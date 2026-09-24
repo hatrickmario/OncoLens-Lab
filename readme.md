@@ -13,9 +13,9 @@
 
 ## 0. Ficha del Proyecto
 
-### **0.1. Mario Julian Bonilla Contreras **
+### **0.1. Mario Julian Bonilla Contreras**
 
-### **0.2. OncoLens **
+### **0.2. OncoLens**
 
 ### **0.3. Descripción breve del proyecto:**
 
