@@ -11,15 +11,11 @@
 
 ---
 
-## 0. Ficha del proyecto
+## 0. Ficha del Proyecto
 
-### **0.1. Tu nombre completo:**
+### **0.1. Mario Julian Bonilla Contreras **
 
-Mario Julian Bonilla Contreras
-
-### **0.2. Nombre del proyecto:**
-
-OncoLens
+### **0.2. OncoLens **
 
 ### **0.3. Descripción breve del proyecto:**
 
@@ -27,12 +23,8 @@ OncoLens es una plataforma de apoyo a la decisión clínica en oncología que co
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
-Pendiente. El proyecto se ejecuta en local (entorno de desarrollo del Máster AI4Devs) y no cuenta con una URL pública desplegada.
+Pendiente. Por el momento el proyecto se ejecuta en local (entorno de desarrollo del Máster sobre Docker) y no cuenta con una URL pública desplegada.
 
 ### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+Repo público
 https://github.com/hatrickmario/OncoLens-Lab/
