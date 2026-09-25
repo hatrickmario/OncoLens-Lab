@@ -12,12 +12,25 @@
 | ID | Decisión (respuesta del autor) | Implicaciones de diseño | Hallazgos afectados |
 |---|---|---|---|
 | D-01 | **Posicionamiento:** MVP de una herramienta **académica**, con potencial de convertirse en apoyo real a decisiones clínicas. | El producto no promete resultados clínicos, pero se diseña *preparado para CDS*: trazabilidad completa, evaluación reproducible y separación clara entre dato verificado y dato inferido. No se implementan todavía controles regulatorios formales. | P1-01, P1-03, P2-02, P2-10 |
-| D-02 | **Datos:** se combinan datos **sintéticos** y **reales anonimizados**. Los datos no anonimizados quedan para una fase futura en la que se cierren las brechas de seguridad. | La regla del MVP pasa de "solo sintéticos" a "**nunca datos identificables**". Cada paciente lleva su origen (`sintético` o `real_anonimizado`). Los controles contra PII residual son obligatorios desde que entran datos reales. | P1-04, P1-05, P1-06, P2-03 |
+| D-02 | **Datos:** se combinan datos **sintéticos** y **reales anonimizados**. Los datos no anonimizados quedan para una fase futura en la que se cierren las brechas de seguridad. **⚠️ Precisada por D-02c** (el piloto usa cédula y nombres reales). | Cada paciente lleva su origen. Los controles contra PII residual son obligatorios desde que entran datos reales. | P1-04, P1-05, P1-06, P2-03 |
+| D-02c | **Clases de datos (Q-01):** **mixto por dataset.** Los datos **sintéticos** usan una identificación numérica aleatoria y van etiquetados como sintéticos. Los datos **reales anonimizados** se usan para calibración y pruebas. Los pacientes **reales** que atienden los oncólogos del piloto se registran con **cédula de ciudadanía y nombres**, los únicos datos personales que se usan, amparados en el contrato marco que el paciente acepta en su primera consulta (uso para su tratamiento con IA y para investigación). | Tres clases de datos con reglas distintas (diseño T-7). La identidad real se guarda cifrada y separada de los datos clínicos, y nunca llega al LLM ni al histórico. Se reabre la decisión de cifrado a nivel de columna de §3.3 #6 (N-07). | T-7, P1-06, T-4, N-07 |
+| D-21 | **Origen de los datos reales (Q-02):** vienen de una institución, un dataset público y un colaborador, bajo un **convenio marco** con los términos de uso para investigación e IA en tratamientos. | Se registra `source_dataset` y la referencia del convenio por paciente desde el Sprint 1. El acuerdo se documenta antes de cargar datos reales. | N-05 |
+| D-22 | **Usuarios (Q-09):** un grupo inicial de **10 oncólogos** para pruebas y refinamiento. La autorización del Sprint 5 debe estar lista **antes de cargar datos reales** y antes de una demo a una audiencia mayor. | Ningún dato real (anonimizado ni identificado) entra a la aplicación antes de completar el Sprint 5. Aparece el gate G-piloto (T-7.4) y la pregunta de hospedaje (N-08). | P1-06, T-7.4 |
+| D-23 | **Umbrales de OCR (Q-06):** se aceptan y pueden ajustarse. Los laboratorios presentan los resultados de formas distintas, y el doctor puede solicitar y ver el documento de origen para confirmar un valor. | Extracción sin plantillas por laboratorio, normalización de unidades y visor del documento de origen resaltando el valor (T-1.7). | T-1, P2-07 |
+| D-24 | **Egreso (Q-08):** lo ejecutan el tratante principal o un administrador; la lista de motivos se valida con el oncólogo. | Regla de autorización del endpoint de egreso. | T-2.3 |
+| D-25 | **Diagnóstico en conflicto (Q-11):** se valida la **fecha del diagnóstico** para saber si es vigente. El dato entra etiquetado y el oncólogo puede confirmarlo o descartarlo. | Regla de fechas en T-1.4. | T-1.4 |
+| D-26 | **Citas (Q-07):** el original siempre visible, la traducción como opción marcada como tal; la verificación de soporte usa siempre el original. | UI de citas y T-5.1. | T-3, N-03 |
+| D-27 | **Chequeo de soporte (Q-10):** estricto (se descarta toda la recomendación), pero las descartadas se muestran en una sección o etiqueta aparte para que el oncólogo las revise. | Se persisten y se muestran separadas (T-5.1). | T-5, P1-03 |
+| D-28 | **Fuentes (Q-13):** guías y tratamiento: NCI PDQ, ESMO, NCCN, PubMed/PMC, ClinicalTrials.gov. Investigación y bioinformática: TCGA/GDC, cBioPortal, TCIA. El MVP usa **solo fuentes textuales**: de las fuentes bioinformáticas se incorporan sus publicaciones y resúmenes asociados. Licencias de NCCN y ESMO: **pendientes**. | NCCN y ESMO quedan excluidas por defecto hasta tener la licencia (solo su contenido de acceso abierto con licencia compatible). ADR de fuentes (P2-09, N-10). | P2-09 |
+| D-29 | **Sesión (Q-12):** 8 h de TTL, 30 min de inactividad y 15 min de bloqueo tras 5 intentos, como valores configurables. | — | P2-05 |
+| D-30 | **Opt-out de la entidad (Q-14):** se acepta la marca de exclusión al importar o registrar, más la opción manual del doctor. | Campo `research_opt_out` en los datos de origen. | T-2.5 |
+| D-31 | **"Entrenamiento":** significa **calibrar y evaluar** (umbrales, prompts, reglas, datasets de evaluación). **No** se reentrena ningún modelo. | Sin *pipeline* de *fine-tuning*. Los datos reales anonimizados alimentan T-5 (N-09). | T-5 |
+| D-05b | **País (Q-05):** los documentos son de uso público y para investigación; **no se asume ningún país**. | Los formatos de identificación del detector de PII y del registro son configurables (T-4, T-7). | T-4, T-7 |
 | D-02b | **Punto de anonimización:** en **ambos** lugares. Los datos llegan anonimizados desde fuera **y** OncoLens verifica que no quede PII residual. | Hace falta un **gate de PII residual** dentro de OncoLens (diseño T-4). Un documento con PII detectada se pone en cuarentena y no se procesa. | P1-04, P1-05, P2-13 |
 | D-04 | **Embeddings:** el spike del Sprint 1 contempla el **idioma**, porque hay documentación y evidencia en español e inglés. | Modelo de *embeddings* multilingüe, estrategia de consulta bilingüe e idioma registrado por chunk (diseño T-3). | P1-08, P2-10 |
 | D-04b | **LLM y embeddings:** **configurable**. Local por defecto; la nube solo para pruebas con datos sintéticos. | `LLMAdapter` con dos implementaciones y una **regla dura**: un análisis de un paciente `real_anonimizado` nunca va a un proveedor en la nube. Los *embeddings* siempre son locales (diseño T-6). | P1-04, P2-03, P2-12 |
 | D-03 | **OCR:** los documentos **no salen a la nube**. Se procesan en local, en Docker, sobre una MacBook Pro M5 con 32 GB de RAM. | Motor de OCR local. Hay restricciones de hardware que aparecen como hallazgos nuevos N-01 y N-02. | P1-04, P3-08 |
-| D-05 | **Idioma de la respuesta:** el **idioma de la pregunta**. | Hay que detectar el idioma de la pregunta; el prompt fija el idioma de salida. El idioma en que se muestran las citas sigue abierto (❓ Q-07). | P1-08 |
+| D-05 | **Idioma de la respuesta:** el **idioma de la pregunta**. | Hay que detectar el idioma de la pregunta; el prompt fija el idioma de salida. El idioma en que se muestran las citas queda definido en D-26. | P1-08 |
 | D-06 | **Datos de OCR en el RAG:** **sí entran**, con una etiqueta de nivel de confianza de la extracción y otra que indique qué requiere revisión del doctor y qué se generó automáticamente con alta confianza. | Modelo de dos ejes, confianza de la extracción × estado de revisión (diseño T-1). El contexto del RAG y la respuesta muestran de qué datos dependen. | P1-02, P2-01, P2-07 |
 | D-07 | **Registro de pacientes:** formulario manual mínimo **y** formulario precargado con datos sugeridos por el OCR. El doctor siempre confirma. Cada paciente tiene una identificación. | Dos caminos hacia un mismo endpoint de creación. El OCR nunca crea pacientes por sí solo (diseño T-2). | P1-09, P2-13 |
 | D-07b | **Alta (egreso):** "dar de alta" significa **egreso**. Los datos del paciente se almacenan en un **histórico** (otra tabla) que podrá usarse en investigación futura, por ejemplo para análisis de grafos entre pacientes. | Ciclo de vida del paciente con estados y un esquema `research` separado (diseño T-2). | P1-09, P2-06 (nuevo alcance) |
@@ -87,7 +100,7 @@ La recomendación de usar el mismo LLM para estructurar documentos (T-1) y para 
 
 **Análisis.** Con D-05, un doctor que pregunta en español recibe una justificación en español construida a partir de chunks posiblemente en inglés. El LLM tiene que **traducir y resumir a la vez**, y aumenta el riesgo de que la justificación no sea fiel. Además, el chequeo de soporte (T-5) debe comparar textos en idiomas distintos.
 
-**Solución 🟡.** El chequeo de soporte usa un modelo NLI **multilingüe** (T-5). La tarjeta de recomendación muestra el idioma original de cada cita. Si la cita se muestra traducida, lleva la etiqueta "traducción automática" (❓ Q-07).
+**Solución 🟡.** El chequeo de soporte usa un modelo NLI **multilingüe** (T-5). La tarjeta de recomendación muestra el idioma original de cada cita. Si la cita se muestra traducida, lleva la etiqueta "traducción automática" (D-26).
 
 ### [N-04] Alto — El histórico de investigación reabre problemas de privacidad y consentimiento
 
@@ -110,6 +123,32 @@ La recomendación de usar el mismo LLM para estructurar documentos (T-1) y para 
 
 **Solución ✅.** La restricción se aplica **en código y en los dos backends** (T-6): Backend 1 envía la clasificación del dato y Backend 2 la hace cumplir. Si la configuración no es compatible, la consulta falla con un error explícito y no se envía nada. Hay tests para esta regla.
 
+### [N-07] Alto — El piloto guarda identidad real (cédula y nombres)
+
+**Análisis.** D-02c introduce datos identificables en el MVP. La decisión §3.3 #6 del README ("cifrado a nivel de columna descartado") y la regla de la versión anterior de esta propuesta ("nunca datos identificables") dejan de ser válidas. Hay tres riesgos concretos: una fuga de la base de datos expone la identidad junto con el diagnóstico; los identificadores pueden filtrarse hacia el LLM, los *logs*, la auditoría o el histórico; y la búsqueda por cédula y por nombre choca con el cifrado.
+
+**Solución ✅/🟡.** Diseño T-7: identidad en una tabla separada, cifrada en la aplicación, con un índice ciego para buscar por cédula; nunca sale de `clinical-api`, salvo para mostrarla al doctor autorizado.
+
+### [N-08] Alto — Hospedaje del piloto con 10 oncólogos
+
+**Análisis.** La decisión D-03 sitúa todo en una MacBook Pro local, y D-22 pide que 10 oncólogos usen el sistema. No está definido cómo se conectan: ¿red local, túnel, un servidor de la entidad? Servir datos de salud identificables desde una laptop implica riesgos de disponibilidad (la laptop se apaga o se mueve), de exposición (cómo se publica el puerto) y de pérdida de los datos (robo del equipo).
+
+**Solución ❓.** Depende de Q-15. Mínimos 🟡 independientes de la respuesta: disco cifrado (FileVault), HTTPS con certificado, acceso restringido (VPN o red privada, nunca un puerto abierto a internet), *backups* cifrados fuera del equipo y apagado controlado documentado.
+
+### [N-09] Alto — Repositorio público y datos reales de evaluación
+
+**Análisis.** El repositorio es **público** (§0.5), y §2.3 prevé `data/evaluation/` dentro del repo. Con D-31, los datos reales anonimizados se usan para calibrar y evaluar. Si se versionan en el repo, se publican.
+
+**Solución ✅.** `data/evaluation/` en el repo contiene **solo datos sintéticos** y las definiciones de los datasets (esquemas, preguntas). Los datos reales anonimizados viven en un volumen local cifrado, fuera del repo (ruta configurable, excluida con `.gitignore`), y sus resultados se versionan solo como métricas agregadas. Se agrega a CI un chequeo de secretos y PII sobre el repo.
+
+**Descartado:** *repositorio privado*, porque contradice §0.5 (entrega académica pública). *Git LFS cifrado*: suma complejidad y deja el riesgo de publicar la clave.
+
+### [N-10] Medio — Fuentes bioinformáticas y licencias de los resúmenes
+
+**Análisis.** TCGA/GDC, cBioPortal y TCIA son datos estructurados e imágenes; por D-28, del MVP solo entran sus **publicaciones y resúmenes asociados**. [I] Los resúmenes de PubMed pueden tener copyright del editor aunque NLM los distribuya. Los artículos de PMC tienen licencias por artículo. Las descripciones de las colecciones de TCIA suelen publicarse con licencias abiertas, pero hay que verificarlo en cada una.
+
+**Solución 🟡.** Un **ADR de fuentes y licencias** con un registro por fuente (licencia, URL de los términos, fecha de verificación, uso permitido). `CorpusDocument.license` y `license_url` son obligatorios y la ingesta rechaza documentos sin licencia registrada. NCCN y ESMO entran solo con licencia (D-28).
+
 ---
 
 ## 3. Diseños transversales
@@ -131,7 +170,7 @@ La confianza es un valor numérico en [0,1] (`extraction_score`) más un nivel d
 | Validación de dominio | El nombre del biomarcador está en el diccionario interno (p. ej., EGFR, ALK, ROS1, BRAF, KRAS, PD-L1, HER2, MSI…); la unidad es coherente; el valor está dentro de un rango físicamente posible; el estadio respeta el formato TNM o el agrupado. | Medio |
 | Consistencia interna | El valor concuerda con `reference_range` y con la bandera del laboratorio, si existe. | Medio |
 
-Umbrales iniciales 🟡 (❓ Q-06, a calibrar con el set de evaluación de OCR): `alta` ≥ 0,90; `media` entre 0,70 y 0,90; `baja` < 0,70.
+Umbrales iniciales 🟡 (✅ D-23, ajustables; a calibrar con el set de evaluación de OCR): `alta` ≥ 0,90; `media` entre 0,70 y 0,90; `baja` < 0,70.
 
 **Por qué no usar la confianza que reporta el LLM:** la misma razón por la que §3.3 #7 descartó el puntaje autorreportado. No está calibrada, no es reproducible y tiende a la sobreconfianza. La confianza se calcula en `domain/` de Backend 2 con reglas testeables.
 
@@ -159,13 +198,22 @@ Las reglas del diccionario (qué biomarcador en qué estado es "relevante" o "cr
 
 Los datos `seed` y los que se capturan en el formulario manual nacen como `verificado`: los ingresó una persona.
 
-**Campos críticos 🟡** (❓ Q-06): valor y estado de biomarcadores accionables, tipo de cáncer, estadio y ECOG. Un error en ellos cambia la recomendación, así que exigen confianza `alta` para quedar como `auto_aceptado`.
+**Campos críticos ✅** (D-23): valor y estado de biomarcadores accionables, tipo de cáncer, estadio y ECOG. Un error en ellos cambia la recomendación, así que exigen confianza `alta` para quedar como `auto_aceptado`.
 
 #### T-1.4 Conflictos con datos existentes
 
 La regla de §3.2 para `Diagnosis` se conserva y se generaliza: un dato extraído **nunca reemplaza** en silencio a uno existente de mayor jerarquía (`verificado` o `corregido`). La diferencia con el README es que el dato en conflicto ya **no** se guarda como `is_active = false`, que se confundía con "histórico" (P2-01), sino como `requiere_revision` con `conflicts_with_id` apuntando al dato vigente.
 
-En el contexto del RAG, el dato vigente va como tal y el dato en conflicto va con la etiqueta "Conflicto pendiente de revisión: el documento X reporta {valor}". 🟡 Esto es coherente con D-06 (todo entra, etiquetado) y deja al LLM y al doctor ver la discrepancia en lugar de ocultarla. ❓ Q-11: confirmar con el oncólogo si un **diagnóstico** en conflicto debe entrar al contexto o solo mostrarse en la ficha.
+En el contexto del RAG, el dato vigente va como tal y el dato en conflicto va con la etiqueta "Conflicto pendiente de revisión: el documento X reporta {valor}". 🟡 Esto es coherente con D-06 (todo entra, etiquetado) y deja al LLM y al doctor ver la discrepancia en lugar de ocultarla. **Regla de vigencia por fecha para `Diagnosis` (D-25) ✅:**
+
+| Situación del diagnóstico extraído | Tratamiento | Etiqueta en el contexto del RAG |
+|---|---|---|
+| Igual al vigente (`cancer_type` + `stage`) | No se inserta (regla del README) | — |
+| `diagnosed_at` **anterior** al del vigente | Se guarda como **histórico** (`is_active = false`); su `review_status` sigue la confianza | "Antecedente diagnóstico ({fecha})" |
+| `diagnosed_at` **posterior** al del vigente, o sin diagnóstico vigente | `requiere_revision` con `conflicts_with_id`: posible diagnóstico más reciente (recurrencia o progresión) | "Posible diagnóstico más reciente — pendiente de revisión" |
+| Sin fecha, o fecha con confianza < `alta` | `requiere_revision`; nunca se infiere la vigencia | "Diagnóstico sin fecha confiable — pendiente de revisión" |
+
+El oncólogo **confirma** (el extraído pasa a vigente y el anterior a histórico, en una transacción) o **descarta** (`rechazado`). Las reglas se validan con el oncólogo (D-09).
 
 #### T-1.5 Cómo viajan las etiquetas y cómo se usan en la respuesta
 
@@ -187,11 +235,23 @@ En el contexto del RAG, el dato vigente va como tal y el dato en conflicto va co
 
 ---
 
+#### T-1.7 Variación entre laboratorios y documento de origen (D-23)
+
+- **Sin plantillas por laboratorio:** los laboratorios presentan los resultados de formas distintas, así que la extracción no depende de *layouts* fijos. Es el LLM de estructuración con anclaje textual (T-1.1) el que se adapta al formato.
+- **Normalización:** tabla de unidades y sinónimos (p. ej., "PD-L1 TPS", "TPS PD-L1", "PDL1 (22C3)") en el catálogo de biomarcadores (P3-04). El rango de referencia siempre se toma **del propio documento**, porque varía entre laboratorios. Se registra `source_lab` (nombre del laboratorio, si figura) para calibrar umbrales por laboratorio más adelante.
+- **Umbrales ajustables:** los valores de T-1.1 viven en configuración (D-23), no en el código.
+- **Ver el documento de origen:** desde cualquier dato extraído, el doctor abre el PDF original en la página del valor, con el fragmento resaltado. Para eso, la extracción devuelve `sourceSpan = { page, bbox?, textOffset }`.
+  - Endpoint: `GET /platform/patients/{id}/documents/{docId}/file`. `clinical-api` lo sirve en *streaming* desde `clinical-minio` a través de `web`, con cabeceras `Content-Disposition: inline` y `Cache-Control: no-store`.
+  - Cada apertura queda registrada en `AuditLog`.
+  - **Descartado:** enlaces prefirmados directos a MinIO (exponen el almacén clínico al navegador y no dejan auditoría) y guardar una copia en el navegador.
+
 ### T-2. Ciclo de vida del paciente: registro, episodios, egreso, reactivación e histórico (resuelve P1-09; nuevo alcance de D-07, D-07b y D-07c; base de P2-13)
 
 #### T-2.1 Identificación del paciente
 
-Como los datos entran anonimizados (D-02b), la identificación que usa OncoLens **no** puede ser el nombre ni un documento de identidad real. 🟡 Propuesta:
+> ⚠️ **Reemplazada por T-7 (D-02c).** Esta subsección se conserva como registro de la propuesta anterior, cuando se suponía que no había datos identificables. La identificación vigente es la de T-7.
+
+Propuesta anterior:
 
 - `patient_code`: identificador **seudónimo** con el que el proceso externo de anonimización etiqueta al paciente (p. ej., `ANON-HOSP1-000123`) o que genera OncoLens para los pacientes sintéticos (`SYN-000001`). Es único e inmutable, y reemplaza a `mrn` como identificador visible.
 - `display_alias`: un alias opcional, no identificable, para la UI (p. ej., "Paciente 123"). **No** se guarda `full_name` real.
@@ -199,7 +259,7 @@ Como los datos entran anonimizados (D-02b), la identificación que usa OncoLens 
 - `source_dataset`: de qué conjunto de datos proviene (N-05).
 - Datos demográficos mínimos: `birth_year` en lugar de `birth_date` (la fecha exacta es un cuasi-identificador), y `sex`.
 
-❓ **Q-01**: confirmar el formato y el origen de la identificación, y si en el MVP se almacena algún dato identificable. La propuesta asume que **no**, y no avanza hasta tu confirmación.
+✅ **Q-01 respondida (D-02c):** sí hay datos identificables en el piloto (cédula y nombres). Ver T-7.
 
 **Por qué se descarta mantener `mrn` y `full_name` como en §3.1:** con datos anonimizados no existen valores reales para esos campos, y rellenarlos con valores ficticios en pacientes reales crea confusión sobre qué es real.
 
@@ -217,33 +277,33 @@ flowchart LR
     P --> C["Doctor confirma o corrige"]
     F --> C
     C --> E["POST /platform/patients"]
-    E --> D{"¿patient_code ya existe?"}
+    E --> D{"¿La identificación (tipo + número) ya existe?"}
     D -- Sí --> R["Ofrece abrir o reactivar el paciente existente (T-2.3)"]
     D -- No --> OK["Paciente creado + CareEpisode abierto + documento vinculado"]
 ```
 
-- **Formulario mínimo:** `patient_code`, `birth_year`, `sex`, `data_origin`, `source_dataset` y los consentimientos (T-2.5). Opcionalmente, un diagnóstico inicial.
-- **Formulario asistido por OCR:** el PDF se sube como **borrador de ingreso** (`IntakeDraft`), que todavía no pertenece a ningún paciente. Backend 2 extrae el `patient_code` y los datos clínicos con la confianza de T-1. La UI precarga el formulario y resalta en color los campos de confianza `media` o `baja`. Al confirmar, se crea el paciente y el documento se vincula a él. Los datos clínicos del borrador se persisten con sus etiquetas de T-1; los campos que el doctor tocó en el formulario quedan `verificado` o `corregido`.
+- **Formulario mínimo:** tipo y número de identificación y nombres (T-7), `birth_year`, `sex`, `data_origin`, `source_dataset`, `agreement_reference` y los consentimientos (T-2.5). Opcionalmente, un diagnóstico inicial.
+- **Formulario asistido por OCR:** el PDF se sube como **borrador de ingreso** (`IntakeDraft`), que todavía no pertenece a ningún paciente. Backend 2 extrae la identificación (cédula y nombre en `real_identificado`, seudónimo en `real_anonimizado`) y los datos clínicos con la confianza de T-1. La UI precarga el formulario y resalta en color los campos de confianza `media` o `baja`. Al confirmar, se crea el paciente y el documento se vincula a él. Los datos clínicos del borrador se persisten con sus etiquetas de T-1; los campos que el doctor tocó en el formulario quedan `verificado` o `corregido`.
 - **Reglas:**
   - El OCR **nunca** crea pacientes: siempre hay una confirmación humana.
-  - `patient_code` es único. Si coincide con uno existente, no se crea un duplicado; se ofrece abrirlo o reactivarlo.
+  - La identificación es única por `(id_type, national_id_hmac)` (T-7.2). Si coincide con una existente, no se crea un duplicado; se ofrece abrirlo o reactivarlo.
   - Un borrador sin confirmar se elimina pasado un plazo configurable, junto con su binario.
 
 **Alternativas descartadas:**
 - *Creación automática por OCR*: un error de lectura en el código crea duplicados o mezcla pacientes, y D-07 exige confirmación.
-- *Solo importación por lotes*: no permite demostrar el flujo en la UI (aunque se puede ofrecer un script de carga **adicional** para los datasets; ❓ Q-02).
+- *Solo importación por lotes*: no permite demostrar el flujo en la UI (aunque se puede ofrecer un script de carga **adicional** para los datasets, D-21).
 - *Integración con una historia clínica electrónica*: fuera del alcance académico.
 
 #### T-2.3 Episodios de atención, egreso y reactivación (D-07b, D-07c)
 
-- Nueva entidad `CareEpisode`: `patient_id`, `opened_at`, `closed_at`, `closure_reason` (❓ Q-08: lista de motivos), `opened_by`, `closed_by`.
+- Nueva entidad `CareEpisode`: `patient_id`, `opened_at`, `closed_at`, `closure_reason` (D-24: lista de motivos a validar con el oncólogo), `opened_by`, `closed_by`.
 - `Patient.lifecycle_status`: `activo` | `egresado`. Es un valor derivado: el paciente está activo si tiene un episodio abierto.
-- **Egreso:** un doctor del equipo tratante (❓ Q-08) cierra el episodio. Ocurre lo siguiente:
+- **Egreso:** el tratante principal o un administrador (D-24) cierra el episodio. Ocurre lo siguiente:
   1. El episodio se cierra.
   2. Se genera el **snapshot mínimo** del episodio (T-2.4), solo si el paciente no ejerció el opt-out de investigación (D-20).
   3. El paciente sale de los listados de pacientes activos, aunque sigue siendo consultable en modo lectura.
   4. No se permiten nuevas consultas RAG ni cargas mientras esté egresado.
-- **Reactivación:** abre un episodio nuevo. El paciente conserva su `patient_code`, su historia clínica y sus análisis previos. El histórico de investigación acumula un snapshot por episodio.
+- **Reactivación:** abre un episodio nuevo. El paciente conserva su identificación, su historia clínica y sus análisis previos. El histórico de investigación acumula un snapshot por episodio.
 - Los datos clínicos (`Diagnosis`, `Exam`, `ClinicalNote`, `AIAnalysisRecord`, `Treatment`) guardan el `episode_id` en el que se registraron, lo que permite reconstruir cada episodio.
 
 **Alternativas descartadas:**
@@ -258,7 +318,7 @@ flowchart LR
 **Alcance MVP 🟡:**
 - **Una sola tabla** `research.episode_snapshot` en un schema `research` de la misma instancia de PostgreSQL:
   - `id`
-  - `research_subject_id`: seudónimo aleatorio y estable por paciente, distinto de `patient_code`. La correspondencia vive en `clinical.research_subject_map`, accesible solo para `clinical-api`.
+  - `research_subject_id`: seudónimo aleatorio y estable por paciente, distinto del identificador interno y de la cédula. La correspondencia vive en `clinical.research_subject_map`, accesible solo para `clinical-api`.
   - `episode_seq`, `snapshot_schema_version`, `snapshot` (JSONB), `created_at`.
 - **Qué contiene `snapshot`:** año de nacimiento agrupado en quinquenios, sexo, `data_origin`, diagnósticos, biomarcadores y tratamientos del episodio, y un resumen de los análisis IA: `top_relevance_score`, opciones propuestas y `document_id` del corpus citados. Cada dato lleva su `review_status` (T-1). Las fechas van como días relativos al inicio del episodio.
 - **Exclusiones:** texto libre (notas clínicas, `rationale`, pregunta del doctor) y fechas absolutas. Así se evita el riesgo de PII residual.
@@ -279,8 +339,8 @@ La migración desde el MVP es directa: `snapshot_schema_version` permite transfo
 **Alternativas descartadas para el MVP:**
 - *No guardar nada al egresar*: incumple D-07b, y los episodios cerrados durante el MVP se perderían para la investigación futura.
 - *Diseño completo (versión anterior de T-2.4)*: contradice D-19 ("lo mínimo necesario").
-- *Copiar las tablas clínicas completas*: arrastra `patient_code` y texto libre con riesgo de PII residual.
-- *Usar el mismo `patient_code` en `research`*: facilita vincular el conjunto de datos con el sistema operativo y aumenta el riesgo de reidentificación.
+- *Copiar las tablas clínicas completas*: arrastra la identificación y texto libre con riesgo de PII residual.
+- *Usar el mismo identificador del paciente (o la cédula) en `research`*: facilita vincular el conjunto de datos con el sistema operativo y aumenta el riesgo de reidentificación.
 - *Un simple estado "egresado" sin snapshot* (el histórico sería la base clínica misma): no separa los datos operativos de los de investigación, y cualquier corrección posterior cambiaría en silencio lo que "quedó" en el histórico.
 
 #### T-2.5 Consentimientos
@@ -367,28 +427,28 @@ flowchart LR
 
 | Punto de entrada | Qué se verifica | Dónde se ejecuta | Qué pasa si se detecta PII |
 |---|---|---|---|
-| PDF subido (registro o carga) | El texto extraído (capa digital u OCR) completo | Backend 2, justo después de extraer el texto y **antes** de estructurarlo | El documento pasa a `ocr_status = cuarentena` (nuevo estado) con el tipo de hallazgo (sin el valor detectado). No se estructura ni se persiste ningún dato clínico. El doctor ve el motivo y puede eliminar el documento. |
+| PDF subido (registro o carga) | El texto extraído (capa digital u OCR) completo | Backend 2, justo después de extraer el texto y **antes** de estructurarlo | **Depende de la clase de datos (T-7.3):** en `sintetico` y `real_anonimizado`, cualquier PII lleva a `ocr_status = cuarentena`, con el tipo de hallazgo y sin el valor detectado; no se estructura ni se persiste ningún dato clínico. En `real_identificado`, se esperan la cédula y el nombre **del propio paciente** (se usan para verificar la identidad, P2-13); cualquier otra PII (terceros, otros documentos de identidad) se enmascara en el texto que se usa después para el RAG. |
 | Formulario de registro | Campos de texto libre (alias, notas) | Backend 1 | `422` con el campo señalado. |
 | Pregunta del doctor (`query`) | Texto libre | Backend 1, antes de llamar a Backend 2 | 🟡 Se enmascaran los hallazgos (`[NOMBRE]`, `[ID]`) y la UI avisa "se enmascararon datos personales en tu pregunta". Se persiste la versión enmascarada. |
 | Notas clínicas al construir `ClinicalContext` | `content` | Backend 1 | Se enmascara. Además, las notas ya se revisaron cuando entraron por el documento. |
 
-**Detector 🟡.** Microsoft Presidio (Python, local) con modelos de spaCy para español e inglés, más reconocedores propios por patrones: formatos de documento de identidad, teléfonos, correos, direcciones y números de historia clínica del país de origen de los datos (❓ Q-05: país o países). Hay dos implementaciones con el mismo conjunto de reglas: la de Backend 2 cubre los documentos y la de Backend 1 el texto libre. 🟡 Para no duplicar el detector en Node, Backend 1 podría llamar a un endpoint `POST /pii/scan` de Backend 2. **Se descarta**, porque haría pasar el texto de la pregunta por Backend 2 solo para limpiarlo y, si el texto tiene PII, esa PII llega igual a Backend 2. La alternativa elegida para Backend 1 es un detector por patrones en TypeScript (identificaciones, teléfonos, correos) más la lista de nombres del proceso externo, si existe (❓ Q-02).
+**Detector 🟡.** Microsoft Presidio (Python, local) con modelos de spaCy para español e inglés, más reconocedores propios por patrones: formatos de documento de identidad, teléfonos, correos, direcciones y números de historia clínica configurables por dataset, sin asumir un país (D-05b). Hay dos implementaciones con el mismo conjunto de reglas: la de Backend 2 cubre los documentos y la de Backend 1 el texto libre. 🟡 Para no duplicar el detector en Node, Backend 1 podría llamar a un endpoint `POST /pii/scan` de Backend 2. **Se descarta**, porque haría pasar el texto de la pregunta por Backend 2 solo para limpiarlo y, si el texto tiene PII, esa PII llega igual a Backend 2. La alternativa elegida para Backend 1 es un detector por patrones en TypeScript (identificaciones, teléfonos, correos) más la lista de nombres del proceso externo, si existe (no confirmado; se verifica con cada dataset, D-21).
 
-**Falsos positivos.** El `patient_code` seudónimo, los nombres de fármacos y los nombres de genes pueden parecer PII. Hay una lista permitida (*allowlist*): el patrón de `patient_code`, el diccionario de biomarcadores y el vocabulario de fármacos del corpus.
+**Falsos positivos.** Los seudónimos de `real_anonimizado`, los nombres de fármacos y los nombres de genes pueden parecer PII. Hay una lista permitida (*allowlist*): el patrón de seudónimo de cada dataset, el diccionario de biomarcadores y el vocabulario de fármacos del corpus.
 
-**Fechas.** El contexto que se envía al LLM convierte las fechas absolutas en relativas ("hace 4 meses", "al diagnóstico + 2 meses"). La base de datos clínica conserva las fechas reales, que ya vienen anonimizadas o desplazadas por el proceso externo (❓ Q-02: confirmar si el proceso externo desplaza las fechas).
+**Fechas.** El contexto que se envía al LLM convierte las fechas absolutas en relativas ("hace 4 meses", "al diagnóstico + 2 meses"). La base de datos clínica conserva las fechas reales, que ya vienen anonimizadas o desplazadas por el proceso externo (no confirmado; se verifica con cada dataset, D-21).
 
 **Métrica y test.** Un conjunto sintético de documentos y preguntas **con PII sembrada** en `data/evaluation/pii/`. Meta 🟡: sensibilidad ≥ 0,95 en identificadores directos (nombre, documento, teléfono). Test automatizado en CI en ambos backends. Esto reemplaza el "muestreo" del KR3 del Sprint 5 (P1-05).
 
 **Nueva redacción del invariante de Backend 2 (P1-04) ✅:**
-> *Backend 2 no persiste PHI ni tiene credenciales ni ruta de red hacia los almacenes clínicos. Recibe documentos ya anonimizados para su extracción, los procesa en memoria de forma transitoria y verifica que no contengan PII residual. En `/rag/query` recibe exclusivamente un contexto desidentificado y seudonimizado por consulta.*
+> *Backend 2 no persiste PHI ni tiene credenciales ni ruta de red hacia los almacenes clínicos. Recibe documentos para su extracción (anonimizados, o del propio paciente identificado en el piloto, D-02c), los procesa en memoria de forma transitoria, sin persistirlos, verifica la PII según la clase de datos (T-7.3) y devuelve la identidad encontrada solo para verificación. En `/rag/query` recibe exclusivamente un contexto desidentificado y seudonimizado por consulta.*
 
 **Alternativas descartadas:**
 
 | Alternativa | Motivo |
 |---|---|
 | Confiar solo en la anonimización externa | Contradice D-02b ("ambos"). Una sola falla externa llevaría PII al LLM y al histórico de investigación. |
-| Anonimizar dentro de OncoLens en lugar de rechazar (reescribir el PDF) | Requiere un anonimizador validado, que es complejo y mucho más exigente que un detector. Además, OncoLens tendría que manejar PDFs identificables, lo que D-02 deja para el futuro. Rechazar y poner en cuarentena es más simple y seguro. |
+| Anonimizar dentro de OncoLens en lugar de rechazar (reescribir el PDF) | Requiere un anonimizador validado, que es complejo y mucho más exigente que un detector. Para los datasets anonimizados, rechazar y poner en cuarentena es más simple y seguro. En `real_identificado` la identidad se espera y se gestiona con T-7, no con reescritura del PDF. |
 | Un LLM como detector de PII | No es determinista, es lento en la M5 y más difícil de medir que Presidio con reglas. |
 | Revisión manual de cada documento | No escala y no protege el texto libre de la pregunta. |
 
@@ -401,7 +461,13 @@ flowchart LR
 Después de la validación de citas que ya existe (OL-02 #5), Backend 2 verifica que cada `rationale` esté **respaldado** por sus chunks citados:
 1. Divide `rationale` en afirmaciones (oraciones).
 2. Para cada afirmación, un modelo **NLI multilingüe** (🟡 un cross-encoder de inferencia textual multilingüe, del orden de 280M parámetros, que corre en CPU) calcula si alguno de los chunks citados la **implica**.
-3. **Regla (`domain/`):** si alguna afirmación con contenido clínico (menciona un fármaco, una dosis, un resultado o un biomarcador) no tiene soporte, se descarta la recomendación. 🟡 Variante menos estricta: se descarta solo la afirmación, y la recomendación se marca `soporte_parcial`. ❓ Q-10 decide entre las dos.
+3. **Regla (`domain/`, D-27) ✅:** si alguna afirmación con contenido clínico (menciona un fármaco, una dosis, un resultado o un biomarcador) no tiene soporte, se **descarta toda la recomendación** (estricto).
+4. **Recomendaciones descartadas visibles para revisión (D-27):**
+   - Se persisten en `AIAnalysisRecord.discarded_recommendations[]` con `discard_reason` (`cita_invalida` | `afirmacion_sin_soporte` | `sin_citas`) y las afirmaciones sin soporte marcadas.
+   - La UI las muestra en una sección aparte, **colapsada por defecto**, con la etiqueta "Descartada por falta de soporte en la evidencia — solo para revisión, no es una recomendación". No se muestra el puntaje de relevancia como principal y el texto sin soporte aparece resaltado.
+   - No cuentan como recomendaciones para el KR3 del Sprint 1 ("0 recomendaciones sin evidencia") ni pueden usarse como `based_on_analysis_id` de un `Treatment`.
+   - Si todas quedan descartadas, la respuesta principal es "sin evidencia suficiente" y la sección de descartadas queda disponible.
+   - **Descartado:** *ocultarlas por completo*, porque el oncólogo quiere revisarlas (D-27) y sirven para calibrar el chequeo. *Mostrarlas junto con las válidas*: se confundirían con recomendaciones respaldadas.
 
 **Por qué NLI y no un LLM juez en línea:** el NLI es determinista, más rápido en CPU y funciona entre idiomas (la justificación en español se contrasta con chunks en inglés, N-03). Un LLM juez local suma varios segundos de latencia por consulta (KR2) y usaría el mismo modelo que generó la respuesta, con sesgos correlacionados. El LLM juez se reserva para la evaluación **fuera de línea** (T-5.2), donde la latencia no importa.
 
@@ -418,7 +484,7 @@ Después de la validación de citas que ya existe (OL-02 #5), Backend 2 verifica
 | `ocr_gold` | Documentos sintéticos y reales anonimizados con los campos esperados (valor exacto) | 20–30 | Autor; el oncólogo revisa el diccionario de significancia (T-1.2) |
 | `pii_seeded` | Documentos y preguntas con PII sembrada | 20–30 | Autor |
 
-**Métricas y metas iniciales 🟡** (se fijan con el baseline del Sprint 1; ❓ Q-10 confirma las metas):
+**Métricas y metas iniciales 🟡** (se fijan con el baseline del Sprint 1; las metas no se confirmaron explícitamente y se ajustan con ese baseline):
 
 | Etapa | Métrica | Meta inicial |
 |---|---|---|
@@ -526,6 +592,66 @@ flowchart TD
 - Métricas desde el Sprint 1: tokens de entrada y salida, tiempo de *retrieval*, *rerank*, generación y chequeo de soporte, y longitud de la cola.
 - `Idempotency-Key` opcional en `/rag/query`: el mismo valor dentro de los 60 s devuelve el mismo `AIAnalysisRecord`.
 
+### T-7. Identidad del paciente y clases de datos (resuelve Q-01/D-02c; N-07; reemplaza T-2.1)
+
+#### T-7.1 Tres clases de datos
+
+| Clase (`data_origin`) | Identificación visible | Dónde se usa | Cuándo | Reglas |
+|---|---|---|---|---|
+| `sintetico` | Número aleatorio con tipo `sintetico` (nunca `cedula_ciudadania`, para que no colisione con una cédula real) + nombre ficticio; distintivo "SINTÉTICO" siempre visible | App (todos los entornos), demos, E2E | Desde el Sprint 1 | Se genera con un script que nunca produce el tipo `cedula_ciudadania` |
+| `real_anonimizado` | Código seudónimo del dataset de origen, con tipo `seudonimo` | Calibración y evaluación (D-31); pruebas en la app tras el gate | Fuera de la app y del repo en cualquier momento (❓ Q-17); en la app tras G-piloto | Gate de PII: si aparece PII, cuarentena |
+| `real_identificado` | **Cédula de ciudadanía + nombres** (D-02c) | Pacientes atendidos por los oncólogos del piloto | Solo tras G-piloto (D-22) | Identidad cifrada, nunca sale de `clinical-api` salvo para mostrarla al doctor autorizado |
+
+#### T-7.2 Modelo de identidad (tabla separada y cifrada)
+
+- **`Patient`** (clínico) queda sin datos personales: `id` (UUID interno, que es lo que usan todas las FK y la API), `data_origin`, `source_dataset`, `agreement_reference` (convenio o contrato marco, D-21), `birth_year`, `sex`, `lifecycle_status`.
+- **`PatientIdentity`** (schema `identity`, nuevo; solo `clinical-api` lo accede):
+  - `patient_id` (PK/FK).
+  - `id_type`: `cedula_ciudadania` | `seudonimo` | `sintetico` | otros según ❓ Q-16.
+  - `national_id_ciphertext`: AES-256-GCM, cifrado **en la aplicación**.
+  - `national_id_hmac`: HMAC-SHA256 con clave propia, que funciona como **índice ciego**. Único por `(id_type, national_id_hmac)`.
+  - `full_name_ciphertext`, `key_version`.
+- **Búsqueda:**
+  - Por cédula: búsqueda **exacta** mediante el HMAC; la cédula en claro nunca aparece en una consulta SQL.
+  - Por nombre: 🟡 se descifra y filtra en la aplicación solo dentro del conjunto de pacientes del equipo tratante del doctor (decenas o cientos en el piloto). No hay índice en claro de nombres.
+- **Claves:** dos claves (cifrado y HMAC), solo en `clinical-api` (variables de entorno o archivos montados), con `key_version` para rotarlas en el futuro. Nunca se versionan en el repo.
+- **Validación del formato de la cédula:** configurable (longitud y dígitos), sin asumir un país (D-05b).
+- **Por qué se reabre §3.3 #6:** el README descartó el cifrado de columna "para este alcance" porque perdía la indexación de campos como `mrn`. Con cédula y nombres reales en una base consultada por 10 usuarios, el balance cambia. El índice ciego resuelve la búsqueda exacta, que es la necesidad declarada ("encontrar al paciente por su identificación").
+
+**Alternativas descartadas:**
+
+| Alternativa | Motivo |
+|---|---|
+| Cédula y nombre en claro en `Patient` (como `mrn` y `full_name` en §3.1) | Una fuga de la base expone la identidad junto con el diagnóstico, y cualquier consulta o *log* puede arrastrarla. |
+| `pgcrypto` en la base de datos | La clave viaja en las consultas y puede quedar en *logs* del servidor. El cifrado en la aplicación mantiene la clave fuera de PostgreSQL. |
+| Solo cifrado de disco | No protege contra consultas, *dumps* ni *logs*. Se mantiene como capa adicional, no como sustituto. |
+| Tokenización con un servicio externo (bóveda) | Suma un componente y memoria (N-02) desproporcionados para un piloto de 10 usuarios. Es reevaluable en producción. |
+| Índice de trigramas sobre nombres en claro para búsqueda aproximada | Reintroduce el nombre en claro en la base. |
+
+#### T-7.3 Qué nunca sale de `clinical-api`
+
+- **Al LLM** (`ClinicalContext`): ni cédula ni nombre; seudónimo por consulta (sin cambios). El gate de T-4 enmascara la pregunta si el doctor escribe el nombre o la cédula.
+- **Al histórico de investigación** (T-2.4): nunca; solo `research_subject_id`.
+- **A `AuditLog` y los *logs* técnicos**: se registra `patient_id` (UUID), nunca la cédula ni el nombre.
+- **A Backend 2 en la extracción:** el PDF de un paciente identificado contiene su identidad y se procesa localmente de forma transitoria (T-4, invariante reescrito). Backend 2 devuelve la cédula encontrada para verificar que el documento pertenece al paciente (P2-13): con cédula real, la verificación es mucho más fuerte que con un seudónimo.
+- **A la UI:** solo al doctor con acceso al paciente (equipo tratante, Sprint 5). Cada consulta de identidad se audita.
+
+#### T-7.4 Gate G-piloto (prerrequisitos para datos reales)
+
+| Prerrequisito | `REAL_ANONYMIZED_ENABLED` | `REAL_IDENTIFIED_ENABLED` |
+|---|---|---|
+| Sprint 5 completo: equipo tratante, consentimientos, autorización en todos los endpoints (D-22) | ✔ | ✔ |
+| Auditoría de accesos activa | ✔ | ✔ |
+| Gate de PII (T-4) y regla de proveedores solo locales (T-6.4) | ✔ | ✔ |
+| Almacén clínico separado (T-6.1) | ✔ | ✔ |
+| Identidad cifrada con índice ciego (T-7.2) y claves fuera del repo | — | ✔ |
+| Hospedaje del piloto resuelto con sus mínimos (N-08, ❓ Q-15) | ✔ (si hay acceso multiusuario) | ✔ |
+| *Backups* cifrados y prueba de restauración | ✔ | ✔ |
+| Convenio o contrato marco registrado (`agreement_reference`, D-21) | ✔ | ✔ |
+| Política de retención definida (❓ Q-18) | — | ✔ |
+
+Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pueden automatizar, y `clinical-api` se niega a arrancar con una bandera en `true` si alguno falla.
+
 ---
 
 ## 4. Solución por hallazgo
@@ -552,14 +678,14 @@ flowchart TD
 - **Solución ✅:** diseño T-1 completo: confianza por campo, `significance_source`, `review_status`, etiquetas en el contexto y aviso `dependsOnUnverifiedData` en cada recomendación.
 - **Descartado:** ver la tabla de T-1.6.
 - **README:** §3.1 (nuevas columnas), §3.2, §3.3 #12 (reformulada), §4.1 y §4.2 (`provenance`), HU-05 y OL-05 #6–7.
-- **Sprint:** 2, junto con OL-05. Las columnas se crean en OL-01 (Sprint 1). **Estado:** ✅ Resuelta (D-06). Umbrales y campos críticos: 🟡 / ❓ Q-06.
+- **Sprint:** 2, junto con OL-05. Las columnas se crean en OL-01 (Sprint 1). **Estado:** ✅ Resuelta (D-06). Umbrales y campos críticos: ✅ D-23 (ajustables).
 
 #### [P1-03] Evaluación del RAG sin sprint; validar citas no garantiza *grounding*
 - **Análisis:** el README trata la evaluación como un ADR futuro, cuando en realidad es el mecanismo de aceptación del producto.
 - **Solución 🟡:** diseño T-5: chequeo de soporte NLI en línea, dataset bilingüe con revisión parcial del oncólogo, métricas con metas iniciales y suite obligatoria en cada cambio de modelo, prompt o corpus. Nuevo ticket **OL-06 "Baseline de evaluación"** en el Sprint 1.
 - **Descartado:** ver T-5.1 y T-5.2.
 - **README:** §2.6 (el ADR pasa a ser un entregable), §5.0 (KR de evaluación por sprint), §6 (OL-06).
-- **Sprint:** 1 (baseline) y todos los siguientes (regresión). **Estado:** 🟡 Propuesta. Metas y rigor del chequeo: ❓ Q-10.
+- **Sprint:** 1 (baseline) y todos los siguientes (regresión). **Estado:** 🟡 Propuesta. Rigor del chequeo: ✅ D-27; metas: se ajustan con el baseline.
 
 #### [P1-04] `/documents/extract` envía PHI a Backend 2
 - **Análisis:** el invariante "nunca recibe PII" se escribió pensando en `/rag/query` y no consideró la extracción.
@@ -575,20 +701,20 @@ flowchart TD
 - **Solución ✅/🟡:** T-4 aplicado a `query` y a `clinicalNotes.content` (enmascaramiento), fechas relativas en el contexto, `birth_year` en lugar de `birth_date` (T-2.1) y una métrica de sensibilidad con test en CI. "Cuando es necesario" pasa a ser "siempre".
 - **Descartado:** ver la tabla de T-4.
 - **README:** §2.5, OL-03 #2.3 y #5, KR3 del Sprint 5.
-- **Sprint:** gate de documentos en el Sprint 2 (cuando entran datos reales); enmascaramiento de la pregunta en el Sprint 2; notas en el Sprint 3 (antes de enviarlas). **Estado:** ✅ en el principio; 🟡 en la herramienta (Presidio); ❓ Q-05 (país y formatos).
+- **Sprint:** gate de documentos en el Sprint 2 (cuando entran datos reales); enmascaramiento de la pregunta en el Sprint 2; notas en el Sprint 3 (antes de enviarlas). **Estado:** ✅ en el principio; 🟡 en la herramienta (Presidio); formatos configurables, sin país (D-05b).
 
 #### [P1-06] Controles de seguridad llegan después que los datos reales
-- **Análisis:** con D-02 ("sintéticos + reales anonimizados"), el riesgo cambia. Ya no se trata de PHI identificable sin controles, sino de datos anonimizados que siguen siendo sensibles y cuyo proceso de anonimización puede fallar.
-- **Solución 🟡:**
-  1. Regla nueva del MVP ✅: **"OncoLens no almacena ni procesa datos identificables. Los datos reales entran solo anonimizados y verificados por el gate de PII."**
-  2. **Gate de datos reales:** `data_origin = real_anonimizado` solo se habilita (bandera de configuración `REAL_DATA_ENABLED`) cuando están activos el gate de PII (T-4), la auditoría de accesos (adelantada al Sprint 2), la regla de proveedores (T-6.4) y el `clinical-minio` separado (T-6.1). Hay un test que verifica que, con la bandera en `false`, el registro rechaza `real_anonimizado`.
-  3. La asignación por equipo tratante y los consentimientos (Sprint 5) **no** bloquean los datos anonimizados en el MVP de un solo usuario, pero **sí** bloquean cualquier despliegue multiusuario. Esto queda declarado en el PRD. ❓ Q-09: confirmar si el MVP será usado por más de una persona.
+- **Análisis:** con D-02c y D-22 el caso queda definido: habrá datos **identificables** (cédula y nombres) usados por **10 oncólogos**. Los controles del Sprint 5 dejan de ser opcionales.
+- **Solución ✅ (D-22):**
+  1. **Ningún dato real entra a la aplicación antes de completar el Sprint 5.** Los Sprints 1–4 operan con datos **sintéticos** (identificación numérica aleatoria, etiquetados). La calibración con datos reales anonimizados puede hacerse **fuera de la aplicación y del repo** (N-09); ❓ Q-17 confirma si puede empezar antes del Sprint 5.
+  2. **Gate G-piloto** (T-7.4), con dos banderas: `REAL_ANONYMIZED_ENABLED` y `REAL_IDENTIFIED_ENABLED`. Se habilitan solo cuando se cumplen sus prerrequisitos (Sprint 5, auditoría, gate de PII, cifrado de identidad, regla de proveedores, almacén clínico separado y hospedaje resuelto), verificados por un comando de *checklist* y por tests.
+  3. La demo a una audiencia mayor exige el mismo gate (D-22).
 - **Descartado:**
-  - *Solo datos sintéticos*: contradice D-02.
-  - *Adelantar todo el Sprint 5 al Sprint 2*: retrasa el núcleo del producto (el OCR) cuando el riesgo ya está mitigado por la anonimización.
+  - *Cargar datos reales anonimizados desde el Sprint 2* (propuesta anterior): contradice D-22.
+  - *Una sola bandera para todo dato real*: las dos clases tienen prerrequisitos distintos (la identificada exige además cifrado y hospedaje).
   - *No tener gate*: nada impediría cargar datos reales antes de que existan los controles.
-- **README:** §2.5, §5.0 (Sprint 2: auditoría y gate), nota final de §5.0.
-- **Sprint:** 2. **Estado:** 🟡 Propuesta (se deriva de D-02); ❓ Q-09.
+- **README:** §2.5, §3.3 #6 (reabierta), §5.0 (Sprint 2 sin datos reales; Sprint 5 con el gate), nota final de §5.0.
+- **Sprint:** 5. **Estado:** ✅ Resuelta (D-02c, D-22); ❓ Q-15, Q-17.
 
 #### [P1-07] PHI en el MinIO de Milvus
 - **Solución 🟡:** T-6.1: `clinical-minio` separado, binario enviado en el body y redes de Compose separadas.
@@ -606,7 +732,7 @@ flowchart TD
 - **Solución ✅:** T-2.2 (registro manual o asistido por OCR), `GET /platform/patients` con filtros de estado (activo o egresado) y por `data_origin`, más T-2.3 y T-2.4 para el egreso.
 - **Descartado:** ver T-2.2 y T-2.3.
 - **README:** §1.2 #1 (sin "datos personales"), §3.1 y §3.2 (`Patient`, `CareEpisode`, `IntakeDraft`), §4.1 y nuevas historias HU-06 a HU-08 (§7).
-- **Sprint:** listado y formulario manual en el Sprint 1; registro asistido por OCR en el Sprint 2; egreso, reactivación y snapshot mínimo en el Sprint 4 (🟡; el histórico completo es futuro, D-19). **Estado:** ✅ Resuelta (D-07); ❓ Q-01 (identificación) y Q-08 (egreso).
+- **Sprint:** listado y formulario manual en el Sprint 1; registro asistido por OCR en el Sprint 2; egreso, reactivación y snapshot mínimo en el Sprint 4 (🟡; el histórico completo es futuro, D-19). **Estado:** ✅ Resuelta (D-07); identificación en T-7 (D-02c); egreso según D-24.
 
 ### P2 — Altos
 
@@ -641,7 +767,7 @@ flowchart TD
 #### [P2-05] Ciclo de vida de la autenticación incompleto
 - **Solución 🟡:**
   - `POST /platform/auth/logout`.
-  - TTL absoluto de 8 h e inactividad de 30 min (❓ Q-12: confirmar los valores).
+  - TTL absoluto de 8 h e inactividad de 30 min (✅ D-29, configurables).
   - Contraseñas con **Argon2id**.
   - Bloqueo de 15 min tras 5 intentos fallidos por cuenta, más un límite por IP.
   - Alta, baja y reinicio de usuarios por **script de administración (CLI)** en el MVP; UI de administración fuera del MVP.
@@ -651,7 +777,7 @@ flowchart TD
   - *JWT sin estado*: el README ya lo descartó con buen criterio (no se puede revocar).
   - *bcrypt*: válido, pero Argon2id es el estándar recomendado actual y resiste mejor el ataque por GPU.
   - *UI de administración*: agrega superficie de ataque y trabajo sin valor académico.
-- **README:** §2.5, HU-01 y el backlog de §6.0. **Sprint:** 1. **Estado:** 🟡 Propuesta; ❓ Q-12.
+- **README:** §2.5, HU-01 y el backlog de §6.0. **Sprint:** 1. **Estado:** ✅ Resuelta (D-29).
 
 #### [P2-06] Consentimiento y asignaciones sin API, responsable ni historial
 - **Solución ✅/🟡:** T-2.5 (`PatientConsent` por eventos, con tipos `analisis_ia` e `investigacion`) y T-2.6 (`CareTeamMember`, varios activos, uno principal). Endpoints en la §6. Quién registra el consentimiento: el doctor tratante al registrar al paciente (formulario de T-2.2). El de investigación es opt-out bajo contrato marco (D-20).
@@ -677,24 +803,25 @@ flowchart TD
 
 #### [P2-09] Licencias, fuente genómica y actualización del corpus
 - **Solución 🟡:**
-  - **Fuentes candidatas** (licencia a verificar documento por documento):
+  - **Fuentes (D-28), solo textuales en el MVP:**
 
-    | Tipo (`source_type`) | Fuente | Idioma | Licencia |
+    | Tipo (`source_type`) | Fuente | Idioma | Estado de licencia |
     |---|---|---|---|
-    | `guideline` | NCI PDQ para profesionales (inglés) y PDQ en español | EN y ES | [I] NCI permite reutilizarlo con atribución; verificar los términos vigentes |
-    | `clinical_trial` | ClinicalTrials.gov (API pública) | EN (algunos ES) | [I] Datos públicos |
-    | `genomic_study` | **CIViC** (interpretación clínica de variantes en cáncer) | EN | [I] CC0 |
-    | `genomic_study` (complemento) | ClinVar | EN | [I] Dominio público (NCBI) |
-    | Literatura | Subconjunto *Open Access* de PubMed Central filtrado por licencia CC-BY o CC0 | EN (algunos ES) | Por artículo |
+    | `guideline` | NCI PDQ para profesionales y PDQ en español | EN y ES | [I] Reutilizable con atribución según NCI; verificar los términos vigentes |
+    | `guideline` | ESMO | EN | ⏸️ **Pendiente de licencia** (D-28): excluida por defecto, salvo artículos de acceso abierto con licencia compatible |
+    | `guideline` | NCCN | EN | ⏸️ **Pendiente de licencia** (D-28): excluida hasta tener licencia explícita |
+    | `clinical_trial` | ClinicalTrials.gov | EN | [I] Datos públicos |
+    | Literatura | PubMed (resúmenes) y PMC (texto completo del subconjunto de acceso abierto) | EN y ES | PMC: por artículo (CC-BY/CC0). Resúmenes de PubMed: verificar el copyright del editor (N-10) |
+    | `genomic_study` | **Publicaciones y resúmenes asociados** a TCGA/GDC, cBioPortal y TCIA (no los datos crudos) | EN | Por publicación; descripciones de colecciones de TCIA según su licencia |
 
-  - **Excluidas salvo licencia explícita:** NCCN (ya no se usa en los ejemplos de §4.1) y OncoKB (licencia académica con restricciones).
-  - **Fuentes en español adicionales:** ❓ Q-13 (p. ej., guías de sociedades científicas nacionales, cuya licencia hay que revisar).
+  - Los datos estructurados (mutaciones, expresión) e imágenes (TCIA) quedan para el **alcance futuro** de investigación (D-19, D-28).
+  - **Retirado de la propuesta anterior:** CIViC, ClinVar y OncoKB, porque no están en la lista que definiste. Se pueden reconsiderar en el ADR de fuentes si hacen falta para la interpretación de variantes.
   - **Actualización:** la ingesta pasa a ser un entregable del **Sprint 3**. Se ejecuta bajo demanda con un comando y con frecuencia mensual 🟡. `checksum` y `last_checked_at` ya existen en el modelo.
 - **Descartado:**
   - *Ingerir NCCN "porque es la referencia"*: riesgo legal explícito.
   - *Actualización continua automática*: innecesaria para un corpus académico; bajo demanda más mensual es suficiente.
 - **README:** §0.3, §1.3, §2.1, §4.1 (ejemplos), §5.0 (KR3 del Sprint 3) y OL-02 #7.
-- **Estado:** 🟡 Propuesta; ❓ Q-13.
+- **Estado:** ✅ Fuentes definidas (D-28); 🟡 ADR de fuentes y licencias (N-10).
 
 #### [P2-10] El nombre `confidence_score` contradice su semántica; escala sin definir
 - **Solución 🟡:**
@@ -720,14 +847,14 @@ flowchart TD
 
 #### [P2-13] Documento del paciente equivocado y duplicados
 - **Solución ✅/🟡:**
-  1. En cada carga, Backend 2 extrae además el `patient_code` que figura en el documento (es un seudónimo, así que no es PII, D-02b).
+  1. En cada carga, Backend 2 extrae además la identificación que figura en el documento: cédula en `real_identificado` (T-7.3), seudónimo en `real_anonimizado`.
   2. Backend 1 lo compara con el paciente de destino. Si coincide, el flujo sigue normal. Si difiere, el documento queda en `ocr_status = requiere_revision_identidad` y no se persisten datos clínicos. Si no se encuentra el código, los datos pasan como `requiere_revision` (T-1).
   3. `Document.checksum` (SHA-256) con un índice único parcial por `(patient_id, checksum)`: subir el mismo archivo dos veces devuelve `409` con un enlace al documento existente.
 - **Descartado:**
   - *Sin verificación*: en la ficha equivocada, un documento contaminaría el contexto de otro paciente.
   - *Comparar nombres*: no existen (datos anonimizados).
   - *Deduplicación solo por nombre de archivo*: es trivial de evadir y da falsos positivos.
-- **README:** §3.1 (`Document`), §4.1 (`409`), §4.2 y OL-05. **Sprint:** 2. **Estado:** ✅ (se deriva de D-02b y D-07); ❓ Q-01 (formato del código).
+- **README:** §3.1 (`Document`), §4.1 (`409`), §4.2 y OL-05. **Sprint:** 2. **Estado:** ✅ (se deriva de D-02b y D-07); identificación definida en T-7.
 
 ### P3 — Medios
 
@@ -738,7 +865,7 @@ flowchart TD
 | P3-03 KRs | "Precisión" y "evidencia suficiente" no están definidas; el KR de ≥ 2 recomendaciones empuja al LLM a inventar alternativas. | 🟡 Las métricas se definen en T-5.2 (por campo crítico y no crítico, con calibración). KR1 del Sprint 4 reformulado: "hasta 3 recomendaciones, cada una sobre el umbral de relevancia y con soporte NLI". | *Mantener ≥ 2*: fuerza alternativas débiles. | 2 y 4 | 🟡 |
 | P3-04 Codificación | Strings libres impiden cruzar paciente ↔ corpus y deduplicar. | 🟡 Catálogos internos mínimos versionados en `domain/`: tipo de cáncer (subconjunto de CIE-O-3), estadio (TNM 8.ª edición, agrupado), biomarcadores (símbolo de gen HGNC + tipo de alteración), fármacos (nombre genérico). La extracción normaliza contra el catálogo, y un valor fuera del catálogo baja la confianza (T-1.1). La ingesta pobla `cancer_type_tags` con el mismo catálogo. | *Terminologías completas (SNOMED CT)*: licencia y tamaño excesivos para el MVP. *Mantener texto libre*: no cumple T-1 ni el histórico (T-2.4). | 2–3 | 🟡 |
 | P3-05 Híbrido | Los contratos afirman búsqueda híbrida antes de que exista. | ✅ Anotar en §4.1, §4.2 y el C4 "dense (Sprints 1–2), híbrido multilingüe (Sprint 3+)". | — | Doc | ✅ |
-| P3-06 Entornos y NFR | Se habla de "producción" sin que exista. | 🟡 Entornos: `local` (desarrollo, solo sintéticos) y `demo` (sintéticos + reales anonimizados con `REAL_DATA_ENABLED`); "producción" queda fuera del MVP. NFR: la ficha y el listado con p95 ≤ 1 s; 1–2 usuarios concurrentes (hardware local); *backup* manual con `pg_dump` y `mc mirror` antes de cada demo, más una prueba de restauración por sprint. | *Definir SLA de disponibilidad*: no aplica a una instalación local en una laptop. | 1 y 6 | 🟡 |
+| P3-06 Entornos y NFR | Se habla de "producción" sin que exista. | 🟡 Entornos: `local` (desarrollo, solo sintéticos) y `piloto` (datos reales tras el gate G-piloto, T-7.4; 10 oncólogos, D-22); "producción" queda fuera del MVP. NFR: la ficha y el listado con p95 ≤ 1 s; hasta 10 usuarios registrados con 2–3 concurrentes (piloto, D-22; la cola del LLM de T-6.5 limita la concurrencia de consultas); *backup* manual con `pg_dump` y `mc mirror` antes de cada demo, más una prueba de restauración por sprint. | *Definir SLA de disponibilidad*: no aplica a una instalación local en una laptop. | 1 y 6 | 🟡 |
 | P3-07 PRs | §7 vacía, sin trazabilidad. | ✅ Plantilla de PR con: ticket OL-xx, HU, criterios de aceptación cubiertos, métricas de evaluación (si aplica) y la Definition of Done de §6.0. | — | Continuo | ✅ |
 | P3-08 Reutilización del OCR | La ingesta del corpus reutiliza un servicio con contrato clínico. | 🟡 Dividir `DocumentExtractionService` en `TextExtractionService` (capa digital u OCR, genérico, se reutiliza en la ingesta) y `ClinicalStructuringService` (LLM + validación de T-1, solo clínico). **Motor de OCR 🟡:** primero, extracción de la capa de texto con PyMuPDF (exacta y sin costo) y OCR solo en las páginas escaneadas. Candidatos: Tesseract (`spa` + `eng`, CPU, liviano) frente a PaddleOCR (mejor con tablas, más pesado en CPU ARM64), a decidir en el spike con el set `ocr_gold`. Estructuración: el mismo LLM local de generación con salida JSON restringida por esquema. | *Vision-LLM directo*: memoria (N-02), latencia sin GPU en Docker (N-01) y **no da confianza por campo ni anclaje textual** (T-1.1). *Solo OCR sin LLM*: no estructura texto libre variable. *OCR en la nube*: contradice D-03. | 2 | 🟡 |
 
@@ -763,14 +890,21 @@ flowchart TD
 erDiagram
     PATIENT {
         uuid id PK
-        string patient_code UK "seudónimo externo o SYN-xxxx (reemplaza mrn)"
-        string display_alias "nullable, no identificable"
         int birth_year "reemplaza birth_date"
         string sex
-        string data_origin "enum: sintetico|real_anonimizado"
+        string data_origin "enum: sintetico|real_anonimizado|real_identificado"
         string source_dataset
+        string agreement_reference "convenio o contrato marco (D-21)"
         string lifecycle_status "derivado: activo|egresado"
         timestamp created_at
+    }
+    PATIENT_IDENTITY {
+        uuid patient_id PK "schema identity; también FK"
+        string id_type "cedula_ciudadania|seudonimo|sintetico|..."
+        bytes national_id_ciphertext "AES-256-GCM en la app"
+        string national_id_hmac "índice ciego; único por id_type"
+        bytes full_name_ciphertext
+        int key_version
     }
     CARE_EPISODE {
         uuid id PK
@@ -857,6 +991,7 @@ erDiagram
         uuid patient_id PK "schema clinical"
         uuid research_subject_id UK "aleatorio"
     }
+    PATIENT ||--|| PATIENT_IDENTITY : "identidad cifrada"
     PATIENT ||--o{ CARE_EPISODE : tiene
     PATIENT ||--o{ CARE_TEAM_MEMBER : "atendido por"
     PATIENT ||--o{ PATIENT_CONSENT : registra
@@ -868,7 +1003,7 @@ erDiagram
 
 **Columnas de etiquetado aplicadas también a `Diagnosis`, `Exam` y `ClinicalNote`:** `extraction_score`, `extraction_confidence`, `review_status`, `conflicts_with_id`, `reviewed_by`, `reviewed_at` y `episode_id`. `significance_source` aplica solo a `Biomarker`.
 
-**Eliminadas o reemplazadas:** `Patient.mrn` → `patient_code`; `Patient.full_name` → eliminado (❓ Q-01); `Patient.birth_date` → `birth_year`; `Patient.consent_ai_analysis` y `consent_recorded_at` → `PatientConsent`; `PatientAssignment` → `CareTeamMember`; `confidence_score` y `top_confidence_score` → `relevance_score` y `top_relevance_score`.
+**Eliminadas o reemplazadas:** `Patient.mrn` y `Patient.full_name` → `PatientIdentity` (cédula o seudónimo y nombre, cifrados, con índice ciego; T-7.2); `Patient.birth_date` → `birth_year`; `Patient.consent_ai_analysis` y `consent_recorded_at` → `PatientConsent`; `PatientAssignment` → `CareTeamMember`; `confidence_score` y `top_confidence_score` → `relevance_score` y `top_relevance_score`.
 
 **Schema `research`** (T-2.4, MVP mínimo): solo `research.episode_snapshot` (`research_subject_id`, `episode_seq`, `snapshot_schema_version`, `snapshot` JSONB, `created_at`). Solo inserta el rol `clinical_research_writer`. El modelo normalizado es futuro (D-19).
 
@@ -879,7 +1014,7 @@ erDiagram
 
 ### 5.3 Índices y restricciones nuevos
 
-- `patient.patient_code` único.
+- `identity.patient_identity (id_type, national_id_hmac)` único (T-7.2).
 - `care_team_member (patient_id, doctor_id) WHERE is_active` único; `(patient_id) WHERE is_active AND is_primary` único.
 - `care_episode (patient_id) WHERE closed_at IS NULL` único: un solo episodio abierto.
 - `document (patient_id, checksum)` único.
@@ -895,8 +1030,9 @@ erDiagram
 | Método y ruta | Propósito | Sprint | Hallazgo |
 |---|---|---|---|
 | `POST /platform/auth/logout` | Cierra la sesión (`revoked`) | 1 | P2-05 |
-| `GET /platform/patients?status=&dataOrigin=&q=&page=` | Listado paginado | 1 | P1-09 |
-| `POST /platform/patients` | Registro (manual o confirmado desde un borrador): `patientCode`, `birthYear`, `sex`, `dataOrigin`, `sourceDataset`, `consents[]`, `intakeDraftId?` → `201`; `409` si el código existe | 1 (manual) / 2 (con borrador) | P1-09, T-2.2 |
+| `GET /platform/patients?status=&dataOrigin=&nationalId=&name=&page=` | Listado paginado. `nationalId` busca de forma exacta mediante el índice ciego; `name` se filtra en la aplicación dentro del equipo tratante (T-7.2) | 1 | P1-09, T-7 |
+| `GET /platform/patients/{id}/documents/{docId}/file` | Visor del documento de origen (*streaming*, auditado) | 2 | D-23, T-1.7 |
+| `POST /platform/patients` | Registro (manual o confirmado desde un borrador): `idType`, `nationalId`, `fullName` (se cifran al recibirlos), `birthYear`, `sex`, `dataOrigin`, `sourceDataset`, `consents[]`, `intakeDraftId?` → `201`; `409` si la identificación existe | 1 (manual) / 2 (con borrador) | P1-09, T-2.2 |
 | `POST /platform/intake-drafts` (multipart) | Sube el PDF para el registro asistido → `202` + borrador | 2 | T-2.2 |
 | `GET /platform/intake-drafts/{id}` | Estado y campos sugeridos con su confianza | 2 | T-2.2 |
 | `GET /platform/patients/{id}` | Ficha ampliada (P2-07) + `pendingReviewCount` + estado del ciclo de vida | 1–2 | P2-07 |
@@ -917,7 +1053,7 @@ erDiagram
 | Ruta | Cambio |
 |---|---|
 | `POST /rag/query` | Request: `dataClassification`, `provenance` por cada ítem de `clinicalContext`, cabecera `X-Request-Deadline`. Response: `relevanceScore`, `supportStatus`, `dependsOnUnverifiedData` por recomendación y el bloque `meta`. Nuevos errores: `429` (cola llena) y `503` (`LOCAL_LLM_UNAVAILABLE`). |
-| `POST /documents/extract` | `multipart/form-data` con el binario (en lugar de la URL prefirmada), `dataClassification` y `mode: registro \| carga`. Response: `piiScan { clean, findingTypes[] }`, `patientCodeFound`, cada campo con `value`, `extractionScore`, `extractionConfidence`, `significanceSource` y `sourceSpan` (la posición en el texto, que sirve para el anclaje de T-1.1). Nuevo estado de respuesta para PII detectada: `200` con `piiScan.clean = false` y sin datos clínicos. |
+| `POST /documents/extract` | `multipart/form-data` con el binario (en lugar de la URL prefirmada), `dataClassification` y `mode: registro \| carga`. Response: `piiScan { clean, findingTypes[] }`, `identityFound` (tipo y número detectados, solo para verificación), cada campo con `value`, `extractionScore`, `extractionConfidence`, `significanceSource` y `sourceSpan` (la posición en el texto, que sirve para el anclaje de T-1.1). Nuevo estado de respuesta para PII detectada: `200` con `piiScan.clean = false` y sin datos clínicos. |
 
 ---
 
@@ -926,72 +1062,84 @@ erDiagram
 | Sprint | Objetivo (sin cambios) | Alcance ajustado |
 |---|---|---|
 | **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
-| **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4). **Recién entonces** se habilita `REAL_DATA_ENABLED`. |
+| **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4), visor del documento de origen (T-1.7). **Sin datos reales en la app todavía** (D-22). |
 | **3** | Híbrida y filtros | Híbrida multilingüe con expansión (T-3), filtros con tabla de verdad (P3-02), **HU-09 revisión de datos de OCR** (aceptar, corregir, rechazar) (P2-01), enmascaramiento de las notas enviadas (T-4), ingesta del corpus como entregable con licencias (P2-09). |
 | **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento, **HU-13 egreso y reactivación con snapshot mínimo** (T-2.3, T-2.4) 🟡. |
-| **5** | Autorización real | **HU-14** equipo tratante (varios, uno principal), validación de consentimientos en todos los endpoints, auditoría completa. |
+| **5** | Autorización real | **HU-14** equipo tratante (varios, uno principal), validación de consentimientos en todos los endpoints, auditoría completa, cifrado de identidad e índice ciego (T-7.2), hospedaje del piloto (N-08). **Gate G-piloto (T-7.4):** recién aquí se habilitan los datos reales y el piloto con 10 oncólogos (D-22). |
 | **6** | Observabilidad y hardening | `/health` y `/metrics` completos, *dashboards*, *mutation testing*, prueba de restauración de *backup*. |
 | **Futuro** (fuera del MVP, D-19) | Histórico de investigación completo | Modelo normalizado, desenlaces del tratamiento, análisis de grafos, **HU-15** exportación para investigación, gobierno del consentimiento de investigación, control de reidentificación. Prerrequisitos: N-04 (puntos 1–3). |
 
-**Criterio de "MVP demostrable":** Sprints 1–4. **Criterio de "MVP multiusuario":** además, Sprint 5 (P1-06, ❓ Q-09).
+**Criterio de "MVP demostrable" (con datos sintéticos):** Sprints 1–4. **Criterio de "piloto con 10 oncólogos y datos reales" o demo a una audiencia mayor:** además, Sprint 5 y el gate G-piloto (D-22).
 
 ---
 
 ## 8. Preguntas abiertas (no asumidas)
 
-Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la recomendación actual.
+### 8.1 Resueltas
+
+| ID | Respuesta | Decisión |
+|---|---|---|
+| Q-01 | Mixto por dataset: cédula y nombres reales para los pacientes del piloto; sintéticos con identificación aleatoria; reales anonimizados para calibrar y probar | D-02c, T-7 |
+| Q-02 | Institución, dataset público y colaborador, bajo un convenio marco; origen registrado desde el Sprint 1 | D-21 |
+| Q-03 | Snapshot solo con la casilla marcada; opt-out bajo contrato marco | D-20 |
+| Q-04 | Movida a alcance futuro | D-19 |
+| Q-05 | Documentos de uso público e investigación; no se asume ningún país | D-05b |
+| Q-06 | Umbrales aceptados y ajustables; variación entre laboratorios; visor del documento de origen | D-23, T-1.7 |
+| Q-07 | Original siempre visible; traducción opcional etiquetada; verificación sobre el original | D-26 |
+| Q-08 | Tratante principal o administrador; motivos a validar con el oncólogo | D-24 |
+| Q-09 | 10 oncólogos; el Sprint 5 antes de cualquier dato real y de una demo amplia | D-22 |
+| Q-10 | Estricto, con las descartadas visibles en una sección aparte para revisión | D-27 |
+| Q-11 | La fecha del diagnóstico decide la vigencia; entra etiquetado; el oncólogo confirma o descarta | D-25 |
+| Q-12 | Parámetros de sesión aceptados como configurables | D-29 |
+| Q-13 | Fuentes textuales (PDQ, ESMO, NCCN, PubMed/PMC, ClinicalTrials.gov) + publicaciones de TCGA/GDC, cBioPortal y TCIA; licencias de NCCN y ESMO pendientes | D-28 |
+| Q-14 | Se acepta la marca de opt-out de la entidad más la opción manual | D-30 |
+| — | "Entrenamiento" = calibrar y evaluar, sin reentrenar modelos | D-31 |
+
+### 8.2 Pendientes
 
 | ID | Pregunta | Bloquea | Recomendación actual |
 |---|---|---|---|
-| Q-01 | ¿Qué formato tiene la identificación del paciente y quién la asigna? ¿En el MVP se guarda algún dato identificable (nombre, documento real)? | T-2.1, P2-13, esquema `Patient` | Seudónimo `patient_code` asignado por el proceso externo (o `SYN-` para sintéticos); ningún dato identificable. |
-| Q-02 | ¿De dónde provienen los datos reales anonimizados (institución, dataset público, colaborador)? ¿Bajo qué acuerdo o aval (comité de ética)? ¿El proceso externo desplaza las fechas? ¿Entrega una lista de nombres para reforzar el detector? | N-05, T-4, `source_dataset` | Registrar el origen por paciente desde el Sprint 1 y documentar el acuerdo antes de habilitar `REAL_DATA_ENABLED`. |
-| ~~Q-03~~ | ✅ **Resuelta (D-20):** el snapshot se guarda solo con la casilla marcada; es opt-out (marcada por defecto) bajo contrato marco con la entidad médica. | — | — |
-| Q-14 | Para datos **reales anonimizados**, el paciente no está frente al doctor de OncoLens. ¿La entidad médica comunica los opt-outs de sus pacientes (p. ej., una marca en el dataset anonimizado) y OncoLens debe respetarla al importar o registrar? ¿Hay una referencia del contrato marco que se pueda registrar? | T-2.5, D-20 | Aceptar una marca `research_opt_out` en los datos de origen que registre automáticamente el opt-out, más la opción manual del doctor. |
-| ~~Q-04~~ | ~~Contenido del histórico y desenlaces~~ → **Movida a alcance futuro (D-19).** El MVP usa el contenido mínimo de T-2.4. | — | — |
-| Q-05 | ¿De qué país o países provienen los documentos? (Define los formatos de documento de identidad, teléfono, historia clínica y la normativa de datos aplicable.) | T-4 (reconocedores), P1-05 | — (no se asume ningún país). |
-| Q-06 | ¿Aceptas los umbrales iniciales de confianza (alta ≥ 0,90; media 0,70–0,90) y la lista de campos críticos (biomarcadores accionables, tipo de cáncer, estadio, ECOG)? ¿El oncólogo puede revisar el diccionario de significancia? | T-1 | Aceptar como punto de partida y calibrar con `ocr_gold`. |
-| Q-07 | Las citas en otro idioma, ¿se muestran solo en el original o también con una traducción automática etiquetada? | T-3, N-03, UI | Original siempre visible más una traducción opcional etiquetada; el chequeo de soporte usa siempre el original. |
-| Q-08 | Egreso: ¿quién puede ejecutarlo (tratante principal, cualquier miembro del equipo, `admin`) y con qué motivos (fin de tratamiento, traslado, fallecimiento, abandono, otro)? | T-2.3 | Tratante principal o `admin`; lista de motivos a validar con el oncólogo. |
-| Q-09 | ¿El MVP lo usará una sola persona (tú) o varias? | P1-06 (si el Sprint 5 es obligatorio antes de la demo) | Si son varias, el Sprint 5 pasa a ser obligatorio antes de cargar datos reales. |
-| Q-10 | Chequeo de soporte: si una afirmación clínica no tiene soporte, ¿se descarta toda la recomendación (estricto) o solo la afirmación, marcando `soporte_parcial`? ¿Aceptas las metas iniciales de T-5.2? | T-5 | Estricto en el MVP (coherente con "0 recomendaciones sin evidencia"). |
-| Q-11 | ¿Un **diagnóstico** extraído en conflicto con el vigente debe entrar al contexto del RAG (etiquetado) o solo mostrarse en la ficha hasta su revisión? | T-1.4 | Entrar etiquetado (coherente con D-06), sujeto a la validación del oncólogo. |
-| Q-12 | ¿Aceptas los parámetros de sesión: TTL de 8 h, inactividad de 30 min, bloqueo de 15 min tras 5 intentos? | P2-05 | Sí, como valores de configuración. |
-| Q-13 | ¿Qué fuentes de evidencia en español quieres incluir, además de PDQ en español (guías de sociedades nacionales, etc.)? ¿Cuentas con su licencia? | P2-09, T-3 | Empezar con PDQ en español más literatura *Open Access* en español. |
-
----
+| Q-15 | ¿Cómo acceden los 10 oncólogos al sistema que corre en la MacBook: red local, VPN o túnel privado, o un servidor de la entidad? | N-08, gate G-piloto | Red privada o VPN, con HTTPS, FileVault y *backups* cifrados; nunca un puerto abierto a internet. Si el piloto dura más que unas semanas, evaluar un servidor de la entidad. |
+| Q-16 | Además de la cédula de ciudadanía, ¿qué otros tipos de documento pueden tener los pacientes (tarjeta de identidad para menores, cédula de extranjería, pasaporte)? | T-7.2 (`id_type`), validación del registro | Modelar `id_type` como catálogo configurable desde el Sprint 1 y habilitar solo los que confirmes. |
+| Q-17 | ¿La calibración y evaluación con datos reales anonimizados puede empezar **antes** del Sprint 5, siempre fuera de la base de la aplicación y fuera del repo público? | P1-06, T-5, N-09 | Sí: no es "cargar datos reales en la app", y adelanta la calibración de los umbrales del OCR (D-23). |
+| Q-18 | ¿Qué política de retención y borrado de los datos identificados fija el contrato o convenio marco (plazos, borrado al revocar, qué pasa al terminar el piloto)? | Gate G-piloto (`REAL_IDENTIFIED_ENABLED`) | Tomarla literalmente del contrato; si no la define, proponer: conservar mientras dure el piloto y borrar la identidad (conservando los datos clínicos seudonimizados) al terminarlo. |
 
 ## 9. Resumen: qué se resuelve y cómo
 
 | Hallazgo | Resolución | Estado |
 |---|---|---|
 | P1-01 | Propuesta de valor ajustada + etiqueta académica + diseño preparado para CDS | ✅ |
-| P1-02 | T-1: confianza × revisión, etiquetas en el RAG y en la UI | ✅ (umbrales ❓ Q-06) |
-| P1-03 | T-5: NLI en línea + dataset bilingüe + OL-06 | 🟡 (❓ Q-10) |
+| P1-02 | T-1: confianza × revisión, etiquetas en el RAG y en la UI | ✅ (D-23) |
+| P1-03 | T-5: NLI en línea + dataset bilingüe + OL-06 | ✅/🟡 (D-27; metas con el baseline) |
 | P1-04 | Datos anonimizados + gate de PII + OCR local + binario en el body + invariante reescrito | ✅ |
-| P1-05 | T-4 sobre el texto libre, fechas relativas, `birth_year` | ✅/🟡 (❓ Q-05) |
-| P1-06 | Regla "nunca identificables" + `REAL_DATA_ENABLED` con prerrequisitos | 🟡 (❓ Q-09) |
+| P1-05 | T-4 sobre el texto libre, fechas relativas, `birth_year` | ✅/🟡 (D-05b) |
+| P1-06 | Sin datos reales en la app antes del Sprint 5; gate G-piloto con dos banderas (T-7.4) | ✅ (❓ Q-15, Q-17) |
 | P1-07 | `clinical-minio` separado + redes separadas | 🟡 |
 | P1-08 | T-3: *embeddings* multilingües, expansión bilingüe, *reranker* | ✅/🟡 |
-| P1-09 | T-2: registro manual o asistido, listado, episodios, egreso, histórico | ✅ (❓ Q-01, Q-08) |
+| P1-09 | T-2: registro manual o asistido, listado, episodios, egreso, histórico | ✅ (D-02c, D-24; T-7) |
 | P2-01 | `review_status` + revisión en el Sprint 3 | ✅/🟡 |
 | P2-02 | Campos de reproducibilidad en `AIAnalysisRecord` | 🟡 |
 | P2-03 | *Embeddings* locales + redacción corregida | ✅ |
 | P2-04 | BFF único en `web` + `SameSite=Strict` + verificación de `Origin` | 🟡 |
-| P2-05 | Logout, TTL, Argon2id, bloqueo, CLI de administración | 🟡 (❓ Q-12) |
-| P2-06 | `PatientConsent` por eventos (investigación opt-out bajo contrato marco, D-20) + `CareTeamMember` | ✅ (❓ Q-14) |
+| P2-05 | Logout, TTL, Argon2id, bloqueo, CLI de administración | ✅ (D-29) |
+| P2-06 | `PatientConsent` por eventos (investigación opt-out bajo contrato marco, D-20) + `CareTeamMember` | ✅ (D-20, D-30) |
 | P2-07 | Ficha ampliada, último valor por biomarcador, endpoint de notas | 🟡 |
 | P2-08 | Catálogo en SQLite + versionado reanudable | 🟡 |
-| P2-09 | Fuentes con licencia (PDQ, ClinicalTrials.gov, CIViC, ClinVar, PMC OA) + ingesta como entregable | 🟡 (❓ Q-13) |
+| P2-09 | Fuentes textuales de D-28; NCCN y ESMO pendientes de licencia; ingesta como entregable | ✅/🟡 |
 | P2-10 | `relevance_score` basado en el *reranker* | 🟡 |
 | P2-11 | HU-06 a HU-14 (HU-15 pasa a futuro, D-19) | 🟡 |
 | P2-12 | Semáforo, `429`, límites, *deadline*, idempotencia | 🟡 |
-| P2-13 | Verificación de `patient_code` + checksum | ✅ (❓ Q-01) |
+| P2-13 | Verificación de la identificación del documento (cédula o seudónimo) + checksum | ✅ |
 | P3-01…P3-08, P4-01…P4-06 | Ver las tablas de la §4 | ✅/🟡 |
 | N-01 | LLM nativo con Ollama o vLLM (D-17) + API compatible con OpenAI; *embeddings*, *reranker* y NLI en CPU dentro de `rag-orchestrator` | ✅ (verificaciones en el ADR) |
 | N-02 | ADR de evaluación de modelos locales (D-18); borrador creado | ✅ |
-| N-03 | NLI multilingüe + idioma original de las citas | 🟡 (❓ Q-07) |
+| N-03 | NLI multilingüe + idioma original de las citas | ✅ (D-26) |
 | N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19), condicionado al opt-out (D-20) | ✅ |
-| N-05 | `source_dataset` por paciente | ❓ Q-02 |
+| N-05 | `source_dataset` + `agreement_reference` por paciente | ✅ (D-21) |
 | N-06 | Regla de proveedores en código (T-6.4) | ✅ |
+| N-07 | Identidad cifrada en la aplicación con índice ciego, en una tabla separada (T-7) | ✅/🟡 (❓ Q-16) |
+| N-08 | Hospedaje del piloto | ❓ Q-15 |
+| N-09 | Datos reales de evaluación fuera del repo público | ✅ (❓ Q-17) |
+| N-10 | ADR de fuentes y licencias; NCCN y ESMO excluidas hasta tener licencia | 🟡 |
 
-**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-01…Q-14, sin Q-03 ni Q-04), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
+**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-15…Q-18), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
