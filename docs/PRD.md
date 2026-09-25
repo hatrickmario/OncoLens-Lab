@@ -6,7 +6,7 @@
 | Versión del documento | 1.0 — MVP (Sprints 1–6 y piloto) |
 | Fecha | 2026-09-25 |
 | Autor | Mario Julian Bonilla Contreras |
-| Documentos relacionados | [`readme.md`](../readme.md): arquitectura (§2), modelo de datos (§3), API (§4), historias (§5), tickets (§6) · [`OncoLens-C4.drawio`](../OncoLens-C4.drawio): diagramas C4 |
+| Documentos relacionados | [`readme.md`](../readme.md): arquitectura (§2), modelo de datos (§3), API (§4), historias (§5), tickets (§6) · [`OncoLens-C4.drawio`](OncoLens-C4.drawio): diagramas C4 |
 
 > **Cómo leer este documento.** El PRD define **qué** debe hacer el producto y **por qué**. El **cómo** está en el README. Cada requisito indica la sección del README que lo implementa. Lo que falta decidir se marca como **TBD — Decisión requerida**.
 

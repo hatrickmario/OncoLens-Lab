@@ -160,6 +160,8 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 - Requiere disciplina de *contract testing* entre Node y Python para evitar *drift* entre sus specs OpenAPI.
 - Hardware limitado (32 GB compartidos): concurrencia de inferencia acotada (1–2 simultáneas) y modelos de 7–8B elegidos por medición (ADR de modelos locales, 1.4).
 
+📐 Diagramas C4 completos (contexto, contenedores, componentes y código): **[`docs/OncoLens-C4.drawio`](docs/OncoLens-C4.drawio)** (se abre con [draw.io](https://app.diagrams.net)).
+
 ```mermaid
 flowchart TD
     Doctor(["Doctor · Browser (red privada/VPN)"])
@@ -337,6 +339,7 @@ OncoLens/
 │
 ├── docs/
 │   ├── PRD.md                             # Product Requirements Document (requisitos, reglas, NFR, trazabilidad)
+│   ├── OncoLens-C4.drawio                 # diagramas C4: contexto, contenedores, componentes y código
 │   ├── architecture/adr/                  # ADRs pendientes: modelos locales, fuentes y licencias, evaluación RAG,
 │   │                                      # scoring de evidencia clínica, streaming de progreso
 │   ├── api/
@@ -1719,7 +1722,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 * **Para** acceder de forma segura al panel de pacientes, sin exponer datos clínicos a personas no autenticadas
 
 **2. Contexto y Alcance (Context & Scope)**
-* **Descripción:** primer paso de cualquier interacción con OncoLens. Crea la `Session` persistida (token opaco, 2.5) que el `Middleware`/Guard valida en cada request posterior (C4 Nivel 3).
+* **Descripción:** primer paso de cualquier interacción con OncoLens. Crea la `Session` persistida (token opaco, 2.5) que el `Middleware`/Guard valida en cada request posterior (C4 Nivel 3, `docs/OncoLens-C4.drawio`).
 * **Entidades afectadas:** `User`, `Session`, `Role`.
 * **Parámetros (configurables):** sesión de 8 h, cierre por 30 min de inactividad, bloqueo de 15 min tras 5 intentos fallidos, contraseñas con Argon2id, rotación del token al iniciar sesión.
 * **Restricciones:** el password nunca se guarda en claro (`password_hash`, Argon2id). El **bloqueo por intentos fallidos entra en esta historia**. El login pasa por el Route Handler de `web` (`/api/auth/login`), nunca directo a `clinical-api`.
