@@ -100,6 +100,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 2. Generar secretos y certificados locales (scripts en `scripts/`, nunca se versionan):
    - par de claves ES256 del JWT de servicio (la privada solo para `clinical-api`, la pública para `rag-orchestrator`);
    - claves de cifrado de identidad y de índice ciego (HMAC), solo para `clinical-api` (§2.5);
+   - roles de PostgreSQL: el de `clinical-api`, el de solo inserción de `research` y `rag_corpus` (solo el schema `corpus`), más el `pg_hba.conf` que restringe `rag_corpus` a `corpus-db-net`;
    - certificados TLS de PostgreSQL y certificado HTTPS de `web` emitido por una CA interna;
    - credenciales de los dos MinIO: `clinical-minio` (solo `clinical-api`) y el MinIO de Milvus (solo corpus).
 3. Configurar variables de entorno (`.env`) por app: conexiones, `LLM_BASE_URL` y `LLM_MODEL` (API compatible con OpenAI del runtime nativo), `LLM_CLOUD_ENABLED=false`, `ENABLED_CANCER_TYPES=mama,prostata`, `REAL_ANONYMIZED_ENABLED=false`, `REAL_IDENTIFIED_ENABLED=false`, plazos de retención y parámetros de sesión (§2.5).
@@ -140,7 +141,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 **Patrón:** BFF (*Backend for Frontend*, los Route Handlers de `web`) + **servicio de plataforma clínica** (Backend 1, que también actúa de gateway de IA) + **servicio especializado de IA** (Backend 2). Los backends se organizan en capas **Controller → Service → Repository**; en Backend 2, las integraciones con modelos (LLM, *embeddings*, *reranker*, NLI, OCR) se implementan como **Adapters**. Hay **bounded contexts** explícitos y una regla de ownership estricta:
 
 - **Backend 1 (`clinical-api`)** posee el registro clínico: identidad (cifrada), autorización, historia clínica, exámenes, biomarcadores, documentos clínicos, historial de análisis, consentimientos, retención y auditoría. Es dueño exclusivo de **PostgreSQL** y de **`clinical-minio`** (almacén de documentos clínicos).
-- **Backend 2 (`rag-orchestrator`)** posee el análisis asistido por IA: recuperación, generación, validación y extracción de documentos. Es dueño de **Milvus**, del **catálogo del corpus (SQLite)** y de los buckets del corpus. **No tiene credenciales ni ruta de red** hacia PostgreSQL ni hacia `clinical-minio`. Procesa documentos clínicos **de forma transitoria, en memoria**, sin persistirlos, y en `/rag/query` recibe solo un contexto desidentificado (T-4).
+- **Backend 2 (`rag-orchestrator`)** posee el análisis asistido por IA: recuperación, generación, validación y extracción de documentos. Es dueño de **Milvus**, del **catálogo del corpus** (schema `corpus` de PostgreSQL) y de los buckets del corpus. **No tiene acceso a los datos clínicos:** en PostgreSQL usa un rol limitado al schema `corpus` (red dedicada, `pg_hba` restringido, tests de acceso denegado) y no tiene credenciales ni red hacia `clinical-minio` (D-42). Procesa documentos clínicos **de forma transitoria, en memoria**, sin persistirlos, y en `/rag/query` recibe solo un contexto desidentificado (T-4).
 - **LLM nativo** (Ollama o vLLM, fuera de Docker, con GPU Metal): lo consume solo Backend 2, mediante una API compatible con OpenAI (D-17).
 
 **Por qué esta arquitectura:**
@@ -171,7 +172,7 @@ flowchart TD
         W1 --> R1
     end
 
-    PG[("PostgreSQL<br/>auth · identity · clinical · audit · research")]
+    PG[("PostgreSQL<br/>auth · identity · clinical · audit · research<br/>+ corpus (solo Backend 2)")]
     CM[("clinical-minio<br/>clinical-documents")]
 
     subgraph BE2["Backend 2 — rag-orchestrator (Python · FastAPI)"]
@@ -187,7 +188,6 @@ flowchart TD
     end
 
     Milvus[("Milvus<br/>corpus_chunks: dense + sparse, is_current, language, cancer_type_tags")]
-    CAT[("corpus-catalog<br/>SQLite")]
     LLM["LLM nativo macOS<br/>Ollama o vLLM (Metal)"]
     Ext["Fuentes externas (texto)<br/>NCI PDQ · ClinicalTrials.gov · PubMed/PMC<br/>publicaciones TCGA/GDC · cBioPortal · TCIA"]
 
@@ -197,7 +197,7 @@ flowchart TD
     S1 --> CM
     S1 -- "JWT servicio · contexto desidentificado / PDF en el body" --> C2
     R2 --> Milvus
-    R2 --> CAT
+    R2 -- "rol rag_corpus: solo schema corpus" --> PG
     A2 -- "host.docker.internal · API OpenAI-compatible" --> LLM
     S2 -. "ingesta batch (licencia registrada)" .-> Ext
 ```
@@ -274,11 +274,10 @@ sequenceDiagram
 |---|---|---|
 | **web** (Frontend + BFF) | React 19, Next.js (App Router, RSC, Route Handlers, Server Actions), TypeScript, Tailwind CSS v4, shadcn/ui | UI del doctor y **único punto de entrada del navegador**. Route Handlers como proxy de todos los endpoints de `clinical-api` (cookie `SameSite=Strict` + verificación de `Origin`). Sin streaming de tokens sin validar. |
 | **Backend 1 — `clinical-api`** | Node.js LTS, Express 5, TypeScript, Zod, Prisma, OpenAPI/Swagger UI | Autenticación y autorización (RBAC + equipo tratante + consentimientos), identidad cifrada con índice ciego, pacientes, episodios, documentos, revisión de datos extraídos, gateway RAG, persistencia de análisis, retención y auditoría. *Worker* de extracción y *jobs* de retención y mayoría de edad. Dueño exclusivo de PostgreSQL y `clinical-minio`. |
-| **PostgreSQL** | PostgreSQL | Schemas `auth`, `identity`, `clinical`, `audit` y `research` (§3.1). |
+| **PostgreSQL** | PostgreSQL | Único motor relacional (D-42). Schemas `auth`, `identity`, `clinical`, `audit` y `research` (Backend 1) y `corpus` (catálogo del corpus, Backend 2, con rol propio y sin acceso a los demás schemas) (§3.1). |
 | **clinical-minio** | MinIO | Binarios de los documentos clínicos (bucket `clinical-documents`). Instancia separada del MinIO de Milvus; solo `clinical-api` tiene credenciales y ruta de red. |
 | **Backend 2 — `rag-orchestrator`** | Python, FastAPI, Pydantic, OpenAPI | Orquestador RAG (expansión bilingüe, recuperación híbrida, *reranker*, generación, validación de citas, chequeo NLI); extracción de documentos (capa de texto u OCR, gate de PII, estructuración con confianza por campo); ingesta del corpus con licencias. *Embeddings*, *reranker* y NLI corren en CPU dentro del contenedor. |
 | **Milvus** | Milvus standalone (+ etcd + MinIO propio) | Chunks del corpus con vectores dense y sparse y metadatos de filtrado (`is_current`, `source_type`, `language`, `cancer_type_tags`). |
-| **corpus-catalog** | SQLite (volumen de `rag-orchestrator`) | Catálogo `CorpusDocument`, licencias, versiones y estado del pipeline de ingesta (§3.3). |
 | **LLM nativo** | Ollama o vLLM en macOS (Metal), API compatible con OpenAI | Generación de respuestas, estructuración de documentos y expansión bilingüe. Modelo fijado por el ADR-0001. La nube solo se usa con datos sintéticos (D-04b). |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
@@ -316,10 +315,10 @@ OncoLens/
 │       │   │                              # catálogos versionados por tipo de cáncer, regla de proveedores
 │       │   ├── infrastructure/
 │       │   │   ├── milvus/                # MilvusRepository
-│       │   │   ├── catalog/               # CorpusCatalogRepository (SQLite)
+│       │   │   ├── catalog/               # CorpusCatalogRepository (PostgreSQL, schema corpus) + migraciones Alembic
 │       │   │   ├── embeddings/ · reranker/ · nli/ · ocr/ · pii/
 │       │   │   └── llm/                   # LLMAdapter (local OpenAI-compatible; nube solo con datos sintéticos)
-│       │   │                              # (sin infrastructure/postgres/ ni acceso a clinical-minio)
+│       │   │                              # (sin acceso a schemas clínicos ni a clinical-minio)
 │       │   └── schemas/                   # Pydantic
 │       └── requirements.txt
 │
@@ -339,10 +338,10 @@ OncoLens/
 │   └── rag/
 │
 ├── specs/                                  # Spec-Driven Development (OpenSpec)
-├── infra/docker/                           # docker-compose.yml, redes clinical-net / ai-net, certs/
+├── infra/docker/                           # docker-compose.yml, redes clinical-net / ai-net / corpus-db-net, pg_hba.conf, certs/
 ├── scripts/                                # claves, certificados, buckets, preflight real-data
 ├── .github/workflows/                      # CI: build, tests, validación OpenAPI, escaneo de secretos/PII
-├── CLAUDE.md                               # reglas: Backend 2 sin Postgres ni clinical-minio, sesión ≠ credencial de servicio,
+├── CLAUDE.md                               # reglas: Backend 2 solo el schema corpus (nunca datos clínicos) ni clinical-minio, sesión ≠ credencial de servicio,
 │                                           # datos reales nunca a la nube ni al repo, identidad nunca fuera de clinical-api
 └── package.json                            # workspaces: ["apps/*", "packages/*"] (npm)
 ```
@@ -362,12 +361,11 @@ flowchart TD
             subgraph CN["red clinical-net"]
                 FE["web<br/>único puerto publicado (HTTPS)"]
                 BE1["clinical-api<br/>sin puerto al host"]
-                PG[("postgres")]
                 CM[("clinical-minio")]
             end
+            PG[("postgres<br/>clinical-net + corpus-db-net")]
             subgraph AN["red ai-net"]
                 BE2["rag-orchestrator<br/>sin puerto al host"]
-                CAT[("corpus-catalog (SQLite, volumen)")]
                 MV[("milvus-standalone")]
                 ETCD["milvus-etcd"]
                 MMINIO["milvus-minio"]
@@ -379,7 +377,7 @@ flowchart TD
     BE1 --> PG
     BE1 --> CM
     BE1 -- "JWT servicio" --> BE2
-    BE2 --> CAT
+    BE2 -- "corpus-db-net · rol rag_corpus" --> PG
     BE2 --> MV
     MV --> ETCD
     MV --> MMINIO
@@ -387,7 +385,7 @@ flowchart TD
 ```
 
 - **Puertos:** solo `web` publica un puerto, y solo en la interfaz de la red privada o VPN. `clinical-api` y `rag-orchestrator` no publican puertos al host.
-- **Redes:** `clinical-api` está en las dos redes. `rag-orchestrator` solo está en `ai-net`, así que no tiene ruta hacia PostgreSQL ni hacia `clinical-minio`.
+- **Redes:** `clinical-net` (web, `clinical-api`, PostgreSQL, `clinical-minio`), `ai-net` (`clinical-api`, `rag-orchestrator`, Milvus) y `corpus-db-net` (solo `rag-orchestrator` y PostgreSQL, D-42). `rag-orchestrator` no tiene ruta hacia `clinical-minio`. En PostgreSQL, `pg_hba.conf` solo acepta al rol `rag_corpus` desde `corpus-db-net` (TLS + SCRAM), y ese rol no tiene permisos fuera del schema `corpus`.
 - **Entornos:** `local` (desarrollo, solo datos sintéticos) y `piloto` (10 oncólogos; datos reales solo después del gate G-piloto, §2.5). No hay entorno cloud en esta versión.
 - **Operación del piloto:** FileVault activo, *backups* cifrados fuera del equipo (rotación corta, coherente con la retención), prueba de restauración por sprint y apagado y arranque documentados (D-32).
 - **Despliegue:** arrancar el LLM nativo y luego `docker compose -f infra/docker/docker-compose.yml up -d` (ver 1.4).
@@ -438,8 +436,15 @@ flowchart LR
   - Solo `clinical-api` tiene la clave privada.
   - Claims `iss = clinical-api`, `aud = rag-orchestrator` y `exp` corto, con el algoritmo fijado.
   - La sesión del doctor **nunca** viaja hasta Backend 2.
-- **Aislamiento:** Backend 2 sin credenciales ni red hacia PostgreSQL y `clinical-minio`. El PDF viaja en el cuerpo del request y Backend 2 no lo persiste ni lo registra en *logs*.
-- **Schemas separados** en PostgreSQL: `auth`, `identity`, `clinical`, `audit` y `research`, este último con un rol de solo inserción.
+- **Aislamiento de Backend 2 (D-42):** sin credenciales ni red hacia `clinical-minio`. En PostgreSQL solo usa el rol `rag_corpus`:
+  - `USAGE` y DML solo sobre el schema `corpus`;
+  - `REVOKE ALL` sobre `auth`, `identity`, `clinical`, `audit` y `research`, más `ALTER DEFAULT PRIVILEGES` para las tablas futuras;
+  - `pg_hba` restringido a `corpus-db-net` con TLS;
+  - `CONNECTION LIMIT` y *timeouts*;
+  - tests de CI que verifican *permission denied* sobre todos los schemas clínicos.
+
+  **Riesgo residual aceptado:** Backend 2 comparte servidor con los datos clínicos, así que un escalamiento de privilegios en PostgreSQL podría exponerlos. Se mitiga con los tests, el `preflight` y PostgreSQL actualizado. El PDF viaja en el cuerpo del request y Backend 2 no lo persiste ni lo registra en *logs*.
+- **Schemas separados** en PostgreSQL: `auth`, `identity`, `clinical`, `audit`, `research` (rol de solo inserción) y `corpus` (rol `rag_corpus`, sin datos de pacientes).
 - **Cifrado:** FileVault y volúmenes cifrados; TLS hacia PostgreSQL (`sslmode=require`); HTTPS con una CA interna hacia el navegador.
 - **Validación de entrada** en cada borde: Zod en Backend 1, Pydantic en Backend 2. PDFs validados por *magic bytes* y duplicados por checksum.
 - **Consentimientos por eventos** (`PatientConsent`):
@@ -509,7 +514,9 @@ flowchart LR
 
 Hay dos modelos, alineados con la regla de ownership de la sección 2:
 - el **relacional** (PostgreSQL + `clinical-minio`, propiedad exclusiva de Backend 1);
-- el del **corpus científico** (Milvus + catálogo SQLite + MinIO de Milvus, propiedad de Backend 2).
+- el del **corpus científico** (Milvus + catálogo en el schema `corpus` de PostgreSQL + MinIO de Milvus, propiedad de Backend 2).
+
+El proyecto usa **solo dos motores de base de datos: PostgreSQL y Milvus** (D-42).
 
 No hay FKs reales entre ambos, solo referencias lógicas.
 
@@ -521,6 +528,7 @@ No hay FKs reales entre ambos, solo referencias lógicas.
 - `clinical` → `Patient`, `CareEpisode`, `CareTeamMember`, `PatientConsent`, `IntakeDraft`, `Diagnosis`, `ClinicalNote`, `Exam`, `Biomarker`, `Document`, `Treatment`, `AIAnalysisRecord`, `ResearchSubjectMap`
 - `audit` → `AuditLog`
 - `research` → `EpisodeSnapshot`
+- `corpus` → `CorpusDocument` y estado de ingesta: **propiedad de Backend 2**, que lo migra y accede con el rol `rag_corpus`. Prisma lo excluye. Ver el modelo del corpus más abajo.
 
 ```mermaid
 erDiagram
@@ -819,14 +827,14 @@ erDiagram
 - `patient_consent (patient_id, consent_type, recorded_at DESC)`; `ai_analysis_record (patient_id, created_at)`; `patient (retention_until)`.
 - FKs del schema `clinical` con `onDelete: Restrict`. El borrado solo lo ejecuta el proceso de retención o de baja total, que borra la identidad y seudonimiza.
 
-#### Corpus científico — Milvus + catálogo SQLite + MinIO de Milvus (Backend 2)
+#### Corpus científico — Milvus + schema `corpus` de PostgreSQL + MinIO de Milvus (Backend 2)
 
-> Modelo lógico: Milvus no impone FKs. `CorpusDocument` vive en SQLite (catálogo con transacciones); Milvus guarda solo los chunks.
+> Modelo lógico: Milvus no impone FKs. `CorpusDocument` vive en el schema `corpus` de PostgreSQL (catálogo con transacciones), migrado y accedido solo por Backend 2 con el rol `rag_corpus`; Milvus guarda solo los chunks.
 
 ```mermaid
 erDiagram
     CORPUS_DOCUMENT {
-        string document_id PK "SQLite — catálogo"
+        string document_id PK "PostgreSQL schema corpus"
         string source_type "guideline|clinical_trial|literature|genomic_study"
         string source_name "NCI PDQ|ClinicalTrials.gov|PubMed/PMC|TCGA/GDC pub|..."
         string external_id "DOI|NCT ID|PMID|URL"
@@ -909,7 +917,7 @@ erDiagram
 - **AuditLog:** accesos y acciones sobre datos clínicos e identidad (lectura de la ficha, consulta RAG, carga, apertura del documento de origen, revisión, consentimientos, bajas, renovaciones y borrados de retención), siempre sin PHI.
 
 **Corpus:**
-- **CorpusDocument (SQLite):** catálogo con licencia obligatoria, idioma, tipo de cáncer, población y versionado. El versionado es **reanudable**: se inserta la versión nueva, se verifica y se cambia la vigencia en una transacción; un comando de reconciliación corrige Milvus si el proceso se corta.
+- **CorpusDocument (PostgreSQL, schema `corpus`):** catálogo con licencia obligatoria, idioma, tipo de cáncer, población y versionado. El versionado es **reanudable**: se inserta la versión nueva, se verifica y se cambia la vigencia en una transacción; un comando de reconciliación corrige Milvus si el proceso se corta.
 - **CorpusChunk (Milvus):** unidad de recuperación con vectores dense y sparse del mismo modelo multilingüe y metadatos denormalizados para filtrar por vigencia, fuente, idioma, tipo de cáncer y población. La colección se crea con su **esquema final** desde el Sprint 1.
 
 ### **3.3. ADRs derivados del modelo de datos**
@@ -925,7 +933,7 @@ erDiagram
    - La baja de investigación borra solo el histórico.
    - No aplica a los datos anonimizados.
    - Plazos configurables y un job diario auditado.
-5. **Versionado del corpus:** ✅ se conserva el histórico, y la recuperación usa solo `is_current`. El catálogo vive en SQLite para tener transacciones (ver #17).
+5. **Versionado del corpus:** ✅ se conserva el histórico, y la recuperación usa solo `is_current`. El catálogo vive en el schema `corpus` de PostgreSQL para tener transacciones (ver #17).
 6. **Cifrado a nivel de columna:** 🔄 **reabierto y resuelto (D-02c).** El descarte original suponía que no había datos identificables. Con cédula y nombres reales en el piloto, la identidad se cifra **en la aplicación** (AES-256-GCM) en el schema `identity`, con un índice ciego HMAC para la búsqueda exacta.
    - **Descartados:** columnas en claro; `pgcrypto`, porque la clave viaja en las consultas; y solo cifrado de disco, porque no protege contra *dumps* ni *logs*.
 7. **Scoring de evidencia clínica:** 🚧 **pendiente de ADR.** Mientras tanto, `relevance_score` mide la relevancia de la recuperación (ver #8), y un campo `clinical_evidence_score` queda reservado.
@@ -941,8 +949,8 @@ erDiagram
 15. **Confianza y revisión de datos de OCR:** ✅ dos ejes independientes. Todo dato entra al RAG etiquetado; los `rechazado` nunca entran (D-06, D-23).
 16. **Almacén de documentos clínicos:** ✅ `clinical-minio` separado del MinIO de Milvus, con el binario enviado en el cuerpo del request a Backend 2.
     - **Descartados:** buckets compartidos con políticas, porque Milvus tiene credenciales administrativas; y URL prefirmada, porque exige una ruta de red desde Backend 2.
-17. **Catálogo del corpus:** ✅ SQLite propio de Backend 2.
-    - **Descartados:** una colección de Milvus sin vectores; el PostgreSQL clínico, porque rompe el aislamiento; y un contenedor PostgreSQL extra, por la memoria que consume.
+17. **Catálogo del corpus:** ✅ **schema `corpus` del PostgreSQL existente** (D-42: solo PostgreSQL y Milvus como motores), con el rol `rag_corpus` limitado a ese schema, red `corpus-db-net`, `pg_hba` restringido y tests de acceso denegado. El invariante de Backend 2 pasa de "sin red hacia PostgreSQL" a "sin acceso a los datos clínicos".
+    - **Descartados:** SQLite, porque agrega otro motor; una colección de Milvus sin vectores, porque no tiene transacciones; un contenedor PostgreSQL extra, por su memoria y operación. Una *base de datos* separada en la misma instancia queda como endurecimiento opcional.
 18. **Consentimientos:** ✅ por eventos, con opt-out de investigación bajo el contrato marco y firma del representante legal en menores. La mayoría de edad marca "requiere ratificación" (D-20, D-30, D-37, D-40).
 19. **Histórico de investigación:** ✅ mínimo en el MVP (`EpisodeSnapshot`); el completo es futuro (D-19).
 20. **Episodios y egreso:** ✅ `CareEpisode`. El egreso lo ejecutan el tratante principal o un administrador, y la reactivación conserva la historia.
@@ -1931,7 +1939,7 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 **Definition of Done común** (aplica a los 6 tickets, además de sus criterios propios):
 - PR revisado y mergeado a `main` con CI en verde: build, tests y validación de specs OpenAPI (`.github/workflows/`, 2.3).
 - Si cambia un contrato: spec OpenAPI del servicio actualizado y `packages/api-contracts` regenerado (2.6).
-- Ninguna regla de `CLAUDE.md` violada, en especial: `rag-orchestrator` sin acceso a PostgreSQL ni a `clinical-minio`; sesión del doctor ≠ credencial de servicio; la identidad nunca sale de `clinical-api`; los datos reales nunca van a la nube ni al repo.
+- Ninguna regla de `CLAUDE.md` violada, en especial: `rag-orchestrator` sin acceso a los schemas clínicos de PostgreSQL (solo `corpus`) ni a `clinical-minio`; sesión del doctor ≠ credencial de servicio; la identidad nunca sale de `clinical-api`; los datos reales nunca van a la nube ni al repo.
 - Si el PR cambia un modelo, un prompt, un umbral o el corpus: suite de evaluación (OL-06) ejecutada y resultados en el PR.
 - Logs sin PHI, PII, identidad ni secretos (tokens, passwords, claves, contenido de documentos).
 - Todo valor marcado *"propuesta, a calibrar"* vive en configuración (variables de entorno o constantes de `domain/`), no incrustado en la lógica.
@@ -1975,7 +1983,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 | `audit` | `AuditLog` | Sprint 2 |
 | `research` | `EpisodeSnapshot` | Sprint 4 |
 
-**Alcance — no incluye:** `PatientContactInfo` (eliminada del modelo, §3.3 #13).
+**Alcance — no incluye:** `PatientContactInfo` (eliminada del modelo, §3.3 #13). Las tablas del schema `corpus`, que migra Backend 2 (OL-02); este ticket sí crea el schema vacío, el rol `rag_corpus`, sus `REVOKE` y `ALTER DEFAULT PRIVILEGES`, y la regla de `pg_hba.conf` (D-42).
 
 **Tareas técnicas:**
 1. `schema.prisma`: datasource PostgreSQL con `schemas = ["auth", "identity", "clinical", "audit", "research"]` y `@@schema(...)` por modelo. Confirmar si la versión de Prisma requiere `previewFeatures` para el multi-schema.
@@ -2003,7 +2011,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Un `AIAnalysisRecord` con `recommendations = []` se guarda con `top_relevance_score = null`.
 - Ejecutar el seed en el entorno `piloto` aborta sin escribir datos.
 - El rol de `research` no puede leer ni actualizar, solo insertar.
-- Ninguna credencial de esta base existe en la definición de servicio de `rag-orchestrator` (regla 1 de `CLAUDE.md`).
+- Las credenciales de `clinical-api` no existen en la definición de servicio de `rag-orchestrator`, que solo tiene las de `rag_corpus` (regla 1 de `CLAUDE.md`). Con `rag_corpus`, `SELECT` sobre `auth`, `identity`, `clinical`, `audit` y `research` → *permission denied* (D-42).
 
 **Dependencias:** servicio `postgres` en `infra/docker/docker-compose.yml` y los scripts de claves y certificados (1.4).
 **Riesgos:** `sslmode=require` obliga a configurar certificados en el contenedor desde este ticket. La gestión de las claves de cifrado de identidad (generación y respaldo) debe quedar documentada: si se pierde la clave, se pierde la identidad.
@@ -2037,7 +2045,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Dado el corpus semilla cargado y una pregunta con evidencia relevante, cuando `clinical-api` invoca `POST /rag/query` con un JWT válido, entonces responde `200` con exactamente 1 recomendación con ≥ 1 elemento en `citedSources`, y todo `chunkId` citado existe en `corpus_chunks` con `is_current = true`.
 - Dada una pregunta sin evidencia sobre el umbral, responde `200` con `recommendations: []` y no se registra ninguna llamada al LLM.
 - Un request sin JWT, con JWT expirado, o que envía la cookie `oncolens_session` en lugar del JWT, responde `401`.
-- El contenedor de `rag-orchestrator` no tiene variables de entorno ni ruta de red hacia PostgreSQL (regla 1 de `CLAUDE.md`).
+- `rag-orchestrator` solo tiene las credenciales del rol `rag_corpus`, y con ellas cualquier `SELECT` sobre los schemas clínicos devuelve *permission denied* (regla 1 de `CLAUDE.md`, D-42).
 - La latencia p95 sobre el corpus semilla queda registrada en el PR frente a la meta KR2 de Sprint 1 (≤ 15 s end-to-end, *propuesta, a calibrar*).
 
 **Ajustes tras la revisión cruzada (D-04, D-05, D-17, D-18, D-27, D-39):**
@@ -2045,7 +2053,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - **Pipeline:** detección de idioma → *embedding* multilingüe de la pregunta y los términos clínicos verificados → búsqueda dense con filtros `is_current`, `cancer_type_tags` y `population` → *reranker* → umbral → generación en el idioma de la pregunta → validación de citas → **chequeo de soporte NLI**. Las recomendaciones sin soporte van a `discardedRecommendations`.
 - **Regla de proveedores:** si `dataClassification` es real, solo se usan modelos locales; si el local no está disponible, `503`. Hay un test que verifica que no hay llamada a la nube.
 - **Semáforo de inferencia** (`429`), *deadline* (`X-Request-Deadline`) y bloque `meta` en la respuesta.
-- **Catálogo** `CorpusDocument` en SQLite, con licencia obligatoria. Corpus semilla de **mama y próstata**, sin NCCN ni ESMO mientras su licencia esté pendiente.
+- **Catálogo** `CorpusDocument` en el schema `corpus` de PostgreSQL (rol `rag_corpus`, migraciones con Alembic), con licencia obligatoria. Corpus semilla de **mama y próstata**, sin NCCN ni ESMO mientras su licencia esté pendiente.
 - **Tests adicionales:** chequeo NLI (afirmación sin soporte → descartada); regla de proveedores; tipo de cáncer no habilitado.
 
 **Riesgos:** confirmar con la versión de Milvus usada que una colección admite declarar `sparse_vector` y dejarlo sin poblar hasta el Sprint 3; si no lo admite, se puebla desde este ticket (la decisión de esquema final no cambia).
