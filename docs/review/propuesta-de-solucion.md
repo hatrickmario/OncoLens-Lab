@@ -25,6 +25,10 @@
 | D-29 | **Sesión (Q-12):** 8 h de TTL, 30 min de inactividad y 15 min de bloqueo tras 5 intentos, como valores configurables. | — | P2-05 |
 | D-30 | **Opt-out de la entidad (Q-14):** se acepta la marca de exclusión al importar o registrar, más la opción manual del doctor. | Campo `research_opt_out` en los datos de origen. | T-2.5 |
 | D-31 | **"Entrenamiento":** significa **calibrar y evaluar** (umbrales, prompts, reglas, datasets de evaluación). **No** se reentrena ningún modelo. | Sin *pipeline* de *fine-tuning*. Los datos reales anonimizados alimentan T-5 (N-09). | T-5 |
+| D-32 | **Acceso al piloto (Q-15):** red privada o VPN, con HTTPS. | Resuelve N-08: ningún puerto abierto a internet; certificado de una CA interna instalado en los equipos de los 10 oncólogos; FileVault y *backups* cifrados como mínimos. | N-08, T-7.4 |
+| D-33 | **Tipos de documento (Q-16):** cédula de ciudadanía, tarjeta de identidad, cédula de extranjería y pasaporte. `id_type` es una lista configurable y solo se habilitan los confirmados. | Catálogo `id_type` con validación de formato por tipo. La tarjeta de identidad implica pacientes menores de edad (❓ Q-20). | T-7.2 |
+| D-34 | **Calibración temprana (Q-17):** la calibración y evaluación con datos reales anonimizados puede empezar antes del Sprint 5, porque no equivale a cargar datos reales en la aplicación. | Se hace fuera de la base de la aplicación y fuera del repo (N-09), desde el Sprint 1–2. | P1-06, T-5, N-09 |
+| D-35 | **Retención (Q-18):** hasta **10 años** para investigación e IA, renovable hasta **20 años** si el paciente no solicita darse de baja. | Retención por paciente con vencimiento, renovación y acción al vencer (T-7.5). El inicio del plazo, cómo se renueva y qué se borra al vencer siguen abiertos (❓ Q-19). | T-7.5, T-2.4, T-2.5 |
 | D-05b | **País (Q-05):** los documentos son de uso público y para investigación; **no se asume ningún país**. | Los formatos de identificación del detector de PII y del registro son configurables (T-4, T-7). | T-4, T-7 |
 | D-02b | **Punto de anonimización:** en **ambos** lugares. Los datos llegan anonimizados desde fuera **y** OncoLens verifica que no quede PII residual. | Hace falta un **gate de PII residual** dentro de OncoLens (diseño T-4). Un documento con PII detectada se pone en cuarentena y no se procesa. | P1-04, P1-05, P2-13 |
 | D-04 | **Embeddings:** el spike del Sprint 1 contempla el **idioma**, porque hay documentación y evidencia en español e inglés. | Modelo de *embeddings* multilingüe, estrategia de consulta bilingüe e idioma registrado por chunk (diseño T-3). | P1-08, P2-10 |
@@ -133,7 +137,13 @@ La recomendación de usar el mismo LLM para estructurar documentos (T-1) y para 
 
 **Análisis.** La decisión D-03 sitúa todo en una MacBook Pro local, y D-22 pide que 10 oncólogos usen el sistema. No está definido cómo se conectan: ¿red local, túnel, un servidor de la entidad? Servir datos de salud identificables desde una laptop implica riesgos de disponibilidad (la laptop se apaga o se mueve), de exposición (cómo se publica el puerto) y de pérdida de los datos (robo del equipo).
 
-**Solución ❓.** Depende de Q-15. Mínimos 🟡 independientes de la respuesta: disco cifrado (FileVault), HTTPS con certificado, acceso restringido (VPN o red privada, nunca un puerto abierto a internet), *backups* cifrados fuera del equipo y apagado controlado documentado.
+**Solución ✅ (D-32).** Acceso **solo por red privada o VPN, con HTTPS**. Mínimos del piloto:
+- Ningún puerto publicado a internet. `web` escucha solo en la interfaz de la red privada o VPN.
+- HTTPS con un certificado de una **CA interna**, instalada en los equipos de los 10 oncólogos. **Descartado:** certificado autofirmado sin CA, porque entrena a los usuarios a aceptar advertencias del navegador.
+- FileVault activo, *backups* cifrados fuera del equipo y un procedimiento documentado de apagado y arranque.
+- La elección de la tecnología de VPN queda para el equipo que opere el piloto; el diseño no depende de ella.
+
+Si el piloto se extiende o crece, se reevalúa migrar a un servidor de la entidad.
 
 ### [N-09] Alto — Repositorio público y datos reales de evaluación
 
@@ -599,7 +609,7 @@ flowchart TD
 | Clase (`data_origin`) | Identificación visible | Dónde se usa | Cuándo | Reglas |
 |---|---|---|---|---|
 | `sintetico` | Número aleatorio con tipo `sintetico` (nunca `cedula_ciudadania`, para que no colisione con una cédula real) + nombre ficticio; distintivo "SINTÉTICO" siempre visible | App (todos los entornos), demos, E2E | Desde el Sprint 1 | Se genera con un script que nunca produce el tipo `cedula_ciudadania` |
-| `real_anonimizado` | Código seudónimo del dataset de origen, con tipo `seudonimo` | Calibración y evaluación (D-31); pruebas en la app tras el gate | Fuera de la app y del repo en cualquier momento (❓ Q-17); en la app tras G-piloto | Gate de PII: si aparece PII, cuarentena |
+| `real_anonimizado` | Código seudónimo del dataset de origen, con tipo `seudonimo` | Calibración y evaluación (D-31); pruebas en la app tras el gate | Fuera de la app y del repo en cualquier momento (D-34: desde el Sprint 1–2); en la app tras G-piloto | Gate de PII: si aparece PII, cuarentena |
 | `real_identificado` | **Cédula de ciudadanía + nombres** (D-02c) | Pacientes atendidos por los oncólogos del piloto | Solo tras G-piloto (D-22) | Identidad cifrada, nunca sale de `clinical-api` salvo para mostrarla al doctor autorizado |
 
 #### T-7.2 Modelo de identidad (tabla separada y cifrada)
@@ -607,7 +617,8 @@ flowchart TD
 - **`Patient`** (clínico) queda sin datos personales: `id` (UUID interno, que es lo que usan todas las FK y la API), `data_origin`, `source_dataset`, `agreement_reference` (convenio o contrato marco, D-21), `birth_year`, `sex`, `lifecycle_status`.
 - **`PatientIdentity`** (schema `identity`, nuevo; solo `clinical-api` lo accede):
   - `patient_id` (PK/FK).
-  - `id_type`: `cedula_ciudadania` | `seudonimo` | `sintetico` | otros según ❓ Q-16.
+  - `id_type` (catálogo configurable, D-33): `cedula_ciudadania`, `tarjeta_identidad`, `cedula_extranjeria`, `pasaporte`, más los internos `seudonimo` y `sintetico`. Cada tipo tiene su validación de formato, también configurable (sin asumir un país, D-05b). Los pasaportes son alfanuméricos y se normalizan a mayúsculas sin espacios antes de calcular el HMAC. Solo los tipos habilitados en la configuración aparecen en el formulario.
+  - `issuing_country` (nullable): solo para `pasaporte` y `cedula_extranjeria`, para que dos documentos con el mismo número de países distintos no colisionen en el índice ciego (HMAC sobre tipo + país + número).
   - `national_id_ciphertext`: AES-256-GCM, cifrado **en la aplicación**.
   - `national_id_hmac`: HMAC-SHA256 con clave propia, que funciona como **índice ciego**. Único por `(id_type, national_id_hmac)`.
   - `full_name_ciphertext`, `key_version`.
@@ -645,12 +656,36 @@ flowchart TD
 | Gate de PII (T-4) y regla de proveedores solo locales (T-6.4) | ✔ | ✔ |
 | Almacén clínico separado (T-6.1) | ✔ | ✔ |
 | Identidad cifrada con índice ciego (T-7.2) y claves fuera del repo | — | ✔ |
-| Hospedaje del piloto resuelto con sus mínimos (N-08, ❓ Q-15) | ✔ (si hay acceso multiusuario) | ✔ |
+| Acceso por red privada o VPN con HTTPS de CA interna, FileVault (N-08, D-32) | ✔ | ✔ |
 | *Backups* cifrados y prueba de restauración | ✔ | ✔ |
 | Convenio o contrato marco registrado (`agreement_reference`, D-21) | ✔ | ✔ |
-| Política de retención definida (❓ Q-18) | — | ✔ |
+| Retención configurada y job de vencimiento activo (T-7.5, D-35; detalles ❓ Q-19) | ✔ | ✔ |
+| Si se habilita `tarjeta_identidad`: regla de consentimiento para menores (❓ Q-20) | — | ✔ |
 
 Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pueden automatizar, y `clinical-api` se niega a arrancar con una bandera en `true` si alguno falla.
+
+#### T-7.5 Retención de datos (D-35)
+
+**Regla confirmada:** los datos se conservan hasta **10 años** para investigación e IA, y el plazo se renueva hasta **20 años** si el paciente no solicita darse de baja.
+
+**Propuesta de implementación 🟡** (los puntos marcados ❓ dependen de Q-19):
+- Campos por paciente: `retention_start` (❓ desde qué fecha cuenta), `retention_until` (= inicio + 10 años) y `retention_max` (= inicio + 20 años). Todos los plazos son configurables (`RETENTION_YEARS=10`, `RETENTION_MAX_YEARS=20`), no fijos en el código.
+- **Renovación:** 🟡 automática por 10 años más, tope 20, si no hay una baja registrada. Queda un evento de renovación en `AuditLog`. ❓ Q-19 confirma si es automática o requiere un acto explícito (del paciente o de la entidad).
+- **Aviso previo:** un reporte de administración lista los pacientes que vencen en los próximos 90 días 🟡.
+- **Baja del paciente:** reutiliza el opt-out de D-20 y D-30. Con la baja, el plazo deja de renovarse. ❓ Q-19: ¿la baja también ejecuta la acción de vencimiento de inmediato?
+- **Al vencer (❓ Q-19):** 🟡 propuesta en dos niveles:
+  1. Se borra `PatientIdentity` (cédula y nombre) y los snapshots de investigación.
+  2. Los datos clínicos quedan seudonimizados (sin forma de volver a la identidad), o se borran por completo.
+
+  Hay que confirmar, además, si existe una obligación de conservar la **historia clínica** por un plazo distinto al de investigación e IA. Esa regla no la puede fijar OncoLens.
+- **Job diario de vencimiento:** en `clinical-api` (el mismo patrón de *worker* que la cola de extracción), idempotente y con registro en `AuditLog`.
+- **Datos sintéticos:** no se les aplica la retención. Datos **reales anonimizados**: ❓ Q-19, porque ya no son identificables y el plazo podría no aplicarles.
+- **Backups:** la retención también aplica a las copias. Los *backups* se rotan en un plazo menor que el mínimo de retención, para que un borrado no "reviva" desde una copia 🟡.
+
+**Alternativas descartadas:**
+- *Sin retención en el MVP* (el "fuera de alcance" de §3.3 #4 del README): con datos identificados reales, el plazo existe (D-35) y tiene que poder cumplirse.
+- *Borrado manual por un administrador*: no es verificable y es fácil de olvidar a 10 o 20 años.
+- *Plazos fijos en el código*: el contrato puede cambiar, y es mejor que vivan en configuración.
 
 ---
 
@@ -706,7 +741,7 @@ Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pue
 #### [P1-06] Controles de seguridad llegan después que los datos reales
 - **Análisis:** con D-02c y D-22 el caso queda definido: habrá datos **identificables** (cédula y nombres) usados por **10 oncólogos**. Los controles del Sprint 5 dejan de ser opcionales.
 - **Solución ✅ (D-22):**
-  1. **Ningún dato real entra a la aplicación antes de completar el Sprint 5.** Los Sprints 1–4 operan con datos **sintéticos** (identificación numérica aleatoria, etiquetados). La calibración con datos reales anonimizados puede hacerse **fuera de la aplicación y del repo** (N-09); ❓ Q-17 confirma si puede empezar antes del Sprint 5.
+  1. **Ningún dato real entra a la aplicación antes de completar el Sprint 5.** Los Sprints 1–4 operan con datos **sintéticos** (identificación numérica aleatoria, etiquetados). La calibración con datos reales anonimizados puede hacerse **fuera de la aplicación y del repo** (N-09), y puede empezar antes del Sprint 5 (D-34).
   2. **Gate G-piloto** (T-7.4), con dos banderas: `REAL_ANONYMIZED_ENABLED` y `REAL_IDENTIFIED_ENABLED`. Se habilitan solo cuando se cumplen sus prerrequisitos (Sprint 5, auditoría, gate de PII, cifrado de identidad, regla de proveedores, almacén clínico separado y hospedaje resuelto), verificados por un comando de *checklist* y por tests.
   3. La demo a una audiencia mayor exige el mismo gate (D-22).
 - **Descartado:**
@@ -714,7 +749,7 @@ Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pue
   - *Una sola bandera para todo dato real*: las dos clases tienen prerrequisitos distintos (la identificada exige además cifrado y hospedaje).
   - *No tener gate*: nada impediría cargar datos reales antes de que existan los controles.
 - **README:** §2.5, §3.3 #6 (reabierta), §5.0 (Sprint 2 sin datos reales; Sprint 5 con el gate), nota final de §5.0.
-- **Sprint:** 5. **Estado:** ✅ Resuelta (D-02c, D-22); ❓ Q-15, Q-17.
+- **Sprint:** 5. **Estado:** ✅ Resuelta (D-02c, D-22, D-32, D-34).
 
 #### [P1-07] PHI en el MinIO de Milvus
 - **Solución 🟡:** T-6.1: `clinical-minio` separado, binario enviado en el body y redes de Compose separadas.
@@ -895,12 +930,16 @@ erDiagram
         string data_origin "enum: sintetico|real_anonimizado|real_identificado"
         string source_dataset
         string agreement_reference "convenio o contrato marco (D-21)"
+        date retention_start "D-35; origen del plazo ❓ Q-19"
+        date retention_until "inicio + 10 años (configurable)"
+        date retention_max "inicio + 20 años (configurable)"
         string lifecycle_status "derivado: activo|egresado"
         timestamp created_at
     }
     PATIENT_IDENTITY {
         uuid patient_id PK "schema identity; también FK"
-        string id_type "cedula_ciudadania|seudonimo|sintetico|..."
+        string id_type "cedula_ciudadania|tarjeta_identidad|cedula_extranjeria|pasaporte|seudonimo|sintetico"
+        string issuing_country "nullable; pasaporte y cédula de extranjería"
         bytes national_id_ciphertext "AES-256-GCM en la app"
         string national_id_hmac "índice ciego; único por id_type"
         bytes full_name_ciphertext
@@ -1061,7 +1100,7 @@ erDiagram
 
 | Sprint | Objetivo (sin cambios) | Alcance ajustado |
 |---|---|---|
-| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
+| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5), que incluye la calibración con datos reales anonimizados fuera de la app y del repo (D-34). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
 | **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4), visor del documento de origen (T-1.7). **Sin datos reales en la app todavía** (D-22). |
 | **3** | Híbrida y filtros | Híbrida multilingüe con expansión (T-3), filtros con tabla de verdad (P3-02), **HU-09 revisión de datos de OCR** (aceptar, corregir, rechazar) (P2-01), enmascaramiento de las notas enviadas (T-4), ingesta del corpus como entregable con licencias (P2-09). |
 | **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento, **HU-13 egreso y reactivación con snapshot mínimo** (T-2.3, T-2.4) 🟡. |
@@ -1094,15 +1133,17 @@ erDiagram
 | Q-13 | Fuentes textuales (PDQ, ESMO, NCCN, PubMed/PMC, ClinicalTrials.gov) + publicaciones de TCGA/GDC, cBioPortal y TCIA; licencias de NCCN y ESMO pendientes | D-28 |
 | Q-14 | Se acepta la marca de opt-out de la entidad más la opción manual | D-30 |
 | — | "Entrenamiento" = calibrar y evaluar, sin reentrenar modelos | D-31 |
+| Q-15 | Red privada o VPN con HTTPS | D-32 |
+| Q-16 | Tarjeta de identidad, cédula de extranjería y pasaporte, además de la cédula; lista configurable | D-33 |
+| Q-17 | La calibración con datos reales anonimizados puede empezar antes del Sprint 5 | D-34 |
+| Q-18 | Retención de hasta 10 años para investigación e IA, renovable hasta 20 si el paciente no se da de baja | D-35 |
 
 ### 8.2 Pendientes
 
 | ID | Pregunta | Bloquea | Recomendación actual |
 |---|---|---|---|
-| Q-15 | ¿Cómo acceden los 10 oncólogos al sistema que corre en la MacBook: red local, VPN o túnel privado, o un servidor de la entidad? | N-08, gate G-piloto | Red privada o VPN, con HTTPS, FileVault y *backups* cifrados; nunca un puerto abierto a internet. Si el piloto dura más que unas semanas, evaluar un servidor de la entidad. |
-| Q-16 | Además de la cédula de ciudadanía, ¿qué otros tipos de documento pueden tener los pacientes (tarjeta de identidad para menores, cédula de extranjería, pasaporte)? | T-7.2 (`id_type`), validación del registro | Modelar `id_type` como catálogo configurable desde el Sprint 1 y habilitar solo los que confirmes. |
-| Q-17 | ¿La calibración y evaluación con datos reales anonimizados puede empezar **antes** del Sprint 5, siempre fuera de la base de la aplicación y fuera del repo público? | P1-06, T-5, N-09 | Sí: no es "cargar datos reales en la app", y adelanta la calibración de los umbrales del OCR (D-23). |
-| Q-18 | ¿Qué política de retención y borrado de los datos identificados fija el contrato o convenio marco (plazos, borrado al revocar, qué pasa al terminar el piloto)? | Gate G-piloto (`REAL_IDENTIFIED_ENABLED`) | Tomarla literalmente del contrato; si no la define, proponer: conservar mientras dure el piloto y borrar la identidad (conservando los datos clínicos seudonimizados) al terminarlo. |
+| Q-19 | Detalles de la retención (D-35): (a) ¿desde qué fecha cuentan los 10 años: el registro, la aceptación del contrato o el último episodio? (b) ¿la renovación hasta 20 años es automática o requiere un acto explícito? (c) al vencer o con la baja, ¿se borra solo la identidad y el histórico, o todos los datos del paciente? ¿Existe una obligación legal de conservar la historia clínica por un plazo distinto? (d) ¿aplica también a los datos reales anonimizados? | T-7.5, gate G-piloto | (a) aceptación del contrato marco; (b) automática, registrada en la auditoría; (c) borrar la identidad y el histórico, y seudonimizar el resto, salvo que la norma de historia clínica exija otra cosa; (d) no, porque ya no son identificables. |
+| Q-20 | La **tarjeta de identidad** implica pacientes **menores de edad**. ¿El piloto incluye pacientes pediátricos? Si es así, ¿quién acepta el contrato marco y el opt-out (representante legal) y cómo se registra? | T-2.5, T-7.4 (`tarjeta_identidad`) | Registrar el consentimiento del representante legal (nombre y documento, cifrados como la identidad) y dejar `tarjeta_identidad` deshabilitado hasta confirmarlo. |
 
 ## 9. Resumen: qué se resuelve y cómo
 
@@ -1113,7 +1154,7 @@ erDiagram
 | P1-03 | T-5: NLI en línea + dataset bilingüe + OL-06 | ✅/🟡 (D-27; metas con el baseline) |
 | P1-04 | Datos anonimizados + gate de PII + OCR local + binario en el body + invariante reescrito | ✅ |
 | P1-05 | T-4 sobre el texto libre, fechas relativas, `birth_year` | ✅/🟡 (D-05b) |
-| P1-06 | Sin datos reales en la app antes del Sprint 5; gate G-piloto con dos banderas (T-7.4) | ✅ (❓ Q-15, Q-17) |
+| P1-06 | Sin datos reales en la app antes del Sprint 5; gate G-piloto con dos banderas (T-7.4); calibración temprana fuera de la app | ✅ (D-22, D-34) |
 | P1-07 | `clinical-minio` separado + redes separadas | 🟡 |
 | P1-08 | T-3: *embeddings* multilingües, expansión bilingüe, *reranker* | ✅/🟡 |
 | P1-09 | T-2: registro manual o asistido, listado, episodios, egreso, histórico | ✅ (D-02c, D-24; T-7) |
@@ -1137,9 +1178,9 @@ erDiagram
 | N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19), condicionado al opt-out (D-20) | ✅ |
 | N-05 | `source_dataset` + `agreement_reference` por paciente | ✅ (D-21) |
 | N-06 | Regla de proveedores en código (T-6.4) | ✅ |
-| N-07 | Identidad cifrada en la aplicación con índice ciego, en una tabla separada (T-7) | ✅/🟡 (❓ Q-16) |
-| N-08 | Hospedaje del piloto | ❓ Q-15 |
-| N-09 | Datos reales de evaluación fuera del repo público | ✅ (❓ Q-17) |
+| N-07 | Identidad cifrada en la aplicación con índice ciego, en una tabla separada (T-7); catálogo de 4 tipos de documento; retención (T-7.5) | ✅ (D-33, D-35; ❓ Q-19, Q-20) |
+| N-08 | Red privada o VPN con HTTPS de CA interna + FileVault + *backups* cifrados | ✅ (D-32) |
+| N-09 | Datos reales de evaluación fuera del repo público; calibración desde el Sprint 1–2 | ✅ (D-34) |
 | N-10 | ADR de fuentes y licencias; NCCN y ESMO excluidas hasta tener licencia | 🟡 |
 
-**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-15…Q-18), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
+**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-19 y Q-20), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
