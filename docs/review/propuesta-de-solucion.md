@@ -26,9 +26,12 @@
 | D-30 | **Opt-out de la entidad (Q-14):** se acepta la marca de exclusión al importar o registrar, más la opción manual del doctor. | Campo `research_opt_out` en los datos de origen. | T-2.5 |
 | D-31 | **"Entrenamiento":** significa **calibrar y evaluar** (umbrales, prompts, reglas, datasets de evaluación). **No** se reentrena ningún modelo. | Sin *pipeline* de *fine-tuning*. Los datos reales anonimizados alimentan T-5 (N-09). | T-5 |
 | D-32 | **Acceso al piloto (Q-15):** red privada o VPN, con HTTPS. | Resuelve N-08: ningún puerto abierto a internet; certificado de una CA interna instalado en los equipos de los 10 oncólogos; FileVault y *backups* cifrados como mínimos. | N-08, T-7.4 |
-| D-33 | **Tipos de documento (Q-16):** cédula de ciudadanía, tarjeta de identidad, cédula de extranjería y pasaporte. `id_type` es una lista configurable y solo se habilitan los confirmados. | Catálogo `id_type` con validación de formato por tipo. La tarjeta de identidad implica pacientes menores de edad (❓ Q-20). | T-7.2 |
+| D-33 | **Tipos de documento (Q-16):** cédula de ciudadanía, tarjeta de identidad, cédula de extranjería y pasaporte. `id_type` es una lista configurable y solo se habilitan los confirmados. | Catálogo `id_type` con validación de formato por tipo. La tarjeta de identidad implica pacientes menores de edad (D-37). | T-7.2 |
 | D-34 | **Calibración temprana (Q-17):** la calibración y evaluación con datos reales anonimizados puede empezar antes del Sprint 5, porque no equivale a cargar datos reales en la aplicación. | Se hace fuera de la base de la aplicación y fuera del repo (N-09), desde el Sprint 1–2. | P1-06, T-5, N-09 |
-| D-35 | **Retención (Q-18):** hasta **10 años** para investigación e IA, renovable hasta **20 años** si el paciente no solicita darse de baja. | Retención por paciente con vencimiento, renovación y acción al vencer (T-7.5). El inicio del plazo, cómo se renueva y qué se borra al vencer siguen abiertos (❓ Q-19). | T-7.5, T-2.4, T-2.5 |
+| D-35 | **Retención (Q-18):** hasta **10 años** para investigación e IA, renovable hasta **20 años** si el paciente no solicita darse de baja. | Retención por paciente con vencimiento, renovación y acción al vencer (T-7.5). Los detalles quedan en D-36. | T-7.5, T-2.4, T-2.5 |
+| D-36 | **Detalles de la retención (Q-19):** (a) el plazo cuenta desde la **aceptación del contrato o la primera cita médica**; (b) la renovación hasta 20 años es **automática**, con registro en la auditoría; (c) al vencer o con la baja se **borran la cédula, el nombre y el histórico de investigación**, y el resto de los datos clínicos queda sin forma de volver a la identidad; **no hay una norma** que obligue a conservar la historia clínica por otro plazo; (d) **no aplica** a los datos reales anonimizados. | T-7.5 queda resuelta. Se distinguen dos niveles de baja (❓ Q-23). | T-7.5 |
+| D-37 | **Menores (Q-20):** el piloto **incluye pacientes pediátricos**; los padres aceptan y firman. | Consentimiento otorgado por un representante legal, con su identidad cifrada (T-2.5). Se habilita `tarjeta_identidad`. Queda por definir qué pasa al cumplir la mayoría de edad (❓ Q-22). | T-2.5, T-7 |
+| D-38 | **Alcance clínico del piloto:** probablemente se empiece con **2 tipos de cáncer** y se agreguen otros de forma gradual. Los candidatos son **próstata, mama y leucemia**. | Alcance por tipo de cáncer configurable, con un criterio de "listo" para habilitar cada tipo (T-8). El modelo de diagnóstico debe cubrir las neoplasias hematológicas (N-11). | T-8, N-11 |
 | D-05b | **País (Q-05):** los documentos son de uso público y para investigación; **no se asume ningún país**. | Los formatos de identificación del detector de PII y del registro son configurables (T-4, T-7). | T-4, T-7 |
 | D-02b | **Punto de anonimización:** en **ambos** lugares. Los datos llegan anonimizados desde fuera **y** OncoLens verifica que no quede PII residual. | Hace falta un **gate de PII residual** dentro de OncoLens (diseño T-4). Un documento con PII detectada se pone en cuarentena y no se procesa. | P1-04, P1-05, P2-13 |
 | D-04 | **Embeddings:** el spike del Sprint 1 contempla el **idioma**, porque hay documentación y evidencia en español e inglés. | Modelo de *embeddings* multilingüe, estrategia de consulta bilingüe e idioma registrado por chunk (diseño T-3). | P1-08, P2-10 |
@@ -158,6 +161,18 @@ Si el piloto se extiende o crece, se reevalúa migrar a un servidor de la entida
 **Análisis.** TCGA/GDC, cBioPortal y TCIA son datos estructurados e imágenes; por D-28, del MVP solo entran sus **publicaciones y resúmenes asociados**. [I] Los resúmenes de PubMed pueden tener copyright del editor aunque NLM los distribuya. Los artículos de PMC tienen licencias por artículo. Las descripciones de las colecciones de TCIA suelen publicarse con licencias abiertas, pero hay que verificarlo en cada una.
 
 **Solución 🟡.** Un **ADR de fuentes y licencias** con un registro por fuente (licencia, URL de los términos, fecha de verificación, uso permitido). `CorpusDocument.license` y `license_url` son obligatorios y la ingesta rechaza documentos sin licencia registrada. NCCN y ESMO entran solo con licencia (D-28).
+
+### [N-11] Alto — El modelo de diagnóstico no representa leucemias ni pacientes pediátricos
+
+**Análisis.** El modelo actual (`Diagnosis.stage`, `ecog_score`; §3.1 y el ejemplo de §4.1) está pensado para **tumores sólidos adultos**:
+- **Estadificación:** [I] la próstata y la mama usan TNM y estadio agrupado (en próstata también el grupo de grado ISUP/Gleason y el PSA). Las **leucemias no usan TNM**: se clasifican por subtipo (p. ej., LLA, LMA, LMC, LLC) y por grupo de riesgo según alteraciones citogenéticas y moleculares.
+- **Estado funcional:** ECOG es la escala habitual en adultos. En pediatría se usan otras escalas (p. ej., Lansky en niños pequeños y Karnofsky en adolescentes).
+- **Documentos y biomarcadores:** leucemia implica hemograma, citometría de flujo, cariotipo y estudios moleculares, que son otros formatos de documento para el OCR y otro catálogo de biomarcadores.
+- **Evidencia:** las guías pediátricas son distintas de las de adultos (p. ej., PDQ tiene resúmenes separados para el tratamiento infantil).
+
+Si se incluye leucemia sin estos cambios, el contexto que recibe el RAG sería incorrecto (un "estadio" vacío o forzado) y las reglas de campos críticos de T-1 no aplicarían.
+
+**Solución 🟡.** Diseño T-8: estadificación y estado funcional **genéricos**, más catálogos por tipo de cáncer.
 
 ---
 
@@ -358,6 +373,14 @@ La migración desde el MVP es directa: `snapshot_schema_version` permite transfo
 Nueva entidad `PatientConsent` (eventos), que reemplaza el booleano `consent_ai_analysis`:
 - `consent_type`: `analisis_ia` | `investigacion`.
 - `legal_basis`: `contrato_marco` | `consentimiento_individual` (nuevo), y `contract_reference` (identificador del contrato marco con la entidad médica, nullable).
+
+**Consentimiento de pacientes menores de edad (D-37) 🟡:**
+- `PatientConsent` agrega `granted_by_role`: `paciente` | `representante_legal`.
+- Nueva entidad `LegalRepresentative` (schema `identity`, cifrada igual que `PatientIdentity`): `patient_id`, `relationship` (madre, padre, tutor legal), tipo y número de documento (cifrados, con índice ciego), nombre (cifrado), `signed_at`, `valid_from` y `valid_until`.
+- El registro de un paciente con documento `tarjeta_identidad` (u otra regla configurable de minoría de edad) **exige** al menos un representante legal con la firma registrada. Sin él, el registro falla con `422`.
+- Los opt-outs (D-20, D-30) de un menor los ejecuta su representante legal.
+- **Mayoría de edad:** la edad es configurable, sin asumir un país. Qué pasa con el consentimiento cuando el paciente la cumple queda abierto (❓ Q-22). 🟡 Propuesta: el sistema lo detecta, lo marca en la ficha como "requiere ratificación del paciente" y el consentimiento del representante sigue vigente hasta que se ratifique o se revoque.
+- **Descartado:** *guardar el nombre del representante en texto libre dentro del consentimiento*, porque es PII sin cifrar. *Exigir a los dos padres*: la decisión D-37 dice "los padres", pero la cantidad mínima es configurable (por defecto, 1).
 
 **Consentimiento de investigación en el MVP (D-20, opt-out):**
 - **Por defecto:** al registrar un paciente (manual o asistido por OCR), la casilla "Incluir en el histórico de investigación" viene **marcada**. Al guardar se crea el evento `investigacion = otorgado` con `legal_basis = contrato_marco` y la referencia del contrato configurada en el entorno (`RESEARCH_CONTRACT_REF`).
@@ -659,8 +682,9 @@ flowchart TD
 | Acceso por red privada o VPN con HTTPS de CA interna, FileVault (N-08, D-32) | ✔ | ✔ |
 | *Backups* cifrados y prueba de restauración | ✔ | ✔ |
 | Convenio o contrato marco registrado (`agreement_reference`, D-21) | ✔ | ✔ |
-| Retención configurada y job de vencimiento activo (T-7.5, D-35; detalles ❓ Q-19) | ✔ | ✔ |
-| Si se habilita `tarjeta_identidad`: regla de consentimiento para menores (❓ Q-20) | — | ✔ |
+| Retención configurada y job de vencimiento activo (T-7.5, D-35, D-36) | ✔ | ✔ |
+| Pacientes menores: `LegalRepresentative` y consentimiento firmado por el representante (D-37) | — | ✔ |
+| Tipos de cáncer habilitados cumplen su criterio de "listo" (T-8.3) | ✔ | ✔ |
 
 Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pueden automatizar, y `clinical-api` se niega a arrancar con una bandera en `true` si alguno falla.
 
@@ -668,24 +692,78 @@ Un comando `oncolens preflight real-data` verifica los prerrequisitos que se pue
 
 **Regla confirmada:** los datos se conservan hasta **10 años** para investigación e IA, y el plazo se renueva hasta **20 años** si el paciente no solicita darse de baja.
 
-**Propuesta de implementación 🟡** (los puntos marcados ❓ dependen de Q-19):
-- Campos por paciente: `retention_start` (❓ desde qué fecha cuenta), `retention_until` (= inicio + 10 años) y `retention_max` (= inicio + 20 años). Todos los plazos son configurables (`RETENTION_YEARS=10`, `RETENTION_MAX_YEARS=20`), no fijos en el código.
-- **Renovación:** 🟡 automática por 10 años más, tope 20, si no hay una baja registrada. Queda un evento de renovación en `AuditLog`. ❓ Q-19 confirma si es automática o requiere un acto explícito (del paciente o de la entidad).
-- **Aviso previo:** un reporte de administración lista los pacientes que vencen en los próximos 90 días 🟡.
-- **Baja del paciente:** reutiliza el opt-out de D-20 y D-30. Con la baja, el plazo deja de renovarse. ❓ Q-19: ¿la baja también ejecuta la acción de vencimiento de inmediato?
-- **Al vencer (❓ Q-19):** 🟡 propuesta en dos niveles:
-  1. Se borra `PatientIdentity` (cédula y nombre) y los snapshots de investigación.
-  2. Los datos clínicos quedan seudonimizados (sin forma de volver a la identidad), o se borran por completo.
+**Implementación (D-35, D-36):**
+- **Inicio del plazo ✅:** `retention_start` = fecha de aceptación del contrato marco o de la primera cita médica (D-36). 🟡 Si están registradas las dos, se usa la **más temprana**, que es la opción conservadora. Cuando el paciente acepta el contrato en su primera consulta, las dos coinciden.
+- Campos: `retention_start`, `retention_until` (= inicio + 10 años) y `retention_max` (= inicio + 20 años). Los plazos son configurables (`RETENTION_YEARS=10`, `RETENTION_MAX_YEARS=20`).
+- **Renovación ✅:** automática por 10 años más, tope de 20, si no hay una baja registrada. Queda un evento de renovación en `AuditLog`.
+- **Aviso previo 🟡:** un reporte de administración lista los pacientes que vencen o llegan al tope en los próximos 90 días.
+- **Acción al vencer o con la baja ✅:**
+  1. Se borran `PatientIdentity` (cédula y nombre), `LegalRepresentative` y los snapshots de investigación.
+  2. Se borra `research_subject_map`, así que tampoco queda forma de relacionar el histórico con el paciente.
+  3. Los datos clínicos restantes (diagnósticos, biomarcadores, análisis) quedan **seudonimizados**: sin identidad ni forma de volver a ella. El paciente pasa a `data_origin = real_anonimizado`.
+  4. Los PDFs originales de `clinical-minio` contienen la identidad, así que 🟡 **se borran**. Los datos extraídos ya están en la base.
+  5. No hay una norma que obligue a conservar la historia clínica por otro plazo (D-36).
+- **Dos niveles de baja 🟡 (❓ Q-23):**
+  - *Baja de investigación* (opt-out de D-20): borra solo los snapshots de investigación. El paciente sigue en tratamiento y OncoLens sigue apoyando su atención.
+  - *Baja total* (retirar el uso de sus datos para investigación **e** IA): ejecuta la acción de vencimiento completa. El paciente deja de poder ser buscado en OncoLens.
 
-  Hay que confirmar, además, si existe una obligación de conservar la **historia clínica** por un plazo distinto al de investigación e IA. Esa regla no la puede fijar OncoLens.
-- **Job diario de vencimiento:** en `clinical-api` (el mismo patrón de *worker* que la cola de extracción), idempotente y con registro en `AuditLog`.
-- **Datos sintéticos:** no se les aplica la retención. Datos **reales anonimizados**: ❓ Q-19, porque ya no son identificables y el plazo podría no aplicarles.
-- **Backups:** la retención también aplica a las copias. Los *backups* se rotan en un plazo menor que el mínimo de retención, para que un borrado no "reviva" desde una copia 🟡.
+  Sin esta distinción, un paciente en tratamiento activo que solo pidiera salir de la investigación perdería su ficha.
+- **Job diario:** en `clinical-api` (el mismo patrón de *worker* que la cola de extracción), idempotente y con registro en `AuditLog`. El evento guarda el `patient_id` (UUID), nunca la identidad borrada.
+- **Alcance ✅:** no aplica a los datos sintéticos ni a los reales anonimizados (D-36 d).
+- **Backups 🟡:** los *backups* se rotan en un plazo corto (p. ej., 30 días), para que un borrado no "reviva" desde una copia. El borrado se considera completo cuando vence la última copia que contenía los datos.
 
 **Alternativas descartadas:**
 - *Sin retención en el MVP* (el "fuera de alcance" de §3.3 #4 del README): con datos identificados reales, el plazo existe (D-35) y tiene que poder cumplirse.
 - *Borrado manual por un administrador*: no es verificable y es fácil de olvidar a 10 o 20 años.
 - *Plazos fijos en el código*: el contrato puede cambiar, y es mejor que vivan en configuración.
+
+### T-8. Alcance por tipo de cáncer (D-38; resuelve N-11)
+
+#### T-8.1 Modelo de diagnóstico genérico
+
+Cambios en `Diagnosis`, que reemplazan `stage` y `ecog_score`:
+
+| Campo | Contenido | Ejemplos |
+|---|---|---|
+| `cancer_type` | Del catálogo de tipos (P3-04), incluido el subtipo | `mama`, `prostata`, `leucemia_linfoblastica_aguda` |
+| `staging_system` | Catálogo por tipo de cáncer | `TNM_8`, `ISUP_grade_group`, `riesgo_LLA`, `riesgo_LMA` |
+| `stage_value` | Valor dentro de ese sistema | `IIIB`, `Grupo 3`, `Alto riesgo` |
+| `performance_scale` | `ECOG` \| `Karnofsky` \| `Lansky` | `Lansky` en un niño de 8 años |
+| `performance_value` | Entero | `80` |
+
+Los catálogos por tipo (sistemas de estadificación, biomarcadores relevantes y sus reglas de significancia de T-1.2, y campos críticos de T-1.3) viven en `domain/` como **datos versionados**, no como código. Agregar un tipo de cáncer consiste en agregar su catálogo, sin migrar el esquema. La deduplicación de diagnósticos de OL-05 #7 compara `cancer_type` + `staging_system` + `stage_value`.
+
+**Alternativas descartadas:**
+- *Mantener `stage` y `ecog_score` y dejarlos vacíos en leucemia*: el contexto del RAG pierde la información de riesgo, que es la que define el tratamiento en las leucemias.
+- *Una tabla de diagnóstico por tipo de cáncer*: multiplica el esquema con cada tipo nuevo, lo que contradice la idea de ir agregando tipos de forma gradual.
+- *Solo un campo JSON libre*: impide validar los campos críticos y comparar diagnósticos.
+
+#### T-8.2 Tipos de cáncer habilitados
+
+- Configuración `ENABLED_CANCER_TYPES` (p. ej., los 2 del piloto inicial).
+- **Registro:** se puede registrar cualquier diagnóstico, porque el paciente es real y su historia también, pero la ficha muestra "fuera del alcance del piloto" si su tipo no está habilitado.
+- **Consulta RAG:** para un tipo no habilitado, la consulta devuelve un aviso explícito ("el corpus no cubre este tipo de cáncer en el piloto") sin invocar al LLM, igual que el caso "sin evidencia". Así se evita una respuesta genérica con evidencia de otro cáncer.
+- **Corpus:** la ingesta se prioriza por los tipos habilitados. `cancer_type_tags` pasa a ser obligatorio y el *retrieval* filtra por el tipo del paciente, más la evidencia marcada como transversal.
+- **Pediatría:** si se habilita una leucemia con pacientes pediátricos, el corpus debe incluir la evidencia pediátrica (p. ej., los resúmenes de PDQ sobre tratamiento infantil) y el filtro considera `population: adulto | pediatrico`.
+
+#### T-8.3 Criterio de "listo" para habilitar un tipo de cáncer
+
+Un tipo se habilita en el piloto solo cuando cumple:
+1. Catálogo del tipo (estadificación, biomarcadores, reglas de significancia y campos críticos) **revisado por el oncólogo** (D-09).
+2. Corpus ingerido con fuentes con licencia (D-28) y un mínimo de documentos por tipo (🟡 p. ej., ≥ 20).
+3. Subconjunto del dataset de evaluación del tipo (preguntas en español e inglés, y documentos `ocr_gold` de sus laboratorios) con métricas ≥ las metas de T-5.2.
+4. Documentos de laboratorio típicos del tipo cubiertos por la extracción: hemograma y citometría en leucemia; PSA y patología en próstata; receptores hormonales y HER2 en mama.
+
+**Descartado:** *habilitar los tres tipos desde el inicio*, porque triplica el trabajo de catálogo, corpus y evaluación antes de validar el flujo. La habilitación gradual es la que definiste (D-38).
+
+#### T-8.4 Observación sobre la elección de los 2 primeros tipos (❓ Q-21)
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Mama + próstata** | Ambos son tumores sólidos con TNM (el modelo actual casi sirve tal cual); abundante evidencia abierta; biomarcadores bien definidos | Pacientes adultos: el caso pediátrico (D-37) no se ejercita en la primera etapa |
+| **Mama o próstata + leucemia** | Ejercita desde el inicio el modelo genérico de T-8.1 y el caso pediátrico | Más trabajo inicial: otro modelo de estadificación, otros documentos de laboratorio y otra evidencia, que además depende del subtipo de leucemia |
+
+🟡 Recomendación: si el objetivo inicial es validar el flujo con los oncólogos, **mama + próstata**, y leucemia como el tercer tipo con T-8.1 ya implementado desde el Sprint 1 (es barato en el esquema). Si los oncólogos del piloto son hemato-oncólogos o pediatras, leucemia debería entrar desde el inicio. Es tu decisión (❓ Q-21).
 
 ---
 
@@ -930,7 +1008,7 @@ erDiagram
         string data_origin "enum: sintetico|real_anonimizado|real_identificado"
         string source_dataset
         string agreement_reference "convenio o contrato marco (D-21)"
-        date retention_start "D-35; origen del plazo ❓ Q-19"
+        date retention_start "D-36: aceptación del contrato o primera cita (la más temprana)"
         date retention_until "inicio + 10 años (configurable)"
         date retention_max "inicio + 20 años (configurable)"
         string lifecycle_status "derivado: activo|egresado"
@@ -1040,6 +1118,8 @@ erDiagram
     CARE_EPISODE ||--o{ DOCUMENT : contiene
 ```
 
+**`Diagnosis` (T-8.1):** `stage` y `ecog_score` se reemplazan por `staging_system`, `stage_value`, `performance_scale` y `performance_value`. Se agrega `population` (`adulto` | `pediatrico`). **Nuevas entidades (D-37):** `LegalRepresentative` (schema `identity`, cifrada); `PatientConsent.granted_by_role`.
+
 **Columnas de etiquetado aplicadas también a `Diagnosis`, `Exam` y `ClinicalNote`:** `extraction_score`, `extraction_confidence`, `review_status`, `conflicts_with_id`, `reviewed_by`, `reviewed_at` y `episode_id`. `significance_source` aplica solo a `Biomarker`.
 
 **Eliminadas o reemplazadas:** `Patient.mrn` y `Patient.full_name` → `PatientIdentity` (cédula o seudónimo y nombre, cifrados, con índice ciego; T-7.2); `Patient.birth_date` → `birth_year`; `Patient.consent_ai_analysis` y `consent_recorded_at` → `PatientConsent`; `PatientAssignment` → `CareTeamMember`; `confidence_score` y `top_confidence_score` → `relevance_score` y `top_relevance_score`.
@@ -1100,13 +1180,15 @@ erDiagram
 
 | Sprint | Objetivo (sin cambios) | Alcance ajustado |
 |---|---|---|
-| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5), que incluye la calibración con datos reales anonimizados fuera de la app y del repo (D-34). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
+| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5), que incluye la calibración con datos reales anonimizados fuera de la app y del repo (D-34). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). Modelo de diagnóstico genérico y catálogos por tipo de cáncer (T-8.1); configuración `ENABLED_CANCER_TYPES` (T-8.2). |
 | **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4), visor del documento de origen (T-1.7). **Sin datos reales en la app todavía** (D-22). |
 | **3** | Híbrida y filtros | Híbrida multilingüe con expansión (T-3), filtros con tabla de verdad (P3-02), **HU-09 revisión de datos de OCR** (aceptar, corregir, rechazar) (P2-01), enmascaramiento de las notas enviadas (T-4), ingesta del corpus como entregable con licencias (P2-09). |
 | **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento, **HU-13 egreso y reactivación con snapshot mínimo** (T-2.3, T-2.4) 🟡. |
 | **5** | Autorización real | **HU-14** equipo tratante (varios, uno principal), validación de consentimientos en todos los endpoints, auditoría completa, cifrado de identidad e índice ciego (T-7.2), hospedaje del piloto (N-08). **Gate G-piloto (T-7.4):** recién aquí se habilitan los datos reales y el piloto con 10 oncólogos (D-22). |
 | **6** | Observabilidad y hardening | `/health` y `/metrics` completos, *dashboards*, *mutation testing*, prueba de restauración de *backup*. |
 | **Futuro** (fuera del MVP, D-19) | Histórico de investigación completo | Modelo normalizado, desenlaces del tratamiento, análisis de grafos, **HU-15** exportación para investigación, gobierno del consentimiento de investigación, control de reidentificación. Prerrequisitos: N-04 (puntos 1–3). |
+
+**Tipos de cáncer:** los 2 tipos iniciales (❓ Q-21) se preparan en los Sprints 1–4 hasta cumplir el criterio de T-8.3. Los siguientes se agregan después del piloto inicial, uno a la vez, con el mismo criterio.
 
 **Criterio de "MVP demostrable" (con datos sintéticos):** Sprints 1–4. **Criterio de "piloto con 10 oncólogos y datos reales" o demo a una audiencia mayor:** además, Sprint 5 y el gate G-piloto (D-22).
 
@@ -1138,12 +1220,16 @@ erDiagram
 | Q-17 | La calibración con datos reales anonimizados puede empezar antes del Sprint 5 | D-34 |
 | Q-18 | Retención de hasta 10 años para investigación e IA, renovable hasta 20 si el paciente no se da de baja | D-35 |
 
+| Q-19 | Plazo desde la aceptación del contrato o la primera cita; renovación automática; borrar la identidad y el histórico, y seudonimizar el resto; sin norma adicional; no aplica a los anonimizados | D-36 |
+| Q-20 | El piloto incluye pacientes pediátricos; los padres aceptan y firman | D-37 |
+
 ### 8.2 Pendientes
 
 | ID | Pregunta | Bloquea | Recomendación actual |
 |---|---|---|---|
-| Q-19 | Detalles de la retención (D-35): (a) ¿desde qué fecha cuentan los 10 años: el registro, la aceptación del contrato o el último episodio? (b) ¿la renovación hasta 20 años es automática o requiere un acto explícito? (c) al vencer o con la baja, ¿se borra solo la identidad y el histórico, o todos los datos del paciente? ¿Existe una obligación legal de conservar la historia clínica por un plazo distinto? (d) ¿aplica también a los datos reales anonimizados? | T-7.5, gate G-piloto | (a) aceptación del contrato marco; (b) automática, registrada en la auditoría; (c) borrar la identidad y el histórico, y seudonimizar el resto, salvo que la norma de historia clínica exija otra cosa; (d) no, porque ya no son identificables. |
-| Q-20 | La **tarjeta de identidad** implica pacientes **menores de edad**. ¿El piloto incluye pacientes pediátricos? Si es así, ¿quién acepta el contrato marco y el opt-out (representante legal) y cómo se registra? | T-2.5, T-7.4 (`tarjeta_identidad`) | Registrar el consentimiento del representante legal (nombre y documento, cifrados como la identidad) y dejar `tarjeta_identidad` deshabilitado hasta confirmarlo. |
+| Q-21 | ¿Con qué 2 tipos de cáncer empieza el piloto? Si se incluye **leucemia**, ¿qué subtipos (LLA, LMA, LMC, LLC) y en qué población (pediátrica, adulta o ambas)? | T-8.2, T-8.3, catálogos, corpus y dataset de evaluación | Mama + próstata para validar el flujo, y leucemia como tercer tipo, salvo que los oncólogos del piloto sean hemato-oncólogos o pediatras (T-8.4). |
+| Q-22 | Cuando un paciente menor cumple la mayoría de edad, ¿el consentimiento firmado por los padres sigue vigente o el paciente debe ratificarlo? | T-2.5 (D-37) | Marcar "requiere ratificación" y mantener vigente el consentimiento del representante hasta que el paciente lo ratifique o lo revoque. |
+| Q-23 | ¿Existen dos niveles de baja: **solo investigación** (se borra el histórico y el paciente sigue en atención) y **total** (se borran la identidad y el histórico, y el paciente sale de OncoLens)? ¿O cualquier baja es total? | T-7.5, T-2.5 | Dos niveles, para que un paciente en tratamiento que solo sale de la investigación no pierda su ficha. |
 
 ## 9. Resumen: qué se resuelve y cómo
 
@@ -1178,9 +1264,10 @@ erDiagram
 | N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19), condicionado al opt-out (D-20) | ✅ |
 | N-05 | `source_dataset` + `agreement_reference` por paciente | ✅ (D-21) |
 | N-06 | Regla de proveedores en código (T-6.4) | ✅ |
-| N-07 | Identidad cifrada en la aplicación con índice ciego, en una tabla separada (T-7); catálogo de 4 tipos de documento; retención (T-7.5) | ✅ (D-33, D-35; ❓ Q-19, Q-20) |
+| N-07 | Identidad cifrada en la aplicación con índice ciego, en una tabla separada (T-7); catálogo de 4 tipos de documento; retención (T-7.5) | ✅ (D-33, D-35, D-36, D-37; ❓ Q-22, Q-23) |
 | N-08 | Red privada o VPN con HTTPS de CA interna + FileVault + *backups* cifrados | ✅ (D-32) |
 | N-09 | Datos reales de evaluación fuera del repo público; calibración desde el Sprint 1–2 | ✅ (D-34) |
 | N-10 | ADR de fuentes y licencias; NCCN y ESMO excluidas hasta tener licencia | 🟡 |
+| N-11 | Diagnóstico genérico (estadificación y estado funcional por tipo), catálogos por tipo de cáncer, criterio de "listo" (T-8) | 🟡 (❓ Q-21) |
 
-**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-19 y Q-20), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
+**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-21, Q-22 y Q-23), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
