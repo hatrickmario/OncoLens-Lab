@@ -24,6 +24,9 @@
 | D-07c | **Reingreso:** el paciente **se reactiva**, conserva su identificación e historia, y el histórico guarda cada episodio. | Modelo de **episodios de atención** (`CareEpisode`). | — |
 | D-09 | **Validador clínico:** un oncólogo disponible **parcialmente**, para revisiones puntuales. El dataset lo arma el autor con fuentes públicas. | El dataset de evaluación se construye con fuentes públicas y el oncólogo revisa una muestra y las reglas clínicas críticas. Las métricas se reportan como "validado clínicamente" o "no validado" (diseño T-5). | P1-03, P2-01 |
 | D-12a | **Asignación:** **varios** doctores activos por paciente (equipo tratante), con uno marcado como tratante principal. | Cambia la regla "solo una asignación activa" de §3.1. | P2-06 |
+| D-17 | **Runtime del LLM local:** **Ollama o vLLM**, ejecutado de forma nativa en macOS (fuera de Docker). | El LLM corre fuera de Compose; la elección entre Ollama y vLLM se toma en el ADR de D-18. El `LLMAdapter` local se implementa contra la API compatible con OpenAI que exponen ambos, así que cambiar de runtime no toca código (N-01). | N-01, T-6 |
+| D-18 | **Modelos locales:** se creará un **ADR de evaluación de modelos locales**. | La elección de LLM, *embeddings*, *reranker*, NLI y motor de OCR, y su cuantización, sale de una medición con criterios explícitos y no de una estimación. Ver el borrador `docs/architecture/adr/0001-evaluacion-modelos-locales.md`. | N-02, P1-08, P3-08 |
+| D-19 | **Histórico de investigación:** es **alcance futuro**. El MVP tendrá **lo mínimo necesario**. | Se reduce T-2.4 a un snapshot mínimo y seudonimizado al egresar. El modelo normalizado, los desenlaces, el grafo y la exportación pasan a una fase posterior (N-04). | N-04, T-2.4, HU-13, HU-15 |
 
 ---
 
@@ -35,12 +38,20 @@ Estos puntos no existían en la revisión original. Aparecen al combinar las dec
 
 **Análisis.** [I] Docker Desktop en macOS ejecuta los contenedores dentro de una máquina virtual Linux, que no tiene acceso a la GPU de Apple (Metal). Un LLM local o un OCR con modelos neuronales corriendo **dentro** de Docker usa solo CPU ARM64. Con un modelo de 7–8B parámetros eso implica decenas de segundos por respuesta, lo que pone en riesgo el KR2 del Sprint 1 (p95 ≤ 15 s).
 
-**Solución 🟡.** Ejecutar el **servidor de inferencia fuera de Docker, de forma nativa en macOS** (Ollama o llama.cpp con Metal; como alternativa, Docker Model Runner, que corre el modelo en el host con aceleración de GPU). Los contenedores lo alcanzan en `host.docker.internal`. El resto (PostgreSQL, Milvus, MinIO, las apps y el OCR clásico) sigue en Docker Compose.
+**Solución ✅ (D-17).** El LLM corre **de forma nativa en macOS, fuera de Docker**, con **Ollama o vLLM**. La elección entre ambos se toma en el ADR de modelos locales (D-18). Los contenedores lo alcanzan en `host.docker.internal`. El resto (PostgreSQL, Milvus, MinIO, las apps y el OCR clásico) sigue en Docker Compose.
+
+**Detalles que el ADR debe verificar (sin asumirlos):**
+1. **Soporte de GPU de cada runtime en Apple Silicon.** [I] Ollama usa Metal de forma nativa en macOS. El soporte de vLLM para Apple Silicon ha sido históricamente experimental y centrado en CPU, con iniciativas de aceleración por Metal en desarrollo. El ADR debe confirmar, en la versión vigente, que vLLM usa la GPU de la M5. Si no la usa, pierde la ventaja que motivó sacarlo de Docker.
+2. **Una sola interfaz para ambos.** Ollama y vLLM exponen una API compatible con OpenAI (`/v1/chat/completions`). El `LLMAdapter` local se implementa contra esa API y el runtime se elige con variables de entorno (`LLM_BASE_URL`, `LLM_MODEL`). Cambiar de runtime no requiere cambios de código.
+3. **Salida JSON restringida.** La extracción clínica (T-1) y la generación necesitan una salida que respete un esquema JSON. Hay que verificar cómo lo soporta cada runtime (formato JSON o decodificación guiada) con el modelo elegido.
+4. **Dónde corren *embeddings*, *reranker* y NLI.** [I] El modelo de *embeddings* propuesto (BGE-M3) genera vectores *dense* y *sparse*. Un runtime de LLM normalmente expone solo el *dense*, y los pesos *sparse* requieren la librería del modelo (p. ej., FlagEmbedding) en Python. 🟡 Propuesta: *embeddings*, *reranker* y NLI corren **dentro de `rag-orchestrator` en CPU** (son modelos de ~0,3–0,6B, con latencias por consulta del orden de cientos de milisegundos, a medir en el ADR). Solo el LLM de generación y estructuración sale de Docker. Alternativa, si la CPU no alcanza: un segundo servicio nativo de Python para estos modelos.
+5. **Operación.** Contrato del componente fuera de Compose: puerto, modelos descargados y versión fijada, *healthcheck* usado por `rag-orchestrator` (el `503 LOCAL_LLM_UNAVAILABLE` de T-6.4) y un script de arranque documentado en §1.4.
 
 **Alternativas descartadas:**
 - *LLM dentro de Docker solo con CPU*: la latencia es incompatible con el KR2 y con la experiencia de consulta.
 - *LLM en la nube para todo*: contradice la decisión D-04b para datos reales anonimizados.
 - *Máquina virtual Linux con GPU*: no existe en Apple Silicon para este caso.
+- *Docker Model Runner*: también corre el modelo en el host con GPU, pero ata la operación a una funcionalidad específica de Docker Desktop. Ollama o vLLM (D-17) son independientes de Docker y exponen la misma API compatible con OpenAI.
 
 **Consecuencia sobre la regla "todo en Docker" (§1.4, §2.4).** El README debe declarar un único componente fuera de Compose (el servidor de inferencia) con su contrato: puerto, modelos y *healthcheck*.
 
@@ -61,9 +72,15 @@ Estos puntos no existían en la revisión original. Aparecen al combinar las dec
 
 Un LLM de 14B (~9–10 GB) deja el sistema al límite, y los modelos de visión (vision-LLM de 7B o más) compiten con el LLM de generación.
 
-**Solución 🟡.** Fijar en el spike un **presupuesto de memoria por componente** y límites en Compose (`mem_limit`). Usar como base un LLM de 7–8B y evaluar uno de 14B solo si la evaluación (T-5) muestra una mejora que lo justifique. Cargar el modelo de extracción y el de generación en momentos distintos o reutilizar el mismo LLM para ambas tareas (ver T-1).
+**Solución ✅ (D-18).** Se crea un **ADR de evaluación de modelos locales**. Ya hay un borrador listo para completar: `docs/architecture/adr/0001-evaluacion-modelos-locales.md`. El ADR:
+- mide el **pico de memoria** de cada candidato con el stack completo levantado, y no de forma aislada;
+- fija el **presupuesto de memoria por componente** y los límites en Compose (`mem_limit`);
+- aplica **restricciones duras**: memoria total ≤ presupuesto, p95 ≤ 15 s, licencia compatible con uso académico y calidad mínima en español;
+- elige, entre los candidatos que cumplen, con los datasets de evaluación de T-5, de modo que un modelo de 14B solo gana si mejora las métricas de forma medible.
 
-**Descartado:** *definir los modelos sin medir* (riesgo de *swapping*, con latencias impredecibles).
+La recomendación de usar el mismo LLM para estructurar documentos (T-1) y para generar respuestas se mantiene 🟡: evita tener dos modelos grandes cargados a la vez.
+
+**Descartado:** *definir los modelos sin medir* (riesgo de *swapping*, con latencias impredecibles), y *evaluar cada modelo por separado sin el stack levantado* (subestima la presión de memoria real).
 
 ### [N-03] Medio — Respuesta en el idioma de la pregunta y evidencia en otro idioma
 
@@ -78,7 +95,7 @@ Un LLM de 14B (~9–10 GB) deja el sistema al límite, y los modelos de visión 
 2. Controlar el riesgo de reidentificación, que en análisis de grafos es mayor, porque los patrones de relaciones identifican.
 3. Datos de **desenlace** (respuesta al tratamiento, progresión) para que el análisis tenga valor. Hoy el modelo no los tiene: `Treatment.status` solo indica activo, completado o suspendido.
 
-**Solución.** Ver el diseño T-2.4. Hay decisiones abiertas: ❓ Q-03 (consentimiento de investigación) y Q-04 (contenido del histórico).
+**Solución ✅ (D-19).** El histórico completo es **alcance futuro**. El MVP implementa solo el **mínimo necesario** (T-2.4): un snapshot seudonimizado por episodio al egresar, sin normalizar, sin desenlaces, sin grafo y sin exportación. Los puntos 1–3 de este hallazgo quedan registrados como **prerrequisitos** de la fase futura, no del MVP. Solo queda una pregunta abierta para el MVP, sobre el consentimiento (Q-03, reducida).
 
 ### [N-05] Alto — Origen y base legal de los datos reales anonimizados
 
@@ -222,7 +239,7 @@ flowchart LR
 - `Patient.lifecycle_status`: `activo` | `egresado`. Es un valor derivado: el paciente está activo si tiene un episodio abierto.
 - **Egreso:** un doctor del equipo tratante (❓ Q-08) cierra el episodio. Ocurre lo siguiente:
   1. El episodio se cierra.
-  2. Se genera el **snapshot de investigación** del episodio (T-2.4), solo si el consentimiento lo permite.
+  2. Se genera el **snapshot mínimo** del episodio (T-2.4), solo si el consentimiento lo permite (❓ Q-03).
   3. El paciente sale de los listados de pacientes activos, aunque sigue siendo consultable en modo lectura.
   4. No se permiten nuevas consultas RAG ni cargas mientras esté egresado.
 - **Reactivación:** abre un episodio nuevo. El paciente conserva su `patient_code`, su historia clínica y sus análisis previos. El histórico de investigación acumula un snapshot por episodio.
@@ -233,32 +250,42 @@ flowchart LR
 - *Solo un booleano `is_discharged`*: no conserva los episodios que exige D-07c ni separa los datos operativos de los de investigación.
 - *Crear un paciente nuevo en cada reingreso*: se pierde la continuidad clínica; es la opción que descartaste en D-07c.
 
-#### T-2.4 Histórico de investigación (`research` schema) (D-07b, N-04)
+#### T-2.4 Histórico: mínimo en el MVP, completo en el futuro (D-07b, D-19, N-04)
 
-**Objetivo:** un almacén **separado** del operativo, preparado para investigación futura (incluido el análisis de grafos), que no expone al sistema clínico a riesgos adicionales.
+**Decisión D-19:** el histórico de investigación es **alcance futuro**, y el MVP tiene **lo mínimo necesario**. "Mínimo necesario" se interpreta aquí 🟡 como: *cumplir D-07b (al egresar, los datos quedan en un histórico en otra tabla) sin cerrar ninguna puerta al diseño futuro y sin crear riesgos que después haya que remediar.*
 
-**Propuesta 🟡:**
-- Un schema `research` en la misma instancia de PostgreSQL, con un **rol de base de datos propio** de solo escritura para `clinical-api`, que solo inserta y nunca lee desde el flujo clínico. El acceso de lectura queda reservado a un rol de investigación que no usa ninguna app del MVP.
-- **Seudónimo de investigación** `research_subject_id`: distinto de `patient_code`, estable por paciente (para vincular episodios del mismo paciente), generado al azar. La correspondencia `patient_code ↔ research_subject_id` se guarda en una tabla del schema `clinical` accesible solo para `clinical-api`. Así, un conjunto de datos exportado desde `research` no revela el `patient_code`.
-- **Contenido del snapshot**, en tablas normalizadas y **no** en un JSON único: facilitan cargarlo después en un grafo.
-  - `research.subject` (`research_subject_id`, `birth_year` agrupado en quinquenios, `sex`, `data_origin`).
-  - `research.episode` (`episode_seq`, duración, motivo de cierre).
-  - `research.diagnosis`, `research.biomarker` (normalizados al diccionario de T-3/P3-04), `research.treatment` (con desenlace, ❓ Q-04), `research.analysis_summary` (qué opciones propuso la IA y cuál se eligió).
-  - Cada fila lleva su `review_status`, para que un investigador pueda filtrar solo datos verificados.
-- **Aristas del futuro grafo:** paciente–tiene–biomarcador, paciente–recibió–tratamiento, tratamiento–basado_en–análisis, análisis–citó–documento del corpus. Todas se derivan de estas tablas sin rediseño. Motor de grafos: **fuera del MVP**. Opciones a evaluar entonces: Apache AGE, una extensión de grafos para PostgreSQL, o una base de grafos dedicada.
+**Alcance MVP 🟡:**
+- **Una sola tabla** `research.episode_snapshot` en un schema `research` de la misma instancia de PostgreSQL:
+  - `id`
+  - `research_subject_id`: seudónimo aleatorio y estable por paciente, distinto de `patient_code`. La correspondencia vive en `clinical.research_subject_map`, accesible solo para `clinical-api`.
+  - `episode_seq`, `snapshot_schema_version`, `snapshot` (JSONB), `created_at`.
+- **Qué contiene `snapshot`:** año de nacimiento agrupado en quinquenios, sexo, `data_origin`, diagnósticos, biomarcadores y tratamientos del episodio, y un resumen de los análisis IA: `top_relevance_score`, opciones propuestas y `document_id` del corpus citados. Cada dato lleva su `review_status` (T-1). Las fechas van como días relativos al inicio del episodio.
+- **Exclusiones:** texto libre (notas clínicas, `rationale`, pregunta del doctor) y fechas absolutas. Así se evita el riesgo de PII residual.
+- **Escritura:** en la misma transacción del egreso (T-2.3), con un rol de base de datos que solo inserta. Ninguna app del MVP lee el schema `research`.
+- **Sin** tablas normalizadas, desenlaces, motor de grafos, UI, API de consulta ni exportación.
 
-**Alternativas descartadas:**
-- *Copiar las tablas clínicas completas*: arrastra `patient_code` y texto libre (notas) con riesgo de PII residual.
-- *Snapshot como un único JSONB*: sirve para auditoría pero es difícil de consultar y de convertir en grafo.
-- *Base de grafos desde el MVP*: suma un contenedor y memoria (N-02) sin un caso de uso en los Sprints 1–6.
+**Alcance futuro** (registrado, no implementado):
+- Modelo normalizado (`research.subject`, `episode`, `diagnosis`, `biomarker`, `treatment`, `analysis_summary`).
+- Desenlaces del tratamiento, que requieren definirlos con el oncólogo.
+- Análisis de grafos (Apache AGE o una base de grafos dedicada).
+- Exportación para investigación y control de reidentificación.
+- Gobierno del consentimiento de investigación.
+
+La migración desde el MVP es directa: `snapshot_schema_version` permite transformar cada JSON al modelo normalizado sin perder información.
+
+**Por qué ahora JSONB, si la versión anterior de esta propuesta lo descartaba:** el modelo normalizado solo tiene sentido cuando se sabe qué se va a consultar (Q-04, ahora futuro). Normalizar hoy obligaría a fijar un esquema de investigación que nadie usa todavía y a mantener seis tablas en el MVP. Un JSON versionado cumple D-07b con una tabla, y conserva los datos en un formato que se puede migrar. La razón del descarte anterior (difícil de consultar y de convertir en grafo) sigue siendo válida para la fase futura, y por eso ahí se normaliza.
+
+**Alternativas descartadas para el MVP:**
+- *No guardar nada al egresar*: incumple D-07b, y los episodios cerrados durante el MVP se perderían para la investigación futura.
+- *Diseño completo (versión anterior de T-2.4)*: contradice D-19 ("lo mínimo necesario").
+- *Copiar las tablas clínicas completas*: arrastra `patient_code` y texto libre con riesgo de PII residual.
 - *Usar el mismo `patient_code` en `research`*: facilita vincular el conjunto de datos con el sistema operativo y aumenta el riesgo de reidentificación.
-
-**Exclusiones deliberadas del snapshot 🟡:** el texto libre de notas clínicas (alto riesgo de PII residual) y las fechas absolutas (se guardan como días relativos al inicio del episodio). ❓ Q-04 confirma el contenido.
+- *Un simple estado "egresado" sin snapshot* (el histórico sería la base clínica misma): no separa los datos operativos de los de investigación, y cualquier corrección posterior cambiaría en silencio lo que "quedó" en el histórico.
 
 #### T-2.5 Consentimientos
 
 Nueva entidad `PatientConsent` (eventos), que reemplaza el booleano `consent_ai_analysis`:
-- `consent_type`: `analisis_ia` | `investigacion` (❓ Q-03: confirmar que se quiere un consentimiento separado para investigación).
+- `consent_type`: `analisis_ia` | `investigacion`. En el MVP, `investigacion` es solo una casilla en el formulario de registro que decide si se escribe el snapshot mínimo de T-2.4. Su gobierno completo es futuro (D-19); ❓ Q-03 reducida.
 - `action`: `otorgado` | `revocado`; `recorded_by`, `recorded_at`, `document_version`.
 - El consentimiento vigente es el último evento de cada tipo.
 
@@ -266,7 +293,7 @@ Nueva entidad `PatientConsent` (eventos), que reemplaza el booleano `consent_ai_
 - Sin `analisis_ia` vigente → `403` en `/rag/query` (igual que el README).
 - Revocar `analisis_ia` no borra los análisis previos (registro clínico inmutable) 🟡.
 - Sin `investigacion` vigente → no se genera el snapshot de egreso.
-- Revocar `investigacion` → los snapshots existentes se marcan como excluidos, o se borran ❓ Q-03.
+- Revocar `investigacion` → 🟡 en el MVP se borran los snapshots del sujeto (operación simple, porque es una sola tabla). La política definitiva es futura.
 
 **Descartado:** *mantener el booleano*. No registra quién ni cuándo, no permite revocar con historial y no distingue el análisis individual del uso para investigación (N-04).
 
@@ -418,7 +445,7 @@ flowchart TD
         MV --> ETCD["milvus-etcd"]
         MV --> MMINIO[("milvus-minio<br/>+ corpus-raw / corpus-normalized")]
     end
-    BE2 -- "host.docker.internal" --> INF["Servidor de inferencia nativo (Metal)<br/>LLM · embeddings · reranker"]
+    BE2 -- "host.docker.internal" --> INF["LLM local nativo en macOS<br/>Ollama o vLLM (ADR D-18)<br/>API compatible con OpenAI"]
     BE2 -. "solo datos sintéticos + adapter nube habilitado" .-> CLOUD["LLM en la nube (opcional)"]
 ```
 
@@ -469,7 +496,7 @@ flowchart TD
 - `LLMAdapterRouter` en Backend 2 (`domain/` + `infrastructure/llm/`):
   - `real_anonimizado` → **solo** el adapter local. Si el local no está disponible, `503` con el código `LOCAL_LLM_UNAVAILABLE`. **Nunca** hay *fallback* a la nube.
   - `sintetico` → usa el adapter configurado (local por defecto; nube si `LLM_CLOUD_ENABLED=true`).
-- *Embeddings*, *reranker*, NLI y OCR: **siempre locales** (D-03, y cambiar el modelo de *embeddings* obliga a reindexar).
+- *Embeddings*, *reranker*, NLI y OCR: **siempre locales** (D-03, y cambiar el modelo de *embeddings* obliga a reindexar). 🟡 Corren dentro de `rag-orchestrator` en CPU (N-01, punto 4).
 - Test de contrato: una consulta `real_anonimizado` con la nube configurada no produce ninguna llamada de red al adapter de la nube.
 - `AIAnalysisRecord.llm_provider` y `llm_model` quedan registrados (P2-02), lo que permite auditar la regla.
 
@@ -563,7 +590,7 @@ flowchart TD
 - **Solución ✅:** T-2.2 (registro manual o asistido por OCR), `GET /platform/patients` con filtros de estado (activo o egresado) y por `data_origin`, más T-2.3 y T-2.4 para el egreso.
 - **Descartado:** ver T-2.2 y T-2.3.
 - **README:** §1.2 #1 (sin "datos personales"), §3.1 y §3.2 (`Patient`, `CareEpisode`, `IntakeDraft`), §4.1 y nuevas historias HU-06 a HU-08 (§7).
-- **Sprint:** listado y formulario manual en el Sprint 1; registro asistido por OCR en el Sprint 2; egreso e histórico en el Sprint 4 (🟡). **Estado:** ✅ Resuelta (D-07); ❓ Q-01 (identificación) y Q-08 (egreso).
+- **Sprint:** listado y formulario manual en el Sprint 1; registro asistido por OCR en el Sprint 2; egreso, reactivación y snapshot mínimo en el Sprint 4 (🟡; el histórico completo es futuro, D-19). **Estado:** ✅ Resuelta (D-07); ❓ Q-01 (identificación) y Q-08 (egreso).
 
 ### P2 — Altos
 
@@ -705,7 +732,7 @@ flowchart TD
 |---|---|---|
 | P4-01 C4 N4 | Alinear `RagQueryRequest` y `RagQueryResult` con §4.2 (citas por recomendación, sin filtros hacia Backend 2, `sourcesSelected` como objeto, `provenance`, `meta`) y regenerarlo desde el código cuando exista. | ✅ |
 | P4-02 Contratos | Ruta pública `/platform/rag/query`; documentar `401`, `409` y `429` en §4.1 y `422`, `429`, `503` y `504` en §4.2; validar que `sourcesSelected` tenga al menos una fuente en `true`. | 🟡 |
-| P4-03 Instalación | Unificar §1.4 y §2.4: Compose levanta todo excepto el servidor de inferencia nativo (N-01). Agregar scripts para las claves ES256, los certificados, los buckets y la descarga de modelos. | ✅ |
+| P4-03 Instalación | Unificar §1.4 y §2.4: Compose levanta todo excepto el LLM nativo (Ollama o vLLM, N-01 y D-17). Agregar scripts para las claves ES256, los certificados, los buckets y la descarga de modelos. | ✅ |
 | P4-04 Schemas | `auth`: `User`, `Session`, `Role`, `Permission`, `RolePermission`. `clinical`: `Patient`, `CareEpisode`, `CareTeamMember`, `PatientConsent`, `IntakeDraft`, los datos clínicos y `ResearchSubjectMap`. `audit`: `AuditLog`. `research`: T-2.4. | ✅ |
 | P4-05 "BFF" | Describir `web` como BFF (Route Handlers) y `clinical-api` como "servicio de plataforma clínica + gateway de IA". | ✅ |
 | P4-06 Seed | Seed con consentimientos `analisis_ia` otorgados en los pacientes (a), (b) y (c) y un paciente (d) sin consentimiento para probar el `403`. Todos con `data_origin = sintetico` y `review_status = verificado`. | ✅ |
@@ -825,7 +852,7 @@ erDiagram
 
 **Eliminadas o reemplazadas:** `Patient.mrn` → `patient_code`; `Patient.full_name` → eliminado (❓ Q-01); `Patient.birth_date` → `birth_year`; `Patient.consent_ai_analysis` y `consent_recorded_at` → `PatientConsent`; `PatientAssignment` → `CareTeamMember`; `confidence_score` y `top_confidence_score` → `relevance_score` y `top_relevance_score`.
 
-**Schema `research`** (T-2.4): `subject`, `episode`, `diagnosis`, `biomarker`, `treatment`, `analysis_summary`. Solo inserta el rol `clinical_research_writer`.
+**Schema `research`** (T-2.4, MVP mínimo): solo `research.episode_snapshot` (`research_subject_id`, `episode_seq`, `snapshot_schema_version`, `snapshot` JSONB, `created_at`). Solo inserta el rol `clinical_research_writer`. El modelo normalizado es futuro (D-19).
 
 ### 5.2 Corpus (Backend 2)
 
@@ -861,8 +888,8 @@ erDiagram
 | `PATCH /platform/patients/{id}/clinical-data/{type}/{itemId}/review` | Revisión de un dato de OCR: `{ action: verificar \| corregir \| rechazar, correctedValue? }` | 3 | T-1, P2-01 |
 | `POST /platform/rag/query` | Renombrada; `relevanceScore`, `dependsOnUnverifiedData`, `supportStatus` y `meta`; errores `401`, `403`, `404`, `422`, `429`, `502`, `503` y `504` | 1 | P2-10, P2-02, P4-02 |
 | `GET /platform/patients/{id}/analyses` · `GET …/analyses/{analysisId}` | Historial | 4 | P2-11 |
-| `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (+ desenlace, ❓ Q-04) | 4 | P2-11 |
-| `POST /platform/patients/{id}/episodes/current/close` | Egreso → cierra el episodio y genera el snapshot de investigación | 4 🟡 | T-2.3 |
+| `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (el desenlace es futuro, D-19) | 4 | P2-11 |
+| `POST /platform/patients/{id}/episodes/current/close` | Egreso → cierra el episodio y escribe el snapshot mínimo (si hay consentimiento) | 4 🟡 | T-2.3, T-2.4 |
 | `POST /platform/patients/{id}/episodes` | Reactivación (abre un episodio nuevo) | 4 🟡 | T-2.3 |
 | `POST /platform/patients/{id}/consents` | Otorga o revoca un consentimiento | 1 (datos) / 5 (UI) | T-2.5 |
 | `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante | 5 | T-2.6 |
@@ -880,12 +907,13 @@ erDiagram
 
 | Sprint | Objetivo (sin cambios) | Alcance ajustado |
 |---|---|---|
-| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **Spike:** modelos (T-3), servidor de inferencia nativo (N-01), presupuesto de RAM (N-02), catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
+| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). |
 | **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4). **Recién entonces** se habilita `REAL_DATA_ENABLED`. |
 | **3** | Híbrida y filtros | Híbrida multilingüe con expansión (T-3), filtros con tabla de verdad (P3-02), **HU-09 revisión de datos de OCR** (aceptar, corregir, rechazar) (P2-01), enmascaramiento de las notas enviadas (T-4), ingesta del corpus como entregable con licencias (P2-09). |
-| **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento (+ desenlace ❓ Q-04), **HU-13 egreso y reactivación con snapshot de investigación** (T-2.3, T-2.4) 🟡. |
+| **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento, **HU-13 egreso y reactivación con snapshot mínimo** (T-2.3, T-2.4) 🟡. |
 | **5** | Autorización real | **HU-14** equipo tratante (varios, uno principal), validación de consentimientos en todos los endpoints, auditoría completa. |
-| **6** | Observabilidad y hardening | `/health` y `/metrics` completos, *dashboards*, *mutation testing*, prueba de restauración de *backup*, **HU-15** exportación del histórico de investigación (❓ Q-04). |
+| **6** | Observabilidad y hardening | `/health` y `/metrics` completos, *dashboards*, *mutation testing*, prueba de restauración de *backup*. |
+| **Futuro** (fuera del MVP, D-19) | Histórico de investigación completo | Modelo normalizado, desenlaces del tratamiento, análisis de grafos, **HU-15** exportación para investigación, gobierno del consentimiento de investigación, control de reidentificación. Prerrequisitos: N-04 (puntos 1–3). |
 
 **Criterio de "MVP demostrable":** Sprints 1–4. **Criterio de "MVP multiusuario":** además, Sprint 5 (P1-06, ❓ Q-09).
 
@@ -899,8 +927,8 @@ Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la re
 |---|---|---|---|
 | Q-01 | ¿Qué formato tiene la identificación del paciente y quién la asigna? ¿En el MVP se guarda algún dato identificable (nombre, documento real)? | T-2.1, P2-13, esquema `Patient` | Seudónimo `patient_code` asignado por el proceso externo (o `SYN-` para sintéticos); ningún dato identificable. |
 | Q-02 | ¿De dónde provienen los datos reales anonimizados (institución, dataset público, colaborador)? ¿Bajo qué acuerdo o aval (comité de ética)? ¿El proceso externo desplaza las fechas? ¿Entrega una lista de nombres para reforzar el detector? | N-05, T-4, `source_dataset` | Registrar el origen por paciente desde el Sprint 1 y documentar el acuerdo antes de habilitar `REAL_DATA_ENABLED`. |
-| Q-03 | ¿Se requiere un consentimiento **separado** para usar los datos en investigación (histórico)? Si se revoca, ¿se borran los snapshots o solo se excluyen? | T-2.4, T-2.5 | Consentimiento separado; al revocar, excluir y borrar los snapshots del sujeto. |
-| Q-04 | ¿Qué debe contener el histórico de investigación? ¿Se registra el **desenlace** del tratamiento (respuesta, progresión, toxicidad) para el futuro análisis de grafos? | T-2.4, HU-12, HU-15 | Snapshot normalizado sin texto libre ni fechas absolutas; agregar un desenlace mínimo en `Treatment` (❓ categorías a definir con el oncólogo). |
+| Q-03 *(reducida por D-19)* | Para el MVP: ¿el snapshot mínimo al egresar se escribe **solo** si el paciente tiene la casilla de consentimiento de investigación marcada? | T-2.4, T-2.5 | Sí: una casilla en el registro evita guardar datos que después haya que purgar. El gobierno completo es futuro. |
+| ~~Q-04~~ | ~~Contenido del histórico y desenlaces~~ → **Movida a alcance futuro (D-19).** El MVP usa el contenido mínimo de T-2.4. | — | — |
 | Q-05 | ¿De qué país o países provienen los documentos? (Define los formatos de documento de identidad, teléfono, historia clínica y la normativa de datos aplicable.) | T-4 (reconocedores), P1-05 | — (no se asume ningún país). |
 | Q-06 | ¿Aceptas los umbrales iniciales de confianza (alta ≥ 0,90; media 0,70–0,90) y la lista de campos críticos (biomarcadores accionables, tipo de cáncer, estadio, ECOG)? ¿El oncólogo puede revisar el diccionario de significancia? | T-1 | Aceptar como punto de partida y calibrar con `ocr_gold`. |
 | Q-07 | Las citas en otro idioma, ¿se muestran solo en el original o también con una traducción automática etiquetada? | T-3, N-03, UI | Original siempre visible más una traducción opcional etiquetada; el chequeo de soporte usa siempre el original. |
@@ -936,10 +964,15 @@ Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la re
 | P2-08 | Catálogo en SQLite + versionado reanudable | 🟡 |
 | P2-09 | Fuentes con licencia (PDQ, ClinicalTrials.gov, CIViC, ClinVar, PMC OA) + ingesta como entregable | 🟡 (❓ Q-13) |
 | P2-10 | `relevance_score` basado en el *reranker* | 🟡 |
-| P2-11 | HU-06 a HU-15 | 🟡 |
+| P2-11 | HU-06 a HU-14 (HU-15 pasa a futuro, D-19) | 🟡 |
 | P2-12 | Semáforo, `429`, límites, *deadline*, idempotencia | 🟡 |
 | P2-13 | Verificación de `patient_code` + checksum | ✅ (❓ Q-01) |
 | P3-01…P3-08, P4-01…P4-06 | Ver las tablas de la §4 | ✅/🟡 |
-| N-01…N-06 | Ver la §2 | 🟡/❓ |
+| N-01 | LLM nativo con Ollama o vLLM (D-17) + API compatible con OpenAI; *embeddings*, *reranker* y NLI en CPU dentro de `rag-orchestrator` | ✅ (verificaciones en el ADR) |
+| N-02 | ADR de evaluación de modelos locales (D-18); borrador creado | ✅ |
+| N-03 | NLI multilingüe + idioma original de las citas | 🟡 (❓ Q-07) |
+| N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19) | ✅ (❓ Q-03 reducida) |
+| N-05 | `source_dataset` por paciente | ❓ Q-02 |
+| N-06 | Regla de proveedores en código (T-6.4) | ✅ |
 
-**Siguiente paso sugerido:** cuando respondas las preguntas Q-01 a Q-13, se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
+**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-01…Q-13, sin Q-04), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
