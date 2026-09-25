@@ -9,7 +9,7 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 
-> **Revisión de la documentación (2026-09-25).** Este documento incorpora las 41 decisiones (D-01…D-41) de la revisión técnica cruzada. Detalle, alternativas descartadas y trazabilidad: [`docs/review/revision-cruzada-y-prd.md`](docs/review/revision-cruzada-y-prd.md) (hallazgos y PRD) y [`docs/review/propuesta-de-solucion.md`](docs/review/propuesta-de-solucion.md) (soluciones y decisiones). Las referencias del tipo "D-xx", "T-x" o "N-xx" apuntan a ese último documento.
+> **Revisión de la documentación (2026-09-25).** Este documento incorpora las decisiones de una revisión técnica cruzada de todo el proyecto (producto, arquitectura, datos, API, historias y tickets): posicionamiento, clases de datos, privacidad, evaluación de la IA, ciclo de vida del paciente y alcance clínico del piloto. Las alternativas descartadas se documentan junto a cada decisión (en particular en 3.3).
 
 ---
 
@@ -21,17 +21,17 @@
 
 ### **0.3. Descripción breve del proyecto:**
 
-OncoLens es un **MVP académico** de apoyo a la decisión clínica en oncología, diseñado para evolucionar hacia una herramienta de apoyo clínico real. Conecta el perfil clínico y molecular de cada paciente con la evidencia científica publicada (guías, ensayos clínicos y publicaciones de investigación oncológica y genómica) mediante búsqueda semántica híbrida y multilingüe (español e inglés), contextualizada al paciente. En minutos, y no en horas de revisión manual, el oncólogo obtiene las opciones de tratamiento descritas en la evidencia más relevante, cada una con **citas verificables** y un indicador de **relevancia de la evidencia**. OncoLens **no** estima la probabilidad de éxito de un tratamiento ni reemplaza el juicio del oncólogo tratante (D-01).
+OncoLens es un **MVP académico** de apoyo a la decisión clínica en oncología, diseñado para evolucionar hacia una herramienta de apoyo clínico real. Conecta el perfil clínico y molecular de cada paciente con la evidencia científica publicada (guías, ensayos clínicos y publicaciones de investigación oncológica y genómica) mediante búsqueda semántica híbrida y multilingüe (español e inglés), contextualizada al paciente. En minutos, y no en horas de revisión manual, el oncólogo obtiene las opciones de tratamiento descritas en la evidencia más relevante, cada una con **citas verificables** y un indicador de **relevancia de la evidencia**. OncoLens **no** estima la probabilidad de éxito de un tratamiento ni reemplaza el juicio del oncólogo tratante.
 
 ### **0.4. URL del proyecto:**
 
-No hay URL pública. El proyecto se ejecuta en local: Docker Compose más un servidor de LLM nativo, en una MacBook Pro M5 con 32 GB. El piloto con oncólogos se accede **solo por red privada o VPN, con HTTPS** (D-32); no se publica en internet.
+No hay URL pública. El proyecto se ejecuta en local: Docker Compose más un servidor de LLM nativo, en una MacBook Pro M5 con 32 GB. El piloto con oncólogos se accede **solo por red privada o VPN, con HTTPS**; no se publica en internet.
 
 ### 0.5. URL o archivo comprimido del repositorio
 Repo público
 https://github.com/hatrickmario/OncoLens-Lab/
 
-> ⚠️ Como el repositorio es público, **nunca** contiene datos reales: ni identificados ni anonimizados. En `data/` solo hay datos sintéticos y definiciones de datasets (N-09).
+> ⚠️ Como el repositorio es público, **nunca** contiene datos reales: ni identificados ni anonimizados. En `data/` solo hay datos sintéticos y definiciones de datasets.
 
 ---
 
@@ -45,28 +45,28 @@ https://github.com/hatrickmario/OncoLens-Lab/
 
 OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatura científica y ensayos clínicos. Cruza automáticamente el perfil clínico y molecular de cada paciente con la evidencia publicada y presenta las opciones de tratamiento que esa evidencia describe, **con trazabilidad hacia la fuente exacta** que las sustenta.
 
-- **Usuarios:** oncólogos (rol `doctor`) y administradores (rol `admin`). El piloto inicial es un grupo de **10 oncólogos** (D-22).
-- **Alcance clínico del piloto:** **cáncer de mama y de próstata**. **Leucemia** se agrega como tercer tipo cuando cumpla su criterio de "listo" (D-38, D-39, §3.3 #22).
-- **Posicionamiento:** MVP académico con potencial de apoyo clínico real (D-01). Toda salida lleva el aviso *"Recomendación generada por IA — requiere validación clínica del oncólogo tratante"* y la etiqueta *"Uso académico/investigación"*.
+- **Usuarios:** oncólogos (rol `doctor`) y administradores (rol `admin`). El piloto inicial es un grupo de **10 oncólogos**.
+- **Alcance clínico del piloto:** **cáncer de mama y de próstata**. **Leucemia** se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22).
+- **Posicionamiento:** MVP académico con potencial de apoyo clínico real. Toda salida lleva el aviso *"Recomendación generada por IA — requiere validación clínica del oncólogo tratante"* y la etiqueta *"Uso académico/investigación"*.
 
 **No-objetivos de esta versión:**
 - Estimar la probabilidad de éxito o el pronóstico de un tratamiento.
 - Tomar decisiones clínicas autónomas.
-- Reentrenar modelos (*fine-tuning*): "entrenamiento" en este proyecto significa **calibrar y evaluar** (D-31).
+- Reentrenar modelos (*fine-tuning*): "entrenamiento" en este proyecto significa **calibrar y evaluar**.
 - Streaming de tokens del LLM al navegador.
 - Despliegue en la nube o multi-institución.
-- Histórico de investigación completo (modelo normalizado, desenlaces, análisis de grafos, exportación): alcance futuro. El MVP guarda solo un snapshot mínimo al egresar (D-19).
-- Datos bioinformáticos crudos (TCGA/GDC, cBioPortal, TCIA): solo entran sus publicaciones y resúmenes (D-28).
+- Histórico de investigación completo (modelo normalizado, desenlaces, análisis de grafos, exportación): alcance futuro. El MVP guarda solo un snapshot mínimo al egresar.
+- Datos bioinformáticos crudos (TCGA/GDC, cBioPortal, TCIA): solo entran sus publicaciones y resúmenes.
 
 ### **1.2. Características y funcionalidades principales:**
 
 > Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
 
-1. **Registro y ciclo de vida del paciente:** alta con formulario manual o asistido por OCR, con confirmación del doctor; identificación por documento (cédula de ciudadanía, tarjeta de identidad, cédula de extranjería o pasaporte) y nombres, cifrados; episodios de atención con egreso y reactivación; consentimientos por eventos, incluidos los firmados por el representante legal de un menor (D-07, D-02c, D-33, D-37).
-2. **Ingesta de historia clínica y exámenes desde PDF**, con OCR local. Cada dato extraído lleva su **nivel de confianza** (alta, media o baja) y su **estado de revisión** (automático, requiere revisión, verificado, corregido, rechazado). El doctor puede abrir el documento de origen en el lugar exacto del valor (D-06, D-23).
-3. **Pipeline de ingesta del corpus científico** (guías, ensayos, publicaciones) con licencia registrada por documento. Los datos del paciente **nunca se persisten** en la base vectorial ni forman parte del corpus: viajan desidentificados dentro de la consulta (D-28, P2-03).
-4. **Búsqueda híbrida multilingüe** (dense + sparse, español e inglés) con expansión bilingüe de la pregunta y reordenamiento (*reranker*) (D-04).
-5. **Orquestador RAG:** construcción de la consulta, inyección del contexto clínico desidentificado y etiquetado, generación en el idioma de la pregunta, validación de citas y **chequeo de soporte** de cada afirmación. Las recomendaciones sin soporte se descartan y se muestran aparte, solo para revisión (D-05, D-27).
+1. **Registro y ciclo de vida del paciente:** alta con formulario manual o asistido por OCR, con confirmación del doctor; identificación por documento (cédula de ciudadanía, tarjeta de identidad, cédula de extranjería o pasaporte) y nombres, cifrados; episodios de atención con egreso y reactivación; consentimientos por eventos, incluidos los firmados por el representante legal de un menor.
+2. **Ingesta de historia clínica y exámenes desde PDF**, con OCR local. Cada dato extraído lleva su **nivel de confianza** (alta, media o baja) y su **estado de revisión** (automático, requiere revisión, verificado, corregido, rechazado). El doctor puede abrir el documento de origen en el lugar exacto del valor.
+3. **Pipeline de ingesta del corpus científico** (guías, ensayos, publicaciones) con licencia registrada por documento. Los datos del paciente **nunca se persisten** en la base vectorial ni forman parte del corpus: viajan desidentificados dentro de la consulta.
+4. **Búsqueda híbrida multilingüe** (dense + sparse, español e inglés) con expansión bilingüe de la pregunta y reordenamiento (*reranker*).
+5. **Orquestador RAG:** construcción de la consulta, inyección del contexto clínico desidentificado y etiquetado, generación en el idioma de la pregunta, validación de citas y **chequeo de soporte** de cada afirmación. Las recomendaciones sin soporte se descartan y se muestran aparte, solo para revisión.
 6. **Consulta cruzada** entre la base relacional (historia clínica y biomarcadores) y la vectorial.
 7. **Interfaz web** para el doctor: listado y búsqueda de pacientes, ficha, panel de IA, revisión de datos extraídos, historial de análisis y registro de la decisión de tratamiento.
 
@@ -78,7 +78,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 
 - **Listado de pacientes:** búsqueda exacta por número de documento y por nombre dentro del equipo tratante; filtros por estado (activo o egresado); distintivo **"SINTÉTICO"** en los pacientes de prueba.
 - **Panel del doctor:** ficha del paciente (identificación, diagnóstico con su sistema de estadificación, estado funcional con su escala), pestañas de resumen clínico y de exámenes y biomarcadores (semáforo normal / alterado / relevante / crítico, con unidad, rango de referencia y **origen** del dato). Contador de **datos pendientes de revisión** y acceso al documento de origen de cada valor.
-- **Panel de interacción IA:** parámetros de consulta (fuentes: guías, ensayos, publicaciones; filtros sobre la información del paciente) y resultado: opciones de tratamiento con su **"Relevancia de la evidencia"** (nunca rotulada como "Evidencia" o "Confianza" a secas), justificación y citas. Las citas se muestran en su idioma original, con traducción automática opcional y etiquetada (D-26). Cada recomendación muestra un aviso si depende de datos pendientes de revisión, y hay una sección colapsada de **"Descartadas por falta de soporte — solo para revisión"** (D-27).
+- **Panel de interacción IA:** parámetros de consulta (fuentes: guías, ensayos, publicaciones; filtros sobre la información del paciente) y resultado: opciones de tratamiento con su **"Relevancia de la evidencia"** (nunca rotulada como "Evidencia" o "Confianza" a secas), justificación y citas. Las citas se muestran en su idioma original, con traducción automática opcional y etiquetada. Cada recomendación muestra un aviso si depende de datos pendientes de revisión, y hay una sección colapsada de **"Descartadas por falta de soporte — solo para revisión"**.
 
 📌 Nota: son mockups ilustrativos de alcance funcional, no un diseño final. Se refinarán con Figma más adelante; esta sección se actualizará con esas capturas o el prototipo y, eventualmente, con un videotutorial de la UI real.
 
@@ -92,7 +92,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 - Docker y Docker Compose.
 - Node.js LTS + npm (con soporte de workspaces).
 - Python 3.x + pip.
-- **Runtime de LLM nativo:** Ollama o vLLM, instalado en macOS **fuera de Docker**, porque Docker en macOS no expone la GPU (Metal) a los contenedores (D-17, N-01). La elección final se toma en el [ADR-0001](docs/architecture/adr/0001-evaluacion-modelos-locales.md).
+- **Runtime de LLM nativo:** Ollama o vLLM, instalado en macOS **fuera de Docker**, porque Docker en macOS no expone la GPU (Metal) a los contenedores. La elección final se toma en el ADR de evaluación de modelos locales (ver "Decisiones de infraestructura de IA" más abajo).
 
 **Pasos:**
 
@@ -104,7 +104,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
    - certificados TLS de PostgreSQL y certificado HTTPS de `web` emitido por una CA interna;
    - credenciales de los dos MinIO: `clinical-minio` (solo `clinical-api`) y el MinIO de Milvus (solo corpus).
 3. Configurar variables de entorno (`.env`) por app: conexiones, `LLM_BASE_URL` y `LLM_MODEL` (API compatible con OpenAI del runtime nativo), `LLM_CLOUD_ENABLED=false`, `ENABLED_CANCER_TYPES=mama,prostata`, `REAL_ANONYMIZED_ENABLED=false`, `REAL_IDENTIFIED_ENABLED=false`, plazos de retención y parámetros de sesión (§2.5).
-4. Arrancar el LLM nativo (p. ej., `ollama serve`) y descargar los modelos fijados en el ADR-0001. Los modelos de *embeddings*, *reranker* y NLI se descargan para `rag-orchestrator`, que los ejecuta en CPU.
+4. Arrancar el LLM nativo (p. ej., `ollama serve`) y descargar los modelos fijados en el ADR de modelos locales (1.4). Los modelos de *embeddings*, *reranker* y NLI se descargan para `rag-orchestrator`, que los ejecuta en CPU.
 5. Levantar la infraestructura y las apps: `docker compose -f infra/docker/docker-compose.yml up -d` (PostgreSQL, `clinical-minio`, Milvus con etcd y su MinIO, `clinical-api`, `rag-orchestrator`, `web`).
 6. **Backend de plataforma** (`apps/clinical-api/`), para desarrollo fuera de Compose:
    ```
@@ -127,9 +127,12 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 9. Antes de habilitar datos reales: `oncolens preflight real-data` verifica los prerrequisitos del gate G-piloto (§2.5). `clinical-api` no arranca con una bandera de datos reales en `true` si alguno falla.
 
 **Decisiones de infraestructura de IA:**
-- **OCR:** local; los documentos no salen a la nube (D-03). Primero se extrae la capa de texto digital del PDF (sin OCR); las páginas escaneadas pasan por OCR (candidatos: Tesseract `spa+eng` o PaddleOCR). La estructuración la hace el mismo LLM local con salida JSON restringida por esquema. Descartado el vision-LLM directo: memoria, latencia sin GPU en Docker y falta de confianza por campo (P3-08).
-- **LLM y *embeddings*:** configurable, **local por defecto**. La nube solo se permite para pruebas con datos **sintéticos**; los datos reales nunca salen a un proveedor externo, regla que aplica el código (D-04b, T-6.4).
-- **Modelos concretos** (LLM, *embeddings* multilingües, *reranker*, NLI, motor de OCR): se eligen midiendo con los criterios del [ADR-0001](docs/architecture/adr/0001-evaluacion-modelos-locales.md) (D-18).
+- **OCR:** local; los documentos no salen a la nube. Primero se extrae la capa de texto digital del PDF (sin OCR); las páginas escaneadas pasan por OCR (candidatos: Tesseract `spa+eng` o PaddleOCR). La estructuración la hace el mismo LLM local con salida JSON restringida por esquema. Descartado el vision-LLM directo: memoria, latencia sin GPU en Docker y falta de confianza por campo.
+- **LLM y *embeddings*:** configurable, **local por defecto**. La nube solo se permite para pruebas con datos **sintéticos**; los datos reales nunca salen a un proveedor externo, regla que aplica el código.
+- **Modelos concretos** (LLM, *embeddings* multilingües, *reranker*, NLI, motor de OCR): se eligen en el **ADR de evaluación de modelos locales**, al inicio del Sprint 1, midiendo con el stack completo levantado:
+  - **Restricciones duras:** memoria total ≤ 24 GB (dejando ≥ 8 GB para macOS); `/platform/rag/query` con p95 ≤ 15 s; extracción con p95 ≤ 60 s por documento; licencia compatible con uso académico; buen desempeño en español; salida JSON válida ≥ 99%; uso real de la GPU de la M5 (verificar el soporte de vLLM en Apple Silicon).
+  - **Candidatos:** runtime Ollama o vLLM; LLM *instruct* de 7–8B multilingüe cuantizado a 4 bits (un modelo de ~14B solo si cumple las restricciones y mejora las métricas de forma medible); *embeddings* BGE-M3 (dense + sparse) o multilingual-e5-large; *reranker* bge-reranker-v2-m3; NLI multilingüe de la familia mDeBERTa-v3 (XNLI); OCR Tesseract o PaddleOCR. Las versiones se fijan en la fecha de ejecución.
+  - **Método:** correr la suite de evaluación (OL-06) y el protocolo de latencia y memoria (3 corridas, mediana); descartar los que no cumplen las restricciones; elegir por la métrica principal de cada componente (en empate, el de menor memoria); fijar las versiones en la configuración.
 
 ---
 
@@ -141,11 +144,11 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 **Patrón:** BFF (*Backend for Frontend*, los Route Handlers de `web`) + **servicio de plataforma clínica** (Backend 1, que también actúa de gateway de IA) + **servicio especializado de IA** (Backend 2). Los backends se organizan en capas **Controller → Service → Repository**; en Backend 2, las integraciones con modelos (LLM, *embeddings*, *reranker*, NLI, OCR) se implementan como **Adapters**. Hay **bounded contexts** explícitos y una regla de ownership estricta:
 
 - **Backend 1 (`clinical-api`)** posee el registro clínico: identidad (cifrada), autorización, historia clínica, exámenes, biomarcadores, documentos clínicos, historial de análisis, consentimientos, retención y auditoría. Es dueño exclusivo de **PostgreSQL** y de **`clinical-minio`** (almacén de documentos clínicos).
-- **Backend 2 (`rag-orchestrator`)** posee el análisis asistido por IA: recuperación, generación, validación y extracción de documentos. Es dueño de **Milvus**, del **catálogo del corpus** (schema `corpus` de PostgreSQL) y de los buckets del corpus. **No tiene acceso a los datos clínicos:** en PostgreSQL usa un rol limitado al schema `corpus` (red dedicada, `pg_hba` restringido, tests de acceso denegado) y no tiene credenciales ni red hacia `clinical-minio` (D-42). Procesa documentos clínicos **de forma transitoria, en memoria**, sin persistirlos, y en `/rag/query` recibe solo un contexto desidentificado (T-4).
-- **LLM nativo** (Ollama o vLLM, fuera de Docker, con GPU Metal): lo consume solo Backend 2, mediante una API compatible con OpenAI (D-17).
+- **Backend 2 (`rag-orchestrator`)** posee el análisis asistido por IA: recuperación, generación, validación y extracción de documentos. Es dueño de **Milvus**, del **catálogo del corpus** (schema `corpus` de PostgreSQL) y de los buckets del corpus. **No tiene acceso a los datos clínicos:** en PostgreSQL usa un rol limitado al schema `corpus` (red dedicada, `pg_hba` restringido, tests de acceso denegado) y no tiene credenciales ni red hacia `clinical-minio`. Procesa documentos clínicos **de forma transitoria, en memoria**, sin persistirlos, y en `/rag/query` recibe solo un contexto desidentificado.
+- **LLM nativo** (Ollama o vLLM, fuera de Docker, con GPU Metal): lo consume solo Backend 2, mediante una API compatible con OpenAI.
 
 **Por qué esta arquitectura:**
-- El navegador **solo habla con `web`**. Los Route Handlers centralizan el acceso a `clinical-api`, que no publica puerto al host (D-10, T-6.3).
+- El navegador **solo habla con `web`**. Los Route Handlers centralizan el acceso a `clinical-api`, que no publica puerto al host.
 - Node/Express es la herramienta correcta para CRUD tipado, autenticación y la API de plataforma; Python/FastAPI, para el ecosistema RAG/ML.
 - Aislar el servicio de IA de las bases clínicas reduce el radio de impacto de una vulnerabilidad en la capa más expuesta a entradas no confiables (documentos, corpus, salida del LLM).
 
@@ -153,7 +156,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 - Mayor complejidad operativa: 2 runtimes, 2 lenguajes, autenticación servicio a servicio, un salto de red adicional en cada consulta RAG y un componente fuera de Docker (el LLM nativo).
 - Riesgo de consistencia eventual: Backend 2 calcula el resultado del análisis, pero lo persiste Backend 1. Se mitiga respondiendo solo después de persistir (OL-03).
 - Requiere disciplina de *contract testing* entre Node y Python para evitar *drift* entre sus specs OpenAPI.
-- Hardware limitado (32 GB compartidos): concurrencia de inferencia acotada (1–2 simultáneas) y modelos de 7–8B elegidos por medición (ADR-0001).
+- Hardware limitado (32 GB compartidos): concurrencia de inferencia acotada (1–2 simultáneas) y modelos de 7–8B elegidos por medición (ADR de modelos locales, 1.4).
 
 ```mermaid
 flowchart TD
@@ -274,11 +277,11 @@ sequenceDiagram
 |---|---|---|
 | **web** (Frontend + BFF) | React 19, Next.js (App Router, RSC, Route Handlers, Server Actions), TypeScript, Tailwind CSS v4, shadcn/ui | UI del doctor y **único punto de entrada del navegador**. Route Handlers como proxy de todos los endpoints de `clinical-api` (cookie `SameSite=Strict` + verificación de `Origin`). Sin streaming de tokens sin validar. |
 | **Backend 1 — `clinical-api`** | Node.js LTS, Express 5, TypeScript, Zod, Prisma, OpenAPI/Swagger UI | Autenticación y autorización (RBAC + equipo tratante + consentimientos), identidad cifrada con índice ciego, pacientes, episodios, documentos, revisión de datos extraídos, gateway RAG, persistencia de análisis, retención y auditoría. *Worker* de extracción y *jobs* de retención y mayoría de edad. Dueño exclusivo de PostgreSQL y `clinical-minio`. |
-| **PostgreSQL** | PostgreSQL | Único motor relacional (D-42). Schemas `auth`, `identity`, `clinical`, `audit` y `research` (Backend 1) y `corpus` (catálogo del corpus, Backend 2, con rol propio y sin acceso a los demás schemas) (§3.1). |
+| **PostgreSQL** | PostgreSQL | Único motor relacional. Schemas `auth`, `identity`, `clinical`, `audit` y `research` (Backend 1) y `corpus` (catálogo del corpus, Backend 2, con rol propio y sin acceso a los demás schemas) (§3.1). |
 | **clinical-minio** | MinIO | Binarios de los documentos clínicos (bucket `clinical-documents`). Instancia separada del MinIO de Milvus; solo `clinical-api` tiene credenciales y ruta de red. |
 | **Backend 2 — `rag-orchestrator`** | Python, FastAPI, Pydantic, OpenAPI | Orquestador RAG (expansión bilingüe, recuperación híbrida, *reranker*, generación, validación de citas, chequeo NLI); extracción de documentos (capa de texto u OCR, gate de PII, estructuración con confianza por campo); ingesta del corpus con licencias. *Embeddings*, *reranker* y NLI corren en CPU dentro del contenedor. |
 | **Milvus** | Milvus standalone (+ etcd + MinIO propio) | Chunks del corpus con vectores dense y sparse y metadatos de filtrado (`is_current`, `source_type`, `language`, `cancer_type_tags`). |
-| **LLM nativo** | Ollama o vLLM en macOS (Metal), API compatible con OpenAI | Generación de respuestas, estructuración de documentos y expansión bilingüe. Modelo fijado por el ADR-0001. La nube solo se usa con datos sintéticos (D-04b). |
+| **LLM nativo** | Ollama o vLLM en macOS (Metal), API compatible con OpenAI | Generación de respuestas, estructuración de documentos y expansión bilingüe. Modelo fijado por el ADR de modelos locales (1.4). La nube solo se usa con datos sintéticos. |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -331,9 +334,8 @@ OncoLens/
 │                                          # viven fuera del repo (volumen local cifrado, .gitignore)
 │
 ├── docs/
-│   ├── architecture/adr/                  # 0001 modelos locales · pendientes: fuentes y licencias, evaluación RAG,
+│   ├── architecture/adr/                  # ADRs pendientes: modelos locales, fuentes y licencias, evaluación RAG,
 │   │                                      # scoring de evidencia clínica, streaming de progreso
-│   ├── review/                            # revisión cruzada, PRD y propuesta de solución
 │   ├── api/
 │   └── rag/
 │
@@ -350,7 +352,7 @@ OncoLens/
 
 > Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
 
-Entorno local: **Docker Compose** en una MacBook Pro M5 (32 GB) y **un componente nativo** fuera de Compose, el LLM, para aprovechar la GPU (D-17). Milvus *standalone* requiere sus dependencias propias (`etcd` y `MinIO`). Los documentos clínicos viven en un **MinIO separado** (`clinical-minio`).
+Entorno local: **Docker Compose** en una MacBook Pro M5 (32 GB) y **un componente nativo** fuera de Compose, el LLM, para aprovechar la GPU. Milvus *standalone* requiere sus dependencias propias (`etcd` y `MinIO`). Los documentos clínicos viven en un **MinIO separado** (`clinical-minio`).
 
 ```mermaid
 flowchart TD
@@ -385,9 +387,9 @@ flowchart TD
 ```
 
 - **Puertos:** solo `web` publica un puerto, y solo en la interfaz de la red privada o VPN. `clinical-api` y `rag-orchestrator` no publican puertos al host.
-- **Redes:** `clinical-net` (web, `clinical-api`, PostgreSQL, `clinical-minio`), `ai-net` (`clinical-api`, `rag-orchestrator`, Milvus) y `corpus-db-net` (solo `rag-orchestrator` y PostgreSQL, D-42). `rag-orchestrator` no tiene ruta hacia `clinical-minio`. En PostgreSQL, `pg_hba.conf` solo acepta al rol `rag_corpus` desde `corpus-db-net` (TLS + SCRAM), y ese rol no tiene permisos fuera del schema `corpus`.
+- **Redes:** `clinical-net` (web, `clinical-api`, PostgreSQL, `clinical-minio`), `ai-net` (`clinical-api`, `rag-orchestrator`, Milvus) y `corpus-db-net` (solo `rag-orchestrator` y PostgreSQL). `rag-orchestrator` no tiene ruta hacia `clinical-minio`. En PostgreSQL, `pg_hba.conf` solo acepta al rol `rag_corpus` desde `corpus-db-net` (TLS + SCRAM), y ese rol no tiene permisos fuera del schema `corpus`.
 - **Entornos:** `local` (desarrollo, solo datos sintéticos) y `piloto` (10 oncólogos; datos reales solo después del gate G-piloto, §2.5). No hay entorno cloud en esta versión.
-- **Operación del piloto:** FileVault activo, *backups* cifrados fuera del equipo (rotación corta, coherente con la retención), prueba de restauración por sprint y apagado y arranque documentados (D-32).
+- **Operación del piloto:** FileVault activo, *backups* cifrados fuera del equipo (rotación corta, coherente con la retención), prueba de restauración por sprint y apagado y arranque documentados.
 - **Despliegue:** arrancar el LLM nativo y luego `docker compose -f infra/docker/docker-compose.yml up -d` (ver 1.4).
 
 ### **2.5. Seguridad**
@@ -409,16 +411,16 @@ flowchart LR
   - **Bloqueo de 15 min tras 5 intentos fallidos**, por cuenta y por IP.
   - **Logout** con revocación.
   - Contraseñas con **Argon2id**.
-  - Todos los valores son configurables (D-29).
+  - Todos los valores son configurables.
   - Alta y baja de usuarios por un script de administración (CLI).
 - **CSRF:** `SameSite=Strict` más verificación de la cabecera `Origin` en todos los Route Handlers que mutan.
 - **Guard** en `clinical-api`: valida la sesión en cada request antes de enrutar.
-- **Autorización:** RBAC (`Role`/`Permission`) para las *acciones*. **Equipo tratante** (`CareTeamMember`: varios doctores activos por paciente, uno principal) para decidir *sobre qué pacientes* (D-12a). El rol `admin` ve todos.
-- **Clases de datos (D-02c):**
+- **Autorización:** RBAC (`Role`/`Permission`) para las *acciones*. **Equipo tratante** (`CareTeamMember`: varios doctores activos por paciente, uno principal) para decidir *sobre qué pacientes*. El rol `admin` ve todos.
+- **Clases de datos:**
   - `sintetico`: identificación aleatoria y distintivo visible.
   - `real_anonimizado`: calibración y pruebas.
   - `real_identificado`: pacientes del piloto con documento y nombres, amparados en el contrato marco.
-- **Identidad cifrada (D-02c, D-33):**
+- **Identidad cifrada:**
   - Documento y nombres viven en el schema `identity`, cifrados en la aplicación con AES-256-GCM.
   - Un **índice ciego HMAC-SHA256** permite buscar el documento de forma exacta.
   - Las claves solo están en `clinical-api`.
@@ -426,17 +428,17 @@ flowchart LR
   - Se reabre la decisión §3.3 #6.
 - **Desidentificación hacia la IA:**
   - El contexto que va a Backend 2 lleva un `pseudoPatientId` **aleatorio por consulta** (nunca en el prompt) y fechas relativas.
-  - El **texto libre** (pregunta y notas) se enmascara con un detector de PII, cuyos formatos son configurables sin asumir un país (D-05b).
+  - El **texto libre** (pregunta y notas) se enmascara con un detector de PII, cuyos formatos son configurables sin asumir un país.
   - Esto aplica **siempre**, no "cuando sea necesario".
-- **Gate de PII en documentos (T-4):**
+- **Gate de PII en documentos:**
   - En `sintetico` y `real_anonimizado`, cualquier PII lleva a `cuarentena_pii`.
   - En `real_identificado` se esperan la identidad del propio paciente (usada para verificar que el documento corresponde) y cualquier otra PII se enmascara.
-- **Regla de proveedores (D-04b):** Backend 1 envía `dataClassification` y Backend 2 **solo** usa modelos locales para datos reales, sin *fallback* a la nube. Hay un test que lo verifica.
+- **Regla de proveedores:** Backend 1 envía `dataClassification` y Backend 2 **solo** usa modelos locales para datos reales, sin *fallback* a la nube. Hay un test que lo verifica.
 - **Credencial de servicio** (Backend 1 → Backend 2): JWT con **firma asimétrica (ES256 o RS256)**.
   - Solo `clinical-api` tiene la clave privada.
   - Claims `iss = clinical-api`, `aud = rag-orchestrator` y `exp` corto, con el algoritmo fijado.
   - La sesión del doctor **nunca** viaja hasta Backend 2.
-- **Aislamiento de Backend 2 (D-42):** sin credenciales ni red hacia `clinical-minio`. En PostgreSQL solo usa el rol `rag_corpus`:
+- **Aislamiento de Backend 2:** sin credenciales ni red hacia `clinical-minio`. En PostgreSQL solo usa el rol `rag_corpus`:
   - `USAGE` y DML solo sobre el schema `corpus`;
   - `REVOKE ALL` sobre `auth`, `identity`, `clinical`, `audit` y `research`, más `ALTER DEFAULT PRIVILEGES` para las tablas futuras;
   - `pg_hba` restringido a `corpus-db-net` con TLS;
@@ -449,14 +451,14 @@ flowchart LR
 - **Validación de entrada** en cada borde: Zod en Backend 1, Pydantic en Backend 2. PDFs validados por *magic bytes* y duplicados por checksum.
 - **Consentimientos por eventos** (`PatientConsent`):
   - `analisis_ia` requerido para consultar.
-  - `investigacion` es **opt-out** bajo el contrato marco (D-20, D-30).
-  - Pueden venir firmados por un **representante legal** en menores (D-37). Al cumplir la mayoría de edad, el paciente queda marcado "requiere ratificación" (D-40).
-- **Retención (D-35, D-36):**
+  - `investigacion` es **opt-out** bajo el contrato marco.
+  - Pueden venir firmados por un **representante legal** en menores. Al cumplir la mayoría de edad, el paciente queda marcado "requiere ratificación".
+- **Retención:**
   - Hasta 10 años desde la aceptación del contrato o la primera cita, renovación automática hasta 20.
   - Al vencer o con la **baja total** se borran la identidad, los representantes, el histórico y los PDFs, y el resto queda seudonimizado.
-  - La **baja de investigación** borra solo el histórico (D-41).
+  - La **baja de investigación** borra solo el histórico.
   - No aplica a los datos anonimizados.
-- **Gate G-piloto:** ningún dato real entra a la aplicación antes del Sprint 5 (D-22). `REAL_ANONYMIZED_ENABLED` y `REAL_IDENTIFIED_ENABLED` exigen:
+- **Gate G-piloto:** ningún dato real entra a la aplicación antes del Sprint 5. `REAL_ANONYMIZED_ENABLED` y `REAL_IDENTIFIED_ENABLED` exigen:
   - autorización por equipo tratante;
   - auditoría;
   - gate de PII;
@@ -471,7 +473,7 @@ flowchart LR
   `oncolens preflight real-data` lo verifica.
 - **Trazabilidad:** cada análisis se persiste con las citas como **snapshot autocontenido**, el contexto enviado, los modelos, la versión del prompt y los parámetros (§3.2).
 - **Rate limiting:** 6 consultas por minuto y 1 consulta en curso por usuario y paciente en Backend 1; semáforo de inferencia en Backend 2 (`429` con `Retry-After`). Todos los valores son configurables.
-- **Repositorio público:** nunca contiene datos reales ni secretos; CI escanea secretos y PII (N-09).
+- **Repositorio público:** nunca contiene datos reales ni secretos; CI escanea secretos y PII.
 
 ### **2.6. Tests**
 
@@ -485,10 +487,10 @@ flowchart LR
 
 **Contract testing:** se genera un cliente TypeScript tipado a partir del spec OpenAPI de Backend 2 y lo consume Backend 1; un cambio incompatible rompe el build. En CI se validan ambos specs.
 
-**Evaluación de calidad de la IA (T-5, OL-06):** es un entregable desde el Sprint 1 (baseline) y es **obligatoria en cada PR que cambie un modelo, un prompt, un umbral o el corpus**.
-- **Datasets:** preguntas en español e inglés por tipo de cáncer, preguntas sin evidencia, documentos de OCR de referencia y PII sembrada. En el repo solo hay datos sintéticos; los reales anonimizados se usan fuera del repo desde el Sprint 1–2 (D-34).
+**Evaluación de calidad de la IA (OL-06):** es un entregable desde el Sprint 1 (baseline) y es **obligatoria en cada PR que cambie un modelo, un prompt, un umbral o el corpus**.
+- **Datasets:** preguntas en español e inglés por tipo de cáncer, preguntas sin evidencia, documentos de OCR de referencia y PII sembrada. En el repo solo hay datos sintéticos; los reales anonimizados se usan fuera del repo desde el Sprint 1–2.
 - **Métricas iniciales:** recall@10 ≥ 0,80 (≥ 0,70 de español a inglés), MRR ≥ 0,60, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, exactitud de "sin evidencia" ≥ 0,90, OCR por campo crítico ≥ 0,95 y sensibilidad de PII ≥ 0,95. Se ajustan con el baseline.
-- **Validación clínica:** un oncólogo revisa una muestra; los reportes distinguen lo validado clínicamente de lo que no (D-09).
+- **Validación clínica:** un oncólogo revisa una muestra; los reportes distinguen lo validado clínicamente de lo que no.
 
 ### **2.7. Observabilidad**
 
@@ -516,7 +518,7 @@ Hay dos modelos, alineados con la regla de ownership de la sección 2:
 - el **relacional** (PostgreSQL + `clinical-minio`, propiedad exclusiva de Backend 1);
 - el del **corpus científico** (Milvus + catálogo en el schema `corpus` de PostgreSQL + MinIO de Milvus, propiedad de Backend 2).
 
-El proyecto usa **solo dos motores de base de datos: PostgreSQL y Milvus** (D-42).
+El proyecto usa **solo dos motores de base de datos: PostgreSQL y Milvus**.
 
 No hay FKs reales entre ambos, solo referencias lógicas.
 
@@ -860,7 +862,7 @@ erDiagram
     CORPUS_CHUNK {
         string chunk_id PK "colección Milvus corpus_chunks"
         string document_id "referencia lógica"
-        vector dense_vector "modelo multilingüe (ADR-0001)"
+        vector dense_vector "modelo multilingüe (ADR de modelos locales)"
         vector sparse_vector "mismo modelo; poblado desde el Sprint 3"
         text chunk_text
         int chunk_index
@@ -887,33 +889,33 @@ erDiagram
 - **User / Role / Permission / RolePermission:** RBAC completo. `User` guarda el hash Argon2id y el estado de bloqueo por intentos fallidos.
 - **Session:** sesión persistida con token opaco (solo `token_hash`), revocable, con expiración absoluta y por inactividad.
 - **Patient:** entidad clínica **sin datos personales**. Su `id` (UUID) es lo que usan las FKs, la API y los *logs*. Campos principales:
-  - `data_origin`: clase de datos (D-02c).
-  - `source_dataset` y `agreement_reference`: origen y convenio (D-21).
-  - `retention_*`: plazos (D-35, D-36).
-  - `requires_ratification`: marca la mayoría de edad (D-40).
+  - `data_origin`: clase de datos.
+  - `source_dataset` y `agreement_reference`: origen y convenio.
+  - `retention_*`: plazos.
+  - `requires_ratification`: marca la mayoría de edad.
 - **PatientIdentity (schema `identity`):** tipo y número de documento más nombres, **cifrados en la aplicación**, con un índice ciego HMAC para la búsqueda exacta. Los pacientes sintéticos usan el tipo `sintetico` y los anonimizados el tipo `seudonimo`, para que nunca colisionen con documentos reales.
-- **LegalRepresentative (schema `identity`):** representante legal de un paciente menor, con los mismos datos cifrados. Es obligatorio para registrar a un paciente con tarjeta de identidad (D-37).
-- **CareEpisode:** episodios de atención. El **egreso** cierra el episodio (lo ejecuta el tratante principal o un administrador, D-24) y la **reactivación** abre uno nuevo, conservando la historia (D-07c).
-- **CareTeamMember:** equipo tratante con varios doctores activos y uno principal. Es la base de la autorización por paciente (D-12a).
-- **PatientConsent:** eventos de consentimiento (`analisis_ia`, `investigacion`), con base legal, referencia del contrato y firmante (paciente o representante). El vigente es el último evento de cada tipo. Investigación es **opt-out** bajo el contrato marco, y la entidad médica puede marcar exclusiones en los datos de origen (D-20, D-30).
-- **IntakeDraft:** borrador del registro asistido por OCR, con sugerencias y su confianza. El OCR nunca crea pacientes: el doctor confirma (D-07).
-- **Diagnosis:** modelo **genérico por tipo de cáncer**. `staging_system` y `stage_value` cubren TNM (mama), grupo de grado ISUP (próstata) y grupos de riesgo (leucemia); `performance_scale` y `performance_value` cubren ECOG, Karnofsky y Lansky (D-38).
-  - **Regla de vigencia por fecha (D-25):** un diagnóstico extraído con fecha anterior al vigente se guarda como histórico. Uno con fecha posterior, o sin fecha confiable, queda `requiere_revision` en conflicto con el vigente. El oncólogo lo confirma o lo descarta.
+- **LegalRepresentative (schema `identity`):** representante legal de un paciente menor, con los mismos datos cifrados. Es obligatorio para registrar a un paciente con tarjeta de identidad.
+- **CareEpisode:** episodios de atención. El **egreso** cierra el episodio (lo ejecuta el tratante principal o un administrador) y la **reactivación** abre uno nuevo, conservando la historia.
+- **CareTeamMember:** equipo tratante con varios doctores activos y uno principal. Es la base de la autorización por paciente.
+- **PatientConsent:** eventos de consentimiento (`analisis_ia`, `investigacion`), con base legal, referencia del contrato y firmante (paciente o representante). El vigente es el último evento de cada tipo. Investigación es **opt-out** bajo el contrato marco, y la entidad médica puede marcar exclusiones en los datos de origen.
+- **IntakeDraft:** borrador del registro asistido por OCR, con sugerencias y su confianza. El OCR nunca crea pacientes: el doctor confirma.
+- **Diagnosis:** modelo **genérico por tipo de cáncer**. `staging_system` y `stage_value` cubren TNM (mama), grupo de grado ISUP (próstata) y grupos de riesgo (leucemia); `performance_scale` y `performance_value` cubren ECOG, Karnofsky y Lansky.
+  - **Regla de vigencia por fecha:** un diagnóstico extraído con fecha anterior al vigente se guarda como histórico. Uno con fecha posterior, o sin fecha confiable, queda `requiere_revision` en conflicto con el vigente. El oncólogo lo confirma o lo descarta.
   - Un dato de OCR nunca reemplaza en silencio a uno verificado.
 - **ClinicalNote / Exam / Biomarker:** datos clínicos con su procedencia.
   - `entry_method`: `ocr`, `manual`, `manual_correction` o `seed`.
-  - **Dos etiquetas independientes (D-06):** `extraction_confidence` (alta, media o baja; se calcula con señales deterministas, nunca con la confianza que reporta el LLM) y `review_status`.
+  - **Dos etiquetas independientes:** `extraction_confidence` (alta, media o baja; se calcula con señales deterministas, nunca con la confianza que reporta el LLM) y `review_status`.
   - `Biomarker.significance_source` indica si el semáforo viene del documento, de una regla del catálogo o de una inferencia de IA. Una inferencia de IA tiene un tope de confianza `media` y siempre queda para revisión.
-  - `source_span` permite abrir el PDF en el valor exacto (D-23).
+  - `source_span` permite abrir el PDF en el valor exacto.
   - Los datos `rechazado` o `reemplazado` no entran al RAG ni a la ficha.
 - **Document:** metadatos del archivo. El binario está en `clinical-minio`. La tabla funciona como **cola de extracción** (`SKIP LOCKED`, `attempts`, `processing_started_at`). `checksum` detecta duplicados, y los estados `cuarentena_pii` y `requiere_revision_identidad` bloquean la persistencia de datos clínicos.
 - **Treatment:** decisión clínica real, con un vínculo opcional al análisis que la originó (Sprint 4). No puede vincularse a una recomendación descartada.
 - **AIAnalysisRecord:** snapshot inmutable de cada consulta.
   - Cada recomendación lleva su `relevance_score` (**relevancia de la evidencia recuperada**, calculada por el *reranker*; no mide solidez clínica ni probabilidad de éxito), sus citas como snapshot y un aviso si depende de datos no verificados.
-  - `discarded_recommendations` conserva las recomendaciones descartadas por falta de soporte, solo para revisión (D-27).
+  - `discarded_recommendations` conserva las recomendaciones descartadas por falta de soporte, solo para revisión.
   - `top_relevance_score` es `null` cuando no hubo evidencia.
   - `clinical_context_snapshot`, los modelos, la versión del prompt y `retrieval_params` hacen el análisis **reproducible**.
-- **ResearchSubjectMap / EpisodeSnapshot:** histórico **mínimo** del MVP (D-19). Al egresar, y solo si no hay opt-out de investigación, se inserta un snapshot JSON versionado con un seudónimo propio, sin identidad, sin texto libre y con fechas relativas. El modelo normalizado, los desenlaces y el análisis de grafos son alcance futuro.
+- **ResearchSubjectMap / EpisodeSnapshot:** histórico **mínimo** del MVP. Al egresar, y solo si no hay opt-out de investigación, se inserta un snapshot JSON versionado con un seudónimo propio, sin identidad, sin texto libre y con fechas relativas. El modelo normalizado, los desenlaces y el análisis de grafos son alcance futuro.
 - **AuditLog:** accesos y acciones sobre datos clínicos e identidad (lectura de la ficha, consulta RAG, carga, apertura del documento de origen, revisión, consentimientos, bajas, renovaciones y borrados de retención), siempre sin PHI.
 
 **Corpus:**
@@ -925,16 +927,16 @@ erDiagram
 > Decisiones identificadas durante el diseño, cada una resuelta explícitamente. Se formalizan como ADRs individuales en `docs/architecture/adr/`.
 
 1. **Granularidad de RBAC:** ✅ tablas `Role`, `Permission` y `RolePermission` completas.
-2. **Asignación doctor–paciente:** ✅ **equipo tratante** con varios doctores activos y uno principal (`CareTeamMember`, D-12a). Reemplaza la asignación única.
+2. **Asignación doctor–paciente:** ✅ **equipo tratante** con varios doctores activos y uno principal (`CareTeamMember`). Reemplaza la asignación única.
 3. **Multi-tenancy:** ✅ no aplica (una institución).
-4. **Retención y borrado:** ✅ **resuelto (D-35, D-36, D-41).**
+4. **Retención y borrado:** ✅ **resuelto.**
    - Hasta 10 años desde la aceptación del contrato o la primera cita, renovación automática hasta 20.
    - Al vencer o con la baja total se borran la identidad, los representantes, el histórico y los PDFs, y el resto se seudonimiza.
    - La baja de investigación borra solo el histórico.
    - No aplica a los datos anonimizados.
    - Plazos configurables y un job diario auditado.
 5. **Versionado del corpus:** ✅ se conserva el histórico, y la recuperación usa solo `is_current`. El catálogo vive en el schema `corpus` de PostgreSQL para tener transacciones (ver #17).
-6. **Cifrado a nivel de columna:** 🔄 **reabierto y resuelto (D-02c).** El descarte original suponía que no había datos identificables. Con cédula y nombres reales en el piloto, la identidad se cifra **en la aplicación** (AES-256-GCM) en el schema `identity`, con un índice ciego HMAC para la búsqueda exacta.
+6. **Cifrado a nivel de columna:** 🔄 **reabierto y resuelto.** El descarte original suponía que no había datos identificables. Con cédula y nombres reales en el piloto, la identidad se cifra **en la aplicación** (AES-256-GCM) en el schema `identity`, con un índice ciego HMAC para la búsqueda exacta.
    - **Descartados:** columnas en claro; `pgcrypto`, porque la clave viaja en las consultas; y solo cifrado de disco, porque no protege contra *dumps* ni *logs*.
 7. **Scoring de evidencia clínica:** 🚧 **pendiente de ADR.** Mientras tanto, `relevance_score` mide la relevancia de la recuperación (ver #8), y un campo `clinical_evidence_score` queda reservado.
 8. **Puntaje de relevancia:** ✅ `relevance_score` = puntaje del *reranker* multilingüe normalizado a [0,1] y versionado. Es `null` sin evidencia.
@@ -943,19 +945,19 @@ erDiagram
 9. **Origen de los datos semilla:** ✅ `entry_method = seed`, solo fuera del entorno piloto.
 10. **Filtro por fuente, tipo de cáncer e idioma en Milvus:** ✅ metadatos denormalizados en `CorpusChunk`.
 11. **Mecanismo asíncrono de extracción:** ✅ `Document` como cola.
-12. **Diagnóstico extraído frente al vigente:** ✅ nunca se reemplaza automáticamente, con la regla de vigencia por fecha (D-25). El conflicto usa `review_status` y `conflicts_with_id`, y ya no `is_active = false`. Reglas a validar con el oncólogo.
-13. **Alcance de `Treatment` y `PatientContactInfo`:** ✅ `Treatment` entra en el Sprint 4. `PatientContactInfo` se **elimina** del modelo: la identidad se limita a documento y nombres (D-02c).
-14. **Clases de datos:** ✅ `sintetico`, `real_anonimizado` y `real_identificado`, con reglas distintas de PII, proveedores y retención (D-02c).
-15. **Confianza y revisión de datos de OCR:** ✅ dos ejes independientes. Todo dato entra al RAG etiquetado; los `rechazado` nunca entran (D-06, D-23).
+12. **Diagnóstico extraído frente al vigente:** ✅ nunca se reemplaza automáticamente, con la regla de vigencia por fecha. El conflicto usa `review_status` y `conflicts_with_id`, y ya no `is_active = false`. Reglas a validar con el oncólogo.
+13. **Alcance de `Treatment` y `PatientContactInfo`:** ✅ `Treatment` entra en el Sprint 4. `PatientContactInfo` se **elimina** del modelo: la identidad se limita a documento y nombres.
+14. **Clases de datos:** ✅ `sintetico`, `real_anonimizado` y `real_identificado`, con reglas distintas de PII, proveedores y retención.
+15. **Confianza y revisión de datos de OCR:** ✅ dos ejes independientes. Todo dato entra al RAG etiquetado; los `rechazado` nunca entran.
 16. **Almacén de documentos clínicos:** ✅ `clinical-minio` separado del MinIO de Milvus, con el binario enviado en el cuerpo del request a Backend 2.
     - **Descartados:** buckets compartidos con políticas, porque Milvus tiene credenciales administrativas; y URL prefirmada, porque exige una ruta de red desde Backend 2.
-17. **Catálogo del corpus:** ✅ **schema `corpus` del PostgreSQL existente** (D-42: solo PostgreSQL y Milvus como motores), con el rol `rag_corpus` limitado a ese schema, red `corpus-db-net`, `pg_hba` restringido y tests de acceso denegado. El invariante de Backend 2 pasa de "sin red hacia PostgreSQL" a "sin acceso a los datos clínicos".
+17. **Catálogo del corpus:** ✅ **schema `corpus` del PostgreSQL existente** (solo PostgreSQL y Milvus como motores), con el rol `rag_corpus` limitado a ese schema, red `corpus-db-net`, `pg_hba` restringido y tests de acceso denegado. El invariante de Backend 2 pasa de "sin red hacia PostgreSQL" a "sin acceso a los datos clínicos".
     - **Descartados:** SQLite, porque agrega otro motor; una colección de Milvus sin vectores, porque no tiene transacciones; un contenedor PostgreSQL extra, por su memoria y operación. Una *base de datos* separada en la misma instancia queda como endurecimiento opcional.
-18. **Consentimientos:** ✅ por eventos, con opt-out de investigación bajo el contrato marco y firma del representante legal en menores. La mayoría de edad marca "requiere ratificación" (D-20, D-30, D-37, D-40).
-19. **Histórico de investigación:** ✅ mínimo en el MVP (`EpisodeSnapshot`); el completo es futuro (D-19).
+18. **Consentimientos:** ✅ por eventos, con opt-out de investigación bajo el contrato marco y firma del representante legal en menores. La mayoría de edad marca "requiere ratificación".
+19. **Histórico de investigación:** ✅ mínimo en el MVP (`EpisodeSnapshot`); el completo es futuro.
 20. **Episodios y egreso:** ✅ `CareEpisode`. El egreso lo ejecutan el tratante principal o un administrador, y la reactivación conserva la historia.
-21. **Modelo de diagnóstico genérico:** ✅ `staging_system`, `stage_value`, `performance_scale` y `performance_value`, con catálogos por tipo de cáncer como datos versionados (D-38).
-22. **Alcance por tipo de cáncer:** ✅ `ENABLED_CANCER_TYPES`: primero mama y próstata, y leucemia como tercer tipo (D-39). Criterio de "listo" para habilitar un tipo:
+21. **Modelo de diagnóstico genérico:** ✅ `staging_system`, `stage_value`, `performance_scale` y `performance_value`, con catálogos por tipo de cáncer como datos versionados.
+22. **Alcance por tipo de cáncer:** ✅ `ENABLED_CANCER_TYPES`: primero mama y próstata, y leucemia como tercer tipo. Criterio de "listo" para habilitar un tipo:
     - catálogo revisado por el oncólogo;
     - corpus con licencia;
     - dataset de evaluación que cumpla las metas;
@@ -1042,7 +1044,7 @@ components:
 
     DiscardedRecommendation:
       type: object
-      description: Solo para revisión del oncólogo; no es una recomendación (D-27).
+      description: Solo para revisión del oncólogo; no es una recomendación.
       properties:
         treatment: { type: string }
         rationale: { type: string }
@@ -1271,7 +1273,7 @@ paths:
         "404": { description: Paciente no encontrado }
 ```
 
-**Endpoints adicionales** (forman parte del spec completo en `docs/api/`; detalle en `docs/review/propuesta-de-solucion.md` §6):
+**Endpoints adicionales** (forman parte del spec completo en `docs/api/`, a generar desde el código):
 
 | Método y ruta | Propósito | Sprint |
 |---|---|---|
@@ -1286,7 +1288,7 @@ paths:
 | `GET /platform/patients/{id}/analyses` · `…/analyses/{analysisId}` | Historial de análisis (HU-11) | 4 |
 | `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (HU-12) | 4 |
 | `POST /platform/patients/{id}/episodes/current/close` · `POST …/episodes` | Egreso y reactivación (HU-13) | 4 |
-| `POST /platform/patients/{id}/consents` · `POST …/withdrawals` | Consentimientos; bajas de investigación o total (D-41) | 1 / 4 |
+| `POST /platform/patients/{id}/consents` · `POST …/withdrawals` | Consentimientos; bajas de investigación o total | 1 / 4 |
 | `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante (HU-14) | 5 |
 
 **Ejemplo — `POST /platform/rag/query`** (paciente sintético)
@@ -1326,7 +1328,7 @@ Respuesta (`200`):
 }
 ```
 
-> El ejemplo es ilustrativo: el texto y los identificadores de la cita muestran el formato, no contenido clínico validado. Los ejemplos no usan NCCN ni ESMO porque su licencia está pendiente (D-28).
+> El ejemplo es ilustrativo: el texto y los identificadores de la cita muestran el formato, no contenido clínico validado. Los ejemplos no usan NCCN ni ESMO porque su licencia está pendiente.
 
 ### **4.2. `rag-orchestrator` (Backend 2) — API interna**
 
@@ -1624,8 +1626,8 @@ Respuesta (`200`): el mismo formato de `recommendations` y `discardedRecommendat
 
 El proyecto crece como un *walking skeleton* iterativo e incremental: desde el Sprint 1 existe un recorrido **end-to-end real**, y cada sprint siguiente lo amplía.
 - **Sprints 1–4:** operan **solo con datos sintéticos**.
-- **Datos reales:** la calibración con datos reales anonimizados empieza desde el Sprint 1–2, siempre **fuera** de la aplicación y del repo (D-34). Los datos reales entran a la aplicación **solo después del Sprint 5 y del gate G-piloto** (D-22).
-- **Alcance clínico:** mama y próstata; leucemia es el tercer tipo (D-39).
+- **Datos reales:** la calibración con datos reales anonimizados empieza desde el Sprint 1–2, siempre **fuera** de la aplicación y del repo. Los datos reales entran a la aplicación **solo después del Sprint 5 y del gate G-piloto**.
+- **Alcance clínico:** mama y próstata; leucemia es el tercer tipo.
 
 **Sprint 1 — Walking skeleton: demostrar el objetivo central de punta a punta**
 
@@ -1636,7 +1638,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 - KR4: baseline de evaluación registrado (OL-06), con métricas de recuperación, generación y "sin evidencia" en español e inglés.
 
 *Alcance incluido:*
-- [ADR-0001](docs/architecture/adr/0001-evaluacion-modelos-locales.md) al inicio: runtime y LLM nativo, *embeddings* multilingües, *reranker*, NLI y presupuesto de memoria.
+- ADR de evaluación de modelos locales al inicio (1.4): runtime y LLM nativo, *embeddings* multilingües, *reranker*, NLI y presupuesto de memoria.
 - Autenticación completa: login, logout, TTL, bloqueo y Argon2id.
 - Listado y registro manual de pacientes sintéticos, con identidad cifrada e índice ciego desde el inicio.
 - Ficha mínima y consulta RAG *dense* multilingüe con *reranker*, chequeo NLI y sección de descartadas.
@@ -1697,7 +1699,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 - KR2: 100% de las requests con `traceId` correlacionable.
 - KR3: *mutation score* de StrykerJS ≥ 70% sobre auth, autorización y cifrado.
 
-**Después del piloto inicial:** leucemia se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22), con el flujo de menores completo (D-37, D-40). El histórico de investigación completo es alcance futuro (D-19).
+**Después del piloto inicial:** leucemia se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22), con el flujo de menores completo. El histórico de investigación completo es alcance futuro.
 
 *Nota:* si el Sprint 6 no llega a ejecutarse, el piloto sigue siendo posible, porque los controles necesarios para datos reales están en los Sprints 2 y 5. Sin el Sprint 5, en cambio, el producto solo es demostrable con datos sintéticos.
 
@@ -1717,8 +1719,8 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 **2. Contexto y Alcance (Context & Scope)**
 * **Descripción:** primer paso de cualquier interacción con OncoLens. Crea la `Session` persistida (token opaco, 2.5) que el `Middleware`/Guard valida en cada request posterior (C4 Nivel 3).
 * **Entidades afectadas:** `User`, `Session`, `Role`.
-* **Parámetros (D-29, configurables):** sesión de 8 h, cierre por 30 min de inactividad, bloqueo de 15 min tras 5 intentos fallidos, contraseñas con Argon2id, rotación del token al iniciar sesión.
-* **Restricciones:** el password nunca se guarda en claro (`password_hash`, Argon2id). El **bloqueo por intentos fallidos entra en esta historia** (D-29). El login pasa por el Route Handler de `web` (`/api/auth/login`), nunca directo a `clinical-api`.
+* **Parámetros (configurables):** sesión de 8 h, cierre por 30 min de inactividad, bloqueo de 15 min tras 5 intentos fallidos, contraseñas con Argon2id, rotación del token al iniciar sesión.
+* **Restricciones:** el password nunca se guarda en claro (`password_hash`, Argon2id). El **bloqueo por intentos fallidos entra en esta historia**. El login pasa por el Route Handler de `web` (`/api/auth/login`), nunca directo a `clinical-api`.
 
 **3. Criterios de Aceptación (Gherkin Format)**
 
@@ -1760,7 +1762,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 **2. Contexto y Alcance (Context & Scope)**
 * **Descripción:** es el "Panel del doctor" del mockup (1.3), en su versión mínima de Sprint 1. Alimenta con contexto la consulta RAG de HU-03.
 * **Entidades afectadas:** `Patient`, `PatientIdentity` (descifrada solo para esta respuesta), `Diagnosis`, `Biomarker`, `Exam`, `AuditLog`.
-* **Restricciones:** en este sprint, **cualquier doctor autenticado puede ver cualquier paciente**. Es aceptable solo porque en los Sprints 1–4 hay únicamente datos sintéticos (D-22). La restricción por equipo tratante (`CareTeamMember`) se incorpora en el Sprint 5, antes de cualquier dato real. Cada lectura de la ficha queda auditada.
+* **Restricciones:** en este sprint, **cualquier doctor autenticado puede ver cualquier paciente**. Es aceptable solo porque en los Sprints 1–4 hay únicamente datos sintéticos. La restricción por equipo tratante (`CareTeamMember`) se incorpora en el Sprint 5, antes de cualquier dato real. Cada lectura de la ficha queda auditada.
 
 **3. Criterios de Aceptación (Gherkin Format)**
 
@@ -1793,7 +1795,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 **2. Contexto y Alcance (Context & Scope)**
 * **Descripción:** el corazón del producto (Flujo 2, 2.1). En el Sprint 1 el corpus es un seed manual de mama y próstata, y la recuperación es **dense multilingüe con *reranker*** (sparse llega en el Sprint 3). La respuesta trae **una sola recomendación**; el array rankeado llega en el Sprint 4. La respuesta sale en el idioma de la pregunta.
 * **Entidades afectadas:** `AIAnalysisRecord`, `CorpusChunk` (Milvus, vía `rag-orchestrator`), `AuditLog`.
-* **Restricciones:** el sistema **nunca muestra como recomendación algo sin fuente citada o sin soporte en la evidencia**. Si no hay evidencia suficiente, lo dice explícitamente. Las recomendaciones que no superan el chequeo de soporte se muestran solo en la sección de descartadas (D-27).
+* **Restricciones:** el sistema **nunca muestra como recomendación algo sin fuente citada o sin soporte en la evidencia**. Si no hay evidencia suficiente, lo dice explícitamente. Las recomendaciones que no superan el chequeo de soporte se muestran solo en la sección de descartadas.
 
 **3. Criterios de Aceptación (Gherkin Format)**
 
@@ -1868,9 +1870,9 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 * **Para** revisar rápidamente el estado del paciente sin abrir el PDF original
 
 **2. Contexto y Alcance (Context & Scope)**
-* **Descripción:** consume el resultado de HU-04 una vez `Document.ocrStatus = completado`. Puebla `Biomarker` (con `resultType`, `clinicalSignificance` y `significanceSource`, 3.2) y `ClinicalNote`/`Exam` con `entry_method = ocr`, cada dato con su **confianza de extracción** y su **estado de revisión** (D-06).
+* **Descripción:** consume el resultado de HU-04 una vez `Document.ocrStatus = completado`. Puebla `Biomarker` (con `resultType`, `clinicalSignificance` y `significanceSource`, 3.2) y `ClinicalNote`/`Exam` con `entry_method = ocr`, cada dato con su **confianza de extracción** y su **estado de revisión**.
 * **Entidades afectadas:** `Biomarker`, `Exam`, `ClinicalNote`, `Document`.
-* **Restricciones:** todo dato con `entry_method = ocr` se muestra como tal, con su confianza (alta, media o baja) y su estado de revisión. Los datos entran al RAG **etiquetados** (D-06). La corrección en UI (HU-09) llega en el **Sprint 3**; en este sprint los datos extraídos son de solo lectura.
+* **Restricciones:** todo dato con `entry_method = ocr` se muestra como tal, con su confianza (alta, media o baja) y su estado de revisión. Los datos entran al RAG **etiquetados**. La corrección en UI (HU-09) llega en el **Sprint 3**; en este sprint los datos extraídos son de solo lectura.
 
 **3. Criterios de Aceptación (Gherkin Format)**
 
@@ -1879,7 +1881,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 * **Cuando** el doctor abre la ficha del paciente
 * **Entonces** ve la tabla de biomarcadores actualizada, cada fila con su `clinicalSignificance` como badge de color (normal/alterado/relevante/crítico)
 * **Y** cada fila muestra su confianza de extracción y su estado de revisión
-* **Y** desde cada biomarcador puede abrir el PDF de origen en la página del valor, con el fragmento resaltado (D-23)
+* **Y** desde cada biomarcador puede abrir el PDF de origen en la página del valor, con el fragmento resaltado
 
 *Escenario 3: Dato de baja confianza*
 * **Dado que** un valor se extrajo con confianza `baja`, o su semáforo lo infirió la IA
@@ -1932,9 +1934,9 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 | OL-03 | `clinical-api`: RAG Gateway `POST /platform/rag/query` (contexto etiquetado y desidentificado, JWT de servicio, persistencia de `AIAnalysisRecord`) | Backend | 1 | HU-03 | Hace cumplir en código las reglas más críticas: ownership de datos, *Doctor session ≠ Service credential*, minimización/anonimización. |
 | OL-04 | `web`: Panel de interacción IA + Route Handler `app/api/rag/route.ts` | Frontend | 1 | HU-03 | Es lo que el doctor ve y usa desde el Sprint 1 — sin esto el walking skeleton no es demostrable. |
 | OL-05 | Carga de PDF + extracción asíncrona (OCR) end-to-end, con confianza por campo y gate de PII | Backend | 2 | HU-04, HU-05 | Entregable central del Sprint 2: elimina la captura manual de datos clínicos (OKR del Sprint 2). |
-| OL-06 | Baseline de evaluación de calidad de la IA (T-5) + suite de regresión | Backend / datos | 1 | HU-03 | Sin medición no se puede afirmar que el producto cumple su objetivo, ni proteger los cambios de modelo que decide el ADR-0001. |
+| OL-06 | Baseline de evaluación de calidad de la IA + suite de regresión | Backend / datos | 1 | HU-03 | Sin medición no se puede afirmar que el producto cumple su objetivo, ni proteger los cambios de modelo que decide el ADR de modelos locales. |
 
-*Backlog de Sprint 1–2 no detallado aquí* (necesario, pero de solución estándar o de menor impacto diferencial): autenticación completa + Guard (HU-01), prerrequisito de OL-03, OL-04 y OL-05 · listado y registro manual de pacientes con identidad cifrada (HU-06, HU-07) · `GET /platform/patients/{patientId}` + Panel del doctor mínimo (HU-02) · Route Handlers de `web` para todos los endpoints + CSRF · registro asistido por OCR (HU-08) · ADR-0001 de modelos locales · `docker-compose.yml` base con healthchecks (2.4, 2.7) · generación de `packages/api-contracts` desde los dos OpenAPI (2.6) · UI de carga de documentos y de biomarcadores extraídos con semáforo (HU-04/HU-05, frontend).
+*Backlog de Sprint 1–2 no detallado aquí* (necesario, pero de solución estándar o de menor impacto diferencial): autenticación completa + Guard (HU-01), prerrequisito de OL-03, OL-04 y OL-05 · listado y registro manual de pacientes con identidad cifrada (HU-06, HU-07) · `GET /platform/patients/{patientId}` + Panel del doctor mínimo (HU-02) · Route Handlers de `web` para todos los endpoints + CSRF · registro asistido por OCR (HU-08) · ADR de modelos locales · `docker-compose.yml` base con healthchecks (2.4, 2.7) · generación de `packages/api-contracts` desde los dos OpenAPI (2.6) · UI de carga de documentos y de biomarcadores extraídos con semáforo (HU-04/HU-05, frontend).
 
 **Definition of Done común** (aplica a los 6 tickets, además de sus criterios propios):
 - PR revisado y mergeado a `main` con CI en verde: build, tests y validación de specs OpenAPI (`.github/workflows/`, 2.3).
@@ -1946,7 +1948,7 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 
 ### 6.1. Decisiones sobre las preguntas abiertas de los tickets
 
-> ⚠️ Estas decisiones son las de la primera revisión de los tickets. La revisión técnica cruzada posterior (D-01…D-41, `docs/review/propuesta-de-solucion.md`) actualizó varias; en particular #1 y #4 (`confidence_score` → `relevance_score`, calculado por el *reranker*), #10 (regla de vigencia por fecha y `review_status`) y #6 (el seudónimo por consulta se mantiene; la identidad real queda cifrada, D-02c).
+> ⚠️ Estas decisiones son las de la primera revisión de los tickets. La revisión técnica cruzada posterior actualizó varias; en particular #1 y #4 (`confidence_score` → `relevance_score`, calculado por el *reranker*), #10 (regla de vigencia por fecha y `review_status`) y #6 (el seudónimo por consulta se mantiene; la identidad real queda cifrada, §2.5).
 
 Al detallar los tickets surgieron preguntas que el resto del documento no respondía. Cada una se resolvió con opciones, recomendación y descarte explícito; las de alta incertidumbre quedan como ADR para investigarlas antes de decidir. Las decisiones ya están incorporadas en las secciones indicadas y en los tickets.
 
@@ -1983,12 +1985,12 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 | `audit` | `AuditLog` | Sprint 2 |
 | `research` | `EpisodeSnapshot` | Sprint 4 |
 
-**Alcance — no incluye:** `PatientContactInfo` (eliminada del modelo, §3.3 #13). Las tablas del schema `corpus`, que migra Backend 2 (OL-02); este ticket sí crea el schema vacío, el rol `rag_corpus`, sus `REVOKE` y `ALTER DEFAULT PRIVILEGES`, y la regla de `pg_hba.conf` (D-42).
+**Alcance — no incluye:** `PatientContactInfo` (eliminada del modelo, §3.3 #13). Las tablas del schema `corpus`, que migra Backend 2 (OL-02); este ticket sí crea el schema vacío, el rol `rag_corpus`, sus `REVOKE` y `ALTER DEFAULT PRIVILEGES`, y la regla de `pg_hba.conf`.
 
 **Tareas técnicas:**
 1. `schema.prisma`: datasource PostgreSQL con `schemas = ["auth", "identity", "clinical", "audit", "research"]` y `@@schema(...)` por modelo. Confirmar si la versión de Prisma requiere `previewFeatures` para el multi-schema.
 2. Nomenclatura: `snake_case` en la BD (`@@map`/`@map`) y `camelCase` en el cliente.
-3. Enums nativos para todos los enums de 3.1. Los valores con tilde se mapean (`critico @map("crítico")`). `entry_method` incluye `seed` y `manual`; `ocr_status` incluye `cuarentena_pii` y `requiere_revision_identidad`; `review_status` y `extraction_confidence` según T-1.
+3. Enums nativos para todos los enums de 3.1. Los valores con tilde se mapean (`critico @map("crítico")`). `entry_method` incluye `seed` y `manual`; `ocr_status` incluye `cuarentena_pii` y `requiere_revision_identidad`; `review_status` y `extraction_confidence` según §3.2.
 4. Restricciones e índices de 3.1: índice ciego único en `identity.patient_identity`, índices parciales del equipo tratante y de episodios, `document (patient_id, checksum)` y demás. FKs del schema `clinical` con `onDelete: Restrict`.
 5. `AIAnalysisRecord`: `recommendations`, `discarded_recommendations`, `clinical_context_snapshot`, `retrieval_params`, `sources_selected` y `filters_applied` como `jsonb`; `top_relevance_score` **nullable**; tabla inmutable (sin `updated_at`).
 6. Roles de base de datos: el rol de `clinical-api` para los schemas operativos y un rol de **solo inserción** para `research`.
@@ -2011,12 +2013,12 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Un `AIAnalysisRecord` con `recommendations = []` se guarda con `top_relevance_score = null`.
 - Ejecutar el seed en el entorno `piloto` aborta sin escribir datos.
 - El rol de `research` no puede leer ni actualizar, solo insertar.
-- Las credenciales de `clinical-api` no existen en la definición de servicio de `rag-orchestrator`, que solo tiene las de `rag_corpus` (regla 1 de `CLAUDE.md`). Con `rag_corpus`, `SELECT` sobre `auth`, `identity`, `clinical`, `audit` y `research` → *permission denied* (D-42).
+- Las credenciales de `clinical-api` no existen en la definición de servicio de `rag-orchestrator`, que solo tiene las de `rag_corpus` (regla 1 de `CLAUDE.md`). Con `rag_corpus`, `SELECT` sobre `auth`, `identity`, `clinical`, `audit` y `research` → *permission denied*.
 
 **Dependencias:** servicio `postgres` en `infra/docker/docker-compose.yml` y los scripts de claves y certificados (1.4).
 **Riesgos:** `sslmode=require` obliga a configurar certificados en el contenedor desde este ticket. La gestión de las claves de cifrado de identidad (generación y respaldo) debe quedar documentada: si se pierde la clave, se pierde la identidad.
 
-**Decisiones aplicadas:** 6.1 #1–#3 y #9, y las de `docs/review/propuesta-de-solucion.md`: D-02c (identidad cifrada), D-12a (equipo tratante), D-19 (histórico mínimo), D-20 (consentimientos por eventos), D-38 (diagnóstico genérico) y P2-02/P2-10 (trazabilidad y `relevance_score`).
+**Decisiones aplicadas:** 6.1 #1–#3 y #9, y de la revisión cruzada: identidad cifrada, equipo tratante, histórico mínimo, consentimientos por eventos, diagnóstico genérico, trazabilidad del análisis y `relevance_score` (§3.3).
 
 ---
 
@@ -2045,11 +2047,11 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Dado el corpus semilla cargado y una pregunta con evidencia relevante, cuando `clinical-api` invoca `POST /rag/query` con un JWT válido, entonces responde `200` con exactamente 1 recomendación con ≥ 1 elemento en `citedSources`, y todo `chunkId` citado existe en `corpus_chunks` con `is_current = true`.
 - Dada una pregunta sin evidencia sobre el umbral, responde `200` con `recommendations: []` y no se registra ninguna llamada al LLM.
 - Un request sin JWT, con JWT expirado, o que envía la cookie `oncolens_session` en lugar del JWT, responde `401`.
-- `rag-orchestrator` solo tiene las credenciales del rol `rag_corpus`, y con ellas cualquier `SELECT` sobre los schemas clínicos devuelve *permission denied* (regla 1 de `CLAUDE.md`, D-42).
+- `rag-orchestrator` solo tiene las credenciales del rol `rag_corpus`, y con ellas cualquier `SELECT` sobre los schemas clínicos devuelve *permission denied* (regla 1 de `CLAUDE.md`).
 - La latencia p95 sobre el corpus semilla queda registrada en el PR frente a la meta KR2 de Sprint 1 (≤ 15 s end-to-end, *propuesta, a calibrar*).
 
-**Ajustes tras la revisión cruzada (D-04, D-05, D-17, D-18, D-27, D-39):**
-- **Modelos:** los fija el [ADR-0001](docs/architecture/adr/0001-evaluacion-modelos-locales.md). El LLM corre nativo (Ollama o vLLM) y se consume vía `LLMAdapter` contra la API compatible con OpenAI. *Embeddings*, *reranker* y NLI corren en CPU dentro del contenedor.
+**Ajustes tras la revisión cruzada:**
+- **Modelos:** los fija el ADR de evaluación de modelos locales (1.4). El LLM corre nativo (Ollama o vLLM) y se consume vía `LLMAdapter` contra la API compatible con OpenAI. *Embeddings*, *reranker* y NLI corren en CPU dentro del contenedor.
 - **Pipeline:** detección de idioma → *embedding* multilingüe de la pregunta y los términos clínicos verificados → búsqueda dense con filtros `is_current`, `cancer_type_tags` y `population` → *reranker* → umbral → generación en el idioma de la pregunta → validación de citas → **chequeo de soporte NLI**. Las recomendaciones sin soporte van a `discardedRecommendations`.
 - **Regla de proveedores:** si `dataClassification` es real, solo se usan modelos locales; si el local no está disponible, `503`. Hay un test que verifica que no hay llamada a la nube.
 - **Semáforo de inferencia** (`429`), *deadline* (`X-Request-Deadline`) y bloque `meta` en la respuesta.
@@ -2092,7 +2094,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Si `rag-orchestrator` no responde dentro del timeout, el doctor recibe `504` y no se persiste ningún registro.
 - `rag-orchestrator` se invoca por el hostname interno de Docker Compose, nunca por un puerto publicado al host (2.4).
 
-**Ajustes tras la revisión cruzada (D-02c, D-04b, D-22, D-27, D-29, P2-02, P2-12):**
+**Ajustes tras la revisión cruzada:**
 - Ruta pública `/platform/rag/query`, accedida vía el Route Handler de `web`.
 - Enmascaramiento de PII en `query` antes de enviarla.
 - `dataClassification` en el request interno.
@@ -2145,13 +2147,13 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - En las herramientas de red del navegador solo aparecen requests a `web` (`/api/rag`) — ninguno directo a `clinical-api` ni a `rag-orchestrator`.
 - Con la sesión expirada, la consulta redirige a login sin mostrar datos del paciente.
 
-**Ajustes tras la revisión cruzada (D-26, D-27, D-01):**
+**Ajustes tras la revisión cruzada:**
 - Organismo `DiscardedRecommendations`: sección colapsada "Descartadas por falta de soporte — solo para revisión".
 - Aviso por tarjeta cuando `dependsOnUnverifiedData`.
 - Citas con idioma y traducción automática opcional etiquetada.
 - Etiqueta permanente "Uso académico/investigación".
 - Estados `tipo_no_habilitado` y `429`.
-- `sourcesSelected` usa `publicaciones` en lugar de `genomica` (D-28).
+- `sourcesSelected` usa `publicaciones` en lugar de `genomica`.
 
 **Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #4 rótulo "Relevancia de la evidencia" · #8 JSON completo, nunca tokens del LLM sin validar; el estado *Cargando* cubre la espera (≤ 15 s p95, *propuesta*) y, si la medición del KR2 lo justifica, el ADR de streaming de progreso lo reemplazará por pasos visibles (recuperando evidencia → generando → validando).
 
@@ -2166,7 +2168,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 **Alcance — incluye:** `POST /platform/patients/{patientId}/documents` (4.1); worker asíncrono con `Document` como cola; consulta del estado de un documento y listado paginado de documentos (4.1, endpoints adicionales); `sourceDocumentId` en los biomarcadores de `PatientSummary`; bucket `clinical-documents`; `POST /documents/extract` (4.2) con `DocumentExtractionService`; mapeo y persistencia con `entry_method = ocr`.
 **No incluye:** corrección manual en UI (HU-09, Sprint 3); validación de equipo tratante (Sprint 5); UI de carga y de biomarcadores extraídos (ticket de frontend de HU-04/HU-05, backlog); reutilización desde el pipeline de ingesta del corpus (carril paralelo — aunque el servicio se diseña ya reutilizable, 2.2).
 
-**Bloqueo:** la técnica ya está decidida: capa de texto + OCR local en las páginas escaneadas + estructuración con el LLM local (1.4). El motor concreto lo fija el ADR-0001, que debe estar resuelto para cerrar el ticket. El trabajo puede arrancar antes detrás de una interfaz `ExtractionAdapter` — coherente con 1.4, que anticipa que la decisión cambia "su diseño interno y sus adapters", no la ubicación del componente.
+**Bloqueo:** la técnica ya está decidida: capa de texto + OCR local en las páginas escaneadas + estructuración con el LLM local (1.4). El motor concreto lo fija el ADR de modelos locales (1.4), que debe estar resuelto para cerrar el ticket. El trabajo puede arrancar antes detrás de una interfaz `ExtractionAdapter` — coherente con 1.4, que anticipa que la decisión cambia "su diseño interno y sus adapters", no la ubicación del componente.
 
 **Tareas técnicas — `clinical-api`:**
 1. Endpoint multipart: sesión validada por el Guard; `documentType` validado contra el enum; archivo validado como PDF por *magic bytes* (`%PDF`), no solo por extensión o `Content-Type` declarado; tamaño máximo *(propuesta: 20 MB, HU-04)* → `422` antes de tocar MinIO o `rag-orchestrator` (HU-04, escenario 2). `404` si el paciente no existe.
@@ -2174,17 +2176,17 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 3. Creación de `Document` con `ocr_status = pendiente` y respuesta `202` + `Document` (4.1).
 4. **Worker de extracción con `Document` como cola** (6.1 #9): un proceso de sondeo dentro de `clinical-api` toma el siguiente documento `pendiente` con `SELECT … FOR UPDATE SKIP LOCKED` (vía `$queryRaw` de Prisma), lo marca `procesando` con `processing_started_at = now()` e incrementa `attempts` en la misma transacción — dos instancias del worker nunca toman el mismo documento. Al arrancar, los documentos en `procesando` con `processing_started_at` más viejo que un umbral *(propuesta, a calibrar)* vuelven a `pendiente` si `attempts` < máximo *(propuesta: 3)*, o pasan a `error` si lo alcanzaron.
 5. Por cada documento tomado: se lee el binario de `clinical-minio` y se envía **en el cuerpo** de `POST /documents/extract` (`multipart/form-data`), con JWT de servicio, `traceId` y `dataClassification`. Se descarta la URL prefirmada, porque exigiría una ruta de red de Backend 2 hacia el almacén clínico.
-6. Validación de `DocumentExtractResponse` con Zod. Si `piiScan.clean = false` en `sintetico` o `real_anonimizado` → `cuarentena_pii`, sin persistir datos. Si la identidad del documento no coincide con la del paciente → `requiere_revision_identidad`. Si no, persistencia **en una sola transacción**: `Exam` + `Biomarker[]`, `Diagnosis` y `ClinicalNote[]`, con `source_document_id`, `entry_method = ocr`, `extraction_score`, `extraction_confidence`, `review_status` (T-1: `auto_aceptado` solo con confianza alta, sin conflicto y sin significancia inferida por IA; si no, `requiere_revision`), `significance_source` y `source_span`; luego `ocr_status = completado` + `extracted_at`. Un `422` de extracción (documento ilegible) → `error` directo, sin reintento; un timeout o `5xx` → vuelve a `pendiente` hasta agotar `attempts`. En ningún caso se persiste un dato parcial (HU-05, escenario 2).
-7. **Regla de diagnóstico extraído** (D-25, §3.2 → `Diagnosis`): igual al vigente (`cancer_type` + `staging_system` + `stage_value`) → no se inserta; fecha **anterior** al vigente → se guarda como histórico; fecha **posterior**, sin vigente o sin fecha confiable → `requiere_revision` con `conflicts_with_id`, para que el oncólogo lo confirme o lo descarte (HU-09, Sprint 3).
+6. Validación de `DocumentExtractResponse` con Zod. Si `piiScan.clean = false` en `sintetico` o `real_anonimizado` → `cuarentena_pii`, sin persistir datos. Si la identidad del documento no coincide con la del paciente → `requiere_revision_identidad`. Si no, persistencia **en una sola transacción**: `Exam` + `Biomarker[]`, `Diagnosis` y `ClinicalNote[]`, con `source_document_id`, `entry_method = ocr`, `extraction_score`, `extraction_confidence`, `review_status` (`auto_aceptado` solo con confianza alta, sin conflicto y sin significancia inferida por IA; si no, `requiere_revision`), `significance_source` y `source_span`; luego `ocr_status = completado` + `extracted_at`. Un `422` de extracción (documento ilegible) → `error` directo, sin reintento; un timeout o `5xx` → vuelve a `pendiente` hasta agotar `attempts`. En ningún caso se persiste un dato parcial (HU-05, escenario 2).
+7. **Regla de diagnóstico extraído** (§3.2 → `Diagnosis`): igual al vigente (`cancer_type` + `staging_system` + `stage_value`) → no se inserta; fecha **anterior** al vigente → se guarda como histórico; fecha **posterior**, sin vigente o sin fecha confiable → `requiere_revision` con `conflicts_with_id`, para que el oncólogo lo confirme o lo descarte (HU-09, Sprint 3).
 8. Idempotencia: reprocesar un documento nunca duplica datos — si ya existen registros con ese `source_document_id`, no se vuelven a insertar.
 9. Endpoints de lectura (6.1 #11; se agregan al spec OpenAPI, ver 4.1 → endpoints adicionales): `GET /platform/patients/{patientId}/documents/{documentId}` (estado de un documento) y `GET /platform/patients/{patientId}/documents` (listado **paginado**, ordenado por `uploaded_at` descendente, con `ocrStatus`). `PatientSummary` expone `sourceDocumentId` en cada biomarcador (vía `Exam.source_document_id`).
 
 **Tareas técnicas — `rag-orchestrator`:**
 10. `DocumentExtractionRouter`: `POST /documents/extract` con los schemas de 4.2 y la misma validación de JWT de OL-02.
 11. `TextExtractionService` + `ClinicalStructuringService`: reciben el PDF en el cuerpo del request; extraen la capa de texto (OCR solo en las páginas escaneadas); pasan el **gate de PII** según `dataClassification`; estructuran con el LLM local (JSON por esquema); calculan la confianza por campo (anclaje textual, dominio, consistencia) y la normalizan contra el catálogo del tipo de cáncer; devuelven `identityFound` y `sourceSpan`. `422` si el documento es ilegible. El PDF no se guarda en disco y su contenido no se registra en *logs*.
-12. `OcrAdapter`, `PiiAdapter` y `LLMAdapter` (interfaces) + implementación de los motores elegidos en el ADR-0001.
+12. `OcrAdapter`, `PiiAdapter` y `LLMAdapter` (interfaces) + implementación de los motores elegidos en el ADR de modelos locales (1.4).
 
-**Tests:** Vitest + Supertest (`clinical-api`): archivo no-PDF renombrado a `.pdf` → `422`; transacción revertida si falla la inserción de un biomarcador; reproceso sin duplicados; dos workers concurrentes no toman el mismo documento; un documento "colgado" en `procesando` se recupera al reiniciar; las tres ramas de la regla de diagnóstico; paginación del listado de documentos. Pytest (`rag-orchestrator`): extracción con `ExtractionAdapter` falso; documento ilegible → `422`. Exactitud por campo medida sobre el set de referencia: sintético en `data/evaluation` y real anonimizado **fuera del repo** (D-34). KR1 del Sprint 2: ≥ 95% en campos críticos y ≥ 90% en no críticos (*metas propuestas*), con el resultado en el PR. Tests adicionales: cuarentena por PII, identidad que no coincide, duplicado → `409`, las tres ramas de la regla de fechas.
+**Tests:** Vitest + Supertest (`clinical-api`): archivo no-PDF renombrado a `.pdf` → `422`; transacción revertida si falla la inserción de un biomarcador; reproceso sin duplicados; dos workers concurrentes no toman el mismo documento; un documento "colgado" en `procesando` se recupera al reiniciar; las tres ramas de la regla de diagnóstico; paginación del listado de documentos. Pytest (`rag-orchestrator`): extracción con `ExtractionAdapter` falso; documento ilegible → `422`. Exactitud por campo medida sobre el set de referencia: sintético en `data/evaluation` y real anonimizado **fuera del repo**. KR1 del Sprint 2: ≥ 95% en campos críticos y ≥ 90% en no críticos (*metas propuestas*), con el resultado en el PR. Tests adicionales: cuarentena por PII, identidad que no coincide, duplicado → `409`, las tres ramas de la regla de fechas.
 
 **Criterios de aceptación:**
 - Dado un PDF sintético de examen de mama con HER2 y receptores hormonales, cuando el doctor lo sube, recibe `202` con `ocrStatus: pendiente`; al consultar el estado, este pasa a `completado`, y `GET /platform/patients/{patientId}` devuelve esos biomarcadores con su `clinicalSignificance` su `sourceDocumentId` apuntando al documento subido y su confianza y estado de revisión.
@@ -2201,23 +2203,23 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 
 #### OL-06 · [Backend / datos] Baseline de evaluación de calidad de la IA + suite de regresión
 
-- **Tipo:** Backend (Python) y datos · **Sprint:** 1 (baseline) y continuo · **HU:** HU-03 (y HU-04/HU-05 para OCR) · **Prioridad:** Crítica: es el mecanismo de aceptación del producto (P1-03).
+- **Tipo:** Backend (Python) y datos · **Sprint:** 1 (baseline) y continuo · **HU:** HU-03 (y HU-04/HU-05 para OCR) · **Prioridad:** Crítica: es el mecanismo de aceptación del producto.
 
 **Objetivo.** Medir si las respuestas están **respaldadas por la evidencia** y si la extracción es **exacta**, con una suite reproducible que proteja los cambios de modelo, prompt, umbral y corpus.
 
 **Alcance — incluye:**
 - **Datasets** (`data/evaluation/`, solo sintéticos en el repo): preguntas en español e inglés por tipo de cáncer (mama y próstata), con los documentos esperados y los puntos clave de la respuesta; preguntas sin evidencia; documentos OCR de referencia; PII sembrada.
-- **Datos reales anonimizados:** fuera del repo, en un volumen local cifrado, desde el Sprint 1–2 (D-34).
+- **Datos reales anonimizados:** fuera del repo, en un volumen local cifrado, desde el Sprint 1–2.
 - **Métricas:** recall@10, MRR, recall de español a inglés, fidelidad, precisión de citas, exactitud de "sin evidencia", exactitud de OCR por campo, calibración de `auto_aceptado`, sensibilidad de PII y p95.
 - Un comando `evaluate` que guarda los resultados versionados con su configuración (métricas agregadas en el repo; nunca datos reales).
 
-**No incluye:** *fine-tuning* (D-31) ni el ADR de scoring de evidencia clínica.
+**No incluye:** *fine-tuning* ni el ADR de scoring de evidencia clínica.
 
 **Tareas técnicas:**
 1. Esquemas de los datasets y generador de datos sintéticos.
 2. *Runner* de evaluación que invoca `RAGOrchestratorService` y los servicios de extracción en proceso, con los adapters reales configurados.
 3. Métricas de recuperación y generación. Para la fidelidad, un LLM juez local fuera de línea más NLI. El framework (p. ej., `ragas`) se decide en el ADR de evaluación.
-4. Reporte que marca qué métricas se basan en datos revisados por el oncólogo (D-09).
+4. Reporte que marca qué métricas se basan en datos revisados por el oncólogo.
 5. Integración con la Definition of Done: los PRs que cambian un modelo, un prompt, un umbral o el corpus adjuntan el reporte.
 
 **Criterios de aceptación:**
@@ -2226,7 +2228,7 @@ Al detallar los tickets surgieron preguntas que el resto del documento no respon
 - Ejecutar `evaluate` dos veces con la misma configuración produce las mismas métricas deterministas.
 - Ningún archivo de datos reales queda versionado (chequeo de CI).
 
-**Decisiones aplicadas:** T-5, D-09, D-27, D-31, D-34.
+**Decisiones aplicadas:** evaluación como entregable desde el Sprint 1, validación clínica parcial, chequeo de soporte estricto, "entrenamiento" = calibrar y evaluar, y calibración con datos reales anonimizados fuera del repo.
 
 ---
 
