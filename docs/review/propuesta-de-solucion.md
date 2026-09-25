@@ -35,6 +35,7 @@
 | D-39 | **Tipos iniciales (Q-21):** el piloto empieza con **mama y próstata**; **leucemia** entra como tercer tipo, con el modelo genérico de T-8.1 implementado desde el Sprint 1. | Catálogos, corpus y dataset de evaluación del Sprint 1–4 para mama y próstata. Leucemia se habilita después con el criterio de T-8.3. | T-8 |
 | D-40 | **Mayoría de edad (Q-22):** al cumplirla, el paciente queda marcado "requiere ratificación" y el consentimiento de los padres sigue vigente hasta que el paciente lo ratifique o lo revoque. | Job diario que detecta la mayoría de edad (edad configurable) y un aviso en la ficha. | T-2.5 |
 | D-41 | **Niveles de baja (Q-23):** hay **dos**: *baja de investigación* (se borra el histórico y el paciente sigue en atención) y *baja total* (se ejecuta la acción de vencimiento y el paciente sale de OncoLens). | Dos acciones distintas en la UI y en la API. | T-7.5, T-2.5 |
+| D-42 | **Motores de base de datos:** solo **PostgreSQL y Milvus**. El catálogo del corpus va en **otro schema (`corpus`) del PostgreSQL existente**, sin agregar otro motor (se descarta SQLite). | Backend 2 necesita red hacia PostgreSQL, así que el invariante pasa de "sin red hacia PostgreSQL" a "**sin acceso a los datos clínicos**": rol propio con permisos solo sobre `corpus`, `pg_hba` restringido y tests de acceso denegado (T-6.2). | T-6.2, P2-08 |
 | D-05b | **País (Q-05):** los documentos son de uso público y para investigación; **no se asume ningún país**. | Los formatos de identificación del detector de PII y del registro son configurables (T-4, T-7). | T-4, T-7 |
 | D-02b | **Punto de anonimización:** en **ambos** lugares. Los datos llegan anonimizados desde fuera **y** OncoLens verifica que no quede PII residual. | Hace falta un **gate de PII residual** dentro de OncoLens (diseño T-4). Un documento con PII detectada se pone en cuarentena y no se procesa. | P1-04, P1-05, P2-13 |
 | D-04 | **Embeddings:** el spike del Sprint 1 contempla el **idioma**, porque hay documentación y evidencia en español e inglés. | Modelo de *embeddings* multilingüe, estrategia de consulta bilingüe e idioma registrado por chunk (diseño T-3). | P1-08, P2-10 |
@@ -478,7 +479,7 @@ flowchart LR
 **Métrica y test.** Un conjunto sintético de documentos y preguntas **con PII sembrada** en `data/evaluation/pii/`. Meta 🟡: sensibilidad ≥ 0,95 en identificadores directos (nombre, documento, teléfono). Test automatizado en CI en ambos backends. Esto reemplaza el "muestreo" del KR3 del Sprint 5 (P1-05).
 
 **Nueva redacción del invariante de Backend 2 (P1-04) ✅:**
-> *Backend 2 no persiste PHI ni tiene credenciales ni ruta de red hacia los almacenes clínicos. Recibe documentos para su extracción (anonimizados, o del propio paciente identificado en el piloto, D-02c), los procesa en memoria de forma transitoria, sin persistirlos, verifica la PII según la clase de datos (T-7.3) y devuelve la identidad encontrada solo para verificación. En `/rag/query` recibe exclusivamente un contexto desidentificado y seudonimizado por consulta.*
+> *Backend 2 no persiste PHI ni tiene acceso a los datos clínicos: sin credenciales ni red hacia `clinical-minio`, y en PostgreSQL solo un rol limitado al schema `corpus` (D-42). Recibe documentos para su extracción (anonimizados, o del propio paciente identificado en el piloto, D-02c), los procesa en memoria de forma transitoria, sin persistirlos, verifica la PII según la clase de datos (T-7.3) y devuelve la identidad encontrada solo para verificación. En `/rag/query` recibe exclusivamente un contexto desidentificado y seudonimizado por consulta.*
 
 **Alternativas descartadas:**
 
@@ -556,10 +557,10 @@ flowchart TD
     Browser(["Navegador"]) -- "HTTPS · cookie SameSite=Strict" --> Web["web (Next.js)<br/>único punto público"]
     subgraph Compose["Docker Compose — red interna"]
         Web -- "HTTP interno · cookie reenviada" --> BE1["clinical-api"]
-        BE1 --> PG[("PostgreSQL<br/>auth · clinical · audit · research")]
+        BE1 --> PG[("PostgreSQL<br/>auth · identity · clinical · audit · research · corpus")]
         BE1 --> CMINIO[("clinical-minio<br/>clinical-documents")]
         BE1 -- "JWT servicio · binario en el body" --> BE2["rag-orchestrator"]
-        BE2 --> CAT[("corpus-catalog<br/>SQLite en volumen propio")]
+        BE2 -- "rol rag_corpus: solo schema corpus" --> PG
         BE2 --> MV[("milvus-standalone")]
         MV --> ETCD["milvus-etcd"]
         MV --> MMINIO[("milvus-minio<br/>+ corpus-raw / corpus-normalized")]
@@ -571,7 +572,7 @@ flowchart TD
 #### T-6.1 Almacén de documentos clínicos separado y envío del binario (P1-07)
 
 - Nuevo contenedor `clinical-minio`, cuya **única** cliente es `clinical-api`, con credenciales solo en `clinical-api`. `milvus-minio` queda exclusivamente para Milvus y el corpus.
-- Backend 1 **envía el binario** del PDF a Backend 2 en el cuerpo de `POST /documents/extract` (`multipart/form-data`, máximo 20 MB) en lugar de una URL prefirmada. Backend 2 no tiene ninguna ruta de red hacia `clinical-minio`: no se publica en su red, y se usan redes de Compose separadas (`clinical-net` para web, BE1, PG y clinical-minio; `ai-net` para BE1, BE2, Milvus y el catálogo).
+- Backend 1 **envía el binario** del PDF a Backend 2 en el cuerpo de `POST /documents/extract` (`multipart/form-data`, máximo 20 MB) en lugar de una URL prefirmada. Backend 2 no tiene ninguna ruta de red hacia `clinical-minio`: no se publica en su red, y se usan redes de Compose separadas: `clinical-net` para web, BE1, PostgreSQL y clinical-minio; `ai-net` para BE1, BE2 y Milvus; y `corpus-db-net` solo para BE2 y PostgreSQL (D-42).
 
 **Alternativas descartadas:**
 
@@ -584,18 +585,35 @@ flowchart TD
 
 **Costo aceptado:** un salto de hasta 20 MB por la red interna en cada extracción, que es despreciable en local.
 
-#### T-6.2 Catálogo del corpus fuera de Milvus (P2-08)
+#### T-6.2 Catálogo del corpus en el schema `corpus` del PostgreSQL existente (P2-08, D-42)
 
-- `CorpusDocument` y el estado del pipeline de ingesta pasan a **SQLite** (modo WAL) en un volumen propio de `rag-orchestrator`. Milvus guarda solo `corpus_chunks`.
-- **Versionado reanudable:** (1) insertar los chunks de la versión nueva con `is_current = false`; (2) verificar el conteo; (3) en una transacción de SQLite, marcar la versión nueva como vigente y la anterior como reemplazada; (4) *upsert* de `is_current` en los chunks de ambas versiones. Si el proceso se corta, un comando de reconciliación compara SQLite (fuente de verdad) con Milvus y corrige.
+**Decisión (D-42):** el proyecto usa solo dos motores, **PostgreSQL y Milvus**. `CorpusDocument` y el estado del pipeline de ingesta viven en un schema **`corpus`** de la misma instancia (y la misma base) de PostgreSQL. Milvus guarda solo `corpus_chunks`.
+
+**Evaluación.** Esta opción conserva lo que motivó sacar el catálogo de Milvus (transacciones, consultas relacionales, *backups* comunes) sin sumar un motor. Su costo es que **Backend 2 pasa a tener una ruta de red hacia el servidor PostgreSQL que guarda los datos clínicos**, algo que el diseño original prohibía expresamente. Por eso el invariante se reformula: de "sin red hacia PostgreSQL" a **"sin acceso a los datos clínicos"**. Deja de ser una garantía de red y pasa a ser una garantía de **autorización**, respaldada por estos controles:
+
+| Control | Detalle |
+|---|---|
+| Rol dedicado | `rag_corpus`: `LOGIN`, sin `SUPERUSER`, `CREATEDB` ni `CREATEROLE`; `USAGE` y DML solo sobre el schema `corpus`; dueño de sus tablas vía migraciones propias de Backend 2. |
+| Revocaciones explícitas | `REVOKE ALL` sobre los schemas `auth`, `identity`, `clinical`, `audit` y `research` para `rag_corpus` y `PUBLIC`; `REVOKE CREATE ON SCHEMA public FROM PUBLIC`; `ALTER DEFAULT PRIVILEGES` para que las tablas futuras de los schemas clínicos nunca queden accesibles. |
+| Red | Red de Compose dedicada `corpus-db-net` (solo PostgreSQL y `rag-orchestrator`). `rag-orchestrator` sigue sin ruta hacia `clinical-minio`. |
+| `pg_hba.conf` | `rag_corpus` solo puede conectarse desde la subred de `corpus-db-net`, con TLS (`hostssl`) y autenticación SCRAM. Los roles clínicos no aceptan conexiones desde esa subred. |
+| Límites | `CONNECTION LIMIT` bajo para `rag_corpus`, más `statement_timeout` e `idle_in_transaction_session_timeout`, para que la ingesta no degrade la base clínica. |
+| Tests (CI) | Con las credenciales de `rag_corpus`: `SELECT` sobre cualquier tabla de `auth`, `identity`, `clinical`, `audit` y `research` → *permission denied*; `CREATE` en `public` → denegado; la conexión desde `clinical-net` con ese rol → rechazada. |
+| Datos | El schema `corpus` contiene solo metadatos del corpus público. Ningún dato de paciente se escribe ahí (regla de `CLAUDE.md`). |
+
+**Riesgo residual aceptado:** una vulnerabilidad de escalamiento de privilegios en PostgreSQL, o una mala configuración de permisos, podría exponer datos clínicos a un Backend 2 comprometido. Se mitiga con los tests de acceso denegado en CI, con la revisión de permisos en el `preflight` del gate G-piloto y manteniendo PostgreSQL actualizado.
+
+- **Versionado reanudable:** (1) insertar los chunks de la versión nueva con `is_current = false`; (2) verificar el conteo; (3) en una transacción de PostgreSQL sobre `corpus`, marcar la versión nueva como vigente y la anterior como reemplazada; (4) *upsert* de `is_current` en los chunks de ambas versiones. Si el proceso se corta, un comando de reconciliación compara `corpus` (fuente de verdad) con Milvus y corrige.
+- **Migraciones:** el schema `corpus` lo migra Backend 2, con su propia herramienta (p. ej., Alembic) y su propio rol. Prisma de Backend 1 **excluye** el schema `corpus`.
 
 **Alternativas descartadas:**
 
 | Alternativa | Motivo |
 |---|---|
-| Colección de Milvus "sin vectores" (README) | [I] Milvus exige un campo vectorial por colección (verificar con la versión elegida). Obliga a un vector ficticio y no ofrece transacciones para estados de ingesta. |
-| Otra base de datos dentro del PostgreSQL clínico | Rompe el invariante "Backend 2 sin ruta de red hacia PostgreSQL". |
-| Contenedor PostgreSQL adicional para el corpus | Suma memoria (N-02) y operación para un catálogo pequeño (~50–500 documentos) con un único escritor (la ingesta por lotes). Se reevalúa si hay varios escritores. |
+| SQLite en un volumen de Backend 2 (propuesta anterior) | Agrega una tecnología de base de datos al proyecto, en contra de D-42. |
+| Colección de Milvus "sin vectores" (README original) | [I] Milvus exige un campo vectorial por colección (verificar con la versión elegida). Obliga a un vector ficticio y no ofrece transacciones para cambiar la vigencia del documento y de sus chunks. |
+| Contenedor PostgreSQL adicional solo para el corpus | Es el mismo motor, pero suma memoria (N-02) y operación. D-42 pide usar la instancia existente. |
+| Otra *base de datos* en la misma instancia | Aislamiento algo mayor (PostgreSQL no permite consultas entre bases), con el mismo costo. Queda como **endurecimiento opcional** si la revisión de seguridad del piloto lo pide. D-42 eligió schema. |
 
 #### T-6.3 Patrón navegador → backend y CSRF (P2-04)
 
@@ -915,7 +933,7 @@ Un tipo se habilita en el piloto solo cuando cumple:
 - **README:** §4.1, HU-02 y HU-05. **Sprint:** 2. **Estado:** 🟡 Propuesta.
 
 #### [P2-08] Catálogo del corpus en Milvus sin vectores
-- **Solución 🟡:** T-6.2 (SQLite en un volumen propio de Backend 2 y versionado reanudable).
+- **Solución ✅ (D-42):** T-6.2: schema `corpus` en el PostgreSQL existente, rol `rag_corpus` con permisos solo sobre ese schema, `corpus-db-net`, `pg_hba` restringido, tests de acceso denegado y versionado reanudable.
 - **README:** §3.1 (el título del bloque y `CORPUS_DOCUMENT`), §3.2, §3.3 #5 y OL-02 #2.
 - **Sprint:** 1. **Estado:** 🟡 Propuesta (verificar el comportamiento de la versión de Milvus en el spike).
 
@@ -1134,7 +1152,7 @@ erDiagram
 ### 5.2 Corpus (Backend 2)
 
 - `corpus_chunks` (Milvus): se agrega `language`. Los vectores *dense* y *sparse* los produce el mismo modelo multilingüe (T-3).
-- `CorpusDocument` (SQLite): mismos atributos de §3.1 más `language`, `license` y `license_url`.
+- `CorpusDocument` (PostgreSQL, schema `corpus`, D-42): mismos atributos de §3.1 más `language`, `license` y `license_url`.
 
 ### 5.3 Índices y restricciones nuevos
 
@@ -1185,7 +1203,7 @@ erDiagram
 
 | Sprint | Objetivo (sin cambios) | Alcance ajustado |
 |---|---|---|
-| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo SQLite (T-6.2). **OL-06:** baseline de evaluación (T-5), que incluye la calibración con datos reales anonimizados fuera de la app y del repo (D-34). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). Modelo de diagnóstico genérico y catálogos por tipo de cáncer (T-8.1); configuración `ENABLED_CANCER_TYPES` (T-8.2). |
+| **1** | Walking skeleton | HU-01 + logout, HU-02 (ficha), **HU-06 listado**, **HU-07 registro manual** (con consentimientos), HU-03 (consulta *dense* multilingüe + *reranker* + chequeo NLI). **ADR de modelos locales (D-18)** al inicio del sprint: LLM y runtime (Ollama o vLLM nativo, D-17), *embeddings* multilingües (T-3), *reranker*, NLI, presupuesto de RAM (N-02). Además, catálogo en el schema `corpus` de PostgreSQL (T-6.2, D-42). **OL-06:** baseline de evaluación (T-5), que incluye la calibración con datos reales anonimizados fuera de la app y del repo (D-34). Migración inicial con todos los campos de la §5 (evita migraciones de datos después). Patrón BFF y CSRF (T-6.3). Modelo de diagnóstico genérico y catálogos por tipo de cáncer (T-8.1); configuración `ENABLED_CANCER_TYPES` (T-8.2). |
 | **2** | Ingesta OCR | HU-04 y HU-05 con T-1 (etiquetas de confianza y revisión en la ficha), **HU-08 registro asistido por OCR**, gate de PII (T-4), `clinical-minio` + envío del binario (T-6.1), checksum y verificación de identidad (P2-13), auditoría de accesos (adelantada), regla de proveedores (T-6.4), visor del documento de origen (T-1.7). **Sin datos reales en la app todavía** (D-22). |
 | **3** | Híbrida y filtros | Híbrida multilingüe con expansión (T-3), filtros con tabla de verdad (P3-02), **HU-09 revisión de datos de OCR** (aceptar, corregir, rechazar) (P2-01), enmascaramiento de las notas enviadas (T-4), ingesta del corpus como entregable con licencias (P2-09). |
 | **4** | Rankeadas y trazabilidad | **HU-10** hasta 3 recomendaciones, **HU-11** historial de análisis, **HU-12** registro de tratamiento, **HU-13 egreso y reactivación con snapshot mínimo** (T-2.3, T-2.4) 🟡. |
@@ -1256,7 +1274,7 @@ No quedan preguntas abiertas de producto. Quedan decisiones técnicas marcadas �
 | P2-05 | Logout, TTL, Argon2id, bloqueo, CLI de administración | ✅ (D-29) |
 | P2-06 | `PatientConsent` por eventos (investigación opt-out bajo contrato marco, D-20) + `CareTeamMember` | ✅ (D-20, D-30) |
 | P2-07 | Ficha ampliada, último valor por biomarcador, endpoint de notas | 🟡 |
-| P2-08 | Catálogo en SQLite + versionado reanudable | 🟡 |
+| P2-08 | Catálogo en el schema `corpus` del PostgreSQL existente (rol dedicado, red y `pg_hba` restringidos) + versionado reanudable | ✅ (D-42) |
 | P2-09 | Fuentes textuales de D-28; NCCN y ESMO pendientes de licencia; ingesta como entregable | ✅/🟡 |
 | P2-10 | `relevance_score` basado en el *reranker* | 🟡 |
 | P2-11 | HU-06 a HU-14 (HU-15 pasa a futuro, D-19) | 🟡 |
