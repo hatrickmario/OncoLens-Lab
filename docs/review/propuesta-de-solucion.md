@@ -26,6 +26,7 @@
 | D-12a | **Asignación:** **varios** doctores activos por paciente (equipo tratante), con uno marcado como tratante principal. | Cambia la regla "solo una asignación activa" de §3.1. | P2-06 |
 | D-17 | **Runtime del LLM local:** **Ollama o vLLM**, ejecutado de forma nativa en macOS (fuera de Docker). | El LLM corre fuera de Compose; la elección entre Ollama y vLLM se toma en el ADR de D-18. El `LLMAdapter` local se implementa contra la API compatible con OpenAI que exponen ambos, así que cambiar de runtime no toca código (N-01). | N-01, T-6 |
 | D-18 | **Modelos locales:** se creará un **ADR de evaluación de modelos locales**. | La elección de LLM, *embeddings*, *reranker*, NLI y motor de OCR, y su cuantización, sale de una medición con criterios explícitos y no de una estimación. Ver el borrador `docs/architecture/adr/0001-evaluacion-modelos-locales.md`. | N-02, P1-08, P3-08 |
+| D-20 | **Consentimiento de investigación (Q-03):** el snapshot al egresar se guarda **solo** si la casilla de investigación está marcada. Es **opt-out**: viene marcada por defecto, porque existe un **contrato marco con la entidad médica**. | Al registrar un paciente se crea automáticamente un evento `investigacion = otorgado` con base `contrato_marco`. El paciente puede excluirse (opt-out) en cualquier momento. La exclusión impide snapshots futuros y borra los existentes. | T-2.4, T-2.5, N-04 |
 | D-19 | **Histórico de investigación:** es **alcance futuro**. El MVP tendrá **lo mínimo necesario**. | Se reduce T-2.4 a un snapshot mínimo y seudonimizado al egresar. El modelo normalizado, los desenlaces, el grafo y la exportación pasan a una fase posterior (N-04). | N-04, T-2.4, HU-13, HU-15 |
 
 ---
@@ -95,7 +96,7 @@ La recomendación de usar el mismo LLM para estructurar documentos (T-1) y para 
 2. Controlar el riesgo de reidentificación, que en análisis de grafos es mayor, porque los patrones de relaciones identifican.
 3. Datos de **desenlace** (respuesta al tratamiento, progresión) para que el análisis tenga valor. Hoy el modelo no los tiene: `Treatment.status` solo indica activo, completado o suspendido.
 
-**Solución ✅ (D-19).** El histórico completo es **alcance futuro**. El MVP implementa solo el **mínimo necesario** (T-2.4): un snapshot seudonimizado por episodio al egresar, sin normalizar, sin desenlaces, sin grafo y sin exportación. Los puntos 1–3 de este hallazgo quedan registrados como **prerrequisitos** de la fase futura, no del MVP. Solo queda una pregunta abierta para el MVP, sobre el consentimiento (Q-03, reducida).
+**Solución ✅ (D-19).** El histórico completo es **alcance futuro**. El MVP implementa solo el **mínimo necesario** (T-2.4): un snapshot seudonimizado por episodio al egresar, sin normalizar, sin desenlaces, sin grafo y sin exportación. Los puntos 1–3 de este hallazgo quedan registrados como **prerrequisitos** de la fase futura, no del MVP. La condición de consentimiento quedó resuelta (D-20: opt-out bajo contrato marco).
 
 ### [N-05] Alto — Origen y base legal de los datos reales anonimizados
 
@@ -239,7 +240,7 @@ flowchart LR
 - `Patient.lifecycle_status`: `activo` | `egresado`. Es un valor derivado: el paciente está activo si tiene un episodio abierto.
 - **Egreso:** un doctor del equipo tratante (❓ Q-08) cierra el episodio. Ocurre lo siguiente:
   1. El episodio se cierra.
-  2. Se genera el **snapshot mínimo** del episodio (T-2.4), solo si el consentimiento lo permite (❓ Q-03).
+  2. Se genera el **snapshot mínimo** del episodio (T-2.4), solo si el paciente no ejerció el opt-out de investigación (D-20).
   3. El paciente sale de los listados de pacientes activos, aunque sigue siendo consultable en modo lectura.
   4. No se permiten nuevas consultas RAG ni cargas mientras esté egresado.
 - **Reactivación:** abre un episodio nuevo. El paciente conserva su `patient_code`, su historia clínica y sus análisis previos. El histórico de investigación acumula un snapshot por episodio.
@@ -285,7 +286,16 @@ La migración desde el MVP es directa: `snapshot_schema_version` permite transfo
 #### T-2.5 Consentimientos
 
 Nueva entidad `PatientConsent` (eventos), que reemplaza el booleano `consent_ai_analysis`:
-- `consent_type`: `analisis_ia` | `investigacion`. En el MVP, `investigacion` es solo una casilla en el formulario de registro que decide si se escribe el snapshot mínimo de T-2.4. Su gobierno completo es futuro (D-19); ❓ Q-03 reducida.
+- `consent_type`: `analisis_ia` | `investigacion`.
+- `legal_basis`: `contrato_marco` | `consentimiento_individual` (nuevo), y `contract_reference` (identificador del contrato marco con la entidad médica, nullable).
+
+**Consentimiento de investigación en el MVP (D-20, opt-out):**
+- **Por defecto:** al registrar un paciente (manual o asistido por OCR), la casilla "Incluir en el histórico de investigación" viene **marcada**. Al guardar se crea el evento `investigacion = otorgado` con `legal_basis = contrato_marco` y la referencia del contrato configurada en el entorno (`RESEARCH_CONTRACT_REF`).
+- **Exclusión en el registro:** si el doctor desmarca la casilla, se registra `investigacion = revocado` en el mismo momento.
+- **Exclusión posterior:** un doctor del equipo tratante (o `admin`) puede registrar el opt-out en cualquier momento. Queda auditado (`recorded_by`, fecha y motivo opcional).
+- **Pacientes sintéticos:** también llevan el evento, para que el flujo sea idéntico en la demo.
+- **Sin contrato configurado:** si `RESEARCH_CONTRACT_REF` está vacío, la casilla viene **desmarcada**. No existe base para el opt-out y el sistema no presume consentimiento.
+- El gobierno completo del consentimiento de investigación (versiones del contrato, vencimiento, auditoría de la entidad) es futuro (D-19).
 - `action`: `otorgado` | `revocado`; `recorded_by`, `recorded_at`, `document_version`.
 - El consentimiento vigente es el último evento de cada tipo.
 
@@ -293,7 +303,13 @@ Nueva entidad `PatientConsent` (eventos), que reemplaza el booleano `consent_ai_
 - Sin `analisis_ia` vigente → `403` en `/rag/query` (igual que el README).
 - Revocar `analisis_ia` no borra los análisis previos (registro clínico inmutable) 🟡.
 - Sin `investigacion` vigente → no se genera el snapshot de egreso.
-- Revocar `investigacion` → 🟡 en el MVP se borran los snapshots del sujeto (operación simple, porque es una sola tabla). La política definitiva es futura.
+- Opt-out (`investigacion = revocado`) → no se escriben snapshots futuros y se **borran** en la misma transacción los snapshots existentes del sujeto (una sola tabla, operación simple). El evento de opt-out queda en `PatientConsent` y en `AuditLog`, sin copiar datos clínicos.
+- Si el paciente vuelve a otorgar el consentimiento, solo se generan snapshots de episodios que se cierren **después**. Los borrados no se reconstruyen 🟡.
+
+**Alternativas descartadas para D-20:**
+- *Opt-in* (casilla desmarcada por defecto): contradice D-20. Con un contrato marco que ya cubre el uso, obligaría a marcarla en cada paciente sin agregar protección.
+- *Marcar como excluido en lugar de borrar al hacer opt-out*: conserva datos de alguien que pidió salir. Borrar es simple porque el snapshot mínimo vive en una sola tabla.
+- *Presumir consentimiento aunque no haya contrato configurado*: el opt-out solo es válido bajo el contrato marco; sin él, la base legal desaparece.
 
 **Descartado:** *mantener el booleano*. No registra quién ni cuándo, no permite revocar con historial y no distingue el análisis individual del uso para investigación (N-04).
 
@@ -638,10 +654,10 @@ flowchart TD
 - **README:** §2.5, HU-01 y el backlog de §6.0. **Sprint:** 1. **Estado:** 🟡 Propuesta; ❓ Q-12.
 
 #### [P2-06] Consentimiento y asignaciones sin API, responsable ni historial
-- **Solución ✅/🟡:** T-2.5 (`PatientConsent` por eventos, con tipos `analisis_ia` e `investigacion`) y T-2.6 (`CareTeamMember`, varios activos, uno principal). Endpoints en la §6. Quién registra el consentimiento: el doctor tratante al registrar al paciente (formulario de T-2.2) 🟡.
+- **Solución ✅/🟡:** T-2.5 (`PatientConsent` por eventos, con tipos `analisis_ia` e `investigacion`) y T-2.6 (`CareTeamMember`, varios activos, uno principal). Endpoints en la §6. Quién registra el consentimiento: el doctor tratante al registrar al paciente (formulario de T-2.2). El de investigación es opt-out bajo contrato marco (D-20).
 - **Descartado:** el booleano único (T-2.5) y la asignación única (contradice D-12a).
 - **README:** §2.5, §3.1, §3.2 y §3.3 #2 y #4, y §5.0 (Sprint 5).
-- **Sprint:** los datos en el Sprint 1 (el consentimiento se captura en el registro); la validación en el Sprint 5. **Estado:** ✅ (D-12a); ❓ Q-03.
+- **Sprint:** los datos en el Sprint 1 (el consentimiento se captura en el registro); la validación en el Sprint 5. **Estado:** ✅ (D-12a, D-20).
 
 #### [P2-07] `PatientSummary` incompleto
 - **Solución 🟡:**
@@ -779,6 +795,8 @@ erDiagram
         uuid id PK
         uuid patient_id FK
         string consent_type "analisis_ia|investigacion"
+        string legal_basis "contrato_marco|consentimiento_individual"
+        string contract_reference "nullable"
         string action "otorgado|revocado"
         string document_version
         uuid recorded_by FK
@@ -891,7 +909,7 @@ erDiagram
 | `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (el desenlace es futuro, D-19) | 4 | P2-11 |
 | `POST /platform/patients/{id}/episodes/current/close` | Egreso → cierra el episodio y escribe el snapshot mínimo (si hay consentimiento) | 4 🟡 | T-2.3, T-2.4 |
 | `POST /platform/patients/{id}/episodes` | Reactivación (abre un episodio nuevo) | 4 🟡 | T-2.3 |
-| `POST /platform/patients/{id}/consents` | Otorga o revoca un consentimiento | 1 (datos) / 5 (UI) | T-2.5 |
+| `POST /platform/patients/{id}/consents` | Otorga o revoca un consentimiento (`{ consentType, action, legalBasis, reason? }`) | 1 (datos) · **4** (UI de opt-out de investigación, antes de que existan snapshots) · 5 (resto de la UI) | T-2.5, D-20 |
 | `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante | 5 | T-2.6 |
 
 **Interna (`rag-orchestrator`):**
@@ -927,7 +945,8 @@ Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la re
 |---|---|---|---|
 | Q-01 | ¿Qué formato tiene la identificación del paciente y quién la asigna? ¿En el MVP se guarda algún dato identificable (nombre, documento real)? | T-2.1, P2-13, esquema `Patient` | Seudónimo `patient_code` asignado por el proceso externo (o `SYN-` para sintéticos); ningún dato identificable. |
 | Q-02 | ¿De dónde provienen los datos reales anonimizados (institución, dataset público, colaborador)? ¿Bajo qué acuerdo o aval (comité de ética)? ¿El proceso externo desplaza las fechas? ¿Entrega una lista de nombres para reforzar el detector? | N-05, T-4, `source_dataset` | Registrar el origen por paciente desde el Sprint 1 y documentar el acuerdo antes de habilitar `REAL_DATA_ENABLED`. |
-| Q-03 *(reducida por D-19)* | Para el MVP: ¿el snapshot mínimo al egresar se escribe **solo** si el paciente tiene la casilla de consentimiento de investigación marcada? | T-2.4, T-2.5 | Sí: una casilla en el registro evita guardar datos que después haya que purgar. El gobierno completo es futuro. |
+| ~~Q-03~~ | ✅ **Resuelta (D-20):** el snapshot se guarda solo con la casilla marcada; es opt-out (marcada por defecto) bajo contrato marco con la entidad médica. | — | — |
+| Q-14 | Para datos **reales anonimizados**, el paciente no está frente al doctor de OncoLens. ¿La entidad médica comunica los opt-outs de sus pacientes (p. ej., una marca en el dataset anonimizado) y OncoLens debe respetarla al importar o registrar? ¿Hay una referencia del contrato marco que se pueda registrar? | T-2.5, D-20 | Aceptar una marca `research_opt_out` en los datos de origen que registre automáticamente el opt-out, más la opción manual del doctor. |
 | ~~Q-04~~ | ~~Contenido del histórico y desenlaces~~ → **Movida a alcance futuro (D-19).** El MVP usa el contenido mínimo de T-2.4. | — | — |
 | Q-05 | ¿De qué país o países provienen los documentos? (Define los formatos de documento de identidad, teléfono, historia clínica y la normativa de datos aplicable.) | T-4 (reconocedores), P1-05 | — (no se asume ningún país). |
 | Q-06 | ¿Aceptas los umbrales iniciales de confianza (alta ≥ 0,90; media 0,70–0,90) y la lista de campos críticos (biomarcadores accionables, tipo de cáncer, estadio, ECOG)? ¿El oncólogo puede revisar el diccionario de significancia? | T-1 | Aceptar como punto de partida y calibrar con `ocr_gold`. |
@@ -959,7 +978,7 @@ Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la re
 | P2-03 | *Embeddings* locales + redacción corregida | ✅ |
 | P2-04 | BFF único en `web` + `SameSite=Strict` + verificación de `Origin` | 🟡 |
 | P2-05 | Logout, TTL, Argon2id, bloqueo, CLI de administración | 🟡 (❓ Q-12) |
-| P2-06 | `PatientConsent` por eventos + `CareTeamMember` | ✅/🟡 (❓ Q-03) |
+| P2-06 | `PatientConsent` por eventos (investigación opt-out bajo contrato marco, D-20) + `CareTeamMember` | ✅ (❓ Q-14) |
 | P2-07 | Ficha ampliada, último valor por biomarcador, endpoint de notas | 🟡 |
 | P2-08 | Catálogo en SQLite + versionado reanudable | 🟡 |
 | P2-09 | Fuentes con licencia (PDQ, ClinicalTrials.gov, CIViC, ClinVar, PMC OA) + ingesta como entregable | 🟡 (❓ Q-13) |
@@ -971,8 +990,8 @@ Cada pregunta indica qué parte de la propuesta queda en espera y cuál es la re
 | N-01 | LLM nativo con Ollama o vLLM (D-17) + API compatible con OpenAI; *embeddings*, *reranker* y NLI en CPU dentro de `rag-orchestrator` | ✅ (verificaciones en el ADR) |
 | N-02 | ADR de evaluación de modelos locales (D-18); borrador creado | ✅ |
 | N-03 | NLI multilingüe + idioma original de las citas | 🟡 (❓ Q-07) |
-| N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19) | ✅ (❓ Q-03 reducida) |
+| N-04 | Histórico completo = futuro; snapshot mínimo en el MVP (D-19), condicionado al opt-out (D-20) | ✅ |
 | N-05 | `source_dataset` por paciente | ❓ Q-02 |
 | N-06 | Regla de proveedores en código (T-6.4) | ✅ |
 
-**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-01…Q-13, sin Q-04), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
+**Siguiente paso sugerido:** cuando respondas las preguntas abiertas (Q-01…Q-14, sin Q-03 ni Q-04), se actualizan los estados ❓ y 🟡 aprobados y se aplican los cambios al `readme.md` (secciones indicadas en cada hallazgo) en un PR separado, para que la revisión de la documentación sea legible.
