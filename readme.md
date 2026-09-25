@@ -9,7 +9,7 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 
-> **Revisión de la documentación (2026-09-25).** Este documento incorpora las decisiones de una revisión técnica cruzada de todo el proyecto (producto, arquitectura, datos, API, historias y tickets): posicionamiento, clases de datos, privacidad, evaluación de la IA, ciclo de vida del paciente y alcance clínico del piloto. Las alternativas descartadas se documentan junto a cada decisión (en particular en 3.3).
+> **Revisión de la documentación (2026-09-25).** Este documento incorpora las decisiones de una revisión técnica cruzada de todo el proyecto (producto, arquitectura, datos, API, historias y tickets): posicionamiento, clases de datos, privacidad, evaluación de la IA, ciclo de vida del paciente y alcance clínico del piloto. Las alternativas descartadas se documentan junto a cada decisión (en particular en 3.3). Los requisitos de producto (objetivos, requisitos funcionales, reglas de negocio, requisitos no funcionales, riesgos y trazabilidad) están en el **[PRD](docs/PRD.md)**.
 
 ---
 
@@ -42,6 +42,8 @@ https://github.com/hatrickmario/OncoLens-Lab/
 ### **1.1. Objetivo:**
 
 > Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+
+📄 Requisitos de producto completos: **[`docs/PRD.md`](docs/PRD.md)**. Incluye objetivos y métricas, no-objetivos, recorridos, requisitos funcionales FR-01 a FR-20, reglas de negocio, requisitos no funcionales, riesgos, TBD y trazabilidad.
 
 OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatura científica y ensayos clínicos. Cruza automáticamente el perfil clínico y molecular de cada paciente con la evidencia publicada y presenta las opciones de tratamiento que esa evidencia describe, **con trazabilidad hacia la fuente exacta** que las sustenta.
 
@@ -334,6 +336,7 @@ OncoLens/
 │                                          # viven fuera del repo (volumen local cifrado, .gitignore)
 │
 ├── docs/
+│   ├── PRD.md                             # Product Requirements Document (requisitos, reglas, NFR, trazabilidad)
 │   ├── architecture/adr/                  # ADRs pendientes: modelos locales, fuentes y licencias, evaluación RAG,
 │   │                                      # scoring de evidencia clínica, streaming de progreso
 │   ├── api/
