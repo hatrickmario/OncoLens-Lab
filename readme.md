@@ -59,7 +59,7 @@ OncoLens ayuda a oncólogos a reducir el tiempo de revisión manual de literatur
 **Mockups iniciales (borrador de baja fidelidad):** [Panel del doctor y Panel de interacción IA](https://claude.ai/artifact/3ohcMYbh9qkPsfqVGYc1eR)
 
 - **Panel del doctor:** ficha del paciente (datos, diagnóstico, estadio, ECOG), pestañas de resumen clínico y de exámenes/biomarcadores (con estado normal/alto/crítico), acceso al panel de IA.
-- **Panel de interacción IA:** parámetros de consulta (fuentes de datos a incluir — guías clínicas, ensayos clínicos, plataformas de investigación genómica —, filtros sobre la información del paciente) y resultado del análisis (tratamientos sugeridos, % de evidencia, fuentes citadas).
+- **Panel de interacción IA:** parámetros de consulta (fuentes de datos a incluir — guías clínicas, ensayos clínicos, plataformas de investigación genómica —, filtros sobre la información del paciente) y resultado del análisis (tratamientos sugeridos, % de relevancia de la evidencia, fuentes citadas). *El mockup rotula ese valor como "Evidencia"; en la UI real se rotula "Relevancia de la evidencia" hasta que se resuelva el ADR de scoring de evidencia clínica (3.3 #7) — ver 6.1.*
 
 📌 Nota: son mockups ilustrativos de alcance funcional, no un diseño final. Se refinarán con Figma más adelante; esta sección se actualizará con esas capturas/prototipo y, eventualmente, con un videotutorial de la UI real.
 
@@ -182,24 +182,30 @@ sequenceDiagram
     participant D as Doctor
     participant FE as Next.js
     participant BE1 as Backend 1 (BFF)
+    participant PG as PostgreSQL + MinIO
     participant BE2 as Backend 2 (OCR/IA)
-    participant PG as PostgreSQL
 
     D->>FE: Sube PDF (historia clínica / examen)
-    FE->>BE1: POST /platform/documents (cookie sesión)
-    BE1->>BE1: Auth · Authz · Zod
-    BE1->>BE2: Extraer datos del PDF (JWT interno)
+    FE->>BE1: POST /platform/patients/{patientId}/documents (cookie sesión)
+    BE1->>BE1: Auth · Authz · Zod (PDF por magic bytes, tamaño)
+    BE1->>PG: Document (ocr_status = pendiente) · binario en MinIO clinical-documents
+    BE1-->>FE: 202 Accepted + Document
+    Note over BE1,PG: Worker asíncrono de BE1 — la tabla Document es la cola (SKIP LOCKED)
+    BE1->>PG: Toma el documento (ocr_status = procesando)
+    BE1->>BE2: POST /documents/extract + URL prefirmada (JWT de servicio)
     BE2->>BE2: OCR / extracción asistida por IA
     BE2-->>BE1: Datos estructurados
     BE1->>BE1: Validar (Zod) y mapear al modelo clínico
-    BE1->>PG: Persistir historia clínica / exámenes / biomarcadores
-    BE1-->>FE: Confirmación
+    BE1->>PG: Transacción única con exámenes / biomarcadores / notas + ocr_status = completado (o error)
+    FE->>BE1: Consulta el estado del documento
     FE-->>D: Documento procesado
 ```
 
 **Flujo 2 — Consulta RAG:**
 
-> La consulta RAG se implementa con un **Route Handler** de Next.js (`app/api/rag/route.ts`), no con una Server Action: las Server Actions están pensadas para mutaciones simples, no para hacer *pass-through* de una respuesta en streaming. El Route Handler reenvía el stream Backend 1 → Backend 2 → LLM hacia el navegador.
+> La consulta RAG se implementa con un **Route Handler** de Next.js (`app/api/rag/route.ts`), no con una Server Action: es un proxy HTTP explícito hacia Backend 1 (el navegador nunca habla con los backends), controla status codes y deja abierta la opción de streaming de progreso — algo que una Server Action, pensada para mutaciones simples, no resuelve bien.
+>
+> **Decisión sobre streaming** (ver 6.1): **nunca se transmiten al navegador tokens del LLM sin validar.** Backend 2 valida las citas sobre la respuesta completa (descarta las que no correspondan a chunks recuperados) y Backend 1 persiste el `AIAnalysisRecord` antes de responder — ambas cosas son incompatibles con enviar tokens en crudo. En el Sprint 1 la respuesta es un JSON completo (contrato de 4.1). 🚧 **Pendiente — ADR tras medir el p95 del Sprint 1 (KR2):** si la latencia afecta la experiencia, se agrega streaming de **eventos de progreso** vía SSE (recuperando evidencia → generando → validando), nunca de contenido.
 
 ```mermaid
 sequenceDiagram
@@ -234,7 +240,7 @@ sequenceDiagram
 
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
-| **Frontend** | React 19, Next.js (App Router, RSC, Server Actions/Route Handlers), TypeScript, Tailwind CSS v4, shadcn/ui | UI del doctor: panel de paciente y panel de interacción IA (ver mockups en 1.3). Route Handlers para llamadas que requieren streaming (consulta RAG); Server Actions para mutaciones simples. |
+| **Frontend** | React 19, Next.js (App Router, RSC, Server Actions/Route Handlers), TypeScript, Tailwind CSS v4, shadcn/ui | UI del doctor: panel de paciente y panel de interacción IA (ver mockups en 1.3). Route Handler como proxy de la consulta RAG hacia Backend 1 (sin streaming de tokens sin validar — ver 2.1); Server Actions para mutaciones simples. |
 | **Backend 1 — Plataforma / BFF** | Node.js LTS, Express 5, TypeScript, Zod, Prisma, OpenAPI/Swagger UI | Único punto de entrada autenticado. Auth/Authz, lógica de negocio, API de plataforma (pacientes, historia clínica, exámenes, biomarcadores), gateway hacia Backend 2, carga y persistencia de documentos (delegando la extracción a Backend 2), persistencia del historial de análisis IA. Dueño exclusivo de PostgreSQL. |
 | **PostgreSQL** | PostgreSQL | Usuarios/roles/sesiones, historia clínica, exámenes, biomarcadores, historial de análisis IA, auditoría. |
 | **Backend 2 — RAG & AI Services** | Python, FastAPI, Pydantic, OpenAPI | Orquestador RAG (retrieval dense/sparse/híbrido, ensamblado de contexto, inferencia LLM, validación de respuesta); servicio de extracción de documentos (OCR asistido por IA) invocado por Backend 1 y reutilizado por su propio pipeline de ingesta; pipeline de ingesta batch del corpus externo (NCI, PDQ, ensayos clínicos) hacia Milvus. Sin acceso de red a PostgreSQL — todo el contexto clínico llega por payload autenticado (JWT interno) desde Backend 1. |
@@ -253,7 +259,7 @@ OncoLens/
 │   ├── web/                              # Frontend — Next.js, React 19, App Router
 │   │   ├── app/
 │   │   │   ├── (dashboard)/               # Panel del doctor / Panel de interacción IA
-│   │   │   └── api/rag/route.ts           # Route Handler — streaming de la consulta RAG
+│   │   │   └── api/rag/route.ts           # Route Handler — proxy de la consulta RAG hacia clinical-api
 │   │   └── components/                    # shadcn/ui + componentes propios
 │   │
 │   ├── clinical-api/                      # Backend 1 — Node.js LTS + Express 5 (BFF)
@@ -289,7 +295,8 @@ OncoLens/
 │   └── evaluation/                        # datasets para el ADR de evaluación de calidad del RAG (2.6)
 │
 ├── docs/
-│   ├── architecture/adr/                  # ADRs pendientes: motor OCR, rate limiting, evaluación RAG
+│   ├── architecture/adr/                  # ADRs pendientes: motor OCR, LLM/embeddings, rate limiting, evaluación RAG,
+│   │                                      # scoring de evidencia clínica, streaming de progreso
 │   ├── api/
 │   └── rag/
 │
@@ -348,8 +355,8 @@ flowchart LR
 - **Sesión del doctor** (Browser → Next.js → Backend 1): cookie de sesión `HttpOnly` + `Secure` con un **token opaco** (no JWT) — su único valor es ser clave de búsqueda de la tabla `Session` en PostgreSQL. Persistida (no stateless) a propósito: permite revocar una sesión (ej. dispositivo robado, baja de un doctor) sin esperar a que expire. Solo se guarda `token_hash` (hash del token) en base de datos, nunca el token en claro — mismo principio que un password hash.
 - **Guard de autenticación**: el `Middleware` (Backend 1) valida el token opaco contra `Session` en cada request autenticado (`token_hash` válido, no revocada, no expirada) *antes* de enrutar al controller correspondiente — ver componente `Middleware` en el C4 Nivel 3.
 - **Autorización RBAC + asignación**: `Role`/`Permission` controla qué *acciones* puede hacer un usuario; `PatientAssignment` controla *sobre qué pacientes* — un doctor con permiso `patients:read` igual no puede ver un paciente que no tiene asignado, salvo rol `admin`. Ambas capas se validan en el mismo `Middleware`/Guard.
-- **Consentimiento y anonimización**: solo se usa la información de un paciente en una consulta RAG si `Patient.consent_ai_analysis = true`. El contexto clínico que Backend 1 arma para Backend 2 se anonimiza cuando es necesario (sin nombre, sin `PatientContactInfo`, identificado solo por un id interno) — coherente con que Backend 2 nunca debería necesitar PII para generar una recomendación basada en evidencia.
-- **Credencial de servicio** (Backend 1 → Backend 2): JWT de servicio (o mecanismo equivalente) — **la sesión del doctor nunca viaja hasta Backend 2**. Regla explícita: *Doctor session ≠ Service credential*. Backend 2 valida el JWT de servicio en cada request y no acepta ni interpreta cookies de sesión.
+- **Consentimiento y anonimización**: solo se usa la información de un paciente en una consulta RAG si `Patient.consent_ai_analysis = true`. El contexto clínico que Backend 1 arma para Backend 2 se anonimiza cuando es necesario (sin nombre, sin `PatientContactInfo`, identificado solo por un `pseudoPatientId` **aleatorio por consulta** — nunca derivado del `patientId`, del `mrn` ni de un HMAC estable que permita vincular consultas del mismo paciente, y nunca incluido en el prompt del LLM) — coherente con que Backend 2 nunca debería necesitar PII para generar una recomendación basada en evidencia.
+- **Credencial de servicio** (Backend 1 → Backend 2): JWT de servicio con **firma asimétrica (ES256 o RS256)** — solo `clinical-api` guarda la clave privada; `rag-orchestrator` solo la pública, así que no puede emitir tokens (mínimo privilegio). Claims `iss = clinical-api`, `aud = rag-orchestrator`, `exp` corto; el validador fija el algoritmo esperado (rechaza `alg: none` y la confusión de algoritmos). Descartados: HS256 con secreto compartido (ambos servicios podrían firmar), mTLS (gestión de CA/certificados pesada para el entorno local — posible complemento futuro) y API key estática (sin expiración ni audiencia). **La sesión del doctor nunca viaja hasta Backend 2**. Regla explícita: *Doctor session ≠ Service credential*. Backend 2 valida el JWT de servicio en cada request y no acepta ni interpreta cookies de sesión.
 - **Aislamiento de red**: Backend 2 no tiene acceso de red a PostgreSQL ni se expone fuera de la red interna de Docker Compose (ver 2.4).
 - **Separación de schemas en PostgreSQL** (defensa en profundidad): `auth` (`User`, `Session`) vs. `clinical` (`Patient`, `PatientContactInfo`, `Diagnosis`, `ClinicalNote`, `Exam`, `Biomarker`, `Document`, `Treatment`, `AIAnalysisRecord`) vs. `audit` (`AuditLog`, que registra acciones sobre ambos dominios). Mismo Postgres, mismo `clinical-api` como único owner — pero un compromiso en una tabla de un schema no da acceso automático al otro.
 - **Cifrado en reposo y en tránsito**: volumen de PostgreSQL y MinIO cifrado en disco; conexión a PostgreSQL con `sslmode=require` (TLS obligatorio). 🚧 Cifrado a nivel de columna (`pgcrypto`) para campos de mayor riesgo — ADR pendiente (ver 3.3), por el trade-off con la capacidad de indexar/buscar sobre esos campos.
@@ -370,7 +377,7 @@ flowchart LR
 
 **Contract testing (mejorado):** en vez de una herramienta de contratos independiente, se genera un **cliente TypeScript tipado a partir del spec OpenAPI de Backend 2** y se consume desde Backend 1 — un cambio incompatible en el contrato rompe el build antes de llegar a producción. En CI se valida además que ambos specs OpenAPI (Backend 1 y Backend 2) sigan siendo válidos.
 
-🚧 **Pendiente — ADR futuro**: **evaluación de calidad del RAG** (precisión del retrieval, fidelidad de la respuesta generada respecto al contexto recuperado — p. ej. con un framework como `ragas`). Los tests anteriores verifican que el sistema *funciona*, no que sus recomendaciones estén bien fundamentadas en la evidencia — crítico en un contexto clínico, se define en un ADR posterior.
+🚧 **Pendiente — ADR futuro**: **evaluación de calidad del RAG** (precisión del retrieval, fidelidad de la respuesta generada respecto al contexto recuperado — p. ej. con un framework como `ragas`). Ligado al ADR de *scoring de evidencia clínica* (3.3 #7): ambos se validan contra el mismo dataset de `data/evaluation`. Los tests anteriores verifican que el sistema *funciona*, no que sus recomendaciones estén bien fundamentadas en la evidencia — crítico en un contexto clínico, se define en un ADR posterior.
 
 ### **2.7. Observabilidad**
 
@@ -462,7 +469,7 @@ erDiagram
     PATIENT_CONTACT_INFO {
         uuid patient_id PK "también FK — 1:1 con PATIENT"
         uuid source_document_id FK "nullable — de qué PDF vino (OCR)"
-        string entry_method "enum: ocr|manual_correction"
+        string entry_method "enum: ocr|manual_correction|seed (seed solo fuera de producción)"
         string national_id "documento de identidad"
         string phone
         string email
@@ -477,7 +484,7 @@ erDiagram
         uuid id PK
         uuid patient_id FK
         uuid source_document_id FK "nullable — de qué PDF vino (OCR)"
-        string entry_method "enum: ocr|manual_correction"
+        string entry_method "enum: ocr|manual_correction|seed (seed solo fuera de producción)"
         string cancer_type
         string stage
         int ecog_score
@@ -492,7 +499,7 @@ erDiagram
         uuid source_document_id FK "nullable — de qué PDF vino (OCR)"
         uuid created_by FK
         string note_type "enum: antecedente|comorbilidad|tratamiento_previo|alergia|antecedente_familiar|nota_libre"
-        string entry_method "enum: ocr|manual_correction"
+        string entry_method "enum: ocr|manual_correction|seed (seed solo fuera de producción)"
         text content
         date recorded_at "fecha clínica del evento, no de carga"
         boolean is_active "soft-supersede: nunca se borra, se marca obsoleta"
@@ -504,7 +511,7 @@ erDiagram
         uuid patient_id FK
         uuid source_document_id FK "nullable"
         string exam_type
-        string entry_method "enum: ocr|manual_correction"
+        string entry_method "enum: ocr|manual_correction|seed (seed solo fuera de producción)"
         date performed_at
         timestamp created_at
     }
@@ -528,7 +535,9 @@ erDiagram
         string object_storage_key "MinIO, bucket clinical-documents"
         string original_filename
         string mime_type
-        string ocr_status "enum: pendiente|procesando|completado|error"
+        string ocr_status "enum: pendiente|procesando|completado|error — la tabla actúa como cola de extracción"
+        int attempts "reintentos de extracción, acotados antes de pasar a error"
+        timestamp processing_started_at "nullable — detecta trabajos colgados tras un reinicio"
         uuid uploaded_by FK
         timestamp uploaded_at
         timestamp extracted_at "nullable"
@@ -555,7 +564,7 @@ erDiagram
         jsonb sources_selected "guías/ensayos/genómica — filtros del panel IA (1.3)"
         jsonb filters_applied "filtros de información del paciente — panel IA (1.3)"
         jsonb recommendations "array anidado: cada item = {treatment, confidence_score, rationale, cited_sources: [{snapshot autocontenido, chunk_id de referencia}]}"
-        float top_confidence_score "derivado de recommendations[0], para ordenar/filtrar sin parsear JSONB"
+        float top_confidence_score "nullable — máximo de recommendations[].confidence_score; null si no hubo evidencia (HU-03)"
         timestamp created_at
     }
 
@@ -630,6 +639,7 @@ erDiagram
         text chunk_text
         int chunk_index
         string section "ej. resultados, criterios de inclusión"
+        string source_type "denormalizado del documento — filtro de sourcesSelected (guideline|clinical_trial|genomic_study)"
         string cancer_type_tags "metadata escalar para filtrar en búsqueda híbrida"
         boolean is_current "denormalizado del documento — el retrieval filtra is_current=true; histórico se conserva sin borrar"
         timestamp created_at
@@ -652,18 +662,18 @@ erDiagram
 - **Session** — sesión persistida (token opaco, no JWT) para poder revocar acceso sin esperar expiración. Solo se guarda `token_hash`; `revoked` permite cerrar sesión remota; `last_seen_at` habilita expiración deslizante. Es lo que valida el `Middleware`/Guard de Backend 1 en cada request (ver C4 Nivel 3 y 2.5).
 - **Patient** — identidad clínica mínima (nombre, nacimiento, sexo, `mrn` único) + `consent_ai_analysis`: el paciente debe tener consentimiento registrado antes de que sus datos se usen en una consulta RAG (ver 2.5). Deliberadamente separada de los datos de contacto (ver `PatientContactInfo`) para acotar qué tablas exponen PII de contacto en queries que no la necesitan.
 - **PatientAssignment** — asignación explícita de doctor tratante por paciente. `is_active` marca la vigente; el histórico de reasignaciones queda en `unassigned_at`. La autorización de Backend 1 usa esta tabla, no solo el rol: un doctor con rol "doctor" no ve automáticamente a todos los pacientes, solo a los asignados (excepto `admin`).
-- **PatientContactInfo** — datos personales de contacto (1:1 con `Patient`, `patient_id` es a la vez PK y FK). Puede no existir aún si el paciente recién se cargó con lo mínimo del OCR — de ahí la relación opcional (`||--o|`).
-- **Diagnosis** — permite más de un diagnóstico por paciente en el tiempo (recurrencias); `is_active` marca el vigente sin borrar el histórico.
-- **ClinicalNote** — bitácora discreta y tipada (`note_type`) pensada para ser **filtrable eficientemente** al construir el contexto clínico de una consulta RAG: los filtros del panel IA (1.3) se traducen directamente en `WHERE note_type IN (...) AND recorded_at >= ...`. `is_active` permite superar una nota sin perder trazabilidad. `entry_method` distingue si vino de OCR o de una corrección manual del doctor — la carga manual existe, pero queda auditada como tal.
+- **PatientContactInfo** — datos personales de contacto (1:1 con `Patient`, `patient_id` es a la vez PK y FK). Puede no existir aún si el paciente recién se cargó con lo mínimo del OCR — de ahí la relación opcional (`||--o|`). **Fuera del MVP** (5.0): se conserva como diseño objetivo, pero no se implementa en los Sprints 1–6 — agrega PII sin aportar al objetivo central, y el contrato de extracción (4.2) no la extrae.
+- **Diagnosis** — permite más de un diagnóstico por paciente en el tiempo (recurrencias); `is_active` marca el vigente sin borrar el histórico. **Regla para diagnósticos extraídos por OCR**: si el paciente no tiene uno activo, el extraído queda activo; si coincide con el activo (`cancer_type` + `stage`) no se crea registro; si difiere, se guarda con `is_active = false` y la decisión queda en manos del doctor (flujo de corrección, Sprint 6) — un error de OCR nunca cambia en silencio el contexto que alimenta al RAG.
+- **ClinicalNote** — bitácora discreta y tipada (`note_type`) pensada para ser **filtrable eficientemente** al construir el contexto clínico de una consulta RAG: los filtros del panel IA (1.3) se traducen directamente en `WHERE note_type IN (...) AND recorded_at >= ...`. `is_active` permite superar una nota sin perder trazabilidad. `entry_method` distingue si vino de OCR o de una corrección manual del doctor — la carga manual existe, pero queda auditada como tal. El valor `seed` marca datos sintéticos de desarrollo/demo y solo existe fuera de producción, para no mezclarlos con correcciones reales.
 - **Exam / Biomarker** — un examen agrupa N biomarcadores; `entry_method` igual que en `ClinicalNote`. `Biomarker` separa `result_type` (cuantitativo/cualitativo) de `clinical_significance` (normal/alterado/relevante/crítico) — un resultado genómico (ej. mutación EGFR positiva) no es "alto" ni "bajo", es cualitativamente relevante, y forzarlo en una sola escala numérica no representa bien el dato.
-- **Document** — metadata del archivo subido; el binario vive en MinIO (`object_storage_key`), nunca en Postgres. `ocr_status` trackea el pipeline de extracción (Flujo 1, 2.1).
-- **Treatment** — decisión clínica **real** que registra el doctor; distinta de la recomendación de IA. `based_on_analysis_id` es opcional: el doctor puede decidir algo que no venga de ninguna recomendación del sistema.
-- **AIAnalysisRecord** — snapshot inmutable de cada consulta RAG. `recommendations` es un array anidado donde **cada** recomendación lleva su propio `confidence_score` y sus propias `cited_sources` — así se representa lo que ya muestra el mockup de 1.3 (evidencia distinta por cada tratamiento sugerido, no una sola para todo el análisis). Cada cita dentro de `cited_sources` es un **snapshot autocontenido** (título, fuente, texto citado), no una referencia viva a Milvus — sobrevive aunque el corpus se reingiera más adelante. `top_confidence_score` es un campo derivado (del primer/mejor resultado) solo para poder ordenar/filtrar el historial sin parsear JSONB. `trace_id` correlaciona con los logs de 2.7.
+- **Document** — metadata del archivo subido; el binario vive en MinIO (`object_storage_key`), nunca en Postgres. `ocr_status` trackea el pipeline de extracción (Flujo 1, 2.1). La propia tabla funciona como **cola de trabajo** de la extracción asíncrona: un worker de `clinical-api` toma documentos `pendiente` con `SELECT … FOR UPDATE SKIP LOCKED`; `processing_started_at` detecta trabajos colgados tras un reinicio y `attempts` acota los reintentos antes de pasar a `error` — durabilidad sin agregar un broker de colas a la infraestructura (2.4).
+- **Treatment** — decisión clínica **real** que registra el doctor; distinta de la recomendación de IA. `based_on_analysis_id` es opcional: el doctor puede decidir algo que no venga de ninguna recomendación del sistema. Se implementa en el **Sprint 4** (5.0), cerrando el ciclo de trazabilidad recomendación → decisión real.
+- **AIAnalysisRecord** — snapshot inmutable de cada consulta RAG. `recommendations` es un array anidado donde **cada** recomendación lleva su propio `confidence_score` y sus propias `cited_sources` — así se representa lo que ya muestra el mockup de 1.3 (evidencia distinta por cada tratamiento sugerido, no una sola para todo el análisis). Cada cita dentro de `cited_sources` es un **snapshot autocontenido** (título, fuente, texto citado), no una referencia viva a Milvus — sobrevive aunque el corpus se reingiera más adelante. `top_confidence_score` es un campo derivado (el máximo de las recomendaciones) solo para poder ordenar/filtrar el historial sin parsear JSONB; es `null` cuando el análisis no encontró evidencia (HU-03) — `0.0` se confundiría con "evidencia con confianza cero". **Semántica de `confidence_score`**: mientras no se resuelva el ADR de *scoring de evidencia clínica* (3.3 #7), mide la **relevancia de la evidencia recuperada** (determinista, derivada de los scores de retrieval de los chunks citados), no la solidez clínica de esa evidencia — y la UI lo rotula así. `trace_id` correlaciona con los logs de 2.7.
 - **AuditLog** — bitácora de acciones sobre el sistema, requisito de seguridad (2.5).
 
 **Milvus + MinIO:**
 - **CorpusDocument** — catálogo a nivel documento (guías/ensayos/datos genómicos), separado de los vectores para poder versionar/deduplicar sin tocar la colección de chunks. `checksum` detecta si un documento fuente cambió y necesita reprocesarse. **Versionado**: `version_group_id` agrupa las versiones sucesivas de una misma guía (ej. NCCN v3.2024 → v4.2025); al llegar una nueva versión, la anterior se marca `is_current = false` (`superseded_at` registrado) pero **nunca se borra** — queda disponible para que una cita antigua en `AIAnalysisRecord.cited_sources` siga siendo resoluble.
-- **CorpusChunk** — unidad de retrieval: texto + vector dense + vector sparse + metadata escalar para la búsqueda híbrida. `is_current` es un espejo denormalizado del documento (Milvus no hace joins, así que el filtro de "solo la versión vigente" tiene que vivir en el propio chunk): el índice de retrieval siempre filtra `is_current = true`, y los chunks históricos permanecen en la colección sin participar en nuevas búsquedas.
+- **CorpusChunk** — unidad de retrieval: texto + vector dense + vector sparse + metadata escalar para la búsqueda híbrida. `is_current` es un espejo denormalizado del documento (Milvus no hace joins, así que el filtro de "solo la versión vigente" tiene que vivir en el propio chunk): el índice de retrieval siempre filtra `is_current = true`, y los chunks históricos permanecen en la colección sin participar en nuevas búsquedas. `source_type` se denormaliza por la misma razón, para filtrar por las fuentes elegidas en el panel IA (`sourcesSelected`). La colección se crea desde el Sprint 1 con su **esquema final** (dense + sparse + `source_type`), aunque el vector sparse se pueble recién en el Sprint 3 — así nunca hay que recrearla ni reingestar el corpus por un cambio de esquema.
 
 ### **3.3. ADRs derivados del modelo de datos**
 
@@ -675,6 +685,16 @@ erDiagram
 4. **Retención y borrado de PHI** — ✅ Resuelto: existe consentimiento del paciente para el uso de su información en análisis (`Patient.consent_ai_analysis`), y **no se usa PII en los análisis de IA** — los datos se anonimizan antes de salir hacia Backend 2 cuando es necesario (ver "Minimización de datos" en 2.5). La política exacta de retención/borrado en PostgreSQL (cuánto tiempo se conserva un registro) queda fuera de este alcance — se puede abrir como ADR aparte si el proyecto lo requiere más adelante.
 5. **Versionado del corpus científico** — ✅ Resuelto: **sí hay versionado**. El histórico de guías se conserva (nunca se borra), pero el índice de retrieval se reconstruye para usar solo la versión vigente de cada una (`is_current`). Implementado en 3.1 (`CorpusDocument.version_group_id`/`is_current`, `CorpusChunk.is_current`) — y refuerza la decisión #3 del review anterior: como los chunks históricos no se borran, una cita antigua en `cited_sources` sigue siendo resoluble por `chunk_id`, no solo por su snapshot.
 6. **Cifrado a nivel de columna** — ✅ Resuelto: **descartado** para el alcance del proyecto. Se mantiene el cifrado de volumen + TLS ya adoptado (2.5) como nivel de protección suficiente; no se justifica el costo de perder indexación directa sobre campos como `mrn` para este alcance.
+
+*Decisiones de modelo derivadas de las preguntas abiertas de los tickets (sección 6 — resumen completo en 6.1):*
+
+7. **Scoring de evidencia clínica** — 🚧 **Pendiente — ADR** (alta incertidumbre). *Pregunta:* ¿cómo se calcula un puntaje que represente la **solidez clínica** de la evidencia que respalda una recomendación, y no solo su similitud con la pregunta? *Alternativas a investigar:* jerarquía por tipo de fuente (guía > ensayo aleatorizado > estudio observacional), vigencia de la versión, fase y tamaño del ensayo, o una combinación ponderada; exige metadatos que hoy no tiene `CorpusDocument` (nivel de evidencia, fase del ensayo) y validación clínica con el dataset de `data/evaluation` — ligado al ADR de evaluación del RAG (2.6). *Mientras tanto:* `confidence_score` = relevancia determinista de la evidencia recuperada, rotulada como tal en la UI. *Descartado:* puntaje auto-reportado por el LLM (no calibrado, no reproducible, tiende a la sobreconfianza).
+8. **`top_confidence_score` sin evidencia** — ✅ Resuelto: **nullable** (`null` = sin evidencia). Descartados `0.0` (ambiguo) y no persistir el análisis (pierde trazabilidad de un resultado clínicamente válido).
+9. **Origen de los datos semilla** — ✅ Resuelto: nuevo valor **`seed`** en `entry_method`, solo fuera de producción. Descartados `manual_correction` (contamina la auditoría de correcciones), `entry_method` nulo (rompe la regla "el origen siempre se conoce") y generar el seed por OCR (acopla el Sprint 1 al OCR del Sprint 2).
+10. **Filtro por fuente en Milvus** — ✅ Resuelto: **`source_type` denormalizado en `CorpusChunk`** y colección creada con su esquema final desde el Sprint 1. Descartados una colección por fuente (triplica índices y obliga a fusionar resultados a mano), búsqueda en dos pasos con `document_id in [...]` (round-trip extra, lista creciente) y particiones por fuente (optimización prematura para ~50 documentos; reevaluable si crece el corpus).
+11. **Mecanismo asíncrono de extracción** — ✅ Resuelto: **`Document` como cola** (`SKIP LOCKED` + `processing_started_at` + `attempts`). Descartados tarea en memoria sin persistencia (se pierde en un reinicio), broker de colas dedicado (sobrecarga operativa injustificada para el volumen actual — se reabre como ADR si el volumen lo exige) y extracción síncrona (choca con timeouts HTTP y con el `202` de 4.1).
+12. **Diagnóstico extraído vs. diagnóstico activo** — ✅ Resuelto: **no se reemplaza automáticamente** (regla detallada en 3.2 → `Diagnosis`). Descartados reemplazo automático (riesgo clínico), múltiples diagnósticos activos (ambigüedad del contexto RAG) y un estado de revisión nuevo (correcto a futuro, pero pertenece al flujo de corrección del Sprint 6). ⚠️ Regla de flujo clínico a validar con un oncólogo.
+13. **Alcance de `Treatment` y `PatientContactInfo`** — ✅ Resuelto: `Treatment` entra al **Sprint 4**; `PatientContactInfo` queda **fuera del MVP** (diseño objetivo conservado en 3.1).
 
 ---
 
@@ -735,7 +755,14 @@ components:
       type: object
       properties:
         treatment: { type: string }
-        confidenceScore: { type: number, format: float, example: 0.92 }
+        confidenceScore:
+          type: number
+          format: float
+          example: 0.92
+          description: >
+            Relevancia de la evidencia recuperada (determinista, derivada de los
+            scores de retrieval de los chunks citados). No mide la solidez clínica
+            de la evidencia — pendiente de ADR (3.3 #7).
         rationale: { type: string }
         citedSources:
           type: array
@@ -750,7 +777,11 @@ components:
         recommendations:
           type: array
           items: { $ref: "#/components/schemas/Recommendation" }
-        topConfidenceScore: { type: number, format: float }
+        topConfidenceScore:
+          type: number
+          format: float
+          nullable: true
+          description: "null cuando no se encontró evidencia (recommendations vacío)"
         createdAt: { type: string, format: date-time }
 
     Biomarker:
@@ -760,6 +791,11 @@ components:
         value: { type: string, example: "Mutación L858R positiva" }
         resultType: { type: string, enum: [cuantitativo, cualitativo] }
         clinicalSignificance: { type: string, enum: [normal, alterado, relevante, crítico] }
+        sourceDocumentId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Document de origen (vía Exam.source_document_id); null si no vino de un documento
 
     PatientSummary:
       type: object
@@ -813,6 +849,13 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Document" }
+        "404":
+          description: Paciente no encontrado
+        "422":
+          description: Archivo no es PDF (validado por magic bytes), excede el tamaño máximo o documentType inválido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "403":
           description: El doctor no tiene asignado a este paciente (PatientAssignment)
           content:
@@ -826,8 +869,10 @@ paths:
         Flujo 2 (2.1): Backend 1 resuelve el contexto clínico autorizado y
         anonimizado (2.5) y lo reenvía a Backend 2 (JWT interno). Backend 2
         hace retrieval híbrido + inferencia LLM. Backend 1 persiste el
-        resultado en AIAnalysisRecord antes de responder. El Route Handler del
-        frontend (2.1) puede consumir esta misma respuesta en streaming.
+        resultado en AIAnalysisRecord antes de responder (respuesta JSON
+        completa — nunca tokens del LLM sin validar, ver 2.1). Sin evidencia
+        suficiente responde 200 con recommendations vacío y
+        topConfidenceScore null.
       requestBody:
         required: true
         content:
@@ -862,6 +907,23 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Paciente no encontrado
+        "422":
+          description: Body inválido (validación Zod)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "502":
+          description: Error de comunicación con rag-orchestrator (sin detalles internos)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "504":
+          description: rag-orchestrator no respondió dentro del timeout
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /platform/patients/{patientId}:
     get:
@@ -889,6 +951,11 @@ paths:
         "404":
           description: Paciente no encontrado
 ```
+
+**Endpoints adicionales** (definidos en los tickets de la sección 6; no se detallan aquí por el límite de 3 endpoints de esta sección, pero forman parte del spec completo en `docs/api/`):
+- `POST /platform/auth/login` — crea la `Session` y emite la cookie `oncolens_session` (HU-01).
+- `GET /platform/patients/{patientId}/documents/{documentId}` — estado de extracción de un documento (`ocrStatus`), prometido por la descripción del endpoint de carga (OL-05).
+- `GET /platform/patients/{patientId}/documents` — listado **paginado** de documentos con su `ocrStatus`, para mostrar en la ficha los documentos con extracción fallida (HU-05, escenario 2). Se prefiere a meter `documents[]` en `PatientSummary`, que crecería sin límite con cada carga.
 
 **Ejemplo — `POST /rag/query`**
 
@@ -960,7 +1027,9 @@ components:
       properties:
         pseudoPatientId:
           type: string
-          description: identificador interno, nunca el mrn ni el nombre
+          description: >
+            Opaco y aleatorio por consulta — nunca derivado del patientId, del
+            mrn ni del nombre. No se incluye en el prompt del LLM (2.5).
         diagnosis:
           type: object
           properties:
@@ -1084,7 +1153,10 @@ paths:
         Invocado únicamente por clinical-api (Flujo 2, 2.1). Retrieval
         dense/sparse sobre Milvus filtrando CorpusChunk.isCurrent=true (3.1/3.3
         — solo la versión vigente del corpus), ensamblado de contexto,
-        inferencia vía LLMAdapter, validación de la respuesta.
+        inferencia vía LLMAdapter, validación de la respuesta. Si ningún
+        chunk supera el umbral de relevancia, responde recommendations vacío
+        sin invocar al LLM; toda cita debe corresponder a un chunk recuperado
+        en esta misma consulta (las demás se descartan).
       requestBody:
         required: true
         content:
@@ -1143,7 +1215,7 @@ Petición (nótese: sin `patientId`, sin nombre — solo `pseudoPatientId` y con
   "query": "¿Qué tratamiento de primera línea tiene mayor evidencia para EGFR L858R positivo en estadio IIIB?",
   "sourcesSelected": { "guias": true, "ensayos": true, "genomica": true },
   "clinicalContext": {
-    "pseudoPatientId": "pt_6f1e2b2a",
+    "pseudoPatientId": "psd_Qx7mR2vK9aLw",
     "diagnosis": { "cancerType": "Adenocarcinoma de pulmón", "stage": "IIIB", "ecogScore": 1 },
     "biomarkers": [
       { "name": "EGFR", "value": "Mutación L858R positiva", "resultType": "cualitativo", "clinicalSignificance": "relevante" },
@@ -1169,11 +1241,11 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 **Sprint 1 — Walking skeleton: demostrar el objetivo central de punta a punta**
 
 *Objetivo (OKR):* Demostrar que el sistema puede cruzar el perfil clínico de un paciente con evidencia científica para sugerir un tratamiento, de extremo a extremo.
-- KR1: 100% de las 5 historias core de este documento (5.1–5.3) pasan sus criterios de aceptación en un ambiente de demo.
-- KR2 *(meta propuesta, a calibrar):* `/rag/query` responde en ≤ 15 s (p95) contra el corpus semilla.
-- KR3: 100% de las recomendaciones generadas incluyen al menos 1 fuente citada verificable — 0 respuestas sin evidencia.
+- KR1: 100% de las 3 historias de este sprint (HU-01 a HU-03, 5.1–5.3) pasan sus criterios de aceptación en un ambiente de demo.
+- KR2 *(meta propuesta, a calibrar):* `/rag/query` responde en ≤ 15 s (p95) contra el corpus semilla. El valor medido decide el ADR de streaming de progreso (2.1).
+- KR3: 100% de las recomendaciones generadas incluyen al menos 1 fuente citada verificable — 0 recomendaciones sin evidencia (una consulta sin evidencia responde explícitamente "sin evidencia", nunca con una recomendación inventada).
 
-*Alcance incluido:* auth básica (`Session` persistida, 2.5) · `GET /platform/patients/{id}` mínimo · `/rag/query` con retrieval **solo dense** (sparse llega en Sprint 3) contra un corpus semilla (~10 documentos cargados a mano) · 1 proveedor de LLM concreto conectado para desbloquear (el ADR self-hosted/cloud de 1.4 se resuelve para producción más adelante) · UI: login, panel del doctor mínimo, panel de IA mínimo (1 pregunta → 1 resultado).
+*Alcance incluido:* auth básica (`Session` persistida, 2.5) · `GET /platform/patients/{id}` mínimo · `/rag/query` con retrieval **solo dense** (sparse llega en Sprint 3) contra un corpus semilla (~10 documentos cargados a mano), sobre colecciones de Milvus creadas ya con su esquema final (3.2) · spike acotado al inicio del sprint para elegir **modelo de embeddings** (prioritario: cambiarlo después obliga a reindexar todo el corpus) y **1 proveedor de LLM** provisional para desbloquear (barato de cambiar detrás de `LLMAdapter`; el ADR self-hosted/cloud de 1.4 se resuelve para producción más adelante) · UI: login, panel del doctor mínimo, panel de IA mínimo (1 pregunta → 1 resultado).
 *Explícitamente fuera de alcance (se resuelve en sprints posteriores):* `PatientAssignment`/RBAC granular (Sprint 5), múltiples recomendaciones rankeadas (Sprint 4), carga de documentos vía OCR (Sprint 2).
 
 **Sprint 2 — Ingesta real de historia clínica (OCR)**
@@ -1183,7 +1255,7 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 - KR2 *(meta propuesta):* tiempo de procesamiento OCR ≤ 60 s por documento (p95).
 - KR3: 100% de los `Document` procesados quedan trazados con `ocrStatus` consultable (pendiente/procesando/completado/error) — 0 cargas "silenciosas" sin estado visible.
 
-*Alcance incluido:* `POST /platform/patients/{id}/documents` + `Document` + MinIO (bucket `clinical-documents`) · `DocumentExtractionService` real en `rag-orchestrator` (motor concreto del ADR de 1.4) · tabla de biomarcadores con semáforo (`clinicalSignificance`, 3.2) poblada dinámicamente.
+*Alcance incluido:* `POST /platform/patients/{id}/documents` + `Document` + MinIO (bucket `clinical-documents`) · worker asíncrono de extracción con `Document` como cola (3.3 #11) · consulta de estado y listado paginado de documentos (4.1, endpoints adicionales) · `DocumentExtractionService` real en `rag-orchestrator` (motor concreto del ADR de 1.4) · tabla de biomarcadores con semáforo (`clinicalSignificance`, 3.2) poblada dinámicamente y trazable a su documento de origen (`sourceDocumentId`).
 *Fuera de alcance:* corrección manual de datos extraídos (`entry_method: manual_correction` completo en UI — Sprint 6), ingesta automatizada del corpus científico externo (arranca en este sprint mismo como carril paralelo, pero no es un entregable con criterios de aceptación propios).
 
 **Sprint 3 — Búsqueda híbrida y filtros reales**
@@ -1200,6 +1272,8 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 - KR2: el doctor puede consultar el historial de análisis previos de un paciente (`AIAnalysisRecord`).
 - KR3: 0 pérdidas de trazabilidad — toda cita en `cited_sources` sigue siendo resoluble (snapshot autocontenido, 3.2/3.3).
 
+*Alcance incluido:* ranking de varias recomendaciones · historial de análisis del paciente · registro de la decisión clínica real (`Treatment`, con `based_on_analysis_id` opcional) — cierra el ciclo recomendación → decisión (3.3 #13).
+
 **Sprint 5 — Autorización real (RBAC + asignación + consentimiento)**
 
 *Objetivo (OKR):* El sistema respeta quién puede ver a quién — listo para múltiples doctores reales, no un demo de un solo usuario.
@@ -1215,6 +1289,8 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 - KR3 *(meta propuesta):* mutation score de StrykerJS ≥ 70% sobre la lógica de auth/autorización (2.6).
 
 *Nota:* si los Sprints 5–6 no llegan a ejecutarse, el producto sigue siendo demostrable end-to-end con lo entregado en Sprints 1–4 — es deliberado: quedan atrás autorización fina, cumplimiento y observabilidad, no el objetivo central del producto.
+
+*Fuera del MVP (ningún sprint):* `PatientContactInfo` — se conserva en el modelo (3.1) como diseño objetivo, pero agrega PII sin aportar al objetivo central (3.3 #13).
 
 ### 5.1–5.5. Historias de Usuario (Sprint 1 y 2 — el corazón del producto)
 
@@ -1304,7 +1380,7 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 * **Dado que** el doctor está viendo la ficha de un paciente con al menos un diagnóstico registrado
 * **Y** el corpus semilla contiene evidencia relevante para la pregunta
 * **Cuando** el doctor escribe su pregunta y presiona "Buscar tratamiento"
-* **Entonces** el sistema muestra al menos 1 recomendación con su `confidenceScore`
+* **Entonces** el sistema muestra al menos 1 recomendación con su `confidenceScore`, rotulado como "Relevancia de la evidencia" (3.3 #7)
 * **Y** al menos 1 fuente citada con nombre/identificador verificable (`sourceName`, `externalId`)
 
 *Escenario 2: Sin evidencia suficiente*
@@ -1315,7 +1391,7 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 
 **4. Datos de Entrada y Salida (I/O Schema)**
 * **Inputs esperados:** `patientId` (uuid) · `query` (string, requerido) · `sourcesSelected` (objeto, schema de 4.1 — en Sprint 1 solo el corpus semilla está disponible como fuente real)
-* **Outputs esperados:** `200` + `AIAnalysisRecord` (schema de 4.1, `recommendations` de longitud 1 en este sprint) · respuesta explícita de "sin evidencia" cuando no hay resultados relevantes (sin código de error — es un resultado válido, no una falla)
+* **Outputs esperados:** `200` + `AIAnalysisRecord` (schema de 4.1, `recommendations` de longitud 1 en este sprint) · respuesta explícita de "sin evidencia" cuando no hay resultados relevantes: `200` con `recommendations: []` y `topConfidenceScore: null` (sin código de error — es un resultado válido, no una falla)
 
 ---
 
@@ -1329,7 +1405,7 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 **2. Contexto y Alcance (Context & Scope)**
 * **Descripción:** dispara el Flujo 1 (2.1): `clinical-api` almacena el binario en MinIO (bucket `clinical-documents`) y delega la extracción a `rag-orchestrator` vía `POST /documents/extract` (JWT interno + URL prefirmada, 4.2). Proceso **asíncrono**: `Document.ocrStatus` transiciona `pendiente → procesando → completado|error`.
 * **Entidades afectadas:** `Document`.
-* **Restricciones:** solo se aceptan archivos `application/pdf`; tamaño máximo *(meta propuesta, a calibrar)* 20 MB. En este sprint no hay validación de `PatientAssignment` (ver HU-02).
+* **Restricciones:** solo se aceptan archivos PDF, verificados por contenido (*magic bytes*), no solo por extensión; tamaño máximo *(meta propuesta, a calibrar)* 20 MB. En este sprint no hay validación de `PatientAssignment` (ver HU-02).
 
 **3. Criterios de Aceptación (Gherkin Format)**
 
@@ -1369,7 +1445,7 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 * **Dado que** un documento tipo `examen` terminó de procesarse (`ocrStatus = completado`)
 * **Cuando** el doctor abre la ficha del paciente
 * **Entonces** ve la tabla de biomarcadores actualizada, cada fila con su `clinicalSignificance` como badge de color (normal/alterado/relevante/crítico)
-* **Y** puede identificar de qué documento (`Document.id`) proviene cada dato
+* **Y** puede identificar de qué documento proviene cada biomarcador (`sourceDocumentId`)
 
 *Escenario 2: Extracción fallida*
 * **Dado que** el procesamiento de un documento falló (`ocrStatus = error`)
@@ -1378,8 +1454,8 @@ Respuesta (`200`) — mismo formato de `recommendations` que recibe el doctor en
 * **Y** el sistema indica claramente que la extracción falló, invitando a reintentar la carga
 
 **4. Datos de Entrada y Salida (I/O Schema)**
-* **Inputs esperados:** `patientId` (uuid, mismo endpoint que HU-02: `GET /platform/patients/{patientId}`)
-* **Outputs esperados:** `200` + `PatientSummary` con `recentBiomarkers` poblados · indicador de error visible por cada `Document` con `ocrStatus = error`
+* **Inputs esperados:** `patientId` (uuid, path param) — la ficha hace **dos llamadas**: `GET /platform/patients/{patientId}` (mismo endpoint que HU-02) y `GET /platform/patients/{patientId}/documents` (listado paginado, 4.1 — endpoints adicionales)
+* **Outputs esperados:** `200` + `PatientSummary` con `recentBiomarkers` poblados, cada uno con su `sourceDocumentId` · `200` + listado de documentos con su `ocrStatus`, del que la UI deriva el indicador de error por cada `Document` con `ocrStatus = error`
 
 ---
 
@@ -1410,6 +1486,25 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 - Logs sin PHI/PII ni secretos (tokens, passwords, URLs prefirmadas completas).
 - Todo valor marcado *"propuesta, a calibrar"* vive en configuración (variables de entorno o constantes de `domain/`), no incrustado en la lógica.
 
+### 6.1. Decisiones sobre las preguntas abiertas de los tickets
+
+Al detallar los tickets surgieron preguntas que el resto del documento no respondía. Cada una se resolvió con opciones, recomendación y descarte explícito; las de alta incertidumbre quedan como ADR para investigarlas antes de decidir. Las decisiones ya están incorporadas en las secciones indicadas y en los tickets.
+
+| # | Pregunta (ticket) | Decisión | Descartado | Estado | Reflejado en |
+|---|---|---|---|---|---|
+| 1 | `top_confidence_score` sin evidencia (OL-01) | Nullable (`null` = sin evidencia) | `0.0` (ambiguo); no persistir (pierde trazabilidad) | ✅ | 3.1, 3.3 #8, 4.1 |
+| 2 | `entry_method` de los datos semilla (OL-01) | Nuevo valor `seed`, solo fuera de producción | `manual_correction` (contamina auditoría); nulo; seed vía OCR | ✅ | 3.1, 3.2, 3.3 #9 |
+| 3 | Sprint de `Treatment` / `PatientContactInfo` (OL-01) | `Treatment` → Sprint 4; `PatientContactInfo` fuera del MVP | Ambas fuera (sin cierre de trazabilidad); ambas dentro (PII sin valor) | ✅ | 3.2, 3.3 #13, 5.0 |
+| 4 | Cálculo de `confidenceScore` (OL-02) | Relevancia determinista de la evidencia recuperada, rotulada como tal | Auto-reportado por el LLM (no calibrado); combinación con él | 🚧 **ADR** — scoring de evidencia clínica | 1.3, 3.2, 3.3 #7, 4.1 |
+| 5 | Filtro por `sourcesSelected` en Milvus (OL-02) | `source_type` denormalizado en `CorpusChunk`; colección con esquema final desde Sprint 1 | Colección por fuente; búsqueda en dos pasos; particiones (prematuro) | ✅ | 3.1, 3.2, 3.3 #10 |
+| 6 | Generación de `pseudoPatientId` (OL-03) | Aleatorio por consulta; nunca en el prompt del LLM | HMAC estable (vinculable); prefijo del UUID (filtra el id) | ✅ | 2.5, 4.2 |
+| 7 | Algoritmo del JWT de servicio (OL-03) | Asimétrico (ES256/RS256), algoritmo fijado en el validador | HS256 compartido; mTLS (pesado en local); API key estática | ✅ | 2.5 |
+| 8 | Streaming vs. contrato de 4.1 (OL-04) | JSON completo; **nunca tokens sin validar** | Streaming de tokens (muestra contenido que luego se descarta); polling | ✅ + 🚧 **ADR** streaming de progreso tras medir KR2 | 2.1, 2.2, 4.1, 5.0 |
+| 9 | Mecanismo asíncrono de extracción (OL-05) | `Document` como cola (`SKIP LOCKED`, `attempts`, `processing_started_at`) | Tarea en memoria (se pierde al reiniciar); broker dedicado; síncrono | ✅ | 2.1 Flujo 1, 3.1, 3.2, 3.3 #11 |
+| 10 | Diagnóstico extraído vs. activo (OL-05) | No se reemplaza automáticamente; deduplicación; el doctor decide | Reemplazo automático; varios activos; estado de revisión (Sprint 6) | ✅ ⚠️ validar con oncólogo | 3.2, 3.3 #12 |
+| 11 | Visibilidad de HU-05 en la ficha (OL-05) | `sourceDocumentId` en `Biomarker` + `GET …/documents` paginado | `documents[]` dentro de `PatientSummary` (crece sin límite) | ✅ | 4.1, 5.0, HU-05 |
+| — | Proveedor de LLM y modelo de embeddings (bloqueo de OL-02) | Spike al inicio del Sprint 1, priorizando embeddings (cambiarlo obliga a reindexar) | — | 🚧 **ADR** existente (1.4) | 1.4, 5.0 |
+
 ---
 
 #### OL-01 · [BD] Esquema PostgreSQL base (Prisma, schemas `auth`/`clinical`) + migración inicial + seed sintético
@@ -1425,32 +1520,31 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 | `auth` | `User`, `Role`, `Session` | HU-01 |
 | `clinical` | `Patient`, `Diagnosis`, `ClinicalNote`, `Exam`, `Biomarker`, `Document`, `AIAnalysisRecord` | HU-02 a HU-05 |
 
-**Alcance — no incluye** (cada una llega con su propia migración en el sprint que la usa): `Permission`/`RolePermission` y `PatientAssignment` (Sprint 5), `AuditLog` (Sprint 6), `PatientContactInfo` y `Treatment` (ningún sprint de 5.0 los usa todavía — ver pregunta abierta 3). `Document` sí entra en Sprint 1 aunque la carga sea de Sprint 2, porque `Diagnosis`/`ClinicalNote`/`Exam` tienen FK `source_document_id` hacia ella.
+**Alcance — no incluye** (cada una llega con su propia migración en el sprint que la usa): `Permission`/`RolePermission` y `PatientAssignment` (Sprint 5), `AuditLog` (Sprint 6), `Treatment` (Sprint 4) y `PatientContactInfo` (fuera del MVP — 6.1 #3). `Document` sí entra en Sprint 1 aunque la carga sea de Sprint 2, porque `Diagnosis`/`ClinicalNote`/`Exam` tienen FK `source_document_id` hacia ella.
 
 **Tareas técnicas:**
 1. `schema.prisma`: datasource PostgreSQL con `schemas = ["auth", "clinical"]` y `@@schema(...)` por modelo (confirmar en la versión de Prisma instalada si el soporte multi-schema requiere `previewFeatures`).
 2. Nomenclatura: tablas/columnas en `snake_case` en la BD (`@@map`/`@map`) y campos `camelCase` en el cliente — así la BD coincide literalmente con 3.1 y el cliente con los contratos de 4.1.
-3. Enums nativos (Prisma `enum`) para todos los enums de 3.1: `document_type`, `ocr_status`, `entry_method`, `note_type`, `result_type`, `clinical_significance`. Los valores con tilde no son identificadores válidos en Prisma → `critico @map("crítico")`.
+3. Enums nativos (Prisma `enum`) para todos los enums de 3.1: `document_type`, `ocr_status`, `entry_method`, `note_type`, `result_type`, `clinical_significance`. Los valores con tilde no son identificadores válidos en Prisma → `critico @map("crítico")`. `entry_method` incluye el valor `seed` (6.1 #2).
 4. Restricciones de 3.1: `User.email`, `Role.name`, `Session.token_hash` y `Patient.mrn` únicos. FKs del schema `clinical` con `onDelete: Restrict` — el modelo no contempla borrado físico de datos clínicos (usa `is_active`; la política de retención sigue fuera de alcance, ADR #4 de 3.3).
-5. `AIAnalysisRecord.recommendations`, `sources_selected` y `filters_applied` como `Json` (→ `jsonb`). Tabla inmutable: sin `updated_at`.
-6. Índices derivados de los accesos reales: `Session(expires_at)` · `Diagnosis(patient_id, is_active)` · `ClinicalNote(patient_id, note_type, recorded_at)` (filtros del panel IA, 3.2) · `Exam(patient_id, performed_at)` · `Biomarker(exam_id)` · `Document(patient_id, ocr_status)` · `AIAnalysisRecord(patient_id, created_at)`.
-7. Migración inicial con `npx prisma migrate dev --name init_auth_clinical` (1.4); `DATABASE_URL` con `sslmode=require` (2.5).
-8. `prisma/seed.ts` idempotente (`upsert`): rol `doctor`; 1 usuario doctor cuyo password se toma de una variable de entorno (nunca en el repositorio); 3 pacientes **sintéticos**: (a) el caso del mockup de 1.3 — adenocarcinoma de pulmón IIIB, ECOG 1, `EGFR` L858R (`cualitativo`/`relevante`) y `PD-L1 TPS` 55 % (`cuantitativo`/`alterado`); (b) un paciente con diagnóstico y sin biomarcadores; (c) un paciente con un diagnóstico inactivo y uno activo (valida `is_active`).
+5. `AIAnalysisRecord.recommendations`, `sources_selected` y `filters_applied` como `Json` (→ `jsonb`); `top_confidence_score` **nullable** (6.1 #1). Tabla inmutable: sin `updated_at`.
+6. `Document` incluye desde ya `attempts` (default 0) y `processing_started_at` (nullable), que usa la cola de extracción de OL-05 (6.1 #9) — evita una migración adicional en el Sprint 2.
+7. Índices derivados de los accesos reales: `Session(expires_at)` · `Diagnosis(patient_id, is_active)` · `ClinicalNote(patient_id, note_type, recorded_at)` (filtros del panel IA, 3.2) · `Exam(patient_id, performed_at)` · `Biomarker(exam_id)` · `Document(ocr_status, uploaded_at)` (lo consulta el worker de la cola) · `Document(patient_id, uploaded_at)` (listado paginado de documentos) · `AIAnalysisRecord(patient_id, created_at)`.
+8. Migración inicial con `npx prisma migrate dev --name init_auth_clinical` (1.4); `DATABASE_URL` con `sslmode=require` (2.5).
+9. `prisma/seed.ts` idempotente (`upsert`), que se niega a ejecutarse en producción: todos los datos clínicos con `entry_method = seed` y `source_document_id = null`; rol `doctor`; 1 usuario doctor cuyo password se toma de una variable de entorno (nunca en el repositorio); 3 pacientes **sintéticos**: (a) el caso del mockup de 1.3 — adenocarcinoma de pulmón IIIB, ECOG 1, `EGFR` L858R (`cualitativo`/`relevante`) y `PD-L1 TPS` 55 % (`cuantitativo`/`alterado`); (b) un paciente con diagnóstico y sin biomarcadores; (c) un paciente con un diagnóstico inactivo y uno activo (valida `is_active`).
 
 **Criterios de aceptación:**
 - Dado un PostgreSQL vacío, cuando se ejecutan `npx prisma migrate dev` y `npx prisma db seed`, entonces existen los schemas `auth` y `clinical` con exactamente las 10 tablas listadas, y el seed puede ejecutarse dos veces sin duplicar registros.
 - Insertar un `Patient` con `mrn` repetido falla por constraint único; borrar un `Patient` con `Diagnosis` asociado falla (`Restrict`).
 - Un `Biomarker` con significancia crítica se lee como `critico` desde el cliente Prisma y como `crítico` desde SQL.
-- La columna `recommendations` acepta el JSON de ejemplo de 4.1 sin transformación.
+- La columna `recommendations` acepta el JSON de ejemplo de 4.1 sin transformación, y un `AIAnalysisRecord` con `recommendations = []` se guarda con `top_confidence_score = null`.
+- Ejecutar el seed con la variable de entorno de producción aborta sin escribir datos.
 - Ninguna credencial de esta base existe en el `.env` ni en la definición de servicio de `rag-orchestrator` (regla 1 de `CLAUDE.md`).
 
 **Dependencias:** servicio `postgres` en `infra/docker/docker-compose.yml` (backlog).
 **Riesgos:** la imagen local de PostgreSQL no trae TLS habilitado por defecto — `sslmode=require` obliga a configurar certificados en el contenedor desde este ticket, o la conexión falla.
 
-**Preguntas abiertas (confirmar antes de cerrar el ticket):**
-1. `AIAnalysisRecord.top_confidence_score` está modelado como no nulo, pero HU-03 (escenario 2) produce un análisis sin recomendaciones. Recomendación: hacerlo `nullable`.
-2. `entry_method` solo admite `ocr|manual_correction`, y los datos del seed no son ninguna de las dos. Opciones: (a) agregar el valor `seed`, (b) usar `manual_correction`. Recomendación: (a) — (b) contaminaría la auditoría de correcciones manuales con datos que nadie corrigió.
-3. `PatientContactInfo` y `Treatment` no tienen sprint asignado en 5.0: ¿se agregan al roadmap o quedan fuera del MVP?
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #1 `top_confidence_score` nullable · #2 valor `seed` en `entry_method` · #3 `Treatment` en Sprint 4, `PatientContactInfo` fuera del MVP · #9 columnas de cola en `Document`.
 
 ---
 
@@ -1458,22 +1552,22 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 
 - **Tipo:** Backend (Python/FastAPI) · **Sprint:** 1 · **Servicio:** `apps/rag-orchestrator` · **HU:** HU-03 · **Prioridad:** Crítica — núcleo del producto y mayor riesgo técnico.
 
-**Objetivo.** Implementar el endpoint interno de 4.2 que, dado un contexto clínico ya anonimizado y una pregunta, recupera evidencia del corpus vigente y devuelve recomendaciones en las que **cada** cita corresponde a un chunk realmente recuperado — o una respuesta vacía explícita si no hay evidencia (HU-03; KR3 de Sprint 1: 0 respuestas sin evidencia).
+**Objetivo.** Implementar el endpoint interno de 4.2 que, dado un contexto clínico ya anonimizado y una pregunta, recupera evidencia del corpus vigente y devuelve recomendaciones en las que **cada** cita corresponde a un chunk realmente recuperado — o una respuesta vacía explícita si no hay evidencia (HU-03; KR3 de Sprint 1: 0 recomendaciones sin evidencia).
 
 **Alcance — incluye:** router, servicio, adapters y repositorio del flujo `/rag/query`; validación del JWT de servicio; colecciones Milvus `corpus_documents`/`corpus_chunks`; script de carga manual del corpus semilla (~10 documentos, 5.0).
-**No incluye:** retrieval sparse/híbrido y filtro por `sourcesSelected` (Sprint 3); varias recomendaciones rankeadas (Sprint 4 — en Sprint 1, máximo 1); `IngestionPipelineService` automatizado (carril paralelo); evaluación de calidad con framework (ADR pendiente, 2.6).
+**No incluye:** poblar `sparse_vector`, retrieval híbrido y aplicar el filtro por `sourcesSelected` (Sprint 3 — aunque la colección ya se crea preparada para ambos); varias recomendaciones rankeadas (Sprint 4 — en Sprint 1, máximo 1); `IngestionPipelineService` automatizado (carril paralelo); evaluación de calidad con framework (ADR pendiente, 2.6); scoring de solidez clínica de la evidencia (ADR, 3.3 #7).
 
-**Bloqueos (decisiones previas, no se asumen aquí):** proveedor de LLM y modelo de embeddings concretos para desbloquear Sprint 1 (5.0 lo exige; el ADR self-hosted vs. cloud de 1.4 sigue abierto para producción). La dimensión de `dense_vector` depende del modelo de embeddings elegido.
+**Bloqueos (decisiones previas, no se asumen aquí):** spike acotado al inicio del sprint (6.1, última fila) que elige **primero el modelo de embeddings** — cambiarlo después cambia la dimensión de `dense_vector` y obliga a reindexar todo el corpus — y un proveedor de LLM provisional, barato de cambiar detrás de `LLMAdapter` (el ADR self-hosted vs. cloud de 1.4 sigue abierto para producción).
 
 **Tareas técnicas (por capa, 2.3):**
-1. `api/` — `RagQueryRouter`: `POST /rag/query` con `RagQueryInternalRequest`/`RagQueryInternalResponse` (Pydantic, `schemas/`) exactamente como en 4.2. Dependencia de FastAPI que valida el JWT de servicio (firma, `exp`, `iss = clinical-api`, `aud = rag-orchestrator`) → `401` si falla; ignora cualquier cookie (2.5). El `traceId` del body se agrega a cada log (2.7).
-2. `infrastructure/milvus/` — `MilvusRepository` (SDK oficial `pymilvus`): creación de colecciones con el schema de 3.1; búsqueda dense top-k con filtro escalar obligatorio `is_current == true` (ADR #5 de 3.3); lectura de `CorpusDocument` por `document_id` para completar la cita (Milvus no hace joins).
+1. `api/` — `RagQueryRouter`: `POST /rag/query` con `RagQueryInternalRequest`/`RagQueryInternalResponse` (Pydantic, `schemas/`) exactamente como en 4.2. Dependencia de FastAPI que valida el JWT de servicio con la **clave pública** de `clinical-api` y el algoritmo fijado (ES256/RS256 — 6.1 #7): firma, `exp`, `iss = clinical-api`, `aud = rag-orchestrator` → `401` si falla; ignora cualquier cookie (2.5). El `traceId` del body se agrega a cada log (2.7).
+2. `infrastructure/milvus/` — `MilvusRepository` (SDK oficial `pymilvus`): creación de colecciones con el **esquema final** de 3.1 — incluidos `sparse_vector` y `source_type` aunque se usen desde el Sprint 3 (6.1 #5), para no recrear la colección ni reingestar; búsqueda dense top-k con filtro escalar obligatorio `is_current == true` (ADR #5 de 3.3); lectura de `CorpusDocument` por `document_id` para completar la cita (Milvus no hace joins).
 3. `infrastructure/embeddings/` — `EmbeddingAdapter` e `infrastructure/llm/` — `LLMAdapter`: interfaz + implementación del proveedor elegido; timeouts y errores del proveedor se traducen a excepciones propias, nunca se propagan crudos al cliente.
 4. `application/` — `RAGOrchestratorService`: embed (pregunta + resumen del contexto clínico) → retrieve → descartar chunks bajo el umbral de relevancia → si no queda ninguno, devolver `recommendations: []` **sin invocar al LLM** → ensamblar contexto → inferencia pidiendo salida JSON estructurada → validar.
-5. `domain/` — reglas puras y testeables: umbral mínimo de relevancia *(propuesta, a calibrar con el corpus semilla)*; cálculo de `confidenceScore` (pregunta abierta 1); validación de citas: todo `chunkId` citado por el LLM debe pertenecer al conjunto recuperado **en esta consulta** — si no, la cita se descarta, y una recomendación que se queda sin citas se descarta. `chunkTextSnapshot`, `title`, `sourceName` y `externalId` se copian del chunk/documento recuperado, **nunca** del texto generado por el LLM.
+5. `domain/` — reglas puras y testeables: umbral mínimo de relevancia *(propuesta, a calibrar con el corpus semilla)*; cálculo de `confidenceScore` como **relevancia de la evidencia recuperada**, derivada de forma determinista de los scores de retrieval de los chunks citados (6.1 #4 — no mide solidez clínica; eso es el ADR 3.3 #7, y el cálculo queda aislado en `domain/` para poder reemplazarlo sin tocar el resto); validación de citas: todo `chunkId` citado por el LLM debe pertenecer al conjunto recuperado **en esta consulta** — si no, la cita se descarta, y una recomendación que se queda sin citas se descarta. `chunkTextSnapshot`, `title`, `sourceName` y `externalId` se copian del chunk/documento recuperado, **nunca** del texto generado por el LLM.
 6. Prompt del LLM: instrucciones de sistema separadas del contenido; los chunks y la pregunta del doctor van delimitados y se tratan como datos, no como instrucciones (mitigación de *prompt injection* desde el corpus o desde la consulta).
-7. Carga del corpus semilla (`scripts/` o comando del servicio) desde `data/raw`: normalización mínima, chunking, embedding dense e inserción con `is_current = true` y `status = embebido`. Solo documentos públicos cuya licencia permita su uso — nunca PHI en `data/` (2.3).
-8. Tests (Pytest + FastAPI TestClient, 2.6), con `LLMAdapter`/`EmbeddingAdapter` falsos: (a) con evidencia; (b) sin evidencia → `recommendations: []` y el LLM no se invoca; (c) el LLM cita un `chunkId` no recuperado → cita descartada; (d) JWT ausente, expirado o con `aud` incorrecto → `401`. Unitarios de `domain/` para umbral y validación de citas.
+7. Carga del corpus semilla (`scripts/` o comando del servicio) desde `data/raw`: normalización mínima, chunking, embedding dense e inserción con `is_current = true`, `status = embebido` y `source_type` copiado del documento en cada chunk. Solo documentos públicos cuya licencia permita su uso — nunca PHI en `data/` (2.3).
+8. Tests (Pytest + FastAPI TestClient, 2.6), con `LLMAdapter`/`EmbeddingAdapter` falsos: (a) con evidencia; (b) sin evidencia → `recommendations: []` y el LLM no se invoca; (c) el LLM cita un `chunkId` no recuperado → cita descartada; (d) JWT ausente, expirado, con `aud` incorrecto, firmado con un algoritmo distinto al fijado o con `alg: none` → `401`. Unitarios de `domain/` para umbral, cálculo de `confidenceScore` (mismo input → mismo score) y validación de citas.
 
 **Criterios de aceptación:**
 - Dado el corpus semilla cargado y una pregunta con evidencia relevante, cuando `clinical-api` invoca `POST /rag/query` con un JWT válido, entonces responde `200` con exactamente 1 recomendación con ≥ 1 elemento en `citedSources`, y todo `chunkId` citado existe en `corpus_chunks` con `is_current = true`.
@@ -1482,11 +1576,9 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 - El contenedor de `rag-orchestrator` no tiene variables de entorno ni ruta de red hacia PostgreSQL (regla 1 de `CLAUDE.md`).
 - La latencia p95 sobre el corpus semilla queda registrada en el PR frente a la meta KR2 de Sprint 1 (≤ 15 s end-to-end, *propuesta, a calibrar*).
 
-**Riesgos:** `sparse_vector` (3.1) se puebla recién en Sprint 3 — confirmar con la versión de Milvus usada si la colección debe declararlo desde ya: modificar el schema de una colección existente puede obligar a recrearla y reingestar.
+**Riesgos:** confirmar con la versión de Milvus usada que una colección admite declarar `sparse_vector` y dejarlo sin poblar hasta el Sprint 3; si no lo admite, se puebla desde este ticket (la decisión de esquema final no cambia).
 
-**Preguntas abiertas:**
-1. **Cómo se calcula `confidenceScore`** (el mockup lo muestra como "Evidencia 92 %") — ninguna sección lo define. Opciones: (a) auto-reportado por el LLM, (b) derivado de forma determinista de los scores de retrieval de los chunks citados, (c) combinación. Recomendación: (b) — un puntaje auto-reportado por el LLM no está calibrado, y presentarlo como "% de evidencia" a un oncólogo sería engañoso; (b) es reproducible y testeable en `domain/`.
-2. **`sourcesSelected` no es filtrable hoy en Milvus**: `source_type` vive en `CorpusDocument` y `CorpusChunk` no lo tiene (sin joins). Para Sprint 3 habrá que denormalizarlo en el chunk, igual que `is_current`. Si se confirma, conviene crear la colección con ese campo desde este ticket (mismo riesgo de recreación que `sparse_vector`).
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #4 `confidenceScore` = relevancia determinista (🚧 ADR de scoring de evidencia clínica) · #5 `source_type` denormalizado y colección con esquema final · bloqueo LLM/embeddings resuelto con spike priorizando embeddings.
 
 ---
 
@@ -1497,7 +1589,7 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 **Objetivo.** Implementar el endpoint público de 4.1 que convierte la pregunta del doctor en una llamada segura a `rag-orchestrator` y persiste el resultado antes de responder — el punto donde el ownership de datos y la regla *Doctor session ≠ Service credential* se hacen cumplir en código.
 
 **Alcance — incluye:** `ai-analysis.controller.ts` / `.service.ts` / `.repository.ts` / `.schema.ts`; `infrastructure/rag-orchestrator.client.ts`; emisión del JWT de servicio; generación de `traceId`.
-**No incluye:** validación de `PatientAssignment` y de `consent_ai_analysis` (Sprint 5 — el `403` de 4.1 todavía no se emite); aplicación real de `filtersApplied` (Sprint 3 — se valida y se persiste, pero aún no filtra); rate limiting (ADR pendiente, 2.5); streaming token a token (OL-04, pregunta abierta 1).
+**No incluye:** validación de `PatientAssignment` y de `consent_ai_analysis` (Sprint 5 — el `403` de 4.1 todavía no se emite); aplicación real de `filtersApplied` (Sprint 3 — se valida y se persiste, pero aún no filtra); rate limiting (ADR pendiente, 2.5); streaming (descartado para tokens; el de progreso queda como ADR — 6.1 #8).
 
 **Dependencias:** OL-01 (tablas), OL-02 (endpoint interno), autenticación + Guard de HU-01 (backlog — sin sesión válida el Guard responde `401` antes de llegar a este controller).
 
@@ -1506,13 +1598,13 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 2. `ai-analysis.service.ts`:
    1. Genera el `traceId` y lo propaga como header `X-Trace-Id` y en el body interno (2.7).
    2. Resuelve el contexto desde PostgreSQL (vía repositorio): `Diagnosis` activo + biomarcadores recientes; `clinicalNotes: []` por defecto — minimización, 2.5: "nunca la historia clínica completa por defecto". `404` si el paciente no existe.
-   3. Construye `ClinicalContext` (4.2) con una **allowlist explícita** de campos — nunca serializar la entidad `Patient`: sin `full_name`, `mrn`, `birth_date` ni `patientId`. `pseudoPatientId` opaco (pregunta abierta 1).
+   3. Construye `ClinicalContext` (4.2) con una **allowlist explícita** de campos — nunca serializar la entidad `Patient`: sin `full_name`, `mrn`, `birth_date` ni `patientId`. `pseudoPatientId` **aleatorio por consulta** generado con un generador criptográfico (6.1 #6) — nunca derivado del `patientId` ni del `mrn`, y no se guarda (la correlación paciente↔análisis ya vive en `AIAnalysisRecord.patient_id`).
    4. Llama a `rag-orchestrator` con el cliente tipado de `packages/api-contracts` (2.6) y un timeout *(propuesta: 30 s, a calibrar contra KR2)*.
    5. Valida la respuesta con Zod (defensa en el borde, 2.5), calcula `topConfidenceScore` (máximo de las recomendaciones, `null` si no hay) y persiste `AIAnalysisRecord` (`patient_id`, `requested_by` = usuario de la sesión, `trace_id`, `query_text`, `sources_selected`, `filters_applied`, `recommendations`).
    6. **Responde solo después de persistir**: si la escritura falla, responde `500` y registra el `traceId` — el doctor nunca ve una recomendación que no quedó trazada (mitiga el riesgo de consistencia declarado en 2.1).
-3. `infrastructure/`: firma del JWT de servicio con `iss = clinical-api`, `aud = rag-orchestrator` y `exp` corto *(propuesta: ≤ 60 s)*; secreto/clave desde variables de entorno. La cookie de sesión **nunca** se reenvía a `rag-orchestrator`.
+3. `infrastructure/`: firma del JWT de servicio con **clave privada asimétrica (ES256/RS256 — 6.1 #7)**, `iss = clinical-api`, `aud = rag-orchestrator` y `exp` corto *(propuesta: ≤ 60 s)*. La clave privada solo existe en `clinical-api` (variable de entorno o archivo montado, nunca en el repositorio); `rag-orchestrator` recibe únicamente la clave pública. La cookie de sesión **nunca** se reenvía a `rag-orchestrator`.
 4. Mapeo de errores de `rag-orchestrator` hacia el cliente, sin exponer detalles internos: `401` interno → `502` (es un error de configuración entre servicios, no del doctor); timeout → `504`; `5xx` → `502`. Documentar `422`, `502` y `504` en el spec OpenAPI de 4.1.
-5. Tests (Vitest + Supertest, 2.6) con `rag-orchestrator` simulado: persistencia correcta del `AIAnalysisRecord`; **test de no-fuga de PII** — el payload enviado no contiene `mrn`, `fullName`, `birthDate` ni el `patientId` del paciente semilla; `recommendations: []` → `200` con `topConfidenceScore: null`; fallo de persistencia → `500` sin recomendaciones en la respuesta; timeout → `504`.
+5. Tests (Vitest + Supertest, 2.6) con `rag-orchestrator` simulado: persistencia correcta del `AIAnalysisRecord`; **test de no-fuga de PII** — el payload enviado no contiene `mrn`, `fullName`, `birthDate` ni el `patientId` del paciente semilla, y dos consultas seguidas sobre el mismo paciente envían `pseudoPatientId` distintos; `recommendations: []` → `200` con `topConfidenceScore: null`; fallo de persistencia → `500` sin recomendaciones en la respuesta; timeout → `504`.
 
 **Criterios de aceptación:**
 - Dado un doctor con sesión válida y el paciente semilla (a) de OL-01, cuando envía el ejemplo de petición de 4.1, entonces recibe `200` con un `AIAnalysisRecord` cuyo `id` existe en `clinical.ai_analysis_record` con el mismo `trace_id`.
@@ -1520,9 +1612,7 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 - Si `rag-orchestrator` no responde dentro del timeout, el doctor recibe `504` y no se persiste ningún registro.
 - `rag-orchestrator` se invoca por el hostname interno de Docker Compose, nunca por un puerto publicado al host (2.4).
 
-**Preguntas abiertas:**
-1. **Generación de `pseudoPatientId`.** El ejemplo de 4.2 (`pt_6f1e2b2a`) reutiliza el prefijo del `patientId` real del ejemplo de 4.1 — implementado así, filtraría parte del identificador. Opciones: (a) aleatorio por request, (b) HMAC(`patientId`, secreto), (c) prefijo del UUID. Recomendación: (a) — `rag-orchestrator` es stateless y no necesita correlacionar pacientes entre consultas; esa correlación ya vive en `AIAnalysisRecord.patient_id` dentro de `clinical-api`. (c) se descarta.
-2. **Algoritmo del JWT de servicio** (2.5 dice "JWT de servicio o mecanismo equivalente", sin fijarlo). Opciones: (a) simétrico (HS256, secreto compartido), (b) asimétrico (RS256/ES256). Recomendación: (b) — `rag-orchestrator` solo guarda la clave pública y no puede emitir tokens (mínimo privilegio); (a) es aceptable para el alcance local si se prioriza simplicidad.
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #6 `pseudoPatientId` aleatorio por consulta (y corregido el ejemplo de 4.2, que derivaba del `patientId`) · #7 JWT de servicio asimétrico con algoritmo fijado · #8 respuesta JSON completa, sin streaming de tokens.
 
 ---
 
@@ -1533,18 +1623,18 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 **Objetivo.** Entregar la versión mínima del "Panel de interacción IA" de 1.3 (1 pregunta → 1 resultado, 5.0), conectada al backend real mediante un Route Handler y con todos los estados de la consulta resueltos, incluido "sin evidencia".
 
 **Alcance — incluye:** página del panel IA, Route Handler, componentes organizados con Atomic Design, estados de carga / éxito / sin evidencia / error.
-**No incluye:** selectores de fuentes y filtros de paciente del mockup (Sprint 3 — mostrarlos antes de que el backend los aplique haría creer al doctor que filtran; mientras tanto se envía `sourcesSelected` con todas las fuentes en `true`); lista de varias recomendaciones rankeadas (Sprint 4, aunque el componente ya itera `recommendations[]`); historial de análisis (Sprint 4); streaming token a token (pregunta abierta 1).
+**No incluye:** selectores de fuentes y filtros de paciente del mockup (Sprint 3 — mostrarlos antes de que el backend los aplique haría creer al doctor que filtran; mientras tanto se envía `sourcesSelected` con todas las fuentes en `true`); lista de varias recomendaciones rankeadas (Sprint 4, aunque el componente ya itera `recommendations[]`); historial de análisis (Sprint 4); cualquier streaming (de tokens: descartado; de progreso: ADR tras medir KR2 — 6.1 #8).
 
 **Dependencias:** OL-03; login y ficha del paciente (HU-01/HU-02, backlog) para llegar al panel con sesión y `patientId`.
 
 **Tareas técnicas:**
-1. **Route Handler** `app/api/rag/route.ts` (2.1 — no Server Action): recibe el body del navegador, reenvía la cookie `oncolens_session` a `clinical-api` `POST /rag/query` usando la URL interna del servicio (variable de entorno solo de servidor, nunca expuesta al cliente) y devuelve status y body sin reinterpretarlos. Nunca llama a `rag-orchestrator` (2.4).
+1. **Route Handler** `app/api/rag/route.ts` (2.1 — no Server Action): recibe el body del navegador, reenvía la cookie `oncolens_session` a `clinical-api` `POST /rag/query` usando la URL interna del servicio (variable de entorno solo de servidor, nunca expuesta al cliente) y devuelve status y body sin reinterpretarlos (JSON completo — nunca tokens del LLM sin validar, 6.1 #8). Nunca llama a `rag-orchestrator` (2.4).
 2. **Componentes (Atomic Design, 1.3) sobre shadcn/ui (2.2):**
 
    | Nivel | Componentes |
    |---|---|
    | Átomos | `Button`, `Textarea`, `Badge`, `Skeleton` (shadcn/ui) |
-   | Moléculas | `CitationChip` (`sourceName` + `externalId`), `EvidenceBar` (`confidenceScore` como barra + %) |
+   | Moléculas | `CitationChip` (`sourceName` + `externalId`), `EvidenceBar` (`confidenceScore` como barra + %, rotulada **"Relevancia de la evidencia"** — 6.1 #4) |
    | Organismos | `PatientContextCard` (diagnóstico y biomarcadores de `PatientSummary`), `RagQueryForm`, `RecommendationCard` (tratamiento, `rationale`, evidencia, citas), `AnalysisResult` (gestiona los estados) |
    | Template | `AIPanelTemplate` — layout de dos columnas del mockup (parámetros a la izquierda, resultado a la derecha) |
    | Página | `app/(dashboard)/patients/[patientId]/ai/page.tsx` *(ruta propuesta — 2.3 solo fija `(dashboard)/`)* |
@@ -1560,13 +1650,12 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 7. Tests E2E (Playwright, 2.6) contra el stack de Compose con el seed: flujo feliz (login → paciente semilla (a) → pregunta → tarjeta con ≥ 1 cita) y flujo sin evidencia.
 
 **Criterios de aceptación:**
-- Dado un doctor autenticado en el panel IA del paciente semilla (a), cuando escribe la pregunta del ejemplo de 4.1 y presiona "Buscar tratamiento", entonces ve una `RecommendationCard` con tratamiento, % de evidencia y al menos 1 `CitationChip` con `sourceName`/`externalId`.
+- Dado un doctor autenticado en el panel IA del paciente semilla (a), cuando escribe la pregunta del ejemplo de 4.1 y presiona "Buscar tratamiento", entonces ve una `RecommendationCard` con tratamiento, % de relevancia de la evidencia (nunca rotulado como "Evidencia" a secas) y al menos 1 `CitationChip` con `sourceName`/`externalId`.
 - Dada una pregunta sin evidencia en el corpus semilla, se muestra el mensaje de "sin evidencia" y ninguna tarjeta de recomendación.
 - En las herramientas de red del navegador solo aparecen requests a `web` (`/api/rag`) — ninguno directo a `clinical-api` ni a `rag-orchestrator`.
 - Con la sesión expirada, la consulta redirige a login sin mostrar datos del paciente.
 
-**Preguntas abiertas:**
-1. **Streaming vs. contrato de 4.1.** 2.1 justifica el Route Handler por el streaming Backend 1 → Backend 2 → LLM, pero 4.1 define una respuesta JSON única (`AIAnalysisRecord`) que `clinical-api` devuelve *después* de persistir — ambas cosas no pueden cumplirse tal como están escritas. Opciones: (a) Sprint 1 sin streaming (JSON completo, como define 4.1) y diseñar el formato de streaming (p. ej. SSE: tokens + evento final con el `AIAnalysisRecord` ya persistido) en un sprint posterior; (b) definir el streaming desde Sprint 1. Recomendación: (a) — no bloquea el walking skeleton, respeta la persistencia-antes-de-responder de OL-03, y el Route Handler ya queda en su lugar, así que la arquitectura no cambia después.
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #4 rótulo "Relevancia de la evidencia" · #8 JSON completo, nunca tokens del LLM sin validar; el estado *Cargando* cubre la espera (≤ 15 s p95, *propuesta*) y, si la medición del KR2 lo justifica, el ADR de streaming de progreso lo reemplazará por pasos visibles (recuperando evidencia → generando → validando).
 
 ---
 
@@ -1576,40 +1665,39 @@ Un ticket tiene más impacto cuanto más (1) desbloquea el flujo central de 5.0 
 
 **Objetivo.** Que el doctor suba el PDF que ya tiene y sus datos clínicos queden en PostgreSQL, trazados al documento de origen y sin captura manual — con un `ocrStatus` siempre consultable (KR3 de Sprint 2: 0 cargas silenciosas).
 
-**Alcance — incluye:** `POST /platform/patients/{patientId}/documents` (4.1); consulta del estado de un documento; bucket `clinical-documents`; `POST /documents/extract` (4.2) con `DocumentExtractionService`; mapeo y persistencia con `entry_method = ocr`.
+**Alcance — incluye:** `POST /platform/patients/{patientId}/documents` (4.1); worker asíncrono con `Document` como cola; consulta del estado de un documento y listado paginado de documentos (4.1, endpoints adicionales); `sourceDocumentId` en los biomarcadores de `PatientSummary`; bucket `clinical-documents`; `POST /documents/extract` (4.2) con `DocumentExtractionService`; mapeo y persistencia con `entry_method = ocr`.
 **No incluye:** corrección manual en UI (Sprint 6); validación de `PatientAssignment` (Sprint 5); UI de carga y de biomarcadores extraídos (ticket de frontend de HU-04/HU-05, backlog); reutilización desde el pipeline de ingesta del corpus (carril paralelo — aunque el servicio se diseña ya reutilizable, 2.2).
 
 **Bloqueo:** el **ADR del motor y la técnica de OCR** (OCR clásico + LLM de estructuración vs. vision-LLM, 1.4) debe estar resuelto para cerrar el ticket. El trabajo puede arrancar antes detrás de una interfaz `ExtractionAdapter` — coherente con 1.4, que anticipa que la decisión cambia "su diseño interno y sus adapters", no la ubicación del componente.
-
-*Nota:* el diagrama del Flujo 1 (2.1) muestra `POST /platform/documents` y una confirmación síncrona; este ticket sigue el contrato de 4.1 (ruta con `patientId`, `202` asíncrono). Pendiente alinear el diagrama.
 
 **Tareas técnicas — `clinical-api`:**
 1. Endpoint multipart: sesión validada por el Guard; `documentType` validado contra el enum; archivo validado como PDF por *magic bytes* (`%PDF`), no solo por extensión o `Content-Type` declarado; tamaño máximo *(propuesta: 20 MB, HU-04)* → `422` antes de tocar MinIO o `rag-orchestrator` (HU-04, escenario 2). `404` si el paciente no existe.
 2. Subida del binario al bucket `clinical-documents` con una clave generada por el servidor (el nombre original solo se guarda como metadato en `original_filename`) y credenciales exclusivas de `clinical-api` (3.1).
 3. Creación de `Document` con `ocr_status = pendiente` y respuesta `202` + `Document` (4.1).
-4. Procesamiento en segundo plano (pregunta abierta 1): `procesando` → URL prefirmada de lectura de corta duración *(propuesta: ≤ 5 min)* → `POST /documents/extract` con JWT de servicio y `traceId`. La URL debe firmarse con el hostname **interno** de MinIO resoluble desde `rag-orchestrator` — la firma incluye el host, y una URL firmada para `localhost` no funciona dentro de la red de Compose. La URL completa nunca se escribe en logs.
-5. Validación de `DocumentExtractResponse` con Zod y persistencia **en una sola transacción**: `Exam` + `Biomarker[]`, `Diagnosis` y `ClinicalNote[]` según lo que el documento contenía, todos con `source_document_id` y `entry_method = ocr`; luego `ocr_status = completado` + `extracted_at`. Cualquier fallo (`422` de extracción, timeout, validación) → `ocr_status = error` y **ningún** dato parcial persistido (HU-05, escenario 2).
-6. Idempotencia: reprocesar un documento nunca duplica datos — si ya existen registros con ese `source_document_id`, no se vuelven a insertar.
-7. `GET /platform/patients/{patientId}/documents/{documentId}` para consultar el estado — 4.1 dice que "el estado se consulta por su id" pero no documenta el endpoint (límite de 3 endpoints en la sección); se agrega al spec OpenAPI.
+4. **Worker de extracción con `Document` como cola** (6.1 #9): un proceso de sondeo dentro de `clinical-api` toma el siguiente documento `pendiente` con `SELECT … FOR UPDATE SKIP LOCKED` (vía `$queryRaw` de Prisma), lo marca `procesando` con `processing_started_at = now()` e incrementa `attempts` en la misma transacción — dos instancias del worker nunca toman el mismo documento. Al arrancar, los documentos en `procesando` con `processing_started_at` más viejo que un umbral *(propuesta, a calibrar)* vuelven a `pendiente` si `attempts` < máximo *(propuesta: 3)*, o pasan a `error` si lo alcanzaron.
+5. Por cada documento tomado: URL prefirmada de lectura de corta duración *(propuesta: ≤ 5 min)* → `POST /documents/extract` con JWT de servicio y `traceId`. La URL debe firmarse con el hostname **interno** de MinIO resoluble desde `rag-orchestrator` — la firma incluye el host, y una URL firmada para `localhost` no funciona dentro de la red de Compose. La URL completa nunca se escribe en logs.
+6. Validación de `DocumentExtractResponse` con Zod y persistencia **en una sola transacción**: `Exam` + `Biomarker[]`, `Diagnosis` y `ClinicalNote[]` según lo que el documento contenía, todos con `source_document_id` y `entry_method = ocr`; luego `ocr_status = completado` + `extracted_at`. Un `422` de extracción (documento ilegible) → `error` directo, sin reintento; un timeout o `5xx` → vuelve a `pendiente` hasta agotar `attempts`. En ningún caso se persiste un dato parcial (HU-05, escenario 2).
+7. **Regla de diagnóstico extraído** (6.1 #10, detalle en 3.2 → `Diagnosis`): sin diagnóstico activo → el extraído queda activo; igual al activo (`cancer_type` + `stage`) → no se inserta; distinto → se inserta con `is_active = false` para que decida el doctor (Sprint 6).
+8. Idempotencia: reprocesar un documento nunca duplica datos — si ya existen registros con ese `source_document_id`, no se vuelven a insertar.
+9. Endpoints de lectura (6.1 #11; se agregan al spec OpenAPI, ver 4.1 → endpoints adicionales): `GET /platform/patients/{patientId}/documents/{documentId}` (estado de un documento) y `GET /platform/patients/{patientId}/documents` (listado **paginado**, ordenado por `uploaded_at` descendente, con `ocrStatus`). `PatientSummary` expone `sourceDocumentId` en cada biomarcador (vía `Exam.source_document_id`).
 
 **Tareas técnicas — `rag-orchestrator`:**
-8. `DocumentExtractionRouter`: `POST /documents/extract` con los schemas de 4.2 y la misma validación de JWT de OL-02.
-9. `DocumentExtractionService`: descarga el PDF **solo** mediante la URL prefirmada recibida (sin credenciales propias sobre `clinical-documents`), extrae vía `ExtractionAdapter` y devuelve únicamente las secciones que el documento realmente contenía; `422` si es ilegible. El PDF no se guarda en disco ni en ningún bucket de `rag-orchestrator`, y su contenido no se loguea (PHI).
-10. `ExtractionAdapter` (interfaz) + implementación del motor elegido en el ADR.
+10. `DocumentExtractionRouter`: `POST /documents/extract` con los schemas de 4.2 y la misma validación de JWT de OL-02.
+11. `DocumentExtractionService`: descarga el PDF **solo** mediante la URL prefirmada recibida (sin credenciales propias sobre `clinical-documents`), extrae vía `ExtractionAdapter` y devuelve únicamente las secciones que el documento realmente contenía; `422` si es ilegible. El PDF no se guarda en disco ni en ningún bucket de `rag-orchestrator`, y su contenido no se loguea (PHI).
+12. `ExtractionAdapter` (interfaz) + implementación del motor elegido en el ADR.
 
-**Tests:** Vitest + Supertest (`clinical-api`): archivo no-PDF renombrado a `.pdf` → `422`; transacción revertida si falla la inserción de un biomarcador; reproceso sin duplicados. Pytest (`rag-orchestrator`): extracción con `ExtractionAdapter` falso; documento ilegible → `422`. Precisión de extracción medida sobre un set de documentos **sintéticos** de referencia en `data/evaluation` (KR1 de Sprint 2, *meta propuesta ≥ 90 %*), con el resultado reportado en el PR.
+**Tests:** Vitest + Supertest (`clinical-api`): archivo no-PDF renombrado a `.pdf` → `422`; transacción revertida si falla la inserción de un biomarcador; reproceso sin duplicados; dos workers concurrentes no toman el mismo documento; un documento "colgado" en `procesando` se recupera al reiniciar; las tres ramas de la regla de diagnóstico; paginación del listado de documentos. Pytest (`rag-orchestrator`): extracción con `ExtractionAdapter` falso; documento ilegible → `422`. Precisión de extracción medida sobre un set de documentos **sintéticos** de referencia en `data/evaluation` (KR1 de Sprint 2, *meta propuesta ≥ 90 %*), con el resultado reportado en el PR.
 
 **Criterios de aceptación:**
-- Dado un PDF sintético de examen con EGFR y PD-L1, cuando el doctor lo sube, recibe `202` con `ocrStatus: pendiente`; al consultar el estado, este pasa a `completado`, y `GET /platform/patients/{patientId}` devuelve esos biomarcadores con su `clinicalSignificance`, trazables al `Document` de origen vía `Exam.source_document_id`.
+- Dado un PDF sintético de examen con EGFR y PD-L1, cuando el doctor lo sube, recibe `202` con `ocrStatus: pendiente`; al consultar el estado, este pasa a `completado`, y `GET /platform/patients/{patientId}` devuelve esos biomarcadores con su `clinicalSignificance` y su `sourceDocumentId` apuntando al documento subido.
+- Si `clinical-api` se reinicia mientras un documento está en `procesando`, al volver a arrancar el documento se reprocesa o termina en `error` — nunca queda indefinidamente en `procesando` (KR3 de Sprint 2).
+- Dado un paciente con un diagnóstico activo, subir una historia clínica con un diagnóstico distinto no cambia el diagnóstico activo ni el contexto que recibe el RAG.
 - Un `.docx` (o un archivo no-PDF con extensión `.pdf`) recibe `422` y no se crea `Document` ni objeto en MinIO.
 - Si la extracción falla, `ocrStatus` queda en `error` y no aparece ningún biomarcador nuevo derivado de ese documento.
 - Las credenciales de MinIO de `rag-orchestrator` no pueden listar ni leer `clinical-documents` (test explícito de acceso denegado).
 - El tiempo de procesamiento p95 queda registrado en el PR frente a KR2 de Sprint 2 (≤ 60 s, *propuesta*).
 
-**Preguntas abiertas:**
-1. **Mecanismo asíncrono.** La arquitectura no define colas ni workers. Opciones: (a) tarea en segundo plano dentro del proceso de `clinical-api`, con recuperación al arrancar (documentos en `procesando` por más de un umbral → `error`, para que ninguno quede colgado); (b) cola de trabajos dedicada (componente nuevo → ADR y cambio en 2.4). Recomendación: (a) para Sprint 2 — cumple KR3 sin sumar infraestructura; (b) se reevalúa si el volumen lo exige.
-2. **Diagnóstico extraído vs. diagnóstico activo existente.** Si una historia clínica trae un diagnóstico y el paciente ya tiene uno activo, ¿el extraído lo reemplaza? Recomendación: no cambiar el diagnóstico activo automáticamente — insertar el extraído con `is_active = false` cuando ya exista uno activo y dejar la decisión al doctor (flujo de corrección, Sprint 6). Un error de OCR no debería alterar en silencio el contexto que alimenta al RAG.
-3. **Visibilidad en la ficha (HU-05).** HU-05 promete un indicador de error por `Document` y la trazabilidad de cada biomarcador a su documento, pero `PatientSummary` (4.1) no incluye documentos, y `Biomarker` no expone su documento de origen. Opciones: (a) extender `PatientSummary` (`documents[]` con `ocrStatus`, `sourceDocumentId` en cada biomarcador), (b) endpoint separado de listado de documentos. Recomendación: (a) — HU-05 ya declara que usa el mismo endpoint que HU-02.
+**Decisiones aplicadas** (detalle y alternativas descartadas en 6.1): #9 `Document` como cola de extracción · #10 el diagnóstico extraído nunca reemplaza al activo automáticamente (⚠️ validar con un oncólogo) · #11 `sourceDocumentId` en `Biomarker` + listado paginado de documentos. El diagrama del Flujo 1 (2.1) ya refleja la ruta con `patientId`, el `202` y el worker asíncrono.
 
 ---
 
