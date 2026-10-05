@@ -5,19 +5,19 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="ctx_doctor" value="&lt;b&gt;Oncólogo&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Persona]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Piloto inicial: 10 oncólogos. Busca pacientes, carga documentos, consulta evidencia, revisa datos extraídos y registra decisiones. Accede solo por red privada o VPN.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#052E56;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
+        <mxCell id="ctx_doctor" value="&lt;b&gt;Oncólogo&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Persona]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Piloto inicial: 10 oncólogos. Busca pacientes, carga documentos, revisa el caso reconstruido y los datos faltantes, analiza la evidencia y registra decisiones y evolución. Accede solo por red privada o VPN.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#052E56;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
           <mxGeometry x="40" y="110" width="220" height="140" as="geometry" />
         </mxCell>
 
-        <mxCell id="ctx_admin" value="&lt;b&gt;Administrador&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Persona]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Gestiona usuarios, equipo tratante, egresos y el seguimiento de retención y consentimientos.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#052E56;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
+        <mxCell id="ctx_admin" value="&lt;b&gt;Administrador&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Persona]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Gestiona usuarios, equipo tratante, egresos y el marcas de opt-out (los consentimientos firmados reposan en el sistema externo) y política de retención.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#052E56;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
           <mxGeometry x="40" y="480" width="220" height="130" as="geometry" />
         </mxCell>
 
-        <mxCell id="ctx_oncolens" value="&lt;b&gt;OncoLens&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema de software — MVP académico]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Cruza el perfil clínico y molecular del paciente con evidencia publicada (búsqueda híbrida multilingüe ES/EN) y presenta opciones de tratamiento con citas verificables y relevancia de la evidencia. No estima probabilidad de éxito. Corre en local: Docker Compose + LLM nativo.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=13;arcSize=10;" vertex="1" parent="1">
+        <mxCell id="ctx_oncolens" value="&lt;b&gt;OncoLens&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema de software — MVP académico]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Reconstruye el caso (timeline, tratamientos previos; CIE-10/LOINC/CUPS/ATC), señala datos faltantes y presenta un análisis de evidencia pública (búsqueda híbrida ES/EN): síntesis, aplicabilidad al paciente y opciones descritas, con citas verificables. No prescribe ni estima probabilidad de éxito. Corre en local: Docker Compose + LLM nativo.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=13;arcSize=10;" vertex="1" parent="1">
           <mxGeometry x="450" y="250" width="340" height="220" as="geometry" />
         </mxCell>
 
-        <mxCell id="ctx_ext" value="&lt;b&gt;Fuentes científicas externas&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Solo texto, con licencia registrada: NCI PDQ (EN/ES), ClinicalTrials.gov, PubMed/PMC y publicaciones de TCGA/GDC, cBioPortal y TCIA. NCCN y ESMO: pendientes de licencia.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
+        <mxCell id="ctx_ext" value="&lt;b&gt;Fuentes científicas externas&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Solo texto, con licencia registrada: NCI PDQ (EN/ES), ClinicalTrials.gov, PubMed/PMC y publicaciones de TCGA/GDC, cBioPortal y TCIA. Solo fuentes públicas de acceso abierto en el MVP; NCCN y ESMO no incluidas (no bloquean).&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
           <mxGeometry x="980" y="60" width="280" height="150" as="geometry" />
         </mxCell>
 
@@ -25,31 +25,31 @@
           <mxGeometry x="980" y="300" width="280" height="120" as="geometry" />
         </mxCell>
 
-        <mxCell id="ctx_entity" value="&lt;b&gt;Entidad médica / colaboradores&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Contrato o convenio marco. Entregan datasets reales anonimizados (calibración y pruebas) y marcas de exclusión (opt-out) de investigación.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
+        <mxCell id="ctx_entity" value="&lt;b&gt;Entidad médica / colaboradores&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Contrato o convenio marco. Entregan datasets reales anonimizados (calibración y pruebas) y custodian los consentimientos firmados; comunican las exclusiones (opt-out), que el administrador registra.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
           <mxGeometry x="980" y="520" width="280" height="140" as="geometry" />
         </mxCell>
 
-        <mxCell id="ctx_e1" value="Consulta pacientes y evidencia, carga documentos&#10;[HTTPS, red privada/VPN]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="ctx_doctor" target="ctx_oncolens">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ctx_e1" value="Consulta pacientes y evidencia, carga documentos&#10;[HTTPS, red privada/VPN]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" edge="1" parent="1" source="ctx_doctor" target="ctx_oncolens">
+          <mxGeometry relative="1" x="0.1" as="geometry"><Array as="points"><mxPoint x="350" y="180" /><mxPoint x="350" y="316" /></Array><mxPoint x="78" y="0" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="ctx_e2" value="Administra&#10;[HTTPS, red privada/VPN]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="ctx_admin" target="ctx_oncolens">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ctx_e2" value="Administra&#10;[HTTPS, red privada/VPN]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="ctx_admin" target="ctx_oncolens">
+          <mxGeometry relative="1" x="-0.3" as="geometry"><Array as="points"><mxPoint x="535" y="545" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="ctx_e3" value="Ingiere publicaciones con licencia&#10;[batch]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="ctx_oncolens" target="ctx_ext">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ctx_e3" value="Ingiere publicaciones con licencia&#10;[batch]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.75;exitY=0;entryX=0;entryY=0.5;" edge="1" parent="1" source="ctx_oncolens" target="ctx_ext">
+          <mxGeometry relative="1" x="0.25" as="geometry"><Array as="points"><mxPoint x="705" y="135" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="ctx_e4" value="Inferencia solo con datos sintéticos&#10;[HTTPS, opcional]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;" edge="1" parent="1" source="ctx_oncolens" target="ctx_cloud">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ctx_e4" value="Inferencia solo con datos sintéticos&#10;[HTTPS, opcional]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="ctx_oncolens" target="ctx_cloud">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="0" y="-14" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="ctx_e5" value="Datasets anonimizados y opt-outs&#10;[importación]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="ctx_entity" target="ctx_oncolens">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="ctx_e5" value="Datasets anonimizados y opt-outs&#10;[importación]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0;exitY=0.5;entryX=0.75;entryY=1;" edge="1" parent="1" source="ctx_entity" target="ctx_oncolens">
+          <mxGeometry relative="1" x="-0.3" as="geometry"><Array as="points"><mxPoint x="705" y="590" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="ctx_note" value="Alcance clínico del piloto: cáncer de mama y de próstata; leucemia como tercer tipo cuando cumpla su criterio de &quot;listo&quot;. Toda salida: &quot;Recomendación generada por IA — requiere validación clínica&quot; y &quot;Uso académico/investigación&quot;." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+        <mxCell id="ctx_note" value="Alcance clínico del piloto: cáncer de mama y de próstata; leucemia como tercer tipo cuando cumpla su criterio de &quot;listo&quot;; captura de menores incluida. v1.2 (ver docs/TO-BE.md). Toda salida: &quot;Análisis generado por IA — requiere validación clínica&quot; y &quot;Uso académico/investigación&quot;." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
           <mxGeometry x="300" y="640" width="620" height="60" as="geometry" />
         </mxCell>
       </root>
@@ -78,12 +78,12 @@
           <mxGeometry x="30" y="110" width="190" height="90" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_web" value="&lt;b&gt;web&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Next.js / React 19 (BFF)]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;UI del doctor y único punto público (HTTPS, CA interna). Route Handlers como proxy de todos los endpoints; cookie SameSite=Strict + verificación de Origin. Nunca tokens del LLM sin validar.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
-          <mxGeometry x="300" y="110" width="240" height="150" as="geometry" />
+        <mxCell id="con_web" value="&lt;b&gt;web&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Next.js / React 19 (BFF)]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;UI del doctor (ficha, vista de caso, panel de análisis de evidencia) y único punto público (HTTPS, CA interna). Route Handlers como proxy de todos los endpoints; cookie SameSite=Strict + verificación de Origin. Nunca tokens del LLM sin validar.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="110" width="240" height="170" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_be1" value="&lt;b&gt;clinical-api&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Node.js LTS / Express 5]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Plataforma clínica + gateway de IA. Auth, equipo tratante, consentimientos, identidad cifrada (índice ciego), documentos, revisión OCR, análisis, retención. Worker de extracción y jobs. Sin puerto al host.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
-          <mxGeometry x="300" y="360" width="240" height="170" as="geometry" />
+        <mxCell id="con_be1" value="&lt;b&gt;clinical-api&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Node.js LTS / Express 5]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Plataforma clínica + gateway de IA. Auth, equipo tratante, marcas de opt-out, identidad cifrada (índice ciego), documentos, revisión OCR, caso longitudinal (timeline, tratamientos previos, evolución), reconciliación y normalización final (dueño), checklist de faltantes, gateway del análisis de evidencia (Base del análisis, memoria, desactualizados), retención (política). Worker de extracción y job de mayoría de edad. Sin puerto al host.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="360" width="240" height="200" as="geometry" />
         </mxCell>
 
         <mxCell id="con_pg" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Base de datos]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Único motor relacional. Schemas auth · identity (cifrado) · clinical · audit · research (solo inserción) · corpus (solo rag-orchestrator, rol rag_corpus).&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
@@ -94,8 +94,8 @@
           <mxGeometry x="520" y="640" width="190" height="140" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_be2" value="&lt;b&gt;rag-orchestrator&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Python / FastAPI]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Recuperación híbrida multilingüe, reranker, generación, citas y soporte NLI; extracción (capa de texto/OCR, gate de PII, confianza por campo); ingesta del corpus. Embeddings, reranker y NLI en CPU. Sin acceso a datos clínicos: en PostgreSQL solo el schema corpus; sin red hacia clinical-minio.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
-          <mxGeometry x="760" y="360" width="260" height="190" as="geometry" />
+        <mxCell id="con_be2" value="&lt;b&gt;rag-orchestrator&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Python / FastAPI]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Recuperación híbrida multilingüe, reranker, generación, citas y soporte NLI; extracción (capa de texto/OCR, gate de PII, confianza por campo); síntesis, aplicabilidad, agente acotado de búsqueda complementaria y orden por aplicabilidad; resumen del caso; eventos, tratamientos previos y propuesta de códigos CIE-10/LOINC/CUPS/ATC; ingesta del corpus abierto con metadatos estructurados. Embeddings, reranker y NLI en CPU. Sin acceso a datos clínicos: en PostgreSQL solo el schema corpus; sin red hacia clinical-minio.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="360" width="260" height="230" as="geometry" />
         </mxCell>
 
         <mxCell id="con_milvus" value="&lt;b&gt;Milvus&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor: Base de datos vectorial (+ etcd + MinIO propio)]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;corpus_chunks: dense + sparse, is_current, source_type, language, cancer_type_tags, population.&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
@@ -110,7 +110,7 @@
           <mxGeometry x="1330" y="380" width="220" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_ext" value="&lt;b&gt;Fuentes científicas externas&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;PDQ, ClinicalTrials.gov, PubMed/PMC, publicaciones TCGA/GDC, cBioPortal, TCIA.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
+        <mxCell id="con_ext" value="&lt;b&gt;Fuentes científicas externas&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Sistema externo]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Solo acceso abierto: PDQ, ClinicalTrials.gov, PubMed/PMC OA, guías públicas, publicaciones TCGA/GDC, cBioPortal, TCIA.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;arcSize=12;" vertex="1" parent="1">
           <mxGeometry x="1330" y="650" width="220" height="130" as="geometry" />
         </mxCell>
 
@@ -122,39 +122,40 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_e3" value="Lee/escribe&#10;[Prisma, SQL, TLS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be1" target="con_pg">
+        <mxCell id="con_e3" value="Lee/escribe&#10;[Prisma, SQL, TLS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.3;exitY=1;entryX=0.4;entryY=0;" edge="1" parent="1" source="con_be1" target="con_pg">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_e4" value="Guarda/lee PDFs&#10;[S3 API]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be1" target="con_cminio">
+        <mxCell id="con_e4" value="Guarda/lee PDFs&#10;[S3 API]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.8;exitY=1;entryX=0.3;entryY=0;" edge="1" parent="1" source="con_be1" target="con_cminio">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_e5" value="Consultas RAG (contexto desidentificado) y extracción (PDF en el body)&#10;[HTTP, JWT de servicio ES256]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be1" target="con_be2">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="con_e5" value="Análisis de evidencia y extracción
+[HTTP, JWT de servicio ES256]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.4;entryX=0;entryY=0.348;" edge="1" parent="1" source="con_be1" target="con_be2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="0" y="-22" as="offset" /></mxGeometry>
         </mxCell>
 
         <mxCell id="con_e6" value="Búsqueda dense/sparse&#10;[gRPC]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be2" target="con_milvus">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="con_e7" value="Catálogo del corpus: solo schema corpus&#10;[rol rag_corpus, corpus-db-net, TLS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;" edge="1" parent="1" source="con_be2" target="con_pg">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="con_e7" value="Catálogo del corpus: solo schema corpus&#10;[rol rag_corpus, corpus-db-net, TLS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=0.2;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="con_be2" target="con_pg">
+          <mxGeometry relative="1" x="-0.45" as="geometry"><Array as="points"><mxPoint x="812" y="615" /><mxPoint x="440" y="615" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="con_e8" value="Generación, estructuración, expansión&#10;[host.docker.internal, API OpenAI-compatible]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be2" target="con_llm">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="con_e8" value="Generación, estructuración, expansión&#10;[host.docker.internal, API OpenAI-compatible]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="con_be2" target="con_llm">
+          <mxGeometry relative="1" x="0.1" as="geometry"><Array as="points"><mxPoint x="890" y="300" /><mxPoint x="1135" y="300" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="con_e9" value="Solo datos sintéticos&#10;[HTTPS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;" edge="1" parent="1" source="con_be2" target="con_cloud">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="con_e9" value="Solo datos sintéticos&#10;[HTTPS]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=1;exitY=0.25;entryX=0;entryY=0.35;" edge="1" parent="1" source="con_be2" target="con_cloud">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="0" y="-14" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="con_e10" value="Ingesta batch&#10;[licencia registrada]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="con_be2" target="con_ext">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="con_e10" value="Ingesta batch&#10;[licencia registrada]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.85;entryX=0;entryY=0.5;" edge="1" parent="1" source="con_be2" target="con_ext">
+          <mxGeometry relative="1" x="-0.6" as="geometry"><Array as="points"><mxPoint x="1290" y="555.5" /><mxPoint x="1290" y="715" /></Array><mxPoint x="0" y="-12" as="offset" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="con_note" value="Solo web publica un puerto (interfaz de la red privada/VPN). Solo PostgreSQL y Milvus como motores. rag-orchestrator: sin ruta hacia clinical-minio; hacia PostgreSQL solo por corpus-db-net con el rol rag_corpus, limitado al schema corpus (pg_hba restringido, tests de acceso denegado). /health y /metrics en ambos backends; Prometheus + Grafana y OpenTelemetry: ADR futuro. Datos reales solo tras el Sprint 5 y el gate G-piloto." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+        <mxCell id="con_note" value="Solo web publica un puerto (interfaz de la red privada/VPN). Solo PostgreSQL y Milvus como motores. rag-orchestrator: sin ruta hacia clinical-minio; hacia PostgreSQL solo por corpus-db-net con el rol rag_corpus, limitado al schema corpus (pg_hba restringido, tests de acceso denegado). /health y /metrics en ambos backends; Prometheus + Grafana y OpenTelemetry: ADR futuro. Datos reales solo tras el Sprint 5 y el gate G-piloto. v1.2: packages/clinical-catalogs (datos críticos, aplicabilidad, CIE-10/LOINC/CUPS/ATC, plantillas) artefacto JSON versionado, montado en clinical-api y rag-orchestrator (409 si la versión difiere)." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
           <mxGeometry x="250" y="990" width="1030" height="60" as="geometry" />
         </mxCell>
       </root>
@@ -162,20 +163,20 @@
   </diagram>
 
   <diagram id="c4-component" name="Nivel 3 - Componentes">
-    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1320" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="cmp_note" value="Zoom a los 2 contenedores con estructura interna relevante. Web (Next.js) actúa como BFF y no tiene diagrama de componentes propio por ahora." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+        <mxCell id="cmp_note" value="Zoom a los 2 contenedores con estructura interna relevante. Web (Next.js) actúa como BFF y no tiene diagrama de componentes propio por ahora. ★ = componente nuevo en v1.1 o v1.2 (ver docs/TO-BE.md)." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
           <mxGeometry x="40" y="10" width="900" height="30" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_b1" value="clinical-api (Backend 1)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;align=left;spacingLeft=14;spacingTop=10;fontSize=14;fontColor=#666666;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="30" y="50" width="780" height="900" as="geometry" />
+          <mxGeometry x="30" y="50" width="780" height="1110" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_mw" value="&lt;b&gt;Middleware&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Guard de sesión · autorización (RBAC + equipo tratante + consentimiento) · Origin/CSRF · rate limit · Zod · traceId&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#5C1A18;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_mw" value="&lt;b&gt;Middleware&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Guard de sesión · autorización (RBAC + equipo tratante + opt-out) · Origin/CSRF · rate limit · Zod · traceId&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#5C1A18;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="60" y="100" width="330" height="90" as="geometry" />
         </mxCell>
 
@@ -183,7 +184,7 @@
           <mxGeometry x="60" y="220" width="220" height="100" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_patients" value="&lt;b&gt;Patients&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — patients · episodes · care-team · consents]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Registro (manual / asistido por OCR), listado y búsqueda, episodios (egreso/reactivación), equipo tratante, consentimientos y bajas&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_patients" value="&lt;b&gt;Patients&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — patients · episodes · care-team · consents]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Registro (manual / asistido por OCR), listado y búsqueda, episodios (egreso/reactivación), equipo tratante, marcas de opt-out (admin) y baja total; egresado sin registros&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="300" y="220" width="230" height="120" as="geometry" />
         </mxCell>
 
@@ -195,24 +196,24 @@
           <mxGeometry x="60" y="370" width="220" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_worker" value="&lt;b&gt;ExtractionWorker&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — workers]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Cola Document (SKIP LOCKED). Verifica identidad del documento, cuarentena PII, persiste con confianza y review_status&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_worker" value="&lt;b&gt;ExtractionWorker&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — workers]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Cola Document (SKIP LOCKED). Verifica identidad del documento, cuarentena PII, persiste con confianza y review_status; eventos y tratamientos previos; delega la reconciliación&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="300" y="370" width="230" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_review" value="&lt;b&gt;ClinicalReview&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — clinical-data]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Verificar / corregir / rechazar datos extraídos; regla de vigencia de diagnósticos por fecha&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_review" value="&lt;b&gt;ClinicalReview&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — clinical-data]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Verificar / corregir / rechazar datos extraídos; regla de vigencia de diagnósticos por fecha; conflictos y términos no_mapeado&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="550" y="370" width="230" height="110" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_gw" value="&lt;b&gt;RagGateway&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — ai-analysis]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Contexto etiquetado; desidentificación (seudónimo por consulta, fechas relativas, enmascarado de PII); tipo de cáncer habilitado; dataClassification; deadline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="60" y="520" width="330" height="120" as="geometry" />
+        <mxCell id="cmp_gw" value="&lt;b&gt;EvidenceGateway&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — evidence-analysis (módulo único)]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Contexto del caso etiquetado (línea, trayectorias, códigos); desidentificación (seudónimo por consulta, fechas relativas, enmascarado de PII); sin opt-out de IA y paciente activo; tipo de cáncer habilitado; dataClassification; deadline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="520" width="330" height="145" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_hist" value="&lt;b&gt;AnalysisHistory&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — ai-analysis]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Persiste AIAnalysisRecord (snapshot de contexto, modelos, prompt, descartadas) antes de responder&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="410" y="520" width="190" height="120" as="geometry" />
+        <mxCell id="cmp_hist" value="&lt;b&gt;AnalysisHistory&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — evidence-analysis]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Persiste AIAnalysisRecord (contexto, modelos, prompt, descartadas, versiones) antes de responder; historial, re-ejecución y comparación&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="410" y="520" width="190" height="145" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_ret" value="&lt;b&gt;RetentionJobs&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — workers]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Retención 10/20 años, bajas (investigación / total), mayoría de edad, snapshot de investigación al egresar&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="620" y="520" width="170" height="120" as="geometry" />
+        <mxCell id="cmp_ret" value="&lt;b&gt;RetentionJobs&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — workers]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Política de retención (job automático: Post-MVP), baja total; opt-out de investigación borra el histórico, job de mayoría de edad, snapshot longitudinal al egresar&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="620" y="520" width="170" height="145" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_repo" value="&lt;b&gt;Repository Layer (Prisma)&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;auth · identity · clinical · audit · research (rol solo inserción)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
@@ -228,43 +229,43 @@
         </mxCell>
 
         <mxCell id="cmp_cminio" value="&lt;b&gt;clinical-minio&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Contenedor externo]&lt;/i&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#438DD5;strokeColor=#2E6295;fontColor=#ffffff;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="330" y="810" width="180" height="110" as="geometry" />
+          <mxGeometry x="445" y="810" width="180" height="110" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_b2" value="rag-orchestrator (Backend 2)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;align=left;spacingLeft=14;spacingTop=10;fontSize=14;fontColor=#666666;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="860" y="50" width="800" height="900" as="geometry" />
+          <mxGeometry x="860" y="50" width="800" height="1110" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_sauth" value="&lt;b&gt;ServiceAuthMiddleware&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Valida JWT de servicio (clave pública, algoritmo fijado); propaga traceId&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#5C1A18;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="890" y="100" width="330" height="80" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_routers" value="&lt;b&gt;RagQueryRouter + DocumentExtractionRouter&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — api]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;/rag/query · /documents/extract&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_routers" value="&lt;b&gt;RagQueryRouter + DocumentExtractionRouter + CaseSummaryRouter&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — api]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;/rag/query · /documents/extract · /case/summary&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="1250" y="100" width="380" height="80" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_rag" value="&lt;b&gt;RAGOrchestratorService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Idioma → expansión bilingüe → retrieval (filtros) → reranker → umbral → generación en el idioma de la pregunta → validación&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_rag" value="&lt;b&gt;RAGOrchestratorService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Idioma → expansión bilingüe → retrieval (filtros) → reranker → umbral → orquesta síntesis y aplicabilidad → validación → orden determinista por aplicabilidad; memoria no citable; agente acotado: hasta 3 sub-consultas si un criterio queda sin evidencia&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="890" y="220" width="360" height="110" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_text" value="&lt;b&gt;TextExtractionService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Capa de texto; OCR solo en páginas escaneadas (reutilizado por la ingesta)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="220" width="170" height="110" as="geometry" />
+          <mxGeometry x="1280" y="196" width="170" height="154" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_struct" value="&lt;b&gt;ClinicalStructuringService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;LLM → JSON por esquema; confianza por campo; sourceSpan; identityFound&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1470" y="220" width="170" height="110" as="geometry" />
+        <mxCell id="cmp_struct" value="&lt;b&gt;ClinicalStructuringService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;LLM → JSON por esquema; confianza por campo; sourceSpan; identityFound; eventos, atributos y tratamientos previos; propone códigos (o no_mapeado)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="196" width="170" height="154" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_domain" value="&lt;b&gt;Domain&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — domain]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Umbral · relevance_score (reranker) · validación de citas · soporte NLI · confianza OCR · catálogos por tipo de cáncer · regla de proveedores&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B9E0A5;strokeColor=#5A9E3D;fontColor=#274D16;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="cmp_domain" value="&lt;b&gt;Domain&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — domain]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Umbral · relevance_score (reranker) · validación de citas · soporte NLI (memoria nunca es soporte) · orden por aplicabilidad · confianza OCR · catálogos por tipo de cáncer · regla de proveedores&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B9E0A5;strokeColor=#5A9E3D;fontColor=#274D16;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="890" y="370" width="360" height="110" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_pii" value="&lt;b&gt;PII Gate&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Detector local (ES/EN), formatos configurables; comportamiento según la clase de datos&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#5C1A18;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="370" width="170" height="110" as="geometry" />
+          <mxGeometry x="1280" y="362" width="170" height="154" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_ingest" value="&lt;b&gt;IngestionPipelineService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Normaliza, fragmenta y embebe el corpus; licencia obligatoria; versionado reanudable&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="1470" y="370" width="170" height="110" as="geometry" />
+        <mxCell id="cmp_ingest" value="&lt;b&gt;IngestionPipelineService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Fuentes abiertas con licencia aceptada; metadatos estructurados verificados; CorpusRelease; versionado reanudable&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="362" width="170" height="154" as="geometry" />
         </mxCell>
 
         <mxCell id="cmp_milvusrepo" value="&lt;b&gt;MilvusRepository&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — infrastructure]&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;" vertex="1" parent="1">
@@ -331,8 +332,8 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="cmp_e10" value="JWT de servicio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="cmp_client" target="cmp_routers">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="cmp_e10" value="JWT de servicio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_client" target="cmp_routers">
+          <mxGeometry relative="1" x="-0.6" as="geometry"><Array as="points"><mxPoint x="832" y="730" /><mxPoint x="832" y="82" /><mxPoint x="1440" y="82" /></Array><mxPoint x="0" y="-10" as="offset" /></mxGeometry>
         </mxCell>
 
         <mxCell id="cmp_e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="cmp_sauth" target="cmp_routers">
@@ -390,6 +391,63 @@
         <mxCell id="cmp_e24" value="batch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;" edge="1" parent="1" source="cmp_ingest" target="cmp_ext">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+              <mxCell id="cmp_v11_timeline" value="&lt;b&gt;★ CaseTimelineService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — case-timeline · clinical-events]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Timeline: eventos derivados de sus tablas + ClinicalEvent (solo tipos sin tabla) + ClinicalAttribute, tratamientos previos, series de biomarcadores, evolución registrada por el oncólogo&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="50" y="960" width="175" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_recon" value="&lt;b&gt;★ ReconciliationService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — reconciliation]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Duplicados → un dato con varias fuentes (ClinicalDataSource); conflictos → requiere_revision; normalización final CIE-10/LOINC/CUPS/ATC (dueño; también datos manuales)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="235" y="960" width="175" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_complete" value="&lt;b&gt;★ CompletenessService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — completeness]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Checklist determinista de datos críticos por tipo de cáncer; faltantes → &quot;desconocido&quot;; no bloquea&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="420" y="960" width="175" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_basis" value="&lt;b&gt;★ AnalysisBasis · Memory · StaleDetector&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — evidence-analysis (módulo único)]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Base del análisis (T-2); memoria por paciente (sin desactualizados), no citable; dos marcas de desactualizado y cascada&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="605" y="960" width="195" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_synth" value="&lt;b&gt;★ SynthesisService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Acuerdos y discrepancias con causa (población, endpoint, fecha, diseño); etiquetas factuales del catálogo&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="890" y="960" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_appl" value="&lt;b&gt;★ ApplicabilityService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Criterio a criterio: coincide / parcial / no coincide / desconocido; conteo, sin puntaje; opción = su fuente más aplicable (perSource)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="960" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_summary" value="&lt;b&gt;★ CaseSummaryService&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Componente — application]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Resumen del caso: cada afirmación referencia un dato del contexto y pasa el soporte; lo demás se omite&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#85BBF0;strokeColor=#1E6EB4;fontColor=#0B3D6E;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="960" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_catalog" value="&lt;b&gt;★ packages/clinical-catalogs&lt;/b&gt;&lt;br&gt;&lt;i&gt;[Datos versionados compartidos]&lt;/i&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Artefacto JSON montado en ambos (409 si difiere) · matriz ítem → campo · datos críticos · criterios de aplicabilidad · sinónimos · CIE-10 / LOINC / CUPS / ATC · plantillas de preguntas (validados por el oncólogo)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B9E0A5;strokeColor=#5A9E3D;fontColor=#274D16;align=center;verticalAlign=middle;fontSize=11;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1200" width="520" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_v11_e1" value="contexto del caso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0;exitY=0.6;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_gw" target="cmp_v11_timeline">
+          <mxGeometry relative="1" x="-0.2" as="geometry"><Array as="points"><mxPoint x="45" y="607" /><mxPoint x="45" y="940" /><mxPoint x="137.5" y="940" /></Array><mxPoint x="-28" y="0" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e2" value="faltantes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.85;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_gw" target="cmp_v11_complete">
+          <mxGeometry relative="1" x="0.55" as="geometry"><Array as="points"><mxPoint x="340.5" y="680" /><mxPoint x="690" y="680" /><mxPoint x="690" y="940" /><mxPoint x="507.5" y="940" /></Array><mxPoint x="0" y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e3" value="base y memoria" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.92;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_gw" target="cmp_v11_basis">
+          <mxGeometry relative="1" x="0.3" as="geometry"><Array as="points"><mxPoint x="363.6" y="673" /><mxPoint x="702.5" y="673" /></Array><mxPoint x="0" y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e4" value="reconcilia" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.4348;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_worker" target="cmp_v11_recon">
+          <mxGeometry relative="1" x="-0.3" as="geometry"><Array as="points"><mxPoint x="400" y="948" /><mxPoint x="322.5" y="948" /></Array><mxPoint x="14" y="0" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.85;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_rag" target="cmp_v11_synth">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1260" y="313.5" /><mxPoint x="1260" y="940" /><mxPoint x="1010" y="940" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=1;exitY=0.85;entryX=0.479;entryY=0;" edge="1" parent="1" source="cmp_rag" target="cmp_v11_appl">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1260" y="313.5" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;exitX=0.058;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cmp_routers" target="cmp_v11_summary">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1272" y="946" /><mxPoint x="1520" y="946" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e8" value="misma versión" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=0.5;exitY=1;entryX=0.1;entryY=0;" edge="1" parent="1" source="cmp_v11_complete" target="cmp_v11_catalog">
+          <mxGeometry relative="1" x="-0.3" as="geometry"><Array as="points"><mxPoint x="507.5" y="1150" /><mxPoint x="612" y="1150" /></Array><mxPoint x="36" y="0" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="cmp_v11_recon" target="cmp_v11_catalog">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="322.5" y="1240" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e10" value="misma versión" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=1;exitY=0.5;entryX=0.9;entryY=0;" edge="1" parent="1" source="cmp_struct" target="cmp_v11_catalog">
+          <mxGeometry relative="1" x="0.6" as="geometry"><Array as="points"><mxPoint x="1652" y="273" /><mxPoint x="1652" y="1180" /><mxPoint x="1028" y="1180" /></Array><mxPoint x="0" y="-10" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="cmp_v11_e11" value="criterios" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;fontColor=#333333;strokeColor=#333333;align=center;dashed=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="cmp_v11_appl" target="cmp_v11_catalog">
+          <mxGeometry relative="1" x="-0.2" as="geometry"><Array as="points"><mxPoint x="1265" y="1240" /></Array><mxPoint x="18" y="0" as="offset" /></mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
@@ -400,195 +458,201 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="code_note" value="⚠️ Nivel ilustrativo/conceptual — todavía no existe código real. Diseño de clases de RAGOrchestratorService (Backend 2), alineado con el contrato de 4.2 del README. Se regenerará desde el código cuando exista (recomendación de Simon Brown para este nivel)." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+        <mxCell id="code_note" value="⚠️ Nivel ilustrativo/conceptual — todavía no existe código real. Diseño de clases de RAGOrchestratorService (Backend 2), alineado con el contrato de 4.2 del README. Se regenerará desde el código cuando exista (recomendación de Simon Brown para este nivel). Actualizado a v1.2: contrato EvidenceAnalysis (opciones descritas, síntesis, aplicabilidad, agente acotado)." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
           <mxGeometry x="40" y="10" width="1100" height="40" as="geometry" />
         </mxCell>
 
         <mxCell id="code_req" value="RagQueryInternalRequest" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="40" y="70" width="330" height="136" as="geometry" />
+          <mxGeometry x="40" y="70" width="400" height="136" as="geometry" />
         </mxCell>
 
         <mxCell id="code_req_a0" value="+ traceId: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
-          <mxGeometry y="26" width="330" height="22" as="geometry" />
+          <mxGeometry y="26" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_req_a1" value="+ query: string (ya enmascarada)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
-          <mxGeometry y="48" width="330" height="22" as="geometry" />
+          <mxGeometry y="48" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_req_a2" value="+ sourcesSelected: SourcesSelected" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
-          <mxGeometry y="70" width="330" height="22" as="geometry" />
+          <mxGeometry y="70" width="400" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_req_a3" value="+ dataClassification: DataClassification" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
-          <mxGeometry y="92" width="330" height="22" as="geometry" />
+        <mxCell id="code_req_a3" value="+ dataClassification · catalogVersion (409 si difiere)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
+          <mxGeometry y="92" width="400" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_req_a4" value="+ clinicalContext: ClinicalContext" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
-          <mxGeometry y="114" width="330" height="22" as="geometry" />
+        <mxCell id="code_req_a4" value="+ clinicalContext · maxOptions · agentLimits" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_req">
+          <mxGeometry y="114" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_ctx" value="ClinicalContext" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="40" y="260" width="330" height="136" as="geometry" />
+          <mxGeometry x="40" y="260" width="400" height="158" as="geometry" />
         </mxCell>
 
         <mxCell id="code_ctx_a0" value="+ pseudoPatientId: string (por consulta)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
-          <mxGeometry y="26" width="330" height="22" as="geometry" />
+          <mxGeometry y="26" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_ctx_a1" value="+ population: adulto | pediatrico" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
-          <mxGeometry y="48" width="330" height="22" as="geometry" />
+          <mxGeometry y="48" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_ctx_a2" value="+ diagnosis: DiagnosisCtx (+ provenance)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
-          <mxGeometry y="70" width="330" height="22" as="geometry" />
+          <mxGeometry y="70" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_ctx_a3" value="+ biomarkers: BiomarkerCtx[] (+ provenance)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
-          <mxGeometry y="92" width="330" height="22" as="geometry" />
+          <mxGeometry y="92" width="400" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_ctx_a4" value="+ clinicalNotes: NoteCtx[] (+ provenance)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
-          <mxGeometry y="114" width="330" height="22" as="geometry" />
+        <mxCell id="code_ctx_a4" value="+ clinicalNotes · priorTreatments · events · attributes" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
+          <mxGeometry y="114" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="code_ctx_a5" value="+ missingCriticalData · priorAnalyses (no citables)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_ctx">
+          <mxGeometry y="136" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_prov" value="Provenance" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="40" y="450" width="330" height="114" as="geometry" />
+          <mxGeometry x="40" y="450" width="400" height="114" as="geometry" />
         </mxCell>
 
         <mxCell id="code_prov_a0" value="+ entryMethod: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_prov">
-          <mxGeometry y="26" width="330" height="22" as="geometry" />
+          <mxGeometry y="26" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_prov_a1" value="+ extractionConfidence: alta | media | baja | n_a" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_prov">
-          <mxGeometry y="48" width="330" height="22" as="geometry" />
+          <mxGeometry y="48" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_prov_a2" value="+ reviewStatus: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_prov">
-          <mxGeometry y="70" width="330" height="22" as="geometry" />
+          <mxGeometry y="70" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_prov_a3" value="+ conflict: boolean" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_prov">
-          <mxGeometry y="92" width="330" height="22" as="geometry" />
+          <mxGeometry y="92" width="400" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc" value="«class» RAGOrchestratorService" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="470" y="70" width="470" height="276" as="geometry" />
+          <mxGeometry x="480" y="70" width="520" height="276" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_a0" value="- milvusRepo: MilvusRepository" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="26" width="470" height="22" as="geometry" />
+          <mxGeometry y="26" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_a1" value="- embeddingAdapter: EmbeddingAdapter" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="48" width="470" height="22" as="geometry" />
+          <mxGeometry y="48" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_a2" value="- rerankerAdapter: RerankerAdapter" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="70" width="470" height="22" as="geometry" />
+          <mxGeometry y="70" width="520" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_svc_a3" value="- supportChecker: SupportChecker" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="92" width="470" height="22" as="geometry" />
+        <mxCell id="code_svc_a3" value="- supportChecker · synthesisService · applicabilityService" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
+          <mxGeometry y="92" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_a4" value="- llmRouter: LLMAdapterRouter" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="114" width="470" height="22" as="geometry" />
+          <mxGeometry y="114" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_div" value="" style="line;html=1;strokeColor=#6C8EBF;" vertex="1" parent="code_svc">
-          <mxGeometry y="136" width="470" height="8" as="geometry" />
+          <mxGeometry y="136" width="520" height="8" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_m0" value="+ handleQuery(req: RagQueryInternalRequest): RagQueryInternalResponse" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="144" width="470" height="22" as="geometry" />
+          <mxGeometry y="144" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_m1" value="- expandQuery(query, lang): string[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="166" width="470" height="22" as="geometry" />
+          <mxGeometry y="166" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_svc_m2" value="- retrieve(queries, filters: RetrievalFilters): Chunk[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="188" width="470" height="22" as="geometry" />
+          <mxGeometry y="188" width="520" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_svc_m3" value="- rerank(query, chunks): ScoredChunk[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="210" width="470" height="22" as="geometry" />
+        <mxCell id="code_svc_m3" value="- rerank(query, chunks) · searchComplementary(gaps, limits)  // agente acotado" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
+          <mxGeometry y="210" width="520" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_svc_m4" value="- generate(ctx, chunks, lang, llm: LLMAdapter): Draft[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="232" width="470" height="22" as="geometry" />
+        <mxCell id="code_svc_m4" value="- generate(ctx, chunks, lang, llm): Draft  // síntesis + aplicabilidad + opciones" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
+          <mxGeometry y="232" width="520" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_svc_m5" value="- validate(drafts, chunks): ValidationResult" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
-          <mxGeometry y="254" width="470" height="22" as="geometry" />
+        <mxCell id="code_svc_m5" value="- validate(draft, chunks): ValidationResult  // memoria ≠ soporte" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_svc">
+          <mxGeometry y="254" width="520" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_resp" value="RagQueryInternalResponse" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="70" width="360" height="114" as="geometry" />
+          <mxGeometry x="1040" y="70" width="470" height="136" as="geometry" />
         </mxCell>
 
         <mxCell id="code_resp_a0" value="+ status: con_evidencia | sin_evidencia" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
-          <mxGeometry y="26" width="360" height="22" as="geometry" />
+          <mxGeometry y="26" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_resp_a1" value="+ recommendations: Recommendation[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
-          <mxGeometry y="48" width="360" height="22" as="geometry" />
+        <mxCell id="code_resp_a1" value="+ evidenceOptions: EvidenceOption[]  // ordenadas por aplicabilidad" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
+          <mxGeometry y="48" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_resp_a2" value="+ discardedRecommendations: DiscardedRecommendation[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
-          <mxGeometry y="70" width="360" height="22" as="geometry" />
+        <mxCell id="code_resp_a2" value="+ discardedOptions: DiscardedOption[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
+          <mxGeometry y="70" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_resp_a3" value="+ meta: AnalysisMeta" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
-          <mxGeometry y="92" width="360" height="22" as="geometry" />
+        <mxCell id="code_resp_a3" value="+ synthesis · applicability · limitations · meta" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
+          <mxGeometry y="92" width="470" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="code_resp_a4" value="+ agentSteps · omittedClaims" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_resp">
+          <mxGeometry y="114" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_rec" value="Recommendation" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="250" width="360" height="136" as="geometry" />
+        <mxCell id="code_rec" value="EvidenceOption" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="260" width="470" height="136" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_rec_a0" value="+ treatment: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
-          <mxGeometry y="26" width="360" height="22" as="geometry" />
+        <mxCell id="code_rec_a0" value="+ option: string  // descrita en la evidencia" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
+          <mxGeometry y="26" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_rec_a1" value="+ relevanceScore: float [0,1]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
-          <mxGeometry y="48" width="360" height="22" as="geometry" />
+        <mxCell id="code_rec_a1" value="+ relevanceScore: float [0,1]  // secundario" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
+          <mxGeometry y="48" width="470" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_rec_a2" value="+ rationale: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
-          <mxGeometry y="70" width="360" height="22" as="geometry" />
+          <mxGeometry y="70" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_rec_a3" value="+ dependsOnUnverifiedData: boolean" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
-          <mxGeometry y="92" width="360" height="22" as="geometry" />
+        <mxCell id="code_rec_a3" value="+ applicabilitySummary (fuente más aplicable) · perSource[] · warnings[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
+          <mxGeometry y="92" width="470" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_rec_a4" value="+ citedSources: CitedSource[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_rec">
-          <mxGeometry y="114" width="360" height="22" as="geometry" />
+          <mxGeometry y="114" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_disc" value="DiscardedRecommendation" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="430" width="360" height="92" as="geometry" />
+        <mxCell id="code_disc" value="DiscardedOption" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#F5F5F5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="440" width="470" height="92" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_disc_a0" value="+ treatment: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_disc">
-          <mxGeometry y="26" width="360" height="22" as="geometry" />
+        <mxCell id="code_disc_a0" value="+ option: string" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_disc">
+          <mxGeometry y="26" width="470" height="22" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_disc_a1" value="+ discardReason: cita_invalida | afirmacion_sin_soporte | sin_citas" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_disc">
-          <mxGeometry y="48" width="360" height="22" as="geometry" />
+        <mxCell id="code_disc_a1" value="+ discardReason: DiscardReason  // 4 motivos (README §4.1)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_disc">
+          <mxGeometry y="48" width="470" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_disc_a2" value="+ unsupportedClaims: string[]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_disc">
-          <mxGeometry y="70" width="360" height="22" as="geometry" />
+          <mxGeometry y="70" width="470" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_milvus" value="«interface» MilvusRepository" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="470" y="460" width="330" height="48" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_milvus_a0" value="+ search(vectors, filters): Chunk[]  // dense; + sparse desde el Sprint 3" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_milvus">
+        <mxCell id="code_milvus_a0" value="+ search(vectors, filters): Chunk[]  // + sparse desde el S3" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_milvus">
           <mxGeometry y="26" width="330" height="22" as="geometry" />
         </mxCell>
 
@@ -645,11 +709,11 @@
         </mxCell>
 
         <mxCell id="code_llm" value="«interface» LLMAdapter" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;resizeLast=1;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="1260" y="700" width="340" height="48" as="geometry" />
+          <mxGeometry x="1260" y="700" width="440" height="48" as="geometry" />
         </mxCell>
 
         <mxCell id="code_llm_a0" value="+ generate(prompt, jsonSchema): LLMResponse  // API OpenAI-compatible" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];overflow=hidden;fontSize=11;spacingLeft=8;" vertex="1" parent="code_llm">
-          <mxGeometry y="26" width="340" height="22" as="geometry" />
+          <mxGeometry y="26" width="440" height="22" as="geometry" />
         </mxCell>
 
         <mxCell id="code_e1" value="recibe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;fontSize=10;endArrow=open;elbow=vertical;startArrow=none;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="code_req" target="code_svc">
@@ -676,24 +740,24 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_e7" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_svc" target="code_milvus">
+        <mxCell id="code_e7" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;exitX=0;exitY=0.85;entryX=0;entryY=0.5;" edge="1" parent="1" source="code_svc" target="code_milvus">
+          <mxGeometry relative="1" x="-0.5" as="geometry"><Array as="points"><mxPoint x="458" y="304.6" /><mxPoint x="458" y="484" /></Array><mxPoint x="-14" y="0" as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="code_e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;exitX=0;exitY=0.85;entryX=0;entryY=0.5;" edge="1" parent="1" source="code_svc" target="code_embed">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="458" y="304.6" /><mxPoint x="458" y="584" /></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="code_e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;exitX=0;exitY=0.85;entryX=0;entryY=0.5;" edge="1" parent="1" source="code_svc" target="code_rerank">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="458" y="304.6" /><mxPoint x="458" y="684" /></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="code_e10" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;exitX=0.83;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1" source="code_svc" target="code_support">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="code_e8" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_svc" target="code_embed">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="code_e9" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_svc" target="code_rerank">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="code_e10" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_svc" target="code_support">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="code_e11" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_svc" target="code_router">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="code_e11" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;exitX=0.65;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="code_svc" target="code_router">
+          <mxGeometry relative="1" x="-0.4" as="geometry"><Array as="points"><mxPoint x="818" y="680" /><mxPoint x="1020" y="680" /></Array><mxPoint x="-14" y="0" as="offset" /></mxGeometry>
         </mxCell>
 
         <mxCell id="code_e12" value="selecciona" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;elbow=vertical;startArrow=none;strokeColor=#333333;" edge="1" parent="1" source="code_router" target="code_llm">
