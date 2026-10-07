@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Aún no hay código.** Solo `readme.md` (especificación), `docs/`, `.claude/` (agentes y skill para el backlog) y `backlog/` (Markdown); todo `apps/`, `packages/`, `infra/`, `scripts/`, `specs/`, `data/` y `docs/architecture/adr/` está por crear. Repositorio público: https://github.com/hatrickmario/OncoLens-Lab (rama `main`, cambios vía PR). `prompts.md` vive solo en el repo (registro de prompts del Máster AI4Devs).
 
-**Backlog:** solo existe una corrida piloto acotada a FEAT-04 (CAP-04, información faltante): `backlog/features/FEAT-04-*.md`, `backlog/features/README.md` y `backlog/04-auditoria.md` (0 Alta, 18 Media). `backlog/_piloto-v1/` es la primera corrida, archivada: no leerla ni ampliarla. Faltan `01-requisitos.md`, `02-adrs.md` y `03-trazabilidad.md`. Nada publicado aún en Linear (`OncoLens-1`, sin issues ni milestones), así que los IDs del piloto (`US-001`…`US-006`, `DEC-01`) todavía pueden cambiar; una vez publicados son inmutables. Documentación, dominio y valores de enums en **español** (`sintetico`, `requiere_revision`, `cuarentena_pii`, `analisis_ia`, `seed`, `no_mapeado`). Mantener ese idioma.
+**Backlog:** completo y publicado en Linear (2026-10-07): 45 Features (`L1D-5`…`L1D-49`) y 213 historias (`L1D-50`…`L1D-262`) en `backlog/features/FEAT-*.md`, con `01-requisitos.md`, `02-adrs.md`, `03-trazabilidad.md` y `04-auditoria.md`; índice, puntos por sprint y recortes en `backlog/features/README.md`. Cada Feature e historia lleva su `> Linear: L1D-NN`. Los IDs publicados (`US-xxx`, `ADR-<n>`, `DEC-<nn>`) son **inmutables**; el Markdown es la fuente y Linear el espejo. `backlog/_piloto-v1/` es la primera corrida, archivada: no leerla ni ampliarla. Documentación, dominio y valores de enums en **español** (`sintetico`, `requiere_revision`, `cuarentena_pii`, `analisis_ia`, `seed`, `no_mapeado`). Mantener ese idioma.
 
 ### Dónde está la verdad
 
@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `readme.md` §4.1 / §4.2 | Contratos OpenAPI de ambos backends |
 | `readme.md` §6 | Tickets OL-01 a OL-06 con criterios de aceptación |
 | `readme.md` §3.3, §6.1 | ADRs ya decididos (#1–38) con sus alternativas descartadas |
-| `docs/PRD.md` §0 | Registro de cambios v1.1 (D-01…D-16) y v1.2 (R-01…R-31): explica por qué cambió el encuadre |
+| `docs/PRD.md` §0 | Registro de cambios v1.1 (D-01…D-16), v1.2 (R-01…R-31) y v1.3 (B-01…B-15, alineación con el backlog): explica por qué cambió el encuadre y el alcance |
 | `docs/PRD.md` §5 / §6 | FR-01 a FR-30; reglas de negocio RN-01 a RN-30 |
 | `docs/PRD.md` §16 | TBD-01 a TBD-21: lo no decidido |
 | `docs/PRD.md` §17 | Trazabilidad FR → HU → endpoint → entidad → componente → sprint |
@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `backlog/` | Product Backlog en Markdown (fuente); Linear es el espejo |
 | `docs/AS-IS.md` · `TO-BE.md` · `OncoLens-C4.drawio` | Discovery (entrevistas), solución por fases, diagramas C4 |
 
-Antes de implementar, buscar la RN y el ADR correspondientes. Casi toda decisión está tomada y justificada; no reabrirla sin motivo. Si `readme.md` y `PRD.md` discrepan, el PRD v1.2 es el más reciente.
+Antes de implementar, buscar la RN y el ADR correspondientes. Casi toda decisión está tomada y justificada; no reabrirla sin motivo. Si `readme.md` y `PRD.md` discrepan, el PRD v1.3 es el más reciente.
 
 **Encuadre (D-01):** el producto entrega un **análisis de evidencia** (`EvidenceAnalysis`: síntesis, aplicabilidad, `evidenceOptions`, `discardedOptions`, `analysisBasis`), **no recomendaciones**. `recommendations[]` y `POST /platform/rag/query` de la v1.0 están reemplazados por `POST /platform/evidence-analyses`. No reintroducir el vocabulario de "recomendación".
 
@@ -78,7 +78,7 @@ cd apps/web && npm install && npm run dev
 oncolens preflight real-data                              # gate G-piloto, antes de habilitar datos reales
 ```
 
-Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales al inicio del Sprint 1. Restricciones duras: stack ≤ 24 GB, `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S4), extracción p95 ≤ 60 s, JSON válido ≥ 99%, licencia académica, buen español. Decidir primero los *embeddings*: cambiarlos obliga a reindexar.
+Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales al inicio del Sprint 1. Restricciones duras: stack ≤ 24 GB, `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S5), extracción p95 ≤ 60 s, JSON válido ≥ 99%, licencia académica, buen español. Decidir primero los *embeddings*: cambiarlos obliga a reindexar.
 
 ### Tests
 
@@ -99,22 +99,22 @@ Vitest + Supertest + StrykerJS (*mutation* sobre auth/authz/cifrado) en `clinica
 - **Códigos terminológicos solo del catálogo versionado**; sin mapeo → `no_mapeado`, nunca inventado ni descartado (RN-27).
 - **Solo chunks `is_current` se recuperan**; el histórico del corpus nunca se borra (RN-05).
 - **`Document` es la cola de extracción** (`SKIP LOCKED`, `attempts`, `processing_started_at`); `checksum` detecta duplicados (409). No hay broker. Carga múltiple: `POST …/documents/batch` (`207`).
-- **Autorización en dos planos:** RBAC decide *qué acciones*; `CareTeamMember` decide *sobre qué pacientes*. `admin` ve todo.
+- **Autorización:** en el MVP solo RBAC (*qué acciones*); `admin` ve todo. El segundo plano, `CareTeamMember` (*sobre qué pacientes*, FR-15), pasa a Post-MVP porque la autorización por paciente la gestiona un sistema externo (PRD B-03); el esquema ya lo incluye.
 - **Consentimiento presunto con opt-out** (RN-15): los consentimientos viven en un sistema externo; con convenio registrado el paciente está incluido salvo marca de opt-out del administrador. Opt-out de `analisis_ia` → `403` en **toda** generación con IA (análisis, resumen del caso, re-ejecución, búsqueda complementaria). Sin convenio no se presume.
 - **Paciente egresado no admite ningún registro** hasta su reactivación (RN-17). Solo bloquean las reglas legales y de acceso; los avisos clínicos (faltantes, sin verificar, conflicto, desactualizado) **no bloquean** (RN-26).
 - **Agente acotado** (FR-30): una búsqueda complementaria con límites de iteraciones, sub-consultas y *deadline* en configuración (`AGENT_MAX_ITERATIONS`, `AGENT_MAX_SUBQUERIES`).
 - **Todo valor "a calibrar" vive en configuración** (RN-22): umbrales, TTL de sesión, *rate limits* (RN-30), retención, edad de mayoría (sin asumir país), `ENABLED_CANCER_TYPES`, `ANALYSIS_MEMORY_MAX`, `EVIDENCE_STALE_YEARS`.
-- **Modelo de diagnóstico genérico** (`staging_system`/`stage_value`, `performance_scale`/`performance_value`) para cubrir TNM, ISUP y grupos de riesgo sin cambiar el esquema. Mama y próstata vía `ENABLED_CANCER_TYPES`; leucemia solo al cumplir el criterio de "listo" (RN-20).
+- **Modelo de diagnóstico genérico** (`staging_system`/`stage_value`, `performance_scale`/`performance_value`) para cubrir TNM y grupos de riesgo sin cambiar el esquema; en próstata, Gleason/grupo ISUP va en `Diagnosis.grade` (PRD B-08). Mama y próstata vía `ENABLED_CANCER_TYPES`; leucemia solo al cumplir el criterio de "listo" (RN-20).
 
 ## Datos y repositorio público
 
 Repo **público**: nunca datos reales (ni anonimizados) ni secretos (RN-14); CI escanea secretos y PII. En `data/`, solo datos sintéticos, corpus público con licencia y definiciones de datasets; los reales anonimizados viven fuera del repo, en volumen cifrado.
-**Ningún dato real entra a la aplicación antes del Sprint 5 y el gate G-piloto** (RN-13): `clinical-api` no arranca con `REAL_*_ENABLED=true` si falla un prerrequisito. **Solo fuentes públicas de acceso abierto con licencia registrada y aceptada** (RN-21): dominio público, CC BY, CC BY-SA; CC BY-NC solo en el MVP académico; ND excluida. NCCN y ESMO excluidas mientras no se gestione su licencia (no bloquea el MVP) — ni siquiera en ejemplos.
+**Ningún dato real entra a la aplicación antes del gate G-piloto (S6)** (RN-13): `clinical-api` no arranca con `REAL_*_ENABLED=true` si falla un prerrequisito. **Solo fuentes públicas de acceso abierto con licencia registrada y aceptada** (RN-21): dominio público, CC BY, CC BY-SA; CC BY-NC solo en el MVP académico; ND excluida. NCCN y ESMO excluidas mientras no se gestione su licencia (no bloquea el MVP) — ni siquiera en ejemplos.
 
 ## Roadmap
 
-*Walking skeleton* end-to-end desde el Sprint 1; Sprints 1–4 solo con datos sintéticos (`docs/PRD.md` §14). Pre-S1: decisiones (contrato `EvidenceAnalysis`, esquema, protocolo de métricas de valor TBD-11, ADR de fuentes, estimación de capacidad TBD-19). 1. Auth, pacientes con identidad cifrada, ficha, análisis dense con contrato `EvidenceAnalysis` final, corpus semilla, esquema completo, baseline (OL-01 a OL-04, OL-06) · 2. Ingesta OCR, gate de PII, vista de caso y normalización (OL-05) · 3. Híbrida, revisión, faltantes, vigencia, Base del análisis, plantillas · 4. Síntesis, aplicabilidad, agente, memoria, historial, `Treatment`, ciclo de vida (G-Demo) · 5. Equipo tratante, bloqueos por opt-out, gate G-piloto — **sin este sprint solo hay demo sintética** · 6. Observabilidad, hardening y métricas de valor.
+*Slicing* v2 (`docs/PRD.md` §14, v1.3): el MVP valida la hipótesis **caso reconstruido → faltantes → opciones más aplicables**, con una demo de punta a punta por sprint; S1–S5 solo con datos sintéticos. Pre-S1: decisiones (contrato `EvidenceAnalysis` y esquema congelados, protocolo de métricas de valor DEC-02, capacidad DEC-03, términos de LOINC/CUPS/ATC DEC-04, fuentes ADR-36) · 1. *Walking skeleton*: sesión mínima, análisis *dense* con una opción citada sobre el paciente semilla, suite `evaluate` en la DoD, baseline manual VM-1/VM-2 · 2. Acceso, identidad cifrada, ficha, catálogos, Base del análisis, baseline técnico · 3. Ingesta OCR, gate de PII, vista de caso y normalización · 4. Revisión, registro manual, faltantes, ingesta del corpus · 5. Aplicabilidad, hasta 3 opciones, feedback → **G-Demo** · 6. Opt-out por CLI, auditoría, proveedores locales, `preflight`, VPN/HTTPS, *backups* → **G-Piloto** → piloto mixto → **G-Éxito**. "Si hay capacidad": resumen del caso, síntesis, vigencia, plantillas, historial, híbrida, `/metrics`. Post-MVP: equipo tratante, ciclo de vida, decisión, memoria, agente, job de retención.
 
-ADRs pendientes en `docs/architecture/adr/`: modelos locales, fuentes y licencias (ADR-36), evaluación RAG, scoring de evidencia clínica, streaming de progreso. Gates: G-Demo al final del S4, G-Piloto al final del S5, G-Éxito al cierre del piloto.
+ADRs pendientes en `docs/architecture/adr/` (historias en el backlog): modelos locales (ADR-39), PII (ADR-40), evaluación RAG (ADR-41), fuentes y licencias (ADR-36), streaming de progreso (ADR-42), catálogo del corpus en base separada (ADR-43), scoring de evidencia clínica (ADR-7, futuro).
 
 El backlog se trabaja con la skill `decompose-prd` (F0 preparación → F1 `requirements-analyst` → F2 `architecture-advisor` → F3 `backlog-writer` → F4 `backlog-auditor` → F5 cierre → F6 publicación en Linear **solo con aprobación explícita**). Los subagentes leen este fichero del disco: si se edita, correr el workflow en una sesión nueva. Destino: proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`.

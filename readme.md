@@ -9,7 +9,9 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 
-> 📄 Los requisitos de producto (objetivos, requisitos funcionales, reglas de negocio, requisitos no funcionales, riesgos y trazabilidad) están en el **[PRD v1.2](docs/PRD.md)**.
+> 📄 Los requisitos de producto (objetivos, requisitos funcionales, reglas de negocio, requisitos no funcionales, riesgos y trazabilidad) están en el **[PRD v1.3](docs/PRD.md)**. El Product Backlog (Features, historias, ADR y decisiones) está en **[`backlog/`](backlog/features/README.md)** y se refleja en Linear.
+>
+> **v1.3 (2026-10-07):** el roadmap vigente es el *slicing* v2 de PRD §14; la autorización por equipo tratante (FR-15) pasa a Post-MVP (PRD B-03) y el opt-out se gestiona por CLI en el MVP (PRD B-05). Las secciones de este README que citan sprints o el equipo tratante conservan el diseño objetivo; ante discrepancia, prevalece el PRD v1.3.
 >
 > 🔁 **Proceso del oncólogo:** **[AS-IS](docs/AS-IS.md)** (cómo trabaja hoy, según el Discovery de 4 entrevistas) · **[TO-BE](docs/TO-BE.md)** (solución objetivo por fases: MVP, Post-MVP y Futuro).
 >
@@ -509,7 +511,7 @@ flowchart LR
   - No aplica a los datos anonimizados.
   - **MVP (v1.1, D-15):** la política y los campos `retention_*` se registran desde el alta. Como ningún dato vence durante el piloto, el **job automático** con aviso a 90 días pasa a Post-MVP, sujeto a validación legal (PRD TBD-16). Las bajas sí están en el MVP.
 - **Gate G-piloto:** ningún dato real entra a la aplicación antes del Sprint 5. `REAL_ANONYMIZED_ENABLED` y `REAL_IDENTIFIED_ENABLED` exigen:
-  - autorización por equipo tratante;
+  - autorización por equipo tratante (**Post-MVP desde v1.3**: la autorización por paciente la gestiona un sistema externo y el `preflight` solo la declara como informativa; PRD B-03);
   - auditoría;
   - gate de PII;
   - regla de proveedores;
@@ -710,8 +712,8 @@ erDiagram
         string mapping_status "mapeado|no_mapeado"
         string histology "v1.2 — tipo histológico (catálogo)"
         string histology_code "nullable — código del catálogo"
-        string grade "v1.2 — nullable"
-        string staging_system "TNM_8|ISUP_grade_group|riesgo_LLA|..."
+        string grade "v1.2 — nullable; Gleason/grupo ISUP en próstata (v1.3)"
+        string staging_system "TNM_8|riesgo_LLA|..."
         string stage_value
         string performance_scale "ECOG|Karnofsky|Lansky"
         int performance_value
@@ -1092,7 +1094,7 @@ erDiagram
 - **CareTeamMember:** equipo tratante con varios doctores activos y uno principal. Es la base de la autorización por paciente.
 - **PatientOptOut** *(v1.2, reemplaza a `PatientConsent`)*: los consentimientos se firman y custodian en el **sistema externo** de la entidad médica. En el MVP se **presume** el consentimiento bajo el convenio (PRD RN-15) y OncoLens solo guarda las **marcas de opt-out** (`analisis_ia`, `investigacion`) que registra el administrador, con la referencia al documento externo. La vigente es la última de cada tipo. Opt-out de `analisis_ia` bloquea toda generación con IA; opt-out de `investigacion` borra el histórico de investigación.
 - **IntakeDraft:** borrador del registro asistido por OCR, con sugerencias y su confianza. El OCR nunca crea pacientes: el doctor confirma.
-- **Diagnosis:** modelo **genérico por tipo de cáncer**. Desde v1.2 incluye `histology` (con código del catálogo) y `grade`, porque son datos críticos del checklist (RN-29). `staging_system` y `stage_value` cubren TNM (mama), grupo de grado ISUP (próstata) y grupos de riesgo (leucemia); `performance_scale` y `performance_value` cubren ECOG, Karnofsky y Lansky.
+- **Diagnosis:** modelo **genérico por tipo de cáncer**. Desde v1.2 incluye `histology` (con código del catálogo) y `grade`, porque son datos críticos del checklist (RN-29). `staging_system` y `stage_value` cubren TNM (mama y próstata) y grupos de riesgo (leucemia); en próstata, **Gleason/grupo ISUP va en `grade`** (v1.3, PRD B-08); `performance_scale` y `performance_value` cubren ECOG, Karnofsky y Lansky.
   - **Regla de vigencia por fecha:** un diagnóstico extraído con fecha anterior al vigente se guarda como histórico. Uno con fecha posterior, o sin fecha confiable, queda `requiere_revision` en conflicto con el vigente. El oncólogo lo confirma o lo descarta.
   - Un dato de OCR nunca reemplaza en silencio a uno verificado.
 - **ClinicalNote / Exam / Biomarker:** datos clínicos con su procedencia.
@@ -1762,15 +1764,17 @@ paths:
 | **`POST/GET /platform/patients/{id}/clinical-events`** | Registrar y listar eventos sin tabla propia y evolución: respuesta, toxicidad, progresión (HU-23); `422` si el paciente está egresado | 2 / 4 |
 | **`POST/GET /platform/patients/{id}/clinical-attributes`** | Atributos clínicos del catálogo (estado menopáusico, estado de castración, sitios metastásicos…) | 2 |
 | **`POST/GET /platform/patients/{id}/prior-treatments`** | Tratamientos previos registrados a mano (HU-15) | 2 |
-| `PATCH /platform/patients/{id}/clinical-data/{type}/{itemId}/review` | Verificar, corregir o rechazar un dato extraído; resolver conflictos y mapear términos `no_mapeado` (HU-09, HU-17) | 3 |
+| `PATCH /platform/patients/{id}/clinical-data/{type}/{itemId}/review` | Verificar, corregir o rechazar un dato extraído; resolver conflictos y mapear términos `no_mapeado` (HU-09, HU-17) | 4 |
+| **`POST /platform/patients/{id}/biomarkers`** | Registro manual de un biomarcador desde un faltante: `{ name, value, unit?, resultType, performedAt }` → `201 Biomarker`; crea un `Exam` `manual` (`exam_type = registro_manual`). Normalización final en Backend 1 (§3.3 #33). v1.3, PRD B-09 | 4 |
+| **`POST /platform/patients/{id}/diagnoses`** | Completar o corregir el diagnóstico: `{ cancerType?, histology?, grade?, stagingSystem?, stageValue?, performanceScale?, performanceValue?, diagnosedAt? }` → `201 Diagnosis`. Con diagnóstico vigente es una corrección explícita (el anterior queda `reemplazado`, nunca en silencio: RN-08); sin vigente crea uno `manual`. v1.3, PRD B-09 | 4 |
 | **`GET /platform/question-templates?cancerType=`** | Plantillas de preguntas por tipo de cáncer y escenario (HU-19) | 3 |
 | `GET /platform/patients/{id}/analyses` · `…/analyses/{analysisId}` | Historial de análisis, con la marca `stale` (HU-11, HU-24) | 4 |
 | **`POST /platform/evidence-analyses/{id}/rerun`** · **`GET …/{id}/compare?with={otherId}`** | Re-ejecutar con datos actuales y comparar (HU-24) | 4 |
-| **`POST /platform/evidence-analyses/{id}/feedback`** | Calificación de utilidad (VM-4, VM-5; HU-25) | 4 |
+| **`POST /platform/evidence-analyses/{id}/feedback`** | Calificación de utilidad 1–5 (VM-4) y aviso de faltantes correcto / útil (VM-5), sin texto libre; valida los catálogos (PRD B-04; HU-25) | 5 |
 | `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (HU-12) | 4 |
 | `POST /platform/patients/{id}/episodes/current/close` · `POST …/episodes` | Egreso y reactivación (HU-13) | 4 |
-| **`POST/DELETE /platform/patients/{id}/opt-outs`** · `POST …/withdrawals` | Marcas de opt-out (`analisis_ia`, `investigacion`), solo `admin`, con referencia al sistema externo (v1.2); baja total | 4 / 4 |
-| `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante (HU-14) | 5 |
+| **`POST/DELETE /platform/patients/{id}/opt-outs`** · `POST …/withdrawals` | Marcas de opt-out (`analisis_ia`, `investigacion`), solo `admin`, con referencia al sistema externo (v1.2); baja total. En el MVP las marcas se registran por CLI (`oncolens opt-outs register\|revoke\|list`, S6; PRD B-05) | Post-MVP |
+| `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante (HU-14) | Post-MVP (PRD B-03) |
 
 **Ejemplo — `POST /platform/evidence-analyses`** (paciente sintético, forma del Sprint 4)
 
@@ -2180,7 +2184,7 @@ paths:
               schema: { $ref: "#/components/schemas/RagQueryInternalResponse" }
         "401": { description: JWT de servicio inválido o ausente }
         "409": { description: "CATALOG_VERSION_MISMATCH — catalogVersion distinto del cargado (§3.3 #38)" }
-        "422": { description: Body inválido (Pydantic) }
+        "422": { description: "Body inválido (Pydantic), o TIPO_NO_HABILITADO — cancerType fuera de ENABLED_CANCER_TYPES; responde sin invocar al LLM (defensa en profundidad, v1.3, PRD B-10)" }
         "429": { description: Cola de inferencia llena (Retry-After) }
         "503": { description: "LOCAL_LLM_UNAVAILABLE — nunca hay fallback a la nube con datos reales" }
         "504": { description: Deadline vencido; la generación se aborta }
@@ -2290,6 +2294,8 @@ Respuesta (`200`): los mismos `synthesis`, `applicability`, `evidenceOptions` y 
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
 ### 5.0. Slicing del alcance por sprints (roadmap de producto)
+
+> **Superado en v1.3.** El roadmap vigente es el *slicing* v2 de **PRD §14** (G-Demo al cierre del S5; G-Piloto, piloto mixto y G-Éxito en el S6; tramo "si hay capacidad"), con el detalle por historia en [`backlog/features/README.md`](backlog/features/README.md). Este apartado se conserva como referencia del diseño original.
 
 El proyecto crece como un *walking skeleton* iterativo e incremental: desde el Sprint 1 existe un recorrido **end-to-end real**, y cada sprint siguiente lo amplía. La v1.1 resecuencia el alcance para incorporar las capacidades del Discovery sin cambiar los 6 sprints ([TO-BE](docs/TO-BE.md), PRD §14).
 - **Sprints 1–4:** operan **solo con datos sintéticos**.
