@@ -1,0 +1,112 @@
+# OncoLens — configuración de OpenSpec (probada con OpenSpec 1.14.x)
+# Fuentes de verdad: docs/PRD.md v1.3 > readme.md > CLAUDE.md.
+# El PRD dice QUÉ y POR QUÉ; Linear (proyecto OncoLens-1, equipo L1D) dice QUÉ y CUÁNDO;
+# openspec/specs/ es el CONTRATO VERIFICABLE de cómo se comporta hoy el sistema.
+#
+# Requiere el perfil extendido para /opsx:verify y /opsx:bulk-archive:
+#   openspec config profile   (seleccionar new, continue, ff, verify, bulk-archive, onboard)
+#   openspec update
+
+schema: spec-driven
+
+context: |
+  Producto: OncoLens, MVP académico de apoyo a la decisión clínica en oncología (mama y próstata).
+  Reconstruye el caso del paciente, señala los datos críticos que faltan y entrega un ANÁLISIS DE
+  EVIDENCIA (síntesis, aplicabilidad criterio a criterio y opciones DESCRITAS en la evidencia, con
+  citas verificables). No prescribe, no recomienda y no estima probabilidad de éxito.
+  Hipótesis del MVP (PRD v1.3, slicing v2): caso reconstruido → faltantes → opciones más aplicables.
+
+  Monorepo (npm workspaces):
+  - apps/web: Next.js App Router + React 19 + TypeScript + Tailwind v4 + shadcn/ui (Atomic Design).
+    Es el BFF: Route Handlers en app/api/* hacen de proxy hacia clinical-api. Único punto de entrada
+    del navegador. Cookie de sesión opaca SameSite=Strict + verificación de Origin.
+  - apps/clinical-api (Backend 1): Node.js LTS + Express 5 + TypeScript + Zod + Prisma + OpenAPI.
+    Capas Controller → Service → Repository por módulo (src/modules/*). Dueño EXCLUSIVO de
+    PostgreSQL (schemas auth, identity, clinical, audit, research) y de clinical-minio.
+    Lógica determinista: timeline, reconciliación y normalización final, checklist de faltantes,
+    Base del análisis, gateway POST /platform/evidence-analyses.
+  - apps/rag-orchestrator (Backend 2): Python + FastAPI + Pydantic + Alembic. Hexagonal
+    (api / application / domain / infrastructure). Adapters para LLM, embeddings, reranker, NLI,
+    OCR y PII. Solo accede al schema `corpus` con el rol `rag_corpus` y a Milvus. NUNCA a datos
+    clínicos ni a clinical-minio. Procesa documentos en memoria, sin persistirlos.
+  - packages/api-contracts: tipos y clientes generados desde los OpenAPI de ambos backends.
+  - packages/clinical-catalogs: JSON versionado (CLINICAL_CATALOG_VERSION), montado en ambos
+    backends; Backend 2 responde 409 si la versión difiere.
+  - LLM nativo (Ollama o vLLM con Metal) fuera de Docker, API compatible con OpenAI.
+  - Infra: Docker Compose (redes clinical-net, ai-net, corpus-db-net). Solo `web` publica puerto.
+  - Tests: Vitest + Supertest (+ StrykerJS si hay capacidad) en clinical-api; Pytest + TestClient
+    con adapters falsos en rag-orchestrator; Playwright E2E contra Compose con datos sintéticos;
+    suite `evaluate` de calidad de IA (OL-06) en cada PR que cambie modelo, prompt, umbral,
+    catálogo o corpus.
+
+  Invariantes que ningún change puede violar (PRD §6):
+  - RN-10/RN-11: la identidad nunca sale de clinical-api; el contexto hacia la IA va desidentificado
+    (seudónimo por consulta, fechas relativas, texto libre enmascarado).
+  - RN-12/RN-13/RN-14: nunca datos reales en el repo ni en la nube; datos reales en la app solo tras
+    el gate G-Piloto (S6). S1–S5 trabajan solo con datos sintéticos.
+  - RN-01/RN-04/RN-06/RN-24/RN-25: toda opción o afirmación mostrada tiene ≥1 cita a un chunk
+    recuperado en esa consulta y pasa el NLI; las citas se copian del corpus; el análisis se
+    persiste antes de responder; un análisis previo nunca es cita ni soporte.
+  - RN-02: sin chunks sobre el umbral → "sin_evidencia" sin invocar al LLM (top_relevance_score = null).
+  - RN-03/RN-28: relevance_score es metadato secundario; las opciones se ordenan por aplicabilidad
+    (estados Coincide / Parcial / No coincide / Desconocido), nunca por puntaje clínico.
+  - RN-19/RN-23: lenguaje no prescriptivo; aviso "Análisis generado por IA: requiere validación
+    clínica del oncólogo tratante" (literal en configuración, B-06).
+  - RN-15: opt-out de analisis_ia → 403 en toda generación con IA (control desde S6, marcas por CLI).
+  - RN-22: todo valor "a calibrar" vive en configuración, nunca en código.
+  - RN-26: los avisos clínicos no bloquean. RN-27: sin mapeo terminológico → `no_mapeado`.
+  - MVP v1.3: solo RBAC (equipo tratante FR-15 es Post-MVP, B-03).
+
+  Vocabulario obligatorio: "análisis de evidencia", "opciones descritas en la evidencia".
+  Prohibido: "recomendación", recommendations[], /platform/rag/query.
+  Idioma de specs y textos de dominio: español (valores de dominio: sintetico, requiere_revision,
+  cuarentena_pii, analisis_ia, no_mapeado).
+
+  Convenciones de trazabilidad:
+  - Un change por historia de usuario: `l1d-<nn>-<slug-kebab>` (p. ej., l1d-93-catalog-validation).
+    Excepción: 2–3 historias muy acopladas (mismo endpoint) en un change, listando todas.
+  - Rama `feat/l1d-<nn>-<slug>`; PR titulado `[L1D-<nn>] <título>` con el nombre del change.
+  - Cada escenario cita los AC de origen: [US-xxx AC-n] y, si existe, [AC-xx.y] del PRD §18.
+  - Cada test lleva en su nombre el tag del AC que verifica: "US-001 AC-2 ...".
+  - Capacidades (openspec/specs/<capability>/spec.md): auth-session, patients-identity,
+    documents-ingestion, document-extraction, case-timeline, terminology-reconciliation,
+    completeness, evidence-analysis, applicability, analysis-basis, corpus-ingestion,
+    clinical-catalogs, human-control, ai-evaluation, audit, opt-out, real-data-gate,
+    platform-observability. Si un change necesita una capacidad nueva, la justifica en proposal.md.
+
+rules:
+  proposal:
+    - "Empieza con un bloque 'Trazabilidad': L1D-<nn> · US-xxx · FEAT-xx · Sprint · FR/RN/AC-xx.y/M-xx.y que cubre. Sin ese bloque el change no es válido."
+    - "Enumera las capacidades afectadas (nombres de openspec/specs) y los bounded contexts tocados: clinical-platform, ai-services, frontend."
+    - "Declara dependencias con otros changes del sprint (⛔ bloqueado por / ↪ depende de) usando nombres de change."
+    - "Incluye 'Fuera de alcance' cuando el límite con otra historia, otro sprint o el Post-MVP no sea obvio."
+    - "Nunca uses vocabulario de recomendación; usa análisis de evidencia y opciones descritas."
+  specs:
+    - "Cada requisito usa SHALL/MUST y tiene ≥1 '#### Scenario:' con WHEN/THEN (Given/When/Then del AC de la historia)."
+    - "Cada escenario cita su origen: [US-xxx AC-n] y [AC-xx.y] del PRD §18 cuando exista; si no hay evidencia, marca (asumido)."
+    - "Cubre ≥1 happy path y los bordes obligatorios: permiso denegado, dato ausente o no verificado, dependencia caída y la RN aplicable."
+    - "Un borde cuyo control llega en un sprint posterior no se escribe como escenario: se anota como 'Regresión [RN-xx] activa desde S<n>'."
+    - "Todo número calibrable (umbral, TTL, límite, plazo) se especifica como clave de configuración, no como literal."
+    - "Usa MODIFIED (no ADDED) cuando el requisito ya existe en openspec/specs; nunca dupliques requisitos entre capacidades."
+  design:
+    - "Incluye una sección obligatoria '## Privacidad y ownership': qué datos cruzan qué frontera (web → clinical-api → rag-orchestrator), cómo se desidentifican (RN-11) y confirma que rag-orchestrator no toca datos clínicos ni clinical-minio."
+    - "Incluye '## Contratos': endpoints, schemas Zod/Pydantic y cambios al OpenAPI; si toca EvidenceAnalysis, indica compatibilidad con ADR-26 (contrato estable entre sprints)."
+    - "Cita las decisiones existentes (ADR-n del readme §3.3) en lugar de reabrirlas; una decisión nueva requiere historia ADR-<n> en el backlog."
+    - "Si cambia modelo, prompt, umbral, catálogo o corpus, incluye '## Evaluación' con las métricas OL-06 afectadas."
+  tasks:
+    - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
+    - "Para cada AC, primero la tarea del test (con el tag US-xxx AC-n) y luego la implementación."
+    - "Termina con: openspec validate <change> --strict, tests del contexto en verde, sync-contracts si hubo cambios de API, run-ai-eval si aplica."
+
+operations:
+  apply:
+    guidance:
+      - "Trabaja solo dentro de los paths del bounded context asignado; si una tarea toca otro contexto, detente y repórtalo al orquestador."
+      - "Corre primero los tests focalizados del AC y después la suite del contexto; no marques una tarea [x] con tests en rojo."
+      - "Usa solo datos sintéticos y fixtures declarados; nunca crees datos reales ni secretos."
+      - "Al terminar, ejecuta openspec validate <change> --strict."
+  archive:
+    guidance:
+      - "Archiva solo changes con todas las tareas completas y PR mergeado en main."
+      - "Al cierre de sprint usa bulk-archive; resuelve conflictos entre deltas del mismo requisito conservando ambos comportamientos y citando los dos changes."
+      - "El resumen de archivo lista L1D, US, capacidades tocadas y el PR."

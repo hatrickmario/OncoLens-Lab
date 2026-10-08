@@ -15,7 +15,7 @@ Una decisión merece **historia de ADR** si cumple **las tres**:
 3. Bloquea o condiciona ≥1 historia del backlog.
 
 Lo que **no** es ADR:
-- **Decisiones ya tomadas** en `readme.md` §3.3 (#1–#38 marcadas ✅, que el PRD cita como `ADR-n`) y §6.1: se citan como contexto, no se reabren. Si una parece equivocada o contradice el PRD v1.2, se reporta como hallazgo, no como ADR nuevo.
+- **Decisiones ya tomadas** en `readme.md` §3.3 (#1–#38 marcadas ✅, que el PRD cita como `ADR-n`) y §6.1: se citan como contexto, no se reabren. Si una parece equivocada o contradice el PRD v1.3, se reporta como hallazgo, no como ADR nuevo.
 - **Decisiones clínicas, legales, de producto o de capacidad** (catálogos validados por el oncólogo, protocolo de métricas de valor, validación legal, canal de opt-out con la entidad médica, estimación de Ingeniería): van como **historia de decisión `DEC-<nn>`**, con dueño, fecha límite según el PRD y qué bloquean. Su entregable es la decisión registrada, no un ADR.
 - **Valores a calibrar con propuesta ya escrita** (p. ej., N de la memoria, años de antigüedad, límites del agente): no son ADR; son configuración (RN-22) que se calibra en una historia de evaluación. Justificar la exclusión y nombrar la historia que los calibra.
 
@@ -73,8 +73,8 @@ extracción se implementen sobre una base estable y no haya que reindexar despu�
 ## Contexto técnico (para el agente)
 Decidir **primero los embeddings**: cambiarlos obliga a reindexar Milvus.
 Candidatos y restricciones duras en `readme.md` §1.4. Protocolo de medición
-compartido con la suite OL-06. La latencia se recalibra en el S4 con síntesis,
-aplicabilidad, memoria y agente (G-5): el ADR deja la medición repetible.
+compartido con la suite OL-06. La latencia se recalibra en el S5 con aplicabilidad y
+hasta 3 opciones; síntesis `si-hay-capacidad`, memoria y agente Post-MVP (G-5): el ADR deja la medición repetible.
 
 ## Opciones
 | Opción | A favor | En contra |
@@ -118,7 +118,7 @@ La mecánica (validador de la firma, RN-29) va en una historia técnica, no aqu�
 1. **Tabla resumen:** ID (`ADR-<n>` / `DEC-<nn>`) · tema · `TBD-xx` o 🚧 de origen · tipo · dueño · sprint (incl. **Pre-S1**) · estimación · historias que bloquea · criticidad.
 2. **Las historias completas**, en los formatos anteriores.
 3. **TBD sin historia:** cada `TBD-xx` que no genera ADR ni DEC, con el motivo y la historia o configuración que lo absorbe.
-4. **Decisiones ✅ cuestionables:** conflictos entre una decisión de §3.3 y el PRD v1.2, si los hay.
+4. **Decisiones ✅ cuestionables:** conflictos entre una decisión de §3.3 y el PRD v1.3, si los hay.
 5. **Orden recomendado**, justificado por bloqueo (no por tamaño). Primero lo que bloquea Pre-S1 y Sprint 1.
 
 ## Reglas
@@ -126,4 +126,4 @@ La mecánica (validador de la firma, RN-29) va en una historia técnica, no aqu�
 - Una historia de ADR no implementa: decide y documenta. Si hace falta un *spike* para medir, es parte de sus AC.
 - Si un ADR o una DEC bloquea una historia, esa historia se estima `?` hasta que cierre. Decirlo explícitamente.
 - No proponer tecnología que viole una invariante de `CLAUDE.md`, aunque sea mejor técnicamente. Si la invariante parece el problema, reportarlo como pregunta al usuario.
-- No reabrir el encuadre de la v1.2: nada de opciones que reintroduzcan recomendaciones, puntaje clínico para ordenar opciones (RN-28) o streaming de contenido sin validar.
+- No reabrir el encuadre de la v1.2 ni las decisiones B-01…B-15 de la v1.3: nada de opciones que reintroduzcan recomendaciones, puntaje clínico para ordenar opciones (RN-28) o streaming de contenido sin validar.

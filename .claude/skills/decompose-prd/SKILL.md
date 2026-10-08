@@ -1,13 +1,13 @@
 ---
 name: decompose-prd
-description: Descompone el PRD v1.2 y el readme de OncoLens en un Product Backlog trazable — requisitos, ADRs y decisiones pendientes, Features (T-shirt), User Stories (Fibonacci, INVEST) y Acceptance Criteria (Given/When/Then) — y lo audita. Úsalo cuando se pida crear, ampliar, re-estimar o auditar el backlog, descomponer un PRD o una Feature, preparar un sprint, o convertir requisitos (FR/RN/NFR/CAP) en historias. También cuando se pregunte qué cobertura o trazabilidad tiene el backlog.
+description: Descompone el PRD v1.3 y el readme de OncoLens en un Product Backlog trazable — requisitos, ADRs y decisiones pendientes, Features (T-shirt), User Stories (Fibonacci, INVEST) y Acceptance Criteria (Given/When/Then) — y lo audita. Úsalo cuando se pida crear, ampliar, re-estimar o auditar el backlog, descomponer un PRD o una Feature, preparar un sprint, o convertir requisitos (FR/RN/NFR/CAP) en historias. También cuando se pregunte qué cobertura o trazabilidad tiene el backlog.
 ---
 
 # Contexto del producto
 
 OncoLens es un sistema de apoyo a la decisión clínica con IA (CDSAI) para oncólogos que tratan cáncer de **mama y próstata**. El MVP reconstruye el caso del paciente a partir de sus documentos (OCR local, timeline, reconciliación, faltantes) y entrega un **análisis de evidencia**: recupera guías y estudios de un corpus abierto, sintetiza acuerdos y discrepancias, compara criterio a criterio la población estudiada con el paciente y describe las opciones que aparecen en la evidencia, **ordenadas por aplicabilidad, con citas verificadas y sin lenguaje prescriptivo**. El objetivo del proyecto es validar que este apoyo mejora el análisis del oncólogo (métricas de valor VM-1 a VM-6).
 
-**Encuadre obligatorio (PRD v1.2, D-01):** OncoLens **no recomienda tratamientos** ni estima probabilidad de éxito. El backlog habla de "análisis de evidencia" y de "opciones descritas en la evidencia", nunca de "recomendaciones". Cualquier texto heredado de la v1.0 (`recommendations[]`, `POST /platform/rag/query`, "consentimiento `analisis_ia` vigente") está superado.
+**Encuadre obligatorio (PRD v1.3, D-01):** OncoLens **no recomienda tratamientos** ni estima probabilidad de éxito. El backlog habla de "análisis de evidencia" y de "opciones descritas en la evidencia", nunca de "recomendaciones". Cualquier texto heredado de la v1.0 (`recommendations[]`, `POST /platform/rag/query`, "consentimiento `analisis_ia` vigente") está superado.
 
 # Descomponer el PRD en un Product Backlog
 
@@ -15,11 +15,11 @@ Actúas como **Senior Product Owner** especializado en productos de tecnología 
 
 ## Fuentes de verdad (nunca inventar requisitos)
 
-Prioridad ante conflicto: **`docs/PRD.md` v1.2 > `readme.md` > `CLAUDE.md`**. Un conflicto entre fuentes no se resuelve en silencio: se registra como vacío.
+Prioridad ante conflicto: **`docs/PRD.md` v1.3 > `readme.md` > `CLAUDE.md`**. Un conflicto entre fuentes no se resuelve en silencio: se registra como vacío.
 
 | Fuente | Qué aporta |
 |---|---|
-| `docs/PRD.md` §0 | Registro de cambios: D-01…D-16 (v1.1) y R-01…R-31 (v1.2). Explica qué quedó superado |
+| `docs/PRD.md` §0 | Registro de cambios: D-01…D-16 (v1.1), R-01…R-31 (v1.2) y B-01…B-15 (v1.3, alineación con el backlog). Explica qué quedó superado |
 | `docs/PRD.md` §2 | Objetivos `G-1`…`G-16` y métricas de valor `VM-1`…`VM-6` |
 | `docs/PRD.md` §3, §18.1.2 | No-objetivos y lo que queda **fuera** del MVP (CAP-12…CAP-19) |
 | `docs/PRD.md` §5 | `FR-01`…`FR-30` |
@@ -36,7 +36,7 @@ Prioridad ante conflicto: **`docs/PRD.md` v1.2 > `readme.md` > `CLAUDE.md`**. Un
 | `docs/AS-IS.md`, `docs/TO-BE.md` | Discovery (pains `P1`…`P12`, JTBD) y fases; solo para justificar **valor**, no para crear requisitos |
 | `CLAUDE.md` | Invariantes de arquitectura y seguridad |
 
-Un ítem del backlog **sin evidencia en estas fuentes no existe**. Si algo falta, es una pregunta abierta o un vacío que reporta el auditor, nunca un requisito inventado. El PRD y el readme no prescriben la arquitectura final: describen el stack y la arquitectura iniciales; el "cómo" se define en las specs (OpenSpec, `specs/`) durante el desarrollo.
+Un ítem del backlog **sin evidencia en estas fuentes no existe**. Si algo falta, es una pregunta abierta o un vacío que reporta el auditor, nunca un requisito inventado. El PRD y el readme no prescriben la arquitectura final: describen el stack y la arquitectura iniciales; el "cómo" se define en las specs de OpenSpec (`openspec/specs/` y `openspec/changes/`) durante el desarrollo; ver las skills `sprint-start`, `implement-story` y `sprint-close`.
 
 ## Universo de IDs (referencia única para los cuatro subagentes)
 
@@ -76,7 +76,7 @@ F0 preparación → F1 requirements-analyst → F2 architecture-advisor
 
 Los subagentes **solo escriben Markdown**: ninguno tiene acceso al MCP de Linear. La publicación la haces tú en F6, y solo después de que el usuario apruebe.
 
-**F0 — Preparación.** Verificar que existen `docs/PRD.md` (v1.2) y `readme.md`, y recalcular con `grep` los rangos del Universo de IDs. Comprobar que `CLAUDE.md` **en disco** está en v1.2 (`grep -q evidence-analyses CLAUDE.md`); si no, detenerse. Si `CLAUDE.md` cambió durante la sesión, la copia que la sesión inyecta en el contexto de los subagentes puede estar obsoleta: correr el workflow en una **sesión nueva**. Crear `backlog/` si falta. Si ya hay backlog, leerlo: las fases siguientes **amplían, no reescriben** (los IDs ya publicados son inmutables). Si el backlog existente usa el encuadre v1.0 (recomendaciones, consentimiento por evento), avisar al usuario antes de ampliarlo.
+**F0 — Preparación.** Verificar que existen `docs/PRD.md` (v1.3) y `readme.md`, y recalcular con `grep` los rangos del Universo de IDs. Comprobar que `CLAUDE.md` **en disco** está en v1.3 (`grep -q 'PRD v1.3' CLAUDE.md`); si no, detenerse. Si `CLAUDE.md` cambió durante la sesión, la copia que la sesión inyecta en el contexto de los subagentes puede estar obsoleta: correr el workflow en una **sesión nueva**. Crear `backlog/` si falta. Si ya hay backlog, leerlo: las fases siguientes **amplían, no reescriben** (los IDs ya publicados son inmutables). Si el backlog existente usa el encuadre v1.0 (recomendaciones, consentimiento por evento), avisar al usuario antes de ampliarlo.
 
 **F1 — `requirements-analyst`** → `backlog/01-requisitos.md`.
 *Gate:* inventario completo según el Universo de IDs (FR 30/30, RN 30/30, NFR 14, SEG 13, IA 11, CAP/T 17, HU 26/26, OL 6/6, TBD 21/21), cada uno con evidencia, actores y Features candidatas; mapa `AC-xx.y` → FR. Los vacíos y los conflictos entre fuentes van en su propia sección.
@@ -159,9 +159,9 @@ Nunca `ADR-001`: colisionaría con las decisiones ya tomadas.
 
 | Control | Existe desde | Fuente |
 |---|---|---|
-| `422` por paciente egresado (RN-17) | S4 | PRD §14 (FR-14) |
-| `403` por opt-out de `analisis_ia` (RN-15) | S5 | PRD §14 (FR-16), `readme.md` §6 OL-03 "No incluye" |
-| `403` por equipo tratante (FR-15) | S5 | PRD §14 |
+| `422` por paciente egresado (RN-17) | Post-MVP | PRD §14 (FR-14) |
+| `403` por opt-out de `analisis_ia` (RN-15) | S6 | PRD §14 (FR-16, marcas por CLI, B-05), `readme.md` §6 OL-03 "No incluye" |
+| `403` por equipo tratante (FR-15) | Post-MVP | PRD §0 B-03, §14; en el MVP solo RBAC |
 
 Una historia de un sprint **anterior** al de su control no escribe ese borde como AC propio: lleva `🔗 Regresión [RN-xx] → US-dueña (activa desde S<n>)`, y la historia dueña del control incluye un AC que lo verifica en todos los endpoints afectados, incluidos los de sprints anteriores.
 
@@ -190,13 +190,13 @@ Una historia de un sprint **anterior** al de su control no escribe ese borde com
 
 **Idioma:** español, incluidos los valores de dominio (`sintetico`, `requiere_revision`, `cuarentena_pii`, `analisis_ia`, `no_mapeado`).
 
-**Sprints:** usar `docs/PRD.md` §14 (coherente con `readme.md` §5.0): **Pre-S1** (decisiones) y Sprints 1–6, con los gates G-Demo (fin del S4), G-Piloto (fin del S5) y G-Éxito. No reordenar el roadmap sin decirlo explícitamente al usuario. La capacidad no está estimada (TBD-19, SUP-1): reportar los puntos por sprint, no recortar alcance por cuenta propia.
+**Sprints:** usar `docs/PRD.md` §14 (coherente con `readme.md` §5.0): **Pre-S1** (decisiones) y Sprints 1–6, con el slicing v2 de la v1.3 (B-01) y los gates G-Demo (fin del S5), G-Piloto y G-Éxito (S6) (B-02). Lo `si-hay-capacidad` se prioriza en el planning de cada sprint. No reordenar el roadmap sin decirlo explícitamente al usuario. La capacidad no está estimada (TBD-19, SUP-1): reportar los puntos por sprint, no recortar alcance por cuenta propia.
 
 ## Reglas del producto que el backlog debe respetar
 
 Estas no son sugerencias: una historia que las viole es un hallazgo de criticidad Alta.
 
-- Ninguna historia pone datos reales en el repositorio ni en la aplicación antes del Sprint 5 y el gate G-piloto (RN-13, RN-14), ni exige datos reales para probarse antes de ese punto.
+- Ninguna historia pone datos reales en el repositorio ni en la aplicación antes del gate G-Piloto (S6) (RN-13, RN-14), ni exige datos reales para probarse antes de ese punto.
 - Ninguna historia da a `rag-orchestrator` acceso a datos clínicos, a `clinical-minio` ni a schemas distintos de `corpus`.
 - Ninguna historia hace viajar la identidad del paciente fuera de `clinical-api` (RN-10), ni envía contexto sin desidentificar —incluidos eventos, tratamientos previos, faltantes y análisis previos— (RN-11), ni datos reales a la nube (RN-12).
 - Ninguna historia muestra una opción o afirmación generada sin cita o enlace verificado y sin chequeo de soporte (RN-01), ni la muestra antes de persistir el análisis (RN-06), ni transmite tokens del LLM sin validar.

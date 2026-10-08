@@ -1,6 +1,6 @@
 ---
 name: requirements-analyst
-description: Extrae del PRD v1.2 y de la arquitectura el inventario de requisitos (FR, RN, NFR, seguridad, IA, capacidades y AC del MVP), actores, restricciones, necesidades de usuario, Features candidatas y vacíos, cada uno con su evidencia. Úsalo como primera fase de la descomposición de un PRD, antes de escribir Features o Stories.
+description: Extrae del PRD v1.3 y de la arquitectura el inventario de requisitos (FR, RN, NFR, seguridad, IA, capacidades y AC del MVP), actores, restricciones, necesidades de usuario, Features candidatas y vacíos, cada uno con su evidencia. Úsalo como primera fase de la descomposición de un PRD, antes de escribir Features o Stories.
 tools: Read, Grep, Glob, Bash, Write
 model: opus
 ---
@@ -11,7 +11,7 @@ El producto entrega un **análisis de evidencia**, no recomendaciones (PRD §0, 
 
 ## Qué leer
 
-Prioridad ante conflicto: `docs/PRD.md` (v1.2) > `readme.md` > `CLAUDE.md`. Lee las fuentes **del disco** con Read; si tu contexto trae una copia de `CLAUDE.md` que contradice el fichero, manda el fichero.
+Prioridad ante conflicto: `docs/PRD.md` (v1.3) > `readme.md` > `CLAUDE.md`. Lee las fuentes **del disco** con Read; si tu contexto trae una copia de `CLAUDE.md` que contradice el fichero, manda el fichero.
 
 - `docs/PRD.md`: §0 (cambios D-xx y R-xx: qué quedó superado), §2 (G-1…G-16, VM-1…VM-6), §3 (no-objetivos), §4 (recorridos), §5 (FR-01…FR-30), §6 (RN-01…RN-30), §7 (NFR), §11 (seguridad), §12 (IA/ML), §14 (roadmap y gates), §16 (TBD-01…TBD-21), §17 (trazabilidad), **§18 (CAP-01…CAP-11, T-1…T-5, AC-P.1, escenarios `AC-xx.y`, medibles `M-xx.y`, SUP-x, PREG-x)**.
 - `readme.md`: §1.2 (funcionalidades), §1.4 (configuración), §2 (arquitectura, seguridad, tests, observabilidad), §3.2 (entidades), §3.3 (decisiones #1–#38), §4 (API), §5 (HU-01…HU-26 y slicing §5.0; mapa HU → CAP → AC en §5.6), §6 (OL-01…OL-06).
@@ -32,7 +32,7 @@ Un requisito suele estar en varios sitios a la vez (FR en el PRD §5, escenarios
 ## Salida — `backlog/01-requisitos.md`
 
 ```markdown
-# Inventario de requisitos · PRD v1.2
+# Inventario de requisitos · PRD v1.3
 
 ## 1. Actores y necesidades
 | Actor | Necesidad | Pain / JTBD | Evidencia |
@@ -46,11 +46,11 @@ Un requisito suele estar en varios sitios a la vez (FR en el PRD §5, escenarios
 | ID | Regla | Afecta a (FR / CAP) | HU dueña propuesta | Sprint del control | Verificable como | Evidencia |
 "HU dueña propuesta": la HU cuya historia verificará la regla de forma exhaustiva (las demás solo llevan regresión). Si la RN atraviesa varias capacidades o tipos de salida (RN-26, RN-23, RN-11…), proponer como dueña la **transversal `T-x`** correspondiente, no una CAP.
 Para cada control que llega en un sprint posterior, listar también los endpoints a los que **no** debe aplicarse (p. ej., lecturas que no generan texto con IA frente a RN-15).
-"Sprint del control": cuándo existe el mecanismo que la hace cumplir (p. ej., RN-15 → S5, RN-17 → S4), según PRD §14.
+"Sprint del control": cuándo existe el mecanismo que la hace cumplir (p. ej., RN-15 → S6, RN-17 → Post-MVP), según PRD §14 (slicing v2).
 
 ## 4. Requisitos no funcionales, de seguridad y de IA
 | ID | Categoría | Requisito | Meta | ¿Calibrable? | Evidencia |
-| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 15 s (a calibrar, S4) | sí | [→ PRD §7] |
+| NFR-01 | Rendimiento | Análisis de evidencia de punta a punta | p95 ≤ 15 s (a calibrar, S5) | sí | [→ PRD §7] |
 | SEG-04 | Desidentificación | … | … | — | [→ PRD §11 #4] |
 | IA-05 | Agente acotado | … | … | sí | [→ PRD §12] |
 
