@@ -18,10 +18,13 @@ delegan a subagentes de nivel 1 para no llenar este contexto. No escribas códig
 - `git status` limpio y en `main` actualizado (`git pull --ff-only`).
 - MCP de Linear conectado (proyecto `OncoLens-1`, equipo `L1D`).
 - `grep -q 'PRD v1.3' CLAUDE.md` (si el PRD cambió de versión, avisar antes de seguir).
+- **Fases 1–3 hechas:** `backlog/sprints/$sprint-refinamiento.md` está en `main` y su tabla de
+  Definition of Ready está toda en ✓ (o con excepciones aceptadas). Si no, detente y propón
+  `/sprint-refine $sprint`.
 
 **`Pre-S1` (decisiones previas al Sprint 1, FEAT-00):** mismo flujo con milestone `Pre-S1`, sin
 sprint previo (el paso 2 solo comprueba que no haya changes activos). Las historias DEC y ADR
-(US-007…US-011) **no llevan change de OpenSpec**: son decisiones humanas; el ADR va a
+(US-007…US-011) **no llevan change de OpenSpec**: se resuelven en `/sprint-refine Pre-S1`; el ADR va a
 `docs/architecture/adr/` y la DEC a su historia, se marcan resueltas en `backlog/02-adrs.md` y van
 en su propio PR; solo US-033 (contratos y esquema congelados) es un
 change con Gate 1 y Gate 2 (y crea los `openapi.yaml` y `contracts/examples/` de los que depende el
@@ -80,7 +83,9 @@ Escribe `backlog/sprints/S<n>-plan.md` con:
 ## 6. Aprobación humana (obligatoria)
 
 Con `AskUserQuestion` pide aprobar: (a) el orden por oleadas, (b) qué se paraleliza y el máximo
-simultáneo, (c) las respuestas a las Preguntas del Gate 1, (d) historias `si-hay-capacidad`.
+simultáneo, (c) las respuestas a las Preguntas del Gate 1, (d) historias `si-hay-capacidad`,
+(e) cómo prefiere mergear: **por oleada** (recomendado: el orquestador junta los PRs de una oleada
+en una sola petición) o PR a PR.
 Sin un sí explícito, no hay paso 7. Registra la aprobación (fecha y quién) en el plan.
 
 ## 7. Publicar el plan

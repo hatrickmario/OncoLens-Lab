@@ -33,7 +33,9 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
 ## Flujo (consumidor del contrato → TDD → refactor)
 
 1. Lee el change, la historia en `backlog/features/` y los deltas de dependencias, en especial el
-   contrato que consumes. Eres **consumidor**: usas solo los tipos y clientes generados de
+   contrato que consumes, y el **diseño de referencia** en `docs/ux/` (`sistema-de-diseno.md`,
+   `flujo-e2e.md` y la pantalla del sprint en `docs/ux/S<n>/`): tokens, componentes, estados y
+   textos salen de ahí. Si el diseño y la spec se contradicen, gana la spec y lo reportas. Eres **consumidor**: usas solo los tipos y clientes generados de
    `packages/api-contracts`, nunca tipos escritos a mano ni `fetch` con forma propia. Si el
    contrato no tiene lo que necesitas, detente: el cambio de spec es del proveedor
    (`clinical-platform-dev`).
@@ -72,7 +74,7 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
    **/opsx:verify `<change>`**.
 8. Push y devuelve: rama, secuencia de commits (`test → feat → refactor`), tests por AC con la
    **salida en rojo y en verde**, refactors, comandos y resultado, el **reporte de
-   `visual-check`** (o `PENDIENTE` con su motivo) y desviaciones del design.md.
+   `visual-check`** (o `PENDIENTE` con su motivo) y desviaciones del design.md y del diseño de `docs/ux/`.
 
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 
