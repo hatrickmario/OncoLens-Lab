@@ -72,7 +72,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | **Claude Code (incluidas)** | `/code-review`, `/security-review`, `/simplify`, `/run`, `/init` | Revisión adicional de PRs, arranque de la app | Vienen con Claude Code |
 | **fullstack-dev-skills** (plugin) | `typescript-pro`, `api-designer`, `postgres-pro`, `nextjs-developer`, `react-expert`, `fastapi-expert`, `python-pro`, `rag-architect`, `playwright-expert`, `test-master`, `security-reviewer` | Referencia técnica por capa para los implementadores | Plugin ya instalado en el equipo del autor |
 | **design** (plugin) | `ux-copy`, `accessibility-review` | Texto de UI no prescriptivo y WCAG 2.1 AA | Plugin `design` |
-| **MCP** | Linear (proyecto `OncoLens-1`, equipo `L1D`) | Historias, estados, relaciones | Conector de Linear |
+| **MCP** | Linear (proyecto `OncoLens-1`, equipo `L1D`, [tablero](https://linear.app/l1der-lab-mjbc/project/oncolens-1-f85aa863d14c/issues)) | Historias, estados, relaciones | Conector de Linear |
 | **CLI** | `gh` (GitHub CLI) | PRs desde el orquestador | `brew install gh && gh auth login` |
 
 ## Hooks (`.claude/settings.json` + `.claude/hooks/`)
@@ -114,6 +114,8 @@ nota en el PR. Insumos deterministas (US-213, FEAT-PL1, Sprint 1): `npm run qual
 `import-linter` para capas y DIP.
 
 ## Convenciones
+
+- **Linear:** proyecto único **OncoLens-1** (`P-L1D-1`, equipo `L1D`, workspace `l1der-lab-mjbc`), tablero https://linear.app/l1der-lab-mjbc/project/oncolens-1-f85aa863d14c/issues. Features = issues padre; historias = sub-issues con milestone = sprint (`Pre-S1`, `Sprint 1`…`Sprint 6`, `Si hay capacidad`, `Post-MVP`). Ningún agente crea proyectos ni equipos; el Markdown de `backlog/` es la fuente y Linear el espejo.
 
 - Change `l1d-<nn>-<slug>` · rama `feat/l1d-<nn>-<slug>` · PR `[L1D-<nn>] …`.
 - Escenarios con `[US-xxx AC-n]` y `[AC-xx.y]`; tests con `US-xxx AC-n` en el nombre.
