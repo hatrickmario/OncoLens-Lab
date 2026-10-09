@@ -16,20 +16,31 @@ de OpenSpec** en tu propio worktree y entregas una rama lista para el Gate 2.
 Componentes en `apps/web/components/` siguiendo Atomic Design (atoms → molecules → organisms →
 templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
 
-## Flujo
+## Flujo (consumidor del contrato → TDD → refactor)
 
-1. Lee el change, la historia en `backlog/features/` y los deltas de dependencias (en especial el
-   contrato que consumes: `packages/api-contracts`, nunca tipos escritos a mano).
+1. Lee el change, la historia en `backlog/features/` y los deltas de dependencias, en especial el
+   contrato que consumes. Eres **consumidor**: usas solo los tipos y clientes generados de
+   `packages/api-contracts`, nunca tipos escritos a mano ni `fetch` con forma propia. Si el
+   contrato no tiene lo que necesitas, detente: el cambio de spec es del proveedor
+   (`clinical-platform-dev`).
 2. Rama `feat/l1d-<nn>-<slug>` desde `main` (o la que te indique el orquestador).
 3. **/opsx:apply `<change>`**, solo las tareas de `## frontend`.
-4. **Test primero** por AC: componentes con Vitest + Testing Library; recorridos con Playwright
-   contra Compose y **fixtures sintéticos sembrados**; tag `US-xxx AC-n` en el nombre.
-5. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
-   commit aparte `refactor(L1D-<nn>): …`.
+4. **Ciclo por AC (TDD con evidencia):**
+   - **Rojo:** escribe el test con el tag `US-xxx AC-n` en el nombre, ejecútalo y comprueba que
+     **falla por la razón esperada** (no por un error de compilación o de import). Commit
+     `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
+   - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
+   - Repite por cada AC; puedes agrupar en un commit los tests en rojo de varios AC si
+     comparten fixture.
+   Componentes con Vitest + Testing Library usando los **ejemplos del contrato**
+   (`contracts/examples/`) como datos de prueba; recorridos con Playwright contra Compose y
+   **fixtures sintéticos sembrados**.
+5. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
 6. Verde local: tests, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict`,
    **/opsx:verify `<change>`**.
-7. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
-   resultado, capturas o descripción de estados de UI, desviaciones del design.md.
+7. Push y devuelve: rama, secuencia de commits (`test → feat → refactor`), tests por AC con la
+   **salida en rojo y en verde**, refactors, comandos y resultado, capturas o descripción de
+   estados de UI, desviaciones del design.md.
 
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 

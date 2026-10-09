@@ -23,7 +23,8 @@ búscalo en `openspec list --json` o en `backlog/sprints/*-plan.md`.
 
 ## 2. Despachar
 
-Una llamada a Agent por bounded context, en este orden si hay varios: dueño del contrato →
+Una llamada a Agent por bounded context, en este orden si hay varios: **proveedor del contrato**
+(quien es dueño del `openapi.yaml` que cambia; hace primero su commit `contract(L1D-<nn>)`) →
 consumidores, sobre la **misma rama** `feat/l1d-<nn>-<slug>`. Prompt mínimo:
 
 ```
@@ -31,7 +32,9 @@ Change: <change> · Historia: L1D-<nn> (<ruta backlog>) · Rama: feat/l1d-<nn>-<
 Tus tareas: sección '## <contexto>' de tasks.md
 Deltas de dependencias: <rutas>
 Paths permitidos: <lista>
-Termina con: tests por AC con tag 'US-xxx AC-n', openspec validate --strict, /opsx:verify, push.
+Orden: contract (si toca API) → test en rojo → feat → refactor, un commit por paso.
+Termina con: tests por AC con tag 'US-xxx AC-n' y su salida en rojo y en verde,
+contracts:verify-provider, openspec validate --strict, /opsx:verify, push.
 ```
 
 ## 3. Gate 2

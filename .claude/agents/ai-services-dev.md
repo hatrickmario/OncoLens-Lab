@@ -23,24 +23,38 @@ change de OpenSpec** en tu propio worktree y entregas una rama lista para el Gat
 
 Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 
-## Flujo
+## Flujo (contract-first → TDD → refactor)
 
 1. Lee el change (`openspec show <change>`, proposal/design/tasks y deltas), la historia en
    `backlog/features/` y los deltas de dependencias que te pasó el orquestador.
 2. Crea la rama `feat/l1d-<nn>-<slug>` desde `main` (o continúa la rama que te indique el
-   orquestador si clinical-platform ya fijó el contrato).
-3. Ejecuta **/opsx:apply `<change>`**, solo las tareas de `## ai-services`.
-4. **Test primero** por cada AC con Pytest + `TestClient` y **adapters falsos** (nunca el LLM real
-   en tests unitarios), con el tag `US-xxx AC-n` en el nombre del test.
-5. Si cambiaste modelo, prompt, umbral, catálogo o corpus: la tarea `## evaluación` es obligatoria;
+   orquestador si el contrato ya está fijado).
+3. Ejecuta **/opsx:apply `<change>`**, solo las tareas de `## ai-services` (y `## contratos` si te
+   las asignaron).
+4. **Contrato primero** (si el change toca `/rag/query`, `/documents/extract`, `/case/summary` u
+   otra ruta): skill `sync-contracts` pasos 1–5. Eres el **proveedor** de
+   `apps/rag-orchestrator/openapi.yaml`: se edita el spec y sus ejemplos, se valida, se regeneran
+   los modelos Pydantic de `app/schemas/generated/` y el cliente que consume `clinical-api`, y se
+   hace el commit `contract(L1D-<nn>)` **antes** de cualquier test o código del endpoint.
+5. **Ciclo por AC (TDD con evidencia):**
+   - **Rojo:** escribe el test con el tag `US-xxx AC-n` en el nombre, ejecútalo y comprueba que
+     **falla por la razón esperada** (no por un error de compilación o de import). Commit
+     `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
+   - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
+   - Repite por cada AC; puedes agrupar en un commit los tests en rojo de varios AC si
+     comparten fixture.
+   Pytest con **adapters falsos** (nunca el LLM real en unitarios); integración con `TestClient`,
+   **validando cada respuesta contra `openapi.yaml`** (verificación del proveedor, US-214). Los
+   fakes cumplen el mismo contrato que los adapters reales (LSP: `null` ≠ `0.0`, mismos errores).
+6. Si cambiaste modelo, prompt, umbral, catálogo o corpus: la tarea `## evaluación` es obligatoria;
    el orquestador lanzará `ai-eval-runner` en el Gate 2. Deja el dataset sintético listo.
-6. Si cambiaste un schema Pydantic o el OpenAPI: corre la skill `sync-contracts`.
-7. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
-   commit aparte `refactor(L1D-<nn>): …`.
-8. Verde local: `pytest`, `mypy` si está configurado, `npm run quality` (Ruff + import-linter, US-213), `openspec validate <change> --strict`
-   y **/opsx:verify `<change>`**.
-9. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
-   resultado, desviaciones del design.md.
+7. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
+8. Verde local: `pytest`, `npm run contracts:verify-provider`, `mypy` si está configurado,
+   `npm run quality` (Ruff + import-linter, US-213), `openspec validate <change> --strict` y
+   **/opsx:verify `<change>`**.
+9. Push y devuelve: rama, secuencia de commits (`contract → test → feat → refactor`), diff del
+   spec, tests por AC con la **salida en rojo y en verde**, refactors, comandos y resultado,
+   desviaciones del design.md.
 
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 

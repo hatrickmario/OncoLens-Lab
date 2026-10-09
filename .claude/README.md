@@ -42,7 +42,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `ai-services-dev` | sonnet | rag-orchestrator, corpus, datasets sintéticos | Hereda; **worktree** |
 | `frontend-dev` | sonnet | UI de `apps/web` (Atomic Design) | Hereda; **worktree** |
 | `privacy-guardian` | opus | PII, desidentificación, aislamiento de Backend 2, datos reales, secretos | Solo lectura |
-| `contract-keeper` | sonnet | Drift Zod ↔ Pydantic ↔ OpenAPI ↔ api-contracts ↔ deltas | Solo lectura |
+| `contract-keeper` | sonnet | Contract-first y provider-driven: spec antes que el código, nada generado a mano, oasdiff, verificación del proveedor, secuencia `contract → test → feat → refactor` | Solo lectura |
 | `design-principles-reviewer` | opus | SOLID y CUPID por change y por lote de 2–3 changes; prioriza lo que confunde a un agente; refactor mínimo por hallazgo | Solo lectura |
 | `clinical-language-auditor` | sonnet | RN-23, RN-19, citas, orden por aplicabilidad, avisos no bloqueantes | Solo lectura |
 | `ai-eval-runner` | sonnet | Suite OL-06 contra baseline y metas | Lectura + reporte en `reports/eval/` |
@@ -59,7 +59,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `implement-story` | Orquestador o `/implement-story L1D-<nn>` | Una historia de punta a punta hasta el PR |
 | `backlog-to-change` | `/sprint-start` o manual | Historia → `/opsx:propose` con trazabilidad |
 | `gate-review` | `/sprint-start` (gate1), orquestador (gate2) | Guardianes en paralelo + veredicto consolidado |
-| `sync-contracts` | Implementadores | Exporta/regenera/compara contratos |
+| `sync-contracts` | Implementadores (primera tarea de `## contratos`) | Spec del proveedor → validar → oasdiff → generar tipos, clientes y Zod/Pydantic → commit `contract(L1D-nn)` |
 | `run-ai-eval` | Implementadores, Gate 2, `/sprint-close` | Fork en `ai-eval-runner` |
 | `preflight-real-data` | Solo manual | Checklist de G-Piloto (S6) |
 | `decompose-prd` | Ya existía | PRD → backlog — **actualizada a PRD v1.3** |
@@ -82,6 +82,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `SessionStart` | `session-context.sh` | Inyecta changes activos y el último `S<n>-status.md` |
 | `PreToolUse` Edit/Write | `guard-sensitive-paths.sh` | Bloquea `.env`, claves, certificados y rutas de datos reales |
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
+| `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, `apps/clinical-api/src/generated/`, `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
 | `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged + `openspec validate --all --strict` |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es
@@ -100,6 +101,18 @@ chmod +x .claude/hooks/*.sh
 
 En `openspec config profile` selecciona además `new, continue, ff, verify, bulk-archive, onboard`.
 Después, en Claude Code: `/opsx:onboard` (opcional) y `/sprint-start S1`.
+
+## Enfoque del backend: SDD + contract-first + TDD, provider-driven
+
+| Enfoque | Dónde se aplica |
+|---|---|
+| **SDD** (OpenSpec) | Un change por historia; `proposal → specs → design → tasks` antes del código; Gate 1 sobre artefactos; `/opsx:verify` sobre el código; hook "sin change activo no hay código" |
+| **Contract-first / spec-first** | `apps/<backend>/openapi.yaml` es la fuente única (US-033). El spec y `contracts/examples/` cambian **antes** que el código (`sync-contracts`, primera tarea de `## contratos`, commit `contract(L1D-nn)`); tipos, clientes y Zod/Pydantic se **generan**; `contracts:breaking` (oasdiff) contra `main`; hook `guard-generated.sh` |
+| **Provider-driven** | Cada backend es proveedor de su contrato y lo **verifica** en sus tests de integración (respuestas validadas contra su spec, US-214); los consumidores solo usan clientes generados. Sin Pact: un equipo, dos consumidores conocidos, contrato congelado en Pre-S1 |
+| **TDD** | Por AC: `test(L1D-nn)` en rojo (falla por la razón esperada) → `feat(L1D-nn)` en verde → `refactor(L1D-nn)`; el reporte incluye la salida en rojo y en verde; el Gate 2 comprueba la secuencia de commits |
+
+Secuencia de commits de un change con API: `contract → test → feat → refactor`. `contract-keeper`
+la verifica en el Gate 2.
 
 ## Revisión de diseño (SOLID y CUPID)
 

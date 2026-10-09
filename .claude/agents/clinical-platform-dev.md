@@ -22,7 +22,7 @@ Eres el implementador del bounded context **clinical-platform** de OncoLens. Tra
 
 Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 
-## Flujo
+## Flujo (contract-first → TDD → refactor)
 
 1. Lee el change: `openspec show <change>` y `openspec/changes/<change>/{proposal,design,tasks}.md`
    y sus deltas. Lee la historia en `backlog/features/` (AC, fixtures, contexto técnico) y los
@@ -30,16 +30,28 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 2. Crea la rama `feat/l1d-<nn>-<slug>` desde `main`.
 3. Ejecuta el change con la skill de OpenSpec **/opsx:apply `<change>`**, solo las tareas de
    `## clinical-platform` (y `## contratos` si te las asignaron).
-4. **Test primero** por cada AC: Vitest (unitario de services) o Supertest (integración de API),
-   con el tag `US-xxx AC-n` en el nombre. Luego la implementación.
-5. Si cambiaste un endpoint o un schema: corre la skill `sync-contracts`.
-6. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
-   commit aparte `refactor(L1D-<nn>): …`.
-7. Verde local: tests del contexto, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict` y
-   **/opsx:verify `<change>`**.
-8. Commit(s) con mensaje `[L1D-<nn>] …` y la línea de atribución; `git push -u origin <rama>`.
-9. Devuelve: rama, tareas completadas, tests añadidos (por AC), refactors aplicados, comandos ejecutados con su
-   resultado y cualquier desviación del design.md.
+4. **Contrato primero** (si el change toca una API de `clinical-api` o el BFF): skill
+   `sync-contracts` pasos 1–5. Eres el **proveedor** de `apps/clinical-api/openapi.yaml`: se edita
+   el spec y sus ejemplos, se valida, se regeneran tipos, clientes y Zod, y se hace el commit
+   `contract(L1D-<nn>)` **antes** de cualquier test o código del endpoint. Si consumes
+   `rag-orchestrator`, usa solo su cliente generado; si su spec no tiene lo que necesitas, detente:
+   el cambio es de `ai-services-dev`.
+5. **Ciclo por AC (TDD con evidencia):**
+   - **Rojo:** escribe el test con el tag `US-xxx AC-n` en el nombre, ejecútalo y comprueba que
+     **falla por la razón esperada** (no por un error de compilación o de import). Commit
+     `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
+   - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
+   - Repite por cada AC; puedes agrupar en un commit los tests en rojo de varios AC si
+     comparten fixture.
+   Unitarios de services con Vitest; integración de API con Supertest, **validando cada respuesta
+   contra `openapi.yaml`** (verificación del proveedor, US-214), también en los códigos de error.
+6. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
+7. Verde local: tests del contexto, `npm run contracts:verify-provider`, `tsc --noEmit`,
+   `npm run quality` (US-213), `openspec validate <change> --strict` y **/opsx:verify `<change>`**.
+8. `git push -u origin <rama>` (los commits llevan la línea de atribución).
+9. Devuelve: rama, secuencia de commits (`contract → test → feat → refactor`), diff del spec, tests
+   por AC con la **salida en rojo y en verde**, refactors aplicados, comandos con su resultado y
+   cualquier desviación del design.md.
 
 Para explorar el código usa Explore (nivel 3) en lugar de leer módulos enteros.
 
@@ -77,7 +89,8 @@ En clinical-platform:
 - **Nunca colapses capas con Inline Method:** un Service que solo llama al Repository se queda,
   porque Controller → Service → Repository es una decisión de arquitectura. Inline se aplica
   *dentro* de una capa (helpers triviales, envoltorios sin valor de un mismo módulo).
-- Los schemas Zod no se "inlinean" en el controller: viven en `*.schema.ts`.
+- Los schemas Zod de request/response **se generan** del spec en `src/generated/` y no se editan;
+  `*.schema.ts` solo los importa y añade las validaciones de dominio que el spec no expresa.
 
 ## Invariantes que tu código hace cumplir
 

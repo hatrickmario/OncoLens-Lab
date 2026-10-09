@@ -39,6 +39,20 @@ context: |
     suite `evaluate` de calidad de IA (OL-06) en cada PR que cambie modelo, prompt, umbral,
     catálogo o corpus.
 
+  Enfoque de implementación del backend: SDD (OpenSpec) + contract-first + TDD, provider-driven.
+  - Cada backend es PROVEEDOR de su contrato: apps/clinical-api/openapi.yaml y
+    apps/rag-orchestrator/openapi.yaml (congelados en Pre-S1, US-033) son la fuente única de la forma
+    de la API. El spec y sus ejemplos (contracts/examples/) cambian ANTES que el código; tipos,
+    clientes (packages/api-contracts) y schemas Zod/Pydantic (src/generated, app/schemas/generated)
+    se generan del spec y nunca se editan a mano. Nunca se genera el spec desde el código.
+  - Verificación del proveedor: cada respuesta de cada backend se valida contra su propio spec en
+    los tests de integración (US-214). Los consumidores (web → clinical-api, clinical-api →
+    rag-orchestrator) solo usan clientes generados. Cambios incompatibles: oasdiff contra main.
+  - No se usa consumer-driven (Pact): un solo equipo, dos consumidores conocidos y contrato
+    congelado en Pre-S1; provider-driven + generación de clientes da la misma garantía sin broker.
+  - TDD con evidencia por AC: commit test(L1D-nn) en rojo → feat(L1D-nn) en verde → refactor(L1D-nn).
+    Secuencia de commits de un change con API: contract → test → feat → refactor.
+
   Invariantes que ningún change puede violar (PRD §6):
   - RN-10/RN-11: la identidad nunca sale de clinical-api; el contexto hacia la IA va desidentificado
     (seudónimo por consulta, fechas relativas, texto libre enmascarado).
@@ -91,20 +105,24 @@ rules:
   design:
     - "Incluye una sección obligatoria '## Privacidad y ownership': qué datos cruzan qué frontera (web → clinical-api → rag-orchestrator), cómo se desidentifican (RN-11) y confirma que rag-orchestrator no toca datos clínicos ni clinical-minio."
     - "Incluye '## Dependencias y colaboradores': módulos que se crean o modifican, de quién dependen (puertos o interfaces, nunca clientes concretos en services ni en domain) y qué reglas de dominio se extraen a métodos con nombre propio. design-principles-reviewer lo contrasta con el código."
-    - "Incluye '## Contratos': endpoints, schemas Zod/Pydantic y cambios al OpenAPI; si toca EvidenceAnalysis, indica compatibilidad con ADR-26 (contrato estable entre sprints)."
+    - "Incluye '## Contratos' con el DIFF PROPUESTO del openapi.yaml del proveedor (rutas, schemas, códigos de estado, errores) y los ejemplos nuevos o cambiados de contracts/examples/; indica quién es proveedor y quién consumidor, si el cambio es incompatible (oasdiff) y su compatibilidad con ADR-26 (contrato estable entre sprints). Los schemas Zod/Pydantic se describen como generados del spec, nunca como fuente."
     - "Cita las decisiones existentes (ADR-n del readme §3.3) en lugar de reabrirlas; una decisión nueva requiere historia ADR-<n> en el backlog."
     - "Si cambia modelo, prompt, umbral, catálogo o corpus, incluye '## Evaluación' con las métricas OL-06 afectadas."
   tasks:
     - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
-    - "Para cada AC, primero la tarea del test (con el tag US-xxx AC-n) y luego la implementación."
+    - "Si el change toca una API, la PRIMERA tarea es '## contratos': editar el openapi.yaml del proveedor y sus ejemplos, contracts:check, contracts:breaking, contracts:generate y commit contract(L1D-<nn>); ninguna tarea de test o código del endpoint va antes."
+    - "Para cada AC, primero la tarea del test en rojo (con el tag US-xxx AC-n y commit test(L1D-<nn>)) y luego la implementación (commit feat(L1D-<nn>))."
+    - "Los tests de integración de cada endpoint validan la respuesta contra el spec del proveedor (verificación del proveedor, US-214), incluidos los códigos de error."
     - "Cada sección de bounded context termina con una tarea '- [ ] Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-<nn>)'."
     - "Si el design.md ya prevé extraer una regla de dominio (umbral, orden por aplicabilidad, desidentificación, validación de citas), nómbrala como tarea explícita: 'Extraer <nombreDelMetodo>() (RN-xx)'."
-    - "Termina con: openspec validate <change> --strict, tests del contexto en verde, sync-contracts si hubo cambios de API, run-ai-eval si aplica."
+    - "Termina con: openspec validate <change> --strict, tests del contexto en verde, contracts:verify-provider si hubo cambios de API, run-ai-eval si aplica."
 
 operations:
   apply:
     guidance:
       - "Trabaja solo dentro de los paths del bounded context asignado; si una tarea toca otro contexto, detente y repórtalo al orquestador."
+      - "Contract-first: si el change toca una API, edita y valida el openapi.yaml del proveedor y regenera lo generado (skill sync-contracts) antes de escribir tests o código del endpoint."
+      - "TDD con evidencia: cada test se ejecuta y falla por la razón esperada antes de implementar; commit test(L1D-<nn>) en rojo, luego feat(L1D-<nn>) en verde. Guarda la salida en rojo y en verde para el reporte."
       - "Corre primero los tests focalizados del AC y después la suite del contexto; no marques una tarea [x] con tests en rojo."
       - "Usa solo datos sintéticos y fixtures declarados; nunca crees datos reales ni secretos."
       - "Ciclo rojo → verde → refactor: con los tests en verde, aplica Extract Method (fragmento que necesita comentario, lógica duplicada, niveles de abstracción mezclados, umbral del linter superado) e Inline Method (cuerpo tan claro como el nombre, middle man dentro de la misma capa, abstracción especulativa sin segundo uso)."

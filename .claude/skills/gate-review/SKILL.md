@@ -31,6 +31,11 @@ explícita de señalar contradicciones **entre** changes del lote.
 3. Lánzalos en paralelo (modo Gate 2, rama `$target`, change asociado).
 4. Comprueba además que el implementador dejó en verde `openspec validate <change> --strict` y
    `/opsx:verify` (si no hay evidencia en su reporte, ejecútalos tú en un worktree temporal).
+5. **Evidencia de TDD:** `git log --oneline origin/main..origin/$target` muestra, para cada AC, un
+   commit `test(L1D-<nn>)` antes de su `feat(L1D-<nn>)`, y el reporte del implementador incluye la
+   salida en rojo y en verde. Si falta → FAIL (Mayor), salvo historias sin código (`DEC`, `ADR`).
+6. **Contract-first:** si el diff toca una API, `contract-keeper` corre siempre y verifica que el
+   commit `contract(L1D-<nn>)` precede a los de test e implementación.
 
 ## Lote: SOLID y CUPID sobre 2–3 changes relacionados
 
