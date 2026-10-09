@@ -46,12 +46,15 @@ archivados. Devuelve: `backlog/03-trazabilidad.md` regenerado, `backlog/sprints/
 huecos priorizados ("AC-04.3 sin escenario", "RN-26 sin test") y estados actualizados en Linear.
 Los huecos Bloqueantes se convierten en historias para el siguiente sprint (propuesta, no creación).
 
-## 5. Demo y retro
+## 5. Review (demo) y retrospectiva
 
-- **Demo (slicing v2, PRD §14):** guion paso a paso del recorrido del sprint con **datos
+- **Review · demo (slicing v2, PRD §14):** guion paso a paso del recorrido del sprint con **datos
   sintéticos** sobre Compose, con los AC de G-Demo/G-Piloto que el sprint acerca. Si es el S5,
   checklist de **G-Demo**; si es el S6, checklist de **G-Piloto** con la skill `preflight-real-data`.
-- **Retro:** tiempos por historia, vueltas de Gate 2 por guardián, falsos positivos y reglas
+- **Retrospectiva · resumen de lo implementado:** historias mergeadas y movidas, puntos
+  completados frente a planificados, decisiones del refinamiento que cambiaron durante el sprint.
+- **Retrospectiva · mejoras críticas del proceso agéntico** (solo las que cambian el resultado;
+  **no apliques ninguna**): situaciones críticas y su causa, tiempos por historia, vueltas de Gate 2 por guardián, falsos positivos y reglas
   que faltaron. Hallazgos de `design-principles-reviewer` por principio (SOLID/CUPID) y
   prioridad (P1/P2/P3), refactors aplicados frente a deuda técnica propuesta, y qué violación P1
   se repitió: si se repite, propón una regla nueva en `config.yaml` o en el linter. Propón

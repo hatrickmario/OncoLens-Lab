@@ -1,6 +1,6 @@
 ---
 name: sprint-orchestrator
-description: Ejecuta la fase de implementación de un sprint de OncoLens ya planificado y aprobado (backlog/sprints/S<n>-plan.md). Recorre el grafo de dependencias por oleadas, lanza los implementadores por bounded context y los guardianes del Gate 2, deja cada PR listo y vuelve a la sesión principal solo para pedir merges o cuando un gate falla dos veces. Lánzalo con /sprint-run, nunca para planificar ni para cerrar un sprint.
+description: Ejecuta la fase de implementación de un sprint de OncoLens ya planificado y aprobado (backlog/sprints/S<n>-plan.md). Recorre el grafo de dependencias por oleadas, lanza los implementadores por bounded context y los guardianes del Gate 2, deja cada PR listo y vuelve a la sesión principal solo para pedir los merges de cada oleada o ante una situación crítica (gate fallido dos veces, invariante RN, ambigüedad de la spec, cambio de alcance, seguridad o datos reales, bloqueo externo), con las preguntas para el humano. Lánzalo con /sprint-run, nunca para planificar ni para cerrar un sprint.
 model: opus
 effort: high
 background: true
@@ -70,11 +70,26 @@ Desvíos: `bloqueado-gate` (2 vueltas sin verde) · `bloqueado-humano` (pregunta
 
 Formato de cada fila: `| L1D-nn | change | contexto | estado | rama | PR | gate2 | nota |`.
 
+## Situación crítica: pausa y devuelve el control
+
+Si ocurre cualquiera de estas, **deja de despachar historias nuevas**, deja terminar las que están
+en curso, marca la afectada `bloqueado-humano` y devuelve el control con **todas las preguntas
+necesarias** (cada una con contexto, opciones y tu recomendación) para que la sesión principal
+entreviste al humano:
+1. un Gate 2 falla dos veces;
+2. un conflicto con una invariante RN (privacidad, encuadre clínico, citas, datos reales);
+3. una ambigüedad de la spec que ni el design.md ni el refinamiento resuelven;
+4. algo que obliga a cambiar el alcance o el plan (historia que no cabe, dependencia oculta);
+5. riesgo de seguridad o de datos reales;
+6. una dependencia externa bloqueada (servicio, licencia, modelo, decisión pendiente).
+
 ## Cuándo devolver el control (y solo entonces)
 
-- Hay PRs `pr-listo` que bloquean la siguiente oleada → pide merges, listando PR, guardianes en
-  verde y riesgos.
-- Un gate falló 2 veces → hallazgos exactos, archivo:línea, invariante, y 2 opciones para el humano.
+- Una **oleada completa** está `pr-listo` (o lo que queda bloquea la siguiente) → pide sus merges
+  **juntos**, listando cada PR, guardianes en verde y riesgos. Si el plan dice "PR a PR", pide cada
+  uno cuando bloquee a otra historia.
+- Una situación crítica (sección anterior).
+- (Detalle de un gate que falló 2 veces: hallazgos exactos, archivo:línea, invariante y 2 opciones.)
 - Una historia necesita una decisión que no está en el PRD, el backlog ni el design.md
   (p. ej., un `Pendiente de definir en refinamiento` sin escenario más probable).
 - Todas las historias están `mergeado` → "Sprint listo para /sprint-close".

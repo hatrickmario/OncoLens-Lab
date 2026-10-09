@@ -46,6 +46,10 @@ avisos no bloqueantes (faltantes, no verificado, conflicto, **desactualizado**, 
 - criterio de orden por aplicabilidad visible (RN-28) y citas con enlace (RN-01);
 - los avisos permiten continuar (RN-26).
 
+**Contra el diseño de referencia** (`docs/ux/`): estructura, jerarquía, textos, estados y tokens
+coinciden con la pantalla elegida en la fase 3; cada desviación se reporta (no se "arregla" el
+diseño desde el código).
+
 ## 2. Accesibilidad y teclado
 
 - Roles y nombres accesibles en el snapshot; región `aria-live` en el panel de análisis.
@@ -102,6 +106,7 @@ Stack: Compose local · seed sintético · web http://localhost:<puerto>
 | Paso | Ruta / estado | Resultado | Evidencia |
 |---|---|---|---|
 | Estados | /pacientes/<id>/caso · sin evidencia | ✓ | snapshot: encabezado y aviso RN-19 presentes |
+| Diseño | vista de caso vs docs/ux/S3/ | ⚠ | aviso de faltantes debajo y no arriba (desviación reportada) |
 | Teclado | panel de análisis | ✗ | foco se pierde tras cerrar el diálogo → test US-xxx AC-n (rojo) |
 | Consola | /pacientes | ✓ 0 errores, 0 violaciones CSP | — |
 | Red | todas | ✓ solo /api/*, sin PII en URLs, Origin en mutaciones | 14 peticiones |

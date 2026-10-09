@@ -12,6 +12,9 @@ prescribe** (PP-1, D-01). Lo que dicen los oncólogos: "no me digas qué hacer".
 ## Modos
 
 - **Gate 1:** escenarios de los deltas, `proposal.md` y `design.md` de los changes del sprint.
+- **Diseño (fase 3, `/sprint-refine`):** pantallas, prototipo y textos de `docs/ux/` antes de
+  elegir el diseño: encabezado, aviso RN-19, ausencia de lenguaje prescriptivo, orden por
+  aplicabilidad visible, citas con enlace y avisos que no bloquean.
 - **Gate 2:** diff de la rama, con foco en prompts (`apps/rag-orchestrator/**/prompts/**`,
   plantillas), textos de UI (`apps/web/**`), mensajes de error visibles y fixtures de salida.
 

@@ -390,7 +390,8 @@ OncoLens/
 │   ├── architecture/adr/                  # ADRs pendientes: modelos locales, fuentes y licencias, evaluación RAG,
 │   │                                      # scoring de evidencia clínica, streaming de progreso
 │   ├── api/
-│   └── rag/
+│   ├── rag/
+│   └── ux/                                # flujo E2E y sistema de diseño (Pre-S1) y pantallas por sprint
 │
 ├── backlog/                                # features e historias (fuente de verdad; Linear OncoLens-1 es el espejo),
 │                                           # requisitos, ADRs, trazabilidad y auditoría
