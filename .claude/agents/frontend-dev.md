@@ -24,10 +24,42 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
 3. **/opsx:apply `<change>`**, solo las tareas de `## frontend`.
 4. **Test primero** por AC: componentes con Vitest + Testing Library; recorridos con Playwright
    contra Compose y **fixtures sintéticos sembrados**; tag `US-xxx AC-n` en el nombre.
-5. Verde local: tests, `tsc --noEmit`, lint, `openspec validate <change> --strict`,
+5. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
+   commit aparte `refactor(L1D-<nn>): …`.
+6. Verde local: tests, `tsc --noEmit`, lint, `openspec validate <change> --strict`,
    **/opsx:verify `<change>`**.
-6. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, comandos y
+7. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
    resultado, capturas o descripción de estados de UI, desviaciones del design.md.
+
+## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
+
+Después de que los tests de los AC estén en verde y **antes** de la verificación final, revisa
+solo los archivos que tocó el change y aplica, sin cambiar comportamiento:
+
+**Extract Method** cuando un fragmento necesita un comentario para entenderse, hay lógica
+duplicada, un método mezcla niveles de abstracción o supera el umbral del linter.
+El método extraído lleva un nombre del dominio en español que diga *qué* hace, no *cómo*.
+
+**Inline Method** cuando el cuerpo es tan claro como el nombre, el método solo reenvía la
+llamada a otro dentro de la misma capa (*middle man*) o es una abstracción especulativa sin
+un segundo uso.
+
+Reglas:
+- Tests en verde antes **y** después de cada refactor; si un test cambia, no era un refactor.
+- Commit separado `refactor(L1D-<nn>): <qué y por qué>` después del commit de comportamiento,
+  para que el Gate 2 distinga ambos.
+- Solo en los archivos del change; un refactor fuera de su alcance se reporta, no se hace.
+- Si no hubo nada que refactorizar, dilo en tu reporte final ("refactor: sin cambios").
+- Reporta cada refactor como `Extract|Inline · archivo:método · motivo`.
+
+En frontend:
+- **Extrae** componentes siguiendo Atomic Design cuando un componente pasa del umbral del linter
+  o repite marcado: átomos y moléculas reutilizables (`AvisoIA`, `CitaVerificable`,
+  `EstadoCriterio`).
+- Extrae a hooks o funciones puras la lógica de presentación (agrupar criterios por estado,
+  formatear vigencia) para probarla sin renderizar.
+- **Inline Method** para componentes o hooks que solo reenvían props sin añadir comportamiento.
+- Los textos obligatorios (RN-19, RN-23) siguen saliendo de configuración también tras el refactor.
 
 ## Reglas de UI que no se negocian
 

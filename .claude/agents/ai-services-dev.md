@@ -35,10 +35,47 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 5. Si cambiaste modelo, prompt, umbral, catálogo o corpus: la tarea `## evaluación` es obligatoria;
    el orquestador lanzará `ai-eval-runner` en el Gate 2. Deja el dataset sintético listo.
 6. Si cambiaste un schema Pydantic o el OpenAPI: corre la skill `sync-contracts`.
-7. Verde local: `pytest`, `mypy`/`ruff` si están configurados, `openspec validate <change> --strict`
+7. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
+   commit aparte `refactor(L1D-<nn>): …`.
+8. Verde local: `pytest`, `mypy`/`ruff` si están configurados, `openspec validate <change> --strict`
    y **/opsx:verify `<change>`**.
-8. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, comandos y
+9. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
    resultado, desviaciones del design.md.
+
+## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
+
+Después de que los tests de los AC estén en verde y **antes** de la verificación final, revisa
+solo los archivos que tocó el change y aplica, sin cambiar comportamiento:
+
+**Extract Method** cuando un fragmento necesita un comentario para entenderse, hay lógica
+duplicada, un método mezcla niveles de abstracción o supera el umbral del linter.
+El método extraído lleva un nombre del dominio en español que diga *qué* hace, no *cómo*.
+
+**Inline Method** cuando el cuerpo es tan claro como el nombre, el método solo reenvía la
+llamada a otro dentro de la misma capa (*middle man*) o es una abstracción especulativa sin
+un segundo uso.
+
+Reglas:
+- Tests en verde antes **y** después de cada refactor; si un test cambia, no era un refactor.
+- Commit separado `refactor(L1D-<nn>): <qué y por qué>` después del commit de comportamiento,
+  para que el Gate 2 distinga ambos.
+- Solo en los archivos del change; un refactor fuera de su alcance se reporta, no se hace.
+- Si no hubo nada que refactorizar, dilo en tu reporte final ("refactor: sin cambios").
+- Reporta cada refactor como `Extract|Inline · archivo:método · motivo`.
+
+En ai-services:
+- **Extrae** toda regla pura a `app/domain/` como función sin I/O, probada sin adapters:
+  `aplicar_umbral_relevancia()` (RN-02), `ordenar_por_aplicabilidad()` (RN-28),
+  `validar_citas_contra_chunks()` (RN-01, RN-04), `normalizar_relevance_score()` (RN-03).
+  Si una de estas reglas aparece dentro de un servicio de `application/` o de un adapter, es
+  señal de Extract Method.
+- Extrae de los servicios de orquestación cada etapa del pipeline (recuperar → reranquear →
+  umbral → generar → validar) a un método por etapa: facilita medir latencias y aislar fallos.
+- **Inline Method** para envoltorios de adapters que solo reenvían al cliente subyacente sin
+  añadir traducción, reintento ni validación. **No inlinees los adapters ni los puertos**: la
+  frontera hexagonal permite usar adapters falsos en los tests.
+- No cambies prompts, umbrales ni catálogos durante el refactor: eso no es un refactor y exige
+  evaluación (OL-06).
 
 ## Invariantes que tu código hace cumplir
 

@@ -33,13 +33,48 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 4. **Test primero** por cada AC: Vitest (unitario de services) o Supertest (integración de API),
    con el tag `US-xxx AC-n` en el nombre. Luego la implementación.
 5. Si cambiaste un endpoint o un schema: corre la skill `sync-contracts`.
-6. Verde local: tests del contexto, `tsc --noEmit`, lint, `openspec validate <change> --strict` y
+6. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
+   commit aparte `refactor(L1D-<nn>): …`.
+7. Verde local: tests del contexto, `tsc --noEmit`, lint, `openspec validate <change> --strict` y
    **/opsx:verify `<change>`**.
-7. Commit(s) con mensaje `[L1D-<nn>] …` y la línea de atribución; `git push -u origin <rama>`.
-8. Devuelve: rama, tareas completadas, tests añadidos (por AC), comandos ejecutados con su
+8. Commit(s) con mensaje `[L1D-<nn>] …` y la línea de atribución; `git push -u origin <rama>`.
+9. Devuelve: rama, tareas completadas, tests añadidos (por AC), refactors aplicados, comandos ejecutados con su
    resultado y cualquier desviación del design.md.
 
 Para explorar el código usa Explore (nivel 3) en lugar de leer módulos enteros.
+
+## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
+
+Después de que los tests de los AC estén en verde y **antes** de la verificación final, revisa
+solo los archivos que tocó el change y aplica, sin cambiar comportamiento:
+
+**Extract Method** cuando un fragmento necesita un comentario para entenderse, hay lógica
+duplicada, un método mezcla niveles de abstracción o supera el umbral del linter.
+El método extraído lleva un nombre del dominio en español que diga *qué* hace, no *cómo*.
+
+**Inline Method** cuando el cuerpo es tan claro como el nombre, el método solo reenvía la
+llamada a otro dentro de la misma capa (*middle man*) o es una abstracción especulativa sin
+un segundo uso.
+
+Reglas:
+- Tests en verde antes **y** después de cada refactor; si un test cambia, no era un refactor.
+- Commit separado `refactor(L1D-<nn>): <qué y por qué>` después del commit de comportamiento,
+  para que el Gate 2 distinga ambos.
+- Solo en los archivos del change; un refactor fuera de su alcance se reporta, no se hace.
+- Si no hubo nada que refactorizar, dilo en tu reporte final ("refactor: sin cambios").
+- Reporta cada refactor como `Extract|Inline · archivo:método · motivo`.
+
+En clinical-platform:
+- **Extrae** a métodos con nombre propio las reglas que los guardianes deben verificar en un solo
+  lugar: `desidentificarContexto()` (RN-11), `persistirAnalisisAntesDeResponder()` (RN-06),
+  `resolverConflictoDeDiagnostico()` (RN-08), `verificarOrigen()` en los Route Handlers. Una
+  invariante repartida en varios métodos es difícil de auditar.
+- Extrae de los controllers toda lógica que no sea traducir HTTP ↔ service; los controllers
+  quedan delgados.
+- **Nunca colapses capas con Inline Method:** un Service que solo llama al Repository se queda,
+  porque Controller → Service → Repository es una decisión de arquitectura. Inline se aplica
+  *dentro* de una capa (helpers triviales, envoltorios sin valor de un mismo módulo).
+- Los schemas Zod no se "inlinean" en el controller: viven en `*.schema.ts`.
 
 ## Invariantes que tu código hace cumplir
 

@@ -96,6 +96,8 @@ rules:
   tasks:
     - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
     - "Para cada AC, primero la tarea del test (con el tag US-xxx AC-n) y luego la implementación."
+    - "Cada sección de bounded context termina con una tarea '- [ ] Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-<nn>)'."
+    - "Si el design.md ya prevé extraer una regla de dominio (umbral, orden por aplicabilidad, desidentificación, validación de citas), nómbrala como tarea explícita: 'Extraer <nombreDelMetodo>() (RN-xx)'."
     - "Termina con: openspec validate <change> --strict, tests del contexto en verde, sync-contracts si hubo cambios de API, run-ai-eval si aplica."
 
 operations:
@@ -104,6 +106,9 @@ operations:
       - "Trabaja solo dentro de los paths del bounded context asignado; si una tarea toca otro contexto, detente y repórtalo al orquestador."
       - "Corre primero los tests focalizados del AC y después la suite del contexto; no marques una tarea [x] con tests en rojo."
       - "Usa solo datos sintéticos y fixtures declarados; nunca crees datos reales ni secretos."
+      - "Ciclo rojo → verde → refactor: con los tests en verde, aplica Extract Method (fragmento que necesita comentario, lógica duplicada, niveles de abstracción mezclados, umbral del linter superado) e Inline Method (cuerpo tan claro como el nombre, middle man dentro de la misma capa, abstracción especulativa sin segundo uso)."
+      - "El refactor no cambia comportamiento ni tests, se limita a los archivos del change y va en un commit aparte refactor(L1D-<nn>). Nunca colapses capas (Controller → Service → Repository) ni puertos/adapters con Inline Method."
+      - "Extrae a un método con nombre propio cada invariante que un guardián debe verificar (RN-01, RN-02, RN-06, RN-08, RN-11, RN-28), para que viva y se pruebe en un solo lugar."
       - "Al terminar, ejecuta openspec validate <change> --strict."
   archive:
     guidance:
