@@ -1,3 +1,5 @@
 .DS_Store
 reports/visual/
 .playwright-mcp/
+reports/tdd-guard/
+.claude/tdd-guard/

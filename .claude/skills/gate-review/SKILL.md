@@ -36,7 +36,14 @@ explícita de señalar contradicciones **entre** changes del lote.
    salida en rojo y en verde. Si falta → FAIL (Mayor), salvo historias sin código (`DEC`, `ADR`).
 6. **Contract-first:** si el diff toca una API, `contract-keeper` corre siempre y verifica que el
    commit `contract(L1D-<nn>)` precede a los de test e implementación.
-7. **Loop visual:** si el diff toca la UI de `apps/web` (fuera de `app/api/`), el reporte del
+7. **Higiene de tests:** sobre `git diff origin/main...origin/$target`:
+   - un test eliminado, desactivado (`.skip`, `.only`, `xit`, `it.todo`, `@pytest.mark.skip`,
+     `xfail`) o con aserciones relajadas → **Mayor**, salvo que el commit lleve
+     `Test-Removal: <motivo>` **y** el AC haya cambiado en los deltas del change;
+   - nombres que no describen comportamiento o sin `[US-xxx AC-n]` → **Menor**;
+   - `vi.mock` de módulos propios o de Prisma, o el LLM real fuera de la suite `evaluate` → lo
+     reporta `design-principles-reviewer` (hallazgo 7, «Mock fuera del borde»).
+8. **Loop visual:** si el diff toca la UI de `apps/web` (fuera de `app/api/`), el reporte del
    implementador incluye el bloque `## visual-check` con PASS, o PENDIENTE con motivo válido (sin
    stack todavía). Falta el bloque o es FAIL → **Mayor**. Pasa la sección **Red** del reporte a
    `privacy-guardian` y la de **Estados** a `clinical-language-auditor` como evidencia; ellos

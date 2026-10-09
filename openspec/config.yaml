@@ -34,7 +34,7 @@ context: |
     backends; Backend 2 responde 409 si la versión difiere.
   - LLM nativo (Ollama o vLLM con Metal) fuera de Docker, API compatible con OpenAI.
   - Infra: Docker Compose (redes clinical-net, ai-net, corpus-db-net). Solo `web` publica puerto.
-  - Tests: Vitest + Supertest (+ StrykerJS si hay capacidad) en clinical-api; Pytest + TestClient
+  - Tests: Vitest + Supertest (StrykerJS con US-185, S6 si hay capacidad) en clinical-api; Pytest + TestClient
     con adapters falsos en rag-orchestrator; Playwright E2E contra Compose con datos sintéticos;
     en la UI, loop visual del implementador (skill visual-check, Playwright MCP + Chrome DevTools
     MCP, solo localhost y seed sintético) como evidencia del Gate 2, no como sustituto de los E2E;
@@ -53,6 +53,9 @@ context: |
   - No se usa consumer-driven (Pact): un solo equipo, dos consumidores conocidos y contrato
     congelado en Pre-S1; provider-driven + generación de clientes da la misma garantía sin broker.
   - TDD con evidencia por AC: commit test(L1D-nn) en rojo → feat(L1D-nn) en verde → refactor(L1D-nn).
+    Un test a la vez, el más simple primero; nunca se borra ni se desactiva un test en rojo.
+    Niveles: unitario (fakes en los puertos), integración (BD real de test, MSW/respx en el HTTP
+    saliente, handlers desde contracts/examples), E2E (Playwright). Mocks solo en los bordes.
     Secuencia de commits de un change con API: contract → test → feat → refactor.
 
   Invariantes que ningún change puede violar (PRD §6):
@@ -115,7 +118,8 @@ rules:
   tasks:
     - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
     - "Si el change toca una API, la PRIMERA tarea es '## contratos': editar el openapi.yaml del proveedor y sus ejemplos, contracts:check, contracts:breaking, contracts:generate y commit contract(L1D-<nn>); ninguna tarea de test o código del endpoint va antes."
-    - "Para cada AC, primero la tarea del test en rojo (con el tag US-xxx AC-n y commit test(L1D-<nn>)) y luego la implementación (commit feat(L1D-<nn>))."
+    - "Para cada AC, primero la tarea del test en rojo (con el tag US-xxx AC-n y commit test(L1D-<nn>)) y luego la implementación (commit feat(L1D-<nn>)). Si el AC necesita varios tests, una tarea por test, del caso más simple al más complejo."
+    - "Cada tarea de test nombra el comportamiento y su nivel: '<resultado> cuando <escenario> [US-xxx AC-n] · unitario|integración|E2E'. Mocks solo en los bordes (HTTP saliente, LLM, OCR, MinIO, nube); nunca módulos propios ni Prisma."
     - "Los tests de integración de cada endpoint validan la respuesta contra el spec del proveedor (verificación del proveedor, US-214), incluidos los códigos de error."
     - "Cada sección de bounded context termina con una tarea '- [ ] Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-<nn>)'."
     - "Si el change toca la UI de apps/web, la sección '## frontend' incluye, después de los AC en verde y antes del refactor, la tarea '- [ ] Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo'."
@@ -129,6 +133,7 @@ operations:
       - "Contract-first: si el change toca una API, edita y valida el openapi.yaml del proveedor y regenera lo generado (skill sync-contracts) antes de escribir tests o código del endpoint."
       - "TDD con evidencia: cada test se ejecuta y falla por la razón esperada antes de implementar; commit test(L1D-<nn>) en rojo, luego feat(L1D-<nn>) en verde. Guarda la salida en rojo y en verde para el reporte."
       - "Corre primero los tests focalizados del AC y después la suite del contexto; no marques una tarea [x] con tests en rojo."
+      - "Un test a la vez: escribe el más simple, velo fallar, implementa el mínimo, velo pasar. Nunca borres, desactives (.skip, .only, xfail) ni debilites un test en rojo; si su AC cambió en la spec, el commit lleva 'Test-Removal: <motivo>'."
       - "Usa solo datos sintéticos y fixtures declarados; nunca crees datos reales ni secretos."
       - "Ciclo rojo → verde → refactor: con los tests en verde, aplica Extract Method (fragmento que necesita comentario, lógica duplicada, niveles de abstracción mezclados, umbral del linter superado) e Inline Method (cuerpo tan claro como el nombre, middle man dentro de la misma capa, abstracción especulativa sin segundo uso)."
       - "El refactor no cambia comportamiento ni tests, se limita a los archivos del change y va en un commit aparte refactor(L1D-<nn>). Nunca colapses capas (Controller → Service → Repository) ni puertos/adapters con Inline Method."

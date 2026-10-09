@@ -85,7 +85,8 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `PreToolUse` Edit/Write | `guard-sensitive-paths.sh` | Bloquea `.env`, claves, certificados y rutas de datos reales |
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
 | `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, que incluye los schemas Zod compartidos en `src/zod/`, y `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
-| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged + `openspec validate --all --strict` |
+| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged · **higiene de tests**: bloquea `.skip`/`.only`/`xit`/`xfail` añadidos y tests eliminados sin el *trailer* `Test-Removal:` (mover un test no cuenta) · `openspec validate --all --strict` |
+| `PreToolUse` Write/Edit, **solo en `clinical-platform-dev`** (frontmatter) | `tdd-guard-pilot.sh` | Piloto de TDD Guard en el S1: bloquea implementación sin test en rojo y registra decisión y latencia en `reports/tdd-guard/pilot.jsonl`; inactivo si `tdd-guard` no está instalado |
 | `PreToolUse` `mcp__playwright__*`, `mcp__chrome-devtools__*` | `guard-visual-loop.sh` | Loop visual solo contra `localhost`/`127.0.0.1` y nunca con `REAL_ANONYMIZED_ENABLED`/`REAL_IDENTIFIED_ENABLED` activos (entorno o `.env`) |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es
@@ -145,6 +146,38 @@ Reglas:
 
 Secuencia de commits de un change con API: `contract → test → feat → refactor`. `contract-keeper`
 la verifica en el Gate 2.
+
+## TDD: política, niveles y piloto de TDD Guard
+
+La política vive en `CLAUDE.md` (Política TDD) y la aplican cuatro capas, de la más barata a la más cara:
+
+| Capa | Qué impide | Cómo |
+|---|---|---|
+| `pre-commit-gate.sh` (determinista, local) | Desactivar o borrar tests para pasar la suite | Bloquea el commit; `Test-Removal: <motivo>` solo si el AC cambió en la spec |
+| Lint de tests en la CI (US-213) | Lo mismo en la CI, nombres sin `[US-xxx AC-n]` y `vi.mock` de módulos propios | `@vitest/eslint-plugin`, `no-restricted-syntax`, `flake8-pytest-style` y un chequeo de marcadores |
+| `gate-review` (Gate 2) | Orden `test → feat`, rojo y verde con evidencia, higiene, nombres | Evidencia del implementador + diff; mocks fuera del borde los reporta `design-principles-reviewer` (hallazgo 7) |
+| Piloto TDD Guard (S1, `clinical-platform-dev`) | Implementar sin test en rojo o más de lo que pide el test, **mientras se edita** | Hook de su frontmatter; un modelo valida cada edición |
+
+**Por qué TDD Guard solo como piloto:** es el único control que actúa durante la edición y no
+después, pero añade una llamada a un modelo por edición y su propio README recomienda empezar con
+su sucesor, Probity, cuyas instrucciones de TDD aún son más básicas. El piloto mide si su valor
+compensa la latencia y los falsos positivos; la retro del S1 decide (`sprint-close`, paso 5).
+
+Montaje del piloto (una vez por máquina y en el primer change de `clinical-api` que cree
+`vitest.config.ts`):
+
+```bash
+npm install -g tdd-guard
+npm install --save-dev tdd-guard-vitest   # en apps/clinical-api
+```
+
+En `apps/clinical-api/vitest.config.ts`, el reporter con la raíz **calculada** (cada worktree tiene
+otra ruta): `reporters: ['default', ['tdd-guard-vitest', { projectRoot: path.resolve(__dirname, '../..') }]]`.
+Valida con el modelo por defecto de TDD Guard a través del SDK de Claude Code (sin API key aparte).
+Sus datos (`.claude/tdd-guard/`) y las métricas del piloto (`reports/tdd-guard/`) están en `.gitignore`.
+
+**Mutation testing:** StrykerJS sobre auth, autorización y cifrado es US-185 (S6, si hay capacidad,
+PRD B-13 y G-10); no se adelanta sin decisión de planning.
 
 ## Revisión de diseño (SOLID y CUPID)
 

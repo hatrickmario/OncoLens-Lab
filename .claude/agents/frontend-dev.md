@@ -44,10 +44,16 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
      **falla por la razón esperada** (no por un error de compilación o de import). Commit
      `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
    - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
-   - Repite por cada AC; puedes agrupar en un commit los tests en rojo de varios AC si
-     comparten fixture.
-   Componentes con Vitest + Testing Library usando los **ejemplos del contrato**
-   (`contracts/examples/`) como datos de prueba; recorridos con Playwright contra Compose y
+   - **Un test a la vez:** empieza por el caso más simple del AC y triangula con el siguiente;
+     nunca acumules varios tests en rojo. Repite por cada AC.
+   - Nunca borres, desactives (`.skip`, `.only`, `xfail`) ni debilites un test en rojo para pasar
+     la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
+   - **Nombres** que describen comportamiento: `it('<resultado> cuando <escenario> [US-xxx AC-n]')`
+     (en Pytest, `test_<unidad>_<escenario>_<resultado>` + `@pytest.mark.ac`). **Mocks solo en los
+     bordes** (HTTP saliente, LLM, OCR, MinIO, nube); nunca módulos propios ni Prisma
+     (`CLAUDE.md`, Política TDD).
+   Componentes con Vitest + Testing Library y **MSW** sobre `/api/*`, con handlers construidos desde
+   los **ejemplos del contrato** (`contracts/examples/`); nunca `vi.mock` de hooks o módulos propios; recorridos con Playwright contra Compose y
    **fixtures sintéticos sembrados**.
 5. **Loop visual** (skill `visual-check`) si el change toca la UI: con los AC en verde, recorre en
    un navegador real (Playwright MCP + Chrome DevTools MCP) los estados, la consola, la red, la

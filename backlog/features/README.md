@@ -68,7 +68,7 @@
 | US-035 | Los secretos y certificados se generan con scripts y nunca se versionan | FEAT-PL1 | 1 | 3 | sí |
 | US-036 | La CI valida build, contratos y bloquea secretos y PII en el repositorio | FEAT-PL1 | 1 | 5 | sí |
 | US-037 | Toda configuración calibrable vive en variables validadas al arranque y los logs salen en JSON con `traceId` | FEAT-PL1 | 2 | 3 | sí |
-| US-213 | La CI aplica umbrales de tamaño y complejidad y reglas de dependencias entre capas en los dos backends y en `web` | FEAT-PL1 | 1 | 5 | sí |
+| US-213 | La CI aplica umbrales de tamaño y complejidad, reglas de dependencias entre capas y la higiene de tests (TDD) en los dos backends y en `web` | FEAT-PL1 | 1 | 5 *(re-estimar)* | sí |
 | US-214 | Cada backend verifica sus respuestas contra su propio contrato OpenAPI y los consumidores solo usan clientes generados | FEAT-PL1 | 1 | 3 | sí |
 | US-215 | Lint base y formato automático: ESLint con reglas de TypeScript, React, Next.js y accesibilidad, Prettier y `ruff format` | FEAT-PL1 | 1 | 2 | sí |
 | US-216 | `web` envía cabeceras de seguridad, impide el clickjacking y no expone secretos ni HTML sin sanitizar | FEAT-PL1 | 1 | 3 | sí |
@@ -507,7 +507,7 @@ Proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`. El Markdown es la fuente; Linea
 
 **US-214** (FEAT-PL1, S1, 3 puntos, 2026-10-08): verificación del proveedor contra su propio `openapi.yaml`, generado sin drift y cambios incompatibles con oasdiff (contract-first, provider-driven). Publicada en Linear como [L1D-264](https://linear.app/l1der-lab-mjbc/issue/L1D-264) (sub-issue de L1D-30, milestone Sprint 1, 3 puntos, `recorrido-principal`, relacionada con L1D-55, L1D-166 y L1D-263).
 
-**US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Publicada en Linear como [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (sub-issue de L1D-30, milestone Sprint 1, 5 puntos, labels `recorrido-principal` y `needs-refinement` por los umbrales pendientes).
+**US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Publicada en Linear como [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (sub-issue de L1D-30, milestone Sprint 1, 5 puntos, labels `recorrido-principal` y `needs-refinement` por los umbrales pendientes). **Ampliada el 2026-10-09** con AC-8…AC-10 (higiene de tests, nombres y mocks solo en los bordes con MSW/`respx`); la estimación se revisa en el planning del S1 (propuesta: 8), sin cambiar el total del S1 hasta entonces.
 
 
 Historias nuevas de los ajustes del usuario del 2026-10-07: **US-211** (FEAT-T4a, S1, división de US-044) y **US-212** (FEAT-01a, S3, extraída de US-080). DEC nuevas del lote 4: **DEC-20** (US-208, criterio de "listo" de CAP-12). Último DEC: DEC-20. Último ADR del backlog: ADR-44 (ADR-7 es anterior y Futuro).

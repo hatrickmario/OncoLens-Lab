@@ -54,14 +54,18 @@ Si US-213 aún no está mergeada, dilo en el reporte y revisa esas reglas a mano
    dentro de un Service, de `domain/` o de un componente de UI, en lugar de un puerto inyectado.
 6. **Fake que no sustituye al real** (SOLID *LSP*): un adapter falso con otro contrato
    (devuelve `0.0` donde el real devuelve `null`, no lanza los mismos errores, ignora el orden).
-7. **Condicionales por tipo** (SOLID *OCP*): `if/switch` sobre tipo de cáncer, tipo de fuente o
+7. **Mock fuera del borde** (*Predictable*, DIP): `vi.mock` de un módulo propio, de un Service o
+   de Prisma, o un `patch` de una función de `app/domain/`: el test pasa aunque el código real esté
+   roto, y el siguiente agente lo copia. Refactor mínimo: inyectar el puerto y usar el fake del
+   borde, o dejar real lo determinista.
+8. **Condicionales por tipo** (SOLID *OCP*): `if/switch` sobre tipo de cáncer, tipo de fuente o
    estado repartidos por el código, en lugar de catálogo o configuración (RN-20, RN-22).
 
 **P3 · fricción:**
-8. **No idiomático** (CUPID *Idiomatic*): se aparta de las convenciones del repo (camelCase en
+9. **No idiomático** (CUPID *Idiomatic*): se aparta de las convenciones del repo (camelCase en
    Python, errores de Express fuera del middleware, componentes fuera de Atomic Design).
-9. **Interfaz ancha** (SOLID *ISP*): repositorios o puertos con métodos que sus clientes no usan.
-10. **No componible** (CUPID *Composable*, *Unix philosophy*): banderas booleanas, más de
+10. **Interfaz ancha** (SOLID *ISP*): repositorios o puertos con métodos que sus clientes no usan.
+11. **No componible** (CUPID *Composable*, *Unix philosophy*): banderas booleanas, más de
     4 parámetros posicionales, funciones que hacen varias cosas que no se pueden usar por separado.
 
 ## Frontend (`apps/web`): tamaño, conceptos y patrones

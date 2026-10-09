@@ -163,18 +163,19 @@ corpus es de US-074. *Mutation testing* (S6).
 
 ---
 
-## US-213 — La CI aplica umbrales de tamaño y complejidad y reglas de dependencias entre capas en los dos backends y en `web`
+## US-213 — La CI aplica umbrales de tamaño y complejidad, reglas de dependencias entre capas y la higiene de tests (TDD) en los dos backends y en `web`
 
 > Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
 
-`FEAT-PL1` · Sprint 1 · Estimación **5** · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI) · 🔗 Consumida por: `design-principles-reviewer` (Gate 2) y el paso de refactor de los implementadores (`.claude/`)
+`FEAT-PL1` · Sprint 1 · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-10 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
 detecten de forma determinista las funciones demasiado largas o complejas y las
-dependencias que cruzan capas prohibidas, para que la revisión de SOLID y CUPID se apoye
-en evidencia reproducible y no solo en el criterio de un modelo, y para que ningún agente
-copie un acoplamiento indebido.
+dependencias que cruzan capas prohibidas, y que la suite de tests no pueda debilitarse en
+silencio ni mockear lo que no es un borde, para que la revisión de SOLID y CUPID y la Política
+TDD se apoyen en evidencia reproducible y no solo en el criterio de un modelo, y para que ningún
+agente copie un acoplamiento indebido ni un test que no prueba nada.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado el monorepo con el código del S1, cuando se ejecuta
@@ -216,6 +217,26 @@ copie un acoplamiento indebido.
   **falla** nombrando el archivo, el valor medido y el umbral. `apps/web/components/ui/**`
   (primitivas de shadcn), tests, stories y código generado quedan excluidos, y los componentes
   no se miden con `max-lines-per-function`. `[NFR-13]` `[RN-22]`
+- **AC-8 (borde · tests desactivados o enfocados)** · Dado un PR que añade `it.skip`, `it.only`,
+  `describe.skip`, `xit`, `fit`, `it.todo` sin `[US-xxx AC-n]`, `@pytest.mark.skip`,
+  `@pytest.mark.xfail`, `pytest.skip(` o `pytest.xfail(` en un archivo de test, cuando corre el job
+  `quality`, entonces falla nombrando el archivo, la línea y la regla (`vitest/no-focused-tests`,
+  `vitest/no-disabled-tests` o el chequeo `tests-sin-desactivar` de Python). `[NFR-13]`
+  `[CLAUDE.md Política TDD]`
+- **AC-9 (borde · nombres de tests)** · Dado un test de Vitest cuyo título no termina en
+  `[US-xxx AC-n]`, o un test de Pytest sin `@pytest.mark.ac`, cuando corre el job `quality`,
+  entonces emite una **alerta** en `reports/quality/latest.json` (no falla) con el archivo y el
+  título; los tests de infraestructura sin AC usan `[infra]` y no alertan. `[NFR-13]` (asumido:
+  alerta y no error hasta la retro del S1)
+- **AC-10 (borde · mocks fuera del borde)** · Dado un test de `web` o `clinical-api` que llama
+  `vi.mock` sobre una ruta relativa (`./`, `../`), un alias propio (`@/`, `@oncolens/`) o
+  `@prisma/client`, cuando corre el job `quality`, entonces falla con la regla
+  `mock-solo-en-bordes` y el módulo; `vi.mock` de paquetes de terceros que son borde (clientes
+  HTTP, SDK de MinIO) se permite. Y dado el arnés de tests, cuando un test de integración de
+  `web` o de `clinical-api` necesita el HTTP saliente, entonces usa los handlers de MSW
+  construidos desde `contracts/examples/` (`packages/test-support/msw/`), y en `rag-orchestrator`
+  los de `respx` (`tests/support/http.py`), de modo que un handler con un campo que no existe en
+  el ejemplo hace fallar su propio test. `[NFR-13]` `[ADR-26]`
 
 ## Contexto técnico
 - **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`
@@ -237,15 +258,32 @@ copie un acoplamiento indebido.
 - **Salida para agentes:** `reports/quality/latest.json` (ignorado por git) es la entrada
   determinista que `design-principles-reviewer` lee antes de opinar; formato
   `{tool, rule, file, line, symbol, measured, threshold}`.
-- AC-2 a AC-5 se verifican con fixtures de PR en `ci/tests/quality/` (un archivo que viola
-  cada regla), en una rama de la CI, no en `main`, igual que US-036.
+- **Higiene y nombres de tests (Node):** `@vitest/eslint-plugin` con `no-focused-tests`,
+  `no-disabled-tests` y `valid-title` (patrón `\[(US-\d+ AC-\d+|infra)\]$`, nivel `warn`);
+  `no-restricted-syntax` para `mock-solo-en-bordes` sobre `vi.mock` con rutas propias o
+  `@prisma/client`.
+- **Higiene y nombres de tests (Python):** Ruff con `PT` (`flake8-pytest-style`) y un chequeo
+  `scripts/quality/check-pytest-hygiene.py` (marcadores `skip`/`xfail` y tests sin
+  `@pytest.mark.ac`) que escribe en `reports/quality/latest.json`; el marcador `ac` se registra
+  en `pyproject.toml` (`--strict-markers`).
+- **Arnés de mocks en los bordes:** `msw` en `web` y `clinical-api` con handlers generados o
+  construidos desde `contracts/examples/` (`packages/test-support/msw/`); `respx` en
+  `rag-orchestrator`. El PostgreSQL de test de la integración es el de US-038 (Testcontainers
+  o servicio de la CI); esta historia no lo duplica.
+- El *hook* local `pre-commit-gate.sh` (`.claude/`) aplica AC-8 antes del commit; la CI es la
+  garantía para quien no usa Claude Code.
+- AC-2 a AC-5 y AC-8 a AC-10 se verifican con fixtures de PR en `ci/tests/quality/` (un archivo
+  que viola cada regla), en una rama de la CI, no en `main`, igual que US-036.
 
 ## Non-goals
-Mutation testing (US-185, `si-hay-capacidad`). Revisión de diseño no determinista (es del
-agente `design-principles-reviewer`). ESLint base, Prettier y `ruff format` (US-215).
+Mutation testing (US-185, `si-hay-capacidad`; no se adelanta sin decisión de planning). El
+PostgreSQL de test (US-038). El piloto de TDD Guard (configuración de `.claude/`, no de la CI).
+Revisión de diseño no determinista (es del agente `design-principles-reviewer`). ESLint base,
+Prettier y `ruff format` (US-215).
 
 ## INVEST
-**Small** ✓ tres archivos de reglas, un archivo de umbrales, un job de CI y fixtures de prueba.
+**Small** ⚠ tres archivos de reglas, un archivo de umbrales, el arnés de MSW/`respx`, un job de CI
+y fixtures de prueba; si en el planning pasa de 8, dividir AC-8…AC-10 en una historia hermana.
 **Testable** ✓ cada AC es una ejecución de `npm run quality` o un PR de prueba con resultado verde o rojo y un mensaje esperado.
 
 ---

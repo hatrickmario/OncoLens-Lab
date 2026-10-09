@@ -83,7 +83,31 @@ Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales a
 
 ### Tests
 
-Vitest + Supertest + StrykerJS (*mutation* sobre auth/authz/cifrado) en `clinical-api`; Pytest + TestClient con adapters falsos en `rag-orchestrator`; Playwright E2E contra Compose con datos sintéticos; en la UI, además, `frontend-dev` se revisa a sí mismo con el loop visual (skill `visual-check`: Playwright MCP + Chrome DevTools MCP, solo `localhost` y seed sintético), que aporta evidencia pero no sustituye a los E2E. Parte del contrato, no extras: no-fuga de PII (incluida PII sembrada en texto libre, eventos, atributos y memoria de análisis), cifrado e índice ciego, CSRF/`Origin`, gate G-piloto, `403` por opt-out en toda generación con IA, `422` en registros sobre paciente egresado, clases de datos, *permission denied* del rol `rag_corpus`, un análisis previo nunca cuenta como soporte (RN-24), y lista de términos prescriptivos prohibidos (RN-23).
+Vitest + Supertest en `clinical-api` (StrykerJS, *mutation* sobre auth/authz/cifrado, llega con US-185: S6, si hay capacidad); Pytest + TestClient con adapters falsos en `rag-orchestrator`; Playwright E2E contra Compose con datos sintéticos; en la UI, además, `frontend-dev` se revisa a sí mismo con el loop visual (skill `visual-check`: Playwright MCP + Chrome DevTools MCP, solo `localhost` y seed sintético), que aporta evidencia pero no sustituye a los E2E. Parte del contrato, no extras: no-fuga de PII (incluida PII sembrada en texto libre, eventos, atributos y memoria de análisis), cifrado e índice ciego, CSRF/`Origin`, gate G-piloto, `403` por opt-out en toda generación con IA, `422` en registros sobre paciente egresado, clases de datos, *permission denied* del rol `rag_corpus`, un análisis previo nunca cuenta como soporte (RN-24), y lista de términos prescriptivos prohibidos (RN-23).
+
+### Política TDD
+
+- **Siempre Rojo → Verde → Refactor**, un test a la vez.
+- **Primero el test en rojo más simple** del AC (el caso degenerado o el camino feliz mínimo) y se triangula con el siguiente; nunca varios tests en rojo a la vez.
+- **Nunca borres, desactives ni debilites un test en rojo para que la suite pase** (`.skip`, `.only`, `xit`, `it.todo`, `@pytest.mark.skip`, `xfail`, aserciones relajadas). Un test solo cambia si su AC cambió en la spec del change; quitar uno exige el *trailer* `Test-Removal: <motivo>` en el commit y lo revisa el Gate 2.
+- **Implementa el mínimo código** que pone el test en verde. **Refactoriza solo en verde**, con los tests en verde antes y después.
+- Evidencia: commit `test(L1D-<nn>)` en rojo antes de su `feat(L1D-<nn>)`, y la salida en rojo y en verde en el reporte del implementador (lo verifica `gate-review`).
+
+| Nivel | Qué prueba | `web` | `clinical-api` | `rag-orchestrator` |
+|---|---|---|---|---|
+| Unitario | Dominio, services y lógica de presentación, sin E/S | Vitest + Testing Library | Vitest; repositorios y adapters fingidos en su puerto | Pytest; adapters falsos en los puertos |
+| Integración | La API o el componente con sus dependencias reales hasta el borde | Vitest + MSW sobre `/api/*` | Supertest + PostgreSQL real de test (US-038) + MSW hacia `rag-orchestrator` y MinIO | `TestClient` + `respx` hacia el LLM y servicios HTTP; Milvus y `corpus` reales o fakes del puerto |
+| E2E | Los recorridos del PRD §13 | Playwright contra Compose con seed sintético | ← | ← |
+
+Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213): un mock no puede divergir del contrato.
+
+**Nombres de tests:** describen comportamiento, no la función llamada. `describe('<Unidad>')` + `it('<resultado esperado> cuando <escenario> [US-xxx AC-n]')`; en Pytest, `test_<unidad>_<escenario>_<resultado>` con `@pytest.mark.ac("US-xxx", n)`. En español, como el dominio. ❌ `it('calcularUmbral works')` · ✅ `it('devuelve sin_evidencia con topRelevanceScore null cuando ningún chunk supera el umbral [US-061 AC-3]')`.
+
+**Mocks solo en los bordes arquitectónicos:** HTTP saliente (MSW, `respx`), LLM, embeddings, reranker, NLI, OCR, MinIO y la nube. **Nunca** módulos propios (`vi.mock('./…')`, `vi.mock('@/…')`) ni Prisma; lo rápido y determinista (dominio, services, validación Zod, mapeos) va real. La BD solo se finge en unitarios a través del puerto del repository; en integración es real (los tests de `rag_corpus`, cifrado e índice ciego lo exigen). Los fakes cumplen el contrato del adapter real (LSP: `null` ≠ `0.0`, mismos errores).
+
+**Mutation testing:** StrykerJS sobre auth, autorización y cifrado con US-185 (S6, si hay capacidad); hasta entonces, los tests de esas áreas los revisa `design-principles-reviewer` buscando aserciones débiles.
+
+**Piloto TDD Guard (S1):** solo en `clinical-platform-dev` (hooks en su frontmatter); se evalúa en la retro del S1 (`.claude/README.md`).
 
 **La evaluación de calidad de IA (OL-06) es obligatoria en cada PR que cambie modelo, prompt, umbral, catálogo o corpus.** Metas iniciales (a recalibrar, TBD-02): recall@10 ≥ 0,80 (≥ 0,70 es→en), MRR ≥ 0,60, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, "sin evidencia" ≥ 0,90, OCR crítico ≥ 0,95, PII ≥ 0,95, eventos ≥ 0,95, mapeo terminológico ≥ 0,95, salidas prescriptivas = 0.
 

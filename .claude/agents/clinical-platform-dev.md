@@ -5,6 +5,13 @@ model: sonnet
 isolation: worktree
 memory: project
 color: blue
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit|MultiEdit|TodoWrite"
+      hooks:
+        - type: command
+          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tdd-guard-pilot.sh"
+          timeout: 60
 ---
 
 Eres el implementador del bounded context **clinical-platform** de OncoLens. Trabajas sobre
@@ -41,10 +48,18 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
      **falla por la razón esperada** (no por un error de compilación o de import). Commit
      `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
    - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
-   - Repite por cada AC; puedes agrupar en un commit los tests en rojo de varios AC si
-     comparten fixture.
-   Unitarios de services con Vitest; integración de API con Supertest, **validando cada respuesta
-   contra `openapi.yaml`** (verificación del proveedor, US-214), también en los códigos de error.
+   - **Un test a la vez:** empieza por el caso más simple del AC y triangula con el siguiente;
+     nunca acumules varios tests en rojo. Repite por cada AC.
+   - Nunca borres, desactives (`.skip`, `.only`, `xfail`) ni debilites un test en rojo para pasar
+     la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
+   - **Nombres** que describen comportamiento: `it('<resultado> cuando <escenario> [US-xxx AC-n]')`
+     (en Pytest, `test_<unidad>_<escenario>_<resultado>` + `@pytest.mark.ac`). **Mocks solo en los
+     bordes** (HTTP saliente, LLM, OCR, MinIO, nube); nunca módulos propios ni Prisma
+     (`CLAUDE.md`, Política TDD).
+   Unitarios de services con Vitest (repositorios fingidos en su puerto); integración de API con
+   Supertest contra **PostgreSQL real de test** y MSW hacia `rag-orchestrator` (handlers desde
+   `contracts/examples/`), **validando cada respuesta contra `openapi.yaml`** (verificación del
+   proveedor, US-214), también en los códigos de error.
 6. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
 7. Verde local: tests del contexto, `npm run contracts:verify-provider`, `tsc --noEmit`,
    `npm run quality` (US-213), `openspec validate <change> --strict` y **/opsx:verify `<change>`**.
