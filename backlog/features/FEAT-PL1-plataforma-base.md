@@ -2,12 +2,12 @@
 
 > Linear: [L1D-30](https://linear.app/l1der-lab-mjbc/issue/L1D-30)
 
-**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213, US-214) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
 **Requisitos:** RN-14 (dueña), RN-22 (dueña), RN-13 (guarda del S1; dueña del gate: US-143), NFR-05, NFR-10 (parte S1), NFR-13, SEG-07 (claves), SEG-08 (TLS hacia PostgreSQL), SEG-09, SEG-12
 **Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.1 patrón y capas], [→ readme §2.3 estructura], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
 **Dependencias:** ↪ US-033 (specs que la CI valida) · 🔗 Bloquea: todas las Features del S1 (entorno común) · ⛔ ADR-39 solo para los valores de runtime (`LLM_BASE_URL`, `LLM_MODEL`) y el presupuesto de memoria, que se configuran, no se codifican
 **Valor:** sin un entorno reproducible no hay walking skeleton demostrable al oncólogo. Esta Feature fija desde el día uno las reglas que no se pueden arreglar después en un repositorio público: ningún secreto ni dato real versionado, solo `web` expuesto, la IA aislada de los datos clínicos por red, y todo valor "a calibrar" en configuración, para que el oncólogo pueda ajustar umbrales sin desplegar código.
-**Stories:** US-034, US-035, US-036, US-213 (18 puntos, S1) · US-037 (3 puntos, S2)
+**Stories:** US-034, US-035, US-036, US-213, US-214 (21 puntos, S1) · US-037 (3 puntos, S2)
 
 ---
 
@@ -237,6 +237,69 @@ más allá de lo que ya fije US-036.
 ## INVEST
 **Small** ✓ tres archivos de reglas, un archivo de umbrales, un job de CI y fixtures de prueba.
 **Testable** ✓ cada AC es una ejecución de `npm run quality` o un PR de prueba con resultado verde o rojo y un mensaje esperado.
+
+---
+
+## US-214 — Cada backend verifica sus respuestas contra su propio contrato OpenAPI y los consumidores solo usan clientes generados
+
+> Linear: pendiente de publicar (sub-issue de L1D-30, milestone Sprint 1)
+
+`FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · NFR-13 · ↪ US-033 (specs congelados), US-036 (workflow de CI) · 🔗 Relacionada: US-213 (regla `api-contracts-generado`) · 🔗 Consumida por: `contract-keeper` (Gate 2) y la skill `sync-contracts` (`.claude/`)
+
+## Story
+Como equipo de desarrollo (personas y agentes de IA), quiero que `clinical-api` y
+`rag-orchestrator` comprueben en sus tests que cada respuesta cumple su propio
+`openapi.yaml`, que lo generado desde el spec no pueda divergir de él y que los cambios
+incompatibles se detecten contra `main`, para que el contrato sea la fuente única
+(contract-first, provider-driven) y ningún consumidor descubra una ruptura en producción.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dados los specs congelados de US-033, cuando se ejecuta
+  `npm run contracts:verify-provider`, entonces los tests de integración de `clinical-api`
+  (Supertest) y de `rag-orchestrator` (`TestClient`) validan **cada** respuesta contra el
+  `openapi.yaml` de su servicio (status, cabeceras declaradas y cuerpo) y terminan en verde; el
+  job `contracts` de la CI lo ejecuta en cada PR. `[readme §2.6]` `[NFR-13]`
+- **AC-2 (borde · respuesta fuera de contrato)** · Dado un endpoint de `rag-orchestrator` que
+  devuelve `topRelevanceScore: 0.0` en un caso `sin_evidencia` (el spec exige `null`), o un
+  campo no declarado en `EvidenceAnalysis`, cuando corren los tests del proveedor, entonces
+  fallan nombrando la ruta, el código de estado y la ruta JSON del campo. `[RN-02]` `[ADR-26]`
+- **AC-3 (borde · errores también son contrato)** · Dadas respuestas `401`, `403`, `409` y
+  `422` (`TIPO_NO_HABILITADO`) de los endpoints existentes, cuando se validan, entonces su
+  cuerpo cumple el schema de error declarado en el spec; un error no declarado hace fallar el
+  test. `[readme §4.1]` `[readme §4.2]` `[B-10]`
+- **AC-4 (borde · generado desactualizado)** · Dado un PR que cambia `openapi.yaml` sin
+  regenerar, o que edita a mano `packages/api-contracts/src/`, `apps/clinical-api/src/generated/`
+  o `apps/rag-orchestrator/app/schemas/generated/`, cuando corre la CI, entonces
+  `npm run contracts:generate && git diff --exit-code` falla nombrando los archivos. `[NFR-13]`
+- **AC-5 (borde · cambio incompatible)** · Dado un PR que elimina o vuelve obligatorio un campo
+  de un spec, cuando corre `npm run contracts:breaking` (oasdiff contra `origin/main`), entonces
+  falla salvo que el PR declare el cambio en `design.md` con la etiqueta de cambio incompatible
+  aceptado. `[ADR-26]` (asumido)
+
+## Contexto técnico
+- **Provider-driven, no consumer-driven:** cada backend es proveedor de su contrato y lo
+  verifica; `web` y `clinical-api` consumen solo los clientes generados en
+  `packages/api-contracts`. No se usa Pact: un solo equipo, dos consumidores conocidos y contrato
+  congelado en Pre-S1; la verificación del proveedor más la generación de clientes da la misma
+  garantía sin broker. La decisión queda registrada en `docs/architecture/adr/` como parte de
+  esta historia.
+- **Herramientas (propuesta):** validación de respuestas con `express-openapi-validator`
+  (`validateResponses: true` solo en el entorno de test) en `clinical-api`, y un validador de
+  respuestas contra el spec (p. ej., `openapi-core`) o `schemathesis` en `rag-orchestrator`;
+  generación con `openapi-typescript`/`openapi-zod-client` (o `orval`) y
+  `datamodel-code-generator`; cambios incompatibles con `oasdiff`.
+- **Scripts:** `contracts:check` (US-033), `contracts:generate`, `contracts:breaking` y
+  `contracts:verify-provider` (esta historia), todos en la raíz.
+- Ejemplos de `contracts/examples/` reutilizados como datos de prueba de consumidores.
+- AC-2 a AC-5 se verifican con fixtures de PR en `ci/tests/contracts/`, igual que US-036.
+
+## Non-goals
+Pact o contratos dirigidos por el consumidor. Pruebas de carga o fuzzing completo de los
+endpoints (más allá de la validación de respuestas). Versionado de la API por URL.
+
+## INVEST
+**Small** ✓ un validador por backend en los tests, tres scripts y un job de CI.
+**Testable** ✓ cada AC es una ejecución de script o un PR de prueba con resultado verde o rojo y un mensaje esperado.
 
 ---
 
