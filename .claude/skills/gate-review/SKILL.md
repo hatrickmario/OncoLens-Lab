@@ -31,16 +31,28 @@ explícita de señalar contradicciones **entre** changes del lote.
 3. Lánzalos en paralelo (modo Gate 2, rama `$target`, change asociado).
 4. Comprueba además que el implementador dejó en verde `openspec validate <change> --strict` y
    `/opsx:verify` (si no hay evidencia en su reporte, ejecútalos tú en un worktree temporal).
-5. **Evidencia de TDD:** `git log --oneline origin/main..origin/$target` muestra, para cada AC, un
-   commit `test(L1D-<nn>)` antes de su `feat(L1D-<nn>)`, y el reporte del implementador incluye la
-   salida en rojo y en verde. Si falta → FAIL (Mayor), salvo historias sin código (`DEC`, `ADR`).
+5. **Evidencia de TDD según la matriz de `CLAUDE.md`:**
+   - *Estricto* y *test del AC primero* (reglas RN, services con lógica, endpoints, UI):
+     `git log --oneline origin/main..origin/$target` muestra, para cada AC, un commit
+     `test(L1D-<nn>)` con su test de aceptación antes de su `feat(L1D-<nn>)`, y el reporte incluye
+     la salida en rojo (falla en la aserción) y en verde. Si falta → **Mayor**.
+   - *Test después* (migraciones, infra, CI, configuración): el test o fixture está en el PR.
+   - *evaluate* (prompts, modelos, umbral, catálogo, corpus): reporte de `ai-eval-runner`.
+   - *Exento*: DEC, ADR y *spikes* (un *spike* no se mergea).
+   No exijas rojo por cada unitario ni por cada componente: eso sería sobredimensionar.
 6. **Contract-first:** si el diff toca una API, `contract-keeper` corre siempre y verifica que el
    commit `contract(L1D-<nn>)` precede a los de test e implementación.
 7. **Higiene de tests:** sobre `git diff origin/main...origin/$target`:
-   - un test eliminado, desactivado (`.skip`, `.only`, `xit`, `it.todo`, `@pytest.mark.skip`,
-     `xfail`) o con aserciones relajadas → **Mayor**, salvo que el commit lleve
-     `Test-Removal: <motivo>` **y** el AC haya cambiado en los deltas del change;
-   - nombres que no describen comportamiento o sin `[US-xxx AC-n]` → **Menor**;
+   - un test eliminado, desactivado (`.skip`, `.only`, `xit`, `fit`, `it.todo`,
+     `@pytest.mark.skip`, `skipif`, `xfail`), con reintentos añadidos o con aserciones relajadas →
+     **Mayor**, salvo que el commit lleve `Test-Removal: <motivo>` **y** el AC haya cambiado en los
+     deltas del change (o el test fuera inestable y el motivo lo explique);
+   - un AC del change sin test de aceptación con `[US-xxx AC-n]` → **Mayor**; nombres que no
+     describen comportamiento → **Menor**;
+   - `Date.now()`, `Math.random()` o `uuid()` directos en dominio o services → lo reporta
+     `design-principles-reviewer` (hallazgo 1);
+   - cobertura de líneas cambiadas baja en lógica (alerta de `latest.json`) → **Menor** con la
+     línea concreta, nunca un FAIL por un porcentaje;
    - `vi.mock` de módulos propios o de Prisma, o el LLM real fuera de la suite `evaluate` → lo
      reporta `design-principles-reviewer` (hallazgo 7, «Mock fuera del borde»).
 8. **Loop visual:** si el diff toca la UI de `apps/web` (fuera de `app/api/`), el reporte del

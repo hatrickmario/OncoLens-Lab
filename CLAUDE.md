@@ -87,27 +87,41 @@ Vitest + Supertest en `clinical-api` (StrykerJS, *mutation* sobre auth/authz/cif
 
 ### Política TDD
 
-- **Siempre Rojo → Verde → Refactor**, un test a la vez.
-- **Primero el test en rojo más simple** del AC (el caso degenerado o el camino feliz mínimo) y se triangula con el siguiente; nunca varios tests en rojo a la vez.
-- **Nunca borres, desactives ni debilites un test en rojo para que la suite pase** (`.skip`, `.only`, `xit`, `it.todo`, `@pytest.mark.skip`, `xfail`, aserciones relajadas). Un test solo cambia si su AC cambió en la spec del change; quitar uno exige el *trailer* `Test-Removal: <motivo>` en el commit y lo revisa el Gate 2.
-- **Implementa el mínimo código** que pone el test en verde. **Refactoriza solo en verde**, con los tests en verde antes y después.
-- Evidencia: commit `test(L1D-<nn>)` en rojo antes de su `feat(L1D-<nn>)`, y la salida en rojo y en verde en el reporte del implementador (lo verifica `gate-review`).
+**TDD proporcional al riesgo.** El TDD estricto se paga donde un error es caro y el ciclo aporta diseño; en el resto basta un test de comportamiento o de humo.
 
-| Nivel | Qué prueba | `web` | `clinical-api` | `rag-orchestrator` |
-|---|---|---|---|---|
-| Unitario | Dominio, services y lógica de presentación, sin E/S | Vitest + Testing Library | Vitest; repositorios y adapters fingidos en su puerto | Pytest; adapters falsos en los puertos |
-| Integración | La API o el componente con sus dependencias reales hasta el borde | Vitest + MSW sobre `/api/*` | Supertest + PostgreSQL real de test (US-038) + MSW hacia `rag-orchestrator` y MinIO | `TestClient` + `respx` hacia el LLM y servicios HTTP; Milvus y `corpus` reales o fakes del puerto |
-| E2E | Los recorridos del PRD §13 | Playwright contra Compose con seed sintético | ← | ← |
+| Tipo de código | Disciplina | Evidencia que exige el Gate 2 |
+|---|---|---|
+| Reglas RN de dominio, services con lógica, endpoints, desidentificación, cifrado, autorización | **TDD estricto, doble bucle** | Commit `test(L1D-nn)` con el test de aceptación del AC en rojo antes de su `feat(L1D-nn)` |
+| Componentes, hooks y Route Handlers simples de `web` | **Test del AC primero** (Testing Library + MSW); sin rojo por cada componente | Commit `test(L1D-nn)` del AC en rojo antes del `feat`; `visual-check` |
+| Prompts, umbrales, modelos, catálogo, corpus | **Sin TDD**: suite `evaluate` (OL-06); la orquestación, con adapters falsos y TDD | Reporte de `ai-eval-runner` |
+| Migraciones, Compose, CI, configuración, scripts | **Test después**: humo, integración o fixture de PR | El test o el fixture en el mismo PR |
+| DEC, ADR, *spikes* | Exento (el código de un *spike* no se mergea) | — |
 
-Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213): un mock no puede divergir del contrato.
+**Reglas (donde aplica TDD):**
+- **Rojo → Verde → Refactor en doble bucle.** Bucle externo: el **test de aceptación** del AC (integración o E2E, con `[US-xxx AC-n]`) en rojo, en su commit `test(L1D-nn)`. Bucle interno: tests unitarios **uno a la vez**, del caso más simple al siguiente, con el **mínimo código** que pone cada uno en verde; entran con el commit `feat(L1D-nn)` cuando el de aceptación pasa.
+- **El rojo falla en la aserción**, no en un import: si el símbolo no existe, el commit `test` incluye solo su esqueleto (firma + `throw new Error('no implementado')` / `raise NotImplementedError`).
+- **Refactoriza solo en verde**, con los tests en verde antes y después. Refactorizar tests (renombrar, extraer *builders*) es válido en un commit `refactor(L1D-nn): tests` que no cambia aserciones.
+- **Nunca borres, desactives ni debilites un test para que la suite pase**: prohibidos en los commits `.skip`, `.only`, `xit`, `fit`, `it.todo`, `@pytest.mark.skip`, `skipif`, `xfail` y las aserciones relajadas. Un test solo se quita si su AC cambió en la spec del change, con el *trailer* `Test-Removal: <motivo>`; lo revisa el Gate 2.
+- **Un test inestable es un bug del sprint:** se arregla o se quita con `Test-Removal:`; nunca cuarentena ni reintentos silenciosos. Sin *retries* en unitarios e integración; Playwright con `retries: 1` solo en la CI y con *trace*.
+- **Determinismo:** el reloj y los generadores de IDs o seudónimos se inyectan y los tests los congelan (`vi.useFakeTimers`, `freezegun`); nada de `Date.now()`, `Math.random()` ni `uuid()` directos en dominio o services.
 
-**Nombres de tests:** describen comportamiento, no la función llamada. `describe('<Unidad>')` + `it('<resultado esperado> cuando <escenario> [US-xxx AC-n]')`; en Pytest, `test_<unidad>_<escenario>_<resultado>` con `@pytest.mark.ac("US-xxx", n)`. En español, como el dominio. ❌ `it('calcularUmbral works')` · ✅ `it('devuelve sin_evidencia con topRelevanceScore null cuando ningún chunk supera el umbral [US-061 AC-3]')`.
+| Nivel | `web` | `clinical-api` | `rag-orchestrator` |
+|---|---|---|---|
+| Unitario (lógica pura, sin E/S) | Vitest + Testing Library | Vitest, **solo para lógica pura** (completitud, reconciliación, cifrado, orden, desidentificación); si un service con lógica lo necesita, recibe su repository por parámetro de una *factory* (sin contenedor de DI) y el test le pasa un fake | Pytest; adapters falsos en los puertos |
+| Integración (**nivel principal de los backends**) | Vitest + MSW sobre `/api/*` | Supertest + **PostgreSQL real de test** (US-038) + MSW hacia `rag-orchestrator` y MinIO | `TestClient` + PostgreSQL `corpus` real + `respx` hacia el HTTP saliente; Milvus y LLM fingidos en su puerto |
+| E2E (recorridos del PRD §13) | Playwright contra Compose con seed sintético y **LLM fingido** (respuestas fijas desde `contracts/examples/`) | ← | ← |
 
-**Mocks solo en los bordes arquitectónicos:** HTTP saliente (MSW, `respx`), LLM, embeddings, reranker, NLI, OCR, MinIO y la nube. **Nunca** módulos propios (`vi.mock('./…')`, `vi.mock('@/…')`) ni Prisma; lo rápido y determinista (dominio, services, validación Zod, mapeos) va real. La BD solo se finge en unitarios a través del puerto del repository; en integración es real (los tests de `rag_corpus`, cifrado e índice ciego lo exigen). Los fakes cumplen el contrato del adapter real (LSP: `null` ≠ `0.0`, mismos errores).
+Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213): un mock no puede divergir del contrato. El LLM real solo corre en la suite `evaluate` y en la demo.
 
-**Mutation testing:** StrykerJS sobre auth, autorización y cifrado con US-185 (S6, si hay capacidad); hasta entonces, los tests de esas áreas los revisa `design-principles-reviewer` buscando aserciones débiles.
+**Nombres de tests:** describen comportamiento, no la función llamada. `describe('<Unidad>')` + `it('<resultado esperado> cuando <escenario>')`; el **test de aceptación** termina en `[US-xxx AC-n]` (en Pytest, `test_<unidad>_<escenario>_<resultado>` y `@pytest.mark.ac("US-xxx", n)` en el de aceptación). En español, como el dominio. ❌ `it('calcularUmbral works')` · ✅ `it('devuelve sin_evidencia con topRelevanceScore null cuando ningún chunk supera el umbral [US-061 AC-3]')`.
 
-**Piloto TDD Guard (S1):** solo en `clinical-platform-dev` (hooks en su frontmatter); se evalúa en la retro del S1 (`.claude/README.md`).
+**Mocks solo en los bordes arquitectónicos:** HTTP saliente (MSW, `respx`), LLM, embeddings, reranker, NLI, OCR, Milvus, MinIO y la nube. **Nunca** módulos propios (`vi.mock('./…')`, `vi.mock('@/…')`) ni Prisma; lo rápido y determinista (dominio, services, validación Zod, mapeos) va real. La BD es real en integración (los tests de `rag_corpus`, cifrado e índice ciego lo exigen). Los fakes cumplen el contrato del adapter real (LSP: `null` ≠ `0.0`, mismos errores).
+
+**Calidad de los tests sin sobredimensionar:** cobertura de las **líneas cambiadas** como alerta en `reports/quality/latest.json` (US-213, AC-11), sin umbral global ni bloqueo; la lee `design-principles-reviewer` buscando lógica sin test y aserciones débiles. *Mutation testing* (StrykerJS sobre auth, autorización y cifrado) con US-185 (S6, si hay capacidad).
+
+**Piloto TDD Guard (S1, con fin):** solo en `clinical-platform-dev`; la retro del S1 decide extenderlo o retirarlo, sin prórroga (`.claude/README.md`).
+
+**Pendiente de planning (no cambia el slicing):** dónde vive el modo `LLM_PROVIDER=fake` de Compose y la CI (US-034 o US-036), y si US-185 pasa a ser condición de G-Piloto antes de usar datos reales.
 
 **La evaluación de calidad de IA (OL-06) es obligatoria en cada PR que cambie modelo, prompt, umbral, catálogo o corpus.** Metas iniciales (a recalibrar, TBD-02): recall@10 ≥ 0,80 (≥ 0,70 es→en), MRR ≥ 0,60, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, "sin evidencia" ≥ 0,90, OCR crítico ≥ 0,95, PII ≥ 0,95, eventos ≥ 0,95, mapeo terminológico ≥ 0,95, salidas prescriptivas = 0.
 

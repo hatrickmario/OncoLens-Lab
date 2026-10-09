@@ -167,7 +167,7 @@ corpus es de US-074. *Mutation testing* (S6).
 
 > Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
 
-`FEAT-PL1` · Sprint 1 · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-10 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
+`FEAT-PL1` · Sprint 1 · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-11 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
@@ -218,16 +218,17 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
   (primitivas de shadcn), tests, stories y código generado quedan excluidos, y los componentes
   no se miden con `max-lines-per-function`. `[NFR-13]` `[RN-22]`
 - **AC-8 (borde · tests desactivados o enfocados)** · Dado un PR que añade `it.skip`, `it.only`,
-  `describe.skip`, `xit`, `fit`, `it.todo` sin `[US-xxx AC-n]`, `@pytest.mark.skip`,
+  `describe.skip`, `xit`, `fit`, `it.todo`, `@pytest.mark.skip`, `@pytest.mark.skipif`,
   `@pytest.mark.xfail`, `pytest.skip(` o `pytest.xfail(` en un archivo de test, cuando corre el job
   `quality`, entonces falla nombrando el archivo, la línea y la regla (`vitest/no-focused-tests`,
   `vitest/no-disabled-tests` o el chequeo `tests-sin-desactivar` de Python). `[NFR-13]`
   `[CLAUDE.md Política TDD]`
-- **AC-9 (borde · nombres de tests)** · Dado un test de Vitest cuyo título no termina en
-  `[US-xxx AC-n]`, o un test de Pytest sin `@pytest.mark.ac`, cuando corre el job `quality`,
-  entonces emite una **alerta** en `reports/quality/latest.json` (no falla) con el archivo y el
-  título; los tests de infraestructura sin AC usan `[infra]` y no alertan. `[NFR-13]` (asumido:
-  alerta y no error hasta la retro del S1)
+- **AC-9 (borde · AC sin test de aceptación)** · Dado un change activo en `openspec/changes/`
+  cuya historia tiene AC-1…AC-n, cuando corre el job `quality`, entonces
+  `scripts/quality/check-ac-coverage` emite una **alerta** en `reports/quality/latest.json` por
+  cada AC sin al menos un test cuyo título termina en `[US-xxx AC-n]` (Vitest, Playwright) o con
+  `@pytest.mark.ac("US-xxx", n)`; los tests sin tag (unitarios del bucle interno) no alertan.
+  `[NFR-13]` `[CLAUDE.md Política TDD]` (asumido: alerta y no error; el Gate 2 lo trata como Mayor)
 - **AC-10 (borde · mocks fuera del borde)** · Dado un test de `web` o `clinical-api` que llama
   `vi.mock` sobre una ruta relativa (`./`, `../`), un alias propio (`@/`, `@oncolens/`) o
   `@prisma/client`, cuando corre el job `quality`, entonces falla con la regla
@@ -237,6 +238,13 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
   construidos desde `contracts/examples/` (`packages/test-support/msw/`), y en `rag-orchestrator`
   los de `respx` (`tests/support/http.py`), de modo que un handler con un campo que no existe en
   el ejemplo hace fallar su propio test. `[NFR-13]` `[ADR-26]`
+- **AC-11 (borde · cobertura de líneas cambiadas)** · Dado un PR, cuando corre el job `quality`,
+  entonces `reports/quality/latest.json` incluye, por archivo cambiado, el porcentaje de líneas
+  cambiadas cubiertas por tests (`vitest --coverage` con v8, `pytest-cov` y `diff-cover`), y una
+  **alerta** si queda por debajo de `coverage.changedLinesWarn` (`quality-thresholds.json`,
+  propuesta 80) en `apps/rag-orchestrator/app/domain/**`, `apps/clinical-api/src/modules/**/*.service.ts`
+  y `apps/web/lib/**`; el job **nunca falla** por cobertura y no hay umbral global. `[NFR-13]`
+  `[RN-22]` (asumido)
 
 ## Contexto técnico
 - **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`
@@ -258,21 +266,26 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
 - **Salida para agentes:** `reports/quality/latest.json` (ignorado por git) es la entrada
   determinista que `design-principles-reviewer` lee antes de opinar; formato
   `{tool, rule, file, line, symbol, measured, threshold}`.
-- **Higiene y nombres de tests (Node):** `@vitest/eslint-plugin` con `no-focused-tests`,
-  `no-disabled-tests` y `valid-title` (patrón `\[(US-\d+ AC-\d+|infra)\]$`, nivel `warn`);
+- **Higiene de tests (Node):** `@vitest/eslint-plugin` con `no-focused-tests`,
+  `no-disabled-tests` (incluye `it.todo`) y `valid-title` (títulos no vacíos ni duplicados);
   `no-restricted-syntax` para `mock-solo-en-bordes` sobre `vi.mock` con rutas propias o
   `@prisma/client`.
-- **Higiene y nombres de tests (Python):** Ruff con `PT` (`flake8-pytest-style`) y un chequeo
-  `scripts/quality/check-pytest-hygiene.py` (marcadores `skip`/`xfail` y tests sin
-  `@pytest.mark.ac`) que escribe en `reports/quality/latest.json`; el marcador `ac` se registra
-  en `pyproject.toml` (`--strict-markers`).
+- **Higiene de tests (Python):** Ruff con `PT` (`flake8-pytest-style`) y
+  `scripts/quality/check-pytest-hygiene.py` (marcadores `skip`, `skipif`, `xfail` y llamadas
+  `pytest.skip`/`pytest.xfail`) que escribe en `reports/quality/latest.json`; el marcador `ac` se
+  registra en `pyproject.toml` (`--strict-markers`).
+- **AC con test de aceptación:** `scripts/quality/check-ac-coverage` lee los AC de las historias con
+  change activo (enlazadas en su `proposal.md`) y busca los tags en los tests; misma salida.
+- **Cobertura de líneas cambiadas:** `diff-cover` sobre los reportes LCOV/Cobertura de Vitest y
+  `pytest-cov` contra `origin/main`; solo alerta (AC-11). Sin umbral global: el porcentaje no
+  sustituye a revisar qué se prueba.
 - **Arnés de mocks en los bordes:** `msw` en `web` y `clinical-api` con handlers generados o
   construidos desde `contracts/examples/` (`packages/test-support/msw/`); `respx` en
   `rag-orchestrator`. El PostgreSQL de test de la integración es el de US-038 (Testcontainers
   o servicio de la CI); esta historia no lo duplica.
 - El *hook* local `pre-commit-gate.sh` (`.claude/`) aplica AC-8 antes del commit; la CI es la
   garantía para quien no usa Claude Code.
-- AC-2 a AC-5 y AC-8 a AC-10 se verifican con fixtures de PR en `ci/tests/quality/` (un archivo
+- AC-2 a AC-5 y AC-8 a AC-11 se verifican con fixtures de PR en `ci/tests/quality/` (un archivo
   que viola cada regla), en una rama de la CI, no en `main`, igual que US-036.
 
 ## Non-goals
@@ -283,7 +296,7 @@ Prettier y `ruff format` (US-215).
 
 ## INVEST
 **Small** ⚠ tres archivos de reglas, un archivo de umbrales, el arnés de MSW/`respx`, un job de CI
-y fixtures de prueba; si en el planning pasa de 8, dividir AC-8…AC-10 en una historia hermana.
+y fixtures de prueba; si en el planning pasa de 8, dividir AC-8…AC-11 en una historia hermana.
 **Testable** ✓ cada AC es una ejecución de `npm run quality` o un PR de prueba con resultado verde o rojo y un mensaje esperado.
 
 ---

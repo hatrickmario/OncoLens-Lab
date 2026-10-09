@@ -32,8 +32,9 @@ Change: <change> · Historia: L1D-<nn> (<ruta backlog>) · Rama: feat/l1d-<nn>-<
 Tus tareas: sección '## <contexto>' de tasks.md
 Deltas de dependencias: <rutas>
 Paths permitidos: <lista>
-Orden: contract (si toca API) → test en rojo → feat → refactor, un commit por paso.
-Termina con: tests por AC con tag 'US-xxx AC-n' y su salida en rojo y en verde,
+Disciplina: matriz de TDD proporcional de CLAUDE.md (indica cuál aplica a cada tarea).
+Orden: contract (si toca API) → test de aceptación del AC en rojo → feat (con sus unitarios) → refactor.
+Termina con: test de aceptación por AC con tag 'US-xxx AC-n' y su salida en rojo y en verde,
 contracts:verify-provider, openspec validate --strict, /opsx:verify, push.
 ```
 

@@ -40,19 +40,26 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
 2. Rama `feat/l1d-<nn>-<slug>` desde `main` (o la que te indique el orquestador).
 3. **/opsx:apply `<change>`**, solo las tareas de `## frontend`.
 4. **Ciclo por AC (TDD con evidencia):**
-   - **Rojo:** escribe el test con el tag `US-xxx AC-n` en el nombre, ejecútalo y comprueba que
-     **falla por la razón esperada** (no por un error de compilación o de import). Commit
-     `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
-   - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
-   - **Un test a la vez:** empieza por el caso más simple del AC y triangula con el siguiente;
-     nunca acumules varios tests en rojo. Repite por cada AC.
-   - Nunca borres, desactives (`.skip`, `.only`, `xfail`) ni debilites un test en rojo para pasar
-     la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
-   - **Nombres** que describen comportamiento: `it('<resultado> cuando <escenario> [US-xxx AC-n]')`
-     (en Pytest, `test_<unidad>_<escenario>_<resultado>` + `@pytest.mark.ac`). **Mocks solo en los
-     bordes** (HTTP saliente, LLM, OCR, MinIO, nube); nunca módulos propios ni Prisma
-     (`CLAUDE.md`, Política TDD).
-   Componentes con Vitest + Testing Library y **MSW** sobre `/api/*`, con handlers construidos desde
+   Disciplina según la **matriz de TDD proporcional** de `CLAUDE.md`: estricto en reglas RN,
+   services con lógica y endpoints; test del AC primero en UI; test después en migraciones,
+   infra y configuración; `evaluate` en prompts y modelos.
+   - **Rojo (bucle externo):** el **test de aceptación** del AC (integración o E2E) con
+     `[US-xxx AC-n]` en el nombre; ejecútalo y comprueba que **falla en la aserción** por la
+     razón esperada. Si el símbolo no existe, crea solo su esqueleto (firma + `throw new
+     Error('no implementado')` / `raise NotImplementedError`) en el mismo commit. Commit
+     `test(L1D-<nn>): AC-n en rojo` y guarda la salida.
+   - **Verde (bucle interno):** hasta que pase el de aceptación, unitarios **uno a la vez**, del
+     caso más simple al siguiente, con el mínimo código; entran con el commit
+     `feat(L1D-<nn>): AC-n`. Guarda la salida en verde. Repite por cada AC.
+   - Nunca borres, desactives (`.skip`, `.only`, `it.todo`, `skipif`, `xfail`) ni debilites un
+     test para pasar la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
+     Un test inestable se arregla o se quita así; nunca se reintenta en silencio.
+   - **Nombres** por comportamiento (`it('<resultado> cuando <escenario>')`); solo el de aceptación
+     lleva `[US-xxx AC-n]` (en Pytest, `@pytest.mark.ac`). **Mocks solo en los bordes**; reloj y
+     generadores de IDs inyectados y congelados en los tests (`CLAUDE.md`, Política TDD).
+   En UI, el test de aceptación del AC es de comportamiento (Testing Library + MSW); los
+   componentes internos no necesitan su propio rojo. Componentes con Vitest + Testing Library y
+   **MSW** sobre `/api/*`, con handlers construidos desde
    los **ejemplos del contrato** (`contracts/examples/`); nunca `vi.mock` de hooks o módulos propios; recorridos con Playwright contra Compose y
    **fixtures sintéticos sembrados**.
 5. **Loop visual** (skill `visual-check`) si el change toca la UI: con los AC en verde, recorre en

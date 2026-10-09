@@ -40,7 +40,9 @@ Si US-213 aún no está mergeada, dilo en el reporte y revisa esas reglas a mano
 
 **P1 · confunden a un agente (revísalas primero y siempre):**
 1. **Efecto lateral oculto** (CUPID *Predictable*, SOLID *SRP*): una función cuyo nombre sugiere
-   consulta o validación pero escribe, persiste, llama al LLM, registra datos o muta su entrada.
+   consulta o validación pero escribe, persiste, llama al LLM, registra datos o muta su entrada;
+   o que lee el reloj o el azar directamente (`Date.now()`, `Math.random()`, `uuid()`) en dominio o
+   services en lugar de recibirlos inyectados.
 2. **Vocabulario ajeno al dominio** (CUPID *Domain-based*): nombres que contradicen el PRD
    (`recommendation`, `score` sin calificar entre relevancia y aplicabilidad), dos nombres para
    un mismo concepto (`patient`/`paciente`, `chunk`/`fragment`) o un nombre para dos conceptos.

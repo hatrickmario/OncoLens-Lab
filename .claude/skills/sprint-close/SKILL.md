@@ -60,8 +60,8 @@ Los huecos Bloqueantes se convierten en historias para el siguiente sprint (prop
   **En el S1, evaluación del piloto de TDD Guard** con `reports/tdd-guard/pilot.jsonl`: bloqueos,
   falsos positivos (el humano marca `falsePositive` en cada bloqueo), latencia p50/p95 y bloqueos
   que evitaron un fallo real. Criterio: se extiende a los tres implementadores si los falsos
-  positivos son < 10 % de los bloqueos y la p95 < 5 s; si no, se retira (y, si interesa, se prueba
-  Probity en el S2 con el mismo criterio). La decisión es humana.
+  positivos son < 10 % de los bloqueos y la p95 < 5 s; si no, se retira sin prórroga (y, si
+  interesa, se prueba Probity en el S2 con el mismo criterio). La decisión es humana.
 Escribe todo en `backlog/sprints/$sprint-cierre.md`.
 
 ## 6. Cierre (humano)

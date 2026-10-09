@@ -44,22 +44,29 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
    `rag-orchestrator`, usa solo su cliente generado; si su spec no tiene lo que necesitas, detente:
    el cambio es de `ai-services-dev`.
 5. **Ciclo por AC (TDD con evidencia):**
-   - **Rojo:** escribe el test con el tag `US-xxx AC-n` en el nombre, ejecútalo y comprueba que
-     **falla por la razón esperada** (no por un error de compilación o de import). Commit
-     `test(L1D-<nn>): AC-n en rojo` y guarda la salida de esa ejecución para tu reporte.
-   - **Verde:** la implementación mínima que lo hace pasar. Commit `feat(L1D-<nn>): AC-n`.
-   - **Un test a la vez:** empieza por el caso más simple del AC y triangula con el siguiente;
-     nunca acumules varios tests en rojo. Repite por cada AC.
-   - Nunca borres, desactives (`.skip`, `.only`, `xfail`) ni debilites un test en rojo para pasar
-     la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
-   - **Nombres** que describen comportamiento: `it('<resultado> cuando <escenario> [US-xxx AC-n]')`
-     (en Pytest, `test_<unidad>_<escenario>_<resultado>` + `@pytest.mark.ac`). **Mocks solo en los
-     bordes** (HTTP saliente, LLM, OCR, MinIO, nube); nunca módulos propios ni Prisma
-     (`CLAUDE.md`, Política TDD).
-   Unitarios de services con Vitest (repositorios fingidos en su puerto); integración de API con
-   Supertest contra **PostgreSQL real de test** y MSW hacia `rag-orchestrator` (handlers desde
-   `contracts/examples/`), **validando cada respuesta contra `openapi.yaml`** (verificación del
-   proveedor, US-214), también en los códigos de error.
+   Disciplina según la **matriz de TDD proporcional** de `CLAUDE.md`: estricto en reglas RN,
+   services con lógica y endpoints; test del AC primero en UI; test después en migraciones,
+   infra y configuración; `evaluate` en prompts y modelos.
+   - **Rojo (bucle externo):** el **test de aceptación** del AC (integración o E2E) con
+     `[US-xxx AC-n]` en el nombre; ejecútalo y comprueba que **falla en la aserción** por la
+     razón esperada. Si el símbolo no existe, crea solo su esqueleto (firma + `throw new
+     Error('no implementado')` / `raise NotImplementedError`) en el mismo commit. Commit
+     `test(L1D-<nn>): AC-n en rojo` y guarda la salida.
+   - **Verde (bucle interno):** hasta que pase el de aceptación, unitarios **uno a la vez**, del
+     caso más simple al siguiente, con el mínimo código; entran con el commit
+     `feat(L1D-<nn>): AC-n`. Guarda la salida en verde. Repite por cada AC.
+   - Nunca borres, desactives (`.skip`, `.only`, `it.todo`, `skipif`, `xfail`) ni debilites un
+     test para pasar la suite; si el AC cambió en la spec, el commit lleva `Test-Removal: <motivo>`.
+     Un test inestable se arregla o se quita así; nunca se reintenta en silencio.
+   - **Nombres** por comportamiento (`it('<resultado> cuando <escenario>')`); solo el de aceptación
+     lleva `[US-xxx AC-n]` (en Pytest, `@pytest.mark.ac`). **Mocks solo en los bordes**; reloj y
+     generadores de IDs inyectados y congelados en los tests (`CLAUDE.md`, Política TDD).
+   **Integración primero:** el test de aceptación de un endpoint es Supertest contra **PostgreSQL
+   real de test** y MSW hacia `rag-orchestrator` (handlers desde `contracts/examples/`),
+   **validando cada respuesta contra `openapi.yaml`** (verificación del proveedor, US-214), también
+   en los códigos de error. Unitarios solo para lógica pura (completitud, reconciliación, cifrado,
+   orden); si un service con lógica necesita uno, recibe su repository por parámetro de una
+   *factory* (sin contenedor de DI) y el test le pasa un fake. Nunca `vi.mock` del repository.
 6. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
 7. Verde local: tests del contexto, `npm run contracts:verify-provider`, `tsc --noEmit`,
    `npm run quality` (US-213), `openspec validate <change> --strict` y **/opsx:verify `<change>`**.

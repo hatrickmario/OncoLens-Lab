@@ -41,22 +41,43 @@ fi
 REMOVED="$( { git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" | sed 's/$/ (archivo eliminado)/';
   git diff --cached -U0 --no-color | python3 -I -c '
 import re, sys
-# Un test cuenta como eliminado si su nombre desaparece y no reaparece en lo añadido (mover no es borrar).
+from collections import defaultdict
+# Test eliminado = su nombre desaparece y no reaparece en lo añadido. Mover no es borrar, y renombrar
+# tampoco: en cada archivo, tantos nombres nuevos como desaparecidos cuenta como renombrado.
 pat = re.compile(r"""^\s*(?:(?:it|test|describe)(?:\.each\([^)]*\))?\(\s*([\x27"`])(.+?)\1|(?:async\s+)?def\s+(test_\w+))""")
-rem, add = {}, set()
+rem, add = defaultdict(dict), defaultdict(set)
+path = ""
 for line in sys.stdin:
-    if line.startswith(("---", "+++")): continue
+    if line.startswith("+++ "):
+        path = line[6:].strip() if line.startswith("+++ b/") else path; continue
+    if line.startswith("--- "): continue
     if line[:1] in "+-":
         m = pat.match(line[1:])
         if m:
             name = m.group(2) or m.group(3)
-            (add.add(name) if line[0] == "+" else rem.setdefault(name, line[1:].strip()))
-for name, src in rem.items():
-    if name not in add: print(src)
+            if line[0] == "+": add[path].add(name)
+            else: rem[path].setdefault(name, line[1:].strip())
+all_added = set().union(*add.values()) if add else set()
+for f, names in rem.items():
+    gone = [n for n in names if n not in all_added]
+    new = [n for n in add.get(f, ()) if n not in set().union(*rem.values())]
+    for n in gone[len(new):]:
+        print(f"{f}: {names[n]}")
 '; } || true)"
-if [ -n "$REMOVED" ] && ! printf '%s' "$CMD" | grep -q 'Test-Removal:'; then
-  echo "OncoLens · el commit elimina tests (Política TDD). Si el AC cambió en la spec del change, añade el trailer" >&2
-  echo "'Test-Removal: <motivo>' al mensaje; el Gate 2 lo revisa. Eliminados:" >&2
+# El trailer puede venir en -m o en el archivo de -F/--file.
+MSG="$CMD"
+MSGFILE="$(printf '%s' "$CMD" | python3 -I -c '
+import shlex, sys
+try: a = shlex.split(sys.stdin.read())
+except ValueError: a = []
+for i, t in enumerate(a):
+    if t in ("-F", "--file") and i + 1 < len(a): print(a[i + 1]); break
+    if t.startswith("--file="): print(t.split("=", 1)[1]); break
+')"
+[ -n "$MSGFILE" ] && [ -f "$MSGFILE" ] && MSG="$MSG $(cat "$MSGFILE")"
+if [ -n "$REMOVED" ] && ! printf '%s' "$MSG" | grep -q 'Test-Removal:'; then
+  echo "OncoLens · el commit elimina tests (Política TDD). Si el AC cambió en la spec del change, o el test era" >&2
+  echo "inestable, añade el trailer 'Test-Removal: <motivo>' al mensaje; el Gate 2 lo revisa. Eliminados:" >&2
   printf '%s\n' "$REMOVED" | head -10 >&2; FAIL=1
 fi
 # 4) OpenSpec
