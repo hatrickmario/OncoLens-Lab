@@ -40,6 +40,11 @@ Skill `gate-review` en modo `gate2` sobre la rama. Si es FAIL: reanuda al mismo 
 con los hallazgos exactos (SendMessage a su nombre o id). Máximo **2 vueltas**; a la tercera,
 estado `bloqueado-gate` y escalar al humano con los hallazgos y dos opciones.
 
+Si el Gate 2 pasa pero `design-principles-reviewer` reporta hallazgos **Mayores**, reanuda al
+implementador para que aplique cada refactor mínimo en su commit `refactor(L1D-<nn>)` y vuelve a
+lanzar solo ese revisor. Si la historia cierra un **lote de revisión** del plan, ejecuta también
+`gate-review` en modo `lote` y resuelve sus hallazgos en esta misma rama.
+
 ## 4. PR
 
 Con el Gate 2 en PASS: `gh pr create --base main --head <rama> --title "[L1D-<nn>] <título>"`.

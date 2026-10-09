@@ -1,7 +1,7 @@
 ---
 name: gate-review
-description: Ejecuta un gate de calidad de OncoLens con los guardianes en paralelo y consolida un veredicto. gate1 revisa los artefactos (proposal, design, deltas) de uno o varios changes antes de escribir código; gate2 revisa el diff de una rama antes del PR, eligiendo guardianes según los paths tocados. La usan /sprint-start (gate1), implement-story y sprint-orchestrator (gate2).
-argument-hint: "gate1 <change...> | gate2 <rama>"
+description: Ejecuta un gate de calidad de OncoLens con los guardianes en paralelo y consolida un veredicto. gate1 revisa los artefactos (proposal, design, deltas) de uno o varios changes antes de escribir código; gate2 revisa el diff de una rama antes del PR, eligiendo guardianes según los paths tocados; lote revisa SOLID y CUPID sobre el diff combinado de 2–3 changes relacionados. La usan /sprint-start (gate1), implement-story y sprint-orchestrator (gate2).
+argument-hint: "gate1 <change...> | gate2 <rama> | lote <rama...>"
 arguments: [mode, target]
 ---
 
@@ -25,13 +25,34 @@ explícita de señalar contradicciones **entre** changes del lote.
 | `*.schema.ts`, `app/schemas/**`, OpenAPI, `packages/api-contracts/**`, routers o controllers | `contract-keeper` |
 | prompts, plantillas de salida, `apps/web/**` (texto visible), mensajes de error visibles | `clinical-language-auditor` |
 | modelo, prompts, umbral, `packages/clinical-catalogs/**`, corpus/ingesta, reranker, NLI, OCR, PII | `ai-eval-runner` |
+| código en `apps/**` o `packages/**` (no solo datos, docs o configuración) | `design-principles-reviewer` (modo change) |
 
    `privacy-guardian` corre **siempre** que el diff toque algo fuera de `docs/` u `openspec/`.
 3. Lánzalos en paralelo (modo Gate 2, rama `$target`, change asociado).
 4. Comprueba además que el implementador dejó en verde `openspec validate <change> --strict` y
    `/opsx:verify` (si no hay evidencia en su reporte, ejecútalos tú en un worktree temporal).
 
-## Consolidación (ambos modos)
+## Lote: SOLID y CUPID sobre 2–3 changes relacionados
+
+El plan del sprint (`/sprint-start`, paso 5) agrupa en un **lote de revisión** los changes que
+tocan el mismo módulo o dependen entre sí. Cuando el **último** change del lote llega al Gate 2:
+
+1. Lanza `design-principles-reviewer` en **modo lote** con las ramas (o PRs mergeados) del lote,
+   además del Gate 2 normal de ese change.
+2. Los hallazgos del lote se resuelven **en la rama del último change**, con su commit
+   `refactor(L1D-<nn>)`, aunque el código pertenezca a historias ya mergeadas; si el refactor
+   excede el alcance (más de dos operaciones), se propone como historia de deuda técnica.
+3. Así ningún PR anterior del lote espera: la revisión cruzada se paga una sola vez, al final.
+
+## Tratamiento de los hallazgos de design-principles-reviewer
+
+| Severidad | Efecto |
+|---|---|
+| Bloqueante (P1 sobre una invariante RN) | FAIL del Gate 2: vuelta al implementador |
+| Mayor (P1 restante o P2) | El implementador aplica el refactor mínimo en su commit `refactor(L1D-<nn>)` **antes del PR**, y se re-ejecuta solo este revisor |
+| Menor (P3) | No bloquea; se copia en el cuerpo del PR |
+
+## Consolidación (todos los modos)
 
 ```
 ## Gate <1|2> · <target> · <fecha>

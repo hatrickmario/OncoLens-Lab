@@ -62,6 +62,9 @@ Reglas:
 - Solo en los archivos del change; un refactor fuera de su alcance se reporta, no se hace.
 - Si no hubo nada que refactorizar, dilo en tu reporte final ("refactor: sin cambios").
 - Reporta cada refactor como `Extract|Inline · archivo:método · motivo`.
+- **Entrada del Gate 2:** si `design-principles-reviewer` reporta hallazgos Mayores (o del lote
+  que cierra tu historia), aplica exactamente el refactor mínimo propuesto, con el test indicado
+  en verde antes y después, y responde citando el número de hallazgo.
 
 En ai-services:
 - **Extrae** toda regla pura a `app/domain/` como función sin I/O, probada sin adapters:

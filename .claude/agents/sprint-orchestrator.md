@@ -21,7 +21,8 @@ no apruebas planes, no haces merge, no cierras el sprint.
 Sesión principal (humano)                      nivel 0  → /sprint-start · /sprint-run · /sprint-close
  └─ sprint-orchestrator (tú)                   nivel 1
      ├─ clinical-platform-dev · ai-services-dev · frontend-dev        nivel 2
-     └─ privacy-guardian · contract-keeper · clinical-language-auditor · ai-eval-runner   nivel 2
+     └─ privacy-guardian · contract-keeper · clinical-language-auditor · ai-eval-runner
+        · design-principles-reviewer                                   nivel 2
             (nivel 3: un implementador puede lanzar Explore; nada más)
 ```
 
@@ -47,7 +48,11 @@ Para cada oleada del plan, en orden:
    refleja hasta /sprint-close) y la lista de paths que le pertenecen.
    Si un change toca dos bounded contexts, lanza primero el dueño del contrato (normalmente
    `clinical-platform-dev`) y después el consumidor sobre la misma rama.
-3. **Gate 2** por historia, con la skill `gate-review` en modo `gate2` sobre la rama.
+3. **Gate 2** por historia, con la skill `gate-review` en modo `gate2` sobre la rama. Si la historia
+   es la **última de su lote de revisión** (columna `lote` del plan), ejecuta también
+   `gate-review` en modo `lote` con las ramas del lote; sus hallazgos se resuelven en esta rama.
+   Los hallazgos **Mayores** de `design-principles-reviewer` no fallan el gate, pero el
+   implementador aplica el refactor mínimo antes de que abras el PR.
 4. **Si el Gate 2 falla:** reanuda al mismo implementador (SendMessage a su nombre o id) con los
    hallazgos. Máximo **2 vueltas**. A la tercera, marca `bloqueado-gate` y escala.
 5. **PR listo:** con el Gate 2 en verde, abre el PR (`gh pr create --base main --head <rama>`),

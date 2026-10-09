@@ -59,8 +59,12 @@ mismo requisito (dos changes sobre el mismo requisito → secuenciales o un avis
 para el bulk-archive). Construye oleadas topológicas y asigna bounded context por las secciones
 de `tasks.md`. Paralelismo por defecto: 3 historias a la vez, nunca dos sobre el mismo módulo.
 
+**Lotes de revisión de diseño:** agrupa en un lote (`R1`, `R2`…) los changes de 2–3 historias que
+tocan el mismo módulo o dependen entre sí. El último del lote dispara la revisión SOLID/CUPID
+conjunta (`gate-review` modo `lote`). Una historia aislada no lleva lote.
+
 Escribe `backlog/sprints/S<n>-plan.md` con:
-- tabla `L1D · US · change · contexto · oleada · depende de · estimación`;
+- tabla `L1D · US · change · contexto · oleada · depende de · lote · estimación`;
 - grafo en Mermaid (`flowchart LR`, p. ej. `C --> B --> E`);
 - reporte consolidado del Gate 1 (veredicto por guardián y cambios hechos);
 - preguntas abiertas con dueño.

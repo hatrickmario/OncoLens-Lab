@@ -24,7 +24,8 @@ en segundo plano para la fase de ejecución. Alineada con el **PRD v1.3** (slici
 Sesión principal (humano)                                         nivel 0
  └─ sprint-orchestrator  (Opus)                                   nivel 1
      ├─ clinical-platform-dev · ai-services-dev · frontend-dev    nivel 2
-     └─ privacy-guardian · contract-keeper · clinical-language-auditor · ai-eval-runner   nivel 2
+     └─ privacy-guardian · contract-keeper · clinical-language-auditor · ai-eval-runner
+        · design-principles-reviewer                                                       nivel 2
             (nivel 3 libre: un implementador puede lanzar Explore)
 traceability-auditor: nivel 1, lanzado por /sprint-close
 ```
@@ -42,6 +43,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `frontend-dev` | sonnet | UI de `apps/web` (Atomic Design) | Hereda; **worktree** |
 | `privacy-guardian` | opus | PII, desidentificación, aislamiento de Backend 2, datos reales, secretos | Solo lectura |
 | `contract-keeper` | sonnet | Drift Zod ↔ Pydantic ↔ OpenAPI ↔ api-contracts ↔ deltas | Solo lectura |
+| `design-principles-reviewer` | opus | SOLID y CUPID por change y por lote de 2–3 changes; prioriza lo que confunde a un agente; refactor mínimo por hallazgo | Solo lectura |
 | `clinical-language-auditor` | sonnet | RN-23, RN-19, citas, orden por aplicabilidad, avisos no bloqueantes | Solo lectura |
 | `ai-eval-runner` | sonnet | Suite OL-06 contra baseline y metas | Lectura + reporte en `reports/eval/` |
 | `traceability-auditor` | opus | L1D ↔ change ↔ spec ↔ PRD ↔ test ↔ PR; `03-trazabilidad.md`; estado en Linear | Hereda, sin Agent |
@@ -98,6 +100,16 @@ chmod +x .claude/hooks/*.sh
 
 En `openspec config profile` selecciona además `new, continue, ff, verify, bulk-archive, onboard`.
 Después, en Claude Code: `/opsx:onboard` (opcional) y `/sprint-start S1`.
+
+## Revisión de diseño (SOLID y CUPID)
+
+`design-principles-reviewer` corre en el Gate 2 de cada change con código y, en modo lote, al
+terminar el último change de un grupo de 2–3 relacionados (columna `lote` del plan). Orden:
+**P1** lo que confunde a un agente (efecto lateral oculto, vocabulario ajeno al dominio, regla
+duplicada, invariante mezclada) → **P2** (DIP, LSP de fakes, OCP por tipo) → **P3** (idiomático,
+ISP, componible). Bloqueante si un P1 toca una RN; Mayor = refactor mínimo antes del PR; Menor =
+nota en el PR. Convención de tooling (lo crea FEAT-PL1): `.dependency-cruiser.cjs` en Node e
+`import-linter` en Python para capas y DIP.
 
 ## Convenciones
 

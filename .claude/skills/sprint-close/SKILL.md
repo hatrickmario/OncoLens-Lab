@@ -49,8 +49,10 @@ Los huecos Bloqueantes se convierten en historias para el siguiente sprint (prop
   sintéticos** sobre Compose, con los AC de G-Demo/G-Piloto que el sprint acerca. Si es el S5,
   checklist de **G-Demo**; si es el S6, checklist de **G-Piloto** con la skill `preflight-real-data`.
 - **Retro:** tiempos por historia, vueltas de Gate 2 por guardián, falsos positivos y reglas
-  que faltaron. Propón cambios concretos a `openspec/config.yaml` (rules), a los agentes o a los
-  hooks, como diff, **sin aplicarlos** hasta que el humano los apruebe.
+  que faltaron. Hallazgos de `design-principles-reviewer` por principio (SOLID/CUPID) y
+  prioridad (P1/P2/P3), refactors aplicados frente a deuda técnica propuesta, y qué violación P1
+  se repitió: si se repite, propón una regla nueva en `config.yaml` o en el linter. Propón
+  cambios concretos a `openspec/config.yaml` (rules), a los agentes o a los hooks, como diff, **sin aplicarlos** hasta que el humano los apruebe.
 Escribe todo en `backlog/sprints/$sprint-cierre.md`.
 
 ## 6. Cierre (humano)
