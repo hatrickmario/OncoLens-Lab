@@ -26,7 +26,7 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
    contra Compose y **fixtures sintéticos sembrados**; tag `US-xxx AC-n` en el nombre.
 5. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
    commit aparte `refactor(L1D-<nn>): …`.
-6. Verde local: tests, `tsc --noEmit`, lint, `openspec validate <change> --strict`,
+6. Verde local: tests, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict`,
    **/opsx:verify `<change>`**.
 7. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
    resultado, capturas o descripción de estados de UI, desviaciones del design.md.

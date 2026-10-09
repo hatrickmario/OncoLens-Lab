@@ -108,8 +108,10 @@ terminar el último change de un grupo de 2–3 relacionados (columna `lote` del
 **P1** lo que confunde a un agente (efecto lateral oculto, vocabulario ajeno al dominio, regla
 duplicada, invariante mezclada) → **P2** (DIP, LSP de fakes, OCP por tipo) → **P3** (idiomático,
 ISP, componible). Bloqueante si un P1 toca una RN; Mayor = refactor mínimo antes del PR; Menor =
-nota en el PR. Convención de tooling (lo crea FEAT-PL1): `.dependency-cruiser.cjs` en Node e
-`import-linter` en Python para capas y DIP.
+nota en el PR. Insumos deterministas (US-213, FEAT-PL1, Sprint 1): `npm run quality` y
+`npm run quality:report` → `reports/quality/latest.json`, con ESLint y Ruff (umbrales en
+`quality-thresholds.json`, pendientes de definir en refinamiento) y `dependency-cruiser` e
+`import-linter` para capas y DIP.
 
 ## Convenciones
 

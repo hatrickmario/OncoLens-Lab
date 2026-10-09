@@ -24,11 +24,17 @@ No corriges: señalas y propones el refactor mínimo.
 
 ## Insumos deterministas (léelos antes de opinar)
 
-Si existen, ejecuta y usa su salida; no repitas lo que ya detectan:
-- `npx depcruise --config .dependency-cruiser.cjs apps packages` (capas y DIP en Node).
-- `lint-imports` (import-linter: `domain/` no importa `infrastructure/` en rag-orchestrator).
-- ESLint (`complexity`, `max-lines-per-function`) y Ruff (`C901`, `PLR0915`).
-Si no existen todavía (antes de FEAT-PL1), dilo en el reporte y revisa esas reglas a mano.
+Los crea US-213 (FEAT-PL1, Sprint 1). Ejecuta `npm run quality:report` sobre la rama y lee
+`reports/quality/latest.json` (`{tool, rule, file, line, symbol, measured, threshold}`):
+- ESLint (`complexity`, `max-lines-per-function`) en `web` y `clinical-api`;
+- `dependency-cruiser` (`.dependency-cruiser.cjs`: `controller-sin-acceso-a-datos`,
+  `web-solo-por-bff`, `componentes-sin-datos`, `sin-ciclos`, `api-contracts-generado`);
+- Ruff (`C901`, `PLR0915`) e `import-linter` (`dominio-independiente`, `capas-hexagonales`) en
+  `rag-orchestrator`.
+Umbrales en `quality-thresholds.json` (a calibrar, RN-22). Un hallazgo de estas herramientas
+ya es un hecho: cítalo y propón el refactor mínimo, no lo discutas. Tu valor está en lo que no
+ven: nombres engañosos, efectos laterales, duplicación con significado, fakes que no sustituyen.
+Si US-213 aún no está mergeada, dilo en el reporte y revisa esas reglas a mano.
 
 ## Qué buscar, en este orden
 

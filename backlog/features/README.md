@@ -9,7 +9,7 @@
 | Feature | Talla | CAP / T | Sprint (slicing v2; shc = `si-hay-capacidad`) | Recorrido principal | Requisitos (dueña) | Stories | Puntos | Dependencias |
 |---|---|---|---|---|---|---|---|---|
 | [FEAT-00 — [Pre-S1] Decisiones previas al Sprint 1](FEAT-00-decisiones-previas.md) | L | — (habilita CAP-02/04/06/08/10, T-5) | Pre-S1 | sí | Contrato `EvidenceAnalysis` y esquema congelados; TBD-04, TBD-11, TBD-17, TBD-19, Q-04 | US-007 · ADR-36, US-008 · DEC-02, US-009 · DEC-03, US-010 · DEC-04, US-011 · DEC-05, US-033 | 12 | ⛔ ADR-39 (US-033 AC-6) |
-| [FEAT-PL1 — Plataforma base](FEAT-PL1-plataforma-base.md) | L | T-4, T-5 (DoD) | 1 · 2 | sí | RN-14, RN-22; NFR-05, NFR-10 (S1), NFR-13; SEG-08, SEG-09, SEG-12 | US-034 … US-037 | 13 (S1) · 3 (S2) | ↪ US-033 |
+| [FEAT-PL1 — Plataforma base](FEAT-PL1-plataforma-base.md) | L | T-4, T-5 (DoD) | 1 · 2 | sí | RN-14, RN-22; NFR-05, NFR-10 (S1), NFR-13; SEG-08, SEG-09, SEG-12 | US-034 … US-037, US-213 | 18 (S1) · 3 (S2) | ↪ US-033 |
 | [FEAT-PL2 — Esquema completo, seed y roles](FEAT-PL2-esquema-seed-roles.md) | L | T-4 (AC-T4.4) | 1 · 2 | sí | OL-01; FR-17 (esquema); SEG-06 (BD) | US-038, US-039, US-040 | 8 (S1) · 5 (S2) | ↪ US-033, US-035 · ⛔ DEC-05, DEC-04 (escenario / workaround Q-07) |
 | [FEAT-PL3 — Catálogos clínicos v1](FEAT-PL3-catalogos-clinicos.md) | L | — (consumida por CAP-02/03/04/05/08) | 2 · `si-hay-capacidad` | sí (US-042: no) | NFR-14; RN-20 (configuración); RN-29 (mínimo S1) | US-041, US-042, US-043, US-018 · DEC-08 | 9 (S2) · 3 (shc) | ↪ US-033, US-037 · ⛔ DEC-04 (workaround Q-07) |
 | [FEAT-T4a — Acceso, identidad, pacientes y desidentificación](FEAT-T4a-acceso-identidad-pacientes.md) | XL (propone división) | T-4 | 1 · 2 · 4 · 6 | sí | FR-01, FR-02, FR-03 (manual), FR-17; RN-10, RN-11, RN-12, RN-16, RN-18 (campos) | US-211 (S1), US-044 … US-050, US-013 · ADR-40 | 8 (S1) · 21 (S2) · 5 (S4) · 3 (S6) | ↪ PL1, PL2 · ⛔ ADR-40 (US-049) |
@@ -68,6 +68,7 @@
 | US-035 | Los secretos y certificados se generan con scripts y nunca se versionan | FEAT-PL1 | 1 | 3 | sí |
 | US-036 | La CI valida build, contratos y bloquea secretos y PII en el repositorio | FEAT-PL1 | 1 | 5 | sí |
 | US-037 | Toda configuración calibrable vive en variables validadas al arranque y los logs salen en JSON con `traceId` | FEAT-PL1 | 2 | 3 | sí |
+| US-213 | La CI aplica umbrales de tamaño y complejidad y reglas de dependencias entre capas en los dos backends y en `web` | FEAT-PL1 | 1 | 5 | sí |
 | US-038 | La migración inicial crea el esquema completo de readme §3.1 | FEAT-PL2 | 1 | 5 | sí |
 | US-039 | El seed sintético carga los pacientes de demo y se niega a correr en el entorno piloto | FEAT-PL2 | 1 | 3 | sí |
 | US-040 | El rol `rag_corpus` solo accede al schema `corpus` y la CI lo prueba | FEAT-PL2 | 2 | 5 | sí |
@@ -297,7 +298,7 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 | Sprint | Puntos | Detalle | Gate / demo |
 |---|---|---|---|
 | Pre-S1 | **12** | FEAT-00: ADR-36 (3) + DEC-02…DEC-05 (4) + US-033 (5) | Contrato y esquema congelados |
-| S1 | **109** | 06a 29 (incluye ADR-39) · T5a 18 (ADR-41, DEC-06, US-072, US-074, US-075) · PL1 13 · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; la suite `evaluate` corre en cada PR que cambia la IA |
+| S1 | **114** | 06a 29 (incluye ADR-39) · T5a 18 (ADR-41, DEC-06, US-072, US-074, US-075) · PL1 18 (incluye US-213, 2026-10-08) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; la suite `evaluate` corre en cada PR que cambia la IA |
 | S2 | **66 + `?`** (71 con US-073 = 5) | T4a 21 (incluye ADR-40) · 01a 13 · PL3 9 (incluye DEC-08) · T2a 8 · 02a 6 (incluye DEC-09) · PL2 5 · PL1 3 · T5a 1 (DEC-07) + US-073 (`?`, rango 3–5) | Demo: login → listado → ficha → análisis con Base del análisis; baseline técnico calibrado y umbral de regresión activo |
 | S3 | **85** | 01b 31 · 02b 21 · 03a 15 · T5b 10 · 10a 3 · T1a 3 · 01a 2 (US-212) | Demo: carga de PDF → extracción → vista de caso con enlace al PDF de origen (hipótesis 1) |
 | S4 | **79** | 04 23 (incluye DEC-01) · 03b 16 · 06c 16 · 06a 6 · 10b 5 · T4a 5 (US-047) · T2b 3 · T5b 3 · T3 2 | Demo: revisión, registro manual y checklist de faltantes (hipótesis 2) |
@@ -494,6 +495,9 @@ Proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`. El Markdown es la fuente; Linea
 - **Milestones:** Pre-S1, Sprint 1…Sprint 6, Si hay capacidad, Post-MVP.
 - **Relaciones de bloqueo:** 30 (`blockedBy`), según la lista ⛔ de cada historia en el manifiesto de publicación.
 
-## Último ID usado: US-212
+## Último ID usado: US-213
+
+**US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Pendiente de publicar en Linear.
+
 
 Historias nuevas de los ajustes del usuario del 2026-10-07: **US-211** (FEAT-T4a, S1, división de US-044) y **US-212** (FEAT-01a, S3, extraída de US-080). DEC nuevas del lote 4: **DEC-20** (US-208, criterio de "listo" de CAP-12). Último DEC: DEC-20. Último ADR del backlog: ADR-44 (ADR-7 es anterior y Futuro).

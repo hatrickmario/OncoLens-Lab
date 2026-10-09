@@ -37,7 +37,7 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 6. Si cambiaste un schema Pydantic o el OpenAPI: corre la skill `sync-contracts`.
 7. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
    commit aparte `refactor(L1D-<nn>): …`.
-8. Verde local: `pytest`, `mypy`/`ruff` si están configurados, `openspec validate <change> --strict`
+8. Verde local: `pytest`, `mypy` si está configurado, `npm run quality` (Ruff + import-linter, US-213), `openspec validate <change> --strict`
    y **/opsx:verify `<change>`**.
 9. Commit `[L1D-<nn>] …` con atribución, push, y devuelve: rama, tareas, tests por AC, refactors, comandos y
    resultado, desviaciones del design.md.

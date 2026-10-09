@@ -2,12 +2,12 @@
 
 > Linear: [L1D-30](https://linear.app/l1der-lab-mjbc/issue/L1D-30)
 
-**Talla:** L · **Sprint:** 1 (US-034…US-036) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
 **Requisitos:** RN-14 (dueña), RN-22 (dueña), RN-13 (guarda del S1; dueña del gate: US-143), NFR-05, NFR-10 (parte S1), NFR-13, SEG-07 (claves), SEG-08 (TLS hacia PostgreSQL), SEG-09, SEG-12
-**Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
+**Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.1 patrón y capas], [→ readme §2.3 estructura], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
 **Dependencias:** ↪ US-033 (specs que la CI valida) · 🔗 Bloquea: todas las Features del S1 (entorno común) · ⛔ ADR-39 solo para los valores de runtime (`LLM_BASE_URL`, `LLM_MODEL`) y el presupuesto de memoria, que se configuran, no se codifican
 **Valor:** sin un entorno reproducible no hay walking skeleton demostrable al oncólogo. Esta Feature fija desde el día uno las reglas que no se pueden arreglar después en un repositorio público: ningún secreto ni dato real versionado, solo `web` expuesto, la IA aislada de los datos clínicos por red, y todo valor "a calibrar" en configuración, para que el oncólogo pueda ajustar umbrales sin desplegar código.
-**Stories:** US-034, US-035, US-036 (13 puntos, S1) · US-037 (3 puntos, S2)
+**Stories:** US-034, US-035, US-036, US-213 (18 puntos, S1) · US-037 (3 puntos, S2)
 
 ---
 
@@ -160,6 +160,83 @@ corpus es de US-074. *Mutation testing* (S6).
 ## INVEST
 **Small** ✓ un workflow con cuatro jobs reutilizando herramientas estándar.
 **Testable** ✓ cada AC es un PR de prueba con resultado esperado verde o rojo.
+
+---
+
+## US-213 — La CI aplica umbrales de tamaño y complejidad y reglas de dependencias entre capas en los dos backends y en `web`
+
+> Linear: pendiente de publicar (crear como sub-issue de L1D-30, milestone Sprint 1)
+
+`FEAT-PL1` · Sprint 1 · Estimación **5** · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI) · 🔗 Consumida por: `design-principles-reviewer` (Gate 2) y el paso de refactor de los implementadores (`.claude/`)
+
+## Story
+Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
+detecten de forma determinista las funciones demasiado largas o complejas y las
+dependencias que cruzan capas prohibidas, para que la revisión de SOLID y CUPID se apoye
+en evidencia reproducible y no solo en el criterio de un modelo, y para que ningún agente
+copie un acoplamiento indebido.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado el monorepo con el código del S1, cuando se ejecuta
+  `npm run quality` en la raíz, entonces corre ESLint en `web` y `clinical-api`,
+  `dependency-cruiser` sobre `apps/` y `packages/`, Ruff y `import-linter` en
+  `rag-orchestrator`; termina con código 0, y `npm run quality:report` escribe
+  `reports/quality/latest.json` con los hallazgos por herramienta, regla, archivo y línea.
+  El job `quality` de `.github/workflows/ci.yml` ejecuta lo mismo en cada PR. `[NFR-13]`
+  `[readme §2.6]`
+- **AC-2 (borde · capa saltada en Node)** · Dado un PR en el que un archivo
+  `apps/clinical-api/src/modules/**/*.controller.ts` importa `@prisma/client` o un
+  `*.repository.ts`, cuando corre el job `quality`, entonces falla y el mensaje nombra la
+  regla `controller-sin-acceso-a-datos` y el archivo. Lo mismo para
+  `apps/web/**` → `apps/clinical-api/**` (`web-solo-por-bff`) y para
+  `apps/web/components/**` → `@prisma/client` o clientes HTTP directos. `[readme §2.1]`
+  `[readme §2.3]`
+- **AC-3 (borde · dominio contaminado en Python)** · Dado un PR en el que un módulo de
+  `apps/rag-orchestrator/app/domain/` importa algo de `app/infrastructure/` o de
+  `app/api/`, cuando corre el job `quality`, entonces `import-linter` falla con el
+  contrato `dominio-independiente` y nombra el import. Igual para `app/application/`
+  → `app/api/` (`capas-hexagonales`). `[readme §2.3]`
+- **AC-4 (borde · umbral de ESLint)** · Dada una función de `clinical-api` que supera el
+  umbral configurado de `max-lines-per-function` o de `complexity`, cuando corre el job
+  `quality`, entonces falla nombrando la regla, la función, el valor medido y el umbral.
+  `[NFR-13]`
+  > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-4, AC-5, `quality-thresholds.json`): ¿qué umbrales se adoptan para `max-lines-per-function`, `complexity` (ESLint), `C901` max-complexity y `PLR0915` max-statements (Ruff), y si los tests tienen un umbral distinto? Hasta decidirlo, la propuesta a calibrar es 40 líneas por función, complejidad 10, max-complexity 10 y 50 sentencias, con tests excluidos de `max-lines-per-function`; se revisa en la retro del S1 con los hallazgos reales de `design-principles-reviewer`.
+- **AC-5 (borde · umbral de Ruff)** · Dada una función de `rag-orchestrator` que supera el
+  umbral configurado de `C901` o `PLR0915`, cuando corre el job `quality`, entonces falla
+  nombrando la regla, la función y el umbral. `[NFR-13]`
+- **AC-6 (borde · umbrales en un solo lugar)** · Dado un cambio de umbral solo en
+  `quality-thresholds.json` (raíz), cuando se vuelve a ejecutar `npm run quality`,
+  entonces ESLint y Ruff aplican el valor nuevo sin tocar ningún otro archivo de
+  configuración, y un umbral ausente o no numérico hace fallar el job con el nombre de la
+  clave. `[RN-22]` (asumido)
+
+## Contexto técnico
+- **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`
+  lo lee y un script (`scripts/quality/sync-ruff-thresholds`) genera la sección
+  `[tool.ruff.lint.mccabe]` / `[tool.ruff.lint.pylint]` de `apps/rag-orchestrator/pyproject.toml`,
+  y la CI comprueba que está sincronizada. Son valores "a calibrar" (RN-22): nunca literales
+  repartidos por la configuración.
+- **Reglas de dependencias (Node):** `.dependency-cruiser.cjs` con, al menos,
+  `controller-sin-acceso-a-datos`, `web-solo-por-bff`, `componentes-sin-datos`,
+  `sin-ciclos` y `api-contracts-generado` (nadie importa tipos de `clinical-api` saltándose
+  `packages/api-contracts`).
+- **Reglas de dependencias (Python):** `apps/rag-orchestrator/.importlinter` con los
+  contratos `dominio-independiente` (domain no importa application, infrastructure ni api) y
+  `capas-hexagonales` (api → application → domain; infrastructure solo implementa puertos).
+- **Salida para agentes:** `reports/quality/latest.json` (ignorado por git) es la entrada
+  determinista que `design-principles-reviewer` lee antes de opinar; formato
+  `{tool, rule, file, line, symbol, measured, threshold}`.
+- AC-2 a AC-5 se verifican con fixtures de PR en `ci/tests/quality/` (un archivo que viola
+  cada regla), en una rama de la CI, no en `main`, igual que US-036.
+
+## Non-goals
+Mutation testing (US-185, `si-hay-capacidad`). Revisión de diseño no determinista (es del
+agente `design-principles-reviewer`). Reglas de estilo o formato (Prettier, `ruff format`)
+más allá de lo que ya fije US-036.
+
+## INVEST
+**Small** ✓ tres archivos de reglas, un archivo de umbrales, un job de CI y fixtures de prueba.
+**Testable** ✓ cada AC es una ejecución de `npm run quality` o un PR de prueba con resultado verde o rojo y un mensaje esperado.
 
 ---
 

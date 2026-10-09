@@ -35,7 +35,7 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 5. Si cambiaste un endpoint o un schema: corre la skill `sync-contracts`.
 6. Commit del comportamiento (`[L1D-<nn>] …`) y luego **Refactor** (sección siguiente) en un
    commit aparte `refactor(L1D-<nn>): …`.
-7. Verde local: tests del contexto, `tsc --noEmit`, lint, `openspec validate <change> --strict` y
+7. Verde local: tests del contexto, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict` y
    **/opsx:verify `<change>`**.
 8. Commit(s) con mensaje `[L1D-<nn>] …` y la línea de atribución; `git push -u origin <rama>`.
 9. Devuelve: rama, tareas completadas, tests añadidos (por AC), refactors aplicados, comandos ejecutados con su
