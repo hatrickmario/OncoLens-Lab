@@ -6,7 +6,7 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 FILE="$(python3 -I "$HOOK_DIR/_input.py" tool_input.file_path)"
 [ -z "$FILE" ] && exit 0
 case "$FILE" in
-  */packages/api-contracts/src/*|*/apps/clinical-api/src/generated/*|*/apps/rag-orchestrator/app/schemas/generated/*)
+  */packages/api-contracts/src/*|*/apps/rag-orchestrator/app/schemas/generated/*)
     echo "OncoLens · bloqueado: $FILE se genera desde el openapi.yaml del proveedor (contract-first)." >&2
     echo "Edita apps/<backend>/openapi.yaml y ejecuta npm run contracts:generate (skill sync-contracts)." >&2
     exit 2 ;;

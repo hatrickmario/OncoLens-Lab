@@ -105,6 +105,29 @@ estado que solo usan dos hojas.
 Al introducir un patrón, el test lo cubre por su API pública (el hook con `renderHook`; el
 compound component combinando sus subpartes como lo haría el consumidor).
 
+## Seguridad del cliente (OWASP aplicado al frontend)
+
+- **Validación en cliente y en servidor, siempre ambas.** La del cliente es UX; la del servidor
+  es seguridad. Los formularios validan con el **mismo schema Zod** del contrato, importado de
+  `packages/api-contracts/src/zod/` (`react-hook-form` + `zodResolver`); nunca un schema escrito a
+  mano en `web`. El Route Handler y `clinical-api` vuelven a validar aunque el cliente ya lo haya
+  hecho.
+- **Nunca secretos en el cliente.** Solo las variables con prefijo `NEXT_PUBLIC_` llegan al
+  bundle, y solo las de la lista permitida (US-216); nada sensible lleva ese prefijo. Todo módulo
+  que lee secretos, la sesión o llama a `clinical-api` empieza con `import 'server-only'`. Los
+  componentes `'use client'` no importan nada de esos módulos.
+- **XSS:** prohibido `dangerouslySetInnerHTML` (regla `react/no-danger`). El texto del LLM, de los
+  chunks del corpus y de los documentos se muestra como texto; si hace falta Markdown, con un
+  renderizador y `rehype-sanitize`, sin HTML crudo. Los enlaces de las citas validan el esquema
+  (`https:`) y llevan `rel="noopener noreferrer"`.
+- **Clickjacking y cabeceras:** no desactives ni relajes la CSP, `frame-ancestors 'none'`,
+  `Referrer-Policy` ni el resto de cabeceras de US-216; si una librería necesita relajar la CSP,
+  detente y pide un ADR.
+- **CSRF:** las mutaciones van por Route Handlers que verifican `Origin` (cookie `SameSite=Strict`);
+  nunca `fetch` directo a `clinical-api` desde el navegador.
+- **Dependencias:** cada dependencia nueva se justifica en `design.md` y debe pasar `npm audit`
+  sin críticas ni altas (US-217). Prefiere lo que ya está en el stack.
+
 ## Reglas de UI que no se negocian
 
 - **Encuadre (RN-23, D-01):** encabezado "Opciones descritas en la evidencia". Nunca

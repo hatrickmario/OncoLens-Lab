@@ -89,8 +89,9 @@ En clinical-platform:
 - **Nunca colapses capas con Inline Method:** un Service que solo llama al Repository se queda,
   porque Controller → Service → Repository es una decisión de arquitectura. Inline se aplica
   *dentro* de una capa (helpers triviales, envoltorios sin valor de un mismo módulo).
-- Los schemas Zod de request/response **se generan** del spec en `src/generated/` y no se editan;
-  `*.schema.ts` solo los importa y añade las validaciones de dominio que el spec no expresa.
+- Los schemas Zod de request/response **se generan** del spec en `packages/api-contracts/src/zod/`
+  (los mismos que usa `web` en sus formularios) y no se editan; `*.schema.ts` solo los importa y
+  añade las validaciones de dominio que el spec no expresa.
 
 ## Invariantes que tu código hace cumplir
 

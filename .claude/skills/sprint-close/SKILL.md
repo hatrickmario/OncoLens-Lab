@@ -27,6 +27,9 @@ Ejecuta **/opsx:verify** para cada change del grupo a archivar, ya sobre `main` 
 integrado, más la suite completa (`npm test` en la raíz y `pytest` en rag-orchestrator) y,
 si el sprint tocó modelo/prompt/umbral/catálogo/corpus, la skill `run-ai-eval` con la suite
 completa. Esto detecta regresiones **entre** historias que el Gate 2 por historia no ve.
+Ejecuta además la skill incluida **`/security-review`** sobre el diff completo del sprint
+(`git diff <commit de inicio del sprint>..main`) y adjunta sus hallazgos; uno crítico o alto
+abierto se trata como regresión.
 Una regresión → historia de corrección en este sprint o `movido-S<n+1>`; decide el humano.
 
 ## 3. Archivo en bloque

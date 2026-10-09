@@ -18,7 +18,7 @@ si el código y el spec difieren, se corrige el código.
 |---|---|
 | `npm run contracts:check` | Valida ambos specs contra OpenAPI 3.1, el vocabulario prohibido (`recommendations`, `/platform/rag/query`) y los ejemplos de `contracts/examples/` |
 | `npm run contracts:breaking` | `oasdiff breaking` del spec de la rama contra `origin/main`; falla ante un cambio incompatible no declarado |
-| `npm run contracts:generate` | Genera desde los specs: `packages/api-contracts/src/` (tipos y clientes TS), `apps/clinical-api/src/generated/` (schemas Zod) y `apps/rag-orchestrator/app/schemas/generated/` (modelos Pydantic) |
+| `npm run contracts:generate` | Genera desde los specs: `packages/api-contracts/src/` (tipos y clientes TS), `packages/api-contracts/src/zod/` (schemas Zod **compartidos** por `web` y `clinical-api`) y `apps/rag-orchestrator/app/schemas/generated/` (modelos Pydantic) |
 | `npm run contracts:verify-provider` | Tests de verificación del proveedor: cada respuesta real de cada backend se valida contra su propio spec (US-214) |
 
 Si un script todavía no existe, no lo inventes: dilo ("pendiente de US-033/US-036/US-214") y haz a

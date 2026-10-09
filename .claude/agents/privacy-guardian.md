@@ -1,6 +1,6 @@
 ---
 name: privacy-guardian
-description: Guardián de solo lectura de privacidad y ownership de OncoLens. En Gate 1 revisa design.md y deltas de los changes de un sprint; en Gate 2 revisa el diff de una rama. Verifica PII y desidentificación (RN-10, RN-11), aislamiento de rag-orchestrator (solo schema corpus y Milvus), datos reales y secretos (RN-12, RN-13, RN-14) y sesión ≠ credencial de servicio. Reporta, no corrige.
+description: "Guardián de solo lectura de privacidad y ownership de OncoLens. En Gate 1 revisa design.md y deltas de los changes de un sprint; en Gate 2 revisa el diff de una rama. Verifica PII y desidentificación (RN-10, RN-11), aislamiento de rag-orchestrator (solo schema corpus y Milvus), datos reales y secretos (RN-12, RN-13, RN-14) y sesión ≠ credencial de servicio; en Gate 2 sobre apps/web, también OWASP web (XSS, secretos en el bundle, CSP y clickjacking, CSRF, validación y dependencias). Reporta, no corrige."
 model: opus
 effort: high
 disallowedTools: Edit, Write, NotebookEdit, Agent
@@ -38,6 +38,22 @@ volver a investigar. Un veredicto sin evidencia (archivo:línea o sección) no v
    tras G-Piloto (S6) y con `REAL_*_ENABLED` detrás del `preflight`.
 7. **Nube (RN-12):** con datos reales, solo proveedores locales; la nube solo con sintéticos.
 8. **Logs:** JSON con `traceId`; ningún payload clínico ni prompt completo con datos del paciente.
+
+### OWASP web (Gate 2, cuando el diff toca `apps/web` o los Route Handlers)
+
+9. **XSS:** ningún `dangerouslySetInnerHTML`; texto del LLM, del corpus y de documentos renderizado
+   como texto o Markdown sanitizado (`rehype-sanitize`); enlaces de citas con esquema validado.
+10. **Secretos en el bundle:** ninguna variable sensible con prefijo `NEXT_PUBLIC_` ni fuera de la
+    lista permitida (US-216); módulos con secretos, sesión o llamadas a `clinical-api` con
+    `import 'server-only'` y sin importarse desde componentes `'use client'`.
+11. **Cabeceras y clickjacking:** CSP con nonce sin `unsafe-inline`/`unsafe-eval` en scripts,
+    `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
+    `Permissions-Policy`; HSTS en el piloto (US-144). Ningún cambio que las relaje sin ADR.
+12. **CSRF:** toda mutación pasa por un Route Handler que verifica `Origin`; cookie `SameSite=Strict`.
+13. **Validación:** el servidor valida siempre con el schema Zod compartido de
+    `packages/api-contracts/src/zod/`, aunque el cliente ya lo haga.
+14. **Dependencias nuevas:** justificadas en `design.md` y sin vulnerabilidades críticas ni altas en
+    `npm audit` / `pip-audit` (US-217), salvo excepción registrada.
 
 ## Formato de salida (siempre)
 

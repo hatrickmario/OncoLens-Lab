@@ -41,7 +41,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `clinical-platform-dev` | sonnet | clinical-api, Prisma, BFF `apps/web/app/api`, infra | Hereda; **worktree** |
 | `ai-services-dev` | sonnet | rag-orchestrator, corpus, datasets sintéticos | Hereda; **worktree** |
 | `frontend-dev` | sonnet | UI de `apps/web` (Atomic Design) | Hereda; **worktree** |
-| `privacy-guardian` | opus | PII, desidentificación, aislamiento de Backend 2, datos reales, secretos | Solo lectura |
+| `privacy-guardian` | opus | PII, desidentificación, aislamiento de Backend 2, datos reales, secretos; en `apps/web`, OWASP web (XSS, secretos en el bundle, CSP y clickjacking, CSRF, validación, dependencias) | Solo lectura |
 | `contract-keeper` | sonnet | Contract-first y provider-driven: spec antes que el código, nada generado a mano, oasdiff, verificación del proveedor, secuencia `contract → test → feat → refactor` | Solo lectura |
 | `design-principles-reviewer` | opus | SOLID y CUPID por change y por lote de 2–3 changes; prioriza lo que confunde a un agente; refactor mínimo por hallazgo | Solo lectura |
 | `clinical-language-auditor` | sonnet | RN-23, RN-19, citas, orden por aplicabilidad, avisos no bloqueantes | Solo lectura |
@@ -55,7 +55,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 |---|---|---|
 | `sprint-start` | Solo manual `/sprint-start S<n>` | Abre el sprint (pasos 1–7) |
 | `sprint-run` | Solo manual `/sprint-run S<n>` | Lanza/reanuda el orquestador |
-| `sprint-close` | Solo manual `/sprint-close S<n>` | Cierra el sprint (pasos 1–6) |
+| `sprint-close` | Solo manual `/sprint-close S<n>` | Cierra el sprint (pasos 1–6), incluido `/security-review` sobre el diff del sprint |
 | `implement-story` | Orquestador o `/implement-story L1D-<nn>` | Una historia de punta a punta hasta el PR |
 | `backlog-to-change` | `/sprint-start` o manual | Historia → `/opsx:propose` con trazabilidad |
 | `gate-review` | `/sprint-start` (gate1), orquestador (gate2) | Guardianes en paralelo + veredicto consolidado |
@@ -82,7 +82,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `SessionStart` | `session-context.sh` | Inyecta changes activos y el último `S<n>-status.md` |
 | `PreToolUse` Edit/Write | `guard-sensitive-paths.sh` | Bloquea `.env`, claves, certificados y rutas de datos reales |
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
-| `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, `apps/clinical-api/src/generated/`, `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
+| `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, que incluye los schemas Zod compartidos en `src/zod/`, y `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
 | `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged + `openspec validate --all --strict` |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es

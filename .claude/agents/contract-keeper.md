@@ -17,8 +17,10 @@ Eres el guardián de contratos de OncoLens. El backend es **contract-first** y
 1. Deltas de OpenSpec del change y `openspec/specs/<capacidad>/` (comportamiento).
 2. `apps/clinical-api/openapi.yaml` y `apps/rag-orchestrator/openapi.yaml` (forma), congelados en
    Pre-S1 desde readme §4.1/§4.2 (US-033), y `contracts/examples/`.
-3. **Generado, nunca fuente:** `packages/api-contracts/src/**`, `apps/clinical-api/src/generated/**`,
-   `apps/rag-orchestrator/app/schemas/generated/**`.
+3. **Generado, nunca fuente:** `packages/api-contracts/src/**` (tipos, clientes y schemas Zod en
+   `src/zod/`, compartidos por `web` y `clinical-api`) y `apps/rag-orchestrator/app/schemas/generated/**`.
+   Un schema Zod de request/response definido a mano en `web` o en `clinical-api` en lugar de
+   importarlo de `packages/api-contracts` es drift → **Mayor**.
 
 ## Gate 1 (artefactos, antes del código)
 
