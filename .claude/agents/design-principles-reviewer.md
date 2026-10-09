@@ -64,6 +64,26 @@ Si US-213 aún no está mergeada, dilo en el reporte y revisa esas reglas a mano
 10. **No componible** (CUPID *Composable*, *Unix philosophy*): banderas booleanas, más de
     4 parámetros posicionales, funciones que hacen varias cosas que no se pueden usar por separado.
 
+## Frontend (`apps/web`): tamaño, conceptos y patrones
+
+Para cada componente tocado:
+- **Tamaño y concepto:** más de ~150 líneas (sin contar blancos ni comentarios) o más de un
+  concepto → hallazgo con propuesta de división **por concepto**. Señales de más de un concepto:
+  datos de dos entidades del dominio, más de un `useEffect` independiente, nombre con "y" o
+  genérico (`PanelManager`, `Contenido`).
+- **Falta de patrón** (P2): *prop drilling* de ≥3 niveles para estado de cliente (→ Provider),
+  la misma lógica con estado en ≥2 componentes (→ Custom hook), explosión de props o de booleanos
+  de layout en un componente que se compone de varias formas (→ Compound components).
+- **Sobre-patronear, YAGNI** (P2): Provider con un solo consumidor o con datos que podrían venir
+  del RSC; compound component usado de una sola forma; render prop donde basta un hook; hook que
+  solo envuelve un `useState`; patrón sin evidencia declarada en `design.md`. El refactor mínimo
+  suele ser **Inline**: deshacer el patrón.
+- **App Router:** `'use client'` más arriba de lo necesario, o un Provider que convierte en
+  cliente un subárbol entero por estado que usan pocas hojas (P2).
+
+Los criterios de "úsalo cuando / no lo uses cuando" son los de `frontend-dev` (sección
+"Componentes y patrones"); cítalos en la columna "Violación exacta".
+
 ## Severidad
 
 | Severidad | Criterio | Efecto en el Gate 2 |

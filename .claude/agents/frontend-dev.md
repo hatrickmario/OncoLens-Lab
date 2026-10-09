@@ -67,13 +67,39 @@ Reglas:
   en verde antes y después, y responde citando el número de hallazgo.
 
 En frontend:
-- **Extrae** componentes siguiendo Atomic Design cuando un componente pasa del umbral del linter
-  o repite marcado: átomos y moléculas reutilizables (`AvisoIA`, `CitaVerificable`,
-  `EstadoCriterio`).
-- Extrae a hooks o funciones puras la lógica de presentación (agrupar criterios por estado,
+- **Regla de oro:** si un componente pasa de **~150 líneas** o maneja **más de un concepto**,
+  divídelo (sección siguiente). Extrae siguiendo Atomic Design: átomos y moléculas reutilizables
+  (`AvisoIA`, `CitaVerificable`, `EstadoCriterio`).
+- Extrae a funciones puras la lógica de presentación sin estado (agrupar criterios por estado,
   formatear vigencia) para probarla sin renderizar.
-- **Inline Method** para componentes o hooks que solo reenvían props sin añadir comportamiento.
+- **Inline Method** para componentes o hooks que solo reenvían props sin añadir comportamiento, y
+  para cualquier patrón introducido sin la evidencia que exige la sección siguiente.
 - Los textos obligatorios (RN-19, RN-23) siguen saliendo de configuración también tras el refactor.
+
+## Componentes y patrones (YAGNI primero)
+
+**Dividir** un componente cuando pasa de ~150 líneas o maneja más de un concepto. Señales de
+"más de un concepto": trae o muestra datos de dos entidades del dominio (p. ej., la opción
+descrita y el checklist de faltantes), tiene más de un `useEffect` independiente, o su nombre
+necesita una "y" o es genérico (`PanelManager`, `Contenido`). Divide por concepto, no por
+número de líneas: dos mitades del mismo concepto no mejoran nada.
+
+**Patrones: solo con evidencia de necesidad.** Si no hay evidencia, la solución simple (props,
+composición con `children`, una función) gana. Declara en `design.md` el patrón y su evidencia.
+
+| Patrón | Úsalo cuando (evidencia) | No lo uses cuando (YAGNI) | Ejemplo en OncoLens |
+|---|---|---|---|
+| **Custom hook** | La misma lógica con estado o efectos aparece en ≥2 componentes, o tapa el render | Solo envuelve un `useState`, o tiene un único consumidor y es corto | `useAnalisisEvidencia()` (Route Handler + estados espera/sin evidencia/error); `useCriteriosPorEstado()` |
+| **Compound components** | Familia de subpartes que el consumidor combina de varias formas, con props que explotan (≥2 booleanos de layout o más de ~7 props) | El componente se usa de una sola forma | `<OpcionDescrita>` con `.Encabezado`, `.Citas`, `.Aplicabilidad`, `.Vigencia`, compartido entre opciones válidas y descartadas |
+| **Render props** | Puntual: el consumidor controla el render de cada ítem y un hook no puede expresarlo (lista con foco o virtualización internos) | Siempre que un hook resuelva lo mismo; exige justificación escrita en `design.md` | Probablemente ninguno en el MVP |
+| **Provider** | Estado **de cliente** compartido por componentes distantes de un subárbol, con *prop drilling* de ≥3 niveles | Datos del servidor (los pasan los RSC), un único consumidor, o "estado global por si acaso" | `PanelAnalisisProvider` para la opción o el criterio seleccionado; nunca para el paciente ni para el análisis |
+
+**App Router:** hooks y providers obligan a `'use client'`. Mantén los RSC por defecto; monta los
+providers **lo más abajo posible** del árbol y no conviertas en cliente un subárbol entero por un
+estado que solo usan dos hojas.
+
+Al introducir un patrón, el test lo cubre por su API pública (el hook con `renderHook`; el
+compound component combinando sus subpartes como lo haría el consumidor).
 
 ## Reglas de UI que no se negocian
 
