@@ -40,7 +40,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `sprint-orchestrator` | opus | Ejecuta el sprint por oleadas; preloads `implement-story`, `gate-review` | Hereda todas (incl. Agent y MCP de Linear); 2.º plano; memoria de proyecto |
 | `clinical-platform-dev` | sonnet | clinical-api, Prisma, BFF `apps/web/app/api`, infra | Hereda; **worktree** |
 | `ai-services-dev` | sonnet | rag-orchestrator, corpus, datasets sintéticos | Hereda; **worktree** |
-| `frontend-dev` | sonnet | UI de `apps/web` (Atomic Design) | Hereda; **worktree** |
+| `frontend-dev` | sonnet | UI de `apps/web` (Atomic Design); se revisa a sí mismo con el loop visual | Hereda; **worktree**; Playwright MCP + Chrome DevTools MCP (solo este agente) |
 | `privacy-guardian` | opus | PII, desidentificación, aislamiento de Backend 2, datos reales, secretos; en `apps/web`, OWASP web (XSS, secretos en el bundle, CSP y clickjacking, CSRF, validación, dependencias) | Solo lectura |
 | `contract-keeper` | sonnet | Contract-first y provider-driven: spec antes que el código, nada generado a mano, oasdiff, verificación del proveedor, secuencia `contract → test → feat → refactor` | Solo lectura |
 | `design-principles-reviewer` | opus | SOLID y CUPID por change y por lote de 2–3 changes; prioriza lo que confunde a un agente; refactor mínimo por hallazgo | Solo lectura |
@@ -61,6 +61,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `gate-review` | `/sprint-start` (gate1), orquestador (gate2) | Guardianes en paralelo + veredicto consolidado |
 | `sync-contracts` | Implementadores (primera tarea de `## contratos`) | Spec del proveedor → validar → oasdiff → generar tipos, clientes y Zod/Pydantic → commit `contract(L1D-nn)` |
 | `run-ai-eval` | Implementadores, Gate 2, `/sprint-close` | Fork en `ai-eval-runner` |
+| `visual-check` | `frontend-dev` (precargada), tras el verde y antes del refactor | Loop visual: estados, consola, red, accesibilidad, rendimiento y capturas en navegador real contra Compose local con seed sintético; evidencia para el Gate 2 |
 | `preflight-real-data` | Solo manual | Checklist de G-Piloto (S6) |
 | `decompose-prd` | Ya existía | PRD → backlog — **actualizada a PRD v1.3** |
 
@@ -72,6 +73,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | **Claude Code (incluidas)** | `/code-review`, `/security-review`, `/simplify`, `/run`, `/init` | Revisión adicional de PRs, arranque de la app | Vienen con Claude Code |
 | **fullstack-dev-skills** (plugin) | `typescript-pro`, `api-designer`, `postgres-pro`, `nextjs-developer`, `react-expert`, `fastapi-expert`, `python-pro`, `rag-architect`, `playwright-expert`, `test-master`, `security-reviewer` | Referencia técnica por capa para los implementadores | Plugin ya instalado en el equipo del autor |
 | **design** (plugin) | `ux-copy`, `accessibility-review` | Texto de UI no prescriptivo y WCAG 2.1 AA | Plugin `design` |
+| **MCP (loop visual)** | Playwright MCP (`@playwright/mcp@0.0.83`) · Chrome DevTools MCP (`chrome-devtools-mcp@1.10.1`) | Que `frontend-dev` vea su propio output | Declarados inline en `frontend-dev` (`mcpServers`); se arrancan con `npx` solo mientras corre ese agente |
 | **MCP** | Linear (proyecto `OncoLens-1`, equipo `L1D`, [tablero](https://linear.app/l1der-lab-mjbc/project/oncolens-1-f85aa863d14c/issues)) | Historias, estados, relaciones | Conector de Linear |
 | **CLI** | `gh` (GitHub CLI) | PRs desde el orquestador | `brew install gh && gh auth login` |
 
@@ -84,6 +86,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
 | `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, que incluye los schemas Zod compartidos en `src/zod/`, y `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
 | `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged + `openspec validate --all --strict` |
+| `PreToolUse` `mcp__playwright__*`, `mcp__chrome-devtools__*` | `guard-visual-loop.sh` | Loop visual solo contra `localhost`/`127.0.0.1` y nunca con `REAL_ANONYMIZED_ENABLED`/`REAL_IDENTIFIED_ENABLED` activos (entorno o `.env`) |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es
 siempre humano. Los hooks requieren `python3` y `git`.
@@ -103,6 +106,33 @@ chmod +x .claude/hooks/*.sh
 
 Tras actualizar OpenSpec, `openspec update` regenera esos archivos (commit aparte, sin editarlos a
 mano). Después, en Claude Code: `/opsx:onboard` (opcional) y `/sprint-start S1`.
+
+## Loop visual del frontend (Playwright MCP + Chrome DevTools MCP)
+
+`frontend-dev` comprueba su propio output en un navegador real sin que nadie abra el navegador
+(skill `visual-check`): con los AC en verde y antes del refactor recorre los estados del change y
+revisa consola, red, accesibilidad, rendimiento y capturas a 375 y 1280 px.
+
+| Herramienta | Para qué |
+|---|---|
+| Playwright MCP | Recorrer flujos y leer el árbol de accesibilidad (barato en tokens); capturas por breakpoint |
+| Chrome DevTools MCP | Consola (violaciones de CSP, hidratación), red (solo `/api/*`, sin PII en URLs, `Origin`, cookies) y trazas de rendimiento |
+
+Reglas:
+- **Privacidad.** Lo que ve el navegador entra al contexto del modelo, que corre en la nube: solo
+  `localhost` y seed sintético. El hook `guard-visual-loop.sh` lo impone (`--allowed-origins` de
+  Playwright MCP no es una frontera de seguridad). Chrome DevTools MCP arranca con
+  `--no-performance-crux --no-usage-statistics`: por defecto enviaría las URLs de las trazas y
+  estadísticas a Google.
+- **Evidencia, no gate.** El gate son los tests E2E de la CI. Cada fallo del loop se convierte
+  primero en un test en rojo. El Gate 2 exige el bloque `## visual-check` (PASS o PENDIENTE con
+  motivo) y pasa la sección Red a `privacy-guardian` y la de Estados a `clinical-language-auditor`.
+- **Un loop a la vez.** Los worktrees comparten los puertos del Compose: candado en
+  `$(git rev-parse --git-common-dir)/oncolens-visual-check.lock`.
+- **Solo en `frontend-dev`.** Los servidores se declaran inline en su frontmatter: sus herramientas
+  no cargan el contexto de la sesión principal ni del orquestador. Versiones fijadas; se suben a
+  mano, en un commit propio.
+- Las capturas van a `reports/visual/` (ignorado por git).
 
 ## Enfoque del backend: SDD + contract-first + TDD, provider-driven
 

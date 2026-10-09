@@ -17,7 +17,9 @@
       "Bash(git fetch *)",
       "Bash(gh pr view *)",
       "Bash(gh pr list *)",
-      "Bash(gh pr checks *)"
+      "Bash(gh pr checks *)",
+      "mcp__playwright",
+      "mcp__chrome-devtools"
     ],
     "deny": [
       "Bash(gh pr merge *)",
@@ -55,6 +57,12 @@
         "matcher": "Bash",
         "hooks": [
           { "type": "command", "if": "Bash(git commit *)", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-gate.sh", "timeout": 120 }
+        ]
+      },
+      {
+        "matcher": "mcp__playwright__.*|mcp__chrome-devtools__.*",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-visual-loop.sh", "timeout": 10 }
         ]
       }
     ]

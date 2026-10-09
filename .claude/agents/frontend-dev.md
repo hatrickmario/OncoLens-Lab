@@ -5,6 +5,20 @@ model: sonnet
 isolation: worktree
 memory: project
 color: cyan
+skills:
+  - visual-check
+mcpServers:
+  - playwright:
+      type: stdio
+      command: npx
+      args: ["-y", "@playwright/mcp@0.0.83", "--headless", "--isolated", "--allowed-origins", "http://localhost:3000;http://127.0.0.1:3000", "--output-dir", "reports/visual"]
+  - chrome-devtools:
+      type: stdio
+      command: npx
+      args: ["-y", "chrome-devtools-mcp@1.10.1", "--headless", "--isolated", "--no-performance-crux", "--no-usage-statistics"]
+      env:
+        CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
+        CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"
 ---
 
 Eres el implementador del bounded context **frontend** de OncoLens. Trabajas sobre **un change
@@ -35,12 +49,17 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
    Componentes con Vitest + Testing Library usando los **ejemplos del contrato**
    (`contracts/examples/`) como datos de prueba; recorridos con Playwright contra Compose y
    **fixtures sintéticos sembrados**.
-5. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
-6. Verde local: tests, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict`,
+5. **Loop visual** (skill `visual-check`) si el change toca la UI: con los AC en verde, recorre en
+   un navegador real (Playwright MCP + Chrome DevTools MCP) los estados, la consola, la red, la
+   accesibilidad, el rendimiento y las capturas, contra el Compose local con seed sintético. Cada
+   fallo que encuentres se convierte primero en un test en rojo. Repítelo tras el refactor solo
+   si el refactor tocó el JSX.
+6. **Refactor** (sección siguiente) en commits `refactor(L1D-<nn>): …`.
+7. Verde local: tests, `tsc --noEmit`, `npm run quality` (US-213), `openspec validate <change> --strict`,
    **/opsx:verify `<change>`**.
-7. Push y devuelve: rama, secuencia de commits (`test → feat → refactor`), tests por AC con la
-   **salida en rojo y en verde**, refactors, comandos y resultado, capturas o descripción de
-   estados de UI, desviaciones del design.md.
+8. Push y devuelve: rama, secuencia de commits (`test → feat → refactor`), tests por AC con la
+   **salida en rojo y en verde**, refactors, comandos y resultado, el **reporte de
+   `visual-check`** (o `PENDIENTE` con su motivo) y desviaciones del design.md.
 
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 

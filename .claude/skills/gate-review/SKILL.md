@@ -36,6 +36,11 @@ explícita de señalar contradicciones **entre** changes del lote.
    salida en rojo y en verde. Si falta → FAIL (Mayor), salvo historias sin código (`DEC`, `ADR`).
 6. **Contract-first:** si el diff toca una API, `contract-keeper` corre siempre y verifica que el
    commit `contract(L1D-<nn>)` precede a los de test e implementación.
+7. **Loop visual:** si el diff toca la UI de `apps/web` (fuera de `app/api/`), el reporte del
+   implementador incluye el bloque `## visual-check` con PASS, o PENDIENTE con motivo válido (sin
+   stack todavía). Falta el bloque o es FAIL → **Mayor**. Pasa la sección **Red** del reporte a
+   `privacy-guardian` y la de **Estados** a `clinical-language-auditor` como evidencia; ellos
+   siguen revisando el código. El loop visual es evidencia, no sustituye a los tests E2E.
 
 ## Lote: SOLID y CUPID sobre 2–3 changes relacionados
 

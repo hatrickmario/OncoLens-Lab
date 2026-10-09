@@ -1,1 +1,3 @@
 .DS_Store
+reports/visual/
+.playwright-mcp/

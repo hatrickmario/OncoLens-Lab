@@ -36,6 +36,8 @@ context: |
   - Infra: Docker Compose (redes clinical-net, ai-net, corpus-db-net). Solo `web` publica puerto.
   - Tests: Vitest + Supertest (+ StrykerJS si hay capacidad) en clinical-api; Pytest + TestClient
     con adapters falsos en rag-orchestrator; Playwright E2E contra Compose con datos sintéticos;
+    en la UI, loop visual del implementador (skill visual-check, Playwright MCP + Chrome DevTools
+    MCP, solo localhost y seed sintético) como evidencia del Gate 2, no como sustituto de los E2E;
     suite `evaluate` de calidad de IA (OL-06) en cada PR que cambie modelo, prompt, umbral,
     catálogo o corpus.
 
@@ -116,6 +118,7 @@ rules:
     - "Para cada AC, primero la tarea del test en rojo (con el tag US-xxx AC-n y commit test(L1D-<nn>)) y luego la implementación (commit feat(L1D-<nn>))."
     - "Los tests de integración de cada endpoint validan la respuesta contra el spec del proveedor (verificación del proveedor, US-214), incluidos los códigos de error."
     - "Cada sección de bounded context termina con una tarea '- [ ] Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-<nn>)'."
+    - "Si el change toca la UI de apps/web, la sección '## frontend' incluye, después de los AC en verde y antes del refactor, la tarea '- [ ] Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo'."
     - "Si el design.md ya prevé extraer una regla de dominio (umbral, orden por aplicabilidad, desidentificación, validación de citas), nómbrala como tarea explícita: 'Extraer <nombreDelMetodo>() (RN-xx)'."
     - "Termina con: openspec validate <change> --strict, tests del contexto en verde, contracts:verify-provider si hubo cambios de API, run-ai-eval si aplica."
 

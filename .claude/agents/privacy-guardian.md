@@ -50,6 +50,9 @@ volver a investigar. Un veredicto sin evidencia (archivo:línea o sección) no v
     `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
     `Permissions-Policy`; HSTS en el piloto (US-144). Ningún cambio que las relaje sin ADR.
 12. **CSRF:** toda mutación pasa por un Route Handler que verifica `Origin`; cookie `SameSite=Strict`.
+    Si recibes la sección **Red** del `visual-check`, contrástala con el código: peticiones fuera
+    de `/api/*` del mismo origen o identidad en una URL son **Bloqueante**. Que el reporte diga
+    "✓" no te exime de revisar el código.
 13. **Validación:** el servidor valida siempre con el schema Zod compartido de
     `packages/api-contracts/src/zod/`, aunque el cliente ya lo haga.
 14. **Dependencias nuevas:** justificadas en `design.md` y sin vulnerabilidades críticas ni altas en
