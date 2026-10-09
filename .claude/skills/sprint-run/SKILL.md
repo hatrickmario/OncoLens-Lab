@@ -21,7 +21,10 @@ disable-model-invocation: true
 
 3. **Dile al humano** cómo seguir, en este formato:
    - Verás los PRs `[L1D-nn]` a medida que pasen el Gate 2; el orquestador volverá aquí para
-     pedirte merges o si un gate falla dos veces.
+     pedirte los merges de cada oleada o ante una **situación crítica** (gate fallido dos veces,
+     invariante RN, ambigüedad de la spec, cambio de alcance, seguridad o datos reales, bloqueo
+     externo). En ese caso, entrevista al humano con `AskUserQuestion` usando las preguntas del
+     orquestador, registra las respuestas en la historia (`Decidido (usuario, fecha)`) y reanúdalo.
    - Tras mergear, escribe p. ej. "mergeados L1D-93 y L1D-95" y reanudaré a `sprint-$sprint`
      con SendMessage. Si el orquestador ya no existe, vuelve a ejecutar `/sprint-run $sprint`:
      reanuda desde el archivo de estado.

@@ -7,14 +7,24 @@ en segundo plano para la fase de ejecución. Alineada con el **PRD v1.3** (slici
 ## Flujo de un sprint
 
 ```
-/sprint-start S<n>   (sesión principal · humano aprueba; también Pre-S1)       → PR de planificación → merge humano
-/sprint-run S<n>     (lanza sprint-orchestrator en 2.º plano)  → PRs [L1D-nn] → merges humanos
-/sprint-close S<n>   (sesión principal · humano cierra)         → PR de cierre → merge humano
+/sprint-refine S<n>  (sesión principal · fases 1–3; también Pre-S1)  → PR de refinamiento → merge humano
+/sprint-start S<n>   (sesión principal · humano aprueba)              → PR de planificación → merge humano
+/sprint-run S<n>     (lanza sprint-orchestrator en 2.º plano)         → PRs [L1D-nn] → merges por oleada
+/sprint-close S<n>   (sesión principal · review + retro, humano cierra) → PR de cierre → merge humano
 ```
+
+| Fase de la dinámica | Comando | Qué produce |
+|---|---|---|
+| 1 Refinamiento | `/sprint-refine` | Definition of Ready en ✓; ADRs y DEC decididos (3 propuestas solo si revertir es caro); respuestas de la entrevista registradas en las historias; slicing ajustado solo con aprobación |
+| 2 Stack técnico | `/sprint-refine` | Máquina preparada; dependencias del repo como tareas de su historia; mejoras solo vía ADR |
+| 3 UI/UX | `/sprint-refine` | Pre-S1: flujo E2E (happy path) y sistema de diseño en `docs/ux/`; luego, pantallas del sprint (3 variantes solo con riesgo de UX nuevo), revisadas por `clinical-language-auditor` y contra el contrato |
+| 4 Ejecución | `/sprint-start` → `/sprint-run` | Changes y Gate 1 aprobados; agentes en paralelo por oleadas; pausa y entrevista ante situación crítica |
+| 5 Review y retro | `/sprint-close` | Demo; resumen de lo implementado y mejoras críticas del proceso, **sin aplicarlas** |
 
 | Fase | Quién | Qué pasa |
 |---|---|---|
-| `/sprint-start` | Sesión principal | Linear → historias · `openspec list` · `backlog-to-change` por historia · **Gate 1** en lote · grafo y oleadas · **aprobación humana** · PR del plan |
+| `/sprint-refine` | Sesión principal | Fases 1–3: DoR, decisiones, entrevista, stack y diseño en `docs/ux/` · `backlog/sprints/S<n>-refinamiento.md` |
+| `/sprint-start` | Sesión principal | Exige el refinamiento en `main` · Linear → historias · `openspec list` · `backlog-to-change` por historia · **Gate 1** en lote · grafo y oleadas · **aprobación humana** · PR del plan |
 | `/sprint-run` | `sprint-orchestrator` (nivel 1) | Oleadas → implementadores (nivel 2, worktree) → **Gate 2** (guardianes, nivel 2) → PR listo · vuelve solo para pedir merges o si un gate falla 2 veces |
 | `/sprint-close` | Sesión principal | Control · `/opsx:verify` global · `/opsx:bulk-archive` · `traceability-auditor` · demo + retro · **cierre humano** |
 
@@ -53,6 +63,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 
 | Skill | Invocación | Propósito |
 |---|---|---|
+| `sprint-refine` | Solo manual `/sprint-refine S<n>` | Fases 1–3: refinamiento con DoR, decisiones, entrevista, stack y UI/UX |
 | `sprint-start` | Solo manual `/sprint-start S<n>` | Abre el sprint (pasos 1–7) |
 | `sprint-run` | Solo manual `/sprint-run S<n>` | Lanza/reanuda el orquestador |
 | `sprint-close` | Solo manual `/sprint-close S<n>` | Cierra el sprint (pasos 1–6), incluido `/security-review` sobre el diff del sprint |
