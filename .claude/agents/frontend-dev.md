@@ -67,8 +67,9 @@ Reglas:
   en verde antes y después, y responde citando el número de hallazgo.
 
 En frontend:
-- **Regla de oro:** si un componente pasa de **~150 líneas** o maneja **más de un concepto**,
-  divídelo (sección siguiente). Extrae siguiendo Atomic Design: átomos y moléculas reutilizables
+- **Regla de oro:** a partir de **100 líneas** (alerta) revisa si el componente maneja más de un
+  concepto y, si es así, divídelo; a partir de **150 líneas** (límite duro, la CI falla) divídelo
+  siempre (sección siguiente). Extrae siguiendo Atomic Design: átomos y moléculas reutilizables
   (`AvisoIA`, `CitaVerificable`, `EstadoCriterio`).
 - Extrae a funciones puras la lógica de presentación sin estado (agrupar criterios por estado,
   formatear vigencia) para probarla sin renderizar.
@@ -78,7 +79,10 @@ En frontend:
 
 ## Componentes y patrones (YAGNI primero)
 
-**Dividir** un componente cuando pasa de ~150 líneas o maneja más de un concepto. Señales de
+**Tamaño** (por archivo `.tsx`, sin blancos ni comentarios; US-213): **100 líneas = alerta**,
+**150 líneas = límite duro**. Entre 100 y 150 la pregunta es si hay más de un concepto; por
+encima de 150 se divide siempre. **Dividir** también, a cualquier tamaño, si maneja más de un
+concepto. Señales de
 "más de un concepto": trae o muestra datos de dos entidades del dominio (p. ej., la opción
 descrita y el checklist de faltantes), tiene más de un `useEffect` independiente, o su nombre
 necesita una "y" o es genérico (`PanelManager`, `Contenido`). Divide por concepto, no por

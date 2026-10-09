@@ -67,8 +67,11 @@ Si US-213 aún no está mergeada, dilo en el reporte y revisa esas reglas a mano
 ## Frontend (`apps/web`): tamaño, conceptos y patrones
 
 Para cada componente tocado:
-- **Tamaño y concepto:** más de ~150 líneas (sin contar blancos ni comentarios) o más de un
-  concepto → hallazgo con propuesta de división **por concepto**. Señales de más de un concepto:
+- **Tamaño y concepto:** con la alerta de 100 líneas de `latest.json` (sin blancos ni
+  comentarios), decide si hay más de un concepto: si lo hay → hallazgo con propuesta de división
+  **por concepto**; si no, regístralo como revisado sin hallazgo. Más de 150 líneas ya hace
+  fallar la CI (US-213): propón la división por concepto. Más de un concepto a cualquier tamaño →
+  hallazgo. Señales de más de un concepto:
   datos de dos entidades del dominio, más de un `useEffect` independiente, nombre con "y" o
   genérico (`PanelManager`, `Contenido`).
 - **Falta de patrón** (P2): *prop drilling* de ≥3 niveles para estado de cliente (→ Provider),

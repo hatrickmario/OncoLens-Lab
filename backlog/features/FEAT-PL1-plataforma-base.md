@@ -200,7 +200,7 @@ copie un acoplamiento indebido.
   umbral configurado de `max-lines-per-function` o de `complexity`, cuando corre el job
   `quality`, entonces falla nombrando la regla, la función, el valor medido y el umbral.
   `[NFR-13]`
-  > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-4, AC-5, `quality-thresholds.json`): ¿qué umbrales se adoptan para `max-lines-per-function`, `complexity` (ESLint), `C901` max-complexity y `PLR0915` max-statements (Ruff), y si los tests tienen un umbral distinto? Hasta decidirlo, la propuesta a calibrar es 40 líneas por función, complejidad 10, max-complexity 10 y 50 sentencias, con tests excluidos de `max-lines-per-function`; se revisa en la retro del S1 con los hallazgos reales de `design-principles-reviewer`.
+  > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-4, AC-5, `quality-thresholds.json`): ¿qué umbrales se adoptan para `max-lines-per-function`, `complexity` (ESLint), `C901` max-complexity y `PLR0915` max-statements (Ruff), y si los tests tienen un umbral distinto? Hasta decidirlo, la propuesta a calibrar es 40 líneas por función, complejidad 10, max-complexity 10 y 50 sentencias, con tests excluidos de `max-lines-per-function`; se revisa en la retro del S1 con los hallazgos reales de `design-principles-reviewer`. **Decidido para `apps/web` (usuario, 2026-10-09):** componentes `.tsx` medidos por archivo, sin líneas en blanco ni comentarios: **100 líneas = alerta** (`warn`, no bloquea; la revisa `design-principles-reviewer`) y **150 líneas = límite duro** (`error`, la CI falla). Ver AC-7. Los umbrales de backends y hooks siguen pendientes.
 - **AC-5 (borde · umbral de Ruff)** · Dada una función de `rag-orchestrator` que supera el
   umbral configurado de `C901` o `PLR0915`, cuando corre el job `quality`, entonces falla
   nombrando la regla, la función y el umbral. `[NFR-13]`
@@ -209,6 +209,13 @@ copie un acoplamiento indebido.
   entonces ESLint y Ruff aplican el valor nuevo sin tocar ningún otro archivo de
   configuración, y un umbral ausente o no numérico hace fallar el job con el nombre de la
   clave. `[RN-22]` (asumido)
+- **AC-7 (borde · tamaño de componentes en `web`)** · Dado un archivo `.tsx` de
+  `apps/web/components/**` o `apps/web/app/**` con más de **100** líneas (sin blancos ni
+  comentarios), cuando corre el job `quality`, entonces ESLint emite una **alerta** que aparece
+  en `reports/quality/latest.json` y el job no falla; y con más de **150** líneas, el job
+  **falla** nombrando el archivo, el valor medido y el umbral. `apps/web/components/ui/**`
+  (primitivas de shadcn), tests, stories y código generado quedan excluidos, y los componentes
+  no se miden con `max-lines-per-function`. `[NFR-13]` `[RN-22]`
 
 ## Contexto técnico
 - **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`
@@ -216,6 +223,10 @@ copie un acoplamiento indebido.
   `[tool.ruff.lint.mccabe]` / `[tool.ruff.lint.pylint]` de `apps/rag-orchestrator/pyproject.toml`,
   y la CI comprueba que está sincronizada. Son valores "a calibrar" (RN-22): nunca literales
   repartidos por la configuración.
+- **Tamaño de componentes (`web`):** ESLint `max-lines` con `skipBlankLines` y `skipComments`, en
+  dos niveles leídos de `quality-thresholds.json` (`web.componentLinesWarn = 100`,
+  `web.componentLinesError = 150`); `printWidth` de Prettier fijado (p. ej., 100) para que el
+  conteo sea estable.
 - **Reglas de dependencias (Node):** `.dependency-cruiser.cjs` con, al menos,
   `controller-sin-acceso-a-datos`, `web-solo-por-bff`, `componentes-sin-datos`,
   `sin-ciclos` y `api-contracts-generado` (nadie importa tipos de `clinical-api` saltándose

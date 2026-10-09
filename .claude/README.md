@@ -121,8 +121,8 @@ terminar el último change de un grupo de 2–3 relacionados (columna `lote` del
 **P1** lo que confunde a un agente (efecto lateral oculto, vocabulario ajeno al dominio, regla
 duplicada, invariante mezclada) → **P2** (DIP, LSP de fakes, OCP por tipo) → **P3** (idiomático,
 ISP, componible). Bloqueante si un P1 toca una RN; Mayor = refactor mínimo antes del PR; Menor =
-nota en el PR. En `apps/web` revisa además la regla de oro (dividir si un componente pasa de
-~150 líneas o maneja más de un concepto) y el uso de custom hooks, compound components, render
+nota en el PR. En `apps/web` revisa además la regla de oro (componentes `.tsx`: 100 líneas = alerta para
+revisar si hay más de un concepto, 150 líneas = límite duro de la CI; dividir siempre por concepto) y el uso de custom hooks, compound components, render
 props y providers en ambas direcciones: falta de patrón y sobre-patronear (YAGNI primero). Insumos deterministas (US-213, FEAT-PL1, Sprint 1): `npm run quality` y
 `npm run quality:report` → `reports/quality/latest.json`, con ESLint y Ruff (umbrales en
 `quality-thresholds.json`, pendientes de definir en refinamiento) y `dependency-cruiser` e
