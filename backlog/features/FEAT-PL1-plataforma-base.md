@@ -2,12 +2,12 @@
 
 > Linear: [L1D-30](https://linear.app/l1der-lab-mjbc/issue/L1D-30)
 
-**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213, US-214, US-215) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213…US-217) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
 **Requisitos:** RN-14 (dueña), RN-22 (dueña), RN-13 (guarda del S1; dueña del gate: US-143), NFR-05, NFR-10 (parte S1), NFR-13, SEG-07 (claves), SEG-08 (TLS hacia PostgreSQL), SEG-09, SEG-12
 **Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.1 patrón y capas], [→ readme §2.3 estructura], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
 **Dependencias:** ↪ US-033 (specs que la CI valida) · 🔗 Bloquea: todas las Features del S1 (entorno común) · ⛔ ADR-39 solo para los valores de runtime (`LLM_BASE_URL`, `LLM_MODEL`) y el presupuesto de memoria, que se configuran, no se codifican
 **Valor:** sin un entorno reproducible no hay walking skeleton demostrable al oncólogo. Esta Feature fija desde el día uno las reglas que no se pueden arreglar después en un repositorio público: ningún secreto ni dato real versionado, solo `web` expuesto, la IA aislada de los datos clínicos por red, y todo valor "a calibrar" en configuración, para que el oncólogo pueda ajustar umbrales sin desplegar código.
-**Stories:** US-034, US-035, US-036, US-213, US-214, US-215 (23 puntos, S1) · US-037 (3 puntos, S2)
+**Stories:** US-034, US-035, US-036, US-213…US-217 (28 puntos, S1) · US-037 (3 puntos, S2)
 
 ---
 
@@ -278,8 +278,8 @@ incompatibles se detecten contra `main`, para que el contrato sea la fuente úni
   cuerpo cumple el schema de error declarado en el spec; un error no declarado hace fallar el
   test. `[readme §4.1]` `[readme §4.2]` `[B-10]`
 - **AC-4 (borde · generado desactualizado)** · Dado un PR que cambia `openapi.yaml` sin
-  regenerar, o que edita a mano `packages/api-contracts/src/`, `apps/clinical-api/src/generated/`
-  o `apps/rag-orchestrator/app/schemas/generated/`, cuando corre la CI, entonces
+  regenerar, o que edita a mano `packages/api-contracts/src/` (incluidos los schemas Zod
+  compartidos de `src/zod/`) o `apps/rag-orchestrator/app/schemas/generated/`, cuando corre la CI, entonces
   `npm run contracts:generate && git diff --exit-code` falla nombrando los archivos. `[NFR-13]`
 - **AC-5 (borde · cambio incompatible)** · Dado un PR que elimina o vuelve obligatorio un campo
   de un spec, cuando corre `npm run contracts:breaking` (oasdiff contra `origin/main`), entonces
@@ -350,7 +350,7 @@ en las revisiones y para que el conteo de líneas de US-213 sea estable.
 - **Prettier:** `.prettierrc` en la raíz con `printWidth: 100` (el conteo de líneas de US-213 lo
   supone), `singleQuote`, `trailingComma: "all"` y `prettier-plugin-tailwindcss` para ordenar
   las clases de Tailwind. `.prettierignore` excluye lo generado (`packages/api-contracts/src/`,
-  `apps/clinical-api/src/generated/`), `components/ui/**` de shadcn solo si se decide no
+  incluidos los schemas Zod de `src/zod/`), `components/ui/**` de shadcn solo si se decide no
   reformatearlo, y `reports/`.
 - **ESLint:** `eslint.config.js` (flat config) en la raíz, compartido, con los plugins de AC-1 y
   `eslint-config-prettier` al final. Los umbrales de tamaño y complejidad y las reglas de
@@ -370,6 +370,107 @@ los hooks de Claude Code ya cubren el control.
 ## INVEST
 **Small** ✓ dos archivos de configuración, tres scripts y su inclusión en el job existente.
 **Testable** ✓ cada AC es una ejecución de script o un fixture con resultado verde o rojo y una regla esperada.
+
+---
+
+## US-216 — `web` envía cabeceras de seguridad, impide el clickjacking y no expone secretos ni HTML sin sanitizar
+
+> Linear: [L1D-266](https://linear.app/l1der-lab-mjbc/issue/L1D-266)
+
+`FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · RN-14, NFR-11, SEG-01 (CSRF ya cubierto), SEG-12 · ↪ US-034 (`web` levantado), US-215 (ESLint base) · 🔗 Relacionada: US-144 (HSTS con HTTPS en el piloto), US-061 (panel que muestra texto del LLM) · 🔗 Consumida por: `frontend-dev` y `privacy-guardian` (`.claude/`)
+
+## Story
+Como equipo de desarrollo, quiero que `web` aplique desde el primer sprint las defensas del
+navegador (CSP, anti-clickjacking, cabeceras), que ningún secreto llegue al bundle y que el
+texto generado por el LLM o copiado del corpus nunca se interprete como HTML, para que una
+fuente maliciosa o un error de configuración no comprometa la sesión del oncólogo ni los
+datos del paciente.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dada cualquier página o Route Handler de `web`, cuando se inspecciona
+  la respuesta, entonces incluye `Content-Security-Policy` con `default-src 'self'`,
+  `script-src` con nonce por request y sin `unsafe-inline` ni `unsafe-eval`,
+  `frame-ancestors 'none'` y `object-src 'none'`; además `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` y `Permissions-Policy` sin cámara, micrófono ni geolocalización.
+  `[RN-14]` `[NFR-11]` (asumido en la lista exacta de cabeceras)
+- **AC-2 (borde · clickjacking)** · Dada una página externa que intenta cargar `web` en un
+  `<iframe>`, cuando el navegador la renderiza, entonces el frame se bloquea (test E2E con
+  Playwright sobre una página de prueba). (asumido)
+- **AC-3 (borde · XSS en texto generado)** · Dado un fixture de `EvidenceAnalysis` cuya síntesis
+  y cuya cita contienen `<img src=x onerror=alert(1)>` y `<script>`, cuando el panel lo
+  muestra, entonces el texto aparece escapado, no se ejecuta ningún script ni se crea ningún
+  elemento `img`, y ESLint falla ante cualquier `dangerouslySetInnerHTML` (`react/no-danger`).
+  `[RN-01]` `[RN-04]` (asumido en el vector de ataque)
+- **AC-4 (borde · secretos en el bundle)** · Dado un `.env` con una variable `NEXT_PUBLIC_*`
+  fuera de `config/public-env.allowlist.json`, o un componente `'use client'` que importa un
+  módulo marcado `import 'server-only'`, cuando corre el job `quality`, entonces falla
+  nombrando la variable o el import; y tras `next build`, un escaneo de `.next/static/` con los
+  patrones de secretos de US-036 no encuentra ninguno. `[RN-14]` `[PRD §11 #12]`
+- **AC-5 (borde · enlaces de citas)** · Dada una cita cuyo `url` usa el esquema `javascript:` o
+  `data:`, cuando se renderiza, entonces no se crea el enlace y se muestra la fuente como texto;
+  los enlaces válidos (`https:`) llevan `rel="noopener noreferrer"`. `[RN-04]` (asumido)
+
+## Contexto técnico
+- **CSP con nonce** generada en `middleware.ts` de Next.js 16 (Turbopack) y propagada a los
+  scripts del framework; el resto de cabeceras en `next.config` (`headers()`). Valores en
+  configuración (`RN-22`), con la CSP en modo `report-only` solo en desarrollo local.
+- **HSTS** queda en US-144: necesita HTTPS con la CA interna del piloto (S6).
+- **Lista permitida** de variables públicas: `config/public-env.allowlist.json` (vacía por
+  defecto; cada entrada justifica por qué no es sensible). Paquete `server-only` en los módulos
+  de sesión, configuración secreta y cliente de `clinical-api`.
+- **Render de texto:** el texto del LLM y del corpus se muestra como texto; si se habilita
+  Markdown, con `react-markdown` + `rehype-sanitize` y sin `rehype-raw`.
+- AC-1 y AC-4 en la CI (tests sobre la respuesta y sobre el build); AC-2, AC-3 y AC-5 con
+  Playwright y Testing Library usando fixtures sintéticos.
+
+## Non-goals
+HSTS y TLS (US-144). Rate limiting (RN-30, S4). Auditoría de dependencias (US-217). WAF o
+protección DDoS (fuera de alcance: acceso solo por VPN).
+
+## INVEST
+**Small** ✓ un middleware, la configuración de cabeceras, una lista permitida y un escaneo del build.
+**Testable** ✓ cada AC es una aserción sobre cabeceras, un E2E o un check de la CI con resultado esperado.
+
+---
+
+## US-217 — Las dependencias se auditan en cada PR y se actualizan con Dependabot
+
+> Linear: [L1D-267](https://linear.app/l1der-lab-mjbc/issue/L1D-267)
+
+`FEAT-PL1` · Sprint 1 · Estimación **2** · — (técnica, PRD §17) · RN-14, SEG-12 · ↪ US-036 (workflow de CI) · 🔗 Relacionada: US-147 (revisión de seguridad del piloto; su AC-5 pasa a regresión de esta historia), US-216
+
+## Story
+Como equipo de desarrollo, quiero que cada PR audite las dependencias de los tres servicios y
+que las actualizaciones de seguridad lleguen solas como PRs, para no descubrir una
+vulnerabilidad crítica recién en la revisión del piloto (S6).
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado un PR sin dependencias vulnerables, cuando corre el job
+  `dependencies` de la CI, entonces ejecuta `npm audit --audit-level=high` en el workspace y
+  `pip-audit` en `rag-orchestrator`, y termina en verde. `[RN-14]` (asumido en el umbral)
+- **AC-2 (borde · vulnerabilidad alta o crítica)** · Dado un PR que añade una dependencia con
+  una vulnerabilidad conocida de severidad alta o crítica, cuando corre el job, entonces falla
+  nombrando el paquete, la versión y el identificador del aviso. (asumido)
+- **AC-3 (borde · excepción registrada)** · Dada una vulnerabilidad sin parche disponible,
+  cuando se registra en `security/audit-exceptions.json` con identificador, motivo, mitigación
+  y fecha de revisión, entonces el job pasa; y una excepción vencida lo hace fallar. (asumido)
+- **AC-4 (borde · Dependabot)** · Dado `.github/dependabot.yml`, cuando se inspecciona, entonces
+  configura actualizaciones de seguridad y de versión para `npm` (raíz y workspaces), `pip`
+  (`rag-orchestrator`), `github-actions` y `docker` (`infra/docker`), con agrupación por
+  ecosistema y frecuencia semanal; sus PRs pasan por la misma CI. (asumido)
+
+## Contexto técnico
+- Herramientas gratuitas para un repositorio público: `npm audit`, `pip-audit` y Dependabot.
+  **Sin Snyk** por ahora (exige cuenta externa; YAGNI); si se necesitara, se decide con un ADR.
+- Los PRs de Dependabot no se mergean solos: el merge sigue siendo humano.
+- La revisión de seguridad del piloto (US-147 AC-5) reutiliza este job como regresión.
+
+## Non-goals
+Escaneo de imágenes de contenedor (Trivy) y SBOM: se reevalúan antes del piloto. Snyk.
+
+## INVEST
+**Small** ✓ un job de CI, un archivo de Dependabot y un archivo de excepciones.
+**Testable** ✓ cada AC es un PR de prueba o una inspección de configuración con resultado esperado.
 
 ---
 

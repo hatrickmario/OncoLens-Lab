@@ -269,9 +269,9 @@ abiertos.
 - **AC-4 (borde · riesgo residual de Backend 2)** · Dada la revisión, cuando se evalúa el
   riesgo residual aceptado (readme §2.5), entonces registra si recomienda abrir ADR-43
   (base separada) y con qué argumento. `[TBD-10]` `[readme §3.3 #17]`
-- **AC-5 (borde · dependencias)** · Dados `npm audit` y `pip-audit` sobre los tres
-  servicios, cuando se ejecutan, entonces no hay vulnerabilidades críticas sin
-  mitigación registrada. (asumido)
+- **AC-5 (borde · dependencias)** · 🔗 Regresión → US-217 / L1D-267 (activa desde S1): dado el job
+  `dependencies` de la CI sobre los tres servicios, cuando se ejecuta para la revisión, entonces
+  no hay vulnerabilidades críticas ni altas sin excepción registrada y vigente. (asumido)
 - **AC-6 (borde · equipo tratante fuera de alcance)** · Dada la revisión, cuando se
   revisa §11 #2, entonces registra RBAC verificado y la autorización por paciente como
   responsabilidad del sistema externo (P-02). `[P-02]` `[SEG-02]`
