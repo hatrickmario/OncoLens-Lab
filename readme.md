@@ -346,7 +346,8 @@ OncoLens/
 │   │   │   ├── middleware/                # auth · authorize · origin-check · rate-limit · error-handler
 │   │   │   ├── infrastructure/            # prisma client, crypto (cifrado + HMAC), minio client, rag-orchestrator.client.ts
 │   │   │   └── routes/
-│   │   └── prisma/                        # schema.prisma, migraciones, seed (solo sintético)
+│   │   ├── prisma/                        # schema.prisma, migraciones, seed (solo sintético)
+│   │   └── openapi.yaml                   # contrato del proveedor: fuente única (contract-first)
 │   │
 │   └── rag-orchestrator/                  # Backend 2 — Python + FastAPI
 │       ├── app/
@@ -362,11 +363,13 @@ OncoLens/
 │       │   │   ├── embeddings/ · reranker/ · nli/ · ocr/ · pii/
 │       │   │   └── llm/                   # LLMAdapter (local OpenAI-compatible; nube solo con datos sintéticos)
 │       │   │                              # (sin acceso a schemas clínicos ni a clinical-minio)
-│       │   └── schemas/                   # Pydantic
+│       │   └── schemas/                   # Pydantic; generated/ se genera desde openapi.yaml (no editar)
+│       ├── openapi.yaml                   # contrato del proveedor: fuente única (contract-first)
 │       └── requirements.txt
 │
 ├── packages/
-│   ├── api-contracts/                     # tipos y clientes generados de los OpenAPI de ambos backends
+│   ├── api-contracts/                     # generado desde los openapi.yaml (no editar): tipos, clientes
+│   │                                      # y schemas Zod compartidos por web y clinical-api (src/zod/)
 │   └── clinical-catalogs/                 # v1.1 — artefacto JSON versionado, montado en ambos contenedores (datos, no código):
 │                                          # datos críticos · criterios de aplicabilidad · sinónimos ·
 │                                          # subconjuntos CIE-10 / LOINC / CUPS / ATC · plantillas de preguntas
@@ -377,7 +380,7 @@ OncoLens/
 │                                          # viven fuera del repo (volumen local cifrado, .gitignore)
 │
 ├── docs/
-│   ├── PRD.md                             # Product Requirements Document v1.2 (requisitos, reglas, NFR, trazabilidad)
+│   ├── PRD.md                             # Product Requirements Document v1.3 (requisitos, reglas, NFR, trazabilidad)
 │   ├── AS-IS.md                           # proceso actual del oncólogo (Discovery)
 │   ├── TO-BE.md                           # solución objetivo por fases (MVP · Post-MVP · Futuro)
 │   ├── OncoLens-C4.drawio                 # diagramas C4: contexto, contenedores, componentes y código
@@ -386,7 +389,13 @@ OncoLens/
 │   ├── api/
 │   └── rag/
 │
-├── specs/                                  # Spec-Driven Development (OpenSpec)
+├── backlog/                                # features e historias (fuente de verdad; Linear OncoLens-1 es el espejo),
+│                                           # requisitos, ADRs, trazabilidad y auditoría
+├── openspec/                               # Spec-Driven Development (OpenSpec)
+│   ├── config.yaml                         # contexto, invariantes y reglas por artefacto
+│   ├── specs/                              # contrato verificable del comportamiento actual, por capacidad
+│   └── changes/                            # un change por historia (l1d-<nn>-<slug>); archive/ al cierre del sprint
+├── .claude/                                # Claude Code: agents/, skills/, commands/opsx/, hooks/, settings.json
 ├── infra/docker/                           # docker-compose.yml, redes clinical-net / ai-net / corpus-db-net, pg_hba.conf, certs/
 ├── scripts/                                # claves, certificados, buckets, preflight real-data
 ├── .github/workflows/                      # CI: build, tests, validación OpenAPI, escaneo de secretos/PII
