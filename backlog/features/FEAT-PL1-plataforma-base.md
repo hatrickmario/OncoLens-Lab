@@ -242,7 +242,7 @@ más allá de lo que ya fije US-036.
 
 ## US-214 — Cada backend verifica sus respuestas contra su propio contrato OpenAPI y los consumidores solo usan clientes generados
 
-> Linear: pendiente de publicar (sub-issue de L1D-30, milestone Sprint 1)
+> Linear: [L1D-264](https://linear.app/l1der-lab-mjbc/issue/L1D-264)
 
 `FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · NFR-13 · ↪ US-033 (specs congelados), US-036 (workflow de CI) · 🔗 Relacionada: US-213 (regla `api-contracts-generado`) · 🔗 Consumida por: `contract-keeper` (Gate 2) y la skill `sync-contracts` (`.claude/`)
 

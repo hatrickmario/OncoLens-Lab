@@ -498,7 +498,7 @@ Proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`. El Markdown es la fuente; Linea
 
 ## Último ID usado: US-214
 
-**US-214** (FEAT-PL1, S1, 3 puntos, 2026-10-08): verificación del proveedor contra su propio `openapi.yaml`, generado sin drift y cambios incompatibles con oasdiff (contract-first, provider-driven). Pendiente de publicar en Linear.
+**US-214** (FEAT-PL1, S1, 3 puntos, 2026-10-08): verificación del proveedor contra su propio `openapi.yaml`, generado sin drift y cambios incompatibles con oasdiff (contract-first, provider-driven). Publicada en Linear como [L1D-264](https://linear.app/l1der-lab-mjbc/issue/L1D-264) (sub-issue de L1D-30, milestone Sprint 1, 3 puntos, `recorrido-principal`, relacionada con L1D-55, L1D-166 y L1D-263).
 
 **US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Publicada en Linear como [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (sub-issue de L1D-30, milestone Sprint 1, 5 puntos, labels `recorrido-principal` y `needs-refinement` por los umbrales pendientes).
 
