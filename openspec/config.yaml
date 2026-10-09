@@ -1,0 +1,149 @@
+# OncoLens — configuración de OpenSpec (probada con OpenSpec 1.14.x)
+# Fuentes de verdad: docs/PRD.md v1.3 > readme.md > CLAUDE.md.
+# El PRD dice QUÉ y POR QUÉ; Linear (proyecto OncoLens-1, equipo L1D) dice QUÉ y CUÁNDO;
+# openspec/specs/ es el CONTRATO VERIFICABLE de cómo se comporta hoy el sistema.
+#
+# Requiere el perfil extendido para /opsx:verify y /opsx:bulk-archive:
+#   openspec config set profile custom + workflows (ver .claude/README.md, Instalación)
+#   openspec update   (los comandos /opsx:* generados ya están en .claude/commands/opsx/)
+
+schema: spec-driven
+
+context: |
+  Producto: OncoLens, MVP académico de apoyo a la decisión clínica en oncología (mama y próstata).
+  Reconstruye el caso del paciente, señala los datos críticos que faltan y entrega un ANÁLISIS DE
+  EVIDENCIA (síntesis, aplicabilidad criterio a criterio y opciones DESCRITAS en la evidencia, con
+  citas verificables). No prescribe, no recomienda y no estima probabilidad de éxito.
+  Hipótesis del MVP (PRD v1.3, slicing v2): caso reconstruido → faltantes → opciones más aplicables.
+
+  Monorepo (npm workspaces):
+  - apps/web: Next.js App Router + React 19 + TypeScript + Tailwind v4 + shadcn/ui (Atomic Design).
+    Es el BFF: Route Handlers en app/api/* hacen de proxy hacia clinical-api. Único punto de entrada
+    del navegador. Cookie de sesión opaca SameSite=Strict + verificación de Origin.
+  - apps/clinical-api (Backend 1): Node.js LTS + Express 5 + TypeScript + Zod + Prisma + OpenAPI.
+    Capas Controller → Service → Repository por módulo (src/modules/*). Dueño EXCLUSIVO de
+    PostgreSQL (schemas auth, identity, clinical, audit, research) y de clinical-minio.
+    Lógica determinista: timeline, reconciliación y normalización final, checklist de faltantes,
+    Base del análisis, gateway POST /platform/evidence-analyses.
+  - apps/rag-orchestrator (Backend 2): Python + FastAPI + Pydantic + Alembic. Hexagonal
+    (api / application / domain / infrastructure). Adapters para LLM, embeddings, reranker, NLI,
+    OCR y PII. Solo accede al schema `corpus` con el rol `rag_corpus` y a Milvus. NUNCA a datos
+    clínicos ni a clinical-minio. Procesa documentos en memoria, sin persistirlos.
+  - packages/api-contracts: tipos y clientes generados desde los OpenAPI de ambos backends.
+  - packages/clinical-catalogs: JSON versionado (CLINICAL_CATALOG_VERSION), montado en ambos
+    backends; Backend 2 responde 409 si la versión difiere.
+  - LLM nativo (Ollama o vLLM con Metal) fuera de Docker, API compatible con OpenAI.
+  - Infra: Docker Compose (redes clinical-net, ai-net, corpus-db-net). Solo `web` publica puerto.
+  - Tests: Vitest + Supertest (StrykerJS con US-185, S6 si hay capacidad) en clinical-api; Pytest + TestClient
+    con adapters falsos en rag-orchestrator; Playwright E2E contra Compose con datos sintéticos;
+    en la UI, loop visual del implementador (skill visual-check, Playwright MCP + Chrome DevTools
+    MCP, solo localhost y seed sintético) como evidencia del Gate 2, no como sustituto de los E2E;
+    suite `evaluate` de calidad de IA (OL-06) en cada PR que cambie modelo, prompt, umbral,
+    catálogo o corpus.
+
+  Enfoque de implementación del backend: SDD (OpenSpec) + contract-first + TDD, provider-driven.
+  - Cada backend es PROVEEDOR de su contrato: apps/clinical-api/openapi.yaml y
+    apps/rag-orchestrator/openapi.yaml (congelados en Pre-S1, US-033) son la fuente única de la forma
+    de la API. El spec y sus ejemplos (contracts/examples/) cambian ANTES que el código; tipos,
+    clientes y schemas Zod (packages/api-contracts, src/zod/, compartidos por web y clinical-api) y
+    modelos Pydantic (app/schemas/generated) se generan del spec y nunca se editan a mano. Nunca se genera el spec desde el código.
+  - Verificación del proveedor: cada respuesta de cada backend se valida contra su propio spec en
+    los tests de integración (US-214). Los consumidores (web → clinical-api, clinical-api →
+    rag-orchestrator) solo usan clientes generados. Cambios incompatibles: oasdiff contra main.
+  - No se usa consumer-driven (Pact): un solo equipo, dos consumidores conocidos y contrato
+    congelado en Pre-S1; provider-driven + generación de clientes da la misma garantía sin broker.
+  - TDD con evidencia por AC: commit test(L1D-nn) en rojo → feat(L1D-nn) en verde → refactor(L1D-nn).
+    TDD proporcional (matriz de CLAUDE.md): estricto en doble bucle en reglas RN, services con
+    lógica y endpoints; test del AC primero en UI; test después en migraciones, infra y config;
+    evaluate en prompts y modelos. Rojo = test de aceptación del AC; unitarios uno a la vez.
+    Nunca se borra ni se desactiva un test. Integración como nivel principal de los backends (BD
+    real, MSW/respx en el HTTP saliente desde contracts/examples); E2E con LLM fingido.
+    Secuencia de commits de un change con API: contract → test → feat → refactor.
+
+  Invariantes que ningún change puede violar (PRD §6):
+  - RN-10/RN-11: la identidad nunca sale de clinical-api; el contexto hacia la IA va desidentificado
+    (seudónimo por consulta, fechas relativas, texto libre enmascarado).
+  - RN-12/RN-13/RN-14: nunca datos reales en el repo ni en la nube; datos reales en la app solo tras
+    el gate G-Piloto (S6). S1–S5 trabajan solo con datos sintéticos.
+  - RN-01/RN-04/RN-06/RN-24/RN-25: toda opción o afirmación mostrada tiene ≥1 cita a un chunk
+    recuperado en esa consulta y pasa el NLI; las citas se copian del corpus; el análisis se
+    persiste antes de responder; un análisis previo nunca es cita ni soporte.
+  - RN-02: sin chunks sobre el umbral → "sin_evidencia" sin invocar al LLM (top_relevance_score = null).
+  - RN-03/RN-28: relevance_score es metadato secundario; las opciones se ordenan por aplicabilidad
+    (estados Coincide / Parcial / No coincide / Desconocido), nunca por puntaje clínico.
+  - RN-19/RN-23: lenguaje no prescriptivo; aviso "Análisis generado por IA: requiere validación
+    clínica del oncólogo tratante" (literal en configuración, B-06).
+  - RN-15: opt-out de analisis_ia → 403 en toda generación con IA (control desde S6, marcas por CLI).
+  - RN-22: todo valor "a calibrar" vive en configuración, nunca en código.
+  - RN-26: los avisos clínicos no bloquean. RN-27: sin mapeo terminológico → `no_mapeado`.
+  - MVP v1.3: solo RBAC (equipo tratante FR-15 es Post-MVP, B-03).
+
+  Vocabulario obligatorio: "análisis de evidencia", "opciones descritas en la evidencia".
+  Prohibido: "recomendación", recommendations[], /platform/rag/query.
+  Idioma de specs y textos de dominio: español (valores de dominio: sintetico, requiere_revision,
+  cuarentena_pii, analisis_ia, no_mapeado).
+
+  Convenciones de trazabilidad:
+  - Un change por historia de usuario: `l1d-<nn>-<slug-kebab>` (p. ej., l1d-93-catalog-validation).
+    Excepción: 2–3 historias muy acopladas (mismo endpoint) en un change, listando todas.
+  - Rama `feat/l1d-<nn>-<slug>`; PR titulado `[L1D-<nn>] <título>` con el nombre del change.
+  - Cada escenario cita los AC de origen: [US-xxx AC-n] y, si existe, [AC-xx.y] del PRD §18.
+  - Cada test lleva en su nombre el tag del AC que verifica: "US-001 AC-2 ...".
+  - Capacidades (openspec/specs/<capability>/spec.md): auth-session, patients-identity,
+    documents-ingestion, document-extraction, case-timeline, terminology-reconciliation,
+    completeness, evidence-analysis, applicability, analysis-basis, corpus-ingestion,
+    clinical-catalogs, human-control, ai-evaluation, audit, opt-out, real-data-gate,
+    platform-observability. Si un change necesita una capacidad nueva, la justifica en proposal.md.
+
+rules:
+  proposal:
+    - "Empieza con un bloque 'Trazabilidad': L1D-<nn> · US-xxx · FEAT-xx · Sprint · FR/RN/AC-xx.y/M-xx.y que cubre. Sin ese bloque el change no es válido."
+    - "Enumera las capacidades afectadas (nombres de openspec/specs) y los bounded contexts tocados: clinical-platform, ai-services, frontend."
+    - "Declara dependencias con otros changes del sprint (⛔ bloqueado por / ↪ depende de) usando nombres de change."
+    - "Incluye 'Fuera de alcance' cuando el límite con otra historia, otro sprint o el Post-MVP no sea obvio."
+    - "Nunca uses vocabulario de recomendación; usa análisis de evidencia y opciones descritas."
+  specs:
+    - "Cada requisito usa SHALL/MUST y tiene ≥1 '#### Scenario:' con WHEN/THEN (Given/When/Then del AC de la historia)."
+    - "Cada escenario cita su origen: [US-xxx AC-n] y [AC-xx.y] del PRD §18 cuando exista; si no hay evidencia, marca (asumido)."
+    - "Cubre ≥1 happy path y los bordes obligatorios: permiso denegado, dato ausente o no verificado, dependencia caída y la RN aplicable."
+    - "Un borde cuyo control llega en un sprint posterior no se escribe como escenario: se anota como 'Regresión [RN-xx] activa desde S<n>'."
+    - "Todo número calibrable (umbral, TTL, límite, plazo) se especifica como clave de configuración, no como literal."
+    - "Usa MODIFIED (no ADDED) cuando el requisito ya existe en openspec/specs; nunca dupliques requisitos entre capacidades."
+  design:
+    - "Si el change toca apps/web o los Route Handlers, la sección '## Privacidad y ownership' incluye 'Seguridad web': validación con el schema Zod compartido en cliente y servidor, variables NEXT_PUBLIC_ nuevas (deben estar en la lista permitida), módulos server-only, cómo se renderiza el texto del LLM o del corpus (sin HTML crudo), impacto en la CSP y las cabeceras, y dependencias nuevas con su resultado de auditoría."
+    - "Incluye una sección obligatoria '## Privacidad y ownership': qué datos cruzan qué frontera (web → clinical-api → rag-orchestrator), cómo se desidentifican (RN-11) y confirma que rag-orchestrator no toca datos clínicos ni clinical-minio."
+    - "Si el change toca apps/web, incluye '## Componentes y patrones': componentes nuevos o divididos (un concepto cada uno; 100 líneas = alerta, 150 = límite duro, sin blancos ni comentarios) y, por cada patrón que introduce (custom hook, compound components, render props, provider), la evidencia que lo justifica (≥2 consumidores, prop drilling de ≥3 niveles, explosión de props); sin evidencia no hay patrón (YAGNI). Indica qué queda como RSC y dónde se monta cada 'use client' o provider."
+    - "Incluye '## Dependencias y colaboradores': módulos que se crean o modifican, de quién dependen (puertos o interfaces, nunca clientes concretos en services ni en domain) y qué reglas de dominio se extraen a métodos con nombre propio. design-principles-reviewer lo contrasta con el código."
+    - "Incluye '## Contratos' con el DIFF PROPUESTO del openapi.yaml del proveedor (rutas, schemas, códigos de estado, errores) y los ejemplos nuevos o cambiados de contracts/examples/; indica quién es proveedor y quién consumidor, si el cambio es incompatible (oasdiff) y su compatibilidad con ADR-26 (contrato estable entre sprints). Los schemas Zod/Pydantic se describen como generados del spec, nunca como fuente."
+    - "Cita las decisiones existentes (ADR-n del readme §3.3) en lugar de reabrirlas; una decisión nueva requiere historia ADR-<n> en el backlog."
+    - "Si cambia modelo, prompt, umbral, catálogo o corpus, incluye '## Evaluación' con las métricas OL-06 afectadas."
+  tasks:
+    - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
+    - "Si el change toca una API, la PRIMERA tarea es '## contratos': editar el openapi.yaml del proveedor y sus ejemplos, contracts:check, contracts:breaking, contracts:generate y commit contract(L1D-<nn>); ninguna tarea de test o código del endpoint va antes."
+    - "Clasifica cada tarea según la matriz de TDD proporcional de CLAUDE.md (estricto · test del AC primero · test después · evaluate · exento) y escríbelo en la tarea."
+    - "Para cada AC con TDD, primero la tarea del test de aceptación en rojo ('<resultado> cuando <escenario> [US-xxx AC-n] · integración|E2E', commit test(L1D-<nn>)) y luego la implementación con sus unitarios (commit feat(L1D-<nn>)). No crees una tarea por cada test unitario."
+    - "Mocks solo en los bordes (HTTP saliente, LLM, Milvus, OCR, MinIO, nube); nunca módulos propios ni Prisma; reloj e IDs inyectados."
+    - "Los tests de integración de cada endpoint validan la respuesta contra el spec del proveedor (verificación del proveedor, US-214), incluidos los códigos de error."
+    - "Cada sección de bounded context termina con una tarea '- [ ] Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-<nn>)'."
+    - "Si el change toca la UI de apps/web, la sección '## frontend' incluye, después de los AC en verde y antes del refactor, la tarea '- [ ] Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo'."
+    - "Si el design.md ya prevé extraer una regla de dominio (umbral, orden por aplicabilidad, desidentificación, validación de citas), nómbrala como tarea explícita: 'Extraer <nombreDelMetodo>() (RN-xx)'."
+    - "Termina con: openspec validate <change> --strict, tests del contexto en verde, contracts:verify-provider si hubo cambios de API, run-ai-eval si aplica."
+
+operations:
+  apply:
+    guidance:
+      - "Trabaja solo dentro de los paths del bounded context asignado; si una tarea toca otro contexto, detente y repórtalo al orquestador."
+      - "Contract-first: si el change toca una API, edita y valida el openapi.yaml del proveedor y regenera lo generado (skill sync-contracts) antes de escribir tests o código del endpoint."
+      - "TDD con evidencia donde la matriz lo exige: el test de aceptación se ejecuta y falla por la razón esperada antes de implementar; commit test(L1D-<nn>) en rojo, luego feat(L1D-<nn>) en verde. Guarda la salida en rojo y en verde para el reporte."
+      - "Corre primero los tests focalizados del AC y después la suite del contexto; no marques una tarea [x] con tests en rojo."
+      - "Doble bucle: el test de aceptación del AC en rojo (falla en la aserción; si el símbolo no existe, solo su esqueleto) y, dentro, unitarios uno a la vez con el mínimo código. Nunca borres, desactives (.skip, .only, it.todo, skipif, xfail) ni debilites un test; si su AC cambió en la spec, el commit lleva 'Test-Removal: <motivo>'. Un test inestable se arregla, no se reintenta."
+      - "Usa solo datos sintéticos y fixtures declarados; nunca crees datos reales ni secretos."
+      - "Ciclo rojo → verde → refactor: con los tests en verde, aplica Extract Method (fragmento que necesita comentario, lógica duplicada, niveles de abstracción mezclados, umbral del linter superado) e Inline Method (cuerpo tan claro como el nombre, middle man dentro de la misma capa, abstracción especulativa sin segundo uso)."
+      - "El refactor no cambia comportamiento ni tests, se limita a los archivos del change y va en un commit aparte refactor(L1D-<nn>). Nunca colapses capas (Controller → Service → Repository) ni puertos/adapters con Inline Method."
+      - "Extrae a un método con nombre propio cada invariante que un guardián debe verificar (RN-01, RN-02, RN-06, RN-08, RN-11, RN-28), para que viva y se pruebe en un solo lugar."
+      - "Al terminar, ejecuta openspec validate <change> --strict."
+  archive:
+    guidance:
+      - "Archiva solo changes con todas las tareas completas y PR mergeado en main."
+      - "Al cierre de sprint usa bulk-archive; resuelve conflictos entre deltas del mismo requisito conservando ambos comportamientos y citando los dos changes."
+      - "El resumen de archivo lista L1D, US, capacidades tocadas y el PR."

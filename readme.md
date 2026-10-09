@@ -143,6 +143,8 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
    npm run dev
    ```
 9. Antes de habilitar datos reales: `oncolens preflight real-data` verifica los prerrequisitos del gate G-piloto (§2.5). `clinical-api` no arranca con una bandera de datos reales en `true` si alguno falla.
+10. **Calidad y tests** (raíz; los scripts los crean US-213, US-214 y US-215): `npm run quality` (lint, umbrales, reglas de capas, higiene de tests y cobertura de líneas cambiadas en `reports/quality/latest.json`), `npm run format:check` y los tests de cada app (§2.6). Los E2E corren contra Compose con `LLM_PROVIDER=fake` (respuestas fijas), sin necesitar el LLM nativo.
+11. **Desarrollo asistido por agentes (opcional):** Claude Code + OpenSpec 1.14 con el perfil extendido y `gh`; instalación y flujo de sprint en `.claude/README.md`.
 
 **Decisiones de infraestructura de IA:**
 - **OCR:** local; los documentos no salen a la nube. Primero se extrae la capa de texto digital del PDF (sin OCR); las páginas escaneadas pasan por OCR (candidatos: Tesseract `spa+eng` o PaddleOCR). La estructuración la hace el mismo LLM local con salida JSON restringida por esquema. Descartado el vision-LLM directo: memoria, latencia sin GPU en Docker y falta de confianza por campo.
@@ -346,7 +348,8 @@ OncoLens/
 │   │   │   ├── middleware/                # auth · authorize · origin-check · rate-limit · error-handler
 │   │   │   ├── infrastructure/            # prisma client, crypto (cifrado + HMAC), minio client, rag-orchestrator.client.ts
 │   │   │   └── routes/
-│   │   └── prisma/                        # schema.prisma, migraciones, seed (solo sintético)
+│   │   ├── prisma/                        # schema.prisma, migraciones, seed (solo sintético)
+│   │   └── openapi.yaml                   # contrato del proveedor: fuente única (contract-first)
 │   │
 │   └── rag-orchestrator/                  # Backend 2 — Python + FastAPI
 │       ├── app/
@@ -362,11 +365,14 @@ OncoLens/
 │       │   │   ├── embeddings/ · reranker/ · nli/ · ocr/ · pii/
 │       │   │   └── llm/                   # LLMAdapter (local OpenAI-compatible; nube solo con datos sintéticos)
 │       │   │                              # (sin acceso a schemas clínicos ni a clinical-minio)
-│       │   └── schemas/                   # Pydantic
+│       │   └── schemas/                   # Pydantic; generated/ se genera desde openapi.yaml (no editar)
+│       ├── openapi.yaml                   # contrato del proveedor: fuente única (contract-first)
 │       └── requirements.txt
 │
 ├── packages/
-│   ├── api-contracts/                     # tipos y clientes generados de los OpenAPI de ambos backends
+│   ├── api-contracts/                     # generado desde los openapi.yaml (no editar): tipos, clientes
+│   │                                      # y schemas Zod compartidos por web y clinical-api (src/zod/)
+│   ├── test-support/                      # handlers de MSW construidos desde contracts/examples/ (mocks solo en los bordes)
 │   └── clinical-catalogs/                 # v1.1 — artefacto JSON versionado, montado en ambos contenedores (datos, no código):
 │                                          # datos críticos · criterios de aplicabilidad · sinónimos ·
 │                                          # subconjuntos CIE-10 / LOINC / CUPS / ATC · plantillas de preguntas
@@ -377,7 +383,7 @@ OncoLens/
 │                                          # viven fuera del repo (volumen local cifrado, .gitignore)
 │
 ├── docs/
-│   ├── PRD.md                             # Product Requirements Document v1.2 (requisitos, reglas, NFR, trazabilidad)
+│   ├── PRD.md                             # Product Requirements Document v1.3 (requisitos, reglas, NFR, trazabilidad)
 │   ├── AS-IS.md                           # proceso actual del oncólogo (Discovery)
 │   ├── TO-BE.md                           # solución objetivo por fases (MVP · Post-MVP · Futuro)
 │   ├── OncoLens-C4.drawio                 # diagramas C4: contexto, contenedores, componentes y código
@@ -386,9 +392,17 @@ OncoLens/
 │   ├── api/
 │   └── rag/
 │
-├── specs/                                  # Spec-Driven Development (OpenSpec)
+├── backlog/                                # features e historias (fuente de verdad; Linear OncoLens-1 es el espejo),
+│                                           # requisitos, ADRs, trazabilidad y auditoría
+├── contracts/examples/                      # ejemplos de request/response de los dos OpenAPI (casos borde incluidos)
+├── openspec/                               # Spec-Driven Development (OpenSpec)
+│   ├── config.yaml                         # contexto, invariantes y reglas por artefacto
+│   ├── specs/                              # contrato verificable del comportamiento actual, por capacidad
+│   └── changes/                            # un change por historia (l1d-<nn>-<slug>); archive/ al cierre del sprint
+├── .claude/                                # Claude Code: agents/, skills/, commands/opsx/, hooks/, settings.json
 ├── infra/docker/                           # docker-compose.yml, redes clinical-net / ai-net / corpus-db-net, pg_hba.conf, certs/
-├── scripts/                                # claves, certificados, buckets, preflight real-data
+├── scripts/                                # claves, certificados, buckets, preflight real-data, quality/ (chequeos de la CI)
+├── quality-thresholds.json                 # umbrales de tamaño, complejidad y cobertura (única fuente, RN-22)
 ├── .github/workflows/                      # CI: build, tests, validación OpenAPI, escaneo de secretos/PII
 ├── CLAUDE.md                               # reglas: Backend 2 solo el schema corpus (nunca datos clínicos) ni clinical-minio, sesión ≠ credencial de servicio,
 │                                           # datos reales nunca a la nube ni al repo, identidad nunca fuera de clinical-api
@@ -534,12 +548,18 @@ flowchart LR
 
 | Servicio | Herramientas | Enfoque |
 |---|---|---|
-| Backend 1 (Node) | Vitest, Supertest, StrykerJS | Unitarios (services), integración de API, *mutation testing* sobre auth y autorización. Unitarios v1.1: checklist de faltantes (determinismo y reglas condicionales), reconciliación (duplicado, conflicto, nunca fusión incorrecta), timeline (fecha incierta), Base del análisis, detector de desactualizados y selección de la memoria. Unitarios v1.2: matriz ítem → campo, normalización final de datos manuales, dos marcas de desactualizado y cascada. Tests de seguridad: no-fuga de PII (incluida PII sembrada en texto libre, en eventos, atributos y en la memoria de análisis), cifrado e índice ciego, CSRF y `Origin`, gate G-piloto, **`403` por opt-out en toda generación con IA**, **`422` en cualquier registro sobre un paciente egresado**, bajas, clases de datos. |
-| Backend 2 (Python) | Pytest, FastAPI TestClient | Unitarios de `domain/` (umbral, `relevance_score`, citas, soporte, orden determinista por aplicabilidad, normalización terminológica, confianza OCR, regla de proveedores) e integración de `/rag/query`, `/documents/extract` y `/case/summary`, con adapters falsos. Test de que un análisis previo nunca cuenta como soporte (RN-24). v1.2: agregación de aplicabilidad por opción, verbalización de datos para el NLI, límites del agente (iteraciones, sub-consultas, deadline) y `409` por versión de catálogo distinta. |
-| Frontend / E2E | Playwright | Flujos del doctor contra el stack de Compose con datos sintéticos: login → listado → ficha → vista de caso → faltantes → análisis → síntesis, aplicabilidad y opción con cita; sin evidencia; carga → estado → datos etiquetados → documento de origen; registro de evolución → análisis desactualizado → re-ejecutar y comparar. |
+| Backend 1 (Node) | Vitest, Supertest, PostgreSQL de test (Testcontainers o servicio de CI), MSW; StrykerJS en el S6 (US-185, si hay capacidad) | **Integración como nivel principal** (API contra BD real, HTTP saliente con MSW) y unitarios de lógica pura; *mutation testing* sobre auth, autorización y cifrado. Unitarios v1.1: checklist de faltantes (determinismo y reglas condicionales), reconciliación (duplicado, conflicto, nunca fusión incorrecta), timeline (fecha incierta), Base del análisis, detector de desactualizados y selección de la memoria. Unitarios v1.2: matriz ítem → campo, normalización final de datos manuales, dos marcas de desactualizado y cascada. Tests de seguridad: no-fuga de PII (incluida PII sembrada en texto libre, en eventos, atributos y en la memoria de análisis), cifrado e índice ciego, CSRF y `Origin`, gate G-piloto, **`403` por opt-out en toda generación con IA**, **`422` en cualquier registro sobre un paciente egresado**, bajas, clases de datos. |
+| Backend 2 (Python) | Pytest, FastAPI TestClient, `respx` | Unitarios de `domain/` (umbral, `relevance_score`, citas, soporte, orden determinista por aplicabilidad, normalización terminológica, confianza OCR, regla de proveedores) e integración de `/rag/query`, `/documents/extract` y `/case/summary`, con el schema `corpus` real y adapters falsos para LLM, Milvus, *embeddings*, *reranker*, NLI y OCR. Test de que un análisis previo nunca cuenta como soporte (RN-24). v1.2: agregación de aplicabilidad por opción, verbalización de datos para el NLI, límites del agente (iteraciones, sub-consultas, deadline) y `409` por versión de catálogo distinta. |
+| Frontend | Vitest, Testing Library, MSW | Comportamiento de componentes y hooks contra `/api/*` con handlers desde `contracts/examples/`; textos obligatorios (RN-19, RN-23), avisos no bloqueantes (RN-26) y accesibilidad. |
+| E2E | Playwright | Flujos del doctor contra el stack de Compose con datos sintéticos y LLM fingido (`LLM_PROVIDER=fake`): login → listado → ficha → vista de caso → faltantes → análisis → síntesis, aplicabilidad y opción con cita; sin evidencia; carga → estado → datos etiquetados → documento de origen; registro de evolución → análisis desactualizado → re-ejecutar y comparar. |
 | Lenguaje | Lista de términos prohibidos | Ninguna salida del set de evaluación ni texto de UI contiene formulaciones prescriptivas (PRD RN-23). |
 
-**Contract testing:** se genera un cliente TypeScript tipado a partir del spec OpenAPI de Backend 2 y lo consume Backend 1; un cambio incompatible rompe el build. En CI se validan ambos specs.
+**Estrategia: TDD proporcional al riesgo** (detalle en `CLAUDE.md`, Política TDD):
+- **TDD estricto en doble bucle** en reglas RN de dominio, services con lógica y endpoints: primero el test de aceptación del AC en rojo (commit `test(L1D-nn)`), dentro los unitarios uno a la vez con el mínimo código (`feat`), y refactor en verde. En la UI, el test del AC primero; en migraciones, infraestructura y configuración, test después; prompts, modelos y umbrales se validan con la suite de evaluación (OL-06), no con TDD.
+- **Mocks solo en los bordes** (HTTP saliente, LLM, Milvus, OCR, MinIO, nube), nunca módulos propios; reloj y generadores de IDs inyectados y congelados en los tests.
+- **Higiene en la CI** (US-213): falla con tests desactivados o enfocados y con mocks fuera del borde; alerta por AC sin test de aceptación y por cobertura baja de las líneas cambiadas, sin umbral global. Un test inestable se arregla o se quita, nunca se reintenta en silencio.
+
+**Contract testing (contract-first, provider-driven):** cada backend es dueño de su `openapi.yaml` (congelado en el Pre-S1, US-033), que cambia antes que el código; desde él se generan los tipos, clientes y schemas Zod (`packages/api-contracts`, compartidos por `web` y `clinical-api`) y los modelos Pydantic. Cada backend valida sus respuestas reales contra su propio spec en los tests de integración (US-214), `oasdiff` detecta cambios incompatibles contra `main` y los mocks de MSW y `respx` se construyen desde `contracts/examples/`, así que un consumidor no puede probar contra una forma que el proveedor no tiene.
 
 **Evaluación de calidad de la IA y del valor clínico (OL-06):** es un entregable desde el Sprint 1 (baseline) y es **obligatoria en cada PR que cambie un modelo, un prompt, un umbral, un catálogo o el corpus**.
 - **Datasets:** preguntas en español e inglés por tipo de cáncer, preguntas sin evidencia, documentos de OCR de referencia y PII sembrada. En v1.1 se agregan: casos con eventos y tratamientos previos conocidos, duplicados y conflictos sembrados, términos para mapear, **faltantes sembrados**, **discrepancias sembradas** y fuentes con **aplicabilidad conocida**. En el repo solo hay datos sintéticos; los reales anonimizados se usan fuera del repo desde el Sprint 1–2.

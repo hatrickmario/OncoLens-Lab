@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Aún no hay código.** Solo `readme.md` (especificación), `docs/`, `.claude/` (agentes y skill para el backlog) y `backlog/` (Markdown); todo `apps/`, `packages/`, `infra/`, `scripts/`, `specs/`, `data/` y `docs/architecture/adr/` está por crear. Repositorio público: https://github.com/hatrickmario/OncoLens-Lab (rama `main`, cambios vía PR). `prompts.md` vive solo en el repo (registro de prompts del Máster AI4Devs).
 
-**Backlog:** completo y publicado en Linear (2026-10-07): 45 Features (`L1D-5`…`L1D-49`) y 213 historias (`L1D-50`…`L1D-262`) en `backlog/features/FEAT-*.md`, con `01-requisitos.md`, `02-adrs.md`, `03-trazabilidad.md` y `04-auditoria.md`; índice, puntos por sprint y recortes en `backlog/features/README.md`. Cada Feature e historia lleva su `> Linear: L1D-NN`. Los IDs publicados (`US-xxx`, `ADR-<n>`, `DEC-<nn>`) son **inmutables**; el Markdown es la fuente y Linear el espejo. `backlog/_piloto-v1/` es la primera corrida, archivada: no leerla ni ampliarla. Documentación, dominio y valores de enums en **español** (`sintetico`, `requiere_revision`, `cuarentena_pii`, `analisis_ia`, `seed`, `no_mapeado`). Mantener ese idioma.
+**Backlog:** completo y publicado en Linear (2026-10-07) en el proyecto **OncoLens-1** ([tablero](https://linear.app/l1der-lab-mjbc/project/oncolens-1-f85aa863d14c/issues)): 45 Features (`L1D-5`…`L1D-49`) y 218 historias (`L1D-50`…`L1D-267`; US-213…US-217 = L1D-263…L1D-267, añadidas el 2026-10-08/09) en `backlog/features/FEAT-*.md`, con `01-requisitos.md`, `02-adrs.md`, `03-trazabilidad.md` y `04-auditoria.md`; índice, puntos por sprint y recortes en `backlog/features/README.md`. Cada Feature e historia lleva su `> Linear: L1D-NN`. Los IDs publicados (`US-xxx`, `ADR-<n>`, `DEC-<nn>`) son **inmutables**; el Markdown es la fuente y Linear el espejo. `backlog/_piloto-v1/` es la primera corrida, archivada: no leerla ni ampliarla. Documentación, dominio y valores de enums en **español** (`sintetico`, `requiere_revision`, `cuarentena_pii`, `analisis_ia`, `seed`, `no_mapeado`). Mantener ese idioma.
 
 ### Dónde está la verdad
 
@@ -61,6 +61,7 @@ Invariantes fáciles de violar al escribir código:
 - Backend 1: `Controller → Service → Repository` por módulo de dominio (`src/modules/<dominio>/*.{controller,service,repository,schema}.ts`), Zod en el borde. `evidence-analysis` es **un solo módulo** (gateway, historial, analysis-basis, analysis-memory, stale-detector). `workers/` aloja la cola de extracción y el job de mayoría de edad.
 - Backend 2: Hexagonal — `api/` → `application/` (incluye el agente acotado dentro de `RAGOrchestratorService`) → `domain/` (reglas puras: umbral, `relevance_score`, citas, soporte, orden por aplicabilidad, confianza OCR, normalización, regla de proveedores) + `infrastructure/` con un **Adapter** por modelo (`llm/`, `embeddings/`, `reranker/`, `nli/`, `ocr/`, `pii/`), Pydantic en el borde. Catálogo del corpus con Alembic.
 - `packages/api-contracts/`: Backend 1 consume el cliente TS generado del OpenAPI de Backend 2 — un cambio incompatible rompe el build.
+- **Build:** `web` usa Next.js 16.x con **Turbopack** (por defecto en `dev` y `build`); sin `webpack()` personalizado en `next.config` (si hiciera falta, ADR). `clinical-api` compila con `tsc` y usa `tsx` en desarrollo; sin bundler. Tests con Vitest (Vite por dentro, `vitest.config.ts` compartido); los Server Components asíncronos se prueban con Playwright.
 - `packages/clinical-catalogs/`: **datos, no código** — JSON versionado (datos críticos, criterios de aplicabilidad, sinónimos, subconjuntos CIE-10/LOINC/CUPS/ATC, plantillas de preguntas), montado de solo lectura en ambos backends (`CLINICAL_CATALOG_PATH`). Versión distinta entre backends → `409`. Todo ítem tiene campo de destino en el modelo (RN-29).
 
 ## Comandos (ninguno existe todavía; forma objetivo, `readme.md` §1.4)
@@ -82,7 +83,45 @@ Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales a
 
 ### Tests
 
-Vitest + Supertest + StrykerJS (*mutation* sobre auth/authz/cifrado) en `clinical-api`; Pytest + TestClient con adapters falsos en `rag-orchestrator`; Playwright E2E contra Compose con datos sintéticos. Parte del contrato, no extras: no-fuga de PII (incluida PII sembrada en texto libre, eventos, atributos y memoria de análisis), cifrado e índice ciego, CSRF/`Origin`, gate G-piloto, `403` por opt-out en toda generación con IA, `422` en registros sobre paciente egresado, clases de datos, *permission denied* del rol `rag_corpus`, un análisis previo nunca cuenta como soporte (RN-24), y lista de términos prescriptivos prohibidos (RN-23).
+Vitest + Supertest en `clinical-api` (StrykerJS, *mutation* sobre auth/authz/cifrado, llega con US-185: S6, si hay capacidad); Pytest + TestClient con adapters falsos en `rag-orchestrator`; Playwright E2E contra Compose con datos sintéticos; en la UI, además, `frontend-dev` se revisa a sí mismo con el loop visual (skill `visual-check`: Playwright MCP + Chrome DevTools MCP, solo `localhost` y seed sintético), que aporta evidencia pero no sustituye a los E2E. Parte del contrato, no extras: no-fuga de PII (incluida PII sembrada en texto libre, eventos, atributos y memoria de análisis), cifrado e índice ciego, CSRF/`Origin`, gate G-piloto, `403` por opt-out en toda generación con IA, `422` en registros sobre paciente egresado, clases de datos, *permission denied* del rol `rag_corpus`, un análisis previo nunca cuenta como soporte (RN-24), y lista de términos prescriptivos prohibidos (RN-23).
+
+### Política TDD
+
+**TDD proporcional al riesgo.** El TDD estricto se paga donde un error es caro y el ciclo aporta diseño; en el resto basta un test de comportamiento o de humo.
+
+| Tipo de código | Disciplina | Evidencia que exige el Gate 2 |
+|---|---|---|
+| Reglas RN de dominio, services con lógica, endpoints, desidentificación, cifrado, autorización | **TDD estricto, doble bucle** | Commit `test(L1D-nn)` con el test de aceptación del AC en rojo antes de su `feat(L1D-nn)` |
+| Componentes, hooks y Route Handlers simples de `web` | **Test del AC primero** (Testing Library + MSW); sin rojo por cada componente | Commit `test(L1D-nn)` del AC en rojo antes del `feat`; `visual-check` |
+| Prompts, umbrales, modelos, catálogo, corpus | **Sin TDD**: suite `evaluate` (OL-06); la orquestación, con adapters falsos y TDD | Reporte de `ai-eval-runner` |
+| Migraciones, Compose, CI, configuración, scripts | **Test después**: humo, integración o fixture de PR | El test o el fixture en el mismo PR |
+| DEC, ADR, *spikes* | Exento (el código de un *spike* no se mergea) | — |
+
+**Reglas (donde aplica TDD):**
+- **Rojo → Verde → Refactor en doble bucle.** Bucle externo: el **test de aceptación** del AC (integración o E2E, con `[US-xxx AC-n]`) en rojo, en su commit `test(L1D-nn)`. Bucle interno: tests unitarios **uno a la vez**, del caso más simple al siguiente, con el **mínimo código** que pone cada uno en verde; entran con el commit `feat(L1D-nn)` cuando el de aceptación pasa.
+- **El rojo falla en la aserción**, no en un import: si el símbolo no existe, el commit `test` incluye solo su esqueleto (firma + `throw new Error('no implementado')` / `raise NotImplementedError`).
+- **Refactoriza solo en verde**, con los tests en verde antes y después. Refactorizar tests (renombrar, extraer *builders*) es válido en un commit `refactor(L1D-nn): tests` que no cambia aserciones.
+- **Nunca borres, desactives ni debilites un test para que la suite pase**: prohibidos en los commits `.skip`, `.only`, `xit`, `fit`, `it.todo`, `@pytest.mark.skip`, `skipif`, `xfail` y las aserciones relajadas. Un test solo se quita si su AC cambió en la spec del change, con el *trailer* `Test-Removal: <motivo>`; lo revisa el Gate 2.
+- **Un test inestable es un bug del sprint:** se arregla o se quita con `Test-Removal:`; nunca cuarentena ni reintentos silenciosos. Sin *retries* en unitarios e integración; Playwright con `retries: 1` solo en la CI y con *trace*.
+- **Determinismo:** el reloj y los generadores de IDs o seudónimos se inyectan y los tests los congelan (`vi.useFakeTimers`, `freezegun`); nada de `Date.now()`, `Math.random()` ni `uuid()` directos en dominio o services.
+
+| Nivel | `web` | `clinical-api` | `rag-orchestrator` |
+|---|---|---|---|
+| Unitario (lógica pura, sin E/S) | Vitest + Testing Library | Vitest, **solo para lógica pura** (completitud, reconciliación, cifrado, orden, desidentificación); si un service con lógica lo necesita, recibe su repository por parámetro de una *factory* (sin contenedor de DI) y el test le pasa un fake | Pytest; adapters falsos en los puertos |
+| Integración (**nivel principal de los backends**) | Vitest + MSW sobre `/api/*` | Supertest + **PostgreSQL real de test** (US-038) + MSW hacia `rag-orchestrator` y MinIO | `TestClient` + PostgreSQL `corpus` real + `respx` hacia el HTTP saliente; Milvus y LLM fingidos en su puerto |
+| E2E (recorridos del PRD §13) | Playwright contra Compose con seed sintético y **LLM fingido** (respuestas fijas desde `contracts/examples/`) | ← | ← |
+
+Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213): un mock no puede divergir del contrato. El LLM real solo corre en la suite `evaluate` y en la demo.
+
+**Nombres de tests:** describen comportamiento, no la función llamada. `describe('<Unidad>')` + `it('<resultado esperado> cuando <escenario>')`; el **test de aceptación** termina en `[US-xxx AC-n]` (en Pytest, `test_<unidad>_<escenario>_<resultado>` y `@pytest.mark.ac("US-xxx", n)` en el de aceptación). En español, como el dominio. ❌ `it('calcularUmbral works')` · ✅ `it('devuelve sin_evidencia con topRelevanceScore null cuando ningún chunk supera el umbral [US-061 AC-3]')`.
+
+**Mocks solo en los bordes arquitectónicos:** HTTP saliente (MSW, `respx`), LLM, embeddings, reranker, NLI, OCR, Milvus, MinIO y la nube. **Nunca** módulos propios (`vi.mock('./…')`, `vi.mock('@/…')`) ni Prisma; lo rápido y determinista (dominio, services, validación Zod, mapeos) va real. La BD es real en integración (los tests de `rag_corpus`, cifrado e índice ciego lo exigen). Los fakes cumplen el contrato del adapter real (LSP: `null` ≠ `0.0`, mismos errores).
+
+**Calidad de los tests sin sobredimensionar:** cobertura de las **líneas cambiadas** como alerta en `reports/quality/latest.json` (US-213, AC-11), sin umbral global ni bloqueo; la lee `design-principles-reviewer` buscando lógica sin test y aserciones débiles. *Mutation testing* (StrykerJS sobre auth, autorización y cifrado) con US-185 (S6, si hay capacidad).
+
+**Piloto TDD Guard (S1, con fin):** solo en `clinical-platform-dev`; la retro del S1 decide extenderlo o retirarlo, sin prórroga (`.claude/README.md`).
+
+**Pendiente de planning (no cambia el slicing):** dónde vive el modo `LLM_PROVIDER=fake` de Compose y la CI (US-034 o US-036), y si US-185 pasa a ser condición de G-Piloto antes de usar datos reales.
 
 **La evaluación de calidad de IA (OL-06) es obligatoria en cada PR que cambie modelo, prompt, umbral, catálogo o corpus.** Metas iniciales (a recalibrar, TBD-02): recall@10 ≥ 0,80 (≥ 0,70 es→en), MRR ≥ 0,60, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, "sin evidencia" ≥ 0,90, OCR crítico ≥ 0,95, PII ≥ 0,95, eventos ≥ 0,95, mapeo terminológico ≥ 0,95, salidas prescriptivas = 0.
 
@@ -117,4 +156,4 @@ Repo **público**: nunca datos reales (ni anonimizados) ni secretos (RN-14); CI 
 
 ADRs pendientes en `docs/architecture/adr/` (historias en el backlog): modelos locales (ADR-39), PII (ADR-40), evaluación RAG (ADR-41), fuentes y licencias (ADR-36), streaming de progreso (ADR-42), catálogo del corpus en base separada (ADR-43), scoring de evidencia clínica (ADR-7, futuro).
 
-El backlog se trabaja con la skill `decompose-prd` (F0 preparación → F1 `requirements-analyst` → F2 `architecture-advisor` → F3 `backlog-writer` → F4 `backlog-auditor` → F5 cierre → F6 publicación en Linear **solo con aprobación explícita**). Los subagentes leen este fichero del disco: si se edita, correr el workflow en una sesión nueva. Destino: proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`.
+El backlog se trabaja con la skill `decompose-prd` (F0 preparación → F1 `requirements-analyst` → F2 `architecture-advisor` → F3 `backlog-writer` → F4 `backlog-auditor` → F5 cierre → F6 publicación en Linear **solo con aprobación explícita**). Los subagentes leen este fichero del disco: si se edita, correr el workflow en una sesión nueva. Destino: proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`, workspace `l1der-lab-mjbc`; tablero: https://linear.app/l1der-lab-mjbc/project/oncolens-1-f85aa863d14c/issues. **Todo** issue de OncoLens va a ese proyecto: no crear proyectos ni equipos nuevos. El desarrollo por sprints (`/sprint-start`, `/sprint-run`, `/sprint-close`) lee y actualiza ese mismo proyecto; ver `.claude/README.md`.
