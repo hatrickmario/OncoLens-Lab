@@ -90,17 +90,19 @@ siempre humano. Los hooks requieren `python3` y `git`.
 
 ## Instalación
 
+Los comandos `/opsx:*` (`.claude/commands/opsx/`) y las skills `openspec-*` ya están en el repo,
+generados con OpenSpec 1.14.1 y el perfil extendido. Cada desarrollador solo configura su máquina:
+
 ```bash
 npm install -g @fission-ai/openspec@latest
-openspec init --tools claude
-openspec config profile
-openspec update
+openspec config set profile custom
+openspec config set workflows '["propose","explore","new","continue","apply","update","ff","sync","archive","bulk-archive","verify","onboard"]'
 brew install gh && gh auth login
 chmod +x .claude/hooks/*.sh
 ```
 
-En `openspec config profile` selecciona además `new, continue, ff, verify, bulk-archive, onboard`.
-Después, en Claude Code: `/opsx:onboard` (opcional) y `/sprint-start S1`.
+Tras actualizar OpenSpec, `openspec update` regenera esos archivos (commit aparte, sin editarlos a
+mano). Después, en Claude Code: `/opsx:onboard` (opcional) y `/sprint-start S1`.
 
 ## Enfoque del backend: SDD + contract-first + TDD, provider-driven
 

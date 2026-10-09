@@ -4,8 +4,8 @@
 # openspec/specs/ es el CONTRATO VERIFICABLE de cómo se comporta hoy el sistema.
 #
 # Requiere el perfil extendido para /opsx:verify y /opsx:bulk-archive:
-#   openspec config profile   (seleccionar new, continue, ff, verify, bulk-archive, onboard)
-#   openspec update
+#   openspec config set profile custom + workflows (ver .claude/README.md, Instalación)
+#   openspec update   (los comandos /opsx:* generados ya están en .claude/commands/opsx/)
 
 schema: spec-driven
 
