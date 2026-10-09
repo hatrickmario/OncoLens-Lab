@@ -2,12 +2,12 @@
 
 > Linear: [L1D-30](https://linear.app/l1der-lab-mjbc/issue/L1D-30)
 
-**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213, US-214) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213, US-214, US-215) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
 **Requisitos:** RN-14 (dueña), RN-22 (dueña), RN-13 (guarda del S1; dueña del gate: US-143), NFR-05, NFR-10 (parte S1), NFR-13, SEG-07 (claves), SEG-08 (TLS hacia PostgreSQL), SEG-09, SEG-12
 **Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.1 patrón y capas], [→ readme §2.3 estructura], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
 **Dependencias:** ↪ US-033 (specs que la CI valida) · 🔗 Bloquea: todas las Features del S1 (entorno común) · ⛔ ADR-39 solo para los valores de runtime (`LLM_BASE_URL`, `LLM_MODEL`) y el presupuesto de memoria, que se configuran, no se codifican
 **Valor:** sin un entorno reproducible no hay walking skeleton demostrable al oncólogo. Esta Feature fija desde el día uno las reglas que no se pueden arreglar después en un repositorio público: ningún secreto ni dato real versionado, solo `web` expuesto, la IA aislada de los datos clínicos por red, y todo valor "a calibrar" en configuración, para que el oncólogo pueda ajustar umbrales sin desplegar código.
-**Stories:** US-034, US-035, US-036, US-213, US-214 (21 puntos, S1) · US-037 (3 puntos, S2)
+**Stories:** US-034, US-035, US-036, US-213, US-214, US-215 (23 puntos, S1) · US-037 (3 puntos, S2)
 
 ---
 
@@ -225,8 +225,8 @@ copie un acoplamiento indebido.
   repartidos por la configuración.
 - **Tamaño de componentes (`web`):** ESLint `max-lines` con `skipBlankLines` y `skipComments`, en
   dos niveles leídos de `quality-thresholds.json` (`web.componentLinesWarn = 100`,
-  `web.componentLinesError = 150`); `printWidth` de Prettier fijado (p. ej., 100) para que el
-  conteo sea estable.
+  `web.componentLinesError = 150`); el conteo supone el `printWidth: 100` de Prettier que fija
+  US-215.
 - **Reglas de dependencias (Node):** `.dependency-cruiser.cjs` con, al menos,
   `controller-sin-acceso-a-datos`, `web-solo-por-bff`, `componentes-sin-datos`,
   `sin-ciclos` y `api-contracts-generado` (nadie importa tipos de `clinical-api` saltándose
@@ -242,8 +242,7 @@ copie un acoplamiento indebido.
 
 ## Non-goals
 Mutation testing (US-185, `si-hay-capacidad`). Revisión de diseño no determinista (es del
-agente `design-principles-reviewer`). Reglas de estilo o formato (Prettier, `ruff format`)
-más allá de lo que ya fije US-036.
+agente `design-principles-reviewer`). ESLint base, Prettier y `ruff format` (US-215).
 
 ## INVEST
 **Small** ✓ tres archivos de reglas, un archivo de umbrales, un job de CI y fixtures de prueba.
@@ -311,6 +310,66 @@ endpoints (más allá de la validación de respuestas). Versionado de la API por
 ## INVEST
 **Small** ✓ un validador por backend en los tests, tres scripts y un job de CI.
 **Testable** ✓ cada AC es una ejecución de script o un PR de prueba con resultado verde o rojo y un mensaje esperado.
+
+---
+
+## US-215 — Lint base y formato automático: ESLint con reglas de TypeScript, React, Next.js y accesibilidad, Prettier y `ruff format`
+
+> Linear: [L1D-265](https://linear.app/l1der-lab-mjbc/issue/L1D-265)
+
+`FEAT-PL1` · Sprint 1 · Estimación **2** · — (técnica, PRD §17) · NFR-13, NFR-12 (accesibilidad) · ↪ US-036 (workflow de CI) · 🔗 Relacionada: US-213 (umbrales y conteo de líneas que dependen del `printWidth` fijado aquí) · 🔗 Consumida por: `frontend-dev`, `clinical-platform-dev`, `ai-services-dev` y `design-principles-reviewer` (`.claude/`)
+
+## Story
+Como equipo de desarrollo (personas y agentes de IA), quiero una configuración base de ESLint
+y un formato automático único en los tres servicios, para que los errores reales de React,
+TypeScript, Next.js y accesibilidad se detecten antes del PR, para que el estilo no se discuta
+en las revisiones y para que el conteo de líneas de US-213 sea estable.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado el monorepo con el código del S1, cuando se ejecuta
+  `npm run lint` y `npm run format:check` en la raíz, entonces ESLint corre en `web` y
+  `clinical-api` con `typescript-eslint`, y en `web` además con `eslint-plugin-react-hooks`,
+  `eslint-plugin-jsx-a11y` y `@next/eslint-plugin-next`; Prettier verifica `web`,
+  `clinical-api` y `packages/`, y `ruff format --check` verifica `rag-orchestrator`; todo
+  termina con código 0 y el job `quality` de la CI ejecuta lo mismo en cada PR. `[NFR-13]`
+- **AC-2 (borde · reglas de hooks)** · Dado un componente de `web` que llama a un hook dentro
+  de un condicional o que omite una dependencia de `useEffect`, cuando corre `npm run lint`,
+  entonces falla con `react-hooks/rules-of-hooks` o `react-hooks/exhaustive-deps` y nombra el
+  archivo y la línea. `[NFR-13]`
+- **AC-3 (borde · accesibilidad)** · Dado un componente de `web` con una imagen sin `alt` o un
+  elemento interactivo sin rol ni manejador de teclado, cuando corre `npm run lint`, entonces
+  falla con la regla de `jsx-a11y` correspondiente. `[NFR-12]` `[PRD §7]`
+- **AC-4 (borde · formato)** · Dado un archivo `.ts`, `.tsx` o `.py` sin formatear, cuando corre
+  el job `quality`, entonces `format:check` falla nombrando el archivo, y `npm run format` lo
+  corrige sin cambiar su comportamiento (los tests siguen en verde). `[NFR-13]`
+- **AC-5 (borde · sin conflictos entre herramientas)** · Dado un archivo formateado por
+  Prettier, cuando corre ESLint, entonces ninguna regla de estilo de ESLint lo marca
+  (`eslint-config-prettier` desactiva las reglas que chocan). (asumido)
+
+## Contexto técnico
+- **Prettier:** `.prettierrc` en la raíz con `printWidth: 100` (el conteo de líneas de US-213 lo
+  supone), `singleQuote`, `trailingComma: "all"` y `prettier-plugin-tailwindcss` para ordenar
+  las clases de Tailwind. `.prettierignore` excluye lo generado (`packages/api-contracts/src/`,
+  `apps/clinical-api/src/generated/`), `components/ui/**` de shadcn solo si se decide no
+  reformatearlo, y `reports/`.
+- **ESLint:** `eslint.config.js` (flat config) en la raíz, compartido, con los plugins de AC-1 y
+  `eslint-config-prettier` al final. Los umbrales de tamaño y complejidad y las reglas de
+  dependencias son de US-213; esta historia solo fija la base.
+- **Python:** `ruff format` con `line-length = 100` en `apps/rag-orchestrator/pyproject.toml`
+  (el lint de complejidad es de US-213).
+- **Scripts (raíz):** `lint`, `format` y `format:check`; `npm run quality` (US-213) los incluye.
+- **Editor:** `.editorconfig` coherente (indentación, fin de línea) para personas; los agentes
+  dependen de los scripts.
+- AC-2 a AC-4 se verifican con fixtures en `ci/tests/quality/`, igual que US-213.
+
+## Non-goals
+Umbrales de tamaño y complejidad y reglas de dependencias entre capas (US-213). Reglas de
+lenguaje prescriptivo (`lint:lenguaje`, FEAT-T3). Hooks de pre-commit de Git (husky): la CI y
+los hooks de Claude Code ya cubren el control.
+
+## INVEST
+**Small** ✓ dos archivos de configuración, tres scripts y su inclusión en el job existente.
+**Testable** ✓ cada AC es una ejecución de script o un fixture con resultado verde o rojo y una regla esperada.
 
 ---
 
