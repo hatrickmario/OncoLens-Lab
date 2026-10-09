@@ -1,7 +1,7 @@
 ---
 name: sprint-start
 description: Abre un sprint de OncoLens en la sesión principal — trae las historias del sprint desde Linear, verifica que no queden changes del sprint previo, crea un change de OpenSpec por historia, corre el Gate 1 en lote con los guardianes, arma el grafo de dependencias y pide al humano aprobar el orden y el paralelismo. Se invoca solo a mano con /sprint-start S<n>.
-argument-hint: "S<n> (p. ej., S4)"
+argument-hint: "S<n> | Pre-S1 (p. ej., S4)"
 arguments: [sprint]
 disable-model-invocation: true
 ---
@@ -18,6 +18,14 @@ delegan a subagentes de nivel 1 para no llenar este contexto. No escribas códig
 - `git status` limpio y en `main` actualizado (`git pull --ff-only`).
 - MCP de Linear conectado (proyecto `OncoLens-1`, equipo `L1D`).
 - `grep -q 'PRD v1.3' CLAUDE.md` (si el PRD cambió de versión, avisar antes de seguir).
+
+**`Pre-S1` (decisiones previas al Sprint 1, FEAT-00):** mismo flujo con milestone `Pre-S1`, sin
+sprint previo (el paso 2 solo comprueba que no haya changes activos). Las historias DEC y ADR
+(US-007…US-011) **no llevan change de OpenSpec**: son decisiones humanas; el ADR va a
+`docs/architecture/adr/` y la DEC a su historia, se marcan resueltas en `backlog/02-adrs.md` y van
+en su propio PR; solo US-033 (contratos y esquema congelados) es un
+change con Gate 1 y Gate 2 (y crea los `openapi.yaml` y `contracts/examples/` de los que depende el
+contract-first). El sprint siguiente al Pre-S1 es `S1`, y su sprint previo, `Pre-S1`.
 
 ## 1. Historias del sprint (Linear MCP)
 

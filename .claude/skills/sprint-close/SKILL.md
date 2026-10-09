@@ -1,7 +1,7 @@
 ---
 name: sprint-close
 description: Cierra un sprint de OncoLens en la sesión principal — controla que cada change tenga tareas completas y PR mergeado (lo demás pasa al siguiente sprint sin archivarse), corre /opsx:verify global sobre main, ejecuta /opsx:bulk-archive resolviendo conflictos, lanza traceability-auditor, prepara la demo y la retro, y pide al humano cerrar. Se invoca solo a mano con /sprint-close S<n>.
-argument-hint: "S<n>"
+argument-hint: "S<n> | Pre-S1"
 arguments: [sprint]
 disable-model-invocation: true
 ---

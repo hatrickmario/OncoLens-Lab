@@ -7,7 +7,7 @@ en segundo plano para la fase de ejecución. Alineada con el **PRD v1.3** (slici
 ## Flujo de un sprint
 
 ```
-/sprint-start S<n>   (sesión principal · humano aprueba)       → PR de planificación → merge humano
+/sprint-start S<n>   (sesión principal · humano aprueba; también Pre-S1)       → PR de planificación → merge humano
 /sprint-run S<n>     (lanza sprint-orchestrator en 2.º plano)  → PRs [L1D-nn] → merges humanos
 /sprint-close S<n>   (sesión principal · humano cierra)         → PR de cierre → merge humano
 ```
@@ -69,7 +69,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 
 | Origen | Skills | Para qué | Cómo se obtienen |
 |---|---|---|---|
-| **OpenSpec** (perfil extendido) | `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:update`, `/opsx:sync`, `/opsx:archive`, `/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard` | Ciclo SDD; `verify` y `bulk-archive` son imprescindibles | `openspec init --tools claude` + `openspec config profile` + `openspec update` |
+| **OpenSpec** (perfil extendido) | `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:update`, `/opsx:sync`, `/opsx:archive`, `/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard` | Ciclo SDD; `verify` y `bulk-archive` son imprescindibles | Ya generados en el repo (`.claude/commands/opsx/`); cada máquina configura el perfil (ver Instalación) |
 | **Claude Code (incluidas)** | `/code-review`, `/security-review`, `/simplify`, `/run`, `/init` | Revisión adicional de PRs, arranque de la app | Vienen con Claude Code |
 | **fullstack-dev-skills** (plugin) | `typescript-pro`, `api-designer`, `postgres-pro`, `nextjs-developer`, `react-expert`, `fastapi-expert`, `python-pro`, `rag-architect`, `playwright-expert`, `test-master`, `security-reviewer` | Referencia técnica por capa para los implementadores | Plugin ya instalado en el equipo del autor |
 | **design** (plugin) | `ux-copy`, `accessibility-review` | Texto de UI no prescriptivo y WCAG 2.1 AA | Plugin `design` |

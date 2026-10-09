@@ -1,7 +1,7 @@
 ---
 name: sprint-run
 description: Delega la fase de ejecución (días 1 a 8) de un sprint ya planificado en el agente sprint-orchestrator en segundo plano, y explica cómo reanudarlo tras cada merge. Se invoca solo a mano con /sprint-run S<n>, después de mergear el PR de /sprint-start.
-argument-hint: "S<n>"
+argument-hint: "S<n> | Pre-S1"
 arguments: [sprint]
 disable-model-invocation: true
 ---
