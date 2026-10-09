@@ -497,7 +497,7 @@ Proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`. El Markdown es la fuente; Linea
 
 ## Último ID usado: US-213
 
-**US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Pendiente de publicar en Linear.
+**US-213** (FEAT-PL1, S1, 5 puntos, 2026-10-08): herramientas deterministas de calidad (ESLint, Ruff, dependency-cruiser, import-linter y umbrales en `quality-thresholds.json`) que consume el agente `design-principles-reviewer`. Publicada en Linear como [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (sub-issue de L1D-30, milestone Sprint 1, 5 puntos, labels `recorrido-principal` y `needs-refinement` por los umbrales pendientes).
 
 
 Historias nuevas de los ajustes del usuario del 2026-10-07: **US-211** (FEAT-T4a, S1, división de US-044) y **US-212** (FEAT-01a, S3, extraída de US-080). DEC nuevas del lote 4: **DEC-20** (US-208, criterio de "listo" de CAP-12). Último DEC: DEC-20. Último ADR del backlog: ADR-44 (ADR-7 es anterior y Futuro).

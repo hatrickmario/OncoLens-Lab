@@ -165,7 +165,7 @@ corpus es de US-074. *Mutation testing* (S6).
 
 ## US-213 — La CI aplica umbrales de tamaño y complejidad y reglas de dependencias entre capas en los dos backends y en `web`
 
-> Linear: pendiente de publicar (crear como sub-issue de L1D-30, milestone Sprint 1)
+> Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
 
 `FEAT-PL1` · Sprint 1 · Estimación **5** · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI) · 🔗 Consumida por: `design-principles-reviewer` (Gate 2) y el paso de refactor de los implementadores (`.claude/`)
 
