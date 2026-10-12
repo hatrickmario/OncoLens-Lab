@@ -56,7 +56,7 @@ Estados: cargando (botón deshabilitado, "Entrando…"), error, bloqueo por inte
 
 ## 02 · Pacientes: búsqueda y listado
 
-- **Búsqueda:** por tipo y número de documento (búsqueda exacta por índice ciego) o por nombre, más un filtro de estado (`GET /platform/patients?idType=&nationalId=&name=&status=`).
+- **Búsqueda:** por tipo y número de documento (búsqueda exacta por índice ciego) o por nombre, con `POST /platform/patients/search`: la identidad va en el cuerpo, nunca en la URL (`[Pre-S1 resp. 22]`). El listado sin búsqueda usa `GET /platform/patients?status=&dataOrigin=&page=`.
 - **Columnas** de `PatientSummary`:
 
 | Columna | Dato |
@@ -205,7 +205,7 @@ Layout C: el caso a la izquierda y el análisis a la derecha.
    - **Recuadro "Contexto fijo de esta conversación":** paciente desidentificado, datos del análisis, pregunta y hallazgos, y evidencia del mismo corpus.
    - **Cada respuesta** llega completa y validada: citas y NLI, la fuente nueva marcada "nueva en el seguimiento" y el aviso RN-19.
    - **Estados:** `sin_evidencia` (ofrece ampliar la antigüedad o abrir un análisis nuevo), `fuera_de_contexto` (otro paciente u otro tema: se ofrece un análisis nuevo) y `409` por límite.
-   - Las preguntas y respuestas se guardan en **Backend 1**, ligadas al análisis (`POST/GET …/evidence-analyses/{id}/follow-ups`).
+   - Las preguntas y respuestas se guardan en **Backend 1**, ligadas al análisis (`POST/GET …/evidence-analyses/{id}/follow-ups`; en Backend 2, `POST /rag/follow-up`).
    - Los hallazgos del análisis son memoria rotulada, nunca soporte citable (RN-24).
 10. **Feedback** (`POST …/feedback`): "¿Qué tan útil fue este análisis?", de 1 a 5, más "El aviso de faltantes fue correcto" y "El aviso de faltantes fue útil". Opcional y sin texto libre.
 11. Acciones: "Registrar la decisión del oncólogo" (Post-MVP) · "Nueva pregunta".
@@ -273,6 +273,6 @@ Layout C: el caso a la izquierda y el análisis a la derecha.
 | UX-3 | Marcadores de cita en línea dentro del `rationale` | **No** se añaden: cada opción lista sus citas debajo, sin cambiar el contrato |
 | UX-4 | Cola global de revisión | **No** se añade: la revisión es por paciente (`pendingReviewCount` y pestaña Revisión) |
 | UX-5 | `sourcesSelected.ensayos` sin corpus en el MVP (ADR-36) | El contrato se mantiene; la UI la muestra deshabilitada con su motivo |
-| UX-6 | Preguntas de seguimiento sin endpoint ni entidad | `POST/GET …/evidence-analyses/{id}/follow-ups`, `FollowUpTurn`, bloque `followUp` en `/rag/query` y `clinical.analysis_follow_up` (US-033 AC-13) `[Pre-S1 resp. 14]` |
+| UX-6 | Preguntas de seguimiento sin endpoint ni entidad | `POST/GET …/evidence-analyses/{id}/follow-ups`, `FollowUpTurn`, endpoint interno `POST /rag/follow-up` (sin estado, `[Pre-S1 resp. 19]`) y `clinical.analysis_follow_up` (US-033 AC-13) `[Pre-S1 resp. 14]` |
 | UX-7 | Filtro de antigüedad | `filtersApplied.publishedFromYear` en los dos backends y registro en `AnalysisBasis` (US-033 AC-14) `[Pre-S1 resp. 15]` |
 | UX-8 | Cuentas pendientes y administrador sin datos clínicos | `auth.user.account_status` y matriz de permisos del rol `admin` (US-033 AC-15) `[Pre-S1 resp. 16, 17]` |

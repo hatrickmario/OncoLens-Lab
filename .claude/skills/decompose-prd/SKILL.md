@@ -1,13 +1,13 @@
 ---
 name: decompose-prd
-description: Descompone el PRD v1.3 y el readme de OncoLens en un Product Backlog trazable — requisitos, ADRs y decisiones pendientes, Features (T-shirt), User Stories (Fibonacci, INVEST) y Acceptance Criteria (Given/When/Then) — y lo audita. Úsalo cuando se pida crear, ampliar, re-estimar o auditar el backlog, descomponer un PRD o una Feature, preparar un sprint, o convertir requisitos (FR/RN/NFR/CAP) en historias. También cuando se pregunte qué cobertura o trazabilidad tiene el backlog.
+description: Descompone el PRD v1.4 y el readme de OncoLens en un Product Backlog trazable — requisitos, ADRs y decisiones pendientes, Features (T-shirt), User Stories (Fibonacci, INVEST) y Acceptance Criteria (Given/When/Then) — y lo audita. Úsalo cuando se pida crear, ampliar, re-estimar o auditar el backlog, descomponer un PRD o una Feature, preparar un sprint, o convertir requisitos (FR/RN/NFR/CAP) en historias. También cuando se pregunte qué cobertura o trazabilidad tiene el backlog.
 ---
 
 # Contexto del producto
 
 OncoLens es un sistema de apoyo a la decisión clínica con IA (CDSAI) para oncólogos que tratan cáncer de **mama y próstata**. El MVP reconstruye el caso del paciente a partir de sus documentos (OCR local, timeline, reconciliación, faltantes) y entrega un **análisis de evidencia**: recupera guías y estudios de un corpus abierto, sintetiza acuerdos y discrepancias, compara criterio a criterio la población estudiada con el paciente y describe las opciones que aparecen en la evidencia, **ordenadas por aplicabilidad, con citas verificadas y sin lenguaje prescriptivo**. El objetivo del proyecto es validar que este apoyo mejora el análisis del oncólogo (métricas de valor VM-1 a VM-6).
 
-**Encuadre obligatorio (PRD v1.3, D-01):** OncoLens **no recomienda tratamientos** ni estima probabilidad de éxito. El backlog habla de "análisis de evidencia" y de "opciones descritas en la evidencia", nunca de "recomendaciones". Cualquier texto heredado de la v1.0 (`recommendations[]`, `POST /platform/rag/query`, "consentimiento `analisis_ia` vigente") está superado.
+**Encuadre obligatorio (PRD v1.4, D-01):** OncoLens **no recomienda tratamientos** ni estima probabilidad de éxito. El backlog habla de "análisis de evidencia" y de "opciones descritas en la evidencia", nunca de "recomendaciones". Cualquier texto heredado de la v1.0 (`recommendations[]`, `POST /platform/rag/query`, "consentimiento `analisis_ia` vigente") está superado.
 
 # Descomponer el PRD en un Product Backlog
 
@@ -15,11 +15,11 @@ Actúas como **Senior Product Owner** especializado en productos de tecnología 
 
 ## Fuentes de verdad (nunca inventar requisitos)
 
-Prioridad ante conflicto: **`docs/PRD.md` v1.3 > `readme.md` > `CLAUDE.md`**. Un conflicto entre fuentes no se resuelve en silencio: se registra como vacío.
+Prioridad ante conflicto: **`docs/PRD.md` v1.4 > `readme.md` > `CLAUDE.md`**. Un conflicto entre fuentes no se resuelve en silencio: se registra como vacío.
 
 | Fuente | Qué aporta |
 |---|---|
-| `docs/PRD.md` §0 | Registro de cambios: D-01…D-16 (v1.1), R-01…R-31 (v1.2) y B-01…B-15 (v1.3, alineación con el backlog). Explica qué quedó superado |
+| `docs/PRD.md` §0 | Registro de cambios: D-01…D-16 (v1.1), R-01…R-31 (v1.2), B-01…B-15 (v1.3, alineación con el backlog) y E-01…E-10 (v1.4, refinamiento del Pre-S1). Explica qué quedó superado |
 | `docs/PRD.md` §2 | Objetivos `G-1`…`G-16` y métricas de valor `VM-1`…`VM-6` |
 | `docs/PRD.md` §3, §18.1.2 | No-objetivos y lo que queda **fuera** del MVP (CAP-12…CAP-19) |
 | `docs/PRD.md` §5 | `FR-01`…`FR-30` |
@@ -76,7 +76,7 @@ F0 preparación → F1 requirements-analyst → F2 architecture-advisor
 
 Los subagentes **solo escriben Markdown**: ninguno tiene acceso al MCP de Linear. La publicación la haces tú en F6, y solo después de que el usuario apruebe.
 
-**F0 — Preparación.** Verificar que existen `docs/PRD.md` (v1.3) y `readme.md`, y recalcular con `grep` los rangos del Universo de IDs. Comprobar que `CLAUDE.md` **en disco** está en v1.3 (`grep -q 'PRD v1.3' CLAUDE.md`); si no, detenerse. Si `CLAUDE.md` cambió durante la sesión, la copia que la sesión inyecta en el contexto de los subagentes puede estar obsoleta: correr el workflow en una **sesión nueva**. Crear `backlog/` si falta. Si ya hay backlog, leerlo: las fases siguientes **amplían, no reescriben** (los IDs ya publicados son inmutables). Si el backlog existente usa el encuadre v1.0 (recomendaciones, consentimiento por evento), avisar al usuario antes de ampliarlo.
+**F0 — Preparación.** Verificar que existen `docs/PRD.md` (v1.4) y `readme.md`, y recalcular con `grep` los rangos del Universo de IDs. Comprobar que `CLAUDE.md` **en disco** está en v1.3 (`grep -q 'PRD v1.4' CLAUDE.md`); si no, detenerse. Si `CLAUDE.md` cambió durante la sesión, la copia que la sesión inyecta en el contexto de los subagentes puede estar obsoleta: correr el workflow en una **sesión nueva**. Crear `backlog/` si falta. Si ya hay backlog, leerlo: las fases siguientes **amplían, no reescriben** (los IDs ya publicados son inmutables). Si el backlog existente usa el encuadre v1.0 (recomendaciones, consentimiento por evento), avisar al usuario antes de ampliarlo.
 
 **F1 — `requirements-analyst`** → `backlog/01-requisitos.md`.
 *Gate:* inventario completo según el Universo de IDs (FR 30/30, RN 30/30, NFR 14, SEG 13, IA 11, CAP/T 17, HU 26/26, OL 6/6, TBD 21/21), cada uno con evidencia, actores y Features candidatas; mapa `AC-xx.y` → FR. Los vacíos y los conflictos entre fuentes van en su propia sección.

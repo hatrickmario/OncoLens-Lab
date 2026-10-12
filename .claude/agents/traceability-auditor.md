@@ -1,6 +1,6 @@
 ---
 name: traceability-auditor
-description: Audita la trazabilidad de OncoLens al cierre de cada sprint — L1D ↔ change de OpenSpec ↔ spec archivada ↔ FR/RN/AC/M del PRD v1.3 ↔ tests ↔ PR —, regenera backlog/03-trazabilidad.md, escribe el reporte del sprint y actualiza el estado de las historias en Linear. Úsalo solo desde /sprint-close, después del bulk-archive.
+description: Audita la trazabilidad de OncoLens al cierre de cada sprint — L1D ↔ change de OpenSpec ↔ spec archivada ↔ FR/RN/AC/M del PRD v1.4 ↔ tests ↔ PR —, regenera backlog/03-trazabilidad.md, escribe el reporte del sprint y actualiza el estado de las historias en Linear. Úsalo solo desde /sprint-close, después del bulk-archive.
 model: opus
 effort: high
 disallowedTools: Agent

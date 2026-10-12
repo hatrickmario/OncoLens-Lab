@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §14 Pre-S1], [→ readme §5.0 "Antes del Sprint 1"], [→ readme §3.3 #10, #24, #26, #30, #36], [→ readme §3.1], [→ readme §4.1, §4.2], [→ PRD §16 TBD-04, TBD-11, TBD-17, TBD-19], [→ PRD §2.2], [→ PRD §18.6 SUP-1, SUP-5], [→ backlog/01-requisitos.md §14 Q-04, Q-07; §15 P-01…P-03], [→ backlog/02-adrs.md §2, §3, §4.4]
 **Dependencias:** — (primera Feature del backlog) · 🔗 Bloquea: FEAT-PL2 (DEC-05, US-033), FEAT-PL3 (DEC-04), FEAT-06a y FEAT-10a (US-033), FEAT-06c (US-033, ADR-36 para el S4), FEAT-T5a (DEC-02)
 **Valor:** el Discovery muestra que el oncólogo reconstruye el caso a mano desde documentos (P1) y busca evidencia sin saber si aplica a su paciente (P5, P6). Antes de escribir código hay que fijar lo que es caro de cambiar después: la forma del análisis que verá el oncólogo (sin "recomendaciones", D-01), el esquema que guardará el caso longitudinal, dónde vive cada dato crítico de próstata, qué fuentes puede usar el corpus y cómo se va a medir si el producto le ahorra tiempo (VM-1…VM-6). Sin estas decisiones, el walking skeleton del S1 se construiría sobre arena y la hipótesis no sería medible.
-**Stories:** US-007 · ADR-36, US-008 · DEC-02, US-009 · DEC-03, US-010 · DEC-04, US-011 · DEC-05, US-033 (15 puntos)
+**Stories:** US-007 · ADR-36, US-008 · DEC-02, US-009 · DEC-03, US-010 · DEC-04, US-011 · DEC-05, US-033 (17 puntos)
 
 > **Ubicación:** ADR-39 (modelos locales) se decide "al inicio del S1" (PRD §14, readme §1.4) y su faseo lo fija el propio ADR (P-01); vive en FEAT-06a (S1), donde se aplica, para que esta Feature solo contenga historias Pre-S1.
 
@@ -310,7 +310,7 @@ seed, matriz ítem → campo) vive en US-033, US-038, US-039 y FEAT-04 US-001.
 
 > Linear: [L1D-55](https://linear.app/l1der-lab-mjbc/issue/L1D-55)
 
-`FEAT-00` · Pre-S1 · Estimación **8** *(antes 5; re-estimada el 2026-10-11 por AC-11…AC-15)* · — (técnica, PRD §17) · FR-09, FR-25 (contrato), FR-27 (esquema `AnalysisBasis`), NFR-13 · AC-05.3 (contrato), AC-T2.1 (esquema) · ↪ DEC-05 (decidida 2026-10-09) · AC-6 sin bloqueo (estructura parametrizada; valor en ADR-39/US-058) · 🔗 Consumida por: US-038, US-041, US-043 (AC-9), US-052, US-053, US-055, US-058, US-061, US-066, US-110, US-111 (AC-10)
+`FEAT-00` · Pre-S1 · Estimación **10** *(5 → 8 por AC-11…AC-15 y 8 → 10 por AC-16, el generador mínimo; re-estimada el 2026-10-11)* · — (técnica, PRD §17) · FR-09, FR-25 (contrato), FR-27 (esquema `AnalysisBasis`), NFR-13 · AC-05.3 (contrato), AC-T2.1 (esquema) · ↪ DEC-05 (decidida 2026-10-09) · AC-6 sin bloqueo (estructura parametrizada; valor en ADR-39/US-058) · 🔗 Consumida por: US-038, US-041, US-043 (AC-9), US-052, US-053, US-055, US-058, US-061, US-066, US-110, US-111 (AC-10)
 
 ## Story
 Como equipo de desarrollo, quiero congelar antes del Sprint 1 el contrato
@@ -327,6 +327,29 @@ de datos en los sprints siguientes.
 >   - **UX-2:** gradación (AC-11).
 >   - **UX-3, UX-4 y UX-5:** sin cambio de contrato.
 >   - **NCCN y ESMO:** pueden nombrarse en `sourcesNotIncluded` **solo como exclusión**. El ejemplo de readme §4.1 se mantiene. `[Pre-S1 resp. 12]`
+> - **Gate 1 (usuario, 2026-10-11):**
+>   - **resp. 18:** el grado se registra siempre como `grading` (`gleason_isup` o `nottingham`) y `grade` es siempre derivado.
+>   - **resp. 19:** el seguimiento usa un endpoint propio en Backend 2, `POST /rag/follow-up`. Backend 2 clasifica `fuera_de_contexto` y Backend 1 calcula si una fuente es nueva. `/rag/query` y AC-9 no cambian.
+>   - **resp. 20:** el generador mínimo entra en esta historia (AC-16).
+>   - **resp. 21:** `licenseClass` tiene 4 valores y la ingesta filtra por configuración.
+>   - **resp. 22:** la búsqueda por identidad pasa a `POST /platform/patients/search`.
+>   - **resp. 23:** la pregunta de seguimiento se guarda y se devuelve enmascarada; cada turno lleva un seudónimo nuevo; Backend 2 no guarda estado.
+>   - **resp. 24:** el administrador ve la identidad con auditoría, sin OCR asistido ni auditoría por paciente, con una matriz de permisos explícita.
+>   - **resp. 25:** schemas con `required` y `additionalProperties: false`; `Provenance` no compartido; los YAML del readme pasan a ser enlaces; `disclaimer` es un solo texto con las dos frases de RN-19.
+> - **Gate 1, segunda vuelta (usuario, 2026-10-11):**
+>   - **resp. 26:** se aceptan las correcciones sin re-gate; el Gate 2 verifica.
+>   - **resp. 27:** el administrador recibe `PatientAdminSummary` (identificación enmascarada, estado y fecha de alta) y `403` en todo lo clínico; el descifrado completo para el opt-out solo se hace por la CLI, con auditoría.
+>   - **resp. 28:** el readme §4 conserva un extracto OpenAPI generado de 3 endpoints.
+>   - **resp. 29 (valores por defecto):**
+>     - el login responde `204`;
+>     - `audit:read_patient` queda en "no" para todos;
+>     - el score y el grupo ISUP son opcionales en la entrada;
+>     - el modelo de datos vive solo en `data-model.md`;
+>     - un `traceId` nuevo por turno;
+>     - `catalogVersion` en `meta`;
+>     - `staleness` neutro en un análisis nuevo;
+>     - referencias `r1…rN` por petición;
+>     - `x-permission` con códigos concretos y `publico` solo en el login.
 > - **Versión de OpenAPI:** readme §4.1 declara `openapi: 3.0.3` y AC-1 exige 3.1. La transcripción a 3.1 cambia `nullable: true` por `type: [<t>, "null"]`, sin cambiar la semántica. Es un vacío resuelto de la transcripción, no un cambio de contrato.
 
 ## AC (Given/When/Then)
@@ -374,20 +397,24 @@ de datos en los sprints siguientes.
   acepta una `grading` opcional con los campos estructurados; `grade` sigue siendo texto
   derivado, no editable a mano. `[DEC-05]` `[Pre-S1 resp. 2]`
 - **AC-12 (borde · atribución de la cita)** · Dado el schema `CitedSource` de ambos specs,
-  cuando el script lo revisa, entonces declara `licenseClass` (enum de las clases aceptadas en
-  ADR-36), `authors` (nullable) y `sourceUrl` (nullable), descritos como copiados del catálogo
+  cuando el script lo revisa, entonces declara `licenseClass` (enum de 4 valores `dominio_publico | cc_by | cc_by_sa | cc_by_nc`;
+  el MVP acepta 3 por configuración, `[Pre-S1 resp. 21]`), `authors` (nullable) y `sourceUrl` (nullable), descritos como copiados del catálogo
   del corpus y nunca del texto generado, y los ejemplos de `contracts/examples/` los incluyen
   (uno con `authors = null` y otro con `sourceUrl = null`, que la UI muestra como "No disponible").
   `[RN-04]` `[RN-25]` `[ADR-36]` `[Pre-S1 resp. 11]`
 - **AC-13 (borde · preguntas de seguimiento)** · Dado `apps/clinical-api/openapi.yaml`,
   cuando el script lo revisa, entonces declara `POST` y `GET
   /platform/evidence-analyses/{id}/follow-ups` (`201 FollowUpTurn`, `409
-  LIMITE_SEGUIMIENTO`, `403` por opt-out). `FollowUpTurn` tiene `turnNumber`, `question`,
+  LIMITE_SEGUIMIENTO`, `403` por RBAC u opt-out, `422`, `401`). `FollowUpTurn` tiene `id`, `turnNumber`, `question` (enmascarada), `createdAt`,
   `status` (`con_evidencia | sin_evidencia | fuera_de_contexto`), `answer` (afirmaciones
   con soporte), `citedSources` (con la marca de fuente nueva), `omittedClaims` y
-  `disclaimer`. El spec de `rag-orchestrator` acepta en `/rag/query` un bloque opcional
-  `followUp`, descrito como memoria rotulada y no citable. El modelo de datos declara
-  `clinical.analysis_follow_up`. `[Pre-S1 resp. 14]` `[RN-24]`
+  `disclaimer`. El spec de `rag-orchestrator` declara el endpoint propio
+  `POST /rag/follow-up` (`RagFollowUpRequest` con la pregunta enmascarada, un
+  `pseudoPatientId` nuevo por turno y la memoria del análisis rotulada y no citable;
+  `RagFollowUpResponse` con `status` que incluye `fuera_de_contexto`), sin estado entre
+  turnos; `/rag/query` no cambia. El modelo de datos declara `clinical.analysis_follow_up`
+  (pregunta enmascarada, `trace_id` y versiones de modelo, prompt y catálogo; sin
+  seudónimo ni identidad). `[Pre-S1 resp. 14]` `[Pre-S1 resp. 19]` `[Pre-S1 resp. 23]` `[RN-24]`
 - **AC-14 (borde · antigüedad)** · Dados ambos specs, cuando el script los revisa, entonces
   `filtersApplied.publishedFromYear` (entero, nullable: `null` = toda la evidencia) existe
   en la petición de Backend 1 y en la de `/rag/query`, y `AnalysisBasis` lo registra.
@@ -396,14 +423,44 @@ de datos en los sprints siguientes.
   `auth.user`, entonces `account_status` (`pendiente | activo | desactivado | rechazado`)
   reemplaza a `is_active`, y la matriz de permisos del rol `admin` excluye la lectura
   clínica y los análisis. `[Pre-S1 resp. 16]` `[Pre-S1 resp. 17]`
+- **AC-16 (borde · clientes generados)** · Dados los dos specs, cuando se ejecuta
+  `npm run contracts:generate && git diff --exit-code`, entonces `packages/api-contracts`
+  (tipos TS y schemas Zod) y `apps/rag-orchestrator/app/schemas/generated/` (Pydantic)
+  están al día y nadie los editó a mano; y AC-8 se verifica sobre lo generado.
+  `[Pre-S1 resp. 20]` `[NFR-13]`
+- **AC-17 (reglas transversales del contrato)** · Dados los dos specs y
+  `contracts/examples/`, cuando se ejecuta `npm run contracts:check`, entonces verifica
+  sin hallazgos:
+  - lenguaje no prescriptivo (RN-23) en descripciones, claves y ejemplos;
+  - el aviso de IA en todo `disclaimer` (RN-19);
+  - que toda opción y afirmación tenga al menos una cita o una referencia `r1…rN` a un
+    dato del paciente (RN-01);
+  - las descripciones normativas de la relevancia y del orden por aplicabilidad
+    (RN-03, RN-28);
+  - los códigos de error cerrados por respuesta;
+  - que no haya identidad ni UUID enlazables en Backend 2, ni identidad en URL o
+    cabeceras de Backend 1 (RN-10, RN-11);
+  - que cada operación declare su `x-permission`, con códigos concretos y `publico` solo
+    en el login;
+  - que los ejemplos sean sintéticos (prefijo `SINT-`, NCCN y ESMO solo como exclusión).
+  Cada regla tiene su parche de mutación. `[Pre-S1 resp. 25]` `[Pre-S1 resp. 29]`
+- **AC-18 (aislamiento del modelo)** · Dado `docs/architecture/data-model.md`, cuando se
+  revisa, entonces el rol `rag_corpus` tiene USAGE solo sobre `corpus`, `REVOKE ALL` sobre
+  `auth`, `identity`, `clinical`, `audit` y `research`, privilegios por defecto que cubren
+  las tablas nuevas, `pg_hba` solo desde `corpus-db-net` y ningún acceso a `clinical-minio`;
+  `data-model.md` es la única fuente del modelo y el readme §3.1 enlaza a él.
+  `[readme §2.5]` `[Pre-S1 resp. 29]`
 - **AC-7 (borde · evento derivado, C-06)** · Dado el spec de `clinical-api`, cuando se
   revisa `POST /platform/evidence-analyses`, entonces su descripción dice que el análisis
   aparece en el timeline como **evento derivado** y no menciona escribir un evento
   `analisis_ia`. `[AC-11.4]`
-- **AC-8 (borde · esquemas compartidos)** · Dado `packages/api-contracts` generado desde
-  ambos specs, cuando se comparan `EvidenceOption`, `DiscardedOption`, `Synthesis` y
-  `SourceApplicability` de §4.1 y §4.2, entonces son estructuralmente idénticos (un solo
-  origen referenciado, no copias divergentes). `[readme §4.2]` `[NFR-13]`
+- **AC-8 (borde · esquemas compartidos)** · Dados los dos specs crudos y lo generado en
+  `packages/api-contracts`, cuando se comparan los ocho schemas compartidos
+  (`EvidenceOption`, `DiscardedOption`, `Synthesis`, `SourceApplicability`, `CitedSource`,
+  `SupportedClaim`, `ApplicabilityCriterion`, `ApplicabilitySummary`), entonces ambos
+  specs los referencian con `$ref` a `contracts/schemas/evidence.yaml` y lo generado es
+  idéntico (un solo origen, no copias divergentes). `Provenance` no se comparte.
+  `[readme §4.2]` `[NFR-13]` `[Pre-S1 resp. 25]`
 - **AC-9 (borde · tipo no habilitado en Backend 2)** · Dado
   `apps/rag-orchestrator/openapi.yaml`, cuando el script revisa `POST /rag/query`,
   entonces declara la respuesta `422` con `error = "TIPO_NO_HABILITADO"` y el enum de
@@ -417,15 +474,15 @@ de datos en los sprints siguientes.
   US-110. `[§15 resp. 4]` `[Q-03]` `[ADR-33]`
 
 ## Contexto técnico
-Entregables: los dos OpenAPI (fuente de verdad del contrato), cuatro ejemplos JSON en
+Entregables: los dos OpenAPI (fuente de verdad del contrato), los ejemplos JSON (unos 24, incluidos los de error) en
 `contracts/examples/`, `docs/architecture/data-model.md` (DDL de readme §3.1 con DEC-05
 aplicada y la colección de Milvus) y el script `contracts:check` (lint OpenAPI +
 validación de ejemplos con un validador JSON Schema + búsqueda de vocabulario v1.0). Se
 ejecuta en local en el Pre-S1; US-036 lo integra en la CI desde el S1. La implementación
 Prisma y la migración son de US-038; la del catálogo `corpus` y Milvus, de US-058.
 
-Todos los AC se verifican con el script (tests unitarios sobre los specs y ejemplos),
-salvo AC-5 y AC-6, que se verifican por revisión del documento de modelo de datos.
+Lo generado vive en `packages/api-contracts/src/types/<proveedor>/` y `src/zod/<proveedor>/` (TS y Zod) y en `apps/rag-orchestrator/app/schemas/generated/` (Pydantic); el diagrama del modelo se mueve del readme §3.1 a `data-model.md`. Todos los AC se verifican con el script (tests unitarios sobre los specs y ejemplos),
+salvo AC-5, AC-6, AC-15, AC-18 y la parte de datos de AC-13, que se verifican por revisión del documento de modelo de datos con chequeos simples del script. El readme §4 conserva un extracto OpenAPI generado de los 3 endpoints representativos, verificado por el script (`[Pre-S1 resp. 28]`).
 
 ## Non-goals
 No implementar endpoints ni migraciones. No decidir modelos (ADR-39). No agregar campos
@@ -435,9 +492,9 @@ resuelto; cualquier otro faltante (p. ej., página en `Provenance`, V-11) se ano
 vacío para su Feature, no se improvisa aquí.
 
 ## INVEST
-**Small** ✓ transcripción de specs existentes, cuatro ejemplos y un script de verificación.
-**Testable** ✓ AC-1 a AC-4 y AC-7 a AC-10 son aserciones automatizadas del script; AC-5 y AC-6, revisión del documento.
-*(Diez AC: todos verifican el mismo entregable con el mismo script o la misma revisión; no es señal de dividir. La estimación de 5 se mantiene.)*
+**Small** ⚠ transcripción de specs con sus vacíos resueltos, ejemplos, un script de verificación y el generador mínimo.
+**Testable** ✓ AC-1 a AC-4, AC-7 a AC-14, AC-16 y AC-17 son aserciones automatizadas de `contracts:check` (cada regla con su parche de mutación); AC-5, AC-6, AC-15, AC-18 y la parte de datos de AC-13 combinan la revisión de `data-model.md` con chequeos simples del script.
+*(Dieciocho AC: todos verifican el mismo entregable, los contratos, el modelo de datos y lo generado, con el mismo script o la misma revisión. Se re-estimó a 10 el 2026-10-11; dividir separaría specs que se congelan juntos.)*
 
 ---
 

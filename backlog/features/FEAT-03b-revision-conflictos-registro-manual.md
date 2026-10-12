@@ -175,14 +175,20 @@ esperar un documento.
   con `entry_method = manual` y un `Biomarker` `verificado`, `extraction_confidence = n_a`,
   `loinc_code = LOINC-T-KI67`, `mapping_status = mapeado`; y en `GET …/completeness` el
   ítem `ki67` pasa a `presente_verificado`. `[AC-04.1]` `[ADR-33]` `[Q-03]` `[§15 resp. 4]`
-- **AC-2 (borde · completar el diagnóstico)** · Dado F-M2 (`grade = null`), cuando el
-  oncólogo envía `POST /platform/patients/{id}/diagnoses` con `grade = "2"`, entonces se
-  crea un `Diagnosis` `manual_correction`, `verificado` y `is_active = true` con los
-  valores del vigente más `grade = "2"`, y el anterior pasa a `reemplazado` e
-  `is_active = false`. `[Q-03]` `[FR-08]` `[RN-08]` `[§15 resp. 4]`
+- **AC-2 (borde · completar el diagnóstico)** · Dado F-M2 (sin gradación), cuando el
+  oncólogo envía `POST /platform/patients/{id}/diagnoses` con
+  `grading = { gradingSystem: "nottingham", nottinghamGrade: 2 }`, entonces se crea un
+  `Diagnosis` `manual_correction`, `verificado` y `is_active = true` con los valores del
+  vigente más esa gradación, `grade` derivado = "Nottingham grado 2", y el anterior pasa
+  a `reemplazado` e `is_active = false`. Un cuerpo con `grade` escrito a mano responde
+  `422`. `[Q-03]` `[FR-08]` `[RN-08]` `[§15 resp. 4]` `[Pre-S1 resp. 18]`
 - **AC-3 (borde · próstata)** · Dado un paciente de próstata, cuando se registra
-  `grade = "ISUP 3"`, entonces queda en `Diagnosis.grade` y el TNM sigue en
-  `staging_system`/`stage_value`. `[Q-04]` `[DEC-05]`
+  `grading = { gradingSystem: "gleason_isup", gleasonPrimaryPattern: 4, gleasonSecondaryPattern: 3, specimenType: "biopsia", gradeScope: "peor" }`,
+  entonces se crea la fila de `diagnosis_grading` con `gleasonScore = 7` e
+  `isupGradeGroup = 3` derivados, `Diagnosis.grade` = "Gleason 4+3=7 · ISUP 3", y el TNM
+  sigue en `staging_system`/`stage_value`; `gleasonScore` e `isupGradeGroup` son opcionales en la entrada y, si llegan incoherentes con los patrones, responden `422 GRADACION_INCOHERENTE` (`[Pre-S1 resp. 29]`).
+  `[Q-04]` `[DEC-05]` `[Pre-S1 resp. 18]`
+  > **Decidido (usuario, 2026-10-11, Gate 1 de US-033):** el grado siempre se registra como `grading` (`gleason_isup` en próstata, `nottingham` en mama) y `grade` es siempre texto derivado, nunca editable. `[Pre-S1 resp. 18]`
 - **AC-4 (borde · término sin mapeo)** · Dado `name = "marcador XYZ"`, cuando se
   registra, entonces se guarda con `mapping_status = no_mapeado` y sin código.
   `[RN-27]` `[AC-03.3]`

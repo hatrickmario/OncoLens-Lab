@@ -2,7 +2,7 @@
 
 Propuesta B (implementadores por bounded context + guardianes transversales), con
 `bulk-archive` y `traceability-auditor` solo al cierre de cada sprint, y un `sprint-orchestrator`
-en segundo plano para la fase de ejecución. Alineada con el **PRD v1.3** (slicing v2).
+en segundo plano para la fase de ejecución. Alineada con el **PRD v1.4** (slicing v2).
 
 ## Flujo de un sprint
 
@@ -57,7 +57,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `clinical-language-auditor` | sonnet | RN-23, RN-19, citas, orden por aplicabilidad, avisos no bloqueantes | Solo lectura |
 | `ai-eval-runner` | sonnet | Suite OL-06 contra baseline y metas | Lectura + reporte en `reports/eval/` |
 | `traceability-auditor` | opus | L1D ↔ change ↔ spec ↔ PRD ↔ test ↔ PR; `03-trazabilidad.md`; estado en Linear | Hereda, sin Agent |
-| `requirements-analyst` · `architecture-advisor` · `backlog-writer` · `backlog-auditor` | opus | Fase de backlog (skill `decompose-prd`) — **actualizados a PRD v1.3** | Ya existían |
+| `requirements-analyst` · `architecture-advisor` · `backlog-writer` · `backlog-auditor` | opus | Fase de backlog (skill `decompose-prd`) — **actualizados a PRD v1.4** | Ya existían |
 
 ## Skills propias (`.claude/skills/`)
 
@@ -74,7 +74,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `run-ai-eval` | Implementadores, Gate 2, `/sprint-close` | Fork en `ai-eval-runner` |
 | `visual-check` | `frontend-dev` (precargada), tras el verde y antes del refactor | Loop visual: estados, consola, red, accesibilidad, rendimiento y capturas en navegador real contra Compose local con seed sintético; evidencia para el Gate 2 |
 | `preflight-real-data` | Solo manual | Checklist de G-Piloto (S6) |
-| `decompose-prd` | Ya existía | PRD → backlog — **actualizada a PRD v1.3** |
+| `decompose-prd` | Ya existía | PRD → backlog — **actualizada a PRD v1.4** |
 
 ## Skills estándar necesarias (no se crean aquí)
 
@@ -218,4 +218,4 @@ props y providers en ambas direcciones: falta de patrón y sobre-patronear (YAGN
 - Change `l1d-<nn>-<slug>` · rama `feat/l1d-<nn>-<slug>` · PR `[L1D-<nn>] …`.
 - Escenarios con `[US-xxx AC-n]` y `[AC-xx.y]`; tests con `US-xxx AC-n` en el nombre.
 - Estado del sprint en `backlog/sprints/S<n>-{plan,status,trazabilidad,cierre}.md`.
-- Prioridad de fuentes: `docs/PRD.md` v1.3 > `readme.md` > `CLAUDE.md`.
+- Prioridad de fuentes: `docs/PRD.md` v1.4 > `readme.md` > `CLAUDE.md`.

@@ -250,6 +250,8 @@ Faltantes en el registro (FEAT-04 US-006).
 
 `FEAT-06a` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · SEG-07 (dueña) · AC-T4.1 (§11 #7) · ↪ US-035
 
+> **Nota (Gate 1 de US-033, 2026-10-11):** el contrato congelado declara para Backend 2 el `401` con `error = "TOKEN_SERVICIO_INVALIDO"` ante un JWT de servicio ausente o inválido; esta historia lo implementa.
+
 ## Story
 Como responsable de seguridad, quiero que `rag-orchestrator` solo acepte llamadas
 firmadas por `clinical-api` con un JWT de servicio de algoritmo fijado, para que la

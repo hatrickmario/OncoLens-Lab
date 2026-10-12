@@ -307,6 +307,8 @@ y fixtures de prueba; si en el planning pasa de 8, dividir AC-8…AC-11 en una h
 
 `FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (técnica, PRD §17) · NFR-13 · ↪ US-033 (specs congelados), US-036 (workflow de CI) · 🔗 Relacionada: US-213 (regla `api-contracts-generado`) · 🔗 Consumida por: `contract-keeper` (Gate 2) y la skill `sync-contracts` (`.claude/`)
 
+> **Decidido (usuario, 2026-10-11, Gate 1 de US-033):** el generador mínimo (`contracts:generate` y la verificación `git diff --exit-code` sobre lo generado) pasa a **US-033 (Pre-S1)**, para que el S1 consuma clientes generados. Esta historia conserva la verificación del proveedor (`contracts:verify-provider`), los cambios incompatibles (`contracts:breaking`, AC-5) y la ampliación del AC-4 a la CI. `[Pre-S1 resp. 20]`
+
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que `clinical-api` y
 `rag-orchestrator` comprueben en sus tests que cada respuesta cumple su propio
