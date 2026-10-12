@@ -44,8 +44,18 @@ export const IDENTITY_B2 = [...IDENTITY_PII, ...LINKABLE_IDENTIFIERS];
 /** Nombres que casan con `name$` pero no son identidad; se amplía solo con revisión de privacy-guardian. */
 export const NAME_ALLOWLIST = ['biomarkerName', 'sourceName', 'regimenName', 'originalName', 'drugName', 'llmModel'].map(normalizeName);
 
+/** Cada nombre que se prueba: el completo y, en nombres con separadores (cabeceras como `X-Patient-Email`), cada tramo contiguo. */
+function candidateNames(name) {
+  const tokens = String(name).split(/[-_]/).filter(Boolean);
+  const spans = [];
+  for (let start = 0; start < tokens.length; start += 1) {
+    for (let end = start + 1; end <= tokens.length; end += 1) spans.push(tokens.slice(start, end).join(''));
+  }
+  return [name, ...spans].map(normalizeName);
+}
+
 /** ¿El nombre es de identidad según `patterns`, descontada la lista blanca? */
 export function matchesIdentity(name, patterns) {
-  const normalized = normalizeName(name);
-  return !NAME_ALLOWLIST.includes(normalized) && patterns.some((pattern) => pattern.test(normalized));
+  if (NAME_ALLOWLIST.includes(normalizeName(name))) return false;
+  return candidateNames(name).some((candidate) => patterns.some((pattern) => pattern.test(candidate)));
 }

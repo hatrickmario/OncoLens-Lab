@@ -1,0 +1,289 @@
+[
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche elimina el 409 de POST …/follow-ups",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/409" }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "follow-ups/post/responses/409", "mensajeContiene": "409" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita isNewSource de las citas de FollowUpTurn",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/FollowUpCitedSource/allOf/1/properties/isNewSource" }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "FollowUpCitedSource", "mensajeContiene": "isNewSource" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche pone una afirmación en follow-up-fuera-de-contexto.json",
+    "parches": [
+      {
+        "destino": "ejemplo:follow-up-fuera-de-contexto.json",
+        "operaciones": [{ "op": "add", "path": "/answer/0", "value": { "text": "Respuesta", "citedSources": [], "patientDataRefs": ["r1"] } }]
+      }
+    ],
+    "esperado": { "archivo": "contracts/examples/follow-up-fuera-de-contexto.json", "rutaContiene": "#/answer", "mensajeContiene": "fuera_de_contexto" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "el mensaje del 409 nombra la clave de configuración ANALYSIS_FOLLOWUP_MAX",
+    "parches": [
+      { "destino": "ejemplo:error-limite-seguimiento.json", "operaciones": [{ "op": "replace", "path": "/message", "value": "Se superó ANALYSIS_FOLLOWUP_MAX." }] }
+    ],
+    "esperado": { "archivo": "contracts/examples/error-limite-seguimiento.json", "rutaContiene": "#/message", "mensajeContiene": "claves de configuración" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "el 403 de POST …/follow-ups deja de distinguir OPT_OUT_ANALISIS_IA",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/ErrorPermisoOOptOut/properties/error/enum/1", "value": "OPT_OUT_ANALISIS_IA" },
+          { "op": "remove", "path": "/components/schemas/ErrorPermisoOOptOut/properties/error/enum/1" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "follow-ups/post/responses/403", "mensajeContiene": "OPT_OUT_ANALISIS_IA" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "la descripción de FollowUpTurn.question deja de decir que es enmascarada",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/FollowUpTurn/properties/question/description", "value": "La pregunta." }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "FollowUpTurn/properties/question", "mensajeContiene": "enmascarada" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita la frase \"sin estado\" de la descripción de /rag/follow-up",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace-text", "path": "/paths/~1rag~1follow-up/post/description", "buscar": "Sin estado entre turnos", "reemplazar": "Con memoria" }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "~1rag~1follow-up/post/description", "mensajeContiene": "sin estado entre turnos" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita de /rag/follow-up que el seudónimo y el traceId son nuevos por turno",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace-text", "path": "/paths/~1rag~1follow-up/post/description", "buscar": "son nuevos en cada turno", "reemplazar": "se reutilizan" }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "mensajeContiene": "nuevos en cada turno" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita de /rag/follow-up la frase de RN-12 (solo modelos locales)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          {
+            "op": "replace-text",
+            "path": "/paths/~1rag~1follow-up/post/description",
+            "buscar": "Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).",
+            "reemplazar": "Sin restricciones de proveedor."
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "~1rag~1follow-up/post/description", "mensajeContiene": "RN-12" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita la frase de RN-12 del 503 de /rag/follow-up",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace", "path": "/paths/~1rag~1follow-up/post/responses/503/description", "value": "LLM local no disponible." }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "responses/503", "mensajeContiene": "RN-12" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche admite citable true en la memoria del análisis",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/PriorAnalysisMemory/properties/citable", "value": { "type": "boolean" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "PriorAnalysisMemory/properties/citable", "mensajeContiene": "RN-24" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita catalogVersion del required de RagMeta",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/RagMeta/required/8", "value": "catalogVersion" },
+          { "op": "remove", "path": "/components/schemas/RagMeta/required/8" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagMeta/required", "mensajeContiene": "catalogVersion" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche sustituye el meta de /case/summary por un objeto propio",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace", "path": "/components/schemas/CaseSummaryInternalResponse/properties/meta", "value": { "type": "object" } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryInternalResponse/properties/meta", "mensajeContiene": "RagMeta" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertRagTipoNoHabilitado",
+    "escenario": "RagQueryInternalRequest gana un bloque followUp",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalRequest/properties/followUp", "value": { "type": "object" } }] }
+    ],
+    "esperado": { "ref": "AC-9", "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "properties/followUp" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche añade pseudo_patient_id a analysis_follow_up",
+    "parches": [
+      {
+        "destino": "doc:data-model",
+        "operaciones": [
+          {
+            "op": "text-replace",
+            "buscar": "| `question_text` | text |  | enmascarado si tenía PII; sin pseudoPatientId ni identidad |",
+            "reemplazar": "| `pseudo_patient_id` | text |  |  |\n| `question_text` | text |  | enmascarado si tenía PII; sin pseudoPatientId ni identidad |"
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "rutaContiene": "analysis_follow_up", "mensajeContiene": "pseudoPatientId" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina trace_id de analysis_follow_up",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `trace_id` | text |  | nuevo por turno |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "analysis_follow_up debe declarar trace_id" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertDataModelDocument",
+    "escenario": "el modelo deja de decir que la pregunta se guarda enmascarada",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "todas": true, "buscar": "enmascarado si tenía PII", "reemplazar": "tal cual" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "enmascarado si tenía PII" }
+  },
+  {
+    "ac": "AC-14",
+    "regla": "assertPublishedFromYear",
+    "escenario": "un parche deja publishedFromYear como integer sin null en RagFiltersApplied",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/RagFiltersApplied/properties/publishedFromYear/type", "value": "integer" }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagFiltersApplied/properties/publishedFromYear", "mensajeContiene": "integer | null" }
+  },
+  {
+    "ac": "AC-14",
+    "regla": "assertPublishedFromYear",
+    "escenario": "la petición de /rag/query deja de exigir filtersApplied",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/RagQueryInternalRequest/required/6", "value": "filtersApplied" },
+          { "op": "remove", "path": "/components/schemas/RagQueryInternalRequest/required/6" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalRequest/required", "mensajeContiene": "filtersApplied" }
+  },
+  {
+    "ac": "AC-14",
+    "regla": "assertPublishedFromYear",
+    "escenario": "la descripción del filtro de la petición deja de remitir a EVIDENCE_DEFAULT_YEARS",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/EvidenceAnalysisFilters/properties/publishedFromYear/description", "value": "Año mínimo." }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "EVIDENCE_DEFAULT_YEARS" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche agrega diagnosis a patient-summary-admin.json",
+    "parches": [{ "destino": "ejemplo:patient-summary-admin.json", "operaciones": [{ "op": "add", "path": "/diagnosis", "value": null }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/patient-summary-admin.json", "mensajeContiene": "additional" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche añade is_active a auth.user",
+    "parches": [
+      {
+        "destino": "doc:data-model",
+        "operaciones": [{ "op": "text-replace", "buscar": "| `account_status` | text |", "reemplazar": "| `is_active` | boolean |  |  |\n| `account_status` | text |" }]
+      }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "rutaContiene": "auth.user", "mensajeContiene": "is_active" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche da al administrador el permiso clinical:read",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "| `clinical:read` | sí | no |", "reemplazar": "| `clinical:read` | sí | sí |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "clinical:read debe ser sí/no" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche sustituye un código de la matriz por un comodín",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "| `clinical:write` | sí | no |", "reemplazar": "| `clinical:*` | sí | no |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "clinical:*" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche añade patients:reveal_identity a la matriz",
+    "parches": [
+      {
+        "destino": "doc:data-model",
+        "operaciones": [{ "op": "text-replace", "buscar": "| `audit:read_patient` | no | no |", "reemplazar": "| `patients:reveal_identity` | no | sí | x |\n| `audit:read_patient` | no | no |" }]
+      }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "patients:reveal_identity" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "la matriz deja de decir que el descifrado completo solo ocurre por la CLI",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "solo ocurre por la CLI", "reemplazar": "ocurre en la API" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "solo ocurre por la CLI" }
+  },
+  {
+    "ac": "AC-15",
+    "regla": "assertDataModelDocument",
+    "escenario": "account_status deja de documentar que desactivado revoca las sesiones",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "todas": true, "buscar": "revoca las sesiones vivas", "reemplazar": "no cambia las sesiones" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "revoca las sesiones vivas" }
+  }
+]

@@ -1,0 +1,394 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorCodesClosed",
+    "escenario": "un parche cambia el schema del 409 de POST …/follow-ups a error: { type: string }",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/ErrorLimiteSeguimiento/properties/error", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "follow-ups/post/responses/409", "mensajeContiene": "const o enum" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorCodesClosed",
+    "escenario": "el 403 se describe como falta de pertenencia al equipo tratante",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/responses/PermisoDenegado/description", "value": "El doctor no pertenece al equipo tratante." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "RBAC u opt-out" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorCodesClosed",
+    "escenario": "un parche declara un código de error sin ejemplo ni pendingExample",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/ErrorLimiteGeneracion/properties/error/enum/-", "value": "CODIGO_NUEVO" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "CODIGO_NUEVO" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorCodesClosed",
+    "escenario": "una respuesta pendiente de su dueño no figura como pendingExample",
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/pendingExamples/0" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "pendingExample" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorsNoEcho",
+    "escenario": "un parche agrega input a un elemento de detail en rag-validacion-422.json (RN-10)",
+    "parches": [{ "destino": "ejemplo:rag-validacion-422.json", "operaciones": [{ "op": "add", "path": "/detail/0/input", "value": "valor recibido" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-validacion-422.json", "rutaContiene": "/detail/0/input", "mensajeContiene": "valor recibido" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorsNoEcho",
+    "escenario": "un parche agrega input a ErrorValidacion.detail.items.properties (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ErrorValidacion/properties/detail/items/properties/input", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ErrorValidacion/properties/detail/items/properties/input" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertErrorsNoEcho",
+    "escenario": "el detail de ErrorValidacion se abre a propiedades adicionales",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/ErrorValidacion/properties/detail/items/additionalProperties", "value": true }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ErrorValidacion/properties/detail/items", "mensajeContiene": "cerrado" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega patientId dentro de ClinicalContext.diagnosis (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/diagnosis/properties/patientId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/diagnosis/properties/patientId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega birth_date al cuerpo de /case/summary (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/CaseSummaryInternalRequest/properties/birth_date", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryInternalRequest/properties/birth_date" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega email a RagFollowUpRequest (RN-10)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagFollowUpRequest/properties/email", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagFollowUpRequest/properties/email" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega patientName a ClinicalContext (RN-10)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/patientName", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/patientName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega fechaNacimiento a ClinicalContext (RN-10)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/fechaNacimiento", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/fechaNacimiento" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega sourceDocumentId a la Provenance de Backend 2 (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/Provenance/properties/sourceDocumentId", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "Provenance/properties/sourceDocumentId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche declara format uuid en una propiedad de RagFollowUpRequest [Pre-S1 resp. 29]",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagFollowUpRequest/properties/reference", "value": { "type": "string", "format": "uuid" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagFollowUpRequest/properties/reference", "mensajeContiene": "format uuid" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega identityFound a la respuesta de /rag/query (RN-10)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalResponse/properties/identityFound", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalResponse/properties/identityFound" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega nationalId al cuerpo multipart de /documents/extract (RN-10)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "add", "path": "/paths/~1documents~1extract/post/requestBody/content/multipart~1form-data/schema/properties/nationalId", "value": { "type": "string" } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "multipart~1form-data/schema/properties/nationalId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche declara una cabecera X-Patient-Id en /rag/query (RN-10)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "add", "path": "/paths/~1rag~1query/post/parameters/-", "value": { "name": "X-Patient-Id", "in": "header", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "mensajeContiene": "X-Patient-Id" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un ejemplo de Backend 2 trae una clave nationalId fuera de identityFound",
+    "parches": [{ "destino": "ejemplo:rag-query-request.json", "operaciones": [{ "op": "add", "path": "/clinicalContext/nationalId", "value": "SINT-0000001" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-query-request.json", "rutaContiene": "nationalId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "la lista blanca admite drugName y identityFound sigue permitida en su puntero exacto",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/drugName", "value": { "type": "string" } }] },
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "test", "path": "/components/schemas/DocumentExtractResponse/properties/identityFound/required/0", "value": "idType" }] }
+    ],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega nationalId como parámetro de query a GET /platform/patients (RN-10)",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "nationalId", "in": "query", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "~1platform~1patients/get/parameters", "mensajeContiene": "nationalId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega patientName como query a GET /platform/patients",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "patientName", "in": "query", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "patientName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega la cabecera X-Patient-Email a GET /platform/patients",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "X-Patient-Email", "in": "header", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "X-Patient-Email" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche declara una variable de ruta {nationalId}",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/paths/~1platform~1ejemplo~1{nationalId}", "value": { "get": { "responses": { "204": { "description": "Sin cuerpo" } } } } }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "{nationalId}" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un UUID de paciente en la ruta ({patientId}) y la cabecera Idempotency-Key no son hallazgo",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "Idempotency-Key", "in": "header", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche quita x-permission de POST …/follow-ups",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/x-permission" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "follow-ups/post", "mensajeContiene": "x-permission" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche usa un código de permiso que no está en la matriz",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1evidence-analyses/post/x-permission", "value": "ai_analysis:purge" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "no está en la matriz" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche elimina la fila follow_ups:create de la matriz de permisos",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `follow_ups:create` |" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "follow-ups/post/x-permission", "mensajeContiene": "follow_ups:create" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche usa el comodín ai_analysis:*",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1evidence-analyses/post/x-permission", "value": "ai_analysis:*" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "comodines" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche pone publico en GET /platform/patients",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1patients/get/x-permission", "value": "publico" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "~1platform~1patients/get", "mensajeContiene": "publico" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche quita x-view-by-permission de GET /platform/patients/{patientId}",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}/get/x-view-by-permission" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "{patientId}/get", "mensajeContiene": "x-view-by-permission" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche mapea default a PatientSummary",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1patients~1{patientId}/get/x-view-by-permission/default", "value": "PatientSummary" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission/default", "mensajeContiene": "no puede tener" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche mapea un permiso que no está en la matriz",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/x-view-by-permission/ghost:perm", "value": "PatientSummary" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "ghost:perm" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "la vista del administrador gana la propiedad diagnosis",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientAdminSummary/properties/diagnosis", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "diagnosis" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone dataClassification real_anonimizado en rag-query-request.json (RN-14)",
+    "parches": [{ "destino": "ejemplo:rag-query-request.json", "operaciones": [{ "op": "replace", "path": "/dataClassification", "value": "real_anonimizado" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-query-request.json", "rutaContiene": "#/dataClassification", "mensajeContiene": "sintetico" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone sourceName NCCN en una cita (RN-21)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/citedSources/0/sourceName", "value": "NCCN" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "rutaContiene": "sourceName", "mensajeContiene": "NCCN" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone un nationalId sin prefijo SINT- en patient-search.json (RN-14)",
+    "parches": [{ "destino": "ejemplo:patient-search.json", "operaciones": [{ "op": "replace", "path": "/nationalId", "value": "12345678" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-search.json", "rutaContiene": "#/nationalId", "mensajeContiene": "SINT-" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone el nombre real María Pérez en patient-search.json (RN-14)",
+    "parches": [{ "destino": "ejemplo:patient-search.json", "operaciones": [{ "op": "add", "path": "/name", "value": "María Pérez" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-search.json", "rutaContiene": "#/name", "mensajeContiene": "Prueba Sintética" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone la fecha 01/03/2026 dentro de clinicalContext (RN-11)",
+    "parches": [{ "destino": "ejemplo:rag-query-request.json", "operaciones": [{ "op": "replace", "path": "/clinicalContext/events/0/description", "value": "Consulta del 01/03/2026" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-query-request.json", "rutaContiene": "clinicalContext/events/0/description", "mensajeContiene": "fechas relativas" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche escribe la fecha en letras (12 de marzo de 2026) en la pregunta de Backend 2",
+    "parches": [{ "destino": "ejemplo:rag-follow-up-request.json", "operaciones": [{ "op": "replace", "path": "/question", "value": "¿Qué pasó el 12 de marzo de 2026?" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-follow-up-request.json", "rutaContiene": "#/question" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche usa un correo de un dominio que no es sintético",
+    "parches": [{ "destino": "ejemplo:login-request.json", "operaciones": [{ "op": "replace-text", "path": "/email", "buscar": "oncolens.test", "reemplazar": "clinicareal.org" }] }],
+    "esperado": { "archivo": "contracts/examples/login-request.json", "mensajeContiene": "dominio sintético" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone un nombre real en la ficha del doctor",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "replace", "path": "/identification/fullName", "value": "Juan Pérez" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "fullName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone dataOrigin real_identificado en la ficha del doctor",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "replace", "path": "/dataOrigin", "value": "real_identificado" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "dataOrigin" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina las líneas de ALTER DEFAULT PRIVILEGES",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "ALTER DEFAULT PRIVILEGES FOR ROLE" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "ALTER DEFAULT PRIVILEGES" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina la regla de pg_hba",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "hostssl" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "pg_hba" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "el REVOKE ALL deja de cubrir el schema clinical",
+    "parches": [
+      {
+        "destino": "doc:data-model",
+        "operaciones": [{ "op": "text-replace", "buscar": "REVOKE ALL ON SCHEMA auth, identity, clinical, audit, research FROM rag_corpus;", "reemplazar": "REVOKE ALL ON SCHEMA auth, identity, audit, research FROM rag_corpus;" }]
+      }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "schema clinical" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina REVOKE ALL ON SCHEMA public FROM PUBLIC",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "REVOKE ALL ON SCHEMA public FROM PUBLIC" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "REVOKE ALL ON SCHEMA public FROM PUBLIC" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "el aislamiento deja de mencionar que no hay acceso a clinical-minio",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "todas": true, "buscar": "clinical-minio", "reemplazar": "el almacén" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "clinical-minio" }
+  },
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "el aislamiento deja de cubrir una tabla nueva (analysis_follow_up)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "todas": true, "buscar": "clinical.analysis_follow_up", "reemplazar": "clinical.otra" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md" }
+  }
+]

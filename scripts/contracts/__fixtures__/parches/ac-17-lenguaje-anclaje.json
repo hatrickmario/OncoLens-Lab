@@ -1,0 +1,217 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"Debe recibir\" con mayúscula en el rationale de una opción del ejemplo del S4 (RN-23)",
+    "parches": [
+      { "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Debe recibir quimioterapia." }] }
+    ],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "rutaContiene": "/evidenceOptions/0/rationale", "mensajeContiene": "debe recibir" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"recommended for this patient\" en una descripción (RN-23)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "Opción recommended for this patient." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/info/description", "mensajeContiene": "recommend" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche agrega el valor de enum recomendada (RN-23)",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "add", "path": "/components/schemas/EvidenceOption/properties/warnings/items/enum/-", "value": "recomendada" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "warnings/items/enum", "mensajeContiene": "recomend" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche agrega una clave de propiedad con prefijo recomend",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/Staleness/properties/recomendacion", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "Staleness/properties/recomendacion" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "una descripción contiene la frase negativa \"no constituye una recomendación\"",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "Este contrato no constituye una recomendación clínica." }] }],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "un parche deja disclaimer vacío en con-evidencia-s1.json (RN-19)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace", "path": "/disclaimer", "value": "" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "rutaContiene": "#/disclaimer", "mensajeContiene": "requiere validación clínica del oncólogo tratante" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "un parche quita la frase \"Uso académico/investigación\" del aviso de follow-up-turn.json (RN-19)",
+    "parches": [{ "destino": "ejemplo:follow-up-turn.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": "Uso académico/investigación", "reemplazar": "Uso general" }] }],
+    "esperado": { "archivo": "contracts/examples/follow-up-turn.json", "mensajeContiene": "Uso académico/investigación" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "el aviso usa dos puntos en lugar de raya y sigue completo",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": " · ", "reemplazar": ": " }] }],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "un parche quita disclaimer del required de FollowUpTurn",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/FollowUpTurn/required/9", "value": "disclaimer" },
+          { "op": "remove", "path": "/components/schemas/FollowUpTurn/required/9" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "FollowUpTurn/required", "mensajeContiene": "disclaimer" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "un parche quita minLength del disclaimer de EvidenceAnalysis",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/EvidenceAnalysis/properties/disclaimer/minLength" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "EvidenceAnalysis/properties/disclaimer", "mensajeContiene": "minLength" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "un parche quita minItems de EvidenceOption.citedSources (RN-01)",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "remove", "path": "/components/schemas/EvidenceOption/properties/citedSources/minItems" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "EvidenceOption/properties/citedSources", "mensajeContiene": "al menos una cita" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "una afirmación de follow-up-turn.json queda sin citas ni datos del paciente (RN-01)",
+    "parches": [
+      {
+        "destino": "ejemplo:follow-up-turn.json",
+        "operaciones": [{ "op": "replace", "path": "/answer/0/citedSources", "value": [] }]
+      }
+    ],
+    "esperado": { "archivo": "contracts/examples/follow-up-turn.json", "rutaContiene": "/answer/0", "mensajeContiene": "ninguna cita" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "la cita de una afirmación tiene un chunkId ausente de citedSources",
+    "parches": [{ "destino": "ejemplo:follow-up-turn.json", "operaciones": [{ "op": "replace", "path": "/answer/0/citedSources/0/chunkId", "value": "chunk_00000" }] }],
+    "esperado": { "archivo": "contracts/examples/follow-up-turn.json", "rutaContiene": "/answer/0/citedSources/0", "mensajeContiene": "chunk_00000" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "un parche quita dataRef de un ítem de ClinicalContext.biomarkers [Pre-S1 resp. 29]",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/ClinicalContext/properties/biomarkers/items/required/0", "value": "dataRef" },
+          { "op": "remove", "path": "/components/schemas/ClinicalContext/properties/biomarkers/items/required/0" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/biomarkers/items", "mensajeContiene": "dataRef" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "un parche quita el pattern de SupportedClaim.patientDataRefs [Pre-S1 resp. 29]",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "remove", "path": "/components/schemas/SupportedClaim/properties/patientDataRefs/items/pattern" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "SupportedClaim/properties/patientDataRefs", "mensajeContiene": "pattern" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "un parche pone un UUID en patientDataRefs de un ejemplo de Backend 2 (RN-10)",
+    "parches": [
+      {
+        "destino": "ejemplo:rag-query-con-evidencia.json",
+        "operaciones": [{ "op": "replace", "path": "/synthesis/agreements/1/patientDataRefs/0", "value": "6f1e2b2a-2a0e-4b8b-9a1a-3a2e6f1e2b2a" }]
+      }
+    ],
+    "esperado": { "archivo": "contracts/examples/rag-query-con-evidencia.json", "rutaContiene": "patientDataRefs/0", "mensajeContiene": "nunca un UUID" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "una referencia r9 no existe en el contexto de la petición de Backend 2",
+    "parches": [{ "destino": "ejemplo:rag-query-con-evidencia.json", "operaciones": [{ "op": "replace", "path": "/synthesis/agreements/1/patientDataRefs/0", "value": "r9" }] }],
+    "esperado": { "archivo": "contracts/examples/rag-query-con-evidencia.json", "mensajeContiene": "r9" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertClaimsAnchored",
+    "escenario": "una referencia del ejemplo del S4 no figura en patientDataLinks",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/synthesis/agreements/1/patientDataRefs/0", "value": "r7" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "r7" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "un parche reemplaza la descripción de relevanceScore por \"confianza de la opción\" (RN-03)",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "replace", "path": "/components/schemas/EvidenceOption/properties/relevanceScore/description", "value": "Confianza de la opción." }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "EvidenceOption/properties/relevanceScore", "mensajeContiene": "metadato secundario" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "la descripción de topRelevanceScore de Backend 1 deja de decir que no mide solidez clínica",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/EvidenceAnalysis/properties/topRelevanceScore/description", "value": "Metadato secundario." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "EvidenceAnalysis/properties/topRelevanceScore" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "la descripción de evidenceOptions deja de decir que el orden es por aplicabilidad (RN-28)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/EvidenceAnalysis/properties/evidenceOptions/description", "value": "Opciones por relevancia." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "EvidenceAnalysis/properties/evidenceOptions", "mensajeContiene": "aplicabilidad" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "un parche quita \"sin afirmación nueva\" de discrepancies[].explanation",
+    "parches": [
+      {
+        "destino": "evidence",
+        "operaciones": [
+          {
+            "op": "replace-text",
+            "path": "/components/schemas/Synthesis/properties/discrepancies/items/properties/explanation/description",
+            "buscar": "sin afirmación nueva",
+            "reemplazar": "con una conclusión"
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "explanation", "mensajeContiene": "sin afirmación nueva" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "un parche quita \"enmascarado (RN-11)\" de la descripción del texto libre de ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/TextoEnmascarado/description", "value": "Texto." }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/clinicalNotes/items/properties/content", "mensajeContiene": "enmascarado (RN-11)" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "PriorAnalysisMemory.question pierde su referencia a TextoEnmascarado",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/PriorAnalysisMemory/properties/question", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "PriorAnalysisMemory/properties/question", "mensajeContiene": "enmascarado (RN-11)" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNormativeDescriptions",
+    "escenario": "linkedDecision deja de describirse como dato rotulado que no es soporte ni cita (RN-24)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/PriorAnalysisMemory/properties/linkedDecision/description", "value": "Decisión vinculada." }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "PriorAnalysisMemory/properties/linkedDecision", "mensajeContiene": "dato rotulado" }
+  }
+]

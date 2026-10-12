@@ -1,0 +1,151 @@
+[
+  {
+    "ac": "AC-2",
+    "regla": "assertNoV1Vocabulary",
+    "escenario": "un parche agrega la ruta /platform/rag/query",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/paths/~1platform~1rag~1query", "value": {} }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "~1platform~1rag~1query", "mensajeContiene": "vocabulario v1.0" }
+  },
+  {
+    "ac": "AC-2",
+    "regla": "assertNoV1Vocabulary",
+    "escenario": "un parche agrega una propiedad recommendations anidada en un schema",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/AnalysisBasis/properties/recommendations", "value": { "type": "array", "items": { "type": "string" } } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "AnalysisBasis/properties/recommendations" }
+  },
+  {
+    "ac": "AC-2",
+    "regla": "assertNoV1Vocabulary",
+    "escenario": "un ejemplo trae la clave recommendations",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "add", "path": "/recommendations", "value": [] }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "rutaContiene": "#/recommendations" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche quita analysisBasis de con-evidencia-s1.json",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "remove", "path": "/analysisBasis" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "analysisBasis" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone topRelevanceScore 0.0 en sin-evidencia.json",
+    "parches": [{ "destino": "ejemplo:sin-evidencia.json", "operaciones": [{ "op": "replace", "path": "/topRelevanceScore", "value": 0.0 }] }],
+    "esperado": { "archivo": "contracts/examples/sin-evidencia.json", "rutaContiene": "topRelevanceScore" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertExamplesValid",
+    "escenario": "un ejemplo del directorio no figura en index.json",
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/examples/0" }] }],
+    "esperado": { "mensajeContiene": "no está listado" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertExamplesValid",
+    "escenario": "un pendingExample no nombra a su historia dueña",
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/pendingExamples/0/owner" }] }],
+    "esperado": { "archivo": "contracts/examples/index.json", "mensajeContiene": "owner" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertNoEvidenceImpliesNullScore",
+    "escenario": "un parche pone topRelevanceScore 0.0 en sin-evidencia.json (RN-02)",
+    "parches": [{ "destino": "ejemplo:sin-evidencia.json", "operaciones": [{ "op": "replace", "path": "/topRelevanceScore", "value": 0.0 }] }],
+    "esperado": { "archivo": "contracts/examples/sin-evidencia.json", "rutaContiene": "#/topRelevanceScore", "mensajeContiene": "no 0" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertNoEvidenceImpliesNullScore",
+    "escenario": "un parche elimina el if/then de EvidenceAnalysis",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "remove", "path": "/components/schemas/EvidenceAnalysis/if" },
+          { "op": "remove", "path": "/components/schemas/EvidenceAnalysis/then" },
+          { "op": "remove", "path": "/components/schemas/EvidenceAnalysis/else" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/EvidenceAnalysis", "mensajeContiene": "if/then" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertNoEvidenceImpliesNullScore",
+    "escenario": "un parche elimina el if/then de FollowUpTurn",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "remove", "path": "/components/schemas/FollowUpTurn/if" },
+          { "op": "remove", "path": "/components/schemas/FollowUpTurn/then" },
+          { "op": "remove", "path": "/components/schemas/FollowUpTurn/else" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/FollowUpTurn" }
+  },
+  {
+    "ac": "AC-3",
+    "regla": "assertNoEvidenceImpliesNullScore",
+    "escenario": "el then de RagQueryInternalResponse deja de vaciar evidenceOptions",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/RagQueryInternalResponse/then/properties/evidenceOptions/maxItems", "value": 1 }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "then/properties/evidenceOptions" }
+  },
+  {
+    "ac": "AC-4",
+    "regla": "assertAnalysisBasisComplete",
+    "escenario": "un parche quita agentSteps del required de AnalysisBasis",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/AnalysisBasis/required/9", "value": "agentSteps" },
+          { "op": "remove", "path": "/components/schemas/AnalysisBasis/required/9" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "AnalysisBasis/required", "mensajeContiene": "agentSteps" }
+  },
+  {
+    "ac": "AC-4",
+    "regla": "assertAnalysisBasisComplete",
+    "escenario": "un parche quita publishedFromYear de los filtros de la Base del análisis",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/AppliedFilters/required/4", "value": "publishedFromYear" },
+          { "op": "remove", "path": "/components/schemas/AppliedFilters/required/4" },
+          { "op": "remove", "path": "/components/schemas/AppliedFilters/properties/publishedFromYear" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "AppliedFilters", "mensajeContiene": "publishedFromYear" }
+  },
+  {
+    "ac": "AC-4",
+    "regla": "assertAnalysisBasisComplete",
+    "escenario": "sourcesConsulted.filters deja de ser un AppliedFilters",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "replace", "path": "/components/schemas/AnalysisBasis/properties/sourcesConsulted/properties/filters", "value": { "type": "object" } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "sourcesConsulted/properties/filters" }
+  }
+]
