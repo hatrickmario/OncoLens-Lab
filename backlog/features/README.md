@@ -333,7 +333,7 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 > - **Al S6, de baja prioridad:** US-221 (registro con aprobación, 3) y US-222 (consola del administrador sin datos clínicos, 5). El S6 pasa de 68 a **76**.
 > - **US-033** pasa de 5 a 8 puntos (AC-11…AC-15), así que el Pre-S1 queda en **15**.
 > - **Totales:** el MVP pasa de 499 a **521** (con US-073 = 5) y el backlog de 789 a 811.
-> - **Conflictos con el PRD**, registrados para enmendarlo: C-Pre4 (conversación de varios turnos), C-Pre6 (usuarios por CLI) y C-Pre7 (`admin` ve todos).
+> - **Conflictos con el PRD** C-Pre4 (conversación de varios turnos), C-Pre6 (usuarios por CLI) y C-Pre7 (`admin` ve todos): **enmendados en el PRD v1.4** (E-01, E-03, E-04).
 
 > **Diferencia con el reparto aprobado (Pre-S1 12 · S1 91 · S2 88 · S3 83 · S4 79 · S5 78 · S6 65 = 496):** S1 **+18** (US-211 +3; US-014, US-016, US-072, US-074 +15) · S2 **−17** con US-073 = 5 (US-044 −2; las cuatro de evaluación −15) · S3 **+2** (US-212). El MVP comprometido pasa de 496 a **499** (con US-073 = 5) y `si-hay-capacidad` de 188 a 186 (US-080 −2). El total del backlog pasa de 788 a **789 + 2 `?`**.
 

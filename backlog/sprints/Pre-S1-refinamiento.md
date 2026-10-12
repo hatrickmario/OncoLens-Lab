@@ -101,7 +101,7 @@ Investigación externa del 2026-10-09 (en subagentes):
 | US-033 · re-estimada (AC-11…AC-15) | FEAT-00 | Pre-S1 | 5 → 8 |
 
 - **Resultado final:** **Pre-S1 15 · S1 96 · S2 96 + `?` · S3 85 · S4 79 · S5 89 · S6 76**. MVP: **521** (con US-073 = 5).
-- **Conflictos con el PRD** registrados para enmendarlo: C-Pre4 (conversación de varios turnos), C-Pre6 (usuarios por CLI) y C-Pre7 (`admin` ve todos).
+- **Conflictos con el PRD:** C-Pre4 (conversación de varios turnos), C-Pre6 (usuarios por CLI) y C-Pre7 (`admin` ve todos). **Enmendados en el PRD v1.4** (2026-10-11, `docs/PRD.md` §0, cambios E-01…E-10, con la nueva FR-31). El readme §3.1, §4.1 y §4.2 se actualiza en el PR de US-033.
 
 ## 5. Stack técnico (fase 2)
 

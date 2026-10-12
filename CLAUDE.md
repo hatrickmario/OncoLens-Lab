@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `readme.md` §4.1 / §4.2 | Contratos OpenAPI de ambos backends |
 | `readme.md` §6 | Tickets OL-01 a OL-06 con criterios de aceptación |
 | `readme.md` §3.3, §6.1 | ADRs ya decididos (#1–38) con sus alternativas descartadas |
-| `docs/PRD.md` §0 | Registro de cambios v1.1 (D-01…D-16), v1.2 (R-01…R-31) y v1.3 (B-01…B-15, alineación con el backlog): explica por qué cambió el encuadre y el alcance |
+| `docs/PRD.md` §0 | Registro de cambios v1.1 (D-01…D-16), v1.2 (R-01…R-31), v1.3 (B-01…B-15, alineación con el backlog) y v1.4 (E-01…E-10, refinamiento del Pre-S1): explica por qué cambió el encuadre y el alcance |
 | `docs/PRD.md` §5 / §6 | FR-01 a FR-30; reglas de negocio RN-01 a RN-30 |
 | `docs/PRD.md` §16 | TBD-01 a TBD-21: lo no decidido |
 | `docs/PRD.md` §17 | Trazabilidad FR → HU → endpoint → entidad → componente → sprint |
@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `backlog/` | Product Backlog en Markdown (fuente); Linear es el espejo |
 | `docs/AS-IS.md` · `TO-BE.md` · `OncoLens-C4.drawio` | Discovery (entrevistas), solución por fases, diagramas C4 |
 
-Antes de implementar, buscar la RN y el ADR correspondientes. Casi toda decisión está tomada y justificada; no reabrirla sin motivo. Si `readme.md` y `PRD.md` discrepan, el PRD v1.3 es el más reciente.
+Antes de implementar, buscar la RN y el ADR correspondientes. Casi toda decisión está tomada y justificada; no reabrirla sin motivo. Si `readme.md` y `PRD.md` discrepan, el PRD v1.4 es el más reciente.
 
 **Encuadre (D-01):** el producto entrega un **análisis de evidencia** (`EvidenceAnalysis`: síntesis, aplicabilidad, `evidenceOptions`, `discardedOptions`, `analysisBasis`), **no recomendaciones**. `recommendations[]` y `POST /platform/rag/query` de la v1.0 están reemplazados por `POST /platform/evidence-analyses`. No reintroducir el vocabulario de "recomendación".
 
@@ -138,7 +138,7 @@ Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213)
 - **Códigos terminológicos solo del catálogo versionado**; sin mapeo → `no_mapeado`, nunca inventado ni descartado (RN-27).
 - **Solo chunks `is_current` se recuperan**; el histórico del corpus nunca se borra (RN-05).
 - **`Document` es la cola de extracción** (`SKIP LOCKED`, `attempts`, `processing_started_at`); `checksum` detecta duplicados (409). No hay broker. Carga múltiple: `POST …/documents/batch` (`207`).
-- **Autorización:** en el MVP solo RBAC (*qué acciones*). `admin` gestiona cuentas, altas de pacientes y opt-out, pero **no lee datos clínicos ni análisis** (mínimo privilegio, Pre-S1 2026-10-11; enmienda pendiente del PRD §11). El segundo plano, `CareTeamMember` (*sobre qué pacientes*, FR-15), pasa a Post-MVP porque la autorización por paciente la gestiona un sistema externo (PRD B-03); el esquema ya lo incluye.
+- **Autorización:** en el MVP solo RBAC (*qué acciones*). `admin` gestiona cuentas, altas de pacientes y opt-out, pero **no lee datos clínicos ni análisis** (mínimo privilegio, PRD v1.4 §11, E-04). El segundo plano, `CareTeamMember` (*sobre qué pacientes*, FR-15), pasa a Post-MVP porque la autorización por paciente la gestiona un sistema externo (PRD B-03); el esquema ya lo incluye.
 - **Consentimiento presunto con opt-out** (RN-15): los consentimientos viven en un sistema externo; con convenio registrado el paciente está incluido salvo marca de opt-out del administrador. Opt-out de `analisis_ia` → `403` en **toda** generación con IA (análisis, resumen del caso, re-ejecución, búsqueda complementaria). Sin convenio no se presume.
 - **Paciente egresado no admite ningún registro** hasta su reactivación (RN-17). Solo bloquean las reglas legales y de acceso; los avisos clínicos (faltantes, sin verificar, conflicto, desactualizado) **no bloquean** (RN-26).
 - **Agente acotado** (FR-30): una búsqueda complementaria con límites de iteraciones, sub-consultas y *deadline* en configuración (`AGENT_MAX_ITERATIONS`, `AGENT_MAX_SUBQUERIES`).

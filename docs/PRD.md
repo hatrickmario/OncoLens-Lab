@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Producto | OncoLens: apoyo a la decisión clínica en oncología basado en evidencia (RAG) |
-| Versión del documento | **1.3** — MVP (Sprints 1–6 y piloto), alineado con el Product Backlog publicado (slicing v2) |
-| Fecha | 2026-10-07 (v1.3; v1.1 y v1.2: 2026-10-04; v1.0: 2026-09-25) |
+| Versión del documento | **1.4** — MVP (Sprints 1–6 y piloto), alineado con el refinamiento del Pre-S1 (decisiones, diseño E2E y alcance añadido) |
+| Fecha | 2026-10-11 (v1.4; v1.3: 2026-10-07; v1.1 y v1.2: 2026-10-04; v1.0: 2026-09-25) |
 | Autor | Mario Julian Bonilla Contreras |
 | Documentos relacionados | [`readme.md`](../readme.md): arquitectura (§2), modelo de datos (§3), API (§4), historias (§5), tickets (§6) · [`OncoLens-C4.drawio`](OncoLens-C4.drawio): diagramas C4 · [`AS-IS.md`](AS-IS.md): proceso actual, pain points (P), JTBD y oportunidades · [`TO-BE.md`](TO-BE.md): solución objetivo por fases. **El conjunto README + PRD + C4 es autocontenido**: no depende de otros documentos. |
 
@@ -13,6 +13,25 @@
 ---
 
 ## 0. Registro de cambios
+
+### Versión 1.4 (2026-10-11): refinamiento del Pre-S1
+
+La v1.4 incorpora las decisiones del refinamiento del Pre-S1 (`/sprint-refine Pre-S1`, informe en [`backlog/sprints/Pre-S1-refinamiento.md`](../backlog/sprints/Pre-S1-refinamiento.md)): las decisiones DEC-02…DEC-05 y el ADR-36, el repliegue de capacidad (DEC-03) y el alcance que el Product Owner añadió al aprobar el diseño del flujo E2E ([`docs/ux/flujo-e2e.md`](ux/flujo-e2e.md)). Las respuestas se citan como `[Pre-S1 resp. n]`.
+
+**No cambian:** el encuadre D-01, las invariantes de seguridad y privacidad (RN-10 a RN-14, *ownership* de `rag-orchestrator`), RN-01, RN-06, RN-23 y RN-24. Las preguntas de seguimiento son una extensión del análisis validado, no un chat abierto: cada respuesta se valida completa y se persiste antes de mostrarse.
+
+| ID | Decisión | Dónde |
+|---|---|---|
+| E-01 | **Preguntas de seguimiento sobre un análisis en el MVP (S5)** `[resp. 14]`. Hasta 10 por análisis (`ANALYSIS_FOLLOWUP_MAX`), ancladas al contexto del análisis (paciente desidentificado, datos usados, hallazgos y evidencia del mismo corpus). Cada respuesta cumple RN-01, RN-06, RN-11, RN-15 y RN-23, y los hallazgos del análisis son memoria rotulada, nunca soporte citable (RN-24). Se persisten en Backend 1. La **conversación abierta** de varios turnos sigue siendo Post-MVP | **FR-31** (nuevo), §3, RU-6, FR-29, §14, §17, §18 |
+| E-02 | **Filtro de antigüedad de la evidencia (S5)** `[resp. 15]`: el oncólogo elige el año de publicación mínimo; por defecto, los últimos 10 años (`EVIDENCE_DEFAULT_YEARS`). Queda registrado en la Base del análisis | FR-09, FR-27 (d), RU-6 |
+| E-03 | **Registro de usuario con aprobación y consola de administración (S6, baja prioridad)** `[resp. 16]`. La CLI sigue siendo el *workaround* hasta entonces. En la consola, los parámetros del sistema se muestran **en solo lectura** (RN-22) y quedan fuera del MVP reasignar oncólogo (FR-15), egresar y reactivar (FR-14) y el rol "investigador" | FR-01, RU-1, RU-9, §14 |
+| E-04 | **El administrador no lee datos clínicos ni análisis** `[resp. 17]`: gestiona cuentas, altas de pacientes y marcas de opt-out (mínimo privilegio). Reemplaza "`admin` ve todos" | §11 #2, RU-9 |
+| E-05 | **Gradación estructurada en próstata (DEC-05)** `[resp. 1, 2]`. `Diagnosis.grade` es el texto canónico derivado ("Gleason 4+3=7 · ISUP 3") de la tabla hija `diagnosis_grading`, que guarda patrones, score, grupo ISUP, espécimen y alcance, con procedencia y revisión propias. Matiza B-08 ("sin cambio de esquema") | FR-23, README §3.1 |
+| E-06 | **Repliegue de capacidad (DEC-03)** `[resp. 5, 9]`. Con 80–90 puntos por sprint, la suite `evaluate` en la DoD, su ADR (ADR-41) y los umbrales de calidad de la CI pasan del S1 al **S2**; las cabeceras de seguridad de `web` pasan al S6, antes de G-Piloto. En el S1, la demo se evalúa a mano. Modifica B-07 | FR-20, §14 |
+| E-07 | **Fuentes del corpus (ADR-36, TBD-04 resuelto)** `[resp. 7]`. Composición **mínima-segura**: NCI PDQ (EN y ES, solo texto) y PMC OA con licencia **CC0, CC BY o CC BY-SA**, evaluada por documento (CC0 se asimila a dominio público). Los resúmenes de PubMed sin licencia se rechazan. ClinicalTrials.gov, CC BY-NC, NICE, GPC sin licencia aceptada, cBioPortal y TCIA quedan fuera del MVP; NCCN y ESMO, para una versión futura. Los metadatos de población se curan a mano (M-08.3) | FR-19, §16, §18.6 |
+| E-08 | **Términos de los estándares (DEC-04, TBD-17 resuelto)** `[resp. 6]`. LOINC, CUPS y ATC se versionan en el repo con aviso (texto literal; ATC no comercial y sin DDD); CIE-10 también, desde la tabla oficial de MinSalud/SISPRO, con el riesgo registrado. El *workaround* de B-11 ("solo CIE-10") queda sin efecto | §16, §18.6 (SUP-5), §11 #12 |
+| E-09 | **Atribución de las citas** `[resp. 11, 12]`. `CitedSource` incluye licencia, autoría y enlace a la fuente original (RN-25); NCCN y ESMO solo se nombran como fuentes **no incluidas** | RN-25, FR-27 (e), README §4.1 |
+| E-10 | **Protocolo de valor (DEC-02)** `[resp. 4, 8]`. Se adoptan y congelan las metas sugeridas de §2.2; un catálogo queda `muestra_insuficiente` con menos de 10 análisis calificados por tipo de cáncer; la tasa mínima de respuesta de VM-4 es 60 %; los oncólogos participan con roles anónimos | §2.2, FR-20 |
 
 ### 0.0 Versión 1.3 (2026-10-07): alineación con el Product Backlog
 
@@ -188,7 +207,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 - CAP-14 Paquete para comité de tumores.
 - CAP-15 Preguntas clínicas sugeridas por IA.
 - CAP-16 Leucemia y otros tipos de cáncer (RN-20).
-- Conversación de varios turnos dentro de un mismo análisis.
+- Conversación abierta de varios turnos (chat libre). Las **preguntas de seguimiento ancladas a un análisis** sí están en el MVP (FR-31, v1.4).
 - Job automático de retención (FR-17).
 
 ---
@@ -197,16 +216,16 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 
 | ID | Recorrido | Pasos |
 |---|---|---|
-| RU-1 | Acceso | El oncólogo inicia sesión → llega al listado de pacientes → cierra sesión o la sesión expira. |
+| RU-1 | Acceso | El oncólogo inicia sesión → llega al listado de pacientes → cierra sesión o la sesión expira. Si no tiene cuenta, la solicita y espera la aprobación del administrador (S6, E-03). El administrador llega a su consola. |
 | RU-2 | Registro de paciente | "Nuevo paciente" → formulario mínimo (documento, nombres, año de nacimiento, sexo, origen del dato, referencia del convenio; representante legal si es menor; sin captura de consentimientos, que reposan en el sistema externo) **o** sube un PDF y confirma los datos que sugiere el OCR → el paciente queda creado con un episodio abierto. |
 | RU-3 | Ficha del paciente | Busca por documento o por nombre → ve identificación, diagnóstico (con su sistema de estadificación y código CIE-10), estado funcional y biomarcadores con semáforo, unidad, rango, **tendencia**, origen, confianza y estado de revisión → abre el documento de origen de cualquier valor. |
 | RU-4 | Carga de documentos | Sube uno o **varios** PDF (carga múltiple) → ve el estado de cada uno (pendiente → procesando → completado, error o cuarentena) → los datos aparecen etiquetados y normalizados en la ficha y en la vista de caso. |
 | RU-5 | Revisión de datos extraídos | Ve el contador de pendientes → verifica, corrige o rechaza cada dato → confirma o descarta los diagnósticos y valores **en conflicto** → mapea los términos **no mapeados**. |
 | RU-10 | **Vista de caso** | Abre la vista de caso → ve el **timeline** de eventos, los **tratamientos previos** por línea, las **series** de biomarcadores (PSA siempre como serie) y el **checklist de datos críticos** → pide el **resumen del caso** verificable → carga o registra lo que falta. |
-| RU-6 | Análisis de evidencia | Desde la vista de caso, ve los **datos críticos faltantes** y elige "Cargar información" o "Continuar con aviso" → escribe una pregunta en español o en inglés, o parte de una **plantilla** → elige fuentes y filtros → recibe la **síntesis** (acuerdos y discrepancias), la **tabla de aplicabilidad** por fuente, hasta 3 **opciones descritas en la evidencia** (1 en los Sprints 1–3) ordenadas por aplicabilidad (con el criterio de orden visible), con citas, vigencia y avisos, y la **Base del análisis**, incluida la búsqueda complementaria si se ejecutó (FR-30) → ve aparte lo descartado → o recibe "sin evidencia suficiente" o "tipo de cáncer fuera del alcance del piloto". |
+| RU-6 | Análisis de evidencia | Desde la vista de caso, ve los **datos críticos faltantes** y elige "Cargar información" o "Continuar con aviso" → escribe una pregunta en español o en inglés, o parte de una **plantilla** → elige fuentes, filtros y la **antigüedad de la evidencia** (E-02) → recibe la **síntesis** (acuerdos y discrepancias), la **tabla de aplicabilidad** por fuente, hasta 3 **opciones descritas en la evidencia** (1 en los Sprints 1–3) ordenadas por aplicabilidad (con el criterio de orden visible), con citas, vigencia y avisos, y la **Base del análisis**, incluida la búsqueda complementaria si se ejecutó (FR-30) → ve aparte lo descartado → hace hasta 10 **preguntas de seguimiento** ancladas al análisis (FR-31) → o recibe "sin evidencia suficiente" o "tipo de cáncer fuera del alcance del piloto". |
 | RU-7 | Historial, decisión y evolución | Consulta los análisis previos (con la marca **"Desactualizado"** si cambiaron sus datos) → re-ejecuta y compara → registra el tratamiento decidido, opcionalmente vinculado a un análisis → **registra la evolución** (respuesta, toxicidad, progresión; solo con el paciente activo), que entra al timeline y al contexto de los análisis siguientes → califica la utilidad del análisis. |
 | RU-8 | Ciclo de vida | El tratante principal egresa al paciente (se guarda el snapshot longitudinal si no hay opt-out de investigación) → mientras está egresado no admite registros → reactivación en un reingreso → baja total si se solicita. |
-| RU-9 | Administración | El administrador gestiona usuarios (CLI) y el equipo tratante; **registra o revoca marcas de opt-out** (análisis IA, investigación) con la referencia al sistema externo; revisa los pacientes que cumplieron la mayoría de edad para que ratifiquen su consentimiento en el sistema externo. |
+| RU-9 | Administración | El administrador gestiona usuarios (CLI; consola con aprobación de solicitudes desde el S6, E-03), **sin acceso a datos clínicos ni análisis** (E-04), y el equipo tratante (Post-MVP); **registra o revoca marcas de opt-out** (análisis IA, investigación) con la referencia al sistema externo; revisa los pacientes que cumplieron la mayoría de edad para que ratifiquen su consentimiento en el sistema externo. |
 
 ---
 
@@ -228,8 +247,9 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - 5 intentos fallidos → bloqueo de 15 min, sin revelarlo.
   - Sesión expirada → redirección al login sin mostrar datos.
   - Todos los valores son configurables.
+- **Cuentas (v1.4, E-03):** hasta el S6 los usuarios se crean por CLI. Desde el S6, una persona puede **solicitar una cuenta** (usuario y contraseña) que queda `pendiente` hasta que el administrador la aprueba o la rechaza (`auth.user.account_status`); una cuenta pendiente o rechazada no inicia sesión. El administrador también crea, desactiva y cambia el rol de los usuarios desde una consola. Roles del MVP: `doctor` y `admin`. El auto-registro puede cerrarse por configuración.
 - **CA:** escenarios 1–4 de HU-01.
-- **Sprint:** 1 (sesión mínima), 2 (expiración y bloqueo por intentos). **README:** §2.5, HU-01.
+- **Sprint:** 1 (sesión mínima), 2 (expiración y bloqueo por intentos), 6 (registro con aprobación y consola, baja prioridad). **README:** §2.5, HU-01.
 
 ### FR-02 — Listado y búsqueda de pacientes
 - **Descripción:** listado paginado con búsqueda **exacta** por tipo y número de documento, y por nombre.
@@ -322,6 +342,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - Contexto clínico **etiquetado** (confianza y revisión) y **desidentificado**, que incluye: diagnóstico (con histología y grado), **atributos clínicos**, biomarcadores con su **tendencia**, **línea de tratamiento actual y tratamientos previos**, **eventos relevantes** con fechas relativas, **datos críticos faltantes** (FR-23) y **análisis previos y evolución** rotulados (FR-29).
   - Expansión bilingüe de la pregunta.
   - Recuperación *dense* (y *sparse* desde el Sprint 3) con filtros de vigencia, fuente, tipo de cáncer y población.
+  - **Filtro de antigüedad (v1.4, E-02):** el oncólogo elige el año de publicación mínimo (`publishedFromYear`; `null` = toda la evidencia). Por defecto, los últimos `EVIDENCE_DEFAULT_YEARS` (10). Las guías se filtran por su fecha de última actualización. Si el filtro deja la consulta sin evidencia, se ofrece ampliarlo.
   - *Reranker* y umbral de relevancia.
   - Generación en el idioma de la pregunta de: síntesis (FR-24), aplicabilidad (FR-25) y opciones descritas; **búsqueda complementaria acotada** si quedan criterios sin evidencia (FR-30, desde el S4).
   - Validación de citas y **chequeo de soporte estricto** para toda afirmación, incluidas las de población del estudio.
@@ -339,7 +360,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - `504` si vence el tiempo máximo.
   - `500` si falla la persistencia, sin mostrar el resultado.
 - **CA:** HU-03, HU-10; AC-06.x y AC-10.x.
-- **Sprint:** 1 (dense, 1 opción, contrato `EvidenceAnalysis`), 5 (aplicabilidad y hasta 3 opciones ordenadas); híbrida y síntesis "si hay capacidad"; búsqueda complementaria en Post-MVP (B-01). **README:** §2.1 Flujo 2, §4.
+- **Sprint:** 1 (dense, 1 opción, contrato `EvidenceAnalysis`), 5 (aplicabilidad, hasta 3 opciones ordenadas y filtro de antigüedad); híbrida y síntesis "si hay capacidad"; búsqueda complementaria en Post-MVP (B-01). **README:** §2.1 Flujo 2, §4.
 
 ### FR-10 — Opciones descartadas visibles para revisión
 - **Descripción:** lo que no supera la validación nunca se muestra como válido (R-21).
@@ -419,8 +440,8 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 ### FR-19 — Corpus científico
 - **Descripción:** ingesta de **fuentes públicas de acceso abierto**, solo textuales, con licencia registrada y **aceptada** (D-09, R-12).
 - **Comportamiento:**
-  - Fuentes del MVP: NCI PDQ, ClinicalTrials.gov, PubMed/PMC (subconjunto de acceso abierto), guías de práctica clínica públicas y publicaciones de TCGA/GDC, cBioPortal y TCIA. La lista final la fija el ADR de fuentes (TBD-04).
-  - **Licencias aceptadas (R-12, ADR-36):** dominio público, **CC BY** y **CC BY-SA**. **CC BY-NC** solo para el MVP académico, documentado y marcado en el catálogo. **Excluidas:** licencias ND y "libre lectura" sin licencia de reutilización. Cada documento guarda su `license_class`. La ingesta de resúmenes de PubMed sin licencia explícita queda por decidir en el ADR-36 (TBD-04).
+  - **Fuentes del MVP (v1.4, ADR-36, E-07):** NCI PDQ (versiones para profesionales en inglés y español, solo texto) y el subconjunto de acceso abierto de PMC con licencia exacta CC0, CC BY o CC BY-SA, evaluada por documento. Candidatas evaluadas y excluidas del MVP: ClinicalTrials.gov, PMC con CC BY-NC, NICE, guías sin licencia aceptada, cBioPortal y TCIA (datos, no texto) y publicaciones de TCGA/GDC fuera de PMC OA. Registro: [`ADR-36`](architecture/adr/ADR-36-fuentes-y-licencias.md).
+  - **Licencias aceptadas (R-12, ADR-36):** dominio público, **CC BY** y **CC BY-SA**. **CC BY-NC** solo para el MVP académico, documentado y marcado en el catálogo. **Excluidas:** licencias ND y "libre lectura" sin licencia de reutilización. Cada documento guarda su `license_class`. Los resúmenes de PubMed sin licencia explícita **se rechazan** (ADR-36, opción A). CC0 se asimila a dominio público.
   - Normalización, fragmentación, *embedding* multilingüe (dense + sparse) y versionado reanudable; se conserva el histórico.
   - **Metadatos estructurados por documento** (prerrequisito de FR-24, FR-25 y FR-26): tipo y diseño del estudio, fase, endpoint principal, tamaño de muestra, **criterios de población** estructurados (subtipo, estadio o extensión, línea o tratamiento previo, biomarcadores, edad o estado menopáusico, estado funcional), fecha de publicación o actualización y versión de la guía. Se toman de la fuente cuando la publica en forma estructurada (por ejemplo, ClinicalTrials.gov) o se extraen al ingerir con verificación (R-16): **`extraido_verificado` = extracción con el LLM + chequeo NLI de cada metadato contra el texto de la fuente + revisión humana de una muestra** (propuesta: 10% por lote de ingesta; TBD-20). Un dato no disponible o que no pasa el NLI queda como `no_disponible`.
   - Catálogo en el schema `corpus` de PostgreSQL, con **fecha de corte** del corpus versionada.
@@ -436,7 +457,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - **Baseline manual de VM-1 y VM-2** antes de cerrar el Sprint 1, y medición de VM-1 a VM-6 según §2.2 (TBD-11), por separado en la cohorte sintética y en la real.
   - **Feedback como validación clínica (B-04):** el feedback por análisis (VM-4 y VM-5) valida el catálogo de aplicabilidad (VM-4 ≥ 70 % con calificación ≥ 4) y el de datos críticos (VM-5 ≥ 80 % "correcto y útil") por versión de catálogo, con una muestra mínima configurable (`muestra_insuficiente` por debajo).
 - **CA:** OL-06; AC-T5.x.
-- **Sprint:** 1 (suite en la DoD y baseline manual), 2 (calibración, baseline técnico y metas definitivas), 5 (feedback) y continuo (B-07).
+- **Sprint:** 1 (baseline manual; la demo se evalúa a mano), 2 (suite en la DoD, ADR-41, calibración, baseline técnico y metas definitivas), 5 (feedback) y continuo (B-07, modificado por E-06).
 
 ### FR-21 — Reconstrucción del caso (CAP-02) · *nuevo en v1.1*
 - **Descripción:** vista de caso centrada en el paciente: timeline, tratamientos previos, series de biomarcadores y resumen verificable (D-02, JTBD 1 y 7).
@@ -474,7 +495,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - Los faltantes viajan al análisis como "desconocido" y aparecen en la aplicabilidad y en la Base del análisis.
   - Mismo estado y misma versión del catálogo dan el mismo resultado, **sin LLM**.
   - **Todo ítem del catálogo tiene un campo de destino en el modelo de datos (R-02):** histología y grado en `Diagnosis`; estado menopáusico, estado de castración, sitios metastásicos y similares en `ClinicalAttribute`; biomarcadores en `Biomarker`; tratamientos previos en `PriorTreatment`. La matriz "ítem → campo" vive en el catálogo y un ítem sin destino no puede publicarse (regla de validación del catálogo y de la DoD).
-  - Las reglas, incluidas las condicionales, viven en el catálogo versionado y las valida el oncólogo (TBD-12). Lista inicial propuesta: mama (histología, grado, TNM, RE, RP, HER2 con ISH condicional, Ki-67, estado menopáusico, ECOG, tratamientos previos si es avanzado, BRCA germinal condicional); próstata (serie de PSA, Gleason/ISUP, TNM, metástasis por imagen, estado de castración condicional, tratamientos previos, ECOG, HRR/BRCA condicional en mCRPC). En próstata, TNM va en `staging_system`/`stage_value` y **Gleason/grupo ISUP en `Diagnosis.grade`** (B-08).
+  - Las reglas, incluidas las condicionales, viven en el catálogo versionado y las valida el oncólogo (TBD-12). Lista inicial propuesta: mama (histología, grado, TNM, RE, RP, HER2 con ISH condicional, Ki-67, estado menopáusico, ECOG, tratamientos previos si es avanzado, BRCA germinal condicional); próstata (serie de PSA, Gleason/ISUP, TNM, metástasis por imagen, estado de castración condicional, tratamientos previos, ECOG, HRR/BRCA condicional en mCRPC). En próstata, TNM va en `staging_system`/`stage_value` y **Gleason/grupo ISUP en `Diagnosis.grade`** (B-08), como texto canónico ("Gleason 4+3=7 · ISUP 3") derivado de la tabla hija `diagnosis_grading` (patrón primario y secundario, score, grupo ISUP, espécimen `biopsia | prostatectomia` y alcance `nucleo_sitio | peor | global`, con procedencia y revisión propias). La gradación de referencia es la de prostatectomía global y, si no existe, la peor de la biopsia (v1.4, E-05).
   - **Registro manual (B-09):** desde un faltante, el oncólogo registra un biomarcador (`POST …/biomarkers`, crea un `Exam` manual) o completa o corrige el diagnóstico (`POST …/diagnoses`, corrección explícita; el anterior queda `reemplazado`). La normalización final es de Backend 1 (ADR-33).
   - **Validación (B-04):** el catálogo se publica como `propuesta` revisada por el oncólogo y se valida con el feedback agregado de VM-5, sin firma formal.
 - **CA:** HU-18; AC-04.1 a AC-04.4; G-12.
@@ -525,7 +546,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   | (a) Datos del paciente usados | Lista de los datos del contexto, con su estado de revisión (verificado, sin verificar, en conflicto) y su origen | Determinista, desde el contexto enviado | S1 |
   | (b) Datos críticos faltantes | Faltantes del checklist (FR-23) y si el oncólogo eligió "Continuar con aviso" | Determinista, desde FR-23 | S3 |
   | (c) Supuestos | Supuestos explícitos del análisis. Por ejemplo: "se asume enfermedad no metastásica porque no hay estudios de extensión" | Reglas deterministas del catálogo, ancladas a un faltante. El LLM puede proponer supuestos adicionales, que se aceptan solo si (1) **no son contradichos** por el contexto (NLI ≠ contradicción) y (2) están **anclados a un dato faltante** del checklist (R-05, ADR-34). Se rotulan "supuesto", nunca como hecho. | S3 |
-  | (d) Fuentes y filtros consultados | Fuentes seleccionadas, filtros, idioma, número de fuentes recuperadas y sobre el umbral | Determinista | S1 |
+  | (d) Fuentes y filtros consultados | Fuentes seleccionadas, filtros (incluida la antigüedad de la evidencia, E-02), idioma, número de fuentes recuperadas y sobre el umbral | Determinista | S1 |
   | (e) Fuentes no incluidas | Fuentes que el corpus no contiene (por ejemplo, "NCCN y ESMO no incluidas" mientras aplique RN-21) | Determinista, desde `CorpusRelease` | S1 |
   | (f) Fecha de corte del corpus | Fecha y versión del corpus usadas | Determinista | S1 |
   | (g) Limitaciones | Por ejemplo: "síntesis basada en una sola fuente", "evidencia solo de ensayos fase II", "población del estudio no comparable en el criterio X" | Las estructurales son deterministas; las redactadas por el LLM pasan el chequeo de soporte | S3 |
@@ -561,7 +582,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
     - Los análisis previos entran **rotulados como "análisis previo de IA"**: son contexto, **nunca evidencia**. No son citables, y una afirmación cuyo único soporte sea un análisis previo se descarta (RN-24).
     - Todo pasa por la misma desidentificación (RN-11).
   - Se mantienen el estado "Desactualizado", la re-ejecución y la comparación (FR-12).
-  - La conversación de varios turnos dentro de un mismo análisis queda Post-MVP.
+  - Las **preguntas de seguimiento** ancladas a un análisis están en el MVP (FR-31, v1.4); la conversación abierta de varios turnos queda Post-MVP.
 - **CA:** HU-23, HU-24; AC-11.x.
 - **Sprint:** Post-MVP (B-01). **README:** §3.1 (`ClinicalEvent`), §4.
 
@@ -575,6 +596,21 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 - **Bordes:** sin evidencia nueva → los criterios siguen en Desconocido y se declara en la Base del análisis. El agente nunca se ejecuta si el primer resultado es "sin evidencia" (RN-02).
 - **CA:** HU-26; AC-08.7; G-16.
 - **Sprint:** Post-MVP (B-01). **README:** §2.1 Flujo 2, HU-26.
+
+### FR-31 — Preguntas de seguimiento sobre un análisis · *nuevo en v1.4*
+- **Descripción:** después de recibir un análisis validado, el oncólogo hace preguntas puntuales sobre sus hallazgos sin salir de su contexto (E-01).
+- **Comportamiento:**
+  - Hasta `ANALYSIS_FOLLOWUP_MAX` (10) preguntas por análisis, en el idioma de la pregunta.
+  - **Contexto fijo:** el paciente desidentificado (RN-11), los datos del caso usados por el análisis, la pregunta original y sus hallazgos, y la evidencia del mismo corpus. Los hallazgos del análisis entran como **memoria rotulada**: nunca son citables ni soporte NLI (RN-24).
+  - Cada respuesta se obtiene con consultas relacionadas al RAG, pasa la validación de citas y el chequeo de soporte (RN-01), se **persiste en Backend 1 antes de mostrarse** (RN-06) y nunca se transmite token a token (TBD-08). Las fuentes nuevas respecto del análisis se marcan.
+  - Toda respuesta lleva el aviso de IA (RN-19) y respeta la lista de términos prohibidos (RN-23).
+- **Bordes:**
+  - Sin chunks sobre el umbral → turno `sin_evidencia`, sin invocar al LLM (RN-02); se ofrece ampliar la antigüedad o abrir un análisis nuevo.
+  - Pregunta sobre otro paciente u otro tema → `fuera_de_contexto`, sin respuesta generada; se ofrece un análisis nuevo.
+  - Límite alcanzado → `409`; se ofrece un análisis nuevo.
+  - Opt-out de `analisis_ia` → `403` (RN-15). Paciente egresado → `422`.
+- **CA:** US-218 y US-219 (FEAT-10c).
+- **Sprint:** 5 (v1.4). **README:** §4.1 (`POST/GET /platform/evidence-analyses/{id}/follow-ups`), §4.2 (bloque `followUp` de `/rag/query`), §3.1 (`clinical.analysis_follow_up`).
 
 
 ---
@@ -708,7 +744,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 ## 11. Requisitos de seguridad y privacidad
 
 1. **Sesión:** cookie opaca `HttpOnly`/`Secure`/`SameSite=Strict`; expiración, bloqueo, Argon2id y logout (FR-01). CSRF: `SameSite` más verificación de `Origin`.
-2. **Autorización:** RBAC; `admin` ve todos. La autorización por equipo tratante (FR-15) pasa a Post-MVP porque la gestiona un sistema externo (B-03).
+2. **Autorización:** RBAC. El rol `admin` gestiona cuentas, altas de pacientes y marcas de opt-out, pero **no lee datos clínicos ni análisis** (v1.4, E-04: mínimo privilegio). La autorización por equipo tratante (FR-15) pasa a Post-MVP porque la gestiona un sistema externo (B-03).
 3. **Identidad:** AES-256-GCM en la aplicación más índice ciego HMAC; claves solo en el servicio clínico; cada vista se audita (RN-10).
 4. **Desidentificación** del contexto hacia la IA y **gate de PII** en los documentos (RN-11, FR-06). Cubre las entidades nuevas (eventos, tratamientos previos, faltantes) y los análisis previos usados como memoria (FR-29).
 5. **Proveedores:** datos reales solo con modelos locales, aplicado en código y probado (RN-12).
@@ -767,15 +803,15 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 
 | Sprint | Objetivo (demo) | Alcance principal | Datos |
 |---|---|---|---|
-| Pre-S1 | Decisiones | Contrato `EvidenceAnalysis` y esquema congelados (incluidos los endpoints de registro manual, B-09); protocolo y metas de VM-1 a VM-6 (TBD-11, DEC-02); capacidad (TBD-19, DEC-03); términos de LOINC, CUPS y ATC (TBD-17, DEC-04); ADR de fuentes (ADR-36) | — |
-| 1 | *Walking skeleton*: login → análisis *dense* con una opción citada sobre el paciente semilla | Sesión mínima (FR-01), FR-09 (*dense*, 1 opción), FR-10, RN-01 (citas y NLI), RN-06, RN-11 (desidentificación), RN-23, FR-19 (semilla y esquema de metadatos), esquema completo y seed, FR-20 (suite `evaluate` en la DoD y baseline manual de VM-1/VM-2); ADR de modelos locales (ADR-39) y de evaluación (ADR-41) | Sintéticos |
-| 2 | Acceso, identidad y ficha: login → listado → ficha → análisis con Base del análisis | FR-01 (completo), FR-02, FR-03 (identidad cifrada, RN-10), FR-04 (ficha mínima), FR-05, catálogos clínicos v1, FR-27 (a, d, e, f), calibración del umbral, baseline técnico y metas definitivas (TBD-02, DEC-07); ADR de PII (ADR-40) | Sintéticos |
+| Pre-S1 | Decisiones | Contrato `EvidenceAnalysis` y esquema congelados (incluidos los endpoints de registro manual, B-09); protocolo y metas de VM-1 a VM-6 (TBD-11, DEC-02); capacidad (TBD-19, DEC-03); términos de LOINC, CUPS y ATC (TBD-17, DEC-04); ADR de fuentes (ADR-36); gradación de próstata (DEC-05); diseño del flujo E2E y sistema de diseño (`docs/ux/`). **Decidido en el refinamiento del 2026-10-09/11 (v1.4)** | — |
+| 1 | *Walking skeleton*: login → análisis *dense* con una opción citada sobre el paciente semilla | Sesión mínima (FR-01), FR-09 (*dense*, 1 opción), FR-10, RN-01 (citas y NLI), RN-06, RN-11 (desidentificación), RN-23, FR-19 (semilla y esquema de metadatos), esquema completo y seed, FR-20 (baseline manual de VM-1/VM-2; la demo se evalúa a mano, E-06); ADR de modelos locales (ADR-39) | Sintéticos |
+| 2 | Acceso, identidad y ficha: login → listado → ficha → análisis con Base del análisis | FR-01 (completo), FR-02, FR-03 (identidad cifrada, RN-10), FR-04 (ficha mínima), FR-05, catálogos clínicos v1, FR-27 (a, d, e, f), FR-20 (suite `evaluate` en la DoD y ADR de evaluación, ADR-41, E-06), umbrales de calidad en la CI, calibración del umbral, baseline técnico y metas definitivas (TBD-02, DEC-07); ADR de PII (ADR-40) | Sintéticos |
 | 3 | Reconstrucción del caso (hipótesis 1): PDF → extracción → vista de caso con enlace al documento de origen | FR-06 (OCR local, gate de PII, confianza, propuesta de códigos), FR-21 (vista de caso), FR-22 (normalización final y duplicados, RN-08), FR-07 (descarga auditada del documento de origen) | Sintéticos |
 | 4 | Faltantes (hipótesis 2): revisión, registro manual y checklist | FR-08, FR-22 (conflictos), registro manual (B-09), **FR-23**, FR-19 (ingesta del corpus con metadatos de población), FR-03 (alta manual), FR-11 (sin verificar), FR-27 (b), RN-30 (*rate limit*) | Sintéticos |
-| 5 | Opciones aplicables (hipótesis 3) → **G-Demo** | **FR-25** (aplicabilidad sin puntaje, RN-28), FR-09 (hasta 3 opciones ordenadas por aplicabilidad), FR-11 (conflictos y faltantes), FR-20 (feedback VM-4/VM-5, VM-3 sintética con DEC-14) | Sintéticos |
-| 6 | **G-Piloto** → piloto mixto → **G-Éxito** | FR-16 (marcas por CLI y `403` en toda generación con IA), FR-18 (accesos y completa), RN-12 (solo proveedores locales), `preflight real-data`, VPN/HTTPS, *backups* cifrados con prueba de restauración, decisiones legales y de catálogo; medición de VM-1 a VM-6 en ambas cohortes | **Datos reales solo tras G-Piloto** |
+| 5 | Opciones aplicables (hipótesis 3) → **G-Demo** | **FR-25** (aplicabilidad sin puntaje, RN-28), FR-09 (hasta 3 opciones ordenadas por aplicabilidad y filtro de antigüedad, E-02), **FR-31** (preguntas de seguimiento, E-01), FR-11 (conflictos y faltantes), FR-20 (feedback VM-4/VM-5, VM-3 sintética con DEC-14) | Sintéticos |
+| 6 | **G-Piloto** → piloto mixto → **G-Éxito** | FR-16 (marcas por CLI y `403` en toda generación con IA), FR-18 (accesos y completa), RN-12 (solo proveedores locales), `preflight real-data`, VPN/HTTPS, *backups* cifrados con prueba de restauración, decisiones legales y de catálogo; cabeceras de seguridad de `web` (E-06); registro con aprobación y consola de administración, de baja prioridad (FR-01, E-03); medición de VM-1 a VM-6 en ambas cohortes | **Datos reales solo tras G-Piloto** |
 | Si hay capacidad | Se priorizan en el *planning* de cada sprint | FR-21 (resumen del caso; primer candidato), FR-24 (síntesis), FR-26 (vigencia), FR-28 (plantillas), FR-12 (historial, re-ejecución, comparación), FR-03 (asistido por OCR), FR-07 (visor en página), FR-09 (híbrida y expansión bilingüe), FR-27 (c, g), job de mayoría de edad, `/metrics` y *mutation testing* (G-10), ADR de *streaming* de progreso (ADR-42) | — |
-| Post-MVP | Diferido con *workaround* | FR-13, FR-14 (egreso, reactivación, `422` por egresado y snapshot longitudinal), FR-15 (B-03), FR-16 (API y UI de administración de opt-out), FR-17 (job de retención), FR-29 (memoria y evolución), FR-30 (agente acotado), FR-27 (h, i); CAP-12 a CAP-16, conversación de varios turnos, reporte CAC | — |
+| Post-MVP | Diferido con *workaround* | FR-13, FR-14 (egreso, reactivación, `422` por egresado y snapshot longitudinal), FR-15 (B-03), FR-16 (API y UI de administración de opt-out), FR-17 (job de retención), FR-29 (memoria y evolución), FR-30 (agente acotado), FR-27 (h, i); CAP-12 a CAP-16, conversación abierta de varios turnos (las preguntas de seguimiento ancladas son MVP, FR-31), reasignación de pacientes y rol "investigador" en la consola de administración, edición de parámetros en caliente, reporte CAC | — |
 | Post-piloto | Tercer tipo de cáncer | Leucemia (RN-20), con el flujo de menores que ya existe | Piloto |
 | Futuro | Investigación y plataforma | CAP-17 puntaje de solidez clínica (ADR-7), CAP-18 integración con HCE (FHIR), histórico completo, grafos, exportación | — |
 
@@ -823,7 +859,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | TBD-01 | Modelos concretos (LLM, *embeddings*, *reranker*, NLI, OCR) y runtime (Ollama o vLLM) | **TBD — Decisión requerida:** ADR de modelos locales, al inicio del Sprint 1 |
 | TBD-02 | Metas definitivas de evaluación | **TBD:** se ajustan con el baseline del Sprint 1 |
 | TBD-03 | Calibración de los umbrales de confianza del OCR y de relevancia | **TBD:** con el set de referencia (sintético y anonimizado) |
-| TBD-04 | ADR de fuentes y licencias (ADR-36): lista final de fuentes públicas abiertas, licencias aceptadas (R-12), ingesta o no de resúmenes de PubMed sin licencia explícita, gestión de NCCN y ESMO | **TBD — Decisión requerida en el S1, no bloqueante** (D-09) |
+| TBD-04 | ADR de fuentes y licencias (ADR-36): lista final de fuentes públicas abiertas, licencias aceptadas (R-12), ingesta o no de resúmenes de PubMed sin licencia explícita, gestión de NCCN y ESMO | ✅ **Resuelto (v1.4, E-07):** composición mínima-segura (NCI PDQ y PMC OA CC0/CC BY/CC BY-SA); PubMed sin licencia se rechaza; NCCN y ESMO para una versión futura. [`ADR-36`](architecture/adr/ADR-36-fuentes-y-licencias.md) |
 | TBD-05 | Subtipos de leucemia (LLA, LMA, LMC, LLC) y población (pediátrica o adulta) | **TBD:** con el oncólogo al preparar el tercer tipo |
 | TBD-06 | Lista de motivos de egreso y reglas clínicas (semáforo, vigencia de diagnósticos) | **TBD:** validación con el oncólogo |
 | TBD-07 | Edad de mayoría configurada | **TBD:** configuración, sin asumir un país |
@@ -836,7 +872,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | TBD-14 | Número de análisis previos que entran como memoria (N) | **TBD:** propuesta 3; se calibra con latencia y evaluación |
 | TBD-15 | Antigüedad para "posiblemente desactualizada" (N años) | **TBD:** propuesta 5; validación del oncólogo |
 | TBD-16 | Validación legal de diferir el job de retención | **TBD — Decisión requerida:** área legal, antes del S6 (DEC-15) |
-| TBD-17 | Términos de uso de LOINC, CUPS y ATC para versionar subconjuntos en un repositorio público | **TBD — Decisión requerida en el Pre-S1** (B-11, DEC-04). Mientras tanto, solo CIE-10 o códigos con permiso confirmado |
+| TBD-17 | Términos de uso de LOINC, CUPS y ATC para versionar subconjuntos en un repositorio público | ✅ **Resuelto (v1.4, E-08, DEC-04):** los cuatro estándares (incluida CIE-10) se versionan con su aviso; ATC solo con fines no comerciales y sin DDD. Firma académica del PO, a revisar antes de G-Piloto |
 | TBD-18 | Límites del agente acotado: iteraciones, sub-consultas y presupuesto de tiempo (FR-30) | **TBD:** propuesta 1 iteración y 3 sub-consultas; se calibra con G-5 al activar el agente (Post-MVP) |
 | TBD-19 | Estimación de esfuerzo de los Sprints 1–6 con el slicing v2 (SUP-1, DEC-03) | **TBD — Decisión requerida antes del S1:** Ingeniería |
 | TBD-20 | Tamaño de la muestra humana para verificar metadatos del corpus (R-16) | **TBD:** propuesta 10% por lote de ingesta |
@@ -848,7 +884,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 
 | Requisito | Historia | API | Datos | Arquitectura | Discovery | Sprint (v1.3; shc = si hay capacidad) |
 |---|---|---|---|---|---|---|
-| FR-01 Autenticación | HU-01 | `/platform/auth/*` | `User`, `Session` | web → clinical-api (Guard) | — | 1–2 |
+| FR-01 Autenticación | HU-01 | `/platform/auth/*`, `/platform/admin/*` (S6) | `User` (`account_status`), `Session` | web → clinical-api (Guard) | — | 1–2 · 6 (registro y consola) |
 | FR-02 Listado | HU-06 | `GET /platform/patients` | `PatientIdentity` (índice ciego) | clinical-api / IdentityService | — | 2 |
 | FR-03 Registro | HU-07, HU-08 | `POST /platform/patients`, `intake-drafts` | `Patient`, `PatientIdentity`, `LegalRepresentative`, `IntakeDraft` | clinical-api + extracción | — | 2 · 4 · shc (asistido) |
 | FR-04 Ficha | HU-02, HU-05 | `GET /platform/patients/{id}` | `Diagnosis`, `Biomarker`, `Exam` | clinical-api | P1 | 2 |
@@ -856,7 +892,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | FR-06 Extracción | HU-04, HU-05 | `/documents/extract` | `Document`, datos clínicos, `ClinicalEvent`, `PriorTreatment` | Worker + rag-orchestrator | P1 | 3 |
 | FR-07 Visor | HU-05 | `…/documents/{docId}/file` | `Document`, `AuditLog` | web → clinical-api → clinical-minio | P12 | 3 (descarga) · shc (visor) |
 | FR-08 Revisión | HU-09 | `PATCH …/review` | `review_status`, `conflicts_with_id`, `mapping_status` | ClinicalReview | P3 | 4 |
-| FR-09 Análisis de evidencia | HU-03, HU-10 | `POST /platform/evidence-analyses`, `/rag/query` | `AIAnalysisRecord`, `CorpusChunk` | EvidenceGateway + RAGOrchestratorService | P5 | 1 / 5 · shc (híbrida) |
+| FR-09 Análisis de evidencia | HU-03, HU-10 | `POST /platform/evidence-analyses`, `/rag/query` | `AIAnalysisRecord`, `CorpusChunk` | EvidenceGateway + RAGOrchestratorService | P5 | 1 / 5 (filtro de antigüedad) · shc (híbrida) |
 | FR-10 Descartadas | HU-03 | ídem | `discarded_options` | Domain (SupportChecker) | P12 | 1 |
 | FR-11 Avisos | HU-05 | ídem | `provenance` | Domain | P12 | 4–5 |
 | FR-12 Historial | HU-11, HU-24 | `…/analyses`, `…/rerun`, `…/compare` | `AIAnalysisRecord` (`context_fingerprint`) | clinical-api / StaleAnalysisDetector | §2 loops | shc |
@@ -878,6 +914,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | FR-28 Plantillas | HU-19 | `…/question-templates` | catálogo | clinical-api | Etapa 7 | shc |
 | FR-29 Iteración y memoria | HU-23, HU-24 | `…/clinical-events`, `/platform/evidence-analyses` | `ClinicalEvent`, `AIAnalysisRecord.prior_analyses_used` | AnalysisMemory (B1) | §2 loops, P10 | Post-MVP |
 | FR-30 Agente acotado | HU-26 | `/platform/evidence-analyses` | `AIAnalysisRecord.agent_steps` | RAGOrchestratorService (B2) | P6, P5 | Post-MVP |
+| FR-31 Preguntas de seguimiento | — (US-218, US-219) | `POST/GET /platform/evidence-analyses/{id}/follow-ups`, `/rag/query` (`followUp`) | `AnalysisFollowUp` | evidence-analysis (B1) + RAGOrchestratorService (B2) | P5, P6 | 5 |
 
 **Sin historia propia:** FR-17 (retención), FR-18 (auditoría), FR-19 (corpus) y FR-20 (evaluación) son requisitos operativos o técnicos, cubiertos por tickets (OL-01, OL-02, OL-06) y por los criterios del Sprint 5. Sus historias de usuario se escriben al iniciar el sprint correspondiente.
 
@@ -922,7 +959,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | CAP-14 Paquete para comité de tumores | Post-MVP | No está priorizado en el Discovery (D-16) |
 | CAP-15 Preguntas sugeridas por IA | Post-MVP | El MVP usa plantillas configuradas (CAP-05) |
 | CAP-16 Leucemia y otros tipos de cáncer | Post-MVP | Sin evidencia de Discovery. Requiere el criterio de "listo" de RN-20. |
-| Conversación de varios turnos dentro de un análisis | Post-MVP | Capacidad. Cada pregunta nueva es un análisis nuevo; la memoria de análisis previos sí está en el MVP (CAP-11). |
+| Conversación abierta de varios turnos (chat libre) | Post-MVP | Capacidad. Las **preguntas de seguimiento ancladas a un análisis** (hasta 10, validadas y persistidas) sí están en el MVP desde la v1.4 (FR-31, S5). |
 | Job automático de retención a 10–20 años | Post-MVP | Ningún dato vence durante el piloto. La política y los campos se mantienen (D-15; validación legal en TBD-16). |
 | NCCN y ESMO en el corpus | MVP si se gestiona la licencia, o versión futura | No bloquean el MVP (D-09); su ausencia se declara en la Base del análisis. |
 | CAP-17 Puntaje de solidez clínica de la evidencia | Futuro | ADR pendiente (TBD-09) |
@@ -1425,8 +1462,8 @@ Detalle completo en FR-27 (D-08).
 |---|---|---|
 | SUP-1 | La capacidad alcanza para CAP-02, 03, 04, 07, 08 (con el agente acotado), 09 y la parte nueva de CAP-11 dentro de los 6 sprints. La capacidad liberada es el job de retención (D-15) y la captura de consentimientos (R-11). Ingeniería estima antes del S1 (TBD-19). | Orden de recorte acordado (§14): CAP-07 a Post-MVP, luego los conflictos de CAP-03 |
 | SUP-2 | El LLM local de 7–8B (ADR de modelos) produce una síntesis y una aplicabilidad que cumplen M-07.x y M-08.x dentro del presupuesto de latencia, también con la memoria de análisis en el contexto | Recalibrar M-06.2, bajar N de memoria, o evaluar un modelo de ~14B dentro del ADR |
-| SUP-3 | Los documentos del corpus abierto permiten extraer población, diseño y endpoint de forma estructurada (M-08.3) | La aplicabilidad queda en "No reportado por la fuente" con más frecuencia y baja su valor |
+| SUP-3 | Los documentos del corpus abierto permiten extraer población, diseño y endpoint de forma estructurada (M-08.3). v1.4: con la composición mínima-segura la población se **cura a mano** (ADR-36) | La aplicabilidad queda en "No reportado por la fuente" con más frecuencia y baja su valor |
 | SUP-4 | Los oncólogos asesores pueden dar tiempo para medir el baseline (AC-T5.2) y validar catálogos (datos críticos, aplicabilidad, mapeos, plantillas) | Sin baseline, VM-1 y VM-2 no son comparables |
-| SUP-5 | Los términos de uso de LOINC, CUPS y ATC permiten versionar subconjuntos en un repositorio público (TBD-17) | Los catálogos se mantienen fuera del repo y se cargan como configuración local |
-| PREG-1 | ¿Qué fuentes abiertas fija el ADR de fuentes, y se gestiona NCCN/ESMO para el MVP o para una versión futura? (TBD-04) | No bloquea; afecta la cobertura percibida |
+| SUP-5 | Los términos de uso de LOINC, CUPS y ATC permiten versionar subconjuntos en un repositorio público (TBD-17) — ✅ **se cumple** (v1.4, DEC-04): permitido con aviso | Los catálogos se mantienen fuera del repo y se cargan como configuración local |
+| PREG-1 | ¿Qué fuentes abiertas fija el ADR de fuentes, y se gestiona NCCN/ESMO para el MVP o para una versión futura? (TBD-04) — ✅ **respondida** (v1.4, E-07): NCI PDQ y PMC OA; NCCN y ESMO en una versión futura | No bloquea; afecta la cobertura percibida |
 | PREG-2 | ¿Aprueba el área legal diferir el job de retención? (TBD-16) | Si no, se reincorpora al S6 y se ajusta SUP-1 |
