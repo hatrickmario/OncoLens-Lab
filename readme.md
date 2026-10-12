@@ -11,7 +11,16 @@
 
 > 📄 Los requisitos de producto (objetivos, requisitos funcionales, reglas de negocio, requisitos no funcionales, riesgos y trazabilidad) están en el **[PRD v1.3](docs/PRD.md)**. El Product Backlog (Features, historias, ADR y decisiones) está en **[`backlog/`](backlog/features/README.md)** y se refleja en Linear.
 >
-> **v1.3 (2026-10-07):** el roadmap vigente es el *slicing* v2 de PRD §14; la autorización por equipo tratante (FR-15) pasa a Post-MVP (PRD B-03) y el opt-out se gestiona por CLI en el MVP (PRD B-05). Las secciones de este README que citan sprints o el equipo tratante conservan el diseño objetivo; ante discrepancia, prevalece el PRD v1.3.
+> **v1.3 (2026-10-07):** el roadmap vigente es el *slicing* v2 de PRD §14; la autorización por equipo tratante (FR-15) pasa a Post-MVP (PRD B-03) y el opt-out se gestiona por CLI en el MVP (PRD B-05). Las secciones de este README que citan sprints o el equipo tratante conservan el diseño objetivo; ante discrepancia, prevalece el PRD.
+
+> **v1.4 (2026-10-11):** alineado con el refinamiento del Pre-S1 (PRD §0, enmiendas E-01…E-10):
+> - **Preguntas de seguimiento** ancladas a un análisis, en el MVP (PRD FR-31, S5).
+> - **Filtro de antigüedad** de la evidencia.
+> - **Registro con aprobación y consola de administración** (S6); el administrador **no lee datos clínicos ni análisis**.
+> - **Fuentes del corpus** según [ADR-36](docs/architecture/adr/ADR-36-fuentes-y-licencias.md).
+> - **La suite `evaluate`** entra en la DoD en el S2.
+>
+> El modelo de datos (§3.1) y los contratos (§4.1, §4.2) se actualizan con la historia que congela el contrato (US-033). Ante discrepancia, prevalece el PRD v1.4.
 >
 > 🔁 **Proceso del oncólogo:** **[AS-IS](docs/AS-IS.md)** (cómo trabaja hoy, según el Discovery de 4 entrevistas) · **[TO-BE](docs/TO-BE.md)** (solución objetivo por fases: MVP, Post-MVP y Futuro).
 >
@@ -69,7 +78,7 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 - Puntaje de solidez clínica de la evidencia (ADR futuro): el MVP muestra etiquetas factuales (diseño, endpoint, n, fecha).
 - Reporte a la Cuenta de Alto Costo (CAC): el MVP solo normaliza con CIE-10, LOINC, CUPS y ATC.
 - Integración con la historia clínica electrónica institucional: la historia del paciente se mantiene dentro de OncoLens.
-- **Post-MVP:** exploración de cohortes y outcomes históricos (el MVP guarda un snapshot longitudinal al egresar), paquete para comité de tumores, preguntas sugeridas por IA, conversación de varios turnos y job automático de retención.
+- **Post-MVP:** exploración de cohortes y outcomes históricos (el MVP guarda un snapshot longitudinal al egresar), paquete para comité de tumores, preguntas sugeridas por IA, conversación abierta de varios turnos y job automático de retención. Las preguntas de seguimiento ancladas a un análisis sí están en el MVP (PRD FR-31).
 - Datos bioinformáticos crudos (TCGA/GDC, cBioPortal, TCIA): solo entran sus publicaciones y resúmenes.
 
 ### **1.2. Características y funcionalidades principales:**
@@ -216,7 +225,7 @@ flowchart TD
     Milvus[("Milvus<br/>corpus_chunks: dense + sparse, is_current, language, cancer_type_tags")]
     LLM["LLM nativo macOS<br/>Ollama o vLLM (Metal)"]
     CAT[("packages/clinical-catalogs<br/>datos críticos · aplicabilidad · CIE-10 · LOINC · CUPS · ATC · plantillas")]
-    Ext["Fuentes externas públicas de acceso abierto (texto)<br/>NCI PDQ · ClinicalTrials.gov · PubMed/PMC OA · guías públicas<br/>publicaciones TCGA/GDC · cBioPortal · TCIA"]
+    Ext["Fuentes externas públicas de acceso abierto (texto, ADR-36)<br/>NCI PDQ (EN/ES) · PMC OA (CC0, CC BY, CC BY-SA)"]
 
     Doctor -- "HTTPS (CA interna)" --> Next
     Next -- "HTTP interno · cookie de sesión" --> C1
@@ -477,7 +486,7 @@ flowchart LR
   - Alta y baja de usuarios por un script de administración (CLI).
 - **CSRF:** `SameSite=Strict` más verificación de la cabecera `Origin` en todos los Route Handlers que mutan.
 - **Guard** en `clinical-api`: valida la sesión en cada request antes de enrutar.
-- **Autorización:** RBAC (`Role`/`Permission`) para las *acciones*. **Equipo tratante** (`CareTeamMember`: varios doctores activos por paciente, uno principal) para decidir *sobre qué pacientes*. El rol `admin` ve todos.
+- **Autorización:** RBAC (`Role`/`Permission`) para las *acciones*. **Equipo tratante** (`CareTeamMember`: varios doctores activos por paciente, uno principal) para decidir *sobre qué pacientes* (Post-MVP, PRD B-03). El rol `admin` gestiona cuentas, altas de pacientes y marcas de opt-out, pero **no lee datos clínicos ni análisis** (mínimo privilegio, PRD v1.4 E-04).
 - **Clases de datos:**
   - `sintetico`: identificación aleatoria y distintivo visible.
   - `real_anonimizado`: calibración y pruebas.
@@ -1214,7 +1223,7 @@ erDiagram
 34. **Verificación de afirmaciones sobre datos del paciente:** ✅ (a) afirmaciones fácticas → el dato referenciado se verbaliza con una plantilla determinista y la afirmación se verifica con NLI contra ese texto; (b) valores del paciente en la aplicabilidad → se copian del contexto, nunca se generan; el estado se calcula de forma determinista cuando ambos valores son estructurados; (c) supuestos → se aceptan si **no son contradichos** por el contexto y están **anclados a un faltante**; se rotulan "supuesto". *(R-05)*
     - **Descartado:** NLI estricto para supuestos (descartaría todo supuesto legítimo).
 35. **Alcance de la memoria:** ✅ por **paciente** (sobrevive a la reactivación), análisis de **todo el equipo tratante**, **excluye** desactualizados y resúmenes, **cascada** de "desactualizado" a quien lo usó como memoria. *(R-09)*
-36. **Licencias del corpus:** ✅ aceptadas: dominio público, CC BY, CC BY-SA; CC BY-NC solo en el MVP académico, marcada; excluidas: ND y "libre lectura" sin licencia. Ingesta de resúmenes de PubMed sin licencia explícita: pendiente (PRD TBD-04). *(R-12)*
+36. **Licencias del corpus:** ✅ aceptadas: dominio público, CC BY, CC BY-SA; CC BY-NC solo en el MVP académico, marcada; excluidas: ND y "libre lectura" sin licencia. Resúmenes de PubMed sin licencia explícita: **se rechazan**. Fuentes del MVP: NCI PDQ y PMC OA con CC0, CC BY o CC BY-SA, evaluado por documento ([ADR-36](docs/architecture/adr/ADR-36-fuentes-y-licencias.md), PRD v1.4 E-07). *(R-12)*
 37. **Agente acotado:** ✅ el MVP incluye un agente mínimo: después del primer borrador, si quedan criterios en "Desconocido: no reportado por la fuente" o puntos de síntesis sin evidencia, planifica hasta **3 sub-consultas** en **1 iteración** (propuestas, TBD-18) usando solo la recuperación sobre el corpus, y regenera solo los bloques afectados. Respeta el *deadline* y la validación; queda registrado en `agent_steps`. *(R-13)*
     - **Descartados:** renombrar sin agente (decisión de los equipos: se quiere validar un comportamiento agéntico); agente abierto con más herramientas (latencia y riesgo).
 38. **Distribución de catálogos:** ✅ artefacto JSON versionado (`packages/clinical-catalogs`), montado como volumen de solo lectura en ambos contenedores; Backend 1 envía `catalogVersion` y Backend 2 responde `409 CATALOG_VERSION_MISMATCH` si difiere de la suya. *(R-20)*
@@ -2316,7 +2325,7 @@ Respuesta (`200`): los mismos `synthesis`, `applicability`, `evidenceOptions` y 
 
 ### 5.0. Slicing del alcance por sprints (roadmap de producto)
 
-> **Superado en v1.3.** El roadmap vigente es el *slicing* v2 de **PRD §14** (G-Demo al cierre del S5; G-Piloto, piloto mixto y G-Éxito en el S6; tramo "si hay capacidad"), con el detalle por historia en [`backlog/features/README.md`](backlog/features/README.md). Este apartado se conserva como referencia del diseño original.
+> **Superado en v1.3 y v1.4.** El roadmap vigente es el *slicing* v2 de **PRD §14**, con los ajustes de la v1.4: la suite `evaluate` pasa al S2; las preguntas de seguimiento y el filtro de antigüedad, al S5; el registro, la consola de administración y las cabeceras de seguridad, al S6 (G-Demo al cierre del S5; G-Piloto, piloto mixto y G-Éxito en el S6; tramo "si hay capacidad"), con el detalle por historia en [`backlog/features/README.md`](backlog/features/README.md). Este apartado se conserva como referencia del diseño original.
 
 El proyecto crece como un *walking skeleton* iterativo e incremental: desde el Sprint 1 existe un recorrido **end-to-end real**, y cada sprint siguiente lo amplía. La v1.1 resecuencia el alcance para incorporar las capacidades del Discovery sin cambiar los 6 sprints ([TO-BE](docs/TO-BE.md), PRD §14).
 - **Sprints 1–4:** operan **solo con datos sintéticos**.
@@ -2401,7 +2410,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 - KR3: *mutation score* de StrykerJS ≥ 70% sobre auth, autorización y cifrado.
 - KR4: VM-1 a VM-6 medidas en el piloto (PRD §2.2).
 
-**Después del piloto inicial:** leucemia se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22), con el flujo de menores que ya existe. **Post-MVP:** exploración de cohortes y outcomes de cohorte, paquete para comité de tumores, preguntas sugeridas por IA, conversación de varios turnos y job automático de retención. **Futuro:** puntaje de solidez clínica, integración con HCE y reporte CAC.
+**Después del piloto inicial:** leucemia se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22), con el flujo de menores que ya existe. **Post-MVP:** exploración de cohortes y outcomes de cohorte, paquete para comité de tumores, preguntas sugeridas por IA, conversación abierta de varios turnos (las preguntas de seguimiento ancladas son MVP, PRD FR-31) y job automático de retención. **Futuro:** puntaje de solidez clínica, integración con HCE y reporte CAC.
 
 *Nota:* si el Sprint 6 no llega a ejecutarse, el piloto sigue siendo posible, porque los controles necesarios para datos reales están en los Sprints 2 y 5. Sin el Sprint 5, en cambio, el producto solo es demostrable con datos sintéticos.
 
