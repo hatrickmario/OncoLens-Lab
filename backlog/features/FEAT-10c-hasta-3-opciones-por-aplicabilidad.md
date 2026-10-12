@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §5 FR-09 ("Máximo 1 opción en los Sprints 1–3 y hasta 3 desde el Sprint 4"; "Orden de las opciones por aplicabilidad (RN-28)")], [→ PRD §6 RN-03, RN-22, RN-26, RN-28], [→ PRD §18.3.10 AC-10.1, AC-10.2, M-10.1], [→ PRD §18.3.8 AC-08.8], [→ PRD §2.1 G-5], [→ PRD §16 TBD-08], [→ readme §5 HU-10 ("comparar hasta 3 opciones descritas en la evidencia, ordenadas por aplicabilidad")], [→ readme §4.1 `EvidenceOption`, `AnalysisBasis.maxOptions`], [→ readme §3.3 #27, #31], [→ readme §6.1 #8], [→ readme §5.0 S4 KR1], [→ backlog/02-adrs.md US-015 · ADR-42], [→ docs/AS-IS.md P6, JTBD 4]
 **Dependencias:** ↪ US-055 (pipeline), US-061 (tarjeta), US-064 (soporte de cada opción), US-125 (comparador `applicability_order`, agregación por opción y orden antes del recorte a `maxOptions`, AC-5…AC-7), US-126 (tabla y resumen de aplicabilidad en la tarjeta y texto del criterio de orden, AC-7) · ⛔ DEC-11 (US-021) · escenario más probable (excluyentes y "Parcial", que alimentan los conteos) · ⛔ ADR-39 (LLM y NLI reales; los AC usan adapters falsos) · 🔗 Medido en: US-140 (M-10.1 y orden con verdad conocida), US-141 (G-5 / M-06.2 con hasta 3 opciones) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
 **Valor:** el oncólogo no busca "la" opción, compara (P6, JTBD 4). Hasta el S3 el análisis devuelve una sola opción: en el S1–S2, sin aplicabilidad, se elige por relevancia y el panel lo dice; desde el S3 esa opción única ya se elige con el comparador de aplicabilidad de US-125, con la relevancia solo como desempate. Con esta Feature ve hasta tres opciones que describe la evidencia, ordenadas por cuánto se parece la población estudiada a su paciente y no por eficacia ni por relevancia, con el criterio de orden siempre a la vista.
-**Stories:** US-134, US-135 (8 puntos, S5) · US-015 · ADR-42 (3 puntos, `si-hay-capacidad`)
+**Stories:** US-134, US-135, US-218, US-219 (16 puntos, S5) · US-015 · ADR-42 (3 puntos, `si-hay-capacidad`)
 
 ## Fixtures
 
@@ -198,6 +198,106 @@ No implementar SSE. No emitir contenido parcial. No cambiar el contrato
 
 ---
 
+---
+
+## US-218 — El oncólogo hace hasta 10 preguntas de seguimiento sobre un análisis y cada respuesta llega citada, validada y anclada a ese análisis
+
+> Linear: [L1D-268](https://linear.app/l1der-lab-mjbc/issue/L1D-268)
+
+`FEAT-10c` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+
+## Story
+Como oncólogo, quiero hacer preguntas de seguimiento puntuales sobre los hallazgos de un
+análisis ya validado, sin salir de su contexto, para aclarar una opción o un criterio sin
+repetir el análisis completo.
+
+> **Decidido (usuario, 2026-10-11):** entra al MVP comprometido en el S5. Cambia el PRD, que dejaba Post-MVP la "conversación de varios turnos" (§3, §17).
+> - **Límite:** 10 preguntas por análisis, en configuración (`ANALYSIS_FOLLOWUP_MAX = 10`, RN-22).
+> - **Contexto fijo:** el paciente desidentificado, los datos usados por el análisis, la pregunta y sus hallazgos, y la evidencia del mismo corpus. Se rechaza todo lo ajeno a ese contexto.
+> - **Persistencia en Backend 1** (`clinical.analysis_follow_up`, ligada al `AIAnalysisRecord`), por la regla de ownership: `rag-orchestrator` no persiste datos clínicos.
+>
+> `[Pre-S1 resp. 14]`
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado un análisis `con_evidencia` del paciente semilla (b), cuando el
+  oncólogo hace `POST /platform/evidence-analyses/{id}/follow-ups` con una pregunta sobre
+  la opción 2, entonces `clinical-api` envía a `rag-orchestrator` el contexto anclado y
+  desidentificado, recibe la respuesta completa, **persiste el turno antes de responder**
+  y devuelve `201 FollowUpTurn` con `answer` (afirmaciones con ≥ 1 cita a un chunk
+  recuperado en esa consulta y soporte NLI), `citedSources` (marcando las nuevas respecto
+  del análisis) y `turnNumber = 1`. `[RN-01]` `[RN-06]` `[RN-04]`
+- **AC-2 (borde · memoria no citable)** · Dado el análisis de origen, cuando
+  `rag-orchestrator` arma el prompt del seguimiento, entonces los hallazgos del análisis
+  viajan como **memoria rotulada** y ninguna afirmación del seguimiento se sostiene solo
+  en ellos; si ocurre, se omite y cuenta en `omittedClaims`. `[RN-24]`
+- **AC-3 (borde · sin evidencia)** · Dada una pregunta de seguimiento sin chunks sobre el
+  umbral, cuando se procesa, entonces el turno es `sin_evidencia`, no se invoca al LLM y
+  la UI ofrece ampliar la antigüedad o abrir un análisis nuevo. `[RN-02]`
+- **AC-4 (borde · límite)** · Dado un análisis con 10 turnos, cuando llega el 11.º,
+  entonces responde `409` con `error = "LIMITE_SEGUIMIENTO"` y el mensaje sugiere un
+  análisis nuevo; el límite se lee de `ANALYSIS_FOLLOWUP_MAX`. `[RN-22]`
+- **AC-5 (borde · fuera de contexto)** · Dada una pregunta sobre otro paciente u otro tema
+  (clasificador determinista más una regla del prompt), cuando se procesa, entonces el
+  turno queda `fuera_de_contexto`, sin respuesta generada, con la sugerencia de abrir un
+  análisis nuevo. `[Pre-S1 resp. 14]`
+- **AC-6 (borde · opt-out y PII)** · Dado un paciente con opt-out de `analisis_ia`,
+  entonces responde `403`; y dada una pregunta con PII sembrada, entonces el texto que
+  sale hacia la IA está enmascarado y los logs no la contienen. `[RN-15]` `[RN-11]`
+- **AC-7 (borde · lenguaje)** · Dada una respuesta con un término de la lista prohibida,
+  entonces esa afirmación se omite (`omittedClaims`) y nunca se muestra. `[RN-23]` `[§15 resp. 2]`
+
+## Contexto técnico
+Endpoints `POST/GET /platform/evidence-analyses/{id}/follow-ups` (contrato congelado en US-033
+AC-13). Backend 2 reutiliza el pipeline de `/rag/query` con un bloque `followUp` (memoria
+rotulada). Tabla `clinical.analysis_follow_up` (US-038). Tests: Supertest y PostgreSQL real
+(AC-1, AC-4, AC-6), Pytest con adapters falsos (AC-2, AC-3, AC-5, AC-7). Afecta a la suite
+`evaluate` (prompt nuevo): reporte de `ai-eval-runner` en el PR.
+
+## Non-goals
+Respuestas en streaming de contenido (TBD-08). Seguimiento sobre análisis `sin_evidencia`.
+
+## INVEST
+**Small** ✓ un endpoint y un bloque de contexto sobre el pipeline existente.
+**Testable** ✓ siete AC automatizados.
+
+---
+
+## US-219 — El panel muestra la conversación de seguimiento bajo el análisis, con su contexto fijo y el contador de preguntas
+
+> Linear: [L1D-269](https://linear.app/l1der-lab-mjbc/issue/L1D-269)
+
+`FEAT-10c` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+
+## Story
+Como oncólogo, quiero ver y escribir las preguntas de seguimiento debajo del análisis, con
+su contexto y sus citas, para discutir los hallazgos sin perder la trazabilidad.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado un análisis `con_evidencia`, cuando el oncólogo abre la
+  pantalla 09, entonces ve "Preguntas de seguimiento sobre este análisis" antes del
+  feedback, el recuadro "Contexto fijo de esta conversación" y el contador "n de 10
+  preguntas usadas". `[Pre-S1 resp. 14]`
+- **AC-2** · Dado un turno respondido, cuando se muestra, entonces cada afirmación tiene
+  sus citas con "ver fragmento", la fuente nueva lleva "nueva en el seguimiento" y el
+  aviso RN-19 acompaña la respuesta. `[RN-01]` `[RN-19]`
+- **AC-3 (borde · espera)** · Mientras se procesa, la UI muestra solo el progreso y la
+  respuesta aparece completa cuando está validada. `[TBD-08]`
+- **AC-4 (borde · límite, sin evidencia, fuera de contexto)** · Dados los estados
+  `409 LIMITE_SEGUIMIENTO`, `sin_evidencia` y `fuera_de_contexto`, cuando ocurren,
+  entonces la UI muestra su texto y la acción "Nuevo análisis" sin errores técnicos.
+- **AC-5 (accesibilidad)** · El historial de turnos se anuncia con `aria-live="polite"` y
+  el campo de pregunta tiene `<label>` visible; pasa `visual-check` a 375 y 1280 px.
+
+## Contexto técnico
+Organismo `FollowUpThread` sobre shadcn/ui (`docs/ux/sistema-de-diseno.md`). Route Handler
+de `web` hacia US-218. Testing Library + MSW con `contracts/examples/` y `visual-check`.
+
+## INVEST
+**Small** ✓ un organismo y su Route Handler.
+**Testable** ✓ cinco AC.
+
+---
+
 ## Conflictos de fuentes
 
 | # | Fuente A | Fuente B | Se siguió |
@@ -206,3 +306,4 @@ No implementar SSE. No emitir contenido parcial. No cambiar el contrato
 | — | backlog/01-requisitos.md §3 RN-28: dueña FEAT-10c (orden) con regresión en FEAT-08b | FEAT-08b (lote 2) fijó US-125 como dueña del comparador y de la agregación | Ambas: US-125 dueña del comparador y la agregación; US-134 dueña del orden visible de hasta 3 opciones |
 | — | `backlog/02-adrs.md` US-015 · ADR-42: Feature FEAT-10a | Mapa de lotes: ADR-42 en el S4 | ADR-42 se ubica en FEAT-10c (S4), la Feature cuya espera mide; FEAT-10a es del S1 |
 | Slicing v2 | PRD §14 S4 y readme §5.0 S4: hasta 3 opciones y G-Demo al cierre del S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): hasta 3 opciones y G-Demo al cierre del S5; ADR-42 `si-hay-capacidad` (indicador de espera) | Se siguió el slicing v2 |
+| C-Pre4 | PRD §3 y §17: "conversación de varios turnos dentro de un análisis" es Post-MVP | Usuario, 2026-10-11: preguntas de seguimiento (hasta 10) en el MVP, S5 | Usuario (`[Pre-S1 resp. 14]`): US-218 y US-219. Enmendado en PRD v1.4 |

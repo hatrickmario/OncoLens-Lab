@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Decisión registrada</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong><nav aria-label="Principal"><a href="Pacientes.dc.html" style="color: #FFFFFF">Pacientes</a></nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Uso académico/investigación</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+<div style="background: #FFFFFF; border-bottom: 1px solid #C4CDDB; padding: 12px 20px 0">
+<div style="max-width: 1240px; margin: 0 auto">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline"><h1 style="margin: 0; font-size: 22px">Paciente sintético 07</h1><span style="font-size: 14px; color: #44506A">Próstata · activo</span><span style="background: #ECEEF1; border-radius: 4px; padding: 2px 6px; font-size: 12px">sintético</span><span style="background: #E9E4F5; color: #4A2F86; border-radius: 4px; padding: 2px 6px; font-size: 12px">Post-MVP · FEAT-11b</span></div>
+<nav aria-label="Secciones del paciente" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; font-size: 14px">
+<a href="Ficha.dc.html" style="padding: 10px 12px; text-decoration: none">Caso clínico</a>
+<a href="VistaCaso.dc.html" style="padding: 10px 12px; text-decoration: none">Resumen y faltantes</a>
+<a href="Documentos.dc.html" style="padding: 10px 12px; text-decoration: none">Documentos</a>
+<a href="Revision.dc.html" style="padding: 10px 12px; text-decoration: none">Revisión (3)</a>
+<a href="Analisis.dc.html" style="padding: 10px 12px; text-decoration: none">Análisis</a>
+<a href="Decision.dc.html" aria-current="page" style="padding: 10px 12px; border-bottom: 3px solid #1F4FB8; font-weight: 600; text-decoration: none; color: #172133">Decisiones y evolución</a>
+</nav>
+</div>
+</div>
+<main style="max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; flex-wrap: wrap; gap: 16px">
+<form aria-labelledby="h-dec" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<h2 id="h-dec" style="margin: 0; font-size: 18px">Registrar el tratamiento decidido</h2>
+<p style="margin: 0; font-size: 14px; color: #44506A">La decisión es del oncólogo tratante. Vincularla a un análisis solo deja constancia de qué evidencia se consultó; no significa que el análisis la indicara.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="reg" style="font-size: 13px; font-weight: 600">Régimen (catálogo ATC)</label><select id="reg" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>[régimen del catálogo]</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="lin" style="font-size: 13px; font-weight: 600">Línea</label><select id="lin" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>1 · enfermedad metastásica</option><option>2</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="ini" style="font-size: 13px; font-weight: 600">Inicio previsto</label><input id="ini" type="date" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 10px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="vin" style="font-size: 13px; font-weight: 600">Análisis consultado (opcional)</label><select id="vin" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Ninguno</option><option>2026-10-09 · intensificación hormonal</option></select></div>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<a href="Evolucion.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Guardar decisión</a>
+<a href="Resultado.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #7C8696; border-radius: 6px; text-decoration: none; color: #172133">Volver al análisis</a>
+</div>
+</form>
+<aside aria-labelledby="h-hist" style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 18px">
+<h2 id="h-hist" style="margin: 0 0 8px; font-size: 16px">Decisiones registradas</h2>
+<ol style="margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 8px">
+<li><strong>2026-05</strong> · Deprivación androgénica · línea 1 · sin análisis vinculado</li>
+<li style="color: #44506A">La nueva decisión aparecerá aquí y en el timeline como evento derivado.</li>
+</ol>
+<p style="margin: 12px 0 0; font-size: 13px; color: #44506A">Workaround del MVP: el tratamiento se registra como tratamiento previo en Resumen y faltantes.</p>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

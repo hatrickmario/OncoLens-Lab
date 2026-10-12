@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Inicio de sesión</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5; display: flex; flex-direction: column">
+<header style="background: #13233A; color: #FFFFFF; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+<strong style="font-size: 17px">OncoLens</strong>
+<span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; font-size: 13px; color: #E3E9F2">Uso académico/investigación</span>
+</header>
+<main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 16px">
+<form style="background: #FFFFFF; border-radius: 10px; padding: 32px; width: 100%; max-width: 400px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 3px rgba(19,35,58,0.12)">
+<h1 style="margin: 0; font-size: 22px">Iniciar sesión</h1>
+<p style="margin: 0; color: #44506A; font-size: 14px">Herramienta de apoyo para el análisis de evidencia. No sustituye el juicio clínico.</p>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="u" style="font-weight: 600; font-size: 14px">Usuario</label>
+<input id="u" type="text" autocomplete="username" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="p" style="font-weight: 600; font-size: 14px">Contraseña</label>
+<input id="p" type="password" autocomplete="current-password" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px">
+</div>
+<p role="alert" style="margin: 0; background: #F9E3E1; color: #8E1F18; border-radius: 6px; padding: 8px 12px; font-size: 14px">Estado de error: “Usuario o contraseña incorrectos.” (mensaje genérico, sin revelar cuál falló)</p>
+<a href="Pacientes.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 44px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Entrar</a>
+<p style="margin: 0; font-size: 14px; color: #44506A; text-align: center">¿No tienes cuenta? <a href="Registro.dc.html" style="font-weight: 600">Solicitar registro</a></p>
+<p style="margin: 0; font-size: 12px; color: #44506A">Destino según el rol: oncólogo → <a href="Pacientes.dc.html">Pacientes</a> · administrador → <a href="AprobacionCuentas.dc.html">Administración</a> (demo).</p>
+<p style="margin: 0; font-size: 12px; color: #44506A">La sesión expira tras un periodo de inactividad configurable. Solo datos sintéticos hasta el gate G-Piloto.</p>
+</form>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -21,7 +21,7 @@
 
 > Linear: [L1D-232](https://linear.app/l1der-lab-mjbc/issue/L1D-232)
 
-`FEAT-T5a` · Sprint 1 · Estimación **3** · — (ADR) · FR-20, IA-10 · AC-T5.3, AC-T5.4 · Dueño: Ingeniería · ⛔ Bloqueada por: ADR-39 (solo la elección del LLM juez local; las métricas deterministas no dependen de él) · 🔗 Bloquea: US-072 (AC-3, fidelidad), US-073, FEAT-T5b
+`FEAT-T5a` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (ADR) · FR-20, IA-10 · AC-T5.3, AC-T5.4 · Dueño: Ingeniería · ⛔ Bloqueada por: ADR-39 (solo la elección del LLM juez local; las métricas deterministas no dependen de él) · 🔗 Bloquea: US-072 (AC-3, fidelidad), US-073, FEAT-T5b
 
 ## Story
 Como responsable técnico, quiero decidir con qué framework y qué protocolo se calculan
@@ -74,7 +74,7 @@ scoring (ADR-7).
 
 > Linear: [L1D-233](https://linear.app/l1der-lab-mjbc/issue/L1D-233)
 
-`FEAT-T5a` · Sprint 1 · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
+`FEAT-T5a` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **1** · — (decisión) · IA-10 · AC-T5.3 · Dueño: oncólogo asesor · ↪ US-072 (dataset y diccionario en borrador) · 🔗 Produce para: US-072 AC-4 (rótulo "validada" en el S1), US-073 (baseline técnico, S2)
 
 ## Story
 Como oncólogo asesor, quiero revisar una muestra del dataset de evaluación y el
@@ -140,7 +140,7 @@ Sprint 1, para que la DoD exija umbrales alcanzables y G-Demo tenga una vara est
 
 > Linear: [L1D-235](https://linear.app/l1der-lab-mjbc/issue/L1D-235)
 
-`FEAT-T5a` · Sprint 1 · Estimación **8** · — (técnica, PRD §17; OL-06) · FR-20, IA-10 · AC-T5.3 · M-06.1, M-07.2, M-10.1, M-10.2, G-4, G-8 · ↪ US-055, US-063, US-064, US-049, US-068 · ⛔ Bloqueada por: ADR-41 (solo AC-3, fidelidad con juez) · 🔗 Mide a: FEAT-06a, FEAT-T1a, FEAT-T4a (US-049, US-050), FEAT-T3 (US-068), FEAT-10a
+`FEAT-T5a` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **8** · — (técnica, PRD §17; OL-06) · FR-20, IA-10 · AC-T5.3 · M-06.1, M-07.2, M-10.1, M-10.2, G-4, G-8 · ↪ US-055, US-063, US-064, US-049, US-068 · ⛔ Bloqueada por: ADR-41 (solo AC-3, fidelidad con juez) · 🔗 Mide a: FEAT-06a, FEAT-T1a, FEAT-T4a (US-049, US-050), FEAT-T3 (US-068), FEAT-10a
 
 ## Story
 Como responsable técnico, quiero una suite de evaluación reproducible con datasets
@@ -251,7 +251,7 @@ FX-T5a-a en la CI.
 
 > Linear: [L1D-237](https://linear.app/l1der-lab-mjbc/issue/L1D-237)
 
-`FEAT-T5a` · Sprint 1 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.4, AC-T5.3 · ↪ US-036, US-072 · 🔗 Relacionada: US-073 (baseline que activa el umbral de regresión, S2), US-017 · DEC-07 (metas definitivas, S2)
+`FEAT-T5a` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.4, AC-T5.3 · ↪ US-036, US-072 · 🔗 Relacionada: US-073 (baseline que activa el umbral de regresión, S2), US-017 · DEC-07 (metas definitivas, S2)
 
 ## Story
 Como responsable técnico, quiero que la CI detecte los PR que cambian un modelo, un
@@ -351,3 +351,4 @@ sintéticos (US-036 AC-5).
 | C-10 | readme OL-06 tarea 5: PR que cambian "un modelo, un prompt, un umbral o el corpus" (omite el catálogo) | PRD FR-20 y AC-T5.4; readme §2.6 y §6.0 DoD: incluyen el catálogo | PRD (US-074 AC-2) |
 | C-17 | readme §5.6: HU-25 mapeada a FR-20 | PRD §17: FR-20 "sin historia propia" | PRD para la suite (historias técnicas sin HU, Q-08); HU-25 solo para el feedback (FEAT-T5c) |
 | Slicing v2 (ajustado el 2026-10-07) | PRD §14 S1, readme §5.0 S1 y OL-06: baseline técnico de evaluación y suite en la DoD desde el S1 | Decisión del usuario (`01-requisitos.md` §15, "Ajustes al slicing v2"): ADR-41 (US-014), DEC-06 (US-016), suite `evaluate` (US-072) y suite en la DoD (US-074) en el S1; calibración del umbral y baseline técnico (US-073) y DEC-07 (US-017) en el S2 | Decisión del usuario: desde el S1 todo PR que cambie modelo, prompt, umbral, catálogo o corpus ejecuta la suite y adjunta el reporte, sin baseline previo (US-074 AC-4); el bloqueo por regresión se activa en el S2 con el baseline de US-073 (US-074 AC-5). Lo único que se aparta del PRD es que el baseline técnico calibrado se registra en el S2 |
+| S-Pre1 | Ajuste del 2026-10-07 ("suite de evaluación desde S1"); CLAUDE.md, roadmap del S1 | DEC-03 (2026-10-09): capacidad de 80–90 puntos; el S1 tenía 124 | DEC-03 (`[Pre-S1 resp. 9]`): US-014, US-016, US-072 y US-074 vuelven al S2; en el S1, `ai-eval-runner` evalúa la demo a mano. US-075 (baseline manual) sigue en el S1 (PRD §2.2) |

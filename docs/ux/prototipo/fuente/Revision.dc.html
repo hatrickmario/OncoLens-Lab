@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Revisión de datos extraídos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong><nav aria-label="Principal"><a href="Pacientes.dc.html" style="color: #FFFFFF">Pacientes</a></nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Uso académico/investigación</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+<div style="background: #FFFFFF; border-bottom: 1px solid #C4CDDB; padding: 12px 20px 0">
+<div style="max-width: 1240px; margin: 0 auto">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline"><h1 style="margin: 0; font-size: 22px">Paciente sintético 07</h1><span style="font-size: 14px; color: #44506A">Próstata · activo</span><span style="background: #ECEEF1; border-radius: 4px; padding: 2px 6px; font-size: 12px">sintético</span></div>
+<nav aria-label="Secciones del paciente" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; font-size: 14px">
+<a href="Ficha.dc.html" style="padding: 10px 12px; text-decoration: none">Caso clínico</a>
+<a href="VistaCaso.dc.html" style="padding: 10px 12px; text-decoration: none">Resumen y faltantes</a>
+<a href="Documentos.dc.html" style="padding: 10px 12px; text-decoration: none">Documentos</a>
+<a href="Revision.dc.html" aria-current="page" style="padding: 10px 12px; border-bottom: 3px solid #1F4FB8; font-weight: 600; text-decoration: none; color: #172133">Revisión (3)</a>
+<a href="Analisis.dc.html" style="padding: 10px 12px; text-decoration: none">Análisis</a>
+<a href="Decision.dc.html" style="padding: 10px 12px; text-decoration: none">Decisiones y evolución</a>
+</nav>
+</div>
+</div>
+<main style="max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<p style="margin: 0; color: #44506A">Un dato extraído nunca reemplaza en silencio a uno verificado. Lo que no revises entra al análisis rotulado como “sin verificar”.</p>
+
+<article aria-labelledby="r1" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<h2 id="r1" style="margin: 0; font-size: 17px">Fosfatasa alcalina · 180 U/L · examen del 15/09/2026</h2>
+<div style="font-size: 14px">Extracción OCR · <strong>confianza media</strong> (señales: valor fuera de patrón de unidad, página escaneada)</div>
+<div style="font-size: 14px">Mapeo: LOINC [código del catálogo] · mapeado</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px">
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600">Verificar</button>
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Corregir</button>
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Rechazar</button>
+</div>
+</div>
+<figure style="flex: 1 1 360px; min-width: 0; margin: 0; background: #F3F5F8; border-radius: 6px; padding: 12px">
+<figcaption style="font-size: 13px; color: #44506A">laboratorio_sep.pdf · página 2 · <a href="#">abrir documento de origen</a></figcaption>
+<blockquote style="margin: 6px 0 0; font-family: ui-monospace, monospace; font-size: 13px">…FOSFATASA ALCALINA ...... 180 U/L (40 - 129)…</blockquote>
+</figure>
+</article>
+
+<article aria-labelledby="r2" style="background: #FFFFFF; border: 2px solid #E8C77A; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<h2 id="r2" style="margin: 0; font-size: 17px">Gradación en conflicto</h2>
+<p style="margin: 0; font-size: 14px">El documento nuevo no tiene fecha confiable, así que no reemplaza al dato verificado: ambos quedan en revisión hasta que decidas.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px">
+<div style="border: 1px solid #C4CDDB; border-radius: 6px; padding: 12px"><div style="font-size: 13px; color: #44506A">Vigente · verificado</div><div style="font-weight: 600">Gleason 4+3=7 · ISUP 3</div><div style="font-size: 13px">biopsia · peor núcleo · patologia_biopsia.pdf</div><div style="font-size: 13px; margin-top: 6px"><strong>Fecha del examen:</strong> 10/04/2026 · <span style="color: #44506A">cargado 22/09/2026</span></div></div>
+<div style="border: 1px solid #C4CDDB; border-radius: 6px; padding: 12px"><div style="font-size: 13px; color: #44506A">Extraído · requiere revisión</div><div style="font-weight: 600">Gleason 4+4=8 · ISUP 4</div><div style="font-size: 13px">espécimen no indicado · informe_externo.pdf · confianza baja</div><div style="font-size: 13px; margin-top: 6px"><strong>Fecha del examen:</strong> <span style="color: #8A4B00; font-weight: 600">▲ no confiable</span> (“mayo”, sin año en el documento) · <span style="color: #44506A">cargado 21/09/2026</span></div><div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px"><label for="fx" style="font-size: 13px; font-weight: 600">Confirmar fecha del examen (opcional)</label><input id="fx" type="date" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 10px; max-width: 220px"></div></div>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Mantener el vigente</button>
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Usar el nuevo (el vigente pasa a reemplazado)</button>
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Registrar ambos con su espécimen</button>
+</div>
+</article>
+
+<article aria-labelledby="r3" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<h2 id="r3" style="margin: 0; font-size: 17px">Término sin mapear · “gamagrafía ósea positiva” · respalda M1b</h2>
+<p style="margin: 0; font-size: 14px">Sin código en el catálogo versionado: queda como <strong>no_mapeado</strong>, nunca se inventa un código.</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="map" style="font-size: 13px; font-weight: 600">Elegir del catálogo</label><select id="map" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF; min-width: 280px"><option>Metástasis óseas (atributo clínico)</option><option>Dejar sin mapear</option></select></div>
+<button style="font: inherit; min-height: 44px; padding: 0 14px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600">Guardar mapeo</button>
+</div>
+</article>
+<div role="status" style="background: #FFFFFF; border: 1px dashed #7C8696; border-radius: 8px; padding: 14px">Estado vacío: “No hay datos por revisar.” <a href="VistaCaso.dc.html">Volver a Resumen y faltantes</a></div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

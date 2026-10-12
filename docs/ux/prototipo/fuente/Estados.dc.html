@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Estados del análisis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong><span style="font-size: 14px; color: #C9D4E5">Estados del panel de análisis · catálogo de referencia</span></div>
+<span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; font-size: 13px; color: #E3E9F2">Uso académico/investigación</span>
+</header>
+<main style="max-width: 1240px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px">
+
+<section aria-labelledby="e1" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">status = sin_evidencia · 200</span>
+<h2 id="e1" style="margin: 0; font-size: 18px">Sin evidencia suficiente</h2>
+<div role="note" style="background: #13233A; color: #FFFFFF; border-radius: 6px; padding: 8px 12px; font-size: 14px; font-weight: 600">Análisis generado por IA — requiere validación clínica del oncólogo tratante</div>
+<p style="margin: 0">Ningún fragmento del corpus superó el umbral de relevancia para esta pregunta. No se generaron opciones.</p>
+<p style="margin: 0; font-size: 14px"><strong>Qué se buscó:</strong> fuentes NCI PDQ y PMC OA, corte del corpus [fecha], con 9 datos del caso. <strong>Relevancia máxima:</strong> no aplica (no hubo fragmentos sobre el umbral).</p>
+<p style="margin: 0; font-size: 14px">Prueba a reformular la pregunta o a ampliar las fuentes. <a href="Analisis.dc.html">Nueva pregunta</a></p>
+</section>
+
+<section aria-labelledby="e2" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">status = tipo_no_habilitado · 200</span>
+<h2 id="e2" style="margin: 0; font-size: 18px">Tipo de cáncer fuera del alcance del piloto</h2>
+<p style="margin: 0">El análisis con IA está habilitado solo para mama y próstata. Los datos del caso siguen disponibles en el caso clínico y en Resumen y faltantes.</p>
+<p style="margin: 0; font-size: 14px; color: #44506A">No se invocó a la IA.</p>
+</section>
+
+<section aria-labelledby="e3" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">403 · opt-out de analisis_ia</span>
+<h2 id="e3" style="margin: 0; font-size: 18px">Análisis con IA no disponible para este paciente</h2>
+<p style="margin: 0">Existe una exclusión registrada del análisis con IA (referencia en el sistema externo de consentimientos). Aplica a todo lo generado con IA: análisis, resumen del caso y re-ejecuciones.</p>
+<p style="margin: 0; font-size: 14px; color: #44506A">El caso clínico, Resumen y faltantes y los documentos siguen disponibles. El botón “Analizar evidencia” se muestra deshabilitado con este motivo.</p>
+</section>
+
+<section aria-labelledby="e4" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">5xx / 502 / tiempo agotado</span>
+<h2 id="e4" style="margin: 0; font-size: 18px">No se pudo completar el análisis</h2>
+<p style="margin: 0">No se muestra ningún resultado parcial. Puedes intentarlo de nuevo; tu pregunta se conserva.</p>
+<p style="margin: 0; font-size: 13px; color: #44506A">Código de traza para soporte: [traceId]. Sin detalles internos.</p>
+<button style="font: inherit; min-height: 44px; align-self: flex-start; padding: 0 14px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600">Reintentar</button>
+</section>
+
+<section aria-labelledby="e5" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">historial · staleness · si hay capacidad</span>
+<h2 id="e5" style="margin: 0; font-size: 18px"><span style="background: #FFF4E0; color: #774500; border-radius: 4px; padding: 2px 8px; font-size: 14px">Desactualizado</span> Análisis del 2026-09-12</h2>
+<p style="margin: 0">Cambiaron datos que este análisis usó: PSA (nuevo valor), metástasis (verificada). También hay una versión más reciente del corpus.</p>
+<button style="font: inherit; min-height: 44px; align-self: flex-start; padding: 0 14px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px">Re-ejecutar con los datos actuales</button>
+</section>
+
+<section aria-labelledby="e6" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; color: #44506A">422 · paciente egresado (Post-MVP: ciclo de vida)</span>
+<h2 id="e6" style="margin: 0; font-size: 18px">El paciente está egresado</h2>
+<p style="margin: 0">No admite registros nuevos hasta su reactivación. Se puede consultar todo lo existente.</p>
+</section>
+
+<section aria-labelledby="e7" style="background: #FFFFFF; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; grid-column: 1 / -1">
+<span style="font-size: 12px; color: #44506A">avisos que no bloquean (RN-26)</span>
+<h2 id="e7" style="margin: 0; font-size: 18px">Patrón de aviso</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px">
+<span style="background: #FFF4E0; border: 1px solid #E8C77A; color: #5E3A00; border-radius: 6px; padding: 6px 10px">◐ Dato sin verificar</span>
+<span style="background: #FFF4E0; border: 1px solid #E8C77A; color: #5E3A00; border-radius: 6px; padding: 6px 10px">⇄ Datos en conflicto</span>
+<span style="background: #F3F5F8; border: 1px solid #7C8696; color: #3A4553; border-radius: 6px; padding: 6px 10px">◌ Dato faltante</span>
+<span style="background: #F3F5F8; border: 1px solid #7C8696; color: #3A4553; border-radius: 6px; padding: 6px 10px">≠ Población no comparable</span>
+<span style="background: #FFF4E0; border: 1px solid #E8C77A; color: #5E3A00; border-radius: 6px; padding: 6px 10px">⌛ Posiblemente desactualizada</span>
+</div>
+<p style="margin: 0; font-size: 14px">Informan y enlazan a la acción (revisar, cargar), nunca deshabilitan el análisis. Solo bloquean las reglas legales y de acceso: 403 por opt-out, 422 por egreso, sesión expirada.</p>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

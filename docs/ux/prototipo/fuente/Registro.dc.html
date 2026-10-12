@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Solicitud de registro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5; display: flex; flex-direction: column">
+<header style="background: #13233A; color: #FFFFFF; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+<strong style="font-size: 17px">OncoLens</strong>
+<span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; font-size: 13px; color: #E3E9F2">Uso académico/investigación</span>
+</header>
+<main style="flex: 1; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 24px; padding: 48px 16px">
+<form style="background: #FFFFFF; border-radius: 10px; padding: 32px; width: 100%; max-width: 400px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 3px rgba(19,35,58,0.12)">
+<span style="align-self: flex-start; background: #E8ECF2; color: #44506A; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600">Baja prioridad · último sprint</span>
+<h1 style="margin: 0; font-size: 22px">Solicitar cuenta</h1>
+<p style="margin: 0; color: #44506A; font-size: 14px">Tu cuenta quedará pendiente hasta que un administrador apruebe la solicitud.</p>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="ru" style="font-weight: 600; font-size: 14px">Usuario</label>
+<input id="ru" type="text" autocomplete="username" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rp" style="font-weight: 600; font-size: 14px">Contraseña</label>
+<input id="rp" type="password" autocomplete="new-password" aria-describedby="rp-h" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px">
+<span id="rp-h" style="font-size: 13px; color: #44506A">[REGLAS DE CONTRASEÑA según política institucional]</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rc" style="font-weight: 600; font-size: 14px">Confirmar contraseña</label>
+<input id="rc" type="password" autocomplete="new-password" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px">
+</div>
+<p role="alert" style="margin: 0; background: #F9E3E1; color: #8E1F18; border-radius: 6px; padding: 8px 12px; font-size: 14px">Estado de error: “Ese usuario ya existe o tiene una solicitud pendiente.” / “Las contraseñas no coinciden.”</p>
+<button type="button" style="font: inherit; min-height: 44px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Enviar solicitud</button>
+<p style="margin: 0; font-size: 14px; color: #44506A; text-align: center">¿Ya tienes cuenta? <a href="Login.dc.html" style="font-weight: 600">Iniciar sesión</a></p>
+</form>
+<section aria-labelledby="ok-t" style="background: #FFFFFF; border-radius: 10px; padding: 32px; width: 100%; max-width: 400px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 3px rgba(19,35,58,0.12)">
+<span style="align-self: flex-start; font-size: 12px; font-weight: 600; color: #44506A">Estado tras enviar</span>
+<h2 id="ok-t" style="margin: 0; font-size: 20px">Solicitud enviada</h2>
+<p style="margin: 0; color: #172133; font-size: 14px">Tu solicitud para el usuario <strong>dr.ramirez</strong> está <span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 1px 6px; font-weight: 600">Pendiente de aprobación</span>.</p>
+<p style="margin: 0; color: #44506A; font-size: 14px">Podrás iniciar sesión cuando un administrador la apruebe. Si intentas entrar antes, verás: “Tu cuenta aún no ha sido aprobada.”</p>
+<a href="Login.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #1F4FB8; color: #1F4FB8; border-radius: 6px; font-weight: 600; text-decoration: none">Volver a inicio de sesión</a>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
