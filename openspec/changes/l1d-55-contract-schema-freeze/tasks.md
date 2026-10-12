@@ -76,5 +76,5 @@
 
 ## 4. Verificación
 
-- [ ] 4.1 Contraste final con `docs/ux/flujo-e2e.md` "Brechas con el contrato": UX-1, UX-2, UX-6, UX-7 y UX-8 reflejadas en specs o modelo; UX-3, UX-4 y UX-5 sin cambio de contrato · verificar: tabla de contraste en la descripción del PR
-- [ ] 4.2 `npm run contracts:check` (código 0), `npm run contracts:generate:check` (sin diferencias), `npx vitest run scripts/contracts` en verde y `openspec validate l1d-55-contract-schema-freeze --strict` en verde; tabla AC-1…AC-18 → regla o checklist en la descripción del PR. `contracts:breaking` y `contracts:verify-provider` no aplican (primer contrato, sin endpoints; llegan con US-214) y `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus)
+- [x] 4.1 Contraste final con `docs/ux/flujo-e2e.md` "Brechas con el contrato": UX-1, UX-2, UX-6, UX-7 y UX-8 reflejadas en specs o modelo; UX-3, UX-4 y UX-5 sin cambio de contrato · verificar: tabla de contraste en la descripción del PR
+- [x] 4.2 `npm run contracts:check` (código 0), `npm run contracts:generate:check` (sin diferencias), `npx vitest run scripts/contracts` en verde y `openspec validate l1d-55-contract-schema-freeze --strict` en verde; tabla AC-1…AC-18 → regla o checklist en la descripción del PR. `contracts:breaking` y `contracts:verify-provider` no aplican (primer contrato, sin endpoints; llegan con US-214) y `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus)
