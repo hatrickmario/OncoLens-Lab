@@ -1,0 +1,5 @@
+{
+  "error": "DOCUMENTO_DUPLICADO",
+  "message": "El mismo archivo ya fue cargado para este paciente.",
+  "traceId": "req_f6a7b8c9"
+}

@@ -1,0 +1,79 @@
+{
+  "traceId": "req_4a5b6c7d",
+  "dataClassification": "sintetico",
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Rt6vC1wX3zNk",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIA",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "HER2",
+        "value": "3+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "ocr",
+          "extractionConfidence": "alta",
+          "reviewStatus": "auto_aceptado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "Receptor de estrógeno",
+        "value": "Positivo (80%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "ocr",
+          "extractionConfidence": "media",
+          "reviewStatus": "requiere_revision",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": null,
+    "attributes": [],
+    "priorTreatments": [],
+    "events": [
+      {
+        "dataRef": "r4",
+        "eventType": "diagnostico",
+        "monthsAgo": 1,
+        "description": "Carcinoma ductal infiltrante de mama",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "priorAnalyses": []
+  }
+}

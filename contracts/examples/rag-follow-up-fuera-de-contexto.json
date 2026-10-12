@@ -1,0 +1,31 @@
+{
+  "status": "fuera_de_contexto",
+  "answer": [],
+  "citedSources": [],
+  "omittedClaims": 0,
+  "topRelevanceScore": null,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-follow-up@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense"
+    },
+    "latencyMs": 900
+  }
+}

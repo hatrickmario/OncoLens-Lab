@@ -1,0 +1,177 @@
+{
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+        "citedSources": [
+          {
+            "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+            "sourceName": "NCI PDQ",
+            "externalId": "CDR0000062787",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2024-03-15",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors.",
+            "chunkId": "chunk_88231"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": []
+  },
+  "applicability": [
+    {
+      "externalId": "CDR0000062787",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "HER2 positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "I–III",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": null,
+          "studyPopulationValue": "ambos",
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
+      "rationale": "La evidencia recuperada describe el beneficio de agregar terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "applicabilitySummary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "CDR0000062787",
+          "summary": {
+            "coincide": 2,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.87,
+      "warnings": [
+        "datos_faltantes"
+      ],
+      "citedSources": [
+        {
+          "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR0000062787",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors.",
+          "chunkId": "chunk_88231"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "limitations": [
+    {
+      "text": "Síntesis basada en una sola fuente.",
+      "origin": "estructural"
+    }
+  ],
+  "assumptions": [],
+  "retrievalStats": {
+    "retrieved": 40,
+    "aboveThreshold": 1
+  },
+  "omittedClaims": 0,
+  "agentSteps": [],
+  "topRelevanceScore": 0.87,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-query@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense"
+    },
+    "latencyMs": 8200
+  }
+}

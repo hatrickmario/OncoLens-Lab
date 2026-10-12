@@ -1,0 +1,45 @@
+{
+  "piiScan": {
+    "clean": true,
+    "findingTypes": []
+  },
+  "identityFound": {
+    "idType": "sintetico",
+    "nationalId": "SINT-0000001"
+  },
+  "sourceLab": null,
+  "extractedData": {
+    "biomarkers": [
+      {
+        "biomarkerName": {
+          "value": "HER2",
+          "extractionScore": 0.96,
+          "extractionConfidence": "alta",
+          "sourceSpan": {
+            "page": 1,
+            "bbox": null,
+            "textOffset": 120
+          }
+        },
+        "originalName": "HER-2/neu",
+        "loincCode": null,
+        "mappingStatus": "no_mapeado",
+        "value": {
+          "value": "3+ (IHQ)",
+          "extractionScore": 0.94,
+          "extractionConfidence": "alta",
+          "sourceSpan": {
+            "page": 1,
+            "bbox": null,
+            "textOffset": 140
+          }
+        },
+        "normalizedUnit": null,
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "significanceSource": "documento"
+      }
+    ]
+  },
+  "catalogVersion": "2026.10.0"
+}

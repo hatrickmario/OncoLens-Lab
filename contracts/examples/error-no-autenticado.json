@@ -1,0 +1,5 @@
+{
+  "error": "NO_AUTENTICADO",
+  "message": "La sesión no existe o expiró.",
+  "traceId": "req_a1b2c3d4"
+}

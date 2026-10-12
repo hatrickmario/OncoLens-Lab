@@ -1,0 +1,13 @@
+{
+  "cancerType": "prostata",
+  "stagingSystem": "TNM_8",
+  "stageValue": "T2cN0M0",
+  "diagnosedAt": "2026-08-20",
+  "grading": {
+    "gradingSystem": "gleason_isup",
+    "specimenType": "biopsia",
+    "gradeScope": "peor",
+    "gleasonPrimaryPattern": 4,
+    "gleasonSecondaryPattern": 3
+  }
+}

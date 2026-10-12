@@ -1,0 +1,5 @@
+{
+  "error": "CREDENCIALES_INVALIDAS",
+  "message": "Las credenciales no son válidas.",
+  "traceId": "req_b2c3d4e5"
+}

@@ -1,0 +1,5 @@
+{
+  "error": "DEADLINE_VENCIDO",
+  "message": "La generación se abortó por vencer el plazo.",
+  "traceId": "req_9f0a1b2c"
+}

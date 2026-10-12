@@ -1,0 +1,5 @@
+{
+  "error": "GRADACION_INCOHERENTE",
+  "message": "El puntaje o el grupo ISUP no corresponden a los patrones de Gleason enviados.",
+  "traceId": "req_d6e7f8a9"
+}

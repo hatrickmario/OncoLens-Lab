@@ -1,0 +1,15 @@
+{
+  "error": "CUERPO_INVALIDO",
+  "message": "El cuerpo de la petición no cumple el contrato.",
+  "traceId": "req_2e3f4a5b",
+  "detail": [
+    {
+      "loc": [
+        "body",
+        "maxOptions"
+      ],
+      "msg": "El valor excede el máximo permitido.",
+      "type": "less_than_equal"
+    }
+  ]
+}

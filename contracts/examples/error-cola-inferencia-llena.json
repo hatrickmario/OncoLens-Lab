@@ -1,0 +1,5 @@
+{
+  "error": "COLA_INFERENCIA_LLENA",
+  "message": "La cola de inferencia está llena; reintentar más tarde.",
+  "traceId": "req_c9d0e1f2"
+}

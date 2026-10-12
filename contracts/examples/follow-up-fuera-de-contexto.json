@@ -1,0 +1,13 @@
+{
+  "id": "f7b3d6e4-5a7c-4d3e-8f5e-3c6d4a7b3d6e",
+  "analysisId": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
+  "turnNumber": 2,
+  "question": "¿Cuál será el clima en la ciudad esta semana?",
+  "status": "fuera_de_contexto",
+  "answer": [],
+  "citedSources": [],
+  "omittedClaims": 0,
+  "patientDataLinks": [],
+  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
+  "createdAt": "2026-10-12T15:35:00Z"
+}

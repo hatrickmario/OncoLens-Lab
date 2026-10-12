@@ -1,0 +1,5 @@
+{
+  "error": "LIMITE_SOLICITUDES",
+  "message": "Se superó el límite de solicitudes; reintentar más tarde.",
+  "traceId": "req_d4e5f6a7"
+}

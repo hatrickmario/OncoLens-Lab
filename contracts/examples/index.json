@@ -1,0 +1,281 @@
+{
+  "description": "Mapa de ejemplos no normativos (el spec manda). Cada entrada asocia un archivo con su spec y con el schema, requestBody o respuesta que valida. request: ejemplo de la petición a la que responde. pendingExamples: respuestas de error sin ejemplo cuya historia dueña fija el código.",
+  "examples": [
+    {
+      "file": "biomarker-manual.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers/post/requestBody"
+    },
+    {
+      "file": "case-summary-request.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/CaseSummaryInternalRequest"
+    },
+    {
+      "file": "case-summary-response.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/CaseSummaryInternalResponse",
+      "request": "case-summary-request.json"
+    },
+    {
+      "file": "con-evidencia-s1.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-s4.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "diagnosis-con-gradings.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Diagnosis"
+    },
+    {
+      "file": "diagnosis-manual-gleason-completo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/requestBody"
+    },
+    {
+      "file": "diagnosis-manual-gleason.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/requestBody"
+    },
+    {
+      "file": "diagnosis-manual-nottingham.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/requestBody"
+    },
+    {
+      "file": "document-extract-response.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/DocumentExtractResponse"
+    },
+    {
+      "file": "error-analisis-sin-evidencia.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/422"
+    },
+    {
+      "file": "error-cola-inferencia-llena.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/429"
+    },
+    {
+      "file": "error-credenciales-invalidas.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1auth~1login/post/responses/401"
+    },
+    {
+      "file": "error-cuerpo-invalido.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1auth~1login/post/responses/422"
+    },
+    {
+      "file": "error-deadline-vencido.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/504"
+    },
+    {
+      "file": "error-documento-duplicado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/409"
+    },
+    {
+      "file": "error-gradacion-incoherente.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1diagnoses/post/responses/422"
+    },
+    {
+      "file": "error-limite-seguimiento.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/409"
+    },
+    {
+      "file": "error-limite-solicitudes.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1auth~1login/post/responses/429"
+    },
+    {
+      "file": "error-llm-local-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"
+    },
+    {
+      "file": "error-no-autenticado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}/get/responses/401"
+    },
+    {
+      "file": "error-no-encontrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}/get/responses/404"
+    },
+    {
+      "file": "error-opt-out.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/403"
+    },
+    {
+      "file": "error-paciente-egresado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/422"
+    },
+    {
+      "file": "error-permiso-denegado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/403"
+    },
+    {
+      "file": "error-servicio-ia.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/502"
+    },
+    {
+      "file": "error-valor-fuera-de-catalogo.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers/post/responses/422"
+    },
+    {
+      "file": "follow-up-create.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/requestBody"
+    },
+    {
+      "file": "follow-up-fuera-de-contexto.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/FollowUpTurn"
+    },
+    {
+      "file": "follow-up-turn.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/FollowUpTurn"
+    },
+    {
+      "file": "login-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1auth~1login/post/requestBody"
+    },
+    {
+      "file": "patient-search.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientSearchRequest"
+    },
+    {
+      "file": "patient-summary-admin.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientAdminSummary"
+    },
+    {
+      "file": "patient-summary-doctor.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientSummary"
+    },
+    {
+      "file": "rag-catalog-version-mismatch.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/409"
+    },
+    {
+      "file": "rag-cola-inferencia-llena.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/429"
+    },
+    {
+      "file": "rag-deadline-vencido.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/504"
+    },
+    {
+      "file": "rag-follow-up-fuera-de-contexto.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagFollowUpResponse",
+      "request": "rag-follow-up-request.json"
+    },
+    {
+      "file": "rag-follow-up-request.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagFollowUpRequest"
+    },
+    {
+      "file": "rag-follow-up-response.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagFollowUpResponse",
+      "request": "rag-follow-up-request.json"
+    },
+    {
+      "file": "rag-llm-local-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1follow-up/post/responses/503"
+    },
+    {
+      "file": "rag-query-con-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request.json"
+    },
+    {
+      "file": "rag-query-request.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request.json"
+    },
+    {
+      "file": "rag-query-tipo-no-habilitado-422.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/422"
+    },
+    {
+      "file": "rag-token-servicio-invalido.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/401"
+    },
+    {
+      "file": "rag-validacion-422.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/422"
+    },
+    {
+      "file": "sin-evidencia.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "tipo-no-habilitado.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    }
+  ],
+  "pendingExamples": [
+    {
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/413",
+      "owner": "FEAT-01b",
+      "note": "Código y cuerpo del error de tamaño de archivo: los fija la historia dueña de la carga de documentos."
+    },
+    {
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/415",
+      "owner": "FEAT-01b",
+      "note": "Código y cuerpo del error de tipo de archivo: los fija la historia dueña de la carga de documentos."
+    },
+    {
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1documents~1extract/post/responses/413",
+      "owner": "FEAT-01b",
+      "note": "Código y cuerpo del error de tamaño de archivo en la extracción."
+    },
+    {
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1documents~1extract/post/responses/415",
+      "owner": "FEAT-01b",
+      "note": "Código y cuerpo del error de tipo de archivo o documento ilegible en la extracción."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "d5f1b4c2-3e5a-4b1c-8d3c-1a4b2e5f1b4c",
+  "traceId": "req_7c2e5f8d",
+  "queryText": "¿Qué opciones describe la evidencia para leucemia linfoblástica aguda?",
+  "questionTemplateId": null,
+  "queryLanguage": "es",
+  "status": "tipo_no_habilitado",
+  "synthesis": {
+    "agreements": [],
+    "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [],
+    "missingCriticalData": [],
+    "continuedWithWarning": false,
+    "assumptions": [],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 0,
+      "aboveThreshold": 0
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "El tipo de cáncer no está habilitado en este entorno.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": null,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [],
+  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
+  "createdAt": "2026-10-12T15:12:00Z"
+}
