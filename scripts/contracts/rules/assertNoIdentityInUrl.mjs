@@ -4,7 +4,7 @@
  */
 import { reporter } from '../lib/findings.mjs';
 import { IDENTITY_PII, matchesIdentity } from '../lib/identity.mjs';
-import { listOperations } from '../lib/operations.mjs';
+import { listOperations, listParameters } from '../lib/operations.mjs';
 import { CLINICAL_API } from '../lib/specs.mjs';
 
 const report = reporter('assertNoIdentityInUrl', 'AC-17 · RN-10');
@@ -15,12 +15,6 @@ const URL_LOCATIONS = ['query', 'path', 'header'];
 
 const isReviewed = (parameter) =>
   URL_LOCATIONS.includes(parameter.in) && !(parameter.in === 'header' && ALLOWED_HEADERS.includes(String(parameter.name).toLowerCase()));
-
-function declaredParameters(spec) {
-  const inOperations = listOperations(spec).flatMap((entry) => (entry.operation.parameters ?? []).map((parameter, index) => ({ parameter, pointer: `${entry.pointer}/parameters/${index}` })));
-  const shared = Object.entries(spec.components?.parameters ?? {}).map(([name, parameter]) => ({ parameter, pointer: `#/components/parameters/${name}` }));
-  return [...inOperations, ...shared];
-}
 
 function checkRouteVariables(file, spec) {
   return listOperations(spec).flatMap((entry) =>
@@ -34,7 +28,7 @@ function checkRouteVariables(file, spec) {
 export function assertNoIdentityInUrl(specs) {
   const { file, bundled } = specs[CLINICAL_API];
   if (!bundled) return [];
-  const parameters = declaredParameters(bundled)
+  const parameters = listParameters(bundled)
     .filter(({ parameter }) => isReviewed(parameter) && matchesIdentity(parameter.name ?? '', IDENTITY_PII))
     .map(({ parameter, pointer }) => report(file, pointer, `el parámetro ${parameter.name} (${parameter.in}) es identidad: debe viajar en el cuerpo de POST /platform/patients/search`));
   return [...parameters, ...checkRouteVariables(file, bundled)];

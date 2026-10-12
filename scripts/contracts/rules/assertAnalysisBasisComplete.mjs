@@ -1,5 +1,6 @@
 /** AC-4 [FR-27, AC-T2.1]: AnalysisBasis exige sus once campos, aunque varios se llenen en sprints posteriores, y filters es cerrado con publishedFromYear. */
 import { reporter } from '../lib/findings.mjs';
+import { lacking } from '../lib/sets.mjs';
 import { CLINICAL_API, fileOf, schemaOf, schemaPointer } from '../lib/specs.mjs';
 
 const report = reporter('assertAnalysisBasisComplete', 'AC-4');
@@ -26,15 +27,13 @@ export const APPLIED_FILTERS_FIELDS = [
   'publishedFromYear',
 ];
 
-const missing = (declared, expected) => expected.filter((name) => !(declared ?? []).includes(name));
-
 function checkFilters(specs) {
   const pointer = schemaPointer('AppliedFilters');
   const file = fileOf(specs, CLINICAL_API, pointer);
   const filters = schemaOf(specs, CLINICAL_API, 'AppliedFilters');
   if (!filters) return [report(file, pointer, 'falta el schema AppliedFilters (sourcesConsulted.filters)')];
-  const found = missing(filters.required, APPLIED_FILTERS_FIELDS).map((name) => report(file, `${pointer}/required`, `AppliedFilters debe exigir ${name}`));
-  for (const name of missing(Object.keys(filters.properties ?? {}), APPLIED_FILTERS_FIELDS)) {
+  const found = lacking(filters.required, APPLIED_FILTERS_FIELDS).map((name) => report(file, `${pointer}/required`, `AppliedFilters debe exigir ${name}`));
+  for (const name of lacking(Object.keys(filters.properties ?? {}), APPLIED_FILTERS_FIELDS)) {
     found.push(report(file, `${pointer}/properties`, `AppliedFilters debe declarar ${name}`));
   }
   if (filters.additionalProperties !== false) found.push(report(file, pointer, 'AppliedFilters debe ser cerrado (additionalProperties: false)'));
@@ -46,8 +45,8 @@ export function assertAnalysisBasisComplete(specs) {
   const file = fileOf(specs, CLINICAL_API, pointer);
   const basis = schemaOf(specs, CLINICAL_API, 'AnalysisBasis');
   if (!basis) return [report(file, pointer, 'falta el schema AnalysisBasis')];
-  const found = missing(basis.required, BASIS_FIELDS).map((name) => report(file, `${pointer}/required`, `AnalysisBasis debe exigir ${name}`));
-  for (const name of missing(Object.keys(basis.properties ?? {}), BASIS_FIELDS)) {
+  const found = lacking(basis.required, BASIS_FIELDS).map((name) => report(file, `${pointer}/required`, `AnalysisBasis debe exigir ${name}`));
+  for (const name of lacking(Object.keys(basis.properties ?? {}), BASIS_FIELDS)) {
     found.push(report(file, `${pointer}/properties`, `AnalysisBasis debe declarar ${name}`));
   }
   const consulted = basis.properties?.sourcesConsulted;

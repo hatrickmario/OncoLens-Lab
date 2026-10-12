@@ -1,5 +1,6 @@
 /** AC-17 [RN-10, privacy M-10]: ningún error repite el valor recibido; el detail de validación es cerrado y sin input ni ctx. */
 import { reporter } from '../lib/findings.mjs';
+import { sameMembers } from '../lib/sets.mjs';
 import { PROVIDERS, schemaPointer } from '../lib/specs.mjs';
 import { walkJson, walkSchema } from '../lib/walk.mjs';
 
@@ -19,7 +20,7 @@ function checkSchemas({ file, raw }) {
     }
   }
   const detail = raw.components?.schemas?.ErrorValidacion?.properties?.detail?.items;
-  if (detail && (detail.additionalProperties !== false || JSON.stringify([...(detail.required ?? [])].sort()) !== JSON.stringify(['loc', 'msg', 'type']))) {
+  if (detail && (detail.additionalProperties !== false || !sameMembers(detail.required, ['loc', 'msg', 'type']))) {
     found.push(report(file, `${schemaPointer('ErrorValidacion')}/properties/detail/items`, 'detail debe ser cerrado y exigir solo loc, msg y type'));
   }
   return found;

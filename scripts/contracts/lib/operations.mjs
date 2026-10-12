@@ -19,6 +19,15 @@ export function listOperations(spec) {
   return entries;
 }
 
+/** Todos los parámetros declarados (en las operaciones y en `components.parameters`), con su puntero. */
+export function listParameters(spec) {
+  const inOperations = listOperations(spec).flatMap((entry) =>
+    (entry.operation.parameters ?? []).map((parameter, index) => ({ parameter, pointer: `${entry.pointer}/parameters/${index}` })),
+  );
+  const shared = Object.entries(spec?.components?.parameters ?? {}).map(([name, parameter]) => ({ parameter, pointer: pointerOf('components', 'parameters', name) }));
+  return [...inOperations, ...shared];
+}
+
 /** La operación `METHOD /ruta`, o `undefined`. @returns {OperationEntry | undefined} */
 export function findOperation(spec, method, route) {
   return listOperations(spec).find((entry) => entry.method === method.toLowerCase() && entry.route === route);

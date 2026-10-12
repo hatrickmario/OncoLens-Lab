@@ -5,6 +5,7 @@
 import { errorCodes } from '../lib/errors.mjs';
 import { reporter } from '../lib/findings.mjs';
 import { findOperation, findResponse, jsonSchemaOf, labelOf } from '../lib/operations.mjs';
+import { lacking, sameMembers } from '../lib/sets.mjs';
 import { missingFragments } from '../lib/text.mjs';
 import { selectExamples, targetsSchema } from '../lib/examples.mjs';
 import { CLINICAL_API, RAG_ORCHESTRATOR, fileOf, schemaOf, schemaPointer } from '../lib/specs.mjs';
@@ -38,8 +39,6 @@ const GET_ERRORS = [
   [404, ['NO_ENCONTRADO']],
 ];
 
-const SAME = (left, right) => JSON.stringify([...(left ?? [])].sort()) === JSON.stringify([...right].sort());
-const lacking = (declared, expected) => expected.filter((name) => !(declared ?? []).includes(name));
 
 function checkErrors(bundled, file, entry, expectations) {
   return expectations.flatMap(([status, codes]) => {
@@ -72,7 +71,7 @@ function checkTurn(specs, file) {
   const pointer = schemaPointer('FollowUpTurn');
   if (!turn) return [report(file, pointer, 'falta el schema FollowUpTurn')];
   const found = lacking(turn.required, TURN_FIELDS).map((name) => report(file, `${pointer}/required`, `FollowUpTurn debe exigir ${name}`));
-  if (!SAME(turn.properties?.status?.enum, FOLLOW_UP_STATUS)) found.push(report(file, `${pointer}/properties/status`, `status debe ser ${FOLLOW_UP_STATUS.join(' | ')}`));
+  if (!sameMembers(turn.properties?.status?.enum, FOLLOW_UP_STATUS)) found.push(report(file, `${pointer}/properties/status`, `status debe ser ${FOLLOW_UP_STATUS.join(' | ')}`));
   if (missingFragments(turn.properties?.question?.description, ['enmascarada']).length > 0) found.push(report(file, `${pointer}/properties/question`, 'question debe describirse como enmascarada (RN-11)'));
   const cited = schemaOf(specs, CLINICAL_API, 'FollowUpCitedSource');
   const flagged = (cited?.allOf ?? []).some((member) => member.properties?.isNewSource?.type === 'boolean' && (member.required ?? []).includes('isNewSource'));
@@ -116,7 +115,7 @@ function checkRagSchemas(specs, file) {
   const found = [];
   for (const name of lacking(request?.required, REQUEST_FIELDS)) found.push(report(file, `${schemaPointer('RagFollowUpRequest')}/required`, `RagFollowUpRequest debe exigir ${name}`));
   for (const name of lacking(response?.required, RESPONSE_FIELDS)) found.push(report(file, `${schemaPointer('RagFollowUpResponse')}/required`, `RagFollowUpResponse debe exigir ${name}`));
-  if (!SAME(response?.properties?.status?.enum, FOLLOW_UP_STATUS)) found.push(report(file, `${schemaPointer('RagFollowUpResponse')}/properties/status`, `status debe ser ${FOLLOW_UP_STATUS.join(' | ')}`));
+  if (!sameMembers(response?.properties?.status?.enum, FOLLOW_UP_STATUS)) found.push(report(file, `${schemaPointer('RagFollowUpResponse')}/properties/status`, `status debe ser ${FOLLOW_UP_STATUS.join(' | ')}`));
   if (request?.properties?.analysisMemory?.items?.$ref !== schemaPointer('PriorAnalysisMemory')) found.push(report(file, `${schemaPointer('RagFollowUpRequest')}/properties/analysisMemory`, 'analysisMemory debe ser un arreglo de PriorAnalysisMemory'));
   const memory = schemaOf(specs, RAG_ORCHESTRATOR, 'PriorAnalysisMemory');
   if (memory?.properties?.citable?.const !== false) found.push(report(file, `${schemaPointer('PriorAnalysisMemory')}/properties/citable`, 'la memoria del análisis nunca es citable: citable debe ser const false (RN-24)'));

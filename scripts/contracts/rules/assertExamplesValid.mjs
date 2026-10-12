@@ -17,7 +17,7 @@ function checkIndexIntegrity(examples) {
   return [...orphans, ...withoutOwner];
 }
 
-function checkEntry(entry, examples, specs, validator) {
+function checkEntry(entry, examples, validator) {
   const file = `${examples.dir}/${entry.file}`;
   if (examples.errors?.[entry.file]) return [report(file, '#', examples.errors[entry.file])];
   if (examples.files?.[entry.file] === undefined) return [report(`${examples.dir}/index.json`, entry.file, 'el ejemplo del índice no existe')];
@@ -39,7 +39,7 @@ export function assertExamplesValid(specs, examples) {
   const validator = createExampleValidator(specs);
   return [
     ...checkIndexIntegrity(examples),
-    ...(examples.index.examples ?? []).flatMap((entry) => checkEntry(entry, examples, specs, validator)),
+    ...(examples.index.examples ?? []).flatMap((entry) => checkEntry(entry, examples, validator)),
     ...checkPendingTargets(examples, specs),
   ];
 }

@@ -1,5 +1,6 @@
 /** AC-1 [ADR-26]: EvidenceAnalysis declara los bloques congelados, aunque vayan vacíos, y el enum de status exacto. */
 import { reporter } from '../lib/findings.mjs';
+import { lacking, sameMembers } from '../lib/sets.mjs';
 import { schemaOf, schemaPointer, CLINICAL_API } from '../lib/specs.mjs';
 
 const report = reporter('assertEvidenceAnalysisShape', 'AC-1');
@@ -33,11 +34,11 @@ export function assertEvidenceAnalysisShape(specs) {
   const pointer = schemaPointer('EvidenceAnalysis');
   if (!schema) return [report(file, pointer, 'falta el schema EvidenceAnalysis')];
   const found = [];
-  for (const field of FROZEN_FIELDS.filter((name) => !(schema.required ?? []).includes(name))) {
+  for (const field of lacking(schema.required, FROZEN_FIELDS)) {
     found.push(report(file, `${pointer}/required`, `EvidenceAnalysis debe exigir ${field} (bloque de ADR-26, obligatorio aunque vaya vacío)`));
   }
   const status = schema.properties?.status?.enum ?? [];
-  if (JSON.stringify([...status].sort()) !== JSON.stringify([...STATUS_VALUES].sort())) {
+  if (!sameMembers(status, STATUS_VALUES)) {
     found.push(report(file, `${pointer}/properties/status/enum`, `status debe ser exactamente ${STATUS_VALUES.join(' | ')}`));
   }
   const score = schema.properties?.topRelevanceScore?.type;

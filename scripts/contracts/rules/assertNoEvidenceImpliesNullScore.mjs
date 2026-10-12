@@ -1,6 +1,7 @@
 /** AC-3 [RN-02, Pre-S1 resp. 25]: sin evidencia ⇒ topRelevanceScore null (no 0.0) y bloques vacíos, en el schema y en los ejemplos. */
 import { reporter } from '../lib/findings.mjs';
 import { selectExamples, targetsSchema } from '../lib/examples.mjs';
+import { sameMembers } from '../lib/sets.mjs';
 import { CLINICAL_API, RAG_ORCHESTRATOR, fileOf, schemaOf, schemaPointer } from '../lib/specs.mjs';
 
 const report = reporter('assertNoEvidenceImpliesNullScore', 'AC-3 · RN-02');
@@ -16,7 +17,6 @@ const CONTRACTS = [
   { spec: RAG_ORCHESTRATOR, schema: 'RagFollowUpResponse', empty: ['sin_evidencia', 'fuera_de_contexto'], emptied: ['answer', 'citedSources'], score: true, requiredWhenFull: 'answer' },
 ];
 
-const sameSet = (left, right) => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
 const statusesOf = (condition) => condition?.properties?.status?.enum ?? [condition?.properties?.status?.const].filter(Boolean);
 
 function checkSchema(specs, contract) {
@@ -27,7 +27,7 @@ function checkSchema(specs, contract) {
   const here = (suffix) => `${pointer}${suffix}`;
   if (!schema.if || !schema.then) return [report(file, pointer, 'falta el if/then que fuerza topRelevanceScore null y los bloques vacíos sin evidencia')];
   const found = [];
-  if (!sameSet(statusesOf(schema.if), contract.empty)) found.push(report(file, here('/if'), `el if debe cubrir exactamente status ${contract.empty.join(' | ')}`));
+  if (!sameMembers(statusesOf(schema.if), contract.empty)) found.push(report(file, here('/if'), `el if debe cubrir exactamente status ${contract.empty.join(' | ')}`));
   for (const field of contract.emptied) {
     if (schema.then.properties?.[field]?.maxItems !== 0) found.push(report(file, here(`/then/properties/${field}`), `${field} debe tener maxItems 0 sin evidencia`));
   }

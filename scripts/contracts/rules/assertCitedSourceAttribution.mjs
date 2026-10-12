@@ -1,6 +1,7 @@
 /** AC-12 [RN-04, RN-25, ADR-36, Pre-S1 resp. 11, 21]: CitedSource declara licencia, autoría y enlace copiados del catálogo; solo los campos listados admiten null. */
 import { reporter } from '../lib/findings.mjs';
 import { citationsIn, selectExamples } from '../lib/examples.mjs';
+import { sameMembers } from '../lib/sets.mjs';
 import { missingFragments } from '../lib/text.mjs';
 import { EVIDENCE, schemaPointer } from '../lib/specs.mjs';
 
@@ -20,14 +21,13 @@ const NULLABLE_FIELDS = [
 ];
 const ORIGIN_PHRASES = ['catalogo del corpus', 'nunca del texto generado'];
 
-const SAME = (left, right) => JSON.stringify([...(left ?? [])].sort()) === JSON.stringify([...right].sort());
 const admitsNull = (property) => Array.isArray(property?.type) && property.type.includes('null');
 
 function checkFields(file, fields) {
   const pointer = schemaPointer('CitedSourceFields');
   const properties = fields.properties ?? {};
   const found = [];
-  if (!SAME(properties.licenseClass?.enum, LICENSE_CLASSES)) {
+  if (!sameMembers(properties.licenseClass?.enum, LICENSE_CLASSES)) {
     found.push(report(file, `${pointer}/properties/licenseClass/enum`, `licenseClass debe tener exactamente ${LICENSE_CLASSES.join(' | ')}`));
   }
   const nullable = Object.keys(properties).filter((name) => admitsNull(properties[name]));

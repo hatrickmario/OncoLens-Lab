@@ -5,7 +5,7 @@
  */
 import { reporter } from '../lib/findings.mjs';
 import { IDENTITY_B2, matchesIdentity } from '../lib/identity.mjs';
-import { listOperations, listResponses, requestBodyOf } from '../lib/operations.mjs';
+import { listOperations, listParameters, listResponses, requestBodyOf } from '../lib/operations.mjs';
 import { pointerOf } from '../lib/pointer.mjs';
 import { walkResolved } from '../lib/resolvedWalk.mjs';
 import { walkJson } from '../lib/walk.mjs';
@@ -34,9 +34,7 @@ function* messageSchemas(spec) {
 }
 
 function checkParameters(file, spec) {
-  const declared = listOperations(spec).flatMap((entry) => (entry.operation.parameters ?? []).map((parameter, index) => ({ parameter, pointer: `${entry.pointer}/parameters/${index}` })));
-  const shared = Object.entries(spec.components?.parameters ?? {}).map(([name, parameter]) => ({ parameter, pointer: `#/components/parameters/${name}` }));
-  return [...declared, ...shared]
+  return listParameters(spec)
     .filter(({ parameter }) => matchesIdentity(parameter.name ?? '', IDENTITY_B2))
     .map(({ parameter, pointer }) => report(file, pointer, `el parámetro ${parameter.name} (${parameter.in}) es identidad o un identificador enlazable`));
 }

@@ -2,6 +2,7 @@
 import { errorCodes } from '../lib/errors.mjs';
 import { reporter } from '../lib/findings.mjs';
 import { findOperation, findResponse, jsonSchemaOf } from '../lib/operations.mjs';
+import { sameMembers } from '../lib/sets.mjs';
 import { CLINICAL_API, schemaOf, schemaPointer } from '../lib/specs.mjs';
 
 const report = reporter('assertDiagnosisGrading', 'AC-11');
@@ -14,7 +15,6 @@ const RANGES = [
   ['GleasonIsupGradingInput', 'isupGradeGroup', 1, 5],
   ['NottinghamGradingInput', 'nottinghamGrade', 1, 3],
 ];
-const SAME = (left, right) => JSON.stringify([...(left ?? [])].sort()) === JSON.stringify([...right].sort());
 
 function checkReadOnly(specs, file) {
   const diagnosis = schemaOf(specs, CLINICAL_API, 'Diagnosis');
@@ -51,11 +51,11 @@ function checkGleason(specs, file) {
   const pointer = schemaPointer('GleasonIsupGradingInput');
   if (!gleason) return [];
   const found = [];
-  if (!SAME(gleason.required, GLEASON_REQUIRED)) {
+  if (!sameMembers(gleason.required, GLEASON_REQUIRED)) {
     found.push(report(file, `${pointer}/required`, `GleasonIsupGradingInput debe exigir exactamente ${GLEASON_REQUIRED.join(', ')} (gleasonScore e isupGradeGroup son opcionales)`));
   }
-  if (!SAME(gleason.properties?.specimenType?.enum, ['biopsia', 'prostatectomia'])) found.push(report(file, `${pointer}/properties/specimenType`, 'specimenType debe ser biopsia | prostatectomia'));
-  if (!SAME(gleason.properties?.gradeScope?.enum, ['nucleo_sitio', 'peor', 'global'])) found.push(report(file, `${pointer}/properties/gradeScope`, 'gradeScope debe ser nucleo_sitio | peor | global'));
+  if (!sameMembers(gleason.properties?.specimenType?.enum, ['biopsia', 'prostatectomia'])) found.push(report(file, `${pointer}/properties/specimenType`, 'specimenType debe ser biopsia | prostatectomia'));
+  if (!sameMembers(gleason.properties?.gradeScope?.enum, ['nucleo_sitio', 'peor', 'global'])) found.push(report(file, `${pointer}/properties/gradeScope`, 'gradeScope debe ser nucleo_sitio | peor | global'));
   return found;
 }
 

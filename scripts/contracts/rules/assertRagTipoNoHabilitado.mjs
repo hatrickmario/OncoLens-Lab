@@ -2,6 +2,7 @@
 import { errorCodes } from '../lib/errors.mjs';
 import { reporter } from '../lib/findings.mjs';
 import { findOperation, findResponse, jsonSchemaOf } from '../lib/operations.mjs';
+import { sameMembers } from '../lib/sets.mjs';
 import { RAG_ORCHESTRATOR, schemaOf, schemaPointer } from '../lib/specs.mjs';
 
 const report = reporter('assertRagTipoNoHabilitado', 'AC-9');
@@ -23,8 +24,7 @@ function checkUnprocessable(spec, file) {
 
 function checkStatusEnum(specs, file) {
   const status = schemaOf(specs, RAG_ORCHESTRATOR, 'RagQueryInternalResponse')?.properties?.status?.enum ?? [];
-  const unchanged = JSON.stringify([...status].sort()) === JSON.stringify([...STATUS_VALUES].sort());
-  return unchanged ? [] : [report(file, `${schemaPointer('RagQueryInternalResponse')}/properties/status/enum`, `status de /rag/query debe seguir siendo ${STATUS_VALUES.join(' | ')}`)];
+  return sameMembers(status, STATUS_VALUES) ? [] : [report(file, `${schemaPointer('RagQueryInternalResponse')}/properties/status/enum`, `status de /rag/query debe seguir siendo ${STATUS_VALUES.join(' | ')}`)];
 }
 
 function checkRequestHasNoFollowUp(specs, file) {

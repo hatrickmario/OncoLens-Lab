@@ -10,13 +10,13 @@ const report = reporter('assertLoginContract', 'AC-1');
 const COOKIE_ATTRIBUTES = ['HttpOnly', 'Secure', 'SameSite=Strict'];
 const LOGIN_ERROR_EXAMPLE = 'error-credenciales-invalidas.json';
 
-function checkCookie(file, pointer, noContent) {
+function checkNoContentResponse(file, noContent) {
   const found = [];
   if (noContent.node?.content) found.push(report(file, `${noContent.pointer}/content`, 'el 204 del login no lleva cuerpo'));
   const cookie = noContent.node?.headers?.['Set-Cookie'];
   const missing = missingFragments(cookie?.description, COOKIE_ATTRIBUTES);
   if (missing.length > 0) {
-    found.push(report(file, `${pointer}/headers/Set-Cookie`, `la cabecera Set-Cookie debe documentar ${missing.join(', ')}`));
+    found.push(report(file, `${noContent.pointer}/headers/Set-Cookie`, `la cabecera Set-Cookie debe documentar ${missing.join(', ')}`));
   }
   return found;
 }
@@ -30,7 +30,7 @@ export function assertLoginContract(specs, examples) {
   if (!noContent) {
     found.push(report(file, `${login.pointer}/responses`, 'el login debe responder 204'));
   } else {
-    found.push(...checkCookie(file, noContent.pointer, noContent));
+    found.push(...checkNoContentResponse(file, noContent));
   }
   const unauthorized = findResponse(bundled, login, 401);
   const schema = unauthorized && jsonSchemaOf(bundled, unauthorized);
