@@ -761,6 +761,153 @@ La especificación **normativa** es **[`apps/clinical-api/openapi.yaml`](apps/cl
 Se muestran las 3 operaciones más representativas: **carga de documento (OCR)**, **análisis de evidencia** (v1.1, reemplaza a la consulta RAG) y **ficha del paciente**.
 
 <!-- contracts:readme-extract:start -->
+> Extracto generado, no normativo, de `apps/clinical-api/openapi.yaml`: operaciones seleccionadas del spec empaquetado (los `$ref` apuntan a sus `components`). El spec manda.
+
+```yaml
+paths:
+  /platform/patients/{patientId}/documents:
+    post:
+      operationId: uploadDocument
+      tags:
+        - documentos
+      summary: Carga un documento clínico (PDF) para extracción
+      description: "Valida la sesión, el permiso, el PDF por magic bytes, el tamaño y los duplicados por checksum. Guarda el binario en clinical-minio y encola la extracción. Es asíncrono: retorna el Document con ocrStatus=pendiente. Para varios archivos en una acción se usa POST /platform/patients/{patientId}/documents/batch (207, un resultado por archivo)."
+      x-permission: documents:upload
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - file
+                - documentType
+              properties:
+                file:
+                  type: string
+                  format: binary
+                documentType:
+                  type: string
+                  enum:
+                    - historia_clinica
+                    - examen
+      responses:
+        "202":
+          description: Documento recibido, extracción en curso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
+        "403":
+          $ref: "#/components/responses/PermisoDenegado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "409":
+          description: El mismo archivo ya fue cargado para este paciente (checksum).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentoDuplicado"
+        "413":
+          description: "Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
+          x-pending-owner: FEAT-01b
+        "415":
+          description: "Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
+          x-pending-owner: FEAT-01b
+        "422":
+          description: documentType inválido, o paciente egresado (RN-17).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
+  /platform/evidence-analyses:
+    post:
+      operationId: createEvidenceAnalysis
+      tags:
+        - analisis-evidencia
+      summary: Ejecuta un análisis de evidencia sobre un paciente
+      description: "Construye el contexto del caso (timeline, línea de tratamiento, trayectorias, faltantes y memoria de análisis previos rotulada), etiquetado y desidentificado, y lo reenvía a Backend 2. Agrega la Base del análisis y persiste el AIAnalysisRecord antes de responder (JSON completo, nunca tokens sin validar). El análisis aparece en el timeline como evento derivado del AIAnalysisRecord: no se escribe ningún ClinicalEvent. Sin evidencia suficiente responde 200 con status sin_evidencia, evidenceOptions vacío, topRelevanceScore null y la Base del análisis. Para un tipo de cáncer no habilitado responde 200 con status tipo_no_habilitado, sin invocar al LLM. Los datos faltantes no bloquean (continueWithWarning). Si la petición no trae filtersApplied.publishedFromYear, clinical-api aplica año actual menos EVIDENCE_DEFAULT_YEARS."
+      x-permission: ai_analysis:create
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvidenceAnalysisRequest"
+      responses:
+        "200":
+          description: Resultado del análisis.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceAnalysis"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
+        "403":
+          $ref: "#/components/responses/PermisoDenegadoOOptOut"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "422":
+          description: Cuerpo inválido, o paciente egresado (RN-17).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
+        "429":
+          $ref: "#/components/responses/LimiteGeneracion"
+        "502":
+          $ref: "#/components/responses/ErrorServicioIa"
+        "503":
+          $ref: "#/components/responses/LlmLocalNoDisponible"
+        "504":
+          $ref: "#/components/responses/DeadlineVencido"
+  /platform/patients/{patientId}:
+    get:
+      operationId: getPatient
+      tags:
+        - pacientes
+      summary: Obtiene la ficha resumen del paciente
+      description: "Alimenta el Panel del doctor. La forma de la respuesta depende del permiso: con clinical:read es PatientSummary (la identificación se descifra solo para esta respuesta y la lectura queda auditada); sin él, PatientAdminSummary, con la identificación enmascarada y sin datos clínicos (mínimo privilegio del administrador). El descifrado completo de la identidad para registrar un opt-out solo ocurre por la CLI, auditado."
+      x-permission:
+        - clinical:read
+        - patients:lookup
+      x-view-by-permission:
+        clinical:read: PatientSummary
+        default: PatientAdminSummary
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      responses:
+        "200":
+          description: Ficha del paciente.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PatientSummary"
+                  - $ref: "#/components/schemas/PatientAdminSummary"
+                discriminator:
+                  propertyName: view
+                  mapping:
+                    doctor: "#/components/schemas/PatientSummary"
+                    admin: "#/components/schemas/PatientAdminSummary"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
+        "403":
+          $ref: "#/components/responses/PermisoDenegado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+```
 <!-- contracts:readme-extract:end -->
 
 **Endpoints adicionales.** Cada historia añade su endpoint al spec del proveedor (`apps/clinical-api/openapi.yaml`) antes de implementarlo, como cambio aditivo (ADR-26). Los marcados "en el spec" ya están en la versión `1.0.0`; los demás los agrega su historia:
