@@ -3,9 +3,10 @@ import { lint, loadConfig } from '@redocly/openapi-core';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
+import { typesPath } from './generated.mjs';
 import { buildContext } from './lib/context.mjs';
 import { finding } from './lib/findings.mjs';
-import { CLINICAL_API, EVIDENCE, RAG_ORCHESTRATOR } from './lib/specs.mjs';
+import { CLINICAL_API, EVIDENCE, PROVIDERS, RAG_ORCHESTRATOR } from './lib/specs.mjs';
 
 /** Dónde vive cada entrada, relativo a la raíz del repositorio. */
 export const PATHS = {
@@ -79,7 +80,9 @@ export async function loadContext(root) {
     dataModel: await loadDoc(root, PATHS.dataModel),
     readme: await loadDoc(root, PATHS.readme),
     terminosProhibidos: terms.data ?? null,
+    generatedTypes: {},
   };
+  for (const provider of PROVIDERS) docs.generatedTypes[provider] = await loadDoc(root, typesPath(provider));
   return buildContext({ specs, examples: await loadExamples(root), docs });
 }
 

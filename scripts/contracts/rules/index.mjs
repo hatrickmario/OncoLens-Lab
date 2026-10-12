@@ -13,6 +13,7 @@ import { assertErrorsNoEcho } from './assertErrorsNoEcho.mjs';
 import { assertEvidenceAnalysisShape } from './assertEvidenceAnalysisShape.mjs';
 import { assertExamplesSynthetic } from './assertExamplesSynthetic.mjs';
 import { assertExamplesValid } from './assertExamplesValid.mjs';
+import { assertGeneratedInSync } from './assertGeneratedInSync.mjs';
 import { assertFollowUpContract } from './assertFollowUpContract.mjs';
 import { assertLoginContract } from './assertLoginContract.mjs';
 import { assertManualEntryEndpoints } from './assertManualEntryEndpoints.mjs';
@@ -25,6 +26,7 @@ import { assertNormativeDescriptions } from './assertNormativeDescriptions.mjs';
 import { assertOperationsDeclarePermission } from './assertOperationsDeclarePermission.mjs';
 import { assertPublishedFromYear } from './assertPublishedFromYear.mjs';
 import { assertRagTipoNoHabilitado } from './assertRagTipoNoHabilitado.mjs';
+import { assertReadmeExtractInSync } from './assertReadmeExtractInSync.mjs';
 import { assertSharedSchemasSingleOrigin } from './assertSharedSchemasSingleOrigin.mjs';
 import { assertSpecVersions } from './assertSpecVersions.mjs';
 import { assertViewByPermission } from './assertViewByPermission.mjs';
@@ -61,6 +63,9 @@ export const RULES = [
   assertFollowUpContract,
   // AC-14
   assertPublishedFromYear,
+  // AC-8 y AC-16
+  assertGeneratedInSync,
+  assertReadmeExtractInSync,
   // AC-17
   assertNoPrescriptiveLanguage,
   assertDisclaimerRequired,

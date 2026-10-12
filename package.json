@@ -7,7 +7,10 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "contracts:check": "node scripts/contracts/check.mjs"
+    "contracts:check": "node scripts/contracts/check.mjs",
+    "contracts:generate": "node scripts/contracts/generate.mjs",
+    "contracts:generate:check": "node scripts/contracts/generate-check.mjs",
+    "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
