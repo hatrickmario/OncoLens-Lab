@@ -1,0 +1,14 @@
+{
+  "descripcion": "Lista PROVISIONAL de lenguaje prescriptivo prohibido por RN-23 (PRD §6). La lee assertNoPrescriptiveLanguage() hasta que US-068 cree packages/clinical-catalogs/lenguaje/terminos-prohibidos.json; entonces la regla pasa a leer el catálogo y este archivo se borra (dueño: US-068). Comparación sin mayúsculas ni acentos.",
+  "terminos": [
+    "recomendado para este paciente",
+    "debe recibir",
+    "el mejor tratamiento",
+    "indicado para usted"
+  ],
+  "prefijos": ["recomend", "recommend"],
+  "frasesPermitidas": [
+    "no constituye una recomendacion",
+    "no recomienda ni prescribe"
+  ]
+}
