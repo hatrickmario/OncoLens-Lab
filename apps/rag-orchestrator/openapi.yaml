@@ -823,7 +823,7 @@ components:
         evidenceOptions:
           type: array
           maxItems: 3
-          description: Ya ordenadas de forma determinista por aplicabilidad (RN-28).
+          description: Orden determinista por aplicabilidad (RN-28); ya vienen ordenadas.
           items:
             $ref: '#/components/schemas/EvidenceOption'
         discardedOptions:
