@@ -17,7 +17,7 @@ delegan a subagentes de nivel 1 para no llenar este contexto. No escribas códig
 - `gh auth status` correcto (lo necesita el orquestador para abrir PRs).
 - `git status` limpio y en `main` actualizado (`git pull --ff-only`).
 - MCP de Linear conectado (proyecto `OncoLens-1`, equipo `L1D`).
-- `grep -q 'PRD v1.3' CLAUDE.md` (si el PRD cambió de versión, avisar antes de seguir).
+- `grep -q 'PRD v1.4' CLAUDE.md` (si el PRD cambió de versión, avisar antes de seguir y actualizar las referencias de `.claude/`).
 - **Fases 1–3 hechas:** `backlog/sprints/$sprint-refinamiento.md` está en `main` y su tabla de
   Definition of Ready está toda en ✓ (o con excepciones aceptadas). Si no, detente y propón
   `/sprint-refine $sprint`.

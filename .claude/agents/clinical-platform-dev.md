@@ -127,7 +127,7 @@ En clinical-platform:
 - **RN-08:** un dato extraído nunca reemplaza en silencio a uno verificado.
 - **RN-22:** umbrales, TTL, rate limits (RN-30), `ENABLED_CANCER_TYPES`… en configuración, nunca literales.
 - **RN-26:** los avisos clínicos no bloquean; solo bloquean reglas legales y de acceso.
-- **MVP v1.3:** autorización solo RBAC (FR-15 equipo tratante es Post-MVP). `403` por opt-out de
+- **MVP v1.4:** autorización solo RBAC (FR-15 equipo tratante es Post-MVP); el rol `admin` **no lee datos clínicos ni análisis** (PRD §11 #2, E-04). `403` por opt-out de
   `analisis_ia` existe desde S6; antes, deja el hook de autorización preparado sin inventar la regla.
 - **RN-13/RN-14:** seed, fixtures y tests solo con datos sintéticos; ningún secreto en el repo.
 

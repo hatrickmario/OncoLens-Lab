@@ -610,7 +610,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
   - Límite alcanzado → `409`; se ofrece un análisis nuevo.
   - Opt-out de `analisis_ia` → `403` (RN-15). Paciente egresado → `422`.
 - **CA:** US-218 y US-219 (FEAT-10c).
-- **Sprint:** 5 (v1.4). **README:** §4.1 (`POST/GET /platform/evidence-analyses/{id}/follow-ups`), §4.2 (bloque `followUp` de `/rag/query`), §3.1 (`clinical.analysis_follow_up`).
+- **Sprint:** 5 (v1.4). **README:** §4.1 (`POST/GET /platform/evidence-analyses/{id}/follow-ups`), §4.2 (`POST /rag/follow-up`, sin estado), §3.1 (`clinical.analysis_follow_up`).
 
 
 ---
@@ -914,7 +914,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | FR-28 Plantillas | HU-19 | `…/question-templates` | catálogo | clinical-api | Etapa 7 | shc |
 | FR-29 Iteración y memoria | HU-23, HU-24 | `…/clinical-events`, `/platform/evidence-analyses` | `ClinicalEvent`, `AIAnalysisRecord.prior_analyses_used` | AnalysisMemory (B1) | §2 loops, P10 | Post-MVP |
 | FR-30 Agente acotado | HU-26 | `/platform/evidence-analyses` | `AIAnalysisRecord.agent_steps` | RAGOrchestratorService (B2) | P6, P5 | Post-MVP |
-| FR-31 Preguntas de seguimiento | — (US-218, US-219) | `POST/GET /platform/evidence-analyses/{id}/follow-ups`, `/rag/query` (`followUp`) | `AnalysisFollowUp` | evidence-analysis (B1) + RAGOrchestratorService (B2) | P5, P6 | 5 |
+| FR-31 Preguntas de seguimiento | — (US-218, US-219) | `POST/GET /platform/evidence-analyses/{id}/follow-ups`, `POST /rag/follow-up` | `AnalysisFollowUp` | evidence-analysis (B1) + RAGOrchestratorService (B2) | P5, P6 | 5 |
 
 **Sin historia propia:** FR-17 (retención), FR-18 (auditoría), FR-19 (corpus) y FR-20 (evaluación) son requisitos operativos o técnicos, cubiertos por tickets (OL-01, OL-02, OL-06) y por los criterios del Sprint 5. Sus historias de usuario se escriben al iniciar el sprint correspondiente.
 

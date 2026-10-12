@@ -13,8 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Fuente | Contenido |
 |---|---|
 | `readme.md` §2.3 | Árbol objetivo (monorepo `apps/` + `packages/`, npm workspaces) |
-| `readme.md` §3.1 | DDL de PostgreSQL + schema de Milvus; la migración inicial lo implementa **entero** (OL-01) |
-| `readme.md` §4.1 / §4.2 | Contratos OpenAPI de ambos backends |
+| `docs/architecture/data-model.md` | Modelo de datos (PostgreSQL + Milvus), fuente única desde US-033 (Pre-S1); la migración inicial lo implementa **entero** (OL-01). Hasta que exista, readme §3.1 |
+| `apps/*/openapi.yaml` + `contracts/` | Contratos OpenAPI de ambos backends (fuente única desde US-033); readme §4 conserva un extracto generado. Hasta que existan, readme §4.1 / §4.2 |
 | `readme.md` §6 | Tickets OL-01 a OL-06 con criterios de aceptación |
 | `readme.md` §3.3, §6.1 | ADRs ya decididos (#1–38) con sus alternativas descartadas |
 | `docs/PRD.md` §0 | Registro de cambios v1.1 (D-01…D-16), v1.2 (R-01…R-31), v1.3 (B-01…B-15, alineación con el backlog) y v1.4 (E-01…E-10, refinamiento del Pre-S1): explica por qué cambió el encuadre y el alcance |

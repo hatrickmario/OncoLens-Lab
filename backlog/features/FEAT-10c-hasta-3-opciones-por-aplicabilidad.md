@@ -241,15 +241,22 @@ repetir el análisis completo.
   turno queda `fuera_de_contexto`, sin respuesta generada, con la sugerencia de abrir un
   análisis nuevo. `[Pre-S1 resp. 14]`
 - **AC-6 (borde · opt-out y PII)** · Dado un paciente con opt-out de `analisis_ia`,
-  entonces responde `403`; y dada una pregunta con PII sembrada, entonces el texto que
-  sale hacia la IA está enmascarado y los logs no la contienen. `[RN-15]` `[RN-11]`
+  entonces responde `403`; y dada una pregunta y una evolución (`outcomesSince`) con PII
+  sembrada, entonces el texto que sale hacia la IA está enmascarado, la pregunta se guarda
+  y se devuelve enmascarada, y los logs no la contienen. `[RN-15]` `[RN-11]` `[Pre-S1 resp. 23]`
+- **AC-8 (borde · seudónimo por turno y Backend 2 sin estado)** · Dados dos turnos del
+  mismo análisis, cuando se envían a `rag-orchestrator`, entonces cada uno lleva un
+  `pseudoPatientId` y un `traceId` distintos, ninguno se persiste en
+  `analysis_follow_up`, y un Pytest demuestra que Backend 2 no escribe turnos ni memoria
+  (disco, caché, Milvus ni logs). `[RN-11]` `[Pre-S1 resp. 23]` `[Pre-S1 resp. 29]`
 - **AC-7 (borde · lenguaje)** · Dada una respuesta con un término de la lista prohibida,
   entonces esa afirmación se omite (`omittedClaims`) y nunca se muestra. `[RN-23]` `[§15 resp. 2]`
 
 ## Contexto técnico
 Endpoints `POST/GET /platform/evidence-analyses/{id}/follow-ups` (contrato congelado en US-033
-AC-13). Backend 2 reutiliza el pipeline de `/rag/query` con un bloque `followUp` (memoria
-rotulada). Tabla `clinical.analysis_follow_up` (US-038). Tests: Supertest y PostgreSQL real
+AC-13). Backend 2 expone el endpoint interno propio `POST /rag/follow-up` (sin estado; memoria
+del análisis rotulada y no citable; clasifica `fuera_de_contexto`) que reutiliza el pipeline de
+recuperación y validación; Backend 1 calcula la marca de fuente nueva (`[Pre-S1 resp. 19]`). Tabla `clinical.analysis_follow_up` (US-038). Tests: Supertest y PostgreSQL real
 (AC-1, AC-4, AC-6), Pytest con adapters falsos (AC-2, AC-3, AC-5, AC-7). Afecta a la suite
 `evaluate` (prompt nuevo): reporte de `ai-eval-runner` en el PR.
 

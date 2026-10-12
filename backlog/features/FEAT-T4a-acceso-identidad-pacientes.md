@@ -14,7 +14,7 @@
 ## Fixtures
 
 - **FX-T4a-a · Paciente sintético con PII conocida.** `data_origin = sintetico`, `id_type = cedula_ciudadania`, `national_id = "52123456"`, `full_name = "Lucía Fernanda Rondón Peña"`, `birth_year = 1971`, `sex = F`, `agreement_reference = "CONV-TEST-01"`. `Diagnosis` activo: `cancer_type = mama`, `icd10_code = C50.9`, `TNM_8` `IIA`, `ECOG 1`, `diagnosed_at = hoy − 14 meses`. `Biomarker` HER2 `3+ (IHQ)`, `performed_at = hoy − 13 meses`, `review_status = verificado`. `ClinicalNote` (`nota_evolucion`, `hoy − 2 meses`): "Paciente Lucía Rondón (CC 52123456), tel. 3001234567, refiere dolor leve." `PriorTreatment` línea 1 "AC-T", inicio `hoy − 12 meses`, fin `hoy − 8 meses`, `end_reason = completado`. Fechas relativas a un reloj de test fijo.
-- **FX-T4a-b · Usuarios.** `doc1@test.local` (rol `doctor`, activo), `admin@test.local` (rol `admin`, activo), `doc2@test.local` (rol `doctor`, `is_active = false`), `lector@test.local` (rol de prueba `lectura` con solo `patients:read`). Contraseñas desde variables de entorno de test.
+- **FX-T4a-b · Usuarios.** `doc1@test.local` (rol `doctor`, activo), `admin@test.local` (rol `admin`, activo), `doc2@test.local` (rol `doctor`, `account_status = desactivado`), `lector@test.local` (rol de prueba `lectura` con solo `patients:read`). Contraseñas desde variables de entorno de test.
 - **FX-T4a-c · Paciente menor.** `data_origin = sintetico`, `id_type = tarjeta_identidad`, `national_id = "1098765432"`, `birth_year = año actual − 15`, `full_name = "Tomás Rondón"`; representante legal `madre`, `cedula_ciudadania` `"52123456"`, "Lucía Fernanda Rondón Peña".
 
 ---
@@ -38,14 +38,15 @@ paciente ni invocar a la IA.
   cualquiera, cuando envía credenciales correctas desde la página de login, entonces
   `web` llama a `POST /platform/auth/login` por su Route Handler, se crea una fila en
   `auth.session` con `token_hash` (el token en claro no aparece en ninguna columna), la
-  respuesta es `200` con una cookie `oncolens_session` `HttpOnly`, `Secure`,
+  respuesta es `204` sin cuerpo con una cookie `oncolens_session` `HttpOnly`, `Secure`,
   `SameSite=Strict` de valor distinto a la previa, y el navegador queda en la ruta de
   inicio configurada. `[HU-01]` `[FR-01]` `[readme §2.5]`
 - **AC-2 (borde · credenciales inválidas o usuario inactivo)** · Dados un correo
   registrado con contraseña incorrecta, un correo inexistente y `doc2@test.local`
-  (`is_active = false`) con su contraseña correcta, cuando se envía cada login, entonces
-  los tres responden `401` con el mismo cuerpo `{ error, message }` y `auth.session` no
-  gana ninguna fila. `[HU-01]` `[FR-01]`
+  (`account_status = desactivado`) con su contraseña correcta, cuando se envía cada login,
+  entonces los tres responden `401` con el mismo cuerpo
+  `{ error: "CREDENCIALES_INVALIDAS", message, traceId }` y `auth.session` no gana ninguna
+  fila. `[HU-01]` `[FR-01]` `[Pre-S1 resp. 29]`
 - **AC-3 (borde · guard en `clinical-api`)** · Dado un `POST /platform/evidence-analyses`
   sobre el paciente semilla (a) sin cookie, y otro con una cookie `oncolens_session` de
   valor aleatorio que no está en `auth.session`, cuando llegan a `clinical-api`,
@@ -174,9 +175,13 @@ OncoLens sin construir una pantalla de administración en el S1.
   salida de la CLI y los logs de `clinical-api`, entonces no contienen la contraseña.
   `[NFR-11]` (asumido)
 - **AC-6 (borde · administrador sin datos clínicos)** · Dado un usuario con rol `admin`,
-  cuando pide la ficha clínica, la vista de caso, los documentos o un análisis de un
-  paciente, entonces responde `403`: la matriz de permisos del rol `admin` no incluye
-  `clinical:read` ni `ai_analysis:*`. `[Pre-S1 resp. 17]`
+  cuando pide `GET /platform/patients/{id}`, entonces recibe `200 PatientAdminSummary`
+  (identificación enmascarada, estado y fecha de alta, sin `diagnosis` ni biomarcadores);
+  y cuando pide la vista de caso, los documentos, un análisis, las preguntas de
+  seguimiento o el resumen del caso, responde `403`. La matriz del rol `admin` no incluye
+  `clinical:read`, `documents:read`, `ai_analysis:create`, `ai_analysis:read` ni
+  `follow_ups:*`; un test verifica que el admin nunca recibe la vista del doctor.
+  `[Pre-S1 resp. 17]` `[Pre-S1 resp. 27]`
 
 ## Contexto técnico
 CLI en `apps/clinical-api/src/cli/` (comandos `users create | deactivate | set-role`),
@@ -327,19 +332,24 @@ paciente que voy a analizar.
   `PATIENTS_PAGE_SIZE`, cada uno con `dataOrigin` y `lifecycleStatus`, y la UI muestra
   "SINTÉTICO" en todos los pacientes semilla. `[HU-06]` `[FR-02]`
 - **AC-2 (borde · búsqueda exacta por documento)** · Dado FX-T4a-a registrado, cuando
-  se busca `idType=cedula_ciudadania&nationalId=52123456`, entonces el resultado es
-  exactamente ese paciente; y con `nationalId=5212345` (número parcial), cero
+  se busca con `POST /platform/patients/search` y el cuerpo
+  `{ idType: "cedula_ciudadania", nationalId: "52123456" }`, entonces el resultado es
+  exactamente ese paciente; y con `nationalId = "5212345"` (número parcial), cero
   resultados. `[FR-02]` `[ADR-6]`
 - **AC-3 (borde · búsqueda por nombre)** · Dado FX-T4a-a, cuando se busca
-  `name=Rondón`, entonces el resultado contiene a FX-T4a-a, sin restringir por equipo
+  con `POST /platform/patients/search` y `{ name: "Rondón" }`, entonces el resultado contiene a FX-T4a-a, sin restringir por equipo
   tratante (P-02). `[FR-02]` `[P-02]` (asumido en la semántica de coincidencia)
   > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-3): ¿la búsqueda por nombre es exacta (nombre completo) o por coincidencia parcial sin tildes ni mayúsculas? FR-02 solo dice "búsqueda exacta" para el documento.
 - **AC-4 (borde · filtros)** · Dado el seed, cuando se filtra `dataOrigin=real_identificado`,
   entonces la lista está vacía; y con `status=activo`, contiene los cinco pacientes
   semilla. `[FR-02]`
-- **AC-5 (borde · documento en la URL)** · Dada la búsqueda del AC-2, cuando se leen los
-  logs de acceso de `web` y `clinical-api`, entonces la URL registrada no contiene
-  `52123456` (parámetros `nationalId` y `name` redactados). `[RN-10]` `[NFR-11]`
+- **AC-5 (borde · identidad fuera de la URL)** · Dada la búsqueda del AC-2, cuando se
+  leen los logs de acceso de `web` y `clinical-api`, entonces ninguna URL contiene
+  `52123456` ni el nombre, porque la identidad viaja solo en el cuerpo de
+  `POST /platform/patients/search` (`GET /platform/patients` solo acepta filtros sin
+  identidad: `status`, `dataOrigin`, `page`), y los cuerpos no se registran.
+  `[RN-10]` `[NFR-11]` `[Pre-S1 resp. 22]`
+  > **Decidido (usuario, 2026-10-11, Gate 1 de US-033):** la búsqueda por identidad pasa a `POST /platform/patients/search`; la identidad nunca va en la URL. `[Pre-S1 resp. 22]`
 - **AC-6 (borde · sin sesión)** · Dada una request sin cookie de sesión, cuando se pide
   el listado, entonces responde `401` sin datos. `[FR-01]`
 
@@ -590,10 +600,12 @@ pacientes desde una consola, para gestionar el piloto sin la CLI y sin ver datos
   se ofrece desactivar y sus registros se conservan.
 - **AC-3 (alta de pacientes)** · El administrador da de alta un paciente con el mismo
   formulario y validaciones de US-047 (identidad cifrada, `409` por duplicado).
-- **AC-4 (borde · sin datos clínicos)** · Dado el administrador, cuando pide la ficha
-  clínica, la vista de caso, los documentos o un análisis de un paciente, entonces
-  responde `403`; su listado de pacientes muestra solo identificación enmascarada, estado
-  y fecha de alta. `[Pre-S1 resp. 17]`
+- **AC-4 (borde · sin datos clínicos)** · Dado el administrador, cuando abre un paciente,
+  entonces ve `PatientAdminSummary` (identificación enmascarada, estado y fecha de alta);
+  la vista de caso, los documentos, los análisis y el seguimiento responden `403`. Si la
+  consola necesita la identidad completa, se añade `patients:reveal_identity` (auditado)
+  como cambio aditivo del contrato; en el MVP el descifrado para el opt-out es por la CLI.
+  `[Pre-S1 resp. 17]` `[Pre-S1 resp. 27]`
 - **AC-5 (borde · parámetros en solo lectura)** · La sección "Parámetros del sistema"
   muestra los valores de configuración vigentes (sesión, edad de mayoría, tipos
   habilitados, fuentes, límite de seguimiento, antigüedad por defecto) **en solo lectura**,
