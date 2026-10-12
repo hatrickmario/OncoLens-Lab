@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Configuración del sistema</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5; display: flex; flex-direction: column">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong>
+<nav aria-label="Administración" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="AprobacionCuentas.dc.html" style="color: #FFFFFF; padding: 10px 10px; text-decoration: none">Solicitudes de cuenta (3)</a>
+<a href="Configuracion.dc.html" aria-current="page" style="color: #FFFFFF; font-weight: 600; padding: 10px 10px; border-bottom: 3px solid #8FB3F0; text-decoration: none">Configuración del sistema</a>
+<span aria-disabled="true" style="color: #C9D4E5; padding: 10px 10px">Auditoría · por diseñar</span>
+</nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Rol: administrador</span><span style="color: #C9D4E5">admin.sistema</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+
+<div style="width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box; padding: 24px 16px 40px; display: flex; flex-wrap: wrap; gap: 20px">
+<nav aria-label="Secciones de configuración" style="flex: 1 1 220px; min-width: 0; align-self: flex-start; background: #FFFFFF; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px; font-size: 14px">
+<a href="#usuarios" style="display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 6px; background: #E3EEF9; color: #1D4F7A; font-weight: 600; text-decoration: none">Usuarios y roles</a>
+<a href="#pacientes" style="display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 6px; color: #172133; text-decoration: none">Pacientes</a>
+<a href="#parametros" style="display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 6px; color: #172133; text-decoration: none">Parámetros del sistema</a>
+<a href="#ia" style="display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 6px; color: #172133; text-decoration: none">Análisis con IA y corpus</a>
+</nav>
+
+<main style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="align-self: flex-start; background: #E8ECF2; color: #44506A; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600">Solo administrador · último sprint</span>
+<h1 style="margin: 0; font-size: 24px">Configuración del sistema</h1>
+<p style="margin: 0; color: #44506A; font-size: 14px">Cada cambio pide confirmación y queda en el registro de auditoría con usuario, fecha y valor anterior.</p>
+</div>
+
+<section id="usuarios" aria-labelledby="h-us" style="background: #FFFFFF; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px">
+<h2 id="h-us" style="margin: 0; font-size: 18px">Usuarios y roles</h2>
+<a href="AprobacionCuentas.dc.html" style="font-size: 14px">3 solicitudes pendientes de aprobar</a>
+</div>
+<form aria-label="Crear usuario" style="border: 1px solid #C4CDDB; border-radius: 8px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px"><label for="nu" style="font-size: 13px; font-weight: 600">Usuario</label><input id="nu" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px"><label for="np" style="font-size: 13px; font-weight: 600">Contraseña temporal</label><input id="np" type="password" autocomplete="new-password" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px; flex: 0 1 180px"><label for="nr" style="font-size: 13px; font-weight: 600">Rol</label><select id="nr" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Oncólogo</option><option>Investigador</option><option>Administrador</option></select></div>
+<button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Crear usuario</button>
+<p style="margin: 0; flex-basis: 100%; font-size: 12px; color: #44506A">Una cuenta creada por el administrador queda aprobada; el usuario debe cambiar la contraseña temporal en su primer inicio de sesión.</p>
+</form>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 680px; font-size: 14px">
+<thead><tr style="background: #F3F5F8; text-align: left"><th scope="col" style="padding: 10px 12px">Usuario</th><th scope="col" style="padding: 10px 12px">Rol</th><th scope="col" style="padding: 10px 12px">Estado</th><th scope="col" style="padding: 10px 12px">Último acceso</th><th scope="col" style="padding: 10px 12px; text-align: right">Acciones</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px; font-weight: 600">dr.vega</td><td style="padding: 8px 12px">Oncólogo</td><td style="padding: 8px 12px"><span style="background: #DDF0E3; color: #1D5B33; border-radius: 4px; padding: 1px 6px; font-weight: 600">Activo</span></td><td style="padding: 8px 12px">11/10/2026</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Cambiar rol</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Desactivar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; cursor: pointer">Eliminar</button></div></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px; font-weight: 600">oncologo.demo</td><td style="padding: 8px 12px">Oncólogo</td><td style="padding: 8px 12px"><span style="background: #DDF0E3; color: #1D5B33; border-radius: 4px; padding: 1px 6px; font-weight: 600">Activo</span></td><td style="padding: 8px 12px">12/10/2026</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Cambiar rol</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Desactivar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; cursor: pointer">Eliminar</button></div></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px; font-weight: 600">dr.ramirez</td><td style="padding: 8px 12px">—</td><td style="padding: 8px 12px"><span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 1px 6px; font-weight: 600">Pendiente</span></td><td style="padding: 8px 12px">—</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><a href="AprobacionCuentas.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Revisar solicitud</a></div></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px; font-weight: 600">investigador.01</td><td style="padding: 8px 12px">Investigador</td><td style="padding: 8px 12px"><span style="background: #ECEEF1; color: #3A4553; border-radius: 4px; padding: 1px 6px; font-weight: 600">Desactivado</span></td><td style="padding: 8px 12px">02/08/2026</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Reactivar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; cursor: pointer">Eliminar</button></div></td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; font-size: 13px; color: #44506A">Eliminar pide confirmación escribiendo el nombre de usuario. Si el usuario tiene análisis o registros, se recomienda desactivar: sus registros se conservan para trazabilidad.</p>
+</section>
+
+<section id="pacientes" aria-labelledby="h-pa" style="background: #FFFFFF; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="h-pa" style="margin: 0; font-size: 18px">Pacientes</h2>
+<p style="margin: 0; font-size: 14px; color: #44506A">El administrador puede dar de alta pacientes, asignarlos a un oncólogo y cambiar su estado. No ve datos clínicos ni análisis.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<a href="RegistroPaciente.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Dar de alta paciente</a>
+<a href="RegistroPDF.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #7C8696; border-radius: 6px; color: #172133; text-decoration: none">Alta desde un PDF</a>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 640px; font-size: 14px">
+<thead><tr style="background: #F3F5F8; text-align: left"><th scope="col" style="padding: 10px 12px">Paciente</th><th scope="col" style="padding: 10px 12px">Oncólogo asignado</th><th scope="col" style="padding: 10px 12px">Estado</th><th scope="col" style="padding: 10px 12px; text-align: right">Acciones</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px">Paciente sintético 07 · CC ••• 4407</td><td style="padding: 8px 12px">oncologo.demo</td><td style="padding: 8px 12px">Activo</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Reasignar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Egresar</button></div></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px 12px">Paciente sintético 02 · CC ••• 0202</td><td style="padding: 8px 12px">dr.vega</td><td style="padding: 8px 12px">Egresado</td><td style="padding: 6px 12px"><div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap"><button type="button" style="font: inherit; min-height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Reactivar</button></div></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section id="parametros" aria-labelledby="h-pr" style="background: #FFFFFF; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<h2 id="h-pr" style="margin: 0; font-size: 18px">Parámetros del sistema</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="p1" style="font-size: 13px; font-weight: 600">Expiración de sesión por inactividad</label><select id="p1" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>15 minutos</option><option selected>30 minutos</option><option>60 minutos</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="p2" style="font-size: 13px; font-weight: 600">Edad de mayoría (representante legal)</label><input id="p2" value="18" inputmode="numeric" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="p3" style="font-size: 13px; font-weight: 600">Registro de nuevos usuarios</label><select id="p3" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option selected>Con aprobación del administrador</option><option>Cerrado (solo crea el administrador)</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="p4" style="font-size: 13px; font-weight: 600">Origen de datos permitido</label><select id="p4" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option selected>Solo sintéticos</option><option disabled>Reales (deshabilitado hasta G-Piloto)</option></select></div>
+</div>
+</section>
+
+<section id="ia" aria-labelledby="h-ia" style="background: #FFFFFF; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<h2 id="h-ia" style="margin: 0; font-size: 18px">Análisis con IA y corpus</h2>
+<fieldset style="border: 1px solid #C4CDDB; border-radius: 8px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 16px">
+<legend style="font-weight: 600; padding: 0 4px">Tipos de cáncer habilitados</legend>
+<label style="display: flex; gap: 8px; align-items: center; min-height: 44px"><input type="checkbox" checked> Mama</label>
+<label style="display: flex; gap: 8px; align-items: center; min-height: 44px"><input type="checkbox" checked> Próstata</label>
+<label style="display: flex; gap: 8px; align-items: center; min-height: 44px; color: #5E6878"><input type="checkbox" disabled> Otros · fuera del alcance del piloto</label>
+</fieldset>
+<fieldset style="border: 1px solid #C4CDDB; border-radius: 8px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 16px">
+<legend style="font-weight: 600; padding: 0 4px">Fuentes del corpus</legend>
+<label style="display: flex; gap: 8px; align-items: center; min-height: 44px"><input type="checkbox" checked> NCI PDQ</label>
+<label style="display: flex; gap: 8px; align-items: center; min-height: 44px"><input type="checkbox" checked> PMC OA (licencia abierta)</label>
+<span style="display: flex; align-items: center; font-size: 13px; color: #44506A">Corte del corpus: [fecha] · <a href="#" style="margin-left: 4px">ver versión</a></span>
+</fieldset>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="i1" style="font-size: 13px; font-weight: 600">Preguntas de seguimiento por análisis</label><input id="i1" value="10" inputmode="numeric" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="i2" style="font-size: 13px; font-weight: 600">Antigüedad de evidencia por defecto</label><select id="i2" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Últimos 5 años</option><option selected>Últimos 10 años</option><option>Toda la evidencia</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="i3" style="font-size: 13px; font-weight: 600">Almacenamiento de conversaciones</label><select id="i3" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Backend 1</option><option>Backend 2</option><option selected>[Por definir]</option></select></div>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end">
+<button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #FFFFFF; border: 1px solid #7C8696; border-radius: 6px; cursor: pointer">Descartar cambios</button>
+<button type="button" style="font: inherit; min-height: 44px; padding: 0 18px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Guardar configuración</button>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

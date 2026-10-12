@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §5 FR-01, FR-02, FR-03, FR-17], [→ PRD §6 RN-10, RN-11, RN-12, RN-13, RN-16, RN-18], [→ PRD §11 #1–#5], [→ PRD §18.4 AC-T4.1–AC-T4.5], [→ readme §5 HU-01], [→ readme §5.6 HU-06, HU-07], [→ readme §2.5], [→ readme §3.3 #1, #6, #14], [→ readme §6 OL-01, OL-02 (regla de proveedores), OL-03 (desidentificación, no-fuga)], [→ readme §6.1 #6], [→ backlog/01-requisitos.md §10 V-02, V-06; §15 P-02], [→ backlog/02-adrs.md ADR-40], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-034, US-035, US-037 (plataforma) · ↪ US-038 (esquema) · ⛔ ADR-40 · escenario más probable (US-049 AC-1; ADR-40 cierra en el S2) · 🔗 Consumida por: US-039 (cifrado en el seed), US-051, US-052, FEAT-02b/02c/04/11c (regresión de RN-11) · 🔗 Regresión [FR-15] → US-204 (Post-MVP) · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
 **Valor:** el oncólogo solo confiará en una herramienta de IA sobre sus pacientes si la identidad de esos pacientes nunca sale del servicio clínico (P12: confianza = trazabilidad + control). Esta Feature entrega el acceso seguro, el registro y la búsqueda de pacientes con identidad cifrada, y garantiza desde el primer análisis que lo que viaja a la IA está desidentificado y que un dato real nunca toca la nube.
-**Stories:** US-049, US-211 (8 puntos, S1) · US-044, US-045, US-046, US-048, US-013 · ADR-40 (21 puntos, S2) · US-047 (5 puntos, S4) · US-050 (3 puntos, S6) — total 37 puntos
+**Stories:** US-049, US-211 (8 puntos, S1) · US-044, US-045, US-046, US-048, US-013 · ADR-40 (21 puntos, S2) · US-047 (5 puntos, S4) · US-050, US-221, US-222 (11 puntos, S6) — total 45 puntos
 
 > **Propuesta de división (talla XL).** Si DEC-03 confirma que el S1 no cabe, publicar como tres Features hermanas sin cambiar los IDs de las Stories: **T4a-1 Acceso** (US-211, US-044, US-045) · **T4a-2 Pacientes e identidad** (US-046, US-047, US-048) · **T4a-3 Desidentificación y proveedores** (US-013, US-049, US-050). T4a-3 y US-211 (sesión mínima del S1) son las únicas que bloquean el análisis (FEAT-06a, FEAT-10a); T4a-2 puede replegarse parcialmente al S2 usando el seed para la demo.
 
@@ -173,6 +173,10 @@ OncoLens sin construir una pantalla de administración en el S1.
 - **AC-5 (borde · secretos de la CLI)** · Dada la ejecución del AC-1, cuando se leen la
   salida de la CLI y los logs de `clinical-api`, entonces no contienen la contraseña.
   `[NFR-11]` (asumido)
+- **AC-6 (borde · administrador sin datos clínicos)** · Dado un usuario con rol `admin`,
+  cuando pide la ficha clínica, la vista de caso, los documentos o un análisis de un
+  paciente, entonces responde `403`: la matriz de permisos del rol `admin` no incluye
+  `clinical:read` ni `ai_analysis:*`. `[Pre-S1 resp. 17]`
 
 ## Contexto técnico
 CLI en `apps/clinical-api/src/cli/` (comandos `users create | deactivate | set-role`),
@@ -532,6 +536,81 @@ clases de datos (#14).
 
 ---
 
+---
+
+## US-221 — Una persona solicita una cuenta y el administrador la aprueba o la rechaza
+
+> Linear: [L1D-271](https://linear.app/l1der-lab-mjbc/issue/L1D-271)
+
+`FEAT-T4a` · Sprint 6 (baja prioridad) · Estimación **3** · — (técnica, PRD §17; cambio frente a V-02 "usuarios por CLI") · FR-01, SEG-02 · ↪ US-045, US-044, US-033 (AC-15, `account_status`) · Diseño: pantallas 13 y 14 · `[Pre-S1 resp. 16]`
+
+## Story
+Como oncólogo nuevo, quiero solicitar una cuenta con usuario y contraseña, y que un
+administrador la apruebe, para empezar a usar OncoLens sin depender de la CLI.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado el formulario de registro, cuando se envían usuario y
+  contraseña válidos, entonces se crea un `User` con `account_status = pendiente`, sin rol
+  ni sesión, y la pantalla muestra "Pendiente de aprobación". `[Pre-S1 resp. 16]`
+- **AC-2 (borde · login pendiente)** · Dada una cuenta pendiente o rechazada, cuando inicia
+  sesión, entonces responde `403` con "Tu cuenta aún no ha sido aprobada" (sin revelar si
+  la contraseña era correcta para cuentas inexistentes). `[SEG-02]`
+- **AC-3 (aprobación)** · Dado el administrador, cuando aprueba con rol `doctor`, entonces
+  la cuenta pasa a `activo` y la acción queda en auditoría (quién, cuándo, valor anterior).
+- **AC-4 (borde · rechazo y duplicado)** · El rechazo registra un motivo opcional; un
+  usuario existente o con solicitud pendiente responde `409`.
+- **AC-5 (borde · registro cerrado)** · Con `USER_SELF_REGISTRATION = cerrado`, la ruta de
+  registro responde `404` y el enlace del login no aparece. `[RN-22]`
+
+## Contexto técnico
+Rutas `POST /platform/auth/register`, `GET /platform/admin/account-requests`,
+`POST …/{id}/approve|reject`, solo `admin`. Supertest con PostgreSQL real.
+
+## INVEST
+**Small** ✓ un estado de cuenta y dos acciones.
+**Testable** ✓ cinco AC.
+
+---
+
+## US-222 — El administrador gestiona usuarios y altas de pacientes desde una consola, sin acceso a datos clínicos
+
+> Linear: [L1D-272](https://linear.app/l1der-lab-mjbc/issue/L1D-272)
+
+`FEAT-T4a` · Sprint 6 (baja prioridad) · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §11 "admin ve todos") · FR-01, FR-03, SEG-02, RN-10, RN-22 · ↪ US-045, US-047, US-221 · Diseño: pantalla 15 · `[Pre-S1 resp. 16]` `[Pre-S1 resp. 17]`
+
+## Story
+Como administrador, quiero crear, desactivar y cambiar el rol de los usuarios, y dar de alta
+pacientes desde una consola, para gestionar el piloto sin la CLI y sin ver datos clínicos.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · usuarios)** · Dado el administrador, cuando crea un usuario con
+  contraseña temporal y rol `doctor` o `admin`, entonces queda `activo`, debe cambiar la
+  contraseña en su primer login, y la acción queda en auditoría. `[Pre-S1 resp. 16]`
+- **AC-2 (borde · eliminar)** · Eliminar exige escribir el usuario; con registros asociados
+  se ofrece desactivar y sus registros se conservan.
+- **AC-3 (alta de pacientes)** · El administrador da de alta un paciente con el mismo
+  formulario y validaciones de US-047 (identidad cifrada, `409` por duplicado).
+- **AC-4 (borde · sin datos clínicos)** · Dado el administrador, cuando pide la ficha
+  clínica, la vista de caso, los documentos o un análisis de un paciente, entonces
+  responde `403`; su listado de pacientes muestra solo identificación enmascarada, estado
+  y fecha de alta. `[Pre-S1 resp. 17]`
+- **AC-5 (borde · parámetros en solo lectura)** · La sección "Parámetros del sistema"
+  muestra los valores de configuración vigentes (sesión, edad de mayoría, tipos
+  habilitados, fuentes, límite de seguimiento, antigüedad por defecto) **en solo lectura**,
+  con la indicación de que se cambian en la configuración del despliegue. `[RN-22]`
+
+## Contexto técnico
+Rutas `/platform/admin/users*` y reutilización de `POST /platform/patients`. Fuera de esta
+historia, y Post-MVP: reasignar oncólogo (equipo tratante, P-02), egresar y reactivar (ciclo
+de vida), rol `investigador` y edición de parámetros en caliente (requeriría un ADR frente
+a RN-22). Supertest con PostgreSQL real y Testing Library con `visual-check`.
+
+## INVEST
+**Small** ✓ CRUD acotado y una sección de solo lectura.
+**Testable** ✓ cinco AC.
+
+---
+
 ## Conflictos de fuentes
 
 | # | Fuente A | Fuente B | Se siguió |
@@ -541,3 +620,5 @@ clases de datos (#14).
 | C-23 | readme §5.0 S2: "regla de proveedores solo locales" en el S2 | readme §6 OL-02 (S1): test de regla de proveedores y `503` | OL-02 (S1): el walking skeleton ya envía `dataClassification` (US-050) |
 | — | readme §6 OL-03 "No incluye" y §5.0 S3: enmascaramiento de las notas en el S3 | PRD RN-11: desidentificar "siempre" | Sin contradicción: en el S1 las notas no se envían (`clinicalNotes = []`, US-049 AC-4); cuando se envíen (S3) irán enmascaradas |
 | Slicing v2 · Q-06 revisada | readme §5.0 S1 (HU-01, HU-06, HU-07) y OL-02 (regla de proveedores en el S1); PRD §14 S1 | Slicing v2 y Q-06 revisada (`01-requisitos.md` §15): acceso e identidad cifrada en el S2, alta manual en el S4 y regla de proveedores RN-12 (US-050) en el S6, antes de G-Piloto — **aceptado por el usuario el 2026-10-07**; ajuste del 2026-10-07: sesión mínima (US-211) en el S1 | El S1 usa los pacientes semilla por ruta directa con sesión real (US-211: login, cookie opaca y guard); la desidentificación (US-049) sí está en el S1. RN-12 no se relaja: hasta el S6 solo hay datos sintéticos y adapters locales, y US-050 se verifica antes de G-Piloto |
+| C-Pre6 | V-02 / US-045: usuarios solo por CLI | Usuario, 2026-10-11: auto-registro con aprobación y consola de administración | Usuario (`[Pre-S1 resp. 16]`): US-221 y US-222 en el S6, de baja prioridad; la CLI sigue siendo el workaround hasta entonces |
+| C-Pre7 | PRD §11 y readme §2.5: "el rol `admin` ve todos" | Usuario, 2026-10-11: el administrador no ve datos clínicos ni análisis | Usuario (`[Pre-S1 resp. 17]`): mínimo privilegio. US-045 (AC-6) y US-222 (AC-4). Se registra para enmendar el PRD y el readme |

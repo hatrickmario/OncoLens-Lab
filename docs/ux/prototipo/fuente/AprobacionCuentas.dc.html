@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Aprobación de cuentas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5; display: flex; flex-direction: column">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong>
+<nav aria-label="Administración" style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px">
+<a href="AprobacionCuentas.dc.html" aria-current="page" style="color: #FFFFFF; font-weight: 600; padding: 10px 10px; border-bottom: 3px solid #8FB3F0; text-decoration: none">Solicitudes de cuenta (3)</a>
+<a href="Configuracion.dc.html" style="color: #FFFFFF; padding: 10px 10px; text-decoration: none">Configuración del sistema</a>
+<span aria-disabled="true" style="color: #C9D4E5; padding: 10px 10px">Auditoría · por diseñar</span>
+</nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Rol: administrador</span><span style="color: #C9D4E5">admin.sistema</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+<main style="width: 100%; max-width: 1080px; margin: 0 auto; box-sizing: border-box; padding: 32px 16px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="align-self: flex-start; background: #E8ECF2; color: #44506A; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600">Baja prioridad · último sprint</span>
+<h1 style="margin: 0; font-size: 24px">Solicitudes de cuenta</h1>
+<p style="margin: 0; color: #44506A; font-size: 14px">Aprueba o rechaza las cuentas nuevas antes de que puedan iniciar sesión.</p>
+</div>
+<span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 4px 10px; font-size: 14px; font-weight: 600">3 pendientes</span>
+</div>
+<div style="background: #FFFFFF; border-radius: 10px; box-shadow: 0 1px 3px rgba(19,35,58,0.12); overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 640px; font-size: 14px">
+<thead>
+<tr style="text-align: left; color: #44506A; border-bottom: 1px solid #D5DBE4">
+<th style="padding: 12px 16px; font-weight: 600">Usuario</th>
+<th style="padding: 12px 16px; font-weight: 600">Solicitado</th>
+<th style="padding: 12px 16px; font-weight: 600">Estado</th>
+<th style="padding: 12px 16px; font-weight: 600; text-align: right">Acciones</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom: 1px solid #E8ECF2">
+<td style="padding: 12px 16px; font-weight: 600">dr.ramirez</td>
+<td style="padding: 12px 16px">11/10/2026 09:14</td>
+<td style="padding: 12px 16px"><span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 1px 6px; font-weight: 600">Pendiente</span></td>
+<td style="padding: 8px 16px"><div style="display: flex; gap: 8px; justify-content: flex-end"><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Aprobar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; font-weight: 600; cursor: pointer">Rechazar</button></div></td>
+</tr>
+<tr style="border-bottom: 1px solid #E8ECF2">
+<td style="padding: 12px 16px; font-weight: 600">dra.solis</td>
+<td style="padding: 12px 16px">10/10/2026 17:42</td>
+<td style="padding: 12px 16px"><span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 1px 6px; font-weight: 600">Pendiente</span></td>
+<td style="padding: 8px 16px"><div style="display: flex; gap: 8px; justify-content: flex-end"><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Aprobar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; font-weight: 600; cursor: pointer">Rechazar</button></div></td>
+</tr>
+<tr style="border-bottom: 1px solid #E8ECF2">
+<td style="padding: 12px 16px; font-weight: 600">investigador.03</td>
+<td style="padding: 12px 16px">09/10/2026 11:05</td>
+<td style="padding: 12px 16px"><span style="background: #FCEFD9; color: #7A4A06; border-radius: 4px; padding: 1px 6px; font-weight: 600">Pendiente</span></td>
+<td style="padding: 8px 16px"><div style="display: flex; gap: 8px; justify-content: flex-end"><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer">Aprobar</button><button type="button" style="font: inherit; min-height: 44px; padding: 0 16px; background: #FFFFFF; color: #8E1F18; border: 1px solid #8E1F18; border-radius: 6px; font-weight: 600; cursor: pointer">Rechazar</button></div></td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; font-weight: 600">dr.vega</td>
+<td style="padding: 12px 16px">08/10/2026 08:30</td>
+<td style="padding: 12px 16px"><span style="background: #DDF0E3; color: #1D5B33; border-radius: 4px; padding: 1px 6px; font-weight: 600">Aprobada</span></td>
+<td style="padding: 12px 16px; text-align: right; color: #44506A">por admin.sistema · 08/10/2026</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; font-size: 13px; color: #44506A">Acceso: al iniciar sesión, una cuenta con rol administrador llega directamente aquí (Solicitudes de cuenta). El menú Administración solo lo ven los administradores; los oncólogos no lo ven.</p>
+<p style="margin: 0; font-size: 13px; color: #44506A">Al rechazar se pide un motivo opcional. Cada aprobación o rechazo queda en el registro de auditoría. Datos sintéticos.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

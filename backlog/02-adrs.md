@@ -7,6 +7,12 @@
 > **Directiva del usuario (2026-10-05), vinculante para este documento:** el MVP valida una hipótesis — que la IA ayuda al oncólogo a **(1) reconstruir el caso**, **(2) identificar los datos faltantes** y **(3) encontrar las opciones descritas en la evidencia más aplicables a las condiciones del paciente** (ordenadas por aplicabilidad, RN-28). Cada historia lleva `Recorrido principal: sí | no`; si es "no", un `Workaround para el MVP` concreto, y la decisión se difiere (sprint tardío o Post-MVP), **salvo que bloquee una invariante de seguridad** (RN-10, RN-11, RN-12, RN-13, RN-14, ownership de `rag-orchestrator`), que no se negocia. **Respuesta del usuario (2026-10-05):** la hipótesis se valida con una **combinación** de casos sintéticos revisados por oncólogos (S1–S4: validan la **mecánica**) y pruebas mixtas con casos reales (desde G-Piloto: validan el **valor**, VM-1…VM-6). Por eso el gate G-Piloto (RN-13) y sus prerrequisitos —`preflight real-data`, VPN + HTTPS, backups cifrados, regla de proveedores solo locales (RN-12), `403` por opt-out de `analisis_ia` (RN-15), autorización por paciente, revisión de seguridad— están en el **recorrido principal**, y las decisiones legales que condicionan los datos reales (TBD-21, TBD-07, TBD-16, TBD-17) son necesarias antes de G-Piloto; su UI de gestión admite workaround (CLI/seed) siempre que no debilite el control. El slicing del readme §5.0 es una sugerencia que se va a re-proponer: los sprints de este documento son el **más temprano necesario** para no bloquear el recorrido, no un compromiso de slicing.
 > **Regla de bloqueo:** toda historia bloqueada por un ADR o una DEC se estima **`?`** hasta que ese ADR o DEC cierre. Las historias que trabajan contra interfaces (*Adapter*, contrato, catálogo en estado `propuesta`) con implementaciones falsas **no** quedan bloqueadas; solo las que dependen del valor decidido.
 
+> **Estado tras el refinamiento del Pre-S1 (2026-10-09, `backlog/sprints/Pre-S1-refinamiento.md`):**
+> - **Resueltas:**
+>   - ADR-36: [registro](../docs/architecture/adr/ADR-36-fuentes-y-licencias.md);
+>   - DEC-02, DEC-03, DEC-04 y DEC-05: bloques `Decidido` en `features/FEAT-00-decisiones-previas.md`. Sus documentos en `docs/decisions/` se escriben en la ejecución del Pre-S1.
+> - **Cambios de sprint (DEC-03):** US-014 · ADR-41 y US-016 · DEC-06 pasan al **S2**.
+
 ---
 
 ## 1. Resumen

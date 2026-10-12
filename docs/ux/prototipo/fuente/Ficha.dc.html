@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Caso clínico del paciente</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong><nav aria-label="Principal"><a href="Pacientes.dc.html" style="color: #FFFFFF">Pacientes</a></nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Uso académico/investigación</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+
+<div style="background: #FFFFFF; border-bottom: 1px solid #C4CDDB; padding: 12px 20px 0">
+<div style="max-width: 1240px; margin: 0 auto">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline">
+<h1 style="margin: 0; font-size: 22px">Paciente sintético 07</h1>
+<span style="font-size: 14px; color: #44506A">CC ••• 4407 · nac. 1958 · masculino · activo</span>
+<span style="background: #ECEEF1; border-radius: 4px; padding: 2px 6px; font-size: 12px">sintético</span>
+</div>
+<nav aria-label="Secciones del paciente" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; font-size: 14px">
+<a href="Ficha.dc.html" aria-current="page" style="padding: 10px 12px; border-bottom: 3px solid #1F4FB8; font-weight: 600; text-decoration: none; color: #172133">Caso clínico</a>
+<a href="VistaCaso.dc.html" style="padding: 10px 12px; text-decoration: none">Resumen y faltantes</a>
+<a href="Documentos.dc.html" style="padding: 10px 12px; text-decoration: none">Documentos</a>
+<a href="Revision.dc.html" style="padding: 10px 12px; text-decoration: none">Revisión (3)</a>
+<a href="Analisis.dc.html" style="padding: 10px 12px; text-decoration: none">Análisis</a>
+<a href="Decision.dc.html" style="padding: 10px 12px; text-decoration: none">Decisiones y evolución</a>
+</nav>
+</div>
+</div>
+
+<main style="max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<div role="status" style="flex: 1 1 320px; background: #FFF4E0; border: 1px solid #E8C77A; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center"><span><strong>3 datos extraídos por revisar</strong> · no bloquean el análisis</span><a href="Revision.dc.html">Revisar</a></div>
+<div role="status" style="flex: 1 1 320px; background: #FFFFFF; border: 1px solid #C4CDDB; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center"><span><strong>2 datos críticos faltantes</strong> · testosterona, volumen de enfermedad</span><a href="VistaCaso.dc.html">Ver checklist</a></div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<section aria-labelledby="h-dx" style="flex: 1 1 380px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 16px">
+<h2 id="h-dx" style="margin: 0 0 10px; font-size: 16px">Diagnóstico vigente</h2>
+<dl style="margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px">
+<dt style="color: #44506A">Tipo</dt><dd style="margin: 0">Próstata · C61 (CIE-10)</dd>
+<dt style="color: #44506A">Histología</dt><dd style="margin: 0">Adenocarcinoma acinar</dd>
+<dt style="color: #44506A">Gradación</dt><dd style="margin: 0">Gleason 4+3=7 · ISUP 3 <span style="color: #44506A">· biopsia, peor núcleo</span> <span style="color: #8A4B00">· valor nuevo en conflicto · <a href="Revision.dc.html">revisar</a></span></dd>
+<dt style="color: #44506A">Estadio</dt><dd style="margin: 0">TNM 8 · cT3a N1 M1b <span style="color: #8A4B00">· M1b sin verificar · <a href="Revision.dc.html">revisar</a></span></dd>
+<dt style="color: #44506A">Estado funcional</dt><dd style="margin: 0">ECOG 1</dd>
+<dt style="color: #44506A">Diagnosticado</dt><dd style="margin: 0">2026-04</dd>
+</dl>
+<p style="margin: 10px 0 0; font-size: 13px; color: #44506A">Origen: <span title="Extraído automáticamente de un documento (OCR)" style="display: inline-flex; align-items: center; gap: 4px; background: #E3EEF9; color: #1D4F7A; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M3 12h18"></path><path d="M8 8h8M8 16h5"></path></svg>OCR</span> confianza alta · verificado · <a href="Documentos.dc.html">ver documento de origen</a></p>
+</section>
+
+<section aria-labelledby="h-bm" style="flex: 2 1 560px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 16px; overflow-x: auto">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 0 0 10px"><h2 id="h-bm" style="margin: 0; font-size: 16px">Biomarcadores recientes · al 22/09/2026</h2><span style="font-size: 13px; color: #44506A">Fecha de referencia: 22/09/2026 (último resultado registrado)</span></div>
+<table style="border-collapse: collapse; width: 100%; min-width: 680px; font-size: 14px">
+<thead><tr style="background: #F3F5F8"><th scope="col" style="text-align: left; padding: 8px">Biomarcador</th><th scope="col" style="text-align: left; padding: 8px">Fecha</th><th scope="col" style="text-align: left; padding: 8px">Valor</th><th scope="col" style="text-align: left; padding: 8px">Rango</th><th scope="col" style="text-align: left; padding: 8px">Tendencia</th><th scope="col" style="text-align: left; padding: 8px">Significancia</th><th scope="col" style="text-align: left; padding: 8px">Origen y revisión</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px">PSA total · LOINC 2857-1</td><td style="padding: 8px; white-space: nowrap">22/09/2026</td><td style="padding: 8px">12 ng/mL</td><td style="padding: 8px">0–4</td><td style="padding: 8px">↓ baja</td><td style="padding: 8px"><span style="background: #F9E3E1; color: #8E1F18; border-radius: 4px; padding: 2px 6px">▲ Alterado</span></td><td style="padding: 8px"><span title="Extraído automáticamente de un documento (OCR)" style="display: inline-flex; align-items: center; gap: 4px; background: #E3EEF9; color: #1D4F7A; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M3 12h18"></path><path d="M8 8h8M8 16h5"></path></svg>OCR</span> alta · verificado · <a href="Documentos.dc.html">doc.</a></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px">Fosfatasa alcalina</td><td style="padding: 8px; white-space: nowrap">15/09/2026</td><td style="padding: 8px">180 U/L</td><td style="padding: 8px">40–129</td><td style="padding: 8px">— primer valor</td><td style="padding: 8px"><span style="background: #F9E3E1; color: #8E1F18; border-radius: 4px; padding: 2px 6px">▲ Alterado</span></td><td style="padding: 8px; color: #8A4B00"><span title="Extraído automáticamente de un documento (OCR)" style="display: inline-flex; align-items: center; gap: 4px; background: #E3EEF9; color: #1D4F7A; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M3 12h18"></path><path d="M8 8h8M8 16h5"></path></svg>OCR</span> media · por revisar · <a href="Revision.dc.html">revisar</a></td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><td style="padding: 8px">Hemoglobina</td><td style="padding: 8px; white-space: nowrap">15/09/2026</td><td style="padding: 8px">13,1 g/dL</td><td style="padding: 8px">13,5–17,5</td><td style="padding: 8px">→ estable</td><td style="padding: 8px"><span style="background: #ECEEF1; color: #3A4553; border-radius: 4px; padding: 2px 6px">● Normal-límite</span></td><td style="padding: 8px"><span title="Registrado a mano por el médico" style="display: inline-flex; align-items: center; gap: 4px; background: #F1E9F7; color: #5A2D78; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3.5"></circle><path d="M5 21v-1.5A5.5 5.5 0 0 1 10.5 14h3a5.5 5.5 0 0 1 5.5 5.5V21"></path><path d="M12 16.5v3M10.5 18h3"></path></svg>Manual</span> verificado</td></tr>
+</tbody>
+</table>
+<p style="margin: 8px 0 0; font-size: 13px; color: #44506A; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center">Origen del dato: <span style="display: inline-flex; gap: 4px; align-items: center"><span title="Extraído automáticamente de un documento (OCR)" style="display: inline-flex; align-items: center; gap: 4px; background: #E3EEF9; color: #1D4F7A; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"></path><path d="M3 12h18"></path><path d="M8 8h8M8 16h5"></path></svg>OCR</span> extraído automáticamente de un documento</span><span style="display: inline-flex; gap: 4px; align-items: center"><span title="Registrado a mano por el médico" style="display: inline-flex; align-items: center; gap: 4px; background: #F1E9F7; color: #5A2D78; border-radius: 4px; padding: 1px 6px; font-weight: 600; white-space: nowrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3.5"></circle><path d="M5 21v-1.5A5.5 5.5 0 0 1 10.5 14h3a5.5 5.5 0 0 1 5.5 5.5V21"></path><path d="M12 16.5v3M10.5 18h3"></path></svg>Manual</span> registrado a mano por el médico</span></p>
+<p style="margin: 8px 0 0; font-size: 13px"><a href="VistaCaso.dc.html">Ver series completas en Resumen y faltantes</a></p>
+</section>
+</div>
+
+<section aria-label="Acciones" style="display: flex; flex-wrap: wrap; gap: 12px">
+<a href="Documentos.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #7C8696; border-radius: 6px; text-decoration: none; color: #172133">Cargar documentos</a>
+<a href="VistaCaso.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #7C8696; border-radius: 6px; text-decoration: none; color: #172133">Registrar un dato a mano</a>
+<a href="VistaCaso.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Abrir resumen y faltantes</a>
+</section>
+<p style="margin: 0; font-size: 12px; color: #44506A">Semáforo con símbolo y texto, no solo color. Cada valor muestra su origen, confianza de extracción y estado de revisión (dos ejes independientes).</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@
 **Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117 (*sparse* poblado), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
 **Valor:** el oncólogo busca con términos exactos (un fármaco, un gen) que la búsqueda semántica sola pierde, en español sobre evidencia mayoritariamente en inglés, y necesita acotar a guías o ensayos (P5, JTBD 3). Con esta Feature la búsqueda combina ambas señales, se expande al otro idioma, respeta los filtros que el oncólogo ve en el panel y sabe qué datos del paciente faltan.
 **Workaround en el MVP (US-112…US-115, y US-133 en FEAT-T5b):** ADR-39 elige *embeddings* multilingües; la recuperación sigue siendo *dense* + *reranker* (US-055) y la suite mide recall es→en ≥ 0,70 (US-072).
-**Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-116 (3 puntos, S5)
+**Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-116, US-220 (6 puntos, S5)
 
 ## Fixtures
 
@@ -226,6 +226,43 @@ Tests: Pytest unitarios del constructor de prompt y de la consulta.
 
 ---
 
+---
+
+## US-220 — El oncólogo filtra la evidencia por antigüedad y el filtro queda registrado en la Base del análisis
+
+> Linear: [L1D-270](https://linear.app/l1der-lab-mjbc/issue/L1D-270)
+
+`FEAT-06b` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · FR-09 (filtros), FR-27, RN-05, RN-22 · ↪ US-033 (AC-14), US-055, US-058 (`published_year` en Milvus) · Diseño: pantalla 08 · `[Pre-S1 resp. 15]`
+
+## Story
+Como oncólogo, quiero acotar la evidencia por año de publicación con un control deslizante,
+para concentrarme en la evidencia reciente sin perder la opción de ver todo el corpus.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado `filtersApplied.publishedFromYear = 2016`, cuando se ejecuta
+  el análisis, entonces `rag-orchestrator` solo recupera chunks con `published_year ≥ 2016`
+  (en guías NCI PDQ, por su fecha de última actualización) y la Base del análisis registra
+  "Evidencia desde 2016". `[Pre-S1 resp. 15]` `[FR-27]`
+- **AC-2 (borde · por defecto)** · Sin el parámetro, se aplica el valor por defecto de
+  configuración (`EVIDENCE_DEFAULT_YEARS = 10`) y queda registrado igual. `[RN-22]`
+- **AC-3 (borde · toda la evidencia)** · Con `publishedFromYear = null` ("Toda la
+  evidencia"), no se filtra y la Base lo dice.
+- **AC-4 (borde · sin evidencia por el filtro)** · Si el filtro deja cero chunks sobre el
+  umbral, entonces la respuesta es `sin_evidencia` y la UI ofrece ampliar la antigüedad.
+  `[RN-02]`
+- **AC-5 (UI)** · El control deslizante (2000–año actual, atajos 5 y 10 años y "Toda la
+  evidencia") es operable con teclado y anuncia el año elegido.
+
+## Contexto técnico
+Filtro escalar sobre `published_year` en Milvus (sin reindexar). Pytest con Milvus fingido,
+Supertest para el registro en `analysis_basis`, Testing Library para el control.
+
+## INVEST
+**Small** ✓ un filtro de extremo a extremo.
+**Testable** ✓ cinco AC.
+
+---
+
 ## Conflictos de fuentes
 
 | # | Fuente A | Fuente B | Se siguió |
@@ -233,3 +270,4 @@ Tests: Pytest unitarios del constructor de prompt y de la consulta.
 | V-04 / Q-08 | PRD §17: la recuperación híbrida y los filtros del S3 no tienen HU | — | Q-08: historias técnicas con HU "— (técnica, PRD §17)" (US-112, US-113); US-114 a US-116 se trazan a HU-03 y HU-18 |
 | — | readme OL-03 (S1): `filtersApplied` se valida y persiste, sin aplicarse | readme §5.0 S3 KR2: filtros conectados a datos reales | S3 (US-114), sin cambio de contrato |
 | Slicing v2 | PRD FR-09 y §14 S3: búsqueda híbrida, expansión bilingüe y filtros en el S3; AC-05.1 y AC-06.1 (parte S3) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): híbrida, bilingüe y filtros `si-hay-capacidad`; faltantes en la consulta en el S5 | AC-05.1 (filtros reales) y la parte S3 de AC-06.1 quedan en historias `si-hay-capacidad` |
+| C-Pre5 | Contrato de readme §4.1: `filtersApplied` sin filtro de antigüedad | Usuario, 2026-10-11: filtro por año de publicación | Usuario (`[Pre-S1 resp. 15]`): `publishedFromYear` en US-033 (AC-14) y US-220 en el S5 |

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Registro de paciente</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+:focus-visible{outline:3px solid #1F4FB8;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap"><strong style="font-size: 17px">OncoLens</strong><nav aria-label="Principal"><a href="Pacientes.dc.html" style="color: #FFFFFF">Pacientes</a></nav></div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px"><span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Uso académico/investigación</span><a href="Login.dc.html" style="color: #FFFFFF; border: 1px solid #8A9BB5; border-radius: 6px; padding: 10px 12px; text-decoration: none">Cerrar sesión</a></div>
+</header>
+<main style="max-width: 1240px; margin: 0 auto; padding: 20px; display: flex; flex-wrap: wrap; gap: 16px">
+<nav aria-label="Ruta" style="flex-basis: 100%; font-size: 13px; color: #44506A"><a href="Pacientes.dc.html">Pacientes</a> › Nuevo paciente</nav>
+
+<form aria-labelledby="h-reg" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<h1 id="h-reg" style="margin: 0; font-size: 22px">Registrar paciente</h1>
+<p style="margin: 0; color: #44506A; font-size: 14px">Datos mínimos. La identidad se guarda cifrada y nunca sale hacia la IA. Los consentimientos reposan en el sistema externo de la institución.</p>
+<fieldset style="border: 1px solid #C4CDDB; border-radius: 8px; padding: 12px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<legend style="font-weight: 600; padding: 0 4px">Identificación</legend>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="t" style="font-size: 13px; font-weight: 600">Tipo de documento</label><select id="t" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>CC</option><option>TI</option><option>RC</option><option>CE</option><option>PA</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="n" style="font-size: 13px; font-weight: 600">Número</label><input id="n" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="nm" style="font-size: 13px; font-weight: 600">Nombres y apellidos</label><input id="nm" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="a" style="font-size: 13px; font-weight: 600">Año de nacimiento</label><input id="a" inputmode="numeric" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="s" style="font-size: 13px; font-weight: 600">Sexo</label><select id="s" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Masculino</option><option>Femenino</option><option>Intersexual</option></select></div>
+</fieldset>
+<fieldset style="border: 1px solid #C4CDDB; border-radius: 8px; padding: 12px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<legend style="font-weight: 600; padding: 0 4px">Origen y convenio</legend>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="o" style="font-size: 13px; font-weight: 600">Origen del dato</label><select id="o" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF"><option>Sintético</option><option disabled>Real (deshabilitado hasta G-Piloto)</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><label for="c" style="font-size: 13px; font-weight: 600">Referencia del convenio</label><input id="c" style="font: inherit; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; padding: 0 12px"></div>
+</fieldset>
+<fieldset style="border: 1px dashed #7C8696; border-radius: 8px; padding: 12px 16px">
+<legend style="font-weight: 600; padding: 0 4px">Representante legal · solo si es menor de edad</legend>
+<p style="margin: 0; font-size: 14px; color: #44506A">Aparece y es obligatorio cuando el año de nacimiento indica un menor según la edad de mayoría configurada.</p>
+</fieldset>
+<p role="alert" style="margin: 0; background: #FFF4E0; border: 1px solid #E8C77A; border-radius: 6px; padding: 8px 12px; font-size: 14px">Estado 409: “Ya existe un paciente con ese documento.” <a href="Ficha.dc.html">Abrir su caso clínico</a></p>
+<div style="display: flex; gap: 12px; flex-wrap: wrap">
+<a href="Ficha.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: #1F4FB8; color: #FFFFFF; border-radius: 6px; font-weight: 600; text-decoration: none">Registrar y abrir caso clínico</a>
+<a href="Pacientes.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #7C8696; border-radius: 6px; text-decoration: none; color: #172133">Cancelar</a>
+</div>
+</form>
+
+<aside style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 8px; align-self: flex-start">
+<h2 style="margin: 0; font-size: 16px">¿Tienes un documento del paciente?</h2>
+<p style="margin: 0; font-size: 14px">Sube la historia clínica en PDF y confirma los datos que sugiere el OCR, con su confianza por campo.</p>
+<span style="font-size: 12px; background: #ECEEF1; border-radius: 4px; padding: 2px 6px; align-self: flex-start">Sprint 3 o posterior (FEAT-01c)</span>
+<a href="RegistroPDF.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #7C8696; border-radius: 6px; background: #FFFFFF; color: #172133; text-decoration: none">Registrar desde un PDF</a>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Dirección C · Mesa de trabajo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F4FB8}a:hover{color:#163A87}
+</style>
+</helmet>
+<div style="font-family: 'Public Sans', system-ui, sans-serif; background: #EDF0F4; color: #172133; min-height: 100%; font-size: 15px; line-height: 1.5">
+
+<header style="background: #13233A; color: #FFFFFF; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+<div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap">
+<strong style="font-size: 17px">OncoLens</strong>
+<span style="font-size: 14px; color: #C9D4E5">Paciente sintético 07 · Próstata · dato sintético</span>
+</div>
+<div style="display: flex; gap: 10px; align-items: center; font-size: 13px">
+<span style="border: 1px solid #5B6F8E; border-radius: 4px; padding: 2px 8px; color: #E3E9F2">Uso académico/investigación</span>
+<button style="font: inherit; color: #FFFFFF; background: transparent; border: 1px solid #5B6F8E; border-radius: 6px; padding: 8px 12px; min-height: 40px">Cerrar sesión</button>
+</div>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 16px 20px 40px; max-width: 1400px; margin: 0 auto">
+
+<aside aria-label="Caso" style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<section style="background: #FFFFFF; border-radius: 8px; padding: 14px 16px">
+<h2 style="margin: 0 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #44506A">Caso</h2>
+<div style="font-weight: 600">Adenocarcinoma acinar de próstata</div>
+<div>Gleason 4+3=7 · ISUP 3</div>
+<div>TNM 8 · cT3a N1 M1b · ECOG 1</div>
+<div style="margin-top: 6px; font-size: 13px; color: #44506A">PSA: 48 → 31 → 12 ng/mL (serie, sintético) · ADT en curso</div>
+<a href="#" style="font-size: 14px">Abrir vista de caso</a>
+</section>
+<section aria-labelledby="hc-chk" style="background: #FFFFFF; border-radius: 8px; padding: 14px 16px">
+<h2 id="hc-chk" style="margin: 0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #44506A">Datos críticos</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px">
+<li>✓ Histología · verificado</li>
+<li>✓ Gleason / ISUP · verificado</li>
+<li>◐ Metástasis óseas · sin verificar (OCR, media)</li>
+<li style="color: #8A4B00; font-weight: 600">✕ Testosterona sérica · falta</li>
+<li style="color: #8A4B00; font-weight: 600">✕ Volumen de enfermedad · falta</li>
+</ul>
+<a href="#" style="display: inline-block; margin-top: 8px; font-size: 14px">Cargar o registrar lo que falta</a>
+</section>
+</aside>
+
+<main style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<section style="background: #FFFFFF; border-radius: 8px; padding: 14px 16px">
+<label for="q" style="font-size: 13px; color: #44506A">Pregunta</label>
+<div id="q" style="font-size: 16px">¿Qué opciones de intensificación del tratamiento hormonal describe la evidencia para cáncer de próstata metastásico hormonosensible?</div>
+<div style="font-size: 13px; color: #44506A; margin-top: 4px">Continuaste con aviso: 2 faltantes cuentan como “desconocido”.</div>
+</section>
+
+<div role="note" style="background: #13233A; color: #FFFFFF; border-radius: 8px; padding: 10px 16px; font-weight: 600">Análisis generado por IA — requiere validación clínica del oncólogo tratante</div>
+
+<section aria-labelledby="hc-op" style="background: #FFFFFF; border-radius: 8px; padding: 14px 16px">
+<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline">
+<h1 id="hc-op" style="margin: 0; font-size: 20px">Opciones descritas en la evidencia</h1>
+<span style="font-size: 13px; color: #44506A">Ordenadas por coincidencia con la población estudiada, no por eficacia</span>
+</div>
+<div style="overflow-x: auto; margin-top: 12px">
+<table style="border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px">
+<caption style="text-align: left; font-size: 13px; color: #44506A; padding-bottom: 6px">Aplicabilidad por criterio (fuente más aplicable de cada opción)</caption>
+<thead>
+<tr style="background: #F3F5F8">
+<th scope="col" style="text-align: left; padding: 8px">Criterio</th>
+<th scope="col" style="text-align: left; padding: 8px">1 · ADT + abiraterona/prednisona</th>
+<th scope="col" style="text-align: left; padding: 8px">2 · ADT + docetaxel</th>
+<th scope="col" style="text-align: left; padding: 8px">3 · ADT + enzalutamida</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-top: 1px solid #E1E6EE"><th scope="row" style="text-align: left; padding: 8px; font-weight: 500">Hormonosensible</th><td style="padding: 8px; color: #17592F">✓ Coincide</td><td style="padding: 8px; color: #17592F">✓ Coincide</td><td style="padding: 8px; color: #17592F">✓ Coincide</td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><th scope="row" style="text-align: left; padding: 8px; font-weight: 500">Metástasis óseas ⚠ sin verificar</th><td style="padding: 8px; color: #17592F">✓ Coincide</td><td style="padding: 8px; color: #17592F">✓ Coincide</td><td style="padding: 8px; color: #17592F">✓ Coincide</td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><th scope="row" style="text-align: left; padding: 8px; font-weight: 500">Volumen de enfermedad</th><td style="padding: 8px; color: #3A4553">? Desconocido</td><td style="padding: 8px; color: #3A4553">? Desconocido</td><td style="padding: 8px; color: #3A4553">? Desconocido</td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><th scope="row" style="text-align: left; padding: 8px; font-weight: 500">ECOG 0–1</th><td style="padding: 8px; color: #17592F">✓ Coincide</td><td style="padding: 8px; color: #774500">◐ Parcial</td><td style="padding: 8px; color: #17592F">✓ Coincide</td></tr>
+<tr style="border-top: 1px solid #E1E6EE"><th scope="row" style="text-align: left; padding: 8px; font-weight: 500">Resumen</th><td style="padding: 8px">4 · 1 · 0 · 1</td><td style="padding: 8px">3 · 2 · 0 · 1</td><td style="padding: 8px">3 · 1 · 1 · 1</td></tr>
+</tbody>
+</table>
+</div>
+<p style="font-size: 12px; color: #44506A; margin: 6px 0 0">Resumen: Coincide · Parcial · No coincide · Desconocido.</p>
+</section>
+
+<section aria-label="Opción 1" style="background: #FFFFFF; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 17px">1 · Deprivación androgénica + abiraterona con prednisona</h2>
+<span style="font-size: 12px; color: #44506A">Relevancia de búsqueda 0,87 · metadato secundario</span>
+</div>
+<p style="margin: 0">Las fuentes describen la combinación en enfermedad metastásica hormonosensible de riesgo alto <a href="#">[1]</a> <a href="#">[2]</a>.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px">
+<a href="#" style="border: 1px solid #C4CDDB; border-radius: 6px; padding: 6px 10px">[1] NCI PDQ · próstata (profesionales) · ES · dominio público</a>
+<a href="#" style="border: 1px solid #C4CDDB; border-radius: 6px; padding: 6px 10px">[2] PMC OA · [título] · ECA fase III · CC BY</a>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<details style="flex: 1 1 280px; background: #FFFFFF; border-radius: 8px; padding: 12px 16px"><summary style="cursor: pointer; font-weight: 600">Descartadas (1)</summary><p style="margin: 6px 0 0">[Opción] — afirmación sin soporte.</p></details>
+<details style="flex: 1 1 280px; background: #FFFFFF; border-radius: 8px; padding: 12px 16px"><summary style="cursor: pointer; font-weight: 600">Base del análisis</summary><p style="margin: 6px 0 0">9 datos usados (2 sin verificar) · 2 faltantes · NCI PDQ, PMC OA · no incluidas: NCCN, ESMO · corte [fecha] · 1 afirmación omitida</p></details>
+</div>
+
+<section aria-label="Valoración" style="background: #FFFFFF; border-radius: 8px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+<span style="font-weight: 600">Utilidad (1–5)</span>
+<div role="group" aria-label="Calificación" style="display: flex; gap: 6px">
+<button style="font: inherit; width: 44px; height: 44px; border-radius: 6px; border: 1px solid #C4CDDB; background: #FFFFFF">1</button>
+<button style="font: inherit; width: 44px; height: 44px; border-radius: 6px; border: 1px solid #C4CDDB; background: #FFFFFF">2</button>
+<button style="font: inherit; width: 44px; height: 44px; border-radius: 6px; border: 1px solid #C4CDDB; background: #FFFFFF">3</button>
+<button style="font: inherit; width: 44px; height: 44px; border-radius: 6px; border: 1px solid #C4CDDB; background: #FFFFFF">4</button>
+<button style="font: inherit; width: 44px; height: 44px; border-radius: 6px; border: 1px solid #C4CDDB; background: #FFFFFF">5</button>
+</div>
+<label><input type="checkbox"> Faltantes correctos</label>
+<label><input type="checkbox"> Faltantes útiles</label>
+</section>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

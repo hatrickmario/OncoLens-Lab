@@ -167,7 +167,7 @@ corpus es de US-074. *Mutation testing* (S6).
 
 > Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
 
-`FEAT-PL1` · Sprint 1 · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-11 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
+`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-11 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
@@ -305,7 +305,7 @@ y fixtures de prueba; si en el planning pasa de 8, dividir AC-8…AC-11 en una h
 
 > Linear: [L1D-264](https://linear.app/l1der-lab-mjbc/issue/L1D-264)
 
-`FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · NFR-13 · ↪ US-033 (specs congelados), US-036 (workflow de CI) · 🔗 Relacionada: US-213 (regla `api-contracts-generado`) · 🔗 Consumida por: `contract-keeper` (Gate 2) y la skill `sync-contracts` (`.claude/`)
+`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (técnica, PRD §17) · NFR-13 · ↪ US-033 (specs congelados), US-036 (workflow de CI) · 🔗 Relacionada: US-213 (regla `api-contracts-generado`) · 🔗 Consumida por: `contract-keeper` (Gate 2) y la skill `sync-contracts` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que `clinical-api` y
@@ -428,7 +428,7 @@ los hooks de Claude Code ya cubren el control.
 
 > Linear: [L1D-266](https://linear.app/l1der-lab-mjbc/issue/L1D-266)
 
-`FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · RN-14, NFR-11, SEG-01 (CSRF ya cubierto), SEG-12 · ↪ US-034 (`web` levantado), US-215 (ESLint base) · 🔗 Relacionada: US-144 (HSTS con HTTPS en el piloto), US-061 (panel que muestra texto del LLM) · 🔗 Consumida por: `frontend-dev` y `privacy-guardian` (`.claude/`)
+`FEAT-PL1` · Sprint 6 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (técnica, PRD §17) · RN-14, NFR-11, SEG-01 (CSRF ya cubierto), SEG-12 · ↪ US-034 (`web` levantado), US-215 (ESLint base) · 🔗 Relacionada: US-144 (HSTS con HTTPS en el piloto), US-061 (panel que muestra texto del LLM) · 🔗 Consumida por: `frontend-dev` y `privacy-guardian` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo, quiero que `web` aplique desde el primer sprint las defensas del
@@ -488,7 +488,7 @@ protección DDoS (fuera de alcance: acceso solo por VPN).
 
 > Linear: [L1D-267](https://linear.app/l1der-lab-mjbc/issue/L1D-267)
 
-`FEAT-PL1` · Sprint 1 · Estimación **2** · — (técnica, PRD §17) · RN-14, SEG-12 · ↪ US-036 (workflow de CI) · 🔗 Relacionada: US-147 (revisión de seguridad del piloto; su AC-5 pasa a regresión de esta historia), US-216
+`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **2** · — (técnica, PRD §17) · RN-14, SEG-12 · ↪ US-036 (workflow de CI) · 🔗 Relacionada: US-147 (revisión de seguridad del piloto; su AC-5 pasa a regresión de esta historia), US-216
 
 ## Story
 Como equipo de desarrollo, quiero que cada PR audite las dependencias de los tres servicios y
@@ -591,3 +591,4 @@ del stream de logs).
 | C-22 | PRD §7 NFR-06 y readme §2.4: *backups* con prueba de restauración "por sprint" | readme §5.0 S5 y PRD §14 S5: *backups* en el S5 | Decisión Q-06 (c): *backups* en el S5 (FEAT-T4d). Esta Feature no los incluye |
 | S-01 | PRD §14 / readme §5.0: slicing original | Slicing "por hipótesis" (01-requisitos §15) | Sin cambio de sprint para esta Feature (S1 en ambos) |
 | Slicing v2 | readme §5.0 S1 y OL-01/OL-02: configuración validada al arranque y logs JSON con `traceId` en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-037 en el S2 | En el S1 la configuración se lee sin validación de arranque; no hay datos reales ni bandera `REAL_*` que guardar (RN-13) hasta el S6 |
+| S-Pre1 | Slicing v2 y ajustes del 2026-10-07/09: US-213, US-214, US-216 y US-217 en el S1 | DEC-03 (2026-10-09): capacidad de 80–90 puntos; el S1 tenía 124 | DEC-03 (`[Pre-S1 resp. 9]`): US-213, US-214 y US-217 al S2; US-216 al S6, antes de G-Piloto |
