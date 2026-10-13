@@ -63,3 +63,8 @@ export function bundleSpec(host, evidence) {
   }
   return bundled;
 }
+
+/** Esqueleto (rojo de DPR-7). */
+export function externalRefsLeft(bundled) {
+  throw new Error('no implementado');
+}
