@@ -1,5 +1,6 @@
 /** AC-8 y AC-16 [NFR-13, Pre-S1 resp. 20]: los tipos generados de los ocho schemas compartidos son textualmente idénticos en ambos proveedores. */
 import { reporter } from '../lib/findings.mjs';
+import { typesPath } from '../lib/paths.mjs';
 import { PROVIDERS, SHARED_SCHEMAS } from '../lib/specs.mjs';
 
 const report = reporter('assertSharedTypesIdenticalAcrossProviders', 'AC-8 · AC-16');
@@ -13,7 +14,7 @@ function declarationOf(text, name) {
 export function assertSharedTypesIdenticalAcrossProviders(specs, examples, docs) {
   const generated = docs.generatedTypes ?? {};
   const missing = PROVIDERS.filter((provider) => !generated[provider])
-    .map((provider) => report(`packages/api-contracts/src/types/${provider}/types.gen.ts`, '#', 'falta lo generado: ejecutar npm run contracts:generate'));
+    .map((provider) => report(typesPath(provider), '#', 'falta lo generado: ejecutar npm run contracts:generate'));
   if (missing.length > 0) return missing;
   const [first, second] = PROVIDERS.map((provider) => generated[provider]);
   return SHARED_SCHEMAS.flatMap((name) => {

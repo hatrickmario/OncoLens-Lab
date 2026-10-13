@@ -1,11 +1,12 @@
 /** AC-16 [Pre-S1 resp. 28]: el extracto de readme §4 entre sus marcadores es exactamente lo que genera contracts:readme-extract. */
 import { reporter } from '../lib/findings.mjs';
+import { PATHS } from '../lib/paths.mjs';
 import { currentReadmeExtract, renderReadmeExtract } from '../lib/readmeExtract.mjs';
 import { CLINICAL_API } from '../lib/specs.mjs';
 
 const report = reporter('assertReadmeExtractInSync', 'AC-16');
 
-const README = 'readme.md';
+const README = PATHS.readme;
 
 export function assertReadmeExtractInSync(specs, examples, docs) {
   const bundled = specs[CLINICAL_API].bundled;

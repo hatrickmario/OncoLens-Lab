@@ -11,9 +11,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
-import { DEFAULT_ROOT } from './check.mjs';
-import { GENERATED_ROOTS, PYDANTIC_DIR, SPEC_FILES, generatedHeader, typesPath, zodPath } from './generated.mjs';
+import { GENERATED_ROOTS, PYDANTIC_DIR, zodPath } from './generated.mjs';
 import { loadContext } from './io.mjs';
+import { DEFAULT_ROOT, SPEC_FILES, generatedHeader, typesPath } from './lib/paths.mjs';
 import { RAG_ORCHESTRATOR } from './lib/specs.mjs';
 import { writeReadmeExtract } from './readme-extract.mjs';
 

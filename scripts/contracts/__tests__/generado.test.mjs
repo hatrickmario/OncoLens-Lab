@@ -5,7 +5,8 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { changedGeneratedFiles } from '../generate-check.mjs';
-import { GENERATED_ROOTS, typesPath, zodPath } from '../generated.mjs';
+import { GENERATED_ROOTS, zodPath } from '../generated.mjs';
+import { typesPath } from '../lib/paths.mjs';
 import { ROOT } from './helpers/parches.mjs';
 
 const run = promisify(execFile);

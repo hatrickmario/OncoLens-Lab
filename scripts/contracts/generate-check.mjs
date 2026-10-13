@@ -6,9 +6,9 @@
 import { execFile } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
-import { DEFAULT_ROOT } from './check.mjs';
 import { generate } from './generate.mjs';
 import { GENERATED_ROOTS } from './generated.mjs';
+import { DEFAULT_ROOT } from './lib/paths.mjs';
 
 const git = promisify(execFile);
 

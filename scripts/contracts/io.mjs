@@ -3,23 +3,10 @@ import { lint, loadConfig } from '@redocly/openapi-core';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
-import { typesPath } from './generated.mjs';
 import { buildContext } from './lib/context.mjs';
 import { finding } from './lib/findings.mjs';
-import { CLINICAL_API, EVIDENCE, PROVIDERS, RAG_ORCHESTRATOR } from './lib/specs.mjs';
-
-/** Dónde vive cada entrada, relativo a la raíz del repositorio. */
-export const PATHS = {
-  specs: {
-    [CLINICAL_API]: 'apps/clinical-api/openapi.yaml',
-    [RAG_ORCHESTRATOR]: 'apps/rag-orchestrator/openapi.yaml',
-    [EVIDENCE]: 'contracts/schemas/evidence.yaml',
-  },
-  examplesDir: 'contracts/examples',
-  dataModel: 'docs/architecture/data-model.md',
-  readme: 'readme.md',
-  prohibitedTerms: 'scripts/contracts/terminos-prohibidos-rn23.json',
-};
+import { PATHS, typesPath } from './lib/paths.mjs';
+import { PROVIDERS } from './lib/specs.mjs';
 
 const REDOCLY_CONFIG = path.join(import.meta.dirname, 'redocly.yaml');
 

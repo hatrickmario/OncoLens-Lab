@@ -5,13 +5,14 @@
  */
 import { reporter } from '../lib/findings.mjs';
 import { cellText, codeBlocks, sectionOf, tableRows } from '../lib/markdown.mjs';
+import { PATHS } from '../lib/paths.mjs';
 import { permissionMatrix } from '../lib/permissions.mjs';
 import { LICENSE_CLASSES } from '../lib/specs.mjs';
 import { missingFragments } from '../lib/text.mjs';
 
 const RULE = 'assertDataModelDocument';
-const MODEL_FILE = 'docs/architecture/data-model.md';
-const README_FILE = 'readme.md';
+const MODEL_FILE = PATHS.dataModel;
+const README_FILE = PATHS.readme;
 
 /** Todas las tablas del modelo (readme §3.1 más las de US-033). */
 export const EXPECTED_TABLES = [

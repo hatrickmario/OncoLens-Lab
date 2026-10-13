@@ -1,5 +1,6 @@
 /** AC-17 [RN-23]: ningún texto, clave ni enum de los specs y los ejemplos usa lenguaje prescriptivo (sin mayúsculas ni acentos). */
 import { reporter } from '../lib/findings.mjs';
+import { PATHS } from '../lib/paths.mjs';
 import { normalizeText } from '../lib/text.mjs';
 import { walkJson } from '../lib/walk.mjs';
 import { EVIDENCE, PROVIDERS } from '../lib/specs.mjs';
@@ -31,7 +32,7 @@ function checkDocument(file, document, catalog) {
 
 export function assertNoPrescriptiveLanguage(specs, examples, docs) {
   const catalog = docs.terminosProhibidos;
-  if (!catalog) return [report('scripts/contracts/terminos-prohibidos-rn23.json', '#', 'falta la lista de términos prohibidos de RN-23')];
+  if (!catalog) return [report(PATHS.prohibitedTerms, '#', 'falta la lista de términos prohibidos de RN-23')];
   const fromSpecs = [...PROVIDERS, EVIDENCE].filter((name) => specs[name].raw).flatMap((name) => checkDocument(specs[name].file, specs[name].raw, catalog));
   const fromExamples = Object.entries(examples.files ?? {}).flatMap(([name, data]) => checkDocument(`${examples.dir}/${name}`, data, catalog));
   return [...fromSpecs, ...fromExamples];
