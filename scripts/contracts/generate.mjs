@@ -19,12 +19,17 @@ import { writeReadmeExtract } from './readme-extract.mjs';
 
 const run = promisify(execFile);
 
+/** Resolver de objetos del plugin Zod: un schema cerrado produce `z.strictObject` (D-4, resp. 33). */
+export function objetoEstricto(ctx) {
+  return ctx.schema.additionalProperties?.type === 'never' ? ctx.$(ctx.symbols.z).attr('strictObject').call(ctx.nodes.shape(ctx)) : undefined;
+}
+
 /** Genera con hey-api un archivo `<salida>` desde el spec empaquetado; `plugin` es `@hey-api/typescript` o `zod`. */
 async function generateWithHeyApi(root, provider, bundled, plugin, outputFile) {
   await createClient({
     input: structuredClone(bundled),
     output: { path: path.join(root, path.dirname(outputFile)), clean: true, header: [generatedHeader(provider)] },
-    plugins: [plugin],
+    plugins: [plugin === 'zod' ? { name: 'zod', '~resolvers': { object: objetoEstricto } } : plugin],
     logs: { level: 'silent' },
   });
 }

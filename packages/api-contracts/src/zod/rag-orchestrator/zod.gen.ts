@@ -5,7 +5,7 @@ import * as z from 'zod';
 /**
  * Solo para revisión del oncólogo; no es una opción.
  */
-export const zDiscardedOption = z.object({
+export const zDiscardedOption = z.strictObject({
     option: z.string(),
     rationale: z.string(),
     discardReason: z.enum([
@@ -20,7 +20,7 @@ export const zDiscardedOption = z.object({
 /**
  * Conteo por estado de los criterios de aplicabilidad. Nunca un puntaje o porcentaje clínico (RN-28).
  */
-export const zApplicabilitySummary = z.object({
+export const zApplicabilitySummary = z.strictObject({
     coincide: z.int().gte(0),
     parcial: z.int().gte(0),
     noCoincide: z.int().gte(0),
@@ -59,7 +59,7 @@ export const zTextoEnmascaradoNulo = z.string().nullable();
 /**
  * Procedencia de un dato del contexto. Sin identificadores de documento (RN-10).
  */
-export const zProvenance = z.object({
+export const zProvenance = z.strictObject({
     entryMethod: z.enum([
         'ocr',
         'manual',
@@ -81,7 +81,7 @@ export const zProvenance = z.object({
     conflict: z.boolean()
 });
 
-export const zSourcesSelected = z.object({
+export const zSourcesSelected = z.strictObject({
     guias: z.boolean(),
     ensayos: z.boolean(),
     publicaciones: z.boolean()
@@ -90,7 +90,7 @@ export const zSourcesSelected = z.object({
 /**
  * Filtros efectivos de la consulta, resueltos por clinical-api.
  */
-export const zRagFiltersApplied = z.object({
+export const zRagFiltersApplied = z.strictObject({
     historiaCompleta: z.boolean(),
     soloBiomarcadoresRelevantes: z.boolean(),
     ultimosSeisMeses: z.boolean(),
@@ -101,7 +101,7 @@ export const zRagFiltersApplied = z.object({
 /**
  * Metadatos de una ejecución que consulta el corpus (/rag/query y /rag/follow-up), con los que clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Estricto: ningún campo es nulo y catalogVersion es obligatorio. /case/summary no consulta el corpus y usa CaseSummaryMeta.
  */
-export const zRagMeta = z.object({
+export const zRagMeta = z.strictObject({
     queryLanguage: z.enum(['es', 'en']),
     responseLanguage: z.enum(['es', 'en']),
     llmProvider: z.string(),
@@ -114,7 +114,7 @@ export const zRagMeta = z.object({
     corpusRelease: z.string(),
     corpusCutoffDate: z.iso.date(),
     excludedSources: z.array(z.string()),
-    retrievalParams: z.object({
+    retrievalParams: z.strictObject({
         topK: z.int().gte(1),
         rerankTopN: z.int().gte(1),
         relevanceThreshold: z.number().gte(0).lte(1),
@@ -126,7 +126,7 @@ export const zRagMeta = z.object({
 /**
  * Metadatos del resumen del caso (RN-06). /case/summary no consulta el corpus: los campos del corpus, los modelos de recuperación y retrievalParams son null; el resto es obligatorio y catalogVersion se exige igual que en RagMeta.
  */
-export const zCaseSummaryMeta = z.object({
+export const zCaseSummaryMeta = z.strictObject({
     queryLanguage: z.enum(['es', 'en']),
     responseLanguage: z.enum(['es', 'en']),
     llmProvider: z.string(),
@@ -146,7 +146,7 @@ export const zCaseSummaryMeta = z.object({
 /**
  * Memoria de un análisis previo del paciente (RN-24): contexto, nunca evidencia. No es citable ni cuenta como soporte NLI. Sin identidad, con tiempos relativos.
  */
-export const zPriorAnalysisMemory = z.object({
+export const zPriorAnalysisMemory = z.strictObject({
     source: z.literal('analisis_previo_ia'),
     citable: z.literal(false),
     monthsAgo: z.int().gte(0),
@@ -154,7 +154,7 @@ export const zPriorAnalysisMemory = z.object({
     synthesisSummary: zTextoEnmascarado,
     optionsDescribed: z.array(zTextoEnmascarado),
     linkedDecision: z.string().nullable(),
-    outcomesSince: z.array(z.object({
+    outcomesSince: z.array(z.strictObject({
         eventType: zTextoEnmascarado,
         monthsAgo: z.int().gte(0),
         description: zTextoEnmascarado
@@ -164,10 +164,10 @@ export const zPriorAnalysisMemory = z.object({
 /**
  * Desidentificado por clinical-api: sin identidad ni identificadores enlazables; fechas relativas; texto libre enmascarado (RN-10, RN-11). Cada ítem lleva una referencia opaca dataRef (r1…rN) asignada por petición.
  */
-export const zClinicalContext = z.object({
+export const zClinicalContext = z.strictObject({
     pseudoPatientId: z.string().regex(/^psd_[A-Za-z0-9]+$/),
     population: z.enum(['adulto', 'pediatrico']),
-    diagnosis: z.object({
+    diagnosis: z.strictObject({
         dataRef: zDataRef,
         cancerType: zTextoEnmascarado,
         histology: zTextoEnmascaradoNulo,
@@ -179,7 +179,7 @@ export const zClinicalContext = z.object({
         monthsSinceDiagnosis: z.int().gte(0),
         provenance: zProvenance
     }).nullable(),
-    biomarkers: z.array(z.object({
+    biomarkers: z.array(z.strictObject({
         dataRef: zDataRef,
         biomarkerName: zTextoEnmascarado,
         value: zTextoEnmascarado,
@@ -193,7 +193,7 @@ export const zClinicalContext = z.object({
         monthsAgo: z.int().gte(0),
         provenance: zProvenance
     })),
-    clinicalNotes: z.array(z.object({
+    clinicalNotes: z.array(z.strictObject({
         dataRef: zDataRef,
         noteType: z.enum([
             'antecedente',
@@ -207,14 +207,14 @@ export const zClinicalContext = z.object({
         provenance: zProvenance
     })),
     currentLine: z.int().nullable(),
-    attributes: z.array(z.object({
+    attributes: z.array(z.strictObject({
         dataRef: zDataRef,
         key: zTextoEnmascarado,
         value: zTextoEnmascarado,
         monthsAgo: z.int().gte(0).nullable(),
         provenance: zProvenance
     })),
-    priorTreatments: z.array(z.object({
+    priorTreatments: z.array(z.strictObject({
         dataRef: zDataRef,
         lineNumber: z.int().nullable(),
         setting: zTextoEnmascarado,
@@ -231,14 +231,14 @@ export const zClinicalContext = z.object({
         ]),
         provenance: zProvenance
     })),
-    events: z.array(z.object({
+    events: z.array(z.strictObject({
         dataRef: zDataRef,
         eventType: zTextoEnmascarado,
         monthsAgo: z.int().gte(0).nullable(),
         description: zTextoEnmascarado,
         provenance: zProvenance
     })),
-    biomarkerTrends: z.array(z.object({
+    biomarkerTrends: z.array(z.strictObject({
         dataRef: zDataRef,
         biomarkerName: zTextoEnmascarado,
         trend: z.enum([
@@ -252,7 +252,7 @@ export const zClinicalContext = z.object({
     priorAnalyses: z.array(zPriorAnalysisMemory)
 });
 
-export const zRagQueryInternalRequest = z.object({
+export const zRagQueryInternalRequest = z.strictObject({
     traceId: zTraceId,
     query: z.string().min(1).max(2000),
     sourcesSelected: zSourcesSelected,
@@ -260,14 +260,14 @@ export const zRagQueryInternalRequest = z.object({
     catalogVersion: z.string().min(1),
     maxOptions: z.int().gte(1).lte(3),
     filtersApplied: zRagFiltersApplied,
-    agentLimits: z.object({
+    agentLimits: z.strictObject({
         maxIterations: z.int().gte(0),
         maxSubQueries: z.int().gte(0)
     }).optional(),
     clinicalContext: zClinicalContext
 });
 
-export const zRagFollowUpRequest = z.object({
+export const zRagFollowUpRequest = z.strictObject({
     traceId: zTraceId,
     dataClassification: zDataClassification,
     catalogVersion: z.string().min(1),
@@ -277,7 +277,7 @@ export const zRagFollowUpRequest = z.object({
     filtersApplied: zRagFiltersApplied
 });
 
-export const zCaseSummaryInternalRequest = z.object({
+export const zCaseSummaryInternalRequest = z.strictObject({
     traceId: zTraceId,
     dataClassification: zDataClassification,
     clinicalContext: zClinicalContext
@@ -286,8 +286,8 @@ export const zCaseSummaryInternalRequest = z.object({
 /**
  * Resumen del caso. Cada afirmación referencia datos del contexto por su dataRef; las que no pasan el soporte se omiten.
  */
-export const zCaseSummaryInternalResponse = z.object({
-    claims: z.array(z.object({
+export const zCaseSummaryInternalResponse = z.strictObject({
+    claims: z.array(z.strictObject({
         text: z.string().min(1),
         supportingDataRefs: z.array(zDataRef).min(1)
     })),
@@ -295,7 +295,7 @@ export const zCaseSummaryInternalResponse = z.object({
     meta: zCaseSummaryMeta
 });
 
-export const zExtractedField = z.object({
+export const zExtractedField = z.strictObject({
     value: z.string(),
     extractionScore: z.number().gte(0).lte(1),
     extractionConfidence: z.enum([
@@ -303,15 +303,15 @@ export const zExtractedField = z.object({
         'media',
         'baja'
     ]),
-    sourceSpan: z.object({
+    sourceSpan: z.strictObject({
         page: z.int().gte(1),
         bbox: z.array(z.number()).nullable(),
         textOffset: z.int().gte(0)
     })
 });
 
-export const zDocumentExtractResponse = z.object({
-    piiScan: z.object({
+export const zDocumentExtractResponse = z.strictObject({
+    piiScan: z.strictObject({
         clean: z.boolean(),
         findingTypes: z.array(z.enum([
             'nombre',
@@ -324,7 +324,7 @@ export const zDocumentExtractResponse = z.object({
             'otro'
         ]))
     }),
-    identityFound: z.object({
+    identityFound: z.strictObject({
         idType: z.string(),
         nationalId: z.string()
     }).nullable(),
@@ -380,19 +380,19 @@ export const zDocumentExtractResponse = z.object({
     catalogVersion: z.string()
 });
 
-export const zErrorTokenServicioInvalido = z.object({
+export const zErrorTokenServicioInvalido = z.strictObject({
     error: z.literal('TOKEN_SERVICIO_INVALIDO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorCatalogVersionMismatch = z.object({
+export const zErrorCatalogVersionMismatch = z.strictObject({
     error: z.literal('CATALOG_VERSION_MISMATCH'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorTipoNoHabilitado = z.object({
+export const zErrorTipoNoHabilitado = z.strictObject({
     error: z.literal('TIPO_NO_HABILITADO'),
     message: z.string(),
     traceId: z.string()
@@ -401,11 +401,11 @@ export const zErrorTipoNoHabilitado = z.object({
 /**
  * Error de validación sin eco: detail lleva la ubicación, el mensaje y el tipo, nunca el valor recibido (sin input ni ctx).
  */
-export const zErrorValidacion = z.object({
+export const zErrorValidacion = z.strictObject({
     error: z.literal('CUERPO_INVALIDO'),
     message: z.string(),
     traceId: z.string(),
-    detail: z.array(z.object({
+    detail: z.array(z.strictObject({
         loc: z.array(z.union([
             z.string(),
             z.int()
@@ -415,19 +415,19 @@ export const zErrorValidacion = z.object({
     }))
 });
 
-export const zErrorColaInferenciaLlena = z.object({
+export const zErrorColaInferenciaLlena = z.strictObject({
     error: z.literal('COLA_INFERENCIA_LLENA'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorLlmLocalNoDisponible = z.object({
+export const zErrorLlmLocalNoDisponible = z.strictObject({
     error: z.literal('LOCAL_LLM_UNAVAILABLE'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorDeadlineVencido = z.object({
+export const zErrorDeadlineVencido = z.strictObject({
     error: z.literal('DEADLINE_VENCIDO'),
     message: z.string(),
     traceId: z.string()
@@ -476,12 +476,12 @@ export const zCitedSource = zCitedSourceFields;
 /**
  * Opción terapéutica descrita en la evidencia; es una descripción de lo que la evidencia recuperada reporta y no constituye una indicación para el paciente (RN-23).
  */
-export const zEvidenceOption = z.object({
+export const zEvidenceOption = z.strictObject({
     option: z.string(),
     rationale: z.string(),
     applicabilitySummary: zApplicabilitySummary,
     populationNotComparable: z.boolean(),
-    perSource: z.array(z.object({
+    perSource: z.array(z.strictObject({
         externalId: z.string(),
         summary: zApplicabilitySummary,
         populationNotComparable: z.boolean()
@@ -503,7 +503,7 @@ export const zSupportedClaim = z.intersection(z.union([
     z.object({
         patientDataRefs: z.array(z.unknown()).min(1).optional()
     })
-]), z.object({
+]), z.strictObject({
     text: z.string().min(1),
     citedSources: z.array(zCitedSource),
     patientDataRefs: z.array(z.string().regex(/^r[0-9]+$/))
@@ -512,9 +512,9 @@ export const zSupportedClaim = z.intersection(z.union([
 /**
  * Síntesis de la evidencia recuperada. Siempre presente: en los Sprints 1–3 puede venir vacía (agreements y discrepancies sin elementos), pero el contrato es el final (ADR-26).
  */
-export const zSynthesis = z.object({
+export const zSynthesis = z.strictObject({
     agreements: z.array(zSupportedClaim),
-    discrepancies: z.array(z.object({
+    discrepancies: z.array(z.strictObject({
         claim: zSupportedClaim,
         explainedBy: z.enum([
             'poblacion',
@@ -530,7 +530,7 @@ export const zSynthesis = z.object({
 /**
  * Un criterio del catálogo del tipo de cáncer y su estado frente al paciente (RN-28).
  */
-export const zApplicabilityCriterion = z.object({
+export const zApplicabilityCriterion = z.strictObject({
     criterion: z.string(),
     patientValue: z.string().nullable(),
     studyPopulationValue: z.string().nullable(),
@@ -553,7 +553,7 @@ export const zApplicabilityCriterion = z.object({
 /**
  * Aplicabilidad de una fuente al paciente, criterio a criterio.
  */
-export const zSourceApplicability = z.object({
+export const zSourceApplicability = z.strictObject({
     externalId: z.string(),
     criteria: z.array(zApplicabilityCriterion),
     summary: zApplicabilitySummary,
@@ -563,25 +563,25 @@ export const zSourceApplicability = z.object({
 /**
  * Usa los schemas compartidos de contracts/schemas/evidence.yaml (Synthesis, SourceApplicability, EvidenceOption, DiscardedOption). clinical-api agrega la Base del análisis y persiste el AIAnalysisRecord.
  */
-export const zRagQueryInternalResponse = z.object({
+export const zRagQueryInternalResponse = z.strictObject({
     status: z.enum(['con_evidencia', 'sin_evidencia']),
     synthesis: zSynthesis,
     applicability: z.array(zSourceApplicability),
     evidenceOptions: z.array(zEvidenceOption).max(3),
     discardedOptions: z.array(zDiscardedOption),
-    limitations: z.array(z.object({
+    limitations: z.array(z.strictObject({
         text: z.string(),
         origin: z.enum(['estructural', 'llm_verificado'])
     })),
-    assumptions: z.array(z.object({
+    assumptions: z.array(z.strictObject({
         text: z.string()
     })),
-    retrievalStats: z.object({
+    retrievalStats: z.strictObject({
         retrieved: z.int().gte(0),
         aboveThreshold: z.int().gte(0)
     }),
     omittedClaims: z.int().gte(0),
-    agentSteps: z.array(z.object({
+    agentSteps: z.array(z.strictObject({
         subQuery: z.string(),
         target: z.string(),
         foundEvidence: z.boolean()
@@ -590,7 +590,7 @@ export const zRagQueryInternalResponse = z.object({
     meta: zRagMeta
 });
 
-export const zRagFollowUpResponse = z.object({
+export const zRagFollowUpResponse = z.strictObject({
     status: z.enum([
         'con_evidencia',
         'sin_evidencia',
@@ -627,7 +627,7 @@ export const zAnswerFollowUpHeaders = z.object({
  */
 export const zAnswerFollowUpResponse = zRagFollowUpResponse;
 
-export const zExtractDocumentBody = z.object({
+export const zExtractDocumentBody = z.strictObject({
     file: z.string(),
     traceId: zTraceId,
     documentType: z.enum(['historia_clinica', 'examen']),

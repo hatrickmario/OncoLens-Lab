@@ -162,11 +162,15 @@ Los ocho schemas compartidos de design.md D1 (`EvidenceOption`, `DiscardedOption
 - **THEN** son textualmente idénticos
 
 ### Requirement: Generación reproducible desde los specs
-`npm run contracts:generate` MUST generar desde ambos specs tipos TS, Zod y Pydantic en las rutas de design.md D6 y el extracto no normativo de readme §4, marcados como no editables. `contracts:generate:check` SHALL fallar si queda una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide con el spec `[Pre-S1 resp. 20, 28]`. `contracts:breaking` y `contracts:verify-provider` quedan para US-214.
+`npm run contracts:generate` MUST generar desde ambos specs tipos TS, Zod y Pydantic en las rutas de design.md D6 y el extracto no normativo de readme §4, marcados como no editables. `contracts:generate:check` SHALL fallar si queda una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide con el spec `[Pre-S1 resp. 20, 28]`. `contracts:breaking` y `contracts:verify-provider` quedan para US-214. El Zod generado MUST ser estricto `[Pre-S1 resp. 33 (D-4)]`.
 
 #### Scenario: Generar dos veces no produce diferencias [US-033 AC-16] [Pre-S1 resp. 20]
 - **WHEN** se ejecuta `contracts:generate:check` sobre el repositorio recién generado y versionado
 - **THEN** termina con código 0 sin diferencias
+
+#### Scenario: El Zod generado rechaza propiedades desconocidas [US-033 AC-16] [Pre-S1 resp. 33 (D-4)]
+- **WHEN** se valida con el Zod generado de `rag-orchestrator` un ejemplo al que se añade una propiedad no declarada en un objeto cerrado
+- **THEN** la validación falla (`z.strictObject`); los `if/then` y los `anyOf` de `required` que el generador no traduce figuran como brecha en design.md D6, con US-214 como dueña
 
 #### Scenario: Una edición a mano de lo generado se detecta [US-033 AC-16] [Pre-S1 resp. 20]
 - **WHEN** se edita a mano `packages/api-contracts/src/zod/clinical-api/zod.gen.ts` o un modelo de `apps/rag-orchestrator/app/schemas/generated/` y se ejecuta `contracts:generate:check`

@@ -5,7 +5,7 @@ import * as z from 'zod';
 /**
  * Solo para revisión del oncólogo; no es una opción.
  */
-export const zDiscardedOption = z.object({
+export const zDiscardedOption = z.strictObject({
     option: z.string(),
     rationale: z.string(),
     discardReason: z.enum([
@@ -20,18 +20,18 @@ export const zDiscardedOption = z.object({
 /**
  * Conteo por estado de los criterios de aplicabilidad. Nunca un puntaje o porcentaje clínico (RN-28).
  */
-export const zApplicabilitySummary = z.object({
+export const zApplicabilitySummary = z.strictObject({
     coincide: z.int().gte(0),
     parcial: z.int().gte(0),
     noCoincide: z.int().gte(0),
     desconocido: z.int().gte(0)
 });
 
-export const zLoginRequest = z.object({
+export const zLoginRequest = z.strictObject({
     email: z.email().max(254)
 });
 
-export const zProvenance = z.object({
+export const zProvenance = z.strictObject({
     entryMethod: z.enum([
         'ocr',
         'manual',
@@ -55,7 +55,7 @@ export const zProvenance = z.object({
     additionalSourceDocumentIds: z.array(z.uuid())
 });
 
-export const zDocument = z.object({
+export const zDocument = z.strictObject({
     id: z.uuid(),
     patientId: z.uuid(),
     documentType: z.enum(['historia_clinica', 'examen']),
@@ -71,7 +71,7 @@ export const zDocument = z.object({
     uploadedAt: z.iso.datetime()
 });
 
-export const zBiomarker = z.object({
+export const zBiomarker = z.strictObject({
     id: z.uuid(),
     name: z.string(),
     loincCode: z.string().nullable(),
@@ -104,8 +104,8 @@ export const zBiomarker = z.object({
 /**
  * Vista de caso (FR-21, FR-23). Sin identidad del paciente. Cada dato lleva su procedencia.
  */
-export const zCaseView = z.object({
-    timeline: z.array(z.object({
+export const zCaseView = z.strictObject({
+    timeline: z.array(z.strictObject({
         id: z.uuid(),
         eventType: z.string(),
         derived: z.boolean(),
@@ -117,13 +117,13 @@ export const zCaseView = z.object({
             'incierta'
         ]),
         description: z.string(),
-        codes: z.object({
+        codes: z.strictObject({
             icd10: z.string().nullable(),
             cups: z.string().nullable()
         }),
         provenance: zProvenance
     })),
-    priorTreatments: z.array(z.object({
+    priorTreatments: z.array(z.strictObject({
         lineNumber: z.int().nullable(),
         setting: z.string(),
         regimenName: z.string(),
@@ -134,23 +134,23 @@ export const zCaseView = z.object({
         endReason: z.string(),
         provenance: zProvenance
     })),
-    attributes: z.array(z.object({
+    attributes: z.array(z.strictObject({
         key: z.string(),
         value: z.string(),
         observedAt: z.iso.date().nullable(),
         provenance: zProvenance
     })),
-    biomarkerSeries: z.array(z.object({
+    biomarkerSeries: z.array(z.strictObject({
         name: z.string(),
         loincCode: z.string().nullable(),
-        points: z.array(z.object({
+        points: z.array(z.strictObject({
             value: z.string(),
             unit: z.string().nullable(),
             performedAt: z.iso.date(),
             provenance: zProvenance
         }))
     })),
-    completeness: z.array(z.object({
+    completeness: z.array(z.strictObject({
         item: z.string(),
         status: z.enum([
             'presente_verificado',
@@ -165,7 +165,7 @@ export const zCaseView = z.object({
 /**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
-export const zBiomarkerManualCreate = z.object({
+export const zBiomarkerManualCreate = z.strictObject({
     name: z.string().min(1).max(200),
     value: z.string().min(1).max(200),
     unit: z.string().max(50).optional(),
@@ -176,7 +176,7 @@ export const zBiomarkerManualCreate = z.object({
 /**
  * Gradación estructurada de un diagnóstico (solo lectura). En lectura gleasonScore e isupGradeGroup siempre vienen derivados de los patrones. El estado de revisión de cada gradación es provenance.reviewStatus.
  */
-export const zDiagnosisGrading = z.object({
+export const zDiagnosisGrading = z.strictObject({
     id: z.uuid(),
     gradingSystem: z.enum(['gleason_isup', 'nottingham']),
     specimenType: z.enum(['biopsia', 'prostatectomia']).nullable(),
@@ -194,7 +194,7 @@ export const zDiagnosisGrading = z.object({
     provenance: zProvenance
 });
 
-export const zDiagnosis = z.object({
+export const zDiagnosis = z.strictObject({
     id: z.uuid(),
     cancerType: z.string(),
     icd10Code: z.string().nullable(),
@@ -214,7 +214,7 @@ export const zDiagnosis = z.object({
 /**
  * Gradación de próstata. gleasonScore e isupGradeGroup son opcionales: el servidor los deriva de los patrones y, si llegan, valida su coherencia (422 GRADACION_INCOHERENTE): score = primario + secundario; grupo ISUP: 3+3 es 1, 3+4 es 2, 4+3 es 3, score 8 es 4, score 9 o 10 es 5 (DEC-05).
  */
-export const zGleasonIsupGradingInput = z.object({
+export const zGleasonIsupGradingInput = z.strictObject({
     gradingSystem: z.literal('gleason_isup'),
     specimenType: z.enum(['biopsia', 'prostatectomia']),
     gradeScope: z.enum([
@@ -231,7 +231,7 @@ export const zGleasonIsupGradingInput = z.object({
 /**
  * Gradación de mama (Nottingham, grado 1 a 3).
  */
-export const zNottinghamGradingInput = z.object({
+export const zNottinghamGradingInput = z.strictObject({
     gradingSystem: z.literal('nottingham'),
     nottinghamGrade: z.int().gte(1).lte(3)
 });
@@ -244,7 +244,7 @@ export const zDiagnosisGradingInput = z.discriminatedUnion('gradingSystem', [
 /**
  * Sin diagnóstico vigente crea uno manual y exige cancerType, stagingSystem, stageValue y diagnosedAt (si faltan, 422 CUERPO_INVALIDO). Con diagnóstico vigente es una corrección explícita: crea uno manual_correction y el anterior pasa a reemplazado (RN-08). Los valores de catálogo (cancerType, stagingSystem, performanceScale) y el rango de performanceValue se validan contra el catálogo (422 VALOR_FUERA_DE_CATALOGO). grade no forma parte del cuerpo: es derivado.
  */
-export const zDiagnosisManualCreate = z.object({
+export const zDiagnosisManualCreate = z.strictObject({
     cancerType: z.string().min(1).optional(),
     histology: z.string().max(200).nullish(),
     stagingSystem: z.string().min(1).optional(),
@@ -275,10 +275,10 @@ export const zLifecycleStatus = z.enum(['activo', 'egresado']);
 /**
  * Vista del doctor (permiso clinical:read).
  */
-export const zPatientSummary = z.object({
+export const zPatientSummary = z.strictObject({
     view: z.literal('doctor'),
     id: z.uuid(),
-    identification: z.object({
+    identification: z.strictObject({
         idType: zIdType,
         nationalId: z.string(),
         fullName: z.string()
@@ -297,7 +297,7 @@ export const zPatientSummary = z.object({
 /**
  * Vista del administrador: identificación enmascarada, estado y fecha de alta. Sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos (mínimo privilegio).
  */
-export const zPatientAdminSummary = z.object({
+export const zPatientAdminSummary = z.strictObject({
     view: z.literal('admin'),
     id: z.uuid(),
     idType: zIdType,
@@ -307,14 +307,14 @@ export const zPatientAdminSummary = z.object({
     registeredAt: z.iso.datetime()
 });
 
-export const zPatientSearchRequest = z.intersection(z.unknown(), z.object({
+export const zPatientSearchRequest = z.intersection(z.unknown(), z.strictObject({
     idType: zIdType.optional(),
     nationalId: z.string().min(1).optional(),
     name: z.string().min(2).optional(),
     page: z.int().gte(1).optional().default(1)
 }));
 
-export const zPatientPage = z.object({
+export const zPatientPage = z.strictObject({
     items: z.array(z.union([zPatientSummary, zPatientAdminSummary])),
     page: z.int().gte(1),
     pageSize: z.int().gte(1),
@@ -324,7 +324,7 @@ export const zPatientPage = z.object({
 /**
  * Filtros de la petición; todos opcionales.
  */
-export const zEvidenceAnalysisFilters = z.object({
+export const zEvidenceAnalysisFilters = z.strictObject({
     historiaCompleta: z.boolean().optional(),
     soloBiomarcadoresRelevantes: z.boolean().optional(),
     ultimosSeisMeses: z.boolean().optional(),
@@ -332,7 +332,7 @@ export const zEvidenceAnalysisFilters = z.object({
     publishedFromYear: z.int().nullish()
 });
 
-export const zEvidenceAnalysisRequest = z.object({
+export const zEvidenceAnalysisRequest = z.strictObject({
     patientId: z.uuid(),
     query: z.string().min(1).max(2000),
     questionTemplateId: z.string().nullish(),
@@ -347,7 +347,7 @@ export const zEvidenceAnalysisRequest = z.object({
         z.object({
             publicaciones: z.literal(true).optional()
         })
-    ]), z.object({
+    ]), z.strictObject({
         guias: z.boolean(),
         ensayos: z.boolean(),
         publicaciones: z.boolean()
@@ -358,7 +358,7 @@ export const zEvidenceAnalysisRequest = z.object({
 /**
  * Filtros efectivos con los que se ejecutó el análisis.
  */
-export const zAppliedFilters = z.object({
+export const zAppliedFilters = z.strictObject({
     historiaCompleta: z.boolean(),
     soloBiomarcadoresRelevantes: z.boolean(),
     ultimosSeisMeses: z.boolean(),
@@ -369,8 +369,8 @@ export const zAppliedFilters = z.object({
 /**
  * Base del análisis (FR-27). Siempre presente, también con sin_evidencia.
  */
-export const zAnalysisBasis = z.object({
-    patientDataUsed: z.array(z.object({
+export const zAnalysisBasis = z.strictObject({
+    patientDataUsed: z.array(z.strictObject({
         label: z.string(),
         reviewStatus: z.enum([
             'auto_aceptado',
@@ -382,11 +382,11 @@ export const zAnalysisBasis = z.object({
     })),
     missingCriticalData: z.array(z.string()),
     continuedWithWarning: z.boolean(),
-    assumptions: z.array(z.object({
+    assumptions: z.array(z.strictObject({
         text: z.string(),
         origin: z.enum(['regla_catalogo', 'llm_verificado'])
     })),
-    sourcesConsulted: z.object({
+    sourcesConsulted: z.strictObject({
         selected: z.array(z.enum([
             'guias',
             'ensayos',
@@ -398,15 +398,15 @@ export const zAnalysisBasis = z.object({
     }),
     sourcesNotIncluded: z.array(z.string()),
     corpusCutoffDate: z.iso.date(),
-    limitations: z.array(z.object({
+    limitations: z.array(z.strictObject({
         text: z.string(),
         origin: z.enum(['estructural', 'llm_verificado'])
     })),
-    priorAnalysesUsed: z.array(z.object({
+    priorAnalysesUsed: z.array(z.strictObject({
         analysisId: z.uuid(),
         createdAt: z.iso.datetime()
     })),
-    agentSteps: z.array(z.object({
+    agentSteps: z.array(z.strictObject({
         subQuery: z.string(),
         target: z.string(),
         foundEvidence: z.boolean()
@@ -417,7 +417,7 @@ export const zAnalysisBasis = z.object({
 /**
  * Vigencia del análisis (FR-12, FR-26). En un análisis nuevo es neutra: patientData false, changedData vacío y newerEvidenceOrCatalog false; el detector de vigencia la calcula después.
  */
-export const zStaleness = z.object({
+export const zStaleness = z.strictObject({
     patientData: z.boolean(),
     changedData: z.array(z.string()),
     newerEvidenceOrCatalog: z.boolean()
@@ -426,7 +426,7 @@ export const zStaleness = z.object({
 /**
  * Resuelve una referencia opaca rN de la respuesta a la entidad real del paciente. Es propio de clinical-api: el UUID nunca viaja a Backend 2.
  */
-export const zPatientDataLink = z.object({
+export const zPatientDataLink = z.strictObject({
     dataRef: z.string().regex(/^r[0-9]+$/),
     entityType: z.enum([
         'diagnosis',
@@ -439,65 +439,65 @@ export const zPatientDataLink = z.object({
     entityId: z.uuid()
 });
 
-export const zFollowUpCreate = z.object({
+export const zFollowUpCreate = z.strictObject({
     question: z.string().min(1).max(2000)
 });
 
-export const zErrorNoAutenticado = z.object({
+export const zErrorNoAutenticado = z.strictObject({
     error: z.literal('NO_AUTENTICADO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorCredencialesInvalidas = z.object({
+export const zErrorCredencialesInvalidas = z.strictObject({
     error: z.literal('CREDENCIALES_INVALIDAS'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorPermisoDenegado = z.object({
+export const zErrorPermisoDenegado = z.strictObject({
     error: z.literal('PERMISO_DENEGADO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorPermisoOOptOut = z.object({
+export const zErrorPermisoOOptOut = z.strictObject({
     error: z.enum(['PERMISO_DENEGADO', 'OPT_OUT_ANALISIS_IA']),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorNoEncontrado = z.object({
+export const zErrorNoEncontrado = z.strictObject({
     error: z.literal('NO_ENCONTRADO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorLimiteSeguimiento = z.object({
+export const zErrorLimiteSeguimiento = z.strictObject({
     error: z.literal('LIMITE_SEGUIMIENTO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorDocumentoDuplicado = z.object({
+export const zErrorDocumentoDuplicado = z.strictObject({
     error: z.literal('DOCUMENTO_DUPLICADO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorCuerpoInvalido = z.object({
+export const zErrorCuerpoInvalido = z.strictObject({
     error: z.literal('CUERPO_INVALIDO'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorSolicitudNoProcesable = z.object({
+export const zErrorSolicitudNoProcesable = z.strictObject({
     error: z.enum(['CUERPO_INVALIDO', 'PACIENTE_EGRESADO']),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorRegistroManualInvalido = z.object({
+export const zErrorRegistroManualInvalido = z.strictObject({
     error: z.enum([
         'CUERPO_INVALIDO',
         'PACIENTE_EGRESADO',
@@ -507,7 +507,7 @@ export const zErrorRegistroManualInvalido = z.object({
     traceId: z.string()
 });
 
-export const zErrorDiagnosticoInvalido = z.object({
+export const zErrorDiagnosticoInvalido = z.strictObject({
     error: z.enum([
         'CUERPO_INVALIDO',
         'PACIENTE_EGRESADO',
@@ -518,7 +518,7 @@ export const zErrorDiagnosticoInvalido = z.object({
     traceId: z.string()
 });
 
-export const zErrorSeguimientoNoProcesable = z.object({
+export const zErrorSeguimientoNoProcesable = z.strictObject({
     error: z.enum([
         'CUERPO_INVALIDO',
         'PACIENTE_EGRESADO',
@@ -528,31 +528,31 @@ export const zErrorSeguimientoNoProcesable = z.object({
     traceId: z.string()
 });
 
-export const zErrorLimiteSolicitudes = z.object({
+export const zErrorLimiteSolicitudes = z.strictObject({
     error: z.literal('LIMITE_SOLICITUDES'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorLimiteGeneracion = z.object({
+export const zErrorLimiteGeneracion = z.strictObject({
     error: z.enum(['LIMITE_SOLICITUDES', 'COLA_INFERENCIA_LLENA']),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorServicioIa = z.object({
+export const zErrorServicioIa = z.strictObject({
     error: z.literal('ERROR_SERVICIO_IA'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorLlmLocalNoDisponible = z.object({
+export const zErrorLlmLocalNoDisponible = z.strictObject({
     error: z.literal('LOCAL_LLM_UNAVAILABLE'),
     message: z.string(),
     traceId: z.string()
 });
 
-export const zErrorDeadlineVencido = z.object({
+export const zErrorDeadlineVencido = z.strictObject({
     error: z.literal('DEADLINE_VENCIDO'),
     message: z.string(),
     traceId: z.string()
@@ -601,12 +601,12 @@ export const zCitedSource = zCitedSourceFields;
 /**
  * Opción terapéutica descrita en la evidencia; es una descripción de lo que la evidencia recuperada reporta y no constituye una indicación para el paciente (RN-23).
  */
-export const zEvidenceOption = z.object({
+export const zEvidenceOption = z.strictObject({
     option: z.string(),
     rationale: z.string(),
     applicabilitySummary: zApplicabilitySummary,
     populationNotComparable: z.boolean(),
-    perSource: z.array(z.object({
+    perSource: z.array(z.strictObject({
         externalId: z.string(),
         summary: zApplicabilitySummary,
         populationNotComparable: z.boolean()
@@ -628,7 +628,7 @@ export const zSupportedClaim = z.intersection(z.union([
     z.object({
         patientDataRefs: z.array(z.unknown()).min(1).optional()
     })
-]), z.object({
+]), z.strictObject({
     text: z.string().min(1),
     citedSources: z.array(zCitedSource),
     patientDataRefs: z.array(z.string().regex(/^r[0-9]+$/))
@@ -637,9 +637,9 @@ export const zSupportedClaim = z.intersection(z.union([
 /**
  * Síntesis de la evidencia recuperada. Siempre presente: en los Sprints 1–3 puede venir vacía (agreements y discrepancies sin elementos), pero el contrato es el final (ADR-26).
  */
-export const zSynthesis = z.object({
+export const zSynthesis = z.strictObject({
     agreements: z.array(zSupportedClaim),
-    discrepancies: z.array(z.object({
+    discrepancies: z.array(z.strictObject({
         claim: zSupportedClaim,
         explainedBy: z.enum([
             'poblacion',
@@ -655,7 +655,7 @@ export const zSynthesis = z.object({
 /**
  * Un criterio del catálogo del tipo de cáncer y su estado frente al paciente (RN-28).
  */
-export const zApplicabilityCriterion = z.object({
+export const zApplicabilityCriterion = z.strictObject({
     criterion: z.string(),
     patientValue: z.string().nullable(),
     studyPopulationValue: z.string().nullable(),
@@ -678,7 +678,7 @@ export const zApplicabilityCriterion = z.object({
 /**
  * Aplicabilidad de una fuente al paciente, criterio a criterio.
  */
-export const zSourceApplicability = z.object({
+export const zSourceApplicability = z.strictObject({
     externalId: z.string(),
     criteria: z.array(zApplicabilityCriterion),
     summary: zApplicabilitySummary,
@@ -688,7 +688,7 @@ export const zSourceApplicability = z.object({
 /**
  * Análisis de evidencia (síntesis, aplicabilidad y opciones descritas en la evidencia, RN-23).
  */
-export const zEvidenceAnalysis = z.object({
+export const zEvidenceAnalysis = z.strictObject({
     id: z.uuid(),
     traceId: z.string(),
     queryText: z.string(),
@@ -719,7 +719,7 @@ export const zFollowUpCitedSource = zCitedSourceFields.and(z.object({
     isNewSource: z.boolean()
 }));
 
-export const zFollowUpTurn = z.object({
+export const zFollowUpTurn = z.strictObject({
     id: z.uuid(),
     analysisId: z.uuid(),
     turnNumber: z.int().gte(1),
@@ -737,12 +737,12 @@ export const zFollowUpTurn = z.object({
     createdAt: z.iso.datetime()
 });
 
-export const zLoginRequestWritable = z.object({
+export const zLoginRequestWritable = z.strictObject({
     email: z.email().max(254),
     password: z.string().min(1).max(1024)
 });
 
-export const zDiagnosisWritable = z.object({
+export const zDiagnosisWritable = z.strictObject({
     id: z.uuid(),
     cancerType: z.string(),
     icd10Code: z.string().nullable(),
@@ -760,10 +760,10 @@ export const zDiagnosisWritable = z.object({
 /**
  * Vista del doctor (permiso clinical:read).
  */
-export const zPatientSummaryWritable = z.object({
+export const zPatientSummaryWritable = z.strictObject({
     view: z.literal('doctor'),
     id: z.uuid(),
-    identification: z.object({
+    identification: z.strictObject({
         idType: zIdType,
         nationalId: z.string(),
         fullName: z.string()
@@ -779,7 +779,7 @@ export const zPatientSummaryWritable = z.object({
     missingCriticalCount: z.int().gte(0)
 });
 
-export const zPatientPageWritable = z.object({
+export const zPatientPageWritable = z.strictObject({
     items: z.array(z.union([zPatientSummaryWritable, zPatientAdminSummary])),
     page: z.int().gte(1),
     pageSize: z.int().gte(1),
@@ -845,7 +845,7 @@ export const zGetPatientCasePath = z.object({
  */
 export const zGetPatientCaseResponse = zCaseView;
 
-export const zUploadDocumentBody = z.object({
+export const zUploadDocumentBody = z.strictObject({
     file: z.string(),
     documentType: z.enum(['historia_clinica', 'examen'])
 });

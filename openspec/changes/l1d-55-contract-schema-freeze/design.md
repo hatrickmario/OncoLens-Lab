@@ -176,6 +176,22 @@ skill `sync-contracts`, que reservan `packages/api-contracts/src/zod/` para los 
   textualmente idénticos.
 - **Pendientes (US-214, S2):** `contracts:breaking` y `contracts:verify-provider`, el *hook* que
   bloquea editar lo generado y los clientes HTTP.
+- **Zod estricto `[Pre-S1 resp. 33 (D-4)]`:** el *plugin* de Zod de `@hey-api/openapi-ts` emite
+  `z.object` aunque el schema declare `additionalProperties: false`. `generate.mjs` registra un
+  *resolver* de objetos (`objetoEstricto`, con test) que emite `z.strictObject` cuando el schema
+  es cerrado y tiene propiedades; los objetos abiertos (`extractedData.*`, excepción nombrada de
+  D7) y los envoltorios de parámetros (`path`, `query`, `headers`) siguen como `z.object`. Así el
+  Zod que `web` y `clinical-api` importan rechaza propiedades desconocidas igual que el spec.
+- **Brecha declarada `[Pre-S1 resp. 33 (D-4)]`, dueña US-214:** el generador **no traduce**
+  (a) los `if/then` condicionales (`RagQueryInternalResponse`, `RagFollowUpResponse`,
+  `EvidenceAnalysis`, `FollowUpTurn`: p. ej. `sin_evidencia` ⇒ `topRelevanceScore: null`) ni
+  (b) los `anyOf` que solo exigen `required`/`properties` (`PatientSearchRequest`: documento o
+  nombre; `EvidenceAnalysisRequest.filters`: al menos un tipo de fuente), que Zod recibe como
+  `z.unknown()` en una intersección. Lo que el Zod generado deja pasar lo cubren `contracts:check`
+  (sobre los ejemplos) y la validación de respuestas contra el spec de `contracts:verify-provider`
+  (US-214). US-214 SHALL decidir si esos refinamientos se escriben como `superRefine` en
+  `*.schema.ts` o si el generador los emite; hasta entonces ningún consumidor debe asumir que el
+  Zod generado impone esas condiciones.
 Descartadas en una línea: `openapi-typescript` + `openapi-zod-client` (dos herramientas y soporte
 3.1 desigual); generar Pydantic con `fastapi-code-generator` (genera también rutas, que no
 queremos).
