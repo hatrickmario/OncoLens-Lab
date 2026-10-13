@@ -11,6 +11,7 @@ export const IDENTIDAD_PII = [
   /^apellidos?$/,
   /^nationalid$/,
   /^idtype$/,
+  /^identification$/, // el objeto que agrupa la identidad en claro (PatientSummary.identification)
   /^documentnumber$/,
   /^documento$/,
   /^birth(date|year)$/,

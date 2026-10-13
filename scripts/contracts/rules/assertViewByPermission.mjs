@@ -1,5 +1,6 @@
 /** AC-17 [Pre-S1 resp. 27, E-04]: toda operación que responde una vista por permiso declara x-view-by-permission y su vista por defecto no lleva datos clínicos. */
 import { reporter } from '../lib/findings.mjs';
+import { IDENTIDAD_PII, matchesIdentity } from '../lib/identity.mjs';
 import { findResponse, jsonSchemaOf, labelOf, listOperations } from '../lib/operations.mjs';
 import { permissionMatrix } from '../lib/permissions.mjs';
 import { walkResolved } from '../lib/resolvedWalk.mjs';
@@ -11,8 +12,15 @@ const ADMIN_VIEW = 'PatientAdminSummary';
 /** Propiedades clínicas que la vista por defecto no puede tener. */
 const CLINICAL_PROPERTIES = ['diagnosis', 'biomarkers', 'recentBiomarkers', 'documents', 'analyses', 'openReviewCount', 'pendingReviewCount', 'missingCriticalCount'];
 
-/** Propiedades con la identidad en claro: solo la ficha las devuelve, con auditoría (D-7, resp. 36). */
-const UNMASKED_IDENTITY = ['identification', 'fullName', 'nationalId'];
+/**
+ * Campos de identidad que el listado SÍ puede devolver porque van enmascarados o no identifican por sí solos
+ * (D-7, resp. 36). Cualquier otro nombre del catálogo IDENTIDAD_PII es identidad en claro: solo la ficha la devuelve.
+ */
+const CAMPOS_ENMASCARADOS = ['nationalIdMasked', 'fullNameMasked', 'idType', 'birthYear'];
+/** Valor del discriminador `view` de la vista del doctor en el listado y la búsqueda. */
+const LISTING_VIEW = 'doctor_listado';
+
+const isUnmaskedIdentity = (name) => matchesIdentity(name, IDENTIDAD_PII) && !CAMPOS_ENMASCARADOS.includes(name);
 
 /** Los `oneOf` de vistas que la respuesta 200 contiene (directos o dentro de sus propiedades). */
 function viewChoices(spec, entry) {
@@ -38,11 +46,31 @@ function checkMapping(file, entry, mapping, choices, matrix) {
   return found;
 }
 
+/** ¿La respuesta 200 es una página (`items` de tipo array), como PatientPage? */
+function respondsPage(spec, entry) {
+  const success = findResponse(spec, entry, 200);
+  const schema = success && jsonSchemaOf(spec, success);
+  return schema?.node?.properties?.items?.type === 'array';
+}
+
+/** ¿Alguna de las vistas declara el discriminador del listado (`view: doctor_listado`)? */
+const declaresListingView = (specs, mapping) => Object.values(mapping).some((view) => schemaOf(specs, CLINICAL_API, view)?.properties?.view?.const === LISTING_VIEW);
+
+/** Rutas (`contacto.email`) de las propiedades con identidad en claro de una vista, a cualquier profundidad y a través de allOf/$ref. */
+function unmaskedIdentityIn(spec, view) {
+  const found = [];
+  walkResolved(spec, { $ref: schemaPointer(view) }, schemaPointer(view), ({ chain, viaProperty }) => {
+    if (viaProperty === null || !isUnmaskedIdentity(viaProperty)) return undefined;
+    found.push(chain.join('.'));
+    return false;
+  });
+  return [...new Set(found)];
+}
+
 /** El listado y la búsqueda devuelven nombre y documento enmascarados; la identidad en claro solo viaja en la ficha. */
-function checkMaskedIdentity(specs, file, entry, mapping) {
-  if (entry.route.includes('{')) return [];
-  return Object.values(mapping).flatMap((view) => UNMASKED_IDENTITY
-    .filter((name) => Object.hasOwn(schemaOf(specs, CLINICAL_API, view)?.properties ?? {}, name))
+function checkMaskedIdentity(specs, spec, file, entry, mapping) {
+  if (!respondsPage(spec, entry) && !declaresListingView(specs, mapping)) return [];
+  return Object.values(mapping).flatMap((view) => unmaskedIdentityIn(spec, view)
     .map((name) => report(file, `${entry.pointer}/x-view-by-permission`, `la vista ${view} del listado no puede tener ${name}: nombre y documento van enmascarados`)));
 }
 
@@ -64,6 +92,6 @@ export function assertViewByPermission(specs, examples, docs) {
     if (choices.length === 0) return [];
     const mapping = entry.operation['x-view-by-permission'];
     if (!mapping) return [report(file, entry.pointer, `${labelOf(entry)} responde una vista por permiso y debe declarar x-view-by-permission`)];
-    return [...checkMapping(file, entry, mapping, choices, matrix), ...checkDefaultView(specs, file, entry, mapping), ...checkMaskedIdentity(specs, file, entry, mapping)];
+    return [...checkMapping(file, entry, mapping, choices, matrix), ...checkDefaultView(specs, file, entry, mapping), ...checkMaskedIdentity(specs, bundled, file, entry, mapping)];
   });
 }
