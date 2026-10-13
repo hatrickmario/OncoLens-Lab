@@ -138,7 +138,7 @@ Aplicados por la sesión principal el 2026-10-11/12 (este change se alinea con e
 | AC-5 | revisión documental de `data-model.md` + `assertDataModelDocument()` (tabla presente; readme sin DDL ni diagrama) + parches |
 | AC-6 | revisión documental + `assertDataModelDocument()` (`EMBEDDING_DIM` sin literal) + parche |
 | AC-7 | `assertDerivedEventDescription()` + parche |
-| AC-8 | `assertSharedSchemasSingleOrigin()` (spec crudo) + `assertGeneratedInSync()` (lo generado) + parche |
+| AC-8 | `assertSharedSchemasSingleOrigin()` (spec crudo) + `assertSharedTypesIdenticalAcrossProviders()` (lo generado) + parche |
 | AC-9 | `assertRagTipoNoHabilitado()` + parches |
 | AC-10 | `assertManualEntryEndpoints()` + parches |
 | AC-11 | `assertDiagnosisGrading()` + ejemplos + parches |

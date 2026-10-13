@@ -718,7 +718,7 @@ Ejemplos: ver D3. Zod, tipos TS y Pydantic se **generan** de estos specs con `co
 | `assertCitedSourceAttribution()` | AC-12 |
 | `assertFollowUpContract()` (incluye la frase sin estado, RN-12 y pregunta enmascarada) | AC-13 |
 | `assertPublishedFromYear()` | AC-14 |
-| `assertGeneratedInSync()` (comparación AC-8 sobre lo generado), `assertReadmeExtractInSync()` | AC-16 |
+| `assertSharedTypesIdenticalAcrossProviders()` (comparación AC-8 sobre lo generado), `assertReadmeExtractInSync()` | AC-16 |
 | `assertNoPrescriptiveLanguage()`, `assertDisclaimerRequired()`, `assertClaimsAnchored()`, `assertNormativeDescriptions()`, `assertErrorCodesClosed()`, `assertErrorsNoEcho()`, `assertNoIdentityInRagContract()`, `assertNoIdentityInUrl()`, `assertOperationsDeclarePermission()`, `assertViewByPermission()`, `assertExamplesSynthetic()` | AC-17 |
 | `assertSpecVersions()` (`info.version` semántico y operaciones del S1) | AC-1 |
 
