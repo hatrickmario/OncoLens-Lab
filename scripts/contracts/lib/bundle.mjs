@@ -1,8 +1,11 @@
 /**
  * Empaquetado en memoria de un spec con los schemas compartidos de `contracts/schemas/evidence.yaml`.
- * Nunca se escribe en el repositorio. El resultado es equivalente al de `@redocly/openapi-core`
- * (lo verifica un test) para los `$ref` externos que usan los dos specs.
+ * Nunca se escribe en el repositorio. Solo internaliza los `$ref` a `evidence.yaml#/components/schemas/<Nombre>`
+ * (sus `components.schemas` coinciden con los de `@redocly/openapi-core`; lo verifica un test). Cualquier otra
+ * `$ref` externa (una respuesta o un parámetro de evidence.yaml, una subruta de un schema, otro archivo) queda
+ * sin empaquetar y el empaquetado falla cerrado: `bundleOrFail` devuelve el error del spec.
  */
+import { walkJson } from './walk.mjs';
 
 const SHARED_REF = /evidence\.yaml#\/components\/schemas\/([^/]+)$/;
 const INTERNAL_SCHEMA_REF = /^#\/components\/schemas\/([^/]+)$/;
@@ -64,7 +67,23 @@ export function bundleSpec(host, evidence) {
   return bundled;
 }
 
-/** Esqueleto (rojo de DPR-7). */
+/**
+ * Las `$ref` externas (no empiezan por `#`) que quedan en el spec empaquetado, con el puntero del objeto que las declara.
+ * @returns {{ pointer: string, ref: string }[]}
+ */
 export function externalRefsLeft(bundled) {
-  throw new Error('no implementado');
+  return [...walkJson(bundled)]
+    .filter(({ key, value }) => key === '$ref' && typeof value === 'string' && !value.startsWith('#'))
+    .map(({ pointer, value }) => ({ pointer: pointer.replace(/\/\$ref$/, ''), ref: value }));
+}
+
+/**
+ * Empaqueta y falla cerrado: si queda alguna `$ref` externa, no hay spec empaquetado sino un error.
+ * @returns {{ bundled: object | null, error?: string, externalRefs: { pointer: string, ref: string }[] }}
+ */
+export function bundleOrFail(host, evidence) {
+  const bundled = bundleSpec(host, evidence);
+  const externalRefs = bundled ? externalRefsLeft(bundled) : [];
+  if (externalRefs.length === 0) return { bundled, externalRefs };
+  return { bundled: null, error: `ref externa sin empaquetar: ${externalRefs.map((item) => item.ref).join(', ')}`, externalRefs };
 }
