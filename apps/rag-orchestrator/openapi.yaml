@@ -387,9 +387,10 @@ components:
     RagMeta:
       type: object
       description: >-
-        Metadatos de la ejecución, con los que clinical-api registra modelos, versión del prompt
-        y del catálogo (RN-06). Mismo bloque en /rag/query, /rag/follow-up y /case/summary; los
-        campos del corpus y retrievalParams son null donde la operación no consulta el corpus.
+        Metadatos de una ejecución que consulta el corpus (/rag/query y /rag/follow-up), con los que
+        clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Estricto: ningún
+        campo es nulo y catalogVersion es obligatorio. /case/summary no consulta el corpus y usa
+        CaseSummaryMeta.
       additionalProperties: false
       required:
         - queryLanguage
@@ -418,9 +419,9 @@ components:
         llmModel:
           type: string
         embeddingModel:
-          type: [string, "null"]
+          type: string
         rerankerModel:
-          type: [string, "null"]
+          type: string
         nliModel:
           type: string
         promptVersion:
@@ -430,17 +431,17 @@ components:
           minLength: 1
           description: Versión del catálogo clínico cargada por rag-orchestrator (ADR-38).
         corpusRelease:
-          type: [string, "null"]
+          type: string
         corpusCutoffDate:
-          type: [string, "null"]
+          type: string
           format: date
         excludedSources:
-          type: [array, "null"]
+          type: array
           description: Fuentes excluidas del corpus, declaradas como exclusión.
           items:
             type: string
         retrievalParams:
-          type: [object, "null"]
+          type: object
           additionalProperties: false
           required: [topK, rerankTopN, relevanceThreshold, retrievalMode]
           properties:
@@ -457,6 +458,63 @@ components:
             retrievalMode:
               type: string
               enum: [dense, hibrida]
+        latencyMs:
+          type: integer
+          minimum: 0
+
+    CaseSummaryMeta:
+      type: object
+      description: >-
+        Metadatos del resumen del caso (RN-06). /case/summary no consulta el corpus: los campos del
+        corpus, los modelos de recuperación y retrievalParams son null; el resto es obligatorio y
+        catalogVersion se exige igual que en RagMeta.
+      additionalProperties: false
+      required:
+        - queryLanguage
+        - responseLanguage
+        - llmProvider
+        - llmModel
+        - embeddingModel
+        - rerankerModel
+        - nliModel
+        - promptVersion
+        - catalogVersion
+        - corpusRelease
+        - corpusCutoffDate
+        - excludedSources
+        - retrievalParams
+        - latencyMs
+      properties:
+        queryLanguage:
+          type: string
+          enum: [es, en]
+        responseLanguage:
+          type: string
+          enum: [es, en]
+        llmProvider:
+          type: string
+        llmModel:
+          type: string
+        embeddingModel:
+          type: "null"
+        rerankerModel:
+          type: "null"
+        nliModel:
+          type: string
+        promptVersion:
+          type: string
+        catalogVersion:
+          type: string
+          minLength: 1
+          description: Versión del catálogo clínico cargada por rag-orchestrator (ADR-38).
+        corpusRelease:
+          type: "null"
+        corpusCutoffDate:
+          type: "null"
+        excludedSources:
+          type: "null"
+        retrievalParams:
+          type: "null"
         latencyMs:
           type: integer
           minimum: 0
@@ -1052,7 +1110,7 @@ components:
           type: integer
           minimum: 0
         meta:
-          $ref: '#/components/schemas/RagMeta'
+          $ref: '#/components/schemas/CaseSummaryMeta'
 
     # ---- /documents/extract
     ExtractedField:

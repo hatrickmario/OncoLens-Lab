@@ -40,7 +40,7 @@ Todo schema `type: object` de ambos specs y de `contracts/schemas/evidence.yaml`
 
 #### Scenario: Un enum nullable sin null rompe la verificación [US-033 AC-1]
 - **WHEN** un parche quita `null` del `enum` de `DiagnosisGrading.specimenType` manteniendo `type: [string, "null"]`
-- **THEN** el comando termina con código distinto de 0 y nombra el campo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
 ### Requirement: Forma congelada de EvidenceAnalysis
 El schema `EvidenceAnalysis` MUST declarar como `required` `status` (`con_evidencia | sin_evidencia | tipo_no_habilitado`), `synthesis`, `applicability`, `evidenceOptions`, `discardedOptions`, `analysisBasis`, `topRelevanceScore` (`number | null`), `staleness`, `patientDataLinks` y `disclaimer`, con un `if/then` que exige `topRelevanceScore = null` y `evidenceOptions` vacío sin evidencia (RN-02). Un análisis nuevo SHALL llevar `staleness` y `newerVersionAvailable` neutros `[Pre-S1 resp. 29]`.
@@ -51,7 +51,7 @@ El schema `EvidenceAnalysis` MUST declarar como `required` `status` (`con_eviden
 
 #### Scenario: Quitar un bloque de ADR-26 rompe la verificación [US-033 AC-1] [ADR-26]
 - **WHEN** un parche quita `disclaimer` o `analysisBasis` del `required` de `EvidenceAnalysis`
-- **THEN** el comando termina con código distinto de 0 y nombra el campo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
 #### Scenario: Los ejemplos del S1, sin evidencia, tipo no habilitado y S4 validan sin cambiar el contrato [US-033 AC-3] [AC-05.3] [RN-02]
 - **WHEN** se validan contra el schema `con-evidencia-s1.json` (1 opción, `synthesis.agreements` y `synthesis.discrepancies` vacíos, `applicability = []`, `staleness` neutro y `newerVersionAvailable = false`), `sin-evidencia.json` (`evidenceOptions = []`, `topRelevanceScore = null`, `analysisBasis` presente), `tipo-no-habilitado.json` y `con-evidencia-s4.json` (con `agentSteps = []` y un criterio con `unknownReason: null`)
@@ -74,7 +74,7 @@ El schema `AnalysisBasis` MUST declarar como `required`, desde el Pre-S1, `patie
 
 #### Scenario: Un campo ausente de AnalysisBasis rompe la verificación [US-033 AC-4]
 - **WHEN** un parche quita `agentSteps` o `sourcesConsulted.filters.publishedFromYear`
-- **THEN** el comando termina con código distinto de 0 y nombra el campo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
 ### Requirement: Vocabulario v1.0 prohibido en los contratos
 Ningún spec MUST declarar la ruta `/platform/rag/query` ni una propiedad `recommendations`; `contracts:check` SHALL fallar si alguien las agrega (D-01).
@@ -256,7 +256,7 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 
 #### Scenario: Una atribución mal declarada rompe la verificación [US-033 AC-12]
 - **WHEN** un parche deja `authors` no nullable, quita `cc_by_nc` del enum o quita el `pattern` de `sourceUrl`
-- **THEN** el comando termina con código distinto de 0 y nombra el campo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
 ### Requirement: Preguntas de seguimiento ancladas a un análisis
 `clinical-api` MUST declarar `POST` (`201 FollowUpTurn`) y `GET` (`200 FollowUpTurn[]`) sobre `/platform/evidence-analyses/{analysisId}/follow-ups` con los errores de design.md D11. `FollowUpTurn` SHALL exigir sus campos (con `question` enmascarada, `status` que incluye `fuera_de_contexto` e `isNewSource` por cita) y un `if/then` por `status` (FR-31, `[Pre-S1 resp. 19, 23]`). El mensaje del `409` MUST NOT tener imperativos ni claves de configuración.
@@ -286,7 +286,7 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **THEN** el comando termina con código distinto de 0 y nombra la ruta
 
 ### Requirement: Endpoint propio de seguimiento en Backend 2, sin estado
-`rag-orchestrator` MUST declarar `POST /rag/follow-up` (`RagFollowUpRequest`/`RagFollowUpResponse`, design.md D10) con memoria rotulada y no citable; `/rag/query` SHALL NOT cambiar. La descripción SHALL decir que no guarda estado, que seudónimo y `traceId` son nuevos por turno, que la pregunta llega enmascarada y que con datos reales solo usa modelos locales, también en su `503`. `RagMeta` MUST exigir `catalogVersion` `[Pre-S1 resp. 19, 23, 29]`.
+`rag-orchestrator` MUST declarar `POST /rag/follow-up` (`RagFollowUpRequest`/`RagFollowUpResponse`, design.md D10) con memoria rotulada y no citable; `/rag/query` SHALL NOT cambiar. La descripción SHALL decir que no guarda estado, que seudónimo y `traceId` son nuevos por turno, que la pregunta llega enmascarada y que con datos reales solo usa modelos locales, también en su `503`. `RagMeta` MUST exigir `catalogVersion` y no admitir nulos `[Pre-S1 resp. 19, 23, 29, 32 (D-3)]`.
 
 #### Scenario: /rag/follow-up está declarado y /rag/query no cambia [US-033 AC-13] [Pre-S1 resp. 19]
 - **WHEN** `contracts:check` revisa el spec de `rag-orchestrator`
@@ -294,7 +294,7 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 
 #### Scenario: Petición y respuesta del seguimiento interno [US-033 AC-13] [Pre-S1 resp. 19]
 - **WHEN** `contracts:check` revisa `RagFollowUpRequest` y `RagFollowUpResponse`
-- **THEN** la petición exige `traceId`, `dataClassification`, `catalogVersion`, `question` (enmascarada), `clinicalContext`, `analysisMemory` (forma de `priorAnalyses`, solo tiempos relativos) y `filtersApplied`; la respuesta exige `status` (`con_evidencia | sin_evidencia | fuera_de_contexto`), `answer`, `citedSources`, `omittedClaims`, `topRelevanceScore` (`number | null`, `null` si no hay evidencia o está fuera de contexto) y `meta` (`RagMeta` con `catalogVersion` requerido); `422` es `oneOf` `TIPO_NO_HABILITADO | CUERPO_INVALIDO`
+- **THEN** la petición exige `traceId`, `dataClassification`, `catalogVersion`, `question` (enmascarada), `clinicalContext`, `analysisMemory` (forma de `priorAnalyses`, solo tiempos relativos) y `filtersApplied`; la respuesta exige `status` (`con_evidencia | sin_evidencia | fuera_de_contexto`), `answer`, `citedSources`, `omittedClaims`, `topRelevanceScore` (`number | null`, `null` si no hay evidencia o está fuera de contexto) y `meta` (`RagMeta` estricto, con `catalogVersion` requerido y sin campos nulos); `422` es `oneOf` `TIPO_NO_HABILITADO | CUERPO_INVALIDO`
 
 #### Scenario: La memoria del análisis nunca es citable [US-033 AC-13] [RN-24]
 - **WHEN** `contracts:check` revisa `analysisMemory` en `RagFollowUpRequest`
@@ -305,8 +305,12 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **THEN** la operación dice que no guarda turnos ni memoria en disco, caché, Milvus o *logs*, que el `pseudoPatientId` y el `traceId` son nuevos en cada turno y que `question` llega enmascarada; la operación y su `503` dicen que con datos reales solo se usan modelos locales, sin *fallback* a la nube; un parche que quite cualquiera de esas frases hace fallar el comando
 
 #### Scenario: catalogVersion es obligatorio en meta [US-033 AC-13] [Pre-S1 resp. 29]
-- **WHEN** un parche quita `catalogVersion` del `required` de `RagMeta` o sustituye `meta` de `/case/summary` por un objeto propio
+- **WHEN** un parche quita `catalogVersion` del `required` de `RagMeta` o de `CaseSummaryMeta`, o sustituye `meta` de `/case/summary` por un objeto propio
 - **THEN** el comando termina con código distinto de 0 y nombra el schema
+
+#### Scenario: RagMeta es estricto y CaseSummaryMeta lleva null donde no hay corpus [US-033 AC-13] [Pre-S1 resp. 32 (D-3)]
+- **WHEN** un parche vuelve nullable un campo de `RagMeta` (p. ej. `embeddingModel`), o un ejemplo de `/rag/query` o `/rag/follow-up` trae `retrievalParams` o `embeddingModel` en `null`, o el ejemplo del resumen del caso trae `corpusRelease` no nulo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
 ### Requirement: Sin identidad ni identificadores enlazables en Backend 2
 Ninguna propiedad, parámetro ni cabecera del spec de `rag-orchestrator`, a ninguna profundidad, MUST coincidir con `IDENTIDAD_B2` (design.md D13: identidad personal e ids enlazables), por regex sin mayúsculas sobre el nombre normalizado y con lista blanca; ningún `requestBody` SHALL declarar `format: uuid` `[Pre-S1 resp. 29]`. La única excepción SHALL ser `identityFound` en su puntero exacto de la respuesta `200` de `/documents/extract` (RN-10).

@@ -185,33 +185,56 @@ export type RagFiltersApplied = {
 };
 
 /**
- * Metadatos de la ejecución, con los que clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Mismo bloque en /rag/query, /rag/follow-up y /case/summary; los campos del corpus y retrievalParams son null donde la operación no consulta el corpus.
+ * Metadatos de una ejecución que consulta el corpus (/rag/query y /rag/follow-up), con los que clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Estricto: ningún campo es nulo y catalogVersion es obligatorio. /case/summary no consulta el corpus y usa CaseSummaryMeta.
  */
 export type RagMeta = {
     queryLanguage: 'es' | 'en';
     responseLanguage: 'es' | 'en';
     llmProvider: string;
     llmModel: string;
-    embeddingModel: string | null;
-    rerankerModel: string | null;
+    embeddingModel: string;
+    rerankerModel: string;
     nliModel: string;
     promptVersion: string;
     /**
      * Versión del catálogo clínico cargada por rag-orchestrator (ADR-38).
      */
     catalogVersion: string;
-    corpusRelease: string | null;
-    corpusCutoffDate: string | null;
+    corpusRelease: string;
+    corpusCutoffDate: string;
     /**
      * Fuentes excluidas del corpus, declaradas como exclusión.
      */
-    excludedSources: Array<string> | null;
+    excludedSources: Array<string>;
     retrievalParams: {
         topK: number;
         rerankTopN: number;
         relevanceThreshold: number;
         retrievalMode: 'dense' | 'hibrida';
-    } | null;
+    };
+    latencyMs: number;
+};
+
+/**
+ * Metadatos del resumen del caso (RN-06). /case/summary no consulta el corpus: los campos del corpus, los modelos de recuperación y retrievalParams son null; el resto es obligatorio y catalogVersion se exige igual que en RagMeta.
+ */
+export type CaseSummaryMeta = {
+    queryLanguage: 'es' | 'en';
+    responseLanguage: 'es' | 'en';
+    llmProvider: string;
+    llmModel: string;
+    embeddingModel: null;
+    rerankerModel: null;
+    nliModel: string;
+    promptVersion: string;
+    /**
+     * Versión del catálogo clínico cargada por rag-orchestrator (ADR-38).
+     */
+    catalogVersion: string;
+    corpusRelease: null;
+    corpusCutoffDate: null;
+    excludedSources: null;
+    retrievalParams: null;
     latencyMs: number;
 };
 
@@ -450,7 +473,7 @@ export type CaseSummaryInternalResponse = {
         supportingDataRefs: Array<DataRef>;
     }>;
     omittedClaims: number;
-    meta: RagMeta;
+    meta: CaseSummaryMeta;
 };
 
 export type ExtractedField = {

@@ -344,9 +344,19 @@ alcance, para FEAT-03b.
   (`CitedSource[]`), `omittedClaims`, `topRelevanceScore` (`number | null`, D7) y `meta`
   (`RagMeta`, el mismo bloque de `/rag/query`; Backend 1 registra con él modelos, versión de
   *prompt* y de catálogo del turno, RN-06).
-- `RagMeta` (cerrado, compartido por `/rag/query`, `/rag/follow-up` y `/case/summary`):
-  `llmModel`, `embeddingModel`, `rerankerModel`, `nliModel`, `promptVersion`, **`catalogVersion`
-  obligatorio** `[Pre-S1 resp. 29]`, `retrievalParams` (cerrado, D7) y `latencyMs`.
+- `RagMeta` (cerrado y **estricto**, compartido por `/rag/query` y `/rag/follow-up`; **enmienda
+  `[Pre-S1 resp. 32 (D-3)]`**): `llmModel`, `embeddingModel`, `rerankerModel`, `nliModel`,
+  `promptVersion`, **`catalogVersion` obligatorio** `[Pre-S1 resp. 29]`, `corpusRelease`,
+  `corpusCutoffDate`, `excludedSources`, `retrievalParams` (cerrado, D7) y `latencyMs`; ningún
+  campo es nulo. La versión inicial de D10 compartía un único `RagMeta` nullable con
+  `/case/summary`; eso dejaba que una consulta al corpus devolviera `retrievalParams: null` sin
+  que el contrato lo detectara.
+- `CaseSummaryMeta` (cerrado, solo `/case/summary`, **enmienda `[Pre-S1 resp. 32 (D-3)]`**): mismos
+  campos, pero `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`,
+  `excludedSources` y `retrievalParams` son `null` (la operación no consulta el corpus) y
+  `catalogVersion` sigue siendo obligatorio. `contracts:check` (`assertFollowUpContract`) exige que
+  `RagMeta` no admita `null` en ningún campo, que ambos bloques exijan `catalogVersion` y que cada
+  respuesta use el suyo.
 - `isNewSource` lo calcula **Backend 1**, comparando los `chunkId` del turno con los del análisis
   persistido; Backend 2 no lo conoce.
 - **Sin estado:** `rag-orchestrator` no guarda turnos ni memoria entre llamadas (ni en disco, ni en
@@ -597,10 +607,12 @@ Diff propuesto `apps/rag-orchestrator/openapi.yaml` (respecto de readme §4.2):
 +                         synthesisSummary, optionsDescribed, linkedDecision, outcomesSince }
 ~   RagQueryInternalRequest: + filtersApplied: RagFiltersApplied { publishedFromYear (integer|null) } required
 ~   RagQueryInternalResponse.status: con_evidencia | sin_evidencia   # sin cambios (AC-9)
-+   RagMeta (cerrado; catalogVersion obligatorio; retrievalParams cerrado), usado por /rag/query,
-+          /rag/follow-up y /case/summary
++   RagMeta (cerrado y estricto: sin campos nulos; catalogVersion obligatorio; retrievalParams
++          cerrado), usado por /rag/query y /rag/follow-up
++   CaseSummaryMeta (cerrado; campos del corpus y retrievalParams null; catalogVersion obligatorio),
++          usado por /case/summary
 +   RagFollowUpRequest, RagFollowUpResponse (D10)
-~   CaseSummaryInternalResponse.claims[].supportingDataRefs: pattern ^r[0-9]+$; meta: RagMeta
+~   CaseSummaryInternalResponse.claims[].supportingDataRefs: pattern ^r[0-9]+$; meta: CaseSummaryMeta
 ~   DocumentExtractResponse.extractedData.biomarkers[].name → biomarkerName; extractedData.* abierto
 ~                    (excepción nombrada, FEAT-01b/c); piiScan.findingTypes enum
 +   Error, ErrorTipoNoHabilitado, ErrorValidacion (detail sin input), ErrorXxx (D11)

@@ -126,10 +126,18 @@ function checkRagSchemas(specs, file) {
 function checkMeta(specs, file) {
   const meta = schemaOf(specs, RAG_ORCHESTRATOR, 'RagMeta');
   const found = [];
-  if (!(meta?.required ?? []).includes('catalogVersion')) found.push(report(file, `${schemaPointer('RagMeta')}/required`, 'RagMeta debe exigir catalogVersion'));
-  for (const name of ['RagQueryInternalResponse', 'RagFollowUpResponse', 'CaseSummaryInternalResponse']) {
-    if (schemaOf(specs, RAG_ORCHESTRATOR, name)?.properties?.meta?.$ref !== schemaPointer('RagMeta')) {
-      found.push(report(file, `${schemaPointer(name)}/properties/meta`, `${name}.meta debe ser el bloque compartido RagMeta`));
+  for (const [metaName, schema] of [['RagMeta', meta], ['CaseSummaryMeta', schemaOf(specs, RAG_ORCHESTRATOR, 'CaseSummaryMeta')]]) {
+    if (!(schema?.required ?? []).includes('catalogVersion')) found.push(report(file, `${schemaPointer(metaName)}/required`, `${metaName} debe exigir catalogVersion`));
+  }
+  for (const [field, property] of Object.entries(meta?.properties ?? {})) {
+    const type = property.type;
+    if (type === 'null' || (Array.isArray(type) && type.includes('null'))) {
+      found.push(report(file, `${schemaPointer('RagMeta')}/properties/${field}`, `RagMeta es estricto: ${field} no puede ser nulo (solo CaseSummaryMeta lo admite)`));
+    }
+  }
+  for (const [name, expected] of [['RagQueryInternalResponse', 'RagMeta'], ['RagFollowUpResponse', 'RagMeta'], ['CaseSummaryInternalResponse', 'CaseSummaryMeta']]) {
+    if (schemaOf(specs, RAG_ORCHESTRATOR, name)?.properties?.meta?.$ref !== schemaPointer(expected)) {
+      found.push(report(file, `${schemaPointer(name)}/properties/meta`, `${name}.meta debe ser ${expected}`));
     }
   }
   return found;

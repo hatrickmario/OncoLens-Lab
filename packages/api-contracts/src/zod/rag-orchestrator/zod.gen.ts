@@ -99,27 +99,47 @@ export const zRagFiltersApplied = z.object({
 });
 
 /**
- * Metadatos de la ejecución, con los que clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Mismo bloque en /rag/query, /rag/follow-up y /case/summary; los campos del corpus y retrievalParams son null donde la operación no consulta el corpus.
+ * Metadatos de una ejecución que consulta el corpus (/rag/query y /rag/follow-up), con los que clinical-api registra modelos, versión del prompt y del catálogo (RN-06). Estricto: ningún campo es nulo y catalogVersion es obligatorio. /case/summary no consulta el corpus y usa CaseSummaryMeta.
  */
 export const zRagMeta = z.object({
     queryLanguage: z.enum(['es', 'en']),
     responseLanguage: z.enum(['es', 'en']),
     llmProvider: z.string(),
     llmModel: z.string(),
-    embeddingModel: z.string().nullable(),
-    rerankerModel: z.string().nullable(),
+    embeddingModel: z.string(),
+    rerankerModel: z.string(),
     nliModel: z.string(),
     promptVersion: z.string(),
     catalogVersion: z.string().min(1),
-    corpusRelease: z.string().nullable(),
-    corpusCutoffDate: z.iso.date().nullable(),
-    excludedSources: z.array(z.string()).nullable(),
+    corpusRelease: z.string(),
+    corpusCutoffDate: z.iso.date(),
+    excludedSources: z.array(z.string()),
     retrievalParams: z.object({
         topK: z.int().gte(1),
         rerankTopN: z.int().gte(1),
         relevanceThreshold: z.number().gte(0).lte(1),
         retrievalMode: z.enum(['dense', 'hibrida'])
-    }).nullable(),
+    }),
+    latencyMs: z.int().gte(0)
+});
+
+/**
+ * Metadatos del resumen del caso (RN-06). /case/summary no consulta el corpus: los campos del corpus, los modelos de recuperación y retrievalParams son null; el resto es obligatorio y catalogVersion se exige igual que en RagMeta.
+ */
+export const zCaseSummaryMeta = z.object({
+    queryLanguage: z.enum(['es', 'en']),
+    responseLanguage: z.enum(['es', 'en']),
+    llmProvider: z.string(),
+    llmModel: z.string(),
+    embeddingModel: z.null(),
+    rerankerModel: z.null(),
+    nliModel: z.string(),
+    promptVersion: z.string(),
+    catalogVersion: z.string().min(1),
+    corpusRelease: z.null(),
+    corpusCutoffDate: z.null(),
+    excludedSources: z.null(),
+    retrievalParams: z.null(),
     latencyMs: z.int().gte(0)
 });
 
@@ -272,7 +292,7 @@ export const zCaseSummaryInternalResponse = z.object({
         supportingDataRefs: z.array(zDataRef).min(1)
     })),
     omittedClaims: z.int().gte(0),
-    meta: zRagMeta
+    meta: zCaseSummaryMeta
 });
 
 export const zExtractedField = z.object({

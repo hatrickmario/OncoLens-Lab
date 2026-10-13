@@ -151,7 +151,7 @@
         "operaciones": [{ "op": "replace", "path": "/components/schemas/CaseSummaryInternalResponse/properties/meta", "value": { "type": "object" } }]
       }
     ],
-    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryInternalResponse/properties/meta", "mensajeContiene": "RagMeta" }
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryInternalResponse/properties/meta", "mensajeContiene": "CaseSummaryMeta" }
   },
   {
     "ac": "AC-13",

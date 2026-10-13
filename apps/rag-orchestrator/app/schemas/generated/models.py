@@ -208,8 +208,8 @@ class RagMeta(BaseModel):
     responseLanguage: ResponseLanguage
     llmProvider: str
     llmModel: str
-    embeddingModel: str | None
-    rerankerModel: str | None
+    embeddingModel: str
+    rerankerModel: str
     nliModel: str
     promptVersion: str
     catalogVersion: Annotated[
@@ -219,13 +219,39 @@ class RagMeta(BaseModel):
             min_length=1,
         ),
     ]
-    corpusRelease: str | None
-    corpusCutoffDate: date | None
+    corpusRelease: str
+    corpusCutoffDate: date
     excludedSources: Annotated[
-        list[str] | None,
+        list[str],
         Field(description='Fuentes excluidas del corpus, declaradas como exclusión.'),
     ]
-    retrievalParams: RetrievalParams | None
+    retrievalParams: RetrievalParams
+    latencyMs: Annotated[int, Field(ge=0)]
+
+
+class CaseSummaryMeta(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    queryLanguage: QueryLanguage
+    responseLanguage: ResponseLanguage
+    llmProvider: str
+    llmModel: str
+    embeddingModel: None
+    rerankerModel: None
+    nliModel: str
+    promptVersion: str
+    catalogVersion: Annotated[
+        str,
+        Field(
+            description='Versión del catálogo clínico cargada por rag-orchestrator (ADR-38).',
+            min_length=1,
+        ),
+    ]
+    corpusRelease: None
+    corpusCutoffDate: None
+    excludedSources: None
+    retrievalParams: None
     latencyMs: Annotated[int, Field(ge=0)]
 
 
@@ -574,7 +600,7 @@ class CaseSummaryInternalResponse(BaseModel):
     )
     claims: list[Claim]
     omittedClaims: Annotated[int, Field(ge=0)]
-    meta: RagMeta
+    meta: CaseSummaryMeta
 
 
 class ExtractedFieldConfidence(StrEnum):

@@ -1,0 +1,45 @@
+[
+  {
+    "ac": "AC-13",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone retrievalParams null en el meta de rag-query-con-evidencia.json (RagMeta es estricto, D-3)",
+    "parches": [{ "destino": "ejemplo:rag-query-con-evidencia.json", "operaciones": [{ "op": "replace", "path": "/meta/retrievalParams", "value": null }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/rag-query-con-evidencia.json", "rutaContiene": "retrievalParams" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone embeddingModel null en el meta de rag-follow-up-response.json",
+    "parches": [{ "destino": "ejemplo:rag-follow-up-response.json", "operaciones": [{ "op": "replace", "path": "/meta/embeddingModel", "value": null }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/rag-follow-up-response.json", "rutaContiene": "embeddingModel" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertExamplesValid",
+    "escenario": "un parche pone corpusRelease no nulo en el meta del resumen del caso (CaseSummaryMeta no consulta el corpus)",
+    "parches": [{ "destino": "ejemplo:case-summary-response.json", "operaciones": [{ "op": "replace", "path": "/meta/corpusRelease", "value": "2026-09-30" }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/case-summary-response.json", "rutaContiene": "corpusRelease" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche quita catalogVersion del required de CaseSummaryMeta",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/CaseSummaryMeta/required/8", "value": "catalogVersion" },
+          { "op": "remove", "path": "/components/schemas/CaseSummaryMeta/required/8" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryMeta/required", "mensajeContiene": "catalogVersion" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche vuelve a nullable embeddingModel en RagMeta",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "replace", "path": "/components/schemas/RagMeta/properties/embeddingModel/type", "value": ["string", "null"] }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagMeta/properties/embeddingModel", "mensajeContiene": "nulo" }
+  }
+]
