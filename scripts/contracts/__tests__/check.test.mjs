@@ -48,12 +48,21 @@ describe('contracts:check', () => {
     expect(result.stderr).toContain('archivo ausente');
   });
 
-  it('imprime una línea ARCHIVO:ruta — regla — AC/RN — mensaje por hallazgo cuando el lint de Redocly falla [US-033 AC-1]', async () => {
+  it('imprime una línea ARCHIVO:ruta — regla — AC/RN — mensaje por hallazgo cuando una regla de assertSpecVersions falla [US-033 AC-1]', async () => {
     const root = await copyOfRepository();
     const spec = path.join(root, 'apps/rag-orchestrator/openapi.yaml');
     await writeFile(spec, (await readFile(spec, 'utf8')).replace('openapi: 3.1.0', 'openapi: 3.0.3'));
     const result = await check(root);
     expect(result.code).not.toBe(0);
     expect(result.stderr).toMatch(/apps\/rag-orchestrator\/openapi\.yaml:#\/openapi — assertSpecVersions — AC-1 — /);
+  });
+
+  it('imprime una línea con redocly:<regla> cuando el lint de Redocly encuentra un $ref sin resolver [US-033 AC-1]', async () => {
+    const root = await copyOfRepository();
+    const spec = path.join(root, 'apps/clinical-api/openapi.yaml');
+    await writeFile(spec, (await readFile(spec, 'utf8')).replace("$ref: '#/components/schemas/Document'", "$ref: '#/components/schemas/NoExiste'"));
+    const result = await check(root);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toMatch(/apps\/clinical-api\/openapi\.yaml:.* — redocly:no-unresolved-refs — AC-1 — /);
   });
 });
