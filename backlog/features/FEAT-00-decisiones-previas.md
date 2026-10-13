@@ -377,6 +377,16 @@ de datos en los sprints siguientes.
 >     - `PatientListItem` con `fullNameMasked` y `nationalIdMasked`;
 >     - el título de PMC9000001 se alinea también en `follow-up-turn.json` y `rag-follow-up-response.json`;
 >     - claves de configuración `UI_TEXTO_FUERA_DE_CONTEXTO`, `UI_TEXTO_SIN_EVIDENCIA` y `UI_ENCABEZADO_OPCIONES_DESCRITAS`.
+> - **Gate 2, tras la segunda vuelta (usuario, 2026-10-13):**
+>   - **resp. 41 (1a):** corrección acotada fuera del límite de 2 vueltas, **con TDD Guard desactivado de forma puntual** en `scripts/contracts/lib/identity.mjs`, `rules/assertExamplesSynthetic.mjs`, `rules/assertViewByPermission.mjs`, sus tests y las fixtures `ac-17-*`:
+>     - Mayor PG #1: primero el test en rojo y después el fix;
+>     - refactor DPR M-1, que cubre PG #2;
+>     - rename residual de DPR-4;
+>     - Menores de privacidad PG #3, #4 y #5.
+>
+>     Se re-ejecutan privacy-guardian, design-principles-reviewer y clinical-language-auditor (este solo sobre `con-evidencia-s4.json`).
+>   - **resp. 42 (2):** el formato de `fullNameMasked` y `nationalIdMasked` queda con US-048 como dueña (`x-pending-owner`), y el ejemplo `SINT-` de `PatientListItem` lo crea US-213.
+>   - **resp. 43 (3):** se amplía ya el `chunkTextSnapshot` sintético de `con-evidencia-s4.json` para que contenga los valores de población ("I", "I–III", "ambos").
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dados `apps/clinical-api/openapi.yaml` y
