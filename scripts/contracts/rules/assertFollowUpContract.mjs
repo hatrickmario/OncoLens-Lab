@@ -17,6 +17,8 @@ const TURN_FIELDS = ['id', 'analysisId', 'turnNumber', 'question', 'status', 'an
 const REQUEST_FIELDS = ['traceId', 'dataClassification', 'catalogVersion', 'question', 'clinicalContext', 'analysisMemory', 'filtersApplied'];
 const RESPONSE_FIELDS = ['status', 'answer', 'citedSources', 'omittedClaims', 'topRelevanceScore', 'meta'];
 const FOLLOW_UP_STATUS = ['con_evidencia', 'sin_evidencia', 'fuera_de_contexto'];
+/** Dónde corrió el modelo: clinical-api lo verifica contra dataClassification (RN-12), así que es un enum cerrado. */
+const LLM_PROVIDERS = ['local', 'nube'];
 const RN_12 = 'con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12)';
 const OPERATION_PHRASES = ['no guarda turnos ni memoria', 'sin estado entre turnos', 'nuevos en cada turno', 'question llega enmascarada', RN_12];
 const LIMIT_MESSAGE = 'Este análisis alcanzó el máximo de preguntas de seguimiento configurado. Una pregunta distinta puede formularse en un análisis nuevo.';
@@ -128,6 +130,9 @@ function checkMeta(specs, file) {
   const found = [];
   for (const [metaName, schema] of [['RagMeta', meta], ['CaseSummaryMeta', schemaOf(specs, RAG_ORCHESTRATOR, 'CaseSummaryMeta')]]) {
     if (!(schema?.required ?? []).includes('catalogVersion')) found.push(report(file, `${schemaPointer(metaName)}/required`, `${metaName} debe exigir catalogVersion`));
+    if (!sameMembers(schema?.properties?.llmProvider?.enum, LLM_PROVIDERS)) {
+      found.push(report(file, `${schemaPointer(metaName)}/properties/llmProvider`, `${metaName}.llmProvider debe ser el enum ${LLM_PROVIDERS.join(' | ')} (RN-12)`));
+    }
   }
   for (const [field, property] of Object.entries(meta?.properties ?? {})) {
     const type = property.type;
