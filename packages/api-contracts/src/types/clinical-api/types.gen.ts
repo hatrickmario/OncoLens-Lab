@@ -371,11 +371,11 @@ export type PatientListItem = {
     id: string;
     idType: IdType;
     /**
-     * Documento enmascarado; el completo solo se descifra en la ficha, auditado.
+     * Documento enmascarado; el completo solo se descifra en la ficha, auditado. Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
      */
     nationalIdMasked: string;
     /**
-     * Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+     * Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado. Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
      */
     fullNameMasked: string;
     dataOrigin: DataOrigin;

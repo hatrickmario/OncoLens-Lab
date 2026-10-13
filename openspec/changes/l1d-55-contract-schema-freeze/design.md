@@ -522,7 +522,9 @@ Consecuencia (vacío resuelto): el nombre del biomarcador en `ClinicalContext.bi
   PatientListItem, default: PatientAdminSummary }`. `PatientListItem` (cerrado, `view: const
   doctor_listado`) devuelve `fullNameMasked` y `nationalIdMasked` **enmascarados** y los contadores;
   el nombre y el documento **completos** solo viajan en la ficha (`PatientSummary.identification`),
-  y cada lectura de la ficha se audita (RN-10). `PatientAdminSummary` (cerrado): `view: const
+  y cada lectura de la ficha se audita (RN-10). El **formato** de la máscara de `fullNameMasked` y
+  `nationalIdMasked` queda con US-048 como dueña (`x-pending-owner: US-048`), y el ejemplo `SINT-`
+  de `PatientListItem` lo crea US-213 `[resp. 42]`. `PatientAdminSummary` (cerrado): `view: const
   admin`, `id`, `idType`, `nationalIdMasked`, `dataOrigin`, `lifecycleStatus`, `registeredAt`;
   sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos. Para el `admin`,
   vista de caso, documentos, análisis, seguimiento y resumen del caso → `403 PERMISO_DENEGADO`.

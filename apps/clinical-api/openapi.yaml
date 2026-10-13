@@ -1244,10 +1244,16 @@ components:
           $ref: '#/components/schemas/IdType'
         nationalIdMasked:
           type: string
-          description: Documento enmascarado; el completo solo se descifra en la ficha, auditado.
+          description: >-
+            Documento enmascarado; el completo solo se descifra en la ficha, auditado. Pendiente: el
+            formato de la máscara lo fija la historia dueña (US-048).
+          x-pending-owner: US-048
         fullNameMasked:
           type: string
-          description: Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+          description: >-
+            Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+            Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
+          x-pending-owner: US-048
         dataOrigin:
           $ref: '#/components/schemas/DataOrigin'
         lifecycleStatus:
