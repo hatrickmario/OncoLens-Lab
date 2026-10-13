@@ -351,6 +351,24 @@ de datos en los sprints siguientes.
 >     - referencias `r1…rN` por petición;
 >     - `x-permission` con códigos concretos y `publico` solo en el login.
 > - **Versión de OpenAPI:** readme §4.1 declara `openapi: 3.0.3` y AC-1 exige 3.1. La transcripción a 3.1 cambia `nullable: true` por `type: [<t>, "null"]`, sin cambiar la semántica. Es un vacío resuelto de la transcripción, no un cambio de contrato.
+> - **Gate 2, primera vuelta (usuario, 2026-10-13):**
+>   - **resp. 30 (D-1):** DPR-5, DPR-7 y las comprobaciones automáticas de PG-M2/M3/m7 se escriben **con TDD Guard desactivado de forma puntual**, solo en esos archivos. Se documenta en el PR, y la retro evalúa qué pasó y si hay que cambiar algo para el S1.
+>   - **resp. 31 (D-2):** se aceptan los dos incidentes en que se esquivó el guard (archivos `.txt` renombrados con `mv`; `sed -i` sobre reglas en verde) y se registran para la retro del piloto.
+>   - **resp. 32 (D-3):** `RagMeta` se separa en dos: `RagMeta` estricto en `/rag/query` y `/rag/follow-up`, y `CaseSummaryMeta` nullable donde no hay corpus. Enmienda D10.
+>   - **resp. 33 (D-4):** el Zod generado produce objetos estrictos en este change. Los `if/then` y `anyOf` que el generador no traduce se declaran como brecha en design.md, con US-214 como dueña.
+>   - **resp. 34 (D-5):** `CaseView` (`GET /platform/patients/{patientId}/case`, `clinical:read`) se mantiene y se actualiza el delta `specs/api-contracts`.
+>   - **resp. 35 (D-6):** se enmienda D2 para mantener el empaquetador propio (`lib/bundle.mjs`) con el arreglo de DPR-7. La migración a `bundleDocument` de `@redocly/openapi-core` queda como historia de deuda técnica para el S2.
+>   - **resp. 36 (D-7, privacidad):**
+>     - `clinical_context_snapshot` no guarda el `pseudoPatientId`;
+>     - el listado y la búsqueda de pacientes devuelven `fullName` y `nationalId` **enmascarados**, completos solo en la ficha y con auditoría;
+>     - la búsqueda por nombre queda con US-048 como dueña;
+>     - `analysis_follow_up` gana `llm_provider` y `data_classification`;
+>     - `llmProvider` pasa a ser enum o `providerLocality` (RN-12).
+>   - **resp. 37 (D-8, lenguaje):**
+>     - el anclaje de `studyPopulationValue` lo da la opción, y queda documentado;
+>     - el título de PMC9000001 se alinea con su texto en `con-evidencia-s4.json`;
+>     - los textos de UI de `fuera_de_contexto`, `sin_evidencia` y el encabezado "Opciones descritas en la evidencia" van en claves de configuración, revisadas en el Gate 2 de `apps/web`;
+>     - `/case/summary` lleva el aviso de RN-19, anotado para su historia.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dados `apps/clinical-api/openapi.yaml` y
