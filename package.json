@@ -12,6 +12,11 @@
     "contracts:generate:check": "node scripts/contracts/generate-check.mjs",
     "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs"
   },
+  "overrides": {
+    "@hey-api/json-schema-ref-parser": {
+      "js-yaml": "4.3.2"
+    }
+  },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
     "@redocly/openapi-core": "2.62.1",
