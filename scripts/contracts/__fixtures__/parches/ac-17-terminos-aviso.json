@@ -1,0 +1,93 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"debería recibir\" (CLA-1)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "El paciente debería recibir esta opción." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "debería recibir" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"se sugiere iniciar\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Se sugiere iniciar esta opción." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "se sugiere iniciar" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"tratamiento indicado\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Es el Tratamiento indicado." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "tratamiento indicado" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"la mejor opción\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Es la mejor opción." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "la mejor opción" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"opción preferida\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Es la opción preferida." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "opción preferida" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"tratamiento de elección\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Es el tratamiento de elección." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "tratamiento de elección" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"tratamiento óptimo\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Es el tratamiento óptimo." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "tratamiento óptimo" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"the patient should receive\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "The patient should receive this option." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "the patient should receive" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción dice \"indicated for this patient\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Option indicated for this patient." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "indicated for this patient" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción promete una \"probabilidad de éxito\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Tiene alta probabilidad de éxito." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "probabilidad de éxito" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "el rationale de una opción promete un \"chance of success\"",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "A good chance of success." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "mensajeContiene": "chance of success" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "una descripción niega la probabilidad de éxito (\"ni la probabilidad de éxito\", RN-03)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "El puntaje no mide la solidez clínica ni la probabilidad de éxito." }] }],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "un parche quita \"Análisis generado por IA\" del aviso de con-evidencia-s1.json (CLA-2)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": "Análisis generado por IA", "reemplazar": "Análisis" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "Análisis generado por IA" }
+  }
+]

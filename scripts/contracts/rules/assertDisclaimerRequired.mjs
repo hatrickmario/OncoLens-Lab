@@ -7,7 +7,7 @@ import { CLINICAL_API, schemaOf, schemaPointer } from '../lib/specs.mjs';
 const report = reporter('assertDisclaimerRequired', 'AC-17 · RN-19');
 
 const SCHEMAS = ['EvidenceAnalysis', 'FollowUpTurn'];
-const PHRASES = ['requiere validación clínica del oncólogo tratante', 'Uso académico/investigación'];
+const PHRASES = ['Análisis generado por IA', 'requiere validación clínica del oncólogo tratante', 'Uso académico/investigación'];
 
 function checkSchema(specs, name) {
   const schema = schemaOf(specs, CLINICAL_API, name);
