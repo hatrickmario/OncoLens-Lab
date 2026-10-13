@@ -15,6 +15,7 @@ let tree;
 beforeEach(async () => {
   tree = await mkdtemp(path.join(os.tmpdir(), 'oncolens-generado-'));
   for (const generatedRoot of GENERATED_ROOTS) await cp(path.join(ROOT, generatedRoot), path.join(tree, generatedRoot), { recursive: true });
+  await cp(path.join(ROOT, 'readme.md'), path.join(tree, 'readme.md'));
   await git(tree, 'init', '-q');
   await git(tree, 'add', '-A');
   await git(tree, 'commit', '-q', '-m', 'generado');
@@ -34,6 +35,11 @@ describe('contracts:generate:check sobre un árbol de trabajo temporal', () => {
   it('lista el archivo cuando se edita a mano un modelo Pydantic generado [US-033 AC-16]', async () => {
     await appendFile(path.join(tree, 'apps/rag-orchestrator/app/schemas/generated/models.py'), '\n# editado a mano\n');
     expect(await changedGeneratedFiles(tree)).toEqual([expect.stringContaining('schemas/generated/models.py')]);
+  });
+
+  it('lista readme.md cuando se edita a mano el extracto generado del readme [US-033 AC-16]', async () => {
+    await appendFile(path.join(tree, 'readme.md'), '\n<!-- editado a mano -->\n');
+    expect(await changedGeneratedFiles(tree)).toEqual([expect.stringContaining('readme.md')]);
   });
 
   it('lista el archivo cuando queda un archivo generado nuevo sin versionar [US-033 AC-16]', async () => {

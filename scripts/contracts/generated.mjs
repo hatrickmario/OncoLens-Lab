@@ -10,7 +10,7 @@ export const zodPath = (provider) => `packages/api-contracts/src/zod/${provider}
 export const PYDANTIC_DIR = 'apps/rag-orchestrator/app/schemas/generated';
 
 /** Rutas versionadas que `contracts:generate:check` vigila (una edición a mano o un archivo nuevo sin versionar fallan). */
-export const GENERATED_ROOTS = ['packages/api-contracts/src', PYDANTIC_DIR];
+export const GENERATED_ROOTS = ['packages/api-contracts/src', PYDANTIC_DIR, 'readme.md'];
 
 /** Cabecera de cada archivo generado. */
 export const generatedHeader = (provider, comment = '//') => `${comment} GENERADO desde ${SPEC_FILES[provider]} — no editar a mano (npm run contracts:generate)`;
