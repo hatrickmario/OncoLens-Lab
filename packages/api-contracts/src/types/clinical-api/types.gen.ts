@@ -104,6 +104,9 @@ export type ApplicabilityCriterion = {
      */
     patientValue: string | null;
     studyPopulationValue: string | null;
+    /**
+     * ApplicabilityStatus
+     */
     status: 'coincide' | 'parcial' | 'no_coincide' | 'desconocido';
     unknownReason: 'falta_en_paciente' | 'no_reportado_por_fuente' | null;
     isExclusionary: boolean;
@@ -287,7 +290,7 @@ export type PatientSummary = {
     cancerTypeEnabled: boolean;
     diagnosis: Diagnosis | null;
     /**
-     * Último valor por biomarcador (serie completa en GET …/biomarkers?name=).
+     * Último valor por biomarcador (serie completa en GET …/biomarkers?biomarkerName=).
      */
     recentBiomarkers: Array<Biomarker>;
     pendingReviewCount: number;
@@ -486,7 +489,7 @@ export type EvidenceAnalysis = {
     discardedOptions: Array<DiscardedOption>;
     analysisBasis: AnalysisBasis;
     /**
-     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando no se encontró evidencia o el tipo no está habilitado (RN-02): null no es 0.0.
+     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando no se encontró evidencia o el tipo no está habilitado (RN-02): null no es 0.0.
      */
     topRelevanceScore: number | null;
     staleness: Staleness;
@@ -691,7 +694,7 @@ export type CitedSourceFields = {
      */
     chunkTextSnapshot: string;
     /**
-     * Referencia best-effort al chunk recuperado en esa consulta.
+     * Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.
      */
     chunkId: string;
 };
@@ -740,7 +743,7 @@ export type PatientSummaryWritable = {
     cancerTypeEnabled: boolean;
     diagnosis: DiagnosisWritable | null;
     /**
-     * Último valor por biomarcador (serie completa en GET …/biomarkers?name=).
+     * Último valor por biomarcador (serie completa en GET …/biomarkers?biomarkerName=).
      */
     recentBiomarkers: Array<Biomarker>;
     pendingReviewCount: number;

@@ -86,7 +86,7 @@
   "evidenceOptions": [
     {
       "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
-      "rationale": "La evidencia recuperada describe el beneficio de agregar terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
       "applicabilitySummary": {
         "coincide": 2,
         "parcial": 0,

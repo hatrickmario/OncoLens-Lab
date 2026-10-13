@@ -45,7 +45,7 @@ class PatientDataRef(RootModel[str]):
     root: Annotated[str, Field(pattern='^r[0-9]+$')]
 
 
-class Status(StrEnum):
+class ApplicabilityStatus(StrEnum):
     coincide = 'coincide'
     parcial = 'parcial'
     no_coincide = 'no_coincide'
@@ -475,7 +475,7 @@ class RagQueryInternalRequest(BaseModel):
     clinicalContext: ClinicalContext
 
 
-class Status1(StrEnum):
+class RagQueryStatus(StrEnum):
     con_evidencia = 'con_evidencia'
     sin_evidencia = 'sin_evidencia'
 
@@ -542,7 +542,7 @@ class RagFollowUpRequest(BaseModel):
     filtersApplied: RagFiltersApplied
 
 
-class Status2(StrEnum):
+class RagFollowUpStatus(StrEnum):
     con_evidencia = 'con_evidencia'
     sin_evidencia = 'sin_evidencia'
     fuera_de_contexto = 'fuera_de_contexto'
@@ -577,7 +577,7 @@ class CaseSummaryInternalResponse(BaseModel):
     meta: RagMeta
 
 
-class ExtractionConfidence1(StrEnum):
+class ExtractedFieldConfidence(StrEnum):
     alta = 'alta'
     media = 'media'
     baja = 'baja'
@@ -598,7 +598,9 @@ class ExtractedField(BaseModel):
     )
     value: str
     extractionScore: Annotated[float, Field(ge=0.0, le=1.0)]
-    extractionConfidence: ExtractionConfidence1
+    extractionConfidence: Annotated[
+        ExtractedFieldConfidence, Field(title='ExtractedFieldConfidence')
+    ]
     sourceSpan: SourceSpan
 
 
@@ -892,7 +894,7 @@ class CitedSourceFields(BaseModel):
     chunkId: Annotated[
         str,
         Field(
-            description='Referencia best-effort al chunk recuperado en esa consulta.'
+            description='Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.'
         ),
     ]
 
@@ -1004,7 +1006,7 @@ class ApplicabilityCriterion(BaseModel):
         ),
     ]
     studyPopulationValue: str | None
-    status: Status
+    status: Annotated[ApplicabilityStatus, Field(title='ApplicabilityStatus')]
     unknownReason: UnknownReason | None
     isExclusionary: bool
     patientDataWarning: PatientDataWarning | None
@@ -1016,9 +1018,10 @@ class RagFollowUpResponse(BaseModel):
         extra='forbid',
     )
     status: Annotated[
-        Status2,
+        RagFollowUpStatus,
         Field(
-            description='rag-orchestrator clasifica fuera_de_contexto cuando la pregunta no se refiere al análisis ni a su evidencia: no se genera respuesta.'
+            description='rag-orchestrator clasifica fuera_de_contexto cuando la pregunta no se refiere al análisis ni a su evidencia: no se genera respuesta.',
+            title='RagFollowUpStatus',
         ),
     ]
     answer: list[SupportedClaim]
@@ -1032,7 +1035,7 @@ class RagFollowUpResponse(BaseModel):
     topRelevanceScore: Annotated[
         float | None,
         Field(
-            description='Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null si no hay evidencia o la pregunta está fuera de contexto (RN-02): null no es 0.0.',
+            description='Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null si no hay evidencia o la pregunta está fuera de contexto (RN-02): null no es 0.0.',
             ge=0.0,
             le=1.0,
         ),
@@ -1078,7 +1081,7 @@ class RagQueryInternalResponse(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    status: Status1
+    status: Annotated[RagQueryStatus, Field(title='RagQueryStatus')]
     synthesis: Synthesis
     applicability: list[SourceApplicability]
     evidenceOptions: Annotated[
@@ -1102,7 +1105,7 @@ class RagQueryInternalResponse(BaseModel):
     topRelevanceScore: Annotated[
         float | None,
         Field(
-            description='Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando ningún chunk supera el umbral (RN-02): null no es 0.0.',
+            description='Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando ningún chunk supera el umbral (RN-02): null no es 0.0.',
             ge=0.0,
             le=1.0,
         ),

@@ -9,7 +9,7 @@ info:
     contrato de clinical-api (provider-driven): el spec cambia antes que el código y los tipos,
     los schemas Zod y los clientes se generan de él. Los ejemplos de contracts/examples/ no son
     normativos: el spec manda. La autorización del MVP es solo RBAC (cada operación declara su
-    permiso en x-permission); el rol admin no lee datos clínicos ni análisis (mínimo
+    permiso en x-permission; cuando es una lista basta con tener alguno de sus códigos); el rol admin no lee datos clínicos ni análisis (mínimo
     privilegio). Cada historia que añada un endpoint lo agrega aquí antes de implementarlo
     (cambio aditivo, ADR-26). Los nombres de propiedad van en camelCase.
 
@@ -1035,7 +1035,7 @@ components:
             - type: "null"
         recentBiomarkers:
           type: array
-          description: Último valor por biomarcador (serie completa en GET …/biomarkers?name=).
+          description: Último valor por biomarcador (serie completa en GET …/biomarkers?biomarkerName=).
           items:
             $ref: '#/components/schemas/Biomarker'
         pendingReviewCount:
@@ -1462,8 +1462,8 @@ components:
           minimum: 0
           maximum: 1
           description: >-
-            Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia
-            recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de
+            Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada
+            con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de
             éxito (RN-03). null cuando no se encontró evidencia o el tipo no está habilitado
             (RN-02): null no es 0.0.
         staleness:

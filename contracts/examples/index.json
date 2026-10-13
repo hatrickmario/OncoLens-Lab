@@ -275,7 +275,7 @@
       "spec": "rag-orchestrator",
       "target": "#/paths/~1documents~1extract/post/responses/415",
       "owner": "FEAT-01b",
-      "note": "Código y cuerpo del error de tipo de archivo o documento ilegible en la extracción."
+      "note": "Código y cuerpo del error de tipo de archivo en la extracción."
     }
   ]
 }

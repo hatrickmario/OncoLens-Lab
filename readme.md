@@ -921,7 +921,7 @@ paths:
 | `POST /platform/intake-drafts` · `GET /platform/intake-drafts/{id}` | Registro asistido por OCR (HU-08) | 2 | |
 | `GET /platform/patients/{id}/documents` · `…/documents/{docId}` | Listado paginado y estado de los documentos | 2 | |
 | `GET /platform/patients/{id}/documents/{docId}/file` | Visor del documento de origen (*streaming*, auditado) | 2 | |
-| `GET /platform/patients/{id}/biomarkers?name=` · `…/clinical-notes` | Serie de un biomarcador y notas clínicas | 2 | |
+| `GET /platform/patients/{id}/biomarkers?biomarkerName=` · `…/clinical-notes` | Serie de un biomarcador y notas clínicas | 2 | |
 | `POST /platform/patients/{id}/documents/batch` | Carga de varios PDF en una acción; un `Document` por archivo; respuesta `207` con el resultado de cada archivo (FR-05) | 2 | |
 | **`GET /platform/patients/{id}/case`** | Vista de caso: timeline, tratamientos previos, series y checklist (`CaseView`, HU-15, HU-18) | 2 / 3 | |
 | **`POST /platform/patients/{id}/case-summary`** | Genera y persiste el resumen del caso verificable (`analysis_type = resumen_caso`, HU-16) | 2 | |

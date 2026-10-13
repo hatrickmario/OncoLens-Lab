@@ -56,6 +56,7 @@ async function generatePydantic(root, bundled) {
       '--target-python-version', '3.12',
       '--disable-timestamp',
       '--use-annotated',
+      '--use-title-as-name',
       '--custom-file-header', generatedHeader(RAG_ORCHESTRATOR, '#'),
     ]);
     await writeFile(path.join(output, '__init__.py'), `${generatedHeader(RAG_ORCHESTRATOR, '#')}\n`);

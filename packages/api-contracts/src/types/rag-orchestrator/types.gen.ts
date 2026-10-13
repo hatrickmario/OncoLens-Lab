@@ -104,6 +104,9 @@ export type ApplicabilityCriterion = {
      */
     patientValue: string | null;
     studyPopulationValue: string | null;
+    /**
+     * ApplicabilityStatus
+     */
     status: 'coincide' | 'parcial' | 'no_coincide' | 'desconocido';
     unknownReason: 'falta_en_paciente' | 'no_reportado_por_fuente' | null;
     isExclusionary: boolean;
@@ -355,6 +358,9 @@ export type RagQueryInternalRequest = {
  * Usa los schemas compartidos de contracts/schemas/evidence.yaml (Synthesis, SourceApplicability, EvidenceOption, DiscardedOption). clinical-api agrega la Base del análisis y persiste el AIAnalysisRecord.
  */
 export type RagQueryInternalResponse = {
+    /**
+     * RagQueryStatus
+     */
     status: 'con_evidencia' | 'sin_evidencia';
     synthesis: Synthesis;
     applicability: Array<SourceApplicability>;
@@ -384,7 +390,7 @@ export type RagQueryInternalResponse = {
         foundEvidence: boolean;
     }>;
     /**
-     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando ningún chunk supera el umbral (RN-02): null no es 0.0.
+     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null cuando ningún chunk supera el umbral (RN-02): null no es 0.0.
      */
     topRelevanceScore: number | null;
     meta: RagMeta;
@@ -408,6 +414,8 @@ export type RagFollowUpRequest = {
 
 export type RagFollowUpResponse = {
     /**
+     * RagFollowUpStatus
+     *
      * rag-orchestrator clasifica fuera_de_contexto cuando la pregunta no se refiere al análisis ni a su evidencia: no se genera respuesta.
      */
     status: 'con_evidencia' | 'sin_evidencia' | 'fuera_de_contexto';
@@ -418,7 +426,7 @@ export type RagFollowUpResponse = {
     citedSources: Array<CitedSource>;
     omittedClaims: number;
     /**
-     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la mejor evidencia recuperada. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null si no hay evidencia o la pregunta está fuera de contexto (RN-02): null no es 0.0.
+     * Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de éxito (RN-03). null si no hay evidencia o la pregunta está fuera de contexto (RN-02): null no es 0.0.
      */
     topRelevanceScore: number | null;
     meta: RagMeta;
@@ -448,6 +456,9 @@ export type CaseSummaryInternalResponse = {
 export type ExtractedField = {
     value: string;
     extractionScore: number;
+    /**
+     * ExtractedFieldConfidence
+     */
     extractionConfidence: 'alta' | 'media' | 'baja';
     sourceSpan: {
         page: number;
@@ -635,7 +646,7 @@ export type CitedSourceFields = {
      */
     chunkTextSnapshot: string;
     /**
-     * Referencia best-effort al chunk recuperado en esa consulta.
+     * Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.
      */
     chunkId: string;
 };
@@ -690,7 +701,7 @@ export type RagQueryResponses = {
 
 export type RagQueryResponse = RagQueryResponses[keyof RagQueryResponses];
 
-export type RagFollowUpData = {
+export type AnswerFollowUpData = {
     body: RagFollowUpRequest;
     headers?: {
         'X-Request-Deadline'?: string;
@@ -700,7 +711,7 @@ export type RagFollowUpData = {
     url: '/rag/follow-up';
 };
 
-export type RagFollowUpErrors = {
+export type AnswerFollowUpErrors = {
     /**
      * JWT de servicio ausente o inválido.
      */
@@ -727,16 +738,16 @@ export type RagFollowUpErrors = {
     504: ErrorDeadlineVencido;
 };
 
-export type RagFollowUpError = RagFollowUpErrors[keyof RagFollowUpErrors];
+export type AnswerFollowUpError = AnswerFollowUpErrors[keyof AnswerFollowUpErrors];
 
-export type RagFollowUpResponses = {
+export type AnswerFollowUpResponses = {
     /**
      * Respuesta del turno.
      */
     200: RagFollowUpResponse;
 };
 
-export type RagFollowUpResponse2 = RagFollowUpResponses[keyof RagFollowUpResponses];
+export type AnswerFollowUpResponse = AnswerFollowUpResponses[keyof AnswerFollowUpResponses];
 
 export type ExtractDocumentData = {
     body: {
@@ -761,11 +772,11 @@ export type ExtractDocumentErrors = {
      */
     413: unknown;
     /**
-     * Tipo de archivo no admitido o documento ilegible. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la extracción (FEAT-01b); aquí no se inventa ningún código.
+     * Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la extracción (FEAT-01b); aquí no se inventa ningún código.
      */
     415: unknown;
     /**
-     * Cuerpo inválido (Pydantic).
+     * Cuerpo inválido (Pydantic), o documento ilegible (el código de este caso lo fija FEAT-01b).
      */
     422: ErrorValidacion;
     /**

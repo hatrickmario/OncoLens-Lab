@@ -596,16 +596,16 @@ export const zRagQueryHeaders = z.object({
  */
 export const zRagQueryResponse = zRagQueryInternalResponse;
 
-export const zRagFollowUpBody = zRagFollowUpRequest;
+export const zAnswerFollowUpBody = zRagFollowUpRequest;
 
-export const zRagFollowUpHeaders = z.object({
+export const zAnswerFollowUpHeaders = z.object({
     'X-Request-Deadline': z.iso.datetime().optional()
 });
 
 /**
  * Respuesta del turno.
  */
-export const zRagFollowUpResponse2 = zRagFollowUpResponse;
+export const zAnswerFollowUpResponse = zRagFollowUpResponse;
 
 export const zExtractDocumentBody = z.object({
     file: z.string(),

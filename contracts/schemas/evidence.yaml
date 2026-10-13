@@ -108,7 +108,7 @@ components:
           description: Texto original de la fuente, sin traducir.
         chunkId:
           type: string
-          description: Referencia best-effort al chunk recuperado en esa consulta.
+          description: Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.
     CitedSource:
       type: object
       description: >-
@@ -224,6 +224,7 @@ components:
         studyPopulationValue:
           type: [string, "null"]
         status:
+          title: ApplicabilityStatus
           type: string
           enum: [coincide, parcial, no_coincide, desconocido]
         unknownReason:
