@@ -64,9 +64,17 @@ Node ESM (`package.json` raíz con `"type": "module"`) en `scripts/contracts/che
 por `npm run contracts:check`. El `package.json` raíz es mínimo (scripts y devDependencies de
 contratos); los *workspaces* los completa la historia de monorepo. Piezas, versiones fijadas
 exactas en el `package.json`:
-- `@redocly/openapi-core`: lint OpenAPI 3.1 (reglas `spec`, sin estilo opinado) y *bundle*
-  **en memoria**. El *bundle* nunca se escribe en el repo; si una herramienta necesita archivo, va
-  a `os.tmpdir()` y se borra al terminar.
+- `@redocly/openapi-core`: lint OpenAPI 3.1 (reglas `spec`, sin estilo opinado). El *bundle*
+  **en memoria** lo hace `scripts/contracts/lib/bundle.mjs`, un empaquetador propio
+  **`[Pre-S1 resp. 35 (D-6)]`** (enmienda de D2, que preveía `bundleDocument` de
+  `@redocly/openapi-core`): internaliza solo los `$ref` a
+  `contracts/schemas/evidence.yaml#/components/schemas/<Nombre>` y **falla cerrado** ante
+  cualquier otra `$ref` externa (arreglo de Gate 2 DPR-7: `bundleOrFail` devuelve el error del
+  spec, nunca un *bundle* parcial). Un test comprueba que sus `components.schemas` coinciden con
+  los de `@redocly/openapi-core`. **Deuda técnica, S2:** migrar a `bundleDocument` y retirar
+  `lib/bundle.mjs` (historia de deuda técnica por abrir en el refinamiento del S2; el código no se
+  migra en este change). El *bundle* nunca se escribe en el repo; si una herramienta necesita
+  archivo, va a `os.tmpdir()` y se borra al terminar.
 - `ajv` (`Ajv2020`, `strict: true`) + `ajv-formats`: valida cada ejemplo contra el destino que
   declara `contracts/examples/index.json`.
 - `fast-json-patch`: aplica en los tests los parches de mutación sobre los specs reales.
