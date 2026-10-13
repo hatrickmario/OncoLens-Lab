@@ -38,14 +38,14 @@
     "ac": "AC-17",
     "regla": "assertExamplesSynthetic",
     "escenario": "un parche pone un documentNumber sin prefijo SINT-",
-    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/documentNumber", "value": "79123456" }] }],
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/documentNumber", "value": "00000000" }] }],
     "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "documentNumber", "mensajeContiene": "SINT-" }
   },
   {
     "ac": "AC-17",
     "regla": "assertExamplesSynthetic",
     "escenario": "un parche pone una fecha de nacimiento absoluta en birthDate",
-    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/birthDate", "value": "1968-04-12" }] }],
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/birthDate", "value": "1900-01-01" }] }],
     "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "birthDate", "mensajeContiene": "fecha de nacimiento" }
   },
   {
