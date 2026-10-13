@@ -8,7 +8,7 @@ const report = reporter('assertSpecVersions', 'AC-1');
 const OPENAPI_3_1 = /^3\.1\.\d+$/;
 const SEMANTIC_VERSION = /^\d+\.\d+\.\d+$/;
 
-/** Operaciones que `clinical-api` declara antes de la primera implementación del S1. */
+/** Operaciones de readme §4.1 que `clinical-api` declara antes de la primera implementación del S1 (con la vista de caso). */
 export const S1_OPERATIONS = [
   ['post', '/platform/auth/login'],
   ['post', '/platform/auth/logout'],
@@ -17,6 +17,7 @@ export const S1_OPERATIONS = [
   ['get', '/platform/patients/{patientId}'],
   ['post', '/platform/patients/{patientId}/documents'],
   ['post', '/platform/evidence-analyses'],
+  ['get', '/platform/patients/{patientId}/case'],
 ];
 
 function checkFile(spec) {

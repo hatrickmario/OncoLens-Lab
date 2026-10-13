@@ -164,5 +164,26 @@
     "escenario": "un ejemplo usa una clave snake_case",
     "parches": [{ "destino": "ejemplo:follow-up-create.json", "operaciones": [{ "op": "add", "path": "/question_text", "value": "x" }] }],
     "esperado": { "archivo": "contracts/examples/follow-up-create.json", "rutaContiene": "question_text" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche elimina GET /platform/patients/{patientId}/case, la vista de caso de readme §4.1 (CK-2)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1case" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "GET /platform/patients/{patientId}/case" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "CaseView deja de ser cerrado",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/CaseView/additionalProperties" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/CaseView", "mensajeContiene": "additionalProperties" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "la vista de caso deja de declarar x-permission",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1case/get/x-permission" }] }],
+    "esperado": { "ref": "AC-17", "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "x-permission" }
   }
 ]
