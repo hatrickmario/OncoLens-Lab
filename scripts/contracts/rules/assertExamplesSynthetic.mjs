@@ -20,6 +20,9 @@ const EMAIL = /[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
 const ABSOLUTE_DATE = /\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2} de [a-záéíóú]+ de \d{4}\b/i;
 const NO_DATES_UNDER = ['clinicalContext', 'analysisMemory', 'query', 'question'];
 
+/** Claves de nombre de archivo: casan con `name$` pero se rigen por la regla SINT-, no por la de "Prueba Sintética". */
+const FILE_NAME_KEYS = ['originalFilename', 'filename', 'fileName'];
+
 const underAny = (pointer, keys) => keys.some((key) => pointer.split('/').includes(key));
 const insideExclusion = (pointer) => EXCLUSION_KEYS.some((key) => pointer.includes(`/${key}/`));
 
@@ -29,11 +32,11 @@ function checkNode({ value, pointer, key }, context) {
   if (key === 'dataClassification' && value !== 'sintetico') found.push(report(file, pointer, 'dataClassification debe ser sintetico'));
   if (key === 'dataOrigin' && REAL_ORIGINS.includes(value)) found.push(report(file, pointer, `${value} no es sintético: los ejemplos solo usan datos sintéticos`));
   if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_NUMERO_DOCUMENTO) && !value.startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
-  if (['originalFilename', 'filename', 'fileName'].includes(key) && !String(value).startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
+  if (FILE_NAME_KEYS.includes(key) && !String(value).startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
   if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_FECHA_NACIMIENTO) && ABSOLUTE_DATE.test(value)) {
     found.push(report(file, pointer, 'una fecha de nacimiento absoluta no puede aparecer en un ejemplo: solo el año o una edad relativa'));
   }
-  const isPerson = (key !== 'name' && key !== null && matchesIdentity(key, PATRONES_NOMBRE_PERSONA)) || (key === 'name' && entry.target === SEARCH_REQUEST_TARGET);
+  const isPerson = (key !== 'name' && key !== null && !FILE_NAME_KEYS.includes(key) && matchesIdentity(key, PATRONES_NOMBRE_PERSONA)) || (key === 'name' && entry.target === SEARCH_REQUEST_TARGET);
   if (isPerson && !SYNTHETIC_NAME.test(String(value))) found.push(report(file, pointer, 'todo nombre de persona debe ser "Prueba Sintética"'));
   return found;
 }

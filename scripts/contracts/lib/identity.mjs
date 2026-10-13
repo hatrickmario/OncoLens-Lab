@@ -61,8 +61,8 @@ export const NAME_ALLOWLIST = [
   'originalName', // texto del biomarcador tal como aparece en el documento
   'drugName', // fármaco del catálogo
   'llmModel', // modelo, no una persona
-  'originalFilename', // nombre de archivo: lo cubren la regla SINT- de los ejemplos y la nota de clinical-api (no viaja a Backend 2)
-  'fileName',
+  // originalFilename y fileName NO están aquí: un nombre de archivo puede llevar identidad y no cruza a Backend 2 (RN-10);
+  // en los ejemplos los cubre la regla SINT- de assertExamplesSynthetic (resp. 41, PG #1).
   'pseudoPatientId', // seudónimo aleatorio por consulta (RN-11), nunca en el prompt
 ].map(normalizeName);
 
