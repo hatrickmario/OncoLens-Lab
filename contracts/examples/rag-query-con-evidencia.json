@@ -23,7 +23,7 @@
             "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
             "possiblyOutdated": false,
             "newerVersionAvailable": false,
-            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors.",
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
             "chunkId": "chunk_88231"
           }
         ],
@@ -129,7 +129,7 @@
           "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
           "possiblyOutdated": false,
           "newerVersionAvailable": false,
-          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors.",
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
           "chunkId": "chunk_88231"
         }
       ]
