@@ -25,11 +25,15 @@ Ambos specs MUST declarar `info.version` semántico, `1.0.0` al congelar; un cam
 - **THEN** los reales declaran `1.0.0` y el parcheado hace terminar el comando con código distinto de 0 nombrando el spec
 
 ### Requirement: Operaciones del S1 en el spec de clinical-api
-Antes de la primera implementación del S1, el spec de `clinical-api` MUST contener `POST /platform/auth/login`, `POST /platform/auth/logout`, `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}`, `POST /platform/patients/{patientId}/documents` y `POST /platform/evidence-analyses`, además del registro manual y el seguimiento; cada historia posterior SHALL añadir su endpoint en su tarea `## contratos` (aditivo).
+Antes de la primera implementación del S1, el spec de `clinical-api` MUST contener `POST /platform/auth/login`, `POST /platform/auth/logout`, `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}`, `POST …/documents`, `POST /platform/evidence-analyses` y `GET /platform/patients/{patientId}/case` `[Pre-S1 resp. 34 (D-5)]`, además del registro manual y el seguimiento; cada historia posterior SHALL añadir su endpoint en su tarea `## contratos` (aditivo).
 
 #### Scenario: Las operaciones del S1 están declaradas [US-033 AC-1]
 - **WHEN** `assertSpecVersions()` revisa el spec de `clinical-api`, y un parche elimina `POST /platform/auth/logout`
-- **THEN** el real contiene las siete operaciones y el parcheado hace terminar el comando con código distinto de 0 nombrando la ruta
+- **THEN** el real contiene las ocho operaciones y el parcheado hace terminar el comando con código distinto de 0 nombrando la ruta
+
+#### Scenario: La vista de caso se mantiene y es lectura clínica [US-033 AC-1] [Pre-S1 resp. 34 (D-5)]
+- **WHEN** `assertSpecVersions()` y `assertOperationsDeclarePermission()` revisan `GET /platform/patients/{patientId}/case`
+- **THEN** responde `200` con `CaseView`, declara `x-permission: clinical:read` y `401`, `403` y `404`; el administrador recibe `403` (lectura clínica)
 
 ### Requirement: Schemas cerrados y bloques obligatorios
 Todo schema `type: object` de ambos specs y de `contracts/schemas/evidence.yaml` MUST declarar `required` y `additionalProperties: false` (o `unevaluatedProperties: false` en las composiciones), salvo las excepciones nombradas con dueño de design.md D7; `meta.retrievalParams` SHALL ser cerrado y todo enum nullable MUST incluir `null`. Las propiedades SHALL estar en camelCase y los bloques de ADR-26 MUST ser obligatorios aunque vayan vacíos `[Pre-S1 resp. 25]`.
@@ -162,11 +166,15 @@ Los ocho schemas compartidos de design.md D1 (`EvidenceOption`, `DiscardedOption
 - **THEN** son textualmente idénticos
 
 ### Requirement: Generación reproducible desde los specs
-`npm run contracts:generate` MUST generar desde ambos specs tipos TS, Zod y Pydantic en las rutas de design.md D6 y el extracto no normativo de readme §4, marcados como no editables. `contracts:generate:check` SHALL fallar si queda una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide con el spec `[Pre-S1 resp. 20, 28]`. `contracts:breaking` y `contracts:verify-provider` quedan para US-214.
+`npm run contracts:generate` MUST generar desde ambos specs tipos TS, Zod y Pydantic en las rutas de design.md D6 y el extracto no normativo de readme §4, marcados como no editables. `contracts:generate:check` SHALL fallar si queda una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide con el spec `[Pre-S1 resp. 20, 28]`. `contracts:breaking` y `contracts:verify-provider` quedan para US-214. El Zod generado MUST ser estricto `[Pre-S1 resp. 33 (D-4)]`.
 
 #### Scenario: Generar dos veces no produce diferencias [US-033 AC-16] [Pre-S1 resp. 20]
 - **WHEN** se ejecuta `contracts:generate:check` sobre el repositorio recién generado y versionado
 - **THEN** termina con código 0 sin diferencias
+
+#### Scenario: El Zod generado rechaza propiedades desconocidas [US-033 AC-16] [Pre-S1 resp. 33 (D-4)]
+- **WHEN** se valida con el Zod generado de `rag-orchestrator` un ejemplo al que se añade una propiedad no declarada en un objeto cerrado
+- **THEN** la validación falla (`z.strictObject`); los `if/then` y los `anyOf` de `required` que el generador no traduce figuran como brecha en design.md D6, con US-214 como dueña
 
 #### Scenario: Una edición a mano de lo generado se detecta [US-033 AC-16] [Pre-S1 resp. 20]
 - **WHEN** se edita a mano `packages/api-contracts/src/zod/clinical-api/zod.gen.ts` o un modelo de `apps/rag-orchestrator/app/schemas/generated/` y se ejecuta `contracts:generate:check`
@@ -286,7 +294,7 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **THEN** el comando termina con código distinto de 0 y nombra la ruta
 
 ### Requirement: Endpoint propio de seguimiento en Backend 2, sin estado
-`rag-orchestrator` MUST declarar `POST /rag/follow-up` (`RagFollowUpRequest`/`RagFollowUpResponse`, design.md D10) con memoria rotulada y no citable; `/rag/query` SHALL NOT cambiar. La descripción SHALL decir que no guarda estado, que seudónimo y `traceId` son nuevos por turno, que la pregunta llega enmascarada y que con datos reales solo usa modelos locales, también en su `503`. `RagMeta` MUST exigir `catalogVersion` `[Pre-S1 resp. 19, 23, 29]`.
+`rag-orchestrator` MUST declarar `POST /rag/follow-up` (`RagFollowUpRequest`/`RagFollowUpResponse`, design.md D10) con memoria rotulada y no citable; `/rag/query` SHALL NOT cambiar. La descripción SHALL decir que no guarda estado, que seudónimo y `traceId` son nuevos por turno, que la pregunta llega enmascarada y que con datos reales solo usa modelos locales, también en su `503`. `RagMeta` MUST exigir `catalogVersion` y no admitir nulos `[Pre-S1 resp. 19, 23, 29, 32 (D-3)]`.
 
 #### Scenario: /rag/follow-up está declarado y /rag/query no cambia [US-033 AC-13] [Pre-S1 resp. 19]
 - **WHEN** `contracts:check` revisa el spec de `rag-orchestrator`
@@ -294,7 +302,7 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 
 #### Scenario: Petición y respuesta del seguimiento interno [US-033 AC-13] [Pre-S1 resp. 19]
 - **WHEN** `contracts:check` revisa `RagFollowUpRequest` y `RagFollowUpResponse`
-- **THEN** la petición exige `traceId`, `dataClassification`, `catalogVersion`, `question` (enmascarada), `clinicalContext`, `analysisMemory` (forma de `priorAnalyses`, solo tiempos relativos) y `filtersApplied`; la respuesta exige `status` (`con_evidencia | sin_evidencia | fuera_de_contexto`), `answer`, `citedSources`, `omittedClaims`, `topRelevanceScore` (`number | null`, `null` si no hay evidencia o está fuera de contexto) y `meta` (`RagMeta` con `catalogVersion` requerido); `422` es `oneOf` `TIPO_NO_HABILITADO | CUERPO_INVALIDO`
+- **THEN** la petición exige `traceId`, `dataClassification`, `catalogVersion`, `question` (enmascarada), `clinicalContext`, `analysisMemory` (forma de `priorAnalyses`, solo tiempos relativos) y `filtersApplied`; la respuesta exige `status` (`con_evidencia | sin_evidencia | fuera_de_contexto`), `answer`, `citedSources`, `omittedClaims`, `topRelevanceScore` (`number | null`, `null` si no hay evidencia o está fuera de contexto) y `meta` (`RagMeta` estricto, con `catalogVersion` requerido y sin campos nulos); `422` es `oneOf` `TIPO_NO_HABILITADO | CUERPO_INVALIDO`
 
 #### Scenario: La memoria del análisis nunca es citable [US-033 AC-13] [RN-24]
 - **WHEN** `contracts:check` revisa `analysisMemory` en `RagFollowUpRequest`
@@ -305,8 +313,24 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **THEN** la operación dice que no guarda turnos ni memoria en disco, caché, Milvus o *logs*, que el `pseudoPatientId` y el `traceId` son nuevos en cada turno y que `question` llega enmascarada; la operación y su `503` dicen que con datos reales solo se usan modelos locales, sin *fallback* a la nube; un parche que quite cualquiera de esas frases hace fallar el comando
 
 #### Scenario: catalogVersion es obligatorio en meta [US-033 AC-13] [Pre-S1 resp. 29]
-- **WHEN** un parche quita `catalogVersion` del `required` de `RagMeta` o sustituye `meta` de `/case/summary` por un objeto propio
+- **WHEN** un parche quita `catalogVersion` del `required` de `RagMeta` o de `CaseSummaryMeta`, o sustituye `meta` de `/case/summary` por un objeto propio
 - **THEN** el comando termina con código distinto de 0 y nombra el schema
+
+#### Scenario: RagMeta es estricto y CaseSummaryMeta lleva null donde no hay corpus [US-033 AC-13] [Pre-S1 resp. 32 (D-3)]
+- **WHEN** un parche vuelve nullable un campo de `RagMeta` (p. ej. `embeddingModel`), o un ejemplo de `/rag/query` o `/rag/follow-up` trae `retrievalParams` o `embeddingModel` en `null`, o el ejemplo del resumen del caso trae `corpusRelease` no nulo
+- **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
+
+#### Scenario: El anclaje del valor de la población del estudio lo da la opción [US-033 AC-17] [Pre-S1 resp. 37 (D-8)] [RN-01]
+- **WHEN** se revisa `ApplicabilityCriterion.studyPopulationValue` en `con-evidencia-s4.json`
+- **THEN** el criterio puede traer `citedSources` vacío y el anclaje lo da `EvidenceOption.citedSources` (`minItems: 1`); el título de `PMC9000001` describe terapia endocrina en receptor de estrógeno positivo, como su texto citado
+
+#### Scenario: Los textos de UI con consecuencia de lenguaje son configuración [US-033 AC-17] [Pre-S1 resp. 37 (D-8)] [RN-22] [RN-23]
+- **WHEN** se revisa design.md D15
+- **THEN** los textos de `fuera_de_contexto`, de `sin_evidencia` y el encabezado "Opciones descritas en la evidencia" figuran como claves de configuración, revisadas en el Gate 2 de `apps/web`; el aviso de RN-19 del resumen del caso queda anotado para US-096 y US-097
+
+#### Scenario: El proveedor del LLM es un enum [US-033 AC-13] [Pre-S1 resp. 36 (D-7)] [RN-12]
+- **WHEN** se revisa `llmProvider` en `RagMeta` y en `CaseSummaryMeta`
+- **THEN** es `enum [local, nube]`, y los ejemplos con datos sintéticos declaran `local`
 
 ### Requirement: Sin identidad ni identificadores enlazables en Backend 2
 Ninguna propiedad, parámetro ni cabecera del spec de `rag-orchestrator`, a ninguna profundidad, MUST coincidir con `IDENTIDAD_B2` (design.md D13: identidad personal e ids enlazables), por regex sin mayúsculas sobre el nombre normalizado y con lista blanca; ningún `requestBody` SHALL declarar `format: uuid` `[Pre-S1 resp. 29]`. La única excepción SHALL ser `identityFound` en su puntero exacto de la respuesta `200` de `/documents/extract` (RN-10).
@@ -348,6 +372,10 @@ Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios 
 #### Scenario: La vista de la ficha está atada al permiso [US-033 AC-17] [Pre-S1 resp. 27]
 - **WHEN** un parche quita `x-view-by-permission` de `GET /platform/patients/{patientId}` o mapea `default` a `PatientSummary`
 - **THEN** `assertViewByPermission()` reporta el hallazgo y el comando termina con código distinto de 0
+
+#### Scenario: El listado y la búsqueda no devuelven la identidad en claro [US-033 AC-17] [Pre-S1 resp. 36 (D-7)] [RN-10]
+- **WHEN** se revisa `x-view-by-permission` de `GET /platform/patients` y de `POST /platform/patients/search`
+- **THEN** mapean `clinical:read` a `PatientListItem` (los ítems de `PatientPage` son `PatientListItem` o `PatientAdminSummary`) (`fullNameMasked`, `nationalIdMasked`, sin `identification`); el nombre y el documento completos solo están en `PatientSummary.identification`, de la ficha; la búsqueda por nombre tiene a US-048 como dueña
 
 #### Scenario: La vista del administrador no tiene datos clínicos [US-033 AC-15] [Pre-S1 resp. 27]
 - **WHEN** se valida `patient-summary-admin.json` y un parche le agrega `diagnosis`

@@ -68,6 +68,10 @@ El modelo MUST declarar `clinical.analysis_follow_up`, ligada al análisis, con 
 - **WHEN** se revisa el schema `clinical` del documento y `assertDataModelDocument()` lo inspecciona
 - **THEN** existe `analysis_follow_up` con referencia al análisis, `turn_number` único por análisis, los campos de `FollowUpTurn`, las columnas de `meta` y `trace_id`, y la frase "sin pseudoPatientId ni identidad"
 
+#### Scenario: El seguimiento registra proveedor y clasificación, y el snapshot no guarda el seudónimo [US-033 AC-13] [Pre-S1 resp. 36 (D-7)] [RN-11] [RN-12]
+- **WHEN** se revisan `clinical.analysis_follow_up` y `clinical.ai_analysis_record.clinical_context_snapshot`
+- **THEN** el seguimiento declara `llm_provider` (`local | nube`, con `CHECK`) y `data_classification`, y la nota del snapshot dice que es desidentificado y sin `pseudoPatientId`
+
 #### Scenario: Una columna de identidad en el seguimiento rompe la verificación [US-033 AC-13] [RN-10]
 - **WHEN** un parche sobre una copia en memoria del documento añade `pseudo_patient_id` a `analysis_follow_up` o elimina `trace_id`
 - **THEN** `assertDataModelDocument()` reporta el hallazgo y el comando termina con código distinto de 0

@@ -1,0 +1,189 @@
+[
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche cambia openapi a 3.0.3 en clinical-api",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/openapi", "value": "3.0.3" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/openapi", "mensajeContiene": "3.1" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "el spec de rag-orchestrator no se encuentra en su ruta",
+    "parches": [{ "destino": "rag-orchestrator", "ausente": true }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "mensajeContiene": "archivo ausente" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche pone info.version en \"v1\" en clinical-api",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/version", "value": "v1" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/info/version" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche elimina POST /platform/auth/logout",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1auth~1logout" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "logout", "mensajeContiene": "POST /platform/auth/logout" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertLoginContract",
+    "escenario": "un parche agrega content al 204 del login",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          {
+            "op": "add",
+            "path": "/paths/~1platform~1auth~1login/post/responses/204/content",
+            "value": { "application/json": { "schema": { "type": "object" } } }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "/responses/204/content", "mensajeContiene": "no lleva cuerpo" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertLoginContract",
+    "escenario": "la cabecera Set-Cookie del login no documenta SameSite=Strict",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "replace", "path": "/paths/~1platform~1auth~1login/post/responses/204/headers/Set-Cookie/description", "value": "Cookie de sesión opaca. HttpOnly; Secure." }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "Set-Cookie", "mensajeContiene": "SameSite=Strict" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertEvidenceAnalysisShape",
+    "escenario": "un parche quita disclaimer del required de EvidenceAnalysis",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/EvidenceAnalysis/required/15", "value": "disclaimer" },
+          { "op": "remove", "path": "/components/schemas/EvidenceAnalysis/required/15" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "EvidenceAnalysis/required", "mensajeContiene": "disclaimer" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertEvidenceAnalysisShape",
+    "escenario": "un parche quita analysisBasis del required de EvidenceAnalysis",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/EvidenceAnalysis/required/10", "value": "analysisBasis" },
+          { "op": "remove", "path": "/components/schemas/EvidenceAnalysis/required/10" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "analysisBasis" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertEvidenceAnalysisShape",
+    "escenario": "un parche amplía el enum de status de EvidenceAnalysis",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/EvidenceAnalysis/properties/status/enum/-", "value": "parcial" }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "properties/status/enum" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "un parche quita additionalProperties de EvidenceAnalysis",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/EvidenceAnalysis/additionalProperties" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/EvidenceAnalysis", "mensajeContiene": "additionalProperties" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "un parche quita additionalProperties de un schema compartido en evidence.yaml",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "remove", "path": "/components/schemas/Synthesis/additionalProperties" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "#/components/schemas/Synthesis" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "un parche abre meta.retrievalParams en rag-orchestrator",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "remove", "path": "/components/schemas/RagMeta/properties/retrievalParams/additionalProperties" }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagMeta/properties/retrievalParams" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "un parche quita null del enum de DiagnosisGrading.specimenType manteniendo el tipo nullable",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/DiagnosisGrading/properties/specimenType/enum/2", "value": null },
+          { "op": "remove", "path": "/components/schemas/DiagnosisGrading/properties/specimenType/enum/2" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "DiagnosisGrading/properties/specimenType", "mensajeContiene": "incluir null" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "una composición allOf pierde unevaluatedProperties false",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "remove", "path": "/components/schemas/CitedSource/unevaluatedProperties" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "#/components/schemas/CitedSource", "mensajeContiene": "unevaluatedProperties" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "CitedSourceFields queda abierto por diseño y extractedData también",
+    "parches": [
+      { "destino": "evidence", "operaciones": [{ "op": "test", "path": "/components/schemas/CitedSourceFields/type", "value": "object" }] },
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "test", "path": "/components/schemas/DocumentExtractResponse/properties/extractedData/type", "value": "object" }] }
+    ],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertCamelCaseProperties",
+    "escenario": "un parche agrega una propiedad snake_case a FollowUpTurn",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/FollowUpTurn/properties/follow_up", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "FollowUpTurn/properties/follow_up", "mensajeContiene": "camelCase" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertCamelCaseProperties",
+    "escenario": "un ejemplo usa una clave snake_case",
+    "parches": [{ "destino": "ejemplo:follow-up-create.json", "operaciones": [{ "op": "add", "path": "/question_text", "value": "x" }] }],
+    "esperado": { "archivo": "contracts/examples/follow-up-create.json", "rutaContiene": "question_text" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche elimina GET /platform/patients/{patientId}/case, la vista de caso de readme §4.1 (CK-2)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1case" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "GET /platform/patients/{patientId}/case" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertClosedSchemas",
+    "escenario": "CaseView deja de ser cerrado",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/CaseView/additionalProperties" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/CaseView", "mensajeContiene": "additionalProperties" }
+  },
+  {
+    "ac": "AC-1",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "la vista de caso deja de declarar x-permission",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1case/get/x-permission" }] }],
+    "esperado": { "ref": "AC-17", "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "x-permission" }
+  }
+]

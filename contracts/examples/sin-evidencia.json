@@ -1,0 +1,74 @@
+{
+  "id": "c4e0a3b1-2d4f-4a0b-9c2b-0f3a1d4e0a3b",
+  "traceId": "req_4b7d1e9a",
+  "queryText": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+  "questionTemplateId": null,
+  "queryLanguage": "es",
+  "status": "sin_evidencia",
+  "synthesis": {
+    "agreements": [],
+    "discrepancies": []
+  },
+  "applicability": [],
+  "evidenceOptions": [],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "continuedWithWarning": true,
+    "assumptions": [],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 0
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Ningún fragmento recuperado supera el umbral de relevancia.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": null,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [],
+  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
+  "createdAt": "2026-10-12T15:10:00Z"
+}

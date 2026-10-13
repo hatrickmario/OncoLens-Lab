@@ -1,0 +1,12 @@
+# Reglas estructurales de Redocly para los contratos (sin estilo opinado). Las usan
+# `contracts:check` (check.mjs) y la comprobación manual con `npx @redocly/cli lint --config`.
+rules:
+  struct: error
+  no-unresolved-refs: error
+  operation-operationId-unique: error
+  path-parameters-defined: error
+  no-path-trailing-slash: error
+  no-identical-paths: error
+  no-enum-type-mismatch: error
+  no-invalid-schema-examples: error
+  no-invalid-parameter-examples: error

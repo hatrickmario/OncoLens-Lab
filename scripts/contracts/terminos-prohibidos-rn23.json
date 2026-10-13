@@ -1,0 +1,26 @@
+{
+  "descripcion": "Lista PROVISIONAL de lenguaje prescriptivo prohibido por RN-23 (PRD §6) y de promesas de resultado (RN-03). La lee assertNoPrescriptiveLanguage() hasta que US-068 cree packages/clinical-catalogs/lenguaje/terminos-prohibidos.json; entonces la regla pasa a leer el catálogo y este archivo se borra (dueño: US-068). Comparación sin mayúsculas ni acentos.",
+  "terminos": [
+    "recomendado para este paciente",
+    "debe recibir",
+    "debería recibir",
+    "se sugiere iniciar",
+    "el mejor tratamiento",
+    "la mejor opción",
+    "opción preferida",
+    "tratamiento indicado",
+    "tratamiento de elección",
+    "tratamiento óptimo",
+    "indicado para usted",
+    "the patient should receive",
+    "indicated for this patient",
+    "probabilidad de éxito",
+    "chance of success"
+  ],
+  "prefijos": ["recomend", "recommend"],
+  "frasesPermitidas": [
+    "no constituye una recomendacion",
+    "no recomienda ni prescribe",
+    "ni la probabilidad de exito"
+  ]
+}

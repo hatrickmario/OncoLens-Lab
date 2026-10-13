@@ -1,0 +1,44 @@
+[
+  {
+    "ac": "AC-8",
+    "regla": "assertSharedTypesIdenticalAcrossProviders",
+    "escenario": "un parche cambia en lo generado de clinical-api un campo de EvidenceOption",
+    "parches": [{ "destino": "doc:tipos-clinical-api", "operaciones": [{ "op": "text-replace", "buscar": "    option: string;", "reemplazar": "    option: number;" }] }],
+    "esperado": { "archivo": "packages/api-contracts/src/types/rag-orchestrator/types.gen.ts", "rutaContiene": "export type EvidenceOption", "mensajeContiene": "EvidenceOption" }
+  },
+  {
+    "ac": "AC-16",
+    "regla": "assertSharedTypesIdenticalAcrossProviders",
+    "escenario": "falta lo generado de rag-orchestrator",
+    "parches": [{ "destino": "doc:tipos-rag-orchestrator", "operaciones": [{ "op": "text-delete-line", "contiene": "export type CitedSource =" }] }],
+    "esperado": { "ref": "AC-8", "archivo": "packages/api-contracts/src/types/rag-orchestrator/types.gen.ts", "mensajeContiene": "CitedSource" }
+  },
+  {
+    "ac": "AC-16",
+    "regla": "assertReadmeExtractInSync",
+    "escenario": "se edita a mano una línea del extracto del readme",
+    "parches": [{ "destino": "doc:readme", "operaciones": [{ "op": "text-replace", "buscar": "operationId: uploadDocument", "reemplazar": "operationId: editadoAMano" }] }],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "no coincide" }
+  },
+  {
+    "ac": "AC-16",
+    "regla": "assertReadmeExtractInSync",
+    "escenario": "se quita la marca de extracto generado, no normativo del bloque",
+    "parches": [{ "destino": "doc:readme", "operaciones": [{ "op": "text-replace", "buscar": "> Extracto generado, no normativo,", "reemplazar": "> Extracto," }] }],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "no coincide" }
+  },
+  {
+    "ac": "AC-16",
+    "regla": "assertReadmeExtractInSync",
+    "escenario": "faltan los marcadores del extracto en el readme",
+    "parches": [{ "destino": "doc:readme", "operaciones": [{ "op": "text-replace", "buscar": "<!-- contracts:readme-extract:start -->", "reemplazar": "" }] }],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "marcadores" }
+  },
+  {
+    "ac": "AC-16",
+    "regla": "assertReadmeExtractInSync",
+    "escenario": "el spec de clinical-api cambia y el extracto del readme no se regenera",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1patients~1{patientId}/get/summary", "value": "Obtiene la ficha del paciente (editado)" }] }],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "regenerarlo" }
+  }
+]

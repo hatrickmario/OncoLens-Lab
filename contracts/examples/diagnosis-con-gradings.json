@@ -1,0 +1,64 @@
+{
+  "id": "9e3c4d5e-0b2f-4c6d-9e7f-8091a2b3c4d5",
+  "cancerType": "prostata",
+  "icd10Code": "C61",
+  "histology": "adenocarcinoma acinar",
+  "histologyCode": null,
+  "grade": "Gleason 4+3=7 · ISUP 3",
+  "gradings": [
+    {
+      "id": "a04d5e6f-1c3a-4d7e-8f80-91a2b3c4d5e6",
+      "gradingSystem": "gleason_isup",
+      "specimenType": "prostatectomia",
+      "gradeScope": "global",
+      "gleasonPrimaryPattern": 4,
+      "gleasonSecondaryPattern": 3,
+      "gleasonScore": 7,
+      "isupGradeGroup": 3,
+      "nottinghamGrade": null,
+      "isReference": true,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "b15e6f70-2d4b-4e8f-9091-a2b3c4d5e6f7",
+      "gradingSystem": "gleason_isup",
+      "specimenType": "biopsia",
+      "gradeScope": "peor",
+      "gleasonPrimaryPattern": 3,
+      "gleasonSecondaryPattern": 4,
+      "gleasonScore": 7,
+      "isupGradeGroup": 2,
+      "nottinghamGrade": null,
+      "isReference": false,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "stagingSystem": "TNM_8",
+  "stageValue": "T2cN0M0",
+  "performanceScale": "ECOG",
+  "performanceValue": 0,
+  "diagnosedAt": "2026-08-20",
+  "isActive": true,
+  "provenance": {
+    "entryMethod": "seed",
+    "extractionConfidence": "n_a",
+    "reviewStatus": "verificado",
+    "conflict": false,
+    "sourceDocumentId": null,
+    "additionalSourceDocumentIds": []
+  }
+}

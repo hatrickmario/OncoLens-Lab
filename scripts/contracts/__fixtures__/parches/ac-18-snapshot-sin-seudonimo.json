@@ -1,0 +1,9 @@
+[
+  {
+    "ac": "AC-18",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche quita de clinical_context_snapshot la nota de que no guarda el pseudoPatientId (RN-11, D-7)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "desidentificado, con etiquetas; sin pseudoPatientId (efímero por consulta, RN-11) |", "reemplazar": "desidentificado, con etiquetas |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "rutaContiene": "clinical.ai_analysis_record", "mensajeContiene": "sin pseudoPatientId" }
+  }
+]

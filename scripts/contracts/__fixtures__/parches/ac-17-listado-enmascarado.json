@@ -1,0 +1,59 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade fullName en claro a PatientListItem, la vista del listado y de la búsqueda (D-7)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/fullName", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "enmascarado" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade identification a PatientListItem, la vista del listado y de la búsqueda (D-7)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/identification", "value": { "type": "object" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "identification" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade firstName en claro a PatientListItem, la vista del listado y de la búsqueda (D-7, DPR M-1)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/firstName", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "no puede tener firstName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade birthDate en claro a PatientListItem, la vista del listado y de la búsqueda (D-7, DPR M-1)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/birthDate", "value": { "type": "string", "format": "date" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "no puede tener birthDate" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade documentNumber en claro a PatientListItem, la vista del listado y de la búsqueda (D-7, DPR M-1)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/documentNumber", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "no puede tener documentNumber" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade email en claro a PatientListItem, la vista del listado y de la búsqueda (D-7, DPR M-1)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/PatientListItem/properties/email", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "no puede tener email" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertViewByPermission",
+    "escenario": "un parche añade a PatientListItem un allOf con un $ref a un schema de contacto que trae email en claro anidado (D-7, DPR M-1)",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/ContactoSintetico", "value": { "type": "object", "properties": { "contacto": { "type": "object", "properties": { "email": { "type": "string" } } } } } },
+          { "op": "add", "path": "/components/schemas/PatientListItem/allOf", "value": [{ "$ref": "#/components/schemas/ContactoSintetico" }] }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "x-view-by-permission", "mensajeContiene": "no puede tener contacto.email" }
+  }
+]

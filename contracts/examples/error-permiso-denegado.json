@@ -1,0 +1,5 @@
+{
+  "error": "PERMISO_DENEGADO",
+  "message": "El rol de la sesión no tiene permiso para esta acción.",
+  "traceId": "req_a7b8c9d0"
+}

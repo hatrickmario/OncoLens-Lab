@@ -1,0 +1,33 @@
+{
+  "claims": [
+    {
+      "text": "El caso registra un carcinoma ductal infiltrante de mama en estadio IIA.",
+      "supportingDataRefs": [
+        "r1"
+      ]
+    },
+    {
+      "text": "El resultado de HER2 registrado es 3+ por inmunohistoquímica.",
+      "supportingDataRefs": [
+        "r2"
+      ]
+    }
+  ],
+  "omittedClaims": 0,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": null,
+    "rerankerModel": null,
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "case-summary@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": null,
+    "corpusCutoffDate": null,
+    "excludedSources": null,
+    "retrievalParams": null,
+    "latencyMs": 4300
+  }
+}

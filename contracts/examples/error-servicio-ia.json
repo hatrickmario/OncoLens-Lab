@@ -1,0 +1,5 @@
+{
+  "error": "ERROR_SERVICIO_IA",
+  "message": "El servicio de IA no respondió correctamente.",
+  "traceId": "req_d0e1f2a3"
+}

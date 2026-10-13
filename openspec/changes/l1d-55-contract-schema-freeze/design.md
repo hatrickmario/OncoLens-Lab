@@ -64,9 +64,17 @@ Node ESM (`package.json` raíz con `"type": "module"`) en `scripts/contracts/che
 por `npm run contracts:check`. El `package.json` raíz es mínimo (scripts y devDependencies de
 contratos); los *workspaces* los completa la historia de monorepo. Piezas, versiones fijadas
 exactas en el `package.json`:
-- `@redocly/openapi-core`: lint OpenAPI 3.1 (reglas `spec`, sin estilo opinado) y *bundle*
-  **en memoria**. El *bundle* nunca se escribe en el repo; si una herramienta necesita archivo, va
-  a `os.tmpdir()` y se borra al terminar.
+- `@redocly/openapi-core`: lint OpenAPI 3.1 (reglas `spec`, sin estilo opinado). El *bundle*
+  **en memoria** lo hace `scripts/contracts/lib/bundle.mjs`, un empaquetador propio
+  **`[Pre-S1 resp. 35 (D-6)]`** (enmienda de D2, que preveía `bundleDocument` de
+  `@redocly/openapi-core`): internaliza solo los `$ref` a
+  `contracts/schemas/evidence.yaml#/components/schemas/<Nombre>` y **falla cerrado** ante
+  cualquier otra `$ref` externa (arreglo de Gate 2 DPR-7: `bundleOrFail` devuelve el error del
+  spec, nunca un *bundle* parcial). Un test comprueba que sus `components.schemas` coinciden con
+  los de `@redocly/openapi-core`. **Deuda técnica, S2:** migrar a `bundleDocument` y retirar
+  `lib/bundle.mjs` (historia de deuda técnica por abrir en el refinamiento del S2; el código no se
+  migra en este change). El *bundle* nunca se escribe en el repo; si una herramienta necesita
+  archivo, va a `os.tmpdir()` y se borra al terminar.
 - `ajv` (`Ajv2020`, `strict: true`) + `ajv-formats`: valida cada ejemplo contra el destino que
   declara `contracts/examples/index.json`.
 - `fast-json-patch`: aplica en los tests los parches de mutación sobre los specs reales.
@@ -176,6 +184,22 @@ skill `sync-contracts`, que reservan `packages/api-contracts/src/zod/` para los 
   textualmente idénticos.
 - **Pendientes (US-214, S2):** `contracts:breaking` y `contracts:verify-provider`, el *hook* que
   bloquea editar lo generado y los clientes HTTP.
+- **Zod estricto `[Pre-S1 resp. 33 (D-4)]`:** el *plugin* de Zod de `@hey-api/openapi-ts` emite
+  `z.object` aunque el schema declare `additionalProperties: false`. `generate.mjs` registra un
+  *resolver* de objetos (`objetoEstricto`, con test) que emite `z.strictObject` cuando el schema
+  es cerrado y tiene propiedades; los objetos abiertos (`extractedData.*`, excepción nombrada de
+  D7) y los envoltorios de parámetros (`path`, `query`, `headers`) siguen como `z.object`. Así el
+  Zod que `web` y `clinical-api` importan rechaza propiedades desconocidas igual que el spec.
+- **Brecha declarada `[Pre-S1 resp. 33 (D-4)]`, dueña US-214:** el generador **no traduce**
+  (a) los `if/then` condicionales (`RagQueryInternalResponse`, `RagFollowUpResponse`,
+  `EvidenceAnalysis`, `FollowUpTurn`: p. ej. `sin_evidencia` ⇒ `topRelevanceScore: null`) ni
+  (b) los `anyOf` que solo exigen `required`/`properties` (`PatientSearchRequest`: documento o
+  nombre; `EvidenceAnalysisRequest.filters`: al menos un tipo de fuente), que Zod recibe como
+  `z.unknown()` en una intersección. Lo que el Zod generado deja pasar lo cubren `contracts:check`
+  (sobre los ejemplos) y la validación de respuestas contra el spec de `contracts:verify-provider`
+  (US-214). US-214 SHALL decidir si esos refinamientos se escriben como `superRefine` en
+  `*.schema.ts` o si el generador los emite; hasta entonces ningún consumidor debe asumir que el
+  Zod generado impone esas condiciones.
 Descartadas en una línea: `openapi-typescript` + `openapi-zod-client` (dos herramientas y soporte
 3.1 desigual); generar Pydantic con `fastapi-code-generator` (genera también rutas, que no
 queremos).
@@ -219,6 +243,14 @@ queremos).
   toda cita de una afirmación case **por `chunkId`** con una entrada de `citedSources` de la misma
   respuesta y que todo `patientDataRefs[i]` exista en `patientDataLinks` (Backend 1) o en un
   `dataRef` del `clinicalContext` de la petición (Backend 2).
+- **Anclaje de `studyPopulationValue` `[Pre-S1 resp. 37 (D-8)]`:** el criterio de aplicabilidad
+  (`ApplicabilityCriterion`) no se ancla por sí mismo: su `citedSources` puede ir vacío. El
+  anclaje de `studyPopulationValue` **lo da la opción** (`EvidenceOption.citedSources`, `minItems:
+  1`, RN-01) cuya fuente hereda el criterio (RN-28); el valor se copia de esa fuente y nunca lo
+  genera el modelo. `patientValue` se ancla al dato del paciente (ADR-34). Los ejemplos
+  `con-evidencia-s4.json` y `rag-query-con-evidencia.json` lo muestran (`citedSources: []` en el
+  criterio). Una afirmación suelta sobre la población del estudio no es un criterio: sigue
+  sujeta a `SupportedClaim` (cita o dato del paciente).
 - **Aviso (RN-19):** `disclaimer` es un solo texto configurable (`AI_DISCLAIMER_TEXT`, dueño
   US-069, que manda sobre la redacción exacta) con las dos frases "Análisis generado por IA —
   requiere validación clínica del oncólogo tratante" y "Uso académico/investigación"; `type:
@@ -226,7 +258,14 @@ queremos).
   `assertDisclaimerRequired()` busca en cada `disclaimer` de los ejemplos las subcadenas
   "requiere validación clínica del oncólogo tratante" y "Uso académico/investigación",
   independientemente de raya o dos puntos (clinical-language M-4). El encabezado "Opciones
-  descritas en la evidencia" vive en la UI, no en el contrato.
+  descritas en la evidencia" vive en la UI, no en el contrato, y se trata como **clave de
+  configuración** (ver `### D15`, textos de UI).
+- **`/case/summary` y el aviso de RN-19** `[Pre-S1 resp. 37 (D-8)]`: `CaseSummaryInternalResponse`
+  no lleva `disclaimer` (el aviso lo compone Backend 1 / la UI desde `AI_DISCLAIMER_TEXT`), y no
+  se añade en este change; la salida del resumen del caso debe mostrar "Análisis generado por IA
+  — requiere validación clínica del oncólogo tratante" y "Uso académico/investigación". Queda
+  **anotado para sus historias**: US-096 (persistencia y respuesta de `clinical-api`, si el
+  contrato público del resumen necesita el campo) y US-097 (UI), con el texto en US-069.
 - **Descripciones normativas** (`assertNormativeDescriptions()`): `relevanceScore` y
   `topRelevanceScore` dicen "metadato secundario", "puntaje del reranker normalizado a [0,1]" y que
   no ordena las opciones ni mide la solidez clínica ni la probabilidad (`minimum: 0`,
@@ -344,9 +383,19 @@ alcance, para FEAT-03b.
   (`CitedSource[]`), `omittedClaims`, `topRelevanceScore` (`number | null`, D7) y `meta`
   (`RagMeta`, el mismo bloque de `/rag/query`; Backend 1 registra con él modelos, versión de
   *prompt* y de catálogo del turno, RN-06).
-- `RagMeta` (cerrado, compartido por `/rag/query`, `/rag/follow-up` y `/case/summary`):
-  `llmModel`, `embeddingModel`, `rerankerModel`, `nliModel`, `promptVersion`, **`catalogVersion`
-  obligatorio** `[Pre-S1 resp. 29]`, `retrievalParams` (cerrado, D7) y `latencyMs`.
+- `RagMeta` (cerrado y **estricto**, compartido por `/rag/query` y `/rag/follow-up`; **enmienda
+  `[Pre-S1 resp. 32 (D-3)]`**): `llmModel`, `embeddingModel`, `rerankerModel`, `nliModel`,
+  `promptVersion`, **`catalogVersion` obligatorio** `[Pre-S1 resp. 29]`, `corpusRelease`,
+  `corpusCutoffDate`, `excludedSources`, `retrievalParams` (cerrado, D7) y `latencyMs`; ningún
+  campo es nulo. La versión inicial de D10 compartía un único `RagMeta` nullable con
+  `/case/summary`; eso dejaba que una consulta al corpus devolviera `retrievalParams: null` sin
+  que el contrato lo detectara.
+- `CaseSummaryMeta` (cerrado, solo `/case/summary`, **enmienda `[Pre-S1 resp. 32 (D-3)]`**): mismos
+  campos, pero `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`,
+  `excludedSources` y `retrievalParams` son `null` (la operación no consulta el corpus) y
+  `catalogVersion` sigue siendo obligatorio. `contracts:check` (`assertFollowUpContract`) exige que
+  `RagMeta` no admita `null` en ningún campo, que ambos bloques exijan `catalogVersion` y que cada
+  respuesta use el suyo.
 - `isNewSource` lo calcula **Backend 1**, comparando los `chunkId` del turno con los del análisis
   persistido; Backend 2 no lo conoce.
 - **Sin estado:** `rag-orchestrator` no guarda turnos ni memoria entre llamadas (ni en disco, ni en
@@ -359,9 +408,20 @@ alcance, para FEAT-03b.
 - **Persistencia en Backend 1** (`clinical.analysis_follow_up`, privacy M-8 / contract-keeper
   M10): `id`, `analysis_id`, `turn_number` (único por análisis), `question_text` (enmascarado si
   tenía PII), `status`, `answer` (afirmaciones validadas), `cited_sources` (con `is_new_source`),
-  `omitted_claims`, `patient_data_links`, las columnas de `meta` (`llm_model`, `embedding_model`,
-  `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`), `trace_id` y `created_at`;
-  **sin `pseudoPatientId` ni identidad**.
+  `omitted_claims`, `patient_data_links`, `data_classification` y `llm_provider` **`[Pre-S1 resp.
+  36 (D-7)]`** (para auditar RN-12 por turno), las columnas de `meta` (`llm_model`,
+  `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`),
+  `trace_id` y `created_at`; **sin `pseudoPatientId` ni identidad**.
+- **`llmProvider` es un enum `[Pre-S1 resp. 36 (D-7)]`:** `RagMeta.llmProvider` y
+  `CaseSummaryMeta.llmProvider` pasan de `string` libre a `enum [local, nube]` (RN-12). Se eligió
+  el enum sobre un campo `providerLocality` aparte para no duplicar la información en el contrato
+  ni en la columna `llm_provider` (que lleva `CHECK (llm_provider IN ('local','nube'))`); el
+  modelo concreto sigue identificándose con `llmModel`. Con datos reales el valor es siempre
+  `local`, sin *fallback* a la nube; Backend 1 lo verifica contra `data_classification`.
+- **`clinical_context_snapshot` sin `pseudoPatientId` `[Pre-S1 resp. 36 (D-7)]`:**
+  `ai_analysis_record.clinical_context_snapshot` guarda el contexto desidentificado con sus
+  etiquetas pero **no** el `pseudoPatientId`, que es efímero por consulta y nunca se persiste
+  (RN-11); un snapshot con seudónimo permitiría enlazar análisis entre sí.
 - Vacío anotado para US-218: si los turnos previos del mismo análisis viajan como elementos de
   `analysisMemory` (misma forma) y si un turno `fuera_de_contexto` cuenta para el límite.
 
@@ -402,7 +462,9 @@ su evidencia; no se generó respuesta."
 
 ### D12. Identidad fuera de la URL y de las cabeceras `[Pre-S1 resp. 22]`
 `POST /platform/patients/search` con `PatientSearchRequest` (cerrado; `anyOf`:
-`[idType, nationalId]` o `[name]`; `page` opcional) → `200 PatientPage`.
+`[idType, nationalId]` o `[name]`; `page` opcional) → `200 PatientPage`. La búsqueda por
+documento es exacta (índice ciego); la **búsqueda por nombre** queda con **US-048 como dueña**
+(`[Pre-S1 resp. 36 (D-7)]`): este change fija su forma en el contrato, no su algoritmo.
 `GET /platform/patients` solo admite `status`, `dataOrigin` y `page`. Regla
 `assertNoIdentityInUrl()`: ningún parámetro `in: query`, `in: path` o `in: header` del spec de
 `clinical-api` coincide con `IDENTIDAD_PII` (D13). Los UUID en la ruta están permitidos
@@ -455,7 +517,14 @@ Consecuencia (vacío resuelto): el nombre del biomarcador en `ClinicalContext.bi
 - **Vista por permiso** `[Pre-S1 resp. 27]`: `GET /platform/patients/{patientId}` responde `200`
   `oneOf [PatientSummary, PatientAdminSummary]` con `discriminator: view` y declara
   `x-view-by-permission: { clinical:read: PatientSummary, default: PatientAdminSummary }`. La
-  misma extensión rige los ítems de `PatientPage`. `PatientAdminSummary` (cerrado): `view: const
+  misma extensión rige los ítems de `PatientPage`, **pero con otra vista** `[Pre-S1 resp. 36
+  (D-7, privacidad)]`: el listado y la búsqueda declaran `x-view-by-permission: { clinical:read:
+  PatientListItem, default: PatientAdminSummary }`. `PatientListItem` (cerrado, `view: const
+  doctor_listado`) devuelve `fullNameMasked` y `nationalIdMasked` **enmascarados** y los contadores;
+  el nombre y el documento **completos** solo viajan en la ficha (`PatientSummary.identification`),
+  y cada lectura de la ficha se audita (RN-10). El **formato** de la máscara de `fullNameMasked` y
+  `nationalIdMasked` queda con US-048 como dueña (`x-pending-owner: US-048`), y el ejemplo `SINT-`
+  de `PatientListItem` lo crea US-213 `[resp. 42]`. `PatientAdminSummary` (cerrado): `view: const
   admin`, `id`, `idType`, `nationalIdMasked`, `dataOrigin`, `lifecycleStatus`, `registeredAt`;
   sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos. Para el `admin`,
   vista de caso, documentos, análisis, seguimiento y resumen del caso → `403 PERMISO_DENEGADO`.
@@ -479,6 +548,17 @@ prescribe"). Mientras no exista `packages/clinical-catalogs/lenguaje/terminos-pr
 (US-068), lee `scripts/contracts/terminos-prohibidos-rn23.json` con los literales de RN-23; cuando
 US-068 lo cree, la regla pasa a leer el catálogo y el archivo provisional se borra (dueño:
 US-068).
+
+**Textos de UI como claves de configuración `[Pre-S1 resp. 37 (D-8)]`:** los textos con
+consecuencia de lenguaje que el contrato no transporta —el de un seguimiento
+`fuera_de_contexto`, el de un análisis `sin_evidencia` y el encabezado "Opciones descritas en la
+evidencia"— se guardan en **claves de configuración** (RN-22), nunca como literales en el
+componente (nombres propuestos: `UI_TEXTO_FUERA_DE_CONTEXTO`, `UI_TEXTO_SIN_EVIDENCIA`,
+`UI_ENCABEZADO_OPCIONES_DESCRITAS`; los fija la historia de `apps/web` que los consuma, junto con
+`AI_DISCLAIMER_TEXT` de US-069). Este change solo lo documenta; su revisión de lenguaje
+(RN-23) ocurre en el **Gate 2 de `apps/web`** (`clinical-language-auditor`), no aquí. El texto
+acordado del `fuera_de_contexto` es "La pregunta no se refiere a este análisis ni a su evidencia;
+no se generó respuesta." (D11).
 
 ## Privacidad y ownership
 
@@ -563,7 +643,8 @@ Diff propuesto `apps/clinical-api/openapi.yaml` (respecto de readme §4.1):
 ~   PatientSummary { view: const doctor, …, diagnosis: Diagnosis|null }
 +   PatientAdminSummary { view: const admin, id, idType, nationalIdMasked, dataOrigin,
 +                         lifecycleStatus, registeredAt }
-+   PatientSearchRequest, PatientPage { items: (PatientSummary|PatientAdminSummary)[], page, pageSize, total }
++   PatientListItem { view: const doctor_listado, id, idType, nationalIdMasked, fullNameMasked, … }
++   PatientSearchRequest, PatientPage { items: (PatientListItem|PatientAdminSummary)[], page, pageSize, total }
 +   LoginRequest { email, password }
 +   Error + ErrorXxx con error const/enum, sin eco (D11)
   paths (cada operación con x-permission, D14):
@@ -580,6 +661,8 @@ Diff propuesto `apps/clinical-api/openapi.yaml` (respecto de readme §4.1):
 ~                                      filtersApplied.publishedFromYear opcional (D8); errores D11
 +   POST /platform/patients/{patientId}/biomarkers   201 Biomarker | 401 | 403 | 404 | 422
 +   POST /platform/patients/{patientId}/diagnoses    201 Diagnosis | 401 | 403 | 404 | 422
++   GET  /platform/patients/{patientId}/case   200 CaseView | 401 | 403 | 404   x-permission: clinical:read
++        [Pre-S1 resp. 34 (D-5): se mantiene; el administrador recibe 403, es lectura clínica]
 +   POST /platform/evidence-analyses/{analysisId}/follow-ups
 +        201 FollowUpTurn | 401 | 403 PERMISO_DENEGADO|OPT_OUT_ANALISIS_IA | 404 | 409 LIMITE_SEGUIMIENTO
 +        | 422 CUERPO_INVALIDO|PACIENTE_EGRESADO|ANALISIS_SIN_EVIDENCIA | 429 | 502 | 503 | 504
@@ -597,10 +680,12 @@ Diff propuesto `apps/rag-orchestrator/openapi.yaml` (respecto de readme §4.2):
 +                         synthesisSummary, optionsDescribed, linkedDecision, outcomesSince }
 ~   RagQueryInternalRequest: + filtersApplied: RagFiltersApplied { publishedFromYear (integer|null) } required
 ~   RagQueryInternalResponse.status: con_evidencia | sin_evidencia   # sin cambios (AC-9)
-+   RagMeta (cerrado; catalogVersion obligatorio; retrievalParams cerrado), usado por /rag/query,
-+          /rag/follow-up y /case/summary
++   RagMeta (cerrado y estricto: sin campos nulos; catalogVersion obligatorio; retrievalParams
++          cerrado), usado por /rag/query y /rag/follow-up
++   CaseSummaryMeta (cerrado; campos del corpus y retrievalParams null; catalogVersion obligatorio),
++          usado por /case/summary
 +   RagFollowUpRequest, RagFollowUpResponse (D10)
-~   CaseSummaryInternalResponse.claims[].supportingDataRefs: pattern ^r[0-9]+$; meta: RagMeta
+~   CaseSummaryInternalResponse.claims[].supportingDataRefs: pattern ^r[0-9]+$; meta: CaseSummaryMeta
 ~   DocumentExtractResponse.extractedData.biomarkers[].name → biomarkerName; extractedData.* abierto
 ~                    (excepción nombrada, FEAT-01b/c); piiScan.findingTypes enum
 +   Error, ErrorTipoNoHabilitado, ErrorValidacion (detail sin input), ErrorXxx (D11)
@@ -635,7 +720,7 @@ Ejemplos: ver D3. Zod, tipos TS y Pydantic se **generan** de estos specs con `co
 | `assertCitedSourceAttribution()` | AC-12 |
 | `assertFollowUpContract()` (incluye la frase sin estado, RN-12 y pregunta enmascarada) | AC-13 |
 | `assertPublishedFromYear()` | AC-14 |
-| `assertGeneratedInSync()` (comparación AC-8 sobre lo generado), `assertReadmeExtractInSync()` | AC-16 |
+| `assertSharedTypesIdenticalAcrossProviders()` (comparación AC-8 sobre lo generado), `assertReadmeExtractInSync()` | AC-16 |
 | `assertNoPrescriptiveLanguage()`, `assertDisclaimerRequired()`, `assertClaimsAnchored()`, `assertNormativeDescriptions()`, `assertErrorCodesClosed()`, `assertErrorsNoEcho()`, `assertNoIdentityInRagContract()`, `assertNoIdentityInUrl()`, `assertOperationsDeclarePermission()`, `assertViewByPermission()`, `assertExamplesSynthetic()` | AC-17 |
 | `assertSpecVersions()` (`info.version` semántico y operaciones del S1) | AC-1 |
 

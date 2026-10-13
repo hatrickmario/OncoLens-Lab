@@ -1,0 +1,5 @@
+{
+  "error": "TOKEN_SERVICIO_INVALIDO",
+  "message": "El token de servicio falta o no es válido.",
+  "traceId": "req_5b6c7d8e"
+}

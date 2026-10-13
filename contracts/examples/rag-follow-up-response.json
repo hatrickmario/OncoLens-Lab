@@ -1,0 +1,81 @@
+{
+  "status": "con_evidencia",
+  "answer": [
+    {
+      "text": "Las fuentes recuperadas describen la terapia endocrina adyuvante en tumores con receptor de estrógeno positivo, sin detallar diferencias por estado menopáusico.",
+      "citedSources": [
+        {
+          "title": "Adjuvant endocrine therapy in estrogen receptor-positive early breast cancer: a systematic review",
+          "sourceName": "PubMed/PMC OA",
+          "externalId": "PMC9000001",
+          "language": "en",
+          "sourceType": "literature",
+          "licenseClass": "cc_by",
+          "studyDesign": "revision_sistematica",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2023-06-01",
+          "lastUpdatedAt": null,
+          "guidelineVersion": null,
+          "authors": "Autoría Sintética et al.",
+          "sourceUrl": null,
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: adjuvant endocrine therapy is described for stage I tumors with positive estrogen receptor.",
+          "chunkId": "chunk_90412"
+        }
+      ],
+      "patientDataRefs": []
+    }
+  ],
+  "citedSources": [
+    {
+      "title": "Adjuvant endocrine therapy in estrogen receptor-positive early breast cancer: a systematic review",
+      "sourceName": "PubMed/PMC OA",
+      "externalId": "PMC9000001",
+      "language": "en",
+      "sourceType": "literature",
+      "licenseClass": "cc_by",
+      "studyDesign": "revision_sistematica",
+      "trialPhase": null,
+      "primaryEndpoint": null,
+      "sampleSize": null,
+      "publishedAt": "2023-06-01",
+      "lastUpdatedAt": null,
+      "guidelineVersion": null,
+      "authors": "Autoría Sintética et al.",
+      "sourceUrl": null,
+      "possiblyOutdated": false,
+      "newerVersionAvailable": false,
+      "chunkTextSnapshot": "Texto sintético de ejemplo: adjuvant endocrine therapy is described for stage I tumors with positive estrogen receptor.",
+      "chunkId": "chunk_90412"
+    }
+  ],
+  "omittedClaims": 0,
+  "topRelevanceScore": 0.81,
+  "meta": {
+    "queryLanguage": "es",
+    "responseLanguage": "es",
+    "llmProvider": "local",
+    "llmModel": "llm-local-ejemplo",
+    "embeddingModel": "embedding-local-ejemplo",
+    "rerankerModel": "reranker-local-ejemplo",
+    "nliModel": "nli-local-ejemplo",
+    "promptVersion": "rag-follow-up@0.1.0",
+    "catalogVersion": "2026.10.0",
+    "corpusRelease": "2026-09-30",
+    "corpusCutoffDate": "2026-09-30",
+    "excludedSources": [
+      "NCCN",
+      "ESMO"
+    ],
+    "retrievalParams": {
+      "topK": 40,
+      "rerankTopN": 10,
+      "relevanceThreshold": 0.5,
+      "retrievalMode": "dense"
+    },
+    "latencyMs": 6100
+  }
+}

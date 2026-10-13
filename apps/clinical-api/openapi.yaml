@@ -1,0 +1,1972 @@
+openapi: 3.1.0
+info:
+  title: OncoLens — Platform API (Backend 1 / clinical-api)
+  version: 1.0.0
+  description: >-
+    API pública, accesible solo a través de los Route Handlers de web (clinical-api no
+    publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
+    SameSite=Strict (token opaco). Backend 2 nunca se expone al cliente. Fuente única del
+    contrato de clinical-api (provider-driven): el spec cambia antes que el código y los tipos,
+    los schemas Zod y los clientes se generan de él. Los ejemplos de contracts/examples/ no son
+    normativos: el spec manda. La autorización del MVP es solo RBAC (cada operación declara su
+    permiso en x-permission; cuando es una lista basta con tener alguno de sus códigos); el rol admin no lee datos clínicos ni análisis (mínimo
+    privilegio). Cada historia que añada un endpoint lo agrega aquí antes de implementarlo
+    (cambio aditivo, ADR-26). Los nombres de propiedad van en camelCase.
+
+servers:
+  - url: http://clinical-api:3000
+    description: Red interna de Compose; el navegador usa https://<web>/api/*
+
+security:
+  - sessionCookie: []
+
+tags:
+  - name: sesion
+  - name: pacientes
+  - name: documentos
+  - name: analisis-evidencia
+  - name: registro-manual
+
+paths:
+  /platform/auth/login:
+    post:
+      operationId: login
+      tags: [sesion]
+      summary: Inicia sesión con correo y contraseña
+      description: >-
+        Responde 204 sin cuerpo y entrega la cookie de sesión opaca en Set-Cookie. Credenciales
+        inválidas y cuentas que no están activas (pendiente, rechazado, desactivado) responden
+        401 con el mismo código CREDENCIALES_INVALIDAS, para no revelar qué cuentas existen.
+      security: []
+      x-permission: publico
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "204":
+          description: Sesión iniciada; no hay cuerpo.
+          headers:
+            Set-Cookie:
+              description: >-
+                Cookie oncolens_session con un token opaco (no JWT). Atributos: HttpOnly; Secure;
+                SameSite=Strict; Path=/. Se rota en cada inicio de sesión.
+              schema:
+                type: string
+        "401":
+          description: Credenciales inválidas o cuenta no activa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCredencialesInvalidas'
+        "422":
+          description: Cuerpo inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCuerpoInvalido'
+        "429":
+          $ref: '#/components/responses/LimiteSolicitudes'
+
+  /platform/auth/logout:
+    post:
+      operationId: logout
+      tags: [sesion]
+      summary: Cierra la sesión y la revoca
+      x-permission: session:logout
+      responses:
+        "204":
+          description: Sesión revocada; no hay cuerpo.
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+
+  /platform/patients:
+    get:
+      operationId: listPatients
+      tags: [pacientes]
+      summary: Lista pacientes con filtros que no contienen identidad
+      description: >-
+        Listado paginado. Solo admite filtros sin identidad (status, dataOrigin, page): la
+        búsqueda por documento o por nombre es POST /platform/patients/search, porque la
+        identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento
+        depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento
+        ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+      x-permission: patients:lookup
+      x-view-by-permission:
+        clinical:read: PatientListItem
+        default: PatientAdminSummary
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [activo, egresado]
+        - name: dataOrigin
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [sintetico, real_anonimizado, real_identificado]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        "200":
+          description: Página de pacientes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientPage'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "422":
+          description: Parámetros inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCuerpoInvalido'
+
+  /platform/patients/search:
+    post:
+      operationId: searchPatients
+      tags: [pacientes]
+      summary: Busca pacientes por identidad exacta o por nombre
+      description: >-
+        La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las
+        cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego); la búsqueda por
+        nombre queda con US-048 como dueña. La forma de cada elemento depende del permiso
+        (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS;
+        completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+      x-permission: patients:lookup
+      x-view-by-permission:
+        clinical:read: PatientListItem
+        default: PatientAdminSummary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientSearchRequest'
+      responses:
+        "200":
+          description: Página de pacientes que coinciden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientPage'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "422":
+          description: Cuerpo inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCuerpoInvalido'
+        "429":
+          $ref: '#/components/responses/LimiteSolicitudes'
+
+  /platform/patients/{patientId}:
+    get:
+      operationId: getPatient
+      tags: [pacientes]
+      summary: Obtiene la ficha resumen del paciente
+      description: >-
+        Alimenta el Panel del doctor. La forma de la respuesta depende del permiso: con
+        clinical:read es PatientSummary (la identificación se descifra solo para esta
+        respuesta y la lectura queda auditada); sin él, PatientAdminSummary, con la
+        identificación enmascarada y sin datos clínicos (mínimo privilegio del administrador).
+        El descifrado completo de la identidad para registrar un opt-out solo ocurre por la CLI,
+        auditado.
+      x-permission: [clinical:read, patients:lookup]
+      x-view-by-permission:
+        clinical:read: PatientSummary
+        default: PatientAdminSummary
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Ficha del paciente.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PatientSummary'
+                  - $ref: '#/components/schemas/PatientAdminSummary'
+                discriminator:
+                  propertyName: view
+                  mapping:
+                    doctor: '#/components/schemas/PatientSummary'
+                    admin: '#/components/schemas/PatientAdminSummary'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+  /platform/patients/{patientId}/case:
+    get:
+      operationId: getPatientCase
+      tags: [pacientes]
+      summary: Obtiene la vista de caso del paciente
+      description: >-
+        Vista de caso (FR-21, FR-23): timeline, tratamientos previos, atributos clínicos, series de
+        biomarcadores y checklist de datos críticos. Los eventos de entidades con tabla propia se
+        derivan en la vista (el análisis aparece como evento derivado) y los demás vienen de
+        ClinicalEvent. Es una lectura clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Vista de caso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseView'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+  /platform/patients/{patientId}/documents:
+    post:
+      operationId: uploadDocument
+      tags: [documentos]
+      summary: Carga un documento clínico (PDF) para extracción
+      description: >-
+        Valida la sesión, el permiso, el PDF por magic bytes, el tamaño y los duplicados por
+        checksum. Guarda el binario en clinical-minio y encola la extracción. Es asíncrono:
+        retorna el Document con ocrStatus=pendiente. Para varios archivos en una acción se
+        usa POST /platform/patients/{patientId}/documents/batch (207, un resultado por archivo).
+      x-permission: documents:upload
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file, documentType]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                documentType:
+                  type: string
+                  enum: [historia_clinica, examen]
+      responses:
+        "202":
+          description: Documento recibido, extracción en curso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: El mismo archivo ya fue cargado para este paciente (checksum).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDocumentoDuplicado'
+        "413":
+          description: >-
+            Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la
+            historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
+          x-pending-owner: FEAT-01b
+        "415":
+          description: >-
+            Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija
+            la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
+          x-pending-owner: FEAT-01b
+        "422":
+          description: documentType inválido, o paciente egresado (RN-17).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSolicitudNoProcesable'
+
+  /platform/evidence-analyses:
+    post:
+      operationId: createEvidenceAnalysis
+      tags: [analisis-evidencia]
+      summary: Ejecuta un análisis de evidencia sobre un paciente
+      description: >-
+        Construye el contexto del caso (timeline, línea de tratamiento, trayectorias, faltantes
+        y memoria de análisis previos rotulada), etiquetado y desidentificado, y lo reenvía a
+        Backend 2. Agrega la Base del análisis y persiste el AIAnalysisRecord antes de responder
+        (JSON completo, nunca tokens sin validar). El análisis aparece en el timeline como evento
+        derivado del AIAnalysisRecord: no se escribe ningún ClinicalEvent. Sin evidencia
+        suficiente responde 200 con status sin_evidencia, evidenceOptions vacío,
+        topRelevanceScore null y la Base del análisis. Para un tipo de cáncer no habilitado
+        responde 200 con status tipo_no_habilitado, sin invocar al LLM. Los datos faltantes no
+        bloquean (continueWithWarning). Si la petición no trae filtersApplied.publishedFromYear,
+        clinical-api aplica año actual menos EVIDENCE_DEFAULT_YEARS.
+      x-permission: ai_analysis:create
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvidenceAnalysisRequest'
+      responses:
+        "200":
+          description: Resultado del análisis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceAnalysis'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegadoOOptOut'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "422":
+          description: Cuerpo inválido, o paciente egresado (RN-17).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSolicitudNoProcesable'
+        "429":
+          $ref: '#/components/responses/LimiteGeneracion'
+        "502":
+          $ref: '#/components/responses/ErrorServicioIa'
+        "503":
+          $ref: '#/components/responses/LlmLocalNoDisponible'
+        "504":
+          $ref: '#/components/responses/DeadlineVencido'
+
+  /platform/patients/{patientId}/biomarkers:
+    post:
+      operationId: createManualBiomarker
+      tags: [registro-manual]
+      summary: Registra a mano un biomarcador desde un faltante
+      description: >-
+        Crea un Exam con entry_method = manual (exam_type = registro_manual) y el Biomarker
+        asociado. La normalización final del término la decide Backend 1 (ADR-33), con la misma
+        versión del catálogo que los datos extraídos. Exige un paciente activo (RN-17).
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BiomarkerManualCreate'
+      responses:
+        "201":
+          description: Biomarcador registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "422":
+          description: Cuerpo inválido, valor fuera del catálogo o paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegistroManualInvalido'
+
+  /platform/patients/{patientId}/diagnoses:
+    post:
+      operationId: createManualDiagnosis
+      tags: [registro-manual]
+      summary: Completa o corrige el diagnóstico a mano
+      description: >-
+        Sin diagnóstico vigente crea uno con entry_method = manual y exige cancerType,
+        stagingSystem, stageValue y diagnosedAt. Con diagnóstico vigente es una corrección
+        explícita: crea uno manual_correction y el anterior pasa a reemplazado, nunca en
+        silencio (RN-08). La gradación se envía como grading estructurada; el campo grade
+        nunca se escribe a mano: es texto derivado de la gradación de referencia.
+      x-permission: clinical:write
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagnosisManualCreate'
+      responses:
+        "201":
+          description: Diagnóstico registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagnosis'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "422":
+          description: >-
+            Cuerpo inválido, valor fuera del catálogo, gradación incoherente (el score o el
+            grupo ISUP no cuadran con los patrones) o paciente egresado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDiagnosticoInvalido'
+
+  /platform/evidence-analyses/{analysisId}/follow-ups:
+    post:
+      operationId: createFollowUp
+      tags: [analisis-evidencia]
+      summary: Formula una pregunta de seguimiento sobre un análisis
+      description: >-
+        La pregunta se ancla al análisis: usa su contexto desidentificado, sus datos y su
+        evidencia, y la respuesta se valida completa y se persiste antes de responder (RN-01,
+        RN-06). Se guarda y se devuelve la versión enmascarada de la pregunta si tenía PII.
+        El análisis admite hasta ANALYSIS_FOLLOWUP_MAX preguntas (409 al superarlo). Backend 2
+        no guarda estado entre turnos; isNewSource lo calcula clinical-api.
+      x-permission: follow_ups:create
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowUpCreate'
+      responses:
+        "201":
+          description: Turno de seguimiento registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowUpTurn'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegadoOOptOut'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: El análisis alcanzó el máximo de preguntas de seguimiento configurado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorLimiteSeguimiento'
+        "422":
+          description: >-
+            Cuerpo inválido, paciente egresado (RN-17) o análisis sin evidencia al que no se le
+            puede preguntar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSeguimientoNoProcesable'
+        "429":
+          $ref: '#/components/responses/LimiteGeneracion'
+        "502":
+          $ref: '#/components/responses/ErrorServicioIa'
+        "503":
+          $ref: '#/components/responses/LlmLocalNoDisponible'
+        "504":
+          $ref: '#/components/responses/DeadlineVencido'
+    get:
+      operationId: listFollowUps
+      tags: [analisis-evidencia]
+      summary: Lista los turnos de seguimiento de un análisis
+      x-permission: follow_ups:read
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      responses:
+        "200":
+          description: Turnos en orden de creación.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FollowUpTurn'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: oncolens_session
+
+  parameters:
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AnalysisId:
+      name: analysisId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NoAutenticado:
+      description: Sesión ausente o expirada.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorNoAutenticado'
+    NoEncontrado:
+      description: Recurso no encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorNoEncontrado'
+    PermisoDenegado:
+      description: Permiso denegado por RBAC u opt-out.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorPermisoDenegado'
+    PermisoDenegadoOOptOut:
+      description: >-
+        Permiso denegado por RBAC (PERMISO_DENEGADO) u opt-out de analisis_ia del paciente
+        (OPT_OUT_ANALISIS_IA, RN-15): bloquea toda generación con IA.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorPermisoOOptOut'
+    LimiteSolicitudes:
+      description: Límite de solicitudes superado.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorLimiteSolicitudes'
+    LimiteGeneracion:
+      description: Límite de generaciones con IA por usuario, o cola de inferencia llena.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorLimiteGeneracion'
+    ErrorServicioIa:
+      description: Error de comunicación con rag-orchestrator (sin detalles internos).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorServicioIa'
+    LlmLocalNoDisponible:
+      description: LLM local no disponible; los datos reales nunca se envían a la nube.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+    DeadlineVencido:
+      description: rag-orchestrator no respondió dentro del deadline.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDeadlineVencido'
+
+  schemas:
+    # ---- Schemas compartidos con rag-orchestrator: un solo origen (contracts/schemas/evidence.yaml)
+    EvidenceOption:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'
+    DiscardedOption:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/DiscardedOption'
+    Synthesis:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/Synthesis'
+    SupportedClaim:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/SupportedClaim'
+    SourceApplicability:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/SourceApplicability'
+    ApplicabilityCriterion:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/ApplicabilityCriterion'
+    ApplicabilitySummary:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/ApplicabilitySummary'
+    CitedSource:
+      $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/CitedSource'
+
+    # ---- Sesión
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          writeOnly: true
+
+    # ---- Procedencia (propia de clinical-api; la de rag-orchestrator no lleva ids de documento)
+    Provenance:
+      type: object
+      additionalProperties: false
+      required:
+        - entryMethod
+        - extractionConfidence
+        - reviewStatus
+        - conflict
+        - sourceDocumentId
+        - additionalSourceDocumentIds
+      properties:
+        entryMethod:
+          type: string
+          enum: [ocr, manual, manual_correction, seed]
+        extractionConfidence:
+          type: string
+          enum: [alta, media, baja, n_a]
+        reviewStatus:
+          type: string
+          enum: [auto_aceptado, requiere_revision, verificado, corregido]
+        conflict:
+          type: boolean
+        sourceDocumentId:
+          type: [string, "null"]
+          format: uuid
+        additionalSourceDocumentIds:
+          type: array
+          description: Duplicados fusionados.
+          items:
+            type: string
+            format: uuid
+
+    Document:
+      type: object
+      additionalProperties: false
+      required: [id, patientId, documentType, originalFilename, ocrStatus, uploadedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        documentType:
+          type: string
+          enum: [historia_clinica, examen]
+        originalFilename:
+          type: string
+        ocrStatus:
+          type: string
+          enum: [pendiente, procesando, completado, error, cuarentena_pii, requiere_revision_identidad]
+        uploadedAt:
+          type: string
+          format: date-time
+
+    # ---- Biomarcadores
+    Biomarker:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - loincCode
+        - mappingStatus
+        - trend
+        - value
+        - unit
+        - referenceRange
+        - resultType
+        - clinicalSignificance
+        - significanceSource
+        - examType
+        - performedAt
+        - provenance
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          examples: [HER2]
+        loincCode:
+          type: [string, "null"]
+        mappingStatus:
+          type: string
+          enum: [mapeado, no_mapeado]
+        trend:
+          type: [string, "null"]
+          enum: [sube, baja, estable, null]
+          description: Respecto del valor anterior.
+        value:
+          type: string
+          examples: [3+ (IHQ)]
+        unit:
+          type: [string, "null"]
+        referenceRange:
+          type: [string, "null"]
+        resultType:
+          type: string
+          enum: [cuantitativo, cualitativo]
+        clinicalSignificance:
+          type: string
+          enum: [normal, alterado, relevante, crítico]
+        significanceSource:
+          type: string
+          enum: [documento, regla, inferido_ia]
+        examType:
+          type: string
+        performedAt:
+          type: string
+          format: date
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    CaseView:
+      type: object
+      description: >-
+        Vista de caso (FR-21, FR-23). Sin identidad del paciente. Cada dato lleva su procedencia.
+      additionalProperties: false
+      required: [timeline, priorTreatments, attributes, biomarkerSeries, completeness, catalogVersion]
+      properties:
+        timeline:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, eventType, derived, eventDate, datePrecision, description, codes, provenance]
+            properties:
+              id:
+                type: string
+                format: uuid
+              eventType:
+                type: string
+                examples: [progresion]
+              derived:
+                type: boolean
+                description: >-
+                  true si se deriva de Diagnosis, Exam, PriorTreatment, Treatment o AIAnalysisRecord
+                  (ADR-32).
+              eventDate:
+                type: [string, "null"]
+                format: date
+              datePrecision:
+                type: string
+                enum: [dia, mes, anio, incierta]
+              description:
+                type: string
+                description: Texto corto, enmascarable.
+              codes:
+                type: object
+                additionalProperties: false
+                required: [icd10, cups]
+                properties:
+                  icd10:
+                    type: [string, "null"]
+                  cups:
+                    type: [string, "null"]
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        priorTreatments:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [lineNumber, setting, regimenName, atcCodes, startedAt, endedAt, ongoing, endReason, provenance]
+            properties:
+              lineNumber:
+                type: [integer, "null"]
+              setting:
+                type: string
+              regimenName:
+                type: string
+              atcCodes:
+                type: array
+                items:
+                  type: string
+              startedAt:
+                type: [string, "null"]
+                format: date
+              endedAt:
+                type: [string, "null"]
+                format: date
+              ongoing:
+                type: boolean
+              endReason:
+                type: string
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        attributes:
+          type: array
+          description: ClinicalAttribute (estado menopáusico, estado de castración, sitios metastásicos…).
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, value, observedAt, provenance]
+            properties:
+              key:
+                type: string
+                examples: [estado_menopausico]
+              value:
+                type: string
+              observedAt:
+                type: [string, "null"]
+                format: date
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        biomarkerSeries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, loincCode, points]
+            properties:
+              name:
+                type: string
+                examples: [PSA]
+              loincCode:
+                type: [string, "null"]
+              points:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [value, unit, performedAt, provenance]
+                  properties:
+                    value:
+                      type: string
+                    unit:
+                      type: [string, "null"]
+                    performedAt:
+                      type: string
+                      format: date
+                    provenance:
+                      $ref: '#/components/schemas/Provenance'
+        completeness:
+          type: array
+          description: Checklist de datos críticos (determinista, FR-23).
+          items:
+            type: object
+            additionalProperties: false
+            required: [item, status]
+            properties:
+              item:
+                type: string
+                examples: [her2]
+              status:
+                type: string
+                enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica]
+        catalogVersion:
+          type: string
+          minLength: 1
+
+    BiomarkerManualCreate:
+      type: object
+      description: >-
+        Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca
+        en la URL.
+      additionalProperties: false
+      required: [name, value, resultType, performedAt]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        value:
+          type: string
+          minLength: 1
+          maxLength: 200
+        unit:
+          type: string
+          maxLength: 50
+        resultType:
+          type: string
+          enum: [cuantitativo, cualitativo]
+        performedAt:
+          type: string
+          format: date
+
+    # ---- Diagnóstico y gradación (DEC-05)
+    DiagnosisGrading:
+      type: object
+      description: >-
+        Gradación estructurada de un diagnóstico (solo lectura). En lectura gleasonScore e
+        isupGradeGroup siempre vienen derivados de los patrones. El estado de revisión de cada
+        gradación es provenance.reviewStatus.
+      additionalProperties: false
+      required:
+        - id
+        - gradingSystem
+        - specimenType
+        - gradeScope
+        - gleasonPrimaryPattern
+        - gleasonSecondaryPattern
+        - gleasonScore
+        - isupGradeGroup
+        - nottinghamGrade
+        - isReference
+        - provenance
+      properties:
+        id:
+          type: string
+          format: uuid
+        gradingSystem:
+          type: string
+          enum: [gleason_isup, nottingham]
+        specimenType:
+          type: [string, "null"]
+          enum: [biopsia, prostatectomia, null]
+        gradeScope:
+          type: [string, "null"]
+          enum: [nucleo_sitio, peor, global, null]
+        gleasonPrimaryPattern:
+          type: [integer, "null"]
+          minimum: 3
+          maximum: 5
+        gleasonSecondaryPattern:
+          type: [integer, "null"]
+          minimum: 3
+          maximum: 5
+        gleasonScore:
+          type: [integer, "null"]
+          minimum: 6
+          maximum: 10
+        isupGradeGroup:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 5
+        nottinghamGrade:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 3
+        isReference:
+          type: boolean
+          description: Es la gradación de la que se deriva Diagnosis.grade.
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    Diagnosis:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - cancerType
+        - icd10Code
+        - histology
+        - histologyCode
+        - grade
+        - gradings
+        - stagingSystem
+        - stageValue
+        - performanceScale
+        - performanceValue
+        - diagnosedAt
+        - isActive
+        - provenance
+      properties:
+        id:
+          type: string
+          format: uuid
+        cancerType:
+          type: string
+          examples: [mama]
+        icd10Code:
+          type: [string, "null"]
+          examples: [C50.9]
+        histology:
+          type: [string, "null"]
+        histologyCode:
+          type: [string, "null"]
+        grade:
+          type: [string, "null"]
+          readOnly: true
+          description: >-
+            Texto canónico derivado de la gradación de referencia; nunca se escribe a mano.
+            Próstata: "Gleason 4+3=7 · ISUP 3". Mama: "Nottingham grado 2".
+        gradings:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/DiagnosisGrading'
+        stagingSystem:
+          type: string
+          examples: [TNM_8]
+        stageValue:
+          type: string
+          examples: [IIA]
+        performanceScale:
+          type: [string, "null"]
+          examples: [ECOG]
+        performanceValue:
+          type: [integer, "null"]
+        diagnosedAt:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+        provenance:
+          $ref: '#/components/schemas/Provenance'
+
+    DiagnosisManualCreate:
+      type: object
+      description: >-
+        Sin diagnóstico vigente crea uno manual y exige cancerType, stagingSystem, stageValue y
+        diagnosedAt (si faltan, 422 CUERPO_INVALIDO). Con diagnóstico vigente es una corrección
+        explícita: crea uno manual_correction y el anterior pasa a reemplazado (RN-08). Los
+        valores de catálogo (cancerType, stagingSystem, performanceScale) y el rango de
+        performanceValue se validan contra el catálogo (422 VALOR_FUERA_DE_CATALOGO). grade no
+        forma parte del cuerpo: es derivado.
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        cancerType:
+          type: string
+          minLength: 1
+        histology:
+          type: [string, "null"]
+          maxLength: 200
+        stagingSystem:
+          type: string
+          minLength: 1
+        stageValue:
+          type: string
+          minLength: 1
+          maxLength: 20
+        performanceScale:
+          type: string
+          minLength: 1
+        performanceValue:
+          type: integer
+          minimum: 0
+        diagnosedAt:
+          type: string
+          format: date
+        grading:
+          $ref: '#/components/schemas/DiagnosisGradingInput'
+
+    DiagnosisGradingInput:
+      oneOf:
+        - $ref: '#/components/schemas/GleasonIsupGradingInput'
+        - $ref: '#/components/schemas/NottinghamGradingInput'
+      discriminator:
+        propertyName: gradingSystem
+        mapping:
+          gleason_isup: '#/components/schemas/GleasonIsupGradingInput'
+          nottingham: '#/components/schemas/NottinghamGradingInput'
+
+    GleasonIsupGradingInput:
+      type: object
+      description: >-
+        Gradación de próstata. gleasonScore e isupGradeGroup son opcionales: el servidor los
+        deriva de los patrones y, si llegan, valida su coherencia (422 GRADACION_INCOHERENTE):
+        score = primario + secundario; grupo ISUP: 3+3 es 1, 3+4 es 2, 4+3 es 3, score 8 es 4,
+        score 9 o 10 es 5 (DEC-05).
+      additionalProperties: false
+      required:
+        - gradingSystem
+        - specimenType
+        - gradeScope
+        - gleasonPrimaryPattern
+        - gleasonSecondaryPattern
+      properties:
+        gradingSystem:
+          type: string
+          const: gleason_isup
+        specimenType:
+          type: string
+          enum: [biopsia, prostatectomia]
+        gradeScope:
+          type: string
+          enum: [nucleo_sitio, peor, global]
+        gleasonPrimaryPattern:
+          type: integer
+          minimum: 3
+          maximum: 5
+        gleasonSecondaryPattern:
+          type: integer
+          minimum: 3
+          maximum: 5
+        gleasonScore:
+          type: integer
+          minimum: 6
+          maximum: 10
+        isupGradeGroup:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    NottinghamGradingInput:
+      type: object
+      description: Gradación de mama (Nottingham, grado 1 a 3).
+      additionalProperties: false
+      required: [gradingSystem, nottinghamGrade]
+      properties:
+        gradingSystem:
+          type: string
+          const: nottingham
+        nottinghamGrade:
+          type: integer
+          minimum: 1
+          maximum: 3
+
+    # ---- Pacientes (vista por permiso)
+    PatientSummary:
+      type: object
+      description: Vista del doctor (permiso clinical:read).
+      additionalProperties: false
+      required:
+        - view
+        - id
+        - identification
+        - dataOrigin
+        - lifecycleStatus
+        - birthYear
+        - requiresRatification
+        - cancerTypeEnabled
+        - diagnosis
+        - recentBiomarkers
+        - pendingReviewCount
+        - missingCriticalCount
+      properties:
+        view:
+          type: string
+          const: doctor
+        id:
+          type: string
+          format: uuid
+        identification:
+          type: object
+          description: Solo para el doctor autorizado; cada lectura se audita.
+          additionalProperties: false
+          required: [idType, nationalId, fullName]
+          properties:
+            idType:
+              $ref: '#/components/schemas/IdType'
+            nationalId:
+              type: string
+            fullName:
+              type: string
+        dataOrigin:
+          $ref: '#/components/schemas/DataOrigin'
+        lifecycleStatus:
+          $ref: '#/components/schemas/LifecycleStatus'
+        birthYear:
+          type: integer
+        requiresRatification:
+          type: boolean
+        cancerTypeEnabled:
+          type: boolean
+          description: false significa fuera del alcance del piloto.
+        diagnosis:
+          oneOf:
+            - $ref: '#/components/schemas/Diagnosis'
+            - type: "null"
+        recentBiomarkers:
+          type: array
+          description: Último valor por biomarcador (serie completa en GET …/biomarkers?biomarkerName=).
+          items:
+            $ref: '#/components/schemas/Biomarker'
+        pendingReviewCount:
+          type: integer
+          minimum: 0
+        missingCriticalCount:
+          type: integer
+          minimum: 0
+          description: Datos críticos faltantes (FR-23).
+
+    PatientListItem:
+      type: object
+      description: >-
+        Elemento del listado y de la búsqueda para quien tiene clinical:read. Nombre y documento
+        ENMASCARADOS: la identidad completa solo viaja en la ficha (PatientSummary), con auditoría
+        (RN-10).
+      additionalProperties: false
+      required:
+        - view
+        - id
+        - idType
+        - nationalIdMasked
+        - fullNameMasked
+        - dataOrigin
+        - lifecycleStatus
+        - birthYear
+        - cancerTypeEnabled
+        - pendingReviewCount
+        - missingCriticalCount
+      properties:
+        view:
+          type: string
+          const: doctor_listado
+        id:
+          type: string
+          format: uuid
+        idType:
+          $ref: '#/components/schemas/IdType'
+        nationalIdMasked:
+          type: string
+          description: >-
+            Documento enmascarado; el completo solo se descifra en la ficha, auditado. Pendiente: el
+            formato de la máscara lo fija la historia dueña (US-048).
+          x-pending-owner: US-048
+        fullNameMasked:
+          type: string
+          description: >-
+            Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+            Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
+          x-pending-owner: US-048
+        dataOrigin:
+          $ref: '#/components/schemas/DataOrigin'
+        lifecycleStatus:
+          $ref: '#/components/schemas/LifecycleStatus'
+        birthYear:
+          type: integer
+        cancerTypeEnabled:
+          type: boolean
+        pendingReviewCount:
+          type: integer
+          minimum: 0
+        missingCriticalCount:
+          type: integer
+          minimum: 0
+
+    PatientAdminSummary:
+      type: object
+      description: >-
+        Vista del administrador: identificación enmascarada, estado y fecha de alta. Sin
+        diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos (mínimo
+        privilegio).
+      additionalProperties: false
+      required:
+        - view
+        - id
+        - idType
+        - nationalIdMasked
+        - dataOrigin
+        - lifecycleStatus
+        - registeredAt
+      properties:
+        view:
+          type: string
+          const: admin
+        id:
+          type: string
+          format: uuid
+        idType:
+          $ref: '#/components/schemas/IdType'
+        nationalIdMasked:
+          type: string
+          description: Documento enmascarado; el descifrado completo solo ocurre por la CLI, auditado.
+        dataOrigin:
+          $ref: '#/components/schemas/DataOrigin'
+        lifecycleStatus:
+          $ref: '#/components/schemas/LifecycleStatus'
+        registeredAt:
+          type: string
+          format: date-time
+
+    IdType:
+      type: string
+      enum: [cedula_ciudadania, tarjeta_identidad, cedula_extranjeria, pasaporte, seudonimo, sintetico]
+    DataOrigin:
+      type: string
+      enum: [sintetico, real_anonimizado, real_identificado]
+    LifecycleStatus:
+      type: string
+      enum: [activo, egresado]
+
+    PatientSearchRequest:
+      type: object
+      description: >-
+        Búsqueda por identidad exacta (idType + nationalId) o por nombre. La identidad viaja
+        solo en el cuerpo (RN-10).
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        idType:
+          $ref: '#/components/schemas/IdType'
+        nationalId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 2
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+      anyOf:
+        - required: [idType, nationalId]
+        - required: [name]
+
+    PatientPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/PatientListItem'
+              - $ref: '#/components/schemas/PatientAdminSummary'
+            discriminator:
+              propertyName: view
+              mapping:
+                doctor_listado: '#/components/schemas/PatientListItem'
+                admin: '#/components/schemas/PatientAdminSummary'
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+
+    # ---- Análisis de evidencia
+    EvidenceAnalysisFilters:
+      type: object
+      description: Filtros de la petición; todos opcionales.
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        historiaCompleta:
+          type: boolean
+        soloBiomarcadoresRelevantes:
+          type: boolean
+        ultimosSeisMeses:
+          type: boolean
+        antecedentesFamiliares:
+          type: boolean
+        publishedFromYear:
+          type: [integer, "null"]
+          description: >-
+            Año mínimo de publicación de la evidencia. Ausente: clinical-api aplica año actual
+            menos EVIDENCE_DEFAULT_YEARS. null: toda la evidencia. Entero: ese año mínimo.
+
+    EvidenceAnalysisRequest:
+      type: object
+      additionalProperties: false
+      required: [patientId, query, sourcesSelected]
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        query:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        questionTemplateId:
+          type: [string, "null"]
+          description: Plantilla de origen (FR-28).
+        continueWithWarning:
+          type: boolean
+          default: false
+          description: >-
+            true si el oncólogo eligió continuar con datos críticos faltantes; solo se registra,
+            no bloquea (RN-26).
+        sourcesSelected:
+          type: object
+          description: Al menos una en true.
+          additionalProperties: false
+          required: [guias, ensayos, publicaciones]
+          properties:
+            guias:
+              type: boolean
+            ensayos:
+              type: boolean
+            publicaciones:
+              type: boolean
+          anyOf:
+            - properties:
+                guias:
+                  const: true
+            - properties:
+                ensayos:
+                  const: true
+            - properties:
+                publicaciones:
+                  const: true
+        filtersApplied:
+          $ref: '#/components/schemas/EvidenceAnalysisFilters'
+
+    AppliedFilters:
+      type: object
+      description: Filtros efectivos con los que se ejecutó el análisis.
+      additionalProperties: false
+      required:
+        - historiaCompleta
+        - soloBiomarcadoresRelevantes
+        - ultimosSeisMeses
+        - antecedentesFamiliares
+        - publishedFromYear
+      properties:
+        historiaCompleta:
+          type: boolean
+        soloBiomarcadoresRelevantes:
+          type: boolean
+        ultimosSeisMeses:
+          type: boolean
+        antecedentesFamiliares:
+          type: boolean
+        publishedFromYear:
+          type: [integer, "null"]
+          description: >-
+            Valor efectivo del filtro de antigüedad, nunca "ausente": el que vino en la petición
+            o año actual menos EVIDENCE_DEFAULT_YEARS. null significa toda la evidencia.
+
+    AnalysisBasis:
+      type: object
+      description: Base del análisis (FR-27). Siempre presente, también con sin_evidencia.
+      additionalProperties: false
+      required:
+        - patientDataUsed
+        - missingCriticalData
+        - continuedWithWarning
+        - assumptions
+        - sourcesConsulted
+        - sourcesNotIncluded
+        - corpusCutoffDate
+        - limitations
+        - priorAnalysesUsed
+        - agentSteps
+        - omittedClaims
+      properties:
+        patientDataUsed:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [label, reviewStatus, conflict]
+            properties:
+              label:
+                type: string
+                examples: [HER2 3+ (IHQ)]
+              reviewStatus:
+                type: string
+                enum: [auto_aceptado, requiere_revision, verificado, corregido]
+              conflict:
+                type: boolean
+        missingCriticalData:
+          type: array
+          items:
+            type: string
+        continuedWithWarning:
+          type: boolean
+        assumptions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [text, origin]
+            properties:
+              text:
+                type: string
+              origin:
+                type: string
+                enum: [regla_catalogo, llm_verificado]
+        sourcesConsulted:
+          type: object
+          additionalProperties: false
+          required: [selected, filters, retrieved, aboveThreshold]
+          properties:
+            selected:
+              type: array
+              items:
+                type: string
+                enum: [guias, ensayos, publicaciones]
+            filters:
+              $ref: '#/components/schemas/AppliedFilters'
+            retrieved:
+              type: integer
+              minimum: 0
+            aboveThreshold:
+              type: integer
+              minimum: 0
+        sourcesNotIncluded:
+          type: array
+          description: Fuentes excluidas del corpus del MVP, declaradas como exclusión.
+          items:
+            type: string
+        corpusCutoffDate:
+          type: string
+          format: date
+        limitations:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [text, origin]
+            properties:
+              text:
+                type: string
+              origin:
+                type: string
+                enum: [estructural, llm_verificado]
+        priorAnalysesUsed:
+          type: array
+          description: Memoria usada como contexto; nunca evidencia ni soporte (RN-24).
+          items:
+            type: object
+            additionalProperties: false
+            required: [analysisId, createdAt]
+            properties:
+              analysisId:
+                type: string
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+        agentSteps:
+          type: array
+          description: >-
+            Búsqueda complementaria del agente acotado (FR-30). Vacío en el MVP: el agente es
+            Post-MVP.
+          items:
+            type: object
+            additionalProperties: false
+            required: [subQuery, target, foundEvidence]
+            properties:
+              subQuery:
+                type: string
+              target:
+                type: string
+                description: Criterio de aplicabilidad o punto de síntesis.
+              foundEvidence:
+                type: boolean
+        omittedClaims:
+          type: integer
+          minimum: 0
+          description: Afirmaciones omitidas por falta de soporte.
+
+    Staleness:
+      type: object
+      description: >-
+        Vigencia del análisis (FR-12, FR-26). En un análisis nuevo es neutra: patientData false,
+        changedData vacío y newerEvidenceOrCatalog false; el detector de vigencia la calcula
+        después.
+      additionalProperties: false
+      required: [patientData, changedData, newerEvidenceOrCatalog]
+      properties:
+        patientData:
+          type: boolean
+          description: >-
+            Cambiaron datos que el análisis usó (o un análisis usado como memoria quedó
+            desactualizado).
+        changedData:
+          type: array
+          items:
+            type: string
+        newerEvidenceOrCatalog:
+          type: boolean
+          description: Hay una versión más reciente del corpus o del catálogo.
+
+    PatientDataLink:
+      type: object
+      description: >-
+        Resuelve una referencia opaca rN de la respuesta a la entidad real del paciente. Es
+        propio de clinical-api: el UUID nunca viaja a Backend 2.
+      additionalProperties: false
+      required: [dataRef, entityType, entityId]
+      properties:
+        dataRef:
+          type: string
+          pattern: ^r[0-9]+$
+        entityType:
+          type: string
+          enum: [diagnosis, biomarker, clinical_note, clinical_attribute, prior_treatment, clinical_event]
+        entityId:
+          type: string
+          format: uuid
+
+    EvidenceAnalysis:
+      type: object
+      description: >-
+        Análisis de evidencia (síntesis, aplicabilidad y opciones descritas en la evidencia, RN-23).
+      additionalProperties: false
+      required:
+        - id
+        - traceId
+        - queryText
+        - questionTemplateId
+        - queryLanguage
+        - status
+        - synthesis
+        - applicability
+        - evidenceOptions
+        - discardedOptions
+        - analysisBasis
+        - topRelevanceScore
+        - staleness
+        - rerunOfAnalysisId
+        - patientDataLinks
+        - disclaimer
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        traceId:
+          type: string
+        queryText:
+          type: string
+          description: Texto de la pregunta, enmascarado si tenía PII (RN-11).
+        questionTemplateId:
+          type: [string, "null"]
+        queryLanguage:
+          type: string
+          enum: [es, en]
+        status:
+          type: string
+          enum: [con_evidencia, sin_evidencia, tipo_no_habilitado]
+        synthesis:
+          $ref: '#/components/schemas/Synthesis'
+        applicability:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceApplicability'
+        evidenceOptions:
+          type: array
+          maxItems: 3
+          description: >-
+            Como máximo 1 en los Sprints 1–3 y 3 desde el Sprint 4; orden determinista por
+            aplicabilidad (RN-28).
+          items:
+            $ref: '#/components/schemas/EvidenceOption'
+        discardedOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscardedOption'
+        analysisBasis:
+          $ref: '#/components/schemas/AnalysisBasis'
+        topRelevanceScore:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 1
+          description: >-
+            Metadato secundario: puntaje del reranker normalizado a [0,1] de la evidencia recuperada
+            con mayor relevancia. No ordena las opciones ni mide la solidez clínica ni la probabilidad de
+            éxito (RN-03). null cuando no se encontró evidencia o el tipo no está habilitado
+            (RN-02): null no es 0.0.
+        staleness:
+          $ref: '#/components/schemas/Staleness'
+        rerunOfAnalysisId:
+          type: [string, "null"]
+          format: uuid
+        patientDataLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientDataLink'
+        disclaimer:
+          type: string
+          minLength: 1
+          description: >-
+            Un solo texto configurable (AI_DISCLAIMER_TEXT, que manda sobre la redacción) con las
+            dos frases de RN-19: "Análisis generado por IA — requiere validación clínica del
+            oncólogo tratante" y "Uso académico/investigación".
+        createdAt:
+          type: string
+          format: date-time
+      if:
+        properties:
+          status:
+            enum: [sin_evidencia, tipo_no_habilitado]
+        required: [status]
+      then:
+        properties:
+          topRelevanceScore:
+            type: "null"
+          evidenceOptions:
+            type: array
+            maxItems: 0
+      else:
+        properties:
+          topRelevanceScore:
+            type: number
+
+    # ---- Preguntas de seguimiento (FR-31)
+    FollowUpCreate:
+      type: object
+      additionalProperties: false
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    FollowUpCitedSource:
+      type: object
+      description: Cita de un turno de seguimiento, con la marca de fuente nueva que calcula clinical-api.
+      allOf:
+        - $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/CitedSourceFields'
+        - type: object
+          required: [isNewSource]
+          properties:
+            isNewSource:
+              type: boolean
+              description: >-
+                true si el chunk no estaba entre los del análisis persistido. La calcula
+                clinical-api; Backend 2 no la conoce.
+      unevaluatedProperties: false
+
+    FollowUpTurn:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - analysisId
+        - turnNumber
+        - question
+        - status
+        - answer
+        - citedSources
+        - omittedClaims
+        - patientDataLinks
+        - disclaimer
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        analysisId:
+          type: string
+          format: uuid
+        turnNumber:
+          type: integer
+          minimum: 1
+        question:
+          type: string
+          description: Pregunta enmascarada si tenía PII (RN-11); es la versión que se guarda.
+        status:
+          type: string
+          enum: [con_evidencia, sin_evidencia, fuera_de_contexto]
+          description: >-
+            fuera_de_contexto: la pregunta no se refiere a este análisis ni a su evidencia; no se
+            generó respuesta.
+        answer:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportedClaim'
+        citedSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/FollowUpCitedSource'
+        omittedClaims:
+          type: integer
+          minimum: 0
+        patientDataLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientDataLink'
+        disclaimer:
+          type: string
+          minLength: 1
+          description: >-
+            Un solo texto configurable (AI_DISCLAIMER_TEXT) con las dos frases de RN-19:
+            "Análisis generado por IA — requiere validación clínica del oncólogo tratante" y
+            "Uso académico/investigación".
+        createdAt:
+          type: string
+          format: date-time
+      if:
+        properties:
+          status:
+            enum: [sin_evidencia, fuera_de_contexto]
+        required: [status]
+      then:
+        properties:
+          answer:
+            type: array
+            maxItems: 0
+          citedSources:
+            type: array
+            maxItems: 0
+      else:
+        properties:
+          answer:
+            type: array
+            minItems: 1
+
+    # ---- Errores: código cerrado por respuesta; sin eco del valor recibido (RN-10)
+    ErrorNoAutenticado:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: NO_AUTENTICADO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorCredencialesInvalidas:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: CREDENCIALES_INVALIDAS }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorPermisoDenegado:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: PERMISO_DENEGADO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorPermisoOOptOut:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [PERMISO_DENEGADO, OPT_OUT_ANALISIS_IA] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorNoEncontrado:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: NO_ENCONTRADO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorLimiteSeguimiento:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: LIMITE_SEGUIMIENTO }
+        message:
+          type: string
+          description: Sin imperativos ni claves de configuración.
+        traceId: { type: string }
+    ErrorDocumentoDuplicado:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: DOCUMENTO_DUPLICADO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorCuerpoInvalido:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: CUERPO_INVALIDO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorSolicitudNoProcesable:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorRegistroManualInvalido:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorDiagnosticoInvalido:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error:
+          type: string
+          enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, VALOR_FUERA_DE_CATALOGO, GRADACION_INCOHERENTE]
+        message: { type: string }
+        traceId: { type: string }
+    ErrorSeguimientoNoProcesable:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, ANALISIS_SIN_EVIDENCIA] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorLimiteSolicitudes:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: LIMITE_SOLICITUDES }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorLimiteGeneracion:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [LIMITE_SOLICITUDES, COLA_INFERENCIA_LLENA] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorServicioIa:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ERROR_SERVICIO_IA }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorLlmLocalNoDisponible:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: LOCAL_LLM_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorDeadlineVencido:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: DEADLINE_VENCIDO }
+        message: { type: string }
+        traceId: { type: string }

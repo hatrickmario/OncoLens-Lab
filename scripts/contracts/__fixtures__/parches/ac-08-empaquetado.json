@@ -1,0 +1,28 @@
+[
+  {
+    "ac": "AC-8",
+    "regla": "assertSharedSchemasSingleOrigin",
+    "escenario": "un parche agrega a clinical-api un $ref externo que el empaquetado no resuelve (DPR-7)",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/components/schemas/Staleness/properties/otro", "value": { "$ref": "../../otro/esquemas.yaml#/components/schemas/Otro" } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "Staleness/properties/otro", "mensajeContiene": "externa" }
+  },
+  {
+    "ac": "AC-8",
+    "regla": "assertSharedSchemasSingleOrigin",
+    "escenario": "un parche define en clinical-api un schema local con el nombre del auxiliar compartido CitedSourceFields (colisión)",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/CitedSourceFields", "value": { "type": "object", "additionalProperties": false, "required": ["title"], "properties": { "title": { "type": "string" } } } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/CitedSourceFields", "mensajeContiene": "colisión" }
+  }
+]

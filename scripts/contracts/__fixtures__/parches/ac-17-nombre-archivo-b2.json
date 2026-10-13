@@ -1,0 +1,20 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega originalFilename a RagQueryInternalRequest (RN-10, el nombre de archivo no cruza a Backend 2)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalRequest/properties/originalFilename", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalRequest/properties/originalFilename" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega fileName a RagQueryInternalRequest (RN-10, el nombre de archivo no cruza a Backend 2)",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalRequest/properties/fileName", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalRequest/properties/fileName" }
+  }
+]

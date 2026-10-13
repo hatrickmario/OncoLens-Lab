@@ -1,0 +1,16 @@
+[
+  {
+    "ac": "AC-13",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina llm_provider de analysis_follow_up (RN-12, D-7)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `llm_provider` |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "analysis_follow_up debe declarar llm_provider" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina data_classification de analysis_follow_up (RN-12, D-7)",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `data_classification` | text |  | heredada del análisis |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "analysis_follow_up debe declarar data_classification" }
+  }
+]

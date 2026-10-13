@@ -1,0 +1,5 @@
+{
+  "error": "PACIENTE_EGRESADO",
+  "message": "El paciente está egresado y no admite nuevos registros.",
+  "traceId": "req_b8c9d0e1"
+}

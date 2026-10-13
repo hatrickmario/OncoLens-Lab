@@ -1,0 +1,58 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone un givenName real en la ficha del doctor",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/givenName", "value": "Juan" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "givenName", "mensajeContiene": "Prueba Sintética" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone un familyName real en la ficha del doctor",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/familyName", "value": "Pérez" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "familyName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone nombres reales en la clave nombres",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/nombres", "value": "Juan Carlos" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "nombres" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone apellidos reales en la clave apellidos",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/apellidos", "value": "Pérez Gómez" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "apellidos" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone el nombre real de un representante legal en representativeName",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/representativeName", "value": "María Gómez" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "representativeName" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone un documentNumber sin prefijo SINT-",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/documentNumber", "value": "00000000" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "documentNumber", "mensajeContiene": "SINT-" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un parche pone una fecha de nacimiento absoluta en birthDate",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/birthDate", "value": "1900-01-01" }] }],
+    "esperado": { "archivo": "contracts/examples/patient-summary-doctor.json", "rutaContiene": "birthDate", "mensajeContiene": "fecha de nacimiento" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un biomarkerName con el nombre de un biomarcador no es el nombre de una persona",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/biomarkerName", "value": "HER2" }] }],
+    "esperado": { "sinHallazgos": true }
+  }
+]

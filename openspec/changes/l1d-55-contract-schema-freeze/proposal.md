@@ -50,7 +50,9 @@ artefacto verificable.
     (E-02); descripción de `POST /platform/evidence-analyses` como **evento derivado** (C-06).
 - **Nuevo** `apps/rag-orchestrator/openapi.yaml` (OpenAPI 3.1, `info.version: 1.0.0`), transcrito
   de readme §4.2 con `422` como `oneOf` (`TIPO_NO_HABILITADO` | validación) en `/rag/query`,
-  `filtersApplied.publishedFromYear`, `RagMeta` con `catalogVersion` obligatorio, `dataRef`
+  `filtersApplied.publishedFromYear`, `RagMeta` estricto (sin campos nulos, `catalogVersion`
+  obligatorio) en `/rag/query` y `/rag/follow-up` y `CaseSummaryMeta` (nullable donde no hay
+  corpus, `catalogVersion` obligatorio) en `/case/summary` (`[Pre-S1 resp. 32 (D-3)]`), `dataRef`
   `r1…rN` en `ClinicalContext`, sin identidad ni identificadores enlazables (`IDENTIDAD_B2`) y el
   **endpoint propio** `POST /rag/follow-up` (`RagFollowUpRequest`/`RagFollowUpResponse`, sin estado
   entre turnos, `traceId` y seudónimo nuevos por turno, solo modelos locales con datos reales).
@@ -136,7 +138,7 @@ Aplicados por la sesión principal el 2026-10-11/12 (este change se alinea con e
 | AC-5 | revisión documental de `data-model.md` + `assertDataModelDocument()` (tabla presente; readme sin DDL ni diagrama) + parches |
 | AC-6 | revisión documental + `assertDataModelDocument()` (`EMBEDDING_DIM` sin literal) + parche |
 | AC-7 | `assertDerivedEventDescription()` + parche |
-| AC-8 | `assertSharedSchemasSingleOrigin()` (spec crudo) + `assertGeneratedInSync()` (lo generado) + parche |
+| AC-8 | `assertSharedSchemasSingleOrigin()` (spec crudo) + `assertSharedTypesIdenticalAcrossProviders()` (lo generado) + parche |
 | AC-9 | `assertRagTipoNoHabilitado()` + parches |
 | AC-10 | `assertManualEntryEndpoints()` + parches |
 | AC-11 | `assertDiagnosisGrading()` + ejemplos + parches |

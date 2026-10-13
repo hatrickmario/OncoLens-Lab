@@ -1,0 +1,10 @@
+{
+  "cancerType": "mama",
+  "stagingSystem": "TNM_8",
+  "stageValue": "IIA",
+  "diagnosedAt": "2026-09-01",
+  "grading": {
+    "gradingSystem": "nottingham",
+    "nottinghamGrade": 2
+  }
+}

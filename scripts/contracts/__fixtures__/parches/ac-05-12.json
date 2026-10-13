@@ -1,0 +1,295 @@
+[
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche elimina la sección de clinical.diagnosis_grading del modelo",
+    "parches": [
+      { "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "#### `clinical.diagnosis_grading`", "reemplazar": "#### `clinical.otra_tabla`" }] }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "falta la tabla clinical.diagnosis_grading" }
+  },
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche quita grade de la entidad Diagnosis",
+    "parches": [
+      { "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `grade` | text |" }] }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "Diagnosis debe declarar grade" }
+  },
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "el readme §3.1 vuelve a incluir un bloque mermaid del modelo",
+    "parches": [
+      {
+        "destino": "doc:readme",
+        "operaciones": [
+          { "op": "text-replace", "buscar": "**Schemas** (detalle de tablas", "reemplazar": "```mermaid\nerDiagram\n    A {\n    }\n```\n\n**Schemas** (detalle de tablas" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "no contiene diagramas ni DDL" }
+  },
+  {
+    "ac": "AC-5",
+    "regla": "assertDataModelDocument",
+    "escenario": "el readme §3.1 deja de enlazar a data-model.md",
+    "parches": [{ "destino": "doc:readme", "operaciones": [{ "op": "text-replace", "buscar": "[`docs/architecture/data-model.md`](docs/architecture/data-model.md)", "reemplazar": "el documento del modelo" }] }],
+    "esperado": { "archivo": "readme.md", "mensajeContiene": "debe enlazar" }
+  },
+  {
+    "ac": "AC-6",
+    "regla": "assertDataModelDocument",
+    "escenario": "un parche reemplaza EMBEDDING_DIM por 1024 en el diagrama",
+    "parches": [
+      { "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "buscar": "dimensión EMBEDDING_DIM (configuración, sin valor fijo); modelo", "reemplazar": "dimensión 1024 (configuración); modelo" }] }
+    ],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "no lleva un valor fijo" }
+  },
+  {
+    "ac": "AC-6",
+    "regla": "assertDataModelDocument",
+    "escenario": "la colección Milvus pierde sparse_vector",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-delete-line", "contiene": "| `sparse_vector` |" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "sparse_vector" }
+  },
+  {
+    "ac": "AC-7",
+    "regla": "assertDerivedEventDescription",
+    "escenario": "un parche restaura la frase de readme sobre el evento analisis_ia",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          {
+            "op": "replace",
+            "path": "/paths/~1platform~1evidence-analyses/post/description",
+            "value": "Agrega la Base del análisis, persiste AIAnalysisRecord y el evento analisis_ia antes de responder."
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "evidence-analyses/post/description", "mensajeContiene": "evento" }
+  },
+  {
+    "ac": "AC-7",
+    "regla": "assertDerivedEventDescription",
+    "escenario": "la descripción de la operación deja de decir evento derivado",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "replace-text", "path": "/paths/~1platform~1evidence-analyses/post/description", "buscar": "evento derivado", "reemplazar": "registro" }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "evento derivado" }
+  },
+  {
+    "ac": "AC-8",
+    "regla": "assertSharedSchemasSingleOrigin",
+    "escenario": "un parche define en línea una copia de EvidenceOption con un campo distinto en clinical-api",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          {
+            "op": "replace",
+            "path": "/components/schemas/EvidenceOption",
+            "value": { "type": "object", "additionalProperties": false, "required": ["option", "extra"], "properties": { "option": { "type": "string" }, "extra": { "type": "string" } } }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/components/schemas/EvidenceOption", "mensajeContiene": "en línea" }
+  },
+  {
+    "ac": "AC-8",
+    "regla": "assertSharedSchemasSingleOrigin",
+    "escenario": "evidence.yaml define Provenance, que no es compartido",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "add", "path": "/components/schemas/Provenance", "value": { "type": "object" } }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "Provenance" }
+  },
+  {
+    "ac": "AC-9",
+    "regla": "assertRagTipoNoHabilitado",
+    "escenario": "un parche añade tipo_no_habilitado al enum de status de RagQueryInternalResponse",
+    "parches": [
+      { "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagQueryInternalResponse/properties/status/enum/-", "value": "tipo_no_habilitado" }] }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagQueryInternalResponse/properties/status/enum" }
+  },
+  {
+    "ac": "AC-9",
+    "regla": "assertRagTipoNoHabilitado",
+    "escenario": "un parche elimina la respuesta 422 de /rag/query",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "remove", "path": "/paths/~1rag~1query/post/responses/422" }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "~1rag~1query/post/responses", "mensajeContiene": "422" }
+  },
+  {
+    "ac": "AC-9",
+    "regla": "assertRagTipoNoHabilitado",
+    "escenario": "el 422 de /rag/query deja de ser un oneOf",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          {
+            "op": "replace",
+            "path": "/paths/~1rag~1query/post/responses/422/content/application~1json/schema",
+            "value": { "$ref": "#/components/schemas/ErrorValidacion" }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "responses/422", "mensajeContiene": "oneOf" }
+  },
+  {
+    "ac": "AC-10",
+    "regla": "assertManualEntryEndpoints",
+    "escenario": "un parche elimina POST …/biomarkers",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1biomarkers" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "biomarkers", "mensajeContiene": "falta POST" }
+  },
+  {
+    "ac": "AC-10",
+    "regla": "assertManualEntryEndpoints",
+    "escenario": "un parche elimina la respuesta 201 de POST …/biomarkers",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1biomarkers/post/responses/201" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "biomarkers/post/responses/201" }
+  },
+  {
+    "ac": "AC-10",
+    "regla": "assertManualEntryEndpoints",
+    "escenario": "la descripción de POST …/diagnoses deja de fijar la transición a reemplazado",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "replace", "path": "/paths/~1platform~1patients~1{patientId}~1diagnoses/post/description", "value": "Registra un diagnóstico manual_correction." }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "reemplazado" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "un parche agrega grade a DiagnosisManualCreate",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/DiagnosisManualCreate/properties/grade", "value": { "type": "string" } }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "DiagnosisManualCreate/properties/grade" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "un parche quita readOnly de gradings",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/components/schemas/Diagnosis/properties/gradings/readOnly" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "Diagnosis/properties/gradings", "mensajeContiene": "readOnly" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "un parche elimina la rama nottingham del oneOf de la gradación",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/DiagnosisGradingInput/oneOf/1/$ref", "value": "#/components/schemas/NottinghamGradingInput" },
+          { "op": "remove", "path": "/components/schemas/DiagnosisGradingInput/oneOf/1" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "DiagnosisGradingInput/oneOf", "mensajeContiene": "NottinghamGradingInput" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "un parche añade gleasonScore al required de GleasonIsupGradingInput",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "add", "path": "/components/schemas/GleasonIsupGradingInput/required/-", "value": "gleasonScore" }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "GleasonIsupGradingInput/required", "mensajeContiene": "opcionales" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "el 422 del registro de diagnósticos deja de declarar GRADACION_INCOHERENTE",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/ErrorDiagnosticoInvalido/properties/error/enum/3", "value": "GRADACION_INCOHERENTE" },
+          { "op": "remove", "path": "/components/schemas/ErrorDiagnosticoInvalido/properties/error/enum/3" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "diagnoses/post/responses/422", "mensajeContiene": "GRADACION_INCOHERENTE" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertDiagnosisGrading",
+    "escenario": "un parche amplía el rango del patrón de Gleason",
+    "parches": [
+      { "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/components/schemas/GleasonIsupGradingInput/properties/gleasonPrimaryPattern/maximum", "value": 6 }] }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "gleasonPrimaryPattern", "mensajeContiene": "entre 3 y 5" }
+  },
+  {
+    "ac": "AC-11",
+    "regla": "assertExamplesValid",
+    "escenario": "un ejemplo de gradación Gleason trae un grado Nottingham",
+    "parches": [{ "destino": "ejemplo:diagnosis-manual-gleason.json", "operaciones": [{ "op": "add", "path": "/grade", "value": "Gleason 4+3=7 · ISUP 3" }] }],
+    "esperado": { "ref": "AC-3", "archivo": "contracts/examples/diagnosis-manual-gleason.json", "mensajeContiene": "additional" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertCitedSourceAttribution",
+    "escenario": "un parche deja authors no nullable",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "replace", "path": "/components/schemas/CitedSourceFields/properties/authors/type", "value": "string" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "properties/authors", "mensajeContiene": "admitir null" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertCitedSourceAttribution",
+    "escenario": "un parche quita cc_by_nc del enum de licenseClass",
+    "parches": [
+      {
+        "destino": "evidence",
+        "operaciones": [
+          { "op": "test", "path": "/components/schemas/CitedSourceFields/properties/licenseClass/enum/3", "value": "cc_by_nc" },
+          { "op": "remove", "path": "/components/schemas/CitedSourceFields/properties/licenseClass/enum/3" }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "licenseClass/enum" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertCitedSourceAttribution",
+    "escenario": "un parche quita el pattern de sourceUrl",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "remove", "path": "/components/schemas/CitedSourceFields/properties/sourceUrl/pattern" }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "properties/sourceUrl", "mensajeContiene": "https" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertCitedSourceAttribution",
+    "escenario": "un parche hace nullable un campo que no lo es (title)",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "replace", "path": "/components/schemas/CitedSourceFields/properties/title/type", "value": ["string", "null"] }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "properties/title", "mensajeContiene": "no debe admitir null" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertCitedSourceAttribution",
+    "escenario": "la descripción de CitedSource deja de decir que se copia del catálogo",
+    "parches": [{ "destino": "evidence", "operaciones": [{ "op": "replace", "path": "/components/schemas/CitedSource/description", "value": "Cita a una fuente." }] }],
+    "esperado": { "archivo": "contracts/schemas/evidence.yaml", "rutaContiene": "CitedSource/description" }
+  },
+  {
+    "ac": "AC-12",
+    "regla": "assertDataModelDocument",
+    "escenario": "el catálogo del corpus pierde cc_by_nc en license_class",
+    "parches": [{ "destino": "doc:data-model", "operaciones": [{ "op": "text-replace", "todas": true, "buscar": "cc_by_nc", "reemplazar": "cc_by_xx" }] }],
+    "esperado": { "archivo": "docs/architecture/data-model.md", "mensajeContiene": "license_class debe incluir cc_by_nc" }
+  }
+]

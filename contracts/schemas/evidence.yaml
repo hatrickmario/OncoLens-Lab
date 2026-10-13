@@ -1,0 +1,337 @@
+openapi: 3.1.0
+info:
+  title: OncoLens — Schemas compartidos del análisis de evidencia
+  version: 1.0.0
+  description: >-
+    Origen único de los ocho schemas que comparten clinical-api (contrato público) y
+    rag-orchestrator (contrato interno): EvidenceOption, DiscardedOption, Synthesis,
+    SupportedClaim, SourceApplicability, ApplicabilityCriterion, ApplicabilitySummary y
+    CitedSource (más el auxiliar CitedSourceFields). Ambos openapi.yaml los referencian con
+    $ref a este archivo; ninguno los define en línea. Provenance NO es compartido: cada
+    proveedor declara la suya. Este archivo no declara operaciones.
+paths: {}
+components:
+  schemas:
+    CitedSourceFields:
+      type: object
+      description: >-
+        Campos de una cita, todos copiados del catálogo del corpus y nunca del texto generado
+        (RN-04, RN-25). Auxiliar abierto: solo se compone dentro de un allOf que cierra con
+        unevaluatedProperties false (CitedSource y FollowUpCitedSource). Un campo ausente en
+        el catálogo viaja como null y la UI lo muestra como "No disponible".
+      required:
+        - title
+        - sourceName
+        - externalId
+        - language
+        - sourceType
+        - licenseClass
+        - studyDesign
+        - trialPhase
+        - primaryEndpoint
+        - sampleSize
+        - publishedAt
+        - lastUpdatedAt
+        - guidelineVersion
+        - authors
+        - sourceUrl
+        - possiblyOutdated
+        - newerVersionAvailable
+        - chunkTextSnapshot
+        - chunkId
+      properties:
+        title:
+          type: string
+          description: Título de la fuente, copiado del catálogo del corpus.
+        sourceName:
+          type: string
+          description: Nombre de la fuente, copiado del catálogo del corpus.
+          examples: [NCI PDQ]
+        externalId:
+          type: string
+          description: Identificador externo de la fuente (DOI, NCT, PMID, CDR…), copiado del catálogo.
+          examples: [CDR0000062787]
+        language:
+          type: string
+          enum: [es, en]
+        sourceType:
+          type: string
+          enum: [guideline, clinical_trial, literature, genomic_study]
+        licenseClass:
+          type: string
+          enum: [dominio_publico, cc_by, cc_by_sa, cc_by_nc]
+          description: >-
+            Clase de licencia copiada del catálogo del corpus (ADR-36, RN-21). El MVP solo
+            ingiere tres clases por configuración (CORPUS_ACCEPTED_LICENSES); cc_by_nc existe en
+            el contrato para que añadirla después no cambie el enum.
+        studyDesign:
+          type: [string, "null"]
+          examples: [eca]
+        trialPhase:
+          type: [string, "null"]
+          examples: [III]
+        primaryEndpoint:
+          type: [string, "null"]
+        sampleSize:
+          type: [integer, "null"]
+          minimum: 0
+        publishedAt:
+          type: [string, "null"]
+          format: date
+        lastUpdatedAt:
+          type: [string, "null"]
+          format: date
+        guidelineVersion:
+          type: [string, "null"]
+        authors:
+          type: [string, "null"]
+          description: >-
+            Autoría copiada del catálogo del corpus; null si el catálogo no la registra (la UI
+            muestra "No disponible", RN-25).
+        sourceUrl:
+          type: [string, "null"]
+          format: uri
+          pattern: ^https://
+          description: >-
+            Enlace a la fuente, copiado del catálogo del corpus; null si el catálogo no lo
+            registra. Solo https. La UI lo abre con rel="noopener noreferrer".
+        possiblyOutdated:
+          type: boolean
+          description: Más de EVIDENCE_STALE_YEARS desde su última actualización.
+        newerVersionAvailable:
+          type: boolean
+          description: >-
+            Hay una versión más reciente del documento en el corpus. Lo calcula el detector de
+            vigencia (FR-26); en un análisis nuevo viaja false.
+        chunkTextSnapshot:
+          type: string
+          description: Texto original de la fuente, sin traducir.
+        chunkId:
+          type: string
+          description: Referencia al chunk del corpus recuperado en esa consulta; puede no resolverse si el chunk se reindexó.
+    CitedSource:
+      type: object
+      description: >-
+        Cita a una fuente del corpus: todos sus campos están copiados del catálogo del corpus,
+        nunca del texto generado (RN-04, RN-25). Cierra el auxiliar CitedSourceFields.
+      allOf:
+        - $ref: '#/components/schemas/CitedSourceFields'
+      unevaluatedProperties: false
+    SupportedClaim:
+      type: object
+      description: >-
+        Afirmación generada que pasó el chequeo de soporte (RN-01). Está anclada a una cita del
+        corpus recuperado en esa consulta, a un dato del paciente mediante una referencia opaca
+        rN, o a ambos (ADR-34): al menos uno de los dos arreglos no está vacío.
+      additionalProperties: false
+      required: [text, citedSources, patientDataRefs]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          description: En el idioma de la pregunta.
+        citedSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitedSource'
+        patientDataRefs:
+          type: array
+          description: >-
+            Referencias opacas a datos del paciente, asignadas por clinical-api por petición
+            (r1, r2…); nunca un UUID. clinical-api las resuelve en patientDataLinks.
+          items:
+            type: string
+            pattern: ^r[0-9]+$
+      anyOf:
+        - properties:
+            citedSources:
+              type: array
+              minItems: 1
+        - properties:
+            patientDataRefs:
+              type: array
+              minItems: 1
+    Synthesis:
+      type: object
+      description: >-
+        Síntesis de la evidencia recuperada. Siempre presente: en los Sprints 1–3 puede venir
+        vacía (agreements y discrepancies sin elementos), pero el contrato es el final (ADR-26).
+      additionalProperties: false
+      required: [agreements, discrepancies]
+      properties:
+        agreements:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportedClaim'
+        discrepancies:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [claim, explainedBy, explanation]
+            properties:
+              claim:
+                $ref: '#/components/schemas/SupportedClaim'
+              explainedBy:
+                type: string
+                enum: [poblacion, endpoint, fecha, diseno, no_identificada]
+              explanation:
+                type: [string, "null"]
+                description: >-
+                  Descripción de la diferencia entre fuentes, sin afirmación nueva ni valoración
+                  clínica.
+    ApplicabilitySummary:
+      type: object
+      description: >-
+        Conteo por estado de los criterios de aplicabilidad. Nunca un puntaje o porcentaje
+        clínico (RN-28).
+      additionalProperties: false
+      required: [coincide, parcial, noCoincide, desconocido]
+      properties:
+        coincide:
+          type: integer
+          minimum: 0
+        parcial:
+          type: integer
+          minimum: 0
+        noCoincide:
+          type: integer
+          minimum: 0
+        desconocido:
+          type: integer
+          minimum: 0
+    ApplicabilityCriterion:
+      type: object
+      description: Un criterio del catálogo del tipo de cáncer y su estado frente al paciente (RN-28).
+      additionalProperties: false
+      required:
+        - criterion
+        - patientValue
+        - studyPopulationValue
+        - status
+        - unknownReason
+        - isExclusionary
+        - patientDataWarning
+        - citedSources
+      properties:
+        criterion:
+          type: string
+          description: Del catálogo del tipo de cáncer.
+          examples: [estado_her2]
+        patientValue:
+          type: [string, "null"]
+          description: Valor copiado del contexto del paciente; nunca generado (ADR-34).
+        studyPopulationValue:
+          type: [string, "null"]
+        status:
+          title: ApplicabilityStatus
+          type: string
+          enum: [coincide, parcial, no_coincide, desconocido]
+        unknownReason:
+          type: [string, "null"]
+          enum: [falta_en_paciente, no_reportado_por_fuente, null]
+        isExclusionary:
+          type: boolean
+        patientDataWarning:
+          type: [string, "null"]
+          enum: [sin_verificar, en_conflicto, faltante, null]
+        citedSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitedSource'
+    SourceApplicability:
+      type: object
+      description: Aplicabilidad de una fuente al paciente, criterio a criterio.
+      additionalProperties: false
+      required: [externalId, criteria, summary, populationNotComparable]
+      properties:
+        externalId:
+          type: string
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicabilityCriterion'
+        summary:
+          $ref: '#/components/schemas/ApplicabilitySummary'
+        populationNotComparable:
+          type: boolean
+          description: Un criterio excluyente en no_coincide.
+    EvidenceOption:
+      type: object
+      description: >-
+        Opción terapéutica descrita en la evidencia; es una descripción de lo que la evidencia
+        recuperada reporta y no constituye una indicación para el paciente (RN-23).
+      additionalProperties: false
+      required:
+        - option
+        - rationale
+        - applicabilitySummary
+        - populationNotComparable
+        - perSource
+        - relevanceScore
+        - warnings
+        - citedSources
+      properties:
+        option:
+          type: string
+        rationale:
+          type: string
+          description: En el idioma de la pregunta.
+        applicabilitySummary:
+          $ref: '#/components/schemas/ApplicabilitySummary'
+        populationNotComparable:
+          type: boolean
+          description: true solo si todas sus fuentes lo son (ADR-31).
+        perSource:
+          type: array
+          description: >-
+            Aplicabilidad de cada fuente que sustenta la opción; applicabilitySummary es la de la
+            más aplicable (ADR-31).
+          items:
+            type: object
+            additionalProperties: false
+            required: [externalId, summary, populationNotComparable]
+            properties:
+              externalId:
+                type: string
+              summary:
+                $ref: '#/components/schemas/ApplicabilitySummary'
+              populationNotComparable:
+                type: boolean
+        relevanceScore:
+          type: number
+          minimum: 0
+          maximum: 1
+          examples: [0.87]
+          description: >-
+            Metadato secundario: puntaje del reranker normalizado a [0,1] que mide la relevancia
+            de la evidencia recuperada. No ordena las opciones, no mide la solidez clínica ni la
+            probabilidad de éxito (RN-03).
+        warnings:
+          type: array
+          items:
+            type: string
+            enum: [datos_sin_verificar, datos_en_conflicto, datos_faltantes, poblacion_no_comparable]
+        citedSources:
+          type: array
+          minItems: 1
+          description: Toda opción tiene al menos una cita a un chunk recuperado en esa consulta (RN-01).
+          items:
+            $ref: '#/components/schemas/CitedSource'
+    DiscardedOption:
+      type: object
+      description: Solo para revisión del oncólogo; no es una opción.
+      additionalProperties: false
+      required: [option, rationale, discardReason, unsupportedClaims]
+      properties:
+        option:
+          type: string
+        rationale:
+          type: string
+        discardReason:
+          type: string
+          enum: [cita_invalida, afirmacion_sin_soporte, sin_citas, solo_soportada_por_analisis_previo]
+        unsupportedClaims:
+          type: array
+          items:
+            type: string

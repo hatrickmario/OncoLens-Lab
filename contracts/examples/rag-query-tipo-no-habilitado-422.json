@@ -1,0 +1,5 @@
+{
+  "error": "TIPO_NO_HABILITADO",
+  "message": "El tipo de cáncer no está habilitado en este entorno.",
+  "traceId": "req_1d2e3f4a"
+}

@@ -599,510 +599,25 @@ flowchart LR
 
 ### **3.1. Diagrama del modelo de datos:**
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+El modelo de datos completo vive en un solo documento: **[`docs/architecture/data-model.md`](docs/architecture/data-model.md)**. Es la **fuente única** del DDL por schema, la colección de Milvus, los diagramas, la matriz de permisos y el aislamiento del rol `rag_corpus`. Este readme no repite el DDL ni los diagramas del modelo, para que no puedan divergir `[Pre-S1 resp. 29]`; las migraciones (US-038 y US-058) implementan ese documento sin decidir nada nuevo.
 
 Hay dos modelos, alineados con la regla de ownership de la sección 2:
 - el **relacional** (PostgreSQL + `clinical-minio`, propiedad exclusiva de Backend 1);
 - el del **corpus científico** (Milvus + catálogo en el schema `corpus` de PostgreSQL + MinIO de Milvus, propiedad de Backend 2).
 
-El proyecto usa **solo dos motores de base de datos: PostgreSQL y Milvus**.
+El proyecto usa **solo dos motores de base de datos: PostgreSQL y Milvus**. No hay FKs reales entre ambos, solo referencias lógicas.
 
-No hay FKs reales entre ambos, solo referencias lógicas.
+**Schemas** (detalle de tablas y columnas en el documento enlazado): `auth`, `identity` (cifrado), `clinical`, `audit`, `research` (solo inserción) y `corpus` (propiedad de Backend 2, Prisma lo excluye).
 
-#### PostgreSQL — datos clínicos (Backend 1)
-
-**Schemas:**
-- `auth` → `User`, `Role`, `Permission`, `RolePermission`, `Session`
-- `identity` → `PatientIdentity`, `LegalRepresentative` (cifrados)
-- `clinical` → `Patient`, `CareEpisode`, `CareTeamMember`, `PatientOptOut` (v1.2, reemplaza a `PatientConsent`), `IntakeDraft`, `Diagnosis`, `ClinicalNote`, `Exam`, `Biomarker`, `Document`, `Treatment`, `AIAnalysisRecord`, `ResearchSubjectMap` y, desde v1.1, **`ClinicalEvent`**, **`PriorTreatment`**, **`ClinicalAttribute`** (v1.2), **`ClinicalDataSource`** y **`AnalysisFeedback`**
-- `audit` → `AuditLog`
-- `research` → `EpisodeSnapshot`
-- `corpus` → `CorpusDocument`, `CorpusRelease`, `CorpusReleaseDocument` y estado de ingesta: **propiedad de Backend 2**, que lo migra y accede con el rol `rag_corpus`. Prisma lo excluye. Ver el modelo del corpus más abajo.
-
-```mermaid
-erDiagram
-    USER {
-        uuid id PK
-        string email UK
-        string password_hash "Argon2id"
-        string full_name
-        uuid role_id FK
-        boolean is_active
-        int failed_login_count
-        timestamp locked_until "nullable"
-        timestamp created_at
-        timestamp updated_at
-    }
-    ROLE {
-        uuid id PK
-        string name UK "doctor, admin"
-        string description
-    }
-    PERMISSION {
-        uuid id PK
-        string code UK "patients:read, ai_analysis:create, ..."
-        string description
-    }
-    ROLE_PERMISSION {
-        uuid role_id PK "también FK"
-        uuid permission_id PK "también FK"
-    }
-    SESSION {
-        uuid id PK
-        uuid user_id FK
-        string token_hash UK
-        timestamp expires_at "absoluto (8 h, configurable)"
-        timestamp last_seen_at "inactividad (30 min, configurable)"
-        string ip_address
-        string user_agent
-        boolean revoked
-        timestamp created_at
-    }
-    PATIENT {
-        uuid id PK "identificador interno usado por FKs y API"
-        string data_origin "sintetico|real_anonimizado|real_identificado"
-        string source_dataset
-        string agreement_reference "convenio o contrato marco"
-        int birth_year
-        string sex
-        string population "adulto|pediatrico (derivado)"
-        string lifecycle_status "activo|egresado (derivado)"
-        date retention_start "aceptación del contrato o primera cita"
-        date retention_until "inicio + 10 años"
-        date retention_max "inicio + 20 años"
-        boolean requires_ratification "cumplió la mayoría de edad"
-        timestamp created_at
-    }
-    PATIENT_IDENTITY {
-        uuid patient_id PK "también FK — schema identity"
-        string id_type "cedula_ciudadania|tarjeta_identidad|cedula_extranjeria|pasaporte|seudonimo|sintetico"
-        string issuing_country "nullable"
-        bytes national_id_ciphertext "AES-256-GCM"
-        string national_id_hmac "índice ciego; UK con id_type+país"
-        bytes full_name_ciphertext
-        int key_version
-    }
-    LEGAL_REPRESENTATIVE {
-        uuid id PK "schema identity"
-        uuid patient_id FK
-        string relationship "madre|padre|tutor_legal"
-        string id_type
-        bytes national_id_ciphertext
-        string national_id_hmac
-        bytes full_name_ciphertext
-        timestamp registered_at "la firma reposa en el sistema externo (v1.2)"
-        date valid_from
-        date valid_until "nullable"
-    }
-    CARE_EPISODE {
-        uuid id PK
-        uuid patient_id FK
-        timestamp opened_at
-        timestamp closed_at "nullable — un solo episodio abierto"
-        string closure_reason "catálogo validado con el oncólogo"
-        uuid opened_by FK
-        uuid closed_by FK "tratante principal o admin"
-    }
-    CARE_TEAM_MEMBER {
-        uuid id PK
-        uuid patient_id FK
-        uuid doctor_id FK
-        string care_role "oncologo|cirujano|radiooncologo|otro"
-        boolean is_primary "uno por paciente"
-        boolean is_active
-        timestamp assigned_at
-        timestamp unassigned_at "nullable"
-    }
-    PATIENT_OPT_OUT {
-        uuid id PK "v1.2 — reemplaza a PATIENT_CONSENT"
-        uuid patient_id FK
-        string opt_out_type "analisis_ia|investigacion"
-        string action "registrado|revocado"
-        string external_reference "documento en el sistema externo de consentimientos"
-        string reason_code "catálogo (TBD-21)"
-        uuid recorded_by FK "solo admin"
-        timestamp recorded_at
-    }
-    INTAKE_DRAFT {
-        uuid id PK
-        uuid document_id FK
-        jsonb suggested_fields "con confianza por campo"
-        string status "pendiente|confirmado|descartado|expirado"
-        uuid created_by FK
-        timestamp expires_at
-    }
-    DIAGNOSIS {
-        uuid id PK
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        string entry_method "ocr|manual|manual_correction|seed"
-        string cancer_type "catálogo, incluye subtipo"
-        string icd10_code "CIE-10, nullable si no_mapeado"
-        string mapping_status "mapeado|no_mapeado"
-        string histology "v1.2 — tipo histológico (catálogo)"
-        string histology_code "nullable — código del catálogo"
-        string grade "v1.2 — nullable; Gleason/grupo ISUP en próstata (v1.3)"
-        string staging_system "TNM_8|riesgo_LLA|..."
-        string stage_value
-        string performance_scale "ECOG|Karnofsky|Lansky"
-        int performance_value
-        date diagnosed_at
-        boolean is_active "vigente vs. histórico"
-        float extraction_score "nullable"
-        string extraction_confidence "alta|media|baja|n_a"
-        string review_status "auto_aceptado|requiere_revision|verificado|corregido|rechazado|reemplazado"
-        uuid conflicts_with_id "nullable"
-        uuid reviewed_by "nullable"
-        timestamp reviewed_at "nullable"
-        timestamp created_at
-    }
-    CLINICAL_NOTE {
-        uuid id PK
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        uuid created_by FK
-        string note_type "antecedente|comorbilidad|alergia|antecedente_familiar|nota_libre (tratamientos previos → PRIOR_TREATMENT)"
-        string entry_method
-        text content
-        date recorded_at
-        boolean is_active
-        string extraction_confidence
-        string review_status
-        timestamp created_at
-    }
-    EXAM {
-        uuid id PK
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        string exam_type
-        string source_lab "nullable"
-        string entry_method
-        date performed_at
-        timestamp created_at
-    }
-    BIOMARKER {
-        uuid id PK
-        uuid exam_id FK
-        string name "término canónico del catálogo"
-        string original_name "texto tal como aparece en el documento"
-        string loinc_code "LOINC, nullable si no_mapeado"
-        string mapping_status "mapeado|no_mapeado"
-        string value
-        string unit "nullable"
-        string normalized_unit "nullable — para detectar duplicados"
-        string reference_range "del propio documento"
-        string result_type "cuantitativo|cualitativo"
-        string clinical_significance "normal|alterado|relevante|crítico"
-        string significance_source "documento|regla|inferido_ia"
-        float extraction_score "nullable"
-        string extraction_confidence
-        string review_status
-        uuid conflicts_with_id "nullable"
-        jsonb source_span "página, bbox, offset"
-        uuid reviewed_by "nullable"
-        timestamp reviewed_at "nullable"
-        timestamp created_at
-    }
-    DOCUMENT {
-        uuid id PK
-        uuid patient_id FK "nullable mientras es IntakeDraft"
-        uuid episode_id FK "nullable"
-        string document_type "historia_clinica|examen"
-        string object_storage_key "clinical-minio"
-        string checksum "SHA-256; único por paciente"
-        string original_filename
-        string mime_type
-        string ocr_status "pendiente|procesando|completado|error|cuarentena_pii|requiere_revision_identidad"
-        string pii_finding_types "nullable — sin valores"
-        int attempts
-        timestamp processing_started_at "nullable"
-        uuid uploaded_by FK
-        timestamp uploaded_at
-        timestamp extracted_at "nullable"
-    }
-    TREATMENT {
-        uuid id PK
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid based_on_analysis_id FK "nullable"
-        uuid decided_by FK
-        string description
-        string atc_codes "ATC, lista; nullable si no_mapeado"
-        string mapping_status "mapeado|no_mapeado (v1.2)"
-        string status "activo|completado|suspendido"
-        date started_at
-        date ended_at "nullable"
-        timestamp created_at
-    }
-    PRIOR_TREATMENT {
-        uuid id PK "v1.1 — línea recibida antes o fuera de OncoLens"
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        int line_number "nullable"
-        string setting "neoadyuvante|adyuvante|primera_linea_metastasica|...|desconocido"
-        string regimen_name
-        string atc_codes "ATC, lista"
-        string cups_code "CUPS — radioterapia/cirugía, nullable"
-        string mapping_status "mapeado|no_mapeado (v1.2)"
-        date started_at "nullable"
-        date ended_at "nullable"
-        boolean ongoing
-        string end_reason "progresion|toxicidad|completado|otro|desconocido"
-        string best_response "nullable"
-        string entry_method "ocr|manual|manual_correction|seed"
-        string extraction_confidence
-        string review_status
-        jsonb source_span "nullable"
-        timestamp created_at
-    }
-    CLINICAL_EVENT {
-        uuid id PK "v1.1 — solo tipos sin tabla propia (v1.2, ADR #32)"
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        string event_type "cirugia|procedimiento|respuesta|progresion|toxicidad|recaida|evolucion"
-        date event_date "nullable"
-        string date_precision "dia|mes|anio|incierta"
-        string description "texto corto, enmascarable"
-        string icd10_code "nullable"
-        string cups_code "nullable — procedimientos"
-        string mapping_status "mapeado|no_mapeado|n_a (v1.2)"
-        string toxicity_grade "nullable"
-        uuid prior_treatment_id FK "nullable"
-        uuid treatment_id FK "nullable"
-        uuid analysis_id FK "nullable"
-        string entry_method
-        string extraction_confidence
-        string review_status
-        jsonb source_span "nullable"
-        uuid recorded_by FK "nullable — sistema"
-        timestamp created_at
-    }
-    CLINICAL_ATTRIBUTE {
-        uuid id PK "v1.2 — atributos del catálogo sin tabla propia (ADR #32, RN-29)"
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid source_document_id FK "nullable"
-        string attribute_key "clave del catálogo: estado_menopausico|estado_castracion|sitios_metastasicos|..."
-        string value "valor o lista codificada según el catálogo"
-        date observed_at "nullable"
-        string date_precision "dia|mes|anio|incierta"
-        string entry_method
-        string extraction_confidence
-        string review_status
-        jsonb source_span "nullable"
-        timestamp created_at
-    }
-    CLINICAL_DATA_SOURCE {
-        uuid id PK "v1.1 — un dato con varias fuentes (duplicados fusionados)"
-        string data_type "biomarker|diagnosis|clinical_event|prior_treatment|clinical_attribute"
-        uuid data_id
-        uuid document_id FK
-        jsonb source_span
-        timestamp created_at
-    }
-    AI_ANALYSIS_RECORD {
-        uuid id PK
-        uuid patient_id FK
-        uuid episode_id FK
-        uuid requested_by FK
-        string analysis_type "analisis_evidencia|resumen_caso"
-        string trace_id
-        text query_text "enmascarado si tenía PII; null en resumen_caso"
-        string question_template_id "nullable"
-        string query_language
-        string response_language
-        jsonb sources_selected
-        jsonb filters_applied
-        jsonb synthesis "agreements[], discrepancies[] con causa y citas"
-        jsonb applicability "por fuente: criterios, estados, conteo, poblacion_no_comparable"
-        jsonb evidence_options "option, applicability_summary, relevance_score, rationale, warnings, cited_sources[snapshot]"
-        jsonb discarded_options "discard_reason, afirmaciones sin soporte"
-        jsonb case_summary "nullable — solo resumen_caso; afirmaciones con enlaces"
-        jsonb analysis_basis "Base del análisis (PRD FR-27)"
-        jsonb agent_steps "v1.2 — sub-consultas del agente acotado (FR-30)"
-        int omitted_claims "v1.2 — afirmaciones omitidas por falta de soporte"
-        jsonb missing_critical_data
-        boolean continued_with_warning
-        uuid_array prior_analyses_used "memoria (no citable)"
-        float top_relevance_score "nullable — null si no hubo evidencia"
-        string status "con_evidencia|sin_evidencia|tipo_no_habilitado"
-        jsonb clinical_context_snapshot "desidentificado, con etiquetas"
-        string context_fingerprint "hash de los datos usados — detecta 'Desactualizado: datos del paciente' (y la cascada por memoria)"
-        uuid rerun_of_analysis_id FK "nullable"
-        string data_classification
-        string llm_provider
-        string llm_model
-        string embedding_model
-        string reranker_model
-        string nli_model
-        string prompt_version
-        string corpus_release "fecha de corte y versión"
-        string catalog_version
-        jsonb retrieval_params
-        timestamp created_at
-    }
-    ANALYSIS_FEEDBACK {
-        uuid id PK "v1.1 — VM-4 / VM-5"
-        uuid analysis_id FK
-        uuid user_id FK
-        int usefulness_rating "1–5"
-        boolean missing_data_warning_correct "nullable — VM-5 (v1.2)"
-        boolean missing_data_warning_useful "nullable — VM-5"
-        timestamp created_at
-    }
-    RESEARCH_SUBJECT_MAP {
-        uuid patient_id PK "también FK"
-        uuid research_subject_id UK "aleatorio"
-    }
-    EPISODE_SNAPSHOT {
-        uuid id PK "schema research — solo inserción"
-        uuid research_subject_id
-        int episode_seq
-        int snapshot_schema_version "v2 = longitudinal (v1.1)"
-        jsonb snapshot "longitudinal: líneas, respuestas, progresiones, decisiones; códigos normalizados; sin identidad, sin texto libre, fechas relativas"
-        timestamp created_at
-    }
-    AUDIT_LOG {
-        uuid id PK
-        uuid user_id FK "nullable — acciones de sistema"
-        string action
-        string entity_type
-        uuid entity_id "UUID, nunca identidad"
-        jsonb metadata "sin PHI"
-        string ip_address
-        timestamp created_at
-    }
-
-    ROLE ||--o{ USER : "asignado a"
-    ROLE ||--o{ ROLE_PERMISSION : tiene
-    PERMISSION ||--o{ ROLE_PERMISSION : otorga
-    USER ||--o{ SESSION : tiene
-    PATIENT ||--|| PATIENT_IDENTITY : "identidad cifrada"
-    PATIENT ||--o{ LEGAL_REPRESENTATIVE : "representado por (menor)"
-    PATIENT ||--o{ CARE_EPISODE : tiene
-    PATIENT ||--o{ CARE_TEAM_MEMBER : "atendido por"
-    USER ||--o{ CARE_TEAM_MEMBER : "integra equipo"
-    PATIENT ||--o{ PATIENT_OPT_OUT : "marcas de opt-out"
-    PATIENT ||--o| RESEARCH_SUBJECT_MAP : "seudónimo de investigación"
-    DOCUMENT ||--o| INTAKE_DRAFT : "origina (registro asistido)"
-    PATIENT ||--o{ DIAGNOSIS : tiene
-    PATIENT ||--o{ CLINICAL_NOTE : tiene
-    PATIENT ||--o{ EXAM : tiene
-    EXAM ||--o{ BIOMARKER : reporta
-    PATIENT ||--o{ DOCUMENT : sube
-    DOCUMENT |o--o{ DIAGNOSIS : "origina (OCR)"
-    DOCUMENT |o--o{ CLINICAL_NOTE : "origina (OCR)"
-    DOCUMENT |o--o{ EXAM : "origina (OCR)"
-    CARE_EPISODE ||--o{ AI_ANALYSIS_RECORD : contiene
-    CARE_EPISODE ||--o{ DOCUMENT : contiene
-    PATIENT ||--o{ TREATMENT : recibe
-    AI_ANALYSIS_RECORD |o--o{ TREATMENT : "puede originar"
-    USER ||--o{ AI_ANALYSIS_RECORD : solicita
-    USER |o--o{ AUDIT_LOG : genera
-    PATIENT ||--o{ PRIOR_TREATMENT : "recibió (antes de OncoLens)"
-    PATIENT ||--o{ CLINICAL_EVENT : "timeline"
-    DOCUMENT |o--o{ PRIOR_TREATMENT : "origina (OCR)"
-    DOCUMENT |o--o{ CLINICAL_EVENT : "origina (OCR)"
-    PATIENT ||--o{ CLINICAL_ATTRIBUTE : "atributos"
-    DOCUMENT |o--o{ CLINICAL_ATTRIBUTE : "origina (OCR)"
-    PRIOR_TREATMENT |o--o{ CLINICAL_EVENT : "evoluciona en"
-    TREATMENT |o--o{ CLINICAL_EVENT : "decisión y evolución"
-    AI_ANALYSIS_RECORD |o--o{ CLINICAL_EVENT : "origina evolución (el análisis se deriva en el timeline)"
-    AI_ANALYSIS_RECORD |o--o{ AI_ANALYSIS_RECORD : "re-ejecución de"
-    DOCUMENT ||--o{ CLINICAL_DATA_SOURCE : "fuente adicional"
-    AI_ANALYSIS_RECORD ||--o{ ANALYSIS_FEEDBACK : "calificado en"
-```
-
-**Índices y restricciones clave:**
-- `identity.patient_identity (id_type, issuing_country, national_id_hmac)`: único.
-- `care_team_member (patient_id, doctor_id) WHERE is_active`: único; `(patient_id) WHERE is_active AND is_primary`: único.
-- `care_episode (patient_id) WHERE closed_at IS NULL`: único.
-- `document (patient_id, checksum)`: único; `document (ocr_status, uploaded_at)`.
-- `diagnosis (patient_id, is_active)`; `clinical_note (patient_id, note_type, recorded_at)`; `exam (patient_id, performed_at)`.
-- Índices por `review_status` para el contador de pendientes.
-- `patient_opt_out (patient_id, opt_out_type, recorded_at DESC)`; `ai_analysis_record (patient_id, created_at)`; `patient (retention_until)`.
-- v1.1: `clinical_event (patient_id, event_date)`; `prior_treatment (patient_id, line_number)`; `clinical_data_source (data_type, data_id)`; `biomarker (exam_id, loinc_code)`; índices por `mapping_status` para la revisión de términos no mapeados; `clinical_attribute (patient_id, attribute_key, observed_at)`; `ai_analysis_record (patient_id, analysis_type, created_at)`.
-- FKs del schema `clinical` con `onDelete: Restrict`. El borrado solo lo ejecuta el proceso de retención o de baja total, que borra la identidad y seudonimiza.
-
-#### Corpus científico — Milvus + schema `corpus` de PostgreSQL + MinIO de Milvus (Backend 2)
-
-> Modelo lógico: Milvus no impone FKs. `CorpusDocument` vive en el schema `corpus` de PostgreSQL (catálogo con transacciones), migrado y accedido solo por Backend 2 con el rol `rag_corpus`; Milvus guarda solo los chunks.
-
-```mermaid
-erDiagram
-    CORPUS_DOCUMENT {
-        string document_id PK "PostgreSQL schema corpus"
-        string source_type "guideline|clinical_trial|literature|genomic_study"
-        string source_name "NCI PDQ|ClinicalTrials.gov|PubMed/PMC OA|guía pública|TCGA/GDC pub|..."
-        string external_id "DOI|NCT ID|PMID|URL"
-        string title
-        string language "es|en"
-        string license "obligatoria — solo acceso abierto en el MVP"
-        string license_class "dominio_publico|cc_by|cc_by_sa|cc_by_nc (solo MVP académico) — v1.2"
-        string license_url
-        boolean open_access
-        string cancer_type_tags
-        string population "adulto|pediatrico|ambos"
-        string study_design "guia|eca|observacional|revision_sistematica|otro (v1.1)"
-        string trial_phase "nullable — I|II|III|IV"
-        string primary_endpoint "nullable"
-        int sample_size "nullable"
-        jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
-        string metadata_source "fuente_estructurada|extraido_verificado"
-        string guideline_version "nullable"
-        date last_updated_at "nullable"
-        string original_format "jats_xml|xml|pdf|html"
-        string object_key_raw "corpus-raw"
-        string object_key_normalized "corpus-normalized"
-        string checksum
-        string version_group_id
-        string version_label
-        boolean is_current
-        timestamp superseded_at "nullable"
-        date published_at
-        timestamp ingested_at
-        timestamp last_checked_at
-        string status "pendiente|normalizado|embebido|error|rechazado_licencia"
-    }
-    CORPUS_CHUNK {
-        string chunk_id PK "colección Milvus corpus_chunks"
-        string document_id "referencia lógica"
-        vector dense_vector "modelo multilingüe (ADR de modelos locales)"
-        vector sparse_vector "mismo modelo; poblado desde el Sprint 3"
-        text chunk_text
-        int chunk_index
-        string section
-        string source_type "denormalizado"
-        string language "denormalizado"
-        string cancer_type_tags "denormalizado — filtro por tipo de cáncer"
-        string population "denormalizado"
-        string study_design "denormalizado (v1.1)"
-        int published_year "denormalizado (v1.1)"
-        boolean is_current "denormalizado"
-        timestamp created_at
-    }
-    CORPUS_RELEASE {
-        string release_id PK "v1.1 — schema corpus"
-        date cutoff_date "fecha de corte mostrada en cada análisis"
-        int document_count
-        string excluded_sources "p. ej. NCCN, ESMO — se declaran en la Base del análisis"
-        timestamp published_at
-    }
-    CORPUS_RELEASE_DOCUMENT {
-        string release_id PK "v1.2 — N:M; también referencia lógica"
-        string document_id PK "versión vigente del documento en esa release"
-    }
-    CORPUS_DOCUMENT ||--o{ CORPUS_CHUNK : "se fragmenta en (lógico)"
-    CORPUS_RELEASE ||--o{ CORPUS_RELEASE_DOCUMENT : incluye
-    CORPUS_DOCUMENT ||--o{ CORPUS_RELEASE_DOCUMENT : "pertenece a"
-```
-
-**Aislamiento de almacenamiento:** `clinical-minio` (bucket `clinical-documents`) es una **instancia separada**, propiedad de Backend 1. El MinIO de Milvus guarda solo datos de Milvus y los buckets `corpus-raw` y `corpus-normalized`. Backend 2 no tiene credenciales ni red hacia `clinical-minio`.
+**Vacíos resueltos respecto del DDL y el diagrama que este readme contenía** (cada uno con su origen en la sección 10 del documento enlazado):
+- vacío resuelto (US-033): tabla hija `clinical.diagnosis_grading` (Gleason/ISUP y Nottingham) y `Diagnosis.grade` como texto derivado, DEC-05 `[Pre-S1 resp. 1, 2, 18, 29]`;
+- vacío resuelto (US-033): `clinical.analysis_follow_up` para las preguntas de seguimiento, sin `pseudoPatientId` ni identidad, con `trace_id` y versiones `[Pre-S1 resp. 14, 19, 23, 29]`;
+- vacío resuelto (US-033): `auth.user.account_status` (`pendiente | activo | desactivado | rechazado`) reemplaza a `is_active` `[Pre-S1 resp. 16]`;
+- vacío resuelto (US-033): matriz de permisos con códigos concretos y sí/no por rol; `admin` sin lectura clínica; `audit:read_patient` no para todos `[Pre-S1 resp. 17, 24, 27, 29]`;
+- vacío resuelto (US-033): `corpus_document.license_class` con cuatro valores y la ingesta del MVP filtrada por `CORPUS_ACCEPTED_LICENSES` `[Pre-S1 resp. 21]`;
+- vacío resuelto (US-033): `corpus_chunks.dense_vector` con dimensión `EMBEDDING_DIM`, sin valor fijo (lo fija ADR-39 y lo aplica US-058) `[Pre-S1 resp. 3]`;
+- vacío resuelto (US-033): aislamiento del rol `rag_corpus` con `ALTER DEFAULT PRIVILEGES FOR ROLE <rol de migraciones>`, `REVOKE ALL ON SCHEMA public FROM PUBLIC` y `pg_hba` `[Pre-S1 resp. 29]`;
+- vacío resuelto (US-033): `ai_analysis_record.patient_data_links` resuelve las referencias opacas `r1…rN` de la respuesta `[Pre-S1 resp. 29]`.
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -1241,1081 +756,243 @@ Hay **dos superficies de API**, coherentes con la regla de ownership de la secci
 
 ### **4.1. `clinical-api` (Backend 1) — API pública**
 
-Se documentan los 3 endpoints más representativos: **carga de documento (OCR)**, **análisis de evidencia** (v1.1, reemplaza a la consulta RAG) y **ficha del paciente**. El esquema `CaseView` de la vista de caso se incluye porque lo usan el análisis y la tabla de endpoints adicionales.
+La especificación **normativa** es **[`apps/clinical-api/openapi.yaml`](apps/clinical-api/openapi.yaml)** (OpenAPI 3.1, `info.version` `1.0.0`): fuente única del contrato público, *provider-driven*. El spec cambia antes que el código; los tipos, los schemas Zod y los clientes se **generan** de él y nunca se editan a mano. Los ocho schemas que `clinical-api` comparte con Backend 2 (`EvidenceOption`, `DiscardedOption`, `Synthesis`, `SupportedClaim`, `SourceApplicability`, `ApplicabilityCriterion`, `ApplicabilitySummary` y `CitedSource`) se definen una sola vez en [`contracts/schemas/evidence.yaml`](contracts/schemas/evidence.yaml). Los ejemplos JSON están en [`contracts/examples/`](contracts/examples/) y **no son normativos**: el spec manda. `npm run contracts:check` verifica los specs, los ejemplos y este extracto.
+
+Se muestran las 3 operaciones más representativas: **carga de documento (OCR)**, **análisis de evidencia** (v1.1, reemplaza a la consulta RAG) y **ficha del paciente**.
+
+<!-- contracts:readme-extract:start -->
+> Extracto generado, no normativo, de `apps/clinical-api/openapi.yaml`: operaciones seleccionadas del spec empaquetado (los `$ref` apuntan a sus `components`). El spec manda.
 
 ```yaml
-openapi: 3.0.3
-info:
-  title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: "0.3.0"
-  description: >
-    API pública, accesible solo a través de los Route Handlers de web (clinical-api
-    no publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
-    SameSite=Strict (token opaco). Backend 2 nunca se expone al cliente.
-
-servers:
-  - url: http://clinical-api:3000   # red interna de Compose; el navegador usa https://<web>/api/*
-
-security:
-  - sessionCookie: []
-
-components:
-  securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: oncolens_session
-
-  schemas:
-    Document:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        patientId: { type: string, format: uuid }
-        documentType: { type: string, enum: [historia_clinica, examen] }
-        originalFilename: { type: string }
-        ocrStatus:
-          type: string
-          enum: [pendiente, procesando, completado, error, cuarentena_pii, requiere_revision_identidad]
-        uploadedAt: { type: string, format: date-time }
-
-    CitedSource:
-      type: object
-      description: Todos los campos se copian del corpus, nunca del texto generado (PRD RN-04, RN-25).
-      properties:
-        title: { type: string }
-        sourceName: { type: string, example: "NCI PDQ" }
-        externalId: { type: string, example: "NCT02296125" }
-        language: { type: string, enum: [es, en] }
-        sourceType: { type: string, enum: [guideline, clinical_trial, literature, genomic_study] }
-        studyDesign: { type: string, nullable: true, example: "eca" }
-        trialPhase: { type: string, nullable: true, example: "III" }
-        primaryEndpoint: { type: string, nullable: true }
-        sampleSize: { type: integer, nullable: true }
-        publishedAt: { type: string, format: date, nullable: true }
-        lastUpdatedAt: { type: string, format: date, nullable: true }
-        guidelineVersion: { type: string, nullable: true }
-        possiblyOutdated: { type: boolean, description: "más de EVIDENCE_STALE_YEARS desde su última actualización" }
-        newerVersionAvailable: { type: boolean, description: "solo en el historial" }
-        chunkTextSnapshot: { type: string, description: "texto original de la fuente, sin traducir" }
-        chunkId: { type: string, description: "referencia best-effort a CorpusChunk en Milvus" }
-
-    SupportedClaim:
-      type: object
-      description: Afirmación generada que pasó el chequeo de soporte (PRD RN-01).
-      properties:
-        text: { type: string, description: "en el idioma de la pregunta" }
-        citedSources:
-          type: array
-          items: { $ref: "#/components/schemas/CitedSource" }
-
-    Synthesis:
-      type: object
-      properties:
-        agreements:
-          type: array
-          items: { $ref: "#/components/schemas/SupportedClaim" }
-        discrepancies:
-          type: array
-          items:
-            type: object
-            properties:
-              claim: { $ref: "#/components/schemas/SupportedClaim" }
-              explainedBy:
-                type: string
-                enum: [poblacion, endpoint, fecha, diseno, no_identificada]
-              explanation: { type: string, nullable: true }
-
-    ApplicabilityCriterion:
-      type: object
-      properties:
-        criterion: { type: string, example: "estado_her2", description: "del catálogo del tipo de cáncer" }
-        patientValue: { type: string, nullable: true }
-        studyPopulationValue: { type: string, nullable: true }
-        status: { type: string, enum: [coincide, parcial, no_coincide, desconocido] }
-        unknownReason:
-          type: string
-          nullable: true
-          enum: [falta_en_paciente, no_reportado_por_fuente]
-        isExclusionary: { type: boolean }
-        patientDataWarning:
-          type: string
-          nullable: true
-          enum: [sin_verificar, en_conflicto, faltante]
-        citedSources:
-          type: array
-          items: { $ref: "#/components/schemas/CitedSource" }
-
-    SourceApplicability:
-      type: object
-      properties:
-        externalId: { type: string }
-        criteria:
-          type: array
-          items: { $ref: "#/components/schemas/ApplicabilityCriterion" }
-        summary: { $ref: "#/components/schemas/ApplicabilitySummary" }
-        populationNotComparable: { type: boolean, description: "un criterio excluyente en no_coincide" }
-
-    ApplicabilitySummary:
-      type: object
-      description: Conteo por estado. Nunca un puntaje o porcentaje clínico (PRD RN-28).
-      properties:
-        coincide: { type: integer }
-        parcial: { type: integer }
-        noCoincide: { type: integer }
-        desconocido: { type: integer }
-
-    EvidenceOption:
-      type: object
-      description: Opción terapéutica DESCRITA en la evidencia, nunca una indicación para el paciente (PRD RN-23).
-      properties:
-        option: { type: string }
-        rationale: { type: string, description: "en el idioma de la pregunta" }
-        applicabilitySummary: { $ref: "#/components/schemas/ApplicabilitySummary" }
-        populationNotComparable: { type: boolean, description: "true solo si TODAS sus fuentes lo son (§3.3 #31)" }
-        perSource:
-          type: array
-          description: aplicabilidad de cada fuente que sustenta la opción; applicabilitySummary es la de la más aplicable (§3.3 #31)
-          items:
-            type: object
-            properties:
-              externalId: { type: string }
-              summary: { $ref: "#/components/schemas/ApplicabilitySummary" }
-              populationNotComparable: { type: boolean }
-        relevanceScore:
-          type: number
-          format: float
-          example: 0.87
-          description: >
-            Metadato secundario: relevancia de la evidencia recuperada (puntaje del reranker,
-            normalizado a [0,1]). No ordena las opciones, no mide la solidez clínica ni la
-            probabilidad de éxito (PRD RN-03; §3.3 #7, #8 y #27).
-        warnings:
-          type: array
-          items: { type: string, enum: [datos_sin_verificar, datos_en_conflicto, datos_faltantes, poblacion_no_comparable] }
-        citedSources:
-          type: array
-          items: { $ref: "#/components/schemas/CitedSource" }
-
-    DiscardedOption:
-      type: object
-      description: Solo para revisión del oncólogo; no es una opción.
-      properties:
-        option: { type: string }
-        rationale: { type: string }
-        discardReason: { type: string, enum: [cita_invalida, afirmacion_sin_soporte, sin_citas, solo_soportada_por_analisis_previo] }
-        unsupportedClaims: { type: array, items: { type: string } }
-
-    AnalysisBasis:
-      type: object
-      description: Base del análisis (PRD FR-27). Siempre presente, también con sin_evidencia.
-      properties:
-        patientDataUsed:
-          type: array
-          items:
-            type: object
-            properties:
-              label: { type: string, example: "HER2 3+ (IHQ)" }
-              reviewStatus: { type: string }
-              conflict: { type: boolean }
-        missingCriticalData: { type: array, items: { type: string } }
-        continuedWithWarning: { type: boolean }
-        assumptions:
-          type: array
-          items:
-            type: object
-            properties:
-              text: { type: string }
-              origin: { type: string, enum: [regla_catalogo, llm_verificado] }
-        sourcesConsulted:
-          type: object
-          properties:
-            selected: { type: array, items: { type: string } }
-            filters: { type: object }
-            retrieved: { type: integer }
-            aboveThreshold: { type: integer }
-        sourcesNotIncluded: { type: array, items: { type: string }, example: ["NCCN", "ESMO"] }
-        corpusCutoffDate: { type: string, format: date }
-        limitations:
-          type: array
-          items:
-            type: object
-            properties:
-              text: { type: string }
-              origin: { type: string, enum: [estructural, llm_verificado] }
-        omittedClaims: { type: integer, description: "afirmaciones omitidas por falta de soporte (PRD R-21)" }
-        agentSteps:
-          type: array
-          description: búsqueda complementaria del agente acotado (PRD FR-30, desde el S4)
-          items:
-            type: object
-            properties:
-              subQuery: { type: string }
-              target: { type: string, description: "criterio de aplicabilidad o punto de síntesis" }
-              foundEvidence: { type: boolean }
-        priorAnalysesUsed:
-          type: array
-          description: Memoria usada como contexto; nunca evidencia (PRD RN-24).
-          items:
-            type: object
-            properties:
-              analysisId: { type: string, format: uuid }
-              createdAt: { type: string, format: date-time }
-
-    EvidenceAnalysis:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        traceId: { type: string }
-        queryText: { type: string }
-        questionTemplateId: { type: string, nullable: true }
-        queryLanguage: { type: string, enum: [es, en] }
-        status: { type: string, enum: [con_evidencia, sin_evidencia, tipo_no_habilitado] }
-        synthesis: { $ref: "#/components/schemas/Synthesis" }
-        applicability:
-          type: array
-          items: { $ref: "#/components/schemas/SourceApplicability" }
-        evidenceOptions:
-          type: array
-          description: ≤ 1 en los Sprints 1–3, ≤ 3 desde el Sprint 4; orden determinista por aplicabilidad (PRD RN-28)
-          items: { $ref: "#/components/schemas/EvidenceOption" }
-        discardedOptions:
-          type: array
-          items: { $ref: "#/components/schemas/DiscardedOption" }
-        analysisBasis: { $ref: "#/components/schemas/AnalysisBasis" }
-        topRelevanceScore:
-          type: number
-          format: float
-          nullable: true
-          description: "null cuando no se encontró evidencia"
-        staleness:
-          type: object
-          description: solo en el historial (PRD FR-12, R-10)
-          properties:
-            patientData: { type: boolean, description: "cambiaron datos que el análisis usó (o un análisis usado como memoria quedó desactualizado)" }
-            changedData: { type: array, items: { type: string } }
-            newerEvidenceOrCatalog: { type: boolean, description: "hay una CorpusRelease o versión de catálogo más reciente" }
-        rerunOfAnalysisId: { type: string, format: uuid, nullable: true }
-        disclaimer: { type: string, example: "Análisis generado por IA — requiere validación clínica del oncólogo tratante" }
-        createdAt: { type: string, format: date-time }
-
-    Provenance:
-      type: object
-      properties:
-        entryMethod: { type: string, enum: [ocr, manual, manual_correction, seed] }
-        extractionConfidence: { type: string, enum: [alta, media, baja, n_a] }
-        reviewStatus: { type: string, enum: [auto_aceptado, requiere_revision, verificado, corregido] }
-        conflict: { type: boolean }
-        sourceDocumentId: { type: string, format: uuid, nullable: true }
-        additionalSourceDocumentIds: { type: array, items: { type: string, format: uuid }, description: "duplicados fusionados" }
-
-    CaseView:
-      type: object
-      description: Vista de caso (PRD FR-21, FR-23). GET /platform/patients/{patientId}/case
-      properties:
-        timeline:
-          type: array
-          items:
-            type: object
-            properties:
-              id: { type: string, format: uuid }
-              eventType: { type: string, example: "progresion" }
-              derived: { type: boolean, description: "true si se deriva de Diagnosis, Exam, PriorTreatment, Treatment o AIAnalysisRecord (§3.3 #32)" }
-              eventDate: { type: string, format: date, nullable: true }
-              datePrecision: { type: string, enum: [dia, mes, anio, incierta] }
-              description: { type: string }
-              codes: { type: object, properties: { icd10: { type: string }, cups: { type: string } } }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        priorTreatments:
-          type: array
-          items:
-            type: object
-            properties:
-              lineNumber: { type: integer, nullable: true }
-              setting: { type: string }
-              regimenName: { type: string }
-              atcCodes: { type: array, items: { type: string } }
-              startedAt: { type: string, format: date, nullable: true }
-              endedAt: { type: string, format: date, nullable: true }
-              ongoing: { type: boolean }
-              endReason: { type: string }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        attributes:
-          type: array
-          description: ClinicalAttribute (estado menopáusico, estado de castración, sitios metastásicos…)
-          items:
-            type: object
-            properties:
-              key: { type: string, example: "estado_menopausico" }
-              value: { type: string }
-              observedAt: { type: string, format: date, nullable: true }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        biomarkerSeries:
-          type: array
-          items:
-            type: object
-            properties:
-              name: { type: string, example: "PSA" }
-              loincCode: { type: string }
-              points:
-                type: array
-                items: { type: object, properties: { value: { type: string }, unit: { type: string }, performedAt: { type: string, format: date }, provenance: { $ref: "#/components/schemas/Provenance" } } }
-        completeness:
-          type: array
-          items:
-            type: object
-            properties:
-              item: { type: string, example: "her2" }
-              status: { type: string, enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica] }
-        catalogVersion: { type: string }
-
-    Biomarker:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        name: { type: string, example: "HER2" }
-        loincCode: { type: string, nullable: true }
-        mappingStatus: { type: string, enum: [mapeado, no_mapeado] }
-        trend: { type: string, nullable: true, enum: [sube, baja, estable], description: "respecto del valor anterior" }
-        value: { type: string, example: "3+ (IHQ)" }
-        unit: { type: string, nullable: true }
-        referenceRange: { type: string, nullable: true }
-        resultType: { type: string, enum: [cuantitativo, cualitativo] }
-        clinicalSignificance: { type: string, enum: [normal, alterado, relevante, crítico] }
-        significanceSource: { type: string, enum: [documento, regla, inferido_ia] }
-        examType: { type: string }
-        performedAt: { type: string, format: date }
-        provenance: { $ref: "#/components/schemas/Provenance" }
-
-    PatientSummary:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        identification:
-          type: object
-          description: Solo para el doctor autorizado; cada lectura se audita.
-          properties:
-            idType: { type: string, example: "cedula_ciudadania" }
-            nationalId: { type: string }
-            fullName: { type: string }
-        dataOrigin: { type: string, enum: [sintetico, real_anonimizado, real_identificado] }
-        lifecycleStatus: { type: string, enum: [activo, egresado] }
-        birthYear: { type: integer }
-        requiresRatification: { type: boolean }
-        cancerTypeEnabled: { type: boolean, description: "false → fuera del alcance del piloto" }
-        diagnosis:
-          type: object
-          nullable: true
-          properties:
-            cancerType: { type: string, example: "mama" }
-            icd10Code: { type: string, nullable: true, example: "C50.9" }
-            stagingSystem: { type: string, example: "TNM_8" }
-            stageValue: { type: string, example: "IIA" }
-            performanceScale: { type: string, example: "ECOG" }
-            performanceValue: { type: integer, example: 1 }
-            diagnosedAt: { type: string, format: date }
-            provenance: { $ref: "#/components/schemas/Provenance" }
-        recentBiomarkers:
-          type: array
-          description: último valor por biomarcador (serie completa en GET …/biomarkers?name=)
-          items: { $ref: "#/components/schemas/Biomarker" }
-        pendingReviewCount: { type: integer }
-        missingCriticalCount: { type: integer, description: "datos críticos faltantes (FR-23)" }
-
-    Error:
-      type: object
-      properties:
-        error: { type: string }
-        message: { type: string }
-
 paths:
   /platform/patients/{patientId}/documents:
     post:
+      operationId: uploadDocument
+      tags:
+        - documentos
       summary: Carga un documento clínico (PDF) para extracción
-      description: >
-        Flujo 1 (2.1). Valida la sesión, la pertenencia al equipo tratante (Sprint 5+), el PDF
-        por magic bytes, el tamaño y los duplicados por checksum. Guarda el binario en
-        clinical-minio y encola la extracción. Es asíncrono: retorna el Document con
-        ocrStatus=pendiente. Para varios archivos en una acción se usa
-        POST /platform/patients/{patientId}/documents/batch (207, un resultado por archivo).
+      description: "Valida la sesión, el permiso, el PDF por magic bytes, el tamaño y los duplicados por checksum. Guarda el binario en clinical-minio y encola la extracción. Es asíncrono: retorna el Document con ocrStatus=pendiente. Para varios archivos en una acción se usa POST /platform/patients/{patientId}/documents/batch (207, un resultado por archivo)."
+      x-permission: documents:upload
       parameters:
-        - name: patientId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/PatientId"
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
+              additionalProperties: false
+              required:
+                - file
+                - documentType
               properties:
-                file: { type: string, format: binary }
-                documentType: { type: string, enum: [historia_clinica, examen] }
+                file:
+                  type: string
+                  format: binary
+                documentType:
+                  type: string
+                  enum:
+                    - historia_clinica
+                    - examen
       responses:
         "202":
-          description: Documento recibido, extracción en curso
+          description: Documento recibido, extracción en curso.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Document" }
-        "401": { description: Sesión ausente o expirada }
+              schema:
+                $ref: "#/components/schemas/Document"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
         "403":
-          description: El doctor no pertenece al equipo tratante del paciente
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-        "404": { description: Paciente no encontrado }
+          $ref: "#/components/responses/PermisoDenegado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
         "409":
-          description: El mismo archivo ya fue cargado para este paciente (checksum)
+          description: El mismo archivo ya fue cargado para este paciente (checksum).
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentoDuplicado"
+        "413":
+          description: "Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
+          x-pending-owner: FEAT-01b
+        "415":
+          description: "Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
+          x-pending-owner: FEAT-01b
         "422":
-          description: No es PDF (magic bytes), excede el tamaño máximo, documentType inválido, o el paciente está egresado
+          description: documentType inválido, o paciente egresado (RN-17).
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-
+              schema:
+                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
   /platform/evidence-analyses:
     post:
-      summary: Ejecuta un análisis de evidencia sobre un paciente (reemplaza a /platform/rag/query)
-      description: >
-        Flujo 2 (2.1). Construye el contexto del caso (timeline, línea de tratamiento,
-        trayectorias, faltantes y memoria de análisis previos rotulada), etiquetado y
-        desidentificado, y lo reenvía a Backend 2. Agrega la Base del análisis, persiste
-        AIAnalysisRecord y el evento analisis_ia antes de responder (JSON completo, nunca
-        tokens sin validar). Sin evidencia suficiente responde 200 con status sin_evidencia,
-        evidenceOptions vacío, topRelevanceScore null y la Base del análisis. Para un tipo de
-        cáncer no habilitado responde 200 con status tipo_no_habilitado, sin invocar al LLM.
-        Los datos faltantes no bloquean (continueWithWarning).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [patientId, query, sourcesSelected]
-              properties:
-                patientId: { type: string, format: uuid }
-                query: { type: string, maxLength: 2000 }
-                questionTemplateId: { type: string, nullable: true, description: "plantilla de origen (FR-28)" }
-                continueWithWarning:
-                  type: boolean
-                  default: false
-                  description: "true si el oncólogo eligió continuar con datos críticos faltantes; solo se registra, no bloquea"
-                sourcesSelected:
-                  type: object
-                  description: al menos una en true
-                  properties:
-                    guias: { type: boolean }
-                    ensayos: { type: boolean }
-                    publicaciones: { type: boolean }
-                filtersApplied:
-                  type: object
-                  properties:
-                    historiaCompleta: { type: boolean }
-                    soloBiomarcadoresRelevantes: { type: boolean }
-                    ultimosSeisMeses: { type: boolean }
-                    antecedentesFamiliares: { type: boolean }
+      operationId: createEvidenceAnalysis
+      tags:
+        - analisis-evidencia
+      summary: Ejecuta un análisis de evidencia sobre un paciente
+      description: "Construye el contexto del caso (timeline, línea de tratamiento, trayectorias, faltantes y memoria de análisis previos rotulada), etiquetado y desidentificado, y lo reenvía a Backend 2. Agrega la Base del análisis y persiste el AIAnalysisRecord antes de responder (JSON completo, nunca tokens sin validar). El análisis aparece en el timeline como evento derivado del AIAnalysisRecord: no se escribe ningún ClinicalEvent. Sin evidencia suficiente responde 200 con status sin_evidencia, evidenceOptions vacío, topRelevanceScore null y la Base del análisis. Para un tipo de cáncer no habilitado responde 200 con status tipo_no_habilitado, sin invocar al LLM. Los datos faltantes no bloquean (continueWithWarning). Si la petición no trae filtersApplied.publishedFromYear, clinical-api aplica año actual menos EVIDENCE_DEFAULT_YEARS."
+      x-permission: ai_analysis:create
       parameters:
         - name: Idempotency-Key
           in: header
           required: false
-          schema: { type: string }
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvidenceAnalysisRequest"
       responses:
         "200":
-          description: Resultado del análisis
+          description: Resultado del análisis.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/EvidenceAnalysis" }
-        "401": { description: Sesión ausente o expirada }
+              schema:
+                $ref: "#/components/schemas/EvidenceAnalysis"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
         "403":
-          description: Sin pertenencia al equipo tratante, o paciente con opt-out de analisis_ia registrado (PRD RN-15)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-        "404": { description: Paciente no encontrado }
+          $ref: "#/components/responses/PermisoDenegadoOOptOut"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
         "422":
-          description: Body inválido (Zod), o paciente egresado (PRD RN-17)
+          description: Cuerpo inválido, o paciente egresado (RN-17).
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Error" }
+              schema:
+                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
         "429":
-          description: Límite de consultas por usuario, o cola de inferencia llena (Retry-After)
+          $ref: "#/components/responses/LimiteGeneracion"
         "502":
-          description: Error de comunicación con rag-orchestrator (sin detalles internos)
+          $ref: "#/components/responses/ErrorServicioIa"
         "503":
-          description: LLM local no disponible (los datos reales nunca se envían a la nube)
+          $ref: "#/components/responses/LlmLocalNoDisponible"
         "504":
-          description: rag-orchestrator no respondió dentro del deadline
-
+          $ref: "#/components/responses/DeadlineVencido"
   /platform/patients/{patientId}:
     get:
+      operationId: getPatient
+      tags:
+        - pacientes
       summary: Obtiene la ficha resumen del paciente
-      description: >
-        Alimenta el Panel del doctor (1.3). Requiere pertenecer al equipo tratante
-        (Sprint 5+), salvo el rol admin. La identificación se descifra solo para esta
-        respuesta y la lectura queda auditada.
+      description: "Alimenta el Panel del doctor. La forma de la respuesta depende del permiso: con clinical:read es PatientSummary (la identificación se descifra solo para esta respuesta y la lectura queda auditada); sin él, PatientAdminSummary, con la identificación enmascarada y sin datos clínicos (mínimo privilegio del administrador). El descifrado completo de la identidad para registrar un opt-out solo ocurre por la CLI, auditado."
+      x-permission:
+        - clinical:read
+        - patients:lookup
+      x-view-by-permission:
+        clinical:read: PatientSummary
+        default: PatientAdminSummary
       parameters:
-        - name: patientId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/PatientId"
       responses:
         "200":
-          description: Ficha del paciente
+          description: Ficha del paciente.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/PatientSummary" }
-        "401": { description: Sesión ausente o expirada }
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PatientSummary"
+                  - $ref: "#/components/schemas/PatientAdminSummary"
+                discriminator:
+                  propertyName: view
+                  mapping:
+                    doctor: "#/components/schemas/PatientSummary"
+                    admin: "#/components/schemas/PatientAdminSummary"
+        "401":
+          $ref: "#/components/responses/NoAutenticado"
         "403":
-          description: El doctor no pertenece al equipo tratante
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
-        "404": { description: Paciente no encontrado }
+          $ref: "#/components/responses/PermisoDenegado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
 ```
+<!-- contracts:readme-extract:end -->
 
-**Endpoints adicionales** (forman parte del spec completo en `docs/api/`, a generar desde el código):
+**Endpoints adicionales.** Cada historia añade su endpoint al spec del proveedor (`apps/clinical-api/openapi.yaml`) antes de implementarlo, como cambio aditivo (ADR-26). Los marcados "en el spec" ya están en la versión `1.0.0`; los demás los agrega su historia:
 
-| Método y ruta | Propósito | Sprint |
-|---|---|---|
-| `POST /platform/auth/login` · `POST /platform/auth/logout` | Sesión (HU-01) | 1 |
-| `GET /platform/patients?status=&dataOrigin=&idType=&nationalId=&name=&page=` | Listado; búsqueda exacta por documento (índice ciego) y por nombre dentro del equipo tratante (HU-06) | 1 |
-| `POST /platform/patients` | Registro manual o confirmado desde un borrador; `409` si la identificación existe; exige representante legal en menores (HU-07) | 1 / 2 |
-| `POST /platform/intake-drafts` · `GET /platform/intake-drafts/{id}` | Registro asistido por OCR (HU-08) | 2 |
-| `GET /platform/patients/{id}/documents` · `…/documents/{docId}` | Listado paginado y estado de los documentos | 2 |
-| `GET /platform/patients/{id}/documents/{docId}/file` | Visor del documento de origen (*streaming*, auditado) | 2 |
-| `GET /platform/patients/{id}/biomarkers?name=` · `…/clinical-notes` | Serie de un biomarcador y notas clínicas | 2 |
-| `POST /platform/patients/{id}/documents/batch` | Carga de varios PDF en una acción; un `Document` por archivo; respuesta `207` con el resultado de cada archivo (FR-05) | 2 |
-| **`GET /platform/patients/{id}/case`** | Vista de caso: timeline, tratamientos previos, series y checklist (`CaseView`, HU-15, HU-18) | 2 / 3 |
-| **`POST /platform/patients/{id}/case-summary`** | Genera y persiste el resumen del caso verificable (`analysis_type = resumen_caso`, HU-16) | 2 |
-| **`GET /platform/patients/{id}/completeness`** | Checklist de datos críticos (determinista, HU-18) | 3 |
-| **`POST/GET /platform/patients/{id}/clinical-events`** | Registrar y listar eventos sin tabla propia y evolución: respuesta, toxicidad, progresión (HU-23); `422` si el paciente está egresado | 2 / 4 |
-| **`POST/GET /platform/patients/{id}/clinical-attributes`** | Atributos clínicos del catálogo (estado menopáusico, estado de castración, sitios metastásicos…) | 2 |
-| **`POST/GET /platform/patients/{id}/prior-treatments`** | Tratamientos previos registrados a mano (HU-15) | 2 |
-| `PATCH /platform/patients/{id}/clinical-data/{type}/{itemId}/review` | Verificar, corregir o rechazar un dato extraído; resolver conflictos y mapear términos `no_mapeado` (HU-09, HU-17) | 4 |
-| **`POST /platform/patients/{id}/biomarkers`** | Registro manual de un biomarcador desde un faltante: `{ name, value, unit?, resultType, performedAt }` → `201 Biomarker`; crea un `Exam` `manual` (`exam_type = registro_manual`). Normalización final en Backend 1 (§3.3 #33). v1.3, PRD B-09 | 4 |
-| **`POST /platform/patients/{id}/diagnoses`** | Completar o corregir el diagnóstico: `{ cancerType?, histology?, grade?, stagingSystem?, stageValue?, performanceScale?, performanceValue?, diagnosedAt? }` → `201 Diagnosis`. Con diagnóstico vigente es una corrección explícita (el anterior queda `reemplazado`, nunca en silencio: RN-08); sin vigente crea uno `manual`. v1.3, PRD B-09 | 4 |
-| **`GET /platform/question-templates?cancerType=`** | Plantillas de preguntas por tipo de cáncer y escenario (HU-19) | 3 |
-| `GET /platform/patients/{id}/analyses` · `…/analyses/{analysisId}` | Historial de análisis, con la marca `stale` (HU-11, HU-24) | 4 |
-| **`POST /platform/evidence-analyses/{id}/rerun`** · **`GET …/{id}/compare?with={otherId}`** | Re-ejecutar con datos actuales y comparar (HU-24) | 4 |
-| **`POST /platform/evidence-analyses/{id}/feedback`** | Calificación de utilidad 1–5 (VM-4) y aviso de faltantes correcto / útil (VM-5), sin texto libre; valida los catálogos (PRD B-04; HU-25) | 5 |
-| `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (HU-12) | 4 |
-| `POST /platform/patients/{id}/episodes/current/close` · `POST …/episodes` | Egreso y reactivación (HU-13) | 4 |
-| **`POST/DELETE /platform/patients/{id}/opt-outs`** · `POST …/withdrawals` | Marcas de opt-out (`analisis_ia`, `investigacion`), solo `admin`, con referencia al sistema externo (v1.2); baja total. En el MVP las marcas se registran por CLI (`oncolens opt-outs register\|revoke\|list`, S6; PRD B-05) | Post-MVP |
-| `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante (HU-14) | Post-MVP (PRD B-03) |
+| Método y ruta | Propósito | Sprint | Spec |
+|---|---|---|---|
+| `POST /platform/auth/login` · `POST /platform/auth/logout` | Sesión (HU-01): el login responde `204` sin cuerpo y entrega la cookie opaca | 1 | en el spec |
+| `GET /platform/patients?status=&dataOrigin=&page=` | Listado paginado, sin identidad en la URL (HU-06) | 1 | en el spec |
+| `POST /platform/patients/search` | Búsqueda exacta por documento (índice ciego) y por nombre; la identidad viaja en el **cuerpo**, nunca en la URL ni en las cabeceras (HU-06, RN-10) | 1 | en el spec |
+| `POST /platform/patients` | Registro manual o confirmado desde un borrador; `409` si la identificación existe; exige representante legal en menores (HU-07) | 1 / 2 | |
+| `POST /platform/intake-drafts` · `GET /platform/intake-drafts/{id}` | Registro asistido por OCR (HU-08) | 2 | |
+| `GET /platform/patients/{id}/documents` · `…/documents/{docId}` | Listado paginado y estado de los documentos | 2 | |
+| `GET /platform/patients/{id}/documents/{docId}/file` | Visor del documento de origen (*streaming*, auditado) | 2 | |
+| `GET /platform/patients/{id}/biomarkers?biomarkerName=` · `…/clinical-notes` | Serie de un biomarcador y notas clínicas | 2 | |
+| `POST /platform/patients/{id}/documents/batch` | Carga de varios PDF en una acción; un `Document` por archivo; respuesta `207` con el resultado de cada archivo (FR-05) | 2 | |
+| **`GET /platform/patients/{id}/case`** | Vista de caso: timeline, tratamientos previos, series y checklist (`CaseView`, HU-15, HU-18) | 2 / 3 | en el spec |
+| **`POST /platform/patients/{id}/case-summary`** | Genera y persiste el resumen del caso verificable (`analysis_type = resumen_caso`, HU-16) | 2 | |
+| **`GET /platform/patients/{id}/completeness`** | Checklist de datos críticos (determinista, HU-18) | 3 | |
+| **`POST/GET /platform/patients/{id}/clinical-events`** | Registrar y listar eventos sin tabla propia y evolución: respuesta, toxicidad, progresión (HU-23); `422` si el paciente está egresado | 2 / 4 | |
+| **`POST/GET /platform/patients/{id}/clinical-attributes`** | Atributos clínicos del catálogo (estado menopáusico, estado de castración, sitios metastásicos…) | 2 | |
+| **`POST/GET /platform/patients/{id}/prior-treatments`** | Tratamientos previos registrados a mano (HU-15) | 2 | |
+| `PATCH /platform/patients/{id}/clinical-data/{type}/{itemId}/review` | Verificar, corregir o rechazar un dato extraído; resolver conflictos y mapear términos `no_mapeado` (HU-09, HU-17) | 4 | |
+| **`POST /platform/patients/{id}/biomarkers`** | Registro manual de un biomarcador desde un faltante: `{ name, value, unit?, resultType, performedAt }` → `201 Biomarker`; crea un `Exam` `manual` (`exam_type = registro_manual`). Normalización final en Backend 1 (§3.3 #33). v1.3, PRD B-09 | 4 | en el spec |
+| **`POST /platform/patients/{id}/diagnoses`** | Completar o corregir el diagnóstico: `{ cancerType?, histology?, stagingSystem?, stageValue?, performanceScale?, performanceValue?, diagnosedAt?, grading? }` → `201 Diagnosis`. `grade` **nunca se escribe a mano**: se envía `grading` (`gleason_isup` o `nottingham`) y `grade` se deriva. Con diagnóstico vigente es una corrección explícita (el anterior queda `reemplazado`, nunca en silencio: RN-08); sin vigente crea uno `manual`. v1.3, PRD B-09 | 4 | en el spec |
+| **`GET /platform/question-templates?cancerType=`** | Plantillas de preguntas por tipo de cáncer y escenario (HU-19) | 3 | |
+| `GET /platform/patients/{id}/analyses` · `…/analyses/{analysisId}` | Historial de análisis, con la marca `stale` (HU-11, HU-24) | 4 | |
+| **`POST /platform/evidence-analyses/{id}/rerun`** · **`GET …/{id}/compare?with={otherId}`** | Re-ejecutar con datos actuales y comparar (HU-24) | 4 | |
+| **`POST/GET /platform/evidence-analyses/{analysisId}/follow-ups`** | Preguntas de seguimiento sobre un análisis (FR-31): `201 FollowUpTurn`, `409 LIMITE_SEGUIMIENTO`, `403` por RBAC u opt-out | 5 | en el spec |
+| **`POST /platform/evidence-analyses/{id}/feedback`** | Calificación de utilidad 1–5 (VM-4) y aviso de faltantes correcto / útil (VM-5), sin texto libre; valida los catálogos (PRD B-04; HU-25) | 5 | |
+| `POST/GET /platform/patients/{id}/treatments` | Decisión de tratamiento (HU-12) | 4 | |
+| `POST /platform/patients/{id}/episodes/current/close` · `POST …/episodes` | Egreso y reactivación (HU-13) | 4 | |
+| **`POST/DELETE /platform/patients/{id}/opt-outs`** · `POST …/withdrawals` | Marcas de opt-out (`analisis_ia`, `investigacion`), solo `admin`, con referencia al sistema externo (v1.2); baja total. En el MVP las marcas se registran por CLI (`oncolens opt-outs register\|revoke\|list`, S6; PRD B-05) | Post-MVP | |
+| `POST/DELETE /platform/patients/{id}/care-team` | Equipo tratante (HU-14) | Post-MVP (PRD B-03) | |
 
-**Ejemplo — `POST /platform/evidence-analyses`** (paciente sintético, forma del Sprint 4)
+**Vacíos resueltos al transcribir §4.1 al spec** (los textos del spec mandan):
+- vacío resuelto (US-033): OpenAPI 3.0.3 pasa a 3.1: `nullable: true` es `type: [<t>, "null"]` y, en los enums nullable, `null` se añade explícitamente al `enum` (en 3.0.3 `nullable` sin `null` en el enum no admitía `null`); transcripción 3.1;
+- vacío resuelto (US-033): el análisis es un **evento derivado** del timeline y `POST /platform/evidence-analyses` no escribe un evento `analisis_ia` (C-06, AC-11.4);
+- vacío resuelto (US-033): `CitedSource` gana `licenseClass` (cuatro valores), `authors` y `sourceUrl`, copiados del catálogo del corpus (UX-1) `[Pre-S1 resp. 11, 21]`;
+- vacío resuelto (US-033): gradación estructurada (`Diagnosis.gradings[]`, `grading` en el registro manual; `grade` solo derivado), DEC-05 `[Pre-S1 resp. 18, 29]`;
+- vacío resuelto (US-033): registro manual de biomarcadores y diagnósticos `[§15 resp. 4]`;
+- vacío resuelto (US-033): preguntas de seguimiento ancladas a un análisis, con `FollowUpTurn` y sus errores completos `[Pre-S1 resp. 14, 19, 23]`;
+- vacío resuelto (US-033): `filtersApplied.publishedFromYear` y su registro en `AnalysisBasis` `[Pre-S1 resp. 15]`;
+- vacío resuelto (US-033): la búsqueda por identidad es `POST /platform/patients/search`; la identidad nunca va en la URL `[Pre-S1 resp. 22]`;
+- vacío resuelto (US-033): vista `PatientAdminSummary` para el `admin`, `x-permission` por operación y los `403` descritos como "RBAC u opt-out" (el equipo tratante es Post-MVP, B-03) `[Pre-S1 resp. 24, 27, 29]`;
+- vacío resuelto (US-033): login `204` sin cuerpo y cookie `HttpOnly; Secure; SameSite=Strict` `[Pre-S1 resp. 29]`;
+- vacío resuelto (US-033): schemas cerrados, bloques de ADR-26 obligatorios aunque vacíos, `staleness` neutro, referencias opacas `r1…rN` con `patientDataLinks` y errores con código cerrado y sin eco `[Pre-S1 resp. 25, 29]`.
 
-Petición:
-```json
-{
-  "patientId": "6f1e2b2a-2a0e-4b8b-9a1a-3a2e6f1e2b2a",
-  "query": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
-  "questionTemplateId": "mama.adyuvancia.her2",
-  "continueWithWarning": true,
-  "sourcesSelected": { "guias": true, "ensayos": true, "publicaciones": true },
-  "filtersApplied": { "historiaCompleta": false, "soloBiomarcadoresRelevantes": true, "ultimosSeisMeses": true, "antecedentesFamiliares": false }
-}
-```
+**Ejemplos** (no normativos; cada uno valida contra el schema que `contracts/examples/index.json` declara):
+- análisis de evidencia: [S1, una opción](contracts/examples/con-evidencia-s1.json) · [forma del S4](contracts/examples/con-evidencia-s4.json) · [sin evidencia](contracts/examples/sin-evidencia.json) · [tipo no habilitado](contracts/examples/tipo-no-habilitado.json);
+- seguimiento: [turno](contracts/examples/follow-up-turn.json) · [fuera de contexto](contracts/examples/follow-up-fuera-de-contexto.json) · [petición](contracts/examples/follow-up-create.json) · [`409`](contracts/examples/error-limite-seguimiento.json);
+- registro manual: [Gleason](contracts/examples/diagnosis-manual-gleason.json) · [Gleason completo](contracts/examples/diagnosis-manual-gleason-completo.json) · [Nottingham](contracts/examples/diagnosis-manual-nottingham.json) · [diagnóstico con gradaciones](contracts/examples/diagnosis-con-gradings.json) · [biomarcador](contracts/examples/biomarker-manual.json);
+- pacientes: [búsqueda](contracts/examples/patient-search.json) · [ficha del doctor](contracts/examples/patient-summary-doctor.json) · [ficha del administrador](contracts/examples/patient-summary-admin.json).
 
-Respuesta (`200`, abreviada):
-```json
-{
-  "id": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
-  "traceId": "req_9a3f2c1b",
-  "queryLanguage": "es",
-  "status": "con_evidencia",
-  "synthesis": {
-    "agreements": [
-      { "text": "Las fuentes recuperadas describen la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
-        "citedSources": [ { "sourceName": "NCI PDQ", "externalId": "CDR0000062787", "sourceType": "guideline", "lastUpdatedAt": "2026-05-01", "possiblyOutdated": false } ] }
-    ],
-    "discrepancies": []
-  },
-  "applicability": [
-    { "externalId": "CDR0000062787",
-      "criteria": [
-        { "criterion": "estado_her2", "patientValue": "3+ (IHQ)", "studyPopulationValue": "HER2 positivo", "status": "coincide", "isExclusionary": true },
-        { "criterion": "estadio", "patientValue": "IIA", "studyPopulationValue": "I–III", "status": "coincide", "isExclusionary": false },
-        { "criterion": "estado_menopausico", "patientValue": null, "studyPopulationValue": "ambos", "status": "desconocido", "unknownReason": "falta_en_paciente", "isExclusionary": false }
-      ],
-      "summary": { "coincide": 2, "parcial": 0, "noCoincide": 0, "desconocido": 1 },
-      "populationNotComparable": false }
-  ],
-  "evidenceOptions": [
-    { "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
-      "rationale": "La evidencia recuperada describe el beneficio de agregar terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
-      "applicabilitySummary": { "coincide": 2, "parcial": 0, "noCoincide": 0, "desconocido": 1 },
-      "populationNotComparable": false,
-      "perSource": [ { "externalId": "CDR0000062787", "summary": { "coincide": 2, "parcial": 0, "noCoincide": 0, "desconocido": 1 }, "populationNotComparable": false } ],
-      "relevanceScore": 0.87,
-      "warnings": ["datos_faltantes"],
-      "citedSources": [ { "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version", "sourceName": "NCI PDQ", "externalId": "CDR0000062787", "language": "en", "chunkTextSnapshot": "...", "chunkId": "chunk_88231" } ] }
-  ],
-  "discardedOptions": [],
-  "analysisBasis": {
-    "patientDataUsed": [ { "label": "HER2 3+ (IHQ)", "reviewStatus": "auto_aceptado", "conflict": false }, { "label": "Estadio IIA (TNM_8)", "reviewStatus": "verificado", "conflict": false } ],
-    "missingCriticalData": ["estado_menopausico", "ki67"],
-    "continuedWithWarning": true,
-    "assumptions": [ { "text": "Se asume enfermedad no metastásica: no hay estudios de extensión registrados.", "origin": "regla_catalogo" } ],
-    "sourcesConsulted": { "selected": ["guias", "ensayos", "publicaciones"], "retrieved": 40, "aboveThreshold": 1 },
-    "sourcesNotIncluded": ["NCCN", "ESMO"],
-    "corpusCutoffDate": "2026-09-30",
-    "limitations": [ { "text": "Síntesis basada en una sola fuente.", "origin": "estructural" } ],
-    "omittedClaims": 0,
-    "agentSteps": [ { "subQuery": "breast cancer HER2 positive adjuvant menopausal status subgroup", "target": "estado_menopausico", "foundEvidence": false } ],
-    "priorAnalysesUsed": []
-  },
-  "topRelevanceScore": 0.87,
-  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante",
-  "createdAt": "2026-09-24T15:04:00Z"
-}
-```
-
-> El ejemplo es ilustrativo: el texto, las fechas y los identificadores muestran el formato, no contenido clínico validado. Los ejemplos no usan NCCN ni ESMO porque no están en el corpus del MVP (fuentes públicas de acceso abierto, D-09). En los Sprints 1–3, `synthesis` y `applicability` pueden venir vacíos, pero el contrato es el mismo.
+> Todos los ejemplos son sintéticos (prefijo `SINT-`, "Prueba Sintética") y no usan NCCN ni ESMO más que como exclusión declarada en `sourcesNotIncluded`. Muestran el formato, no contenido clínico validado.
 
 ### **4.2. `rag-orchestrator` (Backend 2) — API interna**
 
-No se expone al navegador ni al host. Autenticación por **JWT de servicio** (`Authorization: Bearer <service-jwt>`). Tiene 3 endpoints (`/rag/query`, `/documents/extract` y, desde v1.1, `/case/summary`); la ingesta del corpus reutiliza `TextExtractionService` en proceso y no aparece como endpoint.
+La especificación **normativa** es **[`apps/rag-orchestrator/openapi.yaml`](apps/rag-orchestrator/openapi.yaml)** (OpenAPI 3.1, `info.version` `1.0.0`), *provider-driven* igual que el de `clinical-api`: los modelos Pydantic se **generan** de él y nunca se editan a mano. Comparte con `clinical-api` los ocho schemas de [`contracts/schemas/evidence.yaml`](contracts/schemas/evidence.yaml); `Provenance` no se comparte (la de Backend 2 no lleva ids de documento). Los ejemplos JSON están en [`contracts/examples/`](contracts/examples/) y **no son normativos**: el spec manda.
+
+No se expone al navegador ni al host. Autenticación por **JWT de servicio** (`Authorization: Bearer <service-jwt>`). Tiene 4 endpoints (`/rag/query`, `/rag/follow-up`, `/documents/extract` y, desde v1.1, `/case/summary`); la ingesta del corpus reutiliza `TextExtractionService` en proceso y no aparece como endpoint.
 
 Notas de diseño:
-- `clinical-api` envía el contexto ya resuelto, filtrado, **etiquetado** (procedencia, confianza, revisión) y **desidentificado**, porque Backend 2 no accede a PostgreSQL.
+- `clinical-api` envía el contexto ya resuelto, filtrado, **etiquetado** (procedencia, confianza, revisión) y **desidentificado**, porque Backend 2 no accede a PostgreSQL. El contrato de Backend 2 no declara identidad ni identificadores enlazables (RN-10): cada dato del contexto lleva una referencia opaca `r1…rN` asignada por petición.
 - Para extraer, `clinical-api` envía el **PDF en el cuerpo** del request, porque Backend 2 no tiene credenciales ni red hacia `clinical-minio`.
 - `dataClassification` le indica a Backend 2 que los datos reales **solo** se procesan con modelos locales.
 - v1.1: el contexto incluye la línea de tratamiento, los tratamientos previos, los eventos relevantes, los **faltantes** (como "desconocido") y la **memoria** de análisis previos, rotulada `source: analisis_previo_ia` y `citable: false`. Backend 2 nunca la usa como soporte (PRD RN-24).
+- Las preguntas de seguimiento usan un **endpoint propio**, `POST /rag/follow-up`, **sin estado entre turnos**: Backend 2 no guarda turnos ni memoria; `clinical-api` envía en cada llamada el contexto, la pregunta enmascarada y la memoria rotulada del análisis, con un `pseudoPatientId` y un `traceId` nuevos en cada turno.
 
-```yaml
-openapi: 3.0.3
-info:
-  title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: "0.3.0"
-  description: >
-    API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de
-    servicio). No persiste PHI. Procesa documentos clínicos de forma transitoria.
-    En /rag/query recibe solo contexto desidentificado.
+**Vacíos resueltos al transcribir §4.2 al spec** (los textos del spec mandan):
+- vacío resuelto (US-033): OpenAPI 3.0.3 pasa a 3.1 (`nullable` es `type: [<t>, "null"]`; `null` explícito en los enums nullable); transcripción 3.1;
+- vacío resuelto (US-033): `422` de `POST /rag/query` como `oneOf` (`TIPO_NO_HABILITADO` o validación) y el enum de `status` intacto `[§15 resp. 3]`;
+- vacío resuelto (US-033): `POST /rag/follow-up` sin estado, con `RagFollowUpRequest` y `RagFollowUpResponse` (`status` incluye `fuera_de_contexto`) `[Pre-S1 resp. 19, 23]`;
+- vacío resuelto (US-033): `filtersApplied.publishedFromYear` (valor efectivo, requerido en `RagFiltersApplied`) `[Pre-S1 resp. 15]`;
+- vacío resuelto (US-033): el nombre del biomarcador pasa de `name` a `biomarkerName` en `ClinicalContext` y en la extracción, para que ninguna propiedad de este contrato coincida con la lista de identidad;
+- vacío resuelto (US-033): `dataRef` `r1…rN` obligatorio por ítem de `ClinicalContext` y `catalogVersion` obligatorio en `RagMeta` `[Pre-S1 resp. 29]`;
+- vacío resuelto (US-033): atribución de `CitedSource` (`licenseClass`, `authors`, `sourceUrl`) copiada del catálogo `[Pre-S1 resp. 11, 21]`;
+- vacío resuelto (US-033): `Provenance` propia, cerrada y sin ids de documento `[Pre-S1 resp. 25]`;
+- vacío resuelto (US-033): `RagQueryInternalResponse` declara `topRelevanceScore` (`number | null`, `null` sin evidencia, RN-02), que el readme no listaba aunque `clinical-api` lo necesita;
+- vacío resuelto (US-033): `RagMeta` es un solo bloque cerrado para `/rag/query`, `/rag/follow-up` y `/case/summary`; `retrievalParams` es cerrado y los campos del corpus son `null` donde la operación no consulta el corpus;
+- vacío resuelto (US-033): `identityFound` solo existe en la respuesta `200` de `/documents/extract` (RN-10); `piiScan.findingTypes` es un enum cerrado, asumido y refinado por ADR-40.
 
-servers:
-  - url: http://rag-orchestrator:8000
-
-security:
-  - serviceJwt: []
-
-components:
-  securitySchemes:
-    serviceJwt:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    Provenance:
-      type: object
-      properties:
-        entryMethod: { type: string }
-        extractionConfidence: { type: string, enum: [alta, media, baja, n_a] }
-        reviewStatus: { type: string, enum: [auto_aceptado, requiere_revision, verificado, corregido] }
-        conflict: { type: boolean }
-
-    ClinicalContext:
-      type: object
-      description: Desidentificado por clinical-api — sin identidad; fechas relativas; texto libre enmascarado.
-      properties:
-        pseudoPatientId: { type: string, description: "aleatorio por consulta; nunca en el prompt" }
-        population: { type: string, enum: [adulto, pediatrico] }
-        diagnosis:
-          type: object
-          properties:
-            cancerType: { type: string }
-            histology: { type: string, nullable: true }
-            grade: { type: string, nullable: true }
-            stagingSystem: { type: string }
-            stageValue: { type: string }
-            performanceScale: { type: string }
-            performanceValue: { type: integer }
-            monthsSinceDiagnosis: { type: integer }
-            provenance: { $ref: "#/components/schemas/Provenance" }
-        biomarkers:
-          type: array
-          items:
-            type: object
-            properties:
-              name: { type: string }
-              value: { type: string }
-              resultType: { type: string }
-              clinicalSignificance: { type: string }
-              monthsAgo: { type: integer }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        clinicalNotes:
-          type: array
-          description: filtradas según filtersApplied y enmascaradas
-          items:
-            type: object
-            properties:
-              noteType: { type: string }
-              content: { type: string }
-              monthsAgo: { type: integer }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        currentLine: { type: integer, nullable: true, description: "línea de tratamiento actual (v1.1)" }
-        attributes:
-          type: array
-          description: ClinicalAttribute (v1.2)
-          items: { type: object, properties: { key: { type: string }, value: { type: string }, monthsAgo: { type: integer, nullable: true }, provenance: { $ref: "#/components/schemas/Provenance" } } }
-        priorTreatments:
-          type: array
-          items:
-            type: object
-            properties:
-              lineNumber: { type: integer, nullable: true }
-              setting: { type: string }
-              regimenName: { type: string }
-              atcCodes: { type: array, items: { type: string } }
-              monthsSinceStart: { type: integer, nullable: true }
-              monthsSinceEnd: { type: integer, nullable: true }
-              endReason: { type: string }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        events:
-          type: array
-          description: eventos relevantes del timeline, con fechas relativas (v1.1)
-          items:
-            type: object
-            properties:
-              eventType: { type: string }
-              monthsAgo: { type: integer, nullable: true }
-              description: { type: string, description: "enmascarada" }
-              provenance: { $ref: "#/components/schemas/Provenance" }
-        biomarkerTrends:
-          type: array
-          items: { type: object, properties: { name: { type: string }, trend: { type: string, enum: [sube, baja, estable] }, points: { type: integer } } }
-        missingCriticalData:
-          type: array
-          description: faltantes del checklist; se tratan como "desconocido" (v1.1)
-          items: { type: string }
-        priorAnalyses:
-          type: array
-          description: memoria (v1.1). Contexto, NUNCA evidencia; no citable ni válido como soporte NLI.
-          items:
-            type: object
-            properties:
-              source: { type: string, enum: [analisis_previo_ia] }
-              citable: { type: boolean, enum: [false] }
-              monthsAgo: { type: integer }
-              question: { type: string, description: "enmascarada" }
-              synthesisSummary: { type: string }
-              optionsDescribed: { type: array, items: { type: string } }
-              linkedDecision: { type: string, nullable: true }
-              outcomesSince:
-                type: array
-                description: evolución registrada por el oncólogo después del análisis (dato clínico)
-                items: { type: object, properties: { eventType: { type: string }, monthsAgo: { type: integer }, description: { type: string } } }
-
-    RagQueryInternalRequest:
-      type: object
-      required: [traceId, query, sourcesSelected, clinicalContext, dataClassification]
-      properties:
-        traceId: { type: string }
-        query: { type: string, description: "ya enmascarada" }
-        sourcesSelected:
-          type: object
-          properties:
-            guias: { type: boolean }
-            ensayos: { type: boolean }
-            publicaciones: { type: boolean }
-        dataClassification: { type: string, enum: [sintetico, real_anonimizado, real_identificado] }
-        catalogVersion: { type: string }
-        maxOptions: { type: integer, description: "1 en los Sprints 1–3, 3 desde el Sprint 4" }
-        agentLimits:
-          type: object
-          description: agente acotado (PRD FR-30); ausente o maxIterations=0 antes del S4
-          properties:
-            maxIterations: { type: integer, example: 1 }
-            maxSubQueries: { type: integer, example: 3 }
-        clinicalContext: { $ref: "#/components/schemas/ClinicalContext" }
-
-    RagQueryInternalResponse:
-      type: object
-      description: >
-        Mismos esquemas que 4.1 (Synthesis, SourceApplicability, EvidenceOption, DiscardedOption),
-        compartidos vía packages/api-contracts. clinical-api agrega la Base del análisis y persiste.
-      properties:
-        status: { type: string, enum: [con_evidencia, sin_evidencia] }
-        synthesis: { type: object, description: "Synthesis (4.1)" }
-        applicability: { type: array, items: { type: object, description: "SourceApplicability (4.1)" } }
-        evidenceOptions:
-          type: array
-          description: ya ordenadas de forma determinista por aplicabilidad (PRD RN-28)
-          items: { type: object, description: "EvidenceOption (4.1)" }
-        discardedOptions: { type: array, items: { type: object, description: "DiscardedOption (4.1)" } }
-        limitations:
-          type: array
-          items: { type: object, properties: { text: { type: string }, origin: { type: string, enum: [estructural, llm_verificado] } } }
-        assumptions:
-          type: array
-          description: solo las propuestas por el LLM y verificadas; las de regla las agrega clinical-api
-          items: { type: object, properties: { text: { type: string } } }
-        retrievalStats: { type: object, properties: { retrieved: { type: integer }, aboveThreshold: { type: integer } } }
-        omittedClaims: { type: integer }
-        agentSteps:
-          type: array
-          items: { type: object, properties: { subQuery: { type: string }, target: { type: string }, foundEvidence: { type: boolean } } }
-        meta:
-          type: object
-          properties:
-            queryLanguage: { type: string }
-            responseLanguage: { type: string }
-            llmProvider: { type: string }
-            llmModel: { type: string }
-            embeddingModel: { type: string }
-            rerankerModel: { type: string }
-            nliModel: { type: string }
-            promptVersion: { type: string }
-            corpusRelease: { type: string }
-            corpusCutoffDate: { type: string, format: date }
-            excludedSources: { type: array, items: { type: string } }
-            retrievalParams: { type: object }
-
-    CaseSummaryInternalResponse:
-      type: object
-      description: Resumen del caso (v1.1). Cada afirmación referencia ids de datos del contexto; las que no pasan el soporte se omiten.
-      properties:
-        claims:
-          type: array
-          items:
-            type: object
-            properties:
-              text: { type: string }
-              supportingDataRefs: { type: array, items: { type: string }, description: "referencias opacas a datos del contexto" }
-        omittedClaims: { type: integer }
-        meta: { type: object }
-
-    ExtractedField:
-      type: object
-      properties:
-        value: { type: string }
-        extractionScore: { type: number, format: float }
-        extractionConfidence: { type: string, enum: [alta, media, baja] }
-        sourceSpan:
-          type: object
-          properties:
-            page: { type: integer }
-            bbox: { type: array, items: { type: number }, nullable: true }
-            textOffset: { type: integer }
-
-    DocumentExtractResponse:
-      type: object
-      properties:
-        piiScan:
-          type: object
-          properties:
-            clean: { type: boolean }
-            findingTypes: { type: array, items: { type: string }, description: "tipos, nunca valores" }
-        identityFound:
-          type: object
-          nullable: true
-          description: solo para verificar que el documento pertenece al paciente
-          properties:
-            idType: { type: string }
-            nationalId: { type: string }
-        sourceLab: { type: string, nullable: true }
-        extractedData:
-          type: object
-          description: solo las secciones que el documento contenía; cada campo es un ExtractedField
-          properties:
-            diagnosis: { type: object }
-            clinicalNotes: { type: array, items: { type: object } }
-            exam: { type: object }
-            biomarkers:
-              type: array
-              items:
-                type: object
-                properties:
-                  name: { $ref: "#/components/schemas/ExtractedField" }
-                  originalName: { type: string }
-                  loincCode: { type: string, nullable: true, description: "PROPUESTO; clinical-api decide la normalización final (§3.3 #33)" }
-                  mappingStatus: { type: string, enum: [mapeado, no_mapeado] }
-                  value: { $ref: "#/components/schemas/ExtractedField" }
-                  unit: { $ref: "#/components/schemas/ExtractedField" }
-                  normalizedUnit: { type: string, nullable: true }
-                  referenceRange: { $ref: "#/components/schemas/ExtractedField" }
-                  resultType: { type: string }
-                  clinicalSignificance: { type: string }
-                  significanceSource: { type: string, enum: [documento, regla, inferido_ia] }
-            events:
-              type: array
-              description: v1.1 — eventos fechados (diagnóstico, cirugía, respuesta, progresión, toxicidad, recaída…)
-              items:
-                type: object
-                properties:
-                  eventType: { type: string }
-                  eventDate: { $ref: "#/components/schemas/ExtractedField" }
-                  datePrecision: { type: string, enum: [dia, mes, anio, incierta] }
-                  description: { $ref: "#/components/schemas/ExtractedField" }
-                  icd10Code: { type: string, nullable: true }
-                  cupsCode: { type: string, nullable: true }
-            attributes:
-              type: array
-              description: v1.2 — atributos del catálogo (estado menopáusico, histología, grado, sitios metastásicos…)
-              items:
-                type: object
-                properties:
-                  key: { type: string }
-                  value: { $ref: "#/components/schemas/ExtractedField" }
-            priorTreatments:
-              type: array
-              description: v1.1 — líneas de tratamiento previas
-              items:
-                type: object
-                properties:
-                  regimenName: { $ref: "#/components/schemas/ExtractedField" }
-                  atcCodes: { type: array, items: { type: string } }
-                  setting: { type: string }
-                  lineNumber: { type: integer, nullable: true }
-                  startedAt: { $ref: "#/components/schemas/ExtractedField" }
-                  endedAt: { $ref: "#/components/schemas/ExtractedField" }
-                  endReason: { type: string }
-        catalogVersion: { type: string }
-
-    Error:
-      type: object
-      properties:
-        error: { type: string }
-        message: { type: string }
-
-paths:
-  /rag/query:
-    post:
-      summary: Recuperación híbrida multilingüe + generación + validación
-      description: >
-        Invocado solo por clinical-api (Flujo 2). Expansión bilingüe, recuperación
-        (dense; + sparse desde el Sprint 3) con filtros is_current, source_type y
-        cancer_type; reranker; umbral de relevancia (sin evidencia → sin invocar al LLM);
-        generación en el idioma de la pregunta; validación de citas y chequeo de soporte
-        NLI (los análisis previos de la memoria nunca cuentan como soporte). Desde el Sprint 4
-        genera síntesis y aplicabilidad, ejecuta el agente acotado (agentLimits) y ordena las
-        opciones por aplicabilidad (§3.3 #31). Lo que no
-        tiene soporte se devuelve en discardedOptions.
-        Si dataClassification es real, solo usa modelos locales.
-      parameters:
-        - name: X-Request-Deadline
-          in: header
-          required: false
-          schema: { type: string, format: date-time }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/RagQueryInternalRequest" }
-      responses:
-        "200":
-          description: Resultado
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RagQueryInternalResponse" }
-        "401": { description: JWT de servicio inválido o ausente }
-        "409": { description: "CATALOG_VERSION_MISMATCH — catalogVersion distinto del cargado (§3.3 #38)" }
-        "422": { description: "Body inválido (Pydantic), o TIPO_NO_HABILITADO — cancerType fuera de ENABLED_CANCER_TYPES; responde sin invocar al LLM (defensa en profundidad, v1.3, PRD B-10)" }
-        "429": { description: Cola de inferencia llena (Retry-After) }
-        "503": { description: "LOCAL_LLM_UNAVAILABLE — nunca hay fallback a la nube con datos reales" }
-        "504": { description: Deadline vencido; la generación se aborta }
-
-  /documents/extract:
-    post:
-      summary: Extrae datos estructurados de un documento clínico
-      description: >
-        Invocado solo por clinical-api (Flujo 1). Primero la capa de texto; OCR solo en las
-        páginas escaneadas; gate de PII según dataClassification; estructuración con el LLM
-        local y confianza por campo (anclaje textual, dominio, consistencia). El PDF no se
-        persiste ni se registra en logs. clinical-api valida y persiste.
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [file, traceId, documentType, dataClassification, mode]
-              properties:
-                file: { type: string, format: binary }
-                traceId: { type: string }
-                documentType: { type: string, enum: [historia_clinica, examen] }
-                dataClassification: { type: string, enum: [sintetico, real_anonimizado, real_identificado] }
-                mode: { type: string, enum: [registro, carga] }
-      responses:
-        "200":
-          description: Datos extraídos (o piiScan.clean=false sin datos clínicos)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/DocumentExtractResponse" }
-        "401": { description: JWT de servicio inválido o ausente }
-        "422": { description: Documento ilegible o formato no soportado }
-        "503": { description: LLM local no disponible }
-
-  /case/summary:
-    post:
-      summary: Genera el resumen verificable del caso (v1.1)
-      description: >
-        Invocado solo por clinical-api (PRD FR-21). Recibe el ClinicalContext desidentificado,
-        con referencias opacas por dato, y devuelve afirmaciones que referencian esos datos.
-        Cada afirmación pasa el chequeo de soporte contra los datos referenciados; las que no,
-        se omiten. Si dataClassification es real, solo usa modelos locales.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [traceId, dataClassification, clinicalContext]
-              properties:
-                traceId: { type: string }
-                dataClassification: { type: string, enum: [sintetico, real_anonimizado, real_identificado] }
-                clinicalContext: { $ref: "#/components/schemas/ClinicalContext" }
-      responses:
-        "200":
-          description: Resumen
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/CaseSummaryInternalResponse" }
-        "401": { description: JWT de servicio inválido o ausente }
-        "429": { description: Cola de inferencia llena (Retry-After) }
-        "503": { description: LLM local no disponible }
-```
-
-**Ejemplo — `POST /rag/query` (interno)**
-
-Petición (sin `patientId` ni identidad; fechas relativas; datos etiquetados):
-```json
-{
-  "traceId": "req_9a3f2c1b",
-  "query": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
-  "sourcesSelected": { "guias": true, "ensayos": true, "publicaciones": true },
-  "dataClassification": "sintetico",
-  "clinicalContext": {
-    "pseudoPatientId": "psd_Qx7mR2vK9aLw",
-    "population": "adulto",
-    "diagnosis": { "cancerType": "mama", "stagingSystem": "TNM_8", "stageValue": "IIA", "performanceScale": "ECOG", "performanceValue": 1, "monthsSinceDiagnosis": 1,
-                   "provenance": { "entryMethod": "seed", "extractionConfidence": "n_a", "reviewStatus": "verificado", "conflict": false } },
-    "biomarkers": [
-      { "name": "HER2", "value": "3+ (IHQ)", "resultType": "cualitativo", "clinicalSignificance": "relevante", "monthsAgo": 1,
-        "provenance": { "entryMethod": "ocr", "extractionConfidence": "alta", "reviewStatus": "auto_aceptado", "conflict": false } },
-      { "name": "Receptor de estrógeno", "value": "Positivo (80%)", "resultType": "cualitativo", "clinicalSignificance": "relevante", "monthsAgo": 1,
-        "provenance": { "entryMethod": "ocr", "extractionConfidence": "media", "reviewStatus": "requiere_revision", "conflict": false } }
-    ],
-    "clinicalNotes": [],
-    "currentLine": null,
-    "priorTreatments": [],
-    "events": [ { "eventType": "diagnostico", "monthsAgo": 1, "description": "Carcinoma ductal infiltrante de mama", "provenance": { "entryMethod": "seed", "extractionConfidence": "n_a", "reviewStatus": "verificado", "conflict": false } } ],
-    "biomarkerTrends": [],
-    "attributes": [],
-    "missingCriticalData": ["estado_menopausico", "ki67"],
-    "priorAnalyses": []
-  },
-  "catalogVersion": "2026.10.0",
-  "maxOptions": 3,
-  "agentLimits": { "maxIterations": 1, "maxSubQueries": 3 }
-}
-```
-
-Respuesta (`200`): los mismos `synthesis`, `applicability`, `evidenceOptions` y `discardedOptions` que recibe el doctor en 4.1, más `limitations`, `assumptions`, `retrievalStats`, `omittedClaims`, `agentSteps` y el bloque `meta`, antes de que `clinical-api` agregue la Base del análisis, lo envuelva en `AIAnalysisRecord` y lo persista.
+**Ejemplos** (no normativos):
+- `POST /rag/query`: [petición](contracts/examples/rag-query-request.json) · [con evidencia](contracts/examples/rag-query-con-evidencia.json) · [sin evidencia](contracts/examples/rag-query-sin-evidencia.json) · [`422` tipo no habilitado](contracts/examples/rag-query-tipo-no-habilitado-422.json) · [`422` validación](contracts/examples/rag-validacion-422.json);
+- `POST /rag/follow-up`: [petición](contracts/examples/rag-follow-up-request.json) · [respuesta](contracts/examples/rag-follow-up-response.json) · [fuera de contexto](contracts/examples/rag-follow-up-fuera-de-contexto.json);
+- [`/case/summary`](contracts/examples/case-summary-request.json) · [respuesta](contracts/examples/case-summary-response.json) y [`/documents/extract`](contracts/examples/document-extract-response.json).
 
 ---
 

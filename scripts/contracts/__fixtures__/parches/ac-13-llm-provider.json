@@ -1,0 +1,33 @@
+[
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche vuelve llmProvider de RagMeta un string libre, sin enum [local, nube] (RN-12, PG #3)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace", "path": "/components/schemas/RagMeta/properties/llmProvider", "value": { "type": "string", "description": "Dónde corrió el modelo." } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagMeta/properties/llmProvider", "mensajeContiene": "local | nube" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche vuelve llmProvider de CaseSummaryMeta un string libre, sin enum [local, nube] (RN-12, PG #3)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "replace", "path": "/components/schemas/CaseSummaryMeta/properties/llmProvider", "value": { "type": "string", "description": "Dónde corrió el modelo." } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "CaseSummaryMeta/properties/llmProvider", "mensajeContiene": "local | nube" }
+  },
+  {
+    "ac": "AC-13",
+    "regla": "assertFollowUpContract",
+    "escenario": "un parche añade un tercer valor al enum de llmProvider de RagMeta (RN-12, PG #3)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/RagMeta/properties/llmProvider/enum/-", "value": "hibrido" }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "RagMeta/properties/llmProvider", "mensajeContiene": "local | nube" }
+  }
+]

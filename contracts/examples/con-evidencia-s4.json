@@ -1,0 +1,360 @@
+{
+  "id": "b3d9f2a0-1c3e-4f9a-8b1a-9e2f0c3d9f2a",
+  "traceId": "req_9a3f2c1b",
+  "queryText": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+  "questionTemplateId": "mama.adyuvancia.her2",
+  "queryLanguage": "es",
+  "status": "con_evidencia",
+  "synthesis": {
+    "agreements": [
+      {
+        "text": "Las fuentes recuperadas describen la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+        "citedSources": [
+          {
+            "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+            "sourceName": "NCI PDQ",
+            "externalId": "CDR0000062787",
+            "language": "en",
+            "sourceType": "guideline",
+            "licenseClass": "dominio_publico",
+            "studyDesign": "guia",
+            "trialPhase": null,
+            "primaryEndpoint": null,
+            "sampleSize": null,
+            "publishedAt": "2024-03-15",
+            "lastUpdatedAt": "2026-05-01",
+            "guidelineVersion": "2026-05",
+            "authors": null,
+            "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+            "possiblyOutdated": false,
+            "newerVersionAvailable": false,
+            "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+            "chunkId": "chunk_88231"
+          }
+        ],
+        "patientDataRefs": []
+      },
+      {
+        "text": "El paciente tiene registrado un resultado de HER2 3+ por inmunohistoquímica.",
+        "citedSources": [],
+        "patientDataRefs": [
+          "r2"
+        ]
+      }
+    ],
+    "discrepancies": [
+      {
+        "claim": {
+          "text": "La duración de la terapia descrita varía entre las fuentes recuperadas.",
+          "citedSources": [
+            {
+              "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+              "sourceName": "NCI PDQ",
+              "externalId": "CDR0000062787",
+              "language": "en",
+              "sourceType": "guideline",
+              "licenseClass": "dominio_publico",
+              "studyDesign": "guia",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2024-03-15",
+              "lastUpdatedAt": "2026-05-01",
+              "guidelineVersion": "2026-05",
+              "authors": null,
+              "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+              "chunkId": "chunk_88231"
+            },
+            {
+              "title": "Adjuvant endocrine therapy in estrogen receptor-positive early breast cancer: a systematic review",
+              "sourceName": "PubMed/PMC OA",
+              "externalId": "PMC9000001",
+              "language": "en",
+              "sourceType": "literature",
+              "licenseClass": "cc_by",
+              "studyDesign": "revision_sistematica",
+              "trialPhase": null,
+              "primaryEndpoint": null,
+              "sampleSize": null,
+              "publishedAt": "2023-06-01",
+              "lastUpdatedAt": null,
+              "guidelineVersion": null,
+              "authors": "Autoría Sintética et al.",
+              "sourceUrl": null,
+              "possiblyOutdated": false,
+              "newerVersionAvailable": false,
+              "chunkTextSnapshot": "Texto sintético de ejemplo: adjuvant endocrine therapy is described for stage I tumors with positive estrogen receptor.",
+              "chunkId": "chunk_90412"
+            }
+          ],
+          "patientDataRefs": []
+        },
+        "explainedBy": "diseno",
+        "explanation": "Descripción de la diferencia entre las fuentes: los estudios que describen tienen diseños distintos."
+      }
+    ]
+  },
+  "applicability": [
+    {
+      "externalId": "CDR0000062787",
+      "criteria": [
+        {
+          "criterion": "estado_her2",
+          "patientValue": "3+ (IHQ)",
+          "studyPopulationValue": "HER2 positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "I–III",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": null,
+          "studyPopulationValue": "ambos",
+          "status": "desconocido",
+          "unknownReason": "falta_en_paciente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    },
+    {
+      "externalId": "PMC9000001",
+      "criteria": [
+        {
+          "criterion": "receptor_estrogeno",
+          "patientValue": "Positivo (80%)",
+          "studyPopulationValue": "Positivo",
+          "status": "coincide",
+          "unknownReason": null,
+          "isExclusionary": true,
+          "patientDataWarning": "sin_verificar",
+          "citedSources": []
+        },
+        {
+          "criterion": "estadio",
+          "patientValue": "IIA",
+          "studyPopulationValue": "I",
+          "status": "parcial",
+          "unknownReason": null,
+          "isExclusionary": false,
+          "patientDataWarning": null,
+          "citedSources": []
+        },
+        {
+          "criterion": "estado_menopausico",
+          "patientValue": null,
+          "studyPopulationValue": null,
+          "status": "desconocido",
+          "unknownReason": "no_reportado_por_fuente",
+          "isExclusionary": false,
+          "patientDataWarning": "faltante",
+          "citedSources": []
+        }
+      ],
+      "summary": {
+        "coincide": 1,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false
+    }
+  ],
+  "evidenceOptions": [
+    {
+      "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
+      "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "applicabilitySummary": {
+        "coincide": 2,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "CDR0000062787",
+          "summary": {
+            "coincide": 2,
+            "parcial": 0,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.87,
+      "warnings": [
+        "datos_faltantes"
+      ],
+      "citedSources": [
+        {
+          "title": "Breast Cancer Treatment (PDQ®)–Health Professional Version",
+          "sourceName": "NCI PDQ",
+          "externalId": "CDR0000062787",
+          "language": "en",
+          "sourceType": "guideline",
+          "licenseClass": "dominio_publico",
+          "studyDesign": "guia",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2024-03-15",
+          "lastUpdatedAt": "2026-05-01",
+          "guidelineVersion": "2026-05",
+          "authors": null,
+          "sourceUrl": "https://corpus.oncolens.test/documentos/CDR0000062787",
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: the addition of anti-HER2 therapy to adjuvant chemotherapy is described for HER2-positive tumors in a study population with stage I–III disease, including both premenopausal and postmenopausal patients.",
+          "chunkId": "chunk_88231"
+        }
+      ]
+    },
+    {
+      "option": "Terapia endocrina adyuvante en tumores con receptor hormonal positivo",
+      "rationale": "La evidencia recuperada describe el uso de terapia endocrina adyuvante en tumores con receptor de estrógeno positivo.",
+      "applicabilitySummary": {
+        "coincide": 1,
+        "parcial": 1,
+        "noCoincide": 0,
+        "desconocido": 1
+      },
+      "populationNotComparable": false,
+      "perSource": [
+        {
+          "externalId": "PMC9000001",
+          "summary": {
+            "coincide": 1,
+            "parcial": 1,
+            "noCoincide": 0,
+            "desconocido": 1
+          },
+          "populationNotComparable": false
+        }
+      ],
+      "relevanceScore": 0.79,
+      "warnings": [
+        "datos_sin_verificar",
+        "datos_faltantes"
+      ],
+      "citedSources": [
+        {
+          "title": "Adjuvant endocrine therapy in estrogen receptor-positive early breast cancer: a systematic review",
+          "sourceName": "PubMed/PMC OA",
+          "externalId": "PMC9000001",
+          "language": "en",
+          "sourceType": "literature",
+          "licenseClass": "cc_by",
+          "studyDesign": "revision_sistematica",
+          "trialPhase": null,
+          "primaryEndpoint": null,
+          "sampleSize": null,
+          "publishedAt": "2023-06-01",
+          "lastUpdatedAt": null,
+          "guidelineVersion": null,
+          "authors": "Autoría Sintética et al.",
+          "sourceUrl": null,
+          "possiblyOutdated": false,
+          "newerVersionAvailable": false,
+          "chunkTextSnapshot": "Texto sintético de ejemplo: adjuvant endocrine therapy is described for stage I tumors with positive estrogen receptor.",
+          "chunkId": "chunk_90412"
+        }
+      ]
+    }
+  ],
+  "discardedOptions": [],
+  "analysisBasis": {
+    "patientDataUsed": [
+      {
+        "label": "HER2 3+ (IHQ)",
+        "reviewStatus": "auto_aceptado",
+        "conflict": false
+      },
+      {
+        "label": "Estadio IIA (TNM_8)",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    ],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "continuedWithWarning": true,
+    "assumptions": [
+      {
+        "text": "Se asume enfermedad no metastásica: no hay estudios de extensión registrados.",
+        "origin": "regla_catalogo"
+      }
+    ],
+    "sourcesConsulted": {
+      "selected": [
+        "guias",
+        "publicaciones"
+      ],
+      "filters": {
+        "historiaCompleta": false,
+        "soloBiomarcadoresRelevantes": true,
+        "ultimosSeisMeses": true,
+        "antecedentesFamiliares": false,
+        "publishedFromYear": 2021
+      },
+      "retrieved": 40,
+      "aboveThreshold": 2
+    },
+    "sourcesNotIncluded": [
+      "NCCN",
+      "ESMO"
+    ],
+    "corpusCutoffDate": "2026-09-30",
+    "limitations": [
+      {
+        "text": "Síntesis basada en dos fuentes.",
+        "origin": "estructural"
+      }
+    ],
+    "priorAnalysesUsed": [],
+    "agentSteps": [],
+    "omittedClaims": 0
+  },
+  "topRelevanceScore": 0.87,
+  "staleness": {
+    "patientData": false,
+    "changedData": [],
+    "newerEvidenceOrCatalog": false
+  },
+  "rerunOfAnalysisId": null,
+  "patientDataLinks": [
+    {
+      "dataRef": "r2",
+      "entityType": "biomarker",
+      "entityId": "7a1c9e44-5b2d-4c3e-8f60-1d2e3f4a5b6c"
+    }
+  ],
+  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
+  "createdAt": "2026-10-12T15:04:00Z"
+}
