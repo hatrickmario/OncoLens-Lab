@@ -91,10 +91,11 @@ paths:
         Listado paginado. Solo admite filtros sin identidad (status, dataOrigin, page): la
         búsqueda por documento o por nombre es POST /platform/patients/search, porque la
         identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento
-        depende del permiso (x-view-by-permission).
+        depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento
+        ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
       x-permission: patients:lookup
       x-view-by-permission:
-        clinical:read: PatientSummary
+        clinical:read: PatientListItem
         default: PatientAdminSummary
       parameters:
         - name: status
@@ -141,11 +142,13 @@ paths:
       summary: Busca pacientes por identidad exacta o por nombre
       description: >-
         La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las
-        cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego). La forma de cada
-        elemento depende del permiso (x-view-by-permission).
+        cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego); la búsqueda por
+        nombre queda con US-048 como dueña. La forma de cada elemento depende del permiso
+        (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS;
+        completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
       x-permission: patients:lookup
       x-view-by-permission:
-        clinical:read: PatientSummary
+        clinical:read: PatientListItem
         default: PatientAdminSummary
       requestBody:
         required: true
@@ -1211,6 +1214,55 @@ components:
           minimum: 0
           description: Datos críticos faltantes (FR-23).
 
+    PatientListItem:
+      type: object
+      description: >-
+        Elemento del listado y de la búsqueda para quien tiene clinical:read. Nombre y documento
+        ENMASCARADOS: la identidad completa solo viaja en la ficha (PatientSummary), con auditoría
+        (RN-10).
+      additionalProperties: false
+      required:
+        - view
+        - id
+        - idType
+        - nationalIdMasked
+        - fullNameMasked
+        - dataOrigin
+        - lifecycleStatus
+        - birthYear
+        - cancerTypeEnabled
+        - pendingReviewCount
+        - missingCriticalCount
+      properties:
+        view:
+          type: string
+          const: doctor_listado
+        id:
+          type: string
+          format: uuid
+        idType:
+          $ref: '#/components/schemas/IdType'
+        nationalIdMasked:
+          type: string
+          description: Documento enmascarado; el completo solo se descifra en la ficha, auditado.
+        fullNameMasked:
+          type: string
+          description: Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+        dataOrigin:
+          $ref: '#/components/schemas/DataOrigin'
+        lifecycleStatus:
+          $ref: '#/components/schemas/LifecycleStatus'
+        birthYear:
+          type: integer
+        cancerTypeEnabled:
+          type: boolean
+        pendingReviewCount:
+          type: integer
+          minimum: 0
+        missingCriticalCount:
+          type: integer
+          minimum: 0
+
     PatientAdminSummary:
       type: object
       description: >-
@@ -1289,12 +1341,12 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/PatientSummary'
+              - $ref: '#/components/schemas/PatientListItem'
               - $ref: '#/components/schemas/PatientAdminSummary'
             discriminator:
               propertyName: view
               mapping:
-                doctor: '#/components/schemas/PatientSummary'
+                doctor_listado: '#/components/schemas/PatientListItem'
                 admin: '#/components/schemas/PatientAdminSummary'
         page:
           type: integer

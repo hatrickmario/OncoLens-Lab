@@ -185,6 +185,11 @@ class ResponseLanguage(StrEnum):
     en = 'en'
 
 
+class LlmProvider(StrEnum):
+    local = 'local'
+    nube = 'nube'
+
+
 class RetrievalMode(StrEnum):
     dense = 'dense'
     hibrida = 'hibrida'
@@ -206,7 +211,12 @@ class RagMeta(BaseModel):
     )
     queryLanguage: QueryLanguage
     responseLanguage: ResponseLanguage
-    llmProvider: str
+    llmProvider: Annotated[
+        LlmProvider,
+        Field(
+            description='Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube; clinical-api lo persiste y lo verifica contra dataClassification.'
+        ),
+    ]
     llmModel: str
     embeddingModel: str
     rerankerModel: str
@@ -235,7 +245,12 @@ class CaseSummaryMeta(BaseModel):
     )
     queryLanguage: QueryLanguage
     responseLanguage: ResponseLanguage
-    llmProvider: str
+    llmProvider: Annotated[
+        LlmProvider,
+        Field(
+            description='Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube; clinical-api lo persiste y lo verifica contra dataClassification.'
+        ),
+    ]
     llmModel: str
     embeddingModel: None
     rerankerModel: None

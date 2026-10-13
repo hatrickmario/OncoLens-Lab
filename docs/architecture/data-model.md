@@ -336,11 +336,11 @@ erDiagram
         jsonb patient_data_links "rN → entidad del paciente; solo Backend 1 — vacío resuelto (US-033)"
         float top_relevance_score "nullable — null si no hubo evidencia"
         string status "con_evidencia|sin_evidencia|tipo_no_habilitado"
-        jsonb clinical_context_snapshot "desidentificado, con etiquetas"
+        jsonb clinical_context_snapshot "desidentificado, con etiquetas; sin pseudoPatientId"
         string context_fingerprint "hash de los datos usados — detecta 'Desactualizado: datos del paciente' (y la cascada por memoria)"
         uuid rerun_of_analysis_id FK "nullable"
         string data_classification
-        string llm_provider
+        string llm_provider "local|nube (RN-12)"
         string llm_model
         string embedding_model
         string reranker_model
@@ -413,6 +413,8 @@ erDiagram
         jsonb cited_sources "citas del turno, con is_new_source"
         int omitted_claims
         jsonb patient_data_links "rN → entidad del paciente"
+        string data_classification "heredada del análisis"
+        string llm_provider "local|nube (RN-12)"
         string llm_model
         string embedding_model "nullable"
         string reranker_model "nullable"
@@ -942,11 +944,11 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `patient_data_links` | jsonb |  | rN → entidad del paciente; solo Backend 1 — vacío resuelto (US-033) |
 | `top_relevance_score` | double precision |  | nullable — null si no hubo evidencia |
 | `status` | text |  | con_evidencia\|sin_evidencia\|tipo_no_habilitado |
-| `clinical_context_snapshot` | jsonb |  | desidentificado, con etiquetas |
+| `clinical_context_snapshot` | jsonb |  | desidentificado, con etiquetas; sin pseudoPatientId (efímero por consulta, RN-11) |
 | `context_fingerprint` | text |  | hash de los datos usados — detecta 'Desactualizado: datos del paciente' (y la cascada por memoria) |
 | `rerun_of_analysis_id` | uuid | FK | nullable |
 | `data_classification` | text |  |  |
-| `llm_provider` | text |  |  |
+| `llm_provider` | text |  | local\|nube (RN-12); con datos reales siempre local |
 | `llm_model` | text |  |  |
 | `embedding_model` | text |  |  |
 | `reranker_model` | text |  |  |
@@ -1013,6 +1015,8 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `cited_sources` | jsonb |  | citas del turno, con is_new_source |
 | `omitted_claims` | integer |  |  |
 | `patient_data_links` | jsonb |  | rN → entidad del paciente |
+| `data_classification` | text |  | heredada del análisis |
+| `llm_provider` | text |  | local\|nube (RN-12); con datos reales siempre local |
 | `llm_model` | text |  |  |
 | `embedding_model` | text |  | nullable |
 | `reranker_model` | text |  | nullable |
@@ -1223,6 +1227,8 @@ CREATE TABLE clinical.analysis_follow_up (
   cited_sources      jsonb NOT NULL,          -- citas del turno, con is_new_source
   omitted_claims     integer NOT NULL DEFAULT 0,
   patient_data_links jsonb NOT NULL,          -- rN -> entidad del paciente
+  data_classification text NOT NULL,          -- heredada del análisis
+  llm_provider       text NOT NULL CHECK (llm_provider IN ('local', 'nube')),  -- RN-12
   llm_model          text NOT NULL,
   embedding_model    text,
   reranker_model     text,
@@ -1237,7 +1243,7 @@ CREATE TABLE clinical.analysis_follow_up (
 
 - `turn_number` es único por análisis; el límite por análisis es `ANALYSIS_FOLLOWUP_MAX` (configuración, RN-22) y el exceso responde `409 LIMITE_SEGUIMIENTO`.
 - `question_text` guarda la versión **enmascarado si tenía PII**, igual que `ai_analysis_record.query_text`; el contrato devuelve esa misma versión en `FollowUpTurn.question`.
-- Las columnas de `meta` (`llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`) y `trace_id` hacen el turno reproducible (RN-06). `is_new_source` (dentro de `cited_sources`) lo calcula Backend 1 al comparar los `chunkId` del turno con los del análisis persistido.
+- Las columnas de `meta` (`llm_provider`, `llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`), `data_classification` y `trace_id` hacen el turno reproducible (RN-06) y auditable frente a RN-12: `llm_provider` es `local | nube` (el contrato lo declara como enum) y Backend 1 lo verifica contra `data_classification` (con datos reales siempre `local`, sin *fallback* a la nube). `is_new_source` (dentro de `cited_sources`) lo calcula Backend 1 al comparar los `chunkId` del turno con los del análisis persistido.
 - `rag-orchestrator` no guarda turnos ni memoria entre llamadas: toda la persistencia es de Backend 1.
 - Vacío anotado para US-218: si los turnos previos del mismo análisis viajan como elementos de `analysisMemory` y si un turno `fuera_de_contexto` cuenta para el límite.
 

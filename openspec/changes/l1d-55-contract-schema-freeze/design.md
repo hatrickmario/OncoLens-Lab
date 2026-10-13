@@ -393,9 +393,20 @@ alcance, para FEAT-03b.
 - **Persistencia en Backend 1** (`clinical.analysis_follow_up`, privacy M-8 / contract-keeper
   M10): `id`, `analysis_id`, `turn_number` (único por análisis), `question_text` (enmascarado si
   tenía PII), `status`, `answer` (afirmaciones validadas), `cited_sources` (con `is_new_source`),
-  `omitted_claims`, `patient_data_links`, las columnas de `meta` (`llm_model`, `embedding_model`,
-  `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`), `trace_id` y `created_at`;
-  **sin `pseudoPatientId` ni identidad**.
+  `omitted_claims`, `patient_data_links`, `data_classification` y `llm_provider` **`[Pre-S1 resp.
+  36 (D-7)]`** (para auditar RN-12 por turno), las columnas de `meta` (`llm_model`,
+  `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`, `catalog_version`),
+  `trace_id` y `created_at`; **sin `pseudoPatientId` ni identidad**.
+- **`llmProvider` es un enum `[Pre-S1 resp. 36 (D-7)]`:** `RagMeta.llmProvider` y
+  `CaseSummaryMeta.llmProvider` pasan de `string` libre a `enum [local, nube]` (RN-12). Se eligió
+  el enum sobre un campo `providerLocality` aparte para no duplicar la información en el contrato
+  ni en la columna `llm_provider` (que lleva `CHECK (llm_provider IN ('local','nube'))`); el
+  modelo concreto sigue identificándose con `llmModel`. Con datos reales el valor es siempre
+  `local`, sin *fallback* a la nube; Backend 1 lo verifica contra `data_classification`.
+- **`clinical_context_snapshot` sin `pseudoPatientId` `[Pre-S1 resp. 36 (D-7)]`:**
+  `ai_analysis_record.clinical_context_snapshot` guarda el contexto desidentificado con sus
+  etiquetas pero **no** el `pseudoPatientId`, que es efímero por consulta y nunca se persiste
+  (RN-11); un snapshot con seudónimo permitiría enlazar análisis entre sí.
 - Vacío anotado para US-218: si los turnos previos del mismo análisis viajan como elementos de
   `analysisMemory` (misma forma) y si un turno `fuera_de_contexto` cuenta para el límite.
 
@@ -436,7 +447,9 @@ su evidencia; no se generó respuesta."
 
 ### D12. Identidad fuera de la URL y de las cabeceras `[Pre-S1 resp. 22]`
 `POST /platform/patients/search` con `PatientSearchRequest` (cerrado; `anyOf`:
-`[idType, nationalId]` o `[name]`; `page` opcional) → `200 PatientPage`.
+`[idType, nationalId]` o `[name]`; `page` opcional) → `200 PatientPage`. La búsqueda por
+documento es exacta (índice ciego); la **búsqueda por nombre** queda con **US-048 como dueña**
+(`[Pre-S1 resp. 36 (D-7)]`): este change fija su forma en el contrato, no su algoritmo.
 `GET /platform/patients` solo admite `status`, `dataOrigin` y `page`. Regla
 `assertNoIdentityInUrl()`: ningún parámetro `in: query`, `in: path` o `in: header` del spec de
 `clinical-api` coincide con `IDENTIDAD_PII` (D13). Los UUID en la ruta están permitidos
@@ -489,7 +502,12 @@ Consecuencia (vacío resuelto): el nombre del biomarcador en `ClinicalContext.bi
 - **Vista por permiso** `[Pre-S1 resp. 27]`: `GET /platform/patients/{patientId}` responde `200`
   `oneOf [PatientSummary, PatientAdminSummary]` con `discriminator: view` y declara
   `x-view-by-permission: { clinical:read: PatientSummary, default: PatientAdminSummary }`. La
-  misma extensión rige los ítems de `PatientPage`. `PatientAdminSummary` (cerrado): `view: const
+  misma extensión rige los ítems de `PatientPage`, **pero con otra vista** `[Pre-S1 resp. 36
+  (D-7, privacidad)]`: el listado y la búsqueda declaran `x-view-by-permission: { clinical:read:
+  PatientListItem, default: PatientAdminSummary }`. `PatientListItem` (cerrado, `view: const
+  doctor_listado`) devuelve `fullNameMasked` y `nationalIdMasked` **enmascarados** y los contadores;
+  el nombre y el documento **completos** solo viajan en la ficha (`PatientSummary.identification`),
+  y cada lectura de la ficha se audita (RN-10). `PatientAdminSummary` (cerrado): `view: const
   admin`, `id`, `idType`, `nationalIdMasked`, `dataOrigin`, `lifecycleStatus`, `registeredAt`;
   sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos. Para el `admin`,
   vista de caso, documentos, análisis, seguimiento y resumen del caso → `403 PERMISO_DENEGADO`.
@@ -597,7 +615,8 @@ Diff propuesto `apps/clinical-api/openapi.yaml` (respecto de readme §4.1):
 ~   PatientSummary { view: const doctor, …, diagnosis: Diagnosis|null }
 +   PatientAdminSummary { view: const admin, id, idType, nationalIdMasked, dataOrigin,
 +                         lifecycleStatus, registeredAt }
-+   PatientSearchRequest, PatientPage { items: (PatientSummary|PatientAdminSummary)[], page, pageSize, total }
++   PatientListItem { view: const doctor_listado, id, idType, nationalIdMasked, fullNameMasked, … }
++   PatientSearchRequest, PatientPage { items: (PatientListItem|PatientAdminSummary)[], page, pageSize, total }
 +   LoginRequest { email, password }
 +   Error + ErrorXxx con error const/enum, sin eco (D11)
   paths (cada operación con x-permission, D14):

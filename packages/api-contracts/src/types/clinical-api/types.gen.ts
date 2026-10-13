@@ -364,6 +364,29 @@ export type PatientSummary = {
 };
 
 /**
+ * Elemento del listado y de la búsqueda para quien tiene clinical:read. Nombre y documento ENMASCARADOS: la identidad completa solo viaja en la ficha (PatientSummary), con auditoría (RN-10).
+ */
+export type PatientListItem = {
+    view: 'doctor_listado';
+    id: string;
+    idType: IdType;
+    /**
+     * Documento enmascarado; el completo solo se descifra en la ficha, auditado.
+     */
+    nationalIdMasked: string;
+    /**
+     * Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
+     */
+    fullNameMasked: string;
+    dataOrigin: DataOrigin;
+    lifecycleStatus: LifecycleStatus;
+    birthYear: number;
+    cancerTypeEnabled: boolean;
+    pendingReviewCount: number;
+    missingCriticalCount: number;
+};
+
+/**
  * Vista del administrador: identificación enmascarada, estado y fecha de alta. Sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos (mínimo privilegio).
  */
 export type PatientAdminSummary = {
@@ -393,7 +416,7 @@ export type PatientSearchRequest = unknown & {
 };
 
 export type PatientPage = {
-    items: Array<PatientSummary | PatientAdminSummary>;
+    items: Array<PatientListItem | PatientAdminSummary>;
     page: number;
     pageSize: number;
     total: number;
@@ -814,13 +837,6 @@ export type PatientSummaryWritable = {
      * Datos críticos faltantes (FR-23).
      */
     missingCriticalCount: number;
-};
-
-export type PatientPageWritable = {
-    items: Array<PatientSummaryWritable | PatientAdminSummary>;
-    page: number;
-    pageSize: number;
-    total: number;
 };
 
 export type PatientId = string;

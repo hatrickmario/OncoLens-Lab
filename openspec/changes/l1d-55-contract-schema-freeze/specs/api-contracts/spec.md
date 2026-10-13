@@ -320,6 +320,10 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **WHEN** un parche vuelve nullable un campo de `RagMeta` (p. ej. `embeddingModel`), o un ejemplo de `/rag/query` o `/rag/follow-up` trae `retrievalParams` o `embeddingModel` en `null`, o el ejemplo del resumen del caso trae `corpusRelease` no nulo
 - **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
+#### Scenario: El proveedor del LLM es un enum [US-033 AC-13] [Pre-S1 resp. 36 (D-7)] [RN-12]
+- **WHEN** se revisa `llmProvider` en `RagMeta` y en `CaseSummaryMeta`
+- **THEN** es `enum [local, nube]`, y los ejemplos con datos sintéticos declaran `local`
+
 ### Requirement: Sin identidad ni identificadores enlazables en Backend 2
 Ninguna propiedad, parámetro ni cabecera del spec de `rag-orchestrator`, a ninguna profundidad, MUST coincidir con `IDENTIDAD_B2` (design.md D13: identidad personal e ids enlazables), por regex sin mayúsculas sobre el nombre normalizado y con lista blanca; ningún `requestBody` SHALL declarar `format: uuid` `[Pre-S1 resp. 29]`. La única excepción SHALL ser `identityFound` en su puntero exacto de la respuesta `200` de `/documents/extract` (RN-10).
 
@@ -360,6 +364,10 @@ Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios 
 #### Scenario: La vista de la ficha está atada al permiso [US-033 AC-17] [Pre-S1 resp. 27]
 - **WHEN** un parche quita `x-view-by-permission` de `GET /platform/patients/{patientId}` o mapea `default` a `PatientSummary`
 - **THEN** `assertViewByPermission()` reporta el hallazgo y el comando termina con código distinto de 0
+
+#### Scenario: El listado y la búsqueda no devuelven la identidad en claro [US-033 AC-17] [Pre-S1 resp. 36 (D-7)] [RN-10]
+- **WHEN** se revisa `x-view-by-permission` de `GET /platform/patients` y de `POST /platform/patients/search`
+- **THEN** mapean `clinical:read` a `PatientListItem` (los ítems de `PatientPage` son `PatientListItem` o `PatientAdminSummary`) (`fullNameMasked`, `nationalIdMasked`, sin `identification`); el nombre y el documento completos solo están en `PatientSummary.identification`, de la ficha; la búsqueda por nombre tiene a US-048 como dueña
 
 #### Scenario: La vista del administrador no tiene datos clínicos [US-033 AC-15] [Pre-S1 resp. 27]
 - **WHEN** se valida `patient-summary-admin.json` y un parche le agrega `diagnosis`

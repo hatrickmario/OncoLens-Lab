@@ -295,6 +295,23 @@ export const zPatientSummary = z.strictObject({
 });
 
 /**
+ * Elemento del listado y de la búsqueda para quien tiene clinical:read. Nombre y documento ENMASCARADOS: la identidad completa solo viaja en la ficha (PatientSummary), con auditoría (RN-10).
+ */
+export const zPatientListItem = z.strictObject({
+    view: z.literal('doctor_listado'),
+    id: z.uuid(),
+    idType: zIdType,
+    nationalIdMasked: z.string(),
+    fullNameMasked: z.string(),
+    dataOrigin: zDataOrigin,
+    lifecycleStatus: zLifecycleStatus,
+    birthYear: z.int(),
+    cancerTypeEnabled: z.boolean(),
+    pendingReviewCount: z.int().gte(0),
+    missingCriticalCount: z.int().gte(0)
+});
+
+/**
  * Vista del administrador: identificación enmascarada, estado y fecha de alta. Sin diagnóstico, biomarcadores, documentos, análisis ni contadores clínicos (mínimo privilegio).
  */
 export const zPatientAdminSummary = z.strictObject({
@@ -315,7 +332,7 @@ export const zPatientSearchRequest = z.intersection(z.unknown(), z.strictObject(
 }));
 
 export const zPatientPage = z.strictObject({
-    items: z.array(z.union([zPatientSummary, zPatientAdminSummary])),
+    items: z.array(z.union([zPatientListItem, zPatientAdminSummary])),
     page: z.int().gte(1),
     pageSize: z.int().gte(1),
     total: z.int().gte(0)
@@ -777,13 +794,6 @@ export const zPatientSummaryWritable = z.strictObject({
     recentBiomarkers: z.array(zBiomarker),
     pendingReviewCount: z.int().gte(0),
     missingCriticalCount: z.int().gte(0)
-});
-
-export const zPatientPageWritable = z.strictObject({
-    items: z.array(z.union([zPatientSummaryWritable, zPatientAdminSummary])),
-    page: z.int().gte(1),
-    pageSize: z.int().gte(1),
-    total: z.int().gte(0)
 });
 
 export const zPatientId = z.uuid();

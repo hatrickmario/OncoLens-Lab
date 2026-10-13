@@ -190,7 +190,10 @@ export type RagFiltersApplied = {
 export type RagMeta = {
     queryLanguage: 'es' | 'en';
     responseLanguage: 'es' | 'en';
-    llmProvider: string;
+    /**
+     * Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube; clinical-api lo persiste y lo verifica contra dataClassification.
+     */
+    llmProvider: 'local' | 'nube';
     llmModel: string;
     embeddingModel: string;
     rerankerModel: string;
@@ -221,7 +224,10 @@ export type RagMeta = {
 export type CaseSummaryMeta = {
     queryLanguage: 'es' | 'en';
     responseLanguage: 'es' | 'en';
-    llmProvider: string;
+    /**
+     * Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube; clinical-api lo persiste y lo verifica contra dataClassification.
+     */
+    llmProvider: 'local' | 'nube';
     llmModel: string;
     embeddingModel: null;
     rerankerModel: null;

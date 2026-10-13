@@ -104,7 +104,7 @@ export const zRagFiltersApplied = z.strictObject({
 export const zRagMeta = z.strictObject({
     queryLanguage: z.enum(['es', 'en']),
     responseLanguage: z.enum(['es', 'en']),
-    llmProvider: z.string(),
+    llmProvider: z.enum(['local', 'nube']),
     llmModel: z.string(),
     embeddingModel: z.string(),
     rerankerModel: z.string(),
@@ -129,7 +129,7 @@ export const zRagMeta = z.strictObject({
 export const zCaseSummaryMeta = z.strictObject({
     queryLanguage: z.enum(['es', 'en']),
     responseLanguage: z.enum(['es', 'en']),
-    llmProvider: z.string(),
+    llmProvider: z.enum(['local', 'nube']),
     llmModel: z.string(),
     embeddingModel: z.null(),
     rerankerModel: z.null(),

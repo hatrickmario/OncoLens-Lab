@@ -416,6 +416,10 @@ components:
           enum: [es, en]
         llmProvider:
           type: string
+          enum: [local, nube]
+          description: >-
+            Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube;
+            clinical-api lo persiste y lo verifica contra dataClassification.
         llmModel:
           type: string
         embeddingModel:
@@ -493,6 +497,10 @@ components:
           enum: [es, en]
         llmProvider:
           type: string
+          enum: [local, nube]
+          description: >-
+            Dónde corrió el modelo (RN-12). Con datos reales siempre es local, sin fallback a la nube;
+            clinical-api lo persiste y lo verifica contra dataClassification.
         llmModel:
           type: string
         embeddingModel:
