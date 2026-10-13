@@ -175,6 +175,69 @@ export type Biomarker = {
 };
 
 /**
+ * Vista de caso (FR-21, FR-23). Sin identidad del paciente. Cada dato lleva su procedencia.
+ */
+export type CaseView = {
+    timeline: Array<{
+        id: string;
+        eventType: string;
+        /**
+         * true si se deriva de Diagnosis, Exam, PriorTreatment, Treatment o AIAnalysisRecord (ADR-32).
+         */
+        derived: boolean;
+        eventDate: string | null;
+        datePrecision: 'dia' | 'mes' | 'anio' | 'incierta';
+        /**
+         * Texto corto, enmascarable.
+         */
+        description: string;
+        codes: {
+            icd10: string | null;
+            cups: string | null;
+        };
+        provenance: Provenance;
+    }>;
+    priorTreatments: Array<{
+        lineNumber: number | null;
+        setting: string;
+        regimenName: string;
+        atcCodes: Array<string>;
+        startedAt: string | null;
+        endedAt: string | null;
+        ongoing: boolean;
+        endReason: string;
+        provenance: Provenance;
+    }>;
+    /**
+     * ClinicalAttribute (estado menopáusico, estado de castración, sitios metastásicos…).
+     */
+    attributes: Array<{
+        key: string;
+        value: string;
+        observedAt: string | null;
+        provenance: Provenance;
+    }>;
+    biomarkerSeries: Array<{
+        name: string;
+        loincCode: string | null;
+        points: Array<{
+            value: string;
+            unit: string | null;
+            performedAt: string;
+            provenance: Provenance;
+        }>;
+    }>;
+    /**
+     * Checklist de datos críticos (determinista, FR-23).
+     */
+    completeness: Array<{
+        item: string;
+        status: 'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
+    }>;
+    catalogVersion: string;
+};
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export type BiomarkerManualCreate = {
@@ -934,6 +997,41 @@ export type GetPatientResponses = {
 };
 
 export type GetPatientResponse = GetPatientResponses[keyof GetPatientResponses];
+
+export type GetPatientCaseData = {
+    body?: never;
+    path: {
+        patientId: string;
+    };
+    query?: never;
+    url: '/platform/patients/{patientId}/case';
+};
+
+export type GetPatientCaseErrors = {
+    /**
+     * Sesión ausente o expirada.
+     */
+    401: ErrorNoAutenticado;
+    /**
+     * Permiso denegado por RBAC u opt-out.
+     */
+    403: ErrorPermisoDenegado;
+    /**
+     * Recurso no encontrado.
+     */
+    404: ErrorNoEncontrado;
+};
+
+export type GetPatientCaseError = GetPatientCaseErrors[keyof GetPatientCaseErrors];
+
+export type GetPatientCaseResponses = {
+    /**
+     * Vista de caso.
+     */
+    200: CaseView;
+};
+
+export type GetPatientCaseResponse = GetPatientCaseResponses[keyof GetPatientCaseResponses];
 
 export type UploadDocumentData = {
     body: {

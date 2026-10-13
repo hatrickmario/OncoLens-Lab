@@ -212,6 +212,33 @@ paths:
         "404":
           $ref: '#/components/responses/NoEncontrado'
 
+  /platform/patients/{patientId}/case:
+    get:
+      operationId: getPatientCase
+      tags: [pacientes]
+      summary: Obtiene la vista de caso del paciente
+      description: >-
+        Vista de caso (FR-21, FR-23): timeline, tratamientos previos, atributos clínicos, series de
+        biomarcadores y checklist de datos críticos. Los eventos de entidades con tabla propia se
+        derivan en la vista (el análisis aparece como evento derivado) y los demás vienen de
+        ClinicalEvent. Es una lectura clínica: el administrador recibe 403.
+      x-permission: clinical:read
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        "200":
+          description: Vista de caso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseView'
+        "401":
+          $ref: '#/components/responses/NoAutenticado'
+        "403":
+          $ref: '#/components/responses/PermisoDenegado'
+        "404":
+          $ref: '#/components/responses/NoEncontrado'
+
   /platform/patients/{patientId}/documents:
     post:
       operationId: uploadDocument
@@ -731,6 +758,144 @@ components:
           format: date
         provenance:
           $ref: '#/components/schemas/Provenance'
+
+    CaseView:
+      type: object
+      description: >-
+        Vista de caso (FR-21, FR-23). Sin identidad del paciente. Cada dato lleva su procedencia.
+      additionalProperties: false
+      required: [timeline, priorTreatments, attributes, biomarkerSeries, completeness, catalogVersion]
+      properties:
+        timeline:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, eventType, derived, eventDate, datePrecision, description, codes, provenance]
+            properties:
+              id:
+                type: string
+                format: uuid
+              eventType:
+                type: string
+                examples: [progresion]
+              derived:
+                type: boolean
+                description: >-
+                  true si se deriva de Diagnosis, Exam, PriorTreatment, Treatment o AIAnalysisRecord
+                  (ADR-32).
+              eventDate:
+                type: [string, "null"]
+                format: date
+              datePrecision:
+                type: string
+                enum: [dia, mes, anio, incierta]
+              description:
+                type: string
+                description: Texto corto, enmascarable.
+              codes:
+                type: object
+                additionalProperties: false
+                required: [icd10, cups]
+                properties:
+                  icd10:
+                    type: [string, "null"]
+                  cups:
+                    type: [string, "null"]
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        priorTreatments:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [lineNumber, setting, regimenName, atcCodes, startedAt, endedAt, ongoing, endReason, provenance]
+            properties:
+              lineNumber:
+                type: [integer, "null"]
+              setting:
+                type: string
+              regimenName:
+                type: string
+              atcCodes:
+                type: array
+                items:
+                  type: string
+              startedAt:
+                type: [string, "null"]
+                format: date
+              endedAt:
+                type: [string, "null"]
+                format: date
+              ongoing:
+                type: boolean
+              endReason:
+                type: string
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        attributes:
+          type: array
+          description: ClinicalAttribute (estado menopáusico, estado de castración, sitios metastásicos…).
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, value, observedAt, provenance]
+            properties:
+              key:
+                type: string
+                examples: [estado_menopausico]
+              value:
+                type: string
+              observedAt:
+                type: [string, "null"]
+                format: date
+              provenance:
+                $ref: '#/components/schemas/Provenance'
+        biomarkerSeries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, loincCode, points]
+            properties:
+              name:
+                type: string
+                examples: [PSA]
+              loincCode:
+                type: [string, "null"]
+              points:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [value, unit, performedAt, provenance]
+                  properties:
+                    value:
+                      type: string
+                    unit:
+                      type: [string, "null"]
+                    performedAt:
+                      type: string
+                      format: date
+                    provenance:
+                      $ref: '#/components/schemas/Provenance'
+        completeness:
+          type: array
+          description: Checklist de datos críticos (determinista, FR-23).
+          items:
+            type: object
+            additionalProperties: false
+            required: [item, status]
+            properties:
+              item:
+                type: string
+                examples: [her2]
+              status:
+                type: string
+                enum: [presente_verificado, presente_sin_verificar, faltante, no_aplica]
+        catalogVersion:
+          type: string
+          minLength: 1
 
     BiomarkerManualCreate:
       type: object

@@ -18,6 +18,11 @@
       "request": "case-summary-request.json"
     },
     {
+      "file": "case-view.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/CaseView"
+    },
+    {
       "file": "con-evidencia-s1.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"

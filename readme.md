@@ -923,7 +923,7 @@ paths:
 | `GET /platform/patients/{id}/documents/{docId}/file` | Visor del documento de origen (*streaming*, auditado) | 2 | |
 | `GET /platform/patients/{id}/biomarkers?biomarkerName=` · `…/clinical-notes` | Serie de un biomarcador y notas clínicas | 2 | |
 | `POST /platform/patients/{id}/documents/batch` | Carga de varios PDF en una acción; un `Document` por archivo; respuesta `207` con el resultado de cada archivo (FR-05) | 2 | |
-| **`GET /platform/patients/{id}/case`** | Vista de caso: timeline, tratamientos previos, series y checklist (`CaseView`, HU-15, HU-18) | 2 / 3 | |
+| **`GET /platform/patients/{id}/case`** | Vista de caso: timeline, tratamientos previos, series y checklist (`CaseView`, HU-15, HU-18) | 2 / 3 | en el spec |
 | **`POST /platform/patients/{id}/case-summary`** | Genera y persiste el resumen del caso verificable (`analysis_type = resumen_caso`, HU-16) | 2 | |
 | **`GET /platform/patients/{id}/completeness`** | Checklist de datos críticos (determinista, HU-18) | 3 | |
 | **`POST/GET /platform/patients/{id}/clinical-events`** | Registrar y listar eventos sin tabla propia y evolución: respuesta, toxicidad, progresión (HU-23); `422` si el paciente está egresado | 2 / 4 | |

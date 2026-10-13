@@ -102,6 +102,67 @@ export const zBiomarker = z.object({
 });
 
 /**
+ * Vista de caso (FR-21, FR-23). Sin identidad del paciente. Cada dato lleva su procedencia.
+ */
+export const zCaseView = z.object({
+    timeline: z.array(z.object({
+        id: z.uuid(),
+        eventType: z.string(),
+        derived: z.boolean(),
+        eventDate: z.iso.date().nullable(),
+        datePrecision: z.enum([
+            'dia',
+            'mes',
+            'anio',
+            'incierta'
+        ]),
+        description: z.string(),
+        codes: z.object({
+            icd10: z.string().nullable(),
+            cups: z.string().nullable()
+        }),
+        provenance: zProvenance
+    })),
+    priorTreatments: z.array(z.object({
+        lineNumber: z.int().nullable(),
+        setting: z.string(),
+        regimenName: z.string(),
+        atcCodes: z.array(z.string()),
+        startedAt: z.iso.date().nullable(),
+        endedAt: z.iso.date().nullable(),
+        ongoing: z.boolean(),
+        endReason: z.string(),
+        provenance: zProvenance
+    })),
+    attributes: z.array(z.object({
+        key: z.string(),
+        value: z.string(),
+        observedAt: z.iso.date().nullable(),
+        provenance: zProvenance
+    })),
+    biomarkerSeries: z.array(z.object({
+        name: z.string(),
+        loincCode: z.string().nullable(),
+        points: z.array(z.object({
+            value: z.string(),
+            unit: z.string().nullable(),
+            performedAt: z.iso.date(),
+            provenance: zProvenance
+        }))
+    })),
+    completeness: z.array(z.object({
+        item: z.string(),
+        status: z.enum([
+            'presente_verificado',
+            'presente_sin_verificar',
+            'faltante',
+            'no_aplica'
+        ])
+    })),
+    catalogVersion: z.string().min(1)
+});
+
+/**
  * Registro manual de un biomarcador desde un faltante. El nombre viaja en el cuerpo, nunca en la URL.
  */
 export const zBiomarkerManualCreate = z.object({
@@ -774,6 +835,15 @@ export const zGetPatientResponse = z.discriminatedUnion('view', [
     zPatientSummary,
     zPatientAdminSummary
 ]);
+
+export const zGetPatientCasePath = z.object({
+    patientId: z.uuid()
+});
+
+/**
+ * Vista de caso.
+ */
+export const zGetPatientCaseResponse = zCaseView;
 
 export const zUploadDocumentBody = z.object({
     file: z.string(),

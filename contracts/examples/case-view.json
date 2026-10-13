@@ -1,0 +1,114 @@
+{
+  "timeline": [
+    {
+      "id": "c1a2b3c4-d5e6-4f70-8a91-b2c3d4e5f607",
+      "eventType": "diagnostico",
+      "derived": true,
+      "eventDate": "2026-08-20",
+      "datePrecision": "dia",
+      "description": "Adenocarcinoma de próstata",
+      "codes": { "icd10": "C61", "cups": null },
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    },
+    {
+      "id": "d2b3c4d5-e6f7-4a81-9b02-c3d4e5f60718",
+      "eventType": "progresion",
+      "derived": false,
+      "eventDate": null,
+      "datePrecision": "incierta",
+      "description": "Progresión bioquímica registrada sin fecha confiable",
+      "codes": { "icd10": null, "cups": null },
+      "provenance": {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": "requiere_revision",
+        "conflict": false,
+        "sourceDocumentId": "3b8e5a21-6c4d-4e7f-9a10-2c3d4e5f6a7b",
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "priorTreatments": [
+    {
+      "lineNumber": 1,
+      "setting": "primera_linea_metastasica",
+      "regimenName": "Deprivación androgénica",
+      "atcCodes": ["L02AE02"],
+      "startedAt": "2026-03-01",
+      "endedAt": null,
+      "ongoing": true,
+      "endReason": "desconocido",
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "attributes": [
+    {
+      "key": "estado_castracion",
+      "value": "sensible",
+      "observedAt": "2026-08-20",
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false,
+        "sourceDocumentId": null,
+        "additionalSourceDocumentIds": []
+      }
+    }
+  ],
+  "biomarkerSeries": [
+    {
+      "name": "PSA",
+      "loincCode": null,
+      "points": [
+        {
+          "value": "4.2",
+          "unit": "ng/mL",
+          "performedAt": "2026-03-01",
+          "provenance": {
+            "entryMethod": "seed",
+            "extractionConfidence": "n_a",
+            "reviewStatus": "verificado",
+            "conflict": false,
+            "sourceDocumentId": null,
+            "additionalSourceDocumentIds": []
+          }
+        },
+        {
+          "value": "9.8",
+          "unit": "ng/mL",
+          "performedAt": "2026-08-20",
+          "provenance": {
+            "entryMethod": "seed",
+            "extractionConfidence": "n_a",
+            "reviewStatus": "verificado",
+            "conflict": false,
+            "sourceDocumentId": null,
+            "additionalSourceDocumentIds": []
+          }
+        }
+      ]
+    }
+  ],
+  "completeness": [
+    { "item": "gleason_isup", "status": "presente_verificado" },
+    { "item": "psa", "status": "presente_verificado" },
+    { "item": "estado_castracion", "status": "presente_verificado" },
+    { "item": "ecog", "status": "faltante" }
+  ],
+  "catalogVersion": "2026.10.0"
+}
