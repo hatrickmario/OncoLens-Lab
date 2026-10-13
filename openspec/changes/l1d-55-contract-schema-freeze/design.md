@@ -243,6 +243,14 @@ queremos).
   toda cita de una afirmación case **por `chunkId`** con una entrada de `citedSources` de la misma
   respuesta y que todo `patientDataRefs[i]` exista en `patientDataLinks` (Backend 1) o en un
   `dataRef` del `clinicalContext` de la petición (Backend 2).
+- **Anclaje de `studyPopulationValue` `[Pre-S1 resp. 37 (D-8)]`:** el criterio de aplicabilidad
+  (`ApplicabilityCriterion`) no se ancla por sí mismo: su `citedSources` puede ir vacío. El
+  anclaje de `studyPopulationValue` **lo da la opción** (`EvidenceOption.citedSources`, `minItems:
+  1`, RN-01) cuya fuente hereda el criterio (RN-28); el valor se copia de esa fuente y nunca lo
+  genera el modelo. `patientValue` se ancla al dato del paciente (ADR-34). Los ejemplos
+  `con-evidencia-s4.json` y `rag-query-con-evidencia.json` lo muestran (`citedSources: []` en el
+  criterio). Una afirmación suelta sobre la población del estudio no es un criterio: sigue
+  sujeta a `SupportedClaim` (cita o dato del paciente).
 - **Aviso (RN-19):** `disclaimer` es un solo texto configurable (`AI_DISCLAIMER_TEXT`, dueño
   US-069, que manda sobre la redacción exacta) con las dos frases "Análisis generado por IA —
   requiere validación clínica del oncólogo tratante" y "Uso académico/investigación"; `type:
@@ -250,7 +258,14 @@ queremos).
   `assertDisclaimerRequired()` busca en cada `disclaimer` de los ejemplos las subcadenas
   "requiere validación clínica del oncólogo tratante" y "Uso académico/investigación",
   independientemente de raya o dos puntos (clinical-language M-4). El encabezado "Opciones
-  descritas en la evidencia" vive en la UI, no en el contrato.
+  descritas en la evidencia" vive en la UI, no en el contrato, y se trata como **clave de
+  configuración** (ver `### D15`, textos de UI).
+- **`/case/summary` y el aviso de RN-19** `[Pre-S1 resp. 37 (D-8)]`: `CaseSummaryInternalResponse`
+  no lleva `disclaimer` (el aviso lo compone Backend 1 / la UI desde `AI_DISCLAIMER_TEXT`), y no
+  se añade en este change; la salida del resumen del caso debe mostrar "Análisis generado por IA
+  — requiere validación clínica del oncólogo tratante" y "Uso académico/investigación". Queda
+  **anotado para sus historias**: US-096 (persistencia y respuesta de `clinical-api`, si el
+  contrato público del resumen necesita el campo) y US-097 (UI), con el texto en US-069.
 - **Descripciones normativas** (`assertNormativeDescriptions()`): `relevanceScore` y
   `topRelevanceScore` dicen "metadato secundario", "puntaje del reranker normalizado a [0,1]" y que
   no ordena las opciones ni mide la solidez clínica ni la probabilidad (`minimum: 0`,
@@ -531,6 +546,17 @@ prescribe"). Mientras no exista `packages/clinical-catalogs/lenguaje/terminos-pr
 (US-068), lee `scripts/contracts/terminos-prohibidos-rn23.json` con los literales de RN-23; cuando
 US-068 lo cree, la regla pasa a leer el catálogo y el archivo provisional se borra (dueño:
 US-068).
+
+**Textos de UI como claves de configuración `[Pre-S1 resp. 37 (D-8)]`:** los textos con
+consecuencia de lenguaje que el contrato no transporta —el de un seguimiento
+`fuera_de_contexto`, el de un análisis `sin_evidencia` y el encabezado "Opciones descritas en la
+evidencia"— se guardan en **claves de configuración** (RN-22), nunca como literales en el
+componente (nombres propuestos: `UI_TEXTO_FUERA_DE_CONTEXTO`, `UI_TEXTO_SIN_EVIDENCIA`,
+`UI_ENCABEZADO_OPCIONES_DESCRITAS`; los fija la historia de `apps/web` que los consuma, junto con
+`AI_DISCLAIMER_TEXT` de US-069). Este change solo lo documenta; su revisión de lenguaje
+(RN-23) ocurre en el **Gate 2 de `apps/web`** (`clinical-language-auditor`), no aquí. El texto
+acordado del `fuera_de_contexto` es "La pregunta no se refiere a este análisis ni a su evidencia;
+no se generó respuesta." (D11).
 
 ## Privacidad y ownership
 

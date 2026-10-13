@@ -320,6 +320,14 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/{patientId}/bio
 - **WHEN** un parche vuelve nullable un campo de `RagMeta` (p. ej. `embeddingModel`), o un ejemplo de `/rag/query` o `/rag/follow-up` trae `retrievalParams` o `embeddingModel` en `null`, o el ejemplo del resumen del caso trae `corpusRelease` no nulo
 - **THEN** el comando termina con código distinto de 0 y nombra el campo; `/case/summary` usa `CaseSummaryMeta` (design.md D10), que lleva `null` en `embeddingModel`, `rerankerModel`, `corpusRelease`, `corpusCutoffDate`, `excludedSources` y `retrievalParams` y exige `catalogVersion`
 
+#### Scenario: El anclaje del valor de la población del estudio lo da la opción [US-033 AC-17] [Pre-S1 resp. 37 (D-8)] [RN-01]
+- **WHEN** se revisa `ApplicabilityCriterion.studyPopulationValue` en `con-evidencia-s4.json`
+- **THEN** el criterio puede traer `citedSources` vacío y el anclaje lo da `EvidenceOption.citedSources` (`minItems: 1`); el título de `PMC9000001` describe terapia endocrina en receptor de estrógeno positivo, como su texto citado
+
+#### Scenario: Los textos de UI con consecuencia de lenguaje son configuración [US-033 AC-17] [Pre-S1 resp. 37 (D-8)] [RN-22] [RN-23]
+- **WHEN** se revisa design.md D15
+- **THEN** los textos de `fuera_de_contexto`, de `sin_evidencia` y el encabezado "Opciones descritas en la evidencia" figuran como claves de configuración, revisadas en el Gate 2 de `apps/web`; el aviso de RN-19 del resumen del caso queda anotado para US-096 y US-097
+
 #### Scenario: El proveedor del LLM es un enum [US-033 AC-13] [Pre-S1 resp. 36 (D-7)] [RN-12]
 - **WHEN** se revisa `llmProvider` en `RagMeta` y en `CaseSummaryMeta`
 - **THEN** es `enum [local, nube]`, y los ejemplos con datos sintéticos declaran `local`
