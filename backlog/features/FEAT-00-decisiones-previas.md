@@ -369,6 +369,14 @@ de datos en los sprints siguientes.
 >     - el título de PMC9000001 se alinea con su texto en `con-evidencia-s4.json`;
 >     - los textos de UI de `fuera_de_contexto`, `sin_evidencia` y el encabezado "Opciones descritas en la evidencia" van en claves de configuración, revisadas en el Gate 2 de `apps/web`;
 >     - `/case/summary` lleva el aviso de RN-19, anotado para su historia.
+> - **Gate 2, antes de la segunda vuelta (usuario, 2026-10-13):**
+>   - **resp. 38 (1a):** la regla automática del listado enmascarado (`checkMaskedIdentity` en `assertViewByPermission.mjs`, su test y la fixture `ac-17-listado-enmascarado.json`) se escribe **con TDD Guard desactivado de forma puntual**, solo en esos archivos: primero el commit `test` en rojo y después el de implementación. Se documenta en el PR, como la resp. 30. Motivo: el guard lee `.claude/tdd-guard/data/test.json` del checkout principal y no el del worktree.
+>   - **resp. 39 (2a):** se alinean con D-3 (resp. 32) `tasks.md` (tarea 1.3 y escenario de AC-13) y `proposal.md` del change.
+>   - **resp. 40 (3):** se aceptan las elecciones del implementador:
+>     - `llmProvider` como enum `[local, nube]`, sin `providerLocality`;
+>     - `PatientListItem` con `fullNameMasked` y `nationalIdMasked`;
+>     - el título de PMC9000001 se alinea también en `follow-up-turn.json` y `rag-follow-up-response.json`;
+>     - claves de configuración `UI_TEXTO_FUERA_DE_CONTEXTO`, `UI_TEXTO_SIN_EVIDENCIA` y `UI_ENCABEZADO_OPCIONES_DESCRITAS`.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dados `apps/clinical-api/openapi.yaml` y
