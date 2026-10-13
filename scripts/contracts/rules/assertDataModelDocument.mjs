@@ -1,7 +1,8 @@
 /**
  * AC-5, AC-6, AC-12 y AC-13 (datos), AC-15, AC-18 [Pre-S1 resp. 29]: chequeos simples de texto sobre
  * docs/architecture/data-model.md (fuente única del modelo) y sobre readme §3.1 (solo enlaza). La revisión documental
- * completa la hace el PR; esta regla impide que se pierdan las decisiones congeladas.
+ * completa la hace el PR; esta regla impide que se pierdan las decisiones congeladas, incluidas las notas de
+ * privacidad del Gate 2 (PG-M2, PG-M3, PG-m7).
  */
 import { reporter } from '../lib/findings.mjs';
 import { cellText, codeBlocks, sectionOf, tableRows } from '../lib/markdown.mjs';
@@ -43,6 +44,8 @@ const MILVUS_COLUMNS = ['dense_vector', 'sparse_vector', 'source_type', 'languag
 const ACCOUNT_STATUSES = ['pendiente', 'activo', 'desactivado', 'rechazado'];
 const CLINICAL_SCHEMAS = ['auth', 'identity', 'clinical', 'audit', 'research'];
 const MIN_MARKS = 8;
+/** Atributos que el rol rag_corpus declara en su ALTER ROLE (PG-m7). */
+const RAG_CORPUS_ROLE_ATTRIBUTES = ['NOSUPERUSER', 'NOCREATEDB', 'NOCREATEROLE', 'NOREPLICATION', 'NOBYPASSRLS', 'CONNECTION LIMIT'];
 
 /** La matriz esperada: código → [doctor, admin]. */
 const EXPECTED_MATRIX = {
@@ -185,7 +188,21 @@ function checkIsolation(model) {
   if (!/REVOKE ALL ON SCHEMA public FROM PUBLIC/.test(sql)) found.push(report(MODEL_FILE, '## 9', 'falta REVOKE ALL ON SCHEMA public FROM PUBLIC'));
   const hba = codeBlocks(section, 'conf').join('\n');
   if (!/^hostssl\s+.*\brag_corpus\b.*corpus-db-net/m.test(hba)) found.push(report(MODEL_FILE, '## 9', 'falta la regla de pg_hba que solo admite rag_corpus desde corpus-db-net'));
+  if (!/^host\s+all\s+rag_corpus\s+all\s+reject\s*$/m.test(hba)) found.push(report(MODEL_FILE, '## 9', 'falta la regla reject de pg_hba que rechaza a rag_corpus desde cualquier otro origen o sin TLS'));
+  const role = sql.split('\n').find((line) => /^ALTER ROLE rag_corpus\b/.test(line)) ?? '';
+  if (RAG_CORPUS_ROLE_ATTRIBUTES.some((attribute) => !role.includes(attribute))) found.push(report(MODEL_FILE, '## 9', 'falta ALTER ROLE rag_corpus NOSUPERUSER … CONNECTION LIMIT (atributos del rol)'));
   return [...found, ...requireText(report, section, ['clinical.diagnosis_grading', 'clinical.analysis_follow_up', 'clinical-minio'], '## 9', 'el aislamiento')];
+}
+
+/** Notas de privacidad de columnas que pueden llevar identidad (PG-M2, PG-M3): no se guardan en claro ni salen de Backend 1. */
+function checkPrivacyNotes(model) {
+  const report = reporter(RULE, 'AC-18');
+  const suggested = noteOf(tableSection(model, 'clinical.intake_draft'), 'suggested_fields');
+  const filename = noteOf(tableSection(model, 'clinical.document'), 'original_filename');
+  return [
+    ...requireText(report, suggested, ['nunca se guarda en claro', 'dueño FEAT-01c'], '#### clinical.intake_draft', 'la nota de clinical.intake_draft.suggested_fields'),
+    ...requireText(report, filename, ['puede contener identidad', 'nunca en logs ni hacia Backend 2', 'dueño FEAT-01b'], '#### clinical.document', 'la nota de clinical.document.original_filename'),
+  ];
 }
 
 export function assertDataModelDocument(specs, examples, docs) {
@@ -202,5 +219,6 @@ export function assertDataModelDocument(specs, examples, docs) {
     ...checkAccountStatus(model),
     ...checkMatrix(model),
     ...checkIsolation(model),
+    ...checkPrivacyNotes(model),
   ];
 }
