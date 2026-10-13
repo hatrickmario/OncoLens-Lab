@@ -11,6 +11,9 @@ const ADMIN_VIEW = 'PatientAdminSummary';
 /** Propiedades clínicas que la vista por defecto no puede tener. */
 const CLINICAL_PROPERTIES = ['diagnosis', 'biomarkers', 'recentBiomarkers', 'documents', 'analyses', 'openReviewCount', 'pendingReviewCount', 'missingCriticalCount'];
 
+/** Propiedades con la identidad en claro: solo la ficha las devuelve, con auditoría (D-7, resp. 36). */
+const UNMASKED_IDENTITY = ['identification', 'fullName', 'nationalId'];
+
 /** Los `oneOf` de vistas que la respuesta 200 contiene (directos o dentro de sus propiedades). */
 function viewChoices(spec, entry) {
   const success = findResponse(spec, entry, 200);
@@ -35,6 +38,14 @@ function checkMapping(file, entry, mapping, choices, matrix) {
   return found;
 }
 
+/** El listado y la búsqueda devuelven nombre y documento enmascarados; la identidad en claro solo viaja en la ficha. */
+function checkMaskedIdentity(specs, file, entry, mapping) {
+  if (entry.route.includes('{')) return [];
+  return Object.values(mapping).flatMap((view) => UNMASKED_IDENTITY
+    .filter((name) => Object.hasOwn(schemaOf(specs, CLINICAL_API, view)?.properties ?? {}, name))
+    .map((name) => report(file, `${entry.pointer}/x-view-by-permission`, `la vista ${view} del listado no puede tener ${name}: nombre y documento van enmascarados`)));
+}
+
 function checkDefaultView(specs, file, entry, mapping) {
   const view = mapping?.default;
   const schema = view && schemaOf(specs, CLINICAL_API, view);
@@ -53,6 +64,6 @@ export function assertViewByPermission(specs, examples, docs) {
     if (choices.length === 0) return [];
     const mapping = entry.operation['x-view-by-permission'];
     if (!mapping) return [report(file, entry.pointer, `${labelOf(entry)} responde una vista por permiso y debe declarar x-view-by-permission`)];
-    return [...checkMapping(file, entry, mapping, choices, matrix), ...checkDefaultView(specs, file, entry, mapping)];
+    return [...checkMapping(file, entry, mapping, choices, matrix), ...checkDefaultView(specs, file, entry, mapping), ...checkMaskedIdentity(specs, file, entry, mapping)];
   });
 }
