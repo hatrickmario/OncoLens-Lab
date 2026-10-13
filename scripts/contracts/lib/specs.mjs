@@ -22,14 +22,6 @@ export const SHARED_SCHEMAS = [
 /** Auxiliar abierto del archivo compartido; solo se compone dentro de un allOf cerrado. */
 export const SHARED_AUXILIARY = ['CitedSourceFields'];
 
-/** Cada `[spec, schema]` donde vive la regla `sin evidencia ⇒ topRelevanceScore null` (RN-02). */
-export const NO_EVIDENCE_SCHEMAS = [
-  [CLINICAL_API, 'EvidenceAnalysis'],
-  [CLINICAL_API, 'FollowUpTurn'],
-  [RAG_ORCHESTRATOR, 'RagQueryInternalResponse'],
-  [RAG_ORCHESTRATOR, 'RagFollowUpResponse'],
-];
-
 const SHARED_NAMES = new Set([...SHARED_SCHEMAS, ...SHARED_AUXILIARY]);
 
 /** `[#/components/schemas/<Nombre>]` → `Nombre`, o `null` si el puntero no apunta a un schema de componentes. */

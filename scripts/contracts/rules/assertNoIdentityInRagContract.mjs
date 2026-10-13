@@ -4,7 +4,7 @@
  * la respuesta 200 de /documents/extract, por su puntero exacto.
  */
 import { reporter } from '../lib/findings.mjs';
-import { IDENTITY_B2, matchesIdentity } from '../lib/identity.mjs';
+import { matchesIdentityB2 } from '../lib/identity.mjs';
 import { listOperations, listParameters, listResponses, requestBodyOf } from '../lib/operations.mjs';
 import { pointerOf } from '../lib/pointer.mjs';
 import { walkResolved } from '../lib/resolvedWalk.mjs';
@@ -35,7 +35,7 @@ function* messageSchemas(spec) {
 
 function checkParameters(file, spec) {
   return listParameters(spec)
-    .filter(({ parameter }) => matchesIdentity(parameter.name ?? '', IDENTITY_B2))
+    .filter(({ parameter }) => matchesIdentityB2(parameter.name ?? ''))
     .map(({ parameter, pointer }) => report(file, pointer, `el parámetro ${parameter.name} (${parameter.in}) es identidad o un identificador enlazable`));
 }
 
@@ -43,7 +43,7 @@ function checkMessage(file, spec, { schema, pointer, isRequest }) {
   const found = [];
   walkResolved(spec, schema, pointer, ({ schema: node, pointer: where, chain, viaProperty }) => {
     if (viaProperty === ALLOWED_PROPERTY && pointer === ALLOWED_ROOT && chain.length === 1) return false;
-    if (viaProperty !== null && (matchesIdentity(viaProperty, IDENTITY_B2) || viaProperty === ALLOWED_PROPERTY)) {
+    if (viaProperty !== null && (matchesIdentityB2(viaProperty) || viaProperty === ALLOWED_PROPERTY)) {
       found.push(report(file, where, `la propiedad ${viaProperty} es identidad o un identificador enlazable: no puede cruzar a Backend 2`));
     }
     if (isRequest && node.format === 'uuid') found.push(report(file, where, 'un cuerpo de petición de Backend 2 no declara format uuid (referencias opacas)'));
@@ -57,7 +57,7 @@ function checkExamples(examples) {
     .filter((entry) => entry.spec === RAG_ORCHESTRATOR)
     .flatMap((entry) =>
       [...walkJson(examples.files?.[entry.file] ?? {})]
-        .filter(({ key, pointer }) => key !== null && matchesIdentity(key, IDENTITY_B2) && !(entry.file === 'document-extract-response.json' && pointer.startsWith(`${EXAMPLE_ALLOWED_POINTER}/`)))
+        .filter(({ key, pointer }) => key !== null && matchesIdentityB2(key) && !(entry.file === 'document-extract-response.json' && pointer.startsWith(`${EXAMPLE_ALLOWED_POINTER}/`)))
         .map(({ pointer, key }) => report(`${examples.dir}/${entry.file}`, pointer, `la clave ${key} es identidad o un identificador enlazable`)),
     );
 }

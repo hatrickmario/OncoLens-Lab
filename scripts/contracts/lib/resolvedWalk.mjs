@@ -1,9 +1,6 @@
 /** Recorrido de un schema siguiendo los `$ref` internos: cada propiedad se visita donde vive físicamente. */
 import { followRefs, pointerOf } from './pointer.mjs';
-
-const MAP_KEYWORDS = ['properties', 'patternProperties'];
-const LIST_KEYWORDS = ['allOf', 'anyOf', 'oneOf'];
-const SINGLE_KEYWORDS = ['items', 'not', 'if', 'then', 'else', 'additionalProperties', 'unevaluatedProperties'];
+import { SCHEMA_KEYWORDS, SCHEMA_LIST_KEYWORDS, SCHEMA_MAP_KEYWORDS } from './schemaKeywords.mjs';
 
 /**
  * @typedef {object} ResolvedVisit
@@ -28,16 +25,16 @@ export function walkResolved(spec, root, rootPointer, visit) {
     if (visit({ schema: resolved.node, pointer: resolved.pointer, chain, viaProperty }) === false) return;
     const path = new Set(ancestors).add(resolved.pointer);
     const node = resolved.node;
-    for (const keyword of MAP_KEYWORDS) {
+    for (const keyword of SCHEMA_MAP_KEYWORDS) {
       for (const [name, child] of Object.entries(node[keyword] ?? {})) {
         const next = keyword === 'properties' ? [...chain, name] : chain;
         descend(child, `${resolved.pointer}/${keyword}/${pointerOf(name).slice(2)}`, next, keyword === 'properties' ? name : null, path);
       }
     }
-    for (const keyword of LIST_KEYWORDS) {
+    for (const keyword of SCHEMA_LIST_KEYWORDS) {
       (node[keyword] ?? []).forEach((child, index) => descend(child, `${resolved.pointer}/${keyword}/${index}`, chain, null, path));
     }
-    for (const keyword of SINGLE_KEYWORDS) {
+    for (const keyword of SCHEMA_KEYWORDS) {
       if (node[keyword] && typeof node[keyword] === 'object') descend(node[keyword], `${resolved.pointer}/${keyword}`, chain, null, path);
     }
   };

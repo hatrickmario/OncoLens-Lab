@@ -1,21 +1,7 @@
 /** Recorridos de schemas OpenAPI/JSON Schema y de valores JSON. */
 import { listOperations } from './operations.mjs';
 import { pointerOf } from './pointer.mjs';
-
-const SCHEMA_MAP_KEYWORDS = ['properties', 'patternProperties', '$defs'];
-const SCHEMA_LIST_KEYWORDS = ['allOf', 'anyOf', 'oneOf', 'prefixItems'];
-const SCHEMA_KEYWORDS = [
-  'items',
-  'not',
-  'if',
-  'then',
-  'else',
-  'contains',
-  'propertyNames',
-  'additionalProperties',
-  'unevaluatedProperties',
-  'unevaluatedItems',
-];
+import { SCHEMA_KEYWORDS, SCHEMA_LIST_KEYWORDS, SCHEMA_MAP_KEYWORDS } from './schemaKeywords.mjs';
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 

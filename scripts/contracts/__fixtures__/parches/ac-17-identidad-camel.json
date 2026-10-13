@@ -1,0 +1,230 @@
+[
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega patientEmail a ClinicalContext (PG-M1)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/patientEmail", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/patientEmail" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega contactPhone a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/contactPhone", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/contactPhone" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega homeAddress a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/homeAddress", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/homeAddress" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega patientBirthDate a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/patientBirthDate", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/patientBirthDate" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega patientNationalId a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/patientNationalId", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/patientNationalId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega correo a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/correo", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/correo" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega cedula a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/cedula", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/cedula" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega mrn a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/mrn", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/mrn" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega numeroDocumento a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/numeroDocumento", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/numeroDocumento" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega numeroHistoriaClinica a ClinicalContext",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/numeroHistoriaClinica", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/numeroHistoriaClinica" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "historiaCompleta, un filtro legítimo de Backend 2, no es identidad",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "test", "path": "/components/schemas/RagFiltersApplied/properties/historiaCompleta/type", "value": "boolean" }] }],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertExamplesSynthetic",
+    "escenario": "un nombre de archivo con prefijo SINT- no es el nombre de una persona",
+    "parches": [{ "destino": "ejemplo:patient-summary-doctor.json", "operaciones": [{ "op": "add", "path": "/identification/originalFilename", "value": "SINT-historia-clinica.pdf" }] }],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega diagnosisId a ClinicalContext (identificador enlazable genérico)",
+    "parches": [{ "destino": "rag-orchestrator", "operaciones": [{ "op": "add", "path": "/components/schemas/ClinicalContext/properties/diagnosis/properties/diagnosisId", "value": { "type": "string" } }] }],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "diagnosis/properties/diagnosisId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega treatmentId, entityId y patientUuid a ClinicalContext",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/treatmentId", "value": { "type": "string" } },
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/entityId", "value": { "type": "string" } },
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/patientUuid", "value": { "type": "string" } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "ClinicalContext/properties/patientUuid" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "la lista blanca de identificadores admite chunkId, externalId, traceId y pseudoPatientId",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/chunkId", "value": { "type": "string" } },
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/externalId", "value": { "type": "string" } },
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/traceId", "value": { "type": "string" } },
+          { "op": "add", "path": "/components/schemas/ClinicalContext/properties/valid", "value": { "type": "boolean" } }
+        ]
+      }
+    ],
+    "esperado": { "sinHallazgos": true }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega el parámetro de query patientEmail a GET /platform/patients",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "patientEmail", "in": "query", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "patientEmail" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega la cabecera X-Contact-Phone a GET /platform/patients",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "X-Contact-Phone", "in": "header", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "X-Contact-Phone" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInUrl",
+    "escenario": "un parche agrega la cookie patientNationalId como parámetro",
+    "parches": [
+      {
+        "destino": "clinical-api",
+        "operaciones": [{ "op": "add", "path": "/paths/~1platform~1patients/get/parameters/-", "value": { "name": "patientNationalId", "in": "cookie", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "patientNationalId" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega nationalId dentro de prefixItems de RagQueryInternalRequest (DPR-3)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          {
+            "op": "add",
+            "path": "/components/schemas/RagQueryInternalRequest/properties/pares",
+            "value": { "type": "array", "prefixItems": [{ "type": "object", "properties": { "nationalId": { "type": "string" } } }] }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "prefixItems" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega nationalId bajo dependentSchemas de ClinicalContext",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          {
+            "op": "add",
+            "path": "/components/schemas/ClinicalContext/dependentSchemas",
+            "value": { "currentLine": { "properties": { "nationalId": { "type": "string" } } } }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "dependentSchemas" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega nationalId bajo $defs de un schema de Backend 2",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          { "op": "add", "path": "/components/schemas/RagFiltersApplied/$defs", "value": { "interno": { "type": "object", "properties": { "nationalId": { "type": "string" } } } } }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "$defs" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
+    "escenario": "un parche agrega nationalId dentro de contains de un arreglo de Backend 2",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [
+          {
+            "op": "add",
+            "path": "/components/schemas/RagQueryInternalRequest/properties/pares",
+            "value": { "type": "array", "contains": { "type": "object", "properties": { "nationalId": { "type": "string" } } } }
+          }
+        ]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "rutaContiene": "contains" }
+  }
+]

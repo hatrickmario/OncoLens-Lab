@@ -5,7 +5,7 @@
 import { normalizeName } from './text.mjs';
 
 /** Identidad personal: rige la URL y las cabeceras de Backend 1. */
-export const IDENTITY_PII = [
+export const IDENTIDAD_PII = [
   /name$/,
   /^nombres?$/,
   /^apellidos?$/,
@@ -24,8 +24,13 @@ export const IDENTITY_PII = [
   /^telephone$/,
   /^telefono$/,
   /^email$/,
+  /^correo$/,
+  /^cedula$/,
+  /^numerodocumento$/,
   /^medicalrecordnumber$/,
+  /^mrn$/,
   /^historiaclinica$/,
+  /^numerohistoria(clinica)?$/,
 ];
 
 /** Identificadores enlazables: junto con la identidad personal, rigen todo el contrato de Backend 2. */
@@ -39,19 +44,53 @@ const LINKABLE_IDENTIFIERS = [
   /^documentid$/,
 ];
 
-export const IDENTITY_B2 = [...IDENTITY_PII, ...LINKABLE_IDENTIFIERS];
+export const IDENTIDAD_B2 = [...IDENTIDAD_PII, ...LINKABLE_IDENTIFIERS];
 
 /** Nombres que casan con `name$` pero no son identidad; se amplía solo con revisión de privacy-guardian. */
-export const NAME_ALLOWLIST = ['biomarkerName', 'sourceName', 'regimenName', 'originalName', 'drugName', 'llmModel'].map(normalizeName);
+export const NAME_ALLOWLIST = [
+  'biomarkerName', // nombre canónico del biomarcador del catálogo
+  'sourceName', // fuente del corpus, copiada del catálogo
+  'regimenName', // régimen terapéutico del catálogo
+  'originalName', // texto del biomarcador tal como aparece en el documento
+  'drugName', // fármaco del catálogo
+  'llmModel', // modelo, no una persona
+  'originalFilename', // nombre de archivo: lo cubren la regla SINT- de los ejemplos y la nota de clinical-api (no viaja a Backend 2)
+  'fileName',
+  'pseudoPatientId', // seudónimo aleatorio por consulta (RN-11), nunca en el prompt
+].map(normalizeName);
 
-/** Cada nombre que se prueba: el completo y, en nombres con separadores (cabeceras como `X-Patient-Email`), cada tramo contiguo. */
+/** Cada nombre que se prueba: el completo y cada tramo contiguo del nombre partido por separadores (`X-Patient-Email`) y por camelCase (`patientEmail`). */
 function candidateNames(name) {
-  const tokens = String(name).split(/[-_]/).filter(Boolean);
+  const tokens = String(name)
+    .split(/[-_\s]+/)
+    .flatMap((part) => part.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) ?? []);
   const spans = [];
   for (let start = 0; start < tokens.length; start += 1) {
     for (let end = start + 1; end <= tokens.length; end += 1) spans.push(tokens.slice(start, end).join(''));
   }
   return [name, ...spans].map(normalizeName);
+}
+
+/**
+ * Identificadores genéricos (último tramo `id`, `uuid`…) que SÍ pueden cruzar a Backend 2, cada uno justificado:
+ * ninguno enlaza con una entidad clínica ni con una persona.
+ */
+export const IDENTIFIER_ALLOWLIST = [
+  'chunkId', // referencia best-effort a un chunk del corpus
+  'externalId', // identificador de la fuente del corpus (DOI, NCT, PMID)
+  'traceId', // trazabilidad de la llamada, nuevo por turno
+  'pseudoPatientId', // seudónimo aleatorio por consulta (RN-11), nunca en el prompt
+].map(normalizeName);
+
+/** ¿Termina el nombre en un tramo `id`/`uuid`, es decir, es un identificador de algo? */
+function isGenericIdentifier(name) {
+  const tokens = String(name).split(/[-_\s]+/).flatMap((part) => part.match(/[A-Z]+(?![a-z])|[A-Z]?[a-z0-9]+/g) ?? []);
+  return ['id', 'ids', 'uuid', 'guid'].includes(tokens.at(-1)?.toLowerCase());
+}
+
+/** ¿El nombre es de IDENTIDAD_B2 o un identificador genérico fuera de la lista blanca? */
+export function matchesIdentityB2(name) {
+  return matchesIdentity(name, IDENTIDAD_B2) || (isGenericIdentifier(name) && !IDENTIFIER_ALLOWLIST.includes(normalizeName(name)));
 }
 
 /** ¿El nombre es de identidad según `patterns`, descontada la lista blanca? */
