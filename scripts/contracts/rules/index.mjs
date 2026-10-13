@@ -13,7 +13,7 @@ import { assertErrorsNoEcho } from './assertErrorsNoEcho.mjs';
 import { assertEvidenceAnalysisShape } from './assertEvidenceAnalysisShape.mjs';
 import { assertExamplesSynthetic } from './assertExamplesSynthetic.mjs';
 import { assertExamplesValid } from './assertExamplesValid.mjs';
-import { assertGeneratedInSync } from './assertGeneratedInSync.mjs';
+import { assertSharedTypesIdenticalAcrossProviders } from './assertSharedTypesIdenticalAcrossProviders.mjs';
 import { assertFollowUpContract } from './assertFollowUpContract.mjs';
 import { assertLoginContract } from './assertLoginContract.mjs';
 import { assertManualEntryEndpoints } from './assertManualEntryEndpoints.mjs';
@@ -64,7 +64,7 @@ export const RULES = [
   // AC-14
   assertPublishedFromYear,
   // AC-8 y AC-16
-  assertGeneratedInSync,
+  assertSharedTypesIdenticalAcrossProviders,
   assertReadmeExtractInSync,
   // AC-17
   assertNoPrescriptiveLanguage,

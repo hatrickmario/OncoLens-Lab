@@ -46,6 +46,13 @@ const LINKABLE_IDENTIFIERS = [
 
 export const IDENTIDAD_B2 = [...IDENTIDAD_PII, ...LINKABLE_IDENTIFIERS];
 
+/** Nombres de persona: lo que debe ser "Prueba Sintética" en los ejemplos. */
+export const PATRONES_NOMBRE_PERSONA = [/name$/, /^nombres?$/, /^apellidos?$/];
+/** Números de documento: lo que debe empezar por SINT- en los ejemplos. */
+export const PATRONES_NUMERO_DOCUMENTO = [/^nationalid(masked)?$/, /^documentnumber$/, /^numerodocumento$/, /^documento$/, /^cedula$/];
+/** Fechas de nacimiento: no pueden ser absolutas en los ejemplos. */
+export const PATRONES_FECHA_NACIMIENTO = [/^birthdate$/, /^dateofbirth$/, /^dob$/, /^fechanacimiento$/];
+
 /** Nombres que casan con `name$` pero no son identidad; se amplía solo con revisión de privacy-guardian. */
 export const NAME_ALLOWLIST = [
   'biomarkerName', // nombre canónico del biomarcador del catálogo

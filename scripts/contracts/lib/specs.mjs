@@ -22,6 +22,9 @@ export const SHARED_SCHEMAS = [
 /** Auxiliar abierto del archivo compartido; solo se compone dentro de un allOf cerrado. */
 export const SHARED_AUXILIARY = ['CitedSourceFields'];
 
+/** Las cuatro clases de licencia del contrato (`licenseClass`) y de `corpus.license_class`; el MVP solo ingiere tres por configuración. */
+export const LICENSE_CLASSES = ['dominio_publico', 'cc_by', 'cc_by_sa', 'cc_by_nc'];
+
 const SHARED_NAMES = new Set([...SHARED_SCHEMAS, ...SHARED_AUXILIARY]);
 
 /** `[#/components/schemas/<Nombre>]` → `Nombre`, o `null` si el puntero no apunta a un schema de componentes. */

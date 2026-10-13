@@ -6,6 +6,7 @@
 import { reporter } from '../lib/findings.mjs';
 import { cellText, codeBlocks, sectionOf, tableRows } from '../lib/markdown.mjs';
 import { permissionMatrix } from '../lib/permissions.mjs';
+import { LICENSE_CLASSES } from '../lib/specs.mjs';
 import { missingFragments } from '../lib/text.mjs';
 
 const RULE = 'assertDataModelDocument';
@@ -38,7 +39,6 @@ const FOLLOW_UP_COLUMNS = [
   'catalog_version', 'trace_id', 'created_at',
 ];
 const MILVUS_COLUMNS = ['dense_vector', 'sparse_vector', 'source_type', 'language', 'cancer_type_tags', 'population', 'study_design', 'published_year', 'is_current'];
-const LICENSE_CLASSES = ['dominio_publico', 'cc_by', 'cc_by_sa', 'cc_by_nc'];
 const ACCOUNT_STATUSES = ['pendiente', 'activo', 'desactivado', 'rechazado'];
 const CLINICAL_SCHEMAS = ['auth', 'identity', 'clinical', 'audit', 'research'];
 const MIN_MARKS = 8;

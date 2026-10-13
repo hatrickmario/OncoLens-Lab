@@ -3,11 +3,10 @@ import { reporter } from '../lib/findings.mjs';
 import { citationsIn, selectExamples } from '../lib/examples.mjs';
 import { sameMembers } from '../lib/sets.mjs';
 import { missingFragments } from '../lib/text.mjs';
-import { EVIDENCE, schemaPointer } from '../lib/specs.mjs';
+import { EVIDENCE, LICENSE_CLASSES, schemaPointer } from '../lib/specs.mjs';
 
 const report = reporter('assertCitedSourceAttribution', 'AC-12');
 
-const LICENSE_CLASSES = ['dominio_publico', 'cc_by', 'cc_by_sa', 'cc_by_nc'];
 const NULLABLE_FIELDS = [
   'studyDesign',
   'trialPhase',

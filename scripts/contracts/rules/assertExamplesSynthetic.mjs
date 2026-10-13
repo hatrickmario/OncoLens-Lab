@@ -3,16 +3,13 @@
  * Sintética"), NCCN y ESMO solo como exclusión, y los de Backend 2 no llevan fechas absolutas en el contexto ni en el texto.
  */
 import { reporter } from '../lib/findings.mjs';
-import { matchesIdentity } from '../lib/identity.mjs';
+import { PATRONES_FECHA_NACIMIENTO, PATRONES_NOMBRE_PERSONA, PATRONES_NUMERO_DOCUMENTO, matchesIdentity } from '../lib/identity.mjs';
 import { schemaPointer, RAG_ORCHESTRATOR } from '../lib/specs.mjs';
 import { walkJson } from '../lib/walk.mjs';
 
 const report = reporter('assertExamplesSynthetic', 'AC-17 · RN-14');
 
 const SYNTHETIC_NAME = /^Prueba Sintética( \d+)?$/;
-const PERSON_NAME_PATTERNS = [/name$/, /^nombres?$/, /^apellidos?$/];
-const BIRTH_DATE_PATTERNS = [/^birthdate$/, /^dateofbirth$/, /^dob$/, /^fechanacimiento$/];
-const DOCUMENT_NUMBER_PATTERNS = [/^nationalid(masked)?$/, /^documentnumber$/, /^numerodocumento$/, /^documento$/, /^cedula$/];
 const SEARCH_REQUEST_TARGET = schemaPointer('PatientSearchRequest');
 const REAL_ORIGINS = ['real_anonimizado', 'real_identificado'];
 const EXCLUSION_KEYS = ['sourcesNotIncluded', 'excludedSources'];
@@ -31,12 +28,12 @@ function checkNode({ value, pointer, key }, context) {
   const found = [];
   if (key === 'dataClassification' && value !== 'sintetico') found.push(report(file, pointer, 'dataClassification debe ser sintetico'));
   if (key === 'dataOrigin' && REAL_ORIGINS.includes(value)) found.push(report(file, pointer, `${value} no es sintético: los ejemplos solo usan datos sintéticos`));
-  if (key !== null && typeof value === 'string' && matchesIdentity(key, DOCUMENT_NUMBER_PATTERNS) && !value.startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
+  if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_NUMERO_DOCUMENTO) && !value.startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
   if (['originalFilename', 'filename', 'fileName'].includes(key) && !String(value).startsWith('SINT-')) found.push(report(file, pointer, `${key} debe empezar por SINT-`));
-  if (key !== null && typeof value === 'string' && matchesIdentity(key, BIRTH_DATE_PATTERNS) && ABSOLUTE_DATE.test(value)) {
+  if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_FECHA_NACIMIENTO) && ABSOLUTE_DATE.test(value)) {
     found.push(report(file, pointer, 'una fecha de nacimiento absoluta no puede aparecer en un ejemplo: solo el año o una edad relativa'));
   }
-  const isPerson = (key !== 'name' && key !== null && matchesIdentity(key, PERSON_NAME_PATTERNS)) || (key === 'name' && entry.target === SEARCH_REQUEST_TARGET);
+  const isPerson = (key !== 'name' && key !== null && matchesIdentity(key, PATRONES_NOMBRE_PERSONA)) || (key === 'name' && entry.target === SEARCH_REQUEST_TARGET);
   if (isPerson && !SYNTHETIC_NAME.test(String(value))) found.push(report(file, pointer, 'todo nombre de persona debe ser "Prueba Sintética"'));
   return found;
 }

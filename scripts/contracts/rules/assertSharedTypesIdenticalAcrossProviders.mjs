@@ -2,7 +2,7 @@
 import { reporter } from '../lib/findings.mjs';
 import { PROVIDERS, SHARED_SCHEMAS } from '../lib/specs.mjs';
 
-const report = reporter('assertGeneratedInSync', 'AC-8 · AC-16');
+const report = reporter('assertSharedTypesIdenticalAcrossProviders', 'AC-8 · AC-16');
 
 /** La declaración `export type <name> = …;` del archivo generado, con los espacios normalizados. */
 function declarationOf(text, name) {
@@ -10,7 +10,7 @@ function declarationOf(text, name) {
   return match ? match[0].replace(/\s+/g, ' ').trim() : null;
 }
 
-export function assertGeneratedInSync(specs, examples, docs) {
+export function assertSharedTypesIdenticalAcrossProviders(specs, examples, docs) {
   const generated = docs.generatedTypes ?? {};
   const missing = PROVIDERS.filter((provider) => !generated[provider])
     .map((provider) => report(`packages/api-contracts/src/types/${provider}/types.gen.ts`, '#', 'falta lo generado: ejecutar npm run contracts:generate'));
