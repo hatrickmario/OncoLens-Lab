@@ -1,0 +1,9 @@
+[
+  {
+    "ac": "AC-1",
+    "regla": "assertSpecVersions",
+    "escenario": "un parche elimina GET /platform/patients/{patientId}/case (la vista de caso se mantiene, D-5)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "remove", "path": "/paths/~1platform~1patients~1{patientId}~1case" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "case", "mensajeContiene": "GET /platform/patients/{patientId}/case" }
+  }
+]

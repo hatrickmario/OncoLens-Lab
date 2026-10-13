@@ -25,11 +25,15 @@ Ambos specs MUST declarar `info.version` semántico, `1.0.0` al congelar; un cam
 - **THEN** los reales declaran `1.0.0` y el parcheado hace terminar el comando con código distinto de 0 nombrando el spec
 
 ### Requirement: Operaciones del S1 en el spec de clinical-api
-Antes de la primera implementación del S1, el spec de `clinical-api` MUST contener `POST /platform/auth/login`, `POST /platform/auth/logout`, `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}`, `POST /platform/patients/{patientId}/documents` y `POST /platform/evidence-analyses`, además del registro manual y el seguimiento; cada historia posterior SHALL añadir su endpoint en su tarea `## contratos` (aditivo).
+Antes de la primera implementación del S1, el spec de `clinical-api` MUST contener `POST /platform/auth/login`, `POST /platform/auth/logout`, `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}`, `POST …/documents`, `POST /platform/evidence-analyses` y `GET /platform/patients/{patientId}/case` `[Pre-S1 resp. 34 (D-5)]`, además del registro manual y el seguimiento; cada historia posterior SHALL añadir su endpoint en su tarea `## contratos` (aditivo).
 
 #### Scenario: Las operaciones del S1 están declaradas [US-033 AC-1]
 - **WHEN** `assertSpecVersions()` revisa el spec de `clinical-api`, y un parche elimina `POST /platform/auth/logout`
-- **THEN** el real contiene las siete operaciones y el parcheado hace terminar el comando con código distinto de 0 nombrando la ruta
+- **THEN** el real contiene las ocho operaciones y el parcheado hace terminar el comando con código distinto de 0 nombrando la ruta
+
+#### Scenario: La vista de caso se mantiene y es lectura clínica [US-033 AC-1] [Pre-S1 resp. 34 (D-5)]
+- **WHEN** `assertSpecVersions()` y `assertOperationsDeclarePermission()` revisan `GET /platform/patients/{patientId}/case`
+- **THEN** responde `200` con `CaseView`, declara `x-permission: clinical:read` y `401`, `403` y `404`; el administrador recibe `403` (lectura clínica)
 
 ### Requirement: Schemas cerrados y bloques obligatorios
 Todo schema `type: object` de ambos specs y de `contracts/schemas/evidence.yaml` MUST declarar `required` y `additionalProperties: false` (o `unevaluatedProperties: false` en las composiciones), salvo las excepciones nombradas con dueño de design.md D7; `meta.retrievalParams` SHALL ser cerrado y todo enum nullable MUST incluir `null`. Las propiedades SHALL estar en camelCase y los bloques de ADR-26 MUST ser obligatorios aunque vayan vacíos `[Pre-S1 resp. 25]`.

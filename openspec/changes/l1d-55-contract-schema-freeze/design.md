@@ -606,6 +606,8 @@ Diff propuesto `apps/clinical-api/openapi.yaml` (respecto de readme §4.1):
 ~                                      filtersApplied.publishedFromYear opcional (D8); errores D11
 +   POST /platform/patients/{patientId}/biomarkers   201 Biomarker | 401 | 403 | 404 | 422
 +   POST /platform/patients/{patientId}/diagnoses    201 Diagnosis | 401 | 403 | 404 | 422
++   GET  /platform/patients/{patientId}/case   200 CaseView | 401 | 403 | 404   x-permission: clinical:read
++        [Pre-S1 resp. 34 (D-5): se mantiene; el administrador recibe 403, es lectura clínica]
 +   POST /platform/evidence-analyses/{analysisId}/follow-ups
 +        201 FollowUpTurn | 401 | 403 PERMISO_DENEGADO|OPT_OUT_ANALISIS_IA | 404 | 409 LIMITE_SEGUIMIENTO
 +        | 422 CUERPO_INVALIDO|PACIENTE_EGRESADO|ANALISIS_SIN_EVIDENCIA | 429 | 502 | 503 | 504
