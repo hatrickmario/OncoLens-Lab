@@ -37,7 +37,7 @@ const GRADING_TEXT = ['CHECK por sistema', 'gleason_isup', 'nottingham', 'gleaso
 const CANONICAL_GRADES = ['Gleason 4+3=7 · ISUP 3', 'Nottingham grado 2'];
 const FOLLOW_UP_COLUMNS = [
   'analysis_id', 'turn_number', 'question_text', 'status', 'answer', 'cited_sources', 'omitted_claims',
-  'patient_data_links', 'llm_model', 'embedding_model', 'reranker_model', 'nli_model', 'prompt_version',
+  'patient_data_links', 'data_classification', 'llm_provider', 'llm_model', 'embedding_model', 'reranker_model', 'nli_model', 'prompt_version',
   'catalog_version', 'trace_id', 'created_at',
 ];
 const MILVUS_COLUMNS = ['dense_vector', 'sparse_vector', 'source_type', 'language', 'cancer_type_tags', 'population', 'study_design', 'published_year', 'is_current'];
@@ -202,6 +202,7 @@ function checkPrivacyNotes(model) {
   return [
     ...requireText(report, suggested, ['nunca se guarda en claro', 'dueño FEAT-01c'], '#### clinical.intake_draft', 'la nota de clinical.intake_draft.suggested_fields'),
     ...requireText(report, filename, ['puede contener identidad', 'nunca en logs ni hacia Backend 2', 'dueño FEAT-01b'], '#### clinical.document', 'la nota de clinical.document.original_filename'),
+    ...requireText(report, noteOf(tableSection(model, 'clinical.ai_analysis_record'), 'clinical_context_snapshot'), ['sin pseudoPatientId'], '#### clinical.ai_analysis_record', 'la nota de clinical.ai_analysis_record.clinical_context_snapshot'),
   ];
 }
 
