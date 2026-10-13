@@ -1298,15 +1298,16 @@ ALTER DEFAULT PRIVILEGES FOR ROLE <rol de migraciones> IN SCHEMA auth, identity,
 -- 4. Nada heredado por PUBLIC.
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 
--- Atributos del rol: sin privilegios de administración y con límite de conexiones y de tiempo (valores configurables).
+-- Atributos del rol: sin privilegios de administración y con límite de conexiones (valor configurable).
 ALTER ROLE rag_corpus NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT <límite configurable>;
 ```
 
 ```conf
 # 5. pg_hba.conf: rag_corpus solo entra desde corpus-db-net, con TLS; ninguna otra regla lo admite.
 hostssl  <base de datos>  rag_corpus  <subred de corpus-db-net>  scram-sha-256
-# Cualquier otro origen o conexión sin TLS del rol: rechazo explícito (la primera regla que casa manda).
+# Cualquier otro origen, conexión sin TLS o por socket local del rol: rechazo explícito (la primera regla que casa manda).
 host     all                rag_corpus  all                          reject
+local    all                rag_corpus                               reject
 ```
 
 6. **Sin acceso a `clinical-minio`:** `rag-orchestrator` no tiene credenciales ni ruta de red hacia `clinical-minio`; recibe los PDF en el cuerpo del request y no los persiste.
