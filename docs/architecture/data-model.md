@@ -130,7 +130,7 @@ erDiagram
     INTAKE_DRAFT {
         uuid id PK
         uuid document_id FK
-        jsonb suggested_fields "con confianza por campo"
+        jsonb suggested_fields "con confianza por campo; la identidad sugerida nunca se guarda en claro (cifrada o aparte en identity hasta la confirmación) — vacío resuelto (US-033), dueño FEAT-01c"
         string status "pendiente|confirmado|descartado|expirado"
         uuid created_by FK
         timestamp expires_at
@@ -217,7 +217,7 @@ erDiagram
         string document_type "historia_clinica|examen"
         string object_storage_key "clinical-minio"
         string checksum "SHA-256; único por paciente"
-        string original_filename
+        string original_filename "puede contener identidad: cifrado o enmascarado, nunca en logs ni hacia Backend 2 — vacío resuelto (US-033), dueño FEAT-01b"
         string mime_type
         string ocr_status "pendiente|procesando|completado|error|cuarentena_pii|requiere_revision_identidad"
         string pii_finding_types "nullable — sin valores"
@@ -703,7 +703,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 |---|---|---|---|
 | `id` | uuid | PK |  |
 | `document_id` | uuid | FK |  |
-| `suggested_fields` | jsonb |  | con confianza por campo |
+| `suggested_fields` | jsonb |  | con confianza por campo. La identidad sugerida por el OCR nunca se guarda en claro: va cifrada con la clave de identidad, o aparte en `identity` hasta la confirmación del doctor — vacío resuelto (US-033), dueño FEAT-01c |
 | `status` | text |  | pendiente\|confirmado\|descartado\|expirado |
 | `created_by` | uuid | FK |  |
 | `expires_at` | timestamptz |  |  |
@@ -805,7 +805,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `document_type` | text |  | historia_clinica\|examen |
 | `object_storage_key` | text |  | clinical-minio |
 | `checksum` | text |  | SHA-256; único por paciente |
-| `original_filename` | text |  |  |
+| `original_filename` | text |  | puede contener identidad: se guarda cifrado o enmascarado, nunca en logs ni hacia Backend 2 (a Backend 2 viaja un nombre neutro) — vacío resuelto (US-033), dueño FEAT-01b |
 | `mime_type` | text |  |  |
 | `ocr_status` | text |  | pendiente\|procesando\|completado\|error\|cuarentena_pii\|requiere_revision_identidad |
 | `pii_finding_types` | text |  | nullable — sin valores |
@@ -1291,11 +1291,16 @@ ALTER DEFAULT PRIVILEGES FOR ROLE <rol de migraciones> IN SCHEMA auth, identity,
 
 -- 4. Nada heredado por PUBLIC.
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
+
+-- Atributos del rol: sin privilegios de administración y con límite de conexiones y de tiempo (valores configurables).
+ALTER ROLE rag_corpus NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT <límite configurable>;
 ```
 
 ```conf
 # 5. pg_hba.conf: rag_corpus solo entra desde corpus-db-net, con TLS; ninguna otra regla lo admite.
 hostssl  <base de datos>  rag_corpus  <subred de corpus-db-net>  scram-sha-256
+# Cualquier otro origen o conexión sin TLS del rol: rechazo explícito (la primera regla que casa manda).
+host     all                rag_corpus  all                          reject
 ```
 
 6. **Sin acceso a `clinical-minio`:** `rag-orchestrator` no tiene credenciales ni ruta de red hacia `clinical-minio`; recibe los PDF en el cuerpo del request y no los persiste.
