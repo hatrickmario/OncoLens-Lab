@@ -73,8 +73,8 @@ tomar por válido algo que no se pudo respaldar.
   con el stack en perfil de test (adapters falsos `LLM-OK` y FX-06a-a), cuando escribe
   `Q-HER2` y presiona "Analizar evidencia", entonces ve bajo el encabezado "Opciones
   descritas en la evidencia" una tarjeta con la opción, su justificación y al menos un
-  chip de cita con `sourceName` "NCI PDQ" y `externalId` "CDR-TEST-001" en su idioma
-  original. `[HU-03]` `[OL-04]` `[AC-10.2]`
+  chip de cita con `sourceName` "NCI PDQ" y `externalId` del ejemplo `rag-query-con-evidencia.json` (el E2E lo lee del ejemplo,
+  `[S1 resp. 18]`) en su idioma original. `[HU-03]` `[OL-04]` `[AC-10.2]`
 - **AC-2 (borde · relevancia secundaria)** · Dada la tarjeta del AC-1, cuando se
   inspecciona, entonces la relevancia aparece con el rótulo exacto "Relevancia de la
   evidencia" y el valor `0,87`, después de las citas y con estilo secundario, y no

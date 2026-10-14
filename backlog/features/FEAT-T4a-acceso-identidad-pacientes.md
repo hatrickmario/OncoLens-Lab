@@ -409,8 +409,8 @@ arriesgar la identidad del paciente aunque escriba su nombre por error.
   nombre, documento y teléfono, cuando se ejecuta el análisis en el S1, entonces
   `clinicalContext.clinicalNotes = []`. `[OL-03]` `[readme §2.5]`
 - **AC-5 (borde · seudónimo fuera del prompt)** · Dado un `RagQueryInternalRequest`
-  con `pseudoPatientId = "p-7f3a"`, cuando `rag-orchestrator` arma el prompt para el
-  LLM falso, entonces el texto del prompt no contiene `p-7f3a`. `[RN-11]` `[CLAUDE.md]`
+  con `pseudoPatientId = "psd_p7f3a"`, cuando `rag-orchestrator` arma el prompt para el
+  LLM falso, entonces el texto del prompt no contiene `psd_p7f3a` (literal corregido al patrón `^psd_` del contrato, `[S1 resp. 18]`). `[RN-11]` `[CLAUDE.md]`
 - **AC-6 (borde · snapshot persistido)** · Dado el análisis del AC-1, cuando se lee
   `clinical_context_snapshot` del `AIAnalysisRecord`, entonces es igual al
   `clinicalContext` enviado (mismo hash) y tampoco contiene los identificadores del

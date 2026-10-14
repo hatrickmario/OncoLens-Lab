@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
 **Valor:** hoy el oncólogo busca evidencia a mano y no sabe si lo que encuentra se apoya de verdad en una fuente (P5, P12). Con esta Feature, desde el primer sprint puede hacer una pregunta en lenguaje natural sobre su paciente y recibir, de punta a punta, un análisis citado, verificado y persistido, o un "sin evidencia" honesto, sin que la IA toque datos clínicos ni le prescriba nada. Es la demostración de que la hipótesis (3) es técnicamente viable.
-**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225 (29 puntos, S1) · US-056, US-057 (6 puntos, S4)
+**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225 (31 puntos, S1) · US-056, US-057 (6 puntos, S4)
 
 > **Propuesta de división (talla XL: atraviesa los tres servicios y suma 7 historias).** Publicar como dos Features hermanas sin cambiar los IDs: **06a-B2 Pipeline de evidencia** (`rag-orchestrator`: US-012, US-224, US-055, US-225, US-057 y la parte de semáforo y *deadline* de US-056) y **06a-B1 Gateway** (`clinical-api`: US-052, US-053, US-054 y la parte de *rate limit* de US-056). El panel es FEAT-10a.
 
@@ -287,8 +287,8 @@ que me mostró el sistema se pierde o cambia.
 
 ## Contexto técnico
 `evidence-analysis.service.ts` y `.repository.ts`: valida la respuesta interna con Zod
-(defensa en el borde), calcula `topRelevanceScore` (máximo de las opciones, `null` si no
-hay), pide la Base del análisis a `AnalysisBasisBuilder` (US-066) y persiste todo en una
+(defensa en el borde), toma `topRelevanceScore` de la respuesta de Backend 2 (máximo de los chunks sobre el
+umbral, `null` si no hay; corregido en el Gate 1 del S1, `[S1 resp. 18]`), pide la Base del análisis a `AnalysisBasisBuilder` (US-066) y persiste todo en una
 transacción; **responde solo después del `COMMIT`** `[readme §2.1]`. Mapeo de errores:
 `401` interno → `502`; `5xx` → `502`; *timeout* → `504`; `409` de catálogo → `409`
 (US-041); `429` → `429`; `503` → `503` (US-050). `RAG_TIMEOUT_MS` (propuesta 30 s) y el
@@ -310,11 +310,13 @@ Faltantes en el registro (FEAT-04 US-006).
 
 > Linear: [L1D-105](https://linear.app/l1der-lab-mjbc/issue/L1D-105)
 
-`FEAT-06a` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · SEG-07 (dueña) · AC-T4.1 (§11 #7) · ↪ US-035
+`FEAT-06a` · Sprint 1 · Estimación **5** (re-estimada de 3, `[S1 resp. 13]`) · — (técnica, PRD §17) · SEG-07 (dueña) · AC-T4.1 (§11 #7) · ↪ US-035
 
 > **Nota (Gate 1 de US-033, 2026-10-11):** el contrato congelado declara para Backend 2 el `401` con `error = "TOKEN_SERVICIO_INVALIDO"` ante un JWT de servicio ausente o inválido; esta historia lo implementa.
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+>
+> **Decidido (usuario, 2026-10-14, Gate 1 del S1, `[S1 resp. 13]`):** el cliente HTTP generado se adelanta del S2 (US-214) a esta historia, que pasa de 3 a 5 puntos (AC-6).
 
 ## Story
 Como responsable de seguridad, quiero que `rag-orchestrator` solo acepte llamadas
@@ -340,6 +342,13 @@ sesión del doctor nunca llegue al servicio de IA y nadie más pueda invocarlo.
   `[OL-03]` `[CLAUDE.md]`
 - **AC-5 (borde · vida máxima)** · Dado un JWT válido con `exp` a 1 hora (mayor que el
   máximo configurado), cuando llega a `/rag/query`, entonces responde `401`. (asumido)
+- **AC-6 (happy path · cliente generado)** · Dados los `openapi.yaml` de ambos backends,
+  cuando corre `contracts:generate`, entonces `packages/api-contracts` contiene los clientes
+  `web → clinical-api` y `clinical-api → rag-orchestrator` generados (hey-api, `fetch`
+  inyectable), el de `rag-orchestrator` se construye sobre el transporte que firma el JWT
+  de servicio y recibe `X-Request-Deadline` como parámetro tipado, y
+  `contracts:generate:check` falla si alguien edita a mano lo generado.
+  `[S1 resp. 13]` `[ADR-26]` `[CLAUDE.md]`
 
 ## Contexto técnico
 Firma en `clinical-api/src/infrastructure/service-jwt.ts` (clave privada montada solo
@@ -350,7 +359,7 @@ Supertest con servidor simulado que captura cabeceras (AC-4).
 
 ## INVEST
 **Small** ✓ un firmador y un validador con algoritmo fijo.
-**Testable** ✓ cinco grupos de tests con tokens construidos en el test.
+**Testable** ✓ cinco grupos de tests con tokens construidos en el test y el check de generación del cliente (AC-6).
 
 ---
 
