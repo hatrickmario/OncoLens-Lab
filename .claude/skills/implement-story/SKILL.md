@@ -32,6 +32,8 @@ Change: <change> · Historia: L1D-<nn> (<ruta backlog>) · Rama: feat/l1d-<nn>-<
 Tus tareas: sección '## <contexto>' de tasks.md
 Deltas de dependencias: <rutas>
 Paths permitidos: <lista>
+Auto-revisión: antes de entregar, repasa los checklists de <guardianes que aplicarán> sobre tu diff.
+Cortes: push tras cada commit; si te detienes con trabajo sin terminar, commitea en wip/l1d-<nn> y pushea.
 Disciplina: matriz de TDD proporcional de CLAUDE.md (indica cuál aplica a cada tarea).
 Orden: contract (si toca API) → test de aceptación del AC en rojo → feat (con sus unitarios) → refactor.
 Termina con: test de aceptación por AC con tag 'US-xxx AC-n' y su salida en rojo y en verde,
@@ -41,8 +43,10 @@ contracts:verify-provider, openspec validate --strict, /opsx:verify, push.
 ## 3. Gate 2
 
 Skill `gate-review` en modo `gate2` sobre la rama. Si es FAIL: reanuda al mismo implementador
-con los hallazgos exactos (SendMessage a su nombre o id). Máximo **2 vueltas**; a la tercera,
-estado `bloqueado-gate` y escalar al humano con los hallazgos y dos opciones.
+con los hallazgos exactos (SendMessage a su nombre o id; si ya no existe, uno nuevo desde
+`origin/feat/…` o `origin/wip/l1d-<nn>`). Máximo **2 vueltas**; la vuelta 2 es acotada a los
+guardianes que fallaron y al diff nuevo. A la tercera, estado `bloqueado-gate` y escalar al humano
+con los hallazgos y dos opciones. Los Menores no se escalan: van al cuerpo del PR.
 
 Si el Gate 2 pasa pero `design-principles-reviewer` reporta hallazgos **Mayores**, reanuda al
 implementador para que aplique cada refactor mínimo en su commit `refactor(L1D-<nn>)` y vuelve a

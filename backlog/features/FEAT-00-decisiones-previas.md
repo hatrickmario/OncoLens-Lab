@@ -283,6 +283,9 @@ cambiar el modelo genérico de diagnóstico.
 >
 > `[Pre-S1 resp. 1]` `[Pre-S1 resp. 2]`
 
+
+> **Reabierta en el cierre del Pre-S1 (usuario, 2026-10-13):** L1D-54 vuelve a *In Progress* hasta que el oncólogo asesor firme DEC-05 (AC-1). Sin la firma no pasa a Done; bloquea US-038. `[Pre-S1 trazabilidad B-1]`
+
 ## AC (Given/When/Then)
 - **AC-1** · Dada la propuesta Q-04, cuando el oncólogo la valide, entonces
   `docs/decisions/DEC-05-tnm-isup.md` registra el destino de cada ítem (TNM →

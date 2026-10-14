@@ -2,12 +2,12 @@
 
 > Linear: [L1D-30](https://linear.app/l1der-lab-mjbc/issue/L1D-30)
 
-**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213…US-217) · 2 (US-037) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-034…US-036, US-213…US-217) · 2 (US-037, US-223) · **Capacidad:** — (plataforma) · T-4 (SEG-09, SEG-12) · T-5 (DoD de la CI) · **Recorrido principal:** sí
 **Requisitos:** RN-14 (dueña), RN-22 (dueña), RN-13 (guarda del S1; dueña del gate: US-143), NFR-05, NFR-10 (parte S1), NFR-13, SEG-07 (claves), SEG-08 (TLS hacia PostgreSQL), SEG-09, SEG-12
 **Evidencia:** [→ PRD §6 RN-13, RN-14, RN-22], [→ PRD §7 NFR (hardware, observabilidad, mantenibilidad)], [→ PRD §11 #7, #8, #9, #12], [→ readme §1.4 Pasos 2–5], [→ readme §2.3], [→ readme §2.4], [→ readme §2.6 Contract testing], [→ readme §2.1 patrón y capas], [→ readme §2.3 estructura], [→ readme §2.7], [→ readme §6.0 Definition of Done], [→ CLAUDE.md "Comandos", "Datos y repositorio público"]
 **Dependencias:** ↪ US-033 (specs que la CI valida) · 🔗 Bloquea: todas las Features del S1 (entorno común) · ⛔ ADR-39 solo para los valores de runtime (`LLM_BASE_URL`, `LLM_MODEL`) y el presupuesto de memoria, que se configuran, no se codifican
 **Valor:** sin un entorno reproducible no hay walking skeleton demostrable al oncólogo. Esta Feature fija desde el día uno las reglas que no se pueden arreglar después en un repositorio público: ningún secreto ni dato real versionado, solo `web` expuesto, la IA aislada de los datos clínicos por red, y todo valor "a calibrar" en configuración, para que el oncólogo pueda ajustar umbrales sin desplegar código.
-**Stories:** US-034, US-035, US-036, US-213…US-217 (28 puntos, S1) · US-037 (3 puntos, S2)
+**Stories:** US-034, US-035, US-036, US-213…US-217 (28 puntos, S1) · US-037 (3 puntos, S2) · US-223 (2 puntos, S2, deuda del Pre-S1)
 
 ---
 
@@ -145,6 +145,11 @@ cambio incompatible o un dato sensible nunca lleguen a `main` en un repositorio 
   `sintetico`". `[RN-13]` `[OL-06]` (asumido)
 - **AC-6 (borde · rama protegida)** · Dado un PR con la CI en rojo, cuando se intenta
   mergear a `main`, entonces la protección de rama lo impide. (asumido)
+- **AC-7 (borde · código generado y entorno de tests)** · Dado un PR que cambia un `openapi.yaml`,
+  cuando corre la CI, entonces instala `scripts/contracts/requirements-codegen.txt` en un venv y
+  ejecuta `npm run contracts:generate:check`, que falla si lo generado (TS, Zod, Pydantic) no está
+  al día; y `vitest` en la raíz excluye `.claude/**` y `**/node_modules/**` para no recoger copias
+  de los worktrees. `[US-033 AC-16]` `[Pre-S1 trazabilidad M-2]` `[Pre-S1-cierre P-8]`
 
 ## Contexto técnico
 GitHub Actions. Escaneo de secretos con una herramienta estándar (p. ej., gitleaks) y
@@ -152,6 +157,12 @@ escaneo de PII con los mismos formatos configurables que usa el detector de Back
 (ADR-40), sin asumir país `[RN-22]`. El check de cambios incompatibles compara el spec
 del PR con el de `main` (p. ej., oasdiff). Los AC se verifican con PRs de prueba en una
 rama de la CI (fixtures de PR en `ci/tests/`), no en `main`.
+
+**Del cierre del Pre-S1 (P-6, P-8; tareas, no AC):** `vitest.config.ts` en la raíz con esa exclusión;
+versiones fijas de `@playwright/mcp` y `chrome-devtools-mcp` en `.mcp.json` (hoy `@latest`); y un test
+que impida que las reglas de `scripts/contracts/rules/` declaren listas literales de nombres de
+identidad o rutas en lugar de usar `lib/identity.mjs` y `lib/paths.mjs` (el patrón que se repitió en
+el Gate 2 de L1D-55).
 
 ## Non-goals
 La ejecución de la suite de evaluación en PRs de modelo, prompt, umbral, catálogo o
@@ -245,6 +256,10 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
   propuesta 80) en `apps/rag-orchestrator/app/domain/**`, `apps/clinical-api/src/modules/**/*.service.ts`
   y `apps/web/lib/**`; el job **nunca falla** por cobertura y no hay umbral global. `[NFR-13]`
   `[RN-22]` (asumido)
+- **AC-12 (borde · ejemplo de listado enmascarado)** · Dado `contracts/examples/`, cuando se
+  ejecuta `contracts:check`, entonces existe un ejemplo `SINT-` de `PatientListItem` con
+  `fullNameMasked` y `nationalIdMasked` en el formato que fije US-048, y valida contra el schema.
+  `[Pre-S1 resp. 42]` `[Pre-S1 trazabilidad M-1]`
 
 ## Contexto técnico
 - **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`
@@ -290,7 +305,7 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
 
 ## Non-goals
 Mutation testing (US-185, `si-hay-capacidad`; no se adelanta sin decisión de planning). El
-PostgreSQL de test (US-038). El piloto de TDD Guard (configuración de `.claude/`, no de la CI).
+PostgreSQL de test (US-038). TDD Guard (retirado en el cierre del Pre-S1).
 Revisión de diseño no determinista (es del agente `design-principles-reviewer`). ESLint base,
 Prettier y `ruff format` (US-215).
 
@@ -338,6 +353,12 @@ incompatibles se detecten contra `main`, para que el contrato sea la fuente úni
   de un spec, cuando corre `npm run contracts:breaking` (oasdiff contra `origin/main`), entonces
   falla salvo que el PR declare el cambio en `design.md` con la etiqueta de cambio incompatible
   aceptado. `[ADR-26]` (asumido)
+- **AC-6 (borde · brechas del Zod generado)** · Dado el Zod generado por `@hey-api` (objetos
+  estrictos desde US-033), cuando se verifica contra los ejemplos y los parches negativos de
+  `scripts/contracts/__fixtures__/parches/`, entonces rechaza también lo que el generador no
+  traduce: los `if/then` (p. ej., `sin_evidencia` con `topRelevanceScore: 0.0`, RN-02), los `anyOf`
+  y los `allOf` con `unevaluatedProperties: false` de `CitedSource` y `FollowUpCitedSource`.
+  `[Pre-S1 resp. 33]` `[Pre-S1 trazabilidad M-1]`
 
 ## Contexto técnico
 - **Provider-driven, no consumer-driven:** cada backend es proveedor de su contrato y lo
@@ -363,6 +384,39 @@ endpoints (más allá de la validación de respuestas). Versionado de la API por
 ## INVEST
 **Small** ✓ un validador por backend en los tests, tres scripts y un job de CI.
 **Testable** ✓ cada AC es una ejecución de script o un PR de prueba con resultado verde o rojo y un mensaje esperado.
+
+---
+
+## US-223 — `scripts/contracts` empaqueta los specs con `bundleDocument` de Redocly en lugar del empaquetador propio
+
+> Linear: [L1D-273](https://linear.app/l1der-lab-mjbc/issue/L1D-273)
+
+`FEAT-PL1` · Sprint 2 · Estimación **2** · — (técnica, deuda del Pre-S1) · NFR-13 · ↪ US-033 · Origen: `[Pre-S1 resp. 35]` (D-6), enmienda de D2 en el change archivado `2026-10-13-l1d-55-contract-schema-freeze`
+
+## Story
+Como equipo de desarrollo, quiero que `scripts/contracts` empaquete los specs OpenAPI con
+`bundleDocument` de `@redocly/openapi-core` en memoria, en lugar de `lib/bundle.mjs`, para no
+mantener un empaquetador propio que duplica una dependencia ya instalada.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · misma salida)** · Dados los specs de `main`, cuando `contracts:check` y
+  `contracts:generate` usan `bundleDocument`, entonces `contracts:check` sigue sin hallazgos y
+  `contracts:generate:check` no produce diferencias en lo generado (TS, Zod, Pydantic) ni en el
+  extracto del readme. `[US-033 AC-8]` `[US-033 AC-16]`
+- **AC-2 (borde · falla cerrado)** · Dado un spec con una `$ref` externa no resuelta o un nombre de
+  schema repetido, cuando se empaqueta, entonces el comando falla y nombra el archivo y la
+  referencia, como hoy hace `lib/bundle.mjs` (DPR-7). `[US-033 AC-8]`
+- **AC-3 (borde · sin código muerto)** · Dada la migración, cuando se cierra, entonces
+  `lib/bundle.mjs` y sus tests propios se eliminan con el *trailer* `Test-Removal:` y los casos que
+  cubrían pasan a los tests de `bundleDocument`.
+
+## Contexto técnico
+`@redocly/openapi-core` ya es devDependency (D2 original). Test después (`scripts/contracts`,
+matriz TDD de `CLAUDE.md`): los tests existentes de empaquetado son la red de seguridad.
+
+## INVEST
+**Small** ✓ sustituir una función y su test.
+**Testable** ✓ igualdad de lo generado y el caso de falla cerrada.
 
 ---
 

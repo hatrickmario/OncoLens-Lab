@@ -60,11 +60,7 @@ Los huecos Bloqueantes se convierten en historias para el siguiente sprint (prop
   se repitió: si se repite, propón una regla nueva en `config.yaml` o en el linter. Propón
   cambios concretos a `openspec/config.yaml` (rules), a los agentes o a los hooks, como diff, **sin aplicarlos** hasta que el humano los apruebe.
 - **TDD:** commits bloqueados por la higiene de tests y `Test-Removal` aceptados en el Gate 2.
-  **En el S1, evaluación del piloto de TDD Guard** con `reports/tdd-guard/pilot.jsonl`: bloqueos,
-  falsos positivos (el humano marca `falsePositive` en cada bloqueo), latencia p50/p95 y bloqueos
-  que evitaron un fallo real. Criterio: se extiende a los tres implementadores si los falsos
-  positivos son < 10 % de los bloqueos y la p95 < 5 s; si no, se retira sin prórroga (y, si
-  interesa, se prueba Probity en el S2 con el mismo criterio). La decisión es humana.
+  (TDD Guard se retiró en el cierre del Pre-S1; no hay piloto que evaluar.)
 Escribe todo en `backlog/sprints/$sprint-cierre.md`.
 
 ## 6. Cierre (humano)

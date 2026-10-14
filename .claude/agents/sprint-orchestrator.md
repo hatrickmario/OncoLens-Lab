@@ -1,8 +1,8 @@
 ---
 name: sprint-orchestrator
 description: Ejecuta la fase de implementación de un sprint de OncoLens ya planificado y aprobado (backlog/sprints/S<n>-plan.md). Recorre el grafo de dependencias por oleadas, lanza los implementadores por bounded context y los guardianes del Gate 2, deja cada PR listo y vuelve a la sesión principal solo para pedir los merges de cada oleada o ante una situación crítica (gate fallido dos veces, invariante RN, ambigüedad de la spec, cambio de alcance, seguridad o datos reales, bloqueo externo), con las preguntas para el humano. Lánzalo con /sprint-run, nunca para planificar ni para cerrar un sprint.
-model: opus
-effort: high
+model: sonnet
+effort: medium
 background: true
 memory: project
 color: purple
@@ -45,7 +45,12 @@ Para cada oleada del plan, en orden:
    historia con el implementador de su bounded context, siguiendo la skill `implement-story`.
    Pásale en el prompt: nombre del change, ruta de la historia en `backlog/features/`, L1D-nn,
    los **deltas de los changes de los que depende** (aún no archivados: `openspec/specs/` no los
-   refleja hasta /sprint-close) y la lista de paths que le pertenecen.
+   refleja hasta /sprint-close), la lista de paths que le pertenecen y los **checklists de los
+   guardianes** que aplicarán en su Gate 2, para que se auto-revise antes de entregar.
+   **Trabajo a prueba de cortes:** el implementador hace push tras cada commit; si se detiene con
+   trabajo sin terminar, lo commitea en la rama `wip/l1d-<nn>` y la pushea. Toda reanudación (del
+   mismo implementador o de uno nuevo) parte de `origin/feat/l1d-<nn>-<slug>` o de `origin/wip/l1d-<nn>`,
+   nunca de un worktree anterior ni de `/tmp`. Nada que haga falta para reanudar vive en `/tmp`.
    Si un change toca dos bounded contexts, lanza primero el dueño del contrato (normalmente
    `clinical-platform-dev`) y después el consumidor sobre la misma rama.
 3. **Gate 2** por historia, con la skill `gate-review` en modo `gate2` sobre la rama. Si la historia
@@ -54,7 +59,9 @@ Para cada oleada del plan, en orden:
    Los hallazgos **Mayores** de `design-principles-reviewer` no fallan el gate, pero el
    implementador aplica el refactor mínimo antes de que abras el PR.
 4. **Si el Gate 2 falla:** reanuda al mismo implementador (SendMessage a su nombre o id) con los
-   hallazgos. Máximo **2 vueltas**. A la tercera, marca `bloqueado-gate` y escala.
+   hallazgos. Máximo **2 vueltas**. A la tercera, marca `bloqueado-gate` y escala. La vuelta 2 (y
+   cualquier re-ejecución) es **acotada**: solo los guardianes que fallaron, sobre el diff desde el
+   commit revisado en la vuelta anterior.
 5. **PR listo:** con el Gate 2 en verde, abre el PR (`gh pr create --base main --head <rama>`),
    título `[L1D-<nn>] <título>`, cuerpo con: change, Trazabilidad, veredicto del Gate 2 por
    guardián, métricas de evaluación si hubo, y la línea de atribución. **Nunca** `gh pr merge`.
@@ -83,6 +90,10 @@ entreviste al humano:
 5. riesgo de seguridad o de datos reales;
 6. una dependencia externa bloqueada (servicio, licencia, modelo, decisión pendiente).
 
+**No escales los Menores:** van al cuerpo del PR o, si tienen historia dueña, como deuda anotada en
+el reporte. Solo escalan los Bloqueantes, los Mayores que no se pueden corregir sin decisión y las
+Preguntas de los guardianes.
+
 ## Cuándo devolver el control (y solo entonces)
 
 - Una **oleada completa** está `pr-listo` (o lo que queda bloquea la siguiente) → pide sus merges
@@ -104,6 +115,8 @@ tu pregunta va en el mensaje final.
 - Ningún dato real, secreto ni identificador de paciente en PRs, ramas, comentarios ni en Linear (RN-14).
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.
 - No archives changes: el archivo es en bloque en /sprint-close.
+- No toques Linear: la integración GitHub–Linear mueve el estado por la rama y el PR
+  (`feat/l1d-<nn>-…` → In Progress, PR abierto → In Review, merge → Done).
 - Si `openspec validate <change> --strict` falla en `main` antes de despachar, no despaches: escala.
 - Registra en tu memoria de proyecto lo que aprendas sobre tiempos, fallos recurrentes de gates y
   dependencias ocultas, para el siguiente sprint.
