@@ -13,6 +13,11 @@
 >   - DEC-02, DEC-03, DEC-04 y DEC-05: bloques `Decidido` en `features/FEAT-00-decisiones-previas.md`. Sus documentos en `docs/decisions/` se escriben en la ejecución del Pre-S1.
 > - **Cambios de sprint (DEC-03):** US-014 · ADR-41 y US-016 · DEC-06 pasan al **S2**.
 
+> **Estado tras el refinamiento del S1 (2026-10-13, `backlog/sprints/S1-refinamiento.md`):**
+> - **ADR-39 · encuadre decidido, cierre por medición:** hipótesis principal = combinación A (Gemma 4 26B A4B QAT `gemma4:26b-a4b-it-qat` en Ollama, ~16 GB `[S1 resp. 10]`, medido 15 GB y ~79 tok/s; BGE-M3, bge-reranker-v2-m3, mDeBERTa-2mil7, OCRmyPDF + Tesseract), con B y C como respaldos medidos `[S1 resp. 5]`. La historia se parte en **US-012 · ADR-39 fase A** (5) y **US-224 · ADR-39 fase B** (3) `[S1 resp. 6]`; el documento `docs/architecture/adr/ADR-39-modelos-locales.md` (MADR) lo escribe la ejecución del S1 con las cifras.
+> - **DEC-05:** validación clínica del "Oncólogo asesor A" hecha `[S1 resp. 1]`; ya no bloquea US-038.
+> - **ADR-40:** sigue en el S2; en el S1 rige su escenario más probable (opción A) en US-049, aceptado `[S1 resp. 3]`.
+
 ---
 
 ## 1. Resumen
@@ -158,6 +163,8 @@ No implementar la ingesta (FEAT-06c). No negociar licencias de NCCN/ESMO. No def
 ---
 
 ### US-012 · ADR-39 — Evaluación y selección de modelos locales y runtime
+
+> **Refinamiento del S1 (2026-10-13):** encuadre decidido (hipótesis A) y partida en fase A (US-012, 5) y fase B (US-224, 3) `[S1 resp. 5, 6]`. La versión vigente de los AC está en `features/FEAT-06a-analisis-walking-skeleton.md`; esta sección conserva el encargo original.
 
 **Tipo:** ADR · **Feature:** FEAT-00 (decisión) · aplicada en FEAT-06a · **Sprint:** 1 (inicio) · **Estimación:** 8
 **Origen:** TBD-01 · readme §1.4 y §6.1 última fila (🚧) · SUP-2 · **Dueño:** Ingeniería

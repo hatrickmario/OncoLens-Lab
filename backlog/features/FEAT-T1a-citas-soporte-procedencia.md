@@ -70,6 +70,8 @@ unitarios del dominio y de integración del endpoint con FX-06a-a y FX-06a-b.
 
 `FEAT-T1a` · Sprint 1 · Estimación **5** · HU-03 · RN-01 (dueña), FR-10 (dueña), IA-04, RN-23 (términos prohibidos generados en ejecución, §15 resp. 2) · AC-T1.2 (parte S1), AC-10.4 · ↪ US-063, US-068 (lista y verificador `checkProhibitedTerms`) · ⛔ Bloqueada por: ADR-39 (modelo NLI real; los AC usan el adapter falso) · 🔗 Medido en: US-072 (fidelidad M-07.2, M-10.1)
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+
 ## Story
 Como oncólogo, quiero que toda afirmación que el sistema me muestra esté respaldada por
 el texto de la fuente que cita, y que lo que no lo esté se aparte o se omita, para no

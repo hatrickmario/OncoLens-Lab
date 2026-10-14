@@ -17,6 +17,8 @@
 
 `FEAT-T3` · Sprint 1 · Estimación **3** · HU-03 · RN-23 (dueña) · AC-10.3, AC-T3.4 · ↪ US-061, US-062 (S3: sus estados se suman al recorrido del AC-3 al existir) · 🔗 Regresión [RN-23] (salidas generadas en ejecución) → US-064 (AC-7, AC-8) · 🔗 Medido en: US-072 (M-10.2 = 0 sobre las salidas del set de evaluación)
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+
 ## Story
 Como oncólogo, quiero que la herramienta describa lo que dice la evidencia sin decirme
 qué tratamiento darle a mi paciente, para conservar el control de la decisión clínica.
@@ -67,6 +69,10 @@ AC-2), Playwright contra Compose en perfil de test (AC-3, AC-4) y PR de prueba e
 > Linear: [L1D-194](https://linear.app/l1der-lab-mjbc/issue/L1D-194)
 
 `FEAT-T3` · Sprint 1 · Estimación **2** · HU-03 · RN-19 (dueña) · AC-T3.1 · ↪ US-053, US-061 · 🔗 Produce para: FEAT-02c (el resumen del caso agrega "Verifique contra las fuentes", S2)
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 9]`):** el literal es el de PRD B-06 y AC-T3.1, "Análisis generado por IA: requiere validación clínica del oncólogo tratante" (dos puntos), y `disclaimer` lleva **solo** esa frase ("Uso académico/investigación" es una etiqueta aparte). El change de esta historia incluye una tarea de **contratos** (skill `sync-contracts`, cambio compatible, solo texto): corregir la descripción de `disclaimer` en `apps/clinical-api/openapi.yaml` (y su par en Backend 2, si existe) y el campo en los ejemplos de `contracts/examples/` que usan la raya. Supersede la fila C-14.
 
 ## Story
 Como oncólogo, quiero que todo lo que genera la IA lleve un aviso visible de que

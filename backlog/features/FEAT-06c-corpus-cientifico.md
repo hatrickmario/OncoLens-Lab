@@ -35,6 +35,8 @@
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** US-040 (`REVOKE ALL` y tests de *permission denied*) llega en el S2. En el S1 el rol `rag_corpus` lo crean los scripts de US-035 y solo hay datos sintéticos; las restricciones del rol se verifican desde el S2.
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+
 ## Story
 Como equipo de desarrollo, quiero crear desde el S1 el catálogo del corpus y la
 colección de Milvus con su esquema final, incluidos los metadatos de población y el
@@ -87,6 +89,8 @@ Ingesta automatizada y reanudable (S3). Poblar el sparse y búsqueda híbrida (S
 > Linear: [L1D-115](https://linear.app/l1der-lab-mjbc/issue/L1D-115)
 
 `FEAT-06c` · Sprint 1 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (semilla), RN-21 (dueña), RN-05 (versionado), RN-25 (metadatos `no_disponible`) · AC-06.1 (corpus abierto) · ↪ US-058 · ⛔ Bloqueada por: ADR-39 (solo AC-1 con *embeddings* reales; los tests usan el adapter falso) · 🔗 Relacionada: US-007 · ADR-36 (lista final de fuentes, no bloquea)
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
 Como oncólogo, quiero que el corpus con el que se analiza a mi paciente contenga solo

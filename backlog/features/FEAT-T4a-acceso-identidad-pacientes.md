@@ -27,6 +27,8 @@
 
 > **División de US-044 (usuario, 2026-10-07, `01-requisitos.md` §15 "Ajustes al slicing v2"):** esta historia adelanta al S1 el login, la cookie opaca y el guard para que el walking skeleton corra con una sesión real; la expiración, el cierre de sesión y el bloqueo por intentos quedan en US-044 (S2).
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 4]`):** rutas en español del diseño aprobado (`docs/ux/flujo-e2e.md`): `/login` y `/pacientes/[id]/analisis` (en el S1 el resultado se muestra en esa misma página; `/pacientes/[id]/analisis/[analysisId]` llega con el historial). El campo de la página de login es "Correo electrónico". En el S1 la ruta de inicio configurada tras el login es `/pacientes/[id]/analisis` del paciente semilla (a) (`docs/ux/S1/pantallas-s1.md`).
+
 ## Story
 Como oncólogo, quiero iniciar sesión con mi correo y mi contraseña antes de pedir un
 análisis, para que desde el primer sprint nadie sin sesión pueda ver datos de un
@@ -53,7 +55,7 @@ paciente ni invocar a la IA.
   entonces ambos responden `401` antes del controlador y el cliente de
   `rag-orchestrator` registra cero llamadas. `[readme §2.5]` `[FR-01]` `[OL-03]`
 - **AC-4 (borde · guard en `web`)** · Dado un navegador sin cookie de sesión, cuando abre
-  `/patients/{id}/evidence` del paciente semilla (a), entonces `web` redirige a la página
+  `/pacientes/[id]/analisis` del paciente semilla (a), entonces `web` redirige a la página
   de login y el HTML servido no contiene ningún dato del paciente. `[FR-01]` `[readme §2.5]`
 - **AC-5 (invariante · la sesión nunca llega a Backend 2)** · Dado un análisis
   solicitado con la cookie obtenida en el AC-1, cuando se capturan el request hacia
@@ -376,9 +378,11 @@ lectura de logs (AC-5) y Playwright (AC-1).
 
 > Linear: [L1D-203](https://linear.app/l1der-lab-mjbc/issue/L1D-203)
 
-`FEAT-T4a` · Sprint 1 · Estimación **5** · HU-03 · RN-11 (dueña), SEG-04 (parte S1) · AC-06.2 (fechas relativas), AC-T4.2, AC-T4.3 (parte S1) · ⛔ ADR-40 (US-013, S2) · escenario más probable (opción A: coincidencia exacta con la identidad conocida + patrones configurables) · ↪ US-046 (S2), US-052 · 🔗 Medido en: US-072 (sensibilidad de PII, G-8)
+`FEAT-T4a` · Sprint 1 · Estimación **5** · HU-03 · RN-11 (dueña), SEG-04 (parte S1) · AC-06.2 (fechas relativas), AC-T4.2, AC-T4.3 (parte S1) · ⛔ ADR-40 (US-013, S2) · escenario más probable aceptado `[S1 resp. 3]` (opción A: coincidencia exacta con la identidad conocida + patrones configurables) · ↪ US-046 (S2), US-052 · 🔗 Medido en: US-072 (sensibilidad de PII, G-8)
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** ADR-40 (US-013) y la identidad cifrada (US-046) llegan en el S2. En el S1 el detector implementa la opción A de ADR-40 detrás de un puerto (`PiiDetector`): si ADR-40 elige otra opción se sustituye el adapter y se re-estima. La coincidencia exacta del AC-1 usa la identidad de FX-T4a-a servida por un repositorio de identidad falso en el test; con US-046 lee la identidad descifrada.
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan. Incluye el escenario más probable de ADR-40 (opción A: coincidencia exacta con la identidad conocida + patrones configurables, detrás del puerto `PiiDetector`); si ADR-40 elige otra opción en el S2, se sustituye el adapter y se re-estima.
 
 ## Story
 Como oncólogo, quiero que todo lo que el sistema envía a la IA sobre mi paciente vaya

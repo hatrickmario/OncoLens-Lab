@@ -14,7 +14,7 @@
 | [FEAT-PL3 — Catálogos clínicos v1](FEAT-PL3-catalogos-clinicos.md) | L | — (consumida por CAP-02/03/04/05/08) | 2 · `si-hay-capacidad` | sí (US-042: no) | NFR-14; RN-20 (configuración); RN-29 (mínimo S1) | US-041, US-042, US-043, US-018 · DEC-08 | 9 (S2) · 3 (shc) | ↪ US-033, US-037 · ⛔ DEC-04 (workaround Q-07) |
 | [FEAT-T4a — Acceso, identidad, pacientes y desidentificación](FEAT-T4a-acceso-identidad-pacientes.md) | XL (propone división) | T-4 | 1 · 2 · 4 · 6 | sí | FR-01, FR-02, FR-03 (manual), FR-17; RN-10, RN-11, RN-12, RN-16, RN-18 (campos) | US-211 (S1), US-044 … US-050, US-013 · ADR-40 | 8 (S1) · 21 (S2) · 5 (S4) · 3 (S6) | ↪ PL1, PL2 · ⛔ ADR-40 (US-049) |
 | [FEAT-02a — Ficha mínima](FEAT-02a-ficha-minima.md) | M | CAP-02 (S1), T-1 | 2 | sí | FR-04 (S1) | US-051, US-019 · DEC-09 | 6 | ↪ US-039, US-044, US-046 |
-| [FEAT-06a — Análisis de evidencia: walking skeleton](FEAT-06a-analisis-walking-skeleton.md) | XL (propone división) | CAP-06, CAP-10 (S1), CAP-05; T-1, T-4 | 1 · 4 | sí | FR-09 (S1), FR-25 (contrato); RN-02, RN-05 (recuperación), RN-06, RN-30; SEG-07, SEG-13 | US-012 · ADR-39, US-052 … US-057 | 29 (S1) · 6 (S4) | ⛔ ADR-39 (adapters reales) · ↪ T4a (US-211, US-049), T1a, T2a, 06c |
+| [FEAT-06a — Análisis de evidencia: walking skeleton](FEAT-06a-analisis-walking-skeleton.md) | XL (propone división) | CAP-06, CAP-10 (S1), CAP-05; T-1, T-4 | 1 · 4 | sí | FR-09 (S1), FR-25 (contrato); RN-02, RN-05 (recuperación), RN-06, RN-30; SEG-07, SEG-13 | US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052 … US-055, US-225, US-056, US-057 | 29 (S1) · 6 (S4) | ⛔ ADR-39 (adapters reales) · ↪ T4a (US-211, US-049), T1a, T2a, 06c |
 | [FEAT-06c — Corpus científico](FEAT-06c-corpus-cientifico.md) | XL (propone división por sprint) | CAP-06 | 1 · 4 · `si-hay-capacidad` | sí (US-119: no) | FR-19; RN-21; RN-05 (versionado); TBD-20 (CAL) | US-058, US-059 (S1) · US-117, US-118, US-120 (S4) · US-119 (shc) | 10 (S1) · 16 (S4) · 3 (shc) | ⛔ ADR-39 · ⛔ ADR-36 (S3) · 🔗 Medido en: US-132 |
 | [FEAT-10a — Panel y opción descrita](FEAT-10a-panel-opcion-descrita.md) | M | CAP-10 (S1), CAP-05 | 1 · 3 | sí | FR-09 (UI S1), FR-10 (UI); RN-03; NFR-12 | US-060, US-061, US-062 | 8 (S1) · 3 (S3) | ↪ US-053, US-211, US-051 |
 | [FEAT-T1a — Citas, soporte y procedencia](FEAT-T1a-citas-soporte-procedencia.md) | L | T-1, CAP-10 | 1 · 3 · 5 | sí | RN-01, FR-10, RN-04, RN-07, RN-25 | US-063, US-064 (S1) · US-065 (S3) · US-127 (S5) | 10 (S1) · 3 (S3) · 3 (S5) | ⛔ ADR-39 (NLI real) |
@@ -93,11 +93,13 @@
 | US-013 · ADR-40 | Detección y enmascaramiento de PII en texto libre y documentos | FEAT-T4a | 2 | 5 | sí |
 | US-051 | Veo la ficha mínima del paciente con su diagnóstico vigente y sus biomarcadores recientes | FEAT-02a | 2 | 5 | sí |
 | US-019 · DEC-09 | Reglas del semáforo de biomarcadores y de vigencia de diagnósticos | FEAT-02a | 2 | 1 | sí |
-| US-012 · ADR-39 | Evaluación y selección de modelos locales y runtime | FEAT-06a | 1 (inicio) | 8 | sí |
+| US-012 · ADR-39 | Fase A: *embeddings*, *reranker* y NLI locales | FEAT-06a | 1 (inicio) | 5 | sí |
+| US-224 · ADR-39 | Fase B: runtime, LLM local, OCR y p95 extremo a extremo | FEAT-06a | 1 (cierre) | 3 | sí |
 | US-052 | El gateway valida la pregunta y envía a `rag-orchestrator` el contexto clínico del caso | FEAT-06a | 1 | 5 | sí |
 | US-053 | El análisis queda persistido antes de responder y un fallo nunca muestra resultados | FEAT-06a | 1 | 5 | sí |
 | US-054 | `clinical-api` y `rag-orchestrator` se autentican con un JWT de servicio asimétrico | FEAT-06a | 1 | 3 | sí |
-| US-055 | `/rag/query` recupera evidencia vigente, aplica el umbral y responde "sin evidencia" sin invocar al LLM | FEAT-06a | 1 | 8 | sí |
+| US-055 | `/rag/query` recupera evidencia vigente, aplica el umbral y responde "sin evidencia" sin invocar al LLM | FEAT-06a | 1 | 5 | sí |
+| US-225 | Con evidencia sobre el umbral, `/rag/query` genera la opción descrita, la recorta a `maxOptions` y responde con el contrato final | FEAT-06a | 1 | 3 | sí |
 | US-056 | El límite de consultas, el semáforo de inferencia y el tiempo máximo protegen el LLM local | FEAT-06a | 4 | 3 | sí |
 | US-057 | Las instrucciones del prompt quedan separadas de los datos para resistir *prompt injection* | FEAT-06a | 4 | 3 | sí |
 | US-058 | El catálogo del corpus y la colección de Milvus se crean con su esquema final | FEAT-06c | 1 | 5 | sí |
@@ -307,7 +309,7 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 | Sprint | Puntos | Detalle | Gate / demo |
 |---|---|---|---|
 | Pre-S1 | **17** | FEAT-00: ADR-36 (3) + DEC-02…DEC-05 (4) + US-033 (10, re-estimada el 2026-10-11) | Contrato y esquema congelados |
-| S1 | **96** | 06a 29 (incluye ADR-39) · PL1 15 (US-034, US-035, US-036, US-215) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 · T5a 3 (US-075) | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; `ai-eval-runner` evalúa la demo a mano (la suite automatizada llega en el S2, `[Pre-S1 resp. 9]`) |
+| S1 | **96** | 06a 29 (incluye ADR-39 fases A y B: US-012 y US-224; US-055 y US-225) · PL1 15 (US-034, US-035, US-036, US-215) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 · T5a 3 (US-075) | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; `ai-eval-runner` evalúa la demo a mano (la suite automatizada llega en el S2, `[Pre-S1 resp. 9]`) |
 | S2 | **93 + `?`** (98 con US-073 = 5) | T4a 21 (incluye ADR-40) · T5a 16 (ADR-41, DEC-06, US-072, US-074, DEC-07; desde S1) · 01a 13 · PL1 15 (US-213, US-214, US-217 desde S1; US-223, deuda del Pre-S1) · PL3 9 (incluye DEC-08) · T2a 8 · 02a 6 (incluye DEC-09) · PL2 5 + US-073 (`?`, rango 3–5) | Demo: login → listado → ficha → análisis con Base del análisis; suite `evaluate` en la DoD de cada PR que cambia la IA; baseline técnico calibrado y umbral de regresión activo |
 | S3 | **85** | 01b 31 · 02b 21 · 03a 15 · T5b 10 · 10a 3 · T1a 3 · 01a 2 (US-212) | Demo: carga de PDF → extracción → vista de caso con enlace al PDF de origen (hipótesis 1) |
 | S4 | **79** | 04 23 (incluye DEC-01) · 03b 16 · 06c 16 · 06a 6 · 10b 5 · T4a 5 (US-047) · T2b 3 · T5b 3 · T3 2 | Demo: revisión, registro manual y checklist de faltantes (hipótesis 2) |
@@ -336,6 +338,8 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 > - **Conflictos con el PRD** C-Pre4 (conversación de varios turnos), C-Pre6 (usuarios por CLI) y C-Pre7 (`admin` ve todos): **enmendados en el PRD v1.4** (E-01, E-03, E-04).
 
 > **Cierre del Pre-S1 (usuario, 2026-10-13):** se crea US-223 (L1D-273, FEAT-PL1, S2, 2 pts), deuda técnica de la resp. 35: migrar `lib/bundle.mjs` a `bundleDocument`. El S2 pasa a **93 + `?`** (98 con US-073 = 5), el MVP a **525** y el backlog a **815**.
+
+> **Refinamiento del S1 (usuario, 2026-10-13, `[S1 resp. 6]`).** Por la DoR (≤ 5 pts) y la retro del Pre-S1 (P-5): US-012 · ADR-39 (8) se parte en fase A (US-012, 5) y fase B (**US-224**, L1D-274, 3); US-055 (8) se parte en recuperación (US-055, 5) y generación (**US-225**, L1D-275, 3). El S1 sigue en **96**, el MVP en **525** y el backlog en **815**; el número de historias pasa de 224 a 226. Detalle: [`../sprints/S1-refinamiento.md`](../sprints/S1-refinamiento.md).
 
 > **Diferencia con el reparto aprobado (Pre-S1 12 · S1 91 · S2 88 · S3 83 · S4 79 · S5 78 · S6 65 = 496):** S1 **+18** (US-211 +3; US-014, US-016, US-072, US-074 +15) · S2 **−17** con US-073 = 5 (US-044 −2; las cuatro de evaluación −15) · S3 **+2** (US-212). El MVP comprometido pasa de 496 a **499** (con US-073 = 5) y `si-hay-capacidad` de 188 a 186 (US-080 −2). El total del backlog pasa de 788 a **789 + 2 `?`**.
 
@@ -410,7 +414,7 @@ Verificada con un script que busca cada ID como cita `` `[ID]` `` dentro de los 
 | AC-04.1 … AC-04.5 | FEAT-04 (US-001 … US-006, DEC-01) · registro manual: US-110, US-111, US-094 · AC-04.3: US-116, US-124, US-128 · AC-04.5 (aplicabilidad): US-121 |
 | AC-05.1 | US-052 (AC-2, AC-5), US-062 (AC-4), US-114, US-115, US-173 (AC-3) |
 | AC-05.2 | US-171, US-172, US-173 (S6 `si-hay-capacidad`) |
-| AC-05.3 | S1: US-033 (AC-3), US-055 (AC-7), US-061 (AC-5) · síntesis sin opciones: US-169 (AC-2) |
+| AC-05.3 | S1: US-033 (AC-3), US-225 (AC-2, ex US-055 AC-7), US-061 (AC-5) · síntesis sin opciones: US-169 (AC-2) |
 | AC-06.1 | S1: US-055, US-043, US-050, US-053, US-056, US-059 · S3: US-112, US-113, US-114, US-117, US-120 · `403`: US-148 · S6/Post-MVP: US-166 (AC-4), US-177 (AC-5) |
 | AC-06.2 | US-052 (AC-1), US-049 (AC-3, AC-6), US-091, US-093 |
 | AC-07.1 | US-166, US-170 |
@@ -431,7 +435,7 @@ Verificada con un script que busca cada ID como cita `` `[ID]` `` dentro de los 
 | AC-09.2 | US-164 (AC-1, AC-4) |
 | AC-09.3 | US-162 (AC-2), US-163 (AC-3), US-164 (AC-2) |
 | AC-09.4 | US-165 |
-| AC-10.1 | S1–S4: US-055 (AC-1, AC-8), US-061 (AC-3, texto neutro) · S5: US-125 (AC-5…AC-7, opción única por aplicabilidad), US-126 (AC-7, texto del criterio), US-134 (orden y hasta 3), US-135 (UI) |
+| AC-10.1 | S1–S4: US-225 (AC-1 y AC-3, ex US-055 AC-1 y AC-8), US-061 (AC-3, texto neutro) · S5: US-125 (AC-5…AC-7, opción única por aplicabilidad), US-126 (AC-7, texto del criterio), US-134 (orden y hasta 3), US-135 (UI) |
 | AC-10.2 | US-061 (S1), US-101 (avisos sin verificar), US-126 (aplicabilidad), US-136 (conflicto y faltantes), US-135 (varias tarjetas) · vigencia: US-164 (AC-1) |
 | AC-10.3 | US-068 (AC-1, AC-4), US-170 (AC-3) |
 | AC-10.4 | US-053 (AC-2), US-055 (AC-2), US-061 (AC-4), US-062 (AC-2), US-063 (AC-3), US-064 (AC-2) |

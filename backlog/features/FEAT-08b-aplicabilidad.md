@@ -296,7 +296,7 @@ soporte (US-064) → agregación por opción → orden con `applicability_order`
 `maxOptions`. El orden se aplica **antes** del recorte y **después** de la validación de
 citas y soporte, para que una descartada nunca ocupe posición. `maxOptions` llega de
 `clinical-api` desde `EVIDENCE_MAX_OPTIONS` (1 en el S3) `[RN-22]`; con aplicabilidad
-presente la relevancia nunca es criterio principal (S1–S2: US-055 AC-8). Tests: Pytest
+presente la relevancia nunca es criterio principal (S1–S2: US-225 AC-3, ex US-055 AC-8). Tests: Pytest
 unitarios del comparador y de la agregación (AC-1…AC-4) y Pytest + TestClient de
 `/rag/query` con adapters falsos de FX-08b-b (AC-5…AC-7).
 

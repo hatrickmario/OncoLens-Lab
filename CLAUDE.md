@@ -121,7 +121,7 @@ Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213)
 
 **TDD Guard:** retirado en el cierre del Pre-S1 (2026-10-13); la evidencia de TDD es el orden de commits `test → feat` que comprueba el Gate 2 (`.claude/README.md`).
 
-**Pendiente de planning (no cambia el slicing):** dónde vive el modo `LLM_PROVIDER=fake` de Compose y la CI (US-034 o US-036), y si US-185 pasa a ser condición de G-Piloto antes de usar datos reales.
+**Modo `LLM_PROVIDER=fake`:** vive en US-034 (AC-6; Compose, CI y E2E) `[S1 resp. 7]`. **Pendiente de planning (no cambia el slicing):** si US-185 pasa a ser condición de G-Piloto antes de usar datos reales.
 
 **La evaluación de calidad de IA (OL-06) es obligatoria en cada PR que cambie modelo, prompt, umbral, catálogo o corpus.** Metas iniciales (a recalibrar, TBD-02): recall@10 ≥ 0,80 (≥ 0,70 es→en), MRR ≥ 0,60, fidelidad ≥ 0,90, precisión de citas ≥ 0,90, "sin evidencia" ≥ 0,90, OCR crítico ≥ 0,95, PII ≥ 0,95, eventos ≥ 0,95, mapeo terminológico ≥ 0,95, salidas prescriptivas = 0.
 
