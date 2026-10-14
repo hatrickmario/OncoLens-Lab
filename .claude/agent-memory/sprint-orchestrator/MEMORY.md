@@ -1,0 +1,1 @@
+- [Lecciones Pre-S1](project_pre_s1_learnings.md) — TDD Guard retirado, WIP en wip/l1d-nn, Linear por integración, fallos recurrentes del Gate 2, tiempos y cortes por límite de uso
