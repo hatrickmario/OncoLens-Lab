@@ -303,7 +303,11 @@ de prueba en la CI.
 
 > Linear: [L1D-238](https://linear.app/l1der-lab-mjbc/issue/L1D-238)
 
-`FEAT-T5a` · Sprint 1 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.2 · M-02.5 (baseline), VM-1, VM-2 · ⛔ DEC-02 · escenario más probable · 🔗 Produce para: FEAT-T5d (medición con OncoLens en el piloto)
+`FEAT-T5a` · Sprint 1 · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.2 · M-02.5 (baseline), VM-1, VM-2 · DEC-02 decidida (2026-10-09) · 🔗 Produce para: FEAT-T5d (medición con OncoLens en el piloto)
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 2]`):** hay agenda con los oncólogos asesores dentro del S1; la historia se mantiene en el sprint. El orquestador prepara al inicio los casos estandarizados y la plantilla de registro; el usuario registra las sesiones (roles anónimos de DEC-02, sin nombres en el repo).
 
 ## Story
 Como product owner, quiero medir cuánto tardan hoy los oncólogos asesores en

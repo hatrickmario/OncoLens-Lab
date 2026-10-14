@@ -17,7 +17,9 @@
 
 > Linear: [L1D-168](https://linear.app/l1der-lab-mjbc/issue/L1D-168)
 
-`FEAT-PL2` · Sprint 1 · Estimación **5** · — (técnica, PRD §17; OL-01) · FR-17, FR-21, FR-16 (datos) · ↪ US-033, US-035 · ⛔ DEC-05 · escenario más probable (AC-3)
+`FEAT-PL2` · Sprint 1 · Estimación **5** · — (técnica, PRD §17; OL-01) · FR-17, FR-21, FR-16 (datos) · ↪ US-033, US-035 · DEC-05 decidida y validada `[S1 resp. 1]`
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 1]`):** la validación clínica de DEC-05 por el "Oncólogo asesor A" está hecha (registrada en `docs/decisions/DEC-05-tnm-isup.md`); US-038 no tiene bloqueo y el AC-3 pasa del escenario más probable a la forma decidida (`diagnosis_grading`).
 
 ## Story
 Como equipo de desarrollo, quiero que la primera migración de Prisma cree los cinco
@@ -33,10 +35,15 @@ que ningún sprint posterior tenga que migrar datos clínicos para agregar una e
   y existe el schema `corpus` vacío. `[OL-01]` `[readme §3.1]`
 - **AC-2 (borde · tabla reemplazada)** · Dada la migración aplicada, cuando se consulta
   `information_schema.tables`, entonces no existe `patient_consent`. `[OL-01]` `[ADR-18]`
-- **AC-3 (borde · diagnóstico genérico y DEC-05)** · Dada la tabla `clinical.diagnosis`,
-  cuando se inspeccionan sus columnas, entonces tiene `staging_system`, `stage_value`,
-  `performance_scale`, `performance_value`, `histology`, `histology_code`, `grade`,
-  `icd10_code` y `mapping_status`. `[ADR-21]` `[Q-04]` · ⛔ DEC-05 · escenario más probable
+- **AC-3 (borde · diagnóstico genérico y DEC-05)** · Dadas las tablas `clinical.diagnosis`
+  y `clinical.diagnosis_grading`, cuando se inspeccionan sus columnas, entonces
+  `diagnosis` tiene `staging_system`, `stage_value`, `performance_scale`,
+  `performance_value`, `histology`, `histology_code`, `grade`, `icd10_code` y
+  `mapping_status`, y `diagnosis_grading` tiene `grading_system`
+  (`gleason_isup | nottingham`), `specimen_type`, `grade_scope`, los patrones de Gleason,
+  `gleason_score`, `isup_grade_group`, `nottingham_grade` y su `CHECK` de coherencia
+  (`gleason_score = primario + secundario`), como fija `docs/architecture/data-model.md`.
+  `[ADR-21]` `[Q-04]` `[DEC-05]`
 - **AC-4 (borde · análisis sin evidencia)** · Dado un `AIAnalysisRecord` con
   `evidence_options = []` y `top_relevance_score = null`, cuando se inserta, entonces se
   guarda con `top_relevance_score IS NULL` (no `0.0`); y un `UPDATE` sobre cualquier fila
@@ -78,9 +85,11 @@ Tablas del schema `corpus` (US-058). Roles y permisos (US-040). Seed (US-039).
 
 > Linear: [L1D-169](https://linear.app/l1der-lab-mjbc/issue/L1D-169)
 
-`FEAT-PL2` · Sprint 1 · Estimación **3** · — (técnica, PRD §17; OL-01) · RN-13, RN-14, RN-27, FR-16 (datos) · ↪ US-038 · 🔗 Regresión [RN-10] → US-046 (identidades cifradas del seed, activa desde S2) · ⛔ DEC-05 · escenario más probable (paciente b) · ⛔ DEC-04 · workaround Q-07 (AC-4)
+`FEAT-PL2` · Sprint 1 · Estimación **3** · — (técnica, PRD §17; OL-01) · RN-13, RN-14, RN-27, FR-16 (datos) · ↪ US-038 · 🔗 Regresión [RN-10] → US-046 (identidades cifradas del seed, activa desde S2) · DEC-05 decidida y validada `[S1 resp. 1]` · DEC-04 decidida (2026-10-09)
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** US-046 (cifrado e índice ciego) y US-041 (montaje del catálogo) llegan en el S2. En el S1 el seed crea los pacientes (a)–(e) **sin** fila en `identity.patient_identity` (el walking skeleton solo usa el UUID) y toma los códigos CIE-10 del subconjunto versionado en `packages/clinical-catalogs`; las identidades sintéticas cifradas las agrega el seed con US-046 (S2, AC-6).
+
+> **Actualizada en el refinamiento del S1 (2026-10-13):** DEC-04 dejó sin efecto el *workaround* Q-07 (solo CIE-10), así que el AC-4 pasa a la regla general de RN-27; la paciente (b) usa `diagnosis_grading` según DEC-05, validada `[S1 resp. 1]`.
 
 ## Story
 Como equipo de desarrollo, quiero un seed idempotente con los cinco pacientes
@@ -103,10 +112,12 @@ sin un solo dato real.
 - **AC-3 (borde · idempotencia)** · Dado el seed ya aplicado, cuando se ejecuta de
   nuevo, entonces el número de filas de `patient`, `patient_identity`, `diagnosis`,
   `biomarker` y `user` no cambia. `[OL-01]`
-- **AC-4 (borde · códigos sin permiso confirmado, Q-07)** · Dado DEC-04 sin cerrar,
-  cuando se ejecuta el seed, entonces los diagnósticos llevan `icd10_code` del catálogo
-  v1, y los biomarcadores y tratamientos quedan con `loinc_code` y `atc_codes` nulos y
-  `mapping_status = no_mapeado`. `[Q-07]` `[RN-27]` `[TBD-17]`
+- **AC-4 (borde · códigos solo del catálogo, DEC-04)** · Dados los subconjuntos del
+  catálogo v1 (CIE-10 y, con sus avisos `NOTICE-<estándar>.txt` de DEC-04, LOINC y ATC),
+  cuando se ejecuta el seed, entonces cada código sembrado existe en el catálogo con su
+  nombre oficial sin modificar, y un biomarcador o tratamiento sin entrada en el catálogo
+  queda con el código nulo y `mapping_status = no_mapeado`, nunca inventado.
+  `[DEC-04]` `[RN-27]` `[TBD-17]` (antes: *workaround* Q-07, sin efecto desde DEC-04)
 - **AC-5 (borde · entorno piloto)** · Dado `APP_ENV=piloto`, cuando se ejecuta el seed,
   entonces aborta con código ≠ 0 antes de abrir una transacción y ninguna tabla cambia
   de número de filas. `[OL-01]` `[RN-13]`

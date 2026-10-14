@@ -46,7 +46,7 @@ Patrón común a todas las pantallas autenticadas:
 |---|---|---|
 | Título | "Iniciar sesión" | — |
 | Subtítulo | "Herramienta de apoyo para el análisis de evidencia. No sustituye el juicio clínico." | — |
-| Campos | Usuario · Contraseña | `POST /platform/auth/login` |
+| Campos | Correo electrónico · Contraseña `[S1 resp. 4]` | `POST /platform/auth/login` |
 | Error | "Usuario o contraseña incorrectos." Es genérico y no dice qué campo falló | `401` |
 | Pie | "La sesión expira tras un periodo de inactividad configurable." | TTL en configuración (RN-22) |
 | Registro | "¿No tienes cuenta? Solicitar registro" (S6, US-221) | `POST /platform/auth/register` |
@@ -188,7 +188,7 @@ Layout C: el caso a la izquierda y el análisis a la derecha.
 
 **Columna principal, en orden:**
 1. Pregunta y metadatos (`queryText`, `queryLanguage`, `analysisBasis.sourcesConsulted`, `continuedWithWarning`, `createdAt`).
-2. **Aviso IA** (`disclaimer`): "Análisis generado por IA — requiere validación clínica del oncólogo tratante" (RN-19).
+2. **Aviso IA** (`disclaimer`): "Análisis generado por IA: requiere validación clínica del oncólogo tratante" (RN-19, PRD B-06, `[S1 resp. 9]`). El prototipo conserva la raya como referencia histórica.
 3. **Encabezado "Opciones descritas en la evidencia"** y criterio: "Ordenadas por coincidencia con la población estudiada, no por eficacia" (RN-28, `[§15 resp. 7]`).
 4. **Explicación del orden:** "1) menos criterios excluyentes en “No coincide”, 2) más criterios en “Coincide”, 3) relevancia de la búsqueda solo como desempate."
 5. **Tabla de aplicabilidad:** una fila por criterio del catálogo, con el valor del paciente, y una columna por opción con la **fuente más aplicable** (`applicability[]`, `evidenceOptions[].perSource`). Celdas con símbolo y texto: ✓ Coincide · ◐ Parcial · ✕ No coincide (marca "no excluyente" o "excluyente") · ? Desconocido. **La fila Resumen tiene que cuadrar con las celdas** (`applicabilitySummary`). Una frase explica el desempate cuando lo hay.

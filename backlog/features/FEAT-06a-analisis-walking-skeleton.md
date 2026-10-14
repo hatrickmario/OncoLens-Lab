@@ -2,14 +2,14 @@
 
 > Linear: [L1D-16](https://linear.app/l1der-lab-mjbc/issue/L1D-16)
 
-**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39, US-052…US-055) · 4 (US-056, US-057) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
+**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225) · 4 (US-056, US-057) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
 **Requisitos:** FR-09 (S1: dense, 1 opción, contrato `EvidenceAnalysis` final; dueña vía HU-03) · FR-25 (contrato vacío en el S1) · RN-02 (dueña) · RN-05 (dueña de la recuperación) · RN-06 (dueña) · RN-30 (dueña, Q-06 a) · SEG-07 · SEG-13 (V-17) · NFR-01 (medido), NFR-04, NFR-08 · IA-01…IA-04, IA-07, IA-11 · ADR-39
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
 **Valor:** hoy el oncólogo busca evidencia a mano y no sabe si lo que encuentra se apoya de verdad en una fuente (P5, P12). Con esta Feature, desde el primer sprint puede hacer una pregunta en lenguaje natural sobre su paciente y recibir, de punta a punta, un análisis citado, verificado y persistido, o un "sin evidencia" honesto, sin que la IA toque datos clínicos ni le prescriba nada. Es la demostración de que la hipótesis (3) es técnicamente viable.
-**Stories:** US-012 · ADR-39, US-052, US-053, US-054, US-055 (29 puntos, S1) · US-056, US-057 (6 puntos, S4)
+**Stories:** US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052, US-053, US-054, US-055, US-225 (29 puntos, S1) · US-056, US-057 (6 puntos, S4)
 
-> **Propuesta de división (talla XL: atraviesa los tres servicios y suma 7 historias).** Publicar como dos Features hermanas sin cambiar los IDs: **06a-B2 Pipeline de evidencia** (`rag-orchestrator`: US-012, US-055, US-057 y la parte de semáforo y *deadline* de US-056) y **06a-B1 Gateway** (`clinical-api`: US-052, US-053, US-054 y la parte de *rate limit* de US-056). El panel es FEAT-10a.
+> **Propuesta de división (talla XL: atraviesa los tres servicios y suma 7 historias).** Publicar como dos Features hermanas sin cambiar los IDs: **06a-B2 Pipeline de evidencia** (`rag-orchestrator`: US-012, US-224, US-055, US-225, US-057 y la parte de semáforo y *deadline* de US-056) y **06a-B1 Gateway** (`clinical-api`: US-052, US-053, US-054 y la parte de *rate limit* de US-056). El panel es FEAT-10a.
 
 ## Fixtures
 
@@ -32,84 +32,146 @@
 
 ---
 
-## US-012 · ADR-39 — Evaluación y selección de modelos locales y runtime
+## US-012 · ADR-39 — Fase A: *embeddings*, *reranker* y NLI locales
 
 > Linear: [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102)
 
-`FEAT-06a` · Sprint 1 (inicio) · Estimación **8** · — (ADR) · IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · Dueño: Ingeniería · 🔗 Bloquea: US-055 (adapters reales), US-058 (dimensión del vector y campo sparse), US-059 (indexación), US-033 AC-6, US-034 (valores de runtime), US-072/US-073 (baseline con modelos fijados), US-014 · ADR-41 (juez local), FEAT-01b (OCR, S2), ADR-42 (p95) · No bloquea: historias que trabajan contra las interfaces de los adapters con implementaciones falsas
+`FEAT-06a` · Sprint 1 (inicio) · Estimación **5** · — (ADR) · IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · Dueño: Ingeniería · 🔗 Bloquea: US-058 (dimensión del vector y campo sparse), US-059 (indexación), US-055 (adapters reales de recuperación), US-224 · ADR-39 fase B, US-033 AC-6, US-072/US-073 (baseline con modelos fijados), US-014 · ADR-41 (juez local) · No bloquea: historias que trabajan contra las interfaces de los adapters con implementaciones falsas
+
+> **División (usuario, 2026-10-13, `[S1 resp. 6]`, retro del Pre-S1 P-5):** US-012 (8) se parte por superficie en **fase A** (esta historia, 5: lo que fuerza reindexar) y **fase B** (US-224, 3: runtime, LLM, OCR y p95 extremo a extremo, cuando el pipeline corre). Un solo documento, `ADR-39-modelos-locales.md`, con las dos fases. Los AC-6, AC-7 y AC-8 originales pasan a US-224 (AC-1, AC-4 y AC-5); los números no se reutilizan.
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 5]`):** hipótesis principal a medir = **combinación A**: BGE-M3 (dense de 1024, int8, origen del sparse = el propio BGE-M3), bge-reranker-v2-m3 (int8) y mDeBERTa-v3-base-xnli-multilingual-nli-2mil7. Respaldos medidos con el mismo protocolo: **B** (Qwen3-Embedding-0.6B con MRL a 1024 + Qwen3-Reranker-0.6B) y **C** (multilingual-e5-large-instruct + gte-multilingual-reranker-base). La elección final sale de las cifras (AC-2, AC-4), no de esta hipótesis. Insumo: investigación externa del refinamiento del S1 (`backlog/sprints/S1-refinamiento.md` §2), sin latencias medidas.
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
-Como responsable técnico, quiero fijar el runtime y los modelos locales (LLM,
-*embeddings*, *reranker*, NLI y OCR) midiendo con el stack levantado, para que el
-análisis de evidencia y la extracción se implementen sobre una base estable y no haya
-que reindexar el corpus después.
+Como responsable técnico, quiero fijar los modelos de *embeddings*, *reranker* y NLI
+midiendo con el stack levantado, para que el corpus se indexe una sola vez y la
+recuperación del walking skeleton se implemente sobre una base estable.
 
 ## AC (Given/When/Then)
-- **AC-1 (happy path)** `[IA-01]` · Dado el protocolo de medición (3 corridas, mediana) y los
-  datasets de OL-06 disponibles en el S1, cuando se evalúe cada candidato, entonces
-  `docs/architecture/adr/ADR-39-modelos-locales.md` registra por candidato: memoria
-  residente, p95 de su etapa, validez de JSON (LLM), licencia, versión exacta y la
-  métrica principal de su componente (recall@10 y MRR, incluido español → inglés, para
-  *embeddings* y *reranker*; exactitud sobre pares etiquetados para NLI; exactitud por
-  campo crítico para OCR; fidelidad y JSON válido para el LLM). `[readme §1.4]` `[G-3]` `[G-6]`
-- **AC-2 (borde · restricciones duras)** `[NFR-05]` · Dado un candidato o combinación que excede
-  24 GB de memoria total del stack, o p95 > 15 s en `/platform/evidence-analyses`, o
-  p95 > 60 s por documento, o JSON válido < 99 %, o licencia no académica, cuando se
+- **AC-1 (happy path)** `[IA-01]` · Dado el protocolo de medición (3 corridas, mediana) y el
+  mini-dataset del AC-9, cuando se evalúe cada candidato de *embeddings*, *reranker* y NLI,
+  entonces `docs/architecture/adr/ADR-39-modelos-locales.md` (plantilla MADR) registra por
+  candidato: memoria residente, latencia p95 de su etapa en CPU, licencia, versión exacta y
+  la métrica principal de su componente (recall@10 y MRR, incluido español → inglés, para
+  *embeddings* y *reranker*; exactitud sobre pares etiquetados para NLI). `[readme §1.4]` `[G-3]` `[G-6]`
+- **AC-2 (borde · restricciones duras)** `[NFR-05]` · Dado un candidato que, sumado al
+  presupuesto reservado para el LLM de la hipótesis A, hace exceder 24 GB de memoria total
+  del stack, o cuya etapa no deja margen para p95 ≤ 15 s en `/platform/evidence-analyses`
+  (presupuesto por etapa fijado en el propio ADR), o con licencia no académica, cuando se
   evalúe, entonces queda descartado y el ADR anota el motivo y la cifra medida.
   `[readme §1.4]` `[NFR-01]`
 - **AC-3 (embeddings primero)** · Dado que cambiar el modelo de *embeddings* obliga a
-  reindexar Milvus, cuando se cierre la fase de *embeddings*, entonces el ADR fija
-  modelo, dimensión del vector dense y origen del vector sparse **antes** de que US-059
-  indexe el corpus semilla, y el esquema de la colección de US-033 queda completo con
-  esos valores. El orden de las fases (*embeddings*, *reranker* y NLI primero; runtime,
-  LLM, OCR y p95 después) lo fija el propio ADR (P-01). `[readme §6.1]` `[ADR-5]` `[P-01]`
+  reindexar Milvus, cuando se cierre esta fase, entonces el ADR fija modelo, dimensión del
+  vector dense (`EMBEDDING_DIM`) y origen del vector sparse **antes** de que US-059 indexe
+  el corpus semilla, y el esquema de la colección de US-033 queda completo con esos
+  valores. `[readme §6.1]` `[ADR-5]` `[P-01]`
 - **AC-4 (borde · empate)** · Dado un empate en la métrica principal de un componente,
   cuando se decida, entonces gana el de menor memoria y el ADR lo justifica. `[readme §1.4]`
 - **AC-5 (borde · ningún candidato cumple)** · Dado que ningún candidato de un
   componente cumple las restricciones duras, cuando se agote la lista, entonces el ADR
   lo declara y escala el ajuste de metas al usuario (G-5 / NFR-01), sin elegir un modelo
-  que las incumpla. (asumido)
-- **AC-6 (runtime)** · Dados Ollama y vLLM, cuando se comparen, entonces el ADR registra
-  si cada uno usa realmente la GPU (Metal) fuera de Docker, si expone API compatible con
-  OpenAI y si soporta salida JSON restringida por esquema; un runtime sin uso real de GPU
-  queda descartado. `[readme §1.4]`
-- **AC-7 (configuración)** · Dado el ADR aprobado, cuando se cierre, entonces modelos,
-  versiones y parámetros quedan fijados en configuración (`LLM_MODEL` y equivalentes por
-  adapter), no en el código, y la regla de proveedores (US-050) sigue verificada por
-  test con esos valores. `[RN-22]` `[RN-12]`
-- **AC-8 (repetible para el S4)** · Dado el protocolo usado en el S1, cuando se cierre el
-  ADR, entonces queda como script repetible para recalibrar G-5 con síntesis,
-  aplicabilidad y agente, y para evaluar un modelo de ~14B si SUP-2 falla; en el S1 se
-  miden solo candidatos de 7–8B salvo que sobre presupuesto. `[G-5]` `[SUP-2]` (asumido)
+  que las incumpla. (asumido; aceptado `[S1 resp. 3]`)
+- **AC-9 (mini-dataset de la fase A)** · Dado que la suite `evaluate` (US-072) llega en el
+  S2, cuando se prepare la medición, entonces existe `data/eval/adr39-mini/` con ≥ 30
+  preguntas sintéticas (≥ 10 en español contra fuentes en inglés) etiquetadas contra los
+  documentos de la semilla de US-059, y ≥ 30 pares afirmación–fragmento etiquetados para
+  NLI; su manifiesto declara `clase: sintetico` y licencia de cada fuente, y US-072 lo
+  reutiliza. `[RN-13]` `[RN-14]` `[RN-21]` `[S1 resp. 6]`
+
+> AC-6, AC-7 y AC-8 → US-224 (fase B), AC-1, AC-4 y AC-5.
 
 ## Contexto técnico
-Decidir primero los *embeddings* (reindexar es caro); el LLM puede cambiarse sin migrar
-datos. Candidatos (readme §1.4): runtime Ollama o vLLM; LLM *instruct* 7–8B multilingüe
-cuantizado a 4 bits; *embeddings* BGE-M3 (dense + sparse) o multilingual-e5-large;
-*reranker* bge-reranker-v2-m3; NLI multilingüe mDeBERTa-v3 (XNLI); OCR Tesseract
-`spa+eng` o PaddleOCR. *Embeddings*, *reranker* y NLI en CPU dentro de
-`rag-orchestrator`; el LLM, nativo. El sparse debe existir desde el esquema del S1
-(híbrida en el S3). El motor de PII se decide en ADR-40.
+Decidir primero los *embeddings* (reindexar es caro). *Embeddings*, *reranker* y NLI en
+CPU dentro de `rag-orchestrator` (contenedor Linux arm64, sin GPU): medir con int8/ONNX y
+truncado de pares del *reranker* (la investigación estima 3–6 s en fp32 para 20–30 pares
+y 1–2 s en int8; es el segundo cuello de botella después del LLM). El sparse debe existir
+desde el esquema del S1 (híbrida en el S3); con consultas en español sobre un corpus en
+inglés el sparse aporta poco sin traducir la consulta: el ADR lo anota para US-112.
+NLI: no hay un modelo de *groundedness* multilingüe abierto y ligero; medir mDeBERTa con
+afirmación y fragmento en el mismo idioma y en mezcla es/en. El motor de PII se decide en
+ADR-40.
 
-| Opción (runtime) | A favor | En contra |
-|---|---|---|
-| Ollama | Instalación simple, Metal probado, API compatible con OpenAI | Menos control de *batching* |
-| vLLM | Mejor *throughput* y concurrencia | Soporte en Apple Silicon por verificar |
+| Componente | A (hipótesis) | B (respaldo) | C (respaldo) |
+|---|---|---|---|
+| *Embeddings* (fuerza reindexado) | BGE-M3 · 1024 · sparse propio · MIT | Qwen3-Embedding-0.6B · MRL a 1024 · sin sparse · Apache 2.0 | multilingual-e5-large-instruct · 1024 · sin sparse · MIT |
+| *Reranker* | bge-reranker-v2-m3 · Apache 2.0 | Qwen3-Reranker-0.6B · Apache 2.0 | gte-multilingual-reranker-base · Apache 2.0 |
+| NLI | mDeBERTa-v3-base-xnli-multilingual-nli-2mil7 · MIT | ídem | ídem |
 
-| Opción (*embeddings*, fuerza reindexado) | A favor | En contra |
-|---|---|---|
-| BGE-M3 | Dense + sparse en un modelo; multilingüe | Memoria y latencia en CPU a medir |
-| multilingual-e5-large | Multilingüe probado | Sin sparse propio |
-
-**Descartado por decisión previa (no se reabre):** vision-LLM directo para OCR; nube para datos reales (RN-12).
+**Descartado por licencia (investigación del S1):** jina-embeddings v3/v4 y jina-reranker v2/v3 (CC BY-NC o licencia de investigación); HHEM-2.3 (propietario; HHEM-2.1 solo inglés). **No se reabre:** nube para datos reales (RN-12).
 
 ## Non-goals
-No implementar el pipeline. No hacer *fine-tuning*. No decidir el detector de PII
-(ADR-40) ni el framework de evaluación (ADR-41).
+No implementar el pipeline. No hacer *fine-tuning*. No decidir runtime, LLM ni OCR
+(US-224), ni el detector de PII (ADR-40) ni el framework de evaluación (ADR-41).
 
 ## INVEST
-**Small** ✓ 8 es el techo: una evaluación con protocolo fijo y un documento; si la fase B se alarga, dividir en ADR-39a (*embeddings*, *reranker*, NLI) y ADR-39b (runtime, LLM, OCR, p95) bajo el mismo número.
-**Testable** ✓ cada AC se verifica sobre el documento ADR y la configuración resultante.
+**Small** ✓ 5: tres componentes con protocolo fijo, un mini-dataset y un documento.
+**Testable** ✓ cada AC se verifica sobre el documento ADR, el dataset y la configuración resultante.
+
+---
+
+## US-224 · ADR-39 — Fase B: runtime, LLM local, OCR y p95 extremo a extremo
+
+> Linear: [L1D-274](https://linear.app/l1der-lab-mjbc/issue/L1D-274)
+
+`FEAT-06a` · Sprint 1 (cierre) · Estimación **3** · — (ADR) · IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · Dueño: Ingeniería · ↪ US-012 · ADR-39 fase A, US-225 (pipeline con generación), US-034 · 🔗 Bloquea: US-072/US-073 (baseline con modelos fijados), US-014 · ADR-41 (juez local), FEAT-01b (OCR, S2), ADR-42 (p95) · No bloquea: historias que trabajan con `LLM_PROVIDER=fake`
+
+> **Creada (usuario, 2026-10-13, `[S1 resp. 6]`)** al partir US-012. Hipótesis principal **A** `[S1 resp. 5, 10]`: **Gemma 4 26B A4B QAT** (`gemma4:26b-a4b-it-qat`, MoE con ~4B activos, Q4 entrenado con cuantización, Apache 2.0) en **Ollama (GGUF/llama.cpp sobre Metal)**, fuera de Docker, con `num_ctx = 8192`. **Medición del refinamiento (2026-10-13, Ollama 0.34.4):** 15 GB residentes, 100 % GPU, ~79 tok/s y JSON con esquema correcto en una prueba. Se descartó `gemma4:26b-mlx` (18 GB solo en pesos) porque el usuario fijó un presupuesto de ~16 GB para el LLM; OCR **OCRmyPDF + Tesseract `spa`**. Respaldos medidos: **B** Gemma 4 12B (ya descargado) y **C** Qwen3.5-9B sin *thinking*; vllm-metal como runtime alternativo; PaddleOCR (PP-OCRv5 latino) y docTR como OCR alternativos. Descartado por licencia: Surya (GPL-3.0 + OpenRAIL-M con umbral comercial).
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 5]`):** el supuesto original de US-012 AC-8 ("en el S1 solo candidatos de 7–8B") se reemplaza: en el S1 se miden modelos de hasta 26B MoE o 12B denso, siempre que el stack completo quepa en 24 GB.
+
+## Story
+Como responsable técnico, quiero fijar el runtime, el LLM y el OCR locales midiendo el
+análisis de punta a punta, para que el walking skeleton cumpla el p95 y la extracción del
+S2–S3 parta de un motor elegido con datos.
+
+## AC (Given/When/Then)
+- **AC-1 (runtime)** · Dados Ollama y vllm-metal (0.1.0, PyPI, en `~/.venvs/vllm-metal`), cuando se comparen,
+  entonces el ADR registra si cada uno usa realmente la GPU (Metal) fuera de Docker, si
+  expone API compatible con OpenAI y si soporta salida JSON restringida por esquema; un
+  runtime sin uso real de GPU queda descartado. `[readme §1.4]` (ex US-012 AC-6)
+- **AC-2 (LLM)** · Dado el prompt del S1 y `RagQueryInternalResponse` como esquema de
+  salida, cuando se ejecuten 200 llamadas por candidato sobre el mini-dataset de US-012
+  AC-9, entonces el ADR registra memoria residente (pesos + KV), tokens/s, JSON válido
+  contra el esquema (meta ≥ 99 %), fidelidad sobre una muestra revisada y licencia, y
+  declara si la restricción por JSON Schema la aplica el runtime o solo se valida después.
+  `[IA-01]` `[G-3]`
+- **AC-3 (borde · p95 extremo a extremo)** `[NFR-01]` · Dado el pipeline del S1 (US-055,
+  US-225, US-063, US-064) contra el paciente semilla, cuando se mide
+  `POST /platform/evidence-analyses` con 3 corridas de ≥ 30 consultas, entonces el ADR
+  registra p95 total y por etapa, y una combinación con p95 > 15 s o memoria total > 24 GB
+  queda descartada con la cifra medida; si ninguna cumple, aplica US-012 AC-5 (escala al
+  usuario). `[readme §1.4]` `[NFR-05]` (ex US-012 AC-2, parte p95)
+- **AC-4 (configuración)** · Dado el ADR aprobado, cuando se cierre, entonces modelos,
+  versiones y parámetros quedan fijados en configuración (`LLM_MODEL` y equivalentes por
+  adapter), no en el código, y la regla de proveedores (US-050) sigue verificada por test
+  con esos valores. `[RN-22]` `[RN-12]` (ex US-012 AC-7)
+- **AC-5 (repetible para el S4)** · Dado el protocolo usado en el S1, cuando se cierre el
+  ADR, entonces queda como script repetible para recalibrar G-5 con síntesis,
+  aplicabilidad y agente. `[G-5]` `[SUP-2]` (ex US-012 AC-8, supuesto reemplazado
+  `[S1 resp. 5]`)
+- **AC-6 (OCR)** · Dados ≥ 5 PDF sintéticos escaneados en español (`data/eval/ocr-mini/`,
+  `clase: sintetico`), cuando se evalúe cada motor OCR, entonces el ADR registra exactitud
+  por campo crítico, p95 por documento (meta ≤ 60 s), memoria y licencia, y un motor con
+  p95 > 60 s queda descartado. `[readme §1.4]` `[G-6]` (ex US-012 AC-1, parte OCR)
+
+## Contexto técnico
+Riesgo principal (investigación del S1): con ~307 GB/s de ancho de banda del M5 Pro, un
+LLM denso de 12B en Q4 genera ~30–35 tok/s, así que 800 tokens tardan ~23–27 s, por encima
+del p95 solo con el LLM. La hipótesis A (MoE, ~4B activos) midió ~79 tok/s en el refinamiento
+(~10 s para 800 tokens); si falla, las palancas son recortar la salida, decodificación especulativa (MTP en
+vllm-metal, solo con `temperature=0`) o el respaldo B/C. Con GGUF la salida se restringe por gramática en llama.cpp; las 200 llamadas del AC-2 lo
+confirman. Presupuesto de memoria fijado por el usuario: ~16 GB para el LLM `[S1 resp. 10]`
+(medido: 15 GB); el resto del stack debe caber en los ~8–9 GB restantes.
+
+## Non-goals
+No implementar el pipeline (US-055, US-225). No hacer *fine-tuning*. No decidir el
+detector de PII (ADR-40) ni el framework de evaluación (ADR-41).
+
+## INVEST
+**Small** ✓ 3: mediciones con el pipeline ya construido y un script; el documento es el mismo ADR-39.
+**Testable** ✓ cada AC se verifica sobre el ADR, los datasets mínimos y la configuración.
 
 ---
 
@@ -252,6 +314,8 @@ Faltantes en el registro (FEAT-04 US-006).
 
 > **Nota (Gate 1 de US-033, 2026-10-11):** el contrato congelado declara para Backend 2 el `401` con `error = "TOKEN_SERVICIO_INVALIDO"` ante un JWT de servicio ausente o inválido; esta historia lo implementa.
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+
 ## Story
 Como responsable de seguridad, quiero que `rag-orchestrator` solo acepte llamadas
 firmadas por `clinical-api` con un JWT de servicio de algoritmo fijado, para que la
@@ -294,7 +358,11 @@ Supertest con servidor simulado que captura cabeceras (AC-4).
 
 > Linear: [L1D-106](https://linear.app/l1der-lab-mjbc/issue/L1D-106)
 
-`FEAT-06a` · Sprint 1 · Estimación **8** · HU-03 · FR-09 (S1), FR-25 (contrato), RN-02 (dueña), RN-05 (dueña de la recuperación), RN-03 (cálculo), RN-22 · AC-05.3 (parte S1), AC-06.1 (parte S1), AC-10.1 (1 opción), AC-10.4 · ⛔ Bloqueada por: ADR-39 (solo los adapters reales; los AC se verifican con adapters falsos) · ↪ US-054, US-058 · 🔗 Relacionada: US-063, US-064 (validación de citas y soporte que invoca el pipeline) · 🔗 Medido en: US-072 (precisión de "sin evidencia", M-10.1), US-073 (M-06.1) · 🔗 Regresión [RN-28] → US-125 (activa desde S5)
+`FEAT-06a` · Sprint 1 · Estimación **5** · HU-03 · FR-09 (S1), FR-25 (contrato), RN-02 (dueña), RN-05 (dueña de la recuperación), RN-03 (cálculo), RN-22 · AC-06.1 (parte S1), AC-10.4 · ⛔ Bloqueada por: US-012 · ADR-39 fase A (solo los adapters reales de recuperación; los AC se verifican con adapters falsos) · ↪ US-054, US-058 · 🔗 Ampliada por: US-225 (generación y recorte) · 🔗 Relacionada: US-063, US-064 (validación de citas y soporte que invoca el pipeline) · 🔗 Medido en: US-072 (precisión de "sin evidencia", M-10.1), US-073 (M-06.1)
+
+> **División (usuario, 2026-10-13, `[S1 resp. 6]`, retro del Pre-S1 P-5):** US-055 (8) se parte por superficie: esta historia queda con la **recuperación, el umbral y "sin evidencia"** (AC-2…AC-6, 5 puntos); la **generación y el recorte a `maxOptions`** pasan a US-225 (los AC-1, AC-7 y AC-8 originales son sus AC-1, AC-2 y AC-3). Los números no se reutilizan.
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
 Como oncólogo, quiero que el sistema recupere solo evidencia vigente y relevante para
@@ -302,14 +370,6 @@ mi pregunta y que, si no la hay, me lo diga sin inventar nada, para no confundir
 respuesta vacía con una opción respaldada.
 
 ## AC (Given/When/Then)
-- **AC-1 (happy path)** · Dados FX-06a-a, `LLM-OK` y un contexto de mama, cuando
-  `clinical-api` envía `Q-HER2` a `POST /rag/query`, entonces responde `200` con
-  `status = con_evidencia`, exactamente 1 elemento en `evidenceOptions` con
-  `citedSources[0].chunkId = "ch-m1-1"` y `relevanceScore = 0.87`, y con
-  `synthesis.agreements = []`, `synthesis.discrepancies = []`, `applicability = []`,
-  `limitations = []`, `agentSteps = []`, `omittedClaims = 0` y `meta.corpusCutoffDate =
-  2026-09-30`; la respuesta valida contra `RagQueryInternalResponse`.
-  `[OL-02]` `[AC-10.1]` `[FR-25]` `[ADR-26]`
 - **AC-2 (invariante · sin evidencia)** · Dada `Q-SIN`, cuando se procesa, entonces
   responde `200` con `status = sin_evidencia`, `evidenceOptions = []`,
   `retrievalStats.aboveThreshold = 0`, y el adapter del LLM registra **cero**
@@ -328,15 +388,8 @@ respuesta vacía con una opción respaldada.
   pregunta, cuando se calcula `relevanceScore` dos veces, entonces el valor es idéntico,
   está en [0,1] y `meta.rerankerModel` registra la versión del *reranker*.
   `[ADR-8]` `[OL-02]`
-- **AC-7 (borde · pregunta no terapéutica)** · Dada `Q-TOX` con `LLM-SIN-OPCIONES`,
-  cuando se procesa, entonces responde `status = con_evidencia` con
-  `evidenceOptions = []` y el LLM registra una invocación. `[AC-05.3]`
-- **AC-8 (borde · máximo de opciones, S1–S2)** · Dado `maxOptions = 1`, `LLM-DOS` y un
-  pipeline sin aplicabilidad calculada (`applicability = []`, S1–S2), cuando se procesa
-  `Q-HER2`, entonces `evidenceOptions` tiene 1 elemento, el de mayor `relevanceScore`
-  (desempate de RN-28 mientras no hay aplicabilidad), y la otra opción no aparece en
-  `discardedOptions`. `[FR-09]` `[RN-28]` (asumido: el excedente no es una descartada)
-  · Desde el S3 la selección es por aplicabilidad: 🔗 Regresión [RN-28] → US-125 AC-5
+
+> AC-1, AC-7 y AC-8 → US-225 (AC-1, AC-2 y AC-3).
 
 ## Contexto técnico
 Hexagonal en `rag-orchestrator`: `api/RagQueryRouter` → `application/RAGOrchestratorService`
@@ -357,9 +410,57 @@ aplicabilidad (S3, US-125) y hasta 3 opciones ordenadas por aplicabilidad (S3–
 FEAT-08b y US-134).
 
 ## INVEST
-**Small** ✓ 8 es el techo: un pipeline lineal sobre adapters falsos; si se complica, dividir en US-055a (recuperación, umbral, "sin evidencia") y US-055b (generación y recorte).
-**Testable** ✓ ocho tests de Pytest con contadores de invocaciones y un test de filtro contra Milvus de test.
-*(Estimable ⚠ el 8 asume ADR-39 cerrado en su fase de *embeddings*; los adapters reales se conectan sin cambiar los AC.)*
+**Small** ✓ 5: recuperación lineal sobre adapters falsos (la generación es US-225).
+**Testable** ✓ cinco tests de Pytest con contadores de invocaciones y un test de filtro contra Milvus de test.
+*(Estimable: asume US-012 · ADR-39 fase A cerrada; los adapters reales se conectan sin cambiar los AC.)*
+
+---
+
+## US-225 — Con evidencia sobre el umbral, `/rag/query` genera la opción descrita, la recorta a `maxOptions` y responde con el contrato final
+
+> Linear: [L1D-275](https://linear.app/l1der-lab-mjbc/issue/L1D-275)
+
+`FEAT-06a` · Sprint 1 · Estimación **3** · HU-03 · FR-09 (S1), FR-25 (contrato) · AC-05.3 (parte S1), AC-10.1 (1 opción) · ⛔ Bloqueada por: US-224 · ADR-39 fase B (solo el adapter real del LLM; los AC se verifican con adapters falsos) · ↪ US-055 · 🔗 Relacionada: US-063, US-064 (validación de citas y soporte que invoca el pipeline) · 🔗 Medido en: US-072, US-073 · 🔗 Regresión [RN-28] → US-125 (activa desde S5)
+
+> **Creada (usuario, 2026-10-13, `[S1 resp. 6]`)** al partir US-055: sus AC son los AC-1, AC-7 y AC-8 originales de US-055, con su procedencia anotada.
+
+## Story
+Como oncólogo, quiero que, cuando hay evidencia relevante, el sistema me devuelva una
+opción descrita con su cita en la forma final del contrato, para ver desde el primer
+sprint un análisis completo y no un esqueleto vacío.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dados FX-06a-a, `LLM-OK` y un contexto de mama, cuando
+  `clinical-api` envía `Q-HER2` a `POST /rag/query`, entonces responde `200` con
+  `status = con_evidencia`, exactamente 1 elemento en `evidenceOptions` con
+  `citedSources[0].chunkId = "ch-m1-1"` y `relevanceScore = 0.87`, y con
+  `synthesis.agreements = []`, `synthesis.discrepancies = []`, `applicability = []`,
+  `limitations = []`, `agentSteps = []`, `omittedClaims = 0` y `meta.corpusCutoffDate =
+  2026-09-30`; la respuesta valida contra `RagQueryInternalResponse`.
+  `[OL-02]` `[AC-10.1]` `[FR-25]` `[ADR-26]` (ex US-055 AC-1)
+- **AC-2 (borde · pregunta no terapéutica)** · Dada `Q-TOX` con `LLM-SIN-OPCIONES`,
+  cuando se procesa, entonces responde `status = con_evidencia` con
+  `evidenceOptions = []` y el LLM registra una invocación. `[AC-05.3]` (ex US-055 AC-7)
+- **AC-3 (borde · máximo de opciones, S1–S2)** · Dado `maxOptions = 1`, `LLM-DOS` y un
+  pipeline sin aplicabilidad calculada (`applicability = []`, S1–S2), cuando se procesa
+  `Q-HER2`, entonces `evidenceOptions` tiene 1 elemento, el de mayor `relevanceScore`
+  (desempate de RN-28 mientras no hay aplicabilidad), y la otra opción no aparece en
+  `discardedOptions`. `[FR-09]` `[RN-28]` (asumido: el excedente no es una descartada; aceptado `[S1 resp. 3]`)
+  · Desde el S3 la selección es por aplicabilidad: 🔗 Regresión [RN-28] → US-125 AC-5 (ex US-055 AC-8)
+
+## Contexto técnico
+Continúa el pipeline de US-055 en `application/RAGOrchestratorService`: prompt (US-057 en
+el S4) → LLM con salida JSON restringida por el esquema de `RagQueryInternalResponse` →
+validación de citas (US-063) y soporte (US-064) → `domain/` recorte a `maxOptions`.
+Respuesta en el idioma de la pregunta (`meta.queryLanguage`). Tests: Pytest + TestClient
+con adapters falsos (FX-06a-a, FX-06a-b).
+
+## Non-goals
+Síntesis, aplicabilidad, agente y hasta 3 opciones (S3–S5: US-125, US-134).
+
+## INVEST
+**Small** ✓ 3: un tramo del pipeline con tres AC.
+**Testable** ✓ tres tests de Pytest con adapters falsos y validación contra el esquema.
 
 ---
 
@@ -468,3 +569,4 @@ integración con LLM falso (AC-5).
 | — | backlog/02-adrs.md: ADR-39 en la Feature FEAT-00 (decisión) | Mapa de lotes de F3: ADR-39 en el S1; FEAT-00 solo Pre-S1 | ADR-39 vive en FEAT-06a, donde se aplica (mismo sprint en todas las fuentes) |
 | S-01 | PRD §14 / readme §5.0: slicing original | Slicing "por hipótesis" (01-requisitos §15) | Sin cambio de sprint para esta Feature (S1 en ambos) |
 | Slicing v2 · Q-06 revisada | Q-06 (a) y readme OL-03: *rate limit* RN-30 y semáforo en el S1; separación instrucciones/datos (OL-03) en el S1 | Slicing v2 y Q-06 revisada (`01-requisitos.md` §15): US-056 (*rate limit* RN-30) y US-057 en el S4 — **aceptado por el usuario el 2026-10-07** | Decisión del usuario. Hasta el S4 un único usuario de demo y datos sintéticos; el límite y la defensa de *prompt injection* llegan antes de G-Demo (S5) y del piloto |
+| Refinamiento del S1 · P-5 | US-012 · ADR-39 (8) y US-055 (8) en el S1 | DoR del S1 (≤ 5 pts) y retro del Pre-S1 P-5 — **aprobado por el usuario el 2026-10-13** `[S1 resp. 6]` | US-012 → fase A (5) + US-224 fase B (3); US-055 → recuperación (5) + US-225 generación (3). Mismos 29 puntos; AC movidos con su procedencia anotada |

@@ -51,7 +51,7 @@ que las redactó la IA decidan cuál veo arriba.
   relevancia (mismos conteos). `[RN-28]` `[RN-03]` `[AC-10.1]`
 - **AC-3 (borde · tope de opciones)** · Dado `LLM-CUATRO`, cuando se recorta a 3,
   entonces O-A no aparece en `evidenceOptions` ni en `discardedOptions`.
-  `[FR-09]` (asumido: el excedente válido no es una descartada, igual que US-055 AC-8)
+  `[FR-09]` (asumido: el excedente válido no es una descartada, igual que US-225 AC-3, ex US-055 AC-8)
   > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-3, campo `analysisBasis`): ¿las opciones con soporte que quedan fuera del tope de 3 se declaran en la Base del análisis (p. ej., "La evidencia describe 1 opción más, no mostrada") o se omiten sin mención?
 - **AC-4 (borde · no comparable visible)** · Dado `LLM-TRES`, cuando se procesa,
   entonces `evidenceOptions` = [O-B, O-C, O-A] y O-A trae

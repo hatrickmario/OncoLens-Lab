@@ -60,7 +60,7 @@ AC-2, AC-4), Playwright contra Compose (AC-3) y test de build (AC-5).
 
 `FEAT-10a` · Sprint 1 · Estimación **5** · HU-03 · FR-09 (UI S1), FR-10 (UI), RN-03 (dueña), RN-28 (texto del criterio), NFR-12 · AC-10.1 (S1), AC-10.2 (S1), AC-10.4, AC-05.3 (UI) · ↪ US-060, US-211, US-051 · 🔗 Consume: US-064, US-067, US-069 · 🔗 Regresión [RN-28] (selección y texto por aplicabilidad) → US-125, US-126 AC-7 (activa desde S5) · Ticket: OL-04
 
-> **Dependencia hacia adelante (slicing v2, 2026-10-07):** la ficha (US-051) y el resumen de la Base del análisis (US-067) llegan en el S2. En el S1 el panel se abre por ruta directa (`/patients/{id}/evidence`) sobre el paciente semilla, con la sesión de US-211; `AnalysisBasisPanel` se monta con US-067.
+> **Dependencia hacia adelante (slicing v2, 2026-10-07):** la ficha (US-051) y el resumen de la Base del análisis (US-067) llegan en el S2. En el S1 el panel se abre por ruta directa (`/pacientes/[id]/analisis`, `[S1 resp. 4]`) sobre el paciente semilla, con la sesión de US-211; `AnalysisBasisPanel` se monta con US-067.
 
 ## Story
 Como oncólogo, quiero ver la opción que describe la evidencia con sus fuentes citadas y
@@ -105,7 +105,7 @@ tomar por válido algo que no se pudo respaldar.
 Atomic Design sobre shadcn/ui (OL-04 tarea 2): `CitationChip`, `RelevanceMeta`,
 `EvidenceOptionCard`, `DiscardedOptions`, `AnalysisBasisPanel` (US-067),
 `AnalysisResult`, `EvidencePanelTemplate`; página
-`app/(dashboard)/patients/[patientId]/evidence/page.tsx`. Tipos importados de
+`app/(dashboard)/pacientes/[id]/analisis/page.tsx` (en el S1 el resultado se muestra en la misma página tras el POST: el contrato no tiene `GET /platform/evidence-analyses/{id}`). Tipos importados de
 `packages/api-contracts`. El componente ya itera `evidenceOptions[]` y reserva los
 bloques de síntesis y aplicabilidad (S3–S4). El texto del criterio es un literal del
 catálogo i18n de `web` (`evidence.orderCriterion.relevance`), no código, y pasa la lista
@@ -122,7 +122,7 @@ Avisos por tarjeta (`warnings`: FR-11; sin verificar en el S2, US-101; conflicto
 por aplicabilidad y su texto de criterio (S3, US-125 y US-126 AC-7). Hasta 3 opciones
 (S4, US-134). Síntesis y aplicabilidad (S3–S4). Selectores de
 fuentes y filtros (S3).
-> Pendiente de definir en refinamiento (dueño: usuario · afecta: nada en el S1): la "traducción opcional etiquetada" de las citas (PRD §12 Idioma, readme OL-04) no tiene FR, AC ni sprint (V-10); ¿entra en el MVP y en qué sprint?
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 8]`):** la "traducción opcional etiquetada" de las citas (PRD §12 Idioma, readme OL-04, V-10) queda **fuera del MVP comprometido** (Post-MVP, sin historia); la cita se muestra en su idioma original (US-063 AC-6). Registrado en `## Conflictos de fuentes`.
 
 ## INVEST
 **Small** ✓ componentes de presentación sobre un contrato congelado.
@@ -188,3 +188,5 @@ Pasos de progreso visibles (ADR-42, S4; workaround: indicador indeterminado).
 | — | readme OL-04 alcance complementario: citas con traducción automática opcional | PRD §12: "traducción opcional etiquetada" sin FR ni sprint (V-10) | Fuera del S1; queda como nota pendiente en US-061 |
 | C-14 | PRD RN-19 y readme OL-04: "Análisis generado por IA — requiere validación…" (raya) | PRD AC-T3.1: "Análisis generado por IA: requiere validación…" ("texto actualizado") | Lo resuelve la dueña de RN-19 (US-069, FEAT-T3); este panel muestra el literal que fija esa historia |
 | Slicing v2 | readme OL-04 (S1): estados de espera, sin evidencia y error del panel en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-062 en el S3 | El S1 muestra la opción y las descartadas (US-061); los estados del panel llegan en el S3 |
+| Refinamiento del S1 · V-10 | PRD §12 Idioma y readme OL-04: "traducción opcional etiquetada" de las citas | Sin FR, AC ni sprint en el backlog | **Fuera del MVP comprometido** (Post-MVP, sin historia) — decisión del usuario del 2026-10-13 `[S1 resp. 8]`; la cita se muestra en su idioma original (US-063 AC-6) |
+| Refinamiento del S1 · rutas | US-061 y US-211: `/patients/{id}/evidence` | `docs/ux/flujo-e2e.md` (aprobado el 2026-10-11): `/pacientes/[id]/analisis` | Rutas en español del diseño `[S1 resp. 4]` |

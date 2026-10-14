@@ -43,7 +43,7 @@
 - Radios: 4 (etiquetas) · 6 (controles) · 8 (tarjetas) · 10 (diálogo de *login*).
 - Elevación: sin sombras salvo en el *login*. Las capas se separan por superficie y fondo.
 - **Objetivo táctil ≥ 44 × 44 px** en todo control, incluido "Cerrar sesión" (2.5.5).
-- **Foco visible:** `outline: 3px solid var(--color-primary); outline-offset: 2px` en `:focus-visible`, global y sin excepciones (2.4.7).
+- **Foco visible:** `outline: 3px solid var(--color-primary); outline-offset: 2px` en `:focus-visible`, global y sin excepciones (2.4.7). **Sobre superficies navy** (cabecera, aviso IA): `outline-color: #FFFFFF` (15,8:1), porque el primario sobre navy da 2,16:1 y no cumple 1.4.11 (revisión de accesibilidad del S1, 2026-10-13).
 
 ### Layout
 

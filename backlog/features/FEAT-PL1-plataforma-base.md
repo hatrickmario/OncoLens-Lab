@@ -17,6 +17,8 @@
 
 `FEAT-PL1` · Sprint 1 · Estimación **5** · — (técnica, PRD §17) · SEG-09, NFR-05, NFR-10 · ↪ US-035
 
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 7]`):** el modo `LLM_PROVIDER=fake` (respuestas fijas desde `contracts/examples/`) vive en esta historia (AC-6) y lo consumen la CI (US-036) y los E2E. Sin cambio de puntos.
+
 ## Story
 Como equipo de desarrollo, quiero levantar todo el stack con un único comando de
 Docker Compose y con el LLM nativo fuera de Docker, para que cualquier demo o test E2E
@@ -44,14 +46,20 @@ corra igual en la MacBook de referencia y los backends nunca queden expuestos al
   la definición de servicios, entonces no existe ningún servicio de LLM, y
   `rag-orchestrator` lo alcanza por `LLM_BASE_URL=http://host.docker.internal:<puerto>`
   tomado de configuración. `[readme §1.4]` `[CLAUDE.md]`
+- **AC-6 (borde · LLM falso)** `[S1 resp. 7]` · Dado `LLM_PROVIDER=fake` en la
+  configuración, cuando se levanta el stack sin el LLM nativo, entonces
+  `rag-orchestrator` responde `/health` `200` y `/rag/query` devuelve las respuestas fijas
+  de `contracts/examples/` (con evidencia y sin evidencia según la pregunta de fixture),
+  validadas contra `RagQueryInternalResponse`; y con `REAL_*_ENABLED=true` el arranque
+  con `LLM_PROVIDER=fake` falla. `[US-213]` `[RN-12]` `[RN-13]`
 
 ## Contexto técnico
 Redes según readme §2.4: `clinical-net` (web, clinical-api, postgres, clinical-minio),
 `ai-net` (clinical-api, rag-orchestrator, milvus) y `corpus-db-net` (rag-orchestrator y
 postgres). Healthchecks de Compose usan `/health`. AC-2 y AC-5 son tests sobre la salida
 de `docker compose config` (CI, sin levantar el stack); AC-1, AC-3 y AC-4 son un smoke
-test de Compose (script en `scripts/smoke/`) que corre en local y en la CI con un LLM
-falso compatible con OpenAI. El presupuesto de memoria (≤ 24 GB) lo mide ADR-39.
+test de Compose (script en `scripts/smoke/`) que corre en local y en la CI con
+`LLM_PROVIDER=fake` (AC-6), que también usan los E2E de Playwright y la CI de US-036. El presupuesto de memoria (≤ 24 GB) lo mide ADR-39.
 
 ## Non-goals
 HTTPS con CA interna y acceso por VPN (S5, FEAT-T4d). Prometheus, Grafana y OTel
@@ -59,7 +67,7 @@ HTTPS con CA interna y acceso por VPN (S5, FEAT-T4d). Prometheus, Grafana y OTel
 
 ## INVEST
 **Small** ✓ un Compose, healthchecks y un smoke test.
-**Testable** ✓ dos tests estáticos sobre `docker compose config` y un smoke test con tres aserciones.
+**Testable** ✓ dos tests estáticos sobre `docker compose config`, un smoke test con tres aserciones y un test del modo `fake`.
 
 ---
 
@@ -68,6 +76,8 @@ HTTPS con CA interna y acceso por VPN (S5, FEAT-T4d). Prometheus, Grafana y OTel
 > Linear: [L1D-165](https://linear.app/l1der-lab-mjbc/issue/L1D-165)
 
 `FEAT-PL1` · Sprint 1 · Estimación **3** · — (técnica, PRD §17) · SEG-07, SEG-08, RN-14 · 🔗 Consumida por: US-034, US-040, US-046, US-054
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
 Como equipo de desarrollo, quiero generar con scripts las claves del JWT de servicio,
@@ -116,6 +126,8 @@ identidad (riesgo de OL-01). AC-1 a AC-3 se verifican con un test de shell en la
 > Linear: [L1D-166](https://linear.app/l1der-lab-mjbc/issue/L1D-166)
 
 `FEAT-PL1` · Sprint 1 · Estimación **5** · — (técnica, PRD §17) · RN-14 (dueña), NFR-13, SEG-12 · ↪ US-033 · 🔗 Relacionada: US-042 (estándares no permitidos), US-074 (suite en DoD)
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
 Como equipo de desarrollo, quiero que cada PR pase por una CI que compile, ejecute los
@@ -425,6 +437,8 @@ matriz TDD de `CLAUDE.md`): los tests existentes de empaquetado son la red de se
 > Linear: [L1D-265](https://linear.app/l1der-lab-mjbc/issue/L1D-265)
 
 `FEAT-PL1` · Sprint 1 · Estimación **2** · — (técnica, PRD §17) · NFR-13, NFR-12 (accesibilidad) · ↪ US-036 (workflow de CI) · 🔗 Relacionada: US-213 (umbrales y conteo de líneas que dependen del `printWidth` fijado aquí) · 🔗 Consumida por: `frontend-dev`, `clinical-platform-dev`, `ai-services-dev` y `design-principles-reviewer` (`.claude/`)
+
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero una configuración base de ESLint

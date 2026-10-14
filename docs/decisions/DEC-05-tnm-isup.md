@@ -3,11 +3,11 @@
 > Linear: [L1D-54](https://linear.app/l1der-lab-mjbc/issue/L1D-54) · Historia: US-011 · DEC-05 (FEAT-00, Pre-S1) · Q-04 · C-11 · RN-29 · PRD v1.4 E-05
 
 - **Estado:** Decidida por el usuario (2026-10-09; ampliada en el Gate 1 el 2026-10-11) `[Pre-S1 resp. 1, 2, 18, 29]`.
-- **Validación clínica:** **pendiente.** La hace el oncólogo asesor ("Oncólogo asesor A", DEC-02) **antes de US-038**, la migración inicial del S1. Si la rechaza, se escala a Ingeniería antes de la migración y no se difiere al S3 (AC-3).
+- **Validación clínica:** **hecha** según el usuario (refinamiento del S1, 2026-10-13, `[S1 resp. 1]`), por el "Oncólogo asesor A" (DEC-02), antes de US-038. Si en adelante se rechazara, se escala a Ingeniería y no se difiere al S3 (AC-3).
 
 | Validación | Responsable | Fecha | Resultado |
 |---|---|---|---|
-| Destino y formato | Oncólogo asesor A | *[pendiente, antes de US-038]* | *[pendiente]* |
+| Destino y formato | Oncólogo asesor A | Confirmada por el usuario el 2026-10-13 `[S1 resp. 1]` | Validada; sin cambios en el destino ni en el formato |
 
 ## Destino de cada ítem
 
