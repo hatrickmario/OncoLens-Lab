@@ -45,7 +45,7 @@ reingestar el corpus cuando lleguen la búsqueda híbrida y la aplicabilidad.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado un PostgreSQL con el schema `corpus` vacío y Milvus de
-  test, cuando se ejecuta `alembic upgrade head` como `rag_corpus` y el inicializador de
+  test, cuando se ejecuta `alembic upgrade head` como `rag_corpus_migrator` (servicio *one-shot*; el runtime `rag_corpus` solo tiene `USAGE` + DML, `[S1 resp. 14]`) y el inicializador de
   la colección, entonces existen `corpus.corpus_document` (con `license`,
   `license_class`, `population_criteria` `jsonb`, `metadata_source`, `study_design`,
   `trial_phase`, `primary_endpoint`, `sample_size`, `guideline_version`,
