@@ -204,7 +204,7 @@ No implementar SSE. No emitir contenido parcial. No cambiar el contrato
 
 > Linear: [L1D-268](https://linear.app/l1der-lab-mjbc/issue/L1D-268)
 
-`FEAT-10c` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+`FEAT-10c` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-31, FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
 
 ## Story
 Como oncólogo, quiero hacer preguntas de seguimiento puntuales sobre los hallazgos de un
@@ -273,7 +273,7 @@ Respuestas en streaming de contenido (TBD-08). Seguimiento sobre análisis `sin_
 
 > Linear: [L1D-269](https://linear.app/l1der-lab-mjbc/issue/L1D-269)
 
-`FEAT-10c` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+`FEAT-10c` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · FR-31, RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
 
 ## Story
 Como oncólogo, quiero ver y escribir las preguntas de seguimiento debajo del análisis, con

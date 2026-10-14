@@ -16,6 +16,10 @@ explícita de señalar contradicciones **entre** changes del lote.
 
 ## Gate 2: código (antes del PR)
 
+**Vuelta 2 y re-ejecuciones: acotadas** a los guardianes que fallaron y al diff desde el commit que
+revisó la vuelta anterior (`git diff <commit revisado>..origin/<rama>`); los que dieron PASS no se
+relanzan salvo que el diff nuevo toque su dominio.
+
 1. Paths tocados: `git fetch origin && git diff --name-only origin/main...origin/$target`.
 2. Selección de guardianes:
 

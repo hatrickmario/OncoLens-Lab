@@ -352,6 +352,11 @@ paciente que voy a analizar.
   > **Decidido (usuario, 2026-10-11, Gate 1 de US-033):** la búsqueda por identidad pasa a `POST /platform/patients/search`; la identidad nunca va en la URL. `[Pre-S1 resp. 22]`
 - **AC-6 (borde · sin sesión)** · Dada una request sin cookie de sesión, cuando se pide
   el listado, entonces responde `401` sin datos. `[FR-01]`
+- **AC-7 (borde · formato del enmascarado)** · Dado el listado o la búsqueda, cuando se
+  devuelve una fila, entonces `fullNameMasked` y `nationalIdMasked` siguen el formato que fija esta
+  historia (y que reemplaza el `x-pending-owner: US-048` del contrato), nunca el valor en claro; la
+  identidad completa solo aparece en la ficha, con auditoría. `[Pre-S1 resp. 36]` `[Pre-S1 resp. 42]`
+  `[Pre-S1 trazabilidad M-1]`
 
 ## Contexto técnico
 Búsqueda por documento: se calcula el índice ciego del valor recibido y se busca por

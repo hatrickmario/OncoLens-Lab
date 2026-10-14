@@ -5,13 +5,6 @@ model: sonnet
 isolation: worktree
 memory: project
 color: blue
-hooks:
-  PreToolUse:
-    - matcher: "Write|Edit|MultiEdit|TodoWrite"
-      hooks:
-        - type: command
-          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tdd-guard-pilot.sh"
-          timeout: 60
 ---
 
 Eres el implementador del bounded context **clinical-platform** de OncoLens. Trabajas sobre

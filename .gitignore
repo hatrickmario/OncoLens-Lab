@@ -2,8 +2,5 @@
 node_modules/
 reports/visual/
 .playwright-mcp/
-reports/tdd-guard/
-.claude/tdd-guard/data/*
-!.claude/tdd-guard/data/config.json
 __pycache__/
 *.pyc

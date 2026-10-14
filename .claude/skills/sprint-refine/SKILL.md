@@ -34,6 +34,7 @@ Markdown es la fuente.** Evalúa cada historia contra la **Definition of Ready**
 | Dependencias | Sus `⛔` están resueltas o tienen escenario más probable aceptado |
 | Decisiones | Ningún `Pendiente de definir` sin decidir, o con el escenario más probable aceptado |
 | Estimación | Tiene puntos; ninguno `?` |
+| Tamaño | ≤ 5 pts y ≤ 8 AC. Una de 8 se parte siempre (por **superficie**: contrato, modelo, regla, UI…, no solo por AC) con aprobación; 13 no se acepta. Excepción solo con justificación escrita en la historia |
 | Diseño (si toca UI) | Su pantalla tiene referencia en `docs/ux/` (fase 3) |
 
 Muestra la tabla `L1D · US · criterio que falla · qué falta`. Lo que falla alimenta 1.2 y 1.3.
@@ -51,7 +52,8 @@ Por cada ADR o DEC del sprint y cada `Pendiente de definir` que bloquea:
 
 Nunca reabras el encuadre (D-01, B-01…B-15) ni propongas opciones que violen una RN. La decisión es
 del humano. Regístrala así:
-- ADR → `docs/architecture/adr/ADR-<n>-<slug>.md` (contexto, opciones, decisión, consecuencias);
+- ADR → `docs/architecture/adr/ADR-<n>-<slug>.md` con la plantilla MADR (`docs/architecture/adr/_plantilla-madr.md`) y su fila en el índice `docs/architecture/adr/README.md`;
+- DEC → `docs/decisions/DEC-<nn>-<slug>.md` con `docs/decisions/_plantilla-dec.md`;
 - DEC o pendiente → en la historia: `> **Decidido (usuario, AAAA-MM-DD):** …`;
 - marca la historia resuelta en `backlog/02-adrs.md`.
 
@@ -73,7 +75,7 @@ Markdown (la Feature, `backlog/features/README.md` y `## Conflictos de fuentes`)
 ## Fase 2 · Stack técnico
 
 - Lista lo que las historias del sprint necesitan y no está listo: herramientas, versiones,
-  servicios (Docker, Ollama o vLLM y modelos candidatos de ADR-39, `tdd-guard` en el S1, MCPs).
+  servicios (Docker, Ollama o vLLM y modelos candidatos de ADR-39, MCPs).
 - **En la máquina** (fuera del repo): da los comandos de instalación y pide confirmación antes de
   ejecutar cada uno.
 - **En el repo** (dependencias de npm o pip, configuración): no se instalan aquí; van como tarea de

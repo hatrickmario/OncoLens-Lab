@@ -14,6 +14,9 @@ disable-model-invocation: true
    - `openspec list --json` muestra los changes del plan como activos.
    - `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` ≥ 3 (lo fija `.claude/settings.json`).
 
+   - **Sprint de una sola historia:** no hace falta orquestador; propón al humano
+     `/implement-story L1D-<nn>` desde la sesión principal (menos capas que reconstruir tras un corte).
+
 2. **Lanza el orquestador** con la herramienta Agent:
    - `subagent_type: sprint-orchestrator`, `name: sprint-$sprint`, en segundo plano;
    - prompt: "Ejecuta el sprint $sprint según backlog/sprints/$sprint-plan.md. Estado en
