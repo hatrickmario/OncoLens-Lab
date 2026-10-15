@@ -71,12 +71,9 @@ alimentan ningún análisis ni la suite `evaluate`.
 
 ## Open Questions
 
-- **Consentimiento de O1/O2 para publicar sus tiempos seudonimizados en un repo público** — dueño: **usuario**.
-  Aunque el CSV y el reporte solo llevan `O<n>`, el equipo de asesores es pequeño y conocido; publicar sus tiempos
-  en `eval/vm/` (repo público, RN-14) requiere su consentimiento explícito. Hasta resolverla, la tarea 3.4 no
-  versiona `baseline-S1.csv` ni `baseline-S1.md`: se generan en local y el humano decide. Si no hay consentimiento,
-  alternativa: versionar solo las medianas agregadas y dejar el CSV fuera del repo (como `VM_REAL_DATA_PATH` de
-  US-152).
+- ~~Consentimiento de O1/O2 para publicar sus tiempos seudonimizados~~ **Resuelta (usuario, 2026-10-14, `[S1 resp. 23]`):** hay consentimiento, así que `baseline-S1.csv` y `baseline-S1.md` se versionan con los seudónimos `O<n>`.
+- El checklist de "caso reconstruido" y las herramientas de la condición manual de DEC-02 están **aprobados por los oncólogos** `[S1 resp. 24]`.
+- `VM_SESSION_MAX_MINUTES`, la plausibilidad de los 4 casos ficticios, las respuestas esperadas del checklist, las preguntas de referencia y el criterio de "evidencia aplicable" se validan con el cuestionario [`backlog/sprints/S1-cuestionario-oncologos.md`](../../../backlog/sprints/S1-cuestionario-oncologos.md) §A **antes de la primera sesión** (dueño: usuario con los oncólogos). La propuesta por defecto es 30 min por tarea.
 
 ## Riesgos
 

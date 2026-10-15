@@ -127,9 +127,9 @@ flowchart LR
 
 | # | Pregunta | Dueño | Cuándo |
 |---|---|---|---|
-| Q1 | ¿Publicar en el repo los tiempos seudonimizados de O1/O2 (US-075)? Hace falta su consentimiento | usuario | antes de la tarea 3.4 de 238 |
-| Q2 | Checklist de "caso reconstruido" (VM-1), herramientas de la condición manual (VM-2) y `VM_SESSION_MAX_MINUTES` | usuario con los oncólogos | antes de las sesiones de 238 |
-| Q3 | ¿Se añaden `npm run lint` y `format:check` a `.claude/hooks/pre-commit-gate.sh`? | usuario | en la retro del S1 |
+| Q1 | ~~¿Publicar en el repo los tiempos seudonimizados de O1/O2 (US-075)?~~ **Sí** `[S1 resp. 23]` | usuario | resuelta |
+| Q2 | Checklist (VM-1) y herramientas (VM-2): **aprobados** `[S1 resp. 24]`. Lo que queda (`VM_SESSION_MAX_MINUTES`, casos ficticios, textos de la demo y reglas de lenguaje) va en [`S1-cuestionario-oncologos.md`](S1-cuestionario-oncologos.md) | usuario con los oncólogos | §A antes de las sesiones de 238; §B–C antes de la O9 |
+| Q3 | ~~¿Se añaden `npm run lint` y `format:check` al hook?~~ **Sí** `[S1 resp. 25]`: el paso 5 de `pre-commit-gate.sh` los ejecuta cuando hay código staged y existen los scripts (L1D-265) | usuario | resuelta |
 | Q4 | ¿Incluye FEAT-T4d como prerrequisito de G-Piloto la separación `edge-net`/`clinical-net internal` y el cierre de la salida de `ai-net`? | usuario | refinamiento del S5 |
 | Q5 | Raya frente a dos puntos del aviso de IA en la prosa de `readme.md` y `CLAUDE.md` | sesión principal | `/sprint-close S1` |
 | Q6 | `data/eval/` o `data/evaluation/` como raíz única de evaluación | US-072 | S2 |
@@ -144,3 +144,11 @@ flowchart LR
 | 21 | Se aceptan las decisiones por defecto de la vuelta 2: (a) L1D-164 monta `packages/clinical-catalogs` de solo lectura (vacío con `.gitkeep` si aún no existe) y L1D-169 es el único que crea `manifest.json`; (b) excepción del Gate 2 para `contract(L1D-105)`: cambia lo generado sin tocar el spec, porque cambia la configuración del generador; (c) `exigirEntornoSintetico()` se conserva hasta G-Piloto (lo retira US-143), `Idempotency-Key` no se reenvía en el S1 y `config/pii-formats.json` es la fuente única de formatos de PII; (d) `/login` muestra "Uso académico/investigación", con la clave creada por L1D-197 |
 | 22 | **Merge por oleada:** el orquestador junta los PRs de cada oleada en una sola petición al humano |
 | — | No hay historias `si-hay-capacidad` en el S1 |
+
+## 6. Respuestas posteriores (usuario, 2026-10-14)
+
+| # | Decisión |
+|---|---|
+| 23 | **Consentimiento de O1/O2:** sí. Sus tiempos seudonimizados se versionan en `eval/vm/` (US-075) |
+| 24 | **Los oncólogos aprueban** el checklist de "caso reconstruido" (VM-1) y las herramientas de la condición manual (VM-2) de DEC-02. El resto de la validación clínica va en [`S1-cuestionario-oncologos.md`](S1-cuestionario-oncologos.md): el §A antes de las sesiones de US-075 y los §B–C antes de la O9, porque sus respuestas pueden cambiar textos de 104, 106, 140, 180 y 193 |
+| 25 | **Lint y formato en el hook previo al commit:** sí. `.claude/hooks/pre-commit-gate.sh` ejecuta `npm run lint` y `npm run format:check` si hay código staged y existen esos scripts (llegan con L1D-265) |
