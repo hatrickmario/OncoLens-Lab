@@ -27,7 +27,7 @@
 - [ ] 3.1 **[humano]** Confirmar con los oncólogos, **antes de medir**, el checklist de "caso reconstruido" (VM-1) y las herramientas permitidas (VM-2), propuestas de DEC-02; registrar la confirmación en el protocolo sin tocar metas [DEC-02] [R-15]
 - [ ] 3.2 **[humano]** Agendar y conducir las sesiones manuales (cada participante, los 6 casos); guardar fuera del repo la correspondencia nombre ↔ rol [US-075 AC-2] [SUP-4]
 - [ ] 3.3 **[humano]** Registrar `eval/vm/baseline-S1.csv` con una fila por caso y participante (`O1`, `O2`…), sin nombres de oncólogos ni de pacientes [US-075 AC-2] [RN-14]
-- [ ] 3.4 **Bloqueada por la Open Question de consentimiento (dueño: usuario):** sin consentimiento de O1/O2 no se versionan `baseline-S1.csv` ni `baseline-S1.md`. Ejecutar `python -m app.evaluation.vm baseline --fecha <fecha>` dos veces, comparar los reportes y versionar `eval/vm/baseline-S1.md` con fecha anterior a `/sprint-close` del S1 [US-075 AC-3, AC-4, AC-5]
+- [ ] 3.4 (Consentimiento de O1/O2 dado, `[S1 resp. 23]`: se versionan `baseline-S1.csv` y `baseline-S1.md` seudonimizados.) Ejecutar `python -m app.evaluation.vm baseline --fecha <fecha>` dos veces, comparar los reportes y versionar `eval/vm/baseline-S1.md` con fecha anterior a `/sprint-close` del S1 [US-075 AC-3, AC-4, AC-5]
 - [ ] 3.5 **[humano]** Revisar el reporte en la *sprint review* del S1 (metas de DEC-02 sin modificar) [US-075 AC-4] [AC-T5.2]
 
 ## evaluación

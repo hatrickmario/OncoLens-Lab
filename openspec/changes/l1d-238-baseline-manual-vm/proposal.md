@@ -103,7 +103,7 @@ Ninguna. No se toca `openspec/specs/api-contracts` ni `openspec/specs/data-model
    el PDF se exporta para la sesión (DEC-02 pide PDF) y no se versiona. Sin generador de PDF en este change.
 
 5. **Consentimiento de O1/O2 para publicar sus tiempos seudonimizados en un repo público** (dueño: **usuario**;
-   afecta: tareas 3.3–3.4, publicación de `eval/vm/baseline-S1.csv` y `.md`). Abierta tras el Gate 1
+   afecta: tareas 3.3–3.4, publicación de `eval/vm/baseline-S1.csv` y `.md`). **Resuelta: hay consentimiento `[S1 resp. 23]`.** Abierta tras el Gate 1
    (2026-10-14); ver design.md "Open Questions".
 
 ## Impact
