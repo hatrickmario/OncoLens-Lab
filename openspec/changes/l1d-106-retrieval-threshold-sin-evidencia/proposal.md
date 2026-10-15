@@ -7,7 +7,8 @@ HU-03 · FR-09 (S1), FR-25 (contrato) · RN-02 (dueña), RN-05 (dueña de la rec
 AC-06.1 (parte S1), AC-10.4 · IA-07 · ADR-5, ADR-8, ADR-26 · OL-02 · TBD-03 ·
 `[S1 resp. 3]` (supuestos "(asumido)" aceptados) · `[S1 resp. 6]` (división: AC-2…AC-6 aquí; los antiguos AC-1, AC-7 y AC-8 pasan a US-225 = L1D-275) ·
 `[S1 resp. 12]` (familia `503` de `/rag/query` con códigos propios; este change crea el `oneOf` y `RETRIEVAL_UNAVAILABLE`) ·
-`[S1 resp. 17]` (versión rag 1.2.0, nombres canónicos y *helper* de validación de L1D-164) · `[S1 resp. 18]` (`topRelevanceScore` = máximo de los chunks sobre el umbral) ·
+`[S1 resp. 17]` (nombres canónicos y *helper* de validación de L1D-164) · `[S1 resp. 37]` (registro de versiones: rag 1.2.0 en este change, con `RETRIEVAL_UNAVAILABLE` y el `422 TIPO_CANCER_NO_REGISTRADO` en la misma subida) ·
+`[S1 resp. 35]` (validación clínica, 2026-10-14: un caso sin tipo de cáncer no es "sin evidencia"; `422 TIPO_CANCER_NO_REGISTRADO` como defensa en profundidad) · `[S1 resp. 18]` (`topRelevanceScore` = máximo de los chunks sobre el umbral) ·
 US-055 AC-2, AC-3, AC-4, AC-5, AC-6 · Medido en: US-072 (M-10.1, precisión de "sin evidencia"), US-073 (M-06.1)
 
 ## Why
@@ -38,14 +39,19 @@ respaldada. La generación y el recorte a `maxOptions` quedan en US-225 (decidid
   normalizado a [0,1]; `meta.rerankerModel` registra la versión del *reranker*.
 - **Puerto de generación** declarado y sin implementación real: el tramo con evidencia sobre el
   umbral (prompt, LLM, citas, soporte, recorte) lo implementa el change de L1D-275 (US-225).
-- **`clinicalContext.diagnosis = null`** → `sin_evidencia` sin LLM con una limitación `estructural`
-  (sin tipo de cáncer no hay filtro de `cancer_type_tags` y no se mezclan tipos) — (asumido, pendiente
-  de confirmación).
+- **`clinicalContext.diagnosis = null`** (sin tipo de cáncer) → **`422 TIPO_CANCER_NO_REGISTRADO`**
+  sin consultar Milvus ni invocar al LLM `[S1 resp. 35]`: no es un "sin evidencia" (sin tipo de cáncer
+  no hay filtro de `cancer_type_tags` y no se mezclan tipos). Es **defensa en profundidad**: el
+  gateway de `clinical-api` (L1D-103) ya responde el mismo `422` antes de llamar a la IA. Sustituye
+  el supuesto anterior "`diagnosis = null` → `sin_evidencia` estructural (asumido)".
 - **Contrato (aditivo, contract-first, `[S1 resp. 12]`):** el `503` de `POST /rag/query` pasa a
   `oneOf [ErrorLlmLocalNoDisponible, ErrorRecuperacionNoDisponible]`; nuevo schema
   `ErrorRecuperacionNoDisponible` (`error: const RETRIEVAL_UNAVAILABLE`: Milvus o *embeddings* caídos),
-  ejemplo `contracts/examples/rag-recuperacion-no-disponible.json` y su entrada en `index.json`;
-  `info.version` → **1.2.0** `[S1 resp. 17]`. L1D-180 añade después `NLI_UNAVAILABLE` al mismo `oneOf`.
+  ejemplo `contracts/examples/rag-recuperacion-no-disponible.json` y su entrada en `index.json`; y,
+  en la **misma subida** `[S1 resp. 35]`, el `422` de `POST /rag/query` añade al `oneOf` el schema
+  nuevo `ErrorTipoCancerNoRegistrado` (`error: const TIPO_CANCER_NO_REGISTRADO`), con el ejemplo
+  `contracts/examples/rag-tipo-cancer-no-registrado.json` y su entrada en `index.json`;
+  `info.version` 1.1.0 → **1.2.0** `[S1 resp. 37]`. L1D-180 añade después `NLI_UNAVAILABLE` al mismo `oneOf`.
   El resto de lo que emite esta historia ya está congelado (US-033); los modelos generados no se editan.
 
 ## Capabilities
@@ -59,8 +65,8 @@ respaldada. La generación y el recorte a `maxOptions` quedan en US-225 (decidid
 
 ### Modified Capabilities
 
-- `api-contracts`: sin delta de requisitos. El nuevo código de error cerrado con ejemplo
-  (`RETRIEVAL_UNAVAILABLE`) cumple los requisitos existentes "Códigos de error cerrados y sin eco" y
+- `api-contracts`: sin delta de requisitos. Los nuevos códigos de error cerrados con ejemplo
+  (`RETRIEVAL_UNAVAILABLE`, `TIPO_CANCER_NO_REGISTRADO`) cumplen los requisitos existentes "Códigos de error cerrados y sin eco" y
   "Política de versión del contrato" sin modificarlos.
 - `data-model`: no cambia (`is_current` / `cancer_type_tags` de `corpus_chunks` ya congelados).
 
@@ -111,8 +117,9 @@ respaldada. La generación y el recorte a `maxOptions` quedan en US-225 (decidid
   `apps/rag-orchestrator/tests/`, fixture FX-06a-a cargable en Milvus de test y schema `corpus` de
   test (solo datos sintéticos; ningún identificador de paciente).
 - Configuración: `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K`, `RERANK_TOP_N`.
-- Contratos: `503` de `/rag/query` como `oneOf` aditivo con `RETRIEVAL_UNAVAILABLE`, ejemplo nuevo,
-  `info.version` 1.2.0 y regeneración; respuestas validadas con el *helper* de L1D-164 (la
+- Contratos: `503` de `/rag/query` como `oneOf` aditivo con `RETRIEVAL_UNAVAILABLE` y `422` con la
+  alternativa nueva `TIPO_CANCER_NO_REGISTRADO` `[S1 resp. 35]`, dos ejemplos nuevos, `info.version`
+  1.2.0 `[S1 resp. 37]` y regeneración; respuestas validadas con el *helper* de L1D-164 (la
   verificación del proveedor completa llega con US-214).
 - Evaluación: el umbral es un valor calibrable → la métrica "sin evidencia" (M-10.1) se mide en
   US-072; este change no fija el valor de producción.

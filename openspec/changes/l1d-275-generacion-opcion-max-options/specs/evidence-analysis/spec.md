@@ -63,3 +63,12 @@ La plantilla del prompt `rag-query@0.1.0` MUST redactar sus instrucciones en pos
 - **GIVEN** la plantilla de `rag-query@0.1.0` sin datos y la lista `terminos-prohibidos.json` 1.1.0 de L1D-193
 - **WHEN** se aplica `check_prohibited_terms()` con los niveles A y B
 - **THEN** devuelve cero coincidencias
+
+### Requirement: El prompt exige población y escenario al describir una guía
+La plantilla del prompt `rag-query@0.1.0` MUST incluir una instrucción, redactada en positivo y sin términos de nivel A ni la raíz de nivel B, que exige que toda mención de lo que establece una guía indique la población y el escenario ("…para pacientes con [condición] en [escenario]"), atribuida a la fuente citada y nunca dirigida al paciente (`[S1 resp. 34]`). El cumplimiento en las salidas se mide con `ai-eval-runner`, no con una regla determinista.
+
+#### Scenario: La plantilla del prompt contiene la instrucción de atribución con población y escenario [S1 resp. 34] [RN-23]
+- **GIVEN** la plantilla del prompt `rag-query@0.1.0` sin datos
+- **WHEN** se inspecciona su texto fijo
+- **THEN** contiene la instrucción de indicar población y escenario y de atribuir a la fuente al describir lo que establece una guía
+- **AND** `check_prohibited_terms()` con los niveles A y B de `terminos-prohibidos.json` sobre la plantilla devuelve cero coincidencias

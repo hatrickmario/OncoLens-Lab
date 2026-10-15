@@ -3,7 +3,7 @@
 ## Trazabilidad
 
 L1D-194 · US-069 · FEAT-T3 (L1D-39) · Sprint 1 · Estimación **2** · HU-03 · RN-19 (dueña) · RN-22 ·
-AC-T3.1 · OL-04 (aviso fijo, etiqueta permanente) · PRD B-06 (supersede C-14) ·
+AC-T3.1 · OL-04 (aviso fijo, etiqueta permanente) · PRD E-11 (supersede B-06, que supersedía C-14) ·
 US-069 AC-1, AC-2, AC-3, AC-4 · 🔗 Produce para: FEAT-02c (el resumen del caso agrega "Verifique contra
 las fuentes", S2) · 🔗 Regresión [RN-19] → US-069 en toda salida generada posterior (resumen del caso S2,
 seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.md` §1, diseño en
@@ -14,9 +14,19 @@ seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.
 > `clinical-api` y `web` lo muestra desde la respuesta) y el del AC-4 (el aviso acompaña a todo resultado
 > del análisis, también `sin_evidencia`, aunque no haya texto generado por el LLM).
 >
-> **Decidido (usuario, 2026-10-13, `[S1 resp. 9]`):** el literal es el de PRD B-06 y AC-T3.1,
-> **"Análisis generado por IA: requiere validación clínica del oncólogo tratante"** (dos puntos), y
-> `disclaimer` lleva **solo** esa frase ("Uso académico/investigación" es una etiqueta aparte). Este change
+> **Validación clínica (oncólogos asesores, 2026-10-14, `backlog/sprints/S1-plan.md` §7):**
+> - `[S1 resp. 32]` el literal pasa a **"Generado por IA; requiere validación clínica independiente por el
+>   oncólogo tratante."** (punto y coma y punto final), con "Uso académico/investigación" **visible y
+>   permanente** como etiqueta aparte. Supersede el literal de `[S1 resp. 9]` y PRD B-06 (fila nueva E-11
+>   del registro de cambios del PRD, RN-19 y US-069 corregidas: lo hace la sesión principal, no este
+>   change). Cambia el valor por defecto de `AI_DISCLAIMER_TEXT`, la descripción de `disclaimer`, todos los
+>   ejemplos con `disclaimer` y la regla `assertDisclaimerRequired`.
+> - `[S1 resp. 37]` registro de versiones: `info.version` de `clinical-api` → **1.3.1** (sustituye al
+>   1.2.1 de `[S1 resp. 17]`).
+>
+> **Decidido (usuario, 2026-10-13, `[S1 resp. 9]`; su literal lo supersede `[S1 resp. 32]`):** el literal
+> era el de PRD B-06 y AC-T3.1 ("Análisis generado por IA: requiere validación clínica del oncólogo
+> tratante"), y `disclaimer` lleva **solo** esa frase ("Uso académico/investigación" es una etiqueta aparte). Este change
 > incluye una tarea de **contratos** (skill `sync-contracts`, cambio compatible, solo texto): corregir la
 > descripción de `disclaimer` en `apps/clinical-api/openapi.yaml` (en `EvidenceAnalysis` y `FollowUpTurn`;
 > `apps/rag-orchestrator/openapi.yaml` no tiene par: verificado, no declara `disclaimer`) y el campo en los
@@ -32,8 +42,7 @@ seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.
 > - **Gate 1, 2ª vuelta:** `/login` también lleva la etiqueta. `apps/web/messages/es.json` **y la clave
 >   `app.academicUseLabel`** los crea L1D-197 (dueño del archivo), que la prueba en el login; este change
 >   la **consume** en `AppHeader`, sin crearla ni cambiar su valor.
-> - `[S1 resp. 17]` `info.version` de `clinical-api` → **1.2.1** (patch, tras L1D-164 → 1.1.0 y L1D-104 →
->   1.2.0); el cambio cubre **todo ejemplo con `disclaimer`** (no una lista cerrada de seis);
+> - `[S1 resp. 17]` (versión sustituida por `[S1 resp. 37]`: **1.3.1**, patch tras L1D-104 → 1.3.0); el cambio cubre **todo ejemplo con `disclaimer`** (no una lista cerrada de seis);
 >   `contracts:generate` corre **antes** de `contracts:check`; `readme.md` figura en el impacto (extracto
 >   §4 generado).
 > - Pendiente para el **cierre del sprint** (no lo hace este change): la raya del aviso en la prosa de
@@ -43,29 +52,29 @@ seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.
 
 El oncólogo necesita distinguir un análisis automático de un criterio clínico validado (PP-1, AS-IS P12).
 RN-19 exige que toda salida generada muestre el aviso de IA y la etiqueta "Uso académico/investigación", con
-el literal en configuración (B-06). Hoy el contrato congelado en el Pre-S1 describe `disclaimer` como "las
+el literal en configuración (E-11, `[S1 resp. 32]`). Hoy el contrato congelado en el Pre-S1 describe `disclaimer` como "las
 dos frases de RN-19" con raya, y todos los ejemplos de `contracts/examples/` con `disclaimer` repiten esa forma; el AC-1 de
-esta historia exige exactamente el literal de B-06. Si no se corrige primero el contrato, el gateway
+esta historia exige exactamente el literal validado por los oncólogos (`[S1 resp. 32]`). Si no se corrige primero el contrato, el gateway
 (L1D-104), el panel (L1D-140) y sus mocks (MSW desde `contracts/examples/`) divergirían del AC.
 
 ## What Changes
 
 - **Contrato (compatible, solo texto):** la descripción de `disclaimer` en `EvidenceAnalysis` y
-  `FollowUpTurn` pasa a "un solo texto configurable (`AI_DISCLAIMER_TEXT`) con la frase de RN-19 / B-06:
-  'Análisis generado por IA: requiere validación clínica del oncólogo tratante'; 'Uso
-  académico/investigación' es una etiqueta permanente de la UI, no forma parte del campo". **Todo
+  `FollowUpTurn` pasa a "un solo texto configurable (`AI_DISCLAIMER_TEXT`) con la frase de RN-19 / E-11:
+  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.'; 'Uso
+  académico/investigación' es una etiqueta permanente de la UI, no forma parte del campo" `[S1 resp. 32]`. **Todo
   ejemplo con `disclaimer`** (hoy `con-evidencia-s1`, `con-evidencia-s4`, `sin-evidencia`,
   `tipo-no-habilitado`, `follow-up-turn`, `follow-up-fuera-de-contexto`, y los que añadan otros changes)
-  lleva exactamente el literal. `info.version` sube la **patch** a **1.2.1** `[S1 resp. 17]`. Se regeneran
+  lleva exactamente el literal. `info.version` sube la **patch** a **1.3.1** `[S1 resp. 37]`. Se regeneran
   los tipos (`contracts:generate`, antes de `contracts:check`).
 - **Regla `assertDisclaimerRequired` de `contracts:check`:** los ejemplos exigen el literal **exacto** de
-  B-06 (antes: tres subcadenas, con raya o dos puntos); un ejemplo con raya o con "Uso
-  académico/investigación" dentro de `disclaimer` es hallazgo. Sus parches de prueba cambian con el AC
+  `[S1 resp. 32]` (antes: tres subcadenas, con raya o dos puntos); un ejemplo con raya, con el literal
+  anterior de B-06 o con "Uso académico/investigación" dentro de `disclaimer` es hallazgo. Sus parches de prueba cambian con el AC
   (commit con `Test-Removal:`, ver tasks).
 - **clinical-api:** test de integración de que `POST /platform/evidence-analyses` devuelve
   `disclaimer` igual a `AI_DISCLAIMER_TEXT` en `con_evidencia` y en `sin_evidencia`, y test de configuración
   de que cambiar la clave cambia el campo sin tocar código; valor por defecto de la clave = literal de
-  B-06 en `infra/docker/.env.example`; la clave vacía o ausente impide arrancar (falla cerrado, asumido).
+  `[S1 resp. 32]` en `src/config.ts` y en `infra/docker/.env.example`; la clave vacía o ausente impide arrancar (falla cerrado, asumido).
   La clave y su lectura las crea L1D-104 (tarea 2.6); este change fija su **valor** y lo verifica.
 - **web (dueño único, `[S1 resp. 18]`):** molécula `AiDisclaimer` (`role="note"`, banda navy, muestra
   `disclaimer` tal cual llega, sin constante propia), organismo `AppHeader` con la etiqueta permanente "Uso
@@ -80,8 +89,8 @@ esta historia exige exactamente el literal de B-06. Si no se corrige primero el 
   requisitos de RN-19 (aviso de IA y etiqueta), sin solaparse con los de L1D-193.
 
 ### Modified Capabilities
-- `api-contracts`: MODIFIED "Aviso de IA obligatorio" (literal exacto de B-06, solo esa frase; deja de
-  admitir raya y la etiqueta dentro del campo).
+- `api-contracts`: MODIFIED "Aviso de IA obligatorio" (literal exacto de `[S1 resp. 32]`, solo esa frase;
+  deja de admitir raya, el literal anterior de B-06 y la etiqueta dentro del campo).
 
 ## Impact
 
@@ -114,14 +123,16 @@ esta historia exige exactamente el literal de B-06. Si no se corrige primero el 
 - 🔗 **Vecinos:** **L1D-193** (`l1d-193-terminos-prohibidos-rn23`): misma capacidad `human-control` y mismo
   archivo `apps/web/messages/es.json`; el literal del aviso y la etiqueta deben pasar su `lint:lenguaje`.
   **L1D-103** (US-052): gateway del contexto clínico, sin solape.
-- **`info.version` (registro de `[S1 resp. 17]`):** `clinical-api` L1D-164 → 1.1.0, L1D-104 → 1.2.0,
-  **L1D-194 → 1.2.1** (patch, solo texto), L1D-203 → 1.3.0. Quien mergea segundo rebasa; el
+- **`info.version` (registro de `[S1 resp. 37]`, sustituye al de `[S1 resp. 17]`):** `clinical-api`
+  L1D-164 → 1.1.0, L1D-103 → 1.2.0, L1D-104 → 1.3.0, **L1D-194 → 1.3.1** (patch, solo texto), L1D-203 →
+  1.4.0. Quien mergea segundo rebasa; el
   `contracts:check` de la CI exige semver.
 
 ## Fuera de alcance
 
-- La redacción en prosa de `readme.md` (§1, HU-03, OL-04) y de `CLAUDE.md`, que conservan la raya: el PRD
-  v1.4 (B-06) manda; **nota para el cierre del sprint** (pendiente 2 del Gate 1). Si `contracts:readme-extract` incluye la descripción
+- La redacción en prosa de `readme.md` (§1, HU-03, OL-04), de `CLAUDE.md` y de `openspec/config.yaml`, que
+  conservan el literal anterior, y la fila E-11 del PRD con RN-19 y US-069: las corrige la sesión principal
+  (`[S1 resp. 32]`); el literal validado manda; **nota para el cierre del sprint** (pendiente 2 del Gate 1). Si `contracts:readme-extract` incluye la descripción
   de `disclaimer`, se regenera el extracto (es generado).
 - El aviso del resumen del caso y "Verifique contra las fuentes" (FEAT-02c, US-096/US-097, S2), el del
   seguimiento (S5) y el del historial: llevan `🔗 Regresión [RN-19] → US-069`.

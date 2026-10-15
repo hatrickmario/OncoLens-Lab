@@ -57,6 +57,11 @@ pregunta (`meta.queryLanguage`).
    *reranker* de ese chunk, **no una medida de la opción** ni de su solidez clínica (RN-03). Regla pura
    `relevancia_de_opcion()` en `domain/relevance.py` (archivo de L1D-106; se añade un método, no se
    modifica ninguno existente), que devuelve también la cita principal para el desempate de D3.
+   **Presentación** `[S1 resp. 28]` (validación clínica, 2026-10-14): la UI (L1D-140) presenta este valor como
+   "Orden basado en la cita recuperada más relevante asociada a cada opción", con la ayuda de que no resume la
+   aplicabilidad, la eficacia ni la calidad global de la opción, bajo el rótulo "Relevancia de recuperación de
+   evidencia". El contrato no cambia y `rag-orchestrator` no emite ese texto; se documenta aquí porque fija la
+   semántica del campo que este change calcula.
    `topRelevanceScore` no se recalcula aquí: es `top_relevance_score()` de L1D-106, el máximo de los
    chunks sobre el umbral `[S1 resp. 18]`.
 5. **Pregunta no terapéutica** (AC-2): `GenerationOutput.options = []` ⇒ `status = con_evidencia`,
@@ -88,6 +93,11 @@ pregunta (`meta.queryLanguage`).
     prohibidas. Un test comprueba que la plantilla (texto fijo, sin datos) no contiene términos de nivel
     A ni la raíz de nivel B (`recomend*`/`recommend*`) de `terminos-prohibidos.json` 1.1.0 (L1D-193),
     con el gemelo Python `check_prohibited_terms()`.
+    **Atribución de las guías** `[S1 resp. 34]` (validación clínica, 2026-10-14): la plantilla incluye una
+    instrucción, también en positivo y sin la raíz `recomend*`, del tipo "cuando describas lo que establece una
+    guía, indica la población y el escenario a los que se refiere (…para pacientes con [condición] en
+    [escenario]), atribúyelo a la fuente citada y no lo dirijas al paciente". Sin regla determinista: la mide
+    `ai-eval-runner` (Evaluación). La instrucción se versiona con el prompt (`rag-query@0.1.0`).
 
 ## Privacidad y ownership
 
@@ -136,7 +146,10 @@ Introduce el **prompt** del S1 (`rag-query@0.1.0`) → OL-06 obligatoria. Métri
 (≥ 0,90, M-07.2), precisión de citas (≥ 0,90), salidas prescriptivas (= 0) y JSON válido (≥ 99 %, medido
 en L1D-274 AC-2). La suite `evaluate` llega con US-072 (S2): en el S1 `ai-eval-runner` evalúa a mano el
 análisis del paciente semilla con el LLM real (walking skeleton, `CLAUDE.md` Roadmap) y **registra
-M-10.2** (salidas prescriptivas = 0) en su reporte. Los AC se
+M-10.2** (salidas prescriptivas = 0) en su reporte, junto con la **tasa de menciones de guía sin población ni
+escenario** `[S1 resp. 34]` (menciones de lo que establece una guía sin "…para pacientes con [condición] en
+[escenario]" o dirigidas al paciente / total de menciones de guía), informativa y sin meta en el S1; la suite
+`evaluate` (US-072) la registra en cada ejecución. Los AC se
 verifican con el LLM falso; ningún umbral cambia en este change.
 
 ## Dependencias y colaboradores

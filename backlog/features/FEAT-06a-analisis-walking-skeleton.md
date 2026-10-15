@@ -183,6 +183,9 @@ detector de PII (ADR-40) ni el framework de evaluación (ADR-41).
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** el montaje del catálogo (US-041) llega en el S2: `catalogVersion` del AC-1 se lee del `manifest.json` del catálogo versionado, sin el `409` de US-041. La sesión de `doc1@test.local` y el guard del AC-6 son los de US-211 (S1: login, cookie opaca y guard; decisión del usuario del 2026-10-07).
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 35]`):** si el contexto no tiene tipo de cáncer, `POST /platform/evidence-analyses` responde `422 TIPO_CANCER_NO_REGISTRADO` antes de llamar a la IA, sin generar ni persistir análisis, y el panel muestra "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia." No es "sin evidencia". Cambio aditivo del contrato (clinical-api 1.2.0, `[S1 resp. 37]`).
+
+
 ## Story
 Como oncólogo, quiero hacer una pregunta en lenguaje natural sobre mi paciente y que el
 sistema envíe a la IA el contexto relevante de su caso, para que la evidencia que
@@ -250,6 +253,9 @@ implementa en el S1).
 `FEAT-06a` · Sprint 1 · Estimación **5** · HU-03 · FR-09, RN-06 (dueña), NFR-08 · AC-10.4 (RN-06), AC-T1.4, AC-11.4 (parte S1) · ↪ US-052, US-054, US-066 · 🔗 Produce para: US-088 (el análisis como evento derivado en el timeline) · 🔗 Medido en: US-073 (M-06.2) · Ticket: OL-03
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** el builder de la Base del análisis (US-066) llega en el S2. En el S1 `analysis_basis` se persiste con la forma final del contrato (US-033 AC-4) y lo que ya devuelve Backend 2; los AC de esta historia solo afirman que `analysisBasis` está presente y es idéntico a lo respondido.
+
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 30]`):** en el S1, `analysisBasis.assumptions[]` lleva el texto fijo de configuración "Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes.", para que listas vacías no se lean como "no faltan datos". Un `422 TIPO_CANCER_NO_REGISTRADO` de `rag-orchestrator` se retransmite como `422` (`[S1 resp. 35]`).
+
 
 ## Story
 Como oncólogo, quiero que todo análisis que veo haya quedado registrado con lo que se
@@ -373,6 +379,9 @@ Supertest con servidor simulado que captura cabeceras (AC-4).
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 35]`):** con `clinicalContext` sin tipo de cáncer, `/rag/query` responde `422 TIPO_CANCER_NO_REGISTRADO` sin consultar Milvus ni el LLM (defensa en profundidad; `clinical-api` ya lo rechaza antes). No se responde "sin evidencia", porque confunde no haber buscado con no haber encontrado.
+
+
 ## Story
 Como oncólogo, quiero que el sistema recupere solo evidencia vigente y relevante para
 mi pregunta y que, si no la hay, me lo diga sin inventar nada, para no confundir una
@@ -432,6 +441,9 @@ FEAT-08b y US-134).
 `FEAT-06a` · Sprint 1 · Estimación **3** · HU-03 · FR-09 (S1), FR-25 (contrato) · AC-05.3 (parte S1), AC-10.1 (1 opción) · ⛔ Bloqueada por: US-224 · ADR-39 fase B (solo el adapter real del LLM; los AC se verifican con adapters falsos) · ↪ US-055 · 🔗 Relacionada: US-063, US-064 (validación de citas y soporte que invoca el pipeline) · 🔗 Medido en: US-072, US-073 · 🔗 Regresión [RN-28] → US-125 (activa desde S5)
 
 > **Creada (usuario, 2026-10-13, `[S1 resp. 6]`)** al partir US-055: sus AC son los AC-1, AC-7 y AC-8 originales de US-055, con su procedencia anotada.
+
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 28, 34]`):** el prompt exige que toda mención de una recomendación de guía incluya la población y el escenario ("…para pacientes con [condición] en [escenario]"), atribuida a la fuente y nunca dirigida al paciente; `ai-eval-runner` lo mide. El `relevanceScore` de la opción se presenta como "Orden basado en la cita recuperada más relevante asociada a cada opción".
+
 
 ## Story
 Como oncólogo, quiero que, cuando hay evidencia relevante, el sistema me devuelva una

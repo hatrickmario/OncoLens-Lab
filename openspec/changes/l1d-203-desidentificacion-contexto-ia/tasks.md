@@ -16,7 +16,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 (contract-first, skill sync-contracts) Editar `apps/clinical-api/openapi.yaml`: respuesta `GeneracionNoDisponible` (`oneOf` de `ErrorLlmLocalNoDisponible` y `ErrorDesidentificacionNoDisponible`, `error: const DESIDENTIFICACION_NO_DISPONIBLE`) en el `503` de `POST /platform/evidence-analyses`; `info.version` 1.2.1 → **1.3.0** `[S1 resp. 17]`. Añadir `contracts/examples/error-desidentificacion-no-disponible.json` y su entrada en `index.json`.
+- [ ] 1.1 (contract-first, skill sync-contracts) Editar `apps/clinical-api/openapi.yaml`: respuesta `GeneracionNoDisponible` (`oneOf` de `ErrorLlmLocalNoDisponible` y `ErrorDesidentificacionNoDisponible`, `error: const DESIDENTIFICACION_NO_DISPONIBLE`) en el `503` de `POST /platform/evidence-analyses`; `info.version` 1.3.1 → **1.4.0** `[S1 resp. 37]`. Añadir `contracts/examples/error-desidentificacion-no-disponible.json` y su entrada en `index.json`.
 - [ ] 1.2 `contracts:generate` **primero** (cliente, Zod y extracto generado del `readme.md` §4, que se lista como archivo tocado) y **después** `contracts:check` (con `contracts:generate:check`) `[S1 resp. 17]`.
 - [ ] 1.3 Comparación de incompatibilidades: `oasdiff breaking --fail-on ERR` contra `main` (o `contracts:breaking` si ya existe, US-214); citar en el PR el aviso esperado `response-body-wrapped-in-one-of-original-preserved` (alternativas disjuntas por el `const` de `error`, design §Contratos); cualquier `ERR` detiene el change y se escala a contract-keeper. Ante conflicto de merge, rebasar y regenerar, nunca fusionar a mano. Commit `contract(L1D-203)`.
 

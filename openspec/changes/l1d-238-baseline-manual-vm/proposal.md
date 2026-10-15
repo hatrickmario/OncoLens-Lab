@@ -13,6 +13,19 @@ DEC-02 decidida (2026-10-09, `docs/decisions/DEC-02-protocolo-vm.md`) · SUP-4 �
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan
 > (AC-5: rótulo "cohorte sintética" y cohorte real después de G-Piloto).
+>
+> **Decidido (validación clínica de los oncólogos asesores, 2026-10-14, `backlog/sprints/S1-plan.md` §7):**
+> - `[S1 resp. 26]` — 30 min por tarea (`VM_SESSION_MAX_MINUTES = 30`), VM-1 y VM-2 cronometradas por separado;
+>   la tarea que lo supera queda no completada (A1). Los 4 casos ficticios se validan clínicamente por
+>   **coherencia longitudinal** (diagnóstico, TNM o estadio a la fecha, biomarcadores, intención terapéutica,
+>   secuencia previa y línea actual) con una única interpretación razonable, y siguen siendo sintéticos (A2). El
+>   checklist separa elementos `criticos` y `complementarios`; "reconstruido" exige todos los críticos; cada
+>   checklist guarda `version` y `fecha_validacion_clinica` (A3). La `pregunta_referencia` de VM-2 declara
+>   población, contexto clínico, decisión y fecha de corte de la evidencia y es **distinta** de la pregunta de la
+>   demo (`Q-HER2` no cambia) (A4).
+> - `[S1 resp. 27]` — VM-2 con dos desenlaces por intento: `autoidentificada` y `validada` (evaluador ciego al
+>   tiempo y al participante). La meta de DEC-02 (−50 % de la mediana) se calcula sobre la validada; el valor de la
+>   meta no cambia y DEC-02 se enmienda en el criterio de éxito (A5).
 
 ## Why
 
@@ -29,20 +42,28 @@ medianas y la validación del registro (privacidad incluida), que se especifica 
 ## What Changes
 
 - **Nuevo** `data/evaluation/vm-baseline/`: ≥ 6 casos sintéticos estandarizados (3 de mama, 3 de próstata),
-  cada uno con documentos sintéticos (Markdown, exportables a PDF para la sesión), una pregunta de referencia
-  (VM-2) y el checklist de "caso reconstruido" del Discovery P1 (VM-1); `manifest.json` con `clase: sintetico`.
-  Dos casos reutilizan el contenido de los pacientes semilla (a) mama y (b) próstata de OL-01 (change de
-  L1D-169, US-039); los otros cuatro se escriben con valores ficticios fijos.
+  cada uno con documentos sintéticos (Markdown, exportables a PDF para la sesión), una `pregunta_referencia`
+  (VM-2: población, contexto clínico, decisión, fecha de corte y texto, `[S1 resp. 26]` A4) y el
+  `checklist_reconstruccion` del Discovery P1 (VM-1: `criticos`, `complementarios`, `version`,
+  `fecha_validacion_clinica`, A3); `manifest.json` con `clase: sintetico`. Dos casos reutilizan el contenido de
+  los pacientes semilla (a) mama y (b) próstata de OL-01 (change de L1D-169, US-039); los otros cuatro se
+  escriben con valores ficticios fijos y los valida clínicamente un oncólogo asesor por coherencia longitudinal
+  (A2).
 - **Nuevo** protocolo aplicado y plantilla de registro: `docs/evaluation/vm-baseline-protocolo.md` (guion de
-  sesión, cronometraje, criterios de parada) y `eval/vm/baseline-S1.template.csv` (columnas y reglas).
+  sesión, cronometraje por tarea, parada a los 30 min, procedimiento de validación ciega de VM-2) y
+  `eval/vm/baseline-S1.template.csv` (columnas y reglas).
 - **Nuevo** comando determinista `evaluate-vm baseline` (Python, solo biblioteca estándar) en
-  `apps/rag-orchestrator/app/evaluation/vm/`: valida el CSV (participantes `O<n>`, casos del manifiesto, tiempos
-  presentes y positivos, condición `manual`, **solo las columnas declaradas**: rechaza cualquier columna no
-  declarada, p. ej. notas libres, y no guarda fecha por sesión; Gate 1, 2026-10-14), calcula la mediana de VM-1 y VM-2 por tipo de cáncer y en total, y
-  escribe `eval/vm/baseline-S1.md` con fecha, rótulo "cohorte sintética", huella SHA-256 de DEC-02 y la
-  declaración de que las metas no se modificaron. Test después (unitario de medianas y validación, Pytest).
-- **Registro humano** de las sesiones en `eval/vm/baseline-S1.csv` y publicación del reporte antes de
-  `/sprint-close` del S1.
+  `apps/rag-orchestrator/app/evaluation/vm/`: valida el manifiesto (checklist y pregunta de referencia, A3–A4) y
+  el CSV (participantes `O<n>`, casos del manifiesto, tiempos por tarea positivos y ≤ 30 min, condición
+  `manual`, desenlaces `reconstruido`, `autoidentificada`, `fuente_id` y `validada` coherentes, **solo las
+  columnas declaradas**: rechaza cualquier columna no declarada, p. ej. notas libres o justificaciones, y no
+  guarda fecha por sesión; Gate 1, 2026-10-14), calcula la mediana de VM-1 y las dos de VM-2 (autoidentificada y
+  validada) por tipo de cáncer y en total, y escribe `eval/vm/baseline-S1.md` con fecha, rótulo "cohorte
+  sintética", huella SHA-256 de DEC-02 y la declaración "metas no modificadas; criterio de éxito enmendado en
+  DEC-02 [S1 resp. 27]". Subcomando `pares-validacion`: lista de pares (caso, fuente) únicos para el evaluador
+  ciego, sin tiempos ni participantes. Test después (unitario de medianas y validación, Pytest).
+- **Registro humano** de las sesiones en `eval/vm/baseline-S1.csv`, validación ciega de los pares de VM-2 por un
+  evaluador y publicación del reporte antes de `/sprint-close` del S1.
 
 ## Capabilities
 
@@ -74,8 +95,11 @@ Ninguna. No se toca `openspec/specs/api-contracts` ni `openspec/specs/data-model
 - ↪ **change de L1D-166 (US-036)** (`l1d-166-ci-build-contracts-scan`): chequeo de CI de clase `sintetico` de
   los datasets (AC-5) y escaneo de PII; este change añade `eval/vm/` a la configuración del escaneo.
 - ↪ **change de L1D-140 (US-061)** y **change de L1D-103 (US-052)**: no bloquean (el baseline es la condición
-  manual), pero la demo del S1 sobre el paciente semilla y estos casos deben ser coherentes: la pregunta de
-  referencia de los casos (a) y (b) es la misma que usa la demo.
+  manual), pero la demo del S1 sobre el paciente semilla y estos casos deben ser coherentes en el contenido
+  clínico. La pregunta de referencia de VM-2 es **propia del baseline** y no la de la demo (`Q-HER2` no cambia)
+  `[S1 resp. 26]` (A4).
+- ↪ **Enmienda de DEC-02** en el criterio de éxito de VM-2 `[S1 resp. 27]`: fuera de este change; el reporte
+  registra la huella SHA-256 de la versión enmendada que lea al ejecutarse.
 - ⛔ DEC-02 (US-008): **decidida** (2026-10-09) — sin bloqueo. ⛔ Agenda de los oncólogos (SUP-4): **resuelta**
   `[S1 resp. 2]`.
 - 🔗 Produce para: FEAT-T5d (US-152: `evaluate-vm time` reutiliza casos, CSV y comando).
@@ -96,9 +120,12 @@ Ninguna. No se toca `openspec/specs/api-contracts` ni `openspec/specs/data-model
 2. **Confirmar con los oncólogos, antes de medir, las dos definiciones operativas propuestas de DEC-02** que
    aplican aquí (dueño: PO con los oncólogos; afecta: protocolo): el checklist de "caso reconstruido" (VM-1) y
    las herramientas permitidas en la condición manual (VM-2). Confirmarlas no cambia ninguna meta (R-15).
-3. **Tiempo máximo por tarea** (dueño: PO; afecta: CSV). Supuesto: `VM_SESSION_MAX_MINUTES` en la configuración
-   del comando (RN-22); una tarea que lo supera se registra con `completado = no` y el tiempo máximo, y el
-   reporte la cuenta aparte. Valor a fijar con los oncólogos.
+   **Resuelta:** aprobadas `[S1 resp. 24]` y precisadas `[S1 resp. 26]` (críticos/complementarios, A3) y
+   `[S1 resp. 27]` (dos desenlaces de VM-2, A5). Queda, como tarea [humano], la validación clínica de los 4 casos
+   ficticios (A2) y la validación ciega de VM-2.
+3. ~~Tiempo máximo por tarea~~ **Resuelta `[S1 resp. 26]` (A1):** `VM_SESSION_MAX_MINUTES = 30` por tarea en la
+   configuración del comando (RN-22), VM-1 y VM-2 por separado; la tarea que lo alcanza se registra con el tiempo
+   máximo como no completada y el reporte la cuenta aparte.
 4. **Formato de los documentos para la sesión** (dueño: Ingeniería; afecta: AC-1). Supuesto: Markdown versionado;
    el PDF se exporta para la sesión (DEC-02 pide PDF) y no se versiona. Sin generador de PDF en este change.
 

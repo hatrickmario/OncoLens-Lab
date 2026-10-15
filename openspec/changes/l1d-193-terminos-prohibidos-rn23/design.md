@@ -24,8 +24,9 @@ verifica esta lista).
 ## Goals / Non-Goals
 
 **Goals**
-- Una sola lista versionada (1.1.0, dos niveles, `[S1 resp. 15]`) y una sola regla de normalización
-  para Node y Python (sin divergencia), que cubre plural y género.
+- Una sola lista versionada (1.2.0, dos niveles, `[S1 resp. 15]`, ampliada por forma en `[S1 resp. 33]`) y
+  una sola regla de normalización para Node y Python (sin divergencia), que cubre plural, género,
+  conjugación dirigida (formas explícitas) y negación.
 - Una sola definición del origen de los campos del contrato (corpus / generado) para L1D-180, el
   recorrido de UI y `contracts:check`.
 - AC-1…AC-5 automatizados: Vitest (AC-1, AC-2), Pytest de conformidad (AC-2, gemelo), Playwright
@@ -50,79 +51,120 @@ que se comparan tres opciones.
 | B | Un solo verificador en TS, invocado desde Python por subproceso o servicio | Añade Node al contenedor de `rag-orchestrator` y E/S en el camino de cada respuesta; descartada |
 | C | La lista ya trae expresiones regulares precompiladas y cada consumidor solo hace `search` | Las regex de JS y de `re` difieren (Unicode, `\b` con tildes); mueve la divergencia al dato; descartada |
 
-### D2 · Formato de la lista (1.1.0, dos niveles, `[S1 resp. 15]`)
+### D2 · Formato de la lista (1.2.0, dos niveles, `[S1 resp. 15]`, `[S1 resp. 33]`)
+
+`[S1 resp. 33]` (validación clínica de los oncólogos asesores, 2026-10-14, `backlog/sprints/S1-plan.md`
+§7) amplía RN-23 **por forma**: imperativos y subjuntivos dirigidos ("administre"), deónticos
+("se debe", "no debe recibir"), valorativos ("la mejor opción es") y sus equivalentes en inglés en el
+Nivel A, y verbos de acción en infinitivo en el Nivel B. La lista sube a **1.2.0** (minor: añade términos,
+`nivelB.terminos`, los campos opcionales `formas` y `excepciones`, un prefijo y la regla de tramo más largo;
+ningún término de 1.1.0 se retira ni cambia de id).
 
 ```json
 {
-  "version": "1.1.0",
-  "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+secuencia-completa",
+  "version": "1.2.0",
+  "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
     "terminos": [
-      { "id": "es-recomendado-para-este-paciente", "idioma": "es", "texto": "recomendado para este paciente" },
       { "id": "es-debe-recibir", "idioma": "es", "texto": "debe recibir" },
-      { "id": "es-el-mejor-tratamiento", "idioma": "es", "texto": "el mejor tratamiento" },
-      { "id": "es-indicado-para-usted", "idioma": "es", "texto": "indicado para usted" },
-      { "id": "en-recommended-for-this-patient", "idioma": "en", "texto": "recommended for this patient" },
-      { "id": "en-should-receive", "idioma": "en", "texto": "should receive" },
-      { "id": "en-the-best-treatment", "idioma": "en", "texto": "the best treatment" },
-      { "id": "en-indicated-for-you", "idioma": "en", "texto": "indicated for you" },
-      { "id": "es-deben-recibir", "idioma": "es", "texto": "deben recibir" },
-      { "id": "es-deberia-recibir", "idioma": "es", "texto": "debería recibir" },
-      { "id": "es-se-sugiere-iniciar", "idioma": "es", "texto": "se sugiere iniciar" },
-      { "id": "es-tratamiento-indicado", "idioma": "es", "texto": "tratamiento indicado" },
-      { "id": "es-mejor-opcion", "idioma": "es", "texto": "mejor opción" },
-      { "id": "es-usted-debe", "idioma": "es", "texto": "usted debe" },
-      { "id": "en-you-should", "idioma": "en", "texto": "you should" },
-      { "id": "en-the-patient-should", "idioma": "en", "texto": "the patient should" },
-      { "id": "en-indicated-for-this-patient", "idioma": "en", "texto": "indicated for this patient" },
-      { "id": "es-probabilidad-de-exito", "idioma": "es", "texto": "probabilidad de éxito" },
-      { "id": "en-chance-of-success", "idioma": "en", "texto": "chance of success" },
-      { "id": "es-opcion-preferida", "idioma": "es", "texto": "opción preferida" },
-      { "id": "es-tratamiento-de-eleccion", "idioma": "es", "texto": "tratamiento de elección" },
-      { "id": "es-tratamiento-optimo", "idioma": "es", "texto": "tratamiento óptimo" }
+      { "id": "es-se-debe", "idioma": "es", "texto": "se debe", "excepciones": ["se debe a", "se debe al"] },
+      { "id": "es-se-indica", "idioma": "es", "texto": "se indica", "excepciones": ["como se indica"] },
+      { "id": "es-administre", "idioma": "es", "texto": "administre",
+        "formas": ["administre", "administren", "administrese", "administrelo", "administrela",
+                   "administrelos", "administrelas", "administrele", "administreles"] },
+      { "id": "es-cambie-a", "idioma": "es", "texto": "cambie a",
+        "formas": ["cambie a", "cambien a", "cambiese a", "cambielo a", "cambiela a", "cambielos a",
+                   "cambielas a", "cambiele a", "cambieles a"] },
+      "… (resto de términos: tabla siguiente)"
     ]
   },
   "nivelB": {
     "aplicaA": ["ui", "prompts", "contratos"],
     "prefijos": [
       { "id": "b-recomend", "idioma": "es", "prefijo": "recomend" },
+      { "id": "b-recomiend", "idioma": "es", "prefijo": "recomiend" },
       { "id": "b-recommend", "idioma": "en", "prefijo": "recommend" }
+    ],
+    "terminos": [
+      { "id": "b-es-iniciar", "idioma": "es", "texto": "iniciar" },
+      { "id": "b-en-switch-to", "idioma": "en", "texto": "switch to" },
+      "… (resto: tabla siguiente)"
     ]
   },
   "frasesPermitidas": {
     "aplicaA": ["ui", "prompts", "contratos"],
-    "frases": ["no constituye una recomendación", "no recomienda ni prescribe", "ni la probabilidad de éxito"]
+    "frases": ["no constituye una recomendación", "no recomienda ni prescribe", "ni la probabilidad de éxito",
+               "iniciar sesión"]
   }
 }
 ```
 
-- **Nivel A** (salida generada y UI): 8 términos del AC-1 + 11 de `[S1 resp. 15]` + 3 **conservados de la
-  lista provisional del Pre-S1** (22 en total). **Nivel B** (solo
-  textos propios: mensajes de UI, prompts y contratos): las palabras que **empiezan** por `recomend` /
-  `recommend`. La salida generada y el texto renderizado **nunca** se evalúan con Nivel B: el LLM puede
-  describir que una guía "recomienda" algo sin que eso sea una formulación dirigida al paciente; lo
-  prescriptivo dirigido al paciente lo captura el Nivel A.
-- `frasesPermitidas` (las tres de la lista provisional del Pre-S1) se eliminan del texto antes de
-  comparar **solo** en textos propios (`permitirFrases: true`); nunca en salida generada. Los únicos
-  llamadores con `permitirFrases: true` son `bin/lint-lenguaje.ts` y `assertNoPrescriptiveLanguage.mjs`,
-  y este último lo desactiva para los valores de claves de `CAMPOS_GENERADOS` dentro de los ejemplos
-  (Gate 1, 2ª vuelta). Un test estructural lo fija (tasks 2.8): cualquier otro llamador, o uno en
+**Nivel A** (salida generada, UI, prompts y contratos), 54 términos:
+
+| Origen | Términos (`id` = `es-`/`en-` + texto normalizado con guiones) | Coincidencia |
+|---|---|---|
+| AC-1 (8) | recomendado para este paciente, debe recibir, el mejor tratamiento, indicado para usted, recommended for this patient, should receive, the best treatment, indicated for you | clave flexiva |
+| `[S1 resp. 15]` (11) | deben recibir, debería recibir, se sugiere iniciar, tratamiento indicado, mejor opción, usted debe, you should, the patient should, indicated for this patient, probabilidad de éxito, chance of success | clave flexiva |
+| Lista provisional del Pre-S1 (3) | opción preferida, tratamiento de elección, tratamiento óptimo | clave flexiva |
+| `[S1 resp. 33]`, formas verbales (8) | inicie, administre, prescriba, suspenda, cambie a, elija, escoja, ofrezca | `formas` explícitas |
+| `[S1 resp. 33]`, deónticos y valorativos (15) | se debe (excepciones "se debe a", "se debe al"), debe iniciar, debe suspender, se debe administrar, no debe recibir, no se debe administrar, es necesario, es imprescindible, se recomienda, se recomienda iniciar, se indica (excepción "como se indica"), está indicado, está contraindicado, la mejor opción es, manejo de elección | clave flexiva |
+| `[S1 resp. 33]`, inglés (9) | we recommend, is recommended, should be started, must receive, should not receive, is indicated, is contraindicated, preferred treatment, treatment of choice | clave flexiva |
+
+**Nivel B** (solo textos propios: mensajes de UI, prompts y contratos): los prefijos `recomend`,
+`recomiend` y `recommend`, y 15 términos de `[S1 resp. 33]` con clave flexiva: iniciar, administrar,
+prescribir, suspender, ofrecer, elegir, start, initiate, administer, prescribe, discontinue, offer,
+choose, switch to, standard of care (`id` = `b-es-…` / `b-en-…`).
+
+- **Por qué dos mecanismos para las variantes de `[S1 resp. 33]`.** Género y número ("está indicada",
+  "deben iniciarse", "es necesaria") los cubre la **clave flexiva** de D3. La **conjugación** de los
+  imperativos y subjuntivos dirigidos **no**: la clave quita la vocal final y uniría "administre" con el
+  indicativo descriptivo "se administra cada 3 semanas", "inicie" con "la paciente inicia" y con el
+  sustantivo "inicio", y "cambie a" con "el cambio a". Por eso esos 8 términos llevan `formas`: la lista
+  cerrada de formas dirigidas (singular, plural `-n` y enclíticos `-se/-lo/-la/-los/-las/-le/-les` del
+  singular; en "cambie a", sobre la primera palabra), comparadas con la **normalización base** (sin clave
+  flexiva). Las formas son **dato** escrito en la lista, no se generan en código: los dos lenguajes las
+  leen igual. La **negación** se cubre de dos modos: el término dentro de una negación sigue coincidiendo
+  ("no administre", "no está indicado") y los negativos de `[S1 resp. 33]` ("no debe recibir", "no se debe
+  administrar", "should not receive") son términos propios; la regla de tramo (D3.7) los informa una vez.
+- **`excepciones`** (campo opcional por término): frases, con la misma clave flexiva, que anulan una
+  coincidencia del término cuando su aparición **contiene** el tramo de esa coincidencia. Solo para los
+  usos descriptivos frecuentes que la oncología escribe con la misma forma: "se debe a/al" (causal: "la
+  toxicidad se debe a…") y "como se indica" (remisión: "como se indica en la tabla"). Aplica en todos los
+  niveles y también en la salida generada (es parte del término, no una frase permitida). Cada excepción
+  es un caso de conformidad.
+- **Nivel B** sigue sin evaluarse nunca sobre la salida generada ni el texto renderizado: el LLM puede
+  describir que "los ensayos evaluaron administrar trastuzumab" o que "la guía recomienda X para
+  pacientes con [condición] en [escenario]" sin que eso sea una formulación dirigida al paciente
+  (`[S1 resp. 34]`: la atribución con población y escenario explícitos la exige el prompt de L1D-275 y la
+  mide `evaluate`; no hay regla determinista). Lo prescriptivo dirigido lo captura el Nivel A.
+- **Corrección del prefijo:** "recomienda" no empieza por `recomend` (diptongo); 1.1.0 no lo marcaba en
+  el Nivel B pese a que el caso "La guía recomienda X" lo esperaba. 1.2.0 añade `b-recomiend`.
+- `frasesPermitidas` se eliminan del texto antes de comparar **solo** en textos propios
+  (`permitirFrases: true`); nunca en salida generada. 1.2.0 añade **"iniciar sesión"** (botón del login de
+  L1D-197, `login.enviar`), que el término `b-es-iniciar` marcaría. Los únicos llamadores con
+  `permitirFrases: true` son `bin/lint-lenguaje.ts` y `assertNoPrescriptiveLanguage.mjs`, y este último lo
+  desactiva para los valores de claves de `CAMPOS_GENERADOS` dentro de los ejemplos (Gate 1, 2ª vuelta).
+  Un test estructural lo fija (tasks 2.8): cualquier otro llamador, o uno en
   `apps/rag-orchestrator/app/`, hace fallar la suite.
-- `version` es propia de la lista (semver); 1.1.0 por añadir términos y el Nivel B (minor). Un cambio
-  de términos es cambio de catálogo (dispara la suite, US-074). **No** se modifica `manifest.json` de
-  L1D-169 en el S1 (Open Question 3).
+- `version` es propia de la lista (semver). Un cambio de términos es cambio de catálogo (dispara la
+  suite, US-074). **No** se modifica `manifest.json` de L1D-169 en el S1 (Open Question 3).
 - Se aplica la lista **completa** a cualquier texto, sin filtrar por `idioma` (la respuesta sale en el
   idioma de la pregunta y la UI podría mezclar). `idioma` es informativo.
 - El esquema del archivo se valida al cargar (Zod en TS, Pydantic en Python): `version` semver,
-  `nivelA.terminos` no vacío, `id` únicos entre niveles, `prefijos` no vacío.
+  `nivelA.terminos` no vacío, `id` únicos entre niveles, `prefijos` no vacío, `formas` (si existe) no
+  vacía y con la forma de `texto` incluida, `excepciones` (si existe) no vacía y cada una conteniendo el
+  `texto` del término.
 - **Conservado de la lista provisional del Pre-S1** (`scripts/contracts/terminos-prohibidos-rn23.json`,
   decisión del coordinador del Gate 1 para no perder cobertura): "opción preferida", "tratamiento de
-  elección" y "tratamiento óptimo", que no estaban en `[S1 resp. 15]`; "la mejor opción" y "the patient
-  should receive" quedan cubiertos por "mejor opción" y "the patient should". Así ningún término de la
-  lista provisional deja de verificarse al borrarla.
+  elección" y "tratamiento óptimo"; "la mejor opción" y "the patient should receive" quedan cubiertos por
+  "mejor opción" y "the patient should".
+- **Verificado sobre el repositorio (2026-10-14, prototipo del algoritmo):** con la lista 1.2.0, los
+  textos, claves y `enum` de ambos `openapi.yaml`, `contracts/schemas/evidence.yaml` y
+  `contracts/examples/` dan **cero** coincidencias en A + B con `frasesPermitidas`, igual que los textos
+  entrecomillados de `docs/ux/S1/pantallas-s1.md`.
 
-### D3 · Normalización con plural y género (AC-2, `[S1 resp. 3]`, `[S1 resp. 15]`)
+### D3 · Normalización con plural, género, formas verbales y tramo (AC-2, `[S1 resp. 3]`, `[S1 resp. 15]`, `[S1 resp. 33]`)
 
 Mismo algoritmo en ambos lenguajes, aplicado al texto y a cada término:
 
@@ -131,38 +173,69 @@ Mismo algoritmo en ambos lenguajes, aplicado al texto y a cada término:
 2. Minúsculas (`toLowerCase()` / `casefold()`; sin caracteres afectados por la diferencia en la lista).
 3. Todo carácter que no sea letra ni dígito → espacio (`/[^\p{L}\p{N}]+/gu` en TS, `[\W_]+` en Python).
 4. Espacios colapsados, recorte y partición en palabras. (Pasos 1–4 = **normalización base**; el Nivel B
-   y `frasesPermitidas` trabajan sobre ella.)
-5. **Clave flexiva** de cada palabra (solo Nivel A), reglas en este orden, cada una solo si la palabra
-   tiene en ese momento ≥ 4 letras:
+   por prefijo, las `formas` y `frasesPermitidas` trabajan sobre ella.)
+5. **Clave flexiva** de cada palabra (términos sin `formas`, de ambos niveles), reglas en este orden, cada
+   una solo si la palabra tiene en ese momento ≥ 4 letras:
    a. enclítico: termina en `ar|er|ir` + `lo|la|los|las|le|les|se` → se quita el enclítico ("recibirlo" y
-      "recibirse" → "recibir"; el impersonal "debe recibirse" también es prescriptivo y la lista
-      provisional ya lo marcaba por subcadena);
+      "recibirse" → "recibir"; "debe iniciarse" → "debe iniciar");
    b. plural nominal: termina en `s` → se quita ("pacientes" → "paciente", "opciones" → "opcione");
    c. plural verbal: termina en `an|en` → se quita la `n` ("deben" → "debe", "deberían" → "deberia");
    d. género / vocal final: termina en `a|e|o` → se quita ("recomendada" y "recomendado" →
       "recomendad"; "esta" y "este" → "est"; "debe" → "deb"; "opcione" → "opcion").
-6. Coincidencia por **secuencia completa** de claves: un término coincide donde sus claves aparecen
-   consecutivas en el texto; cada aparición cuenta. Si dos términos tienen la misma secuencia de claves
-   ("debe recibir" / "deben recibir"), en esa posición se informa **una** coincidencia: la del término
-   cuya normalización base es igual al texto, o, si ninguno, la del primero de la lista.
-7. **Nivel B**: cada palabra de la normalización base que empieza por un `prefijo` es una coincidencia.
+6. **Candidatas.** (i) Término sin `formas`: sus claves aparecen consecutivas en el texto, salvo que una
+   aparición de una de sus `excepciones` contenga ese tramo. (ii) Término con `formas`: alguna forma
+   aparece como secuencia de palabras de la normalización base. (iii) Prefijo del Nivel B: una palabra de
+   la normalización base empieza por él. Cada aparición es una candidata con su tramo (inicio, longitud
+   en palabras).
+7. **Tramo más largo** (nuevo en 1.2.0): de las candidatas se aceptan, por longitud descendente y, a igual
+   longitud, por inicio ascendente, las que no se solapan con una ya aceptada; en el mismo tramo exacto
+   gana el término cuya normalización base es igual al texto y, si ninguno, el primero de la lista. Así
+   "no debe recibir" informa solo `es-no-debe-recibir` (no también `es-debe-recibir`), "la mejor opción es"
+   solo `es-la-mejor-opcion-es`, "se recomienda iniciar" solo `es-se-recomienda-iniciar`, y "deben
+   recibir" una sola vez (`es-deben-recibir`), como en 1.1.0.
 
 Resultado: lista de `{ terminoId, termino, nivel }` en orden de aparición. Firma:
 `checkProhibitedTerms(texto, lista, { niveles = ['A'], permitirFrases = false })` y
-`check_prohibited_terms(texto, lista, niveles=("A",), permitir_frases=False)`. Las reglas (a)–(d) son
-operaciones de sufijo sobre cadenas ASCII ya normalizadas: idénticas en JS y en Python (sin regex con
-`\b` ni clases Unicode distintas).
+`check_prohibited_terms(texto, lista, niveles=("A",), permitir_frases=False)`. Las reglas (a)–(d), las
+`formas`, las `excepciones` y el tramo son operaciones de sufijo, de igualdad de secuencias y de orden
+sobre cadenas ASCII ya normalizadas: idénticas en JS y en Python (sin regex con `\b` ni clases Unicode
+distintas).
 
-`casos.json` contiene, como mínimo: los textos del AC-2; "deben recibir" (→ `es-deben-recibir`),
-"recomendada para esta paciente" (→ `es-recomendado-para-este-paciente`), "debe recibirlo" (→
-`es-debe-recibir`), "Deberían recibir" (→ `es-deberia-recibir`), "las mejores opciones" (→
-`es-mejor-opcion`), "tratamientos indicados" (→ `es-tratamiento-indicado`), "The patients should" (→
-`en-the-patient-should`); "debe recibirse" (→ `es-debe-recibir`); "Tratamientos de elección" (→
-`es-tratamiento-de-eleccion`); "Opciones descritas en la evidencia"
-(cero); un texto con dos términos (dos); los literales de retirada de L1D-180 `[S1 resp. 16]`
-"[afirmación retirada: formulación no permitida]" y "[claim removed: disallowed wording]" (cero en
-Nivel A y en Nivel B); "La guía recomienda X" (cero en Nivel A, uno `b-recomend` con `niveles A+B`);
-"no constituye una recomendación" (cero con `permitirFrases`, uno `b-recomend` sin él).
+`casos.json` contiene, como mínimo (A = solo Nivel A; A+B = niveles A y B con `permitirFrases`):
+
+| Texto | A | A+B |
+|---|---|---|
+| los textos del AC-2 | una por texto | — |
+| "deben recibir" / "recomendada para esta paciente" / "debe recibirlo" / "debe recibirse" / "Deberían recibir" / "las mejores opciones" / "tratamientos indicados" / "The patients should" / "Tratamientos de elección" | una, con el id de 1.1.0 | — |
+| "Opciones descritas en la evidencia" | 0 | 0 |
+| un texto con dos términos | 2 | — |
+| "[afirmación retirada: formulación no permitida]" / "[claim removed: disallowed wording]" `[S1 resp. 16]` | 0 | 0 |
+| "La guía recomienda el esquema X" | 0 | 1 `b-recomiend` |
+| "no constituye una recomendación" | 0 | 0 (sin `permitirFrases`: 1 `b-recomend`) |
+| **`[S1 resp. 33]`, positivos** | | |
+| "administre trastuzumab" / "No administre trastuzumab" / "Adminístrelo cada 3 semanas" | 1 `es-administre` | 1 |
+| "no debe recibir" | 1 `es-no-debe-recibir` | 1 |
+| "No se debe administrar en embarazo" / "se debe administrar con precaución" | 1 (`es-no-se-debe-administrar` / `es-se-debe-administrar`) | 1 |
+| "debe iniciarse en las 12 semanas" | 1 `es-debe-iniciar` | 1 |
+| "Inicie trastuzumab" / "cambie a pertuzumab" / "Elijan el esquema" / "Ofrezca cirugía" | 1 (id de la forma) | 1 |
+| "es necesaria una biopsia" / "Es imprescindible la confirmación" | 1 | 1 |
+| "Se recomienda trastuzumab" / "se recomienda iniciar trastuzumab" / "la mejor opción es trastuzumab" | 1 (el tramo más largo) | 1 |
+| "se indica trastuzumab" / "no está indicado" / "está contraindicada" / "manejo de elección" | 1 | 1 |
+| "We recommend trastuzumab" / "Trastuzumab is recommended" / "should be started" / "must receive" / "should not receive" / "is contraindicated" / "preferred treatment" / "treatment of choice" | 1 | 1 |
+| "is indicated for you" | 1 `en-indicated-for-you` (tramo más largo) | 1 |
+| **`[S1 resp. 33]`, negativos (descriptivos)** | | |
+| "los ensayos evaluaron administrar trastuzumab" | **0** | 1 `b-es-administrar` |
+| "la guía recomienda X para pacientes con HER2 positivo" | **0** | 1 `b-recomiend` |
+| "el fármaco se administra cada 3 semanas" / "la paciente inicia tratamiento" / "fecha de inicio del tratamiento" / "el cambio a trastuzumab" | 0 | 0 |
+| "la toxicidad se debe a la quimioterapia" / "como se indica en la tabla" | 0 (excepciones) | 0 |
+| "Iniciar sesión" | 0 | 0 (frase permitida; sin `permitirFrases`: 1 `b-es-iniciar`) |
+| **Literales de la UI y del contrato del S1** | | |
+| L1D-140 `[S1 resp. 28]`: "Relevancia de recuperación de evidencia", "Metadato secundario: no mide eficacia ni solidez clínica", "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.", "Orden basado en la cita recuperada más relevante asociada a cada opción", "No resume la aplicabilidad, la eficacia ni la calidad global de la opción." | 0 | 0 |
+| L1D-140 `[S1 resp. 29]`, `[S1 resp. 31]`, `[S1 resp. 35]`, `[S1 resp. 36]`: "Registro solo para auditoría: no es contenido clínico utilizable.", "Reintentar", "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.", la pregunta de prueba de la UI | 0 | 0 |
+| L1D-194 `[S1 resp. 32]`: "Generado por IA; requiere validación clínica independiente por el oncólogo tratante." y "Uso académico/investigación" | 0 | 0 |
+
+Los literales de L1D-140 y L1D-194 dan cero **sin** necesidad de `frasesPermitidas` (comprobado con el
+prototipo); "iniciar sesión" es la única frase permitida nueva.
 
 ### D4 · `lint:lenguaje` y archivo de mensajes (AC-5)
 
@@ -281,8 +354,10 @@ listas.
   cerrado).
 - Los parches de `ac-17-terminos-aviso.json` y `ac-17-lenguaje-anclaje.json` siguen en verde **sin cambiar
   aserciones** ("Debe recibir", "recommended for this patient", `enum` `recomendada`, frase negativa
-  permitida). Hoy los 22 términos y la raíz dan cero hallazgos en specs y ejemplos (verificado: solo
-  aparece "ni la probabilidad de éxito", que está en `frasesPermitidas`).
+  permitida). Con la lista 1.2.0 (54 términos de Nivel A, 15 términos y 3 prefijos de Nivel B), specs y
+  ejemplos dan cero hallazgos (verificado con el prototipo del algoritmo, 2026-10-14). Los ejemplos nuevos
+  de L1D-140 y L1D-194 del S1 (literales de `[S1 resp. 28]`, `[S1 resp. 32]`, `[S1 resp. 35]` y
+  `[S1 resp. 36]`) también dan cero (D3).
 - **No** se añade un test Vitest propio sobre `contracts/examples/` (lo pedía la versión anterior):
   duplicaría la regla de `contracts:check`.
 
@@ -297,7 +372,7 @@ listas.
 
 ## Risks / Trade-offs
 
-- **Lista finita (22 términos + raíz):** paráfrasis no listadas ("se aconseja que reciba") pasan.
+- **Lista finita (54 + 15 términos y 3 prefijos):** paráfrasis no listadas ("se aconseja que reciba") pasan.
   Mitigación: `clinical-language-auditor` en Gate 1/2 y la ampliación por PR de catálogo (sube `version`).
 - **Clave flexiva agresiva:** colapsa vocales finales y plurales; puede unir formas no prescriptivas a una
   secuencia prohibida (p. ej. "debo recibir"). El riesgo es acotado porque se exige la secuencia
@@ -307,7 +382,19 @@ listas.
 - **Falsos positivos en texto del corpus:** las guías usan "should receive" con sujeto poblacional. Por
   eso el recorrido excluye el texto copiado del corpus (D5) y el validador de L1D-180 solo mira texto
   generado.
-- **Dos implementaciones:** riesgo de divergencia, acotado por `casos.json` en ambas suites.
+- **Formas verbales cerradas `[S1 resp. 33]`:** solo se marcan las formas listadas (usted / ustedes y
+  enclíticos); el imperativo de tú ("administra") coincide con el indicativo descriptivo y no se lista.
+  Un falso negativo así lo detectan `clinical-language-auditor` y la métrica de US-072; se amplía por PR de
+  catálogo.
+- **Deónticos ambiguos** ("se debe", "se indica", "es necesario"): también tienen usos descriptivos. Las
+  `excepciones` cubren los dos frecuentes ("se debe a", "como se indica"); el resto de falsos positivos en
+  la salida generada (que L1D-180 retiraría) los mide `false_positive_language_filter_rate` en `evaluate`
+  y se revisan periódicamente `[S1 resp. 34]`; cada uno confirmado se fija como caso de conformidad o como
+  excepción.
+- **Consumidores de la lista:** L1D-180 (Nivel A en ejecución) y L1D-275 (A + B sobre el prompt) leen la
+  1.2.0; un prompt que use "iniciar", "elegir" o "offer" fallará su test (Open Question 5).
+- **Dos implementaciones:** riesgo de divergencia, acotado por `casos.json` en ambas suites (ahora con los
+  casos de formas, excepciones y tramo más largo).
 
 
 ## Migration Plan
@@ -323,7 +410,8 @@ job y el paquete y restaurar la lista provisional; L1D-180 quedaría sin lista y
 
 1. ~~Exclusión del texto copiado del corpus en el AC-3~~ — resuelta en el Gate 1: exclusión acotada a
    hojas de la allowlist, con las comprobaciones (a)–(c) de D5.
-2. ~~Ampliar la lista~~ — resuelta por `[S1 resp. 15]` (Nivel A de 22 términos con los conservados del Pre-S1, Nivel B `recomend*`).
+2. ~~Ampliar la lista~~ — resuelta por `[S1 resp. 15]` (Nivel A de 22 términos con los conservados del
+   Pre-S1, Nivel B `recomend*`) y ampliada por forma por `[S1 resp. 33]` (1.2.0, D2).
 3. **Versión del catálogo:** si la lista debe registrarse en `manifest.json` y subir su versión, o
    basta su `version` propia mientras el catálogo no tenga release (asumido lo segundo; dueño: PO;
    afecta: US-041, US-074, `409` por versión distinta entre backends).

@@ -17,7 +17,11 @@ parámetro tipado de la operación · `[S1 resp. 14c]` `/platform/evidence-analy
 (`403 PERMISO_DENEGADO` para `admin`, PRD E-04) · `[S1 resp. 14d]` el desidentificador provisional falla cerrado si
 `data_origin ≠ sintetico` o `APP_ENV ∉ {local,test}` · `[S1 resp. 17]` las respuestas se validan con el *helper* de
 L1D-164 (Ajv2020 sobre el *bundle*) hasta US-214 · corrección del Gate 1: el `traceId` siempre lo genera
-`clinical-api`; el `X-Trace-Id` entrante solo va al log y solo si cumple el patrón.
+`clinical-api`; el `X-Trace-Id` entrante solo va al log y solo si cumple el patrón ·
+Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md` §7): `[S1 resp. 35]` un caso
+sin tipo de cáncer no es "sin evidencia": `422 TIPO_CANCER_NO_REGISTRADO` antes de llamar a la IA, sin generar ni
+persistir análisis (cambio aditivo del contrato) · `[S1 resp. 37]` registro de versiones: clinical-api 1.1.0
+(L1D-164) → **1.2.0** en este change.
 
 ## Why
 
@@ -55,6 +59,12 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
     controlador) y de una comprobación de rol: **solo `doctor`** en el S1 `[S1 resp. 14c]`; `admin` → `403
     PERMISO_DENEGADO` sin leer el caso ni llamar a `rag-orchestrator` (mínimo privilegio, PRD E-04). El RBAC
     completo por permiso `ai_analysis:create` llega con US-045 (S2), que lo cubre por regresión.
+- **Caso sin tipo de cáncer** `[S1 resp. 35]`: tras leer el caso y **antes** de desidentificar o llamar a
+  `rag-orchestrator`, si el paciente no tiene diagnóstico activo (el contexto no tendría `diagnosis.cancerType`),
+  responde **`422 TIPO_CANCER_NO_REGISTRADO`** con `{ error, message, traceId }`, sin persistir `AIAnalysisRecord`
+  y sin ninguna llamada a la IA. No es un "sin evidencia": sin tipo de cáncer no se puede filtrar la evidencia
+  (OL-02). `rag-orchestrator` mantiene la misma defensa (L1D-106). El panel (L1D-140) muestra "Análisis no
+  realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.".
 - **Puertos declarados para las historias hermanas del mismo módulo** (sin implementarlas): `ContextDeidentifier`
   (US-049, L1D-203), `AnalysisCompletion` (persistencia y respuesta, US-053, L1D-104). El etiquetado de procedencia
   completo y la exclusión de rechazados (US-065) llegan en el S3.
@@ -62,9 +72,14 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
   `APP_ENV ∉ {local,test}`, lanza antes de cualquier llamada saliente y el gateway responde con el error genérico ya
   declarado (`502 ERROR_SERVICIO_IA`, sin contrato nuevo), sin llamar a `rag-orchestrator` y sin persistir. L1D-203
   lo sustituye por el definitivo, con su `503 DESIDENTIFICACION_NO_DISPONIBLE`.
-- **Sin cambios de contrato**: `apps/clinical-api/openapi.yaml` y `apps/rag-orchestrator/openapi.yaml` (congelados
-  en US-033) ya declaran el endpoint, `EvidenceAnalysisRequest`, `ClinicalContext`, `RagQueryInternalRequest` y los
-  errores `401`/`403` (`PERMISO_DENEGADO`)/`404`/`422`/`502`.
+- **Contrato (aditivo, contract-first, `[S1 resp. 35]`)**: en `apps/clinical-api/openapi.yaml`, el `422` de
+  `POST /platform/evidence-analyses` pasa a un schema propio `ErrorAnalisisNoProcesable` (`error` ∈
+  `CUERPO_INVALIDO`, `PACIENTE_EGRESADO`, `TIPO_CANCER_NO_REGISTRADO`), de modo que el `ErrorSolicitudNoProcesable`
+  compartido con la carga de documentos no cambia; ejemplo `contracts/examples/error-tipo-cancer-no-registrado.json`
+  con su entrada en `index.json`; `info.version` 1.1.0 → **1.2.0** `[S1 resp. 37]`. `apps/rag-orchestrator/openapi.yaml`
+  no cambia aquí (su `422` lo añade L1D-106). El resto (endpoint, `EvidenceAnalysisRequest`, `ClinicalContext`,
+  `RagQueryInternalRequest`, `401`/`403` `PERMISO_DENEGADO`/`404`/`422 CUERPO_INVALIDO`/`502`) ya está congelado
+  (US-033).
 
 ## Capabilities
 
@@ -81,7 +96,9 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
 
 ### Modified Capabilities
 
-- Ninguna. `api-contracts` y `data-model` no cambian; los requisitos existentes ("Sin identidad ni identificadores
+- Ninguna con delta de requisitos. `api-contracts`: el código nuevo `TIPO_CANCER_NO_REGISTRADO`, cerrado y con
+  ejemplo, cumple "Códigos de error cerrados y sin eco" y "Política de versión del contrato" sin modificarlos
+  `[S1 resp. 35]`. `data-model` no cambia; los requisitos existentes ("Sin identidad ni identificadores
   enlazables en Backend 2", "Schemas cerrados y bloques obligatorios") se **verifican** en los tests, no se
   modifican.
 
@@ -135,6 +152,8 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
   desde `contracts/examples/`).
 - Configuración: `RAG_ORCHESTRATOR_URL`, `ANALYSIS_MAX_OPTIONS` (1 en el S1; nombre asumido), `CLINICAL_CATALOG_PATH`
   (lectura de `manifest.json`), `APP_ENV` (leído por el desidentificador provisional).
-- Contratos: ninguno. Las respuestas emitidas (`401`/`403`/`404`/`422`/`502`) se validan contra el spec con el
+- Contratos: `apps/clinical-api/openapi.yaml` (aditivo: `ErrorAnalisisNoProcesable` con `TIPO_CANCER_NO_REGISTRADO`,
+  ejemplo nuevo, `info.version` 1.2.0, `[S1 resp. 35]` `[S1 resp. 37]`) y regeneración del Zod y del cliente TS.
+  Las respuestas emitidas (`401`/`403`/`404`/`422`/`502`) se validan contra el spec con el
   *helper* de L1D-164 `[S1 resp. 17]` (no con `contracts:verify-provider`, que llega con US-214).
 - Datos: solo seed sintético y fixtures (RN-13, RN-14).

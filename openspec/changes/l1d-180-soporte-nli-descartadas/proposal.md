@@ -9,8 +9,11 @@ AC-T1.2 (parte S1), AC-10.4 · OL-02 (tarea 8 y tests adicionales NLI) · ADR-26
 US-064 AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8 · Medido en: US-072 (fidelidad M-07.2, M-10.1, M-10.2) ·
 DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.md` §1, "8 AC, en el límite") ·
 Gate 1: `[S1 resp. 11]` (el LLM no genera limitaciones en el S1), `[S1 resp. 12]` (familia `503`),
-`[S1 resp. 15]` (RN-23 en dos niveles), `[S1 resp. 16]` (literal de retiro), `[S1 resp. 17]` (versión
-rag 1.3.0, nombres canónicos, orden de merge).
+`[S1 resp. 15]` (RN-23 en dos niveles), `[S1 resp. 16]` (literal de retiro), `[S1 resp. 17]` (nombres
+canónicos, orden de merge) · Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md`
+§7): `[S1 resp. 29]` al retirar una frase por lenguaje se registra en el log el `ruleId` y la versión de la política
+de lenguaje, nunca el texto; la traza completa pasa a US-150 (S6) · `[S1 resp. 34]` la evaluación registra
+`false_positive_language_filter_rate` · `[S1 resp. 37]` registro de versiones: rag 1.2.0 (L1D-106) → **1.3.0**.
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se
 > aceptan. En esta historia, el del AC-6: **falla cerrada** — si el NLI no está disponible,
@@ -59,7 +62,7 @@ llegue a la respuesta (RN-23), tampoco dentro de una descartada.
 - **Contrato (aditivo, contract-first, `[S1 resp. 12]`):** solo añade `ErrorNliNoDisponible`
   (`error: const NLI_UNAVAILABLE`) como tercera alternativa del `oneOf` del `503` de `/rag/query` que
   crea L1D-106 (`LOCAL_LLM_UNAVAILABLE`, `RETRIEVAL_UNAVAILABLE`); ejemplo
-  `contracts/examples/rag-nli-no-disponible.json`; `info.version` 1.2.0 → **1.3.0** `[S1 resp. 17]`. `DiscardedOption`, `omittedClaims` y `limitations[].origin` ya están
+  `contracts/examples/rag-nli-no-disponible.json`; `info.version` 1.2.0 → **1.3.0** `[S1 resp. 37]`. `DiscardedOption`, `omittedClaims` y `limitations[].origin` ya están
   congelados (US-033) y no cambian.
 
 ## Capabilities
@@ -125,6 +128,9 @@ llegue a la respuesta (RN-23), tampoco dentro de una descartada.
   (US-095, US-123, US-129, US-130, FEAT-07) con `🔗 Regresión [RN-01] → US-064`.
 - Análisis previos como memoria no citable ni soporte NLI (RN-24): Regresión activa desde S4.
 - Lista de términos prohibidos, `lint:lenguaje` y recorrido Playwright de la UI: US-068 (L1D-193).
+- **Traza completa de cada descartada** (frase original retirada, regla, versión de la política y `chunkIds`,
+  persistida sin exponerla en la UI): AC nuevo de US-150 (FEAT-T1b, S6), con su cambio de contrato y de esquema
+  `[S1 resp. 29]`. En el S1 solo queda el registro en el log de `ruleId` y versión de la política.
 - Elección y calibración del modelo NLI y del valor de producción del umbral: L1D-102 y US-072 (S2).
 - Semáforo, *deadline* y `504` del pipeline: US-056 (S4).
 

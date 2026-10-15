@@ -3,7 +3,7 @@
 ## Trazabilidad
 
 L1D-193 · US-068 · FEAT-T3 (L1D-39) · Sprint 1 · Estimación **3** · HU-03 · RN-23 (dueña) ·
-AC-10.3, AC-T3.4 · M-10.2 (= 0; medido en US-072) · G-14 · readme §6.0 DoD ·
+AC-10.3, AC-T3.4 · M-10.2 (= 0; medido en US-072) · G-14 · readme §6.0 DoD · `[S1 resp. 33]` (validación clínica) ·
 US-068 AC-1, AC-2, AC-3, AC-4, AC-5 · 🔗 Regresión [RN-23] (salidas generadas en ejecución) → US-064
 AC-7, AC-8 (L1D-180, mismo sprint) · 🔗 Medido en: US-072 (S2) ·
 DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.md` §1, diseño en `docs/ux/S1/`).
@@ -21,7 +21,7 @@ DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.md` §1, diseño en `docs/ux/S
 > `/pacientes/[id]/analisis`, que recorre el AC-3).
 >
 > **Decidido en el Gate 1 (usuario, 2026-10-14, `backlog/sprints/S1-plan.md` §2):**
-> - `[S1 resp. 15]` **RN-23 en dos niveles**, lista `terminos-prohibidos.json` **1.1.0**. **Nivel A**
+> - `[S1 resp. 15]` **RN-23 en dos niveles**, lista `terminos-prohibidos.json` **1.1.0** (hoy 1.2.0 por `[S1 resp. 33]`). **Nivel A**
 >   (salida generada y UI): los 8 términos del AC-1 más "deben recibir", "debería recibir", "se sugiere
 >   iniciar", "tratamiento indicado", "mejor opción", "usted debe", "you should", "the patient should",
 >   "indicated for this patient", "probabilidad de éxito" y "chance of success", con una normalización
@@ -38,6 +38,27 @@ DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.md` §1, diseño en `docs/ux/S
 >   `assertNoPrescriptiveLanguage()` de `scripts/contracts` pasa a leer el catálogo: se borran la lista
 >   provisional y el test duplicado sobre `contracts/examples/`.
 
+> **Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md` §7):**
+> - `[S1 resp. 33]` **RN-23 ampliada por forma.** `terminos-prohibidos.json` pasa a **1.2.0**: añade al
+>   **Nivel A** (salida generada, UI, prompts y contratos) inicie, administre, prescriba, suspenda,
+>   cambie a, elija, escoja, ofrezca, se debe, debe iniciar(se), debe suspender, se debe administrar, no
+>   debe recibir, no se debe administrar, es necesario, es imprescindible, se recomienda, se recomienda
+>   iniciar, se indica, está indicado, está contraindicado, la mejor opción es, manejo de elección; en
+>   inglés, we recommend, is recommended, should be started, must receive, should not receive, is
+>   indicated, is contraindicated, preferred treatment, treatment of choice. Al **Nivel B** (solo textos
+>   propios de la UI y prompts): iniciar, administrar, prescribir, suspender, ofrecer, elegir, start,
+>   initiate, administer, prescribe, discontinue, offer, choose, switch to, standard of care. Con variantes
+>   de género, número, conjugación y negación (clave flexiva; `formas` explícitas para la conjugación
+>   dirigida, design D2–D3) y casos de conformidad positivos y negativos ("los ensayos evaluaron
+>   administrar trastuzumab" = 0 de Nivel A; "administre trastuzumab" = 1; "no debe recibir" = 1; "la guía
+>   recomienda X para pacientes con HER2 positivo" = 0 de Nivel A).
+> - `[S1 resp. 34]` (contexto, no de este change): `false_positive_language_filter_rate` lo mide `evaluate`
+>   y la atribución "la guía recomienda X para pacientes con [condición] en [escenario]" la exigen el
+>   prompt (L1D-275) y la mide `evaluate` (L1D-180); no hay regla determinista en la lista.
+> - Los literales nuevos de L1D-140 (`[S1 resp. 28]`, `[S1 resp. 29]`, `[S1 resp. 31]`, `[S1 resp. 35]`,
+>   `[S1 resp. 36]`) y de L1D-194 (`[S1 resp. 32]`) dan **0** coincidencias en los dos niveles (casos de
+>   conformidad); la única frase permitida nueva es "iniciar sesión" (botón del login de L1D-197).
+
 ## Why
 
 El oncólogo pidió que la herramienta no le diga qué hacer (PP-1, AS-IS P12). RN-23 exige que ningún
@@ -50,16 +71,21 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 
 ## What Changes
 
-- **Lista versionada** `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` **1.1.0** (datos, no
-  código; `version` semver propia) en **dos niveles** `[S1 resp. 15]`: `nivelA.terminos` (22 términos: los de `[S1 resp. 15]` más 3 conservados de la lista provisional, en
-  español e inglés, cada uno con `id` estable e `idioma`) y `nivelB.prefijos` (`recomend`, `recommend`),
-  más `frasesPermitidas` (frases negativas normativas, solo para textos propios). Montada de solo
+- **Lista versionada** `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` **1.2.0** (datos, no
+  código; `version` semver propia) en **dos niveles** `[S1 resp. 15]` `[S1 resp. 33]`: `nivelA.terminos`
+  (54 términos: los 22 de 1.1.0, con los 3 conservados de la lista provisional, más los 32 de
+  `[S1 resp. 33]`, en español e inglés, cada uno con `id` estable e `idioma`, y `formas` o `excepciones`
+  cuando hace falta), `nivelB.prefijos` (`recomend`, `recomiend`, `recommend`) y `nivelB.terminos` (15 de
+  `[S1 resp. 33]`), más `frasesPermitidas` (frases negativas normativas y "iniciar sesión", solo para
+  textos propios). Montada de solo
   lectura en los backends vía `CLINICAL_CATALOG_PATH`; cambiarla es un cambio de catálogo y dispara la
   suite (US-074).
 - **Regla de normalización única** declarada en la propia lista (`normalizacion`) y fijada por un
   archivo de **casos de conformidad** compartido: minúsculas, sin diacríticos, puntuación → espacio,
   espacios colapsados, **clave flexiva por palabra** (plural, género y enclíticos `-lo/-la/-los/-las/
-  -le/-les/-se`) y coincidencia de la secuencia completa de palabras.
+  -le/-les/-se`), **formas verbales dirigidas** explícitas, **excepciones** descriptivas, coincidencia
+  de la secuencia completa de palabras y **tramo más largo** entre coincidencias solapadas ("no debe
+  recibir" cuenta una vez) `[S1 resp. 33]`.
 - **Nuevo paquete** `packages/clinical-language` (npm workspace, TypeScript, compilado a `dist/` con
   `tsc`): `checkProhibitedTerms(texto, lista, { niveles })` puro (por defecto solo Nivel A),
   `loadProhibitedTerms(ruta)` que falla cerrado, y **la única definición** del origen de los campos del
@@ -125,7 +151,7 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 - ↪ **Depende de** **L1D-169** (US-039): crea `packages/clinical-catalogs/` (`manifest.json` 1.0.0). Si
   este change se implementa antes, crea solo la subcarpeta `lenguaje/` sin tocar el manifiesto.
 - 🔗 **Relacionado (consumidor):** **L1D-180** (US-064) usa la lista (solo Nivel A), el gemelo Python y
-  la allowlist de campos generados para RN-23 en ejecución, y sus literales de retirada `[S1 resp. 16]`
+  la allowlist de campos generados para RN-23 en ejecución (con la 1.2.0, `[S1 resp. 33]`), y sus literales de retirada `[S1 resp. 16]`
   están en los casos de conformidad; **L1D-194** (US-069) comparte la capacidad `human-control`; **L1D-265** (US-215) deja
   `lint:lenguaje` fuera de su ESLint (Non-goal de US-215); **L1D-275** (US-225) genera las salidas que
   luego filtra L1D-180 y es dueño del prompt `app/prompts/rag_query.py`, al que aplica Nivel A + B con
@@ -147,7 +173,7 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 
 ## Impact
 
-- Datos: `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (nuevo).
+- Datos: `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (nuevo, 1.2.0).
 - Código: `packages/clinical-language/` (nuevo workspace, con `origen-de-campos.json`),
   `apps/rag-orchestrator/app/domain/lenguaje.py` y sus tests, script `lint:lenguaje` en `package.json`
   raíz, job en `.github/workflows/ci.yml`, fixtures en `ci/tests/lenguaje/`, specs Playwright en

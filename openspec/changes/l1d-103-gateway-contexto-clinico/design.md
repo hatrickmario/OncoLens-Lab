@@ -19,6 +19,7 @@ POST /platform/evidence-analyses
   Zod (borde) ───────────────422──▶ fin, 0 llamadas
   controller → service
      repository.leerCaso(patientId) ──404──▶ fin, 0 llamadas
+     exigirTipoCancer(caso) ──422 TIPO_CANCER_NO_REGISTRADO──▶ fin, 0 llamadas, sin persistir   [S1 resp. 35]
      ClinicalContextBuilder.construir(caso, ahora)            ← este change (allowlist)
      [ContextLabeler — US-065, S3]
      ContextDeidentifier.desidentificar(contexto, query, caso) ← puerto; provisional falla cerrado
@@ -33,7 +34,8 @@ POST /platform/evidence-analyses
 ## Goals / Non-Goals
 
 **Goals:**
-- Borde validado con el schema Zod generado; cero llamadas a `rag-orchestrator` ante `401`, `422` o `404`.
+- Borde validado con el schema Zod generado; cero llamadas a `rag-orchestrator` ante `401`, `403`, `404` o `422`
+  (`CUERPO_INVALIDO` o `TIPO_CANCER_NO_REGISTRADO`).
 - Allowlist del contexto en **un** lugar con nombre propio, verificable contra `ClinicalContext` con
   `additionalProperties: false` (RN-10).
 - Request interno completo y válido contra `RagQueryInternalRequest`.
@@ -111,7 +113,17 @@ POST /platform/evidence-analyses
 12. **Validación de respuestas con el *helper* de L1D-164** `[S1 resp. 17]` (Vitest con Ajv2020 sobre el *bundle* del
    spec de `clinical-api`) en cada test de integración; `contracts:verify-provider` llega con US-214 y no se usa aquí.
 
-Alternativas: ninguna decisión es cara de revertir (sin contrato, esquema ni modelos nuevos); se descartan en línea.
+13. **Caso sin tipo de cáncer → `422 TIPO_CANCER_NO_REGISTRADO`** `[S1 resp. 35]` (validación clínica de los
+   oncólogos asesores, 2026-10-14). `exigirTipoCancer(caso)` (función pura) se evalúa tras `leerCaso` y antes de
+   `ContextDeidentifier`: sin `Diagnosis` activo no hay `cancerType` que enviar, y un "sin evidencia" sería falso
+   (no se buscó). Responde `ErrorAnalisisNoProcesable` con `error = TIPO_CANCER_NO_REGISTRADO`, `message` fijo del
+   ejemplo y `traceId`; no llama a `AnalysisCompletion` (no hay `AIAnalysisRecord`). Descartado: enviar
+   `diagnosis = null` y dejar que `rag-orchestrator` responda (gasta una llamada interna y depende de otro
+   proveedor para una regla que `clinical-api` ya conoce). `rag-orchestrator` conserva el mismo `422` como defensa
+   en profundidad (L1D-106) y L1D-104 lo traduce a `422` con el mismo código.
+
+Alternativas: ninguna decisión es cara de revertir (un código de error aditivo, sin esquema ni modelos nuevos); se
+descartan en línea.
 
 ## Privacidad y ownership
 
@@ -140,15 +152,46 @@ Alternativas: ninguna decisión es cara de revertir (sin contrato, esquema ni mo
 
 - **Proveedor:** `clinical-api` (`POST /platform/evidence-analyses`); **consumidor:** `web` (US-060).
   **Proveedor:** `rag-orchestrator` (`POST /rag/query`); **consumidor:** `clinical-api` (este change).
-- **Diff propuesto del `openapi.yaml`:** ninguno en ambos specs. Todo lo emitido (`401 NO_AUTENTICADO`,
-  `403 PERMISO_DENEGADO`, `404 NO_ENCONTRADO`, `422 CUERPO_INVALIDO`, `502 ERROR_SERVICIO_IA` provisional) y lo enviado
-  (`RagQueryInternalRequest`, `ClinicalContext`) ya está congelado (US-033). Compatible con ADR-26; `oasdiff` sin
-  cambios. Si L1D-164 sube `info.version` a 1.1.0, este change no lo toca.
+- **Diff propuesto del `openapi.yaml` de `clinical-api`** (aditivo, `[S1 resp. 35]`; lo aplica la tarea
+  `contract(L1D-103)`, primera del change, con la skill `sync-contracts`):
+
+  ```yaml
+  # paths./platform/evidence-analyses.post.responses
+  "422":
+    description: >-
+      Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no tiene tipo de
+      cáncer y el análisis no se realiza (no se llama a la IA ni se persiste análisis).
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/ErrorAnalisisNoProcesable' }
+  # components.schemas (nuevo; ErrorSolicitudNoProcesable queda intacto para la carga de documentos)
+  ErrorAnalisisNoProcesable:
+    type: object
+    additionalProperties: false
+    required: [error, message, traceId]
+    properties:
+      error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, TIPO_CANCER_NO_REGISTRADO] }
+      message: { type: string }
+      traceId: { type: string }
+  # info.version: 1.1.0 (L1D-164) → 1.2.0 [S1 resp. 37]
+  ```
+  El spec de `rag-orchestrator` no cambia en este change (su `422 TIPO_CANCER_NO_REGISTRADO` es de L1D-106). El resto
+  de lo emitido (`401 NO_AUTENTICADO`, `403 PERMISO_DENEGADO`, `404 NO_ENCONTRADO`, `422 CUERPO_INVALIDO`,
+  `502 ERROR_SERVICIO_IA` provisional) y lo enviado (`RagQueryInternalRequest`, `ClinicalContext`) ya está congelado
+  (US-033).
+- **Compatibilidad (ADR-26):** un valor nuevo en el `enum` de una respuesta es aditivo; `oasdiff` puede emitir un
+  `WARN` (`response-property-enum-value-added`) por el cambio de `$ref`/enum, que se declara en el PR; la CI corre
+  `--fail-on ERR`. Si apareciera un `ERR`, se detiene el change y se declara. `web` (L1D-139/L1D-140) consume el
+  código nuevo tras regenerar.
 - **Ejemplos:** MSW se construye desde `contracts/examples/` (US-213); se reutilizan `error-cuerpo-invalido.json`,
-  `error-no-encontrado.json`, `error-no-autenticado.json`, `error-permiso-denegado.json`, `error-servicio-ia.json`.
+  `error-no-encontrado.json`, `error-no-autenticado.json`, `error-permiso-denegado.json`, `error-servicio-ia.json`; y
+  se crea `contracts/examples/error-tipo-cancer-no-registrado.json`
+  (`{"error":"TIPO_CANCER_NO_REGISTRADO","message":"Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.","traceId":"req_…"}`)
+  con su entrada en `index.json` (`spec: clinical-api`, `target: #/paths/~1platform~1evidence-analyses/post/responses/422`)
+  `[S1 resp. 35]`.
   Si falta un ejemplo de
   `RagQueryInternalResponse` para el simulado, se usa el que añadan L1D-106/L1D-275; no se crea uno aquí.
-- **Generado, nunca fuente:** el schema Zod de `EvidenceAnalysisRequest` y el cliente hey-api de `/rag/query`
+- **Generado, nunca fuente:** tras editar el spec, `contracts:generate` y `contracts:check`; el schema Zod de `EvidenceAnalysisRequest` y el cliente hey-api de `/rag/query`
   (L1D-105, `[S1 resp. 13]`) salen de `packages/api-contracts`; no se editan a mano.
 - **Verificación:** respuestas validadas con el *helper* de L1D-164 `[S1 resp. 17]`. Nota: el `anyOf` de `sourcesSelected` debe traducirse a un
   `refine` en el Zod generado; si el generador no lo hace, se reporta a contract-keeper en lugar de parchear lo
@@ -159,6 +202,7 @@ Alternativas: ninguna decisión es cara de revertir (sin contrato, esquema ni mo
 | Módulo | Nuevo/Mod. | Depende de (puertos) | Reglas extraídas |
 |---|---|---|---|
 | `evidence-analysis.controller.ts` | nuevo | service | `exigirRolDoctor()` (`[S1 resp. 14c]`) |
+| `case-guards.ts` | nuevo | — (puro) | `exigirTipoCancer()` (`[S1 resp. 35]`) |
 | `trace-id.middleware.ts` | nuevo | `IdGenerator` | `traceIdEntranteRegistrable()` |
 | `context-deidentifier.provisional.ts` | nuevo | `PseudonymGenerator`, config (`APP_ENV`) | `exigirEntornoSintetico()` (`[S1 resp. 14d]`) |
 | `evidence-analysis.service.ts` (*factory* `crearEvidenceAnalysisService`) | nuevo | `CasoRepository`, `ContextDeidentifier`, `RagQueryClient`, `AnalysisCompletion`, `CatalogVersionProvider`, `Clock`, `IdGenerator`, config | `armarRagQueryRequest()` |

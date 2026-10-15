@@ -59,6 +59,16 @@ Si el `patientId` de la petición no corresponde a ningún paciente, `clinical-a
 - **THEN** responde `404` con `error = NO_ENCONTRADO`, válido contra el spec de `clinical-api`
 - **AND** el cliente de `rag-orchestrator` registra cero llamadas
 
+### Requirement: Caso sin tipo de cáncer no se analiza
+Si el paciente existe pero no tiene diagnóstico activo (el contexto no tendría tipo de cáncer), `clinical-api` MUST responder `422` con `error = TIPO_CANCER_NO_REGISTRADO`, `message` y `traceId` antes de desidentificar o llamar a `rag-orchestrator`; SHALL NOT invocar a la IA ni persistir un `AIAnalysisRecord`, y SHALL NOT presentarlo como "sin evidencia" (OL-02, `[S1 resp. 35]`).
+
+#### Scenario: Un paciente sin diagnóstico responde 422 TIPO_CANCER_NO_REGISTRADO sin llamar a la IA ni persistir [S1 resp. 35] [OL-02] [OL-03]
+- **GIVEN** `doc1@test.local` con sesión válida y un paciente sintético con `data_origin = sintetico`, creado en el test con datos ficticios y sin ningún `Diagnosis` activo
+- **WHEN** envía `POST /platform/evidence-analyses` con una pregunta válida sobre ese paciente
+- **THEN** responde `422` con `error = TIPO_CANCER_NO_REGISTRADO`, `message` y `traceId`, válido contra el spec de `clinical-api`
+- **AND** el cliente de `rag-orchestrator` registra cero llamadas
+- **AND** `ai_analysis_record` no tiene ninguna fila nueva
+
 ### Requirement: Filtros aceptados y reenviados sin alterar el contexto en el S1
 `clinical-api` MUST aceptar `filtersApplied` en la petición, reenviarlo a `rag-orchestrator` como `RagFiltersApplied` efectivo y, en el S1, SHALL no modificar el `clinicalContext` por los filtros; `filters_applied` MUST quedar disponible para la persistencia del análisis con el valor recibido.
 

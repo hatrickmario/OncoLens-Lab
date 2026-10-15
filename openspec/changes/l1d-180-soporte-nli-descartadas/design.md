@@ -52,7 +52,14 @@ unitarios y de integración con FX-06a-b.
      No hay literales distintos para opción y justificación;
    - la opción va a `discardedOptions` con `discardReason = afirmacion_sin_soporte` (el enum no cambia);
      la afirmación retirada entra en `unsupportedClaims` como el literal, nunca con su texto original;
-   - la UI (L1D-140) aclara "o contenía lenguaje no permitido".
+   - la UI (L1D-140) aclara "o contenía lenguaje no permitido";
+   - **registro en el log** `[S1 resp. 29]`: por cada fragmento retirado, un evento
+     `{ event: "fragmento_retirado_lenguaje", traceId, campo, ruleId, languagePolicyVersion }`, donde `ruleId` es el
+     `id` de la entrada coincidente de `terminos-prohibidos.json` y `languagePolicyVersion` su `version` (1.1.0 en el
+     S1). **Nunca** el texto retirado, el término coincidente, la opción, la justificación ni la pregunta. Por eso
+     `ProhibitedTermsChecker` devuelve las coincidencias como `(ruleId, campo)` además del booleano, y el adapter
+     expone la versión cargada. La traza completa persistida (frase original, regla, versión y `chunkIds`) es un
+     AC nuevo de US-150 (FEAT-T1b, S6), con contrato y esquema propios; fuera de alcance aquí.
    Los dos literales viven en `domain/support.py` y figuran en `packages/clinical-language/conformidad/casos.json`
    (L1D-193) como casos de cero coincidencias (dependencia ↪); un unitario lo comprueba aquí también.
    **Alcance del verificador:** solo los campos **generados**, declarados en `domain/support.py` como
@@ -97,7 +104,9 @@ infraestructura y RN-01); "autoverificación" por el propio LLM (confianza autor
 - **`rag-orchestrator` no toca datos clínicos:** solo Milvus y schema `corpus` (rol `rag_corpus`); sin
   credenciales ni ruta a `clinical-minio` ni a otros schemas.
 - **Logs:** `traceId`, número de afirmaciones, de pares NLI, de opciones descartadas y `omittedClaims`,
-  latencia de la etapa y `nliModel`; **nunca** el texto de afirmaciones, chunks, opciones ni la pregunta.
+  latencia de la etapa, `nliModel` y, por cada fragmento retirado por lenguaje, `ruleId`, `campo` y
+  `languagePolicyVersion` `[S1 resp. 29]`; **nunca** el texto de afirmaciones, chunks, opciones, el fragmento
+  retirado, el término coincidente ni la pregunta.
   Test de no-fuga en logs (tarea 2.13).
 - **Errores:** `503 NLI_UNAVAILABLE` con `message` genérico, sin eco ni detalle del modelo.
 - **Datos:** FX-06a-a, FX-06a-b y FX-T1a sintéticos; ningún dato real ni identificador de paciente
@@ -133,7 +142,7 @@ infraestructura y RN-01); "autoverificación" por el propio LLM (confianza autor
       error: { type: string, const: NLI_UNAVAILABLE }
       message: { type: string }
       traceId: { type: string }
-  # info.version: 1.2.0 (L1D-106) → 1.3.0 [S1 resp. 17]
+  # info.version: 1.2.0 (L1D-106) → 1.3.0 [S1 resp. 37]
   ```
   `/rag/follow-up` y `/case/summary` no cambian en este change (su NLI llega con sus historias).
 - **Ejemplos:** nuevo `contracts/examples/rag-nli-no-disponible.json`
@@ -164,8 +173,10 @@ S1 `ai-eval-runner` evalúa a mano el análisis del paciente semilla con el NLI 
 valor de producción del umbral se calibra en US-072 (TBD-02); la configuración de test fija 0,7 (AC-5).
 
 **Coste del filtro de lenguaje (Gate 1, 2ª vuelta).** Junto a salidas prescriptivas = 0, la suite `evaluate`
-(y, en el S1, la evaluación manual) MUST registrar la **tasa de opciones descartadas por lenguaje no permitido**
-(descartadas por `ProhibitedTermsChecker` / total de opciones candidatas con cita y soporte) y listar los
+(y, en el S1, la evaluación manual) MUST registrar **`false_positive_language_filter_rate`** `[S1 resp. 34]`
+(validación clínica, 2026-10-14; renombra la antigua "tasa de opciones descartadas por lenguaje no permitido"):
+opciones descartadas por `ProhibitedTermsChecker` cuya justificación es fiel al chunk citado / total de opciones
+descartadas por lenguaje; se acompaña del recuento bruto de descartes por lenguaje y se revisa periódicamente. Lista los
 **falsos positivos**: opciones cuya justificación reproduce con fidelidad una frase del corpus del tipo "patients
 should receive…" (soportada por el chunk citado) y se descartó solo por el término. Métrica informativa, sin meta
 en el S1 (TBD-02): sirve para ver si "salidas prescriptivas = 0" se consigue a costa de vaciar el análisis y para

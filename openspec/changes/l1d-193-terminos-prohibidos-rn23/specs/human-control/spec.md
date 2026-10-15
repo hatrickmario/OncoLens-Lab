@@ -1,15 +1,17 @@
 ## ADDED Requirements
 
 ### Requirement: Lista versionada de términos prescriptivos prohibidos en dos niveles
-La lista de RN-23 MUST vivir en `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (1.1.0, `[S1 resp. 15]`) con `version`, `normalizacion`, un **Nivel A** de términos (salida generada y UI), un **Nivel B** de prefijos (solo textos propios de UI, prompts y contratos) y `frasesPermitidas` (solo textos propios). Los backends SHALL leerla de solo lectura desde `CLINICAL_CATALOG_PATH`.
+La lista de RN-23 MUST vivir en `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (1.2.0, `[S1 resp. 33]`) con `version`, `normalizacion`, un **Nivel A** de términos (salida generada y textos propios), un **Nivel B** de prefijos y términos y `frasesPermitidas` (ambos solo textos propios). Un término MAY declarar `formas` (conjugación dirigida) y `excepciones` (usos descriptivos). Los backends SHALL leerla de solo lectura desde `CLINICAL_CATALOG_PATH`.
 
-#### Scenario: La lista cargada contiene los términos de RN-23 y los de S1 resp. 15 [US-068 AC-1] [AC-10.3] [RN-23]
+#### Scenario: La lista cargada contiene los términos de RN-23 y los de S1 resp. 15 y 33 [US-068 AC-1] [AC-10.3] [RN-23] [S1 resp. 33]
 - **GIVEN** la lista versionada `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json`
 - **WHEN** `loadProhibitedTerms()` la carga
-- **THEN** devuelve `version` "1.1.0" y un Nivel A que incluye "recomendado para este paciente", "debe recibir", "el mejor tratamiento", "indicado para usted", "recommended for this patient", "should receive", "the best treatment" e "indicated for you"
+- **THEN** devuelve `version` "1.2.0" y un Nivel A que incluye "recomendado para este paciente", "debe recibir", "el mejor tratamiento", "indicado para usted", "recommended for this patient", "should receive", "the best treatment" e "indicated for you"
 - **AND** el Nivel A incluye además "deben recibir", "debería recibir", "se sugiere iniciar", "tratamiento indicado", "mejor opción", "usted debe", "you should", "the patient should", "indicated for this patient", "probabilidad de éxito" y "chance of success" `[S1 resp. 15]`
 - **AND** el Nivel A conserva de la lista provisional del Pre-S1 "opción preferida", "tratamiento de elección" y "tratamiento óptimo"
-- **AND** el Nivel B contiene los prefijos `recomend` y `recommend`
+- **AND** el Nivel A incluye los términos de `[S1 resp. 33]`: "inicie", "administre", "prescriba", "suspenda", "cambie a", "elija", "escoja" y "ofrezca" (con `formas`), "se debe", "debe iniciar", "debe suspender", "se debe administrar", "no debe recibir", "no se debe administrar", "es necesario", "es imprescindible", "se recomienda", "se recomienda iniciar", "se indica", "está indicado", "está contraindicado", "la mejor opción es", "manejo de elección", "we recommend", "is recommended", "should be started", "must receive", "should not receive", "is indicated", "is contraindicated", "preferred treatment" y "treatment of choice"
+- **AND** el Nivel B contiene los prefijos `recomend`, `recomiend` y `recommend` y los términos de `[S1 resp. 33]` "iniciar", "administrar", "prescribir", "suspender", "ofrecer", "elegir", "start", "initiate", "administer", "prescribe", "discontinue", "offer", "choose", "switch to" y "standard of care"
+- **AND** `frasesPermitidas` incluye "iniciar sesión"
 - **AND** cada término o prefijo tiene un `id` único entre niveles e `idioma`
 
 ### Requirement: La carga de la lista falla cerrada
@@ -22,7 +24,7 @@ Una lista ausente, ilegible o que no cumpla su esquema MUST producir un error qu
 - **AND** ningún consumidor (lint, tests, validador de L1D-180) continúa con una lista vacía
 
 ### Requirement: Verificador de términos prohibidos con normalización común en Node y Python
-`checkProhibitedTerms(texto, lista, { niveles, permitirFrases })` MUST ser puro y devolver `id` y nivel por cada aparición. MUST normalizar texto y términos (minúsculas, sin diacríticos, puntuación → espacio, espacios colapsados) y, en el Nivel A, comparar secuencias completas de claves flexivas que cubren plural, género y enclíticos `[S1 resp. 15]`. Por defecto MUST aplicar solo el Nivel A, sin `frasesPermitidas`.
+`checkProhibitedTerms(texto, lista, { niveles, permitirFrases })` MUST ser puro y devolver `id` y nivel por cada aparición. MUST normalizar y comparar secuencias de claves flexivas (plural, género, enclíticos); un término con `formas` MUST compararse por ellas y una `excepción` que lo contiene MUST anularlo `[S1 resp. 33]`. Entre solapadas, solo la de tramo más largo. Por defecto MUST aplicar solo el Nivel A, sin `frasesPermitidas`.
 
 #### Scenario: Las variantes de mayúsculas, tildes y puntuación coinciden [US-068 AC-2] [RN-23]
 - **GIVEN** la lista versionada y el verificador `checkProhibitedTerms`
@@ -39,11 +41,28 @@ Una lista ausente, ilegible o que no cumpla su esquema MUST producir un error qu
 - **WHEN** recibe "[afirmación retirada: formulación no permitida]" y "[claim removed: disallowed wording]"
 - **THEN** devuelve cero coincidencias en ambos
 
-#### Scenario: La raíz recomend solo se aplica cuando se pide el Nivel B [US-068 AC-5] [RN-23] [S1 resp. 15]
+#### Scenario: La raíz recomend solo se aplica cuando se pide el Nivel B [US-068 AC-5] [RN-23] [S1 resp. 15] [S1 resp. 33]
 - **GIVEN** el texto "La guía recomienda el esquema X"
 - **WHEN** se verifica con el Nivel A (salida generada) y después con los niveles A y B (texto propio)
 - **THEN** con el Nivel A devuelve cero coincidencias
-- **AND** con los niveles A y B devuelve una coincidencia `b-recomend` de nivel B
+- **AND** con los niveles A y B devuelve una coincidencia `b-recomiend` de nivel B
+
+#### Scenario: Las formas dirigidas, deónticas y negativas de S1 resp. 33 coinciden una vez [US-068 AC-2] [RN-23] [S1 resp. 33]
+- **GIVEN** la lista versionada 1.2.0 y el verificador con el Nivel A
+- **WHEN** recibe por separado "administre trastuzumab", "No administre trastuzumab", "Adminístrelo cada 3 semanas", "no debe recibir", "No se debe administrar en embarazo", "debe iniciarse en las 12 semanas", "es necesaria una biopsia", "no está indicado", "la mejor opción es trastuzumab", "Se recomienda trastuzumab" y "Trastuzumab is recommended"
+- **THEN** devuelve exactamente una coincidencia por texto: `es-administre`, `es-administre`, `es-administre`, `es-no-debe-recibir`, `es-no-se-debe-administrar`, `es-debe-iniciar`, `es-es-necesario`, `es-esta-indicado`, `es-la-mejor-opcion-es`, `es-se-recomienda` y `en-is-recommended`
+
+#### Scenario: Los usos descriptivos no coinciden en el Nivel A [US-068 AC-2] [RN-23] [S1 resp. 33] [S1 resp. 34]
+- **GIVEN** la lista versionada 1.2.0 y el verificador con el Nivel A (salida generada)
+- **WHEN** recibe por separado "los ensayos evaluaron administrar trastuzumab", "la guía recomienda X para pacientes con HER2 positivo", "el fármaco se administra cada 3 semanas", "la paciente inicia tratamiento", "fecha de inicio del tratamiento", "el cambio a trastuzumab", "la toxicidad se debe a la quimioterapia" y "como se indica en la tabla"
+- **THEN** devuelve cero coincidencias en cada texto
+- **AND** con los niveles A y B, "los ensayos evaluaron administrar trastuzumab" devuelve una coincidencia `b-es-administrar` y "la guía recomienda X para pacientes con HER2 positivo" una `b-recomiend`, ambas de nivel B
+
+#### Scenario: Los literales del S1 de L1D-140 y L1D-194 no coinciden en ningún nivel [US-068 AC-2] [US-068 AC-5] [RN-23] [S1 resp. 28] [S1 resp. 32] [S1 resp. 35]
+- **GIVEN** la lista versionada 1.2.0 y el verificador con los niveles A y B y `permitirFrases`
+- **WHEN** recibe por separado "Relevancia de recuperación de evidencia", "Metadato secundario: no mide eficacia ni solidez clínica", "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.", "Orden basado en la cita recuperada más relevante asociada a cada opción", "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.", "Registro solo para auditoría: no es contenido clínico utilizable.", "Reintentar", "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.", "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?", "Generado por IA; requiere validación clínica independiente por el oncólogo tratante." y "Uso académico/investigación"
+- **THEN** devuelve cero coincidencias en cada texto, también sin `permitirFrases`
+- **AND** "Iniciar sesión" devuelve cero con `permitirFrases` y una `b-es-iniciar` sin él
 
 #### Scenario: El texto descriptivo no coincide [US-068 AC-2] [RN-23]
 - **GIVEN** la lista versionada y el verificador `checkProhibitedTerms`

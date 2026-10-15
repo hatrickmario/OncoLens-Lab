@@ -72,6 +72,9 @@ unitarios del dominio y de integración del endpoint con FX-06a-a y FX-06a-b.
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 29, 34]`):** al retirar una frase por lenguaje no permitido, el log de `rag-orchestrator` registra el `ruleId` y la versión de la política, nunca el texto (la traza completa, con la frase original, pasa a US-150 AC-7, S6). La suite `evaluate` mide `false_positive_language_filter_rate` y se revisa periódicamente; es preferible descartar una opción a convertir una recomendación poblacional en una prescripción.
+
+
 ## Story
 Como oncólogo, quiero que toda afirmación que el sistema me muestra esté respaldada por
 el texto de la fuente que cita, y que lo que no lo esté se aparte o se omita, para no

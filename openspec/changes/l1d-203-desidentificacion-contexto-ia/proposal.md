@@ -12,7 +12,8 @@ detrás del puerto `PiiDetector`); si ADR-40 elige otra opción en el S2, se sus
 (`backlog/features/FEAT-T4a-acceso-identidad-pacientes.md` §US-049; `backlog/sprints/S1-refinamiento.md` resp. 3;
 `backlog/02-adrs.md` nota de ADR-40) · DoR del S1 ✓ "identidad falsa en el test hasta US-046" (S1-refinamiento §DoR) ·
 🔗 Medido en: US-072 (sensibilidad de PII, G-8) ·
-Decidido en el Gate 1 (usuario, 2026-10-14, `backlog/sprints/S1-plan.md` §2): `[S1 resp. 17]` `clinical-api` 1.3.0,
+Decidido en el Gate 1 (usuario, 2026-10-14, `backlog/sprints/S1-plan.md` §2): `[S1 resp. 17]` (versión sustituida por `[S1 resp. 37]`:
+`clinical-api` **1.4.0** tras el `422` nuevo de L1D-103, validación clínica 2026-10-14, `S1-plan.md` §7),
 `contracts:generate` antes de `contracts:check`, `readme.md` (extracto generado) como archivo tocado · `[S1 resp. 18]`
 el seudónimo del AC-5 es `psd_p7f3a` (el Markdown se corrige aparte) · `[S1 resp. 14d]` este change sustituye el
 desidentificador provisional de L1D-103, que fallaba cerrado con `502` · correcciones del Gate 1: va después de
@@ -54,7 +55,7 @@ contaminaría `clinical_context_snapshot` y la memoria de análisis de forma irr
     y sin persistir.
 - **Contrato (aditivo)**: el `503` de `POST /platform/evidence-analyses` admite un segundo código cerrado
   `DESIDENTIFICACION_NO_DISPONIBLE`, con su ejemplo en `contracts/examples/` (hoy solo admite
-  `LOCAL_LLM_UNAVAILABLE`, que describiría mal la causa); `info.version` **1.2.1 → 1.3.0** `[S1 resp. 17]`. `oasdiff`
+  `LOCAL_LLM_UNAVAILABLE`, que describiría mal la causa); `info.version` **1.3.1 → 1.4.0** `[S1 resp. 37]`. `oasdiff`
   emite el aviso `response-body-wrapped-in-one-of-original-preserved` (no es `ERR`). Ver `design.md` §Contratos.
 - **Retira el desidentificador provisional de L1D-103** y su requisito (delta `REMOVED` en
   `evidence-analysis-gateway`): el fallo cerrado de la desidentificación pasa a ser el `503
@@ -112,7 +113,7 @@ contaminaría `clinical_context_snapshot` y la memoria de análisis de forma irr
   en un PR revisado que afecta también al escaneo de la CI.
 - ↪ US-143 (G-Piloto, S6): retira la guarda `exigirEntornoSintetico()` cuando el `preflight` habilite datos reales.
 - ↪ **L1D-164** (US-034): `clinical-api` 1.1.0 y el *helper* de validación de respuestas (Ajv2020 sobre el *bundle*);
-  tras L1D-104 (1.2.0) y L1D-194 (1.2.1), este change sube a **1.3.0** `[S1 resp. 17]`; quien mergea segundo rebasa
+  tras L1D-103 (1.2.0), L1D-104 (1.3.0) y L1D-194 (1.3.1), este change sube a **1.4.0** `[S1 resp. 37]`; quien mergea segundo rebasa
   y regenera.
 - ⛔ ADR-40 (US-013, L1D-205, S2): **no bloquea el S1** por `[S1 resp. 3]`; si elige otra opción, se sustituye el
   adapter de `PiiDetector` y se re-estima.
@@ -139,6 +140,6 @@ contaminaría `clinical_context_snapshot` y la memoria de análisis de forma irr
   copia ni formatos propios), `PII_MASKS_PATH` (`apps/clinical-api/config/pii-masks.json`: marcadores por `tipo`,
   orden y regla de fechas numéricas y con mes en texto), `PII_NAME_TOKEN_MIN_LENGTH`; `APP_ENV` (guarda de entorno
   sintético hasta G-Piloto).
-- Contratos: `apps/clinical-api/openapi.yaml` (1.3.0), `contracts/examples/error-desidentificacion-no-disponible.json`,
+- Contratos: `apps/clinical-api/openapi.yaml` (1.4.0, `[S1 resp. 37]`), `contracts/examples/error-desidentificacion-no-disponible.json`,
   `index.json` y `readme.md` (extracto generado del §4); regenerar `packages/api-contracts`.
 - Datos: solo fixtures sintéticos (FX-T4a-a, FX-T4a-c) y seed; ningún dato real ni PII real (RN-13, RN-14).

@@ -48,4 +48,4 @@ Cada pregunta trae una **propuesta del equipo**. Basta con responder "de acuerdo
 
 | Fecha | Participantes (por rol) | Preguntas respondidas | Cambios que generan |
 |---|---|---|---|
-| | Oncólogo asesor A · Oncólogo asesor B | | |
+| 2026-10-14 | Oncólogo asesor A · Oncólogo asesor B | A1–A5, B1–B8, C1–C5 (todas) | `[S1 resp. 26–37]` en [`S1-plan.md`](S1-plan.md) §7: DEC-02 enmendada (criterio de VM-2), PRD E-11 (aviso), rótulos del panel, 422 sin diagnóstico, RN-23 ampliada por forma, traza de auditoría en US-150 AC-7 (S6) |

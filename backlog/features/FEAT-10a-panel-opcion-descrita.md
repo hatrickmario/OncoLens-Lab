@@ -62,6 +62,8 @@ AC-2, AC-4), Playwright contra Compose (AC-3) y test de build (AC-5).
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** la ficha (US-051) y el resumen de la Base del análisis (US-067) llegan en el S2. En el S1 el panel se abre por ruta directa (`/pacientes/[id]/analisis`, `[S1 resp. 4]`) sobre el paciente semilla, con la sesión de US-211; `AnalysisBasisPanel` se monta con US-067.
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 28, 29, 31, 35, 36]`):** rótulos de la relevancia y del criterio de orden nuevos (AC-2, AC-3); las descartadas muestran número de orden, id del análisis y `createdAt` (AC-4; la traza completa va a US-150, S6); tras un error se puede reintentar con la misma pregunta; ante `422 TIPO_CANCER_NO_REGISTRADO` se muestra "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia."; pregunta de prueba de la UI: "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?". Detalle: [`../sprints/S1-plan.md`](../sprints/S1-plan.md) §7.
+
 ## Story
 Como oncólogo, quiero ver la opción que describe la evidencia con sus fuentes citadas y
 verificables, la relevancia como un dato secundario y lo descartado en una sección
@@ -76,21 +78,24 @@ tomar por válido algo que no se pudo respaldar.
   chip de cita con `sourceName` "NCI PDQ" y `externalId` del ejemplo `rag-query-con-evidencia.json` (el E2E lo lee del ejemplo,
   `[S1 resp. 18]`) en su idioma original. `[HU-03]` `[OL-04]` `[AC-10.2]`
 - **AC-2 (borde · relevancia secundaria)** · Dada la tarjeta del AC-1, cuando se
-  inspecciona, entonces la relevancia aparece con el rótulo exacto "Relevancia de la
-  evidencia" y el valor `0,87`, después de las citas y con estilo secundario, y no
-  aparece ningún rótulo "Evidencia" a secas ni "eficacia". `[RN-03]` `[AC-10.2]` `[ADR-8]`
+  inspecciona, entonces la relevancia aparece con el rótulo exacto "Relevancia de
+  recuperación de evidencia", la nota "no mide eficacia ni solidez clínica" y el valor
+  `0,87` presentado como "Orden basado en la cita recuperada más relevante asociada a cada
+  opción", después de las citas y con estilo secundario, y no aparece ningún rótulo
+  "Evidencia" a secas ni "eficacia". `[RN-03]` `[AC-10.2]` `[ADR-8]` `[S1 resp. 28]`
 - **AC-3 (borde · criterio de selección visible, S1–S2)** · Dada la respuesta del AC-1
   (1 opción, `applicability = []`), cuando se renderiza, entonces encima de la opción se
-  lee "Seleccionada por relevancia de la búsqueda, no por eficacia; la comparación con la
-  población estudiada llega en una versión posterior" y no aparece "Ordenadas por
+  lee "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni
+  aplicabilidad clínica." (`[S1 resp. 28]`) y no aparece "Ordenadas por
   coincidencia con la población estudiada, no por eficacia". `[RN-28]` `[AC-10.1]`
   `[RN-23]` `[§15 resp. 7]`
 - **AC-4 (borde · descartadas)** · Dada una respuesta con `LLM-SIN-SOPORTE`
   (`evidenceOptions = []`, una descartada), cuando se renderiza, entonces no hay tarjeta
   de opción, existe la sección colapsada "Descartadas por falta de soporte — solo para
   revisión", y al expandirla muestra la opción, el motivo y la afirmación sin soporte
-  resaltada, sin ningún control para vincularla a un tratamiento.
-  `[FR-10]` `[HU-03]` `[AC-10.4]`
+  resaltada, con su número de orden, el id del análisis y su `createdAt` para auditoría, sin
+  ningún control para vincularla a un tratamiento y sin presentarla como contenido clínico
+  utilizable. `[FR-10]` `[HU-03]` `[AC-10.4]` `[S1 resp. 29]`
 - **AC-5 (borde · pregunta no terapéutica)** · Dada una respuesta
   `status = con_evidencia` con `evidenceOptions = []` y sin descartadas (`Q-TOX`),
   cuando se renderiza, entonces no aparece la sección "Opciones descritas en la

@@ -309,6 +309,9 @@ de prueba en la CI.
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 2]`):** hay agenda con los oncólogos asesores dentro del S1; la historia se mantiene en el sprint. El orquestador prepara al inicio los casos estandarizados y la plantilla de registro; el usuario registra las sesiones (roles anónimos de DEC-02, sin nombres en el repo).
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 26, 27]`):** el tiempo máximo es de 30 min por tarea, con VM-1 y VM-2 por separado. Los casos se validan por coherencia longitudinal. El checklist separa elementos críticos y complementarios ("reconstruido" exige todos los críticos) y guarda versión y fecha de validación. La pregunta de referencia incluye población, contexto, decisión y fecha de corte. VM-2 registra dos desenlaces, *autoidentificada* y *validada* (por un evaluador ciego y posterior), y la meta de DEC-02 se calcula sobre la *validada* (DEC-02 enmendada en el criterio; la meta no cambia).
+
+
 ## Story
 Como product owner, quiero medir cuánto tardan hoy los oncólogos asesores en
 reconstruir un caso y en encontrar evidencia aplicable sin OncoLens, para tener el punto

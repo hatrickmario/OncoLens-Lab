@@ -166,8 +166,8 @@ compound component combinando sus subpartes como lo haría el consumidor).
 
 - **Encuadre (RN-23, D-01):** encabezado "Opciones descritas en la evidencia". Nunca
   "recomendado", "recomendación", "debe recibir", "tratamiento indicado".
-- **Aviso obligatorio (RN-19, B-06):** "Análisis generado por IA: requiere validación clínica del
-  oncólogo tratante" y "Uso académico/investigación", leídos de configuración, no literales en el JSX.
+- **Aviso obligatorio (RN-19, PRD E-11):** "Generado por IA; requiere validación clínica
+  independiente por el oncólogo tratante." y "Uso académico/investigación", leídos de configuración, no literales en el JSX.
 - **Orden visible (RN-28):** la UI muestra el criterio de orden por aplicabilidad; `relevanceScore`
   como metadato secundario, nunca como ranking principal ni como "probabilidad".
 - **RN-26:** faltantes, no verificados, conflicto y desactualizado son **avisos**, no bloqueos:
