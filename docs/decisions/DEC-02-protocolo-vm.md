@@ -42,6 +42,16 @@
 >
 > Confirmarlas no cambia ninguna meta.
 
+## Enmienda del protocolo (validación clínica, usuario, 2026-10-14, `[S1 resp. 24, 26, 27]`)
+
+Los oncólogos asesores A y B aprueban el checklist de "caso reconstruido" (VM-1) y las herramientas de la condición manual (VM-2), y precisan el protocolo. **Las metas no cambian**; cambia el criterio de éxito de VM-2.
+
+- **Tiempo máximo:** 30 min por tarea (`VM_SESSION_MAX_MINUTES`), con VM-1 y VM-2 cronometradas por separado. Si se supera, el intento queda como no completado.
+- **Casos:** se validan por coherencia longitudinal (diagnóstico, TNM o estadio a la fecha, biomarcadores, intención terapéutica, secuencia previa y línea actual) y deben tener una única interpretación razonable.
+- **Checklist de VM-1:** separa elementos **críticos** y **complementarios**. "Caso reconstruido" exige identificar **todos los críticos**; una reconstrucción parcialmente correcta no cuenta. Cada checklist guarda versión y fecha de validación clínica.
+- **Pregunta de referencia de VM-2:** incluye población, contexto clínico, decisión y **fecha de corte** de la evidencia, para que no se responda con evidencia posterior ni de otro escenario.
+- **Dos desenlaces en VM-2:** *autoidentificada* (el participante señala ≥ 1 fuente y la justifica brevemente) y *validada* (un evaluador confirma, después y ciego al tiempo y al participante, que la fuente corresponde al caso y a la pregunta). **La meta (reducción de la mediana ≥ 50 %) se calcula sobre los intentos validados**; la autoidentificada se informa al lado.
+
 ## Validación de los catálogos por el feedback (P-03)
 
 El feedback por análisis **reemplaza la firma formal** de los catálogos de DEC-01 y DEC-11 `[§15 resp. 5]`:

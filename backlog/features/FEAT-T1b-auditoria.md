@@ -103,6 +103,14 @@ reconstruir lo que pasó con un paciente real sin que el registro contenga su id
   insertar en `audit_log` durante un análisis, cuando ocurre, entonces la respuesta es
   `500` sin opciones y no queda `AIAnalysisRecord` sin su fila de auditoría.
   `[RN-06]` (asumido: misma transacción, falla cerrada como US-102 AC-5)
+- **AC-7 (borde · traza de lenguaje y descartes)** · Dado un análisis en el que el
+  filtro de lenguaje (US-064) retiró una frase y descartó una opción, cuando se consulta su
+  traza de auditoría, entonces contiene, por cada retiro, la frase original, el `ruleId`, la
+  versión de la política de lenguaje y los `chunkIds` de la descartada, y ninguno de esos
+  datos aparece en la interfaz clínica ni en los *logs*. Requiere un cambio aditivo del
+  contrato interno (`RagQueryInternalResponse`) y del esquema (`ai_analysis_record`).
+  `[RN-23]` `[FR-18]` `[S1 resp. 29]` (validación de los oncólogos asesores; re-estimar en el
+  refinamiento del S6)
 
 ## Contexto técnico
 Amplía el `AuditService` y el *middleware* declarativo de US-102 con acciones de

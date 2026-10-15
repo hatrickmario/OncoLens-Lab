@@ -24,7 +24,7 @@ El `AIAnalysisRecord` MUST incluir `trace_id`, `analysis_type = analisis_evidenc
 - **THEN** `trace_id = req_TestGen0001` y ninguna columna del registro contiene `req_Entrante01`
 
 #### Scenario: La Base del análisis del S1 declara que el detalle de datos y faltantes no se evaluó [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
-- **GIVEN** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` = "Datos del paciente enviados como contexto: detalle y faltantes no evaluados en esta versión." en la configuración de test
+- **GIVEN** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` = "Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes." en la configuración de test
 - **WHEN** se completa el análisis del AC-1, y en otro caso el de `Q-SIN` sin evidencia
 - **THEN** en ambos `analysisBasis.patientDataUsed = []`, `analysisBasis.missingCriticalData = []` y `analysisBasis.assumptions` contiene `{ text: <ese literal>, origin: regla_catalogo }`, igual en la respuesta y en `analysis_basis` persistido
 - **AND** el literal no tiene hallazgos de `lint:lenguaje` (L1D-193)
@@ -62,7 +62,7 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **AND** no se persiste ningún registro
 
 ### Requirement: Una sola tabla de mapeo de fallos de rag-orchestrator
-`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` → `503 LOCAL_LLM_UNAVAILABLE`; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, `422`, `401`, en el S1 también `409` y `429`, cualquier otro `5xx`, error de red o respuesta que no valida → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar el cuerpo, el `message` o las cabeceras de `rag-orchestrator`.
+`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` → `503 LOCAL_LLM_UNAVAILABLE`; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `422`, `401`, en el S1 también `409` y `429`, cualquier otro `5xx`, error de red o respuesta que no valida → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar el cuerpo, `message` o cabeceras de rag.
 
 #### Scenario: El LLM local no disponible se responde como 503 sin registro [US-053 AC-4] [S1 resp. 12]
 - **GIVEN** `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-llm-local-no-disponible.json`
@@ -136,3 +136,12 @@ Persistir un análisis de evidencia MUST NOT insertar filas en `clinical.clinica
 - **AND** existe el `ai_analysis_record` del análisis
 
 Regresión [AC-11.4 timeline con el evento derivado] activa desde S3 (US-088).
+
+### Requirement: El 422 TIPO_CANCER_NO_REGISTRADO de rag-orchestrator conserva su código
+`mapearFalloRag()` MUST traducir un `422` de `rag-orchestrator` con `error = TIPO_CANCER_NO_REGISTRADO` a `422 TIPO_CANCER_NO_REGISTRADO` de `clinical-api` con su mensaje fijo, no a `502`; SHALL NOT persistir un `AIAnalysisRecord` ni hacer eco del `message` de rag (`[S1 resp. 35]`).
+
+#### Scenario: Un 422 TIPO_CANCER_NO_REGISTRADO de rag-orchestrator se responde como 422 con el mismo código y sin eco [US-053 AC-4] [S1 resp. 35]
+- **GIVEN** `rag-orchestrator` simulado respondiendo `422` desde `contracts/examples/rag-tipo-cancer-no-registrado.json` (L1D-106) con un `message` con texto interno sintético
+- **WHEN** se envía `Q-HER2`
+- **THEN** la respuesta es `422` con `error = TIPO_CANCER_NO_REGISTRADO`, el `message` fijo de `error-tipo-cancer-no-registrado.json` y el `traceId` generado, válida contra el spec de `clinical-api` (*helper* de L1D-164), sin el texto interno de rag
+- **AND** no se persiste ningún registro

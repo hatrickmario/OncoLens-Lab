@@ -71,8 +71,8 @@ context: |
   - RN-02: sin chunks sobre el umbral → "sin_evidencia" sin invocar al LLM (top_relevance_score = null).
   - RN-03/RN-28: relevance_score es metadato secundario; las opciones se ordenan por aplicabilidad
     (estados Coincide / Parcial / No coincide / Desconocido), nunca por puntaje clínico.
-  - RN-19/RN-23: lenguaje no prescriptivo; aviso "Análisis generado por IA: requiere validación
-    clínica del oncólogo tratante" (literal en configuración, B-06).
+  - RN-19/RN-23: lenguaje no prescriptivo; aviso "Generado por IA; requiere validación clínica
+    independiente por el oncólogo tratante." (literal en configuración, PRD E-11).
   - RN-15: opt-out de analisis_ia → 403 en toda generación con IA (control desde S6, marcas por CLI).
   - RN-22: todo valor "a calibrar" vive en configuración, nunca en código.
   - RN-26: los avisos clínicos no bloquean. RN-27: sin mapeo terminológico → `no_mapeado`.

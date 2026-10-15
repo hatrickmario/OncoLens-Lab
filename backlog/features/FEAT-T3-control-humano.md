@@ -19,6 +19,9 @@
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
+> **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 33]`):** la lista se amplía por **forma**: al nivel A (salida generada, UI, prompts y contratos) van imperativos, modales y recomendación impersonal o no atribuida, con variantes de género, número, conjugación y negación; al nivel B (solo textos propios de la UI y prompts) van los infinitivos y verbos descriptivos que la evidencia usa al describir ("administrar", "offer", "standard of care"…). Lista completa: [`../sprints/S1-plan.md`](../sprints/S1-plan.md) §7, resp. 33.
+
+
 ## Story
 Como oncólogo, quiero que la herramienta describa lo que dice la evidencia sin decirme
 qué tratamiento darle a mi paciente, para conservar el control de la decisión clínica.
@@ -72,6 +75,8 @@ AC-2), Playwright contra Compose en perfil de test (AC-3, AC-4) y PR de prueba e
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 >
+> **Decidido (usuario, 2026-10-14, `[S1 resp. 32]`, validación de los oncólogos asesores):** el literal pasa a "Generado por IA; requiere validación clínica independiente por el oncólogo tratante." (PRD E-11, que supera a B-06 y a la decisión siguiente). "Uso académico/investigación" sigue visible y permanente.
+>
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 9]`):** el literal es el de PRD B-06 y AC-T3.1, "Análisis generado por IA: requiere validación clínica del oncólogo tratante" (dos puntos), y `disclaimer` lleva **solo** esa frase ("Uso académico/investigación" es una etiqueta aparte). El change de esta historia incluye una tarea de **contratos** (skill `sync-contracts`, cambio compatible, solo texto): corregir la descripción de `disclaimer` en `apps/clinical-api/openapi.yaml` (y su par en Backend 2, si existe) y el campo en los ejemplos de `contracts/examples/` que usan la raya. Supersede la fila C-14.
 
 ## Story
@@ -81,8 +86,8 @@ análisis automático con un criterio clínico validado.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado un análisis `con_evidencia` en el panel, cuando se
-  renderiza, entonces se lee "Análisis generado por IA: requiere validación clínica del
-  oncólogo tratante" junto al resultado, y el campo `disclaimer` de la respuesta tiene
+  renderiza, entonces se lee "Generado por IA; requiere validación clínica independiente por el
+  oncólogo tratante." junto al resultado (literal de PRD E-11, `[S1 resp. 32]`), y el campo `disclaimer` de la respuesta tiene
   exactamente ese texto. `[AC-T3.1]` `[RN-19]`
 - **AC-2 (borde · fuente única del literal)** · Dado `AI_DISCLAIMER_TEXT` en la
   configuración de `clinical-api`, cuando un test cambia su valor, entonces el campo

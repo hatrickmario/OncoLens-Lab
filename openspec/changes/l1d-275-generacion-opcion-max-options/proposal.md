@@ -9,7 +9,10 @@ AC-05.3 (parte S1), AC-10.1 (1 opción) · OL-02 · ADR-8, ADR-26 · US-225 AC-1
 Medido en: US-072 (fidelidad M-07.2, precisión de citas, M-10.1), US-073 (M-06.1, M-06.2) ·
 🔗 Regresión [RN-28] → US-125 AC-5 (activa desde S5) ·
 `[S1 resp. 11]` (el LLM no genera limitaciones en el S1) · `[S1 resp. 12]` (salida inválida → `503 LOCAL_LLM_UNAVAILABLE`) ·
-`[S1 resp. 15]` (RN-23 en dos niveles) · `[S1 resp. 17]` (nombres canónicos y orden de merge) · `[S1 resp. 18]` (`topRelevanceScore`).
+`[S1 resp. 15]` (RN-23 en dos niveles) · `[S1 resp. 17]` (nombres canónicos y orden de merge) · `[S1 resp. 18]` (`topRelevanceScore`) ·
+Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md` §7): `[S1 resp. 28]` presentación
+en la UI del `relevanceScore` de la opción · `[S1 resp. 34]` el prompt exige población y escenario en toda mención de lo
+que establece una guía, y `ai-eval-runner` lo mide (sin regla determinista nueva).
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 6]`, retro del Pre-S1 P-5):** US-055 (8) se parte por
 > superficie en recuperación (US-055, 5; change de L1D-106) y generación y recorte (**US-225**, 3; este
@@ -38,7 +41,10 @@ sprints (ADR-26).
   justificación, `chunkId` citados, síntesis); **sin `limitations`**: el LLM no genera limitaciones en el
   S1 `[S1 resp. 11]`. El LLM solo aporta `chunkId`, nunca metadatos de la fuente (RN-04). Las
   instrucciones del prompt se redactan en positivo y la plantilla no contiene términos de nivel A ni la
-  raíz de nivel B de RN-23 (lista de L1D-193, `[S1 resp. 15]`).
+  raíz de nivel B de RN-23 (lista de L1D-193, `[S1 resp. 15]`). **Atribución** `[S1 resp. 34]`: el prompt exige
+  que toda mención de lo que establece una guía incluya la **población y el escenario** ("…para pacientes con
+  [condición] en [escenario]"), atribuida a la fuente citada y nunca dirigida al paciente; `ai-eval-runner` mide
+  la tasa de menciones de guía sin población/escenario. No hay regla determinista nueva.
 - **Salida del LLM inválida o fuera de esquema → `503 LOCAL_LLM_UNAVAILABLE`** (`[S1 resp. 12]`), sin
   reintento silencioso ni respuesta parcial.
 - **Rama `con_evidencia` del pipeline** en `RAGOrchestratorService`: generación → etapa de validación
@@ -58,7 +64,9 @@ sprints (ADR-26).
   principal ascendente; el excedente se omite y **no** va a `discardedOptions` (`[S1 resp. 3]`). El
   número de opciones recortadas solo se registra en el log (`retrievalStats` es cerrado en el contrato).
   El `relevanceScore` de una opción es el de su cita válida más relevante (la cita principal): es un
-  metadato de esa cita, no una medida de la opción (RN-03).
+  metadato de esa cita, no una medida de la opción (RN-03). La UI (L1D-140) lo presenta como **"Orden basado en
+  la cita recuperada más relevante asociada a cada opción"** `[S1 resp. 28]`, con la ayuda de que no resume la
+  aplicabilidad, la eficacia ni la calidad global de la opción; este change no emite ese texto.
 - **Sin cambios de contrato:** `apps/rag-orchestrator/openapi.yaml` (congelado en US-033) ya declara todo
   lo que se emite.
 

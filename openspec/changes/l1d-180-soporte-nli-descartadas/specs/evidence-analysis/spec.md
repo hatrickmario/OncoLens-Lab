@@ -71,3 +71,12 @@ Antes del NLI, la `option`, cada afirmación de su `rationale` y cada limitació
 - **WHEN** `POST /rag/query` valida la respuesta
 - **THEN** `limitations = []` y `omittedClaims = 1`
 - **AND** `checkProhibitedTerms` sobre los campos generados de la respuesta (`CAMPOS_GENERADOS`, igual a `packages/clinical-language/origen-de-campos.json`) devuelve cero coincidencias
+
+### Requirement: El retiro por lenguaje se registra sin el texto retirado
+Por cada fragmento retirado por términos prohibidos, `rag-orchestrator` MUST registrar en el log el `ruleId` de la regla coincidente y la versión de la política de lenguaje (`version` de `terminos-prohibidos.json`), y SHALL NOT registrar el texto retirado ni el término (`[S1 resp. 29]`). La traza completa persistida es de US-150 (S6).
+
+#### Scenario: Un fragmento retirado por lenguaje registra ruleId y versión de la política sin su texto [S1 resp. 29] [RN-23] [RN-10]
+- **GIVEN** FX-06a-a, `Q-HER2`, un LLM falso cuya justificación de la opción contiene "recomendado para este paciente", el NLI falso en `entailment` y la captura de logs activa
+- **WHEN** `POST /rag/query` valida la opción
+- **THEN** los logs contienen un evento `fragmento_retirado_lenguaje` con el `traceId`, `campo = rationale`, `ruleId` igual al `id` de la entrada coincidente de `terminos-prohibidos.json` y `languagePolicyVersion` igual a la `version` de `terminos-prohibidos.json`
+- **AND** ningún registro de log contiene "recomendado para este paciente", el texto de la justificación, de la opción ni de la pregunta

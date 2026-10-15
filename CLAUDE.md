@@ -134,7 +134,7 @@ Los handlers de MSW y `respx` se construyen desde `contracts/examples/` (US-213)
 - **Sin chunks sobre el umbral → "sin evidencia" sin invocar al LLM ni al agente**, con `top_relevance_score = null` (RN-02); `null` ≠ `0.0`.
 - **`relevance_score`** = puntaje del *reranker* normalizado a [0,1], versionado, **metadato secundario** (RN-03): no ordena opciones ni mide solidez clínica. `clinical_evidence_score` reservado (TBD-09).
 - **Aplicabilidad sin puntaje clínico** (RN-28): estados por criterio (Coincide / Parcial / No coincide / Desconocido); orden determinista: menos excluyentes en No coincide → más Coincide → relevancia como desempate. La opción hereda su fuente más aplicable. La UI muestra el criterio de orden.
-- **Lenguaje no prescriptivo** (RN-23): encabezado "Opciones descritas en la evidencia"; nada de "recomendado para este paciente", "debe recibir", etc. Toda salida muestra "Análisis generado por IA — requiere validación clínica del oncólogo tratante" y "Uso académico/investigación" (RN-19).
+- **Lenguaje no prescriptivo** (RN-23): encabezado "Opciones descritas en la evidencia"; nada de "recomendado para este paciente", "debe recibir", etc. Toda salida muestra "Generado por IA; requiere validación clínica independiente por el oncólogo tratante" y "Uso académico/investigación" (RN-19).
 - **Códigos terminológicos solo del catálogo versionado**; sin mapeo → `no_mapeado`, nunca inventado ni descartado (RN-27).
 - **Solo chunks `is_current` se recuperan**; el histórico del corpus nunca se borra (RN-05).
 - **`Document` es la cola de extracción** (`SKIP LOCKED`, `attempts`, `processing_started_at`); `checksum` detecta duplicados (409). No hay broker. Carga múltiple: `POST …/documents/batch` (`207`).

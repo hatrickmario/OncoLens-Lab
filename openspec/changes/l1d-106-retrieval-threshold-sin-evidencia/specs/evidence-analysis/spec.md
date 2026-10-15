@@ -65,12 +65,12 @@ Si Milvus o el adapter de *embeddings* lanzan un error o no responden, `POST /ra
 - **WHEN** se procesa `Q-HER2` con contexto de mama
 - **THEN** responde `503` con `error = "RETRIEVAL_UNAVAILABLE"` y el cuerpo no contiene el texto de la pregunta
 
-### Requirement: Contexto sin diagnóstico responde sin_evidencia sin buscar
-Cuando `clinicalContext.diagnosis` es `null`, `POST /rag/query` MUST responder `200` con `status = sin_evidencia`, `evidenceOptions = []`, `topRelevanceScore = null` y una limitación con `origin = estructural`, sin consultar Milvus ni invocar al LLM: sin tipo de cáncer no se puede aplicar el filtro de `cancer_type_tags` y no se mezclan tipos de cáncer (OL-02, RN-02). (asumido, pendiente de confirmación)
+### Requirement: Contexto sin tipo de cáncer responde 422 sin buscar
+Cuando `clinicalContext.diagnosis` es `null`, `POST /rag/query` MUST responder `422` con `error = TIPO_CANCER_NO_REGISTRADO` sin generar *embeddings*, consultar Milvus ni invocar al LLM, y SHALL NOT responder `sin_evidencia`: sin tipo de cáncer no hay filtro de `cancer_type_tags` (OL-02). Defensa en profundidad del corte de `clinical-api` (`[S1 resp. 35]`).
 
-#### Scenario: Un contexto sin diagnóstico responde sin_evidencia con limitación estructural (asumido, pendiente de confirmación)
-- **GIVEN** FX-06a-a, un `clinicalContext` sintético con `diagnosis = null` y los adapters falsos de búsqueda y del LLM con contador de invocaciones
+#### Scenario: Un contexto sin diagnóstico responde 422 TIPO_CANCER_NO_REGISTRADO sin buscar ni invocar al LLM [S1 resp. 35] [OL-02]
+- **GIVEN** FX-06a-a, un `clinicalContext` sintético con `diagnosis = null` y los adapters falsos de *embeddings*, búsqueda y del LLM con contador de invocaciones
 - **WHEN** se procesa `Q-HER2`
-- **THEN** responde `200` con `status = sin_evidencia`, `topRelevanceScore = null` y una entrada en `limitations` con `origin = estructural`
-- **AND** el puerto de búsqueda y el adapter del LLM registran cero invocaciones
-- **AND** la respuesta valida contra `RagQueryInternalResponse`
+- **THEN** responde `422` con `error = "TIPO_CANCER_NO_REGISTRADO"`, `message` y `traceId`, y el cuerpo no contiene el texto de la pregunta
+- **AND** el adapter de *embeddings*, el puerto de búsqueda y el adapter del LLM registran cero invocaciones
+- **AND** la respuesta valida contra el `422` de `/rag/query` del `openapi.yaml` del proveedor y no es un `RagQueryInternalResponse` con `status = sin_evidencia`

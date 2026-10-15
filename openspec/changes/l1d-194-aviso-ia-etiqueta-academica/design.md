@@ -5,16 +5,21 @@
 US-069 (RN-19, AC-T3.1) pide dos textos distintos: el **aviso de IA**, que acompaña a toda salida generada y
 viaja en `EvidenceAnalysis.disclaimer`, y la **etiqueta** "Uso académico/investigación", permanente en
 toda página autenticada. El Pre-S1 congeló el contrato con un `disclaimer` que juntaba las dos frases con
-raya (`[Pre-S1 resp. 25]`); `[S1 resp. 9]` (2026-10-13) lo corrige: literal de B-06 con dos puntos, solo
-esa frase en el campo, etiqueta aparte. Pantalla de referencia: `docs/ux/S1/pantallas-s1.md` S1-08/09
+raya (`[Pre-S1 resp. 25]`); `[S1 resp. 9]` (2026-10-13) lo corrigió: literal de B-06 con dos puntos, solo
+esa frase en el campo, etiqueta aparte. La validación clínica de los oncólogos asesores `[S1 resp. 32]`
+(2026-10-14, `backlog/sprints/S1-plan.md` §7) fija el literal definitivo y supersede el de B-06 (PRD E-11),
+con "Uso académico/investigación" visible y permanente; `[S1 resp. 37]` fija la versión 1.3.1. Pantalla de referencia: `docs/ux/S1/pantallas-s1.md` S1-08/09
 (cabecera, posición 2 "Aviso IA", posición 7 "Pie" y tabla de estados) y `docs/ux/sistema-de-diseno.md`
 (`AiDisclaimer`, `AppHeader`). Sin desviaciones.
 
 ## Decisiones
 
-- **D1 · Literal (decidido, `[S1 resp. 9]`):** `AI_DISCLAIMER_TEXT` = "Análisis generado por IA: requiere
-  validación clínica del oncólogo tratante". Barato de revertir (configuración y texto): una sola opción,
-  sin alternativas. Descartado: mantener la raya de readme/RN-19 v1.2 (C-14, superada por B-06).
+- **D1 · Literal (decidido, `[S1 resp. 32]`, supersede `[S1 resp. 9]`):** `AI_DISCLAIMER_TEXT` = "Generado
+  por IA; requiere validación clínica independiente por el oncólogo tratante." (con el punto final, que
+  forma parte del literal). Barato de revertir (configuración y texto): una sola opción, sin alternativas.
+  Descartados: el literal de B-06 con dos puntos (`[S1 resp. 9]`, superado por E-11) y la raya de
+  readme/RN-19 v1.2 (C-14). El literal da cero coincidencias en los niveles A y B de la lista 1.2.0 de
+  L1D-193 (verificado allí como caso de conformidad).
 - **D2 · Fuente única (decidido, `[S1 resp. 3]`, US-069 AC-2):** el literal vive solo en la configuración de
   `clinical-api`; `web` lo pinta desde la respuesta. Descartado: constante en `web` (dos fuentes que
   divergen) y mensaje i18n del aviso en `apps/web/messages/es.json` (lo mismo).
@@ -29,7 +34,7 @@ esa frase en el campo, etiqueta aparte. Pantalla de referencia: `docs/ux/S1/pant
   (validación Zod de la configuración que crea L1D-104). Evita un `disclaimer` vacío, que el contrato
   prohíbe (`minLength: 1`).
 - **D5 · Regla de `contracts:check`:** `assertDisclaimerRequired` pasa de "tres subcadenas" a **igualdad
-  exacta** con el literal en los ejemplos; la descripción del schema debe mencionar `AI_DISCLAIMER_TEXT` y el
+  exacta** con el literal de `[S1 resp. 32]` en los ejemplos (el literal de B-06 pasa a ser hallazgo); la descripción del schema debe mencionar `AI_DISCLAIMER_TEXT` y el
   literal. El literal esperado vive como una constante de la regla (es el ejemplo no normativo del
   contrato; el runtime manda por configuración).
 
@@ -99,8 +104,8 @@ Zod/tipos generados) y los mocks MSW construidos desde `contracts/examples/` (US
 
 ```diff
  info:
--  version: 1.2.0            # vigente tras L1D-164 (1.1.0) y L1D-104 (1.2.0), [S1 resp. 17]
-+  version: 1.2.1            # patch: solo texto
+-  version: 1.3.0            # vigente tras L1D-164 (1.1.0), L1D-103 (1.2.0) y L1D-104 (1.3.0), [S1 resp. 37]
++  version: 1.3.1            # patch: solo texto
  ...
  EvidenceAnalysis:
    properties:
@@ -112,9 +117,9 @@ Zod/tipos generados) y los mocks MSW construidos desde `contracts/examples/` (US
 -        dos frases de RN-19: "Análisis generado por IA — requiere validación clínica del
 -        oncólogo tratante" y "Uso académico/investigación".
 +        Un solo texto configurable (AI_DISCLAIMER_TEXT, que manda sobre la redacción) con la
-+        frase de RN-19 en el literal de PRD B-06: "Análisis generado por IA: requiere validación
-+        clínica del oncólogo tratante". "Uso académico/investigación" es una etiqueta permanente
-+        de la UI y no forma parte de este campo.
++        frase de RN-19 en el literal validado (PRD E-11): "Generado por IA; requiere validación
++        clínica independiente por el oncólogo tratante.". "Uso académico/investigación" es una
++        etiqueta permanente de la UI y no forma parte de este campo.
  FollowUpTurn:
    properties:
      disclaimer:
@@ -131,7 +136,7 @@ Ejemplos (`contracts/examples/`): **todo ejemplo con `disclaimer`** `[S1 resp. 1
 
 ```diff
 -  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
-+  "disclaimer": "Análisis generado por IA: requiere validación clínica del oncólogo tratante",
++  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
 ```
 
 Sin rutas, códigos de estado ni errores nuevos. `rag-orchestrator/openapi.yaml`: sin cambios (no declara
@@ -141,13 +146,16 @@ extracto de readme §4 incluye la descripción, `contracts:readme-extract` regen
 extracto).
 
 **Fixtures de la regla** (`scripts/contracts/__fixtures__/parches/ac-17-lenguaje-anclaje.json`), porque su
-AC cambió en la spec (`[S1 resp. 9]`): "quita 'Uso académico/investigación'… → hallazgo" pasa a "agrega
-' · Uso académico/investigación' → hallazgo"; "dos puntos en lugar de raya → sin hallazgos" pasa a "raya en
-lugar de dos puntos → hallazgo"; se añade "ejemplo con el literal exacto → sin hallazgos". El commit lleva
-`Test-Removal: [S1 resp. 9] supersede la tolerancia de Pre-S1 resp. 25`.
+AC cambió en la spec (`[S1 resp. 9]`, `[S1 resp. 32]`): "quita 'Uso académico/investigación'… → hallazgo"
+pasa a "agrega ' · Uso académico/investigación' → hallazgo"; "dos puntos en lugar de raya → sin hallazgos"
+pasa a "literal anterior de B-06 (dos puntos) → hallazgo" y "raya → hallazgo"; se añaden "sin
+'independiente' o sin punto final → hallazgo" y "ejemplo con el literal exacto de `[S1 resp. 32]` → sin
+hallazgos". El commit lleva `Test-Removal: [S1 resp. 32] supersede el literal de S1 resp. 9 y la tolerancia
+de Pre-S1 resp. 25`.
 
-**`info.version` `[S1 resp. 17]`:** `clinical-api` 1.1.0 (L1D-164) → 1.2.0 (L1D-104) → **1.2.1** (este
-change) → 1.3.0 (L1D-203). Quien mergea segundo rebasa.
+**`info.version` `[S1 resp. 37]`** (sustituye al registro de `[S1 resp. 17]`): `clinical-api` 1.1.0
+(L1D-164) → 1.2.0 (L1D-103, `422 TIPO_CANCER_NO_REGISTRADO`) → 1.3.0 (L1D-104) → **1.3.1** (este change) →
+1.4.0 (L1D-203). Quien mergea segundo rebasa.
 
 ## Riesgos
 
@@ -155,8 +163,11 @@ change) → 1.3.0 (L1D-203). Quien mergea segundo rebasa.
   (raya) siguen verdes hasta que este change los cambie; si mergea después, debe leer el literal nuevo.
   Mitigación: el valor por defecto de `AI_DISCLAIMER_TEXT` y los ejemplos cambian en el mismo commit
   `contract(L1D-194)`, y los tests comparan contra la configuración, no contra una cadena copiada.
-- **Prosa con raya** en `readme.md` y `CLAUDE.md`: fuera de alcance; el PRD v1.4 manda. Nota para el cierre
-  del sprint (pendiente 2 del Gate 1).
+- **Prosa con el literal anterior** en `readme.md`, `CLAUDE.md` y `openspec/config.yaml`, y fila E-11 del
+  PRD con RN-19 y US-069: fuera de alcance de este change; las corrige la sesión principal `[S1 resp. 32]`.
+- **Ejemplos de otros changes con `disclaimer`** (p. ej. los de L1D-140): llevan el literal de
+  `[S1 resp. 32]`; si alguno se mergea antes que este change con el literal anterior, la regla de este
+  change lo marca y se corrige aquí, en el mismo commit `contract(L1D-194)`.
 - **E2E en la rama de L1D-140:** los Playwright de AC-1…AC-4 necesitan el panel; se implementan allí (importados);
   mientras tanto la evidencia del Gate 2 de este change son los tests de componente aislados y los de
   integración de `clinical-api`.

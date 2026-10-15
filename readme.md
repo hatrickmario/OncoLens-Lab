@@ -66,7 +66,7 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 
 - **Usuarios:** oncólogos (rol `doctor`) y administradores (rol `admin`). El piloto inicial es un grupo de **10 oncólogos**.
 - **Alcance clínico del piloto:** **cáncer de mama y de próstata**. **Leucemia** se agrega como tercer tipo cuando cumpla su criterio de "listo" (§3.3 #22). La captura de datos de **menores** se mantiene desde el MVP.
-- **Posicionamiento:** MVP académico con potencial de apoyo clínico real. Toda salida generada lleva el aviso *"Análisis generado por IA — requiere validación clínica del oncólogo tratante"* y la etiqueta *"Uso académico/investigación"*. El lenguaje es **no prescriptivo** (PRD RN-23).
+- **Posicionamiento:** MVP académico con potencial de apoyo clínico real. Toda salida generada lleva el aviso *"Generado por IA; requiere validación clínica independiente por el oncólogo tratante"* y la etiqueta *"Uso académico/investigación"*. El lenguaje es **no prescriptivo** (PRD RN-23).
 - **Solución objetivo:** ver [TO-BE](docs/TO-BE.md) (capacidades CAP-01 a CAP-19 por fase).
 
 **No-objetivos de esta versión:**
@@ -1195,7 +1195,7 @@ El proyecto crece como un *walking skeleton* iterativo e incremental: desde el S
 * **Cuando** el doctor escribe su pregunta y presiona "Analizar evidencia"
 * **Entonces** el sistema muestra al menos 1 opción bajo el encabezado "Opciones descritas en la evidencia", con al menos 1 fuente citada con nombre e identificador verificables (`sourceName`, `externalId`), en su idioma original
 * **Y** la "Relevancia de la evidencia" aparece como metadato secundario, rotulado así (§3.3 #8)
-* **Y** la salida lleva el aviso "Análisis generado por IA — requiere validación clínica del oncólogo tratante"
+* **Y** la salida lleva el aviso "Generado por IA; requiere validación clínica independiente por el oncólogo tratante"
 
 *Escenario 2: Sin evidencia suficiente*
 * **Dado que** el corpus semilla no contiene evidencia relevante para la pregunta formulada
@@ -1694,7 +1694,7 @@ Decisiones tomadas al detallar los tickets, cada una con sus alternativas descar
    - *Éxito:* encabezado "Opciones descritas en la evidencia", el criterio de orden visible ("Ordenadas por coincidencia con la población estudiada, no por eficacia", RN-28) y una `EvidenceOptionCard` por cada elemento de `evidenceOptions`, más el `AnalysisBasisPanel`.
    - *Sin evidencia* (`evidenceOptions: []`): mensaje explícito "No se encontró evidencia suficiente en las fuentes consultadas", sin tarjeta vacía ni texto que parezca una opción (HU-03, escenario 2), y la Base del análisis con lo que se buscó.
    - *Error:* `401` → redirección a login; `422` → mensaje junto al campo; `502`/`504`/fallo de red → mensaje genérico con opción de reintentar, sin detalles internos.
-5. Aviso fijo: *"Análisis generado por IA — requiere validación clínica del oncólogo tratante."* Ningún texto de UI usa formulaciones prescriptivas (RN-23); el botón es **"Analizar evidencia"**.
+5. Aviso fijo: *"Generado por IA; requiere validación clínica independiente por el oncólogo tratante."* Ningún texto de UI usa formulaciones prescriptivas (RN-23); el botón es **"Analizar evidencia"**.
 6. Accesibilidad: `label` asociado al textarea, resultado dentro de una región `aria-live="polite"`, navegación completa por teclado.
 7. Tests E2E (Playwright, 2.6) contra el stack de Compose con el seed: flujo feliz (login → paciente semilla (a) → pregunta → tarjeta con ≥ 1 cita) y flujo sin evidencia.
 

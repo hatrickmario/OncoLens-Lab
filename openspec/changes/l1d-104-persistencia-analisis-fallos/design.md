@@ -56,7 +56,8 @@ service.analizar(peticion, sesion)
    `missingCriticalData = []`, `priorAnalysesUsed = []`, `continuedWithWarning = continueWithWarning ?? false`.
    **Supuesto fijo del S1** (corrección del Gate 1): `construirBaseS1()` añade al final de `assumptions[]`
    `{ text: config.ANALYSIS_BASIS_S1_ASSUMPTION_TEXT, origin: regla_catalogo }`, con el literal "Datos del paciente
-   enviados como contexto: detalle y faltantes no evaluados en esta versión." en configuración (junto a
+   recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente
+   relevantes." `[S1 resp. 30]` en configuración (junto a
    `AI_DISCLAIMER_TEXT`), nunca en el código; así `patientDataUsed = []` y `missingCriticalData = []` no se leen como
    "no se usaron datos" ni "no faltan datos". El literal pasa `lint:lenguaje` (L1D-193; sin términos de nivel A ni
    B). `origin = regla_catalogo` porque el enum del contrato solo admite `regla_catalogo | llm_verificado` y el texto
@@ -82,7 +83,8 @@ service.analizar(peticion, sesion)
    | `503` con `error = LOCAL_LLM_UNAVAILABLE` | `503 LOCAL_LLM_UNAVAILABLE` (`error-llm-local-no-disponible.json`) |
    | `503` con `error = RETRIEVAL_UNAVAILABLE` (L1D-106) | `502 ERROR_SERVICIO_IA` |
    | `503` con `error = NLI_UNAVAILABLE` (L1D-180) | `502 ERROR_SERVICIO_IA` |
-   | `422` (validación o `tipo_no_habilitado`) | `502 ERROR_SERVICIO_IA` |
+   | `422` con `error = TIPO_CANCER_NO_REGISTRADO` (L1D-106, defensa en profundidad) | `422 TIPO_CANCER_NO_REGISTRADO` (`error-tipo-cancer-no-registrado.json`, L1D-103) `[S1 resp. 35]` |
+   | cualquier otro `422` (validación o `tipo_no_habilitado`) | `502 ERROR_SERVICIO_IA` |
    | `401` (token de servicio inválido) | `502 ERROR_SERVICIO_IA` |
    | cualquier otro `5xx` (incluido un `503` con código desconocido) | `502 ERROR_SERVICIO_IA` |
    | error de red (asumido) | `502 ERROR_SERVICIO_IA` |
@@ -94,9 +96,12 @@ service.analizar(peticion, sesion)
    En el S1 no hay ramas reservadas inertes: `409` y `429` caen explícitamente en `502` con su escenario, para que
    el comportamiento sea verificable y US-041/US-056 lo cambien por regresión, no por una rama sin probar.
    Ninguna fila persiste un `AIAnalysisRecord` ni hace eco del cuerpo, del `message` ni de las cabeceras de Backend 2.
+   La fila de `TIPO_CANCER_NO_REGISTRADO` `[S1 resp. 35]` es la única que conserva el código de rag: el caso no
+   tiene tipo de cáncer y decir `ERROR_SERVICIO_IA` mentiría sobre la causa; se responde con el mensaje fijo de
+   `clinical-api`, nunca con el `message` de rag. En el flujo normal no se alcanza (L1D-103 corta antes).
    Fallo de `persistirAnalisis()` → `500 ERROR_INTERNO`. Los cuerpos usan los mensajes fijos de los ejemplos
    (`error-servicio-ia.json`, `error-llm-local-no-disponible.json`, `error-deadline-vencido.json`,
-   `error-interno.json`) más el `traceId` generado; jamás el *stack* de Backend 2 o de PostgreSQL. El `504` propio de
+   `error-interno.json`, `error-tipo-cancer-no-registrado.json`) más el `traceId` generado; jamás el *stack* de Backend 2 o de PostgreSQL. El `504` propio de
    rag se trata como *timeout* porque significa que venció el `X-Request-Deadline` propagado.
 6. **Deadline** `[S1 resp. 13]`. `RAG_TIMEOUT_MS` (propuesta 30000; RN-22, en `src/config.ts`). El service calcula
    `deadline = clock.now() + RAG_TIMEOUT_MS` y lo pasa como el **parámetro tipado** `X-Request-Deadline` (ISO 8601)
@@ -129,7 +134,7 @@ responder desde la respuesta de Backend 2 (abre divergencia con lo persistido).
 
 - **Proveedor:** `clinical-api` (`POST /platform/evidence-analyses`); **consumidor:** `web` (L1D-139). **Proveedor:**
   `rag-orchestrator` (`POST /rag/query`); **consumidor:** `clinical-api` (sin cambios).
-- **Diff propuesto** de `apps/clinical-api/openapi.yaml` (`info.version` **1.1.0 → 1.2.0**, `[S1 resp. 17]`):
+- **Diff propuesto** de `apps/clinical-api/openapi.yaml` (`info.version` **1.2.0 → 1.3.0**, `[S1 resp. 37]`):
 
   ```diff
    /platform/evidence-analyses:
@@ -158,14 +163,15 @@ responder desde la respuesta de Backend 2 (abre divergencia con lo persistido).
   +        error: { type: string, const: ERROR_INTERNO }
   +        message: { type: string }
   +        traceId: { type: string }
-  # info.version: 1.1.0 (L1D-164) → 1.2.0 (este change); L1D-194 → 1.2.1 y L1D-203 → 1.3.0 [S1 resp. 17]
+  # info.version: 1.1.0 (L1D-164) → 1.2.0 (L1D-103) → 1.3.0 (este change); L1D-194 → 1.3.1 y L1D-203 → 1.4.0 [S1 resp. 37]
   ```
 
 - **Ejemplos:** nuevo `contracts/examples/error-interno.json`
   (`{"error":"ERROR_INTERNO","message":"No se pudo completar el análisis.","traceId":"req_…"}`) con entrada en
   `index.json` (`target: #/paths/~1platform~1evidence-analyses/post/responses/500`). Se reutilizan
   `error-servicio-ia.json`, `error-deadline-vencido.json`, `rag-query-con-evidencia.json`,
-  `rag-query-sin-evidencia.json`, `rag-token-servicio-invalido.json`, `con-evidencia-s1.json`, `sin-evidencia.json`.
+  `rag-query-sin-evidencia.json`, `rag-token-servicio-invalido.json`, `con-evidencia-s1.json`, `sin-evidencia.json`,
+  `error-tipo-cancer-no-registrado.json` (L1D-103) y `rag-tipo-cancer-no-registrado.json` (L1D-106) `[S1 resp. 35]`.
 - **Compatibilidad:** añadir una respuesta a una operación es aditivo; `oasdiff` no debe reportar incompatibilidad
   (ADR-26). Si la reporta, el change se detiene y se declara.
 - **Orden y archivos tocados** `[S1 resp. 17]`: `contracts:generate` (cliente, Zod y extracto del `readme.md` §4)
@@ -195,8 +201,8 @@ Ningún service importa Prisma ni un cliente HTTP concreto; los reciben por la *
 
 - **Contención con L1D-103 en los mismos archivos** (service, repository, `ports.ts`) → se implementa en la oleada
   siguiente sobre su rama mergeada; este change no redefine lo que L1D-103 crea.
-- **Choque de `info.version`** con L1D-164/L1D-194/L1D-203 → resuelto por el registro de versiones `[S1 resp. 17]`
-  (este change = 1.2.0); quien mergea segundo rebasa y regenera.
+- **Choque de `info.version`** con L1D-164/L1D-103/L1D-194/L1D-203 → resuelto por el registro de versiones
+  `[S1 resp. 37]` (este change = 1.3.0); quien mergea segundo rebasa y regenera.
 - **Fallo de persistencia en integración sin mockear Prisma** → se provoca en la BD real de test con un *trigger*
   temporal `BEFORE INSERT` que lanza `RAISE EXCEPTION` (creado y borrado por el test); el repository es real.
 

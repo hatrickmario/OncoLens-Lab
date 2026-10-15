@@ -71,10 +71,15 @@ Pipeline objetivo (readme §6 OL-02, readme l. 1594, FEAT-06a Contexto técnico)
    `RecuperacionNoDisponibleError` de `application/`, que el router responde con
    `ErrorRecuperacionNoDisponible` (`message` genérico, `traceId`, sin eco ni detalle del motor). Sin
    reintento silencioso ni respuesta parcial; el LLM no se invoca. Resuelve la antigua Open Question.
-9. **`clinicalContext.diagnosis = null` → `sin_evidencia` sin LLM** con una limitación `estructural`
-   de texto fijo de configuración: sin tipo de cáncer no hay filtro de `cancer_type_tags` y no se
-   mezclan tipos (RN-02, OL-02). No se consulta Milvus. **(asumido, pendiente de confirmación)**;
-   barato de revertir (una rama del service). Resuelve la antigua Open Question.
+9. **`clinicalContext.diagnosis = null` → `422 TIPO_CANCER_NO_REGISTRADO`** `[S1 resp. 35]` (validación
+   clínica de los oncólogos asesores, 2026-10-14; **sustituye** el supuesto anterior "`diagnosis = null`
+   → `sin_evidencia` estructural (asumido)"). Un caso sin tipo de cáncer **no** es "sin evidencia": sin
+   tipo no hay filtro de `cancer_type_tags`, no se mezclan tipos (OL-02) y presentarlo como ausencia de
+   evidencia confundiría al oncólogo. El service lanza `TipoCancerNoRegistradoError` de `application/`
+   **antes** de detectar idioma, generar *embeddings*, consultar Milvus o invocar al LLM; el router lo
+   responde con `ErrorTipoCancerNoRegistrado` (`message` genérico, `traceId`, sin eco). Es **defensa en
+   profundidad**: el gateway de `clinical-api` (L1D-103) ya corta antes con el mismo código, así que
+   en el flujo normal este `422` no se alcanza. Va en la **misma subida 1.2.0** que D8 `[S1 resp. 37]`.
 
 ## Privacidad y ownership
 
@@ -115,7 +120,27 @@ Pipeline objetivo (readme §6 OL-02, readme l. 1594, FEAT-06a Contexto técnico)
           oneOf:
             - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
             - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
+  "422":   # [S1 resp. 35], misma subida
+    description: >-
+      Cuerpo inválido (Pydantic); TIPO_NO_HABILITADO: cancerType fuera de ENABLED_CANCER_TYPES; o
+      TIPO_CANCER_NO_REGISTRADO: el contexto no tiene tipo de cáncer (diagnosis null). Los dos últimos
+      responden sin buscar ni invocar al LLM (defensa en profundidad).
+    content:
+      application/json:
+        schema:
+          oneOf:
+            - $ref: '#/components/schemas/ErrorTipoNoHabilitado'
+            - $ref: '#/components/schemas/ErrorValidacion'
+            - $ref: '#/components/schemas/ErrorTipoCancerNoRegistrado'
   # components.schemas
+  ErrorTipoCancerNoRegistrado:
+    type: object
+    additionalProperties: false
+    required: [error, message, traceId]
+    properties:
+      error: { type: string, const: TIPO_CANCER_NO_REGISTRADO }
+      message: { type: string }
+      traceId: { type: string }
   ErrorRecuperacionNoDisponible:
     type: object
     additionalProperties: false
@@ -124,7 +149,7 @@ Pipeline objetivo (readme §6 OL-02, readme l. 1594, FEAT-06a Contexto técnico)
       error: { type: string, const: RETRIEVAL_UNAVAILABLE }
       message: { type: string }
       traceId: { type: string }
-  # info.version: 1.1.0 (L1D-164) → 1.2.0 [S1 resp. 17]
+  # info.version: 1.1.0 (L1D-164) → 1.2.0 [S1 resp. 37]
   ```
   `/rag/follow-up`, `/case/summary` y `/documents/extract` no cambian. El resto de lo que emite esta
   historia (`RagQueryInternalResponse` con su `if/then` de `sin_evidencia`, `RagMeta.retrievalParams`,
@@ -132,12 +157,17 @@ Pipeline objetivo (readme §6 OL-02, readme l. 1594, FEAT-06a Contexto técnico)
 - **Ejemplo nuevo:** `contracts/examples/rag-recuperacion-no-disponible.json`
   (`{"error":"RETRIEVAL_UNAVAILABLE","message":"La recuperación de evidencia no está disponible.","traceId":"req_…"}`)
   con su entrada en `contracts/examples/index.json` (`spec: rag-orchestrator`,
-  `target: #/paths/~1rag~1query/post/responses/503`). Orden: editar el spec → ejemplo e índice →
-  `contracts:generate` → `contracts:check`.
+  `target: #/paths/~1rag~1query/post/responses/503`), y
+  `contracts/examples/rag-tipo-cancer-no-registrado.json`
+  (`{"error":"TIPO_CANCER_NO_REGISTRADO","message":"El contexto no tiene tipo de cáncer; no es posible filtrar la evidencia.","traceId":"req_…"}`)
+  con su entrada (`spec: rag-orchestrator`, `target: #/paths/~1rag~1query/post/responses/422`)
+  `[S1 resp. 35]`. Orden: editar el spec → ejemplos e índice → `contracts:generate` → `contracts:check`.
 - **Compatibilidad (ADR-26):** se conserva `ErrorLlmLocalNoDisponible` intacto como primera
   alternativa del `oneOf`; las alternativas son disjuntas por el `const` de `error`. `oasdiff` emite
   el **warning** `response-body-wrapped-in-one-of-original-preserved` (no un error); se declara aquí y
-  en el PR. La CI corre `oasdiff` con `--fail-on ERR`, así que no bloquea. Si reportara un `ERR`, se
+  en el PR. Añadir `ErrorTipoCancerNoRegistrado` al `oneOf` ya existente del `422` es aditivo (una
+  alternativa nueva en una respuesta; oasdiff, a lo sumo, `WARN`/`INFO`). La CI corre `oasdiff` con
+  `--fail-on ERR`, así que no bloquea. Si reportara un `ERR`, se
   detiene el change y se declara.
 - **Modelos Pydantic y cliente TS:** se regeneran del spec (`contracts:generate`), nunca a mano.
 - **Validación de respuestas:** cada respuesta de los tests de integración (`200 sin_evidencia`,
@@ -145,7 +175,8 @@ Pipeline objetivo (readme §6 OL-02, readme l. 1594, FEAT-06a Contexto técnico)
   contra el spec con el *helper* de L1D-164 (Pytest) `[S1 resp. 17]`; `contracts:verify-provider` no
   existe hasta US-214.
 - **Consumidor:** el mapeo en `clinical-api` (`RETRIEVAL_UNAVAILABLE` → `502 ERROR_SERVICIO_IA`, sin
-  persistir y sin eco) es de L1D-104 `[S1 resp. 12]`.
+  persistir y sin eco) es de L1D-104 `[S1 resp. 12]`; el `422 TIPO_CANCER_NO_REGISTRADO` se traduce a
+  `422` con el mismo código, no a `502` (L1D-104, `[S1 resp. 35]`).
 
 ## Evaluación
 
@@ -182,7 +213,8 @@ composición en `app/bootstrap.py`, no en `app/main.py`, `[S1 resp. 17]`).
 - [Requisitos de `evidence-analysis` añadidos en paralelo por otros changes] → nombres de requisito
   específicos de recuperación; el `## Purpose` de la capacidad es genérico para que el primer
   archivo que llegue no la sesgue.
-- [`diagnosis = null` en el contexto] → D9 (asumido, pendiente de confirmación).
+- [`diagnosis = null` en el contexto] → D9: `422 TIPO_CANCER_NO_REGISTRADO` `[S1 resp. 35]`; doble con el
+  corte de L1D-103, pero barato (una rama del service) y protege si un consumidor futuro omite el corte.
 - [Choque del `oneOf` del `503` con L1D-180 e `info.version`] → orden de merge 164 → 105 → 106 →
   179 → 275 → 180 `[S1 resp. 17]`: L1D-180 añade su alternativa al `oneOf` que deja este change y sube
   a 1.3.0; quien mergea segundo rebasa.
@@ -194,8 +226,9 @@ No hay datos ni esquema que migrar. Rollback: revertir el PR; `/rag/query` vuelv
 ## Open Questions
 
 - **Resuelta `[S1 resp. 12]`:** Milvus o *embeddings* caídos → `503 RETRIEVAL_UNAVAILABLE` (D8).
-- **Asumido, pendiente de confirmación:** `clinicalContext.diagnosis = null` → `sin_evidencia` sin
-  LLM con limitación estructural (D9). No es un AC de US-055.
+- **Resuelta `[S1 resp. 35]`:** `clinicalContext.diagnosis = null` → `422 TIPO_CANCER_NO_REGISTRADO`
+  sin buscar ni invocar al LLM (D9), en lugar del supuesto anterior (`sin_evidencia` estructural). No es
+  un AC de US-055; se apoya en la validación clínica.
 
 ## Regresiones anotadas (no son escenarios de este change)
 
