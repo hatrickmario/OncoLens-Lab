@@ -52,28 +52,28 @@ class Trabajo:
 
 
 class Fabrica(Protocol):
-    def embedder(self, trabajo: Trabajo, config: ConfigMedicion) -> Embedder: ...
-    def tokenizador(self, trabajo: Trabajo) -> Tokenizador: ...
-    def reranker(self, trabajo: Trabajo, config: ConfigMedicion) -> Reranker: ...
-    def nli(self, trabajo: Trabajo, config: ConfigMedicion) -> ClasificadorNli: ...
+    """Construye los envoltorios de un candidato ya exportado (sin depender de ``Trabajo`` ni de la configuración)."""
+
+    def embedder(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> Embedder: ...
+    def tokenizador(self, spec: ModeloSpec, directorio: Path) -> Tokenizador: ...
+    def reranker(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int) -> Reranker: ...
+    def nli(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> ClasificadorNli: ...
 
 
 class FabricaOnnx:
     """Envoltorios reales sobre ONNX Runtime."""
 
-    def embedder(self, trabajo: Trabajo, config: ConfigMedicion) -> Embedder:
-        return envoltorios.EmbedderOnnx(trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu)
+    def embedder(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> Embedder:
+        return envoltorios.EmbedderOnnx(spec, directorio, cuantizacion, hilos)
 
-    def tokenizador(self, trabajo: Trabajo) -> Tokenizador:
-        return envoltorios.TokenizadorModelo(trabajo.directorio_onnx, trabajo.spec.max_length)
+    def tokenizador(self, spec: ModeloSpec, directorio: Path) -> Tokenizador:
+        return envoltorios.TokenizadorModelo(directorio, spec.max_length)
 
-    def reranker(self, trabajo: Trabajo, config: ConfigMedicion) -> Reranker:
-        return envoltorios.RerankerOnnx(
-            trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu, config.reranker_max_length
-        )
+    def reranker(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int) -> Reranker:
+        return envoltorios.RerankerOnnx(spec, directorio, cuantizacion, hilos, max_length)
 
-    def nli(self, trabajo: Trabajo, config: ConfigMedicion) -> ClasificadorNli:
-        return envoltorios.NliOnnx(trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu)
+    def nli(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> ClasificadorNli:
+        return envoltorios.NliOnnx(spec, directorio, cuantizacion, hilos)
 
 
 def _sin_evidencia_resumen(valores: Sequence[float]) -> dict[str, Any]:
@@ -108,7 +108,7 @@ def _calidad_embeddings(
     fabrica: Fabrica,
     reloj: Reloj,
 ) -> dict[str, Any]:
-    tokenizador = fabrica.tokenizador(trabajo)
+    tokenizador = fabrica.tokenizador(trabajo.spec, trabajo.directorio_onnx)
     variante = Variante(config.chunking.tamano, config.chunking.solapamiento_pct, config.chunking.estrategia)
     admitidas, omitidas = variantes_admitidas([variante], tokenizador)
     if not admitidas:
@@ -145,7 +145,7 @@ def _guardar_candidatos(trabajo: Trabajo, chunks: Sequence[ChunkCandidato], rank
 def _trabajo_embeddings(
     trabajo: Trabajo, config: ConfigMedicion, dataset: Dataset, secciones: dict[str, Sequence[Seccion]], fabrica: Fabrica, reloj: Reloj
 ) -> dict[str, Any]:
-    embedder = fabrica.embedder(trabajo, config)
+    embedder = fabrica.embedder(trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu)
     rss_carga = MonitorRss().actual_mb()
     preguntas = entradas_espaciadas([p for p in _preguntas_con_respuesta(dataset) if p.idioma == "es"], config.consultas_por_corrida)
     consultas = [f"{p.texto}\n{config.contexto_resumen}" for p in preguntas if isinstance(p, Pregunta)]
@@ -172,7 +172,7 @@ def _trabajo_reranker(trabajo: Trabajo, config: ConfigMedicion, dataset: Dataset
     chunks = json.loads((trabajo.candidatos_dir / "chunks.json").read_text(encoding="utf-8"))
     rankings = {k: [(int(i), float(s)) for i, s in v] for k, v in json.loads((trabajo.candidatos_dir / "rankings.json").read_text(encoding="utf-8")).items()}
     candidatos = [ChunkCandidato(c["documento"], c["texto"], c["seccion"], 0) for c in chunks]
-    reranker = fabrica.reranker(trabajo, config)
+    reranker = fabrica.reranker(trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu, config.reranker_max_length)
     rss_carga = MonitorRss().actual_mb()
     preguntas = entradas_espaciadas(_preguntas_con_respuesta(dataset), config.lotes_reranker_por_corrida)
     lotes = [(p.texto, [candidatos[i].texto for i, _ in rankings[p.id][: config.reranker_max_pairs]]) for p in preguntas if isinstance(p, Pregunta)]
@@ -192,7 +192,7 @@ def _trabajo_reranker(trabajo: Trabajo, config: ConfigMedicion, dataset: Dataset
 
 
 def _trabajo_nli(trabajo: Trabajo, config: ConfigMedicion, dataset: Dataset, fabrica: Fabrica, reloj: Reloj) -> dict[str, Any]:
-    clasificador = fabrica.nli(trabajo, config)
+    clasificador = fabrica.nli(trabajo.spec, trabajo.directorio_onnx, trabajo.cuantizacion, config.hilos_cpu)
     rss_carga = MonitorRss().actual_mb()
     pares = [(c[0], c[1]) for c in casos_nli(dataset.pares_nli)]
     lotes = [pares[i : i + config.tamano_lote_nli] for i in range(0, len(pares), config.tamano_lote_nli)]

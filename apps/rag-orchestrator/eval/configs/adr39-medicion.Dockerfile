@@ -17,6 +17,10 @@ WORKDIR /work/apps/rag-orchestrator
 COPY requirements-eval.txt /tmp/requirements-eval.txt
 RUN pip install -r /tmp/requirements-eval.txt
 
+# Solo para EXPORTAR gte-multilingual-reranker-base (código remoto incompatible con transformers 5):
+# se usa mediante PYTHONPATH=/opt/tf4 en el proceso de exportación; la medición no importa transformers.
+RUN pip install --target /opt/tf4 'transformers>=4.50,<4.58' 'tokenizers<0.23'
+
 # El código se monta en /work desde el worktree (no se copia): el reporte se escribe en reports/adr39/.
 ENTRYPOINT ["python", "-m"]
 CMD ["app.scripts.adr39_measure", "--help"]

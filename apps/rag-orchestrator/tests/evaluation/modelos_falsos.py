@@ -7,8 +7,7 @@ import zlib
 from pathlib import Path
 
 import numpy as np
-from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec
-from app.evaluation.trabajos import Trabajo
+from app.evaluation.config_medicion import ModeloSpec
 
 DIM = 64
 
@@ -52,16 +51,16 @@ class NliFalso:
 
 
 class FabricaFalsa:
-    def embedder(self, trabajo: Trabajo, config: ConfigMedicion) -> EmbedderFalso:
+    def embedder(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> EmbedderFalso:
         return EmbedderFalso()
 
-    def tokenizador(self, trabajo: Trabajo) -> TokenizadorPalabras:
+    def tokenizador(self, spec: ModeloSpec, directorio: Path) -> TokenizadorPalabras:
         return TokenizadorPalabras()
 
-    def reranker(self, trabajo: Trabajo, config: ConfigMedicion) -> RerankerFalso:
+    def reranker(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int) -> RerankerFalso:
         return RerankerFalso()
 
-    def nli(self, trabajo: Trabajo, config: ConfigMedicion) -> NliFalso:
+    def nli(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> NliFalso:
         return NliFalso()
 
 

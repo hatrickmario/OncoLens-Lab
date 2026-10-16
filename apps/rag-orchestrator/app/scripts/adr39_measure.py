@@ -78,11 +78,15 @@ def exportar_en_subproceso(spec: ModeloSpec, destino: Path) -> None:
         entorno["PYTHONPATH"] = os.pathsep.join(filter(None, [spec.export_pythonpath, entorno.get("PYTHONPATH", "")]))
     from app.evaluation.exportar_onnx import spec_a_json
 
-    subprocess.run(
-        [sys.executable, "-m", "app.evaluation.exportar_onnx", "--spec", spec_a_json(spec), "--destino", str(destino)],
-        check=True,
-        env=entorno,
-    )
+    for fase, marca in (("fp32", "export-fp32.json"), ("int8", "export.json")):  # cada fase en su proceso
+        if (destino / marca).exists():
+            continue
+        entorno_fase = entorno if fase == "fp32" else {k: v for k, v in entorno.items() if k != "PYTHONPATH"}
+        subprocess.run(
+            [sys.executable, "-m", "app.evaluation.exportar_onnx", "--spec", spec_a_json(spec), "--destino", str(destino), "--fase", fase],
+            check=True,
+            env=entorno_fase,
+        )
 
 
 def lanzar_en_subproceso(trabajo: Trabajo, ruta_config: Path, cache_datos: Path) -> None:
