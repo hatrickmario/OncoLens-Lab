@@ -1,8 +1,9 @@
 /**
  * Regla del prefijo de las bases de test (US-035 D2, [S1 resp. 14b]). Es la MISMA que scripts/lib/pg-test-prefix.sh:
  * pg_hba.test.conf admite `/^<prefijo>` como base de datos, así que un prefijo que case con la base clínica,
- * `postgres` o `template*` daría al arnés acceso a una base que no es suya. Una sola constante en el arnés; el test
- * unitario `prefijo-test-db.test.ts` comprueba que no diverge del script.
+ * `postgres` o `template*` daría al arnés acceso a una base que no es suya. Una sola constante en el arnés; los
+ * datos de la regla viven en el script (BASES_RESERVADAS_TEST_DB) y `tests/unit/arnes-bd.test.ts` comprueba la paridad
+ * de veredicto por comportamiento.
  */
 export const PATRON_PREFIJO_TEST_DB = /^[a-z][a-z0-9_]{2,}$/;
 

@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { leerConfiguracionArnes } from '../support/db.js';
 import {
   ErrorArnes,
-  PATRON_PREFIJO_TEST_DB,
   validarNombreBaseDeTest,
   validarPrefijoTestDb,
 } from '../support/prefijo-test-db.js';
@@ -25,12 +25,41 @@ describe('validarPrefijoTestDb', () => {
   it('acepta el prefijo por defecto oltest_ cuando no casa con ninguna base reservada', () => {
     expect(() => validarPrefijoTestDb('oltest_', 'oncolens')).not.toThrow();
   });
+});
 
-  it('usa la misma regex que scripts/lib/pg-test-prefix.sh cuando se compara con el script', () => {
-    const script = readFileSync(new URL('../../../../scripts/lib/pg-test-prefix.sh', import.meta.url), 'utf8');
-    const patron = /PATRON_PREFIJO_TEST_DB='([^']+)'/.exec(script)?.[1];
+// Paridad por COMPORTAMIENTO con scripts/lib/pg-test-prefix.sh: la misma tabla de casos, el mismo veredicto.
+describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
+  const SCRIPT = fileURLToPath(new URL('../../../../scripts/lib/pg-test-prefix.sh', import.meta.url));
+  const CASOS: Array<[string, string]> = [
+    ['.*', 'oncolens'],
+    ['Ab', 'oncolens'],
+    ['oncolens', 'oncolens'],
+    ['post', 'oncolens'],
+    ['template', 'oncolens'],
+    ['templ', 'oncolens'],
+    ['postgres_x', 'oncolens'],
+    ['oltest_', 'oncolens'],
+    ['oltest_;DROP', 'oncolens'],
+  ];
 
-    expect(patron).toBe(PATRON_PREFIJO_TEST_DB.source);
+  const veredictoDelScript = (prefijo: string, baseClinica: string): boolean =>
+    spawnSync('bash', ['-c', 'source "$0"; validar_prefijo_test_db "$1" "$2"', SCRIPT, prefijo, baseClinica], { encoding: 'utf8' })
+      .status === 0;
+  const veredictoDelArnes = (prefijo: string, baseClinica: string): boolean => {
+    try {
+      validarPrefijoTestDb(prefijo, baseClinica);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  it.each(CASOS)('da el mismo veredicto que el script cuando el prefijo es %j y la base clínica %j', (prefijo, baseClinica) => {
+    expect(veredictoDelArnes(prefijo, baseClinica)).toBe(veredictoDelScript(prefijo, baseClinica));
+  });
+
+  it('acepta solo oltest_ de la tabla de casos', () => {
+    expect(CASOS.filter(([prefijo, base]) => veredictoDelScript(prefijo, base)).map(([prefijo]) => prefijo)).toEqual(['oltest_']);
   });
 });
 
