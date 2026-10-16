@@ -24,3 +24,5 @@ RUN pip install --target /opt/tf4 'transformers>=4.50,<4.58' 'tokenizers<0.23'
 # El código se monta en /work desde el worktree (no se copia): el reporte se escribe en reports/adr39/.
 ENTRYPOINT ["python", "-m"]
 CMD ["app.scripts.adr39_measure", "--help"]
+
+RUN pip install pymilvus

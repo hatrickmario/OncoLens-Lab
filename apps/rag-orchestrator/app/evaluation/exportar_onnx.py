@@ -92,6 +92,8 @@ def exportar_fp32(spec: ModeloSpec, destino: Path) -> dict[str, Any]:
     shutil.copy(hf_hub_download(spec.modelo, "tokenizer.json", revision=spec.revision), destino / "tokenizer.json")
     shutil.copy(hf_hub_download(spec.modelo, "config.json", revision=spec.revision), destino / "config.json")
     rapido = Tokenizer.from_file(str(destino / "tokenizer.json"))
+    rapido.no_padding()  # algunos tokenizer.json (gte) traen relleno fijo a la longitud máxima
+    rapido.no_truncation()
     tokenizador_igual = all(tok(s)["input_ids"] == rapido.encode(s).ids for s in SONDAS) and (
         tok(*SONDAS_PAR)["input_ids"] == rapido.encode(*SONDAS_PAR).ids
     )
@@ -134,6 +136,18 @@ def exportar_fp32(spec: ModeloSpec, destino: Path) -> dict[str, Any]:
     return parcial
 
 
+def _quitar_formas_inferidas(ruta: Path) -> None:
+    """Borra ``value_info`` (formas intermedias del exportador): en algunos clasificadores contradice la inferencia de onnx.
+
+    Solo reescribe el grafo; los pesos siguen en su archivo de datos externo, sin cargarlos.
+    """
+    import onnx
+
+    modelo = onnx.load(str(ruta), load_external_data=False)
+    del modelo.graph.value_info[:]
+    onnx.save(modelo, str(ruta))
+
+
 def cuantizar_int8(spec: ModeloSpec, destino: Path) -> dict[str, Any]:
     """Cuantización dinámica int8 de los pesos de MatMul con ONNX Runtime; compara con fp32 y deja ``export.json``."""
     import numpy as np
@@ -146,9 +160,9 @@ def cuantizar_int8(spec: ModeloSpec, destino: Path) -> dict[str, Any]:
     (destino / "int8").mkdir(exist_ok=True)
     ruta_int8 = destino / "int8" / "model.onnx"
     # Solo MatMul: con todos los operadores (Gather incluido) el cuantizador de ONNX Runtime 1.31 supera 7 GB de RAM en BGE-M3.
-    quantize_dynamic(
-        str(ruta_fp32), str(ruta_int8), weight_type=QuantType.QInt8, use_external_data_format=True, op_types_to_quantize=["MatMul"]
-    )
+    opciones: dict[str, Any] = {"weight_type": QuantType.QInt8, "use_external_data_format": True, "op_types_to_quantize": ["MatMul"]}
+    _quitar_formas_inferidas(ruta_fp32)
+    quantize_dynamic(str(ruta_fp32), str(ruta_int8), **opciones)
 
     tokenizador = Tokenizer.from_file(str(destino / "tokenizer.json"))
     if spec.tarea in ("reranker_cls", "nli"):
