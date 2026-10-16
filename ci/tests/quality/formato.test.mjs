@@ -6,10 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { FIXTURES_FORMATO, RAIZ, binLocal, copiarFixtures, ejecutar, prettier, ruff } from './soporte.mjs';
 
 const ASTDE = 'import ast,sys;print(ast.dump(ast.parse(open(sys.argv[1]).read())))';
-const astDe = (archivo) => ejecutar('python3', ['-I', '-c', ASTDE, archivo]).salida;
+const astDe = (archivo) => ejecutar('python3', ['-I', '-c', ASTDE, archivo]);
 
 describe('formato de los fixtures', () => {
-  it('format:check falla y nombra el archivo cuando un .ts/.tsx no está formateado [US-215 AC-4]', () => {
+  it('prettier --check falla y nombra el archivo cuando un .ts/.tsx no está formateado [US-215 AC-4]', () => {
     const carpeta = copiarFixtures(['sin-formato.ts', 'sin-formato.tsx']);
 
     const resultado = prettier('--check', ['sin-formato.ts', 'sin-formato.tsx'], carpeta);
@@ -19,7 +19,7 @@ describe('formato de los fixtures', () => {
     expect(resultado.salida).toContain('sin-formato.tsx');
   });
 
-  it('format:check falla y nombra el archivo cuando un .py no está formateado [US-215 AC-4]', () => {
+  it('ruff format --check falla y nombra el archivo cuando un .py no está formateado [US-215 AC-4]', () => {
     const carpeta = copiarFixtures(['sin-formato.py']);
 
     const resultado = ruff(['--check'], ['sin-formato.py'], carpeta);
@@ -28,7 +28,7 @@ describe('formato de los fixtures', () => {
     expect(resultado.salida).toContain('sin-formato.py');
   });
 
-  it('format corrige los .ts/.tsx y conserva el comportamiento de la función [US-215 AC-4]', async () => {
+  it('prettier --write corrige los .ts/.tsx y conserva el comportamiento de la función [US-215 AC-4]', async () => {
     const carpeta = copiarFixtures(['sin-formato.ts', 'sin-formato.tsx']);
     const antes = (await import(pathToFileURL(path.join(FIXTURES_FORMATO, 'sin-formato.ts')).href)).sumarTotales;
 
@@ -42,15 +42,17 @@ describe('formato de los fixtures', () => {
     );
   });
 
-  it('format corrige el .py y conserva el mismo AST [US-215 AC-4]', () => {
+  it('ruff format corrige el .py y conserva el mismo AST [US-215 AC-4]', () => {
     const carpeta = copiarFixtures(['sin-formato.py']);
     const astAntes = astDe(path.join(carpeta, 'sin-formato.py'));
 
     expect(ruff([], ['sin-formato.py'], carpeta).estado).toBe(0);
 
     expect(ruff(['--check'], ['sin-formato.py'], carpeta).estado).toBe(0);
-    expect(astAntes).not.toBe('');
-    expect(astDe(path.join(carpeta, 'sin-formato.py'))).toBe(astAntes);
+    expect(astAntes.estado, astAntes.salida).toBe(0);
+    const astDespues = astDe(path.join(carpeta, 'sin-formato.py'));
+    expect(astDespues.estado, astDespues.salida).toBe(0);
+    expect(astDespues.salida).toBe(astAntes.salida);
   });
 
   it('ninguna regla de estilo marca un archivo formateado por Prettier [US-215 AC-5]', async () => {
