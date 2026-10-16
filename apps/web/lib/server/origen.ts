@@ -1,6 +1,7 @@
 import 'server-only';
 import type { ConfigWeb } from './config';
 import type { Registrar } from './registro';
+import { respuestaPropia } from './respuestas';
 
 export interface DependenciasOrigen {
   config: Pick<ConfigWeb, 'allowedOrigin'>;
@@ -21,8 +22,8 @@ export function verificarOrigen(request: Request, dependencias: DependenciasOrig
   }
   const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({ event: dependencias.evento, status: 403, traceId, motivo: 'origen' });
-  return Response.json(
+  return respuestaPropia(
     { error: 'PERMISO_DENEGADO', message: 'La solicitud no está permitida desde este origen.', traceId },
-    { status: 403 },
+    403,
   );
 }

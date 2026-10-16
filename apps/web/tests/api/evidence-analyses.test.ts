@@ -164,10 +164,17 @@ describe('POST /api/evidence-analyses', () => {
   });
 
   it('responde 502 propio y no un 200 vacío cuando el cuerpo de una respuesta 2xx se corta [US-060 AC-4]', async () => {
-    clinicalApi.responderCuerpoSinFin();
-    const { dependencias } = crearDependenciasDeTest({
-      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 100, maxBodyBytes: 32768 },
-    });
+    // MSW traga los errores de stream; el corte se simula en el borde del fetch inyectado.
+    const fetchConCorte: typeof globalThis.fetch = () => {
+      const cuerpo = new ReadableStream<Uint8Array>({
+        start: (controlador) => {
+          controlador.enqueue(new TextEncoder().encode('{"id":'));
+          controlador.error(new Error('conexion cortada'));
+        },
+      });
+      return Promise.resolve(new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    };
+    const { dependencias } = crearDependenciasDeTest({ fetch: fetchConCorte });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 

@@ -6,7 +6,7 @@ export interface LineaDeRegistro {
   status: number;
   traceId?: string;
   duracionMs?: number;
-  motivo?: 'origen' | 'clinical_api_inalcanzable';
+  motivo?: 'origen' | 'clinical_api_inalcanzable' | 'cuerpo_excesivo';
 }
 
 export type Registrar = (linea: LineaDeRegistro) => void;

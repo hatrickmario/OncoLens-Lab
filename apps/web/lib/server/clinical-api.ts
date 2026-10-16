@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient, type Client } from '../../../../packages/api-contracts/src/client-web/clinical-api/client';
 import type { ConfigWeb } from './config';
+import { respuestaPropia } from './respuestas';
 
 export const NOMBRE_COOKIE_DE_SESION = 'oncolens_session';
 
@@ -66,14 +67,20 @@ export function crearFetchJsonHaciaClinicalApi(opciones: OpcionesFetchClinicalAp
   };
 }
 
+export interface SdkClinicalApi {
+  client: Client;
+  /** Texto exacto que envió clinical-api (el SDK parsea y reserializaría los cuerpos); `undefined` si no se pudo leer. */
+  cuerpoCrudo(respuesta: Response): string | undefined;
+}
+
 /** Única forma de llamar a clinical-api desde web: el SDK generado del contrato con el fetch de lista blanca. */
 export function crearSdkClinicalApi(
   config: Pick<ConfigWeb, 'clinicalApiUrl' | 'upstreamTimeoutMs'>,
   dependencias: { request?: Request; fetch: typeof globalThis.fetch },
-): Client {
+): SdkClinicalApi {
   const cookieDeSesion =
     dependencias.request === undefined ? undefined : cabeceraCookieDeSesion(dependencias.request);
-  return createClient({
+  const client = createClient({
     baseUrl: config.clinicalApiUrl,
     fetch: crearFetchJsonHaciaClinicalApi({
       fetch: dependencias.fetch,
@@ -81,16 +88,18 @@ export function crearSdkClinicalApi(
       ...(cookieDeSesion !== undefined && { cookieDeSesion }),
     }),
   });
+  const crudos = new WeakMap<Response, string>();
+  client.interceptors.response.use(async (respuesta) => {
+    crudos.set(respuesta, await respuesta.clone().text());
+    return respuesta;
+  });
+  return { client, cuerpoCrudo: (respuesta) => crudos.get(respuesta) };
 }
 
 /** 502 propio del BFF (ErrorServicioIa del contrato): sin URL interna, sin mensaje del error de red. */
 export function respuestaDeFalloDeTransporte(traceId: string): Response {
-  return Response.json(
-    {
-      error: 'ERROR_SERVICIO_IA',
-      message: 'El servicio de IA no respondió correctamente.',
-      traceId,
-    },
-    { status: 502 },
+  return respuestaPropia(
+    { error: 'ERROR_SERVICIO_IA', message: 'El servicio de IA no respondió correctamente.', traceId },
+    502,
   );
 }

@@ -63,36 +63,6 @@ export function crearClinicalApiSimulado() {
           return new HttpResponse(texto, { status, headers: cabeceras ?? {} });
         }),
       ),
-    /** Cabeceras 200 y un cuerpo que empieza y nunca termina (corte durante la lectura). */
-    responderCuerpoSinFin: () =>
-      servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
-          await capturar(request);
-          const cuerpo = new ReadableStream<Uint8Array>({
-            start: (controlador) => controlador.enqueue(new TextEncoder().encode('{"id":')),
-          });
-          return new HttpResponse(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }),
-      ),
-    /** Responde con texto crudo (sin pasar por JSON.stringify), para comprobar que no se reserializa. */
-    responderTexto: ({ status, texto, cabeceras }: { status: number; texto: string | null; cabeceras?: Record<string, string> }) =>
-      servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
-          await capturar(request);
-          return new HttpResponse(texto, { status, headers: cabeceras ?? {} });
-        }),
-      ),
-    /** Cabeceras 200 y un cuerpo que empieza y nunca termina (corte durante la lectura). */
-    responderCuerpoSinFin: () =>
-      servidor.use(
-        http.post(RUTA_UPSTREAM, async ({ request }) => {
-          await capturar(request);
-          const cuerpo = new ReadableStream<Uint8Array>({
-            start: (controlador) => controlador.enqueue(new TextEncoder().encode('{"id":')),
-          });
-          return new HttpResponse(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }),
-      ),
     fallarConErrorDeRed: () =>
       servidor.use(
         http.post(RUTA_UPSTREAM, async ({ request }) => {
