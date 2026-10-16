@@ -11,6 +11,7 @@ const opciones = {
         '**/lib/server/**',
         '@/lib/server',
         '@/lib/server/**',
+        './server',
         './server/**',
         'server-only',
       ],
@@ -27,6 +28,7 @@ const esTextoLiteral = (nodo) => nodo?.type === 'Literal' && typeof nodo.value =
 const esRequire = (nodo) => nodo.callee.type === 'Identifier' && nodo.callee.name === 'require';
 
 /**
+ * Límite conocido: una plantilla literal (import(`@/lib/server/${x}`)) no es un texto literal y no se revisa.
  * La regla nativa solo revisa `import`/`export … from`. Para `import()` y `require()` se le presenta el
  * módulo pedido como si fuera una declaración de import, con la posición de la llamada.
  */

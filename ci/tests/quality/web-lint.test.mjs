@@ -71,6 +71,7 @@ describe('lint del bloque web', () => {
 
   it.each([
     ['cliente-importa-barril.tsx', 'el barril @/lib/server'],
+    ['cliente-importa-barril-relativo.tsx', 'el barril relativo ./server'],
     ['cliente-import-dinamico.tsx', 'un import() dinámico'],
     ['cliente-require-server.tsx', 'un require()'],
   ])(
@@ -91,13 +92,17 @@ describe('lint del bloque web', () => {
     },
   );
 
-  it('aplica el bloque web a apps/web/app/page.tsx con la regla local y react/no-danger [US-215 AC-3]', async () => {
-    const configuracion = await new ESLint({ cwd: RAIZ }).calculateConfigForFile('apps/web/app/page.tsx');
+  it.each(['apps/web/app/page.tsx', 'apps/web/app/page.jsx'])(
+    'aplica el bloque web a %s con la regla local, react/no-danger y no-restricted-syntax [US-215 AC-3]',
+    async (archivo) => {
+      const { rules } = await new ESLint({ cwd: RAIZ }).calculateConfigForFile(archivo);
 
-    expect(Object.keys(configuracion.rules)).toEqual(
-      expect.arrayContaining(['react/no-danger', 'oncolens/no-restricted-imports-en-cliente']),
-    );
-  });
+      expect(Object.keys(rules)).toEqual(
+        expect.arrayContaining(['react/no-danger', 'oncolens/no-restricted-imports-en-cliente']),
+      );
+      expect(JSON.stringify(rules['no-restricted-syntax'])).toContain('dangerouslySetInnerHTML');
+    },
+  );
 
   it("no marca el import de lib/server cuando el módulo no tiene la directiva 'use client' [US-215 AC-3]", async () => {
     const resultado = await lintearFixture('servidor-importa-server.tsx');

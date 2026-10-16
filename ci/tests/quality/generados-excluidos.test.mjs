@@ -51,7 +51,8 @@ describe('lo generado queda fuera de Prettier, ESLint y Ruff', () => {
       .filter((a) => PYTHON.test(a))
       .filter((a) => {
         const resultado = ejecutar('ruff', ['format', '--check', '--force-exclude', path.join(RAIZ, a)], { cwd });
-        return resultado.salida.includes('Would reformat') || resultado.estado !== 0;
+        // Excluido: ruff sale con 0 y avisa de que no encontró archivos Python.
+        return resultado.estado !== 0 || !resultado.salida.includes('No Python files found');
       });
 
     expect(noExcluidos).toEqual([]);
