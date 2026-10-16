@@ -1,0 +1,1226 @@
+# Golden test set ADR-39 — mini-dataset v0.1 (borrador). Preguntas sintéticas sobre fuentes públicas con licencia registrada.
+# Fuente: preguntas del oncólogo asesor; citas literales verificadas contra el texto de cada documento.
+clase: sintetico
+proposito: evaluacion de recuperacion semantica (embeddings, chunking, indice) en ADR-39; no es una fuente de recomendaciones clinicas
+criterio_acierto: 'un chunk recuperado acierta si PERTENECE AL DOCUMENTO esperado y contiene la `cita` (normalizando espacios y puntuación); con varias citas, `modo_acierto: cualquiera` basta con una y `cobertura_documentos` mide cuántos de los documentos esperados aparecen en el top-k; `sin_evidencia`: no hay acierto, se mide el puntaje máximo recuperado para calibrar el umbral (RN-02); acierto por documento = métrica secundaria'
+atribucion: |
+  Texto: National Cancer Institute (NCI). Cada documento se publicó originalmente en la URL indicada.
+  Política de reutilización: https://www.cancer.gov/policies/copyright-reuse (texto libre de copyright, con crédito a NCI).
+  Se excluyen los gráficos. No se usa el logo de NCI ni la marca PDQ como rótulo de fuente.
+  Artículos de PMC: licencia CC BY (se cita autoría, revista y DOI en `documentos`). ClinicalTrials.gov: fuera de este conjunto hasta verificar sus términos de uso.
+documentos:
+  M11:
+    url: https://www.cancer.gov/types/breast/stages
+    emitido: '2025-08-06'
+  M12:
+    url: https://www.cancer.gov/types/breast/diagnosis
+    emitido: '2025-12-02'
+  M14:
+    url: https://www.cancer.gov/types/breast/treatment/by-stage
+    emitido: '2025-12-02'
+  M15:
+    url: https://www.cancer.gov/types/breast/treatment/targeted-therapy
+    emitido: '2025-12-02'
+  P11:
+    url: https://www.cancer.gov/types/prostate/patient/prostate-treatment-pdq
+    emitido: '2026-02-10'
+  P12:
+    url: https://www.cancer.gov/types/prostate/prostate-hormone-therapy-fact-sheet
+    emitido: '2024-10-10'
+  P13:
+    url: https://www.cancer.gov/types/prostate/psa-fact-sheet
+    emitido: '2024-12-12'
+  M01:
+    url: https://www.cancer.gov/types/breast/hp/breast-treatment-pdq
+    emitido: '2026-02-10'
+  P01:
+    url: https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq
+    emitido: '2026-02-10'
+  M02:
+    pmcid: PMC13115210
+    doi: 10.3390/curroncol33040200
+    titulo: 'Guidance for Canadian Breast Cancer Practice: National Consensus Recommendations for the Systemic Treatment of Patients with HER2+ Breast Cancer in Both the Early and Metastatic Settings (2025 Update).'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M03:
+    pmcid: PMC13290887
+    doi: 10.1007/s00066-026-02554-9
+    titulo: 'DEGRO practical guidelines: radiotherapy of breast cancer-regional nodal irradiation.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M04:
+    pmcid: PMC12384589
+    doi: 10.3390/curroncol32080444
+    titulo: Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors for Patients with HR-Positive, HER2-Negative Early Breast Cancer in Canada.
+    revista: null
+    anio: '2025'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M05:
+    pmcid: PMC13607463
+    doi: 10.3390/jcm15187303
+    titulo: 'Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of HER2-Targeted Therapy and Treatment De-Escalation: A Systematic Review and Narrative Synthesis.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M06:
+    pmcid: PMC13464392
+    doi: 10.3390/cancers18152422
+    titulo: 'Small Triple-Negative and HER2-Positive Early Breast Cancer: Upfront Surgery or Neoadjuvant Chemotherapy?'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M07:
+    pmcid: PMC13339100
+    doi: 10.1093/jnci/djag049
+    titulo: Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up.
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  M08:
+    pmcid: PMC13488032
+    doi: 10.1016/j.breast.2026.104894
+    titulo: Prediction of benefit from docetaxel chemotherapy for HR-positive breast cancer in the PACS-01 trial.
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P04:
+    pmcid: PMC13456578
+    doi: 10.1097/ju.0000000000005131
+    titulo: 'First-Line Systemic Treatments of Metastatic Hormone-Sensitive Prostate Cancer: Updated Systematic Review and Network Meta-Analysis.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P05:
+    pmcid: PMC12832964
+    doi: 10.1093/oncolo/oyaf386
+    titulo: 'Best therapeutic approach in metastatic hormone-sensitive prostate cancer based on disease volume: a systematic review and network meta-analysis.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P06:
+    pmcid: PMC13223009
+    doi: 10.3389/fphar.2026.1818807
+    titulo: 'The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review and meta-analysis of randomized controlled trials.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P07:
+    pmcid: PMC13059460
+    doi: 10.25122/jml-2025-0140
+    titulo: 'Efficacy of androgen deprivation therapy (ADT) in combination with radiation therapy, compared to ADT alone in patients with high-risk prostate cancer: an updated systematic review and meta-analysis.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P08:
+    pmcid: PMC13550806
+    doi: 10.1111/bju.70368
+    titulo: Ablative radiotherapy in castration-resistant prostate cancer.
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P16:
+    pmcid: PMC13526558
+    doi: 10.3389/fruro.2026.1836469
+    titulo: 'Use of androgen suppression therapy at salvage radiotherapy in recurrent prostate cancer: a systematic review with meta-analysis.'
+    revista: null
+    anio: '2026'
+    licencia: CC BY (registro de Europe PMC y XML)
+  P17:
+    pmcid: PMC12311285
+    doi: 10.1093/oncolo/oyae287
+    titulo: 'Functional assessment in patients with castration-resistant prostate cancer treated with darolutamide: results from the DaroAcT study.'
+    revista: null
+    anio: '2025'
+    licencia: CC BY (registro de Europe PMC y XML)
+preguntas:
+- id: Q-M01
+  id_original: B01
+  cancer: mama
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué diferencia hay entre la estadificación pronóstica clínica y la patológica en cáncer de mama?
+  respuesta_esperada: La clínica se asigna antes de cirugía con historia, examen, imágenes y biopsia. La patológica se usa cuando la cirugía fue el primer tratamiento e incorpora la información clínica, biomarcadores y resultados del tejido mamario y ganglios extirpados.
+  documentos:
+  - M11
+  evidencia:
+  - documento: M11
+    cita: Clinical prognostic stage is used first to assign a stage for anyone diagnosed with breast cancer.
+    verificada: true
+  - documento: M11
+    cita: Pathological prognostic stage is used only for people who have surgery as their first treatment for breast cancer.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M02
+  id_original: B02
+  cancer: mama
+  idioma: es
+  tipo: lista
+  pregunta: Además de TNM, ¿qué dos tipos de información intervienen en la estadificación del cáncer de mama?
+  respuesta_esperada: El grado tumoral y el estado de biomarcadores; en algunos cánceres también pueden contribuir resultados de pruebas multigénicas.
+  documentos:
+  - M11
+  evidencia:
+  - documento: M11
+    cita: 'This number is determined by a combination of three factors: TNM (tumor node metastasis) value, grade, and biomarker status'
+    verificada: true
+  - documento: M11
+    cita: Results from multigene tests may be used to help stage some breast cancers.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M03
+  id_original: B03
+  cancer: mama
+  idioma: es
+  tipo: definicion
+  pregunta: ¿Qué representa cada letra de TNM en mama?
+  respuesta_esperada: T describe tamaño y localización del tumor primario; N, los ganglios regionales comprometidos y la extensión en ellos; M, la diseminación a otras partes del cuerpo.
+  documentos:
+  - M11
+  evidencia:
+  - documento: M11
+    cita: 'Tumor (T): The size and location of the tumor.'
+    verificada: true
+  - documento: M11
+    cita: 'Lymph node (N): The location of the lymph nodes where cancer has spread and the size of the cancer in the lymph nodes.'
+    verificada: true
+  - documento: M11
+    cita: 'Metastasis (M): The spread of cancer to other parts of the body.'
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M04
+  id_original: B04
+  cancer: mama
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Cuál es la única forma segura de diagnosticar cáncer de mama según el documento?
+  respuesta_esperada: La biopsia, porque permite que patología examine células o tejido al microscopio.
+  documentos:
+  - M12
+  evidencia:
+  - documento: M12
+    cita: A biopsy is the only sure way to diagnose breast cancer.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M05
+  id_original: B05
+  cancer: mama
+  idioma: es
+  tipo: condicion
+  pregunta: ¿En qué situación se usa con frecuencia una biopsia guiada por imagen de mama?
+  respuesta_esperada: Cuando el área anormal está profunda o no se palpa; puede guiarse con ecografía, mamografía o resonancia magnética.
+  documentos:
+  - M12
+  evidencia:
+  - documento: M12
+    cita: It is often used when the abnormal area is deep inside the breast or when the doctor cannot feel a lump or mass.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M06
+  id_original: B06
+  cancer: mama
+  idioma: es
+  tipo: lista
+  pregunta: ¿Qué biomarcadores deben evaluarse en todos los cánceres de mama según la fuente?
+  respuesta_esperada: Receptores hormonales —ER y PR— y HER2. La fuente los vincula con estadificación y planificación terapéutica.
+  documentos:
+  - M12
+  evidencia:
+  - documento: M12
+    cita: All breast cancers are tested for the presence of certain biomarkers, such as hormone receptors (estrogen receptors and progesterone receptors) and HER2.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M07
+  id_original: B07
+  cancer: mama
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué expresa un grado 1 frente a un grado 3 en cáncer de mama?
+  respuesta_esperada: 'Grado 1: células y tejido más parecidos a lo normal y menos propensos a diseminarse. Grado 3: más anormales y con mayor probabilidad de crecer y diseminarse rápidamente.'
+  documentos:
+  - M12
+  evidencia:
+  - documento: M12
+    cita: Grade 1 (well-differentiated) cancer cells look more like normal cells.
+    verificada: true
+  - documento: M12
+    cita: The higher the grade number, the more the cancer cells look like abnormal cells and the more likely they will grow and spread
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M08
+  id_original: B08
+  cancer: mama
+  idioma: es
+  tipo: definicion
+  pregunta: ¿Qué caracteriza al estadio 0 de mama?
+  respuesta_esperada: 'Es una lesión no invasiva, como el carcinoma ductal in situ: hay células anormales en la mama sin evidencia de diseminación desde el sitio de origen. Puede tener cualquier grado o estado de HER2, ER y PR.'
+  documentos:
+  - M11
+  evidencia:
+  - documento: M11
+    cita: Stage 0 is a noninvasive breast cancer, such as ductal carcinoma in situ (DCIS).
+    verificada: true
+  - documento: M11
+    cita: In stage 0, abnormal cells are found in the breast, but there is no evidence that these cells have spread from where they first formed.
+    verificada: true
+  - documento: M11
+    cita: Stage 0 breast cancers can be any grade and have any biomarker (HER2, ER, PR) status.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M09
+  id_original: B09
+  cancer: mama
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué determina la diferencia entre los estadios IIA e IIB de cáncer de mama?
+  respuesta_esperada: La combinación del tamaño tumoral y la afectación de ganglios linfáticos cercanos.
+  documentos:
+  - M11
+  evidencia:
+  - documento: M11
+    cita: 'This stage is divided into groups: Stage IIA and Stage IIB. The difference is determined by the size of the tumor and whether the breast cancer has spread to the lymph nodes.'
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M10
+  id_original: B10
+  cancer: mama
+  idioma: es
+  tipo: secuencia
+  pregunta: ¿Qué secuencia general describe la fuente para cáncer de mama localmente avanzado?
+  respuesta_esperada: Con frecuencia empieza con quimioterapia, seguida de cirugía y radioterapia.
+  documentos:
+  - M14
+  evidencia:
+  - documento: M14
+    cita: Treatment of locally advanced breast cancer, which includes some stage IIB breast cancers and stages IIIA, IIIB, and IIIC, often begins with chemotherapy, followed by surgery and radiation.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M11
+  id_original: B11
+  cancer: mama
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué puede ocurrir antes de cirugía si un tumor mamario es grande?
+  respuesta_esperada: La fuente indica que puede administrarse quimioterapia o terapia dirigida antes de cirugía para reducir el tumor y facilitar su extirpación.
+  documentos:
+  - M14
+  evidencia:
+  - documento: M14
+    cita: If the tumor is large, chemotherapy or targeted therapy may be given before surgery to make the tumor smaller and easier to remove.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M12
+  id_original: B12
+  cancer: mama
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué información de un tumor ayuda a decidir si puede beneficiar de terapia dirigida en mama?
+  respuesta_esperada: Las pruebas de biomarcadores o características tumorales realizadas tras el diagnóstico.
+  documentos:
+  - M15
+  evidencia:
+  - documento: M15
+    cita: These tests can help determine if you are likely to benefit from targeted cancer therapy.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M13
+  id_original: B13
+  cancer: mama
+  idioma: es
+  tipo: secuencia
+  pregunta: ¿En qué momentos del recorrido terapéutico puede administrarse terapia dirigida para mama?
+  respuesta_esperada: Puede iniciarse antes o después de la cirugía, y también puede administrarse cuando no se recomienda cirugía.
+  documentos:
+  - M15
+  evidencia:
+  - documento: M15
+    cita: It might be started before or after surgery. It can also be given even if surgery is not recommended for you.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M14
+  id_original: B14
+  cancer: mama
+  idioma: es
+  tipo: causal
+  pregunta: ¿Por qué las terapias dirigidas a HER2 no actúan contra un cáncer de mama HER2 negativo?
+  respuesta_esperada: Porque esos tumores no tienen niveles altos de HER2; por ello las terapias que atacan HER2 no destruyen esas células.
+  documentos:
+  - M15
+  evidencia:
+  - documento: M15
+    cita: Some breast cancers do not have higher-than-normal levels of HER2, so therapies that target HER2 do not work to kill these cancer cells.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M15
+  id_original: B15
+  cancer: mama
+  idioma: es
+  tipo: definicion
+  pregunta: ¿Cómo define la fuente el cáncer de mama triple negativo?
+  respuesta_esperada: Es negativo para receptor de estrógeno, receptor de progesterona y HER2.
+  documentos:
+  - M15
+  evidencia:
+  - documento: M15
+    cita: Triple-negative breast cancer is estrogen receptor (ER) negative, progesterone receptor (PR) negative, and HER2 negative.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P01
+  id_original: P01
+  cancer: prostata
+  idioma: es
+  tipo: lista
+  pregunta: ¿Qué condiciones no malignas pueden elevar el PSA en sangre?
+  respuesta_esperada: La hiperplasia prostática benigna y la prostatitis; el PSA también es producido por células prostáticas normales.
+  documentos:
+  - P13
+  evidencia:
+  - documento: P13
+    cita: Both prostate cancer and several benign conditions (particularly benign prostatic hyperplasia, or BPH, and prostatitis) can cause PSA levels in the blood to rise.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P02
+  id_original: P02
+  cancer: prostata
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Existe un valor único de PSA que separe de forma definitiva un resultado normal de uno anormal?
+  respuesta_esperada: No existe un umbral único que confirme cáncer de próstata. En general, un PSA mayor de 4,0 ng/mL se considera anormal y puede motivar biopsia, pero el punto de corte puede ajustarse por edad y uso de fármacos que reducen PSA.
+  documentos:
+  - P13
+  evidencia:
+  - documento: P13
+    cita: There is no single threshold that distinguishes a normal versus an abnormal PSA result.
+    verificada: true
+  - documento: P13
+    cita: In general, a PSA level above 4.0 ng/mL is considered abnormal and may result in a recommendation for prostate biopsy.
+    verificada: true
+  - documento: P13
+    cita: However, because PSA levels increase with age, some doctors apply a higher cutoff (such as 5 ng/ml) for older men and a lower cutoff (such as 2.5 ng/mL) for younger men
+    verificada: true
+  - documento: P13
+    cita: In addition, a lower cutoff for abnormal is used in men taking certain drugs, including finasteride and dutasteride, which are used to treat BPH.
+    verificada: true
+  revision_oncologo: aprobada_con_cambios
+  modo_acierto: cualquiera
+- id: Q-P03
+  id_original: P03
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: Tras un PSA elevado en una persona asintomática, ¿qué intervalo menciona la fuente para repetir la prueba y confirmar el hallazgo?
+  respuesta_esperada: Entre 6 y 8 semanas.
+  documentos:
+  - P13
+  evidencia:
+  - documento: P13
+    cita: the doctor may recommend another PSA test in 6 to 8 weeks to confirm the original finding.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P04
+  id_original: P04
+  cancer: prostata
+  idioma: es
+  tipo: lista
+  pregunta: ¿Qué actividades o situaciones transitorias pueden elevar el PSA?
+  respuesta_esperada: Infección o inflamación prostática, biopsia prostática reciente, ejercicio vigoroso como ciclismo y eyaculación.
+  documentos:
+  - P13
+  evidencia:
+  - documento: P13
+    cita: An infection or inflammation of the prostate or having had a recent prostate biopsy can cause PSA levels to be raised for a month or two. Vigorous exercise (such as cycling) and ejaculation can also increase the PSA level transiently.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P05
+  id_original: P05
+  cancer: prostata
+  idioma: es
+  tipo: causal
+  pregunta: Después de tratamiento de próstata, ¿por qué un único PSA elevado no confirma por sí solo recurrencia?
+  respuesta_esperada: Porque una medición aislada puede no representar recurrencia; la fuente describe valorar repetición de PSA y la tendencia ascendente en el tiempo, junto con otros hallazgos.
+  documentos:
+  - P13
+  evidencia:
+  - documento: P13
+    cita: However, a single elevated PSA measurement in someone who has a history of prostate cancer does not always mean that the cancer has come back.
+    verificada: true
+  - documento: P13
+    cita: A rising trend in PSA level over time in combination with other findings, such as an abnormal result on imaging tests, may lead the doctor to recommend further cancer treatment.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P06
+  id_original: P06
+  cancer: prostata
+  idioma: es
+  tipo: procedimiento
+  pregunta: ¿Cómo se construye el puntaje de Gleason en una biopsia de próstata?
+  respuesta_esperada: 'Patología identifica los dos patrones celulares principales: el primario, más frecuente, y el secundario, siguiente en frecuencia. Cada uno se gradúa de 3 a 5 y ambos se suman.'
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: The primary pattern describes the most common tissue pattern, and the secondary pattern describes the next most common pattern. Each pattern is given a grade from 3 to 5, with grade 3 looking the most like normal prostate tissue and grade 5 looking the most abnormal. The two grades are then added to get a Gleason score.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P07
+  id_original: P07
+  cancer: prostata
+  idioma: es
+  tipo: definicion
+  pregunta: ¿Qué significa la notación Gleason 3+4=7?
+  respuesta_esperada: El patrón más común es 3 y el siguiente es 4; al sumarlos se obtiene 7. La fuente lo clasifica como grado intermedio.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: if the most common tissue pattern is grade 3 and the secondary pattern is grade 4, it means that most of the cancer is grade 3 and less of the cancer is grade 4. The grades are added for a Gleason score of 7, and it is a medium-grade cancer.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P08
+  id_original: P08
+  cancer: prostata
+  idioma: es
+  tipo: lista
+  pregunta: ¿Qué variables, además de la extensión anatómica, influyen en el pronóstico y las opciones de tratamiento del cáncer de próstata según la fuente?
+  respuesta_esperada: PSA, puntaje de Gleason, Grade Group, proporción de próstata afectada, presencia de diseminación, edad, recurrencia, comorbilidades, efectos adversos esperados, tratamientos previos y preferencias del paciente.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: The stage of the cancer (level of PSA, Gleason score, Grade Group, how much of the prostate is affected by the cancer, and whether the cancer has spread to other places in the body).
+    verificada: true
+  - documento: P11
+    cita: The patient's age.
+    verificada: true
+  - documento: P11
+    cita: Whether the cancer has just been diagnosed or has recurred (come back).
+    verificada: true
+  - documento: P11
+    cita: Whether the patient has other health problems.
+    verificada: true
+  - documento: P11
+    cita: The expected side effects of treatment.
+    verificada: true
+  - documento: P11
+    cita: Past treatment for prostate cancer.
+    verificada: true
+  - documento: P11
+    cita: The wishes of the patient.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P09
+  id_original: P09
+  cancer: prostata
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Cuál es la diferencia operativa entre espera vigilante y vigilancia activa?
+  respuesta_esperada: La espera vigilante observa hasta que aparezcan o cambien síntomas y orienta el tratamiento a aliviarlos. La vigilancia activa realiza controles como tacto rectal, PSA, ecografía y biopsia para detectar progresión temprana, con intención curativa si el cáncer crece.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: Watchful waiting is closely monitoring a patient's condition without giving any treatment until signs or symptoms appear or change. Treatment is given to relieve symptoms and improve quality of life.
+    verificada: true
+  - documento: P11
+    cita: Active surveillance is closely following a patient's condition without giving any treatment unless there are changes in test results.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P10
+  id_original: P10
+  cancer: prostata
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Qué fenómeno puede ocurrir al iniciar un agonista de LHRH y qué clase farmacológica no lo causa?
+  respuesta_esperada: Un agonista de LHRH puede producir un aumento temporal de testosterona o *flare*. Los antagonistas de LHRH/GnRH no producen ese *flare*.
+  documentos:
+  - P12
+  evidencia:
+  - documento: P12
+    cita: This is a temporary increase in testosterone level that occurs because LHRH agonists briefly cause the pituitary gland to secrete extra luteinizing hormone before blocking its release.
+    verificada: true
+  - documento: P12
+    cita: Unlike LHRH agonists, LHRH antagonists do not cause a testosterone flare.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P11
+  id_original: P11
+  cancer: prostata
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué diferencia de reversibilidad establece la fuente entre castración médica con agonista de LHRH y orquiectomía?
+  respuesta_esperada: La castración médica es reversible y la producción androgénica usualmente se reanuda al suspenderla; la orquiectomía es la extirpación quirúrgica de ambos testículos.
+  documentos:
+  - P12
+  evidencia:
+  - documento: P12
+    cita: But unlike surgical castration (orchiectomy), medical castration is reversible. Once treatment is stopped, androgen production usually resumes.
+    verificada: true
+  - documento: P12
+    cita: Orchiectomy, a surgical procedure to remove both testicles.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P12
+  id_original: P12
+  cancer: prostata
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Cómo difieren los bloqueadores del receptor androgénico de los inhibidores de síntesis androgénica?
+  respuesta_esperada: Los bloqueadores compiten con andrógenos por el receptor; los inhibidores de síntesis bloquean producción de andrógenos en testículos, suprarrenales y células tumorales prostáticas.
+  documentos:
+  - P12
+  evidencia:
+  - documento: P12
+    cita: Such treatments work by competing with androgens for binding to androgen receptors.
+    verificada: true
+  - documento: P12
+    cita: Like ADT, androgen synthesis inhibitors prevent androgen production by the testicles; unlike ADT they also prevent androgen production by the adrenal glands and prostate cancer cells.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P13
+  id_original: P13
+  cancer: prostata
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué situación de enfermedad describe la fuente para el uso de olaparib como inhibidor de PARP?
+  respuesta_esperada: Cáncer de próstata metastásico con mutaciones en ciertos genes, entre ellos BRCA1 o BRCA2.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: Olaparib is a PARP inhibitor used to treat patients with prostate cancer that has spread to other parts of the body and has mutations in certain genes, such as BRCA1 or BRCA2.
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P14
+  id_original: P14
+  cancer: prostata
+  idioma: es
+  tipo: definicion
+  pregunta: ¿Qué distingue el estadio IVB de próstata en la descripción del documento?
+  respuesta_esperada: Diseminación a partes distantes del cuerpo, por ejemplo hueso o ganglios linfáticos distantes.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: 'In stage IVB, cancer: has spread to other parts of the body, such as the bones or distant lymph nodes. Prostate cancer often spreads to the bones.'
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-P15
+  id_original: P15
+  cancer: prostata
+  idioma: es
+  tipo: lista
+  pregunta: ¿Qué medidas enumera la fuente para dolor óseo asociado a metástasis óseas o a terapia hormonal?
+  respuesta_esperada: Analgésicos, radioterapia externa, estroncio-89, terapia dirigida con un anticuerpo monoclonal como denosumab, bisfosfonatos y corticoesteroides.
+  documentos:
+  - P11
+  evidencia:
+  - documento: P11
+    cita: 'Prostate cancer that has spread to the bone and certain types of hormone therapy can weaken bones and lead to bone pain. Treatments for bone pain include: Pain medicine. External radiation therapy. Strontium-89 (a radioisotope). Targeted therapy with a monoclonal antibody, such as denosumab. Bisphosphonate therapy. Corticosteroids.'
+    verificada: true
+  revision_oncologo: aprobada
+  modo_acierto: cualquiera
+- id: Q-M16
+  id_original: Q-M01 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: conclusion
+  pregunta: ¿Qué enfoque describe la revisión para el uso de antraciclinas en cáncer de mama HER2 positivo?
+  respuesta_esperada: Describe un uso selectivo, no rutinario, condicionado por beneficio oncológico previsto, riesgo cardiovascular, características tumorales, contexto terapéutico y preferencias.
+  documentos:
+  - M05
+  evidencia:
+  - documento: M05
+    cita: The available evidence supports selective rather than routine anthracycline use, with treatment decisions guided by the anticipated oncologic benefit, cardiovascular risk, tumor characteristics, treatment setting, and patient preferences.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M17
+  id_original: Q-M02 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Qué tres estudios compararon directamente esquemas con y sin antraciclinas en HER2 positivo?
+  respuesta_esperada: BCIRG-006, TRAIN-2 y TRYPHAENA.
+  documentos:
+  - M05
+  evidencia:
+  - documento: M05
+    cita: However, only BCIRG-006, TRAIN-2, and TRYPHAENA directly compared anthracycline-containing and anthracycline-free regimens.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M18
+  id_original: Q-M03 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué contexto clínico se asocia con quimioterapia neoadyuvante en el documento de tumores de mama pequeños triple negativo/HER2 positivo?
+  respuesta_esperada: El pasaje se refiere a cT2 o cN+ y menciona terapia adyuvante posterior a cirugía de acuerdo con la patología.
+  documentos:
+  - M06
+  evidencia:
+  - documento: M06
+    cita: For cT2 or cN+, NAC is recommended with adjuvant therapy after surgery according to pathologic results.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M19
+  id_original: Q-M04 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: ¿Cómo cambió a 20 años el beneficio absoluto de tamoxifeno en el intervalo libre de recurrencia a distancia de tumores luminal A?
+  respuesta_esperada: Pasó de 4% a 5 años (93% vs. 89%) a 10% a 20 años (76% vs. 66%).
+  documentos:
+  - M07
+  evidencia:
+  - documento: M07
+    cita: 'Patients with luminal A tumors had low early risk and modest early benefit from tamoxifen therapy (5-year distant recurrence-free interval treated vs control: 93% vs 89%; absolute difference = 4%) that increased over the 20-year follow-up (20-year distant recurrence-free interval: 76% vs 66%; absolute difference = 10%)'
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M20
+  id_original: Q-M05 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué interacción estadística encontró PACS-01 entre SET continuo de ER/PR y tratamiento en DRFI?
+  respuesta_esperada: Reportó una interacción significativa, con P de interacción de 0,028.
+  documentos:
+  - M08
+  evidencia:
+  - documento: M08
+    cita: Continuous SET ER/PR demonstrated significant interaction with treatment on DRFI (P interaction = 0.028)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M21
+  id_original: Q-M06 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué diferencia de supervivencia global a 10 años se reportó al añadir pertuzumab a trastuzumab en adyuvancia?
+  respuesta_esperada: La SG aumentó de 89,8% a 91,6%; HR 0,83 (IC 95% 0,69–1,00; p=0,044).
+  documentos:
+  - M02
+  evidencia:
+  - documento: M02
+    cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting (hazard ratio [HR] 0.83, 95% CI 0.69–1.00; p = 0.044)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M22
+  id_original: Q-M07 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: clasificacion
+  pregunta: ¿Cuáles son los dos objetivos principales usados para categorizar las recomendaciones de irradiación ganglionar regional?
+  respuesta_esperada: Mejorar resultados oncológicos y permitir desescalamiento de cirugía axilar.
+  documentos:
+  - M03
+  evidencia:
+  - documento: M03
+    cita: 'The recommendations are categorized according to two primary objectives for RNI: (1) improving oncological outcomes; (2) enabling de-escalation of axillary surgery.'
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M23
+  id_original: Q-M08 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué dosis y fraccionamientos comparó DBCG Skagen 1 en pacientes con ganglios positivos?
+  respuesta_esperada: Comparó 40 Gy en 15 fracciones frente a 50 Gy en 25 fracciones; aleatorizó 2.963 pacientes.
+  documentos:
+  - M03
+  evidencia:
+  - documento: M03
+    cita: The DBCG Skagen 1 trial (data presented at ESTRO 2022 and 2025) randomized 2963 node-positive patients to 40 Gy in 15 fractions or 50 Gy in 25 fractions
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M24
+  id_original: Q-M09 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Qué dos tratamientos CDK4/6 han mostrado mejores resultados en pacientes con alto riesgo de recurrencia?
+  respuesta_esperada: Abemaciclib y ribociclib.
+  documentos:
+  - M04
+  evidencia:
+  - documento: M04
+    cita: Clinical studies with two of these treatments, abemaciclib and ribociclib, have shown improved outcomes for patients at higher risk of recurrence.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P16
+  id_original: Q-P01 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: En mHSPC, ¿qué observó el metaanálisis sobre beneficio de SG de tripletes frente a ARPI + ADT?
+  respuesta_esperada: Ningún triplete mostró beneficio de SG estadísticamente significativo globalmente; en alto volumen, docetaxel + ARPI + ADT mejoró SG (HR 0,76).
+  documentos:
+  - P04
+  evidencia:
+  - documento: P04
+    cita: 'No triplet regimen demonstrated a statistically significant OS benefit over ARPI + ADT, although docetaxel + ARPI + ADT significantly improved OS in the high-volume subgroup (HR 0.76, 95% CI 0.61-0.95; CoE: high).'
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P17
+  id_original: Q-P02 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué patrón de selección terapéutica por volumen y momento de metástasis resume el metaanálisis de mHSPC?
+  respuesta_esperada: Los mayores beneficios de supervivencia de tripletes se observaron en enfermedad de alto volumen/sincrónica y los dobletes con ARPI en enfermedad de bajo volumen.
+  documentos:
+  - P05
+  evidencia:
+  - documento: P05
+    cita: The results provide collective evidence for treatment selection based on disease volume and timing of metastasis with strongest survival benefits of triplets for high-volume/synchronous mHSPC patients and of ARPI doublets for low-volume disease.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P18
+  id_original: Q-P03 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Qué desenlaces prolongó darolutamida combinada con ADT frente a placebo más ADT en nmCRPC?
+  respuesta_esperada: Supervivencia global y supervivencia libre de metástasis.
+  documentos:
+  - P06
+  evidencia:
+  - documento: P06
+    cita: Combining darolutamide with ADT significantly prolonged overall survival (OS) and metastasis-free survival (MFS) in nmCRPC patients compared with placebo plus ADT.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P19
+  id_original: Q-P04 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué efecto sobre SG se asoció a combinar ADT y radioterapia?
+  respuesta_esperada: 'Mejoró significativamente la SG: HR 0,75; IC 95% 0,63–0,90.'
+  documentos:
+  - P07
+  evidencia:
+  - documento: P07
+    cita: The combination of ADT and RT significantly improved OS (HR = 0.75, 95% CI, 0.63, 0.90)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P20
+  id_original: Q-P05 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Cuál fue la proporción de progresión de PSA a un año en MDT frente a observación en el ensayo de CRPC?
+  respuesta_esperada: 44% con MDT y 75% con observación; la diferencia no fue significativa (P=0,14).
+  documentos:
+  - P08
+  evidencia:
+  - documento: P08
+    cita: PSA progression within 1 year occurred in 44% of the MDT group vs 75% in the OBS group (P = 0.14, not significant).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P21
+  id_original: Q-P06 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué proporción de participantes evaluables presentó empeoramiento clínicamente significativo de TUG en DaroAcT?
+  respuesta_esperada: 8 de 25 participantes, equivalentes a 32,0%.
+  documentos:
+  - P17
+  evidencia:
+  - documento: P17
+    cita: 8 (32.0%) of 25 evaluable participants exhibited clinically meaningful worsening in TUG from baseline (primary endpoint).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P22
+  id_original: Q-P07 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué desenlaces mejoraron con SRT + ADT en el metaanálisis de rescate?
+  respuesta_esperada: b-PFS (HR 0,51) y MFS (HR 0,71).
+  documentos:
+  - P16
+  evidencia:
+  - documento: P16
+    cita: Combined SRT+ADT was associated with improved b-PFS (HR 0.51; 95% CI 0.45-0.57; I²=0%) and MFS (HR 0.71; 95% CI 0.60-0.84; I²=39%)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P30
+  id_original: Q-P15 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Cuál fue la asociación de SRT + ADT con supervivencia libre de metástasis en el metaanálisis de rescate?
+  respuesta_esperada: 'Se asoció con mejor MFS: HR 0,71; IC 95% 0,60–0,84; I²=39%.'
+  documentos:
+  - P16
+  evidencia:
+  - documento: P16
+    cita: Combined SRT+ADT was associated with improved b-PFS (HR 0.51; 95% CI 0.45-0.57; I²=0%) and MFS (HR 0.71; 95% CI 0.60-0.84; I²=39%)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M28
+  id_original: Q-M13 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: En los datos citados por el PDQ profesional, ¿cómo cambió el riesgo de recurrencia distante con trastuzumab?
+  respuesta_esperada: Fue 53% menor; HR 0,47 (IC 95% 0,37–0,61; P<0,001).
+  documentos:
+  - M01
+  evidencia:
+  - documento: M01
+    cita: The risk of distant recurrence in patients treated with trastuzumab was 53% lower (HR, 0.47; 95% CI, 0.37–0.61; P < .001), and the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M29
+  id_original: Q-M14 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué comparación de IDFS a tres años reporta el PDQ para T-DM1 frente a trastuzumab?
+  respuesta_esperada: IDFS de 88,3% frente a 77%, con HR para enfermedad invasiva o muerte de 0,50.
+  documentos:
+  - M01
+  evidencia:
+  - documento: M01
+    cita: At the time of a planned interim analysis, IDFS was significantly higher in the T-DM1 group than in the trastuzumab group (HR invasive disease or death, 0.50; 95% CI, 0.39–0.64; P < .001; IDFS at 3 years, 88.3% vs. 77%).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P27
+  id_original: Q-P12 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué población y esquema comparó RTOG-9408 según el PDQ profesional?
+  respuesta_esperada: 1.979 hombres con tumores no metastásicos T1b–c, T2a o T2b y PSA ≤20 ng/mL; radioterapia de 66,6 Gy con o sin cuatro meses de ADT.
+  documentos:
+  - P01
+  evidencia:
+  - documento: P01
+    cita: In an open-label, randomized trial (RTOG-9408 [NCT00002597]), 1,979 men with nonmetastatic stage T1b–c, T2a, or T2b tumors and a PSA level of 20 ng/mL or less were randomly assigned to receive radiation therapy (66.6 Gy prostate dose in 1.8 Gy daily fractions) with or without 4 months of ADT
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P28
+  id_original: Q-P13 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: comparacion
+  pregunta: ¿Qué comparó la revisión sistemática citada por el PDQ para terapia hormonal en próstata?
+  respuesta_esperada: Monoterapia antiandrogénica no esteroidea frente a castración quirúrgica o médica, en 11 ensayos aleatorizados y 3.060 hombres.
+  documentos:
+  - P01
+  evidencia:
+  - documento: P01
+    cita: A systematic evidence review compared nonsteroidal antiandrogen monotherapy with surgical or medical castration from 11 randomized trials in 3,060 men
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M30
+  id_original: Q-M15 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: multi_documento
+  pregunta: En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?
+  respuesta_esperada: El PDQ profesional informa una reducción de 33% en el riesgo de muerte con trastuzumab (HR 0,67). En APHINITY, añadir pertuzumab a trastuzumab se asoció con SG a 10 años de 91,6% frente a 89,8%. ALTTO registra DFS, no mortalidad, como desenlace primario.
+  documentos:
+  - M01
+  - M02
+  evidencia:
+  - documento: M01
+    cita: the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+    verificada: true
+  - documento: M02
+    cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting
+    verificada: true
+  modo_acierto: cobertura_documentos
+  revision_oncologo: aprobada
+  alias: Q-HER2
+  evidencia_pendiente:
+  - M09
+  nota: La cita de ClinicalTrials.gov (M09) se retiró del repo hasta verificar sus términos de uso; la respuesta esperada la menciona como contexto.
+- id: Q-NA01
+  id_original: Q-NA01 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué evidencia contiene el corpus sobre enfriamiento del cuero cabelludo para alopecia por quimioterapia en cáncer de mama?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: scalp cooling|cold cap
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: Q-NA02
+  id_original: Q-NA02 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué describe el corpus sobre radioterapia intraoperatoria en cáncer de mama temprano?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: intraoperative radiotherapy|IORT
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: Q-NA03
+  id_original: Q-NA03 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué evidencia contiene el corpus sobre suplementación de vitamina D y recurrencia de cáncer de mama?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: vitamin D
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: Q-NA04
+  id_original: Q-NA04 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué describe el corpus sobre omega-3 para dolor articular por inhibidores de aromatasa?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: omega-3|fish oil
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: Q-NA05
+  id_original: Q-NA05 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué evidencia contiene el corpus sobre dieta cetogénica en cáncer de próstata?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: ketogenic
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: Q-NA06
+  id_original: Q-NA06 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: sin_respuesta
+  pregunta: ¿Qué describe el corpus sobre melatonina para insomnio durante ADT?
+  respuesta_esperada: Sin evidencia recuperable en este corpus.
+  documentos: []
+  evidencia: []
+  modo_acierto: sin_evidencia
+  comprobacion_ausencia:
+    regex: melatonin
+    coincidencias: 0
+  revision_oncologo: aprobada
+- id: EN-01
+  id_original: EN-01 (archivo de cobertura)
+  cancer: mama
+  idioma: en
+  tipo: valor
+  control_de: Q-M19
+  pregunta: How did the absolute tamoxifen benefit in distant recurrence-free interval for luminal A tumors change over 20 years?
+  respuesta_esperada: 4% at 5 years and 10% at 20 years.
+  documentos:
+  - M07
+  evidencia:
+  - documento: M07
+    cita: 'Patients with luminal A tumors had low early risk and modest early benefit from tamoxifen therapy (5-year distant recurrence-free interval treated vs control: 93% vs 89%; absolute difference = 4%) that increased over the 20-year follow-up (20-year distant recurrence-free interval: 76% vs 66%; absolute difference = 10%)'
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-02
+  id_original: EN-02 (archivo de cobertura)
+  cancer: mama
+  idioma: en
+  tipo: valor
+  control_de: Q-M21
+  pregunta: What 10-year overall-survival difference was reported when pertuzumab was added to trastuzumab in the adjuvant setting?
+  respuesta_esperada: OS increased from 89.8% to 91.6%.
+  documentos:
+  - M02
+  evidencia:
+  - documento: M02
+    cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting (hazard ratio [HR] 0.83, 95% CI 0.69–1.00; p = 0.044)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-04
+  id_original: EN-04 (archivo de cobertura)
+  cancer: mama
+  idioma: en
+  tipo: valor
+  control_de: Q-M29
+  pregunta: What 3-year IDFS comparison did the PDQ report for T-DM1 versus trastuzumab?
+  respuesta_esperada: 88.3% versus 77%; HR 0.50.
+  documentos:
+  - M01
+  evidencia:
+  - documento: M01
+    cita: At the time of a planned interim analysis, IDFS was significantly higher in the T-DM1 group than in the trastuzumab group (HR invasive disease or death, 0.50; 95% CI, 0.39–0.64; P < .001; IDFS at 3 years, 88.3% vs. 77%).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-05
+  id_original: EN-05 (archivo de cobertura)
+  cancer: mama
+  idioma: en
+  tipo: multi_documento
+  control_de: Q-M30
+  pregunta: In early HER2-positive breast cancer, what does the evidence describe about mortality with adjuvant anti-HER2 therapy?
+  respuesta_esperada: 33% lower risk of death with trastuzumab in the PDQ-cited data; APHINITY reports 10-year OS 91.6% versus 89.8%.
+  documentos:
+  - M01
+  - M02
+  evidencia:
+  - documento: M01
+    cita: the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+    verificada: true
+  - documento: M02
+    cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting
+    verificada: true
+  modo_acierto: cobertura_documentos
+  revision_oncologo: aprobada
+  evidencia_pendiente:
+  - M09
+  nota: La cita de ClinicalTrials.gov (M09) se retiró del repo hasta verificar sus términos de uso; la respuesta esperada la menciona como contexto.
+- id: EN-06
+  id_original: EN-06 (archivo de cobertura)
+  cancer: prostata
+  idioma: en
+  tipo: hecho
+  control_de: Q-P18
+  pregunta: Which outcomes were prolonged by darolutamide plus ADT versus placebo plus ADT in nmCRPC?
+  respuesta_esperada: Overall survival and metastasis-free survival.
+  documentos:
+  - P06
+  evidencia:
+  - documento: P06
+    cita: Combining darolutamide with ADT significantly prolonged overall survival (OS) and metastasis-free survival (MFS) in nmCRPC patients compared with placebo plus ADT.
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-07
+  id_original: EN-07 (archivo de cobertura)
+  cancer: prostata
+  idioma: en
+  tipo: valor
+  control_de: Q-P21
+  pregunta: What proportion of evaluable DaroAcT participants had clinically meaningful worsening in TUG from baseline?
+  respuesta_esperada: 8 of 25, or 32.0%.
+  documentos:
+  - P17
+  evidencia:
+  - documento: P17
+    cita: 8 (32.0%) of 25 evaluable participants exhibited clinically meaningful worsening in TUG from baseline (primary endpoint).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-09
+  id_original: EN-09 (archivo de cobertura)
+  cancer: prostata
+  idioma: en
+  tipo: valor
+  control_de: Q-P27
+  pregunta: What population and treatment comparison did RTOG-9408 include according to the professional PDQ?
+  respuesta_esperada: 1,979 men with nonmetastatic T1b–c/T2a/T2b tumors and PSA ≤20 ng/mL, assigned to radiation with or without four months of ADT.
+  documentos:
+  - P01
+  evidencia:
+  - documento: P01
+    cita: In an open-label, randomized trial (RTOG-9408 [NCT00002597]), 1,979 men with nonmetastatic stage T1b–c, T2a, or T2b tumors and a PSA level of 20 ng/mL or less were randomly assigned to receive radiation therapy (66.6 Gy prostate dose in 1.8 Gy daily fractions) with or without 4 months of ADT
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-10
+  id_original: EN-10 (archivo de cobertura)
+  cancer: prostata
+  idioma: en
+  tipo: valor
+  control_de: Q-P30
+  pregunta: What was the association between SRT plus ADT and metastasis-free survival in the salvage-therapy meta-analysis?
+  respuesta_esperada: 'Improved MFS: HR 0.71, 95% CI 0.60–0.84; I²=39%.'
+  documentos:
+  - P16
+  evidencia:
+  - documento: P16
+    cita: Combined SRT+ADT was associated with improved b-PFS (HR 0.51; 95% CI 0.45-0.57; I²=0%) and MFS (HR 0.71; 95% CI 0.60-0.84; I²=39%)
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+verificacion:
+  preguntas: 66
+  preguntas_es_con_respuesta: 52
+  preguntas_sin_respuesta: 6
+  controles_en: 8
+  citas: 83
+  citas_verificadas: 83
+  citas_no_encontradas: 0
+  verificadas_contra: 'texto de cada documento descargado el 2026-10-15 (NCI: HTML; PMC: XML JATS); la comprobación no se repite desde el repo porque los textos no se versionan'
+  retiradas_por_clinicaltrials_gov:
+  - Q-M25
+  - Q-M26
+  - Q-M27
+  - Q-P23
+  - Q-P24
+  - Q-P25
+  - Q-P26
+  - EN-03
+  - EN-08

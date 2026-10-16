@@ -1,0 +1,227 @@
+# Manifiesto del mini-dataset ADR-39
+clase: sintetico
+nombre: adr39-mini
+version: 0.1.0-borrador
+fecha: '2026-10-15'
+descripcion: 'Mini-dataset de la fase A de ADR-39 (US-012, L1D-102): preguntas de recuperación (golden) y pares NLI. Las preguntas y afirmaciones son sintéticas; los fragmentos son citas literales de fuentes públicas.'
+archivos:
+  golden: golden.yaml
+  nli: nli-pares.yaml
+regla_de_acierto: 'un chunk recuperado acierta si PERTENECE AL DOCUMENTO esperado y contiene la `cita` (normalizando espacios y puntuación); con varias citas, `modo_acierto: cualquiera` basta con una y `cobertura_documentos` mide cuántos de los documentos esperados aparecen en el top-k; `sin_evidencia`: no hay acierto, se mide el puntaje máximo recuperado para calibrar el umbral (RN-02); acierto por documento = métrica secundaria'
+fuentes:
+- id: M01
+  fuente: NCI
+  tipo: resumen_guia
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/breast/hp/breast-treatment-pdq
+  emitido: '2026-02-10'
+- id: M02
+  fuente: PMC Open Access
+  tipo: guia_consenso
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13115210
+  doi: 10.3390/curroncol33040200
+  titulo: 'Guidance for Canadian Breast Cancer Practice: National Consensus Recommendations for the Systemic Treatment of Patients with HER2+ Breast Cancer in Both the Early and Metastatic Settings (2025 Update).'
+  revista: null
+  anio: '2026'
+- id: M03
+  fuente: PMC Open Access
+  tipo: guia
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13290887
+  doi: 10.1007/s00066-026-02554-9
+  titulo: 'DEGRO practical guidelines: radiotherapy of breast cancer-regional nodal irradiation.'
+  revista: null
+  anio: '2026'
+- id: M04
+  fuente: PMC Open Access
+  tipo: guia_consenso
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC12384589
+  doi: 10.3390/curroncol32080444
+  titulo: Multidisciplinary Practical Guidance for Implementing Adjuvant CDK4/6 Inhibitors for Patients with HR-Positive, HER2-Negative Early Breast Cancer in Canada.
+  revista: null
+  anio: '2025'
+- id: M05
+  fuente: PMC Open Access
+  tipo: revision
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13607463
+  doi: 10.3390/jcm15187303
+  titulo: 'Reassessing the Role of Anthracyclines in Early HER2-Positive Breast Cancer in the Era of HER2-Targeted Therapy and Treatment De-Escalation: A Systematic Review and Narrative Synthesis.'
+  revista: null
+  anio: '2026'
+- id: M06
+  fuente: PMC Open Access
+  tipo: revision
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13464392
+  doi: 10.3390/cancers18152422
+  titulo: 'Small Triple-Negative and HER2-Positive Early Breast Cancer: Upfront Surgery or Neoadjuvant Chemotherapy?'
+  revista: null
+  anio: '2026'
+- id: M07
+  fuente: PMC Open Access
+  tipo: ensayo_eca
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13339100
+  doi: 10.1093/jnci/djag049
+  titulo: Tamoxifen therapy benefit in luminal A and B breast cancer with 20-year follow-up.
+  revista: null
+  anio: '2026'
+- id: M08
+  fuente: PMC Open Access
+  tipo: ensayo_eca
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13488032
+  doi: 10.1016/j.breast.2026.104894
+  titulo: Prediction of benefit from docetaxel chemotherapy for HR-positive breast cancer in the PACS-01 trial.
+  revista: null
+  anio: '2026'
+- id: M11
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/breast/stages
+  emitido: '2025-08-06'
+- id: M12
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/breast/diagnosis
+  emitido: '2025-12-02'
+- id: M14
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/breast/treatment/by-stage
+  emitido: '2025-12-02'
+- id: M15
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/breast/treatment/targeted-therapy
+  emitido: '2025-12-02'
+- id: P01
+  fuente: NCI
+  tipo: resumen_guia
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq
+  emitido: '2026-02-10'
+- id: P04
+  fuente: PMC Open Access
+  tipo: metaanalisis
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13456578
+  doi: 10.1097/ju.0000000000005131
+  titulo: 'First-Line Systemic Treatments of Metastatic Hormone-Sensitive Prostate Cancer: Updated Systematic Review and Network Meta-Analysis.'
+  revista: null
+  anio: '2026'
+- id: P05
+  fuente: PMC Open Access
+  tipo: metaanalisis
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC12832964
+  doi: 10.1093/oncolo/oyaf386
+  titulo: 'Best therapeutic approach in metastatic hormone-sensitive prostate cancer based on disease volume: a systematic review and network meta-analysis.'
+  revista: null
+  anio: '2026'
+- id: P06
+  fuente: PMC Open Access
+  tipo: revision_sistematica
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13223009
+  doi: 10.3389/fphar.2026.1818807
+  titulo: 'The efficacy and safety of darolutamide combination therapy in advanced prostate cancer: a systematic review and meta-analysis of randomized controlled trials.'
+  revista: null
+  anio: '2026'
+- id: P07
+  fuente: PMC Open Access
+  tipo: metaanalisis
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13059460
+  doi: 10.25122/jml-2025-0140
+  titulo: 'Efficacy of androgen deprivation therapy (ADT) in combination with radiation therapy, compared to ADT alone in patients with high-risk prostate cancer: an updated systematic review and meta-analysis.'
+  revista: null
+  anio: '2026'
+- id: P08
+  fuente: PMC Open Access
+  tipo: ensayo_eca
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13550806
+  doi: 10.1111/bju.70368
+  titulo: Ablative radiotherapy in castration-resistant prostate cancer.
+  revista: null
+  anio: '2026'
+- id: P11
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/prostate/patient/prostate-treatment-pdq
+  emitido: '2026-02-10'
+- id: P12
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/prostate/prostate-hormone-therapy-fact-sheet
+  emitido: '2024-10-10'
+- id: P13
+  fuente: NCI
+  tipo: pagina_paciente
+  formato_original: html
+  licencia: Texto de NCI libre de copyright (https://www.cancer.gov/policies/copyright-reuse); crédito a NCI y enlace al original; sin gráficos; sin logo de NCI ni marca PDQ
+  url: https://www.cancer.gov/types/prostate/psa-fact-sheet
+  emitido: '2024-12-12'
+- id: P16
+  fuente: PMC Open Access
+  tipo: metaanalisis
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC13526558
+  doi: 10.3389/fruro.2026.1836469
+  titulo: 'Use of androgen suppression therapy at salvage radiotherapy in recurrent prostate cancer: a systematic review with meta-analysis.'
+  revista: null
+  anio: '2026'
+- id: P17
+  fuente: PMC Open Access
+  tipo: ensayo_eca
+  formato_original: jats_xml
+  licencia: CC BY 4.0 (declarada en el registro de Europe PMC y en el XML del artículo); se cita autoría, revista y DOI
+  pmcid: PMC12311285
+  doi: 10.1093/oncolo/oyae287
+  titulo: 'Functional assessment in patients with castration-resistant prostate cancer treated with darolutamide: results from the DaroAcT study.'
+  revista: null
+  anio: '2025'
+fuentes_pendientes_de_licencia:
+  ClinicalTrials.gov:
+  - NCT00490139
+  - NCT02040935
+  - NCT00974311
+  - NCT02200614
+  motivo: términos de uso sin verificar; se reincorporan al confirmarlos (hay 9 preguntas y 6 pares NLI preparados en la copia local)
+excluded_sources:
+- NCCN
+- ESMO
+estado_revision:
+  golden: aprobado por el oncólogo asesor (2026-10-15)
+  nli: aprobado por el oncólogo asesor (2026-10-15; un cambio en NLI-31, fuera de este conjunto)

@@ -1,0 +1,421 @@
+# Pares NLI ADR-39 — v0.1 (revisados por el oncólogo asesor)
+clase: sintetico
+proposito: pares afirmación–fragmento para medir el NLI (US-012 AC-9; ADR-39). El fragmento es una cita literal del corpus; la afirmación es sintética. No es una fuente de recomendaciones clínicas.
+etiquetas:
+  entailment: el fragmento respalda la afirmación por sí solo
+  neutral: el fragmento no la confirma ni la contradice
+  contradiction: el fragmento afirma lo contrario o la excluye
+criterio: la etiqueta se decide SOLO con el fragmento, no con el resto del documento ni con conocimiento externo
+idiomas: fragmentos en inglés (el corpus está en inglés); afirmaciones en inglés (mismo idioma) y en español (mezcla es/en), con la variante en el otro idioma en cada par
+atribucion: Fragmentos tomados de las fuentes indicadas en golden.yaml (NCI y artículos de PMC con licencia CC BY). ClinicalTrials.gov no está incluido.
+pares:
+- id: NLI-01
+  etiqueta: entailment
+  documento: M12
+  pregunta_origen: Q-M04
+  fragmento: A biopsy is the only sure way to diagnose breast cancer.
+  idioma_fragmento: en
+  afirmacion: El cáncer de mama solo se puede diagnosticar con certeza mediante una biopsia.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Breast cancer can only be diagnosed with certainty through a biopsy.
+  revision_oncologo: aprobada
+- id: NLI-02
+  etiqueta: neutral
+  documento: M12
+  pregunta_origen: Q-M04
+  fragmento: A biopsy is the only sure way to diagnose breast cancer.
+  idioma_fragmento: en
+  afirmacion: The results of a biopsy are usually available within a week.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Los resultados de una biopsia suelen estar disponibles en menos de una semana.
+  revision_oncologo: aprobada
+- id: NLI-03
+  etiqueta: contradiction
+  documento: M12
+  pregunta_origen: Q-M04
+  fragmento: A biopsy is the only sure way to diagnose breast cancer.
+  idioma_fragmento: en
+  afirmacion: Las pruebas de imagen por sí solas bastan para diagnosticar con certeza el cáncer de mama.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Imaging tests alone are enough to diagnose breast cancer with certainty.
+  revision_oncologo: aprobada
+- id: NLI-04
+  etiqueta: entailment
+  documento: M15
+  pregunta_origen: Q-M14
+  fragmento: Some breast cancers do not have higher-than-normal levels of HER2, so therapies that target HER2 do not work to kill these cancer cells.
+  idioma_fragmento: en
+  afirmacion: Therapies targeting HER2 do not work against cancers without elevated HER2 levels.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Las terapias dirigidas a HER2 no actúan contra los cánceres sin niveles elevados de HER2.
+  revision_oncologo: aprobada
+- id: NLI-05
+  etiqueta: neutral
+  documento: M15
+  pregunta_origen: Q-M14
+  fragmento: Some breast cancers do not have higher-than-normal levels of HER2, so therapies that target HER2 do not work to kill these cancer cells.
+  idioma_fragmento: en
+  afirmacion: Las terapias dirigidas a HER2 pueden causar problemas cardíacos.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: HER2-targeted therapies can cause heart problems.
+  revision_oncologo: aprobada
+- id: NLI-06
+  etiqueta: contradiction
+  documento: M15
+  pregunta_origen: Q-M14
+  fragmento: Some breast cancers do not have higher-than-normal levels of HER2, so therapies that target HER2 do not work to kill these cancer cells.
+  idioma_fragmento: en
+  afirmacion: HER2-targeted therapies are effective against cancers with normal HER2 levels.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Las terapias dirigidas a HER2 son eficaces contra los cánceres con niveles normales de HER2.
+  revision_oncologo: aprobada
+- id: NLI-07
+  etiqueta: entailment
+  documento: M14
+  pregunta_origen: Q-M10
+  fragmento: Treatment of locally advanced breast cancer, which includes some stage IIB breast cancers and stages IIIA, IIIB, and IIIC, often begins with chemotherapy, followed by surgery and radiation.
+  idioma_fragmento: en
+  afirmacion: El tratamiento del cáncer de mama localmente avanzado suele comenzar con quimioterapia, seguida de cirugía y radioterapia.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Treatment of locally advanced breast cancer often starts with chemotherapy, followed by surgery and radiation.
+  revision_oncologo: aprobada
+- id: NLI-08
+  etiqueta: neutral
+  documento: M14
+  pregunta_origen: Q-M10
+  fragmento: Treatment of locally advanced breast cancer, which includes some stage IIB breast cancers and stages IIIA, IIIB, and IIIC, often begins with chemotherapy, followed by surgery and radiation.
+  idioma_fragmento: en
+  afirmacion: Immunotherapy is added in most locally advanced cases.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: En la mayoría de los casos localmente avanzados se añade inmunoterapia.
+  revision_oncologo: aprobada
+- id: NLI-09
+  etiqueta: contradiction
+  documento: M14
+  pregunta_origen: Q-M10
+  fragmento: Treatment of locally advanced breast cancer, which includes some stage IIB breast cancers and stages IIIA, IIIB, and IIIC, often begins with chemotherapy, followed by surgery and radiation.
+  idioma_fragmento: en
+  afirmacion: El tratamiento del cáncer de mama localmente avanzado suele comenzar con cirugía antes de cualquier quimioterapia.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Treatment of locally advanced breast cancer often begins with surgery before any chemotherapy.
+  revision_oncologo: aprobada
+- id: NLI-10
+  etiqueta: entailment
+  documento: P13
+  pregunta_origen: Q-P03
+  fragmento: the doctor may recommend another PSA test in 6 to 8 weeks to confirm the original finding.
+  idioma_fragmento: en
+  afirmacion: A doctor may recommend repeating the PSA test after 6 to 8 weeks to confirm the first result.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: El médico puede recomendar repetir la prueba de PSA a las 6 a 8 semanas para confirmar el primer resultado.
+  revision_oncologo: aprobada
+- id: NLI-11
+  etiqueta: neutral
+  documento: P13
+  pregunta_origen: Q-P03
+  fragmento: the doctor may recommend another PSA test in 6 to 8 weeks to confirm the original finding.
+  idioma_fragmento: en
+  afirmacion: Una prueba de PSA repetida siempre va seguida de una biopsia.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: A repeat PSA test is always followed by a biopsy.
+  revision_oncologo: aprobada
+- id: NLI-12
+  etiqueta: contradiction
+  documento: P13
+  pregunta_origen: Q-P03
+  fragmento: the doctor may recommend another PSA test in 6 to 8 weeks to confirm the original finding.
+  idioma_fragmento: en
+  afirmacion: Repeating the PSA test to confirm the original finding is not recommended.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: No se recomienda repetir la prueba de PSA para confirmar el hallazgo original.
+  revision_oncologo: aprobada
+- id: NLI-13
+  etiqueta: entailment
+  documento: P12
+  pregunta_origen: Q-P11
+  fragmento: But unlike surgical castration (orchiectomy), medical castration is reversible. Once treatment is stopped, androgen production usually resumes.
+  idioma_fragmento: en
+  afirmacion: La producción de andrógenos suele reanudarse después de suspender la castración médica.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Androgen production usually resumes after medical castration is stopped.
+  revision_oncologo: aprobada
+- id: NLI-14
+  etiqueta: neutral
+  documento: P12
+  pregunta_origen: Q-P11
+  fragmento: But unlike surgical castration (orchiectomy), medical castration is reversible. Once treatment is stopped, androgen production usually resumes.
+  idioma_fragmento: en
+  afirmacion: Medical castration is given by injection every three months.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: La castración médica se administra por inyección cada tres meses.
+  revision_oncologo: aprobada
+- id: NLI-15
+  etiqueta: contradiction
+  documento: P12
+  pregunta_origen: Q-P11
+  fragmento: But unlike surgical castration (orchiectomy), medical castration is reversible. Once treatment is stopped, androgen production usually resumes.
+  idioma_fragmento: en
+  afirmacion: La castración médica es irreversible, igual que la orquiectomía.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Medical castration is irreversible, like orchiectomy.
+  revision_oncologo: aprobada
+- id: NLI-16
+  etiqueta: entailment
+  documento: M07
+  pregunta_origen: Q-M19
+  fragmento: 'Patients with luminal A tumors had low early risk and modest early benefit from tamoxifen therapy (5-year distant recurrence-free interval treated vs control: 93% vs 89%; absolute difference = 4%) that increased over the 20-year follow-up (20-year distant recurrence-free interval: 76% vs 66%; absolute difference = 10%)'
+  idioma_fragmento: en
+  afirmacion: In luminal A tumors, the absolute benefit of tamoxifen on distant recurrence-free interval grew from 4% at 5 years to 10% at 20 years.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: En los tumores luminal A, el beneficio absoluto del tamoxifeno sobre el intervalo libre de recurrencia a distancia pasó de 4% a 5 años a 10% a 20 años.
+  revision_oncologo: aprobada
+- id: NLI-17
+  etiqueta: neutral
+  documento: M07
+  pregunta_origen: Q-M19
+  fragmento: 'Patients with luminal A tumors had low early risk and modest early benefit from tamoxifen therapy (5-year distant recurrence-free interval treated vs control: 93% vs 89%; absolute difference = 4%) that increased over the 20-year follow-up (20-year distant recurrence-free interval: 76% vs 66%; absolute difference = 10%)'
+  idioma_fragmento: en
+  afirmacion: El beneficio del tamoxifeno fue mayor en los tumores luminal B que en los luminal A.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Tamoxifen benefit was larger in luminal B than in luminal A tumors.
+  revision_oncologo: aprobada
+- id: NLI-18
+  etiqueta: contradiction
+  documento: M07
+  pregunta_origen: Q-M19
+  fragmento: 'Patients with luminal A tumors had low early risk and modest early benefit from tamoxifen therapy (5-year distant recurrence-free interval treated vs control: 93% vs 89%; absolute difference = 4%) that increased over the 20-year follow-up (20-year distant recurrence-free interval: 76% vs 66%; absolute difference = 10%)'
+  idioma_fragmento: en
+  afirmacion: The absolute benefit of tamoxifen in luminal A tumors decreased over 20 years.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: El beneficio absoluto del tamoxifeno en los tumores luminal A disminuyó a lo largo de 20 años.
+  revision_oncologo: aprobada
+- id: NLI-19
+  etiqueta: entailment
+  documento: M02
+  pregunta_origen: Q-M21
+  fragmento: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting (hazard ratio [HR] 0.83, 95% CI 0.69–1.00; p = 0.044)
+  idioma_fragmento: en
+  afirmacion: Añadir pertuzumab al trastuzumab adyuvante mejoró la supervivencia global a 10 años de 89,8% a 91,6%.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Adding pertuzumab to adjuvant trastuzumab improved 10-year overall survival from 89.8% to 91.6%.
+  revision_oncologo: aprobada
+- id: NLI-20
+  etiqueta: neutral
+  documento: M02
+  pregunta_origen: Q-M21
+  fragmento: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting (hazard ratio [HR] 0.83, 95% CI 0.69–1.00; p = 0.044)
+  idioma_fragmento: en
+  afirmacion: Pertuzumab increased the risk of cardiac events in APHINITY.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: El pertuzumab aumentó el riesgo de eventos cardíacos en APHINITY.
+  revision_oncologo: aprobada
+- id: NLI-21
+  etiqueta: contradiction
+  documento: M02
+  pregunta_origen: Q-M21
+  fragmento: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting (hazard ratio [HR] 0.83, 95% CI 0.69–1.00; p = 0.044)
+  idioma_fragmento: en
+  afirmacion: Añadir pertuzumab al trastuzumab redujo la supervivencia global a 10 años en APHINITY.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Adding pertuzumab to trastuzumab lowered 10-year overall survival in APHINITY.
+  revision_oncologo: aprobada
+- id: NLI-22
+  etiqueta: entailment
+  documento: M01
+  pregunta_origen: Q-M28
+  fragmento: The risk of distant recurrence in patients treated with trastuzumab was 53% lower (HR, 0.47; 95% CI, 0.37–0.61; P < .001), and the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+  idioma_fragmento: en
+  afirmacion: Trastuzumab was associated with a 33% lower risk of death.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: El trastuzumab se asoció con un riesgo de muerte 33% menor.
+  revision_oncologo: aprobada
+- id: NLI-23
+  etiqueta: neutral
+  documento: M01
+  pregunta_origen: Q-M28
+  fragmento: The risk of distant recurrence in patients treated with trastuzumab was 53% lower (HR, 0.47; 95% CI, 0.37–0.61; P < .001), and the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+  idioma_fragmento: en
+  afirmacion: El beneficio del trastuzumab fue mayor en pacientes menores de 50 años.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Trastuzumab benefit was greater in patients younger than 50 years.
+  revision_oncologo: aprobada
+- id: NLI-24
+  etiqueta: contradiction
+  documento: M01
+  pregunta_origen: Q-M28
+  fragmento: The risk of distant recurrence in patients treated with trastuzumab was 53% lower (HR, 0.47; 95% CI, 0.37–0.61; P < .001), and the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
+  idioma_fragmento: en
+  afirmacion: Trastuzumab did not reduce the risk of death.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: El trastuzumab no redujo el riesgo de muerte.
+  revision_oncologo: aprobada
+- id: NLI-25
+  etiqueta: entailment
+  documento: P04
+  pregunta_origen: Q-P16
+  fragmento: 'No triplet regimen demonstrated a statistically significant OS benefit over ARPI + ADT, although docetaxel + ARPI + ADT significantly improved OS in the high-volume subgroup (HR 0.76, 95% CI 0.61-0.95; CoE: high).'
+  idioma_fragmento: en
+  afirmacion: Docetaxel más ARPI más ADT mejoró significativamente la supervivencia global en el subgrupo de alto volumen.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Docetaxel plus ARPI plus ADT significantly improved overall survival in the high-volume subgroup.
+  revision_oncologo: aprobada
+- id: NLI-26
+  etiqueta: neutral
+  documento: P04
+  pregunta_origen: Q-P16
+  fragmento: 'No triplet regimen demonstrated a statistically significant OS benefit over ARPI + ADT, although docetaxel + ARPI + ADT significantly improved OS in the high-volume subgroup (HR 0.76, 95% CI 0.61-0.95; CoE: high).'
+  idioma_fragmento: en
+  afirmacion: Triplet regimens caused more severe adverse events than doublets.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Los regímenes de tripletes causaron más eventos adversos graves que los dobletes.
+  revision_oncologo: aprobada
+- id: NLI-27
+  etiqueta: contradiction
+  documento: P04
+  pregunta_origen: Q-P16
+  fragmento: 'No triplet regimen demonstrated a statistically significant OS benefit over ARPI + ADT, although docetaxel + ARPI + ADT significantly improved OS in the high-volume subgroup (HR 0.76, 95% CI 0.61-0.95; CoE: high).'
+  idioma_fragmento: en
+  afirmacion: Los regímenes de tripletes mostraron un beneficio significativo de supervivencia global frente a ARPI + ADT en todos los pacientes.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Triplet regimens showed a significant overall survival benefit over ARPI + ADT in all-comer patients.
+  revision_oncologo: aprobada
+- id: NLI-28
+  etiqueta: entailment
+  documento: P08
+  pregunta_origen: Q-P20
+  fragmento: PSA progression within 1 year occurred in 44% of the MDT group vs 75% in the OBS group (P = 0.14, not significant).
+  idioma_fragmento: en
+  afirmacion: The difference in 1-year PSA progression between MDT (44%) and observation (75%) was not statistically significant.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: La diferencia en la progresión de PSA a 1 año entre MDT (44%) y observación (75%) no fue estadísticamente significativa.
+  revision_oncologo: aprobada
+- id: NLI-29
+  etiqueta: neutral
+  documento: P08
+  pregunta_origen: Q-P20
+  fragmento: PSA progression within 1 year occurred in 44% of the MDT group vs 75% in the OBS group (P = 0.14, not significant).
+  idioma_fragmento: en
+  afirmacion: Los pacientes del grupo MDT tuvieron menos eventos adversos que los del grupo de observación.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Patients in the MDT arm had fewer adverse events than those under observation.
+  revision_oncologo: aprobada
+- id: NLI-30
+  etiqueta: contradiction
+  documento: P08
+  pregunta_origen: Q-P20
+  fragmento: PSA progression within 1 year occurred in 44% of the MDT group vs 75% in the OBS group (P = 0.14, not significant).
+  idioma_fragmento: en
+  afirmacion: MDT significantly reduced 1-year PSA progression compared with observation.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: La MDT redujo significativamente la progresión de PSA a 1 año frente a la observación.
+  revision_oncologo: aprobada
+- id: NLI-37
+  etiqueta: entailment
+  documento: P01
+  pregunta_origen: Q-P27
+  fragmento: In an open-label, randomized trial (RTOG-9408 [NCT00002597]), 1,979 men with nonmetastatic stage T1b–c, T2a, or T2b tumors and a PSA level of 20 ng/mL or less were randomly assigned to receive radiation therapy (66.6 Gy prostate dose in 1.8 Gy daily fractions) with or without 4 months of ADT
+  idioma_fragmento: en
+  afirmacion: RTOG-9408 aleatorizó a hombres con tumores no metastásicos a radioterapia con o sin 4 meses de ADT.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: RTOG-9408 randomized men with nonmetastatic tumors to radiation therapy with or without 4 months of ADT.
+  revision_oncologo: aprobada
+- id: NLI-38
+  etiqueta: neutral
+  documento: P01
+  pregunta_origen: Q-P27
+  fragmento: In an open-label, randomized trial (RTOG-9408 [NCT00002597]), 1,979 men with nonmetastatic stage T1b–c, T2a, or T2b tumors and a PSA level of 20 ng/mL or less were randomly assigned to receive radiation therapy (66.6 Gy prostate dose in 1.8 Gy daily fractions) with or without 4 months of ADT
+  idioma_fragmento: en
+  afirmacion: RTOG-9408 showed that adding ADT improved overall survival.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: RTOG-9408 mostró que añadir ADT mejoró la supervivencia global.
+  revision_oncologo: aprobada
+- id: NLI-39
+  etiqueta: contradiction
+  documento: P01
+  pregunta_origen: Q-P27
+  fragmento: In an open-label, randomized trial (RTOG-9408 [NCT00002597]), 1,979 men with nonmetastatic stage T1b–c, T2a, or T2b tumors and a PSA level of 20 ng/mL or less were randomly assigned to receive radiation therapy (66.6 Gy prostate dose in 1.8 Gy daily fractions) with or without 4 months of ADT
+  idioma_fragmento: en
+  afirmacion: RTOG-9408 incluyó a hombres con enfermedad metastásica.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: RTOG-9408 enrolled men with metastatic disease.
+  revision_oncologo: aprobada
+resumen:
+  pares: 33
+  por_etiqueta:
+    entailment: 11
+    neutral: 11
+    contradiction: 11
+  afirmaciones_es: 17
+  afirmaciones_en: 16
+  documentos: 11
+ids_reservados:
+  NLI-31..NLI-36: pares sobre registros de ClinicalTrials.gov (M09, P09), retirados hasta verificar sus términos; los IDs no se reutilizan
+revision_oncologo:
+  fecha: '2026-10-15'
+  resultado: aprobados; un cambio en NLI-31 (sobreexpresión o amplificación de HER2, IHC 3+ y/o FISH positivo), aplicado en la copia completa; NLI-31 queda fuera de este conjunto por ser de ClinicalTrials.gov
