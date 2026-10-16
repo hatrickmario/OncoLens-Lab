@@ -1,0 +1,154 @@
+# CI de OncoLens (US-036, docs/process/ci.md). Un único check requerido por la protección de main: `ci-ok`.
+# Sin secretos del repositorio, sin pull_request_target, acciones fijadas por SHA. Los pasos llaman a scripts de
+# scripts/ y npm (los mismos comandos que ejecutan los fixtures de ci/tests/), nunca a lógica en línea.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Base contra la que se comparan contratos y commits: la base del PR o, en push, el commit anterior.
+  BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: apps/rag-orchestrator/requirements.txt
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Build de los workspaces
+        run: npm run build --workspaces --if-present
+      - name: Tests de los workspaces
+        run: npm test --workspaces --if-present
+      - name: Vitest raíz (scripts, infra y fixtures de la CI)
+        run: npx vitest run
+      - name: Dependencias de rag-orchestrator
+        run: pip install -r apps/rag-orchestrator/requirements.txt
+      - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
+        run: python -m pytest
+        working-directory: apps/rag-orchestrator
+      - name: Tests de secretos (L1D-165)
+        run: |
+          if node -e "process.exit(require('./package.json').scripts['test:secrets'] ? 0 : 1)"; then
+            npm run test:secrets
+          else
+            echo "omitido: test:secrets no existe todavía (l1d-165-secrets-setup-scripts sin mergear)"
+          fi
+
+  contracts:
+    name: contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: scripts/contracts/requirements-codegen.txt
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Herramientas de la CI (oasdiff, versión y suma de ci/tools.lock)
+        run: scripts/ci/install-tools.sh
+      - name: Entorno virtual del generador de Pydantic
+        run: |
+          python -m venv .venv-codegen
+          .venv-codegen/bin/pip install -r scripts/contracts/requirements-codegen.txt
+      - name: contracts:check
+        run: npm run contracts:check
+      - name: contracts:generate:check
+        run: npm run contracts:generate:check
+        env:
+          CODEGEN_PYTHON: .venv-codegen/bin/python
+      - name: Cambios incompatibles contra la base (oasdiff, nivel ERR)
+        run: scripts/ci/contracts-breaking.sh "$BASE_REF"
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Herramientas de la CI (gitleaks, versión y suma de ci/tools.lock)
+        run: scripts/ci/install-tools.sh
+      - name: gitleaks sobre el árbol y sobre los commits del PR
+        run: scripts/ci/secret-scan.sh "$BASE_REF"
+
+  data-scan:
+    name: data-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: PII en los archivos versionados
+        run: node scripts/ci/pii-scan.mjs
+      - name: Clase de datos de los datasets de evaluación
+        run: node scripts/ci/dataset-class-check.mjs
+
+  stack-smoke:
+    name: stack-smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Smoke del stack de Compose (secretos ficticios, sin LLM real)
+        run: npm run smoke:compose
+        env:
+          LLM_PROVIDER: fake
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Todos los jobs en success (un job omitido o cancelado no cuenta como verde)
+        run: node scripts/ci/verificar-needs.mjs
+        env:
+          NEEDS: ${{ toJSON(needs) }}
