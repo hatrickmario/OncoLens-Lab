@@ -30,7 +30,7 @@ del login) · `[S1 resp. 13]` (SDK generado de L1D-105) · `[S1 resp. 14a]` (`Or
 >   El bloqueo del administrador en el análisis (`403` si rol ≠ `doctor`) lo implementa L1D-103; aquí
 >   solo se garantiza que el guard adjunta el rol.
 > - `[S1 resp. 13]` `web` llama a `clinical-api` con el SDK generado de L1D-105
->   (`packages/api-contracts/src/client/clinical-api/`), con el `fetch` inyectado de L1D-139.
+>   (`packages/api-contracts/src/client-web/clinical-api/`), con el `fetch` inyectado de L1D-139.
 > - `[S1 resp. 17]` las respuestas se validan contra el spec con el *helper* `assertMatchesSpec()` de
 >   L1D-164 (no `contracts:verify-provider`, que llega con US-214).
 > - `[S1 resp. 18]` este change es el **dueño** de `apps/web/messages/es.json`: crea las claves
@@ -124,7 +124,7 @@ historia lo implementa con el mínimo que exige el S1.
   `createRagOrchestratorFetch()` es el que garantiza `Authorization: Bearer` sin `Cookie`, que AC-5
   verifica aquí de punta a punta con la cookie real.
 - ↪ **Depende de** **l1d-139-bff-route-handler-analisis** (US-060), **solo en las tareas `web` del
-  login**: `verificarOrigen()` (`lib/server/origen.ts`) y `crearFetchHaciaClinicalApi()`
+  login**: `verificarOrigen()` (`lib/server/origen.ts`) y `crearFetchJsonHaciaClinicalApi()`
   (`lib/server/clinical-api.ts`) `[S1 resp. 14a]`. Las tareas de `clinical-api` no esperan.
 - ↪ **Depende de** **l1d-164-compose-stack** para el *helper* `assertMatchesSpec()` (design D5b,
   `[S1 resp. 17]`).

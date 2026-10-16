@@ -66,3 +66,24 @@ Si `clinical-api` no responde (error de red o sin respuesta dentro de `WEB_UPSTR
 - **GIVEN** la build de producción de `web` (`next build`) con `CLINICAL_API_URL` en un valor centinela sintético
 - **WHEN** se busca ese valor en todos los archivos de `apps/web/.next/static`
 - **THEN** no aparece ninguna coincidencia
+
+### Requirement: Cuerpos reenviados sin reserializar
+El Route Handler MUST reenviar el texto exacto de la respuesta de `clinical-api`, sin parsear ni reserializar (un cuerpo vacío sale vacío). SHALL responder `502` propio (`ErrorServicioIa`) si el cuerpo de una `2xx` no pudo leerse completo o si un error no `2xx` con cuerpo no es `application/json`, y MUST marcar `Cache-Control: no-store` en todas sus respuestas.
+
+#### Scenario: Texto exacto y cuerpo vacío [US-060 AC-4]
+- **GIVEN** `clinical-api` responde `422` con un JSON de espaciado y números no canónicos, y en otro caso `401` sin cuerpo
+- **WHEN** el Route Handler las retransmite
+- **THEN** el texto del primer cuerpo es idéntico y el segundo llega vacío y sin `Content-Type`
+
+#### Scenario: Cuerpo cortado o error no JSON [US-060 AC-4]
+- **GIVEN** una respuesta `200` cuyo cuerpo falla a mitad de lectura, o un `500` `text/html`
+- **WHEN** el Route Handler la procesa
+- **THEN** responde `502` `ERROR_SERVICIO_IA` sin eco del cuerpo recibido
+
+### Requirement: Tope del cuerpo de la petición
+El Route Handler MUST responder `413` con forma `ErrorCuerpoInvalido`, sin llamar a `clinical-api`, cuando el cuerpo supera `WEB_MAX_BODY_BYTES` (RN-22; por defecto 32768).
+
+#### Scenario: Cuerpo excesivo [US-060 AC-4]
+- **GIVEN** un `POST` con `Origin` permitido y un cuerpo mayor que `WEB_MAX_BODY_BYTES`
+- **WHEN** llega a `web`
+- **THEN** responde `413` `CUERPO_INVALIDO`, registra `motivo=cuerpo_excesivo` y `clinical-api` recibe cero requests

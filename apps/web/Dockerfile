@@ -7,6 +7,8 @@ COPY apps/clinical-api/package.json apps/clinical-api/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN npm ci --include-workspace-root --workspace apps/web
 COPY apps/web apps/web
+# Solo el SDK generado de clinical-api para web (sin extensión .js; Turbopack); el resto de packages/ no se necesita.
+COPY packages/api-contracts/src/client-web/clinical-api packages/api-contracts/src/client-web/clinical-api
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build --workspace apps/web
 

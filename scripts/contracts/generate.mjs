@@ -11,7 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
-import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, zodPath } from './generated.mjs';
+import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, clientWebDir, zodPath } from './generated.mjs';
 import { loadContext } from './io.mjs';
 import { DEFAULT_ROOT, SPEC_FILES, generatedHeader, typesPath } from './lib/paths.mjs';
 import { RAG_ORCHESTRATOR } from './lib/specs.mjs';
@@ -34,11 +34,15 @@ async function generateWithHeyApi(root, provider, bundled, plugin, outputFile) {
   });
 }
 
-/** SDK por proveedor: cliente `fetch` + operaciones tipadas, con `baseUrl` y `fetch` inyectables (US-054 AC-6, D4). */
-async function generateSdk(root, provider, bundled) {
+/**
+ * SDK por proveedor: cliente `fetch` + operaciones tipadas, con `baseUrl` y `fetch` inyectables (US-054 AC-6, D4).
+ * `importFileExtension` distingue la salida NodeNext ('.js', clinical-api y rag-orchestrator) de la de `web`
+ * (null: Turbopack no resuelve `.js` hacia `.ts`).
+ */
+async function generateSdk(root, provider, bundled, { dir, importFileExtension }) {
   await createClient({
     input: structuredClone(bundled),
-    output: { path: path.join(root, clientDir(provider)), clean: true, header: [generatedHeader(provider)], importFileExtension: '.js' },
+    output: { path: path.join(root, dir), clean: true, header: [generatedHeader(provider)], importFileExtension },
     // baseUrl: false = sin URL por defecto en el cliente global; cada llamador crea el suyo con createClient({ baseUrl, fetch }).
     plugins: ['@hey-api/typescript', { name: '@hey-api/client-fetch', baseUrl: false }, '@hey-api/sdk'],
     logs: { level: 'silent' },
@@ -91,8 +95,9 @@ export async function generate(root = DEFAULT_ROOT) {
   }
   for (const provider of Object.keys(SPEC_FILES)) {
     await generateTypesAndZod(root, provider, specs[provider].bundled);
-    await generateSdk(root, provider, specs[provider].bundled);
+    await generateSdk(root, provider, specs[provider].bundled, { dir: clientDir(provider), importFileExtension: '.js' });
   }
+  await generateSdk(root, 'clinical-api', specs['clinical-api'].bundled, { dir: clientWebDir('clinical-api'), importFileExtension: null });
   await generatePydantic(root, specs[RAG_ORCHESTRATOR].bundled);
   await writeReadmeExtract(root);
 }

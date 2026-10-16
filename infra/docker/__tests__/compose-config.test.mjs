@@ -102,6 +102,17 @@ describe('docker-compose.yml', () => {
     expect(() => assertTtlDelJwtCompartido(resolver({ entorno: { SERVICE_JWT_TTL_SECONDS: '30' } }))).not.toThrow();
   });
 
+  it('web recibe CLINICAL_API_URL, WEB_ALLOWED_ORIGIN y WEB_UPSTREAM_TIMEOUT_MS de servidor y ninguna NEXT_PUBLIC_ [US-060 AC-5]', () => {
+    const entorno = resolver().services.web.environment;
+    expect(entorno).toMatchObject({
+      CLINICAL_API_URL: 'http://clinical-api:3000',
+      WEB_ALLOWED_ORIGIN: 'http://127.0.0.1:3000',
+      WEB_UPSTREAM_TIMEOUT_MS: '40000',
+      WEB_MAX_BODY_BYTES: '32768',
+    });
+    expect(Object.keys(entorno).filter((nombre) => nombre.startsWith('NEXT_PUBLIC_'))).toEqual([]);
+  });
+
   it('falla nombrando ambos servicios cuando un override cambia el SERVICE_JWT_TTL_SECONDS de rag-orchestrator [US-054 AC-5]', () => {
     const config = resolver({ override: 'services:\n  rag-orchestrator:\n    environment:\n      SERVICE_JWT_TTL_SECONDS: "3600"\n' });
     expect(() => assertTtlDelJwtCompartido(config)).toThrow(/clinical-api.*rag-orchestrator/);

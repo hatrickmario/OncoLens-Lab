@@ -143,6 +143,11 @@
       "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers/post/responses/422"
     },
     {
+      "file": "evidence-analysis-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/requestBody"
+    },
+    {
       "file": "follow-up-create.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/requestBody"
