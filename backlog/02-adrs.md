@@ -18,6 +18,8 @@
 > - **DEC-05:** validación clínica del "Oncólogo asesor A" hecha `[S1 resp. 1]`; ya no bloquea US-038.
 > - **ADR-40:** sigue en el S2; en el S1 rige su escenario más probable (opción A) en US-049, aceptado `[S1 resp. 3]`.
 
+> **Adición del 2026-10-16 (propuesta, sin publicar en Linear):** **ADR-45 · Mejora de la recuperación frente a las metas de OL-06** (`docs/architecture/adr/ADR-45-mejora-recuperacion-ol06.md`, estado *propuesto*). Nace del resultado de ADR-39 fase A (recall@10 0,71 y MRR 0,36–0,39 frente a 0,80 y 0,60). Se pidió como ADR-44, pero **ADR-44 ya existe** (Stack de observabilidad, US-028; los IDs publicados son inmutables), de modo que toma el 45. Historias borrador US-226…US-230 en `features/FEAT-T5e-mejora-recuperacion.md` (`Linear: pendiente`). Los conteos de §1 no se recalculan hasta que el humano la apruebe.
+
 ---
 
 ## 1. Resumen

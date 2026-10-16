@@ -23,6 +23,8 @@
 
 `FEAT-T5a` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (ADR) · FR-20, IA-10 · AC-T5.3, AC-T5.4 · Dueño: Ingeniería · ⛔ Bloqueada por: ADR-39 (solo la elección del LLM juez local; las métricas deterministas no dependen de él) · 🔗 Bloquea: US-072 (AC-3, fidelidad), US-073, FEAT-T5b
 
+> **Nota (usuario, 2026-10-20, ADR-45):** las metas de recuperación (recall@10 ≥ 0,80, MRR ≥ 0,60) son **provisionales** y no se modifican antes de terminar US-229 (lote B nuevo). Con ADR-39 fase A se midió recall@10 0,71 y MRR 0,36–0,39: es un hecho conocido, no bloquea el Gate 2. Enmienda propuesta para después de US-229: evaluar sobre el límite inferior del IC de 95 % y medir recall@10 tras el reranker. **Linear: pendiente de sincronizar.**
+
 ## Story
 Como responsable técnico, quiero decidir con qué framework y qué protocolo se calculan
 las métricas de OL-06, para que la suite sea reproducible, corra solo con modelos
