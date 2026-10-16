@@ -63,7 +63,7 @@ Clasificar cada `M-xx.y` como **técnico** (lo mide la Feature de evaluación T-
 | ID | Objetivo / métrica | Meta | Se mide con (FR-20, OL-06, VM…) | Pendiente (TBD) |
 
 ## 7. Restricciones
-Técnicas (≤ 24 GB, Metal fuera de Docker, p95), legales (licencias del corpus RN-21, términos de LOINC/CUPS/ATC TBD-17, retención), de seguridad (regla de ownership, clases de datos, gate G-piloto) y de alcance (mama y próstata; fuera del MVP según §3 y §18.1.2).
+Técnicas (stack ≤ ~30 GB sin swap, LLM ≤ 21 GB, Metal fuera de Docker, p95), legales (licencias del corpus RN-21, términos de LOINC/CUPS/ATC TBD-17, retención), de seguridad (regla de ownership, clases de datos, gate G-piloto) y de alcance (mama y próstata; fuera del MVP según §3 y §18.1.2).
 
 ## 8. Features candidatas
 | ID tentativo | Feature | CAP / T | Requisitos que agrupa | Sprint(s) | Evidencia |

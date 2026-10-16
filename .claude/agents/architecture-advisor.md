@@ -59,7 +59,7 @@ extracción se implementen sobre una base estable y no haya que reindexar despu�
 - **AC-1 (happy path)** · Dado el stack levantado, cuando se ejecute el protocolo
   de medición (3 corridas, mediana), entonces el ADR registra por candidato:
   memoria, p95, validez de JSON y la métrica principal de su componente. `[readme §1.4]`
-- **AC-2 (borde)** · Dado un candidato que excede 24 GB de memoria total o p95 > 15 s
+- **AC-2 (borde)** · Dado un candidato que excede 30 GB de memoria total del stack o 21 GB del LLM o p95 > 15 s
   en `/platform/evidence-analyses`, cuando se evalúe, entonces queda descartado y
   el ADR anota el motivo. `[readme §1.4]` `[NFR-01]`
 - **AC-3 (borde)** · Dado un empate en la métrica principal, cuando se decida,

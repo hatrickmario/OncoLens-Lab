@@ -33,6 +33,7 @@ La v1.4 incorpora las decisiones del refinamiento del Pre-S1 (`/sprint-refine Pr
 | E-09 | **Atribución de las citas** `[resp. 11, 12]`. `CitedSource` incluye licencia, autoría y enlace a la fuente original (RN-25); NCCN y ESMO solo se nombran como fuentes **no incluidas** | RN-25, FR-27 (e), README §4.1 |
 | E-10 | **Protocolo de valor (DEC-02)** `[resp. 4, 8]`. Se adoptan y congelan las metas sugeridas de §2.2; un catálogo queda `muestra_insuficiente` con menos de 10 análisis calificados por tipo de cáncer; la tasa mínima de respuesta de VM-4 es 60 %; los oncólogos participan con roles anónimos | §2.2, FR-20 |
 | E-11 | **Literal del aviso de IA (validación clínica del S1, `[S1 resp. 32]`).** Los oncólogos asesores proponen "Generado por IA; requiere validación clínica independiente por el oncólogo tratante." Supera a B-06. "Uso académico/investigación" sigue visible y permanente; el literal vive en configuración (`AI_DISCLAIMER_TEXT`) | RN-19, AC-T3.1 |
+| E-12 | **Topes de memoria de los modelos locales (decisión del usuario, 2026-10-20, ADR-39 fase B).** El tope máximo del LLM local es **21 GB** (antes ~16 GB, `[S1 resp. 10]`) y el del stack total sube de 24 a **~30 GB** (equipo de referencia MacBook Pro M5 de 32 GB). La holgura para macOS (antes ≥ 8 GB) se reduce a ~2 GB: el ADR de modelos la mide (`memory_pressure` y swap) en lugar de suponerla. Se amplían los candidatos del LLM (Qwen 3.6 35B-A3B Q4_K_M, MedGemma 1.5 4B Q8_0 y BF16, Gemma 4 26B-A4B Q4_K_M) con reglas de decisión fijadas antes de medir; MedGemma usa los términos HAI-DEF, no Apache 2.0, y exige aceptación del usuario para ser elegido. Modifica el hardware de referencia de §7 (NFR-05); no cambia p95 ≤ 15 s, extracción ≤ 60 s ni JSON ≥ 99 % | §7 (Hardware, NFR-05), TBD-01, readme §1.4, US-224 |
 
 ### 0.0 Versión 1.3 (2026-10-07): alineación con el Product Backlog
 
@@ -661,7 +662,7 @@ Responden a la pregunta del proyecto: **¿el apoyo de la IA mejora el análisis 
 | Rendimiento | Extracción por documento | p95 ≤ 60 s |
 | Rendimiento | Ficha, listado y vista de caso (sin generar resumen) | p95 ≤ 1 s ficha y listado; ≤ 2 s vista de caso *(propuesta)* |
 | Capacidad | Usuarios del piloto | 10 registrados, 2–3 concurrentes; 1–2 inferencias simultáneas compartidas por análisis, resumen del caso, extracción y búsqueda complementaria (cola con `429`); presupuesto de tokens por bloque (contexto, memoria, síntesis, aplicabilidad) definido en el ADR de modelos locales |
-| Hardware | Entorno de referencia | MacBook Pro M5, 32 GB; memoria total del stack ≤ 24 GB (ADR de modelos locales) |
+| Hardware | Entorno de referencia | MacBook Pro M5, 32 GB; memoria total del stack ≤ ~30 GB, con el LLM local ≤ 21 GB (ADR de modelos locales; v1.4, E-12: antes ≤ 24 GB) |
 | Disponibilidad | Entorno local y piloto | Sin SLA formal. Apagado y arranque documentados; *backups* cifrados con prueba de restauración por sprint |
 | Fiabilidad | Cola de extracción | Durable ante reinicios; máximo 3 intentos; 0 documentos colgados |
 | Fiabilidad | Consistencia análisis ↔ persistencia | 0 respuestas sin registro |

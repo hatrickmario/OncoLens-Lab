@@ -313,7 +313,7 @@ reducir el riesgo residual aceptado de Backend 2 antes de cargar datos reales.
   `audit`/`research`, y los tests de *permission denied* siguen pasando o se amplían.
   `[CLAUDE.md]` `[SEG-06]`
 - **AC-4 (memoria)** · Dada la opción "base separada en la misma instancia", cuando se
-  evalúe, entonces el ADR confirma que no agrega procesos ni memoria al stack (≤ 24 GB).
+  evalúe, entonces el ADR confirma que no agrega procesos ni memoria al stack (≤ ~30 GB; 24 GB hasta el 2026-10-20).
   `[readme §1.4]` (asumido)
 
 ## Contexto técnico

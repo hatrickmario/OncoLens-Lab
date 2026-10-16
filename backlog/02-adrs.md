@@ -14,7 +14,7 @@
 > - **Cambios de sprint (DEC-03):** US-014 · ADR-41 y US-016 · DEC-06 pasan al **S2**.
 
 > **Estado tras el refinamiento del S1 (2026-10-13, `backlog/sprints/S1-refinamiento.md`):**
-> - **ADR-39 · encuadre decidido, cierre por medición:** hipótesis principal = combinación A (Gemma 4 26B A4B QAT `gemma4:26b-a4b-it-qat` en Ollama, ~16 GB `[S1 resp. 10]`, medido 15 GB y ~79 tok/s; BGE-M3, bge-reranker-v2-m3, mDeBERTa-2mil7, OCRmyPDF + Tesseract), con B y C como respaldos medidos `[S1 resp. 5]`. La historia se parte en **US-012 · ADR-39 fase A** (5) y **US-224 · ADR-39 fase B** (3) `[S1 resp. 6]`; el documento `docs/architecture/adr/ADR-39-modelos-locales.md` (MADR) lo escribe la ejecución del S1 con las cifras.
+> - **ADR-39 · encuadre decidido, cierre por medición:** hipótesis principal = combinación A (Gemma 4 26B A4B QAT `gemma4:26b-a4b-it-qat` en Ollama, ~16 GB `[S1 resp. 10]` (tope del LLM ampliado a 21 GB y del stack a ~30 GB, Decidido (usuario, 2026-10-20); candidatos añadidos: Qwen 3.6 35B-A3B Q4_K_M, MedGemma 1.5 4B Q8_0/BF16 y Gemma 4 26B-A4B Q4_K_M), medido 15 GB y ~79 tok/s; BGE-M3, bge-reranker-v2-m3, mDeBERTa-2mil7, OCRmyPDF + Tesseract), con B y C como respaldos medidos `[S1 resp. 5]`. La historia se parte en **US-012 · ADR-39 fase A** (5) y **US-224 · ADR-39 fase B** (3) `[S1 resp. 6]`; el documento `docs/architecture/adr/ADR-39-modelos-locales.md` (MADR) lo escribe la ejecución del S1 con las cifras.
 > - **DEC-05:** validación clínica del "Oncólogo asesor A" hecha `[S1 resp. 1]`; ya no bloquea US-038.
 > - **ADR-40:** sigue en el S2; en el S1 rige su escenario más probable (opción A) en US-049, aceptado `[S1 resp. 3]`.
 
@@ -120,7 +120,7 @@ Los `US-0NN` provisionales se asignaron en la primera versión de este documento
 
 Orden por sprint. Todas producen un documento en `docs/architecture/adr/` con contexto, opciones (elegida y descartadas), criterios y consecuencias. **Ninguna implementa**: si hace falta un *spike* para medir, es parte de sus AC.
 
-Restricciones duras comunes a las ADR de IA (readme §1.4, PRD §7, §12): memoria total del stack ≤ 24 GB (≥ 8 GB libres para macOS); `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S4, G-5); extracción p95 ≤ 60 s por documento; JSON válido ≥ 99 %; licencia compatible con uso académico; buen desempeño en español; uso real de la GPU (Metal) fuera de Docker; datos reales solo con modelos locales, sin *fallback* a la nube (RN-12). Todo valor que se fije vive en configuración (RN-22).
+Restricciones duras comunes a las ADR de IA (readme §1.4, PRD §7, §12): memoria total del stack ≤ ~30 GB, con el LLM ≤ 21 GB (Decidido (usuario, 2026-10-20); era 24 GB con ≥ 8 GB libres para macOS: en el equipo de 32 GB el nuevo tope deja ~2 GB, riesgo a medir en ADR-39); `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S4, G-5); extracción p95 ≤ 60 s por documento; JSON válido ≥ 99 %; licencia compatible con uso académico; buen desempeño en español; uso real de la GPU (Metal) fuera de Docker; datos reales solo con modelos locales, sin *fallback* a la nube (RN-12). Todo valor que se fije vive en configuración (RN-22).
 
 ---
 
@@ -180,7 +180,7 @@ Como responsable técnico, quiero fijar el runtime y los modelos locales (LLM, *
 
 #### AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado el protocolo de medición (3 corridas, mediana) y los datasets de OL-06 disponibles en el S1, cuando se evalúe cada candidato, entonces `docs/architecture/adr/ADR-39-modelos-locales.md` registra por candidato: memoria residente, p95 de su etapa, validez de JSON (LLM), licencia, versión exacta y la métrica principal de su componente (recall@10 y MRR, incluido español → inglés, para *embeddings* y *reranker*; exactitud sobre pares etiquetados para NLI; exactitud por campo crítico para OCR; fidelidad y JSON válido para el LLM). `[readme §1.4 Método]` `[G-3]` `[G-6]`
-- **AC-2 (borde · restricciones duras)** · Dado un candidato o combinación que excede 24 GB de memoria total del stack, o p95 > 15 s en `/platform/evidence-analyses`, o p95 > 60 s por documento en extracción, o JSON válido < 99 %, o licencia no académica, cuando se evalúe, entonces queda descartado y el ADR anota el motivo y la cifra medida. `[readme §1.4]` `[NFR-01]`
+- **AC-2 (borde · restricciones duras)** · Dado un candidato o combinación que excede ~30 GB de memoria total del stack (24 GB hasta el 2026-10-20) o 21 GB de memoria del LLM, o p95 > 15 s en `/platform/evidence-analyses`, o p95 > 60 s por documento en extracción, o JSON válido < 99 %, o licencia no académica, cuando se evalúe, entonces queda descartado y el ADR anota el motivo y la cifra medida. `[readme §1.4]` `[NFR-01]`
 - **AC-3 (embeddings primero)** · Dado que cambiar el modelo de *embeddings* obliga a reindexar Milvus, cuando se cierre la fase de *embeddings*, entonces el ADR fija modelo, dimensión del vector dense y origen del vector sparse (del propio modelo o de otra fuente) **antes** de que FEAT-06c indexe el corpus semilla, y el esquema de la colección de Milvus del readme §3.1 queda completo con esos valores. `[readme §6.1 última fila]` `[readme §6.1 #5]`
 - **AC-4 (borde · empate)** · Dado un empate en la métrica principal de un componente, cuando se decida, entonces gana el de menor memoria y el ADR lo justifica. `[readme §1.4 Método]`
 - **AC-5 (borde · ningún candidato cumple)** · Dado que ningún candidato de un componente cumple las restricciones duras, cuando se agote la lista, entonces el ADR lo declara y escala el ajuste de metas al usuario (G-5 / NFR-01), sin elegir un modelo que las incumpla. (asumido)
@@ -249,7 +249,7 @@ OL-05 tarea 12 remite el motor de `PiiAdapter` al ADR de modelos locales; se sep
 No implementar el enmascaramiento. No cambiar el gate de PII ni las clases de datos (#14).
 
 #### Preguntas abiertas
-- Ninguna que bloquee; si la opción B supera el presupuesto de memoria fijado en ADR-39, queda descartada por la restricción de 24 GB.
+- Ninguna que bloquee; si la opción B supera el presupuesto de memoria fijado en ADR-39, queda descartada por la restricción de ~30 GB (24 GB hasta el 2026-10-20).
 
 ---
 
@@ -333,7 +333,7 @@ Como responsable técnico, quiero decidir con el resultado de la revisión de se
 - **AC-1 (happy path)** · Dado el informe de la revisión de seguridad del piloto, cuando se decida, entonces `docs/architecture/adr/ADR-43-corpus-base-separada.md` registra los hallazgos sobre el rol `rag_corpus`, la opción elegida y su coste (migración Alembic, roles, `pg_hba`, CI). `[TBD-10]`
 - **AC-2 (borde · no reabrir)** · Dadas las alternativas ya descartadas en #17 (SQLite, colección de Milvus sin vectores, contenedor PostgreSQL extra), cuando se redacte, entonces se citan como contexto y no se evalúan de nuevo. `[readme §3.3 #17]`
 - **AC-3 (invariante)** · Dada cualquier opción, cuando se especifique, entonces Backend 2 sigue sin ruta a `clinical-minio` ni a los schemas `auth`/`identity`/`clinical`/`audit`/`research`, y los tests de *permission denied* siguen pasando o se amplían. `[CLAUDE.md]`
-- **AC-4 (memoria)** · Dada la opción "base separada en la misma instancia", cuando se evalúe, entonces el ADR confirma que no agrega procesos ni memoria al stack (≤ 24 GB). `[readme §1.4]` (asumido)
+- **AC-4 (memoria)** · Dada la opción "base separada en la misma instancia", cuando se evalúe, entonces el ADR confirma que no agrega procesos ni memoria al stack (≤ ~30 GB; 24 GB hasta el 2026-10-20). `[readme §1.4]` (asumido)
 
 #### Opciones
 | Opción | A favor | En contra |
@@ -359,7 +359,7 @@ No hacer la revisión de seguridad. No migrar.
 Como responsable técnico, quiero decidir qué stack consume `/metrics` y si se agrega *tracing* distribuido, para que el S6 entregue observabilidad sin romper el presupuesto de memoria ni filtrar datos clínicos.
 
 #### AC (Given/When/Then)
-- **AC-1 (happy path)** · Dadas las opciones, cuando se decida, entonces `docs/architecture/adr/ADR-44-observabilidad.md` registra la memoria adicional medida de cada una y la elegida cabe en el presupuesto de 24 GB junto con el stack de ADR-39. `[readme §1.4]`
+- **AC-1 (happy path)** · Dadas las opciones, cuando se decida, entonces `docs/architecture/adr/ADR-44-observabilidad.md` registra la memoria adicional medida de cada una y la elegida cabe en el presupuesto de ~30 GB (24 GB hasta el 2026-10-20) junto con el stack de ADR-39. `[readme §1.4]`
 - **AC-2 (borde · no fuga)** · Dado el *tracing* distribuido, cuando se especifique, entonces los atributos de los *spans* siguen la regla de los logs: nunca identidad, PHI, secretos, contenido ni URL de documentos; pacientes por UUID. `[CLAUDE.md]` `[RN-10]`
 - **AC-3 (borde · red)** · Dada una interfaz de paneles, cuando se especifique su acceso, entonces no se publica al host ningún puerto de backend, y el acceso a la UI de paneles queda restringido (VPN o `localhost`) y justificado en el ADR. `[CLAUDE.md]` (asumido)
 - **AC-4** · Dado el ADR aprobado, cuando se cierre, entonces lista las métricas de IA del readme §2.7 que deben verse en paneles (latencia por etapa, afirmaciones descartadas y omitidas, sub-consultas del agente, tokens, cola de inferencia, cuarentena). `[readme §2.7]`
