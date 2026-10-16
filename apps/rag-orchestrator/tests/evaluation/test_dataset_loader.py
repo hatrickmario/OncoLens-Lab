@@ -155,3 +155,34 @@ def test_dataset_loader_cc_by_nc_se_acepta_solo_con_bandera_de_mvp_academico(dat
     _con_licencia(dataset_dir, "CC BY-NC 4.0")
 
     assert cargar_dataset(dataset_dir, permitir_cc_by_nc=True).fuentes
+
+
+@pytest.mark.ac("US-012", 9)
+def test_dataset_loader_terminos_verificados_no_rescatan_una_licencia_nc(dataset_dir: Path) -> None:
+    def poner(m: dict) -> None:
+        m["fuentes"][1]["licencia"] = "CC BY-NC 4.0"
+        m["fuentes"][1]["licencia_verificada"] = "terminos_NLM_ClinicalTrials_gov"
+
+    _editar(dataset_dir / "manifest.yaml", poner)
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
+
+
+def test_dataset_loader_terminos_verificados_solo_valen_para_clinicaltrials_sin_licencia_declarada(dataset_dir: Path) -> None:
+    def poner(m: dict) -> None:
+        for f in m["fuentes"]:
+            if f["fuente"].startswith("ClinicalTrials.gov"):
+                f["licencia"] = "CC BY-NC-ND 4.0"
+
+    _editar(dataset_dir / "manifest.yaml", poner)
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
+
+
+def test_dataset_loader_texto_de_nci_con_cola_distinta_de_la_aclaracion_se_rechaza(dataset_dir: Path) -> None:
+    _con_licencia(dataset_dir, "Texto de NCI libre de copyright y todos los derechos reservados")
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
