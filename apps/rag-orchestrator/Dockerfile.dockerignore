@@ -1,0 +1,6 @@
+# Imagen de PRODUCCIÓN de rag-orchestrator (BuildKit lee <Dockerfile>.dockerignore junto al Dockerfile).
+# El código de medición de ADR-39 no se empaqueta: la imagen de medición (eval/configs/adr39-medicion.Dockerfile)
+# lo monta desde el worktree y no usa este archivo.
+apps/rag-orchestrator/app/evaluation
+apps/rag-orchestrator/app/scripts
+**/__pycache__
