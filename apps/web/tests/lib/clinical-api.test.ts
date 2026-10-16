@@ -3,6 +3,7 @@ import {
   cabeceraCookieDeSesion,
   cabecerasHaciaClinicalApi,
   cabecerasHaciaNavegador,
+  crearFetchJsonHaciaClinicalApi,
 } from '../../lib/server/clinical-api';
 
 function conCookie(valor: string | null): Request {
@@ -57,5 +58,23 @@ describe('cabecerasHaciaNavegador', () => {
       ['retry-after', '30'],
       ['x-trace-id', 'req_1'],
     ]);
+  });
+});
+
+describe('crearFetchJsonHaciaClinicalApi', () => {
+  it('envía siempre Content-Type application/json y el cuerpo como texto aunque la petición traiga otro tipo', async () => {
+    let recibido: { url: string; init: RequestInit | undefined } | undefined;
+    const fetchFalso: typeof globalThis.fetch = (url, init) => {
+      recibido = { url: String(url), init };
+      return Promise.resolve(new Response('{}'));
+    };
+    const enviar = crearFetchJsonHaciaClinicalApi({ fetch: fetchFalso, timeoutMs: 1000, cookieDeSesion: 'oncolens_session=abc' });
+
+    await enviar(new Request('http://clinical-api.test:3000/x', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{"a":1}' }));
+
+    const cabeceras = new Headers(recibido?.init?.headers);
+    expect(cabeceras.get('content-type')).toBe('application/json');
+    expect(cabeceras.get('cookie')).toBe('oncolens_session=abc');
+    expect(recibido?.init?.body).toBe('{"a":1}');
   });
 });

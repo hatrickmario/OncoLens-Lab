@@ -13,7 +13,16 @@ describe('leerConfigWeb', () => {
       clinicalApiUrl: 'http://clinical-api:3000',
       allowedOrigin: 'http://127.0.0.1:3000',
       upstreamTimeoutMs: 40000,
+      maxBodyBytes: 32768,
     });
+  });
+
+  it('lee WEB_MAX_BODY_BYTES del entorno cuando se define', () => {
+    expect(leerConfigWeb({ ...completo, WEB_MAX_BODY_BYTES: '1024' }).maxBodyBytes).toBe(1024);
+  });
+
+  it('falla cuando WEB_MAX_BODY_BYTES no es un entero positivo', () => {
+    expect(() => leerConfigWeb({ ...completo, WEB_MAX_BODY_BYTES: '0' })).toThrow('WEB_MAX_BODY_BYTES');
   });
 
   it.each(['CLINICAL_API_URL', 'WEB_ALLOWED_ORIGIN', 'WEB_UPSTREAM_TIMEOUT_MS'])(

@@ -138,13 +138,97 @@ describe('POST /api/evidence-analyses', () => {
   it('responde 502 ERROR_SERVICIO_IA cuando clinical-api no responde dentro del timeout configurado [US-060 AC-4]', async () => {
     clinicalApi.noResponder();
     const { dependencias } = crearDependenciasDeTest({
-      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 50 },
+      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 50, maxBodyBytes: 32768 },
     });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 
     expect(respuesta.status).toBe(502);
     assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', await respuesta.json());
+  });
+  it('devuelve el mismo cuerpo, sin reserializar, y vacío cuando viene vacío [US-060 AC-4]', async () => {
+    const { dependencias } = crearDependenciasDeTest();
+    const textoCrudo = '{"error":"CUERPO_INVALIDO",  "message":"x","traceId":"req_1","limite":1.0}';
+    const cabecerasJson = { 'Content-Type': 'application/json' };
+
+    clinicalApi.responderTexto({ status: 422, texto: textoCrudo, cabeceras: cabecerasJson });
+    const conCuerpo = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+    clinicalApi.responderTexto({ status: 401, texto: null });
+    const sinCuerpo = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+
+    expect(conCuerpo.status).toBe(422);
+    expect(await conCuerpo.text()).toBe(textoCrudo);
+    expect(sinCuerpo.status).toBe(401);
+    expect(await sinCuerpo.text()).toBe('');
+    expect(sinCuerpo.headers.get('content-type')).toBeNull();
+  });
+
+  it('responde 502 propio y no un 200 vacío cuando el cuerpo de una respuesta 2xx se corta [US-060 AC-4]', async () => {
+    clinicalApi.responderCuerpoSinFin();
+    const { dependencias } = crearDependenciasDeTest({
+      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 100, maxBodyBytes: 32768 },
+    });
+
+    const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+
+    expect(respuesta.status).toBe(502);
+    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', await respuesta.json());
+  });
+
+  it('responde 502 propio sin eco cuando un error no 2xx no es application/json [US-060 AC-4]', async () => {
+    clinicalApi.responderTexto({
+      status: 500,
+      texto: '<html>detalle-interno-del-proxy</html>',
+      cabeceras: { 'Content-Type': 'text/html' },
+    });
+    const { dependencias } = crearDependenciasDeTest();
+
+    const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+
+    expect(respuesta.status).toBe(502);
+    const texto = await respuesta.text();
+    expect(texto).not.toContain('detalle-interno-del-proxy');
+    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', JSON.parse(texto));
+  });
+
+  it('marca Cache-Control no-store en las respuestas 200, 403, 413 y 502 [US-060 AC-1]', async () => {
+    const { dependencias } = crearDependenciasDeTest({
+      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000, maxBodyBytes: 4096 },
+    });
+    const manejador = crearManejadorAnalisis(dependencias);
+
+    clinicalApi.responder({ status: 200, cuerpo: ejemplo('con-evidencia-s1.json') });
+    const ok = await manejador(peticionAutenticada());
+    const origenAjeno = await manejador(peticionDeAnalisis({ Origin: 'https://otro-origen.test' }));
+    const grande = await manejador(
+      peticionDeAnalisis({ Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=s' }, { query: 'x'.repeat(5000) }),
+    );
+    clinicalApi.fallarConErrorDeRed();
+    const caido = await manejador(peticionAutenticada());
+
+    expect([ok.status, origenAjeno.status, grande.status, caido.status]).toEqual([200, 403, 413, 502]);
+    for (const respuesta of [ok, origenAjeno, grande, caido]) {
+      expect(respuesta.headers.get('cache-control')).toBe('no-store');
+    }
+  });
+
+  it('responde 413 CUERPO_INVALIDO sin ningún request a clinical-api cuando el cuerpo supera WEB_MAX_BODY_BYTES [US-060 AC-4]', async () => {
+    const { dependencias, lineas } = crearDependenciasDeTest({
+      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000, maxBodyBytes: 100 },
+    });
+    const solicitud = peticionDeAnalisis(
+      { Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=sesion-sintetica-1' },
+      { query: 'x'.repeat(500) },
+    );
+
+    const respuesta = await crearManejadorAnalisis(dependencias)(solicitud);
+
+    expect(respuesta.status).toBe(413);
+    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorCuerpoInvalido', await respuesta.json());
+    expect(clinicalApi.peticiones).toHaveLength(0);
+    expect(lineas).toEqual([
+      { event: 'evidence_analyses.proxy', status: 413, traceId: 'req_web00001', motivo: 'cuerpo_excesivo' },
+    ]);
   });
 });
 

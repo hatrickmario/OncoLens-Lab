@@ -55,6 +55,44 @@ export function crearClinicalApiSimulado() {
           return HttpResponse.json(cuerpo, { status, headers: cabeceras ?? {} });
         }),
       ),
+    /** Responde con texto crudo (sin pasar por JSON.stringify), para comprobar que no se reserializa. */
+    responderTexto: ({ status, texto, cabeceras }: { status: number; texto: string | null; cabeceras?: Record<string, string> }) =>
+      servidor.use(
+        http.post(RUTA_UPSTREAM, async ({ request }) => {
+          await capturar(request);
+          return new HttpResponse(texto, { status, headers: cabeceras ?? {} });
+        }),
+      ),
+    /** Cabeceras 200 y un cuerpo que empieza y nunca termina (corte durante la lectura). */
+    responderCuerpoSinFin: () =>
+      servidor.use(
+        http.post(RUTA_UPSTREAM, async ({ request }) => {
+          await capturar(request);
+          const cuerpo = new ReadableStream<Uint8Array>({
+            start: (controlador) => controlador.enqueue(new TextEncoder().encode('{"id":')),
+          });
+          return new HttpResponse(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }),
+      ),
+    /** Responde con texto crudo (sin pasar por JSON.stringify), para comprobar que no se reserializa. */
+    responderTexto: ({ status, texto, cabeceras }: { status: number; texto: string | null; cabeceras?: Record<string, string> }) =>
+      servidor.use(
+        http.post(RUTA_UPSTREAM, async ({ request }) => {
+          await capturar(request);
+          return new HttpResponse(texto, { status, headers: cabeceras ?? {} });
+        }),
+      ),
+    /** Cabeceras 200 y un cuerpo que empieza y nunca termina (corte durante la lectura). */
+    responderCuerpoSinFin: () =>
+      servidor.use(
+        http.post(RUTA_UPSTREAM, async ({ request }) => {
+          await capturar(request);
+          const cuerpo = new ReadableStream<Uint8Array>({
+            start: (controlador) => controlador.enqueue(new TextEncoder().encode('{"id":')),
+          });
+          return new HttpResponse(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }),
+      ),
     fallarConErrorDeRed: () =>
       servidor.use(
         http.post(RUTA_UPSTREAM, async ({ request }) => {
@@ -77,7 +115,7 @@ export function crearClinicalApiSimulado() {
 export function crearDependenciasDeTest(sobrescribir: Partial<DependenciasAnalisis> = {}) {
   const lineas: LineaDeRegistro[] = [];
   const dependencias: DependenciasAnalisis = {
-    config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000 },
+    config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000, maxBodyBytes: 32768 },
     fetch: globalThis.fetch,
     nuevoTraceId: () => 'req_web00001',
     ahora: () => 1_760_000_000_000,
