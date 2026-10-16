@@ -1,11 +1,12 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 // Base de lint del monorepo (L1D-265, design D1). `npm run lint` = `eslint . --max-warnings 0`.
 // Los bloques de `web` (React, a11y, Next, seguridad del cliente) los añade la sección de frontend.
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       '**/node_modules/**',

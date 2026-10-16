@@ -1,0 +1,6 @@
+{
+  "ac": "US-215 AC-1",
+  "descripcion": "Ejecutar format no modifica lo generado (api-contracts, Pydantic generado) ni los openapi.yaml: el clon queda sin diferencias en esas rutas.",
+  "esperado": "pasa",
+  "comando": "npm run format && git diff --exit-code -- packages/api-contracts/src apps/clinical-api/openapi.yaml apps/rag-orchestrator/openapi.yaml apps/rag-orchestrator/app/schemas/generated contracts"
+}

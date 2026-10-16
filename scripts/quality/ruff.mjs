@@ -10,6 +10,7 @@ const AVISO_SIN_RUFF =
 
 /** Ejecuta `ruff format` sobre rag-orchestrator y devuelve su código de salida. */
 function formatearPython({ soloVerificar }) {
+  // Ruff descubre apps/rag-orchestrator/pyproject.toml; `--config` explícito resolvería `extend-exclude` desde la raíz.
   const argumentos = ['format', ...(soloVerificar ? ['--check'] : []), DIRECTORIO];
   const resultado = spawnSync('ruff', argumentos, { cwd: RAIZ, stdio: 'inherit' });
 

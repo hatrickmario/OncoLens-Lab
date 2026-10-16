@@ -6,6 +6,7 @@ import path from 'node:path';
 export const RAIZ = path.resolve(import.meta.dirname, '../../..');
 export const FIXTURES_FORMATO = path.join(import.meta.dirname, 'fixtures/formato');
 const BIN = path.join(RAIZ, 'node_modules/.bin');
+export const binLocal = (nombre) => path.join(BIN, nombre);
 
 /** Ejecuta un comando y devuelve estado y salida unificada (stdout + stderr). */
 export function ejecutar(comando, argumentos, { cwd = RAIZ, env = process.env } = {}) {

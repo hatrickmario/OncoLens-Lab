@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
-import { FIXTURES_FORMATO, RAIZ, copiarFixtures, ejecutar, prettier, ruff } from './soporte.mjs';
+import { FIXTURES_FORMATO, RAIZ, binLocal, copiarFixtures, ejecutar, prettier, ruff } from './soporte.mjs';
 
 const ASTDE = 'import ast,sys;print(ast.dump(ast.parse(open(sys.argv[1]).read())))';
 const astDe = (archivo) => ejecutar('python3', ['-I', '-c', ASTDE, archivo]).salida;
@@ -63,7 +63,7 @@ describe('formato de los fixtures', () => {
   });
 
   it('eslint-config-prettier no encuentra reglas en conflicto sobre un archivo formateado [US-215 AC-5]', () => {
-    const resultado = ejecutar(path.join(RAIZ, 'node_modules/.bin/eslint-config-prettier'), [
+    const resultado = ejecutar(binLocal('eslint-config-prettier'), [
       path.join(FIXTURES_FORMATO, 'formateado.ts'),
     ]);
 

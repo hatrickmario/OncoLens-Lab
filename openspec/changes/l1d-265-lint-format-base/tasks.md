@@ -37,6 +37,6 @@
 
 - [ ] 4.0 **[humano, abierta]** Decidir si `pre-commit-gate.sh` de `.claude/hooks/` corre `npm run lint` y `npm run format:check` (design.md Open Questions); este change no toca `.claude/` sin esa respuesta
 
-- [ ] 4.1 `openspec validate l1d-265-lint-format-base --strict` en verde
+- [x] 4.1 `openspec validate l1d-265-lint-format-base --strict` en verde
 - [ ] 4.2 Tests del contexto en verde: `npx vitest run ci/tests/quality`, `npm run lint`, `npm run format:check`, `npm run contracts:generate:check` (sin diferencias), tests de `web`, `clinical-api` y Pytest de `rag-orchestrator`. Sin `contracts:verify-provider` (sin cambios de API) ni `run-ai-eval` (no aplica)
 - [ ] 4.3 Resultado de `npm audit` adjunto al PR (solo `devDependencies` nuevas)
