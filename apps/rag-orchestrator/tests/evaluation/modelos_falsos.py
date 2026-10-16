@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 from app.evaluation.config_medicion import ModeloSpec
+from app.evaluation.envoltorios import MENSAJE_LISTA_VACIA
 
 DIM = 64
 
@@ -31,6 +32,8 @@ class EmbedderFalso:
     """Bolsa de palabras con hash estable, normalizada: determinista y sin cargar nada."""
 
     def codificar(self, textos: list[str], *, consulta: bool) -> np.ndarray:
+        if not textos:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         matriz = np.zeros((len(textos), DIM), dtype=np.float32)
         for i, texto in enumerate(textos):
             for palabra in _palabras(texto):
@@ -41,12 +44,16 @@ class EmbedderFalso:
 
 class RerankerFalso:
     def puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
+        if not pasajes:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         palabras = set(_palabras(consulta))
         return [float(len(palabras & set(_palabras(p)))) - 1.0 for p in pasajes]
 
 
 class NliFalso:
     def clasificar(self, pares: list[tuple[str, str]]) -> list[str]:
+        if not pares:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         return ["neutral" for _ in pares]
 
 

@@ -20,21 +20,24 @@ from app.evaluation.config_medicion import ModeloSpec
 TAMANO_LOTE_TOKENS = 4096  # presupuesto de tokens por llamada a ONNX Runtime al codificar el corpus
 
 
+MENSAJE_LISTA_VACIA = "la lista de entrada está vacía"
+
+
 class Embedder(Protocol):
     def codificar(self, textos: list[str], *, consulta: bool) -> np.ndarray:
-        """Vectores L2-normalizados, una fila por texto."""
+        """Vectores L2-normalizados, una fila por texto. Contrato: ``textos`` vacío lanza ``ValueError`` (los fakes también)."""
         ...
 
 
 class Reranker(Protocol):
     def puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
-        """Puntaje crudo por pasaje (mayor = más relevante)."""
+        """Puntaje crudo por pasaje (mayor = más relevante). Contrato: ``pasajes`` vacío lanza ``ValueError``."""
         ...
 
 
 class ClasificadorNli(Protocol):
     def clasificar(self, pares: list[tuple[str, str]]) -> list[str]:
-        """Etiqueta (entailment | neutral | contradiction) por par (fragmento, afirmación)."""
+        """Etiqueta (entailment | neutral | contradiction) por par (fragmento, afirmación). Contrato: ``pares`` vacío lanza ``ValueError``."""
         ...
 
 
@@ -140,6 +143,8 @@ class EmbedderOnnx(_ModeloOnnx):
         return (vectores / np.maximum(normas, 1e-12)).astype(np.float32)
 
     def codificar(self, textos: list[str], *, consulta: bool) -> np.ndarray:
+        if not textos:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         plantilla = self.spec.plantilla_consulta if consulta else self.spec.plantilla_documento
         secuencias = [self._ids(plantilla.format(texto=t)) for t in textos]
         orden = sorted(range(len(secuencias)), key=lambda i: len(secuencias[i]))
@@ -201,6 +206,8 @@ class RerankerOnnx(_ModeloOnnx):
         return ids_par[: self.max_length - 1] + ids_par[-1:] if len(ids_consulta) < self.max_length - 1 else ids_par[: self.max_length]
 
     def puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
+        if not pasajes:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         salida = self._correr([self._secuencia_par(consulta, p) for p in pasajes])
         if self.spec.tarea == "reranker_causal":
             return [float(v) for v in salida[:, 1] - salida[:, 0]]  # logit(yes) - logit(no)
@@ -237,6 +244,8 @@ class NliOnnx(_ModeloOnnx):
         self.etiquetas = {int(k): str(v).lower() for k, v in config["id2label"].items()}
 
     def clasificar(self, pares: list[tuple[str, str]]) -> list[str]:
+        if not pares:
+            raise ValueError(MENSAJE_LISTA_VACIA)
         secuencias = []
         for fragmento, afirmacion in pares:
             ids = self.tokenizador.encode(fragmento, afirmacion).ids
