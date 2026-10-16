@@ -251,6 +251,16 @@ def ejecutar_fase_a(
         return SALIDA_CITA
 
     medicion = MedicionFaseA(config, dataset, dir_modelos, cache_datos, ejecutor, exportador, cliente)
+    componentes, selecciones = _medir_componentes_en_cascada(medicion, config)
+    reporte = _armar_reporte_fase_a(config, dataset, fuentes, componentes, selecciones, ahora().date().isoformat())
+    destino = salida_reporte or raiz_repo() / "reports" / "adr39" / f"{ahora().date().isoformat()}-fase-a.json"
+    escribir_reporte(destino, reporte)
+    print(f"reporte: {destino}")
+    return SALIDA_SIN_CANDIDATO if reporte["componentes_sin_candidato"] else SALIDA_OK
+
+
+def _medir_componentes_en_cascada(medicion: MedicionFaseA, config: Any) -> tuple[dict[str, Any], dict[str, Seleccion]]:
+    """Embeddings primero; el reranker se mide sobre el embedding elegido; el NLI es independiente."""
     componentes: dict[str, Any] = {}
     selecciones: dict[str, Seleccion] = {}
     bloque, selecciones["embeddings"], _ = medicion.medir_componente("embeddings")
@@ -263,10 +273,13 @@ def ejecutar_fase_a(
         componentes["reranker"] = bloque
     bloque, selecciones["nli"], _ = medicion.medir_componente("nli")
     componentes["nli"] = bloque
+    return componentes, selecciones
 
-    reporte = {
+
+def _armar_reporte_fase_a(config: Any, dataset: Any, fuentes: dict[str, Any], componentes: dict[str, Any], selecciones: dict[str, Seleccion], fecha: str) -> dict[str, Any]:
+    return {
         "fase": "A",
-        "fecha": ahora().date().isoformat(),
+        "fecha": fecha,
         "dataset": {"nombre": dataset.nombre, "version": dataset.version, "preguntas": len(dataset.preguntas), "pares_nli": len(dataset.pares_nli)},
         "fuentes_sha256": {i: f.sha256 for i, f in sorted(fuentes.items())},
         "entorno": _entorno(),
@@ -275,12 +288,8 @@ def ejecutar_fase_a(
         "recuperacion": config.bruto["recuperacion"],
         "componentes": componentes,
         "presupuesto_conjunto": fase_a.presupuesto_conjunto(selecciones, config),
-        "componentes_sin_candidato": sorted(c for c, s in selecciones.items() if s.sin_candidato) + (["reranker"] if elegido is None else []),
+        "componentes_sin_candidato": sorted(c for c, s in selecciones.items() if s.sin_candidato) + (["reranker"] if "reranker" not in selecciones else []),
     }
-    destino = salida_reporte or raiz_repo() / "reports" / "adr39" / f"{ahora().date().isoformat()}-fase-a.json"
-    escribir_reporte(destino, reporte)
-    print(f"reporte: {destino}")
-    return SALIDA_SIN_CANDIDATO if reporte["componentes_sin_candidato"] else SALIDA_OK
 
 
 def main(argv: list[str] | None = None) -> int:

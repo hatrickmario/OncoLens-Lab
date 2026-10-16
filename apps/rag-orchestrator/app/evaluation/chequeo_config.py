@@ -65,6 +65,38 @@ def dimension_con_literal(texto_modelo_datos: str) -> list[str]:
     return malas
 
 
+def problemas_de_claves_contra_entorno(decision: dict[str, str], entorno: dict[str, str]) -> list[str]:
+    """Claves faltantes, desconocidas o divergentes entre el bloque del ADR y ``.env.example``."""
+    problemas = []
+    for clave in CLAVES_OBLIGATORIAS:
+        if clave not in entorno or not entorno[clave]:
+            problemas.append(f"{RUTA_ENV}: falta {clave}")
+    for clave, esperado in decision.items():
+        if clave not in CLAVES_ADR39:
+            problemas.append(f"{RUTA_ADR}: clave desconocida {clave}")
+        elif clave in entorno and entorno[clave] != esperado:
+            problemas.append(f"{clave}: configuración {entorno[clave]!r} difiere del ADR-39 {esperado!r}")
+        elif clave not in entorno and clave not in CLAVES_OBLIGATORIAS:
+            problemas.append(f"{RUTA_ENV}: falta {clave}")
+    problemas.extend(f"{RUTA_ADR}: el bloque de decisión no fija {clave}" for clave in CLAVES_ADR39 if clave not in decision)
+    return problemas
+
+
+def problemas_de_configuracion_invalida(entorno: dict[str, str]) -> list[str]:
+    try:
+        cargar_config_modelos(entorno)
+    except ConfigInvalida as exc:
+        return [f"{RUTA_ENV}: {exc}"]
+    return []
+
+
+def problemas_de_dimension_en_modelo_datos(raiz: Path) -> list[str]:
+    modelo_datos = raiz / RUTA_MODELO_DATOS
+    if not modelo_datos.exists():
+        return []
+    return [f"{m}: la dimensión de dense_vector no puede ser un literal" for m in dimension_con_literal(modelo_datos.read_text(encoding="utf-8"))]
+
+
 def chequear(raiz: Path) -> ResultadoChequeo:
     resultado = ResultadoChequeo()
     decision = leer_bloque_decision((raiz / RUTA_ADR).read_text(encoding="utf-8")) if (raiz / RUTA_ADR).exists() else {}
@@ -72,26 +104,9 @@ def chequear(raiz: Path) -> ResultadoChequeo:
         resultado.problemas.append(f"{RUTA_ADR}: sin bloque de decisión (adr39:decision) con la fase A cerrada")
         return resultado
     entorno = leer_env((raiz / RUTA_ENV).read_text(encoding="utf-8")) if (raiz / RUTA_ENV).exists() else {}
-    for clave in CLAVES_OBLIGATORIAS:
-        if clave not in entorno or not entorno[clave]:
-            resultado.problemas.append(f"{RUTA_ENV}: falta {clave}")
-    for clave, esperado in decision.items():
-        if clave not in CLAVES_ADR39:
-            resultado.problemas.append(f"{RUTA_ADR}: clave desconocida {clave}")
-        elif clave in entorno and entorno[clave] != esperado:
-            resultado.problemas.append(f"{clave}: configuración {entorno[clave]!r} difiere del ADR-39 {esperado!r}")
-        elif clave not in entorno and clave not in CLAVES_OBLIGATORIAS:
-            resultado.problemas.append(f"{RUTA_ENV}: falta {clave}")
-    for clave in CLAVES_ADR39:
-        if clave not in decision:
-            resultado.problemas.append(f"{RUTA_ADR}: el bloque de decisión no fija {clave}")
-    try:
-        cargar_config_modelos(entorno)
-    except ConfigInvalida as exc:
-        resultado.problemas.append(f"{RUTA_ENV}: {exc}")
-    modelo_datos = raiz / RUTA_MODELO_DATOS
-    if modelo_datos.exists():
-        resultado.problemas.extend(f"{m}: la dimensión de dense_vector no puede ser un literal" for m in dimension_con_literal(modelo_datos.read_text(encoding="utf-8")))
+    resultado.problemas.extend(problemas_de_claves_contra_entorno(decision, entorno))
+    resultado.problemas.extend(problemas_de_configuracion_invalida(entorno))
+    resultado.problemas.extend(problemas_de_dimension_en_modelo_datos(raiz))
     return resultado
 
 
