@@ -38,7 +38,7 @@ describe('fake-secrets.sh', () => {
     const salida = execFileSync(SCRIPT, [destino], { encoding: 'utf8' });
 
     const archivos = readdirSync(destino);
-    expect(archivos).toHaveLength(10);
+    expect(archivos).toHaveLength(20);
     const aleatorios = archivos.filter((nombre) => !nombre.endsWith('.pem'));
     for (const nombre of aleatorios) {
       const valor = readFileSync(path.join(destino, nombre), 'utf8').trim();

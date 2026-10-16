@@ -9,12 +9,16 @@ set -euo pipefail
 destino="${1:?uso: fake-secrets.sh <directorio-destino>}"
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 compose="$raiz/infra/docker/docker-compose.yml"
+compose_test="$raiz/infra/docker/docker-compose.test.yml"
+# Secretos que genera scripts/setup-secrets.sh y ningún servicio de este Compose monta todavía.
+SIN_SERVICIO=(pg_ca.crt pg_ca.key seed_doctor_password seed_admin_password)
 
 mkdir -p "$destino"
 umask 077
 
-nombres="$(ONCOLENS_SECRETS_DIR="$destino" docker compose -f "$compose" config --format json \
+nombres="$(ONCOLENS_SECRETS_DIR="$destino" docker compose -f "$compose" -f "$compose_test" config --format json \
   | node -e "const c=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(Object.values(c.secrets??{}).map(s=>require('path').basename(s.file)).join('\n'))")"
+nombres="$(printf '%s\n' "$nombres" "${SIN_SERVICIO[@]}")"
 
 while IFS= read -r nombre; do
   [ -n "$nombre" ] || continue
