@@ -19,6 +19,15 @@ const protegida = () => ({
   rulesets: [],
 });
 
+const rulesetDeMain = (cambios = {}) => ({
+  target: 'branch',
+  enforcement: 'active',
+  bypass_actors: [],
+  conditions: { ref_name: { include: ['~DEFAULT_BRANCH'], exclude: [] } },
+  rules: [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'ci-ok' }] } }],
+  ...cambios,
+});
+
 const faltantes = (respuesta) => evaluarProteccion(respuesta).filter((r) => !r.cumple).map((r) => r.condicion);
 
 describe('evaluarProteccion', () => {
@@ -30,7 +39,7 @@ describe('evaluarProteccion', () => {
     const respuesta = protegida();
     respuesta.protection.required_status_checks = { strict: true, contexts: ['build-test'], checks: [] };
 
-    expect(faltantes(respuesta)).toEqual(['check requerido ci-ok']);
+    expect(faltantes(respuesta)).toEqual(['check requerido ci-ok', 'sin bypass para administradores']);
   });
 
   it('falta todo cuando main no tiene protección ni rulesets [US-036 AC-6]', () => {
@@ -44,7 +53,7 @@ describe('evaluarProteccion', () => {
         { type: 'pull_request', parameters: {} },
         { type: 'required_status_checks', parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: 'ci-ok' }] } },
       ],
-      rulesets: [{ enforcement: 'active', bypass_actors: [] }],
+      rulesets: [rulesetDeMain()],
     };
 
     expect(faltantes(respuesta)).toEqual([]);
@@ -57,10 +66,46 @@ describe('evaluarProteccion', () => {
         { type: 'pull_request', parameters: {} },
         { type: 'required_status_checks', parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: 'ci-ok' }] } },
       ],
-      rulesets: [{ enforcement: 'active', bypass_actors: [{ actor_type: 'RepositoryRole' }] }],
+      rulesets: [rulesetDeMain({ bypass_actors: [{ actor_type: 'RepositoryRole' }] })],
     };
 
     expect(faltantes(respuesta)).toEqual(['sin bypass para administradores']);
+  });
+});
+
+describe('evaluarProteccion · fuente del bypass', () => {
+  const reglas = [
+    { type: 'pull_request', parameters: {} },
+    { type: 'required_status_checks', parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: 'ci-ok' }] } },
+  ];
+
+  it('ignora un ruleset ajeno con actores con bypass que no exige ci-ok [US-036 AC-6]', () => {
+    const ajeno = rulesetDeMain({ rules: [], bypass_actors: [{ actor_type: 'OrganizationAdmin' }] });
+
+    expect(faltantes({ protection: null, rules: reglas, rulesets: [rulesetDeMain(), ajeno] })).toEqual([]);
+  });
+
+  it('no cuenta un ruleset que exige ci-ok pero apunta a otra rama [US-036 AC-6]', () => {
+    const deOtraRama = rulesetDeMain({ conditions: { ref_name: { include: ['refs/heads/release'], exclude: [] } } });
+
+    expect(faltantes({ protection: null, rules: reglas, rulesets: [deOtraRama] })).toEqual(['sin bypass para administradores']);
+  });
+
+  it('falta el bypass cuando el ruleset que exige ci-ok no está activo [US-036 AC-6]', () => {
+    expect(faltantes({ protection: null, rules: reglas, rulesets: [rulesetDeMain({ enforcement: 'evaluate' })] })).toEqual(['sin bypass para administradores']);
+  });
+
+  it('no da por bueno enforce_admins de una protección clásica que no exige ci-ok [US-036 AC-6]', () => {
+    const clasica = protegida().protection;
+    clasica.required_status_checks = { strict: true, contexts: ['build-test'], checks: [] };
+
+    expect(faltantes({ protection: clasica, rules: [], rulesets: [] })).toContain('sin bypass para administradores');
+  });
+
+  it('exige que cumplan todas las fuentes que exigen ci-ok [US-036 AC-6]', () => {
+    const conBypass = rulesetDeMain({ bypass_actors: [{ actor_type: 'RepositoryRole' }] });
+
+    expect(faltantes({ ...protegida(), rulesets: [conBypass] })).toEqual(['sin bypass para administradores']);
   });
 });
 

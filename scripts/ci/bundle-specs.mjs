@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * `node scripts/ci/bundle-specs.mjs <raíz> <directorio-de-salida>`: escribe `<proveedor>.json` con el spec empaquetado
- * (con los `$ref` a `contracts/schemas/` internalizados) de cada proveedor, leído de `<raíz>`. Lo usa
- * `contracts-breaking.sh` para que `oasdiff` compare base y HEAD sin resolver referencias relativas.
+ * (con los `$ref` a `contracts/schemas/` internalizados) de cada proveedor, leído de `<raíz>`, e imprime los proveedores
+ * (uno por línea, de PROVIDERS en scripts/contracts/lib/specs.mjs). Lo usa `contracts-breaking.sh` para que `oasdiff`
+ * compare base y HEAD sin resolver referencias relativas ni repetir la lista de proveedores.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -18,4 +19,5 @@ const especificaciones = loadBundledSpecs(path.resolve(raiz));
 mkdirSync(salida, { recursive: true });
 for (const proveedor of PROVIDERS) {
   writeFileSync(path.join(salida, `${proveedor}.json`), JSON.stringify(especificaciones[proveedor].bundled));
+  console.log(proveedor);
 }

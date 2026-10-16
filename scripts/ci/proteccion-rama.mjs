@@ -36,16 +36,31 @@ export function evaluarProteccion(respuesta) {
       condicion: 'rama actualizada antes de mergear',
       cumple: protection?.required_status_checks?.strict === true || reglaCheck?.parameters?.strict_required_status_checks_policy === true,
     },
-    {
-      condicion: 'sin bypass para administradores',
-      cumple: protection?.enforce_admins?.enabled === true || rulesetsActivosSinBypass(respuesta.rulesets),
-    },
+    { condicion: 'sin bypass para administradores', cumple: sinBypass(respuesta) },
   ];
 }
 
-/** ¿Hay rulesets y todos están activos y sin actores con bypass? Sin rulesets no se puede afirmar nada. */
-function rulesetsActivosSinBypass(rulesets) {
-  return (rulesets ?? []).length > 0 && rulesets.every((ruleset) => ruleset.enforcement === 'active' && (ruleset.bypass_actors ?? []).length === 0);
+const exigeElCheck = (checks = []) => checks.some((check) => check === CHECK_REQUERIDO || check?.context === CHECK_REQUERIDO);
+const apuntaAMain = (ruleset) => {
+  const { include = [], exclude = [] } = ruleset.conditions?.ref_name ?? {};
+  const cubre = (patrones) => patrones.some((patron) => ['~DEFAULT_BRANCH', '~ALL', 'refs/heads/main'].includes(patron));
+  return ruleset.target === 'branch' && cubre(include) && !cubre(exclude);
+};
+const rulesetExigeElCheck = (ruleset) =>
+  (ruleset.rules ?? []).some((regla) => regla.type === 'required_status_checks' && exigeElCheck(regla.parameters?.required_status_checks));
+
+/**
+ * Sin bypass para administradores, evaluado en las mismas fuentes que exigen `ci-ok`: la protección clásica (enforce_admins)
+ * y/o los rulesets activos que apuntan a main y exigen ci-ok (sin actores con bypass). Otros rulesets no cuentan.
+ */
+function sinBypass({ protection, rulesets }) {
+  const clasica = exigeElCheck(protection?.required_status_checks?.contexts) || exigeElCheck(protection?.required_status_checks?.checks);
+  const delRuleset = (rulesets ?? []).filter((ruleset) => apuntaAMain(ruleset) && rulesetExigeElCheck(ruleset));
+  const resultados = [
+    ...(clasica ? [protection.enforce_admins?.enabled === true] : []),
+    ...delRuleset.map((ruleset) => ruleset.enforcement === 'active' && (ruleset.bypass_actors ?? []).length === 0),
+  ];
+  return resultados.length > 0 && resultados.every(Boolean);
 }
 
 function main() {
