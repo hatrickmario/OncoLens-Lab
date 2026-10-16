@@ -14,3 +14,11 @@ backlog
 docs
 openspec
 data
+infra/docker/secrets/
+**/secrets/
+**/*.pem
+**/*.key
+**/pg_hba*.conf
+**/.env
+**/.env.*
+!**/.env.example
