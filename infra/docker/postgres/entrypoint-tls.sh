@@ -11,11 +11,14 @@ set -eu
 origen=/run/secrets
 destino=/run/pg-secrets
 
+instalar_para_postgres() {
+  install -m 0400 -o postgres -g postgres "$origen/$1" "$destino/$1"
+}
+
 install -d -m 0700 -o postgres -g postgres "$destino"
-for archivo in pg_server.key "$origen"/pg_*_password; do
-  nombre="$(basename "$archivo")"
-  [ -f "$origen/$nombre" ] || continue
-  install -m 0400 -o postgres -g postgres "$origen/$nombre" "$destino/$nombre"
+instalar_para_postgres pg_server.key
+for ruta in "$origen"/pg_*_password; do
+  [ -f "$ruta" ] && instalar_para_postgres "$(basename "$ruta")"
 done
 
 export PG_SECRETS_DIR="$destino"

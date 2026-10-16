@@ -202,18 +202,11 @@ contrasena_aleatoria() { openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n'; }
 
 clave_privada_ec_p256() { openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out "$1" 2>/dev/null; }
 
-generar_clave_simetrica() {
-  local nombre="$1"
+# generar_valor_aleatorio <nombre> <función-generadora>: un archivo de una línea con modo 0600.
+generar_valor_aleatorio() {
+  local nombre="$1" generador="$2"
   conservar_si_existen "$nombre" && return 0
-  clave_simetrica_de_32_bytes >"$trabajo/$nombre"
-  publicar "$trabajo/$nombre" "$nombre" 600
-  informar_escritura "$nombre"
-}
-
-generar_contrasena() {
-  local nombre="$1"
-  conservar_si_existen "$nombre" && return 0
-  contrasena_aleatoria >"$trabajo/$nombre"
+  "$generador" >"$trabajo/$nombre"
   publicar "$trabajo/$nombre" "$nombre" 600
   informar_escritura "$nombre"
 }
@@ -288,13 +281,13 @@ generar_pg_hba() {
 generar_secretos() {
   local nombre
   generar_par_jwt
-  for nombre in "${CLAVES_DE_IDENTIDAD[@]}"; do generar_clave_simetrica "$nombre"; done
-  for nombre in "${CONTRASENAS[@]}"; do generar_contrasena "$nombre"; done
+  for nombre in "${CLAVES_DE_IDENTIDAD[@]}"; do generar_valor_aleatorio "$nombre" clave_simetrica_de_32_bytes; done
+  for nombre in "${CONTRASENAS[@]}"; do generar_valor_aleatorio "$nombre" contrasena_aleatoria; done
   generar_autoridad_certificadora
   generar_certificado_del_servidor
   generar_pg_hba pg_hba.conf
   if [ "$perfil" = test ]; then
-    for nombre in "${CONTRASENAS_PERFIL_TEST[@]}"; do generar_contrasena "$nombre"; done
+    for nombre in "${CONTRASENAS_PERFIL_TEST[@]}"; do generar_valor_aleatorio "$nombre" contrasena_aleatoria; done
     generar_pg_hba pg_hba.test.conf "$PLANTILLA_PG_HBA_TEST"
   fi
 }
