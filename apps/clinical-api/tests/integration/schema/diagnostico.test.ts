@@ -1,9 +1,11 @@
+import type { Client } from 'pg';
 import { describe, expect, inject, it } from 'vitest';
 import { columnasDe } from '../../support/catalogo.js';
 import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support/db.js';
 import {
   filaDeDiagnostico,
   filaDeGradacionGleason,
+  filaDeGradacionNottingham,
   generadorDeIds,
   insertar,
   insertarContextoClinico,
@@ -19,7 +21,7 @@ const COLUMNAS_DIAGNOSIS = ['staging_system', 'stage_value', 'performance_scale'
 const GRADING_ANULABLES = ['specimen_type', 'grade_scope', 'gleason_primary_pattern', 'gleason_secondary_pattern', 'gleason_score', 'isup_grade_group', 'nottingham_grade', 'source_document_id', 'extraction_score', 'reviewed_by', 'reviewed_at'];
 const GRADING_OBLIGATORIAS = ['id', 'diagnosis_id', 'grading_system', 'is_reference', 'entry_method', 'extraction_confidence', 'review_status', 'created_at'];
 
-async function diagnosticoSintetico(cliente: Parameters<Parameters<typeof conTransaccionRevertida>[1]>[0]) {
+async function diagnosticoSintetico(cliente: Client) {
   const ids = generadorDeIds(ESPACIO_DE_IDS);
   const contexto = await insertarContextoClinico(cliente, ids);
   const diagnostico = await insertar(cliente, 'clinical.diagnosis', filaDeDiagnostico(ids, contexto.patientId, contexto.episodeId));
@@ -87,18 +89,7 @@ describe('clinical.diagnosis y clinical.diagnosis_grading', () => {
   ])('rechaza por diagnosis_grading_nottingham_ck la gradación Nottingham que %s [US-038 AC-3]', async (_caso, variante) => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const { ids, diagnosisId } = await diagnosticoSintetico(cliente);
-      const nottingham = {
-        ...filaDeGradacionGleason(ids, diagnosisId),
-        grading_system: 'nottingham',
-        specimen_type: null,
-        grade_scope: null,
-        gleason_primary_pattern: null,
-        gleason_secondary_pattern: null,
-        gleason_score: null,
-        isup_grade_group: null,
-        nottingham_grade: 2,
-        ...variante,
-      };
+      const nottingham = filaDeGradacionNottingham(ids, diagnosisId, variante);
       const { sql, valores } = sqlInsertar('clinical.diagnosis_grading', nottingham);
 
       const error = await esperarRechazo(cliente, sql, valores);

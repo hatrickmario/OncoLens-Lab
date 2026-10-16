@@ -631,7 +631,7 @@ CREATE UNIQUE INDEX "permission_code_key" ON "auth"."permission"("code");
 CREATE UNIQUE INDEX "session_token_hash_key" ON "auth"."session"("token_hash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "patient_identity_blind_index_uq" ON "identity"."patient_identity"("id_type", "issuing_country", "national_id_hmac") NULLS NOT DISTINCT; -- editado a mano (data-model.md §5, design D1): issuing_country es nullable
+CREATE UNIQUE INDEX "patient_identity_blind_index_uq" ON "identity"."patient_identity"("id_type", "issuing_country", "national_id_hmac");
 
 -- CreateIndex
 CREATE INDEX "patient_retention_until_idx" ON "clinical"."patient"("retention_until");
@@ -947,6 +947,11 @@ ALTER TABLE clinical.analysis_follow_up
 -- §4.3 (RN-12): mismo dominio de llm_provider en ai_analysis_record.
 ALTER TABLE clinical.ai_analysis_record
   ADD CONSTRAINT ai_analysis_record_llm_provider_ck CHECK (llm_provider IN ('local', 'nube'));
+
+-- §5 (design D1): la única de patient_identity con NULLS NOT DISTINCT (PostgreSQL >= 15). issuing_country es nullable y,
+-- sin la cláusula, dos identidades con país nulo y el mismo HMAC no chocarían. Reemplaza el índice que generó Prisma.
+DROP INDEX identity.patient_identity_blind_index_uq;
+CREATE UNIQUE INDEX patient_identity_blind_index_uq ON identity.patient_identity (id_type, issuing_country, national_id_hmac) NULLS NOT DISTINCT;
 
 -- §5: índices únicos parciales.
 CREATE UNIQUE INDEX care_team_member_active_uq ON clinical.care_team_member (patient_id, doctor_id) WHERE is_active;

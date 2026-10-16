@@ -124,6 +124,56 @@ export function filaDeGradacionGleason(ids: GeneradorDeIds, diagnosisId: string,
   };
 }
 
+export function filaDeGradacionNottingham(ids: GeneradorDeIds, diagnosisId: string, resto: Fila = {}): Fila {
+  return {
+    ...filaDeGradacionGleason(ids, diagnosisId),
+    grading_system: 'nottingham',
+    specimen_type: null,
+    grade_scope: null,
+    gleason_primary_pattern: null,
+    gleason_secondary_pattern: null,
+    gleason_score: null,
+    isup_grade_group: null,
+    nottingham_grade: 2,
+    ...resto,
+  };
+}
+
+export function filaDeMiembroDeEquipo(ids: GeneradorDeIds, patientId: string, doctorId: string, resto: Fila = {}): Fila {
+  return {
+    id: ids(),
+    patient_id: patientId,
+    doctor_id: doctorId,
+    care_role: 'oncologo',
+    is_primary: false,
+    is_active: true,
+    assigned_at: INSTANTE_FIJO,
+    ...resto,
+  };
+}
+
+export function filaDeSeguimiento(ids: GeneradorDeIds, analysisId: string, resto: Fila = {}): Fila {
+  return {
+    id: ids(),
+    analysis_id: analysisId,
+    turn_number: 1,
+    question_text: 'pregunta sintética',
+    status: 'sin_evidencia',
+    answer: JSON.stringify([]),
+    cited_sources: JSON.stringify([]),
+    patient_data_links: JSON.stringify({}),
+    data_classification: 'sintetico',
+    llm_provider: 'local',
+    llm_model: 'modelo-fingido',
+    nli_model: 'nli-fingido',
+    prompt_version: 'prompt-v0',
+    catalog_version: 'catalogo-v0',
+    trace_id: 'traza-sintetica-seguimiento',
+    created_at: INSTANTE_FIJO,
+    ...resto,
+  };
+}
+
 export function filaDeAnalisis(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
   const vacioObj = JSON.stringify({});
   const vacioLista = JSON.stringify([]);
