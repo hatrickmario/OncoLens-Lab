@@ -22,7 +22,7 @@ let privateKey: CryptoKey;
 
 beforeAll(async () => {
   ({ publicKey, privateKey } = await generarParEfimero());
-  servidor.listen({ onUnhandledRequest: 'error' });
+  servidor.listen({ onUnhandledFrame: ({ defaults }) => defaults.error() });
 });
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'], now: INSTANTE_CONGELADO });
