@@ -5,11 +5,13 @@
  * Compara código de salida, mensajes esperados (y ausentes) y, si se pide, que el valor sembrado no salga en el log.
  *
  * case.json: { ac, descripcion, esperado: "pasa" | "falla", comando: string | string[], aplicar?: "archivo.sh|.mjs",
- *              mensajes?: string[], ausentes?: string[], sinValor?: "ruta/relativa/al/clon", pendiente?: "motivo" }
+ *              mensajes?: string[], ausentes?: string[], sinValor?: "ruta/relativa/al/clon",
+ *              pendiente?: { motivo: string, hastaQueSeArchive: string[] } }
  *   - `comando` se ejecuta con `bash -c` en el clon y `BASE_REF` = el commit base del caso (antes de `aplicar`).
  *   - `aplicar` se ejecuta en el clon con CASE_DIR = la carpeta del caso; si deja cambios sin commitear se commitean.
- *   - `pendiente`: el caso depende de un change aún no mergeado; se lista como PENDIENTE y no cuenta como verde con --estricto.
- * Uso: ci/tests/run-cases.sh [--estricto] [--lista] [caso ...]
+ *   - `pendiente`: el caso depende de changes aún no mergeados; se lista como PENDIENTE (y falla con --estricto). Cuando alguno
+ *     de `hastaQueSeArchive` aparece en openspec/changes/archive/ el caso deja de poder estar pendiente y cuenta como FALLA.
+ * Uso: ci/tests/run-cases.sh [--estricto] [--lista] [--casos <dir>] [--archivo <dir>] [caso ...]
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
@@ -17,13 +19,16 @@ import os from 'node:os';
 import path from 'node:path';
 
 const ORIGEN = path.resolve(import.meta.dirname, '../..');
-const CASOS = path.join(ORIGEN, 'ci/tests/cases');
 const IDENTIDAD_GIT = ['-c', 'user.name=ci-selftest', '-c', 'user.email=ci-selftest@example.com', '-c', 'commit.gpgsign=false'];
 
 const argumentos = process.argv.slice(2);
 const estricto = argumentos.includes('--estricto');
 const soloLista = argumentos.includes('--lista');
-const filtro = argumentos.filter((argumento) => !argumento.startsWith('--'));
+const valorDe = (nombre) => (argumentos.includes(nombre) ? argumentos[argumentos.indexOf(nombre) + 1] : undefined);
+const CASOS = path.resolve(valorDe('--casos') ?? path.join(ORIGEN, 'ci/tests/cases'));
+const ARCHIVO = path.resolve(valorDe('--archivo') ?? path.join(ORIGEN, 'openspec/changes/archive'));
+const valoresDeBanderas = new Set(['--casos', '--archivo'].map(valorDe).filter(Boolean));
+const filtro = argumentos.filter((argumento) => !argumento.startsWith('--') && !valoresDeBanderas.has(argumento));
 
 const git = (cwd, ...parametros) => execFileSync('git', [...IDENTIDAD_GIT, '-C', cwd, ...parametros], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
@@ -91,10 +96,21 @@ function incumplimientos(caso, ejecuciones, clon) {
   return { razones, salida };
 }
 
+/** Un caso pendiente deja de serlo cuando se archiva alguno de los changes de los que depende. */
+function estadoDePendiente(nombre, caso) {
+  const { motivo, hastaQueSeArchive = [] } = caso.pendiente;
+  const archivados = existsSync(ARCHIVO) ? readdirSync(ARCHIVO) : [];
+  const yaArchivados = hastaQueSeArchive.filter((change) => archivados.some((carpeta) => carpeta.endsWith(`-${change}`)));
+  if (yaArchivados.length > 0) {
+    return { nombre, caso, estado: 'FALLA', detalle: `sigue pendiente pero ya se archivó ${yaArchivados.join(', ')}: quita pendiente y deja el caso en verde` };
+  }
+  return { nombre, caso, estado: 'PENDIENTE', detalle: motivo };
+}
+
 function correrCaso(nombre) {
   const dirCaso = path.join(CASOS, nombre);
   const caso = JSON.parse(readFileSync(path.join(dirCaso, 'case.json'), 'utf8'));
-  if (caso.pendiente) return { nombre, caso, estado: 'PENDIENTE', detalle: caso.pendiente };
+  if (caso.pendiente) return estadoDePendiente(nombre, caso);
   const temporal = mkdtempSync(path.join(os.tmpdir(), 'oncolens-caso-'));
   try {
     const clon = path.join(temporal, 'clon');

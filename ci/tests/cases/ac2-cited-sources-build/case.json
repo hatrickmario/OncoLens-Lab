@@ -1,7 +1,10 @@
 {
   "ac": "US-036 AC-2",
   "descripcion": "Mitad de build de AC-2: con citedSources eliminado y lo generado regenerado, el build de clinical-api falla porque el gateway (L1D-103/L1D-104) consume EvidenceOption.citedSources. Pendiente hasta que ese consumidor esté en main: no se fabrica un consumidor de prueba.",
-  "pendiente": "l1d-103/l1d-104 sin mergear: clinical-api todavía no consume EvidenceOption.citedSources (tarea 5.2; el change no se cierra sin este caso en verde)",
+  "pendiente": {
+    "motivo": "l1d-103/l1d-104 sin mergear: clinical-api todavía no consume EvidenceOption.citedSources (tarea 5.2; el change no se cierra sin este caso en verde)",
+    "hastaQueSeArchive": ["l1d-103-gateway-contexto-clinico", "l1d-104-persistencia-analisis-fallos"]
+  },
   "esperado": "falla",
   "comando": "npm run contracts:generate && npm run build -w apps/clinical-api",
   "aplicar": "../ac2-cited-sources/aplicar.mjs",
