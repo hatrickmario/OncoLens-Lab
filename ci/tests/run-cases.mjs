@@ -97,10 +97,26 @@ function incumplimientos(caso, ejecuciones, clon) {
   return { razones, salida };
 }
 
+const carpetasDe = (directorio) => (existsSync(directorio) ? readdirSync(directorio) : []);
+
+/** Motivo por el que `pendiente` no es válido (forma o changes inexistentes), o `null`. */
+function validarPendiente(caso) {
+  const { pendiente } = caso;
+  if (typeof pendiente !== 'object' || pendiente === null || typeof pendiente.motivo !== 'string' || !pendiente.motivo) {
+    return 'pendiente debe ser { motivo, hastaQueSeArchive: [changes] }';
+  }
+  if (!Array.isArray(pendiente.hastaQueSeArchive) || pendiente.hastaQueSeArchive.length === 0) return 'pendiente.hastaQueSeArchive debe listar al menos un change';
+  const conocidos = [...carpetasDe(CAMBIOS), ...carpetasDe(ARCHIVO)];
+  const inexistentes = pendiente.hastaQueSeArchive.filter((change) => !conocidos.some((carpeta) => carpeta === change || carpeta.endsWith(`-${change}`)));
+  return inexistentes.length > 0 ? `pendiente depende de un change que no existe en openspec/changes/ ni en el archivo: ${inexistentes.join(', ')}` : null;
+}
+
 /** Un caso pendiente deja de serlo cuando se archiva alguno de los changes de los que depende. */
 function estadoDePendiente(nombre, caso) {
-  const { motivo, hastaQueSeArchive = [] } = caso.pendiente;
-  const archivados = existsSync(ARCHIVO) ? readdirSync(ARCHIVO) : [];
+  const invalido = validarPendiente(caso);
+  if (invalido) return { nombre, caso, estado: 'FALLA', detalle: invalido };
+  const { motivo, hastaQueSeArchive } = caso.pendiente;
+  const archivados = carpetasDe(ARCHIVO);
   const yaArchivados = hastaQueSeArchive.filter((change) => archivados.some((carpeta) => carpeta.endsWith(`-${change}`)));
   if (yaArchivados.length > 0) {
     return { nombre, caso, estado: 'FALLA', detalle: `sigue pendiente pero ya se archivó ${yaArchivados.join(', ')}: quita pendiente y deja el caso en verde` };

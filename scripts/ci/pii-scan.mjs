@@ -13,7 +13,7 @@ import { esTexto, leerBytes, listarArchivosVersionados } from './lib/archivos.mj
 import { leerConfiguracion, parametros } from './lib/cli.mjs';
 import { esMarcaSintetica } from './lib/claseDatos.mjs';
 import { casaConGlob, validarGlob } from './lib/glob.mjs';
-import { coincidenciasPii, compilarFormatos } from '../lib/formatosPii.mjs';
+import { coincidenciasPii, formatosCompilados } from '../lib/formatosPii.mjs';
 
 /** Lista cerrada de exclusiones admisibles: lockfiles y binarios por extensión. En código, para que la configuración no pueda ampliarla. */
 export const EXCLUSIONES_PERMITIDAS = [
@@ -100,7 +100,7 @@ export function estaEnAllowlistSintetica(ruta, formato, hash, allowlist) {
 /**
  * PII en un texto. Devuelve la línea, el formato y el hash del valor normalizado; el valor en claro no sale de aquí.
  * @param {string} texto
- * @param {ReturnType<typeof compilarFormatos>} formatos formatos compilados de scripts/lib/formatosPii.mjs
+ * @param {ReturnType<typeof formatosCompilados>} formatos formatos compilados de scripts/lib/formatosPii.mjs
  * @returns {{ linea: number, formato: string, sha256: string }[]}
  */
 export function detectarPii(texto, formatos) {
@@ -138,7 +138,7 @@ export function escanear({ archivos, leer, formatos, excluir, allowlist }) {
 function main() {
   const { raiz, banderas } = parametros(process.argv.slice(2), '');
   if (banderas.has('--hash')) console.error('aviso: el sha256 no protege el valor (un número corto se invierte por fuerza bruta), solo lo identifica; úsalo únicamente con valores sintéticos');
-  const formatos = compilarFormatos(leerConfiguracion(raiz, 'config/pii-formats.json'));
+  const formatos = formatosCompilados(raiz);
   const { excluir } = leerConfiguracion(raiz, 'config/pii-scan.json');
   const allowlist = leerConfiguracion(raiz, 'config/pii-allowlist.json');
   const { problemas, hallazgos, noEscaneados } = escanear({

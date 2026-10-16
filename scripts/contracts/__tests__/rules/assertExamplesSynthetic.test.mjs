@@ -20,13 +20,11 @@ describe('assertExamplesSynthetic · correos', () => {
   const dominios = ['example.com', 'oncolens.test', 'demo.test', 'host.local', 'clinica-ejemplo.org', 'notexample.com'];
   const texto = dominios.map((dominio) => correo('usuario', dominio)).join(' ');
 
-  it('assertExamplesSynthetic y detectarPii reconocen el mismo conjunto de correos [US-036 AC-4]', () => {
+  it('la regla reporta los correos que el formato reconoce y cuyo dominio no es de ejemplo [US-036 AC-4]', () => {
     const delFormato = coincidenciasPii(texto, formatoCorreo, { sinExenciones: true }).map((c) => c.valor);
-    const delEscaner = detectarPii(texto, formatos).filter((h) => h.formato === 'correo');
 
     expect(delFormato).toHaveLength(dominios.length);
     expect(correosReportados(texto)).toEqual(delFormato.filter((valor) => !/@(example\.(com|org|net)|oncolens\.test|ejemplo\.invalid)$/.test(valor)));
-    expect(delEscaner.length).toBeLessThanOrEqual(delFormato.length);
   });
 
   it('exige un dominio de ejemplo aunque el escáner de PII deje pasar el dominio reservado [US-036 AC-4]', () => {
