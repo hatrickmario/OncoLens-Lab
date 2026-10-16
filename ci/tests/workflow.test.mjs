@@ -60,6 +60,18 @@ describe('ci.yml', () => {
   });
 });
 
+describe('ci-selftest.yml', () => {
+  it('instala ruff antes de los casos de PR porque los de formato ejecutan npm run format [US-215 AC-4]', () => {
+    const selftest = leerWorkflow('ci-selftest.yml');
+    const pasos = todosLosPasos(selftest);
+    const indiceRuff = pasos.findIndex((paso) => /requirements-dev\.txt/.test(paso.run ?? ''));
+    const indiceCasos = pasos.findIndex((paso) => /run-cases\.sh/.test(paso.run ?? ''));
+
+    expect(indiceRuff, 'falta pip install -r apps/rag-orchestrator/requirements-dev.txt').toBeGreaterThanOrEqual(0);
+    expect(indiceRuff).toBeLessThan(indiceCasos);
+  });
+});
+
 describe.each(NOMBRES)('workflow %s', (nombre) => {
   const workflow = leerWorkflow(nombre);
 
