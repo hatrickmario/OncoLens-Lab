@@ -1,8 +1,7 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import os from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ENV_EXAMPLE, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
 import {
   assertAislamientoDeRedes,
   assertCatalogoSoloLectura,
@@ -13,36 +12,14 @@ import {
   assertStackCompleto,
 } from './lib/reglas-compose.mjs';
 
-const RAIZ = path.resolve(import.meta.dirname, '../../..');
-const COMPOSE = path.join(RAIZ, 'infra/docker/docker-compose.yml');
-const ENV_EXAMPLE = path.join(RAIZ, 'infra/docker/.env.example');
-
-let temporal;
-let secretos;
+let resolver;
+let limpiar;
 
 beforeAll(() => {
-  temporal = mkdtempSync(path.join(os.tmpdir(), 'oncolens-compose-'));
-  secretos = path.join(temporal, 'secretos');
-  execFileSync(path.join(RAIZ, 'scripts/smoke/lib/fake-secrets.sh'), [secretos], { stdio: 'pipe' });
+  ({ resolver, limpiar } = crearResolutor());
 });
 
-afterAll(() => rmSync(temporal, { recursive: true, force: true }));
-
-/** Compose resuelto con secretos ficticios; `override` es el YAML de un `-f` adicional y `entorno` variables extra. */
-function resolver({ override, entorno = {} } = {}) {
-  const archivos = ['-f', COMPOSE];
-  if (override) {
-    const archivo = path.join(temporal, `override-${Math.random().toString(36).slice(2)}.yml`);
-    writeFileSync(archivo, override);
-    archivos.push('-f', archivo);
-  }
-  const salida = execFileSync('docker', ['compose', ...archivos, 'config', '--format', 'json'], {
-    env: { ...process.env, ONCOLENS_SECRETS_DIR: secretos, ...entorno },
-    encoding: 'utf8',
-    maxBuffer: 16 * 1024 * 1024,
-  });
-  return JSON.parse(salida);
-}
+afterAll(() => limpiar());
 
 describe('docker-compose.yml', () => {
   it('declara los ocho servicios con healthcheck y tags exactos sin que clinical-api dependa de rag-orchestrator [US-034 AC-1]', () => {
