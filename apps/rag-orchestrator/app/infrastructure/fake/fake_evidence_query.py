@@ -2,6 +2,9 @@
 
 import json
 from pathlib import Path
+from typing import TypeVar
+
+from pydantic import BaseModel, ValidationError
 
 from app.schemas.generated.models import (
     RagQueryInternalRequest,
@@ -10,6 +13,7 @@ from app.schemas.generated.models import (
 )
 
 _TARGET_RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
+_Modelo = TypeVar("_Modelo", bound=BaseModel)
 
 
 class EjemploFixtureInvalido(Exception):
@@ -29,16 +33,18 @@ class FakeEvidenceQuery:
 
     @classmethod
     def desde_directorio(cls, directorio: Path) -> "FakeEvidenceQuery":
-        indice = json.loads((directorio / "index.json").read_text(encoding="utf-8"))
+        indice = _leer_json(directorio / "index.json")
         respuestas: dict[str, RagQueryInternalResponse] = {}
         for entrada in indice["examples"]:
             if entrada["target"] != _TARGET_RESPUESTA:
                 continue
-            pregunta = _leer_pregunta(directorio / entrada["request"])
-            respuestas[pregunta] = RagQueryInternalResponse.model_validate_json(
-                (directorio / entrada["file"]).read_text(encoding="utf-8")
+            solicitud = _leer_modelo(directorio / entrada["request"], RagQueryInternalRequest)
+            respuestas[solicitud.query.strip()] = _leer_modelo(
+                directorio / entrada["file"], RagQueryInternalResponse
             )
-        sin_evidencia = next(r for r in respuestas.values() if r.status == RagQueryStatus.sin_evidencia)
+        sin_evidencia = next((r for r in respuestas.values() if r.status == RagQueryStatus.sin_evidencia), None)
+        if sin_evidencia is None:
+            raise EjemploFixtureInvalido("index.json no declara ninguna respuesta de fixture sin_evidencia")
         return cls(respuestas, sin_evidencia)
 
     def select_fixture_response(self, query: str) -> RagQueryInternalResponse:
@@ -49,6 +55,15 @@ class FakeEvidenceQuery:
         return self.select_fixture_response(solicitud.query)
 
 
-def _leer_pregunta(archivo: Path) -> str:
-    solicitud = RagQueryInternalRequest.model_validate_json(archivo.read_text(encoding="utf-8"))
-    return solicitud.query.strip()
+def _leer_json(archivo: Path) -> dict:
+    try:
+        return json.loads(archivo.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise EjemploFixtureInvalido(f"{archivo.name} falta o no es JSON válido") from None
+
+
+def _leer_modelo(archivo: Path, modelo: type[_Modelo]) -> _Modelo:
+    try:
+        return modelo.model_validate_json(archivo.read_text(encoding="utf-8"))
+    except (OSError, ValidationError):
+        raise EjemploFixtureInvalido(f"{archivo.name} falta o no cumple {modelo.__name__}") from None
