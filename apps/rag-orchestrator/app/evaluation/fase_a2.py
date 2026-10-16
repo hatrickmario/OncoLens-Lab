@@ -25,7 +25,7 @@ from app.evaluation.chunking_variants import (
     Variante,
     variantes_admitidas,
 )
-from app.evaluation.config_medicion import ModeloSpec
+from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_dataset
 from app.evaluation.indices_milvus import ComparadorIndices, estimar_bytes_indice, recall_frente_a_flat
 from app.evaluation.medicion_modelos import (
@@ -69,19 +69,7 @@ class ConfigA2:
 def cargar_config_a2(ruta: Path) -> ConfigA2:
     crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
     emb = crudo["embedding"]
-    spec = ModeloSpec(
-        id=str(emb["id"]),
-        componente="embeddings",
-        modelo=emb["modelo"],
-        revision=emb["revision"],
-        tarea="embedding",
-        max_length=int(emb["max_length"]),
-        pooling=emb["pooling"],
-        plantilla_consulta=emb.get("plantilla_consulta", "{texto}"),
-        plantilla_documento=emb.get("plantilla_documento", "{texto}"),
-        sparse=emb.get("sparse", ""),
-        dim_salida=int(emb.get("dim_salida", 0)),
-    )
+    spec = spec_desde_yaml("embeddings", emb)
     return ConfigA2(
         dataset=crudo["dataset"],
         semilla_bootstrap=int(crudo["semilla_bootstrap"]),

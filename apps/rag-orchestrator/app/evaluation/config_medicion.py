@@ -71,18 +71,16 @@ class ConfigMedicion:
 
 
 def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
-    raise NotImplementedError
-
-
-def _spec(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
-    if crudo["tarea"] not in TAREAS:
-        raise ValueError(f"tarea desconocida: {crudo['tarea']}")
+    """``ModeloSpec`` de un bloque de candidato; los bloques ``embedding`` de A2 y A3 omiten ``tarea`` (es ``embedding``)."""
+    tarea = crudo.get("tarea", "embedding" if componente == "embeddings" else None)
+    if tarea not in TAREAS:
+        raise ValueError(f"tarea desconocida: {tarea}")
     return ModeloSpec(
         id=str(crudo["id"]),
         componente=componente,
         modelo=crudo["modelo"],
         revision=crudo["revision"],
-        tarea=crudo["tarea"],
+        tarea=tarea,
         max_length=int(crudo["max_length"]),
         pooling=crudo.get("pooling", ""),
         plantilla_consulta=crudo.get("plantilla_consulta", "{texto}"),
@@ -109,7 +107,7 @@ def cargar_config(ruta: Path) -> ConfigMedicion:
     rec = crudo["recuperacion"]
     lat = crudo["latencia"]
     candidatos = {
-        componente: tuple(_spec(componente, c) for c in crudo[componente])
+        componente: tuple(spec_desde_yaml(componente, c) for c in crudo[componente])
         for componente in ("embeddings", "reranker", "nli")
         if componente in crudo
     }

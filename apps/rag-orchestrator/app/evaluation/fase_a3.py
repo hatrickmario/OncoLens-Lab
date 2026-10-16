@@ -22,7 +22,7 @@ import numpy as np
 import yaml
 
 from app.evaluation.chunking_variants import ESTRATEGIA_TAMANO_FIJO, ChunkCandidato, Seccion, Variante
-from app.evaluation.config_medicion import ModeloSpec
+from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, DatasetInvalido, Pregunta, cargar_dataset
 from app.evaluation.envoltorios import MonitorRss, pico_rss_mb
 from app.evaluation.medicion_modelos import (
@@ -102,14 +102,8 @@ def cargar_config_a3(ruta: Path) -> ConfigA3:
         k=int(p["k"]),
         tolerancia_empate=float(p["tolerancia_empate"]),
         cuantizacion=p["cuantizacion"],
-        embedding=ModeloSpec(
-            id=str(emb["id"]), componente="embeddings", modelo=emb["modelo"], revision=emb["revision"], tarea="embedding",
-            max_length=int(emb["max_length"]), pooling=emb["pooling"], sparse=emb.get("sparse", ""),
-        ),
-        reranker=ModeloSpec(
-            id=str(rer["id"]), componente="reranker", modelo=rer["modelo"], revision=rer["revision"], tarea=rer["tarea"],
-            max_length=int(rer["max_length"]),
-        ),
+        embedding=spec_desde_yaml("embeddings", emb),
+        reranker=spec_desde_yaml("reranker", rer),
         escenarios=tuple(
             Escenario(e["id"], int(e["chunk"]), int(e["max_length"]), int(e["max_pairs"]), e["rol"]) for e in crudo["escenarios"]
         ),
