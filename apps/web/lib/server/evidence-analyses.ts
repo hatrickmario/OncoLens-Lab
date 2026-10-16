@@ -30,16 +30,7 @@ export function crearManejadorAnalisis(dependencias: DependenciasAnalisis): (req
     }
 
     const inicio = dependencias.ahora();
-    const cuerpo = await request.text();
-    const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
-    const resultado = await createEvidenceAnalysis({
-      client: sdk,
-      // Se reenvía tal cual: la validación del borde es de clinical-api (D1).
-      body: cuerpo as unknown as EvidenceAnalysisRequest,
-      bodySerializer: (texto) => texto as string,
-      parseAs: 'text',
-      throwOnError: false,
-    });
+    const resultado = await pedirAnalisisAClinicalApi(dependencias, request);
 
     if (resultado.response === undefined) {
       return responderFalloDeTransporte(dependencias, inicio);
@@ -50,6 +41,19 @@ export function crearManejadorAnalisis(dependencias: DependenciasAnalisis): (req
     registrarReenvio(dependencias.registrar, respuesta, dependencias.ahora() - inicio);
     return new Response(cuerpoDeRespuesta, { status: respuesta.status, headers: cabecerasHaciaNavegador(respuesta) });
   };
+}
+
+async function pedirAnalisisAClinicalApi(dependencias: DependenciasAnalisis, request: Request) {
+  const cuerpo = await request.text();
+  const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
+  return createEvidenceAnalysis({
+    client: sdk,
+    // Se reenvía tal cual: la validación del borde es de clinical-api (D1).
+    body: cuerpo as unknown as EvidenceAnalysisRequest,
+    bodySerializer: (texto) => texto as string,
+    parseAs: 'text',
+    throwOnError: false,
+  });
 }
 
 function serializarError(error: unknown): string {
