@@ -99,6 +99,9 @@ function incumplimientos(caso, ejecuciones, clon) {
 
 const carpetasDe = (directorio) => (existsSync(directorio) ? readdirSync(directorio) : []);
 
+/** Nombre del change de una carpeta: las archivadas llevan el prefijo AAAA-MM-DD-. */
+const nombreDelChange = (carpeta) => carpeta.replace(/^\d{4}-\d{2}-\d{2}-/, '');
+
 /** Motivo por el que `pendiente` no es válido (forma o changes inexistentes), o `null`. */
 function validarPendiente(caso) {
   const { pendiente } = caso;
@@ -107,7 +110,7 @@ function validarPendiente(caso) {
   }
   if (!Array.isArray(pendiente.hastaQueSeArchive) || pendiente.hastaQueSeArchive.length === 0) return 'pendiente.hastaQueSeArchive debe listar al menos un change';
   const conocidos = [...carpetasDe(CAMBIOS), ...carpetasDe(ARCHIVO)];
-  const inexistentes = pendiente.hastaQueSeArchive.filter((change) => !conocidos.some((carpeta) => carpeta === change || carpeta.endsWith(`-${change}`)));
+  const inexistentes = pendiente.hastaQueSeArchive.filter((change) => !conocidos.map(nombreDelChange).includes(change));
   return inexistentes.length > 0 ? `pendiente depende de un change que no existe en openspec/changes/ ni en el archivo: ${inexistentes.join(', ')}` : null;
 }
 
@@ -117,7 +120,7 @@ function estadoDePendiente(nombre, caso) {
   if (invalido) return { nombre, caso, estado: 'FALLA', detalle: invalido };
   const { motivo, hastaQueSeArchive } = caso.pendiente;
   const archivados = carpetasDe(ARCHIVO);
-  const yaArchivados = hastaQueSeArchive.filter((change) => archivados.some((carpeta) => carpeta.endsWith(`-${change}`)));
+  const yaArchivados = hastaQueSeArchive.filter((change) => archivados.map(nombreDelChange).includes(change));
   if (yaArchivados.length > 0) {
     return { nombre, caso, estado: 'FALLA', detalle: `sigue pendiente pero ya se archivó ${yaArchivados.join(', ')}: quita pendiente y deja el caso en verde` };
   }

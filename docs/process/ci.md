@@ -72,8 +72,9 @@ caso cuenta como FALLA aunque no se use `--estricto`, así que no puede quedar p
     `example.org`, `example.net`) no son hallazgo en ningún archivo.
   - El `patron` de cada formato es neutro; las exenciones son campos que solo aplica `scripts/lib/formatosPii.mjs`:
     `prefijosExentos` (`SINT-`, el centinela que exigen los ejemplos de `contracts/examples/`), `contextosExentos` (`url`:
-    palabra clave y valor dentro de la **ruta** de una misma URL, antes de `?` y `#`; la consulta y el fragmento se escanean
-    siempre), `exencionesDeSigla` (un valor pegado a letras tras una sigla corta, como `trial id: NCT…`), `dominiosExentos` y `correosExentos` (buzones
+    palabra clave y valor dentro de la **ruta** de una misma URL, antes de `?`, `#` y `;`; la consulta y el fragmento se escanean
+    siempre), `prefijosDeRegistroExentos` (`NCT` en mayúsculas y exactamente ocho dígitos: el identificador de
+    ClinicalTrials.gov, con cualquier palabra clave), `dominiosExentos` y `correosExentos` (buzones
     institucionales públicos concretos; hoy, el de consultas de la CIE de la OMS).
   - Siglas de documento: `CC`, `C.C.`, `TI`, `T.I.`, `CE`, `C.E.`, `NUIP`, `ID`, `HC`, `tarjeta de identidad`,
     `historia clínica`; las de hasta cuatro caracteres exigen límite de palabra.
