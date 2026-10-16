@@ -1,9 +1,11 @@
 """Manejadores de error: `422 CUERPO_INVALIDO` sin eco de la petición (RN-10).
 
 Cubre todo `RequestValidationError` (body, header, query y path). La autenticación (L1D-105)
-debe lanzar 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso
-terminaría aquí como 422.
+lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
+También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO`.
 """
+
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,7 +13,10 @@ from fastapi.responses import JSONResponse
 
 from app.api.trace import resolver_trace_id
 from app.application.ports import TraceIdGenerator
-from app.schemas.generated.models import DetailItem, ErrorValidacion
+from app.domain.token_servicio import TokenServicioInvalido
+from app.schemas.generated.models import DetailItem, ErrorTokenServicioInvalido, ErrorValidacion
+
+logger = logging.getLogger(__name__)
 
 
 def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
@@ -26,3 +31,16 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             detail=[DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()],
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
+
+    @app.exception_handler(TokenServicioInvalido)
+    async def token_servicio_invalido(request: Request, error: TokenServicioInvalido) -> JSONResponse:
+        """Responde 401 con cuerpo y mensaje fijos para todo motivo (sin oráculo); el motivo solo va al log."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        # Nunca el token, la cabecera Authorization ni la cookie: solo evento, motivo cerrado y traceId.
+        logger.warning("event=token_servicio_invalido motivo=%s traceId=%s", error.motivo, trace_id)
+        cuerpo = ErrorTokenServicioInvalido(
+            error="TOKEN_SERVICIO_INVALIDO",
+            message="El token de servicio falta o no es válido.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=401, content=cuerpo.model_dump(), headers={"WWW-Authenticate": "Bearer"})

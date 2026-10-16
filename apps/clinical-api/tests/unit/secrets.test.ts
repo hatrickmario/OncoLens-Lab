@@ -56,7 +56,7 @@ describe('assertSecretPresent', () => {
 });
 
 describe('loadRequiredSecrets', () => {
-  const archivos: Record<string, string> = { '/s/aes': 'aes-ficticia\n', '/s/hmac': 'hmac-ficticia\n' };
+  const archivos: Record<string, string> = { '/s/aes': 'aes-ficticia\n', '/s/hmac': 'hmac-ficticia\n', '/s/jwt': 'jwt-ficticia\n' };
   const lector = (ruta: string) => {
     const contenido = archivos[ruta];
     if (contenido === undefined) throw new Error('ENOENT');
@@ -65,13 +65,18 @@ describe('loadRequiredSecrets', () => {
 
   it('devuelve el contenido de las claves de identidad indexado por la variable cuando ambas están presentes', () => {
     const secretos = loadRequiredSecrets(
-      { IDENTITY_AES_KEY_FILE: '/s/aes', BLIND_INDEX_HMAC_KEY_FILE: '/s/hmac' },
+      {
+        IDENTITY_AES_KEY_FILE: '/s/aes',
+        BLIND_INDEX_HMAC_KEY_FILE: '/s/hmac',
+        SERVICE_JWT_PRIVATE_KEY_FILE: '/s/jwt',
+      },
       lector,
     );
 
     expect(secretos).toEqual({
       IDENTITY_AES_KEY_FILE: 'aes-ficticia',
       BLIND_INDEX_HMAC_KEY_FILE: 'hmac-ficticia',
+      SERVICE_JWT_PRIVATE_KEY_FILE: 'jwt-ficticia',
     });
   });
 

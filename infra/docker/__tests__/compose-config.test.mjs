@@ -9,6 +9,7 @@ import {
   assertRagSoloLecturaConTmpfs,
   assertSinServicioDeLlm,
   assertSoloWebPublicaPuertos,
+  assertTtlDelJwtCompartido,
   assertStackCompleto,
 } from './lib/reglas-compose.mjs';
 
@@ -94,5 +95,15 @@ describe('docker-compose.yml', () => {
     const catalogo = path.join(RAIZ, 'packages/clinical-catalogs');
     const override = `services:\n  clinical-api:\n    volumes:\n      - type: bind\n        source: ${catalogo}\n        target: /catalogs\n        read_only: false\n`;
     expect(() => assertCatalogoSoloLectura(resolver({ override }))).toThrow(/clinical-api/);
+  });
+
+  it('clinical-api y rag-orchestrator reciben el mismo SERVICE_JWT_TTL_SECONDS [US-054 AC-5]', () => {
+    expect(() => assertTtlDelJwtCompartido(resolver())).not.toThrow();
+    expect(() => assertTtlDelJwtCompartido(resolver({ entorno: { SERVICE_JWT_TTL_SECONDS: '30' } }))).not.toThrow();
+  });
+
+  it('falla nombrando ambos servicios cuando un override cambia el SERVICE_JWT_TTL_SECONDS de rag-orchestrator [US-054 AC-5]', () => {
+    const config = resolver({ override: 'services:\n  rag-orchestrator:\n    environment:\n      SERVICE_JWT_TTL_SECONDS: "3600"\n' });
+    expect(() => assertTtlDelJwtCompartido(config)).toThrow(/clinical-api.*rag-orchestrator/);
   });
 });

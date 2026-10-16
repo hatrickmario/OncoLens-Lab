@@ -4,7 +4,9 @@ annotated-types==0.8.0
 anyio==4.15.1
 attrs==26.1.0
 certifi==2026.7.22
+cffi==2.1.1
 click==8.5.0
+cryptography==50.0.2
 fastapi==0.143.2
 h11==0.16.0
 httpcore==1.0.9
@@ -16,10 +18,12 @@ jsonschema-specifications==2025.9.1
 opentelemetry-api==1.45.1
 packaging==26.3
 pluggy==1.7.0
+pycparser==3.11
 pydantic==2.14.1
 pydantic-core==2.50.1
 pydantic-settings==2.16.0
 pygments==2.21.0
+pyjwt==2.15.1
 pytest==9.1.1
 python-dotenv==1.2.4
 referencing==0.37.0

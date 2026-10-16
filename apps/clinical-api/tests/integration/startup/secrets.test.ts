@@ -76,6 +76,7 @@ describe('arranque de clinical-api', () => {
       PORT: '4100',
       IDENTITY_AES_KEY_FILE: escribir('identity_aes_key', VALOR_AES),
       BLIND_INDEX_HMAC_KEY_FILE: escribir('blind_index_hmac_key', VALOR_HMAC),
+      SERVICE_JWT_PRIVATE_KEY_FILE: escribir('jwt_service_private.pem', 'clave-servicio-ficticia'),
     });
 
     expect(resultado.salidas).toEqual([]);

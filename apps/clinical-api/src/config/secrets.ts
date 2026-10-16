@@ -29,11 +29,12 @@ export function assertSecretPresent(
 
 /**
  * Variables `*_FILE` sin las que `clinical-api` no arranca (US-035 AC-5). Es un arreglo de configuración:
- * US-054 le añade `SERVICE_JWT_PRIVATE_KEY_FILE`.
+ * US-054 añade `SERVICE_JWT_PRIVATE_KEY_FILE` (fallo cerrado sin clave de servicio).
  */
 export const SECRETOS_REQUERIDOS: readonly string[] = [
   'IDENTITY_AES_KEY_FILE',
   'BLIND_INDEX_HMAC_KEY_FILE',
+  'SERVICE_JWT_PRIVATE_KEY_FILE',
 ];
 
 /** Lee cada secreto requerido; la primera variable ausente lanza `SecretoAusenteError`. */

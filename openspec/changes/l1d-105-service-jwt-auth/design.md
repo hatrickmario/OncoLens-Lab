@@ -34,13 +34,16 @@ estática. Readme §1.4 fija el par **ES256** que genera `scripts/` (US-035). El
   inyectado (determinismo, sin `time.time()` directo). Devuelve un resultado o lanza
   `TokenServicioInvalido(motivo)` con motivo cerrado: `ausente`, `malformado`, `algoritmo`,
   `firma`, `emisor`, `audiencia`, `expirado`, `vida_maxima`.
-- `app/api/dependencies/service_jwt.py` — dependencia FastAPI `require_service_jwt` que lee solo
-  `Authorization: Bearer`; **no lee cookies**. Se monta con `dependencies=[Depends(...)]` en el
-  `APIRouter` interno (endpoints de L1D-164/L1D-106 y los futuros `/documents/extract`,
-  `/case/summary`, `/rag/follow-up`), nunca en `GET /health`.
-- Las dependencias del router se resuelven antes que la validación del cuerpo: un request sin
-  token y con cuerpo inválido recibe `401`, no `422` (no se revela el esquema a quien no está
-  autenticado), y la comprobación del catálogo (`409`) tampoco corre.
+- `app/api/dependencies/service_jwt.py` — `require_service_jwt` lee solo `Authorization: Bearer`;
+  **no lee cookies**. Se monta como **`route_class`** del `APIRouter` interno, no con `Depends`:
+  `crear_router_interno(autenticacion, tags=...)` es la única forma de crear un router interno de
+  rag (endpoints de L1D-164/L1D-106 y los futuros `/documents/extract`, `/case/summary`,
+  `/rag/follow-up`), nunca para `GET /health`. FastAPI lee y parsea el cuerpo antes de resolver las
+  dependencias, así que con `Depends` un JSON ilegible sin token daba `422`.
+- La autenticación corre antes que la validación del cuerpo: un request sin token y con cuerpo
+  inválido (o ilegible) recibe `401`, no `422` (no se revela el esquema a quien no está
+  autenticado), y la comprobación del catálogo (`409`) tampoco corre. Un test recorre las rutas
+  registradas con `security: serviceJwt` del spec y lo verifica.
 - **Respuesta:** `401` con `ErrorTokenServicioInvalido` (`error`, `message` fijo "El token de
   servicio falta o no es válido.", `traceId`) y `WWW-Authenticate: Bearer`. El mismo cuerpo para
   todos los motivos (sin oráculo); el motivo solo va al log.
@@ -82,6 +85,9 @@ estática. Readme §1.4 fija el par **ES256** que genera `scripts/` (US-035). El
   cambia el spec"; la aprueba el humano en el plan del sprint y el Gate 2 la comprueba: el diff del
   commit solo toca `generate.mjs` y lo generado, y regenerar desde los specs de `main` reproduce lo
   commiteado.
+  Nota: los commits `04ce4a8` y `69dc05a` (este último añade `importFileExtension: '.js'` para
+  `NodeNext`) tocan además `scripts/contracts/generated.mjs` (`clientDir`) y
+  `scripts/contracts/__tests__/generado.test.mjs` (pruebas del SDK), no solo `generate.mjs`.
 - **`fetch` inyectable:** cada SDK expone `createClient({ baseUrl, fetch })` (ningún cliente global
   por defecto en producción); las operaciones reciben `{ client, body, headers }` tipados.
 - **`clinical-api → rag-orchestrator`:**
@@ -141,7 +147,7 @@ descartadas `jsonwebtoken` (API más permisiva con algoritmos y claves) y `pytho
 |---|---|---|
 | `rag-orchestrator/app/infrastructure/security/service_jwt_verifier.py` | nuevo | PyJWT, puerto `Clock` (`app/application/ports.py`, archivo creado por L1D-164; si `Clock` aún no está, lo añade este change), clave pública |
 | `rag-orchestrator/app/api/dependencies/service_jwt.py` | nuevo | `ServiceJwtVerifier` (inyectado en `bootstrap.py`) |
-| `rag-orchestrator/app/api/rag_query.py` (router de L1D-164, nombre canónico `[S1 resp. 17]`) | modificado | añade `dependencies=[Depends(require_service_jwt)]` |
+| `rag-orchestrator/app/api/rag_query.py` (router de L1D-164, nombre canónico `[S1 resp. 17]`) | modificado | crea su router con `crear_router_interno(require_service_jwt)` (`route_class`) |
 | `rag-orchestrator/app/bootstrap.py` | modificado | carga la clave pública y crea el verificador; fallo cerrado |
 | `rag-orchestrator/app/config/settings.py` (`Settings`, nombre canónico `[S1 resp. 17]`) | modificado | `SERVICE_JWT_TTL_SECONDS`, `SERVICE_JWT_CLOCK_SKEW_SECONDS`, `SERVICE_JWT_PUBLIC_KEY_FILE` |
 | `rag-orchestrator/tests/support/service_jwt.py` | nuevo | *builder* de tokens de test (válido y cada variante inválida), par efímero |

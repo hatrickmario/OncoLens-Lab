@@ -110,9 +110,14 @@ compose exec -T rag-orchestrator python -c "import os; open(os.path.join(os.envi
 bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".
-consulta='let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const r=await fetch("http://rag-orchestrator:8000/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
-# Consulta /rag/query desde clinical-api con el cuerpo de stdin: imprime "<status> <cuerpo>".
-consultar_rag() { en_node clinical-api "$consulta"; }
+# US-054: /rag/query exige el JWT de servicio ES256. Se firma DENTRO del contenedor clinical-api con el código
+# compilado real (clave y TTL de su configuración, reloj del sistema, transporte createRagOrchestratorFetch):
+# el smoke no reimplementa el firmador y el token nunca sale del contenedor ni viaja como argumento.
+consulta='const D="./dist/apps/clinical-api/src";let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const base="http://rag-orchestrator:8000";let f=fetch;if(process.argv[1]==="firmado"){const {readServiceJwtConfig}=await import(D+"/config.js");const j=await import(D+"/infrastructure/service-jwt.js");const h=await import(D+"/infrastructure/rag-orchestrator.http.js");const cfg=readServiceJwtConfig(process.env);const signer=j.createServiceTokenSigner({privateKey:await j.loadServicePrivateKey(cfg.privateKeyFile),clock:{now:()=>new Date()},ttlSeconds:cfg.ttlSeconds});f=h.createRagOrchestratorFetch({baseUrl:base,signer})}const r=await f(base+"/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
+# Consulta /rag/query desde clinical-api con el cuerpo de stdin: "firmado" usa el firmador real, "sin-jwt" no envía token.
+# Imprime "<status> <cuerpo>".
+consultar_rag_con() { en_node clinical-api "$consulta" "$1"; }
+consultar_rag() { consultar_rag_con firmado; }
 
 # Éxito si "<status> <cuerpo>" es 200 y el cuerpo es idéntico al ejemplo de contracts/examples/.
 es_respuesta_200_igual_a() {
@@ -136,6 +141,15 @@ ajena="$(node -e "const b=require('$raiz/contracts/examples/rag-query-request.js
 salida="$(printf '%s' "$ajena" | consultar_rag)"
 es_respuesta_200_igual_a "$salida" rag-query-sin-evidencia.json || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
 bien "AC-6 una pregunta que no es de fixture devuelve sin evidencia"
+# US-054 AC-1: las consultas de arriba (200 idéntico al ejemplo) ya van con el token del firmador real.
+bien "US-054 AC-1 un token firmado por el firmador real de clinical-api devuelve 200"
+# US-054 AC-2: sin JWT de servicio, /rag/query responde 401 con el cuerpo del contrato (y sin invocar al LLM).
+salida="$(consultar_rag_con sin-jwt <"$raiz/contracts/examples/rag-query-request.json")"
+case "$salida" in
+  401*TOKEN_SERVICIO_INVALIDO*) ;;
+  *) fallo "US-054: /rag/query sin JWT de servicio respondió: $salida" ;;
+esac
+bien "US-054 /rag/query sin JWT de servicio responde 401 TOKEN_SERVICIO_INVALIDO"
 
 # ---------- fase 2b: PostgreSQL con TLS y roles (US-035 AC-4) ----------
 imagen_postgres="$(compose config --format json | node -e "console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).services.postgres.image)")"

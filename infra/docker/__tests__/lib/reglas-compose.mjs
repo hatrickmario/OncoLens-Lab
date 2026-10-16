@@ -154,3 +154,14 @@ export function assertStackCompleto(config) {
     throw new Error(`${CLINICAL_API} no debe depender de ${RAG} (el LLM caído no puede tumbar la ficha)`);
   }
 }
+
+/** US-054: SERVICE_JWT_TTL_SECONDS tiene un único valor para el firmador (clinical-api) y el verificador (rag-orchestrator). */
+export function assertTtlDelJwtCompartido(config) {
+  const valores = [CLINICAL_API, RAG].map((nombre) => [nombre, entorno(servicio(config, nombre)).SERVICE_JWT_TTL_SECONDS]);
+  for (const [nombre, valor] of valores) {
+    if (!valor) throw new Error(`${nombre} debe declarar SERVICE_JWT_TTL_SECONDS`);
+  }
+  if (valores[0][1] !== valores[1][1]) {
+    throw new Error(`${valores[0][0]} (${valores[0][1]}) y ${valores[1][0]} (${valores[1][1]}) deben recibir el mismo SERVICE_JWT_TTL_SECONDS`);
+  }
+}

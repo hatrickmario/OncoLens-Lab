@@ -74,3 +74,18 @@ def assert_matches_spec(pointer: str, body: Any) -> None:
     if errores:
         detalle = "\n".join(f"  /{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errores)
         raise AssertionError(f"la respuesta no cumple {PROVEEDOR}{pointer}:\n{detalle}")
+
+
+def operaciones_con_jwt_de_servicio() -> list[tuple[str, str]]:
+    """(método, ruta) de cada operación del spec con `security: serviceJwt` (la global, salvo `security: []`)."""
+    if _spec is None:
+        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
+    global_requiere = {"serviceJwt"} <= {n for req in _spec.get("security", []) for n in req}
+    protegidas = []
+    for ruta, operaciones in _spec["paths"].items():
+        for metodo, operacion in operaciones.items():
+            seguridad = operacion.get("security")
+            requiere = global_requiere if seguridad is None else any("serviceJwt" in req for req in seguridad)
+            if requiere:
+                protegidas.append((metodo.upper(), ruta))
+    return protegidas
