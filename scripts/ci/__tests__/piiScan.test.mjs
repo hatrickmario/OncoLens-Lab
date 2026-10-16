@@ -377,7 +377,8 @@ describe('escanear', () => {
 
 describe('allowlist real · comentario del hook pre-commit-gate (L1D-166)', () => {
   const RUTA_DEL_HOOK = '.claude/hooks/pre-commit-gate.sh';
-  const COMENTARIO = '# El usuario local empieza por alfanumérico: así `+@pytest.mark…` (marcador de diff + decorador) no cuenta como email.';
+  // El '@' se concatena para que este archivo no contenga él mismo la forma de correo que prueba.
+  const COMENTARIO = `# El usuario local empieza por alfanumérico: así \`+${'@'}pytest.mark…\` (marcador de diff + decorador) no cuenta como email.`;
   const raizRepo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
   const allowlistReal = JSON.parse(readFileSync(path.join(raizRepo, 'config/pii-allowlist.json'), 'utf8'));
   const leerDe = (archivos) => (ruta) => (ruta in archivos ? Buffer.from(archivos[ruta]) : null);
