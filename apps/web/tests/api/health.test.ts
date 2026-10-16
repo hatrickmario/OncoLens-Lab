@@ -2,14 +2,14 @@ import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { GET } from '../../app/api/health/route';
 
-// Sin handlers y con onUnhandledRequest: 'error': cualquier petición saliente (p. ej. a clinical-api) falla el test.
+// Sin handlers y con onUnhandledFrame: 'error' (MSW 3): cualquier petición saliente (p. ej. a clinical-api) falla el test.
 const servidor = setupServer();
 const peticionesSalientes: string[] = [];
 servidor.events.on('request:start', ({ request }) => {
   peticionesSalientes.push(request.url);
 });
 
-beforeAll(() => servidor.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => servidor.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   peticionesSalientes.length = 0;
 });
