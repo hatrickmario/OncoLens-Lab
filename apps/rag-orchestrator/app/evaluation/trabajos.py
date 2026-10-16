@@ -34,7 +34,7 @@ from app.evaluation.medicion_modelos import (
     reordenar_con_reranker,
 )
 from app.evaluation.reporte import a_json_seguro
-from app.evaluation.retrieval_metrics import agregar
+from app.evaluation.retrieval_metrics import ESCALA_COSENO, ESCALA_SIGMOIDE, agregar
 
 SONDAS_DETERMINISMO = ["determinismo uno", "Instruct: determinismo dos", "x"]
 
@@ -74,10 +74,6 @@ class FabricaOnnx:
 
     def nli(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> ClasificadorNli:
         return envoltorios.NliOnnx(spec, directorio, cuantizacion, hilos)
-
-
-def _sin_evidencia_resumen(valores: Sequence[float]) -> dict[str, Any]:
-    return {"n": len(valores), "maximo": max(valores) if valores else None, "mediana": mediana(valores) if valores else None}
 
 
 def _estadisticas_latencia(tiempos: Sequence[float]) -> dict[str, float]:
@@ -121,7 +117,7 @@ def _calidad_embeddings(
     rankings = recuperar_densos(embedder, vectores, dataset.preguntas, pool)
     resultados = evaluar_rankings(dataset.preguntas, rankings, chunks, config.k)
     _guardar_candidatos(trabajo, chunks, rankings)
-    metricas = agregar(resultados, config.semilla_bootstrap, config.bootstrap_repeticiones)
+    metricas = agregar(resultados, config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO)
     return {
         "chunking": variante.etiqueta,
         "numero_chunks": len(chunks),
@@ -186,8 +182,8 @@ def _trabajo_reranker(trabajo: Trabajo, config: ConfigMedicion, dataset: Dataset
         denso = {k: v[: config.reranker_max_pairs] for k, v in rankings.items()}
         resultado["calidad"] = {
             "pares_por_consulta": config.reranker_max_pairs,
-            "metricas": agregar(evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones),
-            "metricas_densas_mismo_conjunto": agregar(evaluar_rankings(dataset.preguntas, denso, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones),
+            "metricas": agregar(evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_SIGMOIDE),
+            "metricas_densas_mismo_conjunto": agregar(evaluar_rankings(dataset.preguntas, denso, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO),
         }
     return resultado
 

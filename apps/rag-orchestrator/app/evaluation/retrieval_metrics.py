@@ -13,9 +13,13 @@ import unicodedata
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+import statistics
 from statistics import mean
 
 from app.evaluation.dataset_loader import Pregunta
+
+ESCALA_COSENO = "coseno_denso"
+ESCALA_SIGMOIDE = "relevance_score_sigmoide"
 
 K = 10
 _NO_ALFANUMERICO = re.compile(r"[\W_]+", re.UNICODE)
@@ -133,7 +137,7 @@ def _desglose(
     return {k: metrica(v, semilla, repeticiones) for k, v in sorted(grupos.items())}
 
 
-def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000, *, escala_puntaje: str = "") -> dict[str, object]:
+def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000, *, escala_puntaje: str) -> dict[str, object]:
     """Totales y desgloses por fuente, tipo de dato, idioma y controles, más el aparte de ``sin_evidencia``."""
     por_fuente: dict[str, list[ResultadoPregunta]] = defaultdict(list)
     for r in resultados:
@@ -151,6 +155,7 @@ def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones:
         "sin_evidencia_puntaje_maximo": {
             "n": len(sin_evidencia),
             "maximo": max(sin_evidencia) if sin_evidencia else None,
-            "mediana": sorted(sin_evidencia)[len(sin_evidencia) // 2] if sin_evidencia else None,
+            "mediana": statistics.median(sin_evidencia) if sin_evidencia else None,
+            "escala_puntaje": escala_puntaje,  # coseno_denso | relevance_score_sigmoide: no comparables entre sí
         },
     }

@@ -39,7 +39,7 @@ from app.evaluation.medicion_modelos import (
 from app.evaluation.fase_a import agregar_corridas
 from app.evaluation.model_selection import dentro_de_tolerancia
 from app.evaluation.reporte import a_json_seguro, escribir_reporte
-from app.evaluation.retrieval_metrics import agregar
+from app.evaluation.retrieval_metrics import ESCALA_COSENO, ESCALA_SIGMOIDE, agregar
 from app.evaluation.trabajos import SONDAS_DETERMINISMO, Fabrica
 
 SALIDA_OK, SALIDA_DATASET, SALIDA_FUENTE = 0, 2, 3
@@ -257,8 +257,8 @@ def ejecutar_trabajo_a3(trabajo: TrabajoA3, config: ConfigA3, dataset: Dataset, 
         denso = {k: v[: e.max_pairs] for k, v in rankings.items()}
         resultado["calidad"] = {
             "pares_por_consulta": e.max_pairs,
-            "metricas": agregar(evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones),
-            "metricas_densas_mismo_conjunto": agregar(evaluar_rankings(dataset.preguntas, denso, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones),
+            "metricas": agregar(evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_SIGMOIDE),
+            "metricas_densas_mismo_conjunto": agregar(evaluar_rankings(dataset.preguntas, denso, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO),
         }
     serializable: dict[str, Any] = a_json_seguro(resultado)
     trabajo.salida.parent.mkdir(parents=True, exist_ok=True)

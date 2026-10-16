@@ -10,10 +10,6 @@ from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec
 from app.evaluation.model_selection import Medicion, Seleccion, seleccionar_componente, verificar_presupuesto_conjunto
 from app.evaluation.reporte import medicion_a_dict, seleccion_a_dict
 
-ETAPAS = {"embeddings": "embeddings", "reranker": "reranker", "nli": "nli"}
-# Metas iniciales de OL-06 (a recalibrar, TBD-02): se informan frente a lo medido, no deciden la selección.
-METAS_OL06 = {"recall_at_10": 0.80, "recall_at_10_es_a_en": 0.70, "mrr": 0.60}
-
 
 def nombre_candidato(spec: ModeloSpec, cuantizacion: str) -> str:
     return f"{spec.id}@{cuantizacion}"
@@ -53,14 +49,6 @@ def a_medicion(spec: ModeloSpec, cuantizacion: str, agregado: dict[str, Any], li
         licencia=licencia,
         metrica_principal=metrica_principal(spec.componente, agregado["calidad"]),
     )
-
-
-def metas_cumplidas(metricas: dict[str, Any]) -> dict[str, bool]:
-    return {
-        "recall_at_10": metricas["total"]["recall_at_10"] >= METAS_OL06["recall_at_10"],
-        "recall_at_10_es_a_en": metricas["es_a_en"]["recall_at_10"] >= METAS_OL06["recall_at_10_es_a_en"],
-        "mrr": metricas["total"]["mrr"] >= METAS_OL06["mrr"],
-    }
 
 
 def reporte_de_componente(

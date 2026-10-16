@@ -38,10 +38,9 @@ from app.evaluation.medicion_modelos import (
 )
 from app.evaluation.model_selection import MedicionVariante, seleccionar_variante
 from app.evaluation.reporte import escribir_reporte
-from app.evaluation.retrieval_metrics import agregar
+from app.evaluation.retrieval_metrics import ESCALA_COSENO, agregar
 from app.evaluation.trabajos import Fabrica
 
-ETAPAS = ("t2", "t3", "t4", "t5")
 SALIDA_OK, SALIDA_FUENTE, SALIDA_DATASET, SALIDA_PREVIA = 0, 3, 2, 6
 
 
@@ -134,7 +133,7 @@ class PruebasChunking:
         vectores = self.vectores_de(variante, chunks)
         rankings = recuperar_densos(self.embedder, vectores, self.dataset.preguntas, self.config.k)
         resultados = evaluar_rankings(self.dataset.preguntas, rankings, chunks, self.config.k)
-        metricas = agregar(resultados, self.config.semilla_bootstrap, self.config.bootstrap_repeticiones)
+        metricas = agregar(resultados, self.config.semilla_bootstrap, self.config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO)
         return {
             "variante": variante.etiqueta,
             "tamano": variante.tamano,
@@ -201,7 +200,7 @@ def prueba_indice(
         todas = [t for p in pasadas for t in p.latencias_ms]
         por_tipo[tipo] = {
             "parametros": parametros,
-            "metricas": agregar(resultados, config.semilla_bootstrap, config.bootstrap_repeticiones),
+            "metricas": agregar(resultados, config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO),
             "p50_ms": mediana(todas),
             "p95_ms": percentil_95(todas),
             "memoria_estimada_bytes": estimar_bytes_indice(tipo, config.parametros_hnsw, len(chunks), int(vectores.shape[1])),

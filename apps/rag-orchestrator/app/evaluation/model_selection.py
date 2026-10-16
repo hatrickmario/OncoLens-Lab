@@ -9,8 +9,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-SIN_CANDIDATO = "sin_candidato"
-
 
 @dataclass(frozen=True)
 class Medicion:

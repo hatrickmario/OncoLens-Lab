@@ -7,6 +7,7 @@ El reloj se inyecta (``reloj``) para que las pruebas sean deterministas.
 from __future__ import annotations
 
 import math
+import statistics
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -150,7 +151,7 @@ def percentil_95(valores: Sequence[float]) -> float:
 
 
 def mediana(valores: Sequence[float]) -> float:
-    return float(np.median(np.asarray(valores, dtype=float)))
+    return float(statistics.median(valores))
 
 
 def entradas_espaciadas(items: Sequence[object], cuantas: int) -> list[object]:

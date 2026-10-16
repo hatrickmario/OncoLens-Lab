@@ -212,9 +212,13 @@ def test_fase_a_cada_bloque_sin_evidencia_declara_la_escala_de_su_puntaje(
     respx_mock: respx.MockRouter, tmp_path: Path, dataset_sintetico: Path
 ) -> None:
     mock_fuentes(respx_mock)
+    respx_mock.get(url__regex=r"https://huggingface\.co/api/models/falso/.+/revision/.+").mock(
+        return_value=httpx.Response(200, json={"sha": REVISION, "tags": ["license:mit"], "cardData": {"license": "mit"}, "siblings": []})
+    )
     ruta = escribir_config(tmp_path, dataset_sintetico)
 
-    _, _, salida = correr(tmp_path, ruta)
+    with httpx.Client() as cliente:
+        _, _, salida = correr(tmp_path, ruta, cliente=cliente)
 
     componentes = json.loads(salida.read_text())["componentes"]
     embeddings = componentes["embeddings"]["detalle"]["A@int8"]["calidad"]["metricas"]
