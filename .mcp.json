@@ -12,7 +12,9 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "chrome-devtools-mcp@1.11.0"
+        "chrome-devtools-mcp@1.11.0",
+        "--no-usage-statistics",
+        "--no-performance-crux"
       ],
       "env": {}
     }
