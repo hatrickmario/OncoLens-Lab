@@ -124,15 +124,16 @@ OncoLens reconstruye el caso, cruza el perfil clínico y molecular con la eviden
 **Pasos:**
 
 1. Clonar el repositorio: `git clone https://github.com/hatrickmario/OncoLens-Lab.git`
-2. Generar secretos y certificados locales (scripts en `scripts/`, nunca se versionan):
+2. Generar secretos y certificados locales con `scripts/setup-secrets.sh` (bash y `openssl`; idempotente, escribe en `infra/docker/secrets/`, que git ignora, y nunca imprime un valor). Reparto por servicio, respaldo y rotación: [`docs/operations/claves.md`](docs/operations/claves.md).
    - par de claves ES256 del JWT de servicio (la privada solo para `clinical-api`, la pública para `rag-orchestrator`);
    - claves de cifrado de identidad y de índice ciego (HMAC), solo para `clinical-api` (§2.5);
-   - roles de PostgreSQL: el de `clinical-api`, el de solo inserción de `research` y `rag_corpus` (solo el schema `corpus`), más el `pg_hba.conf` que restringe `rag_corpus` a `corpus-db-net`;
-   - certificados TLS de PostgreSQL y certificado HTTPS de `web` emitido por una CA interna;
-   - credenciales de los dos MinIO: `clinical-minio` (solo `clinical-api`) y el MinIO de Milvus (solo corpus).
+   - roles de PostgreSQL: el de `clinical-api`, el de solo inserción de `research`, `rag_corpus` (runtime, solo el schema `corpus`, sin `CREATE`) y `rag_corpus_migrator` (DDL de Alembic, solo `corpus`), más el `pg_hba.conf` que restringe a los dos últimos a `corpus-db-net`;
+   - certificados TLS de PostgreSQL (CA propia; los clientes usan `sslmode=require`); el certificado HTTPS de `web` con una CA interna llega con FEAT-T4d (S6);
+   - credenciales de los dos MinIO: `clinical-minio` (solo `clinical-api`) y el MinIO de Milvus (solo corpus);
+   - con `--profile test` (CI): el rol de los arneses de test y su `pg_hba` con el prefijo `PG_TEST_DB_PREFIX`.
 3. Configurar variables de entorno (`.env`) por app: conexiones, `LLM_BASE_URL` y `LLM_MODEL` (API compatible con OpenAI del runtime nativo), `LLM_CLOUD_ENABLED=false`, `ENABLED_CANCER_TYPES=mama,prostata`, `REAL_ANONYMIZED_ENABLED=false`, `REAL_IDENTIFIED_ENABLED=false`, plazos de retención, parámetros de sesión (§2.5), `CLINICAL_CATALOG_VERSION` (versión de `packages/clinical-catalogs`), `ANALYSIS_MEMORY_MAX=3` (análisis previos que entran como memoria), `EVIDENCE_STALE_YEARS=5` (antigüedad para "posiblemente desactualizada"), `AGENT_MAX_ITERATIONS=1` y `AGENT_MAX_SUBQUERIES=3` (agente acotado). Los cuatro últimos son *propuestas, a calibrar*. El catálogo clínico se monta como volumen de solo lectura en ambos backends (`CLINICAL_CATALOG_PATH`).
 4. Arrancar el LLM nativo (p. ej., `ollama serve`) y descargar los modelos fijados en el ADR de modelos locales (ver "Decisiones de infraestructura de IA"). Los modelos de *embeddings*, *reranker* y NLI se descargan para `rag-orchestrator`, que los ejecuta en CPU.
-5. Levantar la infraestructura y las apps: `docker compose -f infra/docker/docker-compose.yml up -d` (PostgreSQL, `clinical-minio`, Milvus con etcd y su MinIO, `clinical-api`, `rag-orchestrator`, `web`). Solo `web` publica puerto. Para comprobar el stack de punta a punta (ocho servicios `healthy`, aislamiento de red, modo `LLM_PROVIDER=fake` y degradación con el LLM caído) sin tocar tu configuración: `npm run smoke:compose` (usa secretos ficticios en un directorio temporal y un proyecto de Compose propio; requiere Docker).
+5. Levantar la infraestructura y las apps: `docker compose -f infra/docker/docker-compose.yml up -d` (PostgreSQL, `clinical-minio`, Milvus con etcd y su MinIO, `clinical-api`, `rag-orchestrator`, `web`). Solo `web` publica puerto. Para comprobar el stack de punta a punta (ocho servicios `healthy`, aislamiento de red, modo `LLM_PROVIDER=fake` y degradación con el LLM caído) sin tocar tu configuración: `npm run smoke:compose` (genera los secretos con `scripts/setup-secrets.sh` en un directorio temporal y usa un proyecto de Compose propio; requiere Docker).
 6. **Backend de plataforma** (`apps/clinical-api/`), para desarrollo fuera de Compose:
    ```
    npm install
