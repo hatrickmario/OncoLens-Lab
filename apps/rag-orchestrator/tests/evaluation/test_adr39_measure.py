@@ -207,6 +207,15 @@ def test_fase_a_los_descartes_del_reporte_llevan_motivo_y_cifra_ac2(
     assert descartes and descartes[0]["motivo"] == "memoria" and "GB" in descartes[0]["cifra"]
 
 
+def test_fase_a_separa_el_cliente_de_las_fuentes_de_la_verificacion_en_la_fuente_de_los_modelos() -> None:
+    import inspect
+
+    parametros = inspect.signature(medir.ejecutar_fase_a).parameters
+
+    assert parametros["cliente_fuentes"].default is inspect.Parameter.empty
+    assert parametros["verificar_fuente"].default is inspect.Parameter.empty
+
+
 @respx.mock(assert_all_called=False)
 def test_fase_a_cada_bloque_sin_evidencia_declara_la_escala_de_su_puntaje(
     respx_mock: respx.MockRouter, tmp_path: Path, dataset_sintetico: Path
