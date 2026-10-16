@@ -9,7 +9,7 @@ from app.application.ports import LlmHealthPort, TraceIdGenerator
 from app.config.logging import silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
-from app.infrastructure.fake.sin_sonda_llm import SinSondaLlm
+from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
 
@@ -31,7 +31,7 @@ def crear_app(
 
 def _sonda_llm_segun(settings: Settings) -> LlmHealthPort:
     if settings.llm_provider == "fake":
-        return SinSondaLlm()
+        return FakeLlmHealth()
     return OpenAICompatibleLlmHealth(settings.llm_base_url, settings.llm_health_timeout_ms)
 
 
