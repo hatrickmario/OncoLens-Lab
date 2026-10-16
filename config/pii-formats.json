@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "descripcion": "Única definición de formatos de PII del repositorio (RN-22, sin asumir país). La consume el escáner de la CI (scripts/ci/pii-scan.mjs) y la reutiliza L1D-203 para enmascarar en ejecución, añadiendo solo sus reglas de reemplazo. Un cambio de forma sube version y obliga a revisar a ambos consumidores en el mismo PR. Cada patron es una expresión regular de JavaScript con las banderas de 'banderas' y un grupo con nombre 'valor'; '{{palabrasClave}}' se sustituye por las palabras clave del formato (alternativa sin ancla inicial, para cubrir camelCase como numeroDocumento). 'digitosMin' y 'digitosMax' acotan los dígitos del valor.",
+  "formatos": [
+    {
+      "id": "documento_identidad",
+      "tipo": "documento_identidad",
+      "descripcion": "Documento de identidad de 6 a 12 dígitos (separadores opcionales) precedido de su palabra clave; no informa fechas, ni números de una ruta (tras '/'), ni los valores con el prefijo centinela SINT- que exigen los ejemplos (assertExamplesSynthetic).",
+      "palabrasClave": ["documento", "document", "national_id", "cédula", "cedula", "DNI", "pasaporte", "passport", "nationalId", "identificación", "identificacion"],
+      "patron": "(?:{{palabrasClave}})[^\\n\\d/]{0,32}(?<!SINT-)(?<valor>(?!\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4}(?!\\d))\\d(?:[\\d.\\- ]{4,14}\\d)?)(?![\\p{L}\\p{N}])",
+      "banderas": "iu",
+      "digitosMin": 6,
+      "digitosMax": 12
+    },
+    {
+      "id": "telefono_e164",
+      "tipo": "telefono",
+      "descripcion": "Teléfono internacional en formato E.164: '+' y de 8 a 15 dígitos.",
+      "patron": "(?<![\\p{N}+])(?<valor>\\+\\d{8,15})(?!\\d)",
+      "banderas": "u",
+      "digitosMin": 8,
+      "digitosMax": 15
+    },
+    {
+      "id": "telefono_local",
+      "tipo": "telefono",
+      "descripcion": "Teléfono local de 7 a 12 dígitos (separadores opcionales) precedido de su palabra clave.",
+      "palabrasClave": ["tel", "teléfono", "telefono", "celular", "móvil", "movil", "phone", "mobile"],
+      "patron": "(?:{{palabrasClave}})[^\\n\\d/]{0,16}(?<valor>(?!\\d{4}-\\d{2}-\\d{2})\\d(?:[\\d.\\- ]{4,14}\\d)?)(?![\\p{L}\\p{N}])",
+      "banderas": "iu",
+      "digitosMin": 7,
+      "digitosMax": 12
+    },
+    {
+      "id": "correo",
+      "tipo": "correo",
+      "descripcion": "Dirección de correo. Los dominios de 'dominiosExentos' (RFC 2606 / RFC 6761) no pueden pertenecer a una persona y no son hallazgo en ningún archivo; 'correosExentos' lista buzones institucionales públicos concretos.",
+      "patron": "(?<valor>[\\p{L}\\p{N}._%+-]+@(?<dominio>[\\p{L}\\p{N}-]+(?:\\.[\\p{L}\\p{N}-]+)*\\.\\p{L}{2,}))(?![\\p{L}\\p{N}-])",
+      "banderas": "u",
+      "dominiosExentos": ["*.test", "*.local", "*.invalid", "*.localhost", "example.com", "example.org", "example.net"],
+      "correosExentos": [
+        {
+          "local": "icd",
+          "dominio": "who.int",
+          "motivo": "Buzón institucional público de consultas de la CIE de la OMS, citado en DEC-04 y en FEAT-00; no pertenece a una persona."
+        }
+      ]
+    }
+  ]
+}

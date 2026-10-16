@@ -4,7 +4,7 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "@playwright/mcp@latest"
+        "@playwright/mcp@0.0.83"
       ],
       "env": {}
     },
@@ -12,7 +12,7 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "chrome-devtools-mcp@latest"
+        "chrome-devtools-mcp@1.11.0"
       ],
       "env": {}
     }

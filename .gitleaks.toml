@@ -1,0 +1,24 @@
+# Configuración de gitleaks para la CI (US-036 AC-3, design.md D4). El repositorio es público (RN-14).
+# Reglas por defecto (incluye private-key para PEM y los tokens de proveedores) más una regla propia de JWT.
+# La allowlist es solo por ruta y está vacía: toda entrada nueva se justifica en el PR (Gate 2, privacy-guardian).
+title = "OncoLens"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "jwt-con-forma"
+description = "Cadena con forma de JWT (tres segmentos base64url, los dos primeros con cabecera JSON)"
+regex = '''eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'''
+keywords = ["eyj"]
+
+[[allowlists]]
+description = "Falso positivo: UUID sintético de ejemplo de la cabecera Idempotency-Key en un escenario de L1D-139 (no es una credencial)"
+targetRules = ["generic-api-key"]
+paths = ['''openspec/changes/l1d-139-bff-route-handler-analisis/specs/web-bff/spec\.md''']
+
+# Plantilla para nuevas entradas (solo por ruta exacta, con la regla afectada y su justificación):
+# [[allowlists]]
+# description = "Justificación obligatoria"
+# targetRules = ["<id de la regla>"]
+# paths = ['''ruta/exacta\.ext''']
