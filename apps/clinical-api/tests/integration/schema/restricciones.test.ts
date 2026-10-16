@@ -177,7 +177,7 @@ describe('Índices únicos parciales', () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const { patientId, userId, episodeId } = await insertarContextoClinico(cliente, ids);
-      await cliente.query('UPDATE clinical.care_episode SET closed_at = $2 WHERE id = $1', [episodeId, INSTANTE_FIJO]);
+      await cliente.query('UPDATE clinical.care_episode SET closed_at = $2, closed_by = $3 WHERE id = $1', [episodeId, INSTANTE_FIJO, userId]);
 
       const nuevo = await insertar(cliente, 'clinical.care_episode', filaDeEpisodio(ids, patientId, userId));
 

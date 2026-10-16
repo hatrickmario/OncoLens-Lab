@@ -174,6 +174,45 @@ export function filaDeSeguimiento(ids: GeneradorDeIds, analysisId: string, resto
   };
 }
 
+const SIN_MODELOS = {
+  llm_provider: null,
+  llm_model: null,
+  nli_model: null,
+  embedding_model: null,
+  reranker_model: null,
+};
+
+/** Análisis con evidencia: todos los modelos registrados, puntaje 0..1 y al menos una opción. */
+export function filaDeAnalisisConEvidencia(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, {
+    status: 'con_evidencia',
+    top_relevance_score: 0.82,
+    evidence_options: JSON.stringify([{ option: 'opción sintética' }]),
+    ...resto,
+  });
+}
+
+/** Tipo de cáncer no habilitado: no se invocó ningún modelo ni hubo recuperación. */
+export function filaDeAnalisisTipoNoHabilitado(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, { status: 'tipo_no_habilitado', top_relevance_score: null, ...SIN_MODELOS, ...resto });
+}
+
+/** Resumen del caso: sin recuperación del corpus ni consulta; el LLM y el NLI sí corren. */
+export function filaDeResumenDeCaso(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, {
+    analysis_type: 'resumen_caso',
+    status: 'con_evidencia',
+    query_text: null,
+    case_summary: JSON.stringify({ afirmaciones: [] }),
+    top_relevance_score: null,
+    embedding_model: null,
+    reranker_model: null,
+    corpus_release: null,
+    retrieval_params: null,
+    ...resto,
+  });
+}
+
 export function filaDeAnalisis(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
   const vacioObj = JSON.stringify({});
   const vacioLista = JSON.stringify([]);
