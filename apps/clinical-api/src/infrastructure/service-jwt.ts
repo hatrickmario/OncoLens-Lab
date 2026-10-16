@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { importPKCS8, SignJWT, type CryptoKey } from 'jose';
 import type { Clock } from './clock.js';
 
@@ -44,4 +45,15 @@ export async function importServicePrivateKey(pem: string): Promise<CryptoKey> {
   } catch {
     throw new Error('SERVICE_JWT_PRIVATE_KEY_FILE no contiene una clave privada EC P-256 en formato PKCS#8');
   }
+}
+
+/** Lee y valida la clave privada del archivo montado como secreto; sin ella `clinical-api` no arranca. */
+export async function loadServicePrivateKey(file: string): Promise<CryptoKey> {
+  let pem: string;
+  try {
+    pem = await readFile(file, 'utf8');
+  } catch {
+    throw new Error('SERVICE_JWT_PRIVATE_KEY_FILE no se puede leer');
+  }
+  return importServicePrivateKey(pem);
 }
