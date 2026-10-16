@@ -2,7 +2,7 @@
 
 ## Trazabilidad
 
-L1D-274 · US-224 · ADR-39 fase B · FEAT-06a (L1D-16) · Sprint 1 (cierre) · Estimación **3** · Historia de ADR ·
+L1D-274 · US-224 · ADR-39 fase B · FEAT-06a (L1D-16) · Sprint 1 (cierre) · Estimación **5** (re-estimada el 2026-10-20) · Historia de ADR ·
 IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · G-3, G-5, G-6 · RN-12, RN-13, RN-14, RN-21, RN-22 ·
 readme §1.4 · US-224 AC-1…AC-6 (ex US-012 AC-6, AC-7, AC-8 y las partes OCR de AC-1 y p95 de AC-2) ·
 `[S1 resp. 3, 5, 6, 10]` · Fuente: `backlog/features/FEAT-06a-analisis-walking-skeleton.md` §US-224;
