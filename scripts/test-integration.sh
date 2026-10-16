@@ -20,6 +20,8 @@ archivo="$secretos/pg_test_admin_password"
 # Caracteres reservados de la contraseña (se generan alfanuméricos, pero no se asume): codificación de URL.
 contrasena="$(node -e 'process.stdout.write(encodeURIComponent(require("fs").readFileSync(process.argv[1], "utf8").trim()))' "$archivo")"
 
+# Prisma no debe consultar su servicio de versiones en la CI ni en máquinas sin red.
+export CHECKPOINT_DISABLE=1
 export PG_TEST_DB_PREFIX="${PG_TEST_DB_PREFIX:-oltest_}"
 export TEST_DATABASE_URL="postgresql://oncolens_test_admin:${contrasena}@127.0.0.1:${PG_TEST_PORT:-55432}/postgres?sslmode=require"
 

@@ -7,6 +7,12 @@
  */
 export const PATRON_PREFIJO_TEST_DB = /^[a-z][a-z0-9_]{2,}$/;
 
+/**
+ * Forma de un nombre de base de test. Es lo que permite interpolar el nombre entre comillas dobles en
+ * CREATE/DROP DATABASE (el identificador no admite parámetros): solo minúsculas, dígitos y guion bajo.
+ */
+export const PATRON_NOMBRE_BASE_TEST = /^[a-z][a-z0-9_]*$/;
+
 const BASES_RESERVADAS = ['postgres', 'template0', 'template1'] as const;
 
 /** Error del arnés: el mensaje nombra la variable, nunca un valor de conexión. */
@@ -42,7 +48,7 @@ export function validarPrefijoTestDb(prefijo: string, baseClinica: string): void
  */
 export function validarNombreBaseDeTest(nombre: string, prefijo: string, baseClinica: string): void {
   validarPrefijoTestDb(prefijo, baseClinica);
-  const valido = /^[a-z][a-z0-9_]*$/.test(nombre) && nombre.startsWith(prefijo) && nombre.length > prefijo.length;
+  const valido = PATRON_NOMBRE_BASE_TEST.test(nombre) && nombre.startsWith(prefijo) && nombre.length > prefijo.length;
   if (!valido || basesQueNoSonDeTest(baseClinica).includes(nombre)) {
     throw new ErrorArnes('la base de test generada no cumple PG_TEST_DB_PREFIX: el arnés no la crea ni la borra');
   }

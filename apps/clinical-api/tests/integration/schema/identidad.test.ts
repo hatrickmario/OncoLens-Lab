@@ -40,19 +40,43 @@ describe('identity.patient_identity', () => {
     });
   });
 
-  it('guarda documento y nombre solo como bytea *_ciphertext cuando se listan las columnas del schema identity [US-038 AC-6]', async () => {
+  // Lista LITERAL de columnas de data-model.md §4.2: una columna en claro nueva en identity rompe este test.
+  const COLUMNAS_DE_IDENTIDAD: Array<[string, Array<[string, string]>]> = [
+    [
+      'patient_identity',
+      [
+        ['patient_id', 'uuid'],
+        ['id_type', 'id_type'],
+        ['issuing_country', 'text'],
+        ['national_id_ciphertext', 'bytea'],
+        ['national_id_hmac', 'text'],
+        ['full_name_ciphertext', 'bytea'],
+        ['key_version', 'int4'],
+      ],
+    ],
+    [
+      'legal_representative',
+      [
+        ['id', 'uuid'],
+        ['patient_id', 'uuid'],
+        ['relationship', 'relationship'],
+        ['id_type', 'id_type'],
+        ['national_id_ciphertext', 'bytea'],
+        ['national_id_hmac', 'text'],
+        ['full_name_ciphertext', 'bytea'],
+        ['registered_at', 'timestamptz'],
+        ['valid_from', 'date'],
+        ['valid_until', 'date'],
+      ],
+    ],
+  ];
+
+  it.each(COLUMNAS_DE_IDENTIDAD)('guarda documento y nombre solo como bytea *_ciphertext cuando se listan las columnas de identity.%s [US-038 AC-6]', async (tabla, esperadas) => {
     const cliente = await conectar(urlBase);
     try {
-      for (const tabla of ['patient_identity', 'legal_representative']) {
-        const columnas = await columnasDe(cliente, 'identity', tabla);
-        const sensibles = columnas.filter((c) => /national_id|full_name/.test(c.nombre));
+      const columnas = await columnasDe(cliente, 'identity', tabla);
 
-        expect(sensibles.length, tabla).toBeGreaterThanOrEqual(3);
-        for (const columna of sensibles) {
-          if (columna.nombre.endsWith('_hmac')) expect(columna.tipoUdt, columna.nombre).toBe('text');
-          else expect({ nombre: columna.nombre, tipo: columna.tipoUdt }).toEqual({ nombre: expect.stringMatching(/_ciphertext$/), tipo: 'bytea' });
-        }
-      }
+      expect(columnas.map((c) => [c.nombre, c.tipoUdt])).toEqual(esperadas);
     } finally {
       await cliente.end();
     }

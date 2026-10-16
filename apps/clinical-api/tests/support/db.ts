@@ -94,7 +94,12 @@ export function ejecutarPrisma(url: URL | string, argumentos: string[]): Resulta
     env: { ...process.env, DATABASE_URL: destino.toString() },
     encoding: 'utf8',
   });
-  const salida = `${resultado.stdout}\n${resultado.stderr}`.replaceAll(decodeURIComponent(destino.password), '***');
+  const bruta = `${resultado.stdout}\n${resultado.stderr}`;
+  // La contraseña puede aparecer codificada (como en la URL) o decodificada.
+  const salida = [destino.password, decodeURIComponent(destino.password)].reduce(
+    (texto, secreto) => (secreto ? texto.replaceAll(secreto, '***') : texto),
+    bruta,
+  );
   return { codigo: resultado.status, salida };
 }
 

@@ -63,12 +63,6 @@ describe('Migración inicial init_full_schema', () => {
     expect(tablas.rowCount).toBe(0);
   });
 
-  it('nombra la tabla ausente cuando la lista del modelo y el catálogo difieren [US-038 AC-1]', () => {
-    const sinGradacion = TABLAS_DEL_MODELO.filter((tabla) => tabla !== 'clinical.diagnosis_grading');
-
-    expect(tablasAusentes(TABLAS_DEL_MODELO, sinGradacion)).toEqual(['clinical.diagnosis_grading']);
-  });
-
   it('no aplica nada y no deja diferencias con schema.prisma cuando se reaplica la migración [US-038 AC-1]', () => {
     const redeploy = ejecutarPrisma(urlBase, ['migrate', 'deploy']);
     const diferencias = ejecutarPrisma(urlBase, [

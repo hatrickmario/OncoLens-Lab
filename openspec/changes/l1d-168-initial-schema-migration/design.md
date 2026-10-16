@@ -82,7 +82,7 @@ inyectado (determinismo, CLAUDE.md). `created_at` sin `@default(now())` por la m
 (asumido; si el Gate 1 prefiere `DEFAULT now()` en la base, es un cambio menor).
 
 ### D4. PostgreSQL de test real: servicio `postgres` de Compose con TLS, una base por ejecución
-El arnés (`apps/clinical-api/test/support/db.ts`) toma `TEST_DATABASE_URL` (con `sslmode=require`),
+El arnés (`apps/clinical-api/tests/support/db.ts`) toma `TEST_DATABASE_URL` (con `sslmode=require`),
 que apunta al rol **`oncolens_test_admin`** de L1D-165 (`CREATEDB` y nada más) sobre la base de
 mantenimiento `postgres`; crea una base nueva `${PG_TEST_DB_PREFIX}<id>` con el sufijo inyectado
 por el *setup* global (queda como dueño), aplica `prisma migrate deploy`, aplica
@@ -102,6 +102,9 @@ dentro de una transacción que se revierte, para que los tests sean independient
 `template1` o un prefijo que empiece por `template`). La misma comprobación se repite sobre el nombre generado
 `${PG_TEST_DB_PREFIX}<id>` antes del `CREATE DATABASE` y antes del `DROP DATABASE`: el arnés nunca crea ni borra
 una base que no sea suya, aunque el `.env` o la CI traigan un prefijo que `setup-secrets.sh` no validó.
+`pg` y `@types/pg` (versión exacta, devDependencies) son el cliente del arnés: crear y borrar la base de test y consultar
+el catálogo con SQL crudo, que el cliente de Prisma no hace; no entran al runtime. Prisma 7.10.1 (última estable; la
+URL va en `prisma.config.ts`).
 Descartada: Testcontainers — duplicaría la configuración de TLS y `pg_hba.conf` de US-035 y
 divergiría de la imagen de Compose; se puede revisar en US-213 si la CI lo pide (reversible).
 
@@ -141,8 +144,8 @@ Compatibilidad ADR-26: sin efecto.
 |---|---|---|
 | `apps/clinical-api/prisma/schema.prisma` | crea | `data-model.md` (fuente), Prisma |
 | `apps/clinical-api/prisma/migrations/<ts>_init_full_schema/migration.sql` | crea (generado + bloque manual) | `schema.prisma`, `data-model.md` §5, §6 |
-| `apps/clinical-api/test/support/db.ts` | crea | `TEST_DATABASE_URL` (`oncolens_test_admin`), `PG_TEST_DB_PREFIX`, `prisma migrate deploy`, `corpus-schema-grants.sql` de L1D-165; generador de nombres inyectado |
-| `apps/clinical-api/test/integration/schema/*.test.ts` | crea | arnés de BD; SQL crudo sobre `information_schema`/`pg_catalog` |
+| `apps/clinical-api/tests/support/db.ts` | crea | `TEST_DATABASE_URL` (`oncolens_test_admin`), `PG_TEST_DB_PREFIX`, `prisma migrate deploy`, `corpus-schema-grants.sql` de L1D-165; generador de nombres inyectado |
+| `apps/clinical-api/tests/integration/schema/*.test.ts` | crea | arnés de BD; SQL crudo sobre `information_schema`/`pg_catalog` |
 | `docs/architecture/data-model.md` §6 | edita la nota de validación | `[S1 resp. 1]` |
 
 Sin services ni reglas de dominio: no se extraen métodos de dominio. Prisma no se mockea; la BD es
