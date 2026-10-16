@@ -130,11 +130,29 @@ def test_agregar_desglosa_por_fuente_tipo_idioma_y_controles_y_separa_sin_eviden
         evaluar_pregunta(pregunta(id="na", modo="sin_evidencia", evidencia=()), [chunk(puntaje=0.2), chunk(puntaje=0.55)]),
     ]
 
-    resumen = agregar(resultados, semilla=1, repeticiones=50)
+    resumen = agregar(resultados, semilla=1, repeticiones=50, escala_puntaje="coseno_denso")
 
     assert resumen["total"].n == 3  # type: ignore[attr-defined]
     assert resumen["es_a_en"].n == 2  # type: ignore[attr-defined]
     assert resumen["controles_en"].n == 1  # type: ignore[attr-defined]
     assert set(resumen["por_fuente"]) == {"D1", "D2"}  # type: ignore[arg-type]
     assert set(resumen["por_tipo"]) == {"valor", "hecho"}  # type: ignore[arg-type]
-    assert resumen["sin_evidencia_puntaje_maximo"] == {"n": 1, "maximo": 0.55, "mediana": 0.55}
+    assert resumen["sin_evidencia_puntaje_maximo"] == {"n": 1, "maximo": 0.55, "mediana": 0.55, "escala_puntaje": "coseno_denso"}
+
+
+@pytest.mark.parametrize("escala", ["coseno_denso", "relevance_score_sigmoide"])
+def test_agregar_declara_la_escala_del_puntaje_en_el_bloque_sin_evidencia_aunque_no_haya_preguntas(escala: str) -> None:
+    resumen = agregar([], semilla=1, repeticiones=10, escala_puntaje=escala)
+
+    assert resumen["sin_evidencia_puntaje_maximo"] == {"n": 0, "maximo": None, "mediana": None, "escala_puntaje": escala}
+
+
+def test_agregar_la_mediana_de_sin_evidencia_con_cantidad_par_es_el_promedio_de_los_dos_centrales() -> None:
+    resultados = [
+        evaluar_pregunta(pregunta(id=f"na{i}", modo="sin_evidencia", evidencia=()), [chunk(puntaje=p)])
+        for i, p in enumerate([0.1, 0.2, 0.4, 0.9])
+    ]
+
+    resumen = agregar(resultados, semilla=1, repeticiones=10, escala_puntaje="coseno_denso")
+
+    assert resumen["sin_evidencia_puntaje_maximo"]["mediana"] == pytest.approx(0.3)  # type: ignore[index]

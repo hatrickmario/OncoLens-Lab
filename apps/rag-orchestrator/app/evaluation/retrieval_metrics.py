@@ -133,7 +133,7 @@ def _desglose(
     return {k: metrica(v, semilla, repeticiones) for k, v in sorted(grupos.items())}
 
 
-def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000) -> dict[str, object]:
+def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000, *, escala_puntaje: str = "") -> dict[str, object]:
     """Totales y desgloses por fuente, tipo de dato, idioma y controles, más el aparte de ``sin_evidencia``."""
     por_fuente: dict[str, list[ResultadoPregunta]] = defaultdict(list)
     for r in resultados:
