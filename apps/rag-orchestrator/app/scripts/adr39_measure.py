@@ -195,7 +195,8 @@ class MedicionFaseA:
             self.exportador(spec, self.directorio_onnx(spec))
             registro = json.loads((self.directorio_onnx(spec) / "export.json").read_text(encoding="utf-8"))
             for cuantizacion in self.config.cuantizaciones:
-                agregado = fase_a.agregar_corridas(self._corridas(spec, cuantizacion, candidatos_dir))
+                carpeta = self.candidatos_del_elegido(spec, cuantizacion) if componente == "embeddings" else candidatos_dir
+                agregado = fase_a.agregar_corridas(self._corridas(spec, cuantizacion, carpeta))
                 medicion = fase_a.a_medicion(spec, cuantizacion, agregado, str(fuente["licencia"]))
                 mediciones.append(medicion)
                 detalle[medicion.candidato] = {

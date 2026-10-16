@@ -48,7 +48,7 @@ class Trabajo:
     directorio_onnx: Path  # carpeta exportada del candidato (contiene fp32/ e int8/)
     directorio_corridas: Path  # <DATA_CACHE_DIR>/adr39/corridas
     salida: Path
-    candidatos_dir: Path | None = None  # rankings y chunks del embedding elegido (solo el reranker)
+    candidatos_dir: Path | None = None  # rankings y chunks: el embedding los escribe, el reranker los lee
 
 
 class Fabrica(Protocol):
@@ -133,7 +133,8 @@ def _calidad_embeddings(
 
 def _guardar_candidatos(trabajo: Trabajo, chunks: Sequence[ChunkCandidato], rankings: dict[str, list[tuple[int, float]]]) -> None:
     """Rankings y chunks del embedding, para que el reranker mida sobre el mismo conjunto (caché, no el repo)."""
-    carpeta = trabajo.salida.parent / f"{trabajo.spec.clave}-{trabajo.cuantizacion}-candidatos"
+    carpeta = trabajo.candidatos_dir
+    assert carpeta is not None, "el trabajo de embeddings con calidad recibe su carpeta de candidatos"
     carpeta.mkdir(parents=True, exist_ok=True)
     (carpeta / "chunks.json").write_text(
         json.dumps([{"documento": c.documento, "texto": c.texto, "seccion": c.seccion} for c in chunks], ensure_ascii=False),
