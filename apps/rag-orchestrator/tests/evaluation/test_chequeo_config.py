@@ -160,3 +160,12 @@ def test_leer_bloque_decision_devuelve_texto_por_clave() -> None:
 
 def test_todas_las_claves_de_adr39_estan_en_el_conjunto_declarado() -> None:
     assert set(VALORES) == set(CLAVES_ADR39)
+
+
+@pytest.mark.ac("US-012", 3)
+def test_chequear_el_repositorio_real_es_coherente_con_el_adr_39_ac3() -> None:
+    from tests.evaluation.conftest import RAIZ_REPO
+
+    resultado = chequear(RAIZ_REPO)
+
+    assert resultado.problemas == []

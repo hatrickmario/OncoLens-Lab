@@ -275,3 +275,14 @@ def test_fase_a_reanudada_no_repite_los_trabajos_ya_medidos(
     _, segunda, _ = correr(tmp_path, ruta)
 
     assert segunda.trabajos == []
+
+
+def test_ejecutar_trabajo_con_componente_desconocido_lanza_error(tmp_path: Path, dataset_sintetico: Path) -> None:
+    import dataclasses
+
+    config = cargar_config(escribir_config(tmp_path, dataset_sintetico))
+    spec = dataclasses.replace(config.candidatos["embeddings"][0], componente="otro")
+    trabajo = Trabajo(spec, "int8", 1, False, tmp_path, tmp_path, tmp_path / "salida.json")
+
+    with pytest.raises(ValueError, match="componente"):
+        ejecutar_trabajo(trabajo, config, cargar_dataset(dataset_sintetico), {}, FabricaFalsa(), reloj=lambda: 0.0)

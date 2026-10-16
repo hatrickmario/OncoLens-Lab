@@ -126,7 +126,10 @@ def test_la_fase_a3_escribe_un_reporte_con_cada_escenario_y_sus_conclusiones(esc
     assert codigo == SALIDA_OK
     assert set(reporte["escenarios"]) == {e.id for e in ESCENARIOS}
     assert reporte["escenarios"]["vigente"]["corridas"] == 3
-    assert reporte["conclusiones"]["presupuesto_reranker_ms"] is None or reporte["conclusiones"]["presupuesto_reranker_ms"] % 250 == 0
+    conclusiones = reporte["conclusiones"]
+    presupuesto = conclusiones["presupuesto_reranker_ms"]
+    assert (presupuesto is not None) == conclusiones["calidad_del_vigente_sostiene_la_base"]
+    assert presupuesto is None or (presupuesto > 0 and presupuesto % 250 == 0)
     assert "texto" not in json.dumps(reporte).lower().replace("textos", "")
     assert reporte["escenarios"]["vigente"]["determinista"] is True
 
