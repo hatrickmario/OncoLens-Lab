@@ -228,7 +228,8 @@ def ejecutar_fase_a(
     salida_reporte: Path | None,
     ejecutor: Ejecutor,
     exportador: Exportador,
-    cliente: httpx.Client | None,
+    cliente_fuentes: httpx.Client,
+    verificar_fuente: bool,
     ahora: Callable[[], datetime],
 ) -> int:
     config = cargar_config(ruta_config)
@@ -238,7 +239,7 @@ def ejecutar_fase_a(
         print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
         return SALIDA_DATASET
     try:
-        fuentes = descargar_fuentes(dataset, cache_datos, cliente or httpx.Client(), ahora)
+        fuentes = descargar_fuentes(dataset, cache_datos, cliente_fuentes, ahora)
     except FuenteNoDescargable as exc:
         print(str(exc), file=sys.stderr)
         return SALIDA_FUENTE
@@ -248,7 +249,7 @@ def ejecutar_fase_a(
     if ausentes:
         return SALIDA_CITA
 
-    medicion = MedicionFaseA(config, dataset, dir_modelos, cache_datos, ejecutor, exportador, cliente)
+    medicion = MedicionFaseA(config, dataset, dir_modelos, cache_datos, ejecutor, exportador, cliente_fuentes if verificar_fuente else None)
     componentes, selecciones = _medir_componentes_en_cascada(medicion, config)
     reporte = _armar_reporte_fase_a(config, dataset, fuentes, componentes, selecciones, ahora().date().isoformat())
     destino = salida_reporte or raiz_repo() / "reports" / "adr39" / f"{ahora().date().isoformat()}-fase-a.json"
@@ -391,7 +392,8 @@ def main(argv: list[str] | None = None) -> int:
             args.salida,
             ejecutor=lambda t: lanzar_en_subproceso(t, args.config, args.cache_datos),
             exportador=exportar,
-            cliente=None if args.sin_verificar_fuente else cliente,
+            cliente_fuentes=cliente,
+            verificar_fuente=not args.sin_verificar_fuente,
             ahora=lambda: datetime.now(timezone.utc),
         )
 

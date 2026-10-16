@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -66,13 +68,24 @@ class Ejecucion:
         ejecutar_trabajo(trabajo, config, dataset, secciones, FabricaFalsa(), reloj=lambda: next(self._relojes) / 1000.0)
 
 
+@contextlib.contextmanager
+def cliente_fuentes_de_prueba(cliente: httpx.Client | None) -> Iterator[httpx.Client]:
+    """El cliente de las fuentes es siempre explícito; la verificación en Hugging Face se pide aparte."""
+    if cliente is not None:
+        yield cliente
+        return
+    with httpx.Client() as propio:
+        yield propio
+
+
 def correr(tmp_path: Path, ruta_config: Path, *, cliente: httpx.Client | None = None) -> tuple[int, Ejecucion, Path]:
     cache = tmp_path / "cache"
     ejecucion = Ejecucion(ruta_config, cache)
     salida = tmp_path / "reporte.json"
-    codigo = medir.ejecutar_fase_a(
-        ruta_config, tmp_path / "modelos", cache, salida, ejecucion, exportador_falso, cliente, lambda: AHORA
-    )
+    with cliente_fuentes_de_prueba(cliente) as descarga:
+        codigo = medir.ejecutar_fase_a(
+            ruta_config, tmp_path / "modelos", cache, salida, ejecucion, exportador_falso, descarga, cliente is not None, lambda: AHORA
+        )
     return codigo, ejecucion, salida
 
 
