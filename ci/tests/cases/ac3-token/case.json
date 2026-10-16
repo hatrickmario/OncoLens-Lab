@@ -1,0 +1,12 @@
+{
+  "ac": "US-036 AC-3",
+  "descripcion": "Un token con forma de JWT generado en tiempo de ejecución, añadido y borrado en dos commits del PR, hace fallar el escaneo de commits, nombra archivo y commit y muestra el valor redactado.",
+  "esperado": "falla",
+  "comando": "scripts/ci/secret-scan.sh \"$BASE_REF\"",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "docs/ci-selftest-token.txt",
+    "Commit:",
+    "REDACTED"
+  ]
+}

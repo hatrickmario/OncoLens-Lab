@@ -1,0 +1,15 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Un tercer valor sintético sin hash en la entrada, en la misma ruta permitida, sigue fallando: la allowlist es por valor, no por ruta.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "ci/tests/cases/ac4-allowlist/datos.md:8: documento_identidad"
+  ],
+  "ausentes": [
+    "datos.md:6:",
+    "datos.md:7:",
+    "999999999"
+  ]
+}
