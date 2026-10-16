@@ -70,6 +70,10 @@ class ConfigMedicion:
     bruto: dict[str, Any] = field(default_factory=dict)
 
 
+def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
+    raise NotImplementedError
+
+
 def _spec(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
     if crudo["tarea"] not in TAREAS:
         raise ValueError(f"tarea desconocida: {crudo['tarea']}")
