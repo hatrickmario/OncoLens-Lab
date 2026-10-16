@@ -27,20 +27,21 @@ def crear_app(
     consulta: EvidenceQueryPort | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
-    # Fallo cerrado (también con LLM_PROVIDER=fake): sin clave pública legible no hay quien autentique a clinical-api.
-    clave_publica = cargar_clave_publica_es256(settings.service_jwt_public_key_file)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
-    verificador = ServiceJwtVerifier(
-        clave_publica,
-        clock or RelojDelSistema(),
-        settings.service_jwt_ttl_seconds,
-        settings.service_jwt_clock_skew_seconds,
-    )
+    verificador = _crear_verificador_jwt_de_servicio(settings, clock or RelojDelSistema())
     _registrar_consulta_de_evidencia(app, settings, consulta, crear_require_service_jwt(verificador))
     app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
     return app
+
+
+def _crear_verificador_jwt_de_servicio(settings: Settings, clock: Clock) -> ServiceJwtVerifier:
+    # Fallo cerrado (también con LLM_PROVIDER=fake): sin clave pública legible no hay quien autentique a clinical-api.
+    clave_publica = cargar_clave_publica_es256(settings.service_jwt_public_key_file)
+    return ServiceJwtVerifier(
+        clave_publica, clock, settings.service_jwt_ttl_seconds, settings.service_jwt_clock_skew_seconds
+    )
 
 
 def _sonda_llm_segun(settings: Settings) -> LlmHealthPort:
