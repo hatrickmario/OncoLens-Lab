@@ -6,6 +6,7 @@ from app.evaluation.model_selection import (
     MedicionVariante,
     Restricciones,
     desempatar_por_memoria,
+    dentro_de_tolerancia,
     descartar_por_restricciones,
     seleccionar_componente,
     seleccionar_variante,
@@ -74,6 +75,27 @@ def test_seleccionar_componente_diferencia_dentro_de_la_tolerancia_cuenta_como_e
 
     assert sin_tolerancia.elegido.candidato == "a" and not sin_tolerancia.desempatado_por_memoria  # type: ignore[union-attr]
     assert con_tolerancia.elegido.candidato == "b" and con_tolerancia.desempatado_por_memoria  # type: ignore[union-attr]
+
+
+@pytest.mark.parametrize(
+    ("valor", "referencia", "esperado"),
+    [(0.78, 0.80, True), (0.80, 0.80, True), (0.779, 0.80, False), (0.85, 0.86, True), (0.84, 0.86, True), (0.83, 0.86, False)],
+)
+def test_dentro_de_tolerancia_incluye_el_borde_exacto_sin_error_de_coma_flotante(valor: float, referencia: float, esperado: bool) -> None:
+    assert dentro_de_tolerancia(valor, referencia, 0.02) is esperado
+
+
+def test_seleccionar_componente_exige_la_tolerancia_de_empate_explicita() -> None:
+    with pytest.raises(TypeError):
+        seleccionar_componente([medicion("a")], RESTRICCIONES)  # type: ignore[call-arg]
+
+
+def test_seleccionar_componente_empate_en_el_borde_exacto_de_la_tolerancia_decide_la_memoria() -> None:
+    mediciones = [medicion("a", memoria=2.2, metrica=0.80), medicion("b", memoria=1.1, metrica=0.78)]
+
+    seleccion = seleccionar_componente(mediciones, RESTRICCIONES, tolerancia_empate=0.02)
+
+    assert seleccion.elegido.candidato == "b" and seleccion.desempatado_por_memoria  # type: ignore[union-attr]
 
 
 def test_desempatar_por_memoria_a_igual_memoria_decide_el_menor_p95() -> None:

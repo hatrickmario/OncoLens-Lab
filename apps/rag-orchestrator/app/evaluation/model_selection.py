@@ -51,6 +51,10 @@ class Seleccion:
         return self.elegido is None
 
 
+def dentro_de_tolerancia(valor: float, referencia: float, tolerancia: float) -> bool:
+    raise NotImplementedError
+
+
 def descartar_por_restricciones(
     mediciones: Sequence[Medicion], restricciones: Restricciones
 ) -> tuple[list[Medicion], list[Descarte]]:
