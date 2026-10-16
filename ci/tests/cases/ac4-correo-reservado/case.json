@@ -1,0 +1,18 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Correos de dominios reservados (RFC 2606/6761) pasan sin allowlist; solo se informa el de otro dominio, sin el valor.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "docs/ci-selftest-correos.md:6: correo"
+  ],
+  "ausentes": [
+    "docs/ci-selftest-correos.md:1:",
+    "docs/ci-selftest-correos.md:2:",
+    "docs/ci-selftest-correos.md:3:",
+    "docs/ci-selftest-correos.md:4:",
+    "docs/ci-selftest-correos.md:5:",
+    "ci-selftest-persona"
+  ]
+}

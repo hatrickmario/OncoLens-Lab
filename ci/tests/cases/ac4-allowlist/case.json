@@ -1,0 +1,6 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Los valores sintéticos de FX-T4a-a de ci/tests/cases/ac4-allowlist/datos.md, cuyos hashes están en la entrada de la allowlist, no se informan.",
+  "esperado": "pasa",
+  "comando": "node scripts/ci/pii-scan.mjs"
+}

@@ -1,0 +1,14 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "El mismo tipo de valor en contracts/examples/ y en un fixture de apps/clinical-api/test/ también falla: el escáner recorre todo git ls-files, no solo data/.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "contracts/examples/ci-selftest-solicitud.json:2: documento_identidad",
+    "apps/clinical-api/test/fixtures/ci-selftest-paciente.json:2: documento_identidad"
+  ],
+  "ausentes": [
+    "666666666"
+  ]
+}

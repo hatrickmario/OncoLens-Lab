@@ -1,0 +1,10 @@
+{
+  "ac": "US-036 AC-7",
+  "descripcion": "Editar a mano un archivo generado (types.gen.ts de rag-orchestrator) hace fallar contracts:generate:check y nombra la ruta.",
+  "esperado": "falla",
+  "comando": "npm run contracts:generate:check",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "packages/api-contracts/src/types/rag-orchestrator/types.gen.ts"
+  ]
+}

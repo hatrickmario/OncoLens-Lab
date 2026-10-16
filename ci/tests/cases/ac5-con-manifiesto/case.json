@@ -1,0 +1,7 @@
+{
+  "ac": "US-036 AC-5",
+  "descripcion": "Un dataset con manifest.json que declara clase sintetico y sus archivos en la misma carpeta pasa.",
+  "esperado": "pasa",
+  "comando": "node scripts/ci/dataset-class-check.mjs",
+  "aplicar": "aplicar.sh"
+}
