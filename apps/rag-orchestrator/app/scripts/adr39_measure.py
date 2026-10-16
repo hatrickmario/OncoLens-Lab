@@ -108,6 +108,19 @@ def lanzar_en_subproceso(trabajo: Trabajo, ruta_config: Path, cache_datos: Path)
     )
 
 
+def lanzar_a3_en_subproceso(cache_datos: Path) -> Callable[[Any, Path], None]:
+    """Cada corrida de la medición del reranker en un proceso nuevo (RSS limpio)."""
+    from app.evaluation.fase_a3 import trabajo_a_json
+
+    def lanzar(trabajo: Any, ruta_config: Path) -> None:
+        subprocess.run(
+            [sys.executable, "-m", "app.scripts.adr39_measure", "--trabajador-a3", json.dumps(trabajo_a_json(trabajo)), "--config", str(ruta_config), "--cache-datos", str(cache_datos)],
+            check=True,
+        )
+
+    return lanzar
+
+
 def _trabajo_desde_json(carga: dict[str, Any]) -> Trabajo:
     return Trabajo(
         spec=ModeloSpec(**carga["spec"]),
@@ -272,6 +285,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=raiz_repo() / "apps/rag-orchestrator/eval/configs/adr39-fase-a.yaml")
     parser.add_argument("--stage", choices=["t2", "t3", "t4", "t5"])
     parser.add_argument("--check-config", action="store_true")
+    parser.add_argument("--reranker-chunks", action="store_true", help="medición del reranker sobre chunks de 1024 tokens (eval/configs/adr39-fase-a3.yaml)")
+    parser.add_argument("--trabajador-a3", help="(interno) JSON de un trabajo de la medición del reranker")
     parser.add_argument("--trabajador", help="(interno) JSON de un trabajo de medición")
     parser.add_argument("--cache-modelos", type=Path, default=Path(os.environ.get("MODEL_CACHE_DIR", ".cache/models")))
     parser.add_argument("--cache-datos", type=Path, default=Path(os.environ.get("DATA_CACHE_DIR", ".cache/data")))
@@ -279,6 +294,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sin-verificar-fuente", action="store_true", help="no consulta la API de Hugging Face (solo pruebas)")
     args = parser.parse_args(argv)
 
+    if args.trabajador_a3:
+        from app.evaluation.fase_a3 import trabajar_a3
+
+        return trabajar_a3(json.loads(args.trabajador_a3), args.config, args.cache_datos)
+    if args.reranker_chunks:
+        from app.evaluation.fase_a3 import ejecutar_cli
+
+        return ejecutar_cli(args.config, args.cache_modelos, args.cache_datos, args.salida, lanzar_a3_en_subproceso(args.cache_datos))
     if args.trabajador:
         return trabajar(json.loads(args.trabajador), args.config, args.cache_datos)
     if args.check_config:
