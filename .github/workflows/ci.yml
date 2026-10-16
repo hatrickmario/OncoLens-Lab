@@ -168,7 +168,7 @@ jobs:
       - name: Formato (Prettier y ruff format)
         run: npm run format:check
       - name: format no modifica lo generado ni los openapi.yaml
-        run: npm run format && git diff --exit-code -- packages/api-contracts/src apps/clinical-api/openapi.yaml apps/rag-orchestrator/openapi.yaml apps/rag-orchestrator/app/schemas/generated contracts
+        run: node scripts/quality/format-no-toca-generados.mjs
       - name: Tests de lint y formato (fixtures)
         run: npx vitest run ci/tests/quality
 

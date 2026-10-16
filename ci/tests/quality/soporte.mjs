@@ -29,8 +29,16 @@ export function prettier(modo, archivos, cwd) {
   );
 }
 
-/** Ruff con la configuración de rag-orchestrator. Requiere `ruff` en el PATH. */
+/** Falla con la instrucción de instalación cuando `ruff` no está en el PATH (nunca se omite un test de Python). */
+export function exigirRuff() {
+  if (ejecutar('ruff', ['--version']).error?.code === 'ENOENT') {
+    throw new Error('ruff no encontrado: pip install -r apps/rag-orchestrator/requirements-dev.txt');
+  }
+}
+
+/** Ruff con la configuración de rag-orchestrator. */
 export function ruff(modo, archivos, cwd) {
+  exigirRuff();
   const configuracion = path.join(RAIZ, 'apps/rag-orchestrator/pyproject.toml');
   return ejecutar('ruff', ['format', ...modo, '--config', configuracion, ...archivos], { cwd });
 }
