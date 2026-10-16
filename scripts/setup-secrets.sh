@@ -120,24 +120,33 @@ comprobar_rotaciones() {
   done
 }
 
-comprobar_destino_no_versionado() {
-  destino="$(cd "$destino" && pwd -P)"
-  case "$destino/" in
+# Ruta absoluta y física de un directorio que puede no existir aún, sin crearlo (resuelve por su ancestro existente).
+ruta_absoluta_sin_crear() {
+  if [ -d "$1" ]; then (cd "$1" && pwd -P); return; fi
+  local padre; padre="$(ruta_absoluta_sin_crear "$(dirname "$1")")"
+  printf '%s/%s\n' "${padre%/}" "$(basename "$1")"
+}
+
+# Aborta si `$1` (ruta absoluta) está en el árbol del repositorio y tiene archivos versionados o no está ignorada.
+rechazar_destino_versionado() {
+  local ruta="$1"
+  case "$ruta/" in
     "$raiz"/*) ;;
     *) return 0 ;; # fuera del árbol del repositorio: no hay nada que versionar
   esac
-  command -v git >/dev/null 2>&1 || fallar "falta git para comprobar que $destino está ignorado"
-  if [ -n "$(git -C "$raiz" ls-files -- "$destino")" ]; then
-    fallar "$destino contiene archivos versionados; los secretos nunca se versionan (RN-14)"
+  command -v git >/dev/null 2>&1 || fallar "falta git para comprobar que $ruta está ignorado"
+  if [ -n "$(git -C "$raiz" ls-files -- "$ruta")" ]; then
+    fallar "$ruta contiene archivos versionados; los secretos nunca se versionan (RN-14)"
   fi
-  git -C "$raiz" check-ignore -q -- "$destino/.secreto" || fallar "$destino está dentro del repositorio y no está en .gitignore (RN-14)"
+  git -C "$raiz" check-ignore -q -- "$ruta/.secreto" || fallar "$ruta está dentro del repositorio y no está en .gitignore (RN-14)"
 }
 
+# Primero se comprueba el destino; solo después se crea y se restringe (nada se escribe en una ruta versionada).
 preparar_destino() {
-  destino="${ONCOLENS_SECRETS_DIR:-$raiz/infra/docker/secrets}"
+  destino="$(ruta_absoluta_sin_crear "${ONCOLENS_SECRETS_DIR:-$raiz/infra/docker/secrets}")"
+  rechazar_destino_versionado "$destino"
   mkdir -p "$destino"
   chmod 700 "$destino"
-  comprobar_destino_no_versionado
   trabajo="$(mktemp -d "$destino/.trabajo.XXXXXX")"
   trap 'rm -rf "$trabajo"' EXIT
 }
