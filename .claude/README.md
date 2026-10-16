@@ -25,8 +25,8 @@ en segundo plano para la fase de ejecución. Alineada con el **PRD v1.4** (slici
 |---|---|---|
 | `/sprint-refine` | Sesión principal | Fases 1–3: DoR, decisiones, entrevista, stack y diseño en `docs/ux/` · `backlog/sprints/S<n>-refinamiento.md` |
 | `/sprint-start` | Sesión principal | Exige el refinamiento en `main` · Linear → historias · `openspec list` · `backlog-to-change` por historia · **Gate 1** en lote · grafo y oleadas · **aprobación humana** · PR del plan |
-| `/sprint-run` | `sprint-orchestrator` (nivel 1) | Oleadas → implementadores (nivel 2, worktree) → **Gate 2** (guardianes, nivel 2) → PR listo · vuelve solo para pedir merges o si un gate falla 2 veces |
-| `/sprint-close` | Sesión principal | Control · `/opsx:verify` global · `/opsx:bulk-archive` · `traceability-auditor` · demo + retro · **cierre humano** |
+| `/sprint-run` | `sprint-orchestrator` (nivel 1) | Oleadas → implementadores (nivel 2, worktree) → **Gate 2** (guardianes, nivel 2) → PR listo · **mantiene Linear: In Progress al empezar, In Review en pruebas/Gate 2/PR, de vuelta a In Progress si fallan las pruebas; nunca Done** · vuelve solo para pedir merges o si un gate falla 2 veces |
+| `/sprint-close` | Sesión principal | Control · `/opsx:verify` global · `/opsx:bulk-archive` · `traceability-auditor` (**único que pasa a Done**, solo si cumple) · demo + retro · **cierre humano** |
 
 ### Jerarquía de agentes (profundidad 3)
 
