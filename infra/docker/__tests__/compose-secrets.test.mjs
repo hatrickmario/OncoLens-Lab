@@ -16,7 +16,7 @@ afterAll(() => limpiar());
 // Los one-shot corpus-migrate (L1D-114) y clinical-seed (L1D-169) aún no existen: el override los simula.
 const UN_SERVICIO = (nombre, secretos) =>
   `  ${nombre}:\n    image: busybox:1.37.0\n    secrets: [${secretos.join(', ')}]\n`;
-const SECRETOS_DEL_SEED = 'secrets:\n  seed_doctor_password:\n    file: /dev/null\n  seed_admin_password:\n    file: /dev/null\n';
+const SECRETOS_DEL_SEED = 'secrets:\n  seed_doctor_password:\n    file: ${ONCOLENS_SECRETS_DIR}/seed_doctor_password\n  seed_admin_password:\n    file: ${ONCOLENS_SECRETS_DIR}/seed_admin_password\n';
 
 describe('docker-compose.yml · reparto de secretos', () => {
   it('monta la privada del JWT, la AES y la HMAC solo en clinical-api y entrega a rag-orchestrator exactamente la pública del JWT y la contraseña de rag_corpus [US-035 AC-2]', () => {
@@ -58,6 +58,26 @@ describe('docker-compose.yml · reparto de secretos', () => {
   it('falla nombrando clinical-api y seed_admin_password cuando un override monta la contraseña del seed en un servicio de runtime [US-035 AC-2]', () => {
     const config = resolver({ override: `services:\n  clinical-api:\n    secrets:\n      - seed_admin_password\n${SECRETOS_DEL_SEED}` });
     expect(() => assertRepartoDeSecretos(config)).toThrow(/clinical-api.*seed_admin_password/);
+  });
+
+  it('falla nombrando clinical-api y pg_ca.key cuando un override le monta la clave de la CA [US-035 AC-2]', () => {
+    const override = 'services:\n  clinical-api:\n    secrets:\n      - pg_ca.key\nsecrets:\n  pg_ca.key:\n    file: ${ONCOLENS_SECRETS_DIR}/pg_ca.key\n';
+    expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/clinical-api.*pg_ca\.key/);
+  });
+
+  it('falla nombrando el secreto sin dueño declarado cuando un override monta un secreto que no está en la tabla [US-035 AC-2]', () => {
+    const override = 'services:\n  clinical-api:\n    secrets:\n      - secreto_nuevo\nsecrets:\n  secreto_nuevo:\n    file: ${ONCOLENS_SECRETS_DIR}/secreto_nuevo\n';
+    expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/sin dueño declarado.*secreto_nuevo/);
+  });
+
+  it('compara por el archivo y no por el alias cuando un override monta identity_aes_key con otro nombre en rag-orchestrator [US-035 AC-2]', () => {
+    const override = 'services:\n  rag-orchestrator:\n    secrets:\n      - alias_inocente\nsecrets:\n  alias_inocente:\n    file: ${ONCOLENS_SECRETS_DIR}/identity_aes_key\n';
+    expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/rag-orchestrator.*identity_aes_key/);
+  });
+
+  it('falla nombrando clinical-api cuando un override monta el directorio de secretos como volumen [US-035 AC-2]', () => {
+    const override = 'services:\n  clinical-api:\n    volumes:\n      - ${ONCOLENS_SECRETS_DIR}:/secretos:ro\n';
+    expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/clinical-api.*directorio de secretos/);
   });
 
   it('acepta corpus-migrate con solo la contraseña del migrator y clinical-seed con solo las del seed cuando esos one-shot existen [US-035 AC-2]', () => {

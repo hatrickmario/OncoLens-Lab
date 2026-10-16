@@ -4,6 +4,8 @@
  * (deben pasar) y a un Compose con un override que rompe la regla (deben fallar nombrando el servicio).
  */
 
+import path from 'node:path';
+
 const SERVICIO_WEB = 'web';
 const CLINICAL_API = 'clinical-api';
 const RAG = 'rag-orchestrator';
@@ -17,6 +19,9 @@ const CLAVE_PUBLICA_JWT = 'jwt_service_public.pem';
 const MONTAJE_CATALOGO = /packages\/clinical-catalogs$/;
 
 export const secretosDe = (servicio) => (servicio.secrets ?? []).map((secreto) => secreto.source);
+/** Nombre del archivo de cada secreto montado: un alias en el Compose no puede esconder qué archivo se entrega. */
+export const archivosDeSecretos = (config, servicio) =>
+  secretosDe(servicio).map((fuente) => path.basename(config.secrets?.[fuente]?.file ?? fuente));
 export const entorno = (servicio) => servicio.environment ?? {};
 
 export function servicio(config, nombre) {
@@ -79,6 +84,9 @@ export const DUENOS_DE_SECRETOS = {
   pg_rag_corpus_password: [RAG, POSTGRES],
   pg_rag_corpus_migrator_password: [CORPUS_MIGRATE, POSTGRES],
   pg_superuser_password: [POSTGRES],
+  // La CA vive en el directorio de secretos para reemitir pg_server.crt; ningún servicio la monta.
+  'pg_ca.key': [],
+  'pg_ca.crt': [],
   'pg_server.crt': [POSTGRES],
   'pg_server.key': [POSTGRES],
   'pg_hba.conf': [POSTGRES],
@@ -94,9 +102,10 @@ const VARIABLES_DE_CLAVE_JWT = { SERVICE_JWT_PRIVATE_KEY_FILE: [CLAVE_PRIVADA_JW
 /** AC-3: cada backend recibe solo su mitad del par del JWT de servicio y los secretos de identidad solo llegan a clinical-api. */
 export function assertClavesPorServicio(config) {
   for (const [nombre, definicion] of Object.entries(config.services)) {
-    for (const secreto of secretosDe(definicion)) {
+    for (const secreto of archivosDeSecretos(config, definicion)) {
       const duenos = DUENOS_DE_SECRETOS[secreto];
-      if (duenos && !duenos.includes(nombre)) throw new Error(`${nombre} recibe el secreto ${secreto} y solo lo recibe ${duenos.join(' o ')}`);
+      if (!duenos) throw new Error(`secreto sin dueño declarado: ${secreto} (montado en ${nombre}); declara sus dueños en DUENOS_DE_SECRETOS`);
+      if (!duenos.includes(nombre)) throw new Error(`${nombre} recibe el secreto ${secreto} y solo lo recibe ${duenos.join(' o ')}`);
     }
     for (const variable of Object.keys(VARIABLES_DE_CLAVE_JWT)) {
       if (variable in entorno(definicion) && VARIABLES_DE_CLAVE_JWT[variable][1] !== nombre) throw new Error(`${nombre} declara ${variable} y solo lo declara ${VARIABLES_DE_CLAVE_JWT[variable][1]}`);

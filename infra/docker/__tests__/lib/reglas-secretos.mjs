@@ -3,7 +3,8 @@
  * por servicio, ningún valor secreto en `environment` y PostgreSQL con TLS y subredes fijas. Cada regla lanza un Error
  * que nombra el servicio y el secreto infractores. La tabla de dueños vive en reglas-compose.mjs (una sola fuente).
  */
-import { assertClavesPorServicio, entorno, secretosDe, servicio } from './reglas-compose.mjs';
+import path from 'node:path';
+import { archivosDeSecretos, assertClavesPorServicio, entorno, servicio } from './reglas-compose.mjs';
 
 /** Servicios que reciben exactamente estos secretos (design D3). Los one-shot solo se exigen si existen. */
 const SECRETOS_EXACTOS = {
@@ -21,7 +22,7 @@ const CIDR_IPV4 = /^\d{1,3}(\.\d{1,3}){3}\/\d{1,2}$/;
 const mismoConjunto = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
 
 function assertSecretosExactosDe(config, nombre, esperados) {
-  const montados = secretosDe(servicio(config, nombre));
+  const montados = archivosDeSecretos(config, servicio(config, nombre));
   const sobrantes = montados.filter((secreto) => !esperados.includes(secreto));
   if (sobrantes.length > 0) {
     throw new Error(`${nombre} recibe el secreto ${sobrantes[0]} y solo debe recibir: ${esperados.join(', ') || 'ninguno'}`);
@@ -31,9 +32,23 @@ function assertSecretosExactosDe(config, nombre, esperados) {
   }
 }
 
-/** AC-2: dueños de cada secreto y conjuntos exactos de rag-orchestrator, web y los procesos one-shot. */
+/** AC-2: ningún servicio monta como volumen el directorio de secretos (saltaría el reparto por `secrets:`). */
+export function assertSinMontajesDelDirectorioDeSecretos(config) {
+  const directorios = new Set(Object.values(config.secrets ?? {}).map((secreto) => path.dirname(secreto.file)));
+  for (const [nombre, definicion] of Object.entries(config.services)) {
+    for (const volumen of definicion.volumes ?? []) {
+      const origen = volumen.source ?? '';
+      if ([...directorios].some((directorio) => origen === directorio || origen.startsWith(`${directorio}/`))) {
+        throw new Error(`${nombre} monta el directorio de secretos (${path.basename(origen) || origen}) como volumen; los secretos se entregan solo por secrets:`);
+      }
+    }
+  }
+}
+
+/** AC-2: dueños de cada secreto, directorio de secretos sin montar y conjuntos exactos de rag-orchestrator, web y los one-shot. */
 export function assertRepartoDeSecretos(config) {
   assertClavesPorServicio(config);
+  assertSinMontajesDelDirectorioDeSecretos(config);
   for (const [nombre, esperados] of Object.entries(SECRETOS_EXACTOS)) assertSecretosExactosDe(config, nombre, esperados);
   for (const [nombre, esperados] of Object.entries(SECRETOS_EXACTOS_SI_EXISTE)) {
     if (config.services[nombre]) assertSecretosExactosDe(config, nombre, esperados);
