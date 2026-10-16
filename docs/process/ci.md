@@ -135,6 +135,18 @@ Ningún agente cambia la configuración del repositorio. Tras el **primer verde 
    en rojo y que el botón de merge está bloqueado, adjuntar la captura al PR de este change y **cerrar el PR de prueba sin
    mergear**.
 
+## Excepciones de `npm audit` (L1D-265)
+
+El job `quality` no ejecuta `npm audit`; la auditoría de dependencias llega con US-217. Hasta entonces rige esta
+excepción, que US-217 debe heredar:
+
+| Paquete | Hallazgo | Alcance | Revisión |
+|---|---|---|---|
+| `@next/eslint-plugin-next` 16.4.2 (devDependency) → `fast-glob` → `micromatch` → `braces` | GHSA-vfj7-8cjw-p6xm (alta, DoS por patrones anidados); sin versión parcheada de `braces` | Solo lint en la CI y en local sobre el código del repo; no entra en runtime, imagen ni bundle | Retirar cuando `braces` publique parche o el plugin cambie de dependencia |
+
+El audit que bloquea es `npm audit --omit=dev` (producción), que sale con 0. `npm audit` completo muestra estas 4
+altas por esa única cadena; no se relaja nada más.
+
 ## Fuera de alcance de este change
 
 Suite `evaluate` en PRs de modelo, prompt, umbral, catálogo o corpus (US-074); umbrales de tamaño, reglas de capas e

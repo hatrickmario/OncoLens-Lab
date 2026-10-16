@@ -160,6 +160,17 @@ el humano (ver Open Questions).
   ni las cabeceras (US-216, S6); `jsx-a11y` y el plugin de Next no añaden código al bundle. Las
   dependencias nuevas son solo `devDependencies`: `npm audit --omit=dev` no cambia y el resultado
   de `npm audit` completo se adjunta al PR.
+- **Excepción registrada de `npm audit` (2026-10-16).** `@next/eslint-plugin-next` 16.4.2 (la versión
+  actual, compatible con Next 16) depende de `fast-glob` → `micromatch` → `braces`, y `npm audit`
+  completo reporta 4 vulnerabilidades **altas** (GHSA-vfj7-8cjw-p6xm, denegación de servicio por
+  agotamiento de pila con patrones anidados) sin versión parcheada de `braces`; el único "fix" de npm
+  es degradar el plugin a 14.2.35 (rompe Next 16). **Alcance:** solo `devDependencies` ejecutadas en
+  el lint de la CI y en local sobre el código del propio repo (patrones glob fijos, sin entrada
+  externa); no entra en el runtime, ni en la imagen standalone, ni en el bundle. `npm audit
+  --omit=dev` (producción) queda en 0 y es la comprobación que bloquea. **Revisión:** retirar la
+  excepción cuando `braces` publique parche o el plugin cambie de dependencia. Registrada también en
+  `docs/process/ci.md`. Alternativa descartada por ahora: lint de Next con una regla local, que
+  duplicaría las reglas de core-web-vitals.
 
 ## Contratos
 
