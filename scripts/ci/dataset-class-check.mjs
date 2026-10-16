@@ -4,19 +4,14 @@
  * `sintetico` en su manifiesto más cercano o en su propia cabecera (RN-13).
  * Uso: node scripts/ci/dataset-class-check.mjs [--root <dir>] [--config <archivo>]
  */
-import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { listarArchivosVersionados, leerTexto } from './lib/archivos.mjs';
 import { declaraClaseEnCabecera, declaraClaseSintetico, manifiestoMasCercano } from './lib/claseDatos.mjs';
 import { leerConfiguracion, parametros } from './lib/cli.mjs';
 
-/** Documentación y código que conviven con un dataset: no son datos y no llevan clase (lista cerrada, en código). */
-export const EXTENSIONES_QUE_NO_SON_DATOS = ['.md', '.py'];
-
 export const MENSAJE_SIN_CLASE = 'dataset sin clase de datos `sintetico`';
 
-const estaBajoUnaRaiz = (ruta, raices) => raices.some((raiz) => ruta.startsWith(raiz));
-const esDato = (ruta) => !EXTENSIONES_QUE_NO_SON_DATOS.includes(path.posix.extname(ruta));
+const raizDe = (ruta, raices) => raices.find((raiz) => ruta.startsWith(raiz));
 
 /**
  * Rutas de datasets sin clase `sintetico`.
@@ -24,10 +19,11 @@ const esDato = (ruta) => !EXTENSIONES_QUE_NO_SON_DATOS.includes(path.posix.extna
  */
 export function datasetsSinClase({ archivos, raices, leerArchivo }) {
   return archivos
-    .filter((ruta) => estaBajoUnaRaiz(ruta, raices) && esDato(ruta))
+    .filter((ruta) => raizDe(ruta, raices))
     .filter((ruta) => {
-      const manifiesto = manifiestoMasCercano(ruta, leerArchivo);
-      if (manifiesto && declaraClaseSintetico(manifiesto)) return false;
+      const manifiesto = manifiestoMasCercano(ruta, leerArchivo, raizDe(ruta, raices));
+      // El manifiesto más cercano manda: si declara otra clase, la cabecera del archivo no la corrige.
+      if (manifiesto) return !declaraClaseSintetico(manifiesto);
       return !declaraClaseEnCabecera(leerArchivo(ruta) ?? '');
     });
 }

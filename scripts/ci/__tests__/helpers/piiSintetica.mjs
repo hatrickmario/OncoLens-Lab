@@ -4,7 +4,8 @@
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { compilarFormatos, detectarPii } from '../../pii-scan.mjs';
+import { detectarPii } from '../../pii-scan.mjs';
+import { compilarFormatos } from '../../../lib/formatosPii.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../../../..');
 

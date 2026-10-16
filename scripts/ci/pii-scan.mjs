@@ -11,7 +11,9 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { esTexto, leerBytes, listarArchivosVersionados } from './lib/archivos.mjs';
 import { leerConfiguracion, parametros } from './lib/cli.mjs';
-import { casaConGlob } from './lib/glob.mjs';
+import { esMarcaSintetica } from './lib/claseDatos.mjs';
+import { casaConGlob, validarGlob } from './lib/glob.mjs';
+import { coincidenciasPii, compilarFormatos } from '../lib/formatosPii.mjs';
 
 /** Lista cerrada de exclusiones admisibles: lockfiles y binarios por extensión. En código, para que la configuración no pueda ampliarla. */
 export const EXCLUSIONES_PERMITIDAS = [
@@ -62,14 +64,16 @@ export function validarAllowlist(allowlist) {
   return allowlist.flatMap((entrada) => {
     const nombre = entrada.fixture ?? '(sin fixture)';
     const errores = [];
-    if (entrada.clase !== 'sintetico') errores.push(`entrada de la allowlist ${nombre}: sin clase sintetico`);
+    if (!esMarcaSintetica(entrada)) errores.push(`entrada de la allowlist ${nombre}: sin clase sintetico`);
     if (!Array.isArray(entrada.valores) || entrada.valores.length === 0) errores.push(`entrada de la allowlist ${nombre}: sin valores`);
     if (!Array.isArray(entrada.rutas) || entrada.rutas.length === 0) {
       errores.push(`entrada de la allowlist ${nombre}: sin rutas`);
     } else {
-      entrada.rutas
-        .filter(globMasAmplioQueUnFixture)
-        .forEach((glob) => errores.push(`entrada de la allowlist ${nombre}: glob más amplio que un directorio de fixture (${glob})`));
+      for (const glob of entrada.rutas) {
+        const invalido = validarGlob(glob);
+        if (invalido) errores.push(`entrada de la allowlist ${nombre}: glob inválido (${glob}): ${invalido}`);
+        else if (globMasAmplioQueUnFixture(glob)) errores.push(`entrada de la allowlist ${nombre}: glob más amplio que un directorio de fixture (${glob})`);
+      }
     }
     return errores;
   });
@@ -93,57 +97,26 @@ export function estaEnAllowlistSintetica(ruta, formato, hash, allowlist) {
   );
 }
 
-const escaparAlternativa = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** Compila los formatos de `config/pii-formats.json`: sustituye las palabras clave y añade la bandera global. */
-export function compilarFormatos(configuracion) {
-  return configuracion.formatos.map((formato) => {
-    const palabras = (formato.palabrasClave ?? []).map(escaparAlternativa).join('|');
-    const fuente = formato.patron.replace('{{palabrasClave}}', palabras);
-    return { ...formato, expresion: new RegExp(fuente, `${formato.banderas ?? ''}g`) };
-  });
-}
-
-/** ¿El dominio casa con alguna exención (`*.test` = cualquier dominio que termina en `.test`; `example.com` incluye subdominios)? */
-function dominioExento(dominio, exentos = []) {
-  const minuscula = dominio.toLowerCase();
-  return exentos.some((exento) =>
-    exento.startsWith('*.') ? minuscula.endsWith(exento.slice(1)) : minuscula === exento || minuscula.endsWith(`.${exento}`),
-  );
-}
-
-const esCorreoExento = (valor, exentos = []) => exentos.some((exento) => `${exento.local}@${exento.dominio}`.toLowerCase() === valor.toLowerCase());
-
-function cumpleLosDigitos(formato, valor) {
-  const digitos = valor.replace(/\D/g, '').length;
-  return digitos >= (formato.digitosMin ?? 0) && digitos <= (formato.digitosMax ?? Infinity);
-}
-
 /**
  * PII en un texto. Devuelve la línea, el formato y el hash del valor normalizado; el valor en claro no sale de aquí.
  * @param {string} texto
- * @param {ReturnType<typeof compilarFormatos>} formatos
+ * @param {ReturnType<typeof compilarFormatos>} formatos formatos compilados de scripts/lib/formatosPii.mjs
  * @returns {{ linea: number, formato: string, sha256: string }[]}
  */
 export function detectarPii(texto, formatos) {
-  const hallazgos = [];
-  texto.split('\n').forEach((contenido, indice) => {
-    for (const formato of formatos) {
-      for (const coincidencia of contenido.matchAll(formato.expresion)) {
-        const { valor, dominio } = coincidencia.groups;
-        if (!cumpleLosDigitos(formato, valor)) continue;
-        if (dominio && dominioExento(dominio, formato.dominiosExentos)) continue;
-        if (dominio && esCorreoExento(valor, formato.correosExentos)) continue;
-        hallazgos.push({ linea: indice + 1, formato: formato.id, sha256: sha256(normalizarValor(formato, valor)) });
-      }
-    }
-  });
-  return hallazgos;
+  return texto.split('\n').flatMap((contenido, indice) =>
+    coincidenciasPii(contenido, formatos).map(({ formato, valor }) => ({
+      linea: indice + 1,
+      formato: formato.id,
+      sha256: sha256(normalizarValor(formato, valor)),
+    })),
+  );
 }
 
 /** Ejecuta el escaneo y devuelve las líneas del informe y los problemas de configuración. */
 export function escanear({ archivos, leer, formatos, excluir, allowlist }) {
   const problemas = [...validarExclusiones(excluir), ...validarAllowlist(allowlist)];
+  const allowlistUsable = allowlist.filter((entrada) => (entrada.rutas ?? []).every((glob) => validarGlob(glob) === null));
   const patronesExcluidos = excluir.map((exclusion) => exclusion.patron).filter((patron) => EXCLUSIONES_PERMITIDAS.includes(patron));
   const hallazgos = [];
   const noEscaneados = [];
@@ -156,7 +129,7 @@ export function escanear({ archivos, leer, formatos, excluir, allowlist }) {
       continue;
     }
     detectarPii(bytes.toString('utf8'), formatos)
-      .filter((hallazgo) => !estaEnAllowlistSintetica(ruta, hallazgo.formato, hallazgo.sha256, allowlist))
+      .filter((hallazgo) => !estaEnAllowlistSintetica(ruta, hallazgo.formato, hallazgo.sha256, allowlistUsable))
       .forEach((hallazgo) => hallazgos.push({ ruta, ...hallazgo }));
   }
   return { problemas, hallazgos, noEscaneados };
@@ -164,6 +137,7 @@ export function escanear({ archivos, leer, formatos, excluir, allowlist }) {
 
 function main() {
   const { raiz, banderas } = parametros(process.argv.slice(2), '');
+  if (banderas.has('--hash')) console.error('aviso: el sha256 no protege el valor (un número corto se invierte por fuerza bruta), solo lo identifica; úsalo únicamente con valores sintéticos');
   const formatos = compilarFormatos(leerConfiguracion(raiz, 'config/pii-formats.json'));
   const { excluir } = leerConfiguracion(raiz, 'config/pii-scan.json');
   const allowlist = leerConfiguracion(raiz, 'config/pii-allowlist.json');

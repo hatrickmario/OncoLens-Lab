@@ -8,7 +8,8 @@
       "apps/clinical-api/prisma/seed/**",
       "apps/clinical-api/test/**/deidentification/**",
       "openspec/specs/deidentification/**",
-      "ci/tests/cases/ac4-allowlist/**"
+      "ci/tests/cases/ac4-allowlist/**",
+      "openspec/changes/l1d-103-gateway-contexto-clinico/**"
     ],
     "valores": [
       {
@@ -101,5 +102,37 @@
       }
     ],
     "motivo": "Parche negativo de AC-17: un documentNumber de ceros sin el prefijo SINT- para probar que assertExamplesSynthetic lo rechaza."
+  },
+  {
+    "fixture": "FX-01-pii-en-encabezado-1",
+    "clase": "sintetico",
+    "rutas": [
+      "backlog/features/FEAT-01a-carga-y-visor.md",
+      "backlog/features/FEAT-01b-extraccion-ocr-pii.md"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414"
+      }
+    ],
+    "motivo": "Documento sintético sembrado en el encabezado de doc-pii.pdf (fixture del gate de PII de US-043/US-044)."
+  },
+  {
+    "fixture": "FX-02-pii-en-texto-libre",
+    "clase": "sintetico",
+    "rutas": [
+      "backlog/features/FEAT-02b-vista-de-caso.md",
+      "backlog/features/FEAT-11b-decision-evolucion.md",
+      "backlog/features/FEAT-11c-memoria-analisis.md",
+      "backlog/features/FEAT-AP1-preparacion-post-mvp.md"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "fe68a21fc76bba7b3a3d8e454eca8cd258de68fd08dddf035f23ddbdce6fc049"
+      }
+    ],
+    "motivo": "Documento sintético sembrado en la descripción de un evento clínico (PII en texto libre, RN-11)."
   }
 ]

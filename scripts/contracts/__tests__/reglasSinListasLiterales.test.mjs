@@ -39,6 +39,12 @@ describe('duplicadosEnListasLiterales', () => {
     expect(duplicadosEnListasLiterales('const X = [/^nationalid$/];')).toHaveLength(1);
   });
 
+  it('detecta una expresión regular de correo fuera de un array', () => {
+    const duplicados = duplicadosEnListasLiterales('const EMAIL = /[a-z]+@([a-z.]+)/g;');
+
+    expect(duplicados.map((d) => d.motivo)).toEqual(['patrón de correo: usar el formato correo de scripts/lib/formatosPii.mjs']);
+  });
+
   it('no informa nombres de la lista blanca de identity.mjs porque no son identidad', () => {
     expect(duplicadosEnListasLiterales("const X = ['biomarkerName', 'sourceName'];")).toEqual([]);
   });

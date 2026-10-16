@@ -5,8 +5,15 @@
 
 const ESPECIALES = /[.+^$()|[\]\\]/g;
 
+/** Motivo por el que el glob no es válido (llave `{` sin cierre), o `null`. */
+export function validarGlob(glob) {
+  return [...glob].some((caracter, i) => caracter === '{' && glob.indexOf('}', i) === -1) ? 'llave { sin cerrar' : null;
+}
+
 /** Convierte un glob en una expresión regular anclada a la ruta completa. */
 export function globARegExp(glob) {
+  const motivo = validarGlob(glob);
+  if (motivo) throw new Error(`glob inválido (${glob}): ${motivo}`);
   let fuente = '';
   for (let i = 0; i < glob.length; i += 1) {
     const caracter = glob[i];

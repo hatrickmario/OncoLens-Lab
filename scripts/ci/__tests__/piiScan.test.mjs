@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DIRECTORIOS_GENERICOS,
   EXCLUSIONES_PERMITIDAS,
   detectarPii,
   escanear,
@@ -36,8 +35,33 @@ describe('detectarPii', () => {
     expect(lineasDe(`cédula de ciudadanía No. ${digitos(2)}.${digitos(3)}.${digitos(3)}`)).toEqual(['1:documento_identidad']);
   });
 
-  it('no informa los números de una ruta tras una palabra clave porque no son un documento [US-036 AC-4]', () => {
+  it('no informa los números de una URL tras una palabra clave porque no son un documento [US-036 AC-4]', () => {
     expect(lineasDe(`https://corpus.oncolens.test/documentos/CDR${digitos(10, '0')}`)).toEqual([]);
+  });
+
+  it('informa el mismo texto con barra fuera de una URL: la exención es del contexto, no del patrón [US-036 AC-4]', () => {
+    expect(lineasDe(`ver documentos/CDR${digitos(10, '0')}`)).toEqual(['1:documento_identidad']);
+    expect(lineasDe(`Documento/ID: ${digitos(10, '1')}`)).toEqual(['1:documento_identidad']);
+  });
+
+  it.each([
+    ['CC', () => `CC ${digitos(10, '1')}`],
+    ['C.C. con puntos de miles', () => `C.C. ${digitos(1, '1')}.${digitos(3, '2')}.${digitos(3, '3')}.${digitos(3, '4')}`],
+    ['ID con dos puntos', () => `ID: ${digitos(10, '1')}`],
+    ['TI', () => `TI ${digitos(10, '1')}`],
+    ['T.I.', () => `T.I. ${digitos(10, '1')}`],
+    ['CE', () => `CE ${digitos(8, '2')}`],
+    ['NUIP', () => `NUIP ${digitos(10, '1')}`],
+    ['tarjeta de identidad', () => `tarjeta de identidad ${digitos(10, '1')}`],
+    ['HC', () => `HC ${digitos(7, '4')}`],
+    ['historia clínica', () => `historia clínica ${digitos(7, '4')}`],
+  ])('informa un documento precedido de la sigla o palabra %s [US-036 AC-4]', (_nombre, texto) => {
+    expect(lineasDe(texto())).toEqual(['1:documento_identidad']);
+  });
+
+  it('no confunde con una sigla de documento el final de un identificador como nct_id [US-036 AC-4]', () => {
+    expect(lineasDe(`nct_id: NCT${digitos(8, '0')}`)).toEqual([]);
+    expect(lineasDe(`valid ${digitos(8, '0')}`)).toEqual([]);
   });
 
   it('no informa una fecha tras una palabra clave [US-036 AC-4]', () => {
@@ -173,8 +197,12 @@ describe('validarAllowlist', () => {
     expect(validarAllowlist(iniciales.map((glob) => entrada({ rutas: [glob] })))).toEqual([]);
   });
 
-  it('trata los directorios genéricos como no identificativos de un fixture [US-036 AC-4]', () => {
-    expect(DIRECTORIOS_GENERICOS).toContain('backlog');
+  it('acepta la marca literal sintetico: true además de clase: sintetico [US-036 AC-4]', () => {
+    expect(validarAllowlist([entrada({ clase: undefined, sintetico: true })])).toEqual([]);
+  });
+
+  it('falla nombrando la entrada con una llave sin cerrar en un glob [US-036 AC-4]', () => {
+    expect(validarAllowlist([entrada({ rutas: ['docs/{a,b'] })])).toEqual(['entrada de la allowlist FX-prueba: glob inválido (docs/{a,b): llave { sin cerrar']);
   });
 });
 

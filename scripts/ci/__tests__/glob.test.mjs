@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { casaConGlob } from '../lib/glob.mjs';
+import { casaConGlob, globARegExp, validarGlob } from '../lib/glob.mjs';
 
 describe('casaConGlob', () => {
   it.each([
@@ -18,5 +18,16 @@ describe('casaConGlob', () => {
     ['a.b', 'axb', false],
   ])('evalúa el glob %s contra %s', (glob, ruta, esperado) => {
     expect(casaConGlob(ruta, glob)).toBe(esperado);
+  });
+});
+
+describe('validarGlob', () => {
+  it('rechaza una llave sin cerrar en vez de quedarse en un bucle [US-036 AC-4]', () => {
+    expect(validarGlob('docs/{a,b')).toBe('llave { sin cerrar');
+    expect(() => globARegExp('docs/{a,b')).toThrow('glob inválido');
+  });
+
+  it('acepta un glob con llaves balanceadas [US-036 AC-4]', () => {
+    expect(validarGlob('**/*.{png,jpg}')).toBeNull();
   });
 });

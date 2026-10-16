@@ -19,11 +19,14 @@ const PATRONES_DE_IDENTIDAD = new Set(IDENTIDAD_PII.map((patron) => patron.toStr
 
 const esCadena = (nodo) => ts.isStringLiteral(nodo) || ts.isNoSubstitutionTemplateLiteral(nodo);
 
-/** Por cada array literal del archivo, los elementos que duplican una fuente única, con su línea. */
+/** Los elementos de array literal que duplican una fuente única y las regex de correo en cualquier posición, con su línea. */
 export function duplicadosEnListasLiterales(codigo, nombreDeArchivo = 'regla.mjs') {
   const archivo = ts.createSourceFile(nombreDeArchivo, codigo, ts.ScriptTarget.Latest, true);
   const duplicados = [];
   const visitar = (nodo) => {
+    if (ts.isRegularExpressionLiteral(nodo) && nodo.text.includes('@')) {
+      duplicados.push({ elemento: nodo.getText(archivo), motivo: 'patrón de correo: usar el formato correo de scripts/lib/formatosPii.mjs', linea: archivo.getLineAndCharacterOfPosition(nodo.getStart()).line + 1 });
+    }
     if (ts.isArrayLiteralExpression(nodo)) {
       for (const elemento of nodo.elements) {
         const motivo = motivoDeDuplicado(elemento);

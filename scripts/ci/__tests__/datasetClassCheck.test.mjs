@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { datasetsSinClase } from '../dataset-class-check.mjs';
-import { declaraClaseEnCabecera, declaraClaseSintetico, manifiestoMasCercano } from '../lib/claseDatos.mjs';
+import { declaraClaseEnCabecera, declaraClaseSintetico, esMarcaSintetica, manifiestoMasCercano } from '../lib/claseDatos.mjs';
 
 const RAICES = ['data/eval/', 'data/evaluation/'];
 const leerDe = (archivos) => (ruta) => (ruta in archivos ? archivos[ruta] : null);
@@ -41,10 +41,26 @@ describe('datasetsSinClase', () => {
     expect(verificar({ 'data/raw/seed/guia.txt': 'texto', 'docs/datos.csv': 'a' })).toEqual([]);
   });
 
-  it('no exige clase a la documentación ni al código que conviven con un dataset pero sí a sus datos [US-036 AC-5]', () => {
-    const archivos = { 'data/eval/p/README.md': '# p', 'data/eval/p/generar.py': 'print(1)', 'data/eval/p/golden.jsonl': '{}' };
+  it('falla con un .md y un .py de datos sin clase porque ninguna extensión está exenta [US-036 AC-5]', () => {
+    const archivos = { 'data/eval/p/README.md': '# p', 'data/eval/p/generar.py': 'print(1)' };
 
-    expect(verificar(archivos)).toEqual(['data/eval/p/golden.jsonl']);
+    expect(verificar(archivos)).toEqual(['data/eval/p/README.md', 'data/eval/p/generar.py']);
+  });
+
+  it('cubre un README con el manifiesto sintetico de su directorio [US-036 AC-5]', () => {
+    expect(verificar({ 'data/eval/p/manifest.yaml': 'clase: sintetico', 'data/eval/p/README.md': '# p' })).toEqual([]);
+  });
+
+  it('falla cuando el manifiesto más cercano declara otra clase aunque la cabecera del archivo diga sintetico [US-036 AC-5]', () => {
+    const archivos = { 'data/eval/r/manifest.yaml': 'clase: real_anonimizado', 'data/eval/r/casos.yaml': 'clase: sintetico' };
+
+    expect(verificar(archivos)).toContain('data/eval/r/casos.yaml');
+  });
+
+  it('no sube más arriba de la raíz configurada en busca de un manifiesto [US-036 AC-5]', () => {
+    const archivos = { 'data/manifest.yaml': 'clase: sintetico', 'data/eval/a.jsonl': '{}' };
+
+    expect(verificar(archivos)).toEqual(['data/eval/a.jsonl']);
   });
 });
 
@@ -53,6 +69,12 @@ describe('manifiestoMasCercano', () => {
     const encontrado = manifiestoMasCercano('data/eval/a/b/c.json', leerDe({ 'data/eval/manifest.yaml': 'clase: sintetico' }));
 
     expect(encontrado.ruta).toBe('data/eval/manifest.yaml');
+  });
+
+  it('se detiene en la raíz indicada aunque haya un manifiesto más arriba [US-036 AC-5]', () => {
+    const leer = leerDe({ 'data/manifest.yaml': 'clase: sintetico' });
+
+    expect(manifiestoMasCercano('data/eval/a.json', leer, 'data/eval/')).toBeNull();
   });
 
   it('devuelve null cuando ningún directorio tiene manifiesto [US-036 AC-5]', () => {
@@ -81,5 +103,17 @@ describe('declaraClaseEnCabecera', () => {
     ['la clase mencionada más allá de la cabecera', `${'x'.repeat(3000)}\nclase: sintetico`, false],
   ])('evalúa %s [US-036 AC-5]', (_descripcion, texto, esperado) => {
     expect(declaraClaseEnCabecera(texto)).toBe(esperado);
+  });
+});
+
+describe('esMarcaSintetica', () => {
+  it.each([
+    [{ clase: 'sintetico' }, true],
+    [{ sintetico: true }, true],
+    [{ clase: 'real_anonimizado' }, false],
+    [{ sintetico: 'true' }, false],
+    [undefined, false],
+  ])('evalúa %j [US-036 AC-5]', (objeto, esperado) => {
+    expect(esMarcaSintetica(objeto)).toBe(esperado);
   });
 });
