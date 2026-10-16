@@ -13,8 +13,10 @@ protocolo:
   tolerancia_empate: 0.02             # ~1 pregunta de 59: una diferencia menor cuenta como empate y decide la memoria (AC-4)
 
 restricciones:
-  stack_memory_limit_gb: 24           # STACK_MEMORY_LIMIT_GB (NFR-01)
-  llm_budget_gb: 16                   # presupuesto del LLM de la hipótesis A ([S1 resp. 10])
+  # Decisión del usuario 2026-10-20: stack 30 GB (MacBook Pro 32 GB de referencia) y tope del LLM 21 GB. La fase A se midió
+  # con 24 / 16; ningún descarte de la fase A fue por memoria, así que el reporte 2026-10-16 sigue siendo válido.
+  stack_memory_limit_gb: 30           # STACK_MEMORY_LIMIT_GB (NFR-01)
+  llm_budget_gb: 21                   # LLM_MEMORY_BUDGET_GB: tope máximo del LLM local
   # STAGE_P95_BUDGET_MS: la suma deja ~1 s de margen sobre el p95 <= 15 s con el LLM (~10 s para 800 tokens)
   stage_p95_budget_ms: {embeddings: 500, reranker: 2000, nli: 1500}
   academic_licenses: [mit, apache-2.0]  # ACADEMIC_LICENSES (identificadores de licencia de Hugging Face)

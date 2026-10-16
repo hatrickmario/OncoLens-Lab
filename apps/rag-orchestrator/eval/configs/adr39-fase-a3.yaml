@@ -1,0 +1,69 @@
+# Medición complementaria de ADR-39 (decisión del usuario 2026-10-20): bge-reranker-v2-m3 sobre chunks de 1024 tokens.
+# Reglas y presupuestos fijados ANTES de medir (commit previo al reporte; RN-22). No reabre la decisión: el reranker es
+# BAAI/bge-reranker-v2-m3; la medición solo justifica el presupuesto de p95 de la etapa y evalúa palancas.
+version: 1
+dataset: data/eval/adr39-mini
+semilla_bootstrap: 39
+bootstrap_repeticiones: 1000
+reporte: reports/adr39/2026-10-20-fase-a3-reranker.json
+
+protocolo:
+  corridas: 3                        # mediana de 3 corridas, cada una en un proceso nuevo (igual que la fase A)
+  calentamiento: 3
+  hilos_cpu: 8
+  cuantizacion: int8                 # la cuantización decidida; fp32 ya medido (9441 ms) y no se repite
+  lotes_por_corrida: 12              # lotes cronometrados por corrida (igual que la fase A)
+  k: 10
+  tolerancia_empate: 0.02            # diferencia de recall@10 <= 0,02 = empate (~1 pregunta de 59)
+
+embedding:                           # genera los candidatos densos; modelo y cuantización decididos en la fase A
+  id: A
+  modelo: BAAI/bge-m3
+  revision: 5617a9f61b028005a4858fdac845db406aefb181
+  cuantizacion: int8
+  max_length: 8192
+  pooling: cls
+  plantilla_consulta: "{texto}"
+  plantilla_documento: "{texto}"
+  sparse: sparse_linear.pt
+
+reranker:
+  id: A
+  modelo: BAAI/bge-reranker-v2-m3
+  revision: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+  tarea: reranker_cls
+  max_length: 8192                   # config.json: max_position_embeddings 8194 (XLM-RoBERTa)
+
+# Escenarios: (tamaño de chunk en tokens de BGE-M3, RERANKER_MAX_LENGTH, RERANKER_MAX_PAIRS). Sin solapamiento, tamaño fijo.
+# `referencia` = la base ya medida en la fase A (chunks de 256, 512, 24 pares) repetida aquí para comparar en la misma sesión.
+# `vigente` = la configuración fijada por el ADR (chunks de 1024, 512, 24): sobre ella se fija el presupuesto.
+escenarios:
+  - {id: base-256-L512-P24, chunk: 256, max_length: 512, max_pairs: 24, rol: referencia}
+  - {id: c1024-L512-P24, chunk: 1024, max_length: 512, max_pairs: 24, rol: vigente}
+  - {id: c1024-L768-P24, chunk: 1024, max_length: 768, max_pairs: 24, rol: longitud}
+  - {id: c1024-L1280-P24, chunk: 1024, max_length: 1280, max_pairs: 24, rol: longitud}    # sin truncado (par <= 1280 tokens)
+  # Palancas (solo medición, no cambian la decisión): menos pares y truncado más corto.
+  - {id: base-256-L512-P16, chunk: 256, max_length: 512, max_pairs: 16, rol: palanca}
+  - {id: base-256-L512-P12, chunk: 256, max_length: 512, max_pairs: 12, rol: palanca}
+  - {id: base-256-L512-P8, chunk: 256, max_length: 512, max_pairs: 8, rol: palanca}
+  - {id: c1024-L512-P16, chunk: 1024, max_length: 512, max_pairs: 16, rol: palanca}
+  - {id: c1024-L512-P12, chunk: 1024, max_length: 512, max_pairs: 12, rol: palanca}
+  - {id: c1024-L512-P8, chunk: 1024, max_length: 512, max_pairs: 8, rol: palanca}
+  - {id: c1024-L256-P24, chunk: 1024, max_length: 256, max_pairs: 24, rol: palanca}
+  - {id: c1024-L1280-P12, chunk: 1024, max_length: 1280, max_pairs: 12, rol: palanca}
+
+# Reglas de decisión (fijadas antes de medir):
+reglas:
+  # Presupuesto de p95 de la etapa = p95 mediano (de las 3 corridas) del escenario `vigente`, redondeado hacia arriba
+  # a múltiplos de 250 ms. Se aplica solo si el recall@10 del vigente es >= el de la base menos la tolerancia; si no,
+  # se informa como hallazgo para el usuario sin cambiar el presupuesto.
+  presupuesto_redondeo_ms: 250
+  # p95 extremo a extremo estimado = suma de los p95 medianos de las etapas (embeddings, reranker, NLI; suma = cota
+  # superior del p95 de la suma) + LLM. El LLM NO se mide aquí: supuesto de [S1 resp. 10] (~10 s para 800 tokens).
+  llm_generacion_ms_supuesto: 10000
+  p95_extremo_a_extremo_objetivo_ms: 15000     # NFR: /platform/evidence-analyses p95 <= 15 s
+  margen_riesgo_ms: 1000                       # margen < 1 s = riesgo alto
+  # Palanca "viable": recall@10 dentro de la tolerancia del vigente y p95 <= p95_viable_ms (el presupuesto original).
+  p95_viable_ms: 2000
+  # Etapas ya medidas (reports/adr39/2026-10-16-fase-a.json), medianas de 3 corridas.
+  p95_otras_etapas_ms: {embeddings: 59, nli: 248}
