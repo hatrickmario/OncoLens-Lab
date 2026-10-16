@@ -52,7 +52,8 @@ class Seleccion:
 
 
 def dentro_de_tolerancia(valor: float, referencia: float, tolerancia: float) -> bool:
-    raise NotImplementedError
+    """``valor`` no queda por debajo de ``referencia`` más de ``tolerancia`` (el borde cuenta; sin error de coma flotante)."""
+    return round(referencia - valor, 9) <= tolerancia
 
 
 def descartar_por_restricciones(
@@ -100,7 +101,7 @@ def desempatar_por_memoria(empatados: Sequence[Medicion]) -> Medicion:
 def seleccionar_componente(
     mediciones: Sequence[Medicion],
     restricciones: Restricciones,
-    tolerancia_empate: float = 0.0,
+    tolerancia_empate: float,
 ) -> Seleccion:
     """Elige el mejor candidato válido de una etapa; ``sin_candidato`` si ninguno cumple (AC-5).
 
@@ -111,7 +112,7 @@ def seleccionar_componente(
     if not validos:
         return Seleccion(etapa, None, tuple(descartados), False)
     mejor = max(m.metrica_principal for m in validos)
-    empatados = [m for m in validos if mejor - m.metrica_principal <= tolerancia_empate]
+    empatados = [m for m in validos if dentro_de_tolerancia(m.metrica_principal, mejor, tolerancia_empate)]
     return Seleccion(
         etapa,
         desempatar_por_memoria(empatados),
@@ -144,7 +145,7 @@ def seleccionar_variante(variantes: Sequence[MedicionVariante], margen: float) -
     """
     barata = min(variantes, key=lambda v: (v.numero_chunks, v.simplicidad, v.variante))
     mejor_recall = max(v.recall_at_10 for v in variantes)
-    if round(mejor_recall - barata.recall_at_10, 9) <= margen:
+    if dentro_de_tolerancia(barata.recall_at_10, mejor_recall, margen):
         return barata
     candidatas = [v for v in variantes if v.recall_at_10 == mejor_recall]
     return min(candidatas, key=lambda v: (v.numero_chunks, v.simplicidad, v.variante))

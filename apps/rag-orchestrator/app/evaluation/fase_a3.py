@@ -35,6 +35,7 @@ from app.evaluation.medicion_modelos import (
     recuperar_densos,
     reordenar_con_reranker,
 )
+from app.evaluation.model_selection import dentro_de_tolerancia
 from app.evaluation.reporte import a_json_seguro, escribir_reporte
 from app.evaluation.retrieval_metrics import agregar
 from app.evaluation.trabajos import Fabrica
@@ -165,7 +166,7 @@ def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Seque
     vigente, base = agregados[por_rol["vigente"].id], agregados[por_rol["referencia"].id]
     recall_vigente = vigente["calidad"]["metricas"]["total"]["recall_at_10"]
     recall_base = base["calidad"]["metricas"]["total"]["recall_at_10"]
-    calidad_sostenida = recall_vigente >= recall_base - config.tolerancia_empate
+    calidad_sostenida = dentro_de_tolerancia(recall_vigente, recall_base, config.tolerancia_empate)
     presupuesto = redondear_hacia_arriba(vigente["p95_ms"], reglas.presupuesto_redondeo_ms)
     palancas = []
     for e in escenarios:
@@ -179,9 +180,9 @@ def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Seque
                 "delta_recall_vs_vigente": recall - recall_vigente,
                 "p95_ms": a["p95_ms"],
                 "delta_p95_vs_vigente_ms": a["p95_ms"] - vigente["p95_ms"],
-                "dentro_de_tolerancia_de_calidad": recall >= recall_vigente - config.tolerancia_empate,
+                "dentro_de_tolerancia_de_calidad": dentro_de_tolerancia(recall, recall_vigente, config.tolerancia_empate),
                 "dentro_del_presupuesto_original": a["p95_ms"] <= reglas.p95_viable_ms,
-                "viable": recall >= recall_vigente - config.tolerancia_empate and a["p95_ms"] <= reglas.p95_viable_ms,
+                "viable": dentro_de_tolerancia(recall, recall_vigente, config.tolerancia_empate) and a["p95_ms"] <= reglas.p95_viable_ms,
                 "extremo_a_extremo": evaluar_extremo_a_extremo(a["p95_ms"], reglas),
             }
         )
@@ -206,7 +207,7 @@ def _conclusion_del_adoptado(agregados: dict[str, dict[str, Any]], config: Confi
     return {
         "escenario": config.escenario_adoptado,
         "recall_at_10": recall,
-        "calidad_sostiene_la_base": recall >= recall_base - config.tolerancia_empate,
+        "calidad_sostiene_la_base": dentro_de_tolerancia(recall, recall_base, config.tolerancia_empate),
         "p95_ms": a["p95_ms"],
         "rss_max_mb": a["rss_max_mb"],
         "presupuesto_reranker_ms": presupuesto,
