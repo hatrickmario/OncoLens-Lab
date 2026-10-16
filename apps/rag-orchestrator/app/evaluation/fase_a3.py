@@ -7,7 +7,7 @@ extremo, palancas viables) se fijan en ``eval/configs/adr39-fase-a3.yaml`` antes
 
 from __future__ import annotations
 
-import hashlib
+import statistics
 import json
 import math
 from collections.abc import Callable, Sequence
@@ -16,13 +16,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import yaml
 
 from app.evaluation.chunking_variants import ESTRATEGIA_TAMANO_FIJO, ChunkCandidato, Seccion, Variante
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, Pregunta
-from app.evaluation.envoltorios import MonitorRss, Reranker, pico_rss_mb
+from app.evaluation.envoltorios import MonitorRss, pico_rss_mb
 from app.evaluation.medicion_modelos import (
     construir_corpus,
     cronometrar,
@@ -34,11 +33,10 @@ from app.evaluation.medicion_modelos import (
     reordenar_con_reranker,
     vectores_en_cache,
 )
-from app.evaluation.fase_a import agregar_corridas
 from app.evaluation.model_selection import dentro_de_tolerancia
 from app.evaluation.reporte import a_json_seguro, escribir_reporte
 from app.evaluation.retrieval_metrics import ESCALA_COSENO, ESCALA_SIGMOIDE, agregar
-from app.evaluation.trabajos import SONDAS_DETERMINISMO, Fabrica
+from app.evaluation.trabajos import Fabrica
 
 SALIDA_OK = 0
 
@@ -222,9 +220,23 @@ def _leer_candidatos(carpeta: Path) -> tuple[list[ChunkCandidato], dict[str, lis
     )
 
 
-def _huella_de_sondas(reranker: Reranker) -> str:
-    puntajes = reranker.puntuar(SONDAS_DETERMINISMO[0], SONDAS_DETERMINISMO[1:])
-    return hashlib.sha256(np.round(np.asarray(puntajes, dtype=float), 4).tobytes()).hexdigest()[:16]
+def agregar_corridas_a3(corridas: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Mediana de p95 y RSS sobre las corridas; la calidad sale de la corrida 1 (determinista)."""
+    primera = next(c for c in corridas if "calidad" in c)
+    return {
+        "corridas": len(corridas),
+        "rss_carga_mb": statistics.median(c["rss_carga_mb"] for c in corridas),
+        "rss_max_mb": statistics.median(c["rss_max_mb"] for c in corridas),
+        "pico_rss_mb": statistics.median(c["pico_rss_mb"] for c in corridas),
+        "p50_ms": statistics.median(c["latencia"]["p50_ms"] for c in corridas),
+        "p95_ms": statistics.median(c["latencia"]["p95_ms"] for c in corridas),
+        "p95_ms_por_corrida": [c["latencia"]["p95_ms"] for c in corridas],
+        "rss_max_mb_por_corrida": [c["rss_max_mb"] for c in corridas],
+        "calidad": primera["calidad"],
+    }
+
+
+# --- trabajo de un proceso --------------------------------------------------------------------------------------
 
 
 def ejecutar_trabajo_a3(trabajo: TrabajoA3, config: ConfigA3, dataset: Dataset, fabrica: Fabrica, reloj: Callable[[], float]) -> dict[str, Any]:
@@ -247,7 +259,6 @@ def ejecutar_trabajo_a3(trabajo: TrabajoA3, config: ConfigA3, dataset: Dataset, 
         "rss_carga_mb": rss_carga,
         "rss_max_mb": monitor.maximo_mb,
         "pico_rss_mb": pico_rss_mb(),
-        "huella_sondas": _huella_de_sondas(reranker),
         "latencia": {"p50_ms": mediana(tiempos), "p95_ms": percentil_95(tiempos), "max_ms": float(max(tiempos)), "n": len(tiempos)},
     }
     if trabajo.calidad:
@@ -340,7 +351,7 @@ def ejecutar_fase_a3(
         except TrabajoFallido as exc:
             no_medibles[e.id] = {"estado": "no_medible", "motivo": str(exc), **descripcion}
             continue
-        agregados[e.id] = {**agregar_corridas(corridas), **descripcion}
+        agregados[e.id] = {**agregar_corridas_a3(corridas), **descripcion}
     reporte = {
         "fase": "A3",
         "fecha": ahora().date().isoformat(),
