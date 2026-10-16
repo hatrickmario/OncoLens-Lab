@@ -214,11 +214,6 @@ class RerankerOnnx(_ModeloOnnx):
         return [float(v) for v in salida[:, 0]]
 
 
-def normalizar_a_unidad(puntajes: list[float]) -> list[float]:
-    """Sigmoide del puntaje crudo: [0, 1] monótono (RN-03, el normalizador versionado lo fija US-055)."""
-    return [float(1.0 / (1.0 + np.exp(-p))) for p in puntajes]
-
-
 class TokenizadorModelo:
     """Tokenizador del modelo elegido para medir el tamaño de chunk en sus tokens (puerto ``Tokenizador``)."""
 

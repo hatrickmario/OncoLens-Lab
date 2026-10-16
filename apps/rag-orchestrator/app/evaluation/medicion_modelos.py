@@ -17,7 +17,8 @@ import numpy as np
 from app.evaluation.chunking_variants import ChunkCandidato, Seccion, Variante, fragmentar
 from app.evaluation.chunking_variants import Tokenizador
 from app.evaluation.dataset_loader import ParNli, Pregunta
-from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker, normalizar_a_unidad
+from app.domain.normalizacion_puntaje import normalizar_a_unidad
+from app.evaluation.envoltorios import ClasificadorNli, Embedder, Reranker
 from app.evaluation.retrieval_metrics import ChunkRecuperado, ResultadoPregunta, evaluar_pregunta
 
 Reloj = Callable[[], float]
