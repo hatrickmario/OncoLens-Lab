@@ -215,8 +215,9 @@ exenciones las aplica solo `scripts/lib/formatosPii.mjs`, que comparten el escá
 
 | Exención | Dónde | Motivo | Test de que lo original se sigue detectando |
 |---|---|---|---|
-| `prefijosExentos: ["SINT-"]` en `documento_identidad` (el centinela sale de ahí: `PREFIJO_SINTETICO`) | formato | los ejemplos de `contracts/examples/` exigen el prefijo `SINT-` (assertExamplesSynthetic) | el mismo número sin prefijo, en la misma línea, se informa |
-| `contextosExentos: ["url"]` | formato | `documentos/CDR…` de una URL del corpus no es un documento | el mismo texto con barra fuera de una URL y `Documento/ID: …` se informan |
+| `prefijosExentos: ["SINT-"]` en `documento_identidad` (el centinela sale de ahí: `PREFIJO_SINTETICO`; se compara distinguiendo mayúsculas) | formato | los ejemplos de `contracts/examples/` exigen el prefijo `SINT-` (assertExamplesSynthetic) | el mismo número sin prefijo, en la misma línea, se informa |
+| `contextosExentos: ["url"]` | formato | `documentos/CDR…` en la **ruta** de una URL del corpus no es un documento; palabra clave y valor deben estar en la ruta de la misma URL (antes de `?` y `#`) | el mismo texto fuera de una URL, el valor tras `?documento=`, `?cedula=`, `?nationalId=`, `?id=` o `#…`, y un valor fuera de la URL de la palabra clave se informan |
+| `exencionesDeSigla: ["valor-pegado-a-letras"]` | formato | `trial id: NCT01234567` es un identificador de ensayo; solo vale para siglas de hasta cuatro caracteres | `pasaporte AB…` (palabra clave larga) se sigue informando |
 | `dominiosExentos` (RFC 2606 / 6761) | formato `correo` | no pueden pertenecer a una persona | `notexample.com` y otros dominios se informan |
 | `correosExentos: [{local: icd, dominio: who.int}]` | formato `correo` | buzón institucional público de consultas de la CIE de la OMS (DEC-04, FEAT-00) | otro buzón del mismo dominio se informa |
 | `EXCLUSIONES_PERMITIDAS` (lockfiles y binarios) | código | sin texto libre | cualquier otra exclusión hace fallar el job |

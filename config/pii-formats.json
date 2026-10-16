@@ -5,10 +5,11 @@
     {
       "id": "documento_identidad",
       "tipo": "documento_identidad",
-      "descripcion": "Documento de identidad de 6 a 12 dígitos (separadores opcionales) precedido de su palabra clave; el patrón no informa fechas. Las siglas de hasta cuatro caracteres (CC, C.C., TI, CE, NUIP, ID, HC…) exigen límite de palabra. Exenciones, aplicadas solo por el escáner: los valores con el prefijo centinela SINT- que exigen los ejemplos (assertExamplesSynthetic) y las coincidencias dentro de una URL.",
+      "descripcion": "Documento de identidad de 6 a 12 dígitos (separadores opcionales) precedido de su palabra clave; el patrón no informa fechas. Las siglas de hasta cuatro caracteres (CC, C.C., TI, CE, NUIP, ID, HC…) exigen límite de palabra. Exenciones, aplicadas solo por el escáner: los valores con el prefijo centinela SINT- (sensible a mayúsculas) que exigen los ejemplos (assertExamplesSynthetic), la palabra clave y el valor dentro de la ruta de una misma URL (la consulta y el fragmento se escanean siempre) y el valor pegado a letras tras una sigla corta (trial id: NCT…).",
       "palabrasClave": ["documento", "document", "national_id", "cédula", "cedula", "DNI", "pasaporte", "passport", "nationalId", "identificación", "identificacion", "CC", "C.C.", "TI", "T.I.", "CE", "C.E.", "NUIP", "ID", "tarjeta de identidad", "HC", "historia clínica", "historia clinica"],
       "prefijosExentos": ["SINT-"],
       "contextosExentos": ["url"],
+      "exencionesDeSigla": ["valor-pegado-a-letras"],
       "patron": "(?:{{palabrasClave}})[^\\n\\d]{0,32}(?<valor>(?!\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4}(?!\\d))\\d(?:[\\d.\\- ]{4,14}\\d)?)(?![\\p{L}\\p{N}])",
       "banderas": "iu",
       "digitosMin": 6,
