@@ -1,0 +1,93 @@
+clase: sintetico
+version: '1'
+sal: ol06-particion-v1
+ciclo:
+- desarrollo
+- validacion
+- desarrollo
+- prueba
+golden_sha256: 6c0abab9eef58c953aab4f7980fb81c765d9e5cfbb268db223ca2acfb5e90741
+total_preguntas: 75
+resumen:
+  desarrollo: 39
+  prueba: 16
+  validacion: 20
+asignacion:
+  desarrollo:
+  - EN-03
+  - EN-04
+  - EN-06
+  - EN-07
+  - EN-09
+  - EN-10
+  - Q-M01
+  - Q-M04
+  - Q-M06
+  - Q-M08
+  - Q-M10
+  - Q-M11
+  - Q-M14
+  - Q-M15
+  - Q-M20
+  - Q-M22
+  - Q-M23
+  - Q-M24
+  - Q-M25
+  - Q-M27
+  - Q-M29
+  - Q-NA03
+  - Q-NA04
+  - Q-NA06
+  - Q-P02
+  - Q-P03
+  - Q-P06
+  - Q-P09
+  - Q-P10
+  - Q-P11
+  - Q-P13
+  - Q-P14
+  - Q-P15
+  - Q-P18
+  - Q-P21
+  - Q-P22
+  - Q-P27
+  - Q-P28
+  - Q-P30
+  validacion:
+  - EN-01
+  - EN-02
+  - EN-05
+  - Q-M02
+  - Q-M05
+  - Q-M13
+  - Q-M17
+  - Q-M19
+  - Q-M21
+  - Q-M26
+  - Q-M30
+  - Q-NA01
+  - Q-NA05
+  - Q-P01
+  - Q-P07
+  - Q-P12
+  - Q-P19
+  - Q-P20
+  - Q-P24
+  - Q-P26
+  prueba:
+  - EN-08
+  - Q-M03
+  - Q-M07
+  - Q-M09
+  - Q-M12
+  - Q-M16
+  - Q-M18
+  - Q-M28
+  - Q-NA02
+  - Q-P04
+  - Q-P05
+  - Q-P08
+  - Q-P16
+  - Q-P17
+  - Q-P23
+  - Q-P25
