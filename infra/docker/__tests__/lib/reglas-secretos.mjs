@@ -76,3 +76,16 @@ export function assertPostgresConTls(config) {
     if (!subred || !CIDR_IPV4.test(subred)) throw new Error(`${red} debe fijar su subred desde configuración y es ${subred}`);
   }
 }
+
+/**
+ * AC-2: los permisos 0600 de los secretos no se relajan; los servicios que leen archivos de secretos con el usuario de
+ * la aplicación corren con el uid:gid dueño de esos archivos (ONCOLENS_UID, ONCOLENS_GID), no con uno ajeno.
+ */
+export function assertAppsConUsuarioDeLosSecretos(config) {
+  const usuarios = ['clinical-api', 'rag-orchestrator'].map((nombre) => [nombre, String(servicio(config, nombre).user ?? '')]);
+  for (const [nombre, usuario] of usuarios) {
+    if (!/^\d+:\d+$/.test(usuario)) throw new Error(`${nombre} debe ejecutarse con ONCOLENS_UID:ONCOLENS_GID y declara user=${usuario || 'ninguno'}`);
+  }
+  const distintos = new Set(usuarios.map(([, usuario]) => usuario));
+  if (distintos.size > 1) throw new Error(`${usuarios.map(([nombre, usuario]) => `${nombre}=${usuario}`).join(' y ')} deben ejecutarse con el mismo usuario dueño de los secretos`);
+}

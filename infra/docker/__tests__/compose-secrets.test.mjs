@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { COMPOSE, COMPOSE_TEST, ENV_EXAMPLE, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
-import { assertPostgresConTls, assertRepartoDeSecretos, assertSinSecretosEnEntorno } from './lib/reglas-secretos.mjs';
+import { assertAppsConUsuarioDeLosSecretos, assertPostgresConTls, assertRepartoDeSecretos, assertSinSecretosEnEntorno } from './lib/reglas-secretos.mjs';
 
 let resolver;
 let limpiar;
@@ -101,6 +101,33 @@ describe('docker-compose.yml · catálogo de secretos', () => {
 
     expect(declarados.length).toBeGreaterThan(0);
     expect(declarados.filter((nombre) => !catalogo.includes(nombre))).toEqual([]);
+  });
+});
+
+describe('docker-compose.yml · lectura de los secretos sin relajar permisos', () => {
+  it('ejecuta clinical-api y rag-orchestrator con el uid y gid dueños de los secretos (ONCOLENS_UID y ONCOLENS_GID) [US-035 AC-2]', () => {
+    const config = resolver({ entorno: { ONCOLENS_UID: '4242', ONCOLENS_GID: '4343' } });
+
+    expect(() => assertAppsConUsuarioDeLosSecretos(config)).not.toThrow();
+    expect(config.services['clinical-api'].user).toBe('4242:4343');
+    expect(config.services['rag-orchestrator'].user).toBe('4242:4343');
+  });
+
+  it('falla nombrando rag-orchestrator cuando un override lo ejecuta con otro usuario [US-035 AC-2]', () => {
+    const config = resolver({ override: 'services:\n  rag-orchestrator:\n    user: "10001"\n' });
+    expect(() => assertAppsConUsuarioDeLosSecretos(config)).toThrow(/rag-orchestrator/);
+  });
+
+  it('declara ONCOLENS_UID y ONCOLENS_GID en .env.example con el mismo valor por defecto que el Compose [US-035 AC-2]', () => {
+    const compose = readFileSync(COMPOSE, 'utf8');
+    const ejemplo = readFileSync(ENV_EXAMPLE, 'utf8');
+    for (const variable of ['ONCOLENS_UID', 'ONCOLENS_GID']) {
+      const enEjemplo = ejemplo.match(new RegExp(`^${variable}=(\\d+)$`, 'm'))?.[1];
+      const enCompose = [...compose.matchAll(new RegExp(`\\$\\{${variable}:-([^}]*)\\}`, 'g'))].map((coincidencia) => coincidencia[1]);
+
+      expect(enEjemplo, `${variable} en .env.example`).toBeTruthy();
+      expect(new Set(enCompose), variable).toEqual(new Set([enEjemplo]));
+    }
   });
 });
 

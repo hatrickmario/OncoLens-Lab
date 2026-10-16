@@ -141,6 +141,8 @@ services:
     build:
       context: ../..
       dockerfile: apps/clinical-api/Dockerfile
+    # Los secretos conservan el 0600 de su dueño: la app corre con ese uid:gid para poder leerlos (scripts/setup-secrets.sh).
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
     environment:
       PORT: "3000"
       APP_ENV: ${APP_ENV:-local}
@@ -178,6 +180,7 @@ services:
     build:
       context: ../..
       dockerfile: apps/rag-orchestrator/Dockerfile
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
     # Sistema de archivos de solo lectura: ningún PDF ni texto extraído persiste en el contenedor.
     read_only: true
     tmpfs:

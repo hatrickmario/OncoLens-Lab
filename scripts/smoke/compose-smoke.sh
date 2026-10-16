@@ -7,8 +7,9 @@
 #           rag_corpus_migrator crea solo en corpus y rag_corpus no crea
 #   fase 4  sin la clave AES montada clinical-api no queda healthy (US-035 AC-5)
 #   fase 5  perfil test/CI: oncolens_test_admin solo con CREATEDB, sin acceso a la base clínica (US-035 AC-1, AC-4)
-# Usa los secretos de scripts/setup-secrets.sh (US-035) en un directorio temporal o, si no existe,
-# secretos ficticios (scripts/smoke/lib/fake-secrets.sh). Un proyecto de Compose propio
+#   fase 6  un fallo del init de roles no deja ninguna contraseña en el log de postgres (US-035 AC-1)
+# Usa los secretos reales de scripts/setup-secrets.sh (US-035) en un directorio temporal, con sus permisos 0600.
+# Un proyecto de Compose propio
 # y `down -v` al final, siempre. Variables: SMOKE_WAIT_TIMEOUT (s), SMOKE_COMPOSE_OVERRIDE (-f extra, p. ej. de la CI).
 set -euo pipefail
 
@@ -60,15 +61,11 @@ compose down -v --remove-orphans >/dev/null 2>&1 || true
 
 # ---------- secretos de las fases siguientes ----------
 secretos="$temporal/secretos"
-if [ -x "$raiz/scripts/setup-secrets.sh" ]; then
-  ONCOLENS_SECRETS_DIR="$secretos" "$raiz/scripts/setup-secrets.sh" >/dev/null
-  # Los contenedores de las apps corren con un usuario no root: en el directorio temporal los archivos se leen sin
-  # restricción (postgres los copia a un tmpfs propio; el 0600 de los secretos reales no se toca).
-  chmod 755 "$secretos"
-  chmod a+r "$secretos"/*
-else
-  "$raiz/scripts/smoke/lib/fake-secrets.sh" "$secretos" >/dev/null
-fi
+ONCOLENS_SECRETS_DIR="$secretos" "$raiz/scripts/setup-secrets.sh" >/dev/null
+# Los permisos de los secretos NO se relajan (0600 del dueño): clinical-api y rag-orchestrator corren con el uid que
+# los posee (ONCOLENS_UID/ONCOLENS_GID) y postgres los copia a un tmpfs propio. Si un servicio no puede leer su
+# secreto, el stack no queda healthy y el smoke falla.
+export ONCOLENS_UID="$(id -u)" ONCOLENS_GID="$(id -g)"
 export ONCOLENS_SECRETS_DIR="$secretos"
 export WEB_PORT="${WEB_PORT:-$(puerto_libre)}"
 
@@ -88,6 +85,14 @@ bien "AC-1 /health de clinical-api responde 200 desde web"
 salida="$(get_desde clinical-api http://rag-orchestrator:8000/health)"
 [ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de rag-orchestrator desde clinical-api respondió: $salida"
 bien "AC-1 /health de rag-orchestrator responde 200 desde clinical-api (LLM_PROVIDER=fake)"
+
+[ -z "$(find "$secretos" -type f \( -name '*password' -o -name '*_key' -o -name '*.key' -o -name jwt_service_private.pem \) ! -perm 600)" ] \
+  || fallo "US-035 AC-2: los secretos del smoke no conservan el modo 0600"
+for servicio_con_secretos in clinical-api rag-orchestrator; do
+  [ "$(compose exec -T "$servicio_con_secretos" id -u)" = "$ONCOLENS_UID" ] \
+    || fallo "US-035 AC-2: $servicio_con_secretos no corre con el uid dueño de los secretos"
+done
+bien "US-035 AC-2 con los secretos en 0600, clinical-api y rag-orchestrator corren con el uid que los posee y quedan healthy"
 
 if compose exec -T rag-orchestrator python -c "import socket; socket.create_connection(('clinical-minio', 9000), 3)" >/dev/null 2>&1; then
   fallo "AC-3: rag-orchestrator alcanzó clinical-minio:9000"
@@ -218,8 +223,6 @@ bien "US-035 AC-5 sin la clave AES clinical-api no queda healthy y el log nombra
 compose down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar el stack antes del perfil test"
 secretos_test="$temporal/secretos-test"
 ONCOLENS_SECRETS_DIR="$secretos_test" "$raiz/scripts/setup-secrets.sh" --profile test >/dev/null
-chmod 755 "$secretos_test"
-chmod a+r "$secretos_test"/*
 proyecto_test="$proyecto-test"
 compose_test() {
   ONCOLENS_SECRETS_DIR="$secretos_test" docker compose -p "$proyecto_test" -f "$raiz/infra/docker/docker-compose.yml" -f "$raiz/infra/docker/docker-compose.test.yml" "$@"
@@ -237,5 +240,27 @@ psql_desde clinical-net oncolens_test_admin "$arnes" require postgres 'DROP DATA
   || fallo "US-035 AC-1: oncolens_test_admin no pudo borrar su base de test"
 debe_fallar_con "pg_hba.conf" psql_desde clinical-net postgres "$secretos_test/pg_superuser_password" require "$base_clinica" 'SELECT 1'
 bien "US-035 AC-1 el perfil test crea y borra bases con el prefijo, no entra a la base clínica y postgres sigue sin entrar por red"
+
+# ---------- fase 6: un fallo del init de roles no filtra contraseñas al log (US-035 AC-1) ----------
+compose_test down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres del perfil test"
+# Un límite numérico pero fuera de rango falla dentro de la sentencia que lleva la contraseña; uno no numérico lo
+# rechaza el shell antes de llamar a psql. En ninguno de los dos casos el log de postgres puede contener un secreto.
+for limite in 99999999999 abc; do
+  PG_RAG_CORPUS_CONNECTION_LIMIT="$limite" compose up -d --no-build postgres >"$log" 2>&1 || fallo "no se pudo crear postgres con el límite $limite"
+  estado=""
+  for _ in $(seq 1 60); do
+    estado="$(compose ps -a --format '{{.State}}' postgres)"
+    [ "$estado" = running ] || break
+    sleep 2
+  done
+  [ "$estado" = exited ] || fallo "US-035 AC-1: postgres debía fallar con PG_RAG_CORPUS_CONNECTION_LIMIT=$limite y está: $estado"
+  registro="$(compose logs --no-log-prefix postgres 2>&1)"
+  case "$registro" in *ERROR*|*PG_RAG_CORPUS_CONNECTION_LIMIT*) ;; *) fallo "US-035 AC-1: el log no muestra el fallo del init con el límite $limite" ;; esac
+  for archivo in "$secretos"/pg_*_password; do
+    case "$registro" in *"$(cat "$archivo")"*) fallo "US-035 AC-1: el log de postgres contiene $(basename "$archivo") tras el fallo con el límite $limite" ;; esac
+  done
+  compose down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres tras el límite $limite"
+done
+bien "US-035 AC-1 un fallo del init de roles (límite fuera de rango o no numérico) no deja ninguna contraseña en el log de postgres"
 
 echo "smoke:compose en verde"

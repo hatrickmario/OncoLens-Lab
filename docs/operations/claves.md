@@ -52,12 +52,29 @@ Lo verifica el test estático `infra/docker/__tests__/compose-secrets.test.mjs`.
 
 `rag-orchestrator` nunca recibe la privada del JWT, las claves de identidad ni credenciales de `clinical-minio`.
 
+### Permisos: los secretos se quedan en 0600
+
+Los permisos de host de los secretos **no se relajan** (ni en el smoke ni en la CI). Cada servicio los lee así:
+
+- `postgres`: su *entrypoint* corre como root, copia la clave TLS y las contraseñas a un tmpfs (`/run/pg-secrets`,
+  solo en memoria) propiedad de `postgres` con `0400`, y apunta a esa copia.
+- `clinical-api` y `rag-orchestrator`: corren con el uid:gid del dueño de los archivos (`ONCOLENS_UID` y
+  `ONCOLENS_GID` en `infra/docker/.env`; valores de `id -u` y `id -g` de quien ejecutó `setup-secrets.sh`; por defecto
+  1000:1000). En Linux, si el uid no coincide, el servicio no lee su secreto y no queda `healthy`: el smoke lo detecta.
+- `clinical-minio`, `milvus-*`: las imágenes corren como root.
+
+Además, `.dockerignore` excluye `secrets/`, `*.pem`, `*.key`, `pg_hba*.conf` y `.env*` del contexto de construcción:
+ningún secreto llega a una capa de imagen.
+
 ## Idempotencia y rotación
 
-- Sin `--rotate`, el script no sobrescribe nada: informa `existe, sin cambios: <nombre>`. Si cambias una subred o la
-  validez en la configuración, regenera `pg_hba.conf` o el certificado con `--rotate`.
+- Sin `--rotate`, el script no sobrescribe ningún secreto: informa `existe, sin cambios: <nombre>`. `pg_hba.conf` (y
+  `pg_hba.test.conf`) no es un secreto: se vuelve a renderizar siempre y solo se reescribe, con `actualizado:`, si
+  cambió la configuración (subredes, `POSTGRES_DB`, prefijo de test). Las subredes deben tener un prefijo de `/16` a
+  `/32`; una más amplia abriría el `pg_hba` a redes ajenas al stack y el script aborta sin escribir. Si cambia la
+  validez de los certificados, reemítelos con `--rotate`.
 - `--rotate <nombre>` regenera solo ese archivo y su pareja: el par JWT, el par TLS del servidor (se reemite con la CA
-  existente) o la CA (que reemite además el certificado del servidor).
+  existente) o la CA (que reemite además el par del servidor, firmado por la CA nueva).
 - **`identity_aes_key` y `blind_index_hmac_key` no se rotan desde el script**: se niega con código distinto de 0.
   Rotarlas sin re-cifrar la identidad existente la pierde (riesgo OL-01). La rotación con re-cifrado es Post-MVP.
 
@@ -78,7 +95,9 @@ Regenerar una `pg_*_password` con `--rotate` no cambia la contraseña de una bas
 
 - datos de desarrollo desechables: `docker compose down -v` y levantar de nuevo (se pierde el volumen);
 - conservar los datos: `ALTER ROLE <rol> PASSWORD …` por `local peer` (siguiente apartado), con el valor nuevo
-  leído del archivo (`\set pwd `cat …``), nunca escrito en la línea de comandos.
+  leído del archivo (`\set pwd `cat …``), nunca escrito en la línea de comandos. Empieza la sesión con
+  `SET log_statement = 'none'; SET log_min_error_statement = 'panic';` para que, si la sentencia falla, la contraseña
+  no quede en el log del servidor (el *init* de roles hace lo mismo y valida en el shell los límites de conexión).
 
 ## Administrar PostgreSQL: solo por `local peer`
 
