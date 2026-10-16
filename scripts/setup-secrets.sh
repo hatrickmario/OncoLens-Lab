@@ -71,6 +71,13 @@ exigir_formato() {
   [[ "$valor" =~ $patron ]] || fallar "$variable no es válido: debe cumplir $patron"
 }
 
+# Una subred IPv4 con prefijo de /16 a /32: una más amplia abriría pg_hba.conf a redes ajenas al stack.
+exigir_subred() {
+  exigir_formato "$1" "$2" '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$'
+  local prefijo="${2##*/}"
+  [ "$prefijo" -ge 16 ] && [ "$prefijo" -le 32 ] || fallar "$1 no es válido: el prefijo de red debe estar entre /16 y /32 y es /$prefijo"
+}
+
 cargar_configuracion() {
   POSTGRES_DB="$(leer_configuracion POSTGRES_DB)"
   CLINICAL_NET_SUBNET="$(leer_configuracion CLINICAL_NET_SUBNET)"
@@ -81,8 +88,8 @@ cargar_configuracion() {
 
   # Estos valores acaban en pg_hba.conf: se validan para que ninguno pueda inyectar reglas.
   exigir_formato POSTGRES_DB "$POSTGRES_DB" '^[a-z][a-z0-9_]*$'
-  exigir_formato CLINICAL_NET_SUBNET "$CLINICAL_NET_SUBNET" '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$'
-  exigir_formato CORPUS_DB_NET_SUBNET "$CORPUS_DB_NET_SUBNET" '^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$'
+  exigir_subred CLINICAL_NET_SUBNET "$CLINICAL_NET_SUBNET"
+  exigir_subred CORPUS_DB_NET_SUBNET "$CORPUS_DB_NET_SUBNET"
   exigir_formato PG_CA_VALID_DAYS "$PG_CA_VALID_DAYS" '^[0-9]+$'
   exigir_formato PG_CERT_VALID_DAYS "$PG_CERT_VALID_DAYS" '^[0-9]+$'
   validar_prefijo_test_db "$PG_TEST_DB_PREFIX" "$POSTGRES_DB" || exit 1
@@ -265,8 +272,17 @@ plantilla_con_reglas() {
 
 generar_pg_hba() {
   local nombre="$1" reglas="${2:-}"
-  conservar_si_existen "$nombre" && return 0
+  # No es un secreto: se vuelve a renderizar siempre, así un cambio de subred llega sin --rotate.
   plantilla_con_reglas "$reglas" | sustituir_configuracion >"$trabajo/$nombre"
+  if [ -e "$destino/$nombre" ] && ! esta_rotando "$nombre"; then
+    if cmp -s "$trabajo/$nombre" "$destino/$nombre"; then
+      echo "existe, sin cambios: $nombre"
+    else
+      publicar "$trabajo/$nombre" "$nombre" 644
+      echo "actualizado: $nombre"
+    fi
+    return 0
+  fi
   publicar "$trabajo/$nombre" "$nombre" 644
   informar_escritura "$nombre"
 }
