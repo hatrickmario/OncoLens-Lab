@@ -77,6 +77,13 @@ describe.each(NOMBRES)('workflow %s', (nombre) => {
     expect(acciones.filter((accion) => !SHA_COMPLETO.test(accion))).toEqual([]);
   });
 
+  it('todo actions/checkout declara persist-credentials: false para no dejar el token en .git/config [US-036 AC-1]', () => {
+    const checkouts = todosLosPasos(workflow).filter((paso) => paso.uses?.startsWith('actions/checkout@'));
+
+    expect(checkouts.length).toBeGreaterThan(0);
+    expect(checkouts.filter((paso) => paso.with?.['persist-credentials'] !== false)).toEqual([]);
+  });
+
   it('no hay disparador pull_request_target ni workflow_run [US-036 AC-1]', () => {
     expect(Object.keys(workflow.on)).not.toContain('pull_request_target');
     expect(Object.keys(workflow.on)).not.toContain('workflow_run');
