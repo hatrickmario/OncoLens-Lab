@@ -10,11 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import sys
-import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +21,7 @@ import yaml
 
 from app.evaluation.chunking_variants import ESTRATEGIA_TAMANO_FIJO, ChunkCandidato, Seccion, Variante
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
-from app.evaluation.dataset_loader import Dataset, DatasetInvalido, Pregunta, cargar_dataset
+from app.evaluation.dataset_loader import Dataset, Pregunta
 from app.evaluation.envoltorios import MonitorRss, Reranker, pico_rss_mb
 from app.evaluation.medicion_modelos import (
     construir_corpus,
@@ -42,7 +40,7 @@ from app.evaluation.reporte import a_json_seguro, escribir_reporte
 from app.evaluation.retrieval_metrics import ESCALA_COSENO, ESCALA_SIGMOIDE, agregar
 from app.evaluation.trabajos import SONDAS_DETERMINISMO, Fabrica
 
-SALIDA_OK, SALIDA_DATASET, SALIDA_FUENTE = 0, 2, 3
+SALIDA_OK = 0
 
 
 class TrabajoFallido(Exception):
@@ -359,28 +357,6 @@ def ejecutar_fase_a3(
     return SALIDA_OK
 
 
-def ejecutar_cli(ruta_config: Path, cache_modelos: Path, cache_datos: Path, salida: Path | None, lanzar: Callable[[TrabajoA3, Path], None]) -> int:
-    """Punto de entrada del CLI: dataset y fuentes desde la caché, envoltorios ONNX reales."""
-    from app.evaluation.trabajos import FabricaOnnx
-    from app.scripts.adr39_fetch_sources import FuenteNoDescargable, leer_fuentes_de_cache
-    from app.scripts.adr39_measure import raiz_repo
-
-    config = cargar_config_a3(ruta_config)
-    try:
-        dataset = cargar_dataset(raiz_repo() / config.dataset)
-        secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
-    except DatasetInvalido as exc:
-        print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
-        return SALIDA_DATASET
-    except FuenteNoDescargable as exc:
-        print(str(exc), file=sys.stderr)
-        return SALIDA_FUENTE
-    return ejecutar_fase_a3(
-        config, dataset, secciones, FabricaOnnx(), cache_modelos, cache_datos, salida or raiz_repo() / config.reporte,
-        lambda t: lanzar(t, ruta_config), lambda: datetime.now(timezone.utc),
-    )
-
-
 def trabajo_desde_json(carga: dict[str, Any]) -> TrabajoA3:
     return TrabajoA3(
         Escenario(**carga["escenario"]), carga["corrida"], carga["calidad"], Path(carga["directorio_candidatos"]),
@@ -397,13 +373,3 @@ def trabajo_a_json(trabajo: TrabajoA3) -> dict[str, Any]:
         "directorio_onnx_reranker": str(trabajo.directorio_onnx_reranker),
         "salida": str(trabajo.salida),
     }
-
-
-def trabajar_a3(carga: dict[str, Any], ruta_config: Path, cache_datos: Path) -> int:
-    from app.evaluation.trabajos import FabricaOnnx
-    from app.scripts.adr39_measure import raiz_repo
-
-    config = cargar_config_a3(ruta_config)
-    dataset = cargar_dataset(raiz_repo() / config.dataset)
-    ejecutar_trabajo_a3(trabajo_desde_json(carga), config, dataset, FabricaOnnx(), time.perf_counter)
-    return SALIDA_OK

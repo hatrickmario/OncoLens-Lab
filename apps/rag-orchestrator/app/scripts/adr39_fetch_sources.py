@@ -28,6 +28,7 @@ from app.evaluation.chunking_variants import Seccion
 from app.evaluation.dataset_loader import Dataset, DatasetInvalido, Fuente, cargar_dataset
 from app.evaluation.parsers_fuentes import PARSERS
 from app.evaluation.retrieval_metrics import contiene_cita
+from app.evaluation.rutas import raiz_repo
 
 EUROPE_PMC_TEXTO = "https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
 CTGOV_API_V2 = "https://clinicaltrials.gov/api/v2/studies/{nct_id}"
@@ -179,13 +180,9 @@ def verificar_citas(dataset: Dataset, fuentes: Mapping[str, FuenteDescargada]) -
     return ausentes
 
 
-def _raiz_repo() -> Path:
-    return Path(__file__).resolve().parents[4]
-
-
 def main(argv: list[str] | None = None, cliente: httpx.Client | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dataset-dir", type=Path, default=_raiz_repo() / "data" / "eval" / "adr39-mini")
+    parser.add_argument("--dataset-dir", type=Path, default=raiz_repo() / "data" / "eval" / "adr39-mini")
     parser.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("DATA_CACHE_DIR", ".cache/data")))
     parser.add_argument("--refresh", action="store_true", help="vuelve a descargar aunque exista la caché")
     args = parser.parse_args(argv)

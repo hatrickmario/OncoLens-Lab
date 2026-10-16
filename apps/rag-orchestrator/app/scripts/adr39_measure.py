@@ -31,8 +31,11 @@ from app.evaluation import fase_a
 from app.evaluation.chunking_variants import Seccion
 from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec, cargar_config
 from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_dataset
+from app.evaluation.fase_a2 import cargar_config_a2, ejecutar_etapa_con_puertos
+from app.evaluation.fase_a3 import TrabajoA3, TrabajoFallido, cargar_config_a3, ejecutar_fase_a3, ejecutar_trabajo_a3, trabajo_a_json, trabajo_desde_json
 from app.evaluation.model_selection import Medicion, Seleccion
 from app.evaluation.reporte import escribir_reporte
+from app.evaluation.rutas import raiz_repo
 from app.evaluation.trabajos import Fabrica, FabricaOnnx, Trabajo, ejecutar_trabajo
 from app.scripts.adr39_fetch_sources import (
     FuenteNoDescargable,
@@ -46,10 +49,6 @@ HF_API = "https://huggingface.co/api/models/{modelo}/revision/{revision}"
 
 Ejecutor = Callable[[Trabajo], None]
 Exportador = Callable[[ModeloSpec, Path], None]
-
-
-def raiz_repo() -> Path:
-    return Path(__file__).resolve().parents[4]
 
 
 def verificar_en_fuente(spec: ModeloSpec, cliente: httpx.Client) -> dict[str, Any]:
@@ -110,8 +109,6 @@ def lanzar_en_subproceso(trabajo: Trabajo, ruta_config: Path, cache_datos: Path)
 
 def lanzar_a3_en_subproceso(cache_datos: Path) -> Callable[[Any, Path], None]:
     """Cada corrida de la medición del reranker en un proceso nuevo (RSS limpio)."""
-    from app.evaluation.fase_a3 import TrabajoFallido, trabajo_a_json
-
     def lanzar(trabajo: Any, ruta_config: Path) -> None:
         try:
             subprocess.run(
@@ -293,6 +290,68 @@ def _armar_reporte_fase_a(config: Any, dataset: Any, fuentes: dict[str, Any], co
     }
 
 
+# --- puntos de entrada de las etapas T2–T5 y de la medición del reranker (fase A3) ---------------------------------
+
+
+def ejecutar_etapa_a2(etapa: str, ruta_config: Path, cache_modelos: Path, cache_datos: Path, salida: Path | None) -> int:
+    """Punto de entrada del CLI: carga dataset, fuentes (de la caché) y envoltorios reales."""
+    from app.evaluation.indices_milvus import ComparadorMilvus
+
+    config = cargar_config_a2(ruta_config)
+    try:
+        dataset = cargar_dataset(raiz_repo() / config.dataset)
+        secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
+    except DatasetInvalido as exc:
+        print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
+        return SALIDA_DATASET
+    except FuenteNoDescargable as exc:
+        print(str(exc), file=sys.stderr)
+        return SALIDA_FUENTE
+    comparador = None
+    if etapa == "t5":
+        import uuid
+
+        comparador = ComparadorMilvus(config.milvus_uri, lambda: uuid.uuid4().hex[:12], time.perf_counter)
+    return ejecutar_etapa_con_puertos(
+        etapa,
+        config,
+        dataset,
+        secciones,
+        FabricaOnnx(),
+        cache_modelos / "onnx" / config.spec.directorio,
+        cache_datos / "adr39" / "vectores",
+        salida or raiz_repo() / config.reporte,
+        comparador,
+        time.perf_counter,
+        lambda: datetime.now(timezone.utc),
+    )
+
+
+def ejecutar_reranker_a3(ruta_config: Path, cache_modelos: Path, cache_datos: Path, salida: Path | None, lanzar: Callable[[TrabajoA3, Path], None]) -> int:
+    """Punto de entrada del CLI: dataset y fuentes desde la caché, envoltorios ONNX reales."""
+    config = cargar_config_a3(ruta_config)
+    try:
+        dataset = cargar_dataset(raiz_repo() / config.dataset)
+        secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
+    except DatasetInvalido as exc:
+        print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
+        return SALIDA_DATASET
+    except FuenteNoDescargable as exc:
+        print(str(exc), file=sys.stderr)
+        return SALIDA_FUENTE
+    return ejecutar_fase_a3(
+        config, dataset, secciones, FabricaOnnx(), cache_modelos, cache_datos, salida or raiz_repo() / config.reporte,
+        lambda t: lanzar(t, ruta_config), lambda: datetime.now(timezone.utc),
+    )
+
+
+def trabajar_a3(carga: dict[str, Any], ruta_config: Path, cache_datos: Path) -> int:
+    config = cargar_config_a3(ruta_config)
+    dataset = cargar_dataset(raiz_repo() / config.dataset)
+    ejecutar_trabajo_a3(trabajo_desde_json(carga), config, dataset, FabricaOnnx(), time.perf_counter)
+    return SALIDA_OK
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", type=Path, default=raiz_repo() / "apps/rag-orchestrator/eval/configs/adr39-fase-a.yaml")
@@ -308,13 +367,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.trabajador_a3:
-        from app.evaluation.fase_a3 import trabajar_a3
-
-        return trabajar_a3(json.loads(args.trabajador_a3), args.config, args.cache_datos)
+            return trabajar_a3(json.loads(args.trabajador_a3), args.config, args.cache_datos)
     if args.reranker_chunks:
-        from app.evaluation.fase_a3 import ejecutar_cli
-
-        return ejecutar_cli(args.config, args.cache_modelos, args.cache_datos, args.salida, lanzar_a3_en_subproceso(args.cache_datos))
+        return ejecutar_reranker_a3(args.config, args.cache_modelos, args.cache_datos, args.salida, lanzar_a3_en_subproceso(args.cache_datos))
     if args.trabajador:
         return trabajar(json.loads(args.trabajador), args.config, args.cache_datos)
     if args.check_config:
@@ -322,9 +377,7 @@ def main(argv: list[str] | None = None) -> int:
 
         return ejecutar_chequeo(raiz_repo())
     if args.stage:
-        from app.evaluation.fase_a2 import ejecutar_etapa
-
-        return ejecutar_etapa(args.stage, args.config, args.cache_modelos, args.cache_datos, args.salida)
+        return ejecutar_etapa_a2(args.stage, args.config, args.cache_modelos, args.cache_datos, args.salida)
 
     def exportar(spec: ModeloSpec, destino: Path) -> None:
         if not (destino / "export.json").exists():

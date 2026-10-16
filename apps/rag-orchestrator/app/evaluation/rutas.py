@@ -6,4 +6,5 @@ from pathlib import Path
 
 
 def raiz_repo() -> Path:
-    raise NotImplementedError
+    """Raíz del repo: ``apps/rag-orchestrator/app/evaluation/rutas.py`` queda cuatro niveles por debajo."""
+    return Path(__file__).resolve().parents[4]

@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import json
 import sys
-import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +25,7 @@ from app.evaluation.chunking_variants import (
     variantes_admitidas,
 )
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
-from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_dataset
+from app.evaluation.dataset_loader import Dataset
 from app.evaluation.indices_milvus import ComparadorIndices, estimar_bytes_indice, recall_frente_a_flat
 from app.evaluation.medicion_modelos import (
     construir_corpus,
@@ -41,7 +40,7 @@ from app.evaluation.reporte import escribir_reporte
 from app.evaluation.retrieval_metrics import ESCALA_COSENO, agregar
 from app.evaluation.trabajos import Fabrica
 
-SALIDA_OK, SALIDA_FUENTE, SALIDA_DATASET, SALIDA_PREVIA = 0, 3, 2, 6
+SALIDA_OK, SALIDA_PREVIA = 0, 6
 
 
 @dataclass(frozen=True)
@@ -285,41 +284,3 @@ def ejecutar_etapa_con_puertos(
     escribir_reporte(ruta_reporte, reporte)
     print(f"{etapa} → {ruta_reporte}")
     return SALIDA_OK
-
-
-def ejecutar_etapa(etapa: str, ruta_config: Path, cache_modelos: Path, cache_datos: Path, salida: Path | None) -> int:
-    """Punto de entrada del CLI: carga dataset, fuentes (de la caché) y envoltorios reales."""
-    from app.evaluation.indices_milvus import ComparadorMilvus
-    from app.evaluation.trabajos import FabricaOnnx
-    from app.scripts.adr39_fetch_sources import FuenteNoDescargable, leer_fuentes_de_cache
-    from app.scripts.adr39_measure import raiz_repo
-
-    config = cargar_config_a2(ruta_config)
-    try:
-        dataset = cargar_dataset(raiz_repo() / config.dataset)
-        secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
-    except DatasetInvalido as exc:
-        print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
-        return SALIDA_DATASET
-    except FuenteNoDescargable as exc:
-        print(str(exc), file=sys.stderr)
-        return SALIDA_FUENTE
-    comparador = None
-    if etapa == "t5":
-        import uuid
-
-        comparador = ComparadorMilvus(config.milvus_uri, lambda: uuid.uuid4().hex[:12], time.perf_counter)
-    return ejecutar_etapa_con_puertos(
-        etapa,
-        config,
-        dataset,
-        secciones,
-        FabricaOnnx(),
-        cache_modelos / "onnx" / config.spec.directorio,
-        cache_datos / "adr39" / "vectores",
-        salida or raiz_repo() / config.reporte,
-        comparador,
-        time.perf_counter,
-        lambda: datetime.now(timezone.utc),
-    )
-
