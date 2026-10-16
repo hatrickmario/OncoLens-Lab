@@ -1,4 +1,9 @@
-"""Manejadores de error: `422 CUERPO_INVALIDO` sin eco del cuerpo (RN-10)."""
+"""Manejadores de error: `422 CUERPO_INVALIDO` sin eco de la petición (RN-10).
+
+Cubre todo `RequestValidationError` (body, header, query y path). La autenticación (L1D-105)
+debe lanzar 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso
+terminaría aquí como 422.
+"""
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,7 +16,8 @@ from app.schemas.generated.models import DetailItem, ErrorValidacion
 
 def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
     @app.exception_handler(RequestValidationError)
-    async def cuerpo_invalido(request: Request, error: RequestValidationError) -> JSONResponse:
+    async def peticion_invalida_sin_eco(request: Request, error: RequestValidationError) -> JSONResponse:
+        """Responde 422 a cualquier `RequestValidationError` (body, header, query o path) sin eco de los valores."""
         # Solo loc, msg y type: input y ctx llevan los valores recibidos (contexto clínico desidentificado).
         cuerpo = ErrorValidacion(
             error="CUERPO_INVALIDO",
