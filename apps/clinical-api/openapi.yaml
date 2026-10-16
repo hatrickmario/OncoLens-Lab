@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -26,8 +26,27 @@ tags:
   - name: documentos
   - name: analisis-evidencia
   - name: registro-manual
+  - name: operacion
 
 paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [operacion]
+      summary: Estado del proceso para el healthcheck de Compose
+      description: >-
+        Solo en la red interna; web no lo reenvía. No consulta a rag-orchestrator: con el LLM
+        caído sigue respondiendo 200.
+      security: []
+      x-permission: publico
+      responses:
+        "200":
+          description: El proceso está listo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
   /platform/auth/login:
     post:
       operationId: login
@@ -613,6 +632,12 @@ components:
             $ref: '#/components/schemas/ErrorDeadlineVencido'
 
   schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, const: ok }
     # ---- Schemas compartidos con rag-orchestrator: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'

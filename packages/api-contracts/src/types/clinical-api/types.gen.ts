@@ -4,6 +4,10 @@ export type ClientOptions = {
     baseUrl: 'http://clinical-api:3000' | (string & {});
 };
 
+export type HealthStatus = {
+    status: 'ok';
+};
+
 /**
  * Opción terapéutica descrita en la evidencia; es una descripción de lo que la evidencia recuperada reporta y no constituye una indicación para el paciente (RN-23).
  */
@@ -842,6 +846,22 @@ export type PatientSummaryWritable = {
 export type PatientId = string;
 
 export type AnalysisId = string;
+
+export type GetHealthData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type GetHealthResponses = {
+    /**
+     * El proceso está listo.
+     */
+    200: HealthStatus;
+};
+
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
 
 export type LoginData = {
     body: LoginRequestWritable;

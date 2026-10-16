@@ -2,6 +2,10 @@
 
 import * as z from 'zod';
 
+export const zHealthStatus = z.strictObject({
+    status: z.literal('ok')
+});
+
 /**
  * Solo para revisión del oncólogo; no es una opción.
  */
@@ -604,6 +608,11 @@ export const zRagFollowUpResponse = z.strictObject({
 });
 
 export const zRequestDeadline = z.iso.datetime();
+
+/**
+ * El proceso está listo y, con LLM_PROVIDER=local, el LLM nativo responde.
+ */
+export const zGetHealthResponse = zHealthStatus;
 
 export const zRagQueryBody = zRagQueryInternalRequest;
 

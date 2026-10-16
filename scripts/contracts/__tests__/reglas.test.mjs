@@ -7,7 +7,7 @@ const real = await realContracts();
 const byName = Object.fromEntries(RULES.map((rule) => [rule.name, rule]));
 const cases = readCases();
 
-const title = (caso) => `${caso.esperado.sinHallazgos ? 'no reporta hallazgos' : 'reporta el hallazgo'} cuando ${caso.escenario} [US-033 ${caso.ac}]`;
+const title = (caso) => `${caso.esperado.sinHallazgos ? 'no reporta hallazgos' : 'reporta el hallazgo'} cuando ${caso.escenario} [${caso.us ?? 'US-033'} ${caso.ac}]`;
 
 /** `AC-1 · AC-13` → ['AC-1', 'AC-13']: se compara por ficha completa, no por prefijo (AC-1 no es AC-17). */
 const refTokens = (ref) => ref.split(/\s*·\s*/);
@@ -58,10 +58,14 @@ const ACS_OF_RULE = {
   assertOperationsDeclarePermission: 'AC-17',
   assertViewByPermission: 'AC-17',
   assertExamplesSynthetic: 'AC-17',
+  assertFixtureQueriesDistinct: 'AC-6',
 };
 
+/** Reglas que no son de US-033 (el resto protege los AC de US-033). */
+const US_OF_RULE = { assertFixtureQueriesDistinct: 'US-034' };
+
 describe('reglas de contratos sobre los contratos reales', () => {
-  it.each(RULES.map((rule) => [`no reporta hallazgos cuando se revisan los contratos reales: ${rule.name} [US-033 ${ACS_OF_RULE[rule.name]}]`, rule]))('%s', (_title, rule) => {
+  it.each(RULES.map((rule) => [`no reporta hallazgos cuando se revisan los contratos reales: ${rule.name} [${US_OF_RULE[rule.name] ?? 'US-033'} ${ACS_OF_RULE[rule.name]}]`, rule]))('%s', (_title, rule) => {
     expect(rule(real.specs, real.examples, real.docs)).toEqual([]);
   });
 });

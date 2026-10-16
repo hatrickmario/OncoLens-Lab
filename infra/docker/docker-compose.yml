@@ -1,0 +1,232 @@
+# Stack local de OncoLens (US-034, readme §2.4). Se levanta con:
+#   docker compose -f infra/docker/docker-compose.yml up -d
+# El LLM corre FUERA de Docker (en macOS Docker no expone Metal): rag-orchestrator lo alcanza por LLM_BASE_URL.
+# Solo web publica un puerto; los secretos son archivos fuera del repositorio (ONCOLENS_SECRETS_DIR, RN-14).
+# Todo valor a calibrar (puertos, intervalos, reintentos, tamaños) viene de variables (RN-22): ver .env.example.
+name: ${COMPOSE_PROJECT_NAME:-oncolens}
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: ${HEALTHCHECK_INTERVAL:-10s}
+  timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+  retries: ${HEALTHCHECK_RETRIES:-12}
+  start_period: ${HEALTHCHECK_START_PERIOD:-20s}
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oncolens}
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_superuser_password
+    secrets:
+      - pg_superuser_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [clinical-net, corpus-db-net]
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+
+  clinical-minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${CLINICAL_MINIO_ROOT_USER:-clinical-minio-admin}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/clinical_minio_root_password
+    secrets:
+      - clinical_minio_root_password
+    volumes:
+      - clinical-minio-data:/data
+    networks: [clinical-net]
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "mc", "ready", "local"]
+
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.34
+    command:
+      - etcd
+      - --advertise-client-urls=http://milvus-etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd
+      - --auto-compaction-mode=revision
+      - --auto-compaction-retention=1000
+      - --quota-backend-bytes=${ETCD_QUOTA_BACKEND_BYTES:-4294967296}
+    volumes:
+      - milvus-etcd-data:/etcd
+    networks: [ai-net]
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+
+  milvus-minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MILVUS_MINIO_ROOT_USER:-milvus-minio-admin}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/milvus_minio_root_password
+    secrets:
+      - milvus_minio_root_password
+    volumes:
+      - milvus-minio-data:/data
+    networks: [ai-net]
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "mc", "ready", "local"]
+
+  milvus-standalone:
+    image: milvusdb/milvus:v2.6.25
+    # Milvus lee la clave de MinIO del entorno: se carga desde el secreto al arrancar, sin escribirla en el Compose.
+    command:
+      - sh
+      - -c
+      - 'MINIO_SECRET_ACCESS_KEY="$$(cat /run/secrets/milvus_minio_root_password)" exec milvus run standalone'
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+      MINIO_ACCESS_KEY_ID: ${MILVUS_MINIO_ROOT_USER:-milvus-minio-admin}
+    secrets:
+      - milvus_minio_root_password
+    volumes:
+      - milvus-data:/var/lib/milvus
+    networks: [ai-net]
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+      milvus-minio:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      start_period: ${MILVUS_HEALTHCHECK_START_PERIOD:-90s}
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9091/healthz"]
+
+  clinical-api:
+    build:
+      context: ../..
+      dockerfile: apps/clinical-api/Dockerfile
+    environment:
+      PORT: "3000"
+      APP_ENV: ${APP_ENV:-local}
+      CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
+    secrets:
+      - jwt_service_private.pem
+      - identity_aes_key
+      - blind_index_hmac_key
+      - pg_clinical_api_password
+      - pg_research_writer_password
+      - clinical_minio_root_password
+    volumes:
+      - type: bind
+        source: ../../packages/clinical-catalogs
+        target: ${CLINICAL_CATALOG_PATH:-/catalogs}
+        read_only: true
+    networks: [clinical-net, ai-net]
+    # No depende de rag-orchestrator: con el LLM caído la ficha sigue sirviendo (US-034 AC-4).
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clinical-minio:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/health"]
+
+  rag-orchestrator:
+    build:
+      context: ../..
+      dockerfile: apps/rag-orchestrator/Dockerfile
+    # Sistema de archivos de solo lectura: ningún PDF ni texto extraído persiste en el contenedor.
+    read_only: true
+    tmpfs:
+      - /tmp:size=${RAG_TMPFS_SIZE:-256m}
+    environment:
+      TMPDIR: /tmp
+      APP_ENV: ${APP_ENV:-local}
+      LLM_PROVIDER: ${LLM_PROVIDER:-local}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_HEALTH_TIMEOUT_MS: ${LLM_HEALTH_TIMEOUT_MS:-2000}
+      LLM_CLOUD_ENABLED: ${LLM_CLOUD_ENABLED:-false}
+      REAL_ANONYMIZED_ENABLED: ${REAL_ANONYMIZED_ENABLED:-false}
+      REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
+      FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
+      CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
+    secrets:
+      - jwt_service_public.pem
+      - pg_rag_corpus_password
+    volumes:
+      - type: bind
+        source: ../../contracts/examples
+        target: ${FAKE_RESPONSES_PATH:-/contracts/examples}
+        read_only: true
+      - type: bind
+        source: ../../packages/clinical-catalogs
+        target: ${CLINICAL_CATALOG_PATH:-/catalogs}
+        read_only: true
+    # host.docker.internal resuelve igual en macOS y en el runner Linux de la CI.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [ai-net, corpus-db-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      CLINICAL_API_BASE_URL: http://clinical-api:3000
+    # Único puerto publicado del stack (SEG-09); en el S1 solo en la máquina local.
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+    networks: [clinical-net]
+    depends_on:
+      clinical-api:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/api/health"]
+
+networks:
+  clinical-net: {}
+  ai-net: {}
+  # Solo PostgreSQL <-> rag-orchestrator: sin salida a otras redes.
+  corpus-db-net:
+    internal: true
+
+volumes:
+  postgres-data: {}
+  clinical-minio-data: {}
+  milvus-etcd-data: {}
+  milvus-minio-data: {}
+  milvus-data: {}
+
+# Nombres que genera scripts/setup-secrets.sh (US-035). Archivos fuera del repositorio.
+secrets:
+  jwt_service_private.pem:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/jwt_service_private.pem
+  jwt_service_public.pem:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/jwt_service_public.pem
+  identity_aes_key:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/identity_aes_key
+  blind_index_hmac_key:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/blind_index_hmac_key
+  pg_clinical_api_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_clinical_api_password
+  pg_research_writer_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_research_writer_password
+  pg_rag_corpus_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_rag_corpus_password
+  pg_superuser_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_superuser_password
+  clinical_minio_root_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/clinical_minio_root_password
+  milvus_minio_root_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/milvus_minio_root_password

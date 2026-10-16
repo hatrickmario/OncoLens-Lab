@@ -14,6 +14,7 @@ import { assertEvidenceAnalysisShape } from './assertEvidenceAnalysisShape.mjs';
 import { assertExamplesSynthetic } from './assertExamplesSynthetic.mjs';
 import { assertExamplesValid } from './assertExamplesValid.mjs';
 import { assertSharedTypesIdenticalAcrossProviders } from './assertSharedTypesIdenticalAcrossProviders.mjs';
+import { assertFixtureQueriesDistinct } from './assertFixtureQueriesDistinct.mjs';
 import { assertFollowUpContract } from './assertFollowUpContract.mjs';
 import { assertLoginContract } from './assertLoginContract.mjs';
 import { assertManualEntryEndpoints } from './assertManualEntryEndpoints.mjs';
@@ -78,6 +79,8 @@ export const RULES = [
   assertOperationsDeclarePermission,
   assertViewByPermission,
   assertExamplesSynthetic,
+  // US-034 AC-6
+  assertFixtureQueriesDistinct,
 ];
 
 /**

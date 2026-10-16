@@ -1,0 +1,16 @@
+.git
+.claude
+.github
+**/node_modules
+**/dist
+**/.next
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+infra/docker/.env
+secrets
+reports
+backlog
+docs
+openspec
+data

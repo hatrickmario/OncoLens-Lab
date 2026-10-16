@@ -9,6 +9,13 @@ from typing import Annotated, Any, Literal
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
 
+class HealthStatus(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    status: Literal['ok']
+
+
 class Warning(StrEnum):
     datos_sin_verificar = 'datos_sin_verificar'
     datos_en_conflicto = 'datos_en_conflicto'

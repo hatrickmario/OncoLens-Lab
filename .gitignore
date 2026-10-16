@@ -4,3 +4,13 @@ reports/visual/
 .playwright-mcp/
 __pycache__/
 *.pyc
+
+# Build y entorno local (US-034)
+dist/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+infra/docker/.env
+.pytest_cache/
+.venv/
+infra/docker/secrets/

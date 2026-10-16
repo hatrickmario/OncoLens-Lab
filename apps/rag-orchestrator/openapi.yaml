@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -23,8 +23,28 @@ tags:
   - name: rag
   - name: documentos
   - name: caso
+  - name: operacion
 
 paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [operacion]
+      summary: Estado del proceso y del LLM nativo
+      description: >-
+        Con LLM_PROVIDER=local verifica el LLM nativo en LLM_BASE_URL y responde 503
+        LOCAL_LLM_UNAVAILABLE si no está; con LLM_PROVIDER=fake no lo consulta.
+      security: []
+      responses:
+        "200":
+          description: El proceso está listo y, con LLM_PROVIDER=local, el LLM nativo responde.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        "503":
+          $ref: '#/components/responses/LlmLocalNoDisponible'
+
   /rag/query:
     post:
       operationId: ragQuery
@@ -288,6 +308,12 @@ components:
             $ref: '#/components/schemas/ErrorDeadlineVencido'
 
   schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, const: ok }
     # ---- Schemas compartidos con clinical-api: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'

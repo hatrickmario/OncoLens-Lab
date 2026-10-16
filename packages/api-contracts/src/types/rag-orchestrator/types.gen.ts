@@ -4,6 +4,10 @@ export type ClientOptions = {
     baseUrl: 'http://rag-orchestrator:8000' | (string & {});
 };
 
+export type HealthStatus = {
+    status: 'ok';
+};
+
 /**
  * Opción terapéutica descrita en la evidencia; es una descripción de lo que la evidencia recuperada reporta y no constituye una indicación para el paciente (RN-23).
  */
@@ -681,6 +685,31 @@ export type CitedSourceFields = {
 };
 
 export type RequestDeadline = string;
+
+export type GetHealthData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type GetHealthErrors = {
+    /**
+     * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
+     */
+    503: ErrorLlmLocalNoDisponible;
+};
+
+export type GetHealthError = GetHealthErrors[keyof GetHealthErrors];
+
+export type GetHealthResponses = {
+    /**
+     * El proceso está listo y, con LLM_PROVIDER=local, el LLM nativo responde.
+     */
+    200: HealthStatus;
+};
+
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
 
 export type RagQueryData = {
     body: RagQueryInternalRequest;
