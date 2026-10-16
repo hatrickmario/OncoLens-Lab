@@ -37,7 +37,7 @@
 ## 3. docs
 
 - [x] 3.1 `docs/operations/claves.md`: qué genera el script (y el perfil test), dónde vive, quién lo recibe (tabla D3), respaldo cifrado fuera del repo de `identity_aes_key` y `blind_index_hmac_key` (perderlas es perder la identidad, OL-01), por qué no se rotan, cómo reemitir `pg_server.crt` con `--rotate` y cómo cambiar contraseñas de roles (`ALTER ROLE` o `down -v`), administración solo por `docker compose exec -u postgres postgres psql` (sin superusuario por red); sin ningún valor · test después [US-035 AC-1, AC-3]
-- [ ] 3.2 readme §1.4 paso 2: comando `scripts/setup-secrets.sh` y enlace a `docs/operations/claves.md`; en `docs/architecture/data-model.md` §9, el rol `rag_corpus_migrator` (`GRANT USAGE, CREATE ON SCHEMA corpus TO rag_corpus_migrator`, regla `hostssl` desde `corpus-db-net`, uso solo por el *one-shot* de Alembic) sin tocar las medidas de `rag_corpus` `[S1 resp. 14b]`, y comprobar que `assertDataModelDocument()` sigue en verde; commit `docs(L1D-165)` · test después [US-058 AC-1]
+- [x] 3.2 readme §1.4 paso 2: comando `scripts/setup-secrets.sh` y enlace a `docs/operations/claves.md`; en `docs/architecture/data-model.md` §9, el rol `rag_corpus_migrator` (`GRANT USAGE, CREATE ON SCHEMA corpus TO rag_corpus_migrator`, regla `hostssl` desde `corpus-db-net`, uso solo por el *one-shot* de Alembic) sin tocar las medidas de `rag_corpus` `[S1 resp. 14b]`, y comprobar que `assertDataModelDocument()` sigue en verde; commit `docs(L1D-165)` · test después [US-058 AC-1]
 
 ## 4. Cierre
 
