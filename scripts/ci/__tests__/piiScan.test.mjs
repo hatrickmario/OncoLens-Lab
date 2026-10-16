@@ -111,6 +111,47 @@ describe('detectarPii', () => {
   });
 });
 
+describe('detectarPii · exención de URL y siglas pegadas (Gate 2, vuelta 2)', () => {
+  const numero = () => digitos(10, '1');
+
+  it.each(['documento', 'cedula', 'nationalId', 'id'])(
+    'informa el número de un parámetro de la consulta ?%s= dentro de una URL [US-036 AC-4]',
+    (parametro) => {
+      expect(lineasDe(`https://x.example/p?${parametro}=${numero()}`)).toEqual(['1:documento_identidad']);
+    },
+  );
+
+  it('informa el número del fragmento de una URL [US-036 AC-4]', () => {
+    expect(lineasDe(`https://x.example/p#documento=${numero()}`)).toEqual(['1:documento_identidad']);
+  });
+
+  it('sigue eximiendo el número de la ruta de la URL aunque lleve consulta después [US-036 AC-4]', () => {
+    expect(lineasDe(`https://x.example/documentos/CDR${digitos(10, '0')}?formato=pdf`)).toEqual([]);
+  });
+
+  it.each([
+    ['la palabra clave en una URL y el valor fuera', () => `ver https://h.example/documents?id=abc paciente CC ${numero()}`],
+    ['un enlace con la palabra en el texto y el valor después', () => `Fuente https://pubmed.ncbi.nlm.nih.gov/id — cédula ${numero()}`],
+    ['un enlace de markdown cerrado antes del valor', () => `[hc](https://x.example/hc) CC ${numero()}`],
+  ])('informa %s [US-036 AC-4]', (_nombre, texto) => {
+    expect(lineasDe(texto())).toEqual(['1:documento_identidad']);
+  });
+
+  it('no informa un identificador de ensayo pegado a letras tras la sigla ID [US-036 AC-4]', () => {
+    expect(lineasDe(`trial id: NCT${digitos(8, '0')}`)).toEqual([]);
+    expect(lineasDe(`NCT ID: NCT${digitos(8, '0')}`)).toEqual([]);
+  });
+
+  it('sigue informando un pasaporte con letras antes de los dígitos porque su palabra clave no es una sigla [US-036 AC-4]', () => {
+    expect(lineasDe(`pasaporte AB${digitos(7, '3')}`)).toEqual(['1:documento_identidad']);
+  });
+
+  it('distingue mayúsculas en el prefijo centinela: sint- en minúsculas no exime [US-036 AC-4]', () => {
+    expect(lineasDe(`"nationalId": "SINT-${digitos(7, '0')}"`)).toEqual([]);
+    expect(lineasDe(`"nationalId": "sint-${digitos(7, '0')}"`)).toEqual(['1:documento_identidad']);
+  });
+});
+
 describe('normalizarValor', () => {
   const por = (id) => formatos.find((formato) => formato.id === id);
 
