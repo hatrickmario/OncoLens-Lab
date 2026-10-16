@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     real_anonymized_enabled: bool = False
     real_identified_enabled: bool = False
     fake_responses_path: Path = Path("/contracts/examples")
+    # JWT de servicio (US-054): la vida máxima y la tolerancia de reloj se calibran; la clave pública es de L1D-165.
+    service_jwt_ttl_seconds: int = Field(default=60, gt=0)
+    service_jwt_clock_skew_seconds: int = Field(default=5, ge=0)
+    service_jwt_public_key_file: Path | None = None
 
     @model_validator(mode="after")
     def _rechazar_fake_con_datos_reales(self) -> Self:

@@ -11,6 +11,7 @@ from app.config.settings import Settings
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
+from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
 
 
@@ -21,6 +22,8 @@ def crear_app(
     trace_ids: TraceIdGenerator | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
+    # Fallo cerrado (también con LLM_PROVIDER=fake): sin clave pública legible no hay quien autentique a clinical-api.
+    cargar_clave_publica_es256(settings.service_jwt_public_key_file)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
