@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
 from app.schemas.generated.models import RagQueryInternalResponse
-from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec
+from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec, operaciones_con_jwt_de_servicio
 from tests.support.fakes import (
     ConsultaEvidenciaContadora,
     GeneradorTraceFijo,
@@ -155,3 +155,24 @@ def test_health_responde_200_sin_jwt_de_servicio():
 
     assert respuesta.status_code == 200
     assert_matches_spec("#/components/schemas/HealthStatus", respuesta.json())
+
+
+def _rutas_de(app) -> list:
+    """Rutas de los routers incluidos (FastAPI los agrupa en `_IncludedRouter`, que expone `original_router`)."""
+    return [ruta for incluido in app.routes for ruta in incluido.original_router.routes]
+
+
+@pytest.mark.ac("US-054", 2)
+def test_toda_ruta_registrada_con_security_service_jwt_responde_401_sin_authorization_y_con_cuerpo_invalido():
+    settings = settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS)
+    app = crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=_consulta())
+    cliente = TestClient(app, raise_server_exceptions=False)
+    registradas = {(metodo, ruta.path) for ruta in _rutas_de(app) for metodo in ruta.methods}
+    protegidas = [op for op in operaciones_con_jwt_de_servicio() if op in registradas]
+
+    assert ("POST", "/rag/query") in protegidas
+    for metodo, ruta in protegidas:
+        respuesta = cliente.request(metodo, ruta, json={"cuerpo": "invalido"})
+        assert respuesta.status_code == 401, f"{metodo} {ruta} no exige el JWT de servicio"
+        assert respuesta.json()["error"] == "TOKEN_SERVICIO_INVALIDO"
+    assert ("GET", "/health") not in operaciones_con_jwt_de_servicio()
