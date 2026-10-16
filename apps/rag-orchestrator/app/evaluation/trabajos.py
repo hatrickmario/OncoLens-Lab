@@ -215,8 +215,10 @@ def ejecutar_trabajo(
         medido = _trabajo_embeddings(trabajo, config, dataset, secciones, fabrica, reloj)
     elif trabajo.spec.componente == "reranker":
         medido = _trabajo_reranker(trabajo, config, dataset, fabrica, reloj)
-    else:
+    elif trabajo.spec.componente == "nli":
         medido = _trabajo_nli(trabajo, config, dataset, fabrica, reloj)
+    else:
+        raise ValueError(f"componente desconocido: {trabajo.spec.componente!r}")
     resultado = {
         "clave": trabajo.spec.clave,
         "modelo": trabajo.spec.modelo,
