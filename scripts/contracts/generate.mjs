@@ -38,7 +38,7 @@ async function generateWithHeyApi(root, provider, bundled, plugin, outputFile) {
 async function generateSdk(root, provider, bundled) {
   await createClient({
     input: structuredClone(bundled),
-    output: { path: path.join(root, clientDir(provider)), clean: true, header: [generatedHeader(provider)] },
+    output: { path: path.join(root, clientDir(provider)), clean: true, header: [generatedHeader(provider)], importFileExtension: '.js' },
     // baseUrl: false = sin URL por defecto en el cliente global; cada llamador crea el suyo con createClient({ baseUrl, fetch }).
     plugins: ['@hey-api/typescript', { name: '@hey-api/client-fetch', baseUrl: false }, '@hey-api/sdk'],
     logs: { level: 'silent' },

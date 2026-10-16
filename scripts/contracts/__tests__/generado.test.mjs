@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { appendFile, cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -56,6 +56,17 @@ describe('contracts:generate:check sobre un árbol de trabajo temporal', () => {
 });
 
 describe('SDK HTTP generado', () => {
+  it.each(['clinical-api', 'rag-orchestrator'])('usa imports relativos con extensión .js (NodeNext) en %s [US-054 AC-6]', async (provider) => {
+    const raiz = path.join(ROOT, clientDir(provider));
+    const archivos = (await readdir(raiz, { recursive: true })).filter((f) => f.endsWith('.ts'));
+    const sinExtension = [];
+    for (const archivo of archivos) {
+      const texto = await readFile(path.join(raiz, archivo), 'utf8');
+      for (const [, destino] of texto.matchAll(/from\s+'(\.[^']*)'/g)) if (!destino.endsWith('.js')) sinExtension.push(`${archivo}: ${destino}`);
+    }
+    expect(sinExtension).toEqual([]);
+  });
+
   it.each(['clinical-api', 'rag-orchestrator'])('expone createClient con fetch inyectable y sin baseUrl por defecto en %s [US-054 AC-6]', async (provider) => {
     const cliente = await readFile(path.join(ROOT, clientDir(provider), 'client.gen.ts'), 'utf8');
     const operaciones = await readFile(path.join(ROOT, clientDir(provider), 'sdk.gen.ts'), 'utf8');

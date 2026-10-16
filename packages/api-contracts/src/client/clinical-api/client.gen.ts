@@ -1,7 +1,7 @@
 // GENERADO desde apps/clinical-api/openapi.yaml — no editar a mano (npm run contracts:generate)
 
-import { type Client, type ClientOptions, type Config, createClient, createConfig } from './client';
-import type { ClientOptions as ClientOptions2 } from './types.gen';
+import { type Client, type ClientOptions, type Config, createClient, createConfig } from './client/index.js';
+import type { ClientOptions as ClientOptions2 } from './types.gen.js';
 
 /**
  * The `createClientConfig()` function will be called on client initialization

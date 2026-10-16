@@ -1,6 +1,6 @@
 // GENERADO desde apps/rag-orchestrator/openapi.yaml — no editar a mano (npm run contracts:generate)
 
-import type { ArrayStyle, ObjectStyle, SerializerOptions } from './pathSerializer.gen';
+import type { ArrayStyle, ObjectStyle, SerializerOptions } from './pathSerializer.gen.js';
 
 export type QuerySerializer = (query: Record<string, unknown>) => string;
 

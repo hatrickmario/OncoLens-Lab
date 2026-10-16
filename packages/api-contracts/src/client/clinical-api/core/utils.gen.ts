@@ -1,12 +1,12 @@
 // GENERADO desde apps/clinical-api/openapi.yaml — no editar a mano (npm run contracts:generate)
 
-import type { BodySerializer, QuerySerializer } from './bodySerializer.gen';
+import type { BodySerializer, QuerySerializer } from './bodySerializer.gen.js';
 import {
   type ArraySeparatorStyle,
   serializeArrayParam,
   serializeObjectParam,
   serializePrimitiveParam,
-} from './pathSerializer.gen';
+} from './pathSerializer.gen.js';
 
 export interface PathSerializer {
   path: Record<string, unknown>;

@@ -1,8 +1,8 @@
 // GENERADO desde apps/rag-orchestrator/openapi.yaml — no editar a mano (npm run contracts:generate)
 
-import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
-import { client } from './client.gen';
-import type { AnswerFollowUpData, AnswerFollowUpErrors, AnswerFollowUpResponses, CaseSummaryData, CaseSummaryErrors, CaseSummaryResponses, ExtractDocumentData, ExtractDocumentErrors, ExtractDocumentResponses, GetHealthData, GetHealthErrors, GetHealthResponses, RagQueryData, RagQueryErrors, RagQueryResponses } from './types.gen';
+import { client } from './client.gen.js';
+import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client/index.js';
+import type { AnswerFollowUpData, AnswerFollowUpErrors, AnswerFollowUpResponses, CaseSummaryData, CaseSummaryErrors, CaseSummaryResponses, ExtractDocumentData, ExtractDocumentErrors, ExtractDocumentResponses, GetHealthData, GetHealthErrors, GetHealthResponses, RagQueryData, RagQueryErrors, RagQueryResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
