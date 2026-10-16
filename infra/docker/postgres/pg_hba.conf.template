@@ -1,0 +1,18 @@
+# pg_hba.conf de OncoLens (US-035). Lo renderiza scripts/setup-secrets.sh; no se edita el generado.
+# La primera regla que casa manda. Placeholders: POSTGRES_DB, CLINICAL_NET_SUBNET, CORPUS_DB_NET_SUBNET (RN-22).
+#
+# TYPE      DATABASE        USER                                  ADDRESS                  METHOD
+# El superusuario solo entra por socket local (administración: docker compose exec -u postgres postgres psql).
+local       all             postgres                                                         peer
+local       all             all                                                              reject
+# Sin TLS, nunca (SEG-08, OL-01).
+hostnossl   all             all                                   all                        reject
+# rag-orchestrator: solo desde corpus-db-net, solo la base clínica (data-model §9), solo por TLS.
+hostssl     ${POSTGRES_DB}  rag_corpus                            ${CORPUS_DB_NET_SUBNET}    scram-sha-256
+hostssl     ${POSTGRES_DB}  rag_corpus_migrator                   ${CORPUS_DB_NET_SUBNET}    scram-sha-256
+# @REGLAS_PERFIL_TEST
+host        all             rag_corpus,rag_corpus_migrator        all                        reject
+hostssl     all             clinical_api                          ${CLINICAL_NET_SUBNET}     scram-sha-256
+hostssl     all             research_writer                       ${CLINICAL_NET_SUBNET}     scram-sha-256
+# Cualquier otra combinación, incluido postgres por red.
+host        all             all                                   all                        reject

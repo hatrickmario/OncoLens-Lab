@@ -1,0 +1,16 @@
+# Override del perfil test/CI (US-035, [S1 resp. 14b]): añade a postgres el rol del arnés de tests y su pg_hba.
+#   docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml up -d
+# Requiere secretos generados con `scripts/setup-secrets.sh --profile test`. Nunca para uso normal ni datos reales.
+services:
+  postgres:
+    environment:
+      ONCOLENS_PG_PROFILE: test
+    secrets:
+      - pg_test_admin_password
+      - pg_hba.test.conf
+
+secrets:
+  pg_test_admin_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_test_admin_password
+  pg_hba.test.conf:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_hba.test.conf

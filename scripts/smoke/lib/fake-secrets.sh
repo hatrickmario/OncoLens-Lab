@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Genera secretos FICTICIOS en un directorio (solo para tests y smoke, nunca para datos reales).
+# Genera secretos FICTICIOS en un directorio, solo para `docker compose config` en los tests estáticos: nunca para
+# levantar el stack (el smoke usa scripts/setup-secrets.sh) ni para datos reales.
 # Uso: fake-secrets.sh <directorio-destino>
-# Los nombres salen del propio Compose (una sola fuente): el par EC P-256 del JWT de servicio es real
-# (openssl) para que rag-orchestrator pueda cargarlo y verificar un ES256; el resto son valores aleatorios.
-# No imprime ningún valor.
+# Los nombres salen del catálogo único scripts/lib/catalogo-secretos.sh (perfil test incluido). El par EC P-256 del
+# JWT es real (openssl); el resto son valores aleatorios. No imprime ningún valor.
 set -euo pipefail
 
 destino="${1:?uso: fake-secrets.sh <directorio-destino>}"
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-compose="$raiz/infra/docker/docker-compose.yml"
+# shellcheck source=../../lib/catalogo-secretos.sh
+source "$raiz/scripts/lib/catalogo-secretos.sh"
 
 mkdir -p "$destino"
 umask 077
 
-nombres="$(ONCOLENS_SECRETS_DIR="$destino" docker compose -f "$compose" config --format json \
-  | node -e "const c=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(Object.values(c.secrets??{}).map(s=>require('path').basename(s.file)).join('\n'))")"
+nombres="$(archivos_del_catalogo test)"
 
 while IFS= read -r nombre; do
   [ -n "$nombre" ] || continue
@@ -32,7 +32,4 @@ done <<< "$nombres"
 
 openssl pkey -in "$destino/jwt_service_private.pem" -pubout -out "$destino/jwt_service_public.pem"
 
-# Los contenedores corren con un usuario no root: los archivos ficticios (en un directorio temporal) se leen sin restricción.
-chmod 755 "$destino"
-chmod 644 "$destino"/*
 echo "secretos ficticios generados en $destino: $(echo "$nombres" | wc -l | tr -d ' ') archivos"

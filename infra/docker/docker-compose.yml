@@ -14,13 +14,51 @@ x-healthcheck-defaults: &healthcheck-defaults
 services:
   postgres:
     image: postgres:17.11-alpine
+    # TLS obligatorio (SEG-08): entrypoint-tls.sh instala la clave con los permisos que exige PostgreSQL y delega
+    # en el entrypoint de la imagen. El superusuario solo entra por `local peer` (docker compose exec -u postgres).
+    entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint-tls.sh"]
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/secrets/pg_server.crt
+      - -c
+      - ssl_key_file=/run/pg-secrets/pg_server.key
+      - -c
+      - hba_file=/run/secrets/pg_hba.conf
+      - -c
+      - password_encryption=scram-sha-256
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-oncolens}
-      POSTGRES_PASSWORD_FILE: /run/secrets/pg_superuser_password
+      PG_RAG_CORPUS_CONNECTION_LIMIT: ${PG_RAG_CORPUS_CONNECTION_LIMIT:-10}
+      PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT: ${PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT:-2}
     secrets:
       - pg_superuser_password
+      - pg_clinical_api_password
+      - pg_research_writer_password
+      - pg_rag_corpus_password
+      - pg_rag_corpus_migrator_password
+      - pg_server.crt
+      - pg_server.key
+      - pg_hba.conf
+    # Copia de las claves y contraseñas con el dueño que exige PostgreSQL; solo en memoria.
+    tmpfs:
+      - /run/pg-secrets:size=1m,mode=0700
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - type: bind
+        source: ./postgres/entrypoint-tls.sh
+        target: /usr/local/bin/entrypoint-tls.sh
+        read_only: true
+      - type: bind
+        source: ./postgres/initdb
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+      - type: bind
+        source: ./postgres/sql
+        target: /opt/oncolens/sql
+        read_only: true
     networks: [clinical-net, corpus-db-net]
     healthcheck:
       <<: *healthcheck-defaults
@@ -103,11 +141,18 @@ services:
     build:
       context: ../..
       dockerfile: apps/clinical-api/Dockerfile
+    # Los secretos conservan el 0600 de su dueño: la app corre con ese uid:gid para poder leerlos (scripts/setup-secrets.sh).
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
     environment:
       PORT: "3000"
       APP_ENV: ${APP_ENV:-local}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
       SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
+      IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
+      BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
+      PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
+      PG_RESEARCH_WRITER_PASSWORD_FILE: /run/secrets/pg_research_writer_password
+      CLINICAL_MINIO_PASSWORD_FILE: /run/secrets/clinical_minio_root_password
     secrets:
       - jwt_service_private.pem
       - identity_aes_key
@@ -135,6 +180,7 @@ services:
     build:
       context: ../..
       dockerfile: apps/rag-orchestrator/Dockerfile
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
     # Sistema de archivos de solo lectura: ningún PDF ni texto extraído persiste en el contenedor.
     read_only: true
     tmpfs:
@@ -152,6 +198,7 @@ services:
       FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
+      PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
     secrets:
       - jwt_service_public.pem
       - pg_rag_corpus_password
@@ -194,12 +241,19 @@ services:
       <<: *healthcheck-defaults
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/api/health"]
 
+# Subredes fijas desde configuración (RN-22): las mismas que renderiza pg_hba.conf (scripts/setup-secrets.sh).
 networks:
-  clinical-net: {}
+  clinical-net:
+    ipam:
+      config:
+        - subnet: ${CLINICAL_NET_SUBNET:-172.28.10.0/24}
   ai-net: {}
   # Solo PostgreSQL <-> rag-orchestrator: sin salida a otras redes.
   corpus-db-net:
     internal: true
+    ipam:
+      config:
+        - subnet: ${CORPUS_DB_NET_SUBNET:-172.28.20.0/24}
 
 volumes:
   postgres-data: {}
@@ -224,8 +278,16 @@ secrets:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_research_writer_password
   pg_rag_corpus_password:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_rag_corpus_password
+  pg_rag_corpus_migrator_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_rag_corpus_migrator_password
   pg_superuser_password:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_superuser_password
+  pg_server.crt:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_server.crt
+  pg_server.key:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_server.key
+  pg_hba.conf:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_hba.conf
   clinical_minio_root_password:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/clinical_minio_root_password
   milvus_minio_root_password:

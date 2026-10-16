@@ -1312,6 +1312,22 @@ local    all                rag_corpus                               reject
 
 6. **Sin acceso a `clinical-minio`:** `rag-orchestrator` no tiene credenciales ni ruta de red hacia `clinical-minio`; recibe los PDF en el cuerpo del request y no los persiste.
 
+### Rol de migraciones del corpus `rag_corpus_migrator` `[S1 resp. 14b]`
+
+El DDL del corpus (Alembic, US-058) no lo hace el runtime `rag_corpus`, que **no tiene `CREATE` en ningún schema**. Lo hace un rol aparte, usado únicamente por el servicio *one-shot* de Alembic (`corpus-migrate`), cuya contraseña no se monta en `rag-orchestrator`. Las medidas de `rag_corpus` de arriba no cambian.
+
+```sql
+-- USAGE y CREATE solo sobre corpus; ningún privilegio sobre auth, identity, clinical, audit, research ni public.
+GRANT USAGE, CREATE ON SCHEMA corpus TO rag_corpus_migrator;
+ALTER ROLE rag_corpus_migrator NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT <límite configurable>;
+```
+
+```conf
+# pg_hba.conf: solo desde corpus-db-net, con TLS; ninguna otra regla lo admite.
+hostssl  <base de datos>  rag_corpus_migrator  <subred de corpus-db-net>  scram-sha-256
+host     all              rag_corpus_migrator  all                          reject
+```
+
 Además: `CONNECTION LIMIT` y *timeouts* para `rag_corpus`; el rol de `research` es de solo inserción; ningún rol de aplicación comparte credenciales con otro. **Riesgo residual aceptado** (readme §2.5): Backend 2 comparte servidor con los datos clínicos, así que un escalamiento de privilegios en PostgreSQL podría exponerlos; se mitiga con los tests, el `preflight` y PostgreSQL actualizado.
 
 ## 10. Vacíos resueltos respecto del readme v1.3
