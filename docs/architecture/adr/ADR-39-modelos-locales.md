@@ -1,10 +1,10 @@
-# ADR-39 — Modelos locales de recuperación y verificación: BGE-M3 int8, gte-multilingual-reranker int8 y mDeBERTa fp32, con chunks de 1024 tokens
+# ADR-39 — Modelos locales de recuperación y verificación: BGE-M3 int8, bge-reranker-v2-m3 int8 y mDeBERTa fp32, con chunks de 1024 tokens
 
 > Linear: [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102) · Historia: US-012 (fase A) · Feature: FEAT-06a
 > Plantilla: MADR 4 (variante mínima, en español). La **fase B** (runtime, LLM, OCR, p95 extremo a extremo) es del change de L1D-274 (US-224).
 
 - **Estado:** propuesto (lo acepta el humano en el PR; ver "Puntos que decide el humano")
-- **Fecha:** 2026-10-16
+- **Fecha:** 2026-10-16 · revisado 2026-10-20 (decisiones del usuario: reranker bge-reranker-v2-m3, tope del LLM 21 GB y stack 30 GB)
 - **Decisores:** usuario (propietario del producto); oncólogo asesor para el dataset
 - **Consultados / informados:** ai-services-dev (mediciones), ai-eval-runner (revisión de reportes en el Gate 2)
 - **Requisitos:** IA-01, NFR-01, NFR-05, TBD-01, RN-12, RN-13, RN-14, RN-21, RN-22; US-012 AC-1 a AC-5 y AC-9 a AC-13
@@ -13,7 +13,7 @@
 
 Cambiar el modelo de *embeddings* obliga a reindexar Milvus; cambiar el *reranker* o el NLI obliga a recalcular `relevance_score` y el soporte de las citas. US-055, US-058 y US-059 necesitan modelo, dimensión (`EMBEDDING_DIM`), origen del *sparse*, tamaño de chunk e índice fijados **antes** de indexar. La hipótesis de partida (A, `[S1 resp. 5]`) salía de una investigación externa sin latencias medidas en CPU; esta decisión sale de cifras medidas.
 
-**Cómo se midió** (todo en `reports/adr39/2026-10-16-fase-a.json` y `-fase-a2.json`, solo agregados):
+**Cómo se midió** (todo en `reports/adr39/2026-10-16-fase-a.json`, `-fase-a2.json` y `2026-10-20-fase-a3-reranker.json`, solo agregados):
 
 - **Dónde:** contenedor provisional Linux arm64 (`python:3.13-slim`, 8 vCPU, sin GPU, 7 GB de RAM; D2 de design.md) porque la imagen de `rag-orchestrator` de L1D-164 aún no está mergeada; se debe repetir si cambian ONNX Runtime o los límites del Compose. Host: Apple M5 Pro, 48 GB; Docker Desktop con 7,75 GB para la VM.
 - **Runtime:** ONNX Runtime 1.31.0 (CPU, 8 hilos). Los candidatos se exportan a ONNX fp32 con el exportador basado en `torch.export` (transformers 5.20.0, torch 2.14.1; `gte` con transformers 4.57.6 por su código remoto) y se cuantizan a **int8 dinámico solo en MatMul** (los pesos de *embeddings* de tokens quedan en fp32). Diferencia máxima ONNX fp32 frente a PyTorch ≤ 7,2e-4 en todos los candidatos.
@@ -22,7 +22,7 @@ Cambiar el modelo de *embeddings* obliga a reindexar Milvus; cambiar el *reranke
 - **Acierto:** un chunk acierta si es del documento esperado **y** contiene la cita (normalizando espacios y puntuación). recall@10 y MRR@10, intervalo del 95 % por *bootstrap* (1000 remuestreos, semilla 39).
 - **Entrada del *reranker*:** los 24 mejores chunks (`RERANKER_MAX_PAIRS`) del *embedding* elegido, truncados a 512 tokens (`RERANKER_MAX_LENGTH`).
 
-**Presupuestos** (fijados antes de medir, en `eval/configs/adr39-fase-a.yaml`): pila ≤ 24 GB con 16 GB para el LLM (`[S1 resp. 10]`), es decir, ~8 GB para todo lo demás; p95 por etapa: *embeddings* 500 ms, *reranker* 2000 ms, NLI 1500 ms (suma 4 s: con el LLM, ~10 s para 800 tokens, deja ~1 s de margen sobre el p95 ≤ 15 s). Licencias académicas aceptadas: `mit`, `apache-2.0` (leídas del repositorio de Hugging Face en la revisión fijada). Empate: diferencia de la métrica principal ≤ 0,02 (≈ 1 pregunta de 59) → gana la menor memoria.
+**Presupuestos** (fijados antes de medir, en `eval/configs/adr39-fase-a.yaml`): en la fase A, pila ≤ 24 GB con 16 GB para el LLM (`[S1 resp. 10]`); p95 por etapa: *embeddings* 500 ms, *reranker* 2000 ms, NLI 1500 ms (suma 4 s: con el LLM, ~10 s para 800 tokens, ~1 s de margen sobre el p95 ≤ 15 s). **Decisiones del usuario del 2026-10-20:** pila ≤ **30 GB** (equipo de referencia: MacBook Pro de 32 GB) con el LLM local ≤ **21 GB**, y p95 del *reranker* **8500 ms** (justificado en "Medición complementaria del reranker"; el valor de 2000 ms queda sustituido). Licencias académicas aceptadas: `mit`, `apache-2.0` (leídas del repositorio de Hugging Face en la revisión fijada). Empate: diferencia de la métrica principal ≤ 0,02 (≈ 1 pregunta de 59) → gana la menor memoria.
 
 ## Factores de decisión
 
@@ -51,12 +51,12 @@ A (hipótesis): BGE-M3 · bge-reranker-v2-m3 · mDeBERTa-v3-base-xnli-multilingu
 
 | Candidato | Licencia | Revisión | Cuant. | RSS máx. | p95 por lote | recall@10 (IC 95 %) | es → en | MRR | Resultado |
 |---|---|---|---|---|---|---|---|---|---|
-| A BAAI/bge-reranker-v2-m3 | apache-2.0 | `953dc6f` | int8 | 2317 MB | 3183 ms | 0,667 (0,551–0,768) | 0,695 | 0,488 | **descartado: p95 3183 ms > 2000 ms** |
-| A | apache-2.0 | `953dc6f` | fp32 | 2966 MB | 9441 ms | 0,667 | 0,695 | 0,488 | descartado: 9441 ms > 2000 ms |
-| B Qwen/Qwen3-Reranker-0.6B | apache-2.0 | `e61197e` | int8 | 5532 MB | 11214 ms | 0,536 | 0,542 | 0,260 | descartado: 11214 ms > 2000 ms |
-| B | apache-2.0 | `e61197e` | fp32 | 6681 MB | 25601 ms | 0,667 | 0,695 | 0,487 | descartado: 25601 ms > 2000 ms |
-| **C** Alibaba-NLP/gte-multilingual-reranker-base | apache-2.0 | `8215cf0` | **int8** | **2066 MB** | **1140 ms** | **0,623** (0,507–0,739) | 0,661 | 0,445 | **elegido** |
-| C | apache-2.0 | `8215cf0` | fp32 | 2308 MB | 3393 ms | 0,667 | 0,712 | 0,517 | descartado: 3393 ms > 2000 ms |
+| **A** BAAI/bge-reranker-v2-m3 | apache-2.0 | `953dc6f` | **int8** | 2317 MB | 3183 ms | **0,667** (0,551–0,768) | 0,695 | 0,488 | descartado con el presupuesto de 2000 ms (3183 ms); **elegido** con el presupuesto de 8500 ms y la decisión del usuario del 2026-10-20 |
+| A | apache-2.0 | `953dc6f` | fp32 | 2966 MB | 9441 ms | 0,667 | 0,695 | 0,488 | descartado: 9441 ms > 8500 ms (y no mejora la calidad) |
+| B Qwen/Qwen3-Reranker-0.6B | apache-2.0 | `e61197e` | int8 | 5532 MB | 11214 ms | 0,536 | 0,542 | 0,260 | descartado: 11214 ms > 8500 ms |
+| B | apache-2.0 | `e61197e` | fp32 | 6681 MB | 25601 ms | 0,667 | 0,695 | 0,487 | descartado: 25601 ms > 8500 ms |
+| C Alibaba-NLP/gte-multilingual-reranker-base | apache-2.0 | `8215cf0` | int8 | 2066 MB | 1140 ms | 0,623 (0,507–0,739) | 0,661 | 0,445 | era el único dentro de 2000 ms; **no elegido** (decisión del usuario: bge-reranker-v2-m3) |
+| C | apache-2.0 | `8215cf0` | fp32 | 2308 MB | 3393 ms | 0,667 | 0,712 | 0,517 | no elegido (int8 es 3× más rápido) |
 
 **NLI** — mDeBERTa-v3-base-xnli-multilingual-nli-2mil7 (MIT, `b5113eb`), 78 evaluaciones (39 mismo idioma, 39 mezcla es/en); lote de 5 pares
 
@@ -67,12 +67,12 @@ A (hipótesis): BGE-M3 · bge-reranker-v2-m3 · mDeBERTa-v3-base-xnli-multilingu
 
 ## Decisión
 
-Opción elegida: **A para *embeddings* (BGE-M3 int8, dense 1024 con sparse propio), C para *reranker* (gte-multilingual-reranker-base int8) y mDeBERTa fp32 para NLI**, con **chunks de 1024 tokens sin solapamiento, tamaño fijo, índice HNSW**. Por componente:
+Opción elegida: **A para *embeddings* (BGE-M3 int8, dense 1024 con sparse propio), A para *reranker* (bge-reranker-v2-m3 int8, decisión del usuario del 2026-10-20) y mDeBERTa fp32 para NLI**, con **chunks de 1024 tokens sin solapamiento, tamaño fijo, índice HNSW**. Por componente:
 
 1. **Embeddings → A@int8.** A@int8 y A@fp32 empatan en recall@10 (0,594): gana el de menor memoria (964 MB frente a 1570 MB) y 3× más rápido (AC-4). B@fp32 (0,565) queda dentro del intervalo pero cuesta 2× la memoria y 6× la latencia; B@int8 degrada 0,12; C rinde la mitad (0,31). El *sparse* de BGE-M3 está disponible (`sparse_linear`, 14 tokens con peso en la sonda): `SPARSE_VECTOR_SOURCE=modelo_embeddings`. Nota para US-112: con consultas en español sobre fuentes en inglés el *sparse* aporta poco sin traducir la consulta.
-2. **Reranker → C@int8.** Es el **único candidato dentro del presupuesto de 2000 ms** (1140 ms). A@int8 rinde mejor (0,667 frente a 0,623; MRR 0,488 frente a 0,445) pero tarda 3183 ms con 8 vCPU: queda descartado por la regla, no por calidad. Las palancas de design.md (menos pares, truncado más corto) no se midieron; ver "Puntos que decide el humano". Todos los *rerankers* mejoran la recuperación densa (0,594 → 0,62–0,67) salvo B@int8.
+2. **Reranker → A@int8 (bge-reranker-v2-m3).** Decisión del usuario del 2026-10-20. Con el presupuesto original de 2000 ms la regla lo descartaba (3183 ms) y dejaba a gte-multilingual-reranker-base (1140 ms) como único válido; el usuario eligió A por calidad (recall@10 0,667 frente a 0,623; MRR 0,488 frente a 0,445 sobre chunks de 256 tokens) y el presupuesto de p95 de la etapa pasa a **8500 ms**, fijado con la regla de "Medición complementaria del reranker" (p95 mediano medido con la configuración vigente, redondeado a 250 ms). Con ese presupuesto A gana también por la regla (diferencia de 0,044 > 0,02 de tolerancia). **Revisión fijada** `953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e` (cabeza de `main` de `BAAI/bge-reranker-v2-m3` a 2026-10-20, última modificación 2024-06-24), licencia **Apache-2.0** leída de la API de Hugging Face, sin acceso restringido (`gated=false`); `config.json` sin `auto_map` ni archivos `.py` en el repositorio: **no requiere código remoto** (arquitectura `XLMRobertaForSequenceClassification`, exportable a ONNX sin `trust_remote_code`). **Riesgo principal:** con chunks de 1024 tokens el p95 medido es 8,25 s y el p95 extremo a extremo estimado ~18,6 s (> 15 s); ver la sección siguiente.
 3. **NLI → mDeBERTa@fp32.** int8 pierde 26 puntos (0,718, y 0,35 en contradicción), así que se usa fp32 (883 MB, 248 ms). Exactitud idéntica en mismo idioma y en mezcla es/en (0,974): no hace falta traducir la afirmación para US-063/US-064.
-4. **Presupuesto conjunto.** 964 + 2066 + 883 MB = **3,9 GB**; con el LLM de 16 GB suman **19,8 GB** de 24 (holgura de 4,2 GB para OCR, PII, Milvus y PostgreSQL; la suma de RSS por separado puede diferir del RSS de un solo proceso). p95 sumado: 59 + 1140 + 248 = **1,45 s** frente a 4 s presupuestados.
+4. **Presupuesto conjunto de memoria (tope 30 GB, LLM ≤ 21 GB).** Modelos medidos (RSS máximo en MiB, mediana de 3 corridas; 6254 MiB en total): 964 MB (*embeddings*) + 4407 MB (*reranker* con la configuración vigente: lotes de 24 pares de 512 tokens sobre chunks de 1024) + 883 MB (NLI) = **6,11 GiB**. Más el LLM al tope (21 GB) = **27,1 GB**. Resto del stack (PostgreSQL, Milvus con etcd y su MinIO, MinIO clínico, clinical-api, web, proceso base de `rag-orchestrator`, OCR y PII): **medido en reposo, 0,53 GB** (`docker stats` del Compose actual, sin carga ni OCR/PII); **estimado bajo carga ~4,3 GB** (**estimación**: PostgreSQL 0,5, Milvus+etcd+MinIO 1,5, MinIO clínico 0,2, clinical-api 0,3, web 0,5, base de `rag-orchestrator` 0,3 y reserva de 1,0 GB para OCR y PII, que se miden en la fase B). Total: **27,6 GB** (reposo) a **31,4 GB** (estimación) frente a 30 GB: **con la estimación el presupuesto no cabe por ~1,4 GB** y deja entre 4,4 GB (reposo) y 0,6 GB de holgura para macOS en un equipo de 32 GB (macOS y las aplicaciones necesitan ~3–4 GB). Con `RERANKER_MAX_PAIRS` = 8 el RSS del *reranker* baja a 1,9 GB y el total estimado a **28,9 GB** (holgura de 3,1 GB para macOS). Además la VM de Docker (7,75 GB hoy) no alberga los modelos (6,1 GB) más el resto (~4,3 GB): hay que subirla a ≥ 12 GB para ejecutar el stack real. La suma de RSS por separado puede diferir del RSS de un solo proceso; el stack completo con LLM se mide en la fase B (US-224). p95 sumado de las etapas: 59 + 8252 + 248 = **8,56 s** (sin el LLM) frente a 10 s de presupuesto (500 + 8500 + 1500).
 
 ### Chunking e índice (T2–T5, AC-10 a AC-12)
 
@@ -93,16 +93,72 @@ T5 (Milvus 2.5.10 standalone de prueba, colección temporal `adr39_tmp_*`, 522 v
 
 Observaciones de las pruebas: (a) **las diferencias de T3 y T4 están dentro de los intervalos de confianza** (≈ ±0,1 con 69 preguntas) y no deciden por sí solas; ganan por la regla de desempate (menos chunks, la más simple); (b) el recall@10 crece con el tamaño del chunk en parte por construcción (10 chunks de 1024 tokens cubren cuatro veces más texto que 10 de 256 y el acierto es "el chunk contiene la cita"); (c) no hubo variantes omitidas por longitud máxima (BGE-M3 admite 8192 tokens).
 
+### Medición complementaria del reranker (2026-10-20)
+
+Decisión del usuario: el *reranker* es bge-reranker-v2-m3. Se midió la combinación que la fase A dejó sin medir: chunks de 1024 tokens con `RERANKER_MAX_LENGTH` = 512, frente a la base de 256 tokens, y las palancas `RERANKER_MAX_PAIRS` y truncado **solo como medición, sin cambiar la decisión**. Reglas, escenarios y presupuestos en `eval/configs/adr39-fase-a3.yaml` (commit previo a la medición); reporte `reports/adr39/2026-10-20-fase-a3-reranker.json`. Mismo contenedor, protocolo y dataset de la fase A (3 corridas en procesos nuevos, mediana, 3 llamadas de calentamiento, 12 lotes cronometrados por corrida, ONNX Runtime int8, 8 hilos; recall@10 y MRR con IC 95 % por *bootstrap*). Reproducir: `python -m app.scripts.adr39_measure --reranker-chunks --config eval/configs/adr39-fase-a3.yaml`.
+
+| Escenario (chunk · longitud máx. · pares) | p95 por lote (corridas) | RSS máx. | recall@10 (IC 95 %) | es → en | MRR | recall@10 denso del mismo conjunto |
+|---|---|---|---|---|---|---|
+| **referencia**: 256 · 512 · 24 | 3947 ms (3946 / 4050 / 3947) | 1930 MB | 0,667 (0,551–0,768) | 0,695 | 0,488 | 0,594 |
+| **vigente**: 1024 · 512 · 24 | **8252 ms** (8252 / 8120 / 8262) | **4407 MB** | 0,652 (0,536–0,768) | 0,661 | 0,512 | 0,710 |
+| 1024 · 768 · 24 | no medible (proceso terminado por falta de memoria, SIGKILL) | > 7 GB | — | — | — | — |
+| 1024 · 1280 · 24 (sin truncado) | no medible (SIGKILL) | > 7 GB | — | — | — | — |
+| palanca 256 · 512 · 16 | 2770 ms | 1590 MB | 0,667 | 0,695 | 0,483 | 0,594 |
+| palanca 256 · 512 · 12 | 1995 ms | 1386 MB | 0,594 | 0,610 | 0,424 | 0,594 |
+| palanca 256 · 512 · 8 | 1470 ms | 1190 MB | 0,551 | 0,559 | 0,445 | 0,551 |
+| palanca 1024 · 512 · 16 | 5575 ms | 2937 MB | 0,696 (0,594–0,812) | 0,712 | 0,508 | 0,710 |
+| palanca 1024 · 512 · 12 | 4259 ms | 2642 MB | 0,696 (0,580–0,797) | 0,712 | 0,491 | 0,710 |
+| palanca 1024 · 512 · 8 | 2947 ms | 1881 MB | 0,667 (0,551–0,783) | 0,678 | 0,514 | 0,667 |
+| palanca 1024 · 256 · 24 (truncado corto) | 3678 ms | 1755 MB | 0,565 | 0,576 | 0,352 | 0,710 |
+| palanca 1024 · 1280 · 12 | no medible (SIGKILL) | > 7 GB | — | — | — | — |
+
+**Lectura de las cifras**
+
+1. **Calidad.** Con chunks de 1024 y 512 tokens el *reranker* **no mejora el recall@10 denso** (0,652 frente a 0,710): solo ve la mitad de cada chunk y la cita puede estar en la parte truncada; sí mejora el MRR (0,356 → 0,512). Frente a la base de 256 el recall@10 queda a 0,015 (dentro de la tolerancia de 0,02 y de los IC, que son de ±0,1). Con 24 pares de 1024 tokens el *reranker* examina 4× más texto que con chunks de 256.
+2. **Latencia.** El p95 del *reranker* se multiplica por 2,1 (3947 → 8252 ms) y el RSS por 2,3 (1930 → 4407 MB). La medición de hoy de la referencia (3947 ms) es **24 % mayor** que la de la fase A (3183 ms) con el mismo contenedor, protocolo y calidad idéntica (0,667, MRR 0,488): hay variabilidad entre sesiones de medición; dentro de cada sesión las tres corridas difieren ≤ 3 %. Los 3183 ms de la fase A y los 3947 ms de hoy son ambos válidos; las comparaciones de este apartado usan solo las cifras de hoy.
+3. **Longitudes mayores no son medibles en esta VM.** 768 y 1280 tokens con 24 pares (y 1280 con 12) agotan los 7,75 GB de la VM de Docker (el escenario vigente ya usa 4,4 GB): el proceso es terminado (SIGKILL). No se inventan cifras: habría que repetirlos con una VM mayor (≥ 12 GB) o en la imagen de L1D-164 con límites mayores.
+4. **Palancas** (solo medición; ninguna se adopta aquí).
+
+   | Palanca sobre la configuración vigente | p95 | recall@10 frente al vigente | p95 extremo a extremo estimado | Margen frente a 15 s |
+   |---|---|---|---|---|
+   | ninguna (1024 · 512 · 24) | 8252 ms | 0,652 | 18,6 s | −3,6 s (riesgo alto) |
+   | `RERANKER_MAX_PAIRS` = 16 | 5575 ms | +0,043 | 15,9 s | −0,9 s (alto) |
+   | `RERANKER_MAX_PAIRS` = 12 | 4259 ms | +0,043 | 14,6 s | +0,4 s (alto: < 1 s) |
+   | `RERANKER_MAX_PAIRS` = 8 | 2947 ms | +0,014 | 13,3 s | +1,7 s (aceptable) |
+   | truncado a 256 tokens | 3678 ms | −0,087 (fuera de tolerancia) | 14,0 s | +1,0 s |
+
+   Ninguna palanca cumple la regla estricta de "viable" fijada antes de medir (recall dentro de la tolerancia **y** p95 ≤ 2000 ms); la más cercana es **8 pares** (2947 ms, recall@10 0,667, RSS 1,9 GB), con la salvedad de que con 8 pares el *reranker* ya no mejora el recall@10 del denso (0,667 = 0,667) y solo reordena (MRR 0,352 → 0,514). Reducir el truncado cuesta calidad (−0,087).
+
+**Presupuesto del *reranker* (regla fijada antes de medir):** p95 mediano del escenario vigente (8252 ms) redondeado hacia arriba a 250 ms = **8500 ms**; la condición de calidad (recall@10 del vigente ≥ el de la base − 0,02) se cumple (0,652 ≥ 0,647).
+
+**Efecto sobre el p95 extremo a extremo** (NFR: `/platform/evidence-analyses` p95 ≤ 15 s). Cota superior = suma de p95 de etapas + LLM; las otras etapas son *embeddings* 59 ms y NLI 248 ms (fase A); la generación del LLM es el **supuesto** de `[S1 resp. 10]` (~10 s para 800 tokens, **no medido aquí**); no incluye Milvus, PII, validación de varias opciones ni clinical-api, así que la cifra real será mayor.
+
+| Configuración del *reranker* | p95 etapa | p95 extremo a extremo estimado | Margen | Riesgo |
+|---|---|---|---|---|
+| gte int8, chunks 256 (hipótesis previa) | 1140 ms | 11,4 s | +3,6 s | aceptable |
+| cálculo previo con bge-reranker-v2-m3 (fase A, 256) | 3183 ms | 13,5 s | +1,5 s | aceptable |
+| bge-reranker-v2-m3, chunks 256 (hoy) | 3947 ms | 14,3 s | +0,7 s | alto |
+| **vigente: bge-reranker-v2-m3, chunks 1024 · 512 · 24** | **8252 ms** | **18,6 s** | **−3,6 s** | **alto: incumple** |
+| con el presupuesto de la etapa (8500 ms) | 8500 ms | 18,8 s | −3,8 s | alto: incumple |
+
+**Riesgo señalado:** la configuración decidida (bge-reranker-v2-m3, chunks de 1024 tokens, 24 pares de 512 tokens) **no cabe en el p95 ≤ 15 s** con el supuesto de LLM de 10 s: el *reranker* consume por sí solo 8,3 s. Fijar 8500 ms como presupuesto de la etapa es coherente con la medición, pero **deja el NFR sin margen y lo incumple en la estimación**. Para cumplirlo hay que cambiar algo de lo decidido (menos pares, chunks más pequeños, más CPU o un LLM más rápido) o recalibrar el NFR en el S5; el ADR no cambia nada de eso por su cuenta (ver "Puntos que decide el humano"). El equipo de producción (MacBook Pro) puede tener más CPU que los 8 vCPU de la VM; la repetición en la imagen de L1D-164 lo dirá.
+
+#### Cambio de topes de memoria (decisión del usuario, 2026-10-20)
+
+`LLM_MEMORY_BUDGET_GB` pasa de 16 a **21** y `STACK_MEMORY_LIMIT_GB` de 24 a **30**. Ningún descarte de la fase A fue por memoria (el mayor, Qwen3-Reranker fp32, 6,7 GB + 16 GB = 22,7 GB ≤ 24), y con los nuevos topes el mayor da 6,7 + 21 = 27,7 GB ≤ 30: **ningún descarte por memoria cambia ni se reabre**. Lo que cambia es el presupuesto conjunto (ver decisión 4).
+
 ### Metas de OL-06 frente a lo medido
 
-Ninguna combinación alcanza las metas iniciales: mejor recall@10 denso 0,710 (meta 0,80), es → en 0,729 (meta 0,70: **se cumple**), MRR 0,356–0,392 (meta 0,60). Con el *reranker* elegido sobre chunks de 256 tokens: recall@10 0,623, MRR 0,445. Preguntas sin respuesta: puntaje máximo recuperado 0,583 (mediana 0,530) con coseno denso de BGE-M3 y 0,459 (mediana 0,398) con el *reranker* elegido (chunks de 256 tokens, n = 6). Esos valores son un insumo para calibrar el umbral de RN-02 (US-056) con la suite `evaluate`; este mini-dataset no lo fija.
+Ninguna combinación alcanza las metas iniciales: mejor recall@10 denso 0,710 (meta 0,80), es → en 0,729 (meta 0,70: **se cumple**), MRR 0,356–0,392 (meta 0,60). Con bge-reranker-v2-m3 sobre chunks de 1024 tokens (configuración vigente): recall@10 0,652, MRR 0,512. Preguntas sin respuesta: puntaje máximo recuperado 0,583 (mediana 0,530) con coseno denso de BGE-M3; los valores del *reranker* de la fase A (0,459 / 0,398) son de gte sobre chunks de 256 tokens y **no** valen para bge-reranker-v2-m3 (otra escala de puntaje): recalibrar el umbral de RN-02 con la suite `evaluate`. Esos valores son un insumo para calibrar el umbral de RN-02 (US-056) con la suite `evaluate`; este mini-dataset no lo fija.
 
 ### Consecuencias
 
-- **Positivas:** modelos con licencia académica y pesos locales; 3,9 GB para los tres; p95 sumado de 1,45 s; mDeBERTa mantiene 0,974 en mezcla es/en; la decisión es reproducible (`python -m app.scripts.adr39_measure`).
+- **Positivas:** modelos con licencia académica y pesos locales; 6,1 GB para los tres con la configuración vigente (3,6 GB con 8 pares); mejor calidad del *reranker* medida (MRR 0,512); mDeBERTa mantiene 0,974 en mezcla es/en; la decisión es reproducible (`python -m app.scripts.adr39_measure`).
 - **Negativas / riesgos:**
-  - El *reranker* se midió sobre chunks de 256 tokens, pero se fija `CORPUS_CHUNK_SIZE=1024` y `RERANKER_MAX_LENGTH=512`: un chunk de 1024 tokens se trunca a la mitad en el *reranker*. **No se midió esa combinación**; hay que re-medirla antes de implementar US-055 o bajar el tamaño de chunk.
-  - gte-multilingual-reranker-base usa **código remoto** de `Alibaba-NLP/new-impl` (sin revisión fijada por este ADR) y exige transformers < 5 solo para exportar; el runtime ONNX no lo ejecuta. Fijar y auditar esa revisión, o exportar una vez y servir el ONNX desde el volumen.
+  - **p95 extremo a extremo:** la configuración vigente da un p95 estimado de ~18,6 s (> 15 s) con el supuesto de LLM de 10 s; ver "Medición complementaria del reranker". Sin una palanca, el NFR no se cumple.
+  - **Memoria:** el RSS del *reranker* con 24 pares de 1024 tokens es 4,4 GB; el total estimado (31,4 GB) supera los 30 GB por ~1,4 GB y la VM de Docker debe subir a ≥ 12 GB.
+  - Con chunks de 1024 y `RERANKER_MAX_LENGTH` = 512, el *reranker* ve la mitad del chunk y su recall@10 (0,652) queda por debajo del denso (0,710). `RERANKER_MAX_LENGTH` mayor (768, 1280) no se pudo medir en la VM de 7,75 GB.
+  - La variabilidad entre sesiones de medición del p95 es ~24 % (3183 ms en la fase A frente a 3947 ms hoy para la misma configuración); repetir en la imagen de L1D-164.
   - Con 8 vCPU y 7 GB de RAM en la VM, no es posible medir el stack completo con el LLM de 16 GB al mismo tiempo; la medición conjunta es de la fase B (US-224).
   - Mini-dataset pequeño: IC ≈ ±0,1; US-072 lo amplía.
 - **Configuración (RN-22):** ver bloque de decisión. `NLI_QUANTIZATION` es una clave añadida (la lista de design.md tenía un solo `MODEL_QUANTIZATION`) porque NLI usa fp32 y el resto int8.
@@ -114,8 +170,8 @@ EMBEDDING_MODEL: BAAI/bge-m3
 EMBEDDING_MODEL_REVISION: 5617a9f61b028005a4858fdac845db406aefb181
 EMBEDDING_DIM: 1024
 SPARSE_VECTOR_SOURCE: modelo_embeddings
-RERANKER_MODEL: Alibaba-NLP/gte-multilingual-reranker-base
-RERANKER_MODEL_REVISION: 8215cf04918ba6f7b6a62bb44238ce2953d8831c
+RERANKER_MODEL: BAAI/bge-reranker-v2-m3
+RERANKER_MODEL_REVISION: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
 RERANKER_MAX_PAIRS: 24
 RERANKER_MAX_LENGTH: 512
 NLI_MODEL: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
@@ -131,23 +187,24 @@ VECTOR_INDEX_TYPE: HNSW
 VECTOR_INDEX_PARAMS: '{"M": 16, "efConstruction": 200, "ef": 64}'
 CHUNK_SELECTION_MARGIN: 0.02
 INDEX_MIN_RECALL_VS_FLAT: 0.99
-STACK_MEMORY_LIMIT_GB: 24
-LLM_MEMORY_BUDGET_GB: 16
-STAGE_P95_BUDGET_MS: '{"embeddings": 500, "reranker": 2000, "nli": 1500}'
+STACK_MEMORY_LIMIT_GB: 30
+LLM_MEMORY_BUDGET_GB: 21
+STAGE_P95_BUDGET_MS: '{"embeddings": 500, "reranker": 8500, "nli": 1500}'
 ACADEMIC_LICENSES: mit,apache-2.0
 ```
 <!-- adr39:decision:fin -->
 
 ### Confirmación
 
-`python -m app.scripts.adr39_measure --check-config` compara `apps/rag-orchestrator/.env.example` con el bloque anterior y falla si `EMBEDDING_DIM`, `SPARSE_VECTOR_SOURCE` o cualquier otra clave faltan o difieren (US-012 AC-3, AC-10 a AC-12); la suite `evaluate` (US-072) reutiliza `data/eval/adr39-mini`. Reproducir: `docker build -f apps/rag-orchestrator/eval/configs/adr39-medicion.Dockerfile …` y `python -m app.scripts.adr39_measure --config eval/configs/adr39-fase-a.yaml`, luego `adr39-fase-a2.yaml --stage t2|t3|t4|t5`.
+`python -m app.scripts.adr39_measure --check-config` compara `apps/rag-orchestrator/.env.example` con el bloque anterior y falla si `EMBEDDING_DIM`, `SPARSE_VECTOR_SOURCE` o cualquier otra clave faltan o difieren (US-012 AC-3, AC-10 a AC-12); la suite `evaluate` (US-072) reutiliza `data/eval/adr39-mini`. Reproducir: `docker build -f apps/rag-orchestrator/eval/configs/adr39-medicion.Dockerfile …` y `python -m app.scripts.adr39_measure --config eval/configs/adr39-fase-a.yaml`, luego `adr39-fase-a2.yaml --stage t2|t3|t4|t5`; el *reranker* sobre chunks de 1024 con `adr39-fase-a3.yaml --reranker-chunks`.
 
 ## Puntos que decide el humano
 
-1. **Reranker A frente a C.** La regla fijada descarta A@int8 por p95 (3183 ms > 2000 ms) aunque rinde 0,044 más de recall@10 y 0,043 más de MRR. Opciones: aceptar C; subir `STAGE_P95_BUDGET_MS.reranker` a ~3,2 s (la suma seguiría en 4,6 s, p95 total ~14,6 s: sin margen); o medir A@int8 con menos pares o truncado más corto (palancas de design.md, no medidas).
-2. **Tamaño de chunk 1024 y `RERANKER_MAX_LENGTH`=512** (ver riesgos): decidir si se re-mide la combinación o se acepta 512 tokens.
+1. **Reranker A frente a C — resuelto (2026-10-20):** bge-reranker-v2-m3 (A). Presupuesto de p95 de la etapa: 8500 ms, según la medición. Lo que queda abierto: la configuración vigente da un p95 extremo a extremo estimado de ~18,6 s frente al NFR de 15 s. Palancas medidas (no aplicadas): `RERANKER_MAX_PAIRS` = 8 (13,3 s, recall@10 0,667, RSS 1,9 GB), 12 (14,6 s) o 16 (15,9 s); chunks de 256 tokens (14,3 s con 24 pares); o recalibrar el NFR en el S5. Decidir cuál.
+2. **Tamaño de chunk 1024 y `RERANKER_MAX_LENGTH` = 512 — medido (2026-10-20):** el *reranker* no supera al denso en recall@10 (0,652 frente a 0,710) y cuesta 2,1× la latencia y 2,3× la memoria frente a chunks de 256. 768 y 1280 tokens no se pudieron medir en la VM de 7,75 GB. Decidir si se acepta, se repite con una VM mayor o se baja el tamaño de chunk (L1D-115 aún no indexó).
 3. **Metas de OL-06 no alcanzadas** (recall@10 0,71 y MRR 0,36–0,39 frente a 0,80 y 0,60): escalar el ajuste de metas (G-5 / NFR-01, TBD-02) o ampliar el dataset.
 4. **HNSW frente a FLAT** con 522 vectores: la regla elige HNSW; FLAT es equivalente hoy.
+5. **Tope de memoria — resuelto (2026-10-20):** LLM ≤ 21 GB y stack ≤ 30 GB. Abierto: con la estimación del resto del stack el total (31,4 GB) excede los 30 GB y la holgura para macOS es de 0,6 a 4,4 GB; confirmar en la fase B con la pila real y subir la VM de Docker a ≥ 12 GB.
 
 ## Fase B
 
@@ -157,8 +214,8 @@ ACADEMIC_LICENSES: mit,apache-2.0
 
 ### A (BGE-M3 · bge-reranker-v2-m3 · mDeBERTa)
 
-- A favor: mejor *embedding* medido; *sparse* propio; mejor *reranker* en calidad.
-- En contra: el *reranker* no entra en el presupuesto de latencia con 8 vCPU.
+- A favor: mejor *embedding* medido; *sparse* propio; mejor *reranker* en calidad (MRR 0,49–0,51).
+- En contra: el *reranker* tarda 3,2–4,0 s con chunks de 256 y 8,3 s con chunks de 1024 en 8 vCPU; con ello el p95 extremo a extremo estimado supera los 15 s.
 
 ### B (Qwen3-Embedding-0.6B · Qwen3-Reranker-0.6B)
 
@@ -167,9 +224,9 @@ ACADEMIC_LICENSES: mit,apache-2.0
 
 ### C (multilingual-e5-large-instruct · gte-multilingual-reranker-base)
 
-- A favor: el *reranker* int8 es el más rápido (1140 ms) y ligero.
-- En contra: el *embedding* rinde la mitad (0,31) en español → inglés; el *reranker* exige código remoto.
+- A favor: el *reranker* int8 es el más rápido (1140 ms) y ligero (el único dentro de 2000 ms).
+- En contra: el *embedding* rinde la mitad (0,31) en español → inglés; el *reranker* exige código remoto y rinde menos (0,623).
 
 ## Más información
 
-Reportes: `reports/adr39/2026-10-16-fase-a.json`, `reports/adr39/2026-10-16-fase-a2.json`. Dataset: `data/eval/adr39-mini` (NCI libre de copyright con crédito, PMC CC BY 4.0, ClinicalTrials.gov: *Source: ClinicalTrials.gov, National Library of Medicine*, sin aval de NLM). Bloquea o informa a: L1D-114 (US-058: dimensión e índice), L1D-115 (US-059: tamaño en tokens, solapamiento y estrategia; hoy `fragmentar()` corta por caracteres), L1D-106 (US-055), L1D-274 (US-224), US-072, US-073, ADR-41. Revisión prevista: al medir la fase B y cuando la imagen de L1D-164 esté mergeada.
+Reportes: `reports/adr39/2026-10-16-fase-a.json`, `reports/adr39/2026-10-16-fase-a2.json`, `reports/adr39/2026-10-20-fase-a3-reranker.json`. Dataset: `data/eval/adr39-mini` (NCI libre de copyright con crédito, PMC CC BY 4.0, ClinicalTrials.gov: *Source: ClinicalTrials.gov, National Library of Medicine*, sin aval de NLM). Bloquea o informa a: L1D-114 (US-058: dimensión e índice), L1D-115 (US-059: tamaño en tokens, solapamiento y estrategia; hoy `fragmentar()` corta por caracteres), L1D-106 (US-055), L1D-274 (US-224), US-072, US-073, ADR-41. Revisión prevista: al medir la fase B y cuando la imagen de L1D-164 esté mergeada.
