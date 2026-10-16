@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -7,6 +8,8 @@ import { arrancar } from '../../../src/startup.js';
 // Secretos ficticios en un directorio temporal: ningún valor es real (RN-13, RN-14).
 const VALOR_AES = 'valor-ficticio-aes-0123456789';
 const VALOR_HMAC = 'valor-ficticio-hmac-9876543210';
+
+const RAIZ_CLINICAL_API = path.resolve(import.meta.dirname, '../../..');
 
 let directorio: string;
 
@@ -78,5 +81,21 @@ describe('arranque de clinical-api', () => {
     expect(resultado.salidas).toEqual([]);
     expect(resultado.escuchas).toEqual([4100]);
     expect(resultado.log).toBe('');
+  });
+
+  it('el proceso real termina con código 1 sin escuchar y su stderr nombra la variable cuando no hay secretos montados', () => {
+    const proceso = spawnSync(process.execPath, ['--import', 'tsx', 'src/server.ts'], {
+      cwd: RAIZ_CLINICAL_API,
+      env: { PATH: process.env['PATH'] ?? '', PORT: '0' },
+      encoding: 'utf8',
+      timeout: 30_000,
+    });
+
+    expect(proceso.status).toBe(1);
+    expect(JSON.parse(proceso.stderr.trim())).toMatchObject({
+      event: 'secreto_ausente',
+      variable: 'IDENTITY_AES_KEY_FILE',
+    });
+    expect(proceso.stdout).not.toContain('escuchando');
   });
 });

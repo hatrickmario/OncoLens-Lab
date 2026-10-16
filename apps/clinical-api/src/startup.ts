@@ -1,4 +1,5 @@
-import type { LeerArchivo } from './config/secrets.js';
+import { readPort } from './config.js';
+import { SecretoAusenteError, loadRequiredSecrets, type LeerArchivo } from './config/secrets.js';
 
 export interface DependenciasDeArranque {
   readonly env: NodeJS.ProcessEnv;
@@ -8,6 +9,19 @@ export interface DependenciasDeArranque {
   readonly listen: (puerto: number) => void;
 }
 
-export function arrancar(_dependencias: DependenciasDeArranque): void {
-  throw new Error('no implementado');
+/**
+ * Raíz de composición testable: comprueba los secretos ANTES de escuchar (US-035 AC-5, fail-fast). Si falta uno,
+ * registra el evento `secreto_ausente` con el nombre de la variable —nunca un valor, RN-10— y termina con código 1;
+ * el healthcheck del Compose ve el contenedor sin escuchar y no lo da por healthy.
+ */
+export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArranque): void {
+  try {
+    loadRequiredSecrets(env, readFile);
+  } catch (error) {
+    if (!(error instanceof SecretoAusenteError)) throw error;
+    log(JSON.stringify({ level: 'error', event: 'secreto_ausente', variable: error.variable }));
+    exit(1);
+    return;
+  }
+  listen(readPort(env));
 }
