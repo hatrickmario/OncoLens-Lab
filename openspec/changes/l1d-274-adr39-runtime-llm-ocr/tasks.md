@@ -33,8 +33,8 @@
       **exento** `[US-224 AC-1]`
 - [ ] 1.5 LLM: medición de admisión por memoria (`ollama ps`, `num_ctx=8192`, tras el prompt más largo;
       descarte con cifra si > 21 GB) y después 200 llamadas por candidato admitido (A
-      `gemma4:26b-a4b-it-qat`, B `gemma4:12b-mlx`, C `qwen3.5:9b-mlx` sin *thinking*, **E** `medgemma1.5:4b-it-q8_0`, **F**
-      `medgemma1.5:4b-it-bf16`, **G** `gemma4:26b-a4b-it-q4_K_M`; E–G añadidos el 2026-10-20; D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir por el usuario el 2026-10-20) con el
+      `gemma4:26b-a4b-it-qat`, B `gemma4:12b-mlx`, C `qwen3.5:9b-mlx` sin *thinking*, **H** `qwen3.6:27b-q4_K_M`, **I** `qwen3.5:27b-q4_K_M`, **J** `qwen3.5:27b-int4` (los tres sin *thinking*), **E** `medgemma1.5:4b-it-q8_0`, **F**
+      `medgemma1.5:4b-it-bf16`, **G** `gemma4:26b-a4b-it-q4_K_M`; E–J añadidos el 2026-10-20; D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir por el usuario el 2026-10-20) con el
       prompt del S1 sobre `data/eval/adr39-mini/`; memoria (pesos + KV), tok/s, JSON válido (≥ 99 %),
       fidelidad y calidad en español en la muestra revisada por `ai-eval-runner`, p95 de
       estructuración por documento sobre el texto de `ocr-mini`, licencia (E y F: HAI-DEF, elección

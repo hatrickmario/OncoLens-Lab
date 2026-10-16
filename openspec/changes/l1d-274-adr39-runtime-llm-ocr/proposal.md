@@ -30,7 +30,7 @@ Decisiones ya tomadas que este change **no reabre** (se citan):
   **Superado (Decidido, usuario, 2026-10-20):** el tope máximo del LLM local pasa a **21 GB** y el del
   stack total a **~30 GB** (equipo de referencia MacBook Pro M5 de 32 GB); la medición de 15 GB de A
   sigue siendo el punto de partida.
-- **Candidatos ampliados** (Decidido, usuario, 2026-10-20): además de A, B y C se miden **E** y **F** MedGemma 1.5 4B en Q8_0 y BF16 (`medgemma1.5:4b-it-q8_0`, `…-bf16`; licencia
+- **Candidatos ampliados** (Decidido, usuario, 2026-10-20): además de A, B y C se miden **H** Qwen 3.6 27B Q4_K_M (`qwen3.6:27b-q4_K_M`, 17 GB), **I** Qwen 3.5 27B Q4_K_M (`qwen3.5:27b-q4_K_M`, 17 GB), **J** Qwen 3.5 27B INT4 (`qwen3.5:27b-int4`, 16 GB), **E** y **F** MedGemma 1.5 4B en Q8_0 y BF16 (`medgemma1.5:4b-it-q8_0`, `…-bf16`; licencia
   HAI-DEF, condicionada a la aceptación del usuario) y **G** Gemma 4 26B-A4B Q4_K_M
   (`gemma4:26b-a4b-it-q4_K_M`, 18 GB). **D** Qwen 3.6 35B-A3B Q4_K_M (`qwen3.6:35b-a3b-q4_K_M`, 24 GB publicados, por encima del tope de 21 GB) queda **descartado sin medición** (Decidido, usuario, 2026-10-20). Tags, tamaños y licencias verificados en la fuente el 2026-10-20
   (tabla en design.md D3); las reglas de decisión se fijan antes de medir (design.md D3).

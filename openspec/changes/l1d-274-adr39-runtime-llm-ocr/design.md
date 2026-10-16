@@ -20,7 +20,7 @@ Hechos de partida (verificados el 2026-10-13, `backlog/sprints/S1-refinamiento.m
 | Descartado el 2026-10-13 | `gemma4:26b-mlx` (18 GB solo en pesos): se descartó por el tope de ~16 GB, hoy superado; no está entre los candidatos pedidos el 2026-10-20 y **no se añade** sin instrucción (su 18 GB cabría en 21 GB; G, de 18 GB, ya cubre la misma familia) | `[S1 resp. 10]`; Decidido (usuario, 2026-10-20) |
 | Respaldo B | `gemma4:12b-mlx` (7,7 GB) | §5 |
 | Respaldo C | `qwen3.5:9b-mlx` (8,9 GB), sin *thinking* | §5 |
-| Candidatos añadidos (2026-10-20) | E `medgemma1.5:4b-it-q8_0`; F `medgemma1.5:4b-it-bf16`; G `gemma4:26b-a4b-it-q4_K_M` (tabla de verificación en D3); D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir (24 GB > 21 GB) | Decidido (usuario, 2026-10-20) |
+| Candidatos añadidos (2026-10-20) | H `qwen3.6:27b-q4_K_M`; I `qwen3.5:27b-q4_K_M`; J `qwen3.5:27b-int4`; E `medgemma1.5:4b-it-q8_0`; F `medgemma1.5:4b-it-bf16`; G `gemma4:26b-a4b-it-q4_K_M` (tabla de verificación en D3); D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir (24 GB > 21 GB) | Decidido (usuario, 2026-10-20) |
 | Runtime alternativo | vllm-metal **0.1.0** (PyPI) en `~/.venvs/vllm-metal`, **sin el paquete `vllm`** que el plugin necesita y no declara como dependencia; no está en Homebrew | §2 ("Datos que resultaron falsos"), §5 |
 | OCR A | OCRmyPDF + Tesseract `spa`, **en el contenedor** de `rag-orchestrator` (no en el host) | §5, `[S1 resp. 5]` |
 | OCR alternativos | PaddleOCR (PP-OCRv5 latino), docTR; Surya descartado por licencia | `[S1 resp. 5]` |
@@ -87,7 +87,7 @@ de GPU queda descartado (AC-1).
 
 ### D3. LLM `[US-224 AC-2]`
 
-- Candidatos (la letra se conserva; D–G añadidos el 2026-10-20):
+- Candidatos (la letra se conserva; D–J añadidos el 2026-10-20):
 
   | | Tag (Ollama) | Digest | Tamaño publicado | Licencia | Estado de verificación |
   |---|---|---|---|---|---|
@@ -98,6 +98,9 @@ de GPU queda descartado (AC-1).
   | E | `medgemma1.5:4b-it-q8_0` | `d6ae3cddb663` | 5,0 GB | Términos HAI-DEF de Google (`license: other`), no permisiva estándar | tag y tamaño verificados; licencia: **condicionada**, ver abajo |
   | F | `medgemma1.5:4b-it-bf16` | `32f17fbd85fe` | 8,6 GB | ídem E | ídem E |
   | G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | 18 GB (25,8B parámetros) | Apache 2.0 | verificado |
+  | H | `qwen3.6:27b-q4_K_M` | por registrar (`ollama list`) | 17 GB (denso 27B) | Apache 2.0 esperada (misma familia que C y D); repositorio HF del 27B por confirmar | tag y tamaño verificados en la página de tags (2026-10-20); licencia del 27B **no verificada** |
+  | I | `qwen3.5:27b-q4_K_M` | por registrar | 17 GB (denso 27B) | ídem H (familia Qwen3.5) | tag y tamaño verificados; licencia del 27B **no verificada** |
+  | J | `qwen3.5:27b-int4` | por registrar | 16 GB (denso 27B, INT4) | ídem H | tag y tamaño verificados; licencia **no verificada**; el formato INT4 (no GGUF K-quant) puede no tener soporte equivalente en Ollama 0.34.4: se comprueba en la admisión |
 
   Fuentes: `ollama.com/library/{qwen3.6,gemma4,medgemma1.5,qwen3.5}/tags`, páginas de cada tag y la API
   de Hugging Face de los repositorios `Qwen/Qwen3.6-35B-A3B`, `google/gemma-4-26B-A4B-it`,
@@ -117,8 +120,11 @@ de GPU queda descartado (AC-1).
     licencia registrada y aceptada); medirlo no exige aceptarlos más allá de la descarga. El tag
     `medgemma1.5` de Ollama figura como «actualizado hace 6 meses»; MedGemma 1.5 4B en Hugging Face
     es de 2026-04-13.
-  - **Qwen3.6 (D):** se mide con *thinking* desactivado (igual que C); sin la opción, la latencia no
-    es comparable.
+  - **Qwen3.6 y Qwen3.5 densos de 27B (H, I, J):** añadidos por el usuario el 2026-10-20. Se miden con
+    *thinking* desactivado (igual que C); sin la opción, la latencia no es comparable. Riesgo principal: un
+    27B denso genera más lento que un MoE de pocos parámetros activos, así que el p95 de 15 s del análisis
+    y el p95 de extracción de 60 s son las eliminatorias que más probablemente decidan. Con 16–17 GB de
+    pesos quedan ~4 GB bajo el tope de 21 GB para contexto y buffers: se confirma con `ollama ps`.
   - Las variantes MTP (`qwen3.6:35b-a3b-mtp-q4_K_M`, 23 GB; `gemma4:26b-a4b-it-mtp-q4_K_M`, 19 GB) no
     son candidatos: son la palanca de decodificación especulativa de D4.
   - Todos en el runtime ganador de D2 (y A también en el otro si es viable, para aislar el efecto del
@@ -347,7 +353,7 @@ Las cifras de este ADR son el punto de partida del baseline de US-072/US-073.
   sin presión de memoria allí no demuestra que quepa en 32 GB. El ADR anota la RAM de la máquina y, si no
   se repite en una de 32 GB, deja la verificación como condición de G-Piloto (no se afirma «cabe en 32 GB»
   solo con la suma de cifras).
-- **Más candidatos, mismo coste (3 pts):** D–G añaden hasta 4 × 200 llamadas, pero la admisión previa
+- **Más candidatos, mismo coste (3 pts):** D–J añaden hasta 7 × 200 llamadas, pero la admisión previa
   descarta primero por memoria y MedGemma (4B) es rápido; si el tiempo no alcanza, D se descarta con la
   cifra de admisión y E/F se miden con 100 llamadas anotándolo. La estimación no cambia sin aprobación.
 - **Licencia de MedGemma (HAI-DEF):** no permisiva estándar; ganar exige aceptación del usuario.
