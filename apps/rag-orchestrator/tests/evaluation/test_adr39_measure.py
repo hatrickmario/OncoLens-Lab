@@ -208,6 +208,20 @@ def test_fase_a_los_descartes_del_reporte_llevan_motivo_y_cifra_ac2(
 
 
 @respx.mock(assert_all_called=False)
+def test_fase_a_el_trabajo_de_embeddings_recibe_y_escribe_su_carpeta_de_candidatos(
+    respx_mock: respx.MockRouter, tmp_path: Path, dataset_sintetico: Path
+) -> None:
+    mock_fuentes(respx_mock)
+    ruta = escribir_config(tmp_path, dataset_sintetico)
+
+    _, ejecucion, _ = correr(tmp_path, ruta)
+
+    con_calidad = [t for t in ejecucion.trabajos if t.spec.componente == "embeddings" and t.calidad]
+    assert con_calidad and all(t.candidatos_dir is not None and (t.candidatos_dir / "chunks.json").exists() for t in con_calidad)
+    assert not any(c.name.endswith("-candidatos") and not (c / "chunks.json").exists() for c in (tmp_path / "cache" / "adr39" / "corridas").iterdir())
+
+
+@respx.mock(assert_all_called=False)
 def test_fase_a_reanudada_no_repite_los_trabajos_ya_medidos(
     respx_mock: respx.MockRouter, tmp_path: Path, dataset_sintetico: Path
 ) -> None:
