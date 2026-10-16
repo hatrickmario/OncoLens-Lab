@@ -60,13 +60,13 @@ describe('cliente de rag-orchestrator', () => {
     });
     const sinDeadline = await ragQuery({ client: cliente, body: requestEjemplo as never });
 
-    expect(conDeadline.response.status).toBe(200);
+    expect(conDeadline.response?.status).toBe(200);
     expect(conDeadline.data).toEqual(respuestaEjemplo);
     expect(capturadas).toHaveLength(2);
     expect(capturadas[0]!.headers.get('x-request-deadline')).toBe(DEADLINE);
     expect(capturadas[1]!.headers.has('x-request-deadline')).toBe(false);
     expect(capturadas[0]!.body).toEqual(requestEjemplo);
-    expect(sinDeadline.response.status).toBe(200);
+    expect(sinDeadline.response?.status).toBe(200);
     for (const { headers } of capturadas) await bearerVerificable(headers);
   });
 });
