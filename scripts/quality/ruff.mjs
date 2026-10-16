@@ -9,7 +9,7 @@ const AVISO_SIN_RUFF =
   'ruff no encontrado: pip install -r apps/rag-orchestrator/requirements-dev.txt';
 
 /** Ejecuta `ruff format` sobre rag-orchestrator y devuelve su código de salida. */
-export function formatearPython({ soloVerificar }) {
+function formatearPython({ soloVerificar }) {
   const argumentos = ['format', ...(soloVerificar ? ['--check'] : []), DIRECTORIO];
   const resultado = spawnSync('ruff', argumentos, { cwd: RAIZ, stdio: 'inherit' });
 

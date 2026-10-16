@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { RAIZ, ejecutar, npmRun } from './soporte.mjs';
@@ -14,15 +14,14 @@ const RAICES_GENERADAS = [
 
 const archivosDe = (ruta) => {
   const absoluta = path.join(RAIZ, ruta);
+  if (statSync(absoluta).isFile()) return [absoluta];
   const entradas = readdirSync(absoluta, { withFileTypes: true, recursive: true });
-  return entradas.length ? entradas.filter((e) => e.isFile()).map((e) => path.join(e.parentPath, e.name)) : [];
+  return entradas.filter((e) => e.isFile()).map((e) => path.join(e.parentPath, e.name));
 };
 
 const huellaDeGenerados = () => {
   const hash = createHash('sha256');
-  const archivos = RAICES_GENERADAS.flatMap((ruta) =>
-    ruta.endsWith('.yaml') ? [path.join(RAIZ, ruta)] : archivosDe(ruta),
-  ).sort();
+  const archivos = RAICES_GENERADAS.flatMap(archivosDe).sort();
   for (const archivo of archivos) hash.update(archivo).update(readFileSync(archivo));
   return hash.digest('hex');
 };
