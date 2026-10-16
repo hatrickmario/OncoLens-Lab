@@ -11,6 +11,9 @@ x-healthcheck-defaults: &healthcheck-defaults
   retries: ${HEALTHCHECK_RETRIES:-12}
   start_period: ${HEALTHCHECK_START_PERIOD:-20s}
 
+# Vida máxima del JWT de servicio (US-054 AC-5): un solo valor para quien firma y quien valida (RN-22).
+x-service-jwt-ttl: &service-jwt-ttl ${SERVICE_JWT_TTL_SECONDS:-60}
+
 services:
   postgres:
     image: postgres:17.11-alpine
@@ -108,6 +111,7 @@ services:
       APP_ENV: ${APP_ENV:-local}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
       SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
+      SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
     secrets:
       - jwt_service_private.pem
       - identity_aes_key
@@ -152,6 +156,7 @@ services:
       FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
+      SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
     secrets:
       - jwt_service_public.pem
       - pg_rag_corpus_password
