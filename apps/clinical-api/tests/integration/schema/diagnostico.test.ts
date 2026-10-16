@@ -11,6 +11,8 @@ import {
 } from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
+// Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
+const ESPACIO_DE_IDS = 1;
 
 // Columnas y nulabilidad de docs/architecture/data-model.md §4.3 y §6 (ADR-21, DEC-05).
 const COLUMNAS_DIAGNOSIS = ['staging_system', 'stage_value', 'performance_scale', 'performance_value', 'histology', 'histology_code', 'grade', 'icd10_code', 'mapping_status'];
@@ -18,7 +20,7 @@ const GRADING_ANULABLES = ['specimen_type', 'grade_scope', 'gleason_primary_patt
 const GRADING_OBLIGATORIAS = ['id', 'diagnosis_id', 'grading_system', 'is_reference', 'entry_method', 'extraction_confidence', 'review_status', 'created_at'];
 
 async function diagnosticoSintetico(cliente: Parameters<Parameters<typeof conTransaccionRevertida>[1]>[0]) {
-  const ids = generadorDeIds();
+  const ids = generadorDeIds(ESPACIO_DE_IDS);
   const contexto = await insertarContextoClinico(cliente, ids);
   const diagnostico = await insertar(cliente, 'clinical.diagnosis', filaDeDiagnostico(ids, contexto.patientId, contexto.episodeId));
   return { ids, diagnosisId: diagnostico.id as string };

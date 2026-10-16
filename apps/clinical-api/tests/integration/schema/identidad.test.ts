@@ -4,6 +4,9 @@ import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support
 import { filaDeIdentidad, filaDePaciente, generadorDeIds, insertar, sqlInsertar } from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
+// Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
+const ESPACIO_DE_IDS = 4;
+const hmacCompartido = 'hmac-sintetico-compartido-identidad';
 
 describe('identity.patient_identity', () => {
   it.each([
@@ -11,11 +14,11 @@ describe('identity.patient_identity', () => {
     ['con país emisor nulo', null],
   ])('rechaza por el índice ciego único la segunda identidad con el mismo id_type, país y HMAC %s [US-038 AC-6]', async (_caso, pais) => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds();
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
       const primero = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
       const segundo = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: pais }));
-      const { sql, valores } = sqlInsertar('identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: pais }));
+      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: pais, national_id_hmac: hmacCompartido }));
+      const { sql, valores } = sqlInsertar('identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: pais, national_id_hmac: hmacCompartido }));
 
       const error = await esperarRechazo(cliente, sql, valores);
 
@@ -26,12 +29,12 @@ describe('identity.patient_identity', () => {
 
   it('admite la misma identidad en otro país porque la unicidad incluye issuing_country [US-038 AC-6]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds();
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
       const primero = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
       const segundo = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: 'CO' }));
+      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: 'CO', national_id_hmac: hmacCompartido }));
 
-      const otra = await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: 'PE' }));
+      const otra = await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: 'PE', national_id_hmac: hmacCompartido }));
 
       expect(otra.issuing_country).toBe('PE');
     });

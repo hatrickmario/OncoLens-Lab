@@ -4,11 +4,13 @@ import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support
 import { filaDeAnalisis, generadorDeIds, insertar, insertarContextoClinico } from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
+// Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
+const ESPACIO_DE_IDS = 2;
 
 describe('clinical.ai_analysis_record', () => {
   it('guarda top_relevance_score como NULL y no como 0.0 cuando el análisis no tiene evidencia [US-038 AC-4]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds();
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
       const sinEvidencia = filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId, {
         evidence_options: JSON.stringify([]),
@@ -28,7 +30,7 @@ describe('clinical.ai_analysis_record', () => {
 
   it('rechaza por el trigger y deja la fila intacta cuando se actualiza cualquier columna de un análisis [US-038 AC-4]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds();
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
       const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId));
 

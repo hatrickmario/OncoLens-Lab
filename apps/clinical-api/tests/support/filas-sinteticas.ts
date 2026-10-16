@@ -11,10 +11,15 @@ export const FECHA_FIJA = '2026-10-16';
 export type Fila = Record<string, unknown>;
 export type GeneradorDeIds = () => string;
 
-/** UUID con forma de v4 y contador: determinista, sin `uuid()` ni `Math.random()`. */
-export function generadorDeIds(): GeneradorDeIds {
+/**
+ * UUID con forma de v4, determinista (sin `uuid()` ni `Math.random()`). El `espacio` (un entero por archivo de test)
+ * ocupa el primer grupo: los archivos corren en paralelo sobre una sola base y no deben compartir PK ni valores únicos
+ * derivados de los ids (email, nombre de rol, HMAC), que bloquearían o harían interbloquear sus transacciones.
+ */
+export function generadorDeIds(espacio: number): GeneradorDeIds {
   let n = 0;
-  return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`;
+  const prefijo = espacio.toString(16).padStart(8, '0');
+  return () => `${prefijo}-0000-4000-8000-${String(++n).padStart(12, '0')}`;
 }
 
 export function sqlInsertar(tabla: string, fila: Fila): { sql: string; valores: unknown[] } {
@@ -31,9 +36,10 @@ export async function insertar(cliente: Client, tabla: string, fila: Fila): Prom
 }
 
 export function filaDeUsuario(ids: GeneradorDeIds, roleId: string, resto: Fila = {}): Fila {
+  const id = ids();
   return {
-    id: ids(),
-    email: 'doctor.sintetico@example.invalid',
+    id,
+    email: `doctor-${id}@example.invalid`,
     password_hash: 'hash-sintetico-no-real',
     full_name: 'Doctor Sintetico',
     role_id: roleId,
@@ -69,7 +75,7 @@ export function filaDeIdentidad(patientId: string, resto: Fila = {}): Fila {
     id_type: 'sintetico',
     issuing_country: null,
     national_id_ciphertext: Buffer.from('cifrado-sintetico-01'),
-    national_id_hmac: 'hmac-sintetico-0001',
+    national_id_hmac: `hmac-sintetico-${patientId}`,
     full_name_ciphertext: Buffer.from('nombre-cifrado-sintetico'),
     key_version: 1,
     ...resto,
@@ -167,7 +173,8 @@ export async function insertarContextoClinico(cliente: Client, ids: GeneradorDeI
   patientId: string;
   episodeId: string;
 }> {
-  const rol = await insertar(cliente, 'auth.role', { id: ids(), name: 'doctor', description: 'Rol sintético de prueba' });
+  const rolId = ids();
+  const rol = await insertar(cliente, 'auth.role', { id: rolId, name: `rol-${rolId}`, description: 'Rol sintético de prueba' });
   const usuario = await insertar(cliente, 'auth."user"', filaDeUsuario(ids, rol.id as string));
   const paciente = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
   const episodio = await insertar(cliente, 'clinical.care_episode', filaDeEpisodio(ids, paciente.id as string, usuario.id as string));

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { leerConfiguracionArnes } from '../support/db.js';
+import { generadorDeIds } from '../support/filas-sinteticas.js';
 import {
   ErrorArnes,
   validarNombreBaseDeTest,
@@ -98,5 +99,19 @@ describe('leerConfiguracionArnes', () => {
 
     expect(config.prefijo).toBe('oltest_');
     expect(config.baseClinica).toBe('oncolens');
+  });
+});
+
+describe('generadorDeIds', () => {
+  it('no comparte ids cuando los espacios son distintos', () => {
+    const a = generadorDeIds(1);
+    const b = generadorDeIds(2);
+    const ids = [a(), a(), a(), b(), b(), b()];
+
+    expect(new Set(ids).size).toBe(6);
+  });
+
+  it('repite la misma secuencia cuando el espacio es el mismo (determinismo)', () => {
+    expect([generadorDeIds(3)(), generadorDeIds(3)()]).toEqual([generadorDeIds(3)(), generadorDeIds(3)()]);
   });
 });

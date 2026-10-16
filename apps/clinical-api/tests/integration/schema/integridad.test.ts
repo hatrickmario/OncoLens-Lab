@@ -3,11 +3,13 @@ import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support
 import { filaDeDiagnostico, generadorDeIds, insertar, insertarContextoClinico } from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
+// Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
+const ESPACIO_DE_IDS = 3;
 
 describe('Integridad referencial del schema clinical', () => {
   it('falla por la FK y conserva paciente y diagnóstico cuando se borra un paciente con diagnóstico [US-038 AC-5]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds();
+      const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
       await insertar(cliente, 'clinical.diagnosis', filaDeDiagnostico(ids, contexto.patientId, contexto.episodeId));
 
