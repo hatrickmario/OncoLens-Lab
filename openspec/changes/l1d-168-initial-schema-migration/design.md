@@ -113,6 +113,17 @@ El test de AC-1 compara el catálogo con una **lista literal** de las 29 tablas 
 `data-model.md` §1 escrita en el test (la higiene de tests prohíbe derivar el esperado del propio
 código). Si el modelo cambia, cambia en su change y el test se actualiza en ese mismo change.
 
+## Decisión posterior: ai_analysis_record anulable por estado y tipo (Gate 2, aprobada por el humano)
+
+Los metadatos de modelo (`llm_provider`, `llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`)
+y de recuperación (`corpus_release`, `retrieval_params`) de `clinical.ai_analysis_record` son anulables y los `CHECK`
+nombrados de `data-model.md` §4.3 fijan cuándo: `tipo_no_habilitado`, `resumen_caso`, `con_evidencia`, coherencia de
+`top_relevance_score` (RN-02) y `evidence_options = '[]'` fuera de `con_evidencia`. También se relajan, por sentido clínico,
+`diagnosis` (estadio y desempeño), `care_episode.closure_reason/closed_by` (con `care_episode_cierre_ck`) y `patient`
+(`source_dataset`, `agreement_reference`). `clinical.analysis_follow_up` comparte el *trigger* de inmutabilidad.
+**Se modifica `init_full_schema` y no se añade otra migración** porque la inicial aún no está desplegada en ningún entorno
+(solo bases de test efímeras): el historial no pierde información y evita una migración de corrección en el mismo sprint.
+
 ## Privacidad y ownership
 
 - **Fronteras:** este change no mueve datos entre servicios. Solo `clinical-api` (dueño de

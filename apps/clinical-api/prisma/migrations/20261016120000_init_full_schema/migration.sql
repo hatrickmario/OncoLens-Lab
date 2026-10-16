@@ -504,15 +504,15 @@ CREATE TABLE "clinical"."ai_analysis_record" (
     "context_fingerprint" TEXT NOT NULL,
     "rerun_of_analysis_id" UUID,
     "data_classification" TEXT NOT NULL,
-    "llm_provider" TEXT NOT NULL,
-    "llm_model" TEXT NOT NULL,
-    "embedding_model" TEXT NOT NULL,
-    "reranker_model" TEXT NOT NULL,
-    "nli_model" TEXT NOT NULL,
-    "prompt_version" TEXT NOT NULL,
-    "corpus_release" TEXT NOT NULL,
+    "llm_provider" TEXT,
+    "llm_model" TEXT,
+    "embedding_model" TEXT,
+    "reranker_model" TEXT,
+    "nli_model" TEXT,
+    "prompt_version" TEXT,
+    "corpus_release" TEXT,
     "catalog_version" TEXT NOT NULL,
-    "retrieval_params" JSONB NOT NULL,
+    "retrieval_params" JSONB,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
 
     CONSTRAINT "ai_analysis_record_pkey" PRIMARY KEY ("id")
@@ -958,14 +958,47 @@ CREATE UNIQUE INDEX care_team_member_active_uq ON clinical.care_team_member (pat
 CREATE UNIQUE INDEX care_team_member_primary_uq ON clinical.care_team_member (patient_id) WHERE is_active AND is_primary;
 CREATE UNIQUE INDEX care_episode_open_uq ON clinical.care_episode (patient_id) WHERE closed_at IS NULL;
 
--- §4.3 / RN-06: clinical.ai_analysis_record es inmutable; ningún UPDATE, de ninguna columna, pasa.
-CREATE FUNCTION clinical.ai_analysis_record_inmutable() RETURNS trigger
+-- §4.3, §7 / RN-06: clinical.ai_analysis_record y clinical.analysis_follow_up son inmutables; ningún UPDATE, de
+-- ninguna columna, pasa. Una sola función para ambas tablas.
+CREATE FUNCTION clinical.rechazar_actualizacion() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  RAISE EXCEPTION 'ai_analysis_record es inmutable (RN-06)' USING ERRCODE = 'restrict_violation';
+  RAISE EXCEPTION '% es inmutable (RN-06)', TG_TABLE_NAME USING ERRCODE = 'restrict_violation';
 END;
 $$;
 
 CREATE TRIGGER ai_analysis_record_inmutable
   BEFORE UPDATE ON clinical.ai_analysis_record
-  FOR EACH ROW EXECUTE FUNCTION clinical.ai_analysis_record_inmutable();
+  FOR EACH ROW EXECUTE FUNCTION clinical.rechazar_actualizacion();
+
+CREATE TRIGGER analysis_follow_up_inmutable
+  BEFORE UPDATE ON clinical.analysis_follow_up
+  FOR EACH ROW EXECUTE FUNCTION clinical.rechazar_actualizacion();
+
+-- §4.3 (US-038, reglas por estado y tipo): las columnas de modelos y recuperación se anulan según el estado o el tipo.
+ALTER TABLE clinical.ai_analysis_record
+  -- tipo_no_habilitado: no se invocó ningún modelo.
+  ADD CONSTRAINT ai_analysis_record_tipo_no_habilitado_ck CHECK (
+    status <> 'tipo_no_habilitado' OR (
+      llm_provider IS NULL AND llm_model IS NULL AND nli_model IS NULL
+      AND embedding_model IS NULL AND reranker_model IS NULL)),
+  -- resumen_caso: no recupera del corpus, así que no hay modelos de recuperación ni puntaje.
+  ADD CONSTRAINT ai_analysis_record_resumen_caso_ck CHECK (
+    analysis_type <> 'resumen_caso' OR (
+      embedding_model IS NULL AND reranker_model IS NULL AND corpus_release IS NULL
+      AND retrieval_params IS NULL AND top_relevance_score IS NULL)),
+  -- con_evidencia: LLM y NLI siempre; los modelos de recuperación en el análisis de evidencia.
+  ADD CONSTRAINT ai_analysis_record_con_evidencia_ck CHECK (
+    status <> 'con_evidencia' OR (
+      llm_provider IS NOT NULL AND llm_model IS NOT NULL AND nli_model IS NOT NULL
+      AND (analysis_type = 'resumen_caso' OR (embedding_model IS NOT NULL AND reranker_model IS NOT NULL)))),
+  -- RN-02: sin evidencia o tipo no habilitado <=> top_relevance_score NULL (null no es 0.0), en el análisis de evidencia.
+  ADD CONSTRAINT ai_analysis_record_puntaje_estado_ck CHECK (
+    analysis_type <> 'analisis_evidencia'
+    OR ((status IN ('sin_evidencia', 'tipo_no_habilitado')) = (top_relevance_score IS NULL))),
+  ADD CONSTRAINT ai_analysis_record_puntaje_rango_ck CHECK (top_relevance_score IS NULL OR top_relevance_score BETWEEN 0 AND 1),
+  ADD CONSTRAINT ai_analysis_record_opciones_ck CHECK (status = 'con_evidencia' OR evidence_options = '[]'::jsonb);
+
+-- §4.3: un episodio tiene responsable de cierre si y solo si está cerrado.
+ALTER TABLE clinical.care_episode
+  ADD CONSTRAINT care_episode_cierre_ck CHECK ((closed_at IS NULL) = (closed_by IS NULL));
