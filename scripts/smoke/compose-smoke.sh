@@ -97,29 +97,30 @@ bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".
 consulta='let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const r=await fetch("http://rag-orchestrator:8000/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
+# Consulta /rag/query desde clinical-api con el cuerpo de stdin: imprime "<status> <cuerpo>".
+consultar_rag() { en_node clinical-api "$consulta"; }
+
+# Éxito si "<status> <cuerpo>" es 200 y el cuerpo es idéntico al ejemplo de contracts/examples/.
+es_respuesta_200_igual_a() {
+  node -e "
+const [estado, ...resto] = process.argv[1].split(' ');
+require('assert').strictEqual(estado, '200');
+require('assert').deepStrictEqual(JSON.parse(resto.join(' ')), require('$raiz/contracts/examples/' + process.argv[2]));
+" "$1" "$2"
+}
+
 pares="$(node -e "
 const i=require('$raiz/contracts/examples/index.json').examples;
 for (const e of i.filter(e=>e.target==='#/components/schemas/RagQueryInternalResponse')) console.log(e.request+' '+e.file);
 ")"
 while read -r peticion respuesta; do
-  salida="$(en_node clinical-api "$consulta" <"$raiz/contracts/examples/$peticion")"
-  node -e "
-const [estado, ...resto] = process.argv[1].split(' ');
-const obtenido = JSON.parse(resto.join(' '));
-const esperado = require('$raiz/contracts/examples/$respuesta');
-require('assert').strictEqual(estado, '200');
-require('assert').deepStrictEqual(obtenido, esperado);
-" "$salida" || fallo "AC-6: $peticion no devolvió $respuesta"
+  salida="$(consultar_rag <"$raiz/contracts/examples/$peticion")"
+  es_respuesta_200_igual_a "$salida" "$respuesta" || fallo "AC-6: $peticion no devolvió $respuesta"
   bien "AC-6 $peticion devuelve $respuesta"
 done <<< "$pares"
 ajena="$(node -e "const b=require('$raiz/contracts/examples/rag-query-request.json');b.query='Pregunta que no es de fixture';console.log(JSON.stringify(b))")"
-salida="$(printf '%s' "$ajena" | en_node clinical-api "$consulta")"
-node -e "
-const [estado, ...resto] = process.argv[1].split(' ');
-const obtenido = JSON.parse(resto.join(' '));
-require('assert').strictEqual(estado, '200');
-require('assert').deepStrictEqual(obtenido, require('$raiz/contracts/examples/rag-query-sin-evidencia.json'));
-" "$salida" || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
+salida="$(printf '%s' "$ajena" | consultar_rag)"
+es_respuesta_200_igual_a "$salida" rag-query-sin-evidencia.json || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
 bien "AC-6 una pregunta que no es de fixture devuelve sin evidencia"
 
 # ---------- fase 3: LLM nativo caído ----------
