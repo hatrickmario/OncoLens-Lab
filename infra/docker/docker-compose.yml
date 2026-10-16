@@ -234,7 +234,11 @@ services:
       context: ../..
       dockerfile: apps/web/Dockerfile
     environment:
-      CLINICAL_API_BASE_URL: http://clinical-api:3000
+      CLINICAL_API_URL: http://clinical-api:3000
+      # Único origen aceptado en POST que mutan (SEG-01); por defecto el mismo que publica el puerto de web.
+      WEB_ALLOWED_ORIGIN: ${WEB_ALLOWED_ORIGIN:-http://127.0.0.1:3000}
+      # Mayor que el deadline de clinical-api hacia rag-orchestrator (RN-22).
+      WEB_UPSTREAM_TIMEOUT_MS: ${WEB_UPSTREAM_TIMEOUT_MS:-40000}
     # Único puerto publicado del stack (SEG-09); en el S1 solo en la máquina local.
     ports:
       - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"

@@ -1,6 +1,6 @@
 import 'server-only';
-import { createEvidenceAnalysis } from '../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import type { EvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { createEvidenceAnalysis } from '../../../../packages/api-contracts/src/client-web/clinical-api';
+import type { EvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import type { ConfigWeb } from './config';
 import {
   cabecerasHaciaNavegador,

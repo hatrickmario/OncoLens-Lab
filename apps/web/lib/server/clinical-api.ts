@@ -1,5 +1,5 @@
 import 'server-only';
-import { createClient, type Client } from '../../../../packages/api-contracts/src/client/clinical-api/client/index.js';
+import { createClient, type Client } from '../../../../packages/api-contracts/src/client-web/clinical-api/client';
 import type { ConfigWeb } from './config';
 
 export const NOMBRE_COOKIE_DE_SESION = 'oncolens_session';
