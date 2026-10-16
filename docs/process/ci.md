@@ -13,7 +13,7 @@ coincide).
 
 | Job | Qué hace | Comandos |
 |---|---|---|
-| `build-test` | Build y tests de `web` y `clinical-api`, `vitest` raíz (scripts, `infra/`, fixtures de la CI), Pytest de `rag-orchestrator` (con Node ya instalado: el *helper* de L1D-164 empaqueta el spec con `scripts/contracts/bundle-json.mjs`), `test:secrets` | `npm run build --workspaces --if-present`, `npm test --workspaces --if-present`, `npx vitest run`, `python -m pytest` |
+| `build-test` | Build y tests de `web` y `clinical-api`, `vitest` raíz (scripts, `infra/`, fixtures de la CI), Pytest de `rag-orchestrator` (con Node ya instalado: el *helper* de L1D-164 empaqueta el spec con `scripts/contracts/bundle-json.mjs`), `test:secrets` | `npm run build --workspaces --if-present`, `npm run test:build --workspace apps/web` (US-060 AC-5: la URL interna no aparece en `.next/static`; `web` lo excluye de `npm test`), `npm test --workspaces --if-present`, `npx vitest run`, `python -m pytest` |
 | `contracts` | Validación de los specs, código generado al día, cambios incompatibles contra la base del PR | `npm run contracts:check`, `npm run contracts:generate:check`, `scripts/ci/contracts-breaking.sh "$BASE_REF"` |
 | `secret-scan` | gitleaks sobre el árbol y sobre los commits del PR (un secreto añadido y borrado en el mismo PR también falla), siempre con `--redact` | `scripts/ci/secret-scan.sh "$BASE_REF"` |
 | `data-scan` | PII en **todo** `git ls-files` y clase de datos de los datasets de evaluación | `node scripts/ci/pii-scan.mjs`, `node scripts/ci/dataset-class-check.mjs` |
