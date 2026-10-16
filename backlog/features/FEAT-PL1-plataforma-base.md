@@ -59,7 +59,7 @@ Redes según readme §2.4: `clinical-net` (web, clinical-api, postgres, clinical
 postgres). Healthchecks de Compose usan `/health`. AC-2 y AC-5 son tests sobre la salida
 de `docker compose config` (CI, sin levantar el stack); AC-1, AC-3 y AC-4 son un smoke
 test de Compose (script en `scripts/smoke/`) que corre en local y en la CI con
-`LLM_PROVIDER=fake` (AC-6), que también usan los E2E de Playwright y la CI de US-036. El presupuesto de memoria (≤ 24 GB) lo mide ADR-39.
+`LLM_PROVIDER=fake` (AC-6), que también usan los E2E de Playwright y la CI de US-036. El presupuesto de memoria (≤ ~30 GB; 24 GB hasta el 2026-10-20) lo mide ADR-39.
 
 ## Non-goals
 HTTPS con CA interna y acceso por VPN (S5, FEAT-T4d). Prometheus, Grafana y OTel

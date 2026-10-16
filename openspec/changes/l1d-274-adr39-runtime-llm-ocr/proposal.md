@@ -2,7 +2,7 @@
 
 ## Trazabilidad
 
-L1D-274 · US-224 · ADR-39 fase B · FEAT-06a (L1D-16) · Sprint 1 (cierre) · Estimación **3** · Historia de ADR ·
+L1D-274 · US-224 · ADR-39 fase B · FEAT-06a (L1D-16) · Sprint 1 (cierre) · Estimación **5** (re-estimada el 2026-10-20) · Historia de ADR ·
 IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · G-3, G-5, G-6 · RN-12, RN-13, RN-14, RN-21, RN-22 ·
 readme §1.4 · US-224 AC-1…AC-6 (ex US-012 AC-6, AC-7, AC-8 y las partes OCR de AC-1 y p95 de AC-2) ·
 `[S1 resp. 3, 5, 6, 10]` · Fuente: `backlog/features/FEAT-06a-analisis-walking-skeleton.md` §US-224;
@@ -14,7 +14,7 @@ TBD-01 (runtime y modelos locales) es la decisión crítica del S1. La fase A (c
 US-012) fija lo que obliga a reindexar (*embeddings*, *reranker*, NLI). Falta fijar, **con cifras
 medidas sobre el pipeline ya construido**, el runtime nativo del LLM, el LLM, el motor OCR y el p95
 extremo a extremo de `POST /platform/evidence-analyses`. Sin esto el walking skeleton no puede
-afirmar que cumple NFR-01 (p95 ≤ 15 s) dentro de NFR-05 (≤ 24 GB), el baseline técnico
+afirmar que cumple NFR-01 (p95 ≤ 15 s) dentro de NFR-05 (stack ≤ ~30 GB; antes 24 GB, Decidido (usuario, 2026-10-20)), el baseline técnico
 (US-072/US-073) no tiene modelos fijados, ADR-41 no tiene juez local, ADR-42 no tiene p95, y la
 extracción de FEAT-01b (S2) no tiene motor OCR elegido.
 
@@ -26,14 +26,20 @@ Decisiones ya tomadas que este change **no reabre** (se citan):
 - **Medición del refinamiento** (Decidido, usuario, 2026-10-13, `[S1 resp. 10]`, Ollama 0.34.4):
   `gemma4:26b-a4b-it-qat` = **15 GB residentes, 100 % GPU, ~79 tok/s** (~10 s para 800 tokens) y
   JSON con esquema correcto en **una** prueba. `gemma4:26b-mlx` se descartó (18 GB solo en pesos)
-  porque el usuario fijó un presupuesto de **~16 GB para el LLM**; el resto del stack debe caber en
-  los ~8–9 GB restantes.
+  porque el usuario fijó entonces un presupuesto de **~16 GB para el LLM** (con el stack en 24 GB).
+  **Superado (Decidido, usuario, 2026-10-20):** el tope máximo del LLM local pasa a **21 GB** y el del
+  stack total a **~30 GB** (equipo de referencia MacBook Pro M5 de 32 GB); la medición de 15 GB de A
+  sigue siendo el punto de partida.
+- **Candidatos ampliados** (Decidido, usuario, 2026-10-20): además de A, B y C se miden **H** Qwen 3.6 27B Q4_K_M (`qwen3.6:27b-q4_K_M`, 17 GB), **I** Qwen 3.5 27B Q4_K_M (`qwen3.5:27b-q4_K_M`, 17 GB), **J** Qwen 3.5 27B INT4 (`qwen3.5:27b-int4`, 16 GB), **E** y **F** MedGemma 1.5 4B en Q8_0 y BF16 (`medgemma1.5:4b-it-q8_0`, `…-bf16`; licencia
+  HAI-DEF, condicionada a la aceptación del usuario) y **G** Gemma 4 26B-A4B Q4_K_M
+  (`gemma4:26b-a4b-it-q4_K_M`, 18 GB). **D** Qwen 3.6 35B-A3B Q4_K_M (`qwen3.6:35b-a3b-q4_K_M`, 24 GB publicados, por encima del tope de 21 GB) queda **descartado sin medición** (Decidido, usuario, 2026-10-20). Tags, tamaños y licencias verificados en la fuente el 2026-10-20
+  (tabla en design.md D3); las reglas de decisión se fijan antes de medir (design.md D3).
 - **Respaldos medidos con el mismo protocolo** `[S1 resp. 5]`: B Gemma 4 12B (`gemma4:12b-mlx`, ya
   descargado) y C Qwen3.5-9B sin *thinking* (`qwen3.5:9b-mlx`, descargado); vllm-metal como runtime
   alternativo; PaddleOCR (PP-OCRv5 latino) y docTR como OCR alternativos.
 - **Supuesto reemplazado** (Decidido, usuario, 2026-10-13, `[S1 resp. 5]`): "en el S1 solo
   candidatos de 7–8B" pasa a "hasta 26B MoE o 12B denso, siempre que el stack completo quepa en
-  24 GB".
+  24 GB" (el 2026-10-20 el tope del stack sube a ~30 GB y el del LLM a 21 GB, ver abajo).
 - **Descartados por licencia**: Surya (GPL-3.0 + OpenRAIL-M con umbral comercial). **No se reabre**:
   nube para datos reales (RN-12); vision-LLM directo para OCR (readme §1.4).
 - Supuestos "(asumido)" de los AC aceptados en bloque `[S1 resp. 3]`; la partida US-012 → fase A +
@@ -58,6 +64,10 @@ Decisiones ya tomadas que este change **no reabre** (se citan):
   comprueba que no quedan archivos tras la extracción; el adapter usa un `TemporaryDirectory` por
   request con limpieza en `finally`, y el ADR fija como consecuencia para el adapter OCR de
   FEAT-01b ese directorio por request y el test de no-residuos también con fallo y con timeout.
+- **Protocolo ampliado** (2026-10-20): la memoria se mide con `ollama ps` y contexto de trabajo
+  (`num_ctx=8192`, tras el prompt más largo), con admisión previa por memoria, calidad en español, JSON
+  válido ≥ 99 %, p95 de extracción ≤ 60 s y holgura (swap y `memory_pressure`); un candidato que no
+  quepa en 21 GB medidos se descarta con su cifra (design.md D1, D3).
 - **Fija en configuración** (RN-22) el runtime, modelo, versión y parámetros elegidos (`LLM_BASE_URL`,
   `LLM_MODEL`, `LLM_NUM_CTX`, y equivalentes del adapter OCR), en `.env.example` y el módulo de
   configuración de `rag-orchestrator`, nunca en el código (AC-4).

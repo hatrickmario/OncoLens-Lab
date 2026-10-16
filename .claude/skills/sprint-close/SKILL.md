@@ -44,6 +44,9 @@ archivar. Si dos deltas modifican el mismo requisito (p. ej., A y C sobre "Orige
 Lanza `traceability-auditor` (nivel 1) con el sprint, el plan, el status y la lista de changes
 archivados. Devuelve: `backlog/03-trazabilidad.md` regenerado, `backlog/sprints/$sprint-trazabilidad.md`,
 huecos priorizados ("AC-04.3 sin escenario", "RN-26 sin test") y estados actualizados en Linear.
+**`Done` solo se pone aquí** y solo si la historia cumple sus requisitos (AC con test en verde, Gate 2 en
+verde, PR mergeado, change archivado). Si no cumple, queda en **In Progress** (hay bug o trabajo sin
+terminar) o **In Review** (a la espera de verificación) con un comentario del hueco.
 Los huecos Bloqueantes se convierten en historias para el siguiente sprint (propuesta, no creación).
 
 ## 5. Review (demo) y retrospectiva

@@ -161,3 +161,61 @@ La rama `main` MUST exigir PR y el *status check* `ci-ok` en verde antes de merg
 - **GIVEN** una respuesta de la API de GitHub, servida desde un archivo de fixture, en la que `main` no exige `ci-ok`
 - **WHEN** se ejecuta `check-branch-protection.sh` con esa respuesta
 - **THEN** termina con código distinto de 0 y nombra `ci-ok` como check requerido ausente
+
+### Requirement: Las exenciones de los escáneres son declarativas, tienen motivo y no ocultan el caso original
+Los formatos de `config/pii-formats.json` MUST tener un `patron` neutro; sus exenciones (`prefijosExentos`, `contextosExentos`, `dominiosExentos`, `correosExentos`) MUST aplicarse solo en `scripts/lib/formatosPii.mjs`, que comparten el escáner de PII y `assertExamplesSynthetic`. Cada exención MUST tener un test de que el caso original se sigue detectando. El `.gitleaks.toml` MUST acotar cada entrada de su allowlist por ruta exacta, regla y forma del valor.
+
+#### Scenario: Un número con el prefijo centinela no es hallazgo pero el mismo número sin prefijo sí [US-036 AC-4] [RN-14]
+- **GIVEN** una línea con `"nationalId": "SINT-<dígitos>"` y otra con el mismo número sin prefijo tras `documento`
+- **WHEN** se ejecuta `scripts/ci/pii-scan.mjs`
+- **THEN** solo se informa la segunda con `ruta:línea: documento_identidad`
+
+#### Scenario: Una coincidencia dentro de una URL no es hallazgo pero fuera de una URL sí [US-036 AC-4] [RN-14]
+- **GIVEN** `https://corpus.oncolens.test/documentos/CDR<dígitos>` y, en otra línea, `documentos/CDR<dígitos>` fuera de una URL
+- **WHEN** se ejecuta `scripts/ci/pii-scan.mjs`
+- **THEN** solo se informa la segunda
+
+#### Scenario: El buzón institucional exento no exime a otros buzones de su dominio [US-036 AC-4] [RN-14]
+- **GIVEN** `correosExentos` con el buzón de consultas de la CIE de la OMS y un correo de otra persona en el mismo dominio
+- **WHEN** se ejecuta `scripts/ci/pii-scan.mjs`
+- **THEN** solo se informa el segundo
+
+### Requirement: Las siglas de documento de identidad se detectan con límite de palabra
+`config/pii-formats.json` MUST incluir como palabras clave de `documento_identidad` las siglas `CC`, `C.C.`, `TI`, `T.I.`, `CE`, `C.E.`, `NUIP`, `ID` y `HC` y las expresiones `tarjeta de identidad` e `historia clínica`. Las de hasta cuatro caracteres MUST exigir límite de palabra y no casar tras `_`.
+
+#### Scenario: Cada sigla precede a un documento detectado [US-036 AC-4] [RN-14]
+- **GIVEN** líneas como `CC <dígitos>`, `C.C. <dígitos con puntos>`, `ID: <dígitos>`, `TI <dígitos>` y `tarjeta de identidad <dígitos>`
+- **WHEN** se ejecuta `scripts/ci/pii-scan.mjs`
+- **THEN** cada línea se informa como `documento_identidad`, y `nct_id: NCT<dígitos>` no
+
+### Requirement: La clase de datos no admite exenciones por extensión
+`scripts/ci/dataset-class-check.mjs` MUST exigir la clase `sintetico` a todo archivo bajo las raíces de evaluación, sea cual sea su extensión. La búsqueda del manifiesto MUST detenerse en la raíz configurada y, si el manifiesto más cercano declara otra clase, MUST fallar sin consultar la cabecera del archivo.
+
+#### Scenario: Un archivo de documentación sin manifiesto falla [US-036 AC-5] [RN-13]
+- **GIVEN** `data/eval/p/README.md` sin manifiesto en su directorio ni en sus ancestros hasta la raíz
+- **WHEN** se ejecuta `scripts/ci/dataset-class-check.mjs`
+- **THEN** termina con código distinto de 0 nombrando la ruta
+
+### Requirement: Un caso de PR pendiente no puede quedar pendiente tras archivar su dependencia
+En `ci/tests/cases/<caso>/case.json`, `pendiente` MUST ser `{ motivo, hastaQueSeArchive: [changes] }`; `ci/tests/run-cases.sh` MUST contar como FALLA un caso pendiente cuando alguno de esos changes esté en `openspec/changes/archive/`, y con `--estricto` MUST fallar mientras exista algún caso pendiente.
+
+#### Scenario: Con la dependencia archivada el caso pendiente falla [US-036 AC-2]
+- **GIVEN** un caso con `pendiente.hastaQueSeArchive: ["l1d-999-consumidor"]` y `openspec/changes/archive/<fecha>-l1d-999-consumidor/`
+- **WHEN** se ejecuta `ci/tests/run-cases.sh`
+- **THEN** el caso se informa como FALLA y el código de salida es 1
+
+### Requirement: contracts-breaking compara todos los proveedores sin repetir su lista
+`scripts/ci/contracts-breaking.sh` MUST obtener los proveedores de `PROVIDERS` (`scripts/contracts/lib/specs.mjs`) y MUST imprimir `<proveedor>: comparado` por cada uno.
+
+#### Scenario: Cada proveedor aparece como comparado [US-036 AC-2]
+- **GIVEN** la base `HEAD`
+- **WHEN** se ejecuta `scripts/ci/contracts-breaking.sh HEAD`
+- **THEN** la salida contiene `<proveedor>: comparado` para cada elemento de `PROVIDERS`
+
+### Requirement: Los checkouts de la CI no persisten credenciales
+Todo paso `actions/checkout` de los workflows MUST declarar `persist-credentials: false`.
+
+#### Scenario: El test estático detecta un checkout sin persist-credentials [US-036 AC-1]
+- **GIVEN** `ci.yml` y `ci-selftest.yml` parseados por `ci/tests/workflow.test.mjs`
+- **WHEN** se revisan los pasos `actions/checkout`
+- **THEN** cada uno tiene `with.persist-credentials: false`; si falta, el test falla

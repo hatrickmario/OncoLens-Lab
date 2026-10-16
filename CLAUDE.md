@@ -79,7 +79,7 @@ cd apps/web && npm install && npm run dev
 oncolens preflight real-data                              # gate G-piloto, antes de habilitar datos reales
 ```
 
-Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales al inicio del Sprint 1. Restricciones duras: stack ≤ 24 GB, `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S5), extracción p95 ≤ 60 s, JSON válido ≥ 99%, licencia académica, buen español. Decidir primero los *embeddings*: cambiarlos obliga a reindexar.
+Runtime y modelos **sin decidir** (TBD-01): los fija el ADR de modelos locales al inicio del Sprint 1. Restricciones duras: stack ≤ ~30 GB sin swap con el LLM local ≤ 21 GB (equipo de referencia MacBook Pro M5 de 32 GB; decisión del usuario, 2026-10-20, PRD E-12), `/platform/evidence-analyses` p95 ≤ 15 s (se recalibra en el S5), extracción p95 ≤ 60 s, JSON válido ≥ 99%, licencia académica, buen español. Decidir primero los *embeddings*: cambiarlos obliga a reindexar.
 
 ### Tests
 

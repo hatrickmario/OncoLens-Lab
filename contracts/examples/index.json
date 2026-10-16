@@ -143,6 +143,11 @@
       "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers/post/responses/422"
     },
     {
+      "file": "evidence-analysis-request.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/requestBody"
+    },
+    {
       "file": "follow-up-create.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/requestBody"
@@ -156,6 +161,16 @@
       "file": "follow-up-turn.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/FollowUpTurn"
+    },
+    {
+      "file": "health-ok.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/HealthStatus"
+    },
+    {
+      "file": "health-ok.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/HealthStatus"
     },
     {
       "file": "login-request.json",
@@ -210,6 +225,11 @@
       "request": "rag-follow-up-request.json"
     },
     {
+      "file": "rag-health-llm-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1health/get/responses/503"
+    },
+    {
       "file": "rag-llm-local-no-disponible.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1follow-up/post/responses/503"
@@ -221,6 +241,11 @@
       "request": "rag-query-request.json"
     },
     {
+      "file": "rag-query-request-sin-evidencia.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
       "file": "rag-query-request.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalRequest"
@@ -229,7 +254,7 @@
       "file": "rag-query-sin-evidencia.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalResponse",
-      "request": "rag-query-request.json"
+      "request": "rag-query-request-sin-evidencia.json"
     },
     {
       "file": "rag-query-tipo-no-habilitado-422.json",

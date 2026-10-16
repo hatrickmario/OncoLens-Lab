@@ -1,0 +1,49 @@
+/**
+ * Una sola definición de "marcado `sintetico`" para los dos escáneres (design.md D5, Open Questions):
+ * `clase: sintetico` (vocabulario de data_origin y de los manifiestos de L1D-102 y L1D-274) o la marca literal
+ * `sintetico: true` de AC-4; `esMarcaSintetica` es la única definición y la usan los manifiestos y la allowlist de PII. Módulo puro: la E/S llega por funciones inyectadas.
+ */
+import path from 'node:path';
+import YAML from 'yaml';
+
+const NOMBRES_DE_MANIFIESTO = ['manifest.json', 'manifest.yaml', 'manifest.yml'];
+const CABECERA = /(?:^|[\s{,#"'])(?:clase["']?\s*[:=]\s*["']?sintetico\b|["']?sintetico["']?\s*[:=]\s*true\b)/;
+const TAMANO_CABECERA = 2048;
+
+/** ¿El objeto (manifiesto o entrada de allowlist) lleva la marca de datos sintéticos, en cualquiera de sus dos formas? */
+export const esMarcaSintetica = (objeto) => objeto?.clase === 'sintetico' || objeto?.sintetico === true;
+
+/**
+ * El manifiesto más cercano a `ruta`: sube por los directorios hasta `raiz` (inclusive) y no más arriba.
+ * @param {string} ruta archivo, relativo a la raíz
+ * @param {(ruta: string) => string | null} leerArchivo devuelve el contenido o `null` si no existe
+ * @param {string} raiz directorio raíz configurado del dataset (p. ej. `data/eval/`): la subida se corta ahí
+ * @returns {{ ruta: string, contenido: string } | null}
+ */
+export function manifiestoMasCercano(ruta, leerArchivo, raiz = '') {
+  const tope = raiz.replace(/\/$/, '') || '.';
+  let directorio = path.posix.dirname(ruta);
+  for (;;) {
+    for (const nombre of NOMBRES_DE_MANIFIESTO) {
+      const candidata = directorio === '.' ? nombre : `${directorio}/${nombre}`;
+      const contenido = leerArchivo(candidata);
+      if (contenido !== null) return { ruta: candidata, contenido };
+    }
+    if (directorio === tope || directorio === '.' || directorio === '/') return null;
+    directorio = path.posix.dirname(directorio);
+  }
+}
+
+/** ¿El manifiesto (JSON o YAML) declara la clase de datos `sintetico`? Un manifiesto ilegible no la declara. */
+export function declaraClaseSintetico(manifiesto) {
+  try {
+    return esMarcaSintetica(YAML.parse(manifiesto.contenido));
+  } catch {
+    return false;
+  }
+}
+
+/** ¿La cabecera del propio archivo (primeros bytes) declara la clase `sintetico`? */
+export function declaraClaseEnCabecera(texto) {
+  return CABECERA.test(texto.slice(0, TAMANO_CABECERA));
+}

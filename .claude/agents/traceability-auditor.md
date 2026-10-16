@@ -39,8 +39,11 @@ citados → PR mergeado `[L1D-nn]`.
    nueva `Spec (openspec)` y `Test` por requisito, y la fecha y sprint de generación.
 2. **`backlog/sprints/S<n>-trazabilidad.md`**: resumen del sprint, cobertura por familia, huecos
    con dueño y propuesta (historia nueva, AC a añadir, test a escribir).
-3. **Linear:** para cada historia con cadena completa, estado `Done` y un comentario con el change
-   archivado, el PR y los tests. Historias con huecos: dejarlas en su estado y comentar el hueco.
+3. **Linear:** `Done` solo se pone aquí. Para cada historia con cadena completa (AC con test en verde,
+   Gate 2 en verde, PR mergeado, change archivado), estado `Done` y un comentario con el change
+   archivado, el PR y los tests. Historias con huecos o bugs abiertos: no las pases a `Done`; déjalas en
+   `In Progress` (si hay bug o trabajo sin terminar) o `In Review` (si solo falta verificación) y
+   comenta el hueco. La Feature padre pasa a `Done` solo si todas sus historias del sprint lo están.
    Solo actualizas estado y comentas: **no creas, no borras, no cambias estimación ni milestone.**
    Nada de datos reales ni secretos en Linear (RN-14). Texto con saltos de línea reales.
 

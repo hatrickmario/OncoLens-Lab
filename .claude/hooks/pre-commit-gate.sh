@@ -21,9 +21,11 @@ fi
 if printf '%s' "$ADDED" | grep -nEi '\b(C\.?C\.?|T\.?I\.?|c[eé]dula|documento)[[:space:]]*(n[o°º]\.?)?[[:space:]]*[:#]?[[:space:]]*[0-9]{6,10}\b' >/dev/null; then
   echo "OncoLens · posible documento de identidad en el commit (RN-13, RN-14). Usa identificadores sintéticos." >&2; FAIL=1
 fi
-if printf '%s' "$ADDED" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
-   | grep -viE '@(example\.(com|org|net)|oncolens\.test|test\.local|anthropic\.com|users\.noreply\.github\.com)$' >/dev/null; then
-  echo "OncoLens · email fuera de dominios de prueba en el commit. Usa @example.com u @oncolens.test." >&2; FAIL=1
+# El usuario local empieza por alfanumérico: así `+@pytest.mark…` (marcador de diff + decorador) no cuenta como email.
+# Se aceptan además los TLD reservados por la RFC 2606 (.invalid, .test, .example), que nunca resuelven.
+if printf '%s' "$ADDED" | grep -oE '[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
+   | grep -viE '@(example\.(com|org|net)|oncolens\.test|test\.local|anthropic\.com|users\.noreply\.github\.com)$|@[A-Za-z0-9.-]+\.(invalid|test|example)$' >/dev/null; then
+  echo "OncoLens · email fuera de dominios de prueba en el commit. Usa @example.com, @oncolens.test o un dominio .invalid." >&2; FAIL=1
 fi
 # 3) Higiene de tests (Política TDD de CLAUDE.md): nunca desactivar ni borrar un test para pasar la suite.
 TESTS_RE='(\.(test|spec)\.[cm]?[jt]sx?$|(^|/)test_[^/]*\.py$|_test\.py$|(^|/)(tests?|__tests__|e2e)/)'

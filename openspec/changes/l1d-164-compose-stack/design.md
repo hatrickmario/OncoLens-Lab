@@ -355,5 +355,5 @@ suite `evaluate` (OL-06), que corre con el LLM real.
   cubren los Pytest de L1D-106/L1D-275 y la suite `evaluate`).
 - **Solapamiento con L1D-165 y L1D-106** en el Compose y en el router de `/rag/query`: se mitiga
   con D4, D6 y el orden de la oleada.
-- **Memoria del stack**: Milvus + modelos en CPU + LLM podrían superar 24 GB; lo mide ADR-39
+- **Memoria del stack**: Milvus + modelos en CPU + LLM podrían superar ~30 GB (tope del stack desde el 2026-10-20; antes 24 GB); lo mide ADR-39
   (L1D-274). El Compose no fija `mem_limit` hasta esa medición.

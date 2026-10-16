@@ -1,0 +1,11 @@
+{
+  "ac": "US-036 AC-2",
+  "descripcion": "Una respuesta 503 pasa a oneOf conservando el schema original y añadiendo una variante con un código nuevo (patrón aditivo del S1, ADR-26): el aviso WARN se imprime y no rompe.",
+  "esperado": "pasa",
+  "comando": "scripts/ci/contracts-breaking.sh \"$BASE_REF\"",
+  "aplicar": "aplicar.mjs",
+  "mensajes": [
+    "rag-orchestrator:",
+    "response-body-wrapped-in-one-of-original-preserved"
+  ]
+}

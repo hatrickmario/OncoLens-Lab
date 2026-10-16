@@ -1,4 +1,4 @@
-/** AC-17 [Pre-S1 resp. 24, 27, 29]: cada operación de clinical-api declara x-permission con códigos concretos de la matriz; publico solo en el login. */
+/** AC-17 [Pre-S1 resp. 24, 27, 29]: cada operación de clinical-api declara x-permission con códigos concretos de la matriz; publico solo en el login y en GET /health. */
 import { reporter } from '../lib/findings.mjs';
 import { labelOf, listOperations } from '../lib/operations.mjs';
 import { permissionMatrix } from '../lib/permissions.mjs';
@@ -7,13 +7,13 @@ import { CLINICAL_API } from '../lib/specs.mjs';
 const report = reporter('assertOperationsDeclarePermission', 'AC-17');
 
 const PUBLIC = 'publico';
-const PUBLIC_OPERATION = 'POST /platform/auth/login';
+const PUBLIC_OPERATIONS = ['POST /platform/auth/login', 'GET /health'];
 
 function checkCode(file, entry, code, matrix) {
   const pointer = `${entry.pointer}/x-permission`;
   if (typeof code !== 'string' || code.includes('*')) return [report(file, pointer, `${JSON.stringify(code)} no es un código concreto (sin comodines)`)];
   if (code === PUBLIC) {
-    return labelOf(entry) === PUBLIC_OPERATION ? [] : [report(file, pointer, `${PUBLIC} solo se admite en ${PUBLIC_OPERATION}`)];
+    return PUBLIC_OPERATIONS.includes(labelOf(entry)) ? [] : [report(file, pointer, `${PUBLIC} solo se admite en ${PUBLIC_OPERATIONS.join(' y ')}`)];
   }
   return matrix.includes(code) ? [] : [report(file, pointer, `el código ${code} no está en la matriz de permisos de data-model.md`)];
 }

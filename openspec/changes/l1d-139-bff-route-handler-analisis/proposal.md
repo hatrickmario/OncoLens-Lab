@@ -24,7 +24,7 @@ navegador solo habla con `web`"; cookie opaca) · `[S1 resp. 4]` (ruta `/pacient
 
 > **Decidido (usuario, 2026-10-14, Gate 1, `backlog/sprints/S1-plan.md` §2):**
 > - `[S1 resp. 13]` el Route Handler llama a `clinical-api` con el **SDK generado** por L1D-105
->   (`packages/api-contracts/src/client/clinical-api/`, `createClient({ baseUrl, fetch })`), con un
+>   (`packages/api-contracts/src/client-web/clinical-api/`, `createClient({ baseUrl, fetch })`), con un
 >   `fetch` inyectable que crea este change; no hay cliente propio (`crearClienteClinicalApi`).
 > - `[S1 resp. 18]` este change es el **dueño único** de
 >   `contracts/examples/evidence-analysis-request.json`. Las respuestas propias del BFF se declaran en
@@ -69,7 +69,7 @@ contrato congelado (US-033).
   - JSON completo, sin streaming (readme §6.1 #8, TBD-08).
 - **`web`, transporte interno** `apps/web/lib/server/clinical-api.ts` (`server-only`): resuelve
   `CLINICAL_API_URL` y el *timeout* `WEB_UPSTREAM_TIMEOUT_MS` (RN-22) en el servidor y crea la
-  instancia del SDK generado con un `fetch` inyectable (`crearFetchHaciaClinicalApi()`) que construye
+  instancia del SDK generado con un `fetch` inyectable (`crearFetchJsonHaciaClinicalApi()`) que construye
   las cabeceras salientes desde cero (lista blanca, design D2) `[S1 resp. 13]`. L1D-197 lo reutiliza
   para el login.
 - **`web`, CSRF** `apps/web/lib/server/origen.ts` (`server-only`): `verificarOrigen()` exportado y
@@ -116,13 +116,13 @@ contrato congelado (US-033).
 ## Dependencias
 
 - ↪ **Depende de** **l1d-105-service-jwt-auth** (US-054): SDK generado de `clinical-api` en
-  `packages/api-contracts/src/client/clinical-api/` con `fetch` inyectable (design D4,
+  `packages/api-contracts/src/client-web/clinical-api/` con `fetch` inyectable (design D4,
   `[S1 resp. 13]`).
 - ↪ **Depende de** **l1d-197-sesion-login-guard** (US-211) **solo para el E2E de AC-3**: login de
   `doc1@test.local` y `proxy.ts` que protege la página del panel. Los tests de AC-1, AC-2, AC-4 y
   AC-5 no lo necesitan (la cookie `oncolens_session` es del contrato).
 - 🔗 **Consumido por** **l1d-197-sesion-login-guard**: su Route Handler de login reutiliza
-  `verificarOrigen()` y `crearFetchHaciaClinicalApi()` `[S1 resp. 14a]`. Orden de la oleada:
+  `verificarOrigen()` y `crearFetchJsonHaciaClinicalApi()` `[S1 resp. 14a]`. Orden de la oleada:
   `lib/server/origen.ts` y `lib/server/clinical-api.ts` de este change en `main` antes de las tareas
   `web` del login de L1D-197; las de `clinical-api` de L1D-197 no esperan.
 - ↪ **Depende de** **l1d-104-persistencia-analisis-fallos** (US-053) y **l1d-103-gateway-contexto-clinico**

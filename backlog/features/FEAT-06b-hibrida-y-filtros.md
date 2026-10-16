@@ -26,6 +26,8 @@
 
 `FEAT-06b` · Sprint si-hay-capacidad · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (S3: *sparse*), IA-03, RN-03, RN-05 · AC-06.1 (híbrida) · ⛔ ADR-39 (modelo *sparse*) · ↪ US-055, US-117 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Workaround en el MVP:** ADR-39 elige *embeddings* multilingües y la recuperación sigue siendo *dense* + *reranker* (US-055); la suite mide recall es→en ≥ 0,70 (US-072)
 
+> **Enmienda decidida (usuario, 2026-10-20, ADR-45):** la expansión bilingüe **no invoca al LLM local** (RN-02 se mantiene). Se resuelve con sinónimos del catálogo y/o un modelo de traducción dedicado, según el resultado de los brazos A3 y A4 de ADR-45. Los AC se ajustan en el refinamiento de la historia; el ID no cambia. **Linear: pendiente de sincronizar.**
+
 ## Story
 Como oncólogo, quiero que la búsqueda encuentre también la evidencia que menciona
 literalmente el fármaco o el gen que pregunto, para no perder un estudio relevante

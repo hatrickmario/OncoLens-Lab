@@ -2,15 +2,23 @@
   "name": "oncolens",
   "private": true,
   "type": "module",
-  "description": "Raíz mínima del monorepo: solo la verificación de contratos (US-033). La historia de monorepo añade los workspaces.",
+  "description": "Monorepo de OncoLens (npm workspaces): web, clinical-api y packages/*. rag-orchestrator es Python y vive fuera de los workspaces.",
   "engines": {
     "node": ">=22.18.0"
   },
+  "workspaces": [
+    "apps/web",
+    "apps/clinical-api",
+    "packages/*"
+  ],
   "scripts": {
     "contracts:check": "node scripts/contracts/check.mjs",
     "contracts:generate": "node scripts/contracts/generate.mjs",
     "contracts:generate:check": "node scripts/contracts/generate-check.mjs",
-    "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs"
+    "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs",
+    "test:infra": "vitest run infra scripts/smoke",
+    "smoke:compose": "bash scripts/smoke/compose-smoke.sh",
+    "test:secrets": "bash scripts/tests/setup-secrets.test.sh"
   },
   "overrides": {
     "@hey-api/json-schema-ref-parser": {

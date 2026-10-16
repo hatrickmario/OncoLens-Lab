@@ -1,0 +1,12 @@
+{
+  "ac": "US-036 AC-3",
+  "descripcion": "Una clave privada PEM generada en tiempo de ejecución hace fallar el escaneo, nombra el archivo y la regla private-key y no imprime ninguna línea de la clave.",
+  "esperado": "falla",
+  "comando": "scripts/ci/secret-scan.sh \"$BASE_REF\"",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "docs/ci-selftest-clave.pem",
+    "private-key"
+  ],
+  "sinValor": "docs/ci-selftest-clave.pem"
+}

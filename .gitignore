@@ -9,3 +9,15 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Build y entorno local (US-034)
+dist/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+infra/docker/.env
+.pytest_cache/
+.venv/
+infra/docker/secrets/
+.ci-tools/
+.venv-codegen/
