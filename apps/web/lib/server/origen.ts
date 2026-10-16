@@ -5,8 +5,9 @@ import type { Registrar } from './registro';
 export interface DependenciasOrigen {
   config: Pick<ConfigWeb, 'allowedOrigin'>;
   nuevoTraceId: () => string;
-  ahora: () => number;
   registrar: Registrar;
+  /** Evento de log del Route Handler que verifica (cada llamador, el suyo: análisis, login...). */
+  evento: string;
 }
 
 /**
@@ -15,18 +16,11 @@ export interface DependenciasOrigen {
  * el cuerpo o la cookie. El log no incluye el Origin recibido.
  */
 export function verificarOrigen(request: Request, dependencias: DependenciasOrigen): Response | null {
-  const inicio = dependencias.ahora();
   if (request.headers.get('origin') === dependencias.config.allowedOrigin) {
     return null;
   }
   const traceId = dependencias.nuevoTraceId();
-  dependencias.registrar({
-    event: 'evidence_analyses.proxy',
-    status: 403,
-    traceId,
-    duracionMs: dependencias.ahora() - inicio,
-    motivo: 'origen',
-  });
+  dependencias.registrar({ event: dependencias.evento, status: 403, traceId, motivo: 'origen' });
   return Response.json(
     { error: 'PERMISO_DENEGADO', message: 'La solicitud no está permitida desde este origen.', traceId },
     { status: 403 },

@@ -5,7 +5,7 @@ export interface LineaDeRegistro {
   event: string;
   status: number;
   traceId?: string;
-  duracionMs: number;
+  duracionMs?: number;
   motivo?: 'origen' | 'clinical_api_inalcanzable';
 }
 

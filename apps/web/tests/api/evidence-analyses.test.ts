@@ -61,7 +61,7 @@ describe('POST /api/evidence-analyses', () => {
     expect(cuerpo).toMatchObject({ error: 'PERMISO_DENEGADO', traceId: 'req_web00001' });
     expect(clinicalApi.peticiones).toHaveLength(0);
     expect(lineas).toEqual([
-      { event: 'evidence_analyses.proxy', status: 403, traceId: 'req_web00001', duracionMs: 0, motivo: 'origen' },
+      { event: 'evidence_analyses.proxy', status: 403, traceId: 'req_web00001', motivo: 'origen' },
     ]);
     expect(JSON.stringify(lineas)).not.toContain('otro-origen.test');
   });

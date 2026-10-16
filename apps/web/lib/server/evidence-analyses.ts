@@ -10,6 +10,8 @@ import {
 import { verificarOrigen } from './origen';
 import type { Registrar } from './registro';
 
+const EVENTO_PROXY = 'evidence_analyses.proxy';
+
 export interface DependenciasAnalisis {
   config: ConfigWeb;
   fetch: typeof globalThis.fetch;
@@ -24,7 +26,7 @@ export interface DependenciasAnalisis {
  */
 export function crearManejadorAnalisis(dependencias: DependenciasAnalisis): (request: Request) => Promise<Response> {
   return async (request) => {
-    const rechazo = verificarOrigen(request, dependencias);
+    const rechazo = verificarOrigen(request, { ...dependencias, evento: EVENTO_PROXY });
     if (rechazo !== null) {
       return rechazo;
     }
@@ -63,7 +65,7 @@ function serializarError(error: unknown): string {
 function responderFalloDeTransporte(dependencias: DependenciasAnalisis, inicio: number): Response {
   const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({
-    event: 'evidence_analyses.proxy',
+    event: EVENTO_PROXY,
     status: 502,
     traceId,
     duracionMs: dependencias.ahora() - inicio,
@@ -75,7 +77,7 @@ function responderFalloDeTransporte(dependencias: DependenciasAnalisis, inicio: 
 function registrarReenvio(registrar: Registrar, respuesta: Response, duracionMs: number): void {
   const traceId = respuesta.headers.get('x-trace-id');
   registrar({
-    event: 'evidence_analyses.proxy',
+    event: EVENTO_PROXY,
     status: respuesta.status,
     ...(traceId !== null && { traceId }),
     duracionMs,
