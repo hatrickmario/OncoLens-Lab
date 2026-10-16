@@ -1210,7 +1210,7 @@ CREATE UNIQUE INDEX diagnosis_grading_reference_uq ON clinical.diagnosis_grading
 - **Procedencia y estado de revisión propios:** cada gradación tiene su `entry_method`, su confianza de extracción y **un único** `review_status`; no existe un segundo estado de revisión (el contrato lo expone como `provenance.reviewStatus`).
 - **Gradación de referencia** (`is_reference`, una por diagnóstico) para `Diagnosis.grade` y para el checklist: en próstata, la de prostatectomía con alcance `global`; si no existe, la `peor` de la biopsia. En mama, la más reciente verificada (**asumido**; lo confirma US-110).
 - **Formato canónico de `Diagnosis.grade`:** próstata `"Gleason 4+3=7 · ISUP 3"`; mama `"Nottingham grado 2"`. El seed (US-039) y la extracción (FEAT-01b) escriben con este mismo formato.
-- **Validación clínica pendiente:** el destino y el formato los valida el oncólogo asesor antes de US-038 (`docs/decisions/DEC-05-tnm-isup.md`); si los rechaza, se escala a Ingeniería antes de la migración.
+- **Validación clínica:** validada por el Oncólogo asesor A (`[S1 resp. 1]`, 2026-10-13); el destino y el formato no cambian (`docs/decisions/DEC-05-tnm-isup.md`). Si en adelante se rechazaran, se escala a Ingeniería.
 
 ## 7. Preguntas de seguimiento: `clinical.analysis_follow_up`
 
