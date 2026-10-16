@@ -7,7 +7,7 @@ atribucion: |
   Texto: National Cancer Institute (NCI). Cada documento se publicó originalmente en la URL indicada.
   Política de reutilización: https://www.cancer.gov/policies/copyright-reuse (texto libre de copyright, con crédito a NCI).
   Se excluyen los gráficos. No se usa el logo de NCI ni la marca PDQ como rótulo de fuente.
-  Artículos de PMC: licencia CC BY (se cita autoría, revista y DOI en `documentos`). ClinicalTrials.gov: fuera de este conjunto hasta verificar sus términos de uso.
+  Artículos de PMC: licencia CC BY (se cita autoría, revista y DOI en `documentos`). ClinicalTrials.gov: Source: ClinicalTrials.gov, National Library of Medicine. Registros consultados el 2026-10-15; pueden no reflejar la versión más reciente. Solo se usan metadatos del registro y citas breves; su inclusión no implica validación clínica ni aval de NLM, NIH ni ClinicalTrials.gov.
 documentos:
   M11:
     url: https://www.cancer.gov/types/breast/stages
@@ -85,6 +85,20 @@ documentos:
     revista: null
     anio: '2026'
     licencia: CC BY (registro de Europe PMC y XML)
+  M09:
+    fuente: ClinicalTrials.gov / NCT00490139
+    nct_id: NCT00490139
+    url: https://clinicaltrials.gov/study/NCT00490139
+    fecha_consulta: '2026-10-15'
+    ultima_actualizacion_registro: '2025-03-21'
+    licencia: terminos_NLM_ClinicalTrials_gov
+  M10:
+    fuente: ClinicalTrials.gov / NCT02040935
+    nct_id: NCT02040935
+    url: https://clinicaltrials.gov/study/NCT02040935
+    fecha_consulta: '2026-10-15'
+    ultima_actualizacion_registro: '2019-08-22'
+    licencia: terminos_NLM_ClinicalTrials_gov
   P04:
     pmcid: PMC13456578
     doi: 10.1097/ju.0000000000005131
@@ -120,6 +134,20 @@ documentos:
     revista: null
     anio: '2026'
     licencia: CC BY (registro de Europe PMC y XML)
+  P09:
+    fuente: ClinicalTrials.gov / NCT00974311
+    nct_id: NCT00974311
+    url: https://clinicaltrials.gov/study/NCT00974311
+    fecha_consulta: '2026-10-15'
+    ultima_actualizacion_registro: '2018-12-11'
+    licencia: terminos_NLM_ClinicalTrials_gov
+  P10:
+    fuente: ClinicalTrials.gov / NCT02200614
+    nct_id: NCT02200614
+    url: https://clinicaltrials.gov/study/NCT02200614
+    fecha_consulta: '2026-10-15'
+    ultima_actualizacion_registro: '2022-06-28'
+    licencia: terminos_NLM_ClinicalTrials_gov
   P16:
     pmcid: PMC13526558
     doi: 10.3389/fruro.2026.1836469
@@ -903,6 +931,111 @@ preguntas:
     verificada: true
   modo_acierto: cualquiera
   revision_oncologo: aprobada
+- id: Q-M25
+  id_original: Q-M10 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué características de cáncer de mama exigía ALTTO para la inclusión?
+  respuesta_esperada: Cáncer primario operable, no metastásico, confirmado histológicamente, con sobreexpresión/amplificación de HER2 y tratado con cirugía definitiva.
+  documentos:
+  - M09
+  evidencia:
+  - documento: M09
+    cita: histologically confirmed, non-metastatic, operable and over expression/amplification of HER2 (3+ by IHC and/or FISH positive) primary breast cancer, treated with definitive surgery
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M26
+  id_original: Q-M11 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Cuál fue el desenlace primario de ALTTO en el análisis principal?
+  respuesta_esperada: Supervivencia libre de enfermedad (DFS) en el análisis primario.
+  documentos:
+  - M09
+  evidencia:
+  - documento: M09
+    cita: Disease-Free Survival (DFS) at the Primary Analysis
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-M27
+  id_original: Q-M12 (archivo de cobertura)
+  cancer: mama
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Cómo describe el registro el diseño y población del estudio de trastuzumab subcutáneo con SID?
+  respuesta_esperada: Es un estudio local multicéntrico, de un solo brazo y abierto, que evalúa seguridad y tolerabilidad tras cirugía y quimioterapia neo- o adyuvante en HER2 positivo temprano.
+  documentos:
+  - M10
+  evidencia:
+  - documento: M10
+    cita: This single-arm, open-label, local multicenter study will evaluate the safety and tolerability of trastuzumab administered subcutaneously (SC) by a single-use injection device (SID) in participants with human epidermal growth factor receptor 2 (HER2)-positive early breast cancer (EBC), following surgery and chemotherapy (neo-adjuvant or adjuvant).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P23
+  id_original: Q-P08 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: condicion
+  pregunta: ¿Qué exposición previa a quimioterapia requería el estudio de enzalutamida post-docetaxel?
+  respuesta_esperada: Uno o dos esquemas previos, y al menos uno debía contener docetaxel.
+  documentos:
+  - P09
+  evidencia:
+  - documento: P09
+    cita: One or two prior chemotherapy regimens. At least one chemotherapy regimen must have contained docetaxel
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P24
+  id_original: Q-P09 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Cuál fue el desenlace primario registrado en NCT00974311?
+  respuesta_esperada: Supervivencia global.
+  documentos:
+  - P09
+  evidencia:
+  - documento: P09
+    cita: Overall Survival
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P25
+  id_original: Q-P10 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: valor
+  pregunta: ¿Qué tiempo de duplicación de PSA exigía el estudio de darolutamida en CRPC no metastásico?
+  respuesta_esperada: Tiempo de duplicación de PSA de 10 meses o menos.
+  documentos:
+  - P10
+  evidencia:
+  - documento: P10
+    cita: Prostate-specific Antigen (PSA) doubling time of ≤ 10 months
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: Q-P26
+  id_original: Q-P11 (archivo de cobertura)
+  cancer: prostata
+  idioma: es
+  tipo: hecho
+  pregunta: ¿Cuál fue el desenlace primario registrado en NCT02200614?
+  respuesta_esperada: Supervivencia libre de metástasis.
+  documentos:
+  - P10
+  evidencia:
+  - documento: P10
+    cita: Metastasis-Free Survival
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
 - id: Q-M28
   id_original: Q-M13 (archivo de cobertura)
   cancer: mama
@@ -973,6 +1106,7 @@ preguntas:
   documentos:
   - M01
   - M02
+  - M09
   evidencia:
   - documento: M01
     cita: the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
@@ -980,12 +1114,12 @@ preguntas:
   - documento: M02
     cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting
     verificada: true
+  - documento: M09
+    cita: Disease-Free Survival (DFS) at the Primary Analysis
+    verificada: true
   modo_acierto: cobertura_documentos
   revision_oncologo: aprobada
   alias: Q-HER2
-  evidencia_pendiente:
-  - M09
-  nota: La cita de ClinicalTrials.gov (M09) se retiró del repo hasta verificar sus términos de uso; la respuesta esperada la menciona como contexto.
 - id: Q-NA01
   id_original: Q-NA01 (archivo de cobertura)
   cancer: mama
@@ -1102,6 +1236,22 @@ preguntas:
     verificada: true
   modo_acierto: cualquiera
   revision_oncologo: aprobada
+- id: EN-03
+  id_original: EN-03 (archivo de cobertura)
+  cancer: mama
+  idioma: en
+  tipo: condicion
+  control_de: Q-M25
+  pregunta: What breast-cancer characteristics were required for ALTTO enrollment?
+  respuesta_esperada: Histologically confirmed, non-metastatic, operable HER2-overexpressed/amplified primary breast cancer after definitive surgery.
+  documentos:
+  - M09
+  evidencia:
+  - documento: M09
+    cita: histologically confirmed, non-metastatic, operable and over expression/amplification of HER2 (3+ by IHC and/or FISH positive) primary breast cancer, treated with definitive surgery
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
 - id: EN-04
   id_original: EN-04 (archivo de cobertura)
   cancer: mama
@@ -1129,6 +1279,7 @@ preguntas:
   documentos:
   - M01
   - M02
+  - M09
   evidencia:
   - documento: M01
     cita: the risk of death was 33% lower (HR, 0.67; 95% CI, 0.48–0.93; P = .015).
@@ -1136,11 +1287,11 @@ preguntas:
   - documento: M02
     cita: The APHINITY 10-year update demonstrated an OS improvement from 89.8% to 91.6% with the addition of pertuzumab to trastuzumab in the adjuvant setting
     verificada: true
+  - documento: M09
+    cita: Disease-Free Survival (DFS) at the Primary Analysis
+    verificada: true
   modo_acierto: cobertura_documentos
   revision_oncologo: aprobada
-  evidencia_pendiente:
-  - M09
-  nota: La cita de ClinicalTrials.gov (M09) se retiró del repo hasta verificar sus términos de uso; la respuesta esperada la menciona como contexto.
 - id: EN-06
   id_original: EN-06 (archivo de cobertura)
   cancer: prostata
@@ -1170,6 +1321,22 @@ preguntas:
   evidencia:
   - documento: P17
     cita: 8 (32.0%) of 25 evaluable participants exhibited clinically meaningful worsening in TUG from baseline (primary endpoint).
+    verificada: true
+  modo_acierto: cualquiera
+  revision_oncologo: aprobada
+- id: EN-08
+  id_original: EN-08 (archivo de cobertura)
+  cancer: prostata
+  idioma: en
+  tipo: valor
+  control_de: Q-P25
+  pregunta: What PSA doubling time was required by the darolutamide trial in nonmetastatic CRPC?
+  respuesta_esperada: 10 months or less.
+  documentos:
+  - P10
+  evidencia:
+  - documento: P10
+    cita: Prostate-specific Antigen (PSA) doubling time of ≤ 10 months
     verificada: true
   modo_acierto: cualquiera
   revision_oncologo: aprobada
@@ -1206,21 +1373,12 @@ preguntas:
   modo_acierto: cualquiera
   revision_oncologo: aprobada
 verificacion:
-  preguntas: 66
-  preguntas_es_con_respuesta: 52
+  preguntas: 75
+  preguntas_es_con_respuesta: 59
   preguntas_sin_respuesta: 6
-  controles_en: 8
-  citas: 83
-  citas_verificadas: 83
+  controles_en: 10
+  citas: 94
+  citas_verificadas: 94
   citas_no_encontradas: 0
   verificadas_contra: 'texto de cada documento descargado el 2026-10-15 (NCI: HTML; PMC: XML JATS); la comprobación no se repite desde el repo porque los textos no se versionan'
-  retiradas_por_clinicaltrials_gov:
-  - Q-M25
-  - Q-M26
-  - Q-M27
-  - Q-P23
-  - Q-P24
-  - Q-P25
-  - Q-P26
-  - EN-03
-  - EN-08
+  retiradas_por_clinicaltrials_gov: []

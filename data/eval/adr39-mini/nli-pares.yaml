@@ -7,7 +7,7 @@ etiquetas:
   contradiction: el fragmento afirma lo contrario o la excluye
 criterio: la etiqueta se decide SOLO con el fragmento, no con el resto del documento ni con conocimiento externo
 idiomas: fragmentos en inglés (el corpus está en inglés); afirmaciones en inglés (mismo idioma) y en español (mezcla es/en), con la variante en el otro idioma en cada par
-atribucion: Fragmentos tomados de las fuentes indicadas en golden.yaml (NCI y artículos de PMC con licencia CC BY). ClinicalTrials.gov no está incluido.
+atribucion: 'Fragmentos tomados de las fuentes indicadas en golden.yaml: NCI, artículos de PMC con licencia CC BY y registros de ClinicalTrials.gov (Source: ClinicalTrials.gov, National Library of Medicine; sin aval de NLM).'
 pares:
 - id: NLI-01
   etiqueta: entailment
@@ -369,6 +369,78 @@ pares:
     idioma: es
     afirmacion: La MDT redujo significativamente la progresión de PSA a 1 año frente a la observación.
   revision_oncologo: aprobada
+- id: NLI-31
+  etiqueta: entailment
+  documento: M09
+  pregunta_origen: Q-M25
+  fragmento: histologically confirmed, non-metastatic, operable and over expression/amplification of HER2 (3+ by IHC and/or FISH positive) primary breast cancer, treated with definitive surgery
+  idioma_fragmento: en
+  afirmacion: Las participantes tenían cáncer de mama operable, no metastásico, con sobreexpresión o amplificación de HER2 (IHC 3+ y/o FISH positivo), tratado con cirugía definitiva.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Participants had operable, non-metastatic breast cancer with HER2 overexpression or amplification (IHC 3+ and/or FISH positive), treated with definitive surgery.
+  revision_oncologo: aprobada_con_cambios
+- id: NLI-32
+  etiqueta: neutral
+  documento: M09
+  pregunta_origen: Q-M25
+  fragmento: histologically confirmed, non-metastatic, operable and over expression/amplification of HER2 (3+ by IHC and/or FISH positive) primary breast cancer, treated with definitive surgery
+  idioma_fragmento: en
+  afirmacion: Participants had to be postmenopausal.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Las participantes debían ser posmenopáusicas.
+  revision_oncologo: aprobada
+- id: NLI-33
+  etiqueta: contradiction
+  documento: M09
+  pregunta_origen: Q-M25
+  fragmento: histologically confirmed, non-metastatic, operable and over expression/amplification of HER2 (3+ by IHC and/or FISH positive) primary breast cancer, treated with definitive surgery
+  idioma_fragmento: en
+  afirmacion: Las participantes tenían cáncer de mama metastásico.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Participants had metastatic breast cancer.
+  revision_oncologo: aprobada
+- id: NLI-34
+  etiqueta: entailment
+  documento: P09
+  pregunta_origen: Q-P23
+  fragmento: One or two prior chemotherapy regimens. At least one chemotherapy regimen must have contained docetaxel
+  idioma_fragmento: en
+  afirmacion: Participants must have received at least one docetaxel-containing chemotherapy regimen.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Los participantes debían haber recibido al menos un esquema de quimioterapia con docetaxel.
+  revision_oncologo: aprobada
+- id: NLI-35
+  etiqueta: neutral
+  documento: P09
+  pregunta_origen: Q-P23
+  fragmento: One or two prior chemotherapy regimens. At least one chemotherapy regimen must have contained docetaxel
+  idioma_fragmento: en
+  afirmacion: Los participantes debían tener metástasis óseas.
+  idioma_afirmacion: es
+  variante_otro_idioma:
+    idioma: en
+    afirmacion: Participants had to have bone metastases.
+  revision_oncologo: aprobada
+- id: NLI-36
+  etiqueta: contradiction
+  documento: P09
+  pregunta_origen: Q-P23
+  fragmento: One or two prior chemotherapy regimens. At least one chemotherapy regimen must have contained docetaxel
+  idioma_fragmento: en
+  afirmacion: Participants could not have received docetaxel before enrollment.
+  idioma_afirmacion: en
+  variante_otro_idioma:
+    idioma: es
+    afirmacion: Los participantes no podían haber recibido docetaxel antes de ingresar al estudio.
+  revision_oncologo: aprobada
 - id: NLI-37
   etiqueta: entailment
   documento: P01
@@ -406,16 +478,14 @@ pares:
     afirmacion: RTOG-9408 enrolled men with metastatic disease.
   revision_oncologo: aprobada
 resumen:
-  pares: 33
+  pares: 39
   por_etiqueta:
-    entailment: 11
-    neutral: 11
-    contradiction: 11
-  afirmaciones_es: 17
-  afirmaciones_en: 16
-  documentos: 11
-ids_reservados:
-  NLI-31..NLI-36: pares sobre registros de ClinicalTrials.gov (M09, P09), retirados hasta verificar sus términos; los IDs no se reutilizan
+    entailment: 13
+    neutral: 13
+    contradiction: 13
+  afirmaciones_es: 20
+  afirmaciones_en: 19
+  documentos: 13
 revision_oncologo:
   fecha: '2026-10-15'
-  resultado: aprobados; un cambio en NLI-31 (sobreexpresión o amplificación de HER2, IHC 3+ y/o FISH positivo), aplicado en la copia completa; NLI-31 queda fuera de este conjunto por ser de ClinicalTrials.gov
+  resultado: aprobados; un cambio en NLI-31 (sobreexpresión o amplificación de HER2, IHC 3+ y/o FISH positivo), ya aplicado

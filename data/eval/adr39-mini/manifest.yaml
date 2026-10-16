@@ -86,6 +86,32 @@ fuentes:
   titulo: Prediction of benefit from docetaxel chemotherapy for HR-positive breast cancer in the PACS-01 trial.
   revista: null
   anio: '2026'
+- id: M09
+  fuente: ClinicalTrials.gov / NCT00490139
+  tipo: ensayo_registro
+  formato_original: json_api
+  nct_id: NCT00490139
+  url: https://clinicaltrials.gov/study/NCT00490139
+  fecha_consulta: '2026-10-15'
+  ultima_actualizacion_registro: '2025-03-21'
+  licencia_verificada: terminos_NLM_ClinicalTrials_gov
+  verificada_por: el usuario (2026-10-15); no se pudo leer la página de términos con las herramientas de la sesión
+  atribucion_requerida: 'Source: ClinicalTrials.gov, National Library of Medicine'
+  aviso_actualizacion: Registro consultado el 2026-10-15; puede no reflejar la versión más reciente.
+  uso_en_golden: permitido para metadatos del registro y citas breves; no implica validación clínica ni aval de NLM
+- id: M10
+  fuente: ClinicalTrials.gov / NCT02040935
+  tipo: ensayo_registro
+  formato_original: json_api
+  nct_id: NCT02040935
+  url: https://clinicaltrials.gov/study/NCT02040935
+  fecha_consulta: '2026-10-15'
+  ultima_actualizacion_registro: '2019-08-22'
+  licencia_verificada: terminos_NLM_ClinicalTrials_gov
+  verificada_por: el usuario (2026-10-15); no se pudo leer la página de términos con las herramientas de la sesión
+  atribucion_requerida: 'Source: ClinicalTrials.gov, National Library of Medicine'
+  aviso_actualizacion: Registro consultado el 2026-10-15; puede no reflejar la versión más reciente.
+  uso_en_golden: permitido para metadatos del registro y citas breves; no implica validación clínica ni aval de NLM
 - id: M11
   fuente: NCI
   tipo: pagina_paciente
@@ -171,6 +197,32 @@ fuentes:
   titulo: Ablative radiotherapy in castration-resistant prostate cancer.
   revista: null
   anio: '2026'
+- id: P09
+  fuente: ClinicalTrials.gov / NCT00974311
+  tipo: ensayo_registro
+  formato_original: json_api
+  nct_id: NCT00974311
+  url: https://clinicaltrials.gov/study/NCT00974311
+  fecha_consulta: '2026-10-15'
+  ultima_actualizacion_registro: '2018-12-11'
+  licencia_verificada: terminos_NLM_ClinicalTrials_gov
+  verificada_por: el usuario (2026-10-15); no se pudo leer la página de términos con las herramientas de la sesión
+  atribucion_requerida: 'Source: ClinicalTrials.gov, National Library of Medicine'
+  aviso_actualizacion: Registro consultado el 2026-10-15; puede no reflejar la versión más reciente.
+  uso_en_golden: permitido para metadatos del registro y citas breves; no implica validación clínica ni aval de NLM
+- id: P10
+  fuente: ClinicalTrials.gov / NCT02200614
+  tipo: ensayo_registro
+  formato_original: json_api
+  nct_id: NCT02200614
+  url: https://clinicaltrials.gov/study/NCT02200614
+  fecha_consulta: '2026-10-15'
+  ultima_actualizacion_registro: '2022-06-28'
+  licencia_verificada: terminos_NLM_ClinicalTrials_gov
+  verificada_por: el usuario (2026-10-15); no se pudo leer la página de términos con las herramientas de la sesión
+  atribucion_requerida: 'Source: ClinicalTrials.gov, National Library of Medicine'
+  aviso_actualizacion: Registro consultado el 2026-10-15; puede no reflejar la versión más reciente.
+  uso_en_golden: permitido para metadatos del registro y citas breves; no implica validación clínica ni aval de NLM
 - id: P11
   fuente: NCI
   tipo: pagina_paciente
@@ -212,16 +264,9 @@ fuentes:
   titulo: 'Functional assessment in patients with castration-resistant prostate cancer treated with darolutamide: results from the DaroAcT study.'
   revista: null
   anio: '2025'
-fuentes_pendientes_de_licencia:
-  ClinicalTrials.gov:
-  - NCT00490139
-  - NCT02040935
-  - NCT00974311
-  - NCT02200614
-  motivo: términos de uso sin verificar; se reincorporan al confirmarlos (hay 9 preguntas y 6 pares NLI preparados en la copia local)
 excluded_sources:
 - NCCN
 - ESMO
 estado_revision:
   golden: aprobado por el oncólogo asesor (2026-10-15)
-  nli: aprobado por el oncólogo asesor (2026-10-15; un cambio en NLI-31, fuera de este conjunto)
+  nli: aprobado por el oncólogo asesor (2026-10-15; un cambio en NLI-31, aplicado)
