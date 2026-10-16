@@ -201,6 +201,32 @@ caso_rotar_el_certificado_del_servidor_cambia_solo_su_par() {
   afirmar "el certificado nuevo sigue firmado por la CA" openssl verify -CAfile "$SECRETOS/pg_ca.crt" "$SECRETOS/pg_server.crt"
 }
 
+caso_cambio_de_subred_vuelve_a_renderizar_solo_pg_hba() {
+  restablecer
+  ejecutar
+  local resto_antes; resto_antes="$(hash_de_cada_archivo | grep -v ' pg_hba\.conf$')"
+  salida="$(CLINICAL_NET_SUBNET=172.29.10.0/24 "$SCRIPT" 2>&1)"
+  codigo=$?
+  afirmar "termina con código 0 (código $codigo): $salida" test "$codigo" -eq 0
+  afirmar "pg_hba.conf lleva la subred nueva" grep -q '172\.29\.10\.0/24' "$SECRETOS/pg_hba.conf"
+  afirmar "informa pg_hba.conf como actualizado" grep -qx 'actualizado: pg_hba.conf' <<<"$salida"
+  afirmar "el resto de archivos no cambia" test "$(hash_de_cada_archivo | grep -v ' pg_hba\.conf$')" = "$resto_antes"
+}
+
+caso_subred_demasiado_amplia_aborta_sin_escribir() {
+  local variable valor par
+  for par in 'CLINICAL_NET_SUBNET:10.0.0.0/8' 'CORPUS_DB_NET_SUBNET:0.0.0.0/0'; do
+    variable="${par%%:*}"
+    valor="${par##*:}"
+    restablecer
+    salida="$(env "$variable=$valor" "$SCRIPT" 2>&1)"
+    codigo=$?
+    afirmar "$valor aborta con código distinto de 0" test "$codigo" -ne 0
+    afirmar "el mensaje nombra $variable" grep -q "$variable" <<<"$salida"
+    afirmar "no se crea ningún archivo de secretos" no test -e "$SECRETOS"
+  done
+}
+
 caso_rotar_la_ca_reemite_el_certificado_del_servidor() {
   restablecer
   ejecutar
@@ -244,6 +270,8 @@ if [ "$fallos" -eq 0 ]; then
   correr "una segunda ejecución sin --rotate deja los mismos hashes e informa existe sin cambios [US-035 AC-3]" caso_segunda_ejecucion_no_cambia_nada
   correr "rotar identity_aes_key o blind_index_hmac_key se rechaza y el hash no cambia [US-035 AC-3]" caso_rotar_clave_de_identidad_se_rechaza
   correr "rotar pg_server.key reemite solo el par del servidor firmado por la misma CA [US-035 AC-3]" caso_rotar_el_certificado_del_servidor_cambia_solo_su_par
+  correr "un cambio de subred vuelve a renderizar solo pg_hba.conf y el resto queda igual [US-035 AC-3]" caso_cambio_de_subred_vuelve_a_renderizar_solo_pg_hba
+  correr "una subred más amplia que /16 aborta sin escribir ningún archivo [US-035 AC-1]" caso_subred_demasiado_amplia_aborta_sin_escribir
   correr "rotar pg_ca.key reemite pg_server.crt firmado por la CA nueva y no cambia el resto [US-035 AC-3]" caso_rotar_la_ca_reemite_el_certificado_del_servidor
 fi
 
