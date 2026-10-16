@@ -12,6 +12,10 @@ from app.schemas.generated.models import (
 _TARGET_RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
 
 
+class EjemploFixtureInvalido(Exception):
+    """Un ejemplo de `FAKE_RESPONSES_PATH` falta o no cumple el contrato; nombra el archivo, nunca su contenido."""
+
+
 class FakeEvidenceQuery:
     """Implementa `EvidenceQueryPort` sin recuperación ni LLM; nunca inventa evidencia."""
 
