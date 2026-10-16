@@ -1,11 +1,11 @@
 import { execFile } from 'node:child_process';
-import { appendFile, cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { changedGeneratedFiles } from '../generate-check.mjs';
-import { GENERATED_ROOTS, zodPath } from '../generated.mjs';
+import { GENERATED_ROOTS, clientDir, zodPath } from '../generated.mjs';
 import { typesPath } from '../lib/paths.mjs';
 import { ROOT } from './helpers/parches.mjs';
 
@@ -46,5 +46,21 @@ describe('contracts:generate:check sobre un árbol de trabajo temporal', () => {
   it('lista el archivo cuando queda un archivo generado nuevo sin versionar [US-033 AC-16]', async () => {
     await writeFile(path.join(tree, typesPath('clinical-api')).replace('types.gen.ts', 'nuevo.gen.ts'), '// nuevo\n');
     expect(await changedGeneratedFiles(tree)).toEqual([expect.stringContaining('nuevo.gen.ts')]);
+  });
+
+  it('lista el archivo cuando se edita a mano el SDK de rag-orchestrator [US-054 AC-6]', async () => {
+    const sdk = `${clientDir('rag-orchestrator')}/sdk.gen.ts`;
+    await appendFile(path.join(tree, sdk), '\n// editado a mano\n');
+    expect(await changedGeneratedFiles(tree)).toEqual([expect.stringContaining(sdk)]);
+  });
+});
+
+describe('SDK HTTP generado', () => {
+  it.each(['clinical-api', 'rag-orchestrator'])('expone createClient con fetch inyectable y sin baseUrl por defecto en %s [US-054 AC-6]', async (provider) => {
+    const cliente = await readFile(path.join(ROOT, clientDir(provider), 'client.gen.ts'), 'utf8');
+    const operaciones = await readFile(path.join(ROOT, clientDir(provider), 'sdk.gen.ts'), 'utf8');
+    expect(cliente).toContain('createClient(createConfig<ClientOptions2>())');
+    expect(operaciones).toContain('options.client ?? client');
+    expect(cliente).not.toMatch(/baseUrl:\s*'/);
   });
 });
