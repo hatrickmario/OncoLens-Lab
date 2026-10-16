@@ -137,9 +137,44 @@ describe('detectarPii · exención de URL y siglas pegadas (Gate 2, vuelta 2)', 
     expect(lineasDe(texto())).toEqual(['1:documento_identidad']);
   });
 
-  it('no informa un identificador de ensayo pegado a letras tras la sigla ID [US-036 AC-4]', () => {
+  it('no informa un identificador de ClinicalTrials.gov (NCT y ocho dígitos) con independencia de la palabra clave [US-036 AC-4]', () => {
     expect(lineasDe(`trial id: NCT${digitos(8, '0')}`)).toEqual([]);
     expect(lineasDe(`NCT ID: NCT${digitos(8, '0')}`)).toEqual([]);
+    expect(lineasDe(`documento NCT${digitos(8, '0')}`)).toEqual([]);
+  });
+
+  it.each([
+    ['CC con letras antes de los dígitos', () => `CC AB${digitos(10, '1')}`],
+    ['ID con la sigla CC pegada', () => `ID: CC${digitos(10, '1')}`],
+    ['CC con la sigla CC pegada', () => `CC: CC${digitos(10, '1')}`],
+    ['HC con una letra', () => `HC: H${digitos(8, '1')}`],
+    ['HC con otra letra', () => `HC: A${digitos(7, '1')}`],
+    ['NUIP con una letra', () => `NUIP: N${digitos(10, '1')}`],
+    ['CE con una letra', () => `CE: E${digitos(10, '1')}`],
+    ['TI con una letra', () => `TI: T${digitos(10, '1')}`],
+    ['ID con pasaporte', () => `ID: P${digitos(8, '1')}`],
+    ['id paciente con una letra', () => `id paciente: X${digitos(10, '1')}`],
+    ['DNI con una letra', () => `DNI X${digitos(7, '1')}`],
+    ['un NCT con más de ocho dígitos', () => `ID: NCT${digitos(10, '1')}`],
+    ['un nct en minúsculas', () => `ID: nct${digitos(8, '1')}`],
+    ['C.C. con Nº pegado', () => `C.C. N\u00BA${digitos(10, '1')}`],
+    ['CC con No pegado', () => `CC No${digitos(10, '1')}`],
+    ['ID con una letra tras los dos puntos', () => `ID:A${digitos(10, '1')}`],
+  ])('informa %s [US-036 AC-4]', (_nombre, texto) => {
+    expect(lineasDe(texto())).toEqual(['1:documento_identidad']);
+  });
+
+  it.each([
+    ['entre ángulos', (n) => `<https://x.example/cc>${n}`],
+    ['entre paréntesis', (n) => `(https://x.example/cc)${n}`],
+    ['entre corchetes', (n) => `[https://x.example/cc]${n}`],
+    ['entre comillas', (n) => `"https://x.example/cc"${n}`],
+  ])('informa el valor que sigue a una URL %s con una palabra clave en la ruta [US-036 AC-4]', (_nombre, construir) => {
+    expect(lineasDe(construir(numero()))).toEqual(['1:documento_identidad']);
+  });
+
+  it('corta la ruta de la URL también en ; para que el parámetro de ruta se escanee [US-036 AC-4]', () => {
+    expect(lineasDe(`https://x.example/p;documento=${numero()}`)).toEqual(['1:documento_identidad']);
   });
 
   it('sigue informando un pasaporte con letras antes de los dígitos porque su palabra clave no es una sigla [US-036 AC-4]', () => {

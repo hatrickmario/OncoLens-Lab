@@ -67,6 +67,19 @@ describe('run-cases · casos pendientes', () => {
     expect(stdout).toContain('FALLA     dependiente');
   });
 
+  it.each([['clinico'], ['contexto-clinico'], ['l1d-103']])(
+    'cuenta como FALLA un pendiente cuyo change %s es solo un fragmento del nombre de uno existente [US-036 AC-2]',
+    async (fragmento) => {
+      const { codigo, stdout } = await correr({
+        existentes: ['l1d-103-gateway-contexto-clinico'],
+        pendiente: { motivo: 'espera', hastaQueSeArchive: [fragmento] },
+      });
+
+      expect(codigo).toBe(1);
+      expect(stdout).toContain('FALLA     dependiente');
+    },
+  );
+
   it('acepta como existente un change que ya está en openspec/changes/archive/ [US-036 AC-2]', async () => {
     const { stdout } = await correr({ existentes: [], archivados: ['2026-10-20-l1d-999-consumidor'] });
 
