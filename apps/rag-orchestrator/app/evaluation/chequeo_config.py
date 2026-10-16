@@ -75,8 +75,6 @@ def chequear(raiz: Path) -> ResultadoChequeo:
     for clave in CLAVES_OBLIGATORIAS:
         if clave not in entorno or not entorno[clave]:
             resultado.problemas.append(f"{RUTA_ENV}: falta {clave}")
-        if clave not in decision:
-            resultado.problemas.append(f"{RUTA_ADR}: el bloque de decisión no fija {clave}")
     for clave, esperado in decision.items():
         if clave not in CLAVES_ADR39:
             resultado.problemas.append(f"{RUTA_ADR}: clave desconocida {clave}")

@@ -155,7 +155,7 @@ def test_t5_mantiene_flat_si_hnsw_pierde_recall_frente_a_flat_ac12(escenario) ->
         correr(etapa, escenario)
     comparador = ComparadorFalso(perder_vecino_en_hnsw=True)
 
-    codigo, reporte = correr("t5", escenario, comparador=comparador, index_min_recall_vs_flat=0.99)
+    codigo, reporte = correr("t5", escenario, comparador=comparador, index_min_recall_vs_flat=0.99, k=2)
 
     t5 = json.loads(reporte.read_text())["etapas"]["t5"]
     assert codigo == SALIDA_OK and t5["elegido"] == "FLAT"

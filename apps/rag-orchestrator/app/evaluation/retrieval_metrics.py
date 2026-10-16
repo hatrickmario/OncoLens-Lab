@@ -133,15 +133,11 @@ def _desglose(
     return {k: metrica(v, semilla, repeticiones) for k, v in sorted(grupos.items())}
 
 
-def _fuente_de(r: ResultadoPregunta) -> list[str]:
-    return list(r.documentos)
-
-
 def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000) -> dict[str, object]:
     """Totales y desgloses por fuente, tipo de dato, idioma y controles, más el aparte de ``sin_evidencia``."""
     por_fuente: dict[str, list[ResultadoPregunta]] = defaultdict(list)
     for r in resultados:
-        for doc in _fuente_de(r):
+        for doc in r.documentos:
             por_fuente[doc].append(r)
     sin_evidencia = [r.puntaje_maximo for r in resultados if r.modo == "sin_evidencia" and r.puntaje_maximo is not None]
     return {

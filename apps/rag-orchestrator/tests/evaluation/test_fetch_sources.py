@@ -8,7 +8,6 @@ from pathlib import Path
 import httpx
 import pytest
 import respx
-import yaml
 from app.evaluation.dataset_loader import cargar_dataset
 from app.evaluation.parsers_fuentes import parsear_html_nci, parsear_jats, parsear_registro_ctgov
 from app.scripts import adr39_fetch_sources as fetch

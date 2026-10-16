@@ -24,6 +24,7 @@ CLAVES_MODELOS = (
     "NLI_MODEL",
     "NLI_MODEL_REVISION",
     "MODEL_QUANTIZATION",
+    "NLI_QUANTIZATION",
     "MODEL_CACHE_DIR",
 )
 CLAVES_CHUNKING_E_INDICE = (
@@ -61,6 +62,7 @@ class ConfigModelos:
     nli_model: str
     nli_model_revision: str
     model_quantization: str
+    nli_quantization: str
     model_cache_dir: str
     corpus_chunk_size: int
     corpus_chunk_overlap: int
@@ -142,6 +144,7 @@ _VALIDADORES = {
     "NLI_MODEL": _texto_no_vacio,
     "NLI_MODEL_REVISION": _texto_no_vacio,
     "MODEL_QUANTIZATION": _opcion(*CUANTIZACIONES),
+    "NLI_QUANTIZATION": _opcion(*CUANTIZACIONES),
     "MODEL_CACHE_DIR": _texto_no_vacio,
     "CORPUS_CHUNK_SIZE": _entero_positivo,
     "CORPUS_CHUNK_OVERLAP": _entero_no_negativo,

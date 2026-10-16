@@ -19,7 +19,6 @@ import numpy as np
 import yaml
 
 from app.evaluation.chunking_variants import (
-    ESTRATEGIA_ESTRUCTURA,
     ESTRATEGIA_TAMANO_FIJO,
     ChunkCandidato,
     Seccion,
@@ -31,14 +30,13 @@ from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_datas
 from app.evaluation.indices_milvus import ComparadorIndices, estimar_bytes_indice, recall_frente_a_flat
 from app.evaluation.medicion_modelos import (
     construir_corpus,
-    entradas_espaciadas,
     evaluar_rankings,
     mediana,
     percentil_95,
     recuperar_densos,
 )
 from app.evaluation.model_selection import MedicionVariante, seleccionar_variante
-from app.evaluation.reporte import a_json_seguro, escribir_reporte
+from app.evaluation.reporte import escribir_reporte
 from app.evaluation.retrieval_metrics import agregar
 from app.evaluation.trabajos import Fabrica
 
@@ -137,7 +135,7 @@ class PruebasChunking:
         self.dir_vectores = dir_vectores
         self.reloj = reloj
 
-    def _vectores(self, variante: Variante, chunks: Sequence[ChunkCandidato]) -> np.ndarray:
+    def vectores_de(self, variante: Variante, chunks: Sequence[ChunkCandidato]) -> np.ndarray:
         ruta = self.dir_vectores / f"{self.config.spec.clave}-{self.config.cuantizacion}-{variante.etiqueta}.npy"
         if ruta.exists():
             return np.load(ruta)
@@ -149,7 +147,7 @@ class PruebasChunking:
     def medir(self, variante: Variante) -> dict[str, Any]:
         inicio = self.reloj()
         chunks = construir_corpus(self.secciones, self.tokenizador, variante)
-        vectores = self._vectores(variante, chunks)
+        vectores = self.vectores_de(variante, chunks)
         rankings = recuperar_densos(self.embedder, vectores, self.dataset.preguntas, self.config.k)
         resultados = evaluar_rankings(self.dataset.preguntas, rankings, chunks, self.config.k)
         metricas = agregar(resultados, self.config.semilla_bootstrap, self.config.bootstrap_repeticiones)
@@ -287,7 +285,7 @@ def ejecutar_etapa_con_puertos(
         elegida_t4 = previas["t4"]["elegida"]
         variante = next(v for v in ganadora if v.etiqueta == elegida_t4)
         chunks = construir_corpus(secciones, pruebas.tokenizador, variante)
-        vectores = pruebas._vectores(variante, chunks)  # noqa: SLF001 - misma caché de vectores que T2–T4
+        vectores = pruebas.vectores_de(variante, chunks)  # misma caché de vectores que T2–T4
         consultas = pruebas.embedder.codificar([p.texto for p in dataset.preguntas], consulta=True)
         previas["t5"] = prueba_indice(config, comparador, chunks, vectores, dataset, consultas)
         previas["t5"]["variante"] = variante.etiqueta
@@ -342,5 +340,3 @@ def ejecutar_etapa(etapa: str, ruta_config: Path, cache_modelos: Path, cache_dat
         lambda: datetime.now(timezone.utc),
     )
 
-
-__all__ = ["ETAPAS", "ConfigA2", "cargar_config_a2", "ejecutar_etapa", "ejecutar_etapa_con_puertos", "prueba_indice", "a_json_seguro", "ESTRATEGIA_ESTRUCTURA", "entradas_espaciadas"]

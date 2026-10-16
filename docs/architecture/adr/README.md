@@ -7,7 +7,7 @@ van como DEC en [`docs/decisions/`](../../decisions/).
 | ADR | Título | Estado | Fecha | Historia |
 |---|---|---|---|---|
 | [ADR-36](ADR-36-fuentes-y-licencias.md) | Fuentes y licencias del corpus científico | aceptado | 2026-10-09 | US-007 (L1D-50) |
-| ADR-39 | Modelos locales y runtime | pendiente | — | US-012 |
+| [ADR-39](ADR-39-modelos-locales.md) | Modelos locales y runtime (fase A: recuperación y verificación; fase B pendiente) | propuesto | 2026-10-16 | US-012 (L1D-102) |
 | ADR-40 | PII | pendiente | — | — |
 | ADR-41 | Evaluación RAG | pendiente | — | US-014 |
 | ADR-42 | Streaming de progreso | pendiente | — | — |

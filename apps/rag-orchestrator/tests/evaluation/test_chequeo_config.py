@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 from app.config.modelos import CLAVES_ADR39, ConfigInvalida, cargar_config_modelos
 from app.evaluation.chequeo_config import (
     chequear,
@@ -24,6 +25,7 @@ VALORES = {
     "NLI_MODEL": "org/nli",
     "NLI_MODEL_REVISION": "c" * 40,
     "MODEL_QUANTIZATION": "int8",
+    "NLI_QUANTIZATION": "fp32",
     "MODEL_CACHE_DIR": "/models",
     "CORPUS_CHUNK_SIZE": "512",
     "CORPUS_CHUNK_OVERLAP": "0",
@@ -48,7 +50,7 @@ def escribir_arbol(raiz: Path, env: dict[str, str], decision: dict[str, str] | N
     decision = VALORES if decision is None else decision
     adr = raiz / "docs/architecture/adr/ADR-39-modelos-locales.md"
     adr.parent.mkdir(parents=True)
-    cuerpo = "\n".join(f'{k}: "{v}"' for k, v in decision.items())
+    cuerpo = yaml.safe_dump(decision, allow_unicode=True, sort_keys=False).rstrip()
     adr.write_text(f"# ADR-39\n\n<!-- adr39:decision:inicio -->\n```yaml\n{cuerpo}\n```\n<!-- adr39:decision:fin -->\n", encoding="utf-8")
     entorno = raiz / "apps/rag-orchestrator/.env.example"
     entorno.parent.mkdir(parents=True)
