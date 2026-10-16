@@ -93,7 +93,7 @@
 | US-013 · ADR-40 | Detección y enmascaramiento de PII en texto libre y documentos | FEAT-T4a | 2 | 5 | sí |
 | US-051 | Veo la ficha mínima del paciente con su diagnóstico vigente y sus biomarcadores recientes | FEAT-02a | 2 | 5 | sí |
 | US-019 · DEC-09 | Reglas del semáforo de biomarcadores y de vigencia de diagnósticos | FEAT-02a | 2 | 1 | sí |
-| US-012 · ADR-39 | Fase A: *embeddings*, *reranker* y NLI locales | FEAT-06a | 1 (inicio) | 5 | sí |
+| US-012 · ADR-39 | Fase A: *embeddings*, *reranker* y NLI locales, más *chunking* e índice (T2–T5, `[S1 resp. 38]`) | FEAT-06a | 1 (inicio) | **8** (excepción de tamaño; era 5) | sí |
 | US-224 · ADR-39 | Fase B: runtime, LLM local, OCR y p95 extremo a extremo | FEAT-06a | 1 (cierre) | 3 | sí |
 | US-052 | El gateway valida la pregunta y envía a `rag-orchestrator` el contexto clínico del caso | FEAT-06a | 1 | 5 | sí |
 | US-053 | El análisis queda persistido antes de responder y un fallo nunca muestra resultados | FEAT-06a | 1 | 5 | sí |
@@ -309,17 +309,17 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 | Sprint | Puntos | Detalle | Gate / demo |
 |---|---|---|---|
 | Pre-S1 | **17** | FEAT-00: ADR-36 (3) + DEC-02…DEC-05 (4) + US-033 (10, re-estimada el 2026-10-11) | Contrato y esquema congelados |
-| S1 | **98** | 06a 31 (incluye ADR-39 fases A y B: US-012 y US-224; US-055 y US-225) · PL1 15 (US-034, US-035, US-036, US-215) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 · T5a 3 (US-075) | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; `ai-eval-runner` evalúa la demo a mano (la suite automatizada llega en el S2, `[Pre-S1 resp. 9]`) |
+| S1 | **101** | 06a 34 (incluye ADR-39 fases A y B: US-012 y US-224; US-055 y US-225) · PL1 15 (US-034, US-035, US-036, US-215) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 · T5a 3 (US-075) | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; `ai-eval-runner` evalúa la demo a mano (la suite automatizada llega en el S2, `[Pre-S1 resp. 9]`) |
 | S2 | **93 + `?`** (98 con US-073 = 5) | T4a 21 (incluye ADR-40) · T5a 16 (ADR-41, DEC-06, US-072, US-074, DEC-07; desde S1) · 01a 13 · PL1 15 (US-213, US-214, US-217 desde S1; US-223, deuda del Pre-S1) · PL3 9 (incluye DEC-08) · T2a 8 · 02a 6 (incluye DEC-09) · PL2 5 + US-073 (`?`, rango 3–5) | Demo: login → listado → ficha → análisis con Base del análisis; suite `evaluate` en la DoD de cada PR que cambia la IA; baseline técnico calibrado y umbral de regresión activo |
 | S3 | **85** | 01b 31 · 02b 21 · 03a 15 · T5b 10 · 10a 3 · T1a 3 · 01a 2 (US-212) | Demo: carga de PDF → extracción → vista de caso con enlace al PDF de origen (hipótesis 1) |
 | S4 | **79** | 04 23 (incluye DEC-01) · 03b 16 · 06c 16 · 06a 6 · 10b 5 · T4a 5 (US-047) · T2b 3 · T5b 3 · T3 2 | Demo: revisión, registro manual y checklist de faltantes (hipótesis 2) |
 | S5 | **89** | 08b 29 (incluye DEC-11) · 10c 16 (incluye US-218, US-219) · T5b 15 · T5c 12 (incluye DEC-14) · 06b 6 (incluye US-220) · 10b 5 · T1a 3 · T3 3 | **G-Demo al cierre del S5** (sintético, hipótesis 3) |
 | S6 | **76** | T4d 28 (incluye ADR-43 condicional y DEC-10, 15, 17, 18, 19) · T5d 16 (núcleo) · T4c 10 (incluye DEC-12, 16) · T1b 8 · T4a 11 (US-050, US-221, US-222) · PL1 3 (US-216, desde S1) | **G-Piloto** → piloto mixto con casos reales → **G-Éxito al cierre del S6** |
-| **MVP comprometido (Pre-S1…S6)** | **520 + `?`** (**525** con US-073 = 5) | | |
+| **MVP comprometido (Pre-S1…S6)** | **525 + `?`** (**530** con US-073 = 5) | | |
 | `si-hay-capacidad` | **186** | 96 que ya estaban en el S6 `si-hay-capacidad` (11a 26 · 07 19 · 09 12 · 01c 11 · PL5 11 · 05 9 · T5d anexos 8) + **90 que salen del MVP comprometido con el slicing v2**: 06b 16 (US-112…US-115) · T5b 14 (US-104, US-106, US-133, US-141) · 02c 13 · 01a 9 (US-077, US-080 = 3, US-081) · 02b 8 (US-091, US-094) · T2b 8 (US-129, US-130) · 03b 5 (US-109) · T4d 5 (US-146) · 06c 3 (US-119) · 10c 3 (US-015 · ADR-42) · PL3 3 (US-042) · T1b 3 (US-151) | Se priorizan en el *planning* de cada sprint si sobra capacidad |
 | Post-MVP | **109** | T4b 27 (incluye DEC-13) · 11b 16 · 11c 16 · 08c 13 · T4e 8 · T4f 8 · T2c 6 · AP1 6 (incluye DEC-20) · T5d anexos 6 (US-160, US-161) · PL5 3 (ADR-44) | |
 | Futuro (sin planificar) | `?` | US-032 · ADR-7 (FEAT-AP1), no suma | |
-| **Total del backlog** | **815 + 2 `?`** | US-073 (S2) y US-032 · ADR-7 (Futuro) | |
+| **Total del backlog** | **820 + 2 `?`** | US-073 (S2) y US-032 · ADR-7 (Futuro) | |
 
 > **Repliegue de DEC-03 (usuario, 2026-10-09, `[Pre-S1 resp. 9]`).**
 > - **Capacidad supuesta:** 80–90 puntos por sprint. El S1 sumaba 124.
@@ -342,6 +342,8 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 > **Refinamiento del S1 (usuario, 2026-10-13, `[S1 resp. 6]`).** Por la DoR (≤ 5 pts) y la retro del Pre-S1 (P-5): US-012 · ADR-39 (8) se parte en fase A (US-012, 5) y fase B (**US-224**, L1D-274, 3); US-055 (8) se parte en recuperación (US-055, 5) y generación (**US-225**, L1D-275, 3). El S1 sigue en **96**, el MVP en **525** y el backlog en **815**; el número de historias pasa de 224 a 226. Detalle: [`../sprints/S1-refinamiento.md`](../sprints/S1-refinamiento.md).
 >
 > **Gate 1 del S1 (usuario, 2026-10-14, `[S1 resp. 13]`).** El cliente HTTP generado se adelanta del S2 (US-214) a US-054, que pasa de 3 a **5**. El S1 queda en **98** (+8 sobre el máximo de DEC-03, aceptado), el MVP en **527** y el backlog en **817**. Detalle: [`../sprints/S1-plan.md`](../sprints/S1-plan.md).
+
+> **Ampliación de US-012 (usuario, 2026-10-15, `[S1 resp. 38]`).** Las pruebas de *chunking*, solapamiento, estrategia e índice (T2–T5) amplían US-012 (AC-10 a AC-13): 5 → **8**, con excepción de tamaño (la DoR del S1 fija ≤ 5). El S1 queda en **101**, el MVP en **530** (con US-073 = 5) y el backlog en **820**. La tabla de totales no había incorporado los +2 de US-054 (`[S1 resp. 13]`); queda corregida. Detalle: [`../sprints/S1-plan.md`](../sprints/S1-plan.md) §8.
 
 > **Diferencia con el reparto aprobado (Pre-S1 12 · S1 91 · S2 88 · S3 83 · S4 79 · S5 78 · S6 65 = 496):** S1 **+18** (US-211 +3; US-014, US-016, US-072, US-074 +15) · S2 **−17** con US-073 = 5 (US-044 −2; las cuatro de evaluación −15) · S3 **+2** (US-212). El MVP comprometido pasa de 496 a **499** (con US-073 = 5) y `si-hay-capacidad` de 188 a 186 (US-080 −2). El total del backlog pasa de 788 a **789 + 2 `?`**.
 

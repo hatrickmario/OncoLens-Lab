@@ -36,13 +36,17 @@
 
 > Linear: [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102)
 
-`FEAT-06a` · Sprint 1 (inicio) · Estimación **5** · — (ADR) · IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · Dueño: Ingeniería · 🔗 Bloquea: US-058 (dimensión del vector y campo sparse), US-059 (indexación), US-055 (adapters reales de recuperación), US-224 · ADR-39 fase B, US-033 AC-6, US-072/US-073 (baseline con modelos fijados), US-014 · ADR-41 (juez local) · No bloquea: historias que trabajan contra las interfaces de los adapters con implementaciones falsas
+`FEAT-06a` · Sprint 1 (inicio) · Estimación **8** (excepción de tamaño, `[S1 resp. 38]`; era 5) · — (ADR) · IA-01, NFR-01, NFR-05, TBD-01 · SUP-2 · Dueño: Ingeniería · 🔗 Bloquea: US-058 (dimensión del vector, campo sparse y tipo de índice), US-059 (indexación y tamaño y solapamiento de chunk), US-055 (adapters reales de recuperación), US-224 · ADR-39 fase B, US-033 AC-6, US-072/US-073 (baseline con modelos fijados), US-014 · ADR-41 (juez local) · No bloquea: historias que trabajan contra las interfaces de los adapters con implementaciones falsas
 
 > **División (usuario, 2026-10-13, `[S1 resp. 6]`, retro del Pre-S1 P-5):** US-012 (8) se parte por superficie en **fase A** (esta historia, 5: lo que fuerza reindexar) y **fase B** (US-224, 3: runtime, LLM, OCR y p95 extremo a extremo, cuando el pipeline corre). Un solo documento, `ADR-39-modelos-locales.md`, con las dos fases. Los AC-6, AC-7 y AC-8 originales pasan a US-224 (AC-1, AC-4 y AC-5); los números no se reutilizan.
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 5]`):** hipótesis principal a medir = **combinación A**: BGE-M3 (dense de 1024, int8, origen del sparse = el propio BGE-M3), bge-reranker-v2-m3 (int8) y mDeBERTa-v3-base-xnli-multilingual-nli-2mil7. Respaldos medidos con el mismo protocolo: **B** (Qwen3-Embedding-0.6B con MRL a 1024 + Qwen3-Reranker-0.6B) y **C** (multilingual-e5-large-instruct + gte-multilingual-reranker-base). La elección final sale de las cifras (AC-2, AC-4), no de esta hipótesis. Insumo: investigación externa del refinamiento del S1 (`backlog/sprints/S1-refinamiento.md` §2), sin latencias medidas.
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
+>
+> **Ampliación (usuario, 2026-10-15, `[S1 resp. 38]`):** las pruebas acotadas de *chunking*, solapamiento, estrategia de *chunking* e índice (T2–T5) amplían esta historia (AC-10 a AC-13). Estimación 5 → **8**, con **excepción de tamaño**: la DoR del S1 fija ≤ 5 puntos y esta historia ya se partió una vez por superar ese límite (`[S1 resp. 6]`). El S1 pasa de 98 a 101. Los números de AC no se reutilizan.
+>
+> **Decidido (usuario, 2026-10-15, `[S1 resp. 39]`):** los registros de ClinicalTrials.gov se pueden usar con atribución visible a NLM ("Source: ClinicalTrials.gov, National Library of Medicine"), sin sugerir aval de NLM, NIH ni ClinicalTrials.gov, con fecha de consulta y aviso de actualización; el uso se limita a metadatos del registro y citas breves. El mini-dataset está en `data/eval/adr39-mini/` (en `main`, PR #21): 75 preguntas, 39 pares NLI y 27 fuentes, revisado por el oncólogo asesor.
 
 ## Story
 Como responsable técnico, quiero fijar los modelos de *embeddings*, *reranker* y NLI
@@ -75,10 +79,14 @@ recuperación del walking skeleton se implemente sobre una base estable.
   que las incumpla. (asumido; aceptado `[S1 resp. 3]`)
 - **AC-9 (mini-dataset de la fase A)** · Dado que la suite `evaluate` (US-072) llega en el
   S2, cuando se prepare la medición, entonces existe `data/eval/adr39-mini/` con ≥ 30
-  preguntas sintéticas (≥ 10 en español contra fuentes en inglés) etiquetadas contra los
-  documentos de la semilla de US-059, y ≥ 30 pares afirmación–fragmento etiquetados para
+  preguntas sintéticas (≥ 10 en español contra fuentes en inglés) etiquetadas con documento y cita literal (de fuentes del manifiesto del propio dataset, que US-059 podrá reutilizar), y ≥ 30 pares afirmación–fragmento etiquetados para
   NLI; su manifiesto declara `clase: sintetico` y licencia de cada fuente, y US-072 lo
   reutiliza. `[RN-13]` `[RN-14]` `[RN-21]` `[S1 resp. 6]`
+
+- **AC-10 (tamaño y solapamiento de chunk)** `[IA-01]` `[RN-22]` · Dados el modelo de *embeddings* elegido (AC-3), el mini-dataset del AC-9 y las fuentes descargadas con checksum (AC-13), cuando se mide un tamaño de chunk de {256, 512, 1024} tokens (solo los que admite el modelo) y después un solapamiento de {0 %, 10–15 %}, variando un solo factor y fijando los demás, entonces el ADR registra por variante recall@10 y MRR (total, por fuente, por tipo de dato, español → inglés y controles en inglés), número de chunks y memoria del índice, y fija `CORPUS_CHUNK_SIZE` y `CORPUS_CHUNK_OVERLAP`; si la mejora de recall@10 no supera `CHUNK_SELECTION_MARGIN`, gana la variante con menos chunks.
+- **AC-11 (estrategia de chunking)** `[IA-01]` · Dados el tamaño y el solapamiento del AC-10, cuando se compara el *chunking* de tamaño fijo con uno que respeta la estructura de la fuente (secciones JATS, campos del registro, encabezados de NCI), entonces el ADR fija `CORPUS_CHUNKING_STRATEGY` con las mismas métricas y el mismo criterio de desempate.
+- **AC-12 (borde · índice)** `[ADR-10]` · Dado el *chunking* elegido, cuando se compara el índice HNSW con la búsqueda exacta FLAT, entonces el ADR registra el recall@10 de HNSW respecto a FLAT y su p95, y fija `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS`; si HNSW queda por debajo de `INDEX_MIN_RECALL_VS_FLAT`, se mantiene FLAT. Con el tamaño del corpus semilla esta prueba solo verifica que HNSW no pierde recall; no mide calidad.
+- **AC-13 (reproducibilidad y preguntas sin respuesta)** `[RN-02]` `[RN-14]` · Dado que los textos de las fuentes no se versionan, cuando se prepara la medición, entonces el script descarga cada documento del manifiesto, registra su SHA-256 y termina con código distinto de 0 si una cita del golden no aparece en su documento; el reporte incluye por separado el puntaje máximo recuperado en las preguntas sin respuesta, para calibrar el umbral.
 
 > AC-6, AC-7 y AC-8 → US-224 (fase B), AC-1, AC-4 y AC-5.
 
@@ -89,6 +97,7 @@ truncado de pares del *reranker* (la investigación estima 3–6 s en fp32 para 
 y 1–2 s en int8; es el segundo cuello de botella después del LLM). El sparse debe existir
 desde el esquema del S1 (híbrida en el S3); con consultas en español sobre un corpus en
 inglés el sparse aporta poco sin traducir la consulta: el ADR lo anota para US-112.
+**Chunking e índice (`[S1 resp. 38]`).** Una prueba por factor con los demás fijos, en secuencia: tamaño (T2), solapamiento (T3), estrategia (T4) e índice (T5); el ganador de cada una queda fijo en la siguiente. La etiqueta del golden es por pasaje (documento + cita), no por chunk, para que el resultado no dependa del *chunking* que se compara. Con 75 preguntas, las diferencias dentro del intervalo de confianza no deciden. Los valores salen a configuración (`CORPUS_CHUNK_SIZE`, `CORPUS_CHUNK_OVERLAP`, `CORPUS_CHUNKING_STRATEGY`, `VECTOR_INDEX_TYPE`, `VECTOR_INDEX_PARAMS`) y los consumen US-058 y US-059.
 NLI: no hay un modelo de *groundedness* multilingüe abierto y ligero; medir mDeBERTa con
 afirmación y fragmento en el mismo idioma y en mezcla es/en. El motor de PII se decide en
 ADR-40.
@@ -102,11 +111,11 @@ ADR-40.
 **Descartado por licencia (investigación del S1):** jina-embeddings v3/v4 y jina-reranker v2/v3 (CC BY-NC o licencia de investigación); HHEM-2.3 (propietario; HHEM-2.1 solo inglés). **No se reabre:** nube para datos reales (RN-12).
 
 ## Non-goals
-No implementar el pipeline. No hacer *fine-tuning*. No decidir runtime, LLM ni OCR
+No implementar el pipeline ni la ingesta (US-059, US-117). No hacer *fine-tuning*. No afinar parámetros de Milvus más allá de HNSW frente a FLAT. No decidir runtime, LLM ni OCR
 (US-224), ni el detector de PII (ADR-40) ni el framework de evaluación (ADR-41).
 
 ## INVEST
-**Small** ✓ 5: tres componentes con protocolo fijo, un mini-dataset y un documento.
+**Small** ⚠ 8, con excepción de tamaño `[S1 resp. 38]`: tres componentes, cuatro pruebas de *chunking* e índice con protocolo fijo, un mini-dataset y un documento. Si la velocidad real lo exige, T5 (índice) es la primera candidata a salir (AC-12).
 **Testable** ✓ cada AC se verifica sobre el documento ADR, el dataset y la configuración resultante.
 
 ---

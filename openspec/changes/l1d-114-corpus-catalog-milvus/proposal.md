@@ -53,7 +53,7 @@ congelado en `data-model.md` §4.6–§4.7 (US-033); falta materializarlo con Al
 - **Nuevo** inicializador de la colección en `apps/rag-orchestrator/app/infrastructure/milvus/`:
   `MilvusRepository.ensure_collection()` crea `corpus_chunks` con `dense_vector` de dimensión
   `EMBEDDING_DIM` (configuración), `sparse_vector`, los campos de `data-model.md` §4.7 (incluidos los
-  siete denormalizados), índice vectorial sobre ambos vectores e índices escalares sobre `is_current`
+  siete denormalizados), índice vectorial sobre ambos vectores (tipo y parámetros desde la configuración: `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS`, que fija US-012 AC-12) e índices escalares sobre `is_current`
   y `cancer_type_tags`. Es idempotente: si la colección existe, no la borra ni la recrea, y si su
   esquema difiere de la configuración (p. ej., otra dimensión) falla con un error explícito.
 - **Nuevos** comandos `python -m app.scripts.migrate_corpus_catalog` (Alembic `upgrade head` como
@@ -105,7 +105,7 @@ change los materializa en código sin tocarlos.
   PostgreSQL de test que el arnés Pytest de este change replica.
 - ⛔ **change de L1D-102 (US-012 fase A)**, solo para el valor real de `EMBEDDING_DIM` y
   `SPARSE_VECTOR_SOURCE` (AC-2). No bloquea los tests (`EMBEDDING_DIM=8`); sí bloquea crear la
-  colección real del entorno de demo. Hipótesis A ya aceptada `[S1 resp. 5]`.
+  colección real del entorno de demo. Hipótesis A ya aceptada `[S1 resp. 5]`. Desde `[S1 resp. 38]`, también `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS` (US-012 AC-12, HNSW frente a FLAT): se leen de la configuración, por lo que tampoco bloquean los tests.
 - ↪ US-033 (L1D-55): modelo congelado — **hecho** (archivado).
 - ↪ US-040 (S2): `REVOKE ALL` y tests de *permission denied* de `rag_corpus` (dependencia hacia
   adelante del slicing v2; en el S1 solo hay datos sintéticos).

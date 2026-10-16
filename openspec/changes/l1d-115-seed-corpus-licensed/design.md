@@ -18,7 +18,7 @@ EN/ES solo texto + PMC OA con CC0, CC BY o CC BY-SA, licencia por documento; NCC
 - Rechazo por licencia o por fuente excluida, sin chunks, sin detener la carga (AC-2, AC-3).
 - Criterios de población copiados de la fuente estructurada o `no_disponible` (AC-4, RN-25).
 - Recarga idempotente por `checksum` (AC-5) y versionado sin borrado (AC-6, RN-05).
-- El manifiesto real `data/raw/seed/manifest.yaml`, del que depende el mini-dataset de ADR-39.
+- El manifiesto real `data/raw/seed/manifest.yaml`, (el mini-dataset de ADR-39 ya no depende de él, `[S1 resp. 38]`).
 
 **Non-Goals:**
 - Ingesta reanudable, *sparse*, `CORPUS_ALLOWED_SOURCES`, ≥ 20 documentos por tipo (US-117, US-120).
@@ -68,7 +68,7 @@ confirma el catálogo; un fallo intermedio deja la versión anterior vigente (ve
 El `checksum` es SHA-256 del texto normalizado.
 
 **D6 · Chunking y *embeddings*.** `fragmentar(texto, CORPUS_CHUNK_SIZE, CORPUS_CHUNK_OVERLAP)` es pura
-(por caracteres con corte en límite de párrafo cuando existe). Normalización mínima: Unicode NFC,
+(por caracteres con corte en límite de párrafo cuando existe; al fijarse US-012 AC-10, tamaño y solapamiento pasan a tokens del *tokenizer* del modelo elegido, `[S1 resp. 38]`). Normalización mínima: Unicode NFC,
 espacios y saltos de línea. El puerto `PassageEmbedder` (pasajes, no preguntas) se declara en
 `app/application/seed_corpus/ports.py` para no chocar con `QueryEmbedder` de L1D-106; el adapter real
 lo implementa el mismo módulo `infrastructure/embeddings/` con el modelo de ADR-39 (prefijo de pasaje
