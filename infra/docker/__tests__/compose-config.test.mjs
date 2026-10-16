@@ -108,6 +108,7 @@ describe('docker-compose.yml', () => {
       CLINICAL_API_URL: 'http://clinical-api:3000',
       WEB_ALLOWED_ORIGIN: 'http://127.0.0.1:3000',
       WEB_UPSTREAM_TIMEOUT_MS: '40000',
+      WEB_MAX_BODY_BYTES: '32768',
     });
     expect(Object.keys(entorno).filter((nombre) => nombre.startsWith('NEXT_PUBLIC_'))).toEqual([]);
   });

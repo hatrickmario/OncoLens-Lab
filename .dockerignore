@@ -22,3 +22,5 @@ infra/docker/secrets/
 **/.env
 **/.env.*
 !**/.env.example
+apps/web/tests
+apps/web/vitest*.config.ts

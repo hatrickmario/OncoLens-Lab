@@ -239,6 +239,8 @@ services:
       WEB_ALLOWED_ORIGIN: ${WEB_ALLOWED_ORIGIN:-http://127.0.0.1:3000}
       # Mayor que el deadline de clinical-api hacia rag-orchestrator (RN-22).
       WEB_UPSTREAM_TIMEOUT_MS: ${WEB_UPSTREAM_TIMEOUT_MS:-40000}
+      # Tope del cuerpo de las peticiones al BFF; más allá, 413 (RN-22).
+      WEB_MAX_BODY_BYTES: ${WEB_MAX_BODY_BYTES:-32768}
     # Único puerto publicado del stack (SEG-09); en el S1 solo en la máquina local.
     ports:
       - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"

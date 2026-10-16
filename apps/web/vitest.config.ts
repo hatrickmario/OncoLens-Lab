@@ -1,12 +1,10 @@
-import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
-
-const require = createRequire(import.meta.url);
 
 export default defineConfig({
   resolve: {
-    // `server-only` lo resuelve Next al compilar; en Vitest se sustituye por el módulo vacío que trae Next.
-    alias: { 'server-only': require.resolve('next/dist/compiled/server-only/empty') },
+    // `server-only` lo resuelve Next al compilar; en Vitest se sustituye por un módulo vacío local.
+    alias: { 'server-only': fileURLToPath(new URL('./tests/support/server-only-vacio.ts', import.meta.url)) },
   },
   test: {
     environment: 'node',
