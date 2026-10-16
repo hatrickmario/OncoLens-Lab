@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -30,6 +31,10 @@ def construir_corpus(
     for documento in sorted(secciones_por_documento):
         chunks.extend(fragmentar(documento, secciones_por_documento[documento], tokenizador, variante))
     return chunks
+
+
+def vectores_en_cache(ruta: Path, textos: Sequence[str], embedder: Embedder) -> np.ndarray:
+    raise NotImplementedError
 
 
 def recuperar_densos(

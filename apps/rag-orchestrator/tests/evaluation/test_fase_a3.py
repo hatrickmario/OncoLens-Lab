@@ -151,6 +151,46 @@ def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigu
     assert "menos-pares" not in reporte["escenarios"] and "vigente" in reporte["escenarios"]
 
 
+def test_vectores_en_cache_codifica_una_vez_y_reutiliza_el_archivo(tmp_path: Path) -> None:
+    from app.evaluation.medicion_modelos import vectores_en_cache
+
+    embedder = FabricaFalsa().embedder(EMB, tmp_path, "int8", 1)
+    original = embedder.codificar
+    llamadas: list[int] = []
+    embedder.codificar = lambda textos, *, consulta: (llamadas.append(len(textos)), original(textos, consulta=consulta))[1]  # type: ignore[method-assign]
+
+    primero = vectores_en_cache(tmp_path / "v.npy", ["uno dos", "tres"], embedder)
+    segundo = vectores_en_cache(tmp_path / "v.npy", ["uno dos", "tres"], embedder)
+
+    assert llamadas == [2] and (primero == segundo).all()
+
+
+def test_vectores_en_cache_recodifica_cuando_la_cache_no_corresponde_al_numero_de_chunks(tmp_path: Path) -> None:
+    from app.evaluation.medicion_modelos import vectores_en_cache
+
+    embedder = FabricaFalsa().embedder(EMB, tmp_path, "int8", 1)
+    vectores_en_cache(tmp_path / "v.npy", ["uno"], embedder)
+
+    vectores = vectores_en_cache(tmp_path / "v.npy", ["uno", "dos", "tres"], embedder)
+
+    assert vectores.shape[0] == 3
+
+
+def test_preparar_candidatos_no_reutiliza_rankings_de_otro_pool(escenario) -> None:
+    from app.evaluation.fase_a3 import preparar_candidatos
+
+    dataset, secciones, tmp = escenario
+    destino = tmp / "candidatos"
+    args = (config(), 4, None, dataset, secciones, FabricaFalsa(), tmp, tmp / "vectores", destino)
+
+    preparar_candidatos(*(args[:2] + (1,) + args[3:]))
+    con_uno = json.loads((destino / "rankings.json").read_text())
+    preparar_candidatos(*(args[:2] + (2,) + args[3:]))
+    con_dos = json.loads((destino / "rankings.json").read_text())
+
+    assert {len(v) for v in con_uno.values()} == {1} and {len(v) for v in con_dos.values()} == {2}
+
+
 def test_conclusiones_aplican_la_regla_de_presupuesto_al_escenario_adoptado() -> None:
     agregados = {
         "base": agregado(0.667, 3947.0),
