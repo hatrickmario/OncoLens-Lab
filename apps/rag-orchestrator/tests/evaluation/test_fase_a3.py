@@ -128,6 +128,17 @@ def test_la_fase_a3_escribe_un_reporte_con_cada_escenario_y_sus_conclusiones(esc
     assert reporte["escenarios"]["vigente"]["corridas"] == 3
     assert reporte["conclusiones"]["presupuesto_reranker_ms"] is None or reporte["conclusiones"]["presupuesto_reranker_ms"] % 250 == 0
     assert "texto" not in json.dumps(reporte).lower().replace("textos", "")
+    assert reporte["escenarios"]["vigente"]["determinista"] is True
+
+
+def test_la_fase_a3_marca_no_determinista_el_escenario_cuyas_corridas_dan_huellas_distintas() -> None:
+    from app.evaluation.fase_a import agregar_corridas
+
+    corrida = {"rss_carga_mb": 1.0, "rss_max_mb": 2.0, "pico_rss_mb": 3.0, "latencia": {"p50_ms": 1.0, "p95_ms": 2.0}, "calidad": {}}
+
+    agregado_a3 = agregar_corridas([{**corrida, "huella_sondas": "x"}, {**corrida, "huella_sondas": "y"}])
+
+    assert agregado_a3["determinista"] is False
 
 
 def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigue_con_los_demas(escenario) -> None:
