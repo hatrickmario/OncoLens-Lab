@@ -174,12 +174,13 @@ describe('POST /api/evidence-analyses', () => {
       });
       return Promise.resolve(new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }));
     };
-    const { dependencias } = crearDependenciasDeTest({ fetch: fetchConCorte });
+    const { dependencias, lineas } = crearDependenciasDeTest({ fetch: fetchConCorte });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 
     expect(respuesta.status).toBe(502);
     assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', await respuesta.json());
+    expect(lineas).toMatchObject([{ status: 502, motivo: 'cuerpo_cortado' }]);
   });
 
   it('responde 502 propio sin eco cuando un error no 2xx no es application/json [US-060 AC-4]', async () => {
@@ -188,14 +189,53 @@ describe('POST /api/evidence-analyses', () => {
       texto: '<html>detalle-interno-del-proxy</html>',
       cabeceras: { 'Content-Type': 'text/html' },
     });
-    const { dependencias } = crearDependenciasDeTest();
+    const { dependencias, lineas } = crearDependenciasDeTest();
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 
     expect(respuesta.status).toBe(502);
+    expect(lineas).toMatchObject([{ status: 502, motivo: 'error_no_json' }]);
     const texto = await respuesta.text();
     expect(texto).not.toContain('detalle-interno-del-proxy');
     assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', JSON.parse(texto));
+  });
+
+  it('responde 502 propio y registra el X-Trace-Id de clinical-api cuando una 2xx con cuerpo no es application/json [US-060 AC-4]', async () => {
+    clinicalApi.responderTexto({
+      status: 200,
+      texto: 'texto-que-no-es-json',
+      cabeceras: { 'Content-Type': 'application/jsonx', 'X-Trace-Id': 'req_upstream1' },
+    });
+    const { dependencias, lineas } = crearDependenciasDeTest();
+
+    const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+
+    expect(respuesta.status).toBe(502);
+    expect(await respuesta.text()).not.toContain('texto-que-no-es-json');
+    expect(lineas).toEqual([
+      {
+        event: 'evidence_analyses.proxy',
+        status: 502,
+        traceId: 'req_web00001',
+        traceIdClinicalApi: 'req_upstream1',
+        duracionMs: 0,
+        motivo: 'error_no_json',
+      },
+    ]);
+  });
+
+  it('acepta application/json con parámetros de charset en una 2xx [US-060 AC-1]', async () => {
+    clinicalApi.responderTexto({
+      status: 200,
+      texto: '{"ok":true}',
+      cabeceras: { 'Content-Type': 'Application/JSON; charset=utf-8' },
+    });
+    const { dependencias } = crearDependenciasDeTest();
+
+    const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
+
+    expect(respuesta.status).toBe(200);
+    expect(await respuesta.text()).toBe('{"ok":true}');
   });
 
   it('marca Cache-Control no-store en las respuestas 200, 403, 413 y 502 [US-060 AC-1]', async () => {

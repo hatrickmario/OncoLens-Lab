@@ -41,7 +41,7 @@ describe('cabecerasHaciaClinicalApi', () => {
 });
 
 describe('cabecerasHaciaNavegador', () => {
-  it('conserva Content-Type, Retry-After y X-Trace-Id y descarta Set-Cookie y cabeceras internas', () => {
+  it('conserva Content-Type, Retry-After y X-Trace-Id, marca no-store y descarta Set-Cookie y cabeceras internas', () => {
     const upstream = new Response('{}', {
       headers: {
         'Content-Type': 'application/json',
@@ -54,6 +54,7 @@ describe('cabecerasHaciaNavegador', () => {
     });
 
     expect([...cabecerasHaciaNavegador(upstream).entries()].sort()).toEqual([
+      ['cache-control', 'no-store'],
       ['content-type', 'application/json'],
       ['retry-after', '30'],
       ['x-trace-id', 'req_1'],
