@@ -28,7 +28,7 @@ describe('POST /api/evidence-analyses', () => {
       Origin: ORIGEN_PERMITIDO,
       Cookie: 'otra=x; oncolens_session=sesion-sintetica-1',
       'X-Trace-Id': 'trace-del-navegador',
-      'Idempotency-Key': '3f2b8c1e-0d4a-4e6b-9a7c-5b1d2e3f4a5b',
+      'Idempotency-Key': '00000000-0000-4000-8000-000000000001',
     });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(solicitud);
