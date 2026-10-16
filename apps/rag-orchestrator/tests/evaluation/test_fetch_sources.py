@@ -109,6 +109,39 @@ def test_descargar_fuentes_falla_tras_reintentar_si_el_origen_responde_error(res
     assert len(esperas) == fetch.INTENTOS
 
 
+@respx.mock(assert_all_called=False)
+def test_leer_fuentes_de_cache_detecta_una_cache_alterada_respecto_al_sha256_registrado(
+    respx_mock: respx.MockRouter, tmp_path: Path
+) -> None:
+    mock_fuentes(respx_mock)
+    dataset = cargar_dataset(preparar_dataset(tmp_path))
+    with httpx.Client() as cliente:
+        fetch.descargar_fuentes(dataset, tmp_path / "cache", cliente, lambda: AHORA, dormir=lambda _s: None)
+    (tmp_path / "cache" / "adr39" / "A1.xml").write_bytes(b"<article/>")
+
+    with pytest.raises(fetch.FuenteNoDescargable, match="SHA-256"):
+        fetch.leer_fuentes_de_cache(dataset, tmp_path / "cache")
+
+
+@respx.mock(assert_all_called=False)
+def test_leer_fuentes_de_cache_devuelve_las_mismas_fuentes_que_la_descarga(respx_mock: respx.MockRouter, tmp_path: Path) -> None:
+    mock_fuentes(respx_mock)
+    dataset = cargar_dataset(preparar_dataset(tmp_path))
+    with httpx.Client() as cliente:
+        descargadas = fetch.descargar_fuentes(dataset, tmp_path / "cache", cliente, lambda: AHORA, dormir=lambda _s: None)
+
+    assert fetch.leer_fuentes_de_cache(dataset, tmp_path / "cache") == descargadas
+
+
+def test_url_de_con_formato_desconocido_lanza_un_error_que_nombra_el_formato() -> None:
+    from app.evaluation.dataset_loader import Fuente
+
+    fuente = Fuente(id="X1", nombre="x", tipo="t", formato_original="pdf", datos={})
+
+    with pytest.raises(fetch.FormatoNoSoportado, match="pdf"):
+        fetch.url_de(fuente)
+
+
 def test_url_de_construye_la_url_segun_el_formato_de_la_fuente(tmp_path: Path) -> None:
     dataset = cargar_dataset(preparar_dataset(tmp_path))
 

@@ -38,6 +38,10 @@ REGISTRO = "descargas.json"
 INTENTOS = 3
 
 
+class FormatoNoSoportado(ValueError):
+    """El manifiesto declara un ``formato_original`` sin extensión, URL ni parser."""
+
+
 class FuenteNoDescargable(RuntimeError):
     """La fuente no se pudo descargar tras los reintentos."""
 
