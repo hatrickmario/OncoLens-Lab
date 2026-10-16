@@ -37,4 +37,4 @@
 
 - [ ] 2.1 `openspec validate l1d-114-corpus-catalog-milvus --strict` en verde
 - [ ] 2.2 Suite de `rag-orchestrator` en verde (Pytest, integración con PostgreSQL —perfil test— y Milvus de test), `corpus-migrate` termina con código 0 y `python -m app.scripts.init_corpus_store` en verde sobre el Compose local
-- [ ] 2.3 Avisar a los changes de L1D-115 (US-059) y L1D-106 (US-055) de que el puerto `CorpusChunkStore` y la colección están disponibles; confirmar con L1D-102 el valor de `EMBEDDING_DIM` antes de crear la colección del entorno de demo
+- [ ] 2.3 Avisar a los changes de L1D-115 (US-059) y L1D-106 (US-055) de que el puerto `CorpusChunkStore` y la colección están disponibles; confirmar con L1D-102 el valor de `EMBEDDING_DIM` y, desde `[S1 resp. 38]`, `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS` (US-012 AC-12) antes de crear la colección del entorno de demo

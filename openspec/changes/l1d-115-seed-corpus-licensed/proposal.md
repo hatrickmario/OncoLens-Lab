@@ -32,10 +32,9 @@ estructurados (RN-25) y nunca borra una versión anterior (RN-05).
 - **Nuevo** manifiesto real `data/raw/seed/manifest.yaml` (~10 documentos de mama y próstata, NCI
   PDQ EN/ES y PMC OA CC0/CC BY/CC BY-SA, licencia verificada por documento según ADR-36) con los
   textos públicos o su URL, más el fixture sintético FX-06c-a
-  (`apps/rag-orchestrator/tests/fixtures/seed-manifest.yaml`). Es el manifiesto que usa el
-  mini-dataset de ADR-39 (change de L1D-102).
+  (`apps/rag-orchestrator/tests/fixtures/seed-manifest.yaml`). Puede derivar de `data/eval/adr39-mini/manifest.yaml` (change de L1D-102), que ya trae fuentes con licencia y atribución.
 - **Configuración** (RN-22): `CORPUS_ACCEPTED_LICENSES`, `CORPUS_EXCLUDED_SOURCES`,
-  `CORPUS_CUTOFF_DATE`, `CORPUS_CHUNK_SIZE`, `CORPUS_CHUNK_OVERLAP`, `CORPUS_SEED_MANIFEST_PATH`.
+  `CORPUS_CUTOFF_DATE`, `CORPUS_CHUNK_SIZE`, `CORPUS_CHUNK_OVERLAP`, `CORPUS_SEED_MANIFEST_PATH` (`[S1 resp. 38]`: tamaño y solapamiento pasan a **tokens** del *tokenizer* del modelo elegido, y se añade `CORPUS_CHUNKING_STRATEGY`, cuando US-012 AC-10 y AC-11 fijen los valores; hasta entonces, valores provisionales).
 - Sin cambio de contrato ni de esquema: el cargador es un comando, no un endpoint, y usa las tablas
   y la colección del change de L1D-114.
 
@@ -64,11 +63,11 @@ estructurados (RN-25) y nunca borra una versión anterior (RN-05).
 - ↪ change de L1D-164 (US-034): esqueleto de `rag-orchestrator`, PostgreSQL y Milvus en Compose y en
   la CI (tests de integración).
 - ⛔ change de L1D-102 (US-012 fase A, ADR-39): solo **AC-1** (smoke con *embeddings* reales y
-  `EMBEDDING_DIM` real). AC-2…AC-6 se verifican con el adapter falso (`EMBEDDING_DIM = 8`).
+  `EMBEDDING_DIM` real). AC-2…AC-6 se verifican con el adapter falso (`EMBEDDING_DIM = 8`). Desde `[S1 resp. 38]`, los valores de `CORPUS_CHUNK_SIZE`, `CORPUS_CHUNK_OVERLAP` y `CORPUS_CHUNKING_STRATEGY` los fija US-012 AC-10 y AC-11; no bloquean los tests.
 - ↪ change de L1D-106 (US-055): coordina el puerto de *embeddings* y `MilvusRepository` (ver
   design.md D6); no bloquea.
-- 🔗 Lo consumen: change de L1D-102 (etiqueta `data/eval/adr39-mini/` contra
-  `data/raw/seed/manifest.yaml`: el manifiesto debe estar antes que el cargador; ver tasks 1.1),
+- 🔗 Lo consumen: change de L1D-102 (su mini-dataset `data/eval/adr39-mini/` ya trae su propio manifiesto y
+  no depende de este change; `[S1 resp. 38]`),
   change de L1D-106 (US-055, recuperación sobre la semilla en la demo), US-117 (S4).
 - 🔗 Relacionada: US-007 (ADR-36, decidido).
 
