@@ -27,7 +27,8 @@ const soloLista = argumentos.includes('--lista');
 const valorDe = (nombre) => (argumentos.includes(nombre) ? argumentos[argumentos.indexOf(nombre) + 1] : undefined);
 const CASOS = path.resolve(valorDe('--casos') ?? path.join(ORIGEN, 'ci/tests/cases'));
 const ARCHIVO = path.resolve(valorDe('--archivo') ?? path.join(ORIGEN, 'openspec/changes/archive'));
-const valoresDeBanderas = new Set(['--casos', '--archivo'].map(valorDe).filter(Boolean));
+const CAMBIOS = path.resolve(valorDe('--changes') ?? path.join(ORIGEN, 'openspec/changes'));
+const valoresDeBanderas = new Set(['--casos', '--archivo', '--changes'].map(valorDe).filter(Boolean));
 const filtro = argumentos.filter((argumento) => !argumento.startsWith('--') && !valoresDeBanderas.has(argumento));
 
 const git = (cwd, ...parametros) => execFileSync('git', [...IDENTIDAD_GIT, '-C', cwd, ...parametros], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
