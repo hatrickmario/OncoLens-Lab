@@ -2,7 +2,7 @@
 
 Los valores salen de ADR-39 y viven solo aquí (y en ``.env.example``): ni el código ni
 ``docs/architecture/data-model.md`` los repiten. En los tests, ``EMBEDDING_DIM=8`` con adapters falsos (FX-06c).
-Este módulo se compondrá dentro de ``app/config/settings.py`` (L1D-164) sin cambiar sus claves.
+``Settings.modelos`` lo compone desde el entorno (opcional: la producción no exige estas claves).
 """
 
 from __future__ import annotations
