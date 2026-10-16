@@ -13,3 +13,4 @@ next-env.d.ts
 infra/docker/.env
 .pytest_cache/
 .venv/
+infra/docker/secrets/
