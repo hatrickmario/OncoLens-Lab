@@ -61,4 +61,25 @@ describe('transporte hacia rag-orchestrator', () => {
     expect(payload.iat).toBe(INSTANTE_CONGELADO.getTime() / 1000);
     expect(payload.exp).toBe(INSTANTE_CONGELADO.getTime() / 1000 + TTL_SEGUNDOS);
   });
+
+  it('no sigue la redirección y no reenvía el token cuando rag-orchestrator responde 307 a otro origen', async () => {
+    const llegadasAlOtroOrigen: Headers[] = [];
+    servidor.use(
+      http.post(`${BASE_URL}/rag/query`, () =>
+        new HttpResponse(null, { status: 307, headers: { Location: 'http://otro-origen:9000/captura' } }),
+      ),
+      http.post('http://otro-origen:9000/captura', ({ request }) => {
+        llegadasAlOtroOrigen.push(request.headers);
+        return HttpResponse.json({});
+      }),
+    );
+    const signer = createServiceTokenSigner({ privateKey, clock: relojCongelado(), ttlSeconds: TTL_SEGUNDOS });
+    const ragFetch = createRagOrchestratorFetch({ baseUrl: BASE_URL, signer });
+
+    await expect(
+      ragFetch(`${BASE_URL}/rag/query`, { method: 'POST', body: JSON.stringify({ query: 'sintetica' }) }),
+    ).rejects.toThrow();
+
+    expect(llegadasAlOtroOrigen).toHaveLength(0);
+  });
 });

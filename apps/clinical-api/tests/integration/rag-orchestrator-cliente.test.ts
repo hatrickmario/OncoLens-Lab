@@ -2,7 +2,7 @@ import { jwtVerify, type CryptoKey } from 'jose';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ragQuery } from '../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import { ragQuery, type RagQueryInternalRequest } from '../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import requestEjemplo from '../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
@@ -10,7 +10,8 @@ import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.j
 import { generarParEfimero, INSTANTE_CONGELADO, relojCongelado } from '../support/service-jwt.js';
 
 const BASE_URL = 'http://rag-orchestrator:8000';
-const DEADLINE = '2026-10-16T12:00:15.000Z';
+const cuerpo: RagQueryInternalRequest = requestEjemplo as RagQueryInternalRequest; // el JSON ensancha los enums a string; el ejemplo cumple el contrato
+const DEADLINE ='2026-10-16T12:00:15.000Z';
 
 type Capturada = { headers: Headers; body: unknown };
 const capturadas: Capturada[] = [];
@@ -55,10 +56,10 @@ describe('cliente de rag-orchestrator', () => {
   it('envía el X-Request-Deadline que pasa el llamador y el Bearer verificable, y omite la cabecera cuando no se pasa [US-054 AC-6]', async () => {
     const conDeadline = await ragQuery({
       client: cliente,
-      body: requestEjemplo as never,
+      body: cuerpo,
       headers: { 'X-Request-Deadline': DEADLINE },
     });
-    const sinDeadline = await ragQuery({ client: cliente, body: requestEjemplo as never });
+    const sinDeadline = await ragQuery({ client: cliente, body: cuerpo });
 
     expect(conDeadline.response?.status).toBe(200);
     expect(conDeadline.data).toEqual(respuestaEjemplo);

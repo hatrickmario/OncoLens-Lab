@@ -47,6 +47,7 @@ export function createRagOrchestratorFetch(options: RagOrchestratorFetchOptions)
     }
     const cabeceras = construirCabecerasSalientes(peticion.headers, await signer.sign());
     const enviar = options.fetch ?? globalThis.fetch;
-    return enviar(new Request(peticion, { headers: cabeceras }));
+    // redirect: 'error' — una redirección a otro origen nunca recibe el Bearer.
+    return enviar(new Request(peticion, { headers: cabeceras, redirect: 'error' }));
   };
 }
