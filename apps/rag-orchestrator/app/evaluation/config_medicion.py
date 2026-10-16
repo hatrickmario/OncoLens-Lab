@@ -76,6 +76,8 @@ def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
     tarea = crudo.get("tarea", "embedding" if componente == "embeddings" else None)
     if tarea not in TAREAS:
         raise ValueError(f"tarea desconocida: {tarea}")
+    if crudo.get("codigo_remoto") and not crudo.get("code_revision"):
+        raise ValueError(f"{crudo['modelo']}: codigo_remoto exige code_revision (commit exacto del código que se ejecuta)")
     return ModeloSpec(
         id=str(crudo["id"]),
         componente=componente,
@@ -91,6 +93,7 @@ def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
         dim_salida=int(crudo.get("dim_salida", 0)),
         atencion=crudo.get("atencion", "sdpa"),
         codigo_remoto=bool(crudo.get("codigo_remoto", False)),
+        code_revision=crudo.get("code_revision", ""),
         export_pythonpath=crudo.get("export_pythonpath", ""),
     )
 

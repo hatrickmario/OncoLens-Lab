@@ -86,6 +86,7 @@ reranker:
     tarea: reranker_cls
     max_length: 8192
     codigo_remoto: true               # NewForSequenceClassification (Alibaba-NLP/new-impl); exige transformers < 5 para exportar
+    code_revision: 40ced75c3017eb27626c9d4ea981bde21a2662f4   # Alibaba-NLP/new-impl: cabeza de main (última modificación 2024-08-11, anterior a la medición)
     export_pythonpath: /opt/tf4
 
 nli:

@@ -54,6 +54,8 @@ def _cargar(spec: ModeloSpec) -> Any:
     comunes: dict[str, Any] = {"revision": spec.revision, "dtype": torch.float32, "trust_remote_code": spec.codigo_remoto}
     if spec.atencion != "sdpa":
         comunes["attn_implementation"] = spec.atencion
+    if spec.codigo_remoto:
+        comunes["code_revision"] = spec.code_revision  # el código remoto se ejecuta: solo el commit fijado
     if spec.tarea == "embedding":
         return AutoModel.from_pretrained(spec.modelo, **comunes).eval()
     if spec.tarea == "reranker_causal":
@@ -88,7 +90,7 @@ def exportar_fp32(spec: ModeloSpec, destino: Path) -> dict[str, Any]:
 
     destino.mkdir(parents=True, exist_ok=True)
     inicio = time.monotonic()
-    tok = AutoTokenizer.from_pretrained(spec.modelo, revision=spec.revision, trust_remote_code=spec.codigo_remoto)
+    tok = AutoTokenizer.from_pretrained(spec.modelo, revision=spec.revision, trust_remote_code=spec.codigo_remoto, **({"code_revision": spec.code_revision} if spec.codigo_remoto else {}))
     shutil.copy(hf_hub_download(spec.modelo, "tokenizer.json", revision=spec.revision), destino / "tokenizer.json")
     shutil.copy(hf_hub_download(spec.modelo, "config.json", revision=spec.revision), destino / "config.json")
     rapido = Tokenizer.from_file(str(destino / "tokenizer.json"))
