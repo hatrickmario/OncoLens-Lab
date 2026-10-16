@@ -1,0 +1,10 @@
+# Override del arnés de integración de clinical-api (US-038, [S1 resp. 14b]): publica PostgreSQL SOLO en loopback para que
+# Vitest (en el host) llegue al servicio `postgres` del perfil test. Nunca para uso normal ni datos reales.
+#   docker compose \
+#     -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml \
+#     -f apps/clinical-api/tests/support/docker-compose.integration.yml up -d --wait postgres
+# El puerto viene de configuración (RN-22): PG_TEST_PORT.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${PG_TEST_PORT:-55432}:5432"
