@@ -108,3 +108,50 @@ def test_rag_query_responde_401_cuando_la_vida_del_jwt_supera_service_jwt_ttl_se
     assert consulta.invocaciones == 0
     assert "vida_maxima" in caplog.text
     assert token not in caplog.text
+
+
+def test_rag_query_responde_401_y_no_422_cuando_falta_el_jwt_de_servicio_y_el_cuerpo_es_invalido():
+    consulta = _consulta()
+    cuerpo_invalido = {**_ejemplo("rag-query-request.json"), "maxOptions": 99, "campoAjeno": "x"}
+
+    respuesta = _cliente(consulta).post("/rag/query", json=cuerpo_invalido)
+
+    _afirmar_401_de_contrato(respuesta)
+    assert "detail" not in respuesta.json()
+    assert consulta.invocaciones == 0
+
+
+def test_rag_query_responde_401_y_no_422_cuando_falta_el_jwt_de_servicio_y_el_cuerpo_no_es_json():
+    respuesta = _cliente(_consulta()).post(
+        "/rag/query", content=b"{no es json", headers={"Content-Type": "application/json"}
+    )
+
+    _afirmar_401_de_contrato(respuesta)
+
+
+def test_rag_query_responde_401_cuando_el_esquema_de_authorization_no_es_bearer():
+    respuesta = _cliente(_consulta()).post(
+        "/rag/query", json=_ejemplo("rag-query-request.json"), headers={"Authorization": "Basic dXNlcjpwYXNz"}
+    )
+
+    _afirmar_401_de_contrato(respuesta)
+
+
+def test_rag_query_ignora_la_cookie_de_sesion_y_responde_200_cuando_el_jwt_de_servicio_es_valido():
+    consulta = _consulta()
+
+    respuesta = _cliente(consulta).post(
+        "/rag/query",
+        json=_ejemplo("rag-query-request.json"),
+        headers={**con_token_valido(par_de_sesion()), "Cookie": f"oncolens_session={COOKIE_DE_SESION}"},
+    )
+
+    assert respuesta.status_code == 200
+    assert consulta.invocaciones == 1
+
+
+def test_health_responde_200_sin_jwt_de_servicio():
+    respuesta = _cliente(_consulta()).get("/health")
+
+    assert respuesta.status_code == 200
+    assert_matches_spec("#/components/schemas/HealthStatus", respuesta.json())
