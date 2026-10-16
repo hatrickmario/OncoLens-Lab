@@ -41,13 +41,21 @@ def test_vigencia_rechaza_con_expirado_cuando_exp_es_igual_al_limite_de_la_toler
     assert error.value.motivo == "expirado"
 
 
-def test_vigencia_rechaza_con_malformado_cuando_iat_esta_en_el_futuro_mas_alla_de_la_tolerancia():
+def test_vigencia_rechaza_con_emitido_en_futuro_cuando_iat_esta_en_el_futuro_mas_alla_de_la_tolerancia():
     with pytest.raises(TokenServicioInvalido) as error:
         _verificar(IAT + SKEW + 1, IAT + SKEW + 1 + TTL)
 
-    assert error.value.motivo == "malformado"
+    assert error.value.motivo == "emitido_en_futuro"
 
 
 def test_vigencia_acepta_un_iat_en_el_futuro_dentro_de_la_tolerancia_de_reloj():
     _verificar(IAT + SKEW, IAT + SKEW + TTL)
 
+
+
+@pytest.mark.parametrize("exp", [IAT, IAT - 1])
+def test_vigencia_rechaza_con_malformado_cuando_exp_no_es_posterior_a_iat(exp):
+    with pytest.raises(TokenServicioInvalido) as error:
+        _verificar(IAT, exp)
+
+    assert error.value.motivo == "malformado"

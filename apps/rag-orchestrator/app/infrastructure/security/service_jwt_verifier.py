@@ -13,6 +13,14 @@ ALGORITMO = "ES256"
 EMISOR = "clinical-api"
 AUDIENCIA = "rag-orchestrator"
 CLAIMS_OBLIGATORIOS = ["iss", "aud", "iat", "exp"]
+# La vigencia (exp/iat) la juzga el dominio con el Clock inyectado; nbf se rechaza si está presente (no lo emite clinical-api).
+OPCIONES_DE_DECODIFICACION = {
+    "require": CLAIMS_OBLIGATORIOS,
+    "verify_exp": False,
+    "verify_iat": False,
+    "verify_nbf": False,
+    "strict_aud": True,
+}
 
 
 class ServiceJwtVerifier:
@@ -47,8 +55,7 @@ class ServiceJwtVerifier:
                 algorithms=[ALGORITMO],
                 audience=AUDIENCIA,
                 issuer=EMISOR,
-                # La vigencia no la juzga PyJWT con el reloj del sistema sino el dominio con el Clock inyectado.
-                options={"require": CLAIMS_OBLIGATORIOS, "verify_exp": False, "verify_iat": False, "verify_nbf": False},
+                options=OPCIONES_DE_DECODIFICACION,
             )
         except jwt.InvalidSignatureError:
             raise TokenServicioInvalido("firma") from None
@@ -58,7 +65,7 @@ class ServiceJwtVerifier:
             raise TokenServicioInvalido("audiencia") from None
         except jwt.PyJWTError:
             raise TokenServicioInvalido("malformado") from None
-        if not all(_es_entero(claims[nombre]) for nombre in ("iat", "exp")):
+        if "nbf" in claims or not all(_es_entero(claims[nombre]) for nombre in ("iat", "exp")):
             raise TokenServicioInvalido("malformado")
         return claims
 

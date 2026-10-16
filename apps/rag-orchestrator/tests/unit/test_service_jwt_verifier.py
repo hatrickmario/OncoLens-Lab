@@ -108,3 +108,17 @@ def test_verificar_ignora_las_cabeceras_que_apuntan_a_claves_externas(tmp_path):
 
     # La firma ya no corresponde a la nueva cabecera: se rechaza por firma, sin resolver ninguna URL.
     assert _motivo(_verificador(par, tmp_path), f"{nueva}.{cuerpo}.{firma}") == "firma"
+
+
+def test_verificar_rechaza_con_audiencia_cuando_aud_es_una_lista_que_incluye_rag_orchestrator(tmp_path):
+    token = token_es256(par_de_sesion(), aud=["rag-orchestrator", "otro-servicio"])  # type: ignore[arg-type]
+
+    assert _motivo(_verificador(par_de_sesion(), tmp_path), token) == "audiencia"
+
+
+def test_verificar_rechaza_con_malformado_cuando_el_token_trae_nbf(tmp_path):
+    par = par_de_sesion()
+    claims = {"iss": "clinical-api", "aud": "rag-orchestrator", "iat": 1_792_152_000, "exp": 1_792_152_060, "nbf": 1_792_152_000}
+    token = jwt.encode(claims, par.privada_pem, algorithm="ES256")
+
+    assert _motivo(_verificador(par, tmp_path), token) == "malformado"
