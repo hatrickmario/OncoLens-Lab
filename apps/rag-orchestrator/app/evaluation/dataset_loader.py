@@ -20,7 +20,7 @@ MODOS_ACIERTO = ("cualquiera", "cobertura_documentos", "sin_evidencia")
 
 # Licencias de fuente del corpus aceptadas por ADR-36 (RN-21). NCI y ClinicalTrials.gov se aceptan por sus
 # términos de reutilización verificados, no por clase de licencia (tarea 1.2).
-PREFIJO_NCI = "Texto de NCI libre de copyright"
+CLASE_NCI = re.compile(r"^Texto de NCI libre de copyright(?=$| \()")
 # Coincidencia exacta de la clase (con versión) seguida del fin o de una aclaración entre paréntesis.
 CLASE_LICENCIA_ACEPTADA = re.compile(r"^(?:CC0 \d\.\d|CC BY(?:-SA)? \d\.\d)(?=$| \()")
 # CC BY-NC solo en el MVP académico (RN-21), con bandera explícita.
@@ -113,13 +113,18 @@ def _leer_yaml(ruta: Path) -> dict[str, Any]:
 
 def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) -> bool:
     licencia = str(fuente.get("licencia") or "").strip()
+    if not licencia:
+        return _terminos_verificados_de_clinicaltrials(fuente)
     if CONTIENE_ND.search(licencia):
         return False
-    if CLASE_LICENCIA_ACEPTADA.match(licencia) or licencia == "Dominio público" or licencia.startswith(PREFIJO_NCI):
+    if CLASE_LICENCIA_ACEPTADA.match(licencia) or licencia == "Dominio público" or CLASE_NCI.match(licencia):
         return True
-    if permitir_cc_by_nc and CLASE_LICENCIA_NC.match(licencia):
-        return True
-    return fuente.get("licencia_verificada") in TERMINOS_VERIFICADOS_ACEPTADOS
+    return permitir_cc_by_nc and bool(CLASE_LICENCIA_NC.match(licencia))
+
+
+def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
+    """Los términos de reutilización verificados solo sustituyen a la licencia en ClinicalTrials.gov (tarea 1.2)."""
+    return fuente.get("licencia_verificada") in TERMINOS_VERIFICADOS_ACEPTADOS and str(fuente.get("fuente", "")).startswith("ClinicalTrials.gov")
 
 
 def _validar_manifiesto(manifiesto: dict[str, Any], permitir_cc_by_nc: bool = False) -> tuple[Fuente, ...]:
