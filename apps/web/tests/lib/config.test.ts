@@ -22,7 +22,9 @@ describe('leerConfigWeb', () => {
   });
 
   it('falla cuando WEB_MAX_BODY_BYTES no es un entero positivo', () => {
-    expect(() => leerConfigWeb({ ...completo, WEB_MAX_BODY_BYTES: '0' })).toThrow('WEB_MAX_BODY_BYTES');
+    expect(() => leerConfigWeb({ ...completo, WEB_MAX_BODY_BYTES: '0' })).toThrow(
+      'WEB_MAX_BODY_BYTES',
+    );
   });
 
   it.each(['CLINICAL_API_URL', 'WEB_ALLOWED_ORIGIN', 'WEB_UPSTREAM_TIMEOUT_MS'])(
@@ -33,6 +35,8 @@ describe('leerConfigWeb', () => {
   );
 
   it('falla cuando el timeout no es un entero positivo', () => {
-    expect(() => leerConfigWeb({ ...completo, WEB_UPSTREAM_TIMEOUT_MS: 'abc' })).toThrow('WEB_UPSTREAM_TIMEOUT_MS');
+    expect(() => leerConfigWeb({ ...completo, WEB_UPSTREAM_TIMEOUT_MS: 'abc' })).toThrow(
+      'WEB_UPSTREAM_TIMEOUT_MS',
+    );
   });
 });

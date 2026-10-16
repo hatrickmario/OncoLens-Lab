@@ -101,7 +101,9 @@ def token_hs256_con_publica(par: ParClavesServicio, ahora: datetime = AHORA) -> 
     """Ataque de confusión de algoritmo: HS256 firmado con la clave pública como secreto."""
     cabecera = _json_base64url({"alg": "HS256", "typ": "JWT"})
     cuerpo = _json_base64url(
-        _claims(ahora, iss=EMISOR, aud=AUDIENCIA, vida=VIDA_VALIDA_SEGUNDOS, iat_desfase=0, omitir=())
+        _claims(
+            ahora, iss=EMISOR, aud=AUDIENCIA, vida=VIDA_VALIDA_SEGUNDOS, iat_desfase=0, omitir=()
+        )
     )
     firma = hmac.new(par.publica_pem, f"{cabecera}.{cuerpo}".encode(), hashlib.sha256).digest()
     return f"{cabecera}.{cuerpo}.{_base64url(firma)}"

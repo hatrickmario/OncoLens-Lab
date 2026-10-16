@@ -12,7 +12,10 @@ function dependencias(lineas: LineaDeRegistro[]) {
 }
 
 function conOrigen(origen: string | null): Request {
-  return new Request('http://web.test:3000/api/x', { method: 'POST', headers: origen === null ? {} : { Origin: origen } });
+  return new Request('http://web.test:3000/api/x', {
+    method: 'POST',
+    headers: origen === null ? {} : { Origin: origen },
+  });
 }
 
 describe('verificarOrigen', () => {
@@ -29,10 +32,14 @@ describe('verificarOrigen', () => {
     const respuesta = verificarOrigen(conOrigen('https://otro.test'), dependencias(lineas));
 
     expect(respuesta?.status).toBe(403);
-    expect(lineas).toEqual([{ event: 'auth.login', status: 403, traceId: 'req_web00001', motivo: 'origen' }]);
+    expect(lineas).toEqual([
+      { event: 'auth.login', status: 403, traceId: 'req_web00001', motivo: 'origen' },
+    ]);
   });
 
   it('rechaza un Origin que solo comparte el prefijo con el permitido', () => {
-    expect(verificarOrigen(conOrigen('http://web.test:3000.evil.test'), dependencias([]))?.status).toBe(403);
+    expect(
+      verificarOrigen(conOrigen('http://web.test:3000.evil.test'), dependencias([]))?.status,
+    ).toBe(403);
   });
 });

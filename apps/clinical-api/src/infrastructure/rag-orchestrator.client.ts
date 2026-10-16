@@ -1,4 +1,7 @@
-import { createClient, type Client } from '../../../../packages/api-contracts/src/client/rag-orchestrator/client/index.js';
+import {
+  createClient,
+  type Client,
+} from '../../../../packages/api-contracts/src/client/rag-orchestrator/client/index.js';
 import { createRagOrchestratorFetch } from './rag-orchestrator.http.js';
 import type { ServiceTokenSigner } from './service-jwt.js';
 

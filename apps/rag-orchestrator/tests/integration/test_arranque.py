@@ -35,7 +35,9 @@ def test_arranque_falla_nombrando_llm_provider_y_la_bandera_cuando_llm_provider_
     assert "url-confidencial" not in mensaje
 
 
-def test_arranque_acepta_llm_provider_fake_cuando_ninguna_bandera_de_datos_reales_esta_activa(monkeypatch):
+def test_arranque_acepta_llm_provider_fake_cuando_ninguna_bandera_de_datos_reales_esta_activa(
+    monkeypatch,
+):
     monkeypatch.setenv("LLM_PROVIDER", "fake")
 
     assert Settings(_env_file=None).llm_provider == "fake"

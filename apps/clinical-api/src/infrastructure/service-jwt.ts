@@ -43,7 +43,9 @@ export async function importServicePrivateKey(pem: string): Promise<CryptoKey> {
   try {
     return await importPKCS8(pem, ALGORITMO);
   } catch {
-    throw new Error('SERVICE_JWT_PRIVATE_KEY_FILE no contiene una clave privada EC P-256 en formato PKCS#8');
+    throw new Error(
+      'SERVICE_JWT_PRIVATE_KEY_FILE no contiene una clave privada EC P-256 en formato PKCS#8',
+    );
   }
 }
 

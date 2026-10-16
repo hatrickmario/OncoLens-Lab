@@ -8,7 +8,9 @@ def test_reject_fake_provider_with_real_data_no_lanza_cuando_el_proveedor_es_fak
 
 
 @pytest.mark.parametrize("anonimizados,identificados", [(True, False), (False, True), (True, True)])
-def test_reject_fake_provider_with_real_data_no_lanza_cuando_el_proveedor_es_local(anonimizados, identificados):
+def test_reject_fake_provider_with_real_data_no_lanza_cuando_el_proveedor_es_local(
+    anonimizados, identificados
+):
     reject_fake_provider_with_real_data("local", anonimizados, identificados)
 
 
