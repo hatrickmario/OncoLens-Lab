@@ -7,9 +7,16 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 const RAIZ = path.resolve(import.meta.dirname, '../../..');
 const SCRIPT = path.join(RAIZ, 'scripts/smoke/lib/fake-secrets.sh');
+const CATALOGO = path.join(RAIZ, 'scripts/lib/catalogo-secretos.sh');
 const temporal = mkdtempSync(path.join(os.tmpdir(), 'oncolens-fake-secrets-'));
 
 afterAll(() => rmSync(temporal, { recursive: true, force: true }));
+
+const nombresDelCatalogo = () =>
+  execFileSync('bash', ['-c', `source "${CATALOGO}"; archivos_del_catalogo test`], { encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean)
+    .sort();
 
 describe('fake-secrets.sh', () => {
   it('genera un par EC P-256 cuya clave pública corresponde a la privada y firma y verifica un ES256 de prueba cuando se ejecuta sobre un directorio temporal', () => {
@@ -33,12 +40,12 @@ describe('fake-secrets.sh', () => {
     expect(salida).not.toContain('BEGIN');
   });
 
-  it('genera un valor aleatorio no vacío para cada secreto declarado en el Compose y no lo imprime', () => {
+  it('genera un valor aleatorio no vacío para cada archivo del catálogo de secretos y no lo imprime', () => {
     const destino = path.join(temporal, 'otros');
     const salida = execFileSync(SCRIPT, [destino], { encoding: 'utf8' });
 
     const archivos = readdirSync(destino);
-    expect(archivos).toHaveLength(10);
+    expect([...archivos].sort()).toEqual(nombresDelCatalogo());
     const aleatorios = archivos.filter((nombre) => !nombre.endsWith('.pem'));
     for (const nombre of aleatorios) {
       const valor = readFileSync(path.join(destino, nombre), 'utf8').trim();

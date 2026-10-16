@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createApp } from './app.js';
 import { readPort, readServiceJwtConfig } from './config.js';
 import { loadServicePrivateKey } from './infrastructure/service-jwt.js';
@@ -13,4 +14,17 @@ const port = readPort(process.env);
 
 app.listen(port, () => {
   console.info(`clinical-api escuchando en el puerto ${port}`);
+import { arrancar } from './startup.js';
+
+/** Raíz de composición: conecta el proceso real (entorno, sistema de archivos, consola) con `arrancar`. */
+arrancar({
+  env: process.env,
+  readFile: (ruta) => readFileSync(ruta, 'utf8'),
+  log: (linea) => console.error(linea),
+  exit: (codigo) => process.exit(codigo),
+  listen: (puerto) => {
+    createApp({}).listen(puerto, () => {
+      console.info(`clinical-api escuchando en el puerto ${puerto}`);
+    });
+  },
 });
