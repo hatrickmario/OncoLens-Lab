@@ -46,7 +46,7 @@
 
 ## 4. Cierre
 
-- [ ] 4.1 `openspec validate l1d-164-compose-stack --strict` en verde
-- [ ] 4.2 Tests de `clinical-api`, `web` (`/api/health`), `rag-orchestrator`, `npm run test:infra` y `npm run smoke:compose` en verde (salida en rojo y en verde guardada para el reporte)
-- [ ] 4.3 `contracts:check`, `contracts:generate:check` y la verificación del proveedor de los `/health` en los tests de integración (2.3, 3.2, 3.4, 3.8, con el *helper* de 1.4; `contracts:verify-provider` cuando exista, US-214)
-- [ ] 4.4 `npm audit` y `pip-audit` de las dependencias nuevas, con el resultado en el PR; `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus)
+- [x] 4.1 `openspec validate l1d-164-compose-stack --strict` en verde
+- [x] 4.2 Tests de `clinical-api`, `web` (`/api/health`), `rag-orchestrator`, `npm run test:infra` y `npm run smoke:compose` en verde (salida en rojo y en verde guardada para el reporte)
+- [x] 4.3 `contracts:check`, `contracts:generate:check` y la verificación del proveedor de los `/health` en los tests de integración (2.3, 3.2, 3.4, 3.8, con el *helper* de 1.4; `contracts:verify-provider` cuando exista, US-214)
+- [x] 4.4 `npm audit` y `pip-audit` de las dependencias nuevas, con el resultado en el PR; `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus)
