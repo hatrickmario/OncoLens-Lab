@@ -6,6 +6,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.config.modelos import ConfigModelos
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
 
 
@@ -25,6 +26,8 @@ class Settings(BaseSettings):
     service_jwt_ttl_seconds: int = Field(default=60, gt=0)
     service_jwt_clock_skew_seconds: int = Field(default=5, ge=0)
     service_jwt_public_key_file: Path | None = None
+    # Modelos de recuperación y verificación (ADR-39): opcional; en producción no se exigen las claves de medición.
+    modelos: ConfigModelos | None = None
 
     @model_validator(mode="after")
     def _rechazar_fake_con_datos_reales(self) -> Self:
