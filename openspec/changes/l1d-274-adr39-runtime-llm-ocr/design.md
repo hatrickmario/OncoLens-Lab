@@ -347,16 +347,17 @@ Las cifras de este ADR son el punto de partida del baseline de US-072/US-073.
   para Milvus, PostgreSQL, MinIO, los modelos CPU de la fase A, OCR y Docker Desktop; se mide con todo
   levantado, no por suma de estimaciones. Con la hipótesis A (15 GB) quedarían ~15 GB.
 - **Holgura de macOS:** en un equipo de 32 GB, un stack de 30 GB deja ~2 GB al sistema y a las
-  aplicaciones del usuario (navegador, IDE). El tope lo fijó el usuario; el ADR mide `memory_pressure` y
+  aplicaciones del usuario (navegador, IDE). El tope lo fijó el usuario y lo confirmó como **stack ≤ ~30 GB sin swap** (Decidido, usuario, 2026-10-20); el ADR mide `memory_pressure` y
   swap (D1, D3 regla 1c) en lugar de asumir que cabe, y declara la holgura real medida.
 - **Máquina de medición ≠ equipo de referencia:** la máquina actual es una M5 Pro de 48 GB; una corrida
-  sin presión de memoria allí no demuestra que quepa en 32 GB. El ADR anota la RAM de la máquina y, si no
-  se repite en una de 32 GB, deja la verificación como condición de G-Piloto (no se afirma «cabe en 32 GB»
-  solo con la suma de cifras).
-- **Más candidatos, mismo coste (3 pts):** D–J añaden hasta 7 × 200 llamadas, pero la admisión previa
-  descarta primero por memoria y MedGemma (4B) es rápido; si el tiempo no alcanza, D se descarta con la
-  cifra de admisión y E/F se miden con 100 llamadas anotándolo. La estimación no cambia sin aprobación.
-- **Licencia de MedGemma (HAI-DEF):** no permisiva estándar; ganar exige aceptación del usuario.
+  sin presión de memoria allí no demuestra que quepa en 32 GB. El ADR anota la RAM de la máquina y no afirma
+  «cabe en 32 GB» solo con la suma de cifras. **Decidido (usuario, 2026-10-20):** la máquina actual (48 GB)
+  es también la de la demo y se mantiene la meta de ~30 GB; repetir la corrida en una de 32 GB **no es
+  condición de G-Piloto** (queda como verificación recomendada, no bloqueante).
+- **Más candidatos (re-estimado a 5 pts, Decidido, usuario, 2026-10-20):** E–J añaden hasta 6 × 200
+  llamadas (D descartado sin medir), pero la admisión previa descarta primero por memoria y MedGemma (4B)
+  es rápido; si el tiempo no alcanza, E/F se miden con 100 llamadas anotándolo.
+- **Licencia de MedGemma (HAI-DEF):** no permisiva estándar; ganar exige aceptación escrita del usuario (**pendiente**: el 2026-10-20 el usuario pidió medir E y F de todos modos y preguntó cómo aceptar los términos; no ha aceptado).
 
 ## Migration Plan
 
