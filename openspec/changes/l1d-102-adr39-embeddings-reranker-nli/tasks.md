@@ -16,7 +16,7 @@
 - [x] 1.7 ADR (exento): escribir `docs/architecture/adr/ADR-39-modelos-locales.md` (MADR) con presupuesto de memoria y de p95 por etapa, tabla por candidato (memoria, p95, licencia, versión, métrica), descartes con motivo y cifra, desempates, componentes sin candidato escalados al usuario (G-5 / NFR-01), decisión por componente, nota del sparse para US-112, exactitud NLI por idioma y sección "Fase B" para el change de L1D-274; añadirlo a `docs/architecture/adr/README.md` [US-012 AC-1] [US-012 AC-2] [US-012 AC-4] [US-012 AC-5]
 - [x] 1.8 Configuración (test después): fijar en los *settings* y `.env.example` de `rag-orchestrator` `EMBEDDING_MODEL`, `EMBEDDING_MODEL_REVISION`, `EMBEDDING_DIM`, `SPARSE_VECTOR_SOURCE`, `RERANKER_MODEL`, `RERANKER_MODEL_REVISION`, `RERANKER_MAX_PAIRS`, `RERANKER_MAX_LENGTH`, `NLI_MODEL`, `NLI_MODEL_REVISION`, `MODEL_QUANTIZATION`, `MODEL_CACHE_DIR`; la configuración de tests mantiene `EMBEDDING_DIM=8`; `docs/architecture/data-model.md` no cambia [US-012 AC-3] [RN-22]
 - [x] 1.9 Chequeo de configuración (test después): `--check-config` compara la configuración con la decisión del ADR y falla si `EMBEDDING_DIM` o `SPARSE_VECTOR_SOURCE` faltan o difieren; test Pytest `@pytest.mark.ac("US-012", 3)`; avisar a los changes de L1D-114 (US-058) y L1D-115 (US-059) antes de indexar [US-012 AC-3]
-- [ ] 1.10 Refactor (se ejecuta al final, tras 1.17): Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-102)
+- [x] 1.10 Refactor (se ejecuta al final, tras 1.17): Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit refactor(L1D-102)
 
 - [x] 1.11 Descarga reproducible de fuentes (test después): `app/scripts/adr39_fetch_sources.py` lee `data/eval/adr39-mini/manifest.yaml`, descarga cada documento a `DATA_CACHE_DIR` (PMC en JATS por Europe PMC, ClinicalTrials.gov API v2, NCI en HTML), registra su SHA-256 y **falla si una cita del golden no aparece en su documento** (normalizando espacios y puntuación); el texto descargado nunca entra al repo; tests con fixtures breves y sintéticos [US-012 AC-13] [RN-14]
 - [x] 1.12 Regla de acierto y métricas (test después): `app/evaluation/retrieval_metrics.py` con acierto = chunk del documento esperado que contiene la cita; modos `cualquiera`, `cobertura_documentos` y `sin_evidencia`; recall@10 y MRR con desgloses por fuente, tipo de dato, idioma y controles; intervalo de confianza por *bootstrap* con semilla de configuración; tests Pytest con casos mínimos [US-012 AC-10] [US-012 AC-13]
@@ -36,5 +36,5 @@
 
 ## Verificación
 
-- [ ] 3.1 `openspec validate l1d-102-adr39-embeddings-reranker-nli --strict`
-- [ ] 3.2 Tests de `apps/rag-orchestrator` en verde (Pytest) y escaneo de secretos/PII sobre `data/eval/adr39-mini/`
+- [x] 3.1 `openspec validate l1d-102-adr39-embeddings-reranker-nli --strict`
+- [x] 3.2 Tests de `apps/rag-orchestrator` en verde (Pytest) y escaneo de secretos/PII sobre `data/eval/adr39-mini/`
