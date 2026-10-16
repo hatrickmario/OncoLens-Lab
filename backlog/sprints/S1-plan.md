@@ -1,6 +1,6 @@
 # S1 · Plan del sprint
 
-> `/sprint-start S1` · 2026-10-14 · proyecto Linear **OncoLens-1**, milestone `Sprint 1`. Son **24 changes y 98 pts** (96 más los 2 de la re-estimación de US-054, `[S1 resp. 13]`). La capacidad es de 80–90 pts (DEC-03); el exceso está aceptado. Refinamiento previo: [`S1-refinamiento.md`](S1-refinamiento.md). Las decisiones de esta fase continúan la numeración: `[S1 resp. 11–n]`.
+> `/sprint-start S1` · 2026-10-14 · proyecto Linear **OncoLens-1**, milestone `Sprint 1`. Son **24 changes y 101 pts** (96 más los 2 de la re-estimación de US-054, `[S1 resp. 13]`, y los 3 de la ampliación de US-012, `[S1 resp. 38]`). La capacidad es de 80–90 pts (DEC-03); el exceso está aceptado. Refinamiento previo: [`S1-refinamiento.md`](S1-refinamiento.md). Las decisiones de esta fase continúan la numeración: `[S1 resp. 11–n]`.
 
 ## 1. Historias, changes y oleadas
 
@@ -9,7 +9,7 @@ Contextos: **CP** = clinical-platform (incluye los Route Handlers `app/api` y la
 | L1D | US | Change | Contexto | Oleada | Depende de | Lote | Est. |
 |---|---|---|---|---|---|---|---|
 | [L1D-164](https://linear.app/l1der-lab-mjbc/issue/L1D-164) | US-034 | `l1d-164-compose-stack` | contratos → CP → AI | 1 | — | R1 | 5 |
-| [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102) | US-012 · ADR-39 A | `l1d-102-adr39-embeddings-reranker-nli` | AI (ADR + mini-dataset) | 1 | 164 (imagen; contenedor provisional si aún no está) | — | 5 |
+| [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102) | US-012 · ADR-39 A | `l1d-102-adr39-embeddings-reranker-nli` | AI (ADR + mini-dataset + *chunking* e índice) | 1 | 164 (imagen; contenedor provisional si aún no está) | — | **8** (era 5) |
 | [L1D-165](https://linear.app/l1der-lab-mjbc/issue/L1D-165) | US-035 | `l1d-165-secrets-setup-scripts` | CP | 2 | 164 | R1 (cierra) | 3 |
 | [L1D-105](https://linear.app/l1der-lab-mjbc/issue/L1D-105) | US-054 | `l1d-105-service-jwt-auth` | contratos (cliente generado) → AI → CP | 2 | 164 | — | **5** (era 3) |
 | [L1D-166](https://linear.app/l1der-lab-mjbc/issue/L1D-166) | US-036 | `l1d-166-ci-build-contracts-scan` | CP (CI) | 2 | 164 | — | 5 |
@@ -173,3 +173,12 @@ Respuestas de los oncólogos asesores A y B al [cuestionario](S1-cuestionario-on
 | 35 | **Caso sin diagnóstico** (C4): no es "sin evidencia". `clinical-api` responde **`422 TIPO_CANCER_NO_REGISTRADO`** antes de llamar a la IA, sin generar ni persistir análisis, y el panel muestra **"Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia."**. `rag-orchestrator` mantiene la misma defensa (`422` con el mismo código). Es un cambio aditivo del contrato | L1D-103, L1D-106, L1D-140 |
 | 36 | **Pregunta de prueba de la UI** (C5): "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?" | L1D-140 |
 | 37 | **Registro de versiones actualizado por resp. 35** (sustituye al de `[S1 resp. 17]`): clinical-api: L1D-164 → 1.1.0, **L1D-103 → 1.2.0** (422 nuevo), L1D-104 → 1.3.0, L1D-194 → 1.3.1, L1D-203 → 1.4.0. rag-orchestrator: L1D-164 → 1.1.0, L1D-106 → 1.2.0 (`RETRIEVAL_UNAVAILABLE` y el 422 `TIPO_CANCER_NO_REGISTRADO` en la misma subida), L1D-180 → 1.3.0 | 103, 104, 106, 194, 203 |
+
+## 8. Ampliación de US-012 y ClinicalTrials.gov (usuario, 2026-10-15)
+
+| # | Decisión | Afecta |
+|---|---|---|
+| 38 | **Las pruebas de *chunking*, solapamiento, estrategia de *chunking* e índice (T2–T5) amplían US-012** (AC-10 a AC-13 nuevos). 5 → **8 pts, con excepción de tamaño**: la DoR fija ≤ 5 y la historia ya se había partido por eso (`[S1 resp. 6]`). El S1 pasa de 98 a **101** (capacidad 80–90, DEC-03; exceso aceptado). Si la velocidad real lo exige, T5 (HNSW frente a FLAT) es la primera candidata a salir. Un valor por factor, el resto fijo, en secuencia; la etiqueta del golden es por pasaje y no por chunk | L1D-102, L1D-114 (tipo de índice), L1D-115 (tamaño y solapamiento de chunk) |
+| 39 | **Los registros de ClinicalTrials.gov se pueden usar**, con fuente `ClinicalTrials.gov / NCTxxxxxxxx`, URL y fecha de consulta; atribución visible a NLM ("Source: ClinicalTrials.gov, National Library of Medicine"); sin sugerir aval de NLM, NIH ni ClinicalTrials.gov; aviso de que el registro puede no reflejar la versión más reciente; uso limitado a metadatos del registro y citas breves. La verificación de los términos la confirma el usuario (la página no pudo leerse con las herramientas de la sesión) | L1D-102, L1D-115 |
+
+**Dataset del ADR-39.** `data/eval/adr39-mini/` (rama `chore/S1-adr39-dataset`): 75 preguntas (59 con respuesta, 6 sin respuesta, 10 controles en inglés), 39 pares NLI y 27 fuentes con licencia por documento (NCI, PMC CC BY, ClinicalTrials.gov); NCCN y ESMO excluidas (RN-21). Revisado y aprobado por el oncólogo asesor. Los textos completos no se versionan: el script de la ampliación los descarga con checksum.

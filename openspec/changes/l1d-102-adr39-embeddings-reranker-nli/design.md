@@ -20,7 +20,7 @@ jina-reranker v2/v3, HHEM-2.3.
 ## Goals / Non-Goals
 
 **Goals:** ADR-39 (MADR) con la fase A cerrada por cifras; mini-dataset sintético reutilizable por
-US-072; script repetible; configuración con modelo, revisión, `EMBEDDING_DIM` y origen del sparse
+US-072; script repetible; pruebas acotadas de *chunking*, solapamiento, estrategia e índice (D8); configuración con modelo, revisión, `EMBEDDING_DIM` y origen del sparse
 antes de que US-059 indexe.
 
 **Non-Goals:** pipeline y adapters de producción (US-055), runtime/LLM/OCR/p95 extremo a extremo
@@ -77,7 +77,8 @@ la consulta.
 Claves en los *settings* de `rag-orchestrator` y en `.env.example`: `EMBEDDING_MODEL`,
 `EMBEDDING_MODEL_REVISION`, `EMBEDDING_DIM`, `SPARSE_VECTOR_SOURCE`, `RERANKER_MODEL`,
 `RERANKER_MODEL_REVISION`, `RERANKER_MAX_PAIRS`, `RERANKER_MAX_LENGTH`, `NLI_MODEL`,
-`NLI_MODEL_REVISION`, `MODEL_QUANTIZATION`, `MODEL_CACHE_DIR`. La configuración de tests sigue con
+`NLI_MODEL_REVISION`, `MODEL_QUANTIZATION`, `MODEL_CACHE_DIR`; y, de D8, `CORPUS_CHUNK_SIZE`, `CORPUS_CHUNK_OVERLAP`,
+`CORPUS_CHUNKING_STRATEGY`, `VECTOR_INDEX_TYPE`, `VECTOR_INDEX_PARAMS`, `CHUNK_SELECTION_MARGIN`, `INDEX_MIN_RECALL_VS_FLAT` y `DATA_CACHE_DIR`. La configuración de tests sigue con
 `EMBEDDING_DIM=8` y adapters falsos (FX-06c). Un chequeo (`python -m app.scripts.adr39_measure
 --check-config`) compara la configuración con el bloque de decisión del ADR (AC-3).
 
@@ -109,6 +110,38 @@ los medidos sobre los candidatos que quedan. Mínimo 2 modelos probados (A y B; 
 
 Los datos de cada modelo (licencia, longitud máxima, tamaño) se verifican en la fuente durante la tarea 1.6; este cuadro
 no los fija.
+
+### D8. Pruebas acotadas de *chunking*, solapamiento, estrategia e índice (T2–T5, `[S1 resp. 38]`)
+Una prueba por factor, los demás fijos, en secuencia: el ganador de cada una queda fijo en la siguiente. Siempre sobre el modelo de
+*embeddings* ganador de T1 (D3, D7) y el golden de `data/eval/adr39-mini/`.
+
+| Prueba | Varía | Fijo | Decide |
+|---|---|---|---|
+| T2 | Tamaño de chunk: 256, 512, 1024 tokens (solo los que admite el modelo) | *embedding* de T1, 0 % de solapamiento, FLAT | `CORPUS_CHUNK_SIZE` (AC-10) |
+| T3 | Solapamiento: 0 % frente a 10–15 % | tamaño de T2 | `CORPUS_CHUNK_OVERLAP` (AC-10) |
+| T4 | Estrategia: tamaño fijo frente a estructura de la fuente (secciones JATS, campos del registro, encabezados de NCI) | T2 y T3 | `CORPUS_CHUNKING_STRATEGY` (AC-11) |
+| T5 | Índice: HNSW frente a FLAT | todo lo anterior | `VECTOR_INDEX_TYPE`, `VECTOR_INDEX_PARAMS` (AC-12) |
+
+- **Regla de acierto** (la misma del dataset): un chunk acierta si pertenece al documento esperado y contiene la cita (normalizando espacios y
+  puntuación). `cobertura_documentos` (Q-HER2) mide cuántos de los documentos esperados aparecen en el top-k; `sin_evidencia` no tiene acierto: se
+  reporta el puntaje máximo recuperado por separado, para calibrar el umbral (RN-02).
+- **Métricas:** recall@10 y MRR (total, por fuente, por tipo de dato, español → inglés y controles en inglés), número de chunks, memoria del
+  índice y, en T5, recall@10 respecto a FLAT y p95 de consulta. Intervalo de confianza del 95 % por *bootstrap* sobre las preguntas, con semilla fija.
+- **Decisión** (función pura `seleccionar_variante()`, junto a la regla de D4): gana la de mayor recall@10 si la diferencia supera
+  `CHUNK_SELECTION_MARGIN`; si no, la de menos chunks; si también empatan, la más simple (tamaño fijo, 0 % de solapamiento).
+- **Tokens:** se cuentan con el *tokenizer* del modelo elegido. Las variantes por encima de su longitud máxima de entrada se omiten y el reporte lo anota
+  (D7, criterio 8).
+- **Fuentes:** no se versionan. `adr39_fetch_sources` descarga cada documento del manifiesto (PMC: JATS por la API de Europe PMC; ClinicalTrials.gov:
+  API v2; NCI: HTML) a `DATA_CACHE_DIR`, registra su SHA-256 y **falla si una cita del golden no aparece** (AC-13). La atribución a NCI y NLM viaja con el manifiesto.
+- **Estructura (T4):** JATS por secciones, ClinicalTrials.gov por campos (resumen, elegibilidad, resultados), NCI por encabezados; texto sin estructura cae a
+  tamaño fijo. Los chunks conservan `section`.
+- **Milvus:** el del Compose de US-034, en una colección de prueba temporal (nunca `corpus_chunks`); si aún no está, standalone provisional como en D2. Con el
+  tamaño del corpus semilla T5 solo verifica que HNSW no pierde recall frente a FLAT; no mide calidad (AC-12).
+- **Unidad:** `CORPUS_CHUNK_SIZE` y `CORPUS_CHUNK_OVERLAP` se expresan en **tokens** del *tokenizer* del modelo elegido (las claves ya las define L1D-115). Hoy
+  `fragmentar()` de L1D-115 corta por caracteres: al cerrar T2–T3 debe pasar a tokens o convertir la unidad (aviso en su change).
+- **Alcance:** las variantes viven en `app/evaluation/chunking_variants.py`. El *chunker* de producción (`chunking.py` de US-059) adopta la ganadora; este
+  change no lo implementa.
+- **Salida:** `reports/adr39/<fecha>-fase-a2.json` (agregados y configuración, sin textos), sección "Chunking e índice" del ADR y las claves de D6.
 
 ## Privacidad y ownership
 
@@ -146,7 +179,7 @@ entonces, `ai-eval-runner` revisa el reporte del script como evidencia del Gate 
 - El script usa los modelos a través de envoltorios de medición propios del script (no los
   adapters de producción de US-055) para no adelantar su diseño; las reglas de selección no
   dependen de ninguna librería de modelos.
-- Lee: `data/raw/seed/manifest.yaml` (change de L1D-115) para validar etiquetas.
+- Lee: `data/eval/adr39-mini/manifest.yaml` (fuentes y licencias) y `golden.yaml` (citas). Crea además `app/scripts/adr39_fetch_sources.py`, `app/evaluation/chunking_variants.py`, `app/evaluation/retrieval_metrics.py` y `eval/configs/adr39-fase-a2.yaml`.
 
 ## Risks / Trade-offs
 
@@ -156,7 +189,10 @@ entonces, `ai-eval-runner` revisa el reporte del script como evidencia del Gate 
   botella; palancas: truncado, menos pares, B como respaldo.
 - **NLI multilingüe débil en mezcla es/en** → el ADR registra la exactitud por idioma; si no
   alcanza, se anota para US-063/US-064 (traducir la afirmación o el fragmento).
-- **Mini-dataset pequeño (≥ 30)**: métricas con alta varianza; el ADR lo declara y US-072 amplía.
+- **Mini-dataset pequeño (≥ 30; hoy 75)**: métricas con alta varianza; el ADR lo declara y US-072 amplía.
+- **Corpus de 39 documentos** (T4–T5): HNSW y FLAT no discriminan y los intervalos de confianza son amplios → se prefiere la variante más barata y T5 es la primera candidata a salir si la capacidad falta.
+- **Descarga externa** (Europe PMC, ClinicalTrials.gov, cancer.gov): el contenido de NCI y de los registros se actualiza; el SHA-256 detecta el cambio y la medición usa la caché.
+- **Modelos de entrada corta** (p. ej. 512 tokens): no admiten chunks de 1024; se omite esa variante y se anota.
 
 ## Migration Plan
 
@@ -166,5 +202,5 @@ No hay datos que migrar: la colección se crea con su esquema final en US-058 us
 ## Open Questions
 
 - ¿Se acepta medir en un contenedor arm64 provisional si la imagen de US-034 no está lista (D2)?
-- ¿El mini-dataset se etiqueta contra el manifiesto final de US-059 (orden L1D-115 → L1D-102 solo
-  para el manifiesto) o contra los `external_id` de ADR-36 con validación posterior?
+- ~~¿El mini-dataset se etiqueta contra el manifiesto final de US-059 o contra los `external_id` de ADR-36?~~ **Resuelta:**
+  el dataset trae su propio manifiesto y etiqueta por documento y cita literal; el manifiesto de L1D-115 podrá derivar de él.
