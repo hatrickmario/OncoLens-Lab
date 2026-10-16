@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { delay, http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 import type { DependenciasAnalisis } from '../../lib/server/evidence-analyses';
 import type { LineaDeRegistro } from '../../lib/server/registro';
@@ -23,7 +23,7 @@ export interface PeticionCapturada {
 
 export interface RespuestaSimulada {
   status: number;
-  cuerpo: unknown;
+  cuerpo: JsonBodyType;
   cabeceras?: Record<string, string>;
 }
 
