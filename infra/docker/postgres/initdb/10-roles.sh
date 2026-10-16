@@ -10,7 +10,19 @@ export PG_RAG_CORPUS_CONNECTION_LIMIT="${PG_RAG_CORPUS_CONNECTION_LIMIT:?falta P
 export PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT="${PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT:?falta PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT}"
 base="${POSTGRES_DB:?falta POSTGRES_DB}"
 
+# Se validan en el shell, antes de que ninguna contraseña llegue a una sentencia (un valor no numérico fallaría
+# dentro de la misma sentencia que lleva la contraseña).
+exigir_numero() {
+  case "$2" in
+    '' | *[!0-9]*) echo "10-roles.sh: $1 debe ser un entero positivo" >&2; exit 1 ;;
+  esac
+}
+exigir_numero PG_RAG_CORPUS_CONNECTION_LIMIT "$PG_RAG_CORPUS_CONNECTION_LIMIT"
+exigir_numero PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT "$PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT"
+
 psql -v ON_ERROR_STOP=1 -v base="$base" --username postgres --dbname postgres <<'SQL'
+SET log_statement = 'none';
+SET log_min_error_statement = 'panic';
 \set clinical_api_pwd `cat "$PG_SECRETS_DIR/pg_clinical_api_password"`
 \set research_writer_pwd `cat "$PG_SECRETS_DIR/pg_research_writer_password"`
 \set rag_corpus_pwd `cat "$PG_SECRETS_DIR/pg_rag_corpus_password"`
@@ -30,6 +42,8 @@ SQL
 # Perfil test/CI: el rol del arnés de tests, solo con CREATEDB (nada más).
 if [ "${ONCOLENS_PG_PROFILE:-}" = "test" ] && [ -f "$PG_SECRETS_DIR/pg_test_admin_password" ]; then
   psql -v ON_ERROR_STOP=1 --username postgres --dbname postgres <<'SQL'
+SET log_statement = 'none';
+SET log_min_error_statement = 'panic';
 \set test_admin_pwd `cat "$PG_SECRETS_DIR/pg_test_admin_password"`
 SELECT format('CREATE ROLE oncolens_test_admin LOGIN NOSUPERUSER CREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD %L', :'test_admin_pwd') \gexec
 SQL
@@ -37,6 +51,8 @@ fi
 
 # Schema del corpus y sus privilegios: USAGE + CREATE solo para el migrator; el runtime solo USAGE.
 psql -v ON_ERROR_STOP=1 --username postgres --dbname "$base" <<'SQL'
+SET log_statement = 'none';
+SET log_min_error_statement = 'panic';
 CREATE SCHEMA IF NOT EXISTS corpus AUTHORIZATION clinical_api;
 \i /opt/oncolens/sql/corpus-schema-grants.sql
 SQL
