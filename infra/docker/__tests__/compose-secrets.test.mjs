@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { COMPOSE_TEST, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
+import { COMPOSE, COMPOSE_TEST, ENV_EXAMPLE, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
 import { assertPostgresConTls, assertRepartoDeSecretos, assertSinSecretosEnEntorno } from './lib/reglas-secretos.mjs';
 
 let resolver;
@@ -100,6 +101,21 @@ describe('docker-compose.yml · catálogo de secretos', () => {
 
     expect(declarados.length).toBeGreaterThan(0);
     expect(declarados.filter((nombre) => !catalogo.includes(nombre))).toEqual([]);
+  });
+});
+
+describe('docker-compose.yml · valores por defecto', () => {
+  it('usa para POSTGRES_DB, CLINICAL_NET_SUBNET y CORPUS_DB_NET_SUBNET los mismos valores por defecto que .env.example, de donde los lee setup-secrets.sh [US-035 AC-4]', () => {
+    const compose = readFileSync(COMPOSE, 'utf8');
+    const ejemplo = readFileSync(ENV_EXAMPLE, 'utf8');
+    for (const variable of ['POSTGRES_DB', 'CLINICAL_NET_SUBNET', 'CORPUS_DB_NET_SUBNET']) {
+      const enCompose = [...compose.matchAll(new RegExp(`\\$\\{${variable}:-([^}]*)\\}`, 'g'))].map((coincidencia) => coincidencia[1]);
+      const enEjemplo = ejemplo.match(new RegExp(`^${variable}=(.*)$`, 'm'))?.[1];
+
+      expect(enEjemplo, `${variable} en .env.example`).toBeTruthy();
+      expect(enCompose.length, `${variable} en el Compose`).toBeGreaterThan(0);
+      expect(new Set(enCompose), variable).toEqual(new Set([enEjemplo]));
+    }
   });
 });
 
