@@ -1,0 +1,8 @@
+# Reglas que el perfil test/CI añade al pg_hba.conf (US-035, [S1 resp. 14b]). scripts/setup-secrets.sh --profile test
+# las inserta en el lugar de @REGLAS_PERFIL_TEST de pg_hba.conf.template, antes del rechazo de rag_corpus*, y
+# renderiza el resultado como pg_hba.test.conf. Una sola lista de reglas base: aquí solo lo que añade el arnés.
+# Placeholders: PG_TEST_DB_PREFIX (validado por scripts/lib/pg-test-prefix.sh), CLINICAL_NET_SUBNET, CORPUS_DB_NET_SUBNET.
+hostssl     /^${PG_TEST_DB_PREFIX}                   rag_corpus,rag_corpus_migrator      ${CORPUS_DB_NET_SUBNET}    scram-sha-256
+# oncolens_test_admin solo tiene CREATEDB: entra a la base de mantenimiento y a las bases con el prefijo, nunca a la clínica.
+hostssl     postgres,/^${PG_TEST_DB_PREFIX}          oncolens_test_admin                 ${CLINICAL_NET_SUBNET}     scram-sha-256
+hostssl     postgres,/^${PG_TEST_DB_PREFIX}          oncolens_test_admin                 ${CORPUS_DB_NET_SUBNET}    scram-sha-256
