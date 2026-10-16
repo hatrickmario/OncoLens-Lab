@@ -6,7 +6,9 @@ export interface LineaDeRegistro {
   status: number;
   traceId?: string;
   duracionMs?: number;
-  motivo?: 'origen' | 'clinical_api_inalcanzable' | 'cuerpo_excesivo';
+  /** X-Trace-Id que devolvió clinical-api, cuando hubo respuesta (el `traceId` es el propio del BFF). */
+  traceIdClinicalApi?: string;
+  motivo?: 'origen' | 'cuerpo_excesivo' | 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
 }
 
 export type Registrar = (linea: LineaDeRegistro) => void;

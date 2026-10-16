@@ -35,9 +35,9 @@ export function cabecerasHaciaClinicalApi(cookieDeSesion: string | undefined): H
 
 const CABECERAS_HACIA_NAVEGADOR = ['content-type', 'retry-after', 'x-trace-id'] as const;
 
-/** Lista blanca hacia el navegador: nunca Set-Cookie, Location, Server ni cabeceras internas. */
+/** Lista blanca hacia el navegador (más `no-store`): nunca Set-Cookie, Location, Server ni cabeceras internas. */
 export function cabecerasHaciaNavegador(respuesta: Response): Headers {
-  const cabeceras = new Headers();
+  const cabeceras = new Headers({ 'Cache-Control': 'no-store' });
   for (const nombre of CABECERAS_HACIA_NAVEGADOR) {
     const valor = respuesta.headers.get(nombre);
     if (valor !== null) {

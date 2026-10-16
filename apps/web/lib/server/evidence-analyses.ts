@@ -10,7 +10,8 @@ import {
 } from './clinical-api';
 import { verificarOrigen } from './origen';
 import type { Registrar } from './registro';
-import { leerCuerpoAcotado, respuestaPropia } from './respuestas';
+import { leerCuerpoAcotado } from './peticiones';
+import { respuestaPropia } from './respuestas';
 
 const EVENTO_PROXY = 'evidence_analyses.proxy';
 
@@ -42,10 +43,15 @@ export function crearManejadorAnalisis(dependencias: DependenciasAnalisis): (req
     const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
     const resultado = await pedirAnalisisAClinicalApi(sdk, cuerpo);
     const respuesta = resultado.response;
-    const cuerpoCrudo = respuesta === undefined ? undefined : sdk.cuerpoCrudo(respuesta);
-
-    if (respuesta === undefined || cuerpoCrudo === undefined || !esReenviable(respuesta, cuerpoCrudo)) {
-      return responderFalloDeTransporte(dependencias, inicio);
+    if (respuesta === undefined) {
+      return responderConFallo(dependencias, inicio, 'clinical_api_inalcanzable', undefined);
+    }
+    const cuerpoCrudo = sdk.cuerpoCrudo(respuesta);
+    if (cuerpoCrudo === undefined) {
+      return responderConFallo(dependencias, inicio, 'cuerpo_cortado', respuesta);
+    }
+    if (cuerpoCrudo !== '' && !esJson(respuesta)) {
+      return responderConFallo(dependencias, inicio, 'error_no_json', respuesta);
     }
     registrarReenvio(dependencias.registrar, respuesta, dependencias.ahora() - inicio);
     return reenviar(respuesta, cuerpoCrudo);
@@ -63,18 +69,19 @@ function pedirAnalisisAClinicalApi(sdk: SdkClinicalApi, cuerpo: string) {
   });
 }
 
-/** Un error no 2xx que no es JSON (p. ej. HTML de un proxy) no se reenvía: llevaría detalles internos. */
-function esReenviable(respuesta: Response, cuerpoCrudo: string): boolean {
-  if (respuesta.ok || cuerpoCrudo === '') {
-    return true;
-  }
-  return (respuesta.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json');
+type MotivoDeFallo = 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
+
+/** Compara solo el tipo MIME (sin parámetros como charset): `application/jsonx` no es JSON. */
+function esJson(respuesta: Response): boolean {
+  const tipo = (respuesta.headers.get('content-type') ?? '').split(';')[0] ?? '';
+  return tipo.trim().toLowerCase() === 'application/json';
 }
 
 function reenviar(respuesta: Response, cuerpoCrudo: string): Response {
-  const cabeceras = cabecerasHaciaNavegador(respuesta);
-  cabeceras.set('Cache-Control', 'no-store');
-  return new Response(cuerpoCrudo === '' ? null : cuerpoCrudo, { status: respuesta.status, headers: cabeceras });
+  return new Response(cuerpoCrudo === '' ? null : cuerpoCrudo, {
+    status: respuesta.status,
+    headers: cabecerasHaciaNavegador(respuesta),
+  });
 }
 
 function responderCuerpoExcesivo(dependencias: DependenciasAnalisis): Response {
@@ -86,14 +93,21 @@ function responderCuerpoExcesivo(dependencias: DependenciasAnalisis): Response {
   );
 }
 
-function responderFalloDeTransporte(dependencias: DependenciasAnalisis, inicio: number): Response {
+function responderConFallo(
+  dependencias: DependenciasAnalisis,
+  inicio: number,
+  motivo: MotivoDeFallo,
+  respuesta: Response | undefined,
+): Response {
   const traceId = dependencias.nuevoTraceId();
+  const traceIdClinicalApi = respuesta?.headers.get('x-trace-id') ?? null;
   dependencias.registrar({
     event: EVENTO_PROXY,
     status: 502,
     traceId,
+    ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
     duracionMs: dependencias.ahora() - inicio,
-    motivo: 'clinical_api_inalcanzable',
+    motivo,
   });
   return respuestaDeFalloDeTransporte(traceId);
 }
