@@ -8,15 +8,18 @@ const SERVICIO_WEB = 'web';
 const CLINICAL_API = 'clinical-api';
 const RAG = 'rag-orchestrator';
 const CLINICAL_MINIO = 'clinical-minio';
+const POSTGRES = 'postgres';
+const CORPUS_MIGRATE = 'corpus-migrate';
+const CLINICAL_SEED = 'clinical-seed';
 const NOMBRES_DE_LLM = /ollama|vllm|llama/i;
 const CLAVE_PRIVADA_JWT = 'jwt_service_private.pem';
 const CLAVE_PUBLICA_JWT = 'jwt_service_public.pem';
 const MONTAJE_CATALOGO = /packages\/clinical-catalogs$/;
 
-const secretosDe = (servicio) => (servicio.secrets ?? []).map((secreto) => secreto.source);
-const entorno = (servicio) => servicio.environment ?? {};
+export const secretosDe = (servicio) => (servicio.secrets ?? []).map((secreto) => secreto.source);
+export const entorno = (servicio) => servicio.environment ?? {};
 
-function servicio(config, nombre) {
+export function servicio(config, nombre) {
   const encontrado = config.services?.[nombre];
   if (!encontrado) throw new Error(`el servicio ${nombre} no existe en el Compose`);
   return encontrado;
@@ -62,15 +65,29 @@ export function assertRagSoloLecturaConTmpfs(config) {
   if (entorno(rag).TMPDIR !== '/tmp') throw new Error(`${RAG} debe fijar TMPDIR=/tmp`);
 }
 
-/** Quién puede recibir cada secreto sensible (el resto de secretos los reparte L1D-165). */
-const DUENOS_DE_SECRETOS = {
+/**
+ * Quién puede recibir cada secreto (US-035, design D3). Los servicios one-shot `corpus-migrate` (L1D-114) y
+ * `clinical-seed` (L1D-169) aún pueden no existir: la regla solo los exige cuando existen.
+ */
+export const DUENOS_DE_SECRETOS = {
   [CLAVE_PRIVADA_JWT]: [CLINICAL_API],
   [CLAVE_PUBLICA_JWT]: [RAG],
   identity_aes_key: [CLINICAL_API],
   blind_index_hmac_key: [CLINICAL_API],
-  pg_clinical_api_password: [CLINICAL_API],
-  pg_research_writer_password: [CLINICAL_API],
+  pg_clinical_api_password: [CLINICAL_API, POSTGRES, CLINICAL_SEED],
+  pg_research_writer_password: [CLINICAL_API, POSTGRES],
+  pg_rag_corpus_password: [RAG, POSTGRES],
+  pg_rag_corpus_migrator_password: [CORPUS_MIGRATE, POSTGRES],
+  pg_superuser_password: [POSTGRES],
+  'pg_server.crt': [POSTGRES],
+  'pg_server.key': [POSTGRES],
+  'pg_hba.conf': [POSTGRES],
+  'pg_hba.test.conf': [POSTGRES],
+  pg_test_admin_password: [POSTGRES],
+  seed_doctor_password: [CLINICAL_SEED],
+  seed_admin_password: [CLINICAL_SEED],
   clinical_minio_root_password: [CLINICAL_API, CLINICAL_MINIO],
+  milvus_minio_root_password: ['milvus-minio', 'milvus-standalone'],
 };
 const VARIABLES_DE_CLAVE_JWT = { SERVICE_JWT_PRIVATE_KEY_FILE: [CLAVE_PRIVADA_JWT, CLINICAL_API], SERVICE_JWT_PUBLIC_KEY_FILE: [CLAVE_PUBLICA_JWT, RAG] };
 
