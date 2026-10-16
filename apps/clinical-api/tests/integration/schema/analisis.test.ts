@@ -1,7 +1,7 @@
 import { describe, expect, inject, it } from 'vitest';
 import { columnasDe } from '../../support/catalogo.js';
 import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support/db.js';
-import { filaDeAnalisis, generadorDeIds, insertar, insertarContextoClinico } from '../../support/filas-sinteticas.js';
+import { filaDeAnalisisSinEvidencia, generadorDeIds, insertar, insertarContextoClinico } from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
 // Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
@@ -12,7 +12,7 @@ describe('clinical.ai_analysis_record', () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
-      const sinEvidencia = filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId, {
+      const sinEvidencia = filaDeAnalisisSinEvidencia(ids, contexto.patientId, contexto.episodeId, contexto.userId, {
         evidence_options: JSON.stringify([]),
         status: 'sin_evidencia',
         top_relevance_score: null,
@@ -32,7 +32,7 @@ describe('clinical.ai_analysis_record', () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
-      const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId));
+      const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisisSinEvidencia(ids, contexto.patientId, contexto.episodeId, contexto.userId));
 
       const error = await esperarRechazo(cliente, 'UPDATE clinical.ai_analysis_record SET omitted_claims = 5 WHERE id = $1', [analisis.id]);
       const { rows } = await cliente.query('SELECT omitted_claims FROM clinical.ai_analysis_record WHERE id = $1', [analisis.id]);

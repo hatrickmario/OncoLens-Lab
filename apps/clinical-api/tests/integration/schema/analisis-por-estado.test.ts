@@ -2,7 +2,7 @@ import type { Client } from 'pg';
 import { describe, expect, inject, it } from 'vitest';
 import { conTransaccionRevertida, esperarRechazo } from '../../support/db.js';
 import {
-  filaDeAnalisis,
+  filaDeAnalisisSinEvidencia,
   filaDeAnalisisConEvidencia,
   filaDeAnalisisTipoNoHabilitado,
   filaDeResumenDeCaso,
@@ -57,7 +57,7 @@ const ESTADOS: Array<{ estado: string; constructor: Constructor; invalidos: Arra
   },
   {
     estado: 'sin_evidencia',
-    constructor: filaDeAnalisis,
+    constructor: filaDeAnalisisSinEvidencia,
     invalidos: [
       ['con puntaje 0.0 en lugar de NULL', { top_relevance_score: 0 }, 'ai_analysis_record_puntaje_estado_ck'],
       ['con opciones de evidencia', { evidence_options: JSON.stringify([{ option: 'x' }]) }, 'ai_analysis_record_opciones_ck'],
@@ -125,7 +125,7 @@ describe('clinical.ai_analysis_record por estado y tipo', () => {
 describe('clinical.analysis_follow_up inmutable', () => {
   it('rechaza por el trigger y deja el turno intacto cuando se actualiza cualquier columna [US-038 AC-4]', async () => {
     await conContexto(async (cliente, ids, c) => {
-      const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisis(ids, c.patientId, c.episodeId, c.userId));
+      const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisisSinEvidencia(ids, c.patientId, c.episodeId, c.userId));
       const turno = await insertar(cliente, 'clinical.analysis_follow_up', filaDeSeguimiento(ids, analisis.id as string));
 
       const error = await esperarRechazo(cliente, 'UPDATE clinical.analysis_follow_up SET omitted_claims = 5 WHERE id = $1', [turno.id]);

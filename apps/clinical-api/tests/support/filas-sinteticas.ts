@@ -174,7 +174,7 @@ export function filaDeSeguimiento(ids: GeneradorDeIds, analysisId: string, resto
   };
 }
 
-const SIN_MODELOS = {
+const SIN_MODELOS_NI_RECUPERACION = {
   llm_provider: null,
   llm_model: null,
   nli_model: null,
@@ -187,7 +187,7 @@ const SIN_MODELOS = {
 
 /** Análisis con evidencia: todos los modelos registrados, puntaje 0..1 y al menos una opción. */
 export function filaDeAnalisisConEvidencia(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
-  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, {
+  return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, {
     status: 'con_evidencia',
     top_relevance_score: 0.82,
     evidence_options: JSON.stringify([{ option: 'opción sintética' }]),
@@ -197,12 +197,12 @@ export function filaDeAnalisisConEvidencia(ids: GeneradorDeIds, patientId: strin
 
 /** Tipo de cáncer no habilitado: no se invocó ningún modelo ni hubo recuperación. */
 export function filaDeAnalisisTipoNoHabilitado(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
-  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, { status: 'tipo_no_habilitado', top_relevance_score: null, ...SIN_MODELOS, ...resto });
+  return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, { status: 'tipo_no_habilitado', top_relevance_score: null, ...SIN_MODELOS_NI_RECUPERACION, ...resto });
 }
 
 /** Resumen del caso: sin recuperación del corpus ni consulta; el LLM y el NLI sí corren. */
 export function filaDeResumenDeCaso(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
-  return filaDeAnalisis(ids, patientId, episodeId, requestedBy, {
+  return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, {
     analysis_type: 'resumen_caso',
     status: 'con_evidencia',
     query_text: null,
@@ -216,7 +216,7 @@ export function filaDeResumenDeCaso(ids: GeneradorDeIds, patientId: string, epis
   });
 }
 
-export function filaDeAnalisis(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+export function filaDeAnalisisSinEvidencia(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
   const vacioObj = JSON.stringify({});
   const vacioLista = JSON.stringify([]);
   return {

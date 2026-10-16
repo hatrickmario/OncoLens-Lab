@@ -2,7 +2,7 @@ import type { Client } from 'pg';
 import { describe, expect, inject, it } from 'vitest';
 import { conTransaccionRevertida, esperarRechazo } from '../../support/db.js';
 import {
-  filaDeAnalisis,
+  filaDeAnalisisSinEvidencia,
   filaDeDiagnostico,
   filaDeEpisodio,
   filaDeGradacionGleason,
@@ -85,7 +85,7 @@ describe('CHECK de clinical.diagnosis_grading', () => {
 describe('CHECK de llm_provider y de clinical.analysis_follow_up', () => {
   async function analisisBase(cliente: Client, ids: GeneradorDeIds) {
     const contexto = await insertarContextoClinico(cliente, ids);
-    const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId));
+    const analisis = await insertar(cliente, 'clinical.ai_analysis_record', filaDeAnalisisSinEvidencia(ids, contexto.patientId, contexto.episodeId, contexto.userId));
     return { contexto, analysisId: analisis.id as string };
   }
 
@@ -93,7 +93,7 @@ describe('CHECK de llm_provider y de clinical.analysis_follow_up', () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const contexto = await insertarContextoClinico(cliente, ids);
-      const fila = filaDeAnalisis(ids, contexto.patientId, contexto.episodeId, contexto.userId, { llm_provider: 'otro' });
+      const fila = filaDeAnalisisSinEvidencia(ids, contexto.patientId, contexto.episodeId, contexto.userId, { llm_provider: 'otro' });
 
       expect(await rechazoDe('clinical.ai_analysis_record', fila, cliente)).toBe('ai_analysis_record_llm_provider_ck');
     });
