@@ -144,7 +144,7 @@ function correrCaso(nombre) {
   } catch (error) {
     return { nombre, caso, estado: 'FALLA', detalle: error.message };
   } finally {
-    rmSync(temporal, { recursive: true, force: true });
+    rmSync(temporal, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
 }
 

@@ -53,12 +53,7 @@ jobs:
         run: python -m pytest
         working-directory: apps/rag-orchestrator
       - name: Tests de secretos (L1D-165)
-        run: |
-          if node -e "process.exit(require('./package.json').scripts['test:secrets'] ? 0 : 1)"; then
-            npm run test:secrets
-          else
-            echo "omitido: test:secrets no existe todavía (l1d-165-secrets-setup-scripts sin mergear)"
-          fi
+        run: npm run test:secrets
 
   contracts:
     name: contracts
