@@ -91,6 +91,21 @@ caso_clon_limpio_genera_los_dieciocho() {
   afirmar "git status queda vacío" test -z "$(git status --porcelain)"
 }
 
+caso_destino_versionado_aborta_sin_cambiar_permisos() {
+  restablecer
+  local versionado=/repo/scripts/lib
+  local permisos lista
+  permisos="$(stat -c %a "$versionado")"
+  lista="$(ls -1A "$versionado")"
+  salida="$(ONCOLENS_SECRETS_DIR="$versionado" "$SCRIPT" 2>&1)"
+  codigo=$?
+  afirmar "aborta con código distinto de 0" test "$codigo" -ne 0
+  afirmar "el mensaje nombra RN-14" grep -q 'RN-14' <<<"$salida"
+  afirmar "no cambia los permisos del directorio versionado" test "$(stat -c %a "$versionado")" = "$permisos"
+  afirmar "no escribe ningún archivo en el directorio versionado" test "$(ls -1A "$versionado")" = "$lista"
+  afirmar "el estado del repositorio queda vacío" test -z "$(git status --porcelain)"
+}
+
 caso_perfil_test_agrega_el_rol_del_arnes() {
   restablecer
   ejecutar --profile test
@@ -206,6 +221,7 @@ fi
 
 if [ "$fallos" -eq 0 ]; then
   correr "un clon limpio genera los dieciocho secretos (incluidos pg_rag_corpus_migrator_password, seed_doctor_password y seed_admin_password), pg_hba.conf no admite a postgres por red ni tiene el prefijo de test y git status queda vacío [US-035 AC-1]" caso_clon_limpio_genera_los_dieciocho
+  correr "un ONCOLENS_SECRETS_DIR versionado aborta sin cambiar permisos ni escribir [US-035 AC-1]" caso_destino_versionado_aborta_sin_cambiar_permisos
   correr "con --profile test se generan además pg_test_admin_password y pg_hba.test.conf con las reglas del prefijo [US-035 AC-1]" caso_perfil_test_agrega_el_rol_del_arnes
   correr "un PG_TEST_DB_PREFIX inválido aborta sin escribir ningún archivo [US-035 AC-1]" caso_prefijo_invalido_aborta_sin_escribir
   correr "un PG_TEST_DB_PREFIX que casa con POSTGRES_DB, postgres o template aborta sin escribir ningún archivo [US-035 AC-1]" caso_prefijo_que_casa_con_base_reservada_aborta_sin_escribir
