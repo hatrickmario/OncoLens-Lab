@@ -26,17 +26,20 @@ def crear_app(
     trace_ids = trace_ids or UuidTraceIdGenerator()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
+    _registrar_consulta_de_evidencia(app, settings)
+    app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
+    return app
 
+
+def _sonda_llm_segun(settings: Settings) -> LlmHealthPort:
     if settings.llm_provider == "fake":
-        llm_health = llm_health or SinSondaLlm()
+        return SinSondaLlm()
+    return OpenAICompatibleLlmHealth(settings.llm_base_url, settings.llm_health_timeout_ms)
+
+
+def _registrar_consulta_de_evidencia(app: FastAPI, settings: Settings) -> None:
+    # Con LLM_PROVIDER=local el enlace real de /rag/query es de L1D-106 (US-055): hasta entonces no se registra.
+    if settings.llm_provider == "fake":
         app.include_router(
             crear_router_rag_query(FakeEvidenceQuery.desde_directorio(settings.fake_responses_path))
         )
-    else:
-        # El enlace real de /rag/query es de L1D-106 (US-055): hasta entonces no se registra.
-        llm_health = llm_health or OpenAICompatibleLlmHealth(
-            settings.llm_base_url, settings.llm_health_timeout_ms
-        )
-
-    app.include_router(crear_router_health(llm_health, trace_ids))
-    return app
