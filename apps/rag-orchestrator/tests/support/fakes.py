@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.config.settings import Settings
+from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
 from tests.support.service_jwt import AHORA, ParClavesServicio, escribir_clave_publica
 
 _par_de_sesion: ParClavesServicio | None = None
@@ -18,6 +19,18 @@ class RelojFijo:
 
     def ahora(self) -> datetime:
         return self.valor
+
+
+class ConsultaEvidenciaContadora:
+    """`EvidenceQueryPort` que cuenta las invocaciones: con 401 el LLM (y todo lo que hay detrás) no se toca."""
+
+    def __init__(self, respuesta: RagQueryInternalResponse) -> None:
+        self.invocaciones = 0
+        self._respuesta = respuesta
+
+    async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
+        self.invocaciones += 1
+        return self._respuesta
 
 
 def usar_par_de_sesion(par: ParClavesServicio, directorio: Path) -> None:
