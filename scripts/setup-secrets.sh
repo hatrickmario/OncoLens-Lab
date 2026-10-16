@@ -22,7 +22,6 @@ MARCA_REGLAS_TEST='# @REGLAS_PERFIL_TEST'
 
 perfil=""
 ROTAR=()
-REEMITIR=() # derivados de una rotación: el certificado del servidor cuando se regenera la CA
 destino=""
 trabajo=""
 
@@ -118,6 +117,14 @@ comprobar_rotaciones() {
     fi
     grep -qxF -- "$pedido" <<<"$conocidos" || fallar "no se puede rotar $pedido: no es un secreto de este perfil"
   done
+  expandir_rotacion_de_la_ca
+}
+
+# Un certificado firmado por la CA anterior ya no sirve: rotar la CA rota también el par del servidor.
+expandir_rotacion_de_la_ca() {
+  if esta_rotando pg_ca.key || esta_rotando pg_ca.crt; then
+    ROTAR+=(pg_ca.key pg_ca.crt pg_server.key pg_server.crt)
+  fi
 }
 
 # Ruta absoluta y física de un directorio que puede no existir aún, sin crearlo (resuelve por su ancestro existente).
@@ -155,12 +162,6 @@ preparar_destino() {
 
 esta_rotando() {
   local nombre
-  for nombre in ${ROTAR[@]+"${ROTAR[@]}"} ${REEMITIR[@]+"${REEMITIR[@]}"}; do [ "$nombre" = "$1" ] && return 0; done
-  return 1
-}
-
-fue_pedido_rotar() {
-  local nombre
   for nombre in ${ROTAR[@]+"${ROTAR[@]}"}; do [ "$nombre" = "$1" ] && return 0; done
   return 1
 }
@@ -177,7 +178,7 @@ conservar_si_existen() {
 informar_escritura() {
   local nombre
   for nombre in "$@"; do
-    if fue_pedido_rotar "$nombre"; then echo "rotado: $nombre"; else echo "generado: $nombre"; fi
+    if esta_rotando "$nombre"; then echo "rotado: $nombre"; else echo "generado: $nombre"; fi
   done
 }
 
@@ -224,8 +225,6 @@ generar_autoridad_certificadora() {
   publicar "$trabajo/ca_key" pg_ca.key 600
   publicar "$trabajo/ca_crt" pg_ca.crt 644
   informar_escritura pg_ca.key pg_ca.crt
-  # Un certificado firmado por la CA anterior ya no sirve: se reemite el del servidor.
-  REEMITIR+=(pg_server.key)
 }
 
 generar_certificado_del_servidor() {

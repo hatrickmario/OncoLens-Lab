@@ -201,6 +201,21 @@ caso_rotar_el_certificado_del_servidor_cambia_solo_su_par() {
   afirmar "el certificado nuevo sigue firmado por la CA" openssl verify -CAfile "$SECRETOS/pg_ca.crt" "$SECRETOS/pg_server.crt"
 }
 
+caso_rotar_la_ca_reemite_el_certificado_del_servidor() {
+  restablecer
+  ejecutar
+  local ca_antes servidor_antes resto_antes
+  ca_antes="$(sha256sum "$SECRETOS/pg_ca.key" "$SECRETOS/pg_ca.crt")"
+  servidor_antes="$(sha256sum "$SECRETOS/pg_server.key" "$SECRETOS/pg_server.crt")"
+  resto_antes="$(hash_de_cada_archivo | grep -vE ' pg_(ca|server)\.')"
+  ejecutar --rotate pg_ca.key
+  afirmar "rotar pg_ca.key termina con código 0 (código $codigo): $salida" test "$codigo" -eq 0
+  afirmar "la CA cambia" test "$(sha256sum "$SECRETOS/pg_ca.key" "$SECRETOS/pg_ca.crt")" != "$ca_antes"
+  afirmar "el par del servidor se reemite" test "$(sha256sum "$SECRETOS/pg_server.key" "$SECRETOS/pg_server.crt")" != "$servidor_antes"
+  afirmar "pg_server.crt está firmado por la CA nueva" openssl verify -CAfile "$SECRETOS/pg_ca.crt" "$SECRETOS/pg_server.crt"
+  afirmar "el resto de archivos no cambia" test "$(hash_de_cada_archivo | grep -vE ' pg_(ca|server)\.')" = "$resto_antes"
+}
+
 # ---------- ejecución ----------
 
 correr() {
@@ -229,6 +244,7 @@ if [ "$fallos" -eq 0 ]; then
   correr "una segunda ejecución sin --rotate deja los mismos hashes e informa existe sin cambios [US-035 AC-3]" caso_segunda_ejecucion_no_cambia_nada
   correr "rotar identity_aes_key o blind_index_hmac_key se rechaza y el hash no cambia [US-035 AC-3]" caso_rotar_clave_de_identidad_se_rechaza
   correr "rotar pg_server.key reemite solo el par del servidor firmado por la misma CA [US-035 AC-3]" caso_rotar_el_certificado_del_servidor_cambia_solo_su_par
+  correr "rotar pg_ca.key reemite pg_server.crt firmado por la CA nueva y no cambia el resto [US-035 AC-3]" caso_rotar_la_ca_reemite_el_certificado_del_servidor
 fi
 
 rm -f "$registro"
