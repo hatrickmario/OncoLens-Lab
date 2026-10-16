@@ -1,13 +1,12 @@
 """Raíz de composición: único lugar que conoce las clases concretas."""
 
-import logging
-
 from fastapi import FastAPI
 
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.application.ports import LlmHealthPort, TraceIdGenerator
+from app.config.logging import silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.sin_sonda_llm import SinSondaLlm
@@ -21,8 +20,7 @@ def crear_app(
     llm_health: LlmHealthPort | None = None,
     trace_ids: TraceIdGenerator | None = None,
 ) -> FastAPI:
-    # httpx registra la URL de cada petición en INFO; la del LLM no debe llegar a los logs.
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    silenciar_urls_de_httpx_en_logs()
     trace_ids = trace_ids or UuidTraceIdGenerator()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)

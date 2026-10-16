@@ -4,9 +4,8 @@ import httpx
 import pytest
 import respx
 
-from app.bootstrap import crear_app
+from app.config.logging import silenciar_urls_de_httpx_en_logs
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
-from tests.support.fakes import settings_de_prueba
 
 pytestmark = pytest.mark.anyio
 
@@ -47,8 +46,8 @@ async def test_esta_disponible_devuelve_false_cuando_no_hay_conexion_o_vence_el_
         assert await OpenAICompatibleLlmHealth(BASE, 2000).esta_disponible() is False
 
 
-async def test_esta_disponible_no_registra_la_url_del_llm_en_los_logs(caplog):
-    crear_app(settings_de_prueba(llm_base_url=BASE))  # fija el nivel del logger de httpx
+async def test_logs_no_registran_la_url_del_llm_cuando_el_logging_esta_configurado(caplog):
+    silenciar_urls_de_httpx_en_logs()
     caplog.set_level(logging.INFO)
     with respx.mock(assert_all_called=False) as llm:
         llm.get(f"{BASE}/models").mock(return_value=httpx.Response(200))
