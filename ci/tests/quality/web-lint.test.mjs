@@ -69,6 +69,36 @@ describe('lint del bloque web', () => {
     expect(mensaje?.line).toBe(3);
   });
 
+  it.each([
+    ['cliente-importa-barril.tsx', 'el barril @/lib/server'],
+    ['cliente-import-dinamico.tsx', 'un import() dinámico'],
+    ['cliente-require-server.tsx', 'un require()'],
+  ])(
+    "falla con oncolens/no-restricted-imports-en-cliente cuando un módulo 'use client' importa lib/server por %s [US-215 AC-3]",
+    async (fixture) => {
+      const mensaje = errorDe(await lintearFixture(fixture), 'oncolens/no-restricted-imports-en-cliente');
+
+      expect(mensaje?.severity).toBe(2);
+    },
+  );
+
+  it.each(['danger-create-element.tsx', 'danger-spread.tsx'])(
+    'falla con no-restricted-syntax cuando %s pasa dangerouslySetInnerHTML sin JSX directo [US-215 AC-3]',
+    async (fixture) => {
+      const mensaje = errorDe(await lintearFixture(fixture), 'no-restricted-syntax');
+
+      expect(mensaje?.severity).toBe(2);
+    },
+  );
+
+  it('aplica el bloque web a apps/web/app/page.tsx con la regla local y react/no-danger [US-215 AC-3]', async () => {
+    const configuracion = await new ESLint({ cwd: RAIZ }).calculateConfigForFile('apps/web/app/page.tsx');
+
+    expect(Object.keys(configuracion.rules)).toEqual(
+      expect.arrayContaining(['react/no-danger', 'oncolens/no-restricted-imports-en-cliente']),
+    );
+  });
+
   it("no marca el import de lib/server cuando el módulo no tiene la directiva 'use client' [US-215 AC-3]", async () => {
     const resultado = await lintearFixture('servidor-importa-server.tsx');
 

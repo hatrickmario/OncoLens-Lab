@@ -30,6 +30,15 @@ export const bloqueWeb = (files) => ({
     ...jsxA11y.flatConfigs.recommended.rules,
     ...nextPlugin.configs['core-web-vitals'].rules,
     'react/no-danger': 'error',
+    // Cubre lo que react/no-danger no ve: createElement y spread de props.
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector:
+          "Property[key.name='dangerouslySetInnerHTML'], Property[key.value='dangerouslySetInnerHTML']",
+        message: 'dangerouslySetInnerHTML está prohibido: es la vía de XSS sobre texto generado o extraído',
+      },
+    ],
     'oncolens/no-restricted-imports-en-cliente': 'error',
   },
 });
@@ -55,7 +64,7 @@ export default defineConfig(
     files: ['**/*.{js,mjs,cjs}'],
     languageOptions: { globals: globals.node },
   },
-  bloqueWeb(['apps/web/**/*.{ts,tsx}']),
+  bloqueWeb(['apps/web/**/*.{js,jsx,ts,tsx}']),
   {
     files: ['apps/clinical-api/**/*.ts'],
     languageOptions: { globals: globals.node },

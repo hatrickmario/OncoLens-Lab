@@ -167,7 +167,8 @@ el humano (ver Open Questions).
   es degradar el plugin a 14.2.35 (rompe Next 16). **Alcance:** solo `devDependencies` ejecutadas en
   el lint de la CI y en local sobre el código del propio repo (patrones glob fijos, sin entrada
   externa); no entra en el runtime, ni en la imagen standalone, ni en el bundle. `npm audit
-  --omit=dev` (producción) queda en 0 y es la comprobación que bloquea. **Revisión:** retirar la
+  --omit=dev` (producción) queda en 0 y es la comprobación que bloqueará con US-217; hoy ningún job la ejecuta: se verifica a
+  mano y se adjunta al PR. **Revisión:** retirar la
   excepción cuando `braces` publique parche o el plugin cambie de dependencia. Registrada también en
   `docs/process/ci.md`. Alternativa descartada por ahora: lint de Next con una regla local, que
   duplicaría las reglas de core-web-vitals.

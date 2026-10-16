@@ -144,7 +144,8 @@ excepción, que US-217 debe heredar:
 |---|---|---|---|
 | `@next/eslint-plugin-next` 16.4.2 (devDependency) → `fast-glob` → `micromatch` → `braces` | GHSA-vfj7-8cjw-p6xm (alta, DoS por patrones anidados); sin versión parcheada de `braces` | Solo lint en la CI y en local sobre el código del repo; no entra en runtime, imagen ni bundle | Retirar cuando `braces` publique parche o el plugin cambie de dependencia |
 
-El audit que bloquea es `npm audit --omit=dev` (producción), que sale con 0. `npm audit` completo muestra estas 4
+El audit que bloqueará (con US-217) es `npm audit --omit=dev` (producción), que hoy sale con 0; hasta entonces ningún
+job lo ejecuta, se verifica a mano y se adjunta al PR. `npm audit` completo muestra estas 4
 altas por esa única cadena; no se relaja nada más.
 
 ## Fuera de alcance de este change
