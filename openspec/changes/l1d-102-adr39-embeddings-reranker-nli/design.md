@@ -81,6 +81,35 @@ Claves en los *settings* de `rag-orchestrator` y en `.env.example`: `EMBEDDING_M
 `EMBEDDING_DIM=8` y adapters falsos (FX-06c). Un chequeo (`python -m app.scripts.adr39_measure
 --check-config`) compara la configuración con el bloque de decisión del ADR (AC-3).
 
+### D7. Criterios para elegir los modelos de *embeddings* a probar
+Se aplican en dos pasos: primero los eliminatorios (son los de `descartar_por_restricciones()`, D4), después
+los medidos sobre los candidatos que quedan. Mínimo 2 modelos probados (A y B; C como tercero opcional).
+
+| # | Criterio | Tipo | Cómo se comprueba |
+|---|---|---|---|
+| 1 | Corre en local, sin enviar datos a la nube (RN-12) | Eliminatorio | Pesos descargables y uso offline; se excluyen las APIs de pago |
+| 2 | Licencia que permite el uso académico, con versión y revisión fijadas | Eliminatorio | Licencia leída en la fuente; `EMBEDDING_MODEL_REVISION` |
+| 3 | Cabe en la memoria disponible (stack ≤ 24 GB; el LLM usa ~15 GB, quedan ~8–9 GB para el resto) | Eliminatorio | RSS máximo medido (D3) |
+| 4 | Multilingüe, con español e inglés (consultas es contra fuentes en inglés) | Eliminatorio | Model card y recall@10 es → en |
+| 5 | recall@10 y MRR, en total, por fuente, por tipo de dato y es → en | Medido | Golden test (metas: ≥ 0,80, ≥ 0,70 es → en, MRR ≥ 0,60) |
+| 6 | Latencia p95 en CPU dentro del contenedor | Medido | D3 |
+| 7 | Efecto de la cuantización (int8 / ONNX) sobre la calidad | Medido | fp32 solo como referencia (D3) |
+| 8 | Longitud máxima de entrada frente al tamaño de chunk probado | Condicionante | Verificar en la ficha de cada modelo (tarea 1.6). Un modelo con tope bajo no se prueba con chunks que lo superen |
+| 9 | Dimensión (`EMBEDDING_DIM`) y coste de almacenamiento; MRL a 1024 como variante propia | Condicionante | Dimensión declarada y verificada en una inserción de prueba en Milvus |
+| 10 | Prefijo o instrucción distinta para consulta y documento | Condicionante | El golden prueba ambos formatos; el envoltorio de medición los aplica |
+| 11 | *Sparse* nativo (D5) | Condicionante | Salida sparse disponible o fuente alternativa fijada en `SPARSE_VECTOR_SOURCE` |
+| 12 | Soporte en arm64 (sentence-transformers o FlagEmbedding, exportación a ONNX) | Condicionante | Corre en el contenedor de D2 |
+
+**Lo que NO es un criterio:**
+- **Compatibilidad con el LLM generador.** El *embedding* no depende de él: solo convierte texto en vectores y debe ser el
+  mismo al indexar y al consultar. La elección del LLM (US-224) no restringe esta.
+- **Compatibilidad con Milvus.** Milvus es agnóstico al modelo. Solo se comprueban la dimensión, la métrica y el almacén
+  del *sparse*.
+- **Ajuste fino (*fine-tuning*).** Fuera de alcance (Non-Goals).
+
+Los datos de cada modelo (licencia, longitud máxima, tamaño) se verifican en la fuente durante la tarea 1.6; este cuadro
+no los fija.
+
 ## Privacidad y ownership
 
 - Ningún dato clínico cruza fronteras: el change solo trabaja en `rag-orchestrator` con el
