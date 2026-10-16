@@ -6,7 +6,7 @@
 
 ## 2. clinical-platform
 
-> ↪ Requiere en `main` el SDK generado de `clinical-api` de L1D-105 (`packages/api-contracts/src/client/clinical-api/`, `[S1 resp. 13]`) y el *helper* `assertMatchesSpec()` de L1D-164 (`[S1 resp. 17]`). `lib/server/origen.ts` y `lib/server/clinical-api.ts` deben llegar a `main` antes de las tareas `web` del login de L1D-197, que los reutiliza `[S1 resp. 14a]`.
+> ↪ Requiere en `main` el SDK generado de `clinical-api` de L1D-105 (`packages/api-contracts/src/client-web/clinical-api/`, `[S1 resp. 13]`) y el *helper* `assertMatchesSpec()` de L1D-164 (`[S1 resp. 17]`). `lib/server/origen.ts` y `lib/server/clinical-api.ts` deben llegar a `main` antes de las tareas `web` del login de L1D-197, que los reutiliza `[S1 resp. 14a]`.
 
 - [x] 2.1 (test después: soporte) Handlers MSW de `clinical-api` para `POST /platform/evidence-analyses` construidos desde `contracts/examples/` (`con-evidencia-s1.json`, `error-cola-inferencia-llena.json` + `Retry-After: 30`, `error-deadline-vencido.json`, `error-no-autenticado.json`, error de red), con contador de requests y captura de cabeceras y cuerpo; `onUnhandledRequest: 'error'`; generador de `traceId` y reloj inyectados; logger de `web` capturable en memoria.
 - [x] 2.2 (Test del AC primero) Test en rojo: "reenvía el cuerpo y solo la cookie oncolens_session, sin el X-Trace-Id ni el Idempotency-Key del navegador, a clinical-api y devuelve el mismo status y JSON cuando un doctor autenticado pide el análisis [US-060 AC-1]" · integración de `web` (Vitest + MSW). Esqueleto de `app/api/evidence-analyses/route.ts` con `throw new Error('no implementado')`. Commit `test(L1D-139)`.

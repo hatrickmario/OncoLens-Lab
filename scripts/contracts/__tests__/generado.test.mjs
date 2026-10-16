@@ -67,9 +67,13 @@ describe('SDK HTTP generado', () => {
     expect(sinExtension).toEqual([]);
   });
 
-  it.each(['clinical-api', 'rag-orchestrator'])('expone createClient con fetch inyectable y sin baseUrl por defecto en %s [US-054 AC-6]', async (provider) => {
-    const cliente = await readFile(path.join(ROOT, clientDir(provider), 'client.gen.ts'), 'utf8');
-    const operaciones = await readFile(path.join(ROOT, clientDir(provider), 'sdk.gen.ts'), 'utf8');
+  it.each([
+    ['clinical-api', clientDir('clinical-api')],
+    ['rag-orchestrator', clientDir('rag-orchestrator')],
+    ['clinical-api (salida para web)', clientWebDir('clinical-api')],
+  ])('expone createClient con fetch inyectable y sin baseUrl por defecto en %s [US-054 AC-6]', async (_nombre, directorio) => {
+    const cliente = await readFile(path.join(ROOT, directorio, 'client.gen.ts'), 'utf8');
+    const operaciones = await readFile(path.join(ROOT, directorio, 'sdk.gen.ts'), 'utf8');
     expect(cliente).toContain('createClient(createConfig<ClientOptions2>())');
     expect(operaciones).toContain('options.client ?? client');
     expect(cliente).not.toMatch(/baseUrl:\s*'/);

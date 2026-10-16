@@ -88,7 +88,7 @@ pregunta, la cookie ni la respuesta; solo `event`, `status`, `traceId` y duraci�
 **D7 · SDK generado de `clinical-api` con `fetch` inyectable `[S1 resp. 13]`.** No hay cliente
 propio: `lib/server/clinical-api.ts` exporta `crearSdkClinicalApi(config, { request, fetch })`, que
 devuelve `createClient({ baseUrl: CLINICAL_API_URL, fetch: crearFetchHaciaClinicalApi(...) })` del SDK
-de `packages/api-contracts/src/client/clinical-api/` (L1D-105, design D4). `crearFetchHaciaClinicalApi`
+de `packages/api-contracts/src/client-web/clinical-api/` (L1D-105, design D4). `crearFetchHaciaClinicalApi`
 recibe el `fetch` real (inyectable; MSW lo intercepta en los tests), aplica el *timeout*
 `WEB_UPSTREAM_TIMEOUT_MS` con `AbortSignal` y construye las cabeceras salientes desde cero con
 `cabecerasHaciaClinicalApi()` (D2), descartando cualquier otra que el llamador pasara. El Route
@@ -96,6 +96,13 @@ Handler llama a `createEvidenceAnalysis({ client, body, headers })` con las opci
 de L1D-197 reutiliza `crearFetchHaciaClinicalApi()` sin cookie entrante. Descartado: el
 `crearClienteClinicalApi(config, fetch)` escrito a mano de la versión anterior (diverge del
 contrato).
+
+**D7b · Salida del SDK para web (decidido por el humano, 2026-10-20).** Turbopack (Next 16) no resuelve las
+importaciones `.js` hacia `.ts` del SDK de L1D-105; `generate.mjs` emite una segunda salida del mismo spec en
+`packages/api-contracts/src/client-web/clinical-api/` (sin extensión) y `web` importa **solo** de ahí
+(`.../client-web/clinical-api` y `.../client-web/clinical-api/client`). Para L1D-140 y L1D-197: mismo import.
+El SDK `src/client/clinical-api/` (con `.js`) queda sin consumidores en `web` (deuda propuesta: retirarlo si
+tampoco lo usa `clinical-api`).
 
 **D8 · `401` retransmitido; la redirección es del cliente.** Un `401 NO_AUTENTICADO` de
 `clinical-api` se devuelve con el mismo status y cuerpo (AC-1/AC-4, "mismo status"): un Route Handler
@@ -170,7 +177,7 @@ Gate 1 para decir lo mismo.
 |---|---|---|---|
 | `apps/web/app/api/evidence-analyses/route.ts` | crea | `verificarOrigen`, `crearSdkClinicalApi`, `createEvidenceAnalysis` del SDK generado (L1D-105) | — |
 | `apps/web/lib/server/origen.ts` | crea | config (`WEB_ALLOWED_ORIGIN`), logger | `verificarOrigen()` (SEG-01), exportado; lo reutiliza L1D-197 |
-| `apps/web/lib/server/clinical-api.ts` | crea | SDK de `packages/api-contracts/src/client/clinical-api/`, `fetch` inyectable, config (`CLINICAL_API_URL`, `WEB_UPSTREAM_TIMEOUT_MS`), generador de `traceId` | `crearFetchHaciaClinicalApi()`, `cabeceraCookieDeSesion()`, `cabecerasHaciaClinicalApi()`, `cabecerasHaciaNavegador()`, `respuestaDeFalloDeTransporte()` |
+| `apps/web/lib/server/clinical-api.ts` | crea | SDK de `packages/api-contracts/src/client-web/clinical-api/`, `fetch` inyectable, config (`CLINICAL_API_URL`, `WEB_UPSTREAM_TIMEOUT_MS`), generador de `traceId` | `crearFetchHaciaClinicalApi()`, `cabeceraCookieDeSesion()`, `cabecerasHaciaClinicalApi()`, `cabecerasHaciaNavegador()`, `respuestaDeFalloDeTransporte()` |
 | `apps/web/lib/server/config.ts` | mod. | entorno | claves nuevas |
 | `apps/web/tests/build/url-interna.test.ts` | crea | `next build` | — |
 | `e2e/analisis-red.spec.ts` | crea | Compose, panel de L1D-140 | — |
