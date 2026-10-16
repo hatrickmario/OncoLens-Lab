@@ -1,11 +1,20 @@
 import type { ServiceTokenSigner } from './service-jwt.js';
 
 /**
- * Única lista de cabeceras que sobreviven del request del llamador: las de la operación del SDK.
- * Todo lo demás (Cookie, Origin, X-Forwarded-*, Authorization entrante) se descarta: la sesión del doctor
- * termina en clinical-api y nunca llega a rag-orchestrator.
+ * Parámetros `in: header` del spec de rag-orchestrator (espejo en minúsculas). Un test los compara con el spec
+ * empaquetado en ambos sentidos: un parámetro nuevo en el contrato sin reflejo aquí, o al revés, falla.
  */
-const CABECERAS_DE_LA_OPERACION = ['content-type', 'accept', 'x-request-deadline', 'x-trace-id'] as const;
+export const CABECERAS_DEL_CONTRATO = ['x-request-deadline'] as const;
+
+/** Cabeceras de transporte: tipo de contenido, `Accept` y la trazabilidad (X-Trace-Id, documentada en el spec). */
+const CABECERAS_DE_TRANSPORTE = ['content-type', 'accept', 'x-trace-id'] as const;
+
+/**
+ * Única lista de cabeceras que sobreviven del request del llamador. Todo lo demás (Cookie, Origin,
+ * X-Forwarded-*, Authorization entrante) se descarta: la sesión del doctor termina en clinical-api
+ * y nunca llega a rag-orchestrator.
+ */
+const CABECERAS_DE_LA_OPERACION = [...CABECERAS_DEL_CONTRATO, ...CABECERAS_DE_TRANSPORTE];
 
 export interface RagOrchestratorFetchOptions {
   baseUrl: string;
