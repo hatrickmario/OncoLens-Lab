@@ -58,7 +58,8 @@ disco. `.github/workflows/ci-selftest.yml` los corre en los PRs que tocan `.gith
 
 `case.json`: `ac`, `descripcion`, `esperado` (`pasa` | `falla`), `comando` (texto o lista; recibe `BASE_REF`), `aplicar`
 (script que modifica el clon), `mensajes` (deben salir), `ausentes` (no deben salir), `sinValor` (ningún línea de ese archivo
-puede repetirse en la salida) y `pendiente` (el caso depende de un change sin mergear).
+puede repetirse en la salida) y `pendiente` (`{ motivo, hastaQueSeArchive: [changes] }`: el caso depende de changes sin mergear; cuando alguno se archiva, el
+caso cuenta como FALLA aunque no se use `--estricto`, así que no puede quedar pendiente para siempre).
 
 ## PII: formatos, exclusiones y allowlist
 
@@ -69,8 +70,13 @@ puede repetirse en la salida) y `pendiente` (el caso depende de un change sin me
   resuelve **afinando el formato en un PR revisado**, nunca con la allowlist.
   - Dominios de correo reservados (RFC 2606 / RFC 6761: `*.test`, `*.local`, `*.invalid`, `*.localhost`, `example.com`,
     `example.org`, `example.net`) no son hallazgo en ningún archivo.
-  - Un valor con el prefijo centinela `SINT-` (el que exigen los ejemplos de `contracts/examples/`) no es un documento.
-  - `correosExentos`: buzones institucionales públicos concretos (hoy, el de consultas de la CIE de la OMS).
+  - El `patron` de cada formato es neutro; las exenciones son campos que solo aplica `scripts/lib/formatosPii.mjs`:
+    `prefijosExentos` (`SINT-`, el centinela que exigen los ejemplos de `contracts/examples/`), `contextosExentos` (`url`:
+    una coincidencia dentro de `https?://…` no es un documento), `dominiosExentos` y `correosExentos` (buzones
+    institucionales públicos concretos; hoy, el de consultas de la CIE de la OMS).
+  - Siglas de documento: `CC`, `C.C.`, `TI`, `T.I.`, `CE`, `C.E.`, `NUIP`, `ID`, `HC`, `tarjeta de identidad`,
+    `historia clínica`; las de hasta cuatro caracteres exigen límite de palabra.
+  - La tabla completa de exenciones con su motivo está en `design.md` D5b del change.
 - **Exclusiones** (`config/pii-scan.json`): solo patrones de la lista cerrada `EXCLUSIONES_PERMITIDAS` de
   `scripts/ci/pii-scan.mjs` (lockfiles y binarios por extensión). Está en código y no en configuración para que la
   configuración no pueda ampliarse a sí misma; cualquier otra exclusión hace fallar el job nombrándola.
@@ -81,11 +87,13 @@ puede repetirse en la salida) y `pendiente` (el caso depende de un change sin me
   `apps/clinical-api/test/**`, `ci/tests/**`…).
   - Para añadir una entrada: `node scripts/ci/pii-scan.mjs --hash` imprime `ruta:línea: formato sha256=…` (nunca el valor)
     de cada hallazgo; copia solo los hashes de valores **sintéticos** de un fixture y justifica la entrada en el PR
-    (Gate 2, `privacy-guardian`). Un hash de un número corto se invierte por fuerza bruta: por eso solo valores sintéticos.
+    (Gate 2, `privacy-guardian`). **El hash no protege el valor, solo lo identifica**: el de un número corto se invierte por
+    fuerza bruta, por eso solo valores sintéticos (el escáner lo recuerda al usar `--hash`).
 - **Clase de datos** (`config/dataset-roots.json`, por defecto `data/eval/` y `data/evaluation/`): todo archivo de datos
-  bajo esas raíces declara `clase: sintetico` en su manifiesto más cercano (`manifest.json` o `manifest.yaml`) o en su
-  propia cabecera. La documentación (`.md`) y el código (`.py`) que conviven con un dataset no son datos y no la llevan.
-  Se acepta también la marca literal `sintetico: true` de AC-4.
+  bajo esas raíces (incluidos README y código) declara `clase: sintetico` en su manifiesto más cercano (`manifest.json` o
+  `manifest.yaml`; la búsqueda no sube más arriba de la raíz) o, si no hay manifiesto, en su propia cabecera. Si el
+  manifiesto más cercano declara otra clase, la cabecera no la corrige. Se acepta también la marca literal `sintetico: true`
+  de AC-4; la definición de la marca es `esMarcaSintetica`, la misma de la allowlist.
 
 ## Secretos
 
@@ -95,8 +103,8 @@ escenario de L1D-139). Los fixtures de AC-3 generan la clave y el token en tiemp
 
 ## Contratos
 
-`scripts/ci/contracts-breaking.sh <base-ref>` empaqueta (con `scripts/contracts/lib/bundle.mjs`, que internaliza los
-`$ref` a `contracts/schemas/`) el `openapi.yaml` de cada proveedor en la base y en `HEAD` y ejecuta
+`scripts/ci/contracts-breaking.sh <base-ref>` empaqueta (con `scripts/ci/bundle-specs.mjs`, que usa `scripts/contracts/lib/bundle.mjs` para internalizar los
+`$ref` a `contracts/schemas/`) los proveedores de `PROVIDERS` (`scripts/contracts/lib/specs.mjs`) el `openapi.yaml` de cada proveedor en la base y en `HEAD` y ejecuta
 `oasdiff breaking --fail-on ERR`. Solo rompen los cambios de nivel `ERR`; los `WARN`, incluido
 `response-body-wrapped-in-one-of-original-preserved` de los `oneOf` aditivos del S1, se imprimen y no rompen (ADR-26).
 Un cambio incompatible **declarado** no tiene *bypass* hasta que US-214 defina el mecanismo de excepción de

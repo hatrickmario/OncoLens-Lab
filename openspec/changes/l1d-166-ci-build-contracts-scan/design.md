@@ -91,9 +91,11 @@ ci.yml (pull_request, push: main; concurrency por ref; permissions: contents: re
 ### D3. AC-2: cambio incompatible
 
 - `scripts/ci/contracts-breaking.sh <base-ref>`: extrae los dos `openapi.yaml` de la base del PR
-  (`git show <base>:apps/…`) junto con `contracts/` de esa base en un directorio temporal, empaqueta
-  base y HEAD con `scripts/contracts/lib/bundle.mjs` (los specs referencian `contracts/schemas/`) y
-  ejecuta `oasdiff breaking --fail-on ERR` por proveedor. Salida: el proveedor y el cambio
+  (`git archive <base> ':(glob)apps/*/openapi.yaml' contracts`) en un directorio temporal, empaqueta
+  base y HEAD con `scripts/ci/bundle-specs.mjs` (que usa `scripts/contracts/lib/bundle.mjs`; los specs referencian
+  `contracts/schemas/`) y ejecuta `oasdiff breaking --fail-on ERR` por proveedor. Los proveedores salen de `PROVIDERS`
+  (`scripts/contracts/lib/specs.mjs`) a través de `bundle-specs.mjs`: el script no los repite, e imprime
+  `<proveedor>: comparado`. Salida: el proveedor y el cambio
   (p. ej., `rag-orchestrator: removed required property 'citedSources'`).
 - **Nivel de fallo fijado en `ERR` (ADR-26):** solo rompen la CI los cambios que `oasdiff`
   clasifica como `ERR` (incompatibles). Los `WARN` se imprimen en el log y no rompen. En concreto,
@@ -205,6 +207,31 @@ ci.yml (pull_request, push: main; concurrency por ref; permissions: contents: re
 - Alternativa descartada: reutilizar el adapter `pii/` de `rag-orchestrator` (no existe aún y
   acoplaría la CI a Backend 2); Presidio en la CI (pesado, sin ganancia para patrones regulares).
 
+### D5b. Exenciones declaradas de los escáneres (Gate 2, vuelta 1)
+
+Cada exención es un campo declarativo de `config/pii-formats.json` o una constante cerrada del código, con su motivo y su
+test de que la regla sigue detectando el caso original. El `patron` de cada formato es **neutro** (describe la PII); las
+exenciones las aplica solo `scripts/lib/formatosPii.mjs`, que comparten el escáner y `assertExamplesSynthetic`.
+
+| Exención | Dónde | Motivo | Test de que lo original se sigue detectando |
+|---|---|---|---|
+| `prefijosExentos: ["SINT-"]` en `documento_identidad` (el centinela sale de ahí: `PREFIJO_SINTETICO`) | formato | los ejemplos de `contracts/examples/` exigen el prefijo `SINT-` (assertExamplesSynthetic) | el mismo número sin prefijo, en la misma línea, se informa |
+| `contextosExentos: ["url"]` | formato | `documentos/CDR…` de una URL del corpus no es un documento | el mismo texto con barra fuera de una URL y `Documento/ID: …` se informan |
+| `dominiosExentos` (RFC 2606 / 6761) | formato `correo` | no pueden pertenecer a una persona | `notexample.com` y otros dominios se informan |
+| `correosExentos: [{local: icd, dominio: who.int}]` | formato `correo` | buzón institucional público de consultas de la CIE de la OMS (DEC-04, FEAT-00) | otro buzón del mismo dominio se informa |
+| `EXCLUSIONES_PERMITIDAS` (lockfiles y binarios) | código | sin texto libre | cualquier otra exclusión hace fallar el job |
+| Siglas de documento (`CC`, `C.C.`, `TI`, `T.I.`, `CE`, `C.E.`, `NUIP`, `ID`, `HC`, `tarjeta de identidad`, `historia clínica`) | formato | cubren cómo se escribe un documento en español; las de hasta cuatro caracteres exigen límite de palabra y no casan tras `_` (`nct_id`) | un test por sigla |
+| Allowlist por fixture y valor | `config/pii-allowlist.json` | PII sintética conocida (FX-T4a-a/c, búsqueda parcial, L1D-203, parches negativos de AC-17, `CC` sembrados de FEAT-01a/01b/02b/11b/11c/AP1) | un segundo valor sin hash en la misma ruta y el mismo hash en otra ruta se informan |
+| `.gitleaks.toml`: UUID de `Idempotency-Key` | ruta exacta + regla `generic-api-key` + forma del valor (`condition = "AND"`) | ejemplo sintético de L1D-139, no es una credencial | cualquier otra ruta o forma sigue sujeta a la regla |
+
+**Clase de datos:** sin exención por extensión. El manifiesto más cercano (la subida se corta en la raíz configurada) manda: si
+declara otra clase, la cabecera del archivo no la corrige. `data/eval/ol06-particion-v1/manifest.yaml` cubre ese directorio.
+La marca `sintetico` tiene una sola definición (`esMarcaSintetica`: `clase: sintetico` o `sintetico: true`), usada por los
+manifiestos y por la allowlist.
+
+**`--hash`** imprime el sha256 del valor normalizado para poblar la allowlist: el hash de un número corto se invierte por
+fuerza bruta, así que no protege el valor, solo lo identifica; se usa únicamente con valores sintéticos.
+
 ### D6. AC-6: protección de rama
 
 - La configuración de GitHub no es código: la aplica el humano administrador (Settings → Branches
@@ -238,6 +265,11 @@ ci.yml (pull_request, push: main; concurrency por ref; permissions: contents: re
   `scripts/ci/**`, `config/**` o `.gitleaks.toml`, y por `workflow_dispatch`. Los fixtures viven
   fuera de `data/` y no contienen PII con forma real: solo números `SINT-` con la forma del patrón.
 
+**Casos pendientes (Gate 2, vuelta 1):** `pendiente` es `{ motivo, hastaQueSeArchive: [changes] }`. El runner lo lista
+como PENDIENTE (y falla con `--estricto`), y cuando alguno de esos changes aparece en `openspec/changes/archive/` el caso cuenta
+como FALLA aunque no se use `--estricto`: no puede quedar pendiente para siempre. Con L1D-103/L1D-104 archivados, el caso
+`ac2-cited-sources-build` debe pasar a verde en el cierre.
+
 ## Privacidad y ownership
 
 - **Fronteras:** este change no hace cruzar datos entre `web`, `clinical-api` y `rag-orchestrator`:
@@ -269,7 +301,7 @@ estable entre sprints) es justo lo que el check de incompatibilidades hace cumpl
 | `scripts/ci/pii-scan.mjs` | nuevo | `config/pii-formats.json`, `config/pii-allowlist.json`, `config/pii-scan.json`; extrae `detectarPii(texto, formatos)`, `normalizarValor(formato, valor)`, `estaEnAllowlistSintetica(ruta, formato, sha256, allowlist)`, `validarAllowlist(allowlist)` y `validarExclusiones(excluir)` (puros) |
 | `scripts/ci/dataset-class-check.mjs` | nuevo | `config/dataset-roots.json`; extrae `manifiestoMasCercano(ruta)` y `declaraClaseSintetico(manifiesto)` (puros) |
 | `scripts/ci/lib/claseDatos.mjs` | nuevo | compartido por los dos escáneres: una sola definición de "marcado `sintetico`" |
-| `scripts/ci/contracts-breaking.sh` | nuevo | `scripts/contracts/lib/bundle.mjs`, `oasdiff` |
+| `scripts/ci/contracts-breaking.sh` | nuevo | `scripts/ci/bundle-specs.mjs` (sobre `scripts/contracts/lib/bundle.mjs`), `oasdiff` |
 | `scripts/ci/check-branch-protection.sh` | nuevo | `gh` |
 | `config/pii-formats.json` (interfaz) | nuevo | consumido también por L1D-203 en ejecución (solo añade reglas de reemplazo); fuente única de formatos de PII |
 | `ci/tests/` | nuevo | `scripts/ci/*`, `git`, `openssl` |
