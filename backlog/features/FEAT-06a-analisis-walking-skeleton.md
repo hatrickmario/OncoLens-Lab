@@ -61,8 +61,8 @@ recuperación del walking skeleton se implemente sobre una base estable.
   la métrica principal de su componente (recall@10 y MRR, incluido español → inglés, para
   *embeddings* y *reranker*; exactitud sobre pares etiquetados para NLI). `[readme §1.4]` `[G-3]` `[G-6]`
 - **AC-2 (borde · restricciones duras)** `[NFR-05]` · Dado un candidato que, sumado al
-  presupuesto reservado para el LLM de la hipótesis A, hace exceder 24 GB de memoria total
-  del stack, o cuya etapa no deja margen para p95 ≤ 15 s en `/platform/evidence-analyses`
+  presupuesto reservado para el LLM de la hipótesis A, hace exceder ~30 GB de memoria total
+  del stack (24 GB hasta el 2026-10-20), o cuya etapa no deja margen para p95 ≤ 15 s en `/platform/evidence-analyses`
   (presupuesto por etapa fijado en el propio ADR), o con licencia no académica, cuando se
   evalúe, entonces queda descartado y el ADR anota el motivo y la cifra medida.
   `[readme §1.4]` `[NFR-01]`
@@ -129,7 +129,8 @@ No implementar el pipeline ni la ingesta (US-059, US-117). No hacer *fine-tuning
 > **Creada (usuario, 2026-10-13, `[S1 resp. 6]`)** al partir US-012. Hipótesis principal **A** `[S1 resp. 5, 10]`: **Gemma 4 26B A4B QAT** (`gemma4:26b-a4b-it-qat`, MoE con ~4B activos, Q4 entrenado con cuantización, Apache 2.0) en **Ollama (GGUF/llama.cpp sobre Metal)**, fuera de Docker, con `num_ctx = 8192`. **Medición del refinamiento (2026-10-13, Ollama 0.34.4):** 15 GB residentes, 100 % GPU, ~79 tok/s y JSON con esquema correcto en una prueba. Se descartó `gemma4:26b-mlx` (18 GB solo en pesos) porque el usuario fijó un presupuesto de ~16 GB para el LLM; OCR **OCRmyPDF + Tesseract `spa`**. Respaldos medidos: **B** Gemma 4 12B (ya descargado) y **C** Qwen3.5-9B sin *thinking*; vllm-metal como runtime alternativo; PaddleOCR (PP-OCRv5 latino) y docTR como OCR alternativos. Descartado por licencia: Surya (GPL-3.0 + OpenRAIL-M con umbral comercial).
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 5]`):** el supuesto original de US-012 AC-8 ("en el S1 solo candidatos de 7–8B") se reemplaza: en el S1 se miden modelos de hasta 26B MoE o 12B denso, siempre que el stack completo quepa en 24 GB.
-
+>
+> **Decidido (usuario, 2026-10-20):** el **tope máximo del LLM local es 21 GB** y el **tope del stack total sube de 24 a ~30 GB** (equipo de referencia: MacBook Pro M5 de 32 GB). Sustituye el presupuesto de ~16 GB de `[S1 resp. 10]` y el límite de 24 GB de `[S1 resp. 5]`. **Candidatos ampliados:** a A, B y C se suman **D** Qwen 3.6 35B-A3B Q4_K_M (`qwen3.6:35b-a3b-q4_K_M`, 24 GB publicados, Apache 2.0: se espera descarte por memoria, con la cifra medida), **E** y **F** MedGemma 1.5 4B en Q8_0 (5,0 GB) y BF16 (8,6 GB) (`medgemma1.5:4b-it-q8_0`, `…-bf16`; términos HAI-DEF, no Apache 2.0: elegibles solo con aceptación del usuario) y **G** Gemma 4 26B-A4B Q4_K_M (`gemma4:26b-a4b-it-q4_K_M`, 18 GB, Apache 2.0); tags, tamaños y licencias verificados en la fuente el 2026-10-20. **Protocolo:** memoria con `ollama ps` y contexto de trabajo (`num_ctx=8192`), JSON válido ≥ 99 %, calidad en español, p95 de extracción ≤ 60 s y p95 e2e ≤ 15 s, con reglas de decisión fijadas antes de medir; un candidato que no quepa en 21 GB medidos se descarta con su cifra. Detalle en `openspec/changes/l1d-274-adr39-runtime-llm-ocr/design.md` (D1, D3). IDs y AC no cambian. **Linear: pendiente de sincronizar** (el Markdown es la fuente).
 ## Story
 Como responsable técnico, quiero fijar el runtime, el LLM y el OCR locales midiendo el
 análisis de punta a punta, para que el walking skeleton cumpla el p95 y la extracción del
@@ -149,7 +150,7 @@ S2–S3 parta de un motor elegido con datos.
 - **AC-3 (borde · p95 extremo a extremo)** `[NFR-01]` · Dado el pipeline del S1 (US-055,
   US-225, US-063, US-064) contra el paciente semilla, cuando se mide
   `POST /platform/evidence-analyses` con 3 corridas de ≥ 30 consultas, entonces el ADR
-  registra p95 total y por etapa, y una combinación con p95 > 15 s o memoria total > 24 GB
+  registra p95 total y por etapa, y una combinación con p95 > 15 s o memoria total > ~30 GB (24 GB hasta el 2026-10-20) o memoria del LLM > 21 GB
   queda descartada con la cifra medida; si ninguna cumple, aplica US-012 AC-5 (escala al
   usuario). `[readme §1.4]` `[NFR-05]` (ex US-012 AC-2, parte p95)
 - **AC-4 (configuración)** · Dado el ADR aprobado, cuando se cierre, entonces modelos,
@@ -171,8 +172,7 @@ LLM denso de 12B en Q4 genera ~30–35 tok/s, así que 800 tokens tardan ~23–2
 del p95 solo con el LLM. La hipótesis A (MoE, ~4B activos) midió ~79 tok/s en el refinamiento
 (~10 s para 800 tokens); si falla, las palancas son recortar la salida, decodificación especulativa (MTP en
 vllm-metal, solo con `temperature=0`) o el respaldo B/C. Con GGUF la salida se restringe por gramática en llama.cpp; las 200 llamadas del AC-2 lo
-confirman. Presupuesto de memoria fijado por el usuario: ~16 GB para el LLM `[S1 resp. 10]`
-(medido: 15 GB); el resto del stack debe caber en los ~8–9 GB restantes.
+confirman. Presupuesto de memoria: ~16 GB para el LLM `[S1 resp. 10]` (medido: 15 GB), **ampliado el 2026-10-20 a 21 GB para el LLM y ~30 GB para el stack** (Decidido, usuario); el resto del stack debe caber en los ~9 GB restantes si el LLM llega al tope. Riesgo: en un equipo de 32 GB quedan ~2 GB para macOS; el ADR mide la holgura real.
 
 ## Non-goals
 No implementar el pipeline (US-055, US-225). No hacer *fine-tuning*. No decidir el

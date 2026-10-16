@@ -98,6 +98,8 @@ Insumo: investigación externa del 2026-10-13. Fuentes: model cards y licencias 
 | 9 | Literal del aviso de IA (dos puntos frente a raya) | **Dos puntos (PRD B-06)**, y `disclaimer` solo con esa frase. El change de US-069 corrige la descripción del `openapi.yaml` y los ejemplos vía `sync-contracts` (cambio compatible) | US-069, `docs/ux/flujo-e2e.md`, `docs/ux/S1/` |
 | 10 | Memoria del LLM (instrucción del usuario: "approx 16 GB") | **`gemma4:26b-a4b-it-qat`** en lugar de `gemma4:26b-mlx` (18 GB); `num_ctx = 8192` | US-224, `02-adrs.md` |
 
+> **Nota (usuario, 2026-10-20):** las resp. 5 (límite de 24 GB) y 10 (~16 GB para el LLM) quedan superadas por el tope de 21 GB para el LLM y ~30 GB para el stack; ver `S1-plan.md` §9, decisión 40. Este registro conserva lo decidido el 2026-10-13.
+
 ## 4. Slicing
 
 **Cambio aprobado** (resp. 6): dos divisiones por superficie, sin cambio de puntos ni de demo.

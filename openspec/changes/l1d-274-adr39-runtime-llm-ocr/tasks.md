@@ -20,7 +20,7 @@
       `validar_contra_esquema()`; reutilizar el arnés de la fase A si existe · **test después**
       `[US-224 AC-5]`
 - [ ] 1.2 Tests Pytest del script (`test_<unidad>_<escenario>_<resultado>`): percentiles, descarte por
-      p95 > 15 s / memoria > 24 GB / LLM > ~16 GB / JSON < 99 % / OCR p95 > 60 s, empate por menor
+      p95 > 15 s / memoria total > ~30 GB o swap creciente / LLM > 21 GB / JSON < 99 % / OCR o extracción p95 > 60 s, empate (≤ 1 salida de diferencia en fidelidad) por menor
       memoria y JSON inválido contra `RagQueryInternalResponse`; HTTP del runtime y del gateway con
       `respx`, reloj inyectado · **test después** `[US-224 AC-5]`
 - [ ] 1.3 Dataset `data/eval/ocr-mini/`: generador versionado de ≥ 5 PDF escaneados en español (mama
@@ -31,15 +31,21 @@
       `~/.venvs/vllm-metal` según su README, time-box 1 h, o descartar con el motivo y el comando
       probado); registrar GPU Metal real, API OpenAI-compatible y JSON restringido por esquema ·
       **exento** `[US-224 AC-1]`
-- [ ] 1.5 LLM: 200 llamadas por candidato (A `gemma4:26b-a4b-it-qat`, B `gemma4:12b-mlx`, C
-      `qwen3.5:9b-mlx` sin *thinking*) con el prompt del S1 sobre `data/eval/adr39-mini/`; memoria
-      (pesos + KV), tok/s, JSON válido (≥ 99 %), fidelidad en la muestra revisada por
-      `ai-eval-runner`, licencia y quién aplica la restricción; contrastar con la medición del
-      refinamiento (15 GB, 100 % GPU, ~79 tok/s, `[S1 resp. 10]`) · **evaluate** `[US-224 AC-2]`
+- [ ] 1.5 LLM: medición de admisión por memoria (`ollama ps`, `num_ctx=8192`, tras el prompt más largo;
+      descarte con cifra si > 21 GB) y después 200 llamadas por candidato admitido (A
+      `gemma4:26b-a4b-it-qat`, B `gemma4:12b-mlx`, C `qwen3.5:9b-mlx` sin *thinking*, **D**
+      `qwen3.6:35b-a3b-q4_K_M` sin *thinking*, **E** `medgemma1.5:4b-it-q8_0`, **F**
+      `medgemma1.5:4b-it-bf16`, **G** `gemma4:26b-a4b-it-q4_K_M`; D–G añadidos el 2026-10-20) con el
+      prompt del S1 sobre `data/eval/adr39-mini/`; memoria (pesos + KV), tok/s, JSON válido (≥ 99 %),
+      fidelidad y calidad en español en la muestra revisada por `ai-eval-runner`, p95 de
+      estructuración por documento sobre el texto de `ocr-mini`, licencia (E y F: HAI-DEF, elección
+      sujeta a aceptación del usuario) y quién aplica la restricción; aplicar las reglas de decisión de
+      design.md D3 (fijadas antes de medir); contrastar con la medición del refinamiento (15 GB, 100 %
+      GPU, ~79 tok/s, `[S1 resp. 10]`) · **evaluate** `[US-224 AC-2]`
 - [ ] 1.6 p95 extremo a extremo: 3 corridas de ≥ 30 consultas a `POST /platform/evidence-analyses`
       contra Compose con seed sintético y LLM real; p95 total y por etapa; memoria total del stack;
-      descartar con cifra o escalar al usuario (US-012 AC-5) · **evaluate** `[US-224 AC-3]` `[NFR-01]`
-      `[NFR-05]`
+      descartar con cifra o escalar al usuario (US-012 AC-5); registrar `memory_pressure` y swap (holgura
+      de macOS) y la RAM de la máquina de medición · **evaluate** `[US-224 AC-3]` `[NFR-01]` `[NFR-05]`
 - [ ] 1.7 OCR: medir OCRmyPDF + Tesseract `spa`, PaddleOCR (PP-OCRv5 latino) y docTR dentro del
       contenedor de `rag-orchestrator` sobre `data/eval/ocr-mini/`: exactitud por campo crítico,
       p95 por documento (≤ 60 s), memoria, licencia y **si escribe a disco y dónde**, con el

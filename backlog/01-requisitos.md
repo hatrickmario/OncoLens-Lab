@@ -160,7 +160,7 @@ Recorridos: RU-1 acceso · RU-2 registro · RU-3 ficha · RU-4 carga · RU-5 rev
 | NFR-02 | Rendimiento | Extracción por documento | p95 ≤ 60 s | sí ("propuesta") | S2 | [→ PRD §7], [→ PRD §18 M-01.2] |
 | NFR-03 | Rendimiento | Ficha, listado y vista de caso (sin resumen) | p95 ≤ 1 s ficha y listado; ≤ 2 s vista de caso | sí (propuesta) | S1 · S2 | [→ PRD §7], [→ PRD §18 M-02.4] |
 | NFR-04 | Capacidad | Usuarios del piloto | 10 registrados, 2–3 concurrentes; 1–2 inferencias simultáneas compartidas (cola con `429`); presupuesto de tokens por bloque en ADR de modelos | sí | S1 (semáforo) · S5 | [→ PRD §7] |
-| NFR-05 | Hardware | Entorno de referencia | MacBook Pro M5 32 GB; stack ≤ 24 GB | no (restricción dura) | S1 | [→ PRD §7], [→ CLAUDE.md] |
+| NFR-05 | Hardware | Entorno de referencia | MacBook Pro M5 32 GB; stack ≤ ~30 GB, LLM ≤ 21 GB (Decidido (usuario, 2026-10-20); antes 24 GB) | no (restricción dura) | S1 | [→ PRD §7], [→ CLAUDE.md] |
 | NFR-06 | Disponibilidad | Entorno local y piloto | Sin SLA; apagado/arranque documentados; backups cifrados con prueba de restauración **por sprint** | no | ambiguo: "por sprint" vs S5 (C-22) | [→ PRD §7], [→ readme §5.0 S5] |
 | NFR-07 | Fiabilidad | Cola de extracción | Durable; máx. 3 intentos; 0 documentos colgados | sí (intentos) | S2 | [→ PRD §7], [→ readme §6.1 #9] |
 | NFR-08 | Fiabilidad | Consistencia análisis ↔ persistencia | 0 respuestas sin registro | no | S1 | [→ PRD §7], [→ PRD §6 RN-06] |
@@ -193,7 +193,7 @@ Recorridos: RU-1 acceso · RU-2 registro · RU-3 ficha · RU-4 carga · RU-5 rev
 
 | ID | Área | Requisito (texto fuente, resumido) | Meta | ¿Calibrable? | Sprint | Evidencia |
 |---|---|---|---|---|---|---|
-| IA-01 | Modelos | Elegidos en ADR de modelos locales con restricciones duras (memoria, latencia, licencia, español, JSON válido, GPU), medido con stack completo | ≤ 24 GB, p95, JSON ≥ 99% ([→ CLAUDE.md]) | sí | inicio S1 (TBD-01) | [→ PRD §12] |
+| IA-01 | Modelos | Elegidos en ADR de modelos locales con restricciones duras (memoria, latencia, licencia, español, JSON válido, GPU), medido con stack completo | ≤ ~30 GB (LLM ≤ 21 GB; antes 24 GB), p95, JSON ≥ 99% ([→ CLAUDE.md]) | sí | inicio S1 (TBD-01) | [→ PRD §12] |
 | IA-02 | Idioma | ES/EN; embeddings multilingües dense+sparse; expansión bilingüe; respuesta en idioma de la pregunta; citas en idioma original con **traducción opcional etiquetada** | Recall@10 es→en ≥ 0,70 | sí | S1 · S3 | [→ PRD §12] |
 | IA-03 | Recuperación | Filtros vigencia/fuente/tipo/población; reranker multilingüe; umbral configurable; consulta enriquecida con línea de tratamiento y faltantes | Recall@10 ≥ 0,80, MRR ≥ 0,60 | sí (umbral, TBD-03) | S1 · S3 | [→ PRD §12] |
 | IA-04 | Grounding | Validación de citas + NLI por afirmación (estricto), incl. población; análisis previos nunca soporte | Fidelidad ≥ 0,90; precisión de citas ≥ 0,90 | sí | S1 → S4 | [→ PRD §12] |
@@ -408,7 +408,7 @@ Resumen: 31 técnicos · 2 de gobierno (M-04.3, M-05.1) · 3 mixtos (M-02.5, M-0
 ## 7. Restricciones
 
 ### 7.1 Técnicas
-- Stack ≤ 24 GB en MacBook Pro M5 32 GB; LLM nativo **fuera de Docker** (Metal) vía `host.docker.internal`; API compatible con OpenAI. [→ PRD §7 NFR-05], [→ PRD §8], [→ CLAUDE.md]
+- Stack ≤ ~30 GB (LLM ≤ 21 GB; 24 GB hasta el 2026-10-20) en MacBook Pro M5 32 GB; LLM nativo **fuera de Docker** (Metal) vía `host.docker.internal`; API compatible con OpenAI. [→ PRD §7 NFR-05], [→ PRD §8], [→ CLAUDE.md]
 - p95 análisis ≤ 15 s (recalibra S4), extracción ≤ 60 s, JSON válido ≥ 99%, licencia académica, buen español; decidir primero los *embeddings* (cambiarlos obliga a reindexar). [→ CLAUDE.md], [→ readme §6.1 última fila]
 - Solo PostgreSQL y Milvus como motores; MinIO como almacén; sin broker (cola en `Document`). [→ PRD §8], [→ readme §3.3 #11, #17]
 - Esquema PostgreSQL **completo** en la migración inicial (S1) y colección Milvus con esquema final. [→ readme §6 OL-01, OL-02]

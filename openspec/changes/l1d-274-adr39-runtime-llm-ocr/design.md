@@ -16,13 +16,18 @@ Hechos de partida (verificados el 2026-10-13, `backlog/sprints/S1-refinamiento.m
 | Máquina | Apple M5 Pro, 48 GB, macOS 27.0.1, ~307 GB/s de ancho de banda | refinamiento §5, contexto técnico de US-224 |
 | Runtime A | Ollama **0.34.4** (Ollama.app); ≥ 0.40 opcional, lo actualiza el usuario | §5 |
 | LLM A | `gemma4:26b-a4b-it-qat` descargado (15 GB); medido con `num_ctx=8192`: **15 GB residentes, 100 % GPU, ~79 tok/s**, JSON con esquema correcto en **una** prueba | §5, Decidido `[S1 resp. 10]` |
-| Presupuesto LLM | **~16 GB** (instrucción del usuario: "approx 16 GB"); resto del stack en ~8–9 GB de los 24 GB | `[S1 resp. 10]` |
-| Descartado | `gemma4:26b-mlx` (18 GB solo en pesos) | `[S1 resp. 10]` |
+| Presupuesto LLM | **21 GB como tope máximo medido** (ollama ps, con `num_ctx` de trabajo); stack total **~30 GB** en el equipo de referencia MacBook Pro M5 de 32 GB. Sustituye el "~16 GB" / 24 GB del 2026-10-13 | Decidido (usuario, 2026-10-20); antes `[S1 resp. 10]` |
+| Descartado el 2026-10-13 | `gemma4:26b-mlx` (18 GB solo en pesos): se descartó por el tope de ~16 GB, hoy superado; no está entre los candidatos pedidos el 2026-10-20 y **no se añade** sin instrucción (su 18 GB cabría en 21 GB; G, de 18 GB, ya cubre la misma familia) | `[S1 resp. 10]`; Decidido (usuario, 2026-10-20) |
 | Respaldo B | `gemma4:12b-mlx` (7,7 GB) | §5 |
 | Respaldo C | `qwen3.5:9b-mlx` (8,9 GB), sin *thinking* | §5 |
+| Candidatos añadidos (2026-10-20) | D `qwen3.6:35b-a3b-q4_K_M`; E `medgemma1.5:4b-it-q8_0`; F `medgemma1.5:4b-it-bf16`; G `gemma4:26b-a4b-it-q4_K_M` (tabla de verificación en D3) | Decidido (usuario, 2026-10-20) |
 | Runtime alternativo | vllm-metal **0.1.0** (PyPI) en `~/.venvs/vllm-metal`, **sin el paquete `vllm`** que el plugin necesita y no declara como dependencia; no está en Homebrew | §2 ("Datos que resultaron falsos"), §5 |
 | OCR A | OCRmyPDF + Tesseract `spa`, **en el contenedor** de `rag-orchestrator` (no en el host) | §5, `[S1 resp. 5]` |
 | OCR alternativos | PaddleOCR (PP-OCRv5 latino), docTR; Surya descartado por licencia | `[S1 resp. 5]` |
+
+**Cambio del 2026-10-20.** El usuario sube el tope del LLM local a 21 GB y el del stack total de 24 a
+~30 GB (equipo de referencia: MacBook Pro M5 de 32 GB; la máquina de medición actual es una M5 Pro de
+48 GB, ver Riesgos). Los candidatos y las reglas de D1 y D3 se fijan **antes** de medir.
 
 Riesgo principal (contexto técnico de US-224): un denso de 12B en Q4 genera ~30–35 tok/s (800
 tokens ≈ 23–27 s), por encima del p95 solo con el LLM. La hipótesis A (MoE, ~4B activos) midió ~79
@@ -57,6 +62,11 @@ con `temperature=0`) o el respaldo B/C.
   `num_ctx=8192`, contrastada con el monitor del sistema; **memoria total del stack** = LLM nativo
   + `docker stats` de todos los contenedores durante la corrida extremo a extremo. Ambas con su
   cifra, sin redondear a la baja.
+- **Memoria con contexto de trabajo (2026-10-20):** la cifra de `ollama ps` se toma con `num_ctx=8192`
+  **después** de procesar el prompt más largo del dataset (prefill completo), no recién cargado el
+  modelo; se anota también `OLLAMA_FLASH_ATTENTION`/`OLLAMA_KV_CACHE_TYPE` si están definidos. Además de
+  `docker stats`, se registran `memory_pressure` y el swap usado antes y después de la corrida
+  extremo a extremo (indicador de holgura para macOS, ver reglas de D3).
 - Toda cifra procede del script (D6) y su JSON queda en `reports/adr39/` (no versionado si pesa;
   el ADR transcribe las medianas y enlaza el comando que las reproduce).
 
@@ -77,20 +87,84 @@ de GPU queda descartado (AC-1).
 
 ### D3. LLM `[US-224 AC-2]`
 
-- Candidatos: **A** `gemma4:26b-a4b-it-qat`; **B** `gemma4:12b-mlx`; **C** `qwen3.5:9b-mlx` sin
-  *thinking*. Todos en el runtime ganador de D2 (y A también en el otro si es viable, para aislar el
-  efecto del runtime).
+- Candidatos (la letra se conserva; D–G añadidos el 2026-10-20):
+
+  | | Tag (Ollama) | Digest | Tamaño publicado | Licencia | Estado de verificación |
+  |---|---|---|---|---|---|
+  | A | `gemma4:26b-a4b-it-qat` | `2dd70431afed` | 16 GB en la página; `ollama list` local: 15 GB | Apache 2.0 | verificado (2026-10-20) |
+  | B | `gemma4:12b-mlx` | `ded7a2735003` | 7,7 GB | Apache 2.0 (HF `google/gemma-4-12B-it`) | verificado |
+  | C | `qwen3.5:9b-mlx` | `203e30078279` | 8,9 GB | Apache 2.0 (HF `Qwen/Qwen3.5-9B`) | verificado |
+  | D | `qwen3.6:35b-a3b-q4_K_M` | `07d35212591f` | **24 GB** (arquitectura `qwen35moe`, 36B parámetros) | Apache 2.0 (Ollama y HF `Qwen/Qwen3.6-35B-A3B`) | verificado; **ya excede 21 GB solo en pesos** |
+  | E | `medgemma1.5:4b-it-q8_0` | `d6ae3cddb663` | 5,0 GB | Términos HAI-DEF de Google (`license: other`), no permisiva estándar | tag y tamaño verificados; licencia: **condicionada**, ver abajo |
+  | F | `medgemma1.5:4b-it-bf16` | `32f17fbd85fe` | 8,6 GB | ídem E | ídem E |
+  | G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | 18 GB (25,8B parámetros) | Apache 2.0 | verificado |
+
+  Fuentes: `ollama.com/library/{qwen3.6,gemma4,medgemma1.5,qwen3.5}/tags`, páginas de cada tag y la API
+  de Hugging Face de los repositorios `Qwen/Qwen3.6-35B-A3B`, `google/gemma-4-26B-A4B-it`,
+  `google/medgemma-1.5-4b-it` (consultadas el 2026-10-20). La página de tags de Ollama muestra tamaños
+  en rangos o redondeados y puede cambiar (las páginas dicen "actualizado hace 3 días"): el tamaño que
+  vale es el de `ollama list`/`ollama ps` del día de la medición, y el ADR anota el *digest*.
+  **No verificado:** (i) que Ollama 0.34.4 sirva `qwen35moe` (D) y `medgemma1.5` (E, F) con GPU Metal y
+  salida JSON restringida: se comprueba en la medición de admisión; (ii) la velocidad (tok/s) y el
+  español de D, E, F y G: no hay cifra previa; (iii) el alcance exacto de la cláusula de «Clinical Use»
+  de los términos HAI-DEF para un uso de investigación (ver licencia).
+  - **MedGemma 1.5 (E, F):** la familia es de Google (Gemma 3, 4B denso, multimodal, entrenada para
+    texto e imagen médicos); no es Apache 2.0 sino los términos HAI-DEF (`health-ai-developer-foundations/terms`),
+    que definen «Clinical Use» como cualquier uso en diagnóstico o tratamiento de pacientes, **incluida
+    una investigación**, y prohíben usos que hagan a Google «fabricante» de un dispositivo médico. El
+    repositorio de Hugging Face es *gated* (aceptación automática). Un candidato con esta licencia solo
+    puede ser **elegido** si el usuario acepta los términos por escrito en el PR del ADR (RN-21 pide
+    licencia registrada y aceptada); medirlo no exige aceptarlos más allá de la descarga. El tag
+    `medgemma1.5` de Ollama figura como «actualizado hace 6 meses»; MedGemma 1.5 4B en Hugging Face
+    es de 2026-04-13.
+  - **Qwen3.6 (D):** se mide con *thinking* desactivado (igual que C); sin la opción, la latencia no
+    es comparable.
+  - Las variantes MTP (`qwen3.6:35b-a3b-mtp-q4_K_M`, 23 GB; `gemma4:26b-a4b-it-mtp-q4_K_M`, 19 GB) no
+    son candidatos: son la palanca de decodificación especulativa de D4.
+  - Todos en el runtime ganador de D2 (y A también en el otro si es viable, para aislar el efecto del
+    runtime).
 - **200 llamadas por candidato** con el prompt del S1 (change de L1D-275) y
   `RagQueryInternalResponse` (`apps/rag-orchestrator/openapi.yaml`) como esquema de salida, sobre
   las preguntas de `data/eval/adr39-mini/` (fase A; ≥ 30 preguntas, se repiten hasta 200) con los
   chunks que recupera el pipeline del S1 (o, si el pipeline aún no está, con los chunks etiquetados
   del dataset como contexto fijo; el ADR anota cuál).
+- **Medición de admisión previa (2026-10-20):** antes de las 200 llamadas, cada candidato se carga con
+  `num_ctx=8192`, procesa el prompt más largo y se lee `ollama ps` (3 repeticiones, mediana). Si la
+  memoria residente supera el tope, el candidato se **descarta con esa cifra** y no se le hacen las 200
+  llamadas. Para D (24 GB publicados) se espera este resultado; se mide igualmente para registrar la
+  cifra real en lugar de descartarlo por la etiqueta.
 - Registro por candidato: memoria residente (pesos + KV), tokens/s (generación y *prefill*), **JSON
   válido contra el esquema** (meta ≥ 99 %), fidelidad sobre una **muestra revisada** (≥ 20 salidas,
   revisadas por `ai-eval-runner` a mano con el criterio de soporte de US-064; ADR-41 aún no existe),
-  licencia y si la restricción por JSON Schema la aplica el runtime.
-- Restricciones duras: memoria del LLM > ~16 GB `[S1 resp. 10]` o JSON válido < 99 % → descartado
-  con la cifra. Empate en la métrica principal → gana el de menor memoria (regla de US-012 AC-4).
+  **calidad en español** (ver reglas), p95 de **estructuración por documento** (ver abajo), licencia y
+  si la restricción por JSON Schema la aplica el runtime.
+- **Estructuración y p95 de extracción (≤ 60 s):** con el texto de verdad de terreno de
+  `data/eval/ocr-mini/` (no con la salida del OCR, para aislar el LLM), cada candidato estructura cada
+  documento; se registra el p95 por documento. El p95 de extracción de extremo a extremo de D5
+  (OCR + estructuración) se calcula con el OCR elegido y debe ser ≤ 60 s.
+
+**Reglas de decisión, fijadas antes de medir (2026-10-20).** No se modifican después de ver las cifras;
+si una regla resulta inaplicable se registra la desviación en el ADR, no se reescribe.
+
+1. **Eliminatorias (en este orden; la primera que falla descarta con su cifra):**
+   (a) licencia académica/permisiva verificada (un candidato con términos HAI-DEF pasa a «condicionado»:
+   se mide, pero solo puede ser elegido con la aceptación del usuario);
+   (b) memoria residente del LLM (`ollama ps`, `num_ctx=8192`, tras el prompt más largo) **≤ 21 GB**;
+   (c) memoria total del stack (LLM + `docker stats` + modelos de CPU de la fase A) **≤ 30 GB** con todo
+   levantado, y el swap usado no crece durante la corrida extremo a extremo (indicador de holgura; si
+   crece, se descarta aunque la suma esté bajo 30 GB);
+   (d) JSON válido contra el esquema **≥ 99 %** de las 200 llamadas;
+   (e) p95 extremo a extremo de `/platform/evidence-analyses` **≤ 15 s** (D4) y p95 de extracción
+   **≤ 60 s** (estructuración de D3 más OCR de D5).
+2. **Calidad en español** (sobre la muestra revisada de ≥ 20 salidas por candidato): fidelidad ≥ 0,90;
+   0 salidas prescriptivas (RN-23); 0 salidas en otro idioma que el de la pregunta; terminología clínica
+   correcta según el criterio de `ai-eval-runner`. Incumplir cualquiera descarta con la cifra.
+3. **Elección entre los que superan 1 y 2:** mayor fidelidad en la muestra; dos candidatos están
+   **empatados** si difieren en una salida de la muestra (0,05 con n = 20) o menos, y entonces gana el de
+   **menor memoria residente** (regla de US-012 AC-4). Un modelo más grande **no** gana por serlo.
+4. **Si nadie supera 1 y 2:** se aplica US-012 AC-5 (escalar al usuario), sin elegir uno que incumpla.
+5. **Sensibilidad:** si el elegido deja menos de 1 GB de margen bajo 21 GB o bajo 30 GB, el ADR lo
+   declara como riesgo y registra el siguiente candidato que sí deja margen (respaldo).
 
 ### D4. p95 extremo a extremo `[US-224 AC-3]`
 
@@ -102,7 +176,7 @@ de GPU queda descartado (AC-1).
   `AIAnalysisRecord` (RN-06). Las etapas se leen de los tiempos que el pipeline registra por
   `traceId` (sin contenido ni PHI en los *logs*); si una etapa no expone su tiempo, el ADR lo anota
   como "no desglosado" en vez de estimarlo.
-- Una combinación con p95 > 15 s o memoria total del stack > 24 GB queda **descartada** con la cifra.
+- Una combinación con p95 > 15 s o memoria total del stack > ~30 GB (o swap creciente, D3 regla 1c) queda **descartada** con la cifra.
   Si ninguna cumple → **US-012 AC-5**: el ADR lo declara y escala el ajuste de metas al usuario
   (G-5 / NFR-01) sin elegir una combinación que incumpla. Las palancas (recorte de salida, MTP con
   `temperature=0`, respaldo B/C) se registran como medidas, no como supuestos.
@@ -263,8 +337,20 @@ Las cifras de este ADR son el punto de partida del baseline de US-072/US-073.
   anota y se pide al usuario actualizar Ollama (≥ 0.40, desde la app) o se mide una variante GGUF del
   mismo modelo, anotando el cambio.
 - **Muestra de OCR pequeña (≥ 5 PDF)** → la exactitud es orientativa; FEAT-01b y US-072 la amplían.
-- **Memoria del stack** con el LLM a 15 GB deja ~9 GB para Milvus, PostgreSQL, MinIO, los modelos
-  CPU de la fase A y OCR; se mide con todo levantado, no por suma de estimaciones.
+- **Memoria del stack** (tope 2026-10-20): con el LLM al tope de 21 GB quedan ~9 GB de los ~30 GB
+  para Milvus, PostgreSQL, MinIO, los modelos CPU de la fase A, OCR y Docker Desktop; se mide con todo
+  levantado, no por suma de estimaciones. Con la hipótesis A (15 GB) quedarían ~15 GB.
+- **Holgura de macOS:** en un equipo de 32 GB, un stack de 30 GB deja ~2 GB al sistema y a las
+  aplicaciones del usuario (navegador, IDE). El tope lo fijó el usuario; el ADR mide `memory_pressure` y
+  swap (D1, D3 regla 1c) en lugar de asumir que cabe, y declara la holgura real medida.
+- **Máquina de medición ≠ equipo de referencia:** la máquina actual es una M5 Pro de 48 GB; una corrida
+  sin presión de memoria allí no demuestra que quepa en 32 GB. El ADR anota la RAM de la máquina y, si no
+  se repite en una de 32 GB, deja la verificación como condición de G-Piloto (no se afirma «cabe en 32 GB»
+  solo con la suma de cifras).
+- **Más candidatos, mismo coste (3 pts):** D–G añaden hasta 4 × 200 llamadas, pero la admisión previa
+  descarta primero por memoria y MedGemma (4B) es rápido; si el tiempo no alcanza, D se descarta con la
+  cifra de admisión y E/F se miden con 100 llamadas anotándolo. La estimación no cambia sin aprobación.
+- **Licencia de MedGemma (HAI-DEF):** no permisiva estándar; ganar exige aceptación del usuario.
 
 ## Migration Plan
 
@@ -278,4 +364,6 @@ cambiarse sin reindexar.
 - Tamaño de la muestra revisada de fidelidad (propuesto ≥ 20 salidas por candidato) y si la revisa
   solo `ai-eval-runner` o también un humano.
 - Si B y C (`-mlx`) no corren en Ollama 0.34.4: ¿actualizar Ollama (lo hace el usuario) o medir su
-  variante GGUF?
+  variante GGUF? Lo mismo para D (`qwen35moe`) y E/F (`medgemma1.5`).
+- ¿El usuario acepta los términos HAI-DEF si MedGemma 1.5 gana? ¿Se repite la corrida final en un
+  equipo de 32 GB? (Pregunta abierta de 2026-10-20.)

@@ -543,7 +543,7 @@ El detector nunca registra valores, solo tipos (`findingTypes`).
 | **Descartada** · Enviar el texto a Backend 2 para enmascararlo | — | Viola RN-10/RN-11 |
 
 Si la opción B supera el presupuesto de memoria de ADR-39, queda descartada por la
-restricción de 24 GB.
+restricción de ~30 GB (24 GB hasta el 2026-10-20).
 
 ## Non-goals
 No implementar el enmascaramiento (US-049, FEAT-01b). No cambiar el gate de PII ni las

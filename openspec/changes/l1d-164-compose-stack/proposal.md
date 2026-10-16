@@ -147,5 +147,5 @@ respuestas fijas que no puedan divergir del contrato (`[S1 resp. 7]`).
   solo se tipan las claves que usa este change.
 - Recuperación, generación, JWT de servicio y errores `401`/`409`/`422`/`429`/`504` de `/rag/query`
   (L1D-106, L1D-275, L1D-105).
-- Medición de memoria del stack ≤ 24 GB (ADR-39, L1D-274).
+- Medición de memoria del stack ≤ ~30 GB (ADR-39, L1D-274; antes 24 GB hasta el 2026-10-20).
 - Pantallas de `web` (US-211 y siguientes).

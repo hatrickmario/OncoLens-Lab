@@ -151,7 +151,7 @@ memoria ni filtrar datos clínicos.
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dadas las opciones, cuando se decida, entonces
   `docs/architecture/adr/ADR-44-observabilidad.md` registra la memoria adicional medida de
-  cada una y la elegida cabe en el presupuesto de 24 GB junto con el stack de ADR-39.
+  cada una y la elegida cabe en el presupuesto de ~30 GB (24 GB hasta el 2026-10-20) junto con el stack de ADR-39.
   `[readme §1.4]`
 - **AC-2 (borde · no fuga)** · Dado el *tracing* distribuido, cuando se especifique,
   entonces los atributos de los *spans* siguen la regla de los logs: nunca identidad,
