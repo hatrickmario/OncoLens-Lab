@@ -977,20 +977,21 @@ CREATE TRIGGER analysis_follow_up_inmutable
 
 -- §4.3 (US-038, reglas por estado y tipo): las columnas de modelos y recuperación se anulan según el estado o el tipo.
 ALTER TABLE clinical.ai_analysis_record
-  -- tipo_no_habilitado: no se invocó ningún modelo.
+  -- tipo_no_habilitado: no se invocó ningún modelo ni hubo recuperación.
   ADD CONSTRAINT ai_analysis_record_tipo_no_habilitado_ck CHECK (
     status <> 'tipo_no_habilitado' OR (
       llm_provider IS NULL AND llm_model IS NULL AND nli_model IS NULL
-      AND embedding_model IS NULL AND reranker_model IS NULL)),
+      AND embedding_model IS NULL AND reranker_model IS NULL
+      AND prompt_version IS NULL AND corpus_release IS NULL AND retrieval_params IS NULL)),
   -- resumen_caso: no recupera del corpus, así que no hay modelos de recuperación ni puntaje.
   ADD CONSTRAINT ai_analysis_record_resumen_caso_ck CHECK (
     analysis_type <> 'resumen_caso' OR (
       embedding_model IS NULL AND reranker_model IS NULL AND corpus_release IS NULL
       AND retrieval_params IS NULL AND top_relevance_score IS NULL)),
-  -- con_evidencia: LLM y NLI siempre; los modelos de recuperación en el análisis de evidencia.
+  -- con_evidencia: LLM, NLI y versión del prompt siempre (reproducibilidad); los modelos de recuperación en el análisis de evidencia.
   ADD CONSTRAINT ai_analysis_record_con_evidencia_ck CHECK (
     status <> 'con_evidencia' OR (
-      llm_provider IS NOT NULL AND llm_model IS NOT NULL AND nli_model IS NOT NULL
+      llm_provider IS NOT NULL AND llm_model IS NOT NULL AND nli_model IS NOT NULL AND prompt_version IS NOT NULL
       AND (analysis_type = 'resumen_caso' OR (embedding_model IS NOT NULL AND reranker_model IS NOT NULL)))),
   -- RN-02: sin evidencia o tipo no habilitado <=> top_relevance_score NULL (null no es 0.0), en el análisis de evidencia.
   ADD CONSTRAINT ai_analysis_record_puntaje_estado_ck CHECK (
@@ -999,6 +1000,7 @@ ALTER TABLE clinical.ai_analysis_record
   ADD CONSTRAINT ai_analysis_record_puntaje_rango_ck CHECK (top_relevance_score IS NULL OR top_relevance_score BETWEEN 0 AND 1),
   ADD CONSTRAINT ai_analysis_record_opciones_ck CHECK (status = 'con_evidencia' OR evidence_options = '[]'::jsonb);
 
--- §4.3: un episodio tiene responsable de cierre si y solo si está cerrado.
+-- §4.3: un episodio tiene responsable de cierre si y solo si está cerrado, y el motivo solo existe en un episodio cerrado.
+-- Cerrar sin motivo sigue permitido: el catálogo de motivos aún no está validado con el oncólogo.
 ALTER TABLE clinical.care_episode
-  ADD CONSTRAINT care_episode_cierre_ck CHECK ((closed_at IS NULL) = (closed_by IS NULL));
+  ADD CONSTRAINT care_episode_cierre_ck CHECK ((closed_at IS NULL) = (closed_by IS NULL) AND (closed_at IS NOT NULL OR closure_reason IS NULL));

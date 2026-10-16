@@ -117,10 +117,15 @@ código). Si el modelo cambia, cambia en su change y el test se actualiza en ese
 
 Los metadatos de modelo (`llm_provider`, `llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`)
 y de recuperación (`corpus_release`, `retrieval_params`) de `clinical.ai_analysis_record` son anulables y los `CHECK`
-nombrados de `data-model.md` §4.3 fijan cuándo: `tipo_no_habilitado`, `resumen_caso`, `con_evidencia`, coherencia de
-`top_relevance_score` (RN-02) y `evidence_options = '[]'` fuera de `con_evidencia`. También se relajan, por sentido clínico,
-`diagnosis` (estadio y desempeño), `care_episode.closure_reason/closed_by` (con `care_episode_cierre_ck`) y `patient`
-(`source_dataset`, `agreement_reference`). `clinical.analysis_follow_up` comparte el *trigger* de inmutabilidad.
+nombrados de `data-model.md` §4.3 fijan cuándo, sin dejar ninguna columna anulable sin regla de estado o tipo salvo la
+pregunta abierta Q1: `tipo_no_habilitado` los anula todos; `resumen_caso` anula los de recuperación y el puntaje;
+`con_evidencia` exige `llm_provider`, `llm_model`, `nli_model` y `prompt_version` (y los modelos de recuperación en el
+análisis de evidencia); además la coherencia de `top_relevance_score` (RN-02) y `evidence_options = '[]'` fuera de
+`con_evidencia`. **Q1 (abierta, para el humano):** `corpus_release` y `retrieval_params` no se exigen `NOT NULL` en
+`analisis_evidencia` con evidencia; hoy solo se prohíben donde no hubo recuperación. También se relajan, por sentido clínico,
+`diagnosis` (estadio y desempeño), `care_episode.closure_reason/closed_by` (con `care_episode_cierre_ck`, que además
+impide un motivo en un episodio abierto) y `patient` (`source_dataset`, `agreement_reference`). `clinical.analysis_follow_up`
+comparte el *trigger* de inmutabilidad.
 **Se modifica `init_full_schema` y no se añade otra migración** porque la inicial aún no está desplegada en ningún entorno
 (solo bases de test efímeras): el historial no pierde información y evita una migración de corrección en el mismo sprint.
 
