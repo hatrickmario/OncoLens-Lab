@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import re
+
 import pytest
 import yaml
-from app.evaluation.config_medicion import spec_desde_yaml
+from app.evaluation.config_medicion import cargar_config, spec_desde_yaml
 from app.evaluation.fase_a2 import cargar_config_a2
 from app.evaluation.fase_a3 import cargar_config_a3
 
@@ -48,3 +50,24 @@ def test_fase_a3_conserva_la_plantilla_de_consulta_del_embedding(tmp_path: Path)
     config = cargar_config_a3(_con_plantilla("adr39-fase-a3.yaml", tmp_path))
 
     assert config.embedding.plantilla_consulta == PLANTILLA and config.embedding.plantilla_documento == "Doc: {texto}"
+
+
+def test_spec_desde_yaml_rechaza_codigo_remoto_sin_revision_del_codigo() -> None:
+    crudo = {"id": "C", "modelo": "x/y", "revision": "a" * 40, "tarea": "reranker_cls", "max_length": 8, "codigo_remoto": True}
+
+    with pytest.raises(ValueError, match="code_revision"):
+        spec_desde_yaml("reranker", crudo)
+
+
+def test_spec_desde_yaml_conserva_la_revision_del_codigo_remoto() -> None:
+    crudo = {"id": "C", "modelo": "x/y", "revision": "a" * 40, "tarea": "reranker_cls", "max_length": 8, "codigo_remoto": True, "code_revision": "b" * 40}
+
+    assert spec_desde_yaml("reranker", crudo).code_revision == "b" * 40
+
+
+def test_la_configuracion_real_fija_la_revision_exacta_de_todo_codigo_remoto() -> None:
+    config = cargar_config(RAIZ_APP / "eval" / "configs" / "adr39-fase-a.yaml")
+
+    remotos = [s for specs in config.candidatos.values() for s in specs if s.codigo_remoto]
+
+    assert remotos and all(re.fullmatch(r"[0-9a-f]{40}", s.code_revision) for s in remotos)

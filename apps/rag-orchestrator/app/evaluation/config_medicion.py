@@ -29,6 +29,7 @@ class ModeloSpec:
     dim_salida: int = 0
     atencion: str = "sdpa"
     codigo_remoto: bool = False
+    code_revision: str = ""  # commit exacto del repositorio del código remoto (obligatorio si codigo_remoto)
     export_pythonpath: str = ""
 
     @property
