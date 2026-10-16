@@ -126,6 +126,25 @@ def descargar_fuentes(
     return resultado
 
 
+def leer_fuentes_de_cache(dataset: Dataset, cache_dir: Path) -> dict[str, FuenteDescargada]:
+    """Secciones de las fuentes ya descargadas, sin red; falla si falta alguna (la descarga la hace el orquestador)."""
+    carpeta = cache_dir / SUBDIRECTORIO
+    registro = _leer_registro(carpeta / REGISTRO)
+    resultado: dict[str, FuenteDescargada] = {}
+    for fuente in dataset.fuentes:
+        archivo = carpeta / f"{fuente.id}.{EXTENSIONES[fuente.formato_original]}"
+        if not archivo.exists() or fuente.id not in registro:
+            raise FuenteNoDescargable(f"falta {fuente.id} en la caché; ejecute adr39_fetch_sources")
+        contenido = archivo.read_bytes()
+        resultado[fuente.id] = FuenteDescargada(
+            id=fuente.id,
+            sha256=str(registro[fuente.id]["sha256"]),
+            bytes=len(contenido),
+            secciones=tuple(PARSERS[fuente.formato_original](contenido)),
+        )
+    return resultado
+
+
 def verificar_citas(dataset: Dataset, fuentes: Mapping[str, FuenteDescargada]) -> list[CitaAusente]:
     """Citas del golden que no aparecen en el texto de su documento (AC-13); informa pregunta y documento."""
     ausentes: list[CitaAusente] = []

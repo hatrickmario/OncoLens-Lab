@@ -1,0 +1,15 @@
+pyyaml
+numpy
+httpx
+defusedxml
+psutil
+torch
+transformers
+tokenizers
+safetensors
+onnx
+onnxscript
+onnxruntime
+sentence-transformers
+pytest
+respx

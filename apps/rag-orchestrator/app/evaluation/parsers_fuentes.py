@@ -84,6 +84,10 @@ def _nombre_modulo(clave: str) -> str:
     return re.sub(r"Module$", "", clave)
 
 
+# Listas de centros y contactos: no son evidencia y ocupan decenas de miles de caracteres de ruido.
+MODULOS_CTGOV_OMITIDOS = frozenset({"contactsLocationsModule"})
+
+
 def parsear_registro_ctgov(contenido: bytes) -> list[Seccion]:
     """Un campo por módulo del registro (identificación, descripción, elegibilidad, resultados…)."""
     estudio = json.loads(contenido)
@@ -93,6 +97,8 @@ def parsear_registro_ctgov(contenido: bytes) -> list[Seccion]:
         ("resultados", estudio.get("resultsSection", {})),
     ):
         for clave, modulo in modulos.items():
+            if clave in MODULOS_CTGOV_OMITIDOS:
+                continue
             texto = " ".join(t.strip() for t in _aplanar_json(modulo) if t.strip())
             if texto:
                 secciones.append(Seccion(f"{bloque}:{_nombre_modulo(clave)}", texto))
