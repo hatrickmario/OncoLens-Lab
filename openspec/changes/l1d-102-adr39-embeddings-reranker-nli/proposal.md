@@ -8,7 +8,7 @@ ADR-5, ADR-10 (readme §3.3, §6.1) · US-012 AC-1, AC-2, AC-3, AC-4, AC-5, AC-9
 Decidido (usuario, 2026-10-13): `[S1 resp. 3]` (supuestos "(asumido)" aceptados), `[S1 resp. 5]`
 (hipótesis A con respaldos B y C medidos), `[S1 resp. 6]` (partida en fase A y fase B; AC-6/7/8
 originales pasan a US-224) · `[S1 resp. 10]` (presupuesto de ~16 GB para el LLM, que fija el margen
-del resto del stack) · `[S1 resp. 38]` (las pruebas de *chunking*, solapamiento, estrategia e índice, T2–T5, amplían US-012: 5 → 8) · `[S1 resp. 39]` (ClinicalTrials.gov utilizable con atribución a NLM) · Fuente: `backlog/features/FEAT-06a-analisis-walking-skeleton.md` §US-012,
+del resto del stack; **ampliado el 2026-10-20 a un tope de 21 GB para el LLM y 30 GB para el stack**, con el *reranker* bge-reranker-v2-m3) · `[S1 resp. 38]` (las pruebas de *chunking*, solapamiento, estrategia e índice, T2–T5, amplían US-012: 5 → 8) · `[S1 resp. 39]` (ClinicalTrials.gov utilizable con atribución a NLM) · Fuente: `backlog/features/FEAT-06a-analisis-walking-skeleton.md` §US-012,
 `backlog/sprints/S1-refinamiento.md` §2 y §5, `backlog/02-adrs.md` §US-012.
 
 ## Why

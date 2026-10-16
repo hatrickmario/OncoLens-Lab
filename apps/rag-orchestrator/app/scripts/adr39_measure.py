@@ -110,13 +110,16 @@ def lanzar_en_subproceso(trabajo: Trabajo, ruta_config: Path, cache_datos: Path)
 
 def lanzar_a3_en_subproceso(cache_datos: Path) -> Callable[[Any, Path], None]:
     """Cada corrida de la medición del reranker en un proceso nuevo (RSS limpio)."""
-    from app.evaluation.fase_a3 import trabajo_a_json
+    from app.evaluation.fase_a3 import TrabajoFallido, trabajo_a_json
 
     def lanzar(trabajo: Any, ruta_config: Path) -> None:
-        subprocess.run(
-            [sys.executable, "-m", "app.scripts.adr39_measure", "--trabajador-a3", json.dumps(trabajo_a_json(trabajo)), "--config", str(ruta_config), "--cache-datos", str(cache_datos)],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "app.scripts.adr39_measure", "--trabajador-a3", json.dumps(trabajo_a_json(trabajo)), "--config", str(ruta_config), "--cache-datos", str(cache_datos)],
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise TrabajoFallido(f"el proceso de medición terminó con código {exc.returncode} (-9 = SIGKILL por memoria de la VM)") from exc
 
     return lanzar
 

@@ -128,3 +128,24 @@ def test_la_fase_a3_escribe_un_reporte_con_cada_escenario_y_sus_conclusiones(esc
     assert reporte["escenarios"]["vigente"]["corridas"] == 3
     assert reporte["conclusiones"]["presupuesto_reranker_ms"] is None or reporte["conclusiones"]["presupuesto_reranker_ms"] % 250 == 0
     assert "texto" not in json.dumps(reporte).lower().replace("textos", "")
+
+
+def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigue_con_los_demas(escenario) -> None:
+    from app.evaluation.fase_a3 import TrabajoFallido
+
+    dataset, secciones, tmp = escenario
+    contador = iter(range(1, 100_000))
+    fabrica = FabricaFalsa()
+    cfg = config()
+
+    def ejecutor(trabajo: TrabajoA3) -> None:
+        if trabajo.escenario.id == "menos-pares":
+            raise TrabajoFallido("código -9")
+        ejecutar_trabajo_a3(trabajo, cfg, dataset, fabrica, lambda: next(contador) / 100.0)
+
+    codigo = ejecutar_fase_a3(cfg, dataset, secciones, fabrica, tmp / "modelos", tmp / "datos", tmp / "a3.json", ejecutor, lambda: AHORA)
+
+    reporte = json.loads((tmp / "a3.json").read_text())
+    assert codigo == SALIDA_OK
+    assert reporte["escenarios_no_medibles"]["menos-pares"]["estado"] == "no_medible"
+    assert "menos-pares" not in reporte["escenarios"] and "vigente" in reporte["escenarios"]

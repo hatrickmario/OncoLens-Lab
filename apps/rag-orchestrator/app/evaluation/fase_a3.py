@@ -42,6 +42,10 @@ from app.evaluation.trabajos import Fabrica
 SALIDA_OK, SALIDA_DATASET, SALIDA_FUENTE = 0, 2, 3
 
 
+class TrabajoFallido(Exception):
+    """Un proceso de medición murió (p. ej. SIGKILL por falta de memoria en la VM de Docker): el escenario no es medible."""
+
+
 @dataclass(frozen=True)
 class Escenario:
     id: str
@@ -312,14 +316,20 @@ def ejecutar_fase_a3(
             dir_modelos / "onnx" / config.embedding.directorio, cache_datos / "adr39" / "vectores", dir_corridas / f"candidatos-{tamano}",
         )
     agregados: dict[str, dict[str, Any]] = {}
+    no_medibles: dict[str, dict[str, Any]] = {}
     for e in config.escenarios:
         corridas = []
-        for n in range(1, config.corridas + 1):
-            salida = dir_corridas / f"{e.id}-corrida{n}.json"
-            if not salida.exists():
-                ejecutor(TrabajoA3(e, n, n == 1, dir_corridas / f"candidatos-{e.tamano_chunk}", dir_modelos / "onnx" / config.reranker.directorio, salida))
-            corridas.append(json.loads(salida.read_text(encoding="utf-8")))
-        agregados[e.id] = {**agregar_corridas_a3(corridas), "tamano_chunk": e.tamano_chunk, "max_length": e.max_length, "max_pairs": e.max_pairs, "rol": e.rol, "numero_chunks": chunks_por_tamano[e.tamano_chunk]}
+        descripcion = {"tamano_chunk": e.tamano_chunk, "max_length": e.max_length, "max_pairs": e.max_pairs, "rol": e.rol, "numero_chunks": chunks_por_tamano[e.tamano_chunk]}
+        try:
+            for n in range(1, config.corridas + 1):
+                salida = dir_corridas / f"{e.id}-corrida{n}.json"
+                if not salida.exists():
+                    ejecutor(TrabajoA3(e, n, n == 1, dir_corridas / f"candidatos-{e.tamano_chunk}", dir_modelos / "onnx" / config.reranker.directorio, salida))
+                corridas.append(json.loads(salida.read_text(encoding="utf-8")))
+        except TrabajoFallido as exc:
+            no_medibles[e.id] = {"estado": "no_medible", "motivo": str(exc), **descripcion}
+            continue
+        agregados[e.id] = {**agregar_corridas_a3(corridas), **descripcion}
     reporte = {
         "fase": "A3",
         "fecha": ahora().date().isoformat(),
@@ -328,7 +338,8 @@ def ejecutar_fase_a3(
         "embedding": {"modelo": config.embedding.modelo, "revision": config.embedding.revision, "cuantizacion": config.cuantizacion},
         "protocolo": {"corridas": config.corridas, "calentamiento": config.calentamiento, "hilos_cpu": config.hilos_cpu, "lotes_por_corrida": config.lotes_por_corrida},
         "escenarios": agregados,
-        "conclusiones": derivar_conclusiones(agregados, config.escenarios, config),
+        "escenarios_no_medibles": no_medibles,
+        "conclusiones": derivar_conclusiones(agregados, [e for e in config.escenarios if e.id in agregados], config),
     }
     escribir_reporte(ruta_reporte, reporte)
     print(f"reporte: {ruta_reporte}")

@@ -9,7 +9,10 @@ US-012 · ADR-39 fase A (`[S1 resp. 6]`) fija los tres modelos que corren en CPU
 mDeBERTa-v3-base-xnli-multilingual-nli-2mil7), con **B** (Qwen3-Embedding-0.6B MRL a 1024 +
 Qwen3-Reranker-0.6B) y **C** (multilingual-e5-large-instruct + gte-multilingual-reranker-base)
 como respaldos medidos con el mismo protocolo (`[S1 resp. 5]`). La elección sale de las cifras
-(AC-2, AC-4), no de la hipótesis. El insumo (`backlog/sprints/S1-refinamiento.md` §2) no trae
+(AC-2, AC-4), no de la hipótesis. **Actualización 2026-10-20 (decisión del usuario):** el *reranker* es
+`BAAI/bge-reranker-v2-m3` (hipótesis A) aunque supera el presupuesto original de p95; su presupuesto se
+justifica con la medición sobre chunks de 1024 tokens (`eval/configs/adr39-fase-a3.yaml`), y los topes pasan
+a 30 GB de stack y 21 GB para el LLM (equipo de referencia MacBook Pro de 32 GB). El insumo (`backlog/sprints/S1-refinamiento.md` §2) no trae
 latencias medidas en CPU; la única cifra medida es la del LLM (15 GB residentes, ~79 tok/s,
 `[S1 resp. 10]`), que deja ~8–9 GB para el resto del stack.
 
@@ -30,7 +33,7 @@ antes de que US-059 indexe.
 
 ### D1. Una sola decisión con dos fases en un documento
 `docs/architecture/adr/ADR-39-modelos-locales.md` sigue `_plantilla-madr.md`: *Context*,
-*Decision Drivers* (24 GB, p95 ≤ 15 s, licencia académica, español → inglés, reindexado),
+*Decision Drivers* (stack ≤ 30 GB con el LLM ≤ 21 GB, p95 ≤ 15 s, licencia académica, español → inglés, reindexado),
 *Considered Options* (A, B, C por componente), *Decision Outcome* por componente, *Consequences*,
 y una sección "Fase B" vacía que completa el change de L1D-274 (US-224). Estado: `propuesto` hasta
 que el humano lo acepte en el PR; las cifras se registran tal como se midieron (memoria del
@@ -56,7 +59,7 @@ contenedor) y esperar a US-034 (retrasa US-058/US-059).
   elegido); exactitud sobre pares etiquetados para NLI, desglosada en mismo idioma y mezcla es/en.
 - **Variantes:** int8 / ONNX como hipótesis; fp32 solo como referencia de calidad si int8 degrada.
 - **Presupuestos** (los fija el ADR y se copian a `eval/configs/adr39-fase-a.yaml`):
-  `STACK_MEMORY_LIMIT_GB` (24), presupuesto del LLM de la hipótesis A (~16 GB, `[S1 resp. 10]`) y
+  `STACK_MEMORY_LIMIT_GB` (30 desde 2026-10-20; antes 24), tope del LLM (`LLM_MEMORY_BUDGET_GB` 21; antes ~16 GB, `[S1 resp. 10]`) y
   `STAGE_P95_BUDGET_MS` por etapa de modo que la suma con el LLM (~10 s para 800 tokens) deje
   margen para p95 ≤ 15 s en `/platform/evidence-analyses`.
 
@@ -90,7 +93,7 @@ los medidos sobre los candidatos que quedan. Mínimo 2 modelos probados (A y B; 
 |---|---|---|---|
 | 1 | Corre en local, sin enviar datos a la nube (RN-12) | Eliminatorio | Pesos descargables y uso offline; se excluyen las APIs de pago |
 | 2 | Licencia que permite el uso académico, con versión y revisión fijadas | Eliminatorio | Licencia leída en la fuente; `EMBEDDING_MODEL_REVISION` |
-| 3 | Cabe en la memoria disponible (stack ≤ 24 GB; el LLM usa ~15 GB, quedan ~8–9 GB para el resto) | Eliminatorio | RSS máximo medido (D3) |
+| 3 | Cabe en la memoria disponible (stack ≤ 30 GB; el LLM usa hasta 21 GB, quedan ~9 GB para el resto; antes 24 y ~8–9 GB) | Eliminatorio | RSS máximo medido (D3) |
 | 4 | Multilingüe, con español e inglés (consultas es contra fuentes en inglés) | Eliminatorio | Model card y recall@10 es → en |
 | 5 | recall@10 y MRR, en total, por fuente, por tipo de dato y es → en | Medido | Golden test (metas: ≥ 0,80, ≥ 0,70 es → en, MRR ≥ 0,60) |
 | 6 | Latencia p95 en CPU dentro del contenedor | Medido | D3 |
