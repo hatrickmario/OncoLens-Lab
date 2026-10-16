@@ -96,9 +96,21 @@ compose exec -T rag-orchestrator python -c "import os; open(os.path.join(os.envi
 bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".
-consulta='let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const r=await fetch("http://rag-orchestrator:8000/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
-# Consulta /rag/query desde clinical-api con el cuerpo de stdin: imprime "<status> <cuerpo>".
-consultar_rag() { en_node clinical-api "$consulta"; }
+# US-054: /rag/query exige el JWT de servicio ES256. El smoke lo firma con la clave privada del directorio de
+# secretos (la de scripts/setup-secrets.sh o la ficticia); vive 60 s, así que se firma uno nuevo por consulta.
+firmar_jwt_de_servicio() {
+  node -e "
+const c=require('node:crypto'), b=o=>Buffer.from(JSON.stringify(o)).toString('base64url'), ahora=Math.floor(Date.now()/1000);
+const t=b({alg:'ES256',typ:'JWT'})+'.'+b({iss:'clinical-api',aud:'rag-orchestrator',iat:ahora,exp:ahora+60});
+const k=c.createPrivateKey(require('fs').readFileSync(process.argv[1]));
+console.log(t+'.'+c.sign('sha256',Buffer.from(t),{key:k,dsaEncoding:'ieee-p1363'}).toString('base64url'))
+" "$secretos/jwt_service_private.pem"
+}
+consulta='let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const h={"content-type":"application/json"};if(process.argv[1])h.authorization="Bearer "+process.argv[1];const r=await fetch("http://rag-orchestrator:8000/rag/query",{method:"POST",headers:h,body:c});console.log(r.status+" "+await r.text())})'
+# Consulta /rag/query desde clinical-api con el cuerpo de stdin y el JWT de servicio ($1, vacío = sin token):
+# imprime "<status> <cuerpo>".
+consultar_rag_con() { en_node clinical-api "$consulta" "$1"; }
+consultar_rag() { consultar_rag_con "$(firmar_jwt_de_servicio)"; }
 
 # Éxito si "<status> <cuerpo>" es 200 y el cuerpo es idéntico al ejemplo de contracts/examples/.
 es_respuesta_200_igual_a() {
@@ -122,6 +134,13 @@ ajena="$(node -e "const b=require('$raiz/contracts/examples/rag-query-request.js
 salida="$(printf '%s' "$ajena" | consultar_rag)"
 es_respuesta_200_igual_a "$salida" rag-query-sin-evidencia.json || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
 bien "AC-6 una pregunta que no es de fixture devuelve sin evidencia"
+# US-054 AC-2: sin JWT de servicio, /rag/query responde 401 con el cuerpo del contrato (y sin invocar al LLM).
+salida="$(consultar_rag_con "" <"$raiz/contracts/examples/rag-query-request.json")"
+case "$salida" in
+  401*TOKEN_SERVICIO_INVALIDO*) ;;
+  *) fallo "US-054: /rag/query sin JWT de servicio respondió: $salida" ;;
+esac
+bien "US-054 /rag/query sin JWT de servicio responde 401 TOKEN_SERVICIO_INVALIDO"
 
 # ---------- fase 3: LLM nativo caído ----------
 export LLM_PROVIDER=local
