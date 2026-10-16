@@ -17,7 +17,7 @@ import json
 import os
 import sys
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,7 +32,6 @@ from app.evaluation.retrieval_metrics import contiene_cita
 EUROPE_PMC_TEXTO = "https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
 CTGOV_API_V2 = "https://clinicaltrials.gov/api/v2/studies/{nct_id}"
 USER_AGENT = "OncoLens-Lab-ADR39/1.0 (investigacion academica; evaluacion de modelos de recuperacion)"
-EXTENSIONES = {"jats_xml": "xml", "json_api": "json", "html": "html"}
 SUBDIRECTORIO = "adr39"
 REGISTRO = "descargas.json"
 INTENTOS = 3
@@ -60,12 +59,53 @@ class FuenteDescargada:
     secciones: tuple[Seccion, ...]
 
 
-def url_de(fuente: Fuente) -> str:
-    if fuente.formato_original == "jats_xml":
-        return EUROPE_PMC_TEXTO.format(pmcid=fuente.datos["pmcid"])
-    if fuente.formato_original == "json_api":
-        return CTGOV_API_V2.format(nct_id=fuente.datos["nct_id"])
+def _url_jats(fuente: Fuente) -> str:
+    return EUROPE_PMC_TEXTO.format(pmcid=fuente.datos["pmcid"])
+
+
+def _url_registro_ctgov(fuente: Fuente) -> str:
+    return CTGOV_API_V2.format(nct_id=fuente.datos["nct_id"])
+
+
+def _url_directa(fuente: Fuente) -> str:
     return str(fuente.datos["url"])
+
+
+# formato_original -> (extensión del archivo en caché, URL de descarga, parser a secciones)
+FORMATOS: dict[str, tuple[str, Callable[[Fuente], str], Callable[[bytes], Sequence[Seccion]]]] = {
+    "jats_xml": ("xml", _url_jats, PARSERS["jats_xml"]),
+    "json_api": ("json", _url_registro_ctgov, PARSERS["json_api"]),
+    "html": ("html", _url_directa, PARSERS["html"]),
+}
+
+
+def _formato(fuente: Fuente) -> tuple[str, Callable[[Fuente], str], Callable[[bytes], Sequence[Seccion]]]:
+    try:
+        return FORMATOS[fuente.formato_original]
+    except KeyError:
+        raise FormatoNoSoportado(f"la fuente {fuente.id} declara formato_original {fuente.formato_original!r}; admitidos: {sorted(FORMATOS)}") from None
+
+
+def url_de(fuente: Fuente) -> str:
+    return _formato(fuente)[1](fuente)
+
+
+def _archivo_de(carpeta: Path, fuente: Fuente) -> Path:
+    return carpeta / f"{fuente.id}.{_formato(fuente)[0]}"
+
+
+def _leer_y_verificar(archivo: Path, fuente: Fuente, registro: dict[str, dict[str, object]]) -> tuple[bytes, str]:
+    """Contenido de la caché y su SHA-256; falla si difiere del registrado."""
+    contenido = archivo.read_bytes()
+    sha = hashlib.sha256(contenido).hexdigest()
+    previo = registro.get(fuente.id, {}).get("sha256")
+    if previo not in (None, sha):
+        raise FuenteNoDescargable(f"la caché de {fuente.id} no coincide con su SHA-256 registrado")
+    return contenido, sha
+
+
+def _fuente_descargada(fuente: Fuente, sha: str, contenido: bytes) -> FuenteDescargada:
+    return FuenteDescargada(id=fuente.id, sha256=sha, bytes=len(contenido), secciones=tuple(_formato(fuente)[2](contenido)))
 
 
 def _descargar(url: str, cliente: httpx.Client, dormir: Callable[[float], None]) -> bytes:
@@ -100,32 +140,16 @@ def descargar_fuentes(
     registro = _leer_registro(ruta_registro)
     resultado: dict[str, FuenteDescargada] = {}
     for fuente in dataset.fuentes:
-        archivo = carpeta / f"{fuente.id}.{EXTENSIONES[fuente.formato_original]}"
+        archivo = _archivo_de(carpeta, fuente)
         if refrescar or not archivo.exists():
             contenido = _descargar(url_de(fuente), cliente, dormir)
             archivo.write_bytes(contenido)
-            registro[fuente.id] = {
-                "sha256": hashlib.sha256(contenido).hexdigest(),
-                "bytes": len(contenido),
-                "url": url_de(fuente),
-                "descargado": ahora().isoformat(),
-            }
-        else:
-            contenido = archivo.read_bytes()
             sha = hashlib.sha256(contenido).hexdigest()
-            previo = registro.get(fuente.id, {}).get("sha256")
-            if previo not in (None, sha):
-                raise FuenteNoDescargable(f"la caché de {fuente.id} no coincide con su SHA-256 registrado")
-            registro.setdefault(
-                fuente.id,
-                {"sha256": sha, "bytes": len(contenido), "url": url_de(fuente), "descargado": ahora().isoformat()},
-            )
-        resultado[fuente.id] = FuenteDescargada(
-            id=fuente.id,
-            sha256=str(registro[fuente.id]["sha256"]),
-            bytes=len(contenido),
-            secciones=tuple(PARSERS[fuente.formato_original](contenido)),
-        )
+            registro[fuente.id] = {"sha256": sha, "bytes": len(contenido), "url": url_de(fuente), "descargado": ahora().isoformat()}
+        else:
+            contenido, sha = _leer_y_verificar(archivo, fuente, registro)
+            registro.setdefault(fuente.id, {"sha256": sha, "bytes": len(contenido), "url": url_de(fuente), "descargado": ahora().isoformat()})
+        resultado[fuente.id] = _fuente_descargada(fuente, str(registro[fuente.id]["sha256"]), contenido)
     ruta_registro.write_text(json.dumps(registro, indent=2, sort_keys=True), encoding="utf-8")
     return resultado
 
@@ -136,16 +160,11 @@ def leer_fuentes_de_cache(dataset: Dataset, cache_dir: Path) -> dict[str, Fuente
     registro = _leer_registro(carpeta / REGISTRO)
     resultado: dict[str, FuenteDescargada] = {}
     for fuente in dataset.fuentes:
-        archivo = carpeta / f"{fuente.id}.{EXTENSIONES[fuente.formato_original]}"
+        archivo = _archivo_de(carpeta, fuente)
         if not archivo.exists() or fuente.id not in registro:
             raise FuenteNoDescargable(f"falta {fuente.id} en la caché; ejecute adr39_fetch_sources")
-        contenido = archivo.read_bytes()
-        resultado[fuente.id] = FuenteDescargada(
-            id=fuente.id,
-            sha256=str(registro[fuente.id]["sha256"]),
-            bytes=len(contenido),
-            secciones=tuple(PARSERS[fuente.formato_original](contenido)),
-        )
+        contenido, sha = _leer_y_verificar(archivo, fuente, registro)
+        resultado[fuente.id] = _fuente_descargada(fuente, sha, contenido)
     return resultado
 
 
