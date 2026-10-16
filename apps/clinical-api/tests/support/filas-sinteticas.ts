@@ -17,19 +17,17 @@ export function generadorDeIds(): GeneradorDeIds {
   return () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}`;
 }
 
-/** Inserta una fila y devuelve la fila insertada. Los valores jsonb se pasan ya serializados (JSON.stringify). */
-export async function insertar(cliente: Client, tabla: string, fila: Fila): Promise<Fila> {
-  const columnas = Object.keys(fila);
-  const marcadores = columnas.map((_, i) => `$${i + 1}`);
-  const sql = `INSERT INTO ${tabla} (${columnas.join(', ')}) VALUES (${marcadores.join(', ')}) RETURNING *`;
-  const resultado = await cliente.query(sql, Object.values(fila));
-  return resultado.rows[0] as Fila;
-}
-
 export function sqlInsertar(tabla: string, fila: Fila): { sql: string; valores: unknown[] } {
   const columnas = Object.keys(fila);
   const marcadores = columnas.map((_, i) => `$${i + 1}`);
   return { sql: `INSERT INTO ${tabla} (${columnas.join(', ')}) VALUES (${marcadores.join(', ')})`, valores: Object.values(fila) };
+}
+
+/** Inserta una fila y devuelve la fila insertada. Los valores jsonb se pasan ya serializados (JSON.stringify). */
+export async function insertar(cliente: Client, tabla: string, fila: Fila): Promise<Fila> {
+  const { sql, valores } = sqlInsertar(tabla, fila);
+  const resultado = await cliente.query(`${sql} RETURNING *`, valores);
+  return resultado.rows[0] as Fila;
 }
 
 export function filaDeUsuario(ids: GeneradorDeIds, roleId: string, resto: Fila = {}): Fila {
