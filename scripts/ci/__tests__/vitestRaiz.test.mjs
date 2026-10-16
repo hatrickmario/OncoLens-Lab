@@ -27,7 +27,7 @@ describe('vitest.config.ts raíz', () => {
   it('no recoge tests bajo .claude/worktrees ni node_modules y sí los del resto del repositorio [US-036 AC-7]', async () => {
     const directorio = await realpath(await mkdtemp(path.join(os.tmpdir(), 'oncolens-vitest-')));
     temporales.push(directorio);
-    const rutas = ['propio.test.mjs', '.claude/worktrees/otro/copia.test.mjs', 'apps/web/node_modules/dependencia/interno.test.mjs'];
+    const rutas = ['scripts/propio.test.mjs', '.claude/worktrees/otro/copia.test.mjs', 'scripts/node_modules/dependencia/interno.test.mjs'];
     for (const ruta of rutas) {
       await mkdir(path.dirname(path.join(directorio, ruta)), { recursive: true });
       await writeFile(path.join(directorio, ruta), '// archivo de prueba vacío\n');
@@ -35,6 +35,28 @@ describe('vitest.config.ts raíz', () => {
 
     const recogidos = await archivosRecogidos(directorio);
 
-    expect(recogidos).toEqual(['propio.test.mjs']);
+    expect(recogidos).toEqual(['scripts/propio.test.mjs']);
+  });
+
+  it('recoge solo scripts, infra y ci y deja los workspaces con su propia configuración [US-036 AC-7]', async () => {
+    const directorio = await realpath(await mkdtemp(path.join(os.tmpdir(), 'oncolens-vitest-')));
+    temporales.push(directorio);
+    const rutas = [
+      'scripts/a.test.mjs',
+      'infra/docker/__tests__/b.test.mjs',
+      'ci/tests/c.test.mjs',
+      'apps/web/d.test.ts',
+      'apps/clinical-api/e.test.ts',
+      'packages/api-contracts/f.test.ts',
+      'tests/build/g.test.ts',
+    ];
+    for (const ruta of rutas) {
+      await mkdir(path.dirname(path.join(directorio, ruta)), { recursive: true });
+      await writeFile(path.join(directorio, ruta), '// archivo de prueba vacío\n');
+    }
+
+    const recogidos = await archivosRecogidos(directorio);
+
+    expect(recogidos.sort()).toEqual(['ci/tests/c.test.mjs', 'infra/docker/__tests__/b.test.mjs', 'scripts/a.test.mjs']);
   });
 });
