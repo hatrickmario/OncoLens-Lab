@@ -1,0 +1,958 @@
+// OncoLens — esquema clínico de Backend 1 (US-038, OL-01). Transcripción de docs/architecture/data-model.md §4.1-§4.5.
+// Fuente única del modelo: cualquier cambio se hace primero en ese documento. Los CHECK, los índices únicos parciales,
+// NULLS NOT DISTINCT, el trigger de inmutabilidad y el schema `corpus` (vacío) van a mano en la migración init_full_schema.
+// La URL de conexión (DATABASE_URL, sslmode=require) la lee prisma.config.ts: Prisma 7 ya no la admite en este bloque.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["auth", "identity", "clinical", "audit", "research"]
+}
+
+model User {
+  id                       String             @id @db.Uuid
+  email                    String             @unique
+  passwordHash             String             @map("password_hash")
+  fullName                 String             @map("full_name")
+  roleId                   String             @map("role_id") @db.Uuid
+  accountStatus            AccountStatus      @map("account_status")
+  failedLoginCount         Int                @map("failed_login_count")
+  lockedUntil              DateTime?          @map("locked_until") @db.Timestamptz(6)
+  createdAt                DateTime           @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime           @map("updated_at") @db.Timestamptz(6)
+  role                     Role               @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  sessions                 Session[]
+  careEpisodesOpenedByUser CareEpisode[]      @relation("CareEpisode_openedBy")
+  careEpisodesClosedByUser CareEpisode[]      @relation("CareEpisode_closedBy")
+  careTeamMembers          CareTeamMember[]
+  patientOptOuts           PatientOptOut[]
+  intakeDrafts             IntakeDraft[]
+  clinicalNotes            ClinicalNote[]
+  documents                Document[]
+  treatments               Treatment[]
+  clinicalEvents           ClinicalEvent[]
+  aiAnalysisRecords        AiAnalysisRecord[]
+  analysisFeedbacks        AnalysisFeedback[]
+  diagnosisGradings        DiagnosisGrading[]
+  auditLogs                AuditLog[]
+
+  @@index([accountStatus])
+  @@map("user")
+  @@schema("auth")
+}
+
+model Role {
+  id              String           @id @db.Uuid
+  name            String           @unique
+  description     String
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("role")
+  @@schema("auth")
+}
+
+model Permission {
+  id              String           @id @db.Uuid
+  code            String           @unique
+  description     String
+  rolePermissions RolePermission[]
+
+  @@map("permission")
+  @@schema("auth")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+  @@schema("auth")
+}
+
+model Session {
+  id         String   @id @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  tokenHash  String   @unique @map("token_hash")
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @map("last_seen_at") @db.Timestamptz(6)
+  ipAddress  String   @map("ip_address")
+  userAgent  String   @map("user_agent")
+  revoked    Boolean
+  createdAt  DateTime @map("created_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("session")
+  @@schema("auth")
+}
+
+model PatientIdentity {
+  patientId            String  @id @map("patient_id") @db.Uuid
+  idType               IdType  @map("id_type")
+  issuingCountry       String? @map("issuing_country")
+  nationalIdCiphertext Bytes   @map("national_id_ciphertext")
+  nationalIdHmac       String  @map("national_id_hmac")
+  fullNameCiphertext   Bytes   @map("full_name_ciphertext")
+  keyVersion           Int     @map("key_version")
+  patient              Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@unique([idType, issuingCountry, nationalIdHmac], map: "patient_identity_blind_index_uq")
+  @@map("patient_identity")
+  @@schema("identity")
+}
+
+model LegalRepresentative {
+  id                   String       @id @db.Uuid
+  patientId            String       @map("patient_id") @db.Uuid
+  relationship         Relationship
+  idType               IdType       @map("id_type")
+  nationalIdCiphertext Bytes        @map("national_id_ciphertext")
+  nationalIdHmac       String       @map("national_id_hmac")
+  fullNameCiphertext   Bytes        @map("full_name_ciphertext")
+  registeredAt         DateTime     @map("registered_at") @db.Timestamptz(6)
+  validFrom            DateTime     @map("valid_from") @db.Date
+  validUntil           DateTime?    @map("valid_until") @db.Date
+  patient              Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@map("legal_representative")
+  @@schema("identity")
+}
+
+model Patient {
+  id                   String                @id @db.Uuid
+  dataOrigin           DataOrigin            @map("data_origin")
+  sourceDataset        String?               @map("source_dataset")
+  agreementReference   String?               @map("agreement_reference")
+  birthYear            Int                   @map("birth_year")
+  sex                  String
+  population           Population
+  lifecycleStatus      LifecycleStatus       @map("lifecycle_status")
+  retentionStart       DateTime              @map("retention_start") @db.Date
+  retentionUntil       DateTime              @map("retention_until") @db.Date
+  retentionMax         DateTime              @map("retention_max") @db.Date
+  requiresRatification Boolean               @map("requires_ratification")
+  createdAt            DateTime              @map("created_at") @db.Timestamptz(6)
+  patientIdentity      PatientIdentity?
+  legalRepresentatives LegalRepresentative[]
+  careEpisodes         CareEpisode[]
+  careTeamMembers      CareTeamMember[]
+  patientOptOuts       PatientOptOut[]
+  diagnoses            Diagnosis[]
+  clinicalNotes        ClinicalNote[]
+  exams                Exam[]
+  documents            Document[]
+  treatments           Treatment[]
+  priorTreatments      PriorTreatment[]
+  clinicalEvents       ClinicalEvent[]
+  clinicalAttributes   ClinicalAttribute[]
+  aiAnalysisRecords    AiAnalysisRecord[]
+  researchSubjectMap   ResearchSubjectMap?
+
+  @@index([retentionUntil])
+  @@map("patient")
+  @@schema("clinical")
+}
+
+model CareEpisode {
+  id                 String              @id @db.Uuid
+  patientId          String              @map("patient_id") @db.Uuid
+  openedAt           DateTime            @map("opened_at") @db.Timestamptz(6)
+  closedAt           DateTime?           @map("closed_at") @db.Timestamptz(6)
+  closureReason      String?             @map("closure_reason")
+  openedBy           String              @map("opened_by") @db.Uuid
+  closedBy           String?             @map("closed_by") @db.Uuid
+  patient            Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  openedByUser       User                @relation("CareEpisode_openedBy", fields: [openedBy], references: [id], onDelete: Restrict)
+  closedByUser       User?               @relation("CareEpisode_closedBy", fields: [closedBy], references: [id], onDelete: Restrict)
+  diagnoses          Diagnosis[]
+  clinicalNotes      ClinicalNote[]
+  exams              Exam[]
+  documents          Document[]
+  treatments         Treatment[]
+  priorTreatments    PriorTreatment[]
+  clinicalEvents     ClinicalEvent[]
+  clinicalAttributes ClinicalAttribute[]
+  aiAnalysisRecords  AiAnalysisRecord[]
+
+  @@map("care_episode")
+  @@schema("clinical")
+}
+
+model CareTeamMember {
+  id           String    @id @db.Uuid
+  patientId    String    @map("patient_id") @db.Uuid
+  doctorId     String    @map("doctor_id") @db.Uuid
+  careRole     CareRole  @map("care_role")
+  isPrimary    Boolean   @map("is_primary")
+  isActive     Boolean   @map("is_active")
+  assignedAt   DateTime  @map("assigned_at") @db.Timestamptz(6)
+  unassignedAt DateTime? @map("unassigned_at") @db.Timestamptz(6)
+  patient      Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  doctor       User      @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  @@map("care_team_member")
+  @@schema("clinical")
+}
+
+model PatientOptOut {
+  id                String       @id @db.Uuid
+  patientId         String       @map("patient_id") @db.Uuid
+  optOutType        OptOutType   @map("opt_out_type")
+  action            OptOutAction
+  externalReference String       @map("external_reference")
+  reasonCode        String       @map("reason_code")
+  recordedBy        String       @map("recorded_by") @db.Uuid
+  recordedAt        DateTime     @map("recorded_at") @db.Timestamptz(6)
+  patient           Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  recordedByUser    User         @relation(fields: [recordedBy], references: [id], onDelete: Restrict)
+
+  @@index([patientId, optOutType, recordedAt(sort: Desc)])
+  @@map("patient_opt_out")
+  @@schema("clinical")
+}
+
+model IntakeDraft {
+  id              String            @id @db.Uuid
+  documentId      String            @map("document_id") @db.Uuid
+  suggestedFields Json              @map("suggested_fields")
+  status          IntakeDraftStatus
+  createdBy       String            @map("created_by") @db.Uuid
+  expiresAt       DateTime          @map("expires_at") @db.Timestamptz(6)
+  document        Document          @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  createdByUser   User              @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@map("intake_draft")
+  @@schema("clinical")
+}
+
+model Diagnosis {
+  id                   String               @id @db.Uuid
+  patientId            String               @map("patient_id") @db.Uuid
+  episodeId            String               @map("episode_id") @db.Uuid
+  sourceDocumentId     String?              @map("source_document_id") @db.Uuid
+  entryMethod          EntryMethod          @map("entry_method")
+  cancerType           String               @map("cancer_type")
+  icd10Code            String?              @map("icd10_code")
+  mappingStatus        MappingStatus        @map("mapping_status")
+  histology            String
+  histologyCode        String?              @map("histology_code")
+  grade                String?
+  stagingSystem        String?              @map("staging_system")
+  stageValue           String?              @map("stage_value")
+  performanceScale     PerformanceScale?    @map("performance_scale")
+  performanceValue     Int?                 @map("performance_value")
+  diagnosedAt          DateTime             @map("diagnosed_at") @db.Date
+  isActive             Boolean              @map("is_active")
+  extractionScore      Float?               @map("extraction_score")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  conflictsWithId      String?              @map("conflicts_with_id") @db.Uuid
+  reviewedBy           String?              @map("reviewed_by") @db.Uuid
+  reviewedAt           DateTime?            @map("reviewed_at") @db.Timestamptz(6)
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  diagnosisGradings    DiagnosisGrading[]
+
+  @@index([patientId, isActive])
+  @@index([reviewStatus])
+  @@index([mappingStatus])
+  @@map("diagnosis")
+  @@schema("clinical")
+}
+
+model ClinicalNote {
+  id                   String               @id @db.Uuid
+  patientId            String               @map("patient_id") @db.Uuid
+  episodeId            String               @map("episode_id") @db.Uuid
+  sourceDocumentId     String?              @map("source_document_id") @db.Uuid
+  createdBy            String               @map("created_by") @db.Uuid
+  noteType             NoteType             @map("note_type")
+  entryMethod          EntryMethod          @map("entry_method")
+  content              String
+  recordedAt           DateTime             @map("recorded_at") @db.Date
+  isActive             Boolean              @map("is_active")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  createdByUser        User                 @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([patientId, noteType, recordedAt])
+  @@index([reviewStatus])
+  @@map("clinical_note")
+  @@schema("clinical")
+}
+
+model Exam {
+  id               String      @id @db.Uuid
+  patientId        String      @map("patient_id") @db.Uuid
+  episodeId        String      @map("episode_id") @db.Uuid
+  sourceDocumentId String?     @map("source_document_id") @db.Uuid
+  examType         String      @map("exam_type")
+  sourceLab        String?     @map("source_lab")
+  entryMethod      EntryMethod @map("entry_method")
+  performedAt      DateTime    @map("performed_at") @db.Date
+  createdAt        DateTime    @map("created_at") @db.Timestamptz(6)
+  patient          Patient     @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode          CareEpisode @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument   Document?   @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  biomarkers       Biomarker[]
+
+  @@index([patientId, performedAt])
+  @@map("exam")
+  @@schema("clinical")
+}
+
+model Biomarker {
+  id                   String               @id @db.Uuid
+  examId               String               @map("exam_id") @db.Uuid
+  name                 String
+  originalName         String               @map("original_name")
+  loincCode            String?              @map("loinc_code")
+  mappingStatus        MappingStatus        @map("mapping_status")
+  value                String
+  unit                 String?
+  normalizedUnit       String?              @map("normalized_unit")
+  referenceRange       String               @map("reference_range")
+  resultType           ResultType           @map("result_type")
+  clinicalSignificance ClinicalSignificance @map("clinical_significance")
+  significanceSource   SignificanceSource   @map("significance_source")
+  extractionScore      Float?               @map("extraction_score")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  conflictsWithId      String?              @map("conflicts_with_id") @db.Uuid
+  sourceSpan           Json                 @map("source_span")
+  reviewedBy           String?              @map("reviewed_by") @db.Uuid
+  reviewedAt           DateTime?            @map("reviewed_at") @db.Timestamptz(6)
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  exam                 Exam                 @relation(fields: [examId], references: [id], onDelete: Restrict)
+
+  @@index([examId, loincCode])
+  @@index([reviewStatus])
+  @@index([mappingStatus])
+  @@map("biomarker")
+  @@schema("clinical")
+}
+
+model Document {
+  id                  String               @id @db.Uuid
+  patientId           String?              @map("patient_id") @db.Uuid
+  episodeId           String?              @map("episode_id") @db.Uuid
+  documentType        DocumentType         @map("document_type")
+  objectStorageKey    String               @map("object_storage_key")
+  checksum            String
+  originalFilename    String               @map("original_filename")
+  mimeType            String               @map("mime_type")
+  ocrStatus           OcrStatus            @map("ocr_status")
+  piiFindingTypes     String?              @map("pii_finding_types")
+  attempts            Int
+  processingStartedAt DateTime?            @map("processing_started_at") @db.Timestamptz(6)
+  uploadedBy          String               @map("uploaded_by") @db.Uuid
+  uploadedAt          DateTime             @map("uploaded_at") @db.Timestamptz(6)
+  extractedAt         DateTime?            @map("extracted_at") @db.Timestamptz(6)
+  patient             Patient?             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode             CareEpisode?         @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  uploadedByUser      User                 @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+  intakeDrafts        IntakeDraft[]
+  diagnoses           Diagnosis[]
+  clinicalNotes       ClinicalNote[]
+  exams               Exam[]
+  priorTreatments     PriorTreatment[]
+  clinicalEvents      ClinicalEvent[]
+  clinicalAttributes  ClinicalAttribute[]
+  clinicalDataSources ClinicalDataSource[]
+  diagnosisGradings   DiagnosisGrading[]
+
+  @@unique([patientId, checksum])
+  @@index([ocrStatus, uploadedAt])
+  @@map("document")
+  @@schema("clinical")
+}
+
+model Treatment {
+  id                String            @id @db.Uuid
+  patientId         String            @map("patient_id") @db.Uuid
+  episodeId         String            @map("episode_id") @db.Uuid
+  basedOnAnalysisId String?           @map("based_on_analysis_id") @db.Uuid
+  decidedBy         String            @map("decided_by") @db.Uuid
+  description       String
+  atcCodes          String[]          @map("atc_codes")
+  mappingStatus     MappingStatus     @map("mapping_status")
+  status            TreatmentStatus
+  startedAt         DateTime          @map("started_at") @db.Date
+  endedAt           DateTime?         @map("ended_at") @db.Date
+  createdAt         DateTime          @map("created_at") @db.Timestamptz(6)
+  patient           Patient           @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode           CareEpisode       @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  basedOnAnalysis   AiAnalysisRecord? @relation(fields: [basedOnAnalysisId], references: [id], onDelete: Restrict)
+  decidedByUser     User              @relation(fields: [decidedBy], references: [id], onDelete: Restrict)
+  clinicalEvents    ClinicalEvent[]
+
+  @@index([mappingStatus])
+  @@map("treatment")
+  @@schema("clinical")
+}
+
+model PriorTreatment {
+  id                   String               @id @db.Uuid
+  patientId            String               @map("patient_id") @db.Uuid
+  episodeId            String               @map("episode_id") @db.Uuid
+  sourceDocumentId     String?              @map("source_document_id") @db.Uuid
+  lineNumber           Int?                 @map("line_number")
+  setting              String
+  regimenName          String               @map("regimen_name")
+  atcCodes             String[]             @map("atc_codes")
+  cupsCode             String?              @map("cups_code")
+  mappingStatus        MappingStatus        @map("mapping_status")
+  startedAt            DateTime?            @map("started_at") @db.Date
+  endedAt              DateTime?            @map("ended_at") @db.Date
+  ongoing              Boolean
+  endReason            EndReason            @map("end_reason")
+  bestResponse         String?              @map("best_response")
+  entryMethod          EntryMethod          @map("entry_method")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  sourceSpan           Json?                @map("source_span")
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  clinicalEvents       ClinicalEvent[]
+
+  @@index([patientId, lineNumber])
+  @@index([reviewStatus])
+  @@index([mappingStatus])
+  @@map("prior_treatment")
+  @@schema("clinical")
+}
+
+model ClinicalEvent {
+  id                   String               @id @db.Uuid
+  patientId            String               @map("patient_id") @db.Uuid
+  episodeId            String               @map("episode_id") @db.Uuid
+  sourceDocumentId     String?              @map("source_document_id") @db.Uuid
+  eventType            EventType            @map("event_type")
+  eventDate            DateTime?            @map("event_date") @db.Date
+  datePrecision        DatePrecision        @map("date_precision")
+  description          String
+  icd10Code            String?              @map("icd10_code")
+  cupsCode             String?              @map("cups_code")
+  mappingStatus        EventMappingStatus   @map("mapping_status")
+  toxicityGrade        String?              @map("toxicity_grade")
+  priorTreatmentId     String?              @map("prior_treatment_id") @db.Uuid
+  treatmentId          String?              @map("treatment_id") @db.Uuid
+  analysisId           String?              @map("analysis_id") @db.Uuid
+  entryMethod          EntryMethod          @map("entry_method")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  sourceSpan           Json?                @map("source_span")
+  recordedBy           String?              @map("recorded_by") @db.Uuid
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  priorTreatment       PriorTreatment?      @relation(fields: [priorTreatmentId], references: [id], onDelete: Restrict)
+  treatment            Treatment?           @relation(fields: [treatmentId], references: [id], onDelete: Restrict)
+  analysis             AiAnalysisRecord?    @relation(fields: [analysisId], references: [id], onDelete: Restrict)
+  recordedByUser       User?                @relation(fields: [recordedBy], references: [id], onDelete: Restrict)
+
+  @@index([patientId, eventDate])
+  @@index([reviewStatus])
+  @@index([mappingStatus])
+  @@map("clinical_event")
+  @@schema("clinical")
+}
+
+model ClinicalAttribute {
+  id                   String               @id @db.Uuid
+  patientId            String               @map("patient_id") @db.Uuid
+  episodeId            String               @map("episode_id") @db.Uuid
+  sourceDocumentId     String?              @map("source_document_id") @db.Uuid
+  attributeKey         String               @map("attribute_key")
+  value                String
+  observedAt           DateTime?            @map("observed_at") @db.Date
+  datePrecision        DatePrecision        @map("date_precision")
+  entryMethod          EntryMethod          @map("entry_method")
+  extractionConfidence ExtractionConfidence @map("extraction_confidence")
+  reviewStatus         ReviewStatus         @map("review_status")
+  sourceSpan           Json?                @map("source_span")
+  createdAt            DateTime             @map("created_at") @db.Timestamptz(6)
+  patient              Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode              CareEpisode          @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  sourceDocument       Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+
+  @@index([patientId, attributeKey, observedAt])
+  @@index([reviewStatus])
+  @@map("clinical_attribute")
+  @@schema("clinical")
+}
+
+model ClinicalDataSource {
+  id         String         @id @db.Uuid
+  dataType   DataSourceType @map("data_type")
+  dataId     String         @map("data_id") @db.Uuid
+  documentId String         @map("document_id") @db.Uuid
+  sourceSpan Json           @map("source_span")
+  createdAt  DateTime       @map("created_at") @db.Timestamptz(6)
+  document   Document       @relation(fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@index([dataType, dataId])
+  @@map("clinical_data_source")
+  @@schema("clinical")
+}
+
+model AiAnalysisRecord {
+  id                      String             @id @db.Uuid
+  patientId               String             @map("patient_id") @db.Uuid
+  episodeId               String             @map("episode_id") @db.Uuid
+  requestedBy             String             @map("requested_by") @db.Uuid
+  analysisType            AnalysisType       @map("analysis_type")
+  traceId                 String             @map("trace_id")
+  queryText               String?            @map("query_text")
+  questionTemplateId      String?            @map("question_template_id")
+  queryLanguage           String             @map("query_language")
+  responseLanguage        String             @map("response_language")
+  sourcesSelected         Json               @map("sources_selected")
+  filtersApplied          Json               @map("filters_applied")
+  synthesis               Json
+  applicability           Json
+  evidenceOptions         Json               @map("evidence_options")
+  discardedOptions        Json               @map("discarded_options")
+  caseSummary             Json?              @map("case_summary")
+  analysisBasis           Json               @map("analysis_basis")
+  agentSteps              Json               @map("agent_steps")
+  omittedClaims           Int                @map("omitted_claims")
+  missingCriticalData     Json               @map("missing_critical_data")
+  continuedWithWarning    Boolean            @map("continued_with_warning")
+  priorAnalysesUsed       String[]           @map("prior_analyses_used") @db.Uuid
+  patientDataLinks        Json               @map("patient_data_links")
+  topRelevanceScore       Float?             @map("top_relevance_score")
+  status                  AnalysisStatus
+  clinicalContextSnapshot Json               @map("clinical_context_snapshot")
+  contextFingerprint      String             @map("context_fingerprint")
+  rerunOfAnalysisId       String?            @map("rerun_of_analysis_id") @db.Uuid
+  dataClassification      String             @map("data_classification")
+  llmProvider             String             @map("llm_provider")
+  llmModel                String             @map("llm_model")
+  embeddingModel          String             @map("embedding_model")
+  rerankerModel           String             @map("reranker_model")
+  nliModel                String             @map("nli_model")
+  promptVersion           String             @map("prompt_version")
+  corpusRelease           String             @map("corpus_release")
+  catalogVersion          String             @map("catalog_version")
+  retrievalParams         Json               @map("retrieval_params")
+  createdAt               DateTime           @map("created_at") @db.Timestamptz(6)
+  patient                 Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  episode                 CareEpisode        @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+  requestedByUser         User               @relation(fields: [requestedBy], references: [id], onDelete: Restrict)
+  rerunOfAnalysis         AiAnalysisRecord?  @relation("AiAnalysisRecord_rerunOfAnalysisId", fields: [rerunOfAnalysisId], references: [id], onDelete: Restrict)
+  treatments              Treatment[]
+  clinicalEvents          ClinicalEvent[]
+  reejecuciones           AiAnalysisRecord[] @relation("AiAnalysisRecord_rerunOfAnalysisId")
+  analysisFeedbacks       AnalysisFeedback[]
+  analysisFollowUps       AnalysisFollowUp[]
+
+  @@index([patientId, createdAt])
+  @@index([patientId, analysisType, createdAt])
+  @@map("ai_analysis_record")
+  @@schema("clinical")
+}
+
+model AnalysisFeedback {
+  id                        String           @id @db.Uuid
+  analysisId                String           @map("analysis_id") @db.Uuid
+  userId                    String           @map("user_id") @db.Uuid
+  usefulnessRating          Int              @map("usefulness_rating")
+  missingDataWarningCorrect Boolean?         @map("missing_data_warning_correct")
+  missingDataWarningUseful  Boolean?         @map("missing_data_warning_useful")
+  createdAt                 DateTime         @map("created_at") @db.Timestamptz(6)
+  analysis                  AiAnalysisRecord @relation(fields: [analysisId], references: [id], onDelete: Restrict)
+  user                      User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("analysis_feedback")
+  @@schema("clinical")
+}
+
+model ResearchSubjectMap {
+  patientId         String  @id @map("patient_id") @db.Uuid
+  researchSubjectId String  @unique @map("research_subject_id") @db.Uuid
+  patient           Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@map("research_subject_map")
+  @@schema("clinical")
+}
+
+model DiagnosisGrading {
+  id                      String               @id @db.Uuid
+  diagnosisId             String               @map("diagnosis_id") @db.Uuid
+  gradingSystem           String               @map("grading_system")
+  specimenType            String?              @map("specimen_type")
+  gradeScope              String?              @map("grade_scope")
+  gleasonPrimaryPattern   Int?                 @map("gleason_primary_pattern")
+  gleasonSecondaryPattern Int?                 @map("gleason_secondary_pattern")
+  gleasonScore            Int?                 @map("gleason_score")
+  isupGradeGroup          Int?                 @map("isup_grade_group")
+  nottinghamGrade         Int?                 @map("nottingham_grade")
+  isReference             Boolean              @default(false) @map("is_reference")
+  sourceDocumentId        String?              @map("source_document_id") @db.Uuid
+  entryMethod             EntryMethod          @map("entry_method")
+  extractionScore         Float?               @map("extraction_score")
+  extractionConfidence    ExtractionConfidence @map("extraction_confidence")
+  reviewStatus            ReviewStatus         @map("review_status")
+  reviewedBy              String?              @map("reviewed_by") @db.Uuid
+  reviewedAt              DateTime?            @map("reviewed_at") @db.Timestamptz(6)
+  createdAt               DateTime             @map("created_at") @db.Timestamptz(6)
+  diagnosis               Diagnosis            @relation(fields: [diagnosisId], references: [id], onDelete: Restrict)
+  sourceDocument          Document?            @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  reviewedByUser          User?                @relation(fields: [reviewedBy], references: [id], onDelete: Restrict)
+
+  @@index([diagnosisId])
+  @@index([reviewStatus])
+  @@map("diagnosis_grading")
+  @@schema("clinical")
+}
+
+model AnalysisFollowUp {
+  id                 String           @id @db.Uuid
+  analysisId         String           @map("analysis_id") @db.Uuid
+  turnNumber         Int              @map("turn_number")
+  questionText       String           @map("question_text")
+  status             String
+  answer             Json
+  citedSources       Json             @map("cited_sources")
+  omittedClaims      Int              @default(0) @map("omitted_claims")
+  patientDataLinks   Json             @map("patient_data_links")
+  dataClassification String           @map("data_classification")
+  llmProvider        String           @map("llm_provider")
+  llmModel           String           @map("llm_model")
+  embeddingModel     String?          @map("embedding_model")
+  rerankerModel      String?          @map("reranker_model")
+  nliModel           String           @map("nli_model")
+  promptVersion      String           @map("prompt_version")
+  catalogVersion     String           @map("catalog_version")
+  traceId            String           @map("trace_id")
+  createdAt          DateTime         @map("created_at") @db.Timestamptz(6)
+  analysis           AiAnalysisRecord @relation(fields: [analysisId], references: [id], onDelete: Restrict)
+
+  @@unique([analysisId, turnNumber])
+  @@index([analysisId, createdAt])
+  @@map("analysis_follow_up")
+  @@schema("clinical")
+}
+
+model AuditLog {
+  id         String   @id @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  metadata   Json
+  ipAddress  String   @map("ip_address")
+  createdAt  DateTime @map("created_at") @db.Timestamptz(6)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("audit_log")
+  @@schema("audit")
+}
+
+model EpisodeSnapshot {
+  id                    String   @id @db.Uuid
+  researchSubjectId     String   @map("research_subject_id") @db.Uuid
+  episodeSeq            Int      @map("episode_seq")
+  snapshotSchemaVersion Int      @map("snapshot_schema_version")
+  snapshot              Json
+  createdAt             DateTime @map("created_at") @db.Timestamptz(6)
+
+  @@map("episode_snapshot")
+  @@schema("research")
+}
+
+enum AccountStatus {
+  pendiente
+  activo
+  desactivado
+  rechazado
+
+  @@map("account_status")
+  @@schema("auth")
+}
+
+enum IdType {
+  cedula_ciudadania
+  tarjeta_identidad
+  cedula_extranjeria
+  pasaporte
+  seudonimo
+  sintetico
+
+  @@map("id_type")
+  @@schema("identity")
+}
+
+enum Relationship {
+  madre
+  padre
+  tutor_legal
+
+  @@map("relationship")
+  @@schema("identity")
+}
+
+enum DataOrigin {
+  sintetico
+  real_anonimizado
+  real_identificado
+
+  @@map("data_origin")
+  @@schema("clinical")
+}
+
+enum Population {
+  adulto
+  pediatrico
+
+  @@map("population")
+  @@schema("clinical")
+}
+
+enum LifecycleStatus {
+  activo
+  egresado
+
+  @@map("lifecycle_status")
+  @@schema("clinical")
+}
+
+enum CareRole {
+  oncologo
+  cirujano
+  radiooncologo
+  otro
+
+  @@map("care_role")
+  @@schema("clinical")
+}
+
+enum OptOutType {
+  analisis_ia
+  investigacion
+
+  @@map("opt_out_type")
+  @@schema("clinical")
+}
+
+enum OptOutAction {
+  registrado
+  revocado
+
+  @@map("opt_out_action")
+  @@schema("clinical")
+}
+
+enum IntakeDraftStatus {
+  pendiente
+  confirmado
+  descartado
+  expirado
+
+  @@map("intake_draft_status")
+  @@schema("clinical")
+}
+
+enum EntryMethod {
+  ocr
+  manual
+  manual_correction
+  seed
+
+  @@map("entry_method")
+  @@schema("clinical")
+}
+
+enum MappingStatus {
+  mapeado
+  no_mapeado
+
+  @@map("mapping_status")
+  @@schema("clinical")
+}
+
+enum EventMappingStatus {
+  mapeado
+  no_mapeado
+  n_a
+
+  @@map("event_mapping_status")
+  @@schema("clinical")
+}
+
+enum ExtractionConfidence {
+  alta
+  media
+  baja
+  n_a
+
+  @@map("extraction_confidence")
+  @@schema("clinical")
+}
+
+enum ReviewStatus {
+  auto_aceptado
+  requiere_revision
+  verificado
+  corregido
+  rechazado
+  reemplazado
+
+  @@map("review_status")
+  @@schema("clinical")
+}
+
+enum NoteType {
+  antecedente
+  comorbilidad
+  alergia
+  antecedente_familiar
+  nota_libre
+
+  @@map("note_type")
+  @@schema("clinical")
+}
+
+enum PerformanceScale {
+  ECOG
+  Karnofsky
+  Lansky
+
+  @@map("performance_scale")
+  @@schema("clinical")
+}
+
+enum ResultType {
+  cuantitativo
+  cualitativo
+
+  @@map("result_type")
+  @@schema("clinical")
+}
+
+enum ClinicalSignificance {
+  normal
+  alterado
+  relevante
+  critico   @map("crítico")
+
+  @@map("clinical_significance")
+  @@schema("clinical")
+}
+
+enum SignificanceSource {
+  documento
+  regla
+  inferido_ia
+
+  @@map("significance_source")
+  @@schema("clinical")
+}
+
+enum DocumentType {
+  historia_clinica
+  examen
+
+  @@map("document_type")
+  @@schema("clinical")
+}
+
+enum OcrStatus {
+  pendiente
+  procesando
+  completado
+  error
+  cuarentena_pii
+  requiere_revision_identidad
+
+  @@map("ocr_status")
+  @@schema("clinical")
+}
+
+enum TreatmentStatus {
+  activo
+  completado
+  suspendido
+
+  @@map("treatment_status")
+  @@schema("clinical")
+}
+
+enum EndReason {
+  progresion
+  toxicidad
+  completado
+  otro
+  desconocido
+
+  @@map("end_reason")
+  @@schema("clinical")
+}
+
+enum EventType {
+  cirugia
+  procedimiento
+  respuesta
+  progresion
+  toxicidad
+  recaida
+  evolucion
+
+  @@map("event_type")
+  @@schema("clinical")
+}
+
+enum DatePrecision {
+  dia
+  mes
+  anio
+  incierta
+
+  @@map("date_precision")
+  @@schema("clinical")
+}
+
+enum DataSourceType {
+  biomarker
+  diagnosis
+  clinical_event
+  prior_treatment
+  clinical_attribute
+
+  @@map("data_source_type")
+  @@schema("clinical")
+}
+
+enum AnalysisType {
+  analisis_evidencia
+  resumen_caso
+
+  @@map("analysis_type")
+  @@schema("clinical")
+}
+
+enum AnalysisStatus {
+  con_evidencia
+  sin_evidencia
+  tipo_no_habilitado
+
+  @@map("analysis_status")
+  @@schema("clinical")
+}
