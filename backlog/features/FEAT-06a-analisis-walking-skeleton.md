@@ -46,7 +46,7 @@
 >
 > **Ampliación (usuario, 2026-10-15, `[S1 resp. 38]`):** las pruebas acotadas de *chunking*, solapamiento, estrategia de *chunking* e índice (T2–T5) amplían esta historia (AC-10 a AC-13). Estimación 5 → **8**, con **excepción de tamaño**: la DoR del S1 fija ≤ 5 puntos y esta historia ya se partió una vez por superar ese límite (`[S1 resp. 6]`). El S1 pasa de 98 a 101. Los números de AC no se reutilizan.
 >
-> **Decidido (usuario, 2026-10-15, `[S1 resp. 39]`):** los registros de ClinicalTrials.gov se pueden usar con atribución visible a NLM ("Source: ClinicalTrials.gov, National Library of Medicine"), sin sugerir aval de NLM, NIH ni ClinicalTrials.gov, con fecha de consulta y aviso de actualización; el uso se limita a metadatos del registro y citas breves. El mini-dataset está en `data/eval/adr39-mini/` (rama `chore/S1-adr39-dataset`): 75 preguntas, 39 pares NLI y 27 fuentes, revisado por el oncólogo asesor.
+> **Decidido (usuario, 2026-10-15, `[S1 resp. 39]`):** los registros de ClinicalTrials.gov se pueden usar con atribución visible a NLM ("Source: ClinicalTrials.gov, National Library of Medicine"), sin sugerir aval de NLM, NIH ni ClinicalTrials.gov, con fecha de consulta y aviso de actualización; el uso se limita a metadatos del registro y citas breves. El mini-dataset está en `data/eval/adr39-mini/` (en `main`, PR #21): 75 preguntas, 39 pares NLI y 27 fuentes, revisado por el oncólogo asesor.
 
 ## Story
 Como responsable técnico, quiero fijar los modelos de *embeddings*, *reranker* y NLI

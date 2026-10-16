@@ -30,8 +30,7 @@ fijo, no de la hipótesis.
   motivo y cifra, desempates por menor memoria, presupuesto de memoria y de p95 por etapa, y el
   modelo, `EMBEDDING_DIM` y origen del sparse elegidos. Deja la sección de la **fase B** como
   marcador para el change de L1D-274 (US-224). Se añade al índice `docs/architecture/adr/README.md`.
-- **Nuevo** mini-dataset sintético `data/eval/adr39-mini/` (entregado en la rama
-  `chore/S1-adr39-dataset`: 75 preguntas con ≥ 10 en español contra fuentes en inglés, etiquetadas con
+- **Nuevo** mini-dataset sintético `data/eval/adr39-mini/` (entregado en `main`, PR #21: 75 preguntas con ≥ 10 en español contra fuentes en inglés, etiquetadas con
   documento y cita literal; 39 pares afirmación–fragmento para NLI; 27 fuentes de NCI, PMC CC BY y
   ClinicalTrials.gov) con manifiesto `clase: sintetico` y licencia por fuente; lo reutiliza US-072.
 - **Nuevo** (`[S1 resp. 38]`) protocolo acotado de **tamaño de chunk, solapamiento, estrategia de
