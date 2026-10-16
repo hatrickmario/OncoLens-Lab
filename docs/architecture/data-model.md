@@ -965,19 +965,19 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 
 | Condición | Regla | `CHECK` |
 |---|---|---|
-| `status = 'tipo_no_habilitado'` | `llm_provider`, `llm_model`, `nli_model`, `embedding_model` y `reranker_model` son `NULL` (no se invocó ningún modelo) | `ai_analysis_record_tipo_no_habilitado_ck` |
+| `status = 'tipo_no_habilitado'` | `llm_provider`, `llm_model`, `nli_model`, `embedding_model`, `reranker_model`, `prompt_version`, `corpus_release` y `retrieval_params` son `NULL` (no se invocó ningún modelo ni hubo recuperación) | `ai_analysis_record_tipo_no_habilitado_ck` |
 | `analysis_type = 'resumen_caso'` | `embedding_model`, `reranker_model`, `corpus_release`, `retrieval_params` y `top_relevance_score` son `NULL` (el resumen no recupera del corpus) | `ai_analysis_record_resumen_caso_ck` |
-| `status = 'con_evidencia'` | `llm_provider`, `llm_model` y `nli_model` son `NOT NULL`; en `analisis_evidencia` también `embedding_model` y `reranker_model` | `ai_analysis_record_con_evidencia_ck` |
+| `status = 'con_evidencia'` | `llm_provider`, `llm_model`, `nli_model` y `prompt_version` son `NOT NULL` (el registro debe ser reproducible); en `analisis_evidencia` también `embedding_model` y `reranker_model` | `ai_analysis_record_con_evidencia_ck` |
 | siempre | `llm_provider` es `NULL` o `local \| nube` (RN-12) | `ai_analysis_record_llm_provider_ck` |
 | `analysis_type = 'analisis_evidencia'` | `(status IN ('sin_evidencia', 'tipo_no_habilitado')) = (top_relevance_score IS NULL)` (RN-02) | `ai_analysis_record_puntaje_estado_ck` |
 | siempre | `top_relevance_score` es `NULL` o está entre 0 y 1 | `ai_analysis_record_puntaje_rango_ck` |
 | `status <> 'con_evidencia'` | `evidence_options = '[]'` | `ai_analysis_record_opciones_ck` |
 
 - En `sin_evidencia` no se invoca al LLM (RN-02), pero `llm_model` y `nli_model` guardan el **modelo configurado** en ese momento, para que el registro siga siendo reproducible; `RagMeta` y los contratos no cambian.
-- Un `resumen_caso` no tiene puntaje de recuperación: la coherencia de `top_relevance_score` aplica solo a `analisis_evidencia`. Un `resumen_caso` con `status = 'con_evidencia'` exige `llm_provider`, `llm_model` y `nli_model`, pero no los modelos de recuperación.
+- Un `resumen_caso` no tiene puntaje de recuperación: la coherencia de `top_relevance_score` aplica solo a `analisis_evidencia`. Un `resumen_caso` con `status = 'con_evidencia'` exige `llm_provider`, `llm_model`, `nli_model` y `prompt_version`, pero no los modelos de recuperación.
 - La tabla es inmutable (`BEFORE UPDATE` rechaza toda actualización, RN-06); `analysis_follow_up` lo es también (§7).
 
-**Nulabilidades relajadas por sentido clínico** (el resto de columnas no anotadas como `nullable` es `NOT NULL`): `diagnosis.staging_system`, `stage_value`, `performance_scale` y `performance_value` (un dato faltante es un aviso, no un bloqueo, RN-26); `care_episode.closure_reason` y `closed_by` (un episodio abierto no tiene cierre; `closed_by` es `NULL` si y solo si `closed_at` lo es, `care_episode_cierre_ck`); `patient.source_dataset` y `agreement_reference` (un paciente viene de un dataset o de un convenio, no de ambos); `ai_analysis_record.query_text` (`null` en `resumen_caso`). `agreement_reference` `NULL` en un paciente **real** significa «sin convenio» y, por RN-15, «no se presume» consentimiento: `403` en toda generación con IA. Esa regla se verifica con un test en la historia de opt-out del S6, no en esta migración.
+**Nulabilidades relajadas por sentido clínico** (el resto de columnas no anotadas como `nullable` es `NOT NULL`): `diagnosis.staging_system`, `stage_value`, `performance_scale` y `performance_value` (un dato faltante es un aviso, no un bloqueo, RN-26); `care_episode.closure_reason` y `closed_by` (un episodio abierto no tiene cierre; `closed_by` es `NULL` si y solo si `closed_at` lo es y `closure_reason` solo puede existir en un episodio cerrado, `care_episode_cierre_ck`; cerrar sin motivo sigue permitido porque el catálogo de motivos aún no está validado); `patient.source_dataset` y `agreement_reference` (un paciente viene de un dataset o de un convenio, no de ambos); `ai_analysis_record.query_text` (`null` en `resumen_caso`). `agreement_reference` `NULL` en un paciente **real** significa «sin convenio» y, por RN-15, «no se presume» consentimiento: `403` en toda generación con IA. Esa regla se verifica con un test en la historia de opt-out del S6, no en esta migración.
 
 #### `clinical.analysis_feedback`
 
