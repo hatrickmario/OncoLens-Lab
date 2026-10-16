@@ -4,6 +4,7 @@ import logging
 
 from fastapi import FastAPI
 
+from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.application.ports import LlmHealthPort, TraceIdGenerator
@@ -24,6 +25,7 @@ def crear_app(
     logging.getLogger("httpx").setLevel(logging.WARNING)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    registrar_manejadores_de_error(app, trace_ids)
 
     if settings.llm_provider == "fake":
         llm_health = llm_health or SinSondaLlm()
