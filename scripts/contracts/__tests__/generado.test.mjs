@@ -5,7 +5,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { changedGeneratedFiles } from '../generate-check.mjs';
-import { GENERATED_ROOTS, clientDir, zodPath } from '../generated.mjs';
+import { GENERATED_ROOTS, clientDir, clientWebDir, zodPath } from '../generated.mjs';
 import { typesPath } from '../lib/paths.mjs';
 import { ROOT } from './helpers/parches.mjs';
 
@@ -73,5 +73,25 @@ describe('SDK HTTP generado', () => {
     expect(cliente).toContain('createClient(createConfig<ClientOptions2>())');
     expect(operaciones).toContain('options.client ?? client');
     expect(cliente).not.toMatch(/baseUrl:\s*'/);
+  });
+});
+
+describe('SDK de clinical-api para web (Turbopack) [US-060]', () => {
+  it('usa imports relativos sin extensión .js en la salida para web', async () => {
+    const raiz = path.join(ROOT, clientWebDir('clinical-api'));
+    const archivos = (await readdir(raiz, { recursive: true })).filter((f) => f.endsWith('.ts'));
+    expect(archivos.length).toBeGreaterThan(0);
+    const conExtension = [];
+    for (const archivo of archivos) {
+      const texto = await readFile(path.join(raiz, archivo), 'utf8');
+      for (const [, destino] of texto.matchAll(/from\s+'(\.[^']*)'/g)) if (/\.[jt]s$/.test(destino)) conExtension.push(`${archivo}: ${destino}`);
+    }
+    expect(conExtension).toEqual([]);
+  });
+
+  it('lista el archivo cuando se edita a mano el SDK para web', async () => {
+    const sdk = `${clientWebDir('clinical-api')}/sdk.gen.ts`;
+    await appendFile(path.join(tree, sdk), '\n// editado a mano\n');
+    expect(await changedGeneratedFiles(tree)).toEqual([expect.stringContaining(sdk)]);
   });
 });

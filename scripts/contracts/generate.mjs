@@ -11,7 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
-import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, zodPath } from './generated.mjs';
+import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, clientWebDir, zodPath } from './generated.mjs';
 import { loadContext } from './io.mjs';
 import { DEFAULT_ROOT, SPEC_FILES, generatedHeader, typesPath } from './lib/paths.mjs';
 import { RAG_ORCHESTRATOR } from './lib/specs.mjs';
@@ -40,6 +40,19 @@ async function generateSdk(root, provider, bundled) {
     input: structuredClone(bundled),
     output: { path: path.join(root, clientDir(provider)), clean: true, header: [generatedHeader(provider)], importFileExtension: '.js' },
     // baseUrl: false = sin URL por defecto en el cliente global; cada llamador crea el suyo con createClient({ baseUrl, fetch }).
+    plugins: ['@hey-api/typescript', { name: '@hey-api/client-fetch', baseUrl: false }, '@hey-api/sdk'],
+    logs: { level: 'silent' },
+  });
+}
+
+/**
+ * Segunda salida del SDK de clinical-api para `web`: sin extensión en los imports relativos, porque Turbopack
+ * (Next 16) no resuelve `.js` hacia `.ts`. El SDK de clinical-api (NodeNext) conserva `.js`. Mismo spec, mismo código.
+ */
+async function generateSdkForWeb(root, provider, bundled) {
+  await createClient({
+    input: structuredClone(bundled),
+    output: { path: path.join(root, clientWebDir(provider)), clean: true, header: [generatedHeader(provider)], importFileExtension: null },
     plugins: ['@hey-api/typescript', { name: '@hey-api/client-fetch', baseUrl: false }, '@hey-api/sdk'],
     logs: { level: 'silent' },
   });
@@ -93,6 +106,7 @@ export async function generate(root = DEFAULT_ROOT) {
     await generateTypesAndZod(root, provider, specs[provider].bundled);
     await generateSdk(root, provider, specs[provider].bundled);
   }
+  await generateSdkForWeb(root, 'clinical-api', specs['clinical-api'].bundled);
   await generatePydantic(root, specs[RAG_ORCHESTRATOR].bundled);
   await writeReadmeExtract(root);
 }
