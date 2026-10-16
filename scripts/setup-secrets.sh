@@ -12,23 +12,13 @@ umask 077
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 # shellcheck source=lib/pg-test-prefix.sh
 source "$raiz/scripts/lib/pg-test-prefix.sh"
+# shellcheck source=lib/catalogo-secretos.sh
+source "$raiz/scripts/lib/catalogo-secretos.sh"
 
 DOCUMENTO_DE_CLAVES="docs/operations/claves.md"
 PLANTILLA_PG_HBA="$raiz/infra/docker/postgres/pg_hba.conf.template"
 PLANTILLA_PG_HBA_TEST="$raiz/infra/docker/postgres/pg_hba.test.conf.template"
 MARCA_REGLAS_TEST='# @REGLAS_PERFIL_TEST'
-
-# Claves de identidad: perderlas es perder la identidad cifrada (OL-01); nunca se rotan desde aquí.
-CLAVES_DE_IDENTIDAD=(identity_aes_key blind_index_hmac_key)
-CONTRASENAS=(
-  pg_superuser_password pg_clinical_api_password pg_research_writer_password pg_rag_corpus_password
-  pg_rag_corpus_migrator_password clinical_minio_root_password milvus_minio_root_password
-  seed_doctor_password seed_admin_password
-)
-CONTRASENAS_PERFIL_TEST=(pg_test_admin_password)
-ARCHIVOS_DE_PARES=(jwt_service_private.pem jwt_service_public.pem pg_ca.key pg_ca.crt pg_server.key pg_server.crt)
-ARCHIVOS_RENDERIZADOS=(pg_hba.conf)
-ARCHIVOS_RENDERIZADOS_PERFIL_TEST=(pg_hba.test.conf)
 
 perfil=""
 ROTAR=()
@@ -111,12 +101,7 @@ comprobar_openssl() {
   esac
 }
 
-archivos_conocidos() {
-  printf '%s\n' "${CLAVES_DE_IDENTIDAD[@]}" "${CONTRASENAS[@]}" "${ARCHIVOS_DE_PARES[@]}" "${ARCHIVOS_RENDERIZADOS[@]}"
-  if [ "$perfil" = test ]; then
-    printf '%s\n' "${CONTRASENAS_PERFIL_TEST[@]}" "${ARCHIVOS_RENDERIZADOS_PERFIL_TEST[@]}"
-  fi
-}
+archivos_conocidos() { archivos_del_catalogo "$perfil"; }
 
 es_clave_de_identidad() {
   local nombre

@@ -1,5 +1,7 @@
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { COMPOSE_TEST, crearResolutor } from './lib/compose-resuelto.mjs';
+import { COMPOSE_TEST, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
 import { assertPostgresConTls, assertRepartoDeSecretos, assertSinSecretosEnEntorno } from './lib/reglas-secretos.mjs';
 
 let resolver;
@@ -66,6 +68,18 @@ describe('docker-compose.yml · reparto de secretos', () => {
   it('falla nombrando corpus-migrate y pg_clinical_api_password cuando el one-shot del migrator recibe otro secreto [US-035 AC-2]', () => {
     const override = `services:\n${UN_SERVICIO('corpus-migrate', ['pg_rag_corpus_migrator_password', 'pg_clinical_api_password'])}`;
     expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/corpus-migrate.*pg_clinical_api_password/);
+  });
+});
+
+describe('docker-compose.yml · catálogo de secretos', () => {
+  it('declara solo secretos que están en el catálogo de scripts/lib/catalogo-secretos.sh, perfil test incluido [US-035 AC-1]', () => {
+    const catalogo = execFileSync('bash', ['-c', `source "${path.join(RAIZ, 'scripts/lib/catalogo-secretos.sh')}"; archivos_del_catalogo test`], { encoding: 'utf8' })
+      .split('\n')
+      .filter(Boolean);
+    const declarados = Object.keys(resolver({ archivosExtra: [COMPOSE_TEST] }).secrets ?? {});
+
+    expect(declarados.length).toBeGreaterThan(0);
+    expect(declarados.filter((nombre) => !catalogo.includes(nombre))).toEqual([]);
   });
 });
 
