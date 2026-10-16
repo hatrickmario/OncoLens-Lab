@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { leerConfiguracionArnes } from '../support/db.js';
@@ -59,6 +60,26 @@ describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
     expect(veredictoDelArnes(prefijo, baseClinica)).toBe(veredictoDelScript(prefijo, baseClinica));
   });
 
+  const datosDelScript = (variable: string): string[] =>
+    spawnSync('bash', ['-c', 'source "$0"; printf "%s\\n" "${!1}"', SCRIPT, `${variable}[@]`], { encoding: 'utf8' })
+      .stdout.split('\n')
+      .filter(Boolean);
+
+  it('lee del script las bases reservadas y los prefijos prohibidos que el arnés debe conocer', () => {
+    expect(datosDelScript('BASES_RESERVADAS_TEST_DB')).toEqual(['postgres', 'template0', 'template1']);
+    expect(datosDelScript('PREFIJOS_PROHIBIDOS_TEST_DB')).toEqual(['postgres', 'template']);
+  });
+
+  it.each([
+    ['BASES_RESERVADAS_TEST_DB', (dato: string) => [dato, dato.slice(0, 4), `${dato}_x`]],
+    ['PREFIJOS_PROHIBIDOS_TEST_DB', (dato: string) => [dato, `${dato}_x`, dato.slice(0, 3)]],
+  ])('da el mismo veredicto que el script para cada dato declarado en %s', (variable, derivar) => {
+    const casos = datosDelScript(variable).flatMap(derivar);
+
+    expect(casos.length).toBeGreaterThan(0);
+    for (const prefijo of casos) expect(veredictoDelArnes(prefijo, 'oncolens'), prefijo).toBe(veredictoDelScript(prefijo, 'oncolens'));
+  });
+
   it('acepta solo oltest_ de la tabla de casos', () => {
     expect(CASOS.filter(([prefijo, base]) => veredictoDelScript(prefijo, base)).map(([prefijo]) => prefijo)).toEqual(['oltest_']);
   });
@@ -113,5 +134,19 @@ describe('generadorDeIds', () => {
 
   it('repite la misma secuencia cuando el espacio es el mismo (determinismo)', () => {
     expect([generadorDeIds(3)(), generadorDeIds(3)()]).toEqual([generadorDeIds(3)(), generadorDeIds(3)()]);
+  });
+});
+
+describe('ESPACIO_DE_IDS de los archivos de integración', () => {
+  const DIRECTORIO = fileURLToPath(new URL('../integration/schema/', import.meta.url));
+
+  it('es distinto en cada archivo porque corren en paralelo sobre una sola base', () => {
+    const espacios = readdirSync(DIRECTORIO)
+      .filter((archivo) => archivo.endsWith('.test.ts'))
+      .map((archivo) => ({ archivo, espacio: /const ESPACIO_DE_IDS = (\d+);/.exec(readFileSync(`${DIRECTORIO}${archivo}`, 'utf8'))?.[1] }))
+      .filter(({ archivo }) => archivo !== 'esquema.test.ts');
+
+    expect(espacios.filter(({ espacio }) => espacio === undefined)).toEqual([]);
+    expect(new Set(espacios.map(({ espacio }) => espacio)).size).toBe(espacios.length);
   });
 });

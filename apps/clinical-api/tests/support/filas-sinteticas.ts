@@ -180,6 +180,9 @@ const SIN_MODELOS = {
   nli_model: null,
   embedding_model: null,
   reranker_model: null,
+  prompt_version: null,
+  corpus_release: null,
+  retrieval_params: null,
 };
 
 /** Análisis con evidencia: todos los modelos registrados, puntaje 0..1 y al menos una opción. */

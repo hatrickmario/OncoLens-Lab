@@ -49,6 +49,7 @@ const ESTADOS: Array<{ estado: string; constructor: Constructor; invalidos: Arra
       ['sin nli_model', { nli_model: null }, 'ai_analysis_record_con_evidencia_ck'],
       ['sin embedding_model', { embedding_model: null }, 'ai_analysis_record_con_evidencia_ck'],
       ['sin reranker_model', { reranker_model: null }, 'ai_analysis_record_con_evidencia_ck'],
+      ['sin prompt_version', { prompt_version: null }, 'ai_analysis_record_con_evidencia_ck'],
       ['sin puntaje', { top_relevance_score: null }, 'ai_analysis_record_puntaje_estado_ck'],
       ['con puntaje fuera de 0..1', { top_relevance_score: 1.5 }, 'ai_analysis_record_puntaje_rango_ck'],
       ['con llm_provider desconocido', { llm_provider: 'otro' }, 'ai_analysis_record_llm_provider_ck'],
@@ -71,6 +72,9 @@ const ESTADOS: Array<{ estado: string; constructor: Constructor; invalidos: Arra
       ['con nli_model', { nli_model: 'nli-fingido' }, 'ai_analysis_record_tipo_no_habilitado_ck'],
       ['con embedding_model', { embedding_model: 'embeddings-fingidos' }, 'ai_analysis_record_tipo_no_habilitado_ck'],
       ['con reranker_model', { reranker_model: 'reranker-fingido' }, 'ai_analysis_record_tipo_no_habilitado_ck'],
+      ['con prompt_version', { prompt_version: 'prompt-v0' }, 'ai_analysis_record_tipo_no_habilitado_ck'],
+      ['con corpus_release', { corpus_release: 'corpus-sintetico' }, 'ai_analysis_record_tipo_no_habilitado_ck'],
+      ['con retrieval_params', { retrieval_params: JSON.stringify({}) }, 'ai_analysis_record_tipo_no_habilitado_ck'],
       ['con puntaje', { top_relevance_score: 0.5 }, 'ai_analysis_record_puntaje_estado_ck'],
     ],
   },
@@ -84,6 +88,7 @@ const ESTADOS: Array<{ estado: string; constructor: Constructor; invalidos: Arra
       ['con retrieval_params', { retrieval_params: JSON.stringify({}) }, 'ai_analysis_record_resumen_caso_ck'],
       ['con puntaje de recuperación', { top_relevance_score: 0.5 }, 'ai_analysis_record_resumen_caso_ck'],
       ['sin llm_model', { llm_model: null }, 'ai_analysis_record_con_evidencia_ck'],
+      ['sin prompt_version', { prompt_version: null }, 'ai_analysis_record_con_evidencia_ck'],
     ],
   },
 ];
@@ -136,9 +141,10 @@ describe('clinical.care_episode cierre coherente', () => {
   it.each([
     ['cierra sin responsable', 'UPDATE clinical.care_episode SET closed_at = $2, closed_by = NULL WHERE patient_id = $1'],
     ['registra responsable sin cierre', 'UPDATE clinical.care_episode SET closed_by = $2 WHERE patient_id = $1'],
+    ['registra motivo de cierre sin cierre', 'UPDATE clinical.care_episode SET closure_reason = $2 WHERE patient_id = $1'],
   ])('rechaza por care_episode_cierre_ck el episodio que %s [US-038 AC-1]', async (_caso, sql) => {
     await conContexto(async (cliente, _ids, c) => {
-      const valor = sql.includes('closed_at') ? INSTANTE_FIJO : c.userId;
+      const valor = sql.includes('closed_at') ? INSTANTE_FIJO : sql.includes('closed_by') ? c.userId : 'alta_sintetica';
 
       const error = await esperarRechazo(cliente, sql, [c.patientId, valor]);
 
