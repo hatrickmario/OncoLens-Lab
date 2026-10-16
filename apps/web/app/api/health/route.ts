@@ -1,6 +1,6 @@
-// Esqueleto (US-034 AC-1): el handler real llega con el commit feat(L1D-164).
+// Healthcheck de Compose (US-034 AC-1): no llama a clinical-api ni lee la sesión.
 export const dynamic = 'force-dynamic';
 
 export function GET(): Response {
-  return new Response(null, { status: 501 });
+  return Response.json({ status: 'ok' });
 }
