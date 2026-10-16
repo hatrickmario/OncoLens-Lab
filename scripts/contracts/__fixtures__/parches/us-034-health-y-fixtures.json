@@ -1,0 +1,39 @@
+[
+  {
+    "us": "US-034",
+    "ac": "AC-1",
+    "regla": "assertOperationsDeclarePermission",
+    "escenario": "un parche pone publico en POST /platform/auth/logout (publico solo se admite en el login y GET /health)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/paths/~1platform~1auth~1logout/post/x-permission", "value": "publico" }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "~1platform~1auth~1logout/post", "ref": "AC-17", "mensajeContiene": "publico" }
+  },
+  {
+    "us": "US-034",
+    "ac": "AC-6",
+    "regla": "assertFixtureQueriesDistinct",
+    "escenario": "dos requests de fixture comparten la misma query",
+    "parches": [
+      {
+        "destino": "ejemplo:rag-query-request-sin-evidencia.json",
+        "operaciones": [{ "op": "replace", "path": "/query", "value": "  ¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?" }]
+      }
+    ],
+    "esperado": { "archivo": "contracts/examples/index.json", "mensajeContiene": "repite la de" }
+  },
+  {
+    "us": "US-034",
+    "ac": "AC-6",
+    "regla": "assertFixtureQueriesDistinct",
+    "escenario": "una respuesta RagQueryInternalResponse del índice no declara request",
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/examples/48/request" }] }],
+    "esperado": { "archivo": "contracts/examples/index.json", "rutaContiene": "rag-query-sin-evidencia.json", "mensajeContiene": "debe declarar request" }
+  },
+  {
+    "us": "US-034",
+    "ac": "AC-6",
+    "regla": "assertFixtureQueriesDistinct",
+    "escenario": "dos respuestas de fixture comparten el mismo request",
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "replace", "path": "/examples/48/request", "value": "rag-query-request.json" }] }],
+    "esperado": { "archivo": "contracts/examples/index.json", "rutaContiene": "rag-query-sin-evidencia.json", "mensajeContiene": "ya está asociado" }
+  }
+]

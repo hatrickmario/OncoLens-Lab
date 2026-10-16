@@ -2,6 +2,10 @@
 
 import * as z from 'zod';
 
+export const zHealthStatus = z.strictObject({
+    status: z.literal('ok')
+});
+
 /**
  * Solo para revisión del oncólogo; no es una opción.
  */
@@ -799,6 +803,11 @@ export const zPatientSummaryWritable = z.strictObject({
 export const zPatientId = z.uuid();
 
 export const zAnalysisId = z.uuid();
+
+/**
+ * El proceso está listo.
+ */
+export const zGetHealthResponse = zHealthStatus;
 
 export const zLoginBody = zLoginRequestWritable;
 
