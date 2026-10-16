@@ -75,7 +75,36 @@ Cuando ninguna historia sea elegible porque todas esperan merges, **devuelve el 
 Desvíos: `bloqueado-gate` (2 vueltas sin verde) · `bloqueado-humano` (pregunta abierta) ·
 `movido-S<n+1>` (lo decide el humano en /sprint-close).
 
-Formato de cada fila: `| L1D-nn | change | contexto | estado | rama | PR | gate2 | nota |`.
+Formato de cada fila: `| L1D-nn | change | contexto | estado | linear | rama | PR | gate2 | nota |`.
+
+## Sincronización con Linear (decisión del usuario, 2026-10-20)
+
+Linear es el espejo del `S<n>-status.md`: tras **cada** transición de estado, actualiza el issue de la
+historia (`L1D-nn`, equipo `L1D`) con `save_issue` y deja un comentario breve con `save_comment`
+(rama, PR si existe, motivo; sin datos reales ni secretos, RN-14; saltos de línea reales).
+
+| Evento en la ejecución | Estado en Linear |
+|---|---|
+| Se despacha al implementador / empieza el trabajo o una tarea (`en-curso`) | **In Progress** |
+| Termina la implementación y empieza la verificación: Gate 2, `/opsx:verify`, pruebas de integración o E2E (`gate2`) | **In Review** |
+| PR abierto y a la espera del merge (`pr-listo`) y PR mergeado (`mergeado`) | **In Review** (el merge no lo pasa a Done) |
+| El Gate 2 o las pruebas fallan, o aparece un bug: vuelta del implementador, o un guardián reabre hallazgos | **In Progress** mientras se corrige; vuelve a **In Review** al relanzar el gate |
+| `bloqueado-gate` o `bloqueado-humano` | se queda en **In Progress** (o el estado en que estaba) con un comentario del bloqueo y la pregunta abierta |
+| Cierre del sprint con requisitos cumplidos | **Done**, solo lo hace `traceability-auditor` en /sprint-close |
+
+Reglas:
+1. **Feature padre:** pasa a **In Progress** cuando la primera de sus historias pasa a In Progress; el
+   `Done` de la Feature también es de /sprint-close, y solo si todas sus historias del sprint están Done.
+2. **Idempotente:** antes de escribir, lee el estado actual con `get_issue`; cambia solo si difiere.
+   **Nunca muevas hacia atrás** un issue en `Done` o `Canceled`, ni toques historias fuera del plan del sprint.
+3. **Estados del equipo L1D:** `Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Canceled`,
+   `Duplicate`. Usa los nombres tal cual; si un nombre no existe o la llamada falla, **no detengas el
+   sprint**: anótalo en la columna `nota` del status y en tu mensaje final.
+4. **Al reanudar** (o ante `S<n>-status.md` y Linear que discrepan), **reconcilia primero**: el status
+   manda, y Linear se ajusta a la tabla de arriba antes de despachar nada nuevo.
+5. **Status:** añade la columna `linear` a la tabla de `S<n>-status.md` con el estado aplicado.
+6. Si el repositorio tiene una automatización GitHub–Linear que pase a Done al mergear, **avísalo en tu
+   mensaje final**: contradice esta política (Done solo en /sprint-close).
 
 ## Situación crítica: pausa y devuelve el control
 
@@ -115,8 +144,9 @@ tu pregunta va en el mensaje final.
 - Ningún dato real, secreto ni identificador de paciente en PRs, ramas, comentarios ni en Linear (RN-14).
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.
 - No archives changes: el archivo es en bloque en /sprint-close.
-- No toques Linear: la integración GitHub–Linear mueve el estado por la rama y el PR
-  (`feat/l1d-<nn>-…` → In Progress, PR abierto → In Review, merge → Done).
+- Linear: **tú mantienes el estado de trabajo** (Backlog/Todo → In Progress → In Review) según la
+  sección «Sincronización con Linear». **Nunca** pasas una historia a `Done` (eso es de /sprint-close) y
+  no creas, borras ni cambias estimación, milestone, etiquetas ni relaciones.
 - Si `openspec validate <change> --strict` falla en `main` antes de despachar, no despaches: escala.
 - Registra en tu memoria de proyecto lo que aprendas sobre tiempos, fallos recurrentes de gates y
   dependencias ocultas, para el siguiente sprint.

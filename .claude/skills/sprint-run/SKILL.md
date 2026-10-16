@@ -20,7 +20,12 @@ disable-model-invocation: true
 2. **Lanza el orquestador** con la herramienta Agent:
    - `subagent_type: sprint-orchestrator`, `name: sprint-$sprint`, en segundo plano;
    - prompt: "Ejecuta el sprint $sprint según backlog/sprints/$sprint-plan.md. Estado en
-     backlog/sprints/$sprint-status.md (créalo si no existe; si existe, reanuda)."
+     backlog/sprints/$sprint-status.md (créalo si no existe; si existe, reanuda). Mantén Linear
+     sincronizado según tu sección «Sincronización con Linear»: In Progress al empezar el trabajo,
+     In Review en pruebas/Gate 2/PR, de vuelta a In Progress si fallan las pruebas o aparece un bug,
+     y nunca Done (eso es de /sprint-close)."
+   - **Antes de lanzar o reanudar:** pide al orquestador reconciliar Linear con el status (si el status
+     dice `en-curso` y el issue sigue en Backlog, pasarlo a In Progress).
 
 3. **Dile al humano** cómo seguir, en este formato:
    - Verás los PRs `[L1D-nn]` a medida que pasen el Gate 2; el orquestador volverá aquí para
@@ -31,7 +36,8 @@ disable-model-invocation: true
    - Tras mergear, escribe p. ej. "mergeados L1D-93 y L1D-95" y reanudaré a `sprint-$sprint`
      con SendMessage. Si el orquestador ya no existe, vuelve a ejecutar `/sprint-run $sprint`:
      reanuda desde el archivo de estado.
-   - Para ver el progreso: `backlog/sprints/$sprint-status.md` o `/tasks`.
+   - Para ver el progreso: `backlog/sprints/$sprint-status.md`, `/tasks` o el tablero de Linear
+     (In Progress = trabajo en curso; In Review = en pruebas, Gate 2 o PR; Done lo pone /sprint-close).
 
 4. Cuando el orquestador informe "Sprint listo para /sprint-close", propón `/sprint-close $sprint`.
 
