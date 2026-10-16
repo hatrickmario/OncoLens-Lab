@@ -34,7 +34,15 @@ def construir_corpus(
 
 
 def vectores_en_cache(ruta: Path, textos: Sequence[str], embedder: Embedder) -> np.ndarray:
-    raise NotImplementedError
+    """Vectores de los chunks desde ``ruta`` (``.npy``); se recodifican si faltan o no corresponden al número de textos."""
+    if ruta.exists():
+        guardados = np.load(ruta)
+        if guardados.shape[0] == len(textos):
+            return guardados
+    vectores = embedder.codificar(list(textos), consulta=False)
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    np.save(ruta, vectores)
+    return vectores
 
 
 def recuperar_densos(

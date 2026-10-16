@@ -34,6 +34,7 @@ from app.evaluation.medicion_modelos import (
     mediana,
     percentil_95,
     recuperar_densos,
+    vectores_en_cache,
 )
 from app.evaluation.model_selection import MedicionVariante, seleccionar_variante
 from app.evaluation.reporte import escribir_reporte
@@ -125,12 +126,7 @@ class PruebasChunking:
 
     def vectores_de(self, variante: Variante, chunks: Sequence[ChunkCandidato]) -> np.ndarray:
         ruta = self.dir_vectores / f"{self.config.spec.clave}-{self.config.cuantizacion}-{variante.etiqueta}.npy"
-        if ruta.exists():
-            return np.load(ruta)
-        vectores = self.embedder.codificar([c.texto for c in chunks], consulta=False)
-        ruta.parent.mkdir(parents=True, exist_ok=True)
-        np.save(ruta, vectores)
-        return vectores
+        return vectores_en_cache(ruta, [c.texto for c in chunks], self.embedder)
 
     def medir(self, variante: Variante) -> dict[str, Any]:
         inicio = self.reloj()

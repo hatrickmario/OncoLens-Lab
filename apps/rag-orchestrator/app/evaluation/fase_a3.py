@@ -18,7 +18,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import yaml
 
 from app.evaluation.chunking_variants import ESTRATEGIA_TAMANO_FIJO, ChunkCandidato, Seccion, Variante
@@ -34,6 +33,7 @@ from app.evaluation.medicion_modelos import (
     percentil_95,
     recuperar_densos,
     reordenar_con_reranker,
+    vectores_en_cache,
 )
 from app.evaluation.model_selection import dentro_de_tolerancia
 from app.evaluation.reporte import a_json_seguro, escribir_reporte
@@ -291,26 +291,30 @@ def preparar_candidatos(
     destino: Path,
 ) -> int:
     """Top-``pool`` densos por pregunta con chunks de ``tamano_chunk`` tokens; devuelve el número de chunks (caché en disco)."""
-    if (destino / "rankings.json").exists():
+    if _candidatos_en_cache(destino, pool):
         return len(json.loads((destino / "chunks.json").read_text(encoding="utf-8")))
     embedder = fabrica.embedder(config.embedding, dir_onnx_embedding, config.cuantizacion, config.hilos_cpu)
     tokenizador = fabrica.tokenizador(config.embedding, dir_onnx_embedding)
     variante = Variante(tamano_chunk, 0.0, ESTRATEGIA_TAMANO_FIJO)
     chunks = construir_corpus(secciones, tokenizador, variante)
     ruta = dir_vectores / f"{config.embedding.clave}-{config.cuantizacion}-{variante.etiqueta}.npy"
-    if ruta.exists():
-        vectores = np.load(ruta)
-    else:
-        vectores = embedder.codificar([c.texto for c in chunks], consulta=False)
-        ruta.parent.mkdir(parents=True, exist_ok=True)
-        np.save(ruta, vectores)
+    vectores = vectores_en_cache(ruta, [c.texto for c in chunks], embedder)
     rankings = recuperar_densos(embedder, vectores, dataset.preguntas, pool)
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "chunks.json").write_text(
         json.dumps([{"documento": c.documento, "texto": c.texto, "seccion": c.seccion} for c in chunks], ensure_ascii=False), encoding="utf-8"
     )
     (destino / "rankings.json").write_text(json.dumps(rankings), encoding="utf-8")
+    (destino / "pool.json").write_text(json.dumps({"pool": pool}), encoding="utf-8")
     return len(chunks)
+
+
+def _candidatos_en_cache(destino: Path, pool: int) -> bool:
+    """Los rankings guardados sirven solo si se calcularon con el mismo ``pool``."""
+    marca = destino / "pool.json"
+    if not (destino / "rankings.json").exists() or not marca.exists():
+        return False
+    return bool(json.loads(marca.read_text(encoding="utf-8")).get("pool") == pool)
 
 
 def ejecutar_fase_a3(
