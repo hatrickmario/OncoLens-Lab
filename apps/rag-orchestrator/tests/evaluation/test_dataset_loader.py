@@ -111,3 +111,47 @@ def test_dataset_loader_golden_sin_clase_sintetica_se_rechaza(dataset_dir: Path)
 
     with pytest.raises(DatasetInvalido, match="golden"):
         cargar_dataset(dataset_dir)
+
+
+def _con_licencia(dataset_dir: Path, licencia: str) -> None:
+    def poner(m: dict) -> None:
+        m["fuentes"][1]["licencia"] = licencia
+
+    _editar(dataset_dir / "manifest.yaml", poner)
+
+
+@pytest.mark.ac("US-012", 9)
+def test_dataset_loader_fuente_cc_by_nd_se_rechaza(dataset_dir: Path) -> None:
+    _con_licencia(dataset_dir, "CC BY-ND 4.0")
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
+
+
+@pytest.mark.ac("US-012", 9)
+def test_dataset_loader_fuente_cc_by_nc_nd_se_rechaza(dataset_dir: Path) -> None:
+    _con_licencia(dataset_dir, "CC BY-NC-ND 4.0")
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
+
+
+@pytest.mark.parametrize("licencia", ["cc by-nd 3.0", "CC BY 4.0 con ND", "CC BY-NC 4.0", "CC BY 4.0 y algo más"])
+def test_dataset_loader_licencia_fuera_de_las_clases_aceptadas_se_rechaza(dataset_dir: Path, licencia: str) -> None:
+    _con_licencia(dataset_dir, licencia)
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
+
+
+@pytest.mark.parametrize("licencia", ["CC BY 4.0", "CC BY-SA 4.0", "CC0 1.0", "Dominio público"])
+def test_dataset_loader_acepta_clases_de_licencia_permitidas(dataset_dir: Path, licencia: str) -> None:
+    _con_licencia(dataset_dir, licencia)
+
+    assert cargar_dataset(dataset_dir).fuentes
+
+
+def test_dataset_loader_cc_by_nc_se_acepta_solo_con_bandera_de_mvp_academico(dataset_dir: Path) -> None:
+    _con_licencia(dataset_dir, "CC BY-NC 4.0")
+
+    assert cargar_dataset(dataset_dir, permitir_cc_by_nc=True).fuentes
