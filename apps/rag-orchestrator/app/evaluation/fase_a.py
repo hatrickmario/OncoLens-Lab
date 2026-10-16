@@ -69,7 +69,7 @@ def presupuesto_conjunto(selecciones: dict[str, Seleccion], config: ConfigMedici
         "cabe": cabe,
         "total_gb_con_llm": total,
         "limite_gb": config.restricciones.stack_memory_limit_gb,
-        "llm_gb": config.restricciones.llm_budget_gb,
+        "llm_gb": config.restricciones.llm_memory_budget_gb,
         "holgura_para_el_resto_gb": config.restricciones.stack_memory_limit_gb - total,
         "p95_suma_ms": sum(s.elegido.p95_ms for s in selecciones.values() if s.elegido is not None),
         "elegidos": [m.candidato for m in elegidos],

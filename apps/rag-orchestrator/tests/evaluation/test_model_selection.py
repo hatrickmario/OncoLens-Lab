@@ -15,7 +15,7 @@ from app.evaluation.model_selection import (
 
 RESTRICCIONES = Restricciones(
     stack_memory_limit_gb=24.0,
-    llm_budget_gb=16.0,
+    llm_memory_budget_gb=16.0,
     stage_p95_budget_ms={"embeddings": 500.0, "reranker": 2000.0, "nli": 1500.0},
     academic_licenses=frozenset({"mit", "apache-2.0"}),
 )

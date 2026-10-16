@@ -99,7 +99,7 @@ def cargar_config(ruta: Path) -> ConfigMedicion:
     r = crudo["restricciones"]
     restricciones = Restricciones(
         stack_memory_limit_gb=float(r["stack_memory_limit_gb"]),
-        llm_budget_gb=float(r["llm_budget_gb"]),
+        llm_memory_budget_gb=float(r["llm_memory_budget_gb"]),
         stage_p95_budget_ms={k: float(v) for k, v in r["stage_p95_budget_ms"].items()},
         academic_licenses=frozenset(r["academic_licenses"]),
     )

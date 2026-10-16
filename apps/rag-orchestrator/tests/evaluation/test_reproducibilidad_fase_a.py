@@ -16,7 +16,9 @@ def test_fase_a_las_restricciones_del_yaml_coinciden_con_las_del_reporte_medido(
     config = yaml.safe_load(CONFIG_FASE_A.read_text(encoding="utf-8"))
     reporte = json.loads(REPORTE_FASE_A.read_text(encoding="utf-8"))
 
-    assert config["restricciones"] == reporte["restricciones"]
+    # El reporte del 2026-10-16 nombra la clave como se llamaba entonces (llm_budget_gb); hoy es llm_memory_budget_gb.
+    historicas = {("llm_memory_budget_gb" if k == "llm_budget_gb" else k): v for k, v in reporte["restricciones"].items()}
+    assert config["restricciones"] == historicas
 
 
 def test_fase_a_el_protocolo_y_la_recuperacion_del_yaml_coinciden_con_los_del_reporte_medido() -> None:

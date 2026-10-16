@@ -25,7 +25,7 @@ class Medicion:
 @dataclass(frozen=True)
 class Restricciones:
     stack_memory_limit_gb: float
-    llm_budget_gb: float
+    llm_memory_budget_gb: float
     stage_p95_budget_ms: dict[str, float]
     academic_licenses: frozenset[str]
 
@@ -74,13 +74,13 @@ def descartar_por_restricciones(
 
 def _motivos_de_descarte(m: Medicion, r: Restricciones) -> list[Descarte]:
     motivos: list[Descarte] = []
-    total_gb = m.memoria_gb + r.llm_budget_gb
+    total_gb = m.memoria_gb + r.llm_memory_budget_gb
     if total_gb > r.stack_memory_limit_gb:
         motivos.append(
             Descarte(
                 m.candidato,
                 "memoria",
-                f"{m.memoria_gb:.2f} GB + LLM {r.llm_budget_gb:.1f} GB = {total_gb:.2f} GB > {r.stack_memory_limit_gb:.1f} GB",
+                f"{m.memoria_gb:.2f} GB + LLM {r.llm_memory_budget_gb:.1f} GB = {total_gb:.2f} GB > {r.stack_memory_limit_gb:.1f} GB",
             )
         )
     presupuesto_ms = r.stage_p95_budget_ms[m.etapa]
@@ -121,7 +121,7 @@ def seleccionar_componente(
 
 def verificar_presupuesto_conjunto(elegidos: Sequence[Medicion], restricciones: Restricciones) -> tuple[bool, float]:
     """Suma de las memorias elegidas más el LLM frente al límite del stack (D3). Devuelve (cabe, total_gb)."""
-    total = sum(m.memoria_gb for m in elegidos) + restricciones.llm_budget_gb
+    total = sum(m.memoria_gb for m in elegidos) + restricciones.llm_memory_budget_gb
     return total <= restricciones.stack_memory_limit_gb, total
 
 

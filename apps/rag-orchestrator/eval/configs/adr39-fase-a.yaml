@@ -17,7 +17,7 @@ restricciones:
   # apps/rag-orchestrator/.env.example (decisión del 2026-10-20: stack 30 GB y tope del LLM 21 GB). Ningún descarte de la
   # fase A fue por memoria, así que el reporte sigue siendo válido.
   stack_memory_limit_gb: 24           # STACK_MEMORY_LIMIT_GB (NFR-01)
-  llm_budget_gb: 16                   # LLM_MEMORY_BUDGET_GB: tope máximo del LLM local
+  llm_memory_budget_gb: 16                   # LLM_MEMORY_BUDGET_GB: tope máximo del LLM local
   # STAGE_P95_BUDGET_MS: la suma deja ~1 s de margen sobre el p95 <= 15 s con el LLM (~10 s para 800 tokens)
   stage_p95_budget_ms: {embeddings: 500, reranker: 2000, nli: 1500}
   academic_licenses: [mit, apache-2.0]  # ACADEMIC_LICENSES (identificadores de licencia de Hugging Face)

@@ -34,7 +34,7 @@ def escribir_config(tmp_path: Path, dataset: Path, *, limite_gb: float = 24.0, l
         "protocolo": {"corridas": 3, "calentamiento": 1, "hilos_cpu": 1, "cuantizaciones": ["int8", "fp32"], "tolerancia_empate": 0.02},
         "restricciones": {
             "stack_memory_limit_gb": limite_gb,
-            "llm_budget_gb": 0.0,
+            "llm_memory_budget_gb": 0.0,
             "stage_p95_budget_ms": {"embeddings": 60000, "reranker": 60000, "nli": 60000},
             "academic_licenses": list(licencias),
         },
