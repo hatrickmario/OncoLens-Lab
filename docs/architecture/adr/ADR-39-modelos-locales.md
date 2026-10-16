@@ -156,7 +156,7 @@ Ninguna combinación alcanza las metas iniciales: mejor recall@10 denso 0,710 (m
 
 ### Consecuencias
 
-- **Positivas:** modelos con licencia académica y pesos locales; 4,4 GB para los tres con la configuración decidida (12 pares); mejor calidad del *reranker* medida (MRR 0,512); mDeBERTa mantiene 0,974 en mezcla es/en; la decisión es reproducible (`python -m app.scripts.adr39_measure`).
+- **Positivas:** modelos con licencia académica y pesos locales; 4,4 GB para los tres con la configuración decidida (12 pares); mejor calidad del *reranker* medida (MRR 0,491 con la configuración decidida de 12 pares; 0,512 con 24 pares); mDeBERTa mantiene 0,974 en mezcla es/en; la decisión es reproducible (`python -m app.scripts.adr39_measure`).
 - **Negativas / riesgos:**
   - **p95 extremo a extremo:** la configuración decidida (12 pares) da un p95 estimado de ~14,6 s, margen de ~0,4 s con un LLM de 10 s sin medir; se cierra en L1D-274 (US-224). Ver "Medición complementaria del reranker".
   - **Memoria:** el RSS del *reranker* con 12 pares de 1024 tokens es 2,6 GB; el total estimado (29,7 GB) cabe en 30 GB con solo 0,3 GB de holgura (2,3 GB para macOS) y la VM de Docker debe subir a ≥ 10 GB.
@@ -209,6 +209,14 @@ ACADEMIC_LICENSES: mit,apache-2.0
 4. **HNSW frente a FLAT** con 522 vectores: la regla elige HNSW; FLAT es equivalente hoy.
 5. **Tope de memoria — resuelto (2026-10-20):** LLM ≤ 21 GB y stack ≤ 30 GB. Con 12 pares el total estimado (29,7 GB) cabe con 0,3 GB de holgura y la holgura para macOS es de 2,3 a 6,1 GB; confirmar en la fase B con la pila real y subir la VM de Docker a ≥ 10 GB.
 
+### Salvedades registradas en la revisión del Gate 2 (sin cambiar decisiones ni cifras)
+
+1. **Sin evidencia con chunks de 1024 (insumo de US-056).** En el escenario decidido (`c1024-L512-P12`, 6 preguntas sin respuesta) el puntaje máximo de las preguntas sin evidencia es **0,570** en coseno denso (mediana 0,527) y **0,040** en el `relevance_score` del *reranker* bge-reranker-v2-m3 (sigmoide del puntaje crudo; mediana **0,012**). Las dos escalas **no son comparables entre sí**: cada bloque `sin_evidencia_puntaje_maximo` declara `escala_puntaje` (`coseno_denso` | `relevance_score_sigmoide`) en los reportes que se generen desde ahora. Con n = 6 la «mediana» publicada en los reportes ya medidos es la **mediana superior** (elemento 4.º de 6); el cálculo corregido (promedio de los dos centrales) rige para mediciones nuevas. El umbral de RN-02 (US-056) se calibra sobre el `relevance_score` del *reranker*, no sobre el coseno.
+2. **Suma de presupuestos por etapa y supuesto del LLM.** Los presupuestos de p95 por etapa suman 500 + 4500 + 1500 = **6,5 s**; con el LLM supuesto de ~10 s la cota es **16,5 s > 15 s** si todas las etapas agotaran su presupuesto a la vez. El supuesto de 10 s para 800 tokens se calculó para el tope anterior de 16 GB de memoria del LLM, no para 21 GB, y **no incluye el *prefill*** de un contexto con chunks de 1024 tokens (12 chunks ≈ 12 000 tokens de entrada). La fase B (L1D-274 / US-224) debe medir el LLM real con ese prefill antes de fijar el presupuesto de la etapa.
+3. **Riesgo de latencia aceptado por el humano (2026-10-20).** Riesgo **alto** aceptado: presupuesto del *reranker* de 4500 ms, margen de +0,2 s sobre el NFR de 15 s con un LLM de 10 s sin medir; se cierra en L1D-274. La VM de Docker debe ser **≥ 10 GB** para medir la fase B.
+4. **Congelación de la fase A, A2 y A3 (2026-10-20).** `eval/configs/adr39-fase-a*.yaml`, `reports/adr39/*.json` y el dataset no se modifican; cualquier medición nueva va en archivos con fecha nueva. `adr39-fase-a.yaml` conserva `stack_memory_limit_gb: 30` y `llm_budget_gb: 21` aunque el reporte `2026-10-16-fase-a.json` se midió con 24 / 16; ningún descarte de la fase A fue por memoria, así que el reporte sigue siendo válido. Un test (`test_reproducibilidad_fase_a.py`) fija que esa es la única diferencia.
+5. **Código remoto.** Solo el exportador de gte-multilingual-reranker-base (candidato C, no elegido) ejecuta código remoto (`trust_remote_code`), fijado al commit `40ced75c3017eb27626c9d4ea981bde21a2662f4` de `Alibaba-NLP/new-impl` (`CODIGO_REMOTO_FIJADO` en `config_medicion.py`); la medición no lo importa y el reranker decidido no lo requiere.
+
 ## Fase B
 
 *(Marcador para el change de L1D-274, US-224: runtime del LLM, OCR, regla de proveedores RN-12 y p95 extremo a extremo con la pila completa.)*
@@ -217,7 +225,7 @@ ACADEMIC_LICENSES: mit,apache-2.0
 
 ### A (BGE-M3 · bge-reranker-v2-m3 · mDeBERTa)
 
-- A favor: mejor *embedding* medido; *sparse* propio; mejor *reranker* en calidad (MRR 0,49–0,51).
+- A favor: mejor *embedding* medido; *sparse* propio; mejor *reranker* en calidad (MRR 0,49–0,51; 0,491 con la configuración decidida).
 - En contra: el *reranker* tarda 3,2–4,0 s con chunks de 256 y 8,3 s con chunks de 1024 en 8 vCPU; con ello el p95 extremo a extremo estimado supera los 15 s.
 
 ### B (Qwen3-Embedding-0.6B · Qwen3-Reranker-0.6B)
