@@ -1,0 +1,7 @@
+{
+  "patientId": "8f2b3c4d-9a1e-4b5c-8d6e-7f8091a2b3c4",
+  "query": "¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?",
+  "questionTemplateId": null,
+  "continueWithWarning": false,
+  "sourcesSelected": { "guias": true, "ensayos": true, "publicaciones": true }
+}
