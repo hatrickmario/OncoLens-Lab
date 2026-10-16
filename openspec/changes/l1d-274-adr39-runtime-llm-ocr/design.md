@@ -20,7 +20,7 @@ Hechos de partida (verificados el 2026-10-13, `backlog/sprints/S1-refinamiento.m
 | Descartado el 2026-10-13 | `gemma4:26b-mlx` (18 GB solo en pesos): se descartó por el tope de ~16 GB, hoy superado; no está entre los candidatos pedidos el 2026-10-20 y **no se añade** sin instrucción (su 18 GB cabría en 21 GB; G, de 18 GB, ya cubre la misma familia) | `[S1 resp. 10]`; Decidido (usuario, 2026-10-20) |
 | Respaldo B | `gemma4:12b-mlx` (7,7 GB) | §5 |
 | Respaldo C | `qwen3.5:9b-mlx` (8,9 GB), sin *thinking* | §5 |
-| Candidatos añadidos (2026-10-20) | D `qwen3.6:35b-a3b-q4_K_M`; E `medgemma1.5:4b-it-q8_0`; F `medgemma1.5:4b-it-bf16`; G `gemma4:26b-a4b-it-q4_K_M` (tabla de verificación en D3) | Decidido (usuario, 2026-10-20) |
+| Candidatos añadidos (2026-10-20) | E `medgemma1.5:4b-it-q8_0`; F `medgemma1.5:4b-it-bf16`; G `gemma4:26b-a4b-it-q4_K_M` (tabla de verificación en D3); D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir (24 GB > 21 GB) | Decidido (usuario, 2026-10-20) |
 | Runtime alternativo | vllm-metal **0.1.0** (PyPI) en `~/.venvs/vllm-metal`, **sin el paquete `vllm`** que el plugin necesita y no declara como dependencia; no está en Homebrew | §2 ("Datos que resultaron falsos"), §5 |
 | OCR A | OCRmyPDF + Tesseract `spa`, **en el contenedor** de `rag-orchestrator` (no en el host) | §5, `[S1 resp. 5]` |
 | OCR alternativos | PaddleOCR (PP-OCRv5 latino), docTR; Surya descartado por licencia | `[S1 resp. 5]` |
@@ -94,7 +94,7 @@ de GPU queda descartado (AC-1).
   | A | `gemma4:26b-a4b-it-qat` | `2dd70431afed` | 16 GB en la página; `ollama list` local: 15 GB | Apache 2.0 | verificado (2026-10-20) |
   | B | `gemma4:12b-mlx` | `ded7a2735003` | 7,7 GB | Apache 2.0 (HF `google/gemma-4-12B-it`) | verificado |
   | C | `qwen3.5:9b-mlx` | `203e30078279` | 8,9 GB | Apache 2.0 (HF `Qwen/Qwen3.5-9B`) | verificado |
-  | D | `qwen3.6:35b-a3b-q4_K_M` | `07d35212591f` | **24 GB** (arquitectura `qwen35moe`, 36B parámetros) | Apache 2.0 (Ollama y HF `Qwen/Qwen3.6-35B-A3B`) | verificado; **ya excede 21 GB solo en pesos** |
+  | D | `qwen3.6:35b-a3b-q4_K_M` | `07d35212591f` | **24 GB** (arquitectura `qwen35moe`, 36B parámetros) | Apache 2.0 (Ollama y HF `Qwen/Qwen3.6-35B-A3B`) | verificado; **ya excede 21 GB solo en pesos; DESCARTADO sin medición (Decidido, usuario, 2026-10-20)** |
   | E | `medgemma1.5:4b-it-q8_0` | `d6ae3cddb663` | 5,0 GB | Términos HAI-DEF de Google (`license: other`), no permisiva estándar | tag y tamaño verificados; licencia: **condicionada**, ver abajo |
   | F | `medgemma1.5:4b-it-bf16` | `32f17fbd85fe` | 8,6 GB | ídem E | ídem E |
   | G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | 18 GB (25,8B parámetros) | Apache 2.0 | verificado |
