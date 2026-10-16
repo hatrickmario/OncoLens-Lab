@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import { createHealthRouter } from './routes/health.js';
 
 /**
  * Dependencias que la raíz de composición (`server.ts`) inyecta en la aplicación.
@@ -10,5 +11,6 @@ export type AppDependencies = Record<string, never>;
 export function createApp(_dependencies: AppDependencies): Express {
   const app = express();
   app.disable('x-powered-by');
+  app.use(createHealthRouter());
   return app;
 }
