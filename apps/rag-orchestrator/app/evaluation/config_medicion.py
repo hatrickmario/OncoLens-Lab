@@ -10,6 +10,11 @@ import yaml
 
 from app.evaluation.model_selection import Restricciones
 
+# Commit exacto del repositorio cuyo código remoto se ejecuta al EXPORTAR (trust_remote_code). Vive aquí y no en
+# eval/configs/adr39-fase-a.yaml porque ese archivo está congelado (decisión del 2026-10-20).
+# Alibaba-NLP/new-impl: cabeza de main (última modificación 2024-08-11, anterior a la medición del 2026-10-16).
+CODIGO_REMOTO_FIJADO = {"Alibaba-NLP/gte-multilingual-reranker-base": "40ced75c3017eb27626c9d4ea981bde21a2662f4"}
+
 TAREAS = ("embedding", "reranker_cls", "reranker_causal", "nli")
 
 
@@ -76,7 +81,8 @@ def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
     tarea = crudo.get("tarea", "embedding" if componente == "embeddings" else None)
     if tarea not in TAREAS:
         raise ValueError(f"tarea desconocida: {tarea}")
-    if crudo.get("codigo_remoto") and not crudo.get("code_revision"):
+    code_revision = crudo.get("code_revision") or CODIGO_REMOTO_FIJADO.get(crudo["modelo"], "")
+    if crudo.get("codigo_remoto") and not code_revision:
         raise ValueError(f"{crudo['modelo']}: codigo_remoto exige code_revision (commit exacto del código que se ejecuta)")
     return ModeloSpec(
         id=str(crudo["id"]),
@@ -93,7 +99,7 @@ def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
         dim_salida=int(crudo.get("dim_salida", 0)),
         atencion=crudo.get("atencion", "sdpa"),
         codigo_remoto=bool(crudo.get("codigo_remoto", False)),
-        code_revision=crudo.get("code_revision", ""),
+        code_revision=code_revision,
         export_pythonpath=crudo.get("export_pythonpath", ""),
     )
 
@@ -103,7 +109,7 @@ def cargar_config(ruta: Path) -> ConfigMedicion:
     r = crudo["restricciones"]
     restricciones = Restricciones(
         stack_memory_limit_gb=float(r["stack_memory_limit_gb"]),
-        llm_memory_budget_gb=float(r["llm_memory_budget_gb"]),
+        llm_memory_budget_gb=float(r["llm_budget_gb"]),
         stage_p95_budget_ms={k: float(v) for k, v in r["stage_p95_budget_ms"].items()},
         academic_licenses=frozenset(r["academic_licenses"]),
     )
