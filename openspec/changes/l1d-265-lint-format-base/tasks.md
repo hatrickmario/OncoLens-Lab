@@ -29,9 +29,9 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 `apps/rag-orchestrator/pyproject.toml` (crear o añadir sección): `[tool.ruff] line-length = 100`, `target-version` según `.python-version`, `extend-exclude = ["app/schemas/generated"]`; `ruff` con versión exacta en `apps/rag-orchestrator/requirements-dev.txt` (design D3) · test después
-- [ ] 3.2 `ruff format --check apps/rag-orchestrator` en verde (tras `ruff format` del código existente, incluido en el commit `style(L1D-265)` de 1.8); `app/schemas/generated/` sin cambios · test después
-- [ ] 3.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-265)`
+- [x] 3.1 `apps/rag-orchestrator/pyproject.toml` (crear o añadir sección): `[tool.ruff] line-length = 100`, `target-version` según `.python-version`, `extend-exclude = ["app/schemas/generated"]`; `ruff` con versión exacta en `apps/rag-orchestrator/requirements-dev.txt` (design D3) · test después
+- [x] 3.2 `ruff format --check apps/rag-orchestrator` en verde (tras `ruff format` del código existente, incluido en el commit `style(L1D-265)` de 1.8); `app/schemas/generated/` sin cambios · test después
+- [x] 3.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-265)`
 
 ## 4. Cierre
 
@@ -39,4 +39,4 @@
 
 - [x] 4.1 `openspec validate l1d-265-lint-format-base --strict` en verde
 - [ ] 4.2 Tests del contexto en verde: `npx vitest run ci/tests/quality`, `npm run lint`, `npm run format:check`, `npm run contracts:generate:check` (sin diferencias), tests de `web`, `clinical-api` y Pytest de `rag-orchestrator`. Sin `contracts:verify-provider` (sin cambios de API) ni `run-ai-eval` (no aplica)
-- [ ] 4.3 Resultado de `npm audit` adjunto al PR (solo `devDependencies` nuevas)
+- [x] 4.3 Resultado de `npm audit` adjunto al PR (solo `devDependencies` nuevas)
