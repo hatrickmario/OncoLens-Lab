@@ -47,10 +47,12 @@ export function cabecerasHaciaNavegador(respuesta: Response): Headers {
 }
 
 /**
- * `fetch` inyectado en el SDK generado: reconstruye la petición con la lista blanca de cabeceras, aplica el
- * timeout (WEB_UPSTREAM_TIMEOUT_MS) y no sigue redirecciones. Lo reutiliza el login (sin cookie entrante).
+ * `fetch` inyectado en el SDK generado, SOLO para operaciones JSON: impone `Content-Type: application/json`
+ * y envía el cuerpo como texto. Reconstruye la petición con la lista blanca de cabeceras, aplica el timeout
+ * (WEB_UPSTREAM_TIMEOUT_MS) y no sigue redirecciones. Lo reutiliza el login (sin cookie entrante).
+ * El multipart (ingesta de documentos) queda como deuda: necesitará su propia variante.
  */
-export function crearFetchHaciaClinicalApi(opciones: OpcionesFetchClinicalApi): typeof globalThis.fetch {
+export function crearFetchJsonHaciaClinicalApi(opciones: OpcionesFetchClinicalApi): typeof globalThis.fetch {
   return async (entrada, init) => {
     const peticion = entrada instanceof Request ? entrada : new Request(entrada, init);
     const cuerpo = await peticion.text();
@@ -73,7 +75,7 @@ export function crearSdkClinicalApi(
     dependencias.request === undefined ? undefined : cabeceraCookieDeSesion(dependencias.request);
   return createClient({
     baseUrl: config.clinicalApiUrl,
-    fetch: crearFetchHaciaClinicalApi({
+    fetch: crearFetchJsonHaciaClinicalApi({
       fetch: dependencias.fetch,
       timeoutMs: config.upstreamTimeoutMs,
       ...(cookieDeSesion !== undefined && { cookieDeSesion }),

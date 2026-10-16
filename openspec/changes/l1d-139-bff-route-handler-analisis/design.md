@@ -87,13 +87,13 @@ pregunta, la cookie ni la respuesta; solo `event`, `status`, `traceId` y duraci�
 
 **D7 · SDK generado de `clinical-api` con `fetch` inyectable `[S1 resp. 13]`.** No hay cliente
 propio: `lib/server/clinical-api.ts` exporta `crearSdkClinicalApi(config, { request, fetch })`, que
-devuelve `createClient({ baseUrl: CLINICAL_API_URL, fetch: crearFetchHaciaClinicalApi(...) })` del SDK
-de `packages/api-contracts/src/client-web/clinical-api/` (L1D-105, design D4). `crearFetchHaciaClinicalApi`
+devuelve `createClient({ baseUrl: CLINICAL_API_URL, fetch: crearFetchJsonHaciaClinicalApi(...) })` del SDK
+de `packages/api-contracts/src/client-web/clinical-api/` (L1D-105, design D4). `crearFetchJsonHaciaClinicalApi`
 recibe el `fetch` real (inyectable; MSW lo intercepta en los tests), aplica el *timeout*
 `WEB_UPSTREAM_TIMEOUT_MS` con `AbortSignal` y construye las cabeceras salientes desde cero con
 `cabecerasHaciaClinicalApi()` (D2), descartando cualquier otra que el llamador pasara. El Route
 Handler llama a `createEvidenceAnalysis({ client, body, headers })` con las opciones de D1. El login
-de L1D-197 reutiliza `crearFetchHaciaClinicalApi()` sin cookie entrante. Descartado: el
+de L1D-197 reutiliza `crearFetchJsonHaciaClinicalApi()` sin cookie entrante. Descartado: el
 `crearClienteClinicalApi(config, fetch)` escrito a mano de la versión anterior (diverge del
 contrato).
 
@@ -177,7 +177,7 @@ Gate 1 para decir lo mismo.
 |---|---|---|---|
 | `apps/web/app/api/evidence-analyses/route.ts` | crea | `verificarOrigen`, `crearSdkClinicalApi`, `createEvidenceAnalysis` del SDK generado (L1D-105) | — |
 | `apps/web/lib/server/origen.ts` | crea | config (`WEB_ALLOWED_ORIGIN`), logger | `verificarOrigen()` (SEG-01), exportado; lo reutiliza L1D-197 |
-| `apps/web/lib/server/clinical-api.ts` | crea | SDK de `packages/api-contracts/src/client-web/clinical-api/`, `fetch` inyectable, config (`CLINICAL_API_URL`, `WEB_UPSTREAM_TIMEOUT_MS`), generador de `traceId` | `crearFetchHaciaClinicalApi()`, `cabeceraCookieDeSesion()`, `cabecerasHaciaClinicalApi()`, `cabecerasHaciaNavegador()`, `respuestaDeFalloDeTransporte()` |
+| `apps/web/lib/server/clinical-api.ts` | crea | SDK de `packages/api-contracts/src/client-web/clinical-api/`, `fetch` inyectable, config (`CLINICAL_API_URL`, `WEB_UPSTREAM_TIMEOUT_MS`), generador de `traceId` | `crearFetchJsonHaciaClinicalApi()`, `cabeceraCookieDeSesion()`, `cabecerasHaciaClinicalApi()`, `cabecerasHaciaNavegador()`, `respuestaDeFalloDeTransporte()` |
 | `apps/web/lib/server/config.ts` | mod. | entorno | claves nuevas |
 | `apps/web/tests/build/url-interna.test.ts` | crea | `next build` | — |
 | `e2e/analisis-red.spec.ts` | crea | Compose, panel de L1D-140 | — |
@@ -208,7 +208,7 @@ HTTP saliente), nunca con `vi.mock` de módulos propios.
   (L1D-164) y el E2E lo detectan; el valor por defecto de `.env.example` es el de `WEB_BIND_ADDRESS` +
   `WEB_PORT`.
 - **Duplicación con el Route Handler de login** (L1D-197): mitigada porque el login reutiliza
-  `verificarOrigen()` y `crearFetchHaciaClinicalApi()` de este change `[S1 resp. 14a]`, `[S1 resp. 13]`.
+  `verificarOrigen()` y `crearFetchJsonHaciaClinicalApi()` de este change `[S1 resp. 14a]`, `[S1 resp. 13]`.
 - **Orden con L1D-197:** su Route Handler de login importa `lib/server/origen.ts` y
   `lib/server/clinical-api.ts`; este change debe estar en `main` antes de esas tareas (las de
   `clinical-api` de L1D-197 no esperan). El E2E de AC-3 de este change necesita el login de L1D-197:
