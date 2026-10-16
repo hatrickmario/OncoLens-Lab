@@ -189,6 +189,15 @@ Propuesta de **enmienda a US-017** (no aplicada; las historias publicadas son in
 - A favor: sin trabajo.
 - En contra: llegaría a G-Demo con una meta de recuperación incumplida y sin saber si es real.
 
+## Decisiones del humano (usuario, 2026-10-20)
+
+Resuelven los puntos 1, 3, 4 y 6 de la lista siguiente (la lista se conserva como registro):
+
+1. **Protocolo P1–P12 y partición congelada: aceptados.** La prueba definitiva es el conjunto nuevo (US-229); el subconjunto de 16 preguntas del golden actual es solo respaldo. Condición añadida: el lote B lo redactan personas distintas de quienes experimentan con las ablaciones.
+2. **RN-02 frente a US-113: se mantiene RN-02** («sin invocar al LLM» cuando no hay chunks sobre el umbral). La expansión bilingüe de US-113 **no usa el LLM local**: se resuelve con sinónimos del catálogo (A3) o un modelo de traducción dedicado (A4), medidos como brazos. US-113 se enmienda en ese sentido (nota en `FEAT-06b`). Si ninguno de los dos brazos mejora, se vuelve a esta decisión con datos.
+3. **Oncólogo asesor: se escalona.** Primero el lote A reducido (≥ 60 preguntas con respuesta y ≥ 10 sin respuesta, US-228) y la auditoría ciega de los 20 fallos (US-227). El lote B (US-229) solo se redacta si el lote A muestra que vale la pena seguir. La opción de ~80 respondibles + 35 sin respuesta queda como último recurso (solo detecta ≥ +0,15).
+4. **Metas de US-017: provisionales.** No se modifican ni se bajan antes de terminar US-229. La enmienda propuesta (límite inferior del IC y recall@10 tras el reranker) se aplica después. Nota en `FEAT-T5a`.
+
 ## Puntos que decide el humano
 
 1. **Aceptar el protocolo P1–P12 y la partición congelada**, incluido que el subconjunto "prueba" actual es solo un respaldo y la prueba definitiva es el conjunto nuevo.

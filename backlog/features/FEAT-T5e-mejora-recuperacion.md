@@ -78,6 +78,8 @@ Corregir el golden; cambiar el sistema.
 
 ---
 
+> **Decidido (usuario, 2026-10-20, ADR-45):** el tiempo del oncólogo se escalona; esta historia (lote A reducido) y US-227 van primero.
+
 ## US-228 — El lote A del dataset nuevo (≥ 60 preguntas con respuesta y ≥ 10 sin respuesta, independientes del actual) queda revisado por el oncólogo
 
 > Linear: pendiente
@@ -106,7 +108,10 @@ Preguntas de otros tipos de cáncer; datos de pacientes reales.
 
 ---
 
+> **Decidido (usuario, 2026-10-20, ADR-45):** US-229 solo se ejecuta si el lote A (US-228) y la auditoría (US-227) muestran que vale la pena seguir; el lote B lo redactan personas distintas de quienes experimentan con las ablaciones. Alternativa de último recurso: ~80 respondibles + 35 sin respuesta (detecta solo ≥ +0,15).
+
 ## US-229 — El lote B (≥ 100 preguntas con respuesta y ≥ 35 sin respuesta) queda sellado como la prueba ciega nueva
+
 
 > Linear: pendiente
 
