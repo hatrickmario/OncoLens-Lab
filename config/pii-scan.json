@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "raiz": "git-ls-files",
+  "excluir": [
+    {
+      "patron": "**/package-lock.json",
+      "motivo": "Lockfile de npm: hashes de integridad y URLs de registro, sin texto libre."
+    },
+    {
+      "patron": "**/*.lock",
+      "motivo": "Lockfiles de otras herramientas: sumas y versiones, sin texto libre."
+    },
+    {
+      "patron": "ci/tools.lock",
+      "motivo": "Versiones y sumas SHA-256 de las herramientas de la CI."
+    }
+  ]
+}

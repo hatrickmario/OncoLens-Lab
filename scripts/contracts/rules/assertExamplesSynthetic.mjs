@@ -3,7 +3,7 @@
  * Sintética"), NCCN y ESMO solo como exclusión, y los de Backend 2 no llevan fechas absolutas en el contexto ni en el texto.
  */
 import { reporter } from '../lib/findings.mjs';
-import { PATRONES_FECHA_NACIMIENTO, PATRONES_NOMBRE_PERSONA, PATRONES_NUMERO_DOCUMENTO, matchesIdentity } from '../lib/identity.mjs';
+import { CLAVES_DE_NOMBRE_DE_ARCHIVO as FILE_NAME_KEYS, PATRONES_FECHA_NACIMIENTO, PATRONES_NOMBRE_PERSONA, PATRONES_NUMERO_DOCUMENTO, matchesIdentity } from '../lib/identity.mjs';
 import { schemaPointer, RAG_ORCHESTRATOR } from '../lib/specs.mjs';
 import { walkJson } from '../lib/walk.mjs';
 
@@ -19,9 +19,6 @@ const EMAIL = /[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
 /** Fechas absolutas: AAAA-MM-DD, DD/MM/AAAA, D/M/AA y "<d> de <mes> de <año>" (privacy M-9). */
 const ABSOLUTE_DATE = /\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2} de [a-záéíóú]+ de \d{4}\b/i;
 const NO_DATES_UNDER = ['clinicalContext', 'analysisMemory', 'query', 'question'];
-
-/** Claves de nombre de archivo: casan con `name$` pero se rigen por la regla SINT-, no por la de "Prueba Sintética". */
-const FILE_NAME_KEYS = ['originalFilename', 'filename', 'fileName'];
 
 const underAny = (pointer, keys) => keys.some((key) => pointer.split('/').includes(key));
 const insideExclusion = (pointer) => EXCLUSION_KEYS.some((key) => pointer.includes(`/${key}/`));

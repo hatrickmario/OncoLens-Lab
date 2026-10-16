@@ -1,0 +1,10 @@
+{
+  "ac": "US-036 AC-5",
+  "descripcion": "Un dataset de evaluación sin manifiesto ni cabecera con clase sintetico hace fallar la CI con el mensaje y la ruta (supuesto aceptado en [S1 resp. 3]).",
+  "esperado": "falla",
+  "comando": "node scripts/ci/dataset-class-check.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "data/evaluation/preguntas.jsonl: dataset sin clase de datos `sintetico`"
+  ]
+}

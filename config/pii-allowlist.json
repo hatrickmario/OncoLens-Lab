@@ -1,0 +1,105 @@
+[
+  {
+    "fixture": "FX-T4a-a",
+    "clase": "sintetico",
+    "rutas": [
+      "backlog/features/FEAT-T4a-*.md",
+      "backlog/features/FEAT-PL1-plataforma-base.md",
+      "apps/clinical-api/prisma/seed/**",
+      "apps/clinical-api/test/**/deidentification/**",
+      "openspec/specs/deidentification/**",
+      "ci/tests/cases/ac4-allowlist/**"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "c7e0a4ab9f005c7cf7a8a5d3d7cf7aaa9cabea8764ebcc05384e9710d849b43b"
+      },
+      {
+        "formato": "telefono_local",
+        "sha256": "bf58149e002652b8d49cabfbfd8aa987d097f3de32306dc2ccf50a0f72065e09"
+      }
+    ],
+    "motivo": "Paciente sintético con PII conocida (FEAT-T4a, FX-T4a-a): documento y teléfono de prueba de la desidentificación y de la búsqueda exacta."
+  },
+  {
+    "fixture": "FX-T4a-c",
+    "clase": "sintetico",
+    "rutas": [
+      "backlog/features/FEAT-T4a-*.md"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "b7caa945a8663e50db2f9c8f59ef6a90cf0bf9356b4b3a72dbbe781466e1e08e"
+      }
+    ],
+    "motivo": "Paciente menor sintético (FX-T4a-c): documento de prueba."
+  },
+  {
+    "fixture": "FX-T4a-busqueda-parcial",
+    "clase": "sintetico",
+    "rutas": [
+      "backlog/features/FEAT-T4a-*.md"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "21fddb3ed3a1e91db0a52a4b15fbba4123524a6dc54758a18f6499e0f3e77bd7"
+      }
+    ],
+    "motivo": "Número parcial sintético del escenario de búsqueda exacta sin coincidencia parcial (FEAT-T4a)."
+  },
+  {
+    "fixture": "L1D-203-desidentificacion",
+    "clase": "sintetico",
+    "rutas": [
+      "openspec/changes/*-desidentificacion-*/**"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f"
+      },
+      {
+        "formato": "documento_identidad",
+        "sha256": "c7e0a4ab9f005c7cf7a8a5d3d7cf7aaa9cabea8764ebcc05384e9710d849b43b"
+      },
+      {
+        "formato": "telefono_local",
+        "sha256": "bf58149e002652b8d49cabfbfd8aa987d097f3de32306dc2ccf50a0f72065e09"
+      }
+    ],
+    "motivo": "Escenarios de enmascarado de L1D-203: documento genérico de ocho dígitos y teléfono de FX-T4a-a, ambos sintéticos."
+  },
+  {
+    "fixture": "parche-ac17-nationalId",
+    "clase": "sintetico",
+    "rutas": [
+      "openspec/specs/api-contracts/spec.md",
+      "openspec/changes/archive/*-l1d-55-contract-schema-freeze/specs/api-contracts/spec.md",
+      "scripts/contracts/__fixtures__/parches/ac-17-errores-identidad-permisos.json"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f"
+      }
+    ],
+    "motivo": "Parche negativo de AC-17: pone un documento sin el prefijo SINT- en patient-search.json para probar que la regla lo rechaza."
+  },
+  {
+    "fixture": "parche-ac17-sinteticos-nombres",
+    "clase": "sintetico",
+    "rutas": [
+      "scripts/contracts/__fixtures__/parches/ac-17-sinteticos-nombres.json"
+    ],
+    "valores": [
+      {
+        "formato": "documento_identidad",
+        "sha256": "7e071fd9b023ed8f18458a73613a0834f6220bd5cc50357ba3493c6040a9ea8c"
+      }
+    ],
+    "motivo": "Parche negativo de AC-17: un documentNumber de ceros sin el prefijo SINT- para probar que assertExamplesSynthetic lo rechaza."
+  }
+]

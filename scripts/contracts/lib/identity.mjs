@@ -54,6 +54,15 @@ export const PATRONES_NUMERO_DOCUMENTO = [/^nationalid(masked)?$/, /^documentnum
 /** Fechas de nacimiento: no pueden ser absolutas en los ejemplos. */
 export const PATRONES_FECHA_NACIMIENTO = [/^birthdate$/, /^dateofbirth$/, /^dob$/, /^fechanacimiento$/];
 
+/**
+ * Campos de identidad que el listado SÍ puede devolver porque van enmascarados o no identifican por sí solos
+ * (D-7, resp. 36). Cualquier otro nombre de IDENTIDAD_PII es identidad en claro: solo la ficha la devuelve.
+ */
+export const CAMPOS_ENMASCARADOS = ['nationalIdMasked', 'fullNameMasked', 'idType', 'birthYear'];
+
+/** Claves de nombre de archivo: casan con `name$` pero se rigen por la regla SINT-, no por la de "Prueba Sintética". */
+export const CLAVES_DE_NOMBRE_DE_ARCHIVO = ['originalFilename', 'filename', 'fileName'];
+
 /** Nombres que casan con `name$` pero no son identidad; se amplía solo con revisión de privacy-guardian. */
 export const NAME_ALLOWLIST = [
   'biomarkerName', // nombre canónico del biomarcador del catálogo

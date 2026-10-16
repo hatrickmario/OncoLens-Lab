@@ -1,0 +1,8 @@
+# Herramientas de la CI con versión exacta y SHA-256 del archivo descargado (design.md D1).
+# Formato: <herramienta> <versión> <plataforma> <sha256> <url>
+# Las sumas salen de los metadatos del release (campo digest); se vuelven a comprobar al actualizar.
+# Las consume scripts/ci/install-tools.sh, que se niega a instalar si la suma no coincide.
+gitleaks 8.30.1 linux_x64 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+gitleaks 8.30.1 darwin_arm64 b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz
+oasdiff 1.33.0 linux_x64 43a4e328e2d13ba1552d760aa68d2485c75c5621f309f6ff64ae895188345247 https://github.com/oasdiff/oasdiff/releases/download/v1.33.0/oasdiff_1.33.0_linux_amd64.tar.gz
+oasdiff 1.33.0 darwin_arm64 2a479337c15afdcbf0b1e89c0b4d0cf0176472dbc11483358fed1f831d1e46c5 https://github.com/oasdiff/oasdiff/releases/download/v1.33.0/oasdiff_1.33.0_darwin_all.tar.gz

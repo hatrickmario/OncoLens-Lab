@@ -1,0 +1,14 @@
+{
+  "ac": "US-036 AC-1",
+  "descripcion": "Un clon de main con un cambio de documentación sin contrato, secretos ni PII: los comandos de los jobs contracts, secret-scan y data-scan terminan en 0. Los jobs build-test y stack-smoke los ejecuta ci.yml sobre el propio PR.",
+  "esperado": "pasa",
+  "comando": [
+    "npm run contracts:check",
+    "npm run contracts:generate:check",
+    "scripts/ci/contracts-breaking.sh \"$BASE_REF\"",
+    "scripts/ci/secret-scan.sh \"$BASE_REF\"",
+    "node scripts/ci/pii-scan.mjs",
+    "node scripts/ci/dataset-class-check.mjs"
+  ],
+  "aplicar": "aplicar.sh"
+}

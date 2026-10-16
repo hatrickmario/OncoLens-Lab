@@ -1,0 +1,13 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Un teléfono sintético en formato E.164 en un archivo de data/ hace fallar el escáner con archivo, línea y formato telefono.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "data/contacto.txt:2: telefono_e164"
+  ],
+  "ausentes": [
+    "5555555555"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Una entrada de la allowlist sin clase sintetico hace fallar el escáner nombrando la entrada.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.mjs",
+  "mensajes": [
+    "entrada de la allowlist FX-T4a-a: sin clase sintetico"
+  ]
+}

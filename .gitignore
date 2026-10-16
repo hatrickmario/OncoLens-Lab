@@ -14,3 +14,5 @@ infra/docker/.env
 .pytest_cache/
 .venv/
 infra/docker/secrets/
+.ci-tools/
+.venv-codegen/
