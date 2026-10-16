@@ -7,6 +7,7 @@ excluida (NCCN, ESMO; RN-21) se rechaza con ``DatasetInvalido`` antes de medir n
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,12 @@ MODOS_ACIERTO = ("cualquiera", "cobertura_documentos", "sin_evidencia")
 
 # Licencias de fuente del corpus aceptadas por ADR-36 (RN-21). NCI y ClinicalTrials.gov se aceptan por sus
 # términos de reutilización verificados, no por clase de licencia (tarea 1.2).
-PREFIJOS_LICENCIA_ACEPTADA = ("CC BY", "CC0", "Dominio público", "Texto de NCI libre de copyright")
+PREFIJO_NCI = "Texto de NCI libre de copyright"
+# Coincidencia exacta de la clase (con versión) seguida del fin o de una aclaración entre paréntesis.
+CLASE_LICENCIA_ACEPTADA = re.compile(r"^(?:CC0 \d\.\d|CC BY(?:-SA)? \d\.\d)(?=$| \()")
+# CC BY-NC solo en el MVP académico (RN-21), con bandera explícita.
+CLASE_LICENCIA_NC = re.compile(r"^CC BY-NC \d\.\d(?=$| \()")
+CONTIENE_ND = re.compile(r"(?<![A-Za-z])ND(?![A-Za-z])", re.IGNORECASE)
 TERMINOS_VERIFICADOS_ACEPTADOS = ("terminos_NLM_ClinicalTrials_gov",)
 FUENTES_EXCLUIDAS_SIEMPRE = ("NCCN", "ESMO")
 
@@ -105,14 +111,18 @@ def _leer_yaml(ruta: Path) -> dict[str, Any]:
     return contenido
 
 
-def _licencia_aceptada(fuente: dict[str, Any]) -> bool:
-    licencia = str(fuente.get("licencia") or "")
-    if any(licencia.startswith(p) for p in PREFIJOS_LICENCIA_ACEPTADA):
+def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) -> bool:
+    licencia = str(fuente.get("licencia") or "").strip()
+    if CONTIENE_ND.search(licencia):
+        return False
+    if CLASE_LICENCIA_ACEPTADA.match(licencia) or licencia == "Dominio público" or licencia.startswith(PREFIJO_NCI):
+        return True
+    if permitir_cc_by_nc and CLASE_LICENCIA_NC.match(licencia):
         return True
     return fuente.get("licencia_verificada") in TERMINOS_VERIFICADOS_ACEPTADOS
 
 
-def _validar_manifiesto(manifiesto: dict[str, Any]) -> tuple[Fuente, ...]:
+def _validar_manifiesto(manifiesto: dict[str, Any], permitir_cc_by_nc: bool = False) -> tuple[Fuente, ...]:
     if manifiesto.get("clase") != CLASE_SINTETICA:
         raise DatasetInvalido("el manifiesto no declara 'clase: sintetico' (RN-13, RN-14)")
     excluidas = {str(x).upper() for x in manifiesto.get("excluded_sources", [])}
@@ -121,7 +131,7 @@ def _validar_manifiesto(manifiesto: dict[str, Any]) -> tuple[Fuente, ...]:
         nombre = str(crudo.get("fuente", ""))
         if any(nombre.upper().startswith(e) for e in (*FUENTES_EXCLUIDAS_SIEMPRE, *excluidas)):
             raise DatasetInvalido(f"la fuente {crudo.get('id')} ({nombre}) está excluida (RN-21)")
-        if not _licencia_aceptada(crudo):
+        if not _licencia_aceptada(crudo, permitir_cc_by_nc):
             raise DatasetInvalido(f"la fuente {crudo.get('id')} no tiene licencia aceptada (RN-21)")
         fuentes.append(
             Fuente(
@@ -178,10 +188,10 @@ def _construir_par(crudo: dict[str, Any]) -> ParNli:
     )
 
 
-def cargar_dataset(directorio: Path) -> Dataset:
+def cargar_dataset(directorio: Path, permitir_cc_by_nc: bool = False) -> Dataset:
     """Carga y valida ``directorio``; lanza ``DatasetInvalido`` sin medir si algo incumple (AC-9)."""
     manifiesto = _leer_yaml(directorio / "manifest.yaml")
-    fuentes = _validar_manifiesto(manifiesto)
+    fuentes = _validar_manifiesto(manifiesto, permitir_cc_by_nc)
     archivos = manifiesto.get("archivos", {})
     golden = _leer_yaml(directorio / archivos.get("golden", "golden.yaml"))
     nli = _leer_yaml(directorio / archivos.get("nli", "nli-pares.yaml"))
