@@ -29,6 +29,15 @@ describe('ci.yml', () => {
     expect(ci.on.push.branches).toEqual(['main']);
   });
 
+  it('build-test lanza el test de build de web tras el build de los workspaces [US-060 AC-5]', () => {
+    const pasos = pasosDe(ci.jobs['build-test']);
+    const indiceBuild = pasos.findIndex((paso) => /npm run build --workspaces/.test(paso.run ?? ''));
+    const indiceTestBuild = pasos.findIndex((paso) => /\btest:build\b/.test(paso.run ?? ''));
+
+    expect(indiceTestBuild).toBeGreaterThan(indiceBuild);
+    expect(indiceBuild).toBeGreaterThanOrEqual(0);
+  });
+
   it('el job que corre pytest tiene setup-node y npm ci antes [US-036 AC-1]', () => {
     const conPytest = Object.entries(ci.jobs).filter(([, job]) => pasosDe(job).some((paso) => /\bpytest\b/.test(paso.run ?? '')));
 
