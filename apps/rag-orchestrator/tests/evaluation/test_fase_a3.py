@@ -149,3 +149,21 @@ def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigu
     assert codigo == SALIDA_OK
     assert reporte["escenarios_no_medibles"]["menos-pares"]["estado"] == "no_medible"
     assert "menos-pares" not in reporte["escenarios"] and "vigente" in reporte["escenarios"]
+
+
+def test_conclusiones_aplican_la_regla_de_presupuesto_al_escenario_adoptado() -> None:
+    agregados = {
+        "base": agregado(0.667, 3947.0),
+        "vigente": agregado(0.652, 8252.0),
+        "menos-pares": agregado(0.696, 4259.0),
+        "lento-y-peor": agregado(0.50, 900.0),
+    }
+    agregados["menos-pares"]["rss_max_mb"] = 2642.0
+
+    c = derivar_conclusiones(agregados, ESCENARIOS, config(escenario_adoptado="menos-pares"))
+
+    adoptado = c["adoptado"]
+    assert adoptado["presupuesto_reranker_ms"] == 4500.0  # 4259 redondeado hacia arriba a múltiplos de 250
+    assert adoptado["calidad_sostiene_la_base"] is True
+    assert adoptado["extremo_a_extremo_con_p95_medido"]["p95_estimado_ms"] == pytest.approx(14_566.0)
+    assert adoptado["extremo_a_extremo_con_presupuesto"]["riesgo"] == "alto"

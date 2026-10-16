@@ -82,6 +82,7 @@ class ConfigA3:
     escenarios: tuple[Escenario, ...]
     reglas: ReglasA3
     reporte: str
+    escenario_adoptado: str | None = None
 
 
 def cargar_config_a3(ruta: Path) -> ConfigA3:
@@ -120,6 +121,7 @@ def cargar_config_a3(ruta: Path) -> ConfigA3:
             p95_otras_etapas_ms={k: float(v) for k, v in r["p95_otras_etapas_ms"].items()},
         ),
         reporte=crudo["reporte"],
+        escenario_adoptado=crudo.get("escenario_adoptado"),
     )
 
 
@@ -184,12 +186,32 @@ def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Seque
             }
         )
     return {
+        "adoptado": _conclusion_del_adoptado(agregados, config, recall_base),
         "calidad_del_vigente_sostiene_la_base": calidad_sostenida,
         "presupuesto_reranker_ms": presupuesto if calidad_sostenida else None,
         "presupuesto_regla": f"p95 mediano del escenario vigente redondeado hacia arriba a {reglas.presupuesto_redondeo_ms:.0f} ms",
         "extremo_a_extremo_con_presupuesto": evaluar_extremo_a_extremo(presupuesto, reglas),
         "extremo_a_extremo_con_p95_medido": evaluar_extremo_a_extremo(vigente["p95_ms"], reglas),
         "palancas": palancas,
+    }
+
+
+def _conclusion_del_adoptado(agregados: dict[str, dict[str, Any]], config: ConfigA3, recall_base: float) -> dict[str, Any] | None:
+    """Mismo presupuesto (p95 mediano redondeado) y riesgo extremo a extremo para el escenario que adopta el usuario."""
+    if config.escenario_adoptado is None or config.escenario_adoptado not in agregados:
+        return None
+    a = agregados[config.escenario_adoptado]
+    recall = a["calidad"]["metricas"]["total"]["recall_at_10"]
+    presupuesto = redondear_hacia_arriba(a["p95_ms"], config.reglas.presupuesto_redondeo_ms)
+    return {
+        "escenario": config.escenario_adoptado,
+        "recall_at_10": recall,
+        "calidad_sostiene_la_base": recall >= recall_base - config.tolerancia_empate,
+        "p95_ms": a["p95_ms"],
+        "rss_max_mb": a["rss_max_mb"],
+        "presupuesto_reranker_ms": presupuesto,
+        "extremo_a_extremo_con_p95_medido": evaluar_extremo_a_extremo(a["p95_ms"], config.reglas),
+        "extremo_a_extremo_con_presupuesto": evaluar_extremo_a_extremo(presupuesto, config.reglas),
     }
 
 

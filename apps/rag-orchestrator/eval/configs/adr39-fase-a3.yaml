@@ -67,3 +67,8 @@ reglas:
   p95_viable_ms: 2000
   # Etapas ya medidas (reports/adr39/2026-10-16-fase-a.json), medianas de 3 corridas.
   p95_otras_etapas_ms: {embeddings: 59, nli: 248}
+
+# Escenario adoptado por el usuario el 2026-10-20 (prioriza el recall): chunks de 1024, RERANKER_MAX_LENGTH 512 y
+# RERANKER_MAX_PAIRS 12. Se le aplica la misma regla de presupuesto (p95 mediano redondeado hacia arriba a 250 ms).
+# Las mediciones ya hechas no se repiten: el reporte se regenera desde las corridas en caché.
+escenario_adoptado: c1024-L512-P12
