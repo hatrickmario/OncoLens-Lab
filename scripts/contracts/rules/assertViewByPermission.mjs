@@ -1,6 +1,6 @@
 /** AC-17 [Pre-S1 resp. 27, E-04]: toda operación que responde una vista por permiso declara x-view-by-permission y su vista por defecto no lleva datos clínicos. */
 import { reporter } from '../lib/findings.mjs';
-import { IDENTIDAD_PII, matchesIdentity } from '../lib/identity.mjs';
+import { CAMPOS_ENMASCARADOS, IDENTIDAD_PII, matchesIdentity } from '../lib/identity.mjs';
 import { findResponse, jsonSchemaOf, labelOf, listOperations } from '../lib/operations.mjs';
 import { permissionMatrix } from '../lib/permissions.mjs';
 import { walkResolved } from '../lib/resolvedWalk.mjs';
@@ -12,11 +12,6 @@ const ADMIN_VIEW = 'PatientAdminSummary';
 /** Propiedades clínicas que la vista por defecto no puede tener. */
 const CLINICAL_PROPERTIES = ['diagnosis', 'biomarkers', 'recentBiomarkers', 'documents', 'analyses', 'openReviewCount', 'pendingReviewCount', 'missingCriticalCount'];
 
-/**
- * Campos de identidad que el listado SÍ puede devolver porque van enmascarados o no identifican por sí solos
- * (D-7, resp. 36). Cualquier otro nombre del catálogo IDENTIDAD_PII es identidad en claro: solo la ficha la devuelve.
- */
-const CAMPOS_ENMASCARADOS = ['nationalIdMasked', 'fullNameMasked', 'idType', 'birthYear'];
 /** Valor del discriminador `view` de la vista del doctor en el listado y la búsqueda. */
 const LISTING_VIEW = 'doctor_listado';
 

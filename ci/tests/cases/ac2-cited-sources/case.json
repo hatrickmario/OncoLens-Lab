@@ -1,0 +1,11 @@
+{
+  "ac": "US-036 AC-2",
+  "descripcion": "Eliminar EvidenceOption.citedSources del contrato de rag-orchestrator es un cambio incompatible: contracts-breaking.sh falla nombrando el proveedor y la propiedad.",
+  "esperado": "falla",
+  "comando": "scripts/ci/contracts-breaking.sh \"$BASE_REF\"",
+  "aplicar": "aplicar.mjs",
+  "mensajes": [
+    "rag-orchestrator:",
+    "citedSources"
+  ]
+}

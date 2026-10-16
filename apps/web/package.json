@@ -12,7 +12,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:build": "vitest run --config vitest.build.config.ts"
   },
   "dependencies": {
     "next": "16.4.2",

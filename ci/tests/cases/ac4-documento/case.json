@@ -1,0 +1,13 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Un número sintético con la forma de documento_identidad, tras su palabra clave, en la línea 7 de data/notas.json: el escáner falla con archivo, línea y formato, sin el número.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "data/notas.json:7: documento_identidad"
+  ],
+  "ausentes": [
+    "888888888"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "Una entrada de la allowlist con el glob ci/tests/** (más amplio que un directorio de fixture) hace fallar el escáner nombrando la entrada.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.mjs",
+  "mensajes": [
+    "entrada de la allowlist FX-T4a-a: glob más amplio que un directorio de fixture (ci/tests/**)"
+  ]
+}

@@ -1,0 +1,50 @@
+# Fixtures de PR de la CI (US-036 AC-1…AC-7, ci/tests/): cada caso aplica un cambio sintético en un clon temporal y
+# comprueba que el comando del job correspondiente falla (o pasa) con el mensaje esperado. No es un check requerido.
+name: CI selftest
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/**
+      - ci/**
+      - scripts/ci/**
+      - config/**
+      - .gitleaks.toml
+  workflow_dispatch:
+
+concurrency:
+  group: ci-selftest-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    name: fixtures
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: scripts/contracts/requirements-codegen.txt
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Herramientas de la CI (gitleaks y oasdiff, versión y suma de ci/tools.lock)
+        run: scripts/ci/install-tools.sh
+      - name: Entorno virtual del generador de Pydantic
+        run: |
+          python -m venv .venv-codegen
+          .venv-codegen/bin/pip install -r scripts/contracts/requirements-codegen.txt
+      - name: Fixtures de PR
+        run: ci/tests/run-cases.sh

@@ -1,0 +1,10 @@
+# Manifiesto de la partición congelada de OL-06 (ADR-45, protocolo P2). Cubre todos los archivos de este directorio.
+clase: sintetico
+nombre: ol06-particion-v1
+version: '1'
+descripcion: 'Partición congelada del golden data/eval/adr39-mini (v0.1.0) en desarrollo, validación y prueba. Solo contiene ids y un generador determinista; ningún texto de pregunta ni dato de paciente.'
+origen: data/eval/adr39-mini
+licencia: 'Material propio del repositorio; hereda las licencias registradas en data/eval/adr39-mini/manifest.yaml para las fuentes del golden de origen.'
+archivos:
+  particion: particion.yaml
+  generador: generar_particion.py

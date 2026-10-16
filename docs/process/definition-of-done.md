@@ -13,6 +13,7 @@
 - [ ] Suite `evaluate` con su reporte adjunto si el PR toca modelo, prompt, umbral, catálogo o corpus (OL-06).
 - [ ] `visual-check` en PASS si el PR toca la UI de `apps/web`.
 - [ ] Sin `.skip`, `.only`, `xit`, `xfail` ni tests borrados sin el *trailer* `Test-Removal:`.
+- [ ] `ci-ok` en verde (build y tests, contratos, secretos, PII y clase de datos, smoke del stack): `docs/process/ci.md`.
 
 ## Historia de usuario (feature nueva)
 
