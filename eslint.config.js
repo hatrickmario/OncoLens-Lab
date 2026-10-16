@@ -3,9 +3,37 @@ import prettier from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import nextPlugin from '@next/eslint-plugin-next';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
 
 // Base de lint del monorepo (L1D-265, design D1). `npm run lint` = `eslint . --max-warnings 0`.
-// Los bloques de `web` (React, a11y, Next, seguridad del cliente) los añade la sección de frontend.
+// `bloqueWeb` aplica React, a11y, Next y seguridad del cliente (D1, D1b) a los archivos que se le den;
+// se exporta para que los tests de ci/tests/quality lo apliquen a sus fixtures.
+export const bloqueWeb = (files) => ({
+  files,
+  languageOptions: { globals: globals.browser },
+  plugins: {
+    'react-hooks': reactHooks,
+    'jsx-a11y': jsxA11y,
+    '@next/next': nextPlugin,
+    react,
+    oncolens: { rules: { 'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente } },
+  },
+  settings: { next: { rootDir: 'apps/web' } },
+  rules: {
+    ...reactHooks.configs.flat.recommended.rules,
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'error',
+    ...jsxA11y.flatConfigs.recommended.rules,
+    ...nextPlugin.configs['core-web-vitals'].rules,
+    'react/no-danger': 'error',
+    'oncolens/no-restricted-imports-en-cliente': 'error',
+  },
+});
+
 export default defineConfig(
   {
     ignores: [
@@ -27,6 +55,7 @@ export default defineConfig(
     files: ['**/*.{js,mjs,cjs}'],
     languageOptions: { globals: globals.node },
   },
+  bloqueWeb(['apps/web/**/*.{ts,tsx}']),
   {
     files: ['apps/clinical-api/**/*.ts'],
     languageOptions: { globals: globals.node },
