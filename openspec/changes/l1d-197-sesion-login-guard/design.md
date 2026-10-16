@@ -70,8 +70,8 @@ Adjunta `req.sesion = { userId, rol }`. El guard solo autentica: el `403` para u
 `motivo=content_type` y no llama a `clinical-api` (login CSRF: un formulario de otro sitio no puede
 enviar JSON sin *preflight*, `[S1 resp. 14a]`). Después valida con el schema Zod generado de
 `LoginRequest` (`packages/api-contracts/src/zod`), llama a la operación `login` del **SDK generado**
-de `clinical-api` (L1D-105, `packages/api-contracts/src/client/clinical-api/`,
-`createClient({ baseUrl, fetch })`) con el `fetch` de `crearFetchHaciaClinicalApi()` de L1D-139, sin
+de `clinical-api` (L1D-105, `packages/api-contracts/src/client-web/clinical-api/`,
+`createClient({ baseUrl, fetch })`) con el `fetch` de `crearFetchJsonHaciaClinicalApi()` de L1D-139 (`crearSdkClinicalApi()` devuelve `{ client, cuerpoCrudo }`; `createClient` se importa de `.../client-web/clinical-api/client`), sin
 cookie entrante `[S1 resp. 13]`, lee el `Set-Cookie` de `response.headers.getSetCookie()` y retransmite
 **solo** la cabecera `Set-Cookie` de `oncolens_session` tal cual (los atributos los fija el
 proveedor; sin `Domain`, el navegador la asocia al host de `web`) y el cuerpo de error del contrato.
@@ -196,7 +196,7 @@ archivo.
 | `src/middleware/auth.ts` | crea | `AuthService.resolverSesion` | — |
 | `src/app.ts` / router `/platform` | mod. | guard | orden: login → guard → resto |
 | `src/config.ts`, logger | mod. | — | claves nuevas, redacción |
-| `web/app/api/auth/login/route.ts` | crea | `verificarOrigen()` y `crearFetchHaciaClinicalApi()` de L1D-139, operación `login` del SDK generado (L1D-105) | `reenviarCookieDeSesion()`, `exigirJson()` |
+| `web/app/api/auth/login/route.ts` | crea | `verificarOrigen(request, { config, nuevoTraceId, registrar, evento })` (el login pasa su propio evento; sin `ahora`) y `crearFetchJsonHaciaClinicalApi()` de L1D-139, operación `login` del SDK generado (L1D-105) | `reenviarCookieDeSesion()`, `exigirJson()` |
 | `web/messages/es.json`, `web/lib/mensajes.ts` | crea (dueño) | — | — |
 | `web/proxy.ts` | crea | — | `tieneCookieDeSesion()` |
 | `web/app/login/page.tsx`, `components/organisms/login-form.tsx` | crea | Route Handler por `fetch('/api/auth/login')` | — |
