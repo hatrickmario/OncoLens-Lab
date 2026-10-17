@@ -107,10 +107,12 @@ El valor del token de `oncolens_session` MUST NOT salir de `clinical-api`: los r
 - **THEN** el request capturado hacia `rag-orchestrator` lleva `Authorization: Bearer <jwt>` y no lleva cabecera `Cookie`
 - **AND** el valor del token no aparece en ninguna cabecera ni en el cuerpo del request capturado
 
-#### Scenario: Los logs de rag-orchestrator no contienen el token de sesión [US-211 AC-5] [OL-03]
-- **GIVEN** el stack de Compose en perfil de test con `LLM_PROVIDER=fake` y un análisis solicitado desde el navegador con la cookie del login
-- **WHEN** se leen los logs de `rag-orchestrator` de ese intervalo
-- **THEN** ninguna línea contiene el valor del token de `oncolens_session` ni la palabra `oncolens_session`
+#### Scenario: Los logs de rag-orchestrator no contienen la cookie de sesión [US-211 AC-5] [OL-03]
+- **GIVEN** `rag-orchestrator` bajo `TestClient` con registro de logs capturado y un `/rag/query` con un `Authorization: Bearer` de servicio válido y una cabecera `Cookie: oncolens_session=<valor sintético>`
+- **WHEN** se atiende la petición
+- **THEN** ningún registro capturado contiene el valor de la cookie ni el nombre `oncolens_session`
+
+Nota: el E2E de los logs de `rag-orchestrator` con el navegador contra Compose queda fuera de este change, en la deuda D-3 (decisión 60 del plan).
 
 ### Requirement: El gateway no registra la pregunta ni el contexto en los logs
 Los logs que emite `clinical-api` al atender `POST /platform/evidence-analyses` MUST contener solo `traceId`, el UUID del paciente y códigos de resultado, y SHALL no contener la `query`, el `clinicalContext` ni identidad del paciente.
@@ -147,6 +149,11 @@ Mientras el puerto `ContextDeidentifier` use el adaptador provisional de este ch
 - **WHEN** envía `POST /platform/evidence-analyses` con una pregunta válida sobre ese paciente
 - **THEN** responde `502` con `error = ERROR_SERVICIO_IA`, `message` fijo y `traceId`, válido contra el spec de `clinical-api`
 - **AND** el cliente de `rag-orchestrator` registra cero llamadas y el log lleva `motivo = data_origin` sin la pregunta
+
+#### Scenario: Compose no levanta el servicio sin APP_ENV [RN-11] [RN-13] [decisión 64]
+- **GIVEN** el `infra/docker/docker-compose.yml` con `clinical-api` declarando `APP_ENV: ${APP_ENV:?APP_ENV obligatorio}`
+- **WHEN** se ejecuta `docker compose config` sin `APP_ENV` en el entorno
+- **THEN** el comando falla con el mensaje `APP_ENV obligatorio` y no se levanta ningún servicio
 
 #### Scenario: Con APP_ENV piloto o ausente el paciente semilla tampoco sale hacia la IA [RN-11] [RN-13] [S1 resp. 14d]
 - **GIVEN** el paciente semilla (b) con `data_origin = sintetico` y la app de test arrancada con `APP_ENV = piloto`, y en otro caso sin `APP_ENV`

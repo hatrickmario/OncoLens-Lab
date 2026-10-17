@@ -50,7 +50,7 @@ con un token nuevo (defensa contra fijación de sesión, AC-1). No revoca la ses
 del logout (US-044). `expires_at = reloj.ahora() + SESSION_TTL_HOURS` (lo aplica el guard, D5) y `last_seen_at = ahora`;
 `ip_address` y `user_agent` quedan `null` en el S1 (el bloqueo por IP de US-044 definirá cómo `web`
 propaga la IP del cliente). Decidido (usuario, 2026-10-20): ambas columnas de `auth.session` son
-**`nullable`** (`docs/architecture/data-model.md` corregido; migración en la tarea 2.0) y el valor
+**`nullable`** (`docs/architecture/data-model.md` corregido; migración en la tarea 2.0, en el mismo PR de este change) y el valor
 es `null`, **no** cadena vacía: esto revierte la nota de cadena vacía que se había planteado.
 
 **D5 · Guard de `clinical-api`.** `src/middleware/auth.ts` (`requireSession`) se monta en el router
@@ -111,9 +111,10 @@ análisis no consulta la ficha (solo usa el parámetro `[id]`), así que una coo
 datos: el Route Handler de análisis (L1D-139) retransmite el `401` tal cual (un `fetch` JSON no
 redirige) y es el cliente del panel (L1D-140) el que navega a `/login`.
 **Decidido (usuario, 2026-10-20, opción b): la verificación del AC-5 (integración con cookie real y
-logs de `rag-orchestrator`) pasa al change de L1D-103** (dueño del gateway); este change ya no
+logs de `rag-orchestrator`) pasa al change de L1D-103 (cabeceras) y a un test de integración de
+`rag-orchestrator` (logs); su E2E queda en la deuda D-3 (decisiones 60 y 61 del plan)** (dueño del gateway); este change ya no
 la contiene ni deja ningún test en rojo. Solo garantiza que el guard adjunta `userId` y `rol` y que la cookie termina en
-`clinical-api`. El AC-5 de US-211 queda verificado cuando L1D-103 esté en `main`.
+`clinical-api`. El AC-5 de US-211 queda verificado en integración cuando 2.8f de L1D-103 esté en `main`; US-211 no pasa a Done antes (decisión 61 del plan).
 
 **D9 · Ruta de inicio configurada.** `WEB_HOME_PATH` (variable de servidor, no `NEXT_PUBLIC_`): la
 página `/login` (RSC) la lee y la pasa al formulario cliente como prop; tras el `204`, el formulario
@@ -146,6 +147,8 @@ test, sin `vi.mock` del repository. La migración a Prisma Client queda como his
 al migrarla solo cambia la implementación del puerto. Esto sustituye las menciones a Prisma de la
 tabla de colaboradores.
 
+**D11b · Conexión a PostgreSQL de `clinical-api`.** Decidido (usuario, 2026-10-20, decisión 62 del plan): `CLINICAL_DATABASE_URL` **sin credenciales** (host, puerto, base y `sslmode`), contraseña del rol de aplicación desde `PG_CLINICAL_API_PASSWORD_FILE`, TLS con `rejectUnauthorized: true` y la CA del servidor (montada de solo lectura; no `sslmode=require` sin verificación), **un solo pool** creado e inyectado en `server.ts` (2.6b) y reutilizado por los módulos de L1D-103 en adelante. El servicio `clinical-api` de Compose no lleva `DATABASE_URL` con contraseña; `prisma migrate` corre en un *one-shot*. `APP_ENV` es obligatorio en Compose (`${APP_ENV:?APP_ENV obligatorio}`) para `clinical-api` y `clinical-seed` (decisión 64).
+
 **D12 · UI provisional con CSS Modules.** Decidido (usuario, 2026-10-20): `/login` se mergea con
 **CSS Modules** y los tokens de `docs/ux/sistema-de-diseno.md` como variables CSS, **no** con
 Tailwind v4 ni shadcn/ui. Es provisional: la deuda D-2 (chore pequeño, ID por asignar) instala
@@ -175,7 +178,10 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
   `req.headers.cookie`, `res.headers["set-cookie"]`, `req.headers.authorization`) y en el de `web`;
   ni el correo ni la contraseña se registran en el login (solo `event`, `resultado`, `traceId`).
 - **Datos:** solo usuarios sintéticos `@test.local`; contraseñas de test y de demo desde variables
-  de entorno (`SEED_DOCTOR_PASSWORD`, `TEST_DOC2_PASSWORD`), nunca en el repo (RN-13, RN-14).
+  de entorno (`SEED_DOCTOR_PASSWORD`, `TEST_DOC1_PASSWORD`, `TEST_DOC2_PASSWORD`), nunca en el repo (RN-13, RN-14).
+  Decidido (decisión 66 del plan): el único respaldo permitido es un valor `SINT-…` **solo bajo
+  `apps/clinical-api/tests/`**; fuera de `tests/` no hay valor por defecto, y si falta la variable el proceso
+  falla nombrando la variable (nunca su valor).
 
 ### Seguridad web
 
@@ -245,9 +251,11 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
   y `error-servicio-autenticacion.json` (`#/components/schemas/ErrorServicioAutenticacion`); mensajes fijos
   sin eco. Los demás ejemplos (`login-request.json`, `error-credenciales-invalidas.json`,
   `error-no-autenticado.json`) no cambian.
-  **Pendiente de decisión humana:** `ErrorInterno` está también en el diff de L1D-104 (mismo `ERROR_INTERNO` y
-  mensaje fijo); la recomendación del Gate 1 es que 197 (oleada 4) sea su dueño y 104 lo referencie. Hasta
-  esa decisión este change conserva el texto de arriba y no se edita 104.
+  **Decidido (usuario, 2026-10-20, decisión 59 del plan):** este change (oleada 4) es el **dueño de
+  `ErrorInterno`** (`ERROR_INTERNO`, mensaje fijo); L1D-104 lo referencia y solo añade el `500` a
+  `POST /platform/evidence-analyses`, con su propio ejemplo (no reutiliza `error-interno.json`).
+- **`info.version`:** `1.1.0` (L1D-164) → **`1.2.0`** (este change); la secuencia completa de clinical-api es
+  164 → 1.1.0, 197 → 1.2.0, 103 → 1.3.0, 104 → 1.4.0, 194 → 1.4.1, 203 → 1.5.0 (decisión 58 del plan).
 - **Compatibilidad:** los añadidos son aditivos (sin `ERR` de oasdiff; un `WARN` se declara en el PR); ADR-26 respetado. Comprobación con `contracts:breaking` de L1D-166 (↪ dependencia); si el script aún no existe, `oasdiff` manual contra `main`.
 - **Verificación del proveedor:** los tests de integración validan `204`, `401` y `422` del login y
   el `401 NO_AUTENTICADO` del guard contra el spec con el *helper*
@@ -300,7 +308,7 @@ Ningún service ni middleware importa `pg` ni `argon2` directamente: los reciben
   secretos) y formulario con Testing Library (error genérico, estado de carga).
 - **E2E** (Playwright contra Compose, perfil de test, `LLM_PROVIDER=fake`): AC-1 (redirección y
   atributos de cookie) y AC-4 (redirección y HTML sin datos), **pendientes hasta la deuda D-3**
-  (decisión 49 del plan); el AC-5 (integración y logs de `rag-orchestrator`) lo verifica L1D-103.
+  (decisión 49 del plan); el AC-5 se verifica en integración en L1D-103 (cabeceras y cuerpo) y en `rag-orchestrator` (logs); su E2E de logs queda en D-3.
 
 ## Riesgos
 

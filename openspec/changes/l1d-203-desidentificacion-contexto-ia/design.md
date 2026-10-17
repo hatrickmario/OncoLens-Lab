@@ -133,8 +133,8 @@ fuera del escenario aceptado); seudónimo derivado por HMAC del `patientId` (enl
 ## Contratos
 
 - **Proveedor:** `clinical-api`; **consumidor:** `web` (US-060, L1D-139, que ya maneja el `503`).
-- **Diff propuesto de `apps/clinical-api/openapi.yaml`** (aditivo, `info.version` **1.3.1 → 1.4.0** según el
-  registro de versiones `[S1 resp. 37]`: L1D-164 1.1.0, L1D-103 1.2.0, L1D-104 1.3.0, L1D-194 1.3.1):
+- **Diff propuesto de `apps/clinical-api/openapi.yaml`** (aditivo, `info.version` **1.4.1 → 1.5.0** según el
+  registro de versiones (decisión 58 del plan): L1D-164 1.1.0, L1D-197 1.2.0, L1D-103 1.3.0, L1D-104 1.4.0, L1D-194 1.4.1):
 
   ```yaml
   # paths./platform/evidence-analyses.post.responses
@@ -235,6 +235,6 @@ son los tests de aceptación con FX-T4a-a.
 
 ## Pendiente de definir
 
-- ~~Código del `503`~~: confirmado por el registro de versiones `[S1 resp. 37]` (L1D-203 → 1.4.0 por código nuevo; sustituye al de `[S1 resp. 17]`).
+- ~~Código del `503`~~: confirmado por el registro de versiones (decisión 58 del plan: L1D-203 → 1.5.0 por código nuevo; sustituye al de `[S1 resp. 37]`).
 - ~~Firma de `ContextDeidentifier`~~: L1D-103 la fija como `desidentificar(contexto, query, caso)`.
 - ~~AC-5 con `p-7f3a`~~: `psd_p7f3a` por `[S1 resp. 18]`.
