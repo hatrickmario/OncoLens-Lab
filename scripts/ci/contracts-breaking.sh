@@ -40,7 +40,7 @@ sin_err_no_declarados() {
   json="$(oasdiff breaking "$temporal/base-out/$1.json" "$temporal/head-out/$1.json" \
     --format json --allow-external-refs=false 2>/dev/null)" || return 1
   decision="$(printf '%s' "$json" | node "$raiz/scripts/ci/lib/excepcionesDeContrato.mjs" "$1")" || {
-    printf '%s\n' "$decision" | sed "s/^/$1: /" >&2
+    printf '%s\n' "$decision" >&2
     return 1
   }
   [ "$decision" = "excepciones-declaradas-aplicadas" ]

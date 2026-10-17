@@ -39,6 +39,10 @@ Opción elegida: **1**, por decisión del usuario del 2026-10-17. No se usa un c
 
 `contracts-breaking.sh` sigue ejecutando `oasdiff breaking --fail-on ERR`. Si falla, repite la comparación con `--format json` y descarta **solo** los ERR que coinciden en **todos** los campos (proveedor, regla, operación, ruta y texto del hallazgo) con una entrada de `scripts/ci/contracts-breaking-excepciones.json`. Cualquier otro ERR del mismo proveedor, incluida otra alternativa añadida al mismo `oneOf`, rompe la CI. Los hallazgos declarados se siguen imprimiendo.
 
+### Fallo cerrado del filtro
+
+El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando rutas **reales** (`realpathSync`): lanzado por una ruta con enlace simbólico (en macOS `/var` es `/private/var`) sigue ejecutándose, en lugar de salir 0 sin hacer nada. (2) Un hallazgo con `level` ausente o no numérico cuenta como ERR; solo 0, 1 y 2 no rompen. (3) Solo perdona, imprimiendo la decisión explícita `excepciones-declaradas-aplicadas`, si **al menos un** ERR coincide con una excepción y **ninguno** queda sin declarar; entrada vacía, JSON inválido o ERR sin declarar dan exit 1. (4) `contracts-breaking.sh` exige esa línea exacta: si el filtro no corre, falla o no la emite, el ERR sigue rompiendo. Los tests de CLI (`scripts/ci/__tests__/excepcionesDeContrato.test.mjs`, grupo «CLI … falla cerrado») lanzan el filtro por un enlace simbólico y cubren cada caso; `contractsBreaking.test.mjs` comprueba que el script contiene la decisión.
+
 ### Excepciones declaradas
 
 | Id | Proveedor | Hallazgo de oasdiff | Change | Motivo |

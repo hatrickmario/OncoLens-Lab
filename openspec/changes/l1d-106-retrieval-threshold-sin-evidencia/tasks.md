@@ -48,7 +48,7 @@
 
 - [x] 3b.1 (TDD) Middleware ASGI `ContencionDeErroresInesperados` (`app/api/contencion_de_errores.py`): responde el 500 fijo y no relanza la excepción, así uvicorn no escribe el traceback con la pregunta (privacy FAIL de la vuelta 2). Sustituye al manejador de `Exception`.
 - [x] 3b.2 (TDD) `GeneradorFallandoCerrado` (`app/application/generador_fallando_cerrado.py`): toda excepción o valor que no sea `RagQueryInternalResponse` del generador es `503 LOCAL_LLM_UNAVAILABLE` del contrato, sin mensaje ni traceback.
-- [x] 3b.3 (TDD) `ParametrosDeRecuperacion.llm_provider` es el enum `LlmProvider` validado.
+- [x] 3b.3 (TDD) `ParametrosDeRecuperacion.llm_provider` es el enum `LlmProvider`; la validación del proveedor y el mapeo `LLM_PROVIDER` → enum viven en `_proveedor_de_meta()` (bootstrap), ver 3b.9.
 - [x] 3b.4 (test después) Compose con los tres valores provisionales (ver 3.1). **Claves para el humano** (no se editó ningún `.env.example`): `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40`, `RERANK_TOP_N=10`, con el comentario "provisional hasta US-072".
 - [x] 3b.5 (TDD) `escapar_patron_like()` (`\`, `%`, `_`) en los patrones `like` de `expresion_vigente_del_tipo()`; el literal duplica la barra (`\\_`). Caso con Milvus real en `test_recuperacion_en_milvus.py` (`-m servicios_reales`, no ejecutado en esta pasada: sin Milvus local).
 - [x] 3b.6 (TDD) longitud máxima del código de `cancerType` en **configuración** (RN-22): `RETRIEVAL_CANCER_TYPE_MAX_LENGTH`, por defecto 64 (`Settings.retrieval_cancer_type_max_length`), inyectada al filtro vía `ParametrosDeRecuperacion`; más largo es `422 TIPO_CANCER_NO_REGISTRADO` (sin cambio de contrato).

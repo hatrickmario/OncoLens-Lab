@@ -165,7 +165,9 @@ def _proveedor_de_meta(settings: Settings) -> LlmProvider:
     """
     if settings.llm_provider == "local":
         return LlmProvider.local
-    raise ValueError("LLM_PROVIDER no tiene un proveedor de meta para la recuperación real")
+    raise ConfiguracionDeRecuperacionIncompleta(
+        "LLM_PROVIDER no tiene un proveedor de meta para la recuperación real"
+    )
 
 
 def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:

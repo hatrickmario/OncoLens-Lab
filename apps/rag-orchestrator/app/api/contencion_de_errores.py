@@ -14,6 +14,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.trace import resolver_trace_id
 from app.application.ports import TraceIdGenerator
+from app.schemas.generated.models import ErrorInterno
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +56,8 @@ class ContencionDeErroresInesperados:
         logger.error("event=error_interno clase=%s traceId=%s", type(error).__name__, trace_id)
         if respuesta_iniciada:
             return  # la cabecera ya salió: no se puede cambiar el estado; basta con no relanzar
-        respuesta = JSONResponse(
-            status_code=500,
-            content={
-                "error": "ERROR_INTERNO",
-                "message": "Error interno del servidor.",
-                "traceId": trace_id,
-            },
+        cuerpo = ErrorInterno(
+            error="ERROR_INTERNO", message="Error interno del servidor.", traceId=trace_id
         )
+        respuesta = JSONResponse(status_code=500, content=cuerpo.model_dump())
         await respuesta(scope, receive, send)
