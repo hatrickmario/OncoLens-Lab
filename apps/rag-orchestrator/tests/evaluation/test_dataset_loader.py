@@ -171,12 +171,40 @@ def test_dataset_loader_acepta_clases_de_licencia_permitidas(
     assert cargar_dataset(dataset_dir).fuentes
 
 
-def test_dataset_loader_cc_by_nc_se_acepta_solo_con_bandera_de_mvp_academico(
+def _con_cc_by_nc(dataset_dir: Path, marca: object | None) -> None:
+    def poner(m: dict) -> None:
+        m["fuentes"][1]["licencia"] = "CC BY-NC 4.0"
+        if marca is not None:
+            m["fuentes"][1]["nc_solo_academico"] = marca
+
+    _editar(dataset_dir / "manifest.yaml", poner)
+
+
+def test_dataset_loader_cc_by_nc_se_acepta_con_la_clave_activa_y_la_marca_academica(
     dataset_dir: Path,
 ) -> None:
-    _con_licencia(dataset_dir, "CC BY-NC 4.0")
+    _con_cc_by_nc(dataset_dir, True)
 
     assert cargar_dataset(dataset_dir, permitir_cc_by_nc=True).fuentes
+
+
+@pytest.mark.parametrize("marca", [None, False, "true"])
+def test_dataset_loader_cc_by_nc_sin_marca_academica_se_rechaza_nombrando_el_id(
+    dataset_dir: Path, marca: object | None
+) -> None:
+    _con_cc_by_nc(dataset_dir, marca)
+
+    with pytest.raises(DatasetInvalido, match=r"M02.*nc_solo_academico"):
+        cargar_dataset(dataset_dir, permitir_cc_by_nc=True)
+
+
+def test_dataset_loader_cc_by_nc_con_marca_pero_clave_desactivada_se_rechaza(
+    dataset_dir: Path,
+) -> None:
+    _con_cc_by_nc(dataset_dir, True)
+
+    with pytest.raises(DatasetInvalido, match="licencia"):
+        cargar_dataset(dataset_dir)
 
 
 @pytest.mark.ac("US-012", 9)
