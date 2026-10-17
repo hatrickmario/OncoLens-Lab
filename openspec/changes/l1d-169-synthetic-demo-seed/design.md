@@ -131,3 +131,31 @@ corre en el primer PR de US-041 que consuma este subconjunto.
 - **Conexión a PostgreSQL (decisión 62 del plan):** el *one-shot* `clinical-seed` usa `CLINICAL_DATABASE_URL` sin credenciales + `PG_CLINICAL_API_PASSWORD_FILE` y TLS verificando la CA del servidor; ningún servicio declara `DATABASE_URL` con contraseña (tarea 3.9c).
 - **`APP_ENV` obligatorio en Compose (decisión 64):** `${APP_ENV:?APP_ENV obligatorio}` en `clinical-seed` (tarea 3.9d), además de la guarda `assertSeedPermitido()`.
 - **Contraseñas de respaldo (decisión 66):** el seed no define valores por defecto; un respaldo `SINT-…` solo bajo `apps/clinical-api/tests/`; si faltan, el error nombra la variable, nunca su valor (tarea 3.5).
+
+## Decidido por defecto (orquestador, 2026-10-20), a revisar
+
+Resueltas por defecto razonable conforme a los specs durante la implementación; el usuario puede revisarlas.
+
+1. **Catálogo (AC-4).** Los biomarcadores y tratamientos quedan con `loinc_code` y `atc_codes` nulos y
+   `mapping_status = no_mapeado`: el catálogo `1.0.0` solo versiona CIE-10 de los diagnósticos (`mama` → C50.9,
+   `prostata` → C61; nombres oficiales OMS/OPS **sin verificar contra MinSalud/SISPRO**, anotado en `versionFuente`;
+   la verificación es del usuario). Hallazgo para DEC-04: ATC `L02AE02` = "leuprorelin" quedó verificado en
+   atcddd.fhi.no (ATC/DDD Index 2026) pero NO se incluyó; LOINC no se pudo verificar (loinc.org responde 403). Los
+   `NOTICE-cie10/loinc/atc.txt` existen para los tres estándares declarados en `manifest.json`.
+2. **Escritura con `pg`, no Prisma Client** (decisión 2 del orquestador, coherente con la deuda D-1 aceptada):
+   `clinical-api` ya usa `pg`; Prisma 7 exigiría `@prisma/adapter-pg` y `prisma generate`. El seed reutiliza
+   `readDatabaseConfig` y `crearPool` de L1D-197 (URL sin credenciales, contraseña por archivo, TLS verificado). El
+   *upsert* es `INSERT … ON CONFLICT (id) DO UPDATE` en una sola transacción. En Prisma 7 el comando del seed se
+   registra en `prisma.config.ts` (`migrations.seed`), no en `package.json`.
+3. **`reason_code` del opt-out de (d):** la columna es `NOT NULL` y el catálogo de motivos (TBD-21) no existe; el
+   seed escribe el código sintético fijo `opt_out_sintetico` (corrige la decisión 9, que decía "nulo").
+4. **Imagen de `clinical-seed`:** ejecuta el seed COMPILADO (`node dist/apps/clinical-api/prisma/seed.js`) desde la
+   imagen runtime de `clinical-api` (sin CLI de Prisma ni `tsx`): `tsconfig.build.json` incluye `prisma/seed*`. Sin
+   target nuevo en el Dockerfile ni cambios al `.dockerignore`.
+5. **`clinical-seed` recibe además `pg_ca.crt`** (verificar el TLS de PostgreSQL), con el mismo patrón que
+   `clinical-api`: secretos exactos `pg_clinical_api_password`, `pg_ca.crt`, `seed_doctor_password`,
+   `seed_admin_password` (`docs/operations/claves.md`, `reglas-compose.mjs`, `reglas-secretos.mjs`).
+6. **Firma de `sembrar`:** `sembrar(db, entradas)` con `entradas = { catalogo, reloj, hasher, credenciales, retencion }`
+   en lugar de cuatro parámetros posicionales. El seed adopta `createPasswordHasher(readAuthConfig(env).argon2)` y el
+   usuario `doc1@test.local` de L1D-197 (decisión 56). Las fechas `retention_*` salen de `SEED_RETENTION_UNTIL_YEARS` y
+   `SEED_RETENTION_MAX_YEARS` (10 y 20 años, data-model §4.3). `APP_ENV` es obligatorio también en `clinical-seed`.
