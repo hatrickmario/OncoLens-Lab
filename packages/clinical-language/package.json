@@ -1,0 +1,30 @@
+{
+  "name": "@oncolens/clinical-language",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Verificador de lenguaje prescriptivo (RN-23): normalización común, lista de términos prohibidos y origen de los campos del contrato. Puro, sin E/S salvo la carga de la lista.",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15"
+  }
+}

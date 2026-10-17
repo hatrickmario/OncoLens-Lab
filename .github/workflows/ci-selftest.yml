@@ -48,5 +48,7 @@ jobs:
           .venv-codegen/bin/pip install -r scripts/contracts/requirements-codegen.txt
       - name: Ruff (los casos de formato ejecutan npm run format)
         run: pip install -r apps/rag-orchestrator/requirements-dev.txt
+      - name: Compilar @oncolens/clinical-language (los clones de los casos resuelven su dist/ por el node_modules enlazado)
+        run: npm run build -w @oncolens/clinical-language
       - name: Fixtures de PR
         run: ci/tests/run-cases.sh
