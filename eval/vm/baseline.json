@@ -1,0 +1,5 @@
+{
+  "VM_SESSION_MAX_MINUTES": 30,
+  "VM_PARTICIPANT_PATTERN": "^O[1-9][0-9]*$",
+  "VM_SOURCE_ID_PATTERN": "^[A-Za-z0-9._:/-]{1,128}$"
+}

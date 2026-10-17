@@ -1,0 +1,326 @@
+{
+  "clase": "sintetico",
+  "nombre": "vm-baseline",
+  "version": "0.1.0-borrador",
+  "descripcion": "Casos sintéticos estandarizados para el baseline manual de VM-1 y VM-2 (US-075, DEC-02). Valores ficticios, fechas relativas, sin datos reales. mama-01 y prostata-01 reutilizan el contenido clínico de los pacientes semilla (a) y (b) de OL-01. Los checklists y las preguntas de referencia esperan la validación clínica de los oncólogos asesores (fecha_validacion_clinica pendiente).",
+  "casos": [
+    {
+      "id": "mama-01",
+      "tipo_cancer": "mama",
+      "documentos": [
+        "mama-01/documentos/01-informe-patologia.md",
+        "mama-01/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Mujer posmenopáusica con cáncer de mama",
+        "contexto_clinico": "Carcinoma ductal infiltrante HER2 positivo, receptor de estrógeno positivo, estadio IIA, sin tratamiento previo",
+        "decision": "Opciones de tratamiento sistémico con intención curativa",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En una mujer posmenopáusica con cáncer de mama HER2 positivo y receptor de estrógeno positivo, estadio IIA, sin tratamiento previo y con intención curativa, ¿qué opciones de tratamiento sistémico están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Carcinoma ductal infiltrante de mama, grado de Nottingham 2"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "TNM 8.ª edición estadio IIA (clínico, día -45)"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "HER2 3+ por inmunohistoquímica; receptor de estrógeno positivo (80 %)"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Curativa"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Ninguno"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Ninguna; sin tratamiento sistémico iniciado"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 1"
+          },
+          {
+            "respuesta_esperada": "Posmenopáusica"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mama-02",
+      "tipo_cancer": "mama",
+      "documentos": [
+        "mama-02/documentos/01-informe-patologia.md",
+        "mama-02/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Mujer premenopáusica con cáncer de mama triple negativo",
+        "contexto_clinico": "Carcinoma ductal infiltrante triple negativo, estadio IIB al diagnóstico, enfermedad residual tras quimioterapia neoadyuvante y cirugía",
+        "decision": "Opciones de tratamiento posoperatorio con intención curativa",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En una mujer premenopáusica con cáncer de mama triple negativo, estadio IIB al diagnóstico, con enfermedad residual tras quimioterapia neoadyuvante y cirugía, ¿qué opciones de tratamiento posoperatorio están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Carcinoma ductal infiltrante de mama triple negativo, grado 3 de Nottingham"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "TNM 8.ª edición T2 N1 M0, estadio anatómico IIB al diagnóstico (ypT1c ypN0 tras la cirugía)"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "Receptor de estrógeno 0 %, receptor de progesterona 0 %, HER2 0"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Curativa"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Quimioterapia neoadyuvante (doxorrubicina y ciclofosfamida seguidas de paclitaxel) y cirugía conservadora con enfermedad residual"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Ninguna en curso; se evalúa el tratamiento posoperatorio"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 0"
+          },
+          {
+            "respuesta_esperada": "Ki-67 60 %"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mama-03",
+      "tipo_cancer": "mama",
+      "documentos": [
+        "mama-03/documentos/01-informe-patologia.md",
+        "mama-03/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Mujer posmenopáusica con cáncer de mama metastásico",
+        "contexto_clinico": "Carcinoma lobulillar infiltrante, receptor hormonal positivo, HER2 negativo, estadio IV, progresión tras inhibidor de aromatasa con inhibidor de CDK4/6",
+        "decision": "Opciones de tratamiento sistémico tras la progresión en primera línea",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión tras un inhibidor de aromatasa más un inhibidor de CDK4/6, ¿qué opciones de tratamiento sistémico están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Carcinoma lobulillar infiltrante de mama, grado 2"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "Estadio IV (M1: metástasis óseas y hepáticas) desde el día -600"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "Receptor de estrógeno 95 %, receptor de progesterona 70 %, HER2 1+ (negativo)"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Paliativa (control de la enfermedad)"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Primera línea metastásica: inhibidor de aromatasa más inhibidor de CDK4/6, con progresión hepática"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Segunda línea: fulvestrant, en curso desde el día -45"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 1"
+          },
+          {
+            "respuesta_esperada": "Posmenopáusica"
+          }
+        ]
+      }
+    },
+    {
+      "id": "prostata-01",
+      "tipo_cancer": "prostata",
+      "documentos": [
+        "prostata-01/documentos/01-informe-patologia.md",
+        "prostata-01/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Hombre con cáncer de próstata",
+        "contexto_clinico": "Adenocarcinoma acinar Gleason 4+3 (ISUP 3), T2c N0 M0, progresión bioquímica con deprivación androgénica en curso",
+        "decision": "Opciones de tratamiento ante la progresión bioquímica",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En un hombre con cáncer de próstata Gleason 4+3 (ISUP 3), T2c N0 M0, con progresión bioquímica durante la deprivación androgénica, ¿qué opciones de tratamiento están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Adenocarcinoma acinar de próstata, Gleason 4+3 (ISUP 3)"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "TNM 8.ª edición T2c N0 M0"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "PSA 4,2 (día -229), 9,8 (día -57) y 12,4 ng/mL (día -20), ascendente"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Control de la enfermedad"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Deprivación androgénica desde el día -229"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Deprivación androgénica continua con progresión bioquímica desde el día -20"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 0"
+          },
+          {
+            "respuesta_esperada": "Estado de castración sensible"
+          }
+        ]
+      }
+    },
+    {
+      "id": "prostata-02",
+      "tipo_cancer": "prostata",
+      "documentos": [
+        "prostata-02/documentos/01-informe-patologia.md",
+        "prostata-02/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Hombre con cáncer de próstata localmente avanzado",
+        "contexto_clinico": "Adenocarcinoma acinar Gleason 4+4 (ISUP 4), T3a N0 M0, prostatectomía radical con margen positivo y PSA persistente",
+        "decision": "Opciones de tratamiento de rescate con intención curativa",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En un hombre con cáncer de próstata Gleason 4+4 (ISUP 4), T3a N0 M0, tras prostatectomía radical con margen positivo y PSA persistente, ¿qué opciones de tratamiento de rescate están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Adenocarcinoma acinar de próstata, Gleason 4+4 (ISUP 4)"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "TNM 8.ª edición cT3a N0 M0 al diagnóstico (pT3a pN0 tras la cirugía)"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "PSA 18,5 ng/mL antes del tratamiento y 0,4 ng/mL persistente tras la cirugía (día -30)"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Curativa"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Prostatectomía radical (día -120) con margen positivo"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Ninguna en curso; se evalúa el tratamiento de rescate"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 0"
+          },
+          {
+            "respuesta_esperada": "PSA previo 18,5 ng/mL"
+          }
+        ]
+      }
+    },
+    {
+      "id": "prostata-03",
+      "tipo_cancer": "prostata",
+      "documentos": [
+        "prostata-03/documentos/01-informe-patologia.md",
+        "prostata-03/documentos/02-nota-oncologia.md"
+      ],
+      "pregunta_referencia": {
+        "poblacion": "Hombre con cáncer de próstata metastásico resistente a la castración",
+        "contexto_clinico": "Adenocarcinoma acinar Gleason 5+4 (ISUP 5), M1b, progresión tras deprivación androgénica y abiraterona, docetaxel en curso",
+        "decision": "Opciones de tratamiento sistémico posteriores",
+        "fecha_corte_evidencia": "2026-06-30",
+        "texto": "En un hombre con cáncer de próstata metastásico resistente a la castración, con progresión tras deprivación androgénica y abiraterona, ¿qué opciones de tratamiento sistémico posteriores están respaldadas por evidencia publicada hasta 2026-06-30?"
+      },
+      "checklist_reconstruccion": {
+        "version": "0.1-borrador",
+        "fecha_validacion_clinica": null,
+        "criticos": [
+          {
+            "eje": "diagnostico",
+            "respuesta_esperada": "Adenocarcinoma acinar de próstata, Gleason 5+4 (ISUP 5)"
+          },
+          {
+            "eje": "estadio_a_la_fecha",
+            "respuesta_esperada": "Metastásico resistente a la castración; M1b (metástasis óseas) desde el diagnóstico"
+          },
+          {
+            "eje": "biomarcadores",
+            "respuesta_esperada": "PSA 48,0 ng/mL; testosterona 18 ng/dL (nivel de castración)"
+          },
+          {
+            "eje": "intencion_terapeutica",
+            "respuesta_esperada": "Paliativa (control de la enfermedad)"
+          },
+          {
+            "eje": "secuencia_previa",
+            "respuesta_esperada": "Deprivación androgénica (día -1000) y abiraterona más prednisona (día -600 a -90) con progresión"
+          },
+          {
+            "eje": "linea_actual",
+            "respuesta_esperada": "Docetaxel en curso desde el día -60"
+          }
+        ],
+        "complementarios": [
+          {
+            "respuesta_esperada": "ECOG 1"
+          },
+          {
+            "respuesta_esperada": "Metástasis óseas"
+          }
+        ]
+      }
+    }
+  ]
+}
