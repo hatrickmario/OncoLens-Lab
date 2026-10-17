@@ -53,6 +53,19 @@ def test_ningun_documento_de_la_semilla_real_viene_de_nccn_ni_de_esmo_ni_usa_la_
         assert "PDQ" not in documento.title and "PDQ" not in documento.source_name
 
 
+@pytest.mark.parametrize(
+    "documento", [d for d in DOCUMENTOS if d.source_name == "NCI"], ids=lambda d: d.document_key
+)
+def test_el_cuerpo_de_un_documento_de_nci_no_se_autoidentifica_como_pdq(
+    documento: DocumentoDeSemilla,
+) -> None:
+    """La marca PDQ solo vale para reproducciones íntegras e inalteradas (ADR-36): estos textos son extractos."""
+    assert documento.ruta_texto is not None
+    cuerpo = (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8")
+
+    assert "PDQ" not in cuerpo
+
+
 @pytest.mark.parametrize("documento", DOCUMENTOS, ids=lambda d: d.document_key)
 def test_el_texto_de_cada_documento_coincide_con_el_checksum_del_manifiesto(
     documento: DocumentoDeSemilla,
