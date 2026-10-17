@@ -110,8 +110,12 @@ escenario de L1D-139). Los fixtures de AC-3 generan la clave y el token en tiemp
 `$ref` a `contracts/schemas/`) los proveedores de `PROVIDERS` (`scripts/contracts/lib/specs.mjs`) el `openapi.yaml` de cada proveedor en la base y en `HEAD` y ejecuta
 `oasdiff breaking --fail-on ERR`. Solo rompen los cambios de nivel `ERR`; los `WARN`, incluido
 `response-body-wrapped-in-one-of-original-preserved` de los `oneOf` aditivos del S1, se imprimen y no rompen (ADR-26).
-Un cambio incompatible **declarado** no tiene *bypass* hasta que US-214 defina el mecanismo de excepción de
-`contracts:breaking`.
+Un cambio incompatible **declarado** solo se perdona si coincide EXACTO (proveedor, regla, operación, ruta y texto) con una
+entrada de `scripts/ci/contracts-breaking-excepciones.json`, registrada en un ADR (hoy E-1 en
+[ADR-26](../architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md): el `422 TIPO_CANCER_NO_REGISTRADO` de
+`POST /rag/query`). El filtro (`scripts/ci/lib/excepcionesDeContrato.mjs`) falla cerrado: el script solo perdona si imprime
+la decisión explícita (al menos un ERR coincide y ninguno queda sin declarar). Hasta que US-214 defina el mecanismo
+definitivo de `contracts:breaking`, no hay otro *bypass*.
 
 ## Protección de rama de `main` (lo hace una persona administradora)
 
