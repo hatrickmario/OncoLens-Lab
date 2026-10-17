@@ -33,6 +33,7 @@
 | Campo 2 | Label visible "Contraseña", `type=password`, `autocomplete=current-password` | `LoginRequest.password` |
 | Botón | "Iniciar sesión". Mientras carga: deshabilitado, "Entrando…" | `POST /api/auth/login` → `POST /platform/auth/login` |
 | Error | "Correo o contraseña incorrectos." Es genérico, igual para los tres casos de US-211 AC-2, en una región `role="alert"` asociada al formulario | `401 CREDENCIALES_INVALIDAS` |
+| Error de servicio | "No se pudo iniciar sesión en este momento. Inténtalo de nuevo." Misma región `role="alert"`; para fallo de red, `429`, `5xx` y `502`, de modo que no culpe a la contraseña (`login.errorServicio`) | `502 ERROR_SERVICIO_AUTENTICACION`, `500`, `429` |
 | Destino | La ruta de inicio configurada. En el S1: `/pacientes/[id]/analisis` del paciente semilla (a) | `204` + cookie `oncolens_session` |
 
 Fuera del S1: el pie "La sesión expira…" y el bloqueo por intentos (US-044, S2), y "Solicitar registro" (US-221, S6).
