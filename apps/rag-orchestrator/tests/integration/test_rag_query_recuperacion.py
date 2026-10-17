@@ -7,6 +7,7 @@ from dataclasses import replace
 
 import pytest
 
+from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
@@ -63,7 +64,7 @@ def test_rag_query_excluye_el_chunk_no_vigente_de_los_candidatos_del_reranker_y_
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
-    assert all("is_current == true" in e for e in entorno.buscador.expresiones)
+    assert set(entorno.buscador.expresiones) == {expresion_vigente_del_tipo("mama")}
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert "ch-m1-1" in candidatos
     assert "ch-m1v0-1" not in candidatos
@@ -81,7 +82,7 @@ def test_rag_query_excluye_el_chunk_de_prostata_de_los_candidatos_cuando_el_cont
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
-    assert all('cancer_type_tags like "%mama%"' in e for e in entorno.buscador.expresiones)
+    assert set(entorno.buscador.expresiones) == {expresion_vigente_del_tipo("mama")}
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert "ch-m1-1" in candidatos
     assert "ch-p1-1" not in candidatos
@@ -127,13 +128,15 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_invocar_al_llm_cuando_
     else:
         entorno = crear_entorno(embedder=EmbedderFalso(error=fallo))
 
-    respuesta = entorno.consultar(solicitud_de(Q_HER2))
+    solicitud = solicitud_de(Q_HER2)
+
+    respuesta = entorno.consultar(solicitud)
 
     assert respuesta.status_code == 503
     cuerpo = respuesta.json()
     assert_matches_spec(RESPUESTA_503, cuerpo)
     assert cuerpo["error"] == "RETRIEVAL_UNAVAILABLE"
-    assert cuerpo["traceId"] == "req_00000001"
+    assert cuerpo["traceId"] == solicitud["traceId"]  # una sola fuente: el traceId del cuerpo
     assert entorno.generador.invocaciones == 0
     assert "milvus-interno" not in respuesta.text
     assert Q_HER2 not in respuesta.text
@@ -142,13 +145,15 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_invocar_al_llm_cuando_
 def test_rag_query_responde_422_tipo_cancer_no_registrado_sin_buscar_ni_invocar_al_llm_cuando_diagnosis_es_null():
     entorno = crear_entorno()
 
-    respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer=None))
+    solicitud = solicitud_de(Q_HER2, tipo_de_cancer=None)
+
+    respuesta = entorno.consultar(solicitud)
 
     assert respuesta.status_code == 422
     cuerpo = respuesta.json()
     assert_matches_spec(RESPUESTA_422, cuerpo)
     assert cuerpo["error"] == "TIPO_CANCER_NO_REGISTRADO"
-    assert cuerpo["traceId"] == "req_00000001"
+    assert cuerpo["traceId"] == solicitud["traceId"]
     assert "status" not in cuerpo, "un contexto sin tipo de cáncer no es un sin_evidencia"
     assert Q_HER2 not in respuesta.text
     assert entorno.embedder.invocaciones == 0

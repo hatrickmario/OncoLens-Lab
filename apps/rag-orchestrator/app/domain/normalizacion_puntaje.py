@@ -10,6 +10,10 @@ def normalizar_a_unidad(puntajes: list[float]) -> list[float]:
     return [_sigmoide(p) for p in puntajes]
 
 
+def validar_puntaje_normalizado(puntaje: float) -> float:
+    raise NotImplementedError
+
+
 def _sigmoide(x: float) -> float:
     if x >= 0:
         return 1.0 / (1.0 + math.exp(-x))

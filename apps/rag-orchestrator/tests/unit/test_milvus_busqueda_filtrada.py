@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from app.domain.retrieval_filter import expresion_filtro_vigente
+from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigente_del_tipo
 from app.infrastructure.milvus.repository import MilvusRepository
 from tests.support.milvus import ajustes_de_milvus, nombre_de_coleccion_de_test
 
@@ -33,12 +33,12 @@ def test_search_dense_envia_solo_is_current_cuando_no_se_indica_filtro():
 
     _repositorio(cliente).search_dense([0.0] * 8, limit=5)
 
-    assert cliente.busquedas[0]["filter"] == expresion_filtro_vigente()
+    assert cliente.busquedas[0]["filter"] == expresion_solo_vigente()
 
 
 def test_search_dense_envia_el_filtro_recibido_cuando_exige_is_current():
     cliente = _ClienteMilvusEspia()
-    filtro = expresion_filtro_vigente("mama")
+    filtro = expresion_vigente_del_tipo("mama")
 
     encontrados = _repositorio(cliente).search_dense([0.0] * 8, limit=7, filtro=filtro)
 
@@ -47,12 +47,20 @@ def test_search_dense_envia_el_filtro_recibido_cuando_exige_is_current():
     assert [c.chunk_id for c in encontrados] == ["c1"]
 
 
-def test_search_dense_rechaza_el_filtro_que_no_exige_is_current_sin_llamar_a_milvus():
+@pytest.mark.parametrize(
+    "filtro",
+    [
+        'cancer_type_tags == "mama"',
+        "is_current == true or source_type == x",
+        "is_current == true and (a) or (b)",
+    ],
+)
+def test_search_dense_rechaza_el_filtro_que_no_deja_is_current_obligatorio_sin_llamar_a_milvus(
+    filtro,
+):
     cliente = _ClienteMilvusEspia()
 
     with pytest.raises(ValueError):
-        _repositorio(cliente).search_dense(
-            [0.0] * 8, limit=5, filtro='cancer_type_tags like "%mama%"'
-        )
+        _repositorio(cliente).search_dense([0.0] * 8, limit=5, filtro=filtro)
 
     assert cliente.busquedas == []

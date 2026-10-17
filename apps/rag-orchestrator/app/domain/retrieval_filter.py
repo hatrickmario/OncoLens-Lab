@@ -9,6 +9,22 @@ FILTRO_VIGENTE = "is_current == true"
 _TIPO_DE_CANCER_SEGURO = re.compile(r"[a-záéíóúüñ0-9][a-záéíóúüñ0-9 _-]{0,63}")
 
 
+def expresion_solo_vigente() -> str:
+    raise NotImplementedError
+
+
+def expresion_vigente_del_tipo(cancer_type: str) -> str:
+    raise NotImplementedError
+
+
+def exigir_filtro_vigente(filtro: str) -> str:
+    raise NotImplementedError
+
+
+def coincide_etiqueta(cancer_type_tags: str, cancer_type: str) -> bool:
+    raise NotImplementedError
+
+
 def expresion_filtro_vigente(cancer_type: str | None = None) -> str:
     """Siempre ``is_current == true`` (RN-05); con ``cancer_type``, además la restricción de ``cancer_type_tags``.
 

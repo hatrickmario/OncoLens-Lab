@@ -10,6 +10,7 @@ from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
     Q_HER2,
     Q_SIN,
+    DetectorIdiomaFalso,
     LectorReleaseFalso,
     RerankerFalso,
     crear_entorno,
@@ -126,7 +127,10 @@ class _RerankerRoto(RerankerFalso):
         return self._respuesta
 
 
-@pytest.mark.parametrize("puntajes", [[1.2, 0.5], [0.5]])
+@pytest.mark.parametrize(
+    "puntajes",
+    [[1.2, 0.5], [0.5], None, "0.5", [None, 0.5], ["0.5", "0.5"], [True, 0.5], [float("nan"), 0.5]],
+)
 def test_rag_query_responde_503_retrieval_unavailable_cuando_el_reranker_rompe_su_contrato(
     puntajes,
 ):
@@ -139,7 +143,25 @@ def test_rag_query_responde_503_retrieval_unavailable_cuando_el_reranker_rompe_s
     assert entorno.generador.invocaciones == 0
 
 
-@pytest.mark.parametrize("tipo", ['mama" or is_current == false or "', "   "])
+def test_rag_query_responde_503_retrieval_unavailable_sin_eco_cuando_falla_el_detector_de_idioma():
+    fallo = RuntimeError(f"detector roto al leer {Q_HER2!r}")
+    entorno = crear_entorno(detector_idioma=DetectorIdiomaFalso(error=fallo))
+    solicitud = solicitud_de(Q_HER2)
+
+    respuesta = entorno.consultar(solicitud)
+
+    assert respuesta.status_code == 503
+    assert_matches_spec(RESPUESTA_503, respuesta.json())
+    assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
+    assert Q_HER2 not in respuesta.text
+    assert entorno.embedder.invocaciones == entorno.buscador.invocaciones == 0
+    assert entorno.generador.invocaciones == 0
+
+
+@pytest.mark.parametrize(
+    "tipo",
+    ['mama" or is_current == false or "', "   ", "próstata", "Mama", "mama ductal"],
+)
 def test_rag_query_responde_422_tipo_cancer_no_registrado_sin_buscar_cuando_el_tipo_no_es_utilizable(
     tipo,
 ):

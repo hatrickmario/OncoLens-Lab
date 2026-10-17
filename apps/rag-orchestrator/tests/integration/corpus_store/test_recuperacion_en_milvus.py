@@ -6,11 +6,13 @@ falsos (FX-06a-a). Colección temporal ``corpus_test_*``, nunca ``corpus_chunks`
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from pymilvus import MilvusClient
 
 from app.config.settings import MilvusSettings
-from app.domain.retrieval_filter import expresion_filtro_vigente
+from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigente_del_tipo
 from app.infrastructure.milvus.repository import MilvusRepository
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
@@ -18,6 +20,7 @@ from tests.support.recuperacion import (
     DIMENSION,
     Q_HER2,
     cargar_fx06a_en_milvus,
+    chunk_del_corpus,
     crear_entorno,
     solicitud_de,
 )
@@ -42,7 +45,7 @@ def test_milvus_excluye_el_chunk_no_vigente_aunque_su_similitud_sea_mayor(
 ) -> None:
     vector_de_q_her2 = [1.0] + [0.0] * (DIMENSION - 1)
 
-    encontrados = repositorio.search_dense(vector_de_q_her2, 10, expresion_filtro_vigente())
+    encontrados = repositorio.search_dense(vector_de_q_her2, 10, expresion_solo_vigente())
 
     ids = [c.chunk_id for c in encontrados]
     assert "ch-m1v0-1" not in ids  # similitud 1.0 (la más alta) pero is_current = false
@@ -55,9 +58,41 @@ def test_milvus_excluye_el_chunk_de_prostata_cuando_el_filtro_es_de_mama(
 ) -> None:
     vector_de_q_her2 = [1.0] + [0.0] * (DIMENSION - 1)
 
-    encontrados = repositorio.search_dense(vector_de_q_her2, 10, expresion_filtro_vigente("mama"))
+    encontrados = repositorio.search_dense(vector_de_q_her2, 10, expresion_vigente_del_tipo("mama"))
 
     assert {c.chunk_id for c in encontrados} == {"ch-m1-1", "ch-inj-1"}
+
+
+@pytest.mark.parametrize(
+    ("tipo", "esperados"),
+    [
+        (
+            "mama",
+            {"ch-m1-1", "ch-inj-1", "ch-multi-1"},
+        ),  # etiqueta completa, también dentro de una lista
+        (
+            "ta",
+            set(),
+        ),  # 'ta' es subcadena de 'prostata' y de 'mama_masculina', pero no una etiqueta
+        ("a", set()),
+        ("mama_masculina", {"ch-mm-1"}),
+    ],
+)
+def test_milvus_compara_la_etiqueta_completa_de_cancer_type_tags(
+    repositorio: MilvusRepository, tipo: str, esperados: set[str]
+) -> None:
+    base = chunk_del_corpus(CORPUS_FX06A[0])
+    repositorio.insert_chunks(
+        [
+            replace(base, chunk_id="ch-mm-1", cancer_type_tags="mama_masculina"),
+            replace(base, chunk_id="ch-multi-1", cancer_type_tags="prostata,mama"),
+        ]
+    )
+    vector = [1.0] + [0.0] * (DIMENSION - 1)
+
+    encontrados = repositorio.search_dense(vector, 20, expresion_vigente_del_tipo(tipo))
+
+    assert {c.chunk_id for c in encontrados} == esperados
 
 
 @pytest.mark.ac("US-055", 3)

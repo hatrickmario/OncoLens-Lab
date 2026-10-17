@@ -261,10 +261,13 @@ class GeneradorFalso:
 
 
 class DetectorIdiomaFalso:
-    def __init__(self, idioma: Idioma = "es") -> None:
+    def __init__(self, idioma: Idioma = "es", error: Exception | None = None) -> None:
         self.idioma = idioma
+        self.error = error
 
     def detectar(self, texto: str) -> Idioma:
+        if self.error is not None:
+            raise self.error
         return self.idioma
 
 
@@ -314,6 +317,7 @@ def crear_entorno(
     buscador: ChunkSearch | None = None,
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
+    detector_idioma: DetectorIdiomaFalso | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -321,7 +325,7 @@ def crear_entorno(
     lector_release = lector_release or LectorReleaseFalso()
     generador = GeneradorFalso()
     servicio = RAGOrchestratorService(
-        detector_idioma=DetectorIdiomaFalso(),
+        detector_idioma=detector_idioma or DetectorIdiomaFalso(),
         embedder=embedder,
         buscador=buscador,
         reranker=reranker,

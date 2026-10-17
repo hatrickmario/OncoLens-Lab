@@ -85,6 +85,16 @@ def test_arranque_falla_nombrando_la_clave_cuando_falta_un_valor_de_recuperacion
     assert CLAVES_DE_RECUPERACION[campo] in str(error.value)
 
 
+@pytest.mark.parametrize("campo", ["relevance_threshold", "retrieval_top_k", "rerank_top_n"])
+def test_arranque_falla_nombrando_la_clave_cuando_llm_provider_es_local_sin_puertos_y_falta_un_valor(
+    campo,
+):
+    with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
+        crear_app(_settings_locales(**{campo: None}), clock=RelojFijo())
+
+    assert CLAVES_DE_RECUPERACION[campo] in str(error.value)
+
+
 def test_rag_query_sigue_respondiendo_el_fixture_sin_exigir_la_configuracion_de_recuperacion_cuando_llm_provider_es_fake():
     app = crear_app(
         settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS),
