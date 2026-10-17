@@ -39,7 +39,7 @@
 
 ## evaluación
 
-- [ ] 4.1 Registrar en el PR "evaluate no aplica en S1": el catálogo lo monta L1D-164 pero sus códigos no alimentan análisis hasta US-041 (S2), donde corre `run-ai-eval` (métrica de mapeo terminológico)
+- [x] 4.1 Registrar en el PR "evaluate no aplica en S1": el catálogo lo monta L1D-164 pero sus códigos no alimentan análisis hasta US-041 (S2), donde corre `run-ai-eval` (métrica de mapeo terminológico) **Cerrada (chore de cierre S1, 2026-10-20):** `evaluate` no aplica en S1; el catálogo lo monta L1D-164 pero sus códigos no alimentan análisis hasta US-041 (S2), donde corre `run-ai-eval` (mapeo terminológico).
 
 ## Cierre
 
