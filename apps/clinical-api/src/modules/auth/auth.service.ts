@@ -1,17 +1,22 @@
 import { createHash } from 'node:crypto';
 import type { AuthConfig } from '../../config.js';
 import type { Clock } from '../../infrastructure/clock.js';
-import type { AuthRepository, UsuarioParaLogin } from './auth.repository.js';
+import type { GeneradorDeIds } from '../../infrastructure/ids.js';
+import type {
+  AuthRepository,
+  EstadoDeCuenta,
+  RolDeUsuario,
+  UsuarioParaLogin,
+} from './auth.repository.js';
 import type { PasswordHasher } from './password-hasher.js';
 
 export interface GeneradorDeToken {
   nuevo(): string;
 }
-export type GeneradorDeIds = () => string;
 
 export interface SesionAutenticada {
   userId: string;
-  rol: string;
+  rol: RolDeUsuario;
 }
 
 export interface AuthService {
@@ -45,6 +50,11 @@ export function hashDeToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+/** Única regla de "puede iniciar o mantener sesión": solo `activo` (data-model, tabla de cuentas). */
+function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
+  return estado === 'activo';
+}
+
 function normalizarCorreo(correo: string): string {
   return correo.trim().toLowerCase();
 }
@@ -63,7 +73,7 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
     const usuario = await repo.buscarUsuarioPorCorreo(normalizarCorreo(email));
     const hashAVerificar = usuario?.passwordHash ?? (await hashSenuelo);
     const contrasenaCorrecta = await hasher.verify(hashAVerificar, password);
-    if (usuario === null || !contrasenaCorrecta || usuario.accountStatus !== 'activo') {
+    if (usuario === null || !contrasenaCorrecta || !cuentaHabilitada(usuario.accountStatus)) {
       throw new CredencialesInvalidasError();
     }
     return usuario;
@@ -86,7 +96,7 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
     },
     async resolverSesion(token) {
       const sesion = await repo.buscarSesionPorTokenHash(hashDeToken(token));
-      if (sesion === null || sesion.revoked || sesion.accountStatus !== 'activo') return null;
+      if (sesion === null || sesion.revoked || !cuentaHabilitada(sesion.accountStatus)) return null;
       // `expires_at` es absoluto y excluyente: en el instante exacto la sesión ya caducó (S1 resp. 14c).
       if (sesion.expiresAt.getTime() <= reloj.now().getTime()) return null;
       return { userId: sesion.userId, rol: sesion.rol };

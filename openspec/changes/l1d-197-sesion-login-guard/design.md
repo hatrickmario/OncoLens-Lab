@@ -57,7 +57,7 @@ es `null`, **no** cadena vacía: esto revierte la nota de cadena vacía que se h
 `/platform` después de declarar `POST /platform/auth/login` y antes de cualquier otro router, y
 corre antes del `express.json()` de cada ruta para que un `401` llegue antes de validar el cuerpo
 (AC-3). Consulta `auth.session` por `token_hash` con `revoked = false` y usuario `activo`, y
-`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.ahora()` (reloj inyectado):
+`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.now()` (reloj inyectado):
 sesión caducada → `401 NO_AUTENTICADO`, igual que un token desconocido `[S1 resp. 14c]`. La
 inactividad sigue en US-044 (S2), que la añadirá en `resolverSesion` sin tocar el middleware.
 Adjunta `req.sesion = { userId, rol }`. El guard solo autentica: el `403` para un rol distinto de
@@ -276,7 +276,7 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
 | Módulo | Crea/mod. | Depende de | Reglas extraídas |
 |---|---|---|---|
 | `clinical-api/src/modules/auth/auth.controller.ts` | crea | `AuthService` (interfaz) | mapeo de error → `401` |
-| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Reloj` | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
+| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, ids, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Clock` (`infrastructure/clock.ts`, método `now()`), `GeneradorDeIds` (`infrastructure/ids.ts`) | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
 | `auth.repository.ts` | crea | `pg` (pool inyectado; `auth.user`, `auth.session`; D11) | — |
 | `auth.schema.ts` | crea | Zod generado `zLoginBody` | — |
 | `auth/password-hasher.ts` | crea | `argon2` | parámetros desde config |
