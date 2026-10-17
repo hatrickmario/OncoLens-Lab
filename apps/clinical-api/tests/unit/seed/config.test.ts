@@ -70,4 +70,13 @@ describe('leerConfiguracionDelSeed', () => {
       'SEED_RETENTION_UNTIL_YEARS debe ser un entero positivo',
     );
   });
+
+  it.each(['   ', '0'])(
+    'falla nombrando SEED_RETENTION_UNTIL_YEARS cuando vale %j y no es un entero positivo',
+    (valor) => {
+      expect(() => leerConfiguracionDelSeed({ SEED_RETENTION_UNTIL_YEARS: valor })).toThrow(
+        'SEED_RETENTION_UNTIL_YEARS debe ser un entero positivo',
+      );
+    },
+  );
 });

@@ -51,3 +51,8 @@ export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
     throw new SeedBloqueadoError('APP_ENV', 'no está en SEED_ALLOWED_ENVS');
   }
 }
+
+/** `piloto` sin distinguir mayúsculas: el entorno de datos reales que ninguna lista de configuración habilita. */
+export function esEntornoPiloto(_appEnv: string): boolean {
+  throw new Error('no implementado');
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertSeedPermitido,
+  esEntornoPiloto,
   SeedBloqueadoError,
   type EntradaDeLaGuarda,
 } from '../../../prisma/seed/guarda.js';
@@ -57,5 +58,17 @@ describe('assertSeedPermitido', () => {
     const config = entrada({ appEnv: 'test', realIdentifiedEnabled: true });
 
     expect(() => assertSeedPermitido(config)).toThrow(/REAL_IDENTIFIED_ENABLED/);
+  });
+});
+
+describe('esEntornoPiloto', () => {
+  it.each([
+    ['piloto', true],
+    ['PILOTO', true],
+    ['Piloto', true],
+    ['local', false],
+    ['pilotos', false],
+  ])('devuelve %s → %s', (appEnv, esperado) => {
+    expect(esEntornoPiloto(appEnv)).toBe(esperado);
   });
 });
