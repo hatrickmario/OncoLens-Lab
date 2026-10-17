@@ -16,10 +16,17 @@ _CODIGO_DE_CATALOGO = re.compile(r"[a-z][a-z0-9_]*")
 
 
 LONGITUD_MAXIMA_DE_CODIGO = 64
+_COMODINES_DE_LIKE = str.maketrans({"\\": "\\\\", "%": "\\%", "_": "\\_"})
 
 
 def escapar_patron_like(texto: str) -> str:
-    raise NotImplementedError("no implementado")
+    """Antepone ``\\`` a ``\\``, ``%`` y ``_``: en un patrón ``like`` de Milvus dejan de ser comodines."""
+    return texto.translate(_COMODINES_DE_LIKE)
+
+
+def _literal_de_patron_like(texto: str) -> str:
+    """El patrón escapado como cuerpo de un literal de cadena de Milvus, donde cada ``\\`` se duplica otra vez."""
+    return escapar_patron_like(texto).replace("\\", "\\\\")
 
 
 def expresion_solo_vigente() -> str:
@@ -34,9 +41,12 @@ def expresion_vigente_del_tipo(cancer_type: str) -> str:
     ``ta`` con ``prostata``. Lanza ``ValueError`` si ``cancer_type`` no es un código de catálogo.
     """
     tipo = _exigir_codigo_de_catalogo(cancer_type)
+    patron = _literal_de_patron_like(
+        tipo
+    )  # `_` es comodín de `like`: se escapa (la igualdad no lo necesita)
     etiqueta = (
-        f'cancer_type_tags == "{tipo}" or cancer_type_tags like "{tipo},%"'
-        f' or cancer_type_tags like "%,{tipo}" or cancer_type_tags like "%,{tipo},%"'
+        f'cancer_type_tags == "{tipo}" or cancer_type_tags like "{patron},%"'
+        f' or cancer_type_tags like "%,{patron}" or cancer_type_tags like "%,{patron},%"'
     )
     return f"{_PREFIJO_CON_RESTRICCION}{etiqueta})"
 
@@ -61,7 +71,10 @@ def coincide_etiqueta(cancer_type_tags: str, cancer_type: str) -> bool:
 
 
 def _exigir_codigo_de_catalogo(cancer_type: str) -> str:
-    if _CODIGO_DE_CATALOGO.fullmatch(cancer_type) is None:
+    if (
+        len(cancer_type) > LONGITUD_MAXIMA_DE_CODIGO
+        or _CODIGO_DE_CATALOGO.fullmatch(cancer_type) is None
+    ):
         raise ValueError("el tipo de cáncer no es un código de catálogo utilizable en el filtro")
     return cancer_type
 

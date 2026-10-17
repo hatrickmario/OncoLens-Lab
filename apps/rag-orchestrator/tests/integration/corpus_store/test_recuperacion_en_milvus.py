@@ -90,6 +90,9 @@ def test_milvus_compara_la_etiqueta_completa_de_cancer_type_tags(
         [
             replace(base, chunk_id="ch-mm-1", cancer_type_tags="mama_masculina"),
             replace(base, chunk_id="ch-multi-1", cancer_type_tags="prostata,mama"),
+            # `_` es comodín de `like`: sin escapar, `mama_masculina` también casaría con `mamaxmasculina`.
+            replace(base, chunk_id="ch-mxm-1", cancer_type_tags="mamaxmasculina"),
+            replace(base, chunk_id="ch-mxm-2", cancer_type_tags="prostata,mamaxmasculina,pulmon"),
         ]
     )
     cliente_milvus.flush(
