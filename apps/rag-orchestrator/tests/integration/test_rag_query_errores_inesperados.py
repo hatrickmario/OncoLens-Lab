@@ -42,3 +42,29 @@ def test_rag_query_responde_500_fijo_y_registra_solo_clase_y_trace_id_cuando_fal
     propios = [r.getMessage() for r in caplog.records if "event=error_interno" in r.getMessage()]
     assert propios == [f"event=error_interno clase=RuntimeError traceId={solicitud['traceId']}"]
     assert all(Q_HER2 not in r.getMessage() for r in caplog.records)
+
+
+def test_rag_query_no_relanza_la_excepcion_al_servidor_cuando_falla_algo_inesperado():
+    # Starlette relanza tras responder el 500 y uvicorn escribiría el traceback (con el mensaje y la pregunta) en su
+    # log: la excepción debe quedar contenida en la aplicación (RN-10).
+    app = crear_app(
+        settings_de_prueba(),
+        trace_ids=GeneradorTraceFijo(),
+        clock=RelojFijo(),
+        consulta=_ConsultaQueExplota(),
+    )
+    cliente = TestClient(
+        app, raise_server_exceptions=True, headers=con_token_valido(par_de_sesion())
+    )
+    solicitud = solicitud_de(Q_HER2)
+    relanzada: Exception | None = None
+    respuesta = None
+
+    try:
+        respuesta = cliente.post("/rag/query", json=solicitud)
+    except Exception as error:  # noqa: BLE001 - lo que se comprueba es justo que no llegue aquí
+        relanzada = error
+
+    assert relanzada is None
+    assert respuesta is not None and respuesta.status_code == 500
+    assert Q_HER2 not in respuesta.text
