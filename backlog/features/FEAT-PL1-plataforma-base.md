@@ -442,6 +442,8 @@ matriz TDD de `CLAUDE.md`): los tests existentes de empaquetado son la red de se
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
+> **Decidido (usuario, 2026-10-20):** el *hook* `pre-commit-gate.sh` **no ejecuta `format:check`** (se quita completo; ni siquiera con cambios staged): lint y formato los cubre la CI (job `quality`, `npm run lint` y `npm run format:check`), que sigue siendo bloqueante. Enmienda `[S1 resp. 25]` en lo que toca a `format:check`; el AC-4 de esta historia no cambia (el fallo de formato lo da el job `quality`). La edición de `.claude/hooks/pre-commit-gate.sh` es un chore aparte, no parte de este change. `docs/process/ci.md` ya describe `format:check` solo como comando local y del job `quality`, sin mención del *hook*, así que no cambia.
+
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero una configuración base de ESLint
 y un formato automático único en los tres servicios, para que los errores reales de React,
@@ -501,6 +503,8 @@ los hooks de Claude Code ya cubren el control.
 > Linear: [L1D-266](https://linear.app/l1der-lab-mjbc/issue/L1D-266)
 
 `FEAT-PL1` · Sprint 6 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **3** · — (técnica, PRD §17) · RN-14, NFR-11, SEG-01 (CSRF ya cubierto), SEG-12 · ↪ US-034 (`web` levantado), US-215 (ESLint base) · 🔗 Relacionada: US-144 (HSTS con HTTPS en el piloto), US-061 (panel que muestra texto del LLM) · 🔗 Consumida por: `frontend-dev` y `privacy-guardian` (`.claude/`)
+
+> **Excepción nombrada (usuario, 2026-10-20):** `/login` (L1D-197) se mergea **sin CSP ni cabeceras anti-clickjacking** (`frame-ancestors`/`X-Frame-Options`); esta historia (S6, antes de G-Piloto) las aplica a toda la app, incluida `/login`. Antes de G-Piloto la página de login no puede quedar fuera de su alcance.
 
 ## Story
 Como equipo de desarrollo, quiero que `web` aplique desde el primer sprint las defensas del
