@@ -23,6 +23,38 @@ export interface AuthConfig {
   argon2: Argon2Config;
 }
 
+const DEFAULT_SESSION_TTL_HOURS = 8;
+// Mínimo recomendado por OWASP para Argon2id; calibrable por entorno (la CI puede bajarlos).
+const DEFAULT_ARGON2_MEMORY_COST_KIB = 19456;
+const DEFAULT_ARGON2_TIME_COST = 2;
+const DEFAULT_ARGON2_PARALLELISM = 1;
+
+function readPositiveInteger(env: NodeJS.ProcessEnv, name: string, defaultValue: number): number {
+  const raw = env[name];
+  if (raw === undefined || raw === '') return defaultValue;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${name} debe ser un entero positivo`);
+  }
+  return value;
+}
+
+/** TTL absoluto de la sesión y parámetros de Argon2id (RN-22: configuración, nunca literales del dominio). */
+export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig {
+  return {
+    sessionTtlHours: readPositiveInteger(env, 'SESSION_TTL_HOURS', DEFAULT_SESSION_TTL_HOURS),
+    argon2: {
+      memoryCostKib: readPositiveInteger(
+        env,
+        'ARGON2_MEMORY_COST_KIB',
+        DEFAULT_ARGON2_MEMORY_COST_KIB,
+      ),
+      timeCost: readPositiveInteger(env, 'ARGON2_TIME_COST', DEFAULT_ARGON2_TIME_COST),
+      parallelism: readPositiveInteger(env, 'ARGON2_PARALLELISM', DEFAULT_ARGON2_PARALLELISM),
+    },
+  };
+}
+
 const DEFAULT_SERVICE_JWT_TTL_SECONDS = 60;
 
 export interface ServiceJwtConfig {
