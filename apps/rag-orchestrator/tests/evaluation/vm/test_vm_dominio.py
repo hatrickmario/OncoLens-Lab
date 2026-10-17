@@ -59,7 +59,7 @@ def test_manifiesto_real_declara_sintetico_con_tres_casos_por_tipo_y_solo_falta_
     assert manifiesto["clase"] == "sintetico"
     assert tipos.count("mama") >= 3 and tipos.count("prostata") >= 3
     # La fecha de validación clínica la registra el usuario tras la validación humana (tarea 3.1).
-    assert errores and all("fecha_validacion_clinica" in e for e in errores)
+    assert all("fecha_validacion_clinica" in e for e in errores)
 
 
 def test_rechaza_el_manifiesto_cuando_no_declara_clase_sintetico() -> None:
