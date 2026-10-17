@@ -154,4 +154,15 @@ describe('POST /platform/auth/login con cuerpo inválido', () => {
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
     expect(await sesionesDeLosUsuarios()).toBe(antes);
   });
+
+  it('responde 422 CUERPO_INVALIDO sin eco del parser cuando el JSON viene malformado', async () => {
+    const respuesta = await request(appDeLogin())
+      .post('/platform/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{"email": "x@test.local", "password": ');
+
+    expect(respuesta.status).toBe(422);
+    assertMatchesSpec('clinical-api', `${PUNTERO_LOGIN}/422`, respuesta.body);
+    expect(JSON.stringify(respuesta.body)).not.toContain('JSON');
+  });
 });
