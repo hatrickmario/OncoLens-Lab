@@ -79,10 +79,16 @@ la versión anterior como vigente y **la siguiente carga del grupo** (la versió
 rechazo) deja de mostrar en Milvus chunks vigentes de la versión fallida. NO garantiza lo contrario: entre la carga fallida y
 la siguiente conviven chunks vigentes de dos versiones, y el grupo puede quedar **sin chunks vigentes de forma persistente**
 (el catálogo dice «vigente» y los chunks de esa versión ya se apagaron) mientras el resultado de recargarla es `omitido`,
-hasta que una reconciliación los encienda (deuda, ver Risks; decisión pendiente del usuario).
+hasta que la siguiente carga lo reconcilie: **la rama `omitir` reconcilia** (decisión del usuario, 2026-10-17, M1). Además de apagar
+`a_apagar`, enciende los chunks de la vigente del catálogo (`DecisionDeVersion.a_encender`, puerto `marcar_vigentes`), de modo
+que volver a cargar el texto de una vigente cuya sucesora falló deja a la vigente con sus chunks. Si encender falla, el
+documento queda `error` en el reporte (`milvus: <clase>`) sin fila de error en el catálogo.
 **Readmisión (D3):** `decidir_version` omite el checksum ya cargado solo si esa versión es la vigente o si el grupo tiene otra
-vigente (no se resucita lo reemplazado); una versión retirada por un rechazo, sin vigente en el grupo, se reingiere con el
+vigente (no se resucita lo reemplazado, **con la salvedad de M2**); una versión retirada por un rechazo, sin vigente en el grupo, se reingiere con el
 mismo texto y queda vigente otra vez en el catálogo y en Milvus (el *upsert* reescribe `is_current = true`).
+**M2 · decisión del usuario (2026-10-17): se acepta** que una versión reemplazada pueda resucitar. Sin vigente en el grupo
+(p. ej. v1 → v2 → v2 rechazada por ND), recargar el texto de v1 reingiere v1 y queda vigente otra vez. Es la regla de
+`decidir_version` tal cual; no se cambia el código, y si se quiere otra regla se cambia en esa función.
 El `checksum` es SHA-256 del texto normalizado.
 
 **D6 · Chunking y *embeddings*.** `fragmentar(texto, CORPUS_CHUNK_SIZE, CORPUS_CHUNK_OVERLAP)` es pura
@@ -143,9 +149,9 @@ Las seis decisiones siguen **vigentes** y corrigen o precisan lo anterior donde 
    (`CLASE_LICENCIA_ACEPTADA`, `CONTIENE_ND`, las tres condiciones de NC). **Deuda anotada:** unificar con `dataset_loader`
    (ID por asignar). `pyyaml==6.0.3` en `requirements.txt`; `load_seed_corpus.py` entra a la lista blanca de
    `Dockerfile.dockerignore` con su test.
-4. **`CORPUS_CUTOFF_DATE`.** El usuario fijó `2026-10-15` (descarga del mini-dataset de ADR-39). Los 10 documentos de la
-   semilla real se descargaron el **2026-10-16** (`downloaded_at` por documento): el usuario decide si el valor de corte de
-   la semilla es `2026-10-16` (propuesta de esta rama) o se mantiene `2026-10-15`. Registros de ClinicalTrials.gov: no hay
+4. **`CORPUS_CUTOFF_DATE` = `2026-10-16`** (confirmado por el usuario, 2026-10-17: la fecha de descarga). Los 10 documentos de la
+   semilla real se descargaron el 2026-10-16 (`downloaded_at` por documento); el `2026-10-15` de una versión anterior de este
+   texto era la descarga del mini-dataset de ADR-39 y ya no aplica a la semilla. La clave de `.env.example` la aplica el usuario. Registros de ClinicalTrials.gov: no hay
    ninguno en la semilla real; el fixture `t-ok-2` es sintético (etiqueta `ClinicalTrials.gov / NCTxxxxxxxx`, URL, fecha de
    consulta y atribución visible a NLM, sin sugerir aval, si algún día se carga uno real). Sin NCCN ni ESMO ni datos reales.
 
@@ -176,8 +182,10 @@ Las seis decisiones siguen **vigentes** y corrigen o precisan lo anterior donde 
   parsear HTML o JATS en producción no es parte de este change (el texto de la semilla real ya está extraído en
   `data/raw/seed/docs/`). El manifiesto acepta además `text` (inline, solo fixtures) y `text_path` relativo al manifiesto.
 - **Fuente excluida: piso en el código, configuración solo amplía** (respuesta del usuario, 2026-10-17). La fuente se compara
-  por nombre, alias y palabra (`NCCN Guidelines` y `National Comprehensive Cancer Network` cuentan) y por el host de
-  `external_id` y `source_url` (`nccn.org`, `esmo.org`). `ALIAS_DE_FUENTES_EXCLUIDAS`, `HOSTS_DE_FUENTES_EXCLUIDAS` y
+  por nombre, alias y palabra (`NCCN Guidelines` y `National Comprehensive Cancer Network` cuentan) y por el host
+  y el DOI de `external_id` y `source_url` (`nccn.org`, `esmo.org`; **P1, 2026-10-17:** las revistas de ESMO cuentan como ESMO:
+  `esmoopen.com`, `annalsofoncology.org`, el nombre «Annals of Oncology» y los DOI `10.1016/j.annonc`, `.esmoop`, `.esmogo`,
+  `.esmorw`, `.esmoio`). `ALIAS_DE_FUENTES_EXCLUIDAS`, `HOSTS_DE_FUENTES_EXCLUIDAS`, `DOIS_DE_FUENTES_EXCLUIDAS` y
   `PISO_DE_FUENTES_EXCLUIDAS` viven en `domain/corpus_seed/admisibilidad.py`; `CORPUS_EXCLUDED_SOURCES` solo puede ampliar el
   piso, nunca quitar NCCN ni ESMO (la release declara la unión). No se inventan hosts para una fuente agregada por configuración.
   **«ESMO Open» se rechaza** (falla cerrado); una excepción explícita revisada legalmente sería el único modo de admitirla.
@@ -293,7 +301,7 @@ deshacer una carga de desarrollo se recrean los volúmenes de test/Compose (solo
 - **Deuda sin ID · la fila previa de una readmisión reescribe la fila retirada.** Para que todo chunk tenga dueño, la fila
   definitiva se guarda (estado `error`, `is_current = false`) antes de escribir en Milvus; en una readmisión eso pisa la fila
   retirada, y si Milvus falla después se pierden `superseded_at` e `ingested_at` originales.
-- **Deuda sin ID · reconciliar en `omitir`** (decisión pendiente del usuario): encender los chunks de la vigente cuando un fallo
-  del catálogo los dejó apagados.
+- **Resuelta · reconciliar en `omitir`** (M1, usuario 2026-10-17): implementado; ver D5.
+- **Abierta (sin decisión) · P2:** alcance de la exención `NCT` de `telefono_local` en el escáner de PII (hoy global). No se toca.
 - **Nota para L1D-106.** Tras su merge, el fake `AlmacenDeChunksEnMemoria.search_dense` debe aceptar el filtro y delegar en
   `exigir_filtro_vigente`, como el adapter real.

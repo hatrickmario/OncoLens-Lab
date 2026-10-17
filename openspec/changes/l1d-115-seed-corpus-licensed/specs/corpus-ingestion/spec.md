@@ -46,7 +46,7 @@ El cargador MUST copiar a `population_criteria` los criterios que el manifiesto 
 - **AND** en `t-ok-1` cada criterio de población (subtipo, estadio, línea, biomarcadores, edad, ECOG) vale `no_disponible`
 
 ### Requirement: Recarga idempotente por checksum
-Volver a ejecutar el cargador con el mismo manifiesto MUST dejar sin cambios el número de documentos de `corpus.corpus_document` y el de chunks de `corpus_chunks`: un documento cuyo `checksum` ya existe en su `version_group_id` SHALL omitirse sin reinsertar ni re-embeber (asumido, aceptado `[S1 resp. 3]`).
+Volver a ejecutar el cargador con el mismo manifiesto MUST dejar sin cambios el número de documentos de `corpus.corpus_document` y el de chunks de `corpus_chunks`: un documento cuyo `checksum` ya existe en su `version_group_id` SHALL omitirse sin reinsertar ni re-embeber (asumido, aceptado `[S1 resp. 3]`). Al omitirlo, el cargador MUST reconciliar Milvus con el catálogo: apagar los chunks de versiones no embebidas del grupo y encender los de la versión vigente del catálogo (M1). Una versión reemplazada puede reingresar si el grupo queda sin vigente (M2, aceptado). Las revistas de ESMO (ESMO Open, Annals of Oncology) MUST rechazarse como fuente excluida por nombre, host o DOI (P1).
 
 #### Scenario: Una segunda carga con el mismo manifiesto no cambia los recuentos [US-059 AC-5] [S1 resp. 3]
 - **GIVEN** la semilla de FX-06c-a ya cargada y el recuento de documentos y de chunks anotado

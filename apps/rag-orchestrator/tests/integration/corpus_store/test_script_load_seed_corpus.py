@@ -51,7 +51,7 @@ def entorno_del_script(
         "CORPUS_SEED_MANIFEST_PATH": str(MANIFIESTO_FX_06C_A),
         "CORPUS_ACCEPTED_LICENSES": "dominio_publico,cc_by,cc_by_sa",
         "CORPUS_EXCLUDED_SOURCES": "NCCN,ESMO",
-        "CORPUS_CUTOFF_DATE": "2026-10-15",
+        "CORPUS_CUTOFF_DATE": "2026-10-16",
         "CORPUS_CHUNK_SIZE": "12",
         "CORPUS_CHUNK_OVERLAP": "0",
     }.items():

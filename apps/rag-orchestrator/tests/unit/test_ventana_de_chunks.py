@@ -18,7 +18,7 @@ RESTO_DE_CLAVES_DEL_CARGADOR = {
     "CORPUS_SEED_MANIFEST_PATH": "/data/seed/manifest.yaml",
     "CORPUS_ACCEPTED_LICENSES": "cc_by",
     "CORPUS_EXCLUDED_SOURCES": "NCCN",
-    "CORPUS_CUTOFF_DATE": "2026-10-15",
+    "CORPUS_CUTOFF_DATE": "2026-10-16",
 }
 INVALIDOS = [(0, 0), (-1, 0), (5, -1), (5, 5), (5, 9)]
 VALIDOS = [(1024, 0), (6, 2), (2, 1)]

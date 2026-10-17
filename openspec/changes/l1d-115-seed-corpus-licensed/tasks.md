@@ -40,8 +40,8 @@
 
 - [x] G3.1 Privacy: `nci-prostata-hp-en` sin la frase ni el encabezado de «Key References» (sin sustituir palabras), test del cuerpo con casefold y siete patrones de autoidentificación de PDQ y al menos un documento NCI; prefijo NCT anclado en `scripts/lib/formatosPii.mjs` (+ nota en la descripción de `telefono_local` y en `l1d-203/design.md`); `httpx.Client(trust_env=False)`; readmisión tras un retiro con el mismo checksum
 - [x] G3.2 Diseño: la fila definitiva se guarda antes de Milvus (todo chunk tiene dueño), `_indexar` por *upsert*, `_rechazar` solo convierte en `error` el apagado de Milvus, `clase_contradice_el_texto` en el dominio, `VersionInexistente`, `deadline_s` obligatorio, `ClaseDeLicencia.CC_BY_NC`; piso de fuentes excluidas (respuesta del usuario, 2026-10-17)
-- Deuda sin ID ampliada: ingesta que falla cerrado (también «vigente en el catálogo sin chunks vigentes» tras un fallo del catálogo; reconciliar en `omitir`); licencias vs `dataset_loader` (el dominio reconoce `NoDerivs`/«sin obras derivadas»/`NonCommercial` y `dataset_loader` no); `license_class` nullable en rechazados
-- Deuda sin ID adicional (pasada final): la fila previa de una readmisión reescribe la retirada (se pierden `superseded_at` e `ingested_at` si Milvus falla después); reconciliar en `omitir` (decisión del usuario). Nota para L1D-106: tras su merge el fake `search_dense` debe aceptar el filtro y delegar en `exigir_filtro_vigente`
+- Deuda sin ID ampliada: ingesta que falla cerrado (reconciliación de documentos quitados del manifiesto; la de «vigente sin chunks vigentes» ya se hace en `omitir`); licencias vs `dataset_loader` (el dominio reconoce `NoDerivs`/«sin obras derivadas»/`NonCommercial` y `dataset_loader` no); `license_class` nullable en rechazados
+- Deuda sin ID adicional (pasada final): la fila previa de una readmisión reescribe la retirada (se pierden `superseded_at` e `ingested_at` si Milvus falla después). (La reconciliación en `omitir` se implementó el 2026-10-17: M1.) Nota para L1D-106: tras su merge el fake `search_dense` debe aceptar el filtro y delegar en `exigir_filtro_vigente`
 - Commits para el cuerpo del PR: 4587a7c (test→refactor), dc257b4, 46c6ad0
 
 ## evaluación
@@ -52,3 +52,4 @@
 
 - [x] 3.1 `openspec validate l1d-115-seed-corpus-licensed --strict`
 - [x] 3.2 Tests de `apps/rag-orchestrator` en verde (Pytest, incluida la suite `servicios_reales` en un Compose propio) y escaneo de secretos/PII sobre `data/raw/seed/` y el fixture (`node scripts/ci/pii-scan.mjs`)
+- [x] G2.3 Decisiones del usuario (2026-10-17): M1 reconciliar en `omitir` (`a_encender` + `marcar_vigentes`, con `test` en rojo antes del `feat`); M2 se acepta que una reemplazada pueda resucitar (solo documentado en D5); P1 las revistas de ESMO (nombre, host y DOI) son fuente excluida; `CORPUS_CUTOFF_DATE = 2026-10-16`. P2 (alcance de la exención `NCT`) sin decisión: pregunta abierta
