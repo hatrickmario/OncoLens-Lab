@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from app.application.errores import LlmLocalNoDisponibleError
+from app.application.errores import ErrorDeAplicacion, LlmLocalNoDisponibleError
 from app.application.ports import EvidenceGenerator, ResultadoDeRecuperacion
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
 
@@ -30,7 +30,7 @@ class GeneradorFallandoCerrado:
         trace_id = solicitud.traceId.root
         try:
             respuesta = await self._generador.generar(solicitud, recuperacion)
-        except LlmLocalNoDisponibleError:
+        except ErrorDeAplicacion:
             raise
         except Exception as error:  # noqa: BLE001 - todo fallo del generador es "modelo local no disponible"
             raise self._fallo_del_generador(type(error).__name__, trace_id) from None
