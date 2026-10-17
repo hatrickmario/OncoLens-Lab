@@ -73,7 +73,8 @@ export WEB_PORT="${WEB_PORT:-$(puerto_libre)}"
 export LLM_PROVIDER=fake
 compose up -d --no-build --wait --wait-timeout "$espera" >"$log" 2>&1 || fallo "el stack en modo fake no quedó healthy"
 
-esperados="$(compose config --services | wc -l | tr -d ' ')"
+# corpus-migrate es un one-shot (restart: "no", sin healthcheck): termina con éxito y su estado nunca es healthy.
+esperados="$(compose config --services | grep -vx 'corpus-migrate' | wc -l | tr -d ' ')"
 saludables="$(estado_de | grep -c '=healthy$' || true)"
 [ "$saludables" = "$esperados" ] || fallo "AC-1: $saludables de $esperados servicios healthy ($(estado_de | tr '\n' ' '))"
 bien "AC-1 los $esperados servicios están healthy"
