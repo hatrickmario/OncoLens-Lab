@@ -116,10 +116,15 @@ def _escribir(ruta: Path, texto: str) -> None:
     ruta.write_text(texto, encoding="utf-8", newline="")
 
 
-def _ejecutar_baseline(args: argparse.Namespace) -> None:
+def _cargar_entradas(args: argparse.Namespace) -> tuple[ConfigVM, dict[str, Any], list[Fila]]:
+    """Configuración, manifiesto (validado primero) y sesiones, en el orden que exige el comando."""
     config = _leer_config(args.config)
     manifiesto = _leer_manifiesto_validado(args.manifest)
-    filas = _leer_sesiones(args.csv)
+    return config, manifiesto, _leer_sesiones(args.csv)
+
+
+def _ejecutar_baseline(args: argparse.Namespace) -> None:
+    config, manifiesto, filas = _cargar_entradas(args)
     _sin_errores(validar_registro(filas, manifiesto, config))
     try:
         huella = hashlib.sha256(args.dec02.read_bytes()).hexdigest()
@@ -133,9 +138,7 @@ def _ejecutar_baseline(args: argparse.Namespace) -> None:
 
 
 def _ejecutar_pares_validacion(args: argparse.Namespace) -> None:
-    config = _leer_config(args.config)
-    manifiesto = _leer_manifiesto_validado(args.manifest)
-    filas = _leer_sesiones(args.csv)
+    config, manifiesto, filas = _cargar_entradas(args)
     _sin_errores(validar_sesiones(filas, manifiesto, config))
     salida = io.StringIO()
     escritor = csv.writer(salida, lineterminator="\n")
