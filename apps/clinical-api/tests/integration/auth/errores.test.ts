@@ -1,6 +1,7 @@
 import type { Client } from 'pg';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, inject, it, vi } from 'vitest';
+import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { createApp } from '../../../src/app.js';
 import type { AuthRepository } from '../../../src/modules/auth/auth.repository.js';
 import { appConAuth } from '../../support/app-auth.js';
@@ -62,6 +63,7 @@ describe('manejador final de errores', () => {
 
       for (const respuesta of [login, guard]) {
         expect(respuesta.status).toBe(500);
+        assertMatchesSpec('clinical-api', '#/components/responses/ErrorInterno', respuesta.body);
         expect(respuesta.headers['content-type']).toMatch(/application\/json/);
         expect(Object.keys(respuesta.body as object).sort()).toEqual([
           'error',
