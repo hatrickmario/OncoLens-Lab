@@ -101,7 +101,7 @@ def contiene_sa(texto: str) -> bool:
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
-    if es_fuente_excluida(documento, politica.fuentes_excluidas()):
+    if es_fuente_excluida(documento, politica):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
@@ -120,16 +120,17 @@ def _cumple_condiciones_de_nc(
     return politica.permitir_cc_by_nc and documento.nc_solo_academico
 
 
-def es_fuente_excluida(documento: DocumentoDeSemilla, excluidas: tuple[str, ...]) -> bool:
+def es_fuente_excluida(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> bool:
     """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host de su identificador o URL.
 
-    ``excluidas`` debe traer el piso (``PoliticaDeLicencias.fuentes_excluidas()``). Los hosts salen solo de la tabla del
+    Usa las fuentes excluidas EFECTIVAS (el piso del código más la configuración). Los hosts salen solo de la tabla del
     código: no se inventan para una fuente agregada por configuración.
     """
-    nombres = {normalizar_clave(fuente) for fuente in excluidas}
+    nombres = {normalizar_clave(fuente) for fuente in politica.fuentes_excluidas()}
     for fuente in list(nombres):
         nombres.update(ALIAS_DE_FUENTES_EXCLUIDAS.get(fuente, ()))
-    palabras = f" {' '.join(re.findall(r'\w+', documento.source_name.casefold()))} "
+    nombre_de_la_fuente = _sin_puntos_de_sigla(documento.source_name.casefold())
+    palabras = f" {' '.join(re.findall(r'\w+', nombre_de_la_fuente))} "
     if any(f" {' '.join(re.findall(r'\w+', nombre))} " in palabras for nombre in nombres):
         return True
     hosts = {host for fuente in nombres for host in HOSTS_DE_FUENTES_EXCLUIDAS.get(fuente, ())}
@@ -140,10 +141,20 @@ def es_fuente_excluida(documento: DocumentoDeSemilla, excluidas: tuple[str, ...]
     )
 
 
+def _sin_puntos_de_sigla(texto: str) -> str:
+    """``n.c.c.n.`` -> ``nccn.``: quita el punto entre letras sueltas; «Dr. N. C. Smith» (con espacios) no cambia."""
+    return re.sub(r"(?<=\b\w)\.(?=\w\b)", "", texto)
+
+
 def _host_de(valor: str | None) -> str:
     if not valor:
         return ""
-    return (urlsplit(valor.strip()).hostname or "").casefold()
+    candidato = valor.strip()
+    if "://" not in candidato and not candidato.startswith("//"):
+        candidato = (
+            f"//{candidato}"  # «nccn.org/guidelines» sin esquema: urlsplit lo tomaría por ruta
+        )
+    return (urlsplit(candidato).hostname or "").casefold()
 
 
 def normalizar_clave(texto: str) -> str:

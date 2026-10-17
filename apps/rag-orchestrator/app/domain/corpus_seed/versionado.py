@@ -51,8 +51,10 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
         v.document_id for v in existentes if v.status != STATUS_EMBEBIDO and v.checksum != checksum
     )
     vigente = next((v for v in embebidas if v.is_current), None)
-    # Se omite lo ya cargado y vigente, y lo reemplazado por una versión posterior (no se resucita). Una versión retirada
-    # (rechazo por licencia o fuente) sin vigente en el grupo se reingiere: la readmisión la deja vigente otra vez.
+    # Regla real: con una versión vigente en el grupo, un checksum ya embebido se omite (la vigente, o una antigua que no se
+    # resucita). SIN vigente en el grupo, cualquier versión embebida con ese checksum se reingiere: también una reemplazada
+    # cuya sucesora se retiró (v1 -> v2 -> v2 rechazada por ND -> vuelve v1 = v1 vigente). Si el usuario prefiere otra regla,
+    # se cambia aquí.
     if any(v.checksum == checksum and (v.is_current or vigente is not None) for v in embebidas):
         return DecisionDeVersion(Accion.OMITIR, a_apagar=huerfanas)
     if vigente is not None:
