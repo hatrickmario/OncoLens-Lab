@@ -38,11 +38,18 @@ _CLAUSULA_SA = re.compile(
 PISO_DE_FUENTES_EXCLUIDAS: tuple[str, ...] = ("NCCN", "ESMO")
 ALIAS_DE_FUENTES_EXCLUIDAS: Mapping[str, tuple[str, ...]] = {
     "nccn": ("national comprehensive cancer network",),
-    "esmo": ("european society for medical oncology",),
+    "esmo": ("european society for medical oncology", "annals of oncology"),
 }
 HOSTS_DE_FUENTES_EXCLUIDAS: Mapping[str, tuple[str, ...]] = {
     "nccn": ("nccn.org",),
-    "esmo": ("esmo.org",),
+    "esmo": ("esmo.org", "esmoopen.com", "annalsofoncology.org"),
+}
+# Las revistas de ESMO (ESMO Open, Annals of Oncology...) se reconocen también por el prefijo de su DOI (P1): un DOI no
+# lleva el nombre de la sociedad ni su host. Solo la tabla del código: no se inventan para fuentes de la configuración.
+DOIS_DE_FUENTES_EXCLUIDAS: Mapping[str, re.Pattern[str]] = {
+    "esmo": re.compile(
+        r"(?<![\w.])10\.1016/j\.(?:annonc|esmoop|esmogo|esmorw|esmoio)\b", re.IGNORECASE
+    ),
 }
 
 
@@ -121,7 +128,7 @@ def _cumple_condiciones_de_nc(
 
 
 def es_fuente_excluida(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> bool:
-    """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host de su identificador o URL.
+    """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host o DOI de su identificador o URL.
 
     Usa las fuentes excluidas EFECTIVAS (el piso del código más la configuración). Los hosts salen solo de la tabla del
     código: no se inventan para una fuente agregada por configuración.
@@ -134,10 +141,17 @@ def es_fuente_excluida(documento: DocumentoDeSemilla, politica: PoliticaDeLicenc
     if any(f" {' '.join(re.findall(r'\w+', nombre))} " in palabras for nombre in nombres):
         return True
     hosts = {host for fuente in nombres for host in HOSTS_DE_FUENTES_EXCLUIDAS.get(fuente, ())}
-    return any(
+    identificadores = [valor for valor in (documento.external_id, documento.url_fuente) if valor]
+    por_host = any(
         _host_de(valor) == host or _host_de(valor).endswith(f".{host}")
-        for valor in (documento.external_id, documento.url_fuente)
+        for valor in identificadores
         for host in hosts
+    )
+    return por_host or any(
+        patron.search(valor)
+        for fuente, patron in DOIS_DE_FUENTES_EXCLUIDAS.items()
+        if fuente in nombres
+        for valor in identificadores
     )
 
 
