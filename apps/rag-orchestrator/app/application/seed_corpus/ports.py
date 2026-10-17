@@ -115,6 +115,13 @@ class CorpusCatalog(Protocol):
         """
         ...
 
+    def retirar_version(self, document_id: str, superseded_at: datetime) -> None:
+        """Marca ``is_current = false`` + ``superseded_at`` SIN borrar nada (RN-05, RN-21).
+
+        Lanza ``VersionAnteriorInexistente`` si el documento no existe.
+        """
+        ...
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]: ...
 
     def ids_de_la_ultima_release(self) -> frozenset[str] | None:

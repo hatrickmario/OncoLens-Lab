@@ -60,6 +60,16 @@ class CorpusDocumentRepository:
             ):  # dentro de la transacción: al lanzar se revierte también el nuevo
                 raise VersionAnteriorInexistente(anterior_id)
 
+    def retirar_version(self, document_id: str, superseded_at: datetime) -> None:
+        with self._motor.begin() as conexion:
+            retiradas = conexion.execute(
+                sa.update(corpus_document)
+                .where(corpus_document.c.document_id == document_id)
+                .values(is_current=False, superseded_at=superseded_at)
+            )
+            if retiradas.rowcount != 1:
+                raise VersionAnteriorInexistente(document_id)
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(
             corpus_document.c.is_current.is_(True), corpus_document.c.status == STATUS_EMBEBIDO

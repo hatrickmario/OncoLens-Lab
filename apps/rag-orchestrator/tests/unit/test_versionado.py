@@ -7,6 +7,7 @@ from app.domain.corpus_seed.versionado import (
     VersionExistente,
     calcular_checksum,
     debe_publicar_release,
+    decidir_retiro,
     decidir_version,
 )
 
@@ -134,3 +135,31 @@ def test_omitir_tambien_apaga_los_chunks_de_las_versiones_no_embebidas_de_otro_c
 def test_sin_versiones_no_embebidas_ni_vigente_no_hay_nada_que_apagar() -> None:
     assert decidir_version("c1", []).a_apagar == ()
     assert decidir_version("c1", [version("a@1", "c1")]).a_apagar == ()
+
+
+def test_el_retiro_apaga_la_vigente_y_las_versiones_no_embebidas_del_grupo() -> None:
+    existentes = [
+        version("a@1", "c1", vigente=False),
+        version("a@2", "c2"),
+        version("a@3", "c3", vigente=False, status="error"),
+    ]
+
+    retiro = decidir_retiro(existentes)
+
+    assert retiro.vigente_id == "a@2" and set(retiro.a_apagar) == {"a@2", "a@3"}
+
+
+def test_un_grupo_sin_vigente_no_tiene_nada_que_retirar_pero_si_huerfanas_que_apagar() -> None:
+    assert decidir_retiro([]).vigente_id is None and decidir_retiro([]).a_apagar == ()
+    sin_vigente = [
+        version("a@1", "c1", vigente=False),
+        version("a@2", "c2", vigente=False, status="error"),
+    ]
+
+    retiro = decidir_retiro(sin_vigente)
+
+    assert retiro.vigente_id is None and retiro.a_apagar == ("a@2",)
+
+
+def test_la_release_se_publica_tambien_cuando_el_conjunto_vigente_queda_vacio() -> None:
+    assert debe_publicar_release(frozenset(), frozenset({"a"})) is True

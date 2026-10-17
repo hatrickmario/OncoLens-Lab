@@ -55,6 +55,15 @@ class CatalogoEnMemoria:
             anterior, is_current=False, superseded_at=superseded_at
         )
 
+    def retirar_version(self, document_id: str, superseded_at: datetime) -> None:
+        self._puede("retirar_version")
+        registro = self.documentos.get(document_id)
+        if registro is None:
+            raise VersionAnteriorInexistente(document_id)
+        self.documentos[document_id] = replace(
+            registro, is_current=False, superseded_at=superseded_at
+        )
+
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         return frozenset(
             i for i, r in self.documentos.items() if r.is_current and r.status == STATUS_EMBEBIDO

@@ -60,6 +60,18 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
     return DecisionDeVersion(Accion.INSERTAR, a_apagar=huerfanas)
 
 
+@dataclass(frozen=True)
+class DecisionDeRetiro:
+    """Qué retirar cuando un documento del grupo se rechaza por licencia o fuente (RN-21, RN-05)."""
+
+    vigente_id: str | None = None
+    a_apagar: tuple[str, ...] = ()
+
+
+def decidir_retiro(existentes: Sequence[VersionExistente]) -> DecisionDeRetiro:
+    raise NotImplementedError("no implementado")
+
+
 def debe_publicar_release(vigentes: Collection[str], ultima: Collection[str] | None) -> bool:
     """Una release nueva solo si el conjunto de documentos vigentes cambió respecto de la última (AC-5)."""
     return bool(vigentes) and set(vigentes) != set(ultima or ())

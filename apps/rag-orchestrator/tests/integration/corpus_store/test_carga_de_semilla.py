@@ -64,6 +64,11 @@ class Entorno:
         assert len(filas) == 1, f"{document_key}: se esperaba una fila y hay {len(filas)}"
         return dict(filas[0])
 
+    def filas_por_prefijo(self, prefijo: str) -> list[dict[str, object]]:
+        consulta = text("SELECT * FROM corpus.corpus_document WHERE starts_with(document_id, :p)")
+        with self.motor.connect() as conexion:
+            return [dict(f) for f in conexion.execute(consulta, {"p": prefijo}).mappings()]
+
     def filas_del_catalogo(self) -> int:
         with self.motor.connect() as conexion:
             return int(
@@ -334,3 +339,34 @@ def test_volver_al_texto_de_v1_tras_un_fallo_real_no_deja_chunks_vigentes_de_v2(
     entorno.cargar("t-ok-1")
 
     assert entorno.documentos_con_chunks_vigentes() == {str(entorno.fila("t-ok-1")["document_id"])}
+
+
+@pytest.mark.parametrize(
+    "cambios",
+    [{"license": "CC BY-ND 4.0"}, {"source_name": "NCCN"}],
+    ids=["licencia_nd", "fuente_excluida"],
+)
+def test_un_documento_embebido_que_vuelve_rechazado_deja_su_grupo_sin_vigentes_y_publica_release(
+    entorno: Entorno, cambios: dict[str, object]
+) -> None:
+    """Decidido (usuario, 2026-10-20): un rechazo por licencia o fuente retira la versión vigente, sin borrar nada."""
+    entorno.cargar("t-ok-1")
+    cargado = entorno.fila("t-ok-1")
+    chunks_antes = entorno.total_de_chunks()
+    filas_antes = entorno.filas_del_catalogo()
+    entorno.reloj.valor = datetime(2026, 10, 17, 9, 30, tzinfo=UTC)
+
+    reporte = entorno.cargador.cargar([replace(documentos_fx_06c_a("t-ok-1")[0], **cambios)])
+
+    retirado = next(
+        f
+        for f in entorno.filas_por_prefijo("t-ok-1@")
+        if f["document_id"] == cargado["document_id"]
+    )
+    assert reporte.resultado_de("t-ok-1").retirada_de_vigente is True
+    assert (retirado["is_current"], retirado["superseded_at"]) == (False, entorno.reloj.valor)
+    assert entorno.documentos_con_chunks_vigentes() == set()
+    assert entorno.total_de_chunks() == chunks_antes  # los chunks siguen existiendo
+    assert entorno.filas_del_catalogo() == filas_antes + 1  # solo la fila del rechazo
+    assert reporte.release_id is not None and entorno.ids_en_la_release() == []
+    assert entorno.releases_publicadas() == 2

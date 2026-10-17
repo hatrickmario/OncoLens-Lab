@@ -25,6 +25,8 @@ class ResultadoDeDocumento:
     resultado: Resultado
     motivo: str | None = None
     chunks: int = 0
+    # Un rechazo por licencia o fuente retiró la versión vigente del grupo (decidido por el usuario, 2026-10-20).
+    retirada_de_vigente: bool = False
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,7 @@ class ReporteDeCarga:
                     "resultado": r.resultado.value,
                     "motivo": r.motivo,
                     "chunks": r.chunks,
+                    "retirada_de_vigente": r.retirada_de_vigente,
                 }
                 for r in self.resultados
             ],

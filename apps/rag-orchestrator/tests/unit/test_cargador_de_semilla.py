@@ -7,6 +7,7 @@ congelados. La integración con PostgreSQL y Milvus reales está en ``tests/inte
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 
 import pytest
 
@@ -344,3 +345,101 @@ def test_el_fake_del_catalogo_cumple_el_mismo_contrato_que_el_real_con_un_anteri
         catalogo.reemplazar_version(registro_de_prueba("nuevo@1"), "no-existe@1", AHORA)
 
     assert catalogo.documentos == {}
+
+
+def rechazado_tras_estar_cargado(montaje: Montaje, **cambios: object) -> DocumentoDeSemilla:
+    """El mismo documento de t-ok-1 (mismo grupo) que vuelve con la licencia o la fuente cambiadas."""
+    montaje.cargar("t-ok-1")
+    return replace(documentos_fx_06c_a("t-ok-1")[0], **cambios)
+
+
+@pytest.mark.parametrize(
+    ("cambios", "motivo"),
+    [
+        ({"license": "CC BY-ND 4.0"}, "licencia_no_aceptada"),
+        ({"license": None}, "sin_licencia"),
+        ({"source_name": "NCCN"}, "fuente_excluida"),
+    ],
+)
+def test_rechazar_un_documento_ya_embebido_retira_su_version_vigente_sin_borrar_nada(
+    montaje: Montaje, cambios: dict[str, object], motivo: str
+) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, **cambios)
+    id_cargado = next(iter(montaje.catalogo.documentos))
+    filas_antes = len(montaje.catalogo.documentos)
+    chunks_antes = set(montaje.almacen.chunks)
+    montaje.reloj.valor = datetime(2026, 10, 17, 9, 30, tzinfo=UTC)
+
+    reporte = montaje.cargador.cargar([documento])
+
+    resultado = reporte.resultado_de("t-ok-1")
+    cargado = montaje.catalogo.documentos[id_cargado]
+    assert (resultado.resultado, resultado.motivo, resultado.retirada_de_vigente) == (
+        Resultado.RECHAZADO,
+        motivo,
+        True,
+    )
+    assert (cargado.is_current, cargado.superseded_at) == (False, montaje.reloj.valor)
+    assert len(montaje.catalogo.documentos) == filas_antes + 1  # la fila del rechazo; nada se borra
+    assert set(montaje.almacen.chunks) == chunks_antes and montaje.vigentes_en_milvus() == set()
+    assert montaje.encontrados_por_busqueda() == set()
+
+
+def test_rechazar_un_documento_ya_embebido_publica_una_release_sin_el_retirado(
+    montaje: Montaje,
+) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+
+    reporte = montaje.cargador.cargar([documento])
+
+    assert reporte.release_id is not None and len(montaje.catalogo.releases) == 2
+    assert montaje.catalogo.releases[-1].document_ids == ()
+
+
+def test_el_reporte_json_distingue_el_rechazo_que_retiro_una_version_vigente(
+    montaje: Montaje,
+) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+
+    datos = montaje.cargador.cargar([documento]).como_diccionario()
+
+    assert datos["documentos"][0]["retirada_de_vigente"] is True
+
+
+def test_rechazar_un_documento_que_nunca_estuvo_cargado_no_retira_nada_ni_publica_release(
+    montaje: Montaje,
+) -> None:
+    reporte = montaje.cargar("t-nd")
+
+    assert reporte.resultado_de("t-nd").retirada_de_vigente is False
+    assert reporte.release_id is None and montaje.catalogo.releases == []
+
+
+def test_si_apagar_la_vigente_falla_el_resultado_es_error_y_el_catalogo_no_cambia(
+    montaje: Montaje,
+) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+    id_cargado = next(iter(montaje.catalogo.documentos))
+    montaje.almacen.fallar_en["marcar_no_vigentes"] = ConnectionError("milvus caído")
+
+    reporte = montaje.cargador.cargar([documento])
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.ERROR
+    assert reporte.resultado_de("t-ok-1").motivo == "retiro: ConnectionError"
+    assert montaje.catalogo.documentos[id_cargado].is_current is True
+    assert len(montaje.catalogo.documentos) == 1  # ni siquiera se guardó la fila del rechazo
+
+
+def test_reintentar_el_rechazo_tras_ese_fallo_retira_la_vigente(montaje: Montaje) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+    montaje.almacen.fallar_en["marcar_no_vigentes"] = ConnectionError("milvus caído")
+    montaje.cargador.cargar([documento])
+    montaje.almacen.fallar_en.clear()
+
+    reporte = montaje.cargador.cargar([documento])
+
+    assert reporte.resultado_de("t-ok-1").retirada_de_vigente is True
+    assert (
+        montaje.vigentes_en_milvus() == set()
+        and montaje.catalogo.ids_de_documentos_vigentes() == frozenset()
+    )
