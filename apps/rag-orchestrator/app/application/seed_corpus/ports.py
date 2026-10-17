@@ -41,14 +41,14 @@ class SourceFetcher(Protocol):
 
 
 class ChunkStoreDeIngesta(Protocol):
-    """Lo que la ingesta necesita del almacén vectorial: insertar, listar por documento y apagar la vigencia (RN-05).
+    """Lo que la ingesta necesita del almacén vectorial: escribir chunks y apagar la vigencia (RN-05).
 
     ``MilvusRepository`` lo cumple junto con ``CorpusChunkStore``; la ingesta no depende de la búsqueda ni de la colección.
     """
 
-    def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int: ...
-
-    def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]: ...
+    def upsert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
+        """Inserta o reescribe por ``chunk_id``: idempotente (reintentos) y deja vigentes los de una readmisión."""
+        ...
 
     def marcar_no_vigentes(self, document_id: str) -> int:
         """Pone ``is_current = false`` a los chunks del documento SIN borrar ninguno. Devuelve cuántos cambió."""

@@ -36,6 +36,7 @@ from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import (
     Accion,
+    DecisionDeRetiro,
     DecisionDeVersion,
     calcular_checksum,
     debe_publicar_release,
@@ -100,28 +101,27 @@ class SeedCorpusLoader:
         return self._cargar_documento(documento, admision)
 
     def _rechazar(self, documento: DocumentoDeSemilla, admision: Admision) -> ResultadoDeDocumento:
-        """Rechazo por licencia o fuente: retira la vigente del grupo (RN-21, RN-05) y registra el rechazo, sin borrar nada."""
+        """Rechazo por licencia o fuente: retira la vigente del grupo (RN-21, RN-05) y registra el rechazo, sin borrar nada.
+
+        Solo el apagado de chunks (Milvus) se vuelve un resultado ``error``; un fallo del catálogo se propaga y aborta.
+        """
+        retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
         try:
-            retirada = self._retirar_vigente_del_grupo(documento)
+            self._apagar(retiro.a_apagar)
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             # Error, no rechazado, y sin fila de rechazo: la siguiente carga repite el retiro desde cero.
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"retiro: {type(error).__name__}"
             )
+        retirada = self._retirar_en_el_catalogo(retiro)
         self._catalogo.guardar_documento(registro_rechazado(documento, self._reloj.ahora()))
         motivo = admision.motivo.value if admision.motivo else None
         return ResultadoDeDocumento(
             documento.document_key, Resultado.RECHAZADO, motivo, retirada_de_vigente=retirada
         )
 
-    def _retirar_vigente_del_grupo(self, documento: DocumentoDeSemilla) -> bool:
-        """Apaga en Milvus y luego retira en el catálogo la versión vigente del grupo; ``True`` si había una.
-
-        Orden de D5: primero los chunks (si falla, el catálogo sigue diciendo "vigente" y el contenido solo se pierde en
-        parte, nunca se sirve contenido retirado), después el catálogo.
-        """
-        retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
-        self._apagar(retiro.a_apagar)
+    def _retirar_en_el_catalogo(self, retiro: DecisionDeRetiro) -> bool:
+        """Marca no vigente la versión del grupo (después de apagar sus chunks, D5); ``True`` si había una."""
         if retiro.vigente_id is None:
             return False
         self._catalogo.retirar_version(retiro.vigente_id, self._reloj.ahora())
@@ -150,6 +150,10 @@ class SeedCorpusLoader:
             return self._registrar_error(
                 documento, admision, preparado.checksum, "embeddings", error
             )
+        # La fila definitiva (no vigente, estado error) ANTES de tocar Milvus: si algo falla después, el chunk tiene dueño.
+        self._catalogo.guardar_documento(
+            registro_con_error(documento, admision, preparado.checksum, self._reloj.ahora())
+        )
         try:
             self._indexar(registro, fragmentos, vectores, preparado.decision)
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
@@ -197,18 +201,16 @@ class SeedCorpusLoader:
         vectores: Sequence[Sequence[float]],
         decision: DecisionDeVersion,
     ) -> None:
-        """Chunks nuevos -> apagar los de ``decision.a_apagar`` (D5). Re-ejecutable: no reinserta lo que ya quedó.
+        """Chunks nuevos -> apagar los de ``decision.a_apagar`` (D5). Idempotente: escribe por ``chunk_id``.
 
-        Entre insertar y apagar hay una ventana en la que conviven chunks vigentes de dos versiones; si algo falla en ella,
-        el catálogo conserva la versión anterior como vigente y la siguiente carga del grupo apaga lo que quedó
-        (``a_apagar`` incluye toda versión no ``embebido``). No hay garantía de que Milvus y el catálogo coincidan entre
-        una carga fallida y la siguiente (deuda: insertar con ``is_current = false`` y encender tras confirmar).
+        Antes de llamarla existe en el catálogo la fila definitiva del documento (no vigente), así que todo chunk que llegue a
+        Milvus tiene fila en su grupo y ``decidir_version``/``decidir_retiro`` lo ven. Entre escribir y apagar conviven
+        chunks vigentes de dos versiones; si algo falla en la ventana, el catálogo conserva la versión anterior como vigente
+        y la siguiente carga del grupo apaga lo que quedó. No hay garantía de coherencia entre la carga fallida y la
+        siguiente (deuda: insertar con ``is_current = false`` y encender tras confirmar).
         """
-        ya_insertados = self._almacen_de_chunks.ids_de_chunks_del_documento(registro.document_id)
         chunks = chunks_del_documento(registro, fragmentos, vectores, self._reloj.ahora())
-        pendientes = [c for c in chunks if c.chunk_id not in ya_insertados]
-        if pendientes:
-            self._almacen_de_chunks.insert_chunks(pendientes)
+        self._almacen_de_chunks.upsert_chunks(chunks)
         self._apagar(decision.a_apagar)
 
     def _apagar(self, document_ids: Sequence[str]) -> None:

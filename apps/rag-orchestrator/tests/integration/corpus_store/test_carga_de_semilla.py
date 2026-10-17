@@ -421,7 +421,9 @@ def test_readmitir_con_el_mismo_checksum_un_documento_retirado_lo_deja_vigente_c
 
     entorno.cargar("t-ok-1")
 
-    readmitido = entorno.fila("t-ok-1")
+    readmitido = next(
+        f for f in entorno.filas_por_prefijo("t-ok-1@") if f["document_id"] == id_cargado
+    )
     assert (readmitido["is_current"], readmitido["superseded_at"]) == (True, None)
     assert entorno.documentos_con_chunks_vigentes() == {id_cargado}
     assert entorno.ids_en_la_release() == [id_cargado]
