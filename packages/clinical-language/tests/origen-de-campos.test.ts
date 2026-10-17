@@ -20,7 +20,9 @@ describe('origen de los campos del contrato', () => {
   });
 
   it('no repite ningún campo en las dos listas', () => {
-    const repetidos = CAMPOS_GENERADOS.filter((campo) => CAMPOS_COPIADOS_DEL_CORPUS.includes(campo));
+    const repetidos = CAMPOS_GENERADOS.filter((campo) =>
+      CAMPOS_COPIADOS_DEL_CORPUS.includes(campo),
+    );
     expect(repetidos).toEqual([]);
   });
 });

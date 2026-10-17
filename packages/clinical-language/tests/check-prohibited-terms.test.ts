@@ -38,9 +38,9 @@ describe('checkProhibitedTerms', () => {
     const texto = 'La guía recomienda el esquema X';
 
     expect(idsDe(texto, { niveles: ['A'] })).toEqual([]);
-    expect(checkProhibitedTerms(texto, lista(), { niveles: ['A', 'B'], permitirFrases: true })).toEqual([
-      { id: 'b-recomiend', termino: 'recomiend', nivel: 'B' },
-    ]);
+    expect(
+      checkProhibitedTerms(texto, lista(), { niveles: ['A', 'B'], permitirFrases: true }),
+    ).toEqual([{ id: 'b-recomiend', termino: 'recomiend', nivel: 'B' }]);
   });
 
   it('devuelve una coincidencia por cada forma dirigida, deóntica o negativa de S1 resp. 33 y cuenta no debe recibir una sola vez [US-068 AC-2]', () => {
