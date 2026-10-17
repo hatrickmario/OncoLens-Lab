@@ -27,7 +27,11 @@ class ServiceJwtVerifier:
     """Implementa `ServiceTokenVerifierPort`; la vigencia la juzga el dominio con el `Clock` inyectado."""
 
     def __init__(
-        self, public_key: ec.EllipticCurvePublicKey, clock: Clock, ttl_seconds: int, skew_seconds: int
+        self,
+        public_key: ec.EllipticCurvePublicKey,
+        clock: Clock,
+        ttl_seconds: int,
+        skew_seconds: int,
     ) -> None:
         self._public_key = public_key
         self._clock = clock

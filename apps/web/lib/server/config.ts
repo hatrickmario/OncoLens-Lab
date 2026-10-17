@@ -15,7 +15,9 @@ export interface ConfigWeb {
 /** Valor por defecto de WEB_MAX_BODY_BYTES: holgado para una pregunta de 2000 caracteres y sus filtros. */
 const MAX_BODY_BYTES_POR_DEFECTO = 32768;
 
-export function leerConfigWeb(entorno: Record<string, string | undefined> = process.env): ConfigWeb {
+export function leerConfigWeb(
+  entorno: Record<string, string | undefined> = process.env,
+): ConfigWeb {
   const clinicalApiUrl = exigir(entorno, 'CLINICAL_API_URL');
   const allowedOrigin = exigir(entorno, 'WEB_ALLOWED_ORIGIN');
   const upstreamTimeoutMs = Number(exigir(entorno, 'WEB_UPSTREAM_TIMEOUT_MS'));

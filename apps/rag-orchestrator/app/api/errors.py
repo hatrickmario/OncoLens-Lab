@@ -21,19 +21,25 @@ logger = logging.getLogger(__name__)
 
 def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) -> None:
     @app.exception_handler(RequestValidationError)
-    async def peticion_invalida_sin_eco(request: Request, error: RequestValidationError) -> JSONResponse:
+    async def peticion_invalida_sin_eco(
+        request: Request, error: RequestValidationError
+    ) -> JSONResponse:
         """Responde 422 a cualquier `RequestValidationError` (body, header, query o path) sin eco de los valores."""
         # Solo loc, msg y type: input y ctx llevan los valores recibidos (contexto clínico desidentificado).
         cuerpo = ErrorValidacion(
             error="CUERPO_INVALIDO",
             message="El cuerpo de la petición no cumple el contrato.",
             traceId=resolver_trace_id(request, trace_ids),
-            detail=[DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()],
+            detail=[
+                DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()
+            ],
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
 
     @app.exception_handler(TokenServicioInvalido)
-    async def token_servicio_invalido(request: Request, error: TokenServicioInvalido) -> JSONResponse:
+    async def token_servicio_invalido(
+        request: Request, error: TokenServicioInvalido
+    ) -> JSONResponse:
         """Responde 401 con cuerpo y mensaje fijos para todo motivo (sin oráculo); el motivo solo va al log."""
         trace_id = resolver_trace_id(request, trace_ids)
         # Nunca el token, la cabecera Authorization ni la cookie: solo evento, motivo cerrado y traceId.
@@ -43,4 +49,6 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             message="El token de servicio falta o no es válido.",
             traceId=trace_id,
         )
-        return JSONResponse(status_code=401, content=cuerpo.model_dump(), headers={"WWW-Authenticate": "Bearer"})
+        return JSONResponse(
+            status_code=401, content=cuerpo.model_dump(), headers={"WWW-Authenticate": "Bearer"}
+        )

@@ -23,7 +23,16 @@ def test_resolver_trace_id_conserva_el_recibido_cuando_cumple_el_formato_del_con
 
 
 @pytest.mark.parametrize(
-    "valor", ["", "req_corto", "req_" + "a" * 33, "abcdef12", "req_abc def1", "req_abcdef1\n", "req_ñandú123"]
+    "valor",
+    [
+        "",
+        "req_corto",
+        "req_" + "a" * 33,
+        "abcdef12",
+        "req_abc def1",
+        "req_abcdef1\n",
+        "req_ñandú123",
+    ],
 )
 def test_resolver_trace_id_genera_uno_nuevo_cuando_el_recibido_no_cumple_el_formato(valor):
     assert resolver_trace_id(_peticion_con(valor), _GeneradorFijo()) == NUEVO

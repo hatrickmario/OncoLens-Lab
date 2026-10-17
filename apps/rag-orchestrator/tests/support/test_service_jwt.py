@@ -43,5 +43,9 @@ def test_variantes_invalidas_incluyen_la_ausencia_de_cabecera_y_el_resto_lleva_b
     cabeceras = {nombre: construir(par) for nombre, construir in VARIANTES_INVALIDAS.items()}
 
     assert cabeceras["sin_cabecera"] == {}
-    assert all(c["Authorization"].startswith("Bearer ") for n, c in cabeceras.items() if n != "sin_cabecera")
+    assert all(
+        c["Authorization"].startswith("Bearer ")
+        for n, c in cabeceras.items()
+        if n != "sin_cabecera"
+    )
     assert cabecera_bearer("x") == {"Authorization": "Bearer x"}

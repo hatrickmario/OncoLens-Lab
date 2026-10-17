@@ -1,5 +1,8 @@
 import 'server-only';
-import { createClient, type Client } from '../../../../packages/api-contracts/src/client-web/clinical-api/client';
+import {
+  createClient,
+  type Client,
+} from '../../../../packages/api-contracts/src/client-web/clinical-api/client';
 import type { ConfigWeb } from './config';
 import { respuestaPropia } from './respuestas';
 
@@ -53,7 +56,9 @@ export function cabecerasHaciaNavegador(respuesta: Response): Headers {
  * (WEB_UPSTREAM_TIMEOUT_MS) y no sigue redirecciones. Lo reutiliza el login (sin cookie entrante).
  * El multipart (ingesta de documentos) queda como deuda: necesitará su propia variante.
  */
-export function crearFetchJsonHaciaClinicalApi(opciones: OpcionesFetchClinicalApi): typeof globalThis.fetch {
+export function crearFetchJsonHaciaClinicalApi(
+  opciones: OpcionesFetchClinicalApi,
+): typeof globalThis.fetch {
   return async (entrada, init) => {
     const peticion = entrada instanceof Request ? entrada : new Request(entrada, init);
     const cuerpo = await peticion.text();
@@ -99,7 +104,11 @@ export function crearSdkClinicalApi(
 /** 502 propio del BFF (ErrorServicioIa del contrato): sin URL interna, sin mensaje del error de red. */
 export function respuestaDeFalloDeTransporte(traceId: string): Response {
   return respuestaPropia(
-    { error: 'ERROR_SERVICIO_IA', message: 'El servicio de IA no respondió correctamente.', traceId },
+    {
+      error: 'ERROR_SERVICIO_IA',
+      message: 'El servicio de IA no respondió correctamente.',
+      traceId,
+    },
     502,
   );
 }

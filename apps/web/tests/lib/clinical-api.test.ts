@@ -15,7 +15,9 @@ function conCookie(valor: string | null): Request {
 
 describe('cabeceraCookieDeSesion', () => {
   it('devuelve solo la cookie oncolens_session cuando el navegador envía más cookies', () => {
-    expect(cabeceraCookieDeSesion(conCookie('a=1; oncolens_session=abc; b=2'))).toBe('oncolens_session=abc');
+    expect(cabeceraCookieDeSesion(conCookie('a=1; oncolens_session=abc; b=2'))).toBe(
+      'oncolens_session=abc',
+    );
   });
 
   it('devuelve undefined cuando no hay cookie de sesión', () => {
@@ -69,9 +71,19 @@ describe('crearFetchJsonHaciaClinicalApi', () => {
       recibido = { url: String(url), init };
       return Promise.resolve(new Response('{}'));
     };
-    const enviar = crearFetchJsonHaciaClinicalApi({ fetch: fetchFalso, timeoutMs: 1000, cookieDeSesion: 'oncolens_session=abc' });
+    const enviar = crearFetchJsonHaciaClinicalApi({
+      fetch: fetchFalso,
+      timeoutMs: 1000,
+      cookieDeSesion: 'oncolens_session=abc',
+    });
 
-    await enviar(new Request('http://clinical-api.test:3000/x', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{"a":1}' }));
+    await enviar(
+      new Request('http://clinical-api.test:3000/x', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: '{"a":1}',
+      }),
+    );
 
     const cabeceras = new Headers(recibido?.init?.headers);
     expect(cabeceras.get('content-type')).toBe('application/json');

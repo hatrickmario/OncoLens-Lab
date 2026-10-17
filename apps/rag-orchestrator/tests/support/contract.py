@@ -36,11 +36,17 @@ def usar_spec(spec: dict[str, Any]) -> None:
 
 
 def _segmentos(pointer: str) -> list[str]:
-    return [s.replace("~1", "/").replace("~0", "~") for s in pointer.removeprefix("#/").split("/") if s]
+    return [
+        s.replace("~1", "/").replace("~0", "~") for s in pointer.removeprefix("#/").split("/") if s
+    ]
 
 
 def _seguir_ref(spec: dict[str, Any], nodo: Any) -> Any:
-    while isinstance(nodo, dict) and isinstance(nodo.get("$ref"), str) and nodo["$ref"].startswith("#/"):
+    while (
+        isinstance(nodo, dict)
+        and isinstance(nodo.get("$ref"), str)
+        and nodo["$ref"].startswith("#/")
+    ):
         nodo = _resolver(spec, nodo["$ref"])
     return nodo
 
@@ -70,9 +76,13 @@ def assert_matches_spec(pointer: str, body: Any) -> None:
     if _spec is None:
         raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
     raiz = {**_schema_de(_spec, pointer), "components": _spec["components"]}
-    errores = sorted(Draft202012Validator(raiz).iter_errors(body), key=lambda e: list(e.absolute_path))
+    errores = sorted(
+        Draft202012Validator(raiz).iter_errors(body), key=lambda e: list(e.absolute_path)
+    )
     if errores:
-        detalle = "\n".join(f"  /{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errores)
+        detalle = "\n".join(
+            f"  /{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errores
+        )
         raise AssertionError(f"la respuesta no cumple {PROVEEDOR}{pointer}:\n{detalle}")
 
 
@@ -85,7 +95,11 @@ def operaciones_con_jwt_de_servicio() -> list[tuple[str, str]]:
     for ruta, operaciones in _spec["paths"].items():
         for metodo, operacion in operaciones.items():
             seguridad = operacion.get("security")
-            requiere = global_requiere if seguridad is None else any("serviceJwt" in req for req in seguridad)
+            requiere = (
+                global_requiere
+                if seguridad is None
+                else any("serviceJwt" in req for req in seguridad)
+            )
             if requiere:
                 protegidas.append((metodo.upper(), ruta))
     return protegidas

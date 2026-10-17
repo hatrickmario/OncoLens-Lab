@@ -18,7 +18,13 @@
     "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs",
     "test:infra": "vitest run infra scripts/smoke",
     "smoke:compose": "bash scripts/smoke/compose-smoke.sh",
-    "test:secrets": "bash scripts/tests/setup-secrets.test.sh"
+    "test:secrets": "bash scripts/tests/setup-secrets.test.sh",
+    "lint": "eslint . --max-warnings 0",
+    "format:js": "prettier \"apps/web/**/*.{ts,tsx,js,jsx,mjs,cjs,css}\" \"apps/clinical-api/**/*.{ts,js,mjs,cjs}\" \"packages/**/*.{ts,tsx,js,mjs,cjs}\"",
+    "format": "npm run format:js -- --write && npm run format:py",
+    "format:check": "npm run format:js -- --check && npm run format:py:check",
+    "format:py": "node scripts/quality/ruff.mjs",
+    "format:py:check": "node scripts/quality/ruff.mjs --check"
   },
   "overrides": {
     "@hey-api/json-schema-ref-parser": {
@@ -26,12 +32,23 @@
     }
   },
   "devDependencies": {
+    "@eslint/js": "9.39.5",
     "@hey-api/openapi-ts": "0.99.0",
+    "@next/eslint-plugin-next": "16.4.2",
     "@redocly/openapi-core": "2.62.1",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
     "fast-json-patch": "3.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
     "vitest": "5.0.4",
     "yaml": "2.9.1",
     "zod": "4.6.6"

@@ -4,7 +4,10 @@ import 'server-only';
  * Lee el cuerpo como texto sin pasar de `maxBytes`: devuelve `null` si lo supera (por Content-Length o
  * mientras se lee), para no cargar en memoria cuerpos arbitrarios del navegador.
  */
-export async function leerCuerpoAcotado(request: Request, maxBytes: number): Promise<string | null> {
+export async function leerCuerpoAcotado(
+  request: Request,
+  maxBytes: number,
+): Promise<string | null> {
   const declarado = Number(request.headers.get('content-length'));
   if (Number.isFinite(declarado) && declarado > maxBytes) {
     return null;

@@ -4,7 +4,15 @@ from datetime import datetime
 from typing import Literal
 
 MotivoTokenInvalido = Literal[
-    "ausente", "malformado", "algoritmo", "firma", "emisor", "audiencia", "expirado", "vida_maxima", "emitido_en_futuro"
+    "ausente",
+    "malformado",
+    "algoritmo",
+    "firma",
+    "emisor",
+    "audiencia",
+    "expirado",
+    "vida_maxima",
+    "emitido_en_futuro",
 ]
 
 

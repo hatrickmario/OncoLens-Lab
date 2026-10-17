@@ -8,7 +8,8 @@ export interface LineaDeRegistro {
   duracionMs?: number;
   /** X-Trace-Id que devolvió clinical-api, cuando hubo respuesta (el `traceId` es el propio del BFF). */
   traceIdClinicalApi?: string;
-  motivo?: 'origen' | 'cuerpo_excesivo' | 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
+  motivo?:
+    'origen' | 'cuerpo_excesivo' | 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
 }
 
 export type Registrar = (linea: LineaDeRegistro) => void;

@@ -17,10 +17,7 @@ servidor.events.on('request:start', ({ request }) => {
 beforeAll(() =>
   servidor.listen({
     onUnhandledFrame: ({ frame, defaults }) => {
-      if (
-        frame.protocol === 'http' &&
-        esLoopback((frame.data as { request: Request }).request.url)
-      )
+      if (frame.protocol === 'http' && esLoopback((frame.data as { request: Request }).request.url))
         frame.passthrough();
       else defaults.error();
     },
@@ -37,11 +34,7 @@ describe('GET /health', () => {
 
     expect(respuesta.status).toBe(200);
     expect(respuesta.body).toEqual({ status: 'ok' });
-    assertMatchesSpec(
-      'clinical-api',
-      '#/paths/~1health/get/responses/200',
-      respuesta.body,
-    );
+    assertMatchesSpec('clinical-api', '#/paths/~1health/get/responses/200', respuesta.body);
   });
 
   it('responde 200 sin emitir cookie cuando la aplicación se crea sin dependencias (no consulta a rag-orchestrator)', async () => {
