@@ -8,7 +8,7 @@ import pytest
 
 from app.config.settings import CorpusSeedSettings
 from app.scripts import load_seed_corpus
-from tests.support.semilla import EmbedderFalso, MANIFIESTO_FX_06C_A
+from tests.support.semilla import MANIFIESTO_FX_06C_A, EmbedderFalso
 
 ENTORNO_VALIDO = {
     "CORPUS_SEED_MANIFEST_PATH": str(MANIFIESTO_FX_06C_A),
@@ -123,5 +123,5 @@ def test_el_cliente_http_del_cargador_no_hereda_proxies_ni_certificados_del_ento
 
     fuente = load_seed_corpus._fuente_de_texto(ajustes)
 
-    assert fuente._descargador is not None  # noqa: SLF001
-    assert fuente._descargador._cliente.trust_env is False  # noqa: SLF001
+    assert fuente._descargador is not None
+    assert fuente._descargador._cliente.trust_env is False

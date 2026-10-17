@@ -169,7 +169,7 @@ def test_la_release_se_publica_tambien_cuando_el_conjunto_vigente_queda_vacio() 
     assert debe_publicar_release(frozenset(), frozenset({"a"})) is True
 
 
-def test_el_checksum_de_una_version_retirada_sin_vigente_en_el_grupo_se_reingiere_en_lugar_de_omitirse() -> (
+def test_sin_vigente_en_el_grupo_cualquier_version_embebida_con_ese_checksum_se_reingiere_tambien_una_reemplazada_cuya_sucesora_se_retiro() -> (
     None
 ):
     """Tras un retiro por licencia o fuente no queda vigente: volver con el mismo texto lo readmite."""

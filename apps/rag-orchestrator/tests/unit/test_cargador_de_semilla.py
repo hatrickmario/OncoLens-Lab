@@ -96,7 +96,7 @@ def test_un_embedding_caido_deja_el_documento_en_error_sin_chunks_y_la_carga_sig
 def test_tras_un_error_de_milvus_una_nueva_carga_deja_los_documentos_embebidos(
     montaje: Montaje,
 ) -> None:
-    montaje.almacen.fallar_en["insert_chunks"] = ConnectionError("milvus caído")
+    montaje.almacen.fallar_en["upsert_chunks"] = ConnectionError("milvus caído")
     reporte = montaje.cargar("t-ok-1")
     montaje.almacen.fallar_en.clear()
 
@@ -108,7 +108,7 @@ def test_tras_un_error_de_milvus_una_nueva_carga_deja_los_documentos_embebidos(
 
 
 def test_un_error_de_milvus_en_el_primer_documento_no_detiene_el_segundo(montaje: Montaje) -> None:
-    montaje.almacen.fallar_en["insert_chunks"] = ConnectionError("milvus caído")
+    montaje.almacen.fallar_en["upsert_chunks"] = ConnectionError("milvus caído")
 
     reporte = montaje.cargar("t-ok-1", "t-ok-2")
 
@@ -320,7 +320,7 @@ def test_tras_un_fallo_al_apagar_la_anterior_una_tercera_version_deja_la_busqued
     assert montaje.encontrados_por_busqueda() == {v3}
 
 
-def test_volver_al_texto_de_v1_tras_ese_fallo_no_deja_chunks_vigentes_de_v2(
+def test_tras_ese_fallo_volver_al_texto_de_v1_no_deja_chunks_vigentes_de_v2(
     montaje: Montaje,
 ) -> None:
     montaje.cargar("t-ok-1")
@@ -461,7 +461,7 @@ def cargar_v1_y_fallar_v2_al_reemplazar(montaje: Montaje) -> None:
 
 
 @pytest.mark.ac("US-059", 6)
-def test_si_falla_confirmar_la_nueva_version_volver_al_texto_de_v1_no_deja_chunks_vigentes_de_v2(
+def test_si_falla_confirmar_la_nueva_version_volver_al_texto_de_v1_no_deja_aparecer_chunks_de_v2(
     montaje: Montaje,
 ) -> None:
     cargar_v1_y_fallar_v2_al_reemplazar(montaje)
@@ -501,11 +501,11 @@ def test_si_falla_confirmar_la_nueva_version_un_rechazo_deja_el_grupo_sin_chunks
 def test_si_falla_guardar_un_documento_nuevo_tras_indexarlo_un_rechazo_apaga_sus_chunks(
     montaje: Montaje,
 ) -> None:
-    # 1.ª llamada a guardar_documento: la fila definitiva (no vigente) previa a Milvus; 2.ª: confirmar.
-    montaje.catalogo.fallar_desde_la_llamada["guardar_documento"] = (1, ConnectionError("pg caído"))
+    # Falla solo al confirmar (registro embebido); la fila definitiva previa a Milvus (estado error) se guarda.
+    montaje.catalogo.fallar_al_guardar_status["embebido"] = ConnectionError("pg caído")
     with pytest.raises(ConnectionError):
         montaje.cargar("t-ok-1")
-    montaje.catalogo.fallar_desde_la_llamada.clear()
+    montaje.catalogo.fallar_al_guardar_status.clear()
     assert montaje.vigentes_en_milvus() != set()  # la ventana documentada: chunks sin confirmar
     rechazado = replace(documentos_fx_06c_a("t-ok-1")[0], license="CC BY-ND 4.0")
 

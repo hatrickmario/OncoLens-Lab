@@ -26,19 +26,12 @@ class CatalogoEnMemoria:
         self.documentos: dict[str, RegistroDeDocumento] = {}
         self.releases: list[RegistroDeRelease] = []
         self.fallar_en: dict[str, Exception] = {}
-        # Falla recién en la llamada número n (0 = la primera) de un método: p. ej. el segundo ``guardar_documento``.
-        self.fallar_desde_la_llamada: dict[str, tuple[int, Exception]] = {}
-        self._llamadas: dict[str, int] = {}
+        # ``guardar_documento`` falla solo al guardar un registro con este ``status`` (p. ej. el ``embebido`` de confirmar).
+        self.fallar_al_guardar_status: dict[str, Exception] = {}
 
     def _puede(self, metodo: str) -> None:
-        llamada = self._llamadas.get(metodo, 0)
-        self._llamadas[metodo] = llamada + 1
         if metodo in self.fallar_en:
             raise self.fallar_en[metodo]
-        if metodo in self.fallar_desde_la_llamada:
-            desde, error = self.fallar_desde_la_llamada[metodo]
-            if llamada >= desde:
-                raise error
 
     def versiones_del_grupo(self, version_group_id: str) -> list[VersionExistente]:
         self._puede("versiones_del_grupo")
@@ -50,6 +43,8 @@ class CatalogoEnMemoria:
 
     def guardar_documento(self, registro: RegistroDeDocumento) -> None:
         self._puede("guardar_documento")
+        if registro.status in self.fallar_al_guardar_status:
+            raise self.fallar_al_guardar_status[registro.status]
         self.documentos[registro.document_id] = registro
 
     def reemplazar_version(
@@ -100,10 +95,7 @@ class AlmacenDeChunksEnMemoria:
         return False
 
     def upsert_chunks(self, chunks: list[ChunkDelCorpus]) -> int:
-        return self.insert_chunks(chunks)
-
-    def insert_chunks(self, chunks: list[ChunkDelCorpus]) -> int:  # type: ignore[override]
-        self._puede("insert_chunks")
+        self._puede("upsert_chunks")
         if any(len(c.dense_vector) != self.dimension for c in chunks):
             raise DimensionDeVectorInvalida("dimensión distinta de EMBEDDING_DIM")
         for chunk in chunks:
@@ -122,9 +114,6 @@ class AlmacenDeChunksEnMemoria:
             for c in vigentes
         ]
         return sorted(puntuados, key=lambda r: -r.similitud_dense)[:limit]
-
-    def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]:
-        return frozenset(i for i, c in self.chunks.items() if c.document_id == document_id)
 
     def marcar_no_vigentes(self, document_id: str) -> int:
         self._puede("marcar_no_vigentes")
