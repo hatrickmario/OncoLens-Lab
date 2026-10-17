@@ -95,10 +95,20 @@ describe('readAppEnv', () => {
 
 describe('crearPool', () => {
   it('verifica siempre el certificado del servidor contra la CA configurada', async () => {
-    const pool = crearPool(readDatabaseConfig(ENTORNO_VALIDO, leer));
+    const pool = crearPool(readDatabaseConfig(ENTORNO_VALIDO, leer), () => undefined);
 
     expect(pool.options.ssl).toMatchObject({ rejectUnauthorized: true });
     expect((pool.options.ssl as { ca: string }).ca).toContain('BEGIN CERTIFICATE');
+    await pool.end();
+  });
+
+  it('registra solo el evento pool_postgres_error, sin el mensaje del error, cuando el pool emite un error', async () => {
+    const lineas: Record<string, unknown>[] = [];
+    const pool = crearPool(readDatabaseConfig(ENTORNO_VALIDO, leer), (linea) => lineas.push(linea));
+
+    pool.emit('error', new Error('detalle con host postgres y usuario clinical_api'));
+
+    expect(lineas).toEqual([{ event: 'pool_postgres_error' }]);
     await pool.end();
   });
 });

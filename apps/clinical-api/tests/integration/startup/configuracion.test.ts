@@ -55,9 +55,23 @@ describe('arranque de clinical-api con el login montado', () => {
         CLINICAL_DATABASE_URL: 'postgresql://clinical_api@postgres:5432/oncolens',
       },
     ],
+    ['SESSION_TTL_HOURS', { APP_ENV: 'test', SESSION_TTL_HOURS: 'abc' }],
+    ['ARGON2_TIME_COST', { APP_ENV: 'test', ARGON2_TIME_COST: '0' }],
+    ['PORT', { PORT: 'abc' }],
+    [
+      'SERVICE_JWT_TTL_SECONDS',
+      (crear: (nombre: string, contenido: string) => string) => ({
+        APP_ENV: 'test',
+        CLINICAL_DATABASE_URL: 'postgresql://clinical_api@postgres:5432/oncolens',
+        PG_CLINICAL_API_PASSWORD_FILE: crear('pg_password', 'contrasena-ficticia'),
+        CLINICAL_DATABASE_CA_FILE: crear('pg_ca.crt', 'ca-ficticia'),
+        SERVICE_JWT_TTL_SECONDS: 'abc',
+      }),
+    ],
   ])(
     'termina con código 1 sin escuchar y su stderr nombra %s, sin ningún valor, cuando la configuración es inválida',
-    (variable, extra) => {
+    (variable, extraOFabrica) => {
+      const extra = typeof extraOFabrica === 'function' ? extraOFabrica(archivo) : extraOFabrica;
       const proceso = arrancarProceso(extra);
 
       expect(proceso.status).toBe(1);

@@ -80,6 +80,40 @@ describe('manejador final de errores', () => {
   );
 });
 
+describe('manejador de cuerpo ilegible del login', () => {
+  function appConDb(db: Consultador) {
+    return appConAuth({
+      cliente,
+      espacio: ESPACIO_DE_IDS,
+      tokens: tokensFijos('t'),
+      reloj: relojFijo(),
+      registrar: loggerEnMemoria().registrar,
+      db,
+    });
+  }
+
+  it('responde 500 ERROR_INTERNO y no 422 cuando un error con status 429 se lanza dentro del login', async () => {
+    const error429 = Object.assign(new Error('límite'), { status: 429 });
+    const app = appConDb({ query: () => Promise.reject(error429) });
+
+    const respuesta = await request(app)
+      .post('/platform/auth/login')
+      .send({ email: doc1.email, password: doc1.password });
+
+    expect(respuesta.status).toBe(500);
+    expect(respuesta.body.error).toBe('ERROR_INTERNO');
+  });
+
+  it('responde 422 CUERPO_INVALIDO cuando el cuerpo supera el límite del parser', async () => {
+    const respuesta = await request(appConDb(dbQueRechaza))
+      .post('/platform/auth/login')
+      .send({ email: doc1.email, password: 'x'.repeat(200_000) });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+  });
+});
+
 describe('AppDependencies', () => {
   it('no admite rutasProtegidas sin el módulo de autenticación (el guard) [tipos]', () => {
     // Solo se comprueba en tiempo de compilación (`tsc --noEmit`): la función no se ejecuta.
