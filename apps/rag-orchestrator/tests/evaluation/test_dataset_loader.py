@@ -56,7 +56,13 @@ def test_dataset_loader_fuente_excluida_nccn_se_rechaza(dataset_dir: Path) -> No
 def test_dataset_loader_acepta_clinicaltrials_por_terminos_verificados(dataset_dir: Path) -> None:
     dataset = cargar_dataset(dataset_dir)
 
-    ct = [f for f in dataset.fuentes if f.nombre.startswith("ClinicalTrials.gov")]
+    ct = []
+    for f in dataset.fuentes:
+        fuente = f.nombre
+        host = urlparse(fuente if "://" in fuente else f"https://{fuente}").hostname
+        if host and (host == "clinicaltrials.gov" or host.endswith(".clinicaltrials.gov")):
+            ct.append(f)
+
     assert ct and all(f.datos["licencia_verificada"] == "terminos_NLM_ClinicalTrials_gov" for f in ct)
 
 
