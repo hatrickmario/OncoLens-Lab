@@ -1,0 +1,55 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.etiqueta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.campo {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-control-border);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 400;
+}
+
+.campo:focus-visible,
+.boton:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.boton {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.error {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-status-nocoincide);
+  border-radius: 0.375rem;
+  background: var(--color-status-nocoincide-bg);
+  color: var(--color-status-nocoincide);
+}
