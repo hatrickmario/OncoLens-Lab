@@ -302,6 +302,10 @@ deshacer una carga de desarrollo se recrean los volúmenes de test/Compose (solo
   definitiva se guarda (estado `error`, `is_current = false`) antes de escribir en Milvus; en una readmisión eso pisa la fila
   retirada, y si Milvus falla después se pierden `superseded_at` e `ingested_at` originales.
 - **Resuelta · reconciliar en `omitir`** (M1, usuario 2026-10-17): implementado; ver D5.
-- **Abierta (sin decisión) · P2:** alcance de la exención `NCT` de `telefono_local` en el escáner de PII (hoy global). No se toca.
+- **Decidido (usuario, 2026-10-17) · P2:** la exención `NCT` del patrón `telefono_local` queda **acotada a
+  `data/raw/seed/docs/`** (no global) y la sigue aplicando solo el escáner de CI. Implementada con
+  `rutasDeRegistroExentas` en `config/pii-formats.json` (sin subir `version`: es un campo de exención que solo lee
+  `scripts/lib/formatosPii.mjs`); el mismo patrón en `apps/`, en `data/` fuera de la semilla o sin ruta conocida es hallazgo.
+  `documento_identidad` conserva su exención `NCT` global (no entra en esta decisión). La allowlist de falsos positivos no se toca.
 - **Nota para L1D-106.** Tras su merge, el fake `AlmacenDeChunksEnMemoria.search_dense` debe aceptar el filtro y delegar en
   `exigir_filtro_vigente`, como el adapter real.

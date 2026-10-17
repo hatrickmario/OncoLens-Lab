@@ -1,0 +1,14 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "L1D-115 P2: el mismo patrón NCT fuera de data/raw/seed/docs/ (data/ fuera de la semilla y apps/) sigue siendo telefono_local: la exención está acotada a la ruta.",
+  "esperado": "falla",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "data/otro/ci-selftest-nct.txt:1: telefono_local",
+    "apps/clinical-api/src/ci-selftest-nct.txt:1: telefono_local"
+  ],
+  "ausentes": [
+    "00712140"
+  ]
+}

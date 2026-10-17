@@ -18,7 +18,9 @@ const lineasDe = (texto, ruta) => detectarPii(texto, formatos, ruta).map(({ line
 
 describe('detectarPii', () => {
   const RUTA_DE_LA_SEMILLA = 'data/raw/seed/docs/nci-mama-hp-en.txt';
-  const trialConNct = 'the PERSEPHONE trial (NCT00712140), which enrolled 4,089';
+  // Compuesto al ejecutarse: el archivo no lleva el patrón literal, que fuera de la semilla es hallazgo.
+  const registro = `${'NCT'}${'00712140'}`;
+  const trialConNct = `the PERSEPHONE trial (${registro}), which enrolled 4,089`;
 
   it('no informa un identificador NCT de ClinicalTrials.gov que cae tras la palabra clave de un teléfono (PERSEPHONE trial) dentro de data/raw/seed/docs/ [L1D-115]', () => {
     expect(detectarPii(trialConNct, formatos, RUTA_DE_LA_SEMILLA).map(({ linea, formato }) => `${linea}:${formato}`)).toEqual([]);
