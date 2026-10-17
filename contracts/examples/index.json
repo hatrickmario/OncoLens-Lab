@@ -272,6 +272,16 @@
       "target": "#/paths/~1rag~1query/post/responses/422"
     },
     {
+      "file": "rag-recuperacion-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/503"
+    },
+    {
+      "file": "rag-tipo-cancer-no-registrado.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/422"
+    },
+    {
       "file": "rag-token-servicio-invalido.json",
       "spec": "rag-orchestrator",
       "target": "#/paths/~1rag~1query/post/responses/401"

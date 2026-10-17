@@ -431,6 +431,18 @@ export const zErrorLlmLocalNoDisponible = z.strictObject({
     traceId: z.string()
 });
 
+export const zErrorRecuperacionNoDisponible = z.strictObject({
+    error: z.literal('RETRIEVAL_UNAVAILABLE'),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorTipoCancerNoRegistrado = z.strictObject({
+    error: z.literal('TIPO_CANCER_NO_REGISTRADO'),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorDeadlineVencido = z.strictObject({
     error: z.literal('DEADLINE_VENCIDO'),
     message: z.string(),

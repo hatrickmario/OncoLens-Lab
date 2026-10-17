@@ -1,0 +1,5 @@
+{
+  "error": "TIPO_CANCER_NO_REGISTRADO",
+  "message": "El contexto no tiene tipo de cáncer; no es posible filtrar la evidencia.",
+  "traceId": "req_9a0b1c2d"
+}
