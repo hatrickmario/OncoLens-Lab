@@ -10,6 +10,7 @@ from dataclasses import dataclass, replace
 
 import pytest
 
+from app.application.seed_corpus.ports import VersionAnteriorInexistente
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
 from app.application.seed_corpus.seed_corpus_loader import SeedCorpusLoader
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -18,6 +19,7 @@ from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from tests.support.almacenes_falsos import AlmacenDeChunksEnMemoria, CatalogoEnMemoria
 from tests.support.fakes import RelojFijo
+from tests.support.registros import AHORA, registro_de_prueba
 from tests.support.semilla import (
     DIRECTORIO_DE_FIXTURES,
     FECHA_DE_CORTE_DE_TEST,
@@ -331,3 +333,14 @@ def test_volver_al_texto_de_v1_tras_ese_fallo_no_deja_chunks_vigentes_de_v2(
     assert reporte.resultado_de("t-ok-1").resultado is Resultado.OMITIDO
     assert montaje.vigentes_en_milvus() == {v1}
     assert montaje.encontrados_por_busqueda() == {v1}
+
+
+def test_el_fake_del_catalogo_cumple_el_mismo_contrato_que_el_real_con_un_anterior_inexistente() -> (
+    None
+):
+    catalogo = CatalogoEnMemoria()
+
+    with pytest.raises(VersionAnteriorInexistente):
+        catalogo.reemplazar_version(registro_de_prueba("nuevo@1"), "no-existe@1", AHORA)
+
+    assert catalogo.documentos == {}

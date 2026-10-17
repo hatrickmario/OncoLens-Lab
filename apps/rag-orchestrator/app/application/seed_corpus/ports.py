@@ -15,6 +15,10 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import VersionExistente
 
 
+class VersionAnteriorInexistente(LookupError):
+    """``reemplazar_version`` recibió un ``anterior_id`` que no existe: no se guardó nada (la transacción se revierte)."""
+
+
 class IdGenerator(Protocol):
     """Genera identificadores (el de la release); inyectado para que los tests lo congelen."""
 
@@ -105,7 +109,10 @@ class CorpusCatalog(Protocol):
     def reemplazar_version(
         self, nuevo: RegistroDeDocumento, anterior_id: str, superseded_at: datetime
     ) -> None:
-        """En UNA transacción: guarda el nuevo y marca el anterior ``is_current = false`` + ``superseded_at``."""
+        """En UNA transacción: guarda el nuevo y marca el anterior ``is_current = false`` + ``superseded_at``.
+
+        Lanza ``VersionAnteriorInexistente`` (y no guarda nada) si ``anterior_id`` no existe.
+        """
         ...
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]: ...
