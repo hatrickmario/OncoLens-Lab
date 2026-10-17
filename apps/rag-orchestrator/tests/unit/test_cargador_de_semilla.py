@@ -474,6 +474,31 @@ def test_si_falla_confirmar_la_nueva_version_volver_al_texto_de_v1_no_deja_apare
 
 
 @pytest.mark.ac("US-059", 6)
+def test_si_falla_confirmar_la_nueva_version_volver_al_texto_de_v1_enciende_otra_vez_sus_chunks(
+    montaje: Montaje,
+) -> None:
+    """Reconciliación en ``omitir`` (M1): la vigente del catálogo no puede quedar sin chunks vigentes."""
+    cargar_v1_y_fallar_v2_al_reemplazar(montaje)
+    v1 = id_de(montaje, "t-ok-1")
+
+    reporte = montaje.cargar("t-ok-1")
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.OMITIDO
+    assert montaje.vigentes_en_milvus() == {v1} == montaje.encontrados_por_busqueda()
+
+
+def test_omitir_un_documento_ya_cargado_sin_fallos_previos_no_reescribe_chunks(
+    montaje: Montaje,
+) -> None:
+    montaje.cargar("t-ok-1")
+    antes = dict(montaje.almacen.chunks)
+
+    montaje.cargar("t-ok-1")
+
+    assert montaje.almacen.chunks == antes
+
+
+@pytest.mark.ac("US-059", 6)
 def test_si_falla_confirmar_la_nueva_version_una_tercera_deja_vigentes_solo_sus_chunks(
     montaje: Montaje,
 ) -> None:
