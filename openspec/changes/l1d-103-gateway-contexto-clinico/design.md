@@ -220,6 +220,11 @@ Ningún service ni builder importa un cliente HTTP o Prisma concreto: los recibe
 - **Ventana de RN-11/RN-06 entre merges** → mitigada con adaptadores provisionales que no muestran resultados, un
   desidentificador provisional que falla cerrado fuera de datos sintéticos y de `APP_ENV ∈ {local,test}`
   `[S1 resp. 14d]`; el orquestador fusiona L1D-103 → L1D-104 → L1D-203 en oleadas consecutivas.
+- **AC-5 de US-211 heredado de L1D-197** (usuario, 2026-10-20, opción b) → el test de integración "la sesión no
+  llega a rag-orchestrator" usa el login real de `doc1` (L1D-197) y el MSW de este change, que ya captura cabeceras
+  y cuerpo; se cierra aquí sin test en rojo. Su par E2E (logs de `rag-orchestrator`, Playwright contra Compose con
+  `LLM_PROVIDER=fake`) queda **pendiente hasta la deuda D-3** (Playwright y perfil de test en Compose, ID por
+  asignar), registrada en tasks.md sin `.skip`. Requisito y escenarios en el delta de spec.
 - **AC-5 cruza a L1D-104** (`filters_applied` persistido) → este change verifica la parte del request; el test de
   aceptación se completa con la aserción de persistencia en L1D-104.
 

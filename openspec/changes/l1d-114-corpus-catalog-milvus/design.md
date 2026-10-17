@@ -85,6 +85,13 @@ nombre, tipo y dimensión de cada campo con el esquema esperado: igual → no ha
 encontrado. El código no contiene ninguna llamada a `drop_collection` (lo comprueba un test de humo).
 Reindexar por cambio de modelo es una operación manual gobernada por ADR-39.
 
+**Ampliación (decidido, usuario, 2026-10-20, revisión del PR de este change):** (a) `settings.py` valida que
+`MILVUS_DENSE_METRIC_TYPE ∈ {COSINE, IP}` al arrancar (cualquier otro valor → error que nombra la clave y el
+conjunto permitido, nunca otros valores); (b) si es barato con la API de `pymilvus` de la versión fijada,
+`assert_schema_matches()` compara además la **métrica** y el **tipo de índice** del campo denso con la configuración
+y lanza `CorpusCollectionSchemaMismatch` si difieren, también sin `drop_collection`. Si la API no expone la métrica
+o el tipo de índice sin una llamada costosa o inestable, (b) se omite y el PR lo declara; (a) no es opcional.
+
 ### D6. Comandos de migración e inicialización
 - `python -m app.scripts.migrate_corpus_catalog`: `alembic upgrade head` como `rag_corpus_migrator`.
   Lo ejecuta el servicio *one-shot* `corpus-migrate` de Compose (imagen de `rag-orchestrator`,
