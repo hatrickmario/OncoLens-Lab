@@ -10,6 +10,7 @@
     "contrasena": "Contraseña",
     "enviar": "Iniciar sesión",
     "enviando": "Entrando…",
-    "errorCredenciales": "Correo o contraseña incorrectos."
+    "errorCredenciales": "Correo o contraseña incorrectos.",
+    "errorServicio": "No se pudo iniciar sesión en este momento. Inténtalo de nuevo."
   }
 }

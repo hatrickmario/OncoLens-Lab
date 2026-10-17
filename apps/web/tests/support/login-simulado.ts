@@ -40,6 +40,16 @@ export function crearLoginSimulado() {
           return new HttpResponse(null, { status: 204, headers: cabeceras });
         }),
       ),
+    /** Respuesta con cuerpo de texto y tipo arbitrarios (p. ej. HTML de un proxy intermedio). */
+    responderTexto: (status: number, texto: string, contentType: string) =>
+      servidor.use(
+        http.post(RUTA_UPSTREAM, async ({ request }) => {
+          await registrar(request);
+          return new HttpResponse(texto, { status, headers: { 'Content-Type': contentType } });
+        }),
+      ),
+    /** Fallo de red (ECONNREFUSED, DNS): el `fetch` rechaza sin respuesta. */
+    inalcanzable: () => servidor.use(http.post(RUTA_UPSTREAM, () => HttpResponse.error())),
     rechazar: (status: number, cuerpo: JsonBodyType, cabeceras: Record<string, string> = {}) =>
       servidor.use(
         http.post(RUTA_UPSTREAM, async ({ request }) => {

@@ -1,5 +1,11 @@
 import 'server-only';
 
+// Esqueleto del commit en rojo (Gate 2, diseño 1): todavía no distingue tipos.
+export function esTipoJson(cabeceras: Headers): boolean {
+  void cabeceras;
+  return false;
+}
+
 /**
  * Lee el cuerpo como texto sin pasar de `maxBytes`: devuelve `null` si lo supera (por Content-Length o
  * mientras se lee), para no cargar en memoria cuerpos arbitrarios del navegador.

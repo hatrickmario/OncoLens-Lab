@@ -18,6 +18,8 @@ export function crearBffLoginSimulado() {
       servidor.resetHandlers();
       cuerpos.length = 0;
     },
+    /** Fallo de red: el `fetch` del navegador rechaza sin respuesta. */
+    fallarRed: () => servidor.use(http.post('*/api/auth/login', () => HttpResponse.error())),
     /** `espera` retiene la respuesta para observar el estado "Entrando…". */
     responder: (status: number, cuerpo?: object, espera?: Promise<void>) =>
       servidor.use(
