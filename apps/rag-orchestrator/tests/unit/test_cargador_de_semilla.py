@@ -562,3 +562,32 @@ def test_la_release_declara_nccn_y_esmo_como_excluidas_aunque_la_configuracion_e
     cargador.cargar(documentos_fx_06c_a("t-ok-1"))
 
     assert catalogo.releases[0].excluded_sources == ("NCCN", "ESMO")
+
+
+def test_si_falla_la_escritura_de_chunks_el_resultado_es_error_de_milvus(montaje: Montaje) -> None:
+    montaje.almacen.fallar_en["upsert_chunks"] = ConnectionError("milvus caído")
+
+    reporte = montaje.cargar("t-ok-1")
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.ERROR
+    assert reporte.resultado_de("t-ok-1").motivo == "milvus: ConnectionError"
+    assert montaje.almacen.chunks == {}
+
+
+def test_s7_v1_v2_v2_retirada_por_nd_y_vuelve_v1_la_reingiere_y_la_deja_vigente(
+    montaje: Montaje,
+) -> None:
+    """Comportamiento de hoy, fijado tal cual: sin vigente en el grupo, cualquier versión embebida con ese checksum se
+    reingiere, también una reemplazada cuya sucesora se retiró. El usuario puede decidir cambiarlo."""
+    montaje.cargar("t-ok-1")
+    montaje.cargar("t-ok-1-v2")
+    id_v1 = id_de(montaje, "t-ok-1")
+    v2_nd = replace(documentos_fx_06c_a("t-ok-1-v2")[0], license="CC BY-ND 4.0")
+    montaje.cargador.cargar([v2_nd])
+    assert montaje.catalogo.ids_de_documentos_vigentes() == frozenset()
+
+    reporte = montaje.cargar("t-ok-1")
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
+    assert montaje.catalogo.ids_de_documentos_vigentes() == {id_v1}
+    assert montaje.vigentes_en_milvus() == {id_v1}

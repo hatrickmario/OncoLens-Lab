@@ -9,6 +9,7 @@ import pytest
 from app.domain.corpus_seed.admisibilidad import (
     MotivoDeRechazo,
     clase_contradice_el_texto,
+    es_fuente_excluida,
     evaluar_admisibilidad,
 )
 from tests.support.semilla import documento_de_prueba, politica_de_test
@@ -312,3 +313,42 @@ def test_una_clave_de_la_tabla_que_contradice_su_clase_se_detecta_en_el_dominio(
     texto: str, clase: str, contradice: bool
 ) -> None:
     assert clase_contradice_el_texto(texto, clase) is contradice
+
+
+def test_es_fuente_excluida_incluye_el_piso_por_si_sola_aunque_la_configuracion_este_vacia() -> (
+    None
+):
+    documento = documento_de_prueba(source_name="NCCN")
+
+    assert es_fuente_excluida(documento, POLITICA_SIN_EXCLUIDAS) is True
+
+
+@pytest.mark.parametrize(
+    "campo",
+    [
+        {"external_id": "nccn.org/guidelines/category_1"},
+        {"external_id": "www.esmo.org/guidelines/breast"},
+        {"external_id": "//www.nccn.org/x"},
+        {"url_fuente": "www.NCCN.org/x", "texto": None},
+    ],
+)
+def test_el_host_se_extrae_aunque_el_identificador_no_traiga_esquema(
+    campo: dict[str, object],
+) -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(**campo), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize("fuente", ["N.C.C.N.", "n.c.c.n", "E.S.M.O.", "NCCN."])
+def test_la_sigla_con_puntos_tambien_es_la_fuente_excluida(fuente: str) -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name=fuente), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize("fuente", ["A.B.C.", "Dr. N. C. Smith", "NCI"])
+def test_una_sigla_con_puntos_que_no_es_nccn_ni_esmo_no_se_excluye(fuente: str) -> None:
+    assert evaluar_admisibilidad(
+        documento_de_prueba(source_name=fuente), politica_de_test()
+    ).admitido

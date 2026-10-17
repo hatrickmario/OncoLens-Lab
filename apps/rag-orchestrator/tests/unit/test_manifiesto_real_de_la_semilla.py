@@ -62,6 +62,8 @@ AUTOIDENTIFICACION_DE_PDQ = (
     "propósito de este resumen",
     "editorial board",
     "consejo editorial",
+    "junta editorial",
+    "comité editorial",
     "permission to use this summary",
 )
 
@@ -76,7 +78,10 @@ def test_el_cuerpo_de_un_documento_de_nci_no_se_autoidentifica_como_pdq(
 ) -> None:
     """La marca PDQ solo vale para reproducciones íntegras e inalteradas (ADR-36): estos textos son extractos."""
     assert documento.ruta_texto is not None
-    cuerpo = (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8").casefold()
+    cuerpo = (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8")
+    cuerpo = " ".join(
+        cuerpo.split()
+    ).casefold()  # saltos de línea y espacios dobles no esconden una frase
 
     presentes = [patron for patron in AUTOIDENTIFICACION_DE_PDQ if patron in cuerpo]
 
