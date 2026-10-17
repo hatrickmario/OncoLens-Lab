@@ -175,7 +175,7 @@ jobs:
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
       - name: Tests de lint y formato (fixtures)
-        run: npx vitest run ci/tests/quality
+        run: npm run test:quality
 
   ci-ok:
     name: ci-ok
