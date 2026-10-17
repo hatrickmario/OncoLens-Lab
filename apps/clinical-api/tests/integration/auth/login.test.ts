@@ -8,7 +8,6 @@ import { conectar } from '../../support/db.js';
 import {
   contarSesiones,
   cookiesEmitidas,
-  CONTRASENA_DOC1,
   crearUsuariosDeAuth,
   limpiarUsuarios,
   loggerEnMemoria,
@@ -99,7 +98,7 @@ describe('POST /platform/auth/login con credenciales rechazadas', () => {
     ],
     [
       'el correo no existe',
-      () => ({ email: `inexistente.${ESPACIO_DE_IDS}@test.local`, password: CONTRASENA_DOC1 }),
+      () => ({ email: `inexistente.${ESPACIO_DE_IDS}@test.local`, password: doc1.password }),
     ],
     [
       'la cuenta está desactivada',

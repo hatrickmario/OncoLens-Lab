@@ -13,14 +13,18 @@ import {
 
 /**
  * Soporte de los tests de sesión (US-211): usuarios SINTÉTICOS `@test.local` (RN-13, RN-14), reloj y generador de
- * token fijos, y un logger capturable en memoria. Las contraseñas vienen del entorno de test (nunca del repo); el
- * valor por defecto es un marcador sintético para correr sin perfil.
+ * token fijos, y un logger capturable en memoria. Las contraseñas vienen del entorno de test (nunca del repo, RN-14):
+ * si falta la variable, el test falla nombrándola.
  */
 
-export const CONTRASENA_DOC1 =
-  process.env['SEED_DOCTOR_PASSWORD'] ?? 'SINT-doc1-contrasena-de-prueba';
-export const CONTRASENA_DOC2 =
-  process.env['TEST_DOC2_PASSWORD'] ?? 'SINT-doc2-contrasena-de-prueba';
+/** Contraseña de test desde el entorno; sin variable, falla nombrándola (nunca un valor por defecto en el repo). */
+export function contrasenaDeTest(variable: 'SEED_DOCTOR_PASSWORD' | 'TEST_DOC2_PASSWORD'): string {
+  const valor = process.env[variable];
+  if (valor === undefined || valor === '') {
+    throw new Error(`Falta la variable de entorno de test ${variable} (perfil test, L1D-165)`);
+  }
+  return valor;
+}
 
 /** Costes bajos de Argon2id para la CI (el `.env` de test los baja, design Riesgos); los usa el hasher del servicio también. */
 export const ARGON2_DE_PRUEBA: Argon2Config = { memoryCostKib: 8, timeCost: 1, parallelism: 1 };
@@ -87,12 +91,12 @@ export async function crearUsuariosDeAuth(cliente: Client, espacio: number) {
   const rolId = await asegurarRol(cliente, ids, 'doctor');
   const doc1 = await insertarUsuario(cliente, ids, {
     email: `doc1.${espacio}@test.local`,
-    password: CONTRASENA_DOC1,
+    password: contrasenaDeTest('SEED_DOCTOR_PASSWORD'),
     rolId,
   });
   const doc2Desactivado = await insertarUsuario(cliente, ids, {
     email: `doc2.${espacio}@test.local`,
-    password: CONTRASENA_DOC2,
+    password: contrasenaDeTest('TEST_DOC2_PASSWORD'),
     rolId,
     estado: 'desactivado',
   });

@@ -1,25 +1,72 @@
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { createApp } from './app.js';
-import { readServiceJwtConfig } from './config.js';
+import { componerAplicacion } from './composition.js';
+import {
+  ConfiguracionInvalidaError,
+  readAppEnv,
+  readAuthConfig,
+  readDatabaseConfig,
+  readServiceJwtConfig,
+} from './config.js';
+import { crearPool } from './infrastructure/database.js';
+import { registrarEnConsola } from './infrastructure/logger.js';
 import { loadServicePrivateKey } from './infrastructure/service-jwt.js';
+import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { arrancar } from './startup.js';
+
+const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
 
 /**
  * Raíz de composición: conecta el proceso real (entorno, sistema de archivos, consola) con `arrancar`.
  * `arrancar` comprueba primero que los secretos existan (US-035 AC-5); aquí, ya antes de escuchar, se
- * valida que la clave privada del JWT de servicio sea legible y utilizable (fallo cerrado, US-054).
+ * valida la configuración de sesión y de PostgreSQL (el error nombra la variable, nunca su valor) y que la
+ * clave privada del JWT de servicio sea legible y utilizable (fallo cerrado, US-054).
  */
 arrancar({
   env: process.env,
-  readFile: (ruta) => readFileSync(ruta, 'utf8'),
+  readFile: leerArchivo,
   log: (linea) => console.error(linea),
   exit: (codigo) => process.exit(codigo),
   listen: (puerto) => {
-    const { privateKeyFile } = readServiceJwtConfig(process.env);
-    loadServicePrivateKey(privateKeyFile)
+    let configuracion;
+    try {
+      readAppEnv(process.env);
+      configuracion = {
+        auth: readAuthConfig(process.env),
+        database: readDatabaseConfig(process.env, leerArchivo),
+        jwt: readServiceJwtConfig(process.env),
+      };
+    } catch (error) {
+      if (!(error instanceof ConfiguracionInvalidaError)) throw error;
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'configuracion_invalida',
+          variable: error.variable,
+        }),
+      );
+      process.exit(1);
+    }
+
+    const pool = crearPool(configuracion.database);
+    loadServicePrivateKey(configuracion.jwt.privateKeyFile)
       .then(() => {
-        createApp({}).listen(puerto, () => {
+        const app = componerAplicacion({
+          db: pool,
+          auth: configuracion.auth,
+          reloj: { now: () => new Date() },
+          tokens: crearGeneradorDeToken(),
+          ids: randomUUID,
+          nuevoTraceId: () => `req_${randomUUID().replaceAll('-', '').slice(0, 8)}`,
+          registrar: registrarEnConsola,
+        });
+        const servidor = app.listen(puerto, () => {
           console.info(`clinical-api escuchando en el puerto ${puerto}`);
+        });
+        process.once('SIGTERM', () => {
+          servidor.close(() => {
+            void pool.end().finally(() => process.exit(0));
+          });
         });
       })
       .catch(() => {

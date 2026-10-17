@@ -81,3 +81,99 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   }
   return { ttlSeconds, privateKeyFile };
 }
+
+/** Falta o es inválida una variable de configuración: el mensaje nombra la clave, nunca su valor (RN-10, RN-14). */
+export class ConfiguracionInvalidaError extends Error {
+  constructor(
+    readonly variable: string,
+    motivo: string,
+  ) {
+    super(`${variable} ${motivo}`);
+    this.name = 'ConfiguracionInvalidaError';
+  }
+}
+
+function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
+  const valor = env[variable];
+  if (valor === undefined || valor === '') {
+    throw new ConfiguracionInvalidaError(variable, 'es obligatoria');
+  }
+  return valor;
+}
+
+/** Entorno de ejecución (`local`, `test`, `piloto`...): obligatorio, sin valor por defecto (fallo cerrado). */
+export function readAppEnv(env: NodeJS.ProcessEnv): string {
+  return leerObligatoria(env, 'APP_ENV');
+}
+
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  /** Certificado de la CA que firma el del servidor PostgreSQL (verificación TLS completa). */
+  ca: string;
+}
+
+const PUERTO_POSTGRES_POR_DEFECTO = 5432;
+
+function leerArchivoObligatorio(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  readFile: (ruta: string) => string,
+): string {
+  const ruta = leerObligatoria(env, variable);
+  let contenido: string;
+  try {
+    contenido = readFile(ruta).trim();
+  } catch {
+    // El error de E/S trae la ruta: se descarta y solo se nombra la variable.
+    throw new ConfiguracionInvalidaError(variable, 'no apunta a un archivo legible');
+  }
+  if (contenido === '') throw new ConfiguracionInvalidaError(variable, 'apunta a un archivo vacío');
+  return contenido;
+}
+
+function leerUrlDeBaseDeDatos(env: NodeJS.ProcessEnv): URL {
+  const variable = 'CLINICAL_DATABASE_URL';
+  let url: URL;
+  try {
+    url = new URL(leerObligatoria(env, variable));
+  } catch (error) {
+    if (error instanceof ConfiguracionInvalidaError) throw error;
+    throw new ConfiguracionInvalidaError(variable, 'no es una URL válida');
+  }
+  if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
+    throw new ConfiguracionInvalidaError(variable, 'debe usar el esquema postgresql');
+  }
+  if (url.password !== '') {
+    throw new ConfiguracionInvalidaError(
+      variable,
+      'no debe llevar contraseña (va en PG_CLINICAL_API_PASSWORD_FILE)',
+    );
+  }
+  if (url.hostname === '' || url.username === '' || url.pathname.length <= 1) {
+    throw new ConfiguracionInvalidaError(variable, 'debe indicar usuario, host y base de datos');
+  }
+  return url;
+}
+
+/**
+ * Conexión del rol `clinical_api` a PostgreSQL. La URL NO lleva contraseña (RN-14): esta se lee del archivo del
+ * secreto (`PG_CLINICAL_API_PASSWORD_FILE`) y la CA de `CLINICAL_DATABASE_CA_FILE`.
+ */
+export function readDatabaseConfig(
+  env: NodeJS.ProcessEnv,
+  readFile: (ruta: string) => string,
+): DatabaseConfig {
+  const url = leerUrlDeBaseDeDatos(env);
+  return {
+    host: url.hostname,
+    port: url.port === '' ? PUERTO_POSTGRES_POR_DEFECTO : Number(url.port),
+    database: decodeURIComponent(url.pathname.slice(1)),
+    user: decodeURIComponent(url.username),
+    password: leerArchivoObligatorio(env, 'PG_CLINICAL_API_PASSWORD_FILE', readFile),
+    ca: leerArchivoObligatorio(env, 'CLINICAL_DATABASE_CA_FILE', readFile),
+  };
+}

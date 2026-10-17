@@ -28,7 +28,8 @@ export function crearResolutor() {
       archivos.push('-f', archivo);
     }
     const salida = execFileSync('docker', ['compose', ...archivos, 'config', '--format', 'json'], {
-      env: { ...process.env, ONCOLENS_SECRETS_DIR: secretos, ...entorno },
+      // APP_ENV es obligatorio en clinical-api (sin valor por defecto, fallo cerrado): los tests estáticos lo fijan.
+      env: { ...process.env, APP_ENV: 'test', ONCOLENS_SECRETS_DIR: secretos, ...entorno },
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
     });
