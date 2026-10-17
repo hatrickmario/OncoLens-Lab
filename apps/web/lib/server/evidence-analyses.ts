@@ -3,14 +3,16 @@ import { createEvidenceAnalysis } from '../../../../packages/api-contracts/src/c
 import type { EvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import {
   cabecerasHaciaNavegador,
+  clasificarRespuestaDeClinicalApi,
   crearSdkClinicalApi,
+  type MotivoDeFalloDeTransporte,
   respuestaDeFalloDeTransporte,
   type SdkClinicalApi,
 } from './clinical-api';
 import { verificarOrigen } from './origen';
 import type { DependenciasDelBff } from './dependencias';
 import type { Registrar } from './registro';
-import { esTipoJson, leerCuerpoAcotado } from './peticiones';
+import { leerCuerpoAcotado } from './peticiones';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_PROXY = 'evidence_analyses.proxy';
@@ -36,17 +38,11 @@ export function crearManejadorAnalisis(
     const inicio = dependencias.ahora();
     const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
     const resultado = await pedirAnalisisAClinicalApi(sdk, cuerpo);
-    const respuesta = resultado.response;
-    if (respuesta === undefined) {
-      return responderConFallo(dependencias, inicio, 'clinical_api_inalcanzable', undefined);
+    const clasificada = clasificarRespuestaDeClinicalApi(sdk, resultado.response);
+    if ('fallo' in clasificada) {
+      return responderConFallo(dependencias, inicio, clasificada.fallo, clasificada.respuesta);
     }
-    const cuerpoCrudo = sdk.cuerpoCrudo(respuesta);
-    if (cuerpoCrudo === undefined) {
-      return responderConFallo(dependencias, inicio, 'cuerpo_cortado', respuesta);
-    }
-    if (cuerpoCrudo !== '' && !esTipoJson(respuesta.headers)) {
-      return responderConFallo(dependencias, inicio, 'error_no_json', respuesta);
-    }
+    const { respuesta, cuerpoCrudo } = clasificada;
     registrarReenvio(dependencias.registrar, respuesta, dependencias.ahora() - inicio);
     return reenviar(respuesta, cuerpoCrudo);
   };
@@ -62,8 +58,6 @@ function pedirAnalisisAClinicalApi(sdk: SdkClinicalApi, cuerpo: string) {
     throwOnError: false,
   });
 }
-
-type MotivoDeFallo = 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
 
 function reenviar(respuesta: Response, cuerpoCrudo: string): Response {
   return new Response(cuerpoCrudo === '' ? null : cuerpoCrudo, {
@@ -88,7 +82,7 @@ function responderCuerpoExcesivo(dependencias: DependenciasDelBff): Response {
 function responderConFallo(
   dependencias: DependenciasDelBff,
   inicio: number,
-  motivo: MotivoDeFallo,
+  motivo: MotivoDeFalloDeTransporte,
   respuesta: Response | undefined,
 ): Response {
   const traceId = dependencias.nuevoTraceId();

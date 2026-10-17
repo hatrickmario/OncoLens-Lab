@@ -14,6 +14,7 @@ export interface LineaDeRegistro {
     | 'clinical_api_inalcanzable'
     | 'cuerpo_cortado'
     | 'error_no_json'
+    | 'cuerpo_no_conforme'
     | 'content_type'
     | 'sin_cookie_de_sesion';
 }

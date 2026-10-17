@@ -4,6 +4,7 @@ import {
   type Client,
 } from '../../../../packages/api-contracts/src/client-web/clinical-api/client';
 import type { ConfigWeb } from './config';
+import { esTipoJson } from './peticiones';
 import { respuestaPropia } from './respuestas';
 
 import { NOMBRE_COOKIE_DE_SESION } from './sesion';
@@ -101,6 +102,35 @@ export function crearSdkClinicalApi(
     return respuesta;
   });
   return { client, cuerpoCrudo: (respuesta) => crudos.get(respuesta) };
+}
+
+export type MotivoDeFalloDeTransporte =
+  'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
+
+export type RespuestaClasificada =
+  | { respuesta: Response; cuerpoCrudo: string }
+  | { fallo: MotivoDeFalloDeTransporte; respuesta?: Response };
+
+/**
+ * Primer filtro común a los Route Handlers que retransmiten a clinical-api: sin respuesta (inalcanzable o
+ * timeout), cuerpo ilegible (cortado) o cuerpo con contenido que no es `application/json` son fallos de
+ * transporte → 502 propio. Si pasa, devuelve la respuesta con su texto exacto.
+ */
+export function clasificarRespuestaDeClinicalApi(
+  sdk: SdkClinicalApi,
+  resultado: Response | undefined,
+): RespuestaClasificada {
+  if (resultado === undefined) {
+    return { fallo: 'clinical_api_inalcanzable' };
+  }
+  const cuerpoCrudo = sdk.cuerpoCrudo(resultado);
+  if (cuerpoCrudo === undefined) {
+    return { fallo: 'cuerpo_cortado', respuesta: resultado };
+  }
+  if (cuerpoCrudo !== '' && !esTipoJson(resultado.headers)) {
+    return { fallo: 'error_no_json', respuesta: resultado };
+  }
+  return { respuesta: resultado, cuerpoCrudo };
 }
 
 /** 502 propio del BFF (ErrorServicioIa del contrato): sin URL interna, sin mensaje del error de red. */

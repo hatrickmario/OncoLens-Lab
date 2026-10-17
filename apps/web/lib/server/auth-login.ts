@@ -1,14 +1,23 @@
 import 'server-only';
+import type { z } from 'zod';
 import { login } from '../../../../packages/api-contracts/src/client-web/clinical-api';
-import { zLoginBody } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import {
+  zErrorCredencialesInvalidas,
+  zErrorCuerpoInvalido,
+  zErrorInterno,
+  zErrorLimiteSolicitudes,
+  zLoginBody,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import {
   cabecerasHaciaNavegador,
+  clasificarRespuestaDeClinicalApi,
   crearSdkClinicalApi,
   NOMBRE_COOKIE_DE_SESION,
 } from './clinical-api';
 import type { DependenciasDelBff } from './dependencias';
 import { verificarOrigen } from './origen';
 import { esTipoJson, leerCuerpoAcotado } from './peticiones';
+import type { LineaDeRegistro } from './registro';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_LOGIN = 'auth.login';
@@ -17,6 +26,16 @@ export type DependenciasLogin = Pick<
   DependenciasDelBff,
   'config' | 'fetch' | 'nuevoTraceId' | 'registrar'
 >;
+
+type MotivoDeFallo = NonNullable<LineaDeRegistro['motivo']>;
+
+/** Errores que el contrato declara para `login`, por status. Cualquier otro status o forma → 502 propio. */
+const ESQUEMAS_DE_ERROR: Record<number, z.ZodType<{ traceId: string }>> = {
+  401: zErrorCredencialesInvalidas,
+  422: zErrorCuerpoInvalido,
+  429: zErrorLimiteSolicitudes,
+  500: zErrorInterno,
+};
 
 /**
  * Proxy del login (design D6). Orden fijo y antes de leer el cuerpo: `Origin` y `Content-Type: application/json`
@@ -30,17 +49,19 @@ export function crearManejadorLogin(
   return async (request) => {
     // TraceId propio del BFF, único para toda la petición; el de clinical-api va aparte en el log.
     const traceId = dependencias.nuevoTraceId();
-    const propias = { ...dependencias, nuevoTraceId: () => traceId };
     const rechazo =
-      verificarOrigen(request, { ...propias, evento: EVENTO_LOGIN }) ??
-      exigirJson(request, propias);
+      verificarOrigen(request, {
+        ...dependencias,
+        nuevoTraceId: () => traceId,
+        evento: EVENTO_LOGIN,
+      }) ?? exigirJson(request, dependencias, traceId);
     if (rechazo !== null) {
       return rechazo;
     }
 
     const credenciales = await leerCredenciales(request, dependencias.config.maxBodyBytes);
     if (credenciales === null) {
-      return responderCuerpoInvalido(propias);
+      return responderCuerpoInvalido(dependencias, traceId);
     }
 
     const sdk = crearSdkClinicalApi(dependencias.config, { fetch: dependencias.fetch });
@@ -50,52 +71,61 @@ export function crearManejadorLogin(
       parseAs: 'text',
       throwOnError: false,
     });
-    const respuesta = resultado.response;
-    if (respuesta === undefined) {
-      return responderConFallo(propias, 'clinical_api_inalcanzable');
+    const clasificada = clasificarRespuestaDeClinicalApi(sdk, resultado.response);
+    if ('fallo' in clasificada) {
+      return responderConFallo(dependencias, traceId, clasificada.fallo);
     }
-    const cuerpoCrudo = sdk.cuerpoCrudo(respuesta);
-    if (cuerpoCrudo !== undefined && cuerpoCrudo !== '' && !esTipoJson(respuesta.headers)) {
-      return responderConFallo(propias, 'error_no_json', respuesta);
-    }
+    const { respuesta, cuerpoCrudo } = clasificada;
     if (respuesta.status === 204) {
-      const conCookie = reenviarCookieDeSesion(respuesta);
-      return conCookie === null
-        ? responderConFallo(propias, 'sin_cookie_de_sesion', respuesta)
-        : registrarYDevolver(propias, conCookie, respuesta);
+      return reenviarCookieDeSesion(respuesta, dependencias, traceId);
     }
-    return registrarYDevolver(
-      propias,
-      new Response(cuerpoCrudo ?? null, {
-        status: respuesta.status,
-        headers: cabecerasHaciaNavegador(respuesta),
-      }),
-      respuesta,
-    );
+    return reenviarErrorDelContrato(respuesta, cuerpoCrudo, dependencias, traceId);
   };
 }
 
-function registrarYDevolver(
+/**
+ * Retransmite el error de clinical-api solo si su status está declarado para `login` y el cuerpo cumple
+ * el schema generado de ese status; si no, 502 propio sin eco. El `traceId` remoto sale del cuerpo del contrato.
+ */
+function reenviarErrorDelContrato(
+  respuesta: Response,
+  cuerpoCrudo: string,
   dependencias: DependenciasLogin,
-  salida: Response,
-  upstream: Response,
+  traceId: string,
 ): Response {
-  const traceIdClinicalApi = upstream.headers.get('x-trace-id');
+  const conforme = ESQUEMAS_DE_ERROR[respuesta.status]?.safeParse(analizarJson(cuerpoCrudo));
+  if (conforme === undefined || !conforme.success) {
+    return responderConFallo(dependencias, traceId, 'cuerpo_no_conforme');
+  }
   dependencias.registrar({
     event: EVENTO_LOGIN,
-    status: salida.status,
-    traceId: dependencias.nuevoTraceId(),
-    ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
+    status: respuesta.status,
+    traceId,
+    traceIdClinicalApi: conforme.data.traceId,
   });
-  return salida;
+  return new Response(cuerpoCrudo, {
+    status: respuesta.status,
+    headers: cabecerasHaciaNavegador(respuesta),
+  });
+}
+
+function analizarJson(texto: string): unknown {
+  try {
+    return JSON.parse(texto);
+  } catch {
+    return undefined;
+  }
 }
 
 /** Compara solo el tipo MIME (el parámetro `charset` es válido); cualquier otro tipo → 403 propio del BFF. */
-function exigirJson(request: Request, dependencias: DependenciasLogin): Response | null {
+function exigirJson(
+  request: Request,
+  dependencias: DependenciasLogin,
+  traceId: string,
+): Response | null {
   if (esTipoJson(request.headers)) {
     return null;
   }
-  const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({ event: EVENTO_LOGIN, status: 403, traceId, motivo: 'content_type' });
   return respuestaPropia(
     {
@@ -112,28 +142,27 @@ async function leerCredenciales(request: Request, maxBytes: number) {
   if (texto === null) {
     return null;
   }
-  let json: unknown;
-  try {
-    json = JSON.parse(texto);
-  } catch {
-    return null;
-  }
-  const credenciales = zLoginBody.safeParse(json);
+  const credenciales = zLoginBody.safeParse(analizarJson(texto));
   return credenciales.success ? credenciales.data : null;
 }
 
 /**
  * 204 hacia el navegador con la única cabecera `Set-Cookie` de `oncolens_session`, tal cual la fijó el proveedor
  * (sin `Domain`). Falla cerrado: si a esa cookie le falta HttpOnly, Secure o SameSite=Strict, o lleva `Domain`,
- * no se retransmite. Cualquier otra cookie de clinical-api se descarta. `null` si no hay una cookie válida.
+ * no se retransmite y responde 502. Cualquier otra cookie de clinical-api se descarta.
  */
-function reenviarCookieDeSesion(respuesta: Response): Response | null {
+function reenviarCookieDeSesion(
+  respuesta: Response,
+  dependencias: DependenciasLogin,
+  traceId: string,
+): Response {
   const cookie = respuesta.headers
     .getSetCookie()
     .find((valor) => valor.startsWith(`${NOMBRE_COOKIE_DE_SESION}=`));
   if (cookie === undefined || !cookieEsSegura(cookie)) {
-    return null;
+    return responderConFallo(dependencias, traceId, 'sin_cookie_de_sesion');
   }
+  dependencias.registrar({ event: EVENTO_LOGIN, status: 204, traceId });
   const cabeceras = cabecerasHaciaNavegador(respuesta);
   cabeceras.append('Set-Cookie', cookie);
   return new Response(null, { status: 204, headers: cabeceras });
@@ -153,8 +182,7 @@ function cookieEsSegura(cookie: string): boolean {
 }
 
 /** 422 local (Zod o cuerpo excesivo): el formulario lo muestra como el mismo error genérico que el 401. */
-function responderCuerpoInvalido(dependencias: DependenciasLogin): Response {
-  const traceId = dependencias.nuevoTraceId();
+function responderCuerpoInvalido(dependencias: DependenciasLogin, traceId: string): Response {
   dependencias.registrar({ event: EVENTO_LOGIN, status: 422, traceId });
   return respuestaPropia(
     {
@@ -169,18 +197,10 @@ function responderCuerpoInvalido(dependencias: DependenciasLogin): Response {
 /** 502 propio del login: mensaje fijo, sin hostname, causa ni cuerpo parcial (ErrorServicioAutenticacion). */
 function responderConFallo(
   dependencias: DependenciasLogin,
-  motivo: 'clinical_api_inalcanzable' | 'sin_cookie_de_sesion' | 'error_no_json',
-  upstream?: Response,
+  traceId: string,
+  motivo: MotivoDeFallo,
 ): Response {
-  const traceId = dependencias.nuevoTraceId();
-  const traceIdClinicalApi = upstream?.headers.get('x-trace-id') ?? null;
-  dependencias.registrar({
-    event: EVENTO_LOGIN,
-    status: 502,
-    traceId,
-    ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
-    motivo,
-  });
+  dependencias.registrar({ event: EVENTO_LOGIN, status: 502, traceId, motivo });
   return respuestaPropia(
     {
       error: 'ERROR_SERVICIO_AUTENTICACION',
