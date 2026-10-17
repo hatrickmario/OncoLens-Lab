@@ -25,13 +25,22 @@ export type EntradaDeLaGuarda = Pick<
  */
 export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
   if (config.realAnonymizedEnabled) {
-    throw new SeedBloqueadoError('REAL_ANONYMIZED_ENABLED', 'está en true (datos reales habilitados)');
+    throw new SeedBloqueadoError(
+      'REAL_ANONYMIZED_ENABLED',
+      'está en true (datos reales habilitados)',
+    );
   }
   if (config.realIdentifiedEnabled) {
-    throw new SeedBloqueadoError('REAL_IDENTIFIED_ENABLED', 'está en true (datos reales habilitados)');
+    throw new SeedBloqueadoError(
+      'REAL_IDENTIFIED_ENABLED',
+      'está en true (datos reales habilitados)',
+    );
   }
   if (config.appEnv === undefined) {
-    throw new SeedBloqueadoError('APP_ENV', 'no está definida (no se presume un entorno permitido)');
+    throw new SeedBloqueadoError(
+      'APP_ENV',
+      'no está definida (no se presume un entorno permitido)',
+    );
   }
   // `piloto` se rechaza siempre: ninguna lista de configuración lo habilita (RN-13).
   if (config.appEnv === ENTORNO_PILOTO) {

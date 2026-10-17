@@ -35,9 +35,7 @@ describe('assertSeedPermitido', () => {
   });
 
   it('rechaza el seed cuando el entorno no está en la lista de permitidos', () => {
-    expect(() => assertSeedPermitido(entrada({ appEnv: 'staging' }))).toThrow(
-      /SEED_ALLOWED_ENVS/,
-    );
+    expect(() => assertSeedPermitido(entrada({ appEnv: 'staging' }))).toThrow(/SEED_ALLOWED_ENVS/);
   });
 
   it('rechaza el seed nombrando REAL_ANONYMIZED_ENABLED aunque el entorno sea local', () => {

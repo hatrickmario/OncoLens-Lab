@@ -61,7 +61,12 @@ describe('leerCatalogo', () => {
   });
 
   it('falla sin eco del contenido cuando una entrada trae un estándar desconocido', () => {
-    const roto = { ...archivos, '/cat/mama/codigos.json': JSON.stringify({ entradas: [{ ...ENTRADA_DE_PRUEBA, estandar: 'inventado' }] }) };
+    const roto = {
+      ...archivos,
+      '/cat/mama/codigos.json': JSON.stringify({
+        entradas: [{ ...ENTRADA_DE_PRUEBA, estandar: 'inventado' }],
+      }),
+    };
 
     expect(() => leerCatalogo('/cat', (ruta) => roto[ruta] ?? '')).toThrow(/mama\/codigos\.json/);
   });

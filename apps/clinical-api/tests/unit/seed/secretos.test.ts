@@ -17,7 +17,11 @@ describe('leerSecreto', () => {
   it('devuelve el contenido del archivo sin el salto de línea cuando solo está la variable _FILE', () => {
     const env = { SEED_DOCTOR_PASSWORD_FILE: '/run/doctor' };
 
-    const secreto = leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': `${VALOR_DEL_ARCHIVO}\n` }));
+    const secreto = leerSecreto(
+      env,
+      'SEED_DOCTOR_PASSWORD',
+      archivos({ '/run/doctor': `${VALOR_DEL_ARCHIVO}\n` }),
+    );
 
     expect(secreto).toBe(VALOR_DEL_ARCHIVO);
   });
@@ -28,7 +32,11 @@ describe('leerSecreto', () => {
       SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE,
     };
 
-    const secreto = leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': VALOR_DEL_ARCHIVO }));
+    const secreto = leerSecreto(
+      env,
+      'SEED_DOCTOR_PASSWORD',
+      archivos({ '/run/doctor': VALOR_DEL_ARCHIVO }),
+    );
 
     expect(secreto).toBe(VALOR_DEL_ARCHIVO);
   });
@@ -40,11 +48,14 @@ describe('leerSecreto', () => {
   });
 
   it('falla nombrando _FILE cuando el archivo está vacío, aunque haya variable directa', () => {
-    const env = { SEED_DOCTOR_PASSWORD_FILE: '/run/doctor', SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE };
+    const env = {
+      SEED_DOCTOR_PASSWORD_FILE: '/run/doctor',
+      SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE,
+    };
 
-    expect(() => leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '\n' }))).toThrow(
-      /SEED_DOCTOR_PASSWORD_FILE/,
-    );
+    expect(() =>
+      leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '\n' })),
+    ).toThrow(/SEED_DOCTOR_PASSWORD_FILE/);
   });
 
   it('falla nombrando _FILE y sin la ruta cuando el archivo no se puede leer', () => {
@@ -62,10 +73,13 @@ describe('leerSecreto', () => {
   });
 
   it('no incluye ningún valor secreto en el mensaje de error', () => {
-    const env = { SEED_DOCTOR_PASSWORD_FILE: '/run/doctor', SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE };
+    const env = {
+      SEED_DOCTOR_PASSWORD_FILE: '/run/doctor',
+      SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE,
+    };
 
-    expect(() => leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '' }))).not.toThrow(
-      new RegExp(VALOR_DE_LA_VARIABLE),
-    );
+    expect(() =>
+      leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '' })),
+    ).not.toThrow(new RegExp(VALOR_DE_LA_VARIABLE));
   });
 });
