@@ -79,7 +79,11 @@ def test_milvus_excluye_el_chunk_de_prostata_cuando_el_filtro_es_de_mama(
     ],
 )
 def test_milvus_compara_la_etiqueta_completa_de_cancer_type_tags(
-    repositorio: MilvusRepository, tipo: str, esperados: set[str]
+    repositorio: MilvusRepository,
+    cliente_milvus: MilvusClient,
+    ajustes_milvus: MilvusSettings,
+    tipo: str,
+    esperados: set[str],
 ) -> None:
     base = chunk_del_corpus(CORPUS_FX06A[0])
     repositorio.insert_chunks(
@@ -88,6 +92,9 @@ def test_milvus_compara_la_etiqueta_completa_de_cancer_type_tags(
             replace(base, chunk_id="ch-multi-1", cancer_type_tags="prostata,mama"),
         ]
     )
+    cliente_milvus.flush(
+        ajustes_milvus.milvus_collection_name
+    )  # la consistencia por defecto es Bounded
     vector = [1.0] + [0.0] * (DIMENSION - 1)
 
     encontrados = repositorio.search_dense(vector, 20, expresion_vigente_del_tipo(tipo))

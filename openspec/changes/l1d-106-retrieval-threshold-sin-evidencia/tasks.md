@@ -40,7 +40,7 @@
 ## 3. evaluación
 
 - [x] 3.1 (evaluate) Si el PR fija o cambia el valor por defecto de `RELEVANCE_THRESHOLD`, correr `run-ai-eval` (precisión de "sin evidencia" M-10.1, recall@10 / MRR M-06.1); si la suite aún no existe (US-072, S2), evaluación manual de `ai-eval-runner` con FX-06a-a. Verificación: reporte en `reports/eval/` enlazado en el PR, o constancia de que el valor por defecto no cambió.
-  - **Constancia:** este change no introduce ningún valor por defecto de `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K` ni `RERANK_TOP_N` (en `Settings` son `None` y el arranque de `/rag/query` con `LLM_PROVIDER=local` se niega si faltan); los tests usan 0,30 y 0,90. La calibración y su medición (M-10.1, M-06.1) llegan con US-072/US-073.
+  - **Constancia:** este change no introduce ningún valor por defecto de `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K` ni `RERANK_TOP_N` (en `Settings` son `None` y con `LLM_PROVIDER=local` el arranque se niega siempre si faltan, aunque no haya puertos reales: en ese caso `/rag/query` responde `503 RETRIEVAL_UNAVAILABLE`, Gate 2 vuelta 1, Q1 b); los tests usan 0,30 y 0,90. La calibración y su medición (M-10.1, M-06.1) llegan con US-072/US-073.
 
 ## 4. Verificación
 
