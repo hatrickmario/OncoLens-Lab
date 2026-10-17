@@ -57,8 +57,8 @@ erDiagram
         string token_hash UK
         timestamp expires_at "absoluto (8 h, configurable)"
         timestamp last_seen_at "inactividad (30 min, configurable)"
-        string ip_address
-        string user_agent
+        string ip_address "nullable — null en el S1"
+        string user_agent "nullable — null en el S1"
         boolean revoked
         timestamp created_at
     }
@@ -594,8 +594,8 @@ erDiagram
 | `token_hash` | text | UK |  |
 | `expires_at` | timestamptz |  | absoluto (8 h, configurable) |
 | `last_seen_at` | timestamptz |  | inactividad (30 min, configurable) |
-| `ip_address` | text |  |  |
-| `user_agent` | text |  |  |
+| `ip_address` | text |  | nullable — `null` en el S1; lo rellenará el bloqueo por IP de US-044 (decidido, usuario, 2026-10-20) |
+| `user_agent` | text |  | nullable — `null` en el S1 (decidido, usuario, 2026-10-20) |
 | `revoked` | boolean |  |  |
 | `created_at` | timestamptz |  |  |
 

@@ -93,6 +93,8 @@ Tablas del schema `corpus` (US-058). Roles y permisos (US-040). Seed (US-039).
 
 > **Actualizada en el refinamiento del S1 (2026-10-13):** DEC-04 dejó sin efecto el *workaround* Q-07 (solo CIE-10), así que el AC-4 pasa a la regla general de RN-27; la paciente (b) usa `diagnosis_grading` según DEC-05, validada `[S1 resp. 1]`.
 
+> **Decidido (usuario, 2026-10-20), circularidad con US-211:** L1D-197 crea `doc1@test.local` con un *fixture* local de tests y el *hasher* de US-211 (`createPasswordHasher()`), sin depender de este seed; esta historia **adopta después** ese *hasher* y el usuario `doc1` en el seed (AC-1 sin cambios). Dependencia sin reordenar oleadas (`backlog/sprints/S1-plan.md` §10, decisión 56).
+
 ## Story
 Como equipo de desarrollo, quiero un seed idempotente con los cinco pacientes
 sintéticos de OL-01 y los usuarios de demo, para demostrar el walking skeleton sin OCR y

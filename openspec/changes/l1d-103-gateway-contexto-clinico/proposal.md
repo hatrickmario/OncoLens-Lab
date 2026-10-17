@@ -115,7 +115,13 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
 - ↪ **Depende de** el change de **L1D-169** (US-039): seed sintético con el paciente semilla (b) (próstata, ISUP,
   ADT, progresión) y `doc1@test.local`, y `packages/clinical-catalogs/manifest.json` (creador único; de su campo
   `version` sale `catalogVersion`).
-- ↪ **Depende de** el change de **L1D-197** (US-211): guard de sesión de `clinical-api` (AC-6).
+- ↪ **Depende de** el change de **L1D-197** (US-211): guard de sesión de `clinical-api` (AC-6) y el login real
+  (`POST /platform/auth/login`) para el test de AC-5 de US-211.
+- **Hereda de L1D-197 (usuario, 2026-10-20, opción b):** el AC-5 de US-211 ("la sesión del doctor nunca llega a
+  `rag-orchestrator`"): su test de integración (tarea 2.8f) y su E2E de logs (2.8g) se escriben y se cierran aquí,
+  porque el gateway nace en este change; cambio de spec de ambos changes (requisito `La sesión del doctor nunca
+  llega a rag-orchestrator` movido de `auth-session` a `evidence-analysis-gateway`). Efecto de orden: este change
+  (oleada 6) ya dependía de L1D-197 (oleada 4); L1D-197 deja de depender de él por AC-5.
 - ↪ **Depende de** el change de **L1D-164** (US-034): esqueleto de `apps/clinical-api`, workspaces, Compose,
   `RAG_ORCHESTRATOR_URL` en la red interna y el montaje de solo lectura de `packages/clinical-catalogs` con
   `CLINICAL_CATALOG_PATH`.
