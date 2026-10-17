@@ -40,9 +40,15 @@ if [ -n "$TEST_FILES" ]; then
     printf '%s\n' "$DISABLED" | head -10 >&2; FAIL=1
   fi
 fi
-REMOVED="$( { git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" | sed 's/$/ (archivo eliminado)/';
-  git diff --cached -U0 --no-color | python3 -I -c '
-import re, sys
+# En un commit de merge (MERGE_HEAD presente) un test solo cuenta como eliminado si existía en AMBOS padres
+# (HEAD y MERGE_HEAD) y falta en el resultado: lo que la otra rama ya trasladó o borró no lo elimina este merge.
+MERGE_HEAD="$(git rev-parse -q --verify MERGE_HEAD 2>/dev/null || true)"
+REMOVED="$( { git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" \
+    | while IFS= read -r f; do
+        { [ -z "$MERGE_HEAD" ] || git cat-file -e "$MERGE_HEAD:$f" 2>/dev/null; } && printf '%s (archivo eliminado)\n' "$f"
+      done;
+  git diff --cached -U0 --no-color | MERGE_HEAD="$MERGE_HEAD" python3 -I -c '
+import os, re, subprocess, sys
 from collections import defaultdict
 # Test eliminado = su nombre desaparece y no reaparece en lo añadido. Mover no es borrar, y renombrar
 # tampoco: en cada archivo, tantos nombres nuevos como desaparecidos cuenta como renombrado.
@@ -60,7 +66,13 @@ for line in sys.stdin:
             if line[0] == "+": add[path].add(name)
             else: rem[path].setdefault(name, line[1:].strip())
 all_added = set().union(*add.values()) if add else set()
+merge_head = os.environ.get("MERGE_HEAD", "")
+def en_merge_head(f, nombre):
+    if not merge_head: return True
+    r = subprocess.run(["git", "show", f"{merge_head}:{f}"], capture_output=True, text=True)
+    return r.returncode == 0 and nombre in r.stdout
 for f, names in rem.items():
+    names = {n: l for n, l in names.items() if en_merge_head(f, n)}
     gone = [n for n in names if n not in all_added]
     new = [n for n in add.get(f, ()) if n not in set().union(*rem.values())]
     for n in gone[len(new):]:
