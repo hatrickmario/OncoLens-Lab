@@ -170,6 +170,8 @@ escaneo de PII con los mismos formatos configurables que usa el detector de Back
 del PR con el de `main` (p. ej., oasdiff). Los AC se verifican con PRs de prueba en una
 rama de la CI (fixtures de PR en `ci/tests/`), no en `main`.
 
+> **Deuda (2026-10-20, decisión del usuario):** `falso_positivo` en la allowlist de `pii-scan` (AC-4 hoy solo admite fixtures `sintetico: true`): permitir marcar un hallazgo concreto como falso positivo, con motivo y fecha de revisión, sin exceptuar el archivo entero. Registrada, **no implementada**; ID futuro a asignar en el planning (relacionada con US-217 AC-3, que ya modela excepciones con fecha de revisión).
+
 **Del cierre del Pre-S1 (P-6, P-8; tareas, no AC):** `vitest.config.ts` en la raíz con esa exclusión;
 versiones fijas de `@playwright/mcp` y `chrome-devtools-mcp` en `.mcp.json` (hoy `@latest`); y un test
 que impida que las reglas de `scripts/contracts/rules/` declaren listas literales de nombres de
