@@ -11,6 +11,18 @@ export function readPort(env: NodeJS.ProcessEnv): number {
   return port;
 }
 
+export interface Argon2Config {
+  memoryCostKib: number;
+  timeCost: number;
+  parallelism: number;
+}
+
+/** Configuración de sesión y de hash de contraseñas (RN-22: calibrable, no literal del dominio). */
+export interface AuthConfig {
+  sessionTtlHours: number;
+  argon2: Argon2Config;
+}
+
 const DEFAULT_SERVICE_JWT_TTL_SECONDS = 60;
 
 export interface ServiceJwtConfig {
