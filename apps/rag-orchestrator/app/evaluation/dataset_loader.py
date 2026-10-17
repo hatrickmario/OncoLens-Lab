@@ -131,8 +131,12 @@ def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
     if fuente.get("licencia_verificada") not in TERMINOS_VERIFICADOS_ACEPTADOS:
         return False
 
-    nombre = str(fuente.get("fuente", "")).split("/", 1)[0].strip().lower()
-    return nombre == "clinicaltrials.gov"
+    return _emisor_de_la_etiqueta(str(fuente.get("fuente", ""))) == "clinicaltrials.gov"
+
+
+def _emisor_de_la_etiqueta(etiqueta: str) -> str:
+    """Emisor de una etiqueta de fuente con formato "<emisor> / <identificador>", en minúsculas y sin espacios."""
+    return etiqueta.split("/", 1)[0].strip().lower()
 
 
 def _validar_manifiesto(
