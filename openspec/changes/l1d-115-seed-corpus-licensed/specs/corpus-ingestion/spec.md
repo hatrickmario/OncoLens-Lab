@@ -46,13 +46,24 @@ El cargador MUST copiar a `population_criteria` los criterios que el manifiesto 
 - **AND** en `t-ok-1` cada criterio de población (subtipo, estadio, línea, biomarcadores, edad, ECOG) vale `no_disponible`
 
 ### Requirement: Recarga idempotente por checksum
-Volver a ejecutar el cargador con el mismo manifiesto MUST dejar sin cambios el número de documentos de `corpus.corpus_document` y el de chunks de `corpus_chunks`: un documento cuyo `checksum` ya existe en su `version_group_id` SHALL omitirse sin reinsertar ni re-embeber (asumido, aceptado `[S1 resp. 3]`). Al omitirlo, el cargador MUST reconciliar Milvus con el catálogo: apagar los chunks de versiones no embebidas del grupo y encender los de la versión vigente del catálogo (M1). Una versión reemplazada puede reingresar si el grupo queda sin vigente (M2, aceptado). Las revistas de ESMO (ESMO Open, Annals of Oncology) MUST rechazarse como fuente excluida por nombre, host o DOI (P1).
+Volver a ejecutar el cargador con el mismo manifiesto MUST dejar sin cambios el número de documentos de `corpus.corpus_document` y el de chunks de `corpus_chunks`: un documento cuyo `checksum` ya existe en su `version_group_id` SHALL omitirse sin reinsertar ni re-embeber (asumido, aceptado `[S1 resp. 3]`).
 
 #### Scenario: Una segunda carga con el mismo manifiesto no cambia los recuentos [US-059 AC-5] [S1 resp. 3]
 - **GIVEN** la semilla de FX-06c-a ya cargada y el recuento de documentos y de chunks anotado
 - **WHEN** se ejecuta de nuevo el cargador con el mismo manifiesto
 - **THEN** el número de filas de `corpus.corpus_document` y el de entidades de `corpus_chunks` son los mismos que antes
 - **AND** el adapter de *embeddings* falso registra cero invocaciones en la segunda carga
+
+#### Scenario: Omitir reconcilia Milvus con el catálogo [US-059 AC-6] [RN-05] [M1]
+- **GIVEN** `t-ok-1` vigente cuyo reemplazo por `t-ok-1-v2` falló al confirmar el catálogo y dejó los chunks de `t-ok-1` apagados
+- **WHEN** se carga de nuevo el texto de `t-ok-1`
+- **THEN** el resultado es `omitido`, los chunks vigentes de Milvus son solo los de `t-ok-1` y los de `t-ok-1-v2` quedan no vigentes
+- **AND** una versión reemplazada puede reingresar si su grupo quedó sin vigente (M2, aceptado por el usuario)
+
+#### Scenario: Las revistas de ESMO se rechazan como fuente excluida [US-059 AC-3] [D-09] [P1]
+- **GIVEN** documentos cuyo nombre es «Annals of Oncology» o cuyo `external_id` es un DOI `10.1016/j.annonc…` o `10.1016/j.esmoop…`, o un host `esmoopen.com` / `annalsofoncology.org`
+- **WHEN** se evalúa su admisibilidad con cualquier `CORPUS_EXCLUDED_SOURCES`
+- **THEN** el motivo es `fuente_excluida`
 
 ### Requirement: Una versión nueva no borra el histórico
 Cuando llega un documento con el mismo `version_group_id` que uno vigente y distinto `checksum`, el cargador MUST insertarlo como nueva fila con `is_current = true`, marcar la versión anterior con `is_current = false` y `superseded_at` (reloj inyectado), marcar sus chunks con `is_current = false`, y SHALL NOT borrar ninguna fila ni ningún chunk (RN-05, ADR-5).

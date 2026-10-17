@@ -47,7 +47,7 @@ def test_lee_las_claves_del_entorno_y_separa_las_listas_por_comas(
     assert ajustes.corpus_seed_manifest_path == Path("/data/seed/manifest.yaml")
     assert ajustes.corpus_accepted_licenses == ("dominio_publico", "cc_by", "cc_by_sa")
     assert ajustes.corpus_excluded_sources == ("NCCN", "ESMO")
-    assert ajustes.corpus_cutoff_date == date(2026, 10, 15)
+    assert ajustes.corpus_cutoff_date == date(2026, 10, 16)
     assert (ajustes.corpus_chunk_size, ajustes.corpus_chunk_overlap) == (1024, 0)
     assert ajustes.corpus_fetch_allowed_hosts == ("www.cancer.gov", "pmc.ncbi.nlm.nih.gov")
 
