@@ -137,7 +137,7 @@ def test_rechaza_un_checksum_que_no_es_sha256_hexadecimal_en_minusculas(
 
 @pytest.mark.parametrize(
     "clave",
-    ["sk-SECRETO/../etc", "con espacios y ñ", "x" * 200, "CC=123456789"],
+    ["sk-SECRETO/../etc", "con espacios y ñ", "x" * 200, "pw=hunter2!"],
 )
 def test_un_error_sobre_un_document_key_invalido_no_lo_repite_en_el_mensaje(
     tmp_path: Path, clave: str

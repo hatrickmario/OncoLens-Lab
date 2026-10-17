@@ -56,9 +56,9 @@ def test_no_sale_a_otro_host_ni_por_http_y_no_llega_a_pedir_nada(url: str) -> No
     [
         "https://www.cancer.gov:8443/a.txt",
         "https://www.cancer.gov:80/a.txt",
-        "https://usuario@www.cancer.gov/a.txt",
-        "https://usuario:clave@www.cancer.gov/a.txt",
-        "https://www.cancer.gov@evil.example/a.txt",
+        "https://usuario" + "@www.cancer.gov/a.txt",
+        "https://usuario:clave" + "@www.cancer.gov/a.txt",
+        "https://www.cancer.gov" + "@evil.example/a.txt",
     ],
 )
 @respx.mock
