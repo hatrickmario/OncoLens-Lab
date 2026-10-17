@@ -1,9 +1,9 @@
-from app.infrastructure.catalog.release_reader import _fuentes_excluidas
+from app.infrastructure.catalog.release_reader import fuentes_excluidas_de
 
 
-def test_fuentes_excluidas_separa_por_comas_y_recorta_espacios():
-    assert _fuentes_excluidas("NCCN, ESMO") == ("NCCN", "ESMO")
+def testfuentes_excluidas_de_separa_por_comas_y_recorta_espacios():
+    assert fuentes_excluidas_de("NCCN, ESMO") == ("NCCN", "ESMO")
 
 
-def test_fuentes_excluidas_devuelve_tupla_vacia_cuando_el_texto_esta_vacio():
-    assert _fuentes_excluidas("") == ()
+def testfuentes_excluidas_de_devuelve_tupla_vacia_cuando_el_texto_esta_vacio():
+    assert fuentes_excluidas_de("") == ()

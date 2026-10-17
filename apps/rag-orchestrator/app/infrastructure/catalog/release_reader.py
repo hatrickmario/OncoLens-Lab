@@ -13,7 +13,7 @@ class CorpusSinReleaseError(RuntimeError):
     """El catálogo no tiene ninguna `CorpusRelease` publicada: no hay corte ni fuentes excluidas que declarar."""
 
 
-class CatalogoCorpusPostgres:
+class LectorReleasePostgres:
     """Solo lectura sobre ``corpus.corpus_release``; el motor ya fija ``search_path=corpus`` (`crear_motor`)."""
 
     def __init__(self, motor: Engine) -> None:
@@ -33,10 +33,10 @@ class CatalogoCorpusPostgres:
         return ReleaseDelCorpus(
             release_id=fila["release_id"],
             cutoff_date=fila["cutoff_date"],
-            excluded_sources=_fuentes_excluidas(fila["excluded_sources"]),
+            excluded_sources=fuentes_excluidas_de(fila["excluded_sources"]),
         )
 
 
-def _fuentes_excluidas(texto: str) -> tuple[str, ...]:
+def fuentes_excluidas_de(texto: str) -> tuple[str, ...]:
     """``excluded_sources`` es texto con las fuentes separadas por comas (data-model §4.6)."""
     return tuple(fuente.strip() for fuente in texto.split(",") if fuente.strip())

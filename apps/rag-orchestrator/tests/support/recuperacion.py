@@ -30,7 +30,11 @@ from app.application.rag_orchestrator_service import (
     RAGOrchestratorService,
 )
 from app.bootstrap import crear_app
-from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
+from app.domain.retrieval_filter import (
+    coincide_etiqueta,
+    exigir_filtro_vigente,
+    expresion_solo_vigente,
+)
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
 from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
@@ -186,8 +190,9 @@ class BuscadorFalso:
         return len(self.expresiones)
 
     def search_dense(
-        self, vector: Sequence[float], limit: int, filtro: str
+        self, vector: Sequence[float], limit: int, filtro: str | None = None
     ) -> list[ChunkEncontrado]:
+        filtro = expresion_solo_vigente() if filtro is None else filtro
         self.expresiones.append(filtro)
         if self.error is not None:
             raise self.error

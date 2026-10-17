@@ -80,7 +80,17 @@ class ChunkEncontrado:
     """Similitud dense de Milvus según ``MILVUS_DENSE_METRIC_TYPE``. NO es ``relevance_score`` (RN-03): no ordena opciones."""
 
 
-class CorpusChunkStore(Protocol):
+class ChunkSearch(Protocol):
+    """Búsqueda dense del corpus (Milvus); la implementa ``MilvusRepository``."""
+
+    def search_dense(
+        self, vector: Sequence[float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontrado]:
+        """``filtro`` viene de ``expresion_vigente_del_tipo()``; ausente, solo ``is_current == true`` (RN-05)."""
+        ...
+
+
+class CorpusChunkStore(ChunkSearch, Protocol):
     """Almacén vectorial de chunks del corpus (Milvus). Lo consumen L1D-106 (recuperación) y L1D-115 (ingesta).
 
     ``search_dense`` solo devuelve chunks ``is_current`` (RN-05). Un vector de dimensión distinta a ``EMBEDDING_DIM``
@@ -92,12 +102,6 @@ class CorpusChunkStore(Protocol):
         ...
 
     def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int: ...
-
-    def search_dense(
-        self, vector: Sequence[float], limit: int, filtro: str | None = None
-    ) -> list[ChunkEncontrado]:
-        """``filtro`` es una expresión de ``expresion_filtro_vigente()``; ausente, solo ``is_current == true`` (RN-05)."""
-        ...
 
 
 # --- Recuperación de /rag/query (US-055, L1D-106) --------------------------------------------------------------------
@@ -118,14 +122,6 @@ class QueryEmbedder(Protocol):
         ...
 
     def embeber(self, texto: str) -> Sequence[float]: ...
-
-
-class ChunkSearch(Protocol):
-    """Búsqueda dense con filtro ya construido; ``MilvusRepository`` la implementa (``CorpusChunkStore.search_dense``)."""
-
-    def search_dense(
-        self, vector: Sequence[float], limit: int, filtro: str
-    ) -> list[ChunkEncontrado]: ...
 
 
 class Reranker(Protocol):
