@@ -16,7 +16,6 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.application.errores import LlmLocalNoDisponibleError
 from app.application.ports import (
     ChunkEncontrado,
     Idioma,
@@ -224,15 +223,6 @@ class GeneradorFalso:
         return RagQueryInternalResponse.model_validate(
             json.loads((EJEMPLOS / "rag-query-con-evidencia.json").read_text(encoding="utf-8"))
         )
-
-
-class GeneradorNoDisponible:
-    """Adapter provisional del bootstrap (hasta L1D-275): lanza el mismo error que un LLM caído."""
-
-    async def generar(
-        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
-    ) -> RagQueryInternalResponse:
-        raise LlmLocalNoDisponibleError()
 
 
 class DetectorIdiomaFalso:

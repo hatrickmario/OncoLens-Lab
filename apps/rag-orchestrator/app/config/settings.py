@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     service_jwt_ttl_seconds: int = Field(default=60, gt=0)
     service_jwt_clock_skew_seconds: int = Field(default=5, ge=0)
     service_jwt_public_key_file: Path | None = None
+    # Recuperación de /rag/query (US-055, RN-22). Sin valor por defecto en código: el umbral lo calibra la evaluación
+    # (US-072) y el arranque de /rag/query con LLM_PROVIDER=local se niega si falta alguno (ver bootstrap).
+    relevance_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    retrieval_top_k: int | None = Field(default=None, gt=0)
+    rerank_top_n: int | None = Field(default=None, gt=0)
+    # Etiquetas que viajan en `meta` (el NLI y el prompt los usan los changes de generación y soporte).
+    nli_model: str | None = None
+    prompt_version: str | None = None
     # Modelos de recuperación y verificación (ADR-39): opcional; en producción no se exigen las claves de medición.
     modelos: ConfigModelos | None = None
 
