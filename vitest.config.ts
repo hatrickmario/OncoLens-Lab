@@ -6,6 +6,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['scripts', 'infra', 'ci'].map((raiz) => `${raiz}/**/*.{test,spec}.?(c|m)[jt]s?(x)`),
-    exclude: [...configDefaults.exclude, '.claude/**', '**/node_modules/**'],
+    // `ci/tests/quality` tiene su propio job (`quality`) y su propia config (`vitest.quality.config.ts`, L1D-265).
+    exclude: [...configDefaults.exclude, '.claude/**', '**/node_modules/**', 'ci/tests/quality/**'],
   },
 });

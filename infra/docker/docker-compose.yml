@@ -180,6 +180,30 @@ services:
       <<: *healthcheck-defaults
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/health"]
 
+  # One-shot (US-058, L1D-114, [S1 resp. 14b]): aplica Alembic al schema corpus como rag_corpus_migrator y termina.
+  # Es el único servicio con la contraseña del migrator; rag-orchestrator no arranca si este no sale con código 0.
+  corpus-migrate:
+    build:
+      context: ../..
+      dockerfile: apps/rag-orchestrator/Dockerfile
+    command: ["python", "-m", "app.scripts.migrate_corpus_catalog"]
+    restart: "no"
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=${RAG_TMPFS_SIZE:-256m}
+    environment:
+      TMPDIR: /tmp
+      # Sin contraseña en la URL (la lee del archivo del secreto) y TLS obligatorio (SEG-08).
+      CORPUS_MIGRATOR_DATABASE_URL: postgresql+psycopg://rag_corpus_migrator@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require
+      PG_RAG_CORPUS_MIGRATOR_PASSWORD_FILE: /run/secrets/pg_rag_corpus_migrator_password
+    secrets:
+      - pg_rag_corpus_migrator_password
+    networks: [corpus-db-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   rag-orchestrator:
     build:
       context: ../..
@@ -223,6 +247,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      corpus-migrate:
+        condition: service_completed_successfully
       milvus-standalone:
         condition: service_healthy
     healthcheck:

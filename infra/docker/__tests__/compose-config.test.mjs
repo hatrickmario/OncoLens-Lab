@@ -23,8 +23,20 @@ beforeAll(() => {
 afterAll(() => limpiar());
 
 describe('docker-compose.yml', () => {
-  it('declara los ocho servicios con healthcheck y tags exactos sin que clinical-api dependa de rag-orchestrator [US-034 AC-1]', () => {
+  it('declara los nueve servicios (ocho con healthcheck y el migrador one-shot) y tags exactos sin que clinical-api dependa de rag-orchestrator [US-034 AC-1]', () => {
     expect(() => assertStackCompleto(resolver())).not.toThrow();
+  });
+
+  it('falla nombrando web cuando un servicio long-running no declara healthcheck [US-034 AC-1]', () => {
+    const config = resolver();
+    delete config.services.web.healthcheck;
+    expect(() => assertStackCompleto(config)).toThrow(/web no declara healthcheck/);
+  });
+
+  it('falla nombrando corpus-migrate cuando deja de ser one-shot y no declara healthcheck [US-034 AC-1]', () => {
+    const config = resolver();
+    config.services['corpus-migrate'].restart = 'unless-stopped';
+    expect(() => assertStackCompleto(config)).toThrow(/corpus-migrate no declara healthcheck/);
   });
 
   it('solo web publica un puerto [US-034 AC-2]', () => {

@@ -36,7 +36,10 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: apps/rag-orchestrator/requirements.txt
+          cache-dependency-path: |
+            apps/rag-orchestrator/requirements.txt
+            apps/rag-orchestrator/requirements-dev.txt
+            apps/rag-orchestrator/requirements-eval.txt
       - name: Instalar dependencias de Node
         run: npm ci
       - name: Herramientas de la CI (oasdiff, que usa el test de contracts-breaking.sh)
@@ -47,8 +50,8 @@ jobs:
         run: npm run test:build --workspace apps/web
       - name: Tests de los workspaces
         run: npm test --workspaces --if-present
-      - name: Dependencias de rag-orchestrator (y ruff, que usan los tests de ci/tests/quality)
-        run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt
+      - name: Dependencias de rag-orchestrator (dev, ruff para ci/tests/quality, y eval, que importan tests/evaluation y test_settings_modelos)
+        run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
         run: npx vitest run
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
@@ -172,7 +175,7 @@ jobs:
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
       - name: Tests de lint y formato (fixtures)
-        run: npx vitest run ci/tests/quality
+        run: npm run test:quality
 
   ci-ok:
     name: ci-ok
