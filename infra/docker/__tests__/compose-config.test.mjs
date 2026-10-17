@@ -114,6 +114,15 @@ describe('docker-compose.yml', () => {
     expect(() => assertTtlDelJwtCompartido(resolver({ entorno: { SERVICE_JWT_TTL_SECONDS: '30' } }))).not.toThrow();
   });
 
+  it('rag-orchestrator recibe los valores provisionales de la recuperación y el entorno los puede cambiar [L1D-106 RN-22]', () => {
+    const porDefecto = resolver().services['rag-orchestrator'].environment;
+    const fijadas = resolver({ entorno: { RELEVANCE_THRESHOLD: '0.45', RETRIEVAL_TOP_K: '20', RERANK_TOP_N: '5' } }).services['rag-orchestrator']
+      .environment;
+
+    expect([porDefecto.RELEVANCE_THRESHOLD, porDefecto.RETRIEVAL_TOP_K, porDefecto.RERANK_TOP_N]).toEqual(['0.30', '40', '10']);
+    expect([fijadas.RELEVANCE_THRESHOLD, fijadas.RETRIEVAL_TOP_K, fijadas.RERANK_TOP_N]).toEqual(['0.45', '20', '5']);
+  });
+
   it('clinical-api resuelve a vacío SESSION_TTL_HOURS y ARGON2_* cuando el entorno no los fija: el valor por defecto vive solo en config.ts (RN-22) [US-211 AC-1]', () => {
     const variables = ['SESSION_TTL_HOURS', 'ARGON2_MEMORY_COST_KIB', 'ARGON2_TIME_COST', 'ARGON2_PARALLELISM'];
     const sinFijar = resolver().services['clinical-api'].environment;

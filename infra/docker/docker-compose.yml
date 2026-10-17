@@ -234,6 +234,11 @@ services:
       REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
       FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      # Recuperación de /rag/query (RN-22): valores provisionales hasta US-072 (calibración con la suite evaluate).
+      # Sin ellos, con LLM_PROVIDER=local el arranque se niega (sin valor por defecto en el código).
+      RELEVANCE_THRESHOLD: ${RELEVANCE_THRESHOLD:-0.30}
+      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-40}
+      RERANK_TOP_N: ${RERANK_TOP_N:-10}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
