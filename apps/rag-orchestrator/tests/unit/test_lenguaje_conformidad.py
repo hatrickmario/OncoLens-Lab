@@ -26,20 +26,13 @@ def test_check_prohibited_terms_casos_de_conformidad_mismos_ids_y_niveles() -> N
 
     discrepancias = []
     for caso in casos:
-        try:
-            coincidencias = check_prohibited_terms(
-                caso["texto"],
-                lista,
-                niveles=tuple(caso["niveles"]),
-                permitir_frases=caso["permitirFrases"],
-            )
-        except NotImplementedError:
-            coincidencias = None
-        obtenido = (
-            None
-            if coincidencias is None
-            else [{"id": c.id, "nivel": c.nivel} for c in coincidencias]
+        coincidencias = check_prohibited_terms(
+            caso["texto"],
+            lista,
+            niveles=tuple(caso["niveles"]),
+            permitir_frases=caso["permitirFrases"],
         )
+        obtenido = [{"id": c.id, "nivel": c.nivel} for c in coincidencias]
         if obtenido != caso["esperado"]:
             discrepancias.append((caso["texto"], caso["esperado"], obtenido))
 
