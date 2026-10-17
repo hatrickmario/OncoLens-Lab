@@ -541,3 +541,24 @@ def test_readmitir_con_el_mismo_checksum_un_documento_retirado_lo_deja_vigente_e
     assert (readmitido.is_current, readmitido.superseded_at) == (True, None)
     assert montaje.vigentes_en_milvus() == {id_cargado} == montaje.encontrados_por_busqueda()
     assert montaje.catalogo.releases[-1].document_ids == (id_cargado,)
+
+
+def test_la_release_declara_nccn_y_esmo_como_excluidas_aunque_la_configuracion_este_vacia() -> None:
+    catalogo = CatalogoEnMemoria()
+    cargador = SeedCorpusLoader(
+        catalogo=catalogo,
+        almacen_de_chunks=AlmacenDeChunksEnMemoria(),
+        embedder=EmbedderFalso(),
+        fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
+        reloj=RelojFijo(),
+        ids=GeneradorDeIdsFijo(),
+        politica=replace(politica_de_test(), excluidas=()),
+        tokenizador=TokenizadorPorPalabras(),
+        tamano_de_chunk=TAMANO_DE_CHUNK_DE_TEST,
+        solape_de_chunk=SOLAPE_DE_CHUNK_DE_TEST,
+        fecha_de_corte=FECHA_DE_CORTE_DE_TEST,
+    )
+
+    cargador.cargar(documentos_fx_06c_a("t-ok-1"))
+
+    assert catalogo.releases[0].excluded_sources == ("NCCN", "ESMO")

@@ -6,7 +6,11 @@ from dataclasses import replace
 
 import pytest
 
-from app.domain.corpus_seed.admisibilidad import MotivoDeRechazo, evaluar_admisibilidad
+from app.domain.corpus_seed.admisibilidad import (
+    MotivoDeRechazo,
+    clase_contradice_el_texto,
+    evaluar_admisibilidad,
+)
 from tests.support.semilla import documento_de_prueba, politica_de_test
 
 
@@ -220,3 +224,91 @@ def test_compara_la_licencia_sin_distinguir_mayusculas_ni_espacios_de_mas(licenc
     admision = evaluar_admisibilidad(documento_de_prueba(license=licencia), politica_de_test())
 
     assert admision.license_class == "cc_by"
+
+
+POLITICA_SIN_EXCLUIDAS = replace(politica_de_test(), excluidas=())
+
+
+@pytest.mark.parametrize("excluidas", [(), ("Foo",), ("Foo", "Bar")])
+@pytest.mark.parametrize("fuente", ["NCCN", "ESMO", "National Comprehensive Cancer Network"])
+def test_la_configuracion_solo_amplia_el_piso_de_nccn_y_esmo_nunca_lo_quita(
+    excluidas: tuple[str, ...], fuente: str
+) -> None:
+    politica = replace(politica_de_test(), excluidas=excluidas)
+
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name=fuente), politica)
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize("host", ["https://www.nccn.org/x", "https://www.esmo.org/x"])
+def test_el_piso_tambien_cubre_los_hosts_aunque_la_configuracion_este_vacia(host: str) -> None:
+    documento = documento_de_prueba(external_id=host)
+
+    assert (
+        evaluar_admisibilidad(documento, POLITICA_SIN_EXCLUIDAS).motivo
+        is MotivoDeRechazo.FUENTE_EXCLUIDA
+    )
+
+
+def test_una_fuente_agregada_por_configuracion_se_excluye_por_nombre() -> None:
+    politica = replace(politica_de_test(), excluidas=("NCCN", "ESMO", "Foo"))
+
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name="Foo Guidelines"), politica)
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+def test_no_se_inventan_hosts_para_una_fuente_agregada_por_configuracion() -> None:
+    politica = replace(politica_de_test(), excluidas=("NCCN", "ESMO", "Foo"))
+
+    admision = evaluar_admisibilidad(documento_de_prueba(external_id="https://foo.org/x"), politica)
+
+    assert admision.admitido
+
+
+@pytest.mark.parametrize("fuente", ["ESMO Open", "ESMO Clinical Practice Guidelines", "esmo"])
+def test_esmo_open_se_rechaza_porque_la_regla_falla_cerrado(fuente: str) -> None:
+    """Una excepción para «ESMO Open» exigiría una revisión legal explícita (design.md); hoy se rechaza."""
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name=fuente), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize(
+    ("configuradas", "esperadas"),
+    [
+        ((), ("NCCN", "ESMO")),
+        (("NCCN", "ESMO"), ("NCCN", "ESMO")),
+        (("nccn", "Foo"), ("nccn", "Foo", "ESMO")),
+    ],
+)
+def test_las_fuentes_excluidas_efectivas_incluyen_el_piso_sin_duplicar(
+    configuradas: tuple[str, ...], esperadas: tuple[str, ...]
+) -> None:
+    politica = replace(politica_de_test(), excluidas=configuradas)
+
+    assert politica.fuentes_excluidas() == esperadas
+
+
+@pytest.mark.parametrize(
+    ("texto", "clase", "contradice"),
+    [
+        ("cc by-nc 4.0", "cc_by", True),
+        ("cc by-nc-sa 4.0", "cc_by_sa", True),
+        ("attribution-noncommercial", "dominio_publico", True),
+        ("cc by-sa 4.0", "cc_by", True),
+        ("cc by-nd 4.0", "cc_by", True),
+        ("cc by-nd 4.0", "cc_by_nc", True),
+        ("cc by noderivs 4.0", "cc_by", True),
+        ("cc by-nc 4.0", "cc_by_nc", False),
+        ("cc by-nc-sa 4.0", "cc_by_nc", False),
+        ("cc by-sa 4.0", "cc_by_sa", False),
+        ("cc by 4.0", "cc_by", False),
+        ("texto de nci libre de copyright", "dominio_publico", False),
+    ],
+)
+def test_una_clave_de_la_tabla_que_contradice_su_clase_se_detecta_en_el_dominio(
+    texto: str, clase: str, contradice: bool
+) -> None:
+    assert clase_contradice_el_texto(texto, clase) is contradice

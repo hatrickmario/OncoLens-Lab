@@ -59,6 +59,10 @@ class PoliticaDeLicencias:
     mapa_de_clases: Mapping[str, str]
     permitir_cc_by_nc: bool = False
 
+    def fuentes_excluidas(self) -> tuple[str, ...]:
+        """Las fuentes excluidas efectivas: el piso del código más las de configuración (esta solo puede ampliarlo)."""
+        return self.excluidas
+
 
 @dataclass(frozen=True)
 class Admision:
@@ -68,6 +72,11 @@ class Admision:
     @property
     def admitido(self) -> bool:
         return self.motivo is None
+
+
+def clase_contradice_el_texto(texto: str, clase: str) -> bool:
+    """La clave de la tabla dice una cosa y la clase otra (RN-21): ND nunca; NC solo a cc_by_nc; SA solo a cc_by_sa."""
+    raise NotImplementedError("no implementado")
 
 
 def contiene_nd(texto: str) -> bool:
