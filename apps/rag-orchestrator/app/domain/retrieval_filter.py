@@ -15,6 +15,13 @@ _PREFIJO_CON_RESTRICCION = f"{FILTRO_VIGENTE} and ("
 _CODIGO_DE_CATALOGO = re.compile(r"[a-z][a-z0-9_]*")
 
 
+LONGITUD_MAXIMA_DE_CODIGO = 64
+
+
+def escapar_patron_like(texto: str) -> str:
+    raise NotImplementedError("no implementado")
+
+
 def expresion_solo_vigente() -> str:
     """``is_current == true`` (RN-05): la recuperación nunca devuelve el histórico del corpus."""
     return FILTRO_VIGENTE
