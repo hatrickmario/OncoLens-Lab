@@ -180,7 +180,8 @@ def test_el_error_de_red_nombra_el_host_y_no_la_url_completa() -> None:
     with pytest.raises(FuenteNoDisponible) as error:
         descargador().descargar_texto(URL)
 
-    assert "www.cancer.gov" in str(error.value) and "/types/breast" not in str(error.value)
+    assert error.value.host == "www.cancer.gov"
+    assert "/types/breast" not in str(error.value)
 
 
 def test_el_texto_inline_se_entrega_tal_cual(tmp_path: Path) -> None:
