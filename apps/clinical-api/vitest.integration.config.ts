@@ -10,6 +10,7 @@ export default defineConfig({
       'tests/integration/schema/**/*.test.ts',
       'tests/integration/auth/**/*.test.ts',
       'tests/integration/seed/**/*.test.ts',
+      'tests/integration/evidence-analysis/**/*.test.ts',
     ],
     globalSetup: ['tests/support/global-setup.ts'],
     testTimeout: 30_000,

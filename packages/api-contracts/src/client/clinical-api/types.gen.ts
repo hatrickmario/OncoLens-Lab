@@ -698,6 +698,12 @@ export type ErrorSolicitudNoProcesable = {
     traceId: string;
 };
 
+export type ErrorAnalisisNoProcesable = {
+    error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'TIPO_CANCER_NO_REGISTRADO';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorRegistroManualInvalido = {
     error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO' | 'VALOR_FUERA_DE_CATALOGO';
     message: string;
@@ -1163,9 +1169,9 @@ export type CreateEvidenceAnalysisErrors = {
      */
     404: ErrorNoEncontrado;
     /**
-     * Cuerpo inválido, o paciente egresado (RN-17).
+     * Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no tiene tipo de cáncer y el análisis no se realiza (no se llama a la IA ni se persiste análisis).
      */
-    422: ErrorSolicitudNoProcesable;
+    422: ErrorAnalisisNoProcesable;
     /**
      * Límite de generaciones con IA por usuario, o cola de inferencia llena.
      */

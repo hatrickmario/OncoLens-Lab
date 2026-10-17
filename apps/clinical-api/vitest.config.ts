@@ -10,6 +10,7 @@ export default defineConfig({
       'tests/integration/schema/**',
       'tests/integration/auth/**',
       'tests/integration/seed/**',
+      'tests/integration/evidence-analysis/**',
     ],
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).
     retry: 0,

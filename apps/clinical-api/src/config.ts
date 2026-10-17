@@ -192,3 +192,58 @@ export function readDatabaseConfig(
     ca: leerArchivoObligatorio(env, 'CLINICAL_DATABASE_CA_FILE', readFile),
   };
 }
+
+export interface EvidenceAnalysisConfig {
+  /** Hostname interno de rag-orchestrator en Compose (nunca publicado al host). */
+  ragOrchestratorUrl: string;
+  /** Directorio de solo lectura del catálogo clínico; de él sale `catalogVersion` (`manifest.json`). */
+  catalogPath: string;
+  /** `maxOptions` del request interno: 1 en el S1, 3 desde el S4 (RN-22). */
+  analysisMaxOptions: number;
+  /** Años de antigüedad por defecto de la evidencia cuando la petición no trae `publishedFromYear` (RN-22). */
+  evidenceDefaultYears: number;
+}
+
+const DEFAULT_ANALYSIS_MAX_OPTIONS = 1;
+/** `maximum` de `maxOptions` en `RagQueryInternalRequest` (contrato de rag-orchestrator). */
+const CONTRACT_MAX_OPTIONS = 3;
+const DEFAULT_EVIDENCE_YEARS = 10;
+
+function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
+  const valor = leerObligatoria(env, variable);
+  try {
+    const url = new URL(valor);
+    if (url.protocol === 'http:' || url.protocol === 'https:') return valor;
+  } catch {
+    // Se descarta el error del parser: puede citar el valor.
+  }
+  throw new ConfiguracionInvalidaError(variable, 'debe ser una URL http(s) válida');
+}
+
+/**
+ * Configuración del gateway de análisis (RN-22: nada de esto es un literal del dominio). Los valores inválidos nombran
+ * la variable y nunca su valor.
+ */
+export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnalysisConfig {
+  const analysisMaxOptions = readPositiveInteger(
+    env,
+    'ANALYSIS_MAX_OPTIONS',
+    DEFAULT_ANALYSIS_MAX_OPTIONS,
+  );
+  if (analysisMaxOptions > CONTRACT_MAX_OPTIONS) {
+    throw new ConfiguracionInvalidaError(
+      'ANALYSIS_MAX_OPTIONS',
+      `no puede superar ${CONTRACT_MAX_OPTIONS} (máximo del contrato)`,
+    );
+  }
+  return {
+    ragOrchestratorUrl: leerUrlHttpObligatoria(env, 'RAG_ORCHESTRATOR_URL'),
+    catalogPath: leerObligatoria(env, 'CLINICAL_CATALOG_PATH'),
+    analysisMaxOptions,
+    evidenceDefaultYears: readPositiveInteger(
+      env,
+      'EVIDENCE_DEFAULT_YEARS',
+      DEFAULT_EVIDENCE_YEARS,
+    ),
+  };
+}

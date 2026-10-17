@@ -860,11 +860,11 @@ paths:
         "404":
           $ref: "#/components/responses/NoEncontrado"
         "422":
-          description: Cuerpo inválido, o paciente egresado (RN-17).
+          description: "Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no tiene tipo de cáncer y el análisis no se realiza (no se llama a la IA ni se persiste análisis)."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
+                $ref: "#/components/schemas/ErrorAnalisisNoProcesable"
         "429":
           $ref: "#/components/responses/LimiteGeneracion"
         "502":

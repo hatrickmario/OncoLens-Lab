@@ -148,6 +148,11 @@
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/502"
     },
     {
+      "file": "error-tipo-cancer-no-registrado.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/422"
+    },
+    {
       "file": "error-valor-fuera-de-catalogo.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1biomarkers/post/responses/422"

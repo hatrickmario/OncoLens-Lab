@@ -530,6 +530,16 @@ export const zErrorSolicitudNoProcesable = z.strictObject({
     traceId: z.string()
 });
 
+export const zErrorAnalisisNoProcesable = z.strictObject({
+    error: z.enum([
+        'CUERPO_INVALIDO',
+        'PACIENTE_EGRESADO',
+        'TIPO_CANCER_NO_REGISTRADO'
+    ]),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorRegistroManualInvalido = z.strictObject({
     error: z.enum([
         'CUERPO_INVALIDO',

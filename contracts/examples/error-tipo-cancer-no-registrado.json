@@ -1,0 +1,5 @@
+{
+  "error": "TIPO_CANCER_NO_REGISTRADO",
+  "message": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
+  "traceId": "req_f1e2d3c4"
+}

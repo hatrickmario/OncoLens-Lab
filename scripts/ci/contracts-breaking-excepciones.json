@@ -9,5 +9,16 @@
     "operacion": "POST",
     "ruta": "/rag/query",
     "texto": "added `#/components/schemas/ErrorTipoCancerNoRegistrado` to the response body `oneOf` list for the response status `422`"
+  },
+  {
+    "id": "E-2",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-103-gateway-contexto-clinico",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/evidence-analyses",
+    "texto": "added the new `TIPO_CANCER_NO_REGISTRADO` enum value to the `error` response property for the response status `422`"
   }
 ]

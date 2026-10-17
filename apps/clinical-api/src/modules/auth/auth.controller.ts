@@ -1,5 +1,5 @@
 import express, { Router, type ErrorRequestHandler, type Response } from 'express';
-import { enviarError } from '../../infrastructure/http-errores.js';
+import { enviarError, esErrorDeCuerpoDelCliente } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { loginSchema, NOMBRE_COOKIE_DE_SESION } from './auth.schema.js';
 import { CredencialesInvalidasError, type AuthService } from './auth.service.js';
@@ -11,16 +11,6 @@ export interface DependenciasDeAuthController {
 }
 
 const EVENTO_LOGIN = 'auth.login';
-// Errores 4xx de body-parser causados por el cliente → 422 del contrato. Se excluyen a propósito
-// `stream.encoding.set` (500: error de configuración del servidor) y `entity.verify.failed` (no se usa `verify`).
-const ERRORES_DE_CUERPO: ReadonlySet<string> = new Set([
-  'entity.parse.failed',
-  'entity.too.large',
-  'encoding.unsupported',
-  'charset.unsupported',
-  'request.size.invalid',
-  'request.aborted',
-]);
 
 /** Cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */
 function establecerCookieDeSesion(respuesta: Response, token: string): void {
@@ -67,9 +57,7 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
 
   // JSON malformado o cuerpo excesivo: mismo 422 del contrato, sin eco del error del parser.
   const cuerpoIlegible: ErrorRequestHandler = (error: unknown, _request, response, next) => {
-    // Solo errores del parser de body-parser (`error.type`): cualquier otro error con `status` sigue al manejador final.
-    const tipo = (error as { type?: unknown }).type;
-    if (typeof tipo !== 'string' || !ERRORES_DE_CUERPO.has(tipo)) {
+    if (!esErrorDeCuerpoDelCliente(error)) {
       next(error);
       return;
     }

@@ -252,4 +252,15 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(compose.services['clinical-seed'].environment.APP_ENV).toBe('${APP_ENV:?APP_ENV obligatorio}');
     expect(() => resolver({ entorno: { APP_ENV: '' } })).toThrow(/APP_ENV obligatorio/);
   });
+
+  it('exige APP_ENV en clinical-api sin valor por defecto y le pasa la configuración del gateway de análisis [L1D-103 RN-11 RN-13]', () => {
+    const compose = parseYaml(readFileSync(COMPOSE, 'utf8'));
+    const entorno = resolver().services['clinical-api'].environment;
+
+    expect(compose.services['clinical-api'].environment.APP_ENV).toBe('${APP_ENV:?APP_ENV obligatorio}');
+    expect(() => resolver({ entorno: { APP_ENV: '' } })).toThrow(/APP_ENV obligatorio/);
+    expect(entorno.RAG_ORCHESTRATOR_URL).toBe('http://rag-orchestrator:8000');
+    expect(entorno.ANALYSIS_MAX_OPTIONS).toBe('');
+    expect(entorno.EVIDENCE_DEFAULT_YEARS).toBe('');
+  });
 });

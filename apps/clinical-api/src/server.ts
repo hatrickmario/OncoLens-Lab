@@ -6,13 +6,18 @@ import {
   exigirAppEnv,
   readAuthConfig,
   readDatabaseConfig,
+  readEvidenceAnalysisConfig,
   readServiceJwtConfig,
 } from './config.js';
 import { crearPool } from './infrastructure/database.js';
-import { nuevoTraceId } from './infrastructure/ids.js';
+import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { registrarEnConsola } from './infrastructure/logger.js';
-import { loadServicePrivateKey } from './infrastructure/service-jwt.js';
+import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
+import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
+import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
+import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
 import { arrancar, registrarConfiguracionInvalida } from './startup.js';
 
 const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
@@ -20,8 +25,9 @@ const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
 /**
  * Raíz de composición: conecta el proceso real (entorno, sistema de archivos, consola) con `arrancar`.
  * `arrancar` comprueba primero que los secretos existan (US-035 AC-5); aquí, ya antes de escuchar, se
- * valida la configuración de sesión y de PostgreSQL (el error nombra la variable, nunca su valor) y que la
- * clave privada del JWT de servicio sea legible y utilizable (fallo cerrado, US-054).
+ * valida la configuración de sesión, de PostgreSQL y del gateway de análisis (el error nombra la variable, nunca su
+ * valor), que el catálogo tenga `manifest.json` y que la clave privada del JWT de servicio sea legible y utilizable
+ * (fallo cerrado, US-054).
  */
 arrancar({
   env: process.env,
@@ -30,13 +36,17 @@ arrancar({
   exit: (codigo) => process.exit(codigo),
   listen: (puerto) => {
     let configuracion;
+    let catalogo;
     try {
-      exigirAppEnv(process.env);
+      const appEnv = exigirAppEnv(process.env);
       configuracion = {
+        appEnv,
         auth: readAuthConfig(process.env),
         database: readDatabaseConfig(process.env, leerArchivo),
         jwt: readServiceJwtConfig(process.env),
+        analisis: readEvidenceAnalysisConfig(process.env),
       };
+      catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
     } catch (error) {
       if (!(error instanceof ConfiguracionInvalidaError)) throw error;
       registrarConfiguracionInvalida((linea) => console.error(linea), error);
@@ -45,15 +55,41 @@ arrancar({
 
     const pool = crearPool(configuracion.database, registrarEnConsola);
     loadServicePrivateKey(configuracion.jwt.privateKeyFile)
-      .then(() => {
+      .then((privateKey) => {
+        const reloj = { now: () => new Date() };
+        const signer = createServiceTokenSigner({
+          privateKey,
+          clock: reloj,
+          ttlSeconds: configuracion.jwt.ttlSeconds,
+        });
+        const gateway = componerGatewayDeAnalisis({
+          db: pool,
+          rag: crearRagQueryClient(
+            createRagOrchestratorClient({
+              baseUrl: configuracion.analisis.ragOrchestratorUrl,
+              signer,
+            }),
+          ),
+          catalogo,
+          config: {
+            appEnv: configuracion.appEnv,
+            analysisMaxOptions: configuracion.analisis.analysisMaxOptions,
+            evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,
+          },
+          reloj,
+          ids: { traceId: nuevoTraceId },
+          pseudonimos: { nuevo: nuevoSeudonimo },
+          registrar: registrarEnConsola,
+        });
         const app = componerAplicacion({
           db: pool,
           auth: configuracion.auth,
-          reloj: { now: () => new Date() },
+          reloj,
           tokens: crearGeneradorDeToken(),
           ids: randomUUID,
           nuevoTraceId,
           registrar: registrarEnConsola,
+          rutasProtegidas: [gateway],
         });
         const servidor = app.listen(puerto, () => {
           console.info(`clinical-api escuchando en el puerto ${puerto}`);
