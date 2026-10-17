@@ -11,8 +11,8 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy.engine import URL, Connection
 
-from app.config.settings import SCHEMA_CORPUS, CorpusMigratorSettings
-from app.infrastructure.catalog.conexion import componer_url, crear_motor
+from app.config.settings import SCHEMA_CORPUS
+from app.infrastructure.catalog.conexion import crear_motor, url_del_migrador_desde_el_entorno
 from app.infrastructure.catalog.tables import metadata
 
 config = context.config
@@ -20,14 +20,7 @@ config = context.config
 
 def _url_del_migrador() -> URL:
     entregada = config.attributes.get("url")
-    if entregada is not None:
-        return entregada
-    ajustes = CorpusMigratorSettings(_env_file=None)  # type: ignore[call-arg]
-    return componer_url(
-        ajustes.corpus_migrator_database_url,
-        ajustes.pg_rag_corpus_migrator_password_file,
-        "PG_RAG_CORPUS_MIGRATOR_PASSWORD_FILE",
-    )
+    return entregada if entregada is not None else url_del_migrador_desde_el_entorno()
 
 
 def _solo_el_schema_corpus(nombre: str | None, tipo: str, _padres: dict) -> bool:

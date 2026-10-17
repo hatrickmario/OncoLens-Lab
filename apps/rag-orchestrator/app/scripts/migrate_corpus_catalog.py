@@ -17,8 +17,7 @@ from pydantic import ValidationError
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import DBAPIError
 
-from app.config.settings import CorpusMigratorSettings
-from app.infrastructure.catalog.conexion import SecretoIlegible, componer_url
+from app.infrastructure.catalog.conexion import SecretoIlegible, url_del_migrador_desde_el_entorno
 
 DIRECTORIO_ALEMBIC = (
     Path(__file__).resolve().parent.parent / "infrastructure" / "catalog" / "alembic"
@@ -48,15 +47,6 @@ def migrar(url: URL) -> str:
     return revision_head()
 
 
-def _url_desde_el_entorno() -> URL:
-    ajustes = CorpusMigratorSettings(_env_file=None)  # type: ignore[call-arg]
-    return componer_url(
-        ajustes.corpus_migrator_database_url,
-        ajustes.pg_rag_corpus_migrator_password_file,
-        "PG_RAG_CORPUS_MIGRATOR_PASSWORD_FILE",
-    )
-
-
 def _describir_fallo(error: Exception) -> str:
     if isinstance(error, ValidationError):
         return "configuración inválida en: " + ", ".join(
@@ -69,7 +59,7 @@ def _describir_fallo(error: Exception) -> str:
 
 def main() -> int:
     try:
-        cabeza = migrar(_url_desde_el_entorno())
+        cabeza = migrar(url_del_migrador_desde_el_entorno())
     except Exception as error:  # noqa: BLE001 - se informa la clase y una línea sin credenciales
         print(f"corpus-migrate: falló ({_describir_fallo(error)})", file=sys.stderr)
         return 1
