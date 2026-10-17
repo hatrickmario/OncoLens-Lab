@@ -7,6 +7,7 @@ colección temporal ``corpus_test_*``; nunca ``corpus_chunks``. Solo chunks sint
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 import pytest
 from pymilvus import DataType, MilvusClient
@@ -191,10 +192,16 @@ def test_milvus_repository_un_campo_ajeno_al_esquema_se_informa_por_nombre(
 
 @pytest.mark.ac("US-058", 5)
 @pytest.mark.parametrize(
-    ("campo", "esperado", "encontrado", "otros_ajustes"),
+    ("campo", "esperado", "encontrado", "existente", "configurado"),
     [
-        ("dense_vector.metric_type", "COSINE", "IP", {"metrica": "IP"}),
-        ("dense_vector.index_type", "FLAT", "HNSW", {"tipo_de_indice": "HNSW"}),
+        ("dense_vector.metric_type", "COSINE", "IP", {"metrica": "IP"}, {"metrica": "COSINE"}),
+        (
+            "dense_vector.index_type",
+            "FLAT",
+            "HNSW",
+            {"tipo_de_indice": "HNSW"},
+            {"tipo_de_indice": "FLAT"},
+        ),
     ],
     ids=["metrica", "tipo_de_indice"],
 )
@@ -205,22 +212,19 @@ def test_milvus_repository_metrica_o_indice_distintos_lanza_schema_mismatch(
     campo: str,
     esperado: str,
     encontrado: str,
-    otros_ajustes: dict[str, str],
+    existente: dict[str, Any],
+    configurado: dict[str, Any],
 ) -> None:
     nombre = nueva_coleccion()
-    existente = MilvusRepository(
-        cliente_milvus, ajustes_de_milvus(uri_de_milvus, nombre, **otros_ajustes)  # type: ignore[arg-type]
-    )
-    existente.ensure_collection()
+    MilvusRepository(
+        cliente_milvus, ajustes_de_milvus(uri_de_milvus, nombre, **existente)
+    ).ensure_collection()
     antes = identificador_interno(cliente_milvus, nombre)
-    configuracion = (
-        ajustes_de_milvus(uri_de_milvus, nombre)
-        if esperado == "COSINE"
-        else ajustes_de_milvus(uri_de_milvus, nombre, tipo_de_indice="FLAT")
-    )
 
     with pytest.raises(CorpusCollectionSchemaMismatch) as error:
-        MilvusRepository(cliente_milvus, configuracion).ensure_collection()
+        MilvusRepository(
+            cliente_milvus, ajustes_de_milvus(uri_de_milvus, nombre, **configurado)
+        ).ensure_collection()
 
     assert (error.value.campo, error.value.esperado, error.value.encontrado) == (
         campo,
