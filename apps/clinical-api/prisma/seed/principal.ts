@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import { ConfiguracionInvalidaError, readAuthConfig } from '../../src/config.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
+import { nuevoTraceId } from '../../src/infrastructure/ids.js';
 import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import type { LeerArchivo } from '../../src/config/secrets.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
@@ -51,11 +51,11 @@ export async function ejecutarSeed(
 
 /** Nunca lleva el mensaje del error (puede traer host, usuario o filas): solo la clase y, si existe, la variable. */
 function lineaDeFallo(error: unknown, traceId: string): Record<string, unknown> {
-  const variable = (error as { variable?: unknown }).variable;
+  const variable = (error as { variable?: unknown } | null)?.variable;
   return {
     event: 'seed_fallido',
     traceId,
-    clase: (error as Error).name,
+    clase: error instanceof Error ? error.name : 'desconocido',
     ...(typeof variable === 'string' ? { variable } : {}),
   };
 }
@@ -99,7 +99,7 @@ export async function ejecutarSeedDelProceso(): Promise<void> {
       leerArchivo: leerArchivoDeTexto,
       hasher: createPasswordHasher(readAuthConfig(process.env).argon2),
       registrar: registrarEnConsola,
-      traceId: `req_${randomUUID().slice(0, 8)}`,
+      traceId: nuevoTraceId(),
     });
   } catch (error) {
     const conocido = ERRORES_CON_MENSAJE_SEGURO.some((clase) => error instanceof clase);

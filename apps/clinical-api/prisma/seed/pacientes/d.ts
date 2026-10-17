@@ -12,7 +12,7 @@ export const pacienteD: PacienteSemilla = {
       histology: 'carcinoma ductal infiltrante',
       stagingSystem: 'TNM_8',
       stageValue: 'IIIA',
-      escalaDeDesempeno: 'ECOG',
+      performanceScale: 'ECOG',
       performanceValue: 1,
       diasDesdeElDiagnostico: 90,
       activo: true,

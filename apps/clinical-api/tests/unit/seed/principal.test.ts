@@ -20,7 +20,6 @@ describe('ejecutarSeed', () => {
 
     await expect(
       ejecutarSeed(ENTORNO, {
-        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         conectar: () => Promise.reject('cadena con host=secreto'),
         leerArchivo,
         hasher: { hash: () => Promise.resolve('h'), verify: () => Promise.resolve(false) },

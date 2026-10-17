@@ -17,7 +17,8 @@ export function conexionDesdeCliente(
         await cliente.query('COMMIT');
         return resultado;
       } catch (error) {
-        await cliente.query('ROLLBACK');
+        // Si el ROLLBACK también falla, el error que importa es el original (la conexión se cierra de todos modos).
+        await cliente.query('ROLLBACK').catch(() => undefined);
         throw error;
       }
     },

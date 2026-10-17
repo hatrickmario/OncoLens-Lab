@@ -2,13 +2,14 @@ import type { Clock } from '../../src/infrastructure/clock.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { resolverCodigoDelCatalogo, type CatalogoClinico } from './catalogo.js';
 import { idSembrado } from './determinismo.js';
-import { derivarGleason, derivarTextoGrade } from './grade.js';
+import { columnasDeGradacion } from './columnas-de-gradacion.js';
+import { derivarTextoGrade } from './grade.js';
 import { pacienteA } from './pacientes/a.js';
 import { pacienteB } from './pacientes/b.js';
 import { pacienteC } from './pacientes/c.js';
 import { pacienteD } from './pacientes/d.js';
 import { pacienteE } from './pacientes/e.js';
-import type { DiagnosticoSemilla, PacienteSemilla } from './pacientes/tipos.js';
+import type { DiagnosticoSemilla, GradacionSemilla, PacienteSemilla } from './pacientes/tipos.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
 import { DESCRIPCION_DE_ROL, MATRIZ_DE_PERMISOS } from './roles.js';
 
@@ -106,7 +107,7 @@ async function devolverId(siembra: Siembra, sql: string, valores: unknown[]): Pr
 /** Roles y permisos de la matriz RBAC: se identifican por nombre/código, no por el id (puede existir de antes). */
 async function asegurarRolesYPermisos(siembra: Siembra): Promise<Record<RolDeUsuario, string>> {
   const roles = {} as Record<RolDeUsuario, string>;
-  for (const nombre of ['doctor', 'admin'] as const) {
+  for (const nombre of Object.keys(DESCRIPCION_DE_ROL) as RolDeUsuario[]) {
     roles[nombre] = await devolverId(
       siembra,
       `INSERT INTO auth.role (id, name, description) VALUES ($1, $2, $3)
@@ -206,7 +207,7 @@ async function sembrarDiagnostico(
     grade: gradacion === undefined ? null : derivarTextoGrade(gradacion),
     staging_system: diagnostico.stagingSystem,
     stage_value: diagnostico.stageValue,
-    performance_scale: diagnostico.escalaDeDesempeno,
+    performance_scale: diagnostico.performanceScale,
     performance_value: diagnostico.performanceValue,
     diagnosed_at: fechaRelativa(siembra.ahora, diagnostico.diasDesdeElDiagnostico),
     is_active: diagnostico.activo,
@@ -218,25 +219,26 @@ async function sembrarDiagnostico(
     reviewed_at: null,
     created_at: siembra.ahora,
   });
-  if (gradacion === undefined) return;
-  const gleason =
-    gradacion.sistema === 'gleason_isup'
-      ? derivarGleason(gradacion.patronPrimario, gradacion.patronSecundario)
-      : null;
+  if (gradacion !== undefined) {
+    await sembrarGradacionDeReferencia(
+      siembra,
+      diagnosticoId,
+      `${contexto.paciente.clave}/${diagnostico.clave}`,
+      gradacion,
+    );
+  }
+}
+
+async function sembrarGradacionDeReferencia(
+  siembra: Siembra,
+  diagnosticoId: string,
+  claveDelDiagnostico: string,
+  gradacion: GradacionSemilla,
+): Promise<void> {
   await upsertar(siembra, 'clinical.diagnosis_grading', {
-    id: idSembrado(`${contexto.paciente.clave}/${diagnostico.clave}/gradacion`),
+    id: idSembrado(`${claveDelDiagnostico}/gradacion`),
     diagnosis_id: diagnosticoId,
-    grading_system: gradacion.sistema,
-    specimen_type:
-      gradacion.sistema === 'gleason_isup' ? (gradacion.muestra?.specimenType ?? null) : null,
-    grade_scope:
-      gradacion.sistema === 'gleason_isup' ? (gradacion.muestra?.gradeScope ?? null) : null,
-    gleason_primary_pattern: gradacion.sistema === 'gleason_isup' ? gradacion.patronPrimario : null,
-    gleason_secondary_pattern:
-      gradacion.sistema === 'gleason_isup' ? gradacion.patronSecundario : null,
-    gleason_score: gleason?.puntaje ?? null,
-    isup_grade_group: gleason?.grupoIsup ?? null,
-    nottingham_grade: gradacion.sistema === 'nottingham' ? gradacion.grado : null,
+    ...columnasDeGradacion(gradacion),
     is_reference: true,
     source_document_id: null,
     ...PROCEDENCIA_DEL_SEED,

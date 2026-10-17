@@ -228,7 +228,7 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(catalogo?.target).toBe(seed.environment.CLINICAL_CATALOG_PATH);
   });
 
-  it('no arranca con up sin perfil: clinical-seed pertenece al perfil seed y el piloto no monta la contraseña del dueño de la base [US-039 AC-5]', () => {
+  it('clinical-seed pertenece al perfil seed y no arranca con up sin perfil [US-039 AC-5]', () => {
     const compose = parseYaml(readFileSync(COMPOSE, 'utf8'));
     const sinPerfil = resolver({ entorno: { COMPOSE_PROFILES: '' } });
 

@@ -43,16 +43,20 @@ export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
     );
   }
   // `piloto` se rechaza siempre y sin distinguir mayúsculas: ninguna lista de configuración lo habilita (RN-13).
-  const entorno = config.appEnv.toLowerCase();
-  if (entorno === ENTORNO_PILOTO) {
+  const entorno = config.appEnv;
+  if (esEntornoPiloto(entorno)) {
     throw new SeedBloqueadoError('APP_ENV', 'es piloto (entorno de datos reales)');
   }
-  if (!config.entornosPermitidos.some((permitido) => permitido.toLowerCase() === entorno)) {
+  if (
+    !config.entornosPermitidos.some(
+      (permitido) => permitido.toLowerCase() === entorno.toLowerCase(),
+    )
+  ) {
     throw new SeedBloqueadoError('APP_ENV', 'no está en SEED_ALLOWED_ENVS');
   }
 }
 
 /** `piloto` sin distinguir mayúsculas: el entorno de datos reales que ninguna lista de configuración habilita. */
-export function esEntornoPiloto(_appEnv: string): boolean {
-  throw new Error('no implementado');
+export function esEntornoPiloto(appEnv: string): boolean {
+  return appEnv.toLowerCase() === ENTORNO_PILOTO;
 }

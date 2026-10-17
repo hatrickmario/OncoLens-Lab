@@ -19,7 +19,7 @@ export interface DiagnosticoSemilla {
   readonly histology: string;
   readonly stagingSystem: string;
   readonly stageValue: string;
-  readonly escalaDeDesempeno: 'ECOG';
+  readonly performanceScale: 'ECOG';
   readonly performanceValue: number;
   readonly diasDesdeElDiagnostico: number;
   readonly activo: boolean;
