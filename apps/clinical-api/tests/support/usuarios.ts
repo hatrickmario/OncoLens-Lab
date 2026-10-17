@@ -17,8 +17,15 @@ import {
  * si falta la variable, el test falla nombrándola.
  */
 
+export type VariableDeContrasenaDeTest = 'TEST_DOC1_PASSWORD' | 'TEST_DOC2_PASSWORD';
+
 /** Contraseña de test desde el entorno; sin variable, falla nombrándola (nunca un valor por defecto en el repo). */
-export function contrasenaDeTest(variable: 'SEED_DOCTOR_PASSWORD' | 'TEST_DOC2_PASSWORD'): string {
+export function contrasenaDeTest(variable: VariableDeContrasenaDeTest): string {
+  if (!/^TEST_DOC\d_PASSWORD$/.test(variable)) {
+    throw new Error(
+      `${variable} no es una variable de contraseña de test (solo TEST_DOC*_PASSWORD)`,
+    );
+  }
   const valor = process.env[variable];
   if (valor === undefined || valor === '') {
     throw new Error(`Falta la variable de entorno de test ${variable} (perfil test, L1D-165)`);
@@ -91,7 +98,7 @@ export async function crearUsuariosDeAuth(cliente: Client, espacio: number) {
   const rolId = await asegurarRol(cliente, ids, 'doctor');
   const doc1 = await insertarUsuario(cliente, ids, {
     email: `doc1.${espacio}@test.local`,
-    password: contrasenaDeTest('SEED_DOCTOR_PASSWORD'),
+    password: contrasenaDeTest('TEST_DOC1_PASSWORD'),
     rolId,
   });
   const doc2Desactivado = await insertarUsuario(cliente, ids, {

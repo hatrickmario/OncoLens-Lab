@@ -8,7 +8,7 @@
 #
 # Arma TEST_DATABASE_URL (rol oncolens_test_admin, sslmode=require) a partir del secreto pg_test_admin_password; la
 # contraseña solo vive en el entorno del proceso hijo y nunca se imprime. También genera las contraseñas sintéticas de
-# test de sesión (SEED_DOCTOR_PASSWORD, TEST_DOC2_PASSWORD). Variables (RN-22): ONCOLENS_SECRETS_DIR,
+# test de sesión (TEST_DOC1_PASSWORD, TEST_DOC2_PASSWORD). Variables (RN-22): ONCOLENS_SECRETS_DIR,
 # PG_TEST_PORT, PG_TEST_DB_PREFIX, POSTGRES_DB.
 set -euo pipefail
 
@@ -28,7 +28,7 @@ export TEST_DATABASE_URL="postgresql://oncolens_test_admin:${contrasena}@127.0.0
 
 # Contraseñas SINTÉTICAS de las cuentas de test de sesión (US-211): se generan en cada ejecución, viven solo en el
 # entorno del proceso hijo y nunca se imprimen ni se versionan (RN-13, RN-14). Si ya vienen del entorno, se respetan.
-export SEED_DOCTOR_PASSWORD="${SEED_DOCTOR_PASSWORD:-SINT-$(openssl rand -hex 16)}"
+export TEST_DOC1_PASSWORD="${TEST_DOC1_PASSWORD:-SINT-$(openssl rand -hex 16)}"
 export TEST_DOC2_PASSWORD="${TEST_DOC2_PASSWORD:-SINT-$(openssl rand -hex 16)}"
 
 cd "$raiz"

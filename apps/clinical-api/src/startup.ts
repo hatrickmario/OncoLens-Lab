@@ -9,6 +9,16 @@ export interface DependenciasDeArranque {
   readonly listen: (puerto: number) => void;
 }
 
+/** Línea de log de una configuración inválida: nombra la variable, nunca su valor (RN-10, RN-14). */
+export function registrarConfiguracionInvalida(
+  log: (linea: string) => void,
+  error: ConfiguracionInvalidaError,
+): void {
+  log(
+    JSON.stringify({ level: 'error', event: 'configuracion_invalida', variable: error.variable }),
+  );
+}
+
 /**
  * Raíz de composición testable: comprueba los secretos ANTES de escuchar (US-035 AC-5, fail-fast). Si falta uno,
  * registra el evento `secreto_ausente` con el nombre de la variable —nunca un valor, RN-10— y termina con código 1;
@@ -24,13 +34,7 @@ export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArr
     if (error instanceof SecretoAusenteError) {
       log(JSON.stringify({ level: 'error', event: 'secreto_ausente', variable: error.variable }));
     } else if (error instanceof ConfiguracionInvalidaError) {
-      log(
-        JSON.stringify({
-          level: 'error',
-          event: 'configuracion_invalida',
-          variable: error.variable,
-        }),
-      );
+      registrarConfiguracionInvalida(log, error);
     } else {
       throw error;
     }

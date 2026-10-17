@@ -12,7 +12,7 @@ import { crearPool } from './infrastructure/database.js';
 import { registrarEnConsola } from './infrastructure/logger.js';
 import { loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
-import { arrancar } from './startup.js';
+import { arrancar, registrarConfiguracionInvalida } from './startup.js';
 
 const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
 
@@ -38,13 +38,7 @@ arrancar({
       };
     } catch (error) {
       if (!(error instanceof ConfiguracionInvalidaError)) throw error;
-      console.error(
-        JSON.stringify({
-          level: 'error',
-          event: 'configuracion_invalida',
-          variable: error.variable,
-        }),
-      );
+      registrarConfiguracionInvalida((linea) => console.error(linea), error);
       process.exit(1);
     }
 

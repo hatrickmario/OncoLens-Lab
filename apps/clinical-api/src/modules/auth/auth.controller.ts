@@ -11,11 +11,15 @@ export interface DependenciasDeAuthController {
 }
 
 const EVENTO_LOGIN = 'auth.login';
+// Errores 4xx de body-parser causados por el cliente → 422 del contrato. Se excluyen a propósito
+// `stream.encoding.set` (500: error de configuración del servidor) y `entity.verify.failed` (no se usa `verify`).
 const ERRORES_DE_CUERPO: ReadonlySet<string> = new Set([
   'entity.parse.failed',
   'entity.too.large',
   'encoding.unsupported',
   'charset.unsupported',
+  'request.size.invalid',
+  'request.aborted',
 ]);
 
 /** Cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */

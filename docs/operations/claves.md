@@ -115,7 +115,7 @@ del S5/S6 junto con el HTTPS de `web`.
 
 ## Perfil test/CI
 
-Los tests de sesión (US-211) necesitan `SEED_DOCTOR_PASSWORD` y `TEST_DOC2_PASSWORD`, contraseñas **sintéticas** de las
+Los tests de sesión (US-211) necesitan `TEST_DOC1_PASSWORD` y `TEST_DOC2_PASSWORD`, contraseñas **sintéticas** de las
 cuentas `doc1`/`doc2` de test. Sin ellas el test falla nombrando la variable. `scripts/test-integration.sh` las genera
 en cada ejecución (`SINT-` + aleatorio), solo en el entorno del proceso, sin imprimirlas ni versionarlas; cualquier otro
 lanzador (CI) debe definirlas igual o invocar ese script.
