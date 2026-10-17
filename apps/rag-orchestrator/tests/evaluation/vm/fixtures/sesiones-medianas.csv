@@ -1,0 +1,7 @@
+participante,caso,condicion,tiempo_reconstruccion_min,reconstruido,tiempo_evidencia_min,autoidentificada,fuente_id,validada
+O1,mama-01,manual,10,si,10,si,PMID:1000001,si
+O1,mama-02,manual,20,si,15,si,PMID:1000002,no
+O1,mama-03,manual,30,no,20,si,PMID:1000003,no
+O1,prostata-01,manual,12,si,14,si,PMID:1000004,si
+O1,prostata-02,manual,18,si,16,si,PMID:1000005,si
+O1,prostata-03,manual,25,si,22,si,PMID:1000006,no
