@@ -37,7 +37,7 @@ export interface Consultador {
 }
 
 /**
- * `ip_address` y `user_agent` son NOT NULL en `auth.session`: en el S1 se guardan vacíos (D4); el bloqueo por IP de
+ * `ip_address` y `user_agent` son nullable en `auth.session` y en el S1 se guardan NULL (D4, nunca la IP ni el UA reales); el bloqueo por IP de
  * US-044 definirá cómo `web` propaga la IP del cliente.
  */
 export function createAuthRepository(db: Consultador): AuthRepository {
@@ -63,7 +63,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
       await db.query(
         `INSERT INTO auth.session
            (id, user_id, token_hash, expires_at, last_seen_at, ip_address, user_agent, revoked, created_at)
-         VALUES ($1, $2, $3, $4, $5, '', '', false, $6)`,
+         VALUES ($1, $2, $3, $4, $5, NULL, NULL, false, $6)`,
         [
           sesion.id,
           sesion.userId,
