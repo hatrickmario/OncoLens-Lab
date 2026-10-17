@@ -70,6 +70,16 @@ const esquemaLista = z
   });
 
 /**
+ * Valida una lista ya leída (por ejemplo, el JSON que carga `contracts:check`). Falla cerrado: lanza un error
+ * que nombra el origen y los problemas del esquema.
+ */
+export function parseProhibitedTerms(datos: unknown, origen: string): ListaTerminos {
+  const resultado = esquemaLista.safeParse(datos);
+  if (!resultado.success) throw errorDeCarga(origen, motivoDeEsquema(resultado.error));
+  return resultado.data;
+}
+
+/**
  * Carga y valida la lista de términos prohibidos. Falla cerrado: una lista ausente, ilegible o inválida
  * lanza un error que nombra el archivo y nunca se trata como lista vacía.
  */
@@ -77,21 +87,27 @@ export function loadProhibitedTerms(
   ruta: string | URL = RUTA_LISTA_TERMINOS_PROHIBIDOS,
 ): ListaTerminos {
   const archivo = ruta instanceof URL ? fileURLToPath(ruta) : ruta;
+  let datos: unknown;
   try {
-    return esquemaLista.parse(JSON.parse(readFileSync(archivo, 'utf8')));
+    datos = JSON.parse(readFileSync(archivo, 'utf8'));
   } catch (error) {
-    throw new Error(
-      `No se pudo cargar la lista de términos prohibidos (RN-23) ${archivo}: ${motivoDe(error)}`,
-      { cause: error },
-    );
+    const motivo = error instanceof Error ? error.message : 'error desconocido';
+    throw errorDeCarga(archivo, motivo, error);
   }
+  return parseProhibitedTerms(datos, archivo);
 }
 
-function motivoDe(error: unknown): string {
-  if (error instanceof z.ZodError) {
-    return error.issues
-      .map((problema) => `${problema.path.join('.') || '(raíz)'}: ${problema.message}`)
-      .join('; ');
-  }
-  return error instanceof Error ? error.message : 'error desconocido';
+function errorDeCarga(origen: string, motivo: string, causa?: unknown): Error {
+  return new Error(
+    `No se pudo cargar la lista de términos prohibidos (RN-23) ${origen}: ${motivo}`,
+    {
+      cause: causa,
+    },
+  );
+}
+
+function motivoDeEsquema(error: z.ZodError): string {
+  return error.issues
+    .map((problema) => `${problema.path.join('.') || '(raíz)'}: ${problema.message}`)
+    .join('; ');
 }

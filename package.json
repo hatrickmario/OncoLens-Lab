@@ -12,6 +12,7 @@
     "packages/*"
   ],
   "scripts": {
+    "precontracts:check": "npm run build -w @oncolens/clinical-language",
     "contracts:check": "node scripts/contracts/check.mjs",
     "contracts:generate": "node scripts/contracts/generate.mjs",
     "contracts:generate:check": "node scripts/contracts/generate-check.mjs",
