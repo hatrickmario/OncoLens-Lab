@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { zLoginBody } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import { CampoConEtiqueta } from '../molecules/campo-con-etiqueta';
 import estilos from './login-form.module.css';
 
 export interface TextosLogin {
@@ -59,6 +60,10 @@ export function LoginForm({ homePath, textos }: LoginFormProps) {
   }
 
   const conError = estado === 'error';
+  const ayudaDelError = {
+    'aria-invalid': conError,
+    'aria-describedby': conError ? 'login-error' : undefined,
+  };
   return (
     <form className={estilos.formulario} onSubmit={enviar} noValidate>
       {conError && (
@@ -66,30 +71,22 @@ export function LoginForm({ homePath, textos }: LoginFormProps) {
           {textos.errorCredenciales}
         </p>
       )}
-      <label className={estilos.etiqueta}>
-        {textos.correo}
-        <input
-          name="email"
-          type="email"
-          autoComplete="username"
-          required
-          aria-invalid={conError}
-          aria-describedby={conError ? 'login-error' : undefined}
-          className={estilos.campo}
-        />
-      </label>
-      <label className={estilos.etiqueta}>
-        {textos.contrasena}
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={conError}
-          aria-describedby={conError ? 'login-error' : undefined}
-          className={estilos.campo}
-        />
-      </label>
+      <CampoConEtiqueta
+        etiqueta={textos.correo}
+        name="email"
+        type="email"
+        autoComplete="username"
+        required
+        {...ayudaDelError}
+      />
+      <CampoConEtiqueta
+        etiqueta={textos.contrasena}
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        {...ayudaDelError}
+      />
       <button type="submit" disabled={estado === 'enviando'} className={estilos.boton}>
         {estado === 'enviando' ? textos.enviando : textos.enviar}
       </button>
