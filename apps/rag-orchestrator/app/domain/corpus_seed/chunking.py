@@ -29,12 +29,17 @@ def normalizar_texto(texto: str) -> str:
     return _SALTOS_DE_MAS.sub("\n\n", "\n".join(lineas)).strip()
 
 
-def fragmentar(texto: str, tokenizador: Tokenizador, *, tamano: int, solape: int) -> list[str]:
-    """Ventanas de ``tamano`` tokens que avanzan ``tamano - solape``; la última llega al final del texto."""
+def validar_ventana(tamano: int, solape: int) -> None:
+    """Única regla del tamaño y el solapamiento del chunk: tamaño positivo, solape no negativo y menor que el tamaño."""
     if tamano <= 0:
         raise ValueError("tamano debe ser positivo")
     if not 0 <= solape < tamano:
         raise ValueError("solape debe ser no negativo y menor que el tamano")
+
+
+def fragmentar(texto: str, tokenizador: Tokenizador, *, tamano: int, solape: int) -> list[str]:
+    """Ventanas de ``tamano`` tokens que avanzan ``tamano - solape``; la última llega al final del texto."""
+    validar_ventana(tamano, solape)
     tokens = tokenizador.tokenizar(texto)
     paso = tamano - solape
     chunks: list[str] = []

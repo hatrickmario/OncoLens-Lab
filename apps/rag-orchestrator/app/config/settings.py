@@ -18,6 +18,7 @@ from app.domain.corpus_seed.admisibilidad import (
     contiene_nd,
     contiene_sa,
 )
+from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
 
 
@@ -270,6 +271,8 @@ class CorpusSeedSettings(BaseSettings):
 
     @model_validator(mode="after")
     def _solapamiento_menor_que_el_tamano(self) -> Self:
-        if self.corpus_chunk_overlap >= self.corpus_chunk_size:
-            raise ValueError("CORPUS_CHUNK_OVERLAP debe ser menor que CORPUS_CHUNK_SIZE")
+        try:
+            validar_ventana(self.corpus_chunk_size, self.corpus_chunk_overlap)
+        except ValueError as exc:
+            raise ValueError(f"CORPUS_CHUNK_OVERLAP / CORPUS_CHUNK_SIZE: {exc}") from None
         return self
