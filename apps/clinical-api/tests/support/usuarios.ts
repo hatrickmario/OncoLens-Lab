@@ -93,13 +93,12 @@ export async function insertarSesion(
   });
 }
 
-export async function contarSesiones(cliente: Client, userId?: string): Promise<number> {
-  const resultado =
-    userId === undefined
-      ? await cliente.query('SELECT count(*)::int AS n FROM auth.session')
-      : await cliente.query('SELECT count(*)::int AS n FROM auth.session WHERE user_id = $1', [
-          userId,
-        ]);
+/** Sesiones de los usuarios dados (los archivos de test comparten base: nunca se cuenta la tabla entera). */
+export async function contarSesiones(cliente: Client, userIds: string[]): Promise<number> {
+  const resultado = await cliente.query(
+    'SELECT count(*)::int AS n FROM auth.session WHERE user_id = ANY($1::uuid[])',
+    [userIds],
+  );
   return (resultado.rows[0] as { n: number }).n;
 }
 

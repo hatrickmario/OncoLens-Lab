@@ -53,6 +53,8 @@ afterAll(async () => {
   await cliente.end();
 });
 
+const sesionesDeLosUsuarios = () => contarSesiones(cliente, [doc1.id, doc2Desactivado.id]);
+
 function appDeLogin(logger = loggerEnMemoria()) {
   return appConAuth({
     cliente,
@@ -65,7 +67,7 @@ function appDeLogin(logger = loggerEnMemoria()) {
 
 describe('POST /platform/auth/login', () => {
   it('crea una sesión con token_hash y responde 204 con cookie HttpOnly Secure SameSite=Strict distinta de la previa cuando doc1 envía credenciales correctas [US-211 AC-1]', async () => {
-    const antes = await contarSesiones(cliente, doc1.id);
+    const antes = await contarSesiones(cliente, [doc1.id]);
 
     const respuesta = await request(appDeLogin())
       .post('/platform/auth/login')
@@ -118,7 +120,7 @@ describe('POST /platform/auth/login con credenciales rechazadas', () => {
   ])(
     'responde 401 CREDENCIALES_INVALIDAS con el mismo cuerpo y sin crear sesión cuando %s [US-211 AC-2]',
     async (_caso, credenciales) => {
-      const antes = await contarSesiones(cliente);
+      const antes = await sesionesDeLosUsuarios();
 
       const respuesta = await request(appDeLogin())
         .post('/platform/auth/login')
@@ -132,7 +134,7 @@ describe('POST /platform/auth/login con credenciales rechazadas', () => {
         message: 'Las credenciales no son válidas.',
       });
       expect(JSON.stringify(respuesta.body)).not.toContain('test.local');
-      expect(await contarSesiones(cliente)).toBe(antes);
+      expect(await sesionesDeLosUsuarios()).toBe(antes);
     },
   );
 });
@@ -143,13 +145,13 @@ describe('POST /platform/auth/login con cuerpo inválido', () => {
     ['el correo no es un correo', { email: 'no-es-correo', password: 'x' }],
     ['hay propiedades desconocidas', { email: 'a@test.local', password: 'x', extra: 1 }],
   ])('responde 422 CUERPO_INVALIDO sin crear sesión cuando %s', async (_caso, cuerpo) => {
-    const antes = await contarSesiones(cliente);
+    const antes = await sesionesDeLosUsuarios();
 
     const respuesta = await request(appDeLogin()).post('/platform/auth/login').send(cuerpo);
 
     expect(respuesta.status).toBe(422);
     assertMatchesSpec('clinical-api', `${PUNTERO_LOGIN}/422`, respuesta.body);
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
-    expect(await contarSesiones(cliente)).toBe(antes);
+    expect(await sesionesDeLosUsuarios()).toBe(antes);
   });
 });

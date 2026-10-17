@@ -84,8 +84,12 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
       });
       return { token };
     },
-    resolverSesion: () => {
-      throw new Error('no implementado');
+    async resolverSesion(token) {
+      const sesion = await repo.buscarSesionPorTokenHash(hashDeToken(token));
+      if (sesion === null || sesion.revoked || sesion.accountStatus !== 'activo') return null;
+      // `expires_at` es absoluto y excluyente: en el instante exacto la sesión ya caducó (S1 resp. 14c).
+      if (sesion.expiresAt.getTime() <= reloj.now().getTime()) return null;
+      return { userId: sesion.userId, rol: sesion.rol };
     },
   };
 }
