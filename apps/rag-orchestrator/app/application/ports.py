@@ -2,10 +2,15 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Protocol
+from datetime import date, datetime
+from typing import Literal, Protocol
 
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.domain.relevance import ChunkPuntuado
+from app.schemas.generated.models import (
+    RagMeta,
+    RagQueryInternalRequest,
+    RagQueryInternalResponse,
+)
 
 
 class LlmHealthPort(Protocol):
@@ -88,4 +93,80 @@ class CorpusChunkStore(Protocol):
 
     def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int: ...
 
-    def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]: ...
+    def search_dense(
+        self, vector: Sequence[float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontrado]:
+        """``filtro`` es una expresión de ``expresion_filtro_vigente()``; ausente, solo ``is_current == true`` (RN-05)."""
+        ...
+
+
+# --- Recuperación de /rag/query (US-055, L1D-106) --------------------------------------------------------------------
+
+Idioma = Literal["es", "en"]
+
+
+class LanguageDetector(Protocol):
+    def detectar(self, texto: str) -> Idioma: ...
+
+
+class QueryEmbedder(Protocol):
+    """*Embeddings* de la pregunta y del resumen del contexto. Un fallo se propaga: el servicio lo traduce a 503."""
+
+    @property
+    def modelo(self) -> str:
+        """Identificador exacto del modelo, para ``meta.embeddingModel`` (nunca un literal del servicio)."""
+        ...
+
+    def embeber(self, texto: str) -> Sequence[float]: ...
+
+
+class ChunkSearch(Protocol):
+    """Búsqueda dense con filtro ya construido; ``MilvusRepository`` la implementa (``CorpusChunkStore.search_dense``)."""
+
+    def search_dense(
+        self, vector: Sequence[float], limit: int, filtro: str
+    ) -> list[ChunkEncontrado]: ...
+
+
+class Reranker(Protocol):
+    """Puntúa candidatos contra la pregunta. Devuelve un puntaje por candidato, en el mismo orden y ya en [0, 1] (RN-03).
+
+    El contrato incluye ``None`` ≠ ``0.0``: este puerto nunca devuelve ``None``; si no puede puntuar, lanza un error.
+    """
+
+    @property
+    def version(self) -> str:
+        """Versión exacta del reranker, para ``meta.rerankerModel`` (IA-07)."""
+        ...
+
+    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]: ...
+
+
+@dataclass(frozen=True)
+class ReleaseDelCorpus:
+    release_id: str
+    cutoff_date: date
+    excluded_sources: tuple[str, ...]
+
+
+class CorpusReleaseReader(Protocol):
+    """Lee del schema ``corpus`` la release vigente (``meta.corpusRelease``, ``corpusCutoffDate``, ``excludedSources``)."""
+
+    def release_vigente(self) -> ReleaseDelCorpus: ...
+
+
+@dataclass(frozen=True)
+class ResultadoDeRecuperacion:
+    """Lo que la recuperación entrega a la generación: solo chunks sobre el umbral, ya puntuados (RN-02)."""
+
+    chunks_sobre_umbral: tuple[ChunkPuntuado, ...]
+    recuperados: int
+    meta: RagMeta
+
+
+class EvidenceGenerator(Protocol):
+    """Rama con evidencia sobre el umbral (prompt, LLM, citas, soporte, recorte): la implementa L1D-275 (US-225)."""
+
+    async def generar(
+        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> RagQueryInternalResponse: ...
