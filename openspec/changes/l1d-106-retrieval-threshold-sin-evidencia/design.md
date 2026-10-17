@@ -235,7 +235,7 @@ sigue pendiente de decisión del usuario).
   distinta) falla cerrado como `503 RETRIEVAL_UNAVAILABLE`, no como `500`.
 - **D4 / 2.12 (Q1 opción b):** con `LLM_PROVIDER=local` la ruta `/rag/query` **siempre** se registra y el arranque exige
   `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K` y `RERANK_TOP_N`. Si faltan los adapters reales de *embeddings*, *reranker* e
-  idioma (historia nueva US-231), responde `503 RETRIEVAL_UNAVAILABLE` (etapa `composicion`) fallando cerrado; con los
+  idioma (historias US-231a —*embeddings*, *reranker* e idioma— y US-231b —NLI y smoke—), responde `503 RETRIEVAL_UNAVAILABLE` (etapa `composicion`) fallando cerrado; con los
   puertos presentes monta `RAGOrchestratorService` y el generador provisional (`503 LOCAL_LLM_UNAVAILABLE`).
 - **D8 (precisión):** todo borde (incluido el detector de idioma) se invoca con `_invocar_borde_fallando_cerrado`: solo se
   registran la clase del error, la etapa y el `traceId`, con `from None` para que ni el mensaje ni el traceback con la
