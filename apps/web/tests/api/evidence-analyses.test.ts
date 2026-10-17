@@ -28,7 +28,7 @@ describe('POST /api/evidence-analyses', () => {
       Origin: ORIGEN_PERMITIDO,
       Cookie: 'otra=x; oncolens_session=sesion-sintetica-1',
       'X-Trace-Id': 'trace-del-navegador',
-      'Idempotency-Key': '3f2b8c1e-0d4a-4e6b-9a7c-5b1d2e3f4a5b',
+      'Idempotency-Key': '00000000-0000-4000-8000-000000000001',
     });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(solicitud);
@@ -73,7 +73,11 @@ describe('POST /api/evidence-analyses', () => {
     const respuesta = await crearManejadorAnalisis(dependencias)(solicitud);
 
     expect(respuesta.status).toBe(403);
-    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorPermisoDenegado', await respuesta.json());
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorPermisoDenegado',
+      await respuesta.json(),
+    );
     expect(clinicalApi.peticiones).toHaveLength(0);
   });
 
@@ -106,7 +110,10 @@ describe('POST /api/evidence-analyses', () => {
     clinicalApi.responder({
       status: 401,
       cuerpo: ejemplo('error-no-autenticado.json'),
-      cabeceras: { 'Set-Cookie': 'oncolens_session=; Max-Age=0', Location: 'http://clinical-api.test:3000/login' },
+      cabeceras: {
+        'Set-Cookie': 'oncolens_session=; Max-Age=0',
+        Location: 'http://clinical-api.test:3000/login',
+      },
     });
     const { dependencias } = crearDependenciasDeTest();
 
@@ -131,20 +138,35 @@ describe('POST /api/evidence-analyses', () => {
     expect(cuerpo).toMatchObject({ error: 'ERROR_SERVICIO_IA', traceId: 'req_web00001' });
     expect(texto).not.toContain('clinical-api.test');
     expect(lineas).toEqual([
-      { event: 'evidence_analyses.proxy', status: 502, traceId: 'req_web00001', duracionMs: 0, motivo: 'clinical_api_inalcanzable' },
+      {
+        event: 'evidence_analyses.proxy',
+        status: 502,
+        traceId: 'req_web00001',
+        duracionMs: 0,
+        motivo: 'clinical_api_inalcanzable',
+      },
     ]);
   });
 
   it('responde 502 ERROR_SERVICIO_IA cuando clinical-api no responde dentro del timeout configurado [US-060 AC-4]', async () => {
     clinicalApi.noResponder();
     const { dependencias } = crearDependenciasDeTest({
-      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 50, maxBodyBytes: 32768 },
+      config: {
+        clinicalApiUrl: URL_CLINICAL_API,
+        allowedOrigin: ORIGEN_PERMITIDO,
+        upstreamTimeoutMs: 50,
+        maxBodyBytes: 32768,
+      },
     });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 
     expect(respuesta.status).toBe(502);
-    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', await respuesta.json());
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorServicioIa',
+      await respuesta.json(),
+    );
   });
   it('devuelve el mismo cuerpo, sin reserializar, y vacío cuando viene vacío [US-060 AC-4]', async () => {
     const { dependencias } = crearDependenciasDeTest();
@@ -172,14 +194,20 @@ describe('POST /api/evidence-analyses', () => {
           controlador.error(new Error('conexion cortada'));
         },
       });
-      return Promise.resolve(new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      return Promise.resolve(
+        new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      );
     };
     const { dependencias, lineas } = crearDependenciasDeTest({ fetch: fetchConCorte });
 
     const respuesta = await crearManejadorAnalisis(dependencias)(peticionAutenticada());
 
     expect(respuesta.status).toBe(502);
-    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioIa', await respuesta.json());
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorServicioIa',
+      await respuesta.json(),
+    );
     expect(lineas).toMatchObject([{ status: 502, motivo: 'cuerpo_cortado' }]);
   });
 
@@ -240,7 +268,12 @@ describe('POST /api/evidence-analyses', () => {
 
   it('marca Cache-Control no-store en las respuestas 200, 403, 413 y 502 [US-060 AC-1]', async () => {
     const { dependencias } = crearDependenciasDeTest({
-      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000, maxBodyBytes: 4096 },
+      config: {
+        clinicalApiUrl: URL_CLINICAL_API,
+        allowedOrigin: ORIGEN_PERMITIDO,
+        upstreamTimeoutMs: 5000,
+        maxBodyBytes: 4096,
+      },
     });
     const manejador = crearManejadorAnalisis(dependencias);
 
@@ -248,12 +281,17 @@ describe('POST /api/evidence-analyses', () => {
     const ok = await manejador(peticionAutenticada());
     const origenAjeno = await manejador(peticionDeAnalisis({ Origin: 'https://otro-origen.test' }));
     const grande = await manejador(
-      peticionDeAnalisis({ Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=s' }, { query: 'x'.repeat(5000) }),
+      peticionDeAnalisis(
+        { Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=s' },
+        { query: 'x'.repeat(5000) },
+      ),
     );
     clinicalApi.fallarConErrorDeRed();
     const caido = await manejador(peticionAutenticada());
 
-    expect([ok.status, origenAjeno.status, grande.status, caido.status]).toEqual([200, 403, 413, 502]);
+    expect([ok.status, origenAjeno.status, grande.status, caido.status]).toEqual([
+      200, 403, 413, 502,
+    ]);
     for (const respuesta of [ok, origenAjeno, grande, caido]) {
       expect(respuesta.headers.get('cache-control')).toBe('no-store');
     }
@@ -261,7 +299,12 @@ describe('POST /api/evidence-analyses', () => {
 
   it('responde 413 CUERPO_INVALIDO sin ningún request a clinical-api cuando el cuerpo supera WEB_MAX_BODY_BYTES [US-060 AC-4]', async () => {
     const { dependencias, lineas } = crearDependenciasDeTest({
-      config: { clinicalApiUrl: URL_CLINICAL_API, allowedOrigin: ORIGEN_PERMITIDO, upstreamTimeoutMs: 5000, maxBodyBytes: 100 },
+      config: {
+        clinicalApiUrl: URL_CLINICAL_API,
+        allowedOrigin: ORIGEN_PERMITIDO,
+        upstreamTimeoutMs: 5000,
+        maxBodyBytes: 100,
+      },
     });
     const solicitud = peticionDeAnalisis(
       { Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=sesion-sintetica-1' },
@@ -271,14 +314,26 @@ describe('POST /api/evidence-analyses', () => {
     const respuesta = await crearManejadorAnalisis(dependencias)(solicitud);
 
     expect(respuesta.status).toBe(413);
-    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorCuerpoInvalido', await respuesta.json());
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorCuerpoInvalido',
+      await respuesta.json(),
+    );
     expect(clinicalApi.peticiones).toHaveLength(0);
     expect(lineas).toEqual([
-      { event: 'evidence_analyses.proxy', status: 413, traceId: 'req_web00001', motivo: 'cuerpo_excesivo' },
+      {
+        event: 'evidence_analyses.proxy',
+        status: 413,
+        traceId: 'req_web00001',
+        motivo: 'cuerpo_excesivo',
+      },
     ]);
   });
 });
 
 function peticionAutenticada(): Request {
-  return peticionDeAnalisis({ Origin: ORIGEN_PERMITIDO, Cookie: 'oncolens_session=sesion-sintetica-1' });
+  return peticionDeAnalisis({
+    Origin: ORIGEN_PERMITIDO,
+    Cookie: 'oncolens_session=sesion-sintetica-1',
+  });
 }

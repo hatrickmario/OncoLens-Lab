@@ -37,7 +37,9 @@ export function construirCabecerasSalientes(entrantes: Headers, token: string): 
  * `fetch` del cliente hacia rag-orchestrator: firma un JWT nuevo por request y reconstruye las cabeceras.
  * Se niega a enviar el token a un origen distinto de `baseUrl`.
  */
-export function createRagOrchestratorFetch(options: RagOrchestratorFetchOptions): typeof globalThis.fetch {
+export function createRagOrchestratorFetch(
+  options: RagOrchestratorFetchOptions,
+): typeof globalThis.fetch {
   const { baseUrl, signer } = options;
   const origenPermitido = new URL(baseUrl).origin;
   return async (input, init) => {

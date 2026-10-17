@@ -36,12 +36,19 @@ afterAll(() => servidor.close());
 
 describe('transporte hacia rag-orchestrator', () => {
   it('envía Authorization Bearer verificable y ninguna cabecera Cookie cuando clinical-api llama a /rag/query por un análisis del doctor [US-054 AC-4]', async () => {
-    const signer = createServiceTokenSigner({ privateKey, clock: relojCongelado(), ttlSeconds: TTL_SEGUNDOS });
+    const signer = createServiceTokenSigner({
+      privateKey,
+      clock: relojCongelado(),
+      ttlSeconds: TTL_SEGUNDOS,
+    });
     const ragFetch = createRagOrchestratorFetch({ baseUrl: BASE_URL, signer });
 
     const respuesta = await ragFetch(`${BASE_URL}/rag/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Cookie: 'oncolens_session=sesion-sintetica-123' },
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: 'oncolens_session=sesion-sintetica-123',
+      },
       body: JSON.stringify({ query: 'sintetica' }),
     });
 
@@ -51,11 +58,15 @@ describe('transporte hacia rag-orchestrator', () => {
     expect(cabeceras.has('cookie')).toBe(false);
     const autorizacion = cabeceras.get('authorization') ?? '';
     expect(autorizacion).toMatch(/^Bearer /);
-    const { payload, protectedHeader } = await jwtVerify(autorizacion.slice('Bearer '.length), publicKey, {
-      algorithms: ['ES256'],
-      issuer: 'clinical-api',
-      audience: 'rag-orchestrator',
-    });
+    const { payload, protectedHeader } = await jwtVerify(
+      autorizacion.slice('Bearer '.length),
+      publicKey,
+      {
+        algorithms: ['ES256'],
+        issuer: 'clinical-api',
+        audience: 'rag-orchestrator',
+      },
+    );
     expect(protectedHeader).toEqual({ alg: 'ES256', typ: 'JWT' });
     expect(Object.keys(payload).sort()).toEqual(['aud', 'exp', 'iat', 'iss']);
     expect(payload.iat).toBe(INSTANTE_CONGELADO.getTime() / 1000);
@@ -65,19 +76,31 @@ describe('transporte hacia rag-orchestrator', () => {
   it('no sigue la redirección y no reenvía el token cuando rag-orchestrator responde 307 a otro origen', async () => {
     const llegadasAlOtroOrigen: Headers[] = [];
     servidor.use(
-      http.post(`${BASE_URL}/rag/query`, () =>
-        new HttpResponse(null, { status: 307, headers: { Location: 'http://otro-origen:9000/captura' } }),
+      http.post(
+        `${BASE_URL}/rag/query`,
+        () =>
+          new HttpResponse(null, {
+            status: 307,
+            headers: { Location: 'http://otro-origen:9000/captura' },
+          }),
       ),
       http.post('http://otro-origen:9000/captura', ({ request }) => {
         llegadasAlOtroOrigen.push(request.headers);
         return HttpResponse.json({});
       }),
     );
-    const signer = createServiceTokenSigner({ privateKey, clock: relojCongelado(), ttlSeconds: TTL_SEGUNDOS });
+    const signer = createServiceTokenSigner({
+      privateKey,
+      clock: relojCongelado(),
+      ttlSeconds: TTL_SEGUNDOS,
+    });
     const ragFetch = createRagOrchestratorFetch({ baseUrl: BASE_URL, signer });
 
     await expect(
-      ragFetch(`${BASE_URL}/rag/query`, { method: 'POST', body: JSON.stringify({ query: 'sintetica' }) }),
+      ragFetch(`${BASE_URL}/rag/query`, {
+        method: 'POST',
+        body: JSON.stringify({ query: 'sintetica' }),
+      }),
     ).rejects.toThrow();
 
     expect(llegadasAlOtroOrigen).toHaveLength(0);

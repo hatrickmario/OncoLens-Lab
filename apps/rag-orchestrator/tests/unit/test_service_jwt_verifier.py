@@ -17,7 +17,9 @@ from tests.support.service_jwt import (
 )
 
 
-def _verificador(par: ParClavesServicio, tmp_path, *, ttl: int = 60, skew: int = 5) -> ServiceJwtVerifier:
+def _verificador(
+    par: ParClavesServicio, tmp_path, *, ttl: int = 60, skew: int = 5
+) -> ServiceJwtVerifier:
     ruta = tmp_path / "publica.pem"
     ruta.write_bytes(par.publica_pem)
     return ServiceJwtVerifier(cargar_clave_publica_es256(ruta), RelojFijo(), ttl, skew)
@@ -92,7 +94,12 @@ def test_verificar_rechaza_con_vida_maxima_cuando_exp_menos_iat_supera_el_ttl_co
 
 def test_verificar_rechaza_con_malformado_cuando_exp_no_es_un_entero(tmp_path):
     par = par_de_sesion()
-    claims = {"iss": "clinical-api", "aud": "rag-orchestrator", "iat": 1_792_152_000, "exp": "1792152060"}
+    claims = {
+        "iss": "clinical-api",
+        "aud": "rag-orchestrator",
+        "iat": 1_792_152_000,
+        "exp": "1792152060",
+    }
     token = jwt.encode(claims, par.privada_pem, algorithm="ES256")
 
     assert _motivo(_verificador(par, tmp_path), token) == "malformado"
@@ -103,14 +110,18 @@ def test_verificar_ignora_las_cabeceras_que_apuntan_a_claves_externas(tmp_path):
     token = token_es256(par)
     cabecera, cuerpo, firma = token.split(".")
     datos = json.loads(base64.urlsafe_b64decode(cabecera + "=="))
-    datos.update({"jku": "http://atacante.test/jwks.json", "x5u": "http://atacante.test/cert", "kid": "otra"})
+    datos.update(
+        {"jku": "http://atacante.test/jwks.json", "x5u": "http://atacante.test/cert", "kid": "otra"}
+    )
     nueva = base64.urlsafe_b64encode(json.dumps(datos).encode()).rstrip(b"=").decode()
 
     # La firma ya no corresponde a la nueva cabecera: se rechaza por firma, sin resolver ninguna URL.
     assert _motivo(_verificador(par, tmp_path), f"{nueva}.{cuerpo}.{firma}") == "firma"
 
 
-def test_verificar_rechaza_con_audiencia_cuando_aud_es_una_lista_que_incluye_rag_orchestrator(tmp_path):
+def test_verificar_rechaza_con_audiencia_cuando_aud_es_una_lista_que_incluye_rag_orchestrator(
+    tmp_path,
+):
     token = token_es256(par_de_sesion(), aud=["rag-orchestrator", "otro-servicio"])  # type: ignore[arg-type]
 
     assert _motivo(_verificador(par_de_sesion(), tmp_path), token) == "audiencia"
@@ -118,7 +129,13 @@ def test_verificar_rechaza_con_audiencia_cuando_aud_es_una_lista_que_incluye_rag
 
 def test_verificar_rechaza_con_malformado_cuando_el_token_trae_nbf(tmp_path):
     par = par_de_sesion()
-    claims = {"iss": "clinical-api", "aud": "rag-orchestrator", "iat": 1_792_152_000, "exp": 1_792_152_060, "nbf": 1_792_152_000}
+    claims = {
+        "iss": "clinical-api",
+        "aud": "rag-orchestrator",
+        "iat": 1_792_152_000,
+        "exp": 1_792_152_060,
+        "nbf": 1_792_152_000,
+    }
     token = jwt.encode(claims, par.privada_pem, algorithm="ES256")
 
     assert _motivo(_verificador(par, tmp_path), token) == "malformado"

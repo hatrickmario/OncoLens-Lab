@@ -1,0 +1,10 @@
+{
+  "ac": "US-215 AC-4",
+  "descripcion": "Un archivo Python sin formatear en rag-orchestrator hace fallar format:check (el comando del job quality, por su parte ruff) y lo nombra.",
+  "esperado": "falla",
+  "comando": "npm run format:check",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "apps/rag-orchestrator/app/sin-formato.py"
+  ]
+}

@@ -8,7 +8,9 @@ EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
 
 
 def _respuesta(nombre: str) -> RagQueryInternalResponse:
-    return RagQueryInternalResponse.model_validate_json((EJEMPLOS / nombre).read_text(encoding="utf-8"))
+    return RagQueryInternalResponse.model_validate_json(
+        (EJEMPLOS / nombre).read_text(encoding="utf-8")
+    )
 
 
 def _pregunta(nombre: str) -> str:

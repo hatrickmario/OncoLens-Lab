@@ -21,7 +21,13 @@ def cargar_clave_publica_es256(ruta: Path | None) -> ec.EllipticCurvePublicKey:
     try:
         clave = load_pem_public_key(contenido)
     except (ValueError, UnsupportedAlgorithm):
-        raise ClavePublicaServicioInvalida("SERVICE_JWT_PUBLIC_KEY_FILE no es una clave pública PEM") from None
-    if not isinstance(clave, ec.EllipticCurvePublicKey) or not isinstance(clave.curve, ec.SECP256R1):
-        raise ClavePublicaServicioInvalida("SERVICE_JWT_PUBLIC_KEY_FILE no es una clave pública EC P-256")
+        raise ClavePublicaServicioInvalida(
+            "SERVICE_JWT_PUBLIC_KEY_FILE no es una clave pública PEM"
+        ) from None
+    if not isinstance(clave, ec.EllipticCurvePublicKey) or not isinstance(
+        clave.curve, ec.SECP256R1
+    ):
+        raise ClavePublicaServicioInvalida(
+            "SERVICE_JWT_PUBLIC_KEY_FILE no es una clave pública EC P-256"
+        )
     return clave

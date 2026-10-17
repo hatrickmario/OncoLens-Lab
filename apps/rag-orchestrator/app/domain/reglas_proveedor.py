@@ -16,4 +16,6 @@ def reject_fake_provider_with_real_data(
         if activa
     ]
     if banderas:
-        raise ValueError(f"LLM_PROVIDER en modo fake no se admite con {', '.join(banderas)} activa (RN-13)")
+        raise ValueError(
+            f"LLM_PROVIDER en modo fake no se admite con {', '.join(banderas)} activa (RN-13)"
+        )

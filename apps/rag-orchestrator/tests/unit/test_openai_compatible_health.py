@@ -38,7 +38,9 @@ async def test_esta_disponible_devuelve_false_cuando_el_llm_responde_5xx(estado)
         assert await OpenAICompatibleLlmHealth(BASE, 2000).esta_disponible() is False
 
 
-@pytest.mark.parametrize("error", [httpx.ConnectError("x"), httpx.ReadTimeout("x"), httpx.ConnectTimeout("x")])
+@pytest.mark.parametrize(
+    "error", [httpx.ConnectError("x"), httpx.ReadTimeout("x"), httpx.ConnectTimeout("x")]
+)
 async def test_esta_disponible_devuelve_false_cuando_no_hay_conexion_o_vence_el_timeout(error):
     with respx.mock(assert_all_called=False) as llm:
         llm.get(f"{BASE}/models").mock(side_effect=error)

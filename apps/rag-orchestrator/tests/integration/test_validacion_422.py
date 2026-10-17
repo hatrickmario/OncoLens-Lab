@@ -16,7 +16,10 @@ CENTINELA = "SENTINELA-422-SINTETICA"
 
 def _cliente() -> TestClient:
     settings = settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS)
-    return TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()), headers=con_token_valido(par_de_sesion()))
+    return TestClient(
+        crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()),
+        headers=con_token_valido(par_de_sesion()),
+    )
 
 
 def _solicitud_invalida() -> dict:

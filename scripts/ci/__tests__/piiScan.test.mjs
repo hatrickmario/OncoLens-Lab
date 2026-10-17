@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   EXCLUSIONES_PERMITIDAS,
@@ -369,5 +372,34 @@ describe('escanear', () => {
     const { hallazgos } = escanear({ archivos: Object.keys(archivos), leer: leerDe(archivos), formatos, excluir: [], allowlist });
 
     expect(hallazgos.map((h) => `${h.linea}:${h.formato}`)).toEqual(['2:documento_identidad']);
+  });
+});
+
+describe('allowlist real · comentario del hook pre-commit-gate (L1D-166)', () => {
+  const RUTA_DEL_HOOK = '.claude/hooks/pre-commit-gate.sh';
+  // El '@' se concatena para que este archivo no contenga él mismo la forma de correo que prueba.
+  const COMENTARIO = `# El usuario local empieza por alfanumérico: así \`+${'@'}pytest.mark…\` (marcador de diff + decorador) no cuenta como email.`;
+  const raizRepo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+  const allowlistReal = JSON.parse(readFileSync(path.join(raizRepo, 'config/pii-allowlist.json'), 'utf8'));
+  const leerDe = (archivos) => (ruta) => (ruta in archivos ? Buffer.from(archivos[ruta]) : null);
+  const escanearCon = (archivos) =>
+    escanear({ archivos: Object.keys(archivos), leer: leerDe(archivos), formatos, excluir: [], allowlist: allowlistReal });
+
+  it('no informa el comentario del hook en su ruta exacta [L1D-166]', () => {
+    const { problemas, hallazgos } = escanearCon({ [RUTA_DEL_HOOK]: COMENTARIO });
+
+    expect({ problemas, hallazgos }).toEqual({ problemas: [], hallazgos: [] });
+  });
+
+  it('sigue informando el mismo texto en cualquier otra ruta [L1D-166]', () => {
+    const { hallazgos } = escanearCon({ '.claude/hooks/otro-hook.sh': COMENTARIO, 'docs/notas.md': COMENTARIO });
+
+    expect(hallazgos.map((h) => `${h.ruta}:${h.formato}`)).toEqual(['.claude/hooks/otro-hook.sh:correo', 'docs/notas.md:correo']);
+  });
+
+  it('sigue informando un correo ordinario en la ruta del hook [L1D-166]', () => {
+    const { hallazgos } = escanearCon({ [RUTA_DEL_HOOK]: `${COMENTARIO}\n${correo('persona', 'hospital-real.org')}` });
+
+    expect(hallazgos.map((h) => `${h.ruta}:${h.linea}:${h.formato}`)).toEqual([`${RUTA_DEL_HOOK}:2:correo`]);
   });
 });

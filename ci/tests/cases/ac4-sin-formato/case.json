@@ -1,0 +1,10 @@
+{
+  "ac": "US-215 AC-4",
+  "descripcion": "Un archivo TypeScript sin formatear en clinical-api hace fallar format:check (el comando del job quality) y lo nombra.",
+  "esperado": "falla",
+  "comando": "npm run format:check",
+  "aplicar": "aplicar.sh",
+  "mensajes": [
+    "apps/clinical-api/src/sin-formato.ts"
+  ]
+}

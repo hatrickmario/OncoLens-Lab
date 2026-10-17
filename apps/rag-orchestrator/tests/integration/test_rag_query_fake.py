@@ -20,7 +20,10 @@ def _ejemplo(nombre: str) -> dict:
 
 def _cliente_fake() -> TestClient:
     settings = settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS)
-    return TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()), headers=con_token_valido(par_de_sesion()))
+    return TestClient(
+        crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()),
+        headers=con_token_valido(par_de_sesion()),
+    )
 
 
 @pytest.fixture
@@ -47,7 +50,9 @@ def test_rag_query_devuelve_rag_query_con_evidencia_validado_cuando_llega_la_pre
 def test_rag_query_devuelve_rag_query_sin_evidencia_cuando_llega_la_pregunta_de_fixture_sin_evidencia(
     llm_vigilado,
 ):
-    respuesta = _cliente_fake().post("/rag/query", json=_ejemplo("rag-query-request-sin-evidencia.json"))
+    respuesta = _cliente_fake().post(
+        "/rag/query", json=_ejemplo("rag-query-request-sin-evidencia.json")
+    )
 
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
@@ -75,7 +80,9 @@ def test_health_responde_200_sin_llamar_al_llm_cuando_llm_provider_es_fake(llm_v
     assert not llm_vigilado.calls
 
 
-def test_rag_query_ignora_los_espacios_de_los_extremos_de_la_pregunta_al_elegir_el_fixture(llm_vigilado):
+def test_rag_query_ignora_los_espacios_de_los_extremos_de_la_pregunta_al_elegir_el_fixture(
+    llm_vigilado,
+):
     base = _ejemplo("rag-query-request.json")
     solicitud = {**base, "query": f"  {base['query']}\n"}
 
@@ -87,6 +94,8 @@ def test_rag_query_ignora_los_espacios_de_los_extremos_de_la_pregunta_al_elegir_
 def test_rag_query_no_se_registra_cuando_llm_provider_es_local():
     settings = settings_de_prueba(llm_provider="local")
 
-    respuesta = TestClient(crear_app(settings)).post("/rag/query", json=_ejemplo("rag-query-request.json"))
+    respuesta = TestClient(crear_app(settings)).post(
+        "/rag/query", json=_ejemplo("rag-query-request.json")
+    )
 
     assert respuesta.status_code == 404

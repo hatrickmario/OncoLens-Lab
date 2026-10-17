@@ -1,0 +1,9 @@
+# Lo generado, los contratos congelados y los fixtures de la CI no se formatean (L1D-265, design D2).
+packages/api-contracts/src/
+**/openapi.yaml
+contracts/
+reports/
+ci/tests/quality/fixtures/
+.next/
+dist/
+coverage/

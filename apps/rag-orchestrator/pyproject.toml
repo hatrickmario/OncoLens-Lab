@@ -1,0 +1,5 @@
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+# Pydantic generado desde el openapi.yaml: reformatearlo rompería contracts:generate:check.
+extend-exclude = ["app/schemas/generated"]

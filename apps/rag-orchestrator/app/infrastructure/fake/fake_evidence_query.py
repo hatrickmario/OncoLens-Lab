@@ -42,9 +42,13 @@ class FakeEvidenceQuery:
             respuestas[solicitud.query.strip()] = _leer_modelo(
                 directorio / entrada["file"], RagQueryInternalResponse
             )
-        sin_evidencia = next((r for r in respuestas.values() if r.status == RagQueryStatus.sin_evidencia), None)
+        sin_evidencia = next(
+            (r for r in respuestas.values() if r.status == RagQueryStatus.sin_evidencia), None
+        )
         if sin_evidencia is None:
-            raise EjemploFixtureInvalido("index.json no declara ninguna respuesta de fixture sin_evidencia")
+            raise EjemploFixtureInvalido(
+                "index.json no declara ninguna respuesta de fixture sin_evidencia"
+            )
         return cls(respuestas, sin_evidencia)
 
     def select_fixture_response(self, query: str) -> RagQueryInternalResponse:
@@ -66,4 +70,6 @@ def _leer_modelo(archivo: Path, modelo: type[_Modelo]) -> _Modelo:
     try:
         return modelo.model_validate_json(archivo.read_text(encoding="utf-8"))
     except (OSError, ValidationError):
-        raise EjemploFixtureInvalido(f"{archivo.name} falta o no cumple {modelo.__name__}") from None
+        raise EjemploFixtureInvalido(
+            f"{archivo.name} falta o no cumple {modelo.__name__}"
+        ) from None

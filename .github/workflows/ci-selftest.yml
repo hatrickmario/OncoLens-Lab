@@ -46,5 +46,7 @@ jobs:
         run: |
           python -m venv .venv-codegen
           .venv-codegen/bin/pip install -r scripts/contracts/requirements-codegen.txt
+      - name: Ruff (los casos de formato ejecutan npm run format)
+        run: pip install -r apps/rag-orchestrator/requirements-dev.txt
       - name: Fixtures de PR
         run: ci/tests/run-cases.sh
