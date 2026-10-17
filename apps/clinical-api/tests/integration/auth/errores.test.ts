@@ -104,6 +104,21 @@ describe('manejador de cuerpo ilegible del login', () => {
     expect(respuesta.body.error).toBe('ERROR_INTERNO');
   });
 
+  it.each(['request.size.invalid', 'request.aborted'])(
+    'responde 422 CUERPO_INVALIDO cuando body-parser falla con %s',
+    async (tipo) => {
+      const errorDelParser = Object.assign(new Error('parser'), { type: tipo, status: 400 });
+      const app = appConDb({ query: () => Promise.reject(errorDelParser) });
+
+      const respuesta = await request(app)
+        .post('/platform/auth/login')
+        .send({ email: doc1.email, password: doc1.password });
+
+      expect(respuesta.status).toBe(422);
+      expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    },
+  );
+
   it('responde 422 CUERPO_INVALIDO cuando el cuerpo supera el límite del parser', async () => {
     const respuesta = await request(appConDb(dbQueRechaza))
       .post('/platform/auth/login')
