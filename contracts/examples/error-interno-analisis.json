@@ -1,0 +1,5 @@
+{
+  "error": "ERROR_INTERNO",
+  "message": "No se pudo completar el análisis.",
+  "traceId": "req_a1b2c3d4"
+}
