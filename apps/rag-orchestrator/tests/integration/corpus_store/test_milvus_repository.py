@@ -187,3 +187,44 @@ def test_milvus_repository_un_campo_ajeno_al_esquema_se_informa_por_nombre(
 
     assert error.value.campo == "document_id"
     assert contar(cliente_milvus, ajena) == 0
+
+
+@pytest.mark.ac("US-058", 5)
+@pytest.mark.parametrize(
+    ("campo", "esperado", "encontrado", "otros_ajustes"),
+    [
+        ("dense_vector.metric_type", "COSINE", "IP", {"metrica": "IP"}),
+        ("dense_vector.index_type", "FLAT", "HNSW", {"tipo_de_indice": "HNSW"}),
+    ],
+    ids=["metrica", "tipo_de_indice"],
+)
+def test_milvus_repository_metrica_o_indice_distintos_lanza_schema_mismatch(
+    cliente_milvus: MilvusClient,
+    nueva_coleccion: Callable[[], str],
+    uri_de_milvus: str,
+    campo: str,
+    esperado: str,
+    encontrado: str,
+    otros_ajustes: dict[str, str],
+) -> None:
+    nombre = nueva_coleccion()
+    existente = MilvusRepository(
+        cliente_milvus, ajustes_de_milvus(uri_de_milvus, nombre, **otros_ajustes)  # type: ignore[arg-type]
+    )
+    existente.ensure_collection()
+    antes = identificador_interno(cliente_milvus, nombre)
+    configuracion = (
+        ajustes_de_milvus(uri_de_milvus, nombre)
+        if esperado == "COSINE"
+        else ajustes_de_milvus(uri_de_milvus, nombre, tipo_de_indice="FLAT")
+    )
+
+    with pytest.raises(CorpusCollectionSchemaMismatch) as error:
+        MilvusRepository(cliente_milvus, configuracion).ensure_collection()
+
+    assert (error.value.campo, error.value.esperado, error.value.encontrado) == (
+        campo,
+        esperado,
+        encontrado,
+    )
+    assert identificador_interno(cliente_milvus, nombre) == antes

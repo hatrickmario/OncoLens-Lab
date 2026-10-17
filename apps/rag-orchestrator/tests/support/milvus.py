@@ -7,7 +7,7 @@ operación. El sufijo lo inyecta quien llama.
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Literal
 
 from pymilvus import MilvusClient
 
@@ -44,16 +44,21 @@ def verificar_coleccion_de_test(nombre: str) -> None:
 
 
 def ajustes_de_milvus(
-    uri: str, nombre: str, *, dimension: int = DIMENSION_DE_TEST
+    uri: str,
+    nombre: str,
+    *,
+    dimension: int = DIMENSION_DE_TEST,
+    metrica: Literal["COSINE", "IP"] = "COSINE",
+    tipo_de_indice: str = "HNSW",
 ) -> MilvusSettings:
     verificar_coleccion_de_test(nombre)
     return MilvusSettings(
         milvus_uri=uri,
         milvus_collection_name=nombre,
         embedding_dim=dimension,
-        vector_index_type="HNSW",
+        vector_index_type=tipo_de_indice,
         vector_index_params=INDICE_DE_ADR39,
-        milvus_dense_metric_type="COSINE",
+        milvus_dense_metric_type=metrica,
         _env_file=None,
     )
 
