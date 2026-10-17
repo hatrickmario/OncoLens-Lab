@@ -76,8 +76,10 @@ el catálogo falle después; (2) se escriben los chunks por *upsert* (idempotent
 dominio); (4) se confirma el catálogo (la fila pasa a `embebido`; `reemplazar_version` retira la anterior en la misma
 transacción). La rama `omitir` también apaga `a_apagar`. Garantía real: si algo falla entre (2) y (4), el catálogo conserva
 la versión anterior como vigente y **la siguiente carga del grupo** (la versión nueva, una tercera, el texto de la primera o un
-rechazo) deja en Milvus sin chunks vigentes de la versión fallida; entre la carga fallida y la siguiente conviven chunks
-vigentes de dos versiones, y puede quedar un documento vigente en el catálogo cuyos chunks ya se apagaron (deuda, ver Risks).
+rechazo) deja de mostrar en Milvus chunks vigentes de la versión fallida. NO garantiza lo contrario: entre la carga fallida y
+la siguiente conviven chunks vigentes de dos versiones, y el grupo puede quedar **sin chunks vigentes de forma persistente**
+(el catálogo dice «vigente» y los chunks de esa versión ya se apagaron) mientras el resultado de recargarla es `omitido`,
+hasta que una reconciliación los encienda (deuda, ver Risks; decisión pendiente del usuario).
 **Readmisión (D3):** `decidir_version` omite el checksum ya cargado solo si esa versión es la vigente o si el grupo tiene otra
 vigente (no se resucita lo reemplazado); una versión retirada por un rechazo, sin vigente en el grupo, se reingiere con el
 mismo texto y queda vigente otra vez en el catálogo y en Milvus (el *upsert* reescribe `is_current = true`).
@@ -248,7 +250,8 @@ El service nunca importa `pymilvus`, `httpx` ni SQLAlchemy. Reglas extraídas co
 - [Fallo entre insertar chunks nuevos y apagar los viejos] → durante la ventana puede haber dos
   versiones con chunks vigentes; el catálogo es la verdad (`is_current` del documento) y **la siguiente carga del grupo**
   apaga lo que quedó (`a_apagar`), también con una tercera versión o al volver al texto de la primera. No hay garantía
-  de coherencia entre la carga fallida y la siguiente. **Deuda sin ID:** ingesta que falla cerrado (insertar con
+  de coherencia entre la carga fallida y la siguiente, y el grupo puede quedar sin chunks vigentes de forma persistente con
+  resultado `omitido` hasta la reconciliación. **Deuda sin ID:** ingesta que falla cerrado (insertar con
   `is_current = false` y encender tras confirmar el catálogo; reconciliar documentos quitados del manifiesto).
 - [Duplicación de forma con `app/evaluation/dataset_loader.py`] → la imagen de producción excluye `app/evaluation`, así que
   la regla de licencias se reescribe en `domain/corpus_seed`; el dominio reconoce `NoDerivs`, «sin obras derivadas» y
@@ -284,3 +287,13 @@ deshacer una carga de desarrollo se recrean los volúmenes de test/Compose (solo
 - Regresión [RN-21] rechazo por fuente no admitida (`CORPUS_ALLOWED_SOURCES`) y regla de PubMed
   activa desde S4 (US-117).
 - Regresión [RN-05] recuperación solo de chunks vigentes: la verifica US-055 AC-3 (change de L1D-106).
+
+## Deuda y notas de la pasada final del Gate 2 (2026-10-17)
+
+- **Deuda sin ID · la fila previa de una readmisión reescribe la fila retirada.** Para que todo chunk tenga dueño, la fila
+  definitiva se guarda (estado `error`, `is_current = false`) antes de escribir en Milvus; en una readmisión eso pisa la fila
+  retirada, y si Milvus falla después se pierden `superseded_at` e `ingested_at` originales.
+- **Deuda sin ID · reconciliar en `omitir`** (decisión pendiente del usuario): encender los chunks de la vigente cuando un fallo
+  del catálogo los dejó apagados.
+- **Nota para L1D-106.** Tras su merge, el fake `AlmacenDeChunksEnMemoria.search_dense` debe aceptar el filtro y delegar en
+  `exigir_filtro_vigente`, como el adapter real.
