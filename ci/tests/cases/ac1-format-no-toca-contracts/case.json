@@ -1,0 +1,7 @@
+{
+  "ac": "US-215 AC-1",
+  "descripcion": "Si format:js alcanza contracts/**/*.json y .prettierignore deja de excluir contracts/, el guardia falla: los ejemplos y el spec compartido también son intocables.",
+  "esperado": "falla",
+  "comando": "node scripts/quality/format-no-toca-generados.mjs",
+  "aplicar": "aplicar.mjs"
+}

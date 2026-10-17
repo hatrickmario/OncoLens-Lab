@@ -6,7 +6,11 @@ from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
 from app.schemas.generated.models import RagQueryInternalResponse
-from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec, operaciones_con_jwt_de_servicio
+from tests.support.contract import (
+    RAIZ_REPOSITORIO,
+    assert_matches_spec,
+    operaciones_con_jwt_de_servicio,
+)
 from tests.support.fakes import (
     ConsultaEvidenciaContadora,
     GeneradorTraceFijo,
@@ -14,7 +18,12 @@ from tests.support.fakes import (
     par_de_sesion,
     settings_de_prueba,
 )
-from tests.support.service_jwt import VARIANTES_INVALIDAS, cabecera_bearer, con_token_valido, token_es256
+from tests.support.service_jwt import (
+    VARIANTES_INVALIDAS,
+    cabecera_bearer,
+    con_token_valido,
+    token_es256,
+)
 
 EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
 RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
@@ -44,7 +53,9 @@ def test_rag_query_responde_200_validado_cuando_el_jwt_de_servicio_es_valido():
     consulta = _consulta()
 
     respuesta = _cliente(consulta).post(
-        "/rag/query", json=_ejemplo("rag-query-request.json"), headers=con_token_valido(par_de_sesion())
+        "/rag/query",
+        json=_ejemplo("rag-query-request.json"),
+        headers=con_token_valido(par_de_sesion()),
     )
 
     assert respuesta.status_code == 200
@@ -65,7 +76,9 @@ def _afirmar_401_de_contrato(respuesta) -> None:
 
 @pytest.mark.ac("US-054", 2)
 @pytest.mark.parametrize("construir", VARIANTES_INVALIDAS.values(), ids=VARIANTES_INVALIDAS.keys())
-def test_rag_query_responde_401_validado_sin_invocar_al_llm_cuando_el_jwt_falta_o_es_invalido(construir):
+def test_rag_query_responde_401_validado_sin_invocar_al_llm_cuando_el_jwt_falta_o_es_invalido(
+    construir,
+):
     consulta = _consulta()
 
     respuesta = _cliente(consulta).post(
@@ -77,7 +90,9 @@ def test_rag_query_responde_401_validado_sin_invocar_al_llm_cuando_el_jwt_falta_
 
 
 @pytest.mark.ac("US-054", 3)
-def test_rag_query_responde_401_y_no_registra_la_cookie_cuando_llega_oncolens_session_sin_jwt(caplog):
+def test_rag_query_responde_401_y_no_registra_la_cookie_cuando_llega_oncolens_session_sin_jwt(
+    caplog,
+):
     caplog.set_level(logging.DEBUG)
     consulta = _consulta()
 
@@ -131,7 +146,9 @@ def test_rag_query_responde_401_y_no_422_cuando_falta_el_jwt_de_servicio_y_el_cu
 
 def test_rag_query_responde_401_cuando_el_esquema_de_authorization_no_es_bearer():
     respuesta = _cliente(_consulta()).post(
-        "/rag/query", json=_ejemplo("rag-query-request.json"), headers={"Authorization": "Basic dXNlcjpwYXNz"}
+        "/rag/query",
+        json=_ejemplo("rag-query-request.json"),
+        headers={"Authorization": "Basic dXNlcjpwYXNz"},
     )
 
     _afirmar_401_de_contrato(respuesta)
@@ -143,7 +160,10 @@ def test_rag_query_ignora_la_cookie_de_sesion_y_responde_200_cuando_el_jwt_de_se
     respuesta = _cliente(consulta).post(
         "/rag/query",
         json=_ejemplo("rag-query-request.json"),
-        headers={**con_token_valido(par_de_sesion()), "Cookie": f"oncolens_session={COOKIE_DE_SESION}"},
+        headers={
+            **con_token_valido(par_de_sesion()),
+            "Cookie": f"oncolens_session={COOKIE_DE_SESION}",
+        },
     )
 
     assert respuesta.status_code == 200
@@ -165,7 +185,9 @@ def _rutas_de(app) -> list:
 @pytest.mark.ac("US-054", 2)
 def test_toda_ruta_registrada_con_security_service_jwt_responde_401_sin_authorization_y_con_cuerpo_invalido():
     settings = settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS)
-    app = crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=_consulta())
+    app = crear_app(
+        settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=_consulta()
+    )
     cliente = TestClient(app, raise_server_exceptions=False)
     registradas = {(metodo, ruta.path) for ruta in _rutas_de(app) for metodo in ruta.methods}
     protegidas = [op for op in operaciones_con_jwt_de_servicio() if op in registradas]

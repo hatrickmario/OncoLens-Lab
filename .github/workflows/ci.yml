@@ -47,10 +47,10 @@ jobs:
         run: npm run test:build --workspace apps/web
       - name: Tests de los workspaces
         run: npm test --workspaces --if-present
+      - name: Dependencias de rag-orchestrator (y ruff, que usan los tests de ci/tests/quality)
+        run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
         run: npx vitest run
-      - name: Dependencias de rag-orchestrator
-        run: pip install -r apps/rag-orchestrator/requirements.txt
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
         run: python -m pytest
         working-directory: apps/rag-orchestrator
@@ -144,10 +144,40 @@ jobs:
         env:
           LLM_PROVIDER: fake
 
+  quality:
+    name: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: apps/rag-orchestrator/requirements-dev.txt
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Ruff (formato de Python)
+        run: pip install -r apps/rag-orchestrator/requirements-dev.txt
+      - name: Lint (ESLint, sin advertencias)
+        run: npm run lint
+      - name: Formato (Prettier y ruff format)
+        run: npm run format:check
+      - name: format no modifica lo generado ni los openapi.yaml
+        run: node scripts/quality/format-no-toca-generados.mjs
+      - name: Tests de lint y formato (fixtures)
+        run: npx vitest run ci/tests/quality
+
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke]
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, quality]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

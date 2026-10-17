@@ -20,16 +20,22 @@ describe('readServiceJwtConfig', () => {
   });
 
   it('devuelve la vida de SERVICE_JWT_TTL_SECONDS cuando es un entero positivo', () => {
-    const config = readServiceJwtConfig({ SERVICE_JWT_PRIVATE_KEY_FILE: '/k', SERVICE_JWT_TTL_SECONDS: '30' });
+    const config = readServiceJwtConfig({
+      SERVICE_JWT_PRIVATE_KEY_FILE: '/k',
+      SERVICE_JWT_TTL_SECONDS: '30',
+    });
 
     expect(config.ttlSeconds).toBe(30);
   });
 
   it('lanza nombrando SERVICE_JWT_TTL_SECONDS cuando no es un entero positivo', () => {
     for (const valor of ['0', '-5', 'abc', '1.5']) {
-      expect(() => readServiceJwtConfig({ SERVICE_JWT_PRIVATE_KEY_FILE: '/k', SERVICE_JWT_TTL_SECONDS: valor })).toThrow(
-        'SERVICE_JWT_TTL_SECONDS',
-      );
+      expect(() =>
+        readServiceJwtConfig({
+          SERVICE_JWT_PRIVATE_KEY_FILE: '/k',
+          SERVICE_JWT_TTL_SECONDS: valor,
+        }),
+      ).toThrow('SERVICE_JWT_TTL_SECONDS');
     }
   });
 });

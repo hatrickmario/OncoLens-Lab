@@ -18,6 +18,7 @@ coincide).
 | `secret-scan` | gitleaks sobre el árbol y sobre los commits del PR (un secreto añadido y borrado en el mismo PR también falla), siempre con `--redact` | `scripts/ci/secret-scan.sh "$BASE_REF"` |
 | `data-scan` | PII en **todo** `git ls-files` y clase de datos de los datasets de evaluación | `node scripts/ci/pii-scan.mjs`, `node scripts/ci/dataset-class-check.mjs` |
 | `stack-smoke` | Levanta el Compose con `LLM_PROVIDER=fake` y secretos ficticios | `npm run smoke:compose` |
+| `quality` | Lint y formato del código (L1D-265): ESLint con `--max-warnings 0`, Prettier y `ruff format` en modo `--check`, y los tests de `ci/tests/quality/` (fixtures de AC-1…AC-5). Instala `ruff` de `apps/rag-orchestrator/requirements-dev.txt`; sin él `format:check` falla (nunca se omite). Local: `npm run lint`, `npm run format` y `npm run format:check` antes de cada commit | `npm run lint`, `npm run format:check`, `npx vitest run ci/tests/quality` |
 | `ci-ok` | Agregador: `needs` de todos los jobs, `if: always()`; falla si alguno no terminó en `success` (fallido, cancelado u omitido) y lo nombra | `node scripts/ci/verificar-needs.mjs` |
 
 `ci-ok` es el **único** *required status check* de la protección de `main`: añadir un job no obliga a tocar la
@@ -133,6 +134,19 @@ Ningún agente cambia la configuración del repositorio. Tras el **primer verde 
    archivo con un número sintético tras la palabra clave `documento` en `data/`), abrir el PR, comprobar que `ci-ok` queda
    en rojo y que el botón de merge está bloqueado, adjuntar la captura al PR de este change y **cerrar el PR de prueba sin
    mergear**.
+
+## Excepciones de `npm audit` (L1D-265)
+
+El job `quality` no ejecuta `npm audit`; la auditoría de dependencias llega con US-217. Hasta entonces rige esta
+excepción, que US-217 debe heredar:
+
+| Paquete | Hallazgo | Alcance | Revisión |
+|---|---|---|---|
+| `@next/eslint-plugin-next` 16.4.2 (devDependency) → `fast-glob` → `micromatch` → `braces` | GHSA-vfj7-8cjw-p6xm (alta, DoS por patrones anidados); sin versión parcheada de `braces` | Solo lint en la CI y en local sobre el código del repo; no entra en runtime, imagen ni bundle | Retirar cuando `braces` publique parche o el plugin cambie de dependencia |
+
+El audit que bloqueará (con US-217) es `npm audit --omit=dev` (producción), que hoy sale con 0; hasta entonces ningún
+job lo ejecuta, se verifica a mano y se adjunta al PR. `npm audit` completo muestra estas 4
+altas por esa única cadena; no se relaja nada más.
 
 ## Fuera de alcance de este change
 

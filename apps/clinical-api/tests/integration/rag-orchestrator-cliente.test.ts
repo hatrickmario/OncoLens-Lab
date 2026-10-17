@@ -2,7 +2,10 @@ import { jwtVerify, type CryptoKey } from 'jose';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ragQuery, type RagQueryInternalRequest } from '../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import {
+  ragQuery,
+  type RagQueryInternalRequest,
+} from '../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import requestEjemplo from '../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
@@ -11,7 +14,7 @@ import { generarParEfimero, INSTANTE_CONGELADO, relojCongelado } from '../suppor
 
 const BASE_URL = 'http://rag-orchestrator:8000';
 const cuerpo: RagQueryInternalRequest = requestEjemplo as RagQueryInternalRequest; // el JSON ensancha los enums a string; el ejemplo cumple el contrato
-const DEADLINE ='2026-10-16T12:00:15.000Z';
+const DEADLINE = '2026-10-16T12:00:15.000Z';
 
 type Capturada = { headers: Headers; body: unknown };
 const capturadas: Capturada[] = [];

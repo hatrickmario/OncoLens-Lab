@@ -27,7 +27,9 @@ export interface DependenciasAnalisis {
  * Proxy transparente de `POST /platform/evidence-analyses` (design D1): sin validar ni traducir; devuelve
  * el status y el texto exacto de clinical-api con las cabeceras de la lista blanca. Sin streaming ni estado.
  */
-export function crearManejadorAnalisis(dependencias: DependenciasAnalisis): (request: Request) => Promise<Response> {
+export function crearManejadorAnalisis(
+  dependencias: DependenciasAnalisis,
+): (request: Request) => Promise<Response> {
   return async (request) => {
     const rechazo = verificarOrigen(request, { ...dependencias, evento: EVENTO_PROXY });
     if (rechazo !== null) {
@@ -88,7 +90,11 @@ function responderCuerpoExcesivo(dependencias: DependenciasAnalisis): Response {
   const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({ event: EVENTO_PROXY, status: 413, traceId, motivo: 'cuerpo_excesivo' });
   return respuestaPropia(
-    { error: 'CUERPO_INVALIDO', message: 'El cuerpo de la solicitud supera el tamaño permitido.', traceId },
+    {
+      error: 'CUERPO_INVALIDO',
+      message: 'El cuerpo de la solicitud supera el tamaño permitido.',
+      traceId,
+    },
     413,
   );
 }
