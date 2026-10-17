@@ -123,7 +123,12 @@ def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) 
         or CLASE_NCI.match(licencia)
     ):
         return True
-    return permitir_cc_by_nc and bool(CLASE_LICENCIA_NC.match(licencia))
+    return permitir_cc_by_nc and _nc_marcada_como_solo_academica(fuente, licencia)
+
+
+def _nc_marcada_como_solo_academica(fuente: dict[str, Any], licencia: str) -> bool:
+    """CC BY-NC solo entra con la marca explícita ``nc_solo_academico: true`` en la fuente (RN-21)."""
+    return bool(CLASE_LICENCIA_NC.match(licencia)) and fuente.get("nc_solo_academico") is True
 
 
 def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
@@ -147,7 +152,10 @@ def _validar_manifiesto(
         if any(nombre.upper().startswith(e) for e in (*FUENTES_EXCLUIDAS_SIEMPRE, *excluidas)):
             raise DatasetInvalido(f"la fuente {crudo.get('id')} ({nombre}) está excluida (RN-21)")
         if not _licencia_aceptada(crudo, permitir_cc_by_nc):
-            raise DatasetInvalido(f"la fuente {crudo.get('id')} no tiene licencia aceptada (RN-21)")
+            raise DatasetInvalido(
+                f"la fuente {crudo.get('id')} no tiene licencia aceptada (RN-21); "
+                "CC BY-NC exige ALLOW_CC_BY_NC y 'nc_solo_academico: true'"
+            )
         fuentes.append(
             Fuente(
                 id=str(crudo["id"]),
