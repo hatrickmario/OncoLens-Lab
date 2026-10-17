@@ -38,6 +38,21 @@ describe('ci.yml', () => {
     expect(indiceBuild).toBeGreaterThanOrEqual(0);
   });
 
+  it('build-test instala cada requirements*.txt de rag-orchestrator antes de su pytest [L1D-102]', () => {
+    const pasos = pasosDe(ci.jobs['build-test']);
+    const indicePytest = pasos.findIndex((paso) => /\bpytest\b/.test(paso.run ?? '') && paso['working-directory'] === 'apps/rag-orchestrator');
+    const requisitos = readdirSync(path.join(RAIZ, 'apps/rag-orchestrator')).filter((nombre) => /^requirements.*\.txt$/.test(nombre));
+
+    expect(indicePytest).toBeGreaterThanOrEqual(0);
+    expect(requisitos).toContain('requirements-eval.txt');
+    for (const archivo of requisitos) {
+      const indiceInstalacion = pasos.findIndex((paso) => (paso.run ?? '').includes(`pip install`) && (paso.run ?? '').includes(`-r apps/rag-orchestrator/${archivo}`));
+
+      expect(indiceInstalacion, archivo).toBeGreaterThanOrEqual(0);
+      expect(indiceInstalacion, archivo).toBeLessThan(indicePytest);
+    }
+  });
+
   it('el job que corre pytest tiene setup-node y npm ci antes [US-036 AC-1]', () => {
     const conPytest = Object.entries(ci.jobs).filter(([, job]) => pasosDe(job).some((paso) => /\bpytest\b/.test(paso.run ?? '')));
 

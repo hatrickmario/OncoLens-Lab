@@ -59,10 +59,15 @@ class ResultadoPregunta:
 
 
 def acierta(chunk: ChunkRecuperado, pregunta: Pregunta) -> bool:
-    return any(chunk.documento == e.documento and contiene_cita(chunk.texto, e.cita) for e in pregunta.evidencia)
+    return any(
+        chunk.documento == e.documento and contiene_cita(chunk.texto, e.cita)
+        for e in pregunta.evidencia
+    )
 
 
-def evaluar_pregunta(pregunta: Pregunta, ranking: Sequence[ChunkRecuperado], k: int = K) -> ResultadoPregunta:
+def evaluar_pregunta(
+    pregunta: Pregunta, ranking: Sequence[ChunkRecuperado], k: int = K
+) -> ResultadoPregunta:
     """Evalúa un ranking (ya ordenado) según el ``modo_acierto`` de la pregunta."""
     top = list(ranking[:k])
     base = {
@@ -84,7 +89,10 @@ def evaluar_pregunta(pregunta: Pregunta, ranking: Sequence[ChunkRecuperado], k: 
     if pregunta.modo_acierto == "cobertura_documentos":
         esperados = {e.documento for e in pregunta.evidencia}
         cubiertos = {
-            e.documento for e in pregunta.evidencia for c in top if c.documento == e.documento and contiene_cita(c.texto, e.cita)
+            e.documento
+            for e in pregunta.evidencia
+            for c in top
+            if c.documento == e.documento and contiene_cita(c.texto, e.cita)
         }
         recall = len(cubiertos) / len(esperados)
     else:
@@ -101,7 +109,9 @@ class Metrica:
     mrr_ic95: tuple[float, float]
 
 
-def _bootstrap_ic(valores: Sequence[float], semilla: int, repeticiones: int, alfa: float = 0.05) -> tuple[float, float]:
+def _bootstrap_ic(
+    valores: Sequence[float], semilla: int, repeticiones: int, alfa: float = 0.05
+) -> tuple[float, float]:
     if not valores:
         return (float("nan"), float("nan"))
     rng = random.Random(semilla)
@@ -112,7 +122,9 @@ def _bootstrap_ic(valores: Sequence[float], semilla: int, repeticiones: int, alf
     return (inferior, superior)
 
 
-def metrica(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000) -> Metrica:
+def metrica(
+    resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000
+) -> Metrica:
     """recall@10 y MRR medios con IC 95 % por bootstrap sobre las preguntas (semilla de configuración)."""
     con_respuesta = [r for r in resultados if r.recall is not None and r.rr is not None]
     recalls = [r.recall for r in con_respuesta if r.recall is not None]
@@ -127,7 +139,10 @@ def metrica(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones:
 
 
 def _desglose(
-    resultados: Sequence[ResultadoPregunta], clave: Callable[[ResultadoPregunta], str | None], semilla: int, repeticiones: int
+    resultados: Sequence[ResultadoPregunta],
+    clave: Callable[[ResultadoPregunta], str | None],
+    semilla: int,
+    repeticiones: int,
 ) -> dict[str, Metrica]:
     grupos: dict[str, list[ResultadoPregunta]] = defaultdict(list)
     for r in resultados:
@@ -137,13 +152,23 @@ def _desglose(
     return {k: metrica(v, semilla, repeticiones) for k, v in sorted(grupos.items())}
 
 
-def agregar(resultados: Sequence[ResultadoPregunta], semilla: int, repeticiones: int = 1000, *, escala_puntaje: str) -> dict[str, object]:
+def agregar(
+    resultados: Sequence[ResultadoPregunta],
+    semilla: int,
+    repeticiones: int = 1000,
+    *,
+    escala_puntaje: str,
+) -> dict[str, object]:
     """Totales y desgloses por fuente, tipo de dato, idioma y controles, más el aparte de ``sin_evidencia``."""
     por_fuente: dict[str, list[ResultadoPregunta]] = defaultdict(list)
     for r in resultados:
         for doc in r.documentos:
             por_fuente[doc].append(r)
-    sin_evidencia = [r.puntaje_maximo for r in resultados if r.modo == "sin_evidencia" and r.puntaje_maximo is not None]
+    sin_evidencia = [
+        r.puntaje_maximo
+        for r in resultados
+        if r.modo == "sin_evidencia" and r.puntaje_maximo is not None
+    ]
     return {
         "total": metrica(resultados, semilla, repeticiones),
         "es_a_en": metrica([r for r in resultados if r.es_es_en], semilla, repeticiones),

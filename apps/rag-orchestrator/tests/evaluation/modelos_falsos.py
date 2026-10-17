@@ -58,13 +58,17 @@ class NliFalso:
 
 
 class FabricaFalsa:
-    def embedder(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> EmbedderFalso:
+    def embedder(
+        self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int
+    ) -> EmbedderFalso:
         return EmbedderFalso()
 
     def tokenizador(self, spec: ModeloSpec, directorio: Path) -> TokenizadorPalabras:
         return TokenizadorPalabras()
 
-    def reranker(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int) -> RerankerFalso:
+    def reranker(
+        self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int
+    ) -> RerankerFalso:
         return RerankerFalso()
 
     def nli(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int) -> NliFalso:
@@ -75,4 +79,6 @@ def exportador_falso(spec: ModeloSpec, destino: Path) -> None:
     import json
 
     destino.mkdir(parents=True, exist_ok=True)
-    (destino / "export.json").write_text(json.dumps({"tamano_bytes": {"int8": 1_000, "fp32": 4_000}}), encoding="utf-8")
+    (destino / "export.json").write_text(
+        json.dumps({"tamano_bytes": {"int8": 1_000, "fp32": 4_000}}), encoding="utf-8"
+    )

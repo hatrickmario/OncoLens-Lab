@@ -7,7 +7,12 @@ from collections.abc import Sequence
 from typing import Any
 
 from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec
-from app.evaluation.model_selection import Medicion, Seleccion, seleccionar_componente, verificar_presupuesto_conjunto
+from app.evaluation.model_selection import (
+    Medicion,
+    Seleccion,
+    seleccionar_componente,
+    verificar_presupuesto_conjunto,
+)
 from app.evaluation.reporte import medicion_a_dict, seleccion_a_dict
 
 
@@ -40,7 +45,9 @@ def agregar_corridas(corridas: Sequence[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def a_medicion(spec: ModeloSpec, cuantizacion: str, agregado: dict[str, Any], licencia: str) -> Medicion:
+def a_medicion(
+    spec: ModeloSpec, cuantizacion: str, agregado: dict[str, Any], licencia: str
+) -> Medicion:
     return Medicion(
         candidato=nombre_candidato(spec, cuantizacion),
         etapa=spec.componente,
@@ -52,7 +59,10 @@ def a_medicion(spec: ModeloSpec, cuantizacion: str, agregado: dict[str, Any], li
 
 
 def reporte_de_componente(
-    componente: str, detalle: dict[str, dict[str, Any]], mediciones: Sequence[Medicion], config: ConfigMedicion
+    componente: str,
+    detalle: dict[str, dict[str, Any]],
+    mediciones: Sequence[Medicion],
+    config: ConfigMedicion,
 ) -> tuple[dict[str, Any], Seleccion]:
     seleccion = seleccionar_componente(mediciones, config.restricciones, config.tolerancia_empate)
     return {
@@ -62,7 +72,9 @@ def reporte_de_componente(
     }, seleccion
 
 
-def presupuesto_conjunto(selecciones: dict[str, Seleccion], config: ConfigMedicion) -> dict[str, Any]:
+def presupuesto_conjunto(
+    selecciones: dict[str, Seleccion], config: ConfigMedicion
+) -> dict[str, Any]:
     elegidos = [s.elegido for s in selecciones.values() if s.elegido is not None]
     cabe, total = verificar_presupuesto_conjunto(elegidos, config.restricciones)
     return {
