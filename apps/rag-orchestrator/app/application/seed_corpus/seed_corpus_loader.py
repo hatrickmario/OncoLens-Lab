@@ -148,8 +148,23 @@ class SeedCorpusLoader:
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
-            return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
+            return self._omitir(documento, decision)
         return _Preparado(texto, checksum, decision)
+
+    def _omitir(
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
+    ) -> ResultadoDeDocumento:
+        """Ya cargado: no se reinserta, pero se apagan los chunks que un fallo previo dejó vigentes (RN-05).
+
+        Si apagarlos falla NO se escribe una fila ``error``: el documento embebido y vigente sigue siendo la verdad.
+        """
+        try:
+            self._apagar(decision.a_apagar)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+            return ResultadoDeDocumento(
+                documento.document_key, Resultado.ERROR, f"milvus: {type(error).__name__}"
+            )
+        return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
 
     def _indexar(
         self,
@@ -158,14 +173,23 @@ class SeedCorpusLoader:
         vectores: Sequence[Sequence[float]],
         decision: DecisionDeVersion,
     ) -> None:
-        """Chunks nuevos -> apagar los de la versión anterior (D5). Re-ejecutable: no reinserta lo que ya quedó."""
+        """Chunks nuevos -> apagar los de ``decision.a_apagar`` (D5). Re-ejecutable: no reinserta lo que ya quedó.
+
+        Entre insertar y apagar hay una ventana en la que conviven chunks vigentes de dos versiones; si algo falla en ella,
+        el catálogo conserva la versión anterior como vigente y la siguiente carga del grupo apaga lo que quedó
+        (``a_apagar`` incluye toda versión no ``embebido``). No hay garantía de que Milvus y el catálogo coincidan entre
+        una carga fallida y la siguiente (deuda: insertar con ``is_current = false`` y encender tras confirmar).
+        """
         ya_insertados = self._almacen_de_chunks.ids_de_chunks_del_documento(registro.document_id)
         chunks = chunks_del_documento(registro, fragmentos, vectores, self._reloj.ahora())
         pendientes = [c for c in chunks if c.chunk_id not in ya_insertados]
         if pendientes:
             self._almacen_de_chunks.insert_chunks(pendientes)
-        if decision.anterior_id is not None:
-            self._almacen_de_chunks.marcar_no_vigentes(decision.anterior_id)
+        self._apagar(decision.a_apagar)
+
+    def _apagar(self, document_ids: Sequence[str]) -> None:
+        for document_id in document_ids:
+            self._almacen_de_chunks.marcar_no_vigentes(document_id)
 
     def _confirmar(
         self,
@@ -191,7 +215,10 @@ class SeedCorpusLoader:
         etapa: str,
         error: Exception,
     ) -> ResultadoDeDocumento:
-        """``status = error`` sin chunks vigentes; el reporte lleva etapa y clase, nunca el mensaje (puede traer URLs)."""
+        """``status = error``, no vigente en el catálogo; sus chunks pudieron quedar en Milvus y los apaga la siguiente carga del grupo.
+
+        El reporte lleva etapa y clase, nunca el mensaje de la excepción (puede traer URLs).
+        """
         registro = registro_con_error(documento, admision, checksum, self._reloj.ahora())
         self._catalogo.guardar_documento(registro)
         return ResultadoDeDocumento(

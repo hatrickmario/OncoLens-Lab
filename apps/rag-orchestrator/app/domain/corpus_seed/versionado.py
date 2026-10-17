@@ -40,17 +40,24 @@ class DecisionDeVersion:
 
 
 def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> DecisionDeVersion:
-    """Qué hacer con un documento entrante frente a las versiones de su grupo.
+    """Qué hacer con un documento entrante frente a las versiones de su grupo y qué chunks apagar (RN-05).
 
-    Solo cuentan las versiones ``embebido``: una ``error`` se reintenta y una ``rechazado_licencia`` no es versión.
+    Solo cuentan como versión las ``embebido``: una ``error`` se reintenta y una ``rechazado_licencia`` no es versión.
+    ``a_apagar`` reúne la vigente anterior (si se reemplaza) y TODA versión del grupo que no esté ``embebido`` y sea de otro
+    contenido: un fallo previo pudo dejar sus chunks vigentes en Milvus, y el catálogo no los refleja.
     """
     embebidas = [v for v in existentes if v.status == STATUS_EMBEBIDO]
+    huerfanas = tuple(
+        v.document_id for v in existentes if v.status != STATUS_EMBEBIDO and v.checksum != checksum
+    )
     if any(v.checksum == checksum for v in embebidas):
-        return DecisionDeVersion(Accion.OMITIR)
+        return DecisionDeVersion(Accion.OMITIR, a_apagar=huerfanas)
     vigente = next((v for v in embebidas if v.is_current), None)
     if vigente is not None:
-        return DecisionDeVersion(Accion.REEMPLAZAR, vigente.document_id)
-    return DecisionDeVersion(Accion.INSERTAR)
+        return DecisionDeVersion(
+            Accion.REEMPLAZAR, vigente.document_id, a_apagar=(vigente.document_id, *huerfanas)
+        )
+    return DecisionDeVersion(Accion.INSERTAR, a_apagar=huerfanas)
 
 
 def debe_publicar_release(vigentes: Collection[str], ultima: Collection[str] | None) -> bool:
