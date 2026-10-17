@@ -91,7 +91,7 @@ llegue a la respuesta (RN-23), tampoco dentro de una descartada.
 
 ## Dependencias
 
-- ↪ **Depende de** la historia **US-231** (adapters reales de *embeddings*, *reranker*, detector de idioma y NLI, ADR-39; Linear: pendiente (límite de issues del workspace); propuesta, decisión 74 del plan): debe estar en `main` antes de este change para correr con modelos reales; los AC siguen verificándose con adapters falsos.
+- ↪ **Depende de** la historia **US-231b** (puerto `NliClassifier`, adapter real de NLI y *smoke* de la semilla, ADR-39; mitad de US-231, dividida por la decisión 75 del plan; Linear: pendiente (límite de issues del workspace)): debe estar en `main` antes de este change para correr con modelos reales; los AC siguen verificándose con adapters falsos.
 - ↪ **Depende de** el change de **L1D-179** (US-063): `validar_citas()` y `CitedSource` con
   `chunkTextSnapshot` copiado del corpus, que es la premisa del NLI; el soporte solo se evalúa sobre
   citas válidas.
