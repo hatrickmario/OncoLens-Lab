@@ -1,6 +1,7 @@
 import 'server-only';
 import type { z } from 'zod';
 import { login } from '../../../../packages/api-contracts/src/client-web/clinical-api';
+import type { LoginErrors } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import {
   zErrorCredencialesInvalidas,
   zErrorCuerpoInvalido,
@@ -12,6 +13,7 @@ import {
   cabecerasHaciaNavegador,
   clasificarRespuestaDeClinicalApi,
   crearSdkClinicalApi,
+  type MotivoDeFalloDeTransporte,
   NOMBRE_COOKIE_DE_SESION,
 } from './clinical-api';
 import type { DependenciasDelBff } from './dependencias';
@@ -27,15 +29,24 @@ export type DependenciasLogin = Pick<
   'config' | 'fetch' | 'nuevoTraceId' | 'registrar'
 >;
 
-type MotivoDeFallo = NonNullable<LineaDeRegistro['motivo']>;
+type MotivoDeFallo =
+  | MotivoDeFalloDeTransporte
+  | Extract<NonNullable<LineaDeRegistro['motivo']>, 'cuerpo_no_conforme' | 'sin_cookie_de_sesion'>;
 
-/** Errores que el contrato declara para `login`, por status. Cualquier otro status o forma → 502 propio. */
-const ESQUEMAS_DE_ERROR: Record<number, z.ZodType<{ traceId: string }>> = {
+/**
+ * Errores que el contrato declara para `login`, por status. `satisfies` ata el mapa al tipo generado: un status
+ * nuevo (o quitado) en openapi.yaml rompe el build en vez de caer en silencio en el 502 `cuerpo_no_conforme`.
+ */
+export const ESQUEMAS_DE_ERROR_DE_LOGIN = {
   401: zErrorCredencialesInvalidas,
   422: zErrorCuerpoInvalido,
   429: zErrorLimiteSolicitudes,
   500: zErrorInterno,
-};
+} satisfies { [S in keyof LoginErrors]: z.ZodType<LoginErrors[S]> };
+
+function esquemaDelStatus(status: number): z.ZodType<{ traceId: string }> | undefined {
+  return (ESQUEMAS_DE_ERROR_DE_LOGIN as Record<number, z.ZodType<{ traceId: string }>>)[status];
+}
 
 /**
  * Proxy del login (design D6). Orden fijo y antes de leer el cuerpo: `Origin` y `Content-Type: application/json`
@@ -93,7 +104,7 @@ function reenviarErrorDelContrato(
   dependencias: DependenciasLogin,
   traceId: string,
 ): Response {
-  const conforme = ESQUEMAS_DE_ERROR[respuesta.status]?.safeParse(analizarJson(cuerpoCrudo));
+  const conforme = esquemaDelStatus(respuesta.status)?.safeParse(analizarJson(cuerpoCrudo));
   if (conforme === undefined || !conforme.success) {
     return responderConFallo(dependencias, traceId, 'cuerpo_no_conforme');
   }
