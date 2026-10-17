@@ -141,6 +141,25 @@ def test_carga_de_semilla_rechaza_t_nd_y_t_sin_licencia_sin_chunks_y_sigue_con_t
     assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
 
 
+@pytest.mark.ac("US-059", 4)
+def test_carga_de_semilla_conserva_estadio_y_linea_de_t_ok_2_y_deja_t_ok_1_en_no_disponible(
+    entorno: Entorno,
+) -> None:
+    entorno.cargar("t-ok-1", "t-ok-2")
+
+    ok_1, ok_2 = entorno.fila("t-ok-1"), entorno.fila("t-ok-2")
+    criterios_2 = ok_2["population_criteria"]
+    assert isinstance(criterios_2, dict)
+    assert {k: criterios_2.get(k) for k in ("estadio", "linea")} == {
+        "estadio": "metastasico",
+        "linea": "primera",
+    }
+    assert ok_2["metadata_source"] == "fuente_estructurada"
+    assert ok_1["population_criteria"] == dict.fromkeys(
+        ("subtipo", "estadio", "linea", "biomarcadores", "edad", "ecog"), "no_disponible"
+    )
+
+
 @pytest.mark.ac("US-059", 3)
 def test_carga_de_semilla_rechaza_t_nccn_por_fuente_excluida_aunque_declare_licencia(
     entorno: Entorno,
