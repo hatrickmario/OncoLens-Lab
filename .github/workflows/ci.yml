@@ -43,6 +43,8 @@ jobs:
         run: scripts/ci/install-tools.sh
       - name: Build de los workspaces
         run: npm run build --workspaces --if-present
+      - name: Test de build de web (US-060 AC-5)
+        run: npm run test:build --workspace apps/web
       - name: Tests de los workspaces
         run: npm test --workspaces --if-present
       - name: Dependencias de rag-orchestrator (y ruff, que usan los tests de ci/tests/quality)
