@@ -26,12 +26,16 @@ ETIQUETAS = ("entailment", "neutral", "contradiction")
 
 
 def construir_corpus(
-    secciones_por_documento: dict[str, Sequence[Seccion]], tokenizador: Tokenizador, variante: Variante
+    secciones_por_documento: dict[str, Sequence[Seccion]],
+    tokenizador: Tokenizador,
+    variante: Variante,
 ) -> list[ChunkCandidato]:
     """Chunks de todos los documentos con una variante, en orden estable por id de documento."""
     chunks: list[ChunkCandidato] = []
     for documento in sorted(secciones_por_documento):
-        chunks.extend(fragmentar(documento, secciones_por_documento[documento], tokenizador, variante))
+        chunks.extend(
+            fragmentar(documento, secciones_por_documento[documento], tokenizador, variante)
+        )
     return chunks
 
 
@@ -61,11 +65,17 @@ def recuperar_densos(
 
 
 def evaluar_rankings(
-    preguntas: Sequence[Pregunta], rankings: dict[str, list[tuple[int, float]]], chunks: Sequence[ChunkCandidato], k: int
+    preguntas: Sequence[Pregunta],
+    rankings: dict[str, list[tuple[int, float]]],
+    chunks: Sequence[ChunkCandidato],
+    k: int,
 ) -> list[ResultadoPregunta]:
     resultados = []
     for pregunta in preguntas:
-        recuperados = [ChunkRecuperado(chunks[i].documento, chunks[i].texto, puntaje) for i, puntaje in rankings[pregunta.id]]
+        recuperados = [
+            ChunkRecuperado(chunks[i].documento, chunks[i].texto, puntaje)
+            for i, puntaje in rankings[pregunta.id]
+        ]
         resultados.append(evaluar_pregunta(pregunta, recuperados, k))
     return resultados
 
@@ -102,13 +112,29 @@ def casos_nli(pares: Sequence[ParNli]) -> list[tuple[str, str, str, bool]]:
     """(fragmento, afirmación, etiqueta, mismo idioma que el fragmento): cada par aporta su afirmación y su variante."""
     casos: list[tuple[str, str, str, bool]] = []
     for par in pares:
-        casos.append((par.fragmento, par.afirmacion, par.etiqueta, par.idioma_afirmacion == par.idioma_fragmento))
+        casos.append(
+            (
+                par.fragmento,
+                par.afirmacion,
+                par.etiqueta,
+                par.idioma_afirmacion == par.idioma_fragmento,
+            )
+        )
         if par.variante_otro_idioma:
-            casos.append((par.fragmento, par.variante_otro_idioma, par.etiqueta, par.idioma_afirmacion != par.idioma_fragmento))
+            casos.append(
+                (
+                    par.fragmento,
+                    par.variante_otro_idioma,
+                    par.etiqueta,
+                    par.idioma_afirmacion != par.idioma_fragmento,
+                )
+            )
     return casos
 
 
-def evaluar_nli(clasificador: ClasificadorNli, pares: Sequence[ParNli], tamano_lote: int = 16) -> ExactitudNli:
+def evaluar_nli(
+    clasificador: ClasificadorNli, pares: Sequence[ParNli], tamano_lote: int = 16
+) -> ExactitudNli:
     """Exactitud sobre pares etiquetados, con la afirmación en el idioma original y en la variante del otro idioma.
 
     Los fragmentos están en inglés: la afirmación en inglés es "mismo idioma"; en español, "mezcla es/en".
@@ -116,12 +142,16 @@ def evaluar_nli(clasificador: ClasificadorNli, pares: Sequence[ParNli], tamano_l
     casos = casos_nli(pares)
     predichas: list[str] = []
     for i in range(0, len(casos), tamano_lote):
-        predichas.extend(clasificador.clasificar([(c[0], c[1]) for c in casos[i : i + tamano_lote]]))
+        predichas.extend(
+            clasificador.clasificar([(c[0], c[1]) for c in casos[i : i + tamano_lote]])
+        )
     aciertos = [p == c[2] for p, c in zip(predichas, casos)]
     mismo = [a for a, c in zip(aciertos, casos) if c[3]]
     mezcla = [a for a, c in zip(aciertos, casos) if not c[3]]
     por_etiqueta = {
-        e: float(np.mean([a for a, c in zip(aciertos, casos) if c[2] == e])) for e in ETIQUETAS if any(c[2] == e for c in casos)
+        e: float(np.mean([a for a, c in zip(aciertos, casos) if c[2] == e]))
+        for e in ETIQUETAS
+        if any(c[2] == e for c in casos)
     }
     return ExactitudNli(
         total=float(np.mean(aciertos)),
@@ -134,7 +164,10 @@ def evaluar_nli(clasificador: ClasificadorNli, pares: Sequence[ParNli], tamano_l
 
 
 def cronometrar(
-    funcion: Callable[[object], object], entradas: Sequence[object], calentamiento: int, reloj: Reloj
+    funcion: Callable[[object], object],
+    entradas: Sequence[object],
+    calentamiento: int,
+    reloj: Reloj,
 ) -> list[float]:
     """Milisegundos de cada llamada tras descartar ``calentamiento`` llamadas (carga del modelo fuera del cronómetro)."""
     for entrada in list(entradas)[:calentamiento] or list(entradas)[:1]:

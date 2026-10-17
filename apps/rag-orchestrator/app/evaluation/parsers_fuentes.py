@@ -109,7 +109,18 @@ class _ExtractorNci(HTMLParser):
     """Texto visible del contenido principal de una página de cancer.gov, cortado por encabezados."""
 
     # Los gráficos (img, svg) no se descargan ni se usan; los pies de figura son texto y se conservan.
-    OMITIR = {"script", "style", "noscript", "svg", "nav", "header", "footer", "aside", "button", "form"}
+    OMITIR = {
+        "script",
+        "style",
+        "noscript",
+        "svg",
+        "nav",
+        "header",
+        "footer",
+        "aside",
+        "button",
+        "form",
+    }
     ENCABEZADOS = {"h1", "h2", "h3", "h4"}
 
     def __init__(self) -> None:

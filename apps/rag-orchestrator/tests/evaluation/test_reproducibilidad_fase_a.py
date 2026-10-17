@@ -12,7 +12,9 @@ CONFIG_FASE_A = RAIZ_APP / "eval" / "configs" / "adr39-fase-a.yaml"
 REPORTE_FASE_A = RAIZ_REPO / "reports" / "adr39" / "2026-10-16-fase-a.json"
 
 
-def test_fase_a_las_restricciones_del_yaml_solo_difieren_del_reporte_en_los_topes_de_memoria_documentados() -> None:
+def test_fase_a_las_restricciones_del_yaml_solo_difieren_del_reporte_en_los_topes_de_memoria_documentados() -> (
+    None
+):
     """El YAML de la fase A está congelado (decisión del 2026-10-20): conserva 30/21 GB y el reporte se midió con 24/16.
 
     Ningún descarte de la fase A fue por memoria; la salvedad está registrada en el ADR-39. Cualquier otra diferencia es un error.
@@ -29,8 +31,13 @@ def test_fase_a_las_restricciones_del_yaml_solo_difieren_del_reporte_en_los_tope
     assert diferencias == {"stack_memory_limit_gb": (30, 24), "llm_budget_gb": (21, 16)}
 
 
-def test_fase_a_el_protocolo_y_la_recuperacion_del_yaml_coinciden_con_los_del_reporte_medido() -> None:
+def test_fase_a_el_protocolo_y_la_recuperacion_del_yaml_coinciden_con_los_del_reporte_medido() -> (
+    None
+):
     config = yaml.safe_load(CONFIG_FASE_A.read_text(encoding="utf-8"))
     reporte = json.loads(REPORTE_FASE_A.read_text(encoding="utf-8"))
 
-    assert (config["protocolo"], config["recuperacion"]) == (reporte["protocolo"], reporte["recuperacion"])
+    assert (config["protocolo"], config["recuperacion"]) == (
+        reporte["protocolo"],
+        reporte["recuperacion"],
+    )

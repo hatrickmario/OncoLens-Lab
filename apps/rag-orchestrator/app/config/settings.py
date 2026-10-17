@@ -34,7 +34,11 @@ class Settings(BaseSettings):
     @classmethod
     def _componer_modelos_desde_el_entorno(cls, datos: Any) -> Any:
         """Si el entorno trae alguna clave de ADR-39 se validan todas juntas; si no trae ninguna, ``modelos`` es None."""
-        if isinstance(datos, dict) and "modelos" not in datos and any(k in os.environ for k in CLAVES_ADR39):
+        if (
+            isinstance(datos, dict)
+            and "modelos" not in datos
+            and any(k in os.environ for k in CLAVES_ADR39)
+        ):
             return {**datos, "modelos": cargar_config_modelos(os.environ)}
         return datos
 
