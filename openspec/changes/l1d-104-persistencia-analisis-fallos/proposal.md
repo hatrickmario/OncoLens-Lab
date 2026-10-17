@@ -20,14 +20,14 @@ Decidido en el Gate 1 (usuario, 2026-10-14, `backlog/sprints/S1-plan.md` §2): `
 de fallos de `rag-orchestrator` (`LOCAL_LLM_UNAVAILABLE` → `503`; `RETRIEVAL_UNAVAILABLE`, `NLI_UNAVAILABLE`, `422` de
 rag y cualquier otro `5xx` → `502 ERROR_SERVICIO_IA`, sin persistir y sin eco; *timeout* → `504`) · `[S1 resp. 13]`
 cliente hey-api generado de L1D-105 con `X-Request-Deadline` como parámetro tipado · `[S1 resp. 17]` `clinical-api`
-versión por el `500 ErrorInterno` (hoy 1.3.0, ver `[S1 resp. 37]`), `contracts:generate` antes de `contracts:check`, *helper* de validación de
+versión por el `500` (ahora **1.4.0**, decisión 58 del plan; `ErrorInterno` lo posee L1D-197, decisión 59), `contracts:generate` antes de `contracts:check`, *helper* de validación de
 L1D-164 · `[S1 resp. 18]` `topRelevanceScore` = máximo de los chunks sobre el umbral, calculado por Backend 2 ·
 corrección del Gate 1: supuesto fijo en `analysisBasis.assumptions[]` para que las listas vacías del S1 no se lean
 como "no se usaron datos / no faltan datos" ·
 Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md` §7): `[S1 resp. 30]` literal
 del supuesto fijo de la Base del análisis · `[S1 resp. 35]` el `422 TIPO_CANCER_NO_REGISTRADO` de rag se traduce a
-`422` con el mismo código, no a `502` · `[S1 resp. 37]` registro de versiones: clinical-api 1.2.0 (L1D-103) →
-**1.3.0** en este change (sustituye al de `[S1 resp. 17]`).
+`422` con el mismo código, no a `502` · registro de versiones (decisión 58 del plan, sustituye al de `[S1 resp. 37]`): clinical-api 1.3.0 (L1D-103) →
+**1.4.0** en este change.
 
 ## Why
 
@@ -68,9 +68,9 @@ fallo (persistencia, *deadline*, error entre servicios) a una respuesta genéric
     (`ahora + RAG_TIMEOUT_MS`, reloj inyectado) se pasa como **parámetro tipado** de la operación del cliente hey-api
     generado de L1D-105 `[S1 resp. 13]`, sobre su transporte `createRagOrchestratorFetch()`.
 - **Contrato (aditivo):** `POST /platform/evidence-analyses` declara hoy `502`/`503`/`504` pero **no** el `500` que
-  exigen PRD §10 y el AC-2. Se añade `"500": ErrorInterno` (`error: const ERROR_INTERNO`), el ejemplo
-  `contracts/examples/error-interno.json` y su entrada en `index.json`; `info.version` **1.2.0 (L1D-103) → 1.3.0**
-  `[S1 resp. 37]`. El extracto generado de `readme.md` §4 se regenera (nunca a mano).
+  exigen PRD §10 y el AC-2. Se añade `"500"` que referencia el `ErrorInterno` existente (`error: const ERROR_INTERNO`, lo posee L1D-197), el ejemplo
+  `contracts/examples/error-interno-analisis.json` y su entrada en `index.json`; `info.version` **1.3.0 (L1D-103) → 1.4.0**
+  (decisión 58 del plan). El extracto generado de `readme.md` §4 se regenera (nunca a mano).
 - Sin cambio de esquema: `clinical.ai_analysis_record` (inmutable, `top_relevance_score` nullable) lo crea L1D-168.
 
 ## Capabilities
@@ -107,13 +107,14 @@ fallo (persistencia, *deadline*, error entre servicios) a una respuesta genéric
   operación `[S1 resp. 13]`.
 - ↪ **Depende de** L1D-106 / L1D-180 (US-055 / US-064): declaran en `/rag/query` los `503` `RETRIEVAL_UNAVAILABLE` y
   `NLI_UNAVAILABLE` (`[S1 resp. 12]`); sus ejemplos alimentan los MSW de la tabla de mapeo.
+- ↪ **Depende de** el change de **L1D-197** (US-211): `ErrorInterno` (`responses` y `schemas`) y su ejemplo `error-interno.json`; este change solo añade el `500` a `evidence-analyses` (decisión 59 del plan).
 - ↪ **Depende de** el change de **L1D-169** (US-039): paciente semilla (a) y `doc1@test.local`.
 - ↪ **Depende de** el change de **L1D-164** (US-034): esqueleto de `clinical-api`, configuración, `info.version`
   1.1.0 y el *helper* de validación de respuestas contra el spec
   (Ajv2020 sobre el *bundle*) que usan los tests hasta US-214.
 - ↪ **Depende de** el change de **L1D-103** (US-052): gateway, puerto `AnalysisCompletion`, `ErrorAnalisisNoProcesable`
-  con `TIPO_CANCER_NO_REGISTRADO` y su ejemplo `error-tipo-cancer-no-registrado.json`, e `info.version` 1.2.0 (este
-  change sube a **1.3.0**, `[S1 resp. 37]`). L1D-106 aporta `rag-tipo-cancer-no-registrado.json` para el MSW.
+  con `TIPO_CANCER_NO_REGISTRADO` y su ejemplo `error-tipo-cancer-no-registrado.json`, e `info.version` 1.3.0 (este
+  change sube a **1.4.0**, decisión 58 del plan). L1D-106 aporta `rag-tipo-cancer-no-registrado.json` para el MSW.
 - 🔗 **Relacionado** con el change de **L1D-203** (US-049): `query_text` y `clinical_context_snapshot` se persisten en
   su versión desidentificada, sin `pseudoPatientId`.
 - 🔗 **Relacionado** con L1D-106 / L1D-275 (US-055 / US-225): sus ejemplos `rag-query-con-evidencia.json` y
@@ -140,6 +141,6 @@ fallo (persistencia, *deadline*, error entre servicios) a una respuesta genéric
   repository ampliados), tests en `apps/clinical-api/test/` (Vitest + Supertest + PostgreSQL real de test + MSW).
 - Configuración: `RAG_TIMEOUT_MS` (propuesta 30000, RN-22), `AI_DISCLAIMER_TEXT` (literal de US-069),
   `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` (supuesto fijo de la Base del análisis del S1).
-- Contratos: `apps/clinical-api/openapi.yaml` (`500`, `info.version` 1.3.0, `[S1 resp. 37]`), `contracts/examples/error-interno.json`,
+- Contratos: `apps/clinical-api/openapi.yaml` (`500`, `info.version` 1.4.0, decisión 58 del plan), `contracts/examples/error-interno-analisis.json`,
   `index.json`, `readme.md` (extracto generado del §4); cliente y Zod regenerados.
 - Datos: solo seed sintético y fixtures FX-06a (RN-13, RN-14).

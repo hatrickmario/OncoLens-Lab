@@ -48,7 +48,7 @@ del login) · `[S1 resp. 13]` (SDK generado de L1D-105) · `[S1 resp. 14a]` (`Or
 > - `/login` con CSS Modules provisional (D12); Tailwind v4 + shadcn/ui = deuda D-2, antes de L1D-140.
 > - Contrato: `500` genérico y código propio de login para el `502` (tarea 1.2, contract-first).
 > - `visual-check` y E2E de Playwright pendientes hasta la deuda D-3 (Playwright y perfil de test en Compose).
-> - `auth.session.ip_address` y `user_agent` `nullable` con valor `null` (D4; migración 2.9b, otro agente).
+> - `auth.session.ip_address` y `user_agent` `nullable` con valor `null` (D4; migración en la tarea 2.0, **en el mismo PR** de este change, decisión 63 del plan).
 > - `WEB_HOME_PATH` con el UUID del paciente semilla aceptado como deuda hasta US-048; CSP y cabeceras
 >   anti-clickjacking de `/login` como excepción nombrada hasta US-216 (S6).
 
@@ -97,8 +97,8 @@ historia lo implementa con el mínimo que exige el S1.
 - **Contrato:** `POST /platform/auth/login`, `LoginRequest`, `ErrorCredencialesInvalidas`,
   `NoAutenticado` y sus ejemplos ya están en `apps/clinical-api/openapi.yaml` (US-033). Cambio
   aditivo decidido el 2026-10-20 (tarea 1.2, contract-first): una respuesta `500` genérica y un
-  código propio de login para el `502` del BFF. Salvo eso, el spec no cambia; `info.version` sigue
-  el registro de `[S1 resp. 37]`.
+  código propio de login para el `502` del BFF. Salvo eso, el spec no cambia; `info.version` sube a **1.2.0**
+  (registro de la decisión 58 del plan) y este change es el dueño de `ErrorInterno` (decisión 59).
 
 ## Capabilities
 
@@ -119,7 +119,7 @@ historia lo implementa con el mínimo que exige el S1.
 
 - **clinical-platform:** módulo `auth` y guard de `clinical-api`; Route Handler
   `web/app/api/auth/login`; configuración y `.env.example`; montaje del login en `server.ts` con el
-  pool `pg` y las variables de Compose. (El E2E de Compose de AC-5 pasa a L1D-103.)
+  pool `pg` (un solo pool inyectado, `CLINICAL_DATABASE_URL` sin credenciales, `PG_CLINICAL_API_PASSWORD_FILE`, TLS con `rejectUnauthorized: true`) y las variables de Compose (`APP_ENV` obligatorio, sin `DATABASE_URL` con contraseña). (El E2E de Compose de AC-5 pasa a la deuda D-3; su test de integración, a L1D-103.)
 - **frontend:** página `/login`, formulario y `proxy.ts` (guard de páginas de `web`).
 - **ai-services:** no se toca (su validador es de L1D-105; la verificación de AC-5 leyendo sus logs es de L1D-103).
 

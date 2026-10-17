@@ -21,8 +21,7 @@ seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.
 >   del registro de cambios del PRD, RN-19 y US-069 corregidas: lo hace la sesión principal, no este
 >   change). Cambia el valor por defecto de `AI_DISCLAIMER_TEXT`, la descripción de `disclaimer`, todos los
 >   ejemplos con `disclaimer` y la regla `assertDisclaimerRequired`.
-> - `[S1 resp. 37]` registro de versiones: `info.version` de `clinical-api` → **1.3.1** (sustituye al
->   1.2.1 de `[S1 resp. 17]`).
+> - Decisión 58 del plan (sustituye a `[S1 resp. 37]` y a `[S1 resp. 17]`): `info.version` de `clinical-api` → **1.4.1**.
 >
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 9]`; su literal lo supersede `[S1 resp. 32]`):** el literal
 > era el de PRD B-06 y AC-T3.1 ("Análisis generado por IA: requiere validación clínica del oncólogo
@@ -42,7 +41,7 @@ seguimiento S5, historial) · DoR del S1: ✓ (`backlog/sprints/S1-refinamiento.
 > - **Gate 1, 2ª vuelta:** `/login` también lleva la etiqueta. `apps/web/messages/es.json` **y la clave
 >   `app.academicUseLabel`** los crea L1D-197 (dueño del archivo), que la prueba en el login; este change
 >   la **consume** en `AppHeader`, sin crearla ni cambiar su valor.
-> - `[S1 resp. 17]` (versión sustituida por `[S1 resp. 37]`: **1.3.1**, patch tras L1D-104 → 1.3.0); el cambio cubre **todo ejemplo con `disclaimer`** (no una lista cerrada de seis);
+> - `[S1 resp. 17]` (versión sustituida por la decisión 58 del plan: **1.4.1**, patch tras L1D-104 → 1.4.0); el cambio cubre **todo ejemplo con `disclaimer`** (no una lista cerrada de seis);
 >   `contracts:generate` corre **antes** de `contracts:check`; `readme.md` figura en el impacto (extracto
 >   §4 generado).
 > - Pendiente para el **cierre del sprint** (no lo hace este change): la raya del aviso en la prosa de
@@ -65,7 +64,7 @@ esta historia exige exactamente el literal validado por los oncólogos (`[S1 res
   académico/investigación' es una etiqueta permanente de la UI, no forma parte del campo" `[S1 resp. 32]`. **Todo
   ejemplo con `disclaimer`** (hoy `con-evidencia-s1`, `con-evidencia-s4`, `sin-evidencia`,
   `tipo-no-habilitado`, `follow-up-turn`, `follow-up-fuera-de-contexto`, y los que añadan otros changes)
-  lleva exactamente el literal. `info.version` sube la **patch** a **1.3.1** `[S1 resp. 37]`. Se regeneran
+  lleva exactamente el literal. `info.version` sube la **patch** a **1.4.1** (decisión 58 del plan). Se regeneran
   los tipos (`contracts:generate`, antes de `contracts:check`).
 - **Regla `assertDisclaimerRequired` de `contracts:check`:** los ejemplos exigen el literal **exacto** de
   `[S1 resp. 32]` (antes: tres subcadenas, con raya o dos puntos); un ejemplo con raya, con el literal
@@ -123,9 +122,9 @@ esta historia exige exactamente el literal validado por los oncólogos (`[S1 res
 - 🔗 **Vecinos:** **L1D-193** (`l1d-193-terminos-prohibidos-rn23`): misma capacidad `human-control` y mismo
   archivo `apps/web/messages/es.json`; el literal del aviso y la etiqueta deben pasar su `lint:lenguaje`.
   **L1D-103** (US-052): gateway del contexto clínico, sin solape.
-- **`info.version` (registro de `[S1 resp. 37]`, sustituye al de `[S1 resp. 17]`):** `clinical-api`
-  L1D-164 → 1.1.0, L1D-103 → 1.2.0, L1D-104 → 1.3.0, **L1D-194 → 1.3.1** (patch, solo texto), L1D-203 →
-  1.4.0. Quien mergea segundo rebasa; el
+- **`info.version` (decisión 58 del plan, sustituye al de `[S1 resp. 37]`):** `clinical-api`
+  L1D-164 → 1.1.0, L1D-197 → 1.2.0, L1D-103 → 1.3.0, L1D-104 → 1.4.0, **L1D-194 → 1.4.1** (patch, solo texto), L1D-203 →
+  1.5.0. Quien mergea segundo rebasa; el
   `contracts:check` de la CI exige semver.
 
 ## Fuera de alcance

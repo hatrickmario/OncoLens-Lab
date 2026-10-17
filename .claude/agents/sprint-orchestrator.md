@@ -87,16 +87,25 @@ historia (`L1D-nn`, equipo `L1D`) con `save_issue` y deja un comentario breve co
 |---|---|
 | Se despacha al implementador / empieza el trabajo o una tarea (`en-curso`) | **In Progress** |
 | Termina la implementación y empieza la verificación: Gate 2, `/opsx:verify`, pruebas de integración o E2E (`gate2`) | **In Review** |
-| PR abierto y a la espera del merge (`pr-listo`) y PR mergeado (`mergeado`) | **In Review** (el merge no lo pasa a Done) |
+| PR abierto y a la espera del merge (`pr-listo`) | **In Review** |
+| Todos los PR de la historia están mergeados y cumple los **criterios de completada** (abajo) | **Done** (decisión del usuario, 2026-10-20) |
+| PR mergeado pero la historia no cumple todos los criterios (tarea pendiente, hallazgo abierto, decisión humana) | **In Review**, con un comentario del hueco |
 | El Gate 2 o las pruebas fallan, o aparece un bug: vuelta del implementador, o un guardián reabre hallazgos | **In Progress** mientras se corrige; vuelve a **In Review** al relanzar el gate |
 | `bloqueado-gate` o `bloqueado-humano` | se queda en **In Progress** (o el estado en que estaba) con un comentario del bloqueo y la pregunta abierta |
-| Cierre del sprint con requisitos cumplidos | **Done**, solo lo hace `traceability-auditor` en /sprint-close |
+| `/sprint-close` revisa a fondo (`traceability-auditor`) y encuentra un hueco o un bug | devuelve la historia a **In Review** (falta verificación) o **In Progress** (hay trabajo o bug), con un comentario; es el único que mueve un `Done` hacia atrás |
+
+**Criterios de «completada»** (todos, verificados con `gh` y el repositorio antes de pasar a Done; si uno falla, la historia
+se queda en In Review y lo anotas en `nota`): (a) todos los PR de la historia están **mergeados** en `main`; (b) Gate 2 en
+PASS sin hallazgo Bloqueante o Mayor abierto; (c) todas las tareas de su change están marcadas `[x]`, salvo las
+diferidas **por escrito** a otra historia (con su ID); (d) ninguna decisión humana ni pregunta abierta de la historia;
+(e) el CI de `main` tras el merge no está en rojo por esa historia. `/sprint-close` volverá a revisarla a fondo.
 
 Reglas:
 1. **Feature padre:** pasa a **In Progress** cuando la primera de sus historias pasa a In Progress; el
-   `Done` de la Feature también es de /sprint-close, y solo si todas sus historias del sprint están Done.
+   `Done` de la Feature es de /sprint-close, y solo si todas sus historias del sprint están Done.
 2. **Idempotente:** antes de escribir, lee el estado actual con `get_issue`; cambia solo si difiere.
-   **Nunca muevas hacia atrás** un issue en `Done` o `Canceled`, ni toques historias fuera del plan del sprint.
+   **Nunca muevas hacia atrás** un issue en `Done` o `Canceled` (solo /sprint-close puede devolver un `Done`), ni toques historias
+   fuera del plan del sprint.
 3. **Estados del equipo L1D:** `Backlog`, `Todo`, `In Progress`, `In Review`, `Done`, `Canceled`,
    `Duplicate`. Usa los nombres tal cual; si un nombre no existe o la llamada falla, **no detengas el
    sprint**: anótalo en la columna `nota` del status y en tu mensaje final.
@@ -104,7 +113,8 @@ Reglas:
    manda, y Linear se ajusta a la tabla de arriba antes de despachar nada nuevo.
 5. **Status:** añade la columna `linear` a la tabla de `S<n>-status.md` con el estado aplicado.
 6. Si el repositorio tiene una automatización GitHub–Linear que pase a Done al mergear, **avísalo en tu
-   mensaje final**: contradice esta política (Done solo en /sprint-close).
+   mensaje final**: puede cerrar una historia con varios PR tras el primero, sin pasar por los criterios de completada. Si pasa,
+   devuélvela a In Review hasta cumplirlos.
 
 ## Situación crítica: pausa y devuelve el control
 
@@ -145,8 +155,8 @@ tu pregunta va en el mensaje final.
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.
 - No archives changes: el archivo es en bloque en /sprint-close.
 - Linear: **tú mantienes el estado de trabajo** (Backlog/Todo → In Progress → In Review) según la
-  sección «Sincronización con Linear». **Nunca** pasas una historia a `Done` (eso es de /sprint-close) y
-  no creas, borras ni cambias estimación, milestone, etiquetas ni relaciones.
+  sección «Sincronización con Linear». Pasas una historia a `Done` **solo** si cumple los criterios de completada y todos
+  sus PR están mergeados (un `Done` de la Feature, o devolver un `Done`, es de /sprint-close); no creas, borras ni cambias estimación, milestone, etiquetas ni relaciones.
 - Si `openspec validate <change> --strict` falla en `main` antes de despachar, no despaches: escala.
 - Registra en tu memoria de proyecto lo que aprendas sobre tiempos, fallos recurrentes de gates y
   dependencias ocultas, para el siguiente sprint.
