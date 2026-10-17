@@ -32,7 +32,7 @@
 
 ## evaluación
 
-- [ ] 2.1 Revisión de los reportes `reports/adr39/<fecha>-fase-a.json` y `<fecha>-fase-a2.json` por `ai-eval-runner` (metas OL-06 iniciales: recall@10 ≥ 0,80, ≥ 0,70 es → en, MRR ≥ 0,60) como evidencia del Gate 2; la suite `evaluate` completa llega con US-072
+- [x] 2.1 Revisión de los reportes `reports/adr39/<fecha>-fase-a.json` y `<fecha>-fase-a2.json` por `ai-eval-runner` (metas OL-06 iniciales: recall@10 ≥ 0,80, ≥ 0,70 es → en, MRR ≥ 0,60) como evidencia del Gate 2; la suite `evaluate` completa llega con US-072 **Evidencia (2026-10-20):** revisión de `ai-eval-runner` en el Gate 2 de L1D-102 (reportes de la fase A y A2, PR #33, vuelta del 2026-10-20; citada como «Gate 2 PR #33 (descripción del PR)», el reporte de `ai-eval-runner` no está versionado en el repo) más la aceptación del usuario del 2026-10-20 (ADR-39 fase A).
 
 ## Verificación
 

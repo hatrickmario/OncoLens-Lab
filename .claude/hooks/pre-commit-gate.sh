@@ -49,10 +49,14 @@ if [ -n "$MERGE_HEAD" ] && { git merge-base --is-ancestor "$MERGE_HEAD" HEAD 2>/
     || ! git merge-base HEAD "$MERGE_HEAD" >/dev/null 2>&1; }; then
   MERGE_HEAD=""
 fi
-REMOVED="$( { if [ -z "$MERGE_HEAD" ]; then git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" | sed 's/$/ (archivo eliminado)/'; fi;
+# Falla cerrado: si el análisis (git o Python) termina con error, el commit se bloquea; nunca queda "sin eliminados".
+TESTS_OUT="$(mktemp)"
+{ if [ -z "$MERGE_HEAD" ]; then git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" | sed 's/$/ (archivo eliminado)/'; fi;
   git diff --cached -U0 --no-color | MERGE_HEAD="$MERGE_HEAD" TESTS_RE="$TESTS_RE" python3 -I -c '
-import os, re, subprocess, sys
+import io, os, re, subprocess, sys
 from collections import defaultdict
+# Bytes no UTF-8 (fixtures bajo tests/) no deben romper el análisis: se decodifica con reemplazo.
+sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
 # Test eliminado = su nombre desaparece y no reaparece en lo añadido. Mover no es borrar, y renombrar
 # tampoco: en cada archivo, tantos nombres nuevos como desaparecidos cuenta como renombrado.
 pat = re.compile(r"""^\s*(?:(?:it|test|describe)(?:\.each\([^)]*\))?\(\s*([\x27"`])(.+?)\1|(?:async\s+)?def\s+(test_\w+))""")
@@ -70,7 +74,7 @@ for line in sys.stdin:
             else: rem[path].setdefault(name, line[1:].strip())
 all_added = set().union(*add.values()) if add else set()
 merge_head = os.environ.get("MERGE_HEAD", "")
-def git(*a): return subprocess.run(["git", *a], capture_output=True, text=True).stdout
+def git(*a): return subprocess.run(["git", *a], capture_output=True, check=True).stdout.decode("utf-8", errors="replace")
 def nombres_de(texto):
     out = {}
     for l in texto.splitlines():
@@ -97,7 +101,11 @@ else:
         new = [n for n in add.get(f, ()) if n not in set().union(*rem.values())]
         for n in gone[len(new):]:
             print(f"{f}: {names[n]}")
-'; } || true)"
+'; } >"$TESTS_OUT"
+if [ "$?" -ne 0 ]; then
+  echo "OncoLens · falló el análisis de higiene de tests; el commit se bloquea (falla cerrado). Revisa el error de arriba." >&2; FAIL=1
+fi
+REMOVED="$(cat "$TESTS_OUT")"; rm -f "$TESTS_OUT"
 # El trailer puede venir en -m o en el archivo de -F/--file.
 MSG="$CMD"
 MSGFILE="$(printf '%s' "$CMD" | python3 -I -c '

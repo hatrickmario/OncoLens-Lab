@@ -50,6 +50,8 @@
 
 > **Decidido (usuario, 2026-10-20):** el booleano propio `ALLOW_CC_BY_NC` (PR #39, política de licencias del corpus: CC BY-NC solo en el MVP académico, RN-21) **se acepta por ahora** como mecanismo de configuración (RN-22); no se sustituye por otra forma antes de G-Piloto. Sin cambio de AC.
 
+> **Decidido (usuario, 2026-10-20):** se **acepta el ADR-39 fase A** (`ADR-39-modelos-locales.md`, estado «aceptado»). En «Puntos que decide el humano» del ADR: **punto 2** aceptado tal como se midió (chunk de 1024 y `RERANKER_MAX_LENGTH` = 512; 768 y 1280 sin medir en la VM de 7,75 GB; repetir con una VM mayor es una medición nueva que no bloquea); **punto 3** resuelto por referencia a ADR-45 y US-226…US-230, con las metas de OL-06 provisionales en US-017 y sin cambiar metas hoy; **punto 4** aceptado (HNSW por la regla, equivalente a FLAT con 522 vectores). Se mantienen las salvedades del Gate 2 y el riesgo de latencia alto aceptado (se cierra en L1D-274; VM de Docker ≥ 10 GB, requisito de la fase B). Memoria: LLM ≤ 21 GB y stack ~30 GB (`S1-plan.md` §9, decisiones 40 y 41). Sin cambio de estimación (8) ni de números de AC.
+
 ## Story
 Como responsable técnico, quiero fijar los modelos de *embeddings*, *reranker* y NLI
 midiendo con el stack levantado, para que el corpus se indexe una sola vez y la
@@ -63,8 +65,7 @@ recuperación del walking skeleton se implemente sobre una base estable.
   la métrica principal de su componente (recall@10 y MRR, incluido español → inglés, para
   *embeddings* y *reranker*; exactitud sobre pares etiquetados para NLI). `[readme §1.4]` `[G-3]` `[G-6]`
 - **AC-2 (borde · restricciones duras)** `[NFR-05]` · Dado un candidato que, sumado al
-  presupuesto reservado para el LLM de la hipótesis A, hace exceder ~30 GB de memoria total
-  del stack (24 GB hasta el 2026-10-20), o cuya etapa no deja margen para p95 ≤ 15 s en `/platform/evidence-analyses`
+  presupuesto reservado para el LLM de la hipótesis A, hace exceder el tope de memoria del stack de ~30 GB (LLM ≤ 21 GB; eran 24 GB y ~16 GB para el LLM hasta el 2026-10-20, `S1-plan.md` decisiones 40 y 41 y ADR-39), o cuya etapa no deja margen para p95 ≤ 15 s en `/platform/evidence-analyses`
   (presupuesto por etapa fijado en el propio ADR), o con licencia no académica, cuando se
   evalúe, entonces queda descartado y el ADR anota el motivo y la cifra medida.
   `[readme §1.4]` `[NFR-01]`
