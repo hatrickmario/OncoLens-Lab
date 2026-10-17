@@ -48,3 +48,21 @@ def test_rag_query_responde_sin_evidencia_sin_invocar_al_llm_cuando_el_umbral_de
     assert cuerpo["status"] == "sin_evidencia"
     assert cuerpo["meta"]["retrievalParams"]["relevanceThreshold"] == 0.90
     assert entorno.generador.invocaciones == 0
+
+
+@pytest.mark.ac("US-055", 3)
+def test_rag_query_excluye_el_chunk_no_vigente_de_los_candidatos_del_reranker_y_de_las_citas_cuando_el_filtro_exige_is_current():
+    entorno = crear_entorno()
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2))
+
+    assert respuesta.status_code == 200
+    assert_matches_spec(RESPUESTA, respuesta.json())
+    assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
+    assert all("is_current == true" in e for e in entorno.buscador.expresiones)
+    candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
+    assert "ch-m1-1" in candidatos
+    assert "ch-m1v0-1" not in candidatos
+    citables = [c.chunk_id for r in entorno.generador.recuperaciones for c in r.chunks_sobre_umbral]
+    assert "ch-m1v0-1" not in citables
+    assert "ch-m1v0-1" not in respuesta.text
