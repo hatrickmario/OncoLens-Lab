@@ -42,6 +42,10 @@ def _filtro_por_documento(document_id: str) -> str:
     return f'document_id == "{document_id}"'
 
 
+class ConsultaTruncada(RuntimeError):
+    """La consulta devolvió exactamente el tope de Milvus: puede faltar el resto, y no se actúa con un resultado parcial."""
+
+
 class CorpusCollectionSchemaMismatch(RuntimeError):
     """La colección existente no coincide con el esquema esperado. El mensaje nombra campo, lo esperado y lo hallado."""
 
