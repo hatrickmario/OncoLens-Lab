@@ -30,15 +30,21 @@ function basesQueNoSonDeTest(baseClinica: string): string[] {
 /** Aborta si el prefijo no cumple la regex o casa con una base que no es de test. Nunca conecta. */
 export function validarPrefijoTestDb(prefijo: string, baseClinica: string): void {
   if (!PATRON_PREFIJO_TEST_DB.test(prefijo)) {
-    throw new ErrorArnes(`PG_TEST_DB_PREFIX no es válido: debe cumplir ${PATRON_PREFIJO_TEST_DB.source}`);
+    throw new ErrorArnes(
+      `PG_TEST_DB_PREFIX no es válido: debe cumplir ${PATRON_PREFIJO_TEST_DB.source}`,
+    );
   }
   for (const reservada of basesQueNoSonDeTest(baseClinica)) {
     if (reservada.startsWith(prefijo)) {
-      throw new ErrorArnes('PG_TEST_DB_PREFIX casa con una base que no es de test (la clínica, postgres o template*)');
+      throw new ErrorArnes(
+        'PG_TEST_DB_PREFIX casa con una base que no es de test (la clínica, postgres o template*)',
+      );
     }
   }
   if (prefijo.startsWith('postgres') || prefijo.startsWith('template')) {
-    throw new ErrorArnes('PG_TEST_DB_PREFIX no puede empezar por postgres ni template (bases reservadas)');
+    throw new ErrorArnes(
+      'PG_TEST_DB_PREFIX no puede empezar por postgres ni template (bases reservadas)',
+    );
   }
 }
 
@@ -46,10 +52,19 @@ export function validarPrefijoTestDb(prefijo: string, baseClinica: string): void
  * El arnés nunca crea ni borra una base que no sea suya: el nombre generado debe empezar por el prefijo validado y
  * no puede ser ninguna base reservada. Se llama antes de CREATE DATABASE y antes de DROP DATABASE.
  */
-export function validarNombreBaseDeTest(nombre: string, prefijo: string, baseClinica: string): void {
+export function validarNombreBaseDeTest(
+  nombre: string,
+  prefijo: string,
+  baseClinica: string,
+): void {
   validarPrefijoTestDb(prefijo, baseClinica);
-  const valido = PATRON_NOMBRE_BASE_TEST.test(nombre) && nombre.startsWith(prefijo) && nombre.length > prefijo.length;
+  const valido =
+    PATRON_NOMBRE_BASE_TEST.test(nombre) &&
+    nombre.startsWith(prefijo) &&
+    nombre.length > prefijo.length;
   if (!valido || basesQueNoSonDeTest(baseClinica).includes(nombre)) {
-    throw new ErrorArnes('la base de test generada no cumple PG_TEST_DB_PREFIX: el arnés no la crea ni la borra');
+    throw new ErrorArnes(
+      'la base de test generada no cumple PG_TEST_DB_PREFIX: el arnés no la crea ni la borra',
+    );
   }
 }

@@ -29,7 +29,11 @@ export function tablasAusentes(esperadas: readonly string[], reales: readonly st
   return esperadas.filter((tabla) => !reales.includes(tabla));
 }
 
-export async function columnasDe(cliente: Client, schema: string, tabla: string): Promise<ColumnaDelCatalogo[]> {
+export async function columnasDe(
+  cliente: Client,
+  schema: string,
+  tabla: string,
+): Promise<ColumnaDelCatalogo[]> {
   const { rows } = await cliente.query<{
     nombre: string;
     tipo: string;

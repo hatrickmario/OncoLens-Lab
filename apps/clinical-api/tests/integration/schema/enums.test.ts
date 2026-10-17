@@ -19,20 +19,26 @@ const ENUMS_ESPERADOS: Array<[string, string[]]> = [
 ];
 
 describe('Enums nativos de PostgreSQL', () => {
-  it.each(ENUMS_ESPERADOS)('lista los valores en español de %s cuando se consulta pg_enum [US-038 AC-7]', async (enumerado, esperados) => {
-    const cliente = await conectar(urlBase);
-    try {
-      const valores = await valoresDeEnum(cliente, enumerado);
+  it.each(ENUMS_ESPERADOS)(
+    'lista los valores en español de %s cuando se consulta pg_enum [US-038 AC-7]',
+    async (enumerado, esperados) => {
+      const cliente = await conectar(urlBase);
+      try {
+        const valores = await valoresDeEnum(cliente, enumerado);
 
-      expect(valores).toEqual(expect.arrayContaining(esperados));
-    } finally {
-      await cliente.end();
-    }
-  });
+        expect(valores).toEqual(expect.arrayContaining(esperados));
+      } finally {
+        await cliente.end();
+      }
+    },
+  );
 
   it('rechaza data_origin synthetic cuando el valor no pertenece al enum en español [US-038 AC-7]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      const { sql, valores } = sqlInsertar('clinical.patient', filaDePaciente(generadorDeIds(ESPACIO_DE_IDS), { data_origin: 'synthetic' }));
+      const { sql, valores } = sqlInsertar(
+        'clinical.patient',
+        filaDePaciente(generadorDeIds(ESPACIO_DE_IDS), { data_origin: 'synthetic' }),
+      );
 
       const error = await esperarRechazo(cliente, sql, valores);
 

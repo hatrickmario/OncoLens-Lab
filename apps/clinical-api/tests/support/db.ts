@@ -14,7 +14,10 @@ import { ErrorArnes, validarNombreBaseDeTest, validarPrefijoTestDb } from './pre
 
 const RAIZ_APP = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const RAIZ_REPO = resolve(RAIZ_APP, '../..');
-const CORPUS_SCHEMA_GRANTS = resolve(RAIZ_REPO, 'infra/docker/postgres/sql/corpus-schema-grants.sql');
+const CORPUS_SCHEMA_GRANTS = resolve(
+  RAIZ_REPO,
+  'infra/docker/postgres/sql/corpus-schema-grants.sql',
+);
 const BASE_DE_MANTENIMIENTO = 'postgres';
 const BASE_CLINICA_POR_DEFECTO = 'oncolens';
 
@@ -34,7 +37,10 @@ export interface BaseDeTest {
 
 function exigirVariable(env: NodeJS.ProcessEnv, nombre: string): string {
   const valor = env[nombre];
-  if (!valor) throw new ErrorArnes(`falta la variable ${nombre} (perfil test de US-035; ver docs/operations/claves.md)`);
+  if (!valor)
+    throw new ErrorArnes(
+      `falta la variable ${nombre} (perfil test de US-035; ver docs/operations/claves.md)`,
+    );
   return valor;
 }
 
@@ -105,7 +111,8 @@ export function ejecutarPrisma(url: URL | string, argumentos: string[]): Resulta
 
 function aplicarMigraciones(url: URL): void {
   const resultado = ejecutarPrisma(url, ['migrate', 'deploy']);
-  if (resultado.codigo !== 0) throw new ErrorArnes(`prisma migrate deploy falló:\n${resultado.salida}`);
+  if (resultado.codigo !== 0)
+    throw new ErrorArnes(`prisma migrate deploy falló:\n${resultado.salida}`);
 }
 
 /** Privilegios sobre `corpus` que aplica L1D-165 al inicializar el volumen; aquí, como dueño de la base de test. */
@@ -122,7 +129,10 @@ async function aplicarPrivilegiosDelCorpus(url: URL): Promise<void> {
  * Crea `${prefijo}${sufijo}`, la migra y devuelve cómo destruirla. El sufijo lo inyecta quien llama (generador de
  * ids del setup global): el arnés no usa aleatoriedad propia.
  */
-export async function crearBaseDeTest(config: ConfiguracionArnes, sufijo: string): Promise<BaseDeTest> {
+export async function crearBaseDeTest(
+  config: ConfiguracionArnes,
+  sufijo: string,
+): Promise<BaseDeTest> {
   const nombre = `${config.prefijo}${sufijo}`;
   validarNombreBaseDeTest(nombre, config.prefijo, config.baseClinica);
 
@@ -159,7 +169,10 @@ export async function crearBaseDeTest(config: ConfiguracionArnes, sufijo: string
  * independientes entre sí. Las sentencias que DEBEN fallar usan `esperarRechazo`, que protege la transacción con un
  * SAVEPOINT.
  */
-export async function conTransaccionRevertida<T>(url: string, cuerpo: (cliente: Client) => Promise<T>): Promise<T> {
+export async function conTransaccionRevertida<T>(
+  url: string,
+  cuerpo: (cliente: Client) => Promise<T>,
+): Promise<T> {
   const cliente = await conectar(url);
   try {
     await cliente.query('BEGIN');

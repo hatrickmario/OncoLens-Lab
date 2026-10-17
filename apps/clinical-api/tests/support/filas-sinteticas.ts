@@ -25,7 +25,10 @@ export function generadorDeIds(espacio: number): GeneradorDeIds {
 export function sqlInsertar(tabla: string, fila: Fila): { sql: string; valores: unknown[] } {
   const columnas = Object.keys(fila);
   const marcadores = columnas.map((_, i) => `$${i + 1}`);
-  return { sql: `INSERT INTO ${tabla} (${columnas.join(', ')}) VALUES (${marcadores.join(', ')})`, valores: Object.values(fila) };
+  return {
+    sql: `INSERT INTO ${tabla} (${columnas.join(', ')}) VALUES (${marcadores.join(', ')})`,
+    valores: Object.values(fila),
+  };
 }
 
 /** Inserta una fila y devuelve la fila insertada. Los valores jsonb se pasan ya serializados (JSON.stringify). */
@@ -82,11 +85,27 @@ export function filaDeIdentidad(patientId: string, resto: Fila = {}): Fila {
   };
 }
 
-export function filaDeEpisodio(ids: GeneradorDeIds, patientId: string, openedBy: string, resto: Fila = {}): Fila {
-  return { id: ids(), patient_id: patientId, opened_at: INSTANTE_FIJO, opened_by: openedBy, ...resto };
+export function filaDeEpisodio(
+  ids: GeneradorDeIds,
+  patientId: string,
+  openedBy: string,
+  resto: Fila = {},
+): Fila {
+  return {
+    id: ids(),
+    patient_id: patientId,
+    opened_at: INSTANTE_FIJO,
+    opened_by: openedBy,
+    ...resto,
+  };
 }
 
-export function filaDeDiagnostico(ids: GeneradorDeIds, patientId: string, episodeId: string, resto: Fila = {}): Fila {
+export function filaDeDiagnostico(
+  ids: GeneradorDeIds,
+  patientId: string,
+  episodeId: string,
+  resto: Fila = {},
+): Fila {
   return {
     id: ids(),
     patient_id: patientId,
@@ -104,7 +123,11 @@ export function filaDeDiagnostico(ids: GeneradorDeIds, patientId: string, episod
   };
 }
 
-export function filaDeGradacionGleason(ids: GeneradorDeIds, diagnosisId: string, resto: Fila = {}): Fila {
+export function filaDeGradacionGleason(
+  ids: GeneradorDeIds,
+  diagnosisId: string,
+  resto: Fila = {},
+): Fila {
   return {
     id: ids(),
     diagnosis_id: diagnosisId,
@@ -124,7 +147,11 @@ export function filaDeGradacionGleason(ids: GeneradorDeIds, diagnosisId: string,
   };
 }
 
-export function filaDeGradacionNottingham(ids: GeneradorDeIds, diagnosisId: string, resto: Fila = {}): Fila {
+export function filaDeGradacionNottingham(
+  ids: GeneradorDeIds,
+  diagnosisId: string,
+  resto: Fila = {},
+): Fila {
   return {
     ...filaDeGradacionGleason(ids, diagnosisId),
     grading_system: 'nottingham',
@@ -139,7 +166,12 @@ export function filaDeGradacionNottingham(ids: GeneradorDeIds, diagnosisId: stri
   };
 }
 
-export function filaDeMiembroDeEquipo(ids: GeneradorDeIds, patientId: string, doctorId: string, resto: Fila = {}): Fila {
+export function filaDeMiembroDeEquipo(
+  ids: GeneradorDeIds,
+  patientId: string,
+  doctorId: string,
+  resto: Fila = {},
+): Fila {
   return {
     id: ids(),
     patient_id: patientId,
@@ -186,7 +218,13 @@ const SIN_MODELOS_NI_RECUPERACION = {
 };
 
 /** Análisis con evidencia: todos los modelos registrados, puntaje 0..1 y al menos una opción. */
-export function filaDeAnalisisConEvidencia(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+export function filaDeAnalisisConEvidencia(
+  ids: GeneradorDeIds,
+  patientId: string,
+  episodeId: string,
+  requestedBy: string,
+  resto: Fila = {},
+): Fila {
   return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, {
     status: 'con_evidencia',
     top_relevance_score: 0.82,
@@ -196,12 +234,29 @@ export function filaDeAnalisisConEvidencia(ids: GeneradorDeIds, patientId: strin
 }
 
 /** Tipo de cáncer no habilitado: no se invocó ningún modelo ni hubo recuperación. */
-export function filaDeAnalisisTipoNoHabilitado(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
-  return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, { status: 'tipo_no_habilitado', top_relevance_score: null, ...SIN_MODELOS_NI_RECUPERACION, ...resto });
+export function filaDeAnalisisTipoNoHabilitado(
+  ids: GeneradorDeIds,
+  patientId: string,
+  episodeId: string,
+  requestedBy: string,
+  resto: Fila = {},
+): Fila {
+  return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, {
+    status: 'tipo_no_habilitado',
+    top_relevance_score: null,
+    ...SIN_MODELOS_NI_RECUPERACION,
+    ...resto,
+  });
 }
 
 /** Resumen del caso: sin recuperación del corpus ni consulta; el LLM y el NLI sí corren. */
-export function filaDeResumenDeCaso(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+export function filaDeResumenDeCaso(
+  ids: GeneradorDeIds,
+  patientId: string,
+  episodeId: string,
+  requestedBy: string,
+  resto: Fila = {},
+): Fila {
   return filaDeAnalisisSinEvidencia(ids, patientId, episodeId, requestedBy, {
     analysis_type: 'resumen_caso',
     status: 'con_evidencia',
@@ -216,7 +271,13 @@ export function filaDeResumenDeCaso(ids: GeneradorDeIds, patientId: string, epis
   });
 }
 
-export function filaDeAnalisisSinEvidencia(ids: GeneradorDeIds, patientId: string, episodeId: string, requestedBy: string, resto: Fila = {}): Fila {
+export function filaDeAnalisisSinEvidencia(
+  ids: GeneradorDeIds,
+  patientId: string,
+  episodeId: string,
+  requestedBy: string,
+  resto: Fila = {},
+): Fila {
   const vacioObj = JSON.stringify({});
   const vacioLista = JSON.stringify([]);
   return {
@@ -259,16 +320,32 @@ export function filaDeAnalisisSinEvidencia(ids: GeneradorDeIds, patientId: strin
 }
 
 /** Rol, usuario, paciente y episodio sintéticos: lo mínimo que cuelga casi toda fila clínica. */
-export async function insertarContextoClinico(cliente: Client, ids: GeneradorDeIds): Promise<{
+export async function insertarContextoClinico(
+  cliente: Client,
+  ids: GeneradorDeIds,
+): Promise<{
   roleId: string;
   userId: string;
   patientId: string;
   episodeId: string;
 }> {
   const rolId = ids();
-  const rol = await insertar(cliente, 'auth.role', { id: rolId, name: `rol-${rolId}`, description: 'Rol sintético de prueba' });
+  const rol = await insertar(cliente, 'auth.role', {
+    id: rolId,
+    name: `rol-${rolId}`,
+    description: 'Rol sintético de prueba',
+  });
   const usuario = await insertar(cliente, 'auth."user"', filaDeUsuario(ids, rol.id as string));
   const paciente = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-  const episodio = await insertar(cliente, 'clinical.care_episode', filaDeEpisodio(ids, paciente.id as string, usuario.id as string));
-  return { roleId: rol.id as string, userId: usuario.id as string, patientId: paciente.id as string, episodeId: episodio.id as string };
+  const episodio = await insertar(
+    cliente,
+    'clinical.care_episode',
+    filaDeEpisodio(ids, paciente.id as string, usuario.id as string),
+  );
+  return {
+    roleId: rol.id as string,
+    userId: usuario.id as string,
+    patientId: paciente.id as string,
+    episodeId: episodio.id as string,
+  };
 }

@@ -1,7 +1,13 @@
 import { describe, expect, inject, it } from 'vitest';
 import { columnasDe } from '../../support/catalogo.js';
 import { conectar, conTransaccionRevertida, esperarRechazo } from '../../support/db.js';
-import { filaDeIdentidad, filaDePaciente, generadorDeIds, insertar, sqlInsertar } from '../../support/filas-sinteticas.js';
+import {
+  filaDeIdentidad,
+  filaDePaciente,
+  generadorDeIds,
+  insertar,
+  sqlInsertar,
+} from '../../support/filas-sinteticas.js';
 
 const urlBase = inject('urlBaseDeTest');
 // Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base).
@@ -12,29 +18,59 @@ describe('identity.patient_identity', () => {
   it.each([
     ['con país emisor', 'CO'],
     ['con país emisor nulo', null],
-  ])('rechaza por el índice ciego único la segunda identidad con el mismo id_type, país y HMAC %s [US-038 AC-6]', async (_caso, pais) => {
-    await conTransaccionRevertida(urlBase, async (cliente) => {
-      const ids = generadorDeIds(ESPACIO_DE_IDS);
-      const primero = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-      const segundo = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: pais, national_id_hmac: hmacCompartido }));
-      const { sql, valores } = sqlInsertar('identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: pais, national_id_hmac: hmacCompartido }));
+  ])(
+    'rechaza por el índice ciego único la segunda identidad con el mismo id_type, país y HMAC %s [US-038 AC-6]',
+    async (_caso, pais) => {
+      await conTransaccionRevertida(urlBase, async (cliente) => {
+        const ids = generadorDeIds(ESPACIO_DE_IDS);
+        const primero = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
+        const segundo = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
+        await insertar(
+          cliente,
+          'identity.patient_identity',
+          filaDeIdentidad(primero.id as string, {
+            issuing_country: pais,
+            national_id_hmac: hmacCompartido,
+          }),
+        );
+        const { sql, valores } = sqlInsertar(
+          'identity.patient_identity',
+          filaDeIdentidad(segundo.id as string, {
+            issuing_country: pais,
+            national_id_hmac: hmacCompartido,
+          }),
+        );
 
-      const error = await esperarRechazo(cliente, sql, valores);
+        const error = await esperarRechazo(cliente, sql, valores);
 
-      expect(error.code).toBe('23505');
-      expect(error.constraint).toBe('patient_identity_blind_index_uq');
-    });
-  });
+        expect(error.code).toBe('23505');
+        expect(error.constraint).toBe('patient_identity_blind_index_uq');
+      });
+    },
+  );
 
   it('admite la misma identidad en otro país porque la unicidad incluye issuing_country [US-038 AC-6]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
       const ids = generadorDeIds(ESPACIO_DE_IDS);
       const primero = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
       const segundo = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-      await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(primero.id as string, { issuing_country: 'CO', national_id_hmac: hmacCompartido }));
+      await insertar(
+        cliente,
+        'identity.patient_identity',
+        filaDeIdentidad(primero.id as string, {
+          issuing_country: 'CO',
+          national_id_hmac: hmacCompartido,
+        }),
+      );
 
-      const otra = await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(segundo.id as string, { issuing_country: 'PE', national_id_hmac: hmacCompartido }));
+      const otra = await insertar(
+        cliente,
+        'identity.patient_identity',
+        filaDeIdentidad(segundo.id as string, {
+          issuing_country: 'PE',
+          national_id_hmac: hmacCompartido,
+        }),
+      );
 
       expect(otra.issuing_country).toBe('PE');
     });
@@ -71,14 +107,17 @@ describe('identity.patient_identity', () => {
     ],
   ];
 
-  it.each(COLUMNAS_DE_IDENTIDAD)('guarda documento y nombre solo como bytea *_ciphertext cuando se listan las columnas de identity.%s [US-038 AC-6]', async (tabla, esperadas) => {
-    const cliente = await conectar(urlBase);
-    try {
-      const columnas = await columnasDe(cliente, 'identity', tabla);
+  it.each(COLUMNAS_DE_IDENTIDAD)(
+    'guarda documento y nombre solo como bytea *_ciphertext cuando se listan las columnas de identity.%s [US-038 AC-6]',
+    async (tabla, esperadas) => {
+      const cliente = await conectar(urlBase);
+      try {
+        const columnas = await columnasDe(cliente, 'identity', tabla);
 
-      expect(columnas.map((c) => [c.nombre, c.tipoUdt])).toEqual(esperadas);
-    } finally {
-      await cliente.end();
-    }
-  });
+        expect(columnas.map((c) => [c.nombre, c.tipoUdt])).toEqual(esperadas);
+      } finally {
+        await cliente.end();
+      }
+    },
+  );
 });

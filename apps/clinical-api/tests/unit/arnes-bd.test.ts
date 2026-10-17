@@ -10,7 +10,8 @@ import {
   validarPrefijoTestDb,
 } from '../support/prefijo-test-db.js';
 
-const URL_ADMIN = 'postgresql://oncolens_test_admin:marcador@127.0.0.1:55432/postgres?sslmode=require';
+const URL_ADMIN =
+  'postgresql://oncolens_test_admin:marcador@127.0.0.1:55432/postgres?sslmode=require';
 
 describe('validarPrefijoTestDb', () => {
   it.each([
@@ -20,9 +21,12 @@ describe('validarPrefijoTestDb', () => {
     ['post', 'oncolens'],
     ['template', 'oncolens'],
     ['templ', 'oncolens'],
-  ])('aborta nombrando PG_TEST_DB_PREFIX cuando el prefijo %j es inválido o casa con una base reservada', (prefijo, baseClinica) => {
-    expect(() => validarPrefijoTestDb(prefijo, baseClinica)).toThrow(/PG_TEST_DB_PREFIX/);
-  });
+  ])(
+    'aborta nombrando PG_TEST_DB_PREFIX cuando el prefijo %j es inválido o casa con una base reservada',
+    (prefijo, baseClinica) => {
+      expect(() => validarPrefijoTestDb(prefijo, baseClinica)).toThrow(/PG_TEST_DB_PREFIX/);
+    },
+  );
 
   it('acepta el prefijo por defecto oltest_ cuando no casa con ninguna base reservada', () => {
     expect(() => validarPrefijoTestDb('oltest_', 'oncolens')).not.toThrow();
@@ -31,7 +35,9 @@ describe('validarPrefijoTestDb', () => {
 
 // Paridad por COMPORTAMIENTO con scripts/lib/pg-test-prefix.sh: la misma tabla de casos, el mismo veredicto.
 describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
-  const SCRIPT = fileURLToPath(new URL('../../../../scripts/lib/pg-test-prefix.sh', import.meta.url));
+  const SCRIPT = fileURLToPath(
+    new URL('../../../../scripts/lib/pg-test-prefix.sh', import.meta.url),
+  );
   const CASOS: Array<[string, string]> = [
     ['.*', 'oncolens'],
     ['Ab', 'oncolens'],
@@ -45,8 +51,11 @@ describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
   ];
 
   const veredictoDelScript = (prefijo: string, baseClinica: string): boolean =>
-    spawnSync('bash', ['-c', 'source "$0"; validar_prefijo_test_db "$1" "$2"', SCRIPT, prefijo, baseClinica], { encoding: 'utf8' })
-      .status === 0;
+    spawnSync(
+      'bash',
+      ['-c', 'source "$0"; validar_prefijo_test_db "$1" "$2"', SCRIPT, prefijo, baseClinica],
+      { encoding: 'utf8' },
+    ).status === 0;
   const veredictoDelArnes = (prefijo: string, baseClinica: string): boolean => {
     try {
       validarPrefijoTestDb(prefijo, baseClinica);
@@ -56,17 +65,28 @@ describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
     }
   };
 
-  it.each(CASOS)('da el mismo veredicto que el script cuando el prefijo es %j y la base clínica %j', (prefijo, baseClinica) => {
-    expect(veredictoDelArnes(prefijo, baseClinica)).toBe(veredictoDelScript(prefijo, baseClinica));
-  });
+  it.each(CASOS)(
+    'da el mismo veredicto que el script cuando el prefijo es %j y la base clínica %j',
+    (prefijo, baseClinica) => {
+      expect(veredictoDelArnes(prefijo, baseClinica)).toBe(
+        veredictoDelScript(prefijo, baseClinica),
+      );
+    },
+  );
 
   const datosDelScript = (variable: string): string[] =>
-    spawnSync('bash', ['-c', 'source "$0"; printf "%s\\n" "${!1}"', SCRIPT, `${variable}[@]`], { encoding: 'utf8' })
+    spawnSync('bash', ['-c', 'source "$0"; printf "%s\\n" "${!1}"', SCRIPT, `${variable}[@]`], {
+      encoding: 'utf8',
+    })
       .stdout.split('\n')
       .filter(Boolean);
 
   it('lee del script las bases reservadas y los prefijos prohibidos que el arnés debe conocer', () => {
-    expect(datosDelScript('BASES_RESERVADAS_TEST_DB')).toEqual(['postgres', 'template0', 'template1']);
+    expect(datosDelScript('BASES_RESERVADAS_TEST_DB')).toEqual([
+      'postgres',
+      'template0',
+      'template1',
+    ]);
     expect(datosDelScript('PREFIJOS_PROHIBIDOS_TEST_DB')).toEqual(['postgres', 'template']);
   });
 
@@ -77,11 +97,18 @@ describe('validarPrefijoTestDb frente a scripts/lib/pg-test-prefix.sh', () => {
     const casos = datosDelScript(variable).flatMap(derivar);
 
     expect(casos.length).toBeGreaterThan(0);
-    for (const prefijo of casos) expect(veredictoDelArnes(prefijo, 'oncolens'), prefijo).toBe(veredictoDelScript(prefijo, 'oncolens'));
+    for (const prefijo of casos)
+      expect(veredictoDelArnes(prefijo, 'oncolens'), prefijo).toBe(
+        veredictoDelScript(prefijo, 'oncolens'),
+      );
   });
 
   it('acepta solo oltest_ de la tabla de casos', () => {
-    expect(CASOS.filter(([prefijo, base]) => veredictoDelScript(prefijo, base)).map(([prefijo]) => prefijo)).toEqual(['oltest_']);
+    expect(
+      CASOS.filter(([prefijo, base]) => veredictoDelScript(prefijo, base)).map(
+        ([prefijo]) => prefijo,
+      ),
+    ).toEqual(['oltest_']);
   });
 });
 
@@ -100,23 +127,35 @@ describe('validarNombreBaseDeTest', () => {
 
 describe('leerConfiguracionArnes', () => {
   it('nombra TEST_DATABASE_URL sin imprimir su valor cuando falta', () => {
-    expect(() => leerConfiguracionArnes({ PG_TEST_DB_PREFIX: 'oltest_' })).toThrow('TEST_DATABASE_URL');
+    expect(() => leerConfiguracionArnes({ PG_TEST_DB_PREFIX: 'oltest_' })).toThrow(
+      'TEST_DATABASE_URL',
+    );
   });
 
   it('exige sslmode=require en TEST_DATABASE_URL', () => {
-    const env = { PG_TEST_DB_PREFIX: 'oltest_', TEST_DATABASE_URL: URL_ADMIN.replace('require', 'disable') };
+    const env = {
+      PG_TEST_DB_PREFIX: 'oltest_',
+      TEST_DATABASE_URL: URL_ADMIN.replace('require', 'disable'),
+    };
 
     expect(() => leerConfiguracionArnes(env)).toThrow('sslmode=require');
   });
 
   it('aborta sin leer la URL cuando el prefijo casa con POSTGRES_DB', () => {
-    const env = { PG_TEST_DB_PREFIX: 'oncolens', POSTGRES_DB: 'oncolens', TEST_DATABASE_URL: URL_ADMIN };
+    const env = {
+      PG_TEST_DB_PREFIX: 'oncolens',
+      POSTGRES_DB: 'oncolens',
+      TEST_DATABASE_URL: URL_ADMIN,
+    };
 
     expect(() => leerConfiguracionArnes(env)).toThrow('PG_TEST_DB_PREFIX');
   });
 
   it('devuelve la configuración cuando el entorno es válido', () => {
-    const config = leerConfiguracionArnes({ PG_TEST_DB_PREFIX: 'oltest_', TEST_DATABASE_URL: URL_ADMIN });
+    const config = leerConfiguracionArnes({
+      PG_TEST_DB_PREFIX: 'oltest_',
+      TEST_DATABASE_URL: URL_ADMIN,
+    });
 
     expect(config.prefijo).toBe('oltest_');
     expect(config.baseClinica).toBe('oncolens');
@@ -133,7 +172,10 @@ describe('generadorDeIds', () => {
   });
 
   it('repite la misma secuencia cuando el espacio es el mismo (determinismo)', () => {
-    expect([generadorDeIds(3)(), generadorDeIds(3)()]).toEqual([generadorDeIds(3)(), generadorDeIds(3)()]);
+    expect([generadorDeIds(3)(), generadorDeIds(3)()]).toEqual([
+      generadorDeIds(3)(),
+      generadorDeIds(3)(),
+    ]);
   });
 });
 
@@ -143,7 +185,12 @@ describe('ESPACIO_DE_IDS de los archivos de integración', () => {
   it('es distinto en cada archivo porque corren en paralelo sobre una sola base', () => {
     const espacios = readdirSync(DIRECTORIO)
       .filter((archivo) => archivo.endsWith('.test.ts'))
-      .map((archivo) => ({ archivo, espacio: /const ESPACIO_DE_IDS = (\d+);/.exec(readFileSync(`${DIRECTORIO}${archivo}`, 'utf8'))?.[1] }))
+      .map((archivo) => ({
+        archivo,
+        espacio: /const ESPACIO_DE_IDS = (\d+);/.exec(
+          readFileSync(`${DIRECTORIO}${archivo}`, 'utf8'),
+        )?.[1],
+      }))
       .filter(({ archivo }) => archivo !== 'esquema.test.ts');
 
     expect(espacios.filter(({ espacio }) => espacio === undefined)).toEqual([]);

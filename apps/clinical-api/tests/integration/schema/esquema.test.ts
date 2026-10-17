@@ -56,8 +56,12 @@ describe('Migración inicial init_full_schema', () => {
   });
 
   it('crea el schema corpus vacío y sin tablas de Prisma cuando se aplica la migración [US-038 AC-1]', async () => {
-    const schema = await cliente.query(`SELECT 1 FROM information_schema.schemata WHERE schema_name = 'corpus'`);
-    const tablas = await cliente.query(`SELECT 1 FROM information_schema.tables WHERE table_schema = 'corpus'`);
+    const schema = await cliente.query(
+      `SELECT 1 FROM information_schema.schemata WHERE schema_name = 'corpus'`,
+    );
+    const tablas = await cliente.query(
+      `SELECT 1 FROM information_schema.tables WHERE table_schema = 'corpus'`,
+    );
 
     expect(schema.rowCount).toBe(1);
     expect(tablas.rowCount).toBe(0);
@@ -81,7 +85,9 @@ describe('Migración inicial init_full_schema', () => {
   });
 
   it('no existe patient_consent en ningún schema cuando la migración está aplicada [US-038 AC-2]', async () => {
-    const resultado = await cliente.query(`SELECT table_schema FROM information_schema.tables WHERE table_name = 'patient_consent'`);
+    const resultado = await cliente.query(
+      `SELECT table_schema FROM information_schema.tables WHERE table_name = 'patient_consent'`,
+    );
 
     expect(resultado.rows).toEqual([]);
   });
