@@ -4,6 +4,11 @@ import logging
 
 import pytest
 
+from app.application.errores import (
+    LlmLocalNoDisponibleError,
+    RecuperacionNoDisponibleError,
+    TipoCancerNoRegistradoError,
+)
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import Q_HER2, GeneradorFalso, crear_entorno, solicitud_de
 
@@ -44,6 +49,27 @@ def test_rag_query_responde_503_del_contrato_sin_eco_cuando_el_generador_lanza_u
         assert SENTINELA_MODELO not in texto
         assert Q_HER2 not in texto
     assert any("event=generacion_fallo" in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.parametrize(
+    ("error", "estado", "codigo"),
+    [
+        (RecuperacionNoDisponibleError("generacion"), 503, "RETRIEVAL_UNAVAILABLE"),
+        (TipoCancerNoRegistradoError(), 422, "TIPO_CANCER_NO_REGISTRADO"),
+        (LlmLocalNoDisponibleError(), 503, "LOCAL_LLM_UNAVAILABLE"),
+    ],
+)
+def test_rag_query_conserva_el_error_de_aplicacion_cuando_el_generador_lo_lanza(
+    error, estado, codigo
+):
+    class _GeneradorQueLanza(GeneradorFalso):
+        async def generar(self, solicitud, recuperacion):
+            raise error
+
+    respuesta = crear_entorno(generador=_GeneradorQueLanza()).consultar(solicitud_de(Q_HER2))
+
+    assert respuesta.status_code == estado
+    assert respuesta.json()["error"] == codigo
 
 
 @pytest.mark.parametrize("valor", [None, {"status": "con_evidencia"}, "texto"])
