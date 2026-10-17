@@ -30,6 +30,22 @@ if [ "${#proveedores[@]}" -eq 0 ]; then
   exit 2
 fi
 
+# ADR-26: un ERR solo se perdona si coincide EXACTO (proveedor, regla, operación, ruta y texto) con una excepción de
+# scripts/ci/contracts-breaking-excepciones.json; cualquier otro ERR del mismo proveedor sigue rompiendo.
+#
+# Falla cerrado: solo perdona si el filtro IMPRIME la decisión explícita (al menos un ERR coincide con una excepción y
+# ninguno queda sin declarar). Un filtro que no corre, que falla o que no emite nada deja el ERR en pie.
+sin_err_no_declarados() {
+  local json decision
+  json="$(oasdiff breaking "$temporal/base-out/$1.json" "$temporal/head-out/$1.json" \
+    --format json --allow-external-refs=false 2>/dev/null)" || return 1
+  decision="$(printf '%s' "$json" | node "$raiz/scripts/ci/lib/excepcionesDeContrato.mjs" "$1")" || {
+    printf '%s\n' "$decision" >&2
+    return 1
+  }
+  [ "$decision" = "excepciones-declaradas-aplicadas" ]
+}
+
 fallo=0
 for proveedor in "${proveedores[@]}"; do
   informe="$temporal/$proveedor.txt"
@@ -38,6 +54,10 @@ for proveedor in "${proveedores[@]}"; do
   codigo=$?
   sed "s/^/$proveedor: /" "$informe"
   echo "$proveedor: comparado"
+  if [ "$codigo" -ne 0 ] && sin_err_no_declarados "$proveedor"; then
+    echo "$proveedor: los ERR son excepciones declaradas (ADR-26, scripts/ci/contracts-breaking-excepciones.json)"
+    codigo=0
+  fi
   if [ "$codigo" -ne 0 ]; then
     fallo=1
     echo "contracts-breaking — $proveedor: cambio incompatible de nivel ERR respecto de $base_ref" >&2

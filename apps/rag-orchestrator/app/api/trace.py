@@ -8,6 +8,11 @@ from app.schemas.generated.models import TraceId
 
 
 def resolver_trace_id(request: Request, generador: TraceIdGenerator) -> str:
+    del_cuerpo = getattr(
+        request.state, "trace_id", None
+    )  # lo fija el endpoint al leer el cuerpo ya validado
+    if del_cuerpo is not None:
+        return del_cuerpo
     recibido = request.headers.get("X-Trace-Id")
     if recibido is not None:
         try:

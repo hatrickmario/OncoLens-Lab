@@ -2,7 +2,10 @@
 
 Cubre todo `RequestValidationError` (body, header, query y path). La autenticación (L1D-105)
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
-También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO`.
+También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
+recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`,
+todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
+`ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
 
 import logging
@@ -12,9 +15,21 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.trace import resolver_trace_id
+from app.application.errores import (
+    LlmLocalNoDisponibleError,
+    RecuperacionNoDisponibleError,
+    TipoCancerNoRegistradoError,
+)
 from app.application.ports import TraceIdGenerator
 from app.domain.token_servicio import TokenServicioInvalido
-from app.schemas.generated.models import DetailItem, ErrorTokenServicioInvalido, ErrorValidacion
+from app.schemas.generated.models import (
+    DetailItem,
+    ErrorLlmLocalNoDisponible,
+    ErrorRecuperacionNoDisponible,
+    ErrorTipoCancerNoRegistrado,
+    ErrorTokenServicioInvalido,
+    ErrorValidacion,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +48,46 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             detail=[
                 DetailItem(loc=list(e["loc"]), msg=e["msg"], type=e["type"]) for e in error.errors()
             ],
+        )
+        return JSONResponse(status_code=422, content=cuerpo.model_dump())
+
+    @app.exception_handler(RecuperacionNoDisponibleError)
+    async def recuperacion_no_disponible(
+        request: Request, error: RecuperacionNoDisponibleError
+    ) -> JSONResponse:
+        """503 RETRIEVAL_UNAVAILABLE: mensaje fijo, sin eco de la pregunta ni detalle del motor (falla cerrada)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning("event=retrieval_unavailable etapa=%s traceId=%s", error.etapa, trace_id)
+        cuerpo = ErrorRecuperacionNoDisponible(
+            error="RETRIEVAL_UNAVAILABLE",
+            message="La recuperación de evidencia no está disponible.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=503, content=cuerpo.model_dump())
+
+    @app.exception_handler(LlmLocalNoDisponibleError)
+    async def llm_local_no_disponible(
+        request: Request, error: LlmLocalNoDisponibleError
+    ) -> JSONResponse:
+        """503 LOCAL_LLM_UNAVAILABLE: con datos reales no hay fallback a la nube (RN-12)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning("event=local_llm_unavailable traceId=%s", trace_id)
+        cuerpo = ErrorLlmLocalNoDisponible(
+            error="LOCAL_LLM_UNAVAILABLE",
+            message="El modelo local no está disponible.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=503, content=cuerpo.model_dump())
+
+    @app.exception_handler(TipoCancerNoRegistradoError)
+    async def tipo_cancer_no_registrado(
+        request: Request, error: TipoCancerNoRegistradoError
+    ) -> JSONResponse:
+        """422 TIPO_CANCER_NO_REGISTRADO: no es un `sin_evidencia`; sin tipo no hay filtro de recuperación."""
+        cuerpo = ErrorTipoCancerNoRegistrado(
+            error="TIPO_CANCER_NO_REGISTRADO",
+            message="El contexto no tiene tipo de cáncer; no es posible filtrar la evidencia.",
+            traceId=resolver_trace_id(request, trace_ids),
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
 

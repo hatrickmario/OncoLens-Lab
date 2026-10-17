@@ -58,5 +58,12 @@ class GeneradorTraceFijo:
 
 def settings_de_prueba(**cambios: object) -> Settings:
     """Settings sin leer el entorno ni archivos `.env` de la máquina, con la pública JWT de la sesión."""
-    valores: dict[str, object] = {"service_jwt_public_key_file": _ruta_publica_de_sesion, **cambios}
+    valores: dict[str, object] = {
+        "service_jwt_public_key_file": _ruta_publica_de_sesion,
+        # Con LLM_PROVIDER=local el arranque de /rag/query exige estos tres (RN-22); los tests usan los de FX-06a-a.
+        "relevance_threshold": 0.30,
+        "retrieval_top_k": 40,
+        "rerank_top_n": 10,
+        **cambios,
+    }
     return Settings(_env_file=None, **valores)  # type: ignore[call-arg, arg-type]

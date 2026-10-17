@@ -91,11 +91,15 @@ def test_rag_query_ignora_los_espacios_de_los_extremos_de_la_pregunta_al_elegir_
     assert respuesta.json() == _ejemplo("rag-query-con-evidencia.json")
 
 
-def test_rag_query_no_se_registra_cuando_llm_provider_es_local():
+def test_rag_query_responde_503_retrieval_unavailable_fallando_cerrado_cuando_llm_provider_es_local_y_faltan_los_puertos_reales():
     settings = settings_de_prueba(llm_provider="local")
 
-    respuesta = TestClient(crear_app(settings)).post(
-        "/rag/query", json=_ejemplo("rag-query-request.json")
-    )
+    respuesta = TestClient(
+        crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()),
+        raise_server_exceptions=False,
+        headers=con_token_valido(par_de_sesion()),
+    ).post("/rag/query", json=_ejemplo("rag-query-request.json"))
 
-    assert respuesta.status_code == 404
+    assert respuesta.status_code == 503
+    assert_matches_spec("#/paths/~1rag~1query/post/responses/503", respuesta.json())
+    assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"

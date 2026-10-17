@@ -623,6 +623,24 @@ export type ErrorLlmLocalNoDisponible = {
     traceId: string;
 };
 
+export type ErrorInterno = {
+    error: 'ERROR_INTERNO';
+    message: string;
+    traceId: string;
+};
+
+export type ErrorRecuperacionNoDisponible = {
+    error: 'RETRIEVAL_UNAVAILABLE';
+    message: string;
+    traceId: string;
+};
+
+export type ErrorTipoCancerNoRegistrado = {
+    error: 'TIPO_CANCER_NO_REGISTRADO';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorDeadlineVencido = {
     error: 'DEADLINE_VENCIDO';
     message: string;
@@ -695,6 +713,10 @@ export type GetHealthData = {
 
 export type GetHealthErrors = {
     /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
+    /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
     503: ErrorLlmLocalNoDisponible;
@@ -731,17 +753,21 @@ export type RagQueryErrors = {
      */
     409: ErrorCatalogVersionMismatch;
     /**
-     * Cuerpo inválido (Pydantic), o TIPO_NO_HABILITADO: cancerType fuera de ENABLED_CANCER_TYPES, que responde sin invocar al LLM (defensa en profundidad).
+     * Cuerpo inválido (Pydantic); TIPO_NO_HABILITADO: cancerType fuera de ENABLED_CANCER_TYPES; o TIPO_CANCER_NO_REGISTRADO: el contexto no tiene tipo de cáncer (diagnosis null). Los dos últimos responden sin buscar ni invocar al LLM (defensa en profundidad).
      */
-    422: ErrorTipoNoHabilitado | ErrorValidacion;
+    422: ErrorTipoNoHabilitado | ErrorValidacion | ErrorTipoCancerNoRegistrado;
     /**
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
     /**
-     * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
      */
-    503: ErrorLlmLocalNoDisponible;
+    500: ErrorInterno;
+    /**
+     * Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del LLM inválida o fuera de esquema) o recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings). Falla cerrada, sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
+     */
+    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible;
     /**
      * Deadline vencido; la generación se aborta.
      */
@@ -786,6 +812,10 @@ export type AnswerFollowUpErrors = {
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
     /**
      * LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
@@ -838,6 +868,10 @@ export type ExtractDocumentErrors = {
      */
     422: ErrorValidacion;
     /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
+    /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
     503: ErrorLlmLocalNoDisponible;
@@ -874,6 +908,10 @@ export type CaseSummaryErrors = {
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
     /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
