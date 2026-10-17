@@ -45,6 +45,9 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
     embebidas = [v for v in existentes if v.status == STATUS_EMBEBIDO]
     if any(v.checksum == checksum for v in embebidas):
         return DecisionDeVersion(Accion.OMITIR)
+    vigente = next((v for v in embebidas if v.is_current), None)
+    if vigente is not None:
+        return DecisionDeVersion(Accion.REEMPLAZAR, vigente.document_id)
     return DecisionDeVersion(Accion.INSERTAR)
 
 

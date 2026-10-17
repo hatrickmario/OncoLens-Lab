@@ -87,12 +87,14 @@ class Entorno:
             )
 
     def ids_en_la_release(self) -> list[str]:
+        """Documentos de la release más reciente (la que vale hoy)."""
+        consulta = text(
+            "SELECT document_id FROM corpus.corpus_release_document WHERE release_id = "
+            "(SELECT release_id FROM corpus.corpus_release ORDER BY published_at DESC, release_id DESC LIMIT 1) "
+            "ORDER BY 1"
+        )
         with self.motor.connect() as conexion:
-            return list(
-                conexion.execute(
-                    text("SELECT document_id FROM corpus.corpus_release_document ORDER BY 1")
-                ).scalars()
-            )
+            return list(conexion.execute(consulta).scalars())
 
 
 @pytest.fixture

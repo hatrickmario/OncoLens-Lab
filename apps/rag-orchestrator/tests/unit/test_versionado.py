@@ -29,6 +29,26 @@ def test_omite_cuando_el_checksum_ya_esta_embebido_en_el_grupo() -> None:
     assert decision.accion is Accion.OMITIR and decision.anterior_id is None
 
 
+def test_una_version_vigente_con_otro_checksum_se_reemplaza_y_nombra_a_la_anterior() -> None:
+    decision = decidir_version("c2", [version("a@1", "c1")])
+
+    assert (decision.accion, decision.anterior_id) == (Accion.REEMPLAZAR, "a@1")
+
+
+def test_un_reintento_tras_un_error_reemplaza_a_la_version_vigente_que_sigue_en_pie() -> None:
+    existentes = [version("a@1", "c1"), version("a@2", "c2", vigente=False, status="error")]
+
+    decision = decidir_version("c2", existentes)
+
+    assert (decision.accion, decision.anterior_id) == (Accion.REEMPLAZAR, "a@1")
+
+
+def test_una_version_vigente_con_error_no_es_la_version_a_reemplazar() -> None:
+    existentes = [version("a@1", "c1", vigente=True, status="error")]
+
+    assert decidir_version("c2", existentes).accion is Accion.INSERTAR
+
+
 def test_el_checksum_de_una_version_antigua_ya_embebida_se_omite_en_lugar_de_resucitarla() -> None:
     historico = [version("a@1", "c1", vigente=False), version("a@2", "c2", vigente=False)]
 

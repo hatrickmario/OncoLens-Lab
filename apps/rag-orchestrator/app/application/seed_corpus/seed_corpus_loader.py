@@ -89,7 +89,8 @@ class SeedCorpusLoader:
         texto = normalizar_texto(self._fuente.obtener_texto(documento))
         checksum = calcular_checksum(texto)
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
-        if decidir_version(checksum, versiones).accion is Accion.OMITIR:
+        decision = decidir_version(checksum, versiones)
+        if decision.accion is Accion.OMITIR:
             return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
         registro = registro_embebido(documento, admision, checksum, ahora)
         fragmentos = fragmentar(
@@ -97,6 +98,13 @@ class SeedCorpusLoader:
         )
         vectores = self._embedder.embeber(fragmentos)
         self._chunks.insert_chunks(chunks_del_documento(registro, fragmentos, vectores, ahora))
+        if decision.accion is Accion.REEMPLAZAR and decision.anterior_id is not None:
+            # Orden de D5: chunks nuevos -> apagar los anteriores -> confirmar el catálogo. Nada se borra (RN-05).
+            self._chunks.marcar_no_vigentes(decision.anterior_id)
+            self._catalogo.reemplazar_version(registro, decision.anterior_id, ahora)
+            return ResultadoDeDocumento(
+                documento.document_key, Resultado.NUEVA_VERSION, chunks=len(fragmentos)
+            )
         self._catalogo.guardar_documento(registro)
         return ResultadoDeDocumento(
             documento.document_key, Resultado.CARGADO, chunks=len(fragmentos)
