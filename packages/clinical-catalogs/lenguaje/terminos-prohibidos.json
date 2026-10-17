@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -53,6 +53,21 @@
         "id": "en-indicated-for-you",
         "idioma": "en",
         "texto": "indicated for you"
+      },
+      {
+        "id": "en-best-option",
+        "idioma": "en",
+        "texto": "best option"
+      },
+      {
+        "id": "en-preferred-option",
+        "idioma": "en",
+        "texto": "preferred option"
+      },
+      {
+        "id": "en-success-rate",
+        "idioma": "en",
+        "texto": "success rate"
       },
       {
         "id": "es-deben-recibir",

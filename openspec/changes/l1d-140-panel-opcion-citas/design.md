@@ -19,7 +19,7 @@ Validación clínica de los oncólogos asesores (`backlog/sprints/S1-plan.md` §
 descartes en la UI, D6), `[S1 resp. 31]` (reintentar tras un error, D2), `[S1 resp. 32]` (literal del
 aviso que se compone de L1D-194, D8), `[S1 resp. 35]` (estado "Análisis no realizado", D2) y
 `[S1 resp. 36]` (pregunta de prueba de la UI, `## Contratos`). Los literales nuevos de este change dan
-cero coincidencias en los niveles A y B de la lista 1.3.0 de L1D-193 (casos de conformidad de ese
+cero coincidencias en los niveles A y B de la lista 1.4.0 de L1D-193 (casos de conformidad de ese
 change). `docs/ux/S1/pantallas-s1.md` conserva los literales anteriores: lo corrige la sesión principal;
 manda este change.
 
