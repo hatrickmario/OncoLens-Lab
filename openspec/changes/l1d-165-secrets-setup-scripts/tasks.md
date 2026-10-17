@@ -43,4 +43,4 @@
 
 - [x] 4.1 `openspec validate l1d-165-secrets-setup-scripts --strict` en verde
 - [x] 4.2 `npm run test:secrets`, los tests estáticos de `infra/docker/__tests__/`, la integración de `clinical-api` y `npm run smoke:compose` en verde (salida en rojo y en verde guardada para el reporte)
-- [ ] 4.3 `git status --porcelain` limpio tras ejecutar el script en el árbol de trabajo y escaneo de secretos (gitleaks o el de L1D-166) sin hallazgos en el diff; `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus)
+- [x] 4.3 `git status --porcelain` limpio tras ejecutar el script en el árbol de trabajo y escaneo de secretos (gitleaks o el de L1D-166) sin hallazgos en el diff; `run-ai-eval` no aplica (no cambia modelo, prompt, umbral, catálogo ni corpus) **Cerrada (chore de cierre S1, 2026-10-20):** `scripts/setup-secrets.sh` ejecutado sobre `origin/main` con `ONCOLENS_SECRETS_DIR` temporal: `git status --porcelain` vacío; el escaneo de secretos del job de L1D-166 sin hallazgos en `main`.

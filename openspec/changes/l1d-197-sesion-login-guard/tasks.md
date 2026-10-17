@@ -36,5 +36,5 @@
 
 ## 4. cierre
 
-- [ ] 4.1 `openspec validate l1d-197-sesion-login-guard --strict`.
+- [x] 4.1 `openspec validate l1d-197-sesion-login-guard --strict`. **Cerrada (chore de cierre S1, 2026-10-20):** `openspec validate l1d-197-sesion-login-guard --strict` válido.
 - [ ] 4.2 Suites de `clinical-api` y `web` (Vitest) y E2E de Playwright en verde **cuando exista D-3** (hasta entonces 3.3 y 3.5 quedan pendientes y registradas, sin `.skip`; **el AC-1 de navegador (cookie y navegación real) y el AC-4 de punta a punta (HTML sin datos) quedan diferidos a D-3**, no cubiertos por 3.1; lo que sí se verifica sin navegador: `apps/web/tests/lib/proxy.test.ts` de 3.4 (test de AC-4 en la CI: redirección sin cookie), 3.1 (formulario) y 2.2/2.5 (cookie y guard en `clinical-api`)); respuestas `204`/`401`/`422` del login, `403` propio del BFF y `401` del guard validadas con el *helper* `assertMatchesSpec()` de L1D-164 (`[S1 resp. 17]`; `contracts:verify-provider` llega con US-214); `npm audit` de `argon2` sin vulnerabilidades altas. `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral, catálogo ni corpus).
