@@ -16,8 +16,8 @@ from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
+from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO
 
-STATUS_EMBEBIDO = "embebido"
 STATUS_RECHAZADO = "rechazado_licencia"
 STATUS_ERROR = "error"
 ORIGEN_DE_LA_SEMILLA = "fuente_estructurada"

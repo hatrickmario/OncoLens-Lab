@@ -31,7 +31,12 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.versionado import calcular_checksum
+from app.domain.corpus_seed.versionado import (
+    Accion,
+    calcular_checksum,
+    debe_publicar_release,
+    decidir_version,
+)
 
 
 class SeedCorpusLoader:
@@ -82,7 +87,11 @@ class SeedCorpusLoader:
     ) -> ResultadoDeDocumento:
         ahora = self._reloj.ahora()
         texto = normalizar_texto(self._fuente.obtener_texto(documento))
-        registro = registro_embebido(documento, admision, calcular_checksum(texto), ahora)
+        checksum = calcular_checksum(texto)
+        versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
+        if decidir_version(checksum, versiones).accion is Accion.OMITIR:
+            return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
+        registro = registro_embebido(documento, admision, checksum, ahora)
         fragmentos = fragmentar(
             texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
         )
@@ -95,7 +104,7 @@ class SeedCorpusLoader:
 
     def _publicar_release(self) -> str | None:
         vigentes = self._catalogo.ids_de_documentos_vigentes()
-        if not vigentes:
+        if not debe_publicar_release(vigentes, self._catalogo.ids_de_la_ultima_release()):
             return None
         release_id = self._ids.nuevo()
         self._catalogo.publicar_release(
