@@ -68,14 +68,23 @@ class ComparadorFalso:
         self.llamadas: list[str] = []
         self.perder = perder_vecino_en_hnsw
 
-    def evaluar(self, vectores: np.ndarray, consultas: np.ndarray, tipo: str, parametros: dict[str, Any], k: int) -> ResultadoIndice:
+    def evaluar(
+        self,
+        vectores: np.ndarray,
+        consultas: np.ndarray,
+        tipo: str,
+        parametros: dict[str, Any],
+        k: int,
+    ) -> ResultadoIndice:
         self.llamadas.append(tipo)
         puntajes = consultas @ vectores.T
         ids, valores = [], []
         for fila in puntajes:
             orden = list(np.argsort(-fila, kind="stable")[:k])
             if tipo == "HNSW" and self.perder and len(orden) >= k:
-                orden[-1] = int(np.argsort(fila, kind="stable")[0])  # sustituye al décimo vecino por el peor chunk
+                orden[-1] = int(
+                    np.argsort(fila, kind="stable")[0]
+                )  # sustituye al décimo vecino por el peor chunk
             ids.append([int(i) for i in orden])
             valores.append([float(fila[i]) for i in orden])
         return ResultadoIndice(tipo, parametros, ids, valores, [1.0, 2.0, 3.0])
@@ -86,7 +95,9 @@ def escenario(tmp_path: Path):
     with respx.mock(assert_all_called=False) as router:
         mock_fuentes(router)
         dataset = cargar_dataset(preparar_dataset(tmp_path))
-        fuentes = descargar_fuentes(dataset, tmp_path / "cache", httpx.Client(), lambda: AHORA, dormir=lambda _s: None)
+        fuentes = descargar_fuentes(
+            dataset, tmp_path / "cache", httpx.Client(), lambda: AHORA, dormir=lambda _s: None
+        )
     secciones = {i: f.secciones for i, f in fuentes.items()}
     return dataset, secciones, tmp_path
 
@@ -96,8 +107,17 @@ def correr(etapa: str, escenario, comparador=None, **cambios: Any) -> tuple[int,
     reporte = tmp / "fase-a2.json"
     contador = iter(range(1, 10_000))
     codigo = ejecutar_etapa_con_puertos(
-        etapa, config(**cambios), dataset, secciones, FabricaFalsa(), tmp / "onnx", tmp / "vectores", reporte,
-        comparador, lambda: next(contador) / 100.0, lambda: AHORA,
+        etapa,
+        config(**cambios),
+        dataset,
+        secciones,
+        FabricaFalsa(),
+        tmp / "onnx",
+        tmp / "vectores",
+        reporte,
+        comparador,
+        lambda: next(contador) / 100.0,
+        lambda: AHORA,
     )
     return codigo, reporte
 
@@ -113,14 +133,23 @@ def test_t2_y_t3_miden_una_variante_por_valor_y_fijan_tamano_y_solapamiento_ac10
     assert {v["solapamiento_pct"] for v in etapas["t3"]["variantes"]} == {0.0, 0.10, 0.15}
     assert len({v["tamano"] for v in etapas["t3"]["variantes"]}) == 1  # un solo factor varía
     assert etapas["t2"]["elegida"] in {v["variante"] for v in etapas["t2"]["variantes"]}
-    assert all("recall_at_10" in v["metricas"]["total"] and "recall_ic95" in v["metricas"]["total"] for v in etapas["t2"]["variantes"])
+    assert all(
+        "recall_at_10" in v["metricas"]["total"] and "recall_ic95" in v["metricas"]["total"]
+        for v in etapas["t2"]["variantes"]
+    )
 
 
 @pytest.mark.ac("US-012", 10)
-def test_t2_omite_y_anota_las_variantes_que_superan_la_longitud_maxima_del_modelo_ac10(escenario, monkeypatch) -> None:
+def test_t2_omite_y_anota_las_variantes_que_superan_la_longitud_maxima_del_modelo_ac10(
+    escenario, monkeypatch
+) -> None:
     import modelos_falsos
 
-    monkeypatch.setattr(modelos_falsos.FabricaFalsa, "tokenizador", lambda self, spec, directorio: modelos_falsos.TokenizadorPalabras(max_length=10))
+    monkeypatch.setattr(
+        modelos_falsos.FabricaFalsa,
+        "tokenizador",
+        lambda self, spec, directorio: modelos_falsos.TokenizadorPalabras(max_length=10),
+    )
 
     _, reporte = correr("t2", escenario)
 
@@ -130,7 +159,9 @@ def test_t2_omite_y_anota_las_variantes_que_superan_la_longitud_maxima_del_model
 
 
 @pytest.mark.ac("US-012", 11)
-def test_t4_compara_tamano_fijo_con_estructura_y_registra_el_criterio_de_desempate_ac11(escenario) -> None:
+def test_t4_compara_tamano_fijo_con_estructura_y_registra_el_criterio_de_desempate_ac11(
+    escenario,
+) -> None:
     for etapa in ("t2", "t3"):
         correr(etapa, escenario)
 
@@ -154,11 +185,16 @@ def test_t5_mantiene_flat_si_hnsw_pierde_recall_frente_a_flat_ac12(escenario) ->
         correr(etapa, escenario)
     comparador = ComparadorFalso(perder_vecino_en_hnsw=True)
 
-    codigo, reporte = correr("t5", escenario, comparador=comparador, index_min_recall_vs_flat=0.99, k=2)
+    codigo, reporte = correr(
+        "t5", escenario, comparador=comparador, index_min_recall_vs_flat=0.99, k=2
+    )
 
     t5 = json.loads(reporte.read_text())["etapas"]["t5"]
     assert codigo == SALIDA_OK and t5["elegido"] == "FLAT"
-    assert t5["indices"]["HNSW"]["recall_vs_flat"] < 0.99 and t5["indices"]["FLAT"]["recall_vs_flat"] == 1.0
+    assert (
+        t5["indices"]["HNSW"]["recall_vs_flat"] < 0.99
+        and t5["indices"]["FLAT"]["recall_vs_flat"] == 1.0
+    )
     assert t5["indices"]["HNSW"]["p95_ms"] > 0
 
 
