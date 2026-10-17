@@ -1,0 +1,178 @@
+"""Lector del manifiesto de la semilla (``data/raw/seed/manifest.yaml``, US-059 D9).
+
+Valida la FORMA del manifiesto antes de tocar PostgreSQL o Milvus: un manifiesto mal formado no carga nada. Lo que el
+manifiesto declara de licencia o de fuente se juzga después en el dominio (``evaluar_admisibilidad``); aquí un documento
+sin licencia es válido (se rechazará con motivo ``sin_licencia``), pero uno sin título o con un ``study_design`` fuera
+del catálogo no lo es.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from datetime import date
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
+from app.infrastructure.catalog.tables import DOMINIOS_CERRADOS
+
+# Claves de auditoría de la licencia (ADR-36: verificada documento por documento): se conservan en el manifiesto pero el
+# cargador no las usa.
+CLAVES_DE_AUDITORIA = frozenset({"license_verified_at", "license_evidence", "attribution", "notes"})
+CLAVES_OBLIGATORIAS = frozenset(
+    {
+        "document_key",
+        "source_type",
+        "source_name",
+        "external_id",
+        "title",
+        "language",
+        "cancer_type_tags",
+        "published_at",
+        "study_design",
+        "population",
+        "original_format",
+    }
+)
+CLAVES_OPCIONALES = frozenset(
+    {
+        "version_group_id",
+        "license",
+        "license_url",
+        "nc_solo_academico",
+        "population_criteria",
+        "version_label",
+        "guideline_version",
+        "trial_phase",
+        "primary_endpoint",
+        "sample_size",
+        "last_updated_at",
+        "text",
+        "text_path",
+        "source_url",
+    }
+)
+CLAVES_DE_TEXTO = ("text", "text_path", "source_url")
+PATRON_DE_CLAVE = re.compile(r"[A-Za-z0-9._-]{1,80}")
+
+
+class ManifiestoInvalido(ValueError):
+    """El manifiesto no se puede cargar; el mensaje nombra el documento y el campo, nunca contenido."""
+
+
+def leer_manifiesto(ruta: Path) -> tuple[DocumentoDeSemilla, ...]:
+    try:
+        contenido = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as error:
+        raise ManifiestoInvalido(
+            f"no se puede leer el manifiesto ({type(error).__name__})"
+        ) from error
+    crudos = contenido.get("documentos") if isinstance(contenido, dict) else None
+    if not isinstance(crudos, list) or not crudos:
+        raise ManifiestoInvalido("el manifiesto debe listar 'documentos'")
+    documentos = tuple(_documento(crudo, posicion) for posicion, crudo in enumerate(crudos, 1))
+    claves = [d.document_key for d in documentos]
+    repetidas = sorted({k for k in claves if claves.count(k) > 1})
+    if repetidas:
+        raise ManifiestoInvalido(f"document_key repetido: {', '.join(repetidas)}")
+    return documentos
+
+
+def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
+    if not isinstance(crudo, dict):
+        raise ManifiestoInvalido(f"documento #{posicion}: debe ser un mapa")
+    clave = str(crudo.get("document_key", f"#{posicion}"))
+    _comprobar_claves(crudo, clave)
+    if not PATRON_DE_CLAVE.fullmatch(clave):
+        raise ManifiestoInvalido(f"{clave}: document_key debe cumplir {PATRON_DE_CLAVE.pattern}")
+    for campo in ("source_type", "language", "population", "study_design", "original_format"):
+        if crudo[campo] not in DOMINIOS_CERRADOS[campo]:
+            raise ManifiestoInvalido(f"{clave}: {campo} fuera del catálogo")
+    if crudo.get("trial_phase") not in (None, *DOMINIOS_CERRADOS["trial_phase"]):
+        raise ManifiestoInvalido(f"{clave}: trial_phase fuera del catálogo")
+    etiquetas = crudo["cancer_type_tags"]
+    if (
+        not isinstance(etiquetas, list)
+        or not etiquetas
+        or not all(isinstance(e, str) for e in etiquetas)
+    ):
+        raise ManifiestoInvalido(f"{clave}: cancer_type_tags debe ser una lista de textos")
+    textos = [campo for campo in CLAVES_DE_TEXTO if crudo.get(campo)]
+    if len(textos) != 1:
+        raise ManifiestoInvalido(
+            f"{clave}: declara exactamente uno de {', '.join(CLAVES_DE_TEXTO)}"
+        )
+    return DocumentoDeSemilla(
+        document_key=clave,
+        version_group_id=str(crudo.get("version_group_id") or clave),
+        source_type=crudo["source_type"],
+        source_name=_texto(crudo, "source_name", clave),
+        external_id=_texto(crudo, "external_id", clave),
+        title=_texto(crudo, "title", clave),
+        language=crudo["language"],
+        cancer_type_tags=tuple(etiquetas),
+        published_at=_fecha(crudo["published_at"], "published_at", clave),
+        study_design=crudo["study_design"],
+        population=crudo["population"],
+        original_format=crudo["original_format"],
+        license=_opcional(crudo.get("license")),
+        license_url=_opcional(crudo.get("license_url")),
+        nc_solo_academico=crudo.get("nc_solo_academico") is True,
+        population_criteria=_criterios(crudo.get("population_criteria"), clave),
+        version_label=_opcional(crudo.get("version_label")),
+        guideline_version=_opcional(crudo.get("guideline_version")),
+        trial_phase=crudo.get("trial_phase"),
+        primary_endpoint=_opcional(crudo.get("primary_endpoint")),
+        sample_size=crudo.get("sample_size"),
+        last_updated_at=_fecha_opcional(crudo.get("last_updated_at"), "last_updated_at", clave),
+        texto=crudo.get("text"),
+        ruta_texto=crudo.get("text_path"),
+        url_fuente=crudo.get("source_url"),
+    )
+
+
+def _comprobar_claves(crudo: Mapping[str, Any], clave: str) -> None:
+    faltan = sorted(CLAVES_OBLIGATORIAS - crudo.keys())
+    sobran = sorted(crudo.keys() - CLAVES_OBLIGATORIAS - CLAVES_OPCIONALES - CLAVES_DE_AUDITORIA)
+    if faltan:
+        raise ManifiestoInvalido(f"{clave}: faltan {', '.join(faltan)}")
+    if sobran:
+        raise ManifiestoInvalido(f"{clave}: claves desconocidas {', '.join(sobran)}")
+
+
+def _texto(crudo: Mapping[str, Any], campo: str, clave: str) -> str:
+    valor = crudo[campo]
+    if not isinstance(valor, str) or not valor.strip():
+        raise ManifiestoInvalido(f"{clave}: {campo} no puede estar vacío")
+    return valor.strip()
+
+
+def _opcional(valor: Any) -> str | None:
+    return valor.strip() if isinstance(valor, str) and valor.strip() else None
+
+
+def _fecha(valor: Any, campo: str, clave: str) -> date:
+    if isinstance(valor, date):
+        return valor
+    try:
+        return date.fromisoformat(str(valor))
+    except ValueError as error:
+        raise ManifiestoInvalido(f"{clave}: {campo} no es una fecha ISO") from error
+
+
+def _fecha_opcional(valor: Any, campo: str, clave: str) -> date | None:
+    return None if valor is None else _fecha(valor, campo, clave)
+
+
+def _criterios(valor: Any, clave: str) -> dict[str, str] | None:
+    if valor is None:
+        return None
+    if not isinstance(valor, dict) or not set(valor) <= set(CRITERIOS_DE_POBLACION):
+        raise ManifiestoInvalido(
+            f"{clave}: population_criteria admite solo {', '.join(CRITERIOS_DE_POBLACION)}"
+        )
+    return {k: str(v) for k, v in valor.items() if v not in (None, "")}

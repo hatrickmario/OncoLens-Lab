@@ -31,6 +31,17 @@ CODIGO_PARAMETRO_INVALIDO = (
 )
 
 
+# Tope de entidades que Milvus devuelve en una consulta por filtro (offset + limit <= 16384).
+LIMITE_DE_CONSULTA = 16384
+
+
+def _filtro_por_documento(document_id: str) -> str:
+    """``document_id == "<id>"``; el identificador lo genera el cargador, y una comilla o barra se rechaza igualmente."""
+    if '"' in document_id or "\\" in document_id:
+        raise ValueError("document_id no puede llevar comillas ni barras invertidas")
+    return f'document_id == "{document_id}"'
+
+
 class CorpusCollectionSchemaMismatch(RuntimeError):
     """La colección existente no coincide con el esquema esperado. El mensaje nombra campo, lo esperado y lo hallado."""
 
@@ -136,6 +147,35 @@ class MilvusRepository:
             )
             for hit in resultados[0]
         ]
+
+    def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]:
+        """``chunk_id`` de TODOS los chunks del documento, vigentes o no (lectura con consistencia fuerte)."""
+        filas = self._cliente.query(
+            self._coleccion,
+            filter=_filtro_por_documento(document_id),
+            output_fields=["chunk_id"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        return frozenset(fila["chunk_id"] for fila in filas)
+
+    def marcar_no_vigentes(self, document_id: str) -> int:
+        """``is_current = false`` en los chunks vigentes del documento, sin borrar ninguno (RN-05).
+
+        Milvus no actualiza un campo suelto: se relee cada entidad con sus vectores y se reescribe con ``upsert`` por
+        ``chunk_id`` (mismo PK). Devuelve cuántos chunks cambió; sin vigentes, 0.
+        """
+        vigentes = self._cliente.query(
+            self._coleccion,
+            filter=f"{_filtro_por_documento(document_id)} and is_current == true",
+            output_fields=["*"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        if not vigentes:
+            return 0
+        self._cliente.upsert(self._coleccion, [{**fila, "is_current": False} for fila in vigentes])
+        return len(vigentes)
 
     @staticmethod
     def _fila(chunk: ChunkDelCorpus) -> dict[str, Any]:

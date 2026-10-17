@@ -1,0 +1,100 @@
+# FX-06c-a · Manifiesto de semilla de test (US-059). TEXTOS SINTÉTICOS BREVES: ningún contenido de NCCN, ESMO ni de
+# otra fuente; los metadatos imitan a los de fuentes públicas. Con CORPUS_CHUNK_SIZE=12 palabras (tests) cada texto da
+# 2 o 3 chunks.
+documentos:
+  - document_key: t-ok-1
+    source_type: guideline
+    source_name: NCI
+    external_id: sintetico-nci-mama-1
+    title: Documento sintético de mama uno
+    language: es
+    cancer_type_tags: [mama]
+    license: Texto de NCI libre de copyright
+    license_url: https://www.cancer.gov/policies/copyright-reuse
+    published_at: 2025-01-15
+    study_design: guia
+    population: adulto
+    original_format: html
+    text: >-
+      Texto sintético uno sobre el cáncer de mama. Describe opciones de tratamiento sistémico en estadio temprano.
+      Menciona la terapia endocrina y la radioterapia como alternativas descritas. No contiene datos de pacientes.
+  - document_key: t-ok-2
+    source_type: clinical_trial
+    source_name: ClinicalTrials.gov
+    external_id: NCT00000000
+    title: Ensayo sintético de próstata dos
+    language: en
+    cancer_type_tags: [prostata]
+    license: Dominio público
+    license_url: https://clinicaltrials.gov/about-site/terms-conditions
+    published_at: 2024-06-01
+    study_design: eca
+    population: adulto
+    original_format: xml
+    population_criteria:
+      estadio: metastasico
+      linea: primera
+    text: >-
+      Synthetic text two about prostate cancer. It describes a first line option in the metastatic setting.
+      The text is fictional and contains no patient data whatsoever.
+  - document_key: t-nd
+    source_type: literature
+    source_name: PMC Open Access
+    external_id: sintetico-pmc-nd
+    title: Artículo sintético con licencia ND
+    language: en
+    cancer_type_tags: [mama]
+    license: CC BY-ND 4.0
+    published_at: 2024-03-10
+    study_design: revision_sistematica
+    population: adulto
+    original_format: jats_xml
+    text: >-
+      Synthetic text three that must never reach the index because its license forbids derivatives.
+      It is fictional and has no clinical content at all.
+  - document_key: t-sin-licencia
+    source_type: literature
+    source_name: PMC Open Access
+    external_id: sintetico-pmc-sin-licencia
+    title: Artículo sintético sin licencia
+    language: en
+    cancer_type_tags: [mama]
+    published_at: 2024-04-11
+    study_design: observacional
+    population: adulto
+    original_format: jats_xml
+    text: >-
+      Synthetic text four that declares no license, so it is rejected without any chunk.
+      It is fictional and has no clinical content at all.
+  - document_key: t-nccn
+    source_type: guideline
+    source_name: NCCN
+    external_id: sintetico-nccn-1
+    title: Guía sintética de una fuente excluida
+    language: en
+    cancer_type_tags: [prostata]
+    license: Dominio público
+    published_at: 2024-05-12
+    study_design: guia
+    population: adulto
+    original_format: pdf
+    text: >-
+      Synthetic text five whose source is excluded. It declares a public domain license but is rejected before
+      the license is even read. It is fictional and has no clinical content at all.
+  - document_key: t-ok-1-v2
+    version_group_id: t-ok-1
+    source_type: guideline
+    source_name: NCI
+    external_id: sintetico-nci-mama-1
+    title: Documento sintético de mama uno
+    language: es
+    cancer_type_tags: [mama]
+    license: Texto de NCI libre de copyright
+    license_url: https://www.cancer.gov/policies/copyright-reuse
+    published_at: 2025-09-01
+    study_design: guia
+    population: adulto
+    original_format: html
+    text: >-
+      Texto sintético uno, segunda versión, sobre el cáncer de mama. Actualiza las opciones de tratamiento sistémico
+      en estadio temprano. Añade una nota sobre la vigilancia posterior. No contiene datos de pacientes.

@@ -1,11 +1,12 @@
 """Configuración de rag-orchestrator (RN-22): todo valor a calibrar viene del entorno."""
 
 import os
+from datetime import date
 from pathlib import Path
-from typing import Any, Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import Field, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
@@ -145,3 +146,101 @@ class MilvusSettings(BaseSettings):
     def _tipo_de_indice_permitido(cls, valor: str) -> str:
         # Se lee TIPOS_INDICE en cada validación: ADR-39 es la única fuente de los tipos admitidos.
         return modelos.opcion(*modelos.TIPOS_INDICE)(valor)
+
+
+# --- Cargador de la semilla (US-059, L1D-115) ---------------------------------------------------------------------------
+# Todo valor a calibrar del cargador (RN-22): licencias, fuentes excluidas, fecha de corte, tamaño de chunk y egreso.
+# El tamaño y el solapamiento del chunk se validan con las mismas reglas que ADR-39 (app/config/modelos.py).
+
+CLASES_DE_LICENCIA = ("dominio_publico", "cc_by", "cc_by_sa", "cc_by_nc")
+# Texto literal de la licencia (normalizado) -> license_class. CC0 y el texto libre de copyright de NCI se asimilan a
+# dominio público (ADR-36, decisión 2). Una licencia ND no figura aquí ni puede añadirse: el dominio la rechaza siempre.
+MAPA_DE_LICENCIAS_POR_DEFECTO = {
+    "cc0 1.0": "dominio_publico",
+    "dominio público": "dominio_publico",
+    "texto de nci libre de copyright": "dominio_publico",
+    "cc by 4.0": "cc_by",
+    "cc by 3.0": "cc_by",
+    "cc by-sa 4.0": "cc_by_sa",
+    "cc by-sa 3.0": "cc_by_sa",
+    "cc by-nc 4.0": "cc_by_nc",
+    "cc by-nc 3.0": "cc_by_nc",
+}
+
+
+def _lista_separada_por_comas(valor: Any) -> Any:
+    if isinstance(valor, str):
+        return tuple(x.strip() for x in valor.split(",") if x.strip())
+    return valor
+
+
+class CorpusSeedSettings(BaseSettings):
+    """Configuración del cargador ``python -m app.scripts.load_seed_corpus``; una clave obligatoria ausente falla al arrancar."""
+
+    model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
+
+    corpus_seed_manifest_path: Path
+    corpus_accepted_licenses: Annotated[tuple[str, ...], NoDecode]
+    corpus_excluded_sources: Annotated[tuple[str, ...], NoDecode]
+    corpus_cutoff_date: date
+    corpus_chunk_size: int
+    corpus_chunk_overlap: int
+    corpus_chunking_strategy: str = "tamano_fijo"
+    corpus_license_class_map: dict[str, str] = Field(
+        default_factory=lambda: dict(MAPA_DE_LICENCIAS_POR_DEFECTO)
+    )
+    # Sin hosts permitidos el cargador no descarga nada: solo lee textos del disco.
+    corpus_fetch_allowed_hosts: Annotated[tuple[str, ...], NoDecode] = ()
+    corpus_fetch_timeout_seconds: float = Field(default=30.0, gt=0)
+    corpus_fetch_max_bytes: int = Field(default=5_000_000, gt=0)
+
+    @field_validator(
+        "corpus_accepted_licenses",
+        "corpus_excluded_sources",
+        "corpus_fetch_allowed_hosts",
+        mode="before",
+    )
+    @classmethod
+    def _separar_por_comas(cls, valor: Any) -> Any:
+        return _lista_separada_por_comas(valor)
+
+    @field_validator("corpus_accepted_licenses")
+    @classmethod
+    def _clases_conocidas(cls, valor: tuple[str, ...]) -> tuple[str, ...]:
+        desconocidas = sorted(set(valor) - set(CLASES_DE_LICENCIA))
+        if not valor or desconocidas:
+            raise ValueError(f"debe listar clases de {CLASES_DE_LICENCIA}")
+        return valor
+
+    @field_validator("corpus_license_class_map")
+    @classmethod
+    def _mapa_a_clases_conocidas(cls, valor: dict[str, str]) -> dict[str, str]:
+        if not set(valor.values()) <= set(CLASES_DE_LICENCIA):
+            raise ValueError(f"cada valor debe ser una de {CLASES_DE_LICENCIA}")
+        return valor
+
+    @field_validator("corpus_chunk_size")
+    @classmethod
+    def _tamano_positivo(cls, valor: int) -> int:
+        return modelos.entero_positivo(str(valor))
+
+    @field_validator("corpus_chunk_overlap")
+    @classmethod
+    def _solapamiento_no_negativo(cls, valor: int) -> int:
+        if valor < 0:
+            raise ValueError("no puede ser negativo")
+        return valor
+
+    @field_validator("corpus_chunking_strategy")
+    @classmethod
+    def _estrategia_de_tamano_fijo(cls, valor: str) -> str:
+        # ADR-39 admite también "estructura"; el cargador de la semilla solo fragmenta por tamaño fijo.
+        if valor != "tamano_fijo":
+            raise ValueError("el cargador de la semilla solo admite tamano_fijo")
+        return valor
+
+    @model_validator(mode="after")
+    def _solapamiento_menor_que_el_tamano(self) -> Self:
+        if self.corpus_chunk_overlap >= self.corpus_chunk_size:
+            raise ValueError("CORPUS_CHUNK_OVERLAP debe ser menor que CORPUS_CHUNK_SIZE")
+        return self
