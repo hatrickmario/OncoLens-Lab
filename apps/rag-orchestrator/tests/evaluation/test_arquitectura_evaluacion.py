@@ -22,7 +22,9 @@ def _modulos_importados(ruta) -> set[str]:  # type: ignore[no-untyped-def]
 
 def test_ningun_modulo_de_evaluacion_importa_app_scripts() -> None:
     ofensores = {
-        p.name: sorted(m for m in _modulos_importados(p) if m == "app.scripts" or m.startswith("app.scripts."))
+        p.name: sorted(
+            m for m in _modulos_importados(p) if m == "app.scripts" or m.startswith("app.scripts.")
+        )
         for p in (RAIZ_APP / "app" / "evaluation").glob("*.py")
     }
 

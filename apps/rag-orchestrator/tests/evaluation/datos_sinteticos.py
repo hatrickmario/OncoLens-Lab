@@ -20,7 +20,9 @@ CTGOV = json.dumps(
             "identificationModule": {"nctId": "NCT00000000", "briefTitle": "Titulo sintetico"},
             "eligibilityModule": {"eligibilityCriteria": "Criterios sinteticos"},
         },
-        "resultsSection": {"outcomeMeasuresModule": {"outcomeMeasures": [{"title": "Disease-Free Survival"}]}},
+        "resultsSection": {
+            "outcomeMeasuresModule": {"outcomeMeasures": [{"title": "Disease-Free Survival"}]}
+        },
     }
 ).encode()
 NCI = (
@@ -34,7 +36,14 @@ def preparar_dataset(tmp_path: Path, cita_ctgov: str = "Disease-Free Survival") 
     destino = tmp_path / "ds"
     destino.mkdir()
     fuentes = [
-        {"id": "A1", "fuente": "PMC Open Access", "tipo": "x", "formato_original": "jats_xml", "licencia": "CC BY 4.0", "pmcid": "PMC1"},
+        {
+            "id": "A1",
+            "fuente": "PMC Open Access",
+            "tipo": "x",
+            "formato_original": "jats_xml",
+            "licencia": "CC BY 4.0",
+            "pmcid": "PMC1",
+        },
         {
             "id": "C1",
             "fuente": "ClinicalTrials.gov / NCT00000000",
@@ -74,7 +83,10 @@ def preparar_dataset(tmp_path: Path, cita_ctgov: str = "Disease-Free Survival") 
             "tipo": "hecho",
             "pregunta": "Disease-Free Survival y texto A",
             "documentos": ["C1", "N1"],
-            "evidencia": [{"documento": "C1", "cita": cita_ctgov}, {"documento": "N1", "cita": "Texto A"}],
+            "evidencia": [
+                {"documento": "C1", "cita": cita_ctgov},
+                {"documento": "N1", "cita": "Texto A"},
+            ],
             "modo_acierto": "cobertura_documentos",
         }
     )
@@ -102,7 +114,15 @@ def preparar_dataset(tmp_path: Path, cita_ctgov: str = "Disease-Free Survival") 
         for i in range(30)
     ]
     (destino / "manifest.yaml").write_text(
-        yaml.safe_dump({"clase": "sintetico", "nombre": "t", "version": "0", "archivos": {"golden": "g.yaml", "nli": "n.yaml"}, "fuentes": fuentes})
+        yaml.safe_dump(
+            {
+                "clase": "sintetico",
+                "nombre": "t",
+                "version": "0",
+                "archivos": {"golden": "g.yaml", "nli": "n.yaml"},
+                "fuentes": fuentes,
+            }
+        )
     )
     (destino / "g.yaml").write_text(yaml.safe_dump({"clase": "sintetico", "preguntas": preguntas}))
     (destino / "n.yaml").write_text(yaml.safe_dump({"clase": "sintetico", "pares": pares}))
@@ -110,6 +130,8 @@ def preparar_dataset(tmp_path: Path, cita_ctgov: str = "Disease-Free Survival") 
 
 
 def mock_fuentes(router: respx.MockRouter) -> None:
-    router.get("https://www.ebi.ac.uk/europepmc/webservices/rest/PMC1/fullTextXML").respond(200, content=JATS)
+    router.get("https://www.ebi.ac.uk/europepmc/webservices/rest/PMC1/fullTextXML").respond(
+        200, content=JATS
+    )
     router.get("https://clinicaltrials.gov/api/v2/studies/NCT00000000").respond(200, content=CTGOV)
     router.get("https://www.cancer.gov/types/breast/stages").respond(200, content=NCI)

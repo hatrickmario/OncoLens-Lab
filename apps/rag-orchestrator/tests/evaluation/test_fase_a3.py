@@ -43,8 +43,20 @@ RER = ModeloSpec("A", "reranker", "falso/rer", "b" * 40, "reranker_cls", 512)
 
 def config(**cambios: Any) -> ConfigA3:
     base = dict(
-        dataset="", semilla_bootstrap=3, bootstrap_repeticiones=30, corridas=3, calentamiento=1, hilos_cpu=1, lotes_por_corrida=3,
-        k=10, tolerancia_empate=0.02, cuantizacion="int8", embedding=EMB, reranker=RER, escenarios=ESCENARIOS, reglas=REGLAS,
+        dataset="",
+        semilla_bootstrap=3,
+        bootstrap_repeticiones=30,
+        corridas=3,
+        calentamiento=1,
+        hilos_cpu=1,
+        lotes_por_corrida=3,
+        k=10,
+        tolerancia_empate=0.02,
+        cuantizacion="int8",
+        embedding=EMB,
+        reranker=RER,
+        escenarios=ESCENARIOS,
+        reglas=REGLAS,
         reporte="reports/adr39/x.json",
     )
     base.update(cambios)
@@ -83,8 +95,15 @@ def test_conclusiones_fijan_el_presupuesto_del_vigente_si_su_recall_sostiene_la_
     assert viables == {"base": False, "vigente": False, "menos-pares": True, "lento-y-peor": False}
 
 
-def test_conclusiones_no_fijan_presupuesto_cuando_el_vigente_pierde_recall_frente_a_la_base() -> None:
-    agregados = {"base": agregado(0.70, 3000.0), "vigente": agregado(0.60, 3183.0), "menos-pares": agregado(0.6, 1.0), "lento-y-peor": agregado(0.6, 1.0)}
+def test_conclusiones_no_fijan_presupuesto_cuando_el_vigente_pierde_recall_frente_a_la_base() -> (
+    None
+):
+    agregados = {
+        "base": agregado(0.70, 3000.0),
+        "vigente": agregado(0.60, 3183.0),
+        "menos-pares": agregado(0.6, 1.0),
+        "lento-y-peor": agregado(0.6, 1.0),
+    }
 
     c = derivar_conclusiones(agregados, ESCENARIOS, config())
 
@@ -98,7 +117,9 @@ def test_la_configuracion_real_fija_los_escenarios_y_las_reglas_antes_de_medir()
     cfg = cargar_config_a3(ruta)
 
     assert cfg.reranker.modelo == "BAAI/bge-reranker-v2-m3"
-    assert [e.rol for e in cfg.escenarios].count("vigente") == 1 and [e.rol for e in cfg.escenarios].count("referencia") == 1
+    assert [e.rol for e in cfg.escenarios].count("vigente") == 1 and [
+        e.rol for e in cfg.escenarios
+    ].count("referencia") == 1
     assert cfg.corridas == 3 and cfg.reglas.presupuesto_redondeo_ms == 250.0
 
 
@@ -107,7 +128,9 @@ def escenario(tmp_path: Path):
     with respx.mock(assert_all_called=False) as router:
         mock_fuentes(router)
         dataset = cargar_dataset(preparar_dataset(tmp_path))
-        fuentes = descargar_fuentes(dataset, tmp_path / "cache", httpx.Client(), lambda: AHORA, dormir=lambda _s: None)
+        fuentes = descargar_fuentes(
+            dataset, tmp_path / "cache", httpx.Client(), lambda: AHORA, dormir=lambda _s: None
+        )
     return dataset, {i: f.secciones for i, f in fuentes.items()}, tmp_path
 
 
@@ -120,7 +143,17 @@ def test_la_fase_a3_escribe_un_reporte_con_cada_escenario_y_sus_conclusiones(esc
     def ejecutor(trabajo: TrabajoA3) -> None:
         ejecutar_trabajo_a3(trabajo, cfg, dataset, fabrica, lambda: next(contador) / 100.0)
 
-    codigo = ejecutar_fase_a3(cfg, dataset, secciones, fabrica, tmp / "modelos", tmp / "datos", tmp / "a3.json", ejecutor, lambda: AHORA)
+    codigo = ejecutar_fase_a3(
+        cfg,
+        dataset,
+        secciones,
+        fabrica,
+        tmp / "modelos",
+        tmp / "datos",
+        tmp / "a3.json",
+        ejecutor,
+        lambda: AHORA,
+    )
 
     reporte = json.loads((tmp / "a3.json").read_text())
     assert codigo == SALIDA_OK
@@ -133,7 +166,9 @@ def test_la_fase_a3_escribe_un_reporte_con_cada_escenario_y_sus_conclusiones(esc
     assert "texto" not in json.dumps(reporte).lower().replace("textos", "")
 
 
-def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigue_con_los_demas(escenario) -> None:
+def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigue_con_los_demas(
+    escenario,
+) -> None:
     from app.evaluation.fase_a3 import TrabajoFallido
 
     dataset, secciones, tmp = escenario
@@ -146,7 +181,17 @@ def test_la_fase_a3_anota_como_no_medible_el_escenario_cuyo_proceso_muere_y_sigu
             raise TrabajoFallido("código -9")
         ejecutar_trabajo_a3(trabajo, cfg, dataset, fabrica, lambda: next(contador) / 100.0)
 
-    codigo = ejecutar_fase_a3(cfg, dataset, secciones, fabrica, tmp / "modelos", tmp / "datos", tmp / "a3.json", ejecutor, lambda: AHORA)
+    codigo = ejecutar_fase_a3(
+        cfg,
+        dataset,
+        secciones,
+        fabrica,
+        tmp / "modelos",
+        tmp / "datos",
+        tmp / "a3.json",
+        ejecutor,
+        lambda: AHORA,
+    )
 
     reporte = json.loads((tmp / "a3.json").read_text())
     assert codigo == SALIDA_OK
@@ -160,7 +205,10 @@ def test_vectores_en_cache_codifica_una_vez_y_reutiliza_el_archivo(tmp_path: Pat
     embedder = FabricaFalsa().embedder(EMB, tmp_path, "int8", 1)
     original = embedder.codificar
     llamadas: list[int] = []
-    embedder.codificar = lambda textos, *, consulta: (llamadas.append(len(textos)), original(textos, consulta=consulta))[1]  # type: ignore[method-assign]
+    embedder.codificar = lambda textos, *, consulta: (
+        llamadas.append(len(textos)),
+        original(textos, consulta=consulta),
+    )[1]  # type: ignore[method-assign]
 
     primero = vectores_en_cache(tmp_path / "v.npy", ["uno dos", "tres"], embedder)
     segundo = vectores_en_cache(tmp_path / "v.npy", ["uno dos", "tres"], embedder)
@@ -168,7 +216,9 @@ def test_vectores_en_cache_codifica_una_vez_y_reutiliza_el_archivo(tmp_path: Pat
     assert llamadas == [2] and (primero == segundo).all()
 
 
-def test_vectores_en_cache_recodifica_cuando_la_cache_no_corresponde_al_numero_de_chunks(tmp_path: Path) -> None:
+def test_vectores_en_cache_recodifica_cuando_la_cache_no_corresponde_al_numero_de_chunks(
+    tmp_path: Path,
+) -> None:
     from app.evaluation.medicion_modelos import vectores_en_cache
 
     embedder = FabricaFalsa().embedder(EMB, tmp_path, "int8", 1)
@@ -206,7 +256,11 @@ def test_conclusiones_aplican_la_regla_de_presupuesto_al_escenario_adoptado() ->
     c = derivar_conclusiones(agregados, ESCENARIOS, config(escenario_adoptado="menos-pares"))
 
     adoptado = c["adoptado"]
-    assert adoptado["presupuesto_reranker_ms"] == 4500.0  # 4259 redondeado hacia arriba a múltiplos de 250
+    assert (
+        adoptado["presupuesto_reranker_ms"] == 4500.0
+    )  # 4259 redondeado hacia arriba a múltiplos de 250
     assert adoptado["calidad_sostiene_la_base"] is True
-    assert adoptado["extremo_a_extremo_con_p95_medido"]["p95_estimado_ms"] == pytest.approx(14_566.0)
+    assert adoptado["extremo_a_extremo_con_p95_medido"]["p95_estimado_ms"] == pytest.approx(
+        14_566.0
+    )
     assert adoptado["extremo_a_extremo_con_presupuesto"]["riesgo"] == "alto"

@@ -6,7 +6,9 @@ import re
 
 from tests.evaluation.conftest import RAIZ_APP
 
-DOCKERFILE = (RAIZ_APP / "eval" / "configs" / "adr39-medicion.Dockerfile").read_text(encoding="utf-8")
+DOCKERFILE = (RAIZ_APP / "eval" / "configs" / "adr39-medicion.Dockerfile").read_text(
+    encoding="utf-8"
+)
 
 
 def test_la_imagen_base_se_fija_por_digest() -> None:
@@ -20,6 +22,12 @@ def test_el_contenedor_no_corre_como_root() -> None:
 
 
 def test_las_versiones_del_exportador_con_codigo_remoto_son_exactas() -> None:
-    instalacion = next(linea for linea in DOCKERFILE.splitlines() if "/opt/tf4" in linea and linea.startswith("RUN"))
+    instalacion = next(
+        linea
+        for linea in DOCKERFILE.splitlines()
+        if "/opt/tf4" in linea and linea.startswith("RUN")
+    )
 
-    assert "transformers==4.57.6" in instalacion and re.search(r"tokenizers==\d+\.\d+\.\d+", instalacion)
+    assert "transformers==4.57.6" in instalacion and re.search(
+        r"tokenizers==\d+\.\d+\.\d+", instalacion
+    )
