@@ -53,6 +53,27 @@ def test_normalizar_texto_quita_tildes_pasa_a_minusculas_y_colapsa_puntuacion() 
     assert normalizar_texto("  ¡Debería,   RECIBIR—ya! ") == "deberia recibir ya"
 
 
+def test_normalizar_texto_convierte_en_espacio_las_marcas_no_mn() -> None:
+    # Igual que TypeScript (design D3.1): solo se quitan las marcas Mn; Mc (U+0903) y Me (U+20DD) separan.
+    assert normalizar_texto("debःe") == "deb e"
+    assert normalizar_texto("deb⃝e") == "deb e"
+    assert normalizar_texto("debé") == "debe"
+
+
+def test_normalizar_texto_pasa_a_minusculas_sin_casefold() -> None:
+    assert normalizar_texto("Straße") == "straße"
+
+
+@pytest.mark.ac("US-068", 5)
+def test_check_prohibited_terms_rechaza_niveles_y_permitir_frases_posicionales() -> None:
+    lista = _lista()
+
+    with pytest.raises(TypeError):
+        check_prohibited_terms("debe recibir", lista, ("A", "B"))  # type: ignore[misc]
+    with pytest.raises(TypeError):
+        check_prohibited_terms("debe recibir", lista, ("A",), True)  # type: ignore[misc]
+
+
 @pytest.mark.parametrize(
     ("palabra", "clave"),
     [

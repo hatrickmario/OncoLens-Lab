@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 APP = Path(__file__).resolve().parents[2] / "app"
-PERMITIR_FRASES_ACTIVO = re.compile(r"permitir_frases\s*=\s*True")
+PERMITIR_FRASES_ACTIVO = re.compile(r"permitir_frases\s*=\s*(?!False\b)")
 
 
 @pytest.mark.ac("US-068", 5)

@@ -1509,6 +1509,56 @@
       "niveles": ["A", "B"],
       "permitirFrases": false,
       "esperado": []
+    },
+    {
+      "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
+      "texto": "debःe recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
+      "texto": "debeःrecibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
+      "texto": "deb⃝e recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (marcas Mc y Me no se quitan, solo Mn)",
+      "texto": "debe⃝recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (minúsculas sin casefold)",
+      "texto": "Straße: debe recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
     }
   ]
 }
