@@ -47,15 +47,15 @@ mismos parámetros, y si la cuenta no está `activo` verifica igualmente antes d
 
 **D4 · Rotación en cada login.** El login ignora la cookie entrante y siempre crea una sesión nueva
 con un token nuevo (defensa contra fijación de sesión, AC-1). No revoca la sesión previa: revocar es
-del logout (US-044). `expires_at = reloj.ahora() + SESSION_TTL_HOURS` (lo aplica el guard, D5) y `last_seen_at = ahora`;
-`ip_address` y `user_agent` quedan `null` en el S1 (el bloqueo por IP de US-044 definirá cómo `web`
+del logout (US-044). `expires_at = reloj.now() + SESSION_TTL_HOURS` (lo aplica el guard, D5) y `last_seen_at = reloj.now()`;
+`ip_address` y `user_agent` quedan como cadena vacía en el S1 (las columnas son NOT NULL en la migración de L1D-168; nota para US-044: cuando el bloqueo por IP de US-044 definirá cómo `web`
 propaga la IP del cliente).
 
 **D5 · Guard de `clinical-api`.** `src/middleware/auth.ts` (`requireSession`) se monta en el router
 `/platform` después de declarar `POST /platform/auth/login` y antes de cualquier otro router, y
 corre antes del `express.json()` de cada ruta para que un `401` llegue antes de validar el cuerpo
 (AC-3). Consulta `auth.session` por `token_hash` con `revoked = false` y usuario `activo`, y
-`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.ahora()` (reloj inyectado):
+`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.now()` (reloj inyectado):
 sesión caducada → `401 NO_AUTENTICADO`, igual que un token desconocido `[S1 resp. 14c]`. La
 inactividad sigue en US-044 (S2), que la añadirá en `resolverSesion` sin tocar el middleware.
 Adjunta `req.sesion = { userId, rol }`. El guard solo autentica: el `403` para un rol distinto de
@@ -189,7 +189,7 @@ archivo.
 | Módulo | Crea/mod. | Depende de | Reglas extraídas |
 |---|---|---|---|
 | `clinical-api/src/modules/auth/auth.controller.ts` | crea | `AuthService` (interfaz) | mapeo de error → `401` |
-| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Reloj` | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
+| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, ids, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Clock` (`infrastructure/clock.ts`, método `now()`), `GeneradorDeIds` (`infrastructure/ids.ts`) | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
 | `auth.repository.ts` | crea | Prisma (`auth.user`, `auth.session`) | — |
 | `auth.schema.ts` | crea | Zod generado de `LoginRequest` | — |
 | `auth/password-hasher.ts` | crea | `argon2` | parámetros desde config |

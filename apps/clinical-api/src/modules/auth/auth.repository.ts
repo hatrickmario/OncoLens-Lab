@@ -1,10 +1,11 @@
+export type RolDeUsuario = 'doctor' | 'admin';
 export type EstadoDeCuenta = 'pendiente' | 'activo' | 'desactivado' | 'rechazado';
 
 export interface UsuarioParaLogin {
   id: string;
   passwordHash: string;
   accountStatus: EstadoDeCuenta;
-  rol: string;
+  rol: RolDeUsuario;
 }
 
 export interface NuevaSesion {
@@ -18,7 +19,7 @@ export interface NuevaSesion {
 
 export interface SesionConUsuario {
   userId: string;
-  rol: string;
+  rol: RolDeUsuario;
   accountStatus: EstadoDeCuenta;
   expiresAt: Date;
   revoked: boolean;
@@ -54,7 +55,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         id: fila['id'] as string,
         passwordHash: fila['password_hash'] as string,
         accountStatus: fila['account_status'] as EstadoDeCuenta,
-        rol: fila['rol'] as string,
+        rol: fila['rol'] as RolDeUsuario,
       };
     },
 
@@ -87,7 +88,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
       if (fila === undefined) return null;
       return {
         userId: fila['user_id'] as string,
-        rol: fila['rol'] as string,
+        rol: fila['rol'] as RolDeUsuario,
         accountStatus: fila['account_status'] as EstadoDeCuenta,
         expiresAt: fila['expires_at'] as Date,
         revoked: fila['revoked'] as boolean,
