@@ -41,7 +41,7 @@ class Admision:
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
-    if normalizar_clave(documento.source_name) in {normalizar_clave(f) for f in politica.excluidas}:
+    if es_fuente_excluida(documento.source_name, politica.excluidas):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
@@ -58,6 +58,11 @@ def _cumple_condiciones_de_nc(
     if clase != "cc_by_nc":
         return True
     return politica.permitir_cc_by_nc and documento.nc_solo_academico
+
+
+def es_fuente_excluida(source_name: str, excluidas: tuple[str, ...]) -> bool:
+    """Compara sin distinguir mayúsculas ni espacios de los extremos (``CORPUS_EXCLUDED_SOURCES``, D-09)."""
+    return normalizar_clave(source_name) in {normalizar_clave(fuente) for fuente in excluidas}
 
 
 def normalizar_clave(texto: str) -> str:

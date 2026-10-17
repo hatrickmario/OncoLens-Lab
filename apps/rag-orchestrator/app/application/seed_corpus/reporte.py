@@ -36,7 +36,7 @@ class ReporteDeCarga:
     def hubo_errores(self) -> bool:
         return any(r.resultado is Resultado.ERROR for r in self.resultados)
 
-    def de(self, document_key: str) -> ResultadoDeDocumento:
+    def resultado_de(self, document_key: str) -> ResultadoDeDocumento:
         return next(r for r in self.resultados if r.document_key == document_key)
 
     def como_diccionario(self) -> dict[str, Any]:

@@ -93,23 +93,7 @@ def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
     _comprobar_claves(crudo, clave)
     if not PATRON_DE_CLAVE.fullmatch(clave):
         raise ManifiestoInvalido(f"{clave}: document_key debe cumplir {PATRON_DE_CLAVE.pattern}")
-    for campo in ("source_type", "language", "population", "study_design", "original_format"):
-        if crudo[campo] not in DOMINIOS_CERRADOS[campo]:
-            raise ManifiestoInvalido(f"{clave}: {campo} fuera del catálogo")
-    if crudo.get("trial_phase") not in (None, *DOMINIOS_CERRADOS["trial_phase"]):
-        raise ManifiestoInvalido(f"{clave}: trial_phase fuera del catálogo")
-    etiquetas = crudo["cancer_type_tags"]
-    if (
-        not isinstance(etiquetas, list)
-        or not etiquetas
-        or not all(isinstance(e, str) for e in etiquetas)
-    ):
-        raise ManifiestoInvalido(f"{clave}: cancer_type_tags debe ser una lista de textos")
-    textos = [campo for campo in CLAVES_DE_TEXTO if crudo.get(campo)]
-    if len(textos) != 1:
-        raise ManifiestoInvalido(
-            f"{clave}: declara exactamente uno de {', '.join(CLAVES_DE_TEXTO)}"
-        )
+    _validar_valores(crudo, clave)
     return DocumentoDeSemilla(
         document_key=clave,
         version_group_id=str(crudo.get("version_group_id") or clave),
@@ -118,7 +102,7 @@ def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
         external_id=_texto(crudo, "external_id", clave),
         title=_texto(crudo, "title", clave),
         language=crudo["language"],
-        cancer_type_tags=tuple(etiquetas),
+        cancer_type_tags=tuple(crudo["cancer_type_tags"]),
         published_at=_fecha(crudo["published_at"], "published_at", clave),
         study_design=crudo["study_design"],
         population=crudo["population"],
@@ -138,6 +122,27 @@ def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
         ruta_texto=crudo.get("text_path"),
         url_fuente=crudo.get("source_url"),
     )
+
+
+def _validar_valores(crudo: Mapping[str, Any], clave: str) -> None:
+    """Valores dentro de los catálogos cerrados del esquema, etiquetas bien formadas y exactamente un origen de texto."""
+    for campo in ("source_type", "language", "population", "study_design", "original_format"):
+        if crudo[campo] not in DOMINIOS_CERRADOS[campo]:
+            raise ManifiestoInvalido(f"{clave}: {campo} fuera del catálogo")
+    if crudo.get("trial_phase") not in (None, *DOMINIOS_CERRADOS["trial_phase"]):
+        raise ManifiestoInvalido(f"{clave}: trial_phase fuera del catálogo")
+    etiquetas = crudo["cancer_type_tags"]
+    if (
+        not isinstance(etiquetas, list)
+        or not etiquetas
+        or not all(isinstance(e, str) for e in etiquetas)
+    ):
+        raise ManifiestoInvalido(f"{clave}: cancer_type_tags debe ser una lista de textos")
+    textos = [campo for campo in CLAVES_DE_TEXTO if crudo.get(campo)]
+    if len(textos) != 1:
+        raise ManifiestoInvalido(
+            f"{clave}: declara exactamente uno de {', '.join(CLAVES_DE_TEXTO)}"
+        )
 
 
 def _comprobar_claves(crudo: Mapping[str, Any], clave: str) -> None:

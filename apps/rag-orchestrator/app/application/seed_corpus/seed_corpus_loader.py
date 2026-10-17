@@ -7,6 +7,7 @@ las reglas viven en ``app/domain/corpus_seed`` y las E/S llegan por los puertos 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date
 
 from app.application.ports import Clock
@@ -48,6 +49,15 @@ class ChecksumDelManifiestoNoCoincide(Exception):
 
 class TextoVacio(Exception):
     """El documento no tiene texto que indexar tras normalizarlo."""
+
+
+@dataclass(frozen=True)
+class _Preparado:
+    """Un documento admitido cuyo texto se leyó íntegro y cuya versión pide trabajo (no es un duplicado)."""
+
+    texto: str
+    checksum: str
+    decision: DecisionDeVersion
 
 
 class SeedCorpusLoader:
@@ -96,7 +106,36 @@ class SeedCorpusLoader:
     def _cargar_documento(
         self, documento: DocumentoDeSemilla, admision: Admision
     ) -> ResultadoDeDocumento:
-        ahora = self._reloj.ahora()
+        preparado = self._preparar(documento, admision)
+        if isinstance(preparado, ResultadoDeDocumento):
+            return preparado
+        fragmentos = fragmentar(
+            preparado.texto,
+            self._tokenizador,
+            tamano=self._tamano_de_chunk,
+            solape=self._solape_de_chunk,
+        )
+        if not fragmentos:
+            return self._registrar_error(
+                documento, admision, preparado.checksum, "texto", TextoVacio()
+            )
+        registro = registro_embebido(documento, admision, preparado.checksum, self._reloj.ahora())
+        try:
+            vectores = self._embedder.embeber(fragmentos)
+        except Exception as error:  # noqa: BLE001 - borde del puerto PassageEmbedder
+            return self._registrar_error(
+                documento, admision, preparado.checksum, "embeddings", error
+            )
+        try:
+            self._indexar(registro, fragmentos, vectores, preparado.decision)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+            return self._registrar_error(documento, admision, preparado.checksum, "milvus", error)
+        return self._confirmar(documento, registro, preparado.decision, len(fragmentos))
+
+    def _preparar(
+        self, documento: DocumentoDeSemilla, admision: Admision
+    ) -> _Preparado | ResultadoDeDocumento:
+        """Texto leído e íntegro y qué hacer con su versión; si el documento ya no sigue, el resultado que lo cierra."""
         try:
             texto = normalizar_texto(self._fuente.obtener_texto(documento))
         except Exception as error:  # noqa: BLE001 - borde del puerto SourceFetcher: lo que falle es de este documento
@@ -110,21 +149,7 @@ class SeedCorpusLoader:
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
             return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
-        fragmentos = fragmentar(
-            texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
-        )
-        if not fragmentos:
-            return self._registrar_error(documento, admision, checksum, "texto", TextoVacio())
-        registro = registro_embebido(documento, admision, checksum, ahora)
-        try:
-            vectores = self._embedder.embeber(fragmentos)
-        except Exception as error:  # noqa: BLE001 - borde del puerto PassageEmbedder
-            return self._registrar_error(documento, admision, checksum, "embeddings", error)
-        try:
-            self._indexar(registro, fragmentos, vectores, decision)
-        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
-            return self._registrar_error(documento, admision, checksum, "milvus", error)
-        return self._confirmar(documento, registro, decision, len(fragmentos))
+        return _Preparado(texto, checksum, decision)
 
     def _indexar(
         self,

@@ -15,7 +15,7 @@ from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert
 
 from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
-from app.domain.corpus_seed.versionado import VersionExistente
+from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
     corpus_document,
     corpus_release,
@@ -54,7 +54,7 @@ class CorpusDocumentRepository:
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(
-            corpus_document.c.is_current.is_(True), corpus_document.c.status == "embebido"
+            corpus_document.c.is_current.is_(True), corpus_document.c.status == STATUS_EMBEBIDO
         )
         with self._motor.connect() as conexion:
             return frozenset(conexion.execute(consulta).scalars())
