@@ -6,7 +6,7 @@ const valida = () => structuredClone(loadProhibitedTerms());
 
 describe('parseProhibitedTerms', () => {
   it('devuelve la lista cuando cumple el esquema', () => {
-    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.2.0');
+    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.3.0');
   });
 
   it('lanza un error que nombra el origen cuando hay ids repetidos entre niveles', () => {
@@ -32,6 +32,20 @@ describe('parseProhibitedTerms', () => {
     if (conExcepciones) conExcepciones.excepciones = ['algo distinto'];
 
     expect(() => parseProhibitedTerms(lista, origen)).toThrow(/no contiene/);
+  });
+
+  it('lanza un error cuando el texto de un término queda vacío tras la normalización', () => {
+    const lista = valida();
+    lista.nivelB.terminos.push({ id: 'b-vacio', idioma: 'es', texto: '¿?' });
+
+    expect(() => parseProhibitedTerms(lista, origen)).toThrow(/normalización/);
+  });
+
+  it('lanza un error cuando un prefijo queda vacío tras la normalización', () => {
+    const lista = valida();
+    lista.nivelB.prefijos.push({ id: 'b-prefijo-vacio', idioma: 'es', prefijo: '...' });
+
+    expect(() => parseProhibitedTerms(lista, origen)).toThrow(/normalización/);
   });
 
   it('lanza un error cuando la versión no es semver', () => {

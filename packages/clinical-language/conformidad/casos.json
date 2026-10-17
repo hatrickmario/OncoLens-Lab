@@ -1,6 +1,6 @@
 {
-  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.2.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
-  "listaVersion": "1.2.0",
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.3.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
+  "listaVersion": "1.3.0",
   "casos": [
     {
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
@@ -1559,6 +1559,61 @@
           "nivel": "A"
         }
       ]
+    },
+    {
+      "grupo": "Gate 2 (indicado para este paciente, género y número)",
+      "texto": "indicado para este paciente",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-indicado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Gate 2 (indicado para este paciente, género y número)",
+      "texto": "Indicado para esta paciente.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-indicado-para-esta-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Gate 2 (indicado para este paciente, género y número)",
+      "texto": "indicada para esta paciente",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-indicado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Gate 2 (indicado para este paciente, género y número)",
+      "texto": "Indicados para estos pacientes",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-indicado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Gate 2 (indicado para este paciente, género y número)",
+      "texto": "indicado para pacientes con HER2 positivo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
     }
   ]
 }

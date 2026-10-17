@@ -15,14 +15,14 @@ describe('loadProhibitedTerms', () => {
     rmSync(directorio, { recursive: true, force: true });
   });
 
-  it('carga la lista 1.2.0 con los cuatro términos de RN-23, sus equivalentes en inglés, los del Nivel A y B de S1 resp. 15 y los de S1 resp. 33 cuando se lee terminos-prohibidos.json [US-068 AC-1]', () => {
+  it('carga la lista 1.3.0 con los cuatro términos de RN-23, sus equivalentes en inglés, los del Nivel A y B de S1 resp. 15 y los de S1 resp. 33 cuando se lee terminos-prohibidos.json [US-068 AC-1]', () => {
     const lista = loadProhibitedTerms();
 
     const textosA = lista.nivelA.terminos.map((termino) => termino.texto);
     const textosB = lista.nivelB.terminos.map((termino) => termino.texto);
     const prefijosB = lista.nivelB.prefijos.map((prefijo) => prefijo.prefijo);
 
-    expect(lista.version).toBe('1.2.0');
+    expect(lista.version).toBe('1.3.0');
     // AC-1: los cuatro de RN-23 y sus equivalentes en inglés
     expect(textosA).toEqual(
       expect.arrayContaining([
@@ -92,7 +92,7 @@ describe('loadProhibitedTerms', () => {
         'treatment of choice',
       ]),
     );
-    expect(lista.nivelA.terminos).toHaveLength(54);
+    expect(lista.nivelA.terminos).toHaveLength(56);
     expect(prefijosB).toEqual(['recomend', 'recomiend', 'recommend']);
     expect(textosB).toEqual([
       'iniciar',

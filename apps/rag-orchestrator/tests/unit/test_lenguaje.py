@@ -226,6 +226,9 @@ def test_check_prohibited_terms_devuelve_las_coincidencias_en_orden_de_aparicion
         {"b": [_termino("a-debe", "otro")]},
         {"a": [_termino("a", "debe recibir", formas=["otra cosa"])]},
         {"a": [_termino("a", "debe recibir", excepciones=["algo ajeno"])]},
+        {"b": [_termino("b-vacio", "¿?")]},
+        {"prefijos": [{"id": "p-vacio", "idioma": "es", "prefijo": "..."}]},
+        {"version": "١.٢.٣"},  # dígitos no ASCII
     ],
 )
 def test_lista_terminos_rechaza_listas_invalidas(cambio: dict[str, Any]) -> None:
