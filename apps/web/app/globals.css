@@ -1,0 +1,22 @@
+/* Tokens de docs/ux/sistema-de-diseno.md (contrastes AA verificados allí). */
+:root {
+  --color-chrome: #13233a;
+  --color-bg: #edf0f4;
+  --color-surface: #fff;
+  --color-text: #172133;
+  --color-text-muted: #44506a;
+  --color-primary: #1f4fb8;
+  --color-control-border: #7c8696;
+  --color-status-nocoincide: #8e1f18;
+  --color-status-nocoincide-bg: #f9e3e1;
+  --color-error: var(--color-status-nocoincide);
+  --color-error-bg: var(--color-status-nocoincide-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}

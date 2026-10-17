@@ -1,5 +1,11 @@
 import 'server-only';
 
+/** Compara solo el tipo MIME (sin parámetros como charset): `application/jsonx` no es JSON. */
+export function esTipoJson(cabeceras: Headers): boolean {
+  const tipo = (cabeceras.get('content-type') ?? '').split(';')[0] ?? '';
+  return tipo.trim().toLowerCase() === 'application/json';
+}
+
 /**
  * Lee el cuerpo como texto sin pasar de `maxBytes`: devuelve `null` si lo supera (por Content-Length o
  * mientras se lee), para no cargar en memoria cuerpos arbitrarios del navegador.

@@ -114,6 +114,16 @@ describe('docker-compose.yml', () => {
     expect(() => assertTtlDelJwtCompartido(resolver({ entorno: { SERVICE_JWT_TTL_SECONDS: '30' } }))).not.toThrow();
   });
 
+  it('clinical-api resuelve a vacío SESSION_TTL_HOURS y ARGON2_* cuando el entorno no los fija: el valor por defecto vive solo en config.ts (RN-22) [US-211 AC-1]', () => {
+    const variables = ['SESSION_TTL_HOURS', 'ARGON2_MEMORY_COST_KIB', 'ARGON2_TIME_COST', 'ARGON2_PARALLELISM'];
+    const sinFijar = resolver().services['clinical-api'].environment;
+    const fijadas = resolver({ entorno: { SESSION_TTL_HOURS: '4', ARGON2_TIME_COST: '3' } }).services['clinical-api'].environment;
+
+    for (const variable of variables) expect(sinFijar[variable]).toBe('');
+    expect(fijadas.SESSION_TTL_HOURS).toBe('4');
+    expect(fijadas.ARGON2_TIME_COST).toBe('3');
+  });
+
   it('web recibe CLINICAL_API_URL, WEB_ALLOWED_ORIGIN y WEB_UPSTREAM_TIMEOUT_MS de servidor y ninguna NEXT_PUBLIC_ [US-060 AC-5]', () => {
     const entorno = resolver().services.web.environment;
     expect(entorno).toMatchObject({

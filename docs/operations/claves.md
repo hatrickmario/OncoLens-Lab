@@ -27,7 +27,7 @@ de los certificados y el prefijo de test salen de `infra/docker/.env` o, si no e
 | `pg_rag_corpus_migrator_password` | rol `rag_corpus_migrator` (DDL solo sobre `corpus`, para Alembic) | 0600 |
 | `clinical_minio_root_password` · `milvus_minio_root_password` | cuentas raíz de los dos MinIO | 0600 |
 | `seed_doctor_password` · `seed_admin_password` | cuentas sintéticas del seed (`l1d-169-synthetic-demo-seed`) | 0600 |
-| `pg_ca.key` · `pg_ca.crt` | CA propia de PostgreSQL; la clave **no se monta** en ningún servicio | 0600 · 0644 |
+| `pg_ca.key` · `pg_ca.crt` | CA propia de PostgreSQL; la clave **no se monta** en ningún servicio; el certificado público lo monta solo `clinical-api` (`CLINICAL_DATABASE_CA_FILE`) para verificar el TLS | 0600 · 0644 |
 | `pg_server.key` · `pg_server.crt` | certificado del servidor, SAN `DNS:postgres`, firmado por la CA | 0600 · 0644 |
 | `pg_hba.conf` | reglas de acceso renderizadas desde `infra/docker/postgres/pg_hba.conf.template` | 0644 |
 | `pg_test_admin_password` · `pg_hba.test.conf` | solo con `--profile test`: rol `oncolens_test_admin` (solo `CREATEDB`) y las reglas con `PG_TEST_DB_PREFIX` | 0600 · 0644 |
@@ -41,7 +41,7 @@ Lo verifica el test estático `infra/docker/__tests__/compose-secrets.test.mjs`.
 
 | Servicio | Secretos |
 |---|---|
-| `clinical-api` | `jwt_service_private.pem`, `identity_aes_key`, `blind_index_hmac_key`, `pg_clinical_api_password`, `pg_research_writer_password`, `clinical_minio_root_password` |
+| `clinical-api` | `jwt_service_private.pem`, `identity_aes_key`, `blind_index_hmac_key`, `pg_clinical_api_password`, `pg_ca.crt`, `pg_research_writer_password`, `clinical_minio_root_password` |
 | `rag-orchestrator` | exactamente `jwt_service_public.pem` y `pg_rag_corpus_password` |
 | `corpus-migrate` (*one-shot* de L1D-114) | exactamente `pg_rag_corpus_migrator_password` |
 | `clinical-seed` (*one-shot* de L1D-169) | `pg_clinical_api_password`, `seed_doctor_password`, `seed_admin_password` |
@@ -110,10 +110,15 @@ docker compose -f infra/docker/docker-compose.yml exec -u postgres postgres psql
 
 Las demás reglas exigen TLS (`hostnossl … reject` va antes de toda aceptación) y `scram-sha-256`: `clinical_api` y
 `research_writer` desde `clinical-net`; `rag_corpus` y `rag_corpus_migrator` solo desde `corpus-db-net` y solo a la base
-clínica. Los clientes usan `sslmode=require`; `verify-full` (distribuir la CA a los clientes) queda para el endurecimiento
+clínica. `clinical-api` verifica el certificado del servidor contra la CA (`pg_ca.crt`, `CLINICAL_DATABASE_CA_FILE`, `rejectUnauthorized: true`; L1D-197) y no usa `sslmode=require`; los demás clientes usan `sslmode=require` y `verify-full` (distribuir la CA a los clientes) queda para el endurecimiento
 del S5/S6 junto con el HTTPS de `web`.
 
 ## Perfil test/CI
+
+Los tests de sesión (US-211) necesitan `TEST_DOC1_PASSWORD` y `TEST_DOC2_PASSWORD`, contraseñas **sintéticas** de las
+cuentas `doc1`/`doc2` de test. Sin ellas el test falla nombrando la variable. `scripts/test-integration.sh` las genera
+en cada ejecución (`SINT-` + aleatorio), solo en el entorno del proceso, sin imprimirlas ni versionarlas; cualquier otro
+lanzador (CI) debe definirlas igual o invocar ese script.
 
 `--profile test` añade `pg_test_admin_password` y `pg_hba.test.conf`. Solo los monta
 `infra/docker/docker-compose.test.yml`:

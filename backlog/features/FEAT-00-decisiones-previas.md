@@ -285,12 +285,14 @@ cambiar el modelo genérico de diagnóstico.
 
 
 > **Reabierta en el cierre del Pre-S1 (usuario, 2026-10-13):** L1D-54 vuelve a *In Progress* hasta que el oncólogo asesor firme DEC-05 (AC-1). Sin la firma no pasa a Done; bloquea US-038. `[Pre-S1 trazabilidad B-1]`
+>
+> **Decidido (usuario, 2026-10-20): la confirmación del usuario del 2026-10-13 de la validación del Oncólogo asesor A cumple el AC-1; la firma escrita del oncólogo queda como constancia opcional sin bloquear.** (Sustituye la condición de firma de la nota anterior; el estado de L1D-54 en Linear lo fija el usuario.)
 
 ## AC (Given/When/Then)
 - **AC-1** · Dada la propuesta Q-04, cuando el oncólogo la valide, entonces
   `docs/decisions/DEC-05-tnm-isup.md` registra el destino de cada ítem (TNM →
   `staging_system`/`stage_value`; Gleason/ISUP → `Diagnosis.grade`), con firma y fecha.
-  `[Q-04]` `[RN-29]`
+  `[Q-04]` `[RN-29]` _Nota: la «firma» se entiende según el bloque «Decidido (usuario, 2026-10-20)» de arriba (confirmación del 2026-10-13; firma escrita opcional)._
 - **AC-2** · Dado que el readme §3.2 menciona "grupo ISUP" en `stage_value`, cuando se
   registre, entonces el documento lo señala como texto a corregir en el readme (C-11). (asumido)
 - **AC-3** · Dado un rechazo del oncólogo, cuando se registre, entonces el documento lo

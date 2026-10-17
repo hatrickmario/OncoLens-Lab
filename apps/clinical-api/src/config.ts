@@ -6,9 +6,53 @@ export function readPort(env: NodeJS.ProcessEnv): number {
   if (raw === undefined || raw === '') return DEFAULT_PORT;
   const port = Number(raw);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT debe ser un puerto TCP válido');
+    throw new ConfiguracionInvalidaError('PORT', 'debe ser un puerto TCP válido');
   }
   return port;
+}
+
+export interface Argon2Config {
+  memoryCostKib: number;
+  timeCost: number;
+  parallelism: number;
+}
+
+/** Configuración de sesión y de hash de contraseñas (RN-22: calibrable, no literal del dominio). */
+export interface AuthConfig {
+  sessionTtlHours: number;
+  argon2: Argon2Config;
+}
+
+const DEFAULT_SESSION_TTL_HOURS = 8;
+// Mínimo recomendado por OWASP para Argon2id; calibrable por entorno (la CI puede bajarlos).
+const DEFAULT_ARGON2_MEMORY_COST_KIB = 19456;
+const DEFAULT_ARGON2_TIME_COST = 2;
+const DEFAULT_ARGON2_PARALLELISM = 1;
+
+function readPositiveInteger(env: NodeJS.ProcessEnv, name: string, defaultValue: number): number {
+  const raw = env[name];
+  if (raw === undefined || raw === '') return defaultValue;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new ConfiguracionInvalidaError(name, 'debe ser un entero positivo');
+  }
+  return value;
+}
+
+/** TTL absoluto de la sesión y parámetros de Argon2id (RN-22: configuración, nunca literales del dominio). */
+export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig {
+  return {
+    sessionTtlHours: readPositiveInteger(env, 'SESSION_TTL_HOURS', DEFAULT_SESSION_TTL_HOURS),
+    argon2: {
+      memoryCostKib: readPositiveInteger(
+        env,
+        'ARGON2_MEMORY_COST_KIB',
+        DEFAULT_ARGON2_MEMORY_COST_KIB,
+      ),
+      timeCost: readPositiveInteger(env, 'ARGON2_TIME_COST', DEFAULT_ARGON2_TIME_COST),
+      parallelism: readPositiveInteger(env, 'ARGON2_PARALLELISM', DEFAULT_ARGON2_PARALLELISM),
+    },
+  };
 }
 
 const DEFAULT_SERVICE_JWT_TTL_SECONDS = 60;
@@ -25,7 +69,7 @@ export interface ServiceJwtConfig {
 export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   const privateKeyFile = env['SERVICE_JWT_PRIVATE_KEY_FILE'];
   if (privateKeyFile === undefined || privateKeyFile === '') {
-    throw new Error('SERVICE_JWT_PRIVATE_KEY_FILE no está configurada');
+    throw new ConfiguracionInvalidaError('SERVICE_JWT_PRIVATE_KEY_FILE', 'no está configurada');
   }
   const rawTtl = env['SERVICE_JWT_TTL_SECONDS'];
   if (rawTtl === undefined || rawTtl === '') {
@@ -33,7 +77,103 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   }
   const ttlSeconds = Number(rawTtl);
   if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
-    throw new Error('SERVICE_JWT_TTL_SECONDS debe ser un entero positivo');
+    throw new ConfiguracionInvalidaError('SERVICE_JWT_TTL_SECONDS', 'debe ser un entero positivo');
   }
   return { ttlSeconds, privateKeyFile };
+}
+
+/** Falta o es inválida una variable de configuración: el mensaje nombra la clave, nunca su valor (RN-10, RN-14). */
+export class ConfiguracionInvalidaError extends Error {
+  constructor(
+    readonly variable: string,
+    motivo: string,
+  ) {
+    super(`${variable} ${motivo}`);
+    this.name = 'ConfiguracionInvalidaError';
+  }
+}
+
+function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
+  const valor = env[variable];
+  if (valor === undefined || valor === '') {
+    throw new ConfiguracionInvalidaError(variable, 'es obligatoria');
+  }
+  return valor;
+}
+
+/** Entorno de ejecución (`local`, `test`, `piloto`...): obligatorio, sin valor por defecto (fallo cerrado). */
+export function exigirAppEnv(env: NodeJS.ProcessEnv): string {
+  return leerObligatoria(env, 'APP_ENV');
+}
+
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  /** Certificado de la CA que firma el del servidor PostgreSQL (verificación TLS completa). */
+  ca: string;
+}
+
+const PUERTO_POSTGRES_POR_DEFECTO = 5432;
+
+function leerArchivoObligatorio(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  readFile: (ruta: string) => string,
+): string {
+  const ruta = leerObligatoria(env, variable);
+  let contenido: string;
+  try {
+    contenido = readFile(ruta).trim();
+  } catch {
+    // El error de E/S trae la ruta: se descarta y solo se nombra la variable.
+    throw new ConfiguracionInvalidaError(variable, 'no apunta a un archivo legible');
+  }
+  if (contenido === '') throw new ConfiguracionInvalidaError(variable, 'apunta a un archivo vacío');
+  return contenido;
+}
+
+function leerUrlDeBaseDeDatos(env: NodeJS.ProcessEnv): URL {
+  const variable = 'CLINICAL_DATABASE_URL';
+  let url: URL;
+  try {
+    url = new URL(leerObligatoria(env, variable));
+  } catch (error) {
+    if (error instanceof ConfiguracionInvalidaError) throw error;
+    throw new ConfiguracionInvalidaError(variable, 'no es una URL válida');
+  }
+  if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
+    throw new ConfiguracionInvalidaError(variable, 'debe usar el esquema postgresql');
+  }
+  if (url.password !== '') {
+    throw new ConfiguracionInvalidaError(
+      variable,
+      'no debe llevar contraseña (va en PG_CLINICAL_API_PASSWORD_FILE)',
+    );
+  }
+  if (url.hostname === '' || url.username === '' || url.pathname.length <= 1) {
+    throw new ConfiguracionInvalidaError(variable, 'debe indicar usuario, host y base de datos');
+  }
+  return url;
+}
+
+/**
+ * Conexión del rol `clinical_api` a PostgreSQL. La URL NO lleva contraseña (RN-14): esta se lee del archivo del
+ * secreto (`PG_CLINICAL_API_PASSWORD_FILE`) y la CA de `CLINICAL_DATABASE_CA_FILE`.
+ */
+export function readDatabaseConfig(
+  env: NodeJS.ProcessEnv,
+  readFile: (ruta: string) => string,
+): DatabaseConfig {
+  const url = leerUrlDeBaseDeDatos(env);
+  return {
+    host: url.hostname,
+    port: url.port === '' ? PUERTO_POSTGRES_POR_DEFECTO : Number(url.port),
+    database: decodeURIComponent(url.pathname.slice(1)),
+    user: decodeURIComponent(url.username),
+    password: leerArchivoObligatorio(env, 'PG_CLINICAL_API_PASSWORD_FILE', readFile),
+    ca: leerArchivoObligatorio(env, 'CLINICAL_DATABASE_CA_FILE', readFile),
+  };
 }

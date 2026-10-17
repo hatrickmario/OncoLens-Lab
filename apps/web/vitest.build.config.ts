@@ -6,5 +6,7 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/build/**/*.test.ts'],
     retry: 0,
+    // Ambos tests ejecutan `next build` sobre el mismo `.next`: en serie.
+    fileParallelism: false,
   },
 });

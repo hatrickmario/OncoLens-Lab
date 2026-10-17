@@ -178,10 +178,14 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
   `req.headers.cookie`, `res.headers["set-cookie"]`, `req.headers.authorization`) y en el de `web`;
   ni el correo ni la contraseña se registran en el login (solo `event`, `resultado`, `traceId`).
 - **Datos:** solo usuarios sintéticos `@test.local`; contraseñas de test y de demo desde variables
-  de entorno (`SEED_DOCTOR_PASSWORD`, `TEST_DOC1_PASSWORD`, `TEST_DOC2_PASSWORD`), nunca en el repo (RN-13, RN-14).
+  de entorno (`SEED_DOCTOR_PASSWORD` solo para el seed de demo de L1D-169; `TEST_DOC1_PASSWORD` y
+  `TEST_DOC2_PASSWORD` para los tests de este change), nunca en el repo (RN-13, RN-14).
   Decidido (decisión 66 del plan): el único respaldo permitido es un valor `SINT-…` **solo bajo
-  `apps/clinical-api/tests/`**; fuera de `tests/` no hay valor por defecto, y si falta la variable el proceso
-  falla nombrando la variable (nunca su valor).
+  `apps/clinical-api/tests/` o generado al vuelo por `scripts/test-integration.sh`**: el script genera cada ejecución
+  `SINT-` + 32 hex aleatorios solo en el entorno del proceso de test, sin escribir ni imprimir ningún valor fijo, así que
+  no deja ningún valor en el repo y cumple el "solo bajo `tests/`". `contrasenaDeTest()` solo acepta `TEST_DOC*_PASSWORD`
+  (nunca `SEED_DOCTOR_PASSWORD`); fuera de los tests no hay valor por defecto, y si falta la variable el proceso falla
+  nombrando la variable (nunca su valor).
 
 ### Seguridad web
 
@@ -198,7 +202,10 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
   (usuario, 2026-10-20):** `/login` se mergea sin CSP ni cabeceras anti-clickjacking hasta US-216,
   antes de G-Piloto; el formulario no usa scripts inline propios.
 - **Dependencias nuevas:** `argon2` en `clinical-api` (`npm audit` sin vulnerabilidades altas en el
-  PR). `web` no añade dependencias.
+  PR). `web` declara `zod` 4.6.6 (ya estaba en el monorepo: el Zod generado `zLoginBody` lo importa; en `web` se
+  declara con versión exacta, sin dependencia nueva en el lockfile) y, solo de desarrollo, `@testing-library/react`
+  16.3.3, `@testing-library/user-event` 14.6.8, `@testing-library/dom` 10.4.2 y `jsdom` 30.1.3 (pruebas de
+  componentes; `npm audit` sin vulnerabilidades).
 
 ## Contratos
 

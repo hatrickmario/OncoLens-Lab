@@ -68,6 +68,16 @@
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/429"
     },
     {
+      "file": "error-interno.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1auth~1login/post/responses/500"
+    },
+    {
+      "file": "error-servicio-autenticacion.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/ErrorServicioAutenticacion"
+    },
+    {
       "file": "error-credenciales-invalidas.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1auth~1login/post/responses/401"
