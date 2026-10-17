@@ -4,10 +4,23 @@ export type GradacionDeReferencia =
       readonly sistema: 'gleason_isup';
       readonly patronPrimario: number;
       readonly patronSecundario: number;
-      readonly puntaje: number;
-      readonly grupoIsup: number;
     }
   | { readonly sistema: 'nottingham'; readonly grado: number };
+
+/** Puntaje de Gleason y grupo ISUP derivados de los patrones (DEC-05, data-model §6). Única fuente de la regla. */
+export function derivarGleason(
+  patronPrimario: number,
+  patronSecundario: number,
+): { readonly puntaje: number; readonly grupoIsup: number } {
+  const puntaje = patronPrimario + patronSecundario;
+  return { puntaje, grupoIsup: grupoIsupDe(puntaje, patronPrimario) };
+}
+
+function grupoIsupDe(puntaje: number, patronPrimario: number): number {
+  if (puntaje <= 6) return 1;
+  if (puntaje === 7) return patronPrimario === 3 ? 2 : 3;
+  return puntaje === 8 ? 4 : 5;
+}
 
 /**
  * `Diagnosis.grade` es texto canónico derivado, nunca escrito a mano (DEC-05, data-model §6): próstata
@@ -15,13 +28,7 @@ export type GradacionDeReferencia =
  */
 export function derivarTextoGrade(gradacion: GradacionDeReferencia): string {
   if (gradacion.sistema === 'nottingham') return `Nottingham grado ${gradacion.grado}`;
-  return `Gleason ${gradacion.patronPrimario}+${gradacion.patronSecundario}=${gradacion.puntaje} · ISUP ${gradacion.grupoIsup}`;
-}
-
-/** Puntaje de Gleason y grupo ISUP derivados de los patrones (DEC-05, data-model §6). */
-export function derivarGleason(
-  _patronPrimario: number,
-  _patronSecundario: number,
-): { readonly puntaje: number; readonly grupoIsup: number } {
-  throw new Error('no implementado');
+  const { patronPrimario, patronSecundario } = gradacion;
+  const { puntaje, grupoIsup } = derivarGleason(patronPrimario, patronSecundario);
+  return `Gleason ${patronPrimario}+${patronSecundario}=${puntaje} · ISUP ${grupoIsup}`;
 }

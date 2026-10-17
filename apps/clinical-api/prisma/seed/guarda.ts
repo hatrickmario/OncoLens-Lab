@@ -42,11 +42,12 @@ export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
       'no está definida (no se presume un entorno permitido)',
     );
   }
-  // `piloto` se rechaza siempre: ninguna lista de configuración lo habilita (RN-13).
-  if (config.appEnv === ENTORNO_PILOTO) {
+  // `piloto` se rechaza siempre y sin distinguir mayúsculas: ninguna lista de configuración lo habilita (RN-13).
+  const entorno = config.appEnv.toLowerCase();
+  if (entorno === ENTORNO_PILOTO) {
     throw new SeedBloqueadoError('APP_ENV', 'es piloto (entorno de datos reales)');
   }
-  if (!config.entornosPermitidos.includes(config.appEnv)) {
+  if (!config.entornosPermitidos.some((permitido) => permitido.toLowerCase() === entorno)) {
     throw new SeedBloqueadoError('APP_ENV', 'no está en SEED_ALLOWED_ENVS');
   }
 }

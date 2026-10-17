@@ -7,8 +7,6 @@ describe('derivarTextoGrade', () => {
       sistema: 'gleason_isup',
       patronPrimario: 4,
       patronSecundario: 3,
-      puntaje: 7,
-      grupoIsup: 3,
     });
 
     expect(texto).toBe('Gleason 4+3=7 · ISUP 3');

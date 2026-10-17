@@ -2,7 +2,7 @@ import type { Clock } from '../../src/infrastructure/clock.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { resolverCodigoDelCatalogo, type CatalogoClinico } from './catalogo.js';
 import { idSembrado } from './determinismo.js';
-import { derivarTextoGrade } from './grade.js';
+import { derivarGleason, derivarTextoGrade } from './grade.js';
 import { pacienteA } from './pacientes/a.js';
 import { pacienteB } from './pacientes/b.js';
 import { pacienteC } from './pacientes/c.js';
@@ -215,6 +215,10 @@ async function sembrarDiagnostico(
   });
   if (gradacion === undefined) return;
   const esGleason = gradacion.sistema === 'gleason_isup';
+  const gleason =
+    gradacion.sistema === 'gleason_isup'
+      ? derivarGleason(gradacion.patronPrimario, gradacion.patronSecundario)
+      : null;
   await upsertar(siembra, 'clinical.diagnosis_grading', {
     id: idSembrado(`${contexto.paciente.clave}/${diagnostico.clave}/gradacion`),
     diagnosis_id: diagnosticoId,
@@ -223,8 +227,8 @@ async function sembrarDiagnostico(
     grade_scope: esGleason ? (gradacion.muestra?.gradeScope ?? null) : null,
     gleason_primary_pattern: esGleason ? gradacion.patronPrimario : null,
     gleason_secondary_pattern: esGleason ? gradacion.patronSecundario : null,
-    gleason_score: esGleason ? gradacion.puntaje : null,
-    isup_grade_group: esGleason ? gradacion.grupoIsup : null,
+    gleason_score: gleason?.puntaje ?? null,
+    isup_grade_group: gleason?.grupoIsup ?? null,
     nottingham_grade: esGleason ? null : gradacion.grado,
     is_reference: true,
     source_document_id: null,

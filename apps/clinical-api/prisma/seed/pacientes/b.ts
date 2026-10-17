@@ -19,8 +19,6 @@ export const pacienteB: PacienteSemilla = {
         sistema: 'gleason_isup',
         patronPrimario: 4,
         patronSecundario: 3,
-        puntaje: 7,
-        grupoIsup: 3,
         muestra: { specimenType: 'biopsia', gradeScope: 'peor' },
       },
     },
