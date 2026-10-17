@@ -9,7 +9,10 @@ US-012 · ADR-39 fase A (`[S1 resp. 6]`) fija los tres modelos que corren en CPU
 mDeBERTa-v3-base-xnli-multilingual-nli-2mil7), con **B** (Qwen3-Embedding-0.6B MRL a 1024 +
 Qwen3-Reranker-0.6B) y **C** (multilingual-e5-large-instruct + gte-multilingual-reranker-base)
 como respaldos medidos con el mismo protocolo (`[S1 resp. 5]`). La elección sale de las cifras
-(AC-2, AC-4), no de la hipótesis. El insumo (`backlog/sprints/S1-refinamiento.md` §2) no trae
+(AC-2, AC-4), no de la hipótesis. **Actualización 2026-10-20 (decisión del usuario):** el *reranker* es
+`BAAI/bge-reranker-v2-m3` (hipótesis A) aunque supera el presupuesto original de p95; su presupuesto se
+justifica con la medición sobre chunks de 1024 tokens (`eval/configs/adr39-fase-a3.yaml`), y los topes pasan
+a 30 GB de stack y 21 GB para el LLM (equipo de referencia MacBook Pro de 32 GB). El usuario adopta además `RERANKER_MAX_PAIRS` = 12 (prioriza el recall; las diferencias entre 12, 16 y 24 pares están dentro del IC) con presupuesto de p95 del *reranker* de 4500 ms: el margen sobre el NFR de 15 s es de ~0,4 s con un LLM de 10 s sin medir, que se cierra en L1D-274. El insumo (`backlog/sprints/S1-refinamiento.md` §2) no trae
 latencias medidas en CPU; la única cifra medida es la del LLM (15 GB residentes, ~79 tok/s,
 `[S1 resp. 10]`). Desde el 2026-10-20 (Decidido, usuario) el LLM puede llegar a 21 GB y el stack a ~30 GB, de modo que el resto del stack, incluidos estos modelos, debe caber en ~9 GB.
 

@@ -4,6 +4,11 @@ reports/visual/
 .playwright-mcp/
 __pycache__/
 *.pyc
+# Cachés de medición (pesos, fuentes descargadas) y secretos locales: nunca al repo (RN-14)
+.cache/
+.env
+.env.*
+!.env.example
 
 # Build y entorno local (US-034)
 dist/

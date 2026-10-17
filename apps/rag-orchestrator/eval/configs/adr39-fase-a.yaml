@@ -1,0 +1,96 @@
+# Configuración de la medición de la fase A de ADR-39 (US-012 AC-1, AC-2, AC-4, AC-5).
+# Los presupuestos y las reglas se fijaron ANTES de medir (commit previo al reporte); los fija el ADR-39 (RN-22).
+version: 1
+dataset: data/eval/adr39-mini        # relativo a la raíz del repo
+semilla_bootstrap: 39                 # semilla del intervalo de confianza (bootstrap sobre las preguntas)
+bootstrap_repeticiones: 1000
+
+protocolo:
+  corridas: 3                         # mediana de 3 corridas, cada una en un proceso nuevo
+  calentamiento: 3                    # llamadas descartadas antes de cronometrar
+  hilos_cpu: 8                        # CPU del contenedor de medición (VM de Docker Desktop: 8 vCPU)
+  cuantizaciones: [int8, fp32]        # int8 = hipótesis; fp32 = referencia de calidad y candidato si int8 degrada
+  tolerancia_empate: 0.02             # ~1 pregunta de 59: una diferencia menor cuenta como empate y decide la memoria (AC-4)
+
+restricciones:
+  # Decisión del usuario 2026-10-20: stack 30 GB (MacBook Pro 32 GB de referencia) y tope del LLM 21 GB. La fase A se midió
+  # con 24 / 16; ningún descarte de la fase A fue por memoria, así que el reporte 2026-10-16 sigue siendo válido.
+  stack_memory_limit_gb: 30           # STACK_MEMORY_LIMIT_GB (NFR-01)
+  llm_budget_gb: 21                   # LLM_MEMORY_BUDGET_GB: tope máximo del LLM local
+  # STAGE_P95_BUDGET_MS: la suma deja ~1 s de margen sobre el p95 <= 15 s con el LLM (~10 s para 800 tokens)
+  stage_p95_budget_ms: {embeddings: 500, reranker: 2000, nli: 1500}
+  academic_licenses: [mit, apache-2.0]  # ACADEMIC_LICENSES (identificadores de licencia de Hugging Face)
+
+recuperacion:
+  chunking: {estrategia: tamano_fijo, tamano: 256, solapamiento_pct: 0.0}   # fijo en T1; T2–T5 lo varían
+  k: 10
+  reranker_max_pairs: 24              # RERANKER_MAX_PAIRS (20–30 en D3)
+  reranker_max_length: 512            # RERANKER_MAX_LENGTH (truncado del par, en tokens)
+
+latencia:
+  consultas_por_corrida: 20           # embeddings: consultas cronometradas por corrida
+  lotes_reranker_por_corrida: 12      # reranker: lotes de RERANKER_MAX_PAIRS pares por corrida
+  tamano_lote_nli: 5                  # NLI: afirmaciones de una opción contra sus fragmentos
+  # Resumen de contexto SINTÉTICO que se concatena a la pregunta en la etapa de embeddings (sin datos de pacientes).
+  contexto_resumen: >-
+    Contexto sintético del caso: mujer de 58 años con carcinoma ductal infiltrante de mama izquierda,
+    receptores hormonales positivos y HER2 negativo, estadio clínico IIA (T2 N0 M0) a la fecha de la
+    consulta, cirugía conservadora completada, sin tratamiento sistémico previo, estado funcional ECOG 0,
+    sin comorbilidades relevantes ni contraindicaciones conocidas.
+
+# Candidatos (S1-refinamiento §2; [S1 resp. 5]). La revisión es la del repositorio de Hugging Face verificada en la fuente.
+embeddings:
+  - id: A
+    modelo: BAAI/bge-m3
+    revision: 5617a9f61b028005a4858fdac845db406aefb181
+    tarea: embedding
+    pooling: cls
+    max_length: 8192
+    plantilla_consulta: "{texto}"
+    plantilla_documento: "{texto}"
+    sparse: sparse_linear.pt
+  - id: B
+    modelo: Qwen/Qwen3-Embedding-0.6B
+    revision: 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3
+    tarea: embedding
+    pooling: ultimo_token
+    max_length: 8192
+    plantilla_consulta: "Instruct: Given a clinical question in Spanish or English, retrieve passages from oncology guidelines and trial records that answer it\nQuery:{texto}"
+    plantilla_documento: "{texto}"
+    dim_salida: 1024                  # MRL: 1024 es la dimensión nativa de 0.6B
+  - id: C
+    modelo: intfloat/multilingual-e5-large-instruct
+    revision: 274baa43b0e13e37fafa6428dbc7938e62e5c439
+    tarea: embedding
+    pooling: media
+    max_length: 512
+    plantilla_consulta: "Instruct: Given a clinical question in Spanish or English, retrieve passages from oncology guidelines and trial records that answer it\nQuery: {texto}"
+    plantilla_documento: "{texto}"
+
+reranker:
+  - id: A
+    modelo: BAAI/bge-reranker-v2-m3
+    revision: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+    tarea: reranker_cls
+    max_length: 8192
+  - id: B
+    modelo: Qwen/Qwen3-Reranker-0.6B
+    revision: e61197ed45024b0ed8a2d74b80b4d909f1255473
+    tarea: reranker_causal
+    max_length: 8192
+    instruccion: "Given a clinical question, judge whether the passage from an oncology source answers it"
+  - id: C
+    modelo: Alibaba-NLP/gte-multilingual-reranker-base
+    revision: 8215cf04918ba6f7b6a62bb44238ce2953d8831c
+    tarea: reranker_cls
+    max_length: 8192
+    codigo_remoto: true               # NewForSequenceClassification (Alibaba-NLP/new-impl); exige transformers < 5 para exportar
+    export_pythonpath: /opt/tf4
+
+nli:
+  - id: A
+    modelo: MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+    revision: b5113eb38ab63efdd7f280f8c144ea8b13f978ce
+    tarea: nli
+    max_length: 512
+    atencion: eager                   # DeBERTa-v2 no admite SDPA en transformers 5

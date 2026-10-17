@@ -1,0 +1,34 @@
+# Imagen de PRODUCCIÓN de rag-orchestrator. BuildKit lee <Dockerfile>.dockerignore EN LUGAR del .dockerignore de la raíz,
+# así que este archivo repite TODOS los patrones raíz (secretos, .env, datos; RN-14) y añade después el código de
+# medición de ADR-39. La imagen de medición (eval/configs/adr39-medicion.Dockerfile) no usa este archivo.
+# Un test exige que cada *.dockerignore contenga todos los patrones del raíz.
+.git
+.claude
+.github
+**/node_modules
+**/dist
+**/.next
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+infra/docker/.env
+secrets
+reports
+backlog
+docs
+openspec
+data
+infra/docker/secrets/
+**/secrets/
+**/*.pem
+**/*.key
+**/pg_hba*.conf
+**/.env
+**/.env.*
+!**/.env.example
+apps/web/tests
+apps/web/vitest*.config.ts
+
+# Código de medición de ADR-39: no se empaqueta en producción
+apps/rag-orchestrator/app/evaluation
+apps/rag-orchestrator/app/scripts

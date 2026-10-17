@@ -1,0 +1,41 @@
+# Configuración de las pruebas T2–T5 de ADR-39 (US-012 AC-10 a AC-12). Una prueba por factor, en secuencia.
+# El modelo es el ganador de T1 (fase A): BGE-M3 int8 (reporte reports/adr39/2026-10-16-fase-a.json).
+# Reglas fijadas ANTES de medir T2–T5.
+version: 1
+dataset: data/eval/adr39-mini
+semilla_bootstrap: 39
+bootstrap_repeticiones: 1000
+hilos_cpu: 8
+k: 10
+reporte: reports/adr39/2026-10-16-fase-a2.json
+
+chunk_selection_margin: 0.02         # CHUNK_SELECTION_MARGIN: ~1 pregunta de 59; mejoras menores gana la variante con menos chunks
+index_min_recall_vs_flat: 0.99       # INDEX_MIN_RECALL_VS_FLAT: HNSW solo si no pierde recall frente a FLAT
+
+embedding:
+  id: A
+  modelo: BAAI/bge-m3
+  revision: 5617a9f61b028005a4858fdac845db406aefb181
+  cuantizacion: int8
+  max_length: 8192
+  pooling: cls
+  plantilla_consulta: "{texto}"
+  plantilla_documento: "{texto}"
+  sparse: sparse_linear.pt
+
+base:                                 # punto de partida de T2 (T1 midió 256 tokens, 0 %, tamaño fijo)
+  tamano: 256
+  solapamiento_pct: 0.0
+  estrategia: tamano_fijo
+
+t2:
+  tamanos: [256, 512, 1024]
+t3:
+  solapamientos_pct: [0.0, 0.10, 0.15]
+t4:
+  estrategias: [tamano_fijo, estructura]
+t5:
+  indices: [FLAT, HNSW]
+  hnsw: {M: 16, efConstruction: 200, ef: 64}
+  milvus_uri: http://adr39-milvus:19530   # Milvus standalone de prueba (colección temporal adr39_tmp_*, nunca corpus_chunks)
+  pasadas_latencia: 3
