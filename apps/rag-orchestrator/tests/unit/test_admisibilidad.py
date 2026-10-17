@@ -8,6 +8,37 @@ from app.domain.corpus_seed.admisibilidad import MotivoDeRechazo, evaluar_admisi
 from tests.support.semilla import documento_de_prueba, politica_de_test
 
 
+def test_rechaza_con_fuente_excluida_aunque_declare_una_licencia_aceptada() -> None:
+    admision = evaluar_admisibilidad(
+        documento_de_prueba(source_name="NCCN", license="Dominio público"), politica_de_test()
+    )
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize("fuente", ["nccn", "  NCCN  ", "Esmo", "ESMO"])
+def test_compara_la_fuente_excluida_sin_distinguir_mayusculas_ni_espacios_de_los_extremos(
+    fuente: str,
+) -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name=fuente), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+def test_la_fuente_excluida_gana_a_la_falta_de_licencia() -> None:
+    admision = evaluar_admisibilidad(
+        documento_de_prueba(source_name="NCCN", license=None), politica_de_test()
+    )
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+def test_una_fuente_con_el_nombre_de_una_excluida_dentro_de_otro_no_se_excluye() -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name="NCCNx"), politica_de_test())
+
+    assert admision.admitido
+
+
 def test_rechaza_con_sin_licencia_un_documento_que_no_declara_licencia() -> None:
     admision = evaluar_admisibilidad(documento_de_prueba(license=None), politica_de_test())
 

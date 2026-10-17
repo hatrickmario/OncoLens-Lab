@@ -41,6 +41,9 @@ class Admision:
 
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
+    # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
+    if normalizar_clave(documento.source_name) in {normalizar_clave(f) for f in politica.excluidas}:
+        return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
     clase = clase_de_licencia(documento.license, politica.mapa_de_clases)
