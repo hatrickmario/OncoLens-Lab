@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearManejadorLogin } from '../../lib/server/auth-login';
-import { ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
+import { crearFetchConCorte, ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
 import {
   crearDependenciasDeLogin,
   crearLoginSimulado,
@@ -77,9 +77,8 @@ describe('POST /api/auth/login (fallos del proveedor)', () => {
   });
 
   it('registra el traceId propio del BFF y aparte el de clinical-api cuando éste responde', async () => {
-    clinicalApi.rechazar(401, ejemplo('error-credenciales-invalidas.json'), {
-      'X-Trace-Id': 'req_remoto01',
-    });
+    const rechazo = ejemplo('error-credenciales-invalidas.json');
+    clinicalApi.rechazar(401, rechazo);
 
     const { lineas } = await iniciarSesion();
 
@@ -88,9 +87,59 @@ describe('POST /api/auth/login (fallos del proveedor)', () => {
         event: 'auth.login',
         status: 401,
         traceId: 'req_web00001',
-        traceIdClinicalApi: 'req_remoto01',
+        traceIdClinicalApi: rechazo['traceId'],
       },
     ]);
+  });
+
+  it('responde 502 con motivo cuerpo_cortado cuando el cuerpo de clinical-api no se puede leer', async () => {
+    const { dependencias, lineas } = crearDependenciasDeLogin({ fetch: crearFetchConCorte() });
+
+    const respuesta = await crearManejadorLogin(dependencias)(
+      peticionDeLogin(CABECERAS, credenciales),
+    );
+
+    expect(respuesta.status).toBe(502);
+    assertMatchesSpec(
+      'clinical-api',
+      '#/components/schemas/ErrorServicioAutenticacion',
+      await respuesta.json(),
+    );
+    expect(lineas.at(-1)).toMatchObject({ status: 502, motivo: 'cuerpo_cortado' });
+  });
+
+  it.each([
+    [
+      '500 con un cuerpo que no es ErrorInterno',
+      500,
+      { message: 'host CENTINELA-HOST.interno', stack: 'CENTINELA-STACK' },
+    ],
+    [
+      '401 con una propiedad de más',
+      401,
+      { ...ejemplo('error-credenciales-invalidas.json'), detalle: 'CENTINELA-DETALLE' },
+    ],
+    ['418 que el contrato no declara', 418, ejemplo('error-interno.json')],
+  ])('responde 502 sin eco cuando clinical-api responde %s', async (_caso, status, cuerpo) => {
+    clinicalApi.rechazar(status, cuerpo);
+
+    const { respuesta, lineas } = await iniciarSesion();
+
+    expect(respuesta.status).toBe(502);
+    const texto = await respuesta.text();
+    expect(JSON.parse(texto)).toEqual(ERROR_502);
+    expect(texto).not.toContain('CENTINELA');
+    expect(lineas.at(-1)).toMatchObject({ status: 502, motivo: 'cuerpo_no_conforme' });
+  });
+
+  it('responde 502 sin Location ni cuerpo cuando clinical-api responde una redirección 302', async () => {
+    clinicalApi.responderTexto(302, '', 'application/json');
+
+    const { respuesta, lineas } = await iniciarSesion();
+
+    expect(respuesta.status).toBe(502);
+    expect(respuesta.headers.get('location')).toBeNull();
+    expect(lineas.at(-1)).toMatchObject({ status: 502, motivo: 'cuerpo_no_conforme' });
   });
 
   it.each([
