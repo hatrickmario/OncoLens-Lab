@@ -4,7 +4,7 @@ import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/response
 import { crearGeneradorDeToken } from '../../../src/infrastructure/token.js';
 import {
   PREGUNTA_AC1,
-  PUNTERO_502,
+  PUNTERO_200,
   TODAS_LAS_FUENTES,
   idDePaciente,
   montarGateway,
@@ -60,6 +60,7 @@ describe('la sesión del doctor nunca llega a rag-orchestrator', () => {
     }
     expect(texto).not.toContain(token);
     expect(texto).not.toContain('oncolens_session');
-    assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
+    expect(respuesta.status).toBe(200);
+    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
   });
 });

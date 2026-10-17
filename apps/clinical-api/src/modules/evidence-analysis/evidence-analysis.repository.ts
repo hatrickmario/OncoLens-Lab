@@ -1,4 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
+import type { RegistroDeAnalisis } from './analysis-record.js';
 import type { OrigenDeDatos } from './ports.js';
 
 export type EstadoDeRevision = 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
@@ -69,6 +70,8 @@ export interface FilaDeEvento extends ProcedenciaDeFila {
  */
 export interface CasoClinico {
   paciente: { id: string; dataOrigin: OrigenDeDatos; population: 'adulto' | 'pediatrico' };
+  /** Episodio de atención vigente (o el último): al que se asocia el `AIAnalysisRecord`. `null` si no hay ninguno. */
+  episodioId: string | null;
   diagnosticoActivo: FilaDeDiagnostico | null;
   biomarcadores: FilaDeBiomarcador[];
   atributos: FilaDeAtributo[];
@@ -79,6 +82,15 @@ export interface CasoClinico {
 export interface CasoRepository {
   /** `null` si el paciente no existe. */
   leerCaso(patientId: string): Promise<CasoClinico | null>;
+}
+
+/** Escritura del `AIAnalysisRecord` (RN-06). */
+export interface AnalisisRepository {
+  /**
+   * Inserta el registro en una sola sentencia (atómica: el `COMMIT` ocurre antes de resolver) y devuelve el registro
+   * leído de la fila persistida. Un fallo de la base lanza sin detalles del error de PostgreSQL.
+   */
+  persistirAnalisis(registro: RegistroDeAnalisis): Promise<RegistroDeAnalisis>;
 }
 
 type Fila = Record<string, unknown>;
@@ -228,8 +240,13 @@ async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
  * columnas que el builder usa: las notas, la identidad y la referencia del convenio no se leen. Las fechas llegan como
  * texto `AAAA-MM-DD` para que la zona horaria del proceso no mueva el día.
  */
-export function createEvidenceAnalysisRepository(db: Consultador): CasoRepository {
+export function createEvidenceAnalysisRepository(
+  db: Consultador,
+): CasoRepository & AnalisisRepository {
   return {
+    async persistirAnalisis() {
+      throw new Error('no implementado');
+    },
     async leerCaso(patientId) {
       const leer: Leer = async (sql) => (await db.query(sql, [patientId])).rows;
       const [paciente] = await leer(
@@ -242,6 +259,7 @@ export function createEvidenceAnalysisRepository(db: Consultador): CasoRepositor
           dataOrigin: paciente['data_origin'] as OrigenDeDatos,
           population: paciente['population'] as 'adulto' | 'pediatrico',
         },
+        episodioId: null,
         diagnosticoActivo: await leerDiagnosticoActivo(leer),
         biomarcadores: await leerBiomarcadores(leer),
         atributos: await leerAtributos(leer),

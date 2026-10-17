@@ -5,11 +5,12 @@ import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/response
 import {
   AHORA,
   PREGUNTA_AC1,
-  PUNTERO_502,
+  PUNTERO_200,
   TODAS_LAS_FUENTES,
   TRACE_ID_GENERADO,
   abrirSesion,
   idDePaciente,
+  leerRegistroPorTrace,
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
@@ -167,6 +168,24 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
   });
 });
 
+describe('gateway de análisis: los filtros recibidos quedan persistidos', () => {
+  it('responde 200 y persiste filters_applied con ultimosSeisMeses en true cuando la petición trae el filtro [US-052 AC-5]', async () => {
+    const { app } = await montarGateway(mundo, { ids: { traceId: () => 'req_Filtros0001' } });
+
+    const respuesta = await request(app)
+      .post('/platform/evidence-analyses')
+      .set('Cookie', cookie)
+      .send(cuerpoDelAnalisis({ filtersApplied: { ultimosSeisMeses: true } }));
+
+    expect(respuesta.status).toBe(200);
+    const fila = await leerRegistroPorTrace(mundo.cliente, 'req_Filtros0001');
+    expect(fila).toBeDefined();
+    expect(fila!.id).toBe(respuesta.body.id);
+    expect(fila!.filters_applied).toMatchObject({ ultimosSeisMeses: true });
+    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
+  });
+});
+
 describe('gateway de análisis: el traceId lo genera siempre clinical-api', () => {
   const PII_EN_LA_CABECERA = 'Lucía Rondón 52123456';
 
@@ -189,7 +208,8 @@ describe('gateway de análisis: el traceId lo genera siempre clinical-api', () =
       expect(logger.texto(), pii).not.toContain(pii);
     }
     expect(respuesta.body.traceId).toBe(TRACE_ID_GENERADO);
-    assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
+    expect(respuesta.status).toBe(200);
+    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(logger.texto()).not.toContain('traceIdEntrante');
   });
 

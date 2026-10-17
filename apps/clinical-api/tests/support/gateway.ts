@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
 import type { Express } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
+import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
@@ -62,6 +63,20 @@ export const PUNTERO_404 = '#/paths/~1platform~1evidence-analyses/post/responses
 export const PUNTERO_403 = '#/paths/~1platform~1evidence-analyses/post/responses/403';
 export const PUNTERO_401 = '#/paths/~1platform~1evidence-analyses/post/responses/401';
 export const PUNTERO_502 = '#/paths/~1platform~1evidence-analyses/post/responses/502';
+export const PUNTERO_200 = '#/paths/~1platform~1evidence-analyses/post/responses/200';
+export const PUNTERO_500 = '#/paths/~1platform~1evidence-analyses/post/responses/500';
+export const PUNTERO_503 = '#/paths/~1platform~1evidence-analyses/post/responses/503';
+export const PUNTERO_504 = '#/paths/~1platform~1evidence-analyses/post/responses/504';
+/** Preguntas del plan de pruebas de FEAT-06a: `Q-HER2` obtiene evidencia (`LLM-OK`) y `Q-SIN` no. */
+export const PREGUNTA_Q_HER2 =
+  '¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?';
+export const PREGUNTA_Q_SIN =
+  '¿Qué opciones describe la evidencia para un tumor inexistente en el corpus?';
+export const DISCLAIMER_DE_TEST = 'Aviso sintético de IA de test · Uso académico/investigación';
+export const SUPUESTO_S1_DE_TEST =
+  'Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes.';
+/** Plazo corto REAL: el temporizador que aborta la llamada es del runtime; el reloj de la aplicación sí está congelado. */
+export const RAG_TIMEOUT_MS_DE_TEST = 150;
 
 export const idDePaciente = (letra: 'a' | 'b' | 'c' | 'd' | 'e'): string =>
   idSembrado(`paciente-${letra}`);
@@ -111,17 +126,38 @@ export interface CapturaDeRag {
   readonly cuerpo: Record<string, unknown>;
 }
 
+export type EscenarioDeRag =
+  | { tipo: 'json'; status: number; cuerpo: object; cabeceras?: Record<string, string> }
+  | { tipo: 'red' }
+  | { tipo: 'sin_respuesta' };
+
+const ESCENARIO_POR_DEFECTO: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: respuestaEjemplo,
+};
+
+/** `rag-orchestrator` responde `200` con el ejemplo sin evidencia (`Q-SIN`). */
+export const SIN_EVIDENCIA: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: respuestaSinEvidencia,
+};
+
 export interface RagSimulado {
   readonly capturadas: CapturaDeRag[];
   llamadas(): number;
+  /** Cambia lo que responde `/rag/query` hasta el próximo `reiniciar()`. */
+  responder(escenario: EscenarioDeRag): void;
   reiniciar(): void;
   iniciar(): void;
   detener(): void;
 }
 
-/** `/rag/query` simulado: responde el ejemplo del contrato y captura cada request (cabeceras y cuerpo). */
+/** `/rag/query` simulado: responde el escenario vigente (por defecto, con evidencia) y captura cada request. */
 export function ragSimulado(): RagSimulado {
   const capturadas: CapturaDeRag[] = [];
+  let escenario: EscenarioDeRag = ESCENARIO_POR_DEFECTO;
   const servidor = servidorMswConLoopback(
     http.post(`${RAG_BASE_URL}/rag/query`, async ({ request }) => {
       const texto = await request.text();
@@ -130,14 +166,26 @@ export function ragSimulado(): RagSimulado {
         texto,
         cuerpo: JSON.parse(texto) as Record<string, unknown>,
       });
-      return HttpResponse.json(respuestaEjemplo);
+      if (escenario.tipo === 'red') return HttpResponse.error();
+      if (escenario.tipo === 'sin_respuesta') {
+        await delay('infinite');
+        return HttpResponse.error();
+      }
+      return HttpResponse.json(escenario.cuerpo, {
+        status: escenario.status,
+        ...(escenario.cabeceras !== undefined && { headers: escenario.cabeceras }),
+      });
     }),
   );
   return {
     capturadas,
     llamadas: () => capturadas.length,
+    responder: (nuevo) => {
+      escenario = nuevo;
+    },
     reiniciar: () => {
       capturadas.length = 0;
+      escenario = ESCENARIO_POR_DEFECTO;
       servidor.servidor.resetHandlers();
     },
     iniciar: servidor.iniciar,
@@ -155,6 +203,8 @@ export interface OpcionesDeGateway {
   /** `ANALYSIS_MAX_OPTIONS` (por defecto 1, el valor del S1). */
   analysisMaxOptions?: number;
   evidenceDefaultYears?: number;
+  /** `RAG_TIMEOUT_MS` (por defecto, el plazo corto de test). */
+  ragTimeoutMs?: number;
 }
 
 export interface GatewayDeTest {
@@ -190,9 +240,13 @@ export async function montarGateway(
       appEnv,
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
+      ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
+      aiDisclaimerText: DISCLAIMER_DE_TEST,
+      analysisBasisAssumptionText: SUPUESTO_S1_DE_TEST,
     },
     reloj,
     ids: opciones.ids ?? { traceId: () => TRACE_ID_GENERADO },
+    idsDeAnalisis: generadorDeIds(mundo.espacio + 2000),
     pseudonimos: opciones.pseudonimos ?? pseudonimosFijos(),
     registrar: logger.registrar,
   });
@@ -392,4 +446,78 @@ export async function contarAnalisisDelPaciente(
     [patientId],
   );
   return rows[0]?.n ?? 0;
+}
+
+/** Columnas de `clinical.ai_analysis_record` que afirman los tests (snake_case; jsonb ya parseado). */
+export interface FilaDelRegistro {
+  id: string;
+  patient_id: string;
+  episode_id: string;
+  requested_by: string;
+  analysis_type: string;
+  trace_id: string;
+  query_text: string;
+  status: string;
+  top_relevance_score: number | null;
+  evidence_options: unknown[];
+  analysis_basis: Record<string, unknown> & { assumptions: { text: string; origin: string }[] };
+  filters_applied: Record<string, unknown>;
+  clinical_context_snapshot: Record<string, unknown>;
+  context_fingerprint: string;
+  patient_data_links: { dataRef: string; entityType: string; entityId: string }[];
+  [columna: string]: unknown;
+}
+
+/** Fila cruda de `clinical.ai_analysis_record` de un `trace_id`; `undefined` si no hay. */
+export async function leerRegistroPorTrace(
+  cliente: Client,
+  traceId: string,
+): Promise<FilaDelRegistro | undefined> {
+  const { rows } = await cliente.query<FilaDelRegistro>(
+    'SELECT * FROM clinical.ai_analysis_record WHERE trace_id = $1',
+    [traceId],
+  );
+  return rows[0];
+}
+
+/** Cantidad de registros de análisis con ese `trace_id` (los de un test no se mezclan con los de otro). */
+export async function contarRegistrosPorTrace(cliente: Client, traceId: string): Promise<number> {
+  const { rows } = await cliente.query<{ n: number }>(
+    'SELECT count(*)::int AS n FROM clinical.ai_analysis_record WHERE trace_id = $1',
+    [traceId],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+export async function contarEventosDelPaciente(
+  cliente: Client,
+  patientId: string,
+): Promise<number> {
+  const { rows } = await cliente.query<{ n: number }>(
+    'SELECT count(*)::int AS n FROM clinical.clinical_event WHERE patient_id = $1',
+    [patientId],
+  );
+  return rows[0]?.n ?? 0;
+}
+
+/**
+ * Provoca un fallo real de escritura (RN-06): un *trigger* temporal `BEFORE INSERT` en `clinical.ai_analysis_record`
+ * que lanza una excepción con texto sintético. Devuelve la función que lo elimina. La base es de este archivo de test.
+ */
+export async function instalarFalloDeEscrituraDelRegistro(
+  cliente: Client,
+  textoDelError: string,
+): Promise<() => Promise<void>> {
+  await cliente.query(`
+    CREATE FUNCTION clinical.test_falla_insercion_analisis() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION '${textoDelError}'; END $$`);
+  await cliente.query(`
+    CREATE TRIGGER test_falla_insercion_analisis BEFORE INSERT ON clinical.ai_analysis_record
+    FOR EACH ROW EXECUTE FUNCTION clinical.test_falla_insercion_analisis()`);
+  return async () => {
+    await cliente.query(
+      'DROP TRIGGER test_falla_insercion_analisis ON clinical.ai_analysis_record',
+    );
+    await cliente.query('DROP FUNCTION clinical.test_falla_insercion_analisis()');
+  };
 }

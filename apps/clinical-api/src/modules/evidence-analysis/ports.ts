@@ -1,4 +1,8 @@
 import type {
+  AnalysisBasis,
+  EvidenceAnalysis,
+} from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import type {
   ClinicalContext,
   DataClassification,
   RagQueryInternalRequest,
@@ -55,10 +59,20 @@ export interface ContextDeidentifier {
 export interface OpcionesDeConsultaRag {
   /** Valor de la cabecera `X-Request-Deadline` (parámetro tipado de la operación; lo calcula L1D-104). */
   deadline?: string;
+  /** Aborta la llamada al vencer `RAG_TIMEOUT_MS`. */
+  signal?: AbortSignal;
 }
 
-export type RespuestaDeRag =
-  { ok: true; cuerpo: RagQueryInternalResponse } | { ok: false; status: number | null };
+/** Fallo de la llamada a rag-orchestrator: `status` null = sin respuesta HTTP; `codigo` es el `error` de su cuerpo. */
+export interface FalloDeRag {
+  ok: false;
+  status: number | null;
+  codigo?: string | null;
+  /** La llamada se abortó porque venció el plazo local (`RAG_TIMEOUT_MS`). */
+  tiempoAgotado?: boolean;
+}
+
+export type RespuestaDeRag = { ok: true; cuerpo: RagQueryInternalResponse } | FalloDeRag;
 
 /** Cliente de `/rag/query`: el SDK generado de L1D-105 sobre el transporte con JWT de servicio. */
 export interface RagQueryClient {
@@ -71,14 +85,39 @@ export interface RagQueryClient {
 export interface EntradaDeCierre {
   traceId: string;
   patientId: string;
+  /** Episodio de atención del paciente al que se asocia el registro (`episode_id`). */
+  episodeId: string | null;
   userId: string;
+  questionTemplateId: string | null;
+  continueWithWarning: boolean;
   request: RagQueryInternalRequest;
   dataRefs: MapaDeDataRefs;
   respuesta: RespuestaDeRag;
 }
 
+/** Respuesta HTTP de un fallo de rag-orchestrator ya traducida (`mapearFalloRag()`), sin eco de su cuerpo. */
+export interface RespuestaDeFallo {
+  status: 422 | 502 | 503 | 504;
+  codigo:
+    | 'TIPO_CANCER_NO_REGISTRADO'
+    | 'ERROR_SERVICIO_IA'
+    | 'LOCAL_LLM_UNAVAILABLE'
+    | 'DEADLINE_VENCIDO';
+  /** Etiqueta del log (sin PHI). */
+  resultado: string;
+}
+
 export type ResultadoDelAnalisis =
-  { tipo: 'completado'; cuerpo: unknown } | { tipo: 'error_servicio_ia' };
+  { tipo: 'completado'; cuerpo: EvidenceAnalysis } | { tipo: 'fallo'; respuesta: RespuestaDeFallo };
+
+/** Base del análisis (FR-27): el adaptador del S1 es mínimo; US-066 (S2) lo sustituye sin tocar el service. */
+export interface AnalysisBasisBuilder {
+  construir(
+    request: RagQueryInternalRequest,
+    respuesta: RagQueryInternalResponse,
+    continueWithWarning: boolean,
+  ): AnalysisBasis;
+}
 
 /** Cierre del análisis: persistir el `AIAnalysisRecord` ANTES de responder (RN-06). Lo implementa L1D-104. */
 export interface AnalysisCompletion {

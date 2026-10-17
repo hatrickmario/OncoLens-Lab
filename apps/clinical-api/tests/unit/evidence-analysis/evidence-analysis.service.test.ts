@@ -33,6 +33,11 @@ const CONTEXTO: ClinicalContext = {
   priorAnalyses: [],
 };
 
+const RESULTADO_DEL_CIERRE = {
+  tipo: 'fallo',
+  respuesta: { status: 502, codigo: 'ERROR_SERVICIO_IA', resultado: 'error_servicio_ia' },
+} as const;
+
 const entradaBase = {
   traceId: 'req_Fijo0001',
   query: 'pregunta sintética',
@@ -137,12 +142,12 @@ function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null }
       completar: async (entrada) => {
         llamadas.push('completar');
         recibido.cierre = entrada;
-        return { tipo: 'error_servicio_ia' };
+        return RESULTADO_DEL_CIERRE;
       },
     },
     catalogo: { version: () => '1.0.0' },
     reloj: { now: () => AHORA_DE_EJEMPLO },
-    config: { analysisMaxOptions: 1, evidenceDefaultYears: 10 },
+    config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },
   };
   return { dependencias, llamadas, recibido };
 }
@@ -216,8 +221,11 @@ describe('crearEvidenceAnalysisService', () => {
       traceId: 'req_Fijo0001',
       patientId: 'paciente-sintetico',
       userId: 'usuario-sintetico',
+      episodeId: 'episodio-sintetico',
+      questionTemplateId: null,
+      continueWithWarning: false,
       respuesta: { ok: false, status: 500 },
     });
-    expect(resultado).toEqual({ tipo: 'error_servicio_ia' });
+    expect(resultado).toEqual(RESULTADO_DEL_CIERRE);
   });
 });

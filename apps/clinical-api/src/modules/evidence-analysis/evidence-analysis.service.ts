@@ -30,6 +30,8 @@ export interface ConfiguracionDelAnalisis {
   analysisMaxOptions: number;
   /** Años de antigüedad por defecto de la evidencia (`EVIDENCE_DEFAULT_YEARS`, RN-22). */
   evidenceDefaultYears: number;
+  /** Plazo hacia rag-orchestrator en ms (`RAG_TIMEOUT_MS`, RN-22). */
+  ragTimeoutMs: number;
 }
 
 export interface DependenciasDelService {
@@ -133,7 +135,10 @@ export function crearEvidenceAnalysisService(
       return cierre.completar({
         traceId,
         patientId: peticion.patientId,
+        episodeId: caso.episodioId,
         userId,
+        questionTemplateId: peticion.questionTemplateId ?? null,
+        continueWithWarning: peticion.continueWithWarning,
         request,
         dataRefs,
         respuesta,

@@ -151,7 +151,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
         response.status(200).json(resultado.cuerpo);
         return;
       }
-      rechazar(response, ERROR_SERVICIO_IA, trazaDelPaciente);
+      rechazar(response, resultado.respuesta, trazaDelPaciente);
     } catch (error) {
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;

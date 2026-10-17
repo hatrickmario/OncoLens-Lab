@@ -89,6 +89,7 @@ export function eventoDeEjemplo(resto: Partial<FilaDeEvento> = {}): FilaDeEvento
 export function casoDeEjemplo(resto: Partial<CasoClinico> = {}): CasoClinico {
   return {
     paciente: { id: 'paciente-sintetico', dataOrigin: 'sintetico', population: 'adulto' },
+    episodioId: 'episodio-sintetico',
     diagnosticoActivo: diagnosticoDeEjemplo(),
     biomarcadores: [],
     atributos: [],
