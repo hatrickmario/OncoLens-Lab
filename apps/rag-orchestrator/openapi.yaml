@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -42,6 +42,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthStatus'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -80,18 +82,33 @@ paths:
           $ref: '#/components/responses/CatalogVersionMismatch'
         "422":
           description: >-
-            Cuerpo inválido (Pydantic), o TIPO_NO_HABILITADO: cancerType fuera de
-            ENABLED_CANCER_TYPES, que responde sin invocar al LLM (defensa en profundidad).
+            Cuerpo inválido (Pydantic); TIPO_NO_HABILITADO: cancerType fuera de
+            ENABLED_CANCER_TYPES; o TIPO_CANCER_NO_REGISTRADO: el contexto no tiene tipo de cáncer
+            (diagnosis null). Los dos últimos responden sin buscar ni invocar al LLM (defensa en
+            profundidad).
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/ErrorTipoNoHabilitado'
                   - $ref: '#/components/schemas/ErrorValidacion'
+                  - $ref: '#/components/schemas/ErrorTipoCancerNoRegistrado'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
-          $ref: '#/components/responses/LlmLocalNoDisponible'
+          description: >-
+            Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del
+            LLM inválida o fuera de esquema) o recuperación (RETRIEVAL_UNAVAILABLE: Milvus o
+            embeddings). Falla cerrada, sin respuesta parcial. Con datos reales solo modelos
+            locales, sin fallback a la nube (RN-12).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+                  - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
 
@@ -138,6 +155,8 @@ paths:
                   - $ref: '#/components/schemas/ErrorValidacion'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
             LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan
@@ -212,6 +231,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorValidacion'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -249,6 +270,8 @@ paths:
                 $ref: '#/components/schemas/ErrorValidacion'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -300,6 +323,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+    ErrorInterno:
+      description: >-
+        Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10);
+        no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInterno'
     DeadlineVencido:
       description: Deadline vencido; la generación se aborta.
       content:
@@ -1384,6 +1415,30 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: LOCAL_LLM_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorInterno:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ERROR_INTERNO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorRecuperacionNoDisponible:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: RETRIEVAL_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorTipoCancerNoRegistrado:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: TIPO_CANCER_NO_REGISTRADO }
         message: { type: string }
         traceId: { type: string }
     ErrorDeadlineVencido:

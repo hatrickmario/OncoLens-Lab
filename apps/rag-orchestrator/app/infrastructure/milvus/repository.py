@@ -16,6 +16,7 @@ from pymilvus.exceptions import MilvusException
 
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.config.settings import MilvusSettings
+from app.domain.retrieval_filter import exigir_filtro_vigente, expresion_solo_vigente
 from app.infrastructure.milvus.schema import (
     CAMPO_DENSE,
     CAMPO_SPARSE,
@@ -146,14 +147,21 @@ class MilvusRepository:
             raise
         return int(resultado[clave_del_conteo])
 
-    def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]:
-        """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03)."""
+    def search_dense(
+        self, vector: Sequence[float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontrado]:
+        """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03).
+
+        ``filtro`` viene de ``expresion_vigente_del_tipo()``; una expresión que no exija ``is_current`` como condición
+        obligatoria se rechaza con ``ValueError`` antes de llegar a Milvus.
+        """
+        filtro = expresion_solo_vigente() if filtro is None else exigir_filtro_vigente(filtro)
         resultados = self._cliente.search(
             self._coleccion,
             data=[list(vector)],
             anns_field=CAMPO_DENSE,
             limit=limit,
-            filter="is_current == true",
+            filter=filtro,
             search_params=search_params(self._ajustes),
             output_fields=["chunk_id", "document_id", "chunk_text"],
         )

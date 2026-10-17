@@ -71,9 +71,9 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 
 ## What Changes
 
-- **Lista versionada** `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` **1.2.0** (datos, no
+- **Lista versionada** `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` **1.3.0** (datos, no
   código; `version` semver propia) en **dos niveles** `[S1 resp. 15]` `[S1 resp. 33]`: `nivelA.terminos`
-  (54 términos: los 22 de 1.1.0, con los 3 conservados de la lista provisional, más los 32 de
+  (56 términos, 1.3.0 añade "indicado para este/esta paciente" en el Gate 2: los 22 de 1.1.0, con los 3 conservados de la lista provisional, más los 32 de
   `[S1 resp. 33]`, en español e inglés, cada uno con `id` estable e `idioma`, y `formas` o `excepciones`
   cuando hace falta), `nivelB.prefijos` (`recomend`, `recomiend`, `recommend`) y `nivelB.terminos` (15 de
   `[S1 resp. 33]`), más `frasesPermitidas` (frases negativas normativas y "iniciar sesión", solo para
@@ -151,7 +151,7 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 - ↪ **Depende de** **L1D-169** (US-039): crea `packages/clinical-catalogs/` (`manifest.json` 1.0.0). Si
   este change se implementa antes, crea solo la subcarpeta `lenguaje/` sin tocar el manifiesto.
 - 🔗 **Relacionado (consumidor):** **L1D-180** (US-064) usa la lista (solo Nivel A), el gemelo Python y
-  la allowlist de campos generados para RN-23 en ejecución (con la 1.2.0, `[S1 resp. 33]`), y sus literales de retirada `[S1 resp. 16]`
+  la allowlist de campos generados para RN-23 en ejecución (con la 1.3.0, `[S1 resp. 33]`), y sus literales de retirada `[S1 resp. 16]`
   están en los casos de conformidad; **L1D-194** (US-069) comparte la capacidad `human-control`; **L1D-265** (US-215) deja
   `lint:lenguaje` fuera de su ESLint (Non-goal de US-215); **L1D-275** (US-225) genera las salidas que
   luego filtra L1D-180 y es dueño del prompt `app/prompts/rag_query.py`, al que aplica Nivel A + B con
@@ -173,7 +173,7 @@ normalización** que se usa igual desde Node (UI, CI) y desde Python (`rag-orche
 
 ## Impact
 
-- Datos: `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (nuevo, 1.2.0).
+- Datos: `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` (nuevo, 1.3.0).
 - Código: `packages/clinical-language/` (nuevo workspace, con `origen-de-campos.json`),
   `apps/rag-orchestrator/app/domain/lenguaje.py` y sus tests, script `lint:lenguaje` en `package.json`
   raíz, job en `.github/workflows/ci.yml`, fixtures en `ci/tests/lenguaje/`, specs Playwright en

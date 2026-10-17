@@ -17,7 +17,7 @@ export const PATHS = {
   examplesDir: 'contracts/examples',
   dataModel: 'docs/architecture/data-model.md',
   readme: 'readme.md',
-  prohibitedTerms: 'scripts/contracts/terminos-prohibidos-rn23.json',
+  prohibitedTerms: 'packages/clinical-catalogs/lenguaje/terminos-prohibidos.json',
 };
 
 /** Los specs de los dos proveedores (sin el archivo compartido), de los que se genera código. */

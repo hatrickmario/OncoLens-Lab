@@ -1,6 +1,46 @@
 [
   {
     "ac": "AC-17",
+    "us": "US-068",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche retira la lista de términos del catálogo (falla cerrado, RN-23)",
+    "parches": [{ "destino": "catalogo:terminos-prohibidos", "ausente": true }],
+    "esperado": { "archivo": "packages/clinical-catalogs/lenguaje/terminos-prohibidos.json", "mensajeContiene": "packages/clinical-catalogs/lenguaje/terminos-prohibidos.json" }
+  },
+  {
+    "ac": "AC-17",
+    "us": "US-068",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"no constituye una recomendación\" en el rationale de una opción de con-evidencia-s4.json (frase permitida solo en textos propios)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s4.json", "operaciones": [{ "op": "replace", "path": "/evidenceOptions/0/rationale", "value": "Esto no constituye una recomendación." }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s4.json", "rutaContiene": "rationale", "mensajeContiene": "nivel B" }
+  },
+  {
+    "ac": "AC-17",
+    "us": "US-068",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"deben recibir\" en una descripción del spec (plural, S1 resp. 15)",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "Las pacientes deben recibir esta opción." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/info/description", "mensajeContiene": "deben recibir" }
+  },
+  {
+    "ac": "AC-17",
+    "us": "US-068",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"administre\" (Nivel A, S1 resp. 33) en una descripción del spec",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "Administre el esquema indicado." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/info/description", "mensajeContiene": "administre" }
+  },
+  {
+    "ac": "AC-17",
+    "us": "US-068",
+    "regla": "assertNoPrescriptiveLanguage",
+    "escenario": "un parche pone \"standard of care\" (Nivel B, S1 resp. 33) en una descripción del spec",
+    "parches": [{ "destino": "clinical-api", "operaciones": [{ "op": "replace", "path": "/info/description", "value": "Describe the standard of care." }] }],
+    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "rutaContiene": "#/info/description", "mensajeContiene": "standard of care" }
+  },
+  {
+    "ac": "AC-17",
     "regla": "assertNoPrescriptiveLanguage",
     "escenario": "un parche pone \"Debe recibir\" con mayúscula en el rationale de una opción del ejemplo del S4 (RN-23)",
     "parches": [

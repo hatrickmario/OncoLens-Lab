@@ -27,9 +27,10 @@
     {
       "id": "telefono_local",
       "tipo": "telefono",
-      "descripcion": "Teléfono local de 7 a 12 dígitos (separadores opcionales) precedido de su palabra clave. Exención aplicada solo por el escáner (scripts/lib/formatosPii.mjs): un identificador de registro NCT de ClinicalTrials.gov (prefijo NCT en mayúsculas, no pegado a otra palabra, y ocho dígitos) no es un teléfono (p. ej. «the PERSEPHONE trial (NCT00712140)»).",
+      "descripcion": "Teléfono local de 7 a 12 dígitos (separadores opcionales) precedido de su palabra clave. Exención aplicada solo por el escáner (scripts/lib/formatosPii.mjs): un identificador de registro NCT de ClinicalTrials.gov (prefijo NCT en mayúsculas, no pegado a otra palabra, y ocho dígitos) no es un teléfono (el prefijo NCT seguido de ocho cifras), y solo bajo las rutas de 'rutasDeRegistroExentas' (corpus semilla público, decisión del usuario 2026-10-17); en cualquier otra ruta, o sin ruta, es hallazgo.",
       "palabrasClave": ["tel", "teléfono", "telefono", "celular", "móvil", "movil", "phone", "mobile"],
       "prefijosDeRegistroExentos": ["NCT"],
+      "rutasDeRegistroExentas": ["data/raw/seed/docs/**"],
       "patron": "(?:{{palabrasClave}})[^\\n\\d]{0,16}(?<valor>(?!\\d{4}-\\d{2}-\\d{2})\\d(?:[\\d.\\- ]{4,14}\\d)?)(?![\\p{L}\\p{N}])",
       "banderas": "iu",
       "digitosMin": 7,

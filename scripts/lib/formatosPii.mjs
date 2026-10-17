@@ -3,10 +3,11 @@
  * (scripts/ci/pii-scan.mjs) y la regla de ejemplos sintéticos (scripts/contracts/rules/assertExamplesSynthetic.mjs).
  * Los `patron` del archivo son neutros (describen la PII); las exenciones viven en campos que solo aplica este módulo:
  * `prefijosExentos` (p. ej. el centinela SINT-, sensible a mayúsculas), `contextosExentos` (`url`: solo la ruta de la URL;
- * la consulta y el fragmento se escanean siempre), `prefijosDeRegistroExentos`, `dominiosExentos` y `correosExentos`.
+ * la consulta y el fragmento se escanean siempre), `prefijosDeRegistroExentos` (con `rutasDeRegistroExentas` opcional: solo vale en esas rutas), `dominiosExentos` y `correosExentos`.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { casaConGlob } from '../ci/lib/glob.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const ARCHIVO_DE_FORMATOS = 'config/pii-formats.json';
@@ -67,24 +68,29 @@ function estanEnLaRutaDeUnaUrl(linea, inicioDeLaClave, inicioDelValor) {
   });
 }
 
+/** Sin `rutasDeRegistroExentas` la exención es global; con ellas solo vale en esas rutas, y sin ruta conocida no vale. */
+const rutaPermiteLaExencionDeRegistro = (formato, ruta) =>
+  formato.rutasDeRegistroExentas === undefined || (ruta !== undefined && formato.rutasDeRegistroExentas.some((glob) => casaConGlob(ruta, glob)));
+
 /**
  * Identificador de registro exento (`prefijosDeRegistroExentos`, p. ej. `NCT` de ClinicalTrials.gov): el prefijo justo antes
  * del valor, en mayúsculas, y exactamente ocho dígitos. Es independiente de la palabra clave: no exime a un documento con letras.
  */
-const esIdentificadorDeRegistro = (linea, inicioDelValor, valor, formato) =>
+const esIdentificadorDeRegistro = (linea, inicioDelValor, valor, formato, ruta) =>
   /^\d{8}$/.test(valor) &&
+  rutaPermiteLaExencionDeRegistro(formato, ruta) &&
   (formato.prefijosDeRegistroExentos ?? []).some((prefijo) => {
     const inicioDelPrefijo = Math.max(0, inicioDelValor - prefijo.length);
     // El prefijo no puede ser el final de otra palabra (XNCT00712140 no es un registro de ClinicalTrials.gov).
     return linea.slice(inicioDelPrefijo, inicioDelValor) === prefijo && !/[\p{L}\p{N}]/u.test(linea.slice(inicioDelPrefijo - 1, inicioDelPrefijo));
   });
 
-function exento(linea, coincidencia, formato) {
+function exento(linea, coincidencia, formato, ruta) {
   const { valor, dominio } = coincidencia.groups;
   const [inicioDelValor] = coincidencia.indices.groups.valor;
   if (!cumpleLosDigitos(formato, valor)) return true;
   if (tienePrefijoExento(linea, inicioDelValor, formato)) return true;
-  if (esIdentificadorDeRegistro(linea, inicioDelValor, valor, formato)) return true;
+  if (esIdentificadorDeRegistro(linea, inicioDelValor, valor, formato, ruta)) return true;
   if ((formato.contextosExentos ?? []).includes('url') && estanEnLaRutaDeUnaUrl(linea, coincidencia.index, inicioDelValor)) return true;
   if (dominio && dominioExento(dominio, formato.dominiosExentos)) return true;
   return Boolean(dominio) && esCorreoExento(valor, formato.correosExentos);
@@ -93,12 +99,13 @@ function exento(linea, coincidencia, formato) {
 /**
  * Coincidencias de PII de una línea, tras aplicar las exenciones de cada formato.
  * Con `sinExenciones` devuelve todo lo que casa con el patrón (la regla de ejemplos es más estricta que el escáner).
+ * `ruta` (opcional) es la del archivo escaneado: las exenciones acotadas por ruta solo aplican si la conocen y casa.
  * @returns {{ formato: object, valor: string, dominio?: string }[]}
  */
-export function coincidenciasPii(linea, formatos, { sinExenciones = false } = {}) {
+export function coincidenciasPii(linea, formatos, { sinExenciones = false, ruta } = {}) {
   return formatos.flatMap((formato) =>
     [...linea.matchAll(formato.expresion)]
-      .filter((coincidencia) => sinExenciones || !exento(linea, coincidencia, formato))
+      .filter((coincidencia) => sinExenciones || !exento(linea, coincidencia, formato, ruta))
       .map((coincidencia) => ({ formato, valor: coincidencia.groups.valor, dominio: coincidencia.groups.dominio })),
   );
 }

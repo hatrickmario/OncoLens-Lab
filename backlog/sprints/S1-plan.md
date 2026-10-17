@@ -1,6 +1,6 @@
 # S1 · Plan del sprint
 
-> `/sprint-start S1` · 2026-10-14 · proyecto Linear **OncoLens-1**, milestone `Sprint 1`. Son **24 changes y 103 pts** (96 más los 2 de la re-estimación de US-054, `[S1 resp. 13]`, los 3 de la ampliación de US-012, `[S1 resp. 38]` y los 2 de la re-estimación de US-224, `[S1 resp. 41]`). La capacidad es de 80–90 pts (DEC-03); el exceso está aceptado. Refinamiento previo: [`S1-refinamiento.md`](S1-refinamiento.md). Las decisiones de esta fase continúan la numeración: `[S1 resp. 11–n]`.
+> `/sprint-start S1` · 2026-10-14 · proyecto Linear **OncoLens-1**, milestone `Sprint 1`. Son **26 historias y 111 pts** (96 más los 2 de la re-estimación de US-054, `[S1 resp. 13]`, los 3 de la ampliación de US-012, `[S1 resp. 38]`, los 2 de la re-estimación de US-224, `[S1 resp. 41]`, y los 8 de US-231a + US-231b, decisión 75); 24 tienen change de OpenSpec y US-231a/US-231b aún no. La capacidad es de 80–90 pts (DEC-03); el exceso está aceptado. Refinamiento previo: [`S1-refinamiento.md`](S1-refinamiento.md). Las decisiones de esta fase continúan la numeración: `[S1 resp. 11–n]`.
 
 ## 1. Historias, changes y oleadas
 
@@ -19,27 +19,30 @@ Contextos: **CP** = clinical-platform (incluye los Route Handlers `app/api` y la
 | [L1D-197](https://linear.app/l1der-lab-mjbc/issue/L1D-197) | US-211 | `l1d-197-sesion-login-guard` | CP → FE | 4 | 168, 139, 105, 165 (sin 169: *fixture* local de `doc1`, decisión 56) | R7 | 3 |
 | [L1D-114](https://linear.app/l1der-lab-mjbc/issue/L1D-114) | US-058 | `l1d-114-corpus-catalog-milvus` | AI | 4 | 164, 165, 168 (arnés) | R3 | 5 |
 | [L1D-169](https://linear.app/l1der-lab-mjbc/issue/L1D-169) | US-039 | `l1d-169-synthetic-demo-seed` | CP | 5 | 168, 197 (hasher y usuario `doc1`, decisión 56), 165 | R2 (cierra) | 3 |
-| [L1D-115](https://linear.app/l1der-lab-mjbc/issue/L1D-115) | US-059 | `l1d-115-seed-corpus-licensed` | AI | 5 | 114, 106 (`PassageEmbedder`, decisión 69) · *smoke* 1.13: US-231 (propuesta, decisión 74) | R3 (cierra) | 5 |
-| [L1D-106](https://linear.app/l1der-lab-mjbc/issue/L1D-106) | US-055 | `l1d-106-retrieval-threshold-sin-evidencia` | contratos (503) → AI | 6 | 164, 105, 114 · adapters reales: US-231 (propuesta, decisión 74) | R4 | 5 |
+| [L1D-115](https://linear.app/l1der-lab-mjbc/issue/L1D-115) | US-059 | `l1d-115-seed-corpus-licensed` | AI | 5 | 114, 106 (`PassageEmbedder`, decisión 69) · *smoke* 1.13: US-231b (decisión 75; L1D-115 no pasa a Done hasta que corra) | R3 (cierra) | 5 |
+| [L1D-106](https://linear.app/l1der-lab-mjbc/issue/L1D-106) | US-055 | `l1d-106-retrieval-threshold-sin-evidencia` | contratos (503) → AI | 6 | 164, 105, 114 · adapters reales: después, en US-231a/US-231b (decisión 75; dependen de 106, no al revés) | R4 | 5 |
 | [L1D-103](https://linear.app/l1der-lab-mjbc/issue/L1D-103) | US-052 | `l1d-103-gateway-contexto-clinico` | contratos (422) → CP | 6 | 105, 168, 169, 197 | R6 | 5 |
 | [L1D-193](https://linear.app/l1der-lab-mjbc/issue/L1D-193) | US-068 | `l1d-193-terminos-prohibidos-rn23` | contratos → CP → AI | 6 | 164, 166, 169 (catálogo), 197 (`es.json`) | R8 | 3 |
-| [L1D-179](https://linear.app/l1der-lab-mjbc/issue/L1D-179) | US-063 | `l1d-179-citas-chunk-recuperado` | AI | 7 | 106, 114, US-231 (propuesta, decisión 74) | R4 (cierra) | 5 |
+| — (Linear pendiente, límite de issues) | US-231a · ADR-39 | sin change todavía (propuesto: `us-231a-adapters-reales-recuperacion`) | AI | 6b | 106 (puertos y fakes), 114, 102 (ADR-39 A), 164 | — | 5 |
+| — (Linear pendiente, límite de issues) | US-231b · ADR-39 | sin change todavía (propuesto: `us-231b-adapter-nli-smoke-semilla`) | AI | 6c | US-231a, 115 (cargador y manifiesto), 102, 164 | — | 3 |
+| [L1D-179](https://linear.app/l1der-lab-mjbc/issue/L1D-179) | US-063 | `l1d-179-citas-chunk-recuperado` | AI | 7 | 106, 114, US-231a (decisión 75) | R4 (cierra) | 5 |
 | [L1D-104](https://linear.app/l1der-lab-mjbc/issue/L1D-104) | US-053 | `l1d-104-persistencia-analisis-fallos` | contratos (500) → CP | 7 | 103, 105, 168 | R6 | 5 |
 | [L1D-238](https://linear.app/l1der-lab-mjbc/issue/L1D-238) | US-075 | `l1d-238-baseline-manual-vm` | AI (cálculo) + humano (sesiones) | 7 | 164, 166, 169; las sesiones, con la demo (140) | — | 3 |
-| [L1D-275](https://linear.app/l1der-lab-mjbc/issue/L1D-275) | US-225 | `l1d-275-generacion-opcion-max-options` | AI | 8 | 106, 179, 114, 193, US-231 (propuesta, decisión 74) | R5 | 3 |
+| [L1D-275](https://linear.app/l1der-lab-mjbc/issue/L1D-275) | US-225 | `l1d-275-generacion-opcion-max-options` | AI | 8 | 106, 179, 114, 193, US-231a (decisión 75) | R5 | 3 |
 | [L1D-194](https://linear.app/l1der-lab-mjbc/issue/L1D-194) | US-069 | `l1d-194-aviso-ia-etiqueta-academica` | contratos (patch) → CP → FE | 8 | 104, 197 | R8 (cierra) | 2 |
-| [L1D-180](https://linear.app/l1der-lab-mjbc/issue/L1D-180) | US-064 | `l1d-180-soporte-nli-descartadas` | contratos (503) → AI | 9 | 275, 179, 193, US-231 (propuesta, decisión 74) | R5 (cierra) | 5 |
+| [L1D-180](https://linear.app/l1der-lab-mjbc/issue/L1D-180) | US-064 | `l1d-180-soporte-nli-descartadas` | contratos (503) → AI | 9 | 275, 179, 193, US-231b (decisión 75: puerto `NliClassifier` y adapter real) | R5 (cierra) | 5 |
 | [L1D-203](https://linear.app/l1der-lab-mjbc/issue/L1D-203) | US-049 | `l1d-203-desidentificacion-contexto-ia` | contratos (503) → CP → AI (test) | 9 | 103, 104, 275, 166 | R6 (cierra) | 5 |
 | [L1D-140](https://linear.app/l1der-lab-mjbc/issue/L1D-140) | US-061 | `l1d-140-panel-opcion-citas` | contratos (ejemplos) → FE | 9 | 139, 197, 193, 194, 104 | R7 (cierra) | 5 |
-| [L1D-274](https://linear.app/l1der-lab-mjbc/issue/L1D-274) | US-224 · ADR-39 B | `l1d-274-adr39-runtime-llm-ocr` | AI (ADR + medición p95) | 10 | 102, 275, 180, 103, 104 | — | 5 |
+| [L1D-274](https://linear.app/l1der-lab-mjbc/issue/L1D-274) | US-224 · ADR-39 B | `l1d-274-adr39-runtime-llm-ocr` | AI (ADR + medición p95) | 10 | 102, 275, 180, 103, 104, US-231a, US-231b (adapters reales para el p95) | — | 5 |
 
 **Reglas del orden:**
 - **Nunca dos historias a la vez sobre el mismo módulo.** Por eso 106/179/275/180 (pipeline de evidencia de rag) y 103/104/203 (módulo `evidence-analysis` de clinical-api) van una por oleada, y 139 → 197 → 140 (web) también.
 - **Pipeline de rag:** 164 → 105 → 106 → 179 → 275 → 180. Producción falla cerrado (`503`) hasta que se mergea 180.
+- **Adapters reales (decisión 75):** 106 → 231a → 231b, antes de 179. 231a y 231b tocan `app/infrastructure/` y el cableado de `app/bootstrap.py`, no el `RAGOrchestratorService`; van en serie porque 231b reutiliza la verificación de modelos y el `PassageEmbedder` real de 231a. 179 y 275 necesitan 231a; 180 necesita 231b (puerto `NliClassifier` y adapter real).
 - **Contratos, por el registro de versiones (decisión 58, que actualiza `[S1 resp. 37]`):** clinical-api 164 (1.1.0) → 197 (1.2.0) → 103 (1.3.0) → 104 (1.4.0) → 194 (1.4.1) → 203 (1.5.0); rag 164 → 106 → 180.
 - **Archivado:** 103 antes que 203 (delta `REMOVED`).
 - **E2E importados:** los de 193 y 194 que necesitan el panel se implementan en la rama de 140, con sus tags `[US-068 AC-n]`/`[US-069 AC-n]`.
-- **ADR-39:** las fases A (102) y B (274) bloquean solo los adapters reales; todos los AC se verifican con falsos.
+- **ADR-39:** las fases A (102) y B (274) bloquean solo los adapters reales; todos los AC se verifican con falsos. Los adapters reales de recuperación y NLI los construyen 231a y 231b.
 
 ```mermaid
 flowchart LR
@@ -57,6 +60,11 @@ flowchart LR
   C169 --> C103[103 gateway] & C193[193 RN-23]
   C197 --> C103 & C193
   C106 --> C179[179 citas] --> C275[275 generación] --> C180[180 NLI]
+  C106 & C114 --> C231a[231a adapters recuperación] --> C231b[231b NLI + smoke semilla]
+  C102 -.-> C231a
+  C115 --> C231b
+  C231a --> C179 & C275
+  C231b --> C180
   C193 --> C275 & C180
   C103 --> C104[104 persistencia] --> C194[194 aviso IA] & C203[203 desidentificación]
   C275 --> C203
@@ -64,12 +72,12 @@ flowchart LR
   C194 --> C140[140 panel]
   C193 --> C140
   C104 --> C140
-  C180 & C203 & C102 --> C274[274 ADR-39 B]
+  C180 & C203 & C102 & C231b --> C274[274 ADR-39 B]
 ```
 
-**Oleadas (3 a la vez como máximo):** O1 164, 102 · O2 165, 105, 166 · O3 168, 265, 139 · O4 197, 114 · O5 169, 115 · O6 106, 103, 193 · O7 179, 104, 238 · O8 275, 194 · O9 180, 203, 140 · O10 274. Las sesiones con los oncólogos de 238 se hacen con la demo, después de la O9.
+**Oleadas (3 a la vez como máximo):** O1 164, 102 · O2 165, 105, 166 · O3 168, 265, 139 · O4 197, 114 · O5 169, 115 · O6 106, 103, 193 · O6b 231a · O6c 231b · O7 179, 104, 238 · O8 275, 194 · O9 180, 203, 140 · O10 274. Las sesiones con los oncólogos de 238 se hacen con la demo, después de la O9.
 
-**Lotes de revisión SOLID/CUPID** (los dispara el último change del lote): R1 164+165 · R2 168+169 · R3 114+115 · R4 106+179 · R5 275+180 · R6 103+104+203 · R7 139+197+140 · R8 193+194. Sin lote: 102, 105, 166, 265, 238 y 274.
+**Lotes de revisión SOLID/CUPID** (los dispara el último change del lote): R1 164+165 · R2 168+169 · R3 114+115 · R4 106+179 · R5 275+180 · R6 103+104+203 · R7 139+197+140 · R8 193+194. Sin lote: 102, 105, 166, 265, 238, 274, 231a y 231b.
 
 ## 2. Gate 1 · decisiones del humano (usuario, 2026-10-14)
 
@@ -229,3 +237,5 @@ Registro de las decisiones tomadas al revisar los PR de la Oleada 4. Solo docume
 | 73 | **Decidido (usuario, 2026-10-20): ADR-39 fase A aceptado** (`docs/architecture/adr/ADR-39-modelos-locales.md`, estado «aceptado»; L1D-102 / US-012). Puntos del ADR: **2** aceptado tal como se midió (chunk de 1024, `RERANKER_MAX_LENGTH` = 512; 768 y 1280 sin medir en la VM de 7,75 GB; repetir con una VM mayor es una medición nueva que no bloquea); **3** resuelto por referencia a ADR-45 y US-226…US-230, con las metas de OL-06 provisionales en US-017 y sin cambiar metas hoy; **4** aceptado (HNSW por la regla; equivalente a FLAT con 522 vectores). Se mantienen las salvedades y el riesgo de latencia alto (se cierra en L1D-274; VM de Docker ≥ 10 GB, requisito de la fase B). La tarea 2.1 del change de L1D-102 queda marcada. Mediciones y reportes congelados. (Numerada 73 porque el PR #50 toma la 72) | L1D-102, L1D-274, ADR-39 |
 | 72 | **Decidido (usuario, 2026-10-20): mejora del hook `pre-commit-gate` para commits de merge y robustez** (deuda **D-6**, ID por asignar, `backlog/features/README.md`). **M1:** comparación a 3 vías con `merge-base`: esperado = max(0, cHEAD + cOTRA − cBASE) apariciones de cada nombre de test en todos los archivos de test; se considera eliminado si cÍNDICE < esperado. Cubre H1/H1b/H1c (tests añadidos en una sola rama que la resolución descarta; `MERGE_HEAD` forjado = punta de `main`), H2 (duplicados de nombre entre archivos) y H5 (pérdida de la detección por archivo en merges: `it.concurrent`, `test.for`, `it.each(f(1))`). **Rendimiento:** un `git grep -z -I -E` por árbol o `git cat-file --batch` en lugar de 3N `git show` (21 s con 1500 archivos; riesgo de morir por el *timeout* de 120 s de `.claude/settings.json`). **Rutas no ASCII:** `-c core.quotePath=false` o `-z`. **Modelo de amenaza:** `git commit-tree`, `update-ref` y la escritura en `.git/MERGE_HEAD` no pasan por el hook; **Decidido: la barrera real es la CI y el Gate 2; el hook es una ayuda local.** **M2** (fallo cerrado + bytes) se corrige aparte en el PR `chore/hook-falla-cerrado`; el #46, ya mergeado, tiene esa deuda conocida (Gate 2 de `privacy-guardian` en FAIL en la vuelta 2, mergeado por decisión del usuario) | `.claude/hooks/pre-commit-gate.sh`, D-6 |
 | 74 | **Decidido (usuario, 2026-10-17): historia nueva US-231, adapters reales de recuperación (ADR-39 fase A aceptado).** Redactada en `FEAT-06a` (Linear: pendiente (límite de issues del workspace); sin `L1D-nn`): *embeddings* BGE-M3 int8, *reranker* bge-reranker-v2-m3 int8 (`RERANKER_MAX_LENGTH` = 512), detector de idioma y NLI mDeBERTa, detrás de los puertos de `app/application/ports.py`, locales y sin red (RN-12). **Dependencia:** va **antes** de L1D-179, L1D-275 y L1D-180, que los necesitan, y absorbe el *smoke* 1.13 de L1D-115 y la tarea 2.13b trasladada; los AC de L1D-106 siguen verificándose con adapters falsos. **No cambia todavía el alcance ni los puntos del S1** (101 + exceso aceptado): estimación propuesta 8 y slicing (S1 o S2) por decidir en el refinamiento. Se anota la dependencia en las filas de L1D-106, L1D-115, L1D-179, L1D-275 y L1D-180 de este plan y en los changes de 179, 275 y 180; los implementadores de 106 y 115 la anotan en su rama. No hay change de OpenSpec para US-231 | US-231, L1D-106, L1D-115, L1D-179, L1D-275, L1D-180, L1D-274 |
+| 75 | **Decidido (usuario, 2026-10-17): US-231 se divide en US-231a (5) y US-231b (3), ambas en el S1, entre las oleadas 6 y 7** (actualiza la decisión 74, que la dejaba fuera del recuento y con el sprint por decidir). Corte por adapter y consumidor: **US-231a** = *embeddings* BGE-M3 (`QueryEmbedder` y `PassageEmbedder`), *reranker* bge-reranker-v2-m3 y detector de idioma reales detrás de los puertos de recuperación, más el mecanismo común de verificación de modelos (ruta + SHA-256, RN-22) y la batería de contrato real/fake; **US-231b** = puerto `NliClassifier` (firma de la D7 del design de L1D-180) y adapter real mDeBERTa, memoria conjunta de los tres modelos, sustitución de `fabricar_embedder_real` y del tokenizer de la semilla y *smoke* 1.13 / 2.13b de US-059 AC-1. IDs **US-231a/US-231b** mientras no existan issues (Linear bloqueado por el límite de issues del plan gratuito); US-231 queda como lápida y no suma. **Oleadas:** O6b 231a · O6c 231b (en serie: 231b reutiliza la verificación y el `PassageEmbedder` real de 231a). **Dependencias:** 179 y 275 → 231a; 180 → 231b; 115 no pasa a Done hasta el *smoke* de 231b; 274 → ambas. **Puntos:** +0 frente a la propuesta de 8 (5 + 3); como US-231 estaba fuera del recuento, el S1 pasa de 103 a **111** (exceso sobre DEC-03 aceptado). Sin lote SOLID/CUPID. **Pendiente:** crear los changes de OpenSpec de 231a y 231b y los issues de Linear cuando haya cupo; las tareas 2.11 (parte `NliClassifier`) y 2.14 del change de L1D-180 pasan a consumir lo que entrega 231b | US-231, US-231a, US-231b, L1D-106, L1D-115, L1D-179, L1D-275, L1D-180, L1D-274, `FEAT-06a`, `backlog/features/README.md` |
+| 76 | **Decidido (usuario, 2026-10-17): cierre de tareas menores en un solo chore** (`chore/cierre-tareas-s1`, solo `tasks.md` y documentación, sin gates). Cierra 105 (3.6, 4.2), 165 (4.3), 169 (4.1), 114 (2.3) y 197 (4.1); difiere 114/2.4 a L1D-103/106 y 265/4.2 a la deuda **D-7** (`ruff format` y dependencias de `tests/evaluation`, después de la oleada). L1D-139, 166 y 115 siguen en In Review por dependencias reales (140/103/104, administrador, adapter de 106). L1D-164 y 168 no tienen tareas abiertas: el orquestador las mueve a Done tras revisar los criterios | L1D-105, 165, 169, 114, 197, 265, 164, 168 |

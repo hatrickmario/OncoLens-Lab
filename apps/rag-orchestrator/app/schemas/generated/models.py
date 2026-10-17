@@ -853,6 +853,33 @@ class ErrorLlmLocalNoDisponible(BaseModel):
     traceId: str
 
 
+class ErrorInterno(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['ERROR_INTERNO']
+    message: str
+    traceId: str
+
+
+class ErrorRecuperacionNoDisponible(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['RETRIEVAL_UNAVAILABLE']
+    message: str
+    traceId: str
+
+
+class ErrorTipoCancerNoRegistrado(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['TIPO_CANCER_NO_REGISTRADO']
+    message: str
+    traceId: str
+
+
 class ErrorDeadlineVencido(BaseModel):
     model_config = ConfigDict(
         extra='forbid',

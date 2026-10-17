@@ -74,6 +74,10 @@ function applyPatch(parts, patch) {
   const [kind, name] = patch.destino.split(':');
   if (kind === 'ejemplo') parts.examples.files[name] = applyOperations(parts.examples.files[name], patch.operaciones);
   else if (kind === 'indice') parts.examples.index = applyOperations(parts.examples.index, patch.operaciones);
+  else if (kind === 'catalogo') {
+    // `catalogo:terminos-prohibidos`: la lista de RN-23 (US-068); `ausente` la retira como si el archivo no existiera.
+    parts.docs.terminosProhibidos = patch.ausente ? null : applyOperations(parts.docs.terminosProhibidos, patch.operaciones);
+  }
   else if (kind === 'doc') {
     const doc = DOCS[name].reduce((holder, key) => holder[key], parts.docs);
     doc.text = applyTextOperations(doc.text, patch.operaciones);
@@ -85,7 +89,7 @@ function applyPatch(parts, patch) {
 /**
  * El contexto real con los parches aplicados sobre una copia; nunca se escribe en el repositorio.
  * `destino` es un spec (`clinical-api`, `rag-orchestrator`, `evidence`), `ejemplo:<archivo>`, `indice`,
- * `doc:data-model` o `doc:readme`.
+ * `doc:data-model`, `doc:readme` o `catalogo:terminos-prohibidos`.
  */
 export function patchedContracts(base, patches) {
   const parts = {

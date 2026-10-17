@@ -219,6 +219,52 @@ composición en `app/bootstrap.py`, no en `app/main.py`, `[S1 resp. 17]`).
   179 → 275 → 180 `[S1 resp. 17]`: L1D-180 añade su alternativa al `oneOf` que deja este change y sube
   a 1.3.0; quien mergea segundo rebasa.
 
+## Decisiones de implementación (Gate 2, vuelta 1)
+
+Precisan D1–D9 sin cambiar el contrato (`openapi.yaml` y la tarea 1.3 quedan como estaban; el ERR de oasdiff del `422`
+sigue pendiente de decisión del usuario).
+
+- **D2 (precisión):** `cancerType` es el **código del catálogo** (`^[a-z][a-z0-9_]*$`; la normalización de tildes,
+  mayúsculas y sinónimos es de Backend 1, ADR-33); `próstata` ⇒ `422 TIPO_CANCER_NO_REGISTRADO`. La expresión compara la
+  etiqueta **completa** dentro de la lista separada por comas (`== "t"`, `like "t,%"`, `like "%,t"`, `like "%,t,%"`), así
+  `mama` no casa con `mama_masculina` ni `ta` con `prostata`. `exigir_filtro_vigente()` (mismo módulo) garantiza que
+  `is_current == true` sea obligatorio en toda expresión que llegue a Milvus; lo usan `MilvusRepository` y el fake. La
+  sintaxis de Milvus vive en `domain/` a propósito (Q2 del Gate 2: se deja así, para probar la regla sin Milvus).
+- **D3 (precisión):** `validar_puntaje_normalizado()` está en `domain/normalizacion_puntaje.py`. Rechaza lo que no sea
+  `int`/`float` (no `bool`), no finito o fuera de [0,1]; una lista de puntajes inválida (`None`, `"0.5"`, `True`, cantidad
+  distinta) falla cerrado como `503 RETRIEVAL_UNAVAILABLE`, no como `500`.
+- **D4 / 2.12 (Q1 opción b):** con `LLM_PROVIDER=local` la ruta `/rag/query` **siempre** se registra y el arranque exige
+  `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K` y `RERANK_TOP_N`. Si faltan los adapters reales de *embeddings*, *reranker* e
+  idioma (historias US-231a —*embeddings*, *reranker* e idioma— y US-231b —NLI y smoke—), responde `503 RETRIEVAL_UNAVAILABLE` (etapa `composicion`) fallando cerrado; con los
+  puertos presentes monta `RAGOrchestratorService` y el generador provisional (`503 LOCAL_LLM_UNAVAILABLE`).
+- **D8 (precisión):** todo borde (incluido el detector de idioma) se invoca con `_invocar_borde_fallando_cerrado`: solo se
+  registran la clase del error, la etapa y el `traceId`, con `from None` para que ni el mensaje ni el traceback con la
+  pregunta lleguen al log. Un `Exception` no traducido responde un `500` fijo (`ERROR_INTERNO`, sin eco); ese cuerpo no
+  está en `openapi.yaml` (el contrato de rag no declara `500`) y queda como defensa en profundidad. ~~Starlette vuelve a
+  lanzar la excepción tras responder y uvicorn escribe su traceback: el *handler* no lo evita.~~ **Corregido en la
+  pasada 3:** el 500 lo responde el middleware ASGI `ContencionDeErroresInesperados`, que no relanza (el manejador de
+  `Exception` desaparece), así que uvicorn ya no registra el traceback con el mensaje del error.
+- **Pasada 3 (Gate 2 vuelta 2, autorizada 2026-10-17):**
+  - *Generador:* `GeneradorFallandoCerrado` envuelve a cualquier `EvidenceGenerator` dentro del servicio: excepción
+    inesperada o valor que no es `RagQueryInternalResponse` → `LlmLocalNoDisponibleError` (`503 LOCAL_LLM_UNAVAILABLE`),
+    con solo la clase del error y el `traceId` en el log. Cuando L1D-275 entregue la salida como flujo, el envoltorio
+    debe consumirla entera y validarla antes de devolver nada (nunca tokens sin validar).
+  - *`llm_provider`:* `ParametrosDeRecuperacion.llm_provider` es `LlmProvider` (enum del contrato); un texto fuera del
+    enum (p. ej. `fake`) falla al construir, no al serializar `meta`.
+  - *Compose (M3):* `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40` y `RERANK_TOP_N=10` provisionales hasta US-072,
+    con `${VAR:-valor}` para poder cambiarlos; `Settings` sigue sin valor por defecto en código.
+  - *Filtro:* en los patrones `like` se escapan `\`, `%` y `_` (el literal duplica la barra, `\\_`; la igualdad exacta no
+    se escapa) y el código de `cancerType` tiene una longitud máxima **configurable** (RN-22): `RETRIEVAL_CANCER_TYPE_MAX_LENGTH`, por defecto 64, inyectada al filtro desde `Settings` por `ParametrosDeRecuperacion`; más largo → `422 TIPO_CANCER_NO_REGISTRADO`. (Se decidió configuración y no constante técnica por RN-22.)
+    La sintaxis `\\_` está comprobada contra la documentación de Milvus, no contra un Milvus real en esta pasada.
+  - *Pasada 4:* (a) `_proveedor_de_meta()` en el bootstrap mapea `LLM_PROVIDER` al enum del contrato (`nube` solo cuando exista su adapter). (b) `ErrorDeAplicacion` es la raíz de los errores con respuesta contractual propia; el envoltorio del generador los deja pasar. (c) Se declara `500 ERROR_INTERNO` en el spec de rag-orchestrator (decisión del usuario; aditivo, sin ERR nuevo) y el middleware usa el mensaje del ejemplo `error-interno.json`. (d) El filtro de excepciones de oasdiff compara rutas reales y falla cerrado (ver ADR-26). **Deuda anotada (m3):** el registro del fallo de un borde (`_invocar_borde_fallando_cerrado`) y el del generador (`_registrar_fallo_del_generador`) siguen siendo dos puntos de log; unificarlos en un `registrar_fallo_de_borde` compartido queda para un refactor posterior.
+  - *Contrato del 422:* excepción E-1 de oasdiff declarada y acotada + ADR-26 (decisión del usuario, 2026-10-17).
+- **Umbral:** "sobre el umbral" es estricto (`>`): un chunk con puntaje igual al umbral no cuenta (supuesto).
+- **`traceId`:** una sola fuente por petición: el del cuerpo de `/rag/query` (es el `X-Trace-Id` del contrato); lo usan los
+  logs del servicio y los manejadores de error de esa ruta. Antes de leer el cuerpo (401, 422 de validación) se mantiene
+  el `X-Trace-Id` validado o uno generado.
+- **Pendiente anotado:** `ConfigRecuperacion` anidada y obligatoria en `Settings` (en vez de campos opcionales validados
+  en el arranque) no cupo en esta vuelta.
+
 ## Migration Plan
 
 No hay datos ni esquema que migrar. Rollback: revertir el PR; `/rag/query` vuelve a no existir.

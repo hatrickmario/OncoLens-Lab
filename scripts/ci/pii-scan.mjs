@@ -101,11 +101,12 @@ export function estaEnAllowlistSintetica(ruta, formato, hash, allowlist) {
  * PII en un texto. Devuelve la línea, el formato y el hash del valor normalizado; el valor en claro no sale de aquí.
  * @param {string} texto
  * @param {ReturnType<typeof formatosCompilados>} formatos formatos compilados de scripts/lib/formatosPii.mjs
+ * @param {string} [ruta] ruta del archivo: las exenciones acotadas por ruta (NCT de telefono_local) solo aplican si casa
  * @returns {{ linea: number, formato: string, sha256: string }[]}
  */
-export function detectarPii(texto, formatos) {
+export function detectarPii(texto, formatos, ruta) {
   return texto.split('\n').flatMap((contenido, indice) =>
-    coincidenciasPii(contenido, formatos).map(({ formato, valor }) => ({
+    coincidenciasPii(contenido, formatos, { ruta }).map(({ formato, valor }) => ({
       linea: indice + 1,
       formato: formato.id,
       sha256: sha256(normalizarValor(formato, valor)),
@@ -128,7 +129,7 @@ export function escanear({ archivos, leer, formatos, excluir, allowlist }) {
       noEscaneados.push(ruta);
       continue;
     }
-    detectarPii(bytes.toString('utf8'), formatos)
+    detectarPii(bytes.toString('utf8'), formatos, ruta)
       .filter((hallazgo) => !estaEnAllowlistSintetica(ruta, hallazgo.formato, hallazgo.sha256, allowlistUsable))
       .forEach((hallazgo) => hallazgos.push({ ruta, ...hallazgo }));
   }

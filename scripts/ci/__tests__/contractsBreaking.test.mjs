@@ -3,6 +3,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { PROVIDERS } from '../../contracts/lib/specs.mjs';
+import { DECISION_PERDONADO } from '../lib/excepcionesDeContrato.mjs';
 
 const ejecutar = promisify(execFile);
 const SCRIPT = path.resolve(import.meta.dirname, '../contracts-breaking.sh');
@@ -27,5 +28,12 @@ describe('contracts-breaking.sh', () => {
     const texto = await readFile(SCRIPT, 'utf8');
 
     for (const proveedor of PROVIDERS) expect(texto.replace(/#.*$/gm, '')).not.toContain(proveedor);
+  });
+
+  it('exige en el script la misma decisión explícita que imprime el filtro de excepciones (fallo cerrado, ADR-26)', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const texto = await readFile(SCRIPT, 'utf8');
+
+    expect(texto).toContain(DECISION_PERDONADO);
   });
 });
