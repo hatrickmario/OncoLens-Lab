@@ -6,11 +6,42 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from urllib.parse import urlsplit
 
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 
-# "ND" como palabra aparte ("CC BY-ND", "by-nc-nd"): no casa dentro de otra palabra.
-_CLAUSULA_ND = re.compile(r"(?<![a-z])nd(?![a-z])", re.IGNORECASE)
+
+class ClaseDeLicencia(StrEnum):
+    """Los cuatro valores de ``corpus_document.license_class`` (data-model §4.6): única definición."""
+
+    DOMINIO_PUBLICO = "dominio_publico"
+    CC_BY = "cc_by"
+    CC_BY_SA = "cc_by_sa"
+    CC_BY_NC = "cc_by_nc"
+
+
+# Cláusulas por palabra aparte (no dentro de otra: "NCI" no es NC) o por su nombre largo, en inglés y en español.
+_CLAUSULA_ND = re.compile(
+    r"(?<![a-z])nd(?![a-z])|noderiv|no[\s-]?derivative|sin\s+obras?\s+derivadas?", re.IGNORECASE
+)
+_CLAUSULA_NC = re.compile(
+    r"(?<![a-z])nc(?![a-z])|non[\s-]?commercial|no[\s-]?comercial|sin\s+fines\s+comerciales",
+    re.IGNORECASE,
+)
+_CLAUSULA_SA = re.compile(
+    r"(?<![a-z])sa(?![a-z])|share[\s-]?alike|compartir[\s-]?igual", re.IGNORECASE
+)
+
+# Fuentes que no se pueden ingerir (RN-21, D-09) con su nombre largo y su host: una fuente configurada se reconoce
+# también por estos alias; el identificador y la URL de un documento se comparan con el host.
+ALIAS_DE_FUENTES_EXCLUIDAS: Mapping[str, tuple[str, ...]] = {
+    "nccn": ("national comprehensive cancer network",),
+    "esmo": ("european society for medical oncology",),
+}
+HOSTS_DE_FUENTES_EXCLUIDAS: Mapping[str, tuple[str, ...]] = {
+    "nccn": ("nccn.org",),
+    "esmo": ("esmo.org",),
+}
 
 
 class MotivoDeRechazo(StrEnum):
@@ -39,9 +70,21 @@ class Admision:
         return self.motivo is None
 
 
+def contiene_nd(texto: str) -> bool:
+    return _CLAUSULA_ND.search(texto) is not None
+
+
+def contiene_nc(texto: str) -> bool:
+    return _CLAUSULA_NC.search(texto) is not None
+
+
+def contiene_sa(texto: str) -> bool:
+    return _CLAUSULA_SA.search(texto) is not None
+
+
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
-    if es_fuente_excluida(documento.source_name, politica.excluidas):
+    if es_fuente_excluida(documento, politica.excluidas):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
@@ -55,14 +98,35 @@ def _cumple_condiciones_de_nc(
     clase: str | None, documento: DocumentoDeSemilla, politica: PoliticaDeLicencias
 ) -> bool:
     """CC BY-NC solo en el MVP académico (RN-21): además de estar aceptada exige ``ALLOW_CC_BY_NC`` y la marca del documento."""
-    if clase != "cc_by_nc":
+    if clase != ClaseDeLicencia.CC_BY_NC:
         return True
     return politica.permitir_cc_by_nc and documento.nc_solo_academico
 
 
-def es_fuente_excluida(source_name: str, excluidas: tuple[str, ...]) -> bool:
-    """Compara sin distinguir mayúsculas ni espacios de los extremos (``CORPUS_EXCLUDED_SOURCES``, D-09)."""
-    return normalizar_clave(source_name) in {normalizar_clave(fuente) for fuente in excluidas}
+def es_fuente_excluida(documento: DocumentoDeSemilla, excluidas: tuple[str, ...]) -> bool:
+    """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host de su identificador o URL."""
+    nombres = {normalizar_clave(fuente) for fuente in excluidas}
+    for fuente in list(nombres):
+        nombres.update(ALIAS_DE_FUENTES_EXCLUIDAS.get(fuente, ()))
+    palabras = f" {' '.join(re.findall(r'\w+', documento.source_name.casefold()))} "
+    if any(f" {' '.join(re.findall(r'\w+', nombre))} " in palabras for nombre in nombres):
+        return True
+    hosts = {
+        host
+        for fuente in nombres
+        for host in HOSTS_DE_FUENTES_EXCLUIDAS.get(fuente, (f"{fuente.replace(' ', '')}.org",))
+    }
+    return any(
+        _host_de(valor) == host or _host_de(valor).endswith(f".{host}")
+        for valor in (documento.external_id, documento.url_fuente)
+        for host in hosts
+    )
+
+
+def _host_de(valor: str | None) -> str:
+    if not valor:
+        return ""
+    return (urlsplit(valor.strip()).hostname or "").casefold()
 
 
 def normalizar_clave(texto: str) -> str:
@@ -73,9 +137,12 @@ def normalizar_clave(texto: str) -> str:
 def clase_de_licencia(licencia: str, mapa_de_clases: Mapping[str, str]) -> str | None:
     """``license_class`` del texto literal de la licencia según la tabla de configuración; ``None`` si no mapea.
 
-    Una licencia ND no tiene clase aunque la tabla la contuviera por error: se rechaza siempre (RN-21).
+    El texto manda sobre la tabla (RN-21): una licencia ND no tiene clase aunque la tabla la contuviera por error y una
+    NC es siempre ``cc_by_nc`` aunque la tabla diga otra.
     """
-    if _CLAUSULA_ND.search(licencia):
+    if contiene_nd(licencia):
         return None
+    if contiene_nc(licencia):
+        return ClaseDeLicencia.CC_BY_NC
     tabla = {normalizar_clave(texto): clase for texto, clase in mapa_de_clases.items()}
     return tabla.get(normalizar_clave(licencia))

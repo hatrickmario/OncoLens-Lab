@@ -12,6 +12,12 @@ from sqlalchemy.exc import ArgumentError
 
 from app.config import modelos
 from app.config.modelos import CLAVES_ADR39, ConfigModelos, cargar_config_modelos
+from app.domain.corpus_seed.admisibilidad import (
+    ClaseDeLicencia,
+    contiene_nc,
+    contiene_nd,
+    contiene_sa,
+)
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
 
 
@@ -152,7 +158,7 @@ class MilvusSettings(BaseSettings):
 # Todo valor a calibrar del cargador (RN-22): licencias, fuentes excluidas, fecha de corte, tamaño de chunk y egreso.
 # El tamaño y el solapamiento del chunk se validan con las mismas reglas que ADR-39 (app/config/modelos.py).
 
-CLASES_DE_LICENCIA = ("dominio_publico", "cc_by", "cc_by_sa", "cc_by_nc")
+CLASES_DE_LICENCIA = tuple(clase.value for clase in ClaseDeLicencia)
 # Texto literal de la licencia (normalizado) -> license_class. CC0 y el texto libre de copyright de NCI se asimilan a
 # dominio público (ADR-36, decisión 2). Una licencia ND no figura aquí ni puede añadirse: el dominio la rechaza siempre.
 MAPA_DE_LICENCIAS_POR_DEFECTO = {
@@ -171,6 +177,15 @@ MAPA_DE_LICENCIAS_POR_DEFECTO = {
     "cc by-nc 4.0": "cc_by_nc",
     "cc by-nc 3.0": "cc_by_nc",
 }
+
+
+def _clase_contradice_el_texto(texto: str, clase: str) -> bool:
+    """La clave de la tabla dice una cosa y la clase otra (RN-21): ND nunca; NC solo a cc_by_nc; SA solo a cc_by_sa."""
+    return (
+        contiene_nd(texto)
+        or (contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_NC)
+        or (contiene_sa(texto) and not contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_SA)
+    )
 
 
 def _lista_separada_por_comas(valor: Any) -> Any:
@@ -222,6 +237,13 @@ class CorpusSeedSettings(BaseSettings):
     def _mapa_a_clases_conocidas(cls, valor: dict[str, str]) -> dict[str, str]:
         if not set(valor.values()) <= set(CLASES_DE_LICENCIA):
             raise ValueError(f"cada valor debe ser una de {CLASES_DE_LICENCIA}")
+        incoherentes = [
+            texto for texto, clase in valor.items() if _clase_contradice_el_texto(texto, clase)
+        ]
+        if incoherentes:
+            raise ValueError(
+                "ninguna clave puede llevar ND, y una clave NC o SA debe apuntar a cc_by_nc o cc_by_sa"
+            )
         return valor
 
     @field_validator("corpus_chunk_size")
