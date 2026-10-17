@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.2.0
+  version: 1.3.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -370,11 +370,14 @@ paths:
         "404":
           $ref: '#/components/responses/NoEncontrado'
         "422":
-          description: Cuerpo inválido, o paciente egresado (RN-17).
+          description: >-
+            Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no
+            tiene tipo de cáncer y el análisis no se realiza (no se llama a la IA ni se persiste
+            análisis).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorSolicitudNoProcesable'
+                $ref: '#/components/schemas/ErrorAnalisisNoProcesable'
         "429":
           $ref: '#/components/responses/LimiteGeneracion'
         "502":
@@ -1952,6 +1955,14 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorAnalisisNoProcesable:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, TIPO_CANCER_NO_REGISTRADO] }
         message: { type: string }
         traceId: { type: string }
     ErrorRegistroManualInvalido:
