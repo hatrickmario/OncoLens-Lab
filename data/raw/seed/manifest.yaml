@@ -72,7 +72,7 @@ documentos:
     all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
     Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
   downloaded_at: '2026-10-16'
-  checksum: 7e3a68a1aab24b2fe1059309d50d692658592f21823a2e6b745bcfa64e4106eb
+  checksum: 1007e2dd59d28a46390f63b1e687d57173126631b347e5819bc72369f1425144
   text_path: docs/nci-prostata-hp-en.txt
 - document_key: nci-prostata-pac-es
   source_type: guideline
