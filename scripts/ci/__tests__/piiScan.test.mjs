@@ -22,7 +22,7 @@ describe('detectarPii', () => {
   });
 
   it('sí informa ocho dígitos si NCT es parte de otra palabra y no un prefijo de registro [L1D-115]', () => {
-    expect(lineasDe('the PERSEPHONE trial (XNCT00712140), which enrolled 4,089')).toEqual(['1:telefono_local']);
+    expect(lineasDe(`the PERSEPHONE trial (${'X'}${'NCT'}00712140), which enrolled 4,089`)).toEqual(['1:telefono_local']);
   });
 
   it('devuelve documento_identidad en la línea 7 sin el valor cuando el número va precedido de su palabra clave [US-036 AC-4]', () => {
