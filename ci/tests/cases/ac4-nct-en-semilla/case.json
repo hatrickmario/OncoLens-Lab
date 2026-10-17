@@ -1,0 +1,7 @@
+{
+  "ac": "US-036 AC-4",
+  "descripcion": "L1D-115 P2: un identificador NCT tras la palabra clave de un teléfono dentro de data/raw/seed/docs/ (corpus semilla público) no es hallazgo.",
+  "esperado": "pasa",
+  "comando": "node scripts/ci/pii-scan.mjs",
+  "aplicar": "aplicar.sh"
+}
