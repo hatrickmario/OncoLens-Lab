@@ -148,5 +148,23 @@
       }
     ],
     "motivo": "Falso positivo (L1D-166): línea 24 del hook, un comentario que documenta el decorador @pytest.mark como contraejemplo del regex de emails; no es un correo ni una persona. Exención por valor y ruta exacta."
+  },
+  {
+    "fixture": "FX-hook-pre-commit-gate",
+    "clase": "sintetico",
+    "rutas": [
+      "ci/tests/hook-pre-commit-gate.test.mjs"
+    ],
+    "valores": [
+      {
+        "formato": "correo",
+        "sha256": "f00916adb70ef08c7a677f0ae98b2cc70fb44f9ba5567e5173c61d0aacc192f1"
+      },
+      {
+        "formato": "documento_identidad",
+        "sha256": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f"
+      }
+    ],
+    "motivo": "Señuelos sintéticos del test del hook pre-commit-gate (#46): una línea con forma de correo (falso positivo de '@pytest.mark' tras un salto de línea) y un número con forma de documento de identidad, para comprobar que el hook bloquea PII. Solo esos dos valores, en ese archivo."
   }
 ]
