@@ -48,6 +48,8 @@
 >
 > **Decidido (usuario, 2026-10-15, `[S1 resp. 39]`):** los registros de ClinicalTrials.gov se pueden usar con atribución visible a NLM ("Source: ClinicalTrials.gov, National Library of Medicine"), sin sugerir aval de NLM, NIH ni ClinicalTrials.gov, con fecha de consulta y aviso de actualización; el uso se limita a metadatos del registro y citas breves. El mini-dataset está en `data/eval/adr39-mini/` (en `main`, PR #21): 75 preguntas, 39 pares NLI y 27 fuentes, revisado por el oncólogo asesor.
 
+> **Decidido (usuario, 2026-10-20):** el booleano propio `ALLOW_CC_BY_NC` (PR #39, política de licencias del corpus: CC BY-NC solo en el MVP académico, RN-21) **se acepta por ahora** como mecanismo de configuración (RN-22); no se sustituye por otra forma antes de G-Piloto. Sin cambio de AC.
+
 ## Story
 Como responsable técnico, quiero fijar los modelos de *embeddings*, *reranker* y NLI
 midiendo con el stack levantado, para que el corpus se indexe una sola vez y la
@@ -194,6 +196,8 @@ detector de PII (ADR-40) ni el framework de evaluación (ADR-41).
 
 > **Decidido (usuario, 2026-10-14, validación de los oncólogos asesores, `[S1 resp. 35]`):** si el contexto no tiene tipo de cáncer, `POST /platform/evidence-analyses` responde `422 TIPO_CANCER_NO_REGISTRADO` antes de llamar a la IA, sin generar ni persistir análisis, y el panel muestra "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia." No es "sin evidencia". Cambio aditivo del contrato (clinical-api 1.2.0, `[S1 resp. 37]`).
 
+
+> **Decidido (usuario, 2026-10-20), AC-5 de US-211 traspasado a esta historia (opción b):** el test de integración "envía Authorization Bearer y ninguna cabecera Cookie ni el token hacia rag-orchestrator cuando se pide un análisis con la cookie del login" `[US-211 AC-5]` se escribe y se verifica en el change de L1D-103 (login real de `doc1` → `POST /platform/evidence-analyses` con MSW que captura), porque el gateway nace aquí. Los AC propios de US-052 no cambian. Efecto de orden: L1D-103 depende de L1D-197 (guard y login) y el AC-5 de US-211 solo se cierra con L1D-103 en `main`; ver `backlog/sprints/S1-plan.md` §10.
 
 ## Story
 Como oncólogo, quiero hacer una pregunta en lenguaje natural sobre mi paciente y que el

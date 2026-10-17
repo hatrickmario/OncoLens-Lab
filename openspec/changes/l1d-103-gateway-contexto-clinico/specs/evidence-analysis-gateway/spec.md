@@ -98,6 +98,22 @@ Si el paciente existe pero no tiene diagnóstico activo (el contexto no tendría
 
 Regresión [RBAC `ai_analysis:create` → 403] activa desde S2 (US-045), que reemplaza la comprobación de rol y conserva este escenario. Regresión [RN-15 opt-out → 403] activa desde S6 (US-148). Regresión [RN-17 paciente egresado → 422] Post-MVP (US-198). Regresión [409 de catálogo] activa desde S2 (US-041).
 
+### Requirement: La sesión del doctor nunca llega a rag-orchestrator
+El valor del token de `oncolens_session` MUST NOT salir de `clinical-api`: los requests hacia `rag-orchestrator` SHALL llevar solo `Authorization: Bearer <jwt de servicio>` (capacidad `service-auth`, L1D-105) y ninguna cabecera `Cookie` ni cabecera copiada del request entrante; el token MUST NOT aparecer en cabeceras, cuerpos ni logs de `rag-orchestrator`. (Requisito heredado de L1D-197, usuario, 2026-10-20, opción b.)
+
+#### Scenario: El análisis con la cookie real no filtra el token hacia Backend 2 [US-211 AC-5] [FR-01] [OL-03]
+- **GIVEN** la cookie `oncolens_session` obtenida con el login de `doc1@test.local` y `rag-orchestrator` simulado que captura el request
+- **WHEN** se solicita un análisis sobre el paciente semilla (a) con esa cookie
+- **THEN** el request capturado hacia `rag-orchestrator` lleva `Authorization: Bearer <jwt>` y no lleva cabecera `Cookie`
+- **AND** el valor del token no aparece en ninguna cabecera ni en el cuerpo del request capturado
+
+#### Scenario: Los logs de rag-orchestrator no contienen la cookie de sesión [US-211 AC-5] [OL-03]
+- **GIVEN** `rag-orchestrator` bajo `TestClient` con registro de logs capturado y un `/rag/query` con un `Authorization: Bearer` de servicio válido y una cabecera `Cookie: oncolens_session=<valor sintético>`
+- **WHEN** se atiende la petición
+- **THEN** ningún registro capturado contiene el valor de la cookie ni el nombre `oncolens_session`
+
+Nota: el E2E de los logs de `rag-orchestrator` con el navegador contra Compose queda fuera de este change, en la deuda D-3 (decisión 60 del plan).
+
 ### Requirement: El gateway no registra la pregunta ni el contexto en los logs
 Los logs que emite `clinical-api` al atender `POST /platform/evidence-analyses` MUST contener solo `traceId`, el UUID del paciente y códigos de resultado, y SHALL no contener la `query`, el `clinicalContext` ni identidad del paciente.
 
@@ -134,9 +150,16 @@ Mientras el puerto `ContextDeidentifier` use el adaptador provisional de este ch
 - **THEN** responde `502` con `error = ERROR_SERVICIO_IA`, `message` fijo y `traceId`, válido contra el spec de `clinical-api`
 - **AND** el cliente de `rag-orchestrator` registra cero llamadas y el log lleva `motivo = data_origin` sin la pregunta
 
+#### Scenario: Compose no levanta el servicio sin APP_ENV [RN-11] [RN-13] [decisión 64]
+- **GIVEN** el `infra/docker/docker-compose.yml` con `clinical-api` declarando `APP_ENV: ${APP_ENV:?APP_ENV obligatorio}`
+- **WHEN** se ejecuta `docker compose config` sin `APP_ENV` en el entorno
+- **THEN** el comando falla con el mensaje `APP_ENV obligatorio` y no se levanta ningún servicio
+
 #### Scenario: Con APP_ENV piloto o ausente el paciente semilla tampoco sale hacia la IA [RN-11] [RN-13] [S1 resp. 14d]
 - **GIVEN** el paciente semilla (b) con `data_origin = sintetico` y la app de test arrancada con `APP_ENV = piloto`, y en otro caso sin `APP_ENV`
 - **WHEN** `doc1@test.local` envía la pregunta del AC-1
 - **THEN** ambas respuestas son `502` con `error = ERROR_SERVICIO_IA` y el cliente de `rag-orchestrator` registra cero llamadas
 
 Regresión [RN-11 fallo cerrado `503 DESIDENTIFICACION_NO_DISPONIBLE`] activa desde S1 con el change de L1D-203, que sustituye este adaptador.
+
+Nota de presentación (Gate 1, usuario, 2026-10-20): el panel de L1D-140 muestra para este `502` el mismo aviso neutro "No se pudo generar el análisis en este momento." (clave de `es.json`, dueño L1D-140). El `422 TIPO_CANCER_NO_REGISTRADO` es una imposibilidad técnica, no un aviso clínico de RN-26, y su `message` es fijo; el panel añade cómo continuar ("Registre el diagnóstico activo del paciente y vuelva a solicitar el análisis."). Este change no modifica `web`.

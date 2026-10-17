@@ -173,7 +173,7 @@ descartan en línea.
       error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO, TIPO_CANCER_NO_REGISTRADO] }
       message: { type: string }
       traceId: { type: string }
-  # info.version: 1.1.0 (L1D-164) → 1.2.0 [S1 resp. 37]
+  # info.version: 1.2.0 (L1D-197) → 1.3.0 (este change; decisión 58 del plan)
   ```
   El spec de `rag-orchestrator` no cambia en este change (su `422 TIPO_CANCER_NO_REGISTRADO` es de L1D-106). El resto
   de lo emitido (`401 NO_AUTENTICADO`, `403 PERMISO_DENEGADO`, `404 NO_ENCONTRADO`, `422 CUERPO_INVALIDO`,
@@ -206,22 +206,40 @@ descartan en línea.
 | `trace-id.middleware.ts` | nuevo | `IdGenerator` | `traceIdEntranteRegistrable()` |
 | `context-deidentifier.provisional.ts` | nuevo | `PseudonymGenerator`, config (`APP_ENV`) | `exigirEntornoSintetico()` (`[S1 resp. 14d]`) |
 | `evidence-analysis.service.ts` (*factory* `crearEvidenceAnalysisService`) | nuevo | `CasoRepository`, `ContextDeidentifier`, `RagQueryClient`, `AnalysisCompletion`, `CatalogVersionProvider`, `Clock`, `IdGenerator`, config | `armarRagQueryRequest()` |
-| `evidence-analysis.repository.ts` | nuevo | Prisma (real en tests) | — |
+| `evidence-analysis.repository.ts` | nuevo | pool `pg` inyectado de `server.ts` (L1D-197, 2.6b; real en tests; migración a Prisma = deuda D-1) | — |
 | `clinical-context.builder.ts` | nuevo | `Clock` | `construirContextoPermitido()` (RN-10), `mesesTranscurridos()`, `asignarDataRefs()`, `provenanceDe()` |
 | `evidence-analysis.schema.ts` | nuevo | Zod generado | — |
 | `ports.ts` | nuevo | — | declara `ContextDeidentifier`, `AnalysisCompletion`, `RagQueryClient`, `CatalogVersionProvider` |
 | Router de la app | mod. | guard de US-211 | — |
-| Composición del módulo (arranque) | nuevo | cliente hey-api generado, `createRagOrchestratorFetch()` y `createServiceTokenSigner()` de L1D-105 (no se crean aquí) | — |
+| Composición del módulo (arranque) | nuevo | pool `pg` creado por L1D-197 en `server.ts` (no se crea otro), cliente hey-api generado, `createRagOrchestratorFetch()` y `createServiceTokenSigner()` de L1D-105 (no se crean aquí) | — |
 
-Ningún service ni builder importa un cliente HTTP o Prisma concreto: los reciben por la *factory*.
+Ningún service ni builder importa un cliente HTTP, `pg` o Prisma concreto: los reciben por la *factory*.
 
 ## Risks / Trade-offs
 
 - **Ventana de RN-11/RN-06 entre merges** → mitigada con adaptadores provisionales que no muestran resultados, un
   desidentificador provisional que falla cerrado fuera de datos sintéticos y de `APP_ENV ∈ {local,test}`
   `[S1 resp. 14d]`; el orquestador fusiona L1D-103 → L1D-104 → L1D-203 en oleadas consecutivas.
+- **AC-5 de US-211 heredado de L1D-197** (usuario, 2026-10-20, opción b) → el test de integración "la sesión no
+  llega a rag-orchestrator" usa el login real de `doc1` (L1D-197) y el MSW de este change, que ya captura cabeceras
+  y cuerpo; se cierra aquí sin test en rojo. La mitad de logs de `rag-orchestrator` se cubre con un test de
+  integración (tarea 3.1: `TestClient` + `caplog` con `Authorization` válido y una `Cookie` sintética). Su par E2E
+  (Playwright contra Compose con `LLM_PROVIDER=fake`) **sale de este change hacia la deuda D-3** (Playwright y perfil
+  de test en Compose, ID por asignar): no se archiva con una tarea pendiente (decisión 60 del plan).
+  **US-211 no pasa a Done hasta que 2.8f esté en `main`** (decisión 61). Requisito y escenarios en el delta de spec.
 - **AC-5 cruza a L1D-104** (`filters_applied` persistido) → este change verifica la parte del request; el test de
   aceptación se completa con la aserción de persistencia en L1D-104.
+
+- **Avisos del panel por fallos que no son clínicos (Gate 1 de `clinical-language-auditor`, usuario, 2026-10-20).**
+  (a) El fallo cerrado del desidentificador provisional (`502 ERROR_SERVICIO_IA`) **se muestra en el panel con el
+  mismo aviso neutro** que el resto de fallos de generación: "No se pudo generar el análisis en este momento.";
+  la clave vive en `apps/web/messages/es.json` y su dueño es L1D-140 (que añade `evidence.*`); este change no
+  toca `web` ni el literal. (b) `422 TIPO_CANCER_NO_REGISTRADO` es una **imposibilidad técnica** (sin tipo de
+  cáncer no se puede filtrar la evidencia), **no** un aviso clínico de RN-26: por eso corta antes de la IA y no se
+  presenta como "sin evidencia". El `message` de la API queda fijo ("Análisis no realizado: falta el tipo de
+  cáncer; no fue posible filtrar la evidencia."); el **panel de L1D-140 añade cómo continuar** ("Registre el
+  diagnóstico activo del paciente y vuelva a solicitar el análisis."), con la clave en `es.json` de L1D-140.
+  Ambos textos son informativos, sin lenguaje prescriptivo (RN-23).
 
 ## Pendiente de definir
 
@@ -233,3 +251,8 @@ Ningún service ni builder importa un cliente HTTP o Prisma concreto: los recibe
 - **Nombre de `ANALYSIS_MAX_OPTIONS`** (asumido; coordinar con L1D-275, que recorta a `maxOptions` en Backend 2).
 - ~~`manifest.json` mínimo en el S1~~: resuelto en el Gate 1 (2ª vuelta): lo crea L1D-169 (↪, creador único); este
   change solo lo lee y no crea ningún archivo en `packages/clinical-catalogs`.
+
+## Decisiones del Gate 1 (privacy-guardian, 2026-10-20)
+
+- **`APP_ENV` dentro de Compose (`exigirEntornoSintetico()`):** **Decidido (usuario, 2026-10-20, decisión 64 del plan): opción 1.** `${APP_ENV:?APP_ENV obligatorio}` en los servicios `clinical-api` (tarea de L1D-197, montaje de `server.ts` y Compose) y `clinical-seed` (tarea de L1D-169), de modo que el fallo cerrado por `APP_ENV ∉ {local,test}` proteja también el stack; este change lo verifica con el escenario «Compose no levanta el servicio sin APP_ENV» (tarea 2.1).
+- **Conexión a PostgreSQL:** **Decidido (decisión 62):** el repository de este change usa el pool `pg` inyectado de L1D-197 (sin credenciales en la URL, TLS verificado); no abre su propia conexión.

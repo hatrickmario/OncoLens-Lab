@@ -4,7 +4,7 @@
 `POST /platform/auth/login` (vía el Route Handler de `web`) MUST verificar la contraseña con Argon2id contra `password_hash` de un usuario `activo` y SHALL crear en `auth.session` una fila cuyo `token_hash` es el hash de un token opaco aleatorio de 256 bits nuevo (no JWT ni cookie previa), con `expires_at = ahora + SESSION_TTL_HOURS`. MUST responder `204` sin cuerpo con la cookie `oncolens_session` `HttpOnly; Secure; SameSite=Strict`; el token en claro MUST NOT guardarse.
 
 #### Scenario: Login correcto crea la sesión hasheada y rota la cookie [US-211 AC-1] [HU-01] [FR-01]
-- **GIVEN** `doc1@test.local` activo (FX-T4a-b, sembrado por US-039 con hash Argon2id) y un request con una cookie `oncolens_session` previa de valor arbitrario
+- **GIVEN** `doc1@test.local` activo (FX-T4a-b; lo crea el *fixture* de test con `createPasswordHasher()` de este change y, en la demo, el seed de US-039, con hash Argon2id) y un request con una cookie `oncolens_session` previa de valor arbitrario
 - **WHEN** se envían sus credenciales correctas a `POST /api/auth/login` de `web`
 - **THEN** `web` llama a `POST /platform/auth/login` por su Route Handler y `auth.session` gana exactamente una fila del usuario con `token_hash` no nulo y `revoked = false`
 - **AND** ninguna columna de esa fila contiene el valor del token en claro
@@ -19,13 +19,13 @@ La página `/login` de `web` MUST rotular el campo de usuario como "Correo elect
 - **THEN** el navegador queda en la ruta configurada y tiene la cookie `oncolens_session` con `HttpOnly`, `Secure` y `SameSite=Strict`
 
 ### Requirement: Etiqueta de uso académico en el login con clave propia
-La página `/login` MUST mostrar como texto visible "Uso académico/investigación" (RN-19, S1-01) desde la clave `app.academicUseLabel` de `apps/web/messages/es.json`, que este change crea (Gate 1, 2ª vuelta); `AppHeader` de L1D-194 SHALL consumir la misma clave, sin otra copia del literal en `apps/web`.
+La página `/login` MUST mostrar como texto visible "Uso académico/investigación" (RN-19, S1-01) desde la clave `app.academicUseLabel` de `apps/web/messages/es.json`, que este change crea (Gate 1, 2ª vuelta); `AppHeader` de L1D-194 SHALL consumir la misma clave, sin otra copia del literal en `apps/web` (los archivos de test quedan excluidos de ese chequeo).
 
 #### Scenario: La página de login muestra la etiqueta de uso académico desde es.json [US-069 AC-3] [RN-19] [pantallas-s1 S1-01]
 - **GIVEN** `apps/web/messages/es.json` con `app.academicUseLabel` = "Uso académico/investigación"
 - **WHEN** se renderiza `/login` sin sesión
 - **THEN** la página muestra el texto visible "Uso académico/investigación" (no solo color) leído de la clave `app.academicUseLabel`
-- **AND** ningún archivo de `apps/web` fuera de `messages/es.json` contiene el literal "Uso académico/investigación"
+- **AND** ningún archivo de `apps/web` fuera de `messages/es.json` y de los archivos de test (`*.test.ts`, `*.test.tsx` y `tests/`) contiene el literal "Uso académico/investigación"
 
 ### Requirement: Respuesta uniforme ante credenciales inválidas o cuenta no activa
 Una contraseña incorrecta, un correo inexistente y una cuenta no `activo` MUST responder `401` con el mismo cuerpo `{ error: "CREDENCIALES_INVALIDAS", message, traceId }` (solo cambia `traceId`), sin eco del correo, y MUST NOT crear filas en `auth.session` `[Pre-S1 resp. 29]`. La verificación SHALL ejecutar Argon2id también si el correo no existe. `web` SHALL mostrar "Correo o contraseña incorrectos." en una región `role="alert"`, igual en los tres casos.
@@ -41,6 +41,11 @@ Una contraseña incorrecta, un correo inexistente y una cuenta no `activo` MUST 
 - **WHEN** se envía el formulario
 - **THEN** aparece "Correo o contraseña incorrectos." en una región `role="alert"`, sin indicar qué campo falló, y el navegador sigue en `/login`
 
+#### Scenario: La página de login muestra el aviso de servicio cuando el Route Handler responde 502 [US-211 AC-2] [Gate 1 2026-10-20]
+- **GIVEN** la página `/login` y el Route Handler respondiendo `502` con `error = ERROR_SERVICIO_AUTENTICACION` (MSW desde su ejemplo en `contracts/examples/`)
+- **WHEN** se envía el formulario
+- **THEN** aparece el texto de la clave `login.errorServicio` ("No se pudo iniciar sesión en este momento. Inténtalo de nuevo.") en una región `role="alert"`, distinto de "Correo o contraseña incorrectos.", y el navegador sigue en `/login`
+
 ### Requirement: El login de web verifica Origin y Content-Type antes de contactar a clinical-api
 Antes de leer el cuerpo, `POST /api/auth/login` de `web` MUST verificar `Origin` con `verificarOrigen()` de L1D-139 (ausente también falla) y exigir `Content-Type: application/json` `[S1 resp. 14a]`. Si falla, SHALL responder la respuesta propia del BFF `403` con forma `ErrorPermisoDenegado` (`PERMISO_DENEGADO`) y registrar `motivo=origen` o `motivo=content_type` sin credenciales; MUST NOT llamar a `clinical-api`.
 
@@ -49,6 +54,20 @@ Antes de leer el cuerpo, `POST /api/auth/login` de `web` MUST verificar `Origin`
 - **WHEN** llega cada request a `web`
 - **THEN** ambos responden `403` con `error = PERMISO_DENEGADO`, validados contra `ErrorPermisoDenegado` con el *helper* `assertMatchesSpec()` de L1D-164
 - **AND** ninguna respuesta lleva `Set-Cookie` y el contador de requests a `clinical-api` es cero
+
+### Requirement: El login de web declara sus respuestas propias 502 y 500
+Cuando `clinical-api` es inalcanzable o falla el transporte, `POST /api/auth/login` de `web` MUST responder `502` con `ErrorServicioAutenticacion` (`error = ERROR_SERVICIO_AUTENTICACION`, mensaje fijo, `traceId` generado) sin URL, cuerpo parcial ni detalle interno; y un `500` de `clinical-api` (`ErrorInterno`) SHALL retransmitirse sin cambios. Ninguno lleva `Set-Cookie`.
+
+#### Scenario: Con clinical-api inalcanzable el login responde 502 ERROR_SERVICIO_AUTENTICACION sin detalle [Gate 1 2026-10-20]
+- **GIVEN** el Route Handler `app/api/auth/login` con `clinical-api` simulado (MSW) que falla la conexión, y las credenciales correctas de `doc1@test.local`
+- **WHEN** se envía el login
+- **THEN** responde `502` con `error = ERROR_SERVICIO_AUTENTICACION`, `message` fijo y `traceId`, validado contra `#/components/schemas/ErrorServicioAutenticacion` con `assertMatchesSpec()`
+- **AND** el cuerpo no contiene el hostname ni la causa de la excepción, `message` es fijo, no lleva `Set-Cookie`, y ninguna línea de log capturada contiene la contraseña enviada
+
+#### Scenario: Un 500 de clinical-api se retransmite como ErrorInterno [Gate 1 2026-10-20]
+- **GIVEN** `clinical-api` simulado con MSW desde `contracts/examples/error-interno.json` respondiendo `500`
+- **WHEN** se envía el login
+- **THEN** `web` responde `500` con el mismo cuerpo `ErrorInterno`, validado contra el spec, y sin `Set-Cookie`
 
 ### Requirement: Guard de sesión en clinical-api
 Toda ruta `/platform/*` salvo el login MUST pasar por el guard, que busca el hash del token de `oncolens_session` en `auth.session` no revocada, con `expires_at` futuro `[S1 resp. 14c]` y de un usuario `activo`. Sin cookie, con token desconocido o con sesión caducada, SHALL responder `401 NO_AUTENTICADO` antes del controlador y de validar el cuerpo, sin invocar a `rag-orchestrator`. Con sesión válida SHALL adjuntar `userId` y rol (el `403` de admin es de L1D-103).
@@ -77,19 +96,7 @@ Regresión [SEG-02] (`403` por permiso según `x-permission`) activa desde S2 (U
 - **THEN** `web` responde con una redirección a `/login` y el navegador termina en la página de login
 - **AND** el HTML servido no contiene el identificador del paciente ni ningún dato clínico o de identidad del seed
 
-### Requirement: La sesión del doctor nunca llega a rag-orchestrator
-El valor del token de `oncolens_session` MUST NOT salir de `clinical-api`: los requests hacia `rag-orchestrator` SHALL llevar solo `Authorization: Bearer <jwt de servicio>` (capacidad `service-auth`, L1D-105) y ninguna cabecera `Cookie` ni cabecera copiada del request entrante; el token MUST NOT aparecer en cabeceras, cuerpos ni logs de `rag-orchestrator`.
-
-#### Scenario: El análisis con la cookie real no filtra el token hacia Backend 2 [US-211 AC-5] [FR-01] [OL-03]
-- **GIVEN** la cookie `oncolens_session` obtenida con el login de `doc1@test.local` y `rag-orchestrator` simulado que captura el request
-- **WHEN** se solicita un análisis sobre el paciente semilla (a) con esa cookie
-- **THEN** el request capturado hacia `rag-orchestrator` lleva `Authorization: Bearer <jwt>` y no lleva cabecera `Cookie`
-- **AND** el valor del token no aparece en ninguna cabecera ni en el cuerpo del request capturado
-
-#### Scenario: Los logs de rag-orchestrator no contienen el token de sesión [US-211 AC-5] [OL-03]
-- **GIVEN** el stack de Compose en perfil de test con `LLM_PROVIDER=fake` y un análisis solicitado desde el navegador con la cookie del login
-- **WHEN** se leen los logs de `rag-orchestrator` de ese intervalo
-- **THEN** ninguna línea contiene el valor del token de `oncolens_session` ni la palabra `oncolens_session`
+Nota (usuario, 2026-10-20, opción b): el requisito "La sesión del doctor nunca llega a rag-orchestrator" (AC-5 de US-211) y sus dos escenarios se movieron al delta de spec de L1D-103 (`evidence-analysis-gateway`); este change solo garantiza que el guard adjunta `userId` y `rol`.
 
 ### Requirement: Contraseñas y tokens de sesión fuera de los logs
 Los logs de `web` y `clinical-api` MUST NOT contener la contraseña enviada en el login ni el valor del token de sesión (ni en cabeceras `Cookie`/`Set-Cookie` ni en cuerpos). El logger SHALL redactar `password`, `cookie`, `set-cookie` y `authorization`, y el cuerpo del login MUST NOT registrarse.

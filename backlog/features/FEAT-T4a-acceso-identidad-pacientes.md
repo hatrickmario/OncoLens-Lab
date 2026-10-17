@@ -29,6 +29,21 @@
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 4]`):** rutas en español del diseño aprobado (`docs/ux/flujo-e2e.md`): `/login` y `/pacientes/[id]/analisis` (en el S1 el resultado se muestra en esa misma página; `/pacientes/[id]/analisis/[analysisId]` llega con el historial). El campo de la página de login es "Correo electrónico". En el S1 la ruta de inicio configurada tras el login es `/pacientes/[id]/analisis` del paciente semilla (a) (`docs/ux/S1/pantallas-s1.md`).
 
+> **Decidido (usuario, 2026-10-20), decisiones sobre la Oleada 4** (detalle en `openspec/changes/l1d-197-sesion-login-guard/` y en `backlog/sprints/S1-plan.md` §10):
+> - **AC-5 pasa a L1D-103 (US-052), opción (b):** el test de integración "la sesión no llega a rag-orchestrator" `[US-211 AC-5]` se escribe y se cierra en el change de L1D-103 (cabeceras y cuerpo, tarea 2.8f) y en un test de integración de `rag-orchestrator` (logs, tarea 3.1 de ese change); su par E2E de logs pasa a la deuda D-3; el AC-5 de esta historia **se conserva** (no cambia su texto ni su número), pero su verificación ya no es tarea de L1D-197. **US-211 no pasa a Done hasta que 2.8f de L1D-103 esté en `main`** (decisión 61 del plan); no se mergea con test rojo. El commit de código de L1D-197 que quite las tareas lleva `Test-Removal:`.
+> - **Login montado en `server.ts`** de `clinical-api` dentro de esta historia (pool PostgreSQL y variables en Compose).
+> - **Repository sobre `pg`** en esta historia; migración a Prisma Client registrada como deuda (ver `backlog/features/README.md`, "Deuda por asignar ID", D-1).
+> - **UI provisional:** `/login` con CSS Modules; Tailwind v4 + shadcn/ui llegan en un chore previo a L1D-140 (deuda D-2).
+> - **Contrato:** `500` genérico y un código propio del login para el `502` de `web` se añaden al spec vía `sync-contracts` (tarea de contratos).
+> - **`auth.session.ip_address` y `user_agent` son `nullable`** (`null` en el S1); se corrige `docs/architecture/data-model.md` y la migración va en el **mismo PR** de L1D-197 como tarea 2.0, antes del código de login (decisión 63 del plan).
+> - **Contrato y versión (decisiones 58 y 59):** L1D-197 sube `clinical-api` a 1.2.0 y es el dueño de `ErrorInterno` (L1D-104 lo referencia).
+> - **Conexión a PostgreSQL (decisión 62):** `CLINICAL_DATABASE_URL` sin credenciales + `PG_CLINICAL_API_PASSWORD_FILE`, TLS con `rejectUnauthorized: true`, un solo pool inyectado en `server.ts`; `APP_ENV` obligatorio en Compose (decisión 64); respaldo `SINT-*` solo bajo `tests/` (decisión 66).
+> - **`visual-check` de `/login` y E2E de Playwright pendientes** hasta la deuda D-3 (Playwright y perfil de test en Compose).
+> - **`WEB_HOME_PATH`** con el UUID del paciente semilla: aceptado como deuda hasta US-048.
+> - **CSP y cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6).
+
+> **Decidido (usuario, 2026-10-20), circularidad con US-039:** L1D-197 crea su usuario `doc1@test.local` con un *fixture* local de tests (`tests/support/usuarios.ts`) usando el *hasher* de 197 (`createPasswordHasher()`), **sin depender del seed de L1D-169**; L1D-169 adopta después el seed usando ese mismo *hasher* y el mismo usuario `doc1`. Los AC no cambian (el AC-1 sigue hablando de `doc1@test.local` activo con hash Argon2id).
+
 ## Story
 Como oncólogo, quiero iniciar sesión con mi correo y mi contraseña antes de pedir un
 análisis, para que desde el primer sprint nadie sin sesión pueda ver datos de un

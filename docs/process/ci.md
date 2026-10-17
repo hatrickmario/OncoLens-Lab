@@ -148,6 +148,10 @@ El audit que bloqueará (con US-217) es `npm audit --omit=dev` (producción), qu
 job lo ejecuta, se verifica a mano y se adjunta al PR. `npm audit` completo muestra estas 4
 altas por esa única cadena; no se relaja nada más.
 
+## Seguimiento: duración de `build-test` (PR #41)
+
+Decidido (usuario, 2026-10-20): tras el merge del PR #41 se **mide la duración del job `build-test`** (se compara con la de `main` antes del merge y se anota en el PR). Si la instalación de `torch` domina el tiempo, se pasa a la rueda CPU solo con `--index-url` en esa instalación (versión exacta y sin cambiar el resto de dependencias). Sin umbral nuevo ni cambio de la CI hasta tener la medición.
+
 ## Fuera de alcance de este change
 
 Suite `evaluate` en PRs de modelo, prompt, umbral, catálogo o corpus (US-074); umbrales de tamaño, reglas de capas e

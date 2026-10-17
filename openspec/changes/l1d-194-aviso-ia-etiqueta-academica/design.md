@@ -8,7 +8,7 @@ toda página autenticada. El Pre-S1 congeló el contrato con un `disclaimer` que
 raya (`[Pre-S1 resp. 25]`); `[S1 resp. 9]` (2026-10-13) lo corrigió: literal de B-06 con dos puntos, solo
 esa frase en el campo, etiqueta aparte. La validación clínica de los oncólogos asesores `[S1 resp. 32]`
 (2026-10-14, `backlog/sprints/S1-plan.md` §7) fija el literal definitivo y supersede el de B-06 (PRD E-11),
-con "Uso académico/investigación" visible y permanente; `[S1 resp. 37]` fija la versión 1.3.1. Pantalla de referencia: `docs/ux/S1/pantallas-s1.md` S1-08/09
+con "Uso académico/investigación" visible y permanente; la decisión 58 del plan fija la versión 1.4.1. Pantalla de referencia: `docs/ux/S1/pantallas-s1.md` S1-08/09
 (cabecera, posición 2 "Aviso IA", posición 7 "Pie" y tabla de estados) y `docs/ux/sistema-de-diseno.md`
 (`AiDisclaimer`, `AppHeader`). Sin desviaciones.
 
@@ -104,8 +104,8 @@ Zod/tipos generados) y los mocks MSW construidos desde `contracts/examples/` (US
 
 ```diff
  info:
--  version: 1.3.0            # vigente tras L1D-164 (1.1.0), L1D-103 (1.2.0) y L1D-104 (1.3.0), [S1 resp. 37]
-+  version: 1.3.1            # patch: solo texto
+-  version: 1.4.0            # vigente tras L1D-164 (1.1.0), L1D-197 (1.2.0), L1D-103 (1.3.0) y L1D-104 (1.4.0), decisión 58 del plan
++  version: 1.4.1            # patch: solo texto
  ...
  EvidenceAnalysis:
    properties:
@@ -153,9 +153,9 @@ pasa a "literal anterior de B-06 (dos puntos) → hallazgo" y "raya → hallazgo
 hallazgos". El commit lleva `Test-Removal: [S1 resp. 32] supersede el literal de S1 resp. 9 y la tolerancia
 de Pre-S1 resp. 25`.
 
-**`info.version` `[S1 resp. 37]`** (sustituye al registro de `[S1 resp. 17]`): `clinical-api` 1.1.0
-(L1D-164) → 1.2.0 (L1D-103, `422 TIPO_CANCER_NO_REGISTRADO`) → 1.3.0 (L1D-104) → **1.3.1** (este change) →
-1.4.0 (L1D-203). Quien mergea segundo rebasa.
+**`info.version` (decisión 58 del plan, sustituye al registro de `[S1 resp. 37]`)**: `clinical-api` 1.1.0
+(L1D-164) → 1.2.0 (L1D-197) → 1.3.0 (L1D-103, `422 TIPO_CANCER_NO_REGISTRADO`) → 1.4.0 (L1D-104) → **1.4.1** (este change) →
+1.5.0 (L1D-203). Quien mergea segundo rebasa.
 
 ## Riesgos
 

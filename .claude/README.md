@@ -25,8 +25,8 @@ en segundo plano para la fase de ejecución. Alineada con el **PRD v1.4** (slici
 |---|---|---|
 | `/sprint-refine` | Sesión principal | Fases 1–3: DoR, decisiones, entrevista, stack y diseño en `docs/ux/` · `backlog/sprints/S<n>-refinamiento.md` |
 | `/sprint-start` | Sesión principal | Exige el refinamiento en `main` · Linear → historias · `openspec list` · `backlog-to-change` por historia · **Gate 1** en lote · grafo y oleadas · **aprobación humana** · PR del plan |
-| `/sprint-run` | `sprint-orchestrator` (nivel 1) | Oleadas → implementadores (nivel 2, worktree) → **Gate 2** (guardianes, nivel 2) → PR listo · **mantiene Linear: In Progress al empezar, In Review en pruebas/Gate 2/PR, de vuelta a In Progress si fallan las pruebas; nunca Done** · vuelve solo para pedir merges o si un gate falla 2 veces |
-| `/sprint-close` | Sesión principal | Control · `/opsx:verify` global · `/opsx:bulk-archive` · `traceability-auditor` (**único que pasa a Done**, solo si cumple) · demo + retro · **cierre humano** |
+| `/sprint-run` | `sprint-orchestrator` (nivel 1) | Oleadas → implementadores (nivel 2, worktree) → **Gate 2** (guardianes, nivel 2) → PR listo · **mantiene Linear: In Progress al empezar, In Review en pruebas/Gate 2/PR, de vuelta a In Progress si fallan las pruebas, Done cuando la historia está completada y mergeada** · vuelve solo para pedir merges o si un gate falla 2 veces |
+| `/sprint-close` | Sesión principal | Control · `/opsx:verify` global · `/opsx:bulk-archive` · `traceability-auditor` (**revisión profunda de los Done: confirma o devuelve a In Review/In Progress**; Done de las Features) · demo + retro · **cierre humano** |
 
 ### Jerarquía de agentes (profundidad 3)
 
@@ -96,7 +96,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `PreToolUse` Edit/Write | `guard-sensitive-paths.sh` | Bloquea `.env`, claves, certificados y rutas de datos reales |
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
 | `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, que incluye los schemas Zod compartidos en `src/zod/`, y `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
-| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged · **higiene de tests**: bloquea `.skip`/`.only`/`xit`/`xfail` añadidos y tests eliminados sin el *trailer* `Test-Removal:` (mover un test no cuenta) · `openspec validate --all --strict`. No corre lint ni formato (`lint`, `format:check`): los cubre la CI (decisión 2026-10-20) |
+| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged · **higiene de tests**: bloquea `.skip`/`.only`/`xit`/`xfail` añadidos y tests eliminados sin el *trailer* `Test-Removal:` (mover un test no cuenta; en un merge real —MERGE_HEAD que no es ancestro de HEAD y comparte base con él; si no, es un commit normal— un test solo cuenta como eliminado si su nombre está en algún archivo de test de ambos padres y en ninguno del resultado; lo que la otra rama ya movió o borró no cuenta. Comparación por nombre en todos los archivos de test de HEAD, MERGE_HEAD e índice) · `openspec validate --all --strict`. No corre lint ni formato (`lint`, `format:check`): los cubre la CI (decisión 2026-10-20) |
 | `PreToolUse` `mcp__playwright__*`, `mcp__chrome-devtools__*` | `guard-visual-loop.sh` | Loop visual solo contra `localhost`/`127.0.0.1` y nunca con `REAL_ANONYMIZED_ENABLED`/`REAL_IDENTIFIED_ENABLED` activos (entorno o `.env`) |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es
