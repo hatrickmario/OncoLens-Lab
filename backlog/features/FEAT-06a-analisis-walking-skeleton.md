@@ -499,6 +499,40 @@ Síntesis, aplicabilidad, agente y hasta 3 opciones (S3–S5: US-125, US-134).
 
 ---
 
+## US-231 · ADR-39 — Adapters reales de embeddings, reranker, detector de idioma y NLI
+
+> Linear: pendiente (límite de issues del workspace). Sin `L1D-nn` asignado; el ID de Linear se pone cuando exista el issue. Historia **propuesta** (usuario, 2026-10-17): no entra todavía en el recuento de puntos ni en el slicing del S1 (ver `S1-plan.md`, decisión 74).
+
+`FEAT-06a` · Sprint por decidir (propuesta: S1, antes de L1D-179) · Estimación **8** (propuesta, a validar en el refinamiento; excepción de tamaño como US-012) · HU-03 · IA-01, NFR-01, NFR-05, RN-12, RN-22, RN-03 (cálculo del `relevance_score`), FR-09 (S1), FR-25 (`meta.rerankerModel`, `meta.nliModel`) · AC-06.1 (parte S1) · Dueño: Ingeniería (`ai-services`) · ↪ US-012 · ADR-39 fase A (aceptado, 2026-10-20), US-058 (dimensión y esquema), US-059 (el corpus a indexar), US-055 (puertos y adapters falsos que estos reemplazan), US-034 (Compose y volumen de modelos) · 🔗 Bloquea: US-063 [L1D-179], US-225 [L1D-275], US-064 [L1D-180], el *smoke* AC-1 de US-059 [L1D-115, tarea 1.13] y la medición de p95 de US-224 [L1D-274] · No bloquea: los AC de US-055, que se siguen verificando con adapters falsos
+
+> **Origen (usuario, 2026-10-17):** los AC de US-055 y de las historias que la siguen se verifican con adapters falsos; faltaba la historia que construye los adapters **reales** de `rag-orchestrator` con los modelos que fijó el ADR-39 fase A. Absorbe el *smoke* 1.13 de L1D-115 (cargador de la semilla con *embeddings* reales) y la tarea 2.13b trasladada.
+
+## Story
+Como responsable técnico, quiero que `rag-orchestrator` use los modelos locales fijados por el ADR-39 fase A detrás de los puertos de `app/application/ports.py`, para que el walking skeleton recupere, ordene y valide con modelos reales sin salir de la máquina y sin cambiar el contrato de los puertos.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · *embeddings*)** `[IA-01]` · Dado un fixture sintético pequeño (3 pasajes y 1 pregunta, `clase: sintetico`), cuando `QueryEmbedder` y `PassageEmbedder` reales (BGE-M3 int8, CPU/ONNX) los procesan, entonces el vector *dense* tiene 1024 dimensiones (`EMBEDDING_DIM`), el *sparse* sale del propio BGE-M3 y el pasaje semánticamente más cercano a la pregunta queda primero por coseno.
+- **AC-2 (happy path · *reranker*)** `[RN-03]` · Dado el mismo fixture, cuando el `Reranker` real (bge-reranker-v2-m3 int8, `RERANKER_MAX_LENGTH` = 512) puntúa los pares, entonces cada `relevance_score` está en [0,1], el pasaje relevante supera al irrelevante y `meta.rerankerModel` registra modelo, versión y *hash*.
+- **AC-3 (happy path · idioma y NLI)** · Dadas una afirmación y una premisa etiquetadas en el fixture (es y es → en) y dos textos de idioma conocido, cuando el `LanguageDetector` y el `NLI` reales (mDeBERTa-v3-base-xnli-multilingual-nli-2mil7, fp32 según el ADR) los procesan, entonces el detector devuelve `es`/`en` y el NLI devuelve la clase esperada (entailment/neutral/contradiction) con probabilidades que suman 1 y `meta.nliModel` registra modelo, versión y *hash*.
+- **AC-4 (invariante · mismo contrato que el fake)** · Dados los adapters reales y sus fakes (FX-06a-a / FX-06a-b), cuando se ejecuta la misma batería de contrato sobre ambos, entonces cumplen las mismas firmas y los mismos errores, `None` ≠ `0.0` (un puntaje ausente nunca se convierte en 0) y el fallo de un modelo se traduce al mismo error de dominio (`RETRIEVAL_UNAVAILABLE` para recuperación; el de NLI, el de US-064).
+- **AC-5 (borde · determinismo)** `[IA-07]` `[ADR-8]` · Dados los mismos pares y la misma configuración, cuando se calcula el `relevance_score` dos veces (y en otro proceso), entonces los valores son idénticos y quedan versionados con modelo y *hash*.
+- **AC-6 (borde · modelo ausente o alterado)** `[RN-22]` · Dado un modelo cuyo archivo falta o cuyo *hash* no coincide con el configurado, cuando arranca `rag-orchestrator`, entonces no arranca y el error **nombra la variable de configuración** (p. ej. `RERANKER_MODEL_PATH`, `RERANKER_MODEL_SHA256`), nunca su contenido.
+- **AC-7 (invariante · local, sin red)** `[RN-12]` `[NFR-05]` · Dados los adapters reales, cuando se ejecutan con la red bloqueada, entonces funcionan; los archivos de modelos viven fuera del repo (volumen montado de solo lectura), no se descargan en *runtime* y ningún adapter importa un cliente de nube.
+- **AC-8 (borde · latencia por etapa)** `[NFR-01]` · Dado el fixture y la VM de Docker ≥ 10 GB del ADR-39, cuando se mide cada etapa (3 corridas, mediana), entonces el p95 de *embeddings* ≤ 500 ms, *reranker* (12 pares) ≤ 4500 ms y NLI ≤ 1500 ms, y la memoria residente de los tres no excede la cifra medida en el ADR (4489 MiB); un valor fuera de presupuesto se reporta al refinamiento y no se oculta.
+- **AC-9 (*smoke* de L1D-115)** `[US-059 AC-1]` · Dado el manifiesto real de la semilla (`data/raw/seed/manifest.yaml`) y los *embeddings* reales, cuando corre el cargador de la semilla contra Compose, entonces todos los documentos quedan `embebido`, los chunks vigentes llevan los metadatos denormalizados copiados del catálogo y la `CorpusRelease` se publica (tarea 1.13 de L1D-115 y 2.13b trasladadas aquí, `@pytest.mark.ac("US-059", 1)`).
+
+## Contexto técnico
+Adapters en `app/infrastructure/{embeddings,reranker,nli,language}/`, uno por modelo (hexagonal), cableados en `app/bootstrap.py`/`main.py` solo cuando `MODEL_PROVIDER` no es `fake`. CPU con cuantización int8 vía ONNX Runtime; tamaño de chunk 1024 y 12 pares por consulta (ADR-39). Los archivos de modelos y sus *hash* se montan desde un volumen; el repositorio solo guarda las rutas y los SHA-256 esperados en configuración (RN-22). La versión y el *hash* se exponen en `meta.rerankerModel` y `meta.nliModel`. El detector de idioma es local y determinista. Tests: Pytest con el fixture sintético y los modelos reales (marcados `@pytest.mark.models`, fuera de la ruta rápida de la CI y ejecutados en la VM local y en el *smoke* de Compose); la batería de contrato corre sobre real y fake.
+
+## Non-goals
+LLM y OCR (US-224 / L1D-274). Recuperación híbrida y uso del *sparse* en la búsqueda (S3: US-112). *Fine-tuning* o reentrenar modelos. Cambiar la elección del ADR-39 (otra combinación exige una medición nueva y un ADR). Mejoras de recuperación de ADR-45.
+
+## INVEST
+**Small** ✗ 8: cuatro adapters, verificación de *hash*, batería de contrato y el *smoke* de la semilla; se propone la excepción de tamaño (como US-012) o partir en dos (embeddings + *reranker* + idioma · NLI + *smoke*), a decidir en el refinamiento.
+**Testable** ✓ cada AC tiene fixture sintético, batería de contrato o medición.
+
+---
+
 ## US-056 — El límite de consultas, el semáforo de inferencia y el tiempo máximo protegen el LLM local
 
 > Linear: [L1D-107](https://linear.app/l1der-lab-mjbc/issue/L1D-107)

@@ -90,6 +90,7 @@ sprints (ADR-26).
 
 ## Dependencias
 
+- ↪ **Depende de** la historia **US-231** (adapters reales de *embeddings*, *reranker*, detector de idioma y NLI, ADR-39; Linear: pendiente (límite de issues del workspace); propuesta, decisión 74 del plan): debe estar en `main` antes de este change para correr con modelos reales; los AC siguen verificándose con adapters falsos.
 - **Orden de merge** `[S1 resp. 17]`: L1D-164 → L1D-105 → L1D-106 → L1D-179 → **L1D-275** → L1D-180.
 - ↪ **Depende de** el change de **L1D-106** (US-055): `RAGOrchestratorService` (implementa
   `EvidenceQueryPort` de L1D-164), puertos (incluido `EvidenceGenerator`), umbral, filtros,
