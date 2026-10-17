@@ -38,6 +38,10 @@ class ServiceTokenVerifierPort(Protocol):
     def verificar(self, token: str | None) -> None: ...
 
 
+class DimensionDeVectorInvalida(ValueError):
+    """El vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección; no se insertó ningún chunk."""
+
+
 @dataclass(frozen=True)
 class ChunkDelCorpus:
     """Un chunk listo para indexar (data-model §4.7). ``sparse_vector`` ausente = sin poblar (S1, US-058 AC-3).
@@ -67,7 +71,8 @@ class ChunkEncontrado:
     chunk_id: str
     document_id: str
     chunk_text: str
-    score: float
+    similitud_dense: float
+    """Similitud dense de Milvus según ``MILVUS_DENSE_METRIC_TYPE``. NO es ``relevance_score`` (RN-03): no ordena opciones."""
 
 
 class CorpusChunkStore(Protocol):

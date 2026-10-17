@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from app.config import modelos
 from app.config.settings import CorpusDatabaseSettings, CorpusMigratorSettings, MilvusSettings
 
 CLAVES_DE_MILVUS = {
@@ -140,3 +141,32 @@ def test_corpus_migrator_settings_no_exige_la_contrasena_del_runtime(
     ajustes = CorpusMigratorSettings(_env_file=None)
 
     assert ajustes.corpus_migrator_database_url == URL_MIGRADOR
+
+
+def test_milvus_settings_admite_un_tipo_de_indice_que_adr39_amplia_en_tipos_indice(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Una sola fuente: los tipos admitidos son app.config.modelos.TIPOS_INDICE, no una lista propia de MilvusSettings.
+    for clave, valor in CLAVES_DE_MILVUS.items():
+        monkeypatch.setenv(clave, valor)
+    monkeypatch.setenv("VECTOR_INDEX_TYPE", "IVF_FLAT")
+    with pytest.raises(ValidationError) as antes:
+        MilvusSettings(_env_file=None)
+
+    monkeypatch.setattr(modelos, "TIPOS_INDICE", (*modelos.TIPOS_INDICE, "IVF_FLAT"))
+
+    assert "vector_index_type" in str(antes.value)
+    assert MilvusSettings(_env_file=None).vector_index_type == "IVF_FLAT"
+
+
+def test_milvus_settings_valida_la_dimension_con_la_regla_de_adr39(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for clave, valor in CLAVES_DE_MILVUS.items():
+        monkeypatch.setenv(clave, valor)
+    monkeypatch.setenv("EMBEDDING_DIM", "0")
+
+    with pytest.raises(ValidationError) as error:
+        MilvusSettings(_env_file=None)
+
+    assert "entero positivo" in str(error.value)

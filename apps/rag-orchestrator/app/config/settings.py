@@ -9,6 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
+from app.config import modelos
 from app.config.modelos import CLAVES_ADR39, ConfigModelos, cargar_config_modelos
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
 
@@ -36,7 +37,11 @@ class Settings(BaseSettings):
     @classmethod
     def _componer_modelos_desde_el_entorno(cls, datos: Any) -> Any:
         """Si el entorno trae alguna clave de ADR-39 se validan todas juntas; si no trae ninguna, ``modelos`` es None."""
-        if isinstance(datos, dict) and "modelos" not in datos and any(k in os.environ for k in CLAVES_ADR39):
+        if (
+            isinstance(datos, dict)
+            and "modelos" not in datos
+            and any(k in os.environ for k in CLAVES_ADR39)
+        ):
             return {**datos, "modelos": cargar_config_modelos(os.environ)}
         return datos
 
@@ -110,8 +115,8 @@ class MilvusSettings(BaseSettings):
 
     milvus_uri: str
     milvus_collection_name: str = "corpus_chunks"
-    embedding_dim: int = Field(gt=0)
-    vector_index_type: Literal["FLAT", "HNSW"]
+    embedding_dim: int
+    vector_index_type: str
     vector_index_params: dict[str, Any]
     milvus_dense_metric_type: Literal["COSINE", "IP", "L2"]
     milvus_sparse_index_type: str = "SPARSE_INVERTED_INDEX"
@@ -126,3 +131,15 @@ class MilvusSettings(BaseSettings):
     milvus_len_cancer_type_tags: int = Field(default=512, gt=0, le=65535)
     milvus_len_population: int = Field(default=64, gt=0, le=65535)
     milvus_len_study_design: int = Field(default=64, gt=0, le=65535)
+
+    @field_validator("embedding_dim")
+    @classmethod
+    def _dimension_positiva(cls, valor: int) -> int:
+        # Misma regla que la configuración de ADR-39 (app/config/modelos.py): una sola fuente.
+        return modelos.entero_positivo(str(valor))
+
+    @field_validator("vector_index_type")
+    @classmethod
+    def _tipo_de_indice_permitido(cls, valor: str) -> str:
+        # Se lee TIPOS_INDICE en cada validación: ADR-39 es la única fuente de los tipos admitidos.
+        return modelos.opcion(*modelos.TIPOS_INDICE)(valor)

@@ -10,8 +10,8 @@ from collections.abc import Callable
 
 import pytest
 from pymilvus import DataType, MilvusClient
-from pymilvus.exceptions import MilvusException
 
+from app.application.ports import DimensionDeVectorInvalida
 from app.config.settings import MilvusSettings
 from app.infrastructure.milvus.repository import CorpusCollectionSchemaMismatch, MilvusRepository
 from tests.support.milvus import ajustes_de_milvus, chunk_sintetico, vector_unitario
@@ -79,7 +79,7 @@ def test_milvus_repository_dimension_8_rechaza_vector_de_1024(
     nombre = ajustes_milvus.milvus_collection_name
 
     insertados = repositorio.insert_chunks([chunk_sintetico("c1", vector_unitario(DIMENSION, 0))])
-    with pytest.raises(MilvusException, match=r"dim.*1024.*8|8.*1024"):
+    with pytest.raises(DimensionDeVectorInvalida):
         repositorio.insert_chunks([chunk_sintetico("c2", vector_unitario(1024, 0))])
 
     dimension = next(
@@ -103,6 +103,7 @@ def test_milvus_repository_chunk_sin_sparse_se_inserta_y_recupera_por_dense(
         [
             chunk_sintetico("vigente", vector_unitario(DIMENSION, 0), sparse=None),
             chunk_sintetico("historico", vector_unitario(DIMENSION, 0), vigente=False),
+            chunk_sintetico("ortogonal", vector_unitario(DIMENSION, 1)),
         ]
     )
     contar(
@@ -110,8 +111,9 @@ def test_milvus_repository_chunk_sin_sparse_se_inserta_y_recupera_por_dense(
     )  # flush: la consistencia por defecto es Bounded
     encontrados = repositorio.search_dense(vector_unitario(DIMENSION, 0), limit=5)
 
-    assert insertados == 2
-    assert [chunk.chunk_id for chunk in encontrados] == ["vigente"]  # is_current == true (RN-05)
+    assert insertados == 3
+    assert [chunk.chunk_id for chunk in encontrados] == ["vigente", "ortogonal"]  # is_current == true (RN-05)
+    assert encontrados[0].similitud_dense > encontrados[1].similitud_dense  # idéntico > ortogonal
     assert encontrados[0].document_id == "doc-vigente"
 
 

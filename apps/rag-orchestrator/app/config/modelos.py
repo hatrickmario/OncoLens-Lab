@@ -78,7 +78,7 @@ class ConfigModelos:
     academic_licenses: frozenset[str]
 
 
-def _entero_positivo(valor: str) -> int:
+def entero_positivo(valor: str) -> int:
     numero = int(valor)
     if numero <= 0:
         raise ValueError("debe ser un entero positivo")
@@ -92,7 +92,7 @@ def _entero_no_negativo(valor: str) -> int:
     return numero
 
 
-def _opcion(*validas: str):  # noqa: ANN202
+def opcion(*validas: str):  # noqa: ANN202
     def validar(valor: str) -> str:
         if valor not in validas:
             raise ValueError(f"debe ser uno de {validas}")
@@ -135,21 +135,21 @@ def _conjunto(valor: str) -> frozenset[str]:
 _VALIDADORES = {
     "EMBEDDING_MODEL": _texto_no_vacio,
     "EMBEDDING_MODEL_REVISION": _texto_no_vacio,
-    "EMBEDDING_DIM": _entero_positivo,
+    "EMBEDDING_DIM": entero_positivo,
     "SPARSE_VECTOR_SOURCE": _texto_no_vacio,
     "RERANKER_MODEL": _texto_no_vacio,
     "RERANKER_MODEL_REVISION": _texto_no_vacio,
-    "RERANKER_MAX_PAIRS": _entero_positivo,
-    "RERANKER_MAX_LENGTH": _entero_positivo,
+    "RERANKER_MAX_PAIRS": entero_positivo,
+    "RERANKER_MAX_LENGTH": entero_positivo,
     "NLI_MODEL": _texto_no_vacio,
     "NLI_MODEL_REVISION": _texto_no_vacio,
-    "MODEL_QUANTIZATION": _opcion(*CUANTIZACIONES),
-    "NLI_QUANTIZATION": _opcion(*CUANTIZACIONES),
+    "MODEL_QUANTIZATION": opcion(*CUANTIZACIONES),
+    "NLI_QUANTIZATION": opcion(*CUANTIZACIONES),
     "MODEL_CACHE_DIR": _texto_no_vacio,
-    "CORPUS_CHUNK_SIZE": _entero_positivo,
+    "CORPUS_CHUNK_SIZE": entero_positivo,
     "CORPUS_CHUNK_OVERLAP": _entero_no_negativo,
-    "CORPUS_CHUNKING_STRATEGY": _opcion(*ESTRATEGIAS_CHUNKING),
-    "VECTOR_INDEX_TYPE": _opcion(*TIPOS_INDICE),
+    "CORPUS_CHUNKING_STRATEGY": opcion(*ESTRATEGIAS_CHUNKING),
+    "VECTOR_INDEX_TYPE": opcion(*TIPOS_INDICE),
     "VECTOR_INDEX_PARAMS": _mapa_json,
     "CHUNK_SELECTION_MARGIN": _proporcion,
     "INDEX_MIN_RECALL_VS_FLAT": _proporcion,

@@ -73,16 +73,28 @@ def build_corpus_chunks_schema(ajustes: MilvusSettings) -> CollectionSchema:
     return esquema
 
 
-def parametros_de_construccion(ajustes: MilvusSettings) -> dict[str, Any]:
-    return {k: v for k, v in ajustes.vector_index_params.items() if k not in PARAMETROS_DE_BUSQUEDA}
+# Parámetros de construcción de HNSW que ADR-39 guarda en VECTOR_INDEX_PARAMS (lista de permitidos).
+PARAMETROS_DE_CONSTRUCCION_HNSW = ("M", "efConstruction")
 
 
-def parametros_de_busqueda(ajustes: MilvusSettings) -> dict[str, Any]:
+def parametros_de_construccion(tipo: str, plano: dict[str, Any]) -> dict[str, Any]:
+    """``VECTOR_INDEX_PARAMS`` plano → parámetros de construcción del índice. ``FLAT`` no lleva ninguno."""
+    if tipo != "HNSW":
+        return {}
+    return {k: plano[k] for k in PARAMETROS_DE_CONSTRUCCION_HNSW if k in plano}
+
+
+def parametros_de_busqueda(tipo: str, plano: dict[str, Any]) -> dict[str, Any]:
+    """``VECTOR_INDEX_PARAMS`` plano → parámetros de búsqueda (``ef`` en HNSW). ``FLAT`` no lleva ninguno."""
+    if tipo != "HNSW":
+        return {}
+    return {k: plano[k] for k in PARAMETROS_DE_BUSQUEDA if k in plano}
+
+
+def search_params(ajustes: MilvusSettings) -> dict[str, Any]:
     return {
         "metric_type": ajustes.milvus_dense_metric_type,
-        "params": {
-            k: v for k, v in ajustes.vector_index_params.items() if k in PARAMETROS_DE_BUSQUEDA
-        },
+        "params": parametros_de_busqueda(ajustes.vector_index_type, ajustes.vector_index_params),
     }
 
 
@@ -93,7 +105,7 @@ def build_corpus_chunks_indexes(cliente: MilvusClient, ajustes: MilvusSettings) 
         field_name=CAMPO_DENSE,
         index_type=ajustes.vector_index_type,
         metric_type=ajustes.milvus_dense_metric_type,
-        params=parametros_de_construccion(ajustes),
+        params=parametros_de_construccion(ajustes.vector_index_type, ajustes.vector_index_params),
     )
     indices.add_index(
         field_name=CAMPO_SPARSE,

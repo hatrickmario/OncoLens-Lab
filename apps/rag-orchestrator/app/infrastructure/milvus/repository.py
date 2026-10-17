@@ -12,8 +12,9 @@ from collections.abc import Sequence
 from typing import Any
 
 from pymilvus import MilvusClient
+from pymilvus.exceptions import MilvusException
 
-from app.application.ports import ChunkDelCorpus, ChunkEncontrado
+from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.config.settings import MilvusSettings
 from app.infrastructure.milvus.schema import (
     CAMPO_DENSE,
@@ -21,7 +22,12 @@ from app.infrastructure.milvus.schema import (
     build_corpus_chunks_indexes,
     build_corpus_chunks_schema,
     campos_esperados,
-    parametros_de_busqueda,
+    search_params,
+)
+
+
+CODIGO_PARAMETRO_INVALIDO = (
+    1100  # código de Milvus para 'invalid parameter' (dimensión incorrecta incluida)
 )
 
 
@@ -79,18 +85,27 @@ class MilvusRepository:
             )
 
     def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
-        resultado = self._cliente.insert(self._coleccion, [self._fila(chunk) for chunk in chunks])
+        try:
+            resultado = self._cliente.insert(
+                self._coleccion, [self._fila(chunk) for chunk in chunks]
+            )
+        except MilvusException as error:
+            if CODIGO_PARAMETRO_INVALIDO == error.code and "dim" in str(error):
+                raise DimensionDeVectorInvalida(
+                    f"el vector dense no tiene la dimensión {self._ajustes.embedding_dim} de la colección"
+                ) from None
+            raise
         return int(resultado["insert_count"])
 
     def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]:
-        """Solo chunks ``is_current`` (RN-05); ``score`` es el que devuelve Milvus con la métrica configurada."""
+        """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03)."""
         resultados = self._cliente.search(
             self._coleccion,
             data=[list(vector)],
             anns_field=CAMPO_DENSE,
             limit=limit,
             filter="is_current == true",
-            search_params=parametros_de_busqueda(self._ajustes),
+            search_params=search_params(self._ajustes),
             output_fields=["chunk_id", "document_id", "chunk_text"],
         )
         return [
@@ -98,7 +113,7 @@ class MilvusRepository:
                 chunk_id=hit["entity"]["chunk_id"],
                 document_id=hit["entity"]["document_id"],
                 chunk_text=hit["entity"]["chunk_text"],
-                score=float(hit["distance"]),
+                similitud_dense=float(hit["distance"]),
             )
             for hit in resultados[0]
         ]
