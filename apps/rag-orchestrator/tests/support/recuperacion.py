@@ -326,12 +326,13 @@ def crear_entorno(
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
+    generador: GeneradorFalso | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
     reranker = reranker or RerankerFalso()
     lector_release = lector_release or LectorReleaseFalso()
-    generador = GeneradorFalso()
+    generador = generador or GeneradorFalso()
     servicio = RAGOrchestratorService(
         detector_idioma=detector_idioma or DetectorIdiomaFalso(),
         embedder=embedder,
