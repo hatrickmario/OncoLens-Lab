@@ -6,10 +6,23 @@ import type { ClienteSql, ConexionDelSeed } from './sembrar.js';
 
 /** Envuelve un cliente de `pg` en la conexión del seed: transacción única y liberación (`alCerrar`). */
 export function conexionDesdeCliente(
-  _cliente: ClienteSql,
-  _alCerrar: () => Promise<void>,
+  cliente: ClienteSql,
+  alCerrar: () => Promise<void>,
 ): ConexionDelSeed {
-  throw new Error('no implementado');
+  return {
+    enTransaccion: async (fn) => {
+      await cliente.query('BEGIN');
+      try {
+        const resultado = await fn(cliente);
+        await cliente.query('COMMIT');
+        return resultado;
+      } catch (error) {
+        await cliente.query('ROLLBACK');
+        throw error;
+      }
+    },
+    end: alCerrar,
+  };
 }
 
 /**
