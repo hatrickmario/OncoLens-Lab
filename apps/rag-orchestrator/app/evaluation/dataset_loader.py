@@ -117,7 +117,11 @@ def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) 
         return _terminos_verificados_de_clinicaltrials(fuente)
     if CONTIENE_ND.search(licencia):
         return False
-    if CLASE_LICENCIA_ACEPTADA.match(licencia) or licencia == "Dominio público" or CLASE_NCI.match(licencia):
+    if (
+        CLASE_LICENCIA_ACEPTADA.match(licencia)
+        or licencia == "Dominio público"
+        or CLASE_NCI.match(licencia)
+    ):
         return True
     return permitir_cc_by_nc and bool(CLASE_LICENCIA_NC.match(licencia))
 
@@ -131,7 +135,9 @@ def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
     return nombre == "clinicaltrials.gov"
 
 
-def _validar_manifiesto(manifiesto: dict[str, Any], permitir_cc_by_nc: bool = False) -> tuple[Fuente, ...]:
+def _validar_manifiesto(
+    manifiesto: dict[str, Any], permitir_cc_by_nc: bool = False
+) -> tuple[Fuente, ...]:
     if manifiesto.get("clase") != CLASE_SINTETICA:
         raise DatasetInvalido("el manifiesto no declara 'clase: sintetico' (RN-13, RN-14)")
     excluidas = {str(x).upper() for x in manifiesto.get("excluded_sources", [])}
@@ -148,7 +154,11 @@ def _validar_manifiesto(manifiesto: dict[str, Any], permitir_cc_by_nc: bool = Fa
                 nombre=nombre,
                 tipo=str(crudo.get("tipo", "")),
                 formato_original=str(crudo.get("formato_original", "")),
-                datos={k: v for k, v in crudo.items() if k not in {"id", "fuente", "tipo", "formato_original"}},
+                datos={
+                    k: v
+                    for k, v in crudo.items()
+                    if k not in {"id", "fuente", "tipo", "formato_original"}
+                },
             )
         )
     if not fuentes:
@@ -160,12 +170,18 @@ def _construir_pregunta(crudo: dict[str, Any], ids_fuentes: set[str]) -> Pregunt
     modo = crudo.get("modo_acierto")
     if modo not in MODOS_ACIERTO:
         raise DatasetInvalido(f"{crudo.get('id')}: modo_acierto desconocido ({modo!r})")
-    evidencia = tuple(Evidencia(str(e["documento"]), str(e["cita"])) for e in crudo.get("evidencia", []))
+    evidencia = tuple(
+        Evidencia(str(e["documento"]), str(e["cita"])) for e in crudo.get("evidencia", [])
+    )
     if modo != "sin_evidencia" and not evidencia:
-        raise DatasetInvalido(f"{crudo['id']}: una pregunta con respuesta necesita documento y cita literal")
+        raise DatasetInvalido(
+            f"{crudo['id']}: una pregunta con respuesta necesita documento y cita literal"
+        )
     for ev in evidencia:
         if ev.documento not in ids_fuentes:
-            raise DatasetInvalido(f"{crudo['id']}: el documento {ev.documento} no está en el manifiesto")
+            raise DatasetInvalido(
+                f"{crudo['id']}: el documento {ev.documento} no está en el manifiesto"
+            )
         if not ev.cita.strip():
             raise DatasetInvalido(f"{crudo['id']}: cita vacía para {ev.documento}")
     return Pregunta(
@@ -184,7 +200,9 @@ def _construir_pregunta(crudo: dict[str, Any], ids_fuentes: set[str]) -> Pregunt
 
 def _construir_par(crudo: dict[str, Any]) -> ParNli:
     if crudo.get("etiqueta") not in ETIQUETAS_NLI:
-        raise DatasetInvalido(f"{crudo.get('id')}: etiqueta NLI desconocida ({crudo.get('etiqueta')!r})")
+        raise DatasetInvalido(
+            f"{crudo.get('id')}: etiqueta NLI desconocida ({crudo.get('etiqueta')!r})"
+        )
     variante = crudo.get("variante_otro_idioma") or {}
     return ParNli(
         id=str(crudo["id"]),
@@ -213,10 +231,14 @@ def cargar_dataset(directorio: Path, permitir_cc_by_nc: bool = False) -> Dataset
     pares = tuple(_construir_par(p) for p in nli.get("pares", []))
 
     if len(preguntas) < MINIMO_PREGUNTAS:
-        raise DatasetInvalido(f"hay {len(preguntas)} preguntas; se exigen al menos {MINIMO_PREGUNTAS}")
+        raise DatasetInvalido(
+            f"hay {len(preguntas)} preguntas; se exigen al menos {MINIMO_PREGUNTAS}"
+        )
     en_espanol = sum(1 for p in preguntas if p.es_espanol_contra_ingles)
     if en_espanol < MINIMO_PREGUNTAS_ES:
-        raise DatasetInvalido(f"hay {en_espanol} preguntas es → en; se exigen al menos {MINIMO_PREGUNTAS_ES}")
+        raise DatasetInvalido(
+            f"hay {en_espanol} preguntas es → en; se exigen al menos {MINIMO_PREGUNTAS_ES}"
+        )
     if len(pares) < MINIMO_PARES_NLI:
         raise DatasetInvalido(f"hay {len(pares)} pares NLI; se exigen al menos {MINIMO_PARES_NLI}")
 

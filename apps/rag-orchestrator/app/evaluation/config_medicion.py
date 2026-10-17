@@ -13,7 +13,9 @@ from app.evaluation.model_selection import Restricciones
 # Commit exacto del repositorio cuyo código remoto se ejecuta al EXPORTAR (trust_remote_code). Vive aquí y no en
 # eval/configs/adr39-fase-a.yaml porque ese archivo está congelado (decisión del 2026-10-20).
 # Alibaba-NLP/new-impl: cabeza de main (última modificación 2024-08-11, anterior a la medición del 2026-10-16).
-CODIGO_REMOTO_FIJADO = {"Alibaba-NLP/gte-multilingual-reranker-base": "40ced75c3017eb27626c9d4ea981bde21a2662f4"}
+CODIGO_REMOTO_FIJADO = {
+    "Alibaba-NLP/gte-multilingual-reranker-base": "40ced75c3017eb27626c9d4ea981bde21a2662f4"
+}
 
 TAREAS = ("embedding", "reranker_cls", "reranker_causal", "nli")
 
@@ -34,7 +36,9 @@ class ModeloSpec:
     dim_salida: int = 0
     atencion: str = "sdpa"
     codigo_remoto: bool = False
-    code_revision: str = ""  # commit exacto del repositorio del código remoto (obligatorio si codigo_remoto)
+    code_revision: str = (
+        ""  # commit exacto del repositorio del código remoto (obligatorio si codigo_remoto)
+    )
     export_pythonpath: str = ""
 
     @property
@@ -83,7 +87,9 @@ def spec_desde_yaml(componente: str, crudo: dict[str, Any]) -> ModeloSpec:
         raise ValueError(f"tarea desconocida: {tarea}")
     code_revision = crudo.get("code_revision") or CODIGO_REMOTO_FIJADO.get(crudo["modelo"], "")
     if crudo.get("codigo_remoto") and not code_revision:
-        raise ValueError(f"{crudo['modelo']}: codigo_remoto exige code_revision (commit exacto del código que se ejecuta)")
+        raise ValueError(
+            f"{crudo['modelo']}: codigo_remoto exige code_revision (commit exacto del código que se ejecuta)"
+        )
     return ModeloSpec(
         id=str(crudo["id"]),
         componente=componente,

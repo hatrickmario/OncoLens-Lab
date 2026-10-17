@@ -92,7 +92,9 @@ class _ModeloOnnx:
         opciones.intra_op_num_threads = hilos
         opciones.inter_op_num_threads = 1
         self.sesion = ort.InferenceSession(
-            str(directorio / cuantizacion / "model.onnx"), sess_options=opciones, providers=["CPUExecutionProvider"]
+            str(directorio / cuantizacion / "model.onnx"),
+            sess_options=opciones,
+            providers=["CPUExecutionProvider"],
         )
         self.tokenizador = Tokenizer.from_file(str(directorio / "tokenizer.json"))
         self.tokenizador.no_truncation()
@@ -126,7 +128,11 @@ class EmbedderOnnx(_ModeloOnnx):
     def _ids(self, texto: str) -> list[int]:
         ids = self.tokenizador.encode(texto).ids
         if len(ids) > self.spec.max_length:
-            ids = ids[: self.spec.max_length - 1] + ids[-1:] if self.spec.pooling == "ultimo_token" else ids[: self.spec.max_length]
+            ids = (
+                ids[: self.spec.max_length - 1] + ids[-1:]
+                if self.spec.pooling == "ultimo_token"
+                else ids[: self.spec.max_length]
+            )
         return ids
 
     def _pool(self, oculto: np.ndarray, longitudes: list[int]) -> np.ndarray:
@@ -135,7 +141,9 @@ class EmbedderOnnx(_ModeloOnnx):
         elif self.spec.pooling == "ultimo_token":
             vectores = oculto[np.arange(len(longitudes)), np.array(longitudes) - 1]
         else:  # media sobre tokens reales
-            mascara = (np.arange(oculto.shape[1])[None, :] < np.array(longitudes)[:, None])[..., None]
+            mascara = (np.arange(oculto.shape[1])[None, :] < np.array(longitudes)[:, None])[
+                ..., None
+            ]
             vectores = (oculto * mascara).sum(1) / np.array(longitudes)[:, None]
         if self.spec.dim_salida:
             vectores = vectores[:, : self.spec.dim_salida]
@@ -159,7 +167,9 @@ class EmbedderOnnx(_ModeloOnnx):
             self._llenar(lote, secuencias, salida)
         return np.stack([v for v in salida if v is not None])
 
-    def _llenar(self, lote: list[int], secuencias: list[list[int]], salida: list[np.ndarray | None]) -> None:
+    def _llenar(
+        self, lote: list[int], secuencias: list[list[int]], salida: list[np.ndarray | None]
+    ) -> None:
         oculto = self._correr([secuencias[i] for i in lote])
         vectores = self._pool(oculto, [len(secuencias[i]) for i in lote])
         for fila, i in enumerate(lote):
@@ -187,7 +197,9 @@ class RerankerOnnx(_ModeloOnnx):
     )
     SUFIJO = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
 
-    def __init__(self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int) -> None:
+    def __init__(
+        self, spec: ModeloSpec, directorio: Path, cuantizacion: str, hilos: int, max_length: int
+    ) -> None:
         super().__init__(spec, directorio, cuantizacion, hilos)
         self.max_length = max_length
         self._prefijo = self.tokenizador.encode(self.PREFIJO, add_special_tokens=False).ids
@@ -195,15 +207,25 @@ class RerankerOnnx(_ModeloOnnx):
 
     def _secuencia_par(self, consulta: str, pasaje: str) -> list[int]:
         if self.spec.tarea == "reranker_causal":
-            contenido = f"<Instruct>: {self.spec.instruccion}\n<Query>: {consulta}\n<Document>: {pasaje}"
+            contenido = (
+                f"<Instruct>: {self.spec.instruccion}\n<Query>: {consulta}\n<Document>: {pasaje}"
+            )
             ids = self.tokenizador.encode(contenido, add_special_tokens=False).ids
-            return self._prefijo + ids[: self.max_length - len(self._prefijo) - len(self._sufijo)] + self._sufijo
+            return (
+                self._prefijo
+                + ids[: self.max_length - len(self._prefijo) - len(self._sufijo)]
+                + self._sufijo
+            )
         ids_consulta = self.tokenizador.encode(consulta).ids
         ids_par = self.tokenizador.encode(consulta, pasaje).ids
         if len(ids_par) <= self.max_length:
             return ids_par
         # truncado del segundo segmento (el pasaje), conservando el separador final del par
-        return ids_par[: self.max_length - 1] + ids_par[-1:] if len(ids_consulta) < self.max_length - 1 else ids_par[: self.max_length]
+        return (
+            ids_par[: self.max_length - 1] + ids_par[-1:]
+            if len(ids_consulta) < self.max_length - 1
+            else ids_par[: self.max_length]
+        )
 
     def puntuar(self, consulta: str, pasajes: list[str]) -> list[float]:
         if not pasajes:
@@ -229,7 +251,10 @@ class TokenizadorModelo:
         self.tokens_especiales = con - sin
 
     def desplazamientos(self, texto: str) -> list[tuple[int, int]]:
-        return [(inicio, fin) for inicio, fin in self._tokenizador.encode(texto, add_special_tokens=False).offsets]
+        return [
+            (inicio, fin)
+            for inicio, fin in self._tokenizador.encode(texto, add_special_tokens=False).offsets
+        ]
 
 
 class NliOnnx(_ModeloOnnx):
@@ -244,6 +269,10 @@ class NliOnnx(_ModeloOnnx):
         secuencias = []
         for fragmento, afirmacion in pares:
             ids = self.tokenizador.encode(fragmento, afirmacion).ids
-            secuencias.append(ids[: self.spec.max_length - 1] + ids[-1:] if len(ids) > self.spec.max_length else ids)
+            secuencias.append(
+                ids[: self.spec.max_length - 1] + ids[-1:]
+                if len(ids) > self.spec.max_length
+                else ids
+            )
         logits = self._correr(secuencias)
         return [self.etiquetas[int(i)] for i in logits.argmax(axis=1)]

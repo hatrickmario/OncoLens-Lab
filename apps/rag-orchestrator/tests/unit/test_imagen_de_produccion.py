@@ -14,7 +14,11 @@ DOCKERIGNORE_RAIZ = RAIZ_APP.parents[1] / ".dockerignore"
 def _patrones(ruta: Path) -> list[str]:
     if not ruta.exists():
         return []
-    return [linea.strip() for linea in ruta.read_text(encoding="utf-8").splitlines() if linea.strip() and not linea.startswith("#")]
+    return [
+        linea.strip()
+        for linea in ruta.read_text(encoding="utf-8").splitlines()
+        if linea.strip() and not linea.startswith("#")
+    ]
 
 
 def _lineas_del_dockerignore() -> list[str]:
@@ -62,12 +66,18 @@ def test_el_codigo_de_produccion_no_importa_evaluacion_ni_scripts() -> None:
         if relativa[0] in ("evaluation", "scripts"):
             continue
         for nodo in ast.walk(ast.parse(ruta.read_text(encoding="utf-8"))):
-            ofensores += [f"{ruta.name}: {m}" for m in _modulos_absolutos(nodo, relativa) if m.startswith(("app.evaluation", "app.scripts"))]
+            ofensores += [
+                f"{ruta.name}: {m}"
+                for m in _modulos_absolutos(nodo, relativa)
+                if m.startswith(("app.evaluation", "app.scripts"))
+            ]
 
     assert ofensores == []
 
 
 def test_la_imagen_de_medicion_no_copia_el_codigo_sino_que_lo_monta() -> None:
-    dockerfile = (RAIZ_APP / "eval" / "configs" / "adr39-medicion.Dockerfile").read_text(encoding="utf-8")
+    dockerfile = (RAIZ_APP / "eval" / "configs" / "adr39-medicion.Dockerfile").read_text(
+        encoding="utf-8"
+    )
 
     assert "COPY app" not in dockerfile and "se monta en /work" in dockerfile

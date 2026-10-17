@@ -24,25 +24,53 @@ AHORA = datetime(2026, 10, 16, 9, 0, tzinfo=timezone.utc)
 REVISION = "a" * 40
 
 
-def escribir_config(tmp_path: Path, dataset: Path, *, limite_gb: float = 24.0, licencias: tuple[str, ...] = ("mit",)) -> Path:
+def escribir_config(
+    tmp_path: Path, dataset: Path, *, limite_gb: float = 24.0, licencias: tuple[str, ...] = ("mit",)
+) -> Path:
     def spec(componente_id: str, tarea: str, **extra: object) -> dict[str, object]:
-        return {"id": componente_id, "modelo": f"falso/{componente_id}", "revision": REVISION, "tarea": tarea, "max_length": 512, **extra}
+        return {
+            "id": componente_id,
+            "modelo": f"falso/{componente_id}",
+            "revision": REVISION,
+            "tarea": tarea,
+            "max_length": 512,
+            **extra,
+        }
 
     contenido = {
         "version": 1,
         "dataset": str(dataset),
         "semilla_bootstrap": 7,
         "bootstrap_repeticiones": 50,
-        "protocolo": {"corridas": 3, "calentamiento": 1, "hilos_cpu": 1, "cuantizaciones": ["int8", "fp32"], "tolerancia_empate": 0.02},
+        "protocolo": {
+            "corridas": 3,
+            "calentamiento": 1,
+            "hilos_cpu": 1,
+            "cuantizaciones": ["int8", "fp32"],
+            "tolerancia_empate": 0.02,
+        },
         "restricciones": {
             "stack_memory_limit_gb": limite_gb,
             "llm_budget_gb": 0.0,
             "stage_p95_budget_ms": {"embeddings": 60000, "reranker": 60000, "nli": 60000},
             "academic_licenses": list(licencias),
         },
-        "recuperacion": {"chunking": {"estrategia": "tamano_fijo", "tamano": 8, "solapamiento_pct": 0.0}, "k": 10, "reranker_max_pairs": 5, "reranker_max_length": 64},
-        "latencia": {"consultas_por_corrida": 3, "lotes_reranker_por_corrida": 2, "tamano_lote_nli": 5, "contexto_resumen": "contexto sintetico"},
-        "embeddings": [spec("A", "embedding", pooling="cls"), spec("B", "embedding", pooling="media")],
+        "recuperacion": {
+            "chunking": {"estrategia": "tamano_fijo", "tamano": 8, "solapamiento_pct": 0.0},
+            "k": 10,
+            "reranker_max_pairs": 5,
+            "reranker_max_length": 64,
+        },
+        "latencia": {
+            "consultas_por_corrida": 3,
+            "lotes_reranker_por_corrida": 2,
+            "tamano_lote_nli": 5,
+            "contexto_resumen": "contexto sintetico",
+        },
+        "embeddings": [
+            spec("A", "embedding", pooling="cls"),
+            spec("B", "embedding", pooling="media"),
+        ],
         "reranker": [spec("A", "reranker_cls")],
         "nli": [spec("A", "nli")],
     }
@@ -64,8 +92,17 @@ class Ejecucion:
         self.trabajos.append(trabajo)
         config = cargar_config(self.ruta_config)
         dataset = cargar_dataset(Path(config.dataset))
-        secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, self.cache_datos).items()}
-        ejecutar_trabajo(trabajo, config, dataset, secciones, FabricaFalsa(), reloj=lambda: next(self._relojes) / 1000.0)
+        secciones = {
+            i: f.secciones for i, f in leer_fuentes_de_cache(dataset, self.cache_datos).items()
+        }
+        ejecutar_trabajo(
+            trabajo,
+            config,
+            dataset,
+            secciones,
+            FabricaFalsa(),
+            reloj=lambda: next(self._relojes) / 1000.0,
+        )
 
 
 @contextlib.contextmanager
@@ -78,13 +115,23 @@ def cliente_fuentes_de_prueba(cliente: httpx.Client | None) -> Iterator[httpx.Cl
         yield propio
 
 
-def correr(tmp_path: Path, ruta_config: Path, *, cliente: httpx.Client | None = None) -> tuple[int, Ejecucion, Path]:
+def correr(
+    tmp_path: Path, ruta_config: Path, *, cliente: httpx.Client | None = None
+) -> tuple[int, Ejecucion, Path]:
     cache = tmp_path / "cache"
     ejecucion = Ejecucion(ruta_config, cache)
     salida = tmp_path / "reporte.json"
     with cliente_fuentes_de_prueba(cliente) as descarga:
         codigo = medir.ejecutar_fase_a(
-            ruta_config, tmp_path / "modelos", cache, salida, ejecucion, exportador_falso, descarga, cliente is not None, lambda: AHORA
+            ruta_config,
+            tmp_path / "modelos",
+            cache,
+            salida,
+            ejecucion,
+            exportador_falso,
+            descarga,
+            cliente is not None,
+            lambda: AHORA,
         )
     return codigo, ejecucion, salida
 
@@ -102,7 +149,13 @@ def test_fase_a_reporta_por_candidato_memoria_p95_licencia_version_y_metrica_ac1
     mock_fuentes(respx_mock)
     respx_mock.get(url__regex=r"https://huggingface\.co/api/models/falso/.+/revision/.+").mock(
         return_value=httpx.Response(
-            200, json={"sha": REVISION, "tags": ["license:mit"], "cardData": {"license": "mit"}, "siblings": [{"rfilename": "model.safetensors", "size": 123}]}
+            200,
+            json={
+                "sha": REVISION,
+                "tags": ["license:mit"],
+                "cardData": {"license": "mit"},
+                "siblings": [{"rfilename": "model.safetensors", "size": 123}],
+            },
         )
     )
     ruta = escribir_config(tmp_path, dataset_sintetico)
@@ -115,10 +168,21 @@ def test_fase_a_reporta_por_candidato_memoria_p95_licencia_version_y_metrica_ac1
     assert len(ejecucion.trabajos) == (2 + 1 + 1) * 2 * 3  # candidatos x cuantizaciones x corridas
     candidato = reporte["componentes"]["embeddings"]["detalle"]["A@int8"]
     assert candidato["corridas"] == 3 and candidato["rss_max_mb"] > 0 and candidato["p95_ms"] > 0
-    assert candidato["fuente"]["licencia"] == "mit" and candidato["revision"] == REVISION and candidato["fuente"]["revision_coincide"]
+    assert (
+        candidato["fuente"]["licencia"] == "mit"
+        and candidato["revision"] == REVISION
+        and candidato["fuente"]["revision_coincide"]
+    )
     assert 0.0 <= candidato["calidad"]["metricas"]["total"]["recall_at_10"] <= 1.0
-    assert reporte["componentes"]["nli"]["detalle"]["A@int8"]["calidad"]["exactitud"]["total"] == 1.0
-    assert reporte["componentes"]["reranker"]["detalle"]["A@fp32"]["calidad"]["metricas_densas_mismo_conjunto"]["total"]["n"] > 0
+    assert (
+        reporte["componentes"]["nli"]["detalle"]["A@int8"]["calidad"]["exactitud"]["total"] == 1.0
+    )
+    assert (
+        reporte["componentes"]["reranker"]["detalle"]["A@fp32"]["calidad"][
+            "metricas_densas_mismo_conjunto"
+        ]["total"]["n"]
+        > 0
+    )
 
 
 @respx.mock(assert_all_called=False)
@@ -131,7 +195,12 @@ def test_fase_a_el_reporte_no_contiene_textos_de_preguntas_ni_fragmentos(
     _, _, salida = correr(tmp_path, ruta)
 
     crudo = salida.read_text(encoding="utf-8")
-    for texto in ("valor de P interaction en SET", "tema inexistente", "Valor de P interaction = 0.028", "Titulo sintetico"):
+    for texto in (
+        "valor de P interaction en SET",
+        "tema inexistente",
+        "Valor de P interaction = 0.028",
+        "Titulo sintetico",
+    ):
         assert texto not in crudo
 
 
@@ -145,7 +214,9 @@ def test_fase_a_separa_el_puntaje_maximo_de_las_preguntas_sin_respuesta_ac13(
 
     _, _, salida = correr(tmp_path, ruta)
 
-    metricas = json.loads(salida.read_text())["componentes"]["embeddings"]["detalle"]["A@int8"]["calidad"]["metricas"]
+    metricas = json.loads(salida.read_text())["componentes"]["embeddings"]["detalle"]["A@int8"][
+        "calidad"
+    ]["metricas"]
     assert metricas["sin_evidencia_puntaje_maximo"]["n"] == 1
     assert metricas["sin_evidencia_puntaje_maximo"]["maximo"] is not None
 
@@ -191,7 +262,9 @@ def test_fase_a_con_todos_los_candidatos_descartados_termina_distinto_de_cero_y_
 ) -> None:
     mock_fuentes(respx_mock)
     respx_mock.get(url__regex=r"https://huggingface\.co/api/models/.+").mock(
-        return_value=httpx.Response(200, json={"sha": REVISION, "tags": ["license:cc-by-nc-4.0"], "siblings": []})
+        return_value=httpx.Response(
+            200, json={"sha": REVISION, "tags": ["license:cc-by-nc-4.0"], "siblings": []}
+        )
     )
     ruta = escribir_config(tmp_path, dataset_sintetico, licencias=("mit",))
 
@@ -201,8 +274,14 @@ def test_fase_a_con_todos_los_candidatos_descartados_termina_distinto_de_cero_y_
     reporte = json.loads(salida.read_text())
     assert codigo == medir.SALIDA_SIN_CANDIDATO
     assert reporte["componentes"]["embeddings"]["seleccion"]["elegido"] == "sin_candidato"
-    assert "embeddings" in reporte["componentes_sin_candidato"] and "reranker" in reporte["componentes_sin_candidato"]
-    assert all(d["motivo"] == "licencia" for d in reporte["componentes"]["embeddings"]["seleccion"]["descartados"])
+    assert (
+        "embeddings" in reporte["componentes_sin_candidato"]
+        and "reranker" in reporte["componentes_sin_candidato"]
+    )
+    assert all(
+        d["motivo"] == "licencia"
+        for d in reporte["componentes"]["embeddings"]["seleccion"]["descartados"]
+    )
 
 
 @pytest.mark.ac("US-012", 2)
@@ -220,7 +299,9 @@ def test_fase_a_los_descartes_del_reporte_llevan_motivo_y_cifra_ac2(
     assert descartes and descartes[0]["motivo"] == "memoria" and "GB" in descartes[0]["cifra"]
 
 
-def test_fase_a_separa_el_cliente_de_las_fuentes_de_la_verificacion_en_la_fuente_de_los_modelos() -> None:
+def test_fase_a_separa_el_cliente_de_las_fuentes_de_la_verificacion_en_la_fuente_de_los_modelos() -> (
+    None
+):
     import inspect
 
     parametros = inspect.signature(medir.ejecutar_fase_a).parameters
@@ -235,7 +316,15 @@ def test_fase_a_cada_bloque_sin_evidencia_declara_la_escala_de_su_puntaje(
 ) -> None:
     mock_fuentes(respx_mock)
     respx_mock.get(url__regex=r"https://huggingface\.co/api/models/falso/.+/revision/.+").mock(
-        return_value=httpx.Response(200, json={"sha": REVISION, "tags": ["license:mit"], "cardData": {"license": "mit"}, "siblings": []})
+        return_value=httpx.Response(
+            200,
+            json={
+                "sha": REVISION,
+                "tags": ["license:mit"],
+                "cardData": {"license": "mit"},
+                "siblings": [],
+            },
+        )
     )
     ruta = escribir_config(tmp_path, dataset_sintetico)
 
@@ -246,8 +335,14 @@ def test_fase_a_cada_bloque_sin_evidencia_declara_la_escala_de_su_puntaje(
     embeddings = componentes["embeddings"]["detalle"]["A@int8"]["calidad"]["metricas"]
     reranker = componentes["reranker"]["detalle"]["A@int8"]["calidad"]
     assert embeddings["sin_evidencia_puntaje_maximo"]["escala_puntaje"] == "coseno_denso"
-    assert reranker["metricas"]["sin_evidencia_puntaje_maximo"]["escala_puntaje"] == "relevance_score_sigmoide"
-    assert reranker["metricas_densas_mismo_conjunto"]["sin_evidencia_puntaje_maximo"]["escala_puntaje"] == "coseno_denso"
+    assert (
+        reranker["metricas"]["sin_evidencia_puntaje_maximo"]["escala_puntaje"]
+        == "relevance_score_sigmoide"
+    )
+    assert (
+        reranker["metricas_densas_mismo_conjunto"]["sin_evidencia_puntaje_maximo"]["escala_puntaje"]
+        == "coseno_denso"
+    )
 
 
 @respx.mock(assert_all_called=False)
@@ -260,8 +355,14 @@ def test_fase_a_el_trabajo_de_embeddings_recibe_y_escribe_su_carpeta_de_candidat
     _, ejecucion, _ = correr(tmp_path, ruta)
 
     con_calidad = [t for t in ejecucion.trabajos if t.spec.componente == "embeddings" and t.calidad]
-    assert con_calidad and all(t.candidatos_dir is not None and (t.candidatos_dir / "chunks.json").exists() for t in con_calidad)
-    assert not any(c.name.endswith("-candidatos") and not (c / "chunks.json").exists() for c in (tmp_path / "cache" / "adr39" / "corridas").iterdir())
+    assert con_calidad and all(
+        t.candidatos_dir is not None and (t.candidatos_dir / "chunks.json").exists()
+        for t in con_calidad
+    )
+    assert not any(
+        c.name.endswith("-candidatos") and not (c / "chunks.json").exists()
+        for c in (tmp_path / "cache" / "adr39" / "corridas").iterdir()
+    )
 
 
 @respx.mock(assert_all_called=False)
@@ -277,7 +378,9 @@ def test_fase_a_reanudada_no_repite_los_trabajos_ya_medidos(
     assert segunda.trabajos == []
 
 
-def test_ejecutar_trabajo_con_componente_desconocido_lanza_error(tmp_path: Path, dataset_sintetico: Path) -> None:
+def test_ejecutar_trabajo_con_componente_desconocido_lanza_error(
+    tmp_path: Path, dataset_sintetico: Path
+) -> None:
     import dataclasses
 
     config = cargar_config(escribir_config(tmp_path, dataset_sintetico))
@@ -285,4 +388,11 @@ def test_ejecutar_trabajo_con_componente_desconocido_lanza_error(tmp_path: Path,
     trabajo = Trabajo(spec, "int8", 1, False, tmp_path, tmp_path, tmp_path / "salida.json")
 
     with pytest.raises(ValueError, match="componente"):
-        ejecutar_trabajo(trabajo, config, cargar_dataset(dataset_sintetico), {}, FabricaFalsa(), reloj=lambda: 0.0)
+        ejecutar_trabajo(
+            trabajo,
+            config,
+            cargar_dataset(dataset_sintetico),
+            {},
+            FabricaFalsa(),
+            reloj=lambda: 0.0,
+        )

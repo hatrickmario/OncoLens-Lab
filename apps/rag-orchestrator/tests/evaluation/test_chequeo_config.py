@@ -46,15 +46,25 @@ MODELO_DATOS_OK = (
 )
 
 
-def escribir_arbol(raiz: Path, env: dict[str, str], decision: dict[str, str] | None = None, modelo_datos: str = MODELO_DATOS_OK) -> None:
+def escribir_arbol(
+    raiz: Path,
+    env: dict[str, str],
+    decision: dict[str, str] | None = None,
+    modelo_datos: str = MODELO_DATOS_OK,
+) -> None:
     decision = VALORES if decision is None else decision
     adr = raiz / "docs/architecture/adr/ADR-39-modelos-locales.md"
     adr.parent.mkdir(parents=True)
     cuerpo = yaml.safe_dump(decision, allow_unicode=True, sort_keys=False).rstrip()
-    adr.write_text(f"# ADR-39\n\n<!-- adr39:decision:inicio -->\n```yaml\n{cuerpo}\n```\n<!-- adr39:decision:fin -->\n", encoding="utf-8")
+    adr.write_text(
+        f"# ADR-39\n\n<!-- adr39:decision:inicio -->\n```yaml\n{cuerpo}\n```\n<!-- adr39:decision:fin -->\n",
+        encoding="utf-8",
+    )
     entorno = raiz / "apps/rag-orchestrator/.env.example"
     entorno.parent.mkdir(parents=True)
-    entorno.write_text("# modelos\n" + "\n".join(f"{k}={v}" for k, v in env.items()) + "\n", encoding="utf-8")
+    entorno.write_text(
+        "# modelos\n" + "\n".join(f"{k}={v}" for k, v in env.items()) + "\n", encoding="utf-8"
+    )
     modelo = raiz / "docs/architecture/data-model.md"
     modelo.write_text(modelo_datos, encoding="utf-8")
 
@@ -63,7 +73,10 @@ def test_cargar_config_modelos_valida_y_tipa_todas_las_claves() -> None:
     config = cargar_config_modelos(VALORES)
 
     assert config.embedding_dim == 1024 and config.stage_p95_budget_ms["reranker"] == 2000.0
-    assert config.academic_licenses == frozenset({"mit", "apache-2.0"}) and config.vector_index_params == {}
+    assert (
+        config.academic_licenses == frozenset({"mit", "apache-2.0"})
+        and config.vector_index_params == {}
+    )
 
 
 def test_cargar_config_modelos_acepta_embedding_dim_8_de_los_tests_con_adapters_falsos() -> None:
@@ -71,7 +84,10 @@ def test_cargar_config_modelos_acepta_embedding_dim_8_de_los_tests_con_adapters_
 
 
 def test_cargar_config_modelos_reporta_todas_las_claves_con_problema_juntas() -> None:
-    entorno = {k: v for k, v in VALORES.items() if k != "EMBEDDING_DIM"} | {"MODEL_QUANTIZATION": "int4", "CORPUS_CHUNK_OVERLAP": "900"}
+    entorno = {k: v for k, v in VALORES.items() if k != "EMBEDDING_DIM"} | {
+        "MODEL_QUANTIZATION": "int4",
+        "CORPUS_CHUNK_OVERLAP": "900",
+    }
 
     with pytest.raises(ConfigInvalida) as error:
         cargar_config_modelos(entorno)
@@ -133,7 +149,9 @@ def test_chequear_extendido_valida_chunking_e_indice_contra_el_adr_ac12(tmp_path
 
 def test_chequear_sin_bloque_de_decision_en_el_adr_falla(tmp_path: Path) -> None:
     escribir_arbol(tmp_path, VALORES, decision={})
-    (tmp_path / "docs/architecture/adr/ADR-39-modelos-locales.md").write_text("# ADR-39 sin decidir\n", encoding="utf-8")
+    (tmp_path / "docs/architecture/adr/ADR-39-modelos-locales.md").write_text(
+        "# ADR-39 sin decidir\n", encoding="utf-8"
+    )
 
     assert any("sin bloque de decisión" in p for p in chequear(tmp_path).problemas)
 
@@ -147,13 +165,13 @@ def test_dimension_con_literal_detecta_un_numero_fijado_en_data_model_ac3() -> N
 
 
 def test_chequear_falla_si_data_model_fija_la_dimension(tmp_path: Path) -> None:
-    escribir_arbol(tmp_path, VALORES, modelo_datos='| `dense_vector` | vector | dimensión 1024 |\n')
+    escribir_arbol(tmp_path, VALORES, modelo_datos="| `dense_vector` | vector | dimensión 1024 |\n")
 
     assert any("literal" in p for p in chequear(tmp_path).problemas)
 
 
 def test_leer_bloque_decision_devuelve_texto_por_clave() -> None:
-    texto = '<!-- adr39:decision:inicio -->\n```yaml\nEMBEDDING_DIM: 1024\nSPARSE_VECTOR_SOURCE: x\n```\n<!-- adr39:decision:fin -->'
+    texto = "<!-- adr39:decision:inicio -->\n```yaml\nEMBEDDING_DIM: 1024\nSPARSE_VECTOR_SOURCE: x\n```\n<!-- adr39:decision:fin -->"
 
     assert leer_bloque_decision(texto) == {"EMBEDDING_DIM": "1024", "SPARSE_VECTOR_SOURCE": "x"}
 

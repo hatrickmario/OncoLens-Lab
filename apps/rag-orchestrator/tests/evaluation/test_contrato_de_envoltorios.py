@@ -30,6 +30,8 @@ def test_los_modelos_falsos_rechazan_una_lista_vacia_con_value_error(llamada) ->
     ],
     ids=["embedder-onnx", "reranker-onnx", "nli-onnx"],
 )
-def test_los_envoltorios_onnx_rechazan_una_lista_vacia_con_value_error_antes_de_tocar_el_modelo(llamada) -> None:  # type: ignore[no-untyped-def]
+def test_los_envoltorios_onnx_rechazan_una_lista_vacia_con_value_error_antes_de_tocar_el_modelo(
+    llamada,
+) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(ValueError, match="vacía"):
         llamada()

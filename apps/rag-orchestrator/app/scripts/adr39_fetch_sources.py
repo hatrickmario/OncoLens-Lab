@@ -32,7 +32,9 @@ from app.evaluation.rutas import raiz_repo
 
 EUROPE_PMC_TEXTO = "https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
 CTGOV_API_V2 = "https://clinicaltrials.gov/api/v2/studies/{nct_id}"
-USER_AGENT = "OncoLens-Lab-ADR39/1.0 (investigacion academica; evaluacion de modelos de recuperacion)"
+USER_AGENT = (
+    "OncoLens-Lab-ADR39/1.0 (investigacion academica; evaluacion de modelos de recuperacion)"
+)
 SUBDIRECTORIO = "adr39"
 REGISTRO = "descargas.json"
 INTENTOS = 3
@@ -80,11 +82,15 @@ FORMATOS: dict[str, tuple[str, Callable[[Fuente], str], Callable[[bytes], Sequen
 }
 
 
-def _formato(fuente: Fuente) -> tuple[str, Callable[[Fuente], str], Callable[[bytes], Sequence[Seccion]]]:
+def _formato(
+    fuente: Fuente,
+) -> tuple[str, Callable[[Fuente], str], Callable[[bytes], Sequence[Seccion]]]:
     try:
         return FORMATOS[fuente.formato_original]
     except KeyError:
-        raise FormatoNoSoportado(f"la fuente {fuente.id} declara formato_original {fuente.formato_original!r}; admitidos: {sorted(FORMATOS)}") from None
+        raise FormatoNoSoportado(
+            f"la fuente {fuente.id} declara formato_original {fuente.formato_original!r}; admitidos: {sorted(FORMATOS)}"
+        ) from None
 
 
 def url_de(fuente: Fuente) -> str:
@@ -95,7 +101,9 @@ def _archivo_de(carpeta: Path, fuente: Fuente) -> Path:
     return carpeta / f"{fuente.id}.{_formato(fuente)[0]}"
 
 
-def _leer_y_verificar(archivo: Path, fuente: Fuente, registro: dict[str, dict[str, object]]) -> tuple[bytes, str]:
+def _leer_y_verificar(
+    archivo: Path, fuente: Fuente, registro: dict[str, dict[str, object]]
+) -> tuple[bytes, str]:
     """Contenido de la caché y su SHA-256; falla si difiere del registrado."""
     contenido = archivo.read_bytes()
     sha = hashlib.sha256(contenido).hexdigest()
@@ -106,14 +114,21 @@ def _leer_y_verificar(archivo: Path, fuente: Fuente, registro: dict[str, dict[st
 
 
 def _fuente_descargada(fuente: Fuente, sha: str, contenido: bytes) -> FuenteDescargada:
-    return FuenteDescargada(id=fuente.id, sha256=sha, bytes=len(contenido), secciones=tuple(_formato(fuente)[2](contenido)))
+    return FuenteDescargada(
+        id=fuente.id,
+        sha256=sha,
+        bytes=len(contenido),
+        secciones=tuple(_formato(fuente)[2](contenido)),
+    )
 
 
 def _descargar(url: str, cliente: httpx.Client, dormir: Callable[[float], None]) -> bytes:
     ultimo: Exception | None = None
     for intento in range(1, INTENTOS + 1):
         try:
-            respuesta = cliente.get(url, headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=60.0)
+            respuesta = cliente.get(
+                url, headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=60.0
+            )
             respuesta.raise_for_status()
             return respuesta.content
         except httpx.HTTPError as exc:
@@ -146,11 +161,26 @@ def descargar_fuentes(
             contenido = _descargar(url_de(fuente), cliente, dormir)
             archivo.write_bytes(contenido)
             sha = hashlib.sha256(contenido).hexdigest()
-            registro[fuente.id] = {"sha256": sha, "bytes": len(contenido), "url": url_de(fuente), "descargado": ahora().isoformat()}
+            registro[fuente.id] = {
+                "sha256": sha,
+                "bytes": len(contenido),
+                "url": url_de(fuente),
+                "descargado": ahora().isoformat(),
+            }
         else:
             contenido, sha = _leer_y_verificar(archivo, fuente, registro)
-            registro.setdefault(fuente.id, {"sha256": sha, "bytes": len(contenido), "url": url_de(fuente), "descargado": ahora().isoformat()})
-        resultado[fuente.id] = _fuente_descargada(fuente, str(registro[fuente.id]["sha256"]), contenido)
+            registro.setdefault(
+                fuente.id,
+                {
+                    "sha256": sha,
+                    "bytes": len(contenido),
+                    "url": url_de(fuente),
+                    "descargado": ahora().isoformat(),
+                },
+            )
+        resultado[fuente.id] = _fuente_descargada(
+            fuente, str(registro[fuente.id]["sha256"]), contenido
+        )
     ruta_registro.write_text(json.dumps(registro, indent=2, sort_keys=True), encoding="utf-8")
     return resultado
 
@@ -181,10 +211,18 @@ def verificar_citas(dataset: Dataset, fuentes: Mapping[str, FuenteDescargada]) -
 
 
 def main(argv: list[str] | None = None, cliente: httpx.Client | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dataset-dir", type=Path, default=raiz_repo() / "data" / "eval" / "adr39-mini")
-    parser.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("DATA_CACHE_DIR", ".cache/data")))
-    parser.add_argument("--refresh", action="store_true", help="vuelve a descargar aunque exista la caché")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--dataset-dir", type=Path, default=raiz_repo() / "data" / "eval" / "adr39-mini"
+    )
+    parser.add_argument(
+        "--cache-dir", type=Path, default=Path(os.environ.get("DATA_CACHE_DIR", ".cache/data"))
+    )
+    parser.add_argument(
+        "--refresh", action="store_true", help="vuelve a descargar aunque exista la caché"
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -194,7 +232,13 @@ def main(argv: list[str] | None = None, cliente: httpx.Client | None = None) -> 
         return 2
     cliente = cliente or httpx.Client()
     try:
-        fuentes = descargar_fuentes(dataset, args.cache_dir, cliente, lambda: datetime.now(timezone.utc), refrescar=args.refresh)
+        fuentes = descargar_fuentes(
+            dataset,
+            args.cache_dir,
+            cliente,
+            lambda: datetime.now(timezone.utc),
+            refrescar=args.refresh,
+        )
     except FuenteNoDescargable as exc:
         print(str(exc), file=sys.stderr)
         return 3
@@ -203,7 +247,9 @@ def main(argv: list[str] | None = None, cliente: httpx.Client | None = None) -> 
         print(f"cita ausente: pregunta {a.pregunta} en el documento {a.documento}", file=sys.stderr)
     if ausentes:
         return 1
-    print(f"{len(fuentes)} fuentes descargadas y {sum(len(p.evidencia) for p in dataset.preguntas)} citas verificadas")
+    print(
+        f"{len(fuentes)} fuentes descargadas y {sum(len(p.evidencia) for p in dataset.preguntas)} citas verificadas"
+    )
     return 0
 
 
