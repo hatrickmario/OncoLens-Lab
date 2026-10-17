@@ -29,6 +29,7 @@
       "tipo": "telefono",
       "descripcion": "Teléfono local de 7 a 12 dígitos (separadores opcionales) precedido de su palabra clave.",
       "palabrasClave": ["tel", "teléfono", "telefono", "celular", "móvil", "movil", "phone", "mobile"],
+      "prefijosDeRegistroExentos": ["NCT"],
       "patron": "(?:{{palabrasClave}})[^\\n\\d]{0,16}(?<valor>(?!\\d{4}-\\d{2}-\\d{2})\\d(?:[\\d.\\- ]{4,14}\\d)?)(?![\\p{L}\\p{N}])",
       "banderas": "iu",
       "digitosMin": 7,
