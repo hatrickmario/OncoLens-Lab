@@ -25,16 +25,16 @@ divergen de la base sembrada.
 ## Decisiones
 
 1. **Estructura**: `prisma/seed.ts` es solo el punto de entrada (lee configuración, aplica la guarda,
-   crea el cliente, llama a `sembrar()`). Los datos de cada paciente viven en
+   abre la conexión, llama a `sembrar()`). Los datos de cada paciente viven en
    `prisma/seed/pacientes/<a…e>.ts` como objetos con **términos canónicos**, sin códigos. Recomendado
-   frente a un JSON único (pierde tipos) o SQL crudo (no reutiliza Prisma ni la regla de `grade`).
+   frente a un JSON único (pierde tipos) o SQL crudo (no reutiliza la regla de `grade`).
 2. **Idempotencia por identificadores deterministas**: cada registro sembrado tiene un UUID derivado
    (UUID v5 sobre un *namespace* fijo del seed + clave natural, p. ej. `paciente-a/diagnostico-1`) y se
    escribe con `upsert`. Descartados: "borrar y volver a crear" (cambia IDs y viola `ON DELETE RESTRICT`)
    y "comprobar si existe el primero" (frágil ante seeds parciales).
-3. **Toda la escritura en una transacción** (`prisma.$transaction`): un fallo a mitad no deja un seed
-   parcial.
-4. **Guarda de entorno antes de Prisma**: `assertSeedPermitido(config)` es una función pura que recibe la
+3. **Toda la escritura en una transacción** (`ConexionDelSeed.enTransaccion`, sobre `pg`; sustituye a la
+   `prisma.$transaction` original): un fallo a mitad no deja un seed parcial.
+4. **Guarda de entorno antes de abrir la conexión**: `assertSeedPermitido(config)` es una función pura que recibe la
    configuración ya leída; `seed.ts` la llama **antes** de abrir la conexión a PostgreSQL. Entornos
    permitidos: lista en configuración (`SEED_ALLOWED_ENVS`, por defecto `local,test`); `piloto` siempre
    se rechaza aunque alguien lo añada a la lista (RN-13). `APP_ENV` ausente → rechazo.
@@ -95,11 +95,11 @@ Sin cambios en `apps/*/openapi.yaml` ni en `contracts/`. Proveedor: ninguno. Los
 
 ## Dependencias y colaboradores
 
-- `prisma/seed.ts` → `config/seedConfig` (lectura y validación Zod de `APP_ENV`, `SEED_ALLOWED_ENVS`,
+- `prisma/seed.ts` → `prisma/seed/config.ts` (lectura y validación Zod de `APP_ENV`, `SEED_ALLOWED_ENVS`,
   `REAL_ANONYMIZED_ENABLED`, `REAL_IDENTIFIED_ENABLED`, `SEED_REFERENCE_DATE`, `SEED_*_PASSWORD_FILE`
   con respaldo `SEED_*_PASSWORD`, `CLINICAL_CATALOG_PATH`; lector de archivos inyectado) → `assertSeedPermitido()` →
   conexión (`ConexionDelSeed.enTransaccion`) → `sembrar(sesion, { catalogo, reloj, hasher, credenciales, retencion })`.
-- `sembrar()` recibe sus colaboradores por parámetro (sin contenedor de DI): el cliente de Prisma real,
+- `sembrar()` recibe sus colaboradores por parámetro (sin contenedor de DI): la sesión de la transacción (`pg`),
   el catálogo leído, un reloj y un *hasher* de contraseñas.
 - Reglas con nombre propio (extraídas y probadas en un solo lugar):
   - `assertSeedPermitido()` (RN-13: `APP_ENV` y `REAL_*_ENABLED`).
@@ -108,7 +108,8 @@ Sin cambios en `apps/*/openapi.yaml` ni en `contracts/`. Proveedor: ninguno. Los
   - `derivarTextoGrade()` (DEC-05): formato canónico de `Diagnosis.grade` desde la gradación de
     referencia; queda como función pura reutilizable por US-110 / FEAT-01b.
   - `idSembrado(claveNatural)` (determinismo, UUID v5).
-- Sin dependencia de módulos de `src/modules/*` (el seed no pasa por services de dominio en el S1).
+- El seed no pasa por services de dominio en el S1, pero sí importa de `src/modules/auth` el *hasher*
+  (`createPasswordHasher`) y el tipo `RolDeUsuario`, y de `src/config.ts` los lectores de configuración.
 
 ## Evaluación
 
@@ -178,3 +179,13 @@ Resueltas por defecto razonable conforme a los specs durante la implementación;
 - **Preguntas abiertas al usuario:** origen `source_dataset = seed` junto a `agreement_reference` (data-model: «solo si el
   paciente viene de un dataset»); `significance_source = 'documento'` en los biomarcadores sembrados (no hay documento);
   dos patrones de contraseñas SINT-* de test (constantes de `tests/support/seed.ts` frente a `TEST_DOC*` de `usuarios.ts`).
+
+### Deuda registrada y notas del re-gate (sin ID)
+
+- **D-a:** one-shot `clinical-migrate` (`prisma migrate deploy`) y restaurar en el smoke la aserción «US-039 AC-1
+  clinical-seed terminó con código 0». Pregunta abierta al usuario.
+- **D-b:** rol de PostgreSQL `clinical_seed` con solo DML antes de G-Piloto (S6).
+- `derivarGleason` con patrones fuera de 3–5: se deja tal cual; lo validará US-110 / FEAT-01b.
+- Los commits `test(L1D-169)` de las piezas pequeñas (`uuidV5`/`idSembrado`/reloj, `leerSecreto`, catálogo, grade) se
+  hicieron con la implementación ya escrita en el árbol de trabajo; el rojo es por construcción (esqueleto) y no hay
+  salida guardada de esas corridas.

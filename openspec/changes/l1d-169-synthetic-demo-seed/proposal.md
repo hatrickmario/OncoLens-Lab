@@ -81,7 +81,7 @@ Ninguna.
 ## Bounded contexts
 
 - **clinical-platform** (único): `apps/clinical-api/prisma/seed.ts`, `apps/clinical-api/prisma/seed/`
-  (datos y helpers del seed), `apps/clinical-api/test/seed/`, `apps/clinical-api/package.json` y los
+  (datos y helpers del seed), `apps/clinical-api/tests/`, `apps/clinical-api/prisma.config.ts`, `infra/docker/` y los
   datos de `packages/clinical-catalogs/`.
 - ai-services y frontend: no se tocan.
 
