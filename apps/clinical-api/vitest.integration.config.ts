@@ -1,0 +1,15 @@
+import { defineConfig } from 'vitest/config';
+
+// Integración contra PostgreSQL real de test (US-038). Necesita el perfil test de US-035 (TEST_DATABASE_URL,
+// PG_TEST_DB_PREFIX): el global setup crea una base por ejecución, la migra y la elimina.
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['tests/integration/schema/**/*.test.ts'],
+    globalSetup: ['tests/support/global-setup.ts'],
+    testTimeout: 30_000,
+    hookTimeout: 120_000,
+    // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).
+    retry: 0,
+  },
+});

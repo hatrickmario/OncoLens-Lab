@@ -7,26 +7,31 @@
 # (la base clínica, `postgres`, `template0`, `template1`) daría acceso del arnés a esa base.
 
 PATRON_PREFIJO_TEST_DB='^[a-z][a-z0-9_]{2,}$'
+# Datos de la regla (el arnés de Vitest los comprueba por comportamiento, tests/unit/arnes-bd.test.ts).
+BASES_RESERVADAS_TEST_DB=(postgres template0 template1)
+PREFIJOS_PROHIBIDOS_TEST_DB=(postgres template)
 
 # validar_prefijo_test_db <prefijo> <base-clinica>
 # Devuelve 0 si el prefijo es válido; si no, escribe en stderr la variable y el motivo y devuelve 1.
 validar_prefijo_test_db() {
-  local prefijo="$1" base_clinica="$2" reservada
+  local prefijo="$1" base_clinica="$2" reservada prohibido
 
   if [[ ! "$prefijo" =~ $PATRON_PREFIJO_TEST_DB ]]; then
     echo "PG_TEST_DB_PREFIX no es válido: debe cumplir $PATRON_PREFIJO_TEST_DB" >&2
     return 1
   fi
 
-  for reservada in "$base_clinica" postgres template0 template1; do
+  for reservada in "$base_clinica" "${BASES_RESERVADAS_TEST_DB[@]}"; do
     if [[ "$reservada" == "$prefijo"* ]]; then
       echo "PG_TEST_DB_PREFIX=$prefijo casa con la base que no es de test: $reservada" >&2
       return 1
     fi
   done
 
-  if [[ "$prefijo" == postgres* || "$prefijo" == template* ]]; then
-    echo "PG_TEST_DB_PREFIX=$prefijo no puede empezar por postgres ni template (bases reservadas)" >&2
-    return 1
-  fi
+  for prohibido in "${PREFIJOS_PROHIBIDOS_TEST_DB[@]}"; do
+    if [[ "$prefijo" == "$prohibido"* ]]; then
+      echo "PG_TEST_DB_PREFIX=$prefijo no puede empezar por $prohibido (bases reservadas)" >&2
+      return 1
+    fi
+  done
 }

@@ -82,7 +82,7 @@ inyectado (determinismo, CLAUDE.md). `created_at` sin `@default(now())` por la m
 (asumido; si el Gate 1 prefiere `DEFAULT now()` en la base, es un cambio menor).
 
 ### D4. PostgreSQL de test real: servicio `postgres` de Compose con TLS, una base por ejecución
-El arnés (`apps/clinical-api/test/support/db.ts`) toma `TEST_DATABASE_URL` (con `sslmode=require`),
+El arnés (`apps/clinical-api/tests/support/db.ts`) toma `TEST_DATABASE_URL` (con `sslmode=require`),
 que apunta al rol **`oncolens_test_admin`** de L1D-165 (`CREATEDB` y nada más) sobre la base de
 mantenimiento `postgres`; crea una base nueva `${PG_TEST_DB_PREFIX}<id>` con el sufijo inyectado
 por el *setup* global (queda como dueño), aplica `prisma migrate deploy`, aplica
@@ -102,6 +102,9 @@ dentro de una transacción que se revierte, para que los tests sean independient
 `template1` o un prefijo que empiece por `template`). La misma comprobación se repite sobre el nombre generado
 `${PG_TEST_DB_PREFIX}<id>` antes del `CREATE DATABASE` y antes del `DROP DATABASE`: el arnés nunca crea ni borra
 una base que no sea suya, aunque el `.env` o la CI traigan un prefijo que `setup-secrets.sh` no validó.
+`pg` y `@types/pg` (versión exacta, devDependencies) son el cliente del arnés: crear y borrar la base de test y consultar
+el catálogo con SQL crudo, que el cliente de Prisma no hace; no entran al runtime. Prisma 7.10.1 (última estable; la
+URL va en `prisma.config.ts`).
 Descartada: Testcontainers — duplicaría la configuración de TLS y `pg_hba.conf` de US-035 y
 divergiría de la imagen de Compose; se puede revisar en US-213 si la CI lo pide (reversible).
 
@@ -109,6 +112,22 @@ divergiría de la imagen de Compose; se puede revisar en US-213 si la CI lo pide
 El test de AC-1 compara el catálogo con una **lista literal** de las 29 tablas de
 `data-model.md` §1 escrita en el test (la higiene de tests prohíbe derivar el esperado del propio
 código). Si el modelo cambia, cambia en su change y el test se actualiza en ese mismo change.
+
+## Decisión posterior: ai_analysis_record anulable por estado y tipo (Gate 2, aprobada por el humano)
+
+Los metadatos de modelo (`llm_provider`, `llm_model`, `embedding_model`, `reranker_model`, `nli_model`, `prompt_version`)
+y de recuperación (`corpus_release`, `retrieval_params`) de `clinical.ai_analysis_record` son anulables y los `CHECK`
+nombrados de `data-model.md` §4.3 fijan cuándo, sin dejar ninguna columna anulable sin regla de estado o tipo salvo la
+pregunta abierta Q1: `tipo_no_habilitado` los anula todos; `resumen_caso` anula los de recuperación y el puntaje;
+`con_evidencia` exige `llm_provider`, `llm_model`, `nli_model` y `prompt_version` (y los modelos de recuperación en el
+análisis de evidencia); además la coherencia de `top_relevance_score` (RN-02) y `evidence_options = '[]'` fuera de
+`con_evidencia`. **Q1 (abierta, para el humano):** `corpus_release` y `retrieval_params` no se exigen `NOT NULL` en
+`analisis_evidencia` con evidencia; hoy solo se prohíben donde no hubo recuperación. También se relajan, por sentido clínico,
+`diagnosis` (estadio y desempeño), `care_episode.closure_reason/closed_by` (con `care_episode_cierre_ck`, que además
+impide un motivo en un episodio abierto) y `patient` (`source_dataset`, `agreement_reference`). `clinical.analysis_follow_up`
+comparte el *trigger* de inmutabilidad.
+**Se modifica `init_full_schema` y no se añade otra migración** porque la inicial aún no está desplegada en ningún entorno
+(solo bases de test efímeras): el historial no pierde información y evita una migración de corrección en el mismo sprint.
 
 ## Privacidad y ownership
 
@@ -141,8 +160,8 @@ Compatibilidad ADR-26: sin efecto.
 |---|---|---|
 | `apps/clinical-api/prisma/schema.prisma` | crea | `data-model.md` (fuente), Prisma |
 | `apps/clinical-api/prisma/migrations/<ts>_init_full_schema/migration.sql` | crea (generado + bloque manual) | `schema.prisma`, `data-model.md` §5, §6 |
-| `apps/clinical-api/test/support/db.ts` | crea | `TEST_DATABASE_URL` (`oncolens_test_admin`), `PG_TEST_DB_PREFIX`, `prisma migrate deploy`, `corpus-schema-grants.sql` de L1D-165; generador de nombres inyectado |
-| `apps/clinical-api/test/integration/schema/*.test.ts` | crea | arnés de BD; SQL crudo sobre `information_schema`/`pg_catalog` |
+| `apps/clinical-api/tests/support/db.ts` | crea | `TEST_DATABASE_URL` (`oncolens_test_admin`), `PG_TEST_DB_PREFIX`, `prisma migrate deploy`, `corpus-schema-grants.sql` de L1D-165; generador de nombres inyectado |
+| `apps/clinical-api/tests/integration/schema/*.test.ts` | crea | arnés de BD; SQL crudo sobre `information_schema`/`pg_catalog` |
 | `docs/architecture/data-model.md` §6 | edita la nota de validación | `[S1 resp. 1]` |
 
 Sin services ni reglas de dominio: no se extraen métodos de dominio. Prisma no se mockea; la BD es

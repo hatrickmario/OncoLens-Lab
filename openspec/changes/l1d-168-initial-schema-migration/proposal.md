@@ -55,7 +55,7 @@ Ninguna.
 
 ## Bounded contexts
 
-- **clinical-platform** (único): `apps/clinical-api/prisma/`, `apps/clinical-api/test/` y la nota de
+- **clinical-platform** (único): `apps/clinical-api/prisma/`, `apps/clinical-api/tests/` y la nota de
   `docs/architecture/data-model.md` §6.
 - ai-services y frontend: no se tocan. `rag-orchestrator` no ve nada de este change salvo que el
   schema `corpus` existe vacío.
@@ -90,7 +90,7 @@ Ninguna.
 ## Impact
 
 - Código nuevo en `apps/clinical-api/prisma/` (`schema.prisma`, `migrations/<ts>_init_full_schema/migration.sql`)
-  y `apps/clinical-api/test/` (arnés de BD e integración). Dependencias nuevas de `clinical-api`:
+  y `apps/clinical-api/tests/` (arnés de BD e integración). Dependencias nuevas de `clinical-api`:
   `prisma` y `@prisma/client` con versión exacta.
 - Sin cambios de API ni de `contracts/`: no hay sección de contratos.
 - Sin cambios de modelo, prompt, umbral, catálogo ni corpus: no aplica la suite `evaluate`.

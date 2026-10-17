@@ -65,8 +65,8 @@ erDiagram
     PATIENT {
         uuid id PK "identificador interno usado por FKs y API"
         string data_origin "sintetico|real_anonimizado|real_identificado"
-        string source_dataset
-        string agreement_reference "convenio o contrato marco"
+        string source_dataset "nullable"
+        string agreement_reference "nullable — convenio o contrato marco"
         int birth_year
         string sex
         string population "adulto|pediatrico (derivado)"
@@ -103,9 +103,9 @@ erDiagram
         uuid patient_id FK
         timestamp opened_at
         timestamp closed_at "nullable — un solo episodio abierto"
-        string closure_reason "catálogo validado con el oncólogo"
+        string closure_reason "nullable — catálogo validado con el oncólogo"
         uuid opened_by FK
-        uuid closed_by FK "tratante principal o admin"
+        uuid closed_by FK "nullable — tratante principal o admin"
     }
     CARE_TEAM_MEMBER {
         uuid id PK
@@ -147,10 +147,10 @@ erDiagram
         string histology "v1.2 — tipo histológico (catálogo)"
         string histology_code "nullable — código del catálogo"
         string grade "nullable; texto canónico DERIVADO de la gradación de referencia (diagnosis_grading), nunca escrito a mano — vacío resuelto (US-033)"
-        string staging_system "TNM_8|riesgo_LLA|..."
-        string stage_value
-        string performance_scale "ECOG|Karnofsky|Lansky"
-        int performance_value
+        string staging_system "nullable — TNM_8|riesgo_LLA|..."
+        string stage_value "nullable"
+        string performance_scale "nullable — ECOG|Karnofsky|Lansky"
+        int performance_value "nullable"
         date diagnosed_at
         boolean is_active "vigente vs. histórico"
         float extraction_score "nullable"
@@ -316,7 +316,7 @@ erDiagram
         uuid requested_by FK
         string analysis_type "analisis_evidencia|resumen_caso"
         string trace_id
-        text query_text "enmascarado si tenía PII; null en resumen_caso"
+        text query_text "nullable — enmascarado si tenía PII; null en resumen_caso"
         string question_template_id "nullable"
         string query_language
         string response_language
@@ -340,15 +340,15 @@ erDiagram
         string context_fingerprint "hash de los datos usados — detecta 'Desactualizado: datos del paciente' (y la cascada por memoria)"
         uuid rerun_of_analysis_id FK "nullable"
         string data_classification
-        string llm_provider "local|nube (RN-12)"
-        string llm_model
-        string embedding_model
-        string reranker_model
-        string nli_model
-        string prompt_version
-        string corpus_release "fecha de corte y versión"
+        string llm_provider "nullable por estado/tipo — local|nube (RN-12)"
+        string llm_model "nullable por estado/tipo"
+        string embedding_model "nullable por estado/tipo"
+        string reranker_model "nullable por estado/tipo"
+        string nli_model "nullable por estado/tipo"
+        string prompt_version "nullable por estado/tipo"
+        string corpus_release "nullable por tipo — fecha de corte y versión"
         string catalog_version
-        jsonb retrieval_params
+        jsonb retrieval_params "nullable por tipo"
         timestamp created_at
     }
     ANALYSIS_FEEDBACK {
@@ -649,8 +649,8 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 |---|---|---|---|
 | `id` | uuid | PK | identificador interno usado por FKs y API |
 | `data_origin` | text |  | sintetico\|real_anonimizado\|real_identificado |
-| `source_dataset` | text |  |  |
-| `agreement_reference` | text |  | convenio o contrato marco |
+| `source_dataset` | text |  | nullable — solo si el paciente viene de un dataset |
+| `agreement_reference` | text |  | nullable — convenio o contrato marco; NULL en un paciente real = sin convenio (ver nulabilidades relajadas) |
 | `birth_year` | integer |  |  |
 | `sex` | text |  |  |
 | `population` | text |  | adulto\|pediatrico (derivado) |
@@ -669,9 +669,9 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `patient_id` | uuid | FK |  |
 | `opened_at` | timestamptz |  |  |
 | `closed_at` | timestamptz |  | nullable — un solo episodio abierto |
-| `closure_reason` | text |  | catálogo validado con el oncólogo |
+| `closure_reason` | text |  | nullable — catálogo validado con el oncólogo; NULL mientras el episodio está abierto |
 | `opened_by` | uuid | FK |  |
-| `closed_by` | uuid | FK | tratante principal o admin |
+| `closed_by` | uuid | FK | nullable — tratante principal o admin; NULL si y solo si `closed_at` es NULL |
 
 #### `clinical.care_team_member`
 
@@ -725,10 +725,10 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `histology` | text |  | v1.2 — tipo histológico (catálogo) |
 | `histology_code` | text |  | nullable — código del catálogo |
 | `grade` | text |  | nullable; texto canónico DERIVADO de la gradación de referencia (diagnosis_grading), nunca escrito a mano — vacío resuelto (US-033) |
-| `staging_system` | text |  | TNM_8\|riesgo_LLA\|... |
-| `stage_value` | text |  |  |
-| `performance_scale` | text |  | ECOG\|Karnofsky\|Lansky |
-| `performance_value` | integer |  |  |
+| `staging_system` | text |  | nullable — TNM_8\|riesgo_LLA\|... |
+| `stage_value` | text |  | nullable |
+| `performance_scale` | text |  | nullable — ECOG\|Karnofsky\|Lansky |
+| `performance_value` | integer |  | nullable |
 | `diagnosed_at` | date |  |  |
 | `is_active` | boolean |  | vigente vs. histórico |
 | `extraction_score` | double precision |  | nullable |
@@ -924,7 +924,7 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `requested_by` | uuid | FK |  |
 | `analysis_type` | text |  | analisis_evidencia\|resumen_caso |
 | `trace_id` | text |  |  |
-| `query_text` | text |  | enmascarado si tenía PII; null en resumen_caso |
+| `query_text` | text |  | nullable — enmascarado si tenía PII; null en resumen_caso |
 | `question_template_id` | text |  | nullable |
 | `query_language` | text |  |  |
 | `response_language` | text |  |  |
@@ -942,22 +942,42 @@ Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac
 | `continued_with_warning` | boolean |  |  |
 | `prior_analyses_used` | uuid[] |  | memoria (no citable) |
 | `patient_data_links` | jsonb |  | rN → entidad del paciente; solo Backend 1 — vacío resuelto (US-033) |
-| `top_relevance_score` | double precision |  | nullable — null si no hubo evidencia |
+| `top_relevance_score` | double precision |  | nullable — null si no hubo evidencia (`null` ≠ `0.0`, RN-02); 0..1 si existe |
 | `status` | text |  | con_evidencia\|sin_evidencia\|tipo_no_habilitado |
 | `clinical_context_snapshot` | jsonb |  | desidentificado, con etiquetas; sin pseudoPatientId (efímero por consulta, RN-11) |
 | `context_fingerprint` | text |  | hash de los datos usados — detecta 'Desactualizado: datos del paciente' (y la cascada por memoria) |
 | `rerun_of_analysis_id` | uuid | FK | nullable |
 | `data_classification` | text |  |  |
-| `llm_provider` | text |  | local\|nube (RN-12); con datos reales siempre local |
-| `llm_model` | text |  |  |
-| `embedding_model` | text |  |  |
-| `reranker_model` | text |  |  |
-| `nli_model` | text |  |  |
-| `prompt_version` | text |  |  |
-| `corpus_release` | text |  | fecha de corte y versión |
+| `llm_provider` | text |  | nullable por estado/tipo — local\|nube (RN-12); con datos reales siempre local |
+| `llm_model` | text |  | nullable por estado/tipo; en `sin_evidencia` es el «modelo configurado» |
+| `embedding_model` | text |  | nullable por estado/tipo |
+| `reranker_model` | text |  | nullable por estado/tipo |
+| `nli_model` | text |  | nullable por estado/tipo; en `sin_evidencia` es el «modelo configurado» |
+| `prompt_version` | text |  | nullable por estado/tipo |
+| `corpus_release` | text |  | nullable por tipo — fecha de corte y versión |
 | `catalog_version` | text |  |  |
-| `retrieval_params` | jsonb |  |  |
+| `retrieval_params` | jsonb |  | nullable por tipo |
 | `created_at` | timestamptz |  |  |
+
+#### Reglas de `clinical.ai_analysis_record` por estado y tipo (US-038)
+
+Las columnas de metadatos del modelo se anulan según el estado o el tipo del análisis, porque en esos casos no hubo modelo, recuperación o puntaje que registrar. La migración las impone con `CHECK` nombrados; las reglas son de la base y no las sustituye la validación del service.
+
+| Condición | Regla | `CHECK` |
+|---|---|---|
+| `status = 'tipo_no_habilitado'` | `llm_provider`, `llm_model`, `nli_model`, `embedding_model`, `reranker_model`, `prompt_version`, `corpus_release` y `retrieval_params` son `NULL` (no se invocó ningún modelo ni hubo recuperación) | `ai_analysis_record_tipo_no_habilitado_ck` |
+| `analysis_type = 'resumen_caso'` | `embedding_model`, `reranker_model`, `corpus_release`, `retrieval_params` y `top_relevance_score` son `NULL` (el resumen no recupera del corpus) | `ai_analysis_record_resumen_caso_ck` |
+| `status = 'con_evidencia'` | `llm_provider`, `llm_model`, `nli_model` y `prompt_version` son `NOT NULL` (el registro debe ser reproducible); en `analisis_evidencia` también `embedding_model` y `reranker_model` | `ai_analysis_record_con_evidencia_ck` |
+| siempre | `llm_provider` es `NULL` o `local \| nube` (RN-12) | `ai_analysis_record_llm_provider_ck` |
+| `analysis_type = 'analisis_evidencia'` | `(status IN ('sin_evidencia', 'tipo_no_habilitado')) = (top_relevance_score IS NULL)` (RN-02) | `ai_analysis_record_puntaje_estado_ck` |
+| siempre | `top_relevance_score` es `NULL` o está entre 0 y 1 | `ai_analysis_record_puntaje_rango_ck` |
+| `status <> 'con_evidencia'` | `evidence_options = '[]'` | `ai_analysis_record_opciones_ck` |
+
+- En `sin_evidencia` no se invoca al LLM (RN-02), pero `llm_model` y `nli_model` guardan el **modelo configurado** en ese momento, para que el registro siga siendo reproducible; `RagMeta` y los contratos no cambian.
+- Un `resumen_caso` no tiene puntaje de recuperación: la coherencia de `top_relevance_score` aplica solo a `analisis_evidencia`. Un `resumen_caso` con `status = 'con_evidencia'` exige `llm_provider`, `llm_model`, `nli_model` y `prompt_version`, pero no los modelos de recuperación.
+- La tabla es inmutable (`BEFORE UPDATE` rechaza toda actualización, RN-06); `analysis_follow_up` lo es también (§7).
+
+**Nulabilidades relajadas por sentido clínico** (el resto de columnas no anotadas como `nullable` es `NOT NULL`): `diagnosis.staging_system`, `stage_value`, `performance_scale` y `performance_value` (un dato faltante es un aviso, no un bloqueo, RN-26); `care_episode.closure_reason` y `closed_by` (un episodio abierto no tiene cierre; `closed_by` es `NULL` si y solo si `closed_at` lo es y `closure_reason` solo puede existir en un episodio cerrado, `care_episode_cierre_ck`; cerrar sin motivo sigue permitido porque el catálogo de motivos aún no está validado); `patient.source_dataset` y `agreement_reference` (un paciente viene de un dataset o de un convenio, no de ambos); `ai_analysis_record.query_text` (`null` en `resumen_caso`). `agreement_reference` `NULL` en un paciente **real** significa «sin convenio» y, por RN-15, «no se presume» consentimiento: `403` en toda generación con IA. Esa regla se verifica con un test en la historia de opt-out del S6, no en esta migración.
 
 #### `clinical.analysis_feedback`
 
@@ -1210,7 +1230,7 @@ CREATE UNIQUE INDEX diagnosis_grading_reference_uq ON clinical.diagnosis_grading
 - **Procedencia y estado de revisión propios:** cada gradación tiene su `entry_method`, su confianza de extracción y **un único** `review_status`; no existe un segundo estado de revisión (el contrato lo expone como `provenance.reviewStatus`).
 - **Gradación de referencia** (`is_reference`, una por diagnóstico) para `Diagnosis.grade` y para el checklist: en próstata, la de prostatectomía con alcance `global`; si no existe, la `peor` de la biopsia. En mama, la más reciente verificada (**asumido**; lo confirma US-110).
 - **Formato canónico de `Diagnosis.grade`:** próstata `"Gleason 4+3=7 · ISUP 3"`; mama `"Nottingham grado 2"`. El seed (US-039) y la extracción (FEAT-01b) escriben con este mismo formato.
-- **Validación clínica pendiente:** el destino y el formato los valida el oncólogo asesor antes de US-038 (`docs/decisions/DEC-05-tnm-isup.md`); si los rechaza, se escala a Ingeniería antes de la migración.
+- **Validación clínica:** validada por el Oncólogo asesor A (`[S1 resp. 1]`, 2026-10-13); el destino y el formato no cambian (`docs/decisions/DEC-05-tnm-isup.md`). Si en adelante se rechazaran, se escala a Ingeniería.
 
 ## 7. Preguntas de seguimiento: `clinical.analysis_follow_up`
 
