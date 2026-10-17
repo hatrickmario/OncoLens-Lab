@@ -33,8 +33,35 @@ function leerCredenciales(env: NodeJS.ProcessEnv, leerArchivo: LeerArchivo): Cre
   };
 }
 
-/** Orquesta el seed: configuración → guarda (RN-13) → credenciales → catálogo → conexión → siembra. */
+/** Orquesta el seed y registra el resultado con el `traceId` de la ejecución; un fallo solo registra clase y variable. */
 export async function ejecutarSeed(
+  env: NodeJS.ProcessEnv,
+  dependencias: DependenciasDelSeed,
+): Promise<ResumenDelSeed> {
+  const { registrar, traceId } = dependencias;
+  try {
+    const filas = await sembrarTrasLaGuarda(env, dependencias);
+    registrar({ event: 'seed_completo', traceId, filas });
+    return filas;
+  } catch (error) {
+    registrar(lineaDeFallo(error, traceId));
+    throw error;
+  }
+}
+
+/** Nunca lleva el mensaje del error (puede traer host, usuario o filas): solo la clase y, si existe, la variable. */
+function lineaDeFallo(error: unknown, traceId: string): Record<string, unknown> {
+  const variable = (error as { variable?: unknown }).variable;
+  return {
+    event: 'seed_fallido',
+    traceId,
+    clase: (error as Error).name,
+    ...(typeof variable === 'string' ? { variable } : {}),
+  };
+}
+
+/** Configuración → guarda (RN-13) → credenciales → catálogo → conexión → siembra. */
+async function sembrarTrasLaGuarda(
   env: NodeJS.ProcessEnv,
   dependencias: DependenciasDelSeed,
 ): Promise<ResumenDelSeed> {
@@ -56,7 +83,6 @@ export async function ejecutarSeed(
         },
       }),
     );
-    dependencias.registrar({ event: 'seed_completo', filas: resumen });
     return resumen;
   } finally {
     await conexion.end();
