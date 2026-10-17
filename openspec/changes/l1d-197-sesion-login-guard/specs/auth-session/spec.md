@@ -77,19 +77,7 @@ Regresión [SEG-02] (`403` por permiso según `x-permission`) activa desde S2 (U
 - **THEN** `web` responde con una redirección a `/login` y el navegador termina en la página de login
 - **AND** el HTML servido no contiene el identificador del paciente ni ningún dato clínico o de identidad del seed
 
-### Requirement: La sesión del doctor nunca llega a rag-orchestrator
-El valor del token de `oncolens_session` MUST NOT salir de `clinical-api`: los requests hacia `rag-orchestrator` SHALL llevar solo `Authorization: Bearer <jwt de servicio>` (capacidad `service-auth`, L1D-105) y ninguna cabecera `Cookie` ni cabecera copiada del request entrante; el token MUST NOT aparecer en cabeceras, cuerpos ni logs de `rag-orchestrator`.
-
-#### Scenario: El análisis con la cookie real no filtra el token hacia Backend 2 [US-211 AC-5] [FR-01] [OL-03]
-- **GIVEN** la cookie `oncolens_session` obtenida con el login de `doc1@test.local` y `rag-orchestrator` simulado que captura el request
-- **WHEN** se solicita un análisis sobre el paciente semilla (a) con esa cookie
-- **THEN** el request capturado hacia `rag-orchestrator` lleva `Authorization: Bearer <jwt>` y no lleva cabecera `Cookie`
-- **AND** el valor del token no aparece en ninguna cabecera ni en el cuerpo del request capturado
-
-#### Scenario: Los logs de rag-orchestrator no contienen el token de sesión [US-211 AC-5] [OL-03]
-- **GIVEN** el stack de Compose en perfil de test con `LLM_PROVIDER=fake` y un análisis solicitado desde el navegador con la cookie del login
-- **WHEN** se leen los logs de `rag-orchestrator` de ese intervalo
-- **THEN** ninguna línea contiene el valor del token de `oncolens_session` ni la palabra `oncolens_session`
+Nota (usuario, 2026-10-20, opción b): el requisito "La sesión del doctor nunca llega a rag-orchestrator" (AC-5 de US-211) y sus dos escenarios se movieron al delta de spec de L1D-103 (`evidence-analysis-gateway`); este change solo garantiza que el guard adjunta `userId` y `rol`.
 
 ### Requirement: Contraseñas y tokens de sesión fuera de los logs
 Los logs de `web` y `clinical-api` MUST NOT contener la contraseña enviada en el login ni el valor del token de sesión (ni en cabeceras `Cookie`/`Set-Cookie` ni en cuerpos). El logger SHALL redactar `password`, `cookie`, `set-cookie` y `authorization`, y el cuerpo del login MUST NOT registrarse.

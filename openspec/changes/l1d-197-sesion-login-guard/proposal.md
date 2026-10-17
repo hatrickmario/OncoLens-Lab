@@ -39,6 +39,19 @@ del login) · `[S1 resp. 13]` (SDK generado de L1D-105) · `[S1 resp. 14a]` (`Or
 > - Texto de error del login: "Correo o contraseña incorrectos." (alineado con el campo "Correo
 >   electrónico").
 
+> **Decidido (usuario, 2026-10-20), Oleada 4** (`backlog/sprints/S1-plan.md` §10, decisiones 43–52):
+> - **AC-5 de US-211 pasa a L1D-103** (opción b): este change ya no contiene el test de integración
+>   ni el E2E de "la sesión no llega a rag-orchestrator" (tareas 2.8 y 2.12 retiradas, `Test-Removal:`
+>   en el commit de código) ni su escenario de spec; los verifica L1D-103. No se mergea con test rojo.
+> - El login se monta en `server.ts` dentro de este change (tarea 2.6b).
+> - Repository sobre `pg` (D11); migración a Prisma Client = deuda D-1 (ID por asignar).
+> - `/login` con CSS Modules provisional (D12); Tailwind v4 + shadcn/ui = deuda D-2, antes de L1D-140.
+> - Contrato: `500` genérico y código propio de login para el `502` (tarea 1.2, contract-first).
+> - `visual-check` y E2E de Playwright pendientes hasta la deuda D-3 (Playwright y perfil de test en Compose).
+> - `auth.session.ip_address` y `user_agent` `nullable` con valor `null` (D4; migración 2.9b, otro agente).
+> - `WEB_HOME_PATH` con el UUID del paciente semilla aceptado como deuda hasta US-048; CSP y cabeceras
+>   anti-clickjacking de `/login` como excepción nombrada hasta US-216 (S6).
+
 ## Why
 
 El *walking skeleton* del S1 (login → análisis *dense* con una opción citada sobre el paciente
@@ -81,9 +94,11 @@ historia lo implementa con el mínimo que exige el S1.
   lector de servidor `lib/mensajes.ts`, sin librería de i18n.
 - **Configuración** (RN-22): `SESSION_TTL_HOURS`, `ARGON2_MEMORY_COST_KIB`, `ARGON2_TIME_COST`,
   `ARGON2_PARALLELISM` (`clinical-api`) y `WEB_HOME_PATH` (`web`, servidor) en `.env.example`.
-- **Contrato:** sin cambios. `POST /platform/auth/login`, `LoginRequest`,
-  `ErrorCredencialesInvalidas`, `NoAutenticado` y sus ejemplos ya están en
-  `apps/clinical-api/openapi.yaml` (US-033); `info.version` no se toca (la sube L1D-164).
+- **Contrato:** `POST /platform/auth/login`, `LoginRequest`, `ErrorCredencialesInvalidas`,
+  `NoAutenticado` y sus ejemplos ya están en `apps/clinical-api/openapi.yaml` (US-033). Cambio
+  aditivo decidido el 2026-10-20 (tarea 1.2, contract-first): una respuesta `500` genérica y un
+  código propio de login para el `502` del BFF. Salvo eso, el spec no cambia; `info.version` sigue
+  el registro de `[S1 resp. 37]`.
 
 ## Capabilities
 
@@ -103,9 +118,10 @@ historia lo implementa con el mínimo que exige el S1.
 ## Bounded contexts
 
 - **clinical-platform:** módulo `auth` y guard de `clinical-api`; Route Handler
-  `web/app/api/auth/login`; configuración y `.env.example`; E2E de Compose de AC-5.
+  `web/app/api/auth/login`; configuración y `.env.example`; montaje del login en `server.ts` con el
+  pool `pg` y las variables de Compose. (El E2E de Compose de AC-5 pasa a L1D-103.)
 - **frontend:** página `/login`, formulario y `proxy.ts` (guard de páginas de `web`).
-- **ai-services:** no se toca (AC-5 se verifica leyendo sus logs; su validador es de L1D-105).
+- **ai-services:** no se toca (su validador es de L1D-105; la verificación de AC-5 leyendo sus logs es de L1D-103).
 
 ## Dependencias
 
@@ -116,13 +132,13 @@ historia lo implementa con el mínimo que exige el S1.
   **`doc2@test.local` (desactivado) lo crea el test de este change, no el seed** (confirmado; ver
   design D7), igual que el correo inexistente de AC-2.
 - ↪ **Depende de** **l1d-164-compose-stack** (US-034): esqueletos de `web` y `clinical-api`, logger,
-  `LLM_PROVIDER=fake` y perfil de test de Compose para el Playwright de AC-1, AC-4 y AC-5.
+  `LLM_PROVIDER=fake` y perfil de test de Compose para el Playwright de AC-1 y AC-4 (pendiente hasta la deuda D-3).
 - ↪ **Depende de** **l1d-165-secrets-setup-scripts** (US-035): `.env.example` y contraseñas de test
   por variables de entorno (sin secretos en el repo, RN-14).
 - ↪ **Depende de** **l1d-105-service-jwt-auth** (US-054): SDK generado de `clinical-api`
   (design D4, `[S1 resp. 13]`) para el Route Handler de login; su transporte
   `createRagOrchestratorFetch()` es el que garantiza `Authorization: Bearer` sin `Cookie`, que AC-5
-  verifica aquí de punta a punta con la cookie real.
+  se verifica de punta a punta con la cookie real, pero **en L1D-103** (decisión del 2026-10-20).
 - ↪ **Depende de** **l1d-139-bff-route-handler-analisis** (US-060), **solo en las tareas `web` del
   login**: `verificarOrigen()` (`lib/server/origen.ts`) y `crearFetchJsonHaciaClinicalApi()`
   (`lib/server/clinical-api.ts`) `[S1 resp. 14a]`. Las tareas de `clinical-api` no esperan.
@@ -134,8 +150,8 @@ historia lo implementa con el mínimo que exige el S1.
   el de **L1D-140** (US-061, panel en `/pacientes/[id]/analisis`: redirige a `/login` ante el `401`, y
   amplía `es.json`). L1D-193 y L1D-194 también amplían `es.json`. Coordinación de oleada: la parte
   `clinical-api` de L1D-197 antes de L1D-103; la parte `web` del login después de
-  `lib/server/origen.ts` de L1D-139. AC-5 necesita el gateway de L1D-103:
-  su test de punta a punta se completa en la misma oleada (design D8).
+  `lib/server/origen.ts` de L1D-139. **AC-5 lo verifica L1D-103** (que depende de este change), no
+  este (design D8, decisión del 2026-10-20).
 - ⛔ Ninguno bloqueante.
 
 ## Fuera de alcance
