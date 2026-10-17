@@ -51,3 +51,15 @@ def test_settings_con_claves_de_modelos_incompletas_falla_nombrando_las_que_falt
 
     with pytest.raises(ValidationError, match="EMBEDDING_DIM: falta"):
         Settings(_env_file=None)
+
+
+def test_settings_cc_by_nc_esta_desactivado_por_defecto(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ALLOW_CC_BY_NC", raising=False)
+
+    assert Settings(_env_file=None).allow_cc_by_nc is False
+
+
+def test_settings_cc_by_nc_se_activa_desde_el_entorno(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ALLOW_CC_BY_NC", "true")
+
+    assert Settings(_env_file=None).allow_cc_by_nc is True

@@ -30,7 +30,7 @@ import httpx
 from app.evaluation import fase_a
 from app.evaluation.chunking_variants import Seccion
 from app.evaluation.config_medicion import ConfigMedicion, ModeloSpec, cargar_config
-from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_dataset
+from app.evaluation.dataset_loader import Dataset, DatasetInvalido, cargar_dataset_configurado
 from app.evaluation.fase_a2 import cargar_config_a2, ejecutar_etapa_con_puertos
 from app.evaluation.fase_a3 import (
     TrabajoA3,
@@ -207,7 +207,7 @@ def trabajar(
 ) -> int:
     """Modo trabajador: mide un candidato en este proceso."""
     config = cargar_config(ruta_config)
-    dataset = cargar_dataset(raiz_repo() / config.dataset)
+    dataset = cargar_dataset_configurado(raiz_repo() / config.dataset)
     trabajo = _trabajo_desde_json(carga)
     ejecutar_trabajo(
         trabajo,
@@ -330,7 +330,7 @@ def ejecutar_fase_a(
 ) -> int:
     config = cargar_config(ruta_config)
     try:
-        dataset = cargar_dataset(raiz_repo() / config.dataset)
+        dataset = cargar_dataset_configurado(raiz_repo() / config.dataset)
     except DatasetInvalido as exc:
         print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
         return SALIDA_DATASET
@@ -428,7 +428,7 @@ def ejecutar_etapa_a2(
 
     config = cargar_config_a2(ruta_config)
     try:
-        dataset = cargar_dataset(raiz_repo() / config.dataset)
+        dataset = cargar_dataset_configurado(raiz_repo() / config.dataset)
         secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
     except DatasetInvalido as exc:
         print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
@@ -468,7 +468,7 @@ def ejecutar_reranker_a3(
     """Punto de entrada del CLI: dataset y fuentes desde la caché, envoltorios ONNX reales."""
     config = cargar_config_a3(ruta_config)
     try:
-        dataset = cargar_dataset(raiz_repo() / config.dataset)
+        dataset = cargar_dataset_configurado(raiz_repo() / config.dataset)
         secciones = {i: f.secciones for i, f in leer_fuentes_de_cache(dataset, cache_datos).items()}
     except DatasetInvalido as exc:
         print(f"dataset inválido, no se mide nada: {exc}", file=sys.stderr)
@@ -491,7 +491,7 @@ def ejecutar_reranker_a3(
 
 def trabajar_a3(carga: dict[str, Any], ruta_config: Path, cache_datos: Path) -> int:
     config = cargar_config_a3(ruta_config)
-    dataset = cargar_dataset(raiz_repo() / config.dataset)
+    dataset = cargar_dataset_configurado(raiz_repo() / config.dataset)
     ejecutar_trabajo_a3(
         trabajo_desde_json(carga), config, dataset, FabricaOnnx(), time.perf_counter
     )

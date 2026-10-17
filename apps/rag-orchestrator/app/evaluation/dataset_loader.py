@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from app.config.settings import Settings
 
 CLASE_SINTETICA = "sintetico"
 ETIQUETAS_NLI = ("entailment", "neutral", "contradiction")
@@ -111,19 +112,28 @@ def _leer_yaml(ruta: Path) -> dict[str, Any]:
     return contenido
 
 
-def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) -> bool:
+def _motivo_de_rechazo_de_licencia(fuente: dict[str, Any], permitir_cc_by_nc: bool) -> str | None:
+    """Causa concreta por la que la licencia de la fuente no se acepta (RN-21); ``None`` si se acepta."""
     licencia = str(fuente.get("licencia") or "").strip()
     if not licencia:
-        return _terminos_verificados_de_clinicaltrials(fuente)
+        if _terminos_verificados_de_clinicaltrials(fuente):
+            return None
+        return "sin licencia aceptada (RN-21)"
     if CONTIENE_ND.search(licencia):
-        return False
+        return "licencia con cláusula ND no aceptada (RN-21)"
     if (
         CLASE_LICENCIA_ACEPTADA.match(licencia)
         or licencia == "Dominio público"
         or CLASE_NCI.match(licencia)
     ):
-        return True
-    return permitir_cc_by_nc and bool(CLASE_LICENCIA_NC.match(licencia))
+        return None
+    if not CLASE_LICENCIA_NC.match(licencia):
+        return "licencia fuera de las clases aceptadas (RN-21)"
+    if not permitir_cc_by_nc:
+        return "licencia CC BY-NC no aceptada: exige ALLOW_CC_BY_NC=true (RN-21)"
+    if fuente.get("nc_solo_academico") is not True:
+        return "licencia CC BY-NC no aceptada: exige 'nc_solo_academico: true' (RN-21)"
+    return None
 
 
 def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
@@ -150,8 +160,9 @@ def _validar_manifiesto(
         nombre = str(crudo.get("fuente", ""))
         if any(nombre.upper().startswith(e) for e in (*FUENTES_EXCLUIDAS_SIEMPRE, *excluidas)):
             raise DatasetInvalido(f"la fuente {crudo.get('id')} ({nombre}) está excluida (RN-21)")
-        if not _licencia_aceptada(crudo, permitir_cc_by_nc):
-            raise DatasetInvalido(f"la fuente {crudo.get('id')} no tiene licencia aceptada (RN-21)")
+        motivo = _motivo_de_rechazo_de_licencia(crudo, permitir_cc_by_nc)
+        if motivo is not None:
+            raise DatasetInvalido(f"la fuente {crudo.get('id')}: {motivo}")
         fuentes.append(
             Fuente(
                 id=str(crudo["id"]),
@@ -253,3 +264,8 @@ def cargar_dataset(directorio: Path, permitir_cc_by_nc: bool = False) -> Dataset
         preguntas=preguntas,
         pares_nli=pares,
     )
+
+
+def cargar_dataset_configurado(directorio: Path) -> Dataset:
+    """Carga el dataset con el opt-in de CC BY-NC tomado de la configuración (``ALLOW_CC_BY_NC``, RN-22)."""
+    return cargar_dataset(directorio, permitir_cc_by_nc=Settings().allow_cc_by_nc)
