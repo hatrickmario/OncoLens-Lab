@@ -63,7 +63,9 @@ def test_dataset_loader_acepta_clinicaltrials_por_terminos_verificados(dataset_d
 def test_dataset_loader_clinicaltrials_sin_terminos_verificados_se_rechaza(dataset_dir: Path) -> None:
     def borrar(m: dict) -> None:
         for f in m["fuentes"]:
-            if f["fuente"].startswith("ClinicalTrials.gov"):
+            fuente = f["fuente"]
+            host = urlparse(fuente if "://" in fuente else f"https://{fuente}").hostname
+            if host and (host == "clinicaltrials.gov" or host.endswith(".clinicaltrials.gov")):
                 f.pop("licencia_verificada")
 
     _editar(dataset_dir / "manifest.yaml", borrar)
