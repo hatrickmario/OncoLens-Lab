@@ -1,3 +1,5 @@
+import { leerSecretoDeArchivo } from '../config.js';
+
 /** Lector de archivos inyectado: la carga de secretos no hace E/S directa (determinista en test). */
 export type LeerArchivo = (ruta: string) => string;
 
@@ -16,15 +18,12 @@ export function assertSecretPresent(
 ): string {
   const ruta = env[variable];
   if (!ruta) throw new SecretoAusenteError(variable);
-  let contenido: string;
   try {
-    contenido = readFile(ruta).trim();
+    return leerSecretoDeArchivo(variable, ruta, readFile);
   } catch {
-    // El error de E/S trae la ruta: se descarta y solo se nombra la variable.
+    // Cualquier fallo (E/S o vacío) se traduce: el mensaje solo nombra la variable, nunca la ruta (RN-10, RN-14).
     throw new SecretoAusenteError(variable);
   }
-  if (contenido === '') throw new SecretoAusenteError(variable);
-  return contenido;
 }
 
 /**

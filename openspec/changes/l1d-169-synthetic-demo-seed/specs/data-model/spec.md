@@ -88,8 +88,8 @@ El seed MUST abortar con código de salida ≠ 0 cuando `APP_ENV=piloto`, **ante
 - **THEN** el proceso termina con código ≠ 0, el mensaje indica que el seed no corre en `piloto`, el número de filas de todas las tablas de `auth`, `identity`, `clinical`, `audit` y `research` es el mismo que antes, y no se abrió ninguna transacción
 
 #### Scenario: La guarda de entorno decide antes de tocar la base [US-039 AC-5] [RN-13]
-- **WHEN** se evalúa la función pura de guarda del seed con una configuración `APP_ENV=piloto`, antes de construir el cliente de Prisma
-- **THEN** lanza el error de dominio de seed bloqueado y el punto de entrada del seed no llega a crear el cliente de Prisma
+- **WHEN** se evalúa la función pura de guarda del seed con una configuración `APP_ENV=piloto`, antes de abrir la conexión a PostgreSQL
+- **THEN** lanza el error de dominio de seed bloqueado y el punto de entrada del seed no llega a abrir la conexión
 
 #### Scenario: Sin APP_ENV el seed no presume un entorno permitido [US-039 AC-5] [RN-13] (asumido)
 - **WHEN** se ejecuta el seed sin `APP_ENV` definido
@@ -100,7 +100,7 @@ El seed MUST abortar con código de salida ≠ 0 cuando `APP_ENV=piloto`, **ante
 
 #### Scenario: Con REAL_ANONYMIZED_ENABLED=true el seed aborta sin tocar la base [US-039 AC-5] [RN-13] [S1 resp. 14b]
 - **WHEN** con `APP_ENV=local` y `REAL_ANONYMIZED_ENABLED=true` se ejecuta `npx prisma db seed` sobre una base migrada
-- **THEN** el proceso termina con código ≠ 0, el mensaje nombra `REAL_ANONYMIZED_ENABLED`, no se crea el cliente de Prisma y ninguna tabla cambia de número de filas
+- **THEN** el proceso termina con código ≠ 0, el mensaje nombra `REAL_ANONYMIZED_ENABLED`, no se abre la conexión a PostgreSQL y ninguna tabla cambia de número de filas
 
 #### Scenario: Con REAL_IDENTIFIED_ENABLED=true la guarda rechaza [US-039 AC-5] [RN-13] [S1 resp. 14b]
 - **WHEN** se evalúa la función pura de guarda con `APP_ENV=test` y `REAL_IDENTIFIED_ENABLED=true`

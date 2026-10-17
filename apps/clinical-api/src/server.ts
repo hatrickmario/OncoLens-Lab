@@ -9,6 +9,7 @@ import {
   readServiceJwtConfig,
 } from './config.js';
 import { crearPool } from './infrastructure/database.js';
+import { nuevoTraceId } from './infrastructure/ids.js';
 import { registrarEnConsola } from './infrastructure/logger.js';
 import { loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
@@ -51,7 +52,7 @@ arrancar({
           reloj: { now: () => new Date() },
           tokens: crearGeneradorDeToken(),
           ids: randomUUID,
-          nuevoTraceId: () => `req_${randomUUID().replaceAll('-', '').slice(0, 8)}`,
+          nuevoTraceId,
           registrar: registrarEnConsola,
         });
         const servidor = app.listen(puerto, () => {

@@ -71,8 +71,8 @@ export function assertRagSoloLecturaConTmpfs(config) {
 }
 
 /**
- * Quién puede recibir cada secreto (US-035, design D3). Los servicios one-shot `corpus-migrate` (L1D-114) y
- * `clinical-seed` (L1D-169) aún pueden no existir: la regla solo los exige cuando existen.
+ * Quién puede recibir cada secreto (US-035, design D3). El one-shot `corpus-migrate` (L1D-114) aún puede
+ * no existir: la regla solo lo exige cuando existe. `clinical-seed` (L1D-169) ya existe.
  */
 export const DUENOS_DE_SECRETOS = {
   [CLAVE_PRIVADA_JWT]: [CLINICAL_API],
@@ -85,9 +85,10 @@ export const DUENOS_DE_SECRETOS = {
   pg_rag_corpus_migrator_password: [CORPUS_MIGRATE, POSTGRES],
   pg_superuser_password: [POSTGRES],
   // La clave de la CA vive en el directorio de secretos para reemitir pg_server.crt; ningún servicio la monta. El
-  // certificado público de la CA lo recibe clinical-api para verificar el TLS de PostgreSQL (L1D-197, 2.6b).
+  // certificado público de la CA lo reciben clinical-api (L1D-197, 2.6b) y el one-shot clinical-seed (L1D-169) para
+  // verificar el TLS de PostgreSQL.
   'pg_ca.key': [],
-  'pg_ca.crt': [CLINICAL_API],
+  'pg_ca.crt': [CLINICAL_API, CLINICAL_SEED],
   'pg_server.crt': [POSTGRES],
   'pg_server.key': [POSTGRES],
   'pg_hba.conf': [POSTGRES],
@@ -144,10 +145,10 @@ export function assertAislamientoDeRedes(config) {
 /** Un servicio one-shot (migrador) corre y termina: `restart: "no"` y sin healthcheck, que sería ficticio. */
 export const esOneShot = (definicion) => definicion.restart === 'no';
 
-/** AC-1: nueve servicios (ocho long-running con healthcheck y el migrador one-shot `corpus-migrate`), imágenes de terceros con tag exacto y clinical-api sin depender de rag-orchestrator. */
+/** AC-1: diez servicios (ocho long-running con healthcheck y los one-shot `corpus-migrate` y `clinical-seed`), imágenes de terceros con tag exacto y clinical-api sin depender de rag-orchestrator. */
 export function assertStackCompleto(config) {
   const nombres = Object.keys(config.services).sort();
-  const esperados = ['clinical-api', 'clinical-minio', 'corpus-migrate', 'milvus-etcd', 'milvus-minio', 'milvus-standalone', 'postgres', 'rag-orchestrator', 'web'];
+  const esperados = ['clinical-api', 'clinical-minio', 'clinical-seed', 'corpus-migrate', 'milvus-etcd', 'milvus-minio', 'milvus-standalone', 'postgres', 'rag-orchestrator', 'web'];
   if (JSON.stringify(nombres) !== JSON.stringify(esperados)) throw new Error(`servicios inesperados: ${nombres.join(', ')}`);
   for (const [nombre, definicion] of Object.entries(config.services)) {
     if (!esOneShot(definicion) && !definicion.healthcheck?.test) throw new Error(`${nombre} no declara healthcheck`);

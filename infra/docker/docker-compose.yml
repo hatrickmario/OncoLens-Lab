@@ -189,6 +189,51 @@ services:
       <<: *healthcheck-defaults
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/health"]
 
+  # One-shot (US-039, L1D-169, [S1 resp. 14b]): siembra los datos SINTÉTICOS de demo (pacientes a-e y usuarios doc1 y
+  # admin) y termina. Es el único servicio con las contraseñas del seed; clinical-api no las monta. Se conecta como
+  # clinical_api con la URL sin credenciales y TLS verificado (SEG-08). Se niega en APP_ENV=piloto y con
+  # REAL_*_ENABLED=true (RN-13). Ejecuta el seed COMPILADO: la imagen runtime no trae el CLI de Prisma ni tsx.
+  # Requiere el esquema clínico migrado: nada lo migra todavía en Compose (pendiente del one-shot clinical-migrate).
+  clinical-seed:
+    # Perfil `seed`: no arranca con `up` (el piloto no debe montar la contraseña del dueño de la base). Se ejecuta con
+    # `docker compose --profile seed run --rm clinical-seed`.
+    profiles: ["seed"]
+    build:
+      context: ../..
+      dockerfile: apps/clinical-api/Dockerfile
+    command: ["node", "dist/apps/clinical-api/prisma/seed.js"]
+    restart: "no"
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
+    environment:
+      APP_ENV: ${APP_ENV:?APP_ENV obligatorio}
+      SEED_ALLOWED_ENVS: ${SEED_ALLOWED_ENVS:-}
+      SEED_REFERENCE_DATE: ${SEED_REFERENCE_DATE:-}
+      REAL_ANONYMIZED_ENABLED: ${REAL_ANONYMIZED_ENABLED:-false}
+      REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
+      CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      ARGON2_MEMORY_COST_KIB: ${ARGON2_MEMORY_COST_KIB:-}
+      ARGON2_TIME_COST: ${ARGON2_TIME_COST:-}
+      ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-}
+      CLINICAL_DATABASE_URL: postgresql://clinical_api@postgres:5432/${POSTGRES_DB:-oncolens}
+      CLINICAL_DATABASE_CA_FILE: /run/secrets/pg_ca.crt
+      PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
+      SEED_DOCTOR_PASSWORD_FILE: /run/secrets/seed_doctor_password
+      SEED_ADMIN_PASSWORD_FILE: /run/secrets/seed_admin_password
+    secrets:
+      - pg_clinical_api_password
+      - pg_ca.crt
+      - seed_doctor_password
+      - seed_admin_password
+    volumes:
+      - type: bind
+        source: ../../packages/clinical-catalogs
+        target: ${CLINICAL_CATALOG_PATH:-/catalogs}
+        read_only: true
+    networks: [clinical-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # One-shot (US-058, L1D-114, [S1 resp. 14b]): aplica Alembic al schema corpus como rag_corpus_migrator y termina.
   # Es el único servicio con la contraseña del migrator; rag-orchestrator no arranca si este no sale con código 0.
   corpus-migrate:
@@ -330,6 +375,10 @@ secrets:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_superuser_password
   pg_ca.crt:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_ca.crt
+  seed_doctor_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/seed_doctor_password
+  seed_admin_password:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/seed_admin_password
   pg_server.crt:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_server.crt
   pg_server.key:

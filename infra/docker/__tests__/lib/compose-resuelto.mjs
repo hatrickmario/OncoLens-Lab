@@ -29,7 +29,9 @@ export function crearResolutor() {
     }
     const salida = execFileSync('docker', ['compose', ...archivos, 'config', '--format', 'json'], {
       // APP_ENV es obligatorio en clinical-api (sin valor por defecto, fallo cerrado): los tests estáticos lo fijan.
-      env: { ...process.env, APP_ENV: 'test', ONCOLENS_SECRETS_DIR: secretos, ...entorno },
+      // COMPOSE_PROFILES=seed: los tests estáticos revisan también clinical-seed (perfil `seed`, L1D-169); `entorno`
+      // puede vaciarlo para ver lo que arranca con `up` sin perfil.
+      env: { ...process.env, APP_ENV: 'test', COMPOSE_PROFILES: 'seed', ONCOLENS_SECRETS_DIR: secretos, ...entorno },
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
     });

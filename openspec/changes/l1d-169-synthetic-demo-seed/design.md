@@ -25,17 +25,17 @@ divergen de la base sembrada.
 ## Decisiones
 
 1. **Estructura**: `prisma/seed.ts` es solo el punto de entrada (lee configuración, aplica la guarda,
-   crea el cliente, llama a `sembrar()`). Los datos de cada paciente viven en
+   abre la conexión, llama a `sembrar()`). Los datos de cada paciente viven en
    `prisma/seed/pacientes/<a…e>.ts` como objetos con **términos canónicos**, sin códigos. Recomendado
-   frente a un JSON único (pierde tipos) o SQL crudo (no reutiliza Prisma ni la regla de `grade`).
+   frente a un JSON único (pierde tipos) o SQL crudo (no reutiliza la regla de `grade`).
 2. **Idempotencia por identificadores deterministas**: cada registro sembrado tiene un UUID derivado
    (UUID v5 sobre un *namespace* fijo del seed + clave natural, p. ej. `paciente-a/diagnostico-1`) y se
    escribe con `upsert`. Descartados: "borrar y volver a crear" (cambia IDs y viola `ON DELETE RESTRICT`)
    y "comprobar si existe el primero" (frágil ante seeds parciales).
-3. **Toda la escritura en una transacción** (`prisma.$transaction`): un fallo a mitad no deja un seed
-   parcial.
-4. **Guarda de entorno antes de Prisma**: `assertSeedPermitido(config)` es una función pura que recibe la
-   configuración ya leída; `seed.ts` la llama **antes** de instanciar `PrismaClient`. Entornos
+3. **Toda la escritura en una transacción** (`ConexionDelSeed.enTransaccion`, sobre `pg`; sustituye a la
+   `prisma.$transaction` original): un fallo a mitad no deja un seed parcial.
+4. **Guarda de entorno antes de abrir la conexión**: `assertSeedPermitido(config)` es una función pura que recibe la
+   configuración ya leída; `seed.ts` la llama **antes** de abrir la conexión a PostgreSQL. Entornos
    permitidos: lista en configuración (`SEED_ALLOWED_ENVS`, por defecto `local,test`); `piloto` siempre
    se rechaza aunque alguien lo añada a la lista (RN-13). `APP_ENV` ausente → rechazo.
    `REAL_ANONYMIZED_ENABLED=true` o `REAL_IDENTIFIED_ENABLED=true` → rechazo, sea cual sea `APP_ENV`
@@ -62,7 +62,7 @@ divergen de la base sembrada.
    `auth.role` con sus permisos de `data-model.md` §8. La contraseña se re-hashea solo si el usuario no
    existe (idempotencia: no cambia `password_hash` en cada ejecución).
 9. **(d) opt-out**: `recorded_by = admin@test.local`, `external_reference` sintético
-   (`OPTOUT-SEED-D`), `reason_code` nulo (TBD-21).
+   (`OPTOUT-SEED-D`), `reason_code` sintético fijo `opt_out_sintetico` (NOT NULL; TBD-21).
 10. **Contraseñas por archivo y proceso *one-shot*** (`[S1 resp. 14b]`): `seedConfig` resuelve cada
    contraseña con `leerSecreto(env, nombre, readFile)` — si `<NOMBRE>_FILE` está definida, lee el
    archivo (inexistente o vacío → error que nombra `<NOMBRE>_FILE`) e **ignora** la variable directa;
@@ -95,11 +95,11 @@ Sin cambios en `apps/*/openapi.yaml` ni en `contracts/`. Proveedor: ninguno. Los
 
 ## Dependencias y colaboradores
 
-- `prisma/seed.ts` → `config/seedConfig` (lectura y validación Zod de `APP_ENV`, `SEED_ALLOWED_ENVS`,
+- `prisma/seed.ts` → `prisma/seed/config.ts` (lectura y validación Zod de `APP_ENV`, `SEED_ALLOWED_ENVS`,
   `REAL_ANONYMIZED_ENABLED`, `REAL_IDENTIFIED_ENABLED`, `SEED_REFERENCE_DATE`, `SEED_*_PASSWORD_FILE`
   con respaldo `SEED_*_PASSWORD`, `CLINICAL_CATALOG_PATH`; lector de archivos inyectado) → `assertSeedPermitido()` →
-  `PrismaClient` → `sembrar(prisma, catalogo, reloj, hasher)`.
-- `sembrar()` recibe sus colaboradores por parámetro (sin contenedor de DI): el cliente de Prisma real,
+  conexión (`ConexionDelSeed.enTransaccion`) → `sembrar(sesion, { catalogo, reloj, hasher, credenciales, retencion })`.
+- `sembrar()` recibe sus colaboradores por parámetro (sin contenedor de DI): la sesión de la transacción (`pg`),
   el catálogo leído, un reloj y un *hasher* de contraseñas.
 - Reglas con nombre propio (extraídas y probadas en un solo lugar):
   - `assertSeedPermitido()` (RN-13: `APP_ENV` y `REAL_*_ENABLED`).
@@ -108,7 +108,8 @@ Sin cambios en `apps/*/openapi.yaml` ni en `contracts/`. Proveedor: ninguno. Los
   - `derivarTextoGrade()` (DEC-05): formato canónico de `Diagnosis.grade` desde la gradación de
     referencia; queda como función pura reutilizable por US-110 / FEAT-01b.
   - `idSembrado(claveNatural)` (determinismo, UUID v5).
-- Sin dependencia de módulos de `src/modules/*` (el seed no pasa por services de dominio en el S1).
+- El seed no pasa por services de dominio en el S1, pero sí importa de `src/modules/auth` el *hasher*
+  (`createPasswordHasher`) y el tipo `RolDeUsuario`, y de `src/config.ts` los lectores de configuración.
 
 ## Evaluación
 
@@ -131,3 +132,69 @@ corre en el primer PR de US-041 que consuma este subconjunto.
 - **Conexión a PostgreSQL (decisión 62 del plan):** el *one-shot* `clinical-seed` usa `CLINICAL_DATABASE_URL` sin credenciales + `PG_CLINICAL_API_PASSWORD_FILE` y TLS verificando la CA del servidor; ningún servicio declara `DATABASE_URL` con contraseña (tarea 3.9c).
 - **`APP_ENV` obligatorio en Compose (decisión 64):** `${APP_ENV:?APP_ENV obligatorio}` en `clinical-seed` (tarea 3.9d), además de la guarda `assertSeedPermitido()`.
 - **Contraseñas de respaldo (decisión 66):** el seed no define valores por defecto; un respaldo `SINT-…` solo bajo `apps/clinical-api/tests/`; si faltan, el error nombra la variable, nunca su valor (tarea 3.5).
+
+## Decidido por defecto (orquestador, 2026-10-20), a revisar
+
+Resueltas por defecto razonable conforme a los specs durante la implementación; el usuario puede revisarlas.
+
+1. **Catálogo (AC-4).** Los biomarcadores y tratamientos quedan con `loinc_code` y `atc_codes` nulos y
+   `mapping_status = no_mapeado`: el catálogo `1.0.0` solo versiona CIE-10 de los diagnósticos (`mama` → C50.9,
+   `prostata` → C61; nombres oficiales OMS/OPS **sin verificar contra MinSalud/SISPRO**, anotado en `versionFuente`;
+   la verificación es del usuario). Hallazgo para DEC-04: ATC `L02AE02` = "leuprorelin" quedó verificado en
+   atcddd.fhi.no (ATC/DDD Index 2026) pero NO se incluyó; LOINC no se pudo verificar (loinc.org responde 403). Los
+   `NOTICE-cie10/loinc/atc.txt` existen para los tres estándares declarados en `manifest.json`.
+2. **Escritura con `pg`, no Prisma Client** (decisión 2 del orquestador, coherente con la deuda D-1 aceptada):
+   `clinical-api` ya usa `pg`; Prisma 7 exigiría `@prisma/adapter-pg` y `prisma generate`. El seed reutiliza
+   `readDatabaseConfig` y `crearPool` de L1D-197 (URL sin credenciales, contraseña por archivo, TLS verificado). El
+   *upsert* es `INSERT … ON CONFLICT (id) DO UPDATE` en una sola transacción. En Prisma 7 el comando del seed se
+   registra en `prisma.config.ts` (`migrations.seed`), no en `package.json`.
+3. **`reason_code` del opt-out de (d):** la columna es `NOT NULL` y el catálogo de motivos (TBD-21) no existe; el
+   seed escribe el código sintético fijo `opt_out_sintetico` (corrige la decisión 9, que decía "nulo").
+4. **Imagen de `clinical-seed`:** ejecuta el seed COMPILADO (`node dist/apps/clinical-api/prisma/seed.js`) desde la
+   imagen runtime de `clinical-api` (sin CLI de Prisma ni `tsx`): `tsconfig.build.json` incluye `prisma/seed*`. Sin
+   target nuevo en el Dockerfile ni cambios al `.dockerignore`.
+5. **`clinical-seed` recibe además `pg_ca.crt`** (verificar el TLS de PostgreSQL), con el mismo patrón que
+   `clinical-api`: secretos exactos `pg_clinical_api_password`, `pg_ca.crt`, `seed_doctor_password`,
+   `seed_admin_password` (`docs/operations/claves.md`, `reglas-compose.mjs`, `reglas-secretos.mjs`).
+6. **Firma de `sembrar`:** `sembrar(db, entradas)` con `entradas = { catalogo, reloj, hasher, credenciales, retencion }`
+   en lugar de cuatro parámetros posicionales. El seed adopta `createPasswordHasher(readAuthConfig(env).argon2)` y el
+   usuario `doc1@test.local` de L1D-197 (decisión 56). Las fechas `retention_*` salen de `SEED_RETENTION_UNTIL_YEARS` y
+   `SEED_RETENTION_MAX_YEARS` (10 y 20 años, data-model §4.3). `APP_ENV` es obligatorio también en `clinical-seed`.
+
+### Cambios del Gate 2 (vuelta 1) y deuda
+
+- **Atomicidad en la conexión:** `ConexionDelSeed.enTransaccion(fn)` (BEGIN/COMMIT/ROLLBACK, `conexion.ts`); `sembrar` solo
+  recibe la sesión de dentro. Un hasher que falla a mitad no deja filas (test [US-039 AC-3]).
+- **Perfil `seed`:** `clinical-seed` no arranca con `up` (`profiles: ["seed"]`); se ejecuta con
+  `docker compose --profile seed run --rm clinical-seed`. **Pendiente:** nada migra el esquema clínico en Compose
+  (one-shot `clinical-migrate` con `prisma migrate deploy`): el smoke de la CI no exige aún que el seed termine con 0.
+- **Una sola regla de lectura de secretos `*_FILE`:** `leerSecretoDeArchivo` en `src/config.ts`; `leerSecreto` del seed
+  delega y falla con `ConfiguracionInvalidaError`. `derivarGleason` es la única fuente de puntaje e ISUP.
+- **Guarda sin distinguir mayúsculas:** `PILOTO`/`Piloto` se rechazan igual que `piloto`, aunque estén en `SEED_ALLOWED_ENVS`.
+- **Logs del seed:** `traceId` por ejecución (`req_xxxxxxxx`) y `seed_fallido` solo con clase y variable.
+- **Imagen de runtime:** lleva el seed compilado (`dist/.../prisma/seed.js`); aceptado: sin contraseñas, el seed solo corre con
+  el perfil `seed` y las contraseñas llegan por `*_FILE`.
+- **Deuda S6 (sin ID):** rol de PostgreSQL `clinical_seed` con solo DML sobre `auth`/`clinical` en lugar de `clinical_api`
+  (dueño de la base), antes de G-Piloto.
+- **Preguntas abiertas al usuario:** origen `source_dataset = seed` junto a `agreement_reference` (data-model: «solo si el
+  paciente viene de un dataset»); `significance_source = 'documento'` en los biomarcadores sembrados (no hay documento);
+  dos patrones de contraseñas SINT-* de test (constantes de `tests/support/seed.ts` frente a `TEST_DOC*` de `usuarios.ts`).
+
+### Deuda registrada y notas del re-gate (sin ID)
+
+- **D-a:** one-shot `clinical-migrate` (`prisma migrate deploy`) y restaurar en el smoke la aserción «US-039 AC-1
+  clinical-seed terminó con código 0». Pregunta abierta al usuario.
+- **D-b:** rol de PostgreSQL `clinical_seed` con solo DML antes de G-Piloto (S6).
+- `derivarGleason` con patrones fuera de 3–5: se deja tal cual; lo validará US-110 / FEAT-01b.
+- Los commits `test(L1D-169)` de las piezas pequeñas (`uuidV5`/`idSembrado`/reloj, `leerSecreto`, catálogo, grade) se
+  hicieron con la implementación ya escrita en el árbol de trabajo; el rojo es por construcción (esqueleto) y no hay
+  salida guardada de esas corridas.
+
+### Dependencia nueva: `uuid` (CodeQL js/weak-cryptographic-algorithm)
+
+`idSembrado` delega en `v5` del paquete `uuid` (versión exacta `14.0.2`, dependencia de producción de `clinical-api`: el seed
+compilado la resuelve en la imagen de runtime). Justificación: UUID v5 del RFC 4122 sin implementación propia; el SHA-1 de v5 es
+parte del estándar y la alerta de CodeQL `js/weak-cryptographic-algorithm` sobre el `createHash('sha1')` propio queda cerrada
+al desaparecer ese código. La alerta NO se descarta a mano. El esquema de ids no cambia: `idSembrado('paciente-a')` =
+`0fd028e2-f8b0-56c7-a748-2a4e473d879d` (namespace `0b7f3c5e-6a41-4d2b-9e18-5c2a8f40d7b3`). `npm audit --omit=dev`: 0
+vulnerabilidades.

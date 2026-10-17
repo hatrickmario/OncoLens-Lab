@@ -8,13 +8,14 @@ import { archivosDeSecretos, assertClavesPorServicio, entorno, servicio } from '
 
 /** Servicios que reciben exactamente estos secretos (design D3). Los one-shot solo se exigen si existen. */
 const SECRETOS_EXACTOS = {
+  // One-shot del seed (L1D-169): contraseña del rol, CA pública para verificar el TLS y las dos del seed. Nada más.
+  'clinical-seed': ['pg_clinical_api_password', 'pg_ca.crt', 'seed_doctor_password', 'seed_admin_password'],
   'rag-orchestrator': ['jwt_service_public.pem', 'pg_rag_corpus_password'],
   web: [],
   'milvus-etcd': [],
 };
 const SECRETOS_EXACTOS_SI_EXISTE = {
   'corpus-migrate': ['pg_rag_corpus_migrator_password'],
-  'clinical-seed': ['pg_clinical_api_password', 'seed_doctor_password', 'seed_admin_password'],
 };
 const VARIABLE_CON_VALOR_SECRETO = /(PASSWORD|SECRET|PRIVATE_KEY|_KEY)$/;
 const CIDR_IPV4 = /^\d{1,3}(\.\d{1,3}){3}\/\d{1,2}$/;
