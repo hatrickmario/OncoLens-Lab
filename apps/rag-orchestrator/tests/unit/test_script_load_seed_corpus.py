@@ -111,3 +111,17 @@ def test_una_dependencia_obligatoria_que_falla_sale_con_1_nombrando_solo_la_clas
     error = capsys.readouterr().err
     assert codigo == 1 and error.startswith("load_seed_corpus: falló (")
     assert "postgres.invalid" not in error and "no-existe" not in error  # ni hosts ni rutas
+
+
+def test_el_cliente_http_del_cargador_no_hereda_proxies_ni_certificados_del_entorno(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    """El único egreso del cargador no debe desviarse por HTTPS_PROXY, ALL_PROXY o SSL_CERT_FILE del entorno."""
+    entorno.setenv("CORPUS_FETCH_ALLOWED_HOSTS", "www.cancer.gov")
+    entorno.setenv("HTTPS_PROXY", "http://proxy.invalid:3128")
+    ajustes = CorpusSeedSettings(_env_file=None)  # type: ignore[call-arg]
+
+    fuente = load_seed_corpus._fuente_de_texto(ajustes)
+
+    assert fuente._descargador is not None  # noqa: SLF001
+    assert fuente._descargador._cliente.trust_env is False  # noqa: SLF001
