@@ -8,11 +8,11 @@ import { createAuthRepository } from '../../src/modules/auth/auth.repository.js'
 import { createAuthService, type GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { generadorDeIds } from './filas-sinteticas.js';
-import { traceIdsFijos } from './usuarios.js';
+import { ARGON2_DE_PRUEBA, traceIdsFijos } from './usuarios.js';
 
 export const CONFIG_DE_TEST: AuthConfig = {
   sessionTtlHours: 8,
-  argon2: { memoryCostKib: 8, timeCost: 1, parallelism: 1 },
+  argon2: ARGON2_DE_PRUEBA,
 };
 
 export interface OpcionesAppDeTest {

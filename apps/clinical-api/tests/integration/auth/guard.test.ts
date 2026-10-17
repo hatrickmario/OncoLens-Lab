@@ -1,19 +1,17 @@
 import { createHash } from 'node:crypto';
 import express, { Router } from 'express';
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import type { Client } from 'pg';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import type { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { servidorMswConLoopback } from '../../support/servidor-msw.js';
 import {
-  asegurarRol,
-  CONTRASENA_DOC1,
+  crearUsuariosDeAuth,
   insertarSesion,
-  insertarUsuario,
   limpiarUsuarios,
   loggerEnMemoria,
   relojFijo,
@@ -31,9 +29,7 @@ const hashDe = (token: string) => createHash('sha256').update(token).digest('hex
 // Contadores del borde: cuántas veces corrió el controlador y cuántas veces se llamó a rag-orchestrator.
 let ejecuciones = 0;
 let llamadasARag = 0;
-const esLoopback = (url: string) =>
-  ['127.0.0.1', 'localhost', '[::1]'].includes(new URL(url).hostname);
-const servidor = setupServer(
+const ragSimulado = servidorMswConLoopback(
   http.post(RAG_URL, () => {
     llamadasARag += 1;
     return HttpResponse.json({});
@@ -57,36 +53,18 @@ let doc2Desactivado: UsuarioDeTest;
 let ids: ReturnType<typeof generadorDeIds>;
 
 beforeAll(async () => {
-  servidor.listen({
-    onUnhandledFrame: ({ frame, defaults }) => {
-      if (frame.protocol === 'http' && esLoopback((frame.data as { request: Request }).request.url))
-        frame.passthrough();
-      else defaults.error();
-    },
-  });
+  ragSimulado.iniciar();
   cliente = await conectar(urlBase);
-  ids = generadorDeIds(ESPACIO_DE_IDS);
-  const rolDoctor = await asegurarRol(cliente, ids, 'doctor');
-  doc1 = await insertarUsuario(cliente, ids, {
-    email: `doc1.${ESPACIO_DE_IDS}@test.local`,
-    password: CONTRASENA_DOC1,
-    rolId: rolDoctor,
-  });
-  doc2Desactivado = await insertarUsuario(cliente, ids, {
-    email: `doc2.${ESPACIO_DE_IDS}@test.local`,
-    password: CONTRASENA_DOC1,
-    rolId: rolDoctor,
-    estado: 'desactivado',
-  });
+  ({ ids, doc1, doc2Desactivado } = await crearUsuariosDeAuth(cliente, ESPACIO_DE_IDS));
 });
 
 beforeEach(() => {
   ejecuciones = 0;
   llamadasARag = 0;
 });
-afterEach(() => servidor.resetHandlers());
+afterEach(() => ragSimulado.servidor.resetHandlers());
 afterAll(async () => {
-  servidor.close();
+  ragSimulado.detener();
   await limpiarUsuarios(cliente, [doc1.id, doc2Desactivado.id]);
   await cliente.end();
 });

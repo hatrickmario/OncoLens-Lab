@@ -4,13 +4,9 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { crearRegistrador } from '../../../src/infrastructure/logger.js';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
-  asegurarRol,
   cookiesEmitidas,
-  CONTRASENA_DOC1,
-  CONTRASENA_DOC2,
-  insertarUsuario,
+  crearUsuariosDeAuth,
   limpiarUsuarios,
   relojFijo,
   tokensFijos,
@@ -28,19 +24,7 @@ let doc2Desactivado: UsuarioDeTest;
 
 beforeAll(async () => {
   cliente = await conectar(urlBase);
-  const ids = generadorDeIds(ESPACIO_DE_IDS);
-  const rolDoctor = await asegurarRol(cliente, ids, 'doctor');
-  doc1 = await insertarUsuario(cliente, ids, {
-    email: `doc1.${ESPACIO_DE_IDS}@test.local`,
-    password: CONTRASENA_DOC1,
-    rolId: rolDoctor,
-  });
-  doc2Desactivado = await insertarUsuario(cliente, ids, {
-    email: `doc2.${ESPACIO_DE_IDS}@test.local`,
-    password: CONTRASENA_DOC2,
-    rolId: rolDoctor,
-    estado: 'desactivado',
-  });
+  ({ doc1, doc2Desactivado } = await crearUsuariosDeAuth(cliente, ESPACIO_DE_IDS));
 });
 
 afterAll(async () => {

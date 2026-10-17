@@ -1,5 +1,4 @@
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import type { Client } from 'pg';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, inject, it } from 'vitest';
@@ -7,13 +6,11 @@ import evidenciaEjemplo from '../../../../../contracts/examples/rag-query-con-ev
 import solicitudEjemplo from '../../../../../contracts/examples/evidence-analysis-request.json' with { type: 'json' };
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
-import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import { rutasDelGateway } from '../../support/gateway.js';
+import { servidorMswConLoopback } from '../../support/servidor-msw.js';
 import {
-  asegurarRol,
-  CONTRASENA_DOC1,
   cookiesEmitidas,
-  insertarUsuario,
+  crearUsuariosDeAuth,
   limpiarUsuarios,
   loggerEnMemoria,
   relojFijo,
@@ -31,9 +28,7 @@ interface Capturada {
   cuerpo: string;
 }
 const capturadas: Capturada[] = [];
-const esLoopback = (url: string) =>
-  ['127.0.0.1', 'localhost', '[::1]'].includes(new URL(url).hostname);
-const servidor = setupServer(
+const ragSimulado = servidorMswConLoopback(
   http.post(RAG_URL, async ({ request: peticion }) => {
     capturadas.push({ headers: peticion.headers, cuerpo: await peticion.text() });
     return HttpResponse.json(evidenciaEjemplo);
@@ -42,30 +37,20 @@ const servidor = setupServer(
 
 let cliente: Client;
 let doc1: UsuarioDeTest;
+let doc2Desactivado: UsuarioDeTest;
 
 beforeAll(async () => {
-  servidor.listen({
-    onUnhandledFrame: ({ frame, defaults }) => {
-      if (frame.protocol === 'http' && esLoopback((frame.data as { request: Request }).request.url))
-        frame.passthrough();
-      else defaults.error();
-    },
-  });
+  ragSimulado.iniciar();
   cliente = await conectar(urlBase);
-  const ids = generadorDeIds(ESPACIO_DE_IDS);
-  doc1 = await insertarUsuario(cliente, ids, {
-    email: `doc1.${ESPACIO_DE_IDS}@test.local`,
-    password: CONTRASENA_DOC1,
-    rolId: await asegurarRol(cliente, ids, 'doctor'),
-  });
+  ({ doc1, doc2Desactivado } = await crearUsuariosDeAuth(cliente, ESPACIO_DE_IDS));
 });
 
 afterEach(() => {
   capturadas.length = 0;
 });
 afterAll(async () => {
-  servidor.close();
-  await limpiarUsuarios(cliente, [doc1.id]);
+  ragSimulado.detener();
+  await limpiarUsuarios(cliente, [doc1.id, doc2Desactivado.id]);
   await cliente.end();
 });
 

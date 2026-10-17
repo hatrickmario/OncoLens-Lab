@@ -1,9 +1,15 @@
-import argon2 from 'argon2';
 import type { Client } from 'pg';
+import type { Argon2Config } from '../../src/config.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { LineaDeLog, Registrar } from '../../src/infrastructure/logger.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
-import { INSTANTE_FIJO, insertar, type GeneradorDeIds } from './filas-sinteticas.js';
+import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
+import {
+  generadorDeIds,
+  INSTANTE_FIJO,
+  insertar,
+  type GeneradorDeIds,
+} from './filas-sinteticas.js';
 
 /**
  * Soporte de los tests de sesión (US-211): usuarios SINTÉTICOS `@test.local` (RN-13, RN-14), reloj y generador de
@@ -16,8 +22,8 @@ export const CONTRASENA_DOC1 =
 export const CONTRASENA_DOC2 =
   process.env['TEST_DOC2_PASSWORD'] ?? 'SINT-doc2-contrasena-de-prueba';
 
-// Costes bajos: el hash solo prepara filas de test; el servicio verifica con los parámetros de su configuración.
-const PARAMETROS_DE_PRUEBA = { memoryCost: 8, timeCost: 1, parallelism: 1 } as const;
+/** Costes bajos de Argon2id para la CI (el `.env` de test los baja, design Riesgos); los usa el hasher del servicio también. */
+export const ARGON2_DE_PRUEBA: Argon2Config = { memoryCostKib: 8, timeCost: 1, parallelism: 1 };
 
 /** Cabeceras `Set-Cookie` de una respuesta de Supertest (siempre arreglo, vacío si no hay). */
 export function cookiesEmitidas(respuesta: { headers: Record<string, unknown> }): string[] {
@@ -57,10 +63,7 @@ export async function insertarUsuario(
   opciones: OpcionesDeUsuario,
 ): Promise<UsuarioDeTest> {
   const id = ids();
-  const passwordHash = await argon2.hash(opciones.password, {
-    type: argon2.argon2id,
-    ...PARAMETROS_DE_PRUEBA,
-  });
+  const passwordHash = await createPasswordHasher(ARGON2_DE_PRUEBA).hash(opciones.password);
   await insertar(cliente, 'auth."user"', {
     id,
     email: opciones.email,
@@ -73,6 +76,27 @@ export async function insertarUsuario(
     updated_at: INSTANTE_FIJO,
   });
   return { id, email: opciones.email, password: opciones.password };
+}
+
+/**
+ * Los dos usuarios que usan los tests de sesión: `doc1` activo y `doc2` desactivado (D7: lo crea el test, no el
+ * seed). El correo lleva el espacio del archivo porque los archivos comparten base y corren en paralelo.
+ */
+export async function crearUsuariosDeAuth(cliente: Client, espacio: number) {
+  const ids = generadorDeIds(espacio);
+  const rolId = await asegurarRol(cliente, ids, 'doctor');
+  const doc1 = await insertarUsuario(cliente, ids, {
+    email: `doc1.${espacio}@test.local`,
+    password: CONTRASENA_DOC1,
+    rolId,
+  });
+  const doc2Desactivado = await insertarUsuario(cliente, ids, {
+    email: `doc2.${espacio}@test.local`,
+    password: CONTRASENA_DOC2,
+    rolId,
+    estado: 'desactivado',
+  });
+  return { ids, doc1, doc2Desactivado };
 }
 
 export async function insertarSesion(
