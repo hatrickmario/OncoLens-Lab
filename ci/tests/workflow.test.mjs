@@ -98,6 +98,17 @@ describe('ci-selftest.yml', () => {
   });
 });
 
+describe('ci-selftest.yml y el paquete de lenguaje', () => {
+  it('compila @oncolens/clinical-language antes de los casos de PR porque contracts:check importa su dist/ [US-068 AC-5]', () => {
+    const pasos = todosLosPasos(leerWorkflow('ci-selftest.yml'));
+    const indiceBuild = pasos.findIndex((paso) => /build -w @oncolens\/clinical-language/.test(paso.run ?? ''));
+    const indiceCasos = pasos.findIndex((paso) => /run-cases\.sh/.test(paso.run ?? ''));
+
+    expect(indiceBuild, 'falta compilar @oncolens/clinical-language').toBeGreaterThanOrEqual(0);
+    expect(indiceBuild).toBeLessThan(indiceCasos);
+  });
+});
+
 describe.each(NOMBRES)('workflow %s', (nombre) => {
   const workflow = leerWorkflow(nombre);
 
