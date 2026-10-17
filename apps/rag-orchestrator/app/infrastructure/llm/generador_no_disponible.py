@@ -1,8 +1,12 @@
 """Generador provisional de `/rag/query` con `LLM_PROVIDER=local` (US-055) hasta que L1D-275 (US-225) lo reemplace."""
 
+import logging
+
 from app.application.errores import LlmLocalNoDisponibleError
 from app.application.ports import ResultadoDeRecuperacion
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+
+logger = logging.getLogger(__name__)
 
 
 class GeneradorLocalNoDisponible:
@@ -15,4 +19,5 @@ class GeneradorLocalNoDisponible:
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> RagQueryInternalResponse:
+        logger.info("event=generacion_no_implementada traceId=%s", solicitud.traceId.root)
         raise LlmLocalNoDisponibleError()
