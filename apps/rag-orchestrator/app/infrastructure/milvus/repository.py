@@ -99,6 +99,11 @@ class MilvusRepository:
                 )
 
     def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
+        """Inserta los chunks y devuelve cuántos entraron.
+
+        Lanza ``DimensionDeVectorInvalida`` si algún vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección;
+        cualquier otro error de Milvus se propaga sin traducir.
+        """
         try:
             resultado = self._cliente.insert(
                 self._coleccion, [self._fila(chunk) for chunk in chunks]
