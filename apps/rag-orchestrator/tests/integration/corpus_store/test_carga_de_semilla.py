@@ -139,3 +139,19 @@ def test_carga_de_semilla_rechaza_t_nd_y_t_sin_licencia_sin_chunks_y_sigue_con_t
     assert entorno.chunks_de(ok["document_id"]) != []
     assert entorno.ids_en_la_release() == [ok["document_id"]]
     assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
+
+
+@pytest.mark.ac("US-059", 3)
+def test_carga_de_semilla_rechaza_t_nccn_por_fuente_excluida_aunque_declare_licencia(
+    entorno: Entorno,
+) -> None:
+    reporte = entorno.cargar("t-nccn", "t-ok-1")
+
+    nccn, ok = entorno.fila("t-nccn"), entorno.fila("t-ok-1")
+    assert (reporte.de("t-nccn").resultado, reporte.de("t-nccn").motivo) == (
+        Resultado.RECHAZADO,
+        "fuente_excluida",
+    )
+    assert nccn["status"] == "rechazado_licencia" and nccn["license"] == "Dominio público"
+    assert entorno.chunks_de(nccn["document_id"]) == []
+    assert entorno.ids_en_la_release() == [ok["document_id"]]
