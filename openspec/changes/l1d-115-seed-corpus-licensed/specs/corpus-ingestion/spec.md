@@ -78,3 +78,8 @@ Un documento rechazado por licencia o fuente excluida MUST retirar la versión `
 - **GIVEN** `t-ok-1` cargado y vigente, y Milvus caído al apagar chunks
 - **WHEN** el mismo documento vuelve rechazado
 - **THEN** el reporte lo marca `error` (no `rechazado`), la versión sigue vigente en el catálogo y no se escribe la fila de rechazo
+
+#### Scenario: Un documento retirado que vuelve con el mismo texto y la licencia corregida queda vigente [US-059] [RN-21] [RN-05]
+- **GIVEN** `t-ok-1` retirado por un rechazo (sin versión vigente en su grupo)
+- **WHEN** el manifiesto trae el mismo texto con una licencia aceptada
+- **THEN** `t-ok-1` vuelve a `is_current = true` con `superseded_at` nulo, sus chunks son vigentes y la `CorpusRelease` nueva lo incluye

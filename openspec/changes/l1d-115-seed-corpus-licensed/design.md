@@ -34,8 +34,8 @@ constructor `CorpusCatalog` (PostgreSQL `corpus`), `ChunkStoreDeIngesta` (Milvus
 `SourceFetcher` (texto de un documento; lo implementa `FuenteDeTextoDelManifiesto`, que usa `DescargadorHttps` para las URL), `Clock` e `IdGenerator`. Descartadas: un script monolítico
 (no testeable sin E/S) y reutilizar ya el `IngestionPipelineService` (es del S4).
 
-**D2 · Admisibilidad: exclusión de fuente antes que licencia.** `evaluar_admisibilidad(doc, aceptadas,
-excluidas)` es pura y devuelve `admitido` o `rechazado(motivo)` con `motivo ∈ {fuente_excluida,
+**D2 · Admisibilidad: exclusión de fuente antes que licencia.** `evaluar_admisibilidad(documento,
+politica)` es pura y devuelve `admitido` o `rechazado(motivo)` con `motivo ∈ {fuente_excluida,
 sin_licencia, licencia_no_aceptada}`. Se comprueba primero `source_name` contra
 `CORPUS_EXCLUDED_SOURCES` y sus alias (comparación normalizada, por palabra: "NCCN Guidelines" y "National
 Comprehensive Cancer Network" también cuentan) y el host de `external_id` y `source_url` (`nccn.org`, `esmo.org`):
@@ -69,12 +69,18 @@ mismo `checksum` en el grupo → `omitir` (AC-5, sin *embedding*); grupo sin ver
 nueva, marca la anterior `is_current = false` + `superseded_at = clock.now()` en la misma
 transacción del catálogo, y actualiza `is_current = false` de los chunks anteriores con *upsert* de
 Milvus por `chunk_id` (mismo PK, no hay borrado lógico ni físico de la entidad desde el cargador).
-Orden: primero se insertan los chunks nuevos, después se apagan los de `DecisionDeVersion.a_apagar` (la vigente
-anterior **más toda versión del grupo que no esté `embebido`**, decidido por el dominio) y por último se confirma el
-catálogo. La rama `omitir` también apaga `a_apagar`. Garantía real: si algo falla entre insertar y confirmar, el catálogo
-conserva la versión anterior como vigente y **la siguiente carga del grupo** (con la versión nueva, una tercera o el texto
-de la primera) deja en Milvus solo los chunks de la vigente; entre la carga fallida y la siguiente conviven chunks
-vigentes de dos versiones (ver Risks).
+Orden: (1) se guarda la **fila definitiva** del documento (`document_id` final, `is_current = false`, estado `error`) ANTES
+de tocar Milvus, para que todo chunk que llegue a Milvus tenga fila en su grupo y `a_apagar`/`decidir_retiro` lo vean aunque
+el catálogo falle después; (2) se escriben los chunks por *upsert* (idempotente); (3) se apagan los de
+`DecisionDeVersion.a_apagar` (la vigente anterior **más toda versión del grupo que no esté `embebido`**, decidido por el
+dominio); (4) se confirma el catálogo (la fila pasa a `embebido`; `reemplazar_version` retira la anterior en la misma
+transacción). La rama `omitir` también apaga `a_apagar`. Garantía real: si algo falla entre (2) y (4), el catálogo conserva
+la versión anterior como vigente y **la siguiente carga del grupo** (la versión nueva, una tercera, el texto de la primera o un
+rechazo) deja en Milvus sin chunks vigentes de la versión fallida; entre la carga fallida y la siguiente conviven chunks
+vigentes de dos versiones, y puede quedar un documento vigente en el catálogo cuyos chunks ya se apagaron (deuda, ver Risks).
+**Readmisión (D3):** `decidir_version` omite el checksum ya cargado solo si esa versión es la vigente o si el grupo tiene otra
+vigente (no se resucita lo reemplazado); una versión retirada por un rechazo, sin vigente en el grupo, se reingiere con el
+mismo texto y queda vigente otra vez en el catálogo y en Milvus (el *upsert* reescribe `is_current = true`).
 El `checksum` es SHA-256 del texto normalizado.
 
 **D6 · Chunking y *embeddings*.** `fragmentar(texto, CORPUS_CHUNK_SIZE, CORPUS_CHUNK_OVERLAP)` es pura
@@ -112,7 +118,7 @@ menos uno en español. `data/raw/seed/ATTRIBUTION.md` lista autoría y licencia 
 
 ## Decisiones del usuario del 2026-10-20 y desviaciones de la implementación
 
-Las cuatro decisiones siguen **vigentes** y corrigen o precisan lo anterior donde discrepan.
+Las seis decisiones siguen **vigentes** y corrigen o precisan lo anterior donde discrepan.
 
 1. **Esquema, opción A, sin cambiar el catálogo** — *lectura revisada de Q9/D4 (decidido por el usuario, 2026-10-20)*.
    `object_key_raw = ''` y `object_key_normalized = ''` (la semilla no persiste originales en MinIO; la copia de referencia
@@ -167,8 +173,14 @@ Las cuatro decisiones siguen **vigentes** y corrigen o precisan lo anterior dond
   otro, el documento queda `error` (etapa `integridad`) y no se indexa. `DescargadorHttps` solo acepta `text/plain`:
   parsear HTML o JATS en producción no es parte de este change (el texto de la semilla real ya está extraído en
   `data/raw/seed/docs/`). El manifiesto acepta además `text` (inline, solo fixtures) y `text_path` relativo al manifiesto.
-- **Fuera de la regla de fuente excluida**: la comparación es exacta tras `casefold` y espacios (spec); una variante como
-  "NCCN Guidelines" no coincide. El manifiesto lo escribimos nosotros y la regla de la ingesta del S4 será `CORPUS_ALLOWED_SOURCES`.
+- **Fuente excluida: piso en el código, configuración solo amplía** (respuesta del usuario, 2026-10-17). La fuente se compara
+  por nombre, alias y palabra (`NCCN Guidelines` y `National Comprehensive Cancer Network` cuentan) y por el host de
+  `external_id` y `source_url` (`nccn.org`, `esmo.org`). `ALIAS_DE_FUENTES_EXCLUIDAS`, `HOSTS_DE_FUENTES_EXCLUIDAS` y
+  `PISO_DE_FUENTES_EXCLUIDAS` viven en `domain/corpus_seed/admisibilidad.py`; `CORPUS_EXCLUDED_SOURCES` solo puede ampliar el
+  piso, nunca quitar NCCN ni ESMO (la release declara la unión). No se inventan hosts para una fuente agregada por configuración.
+  **«ESMO Open» se rechaza** (falla cerrado); una excepción explícita revisada legalmente sería el único modo de admitirla.
+- **Hallazgo de la tercera pasada.** `nci-prostata-hp-en` ya no lleva el encabezado «Key References for Prostate Cancer» ni su frase
+  introductoria (atribuía una lista a una junta editorial de PDQ); se eliminaron sin sustituir palabras.
 - **Observación para L1D-106 (no se cambia aquí).** `MilvusRepository.search_dense` no fija nivel de consistencia: con el
   predeterminado de la colección, una búsqueda inmediatamente posterior a `marcar_no_vigentes` puede ver el estado anterior.
   El cargador y sus tests leen con `consistency_level="Strong"`.
@@ -239,7 +251,8 @@ El service nunca importa `pymilvus`, `httpx` ni SQLAlchemy. Reglas extraídas co
   de coherencia entre la carga fallida y la siguiente. **Deuda sin ID:** ingesta que falla cerrado (insertar con
   `is_current = false` y encender tras confirmar el catálogo; reconciliar documentos quitados del manifiesto).
 - [Duplicación de forma con `app/evaluation/dataset_loader.py`] → la imagen de producción excluye `app/evaluation`, así que
-  la regla de licencias se reescribe en `domain/corpus_seed`. **Deuda sin ID:** unificar ambas.
+  la regla de licencias se reescribe en `domain/corpus_seed`; el dominio reconoce `NoDerivs`, «sin obras derivadas» y
+  `NonCommercial` y `dataset_loader` no. **Deuda sin ID:** unificar ambas.
 - [`license_class` de un rechazado] → `cc_by_nc` (P4); toda consulta por clase debe filtrar `status = 'embebido'`.
   **Deuda sin ID:** `license_class` nullable en rechazados (cambio de `data-model` y migración propios).
 - [Licencia PMC mal leída] → `license_verified_at` y la evidencia por documento en el manifiesto;

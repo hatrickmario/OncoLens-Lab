@@ -36,6 +36,13 @@
 - [x] G2.3 Opción A (decidido por el usuario, 2026-10-20): un rechazo retira la versión vigente del grupo (`_retirar_vigente_del_grupo`, `decidir_retiro`, `CorpusCatalog.retirar_version`)
 - Deuda sin ID: unificar la regla de licencias con `app/evaluation/dataset_loader.py`; ingesta que falla cerrado (insertar `is_current = false` y encender tras confirmar el catálogo; reconciliar documentos quitados del manifiesto); `license_class` nullable en los rechazados (hoy `cc_by_nc`; P4)
 
+## Gate 2 · tercera pasada (2026-10-17)
+
+- [x] G3.1 Privacy: `nci-prostata-hp-en` sin la frase ni el encabezado de «Key References» (sin sustituir palabras), test del cuerpo con casefold y siete patrones de autoidentificación de PDQ y al menos un documento NCI; prefijo NCT anclado en `scripts/lib/formatosPii.mjs` (+ nota en la descripción de `telefono_local` y en `l1d-203/design.md`); `httpx.Client(trust_env=False)`; readmisión tras un retiro con el mismo checksum
+- [x] G3.2 Diseño: la fila definitiva se guarda antes de Milvus (todo chunk tiene dueño), `_indexar` por *upsert*, `_rechazar` solo convierte en `error` el apagado de Milvus, `clase_contradice_el_texto` en el dominio, `VersionInexistente`, `deadline_s` obligatorio, `ClaseDeLicencia.CC_BY_NC`; piso de fuentes excluidas (respuesta del usuario, 2026-10-17)
+- Deuda sin ID ampliada: ingesta que falla cerrado (también «vigente en el catálogo sin chunks vigentes» tras un fallo del catálogo; reconciliar en `omitir`); licencias vs `dataset_loader` (el dominio reconoce `NoDerivs`/«sin obras derivadas»/`NonCommercial` y `dataset_loader` no); `license_class` nullable en rechazados
+- Commits para el cuerpo del PR: 4587a7c (test→refactor), dc257b4, 46c6ad0
+
 ## evaluación
 
 - [ ] 2.1 Cambia el corpus: `run-ai-eval` si la suite existe; si no (US-072 llega en el S2), `ai-eval-runner` revisa a mano la recuperación del paciente semilla de mama y próstata sobre esta semilla (recall@10, MRR, precisión de citas, "sin evidencia"), como evidencia del Gate 2. **Pendiente del orquestador:** requiere el adapter real de embeddings (L1D-106); el implementador deja la semilla lista
