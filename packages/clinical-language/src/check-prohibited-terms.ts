@@ -5,6 +5,7 @@ import type {
   ListaTerminos,
   Nivel,
   OpcionesDeVerificacion,
+  PrefijoProhibido,
   TerminoProhibido,
 } from './tipos.js';
 
@@ -72,27 +73,37 @@ function recolectarCandidatas(
   }
   if (niveles.includes('B')) {
     for (const prefijo of lista.nivelB.prefijos) {
-      const normalizado = normalizarTexto(prefijo.prefijo);
-      palabras.forEach((palabra, inicio) => {
-        if (palabra.startsWith(normalizado)) {
-          candidatas.push({
-            id: prefijo.id,
-            termino: prefijo.prefijo,
-            nivel: 'B',
-            inicio,
-            longitud: 1,
-            orden,
-            exacta: palabra === normalizado,
-          });
-        }
-      });
-      orden++;
+      candidatas.push(...candidatasDePrefijo(prefijo, orden++, palabras));
     }
     for (const termino of lista.nivelB.terminos) {
       candidatas.push(...candidatasDeTermino(termino, 'B', orden++, palabras, claves));
     }
   }
   return candidatas;
+}
+
+/** Cada palabra de la normalización base que empieza por el prefijo es una candidata de una palabra. */
+function candidatasDePrefijo(
+  prefijo: PrefijoProhibido,
+  orden: number,
+  palabras: string[],
+): Candidata[] {
+  const normalizado = normalizarTexto(prefijo.prefijo);
+  return palabras.flatMap((palabra, inicio) =>
+    palabra.startsWith(normalizado)
+      ? [
+          {
+            id: prefijo.id,
+            termino: prefijo.prefijo,
+            nivel: 'B' as const,
+            inicio,
+            longitud: 1,
+            orden,
+            exacta: palabra === normalizado,
+          },
+        ]
+      : [],
+  );
 }
 
 function candidatasDeTermino(
