@@ -25,7 +25,12 @@ from pathlib import Path
 import httpx
 
 from app.evaluation.chunking_variants import Seccion
-from app.evaluation.dataset_loader import Dataset, DatasetInvalido, Fuente, cargar_dataset
+from app.evaluation.dataset_loader import (
+    Dataset,
+    DatasetInvalido,
+    Fuente,
+    cargar_dataset_configurado,
+)
 from app.evaluation.parsers_fuentes import PARSERS
 from app.evaluation.retrieval_metrics import contiene_cita
 from app.evaluation.rutas import raiz_repo
@@ -226,7 +231,7 @@ def main(argv: list[str] | None = None, cliente: httpx.Client | None = None) -> 
     args = parser.parse_args(argv)
 
     try:
-        dataset = cargar_dataset(args.dataset_dir)
+        dataset = cargar_dataset_configurado(args.dataset_dir)
     except DatasetInvalido as exc:
         print(f"dataset inválido: {exc}", file=sys.stderr)
         return 2
