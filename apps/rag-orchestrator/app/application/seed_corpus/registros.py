@@ -15,6 +15,7 @@ from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 
 STATUS_EMBEBIDO = "embebido"
 STATUS_RECHAZADO = "rechazado_licencia"
@@ -125,7 +126,7 @@ def _registro(
         trial_phase=documento.trial_phase,
         primary_endpoint=documento.primary_endpoint,
         sample_size=documento.sample_size,
-        population_criteria={},
+        population_criteria=resolver_criterios_poblacion(documento.population_criteria),
         metadata_source=ORIGEN_DE_LA_SEMILLA,
         guideline_version=documento.guideline_version,
         last_updated_at=documento.last_updated_at,
