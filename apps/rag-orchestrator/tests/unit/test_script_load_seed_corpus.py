@@ -17,12 +17,12 @@ ENTORNO_VALIDO = {
     "CORPUS_CUTOFF_DATE": "2026-10-15",
     "CORPUS_CHUNK_SIZE": "12",
     "CORPUS_CHUNK_OVERLAP": "0",
-    "MILVUS_URI": "http://milvus.invalido:19530",
+    "MILVUS_URI": "http://milvus.invalid:19530",
     "EMBEDDING_DIM": "8",
     "VECTOR_INDEX_TYPE": "HNSW",
     "VECTOR_INDEX_PARAMS": '{"M": 16, "efConstruction": 200, "ef": 64}',
     "MILVUS_DENSE_METRIC_TYPE": "COSINE",
-    "CORPUS_DATABASE_URL": "postgresql+psycopg://rag_corpus@postgres.invalido:5432/oncolens?sslmode=require",
+    "CORPUS_DATABASE_URL": "postgresql+psycopg://rag_corpus@postgres.invalid:5432/oncolens?sslmode=require",
     "PG_RAG_CORPUS_PASSWORD_FILE": "/run/secrets/no-existe",
 }
 
@@ -95,11 +95,11 @@ def test_un_manifiesto_ilegible_sale_con_1_antes_de_conectarse_a_las_bases(
     assert codigo == 1 and "manifiesto" in capturado.err and str(tmp_path) not in capturado.err
 
 
-def test_una_base_inalcanzable_sale_con_1_nombrando_solo_la_clase_del_error(
+def test_una_dependencia_obligatoria_que_falla_sale_con_1_nombrando_solo_la_clase_del_error(
     entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     codigo = load_seed_corpus.main(embedder=EmbedderFalso())
 
     error = capsys.readouterr().err
     assert codigo == 1 and error.startswith("load_seed_corpus: falló (")
-    assert "invalido" not in error  # ni hosts ni URIs
+    assert "postgres.invalid" not in error and "no-existe" not in error  # ni hosts ni rutas

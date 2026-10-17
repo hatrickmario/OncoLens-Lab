@@ -10,9 +10,7 @@ from app.application.seed_corpus.ports import RegistroDeDocumento
 AHORA = datetime(2026, 10, 16, 12, 0, 0, tzinfo=UTC)
 
 
-def registro_de_prueba(
-    document_id: str = "doc-a@000000000001", **cambios: object
-) -> RegistroDeDocumento:
+def registro_de_prueba(document_id: str = "doc-a@abcdef", **cambios: object) -> RegistroDeDocumento:
     base = RegistroDeDocumento(
         document_id=document_id,
         source_type="guideline",

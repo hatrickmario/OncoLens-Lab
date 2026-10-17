@@ -30,7 +30,7 @@ documentos:
     all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
     Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
   downloaded_at: '2026-10-16'
-  checksum: 43a76ad2e99f6ac34611fee7f759feb196ffd843d166b4f0bdaf602f9266769a
+  checksum: bc2d96bc6f96c00fd34862d0e028a574b2c85a4fa0433411360873e52c1433af
   text_path: docs/nci-mama-hp-en.txt
 - document_key: nci-mama-pac-es
   source_type: guideline
@@ -51,7 +51,7 @@ documentos:
     all text within National Cancer Institute (NCI) products is free of copyright and may be reused without our permission.
     Credit the National Cancer Institute as the source.» Sin gráficos; sin logo de NCI ni marca PDQ.'
   downloaded_at: '2026-10-16'
-  checksum: 8589a85c4f4032eb849e68cf5fac3352f8286ba0f4bbe4d863e4b16184c067f5
+  checksum: a5509492c9165d9a061c3963ceeea692447dca6b97198d5450e7f028b2db7825
   text_path: docs/nci-mama-pac-es.txt
 - document_key: nci-prostata-hp-en
   source_type: guideline
@@ -95,7 +95,7 @@ documentos:
   downloaded_at: '2026-10-16'
   checksum: 94719453659abe4ee062530fc98ab51400ebcae0dcbf6810701fcf311214d5f1
   text_path: docs/nci-prostata-pac-es.txt
-- document_key: pmc-12384589
+- document_key: pmc-mama-cdk46-guia
   source_type: guideline
   source_name: PMC Open Access
   external_id: 10.3390/curroncol32080444
@@ -116,8 +116,8 @@ documentos:
     terms and conditions of the Creative Commons Attribution (CC BY) license (https://creativecommons.org/licenses/by/4.0/).»'
   downloaded_at: '2026-10-16'
   checksum: a3bb26468a3282e2b57f16ed646e2ddd92c86954337c17a34cfacde7b599e7b7
-  text_path: docs/pmc-12384589.txt
-- document_key: pmc-13339100
+  text_path: docs/pmc-mama-cdk46-guia.txt
+- document_key: pmc-mama-tamoxifeno-eca
   source_type: literature
   source_name: PMC Open Access
   external_id: 10.1093/jnci/djag049
@@ -138,8 +138,8 @@ documentos:
     in any medium, provided the original work is properly cited.»'
   downloaded_at: '2026-10-16'
   checksum: e2e4820ce4bee220183287139784169cf42dcd486781b107793d6e502369b396
-  text_path: docs/pmc-13339100.txt
-- document_key: pmc-13607463
+  text_path: docs/pmc-mama-tamoxifeno-eca.txt
+- document_key: pmc-mama-antraciclinas-rs
   source_type: literature
   source_name: PMC Open Access
   external_id: 10.3390/jcm15187303
@@ -160,8 +160,8 @@ documentos:
     terms and conditions of the Creative Commons Attribution (CC BY) license.»'
   downloaded_at: '2026-10-16'
   checksum: c019104016b2b59c9623702a8030d9b1ed3fa8083dee6201352a463bfe16f03a
-  text_path: docs/pmc-13607463.txt
-- document_key: pmc-13456578
+  text_path: docs/pmc-mama-antraciclinas-rs.txt
+- document_key: pmc-prostata-mhsp-nma
   source_type: literature
   source_name: PMC Open Access
   external_id: 10.1097/ju.0000000000005131
@@ -182,8 +182,8 @@ documentos:
     which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.»'
   downloaded_at: '2026-10-16'
   checksum: 85f4120c2ce775ad3b5ec07296f7f5fae781e1aeff1925b48b7598848fce795a
-  text_path: docs/pmc-13456578.txt
-- document_key: pmc-12832964
+  text_path: docs/pmc-prostata-mhsp-nma.txt
+- document_key: pmc-prostata-volumen-nma
   source_type: literature
   source_name: PMC Open Access
   external_id: 10.1093/oncolo/oyaf386
@@ -205,8 +205,8 @@ documentos:
     in any medium, provided the original work is properly cited.»'
   downloaded_at: '2026-10-16'
   checksum: 43c99994a4d95513de6cfa09b12271fb0f502972c1a060fe75b0611d17a634f3
-  text_path: docs/pmc-12832964.txt
-- document_key: pmc-13223009
+  text_path: docs/pmc-prostata-volumen-nma.txt
+- document_key: pmc-prostata-darolutamida-rs
   source_type: literature
   source_name: PMC Open Access
   external_id: 10.3389/fphar.2026.1818807
@@ -229,4 +229,4 @@ documentos:
     academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.»'
   downloaded_at: '2026-10-16'
   checksum: f3b7c87b164ed810ff7987870f16edb0b90b1f3c963a818de3e27e739d31997d
-  text_path: docs/pmc-13223009.txt
+  text_path: docs/pmc-prostata-darolutamida-rs.txt

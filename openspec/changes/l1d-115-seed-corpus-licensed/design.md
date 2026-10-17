@@ -98,6 +98,63 @@ nunca titulado "resumen PDQ" (ADR-36). Composición objetivo: ~5 de mama y ~5 de
 menos uno en español. `data/raw/seed/ATTRIBUTION.md` lista autoría y licencia de cada texto
 (CC BY/BY-SA lo exigen).
 
+## Decisiones del usuario del 2026-10-20 y desviaciones de la implementación
+
+Las cuatro decisiones siguen **vigentes** y corrigen o precisan lo anterior donde discrepan.
+
+1. **Esquema, opción A, sin cambiar el catálogo** — *lectura revisada de Q9/D4 (decidido por el usuario, 2026-10-20)*.
+   `object_key_raw = ''` y `object_key_normalized = ''` (la semilla no persiste originales en MinIO; la copia de referencia
+   es `data/raw/seed/` o la URL del manifiesto, con `checksum`; Q8/Q9 se difieren a US-117, S4).
+   `original_format` es el formato real declarado **por documento** en el manifiesto (`html` para NCI, `jats_xml` para PMC;
+   siempre dentro del `CHECK IN ('jats_xml','xml','pdf','html')`). `metadata_source = 'fuente_estructurada'` **siempre**
+   (D4 queda así: la rama "nulo si ninguna criterio viene de la fuente" desaparece, la columna es `NOT NULL`): para `t-ok-1`
+   los criterios salen del manifiesto estructurado, que no declara ninguno, y valen `no_disponible`; nunca `extraido_verificado`.
+2. **Dependencia de L1D-106 aceptada.** No existe en `main` el adapter real de *embeddings*. El puerto `PassageEmbedder`
+   se prueba con un fake determinista (`EMBEDDING_DIM = 8`) con contador de invocaciones; la fábrica real del script
+   (`fabricar_embedder_real`) falla con un mensaje claro y código 1 hasta que L1D-106 aporte el adapter. El **smoke 1.13
+   (AC-1 con el manifiesto real y *embeddings* reales) pasa a tarea explícita de L1D-106** (tarea 2.13b de su `tasks.md`);
+   **L1D-115 no pasa a Done hasta que ese smoke corra.**
+3. **`fragmentar()` puro sobre un puerto `Tokenizador`** con un tokenizador por palabras provisional (ADR-39 propuesto:
+   `CORPUS_CHUNK_SIZE = 1024`, solapamiento 0, `tamano_fijo`); reutiliza `modelos.entero_positivo` y exige solape < tamaño.
+   **Regla de licencias del cargador:** `CORPUS_LICENSE_CLASS_MAP` + `CORPUS_ACCEPTED_LICENSES`; ND siempre rechazada
+   (aunque el mapa la contuviera); CC BY-NC solo con las tres condiciones (`cc_by_nc` en `CORPUS_ACCEPTED_LICENSES`,
+   `ALLOW_CC_BY_NC=true` por `Settings` y `nc_solo_academico: true` por documento). `app/evaluation` queda fuera de la imagen
+   de producción, así que **no se importa `dataset_loader`**: la regla de licencias de la semilla duplica su *forma*
+   (`CLASE_LICENCIA_ACEPTADA`, `CONTIENE_ND`, las tres condiciones de NC). **Deuda anotada:** unificar con `dataset_loader`
+   (ID por asignar). `pyyaml==6.0.3` en `requirements.txt`; `load_seed_corpus.py` entra a la lista blanca de
+   `Dockerfile.dockerignore` con su test.
+4. **`CORPUS_CUTOFF_DATE`.** El usuario fijó `2026-10-15` (descarga del mini-dataset de ADR-39). Los 10 documentos de la
+   semilla real se descargaron el **2026-10-16** (`downloaded_at` por documento): el usuario decide si el valor de corte de
+   la semilla es `2026-10-16` (propuesta de esta rama) o se mantiene `2026-10-15`. Registros de ClinicalTrials.gov: no hay
+   ninguno en la semilla real; el fixture `t-ok-2` es sintético (etiqueta `ClinicalTrials.gov / NCTxxxxxxxx`, URL, fecha de
+   consulta y atribución visible a NLM, sin sugerir aval, si algún día se carga uno real). Sin NCCN ni ESMO ni datos reales.
+
+### Desviaciones del diseño original
+
+- **D2/D3 · clase de licencia de un rechazado.** `corpus_document.license_class` es `NOT NULL` con `CHECK` sobre cuatro
+  valores y el catálogo no cambia, así que una fila `rechazado_licencia` necesita uno. Se usa `cc_by_nc` (la más
+  restrictiva); la verdad de la licencia del rechazado es `license` (texto literal, `''` si falta) y `status`; nunca es
+  vigente ni tiene chunks ni entra a una release. **Pregunta abierta P4** (humano): ¿se prefiere permitir `NULL`/otro valor
+  en una migración propia? No cambia ningún AC.
+- **D3 · reporte.** Solo salida estándar (JSON con identificadores, resultado, motivo y recuentos). No se escribe
+  `reports/corpus/seed-<fecha>.json`: `reports/` no viaja en la imagen y el contenedor es de solo lectura.
+- **D5 · identificadores.** `document_id = <document_key>@<checksum[:12]>` (mismo contenido, mismo id: los reintentos son
+  *upserts*; contenido nuevo, id nuevo, sin colisión de PK) y `chunk_id = <document_id>#<índice de 4 dígitos>`. Un rechazado
+  usa `<key>@rechazado` y un error previo al checksum `<key>@error`. Un reintento no reinserta los chunks que ya estén en
+  Milvus (`ids_de_chunks_del_documento`) y `marcar_no_vigentes` relee cada entidad con sus vectores y la reescribe con
+  `upsert` por `chunk_id`. El checksum es el del texto normalizado (NFC, `\n`, espacios colapsados).
+- **D8 · `excluded_sources`** se guarda como arreglo JSON en la columna `text` (`["NCCN", "ESMO"]`), el mismo formato del
+  contrato; la release se publica solo si el conjunto de documentos vigentes cambia respecto de la última.
+- **D9 · integridad.** El manifiesto admite `checksum` (SHA-256 del texto normalizado) por documento; si el texto leído da
+  otro, el documento queda `error` (etapa `integridad`) y no se indexa. `HttpSourceFetcher` solo acepta `text/plain`:
+  parsear HTML o JATS en producción no es parte de este change (el texto de la semilla real ya está extraído en
+  `data/raw/seed/docs/`). El manifiesto acepta además `text` (inline, solo fixtures) y `text_path` relativo al manifiesto.
+- **Fuera de la regla de fuente excluida**: la comparación es exacta tras `casefold` y espacios (spec); una variante como
+  "NCCN Guidelines" no coincide. El manifiesto lo escribimos nosotros y la regla de la ingesta del S4 será `CORPUS_ALLOWED_SOURCES`.
+- **Observación para L1D-106 (no se cambia aquí).** `MilvusRepository.search_dense` no fija nivel de consistencia: con el
+  predeterminado de la colección, una búsqueda inmediatamente posterior a `marcar_no_vigentes` puede ver el estado anterior.
+  El cargador y sus tests leen con `consistency_level="Strong"`.
+
 ## Privacidad y ownership
 
 - Todo ocurre dentro de `rag-orchestrator` (ai-services): lee archivos de `data/raw/seed/` o URLs
@@ -173,12 +230,11 @@ deshacer una carga de desarrollo se recrean los volúmenes de test/Compose (solo
 
 ## Open Questions
 
-- **P1 · Pendiente de definir (humano):** ¿el rechazo por `fuente_excluida` se persiste como fila con
-  `status = rechazado_licencia` (propuesta D3, sin cambio de esquema) o no se persiste y solo se
-  reporta? Añadir `rejection_reason` exigiría su propio change sobre `data-model`. No cambia los AC.
-- **P2 · Pendiente de definir (humano):** ADR-36 decisión 5 prevé origen `curado` de la población, pero
-  el enum de `metadata_source` es `fuente_estructurada | extraido_verificado`. En el S1 no se cura
-  (D4: `fuente_estructurada` o nulo). ¿Se añade `curado` al enum antes de US-118 (S4)?
+- **P1 · Resuelta por la implementación (a confirmar en la revisión del PR):** el rechazo por `fuente_excluida` se
+  persiste como fila `status = rechazado_licencia` (propuesta D3, sin cambio de esquema); el motivo va al reporte.
+- **P2 · Resuelta por la decisión 1 del usuario (2026-10-20):** `metadata_source = fuente_estructurada` siempre. El valor
+  `curado` de ADR-36 decisión 5 sigue pendiente para US-118 (S4).
+- **P4 · Pendiente de definir (humano):** `license_class` de una fila `rechazado_licencia` (ver *Desviaciones*).
 - **P3 · Nota (no bloquea):** FX-06c-a usa `ClinicalTrials.gov` en `t-ok-2`, fuente fuera del MVP
   según ADR-36. Es un fixture sintético para probar la copia de criterios estructurados y el S1 no
   aplica `CORPUS_ALLOWED_SOURCES` (US-117); el manifiesto real no la incluye.
