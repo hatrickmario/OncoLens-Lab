@@ -9,6 +9,8 @@ RUN npm ci --include-workspace-root --workspace apps/clinical-api
 COPY apps/clinical-api apps/clinical-api
 # El SDK generado de rag-orchestrator vive fuera de la app y se compila junto con ella (tsconfig.build.json).
 COPY packages/api-contracts/src/client/rag-orchestrator packages/api-contracts/src/client/rag-orchestrator
+# Los schemas Zod generados del propio contrato (auth.schema.ts) también se compilan con la app.
+COPY packages/api-contracts/src/zod/clinical-api packages/api-contracts/src/zod/clinical-api
 RUN npm run build --workspace apps/clinical-api
 
 FROM node:24.22.0-alpine3.24 AS runtime

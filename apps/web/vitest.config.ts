@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.ts', 'app/**/*.test.ts'],
+    include: ['tests/**/*.test.{ts,tsx}', 'app/**/*.test.{ts,tsx}'],
     // El test de build (AC-5) ejecuta `next build` y se lanza aparte: npm run test:build.
     exclude: ['tests/build/**', 'node_modules/**'],
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).

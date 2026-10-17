@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -88,6 +88,8 @@ paths:
                 $ref: '#/components/schemas/ErrorCuerpoInvalido'
         "429":
           $ref: '#/components/responses/LimiteSolicitudes'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/auth/logout:
     post:
@@ -564,6 +566,13 @@ components:
         format: uuid
 
   responses:
+    ErrorInterno:
+      description: >-
+        Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInterno'
     NoAutenticado:
       description: Sesión ausente o expirada.
       content:
@@ -1855,6 +1864,22 @@ components:
             minItems: 1
 
     # ---- Errores: código cerrado por respuesta; sin eco del valor recibido (RN-10)
+    ErrorInterno:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ERROR_INTERNO }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorServicioAutenticacion:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ERROR_SERVICIO_AUTENTICACION }
+        message: { type: string }
+        traceId: { type: string }
     ErrorNoAutenticado:
       type: object
       additionalProperties: false

@@ -25,7 +25,7 @@
     "ac": "AC-6",
     "regla": "assertFixtureQueriesDistinct",
     "escenario": "una respuesta RagQueryInternalResponse del índice no declara request",
-    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/examples/49/request" }] }],
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/examples/[file=rag-query-sin-evidencia.json]/request" }] }],
     "esperado": { "archivo": "contracts/examples/index.json", "rutaContiene": "rag-query-sin-evidencia.json", "mensajeContiene": "debe declarar request" }
   },
   {
@@ -33,7 +33,7 @@
     "ac": "AC-6",
     "regla": "assertFixtureQueriesDistinct",
     "escenario": "dos respuestas de fixture comparten el mismo request",
-    "parches": [{ "destino": "indice", "operaciones": [{ "op": "replace", "path": "/examples/49/request", "value": "rag-query-request.json" }] }],
+    "parches": [{ "destino": "indice", "operaciones": [{ "op": "replace", "path": "/examples/[file=rag-query-sin-evidencia.json]/request", "value": "rag-query-request.json" }] }],
     "esperado": { "archivo": "contracts/examples/index.json", "rutaContiene": "rag-query-sin-evidencia.json", "mensajeContiene": "ya está asociado" }
   }
 ]

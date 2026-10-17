@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { delay, http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
-import type { DependenciasAnalisis } from '../../lib/server/evidence-analyses';
+import type { DependenciasDelBff } from '../../lib/server/dependencias';
 import type { LineaDeRegistro } from '../../lib/server/registro';
 
 export const URL_CLINICAL_API = 'http://clinical-api.test:3000';
@@ -90,14 +90,15 @@ export function crearClinicalApiSimulado() {
 }
 
 /** Dependencias del handler con reloj, traceId y logger controlados por el test. */
-export function crearDependenciasDeTest(sobrescribir: Partial<DependenciasAnalisis> = {}) {
+export function crearDependenciasDeTest(sobrescribir: Partial<DependenciasDelBff> = {}) {
   const lineas: LineaDeRegistro[] = [];
-  const dependencias: DependenciasAnalisis = {
+  const dependencias: DependenciasDelBff = {
     config: {
       clinicalApiUrl: URL_CLINICAL_API,
       allowedOrigin: ORIGEN_PERMITIDO,
       upstreamTimeoutMs: 5000,
       maxBodyBytes: 32768,
+      homePath: '/pacientes/x/analisis',
     },
     fetch: globalThis.fetch,
     nuevoTraceId: () => 'req_web00001',
@@ -117,4 +118,19 @@ export function peticionDeAnalisis(
     headers: { 'Content-Type': 'application/json', ...cabeceras },
     body: JSON.stringify(cuerpo),
   });
+}
+
+/** MSW traga los errores de stream: el corte del cuerpo se simula en el borde del `fetch` inyectado. */
+export function crearFetchConCorte(): typeof globalThis.fetch {
+  return () => {
+    const cuerpo = new ReadableStream<Uint8Array>({
+      start: (controlador) => {
+        controlador.enqueue(new TextEncoder().encode('{"id":'));
+        controlador.error(new Error('conexion cortada'));
+      },
+    });
+    return Promise.resolve(
+      new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+  };
 }

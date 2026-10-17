@@ -148,8 +148,16 @@ services:
     user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
     environment:
       PORT: "3000"
-      APP_ENV: ${APP_ENV:-local}
+      APP_ENV: ${APP_ENV:?APP_ENV obligatorio}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      # Rol de aplicación clinical_api. Sin contraseña en la URL (RN-14): va por archivo de secreto. TLS con
+      # verificación del certificado del servidor (SAN postgres) contra la CA propia (SEG-08).
+      CLINICAL_DATABASE_URL: postgresql://clinical_api@postgres:5432/${POSTGRES_DB:-oncolens}
+      CLINICAL_DATABASE_CA_FILE: /run/secrets/pg_ca.crt
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-}
+      ARGON2_MEMORY_COST_KIB: ${ARGON2_MEMORY_COST_KIB:-}
+      ARGON2_TIME_COST: ${ARGON2_TIME_COST:-}
+      ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-}
       SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
@@ -162,6 +170,7 @@ services:
       - identity_aes_key
       - blind_index_hmac_key
       - pg_clinical_api_password
+      - pg_ca.crt
       - pg_research_writer_password
       - clinical_minio_root_password
     volumes:
@@ -319,6 +328,8 @@ secrets:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_rag_corpus_migrator_password
   pg_superuser_password:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_superuser_password
+  pg_ca.crt:
+    file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_ca.crt
   pg_server.crt:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_server.crt
   pg_server.key:

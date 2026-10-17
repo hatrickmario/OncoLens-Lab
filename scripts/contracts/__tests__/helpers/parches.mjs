@@ -24,9 +24,22 @@ function replaceText(document, operation) {
   return { op: 'replace', path: operation.path, value: current.replace(operation.buscar, operation.reemplazar) };
 }
 
+/**
+ * Un segmento `[file=<nombre>]` en la ruta de un parche del índice de ejemplos se resuelve por el campo `file` de la
+ * entrada, no por su posición: añadir ejemplos al índice no desplaza los parches. Falla si el archivo no está.
+ */
+function resolveIndexEntries(document, operation) {
+  const match = /\[file=([^\]]+)\]/.exec(operation.path);
+  if (!match) return operation;
+  const position = document.examples.findIndex((entry) => entry.file === match[1]);
+  if (position === -1) throw new Error(`parche: el índice no tiene ninguna entrada con file="${match[1]}"`);
+  return { ...operation, path: operation.path.replace(match[0], String(position)) };
+}
+
 function applyOperations(document, operations) {
   const target = structuredClone(document);
-  for (const operation of operations) {
+  for (const rawOperation of operations) {
+    const operation = resolveIndexEntries(target, rawOperation);
     jsonpatch.applyOperation(target, operation.op === 'replace-text' ? replaceText(target, operation) : operation, true, true);
   }
   return target;

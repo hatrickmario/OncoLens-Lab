@@ -629,6 +629,18 @@ export type FollowUpTurn = {
     createdAt: string;
 };
 
+export type ErrorInterno = {
+    error: 'ERROR_INTERNO';
+    message: string;
+    traceId: string;
+};
+
+export type ErrorServicioAutenticacion = {
+    error: 'ERROR_SERVICIO_AUTENTICACION';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorNoAutenticado = {
     error: 'NO_AUTENTICADO';
     message: string;
@@ -883,6 +895,10 @@ export type LoginErrors = {
      * Límite de solicitudes superado.
      */
     429: ErrorLimiteSolicitudes;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
 };
 
 export type LoginError = LoginErrors[keyof LoginErrors];
