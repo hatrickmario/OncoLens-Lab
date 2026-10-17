@@ -1,7 +1,6 @@
 import pytest
 
 from app.domain.retrieval_filter import (
-    LONGITUD_MAXIMA_POR_DEFECTO,
     coincide_etiqueta,
     escapar_patron_like,
     exigir_filtro_vigente,
@@ -10,12 +9,15 @@ from app.domain.retrieval_filter import (
 )
 
 
+LONGITUD = 64  # el defecto de Settings.retrieval_cancer_type_max_length
+
+
 def test_expresion_solo_vigente_exige_is_current():
     assert expresion_solo_vigente() == "is_current == true"
 
 
 def test_expresion_vigente_del_tipo_compara_la_etiqueta_completa_dentro_de_la_lista_separada_por_comas():
-    assert expresion_vigente_del_tipo("mama") == (
+    assert expresion_vigente_del_tipo("mama", LONGITUD) == (
         'is_current == true and (cancer_type_tags == "mama" or cancer_type_tags like "mama,%"'
         ' or cancer_type_tags like "%,mama" or cancer_type_tags like "%,mama,%")'
     )
@@ -40,7 +42,7 @@ def test_expresion_vigente_del_tipo_compara_la_etiqueta_completa_dentro_de_la_li
 )
 def test_expresion_vigente_del_tipo_rechaza_lo_que_no_es_un_codigo_de_catalogo(tipo):
     with pytest.raises(ValueError):
-        expresion_vigente_del_tipo(tipo)
+        expresion_vigente_del_tipo(tipo, LONGITUD)
 
 
 @pytest.mark.parametrize(
@@ -65,7 +67,7 @@ def test_coincide_etiqueta_exige_la_etiqueta_completa(etiquetas, tipo, esperado)
 def test_expresion_vigente_del_tipo_escapa_el_guion_bajo_en_los_patrones_like_cuando_el_codigo_lo_lleva():
     # `_` es comodín de `like` en Milvus: sin escapar, `mama_masculina` casaría con `mamaXmasculina`. En el literal
     # de la expresión cada `\` va duplicado (`\\_`); la igualdad exacta no es un patrón y no se escapa.
-    assert expresion_vigente_del_tipo("mama_masculina") == (
+    assert expresion_vigente_del_tipo("mama_masculina", LONGITUD) == (
         'is_current == true and (cancer_type_tags == "mama_masculina"'
         ' or cancer_type_tags like "mama\\\\_masculina,%"'
         ' or cancer_type_tags like "%,mama\\\\_masculina"'
@@ -88,14 +90,14 @@ def test_escapar_patron_like_antepone_barra_a_barra_porcentaje_y_guion_bajo(text
 
 
 def test_expresion_vigente_del_tipo_acepta_un_codigo_de_la_longitud_maxima():
-    tipo = "a" * LONGITUD_MAXIMA_POR_DEFECTO
+    tipo = "a" * LONGITUD
 
-    assert f'cancer_type_tags == "{tipo}"' in expresion_vigente_del_tipo(tipo)
+    assert f'cancer_type_tags == "{tipo}"' in expresion_vigente_del_tipo(tipo, LONGITUD)
 
 
 def test_expresion_vigente_del_tipo_rechaza_un_codigo_mas_largo_que_el_maximo():
     with pytest.raises(ValueError):
-        expresion_vigente_del_tipo("a" * (LONGITUD_MAXIMA_POR_DEFECTO + 1))
+        expresion_vigente_del_tipo("a" * (LONGITUD + 1), LONGITUD)
 
 
 def test_exigir_filtro_vigente_acepta_la_expresion_solo_vigente():
@@ -103,7 +105,7 @@ def test_exigir_filtro_vigente_acepta_la_expresion_solo_vigente():
 
 
 def test_exigir_filtro_vigente_acepta_la_expresion_vigente_del_tipo():
-    filtro = expresion_vigente_del_tipo("mama")
+    filtro = expresion_vigente_del_tipo("mama", LONGITUD)
 
     assert exigir_filtro_vigente(filtro) == filtro
 
@@ -132,4 +134,4 @@ def test_expresion_vigente_del_tipo_usa_la_longitud_maxima_inyectada_cuando_difi
     with pytest.raises(ValueError):
         expresion_vigente_del_tipo("aaaaaa", longitud_maxima=5)
     # el mismo código, con el máximo por defecto, sí entra
-    assert 'cancer_type_tags == "aaaaaa"' in expresion_vigente_del_tipo("aaaaaa")
+    assert 'cancer_type_tags == "aaaaaa"' in expresion_vigente_del_tipo("aaaaaa", LONGITUD)

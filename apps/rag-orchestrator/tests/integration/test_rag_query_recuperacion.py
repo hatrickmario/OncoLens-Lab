@@ -10,6 +10,7 @@ import pytest
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
+    LONGITUD_MAXIMA_DE_PRUEBA,
     PARAMETROS_DE_PRUEBA,
     Q_HER2,
     Q_SIN,
@@ -64,7 +65,9 @@ def test_rag_query_excluye_el_chunk_no_vigente_de_los_candidatos_del_reranker_y_
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
-    assert set(entorno.buscador.expresiones) == {expresion_vigente_del_tipo("mama")}
+    assert set(entorno.buscador.expresiones) == {
+        expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
+    }
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert "ch-m1-1" in candidatos
     assert "ch-m1v0-1" not in candidatos
@@ -82,7 +85,9 @@ def test_rag_query_excluye_el_chunk_de_prostata_de_los_candidatos_cuando_el_cont
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
-    assert set(entorno.buscador.expresiones) == {expresion_vigente_del_tipo("mama")}
+    assert set(entorno.buscador.expresiones) == {
+        expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
+    }
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert "ch-m1-1" in candidatos
     assert "ch-p1-1" not in candidatos

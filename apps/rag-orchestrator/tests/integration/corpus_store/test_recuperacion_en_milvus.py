@@ -16,6 +16,7 @@ from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigent
 from app.infrastructure.milvus.repository import MilvusRepository
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
+    LONGITUD_MAXIMA_DE_PRUEBA,
     CORPUS_FX06A,
     DIMENSION,
     Q_HER2,
@@ -58,7 +59,9 @@ def test_milvus_excluye_el_chunk_de_prostata_cuando_el_filtro_es_de_mama(
 ) -> None:
     vector_de_q_her2 = [1.0] + [0.0] * (DIMENSION - 1)
 
-    encontrados = repositorio.search_dense(vector_de_q_her2, 10, expresion_vigente_del_tipo("mama"))
+    encontrados = repositorio.search_dense(
+        vector_de_q_her2, 10, expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
+    )
 
     assert {c.chunk_id for c in encontrados} == {"ch-m1-1", "ch-inj-1"}
 
@@ -100,7 +103,9 @@ def test_milvus_compara_la_etiqueta_completa_de_cancer_type_tags(
     )  # la consistencia por defecto es Bounded
     vector = [1.0] + [0.0] * (DIMENSION - 1)
 
-    encontrados = repositorio.search_dense(vector, 20, expresion_vigente_del_tipo(tipo))
+    encontrados = repositorio.search_dense(
+        vector, 20, expresion_vigente_del_tipo(tipo, LONGITUD_MAXIMA_DE_PRUEBA)
+    )
 
     assert {c.chunk_id for c in encontrados} == esperados
 

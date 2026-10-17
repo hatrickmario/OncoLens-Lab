@@ -6,6 +6,7 @@ import pytest
 
 from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigente_del_tipo
 from app.infrastructure.milvus.repository import MilvusRepository
+from tests.support.recuperacion import LONGITUD_MAXIMA_DE_PRUEBA
 from tests.support.milvus import ajustes_de_milvus, nombre_de_coleccion_de_test
 
 
@@ -38,7 +39,7 @@ def test_search_dense_envia_solo_is_current_cuando_no_se_indica_filtro():
 
 def test_search_dense_envia_el_filtro_recibido_cuando_exige_is_current():
     cliente = _ClienteMilvusEspia()
-    filtro = expresion_vigente_del_tipo("mama")
+    filtro = expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
 
     encontrados = _repositorio(cliente).search_dense([0.0] * 8, limit=7, filtro=filtro)
 

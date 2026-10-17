@@ -15,7 +15,6 @@ _PREFIJO_CON_RESTRICCION = f"{FILTRO_VIGENTE} and ("
 _CODIGO_DE_CATALOGO = re.compile(r"[a-z][a-z0-9_]*")
 
 
-LONGITUD_MAXIMA_POR_DEFECTO = 64  # valor por defecto de RETRIEVAL_CANCER_TYPE_MAX_LENGTH (RN-22)
 _COMODINES_DE_LIKE = str.maketrans({"\\": "\\\\", "%": "\\%", "_": "\\_"})
 
 
@@ -34,13 +33,12 @@ def expresion_solo_vigente() -> str:
     return FILTRO_VIGENTE
 
 
-def expresion_vigente_del_tipo(
-    cancer_type: str, longitud_maxima: int = LONGITUD_MAXIMA_POR_DEFECTO
-) -> str:
+def expresion_vigente_del_tipo(cancer_type: str, longitud_maxima: int) -> str:
     """Vigente y con la etiqueta COMPLETA ``cancer_type`` dentro de ``cancer_type_tags`` (lista separada por comas).
 
     Compara la etiqueta entera (sola, primera, última o intermedia), así ``mama`` no casa con ``mama_masculina`` ni
-    ``ta`` con ``prostata``. Lanza ``ValueError`` si ``cancer_type`` no es un código de catálogo.
+    ``ta`` con ``prostata``. Lanza ``ValueError`` si ``cancer_type`` no es un código de catálogo o excede ``longitud_maxima``
+    (configuración, RN-22: el dominio no tiene valor por defecto).
     """
     tipo = _exigir_codigo_de_catalogo(cancer_type, longitud_maxima)
     # `_` es comodín de `like`: se escapa (la igualdad exacta no lo necesita).
@@ -66,15 +64,19 @@ def exigir_filtro_vigente(filtro: str) -> str:
     raise ValueError("el filtro de búsqueda debe exigir is_current == true (RN-05)")
 
 
-def coincide_etiqueta(
-    cancer_type_tags: str, cancer_type: str, longitud_maxima: int = LONGITUD_MAXIMA_POR_DEFECTO
-) -> bool:
+def coincide_etiqueta(cancer_type_tags: str, cancer_type: str) -> bool:
     """La misma regla que ``expresion_vigente_del_tipo`` aplicada en memoria: etiqueta completa en la lista."""
-    return _exigir_codigo_de_catalogo(cancer_type, longitud_maxima) in cancer_type_tags.split(",")
+    return _exigir_formato_de_codigo(cancer_type) in cancer_type_tags.split(",")
 
 
 def _exigir_codigo_de_catalogo(cancer_type: str, longitud_maxima: int) -> str:
-    if len(cancer_type) > longitud_maxima or _CODIGO_DE_CATALOGO.fullmatch(cancer_type) is None:
+    if len(cancer_type) > longitud_maxima:
+        raise ValueError("el tipo de cáncer excede la longitud máxima configurada")
+    return _exigir_formato_de_codigo(cancer_type)
+
+
+def _exigir_formato_de_codigo(cancer_type: str) -> str:
+    if _CODIGO_DE_CATALOGO.fullmatch(cancer_type) is None:
         raise ValueError("el tipo de cáncer no es un código de catálogo utilizable en el filtro")
     return cancer_type
 

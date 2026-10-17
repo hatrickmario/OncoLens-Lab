@@ -125,6 +125,7 @@ _VECTOR_DE_LA_PREGUNTA = {Q_HER2: _vector(e0=1.0), Q_SIN: _vector(e1=1.0), Q_TOX
 _VECTOR_DEL_RESUMEN = _vector(e3=1.0)
 
 
+LONGITUD_MAXIMA_DE_PRUEBA = 64  # el defecto de Settings.retrieval_cancer_type_max_length
 EPOCA_FIJA_MS = 1_760_000_000_000  # reloj congelado de los arneses (2025-10-09T08:53:20Z)
 
 
@@ -299,7 +300,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
     retrieval_top_k=40,
     rerank_top_n=10,
-    longitud_maxima_codigo_tipo=64,
+    longitud_maxima_codigo_tipo=LONGITUD_MAXIMA_DE_PRUEBA,
     llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
     nli_model="nli-test@1",

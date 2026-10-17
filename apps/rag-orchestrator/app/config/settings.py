@@ -12,7 +12,6 @@ from sqlalchemy.exc import ArgumentError
 from app.config import modelos
 from app.config.modelos import CLAVES_ADR39, ConfigModelos, cargar_config_modelos
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
-from app.domain.retrieval_filter import LONGITUD_MAXIMA_POR_DEFECTO
 
 
 class Settings(BaseSettings):
@@ -39,7 +38,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int | None = Field(default=None, gt=0)
     rerank_top_n: int | None = Field(default=None, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
-    retrieval_cancer_type_max_length: int = Field(default=LONGITUD_MAXIMA_POR_DEFECTO, gt=0)
+    retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
     # Etiquetas que viajan en `meta` (el NLI y el prompt los usan los changes de generación y soporte).
     nli_model: str | None = None
     prompt_version: str | None = None

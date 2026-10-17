@@ -6,7 +6,6 @@ import pytest
 from pydantic import ValidationError
 
 from app.bootstrap import _parametros_de_recuperacion
-from app.domain.retrieval_filter import LONGITUD_MAXIMA_POR_DEFECTO
 from tests.support.fakes import settings_de_prueba
 from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
@@ -23,7 +22,7 @@ def _settings(**cambios):
 
 
 def test_settings_usa_64_como_longitud_maxima_del_codigo_cuando_el_entorno_no_la_fija():
-    assert _settings().retrieval_cancer_type_max_length == LONGITUD_MAXIMA_POR_DEFECTO == 64
+    assert _settings().retrieval_cancer_type_max_length == 64
 
 
 @pytest.mark.parametrize("valor", [0, -1])
