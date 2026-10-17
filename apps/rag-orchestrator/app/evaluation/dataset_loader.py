@@ -261,3 +261,7 @@ def cargar_dataset(directorio: Path, permitir_cc_by_nc: bool = False) -> Dataset
         preguntas=preguntas,
         pares_nli=pares,
     )
+
+
+def cargar_dataset_configurado(directorio: Path) -> Dataset:
+    raise NotImplementedError("no implementado")

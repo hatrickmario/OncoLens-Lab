@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from app.evaluation.dataset_loader import DatasetInvalido, cargar_dataset
+from app.evaluation.dataset_loader import (
+    DatasetInvalido,
+    cargar_dataset,
+    cargar_dataset_configurado,
+)
 
 
 def _editar(ruta: Path, cambio) -> None:
@@ -198,7 +202,7 @@ def test_dataset_loader_cc_by_nc_con_marca_pero_clave_desactivada_se_rechaza(
 ) -> None:
     _con_cc_by_nc(dataset_dir, True)
 
-    with pytest.raises(DatasetInvalido, match="licencia"):
+    with pytest.raises(DatasetInvalido, match=r"M02.*ALLOW_CC_BY_NC"):
         cargar_dataset(dataset_dir)
 
 
@@ -285,3 +289,41 @@ def test_dataset_loader_mini_dataset_real_carga_y_acepta_sus_fuentes_de_clinical
 
     ct = [f for f in dataset.fuentes if "nct_id" in f.datos]
     assert ct
+
+
+def test_dataset_loader_licencia_nd_se_rechaza_sin_pedir_la_marca_academica(
+    dataset_dir: Path,
+) -> None:
+    _con_licencia(dataset_dir, "CC BY-ND 4.0")
+
+    with pytest.raises(DatasetInvalido, match="M02") as error:
+        cargar_dataset(dataset_dir, permitir_cc_by_nc=True)
+    assert "nc_solo_academico" not in str(error.value)
+
+
+def test_dataset_loader_cc_by_nc_sin_marca_con_clave_activa_nombra_la_marca(
+    dataset_dir: Path,
+) -> None:
+    _con_cc_by_nc(dataset_dir, None)
+
+    with pytest.raises(DatasetInvalido, match=r"M02.*nc_solo_academico"):
+        cargar_dataset(dataset_dir, permitir_cc_by_nc=True)
+
+
+def test_dataset_loader_configurado_carga_cc_by_nc_marcada_cuando_la_clave_esta_activa(
+    dataset_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _con_cc_by_nc(dataset_dir, True)
+    monkeypatch.setenv("ALLOW_CC_BY_NC", "true")
+
+    assert cargar_dataset_configurado(dataset_dir).fuentes
+
+
+def test_dataset_loader_configurado_rechaza_cc_by_nc_marcada_cuando_la_clave_esta_ausente(
+    dataset_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _con_cc_by_nc(dataset_dir, True)
+    monkeypatch.delenv("ALLOW_CC_BY_NC", raising=False)
+
+    with pytest.raises(DatasetInvalido, match="M02"):
+        cargar_dataset_configurado(dataset_dir)

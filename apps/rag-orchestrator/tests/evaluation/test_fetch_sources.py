@@ -183,3 +183,26 @@ def test_url_de_construye_la_url_segun_el_formato_de_la_fuente(tmp_path: Path) -
     assert urls["A1"].endswith("/PMC1/fullTextXML")
     assert urls["C1"].endswith("/NCT00000000")
     assert urls["N1"] == "https://www.cancer.gov/types/breast/stages"
+
+
+def test_main_de_fetch_rechaza_cc_by_nc_marcada_cuando_la_clave_esta_ausente(
+    dataset_dir: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import yaml
+
+    ruta = dataset_dir / "manifest.yaml"
+    manifiesto = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    manifiesto["fuentes"][1].update({"licencia": "CC BY-NC 4.0", "nc_solo_academico": True})
+    ruta.write_text(yaml.safe_dump(manifiesto, allow_unicode=True), encoding="utf-8")
+    monkeypatch.delenv("ALLOW_CC_BY_NC", raising=False)
+
+    codigo = fetch.main(
+        ["--dataset-dir", str(dataset_dir), "--cache-dir", str(tmp_path / "cache")],
+        cliente=httpx.Client(),
+    )
+
+    assert codigo == 2
+    assert "M02" in capsys.readouterr().err
