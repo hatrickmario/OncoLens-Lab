@@ -30,6 +30,7 @@ from app.application.rag_orchestrator_service import (
     RAGOrchestratorService,
 )
 from app.bootstrap import crear_app
+from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
 from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
@@ -164,8 +165,7 @@ class EmbedderFalso:
         return list(_VECTOR_DE_LA_PREGUNTA.get(texto, _VECTOR_DEL_RESUMEN))
 
 
-_FILTRO_VIGENTE = "is_current == true"
-_FILTRO_TIPO = re.compile(r'cancer_type_tags like "%(?P<tipo>[^"%]+)%"')
+_FILTRO_TIPO = re.compile(r'cancer_type_tags == "(?P<tipo>[a-z][a-z0-9_]*)"')
 
 
 class BuscadorFalso:
@@ -205,10 +205,12 @@ class BuscadorFalso:
 
     @staticmethod
     def _cumple(chunk: ChunkFx, filtro: str) -> bool:
-        if _FILTRO_VIGENTE in filtro and not chunk.es_vigente:
+        # Las mismas reglas del dominio que usa el repositorio real: sin is_current obligatorio, ValueError.
+        exigir_filtro_vigente(filtro)
+        if not chunk.es_vigente:
             return False
         tipo = _FILTRO_TIPO.search(filtro)
-        return tipo is None or tipo.group("tipo") in chunk.cancer_type_tags.split(",")
+        return tipo is None or coincide_etiqueta(chunk.cancer_type_tags, tipo.group("tipo"))
 
 
 def _producto(a: Sequence[float], b: Sequence[float]) -> float:
@@ -288,6 +290,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
     retrieval_top_k=40,
     rerank_top_n=10,
+    llm_provider="local",
     llm_model="llm-test@1",
     nli_model="nli-test@1",
     prompt_version="rag-query@test",

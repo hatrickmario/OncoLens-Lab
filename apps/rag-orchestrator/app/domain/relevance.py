@@ -27,10 +27,3 @@ def top_relevance_score(chunks_sobre_umbral: Sequence[ChunkPuntuado]) -> float |
     if not chunks_sobre_umbral:
         return None
     return max(chunk.relevance_score for chunk in chunks_sobre_umbral)
-
-
-def validar_puntaje_normalizado(puntaje: float) -> float:
-    """Un reranker (o un fake) que devuelve un puntaje fuera de [0, 1] rompe el contrato del puerto (RN-03)."""
-    if not 0.0 <= puntaje <= 1.0:  # también falsa para NaN
-        raise ValueError("el puntaje del reranker debe estar normalizado a [0, 1]")
-    return puntaje

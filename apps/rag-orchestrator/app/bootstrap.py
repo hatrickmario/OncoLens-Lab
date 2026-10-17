@@ -19,6 +19,7 @@ from app.application.ports import (
     Reranker,
     TraceIdGenerator,
 )
+from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -66,7 +67,12 @@ def crear_app(
     registrar_manejadores_de_error(app, trace_ids)
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     _registrar_consulta_de_evidencia(
-        app, settings, consulta, crear_require_service_jwt(verificador), recuperacion, clock
+        app,
+        settings,
+        consulta=consulta,
+        autenticacion=crear_require_service_jwt(verificador),
+        recuperacion=recuperacion,
+        clock=clock,
     )
     app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
     return app
@@ -92,6 +98,7 @@ def _sonda_llm_segun(settings: Settings) -> LlmHealthPort:
 def _registrar_consulta_de_evidencia(
     app: FastAPI,
     settings: Settings,
+    *,
     consulta: EvidenceQueryPort | None,
     autenticacion: DependenciaJwtServicio,
     recuperacion: PuertosDeRecuperacion | None,
@@ -99,10 +106,15 @@ def _registrar_consulta_de_evidencia(
 ) -> None:
     if consulta is None and settings.llm_provider == "fake":
         consulta = FakeEvidenceQuery.desde_directorio(settings.fake_responses_path)
-    elif consulta is None and recuperacion is not None:
-        # Con LLM_PROVIDER=local el servicio real necesita sus bordes; sin ellos (adapters reales de embeddings y
-        # reranker, tras L1D-102) la ruta no se registra, como antes de US-055.
-        consulta = _crear_servicio_de_recuperacion(settings, recuperacion, clock)
+    elif consulta is None:
+        # LLM_PROVIDER=local: la ruta siempre existe. La configuración se exige aunque falten los bordes reales
+        # (adapters de embeddings, reranker e idioma, US-231): sin ellos responde 503 fallando cerrado.
+        _exigir_configuracion_de_recuperacion(settings)
+        consulta = (
+            _crear_servicio_de_recuperacion(settings, recuperacion, clock)
+            if recuperacion is not None
+            else ConsultaNoComponible()
+        )
     if consulta is not None:
         app.include_router(crear_router_rag_query(consulta, autenticacion))
 
@@ -123,24 +135,34 @@ def _crear_servicio_de_recuperacion(
     )
 
 
-def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
-    """Todo valor calibrable sale de la configuración (RN-22); si falta alguno, el arranque se niega."""
-    valores = {
-        "RELEVANCE_THRESHOLD": settings.relevance_threshold,
-        "RETRIEVAL_TOP_K": settings.retrieval_top_k,
-        "RERANK_TOP_N": settings.rerank_top_n,
-        "NLI_MODEL": settings.nli_model,
-        "PROMPT_VERSION": settings.prompt_version,
-    }
+def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
+    """Umbral y tamaños de la recuperación (RN-22): sin valor por defecto en código, el arranque se niega si faltan."""
+    _exigir_claves(
+        {
+            "RELEVANCE_THRESHOLD": settings.relevance_threshold,
+            "RETRIEVAL_TOP_K": settings.retrieval_top_k,
+            "RERANK_TOP_N": settings.rerank_top_n,
+        }
+    )
+
+
+def _exigir_claves(valores: dict[str, object]) -> None:
     ausentes = [clave for clave, valor in valores.items() if valor is None]
     if ausentes:
         raise ConfiguracionDeRecuperacionIncompleta(
             f"falta configurar para /rag/query: {', '.join(ausentes)}"
         )
+
+
+def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
+    """Además de la configuración de recuperación, las etiquetas de ``meta`` (NLI_MODEL, PROMPT_VERSION)."""
+    _exigir_configuracion_de_recuperacion(settings)
+    _exigir_claves({"NLI_MODEL": settings.nli_model, "PROMPT_VERSION": settings.prompt_version})
     return ParametrosDeRecuperacion(
         relevance_threshold=settings.relevance_threshold,  # type: ignore[arg-type]
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
         rerank_top_n=settings.rerank_top_n,  # type: ignore[arg-type]
+        llm_provider=settings.llm_provider,
         llm_model=settings.llm_model,
         nli_model=settings.nli_model,  # type: ignore[arg-type]
         prompt_version=settings.prompt_version,  # type: ignore[arg-type]

@@ -50,6 +50,16 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
 
+    @app.exception_handler(Exception)
+    async def error_inesperado(request: Request, error: Exception) -> JSONResponse:
+        """500 fijo para lo que ningún borde tradujo: solo la clase y el traceId al log, nunca el mensaje ni la pregunta."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.error("event=error_interno clase=%s traceId=%s", type(error).__name__, trace_id)
+        return JSONResponse(
+            status_code=500,
+            content={"error": "ERROR_INTERNO", "message": "Error interno.", "traceId": trace_id},
+        )
+
     @app.exception_handler(RecuperacionNoDisponibleError)
     async def recuperacion_no_disponible(
         request: Request, error: RecuperacionNoDisponibleError

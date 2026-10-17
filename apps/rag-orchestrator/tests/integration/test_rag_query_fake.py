@@ -95,7 +95,7 @@ def test_rag_query_responde_503_retrieval_unavailable_fallando_cerrado_cuando_ll
     settings = settings_de_prueba(llm_provider="local")
 
     respuesta = TestClient(
-        crear_app(settings, trace_ids=GeneradorTraceFijo()),
+        crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()),
         raise_server_exceptions=False,
         headers=con_token_valido(par_de_sesion()),
     ).post("/rag/query", json=_ejemplo("rag-query-request.json"))

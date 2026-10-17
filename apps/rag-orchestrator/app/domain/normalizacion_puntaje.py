@@ -11,7 +11,16 @@ def normalizar_a_unidad(puntajes: list[float]) -> list[float]:
 
 
 def validar_puntaje_normalizado(puntaje: float) -> float:
-    raise NotImplementedError
+    """Un reranker (o un fake) que devuelve algo que no sea un número finito en [0, 1] rompe el contrato (RN-03).
+
+    ``TypeError`` si no es ``int``/``float`` (``bool`` incluido: ``True`` no es 1.0); ``ValueError`` si es NaN, infinito
+    o está fuera de [0, 1].
+    """
+    if isinstance(puntaje, bool) or not isinstance(puntaje, int | float):
+        raise TypeError("el puntaje del reranker debe ser un número")
+    if not math.isfinite(puntaje) or not 0.0 <= puntaje <= 1.0:
+        raise ValueError("el puntaje del reranker debe estar normalizado a [0, 1]")
+    return puntaje
 
 
 def _sigmoide(x: float) -> float:

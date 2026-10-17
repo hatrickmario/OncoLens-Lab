@@ -1,11 +1,4 @@
-import pytest
-
-from app.domain.relevance import (
-    ChunkPuntuado,
-    filtrar_sobre_umbral,
-    top_relevance_score,
-    validar_puntaje_normalizado,
-)
+from app.domain.relevance import ChunkPuntuado, filtrar_sobre_umbral, top_relevance_score
 
 
 def _chunk(chunk_id: str, puntaje: float) -> ChunkPuntuado:
@@ -39,16 +32,3 @@ def test_top_relevance_score_devuelve_el_maximo_de_los_chunks_sobre_el_umbral():
     chunks = [_chunk("a", 0.40), _chunk("b", 0.87), _chunk("c", 0.55)]
 
     assert top_relevance_score(chunks) == 0.87
-
-
-@pytest.mark.parametrize("puntaje", [0.0, 0.42, 1.0])
-def test_validar_puntaje_normalizado_devuelve_el_mismo_valor_cuando_esta_en_el_intervalo_unitario(
-    puntaje,
-):
-    assert validar_puntaje_normalizado(puntaje) == puntaje
-
-
-@pytest.mark.parametrize("puntaje", [-0.01, 1.01, float("nan"), float("inf")])
-def test_validar_puntaje_normalizado_rechaza_el_valor_fuera_del_intervalo_unitario(puntaje):
-    with pytest.raises(ValueError):
-        validar_puntaje_normalizado(puntaje)
