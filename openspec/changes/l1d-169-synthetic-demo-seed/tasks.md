@@ -63,3 +63,6 @@ Ver `design.md` § "Cambios del Gate 2". Perfil `seed` en `clinical-seed`; smoke
 Deuda (sin ID): D-a one-shot `clinical-migrate` con la aserción del smoke «US-039 AC-1 clinical-seed terminó con código 0»
 restaurada (retirada con `Test-Removal:` en el commit vacío `chore(L1D-169)`; repetir en el cuerpo del PR); D-b rol
 `clinical_seed` solo DML. m8: los commits `test` de las piezas pequeñas llevaron implementación en el árbol de trabajo.
+
+Dependencia nueva `uuid@14.0.2` (versión exacta) para `idSembrado` (UUID v5 sin implementación propia; cierra la alerta de CodeQL
+js/weak-cryptographic-algorithm, que no se descarta a mano). Ver `design.md`.

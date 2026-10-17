@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { idSembrado, relojDelSeed, uuidV5 } from '../../../prisma/seed/determinismo.js';
+import { v5 } from 'uuid';
+import { idSembrado, relojDelSeed } from '../../../prisma/seed/determinismo.js';
 
 const NAMESPACE_DNS_DEL_RFC_4122 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
 
-describe('uuidV5', () => {
+describe('uuid v5 (biblioteca)', () => {
   it('reproduce el vector de prueba del RFC 4122 cuando se usa el namespace DNS', () => {
-    expect(uuidV5(NAMESPACE_DNS_DEL_RFC_4122, 'www.example.com')).toBe(
+    expect(v5('www.example.com', NAMESPACE_DNS_DEL_RFC_4122)).toBe(
       '2ed6657d-e927-568b-95e1-2665a8aea6a2',
     );
   });

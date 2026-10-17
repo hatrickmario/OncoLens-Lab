@@ -189,3 +189,12 @@ Resueltas por defecto razonable conforme a los specs durante la implementación;
 - Los commits `test(L1D-169)` de las piezas pequeñas (`uuidV5`/`idSembrado`/reloj, `leerSecreto`, catálogo, grade) se
   hicieron con la implementación ya escrita en el árbol de trabajo; el rojo es por construcción (esqueleto) y no hay
   salida guardada de esas corridas.
+
+### Dependencia nueva: `uuid` (CodeQL js/weak-cryptographic-algorithm)
+
+`idSembrado` delega en `v5` del paquete `uuid` (versión exacta `14.0.2`, dependencia de producción de `clinical-api`: el seed
+compilado la resuelve en la imagen de runtime). Justificación: UUID v5 del RFC 4122 sin implementación propia; el SHA-1 de v5 es
+parte del estándar y la alerta de CodeQL `js/weak-cryptographic-algorithm` sobre el `createHash('sha1')` propio queda cerrada
+al desaparecer ese código. La alerta NO se descarta a mano. El esquema de ids no cambia: `idSembrado('paciente-a')` =
+`0fd028e2-f8b0-56c7-a748-2a4e473d879d` (namespace `0b7f3c5e-6a41-4d2b-9e18-5c2a8f40d7b3`). `npm audit --omit=dev`: 0
+vulnerabilidades.
