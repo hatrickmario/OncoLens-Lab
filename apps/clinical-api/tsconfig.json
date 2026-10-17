@@ -14,5 +14,13 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["src", "tests", "vitest.config.ts", "vitest.integration.config.ts", "prisma.config.ts"]
+  "include": [
+    "src",
+    "tests",
+    "prisma/seed.ts",
+    "prisma/seed",
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "prisma.config.ts"
+  ]
 }

@@ -23,7 +23,7 @@ beforeAll(() => {
 afterAll(() => limpiar());
 
 describe('docker-compose.yml', () => {
-  it('declara los nueve servicios (ocho con healthcheck y el migrador one-shot) y tags exactos sin que clinical-api dependa de rag-orchestrator [US-034 AC-1]', () => {
+  it('declara los diez servicios (ocho con healthcheck y los one-shot corpus-migrate y clinical-seed) y tags exactos sin que clinical-api dependa de rag-orchestrator [US-034 AC-1]', () => {
     expect(() => assertStackCompleto(resolver())).not.toThrow();
   });
 

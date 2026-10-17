@@ -8,6 +8,8 @@ const DATABASE_URL =
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
-  migrations: { path: 'prisma/migrations' },
+  // Prisma 7 registra el seed aquí (`npx prisma db seed`), no en package.json. El seed no usa Prisma Client: escribe con
+  // `pg`, como el resto de clinical-api, y se niega a correr en `piloto` o con datos reales (RN-13, US-039).
+  migrations: { path: 'prisma/migrations', seed: 'tsx prisma/seed.ts' },
   datasource: { url: DATABASE_URL },
 });
