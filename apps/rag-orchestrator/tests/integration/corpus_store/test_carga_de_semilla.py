@@ -139,7 +139,7 @@ def test_carga_de_semilla_con_el_modelo_caido_deja_error_en_el_catalogo_y_un_rei
 
     assert caido.hubo_errores and caido.release_id is None
     assert (en_error["status"], en_error["is_current"]) == ("error", False)
-    assert reintento.de("t-ok-1").resultado is Resultado.CARGADO
+    assert reintento.resultado_de("t-ok-1").resultado is Resultado.CARGADO
     assert entorno.filas_del_catalogo() == 1 and entorno.fila("t-ok-1")["status"] == "embebido"
 
 
@@ -150,7 +150,7 @@ def test_carga_de_semilla_con_vectores_de_otra_dimension_los_rechaza_milvus_y_qu
 
     reporte = entorno.cargar("t-ok-1")
 
-    assert reporte.de("t-ok-1").motivo == "milvus: DimensionDeVectorInvalida"
+    assert reporte.resultado_de("t-ok-1").motivo == "milvus: DimensionDeVectorInvalida"
     assert entorno.fila("t-ok-1")["status"] == "error" and entorno.total_de_chunks() == 0
 
 
@@ -185,7 +185,7 @@ def test_carga_de_semilla_rechaza_t_nd_y_t_sin_licencia_sin_chunks_y_sigue_con_t
         "rechazado_licencia",
         "embebido",
     )
-    assert (reporte.de("t-nd").motivo, reporte.de("t-sin-licencia").motivo) == (
+    assert (reporte.resultado_de("t-nd").motivo, reporte.resultado_de("t-sin-licencia").motivo) == (
         "licencia_no_aceptada",
         "sin_licencia",
     )
@@ -193,7 +193,7 @@ def test_carga_de_semilla_rechaza_t_nd_y_t_sin_licencia_sin_chunks_y_sigue_con_t
     assert entorno.chunks_de(sin_licencia["document_id"]) == []
     assert entorno.chunks_de(ok["document_id"]) != []
     assert entorno.ids_en_la_release() == [ok["document_id"]]
-    assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
 
 
 @pytest.mark.ac("US-059", 4)
@@ -272,7 +272,7 @@ def test_carga_de_semilla_rechaza_t_nccn_por_fuente_excluida_aunque_declare_lice
     reporte = entorno.cargar("t-nccn", "t-ok-1")
 
     nccn, ok = entorno.fila("t-nccn"), entorno.fila("t-ok-1")
-    assert (reporte.de("t-nccn").resultado, reporte.de("t-nccn").motivo) == (
+    assert (reporte.resultado_de("t-nccn").resultado, reporte.resultado_de("t-nccn").motivo) == (
         Resultado.RECHAZADO,
         "fuente_excluida",
     )

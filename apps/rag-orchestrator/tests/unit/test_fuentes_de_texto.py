@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 import httpx
 import pytest
 import respx
 
-from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.fetch.fuente_de_texto import (
     FuenteDeTextoDelManifiesto,
     RutaFueraDelManifiesto,
@@ -20,26 +18,9 @@ from app.infrastructure.fetch.http_source_fetcher import (
     HttpSourceFetcher,
 )
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
+from tests.support.semilla import documento_de_prueba
 
 URL = "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq.txt"
-
-
-def documento(**cambios: object) -> DocumentoDeSemilla:
-    base: dict[str, object] = {
-        "document_key": "d-1",
-        "version_group_id": "d-1",
-        "source_type": "guideline",
-        "source_name": "NCI",
-        "external_id": "x",
-        "title": "t",
-        "language": "es",
-        "cancer_type_tags": ("mama",),
-        "published_at": date(2025, 1, 1),
-        "study_design": "guia",
-        "population": "adulto",
-        "original_format": "html",
-    }
-    return DocumentoDeSemilla(**{**base, **cambios})  # type: ignore[arg-type]
 
 
 def descargador(max_bytes: int = 1000) -> HttpSourceFetcher:
@@ -113,7 +94,7 @@ def test_el_error_de_red_nombra_el_host_y_no_la_url_completa() -> None:
 def test_el_texto_inline_se_entrega_tal_cual(tmp_path: Path) -> None:
     fuente = FuenteDeTextoDelManifiesto(tmp_path, None)
 
-    assert fuente.obtener_texto(documento(texto="Texto sintético.")) == "Texto sintético."
+    assert fuente.obtener_texto(documento_de_prueba(texto="Texto sintético.")) == "Texto sintético."
 
 
 def test_el_archivo_se_lee_relativo_al_directorio_del_manifiesto(tmp_path: Path) -> None:
@@ -121,7 +102,10 @@ def test_el_archivo_se_lee_relativo_al_directorio_del_manifiesto(tmp_path: Path)
     (tmp_path / "docs" / "d-1.txt").write_text("Del archivo.", encoding="utf-8")
     fuente = FuenteDeTextoDelManifiesto(tmp_path, None)
 
-    assert fuente.obtener_texto(documento(ruta_texto="docs/d-1.txt")) == "Del archivo."
+    assert (
+        fuente.obtener_texto(documento_de_prueba(texto=None, ruta_texto="docs/d-1.txt"))
+        == "Del archivo."
+    )
 
 
 @pytest.mark.parametrize("ruta", ["../secreto.txt", "/etc/passwd", "docs/../../secreto.txt"])
@@ -132,7 +116,7 @@ def test_una_ruta_que_sale_del_directorio_del_manifiesto_se_rechaza_sin_leerla(
     fuente = FuenteDeTextoDelManifiesto(tmp_path / "base", None)
 
     with pytest.raises(RutaFueraDelManifiesto):
-        fuente.obtener_texto(documento(ruta_texto=ruta))
+        fuente.obtener_texto(documento_de_prueba(texto=None, ruta_texto=ruta))
 
 
 @respx.mock
@@ -140,14 +124,16 @@ def test_la_url_se_descarga_con_el_descargador_de_hosts_permitidos(tmp_path: Pat
     respx.get(URL).respond(200, text="Remoto.", headers={"content-type": "text/plain"})
     fuente = FuenteDeTextoDelManifiesto(tmp_path, descargador())
 
-    assert fuente.obtener_texto(documento(url_fuente=URL)) == "Remoto."
+    assert fuente.obtener_texto(documento_de_prueba(texto=None, url_fuente=URL)) == "Remoto."
 
 
 def test_una_url_sin_descargador_configurado_falla_en_lugar_de_salir_a_la_red(
     tmp_path: Path,
 ) -> None:
     with pytest.raises(RuntimeError, match="d-1"):
-        FuenteDeTextoDelManifiesto(tmp_path, None).obtener_texto(documento(url_fuente=URL))
+        FuenteDeTextoDelManifiesto(tmp_path, None).obtener_texto(
+            documento_de_prueba(texto=None, url_fuente=URL)
+        )
 
 
 def test_el_tokenizador_por_palabras_conserva_el_texto_al_concatenar_sus_piezas() -> None:

@@ -73,9 +73,11 @@ def test_un_embedding_caido_deja_el_documento_en_error_sin_chunks_y_la_carga_sig
     reporte = montaje.cargar("t-nd", "t-ok-1")
 
     assert reporte.hubo_errores
-    assert reporte.de("t-ok-1").resultado is Resultado.ERROR
-    assert reporte.de("t-ok-1").motivo == "embeddings: ConnectionError"
-    assert reporte.de("t-nd").resultado is Resultado.RECHAZADO  # el rechazo sigue siendo esperado
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.ERROR
+    assert reporte.resultado_de("t-ok-1").motivo == "embeddings: ConnectionError"
+    assert (
+        reporte.resultado_de("t-nd").resultado is Resultado.RECHAZADO
+    )  # el rechazo sigue siendo esperado
     assert montaje.estados() == {"t-nd": "rechazado_licencia", "t-ok-1": "error"}
     assert montaje.almacen.chunks == {} and montaje.catalogo.releases == []
 
@@ -89,7 +91,7 @@ def test_tras_un_error_de_milvus_una_nueva_carga_deja_los_documentos_embebidos(
 
     reporte_2 = montaje.cargar("t-ok-1", "t-ok-2")
 
-    assert reporte.de("t-ok-1").motivo == "milvus: ConnectionError"
+    assert reporte.resultado_de("t-ok-1").motivo == "milvus: ConnectionError"
     assert [r.resultado for r in reporte_2.resultados] == [Resultado.CARGADO, Resultado.CARGADO]
     assert montaje.estados() == {"t-ok-1": "embebido", "t-ok-2": "embebido"}
 
@@ -122,7 +124,7 @@ def test_un_vector_de_otra_dimension_deja_el_documento_en_error_en_lugar_de_inse
 
     reporte = montaje.cargar("t-ok-1")
 
-    assert reporte.de("t-ok-1").motivo == "milvus: DimensionDeVectorInvalida"
+    assert reporte.resultado_de("t-ok-1").motivo == "milvus: DimensionDeVectorInvalida"
     assert montaje.almacen.chunks == {}
 
 
@@ -136,7 +138,7 @@ def test_un_reintento_tras_un_error_carga_el_documento_con_el_mismo_identificado
 
     reporte = montaje.cargar("t-ok-1")
 
-    assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
     assert list(montaje.catalogo.documentos) == [identificador_con_error]
     assert montaje.catalogo.documentos[identificador_con_error].status == "embebido"
 
@@ -150,7 +152,7 @@ def test_un_reintento_no_duplica_los_chunks_que_ya_quedaron_en_milvus(montaje: M
 
     montaje.cargar("t-ok-1")
 
-    assert primero.de("t-ok-1").chunks == len(chunks_antes) > 0
+    assert primero.resultado_de("t-ok-1").chunks == len(chunks_antes) > 0
     assert montaje.almacen.chunks == chunks_antes
     assert montaje.catalogo.documentos[identificador].status == "embebido"
 
@@ -164,8 +166,8 @@ def test_un_texto_que_no_se_puede_leer_deja_el_documento_en_error_con_su_clave_y
 
     reporte = montaje.cargador.cargar([ilegible, *documentos_fx_06c_a("t-ok-1")])
 
-    assert reporte.de("d-ilegible").motivo == "obtener_texto: FileNotFoundError"
-    assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
+    assert reporte.resultado_de("d-ilegible").motivo == "obtener_texto: FileNotFoundError"
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
     assert "d-ilegible@error" in montaje.catalogo.documentos
 
 
@@ -176,7 +178,9 @@ def test_un_texto_cuyo_checksum_no_es_el_del_manifiesto_queda_en_error_sin_chunk
 
     reporte = montaje.cargador.cargar([alterado])
 
-    assert reporte.de("d-alterado").motivo == "integridad: ChecksumDelManifiestoNoCoincide"
+    assert (
+        reporte.resultado_de("d-alterado").motivo == "integridad: ChecksumDelManifiestoNoCoincide"
+    )
     assert montaje.almacen.chunks == {} and montaje.embedder.invocaciones == 0
 
 
@@ -188,7 +192,7 @@ def test_un_texto_cuyo_checksum_coincide_con_el_del_manifiesto_se_carga(montaje:
 
     reporte = montaje.cargador.cargar([integro])
 
-    assert reporte.de("d-integro").resultado is Resultado.CARGADO
+    assert reporte.resultado_de("d-integro").resultado is Resultado.CARGADO
 
 
 def test_un_texto_vacio_deja_el_documento_en_error_porque_no_tiene_nada_que_indexar(
@@ -198,7 +202,7 @@ def test_un_texto_vacio_deja_el_documento_en_error_porque_no_tiene_nada_que_inde
 
     reporte = montaje.cargador.cargar([vacio])
 
-    assert reporte.de("d-vacio").motivo == "texto: TextoVacio"
+    assert reporte.resultado_de("d-vacio").motivo == "texto: TextoVacio"
     assert montaje.almacen.chunks == {}
 
 
@@ -212,7 +216,7 @@ def test_un_fallo_al_apagar_la_version_anterior_deja_vigente_a_la_anterior_y_el_
 
     anterior = next(r for i, r in montaje.catalogo.documentos.items() if i.startswith("t-ok-1@"))
     nuevo = next(r for i, r in montaje.catalogo.documentos.items() if i.startswith("t-ok-1-v2@"))
-    assert reporte.de("t-ok-1-v2").resultado is Resultado.ERROR
+    assert reporte.resultado_de("t-ok-1-v2").resultado is Resultado.ERROR
     assert (anterior.is_current, anterior.status) == (True, "embebido")
     assert (nuevo.is_current, nuevo.status) == (False, "error")
 
@@ -228,7 +232,7 @@ def test_reintentar_la_nueva_version_tras_ese_fallo_la_deja_vigente_y_apaga_la_a
     reporte = montaje.cargar("t-ok-1-v2")
 
     vigentes = [i.split("@")[0] for i in montaje.catalogo.ids_de_documentos_vigentes()]
-    assert reporte.de("t-ok-1-v2").resultado is Resultado.NUEVA_VERSION
+    assert reporte.resultado_de("t-ok-1-v2").resultado is Resultado.NUEVA_VERSION
     assert vigentes == ["t-ok-1-v2"]
     assert not any(c.is_current for c in montaje.almacen.chunks.values() if "t-ok-1@" in c.chunk_id)
 

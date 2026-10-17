@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from app.domain.corpus_seed.admisibilidad import MotivoDeRechazo, evaluar_admisibilidad
@@ -48,6 +50,18 @@ def test_rechaza_con_sin_licencia_un_documento_que_no_declara_licencia() -> None
 @pytest.mark.parametrize("licencia", ["CC BY-ND 4.0", "cc by-nc-nd 4.0", "CC BY-ND"])
 def test_rechaza_con_licencia_no_aceptada_toda_licencia_nd(licencia: str) -> None:
     admision = evaluar_admisibilidad(documento_de_prueba(license=licencia), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.LICENCIA_NO_ACEPTADA
+
+
+def test_una_licencia_nd_se_rechaza_aunque_la_tabla_de_configuracion_la_mapee_a_una_clase_aceptada() -> (
+    None
+):
+    politica = replace(
+        politica_de_test(), mapa_de_clases={"cc by-nd 4.0": "cc_by", "cc by 4.0": "cc_by"}
+    )
+
+    admision = evaluar_admisibilidad(documento_de_prueba(license="CC BY-ND 4.0"), politica)
 
     assert admision.motivo is MotivoDeRechazo.LICENCIA_NO_ACEPTADA
 
