@@ -31,13 +31,7 @@ export type ContextoPermitido = Omit<ClinicalContext, 'pseudoPatientId'>;
 
 /** Qué dato del paciente respalda cada `dataRef` (no viaja a Backend 2; lo persiste L1D-104 en `patient_data_links`). */
 export interface EnlaceDeDato {
-  tabla:
-    | 'diagnosis'
-    | 'biomarker'
-    | 'clinical_note'
-    | 'clinical_attribute'
-    | 'prior_treatment'
-    | 'clinical_event';
+  tabla: 'diagnosis' | 'biomarker' | 'clinical_attribute' | 'prior_treatment' | 'clinical_event';
   id: string;
 }
 export type MapaDeDataRefs = ReadonlyMap<string, EnlaceDeDato>;

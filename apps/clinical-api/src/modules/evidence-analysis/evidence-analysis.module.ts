@@ -2,6 +2,7 @@ import type { Router } from 'express';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
+import { crearCierreProvisional } from './analysis-completion.provisional.js';
 import { crearDesidentificadorProvisional } from './context-deidentifier.provisional.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
 import { createEvidenceAnalysisRepository } from './evidence-analysis.repository.js';
@@ -49,11 +50,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
         appEnv: dependencias.config.appEnv,
       }),
     rag: dependencias.rag,
-    cierre: dependencias.cierre ?? {
-      completar() {
-        throw new Error('no implementado');
-      },
-    },
+    cierre: dependencias.cierre ?? crearCierreProvisional(),
     catalogo: dependencias.catalogo,
     reloj: dependencias.reloj,
     config: dependencias.config,

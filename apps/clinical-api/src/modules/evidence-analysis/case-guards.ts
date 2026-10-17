@@ -9,6 +9,6 @@ export class TipoCancerNoRegistradoError extends Error {
 }
 
 /** Corte previo a la IA: sin diagnóstico activo no se desidentifica, ni se llama a rag-orchestrator, ni se persiste. */
-export function exigirTipoCancer(_caso: Pick<CasoClinico, 'diagnosticoActivo'>): void {
-  throw new Error('no implementado');
+export function exigirTipoCancer(caso: Pick<CasoClinico, 'diagnosticoActivo'>): void {
+  if (caso.diagnosticoActivo === null) throw new TipoCancerNoRegistradoError();
 }

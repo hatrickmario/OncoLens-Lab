@@ -37,13 +37,6 @@ export interface FilaDeBiomarcador extends ProcedenciaDeFila {
   createdAt: string;
 }
 
-export interface FilaDeNota extends ProcedenciaDeFila {
-  id: string;
-  noteType: string;
-  content: string;
-  recordedAt: string;
-}
-
 export interface FilaDeAtributo extends ProcedenciaDeFila {
   id: string;
   attributeKey: string;
@@ -70,12 +63,14 @@ export interface FilaDeEvento extends ProcedenciaDeFila {
   description: string;
 }
 
-/** Todo lo que el gateway lee del caso: filas crudas, sin decidir qué viaja (eso es del builder). */
+/**
+ * Todo lo que el gateway lee del caso: filas crudas, sin decidir qué viaja (eso es del builder). Las notas clínicas no
+ * se leen: viajan vacías por minimización (readme §2.5) y un texto libre que no se lee no puede filtrarse.
+ */
 export interface CasoClinico {
   paciente: { id: string; dataOrigin: OrigenDeDatos; population: 'adulto' | 'pediatrico' };
   diagnosticoActivo: FilaDeDiagnostico | null;
   biomarcadores: FilaDeBiomarcador[];
-  notas: FilaDeNota[];
   atributos: FilaDeAtributo[];
   tratamientosPrevios: FilaDeTratamientoPrevio[];
   eventos: FilaDeEvento[];
@@ -86,10 +81,162 @@ export interface CasoRepository {
   leerCaso(patientId: string): Promise<CasoClinico | null>;
 }
 
-export function createEvidenceAnalysisRepository(_db: Consultador): CasoRepository {
+type Fila = Record<string, unknown>;
+
+/** Los datos rechazados o reemplazados no entran al RAG (RN-07); el contrato de procedencia ni siquiera los admite. */
+const SIN_RECHAZADOS = `review_status NOT IN ('rechazado', 'reemplazado')`;
+
+function procedenciaDe(fila: Fila): ProcedenciaDeFila {
   return {
-    leerCaso() {
-      throw new Error('no implementado');
+    entryMethod: fila['entry_method'] as MetodoDeIngreso,
+    extractionConfidence: fila['extraction_confidence'] as ConfianzaDeExtraccion,
+    reviewStatus: fila['review_status'] as EstadoDeRevision,
+    conflictsWithId: (fila['conflicts_with_id'] as string | null | undefined) ?? null,
+  };
+}
+
+function diagnosticoDe(fila: Fila): FilaDeDiagnostico {
+  return {
+    id: fila['id'] as string,
+    cancerType: fila['cancer_type'] as string,
+    histology: fila['histology'] as string,
+    grade: fila['grade'] as string | null,
+    stagingSystem: fila['staging_system'] as string | null,
+    stageValue: fila['stage_value'] as string | null,
+    performanceScale: fila['performance_scale'] as string | null,
+    performanceValue: fila['performance_value'] as number | null,
+    diagnosedAt: fila['diagnosed_at'] as string,
+    ...procedenciaDe(fila),
+  };
+}
+
+function biomarcadorDe(fila: Fila): FilaDeBiomarcador {
+  return {
+    id: fila['id'] as string,
+    name: fila['name'] as string,
+    value: fila['value'] as string,
+    resultType: fila['result_type'] as FilaDeBiomarcador['resultType'],
+    clinicalSignificance: fila[
+      'clinical_significance'
+    ] as FilaDeBiomarcador['clinicalSignificance'],
+    performedAt: fila['performed_at'] as string,
+    createdAt: (fila['created_at'] as Date).toISOString(),
+    ...procedenciaDe(fila),
+  };
+}
+
+function atributoDe(fila: Fila): FilaDeAtributo {
+  return {
+    id: fila['id'] as string,
+    attributeKey: fila['attribute_key'] as string,
+    value: fila['value'] as string,
+    observedAt: fila['observed_at'] as string | null,
+    ...procedenciaDe(fila),
+  };
+}
+
+function tratamientoPrevioDe(fila: Fila): FilaDeTratamientoPrevio {
+  return {
+    id: fila['id'] as string,
+    lineNumber: fila['line_number'] as number | null,
+    setting: fila['setting'] as string,
+    regimenName: fila['regimen_name'] as string,
+    atcCodes: fila['atc_codes'] as string[],
+    startedAt: fila['started_at'] as string | null,
+    endedAt: fila['ended_at'] as string | null,
+    ongoing: fila['ongoing'] as boolean,
+    endReason: fila['end_reason'] as FilaDeTratamientoPrevio['endReason'],
+    ...procedenciaDe(fila),
+  };
+}
+
+function eventoDe(fila: Fila): FilaDeEvento {
+  return {
+    id: fila['id'] as string,
+    eventType: fila['event_type'] as string,
+    eventDate: fila['event_date'] as string | null,
+    description: fila['description'] as string,
+    ...procedenciaDe(fila),
+  };
+}
+
+/**
+ * Lectura del caso con `pg` sobre el pool inyectado de `server.ts` (migración a Prisma = deuda D-1). Solo lee las
+ * columnas que el builder usa: las notas, la identidad y la referencia del convenio no se leen. Las fechas llegan como
+ * texto `AAAA-MM-DD` para que la zona horaria del proceso no mueva el día.
+ */
+export function createEvidenceAnalysisRepository(db: Consultador): CasoRepository {
+  const leer = async (sql: string, patientId: string): Promise<Fila[]> =>
+    (await db.query(sql, [patientId])).rows;
+
+  return {
+    async leerCaso(patientId) {
+      const [paciente] = await leer(
+        'SELECT id, data_origin, population FROM clinical.patient WHERE id = $1',
+        patientId,
+      );
+      if (paciente === undefined) return null;
+
+      const [diagnosticos, biomarcadores, atributos, tratamientos, eventos] = await Promise.all([
+        leer(
+          `SELECT id, cancer_type, histology, grade, staging_system, stage_value, performance_scale,
+                  performance_value, diagnosed_at::text AS diagnosed_at, entry_method,
+                  extraction_confidence, review_status, conflicts_with_id
+             FROM clinical.diagnosis
+            WHERE patient_id = $1 AND is_active AND ${SIN_RECHAZADOS}
+            ORDER BY diagnosed_at DESC, created_at DESC
+            LIMIT 1`,
+          patientId,
+        ),
+        leer(
+          `SELECT b.id, b.name, b.value, b.result_type, b.clinical_significance, b.created_at,
+                  e.performed_at::text AS performed_at, e.entry_method, b.extraction_confidence,
+                  b.review_status, b.conflicts_with_id
+             FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+            WHERE e.patient_id = $1 AND b.${SIN_RECHAZADOS}
+            ORDER BY e.performed_at DESC, b.created_at DESC`,
+          patientId,
+        ),
+        leer(
+          `SELECT id, attribute_key, value, observed_at::text AS observed_at, entry_method,
+                  extraction_confidence, review_status
+             FROM clinical.clinical_attribute
+            WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+            ORDER BY attribute_key, observed_at DESC NULLS LAST`,
+          patientId,
+        ),
+        leer(
+          `SELECT id, line_number, setting, regimen_name, atc_codes, started_at::text AS started_at,
+                  ended_at::text AS ended_at, ongoing, end_reason, entry_method,
+                  extraction_confidence, review_status
+             FROM clinical.prior_treatment
+            WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+            ORDER BY line_number NULLS LAST, started_at NULLS LAST`,
+          patientId,
+        ),
+        // Los eventos con analysis_id son el reflejo de un análisis previo en el timeline: no son datos clínicos.
+        leer(
+          `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
+                  extraction_confidence, review_status
+             FROM clinical.clinical_event
+            WHERE patient_id = $1 AND analysis_id IS NULL AND ${SIN_RECHAZADOS}
+            ORDER BY event_date NULLS LAST, created_at`,
+          patientId,
+        ),
+      ]);
+
+      return {
+        paciente: {
+          id: paciente['id'] as string,
+          dataOrigin: paciente['data_origin'] as OrigenDeDatos,
+          population: paciente['population'] as 'adulto' | 'pediatrico',
+        },
+        diagnosticoActivo: diagnosticos[0] === undefined ? null : diagnosticoDe(diagnosticos[0]),
+        biomarcadores: biomarcadores.map(biomarcadorDe),
+        atributos: atributos.map(atributoDe),
+        tratamientosPrevios: tratamientos.map(tratamientoPrevioDe),
+        eventos: eventos.map(eventoDe),
+      };
     },
   };
 }

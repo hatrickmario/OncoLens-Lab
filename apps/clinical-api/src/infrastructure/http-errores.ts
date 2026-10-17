@@ -7,6 +7,9 @@ export type CodigoDeError =
   | 'CUERPO_INVALIDO'
   | 'NO_AUTENTICADO'
   | 'PERMISO_DENEGADO'
+  | 'NO_ENCONTRADO'
+  | 'TIPO_CANCER_NO_REGISTRADO'
+  | 'ERROR_SERVICIO_IA'
   | 'ERROR_INTERNO';
 
 const MENSAJES: Record<CodigoDeError, string> = {
@@ -14,8 +17,29 @@ const MENSAJES: Record<CodigoDeError, string> = {
   CUERPO_INVALIDO: 'El cuerpo de la petición no cumple el contrato.',
   NO_AUTENTICADO: 'La sesión no existe o expiró.',
   PERMISO_DENEGADO: 'El rol de la sesión no tiene permiso para esta acción.',
+  NO_ENCONTRADO: 'No existe el recurso solicitado.',
+  TIPO_CANCER_NO_REGISTRADO:
+    'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
+  ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   ERROR_INTERNO: 'Error interno del servidor.',
 };
+
+// Errores 4xx de body-parser causados por el cliente → 422 del contrato. Se excluyen a propósito
+// `stream.encoding.set` (500: error de configuración del servidor) y `entity.verify.failed` (no se usa `verify`).
+const ERRORES_DE_CUERPO: ReadonlySet<string> = new Set([
+  'entity.parse.failed',
+  'entity.too.large',
+  'encoding.unsupported',
+  'charset.unsupported',
+  'request.size.invalid',
+  'request.aborted',
+]);
+
+/** `true` solo para los errores del parser de cuerpo (`error.type`) que causa el cliente; cualquier otro sigue al 500. */
+export function esErrorDeCuerpoDelCliente(error: unknown): boolean {
+  const tipo = (error as { type?: unknown } | null)?.type;
+  return typeof tipo === 'string' && ERRORES_DE_CUERPO.has(tipo);
+}
 
 /** Cuerpo de error del contrato `{ error, message, traceId }`: el mensaje es fijo, nunca eco de la entrada. */
 export function enviarError(
