@@ -44,7 +44,7 @@ export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
   }
   // `piloto` se rechaza siempre: ninguna lista de configuración lo habilita (RN-13).
   if (config.appEnv === ENTORNO_PILOTO) {
-    throw new SeedBloqueadoError('APP_ENV', 'es piloto: el seed no corre en el entorno piloto');
+    throw new SeedBloqueadoError('APP_ENV', 'es piloto (entorno de datos reales)');
   }
   if (!config.entornosPermitidos.includes(config.appEnv)) {
     throw new SeedBloqueadoError('APP_ENV', 'no está en SEED_ALLOWED_ENVS');
