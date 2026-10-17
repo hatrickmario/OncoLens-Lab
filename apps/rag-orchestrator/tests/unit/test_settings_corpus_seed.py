@@ -102,6 +102,35 @@ def test_un_valor_invalido_falla_sin_mostrar_el_valor(
     assert "cc_by_nd" not in str(error.value)
 
 
+@pytest.mark.parametrize(
+    "mapa",
+    [
+        '{"cc by-nc 4.0": "cc_by"}',  # NC que no apunta a cc_by_nc
+        '{"cc by-nc-sa 4.0": "cc_by_sa"}',
+        '{"attribution-noncommercial": "dominio_publico"}',
+        '{"cc by-sa 4.0": "cc_by"}',  # SA que no apunta a cc_by_sa
+        '{"cc by-nd 4.0": "cc_by"}',  # cualquier clave con ND
+        '{"cc by-nd 4.0": "cc_by_nc"}',
+        '{"cc by noderivs 4.0": "cc_by"}',
+    ],
+)
+def test_un_mapa_de_licencias_incoherente_con_el_texto_de_la_clave_falla_al_arrancar(
+    monkeypatch: pytest.MonkeyPatch, mapa: str
+) -> None:
+    with pytest.raises(ValidationError) as error:
+        con_entorno(monkeypatch, CORPUS_LICENSE_CLASS_MAP=mapa)
+
+    assert "corpus_license_class_map" in str(error.value)
+
+
+def test_un_mapa_coherente_con_nc_y_sa_se_acepta(monkeypatch: pytest.MonkeyPatch) -> None:
+    mapa = '{"cc by-nc 4.0": "cc_by_nc", "cc by-sa 4.0": "cc_by_sa", "cc by 4.0": "cc_by"}'
+
+    assert (
+        len(con_entorno(monkeypatch, CORPUS_LICENSE_CLASS_MAP=mapa).corpus_license_class_map) == 3
+    )
+
+
 def test_un_solapamiento_igual_al_tamano_falla_nombrando_las_dos_claves(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

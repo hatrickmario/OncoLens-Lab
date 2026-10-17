@@ -123,6 +123,98 @@ def test_cc_by_nc_se_admite_con_sus_tres_condiciones_y_queda_marcada_como_tal() 
     assert admision.admitido and admision.license_class == "cc_by_nc"
 
 
+@pytest.mark.parametrize(
+    "licencia",
+    [
+        "CC BY-NC 4.0",
+        "Creative Commons Attribution-NonCommercial 4.0",
+        "CC BY No Comercial 4.0",
+        "cc by-nc-sa 4.0",
+    ],
+)
+def test_el_texto_nc_gana_al_mapa_y_cae_en_cc_by_nc_aunque_el_mapa_diga_otra_clase(
+    licencia: str,
+) -> None:
+    mapa = {licencia.casefold(): "cc_by"}
+    politica = replace(politica_de_test(), mapa_de_clases=mapa)  # cc_by_nc NO está aceptada
+
+    admision = evaluar_admisibilidad(documento_de_prueba(license=licencia), politica)
+
+    assert admision.motivo is MotivoDeRechazo.LICENCIA_NO_ACEPTADA
+
+
+@pytest.mark.parametrize(
+    "licencia",
+    [
+        "CC BY-ND 4.0",
+        "CC BY NoDerivs 4.0",
+        "Creative Commons Attribution-NoDerivatives 4.0",
+        "CC BY No Derivative Works",
+        "CC BY sin obras derivadas",
+    ],
+)
+def test_toda_variante_de_nd_se_rechaza_aunque_el_mapa_la_acepte(licencia: str) -> None:
+    politica = replace(politica_de_test(), mapa_de_clases={licencia.casefold(): "cc_by"})
+
+    admision = evaluar_admisibilidad(documento_de_prueba(license=licencia), politica)
+
+    assert admision.motivo is MotivoDeRechazo.LICENCIA_NO_ACEPTADA
+
+
+def test_nci_no_se_confunde_con_nc() -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(), politica_de_test())
+
+    assert admision.admitido and admision.license_class == "dominio_publico"
+
+
+@pytest.mark.parametrize(
+    "fuente",
+    [
+        "National Comprehensive Cancer Network",
+        "NCCN Guidelines®",
+        "European Society for Medical Oncology",
+        "ESMO Clinical Practice Guidelines",
+        "  nccn  ",
+    ],
+)
+def test_una_fuente_excluida_se_reconoce_por_su_alias_o_por_el_token_en_el_nombre(
+    fuente: str,
+) -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(source_name=fuente), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize(
+    "campo",
+    [
+        {"external_id": "https://www.nccn.org/guidelines/category_1"},
+        {"external_id": "https://guidelines.NCCN.org/x"},
+        {"url_fuente": "https://www.esmo.org/guidelines/breast", "texto": None},
+    ],
+)
+def test_una_fuente_excluida_se_reconoce_por_el_host_del_identificador_o_de_la_url(
+    campo: dict[str, object],
+) -> None:
+    admision = evaluar_admisibilidad(documento_de_prueba(**campo), politica_de_test())
+
+    assert admision.motivo is MotivoDeRechazo.FUENTE_EXCLUIDA
+
+
+@pytest.mark.parametrize(
+    "campo",
+    [
+        {"external_id": "https://www.cancer.gov/types/breast"},
+        {"external_id": "https://notnccn.org/x"},
+        {"external_id": "10.3390/curroncol32080444"},
+    ],
+)
+def test_un_host_que_no_es_el_de_una_fuente_excluida_no_la_excluye(
+    campo: dict[str, object],
+) -> None:
+    assert evaluar_admisibilidad(documento_de_prueba(**campo), politica_de_test()).admitido
+
+
 @pytest.mark.parametrize("licencia", ["  cc by 4.0 ", "CC   BY\t4.0", "Cc By 4.0"])
 def test_compara_la_licencia_sin_distinguir_mayusculas_ni_espacios_de_mas(licencia: str) -> None:
     admision = evaluar_admisibilidad(documento_de_prueba(license=licencia), politica_de_test())
