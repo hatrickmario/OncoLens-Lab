@@ -100,6 +100,7 @@
 | US-054 | `clinical-api` y `rag-orchestrator` se autentican con un JWT de servicio asimétrico | FEAT-06a | 1 | 5 | sí |
 | US-055 | `/rag/query` recupera evidencia vigente, aplica el umbral y responde "sin evidencia" sin invocar al LLM | FEAT-06a | 1 | 5 | sí |
 | US-225 | Con evidencia sobre el umbral, `/rag/query` genera la opción descrita, la recorta a `maxOptions` y responde con el contrato final | FEAT-06a | 1 | 3 | sí |
+| US-231 | Adapters reales de *embeddings*, *reranker*, detector de idioma y NLI (ADR-39) — **propuesta**, Linear pendiente (límite de issues del workspace); fuera del recuento hasta el refinamiento | FEAT-06a | por decidir (propuesta: 1) | 8 (propuesta) | sí |
 | US-056 | El límite de consultas, el semáforo de inferencia y el tiempo máximo protegen el LLM local | FEAT-06a | 4 | 3 | sí |
 | US-057 | Las instrucciones del prompt quedan separadas de los datos para resistir *prompt injection* | FEAT-06a | 4 | 3 | sí |
 | US-058 | El catálogo del corpus y la colección de Milvus se crean con su esquema final | FEAT-06c | 1 | 5 | sí |

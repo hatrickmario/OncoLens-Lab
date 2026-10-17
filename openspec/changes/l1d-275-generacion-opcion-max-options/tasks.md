@@ -1,5 +1,7 @@
 # Tasks — l1d-275-generacion-opcion-max-options
 
+> ↪ Depende de **US-231** (adapters reales, ADR-39; Linear: pendiente (límite de issues del workspace); propuesta, decisión 74 del plan): en `main` antes de este change para correr con modelos reales. Los AC se verifican con adapters falsos.
+
 > Matriz TDD (CLAUDE.md): endpoint, service y regla de recorte → **TDD estricto, doble bucle**
 > (commit `test(L1D-275)` con el test de aceptación en rojo antes de su `feat(L1D-275)`); prompt →
 > **evaluate**; composición y configuración → **test después**.
