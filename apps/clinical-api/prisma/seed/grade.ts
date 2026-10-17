@@ -17,3 +17,11 @@ export function derivarTextoGrade(gradacion: GradacionDeReferencia): string {
   if (gradacion.sistema === 'nottingham') return `Nottingham grado ${gradacion.grado}`;
   return `Gleason ${gradacion.patronPrimario}+${gradacion.patronSecundario}=${gradacion.puntaje} · ISUP ${gradacion.grupoIsup}`;
 }
+
+/** Puntaje de Gleason y grupo ISUP derivados de los patrones (DEC-05, data-model §6). */
+export function derivarGleason(
+  _patronPrimario: number,
+  _patronSecundario: number,
+): { readonly puntaje: number; readonly grupoIsup: number } {
+  throw new Error('no implementado');
+}

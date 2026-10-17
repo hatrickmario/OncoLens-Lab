@@ -30,6 +30,15 @@ describe('assertSeedPermitido', () => {
     expect(() => assertSeedPermitido(config)).toThrow(SeedBloqueadoError);
   });
 
+  it.each(['PILOTO', 'Piloto'])(
+    'rechaza piloto sin distinguir mayúsculas aunque %s esté en los entornos permitidos',
+    (nombre) => {
+      const config = entrada({ appEnv: nombre, entornosPermitidos: ['local', nombre] });
+
+      expect(() => assertSeedPermitido(config)).toThrow(/piloto/);
+    },
+  );
+
   it('rechaza el seed nombrando APP_ENV cuando no está definida', () => {
     expect(() => assertSeedPermitido(entrada({ appEnv: undefined }))).toThrow(/APP_ENV/);
   });
