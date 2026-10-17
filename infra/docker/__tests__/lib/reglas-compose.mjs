@@ -141,7 +141,7 @@ export function assertAislamientoDeRedes(config) {
 }
 
 /** Un servicio one-shot (migrador) corre y termina: `restart: "no"` y sin healthcheck, que sería ficticio. */
-export const esUnico = (definicion) => definicion.restart === 'no';
+export const esOneShot = (definicion) => definicion.restart === 'no';
 
 /** AC-1: nueve servicios (ocho long-running con healthcheck y el migrador one-shot `corpus-migrate`), imágenes de terceros con tag exacto y clinical-api sin depender de rag-orchestrator. */
 export function assertStackCompleto(config) {
@@ -149,7 +149,7 @@ export function assertStackCompleto(config) {
   const esperados = ['clinical-api', 'clinical-minio', 'corpus-migrate', 'milvus-etcd', 'milvus-minio', 'milvus-standalone', 'postgres', 'rag-orchestrator', 'web'];
   if (JSON.stringify(nombres) !== JSON.stringify(esperados)) throw new Error(`servicios inesperados: ${nombres.join(', ')}`);
   for (const [nombre, definicion] of Object.entries(config.services)) {
-    if (!esUnico(definicion) && !definicion.healthcheck?.test) throw new Error(`${nombre} no declara healthcheck`);
+    if (!esOneShot(definicion) && !definicion.healthcheck?.test) throw new Error(`${nombre} no declara healthcheck`);
     if (definicion.image && !/:[^:@]+$/.test(definicion.image)) throw new Error(`${nombre}: la imagen ${definicion.image} no fija tag`);
     if (/:latest$/.test(definicion.image ?? '')) throw new Error(`${nombre}: la imagen ${definicion.image} usa latest`);
   }

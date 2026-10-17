@@ -170,3 +170,31 @@ def test_milvus_settings_valida_la_dimension_con_la_regla_de_adr39(
         MilvusSettings(_env_file=None)
 
     assert "entero positivo" in str(error.value)
+
+
+@pytest.mark.ac("US-058", 2)
+def test_settings_metrica_densa_fuera_de_cosine_o_ip_falla_nombrando_la_clave(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for clave, valor in CLAVES_DE_MILVUS.items():
+        monkeypatch.setenv(clave, valor)
+    monkeypatch.setenv("MILVUS_DENSE_METRIC_TYPE", "L2")
+
+    with pytest.raises(ValidationError) as error:
+        MilvusSettings(_env_file=None)
+
+    mensaje = str(error.value)
+    assert "milvus_dense_metric_type" in mensaje
+    assert "COSINE" in mensaje and "IP" in mensaje
+    assert "L2" not in mensaje
+
+
+@pytest.mark.parametrize("metrica", ["COSINE", "IP"])
+def test_settings_metrica_densa_acepta_cosine_e_ip(
+    monkeypatch: pytest.MonkeyPatch, metrica: str
+) -> None:
+    for clave, valor in CLAVES_DE_MILVUS.items():
+        monkeypatch.setenv(clave, valor)
+    monkeypatch.setenv("MILVUS_DENSE_METRIC_TYPE", metrica)
+
+    assert MilvusSettings(_env_file=None).milvus_dense_metric_type == metrica

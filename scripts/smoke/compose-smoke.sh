@@ -79,6 +79,11 @@ saludables="$(estado_de | grep -c '=healthy$' || true)"
 [ "$saludables" = "$esperados" ] || fallo "AC-1: $saludables de $esperados servicios healthy ($(estado_de | tr '\n' ' '))"
 bien "AC-1 los $esperados servicios están healthy"
 
+# Healthy no basta para un one-shot: se comprueba que corpus-migrate terminó (exited) con código 0.
+migracion="$(compose ps -a corpus-migrate --format '{{.State}} {{.ExitCode}}')"
+[ "$migracion" = "exited 0" ] || fallo "AC-1: corpus-migrate no terminó con código 0 (estado: $migracion)"
+bien "AC-1 corpus-migrate terminó con código 0"
+
 salida="$(get_desde web http://clinical-api:3000/health)"
 [ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de clinical-api desde web respondió: $salida"
 bien "AC-1 /health de clinical-api responde 200 desde web"

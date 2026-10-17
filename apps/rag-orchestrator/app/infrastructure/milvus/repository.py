@@ -83,8 +83,27 @@ class MilvusRepository:
             raise CorpusCollectionSchemaMismatch(
                 min(sobrantes), "campo inexistente", "campo presente"
             )
+        self._assert_indice_denso_coincide()
+
+    def _assert_indice_denso_coincide(self) -> None:
+        """Métrica y tipo del índice dense contra la configuración (D5): solo valores de configuración, sin datos."""
+        indice = self._cliente.describe_index(self._coleccion, CAMPO_DENSE)
+        for atributo, esperado in (
+            ("metric_type", self._ajustes.milvus_dense_metric_type),
+            ("index_type", self._ajustes.vector_index_type),
+        ):
+            encontrado = indice.get(atributo)
+            if encontrado != esperado:
+                raise CorpusCollectionSchemaMismatch(
+                    f"{CAMPO_DENSE}.{atributo}", esperado, str(encontrado)
+                )
 
     def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
+        """Inserta los chunks y devuelve cuántos entraron.
+
+        Lanza ``DimensionDeVectorInvalida`` si algún vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección;
+        cualquier otro error de Milvus se propaga sin traducir.
+        """
         try:
             resultado = self._cliente.insert(
                 self._coleccion, [self._fila(chunk) for chunk in chunks]

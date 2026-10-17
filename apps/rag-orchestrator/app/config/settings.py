@@ -120,7 +120,7 @@ class MilvusSettings(BaseSettings):
     embedding_dim: int
     vector_index_type: str
     vector_index_params: dict[str, Any]
-    milvus_dense_metric_type: Literal["COSINE", "IP", "L2"]
+    milvus_dense_metric_type: Literal["COSINE", "IP"]
     milvus_sparse_index_type: str = "SPARSE_INVERTED_INDEX"
     milvus_sparse_metric_type: Literal["IP"] = "IP"
     # Longitudes máximas de los VARCHAR (RN-22): Milvus las exige y admite hasta 65535.
