@@ -53,17 +53,34 @@ def test_ningun_documento_de_la_semilla_real_viene_de_nccn_ni_de_esmo_ni_usa_la_
         assert "PDQ" not in documento.title and "PDQ" not in documento.source_name
 
 
-@pytest.mark.parametrize(
-    "documento", [d for d in DOCUMENTOS if d.source_name == "NCI"], ids=lambda d: d.document_key
+DOCUMENTOS_DE_NCI = [d for d in DOCUMENTOS if d.source_name == "NCI"]
+# Cómo se identifica un producto de NCI/PDQ a sí mismo: no puede aparecer en un extracto (ADR-36, política de cancer.gov).
+AUTOIDENTIFICACION_DE_PDQ = (
+    "pdq",
+    "physician data query",
+    "purpose of this summary",
+    "propósito de este resumen",
+    "editorial board",
+    "consejo editorial",
+    "permission to use this summary",
 )
+
+
+def test_la_semilla_real_tiene_documentos_de_nci_que_vigilar() -> None:
+    assert len(DOCUMENTOS_DE_NCI) >= 1
+
+
+@pytest.mark.parametrize("documento", DOCUMENTOS_DE_NCI, ids=lambda d: d.document_key)
 def test_el_cuerpo_de_un_documento_de_nci_no_se_autoidentifica_como_pdq(
     documento: DocumentoDeSemilla,
 ) -> None:
     """La marca PDQ solo vale para reproducciones íntegras e inalteradas (ADR-36): estos textos son extractos."""
     assert documento.ruta_texto is not None
-    cuerpo = (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8")
+    cuerpo = (DIRECTORIO / documento.ruta_texto).read_text(encoding="utf-8").casefold()
 
-    assert "PDQ" not in cuerpo
+    presentes = [patron for patron in AUTOIDENTIFICACION_DE_PDQ if patron in cuerpo]
+
+    assert presentes == []
 
 
 @pytest.mark.parametrize("documento", DOCUMENTOS, ids=lambda d: d.document_key)
