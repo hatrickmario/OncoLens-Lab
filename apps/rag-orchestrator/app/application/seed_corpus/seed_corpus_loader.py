@@ -182,12 +182,15 @@ class SeedCorpusLoader:
     def _omitir(
         self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
     ) -> ResultadoDeDocumento:
-        """Ya cargado: no se reinserta, pero se apagan los chunks que un fallo previo dejó vigentes (RN-05).
+        """Ya cargado: no se reinserta, pero se reconcilia Milvus con el catálogo (RN-05).
 
-        Si apagarlos falla NO se escribe una fila ``error``: el documento embebido y vigente sigue siendo la verdad.
+        Se apagan los chunks que un fallo previo dejó vigentes y se enciende la vigente del catálogo, cuyos chunks un fallo
+        pudo dejar apagados. Si falla NO se escribe una fila ``error``: el documento embebido y vigente sigue siendo la verdad.
         """
         try:
             self._apagar(decision.a_apagar)
+            if decision.a_encender is not None:
+                self._almacen_de_chunks.marcar_vigentes(decision.a_encender)
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"milvus: {type(error).__name__}"

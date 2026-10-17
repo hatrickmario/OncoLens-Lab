@@ -180,3 +180,20 @@ def test_sin_vigente_en_el_grupo_cualquier_version_embebida_con_ese_checksum_se_
 
 def test_el_checksum_de_la_version_vigente_se_omite() -> None:
     assert decidir_version("c1", [version("a@1", "c1")]).accion is Accion.OMITIR
+
+
+def test_omitir_nombra_la_vigente_del_catalogo_para_reconciliar_sus_chunks() -> None:
+    decision = decidir_version("c1", [version("a@1", "c1")])
+
+    assert decision.a_encender == "a@1"
+
+
+def test_omitir_una_version_antigua_con_otra_vigente_enciende_la_vigente_no_la_antigua() -> None:
+    historico = [version("a@1", "c1", vigente=False), version("a@2", "c2")]
+
+    assert decidir_version("c1", historico).a_encender == "a@2"
+
+
+def test_insertar_y_reemplazar_no_encienden_nada() -> None:
+    assert decidir_version("c9", []).a_encender is None
+    assert decidir_version("c9", [version("a@1", "c1")]).a_encender is None

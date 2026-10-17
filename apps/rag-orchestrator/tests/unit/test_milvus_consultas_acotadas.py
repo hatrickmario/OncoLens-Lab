@@ -44,3 +44,12 @@ def test_un_resultado_por_debajo_del_tope_se_procesa_completo() -> None:
     cliente = ClienteQueDevuelve(LIMITE_DE_CONSULTA - 1)
 
     assert repositorio(cliente).marcar_no_vigentes("d") == LIMITE_DE_CONSULTA - 1
+
+
+def test_un_resultado_que_alcanza_el_tope_no_se_reescribe_a_medias_al_encender() -> None:
+    cliente = ClienteQueDevuelve(LIMITE_DE_CONSULTA)
+
+    with pytest.raises(ConsultaTruncada):
+        repositorio(cliente).marcar_vigentes("d")
+
+    assert cliente.reescritas == 0

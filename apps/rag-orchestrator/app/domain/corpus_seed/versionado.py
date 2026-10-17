@@ -37,6 +37,8 @@ class DecisionDeVersion:
     anterior_id: str | None = None
     # Versiones del grupo cuyos chunks deben quedar no vigentes en Milvus (RN-05); la decide el dominio.
     a_apagar: tuple[str, ...] = ()
+    # Solo en ``omitir``: la vigente del catálogo, cuyos chunks deben estar vigentes en Milvus (un fallo previo pudo apagarlos).
+    a_encender: str | None = None
 
 
 def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> DecisionDeVersion:
@@ -56,7 +58,11 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
     # cuya sucesora se retiró (v1 -> v2 -> v2 rechazada por ND -> vuelve v1 = v1 vigente). Si el usuario prefiere otra regla,
     # se cambia aquí.
     if any(v.checksum == checksum and (v.is_current or vigente is not None) for v in embebidas):
-        return DecisionDeVersion(Accion.OMITIR, a_apagar=huerfanas)
+        return DecisionDeVersion(
+            Accion.OMITIR,
+            a_apagar=huerfanas,
+            a_encender=vigente.document_id if vigente else None,
+        )
     if vigente is not None:
         return DecisionDeVersion(
             Accion.REEMPLAZAR, vigente.document_id, a_apagar=(vigente.document_id, *huerfanas)

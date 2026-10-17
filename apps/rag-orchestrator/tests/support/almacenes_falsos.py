@@ -124,6 +124,15 @@ class AlmacenDeChunksEnMemoria:
             self.chunks[identificador] = replace(self.chunks[identificador], is_current=False)
         return len(cambiados)
 
+    def marcar_vigentes(self, document_id: str) -> int:
+        self._puede("marcar_vigentes")
+        cambiados = [
+            i for i, c in self.chunks.items() if c.document_id == document_id and not c.is_current
+        ]
+        for identificador in cambiados:
+            self.chunks[identificador] = replace(self.chunks[identificador], is_current=True)
+        return len(cambiados)
+
 
 class AlmacenConFallosInyectables:
     """Envuelve un ``ChunkStoreDeIngesta`` REAL (Milvus) e inyecta un error en ``marcar_no_vigentes``; el resto delega tal cual."""

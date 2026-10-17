@@ -102,3 +102,29 @@ def test_upsert_chunks_devuelve_cuantos_chunks_escribio(repositorio: MilvusRepos
 
     assert repositorio.upsert_chunks(chunks) == 3
     assert repositorio.upsert_chunks(chunks[:2]) == 2
+
+
+def test_marcar_vigentes_enciende_los_chunks_apagados_del_documento_sin_tocar_a_los_demas(
+    repositorio: MilvusRepository, cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings
+) -> None:
+    repositorio.insert_chunks(
+        [
+            chunk_sintetico("a", vector_unitario(DIMENSION, 0)),
+            chunk_sintetico("b", vector_unitario(DIMENSION, 1)),
+        ]
+    )
+    repositorio.marcar_no_vigentes("doc-a")
+    repositorio.marcar_no_vigentes("doc-b")
+
+    cambiados = repositorio.marcar_vigentes("doc-a")
+
+    filas = cliente_milvus.query(
+        ajustes_milvus.milvus_collection_name,
+        filter="chunk_id in ['a', 'b']",
+        output_fields=["chunk_id", "is_current", "chunk_text"],
+        consistency_level="Strong",
+    )
+    por_id = {f["chunk_id"]: f for f in filas}
+    assert cambiados == 1
+    assert (por_id["a"]["is_current"], por_id["b"]["is_current"]) == (True, False)
+    assert repositorio.marcar_vigentes("doc-a") == 0

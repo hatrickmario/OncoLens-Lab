@@ -173,18 +173,28 @@ class MilvusRepository:
         Milvus no actualiza un campo suelto: se relee cada entidad con sus vectores y se reescribe con ``upsert`` por
         ``chunk_id`` (mismo PK). Devuelve cuántos chunks cambió; sin vigentes, 0.
         """
-        vigentes = self._cliente.query(
+        return self._reescribir_vigencia(document_id, desde=True)
+
+    def marcar_vigentes(self, document_id: str) -> int:
+        """``is_current = true`` en los chunks no vigentes del documento (reconciliación de la vigente del catálogo).
+
+        Mismo mecanismo y mismos errores que ``marcar_no_vigentes``; sin chunks apagados, 0.
+        """
+        return self._reescribir_vigencia(document_id, desde=False)
+
+    def _reescribir_vigencia(self, document_id: str, *, desde: bool) -> int:
+        filas = self._cliente.query(
             self._coleccion,
-            filter=f"{_filtro_por_documento(document_id)} and is_current == true",
+            filter=f"{_filtro_por_documento(document_id)} and is_current == {str(desde).lower()}",
             output_fields=["*"],
             limit=LIMITE_DE_CONSULTA,
             consistency_level="Strong",
         )
-        _exigir_completo(vigentes)
-        if not vigentes:
+        _exigir_completo(filas)
+        if not filas:
             return 0
-        self._cliente.upsert(self._coleccion, [{**fila, "is_current": False} for fila in vigentes])
-        return len(vigentes)
+        self._cliente.upsert(self._coleccion, [{**fila, "is_current": not desde} for fila in filas])
+        return len(filas)
 
     @staticmethod
     def _fila(chunk: ChunkDelCorpus) -> dict[str, Any]:

@@ -616,3 +616,16 @@ def test_s7_v1_v2_v2_retirada_por_nd_y_vuelve_v1_la_reingiere_y_la_deja_vigente(
     assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
     assert montaje.catalogo.ids_de_documentos_vigentes() == {id_v1}
     assert montaje.vigentes_en_milvus() == {id_v1}
+
+
+def test_un_fallo_al_encender_la_vigente_al_omitir_es_un_error_del_documento_sin_fila_de_error(
+    montaje: Montaje,
+) -> None:
+    cargar_v1_y_fallar_v2_al_reemplazar(montaje)
+    montaje.almacen.fallar_en["marcar_vigentes"] = ConnectionError("milvus caído")
+
+    reporte = montaje.cargar("t-ok-1")
+
+    v1 = montaje.catalogo.documentos[id_de(montaje, "t-ok-1")]
+    assert reporte.resultado_de("t-ok-1").motivo == "milvus: ConnectionError"
+    assert (v1.is_current, v1.status) == (True, "embebido")

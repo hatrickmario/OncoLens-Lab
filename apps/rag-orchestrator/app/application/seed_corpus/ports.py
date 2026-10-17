@@ -54,6 +54,10 @@ class ChunkStoreDeIngesta(Protocol):
         """Pone ``is_current = false`` a los chunks del documento SIN borrar ninguno. Devuelve cuántos cambió."""
         ...
 
+    def marcar_vigentes(self, document_id: str) -> int:
+        """Pone ``is_current = true`` a los chunks del documento SIN borrar ninguno (reconciliación). Devuelve cuántos cambió."""
+        ...
+
 
 @dataclass(frozen=True)
 class RegistroDeDocumento:
