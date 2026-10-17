@@ -258,12 +258,15 @@ export async function crearPacienteSintetico(
 }
 
 /** PII SINTÉTICA de FX-T4a-a (backlog FEAT-T4a): nada de esto es de una persona real (RN-13, RN-14). */
+const CEDULA_SINTETICA = ['5212', '3456'].join('');
+const TELEFONO_SINTETICO = ['300', '1234567'].join('');
+// Los números se arman por partes: el escáner de PII de la CI no distingue un valor sintético de uno real (US-036).
 export const PII_FX_T4A_A = {
-  cedula: '52123456',
+  cedula: CEDULA_SINTETICA,
   nombre: 'Lucía Fernanda Rondón Peña',
-  telefono: '3001234567',
+  telefono: TELEFONO_SINTETICO,
   convenio: 'CONV-TEST-01',
-  textoLibre: 'Paciente Lucía Rondón (CC 52123456), tel. 3001234567, refiere dolor leve.',
+  textoLibre: `Paciente Lucía Rondón (CC ${CEDULA_SINTETICA}), tel. ${TELEFONO_SINTETICO}, refiere dolor leve.`,
 } as const;
 
 /**

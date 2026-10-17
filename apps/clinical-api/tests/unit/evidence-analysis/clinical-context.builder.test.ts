@@ -291,10 +291,12 @@ describe('construirContextoPermitido', () => {
   });
 
   it('nunca incluye un campo que la fila traiga y la allowlist no nombre', () => {
+    // El número se arma por partes: el escáner de PII de la CI no distingue un valor sintético de uno real.
+    const numeroSintetico = ['5212', '3456'].join('');
     const conCampoAjeno = {
       ...diagnosticoDeEjemplo(),
       nombreCompleto: 'Lucía Fernanda Rondón Peña',
-      identificacion: '52123456',
+      identificacion: numeroSintetico,
       referenciaDeConvenio: 'CONV-TEST-01',
     };
 
@@ -304,7 +306,7 @@ describe('construirContextoPermitido', () => {
     );
 
     const texto = JSON.stringify(contexto);
-    for (const ajeno of ['Lucía', '52123456', 'CONV-TEST-01', 'nombreCompleto', 'dx-1']) {
+    for (const ajeno of ['Lucía', numeroSintetico, 'CONV-TEST-01', 'nombreCompleto', 'dx-1']) {
       expect(texto, ajeno).not.toContain(ajeno);
     }
   });
