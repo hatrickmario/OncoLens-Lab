@@ -1,0 +1,15 @@
+{
+  "app": {
+    "nombre": "OncoLens",
+    "academicUseLabel": "Uso académico/investigación"
+  },
+  "login": {
+    "titulo": "Iniciar sesión",
+    "subtitulo": "Herramienta de apoyo para el análisis de evidencia. No sustituye el juicio clínico.",
+    "correo": "Correo electrónico",
+    "contrasena": "Contraseña",
+    "enviar": "Iniciar sesión",
+    "enviando": "Entrando…",
+    "errorCredenciales": "Correo o contraseña incorrectos."
+  }
+}
