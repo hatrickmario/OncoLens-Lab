@@ -127,6 +127,25 @@ def entorno(
     motor.dispose()
 
 
+@pytest.mark.ac("US-059", 1)
+def test_carga_de_semilla_publica_una_release_con_el_corte_de_configuracion_las_fuentes_excluidas_y_una_fila_por_vigente(
+    entorno: Entorno,
+) -> None:
+    reporte = entorno.cargar("t-ok-1", "t-ok-2", "t-nd", "t-sin-licencia", "t-nccn")
+
+    with entorno.motor.connect() as conexion:
+        release = conexion.execute(text("SELECT * FROM corpus.corpus_release")).mappings().one()
+    vigentes = sorted(str(entorno.fila(k)["document_id"]) for k in ("t-ok-1", "t-ok-2"))
+    assert reporte.release_id == "release-1" == release["release_id"]
+    assert (release["cutoff_date"], release["excluded_sources"], release["document_count"]) == (
+        FECHA_DE_CORTE_DE_TEST,
+        '["NCCN", "ESMO"]',
+        2,
+    )
+    assert release["published_at"] == entorno.reloj.valor
+    assert entorno.ids_en_la_release() == vigentes
+
+
 @pytest.mark.ac("US-059", 2)
 def test_carga_de_semilla_rechaza_t_nd_y_t_sin_licencia_sin_chunks_y_sigue_con_t_ok_1(
     entorno: Entorno,
