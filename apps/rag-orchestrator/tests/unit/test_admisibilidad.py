@@ -360,8 +360,8 @@ def test_una_sigla_con_puntos_que_no_es_nccn_ni_esmo_no_se_excluye(fuente: str) 
         {"source_name": "Annals of Oncology"},
         {"source_name": "annals  of oncology"},
         {"external_id": "10.1016/j.annonc.2020.01.001"},
-        {"external_id": "https://doi.org/10.1016/J.ESMOOP.2021.100123"},
-        {"external_id": "doi:10.1016/j.esmogo.2024.100001"},
+        {"external_id": "https://doi.org/10.1016/J.ESMOOP.2021.1001"},
+        {"external_id": "doi:10.1016/j.esmogo.2024.1002"},
         {"url_fuente": "https://doi.org/10.1016/j.annonc.2019.12.002", "texto": None},
         {"external_id": "https://www.annalsofoncology.org/article/S0923-7534(20)00001-1/fulltext"},
         {"external_id": "https://www.esmoopen.com/article/S2059-7029(21)00001-1/fulltext"},
@@ -388,9 +388,10 @@ def test_una_revista_ajena_a_esmo_no_se_excluye_por_parecerse(campo: dict[str, o
 
 
 def test_las_revistas_de_esmo_se_excluyen_aunque_la_configuracion_este_vacia() -> None:
-    documento = documento_de_prueba(external_id="10.1016/j.esmoop.2021.100123")
+    doi = "10.1016/j.esmoop.2021.1001"
+    revista = documento_de_prueba(external_id=doi)
 
     assert (
-        evaluar_admisibilidad(documento, POLITICA_SIN_EXCLUIDAS).motivo
+        evaluar_admisibilidad(revista, POLITICA_SIN_EXCLUIDAS).motivo
         is MotivoDeRechazo.FUENTE_EXCLUIDA
     )
