@@ -52,7 +52,10 @@ const prepararDivergencia = ({ base, enFeature, enMain }) => {
   git('add', '-A');
   confirmar('feature');
   git('checkout', '-q', 'main');
-  for (const [rel, c] of Object.entries(enMain)) escribir(rel, c);
+  for (const [rel, c] of Object.entries(enMain)) {
+    if (c === null) rmSync(path.join(repo, rel));
+    else escribir(rel, c);
+  }
   git('add', '-A');
   confirmar('main');
   git('checkout', '-q', 'feature');
@@ -143,6 +146,93 @@ describe('pre-commit-gate: higiene de tests en commits de merge', () => {
     git('add', '-A');
 
     expect(correrHook().codigo).toBe(2);
+  });
+});
+
+describe('pre-commit-gate: MERGE_HEAD forjado u obsoleto no debilita un commit normal', () => {
+  // Repo con un commit previo sin el test (ancestro de HEAD) y otro que lo añade.
+  const prepararHistorial = () => {
+    git('init', '-q', '-b', 'main');
+    escribir('README.txt', 'base\n');
+    git('add', '-A');
+    confirmar('vacío');
+    const ancestro = git('rev-parse', 'HEAD').trim();
+    escribir('tests/test_a.py', PY_DOS);
+    git('add', '-A');
+    confirmar('con test');
+    return ancestro;
+  };
+  const forjarMergeHead = (sha) => writeFileSync(path.join(repo, '.git', 'MERGE_HEAD'), `${sha}\n`);
+
+  it('bloquea el borrado de un test cuando MERGE_HEAD es un ancestro de HEAD sin el test [hook merge P4]', () => {
+    forjarMergeHead(prepararHistorial());
+    escribir('tests/test_a.py', PY_UNO);
+    git('add', '-A');
+
+    const { codigo, stderr } = correrHook();
+
+    expect(codigo).toBe(2);
+    expect(stderr).toContain('test_dos');
+  });
+
+  it('bloquea el borrado del archivo de test cuando MERGE_HEAD es un ancestro de HEAD sin el test [hook merge P4b]', () => {
+    forjarMergeHead(prepararHistorial());
+    git('rm', '-q', 'tests/test_a.py');
+
+    expect(correrHook().codigo).toBe(2);
+  });
+
+  it('bloquea el borrado de un test cuando MERGE_HEAD es un commit huérfano sin base común [hook merge P5]', () => {
+    prepararHistorial();
+    const arbolVacio = git('hash-object', '-t', 'tree', '-w', '/dev/null').trim();
+    forjarMergeHead(git('commit-tree', arbolVacio, '-m', 'huérfano').trim());
+    escribir('tests/test_a.py', PY_UNO);
+    git('add', '-A');
+
+    expect(correrHook().codigo).toBe(2);
+  });
+});
+
+describe('pre-commit-gate: merge con tests en otra ruta', () => {
+  it('bloquea cuando la otra rama movió el test a otro archivo y la resolución lo quita de ahí [hook merge P7]', () => {
+    prepararDivergencia({
+      base: { 'tests/test_a.py': PY_DOS },
+      enFeature: { 'otro.txt': 'feature\n' },
+      enMain: { 'tests/test_a.py': PY_UNO, 'tests/test_b.py': PY_DOS_SOLO },
+    });
+    escribir('tests/test_b.py', '# vacío\n');
+    git('add', '-A');
+
+    const { codigo, stderr } = correrHook();
+
+    expect(codigo).toBe(2);
+    expect(stderr).toContain('test_dos');
+  });
+
+  it('bloquea cuando la otra rama renombró el archivo de test y la resolución lo borra [hook merge P8]', () => {
+    prepararDivergencia({
+      base: { 'tests/test_a.py': PY_DOS },
+      enFeature: { 'otro.txt': 'feature\n' },
+      enMain: { 'tests/test_a.py': null, 'tests/test_z.py': PY_DOS },
+    });
+    git('rm', '-q', '-f', 'tests/test_z.py');
+
+    expect(correrHook().codigo).toBe(2);
+  });
+
+  it('bloquea cuando la resolución borra un test presente en ambos aunque la otra rama aportó uno nuevo [hook merge P9]', () => {
+    prepararDivergencia({
+      base: { 'tests/test_a.py': PY_DOS },
+      enFeature: { 'otro.txt': 'feature\n' },
+      enMain: { 'tests/test_a.py': `${PY_DOS}\n\ndef test_tres():\n    assert 3\n` },
+    });
+    escribir('tests/test_a.py', `${PY_UNO}\n\ndef test_tres():\n    assert 3\n`);
+    git('add', '-A');
+
+    const { codigo, stderr } = correrHook();
+
+    expect(codigo).toBe(2);
+    expect(stderr).toContain('test_dos');
   });
 });
 
