@@ -7,10 +7,6 @@ import yaml
 from app.evaluation.dataset_loader import DatasetInvalido, cargar_dataset
 
 
-def _es_fuente_clinicaltrials(nombre: str) -> bool:
-    return nombre.split("/", 1)[0].strip().lower() == "clinicaltrials.gov"
-
-
 def _editar(ruta: Path, cambio) -> None:
     contenido = yaml.safe_load(ruta.read_text(encoding="utf-8"))
     cambio(contenido)
@@ -61,10 +57,9 @@ def test_dataset_loader_fuente_excluida_nccn_se_rechaza(dataset_dir: Path) -> No
 def test_dataset_loader_acepta_clinicaltrials_por_terminos_verificados(dataset_dir: Path) -> None:
     dataset = cargar_dataset(dataset_dir)
 
-    ct = [f for f in dataset.fuentes if _es_fuente_clinicaltrials(f.nombre)]
-    assert ct and all(
-        f.datos["licencia_verificada"] == "terminos_NLM_ClinicalTrials_gov" for f in ct
-    )
+    ct = [f for f in dataset.fuentes if "nct_id" in f.datos]
+    assert len(ct) == 4
+    assert all(f.datos["licencia_verificada"] == "terminos_NLM_ClinicalTrials_gov" for f in ct)
 
 
 def test_dataset_loader_clinicaltrials_sin_terminos_verificados_se_rechaza(
@@ -72,7 +67,7 @@ def test_dataset_loader_clinicaltrials_sin_terminos_verificados_se_rechaza(
 ) -> None:
     def borrar(m: dict) -> None:
         for f in m["fuentes"]:
-            if _es_fuente_clinicaltrials(f["fuente"]):
+            if "nct_id" in f:
                 f.pop("licencia_verificada")
 
     _editar(dataset_dir / "manifest.yaml", borrar)
@@ -224,7 +219,7 @@ def test_dataset_loader_terminos_verificados_solo_valen_para_clinicaltrials_sin_
 ) -> None:
     def poner(m: dict) -> None:
         for f in m["fuentes"]:
-            if _es_fuente_clinicaltrials(f["fuente"]):
+            if "nct_id" in f:
                 f["licencia"] = "CC BY-NC-ND 4.0"
 
     _editar(dataset_dir / "manifest.yaml", poner)
@@ -242,10 +237,10 @@ def test_dataset_loader_texto_de_nci_con_cola_distinta_de_la_aclaracion_se_recha
         cargar_dataset(dataset_dir)
 
 
-def _manifiesto_con_clinicaltrials_sin_licencia(dataset_dir: Path, fuente: str) -> None:
+def _reetiquetar_clinicaltrials_sin_licencia(dataset_dir: Path, fuente: str) -> None:
     def poner(m: dict) -> None:
         for f in m["fuentes"]:
-            if _es_fuente_clinicaltrials(f["fuente"]):
+            if "nct_id" in f:
                 f["fuente"] = fuente
                 f.pop("licencia", None)
                 f["licencia_verificada"] = "terminos_NLM_ClinicalTrials_gov"
@@ -259,9 +254,10 @@ def _manifiesto_con_clinicaltrials_sin_licencia(dataset_dir: Path, fuente: str) 
 def test_dataset_loader_acepta_la_etiqueta_canonica_de_clinicaltrials_con_terminos_verificados(
     dataset_dir: Path, fuente: str
 ) -> None:
-    _manifiesto_con_clinicaltrials_sin_licencia(dataset_dir, fuente)
+    _reetiquetar_clinicaltrials_sin_licencia(dataset_dir, fuente)
 
-    assert cargar_dataset(dataset_dir).fuentes
+    ids = {f.id for f in cargar_dataset(dataset_dir).fuentes}
+    assert {"M09", "M10", "P09", "P10"} <= ids
 
 
 @pytest.mark.parametrize(
@@ -276,7 +272,7 @@ def test_dataset_loader_acepta_la_etiqueta_canonica_de_clinicaltrials_con_termin
 def test_dataset_loader_rechaza_etiquetas_que_imitan_a_clinicaltrials_aunque_traigan_terminos_verificados(
     dataset_dir: Path, fuente: str
 ) -> None:
-    _manifiesto_con_clinicaltrials_sin_licencia(dataset_dir, fuente)
+    _reetiquetar_clinicaltrials_sin_licencia(dataset_dir, fuente)
 
     with pytest.raises(DatasetInvalido, match="licencia"):
         cargar_dataset(dataset_dir)
@@ -287,5 +283,5 @@ def test_dataset_loader_mini_dataset_real_carga_y_acepta_sus_fuentes_de_clinical
 ) -> None:
     dataset = cargar_dataset(dataset_dir)
 
-    ct = [f for f in dataset.fuentes if _es_fuente_clinicaltrials(f.nombre)]
+    ct = [f for f in dataset.fuentes if "nct_id" in f.datos]
     assert ct
