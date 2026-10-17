@@ -12,11 +12,15 @@ from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
     Q_HER2,
     Q_SIN,
+    BuscadorFalso,
+    EmbedderFalso,
     crear_entorno,
     solicitud_de,
 )
 
 RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
+RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
+RESPUESTA_422 = "#/paths/~1rag~1query/post/responses/422"
 
 
 @pytest.mark.ac("US-055", 2)
@@ -110,3 +114,26 @@ def test_rag_query_registra_la_version_del_reranker_en_meta_cuando_responde_sin_
 
     assert respuesta.status_code == 200
     assert respuesta.json()["meta"]["rerankerModel"] == entorno.reranker.version
+
+
+@pytest.mark.parametrize("borde_caido", ["milvus", "embeddings"])
+def test_rag_query_responde_503_retrieval_unavailable_sin_invocar_al_llm_cuando_falla_milvus_o_el_adapter_de_embeddings(
+    borde_caido,
+):
+    # El mensaje del error del motor lleva un host y la pregunta: ninguno puede salir en la respuesta.
+    fallo = RuntimeError(f"conexión rechazada por milvus-interno.test:19530 al buscar {Q_HER2!r}")
+    if borde_caido == "milvus":
+        entorno = crear_entorno(buscador=BuscadorFalso(error=fallo))
+    else:
+        entorno = crear_entorno(embedder=EmbedderFalso(error=fallo))
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2))
+
+    assert respuesta.status_code == 503
+    cuerpo = respuesta.json()
+    assert_matches_spec(RESPUESTA_503, cuerpo)
+    assert cuerpo["error"] == "RETRIEVAL_UNAVAILABLE"
+    assert cuerpo["traceId"] == "req_00000001"
+    assert entorno.generador.invocaciones == 0
+    assert "milvus-interno" not in respuesta.text
+    assert Q_HER2 not in respuesta.text
