@@ -40,14 +40,17 @@ if [ -n "$TEST_FILES" ]; then
     printf '%s\n' "$DISABLED" | head -10 >&2; FAIL=1
   fi
 fi
-# En un commit de merge (MERGE_HEAD presente) un test solo cuenta como eliminado si existía en AMBOS padres
-# (HEAD y MERGE_HEAD) y falta en el resultado: lo que la otra rama ya trasladó o borró no lo elimina este merge.
+# Commit de merge real: MERGE_HEAD existe, NO es ancestro de HEAD (un MERGE_HEAD obsoleto o forjado no exime nada)
+# y comparte una base con HEAD (un commit huérfano tampoco). Si no, el commit es normal.
+# En un merge real un test solo cuenta como eliminado si su NOMBRE está en algún archivo de test de AMBOS padres
+# (HEAD y MERGE_HEAD) y en ninguno del índice: lo que la otra rama ya trasladó, renombró o borró no lo elimina este merge.
 MERGE_HEAD="$(git rev-parse -q --verify MERGE_HEAD 2>/dev/null || true)"
-REMOVED="$( { git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" \
-    | while IFS= read -r f; do
-        { [ -z "$MERGE_HEAD" ] || git cat-file -e "$MERGE_HEAD:$f" 2>/dev/null; } && printf '%s (archivo eliminado)\n' "$f"
-      done;
-  git diff --cached -U0 --no-color | MERGE_HEAD="$MERGE_HEAD" python3 -I -c '
+if [ -n "$MERGE_HEAD" ] && { git merge-base --is-ancestor "$MERGE_HEAD" HEAD 2>/dev/null \
+    || ! git merge-base HEAD "$MERGE_HEAD" >/dev/null 2>&1; }; then
+  MERGE_HEAD=""
+fi
+REMOVED="$( { if [ -z "$MERGE_HEAD" ]; then git diff --cached --name-only --diff-filter=D | grep -E "$TESTS_RE" | sed 's/$/ (archivo eliminado)/'; fi;
+  git diff --cached -U0 --no-color | MERGE_HEAD="$MERGE_HEAD" TESTS_RE="$TESTS_RE" python3 -I -c '
 import os, re, subprocess, sys
 from collections import defaultdict
 # Test eliminado = su nombre desaparece y no reaparece en lo añadido. Mover no es borrar, y renombrar
@@ -67,16 +70,33 @@ for line in sys.stdin:
             else: rem[path].setdefault(name, line[1:].strip())
 all_added = set().union(*add.values()) if add else set()
 merge_head = os.environ.get("MERGE_HEAD", "")
-def en_merge_head(f, nombre):
-    if not merge_head: return True
-    r = subprocess.run(["git", "show", f"{merge_head}:{f}"], capture_output=True, text=True)
-    return r.returncode == 0 and nombre in r.stdout
-for f, names in rem.items():
-    names = {n: l for n, l in names.items() if en_merge_head(f, n)}
-    gone = [n for n in names if n not in all_added]
-    new = [n for n in add.get(f, ()) if n not in set().union(*rem.values())]
-    for n in gone[len(new):]:
-        print(f"{f}: {names[n]}")
+def git(*a): return subprocess.run(["git", *a], capture_output=True, text=True).stdout
+def nombres_de(texto):
+    out = {}
+    for l in texto.splitlines():
+        m = pat.match(l)
+        if m: out.setdefault(m.group(2) or m.group(3), l.strip())
+    return out
+def arbol_de_tests(rev):  # rev vacío = índice
+    rutas = git("ls-files", "-z") if not rev else git("ls-tree", "-r", "-z", "--name-only", rev)
+    return {p: nombres_de(git("show", f"{rev}:{p}")) for p in rutas.split("\0")
+            if p and re.search(os.environ["TESTS_RE"], p)}
+if merge_head:
+    # Merge real: por nombre, en todos los archivos de test de cada árbol.
+    cabeza, otra, indice = arbol_de_tests("HEAD"), arbol_de_tests(merge_head), arbol_de_tests("")
+    en_otra = set().union(*otra.values()) if otra else set()
+    en_indice = set().union(*indice.values()) if indice else set()
+    for f, names in cabeza.items():
+        gone = [n for n in names if n in en_otra and n not in en_indice]
+        new = [n for n in add.get(f, ()) if n not in en_otra]
+        for n in gone[len(new):]:
+            print(f"{f}: {names[n]}")
+else:
+    for f, names in rem.items():
+        gone = [n for n in names if n not in all_added]
+        new = [n for n in add.get(f, ()) if n not in set().union(*rem.values())]
+        for n in gone[len(new):]:
+            print(f"{f}: {names[n]}")
 '; } || true)"
 # El trailer puede venir en -m o en el archivo de -F/--file.
 MSG="$CMD"
