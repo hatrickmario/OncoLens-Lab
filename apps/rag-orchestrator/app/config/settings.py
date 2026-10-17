@@ -156,13 +156,18 @@ CLASES_DE_LICENCIA = ("dominio_publico", "cc_by", "cc_by_sa", "cc_by_nc")
 # Texto literal de la licencia (normalizado) -> license_class. CC0 y el texto libre de copyright de NCI se asimilan a
 # dominio público (ADR-36, decisión 2). Una licencia ND no figura aquí ni puede añadirse: el dominio la rechaza siempre.
 MAPA_DE_LICENCIAS_POR_DEFECTO = {
+    "cc0": "dominio_publico",
     "cc0 1.0": "dominio_publico",
     "dominio público": "dominio_publico",
     "texto de nci libre de copyright": "dominio_publico",
+    # Europe PMC publica la licencia sin versión ("cc by"); el XML del artículo puede precisarla (4.0, 3.0).
+    "cc by": "cc_by",
     "cc by 4.0": "cc_by",
     "cc by 3.0": "cc_by",
+    "cc by-sa": "cc_by_sa",
     "cc by-sa 4.0": "cc_by_sa",
     "cc by-sa 3.0": "cc_by_sa",
+    "cc by-nc": "cc_by_nc",
     "cc by-nc 4.0": "cc_by_nc",
     "cc by-nc 3.0": "cc_by_nc",
 }

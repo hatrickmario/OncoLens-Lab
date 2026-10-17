@@ -121,6 +121,20 @@ def test_rechaza_valores_fuera_del_catalogo_claves_desconocidas_y_claves_mal_for
         leer_manifiesto(escribir(tmp_path, DOCUMENTO_VALIDO.replace(viejo, nuevo)))
 
 
+def test_lee_el_checksum_declarado_del_texto(tmp_path: Path) -> None:
+    contenido = DOCUMENTO_VALIDO + f"    checksum: {'ab' * 32}\n"
+
+    assert leer_manifiesto(escribir(tmp_path, contenido))[0].checksum_esperado == "ab" * 32
+
+
+@pytest.mark.parametrize("valor", ["abc", "AB" * 32, "zz" * 32])
+def test_rechaza_un_checksum_que_no_es_sha256_hexadecimal_en_minusculas(
+    tmp_path: Path, valor: str
+) -> None:
+    with pytest.raises(ManifiestoInvalido, match="checksum"):
+        leer_manifiesto(escribir(tmp_path, DOCUMENTO_VALIDO + f"    checksum: {valor}\n"))
+
+
 def test_rechaza_criterios_de_poblacion_que_no_son_de_las_seis_claves(tmp_path: Path) -> None:
     contenido = DOCUMENTO_VALIDO + "    population_criteria: {sexo: femenino}\n"
 

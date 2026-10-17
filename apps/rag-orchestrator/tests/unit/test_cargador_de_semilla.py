@@ -12,6 +12,7 @@ import pytest
 
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
 from app.application.seed_corpus.seed_corpus_loader import SeedCorpusLoader
+from app.domain.corpus_seed.versionado import calcular_checksum
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from tests.support.almacenes_falsos import AlmacenDeChunksEnMemoria, CatalogoEnMemoria
@@ -166,6 +167,28 @@ def test_un_texto_que_no_se_puede_leer_deja_el_documento_en_error_con_su_clave_y
     assert reporte.de("d-ilegible").motivo == "obtener_texto: FileNotFoundError"
     assert reporte.de("t-ok-1").resultado is Resultado.CARGADO
     assert "d-ilegible@error" in montaje.catalogo.documentos
+
+
+def test_un_texto_cuyo_checksum_no_es_el_del_manifiesto_queda_en_error_sin_chunks(
+    montaje: Montaje,
+) -> None:
+    alterado = documento_de_prueba(document_key="d-alterado", checksum_esperado="0" * 64)
+
+    reporte = montaje.cargador.cargar([alterado])
+
+    assert reporte.de("d-alterado").motivo == "integridad: ChecksumDelManifiestoNoCoincide"
+    assert montaje.almacen.chunks == {} and montaje.embedder.invocaciones == 0
+
+
+def test_un_texto_cuyo_checksum_coincide_con_el_del_manifiesto_se_carga(montaje: Montaje) -> None:
+    texto = "Texto sintético con checksum declarado."
+    integro = documento_de_prueba(
+        document_key="d-integro", texto=texto, checksum_esperado=calcular_checksum(texto)
+    )
+
+    reporte = montaje.cargador.cargar([integro])
+
+    assert reporte.de("d-integro").resultado is Resultado.CARGADO
 
 
 def test_un_texto_vacio_deja_el_documento_en_error_porque_no_tiene_nada_que_indexar(

@@ -37,6 +37,8 @@ class DocumentoDeSemilla:
     primary_endpoint: str | None = None
     sample_size: int | None = None
     last_updated_at: date | None = None
+    # SHA-256 del texto normalizado que el manifiesto declara: si el texto leído da otro, no se indexa (integridad).
+    checksum_esperado: str | None = None
     # Dónde está el texto: inline (solo fixtures), archivo junto al manifiesto o URL de un host permitido.
     texto: str | None = None
     ruta_texto: str | None = None

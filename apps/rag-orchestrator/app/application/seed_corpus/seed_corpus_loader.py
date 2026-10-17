@@ -42,6 +42,10 @@ from app.domain.corpus_seed.versionado import (
 )
 
 
+class ChecksumDelManifiestoNoCoincide(Exception):
+    """El texto leído no es el que el manifiesto declaró (``checksum``): se alteró o es otra versión."""
+
+
 class TextoVacio(Exception):
     """El documento no tiene texto que indexar tras normalizarlo."""
 
@@ -98,6 +102,10 @@ class SeedCorpusLoader:
         except Exception as error:  # noqa: BLE001 - borde del puerto SourceFetcher: lo que falle es de este documento
             return self._registrar_error(documento, admision, None, "obtener_texto", error)
         checksum = calcular_checksum(texto)
+        if documento.checksum_esperado not in (None, checksum):
+            return self._registrar_error(
+                documento, admision, None, "integridad", ChecksumDelManifiestoNoCoincide()
+            )
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:

@@ -22,7 +22,10 @@ from app.infrastructure.catalog.tables import DOMINIOS_CERRADOS
 
 # Claves de auditoría de la licencia (ADR-36: verificada documento por documento): se conservan en el manifiesto pero el
 # cargador no las usa.
-CLAVES_DE_AUDITORIA = frozenset({"license_verified_at", "license_evidence", "attribution", "notes"})
+CLAVES_DE_AUDITORIA = frozenset(
+    {"license_verified_at", "license_evidence", "attribution", "notes", "downloaded_at"}
+)
+PATRON_DE_CHECKSUM = re.compile(r"[0-9a-f]{64}")
 CLAVES_OBLIGATORIAS = frozenset(
     {
         "document_key",
@@ -51,6 +54,7 @@ CLAVES_OPCIONALES = frozenset(
         "primary_endpoint",
         "sample_size",
         "last_updated_at",
+        "checksum",
         "text",
         "text_path",
         "source_url",
@@ -129,6 +133,7 @@ def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
         primary_endpoint=_opcional(crudo.get("primary_endpoint")),
         sample_size=crudo.get("sample_size"),
         last_updated_at=_fecha_opcional(crudo.get("last_updated_at"), "last_updated_at", clave),
+        checksum_esperado=_checksum(crudo.get("checksum"), clave),
         texto=crudo.get("text"),
         ruta_texto=crudo.get("text_path"),
         url_fuente=crudo.get("source_url"),
@@ -166,6 +171,14 @@ def _fecha(valor: Any, campo: str, clave: str) -> date:
 
 def _fecha_opcional(valor: Any, campo: str, clave: str) -> date | None:
     return None if valor is None else _fecha(valor, campo, clave)
+
+
+def _checksum(valor: Any, clave: str) -> str | None:
+    if valor is None:
+        return None
+    if not isinstance(valor, str) or not PATRON_DE_CHECKSUM.fullmatch(valor):
+        raise ManifiestoInvalido(f"{clave}: checksum debe ser un SHA-256 hexadecimal en minúsculas")
+    return valor
 
 
 def _criterios(valor: Any, clave: str) -> dict[str, str] | None:

@@ -15,6 +15,7 @@ from sqlalchemy.engine import URL
 
 from app.infrastructure.catalog.conexion import crear_motor
 from app.scripts import load_seed_corpus
+from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import RelojFijo
 from tests.support.milvus import INDICE_DE_ADR39
 from tests.support.pg import BaseDeTest
@@ -83,6 +84,26 @@ def test_el_script_carga_la_semilla_imprime_un_reporte_sin_contenido_y_sale_con_
     assert "Texto sintético" not in capturado.out + capturado.err
     assert "cancer.gov" not in capturado.out + capturado.err
     assert contrasena_runtime not in capturado.out + capturado.err
+
+
+def test_el_script_carga_el_manifiesto_real_con_embeddings_falsos_y_los_limites_de_milvus(
+    entorno_del_script: BaseDeTest,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """NO es el smoke de AC-1 (modelo real, L1D-106): comprueba que los textos reales caben en el esquema de Milvus."""
+    monkeypatch.setenv(
+        "CORPUS_SEED_MANIFEST_PATH", str(RAIZ_REPOSITORIO / "data/raw/seed/manifest.yaml")
+    )
+    monkeypatch.setenv("CORPUS_CHUNK_SIZE", "1024")
+
+    codigo = load_seed_corpus.main(embedder=EmbedderFalso(), reloj=RelojFijo())
+
+    capturado = capsys.readouterr()
+    reporte = json.loads(capturado.out)
+    assert codigo == 0, capturado.err
+    assert reporte["resumen"]["cargado"] == 10 and reporte["resumen"]["error"] == 0
+    assert sum(d["chunks"] for d in reporte["documentos"]) > 100
 
 
 def test_el_script_repetido_omite_lo_ya_cargado_y_no_publica_otra_release(

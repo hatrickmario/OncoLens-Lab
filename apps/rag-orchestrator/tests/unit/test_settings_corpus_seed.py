@@ -63,6 +63,7 @@ def test_el_mapa_de_licencias_por_defecto_asimila_cc0_y_el_texto_de_nci_a_domini
 
     assert mapa["cc0 1.0"] == "dominio_publico"
     assert mapa["texto de nci libre de copyright"] == "dominio_publico"
+    assert (mapa["cc by"], mapa["cc by 4.0"], mapa["cc by-sa"]) == ("cc_by", "cc_by", "cc_by_sa")
     assert not any("-nd" in clave for clave in mapa)
 
 
