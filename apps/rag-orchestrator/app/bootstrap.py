@@ -158,7 +158,14 @@ def _exigir_claves(valores: dict[str, object]) -> None:
 
 
 def _proveedor_de_meta(settings: Settings) -> LlmProvider:
-    raise NotImplementedError("no implementado")
+    """``LLM_PROVIDER`` (vocabulario de configuración) → ``meta.llmProvider`` (vocabulario del contrato, RN-12).
+
+    Mapeo explícito: ``local`` es el único proveedor con adapter; ``fake`` responde con los ejemplos y nunca llega a la
+    recuperación real; ``nube`` entrará aquí cuando exista su adapter.
+    """
+    if settings.llm_provider == "local":
+        return LlmProvider.local
+    raise ValueError("LLM_PROVIDER no tiene un proveedor de meta para la recuperación real")
 
 
 def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
@@ -169,7 +176,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         relevance_threshold=settings.relevance_threshold,  # type: ignore[arg-type]
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
         rerank_top_n=settings.rerank_top_n,  # type: ignore[arg-type]
-        llm_provider=settings.llm_provider,
+        llm_provider=_proveedor_de_meta(settings),
         llm_model=settings.llm_model,
         nli_model=settings.nli_model,  # type: ignore[arg-type]
         prompt_version=settings.prompt_version,  # type: ignore[arg-type]

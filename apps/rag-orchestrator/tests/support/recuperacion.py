@@ -35,7 +35,11 @@ from app.domain.retrieval_filter import (
     exigir_filtro_vigente,
     expresion_solo_vigente,
 )
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.schemas.generated.models import (
+    LlmProvider,
+    RagQueryInternalRequest,
+    RagQueryInternalResponse,
+)
 from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.service_jwt import con_token_valido
@@ -295,7 +299,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
     retrieval_top_k=40,
     rerank_top_n=10,
-    llm_provider="local",
+    llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
     nli_model="nli-test@1",
     prompt_version="rag-query@test",

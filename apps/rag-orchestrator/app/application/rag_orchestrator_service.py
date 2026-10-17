@@ -66,10 +66,6 @@ class ParametrosDeRecuperacion:
     nli_model: str
     prompt_version: str
 
-    def __post_init__(self) -> None:
-        # Acepta el texto del enum y lo valida: un proveedor fuera del contrato (p. ej. "fake") no llega a ``meta``.
-        object.__setattr__(self, "llm_provider", LlmProvider(self.llm_provider))
-
 
 class RAGOrchestratorService:
     def __init__(
