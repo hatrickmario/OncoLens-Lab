@@ -39,6 +39,7 @@ from app.domain.corpus_seed.versionado import (
     DecisionDeVersion,
     calcular_checksum,
     debe_publicar_release,
+    decidir_retiro,
     decidir_version,
 )
 
@@ -99,9 +100,32 @@ class SeedCorpusLoader:
         return self._cargar_documento(documento, admision)
 
     def _rechazar(self, documento: DocumentoDeSemilla, admision: Admision) -> ResultadoDeDocumento:
+        """Rechazo por licencia o fuente: retira la vigente del grupo (RN-21, RN-05) y registra el rechazo, sin borrar nada."""
+        try:
+            retirada = self._retirar_vigente_del_grupo(documento)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+            # Error, no rechazado, y sin fila de rechazo: la siguiente carga repite el retiro desde cero.
+            return ResultadoDeDocumento(
+                documento.document_key, Resultado.ERROR, f"retiro: {type(error).__name__}"
+            )
         self._catalogo.guardar_documento(registro_rechazado(documento, self._reloj.ahora()))
         motivo = admision.motivo.value if admision.motivo else None
-        return ResultadoDeDocumento(documento.document_key, Resultado.RECHAZADO, motivo)
+        return ResultadoDeDocumento(
+            documento.document_key, Resultado.RECHAZADO, motivo, retirada_de_vigente=retirada
+        )
+
+    def _retirar_vigente_del_grupo(self, documento: DocumentoDeSemilla) -> bool:
+        """Apaga en Milvus y luego retira en el catálogo la versión vigente del grupo; ``True`` si había una.
+
+        Orden de D5: primero los chunks (si falla, el catálogo sigue diciendo "vigente" y el contenido solo se pierde en
+        parte, nunca se sirve contenido retirado), después el catálogo.
+        """
+        retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
+        self._apagar(retiro.a_apagar)
+        if retiro.vigente_id is None:
+            return False
+        self._catalogo.retirar_version(retiro.vigente_id, self._reloj.ahora())
+        return True
 
     def _cargar_documento(
         self, documento: DocumentoDeSemilla, admision: Admision

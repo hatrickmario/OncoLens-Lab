@@ -93,8 +93,14 @@ class Entorno:
         return {fila["document_id"] for fila in filas}
 
     def total_de_chunks(self) -> int:
-        self.cliente.flush(self.coleccion)
-        return int(self.cliente.get_collection_stats(self.coleccion)["row_count"])
+        """Entidades vivas con consistencia fuerte: ``row_count`` cuenta también las reescrituras (upsert) sin compactar."""
+        filas = self.cliente.query(
+            self.coleccion,
+            filter="chunk_id != ''",
+            output_fields=["count(*)"],
+            consistency_level="Strong",
+        )
+        return int(filas[0]["count(*)"])
 
     def releases_publicadas(self) -> int:
         with self.motor.connect() as conexion:

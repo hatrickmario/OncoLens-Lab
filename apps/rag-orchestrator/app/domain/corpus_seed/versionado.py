@@ -69,9 +69,18 @@ class DecisionDeRetiro:
 
 
 def decidir_retiro(existentes: Sequence[VersionExistente]) -> DecisionDeRetiro:
-    raise NotImplementedError("no implementado")
+    """La versión vigente del grupo y los chunks a apagar: la vigente más toda versión no ``embebido`` (ver ``decidir_version``)."""
+    vigente = next((v for v in existentes if v.status == STATUS_EMBEBIDO and v.is_current), None)
+    huerfanas = tuple(v.document_id for v in existentes if v.status != STATUS_EMBEBIDO)
+    if vigente is None:
+        return DecisionDeRetiro(None, huerfanas)
+    return DecisionDeRetiro(vigente.document_id, (vigente.document_id, *huerfanas))
 
 
 def debe_publicar_release(vigentes: Collection[str], ultima: Collection[str] | None) -> bool:
-    """Una release nueva solo si el conjunto de documentos vigentes cambió respecto de la última (AC-5)."""
-    return bool(vigentes) and set(vigentes) != set(ultima or ())
+    """Una release nueva solo si el conjunto de documentos vigentes cambió respecto de la última (AC-5).
+
+    Incluye quedar sin vigentes tras un retiro (la última release no debe seguir listando lo retirado); sin release previa y
+    sin vigentes no hay nada que publicar.
+    """
+    return set(vigentes) != set(ultima or ())

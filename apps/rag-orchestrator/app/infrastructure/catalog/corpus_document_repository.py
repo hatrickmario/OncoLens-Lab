@@ -103,13 +103,16 @@ class CorpusDocumentRepository:
                     published_at=release.published_at,
                 )
             )
-            conexion.execute(
-                sa.insert(corpus_release_document),
-                [
-                    {"release_id": release.release_id, "document_id": identificador}
-                    for identificador in release.document_ids
-                ],
-            )
+            if (
+                release.document_ids
+            ):  # una release sin documentos es válida (tras retirar el último vigente)
+                conexion.execute(
+                    sa.insert(corpus_release_document),
+                    [
+                        {"release_id": release.release_id, "document_id": identificador}
+                        for identificador in release.document_ids
+                    ],
+                )
 
     @staticmethod
     def _guardar(conexion: sa.Connection, registro: RegistroDeDocumento) -> None:
