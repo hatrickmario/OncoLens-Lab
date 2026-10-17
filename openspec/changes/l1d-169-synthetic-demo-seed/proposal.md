@@ -30,7 +30,7 @@ entorno `piloto`, para que ningún dato `seed` contamine nunca un entorno con da
 
 ## What Changes
 
-- **Nuevo** `apps/clinical-api/prisma/seed.ts` (registrado en `package.json` → `prisma.seed`), idempotente
+- **Nuevo** `apps/clinical-api/prisma/seed.ts` (registrado en `prisma.config.ts` → `migrations.seed`, Prisma 7), idempotente
   (claves naturales deterministas + *upsert*), con:
   - **Guarda de entorno** (`APP_ENV`, `REAL_ANONYMIZED_ENABLED`, `REAL_IDENTIFIED_ENABLED`) evaluada
     **antes de abrir conexión o transacción**: con `APP_ENV=piloto` o ausente, o con cualquier
@@ -42,7 +42,7 @@ entorno `piloto`, para que ningún dato `seed` contamine nunca un entorno con da
     los que usa US-211 (FX-T4a-b).
   - **Servicio *one-shot* `clinical-seed`** en `infra/docker/docker-compose.yml` (imagen de
     `clinical-api`, `restart: "no"`, `clinical-net`, secretos `pg_clinical_api_password`,
-    `seed_doctor_password` y `seed_admin_password` según L1D-165 D3): ejecuta `npx prisma db seed` y
+    `seed_doctor_password` y `seed_admin_password` según L1D-165 D3): ejecuta el seed compilado (perfil `seed`) y
     termina; `clinical-api` en runtime no monta las contraseñas del seed `[S1 resp. 14b]`.
   - **Pacientes (a)–(e)** de OL-01 con `data_origin = sintetico`, `source_dataset = seed`,
     `agreement_reference` sintético no nulo y un `care_episode` abierto; datos clínicos con

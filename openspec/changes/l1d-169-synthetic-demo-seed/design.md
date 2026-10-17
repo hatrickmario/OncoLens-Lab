@@ -35,7 +35,7 @@ divergen de la base sembrada.
 3. **Toda la escritura en una transacción** (`prisma.$transaction`): un fallo a mitad no deja un seed
    parcial.
 4. **Guarda de entorno antes de Prisma**: `assertSeedPermitido(config)` es una función pura que recibe la
-   configuración ya leída; `seed.ts` la llama **antes** de instanciar `PrismaClient`. Entornos
+   configuración ya leída; `seed.ts` la llama **antes** de abrir la conexión a PostgreSQL. Entornos
    permitidos: lista en configuración (`SEED_ALLOWED_ENVS`, por defecto `local,test`); `piloto` siempre
    se rechaza aunque alguien lo añada a la lista (RN-13). `APP_ENV` ausente → rechazo.
    `REAL_ANONYMIZED_ENABLED=true` o `REAL_IDENTIFIED_ENABLED=true` → rechazo, sea cual sea `APP_ENV`
@@ -62,7 +62,7 @@ divergen de la base sembrada.
    `auth.role` con sus permisos de `data-model.md` §8. La contraseña se re-hashea solo si el usuario no
    existe (idempotencia: no cambia `password_hash` en cada ejecución).
 9. **(d) opt-out**: `recorded_by = admin@test.local`, `external_reference` sintético
-   (`OPTOUT-SEED-D`), `reason_code` nulo (TBD-21).
+   (`OPTOUT-SEED-D`), `reason_code` sintético fijo `opt_out_sintetico` (NOT NULL; TBD-21).
 10. **Contraseñas por archivo y proceso *one-shot*** (`[S1 resp. 14b]`): `seedConfig` resuelve cada
    contraseña con `leerSecreto(env, nombre, readFile)` — si `<NOMBRE>_FILE` está definida, lee el
    archivo (inexistente o vacío → error que nombra `<NOMBRE>_FILE`) e **ignora** la variable directa;
@@ -98,7 +98,7 @@ Sin cambios en `apps/*/openapi.yaml` ni en `contracts/`. Proveedor: ninguno. Los
 - `prisma/seed.ts` → `config/seedConfig` (lectura y validación Zod de `APP_ENV`, `SEED_ALLOWED_ENVS`,
   `REAL_ANONYMIZED_ENABLED`, `REAL_IDENTIFIED_ENABLED`, `SEED_REFERENCE_DATE`, `SEED_*_PASSWORD_FILE`
   con respaldo `SEED_*_PASSWORD`, `CLINICAL_CATALOG_PATH`; lector de archivos inyectado) → `assertSeedPermitido()` →
-  `PrismaClient` → `sembrar(prisma, catalogo, reloj, hasher)`.
+  conexión (`ConexionDelSeed.enTransaccion`) → `sembrar(sesion, { catalogo, reloj, hasher, credenciales, retencion })`.
 - `sembrar()` recibe sus colaboradores por parámetro (sin contenedor de DI): el cliente de Prisma real,
   el catálogo leído, un reloj y un *hasher* de contraseñas.
 - Reglas con nombre propio (extraídas y probadas en un solo lugar):
@@ -159,3 +159,22 @@ Resueltas por defecto razonable conforme a los specs durante la implementación;
    en lugar de cuatro parámetros posicionales. El seed adopta `createPasswordHasher(readAuthConfig(env).argon2)` y el
    usuario `doc1@test.local` de L1D-197 (decisión 56). Las fechas `retention_*` salen de `SEED_RETENTION_UNTIL_YEARS` y
    `SEED_RETENTION_MAX_YEARS` (10 y 20 años, data-model §4.3). `APP_ENV` es obligatorio también en `clinical-seed`.
+
+### Cambios del Gate 2 (vuelta 1) y deuda
+
+- **Atomicidad en la conexión:** `ConexionDelSeed.enTransaccion(fn)` (BEGIN/COMMIT/ROLLBACK, `conexion.ts`); `sembrar` solo
+  recibe la sesión de dentro. Un hasher que falla a mitad no deja filas (test [US-039 AC-3]).
+- **Perfil `seed`:** `clinical-seed` no arranca con `up` (`profiles: ["seed"]`); se ejecuta con
+  `docker compose --profile seed run --rm clinical-seed`. **Pendiente:** nada migra el esquema clínico en Compose
+  (one-shot `clinical-migrate` con `prisma migrate deploy`): el smoke de la CI no exige aún que el seed termine con 0.
+- **Una sola regla de lectura de secretos `*_FILE`:** `leerSecretoDeArchivo` en `src/config.ts`; `leerSecreto` del seed
+  delega y falla con `ConfiguracionInvalidaError`. `derivarGleason` es la única fuente de puntaje e ISUP.
+- **Guarda sin distinguir mayúsculas:** `PILOTO`/`Piloto` se rechazan igual que `piloto`, aunque estén en `SEED_ALLOWED_ENVS`.
+- **Logs del seed:** `traceId` por ejecución (`req_xxxxxxxx`) y `seed_fallido` solo con clase y variable.
+- **Imagen de runtime:** lleva el seed compilado (`dist/.../prisma/seed.js`); aceptado: sin contraseñas, el seed solo corre con
+  el perfil `seed` y las contraseñas llegan por `*_FILE`.
+- **Deuda S6 (sin ID):** rol de PostgreSQL `clinical_seed` con solo DML sobre `auth`/`clinical` en lugar de `clinical_api`
+  (dueño de la base), antes de G-Piloto.
+- **Preguntas abiertas al usuario:** origen `source_dataset = seed` junto a `agreement_reference` (data-model: «solo si el
+  paciente viene de un dataset»); `significance_source = 'documento'` en los biomarcadores sembrados (no hay documento);
+  dos patrones de contraseñas SINT-* de test (constantes de `tests/support/seed.ts` frente a `TEST_DOC*` de `usuarios.ts`).
