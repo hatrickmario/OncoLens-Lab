@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import pytest
 from pymilvus import MilvusClient
@@ -190,6 +191,30 @@ def test_carga_de_semilla_repetida_con_el_mismo_manifiesto_no_cambia_los_recuent
         Resultado.RECHAZADO,
         Resultado.RECHAZADO,
     ]
+
+
+@pytest.mark.ac("US-059", 6)
+def test_carga_de_semilla_con_t_ok_1_v2_la_deja_vigente_y_apaga_t_ok_1_y_sus_chunks_sin_borrar_nada(
+    entorno: Entorno,
+) -> None:
+    entorno.cargar("t-ok-1")
+    antes_t_ok_1 = entorno.fila("t-ok-1")
+    chunks_de_t_ok_1 = entorno.chunks_de(antes_t_ok_1["document_id"])
+    filas_antes = entorno.filas_del_catalogo()
+    instante_de_la_v2 = datetime(2026, 10, 17, 9, 30, tzinfo=UTC)
+    entorno.reloj.valor = instante_de_la_v2
+
+    entorno.cargar("t-ok-1-v2")
+
+    v1, v2 = entorno.fila("t-ok-1"), entorno.fila("t-ok-1-v2")
+    assert (v2["is_current"], v2["status"]) == (True, "embebido")
+    assert (v1["is_current"], v1["superseded_at"]) == (False, instante_de_la_v2)
+    assert entorno.filas_del_catalogo() == filas_antes + 1
+    chunks_apagados = entorno.chunks_de(v1["document_id"])
+    assert {c["chunk_id"] for c in chunks_apagados} == {c["chunk_id"] for c in chunks_de_t_ok_1}
+    assert chunks_apagados and not any(c["is_current"] for c in chunks_apagados)
+    assert all(c["is_current"] for c in entorno.chunks_de(v2["document_id"]))
+    assert entorno.ids_en_la_release() == [v2["document_id"]]
 
 
 @pytest.mark.ac("US-059", 3)
