@@ -35,6 +35,8 @@ function entornoValido(): Record<string, string> {
     CLINICAL_DATABASE_CA_FILE: archivo('pg_ca.crt', 'ca-ficticia'),
     RAG_ORCHESTRATOR_URL: 'http://rag-orchestrator:8000',
     CLINICAL_CATALOG_PATH: CATALOGO_DEL_MONOREPO,
+    AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
+    ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto sintético de test.',
   };
 }
 
@@ -56,6 +58,9 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
     ['CLINICAL_CATALOG_PATH', { CLINICAL_CATALOG_PATH: undefined }],
     ['ANALYSIS_MAX_OPTIONS', { ANALYSIS_MAX_OPTIONS: '4' }],
     ['EVIDENCE_DEFAULT_YEARS', { EVIDENCE_DEFAULT_YEARS: '0' }],
+    ['RAG_TIMEOUT_MS', { RAG_TIMEOUT_MS: '0' }],
+    ['AI_DISCLAIMER_TEXT', { AI_DISCLAIMER_TEXT: undefined }],
+    ['ANALYSIS_BASIS_S1_ASSUMPTION_TEXT', { ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined }],
   ])(
     'termina con código 1 sin escuchar y su stderr nombra %s cuando la configuración es inválida',
     (variable, cambios) => {

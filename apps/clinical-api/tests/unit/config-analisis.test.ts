@@ -4,6 +4,8 @@ import { ConfiguracionInvalidaError, readEvidenceAnalysisConfig } from '../../sr
 const ENV_VALIDO = {
   RAG_ORCHESTRATOR_URL: 'http://rag-orchestrator:8000',
   CLINICAL_CATALOG_PATH: '/catalogs',
+  AI_DISCLAIMER_TEXT: 'Texto de aviso sintético de test.',
+  ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto fijo sintético de test.',
 };
 
 function variableInvalida(env: NodeJS.ProcessEnv): string {
@@ -17,13 +19,22 @@ function variableInvalida(env: NodeJS.ProcessEnv): string {
 }
 
 describe('readEvidenceAnalysisConfig', () => {
-  it('aplica los valores por defecto del S1: maxOptions 1 y 10 años de antigüedad', () => {
+  it('aplica los valores por defecto del S1: maxOptions 1, 10 años de antigüedad y 30 s de plazo hacia rag-orchestrator', () => {
     expect(readEvidenceAnalysisConfig(ENV_VALIDO)).toEqual({
       ragOrchestratorUrl: 'http://rag-orchestrator:8000',
       catalogPath: '/catalogs',
       analysisMaxOptions: 1,
       evidenceDefaultYears: 10,
+      ragTimeoutMs: 30_000,
+      aiDisclaimerText: 'Texto de aviso sintético de test.',
+      analysisBasisAssumptionText: 'Supuesto fijo sintético de test.',
     });
+  });
+
+  it('lee RAG_TIMEOUT_MS del entorno', () => {
+    const config = readEvidenceAnalysisConfig({ ...ENV_VALIDO, RAG_TIMEOUT_MS: '45000' });
+
+    expect(config.ragTimeoutMs).toBe(45_000);
   });
 
   it('lee ANALYSIS_MAX_OPTIONS y EVIDENCE_DEFAULT_YEARS del entorno', () => {
@@ -55,6 +66,15 @@ describe('readEvidenceAnalysisConfig', () => {
     ['ANALYSIS_MAX_OPTIONS', { ...ENV_VALIDO, ANALYSIS_MAX_OPTIONS: '4' }],
     ['ANALYSIS_MAX_OPTIONS', { ...ENV_VALIDO, ANALYSIS_MAX_OPTIONS: 'abc' }],
     ['EVIDENCE_DEFAULT_YEARS', { ...ENV_VALIDO, EVIDENCE_DEFAULT_YEARS: '0' }],
+    ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: '0' }],
+    ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: '-5' }],
+    ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: 'abc' }],
+    ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: undefined }],
+    ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: '' }],
+    [
+      'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT',
+      { ...ENV_VALIDO, ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined },
+    ],
   ])('rechaza nombrando %s cuando el entorno es inválido', (variable, env) => {
     expect(variableInvalida(env)).toBe(variable);
   });

@@ -164,6 +164,11 @@ services:
       RAG_ORCHESTRATOR_URL: ${RAG_ORCHESTRATOR_URL:-http://rag-orchestrator:8000}
       ANALYSIS_MAX_OPTIONS: ${ANALYSIS_MAX_OPTIONS:-}
       EVIDENCE_DEFAULT_YEARS: ${EVIDENCE_DEFAULT_YEARS:-}
+      # Cierre del análisis (L1D-104): plazo hacia rag-orchestrator y textos configurables (RN-22). Los dos textos son
+      # obligatorios: vacíos, clinical-api no arranca (fallo cerrado); sus claves están en .env.example.
+      RAG_TIMEOUT_MS: ${RAG_TIMEOUT_MS:-}
+      AI_DISCLAIMER_TEXT: ${AI_DISCLAIMER_TEXT:-}
+      ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: ${ANALYSIS_BASIS_S1_ASSUMPTION_TEXT:-}
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
       BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password

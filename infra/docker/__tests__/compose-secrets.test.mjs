@@ -262,5 +262,8 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(entorno.RAG_ORCHESTRATOR_URL).toBe('http://rag-orchestrator:8000');
     expect(entorno.ANALYSIS_MAX_OPTIONS).toBe('');
     expect(entorno.EVIDENCE_DEFAULT_YEARS).toBe('');
+    expect(entorno.RAG_TIMEOUT_MS).toBe('');
+    expect(entorno.AI_DISCLAIMER_TEXT).toBe('');
+    expect(entorno.ANALYSIS_BASIS_S1_ASSUMPTION_TEXT).toBe('');
   });
 });
