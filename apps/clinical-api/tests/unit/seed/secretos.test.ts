@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { leerSecreto, SecretoDelSeedAusenteError } from '../../../prisma/seed/secretos.js';
+import { leerSecreto } from '../../../prisma/seed/secretos.js';
+import { ConfiguracionInvalidaError } from '../../../src/config.js';
 
 /** Lector de archivos en memoria: el test no hace E/S. */
 function archivos(contenidos: Record<string, string>) {
@@ -47,28 +48,32 @@ describe('leerSecreto', () => {
     expect(leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({}))).toBe(VALOR_DE_LA_VARIABLE);
   });
 
-  it('falla nombrando _FILE cuando el archivo está vacío, aunque haya variable directa', () => {
+  it('falla con ConfiguracionInvalidaError nombrando _FILE cuando el archivo está vacío, aunque haya variable directa', () => {
     const env = {
       SEED_DOCTOR_PASSWORD_FILE: '/run/doctor',
       SEED_DOCTOR_PASSWORD: VALOR_DE_LA_VARIABLE,
     };
+    const leer = () => leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '\n' }));
 
-    expect(() =>
-      leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({ '/run/doctor': '\n' })),
-    ).toThrow(/SEED_DOCTOR_PASSWORD_FILE/);
+    expect(leer).toThrow(ConfiguracionInvalidaError);
+    expect(leer).toThrow('SEED_DOCTOR_PASSWORD_FILE apunta a un archivo vacío');
   });
 
   it('falla nombrando _FILE y sin la ruta cuando el archivo no se puede leer', () => {
     const env = { SEED_DOCTOR_PASSWORD_FILE: '/run/ruta-secreta' };
+    const leer = () => leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({}));
 
-    expect(() => leerSecreto(env, 'SEED_DOCTOR_PASSWORD', archivos({}))).toThrow(
-      new SecretoDelSeedAusenteError('SEED_DOCTOR_PASSWORD_FILE', 'no apunta a un archivo legible'),
-    );
+    expect(leer).toThrow(ConfiguracionInvalidaError);
+    expect(leer).toThrow('SEED_DOCTOR_PASSWORD_FILE no apunta a un archivo legible');
+    expect(leer).not.toThrow(/ruta-secreta/);
   });
 
-  it('falla nombrando _FILE cuando no hay archivo ni variable directa', () => {
-    expect(() => leerSecreto({}, 'SEED_ADMIN_PASSWORD', archivos({}))).toThrow(
-      /SEED_ADMIN_PASSWORD_FILE/,
+  it('falla con ConfiguracionInvalidaError nombrando _FILE cuando no hay archivo ni variable directa', () => {
+    const leer = () => leerSecreto({}, 'SEED_ADMIN_PASSWORD', archivos({}));
+
+    expect(leer).toThrow(ConfiguracionInvalidaError);
+    expect(leer).toThrow(
+      'SEED_ADMIN_PASSWORD_FILE no está definida (ni SEED_ADMIN_PASSWORD como respaldo local)',
     );
   });
 
