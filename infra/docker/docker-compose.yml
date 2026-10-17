@@ -193,7 +193,11 @@ services:
   # admin) y termina. Es el único servicio con las contraseñas del seed; clinical-api no las monta. Se conecta como
   # clinical_api con la URL sin credenciales y TLS verificado (SEG-08). Se niega en APP_ENV=piloto y con
   # REAL_*_ENABLED=true (RN-13). Ejecuta el seed COMPILADO: la imagen runtime no trae el CLI de Prisma ni tsx.
+  # Requiere el esquema clínico migrado: nada lo migra todavía en Compose (pendiente del one-shot clinical-migrate).
   clinical-seed:
+    # Perfil `seed`: no arranca con `up` (el piloto no debe montar la contraseña del dueño de la base). Se ejecuta con
+    # `docker compose --profile seed run --rm clinical-seed`.
+    profiles: ["seed"]
     build:
       context: ../..
       dockerfile: apps/clinical-api/Dockerfile

@@ -25,8 +25,9 @@ códigos CIE-10/LOINC/ATC salen solo de `packages/clinical-catalogs`; un términ
 
 ### Cómo ejecutarlo
 
-- Compose (recomendado): `docker compose -f infra/docker/docker-compose.yml run --rm clinical-seed`. El servicio
-  *one-shot* `clinical-seed` es el único que monta las contraseñas del seed y ejecuta el seed compilado.
+- Compose (recomendado): `docker compose -f infra/docker/docker-compose.yml --profile seed run --rm clinical-seed`. El
+  servicio *one-shot* `clinical-seed` (perfil `seed`: no arranca con `up`) es el único que monta las contraseñas del
+  seed y ejecuta el seed compilado. Necesita el esquema clínico ya migrado.
 - Local: `npx prisma db seed` (ejecuta `tsx prisma/seed.ts`, registrado en `prisma.config.ts`).
 
 El seed no escribe en `piloto` ni con `REAL_*_ENABLED=true`: aborta con código distinto de 0 antes de abrir la base.

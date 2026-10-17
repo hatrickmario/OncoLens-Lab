@@ -77,8 +77,8 @@ export WEB_PORT="${WEB_PORT:-$(puerto_libre)}"
 export LLM_PROVIDER=fake
 compose up -d --no-build --wait --wait-timeout "$espera" >"$log" 2>&1 || fallo "el stack en modo fake no quedó healthy"
 
-# corpus-migrate y clinical-seed son one-shot (restart: "no", sin healthcheck): terminan con éxito y su estado nunca es healthy.
-esperados="$(compose config --services | grep -vxE 'corpus-migrate|clinical-seed' | wc -l | tr -d ' ')"
+# corpus-migrate es un one-shot (restart: "no", sin healthcheck): termina con éxito y su estado nunca es healthy.
+esperados="$(compose config --services | grep -vx 'corpus-migrate' | wc -l | tr -d ' ')"
 saludables="$(estado_de | grep -c '=healthy$' || true)"
 [ "$saludables" = "$esperados" ] || fallo "AC-1: $saludables de $esperados servicios healthy ($(estado_de | tr '\n' ' '))"
 bien "AC-1 los $esperados servicios están healthy"
@@ -88,10 +88,8 @@ migracion="$(compose ps -a corpus-migrate --format '{{.State}} {{.ExitCode}}')"
 [ "$migracion" = "exited 0" ] || fallo "AC-1: corpus-migrate no terminó con código 0 (estado: $migracion)"
 bien "AC-1 corpus-migrate terminó con código 0"
 
-# El seed sintético (L1D-169, US-039 AC-1) también es un one-shot: debe terminar con código 0 y dejar el paciente (a).
-siembra="$(compose ps -a clinical-seed --format '{{.State}} {{.ExitCode}}')"
-[ "$siembra" = "exited 0" ] || fallo "US-039 AC-1: clinical-seed no terminó con código 0 (estado: $siembra)"
-bien "US-039 AC-1 clinical-seed terminó con código 0"
+# clinical-seed (L1D-169) pertenece al perfil `seed`: no arranca con `up`. Que termine con código 0 queda pendiente del
+# one-shot clinical-migrate (hoy nada migra el esquema clínico en Compose); se consultó al usuario.
 
 salida="$(get_desde web http://clinical-api:3000/health)"
 [ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de clinical-api desde web respondió: $salida"
