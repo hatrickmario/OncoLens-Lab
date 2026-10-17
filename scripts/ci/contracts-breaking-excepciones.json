@@ -1,0 +1,13 @@
+[
+  {
+    "id": "E-1",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-106-retrieval-threshold-sin-evidencia",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-body-one-of-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added `#/components/schemas/ErrorTipoCancerNoRegistrado` to the response body `oneOf` list for the response status `422`"
+  }
+]

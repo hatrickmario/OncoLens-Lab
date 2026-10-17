@@ -1,0 +1,60 @@
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { PROVIDERS } from '../../contracts/lib/specs.mjs';
+import { errNoDeclarados } from '../lib/excepcionesDeContrato.mjs';
+
+const RAIZ = path.resolve(import.meta.dirname, '../../..');
+const EXCEPCIONES = JSON.parse(readFileSync(path.join(RAIZ, 'scripts/ci/contracts-breaking-excepciones.json'), 'utf8'));
+
+const ERR = 3;
+const WARN = 2;
+const HALLAZGO_422 = {
+  id: 'response-body-one-of-added',
+  text: 'added `#/components/schemas/ErrorTipoCancerNoRegistrado` to the response body `oneOf` list for the response status `422`',
+  level: ERR,
+  operation: 'POST',
+  path: '/rag/query',
+};
+const PROVEEDOR = 'rag-orchestrator';
+
+describe('errNoDeclarados (ADR-26)', () => {
+  it('no devuelve el ERR del 422 TIPO_CANCER_NO_REGISTRADO cuando está declarado como excepción', () => {
+    expect(errNoDeclarados(PROVEEDOR, [HALLAZGO_422], EXCEPCIONES)).toEqual([]);
+  });
+
+  it('devuelve el mismo ERR cuando lo reporta otro proveedor', () => {
+    expect(errNoDeclarados('clinical-api', [HALLAZGO_422], EXCEPCIONES)).toEqual([HALLAZGO_422]);
+  });
+
+  it('devuelve un ERR de la misma regla y ruta cuando el schema añadido es otro', () => {
+    const otro = { ...HALLAZGO_422, text: HALLAZGO_422.text.replace('ErrorTipoCancerNoRegistrado', 'ErrorOtro') };
+    expect(errNoDeclarados(PROVEEDOR, [otro], EXCEPCIONES)).toEqual([otro]);
+  });
+
+  it('devuelve un ERR de otra regla sobre la misma operación', () => {
+    const otro = { ...HALLAZGO_422, id: 'response-property-removed', text: 'removed `status`' };
+    expect(errNoDeclarados(PROVEEDOR, [otro], EXCEPCIONES)).toEqual([otro]);
+  });
+
+  it('devuelve el mismo ERR cuando cambia la ruta', () => {
+    const otro = { ...HALLAZGO_422, path: '/case/summary' };
+    expect(errNoDeclarados(PROVEEDOR, [otro], EXCEPCIONES)).toEqual([otro]);
+  });
+
+  it('ignora los avisos (WARN) y conserva solo los ERR no declarados', () => {
+    const aviso = { ...HALLAZGO_422, id: 'response-body-wrapped-in-one-of-original-preserved', level: WARN };
+    const otroErr = { ...HALLAZGO_422, id: 'request-body-type-changed', text: 'otro' };
+    expect(errNoDeclarados(PROVEEDOR, [aviso, HALLAZGO_422, otroErr], EXCEPCIONES)).toEqual([otroErr]);
+  });
+});
+
+describe('contracts-breaking-excepciones.json', () => {
+  it('declara solo la excepción E-1 del 422 TIPO_CANCER_NO_REGISTRADO, con su ADR-26 y un proveedor válido', () => {
+    expect(EXCEPCIONES.map((excepcion) => excepcion.id)).toEqual(['E-1']);
+    const [excepcion] = EXCEPCIONES;
+    expect(PROVIDERS).toContain(excepcion.proveedor);
+    expect(excepcion.adr).toBe('ADR-26');
+    expect(existsSync(path.join(RAIZ, 'docs/architecture/adr', excepcion.documento))).toBe(true);
+  });
+});
