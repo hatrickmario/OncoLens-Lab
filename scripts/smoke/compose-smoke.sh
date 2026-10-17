@@ -88,6 +88,9 @@ migracion="$(compose ps -a corpus-migrate --format '{{.State}} {{.ExitCode}}')"
 [ "$migracion" = "exited 0" ] || fallo "AC-1: corpus-migrate no terminó con código 0 (estado: $migracion)"
 bien "AC-1 corpus-migrate terminó con código 0"
 
+# clinical-seed (L1D-169) pertenece al perfil `seed`: no arranca con `up`. Que termine con código 0 queda pendiente del
+# one-shot clinical-migrate (hoy nada migra el esquema clínico en Compose); se consultó al usuario.
+
 salida="$(get_desde web http://clinical-api:3000/health)"
 [ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de clinical-api desde web respondió: $salida"
 bien "AC-1 /health de clinical-api responde 200 desde web"

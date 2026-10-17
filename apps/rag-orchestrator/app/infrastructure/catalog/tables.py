@@ -14,13 +14,14 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 from app.config.settings import SCHEMA_CORPUS
+from app.domain.corpus_seed.admisibilidad import ClaseDeLicencia
 
 # Valores literales de data-model.md §4.6, usados por los ``CHECK`` de este ``MetaData``. La migración 0001 congela su
 # propia copia y ``alembic check`` NO compara ``CHECK``: un test compara los de la base migrada con este diccionario.
 DOMINIOS_CERRADOS: Final[dict[str, tuple[str, ...]]] = {
     "source_type": ("guideline", "clinical_trial", "literature", "genomic_study"),
     "language": ("es", "en"),
-    "license_class": ("dominio_publico", "cc_by", "cc_by_sa", "cc_by_nc"),
+    "license_class": tuple(clase.value for clase in ClaseDeLicencia),
     "population": ("adulto", "pediatrico", "ambos"),
     "study_design": ("guia", "eca", "observacional", "revision_sistematica", "otro"),
     "trial_phase": ("I", "II", "III", "IV"),

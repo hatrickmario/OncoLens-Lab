@@ -14,9 +14,51 @@ import {
 import { correo, digitos, documentoConPalabraClave, formatosReales, hashDelHallazgo, telefonoE164, telefonoLocal } from './helpers/piiSintetica.mjs';
 
 const formatos = formatosReales();
-const lineasDe = (texto) => detectarPii(texto, formatos).map(({ linea, formato }) => `${linea}:${formato}`);
+const lineasDe = (texto, ruta) => detectarPii(texto, formatos, ruta).map(({ linea, formato }) => `${linea}:${formato}`);
 
 describe('detectarPii', () => {
+  const RUTA_DE_LA_SEMILLA = 'data/raw/seed/docs/nci-mama-hp-en.txt';
+  // Compuesto al ejecutarse: el archivo no lleva el patrón literal, que fuera de la semilla es hallazgo.
+  const registro = `${'NCT'}${'00712140'}`;
+  const trialConNct = `the PERSEPHONE trial (${registro}), which enrolled 4,089`;
+
+  it('no informa un identificador NCT de ClinicalTrials.gov que cae tras la palabra clave de un teléfono (PERSEPHONE trial) dentro de data/raw/seed/docs/ [L1D-115]', () => {
+    expect(detectarPii(trialConNct, formatos, RUTA_DE_LA_SEMILLA).map(({ linea, formato }) => `${linea}:${formato}`)).toEqual([]);
+  });
+
+  it.each([
+    ['apps/clinical-api/src/nota.ts'],
+    ['data/otro/nota.txt'],
+    ['data/raw/seed/nota.txt'],
+    ['data/raw/seed/docs-otros/nota.txt'],
+    ['docs/data/raw/seed/docs/nota.txt'],
+  ])('sí informa el mismo patrón NCT como telefono_local fuera de data/raw/seed/docs/ (%s) [L1D-115 P2]', (ruta) => {
+    expect(detectarPii(trialConNct, formatos, ruta).map(({ linea, formato }) => `${linea}:${formato}`)).toEqual(['1:telefono_local']);
+  });
+
+  it('sí informa el patrón NCT como telefono_local cuando no se conoce la ruta del archivo [L1D-115 P2]', () => {
+    expect(lineasDe(trialConNct)).toEqual(['1:telefono_local']);
+  });
+
+  it('sí informa ocho dígitos si NCT es parte de otra palabra y no un prefijo de registro [L1D-115]', () => {
+    expect(
+      detectarPii(`the PERSEPHONE trial (${'X'}${'NCT'}00712140), which enrolled 4,089`, formatos, RUTA_DE_LA_SEMILLA).map(({ linea, formato }) => `${linea}:${formato}`),
+    ).toEqual(['1:telefono_local']);
+  });
+
+  it('el escáner pasa el NCT bajo data/raw/seed/docs/ y falla el mismo patrón en apps/ [L1D-115 P2]', () => {
+    const contenido = Buffer.from(trialConNct);
+    const resultado = escanear({
+      archivos: [RUTA_DE_LA_SEMILLA, 'apps/clinical-api/src/nota.ts'],
+      leer: () => contenido,
+      formatos,
+      excluir: [],
+      allowlist: [],
+    });
+
+    expect(resultado.hallazgos.map(({ ruta, formato }) => `${ruta}:${formato}`)).toEqual(['apps/clinical-api/src/nota.ts:telefono_local']);
+  });
+
   it('devuelve documento_identidad en la línea 7 sin el valor cuando el número va precedido de su palabra clave [US-036 AC-4]', () => {
     const texto = `${'linea\n'.repeat(6)}{ "nota": "${documentoConPalabraClave(8)}" }`;
 

@@ -57,6 +57,7 @@ describe('assertSecretPresent', () => {
 
       expect(error).toBeInstanceOf(SecretoAusenteError);
       expect(error.message).toContain('BLIND_INDEX_HMAC_KEY_FILE');
+      expect(error.message).not.toContain('/s/hmac');
     }
   });
 

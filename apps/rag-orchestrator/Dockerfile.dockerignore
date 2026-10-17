@@ -37,3 +37,4 @@ apps/rag-orchestrator/app/scripts
 !apps/rag-orchestrator/app/scripts/__init__.py
 !apps/rag-orchestrator/app/scripts/migrate_corpus_catalog.py
 !apps/rag-orchestrator/app/scripts/init_corpus_store.py
+!apps/rag-orchestrator/app/scripts/load_seed_corpus.py

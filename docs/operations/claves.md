@@ -27,7 +27,7 @@ de los certificados y el prefijo de test salen de `infra/docker/.env` o, si no e
 | `pg_rag_corpus_migrator_password` | rol `rag_corpus_migrator` (DDL solo sobre `corpus`, para Alembic) | 0600 |
 | `clinical_minio_root_password` · `milvus_minio_root_password` | cuentas raíz de los dos MinIO | 0600 |
 | `seed_doctor_password` · `seed_admin_password` | cuentas sintéticas del seed (`l1d-169-synthetic-demo-seed`) | 0600 |
-| `pg_ca.key` · `pg_ca.crt` | CA propia de PostgreSQL; la clave **no se monta** en ningún servicio; el certificado público lo monta solo `clinical-api` (`CLINICAL_DATABASE_CA_FILE`) para verificar el TLS | 0600 · 0644 |
+| `pg_ca.key` · `pg_ca.crt` | CA propia de PostgreSQL; la clave **no se monta** en ningún servicio; el certificado público lo montan solo `clinical-api` y el *one-shot* `clinical-seed` (`CLINICAL_DATABASE_CA_FILE`) para verificar el TLS | 0600 · 0644 |
 | `pg_server.key` · `pg_server.crt` | certificado del servidor, SAN `DNS:postgres`, firmado por la CA | 0600 · 0644 |
 | `pg_hba.conf` | reglas de acceso renderizadas desde `infra/docker/postgres/pg_hba.conf.template` | 0644 |
 | `pg_test_admin_password` · `pg_hba.test.conf` | solo con `--profile test`: rol `oncolens_test_admin` (solo `CREATEDB`) y las reglas con `PG_TEST_DB_PREFIX` | 0600 · 0644 |
@@ -44,7 +44,7 @@ Lo verifica el test estático `infra/docker/__tests__/compose-secrets.test.mjs`.
 | `clinical-api` | `jwt_service_private.pem`, `identity_aes_key`, `blind_index_hmac_key`, `pg_clinical_api_password`, `pg_ca.crt`, `pg_research_writer_password`, `clinical_minio_root_password` |
 | `rag-orchestrator` | exactamente `jwt_service_public.pem` y `pg_rag_corpus_password` |
 | `corpus-migrate` (*one-shot* de L1D-114) | exactamente `pg_rag_corpus_migrator_password` |
-| `clinical-seed` (*one-shot* de L1D-169) | `pg_clinical_api_password`, `seed_doctor_password`, `seed_admin_password` |
+| `clinical-seed` (*one-shot* de L1D-169) | `pg_clinical_api_password`, `pg_ca.crt` (verifica el TLS de PostgreSQL), `seed_doctor_password`, `seed_admin_password` |
 | `postgres` | las contraseñas de los roles, `pg_server.crt`, `pg_server.key`, `pg_hba.conf` (perfil test: también `pg_hba.test.conf` y `pg_test_admin_password`) |
 | `clinical-minio` | `clinical_minio_root_password` |
 | `milvus-minio`, `milvus-standalone` | `milvus_minio_root_password` |

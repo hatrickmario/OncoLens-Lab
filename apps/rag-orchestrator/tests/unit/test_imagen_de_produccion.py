@@ -12,7 +12,12 @@ from pathlib import Path
 RAIZ_APP = Path(__file__).resolve().parents[2]
 PREFIJO_REPO = "apps/rag-orchestrator"
 # Lista blanca: lo único de app/scripts que viaja en la imagen de producción (el one-shot corpus-migrate y el inicializador).
-SCRIPTS_DE_OPERACION = ("migrate_corpus_catalog.py", "init_corpus_store.py", "__init__.py")
+SCRIPTS_DE_OPERACION = (
+    "migrate_corpus_catalog.py",
+    "init_corpus_store.py",
+    "load_seed_corpus.py",
+    "__init__.py",
+)
 PREFIJOS_DE_MEDICION = (
     "app.evaluation",
     "app.scripts.adr39_",

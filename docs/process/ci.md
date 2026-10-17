@@ -75,7 +75,8 @@ caso cuenta como FALLA aunque no se use `--estricto`, así que no puede quedar p
     `prefijosExentos` (`SINT-`, el centinela que exigen los ejemplos de `contracts/examples/`), `contextosExentos` (`url`:
     palabra clave y valor dentro de la **ruta** de una misma URL, antes de `?`, `#` y `;`; la consulta y el fragmento se escanean
     siempre), `prefijosDeRegistroExentos` (`NCT` en mayúsculas y exactamente ocho dígitos: el identificador de
-    ClinicalTrials.gov, con cualquier palabra clave), `dominiosExentos` y `correosExentos` (buzones
+    ClinicalTrials.gov, con cualquier palabra clave; en `telefono_local` acotado por `rutasDeRegistroExentas` a
+    `data/raw/seed/docs/**`, fuera de esa ruta es hallazgo), `dominiosExentos` y `correosExentos` (buzones
     institucionales públicos concretos; hoy, el de consultas de la CIE de la OMS).
   - Siglas de documento: `CC`, `C.C.`, `TI`, `T.I.`, `CE`, `C.E.`, `NUIP`, `ID`, `HC`, `tarjeta de identidad`,
     `historia clínica`; las de hasta cuatro caracteres exigen límite de palabra.

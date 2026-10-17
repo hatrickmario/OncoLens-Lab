@@ -238,3 +238,6 @@ son los tests de aceptación con FX-T4a-a.
 - ~~Código del `503`~~: confirmado por el registro de versiones (decisión 58 del plan: L1D-203 → 1.5.0 por código nuevo; sustituye al de `[S1 resp. 37]`).
 - ~~Firma de `ContextDeidentifier`~~: L1D-103 la fija como `desidentificar(contexto, query, caso)`.
 - ~~AC-5 con `p-7f3a`~~: `psd_p7f3a` por `[S1 resp. 18]`.
+
+
+> **Nota (L1D-115, 2026-10-17):** `config/pii-formats.json` lleva exenciones (`prefijosExentos`, `contextosExentos`, `prefijosDeRegistroExentos` —desde L1D-115 también en `telefono_local` para el identificador NCT—, `dominiosExentos`, `correosExentos`) que solo aplica el escáner de la CI (`scripts/lib/formatosPii.mjs`). El enmascarado en ejecución de este change debe decidir de forma EXPLÍCITA si usa `coincidenciasPii(..., { sinExenciones: true })` o respeta esas exenciones: una exención pensada para texto de documentos públicos no tiene por qué valer para el contexto clínico de un paciente.

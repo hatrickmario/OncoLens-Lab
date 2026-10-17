@@ -54,6 +54,17 @@ Volver a ejecutar el cargador con el mismo manifiesto MUST dejar sin cambios el 
 - **THEN** el número de filas de `corpus.corpus_document` y el de entidades de `corpus_chunks` son los mismos que antes
 - **AND** el adapter de *embeddings* falso registra cero invocaciones en la segunda carga
 
+#### Scenario: Omitir reconcilia Milvus con el catálogo [US-059 AC-6] [RN-05] [M1]
+- **GIVEN** `t-ok-1` vigente cuyo reemplazo por `t-ok-1-v2` falló al confirmar el catálogo y dejó los chunks de `t-ok-1` apagados
+- **WHEN** se carga de nuevo el texto de `t-ok-1`
+- **THEN** el resultado es `omitido`, los chunks vigentes de Milvus son solo los de `t-ok-1` y los de `t-ok-1-v2` quedan no vigentes
+- **AND** una versión reemplazada puede reingresar si su grupo quedó sin vigente (M2, aceptado por el usuario)
+
+#### Scenario: Las revistas de ESMO se rechazan como fuente excluida [US-059 AC-3] [D-09] [P1]
+- **GIVEN** documentos cuyo nombre es «Annals of Oncology» o cuyo `external_id` es un DOI `10.1016/j.annonc…` o `10.1016/j.esmoop…`, o un host `esmoopen.com` / `annalsofoncology.org`
+- **WHEN** se evalúa su admisibilidad con cualquier `CORPUS_EXCLUDED_SOURCES`
+- **THEN** el motivo es `fuente_excluida`
+
 ### Requirement: Una versión nueva no borra el histórico
 Cuando llega un documento con el mismo `version_group_id` que uno vigente y distinto `checksum`, el cargador MUST insertarlo como nueva fila con `is_current = true`, marcar la versión anterior con `is_current = false` y `superseded_at` (reloj inyectado), marcar sus chunks con `is_current = false`, y SHALL NOT borrar ninguna fila ni ningún chunk (RN-05, ADR-5).
 
@@ -63,3 +74,23 @@ Cuando llega un documento con el mismo `version_group_id` que uno vigente y dist
 - **THEN** `t-ok-1-v2` queda con `is_current = true` y `status = embebido`
 - **AND** `t-ok-1` queda con `is_current = false` y `superseded_at` igual a la hora del reloj congelado, y todos sus chunks tienen `is_current = false`
 - **AND** el número de filas de `corpus.corpus_document` aumentó exactamente en 1 y los chunks de `t-ok-1` siguen existiendo en `corpus_chunks`
+
+### Requirement: Un rechazo retira la versión vigente del grupo
+Un documento rechazado por licencia o fuente excluida MUST retirar la versión `embebido` y vigente de su grupo (`version_group_id`) sin borrar nada, y si no puede retirarla su resultado SHALL ser `error`, no `rechazado` (RN-21, RN-05; decidido por el usuario, 2026-10-20).
+
+#### Scenario: Un documento embebido que vuelve con CC BY-ND deja su grupo sin versión vigente [US-059] [RN-21] [RN-05]
+- **GIVEN** `t-ok-1` cargado, `embebido` y vigente, y el reloj de test congelado
+- **WHEN** el manifiesto trae el mismo documento (mismo `version_group_id`) con licencia `CC BY-ND 4.0` o con su fuente en `CORPUS_EXCLUDED_SOURCES`
+- **THEN** el reporte lo marca `rechazado` con `retirada_de_vigente = true`
+- **AND** la versión anterior queda con `is_current = false` y `superseded_at` igual a la hora del reloj, ninguno de sus chunks de `corpus_chunks` es vigente y todos siguen existiendo
+- **AND** el número de filas de `corpus.corpus_document` solo aumenta (la fila del rechazo) y se publica una `CorpusRelease` nueva que no incluye la versión retirada
+
+#### Scenario: Si apagar la versión vigente falla el resultado es error y nada cambia [US-059] [RN-05]
+- **GIVEN** `t-ok-1` cargado y vigente, y Milvus caído al apagar chunks
+- **WHEN** el mismo documento vuelve rechazado
+- **THEN** el reporte lo marca `error` (no `rechazado`), la versión sigue vigente en el catálogo y no se escribe la fila de rechazo
+
+#### Scenario: Un documento retirado que vuelve con el mismo texto y la licencia corregida queda vigente [US-059] [RN-21] [RN-05]
+- **GIVEN** `t-ok-1` retirado por un rechazo (sin versión vigente en su grupo)
+- **WHEN** el manifiesto trae el mismo texto con una licencia aceptada
+- **THEN** `t-ok-1` vuelve a `is_current = true` con `superseded_at` nulo, sus chunks son vigentes y la `CorpusRelease` nueva lo incluye

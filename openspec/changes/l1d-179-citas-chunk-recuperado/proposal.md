@@ -64,6 +64,7 @@ segunda (soporte NLI) es US-064.
 
 ## Dependencias
 
+- ↪ **Depende de** la historia **US-231a** (adapters reales de *embeddings*, *reranker* y detector de idioma, ADR-39; mitad de US-231, dividida por la decisión 75 del plan; Linear: pendiente (límite de issues del workspace)): debe estar en `main` antes de este change para correr con modelos reales; los AC siguen verificándose con adapters falsos.
 - ↪ **Depende de** el change de **L1D-106** (US-055): `RAGOrchestratorService`, puertos, conjunto
   de chunks recuperados sobre el umbral y fixtures FX-06a-a / FX-06a-b (adapters falsos).
 - **Sin dependencia de L1D-275:** los tests de aceptación corren sobre el service con el

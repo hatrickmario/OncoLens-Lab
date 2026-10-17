@@ -1,5 +1,7 @@
 # Tasks — l1d-180-soporte-nli-descartadas
 
+> ↪ Depende de **US-231b** (puerto `NliClassifier`, adapter real de NLI y *smoke* de la semilla, ADR-39; mitad de US-231, dividida por la decisión 75 del plan; Linear: pendiente (límite de issues del workspace)): en `main` antes de este change para correr con modelos reales. Los AC se verifican con adapters falsos. **Ownership (decisión 75):** US-231b crea el puerto `NliClassifier` (firma de la D7 del design) y el adapter real `MdebertaNliClassifier`; aquí la parte `NliClassifier` de la tarea 2.11 y la tarea 2.14 se reducen a consumirlos y cablear la etapa (a reconciliar al iniciar el change).
+
 > Matriz TDD (CLAUDE.md): regla RN-01/RN-23 y endpoint → **TDD estricto, doble bucle** (commit
 > `test(L1D-180)` con el test de aceptación en rojo antes de su `feat(L1D-180)`); umbral y modelo NLI →
 > **evaluate**; fixtures → **test después**. Mocks solo en los bordes: LLM, NLI, Milvus, *embeddings*,

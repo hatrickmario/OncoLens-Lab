@@ -1,5 +1,7 @@
 # Tasks — l1d-179-citas-chunk-recuperado
 
+> ↪ Depende de **US-231a** (adapters reales de *embeddings*, *reranker* y detector de idioma, ADR-39; mitad de US-231, dividida por la decisión 75 del plan; Linear: pendiente (límite de issues del workspace)): en `main` antes de este change para correr con modelos reales. Los AC se verifican con adapters falsos.
+
 > Matriz TDD (CLAUDE.md): regla RN-01/RN-04 y endpoint → **TDD estricto, doble bucle** (commit
 > `test(L1D-179)` con el test de aceptación en rojo antes de su `feat(L1D-179)`); fixtures →
 > **test después**. Mocks solo en los bordes: LLM, Milvus, *embeddings*, *reranker* (adapters

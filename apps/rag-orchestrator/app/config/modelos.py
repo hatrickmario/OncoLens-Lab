@@ -12,6 +12,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from app.domain.corpus_seed.chunking import validar_ventana
+
 CLAVES_MODELOS = (
     "EMBEDDING_MODEL",
     "EMBEDDING_MODEL_REVISION",
@@ -97,7 +99,7 @@ def _entero_no_negativo(valor: str) -> int:
     return numero
 
 
-def opcion(*validas: str):  # noqa: ANN202
+def opcion(*validas: str):
     def validar(valor: str) -> str:
         if valor not in validas:
             raise ValueError(f"debe ser uno de {validas}")
@@ -179,8 +181,11 @@ def cargar_config_modelos(entorno: Mapping[str, str]) -> ConfigModelos:
             valores[clave] = _VALIDADORES[clave](crudo)
         except (ValueError, TypeError, json.JSONDecodeError) as exc:
             problemas.append(f"{clave}: {exc}")
-    if not problemas and valores["CORPUS_CHUNK_OVERLAP"] >= valores["CORPUS_CHUNK_SIZE"]:
-        problemas.append("CORPUS_CHUNK_OVERLAP: debe ser menor que CORPUS_CHUNK_SIZE")
+    if not problemas:
+        try:
+            validar_ventana(valores["CORPUS_CHUNK_SIZE"], valores["CORPUS_CHUNK_OVERLAP"])
+        except ValueError as exc:
+            problemas.append(f"CORPUS_CHUNK_OVERLAP: {exc}")
     if problemas:
         raise ConfigInvalida("; ".join(problemas))
     return ConfigModelos(**{clave.lower(): valor for clave, valor in valores.items()})
