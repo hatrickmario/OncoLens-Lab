@@ -1,5 +1,7 @@
 """Composición de `/rag/query` con `LLM_PROVIDER=local` (US-055 / L1D-106, tarea 2.12)."""
 
+import logging
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -67,6 +69,18 @@ def test_rag_query_responde_503_local_llm_unavailable_validado_cuando_hay_eviden
     assert respuesta.status_code == 503
     assert_matches_spec("#/paths/~1rag~1query/post/responses/503", respuesta.json())
     assert respuesta.json()["error"] == "LOCAL_LLM_UNAVAILABLE"
+
+
+def test_rag_query_registra_generacion_no_implementada_con_el_trace_id_cuando_el_generador_provisional_responde_503(
+    caplog,
+):
+    solicitud = solicitud_de(Q_HER2)
+    caplog.set_level(logging.INFO)
+
+    _cliente().post("/rag/query", json=solicitud)
+
+    mensajes = [r.getMessage() for r in caplog.records]
+    assert f"event=generacion_no_implementada traceId={solicitud['traceId']}" in mensajes
 
 
 def test_rag_query_responde_sin_evidencia_validado_cuando_la_composicion_local_no_encuentra_evidencia():
