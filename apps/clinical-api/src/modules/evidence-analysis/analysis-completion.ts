@@ -56,6 +56,22 @@ export interface DependenciasDelCierre {
   disclaimer: string;
 }
 
+interface RespuestaInterpretada {
+  respuesta: RagQueryInternalResponse;
+  topRelevanceScore: number | null;
+}
+
+/** La respuesta interna validada con su puntaje persistible, o `null` si no cumple el contrato o es incoherente. */
+function interpretarRespuestaInterna(cuerpo: unknown): RespuestaInterpretada | null {
+  try {
+    const respuesta = validarRespuestaInterna(cuerpo);
+    return { respuesta, topRelevanceScore: topRelevanceScorePersistible(respuesta) };
+  } catch (error) {
+    if (error instanceof RespuestaInternaInvalidaError) return null;
+    throw error;
+  }
+}
+
 /**
  * RN-06: el registro se persiste ANTES de responder. Resuelve solo cuando la escritura terminó y devuelve el registro
  * leído de la fila; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin sus detalles.
@@ -81,17 +97,9 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
     async completar(entrada) {
       if (!entrada.respuesta.ok)
         return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
-      let respuesta: RagQueryInternalResponse;
-      let topRelevanceScore: number | null;
-      try {
-        respuesta = validarRespuestaInterna(entrada.respuesta.cuerpo);
-        topRelevanceScore = topRelevanceScorePersistible(respuesta);
-      } catch (error) {
-        if (error instanceof RespuestaInternaInvalidaError) {
-          return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
-        }
-        throw error;
-      }
+      const interpretada = interpretarRespuestaInterna(entrada.respuesta.cuerpo);
+      if (interpretada === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
+      const { respuesta, topRelevanceScore } = interpretada;
       if (entrada.episodeId === null) throw new FalloDePersistenciaError();
       const registro = armarRegistro({
         id: idsDeAnalisis(),
