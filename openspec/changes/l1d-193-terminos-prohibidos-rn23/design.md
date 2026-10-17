@@ -51,7 +51,7 @@ que se comparan tres opciones.
 | B | Un solo verificador en TS, invocado desde Python por subproceso o servicio | Añade Node al contenedor de `rag-orchestrator` y E/S en el camino de cada respuesta; descartada |
 | C | La lista ya trae expresiones regulares precompiladas y cada consumidor solo hace `search` | Las regex de JS y de `re` difieren (Unicode, `\b` con tildes); mueve la divergencia al dato; descartada |
 
-### D2 · Formato de la lista (1.3.0, dos niveles, `[S1 resp. 15]`, `[S1 resp. 33]`)
+### D2 · Formato de la lista (1.4.0, dos niveles, `[S1 resp. 15]`, `[S1 resp. 33]`)
 
 `[S1 resp. 33]` (validación clínica de los oncólogos asesores, 2026-10-14, `backlog/sprints/S1-plan.md`
 §7) amplía RN-23 **por forma**: imperativos y subjuntivos dirigidos ("administre"), deónticos
@@ -64,7 +64,7 @@ patient" de `[S1 resp. 15]`; sin retiradas ni cambios de id).
 
 ```json
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -102,7 +102,7 @@ patient" de `[S1 resp. 15]`; sin retiradas ni cambios de id).
 }
 ```
 
-**Nivel A** (salida generada, UI, prompts y contratos), 56 términos:
+**Nivel A** (salida generada, UI, prompts y contratos), 59 términos:
 
 | Origen | Términos (`id` = `es-`/`en-` + texto normalizado con guiones) | Coincidencia |
 |---|---|---|
@@ -110,6 +110,7 @@ patient" de `[S1 resp. 15]`; sin retiradas ni cambios de id).
 | `[S1 resp. 15]` (11) | deben recibir, debería recibir, se sugiere iniciar, tratamiento indicado, mejor opción, usted debe, you should, the patient should, indicated for this patient, probabilidad de éxito, chance of success | clave flexiva |
 | Lista provisional del Pre-S1 (3) | opción preferida, tratamiento de elección, tratamiento óptimo | clave flexiva |
 | Gate 2 de L1D-193, 1.3.0 (2) | indicado para este paciente, indicado para esta paciente (género y número; el segundo gana solo cuando el texto es exactamente el suyo) | clave flexiva |
+| Decisión del usuario 2026-10-17, 1.4.0 (3) | best option, preferred option, success rate (equivalentes ingleses; falsos positivos fijados: "best practice", "optional", "response rate") | clave flexiva |
 | `[S1 resp. 33]`, formas verbales (8) | inicie, administre, prescriba, suspenda, cambie a, elija, escoja, ofrezca | `formas` explícitas |
 | `[S1 resp. 33]`, deónticos y valorativos (15) | se debe (excepciones "se debe a", "se debe al"), debe iniciar, debe suspender, se debe administrar, no debe recibir, no se debe administrar, es necesario, es imprescindible, se recomienda, se recomienda iniciar, se indica (excepción "como se indica"), está indicado, está contraindicado, la mejor opción es, manejo de elección | clave flexiva |
 | `[S1 resp. 33]`, inglés (9) | we recommend, is recommended, should be started, must receive, should not receive, is indicated, is contraindicated, preferred treatment, treatment of choice | clave flexiva |
@@ -282,6 +283,17 @@ prototipo); "iniciar sesión" es la única frase permitida nueva.
 - AC-4: aserciones `toHaveText` exactas sobre el `h2` de opciones y el botón de envío, en el estado
   "con opción".
 
+### D7 · Deuda Nivel A español y alcance en el corpus (decisión del usuario, 2026-10-17)
+
+De la ampliación del Nivel A entran ya solo los tres equivalentes ingleses (1.4.0). **Deuda del MVP, no
+incluida:** formas españolas "Recomendamos", "Se recomendaría", "Opción recomendada", "Se aconseja", "Se
+debería" y "Considere iniciar"; hoy las cubre, en textos propios, el Nivel B (`recomend*`), pero no la salida
+generada (Nivel A). Se incorporan por PR de catálogo (sube `version`) con sus casos de conformidad.
+
+L1D-180 **no aplica el Nivel A a campos copiados del corpus** (RN-04, RN-25): solo al texto generado, según
+`CAMPOS_GENERADOS` (D6); las guías citadas pueden usar "success rate" o "preferred option" con sujeto
+poblacional sin que sea una indicación al paciente.
+
 ### D6 · Origen de los campos del contrato, definido una vez
 
 `packages/clinical-language/origen-de-campos.json` (dato, versionado con el paquete) y sus constantes
@@ -361,7 +373,7 @@ listas.
   cerrado).
 - Los parches de `ac-17-terminos-aviso.json` y `ac-17-lenguaje-anclaje.json` siguen en verde **sin cambiar
   aserciones** ("Debe recibir", "recommended for this patient", `enum` `recomendada`, frase negativa
-  permitida). Con la lista 1.3.0 (56 términos de Nivel A, 15 términos y 3 prefijos de Nivel B), specs y
+  permitida). Con la lista 1.4.0 (59 términos de Nivel A, 15 términos y 3 prefijos de Nivel B), specs y
   ejemplos dan cero hallazgos (verificado con el prototipo del algoritmo, 2026-10-14). Los ejemplos nuevos
   de L1D-140 y L1D-194 del S1 (literales de `[S1 resp. 28]`, `[S1 resp. 32]`, `[S1 resp. 35]` y
   `[S1 resp. 36]`) también dan cero (D3).
@@ -379,7 +391,7 @@ listas.
 
 ## Risks / Trade-offs
 
-- **Lista finita (56 + 15 términos y 3 prefijos):** paráfrasis no listadas ("se aconseja que reciba") pasan.
+- **Lista finita (59 + 15 términos y 3 prefijos):** paráfrasis no listadas ("se aconseja que reciba") pasan.
   Mitigación: `clinical-language-auditor` en Gate 1/2 y la ampliación por PR de catálogo (sube `version`).
 - **Clave flexiva agresiva:** colapsa vocales finales y plurales; puede unir formas no prescriptivas a una
   secuencia prohibida (p. ej. "debo recibir"). El riesgo es acotado porque se exige la secuencia
@@ -399,7 +411,7 @@ listas.
   y se revisan periódicamente `[S1 resp. 34]`; cada uno confirmado se fija como caso de conformidad o como
   excepción.
 - **Consumidores de la lista:** L1D-180 (Nivel A en ejecución) y L1D-275 (A + B sobre el prompt) leen la
-  1.3.0; un prompt que use "iniciar", "elegir" o "offer" fallará su test (Open Question 5).
+  1.4.0; un prompt que use "iniciar", "elegir" o "offer" fallará su test (Open Question 5).
 - **Deriva por versión de Unicode:** CPython 3.13 usa Unicode 15.1 y Node usa el de su ICU; unos ~4850 code
   points (asignados en una versión y no en la otra) pueden clasificarse distinto en `L`/`N`/`Mn`. Riesgo
   aceptado: ningún caso de conformidad lo cubre y los textos de la lista y de la salida son español e inglés.
