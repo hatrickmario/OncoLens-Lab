@@ -66,3 +66,18 @@ def test_rag_query_excluye_el_chunk_no_vigente_de_los_candidatos_del_reranker_y_
     citables = [c.chunk_id for r in entorno.generador.recuperaciones for c in r.chunks_sobre_umbral]
     assert "ch-m1v0-1" not in citables
     assert "ch-m1v0-1" not in respuesta.text
+
+
+@pytest.mark.ac("US-055", 4)
+def test_rag_query_excluye_el_chunk_de_prostata_de_los_candidatos_cuando_el_contexto_es_de_mama():
+    entorno = crear_entorno()
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer="mama"))
+
+    assert respuesta.status_code == 200
+    assert_matches_spec(RESPUESTA, respuesta.json())
+    assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
+    assert all('cancer_type_tags like "%mama%"' in e for e in entorno.buscador.expresiones)
+    candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
+    assert "ch-m1-1" in candidatos
+    assert "ch-p1-1" not in candidatos
