@@ -61,7 +61,7 @@ describe('leerCatalogo', () => {
   });
 
   it('falla sin eco del contenido cuando una entrada trae un estándar desconocido', () => {
-    const roto = {
+    const roto: Record<string, string> = {
       ...archivos,
       '/cat/mama/codigos.json': JSON.stringify({
         entradas: [{ ...ENTRADA_DE_PRUEBA, estandar: 'inventado' }],
