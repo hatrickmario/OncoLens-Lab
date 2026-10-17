@@ -35,6 +35,12 @@ CODIGO_PARAMETRO_INVALIDO = (
 LIMITE_DE_CONSULTA = 16384
 
 
+def _exigir_completo(filas: Sequence[Any]) -> None:
+    """Milvus corta una consulta en ``LIMITE_DE_CONSULTA``: con exactamente ese número puede faltar el resto."""
+    if len(filas) >= LIMITE_DE_CONSULTA:
+        raise ConsultaTruncada(f"la consulta alcanzó el tope de {LIMITE_DE_CONSULTA} entidades")
+
+
 def _filtro_por_documento(document_id: str) -> str:
     """``document_id == "<id>"``; el identificador lo genera el cargador, y una comilla o barra se rechaza igualmente."""
     if '"' in document_id or "\\" in document_id:
@@ -153,7 +159,10 @@ class MilvusRepository:
         ]
 
     def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]:
-        """``chunk_id`` de TODOS los chunks del documento, vigentes o no (lectura con consistencia fuerte)."""
+        """``chunk_id`` de TODOS los chunks del documento, vigentes o no (lectura con consistencia fuerte).
+
+        Lanza ``ConsultaTruncada`` si el resultado alcanza el tope de Milvus (``LIMITE_DE_CONSULTA``): no es una lista fiable.
+        """
         filas = self._cliente.query(
             self._coleccion,
             filter=_filtro_por_documento(document_id),
@@ -161,6 +170,7 @@ class MilvusRepository:
             limit=LIMITE_DE_CONSULTA,
             consistency_level="Strong",
         )
+        _exigir_completo(filas)
         return frozenset(fila["chunk_id"] for fila in filas)
 
     def marcar_no_vigentes(self, document_id: str) -> int:
@@ -176,6 +186,7 @@ class MilvusRepository:
             limit=LIMITE_DE_CONSULTA,
             consistency_level="Strong",
         )
+        _exigir_completo(vigentes)
         if not vigentes:
             return 0
         self._cliente.upsert(self._coleccion, [{**fila, "is_current": False} for fila in vigentes])
