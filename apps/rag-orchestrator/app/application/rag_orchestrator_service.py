@@ -94,7 +94,7 @@ class RAGOrchestratorService:
         inicio = self._reloj.ahora()
         filtro = self._filtro_de_recuperacion(solicitud)  # antes de cualquier puerto (OL-02)
         idioma = self._detector_idioma.detectar(solicitud.query)
-        release = await self._leer_release()
+        release = await self._en_hilo("catalogo", self._lector_release.release_vigente)
         candidatos = await self._recuperar(solicitud, filtro)
         puntuados = await self._reranquear(solicitud.query, candidatos)
         sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
@@ -121,9 +121,6 @@ class RAGOrchestratorService:
         except ValueError:
             raise TipoCancerNoRegistradoError() from None
 
-    async def _leer_release(self) -> ReleaseDelCorpus:
-        return await self._en_hilo("catalogo", self._lector_release.release_vigente)
-
     async def _recuperar(
         self, solicitud: RagQueryInternalRequest, filtro: str
     ) -> list[ChunkEncontrado]:
@@ -131,19 +128,21 @@ class RAGOrchestratorService:
         textos = (solicitud.query, resumen_del_contexto_clinico(solicitud.clinicalContext))
         encontrados: dict[str, ChunkEncontrado] = {}
         for texto in textos:
-            vector = await self._en_hilo("embeddings", self._embedder.embeber, texto)
-            lote = await self._en_hilo(
-                "busqueda",
-                self._buscador.search_dense,
-                vector,
-                self._parametros.retrieval_top_k,
-                filtro,
-            )
-            for chunk in lote:
+            for chunk in await self._buscar_cercanos_a(texto, filtro):
                 encontrados.setdefault(chunk.chunk_id, chunk)
         # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
         ordenados = sorted(encontrados.values(), key=lambda c: (-c.similitud_dense, c.chunk_id))
         return ordenados[: self._parametros.retrieval_top_k]
+
+    async def _buscar_cercanos_a(self, texto: str, filtro: str) -> list[ChunkEncontrado]:
+        vector = await self._en_hilo("embeddings", self._embedder.embeber, texto)
+        return await self._en_hilo(
+            "busqueda",
+            self._buscador.search_dense,
+            vector,
+            self._parametros.retrieval_top_k,
+            filtro,
+        )
 
     async def _reranquear(
         self, pregunta: str, candidatos: Sequence[ChunkEncontrado]
@@ -151,20 +150,27 @@ class RAGOrchestratorService:
         """Puntúa todos los candidatos y conserva los ``RERANK_TOP_N`` de mayor `relevance_score` (orden estable)."""
         if not candidatos:
             return []
-        puntajes = await self._en_hilo("reranker", self._reranker.puntuar, pregunta, candidatos)
-        try:
-            if len(puntajes) != len(candidatos):
-                raise ValueError("el reranker debe devolver un puntaje por candidato")
-            validados = [validar_puntaje_normalizado(p) for p in puntajes]
-        except ValueError as error:
-            logger.warning("event=reranker_contrato_roto motivo=%s", type(error).__name__)
-            raise RecuperacionNoDisponibleError("reranker") from None
+        crudos = await self._en_hilo("reranker", self._reranker.puntuar, pregunta, candidatos)
+        puntajes = self._exigir_un_puntaje_normalizado_por_candidato(crudos, len(candidatos))
         puntuados = [
             ChunkPuntuado(c.chunk_id, c.document_id, c.chunk_text, p)
-            for c, p in zip(candidatos, validados)
+            for c, p in zip(candidatos, puntajes)
         ]
         puntuados.sort(key=lambda c: (-c.relevance_score, c.chunk_id))
         return puntuados[: self._parametros.rerank_top_n]
+
+    @staticmethod
+    def _exigir_un_puntaje_normalizado_por_candidato(
+        puntajes: Sequence[float], candidatos: int
+    ) -> list[float]:
+        """Un reranker que rompe su contrato (cantidad o rango) falla cerrado como recuperación no disponible."""
+        try:
+            if len(puntajes) != candidatos:
+                raise ValueError("el reranker debe devolver un puntaje por candidato")
+            return [validar_puntaje_normalizado(p) for p in puntajes]
+        except ValueError as error:
+            logger.warning("event=reranker_contrato_roto motivo=%s", type(error).__name__)
+            raise RecuperacionNoDisponibleError("reranker") from None
 
     def _armar_meta(
         self,
