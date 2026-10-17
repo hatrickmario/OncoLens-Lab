@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { COMPOSE, COMPOSE_TEST, ENV_EXAMPLE, RAIZ, crearResolutor } from './lib/compose-resuelto.mjs';
 import { assertAppsConUsuarioDeLosSecretos, assertPostgresConTls, assertRepartoDeSecretos, assertSinSecretosEnEntorno } from './lib/reglas-secretos.mjs';
@@ -14,7 +15,7 @@ beforeAll(() => {
 
 afterAll(() => limpiar());
 
-// Los one-shot corpus-migrate (L1D-114) y clinical-seed (L1D-169) aún no existen: el override los simula.
+// El one-shot corpus-migrate (L1D-114) aún no existe: el override lo simula. clinical-seed (L1D-169) ya está en el Compose.
 const UN_SERVICIO = (nombre, secretos) =>
   `  ${nombre}:\n    image: busybox:1.37.0\n    secrets: [${secretos.join(', ')}]\n`;
 const SECRETOS_DEL_SEED = 'secrets:\n  seed_doctor_password:\n    file: ${ONCOLENS_SECRETS_DIR}/seed_doctor_password\n  seed_admin_password:\n    file: ${ONCOLENS_SECRETS_DIR}/seed_admin_password\n';
@@ -81,8 +82,8 @@ describe('docker-compose.yml · reparto de secretos', () => {
     expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/clinical-api.*directorio de secretos/);
   });
 
-  it('acepta corpus-migrate con solo la contraseña del migrator y clinical-seed con solo las del seed cuando esos one-shot existen [US-035 AC-2]', () => {
-    const override = `services:\n${UN_SERVICIO('corpus-migrate', ['pg_rag_corpus_migrator_password'])}${UN_SERVICIO('clinical-seed', ['pg_clinical_api_password', 'seed_doctor_password', 'seed_admin_password'])}${SECRETOS_DEL_SEED}`;
+  it('acepta corpus-migrate con solo la contraseña del migrator cuando ese one-shot existe [US-035 AC-2]', () => {
+    const override = `services:\n${UN_SERVICIO('corpus-migrate', ['pg_rag_corpus_migrator_password'])}`;
     expect(() => assertRepartoDeSecretos(resolver({ override }))).not.toThrow();
   });
 
@@ -164,5 +165,82 @@ describe('docker-compose.yml · PostgreSQL con TLS', () => {
     expect(() => assertRepartoDeSecretos(config)).not.toThrow();
     const sinPerfil = resolver().services.postgres.environment.ONCOLENS_PG_PROFILE;
     expect(sinPerfil).toBeUndefined();
+  });
+});
+
+describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
+  it('las contraseñas del seed solo están en clinical-seed y ningún servicio las declara en environment [US-039 AC-1]', () => {
+    const config = resolver();
+    const montados = (nombre) => (config.services[nombre].secrets ?? []).map((secreto) => secreto.source);
+    const conContrasenaDelSeed = Object.keys(config.services).filter(
+      (nombre) => montados(nombre).includes('seed_doctor_password') || montados(nombre).includes('seed_admin_password'),
+    );
+
+    expect(conContrasenaDelSeed).toEqual(['clinical-seed']);
+    expect(config.services['clinical-seed'].restart).toBe('no');
+    expect(config.services['clinical-seed'].environment.SEED_DOCTOR_PASSWORD_FILE).toBe('/run/secrets/seed_doctor_password');
+    expect(config.services['clinical-seed'].environment.SEED_ADMIN_PASSWORD_FILE).toBe('/run/secrets/seed_admin_password');
+    for (const [nombre, definicion] of Object.entries(config.services)) {
+      const variables = Object.keys(definicion.environment ?? {});
+      expect(variables.filter((variable) => ['SEED_DOCTOR_PASSWORD', 'SEED_ADMIN_PASSWORD'].includes(variable)), nombre).toEqual([]);
+    }
+  });
+
+  it('recibe exactamente la contraseña de clinical_api, la CA pública y las dos del seed [US-039 AC-1]', () => {
+    const config = resolver();
+    expect(() => assertRepartoDeSecretos(config)).not.toThrow();
+    expect((config.services['clinical-seed'].secrets ?? []).map((secreto) => secreto.source).sort()).toEqual(
+      ['pg_ca.crt', 'pg_clinical_api_password', 'seed_admin_password', 'seed_doctor_password'],
+    );
+  });
+
+  it('falla nombrando clinical-seed y pg_ca.crt cuando un override le quita la CA [US-039 AC-1]', () => {
+    const override = 'services:\n  clinical-seed:\n    secrets: !override\n      - pg_clinical_api_password\n      - seed_doctor_password\n      - seed_admin_password\n';
+    expect(() => assertRepartoDeSecretos(resolver({ override }))).toThrow(/clinical-seed.*pg_ca\.crt/);
+  });
+
+  it('se conecta a PostgreSQL con la URL sin credenciales, la contraseña por archivo y TLS verificado con la CA; ningún servicio lleva DATABASE_URL con contraseña [US-039 AC-1]', () => {
+    const config = resolver();
+    const entornoDelSeed = config.services['clinical-seed'].environment;
+
+    expect(new URL(entornoDelSeed.CLINICAL_DATABASE_URL).password).toBe('');
+    expect(new URL(entornoDelSeed.CLINICAL_DATABASE_URL).username).toBe('clinical_api');
+    expect(entornoDelSeed.PG_CLINICAL_API_PASSWORD_FILE).toBe('/run/secrets/pg_clinical_api_password');
+    expect(entornoDelSeed.CLINICAL_DATABASE_CA_FILE).toBe('/run/secrets/pg_ca.crt');
+    for (const [nombre, definicion] of Object.entries(config.services)) {
+      for (const [variable, valor] of Object.entries(definicion.environment ?? {})) {
+        if (/DATABASE_URL$/.test(variable)) {
+          expect(new URL(String(valor).replace(/^postgresql\+\w+:/, 'postgresql:')).password, `${nombre} ${variable}`).toBe('');
+        }
+      }
+    }
+  });
+
+  it('corre sin reinicio, tras postgres healthy, con el uid dueño de los secretos y el catálogo de solo lectura [US-039 AC-1]', () => {
+    const seed = resolver({ entorno: { ONCOLENS_UID: '4242', ONCOLENS_GID: '4343' } }).services['clinical-seed'];
+
+    expect(seed.depends_on.postgres.condition).toBe('service_healthy');
+    expect(seed.user).toBe('4242:4343');
+    expect(Object.keys(seed.networks)).toEqual(['clinical-net']);
+    expect(seed.ports ?? []).toEqual([]);
+    const catalogo = (seed.volumes ?? []).find((volumen) => /packages\/clinical-catalogs$/.test(volumen.source ?? ''));
+    expect(catalogo?.read_only).toBe(true);
+    expect(catalogo?.target).toBe(seed.environment.CLINICAL_CATALOG_PATH);
+  });
+
+  it('pasa REAL_ANONYMIZED_ENABLED y REAL_IDENTIFIED_ENABLED al seed para que su guarda los vea [US-039 AC-5]', () => {
+    const porDefecto = resolver().services['clinical-seed'].environment;
+    const habilitado = resolver({ entorno: { REAL_ANONYMIZED_ENABLED: 'true' } }).services['clinical-seed'].environment;
+
+    expect(porDefecto.REAL_ANONYMIZED_ENABLED).toBe('false');
+    expect(porDefecto.REAL_IDENTIFIED_ENABLED).toBe('false');
+    expect(habilitado.REAL_ANONYMIZED_ENABLED).toBe('true');
+  });
+
+  it('exige APP_ENV sin valor por defecto: Compose no levanta clinical-seed sin APP_ENV [US-039 AC-5]', () => {
+    const compose = parseYaml(readFileSync(COMPOSE, 'utf8'));
+
+    expect(compose.services['clinical-seed'].environment.APP_ENV).toBe('${APP_ENV:?APP_ENV obligatorio}');
+    expect(() => resolver({ entorno: { APP_ENV: '' } })).toThrow(/APP_ENV obligatorio/);
   });
 });
