@@ -14,7 +14,11 @@ import sqlalchemy as sa
 from sqlalchemy import Engine
 from sqlalchemy.dialects.postgresql import insert
 
-from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
+from app.application.seed_corpus.ports import (
+    RegistroDeDocumento,
+    RegistroDeRelease,
+    VersionAnteriorInexistente,
+)
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
     corpus_document,
@@ -46,11 +50,15 @@ class CorpusDocumentRepository:
     ) -> None:
         with self._motor.begin() as conexion:
             self._guardar(conexion, nuevo)
-            conexion.execute(
+            apagadas = conexion.execute(
                 sa.update(corpus_document)
                 .where(corpus_document.c.document_id == anterior_id)
                 .values(is_current=False, superseded_at=superseded_at)
             )
+            if (
+                apagadas.rowcount != 1
+            ):  # dentro de la transacción: al lanzar se revierte también el nuevo
+                raise VersionAnteriorInexistente(anterior_id)
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(

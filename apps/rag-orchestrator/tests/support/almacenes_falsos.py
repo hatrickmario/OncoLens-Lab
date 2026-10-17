@@ -12,8 +12,12 @@ from dataclasses import replace
 from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
-from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
-from app.domain.corpus_seed.versionado import VersionExistente
+from app.application.seed_corpus.ports import (
+    RegistroDeDocumento,
+    RegistroDeRelease,
+    VersionAnteriorInexistente,
+)
+from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from tests.support.milvus import DIMENSION_DE_TEST
 
 
@@ -43,7 +47,9 @@ class CatalogoEnMemoria:
         self, nuevo: RegistroDeDocumento, anterior_id: str, superseded_at: datetime
     ) -> None:
         self._puede("reemplazar_version")
-        anterior = self.documentos[anterior_id]  # KeyError antes de tocar nada: atómico
+        anterior = self.documentos.get(anterior_id)
+        if anterior is None:  # antes de tocar nada: atómico, como la transacción del real
+            raise VersionAnteriorInexistente(anterior_id)
         self.documentos[nuevo.document_id] = nuevo
         self.documentos[anterior_id] = replace(
             anterior, is_current=False, superseded_at=superseded_at
@@ -51,7 +57,7 @@ class CatalogoEnMemoria:
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         return frozenset(
-            i for i, r in self.documentos.items() if r.is_current and r.status == "embebido"
+            i for i, r in self.documentos.items() if r.is_current and r.status == STATUS_EMBEBIDO
         )
 
     def ids_de_la_ultima_release(self) -> frozenset[str] | None:
