@@ -1,0 +1,475 @@
+{
+  "version": "1.2.0",
+  "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
+  "nivelA": {
+    "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
+    "terminos": [
+      {
+        "id": "es-recomendado-para-este-paciente",
+        "idioma": "es",
+        "texto": "recomendado para este paciente"
+      },
+      {
+        "id": "es-debe-recibir",
+        "idioma": "es",
+        "texto": "debe recibir"
+      },
+      {
+        "id": "es-el-mejor-tratamiento",
+        "idioma": "es",
+        "texto": "el mejor tratamiento"
+      },
+      {
+        "id": "es-indicado-para-usted",
+        "idioma": "es",
+        "texto": "indicado para usted"
+      },
+      {
+        "id": "en-recommended-for-this-patient",
+        "idioma": "en",
+        "texto": "recommended for this patient"
+      },
+      {
+        "id": "en-should-receive",
+        "idioma": "en",
+        "texto": "should receive"
+      },
+      {
+        "id": "en-the-best-treatment",
+        "idioma": "en",
+        "texto": "the best treatment"
+      },
+      {
+        "id": "en-indicated-for-you",
+        "idioma": "en",
+        "texto": "indicated for you"
+      },
+      {
+        "id": "es-deben-recibir",
+        "idioma": "es",
+        "texto": "deben recibir"
+      },
+      {
+        "id": "es-deberia-recibir",
+        "idioma": "es",
+        "texto": "debería recibir"
+      },
+      {
+        "id": "es-se-sugiere-iniciar",
+        "idioma": "es",
+        "texto": "se sugiere iniciar"
+      },
+      {
+        "id": "es-tratamiento-indicado",
+        "idioma": "es",
+        "texto": "tratamiento indicado"
+      },
+      {
+        "id": "es-mejor-opcion",
+        "idioma": "es",
+        "texto": "mejor opción"
+      },
+      {
+        "id": "es-usted-debe",
+        "idioma": "es",
+        "texto": "usted debe"
+      },
+      {
+        "id": "en-you-should",
+        "idioma": "en",
+        "texto": "you should"
+      },
+      {
+        "id": "en-the-patient-should",
+        "idioma": "en",
+        "texto": "the patient should"
+      },
+      {
+        "id": "en-indicated-for-this-patient",
+        "idioma": "en",
+        "texto": "indicated for this patient"
+      },
+      {
+        "id": "es-probabilidad-de-exito",
+        "idioma": "es",
+        "texto": "probabilidad de éxito"
+      },
+      {
+        "id": "en-chance-of-success",
+        "idioma": "en",
+        "texto": "chance of success"
+      },
+      {
+        "id": "es-opcion-preferida",
+        "idioma": "es",
+        "texto": "opción preferida"
+      },
+      {
+        "id": "es-tratamiento-de-eleccion",
+        "idioma": "es",
+        "texto": "tratamiento de elección"
+      },
+      {
+        "id": "es-tratamiento-optimo",
+        "idioma": "es",
+        "texto": "tratamiento óptimo"
+      },
+      {
+        "id": "es-inicie",
+        "idioma": "es",
+        "texto": "inicie",
+        "formas": [
+          "inicie",
+          "inicien",
+          "iniciese",
+          "inicielo",
+          "iniciela",
+          "inicielos",
+          "inicielas",
+          "iniciele",
+          "inicieles"
+        ]
+      },
+      {
+        "id": "es-administre",
+        "idioma": "es",
+        "texto": "administre",
+        "formas": [
+          "administre",
+          "administren",
+          "administrese",
+          "administrelo",
+          "administrela",
+          "administrelos",
+          "administrelas",
+          "administrele",
+          "administreles"
+        ]
+      },
+      {
+        "id": "es-prescriba",
+        "idioma": "es",
+        "texto": "prescriba",
+        "formas": [
+          "prescriba",
+          "prescriban",
+          "prescribase",
+          "prescribalo",
+          "prescribala",
+          "prescribalos",
+          "prescribalas",
+          "prescribale",
+          "prescribales"
+        ]
+      },
+      {
+        "id": "es-suspenda",
+        "idioma": "es",
+        "texto": "suspenda",
+        "formas": [
+          "suspenda",
+          "suspendan",
+          "suspendase",
+          "suspendalo",
+          "suspendala",
+          "suspendalos",
+          "suspendalas",
+          "suspendale",
+          "suspendales"
+        ]
+      },
+      {
+        "id": "es-cambie-a",
+        "idioma": "es",
+        "texto": "cambie a",
+        "formas": [
+          "cambie a",
+          "cambien a",
+          "cambiese a",
+          "cambielo a",
+          "cambiela a",
+          "cambielos a",
+          "cambielas a",
+          "cambiele a",
+          "cambieles a"
+        ]
+      },
+      {
+        "id": "es-elija",
+        "idioma": "es",
+        "texto": "elija",
+        "formas": [
+          "elija",
+          "elijan",
+          "elijase",
+          "elijalo",
+          "elijala",
+          "elijalos",
+          "elijalas",
+          "elijale",
+          "elijales"
+        ]
+      },
+      {
+        "id": "es-escoja",
+        "idioma": "es",
+        "texto": "escoja",
+        "formas": [
+          "escoja",
+          "escojan",
+          "escojase",
+          "escojalo",
+          "escojala",
+          "escojalos",
+          "escojalas",
+          "escojale",
+          "escojales"
+        ]
+      },
+      {
+        "id": "es-ofrezca",
+        "idioma": "es",
+        "texto": "ofrezca",
+        "formas": [
+          "ofrezca",
+          "ofrezcan",
+          "ofrezcase",
+          "ofrezcalo",
+          "ofrezcala",
+          "ofrezcalos",
+          "ofrezcalas",
+          "ofrezcale",
+          "ofrezcales"
+        ]
+      },
+      {
+        "id": "es-se-debe",
+        "idioma": "es",
+        "texto": "se debe",
+        "excepciones": ["se debe a", "se debe al"]
+      },
+      {
+        "id": "es-debe-iniciar",
+        "idioma": "es",
+        "texto": "debe iniciar"
+      },
+      {
+        "id": "es-debe-suspender",
+        "idioma": "es",
+        "texto": "debe suspender"
+      },
+      {
+        "id": "es-se-debe-administrar",
+        "idioma": "es",
+        "texto": "se debe administrar"
+      },
+      {
+        "id": "es-no-debe-recibir",
+        "idioma": "es",
+        "texto": "no debe recibir"
+      },
+      {
+        "id": "es-no-se-debe-administrar",
+        "idioma": "es",
+        "texto": "no se debe administrar"
+      },
+      {
+        "id": "es-es-necesario",
+        "idioma": "es",
+        "texto": "es necesario"
+      },
+      {
+        "id": "es-es-imprescindible",
+        "idioma": "es",
+        "texto": "es imprescindible"
+      },
+      {
+        "id": "es-se-recomienda",
+        "idioma": "es",
+        "texto": "se recomienda"
+      },
+      {
+        "id": "es-se-recomienda-iniciar",
+        "idioma": "es",
+        "texto": "se recomienda iniciar"
+      },
+      {
+        "id": "es-se-indica",
+        "idioma": "es",
+        "texto": "se indica",
+        "excepciones": ["como se indica"]
+      },
+      {
+        "id": "es-esta-indicado",
+        "idioma": "es",
+        "texto": "está indicado"
+      },
+      {
+        "id": "es-esta-contraindicado",
+        "idioma": "es",
+        "texto": "está contraindicado"
+      },
+      {
+        "id": "es-la-mejor-opcion-es",
+        "idioma": "es",
+        "texto": "la mejor opción es"
+      },
+      {
+        "id": "es-manejo-de-eleccion",
+        "idioma": "es",
+        "texto": "manejo de elección"
+      },
+      {
+        "id": "en-we-recommend",
+        "idioma": "en",
+        "texto": "we recommend"
+      },
+      {
+        "id": "en-is-recommended",
+        "idioma": "en",
+        "texto": "is recommended"
+      },
+      {
+        "id": "en-should-be-started",
+        "idioma": "en",
+        "texto": "should be started"
+      },
+      {
+        "id": "en-must-receive",
+        "idioma": "en",
+        "texto": "must receive"
+      },
+      {
+        "id": "en-should-not-receive",
+        "idioma": "en",
+        "texto": "should not receive"
+      },
+      {
+        "id": "en-is-indicated",
+        "idioma": "en",
+        "texto": "is indicated"
+      },
+      {
+        "id": "en-is-contraindicated",
+        "idioma": "en",
+        "texto": "is contraindicated"
+      },
+      {
+        "id": "en-preferred-treatment",
+        "idioma": "en",
+        "texto": "preferred treatment"
+      },
+      {
+        "id": "en-treatment-of-choice",
+        "idioma": "en",
+        "texto": "treatment of choice"
+      }
+    ]
+  },
+  "nivelB": {
+    "aplicaA": ["ui", "prompts", "contratos"],
+    "prefijos": [
+      {
+        "id": "b-recomend",
+        "idioma": "es",
+        "prefijo": "recomend"
+      },
+      {
+        "id": "b-recomiend",
+        "idioma": "es",
+        "prefijo": "recomiend"
+      },
+      {
+        "id": "b-recommend",
+        "idioma": "en",
+        "prefijo": "recommend"
+      }
+    ],
+    "terminos": [
+      {
+        "id": "b-es-iniciar",
+        "idioma": "es",
+        "texto": "iniciar"
+      },
+      {
+        "id": "b-es-administrar",
+        "idioma": "es",
+        "texto": "administrar"
+      },
+      {
+        "id": "b-es-prescribir",
+        "idioma": "es",
+        "texto": "prescribir"
+      },
+      {
+        "id": "b-es-suspender",
+        "idioma": "es",
+        "texto": "suspender"
+      },
+      {
+        "id": "b-es-ofrecer",
+        "idioma": "es",
+        "texto": "ofrecer"
+      },
+      {
+        "id": "b-es-elegir",
+        "idioma": "es",
+        "texto": "elegir"
+      },
+      {
+        "id": "b-en-start",
+        "idioma": "en",
+        "texto": "start"
+      },
+      {
+        "id": "b-en-initiate",
+        "idioma": "en",
+        "texto": "initiate"
+      },
+      {
+        "id": "b-en-administer",
+        "idioma": "en",
+        "texto": "administer"
+      },
+      {
+        "id": "b-en-prescribe",
+        "idioma": "en",
+        "texto": "prescribe"
+      },
+      {
+        "id": "b-en-discontinue",
+        "idioma": "en",
+        "texto": "discontinue"
+      },
+      {
+        "id": "b-en-offer",
+        "idioma": "en",
+        "texto": "offer"
+      },
+      {
+        "id": "b-en-choose",
+        "idioma": "en",
+        "texto": "choose"
+      },
+      {
+        "id": "b-en-switch-to",
+        "idioma": "en",
+        "texto": "switch to"
+      },
+      {
+        "id": "b-en-standard-of-care",
+        "idioma": "en",
+        "texto": "standard of care"
+      }
+    ]
+  },
+  "frasesPermitidas": {
+    "aplicaA": ["ui", "prompts", "contratos"],
+    "frases": [
+      "no constituye una recomendación",
+      "no recomienda ni prescribe",
+      "ni la probabilidad de éxito",
+      "iniciar sesión"
+    ]
+  }
+}

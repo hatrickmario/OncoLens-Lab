@@ -1,0 +1,1514 @@
+{
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.2.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
+  "listaVersion": "1.2.0",
+  "casos": [
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "RECOMENDADO PARA ESTE PACIENTE",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-recomendado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "Recomendado para este paciente.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-recomendado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "debe recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "DEBE RECIBIR",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "Recomendado, para: este paciente!",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-recomendado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "Recommended for this patient",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-recommended-for-this-patient",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "el mejor tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-el-mejor-tratamiento",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "indicado para usted",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-indicado-para-usted",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "Should receive",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-should-receive",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "the best treatment",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-the-best-treatment",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
+      "texto": "indicated for you",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-indicated-for-you",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "deben recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-deben-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "recomendada para esta paciente",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-recomendado-para-este-paciente",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "debe recibirlo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "debe recibirse",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "Deberían recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-deberia-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "las mejores opciones",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-mejor-opcion",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "tratamientos indicados",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-tratamiento-indicado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "The patients should",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-the-patient-should",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "Tratamientos de elección",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-tratamiento-de-eleccion",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "Se sugiere iniciar trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-sugiere-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "usted debe",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-usted-debe",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "You should",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-you-should",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "indicated for this patient",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-indicated-for-this-patient",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "La probabilidad de éxito es alta",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-probabilidad-de-exito",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "chance of success",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-chance-of-success",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "opciones preferidas",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-opcion-preferida",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (plural, género y enclíticos, S1 resp. 15)",
+      "texto": "tratamiento óptimo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-tratamiento-optimo",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (dos términos, dos apariciones)",
+      "texto": "Debe recibir trastuzumab y el mejor tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        },
+        {
+          "id": "es-el-mejor-tratamiento",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (dos términos, dos apariciones)",
+      "texto": "debe recibir A. Debe recibir B",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        },
+        {
+          "id": "es-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-2 (descriptivo)",
+      "texto": "Opciones descritas en la evidencia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (descriptivo)",
+      "texto": "Opciones descritas en la evidencia",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (texto vacío)",
+      "texto": "",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
+      "texto": "[afirmación retirada: formulación no permitida]",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
+      "texto": "[claim removed: disallowed wording]",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
+      "texto": "[afirmación retirada: formulación no permitida]",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-2 (literales de retirada, S1 resp. 16)",
+      "texto": "[claim removed: disallowed wording]",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "La guía recomienda el esquema X",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "La guía recomienda el esquema X",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "b-recomiend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "Opción recomendada",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "Recommended option",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "b-recommend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "no constituye una recomendación",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "no constituye una recomendación",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "no constituye una recomendación",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "b-recomend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "texto": "Este es el mejor tratamiento",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-el-mejor-tratamiento",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "administre trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "administre trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "No administre trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Adminístrelo cada 3 semanas",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Adminístrelo cada 3 semanas",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Administren el fármaco",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-administre",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "no debe recibir",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-no-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "no debe recibir",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-no-debe-recibir",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "No se debe administrar en embarazo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-no-se-debe-administrar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "No se debe administrar en embarazo",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-no-se-debe-administrar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se debe administrar con precaución",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-debe-administrar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se debe administrar con precaución",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-se-debe-administrar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "debe iniciarse en las 12 semanas",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "debe iniciarse en las 12 semanas",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-debe-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Debe suspender el esquema",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-debe-suspender",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Inicie trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-inicie",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Inicie trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-inicie",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Prescriba el esquema",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-prescriba",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Suspenda el fármaco",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-suspenda",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "cambie a pertuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-cambie-a",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "cambie a pertuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-cambie-a",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Elijan el esquema",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-elija",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Escoja una opción",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-escoja",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Ofrezca cirugía",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-ofrezca",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Ofrezca cirugía",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-ofrezca",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "es necesaria una biopsia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-es-necesario",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "es necesaria una biopsia",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-es-necesario",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Es imprescindible la confirmación",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-es-imprescindible",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Se recomienda trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-recomienda",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Se recomienda trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-se-recomienda",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se recomienda iniciar trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-recomienda-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se recomienda iniciar trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-se-recomienda-iniciar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "la mejor opción es trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-la-mejor-opcion-es",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "la mejor opción es trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-la-mejor-opcion-es",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se indica trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-indica",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "se indica trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-se-indica",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "no está indicado",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-esta-indicado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "no está indicado",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "es-esta-indicado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "está contraindicada",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-esta-contraindicado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "manejo de elección",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-manejo-de-eleccion",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "We recommend trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-we-recommend",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "We recommend trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "en-we-recommend",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Trastuzumab is recommended",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-is-recommended",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "Trastuzumab is recommended",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "en-is-recommended",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "should be started",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-should-be-started",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "must receive",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-must-receive",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "should not receive",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-should-not-receive",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "is indicated for you",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-indicated-for-you",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "is indicated for you",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "en-indicated-for-you",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "is contraindicated",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-is-contraindicated",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "preferred treatment",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-preferred-treatment",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 (positivos)",
+      "texto": "treatment of choice",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-treatment-of-choice",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "los ensayos evaluaron administrar trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "los ensayos evaluaron administrar trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "b-es-administrar",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "la guía recomienda X para pacientes con HER2 positivo",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "la guía recomienda X para pacientes con HER2 positivo",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": [
+        {
+          "id": "b-recomiend",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "el fármaco se administra cada 3 semanas",
+      "niveles": ["A"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "el fármaco se administra cada 3 semanas",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "la paciente inicia tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "la paciente inicia tratamiento",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "fecha de inicio del tratamiento",
+      "niveles": ["A"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "fecha de inicio del tratamiento",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "el cambio a trastuzumab",
+      "niveles": ["A"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 y 34 (negativos, usos descriptivos)",
+      "texto": "el cambio a trastuzumab",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (excepciones)",
+      "texto": "la toxicidad se debe a la quimioterapia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (excepciones)",
+      "texto": "la toxicidad se debe a la quimioterapia",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (excepciones)",
+      "texto": "el efecto se debe al fármaco",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (excepciones)",
+      "texto": "como se indica en la tabla",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (excepciones)",
+      "texto": "como se indica en la tabla",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
+      "texto": "Iniciar sesión",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
+      "texto": "Iniciar sesión",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "S1 resp. 33 (frase permitida: iniciar sesión)",
+      "texto": "Iniciar sesión",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "b-es-iniciar",
+          "nivel": "B"
+        }
+      ]
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Relevancia de recuperación de evidencia",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Relevancia de recuperación de evidencia",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Relevancia de recuperación de evidencia",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Metadato secundario: no mide eficacia ni solidez clínica",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Registro solo para auditoría: no es contenido clínico utilizable.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Reintentar",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Reintentar",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Reintentar",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-140 (S1 resp. 28, 29, 31, 35, 36)",
+      "texto": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Uso académico/investigación",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Uso académico/investigación",
+      "niveles": ["A", "B"],
+      "permitirFrases": true,
+      "esperado": []
+    },
+    {
+      "grupo": "Literales de L1D-194 (S1 resp. 32)",
+      "texto": "Uso académico/investigación",
+      "niveles": ["A", "B"],
+      "permitirFrases": false,
+      "esperado": []
+    }
+  ]
+}

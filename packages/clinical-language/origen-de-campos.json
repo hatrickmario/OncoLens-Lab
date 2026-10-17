@@ -1,0 +1,5 @@
+{
+  "descripcion": "Origen de los campos del contrato EvidenceAnalysis para RN-23 (US-068, design D6): lo copiado del corpus (RN-04, RN-25) y lo generado por el LLM. Fuente única para el recorrido de UI, contracts:check y el validador de L1D-180.",
+  "camposCopiadosDelCorpus": ["chunkTextSnapshot", "title", "sourceName", "externalId", "authors"],
+  "camposGenerados": ["option", "rationale", "unsupportedClaims", "limitations[].text", "synthesis"]
+}
