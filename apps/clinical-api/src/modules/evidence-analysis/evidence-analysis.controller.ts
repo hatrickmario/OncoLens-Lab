@@ -28,6 +28,16 @@ export interface DependenciasDelController {
   registrar: Registrar;
 }
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Locals {
+      /** Sesión con rol `doctor`, puesta por `soloDoctor`; ausente en cualquier otro caso. */
+      sesionDoctor?: SesionAutenticada;
+    }
+  }
+}
+
 const EVENTO = 'evidence_analysis.solicitud';
 
 /** La sesión no tiene el rol que exige la acción. */
@@ -127,9 +137,10 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
   }
 
+  /** Única comprobación del rol (antes de leer el cuerpo): deja la sesión del doctor para el handler. */
   const soloDoctor: RequestHandler = (request, response, next) => {
     try {
-      exigirRolDoctor(request.sesion);
+      response.locals.sesionDoctor = exigirRolDoctor(request.sesion);
     } catch (error) {
       if (!(error instanceof PermisoDenegadoError)) throw error;
       rechazar(response, PERMISO_DENEGADO);
@@ -139,7 +150,11 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
   };
 
   const solicitar: RequestHandler = async (request, response) => {
-    const sesion = exigirRolDoctor(request.sesion);
+    const sesion = response.locals.sesionDoctor;
+    if (sesion === undefined) {
+      rechazar(response, PERMISO_DENEGADO); // cerrado ante una cadena de middlewares mal montada
+      return;
+    }
     const cuerpo = evidenceAnalysisRequestSchema.safeParse(request.body);
     if (!cuerpo.success) {
       rechazar(response, CUERPO_INVALIDO);
