@@ -51,18 +51,20 @@ que se comparan tres opciones.
 | B | Un solo verificador en TS, invocado desde Python por subproceso o servicio | Añade Node al contenedor de `rag-orchestrator` y E/S en el camino de cada respuesta; descartada |
 | C | La lista ya trae expresiones regulares precompiladas y cada consumidor solo hace `search` | Las regex de JS y de `re` difieren (Unicode, `\b` con tildes); mueve la divergencia al dato; descartada |
 
-### D2 · Formato de la lista (1.2.0, dos niveles, `[S1 resp. 15]`, `[S1 resp. 33]`)
+### D2 · Formato de la lista (1.3.0, dos niveles, `[S1 resp. 15]`, `[S1 resp. 33]`)
 
 `[S1 resp. 33]` (validación clínica de los oncólogos asesores, 2026-10-14, `backlog/sprints/S1-plan.md`
 §7) amplía RN-23 **por forma**: imperativos y subjuntivos dirigidos ("administre"), deónticos
 ("se debe", "no debe recibir"), valorativos ("la mejor opción es") y sus equivalentes en inglés en el
 Nivel A, y verbos de acción en infinitivo en el Nivel B. La lista sube a **1.2.0** (minor: añade términos,
 `nivelB.terminos`, los campos opcionales `formas` y `excepciones`, un prefijo y la regla de tramo más largo;
-ningún término de 1.1.0 se retira ni cambia de id).
+ningún término de 1.1.0 se retira ni cambia de id). El Gate 2 (vuelta 1) la sube a **1.3.0** (minor: añade
+"indicado para este paciente" e "indicado para esta paciente" al Nivel A, coherentes con "indicated for this
+patient" de `[S1 resp. 15]`; sin retiradas ni cambios de id).
 
 ```json
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -100,13 +102,14 @@ ningún término de 1.1.0 se retira ni cambia de id).
 }
 ```
 
-**Nivel A** (salida generada, UI, prompts y contratos), 54 términos:
+**Nivel A** (salida generada, UI, prompts y contratos), 56 términos:
 
 | Origen | Términos (`id` = `es-`/`en-` + texto normalizado con guiones) | Coincidencia |
 |---|---|---|
 | AC-1 (8) | recomendado para este paciente, debe recibir, el mejor tratamiento, indicado para usted, recommended for this patient, should receive, the best treatment, indicated for you | clave flexiva |
 | `[S1 resp. 15]` (11) | deben recibir, debería recibir, se sugiere iniciar, tratamiento indicado, mejor opción, usted debe, you should, the patient should, indicated for this patient, probabilidad de éxito, chance of success | clave flexiva |
 | Lista provisional del Pre-S1 (3) | opción preferida, tratamiento de elección, tratamiento óptimo | clave flexiva |
+| Gate 2 de L1D-193, 1.3.0 (2) | indicado para este paciente, indicado para esta paciente (género y número; el segundo gana solo cuando el texto es exactamente el suyo) | clave flexiva |
 | `[S1 resp. 33]`, formas verbales (8) | inicie, administre, prescriba, suspenda, cambie a, elija, escoja, ofrezca | `formas` explícitas |
 | `[S1 resp. 33]`, deónticos y valorativos (15) | se debe (excepciones "se debe a", "se debe al"), debe iniciar, debe suspender, se debe administrar, no debe recibir, no se debe administrar, es necesario, es imprescindible, se recomienda, se recomienda iniciar, se indica (excepción "como se indica"), está indicado, está contraindicado, la mejor opción es, manejo de elección | clave flexiva |
 | `[S1 resp. 33]`, inglés (9) | we recommend, is recommended, should be started, must receive, should not receive, is indicated, is contraindicated, preferred treatment, treatment of choice | clave flexiva |
@@ -168,10 +171,12 @@ choose, switch to, standard of care (`id` = `b-es-…` / `b-en-…`).
 
 Mismo algoritmo en ambos lenguajes, aplicado al texto y a cada término:
 
-1. Unicode NFKD y eliminación de marcas combinantes (categoría `Mn`): "recibír" → "recibir", "opción" →
-   "opcion".
-2. Minúsculas (`toLowerCase()` / `casefold()`; sin caracteres afectados por la diferencia en la lista).
-3. Todo carácter que no sea letra ni dígito → espacio (`/[^\p{L}\p{N}]+/gu` en TS, `[\W_]+` en Python).
+1. Unicode NFKD y eliminación de las marcas combinantes de categoría **`Mn`** únicamente: "recibír" →
+   "recibir", "opción" → "opcion". Las marcas `Mc` y `Me` no se quitan: pasan al paso 3 y separan palabras
+   (Python: `unicodedata.category(c) != "Mn"`; TS: `/\p{Mn}/gu`). Los casos de conformidad lo fijan.
+2. Minúsculas con `toLowerCase()` / `lower()`, **no** `casefold()`: "Straße" → "straße" en ambos.
+3. Todo carácter que no sea letra ni dígito → espacio. Se decide por categoría Unicode: `/[^\p{L}\p{N}]+/gu`
+   en TS y, en Python, categoría general distinta de `L*` y `N*`.
 4. Espacios colapsados, recorte y partición en palabras. (Pasos 1–4 = **normalización base**; el Nivel B
    por prefijo, las `formas` y `frasesPermitidas` trabajan sobre ella.)
 5. **Clave flexiva** de cada palabra (términos sin `formas`, de ambos niveles), reglas en este orden, cada
@@ -194,9 +199,11 @@ Mismo algoritmo en ambos lenguajes, aplicado al texto y a cada término:
    solo `es-la-mejor-opcion-es`, "se recomienda iniciar" solo `es-se-recomienda-iniciar`, y "deben
    recibir" una sola vez (`es-deben-recibir`), como en 1.1.0.
 
-Resultado: lista de `{ terminoId, termino, nivel }` en orden de aparición. Firma:
+Resultado: lista de `{ id, termino, nivel }` en orden de aparición. Firma:
 `checkProhibitedTerms(texto, lista, { niveles = ['A'], permitirFrases = false })` y
-`check_prohibited_terms(texto, lista, niveles=("A",), permitir_frases=False)`. Las reglas (a)–(d), las
+`check_prohibited_terms(texto, lista, *, niveles=("A",), permitir_frases=False)` (keyword-only, para que
+`permitir_frases=True` siempre sea visible en la llamada y lo vigile el test estructural). Python define
+`ListaTerminos` (Pydantic) en `app/domain/lenguaje.py`, junto al verificador. Las reglas (a)–(d), las
 `formas`, las `excepciones` y el tramo son operaciones de sufijo, de igualdad de secuencias y de orden
 sobre cadenas ASCII ya normalizadas: idénticas en JS y en Python (sin regex con `\b` ni clases Unicode
 distintas).
@@ -354,7 +361,7 @@ listas.
   cerrado).
 - Los parches de `ac-17-terminos-aviso.json` y `ac-17-lenguaje-anclaje.json` siguen en verde **sin cambiar
   aserciones** ("Debe recibir", "recommended for this patient", `enum` `recomendada`, frase negativa
-  permitida). Con la lista 1.2.0 (54 términos de Nivel A, 15 términos y 3 prefijos de Nivel B), specs y
+  permitida). Con la lista 1.3.0 (56 términos de Nivel A, 15 términos y 3 prefijos de Nivel B), specs y
   ejemplos dan cero hallazgos (verificado con el prototipo del algoritmo, 2026-10-14). Los ejemplos nuevos
   de L1D-140 y L1D-194 del S1 (literales de `[S1 resp. 28]`, `[S1 resp. 32]`, `[S1 resp. 35]` y
   `[S1 resp. 36]`) también dan cero (D3).
@@ -372,7 +379,7 @@ listas.
 
 ## Risks / Trade-offs
 
-- **Lista finita (54 + 15 términos y 3 prefijos):** paráfrasis no listadas ("se aconseja que reciba") pasan.
+- **Lista finita (56 + 15 términos y 3 prefijos):** paráfrasis no listadas ("se aconseja que reciba") pasan.
   Mitigación: `clinical-language-auditor` en Gate 1/2 y la ampliación por PR de catálogo (sube `version`).
 - **Clave flexiva agresiva:** colapsa vocales finales y plurales; puede unir formas no prescriptivas a una
   secuencia prohibida (p. ej. "debo recibir"). El riesgo es acotado porque se exige la secuencia
@@ -392,7 +399,10 @@ listas.
   y se revisan periódicamente `[S1 resp. 34]`; cada uno confirmado se fija como caso de conformidad o como
   excepción.
 - **Consumidores de la lista:** L1D-180 (Nivel A en ejecución) y L1D-275 (A + B sobre el prompt) leen la
-  1.2.0; un prompt que use "iniciar", "elegir" o "offer" fallará su test (Open Question 5).
+  1.3.0; un prompt que use "iniciar", "elegir" o "offer" fallará su test (Open Question 5).
+- **Deriva por versión de Unicode:** CPython 3.13 usa Unicode 15.1 y Node usa el de su ICU; unos ~4850 code
+  points (asignados en una versión y no en la otra) pueden clasificarse distinto en `L`/`N`/`Mn`. Riesgo
+  aceptado: ningún caso de conformidad lo cubre y los textos de la lista y de la salida son español e inglés.
 - **Dos implementaciones:** riesgo de divergencia, acotado por `casos.json` en ambas suites (ahora con los
   casos de formas, excepciones y tramo más largo).
 
@@ -421,6 +431,10 @@ job y el paquete y restaurar la lista provisional; L1D-180 quedaría sin lista y
 5. **Prompts que citan la lista:** si el prompt de L1D-275 enumera las formulaciones que el LLM no debe
    usar, su test con Nivel A + B fallaría. Asumido: el prompt describe la regla sin citar los términos
    ("no formules indicaciones dirigidas al paciente"); dueño: L1D-275.
+
+6. **Ubicación de `ListaTerminos`:** hoy vive en `app/domain/lenguaje.py` (el dominio no lee archivos, pero el
+   modelo es el esquema de un archivo). L1D-180 decide al crear el puerto de carga si se mueve a
+   `infrastructure/` y el dominio recibe una vista mínima; dueño: L1D-180.
 
 ## Regresiones anotadas (no son escenarios de este change)
 
