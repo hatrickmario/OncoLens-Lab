@@ -47,7 +47,7 @@ jobs:
         run: npm run test:build --workspace apps/web
       - name: Tests de los workspaces
         run: npm test --workspaces --if-present
-      - name: Dependencias de rag-orchestrator (y ruff, que usan los tests de ci/tests/quality)
+      - name: Dependencias de rag-orchestrator
         run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
         run: npx vitest run
@@ -172,7 +172,7 @@ jobs:
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
       - name: Tests de lint y formato (fixtures)
-        run: npx vitest run ci/tests/quality
+        run: npm run test:quality
 
   ci-ok:
     name: ci-ok

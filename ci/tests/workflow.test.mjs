@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import YAML from 'yaml';
+import configQuality from '../../vitest.quality.config.ts';
+import configRaiz from '../../vitest.config.ts';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const leerWorkflow = (nombre) => YAML.parse(readFileSync(path.join(RAIZ, '.github/workflows', nombre), 'utf8'));
@@ -113,5 +115,33 @@ describe.each(NOMBRES)('workflow %s', (nombre) => {
   it('declara permissions contents: read en el nivel del workflow y ningún job las amplía [US-036 AC-1]', () => {
     expect(workflow.permissions).toEqual({ contents: 'read' });
     expect(Object.values(workflow.jobs).filter((job) => job.permissions)).toEqual([]);
+  });
+});
+
+describe('vitest raíz y job quality', () => {
+  const corridas = (job) => pasosDe(job).map((paso) => paso.run ?? '');
+  const scripts = JSON.parse(readFileSync(path.join(RAIZ, 'package.json'), 'utf8')).scripts;
+
+  it('el vitest raíz excluye ci/tests/quality y conserva scripts, infra y ci en el include [US-215 AC-1]', () => {
+    expect(configRaiz.test.exclude).toContain('ci/tests/quality/**');
+    expect(configRaiz.test.include.map((patron) => patron.split('/')[0]).sort()).toEqual(['ci', 'infra', 'scripts']);
+  });
+
+  it('la config de quality incluye solo ci/tests/quality [US-215 AC-1]', () => {
+    expect(configQuality.test.include).toEqual(['ci/tests/quality/**/*.{test,spec}.?(c|m)[jt]s?(x)']);
+    expect(configQuality.test.exclude).not.toContain('ci/tests/quality/**');
+  });
+
+  it('el job quality ejecuta test:quality y build-test no lo ejecuta [US-215 AC-1]', () => {
+    expect(scripts['test:quality']).toContain('vitest.quality.config.ts');
+    expect(corridas(ci.jobs.quality)).toContain('npm run test:quality');
+    expect(corridas(ci.jobs['build-test']).some((run) => /test:quality|ci\/tests\/quality/.test(run))).toBe(false);
+  });
+
+  it('build-test conserva el vitest raíz y el test de build de web (US-060 AC-5) [US-060 AC-5]', () => {
+    const run = corridas(ci.jobs['build-test']);
+
+    expect(run).toContain('npx vitest run');
+    expect(run).toContain('npm run test:build --workspace apps/web');
   });
 });
