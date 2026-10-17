@@ -51,7 +51,11 @@ def test_una_version_vigente_con_error_no_es_la_version_a_reemplazar() -> None:
 
 
 def test_el_checksum_de_una_version_antigua_ya_embebida_se_omite_en_lugar_de_resucitarla() -> None:
-    historico = [version("a@1", "c1", vigente=False), version("a@2", "c2", vigente=False)]
+    historico = [
+        version("a@1", "c1", vigente=False),
+        version("a@2", "c2", vigente=False),
+        version("a@3", "c3"),
+    ]
 
     assert decidir_version("c1", historico).accion is Accion.OMITIR
 
@@ -163,3 +167,16 @@ def test_un_grupo_sin_vigente_no_tiene_nada_que_retirar_pero_si_huerfanas_que_ap
 
 def test_la_release_se_publica_tambien_cuando_el_conjunto_vigente_queda_vacio() -> None:
     assert debe_publicar_release(frozenset(), frozenset({"a"})) is True
+
+
+def test_el_checksum_de_una_version_retirada_sin_vigente_en_el_grupo_se_reingiere_en_lugar_de_omitirse() -> (
+    None
+):
+    """Tras un retiro por licencia o fuente no queda vigente: volver con el mismo texto lo readmite."""
+    retirada = [version("a@1", "c1", vigente=False)]
+
+    assert decidir_version("c1", retirada).accion is Accion.INSERTAR
+
+
+def test_el_checksum_de_la_version_vigente_se_omite() -> None:
+    assert decidir_version("c1", [version("a@1", "c1")]).accion is Accion.OMITIR

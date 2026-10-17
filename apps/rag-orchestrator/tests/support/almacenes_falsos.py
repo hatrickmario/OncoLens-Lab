@@ -26,10 +26,19 @@ class CatalogoEnMemoria:
         self.documentos: dict[str, RegistroDeDocumento] = {}
         self.releases: list[RegistroDeRelease] = []
         self.fallar_en: dict[str, Exception] = {}
+        # Falla recién en la llamada número n (0 = la primera) de un método: p. ej. el segundo ``guardar_documento``.
+        self.fallar_desde_la_llamada: dict[str, tuple[int, Exception]] = {}
+        self._llamadas: dict[str, int] = {}
 
     def _puede(self, metodo: str) -> None:
+        llamada = self._llamadas.get(metodo, 0)
+        self._llamadas[metodo] = llamada + 1
         if metodo in self.fallar_en:
             raise self.fallar_en[metodo]
+        if metodo in self.fallar_desde_la_llamada:
+            desde, error = self.fallar_desde_la_llamada[metodo]
+            if llamada >= desde:
+                raise error
 
     def versiones_del_grupo(self, version_group_id: str) -> list[VersionExistente]:
         self._puede("versiones_del_grupo")
@@ -90,6 +99,9 @@ class AlmacenDeChunksEnMemoria:
     def ensure_collection(self) -> bool:
         return False
 
+    def upsert_chunks(self, chunks: list[ChunkDelCorpus]) -> int:
+        return self.insert_chunks(chunks)
+
     def insert_chunks(self, chunks: list[ChunkDelCorpus]) -> int:  # type: ignore[override]
         self._puede("insert_chunks")
         if any(len(c.dense_vector) != self.dimension for c in chunks):
@@ -137,4 +149,22 @@ class AlmacenConFallosInyectables:
         return self._real.marcar_no_vigentes(document_id)  # type: ignore[attr-defined, no-any-return]
 
     def __getattr__(self, nombre: str) -> object:
+        return getattr(self._real, nombre)
+
+
+class CatalogoConFallosInyectables:
+    """Envuelve el ``CorpusCatalog`` REAL (PostgreSQL) e inyecta un error en los métodos de ``fallar_en``."""
+
+    def __init__(self, real: object) -> None:
+        self._real = real
+        self.fallar_en: dict[str, Exception] = {}
+
+    def __getattr__(self, nombre: str) -> object:
+        if nombre in self.fallar_en:
+            error = self.fallar_en[nombre]
+
+            def falla(*_: object, **__: object) -> None:
+                raise error
+
+            return falla
         return getattr(self._real, nombre)

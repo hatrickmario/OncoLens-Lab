@@ -22,7 +22,10 @@ from app.infrastructure.catalog.corpus_document_repository import CorpusDocument
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
-from tests.support.almacenes_falsos import AlmacenConFallosInyectables
+from tests.support.almacenes_falsos import (
+    AlmacenConFallosInyectables,
+    CatalogoConFallosInyectables,
+)
 from tests.support.fakes import RelojFijo
 from tests.support.pg import BaseDeTest
 from tests.support.semilla import (
@@ -50,6 +53,7 @@ class Entorno:
     reloj: RelojFijo
     cargador: SeedCorpusLoader
     almacen: AlmacenConFallosInyectables
+    catalogo: CatalogoConFallosInyectables
 
     def cargar(self, *claves: str) -> ReporteDeCarga:
         return self.cargador.cargar(documentos_fx_06c_a(*claves))
@@ -127,9 +131,10 @@ def entorno(
     real = MilvusRepository(cliente_milvus, ajustes_milvus)
     real.ensure_collection()
     almacen = AlmacenConFallosInyectables(real)
+    catalogo = CatalogoConFallosInyectables(CorpusDocumentRepository(motor))
     embedder, reloj = EmbedderFalso(), RelojFijo()
     cargador = SeedCorpusLoader(
-        catalogo=CorpusDocumentRepository(motor),
+        catalogo=catalogo,
         almacen_de_chunks=almacen,
         embedder=embedder,
         fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
@@ -149,6 +154,7 @@ def entorno(
         reloj,
         cargador,
         almacen,
+        catalogo,
     )
     with motor.begin() as conexion:
         for tabla in ("corpus_release_document", "corpus_release", "corpus_document"):
@@ -376,3 +382,46 @@ def test_un_documento_embebido_que_vuelve_rechazado_deja_su_grupo_sin_vigentes_y
     assert entorno.filas_del_catalogo() == filas_antes + 1  # solo la fila del rechazo
     assert reporte.release_id is not None and entorno.ids_en_la_release() == []
     assert entorno.releases_publicadas() == 2
+
+
+@pytest.mark.ac("US-059", 6)
+def test_si_falla_confirmar_en_postgresql_volver_al_texto_de_v1_o_cargar_v3_no_deja_chunks_vigentes_de_v2(
+    entorno: Entorno,
+) -> None:
+    """Gemelo de integración (PostgreSQL y Milvus reales) del residual RN-05 del Gate 2."""
+    entorno.cargar("t-ok-1")
+    entorno.catalogo.fallar_en["reemplazar_version"] = ConnectionError("postgres caído")
+    with pytest.raises(ConnectionError):
+        entorno.cargar("t-ok-1-v2")
+    entorno.catalogo.fallar_en.clear()
+    id_v2 = str(entorno.fila("t-ok-1-v2")["document_id"])
+
+    entorno.cargar("t-ok-1")
+    assert id_v2 not in entorno.documentos_con_chunks_vigentes()
+
+    v3 = replace(
+        documentos_fx_06c_a("t-ok-1-v2")[0],
+        document_key="t-ok-1-v3",
+        texto="Tercera versión sintética del documento uno de mama.",
+    )
+    entorno.cargador.cargar([v3])
+    assert entorno.documentos_con_chunks_vigentes() == {
+        str(entorno.fila("t-ok-1-v3")["document_id"])
+    }
+
+
+@pytest.mark.ac("US-059", 2)
+def test_readmitir_con_el_mismo_checksum_un_documento_retirado_lo_deja_vigente_con_postgresql_y_milvus_reales(
+    entorno: Entorno,
+) -> None:
+    entorno.cargar("t-ok-1")
+    id_cargado = str(entorno.fila("t-ok-1")["document_id"])
+    entorno.cargador.cargar([replace(documentos_fx_06c_a("t-ok-1")[0], license="CC BY-ND 4.0")])
+    assert entorno.documentos_con_chunks_vigentes() == set()
+
+    entorno.cargar("t-ok-1")
+
+    readmitido = entorno.fila("t-ok-1")
+    assert (readmitido["is_current"], readmitido["superseded_at"]) == (True, None)
+    assert entorno.documentos_con_chunks_vigentes() == {id_cargado}
+    assert entorno.ids_en_la_release() == [id_cargado]

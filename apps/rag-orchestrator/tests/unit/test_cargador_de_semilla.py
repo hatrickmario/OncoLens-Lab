@@ -443,3 +443,101 @@ def test_reintentar_el_rechazo_tras_ese_fallo_retira_la_vigente(montaje: Montaje
         montaje.vigentes_en_milvus() == set()
         and montaje.catalogo.ids_de_documentos_vigentes() == frozenset()
     )
+
+
+# --- Gate 2 · tercera pasada: todo chunk de Milvus tiene fila en su grupo (RN-05, RN-21) ---------------------------------
+
+
+def id_de(montaje: Montaje, clave: str) -> str:
+    return next(i for i in montaje.catalogo.documentos if i.startswith(f"{clave}@"))
+
+
+def cargar_v1_y_fallar_v2_al_reemplazar(montaje: Montaje) -> None:
+    montaje.cargar("t-ok-1")
+    montaje.catalogo.fallar_en["reemplazar_version"] = ConnectionError("postgres caído")
+    with pytest.raises(ConnectionError):
+        montaje.cargar("t-ok-1-v2")
+    montaje.catalogo.fallar_en.clear()
+
+
+@pytest.mark.ac("US-059", 6)
+def test_si_falla_confirmar_la_nueva_version_volver_al_texto_de_v1_no_deja_chunks_vigentes_de_v2(
+    montaje: Montaje,
+) -> None:
+    cargar_v1_y_fallar_v2_al_reemplazar(montaje)
+    v2 = id_de(montaje, "t-ok-1-v2")
+
+    reporte = montaje.cargar("t-ok-1")
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.OMITIDO
+    assert v2 not in montaje.vigentes_en_milvus() and v2 not in montaje.encontrados_por_busqueda()
+
+
+@pytest.mark.ac("US-059", 6)
+def test_si_falla_confirmar_la_nueva_version_una_tercera_deja_vigentes_solo_sus_chunks(
+    montaje: Montaje,
+) -> None:
+    cargar_v1_y_fallar_v2_al_reemplazar(montaje)
+
+    montaje.cargador.cargar([version_3(montaje)])
+
+    v3 = id_de(montaje, "t-ok-1-v3")
+    assert montaje.vigentes_en_milvus() == {v3} == montaje.encontrados_por_busqueda()
+
+
+@pytest.mark.ac("US-059", 6)
+def test_si_falla_confirmar_la_nueva_version_un_rechazo_deja_el_grupo_sin_chunks_vigentes(
+    montaje: Montaje,
+) -> None:
+    cargar_v1_y_fallar_v2_al_reemplazar(montaje)
+    rechazado = replace(documentos_fx_06c_a("t-ok-1")[0], license="CC BY-ND 4.0")
+
+    montaje.cargador.cargar([rechazado])
+
+    assert montaje.vigentes_en_milvus() == set() == montaje.encontrados_por_busqueda()
+
+
+@pytest.mark.ac("US-059", 6)
+def test_si_falla_guardar_un_documento_nuevo_tras_indexarlo_un_rechazo_apaga_sus_chunks(
+    montaje: Montaje,
+) -> None:
+    # 1.ª llamada a guardar_documento: la fila definitiva (no vigente) previa a Milvus; 2.ª: confirmar.
+    montaje.catalogo.fallar_desde_la_llamada["guardar_documento"] = (1, ConnectionError("pg caído"))
+    with pytest.raises(ConnectionError):
+        montaje.cargar("t-ok-1")
+    montaje.catalogo.fallar_desde_la_llamada.clear()
+    assert montaje.vigentes_en_milvus() != set()  # la ventana documentada: chunks sin confirmar
+    rechazado = replace(documentos_fx_06c_a("t-ok-1")[0], license="CC BY-ND 4.0")
+
+    montaje.cargador.cargar([rechazado])
+
+    assert montaje.vigentes_en_milvus() == set() == montaje.encontrados_por_busqueda()
+
+
+@pytest.mark.parametrize("metodo", ["versiones_del_grupo", "retirar_version"])
+def test_un_fallo_del_catalogo_al_rechazar_se_propaga_en_lugar_de_volverse_un_resultado_error(
+    montaje: Montaje, metodo: str
+) -> None:
+    documento = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+    montaje.catalogo.fallar_en[metodo] = ConnectionError("postgres caído")
+
+    with pytest.raises(ConnectionError):
+        montaje.cargador.cargar([documento])
+
+
+@pytest.mark.ac("US-059", 2)
+def test_readmitir_con_el_mismo_checksum_un_documento_retirado_lo_deja_vigente_en_catalogo_y_milvus(
+    montaje: Montaje,
+) -> None:
+    original = rechazado_tras_estar_cargado(montaje, license="CC BY-ND 4.0")
+    id_cargado = id_de(montaje, "t-ok-1")
+    montaje.cargador.cargar([original])  # retirado
+    assert montaje.vigentes_en_milvus() == set()
+
+    reporte = montaje.cargar("t-ok-1")  # la licencia se corrigió: vuelve el mismo texto
+
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.CARGADO
+    readmitido = montaje.catalogo.documentos[id_cargado]
+    assert (readmitido.is_current, readmitido.superseded_at) == (True, None)
+    assert montaje.vigentes_en_milvus() == {id_cargado} == montaje.encontrados_por_busqueda()
+    assert montaje.catalogo.releases[-1].document_ids == (id_cargado,)

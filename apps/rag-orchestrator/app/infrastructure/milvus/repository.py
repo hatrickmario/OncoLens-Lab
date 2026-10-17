@@ -8,7 +8,7 @@ El cliente ``pymilvus`` se inyecta (real en integración y E2E).
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from pymilvus import MilvusClient
@@ -125,17 +125,25 @@ class MilvusRepository:
         Lanza ``DimensionDeVectorInvalida`` si algún vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección;
         cualquier otro error de Milvus se propaga sin traducir.
         """
+        return self._escribir(self._cliente.insert, chunks)
+
+    def upsert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
+        """Inserta o reescribe por ``chunk_id`` (idempotente: reintentos y readmisión de una versión retirada).
+
+        Mismos errores que ``insert_chunks``.
+        """
+        return self._escribir(self._cliente.upsert, chunks)
+
+    def _escribir(self, operacion: Callable[..., Any], chunks: Sequence[ChunkDelCorpus]) -> int:
         try:
-            resultado = self._cliente.insert(
-                self._coleccion, [self._fila(chunk) for chunk in chunks]
-            )
+            resultado = operacion(self._coleccion, [self._fila(chunk) for chunk in chunks])
         except MilvusException as error:
             if CODIGO_PARAMETRO_INVALIDO == error.code and "dim" in str(error):
                 raise DimensionDeVectorInvalida(
                     f"el vector dense no tiene la dimensión {self._ajustes.embedding_dim} de la colección"
                 ) from None
             raise
-        return int(resultado["insert_count"])
+        return int(resultado.get("insert_count", resultado.get("upsert_count", 0)))
 
     def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]:
         """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03)."""
