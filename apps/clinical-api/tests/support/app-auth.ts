@@ -1,3 +1,4 @@
+import type { Router } from 'express';
 import type { Client } from 'pg';
 import { createApp } from '../../src/app.js';
 import type { AuthConfig } from '../../src/config.js';
@@ -21,6 +22,7 @@ export interface OpcionesAppDeTest {
   tokens: GeneradorDeToken;
   reloj: Clock;
   registrar: Registrar;
+  rutasProtegidas?: readonly Router[];
 }
 
 /** Aplicación real con el módulo de sesión cableado a la BD de test y a un reloj/token/ids/traceId fijos. */
@@ -35,5 +37,6 @@ export function appConAuth(opciones: OpcionesAppDeTest) {
   });
   return createApp({
     auth: { service, nuevoTraceId: traceIdsFijos(), registrar: opciones.registrar },
+    ...(opciones.rutasProtegidas !== undefined && { rutasProtegidas: opciones.rutasProtegidas }),
   });
 }
