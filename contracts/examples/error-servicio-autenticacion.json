@@ -1,0 +1,5 @@
+{
+  "error": "ERROR_SERVICIO_AUTENTICACION",
+  "message": "El servicio de autenticación no respondió correctamente.",
+  "traceId": "req_e5f6a7b8"
+}
