@@ -228,6 +228,15 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(catalogo?.target).toBe(seed.environment.CLINICAL_CATALOG_PATH);
   });
 
+  it('no arranca con up sin perfil: clinical-seed pertenece al perfil seed y el piloto no monta la contraseña del dueño de la base [US-039 AC-5]', () => {
+    const compose = parseYaml(readFileSync(COMPOSE, 'utf8'));
+    const sinPerfil = resolver({ entorno: { COMPOSE_PROFILES: '' } });
+
+    expect(compose.services['clinical-seed'].profiles).toEqual(['seed']);
+    expect(Object.keys(sinPerfil.services)).not.toContain('clinical-seed');
+    expect(Object.keys(resolver().services)).toContain('clinical-seed');
+  });
+
   it('pasa REAL_ANONYMIZED_ENABLED y REAL_IDENTIFIED_ENABLED al seed para que su guarda los vea [US-039 AC-5]', () => {
     const porDefecto = resolver().services['clinical-seed'].environment;
     const habilitado = resolver({ entorno: { REAL_ANONYMIZED_ENABLED: 'true' } }).services['clinical-seed'].environment;
