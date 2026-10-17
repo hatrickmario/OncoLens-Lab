@@ -235,6 +235,133 @@ async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
   return filas.map(eventoDe);
 }
 
+/** El episodio abierto del paciente o, si no hay, el último: el `AIAnalysisRecord` se asocia a él. */
+async function leerEpisodioVigente(leer: Leer): Promise<string | null> {
+  const [fila] = await leer(
+    `SELECT id FROM clinical.care_episode
+      WHERE patient_id = $1
+      ORDER BY (closed_at IS NULL) DESC, opened_at DESC
+      LIMIT 1`,
+  );
+  return fila === undefined ? null : (fila['id'] as string);
+}
+
+/**
+ * Columnas de `clinical.ai_analysis_record` en el orden de `parametrosDelRegistro()`. Una sola sentencia: es atómica y
+ * su `COMMIT` ocurre antes de que la promesa resuelva (RN-06). `RETURNING` devuelve lo realmente persistido.
+ */
+const INSERTAR_REGISTRO = `
+  INSERT INTO clinical.ai_analysis_record (
+    id, patient_id, episode_id, requested_by, analysis_type, trace_id, query_text, question_template_id,
+    query_language, response_language, sources_selected, filters_applied, synthesis, applicability,
+    evidence_options, discarded_options, case_summary, analysis_basis, agent_steps, omitted_claims,
+    missing_critical_data, continued_with_warning, prior_analyses_used, patient_data_links,
+    top_relevance_score, status, clinical_context_snapshot, context_fingerprint, rerun_of_analysis_id,
+    data_classification, llm_provider, llm_model, embedding_model, reranker_model, nli_model,
+    prompt_version, corpus_release, catalog_version, retrieval_params, created_at
+  ) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb,
+    $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb, $19::jsonb, $20, $21::jsonb, $22, $23::uuid[],
+    $24::jsonb, $25, $26, $27::jsonb, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
+    $39::jsonb, $40
+  ) RETURNING *`;
+
+const aJson = (valor: unknown): string | null => (valor === null ? null : JSON.stringify(valor));
+
+/** `node-pg` convertiría un arreglo JS en un arreglo de PostgreSQL: los jsonb viajan siempre como texto JSON. */
+function parametrosDelRegistro(r: RegistroDeAnalisis): unknown[] {
+  return [
+    r.id,
+    r.patientId,
+    r.episodeId,
+    r.requestedBy,
+    r.analysisType,
+    r.traceId,
+    r.queryText,
+    r.questionTemplateId,
+    r.queryLanguage,
+    r.responseLanguage,
+    aJson(r.sourcesSelected),
+    aJson(r.filtersApplied),
+    aJson(r.synthesis),
+    aJson(r.applicability),
+    aJson(r.evidenceOptions),
+    aJson(r.discardedOptions),
+    aJson(r.caseSummary),
+    aJson(r.analysisBasis),
+    aJson(r.agentSteps),
+    r.omittedClaims,
+    aJson(r.missingCriticalData),
+    r.continuedWithWarning,
+    r.priorAnalysesUsed,
+    aJson(r.patientDataLinks),
+    r.topRelevanceScore,
+    r.status,
+    aJson(r.clinicalContextSnapshot),
+    r.contextFingerprint,
+    r.rerunOfAnalysisId,
+    r.dataClassification,
+    r.llmProvider,
+    r.llmModel,
+    r.embeddingModel,
+    r.rerankerModel,
+    r.nliModel,
+    r.promptVersion,
+    r.corpusRelease,
+    r.catalogVersion,
+    aJson(r.retrievalParams),
+    r.createdAt,
+  ];
+}
+
+/** El registro tal como quedó en la fila (jsonb ya parseado por `pg`): de aquí sale la respuesta `200`. */
+function registroDeFila(f: Fila): RegistroDeAnalisis {
+  return {
+    id: f['id'] as string,
+    patientId: f['patient_id'] as string,
+    episodeId: f['episode_id'] as string,
+    requestedBy: f['requested_by'] as string,
+    analysisType: f['analysis_type'] as RegistroDeAnalisis['analysisType'],
+    traceId: f['trace_id'] as string,
+    queryText: f['query_text'] as string,
+    questionTemplateId: f['question_template_id'] as string | null,
+    queryLanguage: f['query_language'] as RegistroDeAnalisis['queryLanguage'],
+    responseLanguage: f['response_language'] as RegistroDeAnalisis['responseLanguage'],
+    sourcesSelected: f['sources_selected'] as RegistroDeAnalisis['sourcesSelected'],
+    filtersApplied: f['filters_applied'] as RegistroDeAnalisis['filtersApplied'],
+    synthesis: f['synthesis'] as RegistroDeAnalisis['synthesis'],
+    applicability: f['applicability'] as RegistroDeAnalisis['applicability'],
+    evidenceOptions: f['evidence_options'] as RegistroDeAnalisis['evidenceOptions'],
+    discardedOptions: f['discarded_options'] as RegistroDeAnalisis['discardedOptions'],
+    caseSummary: null,
+    analysisBasis: f['analysis_basis'] as RegistroDeAnalisis['analysisBasis'],
+    agentSteps: f['agent_steps'] as RegistroDeAnalisis['agentSteps'],
+    omittedClaims: f['omitted_claims'] as number,
+    missingCriticalData: f['missing_critical_data'] as string[],
+    continuedWithWarning: f['continued_with_warning'] as boolean,
+    priorAnalysesUsed: f['prior_analyses_used'] as string[],
+    patientDataLinks: f['patient_data_links'] as RegistroDeAnalisis['patientDataLinks'],
+    topRelevanceScore: f['top_relevance_score'] as number | null,
+    status: f['status'] as RegistroDeAnalisis['status'],
+    clinicalContextSnapshot: f[
+      'clinical_context_snapshot'
+    ] as RegistroDeAnalisis['clinicalContextSnapshot'],
+    contextFingerprint: f['context_fingerprint'] as string,
+    rerunOfAnalysisId: null,
+    dataClassification: f['data_classification'] as RegistroDeAnalisis['dataClassification'],
+    llmProvider: f['llm_provider'] as string | null,
+    llmModel: f['llm_model'] as string | null,
+    embeddingModel: f['embedding_model'] as string | null,
+    rerankerModel: f['reranker_model'] as string | null,
+    nliModel: f['nli_model'] as string | null,
+    promptVersion: f['prompt_version'] as string | null,
+    corpusRelease: f['corpus_release'] as string | null,
+    catalogVersion: f['catalog_version'] as string,
+    retrievalParams: f['retrieval_params'] as RegistroDeAnalisis['retrievalParams'],
+    createdAt: f['created_at'] as Date,
+  };
+}
+
 /**
  * Lectura del caso con `pg` sobre el pool inyectado de `server.ts` (migración a Prisma = deuda D-1). Solo lee las
  * columnas que el builder usa: las notas, la identidad y la referencia del convenio no se leen. Las fechas llegan como
@@ -244,8 +371,9 @@ export function createEvidenceAnalysisRepository(
   db: Consultador,
 ): CasoRepository & AnalisisRepository {
   return {
-    async persistirAnalisis() {
-      throw new Error('no implementado');
+    async persistirAnalisis(registro) {
+      const { rows } = await db.query(INSERTAR_REGISTRO, parametrosDelRegistro(registro));
+      return registroDeFila(rows[0] ?? {});
     },
     async leerCaso(patientId) {
       const leer: Leer = async (sql) => (await db.query(sql, [patientId])).rows;
@@ -259,7 +387,7 @@ export function createEvidenceAnalysisRepository(
           dataOrigin: paciente['data_origin'] as OrigenDeDatos,
           population: paciente['population'] as 'adulto' | 'pediatrico',
         },
-        episodioId: null,
+        episodioId: await leerEpisodioVigente(leer),
         diagnosticoActivo: await leerDiagnosticoActivo(leer),
         biomarcadores: await leerBiomarcadores(leer),
         atributos: await leerAtributos(leer),

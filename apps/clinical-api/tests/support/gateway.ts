@@ -91,6 +91,8 @@ export interface MundoDeGateway {
   readonly base: BaseDeTest;
   readonly cliente: Client;
   readonly ids: GeneradorDeIds;
+  /** UUID de los `AIAnalysisRecord`: un solo generador por base, para que los tests de un archivo no repitan ids. */
+  readonly idsDeAnalisis: GeneradorDeIds;
   readonly espacio: number;
   readonly cerrar: () => Promise<void>;
 }
@@ -112,6 +114,7 @@ export async function prepararMundoConSeed(
     base,
     cliente,
     ids: generadorDeIds(espacio),
+    idsDeAnalisis: generadorDeIds(espacio + 2000),
     espacio,
     cerrar: async () => {
       await cliente.end();
@@ -246,7 +249,7 @@ export async function montarGateway(
     },
     reloj,
     ids: opciones.ids ?? { traceId: () => TRACE_ID_GENERADO },
-    idsDeAnalisis: generadorDeIds(mundo.espacio + 2000),
+    idsDeAnalisis: mundo.idsDeAnalisis,
     pseudonimos: opciones.pseudonimos ?? pseudonimosFijos(),
     registrar: logger.registrar,
   });
