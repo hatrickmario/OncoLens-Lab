@@ -9,7 +9,6 @@ from enum import StrEnum
 
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 
-
 # "ND" como palabra aparte ("CC BY-ND", "by-nc-nd"): no casa dentro de otra palabra.
 _CLAUSULA_ND = re.compile(r"(?<![a-z])nd(?![a-z])", re.IGNORECASE)
 

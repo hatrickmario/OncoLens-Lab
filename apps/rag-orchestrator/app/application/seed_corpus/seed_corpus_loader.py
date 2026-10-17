@@ -15,11 +15,13 @@ from app.application.seed_corpus.ports import (
     CorpusCatalog,
     IdGenerator,
     PassageEmbedder,
+    RegistroDeDocumento,
     RegistroDeRelease,
     SourceFetcher,
 )
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
+    registro_con_error,
     registro_embebido,
     registro_rechazado,
 )
@@ -33,14 +35,19 @@ from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import (
     Accion,
+    DecisionDeVersion,
     calcular_checksum,
     debe_publicar_release,
     decidir_version,
 )
 
 
+class TextoVacio(Exception):
+    """El documento no tiene texto que indexar tras normalizarlo."""
+
+
 class SeedCorpusLoader:
-    def __init__(  # noqa: PLR0913 - raíz de composición del caso de uso: un puerto por colaborador
+    def __init__(
         self,
         *,
         catalogo: CorpusCatalog,
@@ -86,28 +93,74 @@ class SeedCorpusLoader:
         self, documento: DocumentoDeSemilla, admision: Admision
     ) -> ResultadoDeDocumento:
         ahora = self._reloj.ahora()
-        texto = normalizar_texto(self._fuente.obtener_texto(documento))
+        try:
+            texto = normalizar_texto(self._fuente.obtener_texto(documento))
+        except Exception as error:  # noqa: BLE001 - borde del puerto SourceFetcher: lo que falle es de este documento
+            return self._registrar_error(documento, admision, None, "obtener_texto", error)
         checksum = calcular_checksum(texto)
         versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
             return ResultadoDeDocumento(documento.document_key, Resultado.OMITIDO)
-        registro = registro_embebido(documento, admision, checksum, ahora)
         fragmentos = fragmentar(
             texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
         )
-        vectores = self._embedder.embeber(fragmentos)
-        self._chunks.insert_chunks(chunks_del_documento(registro, fragmentos, vectores, ahora))
-        if decision.accion is Accion.REEMPLAZAR and decision.anterior_id is not None:
-            # Orden de D5: chunks nuevos -> apagar los anteriores -> confirmar el catálogo. Nada se borra (RN-05).
+        if not fragmentos:
+            return self._registrar_error(documento, admision, checksum, "texto", TextoVacio())
+        registro = registro_embebido(documento, admision, checksum, ahora)
+        try:
+            vectores = self._embedder.embeber(fragmentos)
+        except Exception as error:  # noqa: BLE001 - borde del puerto PassageEmbedder
+            return self._registrar_error(documento, admision, checksum, "embeddings", error)
+        try:
+            self._indexar(registro, fragmentos, vectores, decision)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+            return self._registrar_error(documento, admision, checksum, "milvus", error)
+        return self._confirmar(documento, registro, decision, len(fragmentos))
+
+    def _indexar(
+        self,
+        registro: RegistroDeDocumento,
+        fragmentos: Sequence[str],
+        vectores: Sequence[Sequence[float]],
+        decision: DecisionDeVersion,
+    ) -> None:
+        """Chunks nuevos -> apagar los de la versión anterior (D5). Re-ejecutable: no reinserta lo que ya quedó."""
+        ya_insertados = self._chunks.ids_de_chunks_del_documento(registro.document_id)
+        chunks = chunks_del_documento(registro, fragmentos, vectores, self._reloj.ahora())
+        pendientes = [c for c in chunks if c.chunk_id not in ya_insertados]
+        if pendientes:
+            self._chunks.insert_chunks(pendientes)
+        if decision.anterior_id is not None:
             self._chunks.marcar_no_vigentes(decision.anterior_id)
-            self._catalogo.reemplazar_version(registro, decision.anterior_id, ahora)
-            return ResultadoDeDocumento(
-                documento.document_key, Resultado.NUEVA_VERSION, chunks=len(fragmentos)
-            )
+
+    def _confirmar(
+        self,
+        documento: DocumentoDeSemilla,
+        registro: RegistroDeDocumento,
+        decision: DecisionDeVersion,
+        chunks: int,
+    ) -> ResultadoDeDocumento:
+        """Último paso: el catálogo es la verdad (``is_current``); un fallo aquí aborta la carga."""
+        if decision.anterior_id is None:
+            self._catalogo.guardar_documento(registro)
+            return ResultadoDeDocumento(documento.document_key, Resultado.CARGADO, chunks=chunks)
+        self._catalogo.reemplazar_version(registro, decision.anterior_id, self._reloj.ahora())
+        return ResultadoDeDocumento(documento.document_key, Resultado.NUEVA_VERSION, chunks=chunks)
+
+    def _registrar_error(
+        self,
+        documento: DocumentoDeSemilla,
+        admision: Admision,
+        checksum: str | None,
+        etapa: str,
+        error: Exception,
+    ) -> ResultadoDeDocumento:
+        """``status = error`` sin chunks vigentes; el reporte lleva etapa y clase, nunca el mensaje (puede traer URLs)."""
+        registro = registro_con_error(documento, admision, checksum, self._reloj.ahora())
         self._catalogo.guardar_documento(registro)
         return ResultadoDeDocumento(
-            documento.document_key, Resultado.CARGADO, chunks=len(fragmentos)
+            documento.document_key, Resultado.ERROR, f"{etapa}: {type(error).__name__}"
         )
 
     def _publicar_release(self) -> str | None:

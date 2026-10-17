@@ -127,6 +127,33 @@ def entorno(
     motor.dispose()
 
 
+def test_carga_de_semilla_con_el_modelo_caido_deja_error_en_el_catalogo_y_un_reintento_lo_carga(
+    entorno: Entorno,
+) -> None:
+    entorno.embedder.error = ConnectionError("modelo no disponible")
+
+    caido = entorno.cargar("t-ok-1")
+    en_error = entorno.fila("t-ok-1")
+    entorno.embedder.error = None
+    reintento = entorno.cargar("t-ok-1")
+
+    assert caido.hubo_errores and caido.release_id is None
+    assert (en_error["status"], en_error["is_current"]) == ("error", False)
+    assert reintento.de("t-ok-1").resultado is Resultado.CARGADO
+    assert entorno.filas_del_catalogo() == 1 and entorno.fila("t-ok-1")["status"] == "embebido"
+
+
+def test_carga_de_semilla_con_vectores_de_otra_dimension_los_rechaza_milvus_y_queda_error(
+    entorno: Entorno,
+) -> None:
+    entorno.embedder.dimension = 16
+
+    reporte = entorno.cargar("t-ok-1")
+
+    assert reporte.de("t-ok-1").motivo == "milvus: DimensionDeVectorInvalida"
+    assert entorno.fila("t-ok-1")["status"] == "error" and entorno.total_de_chunks() == 0
+
+
 @pytest.mark.ac("US-059", 1)
 def test_carga_de_semilla_publica_una_release_con_el_corte_de_configuracion_las_fuentes_excluidas_y_una_fila_por_vigente(
     entorno: Entorno,
