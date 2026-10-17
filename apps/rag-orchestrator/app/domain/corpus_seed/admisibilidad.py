@@ -32,8 +32,10 @@ _CLAUSULA_SA = re.compile(
     r"(?<![a-z])sa(?![a-z])|share[\s-]?alike|compartir[\s-]?igual", re.IGNORECASE
 )
 
-# Fuentes que no se pueden ingerir (RN-21, D-09) con su nombre largo y su host: una fuente configurada se reconoce
-# también por estos alias; el identificador y la URL de un documento se comparan con el host.
+# PISO de fuentes que no se pueden ingerir (RN-21, D-09), con su nombre largo y su host. Vive en el código: ``CORPUS_EXCLUDED_SOURCES``
+# (configuración) solo puede AMPLIARLO, nunca quitar NCCN ni ESMO. Sin excepciones: «ESMO Open» se rechaza (falla cerrado);
+# admitirla exigiría una excepción explícita revisada legalmente (design.md).
+PISO_DE_FUENTES_EXCLUIDAS: tuple[str, ...] = ("NCCN", "ESMO")
 ALIAS_DE_FUENTES_EXCLUIDAS: Mapping[str, tuple[str, ...]] = {
     "nccn": ("national comprehensive cancer network",),
     "esmo": ("european society for medical oncology",),
@@ -60,8 +62,10 @@ class PoliticaDeLicencias:
     permitir_cc_by_nc: bool = False
 
     def fuentes_excluidas(self) -> tuple[str, ...]:
-        """Las fuentes excluidas efectivas: el piso del código más las de configuración (esta solo puede ampliarlo)."""
-        return self.excluidas
+        """Las fuentes excluidas efectivas: la configuración más las del piso que le falten (esta solo puede ampliarlo)."""
+        presentes = {normalizar_clave(fuente) for fuente in self.excluidas}
+        faltan = tuple(f for f in PISO_DE_FUENTES_EXCLUIDAS if normalizar_clave(f) not in presentes)
+        return (*self.excluidas, *faltan)
 
 
 @dataclass(frozen=True)
@@ -76,7 +80,11 @@ class Admision:
 
 def clase_contradice_el_texto(texto: str, clase: str) -> bool:
     """La clave de la tabla dice una cosa y la clase otra (RN-21): ND nunca; NC solo a cc_by_nc; SA solo a cc_by_sa."""
-    raise NotImplementedError("no implementado")
+    return (
+        contiene_nd(texto)
+        or (contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_NC)
+        or (contiene_sa(texto) and not contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_SA)
+    )
 
 
 def contiene_nd(texto: str) -> bool:
@@ -93,7 +101,7 @@ def contiene_sa(texto: str) -> bool:
 
 def evaluar_admisibilidad(documento: DocumentoDeSemilla, politica: PoliticaDeLicencias) -> Admision:
     # La fuente excluida se decide ANTES que la licencia: NCCN se rechaza aunque declare una aceptada (D-09).
-    if es_fuente_excluida(documento, politica.excluidas):
+    if es_fuente_excluida(documento, politica.fuentes_excluidas()):
         return Admision(MotivoDeRechazo.FUENTE_EXCLUIDA)
     if not documento.license:
         return Admision(MotivoDeRechazo.SIN_LICENCIA)
@@ -113,18 +121,18 @@ def _cumple_condiciones_de_nc(
 
 
 def es_fuente_excluida(documento: DocumentoDeSemilla, excluidas: tuple[str, ...]) -> bool:
-    """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host de su identificador o URL."""
+    """Falla cerrado (D-09): nombre, alias o token del nombre de la fuente, o host de su identificador o URL.
+
+    ``excluidas`` debe traer el piso (``PoliticaDeLicencias.fuentes_excluidas()``). Los hosts salen solo de la tabla del
+    código: no se inventan para una fuente agregada por configuración.
+    """
     nombres = {normalizar_clave(fuente) for fuente in excluidas}
     for fuente in list(nombres):
         nombres.update(ALIAS_DE_FUENTES_EXCLUIDAS.get(fuente, ()))
     palabras = f" {' '.join(re.findall(r'\w+', documento.source_name.casefold()))} "
     if any(f" {' '.join(re.findall(r'\w+', nombre))} " in palabras for nombre in nombres):
         return True
-    hosts = {
-        host
-        for fuente in nombres
-        for host in HOSTS_DE_FUENTES_EXCLUIDAS.get(fuente, (f"{fuente.replace(' ', '')}.org",))
-    }
+    hosts = {host for fuente in nombres for host in HOSTS_DE_FUENTES_EXCLUIDAS.get(fuente, ())}
     return any(
         _host_de(valor) == host or _host_de(valor).endswith(f".{host}")
         for valor in (documento.external_id, documento.url_fuente)

@@ -260,7 +260,7 @@ class SeedCorpusLoader:
             RegistroDeRelease(
                 release_id=release_id,
                 cutoff_date=self._fecha_de_corte,
-                excluded_sources=self._politica.excluidas,
+                excluded_sources=self._politica.fuentes_excluidas(),
                 published_at=self._reloj.ahora(),
                 document_ids=tuple(sorted(vigentes)),
             )

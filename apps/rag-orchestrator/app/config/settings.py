@@ -14,9 +14,7 @@ from app.config import modelos
 from app.config.modelos import CLAVES_ADR39, ConfigModelos, cargar_config_modelos
 from app.domain.corpus_seed.admisibilidad import (
     ClaseDeLicencia,
-    contiene_nc,
-    contiene_nd,
-    contiene_sa,
+    clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
@@ -180,15 +178,6 @@ MAPA_DE_LICENCIAS_POR_DEFECTO = {
 }
 
 
-def _clase_contradice_el_texto(texto: str, clase: str) -> bool:
-    """La clave de la tabla dice una cosa y la clase otra (RN-21): ND nunca; NC solo a cc_by_nc; SA solo a cc_by_sa."""
-    return (
-        contiene_nd(texto)
-        or (contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_NC)
-        or (contiene_sa(texto) and not contiene_nc(texto) and clase != ClaseDeLicencia.CC_BY_SA)
-    )
-
-
 def _lista_separada_por_comas(valor: Any) -> Any:
     if isinstance(valor, str):
         return tuple(x.strip() for x in valor.split(",") if x.strip())
@@ -241,7 +230,7 @@ class CorpusSeedSettings(BaseSettings):
         if not set(valor.values()) <= set(CLASES_DE_LICENCIA):
             raise ValueError(f"cada valor debe ser una de {CLASES_DE_LICENCIA}")
         incoherentes = [
-            texto for texto, clase in valor.items() if _clase_contradice_el_texto(texto, clase)
+            texto for texto, clase in valor.items() if clase_contradice_el_texto(texto, clase)
         ]
         if incoherentes:
             raise ValueError(
