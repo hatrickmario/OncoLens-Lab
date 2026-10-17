@@ -13,6 +13,10 @@
 # y `down -v` al final, siempre. Variables: SMOKE_WAIT_TIMEOUT (s), SMOKE_COMPOSE_OVERRIDE (-f extra, p. ej. de la CI).
 set -euo pipefail
 
+# APP_ENV es obligatorio en el servicio clinical-api (`${APP_ENV:?...}`, sin default en el Compose): el smoke corre con
+# datos sintéticos y lo fija explícitamente, salvo que el llamador ya lo defina.
+export APP_ENV="${APP_ENV:-test}"
+
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 proyecto="oncolens-smoke-$$"
 espera="${SMOKE_WAIT_TIMEOUT:-900}"

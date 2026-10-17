@@ -84,9 +84,10 @@ export const DUENOS_DE_SECRETOS = {
   pg_rag_corpus_password: [RAG, POSTGRES],
   pg_rag_corpus_migrator_password: [CORPUS_MIGRATE, POSTGRES],
   pg_superuser_password: [POSTGRES],
-  // La CA vive en el directorio de secretos para reemitir pg_server.crt; ningún servicio la monta.
+  // La clave de la CA vive en el directorio de secretos para reemitir pg_server.crt; ningún servicio la monta. El
+  // certificado público de la CA lo recibe clinical-api para verificar el TLS de PostgreSQL (L1D-197, 2.6b).
   'pg_ca.key': [],
-  'pg_ca.crt': [],
+  'pg_ca.crt': [CLINICAL_API],
   'pg_server.crt': [POSTGRES],
   'pg_server.key': [POSTGRES],
   'pg_hba.conf': [POSTGRES],

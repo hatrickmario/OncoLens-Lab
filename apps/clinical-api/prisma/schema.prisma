@@ -83,8 +83,8 @@ model Session {
   tokenHash  String   @unique @map("token_hash")
   expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
   lastSeenAt DateTime @map("last_seen_at") @db.Timestamptz(6)
-  ipAddress  String   @map("ip_address")
-  userAgent  String   @map("user_agent")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
   revoked    Boolean
   createdAt  DateTime @map("created_at") @db.Timestamptz(6)
   user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)

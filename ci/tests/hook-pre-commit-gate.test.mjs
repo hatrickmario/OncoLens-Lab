@@ -306,3 +306,54 @@ describe('pre-commit-gate: señuelos sintéticos siguen bloqueando', () => {
     expect(correrHook().codigo).toBe(0);
   });
 });
+
+describe('pre-commit-gate: falla cerrado', () => {
+  // Bytes no UTF-8 bajo tests/fixtures/: uno sin NUL (git lo trata como texto) y otro con NUL (binario).
+  const FIXTURES_BINARIOS = {
+    'tests/fixtures/sin-nul.bin': Buffer.from([0xff, 0xfe, 0x80, 0xc3, 0x28, 0x0a]),
+    'tests/fixtures/con-nul.bin': Buffer.from([0xff, 0x00, 0xfe, 0x80, 0x00]),
+  };
+
+  it('bloquea el borrado de un test presente en ambos padres aunque haya fixtures no UTF-8 bajo tests/ [hook cerrado H3]', () => {
+    prepararDivergencia({
+      base: { 'tests/test_a.py': PY_DOS },
+      enFeature: { 'otro.txt': 'feature\n' },
+      enMain: FIXTURES_BINARIOS,
+    });
+    escribir('tests/test_a.py', PY_UNO);
+    git('add', '-A');
+
+    const { codigo, stderr } = correrHook();
+
+    expect(codigo).toBe(2);
+    expect(stderr).toContain('test_dos');
+  });
+
+  it('pasa un merge con fixtures no UTF-8 bajo tests/ cuando no se elimina ningún test [hook cerrado H3]', () => {
+    prepararDivergencia({
+      base: { 'tests/test_a.py': PY_DOS },
+      enFeature: { 'otro.txt': 'feature\n' },
+      enMain: FIXTURES_BINARIOS,
+    });
+
+    const { codigo, stderr } = correrHook();
+
+    expect(stderr).not.toContain('Traceback');
+    expect(codigo).toBe(0);
+  });
+
+  it('bloquea cuando el análisis de tests en Python falla por cualquier causa [hook cerrado M2]', () => {
+    const pythonReal = execFileSync('sh', ['-c', 'command -v python3'], { encoding: 'utf8' }).trim();
+    const sustituto = path.join(bin, 'python3');
+    writeFileSync(sustituto, `#!/bin/sh\ncase "$*" in *defaultdict*) exit 1;; esac\nexec "${pythonReal}" "$@"\n`);
+    chmodSync(sustituto, 0o755);
+    git('init', '-q', '-b', 'main');
+    escribir('README.txt', 'base\n');
+    git('add', '-A');
+    confirmar('base');
+    escribir('src/b.txt', 'hola\n');
+    git('add', '-A');
+
+    expect(correrHook().codigo).toBe(2);
+  });
+});

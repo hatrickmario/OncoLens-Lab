@@ -464,6 +464,18 @@ export const zFollowUpCreate = z.strictObject({
     question: z.string().min(1).max(2000)
 });
 
+export const zErrorInterno = z.strictObject({
+    error: z.literal('ERROR_INTERNO'),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorServicioAutenticacion = z.strictObject({
+    error: z.literal('ERROR_SERVICIO_AUTENTICACION'),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorNoAutenticado = z.strictObject({
     error: z.literal('NO_AUTENTICADO'),
     message: z.string(),
