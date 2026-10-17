@@ -19,7 +19,14 @@ class FuenteNoPermitida(RuntimeError):
 
 
 class FuenteNoDisponible(RuntimeError):
-    """El host respondió con error, con un tipo que no es texto o con más bytes del tope."""
+    """El host respondió con error, con un tipo que no es texto o con más bytes del tope.
+
+    ``host`` es solo el nombre del servidor: el mensaje nunca lleva la ruta ni la URL completa.
+    """
+
+    def __init__(self, host: str, detalle: str) -> None:
+        super().__init__(f"{host}: {detalle}")
+        self.host = host
 
 
 class DescargadorHttps:
@@ -44,7 +51,7 @@ class DescargadorHttps:
             with self._cliente.stream("GET", url, follow_redirects=False) as respuesta:
                 return self._leer(respuesta, host, inicio)
         except httpx.HTTPError as error:
-            raise FuenteNoDisponible(f"{host}: {type(error).__name__}") from None
+            raise FuenteNoDisponible(host, type(error).__name__) from None
 
     def _host_permitido(self, url: str) -> str:
         """Host de la URL si es HTTPS, del puerto 443 (o sin puerto), sin credenciales y de la lista; si no, lanza."""
@@ -68,14 +75,14 @@ class DescargadorHttps:
 
     def _leer(self, respuesta: httpx.Response, host: str, inicio: float) -> str:
         if respuesta.status_code != 200:
-            raise FuenteNoDisponible(f"{host}: HTTP {respuesta.status_code}")
+            raise FuenteNoDisponible(host, f"HTTP {respuesta.status_code}")
         if _tipo_de_medio(respuesta) != "text/plain":
-            raise FuenteNoDisponible(f"{host}: el contenido no es text/plain")
+            raise FuenteNoDisponible(host, "el contenido no es text/plain")
         cuerpo = bytearray()
         for bloque in respuesta.iter_bytes():
             cuerpo += bloque
             if len(cuerpo) > self._max_bytes:
-                raise FuenteNoDisponible(f"{host}: supera {self._max_bytes} bytes")
+                raise FuenteNoDisponible(host, f"supera {self._max_bytes} bytes")
             self._exigir_plazo(host, inicio)
         self._exigir_plazo(host, inicio)
         return bytes(cuerpo).decode("utf-8", errors="replace")
@@ -83,7 +90,7 @@ class DescargadorHttps:
     def _exigir_plazo(self, host: str, inicio: float) -> None:
         """Plazo TOTAL de la descarga: un servidor que gotea bytes a tiempo no la retiene indefinidamente."""
         if self._reloj_monotonico() - inicio > self._deadline_s:
-            raise FuenteNoDisponible(f"{host}: excede el plazo de {self._deadline_s:g} s")
+            raise FuenteNoDisponible(host, f"excede el plazo de {self._deadline_s:g} s")
 
 
 def _tipo_de_medio(respuesta: httpx.Response) -> str:
