@@ -119,3 +119,18 @@ export function peticionDeAnalisis(
     body: JSON.stringify(cuerpo),
   });
 }
+
+/** MSW traga los errores de stream: el corte del cuerpo se simula en el borde del `fetch` inyectado. */
+export function crearFetchConCorte(): typeof globalThis.fetch {
+  return () => {
+    const cuerpo = new ReadableStream<Uint8Array>({
+      start: (controlador) => {
+        controlador.enqueue(new TextEncoder().encode('{"id":'));
+        controlador.error(new Error('conexion cortada'));
+      },
+    });
+    return Promise.resolve(
+      new Response(cuerpo, { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+  };
+}
