@@ -81,3 +81,32 @@ def test_rag_query_excluye_el_chunk_de_prostata_de_los_candidatos_cuando_el_cont
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert "ch-m1-1" in candidatos
     assert "ch-p1-1" not in candidatos
+
+
+@pytest.mark.ac("US-055", 6)
+def test_rag_query_devuelve_el_mismo_relevance_score_en_unidad_y_registra_el_reranker_cuando_se_calcula_dos_veces():
+    entorno = crear_entorno()
+
+    primera = entorno.consultar(solicitud_de(Q_HER2))
+    segunda = entorno.consultar(solicitud_de(Q_HER2))
+
+    assert primera.status_code == segunda.status_code == 200
+    puntajes = [
+        [c.relevance_score for c in r.chunks_sobre_umbral] for r in entorno.generador.recuperaciones
+    ]
+    assert len(puntajes) == 2
+    assert puntajes[0] == puntajes[1]
+    assert puntajes[0] and all(0.0 <= p <= 1.0 for p in puntajes[0])
+    assert primera.json() == segunda.json()
+    for recuperacion in entorno.generador.recuperaciones:
+        assert recuperacion.meta.rerankerModel == entorno.reranker.version
+
+
+@pytest.mark.ac("US-055", 6)
+def test_rag_query_registra_la_version_del_reranker_en_meta_cuando_responde_sin_evidencia():
+    entorno = crear_entorno()
+
+    respuesta = entorno.consultar(solicitud_de(Q_SIN))
+
+    assert respuesta.status_code == 200
+    assert respuesta.json()["meta"]["rerankerModel"] == entorno.reranker.version
