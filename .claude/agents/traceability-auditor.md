@@ -39,11 +39,12 @@ citados → PR mergeado `[L1D-nn]`.
    nueva `Spec (openspec)` y `Test` por requisito, y la fecha y sprint de generación.
 2. **`backlog/sprints/S<n>-trazabilidad.md`**: resumen del sprint, cobertura por familia, huecos
    con dueño y propuesta (historia nueva, AC a añadir, test a escribir).
-3. **Linear:** `Done` solo se pone aquí. Para cada historia con cadena completa (AC con test en verde,
-   Gate 2 en verde, PR mergeado, change archivado), estado `Done` y un comentario con el change
-   archivado, el PR y los tests. Historias con huecos o bugs abiertos: no las pases a `Done`; déjalas en
-   `In Progress` (si hay bug o trabajo sin terminar) o `In Review` (si solo falta verificación) y
-   comenta el hueco. La Feature padre pasa a `Done` solo si todas sus historias del sprint lo están.
+3. **Linear:** el orquestador pudo haber pasado ya historias a `Done` al completarse. Tú haces la revisión profunda de cada
+   una. Con cadena completa (AC con test en verde, Gate 2 en verde, PR mergeado, change archivado, tareas completas),
+   confirmas `Done` (o lo pones si faltaba) y comentas el change archivado, el PR y los tests. Con huecos o bugs
+   abiertos, **devuelve la historia** desde `Done` a `In Progress` (si hay bug o trabajo sin terminar) o `In Review` (si solo
+   falta verificación) y comenta el hueco. Eres el único que mueve un `Done` hacia atrás. La Feature padre pasa a `Done`
+   solo si todas sus historias del sprint lo están.
    Solo actualizas estado y comentas: **no creas, no borras, no cambias estimación ni milestone.**
    Nada de datos reales ni secretos en Linear (RN-14). Texto con saltos de línea reales.
 
