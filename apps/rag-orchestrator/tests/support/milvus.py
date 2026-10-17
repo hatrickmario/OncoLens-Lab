@@ -16,7 +16,7 @@ from app.config.settings import MilvusSettings
 
 PREFIJO_COLECCION_DE_TEST = "corpus_test_"
 COLECCION_DE_PRODUCCION = "corpus_chunks"
-_PATRON_NOMBRE = re.compile(r"^corpus_test_[a-z0-9_]{3,}$")
+_PATRON_NOMBRE = re.compile(r"corpus_test_[a-z0-9_]{3,}")
 INDICE_DE_ADR39: dict[str, Any] = {
     "M": 16,
     "efConstruction": 200,
@@ -37,7 +37,7 @@ def nombre_de_coleccion_de_test(sufijo: str) -> str:
 
 
 def verificar_coleccion_de_test(nombre: str) -> None:
-    if nombre == COLECCION_DE_PRODUCCION or not _PATRON_NOMBRE.match(nombre):
+    if nombre == COLECCION_DE_PRODUCCION or not _PATRON_NOMBRE.fullmatch(nombre):
         raise ColeccionProhibida(
             f"{nombre!r}: el arnés solo usa colecciones {PREFIJO_COLECCION_DE_TEST}*"
         )

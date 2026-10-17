@@ -112,7 +112,10 @@ def test_milvus_repository_chunk_sin_sparse_se_inserta_y_recupera_por_dense(
     encontrados = repositorio.search_dense(vector_unitario(DIMENSION, 0), limit=5)
 
     assert insertados == 3
-    assert [chunk.chunk_id for chunk in encontrados] == ["vigente", "ortogonal"]  # is_current == true (RN-05)
+    assert [chunk.chunk_id for chunk in encontrados] == [
+        "vigente",
+        "ortogonal",
+    ]  # is_current == true (RN-05)
     assert encontrados[0].similitud_dense > encontrados[1].similitud_dense  # idéntico > ortogonal
     assert encontrados[0].document_id == "doc-vigente"
 

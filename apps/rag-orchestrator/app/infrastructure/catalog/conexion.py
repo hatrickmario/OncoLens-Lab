@@ -43,12 +43,16 @@ def url_del_migrador_desde_el_entorno() -> URL:
     )
 
 
-def crear_motor(url: URL, *, search_path_corpus: bool = True) -> Engine:
-    """Motor con ``search_path=corpus``: ningún objeto sin calificar cae fuera del schema del corpus.
+def crear_motor(url: URL) -> Engine:
+    """Motor con ``search_path=corpus``: ningún objeto sin calificar cae fuera del schema del corpus."""
+    return create_engine(url, connect_args={"options": f"-c search_path={SCHEMA_CORPUS}"})
 
-    Alembic lo pide sin ``search_path``: con el schema por defecto igual a ``corpus`` su autogeneración (``alembic
-    check``) no reconoce las tablas calificadas como ``corpus.*`` y las daría por ausentes. La migración califica
-    cada objeto con ``schema="corpus"`` y ``include_schemas`` limita lo que ve a ese schema.
+
+def crear_motor_de_migraciones(url: URL) -> Engine:
+    """Motor de Alembic, SIN ``search_path``.
+
+    Con el schema por defecto igual a ``corpus`` la autogeneración (``alembic check``) no reconoce las tablas
+    calificadas como ``corpus.*`` y las daría por ausentes. La migración califica cada objeto con ``schema="corpus"`` y
+    ``include_schemas`` limita lo que ve a ese schema.
     """
-    opciones = {"options": f"-c search_path={SCHEMA_CORPUS}"} if search_path_corpus else {}
-    return create_engine(url, connect_args=opciones)
+    return create_engine(url)

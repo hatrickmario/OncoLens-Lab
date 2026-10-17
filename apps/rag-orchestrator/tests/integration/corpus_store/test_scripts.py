@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import Callable
 
 import pytest
@@ -103,4 +102,5 @@ def test_migrate_corpus_catalog_main_migra_como_rag_corpus_migrator_y_es_idempot
         motor.dispose()
     assert (primera, segunda, tablas) == (0, 0, 4), capturado.err
     assert salida.count("0001_corpus_catalog") == 2
-    assert url.password not in salida and url.password not in os.environ.values()
+    contrasena_en_la_salida = url.password in salida
+    assert not contrasena_en_la_salida, "la salida del one-shot contiene la contraseña del migrator"

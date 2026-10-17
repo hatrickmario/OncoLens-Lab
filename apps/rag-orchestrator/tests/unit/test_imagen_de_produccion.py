@@ -6,12 +6,17 @@ Los scripts de operación (``migrate_corpus_catalog``, ``init_corpus_store``; US
 from __future__ import annotations
 
 import ast
-from fnmatch import fnmatchcase
+import re
 from pathlib import Path
 
 RAIZ_APP = Path(__file__).resolve().parents[2]
-EXCLUIDOS = ("apps/rag-orchestrator/app/evaluation", "apps/rag-orchestrator/app/scripts/adr39_*.py")
-PREFIJOS_DE_MEDICION = ("app.evaluation", "app.scripts.adr39_")
+PREFIJO_REPO = "apps/rag-orchestrator"
+# Lista blanca: lo único de app/scripts que viaja en la imagen de producción (el one-shot corpus-migrate y el inicializador).
+SCRIPTS_DE_OPERACION = ("migrate_corpus_catalog.py", "init_corpus_store.py", "__init__.py")
+PREFIJOS_DE_MEDICION = (
+    "app.evaluation",
+    "app.scripts.adr39_",
+)  # imports prohibidos en código de producción
 DOCKERIGNORE = RAIZ_APP / "Dockerfile.dockerignore"
 DOCKERIGNORE_RAIZ = RAIZ_APP.parents[1] / ".dockerignore"
 
@@ -60,67 +65,106 @@ def test_los_imports_relativos_a_evaluacion_o_scripts_se_resuelven_y_se_rechazan
     assert "app.scripts.adr39_measure" in _modulos_absolutos(nodo, ("x.py",))
 
 
-def test_el_dockerignore_de_la_imagen_de_produccion_excluye_evaluacion_y_scripts_de_medicion() -> (
-    None
-):
-    lineas = _lineas_del_dockerignore()
+def _regex_de_patron(patron: str) -> re.Pattern[str]:
+    """Glob de .dockerignore: ``*`` y ``?`` no cruzan ``/`` (a diferencia de fnmatch); ``**`` sí."""
+    partes = []
+    for fragmento in re.split(r"(\*\*|\*|\?)", patron.rstrip("/")):
+        partes.append(
+            {"**": ".*", "*": "[^/]*", "?": "[^/]"}.get(fragmento) or re.escape(fragmento)
+        )
+    return re.compile("".join(partes))
 
-    assert all(excluido in lineas for excluido in EXCLUIDOS)
 
-
-def _archivos_de_medicion() -> list[str]:
-    """Rutas (desde la raíz del repo) del código de medición: ``app/evaluation/**`` y ``app/scripts/adr39_*.py``."""
-    raiz = RAIZ_APP.parents[1]
-    rutas = [
-        *(RAIZ_APP / "app" / "evaluation").rglob("*.py"),
-        *(RAIZ_APP / "app" / "scripts").glob("adr39_*.py"),
-    ]
-    return sorted(ruta.relative_to(raiz).as_posix() for ruta in rutas)
+def _coincide(patron: str, archivo: str) -> bool:
+    """Un patrón casa con el archivo o con alguno de sus directorios ancestros."""
+    regex = _regex_de_patron(patron)
+    partes = archivo.split("/")
+    return any(regex.fullmatch("/".join(partes[: n + 1])) for n in range(len(partes)))
 
 
 def _entrarian_a_la_imagen(patrones: list[str], archivos: list[str]) -> list[str]:
-    """Archivos que ningún patrón del .dockerignore excluye (patrón de archivo, glob o directorio ancestro)."""
-    lineas = [p.rstrip("/") for p in patrones]
+    """Archivos que el .dockerignore deja entrar. Como Docker: gana el ÚLTIMO patrón que casa y ``!`` lo reincorpora."""
+    entran = []
+    for archivo in archivos:
+        excluido = False
+        for patron in patrones:
+            negado = patron.startswith("!")
+            if _coincide(patron.removeprefix("!"), archivo):
+                excluido = not negado
+        if not excluido:
+            entran.append(archivo)
+    return entran
 
-    def excluido(archivo: str) -> bool:
-        return any(fnmatchcase(archivo, p) or archivo.startswith(p + "/") for p in lineas)
 
-    return [a for a in archivos if not excluido(a)]
+def _archivos_reales(subdirectorio: str) -> list[str]:
+    raiz = RAIZ_APP.parents[1]
+    return sorted(
+        ruta.relative_to(raiz).as_posix()
+        for ruta in (RAIZ_APP / "app" / subdirectorio).rglob("*")
+        if ruta.is_file()
+    )
 
 
-def test_el_dockerignore_de_produccion_deja_fuera_todo_archivo_de_medicion_existente() -> None:
-    archivos = _archivos_de_medicion()
+RUTA_SCRIPTS = f"{PREFIJO_REPO}/app/scripts"
+SENUELOS_DE_MEDICION = [
+    f"{RUTA_SCRIPTS}/ADR39_mayus.py",
+    f"{RUTA_SCRIPTS}/adr39_sub/medir.py",
+    f"{RUTA_SCRIPTS}/data/muestra.json",
+    f"{RUTA_SCRIPTS}/reporte_adr39.json",
+    f"{RUTA_SCRIPTS}/medir_otra_cosa.py",
+    f"{PREFIJO_REPO}/app/evaluation/nuevo_modulo.py",
+]
+
+
+def test_la_imagen_de_produccion_solo_lleva_de_app_scripts_los_scripts_de_operacion() -> None:
+    patrones = _patrones(DOCKERIGNORE)
+    archivos = _archivos_reales("scripts")
+
+    entran = _entrarian_a_la_imagen(patrones, archivos)
+
+    assert {a.rsplit("/", 1)[1] for a in archivos} > set(
+        SCRIPTS_DE_OPERACION
+    )  # hay scripts de medición que excluir
+    assert sorted(a.rsplit("/", 1)[1] for a in entran) == sorted(SCRIPTS_DE_OPERACION)
+
+
+def test_la_imagen_de_produccion_deja_fuera_todo_app_evaluation() -> None:
+    archivos = _archivos_reales("evaluation")
 
     assert archivos and _entrarian_a_la_imagen(_patrones(DOCKERIGNORE), archivos) == []
 
 
-def test_un_dockerignore_sin_el_patron_de_adr39_deja_entrar_los_scripts_de_medicion() -> None:
-    sin_adr39 = [p for p in _patrones(DOCKERIGNORE) if "adr39_" not in p]
+def test_ningun_senuelo_de_medicion_entra_a_la_imagen_aunque_se_llame_distinto_o_viva_en_un_subdirectorio() -> (
+    None
+):
+    assert _entrarian_a_la_imagen(_patrones(DOCKERIGNORE), SENUELOS_DE_MEDICION) == []
 
-    entran = _entrarian_a_la_imagen(sin_adr39, _archivos_de_medicion())
 
-    assert entran and all("/app/scripts/adr39_" in a for a in entran)
+def test_un_dockerignore_con_exclusion_por_nombre_deja_entrar_los_senuelos() -> None:
+    """Prueba en rojo del evaluador: la versión anterior (solo ``adr39_*.py``) dejaba entrar medir_otra_cosa.py y más."""
+    por_nombre = [p for p in _patrones(DOCKERIGNORE) if not p.startswith(("!", RUTA_SCRIPTS))]
+    por_nombre.append(f"{RUTA_SCRIPTS}/adr39_*.py")
+
+    entran = _entrarian_a_la_imagen(por_nombre, SENUELOS_DE_MEDICION)
+
+    assert f"{RUTA_SCRIPTS}/medir_otra_cosa.py" in entran
+    assert f"{RUTA_SCRIPTS}/adr39_sub/medir.py" in entran
+    assert f"{RUTA_SCRIPTS}/reporte_adr39.json" in entran
 
 
 def test_un_dockerignore_sin_app_evaluation_deja_entrar_el_codigo_de_evaluacion() -> None:
     sin_evaluacion = [p for p in _patrones(DOCKERIGNORE) if not p.endswith("app/evaluation")]
 
-    entran = _entrarian_a_la_imagen(sin_evaluacion, _archivos_de_medicion())
-
-    assert entran and all("/app/evaluation/" in a for a in entran)
-
-
-def test_un_senuelo_de_medicion_nuevo_entra_a_la_imagen_si_no_cae_bajo_un_patron_excluido() -> None:
-    senuelo = "apps/rag-orchestrator/app/scripts/medir_otra_cosa.py"
-
-    assert _entrarian_a_la_imagen(_patrones(DOCKERIGNORE), [senuelo]) == [senuelo]
+    assert _entrarian_a_la_imagen(sin_evaluacion, _archivos_reales("evaluation"))
 
 
 def test_el_codigo_de_produccion_no_importa_evaluacion_ni_scripts_de_medicion() -> None:
     ofensores = []
     for ruta in (RAIZ_APP / "app").rglob("*.py"):
         relativa = ruta.relative_to(RAIZ_APP / "app").parts
-        if relativa[0] == "evaluation" or relativa[-1].startswith("adr39_"):
+        if relativa[0] == "evaluation" or (
+            relativa[0] == "scripts" and relativa[-1] not in SCRIPTS_DE_OPERACION
+        ):
             continue
         for nodo in ast.walk(ast.parse(ruta.read_text(encoding="utf-8"))):
             ofensores += [

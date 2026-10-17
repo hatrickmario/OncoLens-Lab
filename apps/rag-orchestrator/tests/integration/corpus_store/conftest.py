@@ -1,7 +1,8 @@
 """Fixtures de integración del catálogo y la colección del corpus (US-058).
 
 Necesitan el PostgreSQL de test y el Milvus de test del Compose, y correr dentro de ``corpus-db-net`` (ver
-``tests/support/pg.py``). Si falta una variable el test FALLA nombrándola: nunca se salta.
+``tests/support/pg.py``). Están deseleccionados por defecto (``pytest.ini``: marker ``servicios_reales``); los ejecuta el job de CI de la tarea 2.4
+del change. Si falta una variable el test FALLA nombrándola.
 """
 
 from __future__ import annotations

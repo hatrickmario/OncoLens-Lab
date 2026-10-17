@@ -21,6 +21,7 @@ URL_ADMIN = "postgresql://oncolens_test_admin:clave-ficticia@postgres:5432/postg
     ("prefijo", "base_clinica"),
     [
         (".*", BASE_CLINICA),
+        ("oltest_\n", BASE_CLINICA),
         ("Ab", BASE_CLINICA),
         ("oncolens", "oncolens"),
         ("post", BASE_CLINICA),

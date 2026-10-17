@@ -15,7 +15,8 @@ from sqlalchemy.dialects import postgresql
 
 from app.config.settings import SCHEMA_CORPUS
 
-# Valores literales de data-model.md §4.6. Fuente única: la migración y los tests leen de aquí.
+# Valores literales de data-model.md §4.6, usados por los ``CHECK`` de este ``MetaData``. La migración 0001 congela su
+# propia copia y ``alembic check`` NO compara ``CHECK``: un test compara los de la base migrada con este diccionario.
 DOMINIOS_CERRADOS: Final[dict[str, tuple[str, ...]]] = {
     "source_type": ("guideline", "clinical_trial", "literature", "genomic_study"),
     "language": ("es", "en"),

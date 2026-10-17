@@ -18,6 +18,7 @@ from sqlalchemy import Connection, text
 from sqlalchemy.exc import DBAPIError, IntegrityError, ProgrammingError
 
 from app.infrastructure.catalog.conexion import crear_motor
+from app.infrastructure.catalog.tables import DOMINIOS_CERRADOS
 from app.schemas.generated.models import LicenseClass
 from app.scripts.migrate_corpus_catalog import configuracion_de_alembic, migrar, revision_head
 from tests.support.pg import BaseDeTest
@@ -245,7 +246,7 @@ def valores_del_check(base: BaseDeTest, restriccion: str) -> set[str]:
             ).scalar_one()
     finally:
         motor.dispose()
-    return set(re.findall(r"'([a-z_]+)'::text", definicion))
+    return set(re.findall(r"'([^']+)'::text", definicion))
 
 
 @pytest.mark.ac("US-058", 1)
@@ -328,3 +329,12 @@ def test_corpus_catalog_clases_de_licencia_del_esquema_coinciden_con_el_contrato
     assert valores_del_check(base_migrada, "ck_corpus_document_license_class") == {
         c.value for c in LicenseClass
     }
+
+
+@pytest.mark.parametrize("columna", sorted(DOMINIOS_CERRADOS))
+def test_corpus_catalog_check_migrado_coincide_con_los_dominios_cerrados_de_tables(
+    base_migrada: BaseDeTest, columna: str
+) -> None:
+    assert valores_del_check(base_migrada, f"ck_corpus_document_{columna}") == set(
+        DOMINIOS_CERRADOS[columna]
+    )

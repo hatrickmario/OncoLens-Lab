@@ -12,7 +12,10 @@ from alembic import context
 from sqlalchemy.engine import URL, Connection
 
 from app.config.settings import SCHEMA_CORPUS
-from app.infrastructure.catalog.conexion import crear_motor, url_del_migrador_desde_el_entorno
+from app.infrastructure.catalog.conexion import (
+    crear_motor_de_migraciones,
+    url_del_migrador_desde_el_entorno,
+)
 from app.infrastructure.catalog.tables import metadata
 
 config = context.config
@@ -38,7 +41,7 @@ def _configurar(connection: Connection) -> None:
 
 
 def run_migrations_online() -> None:
-    motor = crear_motor(_url_del_migrador(), search_path_corpus=False)
+    motor = crear_motor_de_migraciones(_url_del_migrador())
     try:
         with motor.connect() as connection:
             _configurar(connection)

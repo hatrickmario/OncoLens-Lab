@@ -20,13 +20,14 @@ import psycopg
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.exc import ArgumentError
 
+from app.config.settings import ROL_MIGRADOR_CORPUS, ROL_RUNTIME_CORPUS
 from app.infrastructure.catalog.conexion import DRIVER, leer_secreto
 from app.scripts.migrate_corpus_catalog import migrar
 from tests.support.contract import RAIZ_REPOSITORIO
 
 # Misma regla que scripts/lib/pg-test-prefix.sh. Un cambio allí obliga a cambiar este archivo en el mismo PR.
-PATRON_PREFIJO_TEST_DB = re.compile(r"^[a-z][a-z0-9_]{2,}$")
-PATRON_NOMBRE_BASE_TEST = re.compile(r"^[a-z][a-z0-9_]*$")
+PATRON_PREFIJO_TEST_DB = re.compile(r"[a-z][a-z0-9_]{2,}")
+PATRON_NOMBRE_BASE_TEST = re.compile(r"[a-z][a-z0-9_]*")
 BASES_RESERVADAS = ("postgres", "template0", "template1")
 PREFIJOS_PROHIBIDOS = ("postgres", "template")
 BASE_DE_MANTENIMIENTO = "postgres"
@@ -40,9 +41,9 @@ class ErrorArnes(RuntimeError):
 
 def validar_prefijo_test_db(prefijo: str, base_clinica: str) -> None:
     """Aborta sin conectar si el prefijo no cumple la regex o casa con una base que no es de test."""
-    if not PATRON_PREFIJO_TEST_DB.match(prefijo):
+    if not PATRON_PREFIJO_TEST_DB.fullmatch(prefijo):
         raise ErrorArnes(
-            f"PG_TEST_DB_PREFIX no es válido: debe cumplir {PATRON_PREFIJO_TEST_DB.pattern}"
+            f"PG_TEST_DB_PREFIX no es válido: debe cumplir ^{PATRON_PREFIJO_TEST_DB.pattern}$"
         )
     for reservada in (base_clinica, *BASES_RESERVADAS):
         if reservada.startswith(prefijo):
@@ -59,7 +60,7 @@ def validar_nombre_base_de_test(nombre: str, prefijo: str, base_clinica: str) ->
     """Se llama antes de ``CREATE DATABASE`` y de ``DROP DATABASE``: el arnés no toca una base que no es suya."""
     validar_prefijo_test_db(prefijo, base_clinica)
     valido = (
-        PATRON_NOMBRE_BASE_TEST.match(nombre) is not None
+        PATRON_NOMBRE_BASE_TEST.fullmatch(nombre) is not None
         and nombre.startswith(prefijo)
         and len(nombre) > len(prefijo)
     )
@@ -157,14 +158,14 @@ def crear_base_de_test(
     url_base = admin.set(database=nombre)
     url_migrador = url_base.set(
         drivername=DRIVER,
-        username="rag_corpus_migrator",
+        username=ROL_MIGRADOR_CORPUS,
         password=leer_secreto(
             config.archivo_contrasena_migrador, "PG_RAG_CORPUS_MIGRATOR_PASSWORD_FILE"
         ),
     )
     url_runtime = url_base.set(
         drivername=DRIVER,
-        username="rag_corpus",
+        username=ROL_RUNTIME_CORPUS,
         password=leer_secreto(config.archivo_contrasena_runtime, "PG_RAG_CORPUS_PASSWORD_FILE"),
     )
     try:

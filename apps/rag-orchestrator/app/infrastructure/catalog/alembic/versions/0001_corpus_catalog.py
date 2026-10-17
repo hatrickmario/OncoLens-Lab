@@ -15,7 +15,8 @@ depends_on = None
 
 SCHEMA = "corpus"
 
-# Congelado en esta revisión (una migración no sigue a ``tables.py``; ``alembic check`` detecta la deriva de columnas).
+# Copia congelada en esta revisión (una migración no sigue a ``tables.py``). ``alembic check`` detecta la deriva de
+# columnas pero NO la de los ``CHECK``: ``test_catalogo.py`` compara los ``CHECK`` migrados con ``DOMINIOS_CERRADOS``.
 DOMINIOS = {
     "source_type": ("guideline", "clinical_trial", "literature", "genomic_study"),
     "language": ("es", "en"),
