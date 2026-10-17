@@ -177,10 +177,29 @@ jobs:
       - name: Tests de lint y formato (fixtures)
         run: npm run test:quality
 
+  lint-lenguaje:
+    name: lint-lenguaje
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: lint:lenguaje (mensajes de la UI sin términos prohibidos de RN-23)
+        run: npm run lint:lenguaje
+      - name: Fixtures de lint:lenguaje (US-068 AC-5)
+        run: npm run test:lenguaje
+
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, quality]
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, quality, lint-lenguaje]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
