@@ -30,32 +30,38 @@ EN/ES solo texto + PMC OA con CC0, CC BY o CC BY-SA, licencia por documento; NCC
 **D1 · Cargador como caso de uso con puertos, script como raíz de composición.**
 `app/scripts/load_seed_corpus.py` solo lee la configuración, construye los adapters y llama a
 `SeedCorpusLoader.cargar(manifiesto)` (`app/application/seed_corpus/`). El service recibe por
-constructor `CorpusCatalog` (PostgreSQL `corpus`), `ChunkStore` (Milvus), `PassageEmbedder`,
-`SourceFetcher` (texto por URL), `Clock` e `IdGenerator`. Descartadas: un script monolítico
+constructor `CorpusCatalog` (PostgreSQL `corpus`), `ChunkStoreDeIngesta` (Milvus), `PassageEmbedder`,
+`SourceFetcher` (texto de un documento; lo implementa `FuenteDeTextoDelManifiesto`, que usa `DescargadorHttps` para las URL), `Clock` e `IdGenerator`. Descartadas: un script monolítico
 (no testeable sin E/S) y reutilizar ya el `IngestionPipelineService` (es del S4).
 
 **D2 · Admisibilidad: exclusión de fuente antes que licencia.** `evaluar_admisibilidad(doc, aceptadas,
 excluidas)` es pura y devuelve `admitido` o `rechazado(motivo)` con `motivo ∈ {fuente_excluida,
 sin_licencia, licencia_no_aceptada}`. Se comprueba primero `source_name` contra
-`CORPUS_EXCLUDED_SOURCES` (comparación normalizada: `casefold` + `strip`), para que NCCN se rechace
-aunque declare licencia (AC-3, D-09); después la licencia: ausente → `sin_licencia`; texto de
+`CORPUS_EXCLUDED_SOURCES` y sus alias (comparación normalizada, por palabra: "NCCN Guidelines" y "National
+Comprehensive Cancer Network" también cuentan) y el host de `external_id` y `source_url` (`nccn.org`, `esmo.org`):
+falla cerrado, para que NCCN se rechace aunque declare licencia (AC-3, D-09); después la licencia: ausente → `sin_licencia`; texto de
 licencia que no mapea a una `license_class` de `CORPUS_ACCEPTED_LICENSES` → `licencia_no_aceptada`.
 El mapeo texto → `license_class` es una tabla en configuración (CC0 → `dominio_publico`, ADR-36
-decisión 2); ND no tiene clase y cae en `licencia_no_aceptada`.
+decisión 2); **el texto manda sobre la tabla**: ND (incluidas `NoDerivs`, `No Derivative`, «sin obras derivadas»)
+no tiene clase y cae en `licencia_no_aceptada`, y NC (`NonCommercial`, «no comercial») es siempre `cc_by_nc`, que
+solo entra con sus tres condiciones. `CORPUS_LICENSE_CLASS_MAP` falla al arrancar si una clave lleva ND o si una clave NC/SA no apunta a
+`cc_by_nc`/`cc_by_sa`.
 
 **D3 · Persistencia del rechazo sin cambiar el esquema.** Todo rechazo deja la fila con
 `status = rechazado_licencia` (único estado de rechazo del enum de `data-model`), sin chunks, sin
 texto almacenado y fuera del `CorpusRelease`. El **motivo** va en el reporte de la carga (JSON por
-stdout y `reports/corpus/seed-<fecha>.json`, solo identificadores de documento, motivos y
-recuentos), no en una columna: añadir `rejection_reason` cambiaría `data-model` y el esquema de
+stdout, solo identificadores de documento, motivos y recuentos; no se escribe `reports/corpus/`), no en una columna: añadir `rejection_reason` cambiaría `data-model` y el esquema de
 L1D-114. Ver Open Questions (P1). Para `fuente_excluida` la fila guarda solo metadatos del
-manifiesto (`source_name`, `external_id`, `title`), nunca contenido.
+manifiesto (`source_name`, `external_id`, `title`), nunca contenido. **Decidido (usuario, 2026-10-20), opción A:** un
+rechazo por licencia o fuente **retira la versión vigente del grupo** del documento (catálogo `is_current = false` +
+`superseded_at`, chunks no vigentes en Milvus y release nueva), sin borrar nada (RN-21, RN-05); si el apagado falla, el
+resultado es `error` y no se escribe la fila de rechazo. El reporte distingue `retirada_de_vigente`.
 
 **D4 · Población (RN-25).** `resolver_criterios_poblacion(doc)` devuelve el `jsonb` con las seis
 claves de `population_criteria` (subtipo, estadio, línea, biomarcadores, edad, ECOG): las que el
-manifiesto trae en `population_criteria` estructurado se copian; el resto, `no_disponible`. Si al
-menos una viene de la fuente, `metadata_source = fuente_estructurada`; si ninguna, `metadata_source`
-queda nulo (no hay metadato que atribuir). No se lee ni se infiere nada del texto.
+manifiesto trae en `population_criteria` estructurado se copian; el resto, `no_disponible`.
+`metadata_source = fuente_estructurada` **siempre** (decisión 1 del usuario: la columna es `NOT NULL`). No se lee ni se infiere
+nada del texto.
 
 **D5 · Versionado e idempotencia (RN-05).** `decidir_version(entrante, existentes_del_grupo)` es pura:
 mismo `checksum` en el grupo → `omitir` (AC-5, sin *embedding*); grupo sin versión vigente →
@@ -63,20 +69,26 @@ mismo `checksum` en el grupo → `omitir` (AC-5, sin *embedding*); grupo sin ver
 nueva, marca la anterior `is_current = false` + `superseded_at = clock.now()` en la misma
 transacción del catálogo, y actualiza `is_current = false` de los chunks anteriores con *upsert* de
 Milvus por `chunk_id` (mismo PK, no hay borrado lógico ni físico de la entidad desde el cargador).
-Orden: primero se insertan los chunks nuevos, después se apagan los anteriores, y por último se
-confirma el catálogo; un fallo intermedio deja la versión anterior vigente (ver Risks).
+Orden: primero se insertan los chunks nuevos, después se apagan los de `DecisionDeVersion.a_apagar` (la vigente
+anterior **más toda versión del grupo que no esté `embebido`**, decidido por el dominio) y por último se confirma el
+catálogo. La rama `omitir` también apaga `a_apagar`. Garantía real: si algo falla entre insertar y confirmar, el catálogo
+conserva la versión anterior como vigente y **la siguiente carga del grupo** (con la versión nueva, una tercera o el texto
+de la primera) deja en Milvus solo los chunks de la vigente; entre la carga fallida y la siguiente conviven chunks
+vigentes de dos versiones (ver Risks).
 El `checksum` es SHA-256 del texto normalizado.
 
 **D6 · Chunking y *embeddings*.** `fragmentar(texto, CORPUS_CHUNK_SIZE, CORPUS_CHUNK_OVERLAP)` es pura
-(por caracteres con corte en límite de párrafo cuando existe; al fijarse US-012 AC-10, tamaño y solapamiento pasan a tokens del *tokenizer* del modelo elegido, `[S1 resp. 38]`). Normalización mínima: Unicode NFC,
+(ventanas de tamaño fijo sobre un puerto `Tokenizador`; el provisional cuenta palabras y, al llegar el adapter de L1D-106, pasa a tokens del *tokenizer* del modelo elegido, `[S1 resp. 38]`; la regla tamaño/solape es `validar_ventana`, una sola para ADR-39, el cargador y `fragmentar`). Normalización mínima: Unicode NFC,
 espacios y saltos de línea. El puerto `PassageEmbedder` (pasajes, no preguntas) se declara en
 `app/application/seed_corpus/ports.py` para no chocar con `QueryEmbedder` de L1D-106; el adapter real
 lo implementa el mismo módulo `infrastructure/embeddings/` con el modelo de ADR-39 (prefijo de pasaje
-si el modelo lo requiere). La inserción en Milvus extiende `MilvusRepository` de L1D-106/L1D-114
-con `insertar_chunks()` y `marcar_no_vigentes()`; quien mergee segundo hace el *rebase*.
+si el modelo lo requiere). Milvus: `MilvusRepository.insert_chunks` (de L1D-114) más `ids_de_chunks_del_documento()` y
+`marcar_no_vigentes()`; el puerto de la ingesta es `ChunkStoreDeIngesta`. Ambas consultas fallan (`ConsultaTruncada`) si
+alcanzan el tope de Milvus.
 
 **D7 · Fallos de dependencias.** Si el *embedding* o Milvus fallan para un documento, ese documento
-queda `status = error`, sin chunks a medio insertar visibles como vigentes, y el cargador sigue;
+queda `status = error` (no vigente en el catálogo; sus chunks, si llegaron a insertarse, los apaga la siguiente carga del
+grupo), y el cargador sigue;
 termina con código ≠ 0 si hubo algún `error`, y con código 0 si solo hubo rechazos de licencia
 (son resultado esperado). PostgreSQL caído → aborta antes de procesar. No es AC de US-059: se
 documenta y se prueba como test después, no como escenario.
@@ -84,7 +96,7 @@ documenta y se prueba como test después, no como escenario.
 **D8 · `CorpusRelease`.** Se publica una release al final de cada ejecución **solo si cambió el
 conjunto de documentos vigentes** (AC-5: la recarga idéntica no crea otra). `release_id` del
 `IdGenerator`; `cutoff_date` de `CORPUS_CUTOFF_DATE` (workaround de US-119, RN-22);
-`excluded_sources` de `CORPUS_EXCLUDED_SOURCES`; `document_count` y una fila de
+`excluded_sources` de `CORPUS_EXCLUDED_SOURCES`; también se publica cuando el conjunto vigente queda vacío tras un retiro; `document_count` y una fila de
 `corpus_release_document` por documento vigente.
 
 **D9 · Manifiesto y textos (RN-14, RN-21).** `data/raw/seed/manifest.yaml` declara por documento:
@@ -128,6 +140,12 @@ Las cuatro decisiones siguen **vigentes** y corrigen o precisan lo anterior dond
    la semilla es `2026-10-16` (propuesta de esta rama) o se mantiene `2026-10-15`. Registros de ClinicalTrials.gov: no hay
    ninguno en la semilla real; el fixture `t-ok-2` es sintético (etiqueta `ClinicalTrials.gov / NCTxxxxxxxx`, URL, fecha de
    consulta y atribución visible a NLM, sin sugerir aval, si algún día se carga uno real). Sin NCCN ni ESMO ni datos reales.
+
+5. **Un rechazo retira la versión vigente del grupo** (opción A, decidido por el usuario, 2026-10-20, hallazgo 2 del
+   Gate 2): ver D3. Registrado en el delta de spec (requisito «Un rechazo retira la versión vigente del grupo»).
+6. **Deuda sin ID**: unificar la regla de licencias con `app/evaluation/dataset_loader.py`; ingesta que falla cerrado
+   (insertar `is_current = false` hasta confirmar en el catálogo y reconciliar documentos quitados del manifiesto);
+   `license_class` nullable en los rechazados (P4).
 
 ### Desviaciones del diseño original
 
@@ -192,16 +210,17 @@ se miden en el S5 (US-132) sobre el corpus del S4; esta semilla no los persigue.
 | Módulo | Nuevo/modifica | Depende de |
 |---|---|---|
 | `app/scripts/load_seed_corpus.py` | nuevo | configuración, adapters concretos (raíz de composición) |
-| `app/application/seed_corpus/seed_corpus_loader.py` | nuevo | puertos `CorpusCatalog`, `ChunkStore`, `PassageEmbedder`, `SourceFetcher`, `Clock`, `IdGenerator`; reglas de `domain/corpus_seed/` |
+| `app/application/seed_corpus/seed_corpus_loader.py` | nuevo | puertos `CorpusCatalog`, `ChunkStoreDeIngesta`, `PassageEmbedder`, `SourceFetcher`, `Clock`, `IdGenerator`; reglas de `domain/corpus_seed/` |
 | `app/application/seed_corpus/ports.py` | nuevo | — (Protocol) |
-| `app/domain/corpus_seed/admisibilidad.py` | nuevo | — (puro): `evaluar_admisibilidad()` (RN-21, D-09), `clase_de_licencia()` |
+| `app/domain/corpus_seed/admisibilidad.py` | nuevo | — (puro): `evaluar_admisibilidad()` (RN-21, D-09), `clase_de_licencia()`, `es_fuente_excluida()`, `ClaseDeLicencia` |
 | `app/domain/corpus_seed/poblacion.py` | nuevo | — (puro): `resolver_criterios_poblacion()` (RN-25) |
-| `app/domain/corpus_seed/versionado.py` | nuevo | — (puro): `decidir_version()` (RN-05), `calcular_checksum()` |
-| `app/domain/corpus_seed/chunking.py` | nuevo | — (puro): `normalizar_texto()`, `fragmentar()` |
+| `app/domain/corpus_seed/versionado.py` | nuevo | — (puro): `decidir_version()` y `decidir_retiro()` (RN-05), `calcular_checksum()`, `debe_publicar_release()` |
+| `app/domain/corpus_seed/chunking.py` | nuevo | — (puro): `normalizar_texto()`, `fragmentar()`, `validar_ventana()` |
 | `app/infrastructure/catalog/corpus_document_repository.py` | nuevo | SQLAlchemy/psycopg sobre las tablas de L1D-114; implementa `CorpusCatalog` |
-| `app/infrastructure/milvus/milvus_repository.py` | modifica (L1D-106/L1D-114) | `pymilvus`; añade `insertar_chunks()`, `marcar_no_vigentes()`; implementa `ChunkStore` |
-| `app/infrastructure/embeddings/` | modifica (L1D-106) | adapter falso determinista (tests) y real de ADR-39; implementa `PassageEmbedder` |
-| `app/infrastructure/fetch/descargador_https.py` | nuevo | `httpx`; lista de hosts permitidos |
+| `app/infrastructure/milvus/repository.py` | modifica (L1D-114) | `pymilvus`; añade `ids_de_chunks_del_documento()`, `marcar_no_vigentes()`; cumple `ChunkStoreDeIngesta` |
+| `app/infrastructure/embeddings/` | **no existe aún** (L1D-106) | adapter real de ADR-39; el fake determinista vive en `tests/support/semilla.py` |
+| `app/infrastructure/fetch/descargador_https.py` | nuevo | `httpx`; HTTPS:443 sin credenciales, hosts permitidos, `text/plain`, tope de bytes y plazo total |
+| `app/infrastructure/fetch/fuente_de_texto.py` | nuevo | implementa `SourceFetcher`: texto inline (fixtures), `text_path` o URL |
 | `app/config/settings.py` | modifica | `pydantic-settings` (claves de What Changes) |
 
 El service nunca importa `pymilvus`, `httpx` ni SQLAlchemy. Reglas extraídas con nombre propio:
@@ -215,9 +234,14 @@ El service nunca importa `pymilvus`, `httpx` ni SQLAlchemy. Reglas extraídas co
 - [Choque en `milvus_repository.py` / `embeddings/` con L1D-106] → métodos nuevos, no se cambian los
   existentes; puerto propio `PassageEmbedder`.
 - [Fallo entre insertar chunks nuevos y apagar los viejos] → durante la ventana puede haber dos
-  versiones con chunks vigentes; el catálogo es la verdad (`is_current` del documento) y una
-  re-ejecución lo repara (idempotente). Aceptable en un cargador manual del S1; US-117 lo resuelve
-  con la ingesta reanudable.
+  versiones con chunks vigentes; el catálogo es la verdad (`is_current` del documento) y **la siguiente carga del grupo**
+  apaga lo que quedó (`a_apagar`), también con una tercera versión o al volver al texto de la primera. No hay garantía
+  de coherencia entre la carga fallida y la siguiente. **Deuda sin ID:** ingesta que falla cerrado (insertar con
+  `is_current = false` y encender tras confirmar el catálogo; reconciliar documentos quitados del manifiesto).
+- [Duplicación de forma con `app/evaluation/dataset_loader.py`] → la imagen de producción excluye `app/evaluation`, así que
+  la regla de licencias se reescribe en `domain/corpus_seed`. **Deuda sin ID:** unificar ambas.
+- [`license_class` de un rechazado] → `cc_by_nc` (P4); toda consulta por clase debe filtrar `status = 'embebido'`.
+  **Deuda sin ID:** `license_class` nullable en rechazados (cambio de `data-model` y migración propios).
 - [Licencia PMC mal leída] → `license_verified_at` y la evidencia por documento en el manifiesto;
   revisión humana del manifiesto en el PR (ADR-36, "Pendiente de verificar").
 - [PDQ desactualizado (ADR-36, sin verificar)] → no bloquea la semilla; se anota en el manifiesto.
@@ -234,6 +258,7 @@ deshacer una carga de desarrollo se recrean los volúmenes de test/Compose (solo
   persiste como fila `status = rechazado_licencia` (propuesta D3, sin cambio de esquema); el motivo va al reporte.
 - **P2 · Resuelta por la decisión 1 del usuario (2026-10-20):** `metadata_source = fuente_estructurada` siempre. El valor
   `curado` de ADR-36 decisión 5 sigue pendiente para US-118 (S4).
+- **P3 bis · Resuelta (usuario, 2026-10-20):** un rechazo retira la versión vigente del grupo (D3).
 - **P4 · Pendiente de definir (humano):** `license_class` de una fila `rechazado_licencia` (ver *Desviaciones*).
 - **P3 · Nota (no bloquea):** FX-06c-a usa `ClinicalTrials.gov` en `t-ok-2`, fuente fuera del MVP
   según ADR-36. Es un fixture sintético para probar la copia de criterios estructurados y el S1 no

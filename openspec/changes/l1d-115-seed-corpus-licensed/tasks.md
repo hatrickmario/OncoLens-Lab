@@ -29,6 +29,13 @@
 - [ ] 1.13 **Trasladada a L1D-106** (tarea 2.13b de su `tasks.md`; decisión del usuario, 2026-10-20). Smoke AC-1 (test después): con el manifiesto real y los *embeddings* y `EMBEDDING_DIM` reales de ADR-39 contra Compose (change de L1D-164), todos los documentos `embebido`, chunks vigentes con metadatos denormalizados copiados, y release publicada; `@pytest.mark.ac("US-059", 1)` [US-059 AC-1] [AC-06.1]. Cubierto mientras tanto, sin modelo real: `test_manifiesto_real_de_la_semilla.py` (datos) y la carga del manifiesto real con *embeddings* falsos contra PostgreSQL y Milvus reales
 - [x] 1.14 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commits `refactor(L1D-115)`
 
+## Gate 2 · vuelta 1 (2026-10-20)
+
+- [x] G2.1 Privacy Mayor 1 (RN-21, ADR-36): los extractos de NCI sin secciones de autoidentificación ni marca PDQ, checksums recalculados, `ATTRIBUTION.md` corregida; el test del manifiesto real lee el CUERPO de cada `text_path` y falla si un documento `NCI` contiene `PDQ`. Menores: texto original del `NCT` restaurado (falso positivo `telefono_local` resuelto con `prefijosDeRegistroExentos: ["NCT"]`, campo ya aplicado a cualquier formato por `scripts/lib/formatosPii.mjs`, sin subir `version`), 1-800 de NCI omitido, dos artículos a `CC BY 4.0`, NC/ND por texto, fuente excluida por alias, token y host, `document_key` no repetido, `DescargadorHttps` (443, sin credenciales, `text/plain` exacto, plazo total `CORPUS_FETCH_DEADLINE_SECONDS`)
+- [x] G2.2 Diseño Bloqueante 1 (RN-05): `DecisionDeVersion.a_apagar` decidida por el dominio, también en `omitir`; Mayores 3 a 6 y menores 8, 9, 10, 13, 14, 16
+- [x] G2.3 Opción A (decidido por el usuario, 2026-10-20): un rechazo retira la versión vigente del grupo (`_retirar_vigente_del_grupo`, `decidir_retiro`, `CorpusCatalog.retirar_version`)
+- Deuda sin ID: unificar la regla de licencias con `app/evaluation/dataset_loader.py`; ingesta que falla cerrado (insertar `is_current = false` y encender tras confirmar el catálogo; reconciliar documentos quitados del manifiesto); `license_class` nullable en los rechazados (hoy `cc_by_nc`; P4)
+
 ## evaluación
 
 - [ ] 2.1 Cambia el corpus: `run-ai-eval` si la suite existe; si no (US-072 llega en el S2), `ai-eval-runner` revisa a mano la recuperación del paciente semilla de mama y próstata sobre esta semilla (recall@10, MRR, precisión de citas, "sin evidencia"), como evidencia del Gate 2. **Pendiente del orquestador:** requiere el adapter real de embeddings (L1D-106); el implementador deja la semilla lista

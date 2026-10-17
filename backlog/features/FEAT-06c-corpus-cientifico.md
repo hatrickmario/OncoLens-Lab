@@ -92,6 +92,10 @@ Ingesta automatizada y reanudable (S3). Poblar el sparse y búsqueda híbrida (S
 
 > **Decidido (usuario, 2026-10-13, `[S1 resp. 3]`):** los supuestos marcados "(asumido)" en los AC se aceptan.
 
+> **Decidido (usuario, 2026-10-20):** un documento rechazado por licencia o fuente excluida **retira la versión vigente de su grupo** (catálogo `is_current = false` con `superseded_at`, chunks no vigentes en Milvus y release nueva), sin borrar nada (RN-21, RN-05); si el apagado falla, el resultado es `error`. Detalle en el change `l1d-115-seed-corpus-licensed` (D3 y requisito «Un rechazo retira la versión vigente del grupo»).
+>
+> **Deuda sin ID (L1D-115, 2026-10-20):** (1) unificar la regla de licencias del cargador de la semilla con `app/evaluation/dataset_loader.py`; (2) ingesta que falla cerrado (insertar con `is_current = false` hasta confirmar en el catálogo y reconciliar documentos quitados del manifiesto); (3) `license_class` nullable en los rechazados (hoy `cc_by_nc`; toda consulta por clase filtra `status = 'embebido'`).
+
 ## Story
 Como oncólogo, quiero que el corpus con el que se analiza a mi paciente contenga solo
 fuentes públicas con licencia que permite usarlas y con sus metadatos registrados, para

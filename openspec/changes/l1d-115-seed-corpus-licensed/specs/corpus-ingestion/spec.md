@@ -63,3 +63,18 @@ Cuando llega un documento con el mismo `version_group_id` que uno vigente y dist
 - **THEN** `t-ok-1-v2` queda con `is_current = true` y `status = embebido`
 - **AND** `t-ok-1` queda con `is_current = false` y `superseded_at` igual a la hora del reloj congelado, y todos sus chunks tienen `is_current = false`
 - **AND** el número de filas de `corpus.corpus_document` aumentó exactamente en 1 y los chunks de `t-ok-1` siguen existiendo en `corpus_chunks`
+
+### Requirement: Un rechazo retira la versión vigente del grupo
+Un documento rechazado por licencia o fuente excluida MUST retirar la versión `embebido` y vigente de su grupo (`version_group_id`) sin borrar nada, y si no puede retirarla su resultado SHALL ser `error`, no `rechazado` (RN-21, RN-05; decidido por el usuario, 2026-10-20).
+
+#### Scenario: Un documento embebido que vuelve con CC BY-ND deja su grupo sin versión vigente [US-059] [RN-21] [RN-05]
+- **GIVEN** `t-ok-1` cargado, `embebido` y vigente, y el reloj de test congelado
+- **WHEN** el manifiesto trae el mismo documento (mismo `version_group_id`) con licencia `CC BY-ND 4.0` o con su fuente en `CORPUS_EXCLUDED_SOURCES`
+- **THEN** el reporte lo marca `rechazado` con `retirada_de_vigente = true`
+- **AND** la versión anterior queda con `is_current = false` y `superseded_at` igual a la hora del reloj, ninguno de sus chunks de `corpus_chunks` es vigente y todos siguen existiendo
+- **AND** el número de filas de `corpus.corpus_document` solo aumenta (la fila del rechazo) y se publica una `CorpusRelease` nueva que no incluye la versión retirada
+
+#### Scenario: Si apagar la versión vigente falla el resultado es error y nada cambia [US-059] [RN-05]
+- **GIVEN** `t-ok-1` cargado y vigente, y Milvus caído al apagar chunks
+- **WHEN** el mismo documento vuelve rechazado
+- **THEN** el reporte lo marca `error` (no `rechazado`), la versión sigue vigente en el catálogo y no se escribe la fila de rechazo
