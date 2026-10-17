@@ -1,5 +1,8 @@
 import type { ConfiguracionDelSeed } from './config.js';
 
+/** Nombre del entorno de datos reales (readme §6.1 #2): el único que ninguna configuración puede permitir. */
+const ENTORNO_PILOTO = 'piloto';
+
 /** El seed se negó a correr (RN-13). El mensaje nombra la variable, nunca un valor. */
 export class SeedBloqueadoError extends Error {
   constructor(
@@ -20,6 +23,21 @@ export type EntradaDeLaGuarda = Pick<
  * Guarda de entorno del seed (RN-13). Pura: decide con la configuración ya leída, antes de crear el cliente de la
  * base. Un entorno con datos reales habilitados nunca recibe datos `seed`.
  */
-export function assertSeedPermitido(_config: EntradaDeLaGuarda): void {
-  throw new Error('no implementado');
+export function assertSeedPermitido(config: EntradaDeLaGuarda): void {
+  if (config.realAnonymizedEnabled) {
+    throw new SeedBloqueadoError('REAL_ANONYMIZED_ENABLED', 'está en true (datos reales habilitados)');
+  }
+  if (config.realIdentifiedEnabled) {
+    throw new SeedBloqueadoError('REAL_IDENTIFIED_ENABLED', 'está en true (datos reales habilitados)');
+  }
+  if (config.appEnv === undefined) {
+    throw new SeedBloqueadoError('APP_ENV', 'no está definida (no se presume un entorno permitido)');
+  }
+  // `piloto` se rechaza siempre: ninguna lista de configuración lo habilita (RN-13).
+  if (config.appEnv === ENTORNO_PILOTO) {
+    throw new SeedBloqueadoError('APP_ENV', 'es piloto: el seed no corre en el entorno piloto');
+  }
+  if (!config.entornosPermitidos.includes(config.appEnv)) {
+    throw new SeedBloqueadoError('APP_ENV', 'no está en SEED_ALLOWED_ENVS');
+  }
 }
