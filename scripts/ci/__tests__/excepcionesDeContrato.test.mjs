@@ -1,8 +1,10 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { PROVIDERS } from '../../contracts/lib/specs.mjs';
-import { errNoDeclarados } from '../lib/excepcionesDeContrato.mjs';
+import { DECISION_PERDONADO, errNoDeclarados } from '../lib/excepcionesDeContrato.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../../..');
 const EXCEPCIONES = JSON.parse(readFileSync(path.join(RAIZ, 'scripts/ci/contracts-breaking-excepciones.json'), 'utf8'));
@@ -42,10 +44,60 @@ describe('errNoDeclarados (ADR-26)', () => {
     expect(errNoDeclarados(PROVEEDOR, [otro], EXCEPCIONES)).toEqual([otro]);
   });
 
+  it.each(['ERR', '3', null, undefined])('trata como ERR no declarado un hallazgo con level %s (no numérico)', (level) => {
+    const raro = { ...HALLAZGO_422, id: 'otro', level };
+    expect(errNoDeclarados(PROVEEDOR, [raro], EXCEPCIONES)).toEqual([raro]);
+  });
+
   it('ignora los avisos (WARN) y conserva solo los ERR no declarados', () => {
     const aviso = { ...HALLAZGO_422, id: 'response-body-wrapped-in-one-of-original-preserved', level: WARN };
     const otroErr = { ...HALLAZGO_422, id: 'request-body-type-changed', text: 'otro' };
     expect(errNoDeclarados(PROVEEDOR, [aviso, HALLAZGO_422, otroErr], EXCEPCIONES)).toEqual([otroErr]);
+  });
+});
+
+describe('CLI de excepcionesDeContrato (falla cerrado)', () => {
+  const directorio = mkdtempSync(path.join(tmpdir(), 'excepciones-'));
+  const enlace = path.join(directorio, 'filtro.mjs');
+  symlinkSync(path.join(RAIZ, 'scripts/ci/lib/excepcionesDeContrato.mjs'), enlace);
+  afterAll(() => rmSync(directorio, { recursive: true, force: true }));
+
+  // Por la ruta del enlace: process.argv[1] no es la ruta real (en macOS /var es un enlace a /private/var).
+  const ejecutarCli = (hallazgos) =>
+    spawnSync('node', [enlace, PROVEEDOR], { input: JSON.stringify(hallazgos), encoding: 'utf8' });
+
+  it('sale con 1 cuando lo lanza una ruta con enlace simbólico y hay un ERR no declarado', () => {
+    const noDeclarado = { ...HALLAZGO_422, id: 'request-body-type-changed', text: 'otro' };
+    const resultado = ejecutarCli([HALLAZGO_422, noDeclarado]);
+
+    expect(resultado.status).toBe(1);
+    expect(resultado.stdout).toContain('ERR no declarado');
+  });
+
+  it('sale con 0 y emite la decisión explícita cuando el único ERR es la excepción E-1', () => {
+    const resultado = ejecutarCli([HALLAZGO_422]);
+
+    expect(resultado.status).toBe(0);
+    expect(resultado.stdout).toContain(DECISION_PERDONADO);
+  });
+
+  it('sale con 1 cuando ningún ERR coincide con una excepción (nada que perdonar)', () => {
+    const resultado = ejecutarCli([]);
+
+    expect(resultado.status).toBe(1);
+    expect(resultado.stdout).not.toContain(DECISION_PERDONADO);
+  });
+
+  it('sale con 1 cuando el level de un hallazgo no es numérico, aunque sea la excepción E-1', () => {
+    const resultado = ejecutarCli([HALLAZGO_422, { ...HALLAZGO_422, id: 'otro', level: 'ERR' }]);
+
+    expect(resultado.status).toBe(1);
+  });
+
+  it('sale con 1 cuando la entrada no es JSON', () => {
+    const resultado = spawnSync('node', [enlace, PROVEEDOR], { input: 'no es json', encoding: 'utf8' });
+
+    expect(resultado.status).toBe(1);
   });
 });
 

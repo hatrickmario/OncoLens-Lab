@@ -9,6 +9,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** Línea que el filtro imprime SOLO cuando perdona: `contracts-breaking.sh` falla cerrado si no la ve. */
+export const DECISION_PERDONADO = 'excepciones-declaradas-aplicadas';
 const NIVEL_ERR = 3;
 const ARCHIVO_DE_EXCEPCIONES = path.resolve(import.meta.dirname, '../contracts-breaking-excepciones.json');
 
