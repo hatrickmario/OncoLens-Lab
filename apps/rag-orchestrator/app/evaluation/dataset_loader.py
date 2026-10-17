@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import yaml
 
@@ -124,7 +125,21 @@ def _licencia_aceptada(fuente: dict[str, Any], permitir_cc_by_nc: bool = False) 
 
 def _terminos_verificados_de_clinicaltrials(fuente: dict[str, Any]) -> bool:
     """Los términos de reutilización verificados solo sustituyen a la licencia en ClinicalTrials.gov (tarea 1.2)."""
-    return fuente.get("licencia_verificada") in TERMINOS_VERIFICADOS_ACEPTADOS and str(fuente.get("fuente", "")).startswith("ClinicalTrials.gov")
+    if fuente.get("licencia_verificada") not in TERMINOS_VERIFICADOS_ACEPTADOS:
+        return False
+
+    fuente_valor = str(fuente.get("fuente", "")).strip()
+    if not fuente_valor:
+        return False
+
+    # Compatibilidad con el valor canónico no-URL.
+    if fuente_valor.lower() == "clinicaltrials.gov":
+        return True
+
+    # Validación robusta por host cuando se recibe URL o host/path.
+    parseada = urlparse(fuente_valor if "://" in fuente_valor else f"//{fuente_valor}")
+    host = (parseada.hostname or "").lower()
+    return host == "clinicaltrials.gov" or host.endswith(".clinicaltrials.gov")
 
 
 def _validar_manifiesto(manifiesto: dict[str, Any], permitir_cc_by_nc: bool = False) -> tuple[Fuente, ...]:
