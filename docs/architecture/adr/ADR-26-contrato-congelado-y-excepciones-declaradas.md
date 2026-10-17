@@ -2,7 +2,7 @@
 
 > Linear: L1D-106 (aplicación de la excepción E-1) · Historia: US-055 · Feature: FEAT-06a
 > Plantilla: MADR 4 (variante mínima, en español).
-> **Origen del número:** ADR-26 es una decisión previa al backlog (contrato `EvidenceAnalysis` congelado; `readme.md` §3.3) que hasta ahora solo se citaba en historias y en `readme.md` §4. Este archivo la formaliza y registra el único mecanismo de excepción; no cambia la decisión original.
+> **Origen del número:** ADR-26 es una decisión previa al backlog (`readme.md` §3.3 #26: contrato `EvidenceAnalysis` congelado) que hasta ahora solo se citaba en historias y en `readme.md` §4. Este archivo la formaliza y registra el único mecanismo de excepción. **Amplía su alcance**: la regla aditiva se extiende a todo `openapi.yaml` de proveedor y se define cómo se declara una excepción; no cambia la decisión original.
 
 - **Estado:** aceptado
 - **Fecha:** 2026-10-17

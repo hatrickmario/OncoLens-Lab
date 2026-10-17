@@ -51,7 +51,11 @@
 - [x] 3b.3 (TDD) `ParametrosDeRecuperacion.llm_provider` es el enum `LlmProvider` validado.
 - [x] 3b.4 (test después) Compose con los tres valores provisionales (ver 3.1). **Claves para el humano** (no se editó ningún `.env.example`): `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40`, `RERANK_TOP_N=10`, con el comentario "provisional hasta US-072".
 - [x] 3b.5 (TDD) `escapar_patron_like()` (`\`, `%`, `_`) en los patrones `like` de `expresion_vigente_del_tipo()`; el literal duplica la barra (`\\_`). Caso con Milvus real en `test_recuperacion_en_milvus.py` (`-m servicios_reales`, no ejecutado en esta pasada: sin Milvus local).
-- [x] 3b.6 (TDD) `LONGITUD_MAXIMA_DE_CODIGO = 64` para el código de `cancerType`; más largo es `422 TIPO_CANCER_NO_REGISTRADO` (sin cambio de contrato).
+- [x] 3b.6 (TDD) longitud máxima del código de `cancerType` en **configuración** (RN-22): `RETRIEVAL_CANCER_TYPE_MAX_LENGTH`, por defecto 64 (`Settings.retrieval_cancer_type_max_length`), inyectada al filtro vía `ParametrosDeRecuperacion`; más largo es `422 TIPO_CANCER_NO_REGISTRADO` (sin cambio de contrato).
+- [x] 3b.8 (pasada 4) Filtro de excepciones de oasdiff: compara rutas reales (`realpathSync`, sin fallo abierto por enlaces simbólicos), un `level` no numérico es ERR, `contracts-breaking.sh` falla cerrado (solo perdona con la decisión explícita impresa) y `docs/process/ci.md` lo documenta.
+- [x] 3b.9 (pasada 4) `_proveedor_de_meta(settings) -> LlmProvider` en `bootstrap.py` (`local` → enum; `fake` rechazado); `ParametrosDeRecuperacion` ya no convierte vocabularios.
+- [x] 3b.10 (pasada 4) `ErrorDeAplicacion` como superclase; el envoltorio del generador conserva los errores de aplicación (503 RETRIEVAL_UNAVAILABLE, 422 TIPO_CANCER_NO_REGISTRADO, 503 LOCAL_LLM_UNAVAILABLE).
+- [x] 3b.11 (pasada 4, `contract(L1D-106)`) `500 ERROR_INTERNO` declarado en todas las operaciones de `apps/rag-orchestrator/openapi.yaml` (aditivo: oasdiff sigue reportando solo E-1); ejemplo `error-interno.json` reutilizado; el middleware usa su mensaje. Versión del contrato sin cambio (1.2.0 aún no publicada).
 - [x] 3b.7 Excepción E-1 de `contracts-breaking.sh` + ADR-26 (ver 1.3).
 
 ## 4. Verificación

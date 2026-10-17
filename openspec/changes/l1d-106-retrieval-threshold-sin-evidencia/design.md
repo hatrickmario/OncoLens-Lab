@@ -254,8 +254,9 @@ sigue pendiente de decisión del usuario).
   - *Compose (M3):* `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40` y `RERANK_TOP_N=10` provisionales hasta US-072,
     con `${VAR:-valor}` para poder cambiarlos; `Settings` sigue sin valor por defecto en código.
   - *Filtro:* en los patrones `like` se escapan `\`, `%` y `_` (el literal duplica la barra, `\\_`; la igualdad exacta no
-    se escapa) y el código de `cancerType` admite como máximo 64 caracteres; más largo → `422 TIPO_CANCER_NO_REGISTRADO`.
+    se escapa) y el código de `cancerType` tiene una longitud máxima **configurable** (RN-22): `RETRIEVAL_CANCER_TYPE_MAX_LENGTH`, por defecto 64, inyectada al filtro desde `Settings` por `ParametrosDeRecuperacion`; más largo → `422 TIPO_CANCER_NO_REGISTRADO`. (Se decidió configuración y no constante técnica por RN-22.)
     La sintaxis `\\_` está comprobada contra la documentación de Milvus, no contra un Milvus real en esta pasada.
+  - *Pasada 4:* (a) `_proveedor_de_meta()` en el bootstrap mapea `LLM_PROVIDER` al enum del contrato (`nube` solo cuando exista su adapter). (b) `ErrorDeAplicacion` es la raíz de los errores con respuesta contractual propia; el envoltorio del generador los deja pasar. (c) Se declara `500 ERROR_INTERNO` en el spec de rag-orchestrator (decisión del usuario; aditivo, sin ERR nuevo) y el middleware usa el mensaje del ejemplo `error-interno.json`. (d) El filtro de excepciones de oasdiff compara rutas reales y falla cerrado (ver ADR-26). **Deuda anotada (m3):** el registro del fallo de un borde (`_invocar_borde_fallando_cerrado`) y el del generador (`_registrar_fallo_del_generador`) siguen siendo dos puntos de log; unificarlos en un `registrar_fallo_de_borde` compartido queda para un refactor posterior.
   - *Contrato del 422:* excepción E-1 de oasdiff declarada y acotada + ADR-26 (decisión del usuario, 2026-10-17).
 - **Umbral:** "sobre el umbral" es estricto (`>`): un chunk con puntaje igual al umbral no cuenta (supuesto).
 - **`traceId`:** una sola fuente por petición: el del cuerpo de `/rag/query` (es el `X-Trace-Id` del contrato); lo usan los
