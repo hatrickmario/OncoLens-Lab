@@ -17,8 +17,11 @@ import { appConAuth } from './app-auth.js';
 import type { BaseDeTest } from './db.js';
 import { conectar } from './db.js';
 import {
+  FECHA_FIJA,
+  INSTANTE_FIJO,
   filaDeDiagnostico,
   filaDeEpisodio,
+  filaDeIdentidad,
   filaDePaciente,
   generadorDeIds,
   insertar,
@@ -252,6 +255,129 @@ export async function crearPacienteSintetico(
     );
   }
   return paciente['id'] as string;
+}
+
+/** PII SINTÉTICA de FX-T4a-a (backlog FEAT-T4a): nada de esto es de una persona real (RN-13, RN-14). */
+export const PII_FX_T4A_A = {
+  cedula: '52123456',
+  nombre: 'Lucía Fernanda Rondón Peña',
+  telefono: '3001234567',
+  convenio: 'CONV-TEST-01',
+  textoLibre: 'Paciente Lucía Rondón (CC 52123456), tel. 3001234567, refiere dolor leve.',
+} as const;
+
+/**
+ * FX-T4a-a: paciente sintético con PII conocida en la identidad cifrada (bytes ficticios), el convenio y el texto libre
+ * de una nota y de un evento, con diagnóstico de mama, HER2 y un tratamiento previo. Devuelve su id.
+ */
+export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string> {
+  const { cliente, ids } = mundo;
+  const { rows } = await cliente.query<{ id: string }>(
+    `SELECT id FROM auth."user" WHERE email = 'doc1@test.local'`,
+  );
+  const doctorId = rows[0]?.id ?? '';
+  const paciente = await insertar(
+    cliente,
+    'clinical.patient',
+    filaDePaciente(ids, {
+      birth_year: 1971,
+      sex: 'F',
+      agreement_reference: PII_FX_T4A_A.convenio,
+    }),
+  );
+  const patientId = paciente['id'] as string;
+  await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(patientId));
+  const episodio = await insertar(
+    cliente,
+    'clinical.care_episode',
+    filaDeEpisodio(ids, patientId, doctorId),
+  );
+  const episodeId = episodio['id'] as string;
+  await insertar(
+    cliente,
+    'clinical.diagnosis',
+    filaDeDiagnostico(ids, patientId, episodeId, {
+      cancer_type: 'mama',
+      icd10_code: 'C50.9',
+      staging_system: 'TNM_8',
+      stage_value: 'IIA',
+      performance_scale: 'ECOG',
+      performance_value: 1,
+    }),
+  );
+  const examen = await insertar(cliente, 'clinical.exam', {
+    id: ids(),
+    patient_id: patientId,
+    episode_id: episodeId,
+    source_document_id: null,
+    exam_type: 'laboratorio',
+    source_lab: null,
+    entry_method: 'seed',
+    performed_at: FECHA_FIJA,
+    created_at: INSTANTE_FIJO,
+  });
+  await insertar(cliente, 'clinical.biomarker', {
+    id: ids(),
+    exam_id: examen['id'],
+    name: 'HER2',
+    original_name: 'HER2',
+    mapping_status: 'no_mapeado',
+    value: '3+ (IHQ)',
+    reference_range: '',
+    result_type: 'cualitativo',
+    clinical_significance: 'relevante',
+    significance_source: 'documento',
+    extraction_confidence: 'n_a',
+    review_status: 'verificado',
+    source_span: '{}',
+    created_at: INSTANTE_FIJO,
+  });
+  await insertar(cliente, 'clinical.clinical_note', {
+    id: ids(),
+    patient_id: patientId,
+    episode_id: episodeId,
+    created_by: doctorId,
+    note_type: 'nota_libre',
+    entry_method: 'seed',
+    content: PII_FX_T4A_A.textoLibre,
+    recorded_at: FECHA_FIJA,
+    is_active: true,
+    extraction_confidence: 'n_a',
+    review_status: 'verificado',
+    created_at: INSTANTE_FIJO,
+  });
+  await insertar(cliente, 'clinical.prior_treatment', {
+    id: ids(),
+    patient_id: patientId,
+    episode_id: episodeId,
+    line_number: 1,
+    setting: 'adyuvante',
+    regimen_name: 'AC-T',
+    atc_codes: [],
+    mapping_status: 'no_mapeado',
+    started_at: FECHA_FIJA,
+    ongoing: false,
+    end_reason: 'completado',
+    entry_method: 'seed',
+    extraction_confidence: 'n_a',
+    review_status: 'verificado',
+    created_at: INSTANTE_FIJO,
+  });
+  await insertar(cliente, 'clinical.clinical_event', {
+    id: ids(),
+    patient_id: patientId,
+    episode_id: episodeId,
+    event_type: 'evolucion',
+    event_date: FECHA_FIJA,
+    date_precision: 'dia',
+    description: PII_FX_T4A_A.textoLibre,
+    mapping_status: 'n_a',
+    entry_method: 'seed',
+    extraction_confidence: 'n_a',
+    review_status: 'verificado',
+    created_at: INSTANTE_FIJO,
+  });
+  return patientId;
 }
 
 export async function contarAnalisisDelPaciente(

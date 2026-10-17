@@ -160,6 +160,10 @@ services:
       ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-}
       SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
+      # Gateway de análisis (L1D-103): hostname interno de rag-orchestrator y valores a calibrar (RN-22); vacío = por defecto.
+      RAG_ORCHESTRATOR_URL: ${RAG_ORCHESTRATOR_URL:-http://rag-orchestrator:8000}
+      ANALYSIS_MAX_OPTIONS: ${ANALYSIS_MAX_OPTIONS:-}
+      EVIDENCE_DEFAULT_YEARS: ${EVIDENCE_DEFAULT_YEARS:-}
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
       BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
