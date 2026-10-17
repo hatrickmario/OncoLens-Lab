@@ -52,6 +52,18 @@ def test_lee_las_claves_del_entorno_y_separa_las_listas_por_comas(
     assert ajustes.corpus_fetch_allowed_hosts == ("www.cancer.gov", "pmc.ncbi.nlm.nih.gov")
 
 
+def test_el_plazo_total_de_descarga_viene_de_configuracion_y_debe_ser_positivo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert con_entorno(monkeypatch).corpus_fetch_deadline_seconds == 60.0
+    assert (
+        con_entorno(monkeypatch, CORPUS_FETCH_DEADLINE_SECONDS="12.5").corpus_fetch_deadline_seconds
+        == 12.5
+    )
+    with pytest.raises(ValidationError):
+        con_entorno(monkeypatch, CORPUS_FETCH_DEADLINE_SECONDS="0")
+
+
 def test_sin_hosts_permitidos_el_cargador_no_descarga_nada(monkeypatch: pytest.MonkeyPatch) -> None:
     assert con_entorno(monkeypatch).corpus_fetch_allowed_hosts == ()
 

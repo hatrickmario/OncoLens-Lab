@@ -72,6 +72,7 @@ def _fuente_de_texto(ajustes: CorpusSeedSettings) -> FuenteDeTextoDelManifiesto:
             httpx.Client(timeout=ajustes.corpus_fetch_timeout_seconds),
             ajustes.corpus_fetch_allowed_hosts,
             ajustes.corpus_fetch_max_bytes,
+            ajustes.corpus_fetch_deadline_seconds,
         )
         if ajustes.corpus_fetch_allowed_hosts
         else None

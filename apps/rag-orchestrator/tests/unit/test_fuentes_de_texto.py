@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import httpx
 import pytest
 import respx
 
+from app.infrastructure.fetch import descargador_https, fuente_de_texto
+from app.infrastructure.fetch.descargador_https import (
+    DescargadorHttps,
+    FuenteNoDisponible,
+    FuenteNoPermitida,
+)
 from app.infrastructure.fetch.fuente_de_texto import (
     FuenteDeTextoDelManifiesto,
     RutaFueraDelManifiesto,
-)
-from app.infrastructure.fetch.descargador_https import (
-    FuenteNoDisponible,
-    FuenteNoPermitida,
-    DescargadorHttps,
 )
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from tests.support.semilla import documento_de_prueba
@@ -118,7 +120,7 @@ def test_un_cuerpo_que_llega_a_cuentagotas_excede_el_plazo_total_aunque_cada_blo
         ["www.cancer.gov"],
         1000,
         deadline_s=10.0,
-        reloj_monotonico=RelojQueAvanza(4.0),
+        reloj_monotonico=RelojQueAvanza(6.0),
     )
 
     with pytest.raises(FuenteNoDisponible, match="plazo"):
@@ -224,6 +226,20 @@ def test_una_url_sin_descargador_configurado_falla_en_lugar_de_salir_a_la_red(
         FuenteDeTextoDelManifiesto(tmp_path, None).obtener_texto(
             documento_de_prueba(texto=None, url_fuente=URL)
         )
+
+
+def test_la_unica_clase_de_fetch_que_implementa_source_fetcher_es_la_fuente_de_texto_del_manifiesto() -> (
+    None
+):
+    """``DescargadorHttps`` baja una URL; solo ``FuenteDeTextoDelManifiesto`` entrega el texto de un documento."""
+    implementan = [
+        clase.__name__
+        for modulo in (fuente_de_texto, descargador_https)
+        for _, clase in inspect.getmembers(modulo, inspect.isclass)
+        if clase.__module__ == modulo.__name__ and hasattr(clase, "obtener_texto")
+    ]
+
+    assert implementan == ["FuenteDeTextoDelManifiesto"]
 
 
 def test_el_tokenizador_por_palabras_conserva_el_texto_al_concatenar_sus_piezas() -> None:

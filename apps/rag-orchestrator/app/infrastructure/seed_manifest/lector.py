@@ -89,9 +89,12 @@ def leer_manifiesto(ruta: Path) -> tuple[DocumentoDeSemilla, ...]:
 def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
     if not isinstance(crudo, dict):
         raise ManifiestoInvalido(f"documento #{posicion}: debe ser un mapa")
-    clave = str(crudo.get("document_key", f"#{posicion}"))
+    candidata = crudo.get("document_key")
+    valida = isinstance(candidata, str) and PATRON_DE_CLAVE.fullmatch(candidata) is not None
+    # Un document_key mal formado puede traer un secreto pegado por error: no se repite en ningún mensaje.
+    clave = candidata if valida else f"documento #{posicion}"
     _comprobar_claves(crudo, clave)
-    if not PATRON_DE_CLAVE.fullmatch(clave):
+    if not valida:
         raise ManifiestoInvalido(f"{clave}: document_key debe cumplir {PATRON_DE_CLAVE.pattern}")
     _validar_valores(crudo, clave)
     return DocumentoDeSemilla(

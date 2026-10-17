@@ -38,24 +38,54 @@ class DescargadorHttps:
         self._max_bytes = max_bytes
 
     def descargar_texto(self, url: str) -> str:
-        partes = urlsplit(url)
-        host = (partes.hostname or "").casefold()
-        if partes.scheme != "https" or host not in self._hosts:
-            raise FuenteNoPermitida(f"{host or 'sin host'}: no es HTTPS o no está permitido")
+        host = self._host_permitido(url)
+        inicio = self._reloj_monotonico()
         try:
             with self._cliente.stream("GET", url, follow_redirects=False) as respuesta:
-                return self._leer(respuesta, host)
+                return self._leer(respuesta, host, inicio)
         except httpx.HTTPError as error:
             raise FuenteNoDisponible(f"{host}: {type(error).__name__}") from None
 
-    def _leer(self, respuesta: httpx.Response, host: str) -> str:
+    def _host_permitido(self, url: str) -> str:
+        """Host de la URL si es HTTPS, del puerto 443 (o sin puerto), sin credenciales y de la lista; si no, lanza."""
+        partes = urlsplit(url)
+        host = (partes.hostname or "").casefold()
+        try:
+            puerto = partes.port
+        except ValueError:
+            puerto = -1
+        if (
+            partes.scheme != "https"
+            or host not in self._hosts
+            or puerto not in (None, 443)
+            or partes.username is not None
+            or partes.password is not None
+        ):
+            raise FuenteNoPermitida(
+                f"{host or 'sin host'}: no es HTTPS:443 sin credenciales o no está permitido"
+            )
+        return host
+
+    def _leer(self, respuesta: httpx.Response, host: str, inicio: float) -> str:
         if respuesta.status_code != 200:
             raise FuenteNoDisponible(f"{host}: HTTP {respuesta.status_code}")
-        if not respuesta.headers.get("content-type", "").startswith("text/plain"):
+        if _tipo_de_medio(respuesta) != "text/plain":
             raise FuenteNoDisponible(f"{host}: el contenido no es text/plain")
         cuerpo = bytearray()
         for bloque in respuesta.iter_bytes():
             cuerpo += bloque
             if len(cuerpo) > self._max_bytes:
                 raise FuenteNoDisponible(f"{host}: supera {self._max_bytes} bytes")
+            self._exigir_plazo(host, inicio)
+        self._exigir_plazo(host, inicio)
         return bytes(cuerpo).decode("utf-8", errors="replace")
+
+    def _exigir_plazo(self, host: str, inicio: float) -> None:
+        """Plazo TOTAL de la descarga: un servidor que gotea bytes a tiempo no la retiene indefinidamente."""
+        if self._reloj_monotonico() - inicio > self._deadline_s:
+            raise FuenteNoDisponible(f"{host}: excede el plazo de {self._deadline_s:g} s")
+
+
+def _tipo_de_medio(respuesta: httpx.Response) -> str:
+    """Tipo de medio sin parámetros y en minúsculas (``text/plain; charset=utf-8`` -> ``text/plain``)."""
+    return respuesta.headers.get("content-type", "").split(";", 1)[0].strip().casefold()

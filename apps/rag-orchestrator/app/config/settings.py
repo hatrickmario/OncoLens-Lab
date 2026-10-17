@@ -213,6 +213,8 @@ class CorpusSeedSettings(BaseSettings):
     corpus_fetch_allowed_hosts: Annotated[tuple[str, ...], NoDecode] = ()
     corpus_fetch_timeout_seconds: float = Field(default=30.0, gt=0)
     corpus_fetch_max_bytes: int = Field(default=5_000_000, gt=0)
+    # Plazo TOTAL de una descarga (no por lectura): un servidor que gotea bytes no la retiene indefinidamente.
+    corpus_fetch_deadline_seconds: float = Field(default=60.0, gt=0)
 
     @field_validator(
         "corpus_accepted_licenses",
