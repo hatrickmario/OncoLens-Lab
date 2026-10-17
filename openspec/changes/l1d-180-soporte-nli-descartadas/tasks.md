@@ -1,5 +1,7 @@
 # Tasks — l1d-180-soporte-nli-descartadas
 
+> ↪ Depende de **US-231** (adapters reales, ADR-39; Linear: pendiente (límite de issues del workspace); propuesta, decisión 74 del plan): en `main` antes de este change para correr con modelos reales. Los AC se verifican con adapters falsos.
+
 > Matriz TDD (CLAUDE.md): regla RN-01/RN-23 y endpoint → **TDD estricto, doble bucle** (commit
 > `test(L1D-180)` con el test de aceptación en rojo antes de su `feat(L1D-180)`); umbral y modelo NLI →
 > **evaluate**; fixtures → **test después**. Mocks solo en los bordes: LLM, NLI, Milvus, *embeddings*,
