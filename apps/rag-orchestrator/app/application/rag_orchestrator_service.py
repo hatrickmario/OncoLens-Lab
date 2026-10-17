@@ -35,6 +35,7 @@ from app.domain.relevance import ChunkPuntuado, filtrar_sobre_umbral, top_releva
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.schemas.generated.models import (
     Limitation,
+    LlmProvider,
     Origin,
     RagMeta,
     RagQueryInternalRequest,
@@ -60,10 +61,14 @@ class ParametrosDeRecuperacion:
     relevance_threshold: float
     retrieval_top_k: int
     rerank_top_n: int
-    llm_provider: str
+    llm_provider: LlmProvider
     llm_model: str
     nli_model: str
     prompt_version: str
+
+    def __post_init__(self) -> None:
+        # Acepta el texto del enum y lo valida: un proveedor fuera del contrato (p. ej. "fake") no llega a ``meta``.
+        object.__setattr__(self, "llm_provider", LlmProvider(self.llm_provider))
 
 
 class RAGOrchestratorService:
