@@ -240,8 +240,23 @@ sigue pendiente de decisión del usuario).
 - **D8 (precisión):** todo borde (incluido el detector de idioma) se invoca con `_invocar_borde_fallando_cerrado`: solo se
   registran la clase del error, la etapa y el `traceId`, con `from None` para que ni el mensaje ni el traceback con la
   pregunta lleguen al log. Un `Exception` no traducido responde un `500` fijo (`ERROR_INTERNO`, sin eco); ese cuerpo no
-  está en `openapi.yaml` (el contrato de rag no declara `500`) y queda como defensa en profundidad. Starlette vuelve a
-  lanzar la excepción tras responder, por lo que uvicorn aún escribe su traceback: el *handler* no lo evita.
+  está en `openapi.yaml` (el contrato de rag no declara `500`) y queda como defensa en profundidad. ~~Starlette vuelve a
+  lanzar la excepción tras responder y uvicorn escribe su traceback: el *handler* no lo evita.~~ **Corregido en la
+  pasada 3:** el 500 lo responde el middleware ASGI `ContencionDeErroresInesperados`, que no relanza (el manejador de
+  `Exception` desaparece), así que uvicorn ya no registra el traceback con el mensaje del error.
+- **Pasada 3 (Gate 2 vuelta 2, autorizada 2026-10-17):**
+  - *Generador:* `GeneradorFallandoCerrado` envuelve a cualquier `EvidenceGenerator` dentro del servicio: excepción
+    inesperada o valor que no es `RagQueryInternalResponse` → `LlmLocalNoDisponibleError` (`503 LOCAL_LLM_UNAVAILABLE`),
+    con solo la clase del error y el `traceId` en el log. Cuando L1D-275 entregue la salida como flujo, el envoltorio
+    debe consumirla entera y validarla antes de devolver nada (nunca tokens sin validar).
+  - *`llm_provider`:* `ParametrosDeRecuperacion.llm_provider` es `LlmProvider` (enum del contrato); un texto fuera del
+    enum (p. ej. `fake`) falla al construir, no al serializar `meta`.
+  - *Compose (M3):* `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40` y `RERANK_TOP_N=10` provisionales hasta US-072,
+    con `${VAR:-valor}` para poder cambiarlos; `Settings` sigue sin valor por defecto en código.
+  - *Filtro:* en los patrones `like` se escapan `\`, `%` y `_` (el literal duplica la barra, `\\_`; la igualdad exacta no
+    se escapa) y el código de `cancerType` admite como máximo 64 caracteres; más largo → `422 TIPO_CANCER_NO_REGISTRADO`.
+    La sintaxis `\\_` está comprobada contra la documentación de Milvus, no contra un Milvus real en esta pasada.
+  - *Contrato del 422:* excepción E-1 de oasdiff declarada y acotada + ADR-26 (decisión del usuario, 2026-10-17).
 - **Umbral:** "sobre el umbral" es estricto (`>`): un chunk con puntaje igual al umbral no cuenta (supuesto).
 - **`traceId`:** una sola fuente por petición: el del cuerpo de `/rag/query` (es el `X-Trace-Id` del contrato); lo usan los
   logs del servicio y los manejadores de error de esa ruta. Antes de leer el cuerpo (401, 422 de validación) se mantiene

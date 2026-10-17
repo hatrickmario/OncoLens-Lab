@@ -16,8 +16,9 @@
 
 - [x] 1.1 (test después; primera tarea del change, skill `sync-contracts`) `contract(L1D-106)` `[S1 resp. 12]`: en `apps/rag-orchestrator/openapi.yaml`, `503` de `POST /rag/query` como `oneOf [ErrorLlmLocalNoDisponible, ErrorRecuperacionNoDisponible]` con la descripción de design.md `## Contratos`; schema nuevo `ErrorRecuperacionNoDisponible` (`error: const RETRIEVAL_UNAVAILABLE`); en la misma subida `[S1 resp. 35]`, el `422` de `POST /rag/query` añade al `oneOf` el schema nuevo `ErrorTipoCancerNoRegistrado` (`error: const TIPO_CANCER_NO_REGISTRADO`) y actualiza su descripción; `info.version` 1.1.0 → 1.2.0 `[S1 resp. 37]`. Verificación: diff igual al de design.md.
 - [x] 1.2 (test después) Ejemplos nuevos `contracts/examples/rag-recuperacion-no-disponible.json` y `contracts/examples/rag-tipo-cancer-no-registrado.json` `[S1 resp. 35]` (sintéticos, sin eco) y sus entradas en `contracts/examples/index.json` (`spec: rag-orchestrator`, `target: #/paths/~1rag~1query/post/responses/503` y `…/422`). Después `contracts:generate` (Pydantic y cliente TS, sin edición manual) y `contracts:check` en verde.
-- [ ] 1.3 (test después) `contracts:breaking` (oasdiff contra `main`, `--fail-on ERR`): sin `ERR`; los hallazgos esperados son el warning `response-body-wrapped-in-one-of-original-preserved` y, a lo sumo, un `WARN`/`INFO` por la alternativa nueva del `oneOf` del `422`, declarados en el PR (design.md `## Contratos`). Si aparece un `ERR`, detener y declararlo (ADR-26). Commit `contract(L1D-106)`.
-  - **PENDIENTE DE DECISIÓN (2026-10-16):** `scripts/ci/contracts-breaking.sh origin/main` reporta 1 `ERR` (`response-body-one-of-added`: alternativa `ErrorTipoCancerNoRegistrado` añadida al `oneOf` del `422`) además del warning esperado; design.md preveía a lo sumo `WARN`/`INFO`. La CI no tiene *bypass* hasta US-214. Ver el reporte del implementador.
+- [x] 1.3 (test después) `contracts:breaking` (oasdiff contra `main`, `--fail-on ERR`): sin `ERR`; los hallazgos esperados son el warning `response-body-wrapped-in-one-of-original-preserved` y, a lo sumo, un `WARN`/`INFO` por la alternativa nueva del `oneOf` del `422`, declarados en el PR (design.md `## Contratos`). Si aparece un `ERR`, detener y declararlo (ADR-26). Commit `contract(L1D-106)`.
+  - **RESUELTO (usuario, 2026-10-17):** el `ERR` `response-body-one-of-added` del `422` se acepta como **excepción declarada y acotada** E-1 (`scripts/ci/contracts-breaking-excepciones.json`, filtro `scripts/ci/lib/excepcionesDeContrato.mjs`, registrada en `docs/architecture/adr/ADR-26-contrato-congelado-y-excepciones-declaradas.md`); no se usa un código propio 400/424 ni el enum común. Con la excepción, `contracts-breaking.sh origin/main` sale 0; cualquier otro ERR sigue rompiendo.
+  - (histórico) **PENDIENTE DE DECISIÓN (2026-10-16):** `scripts/ci/contracts-breaking.sh origin/main` reporta 1 `ERR` (`response-body-one-of-added`: alternativa `ErrorTipoCancerNoRegistrado` añadida al `oneOf` del `422`) además del warning esperado; design.md preveía a lo sumo `WARN`/`INFO`. La CI no tiene *bypass* hasta US-214. Ver el reporte del implementador.
 
 ## 2. ai-services
 
@@ -41,6 +42,17 @@
 
 - [x] 3.1 (evaluate) Si el PR fija o cambia el valor por defecto de `RELEVANCE_THRESHOLD`, correr `run-ai-eval` (precisión de "sin evidencia" M-10.1, recall@10 / MRR M-06.1); si la suite aún no existe (US-072, S2), evaluación manual de `ai-eval-runner` con FX-06a-a. Verificación: reporte en `reports/eval/` enlazado en el PR, o constancia de que el valor por defecto no cambió.
   - **Constancia:** este change no introduce ningún valor por defecto de `RELEVANCE_THRESHOLD`, `RETRIEVAL_TOP_K` ni `RERANK_TOP_N` (en `Settings` son `None` y con `LLM_PROVIDER=local` el arranque se niega siempre si faltan, aunque no haya puertos reales: en ese caso `/rag/query` responde `503 RETRIEVAL_UNAVAILABLE`, Gate 2 vuelta 1, Q1 b); los tests usan 0,30 y 0,90. La calibración y su medición (M-10.1, M-06.1) llegan con US-072/US-073.
+  - **Actualización (pasada 3, 2026-10-17, decisión del usuario):** el **Compose** (no el código) pasa `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40` y `RERANK_TOP_N=10` como valores **provisionales hasta US-072**, para que el stack arranque con `LLM_PROVIDER=local`. Son los mismos valores de los tests (FX-06a-a), sin medición propia; `Settings` sigue sin valor por defecto. La medición de calidad de ese umbral sigue pendiente de US-072/US-073 (no se afirma ninguna métrica).
+
+## 3b. Pasada 3 acotada (Gate 2 vuelta 2; autorizada por el usuario el 2026-10-17)
+
+- [x] 3b.1 (TDD) Middleware ASGI `ContencionDeErroresInesperados` (`app/api/contencion_de_errores.py`): responde el 500 fijo y no relanza la excepción, así uvicorn no escribe el traceback con la pregunta (privacy FAIL de la vuelta 2). Sustituye al manejador de `Exception`.
+- [x] 3b.2 (TDD) `GeneradorFallandoCerrado` (`app/application/generador_fallando_cerrado.py`): toda excepción o valor que no sea `RagQueryInternalResponse` del generador es `503 LOCAL_LLM_UNAVAILABLE` del contrato, sin mensaje ni traceback.
+- [x] 3b.3 (TDD) `ParametrosDeRecuperacion.llm_provider` es el enum `LlmProvider` validado.
+- [x] 3b.4 (test después) Compose con los tres valores provisionales (ver 3.1). **Claves para el humano** (no se editó ningún `.env.example`): `RELEVANCE_THRESHOLD=0.30`, `RETRIEVAL_TOP_K=40`, `RERANK_TOP_N=10`, con el comentario "provisional hasta US-072".
+- [x] 3b.5 (TDD) `escapar_patron_like()` (`\`, `%`, `_`) en los patrones `like` de `expresion_vigente_del_tipo()`; el literal duplica la barra (`\\_`). Caso con Milvus real en `test_recuperacion_en_milvus.py` (`-m servicios_reales`, no ejecutado en esta pasada: sin Milvus local).
+- [x] 3b.6 (TDD) `LONGITUD_MAXIMA_DE_CODIGO = 64` para el código de `cancerType`; más largo es `422 TIPO_CANCER_NO_REGISTRADO` (sin cambio de contrato).
+- [x] 3b.7 Excepción E-1 de `contracts-breaking.sh` + ADR-26 (ver 1.3).
 
 ## 4. Verificación
 
