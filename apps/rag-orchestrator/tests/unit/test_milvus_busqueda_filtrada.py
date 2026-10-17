@@ -22,7 +22,9 @@ class _ClienteMilvusEspia:
 
 
 def _repositorio(cliente: _ClienteMilvusEspia) -> MilvusRepository:
-    ajustes = ajustes_de_milvus("http://milvus-de-test:19530", nombre_de_coleccion_de_test("filtro"))
+    ajustes = ajustes_de_milvus(
+        "http://milvus-de-test:19530", nombre_de_coleccion_de_test("filtro")
+    )
     return MilvusRepository(cliente, ajustes)  # type: ignore[arg-type]
 
 
@@ -49,6 +51,8 @@ def test_search_dense_rechaza_el_filtro_que_no_exige_is_current_sin_llamar_a_mil
     cliente = _ClienteMilvusEspia()
 
     with pytest.raises(ValueError):
-        _repositorio(cliente).search_dense([0.0] * 8, limit=5, filtro='cancer_type_tags like "%mama%"')
+        _repositorio(cliente).search_dense(
+            [0.0] * 8, limit=5, filtro='cancer_type_tags like "%mama%"'
+        )
 
     assert cliente.busquedas == []

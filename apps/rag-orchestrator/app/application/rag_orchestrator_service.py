@@ -224,6 +224,8 @@ class RAGOrchestratorService:
         """
         try:
             return await asyncio.to_thread(funcion, *argumentos)
-        except Exception as error:
-            logger.warning("event=recuperacion_fallo etapa=%s error=%s", etapa, type(error).__name__)
+        except Exception as error:  # noqa: BLE001 - todo fallo de un borde es "recuperación no disponible"
+            logger.warning(
+                "event=recuperacion_fallo etapa=%s error=%s", etapa, type(error).__name__
+            )
             raise RecuperacionNoDisponibleError(etapa) from None

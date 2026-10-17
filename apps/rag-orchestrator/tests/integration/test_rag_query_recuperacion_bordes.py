@@ -127,7 +127,9 @@ class _RerankerRoto(RerankerFalso):
 
 
 @pytest.mark.parametrize("puntajes", [[1.2, 0.5], [0.5]])
-def test_rag_query_responde_503_retrieval_unavailable_cuando_el_reranker_rompe_su_contrato(puntajes):
+def test_rag_query_responde_503_retrieval_unavailable_cuando_el_reranker_rompe_su_contrato(
+    puntajes,
+):
     entorno = crear_entorno(reranker=_RerankerRoto(puntajes))
 
     respuesta = entorno.consultar(solicitud_de(Q_HER2))

@@ -17,7 +17,10 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.application.ports import (
+    ChunkDelCorpus,
     ChunkEncontrado,
+    ChunkSearch,
+    CorpusChunkStore,
     Idioma,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
@@ -113,6 +116,34 @@ _VECTOR_DE_LA_PREGUNTA = {Q_HER2: _vector(e0=1.0), Q_SIN: _vector(e1=1.0), Q_TOX
 _VECTOR_DEL_RESUMEN = _vector(e3=1.0)
 
 
+EPOCA_FIJA_MS = 1_760_000_000_000  # reloj congelado de los arneses (2025-10-09T08:53:20Z)
+
+
+def chunk_del_corpus(chunk: ChunkFx) -> ChunkDelCorpus:
+    return ChunkDelCorpus(
+        chunk_id=chunk.chunk_id,
+        document_id=chunk.document_id,
+        dense_vector=chunk.vector,
+        chunk_text=chunk.texto,
+        chunk_index=0,
+        section="resultados",
+        source_type="guideline",
+        language="en",
+        cancer_type_tags=chunk.cancer_type_tags,
+        population="adulto",
+        study_design="guia",
+        published_year=2025,
+        is_current=chunk.es_vigente,
+        created_at_ms=EPOCA_FIJA_MS,
+    )
+
+
+def cargar_fx06a_en_milvus(almacen: CorpusChunkStore) -> int:
+    """Script de carga de FX-06a-a en la colección de test (Milvus real): crea la colección y devuelve los chunks."""
+    almacen.ensure_collection()
+    return almacen.insert_chunks([chunk_del_corpus(c) for c in CORPUS_FX06A])
+
+
 class EmbedderFalso:
     """``QueryEmbedder``: vector fijo por pregunta de fixture; cualquier otro texto (el resumen del contexto) e3."""
 
@@ -143,7 +174,9 @@ class BuscadorFalso:
     Registra cada expresión recibida: el test comprueba lo que se envió a Milvus, no solo el resultado.
     """
 
-    def __init__(self, chunks: Sequence[ChunkFx] = CORPUS_FX06A, error: Exception | None = None) -> None:
+    def __init__(
+        self, chunks: Sequence[ChunkFx] = CORPUS_FX06A, error: Exception | None = None
+    ) -> None:
         self._chunks = list(chunks)
         self.error = error
         self.expresiones: list[str] = []
@@ -152,7 +185,9 @@ class BuscadorFalso:
     def invocaciones(self) -> int:
         return len(self.expresiones)
 
-    def search_dense(self, vector: Sequence[float], limit: int, filtro: str) -> list[ChunkEncontrado]:
+    def search_dense(
+        self, vector: Sequence[float], limit: int, filtro: str
+    ) -> list[ChunkEncontrado]:
         self.expresiones.append(filtro)
         if self.error is not None:
             raise self.error
@@ -276,7 +311,7 @@ def crear_entorno(
     *,
     parametros: ParametrosDeRecuperacion = PARAMETROS_DE_PRUEBA,
     embedder: EmbedderFalso | None = None,
-    buscador: BuscadorFalso | None = None,
+    buscador: ChunkSearch | None = None,
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
 ) -> EntornoDeRecuperacion:
@@ -299,15 +334,15 @@ def crear_entorno(
         settings_de_prueba(), trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=servicio
     )
     # Sin relanzar excepciones del servidor: un esqueleto o un fallo se ve como 500, no como error del test.
-    cliente = TestClient(app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion()))
+    cliente = TestClient(
+        app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
+    )
     return EntornoDeRecuperacion(
         cliente, embedder, buscador, reranker, generador, lector_release, servicio
     )
 
 
-def solicitud_de(
-    pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama"
-) -> dict[str, Any]:
+def solicitud_de(pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama") -> dict[str, Any]:
     """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
     base = json.loads((EJEMPLOS / "rag-query-request.json").read_text(encoding="utf-8"))
     solicitud = copy.deepcopy(base)

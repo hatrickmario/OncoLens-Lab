@@ -42,9 +42,7 @@ def _prohibidos(solicitud: dict) -> list[str]:
 @pytest.mark.parametrize(
     "escenario", ["con_evidencia", "sin_evidencia", "milvus_caido", "tipo_de_cancer_ausente"]
 )
-def test_rag_query_no_registra_pregunta_contexto_seudonimo_ni_chunks_en_los_logs(
-    escenario, caplog
-):
+def test_rag_query_no_registra_pregunta_contexto_seudonimo_ni_chunks_en_los_logs(escenario, caplog):
     pregunta = Q_SIN if escenario == "sin_evidencia" else Q_HER2
     solicitud = _solicitud_con_pii_sembrada(pregunta)
     if escenario == "milvus_caido":
@@ -59,7 +57,9 @@ def test_rag_query_no_registra_pregunta_contexto_seudonimo_ni_chunks_en_los_logs
 
     entorno.consultar(solicitud)
 
-    assert caplog.records, "el escenario debe dejar al menos un log para que la comprobación sea significativa"
+    assert caplog.records, (
+        "el escenario debe dejar al menos un log para que la comprobación sea significativa"
+    )
     for registro in caplog.records:
         texto = registro.getMessage() + (registro.exc_text or "")
         for prohibido in _prohibidos(solicitud):
