@@ -77,6 +77,7 @@ export const SUPUESTO_S1_DE_TEST =
   'Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes.';
 /** Plazo corto REAL: el temporizador que aborta la llamada es del runtime; el reloj de la aplicación sí está congelado. */
 export const RAG_TIMEOUT_MS_DE_TEST = 150;
+const RESPUESTA_TARDIA_MS = 2000;
 
 export const idDePaciente = (letra: 'a' | 'b' | 'c' | 'd' | 'e'): string =>
   idSembrado(`paciente-${letra}`);
@@ -132,7 +133,8 @@ export interface CapturaDeRag {
 export type EscenarioDeRag =
   | { tipo: 'json'; status: number; cuerpo: object; cabeceras?: Record<string, string> }
   | { tipo: 'red' }
-  | { tipo: 'sin_respuesta' };
+  /** No responde dentro de `RAG_TIMEOUT_MS`: contesta con evidencia, pero mucho después del plazo. */
+  | { tipo: 'tardia' };
 
 const ESCENARIO_POR_DEFECTO: EscenarioDeRag = {
   tipo: 'json',
@@ -170,9 +172,9 @@ export function ragSimulado(): RagSimulado {
         cuerpo: JSON.parse(texto) as Record<string, unknown>,
       });
       if (escenario.tipo === 'red') return HttpResponse.error();
-      if (escenario.tipo === 'sin_respuesta') {
-        await delay('infinite');
-        return HttpResponse.error();
+      if (escenario.tipo === 'tardia') {
+        await delay(RESPUESTA_TARDIA_MS);
+        return HttpResponse.json(respuestaEjemplo);
       }
       return HttpResponse.json(escenario.cuerpo, {
         status: escenario.status,
