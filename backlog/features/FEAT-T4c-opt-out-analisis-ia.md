@@ -66,6 +66,12 @@ documentos.
   este paciente" sin la referencia ni el motivo de la marca, y el botón "Analizar
   evidencia" está deshabilitado; la ficha y la vista de caso se ven completas.
   `[RN-15]` `[RN-10]` (asumido en el texto)
+- **AC-9 (borde · paciente real sin convenio)** · Dado un paciente real con
+  `agreement_reference` `NULL` (sin convenio registrado: el consentimiento no se presume),
+  cuando se solicita cualquier generación con IA (el análisis y, cuando existan, resumen del
+  caso, re-ejecución y búsqueda complementaria), entonces responde `403`, el cliente de
+  `rag-orchestrator` registra cero llamadas y no se crea ningún registro de IA. `[RN-15]`
+  (deuda registrada tras L1D-168: `data-model.md` difiere esta verificación a esta historia)
 
 ## Contexto técnico
 Guardia `OptOutGuard` en `clinical-api` (módulo `opt-outs`), aplicado como *middleware*

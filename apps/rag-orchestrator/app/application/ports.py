@@ -1,5 +1,7 @@
 """Puertos de la capa de aplicación. Cada change de rag-orchestrator añade aquí los suyos."""
 
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -34,3 +36,56 @@ class ServiceTokenVerifierPort(Protocol):
     """Verifica el JWT de servicio de `clinical-api`; lanza `TokenServicioInvalido(motivo)` si no es válido."""
 
     def verificar(self, token: str | None) -> None: ...
+
+
+class DimensionDeVectorInvalida(ValueError):
+    """El vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección; no se insertó ningún chunk."""
+
+
+@dataclass(frozen=True)
+class ChunkDelCorpus:
+    """Un chunk listo para indexar (data-model §4.7). ``sparse_vector`` ausente = sin poblar (S1, US-058 AC-3).
+
+    ``created_at_ms`` es la época en milisegundos y la entrega quien llama (reloj inyectado, nunca el del repositorio).
+    """
+
+    chunk_id: str
+    document_id: str
+    dense_vector: Sequence[float]
+    chunk_text: str
+    chunk_index: int
+    section: str
+    source_type: str
+    language: str
+    cancer_type_tags: str
+    population: str
+    study_design: str
+    published_year: int
+    is_current: bool
+    created_at_ms: int
+    sparse_vector: Mapping[int, float] | None = None
+
+
+@dataclass(frozen=True)
+class ChunkEncontrado:
+    chunk_id: str
+    document_id: str
+    chunk_text: str
+    similitud_dense: float
+    """Similitud dense de Milvus según ``MILVUS_DENSE_METRIC_TYPE``. NO es ``relevance_score`` (RN-03): no ordena opciones."""
+
+
+class CorpusChunkStore(Protocol):
+    """Almacén vectorial de chunks del corpus (Milvus). Lo consumen L1D-106 (recuperación) y L1D-115 (ingesta).
+
+    ``search_dense`` solo devuelve chunks ``is_current`` (RN-05). Un vector de dimensión distinta a ``EMBEDDING_DIM``
+    se rechaza con un error y no cambia el conteo.
+    """
+
+    def ensure_collection(self) -> bool:
+        """Crea la colección si no existe (``True``) o la deja intacta si coincide con el esquema (``False``)."""
+        ...
+
+    def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int: ...
+
+    def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]: ...

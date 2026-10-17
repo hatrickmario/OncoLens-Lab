@@ -79,6 +79,8 @@ Tablas del schema `corpus` (US-058). Roles y permisos (US-040). Seed (US-039).
 **Small** ✓ un `schema.prisma` transcrito de un DDL ya congelado (US-033) y una migración.
 **Testable** ✓ siete aserciones sobre el catálogo de PostgreSQL y restricciones, en un test de integración.
 
+> **Deuda (2026-10-16, tras L1D-168):** `ai_analysis_record` es inmutable solo frente a `UPDATE` (trigger `BEFORE UPDATE`, RN-06); nada impide `DELETE` ni `TRUNCATE`. Falta un *trigger* de base de datos que bloquee `DELETE` y `TRUNCATE` sobre `clinical.ai_analysis_record` (sentencia `BEFORE TRUNCATE` y fila `BEFORE DELETE` que lanzan error; `analysis_follow_up` y `analysis_feedback` ya usan `ON DELETE RESTRICT` hacia ella). No se añade como tarea de US-038 (entregada con L1D-168) ni de US-053 / L1D-104 (que solo escribe y lee el registro): propuesta de historia futura, ID a asignar en el planning (el último publicado es US-230) (técnica, 2 puntos, dueña de la tabla: FEAT-PL2), con test de integración contra PostgreSQL real; a decidir en el planning. Sin ID publicado ni Linear todavía.
+
 ---
 
 ## US-039 — El seed sintético carga los pacientes de demo y se niega a correr en el entorno piloto
@@ -90,6 +92,8 @@ Tablas del schema `corpus` (US-058). Roles y permisos (US-040). Seed (US-039).
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** US-046 (cifrado e índice ciego) y US-041 (montaje del catálogo) llegan en el S2. En el S1 el seed crea los pacientes (a)–(e) **sin** fila en `identity.patient_identity` (el walking skeleton solo usa el UUID) y toma los códigos CIE-10 del subconjunto versionado en `packages/clinical-catalogs`; las identidades sintéticas cifradas las agrega el seed con US-046 (S2, AC-6).
 
 > **Actualizada en el refinamiento del S1 (2026-10-13):** DEC-04 dejó sin efecto el *workaround* Q-07 (solo CIE-10), así que el AC-4 pasa a la regla general de RN-27; la paciente (b) usa `diagnosis_grading` según DEC-05, validada `[S1 resp. 1]`.
+
+> **Decidido (usuario, 2026-10-20), circularidad con US-211:** L1D-197 crea `doc1@test.local` con un *fixture* local de tests y el *hasher* de US-211 (`createPasswordHasher()`), sin depender de este seed; esta historia **adopta después** ese *hasher* y el usuario `doc1` en el seed (AC-1 sin cambios). Dependencia sin reordenar oleadas (`backlog/sprints/S1-plan.md` §10, decisión 56).
 
 ## Story
 Como equipo de desarrollo, quiero un seed idempotente con los cinco pacientes

@@ -90,20 +90,7 @@ if git diff --cached --name-only | grep -q '^openspec/' && command -v openspec >
   fi
   rm -f "$TMP"
 fi
-# 5) Lint y formato (US-215, [S1 resp. 23]): solo si hay código staged y los scripts ya existen en el
-# package.json raíz (los crea L1D-265); antes de eso, el paso se omite.
-CODE_RE='\.([cm]?[jt]sx?|css|py)$'
-if git diff --cached --name-only --diff-filter=ACMR | grep -qE "$CODE_RE" && [ -f package.json ] && [ -d node_modules ]; then
-  for S in lint format:check; do
-    if node -e 'process.exit(require("./package.json").scripts?.[process.argv[1]] ? 0 : 1)' "$S" 2>/dev/null; then
-      TMP="$(mktemp)"
-      if ! npm run -s "$S" >"$TMP" 2>&1; then
-        echo "OncoLens · npm run $S falla (US-215). Corrige antes de commitear:" >&2; tail -20 "$TMP" >&2; FAIL=1
-      fi
-      rm -f "$TMP"
-    fi
-  done
-fi
+# Lint y formato (ESLint, Prettier, Ruff): no se corren aquí; los cubre la CI (decisión 2026-10-20).
 
 [ "$FAIL" = "1" ] && exit 2
 exit 0

@@ -521,6 +521,18 @@ Ninguna. Todos los IDs provisionales quedaron reconciliados (verificación: `gre
 - **Lote 3:** US-HU10-01 → US-134 (+ US-135, UI) · US-FR11-01 → US-136 · US-HU25-01 → US-137 (+ US-138, US-139) · US-RN13-01 → US-143 · US-RN15-01 → US-148 (+ US-149, marcas por CLI).
 - **Lote 4:** US-FR12-01 → **US-177** (re-ejecución que recalcula faltantes, FEAT-11a) · US-RN17-01 → **US-198** (`422` por egresado, FEAT-T4b) · US-FR15-01 → **US-204** (`403` por equipo tratante, FEAT-T4e). En el lote 4 se retiraron de las cabeceras de historia las anotaciones "absorbe US-…" y las tablas locales de IDs provisionales (FEAT-04): esta nota es la única fuente de las equivalencias.
 
+## Deuda registrada, ID por asignar (usuario, 2026-10-20)
+
+Historias de deuda nacidas de las decisiones del usuario sobre la Oleada 4 (`backlog/sprints/S1-plan.md` §10). **Sin ID publicado**: no existen en Linear ni en el recuento de puntos; el ID (`US-nnn` / `L1D-nn`) y la estimación los asigna el planning o `/sprint-refine`, sin reutilizar ni reordenar los publicados. Las etiquetas D-1…D-3 son locales a esta sección.
+
+| Etiqueta | Título | Feature | Origen | Alcance y condición de salida | Sprint |
+|---|---|---|---|---|---|
+| **D-1** | `clinical-api`: repositories sobre Prisma Client (auth) | FEAT-T4a | Decisión 4 | Migrar `auth.repository.ts` (L1D-197, implementado sobre `pg`) a Prisma Client. Prisma 7 exige `@prisma/adapter-pg` y un cliente generado que aún no están en el repo. Condición: tests de integración de `auth` sin cambios en verde, sin `vi.mock` de Prisma. | por asignar (≥ S2) |
+| **D-2** | `web`: Tailwind v4 + shadcn/ui (chore pequeño) | FEAT-PL1 | Decisión 5 | Instalar Tailwind v4 y shadcn/ui y migrar `/login` de CSS Modules (provisional) a los tokens de `docs/ux/sistema-de-diseno.md`. **Debe mergearse antes de L1D-140** (US-061, panel de opción y citas). | S1, antes de L1D-140 (por confirmar) |
+| **D-3** | Playwright y perfil de test en Compose | FEAT-PL1 | Decisión 7 | Playwright contra Compose en perfil de test con `LLM_PROVIDER=fake`, para los E2E y el `visual-check` de `/login`. Hasta entonces quedan **pendientes** el `visual-check` de L1D-197 y sus tareas E2E (2.12 pasa a L1D-103, 3.3, 3.5). | por asignar |
+
+Excepciones y deudas menores sin historia propia (registradas en su historia dueña): `WEB_HOME_PATH` con el UUID del paciente semilla en `/login`, aceptado hasta US-048 (US-211); CSP y cabeceras anti-clickjacking en `/login`, excepción nombrada hasta US-216 (S6); `ALLOW_CC_BY_NC` aceptado por ahora (US-012).
+
 ## Publicación en Linear (F6, 2026-10-07)
 
 Proyecto `OncoLens-1` (`P-L1D-1`), equipo `L1D`. El Markdown es la fuente; Linear es el espejo. Cada Feature y cada historia lleva debajo de su título la línea `> Linear: [L1D-NN](…)`.

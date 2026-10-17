@@ -220,8 +220,24 @@ Ningún service ni builder importa un cliente HTTP o Prisma concreto: los recibe
 - **Ventana de RN-11/RN-06 entre merges** → mitigada con adaptadores provisionales que no muestran resultados, un
   desidentificador provisional que falla cerrado fuera de datos sintéticos y de `APP_ENV ∈ {local,test}`
   `[S1 resp. 14d]`; el orquestador fusiona L1D-103 → L1D-104 → L1D-203 en oleadas consecutivas.
+- **AC-5 de US-211 heredado de L1D-197** (usuario, 2026-10-20, opción b) → el test de integración "la sesión no
+  llega a rag-orchestrator" usa el login real de `doc1` (L1D-197) y el MSW de este change, que ya captura cabeceras
+  y cuerpo; se cierra aquí sin test en rojo. Su par E2E (logs de `rag-orchestrator`, Playwright contra Compose con
+  `LLM_PROVIDER=fake`) queda **pendiente hasta la deuda D-3** (Playwright y perfil de test en Compose, ID por
+  asignar), registrada en tasks.md sin `.skip`. Requisito y escenarios en el delta de spec.
 - **AC-5 cruza a L1D-104** (`filters_applied` persistido) → este change verifica la parte del request; el test de
   aceptación se completa con la aserción de persistencia en L1D-104.
+
+- **Avisos del panel por fallos que no son clínicos (Gate 1 de `clinical-language-auditor`, usuario, 2026-10-20).**
+  (a) El fallo cerrado del desidentificador provisional (`502 ERROR_SERVICIO_IA`) **se muestra en el panel con el
+  mismo aviso neutro** que el resto de fallos de generación: "No se pudo generar el análisis en este momento.";
+  la clave vive en `apps/web/messages/es.json` y su dueño es L1D-140 (que añade `evidence.*`); este change no
+  toca `web` ni el literal. (b) `422 TIPO_CANCER_NO_REGISTRADO` es una **imposibilidad técnica** (sin tipo de
+  cáncer no se puede filtrar la evidencia), **no** un aviso clínico de RN-26: por eso corta antes de la IA y no se
+  presenta como "sin evidencia". El `message` de la API queda fijo ("Análisis no realizado: falta el tipo de
+  cáncer; no fue posible filtrar la evidencia."); el **panel de L1D-140 añade cómo continuar** ("Registre el
+  diagnóstico activo del paciente y vuelva a solicitar el análisis."), con la clave en `es.json` de L1D-140.
+  Ambos textos son informativos, sin lenguaje prescriptivo (RN-23).
 
 ## Pendiente de definir
 
@@ -233,3 +249,7 @@ Ningún service ni builder importa un cliente HTTP o Prisma concreto: los recibe
 - **Nombre de `ANALYSIS_MAX_OPTIONS`** (asumido; coordinar con L1D-275, que recorta a `maxOptions` en Backend 2).
 - ~~`manifest.json` mínimo en el S1~~: resuelto en el Gate 1 (2ª vuelta): lo crea L1D-169 (↪, creador único); este
   change solo lo lee y no crea ningún archivo en `packages/clinical-catalogs`.
+
+## Pendiente de decisión (Gate 1, privacy-guardian, 2026-10-20)
+
+- **`APP_ENV` dentro de Compose (`exigirEntornoSintetico()`):** (1) declarar `${APP_ENV:?APP_ENV obligatorio}` en el servicio `clinical-api` de `infra/docker/docker-compose.yml` (y en `clinical-seed`) como tarea explícita, de modo que el fallo cerrado por `APP_ENV ∉ {local,test}` proteja también el stack; o (2) declarar que dentro de Compose solo protege `data_origin`. **Recomendación: la opción 1.** No aplicada; decisión humana.

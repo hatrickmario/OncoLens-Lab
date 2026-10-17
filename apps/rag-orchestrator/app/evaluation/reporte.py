@@ -10,7 +10,9 @@ from typing import Any
 
 from app.evaluation.model_selection import Descarte, Medicion, Seleccion
 
-CLAVES_PROHIBIDAS = frozenset({"texto", "textos", "pregunta", "fragmento", "afirmacion", "cita", "chunk", "chunks"})
+CLAVES_PROHIBIDAS = frozenset(
+    {"texto", "textos", "pregunta", "fragmento", "afirmacion", "cita", "chunk", "chunks"}
+)
 
 
 def a_json_seguro(valor: Any) -> Any:
@@ -48,7 +50,10 @@ def escribir_reporte(ruta: Path, reporte: dict[str, Any]) -> None:
     if sospechosas:
         raise ValueError(f"el reporte no debe contener textos; claves sospechosas: {sospechosas}")
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    ruta.write_text(json.dumps(contenido, indent=2, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    ruta.write_text(
+        json.dumps(contenido, indent=2, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 def seleccion_a_dict(seleccion: Seleccion) -> dict[str, Any]:

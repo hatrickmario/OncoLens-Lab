@@ -98,6 +98,20 @@ Si el paciente existe pero no tiene diagnóstico activo (el contexto no tendría
 
 Regresión [RBAC `ai_analysis:create` → 403] activa desde S2 (US-045), que reemplaza la comprobación de rol y conserva este escenario. Regresión [RN-15 opt-out → 403] activa desde S6 (US-148). Regresión [RN-17 paciente egresado → 422] Post-MVP (US-198). Regresión [409 de catálogo] activa desde S2 (US-041).
 
+### Requirement: La sesión del doctor nunca llega a rag-orchestrator
+El valor del token de `oncolens_session` MUST NOT salir de `clinical-api`: los requests hacia `rag-orchestrator` SHALL llevar solo `Authorization: Bearer <jwt de servicio>` (capacidad `service-auth`, L1D-105) y ninguna cabecera `Cookie` ni cabecera copiada del request entrante; el token MUST NOT aparecer en cabeceras, cuerpos ni logs de `rag-orchestrator`. (Requisito heredado de L1D-197, usuario, 2026-10-20, opción b.)
+
+#### Scenario: El análisis con la cookie real no filtra el token hacia Backend 2 [US-211 AC-5] [FR-01] [OL-03]
+- **GIVEN** la cookie `oncolens_session` obtenida con el login de `doc1@test.local` y `rag-orchestrator` simulado que captura el request
+- **WHEN** se solicita un análisis sobre el paciente semilla (a) con esa cookie
+- **THEN** el request capturado hacia `rag-orchestrator` lleva `Authorization: Bearer <jwt>` y no lleva cabecera `Cookie`
+- **AND** el valor del token no aparece en ninguna cabecera ni en el cuerpo del request capturado
+
+#### Scenario: Los logs de rag-orchestrator no contienen el token de sesión [US-211 AC-5] [OL-03]
+- **GIVEN** el stack de Compose en perfil de test con `LLM_PROVIDER=fake` y un análisis solicitado desde el navegador con la cookie del login
+- **WHEN** se leen los logs de `rag-orchestrator` de ese intervalo
+- **THEN** ninguna línea contiene el valor del token de `oncolens_session` ni la palabra `oncolens_session`
+
 ### Requirement: El gateway no registra la pregunta ni el contexto en los logs
 Los logs que emite `clinical-api` al atender `POST /platform/evidence-analyses` MUST contener solo `traceId`, el UUID del paciente y códigos de resultado, y SHALL no contener la `query`, el `clinicalContext` ni identidad del paciente.
 
@@ -140,3 +154,5 @@ Mientras el puerto `ContextDeidentifier` use el adaptador provisional de este ch
 - **THEN** ambas respuestas son `502` con `error = ERROR_SERVICIO_IA` y el cliente de `rag-orchestrator` registra cero llamadas
 
 Regresión [RN-11 fallo cerrado `503 DESIDENTIFICACION_NO_DISPONIBLE`] activa desde S1 con el change de L1D-203, que sustituye este adaptador.
+
+Nota de presentación (Gate 1, usuario, 2026-10-20): el panel de L1D-140 muestra para este `502` el mismo aviso neutro "No se pudo generar el análisis en este momento." (clave de `es.json`, dueño L1D-140). El `422 TIPO_CANCER_NO_REGISTRADO` es una imposibilidad técnica, no un aviso clínico de RN-26, y su `message` es fijo; el panel añade cómo continuar ("Registre el diagnóstico activo del paciente y vuelva a solicitar el análisis."). Este change no modifica `web`.

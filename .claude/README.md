@@ -96,7 +96,7 @@ explícitamente con `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=3`.
 | `PreToolUse` Edit/Write | `guard-sensitive-paths.sh` | Bloquea `.env`, claves, certificados y rutas de datos reales |
 | `PreToolUse` Edit/Write | `require-active-change.sh` | Sin change activo no se edita `apps/`, `packages/`, `infra/`. Hotfix: crear `.claude/HOTFIX` o `ONCOLENS_HOTFIX=1` |
 | `PreToolUse` Edit/Write | `guard-generated.sh` | Bloquea la edición manual de lo generado desde el spec (`packages/api-contracts/src/`, que incluye los schemas Zod compartidos en `src/zod/`, y `apps/rag-orchestrator/app/schemas/generated/`): se regenera con `npm run contracts:generate` |
-| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged · **higiene de tests**: bloquea `.skip`/`.only`/`xit`/`xfail` añadidos y tests eliminados sin el *trailer* `Test-Removal:` (mover un test no cuenta) · `openspec validate --all --strict` |
+| `PreToolUse` Bash `git commit *` | `pre-commit-gate.sh` | Escaneo de secretos/PII en lo staged · **higiene de tests**: bloquea `.skip`/`.only`/`xit`/`xfail` añadidos y tests eliminados sin el *trailer* `Test-Removal:` (mover un test no cuenta) · `openspec validate --all --strict`. No corre lint ni formato (`lint`, `format:check`): los cubre la CI (decisión 2026-10-20) |
 | `PreToolUse` `mcp__playwright__*`, `mcp__chrome-devtools__*` | `guard-visual-loop.sh` | Loop visual solo contra `localhost`/`127.0.0.1` y nunca con `REAL_ANONYMIZED_ENABLED`/`REAL_IDENTIFIED_ENABLED` activos (entorno o `.env`) |
 
 Permisos: `gh pr merge` y los `push` forzados o directos a `main` están **denegados**: el merge es

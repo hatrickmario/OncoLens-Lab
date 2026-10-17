@@ -29,6 +29,11 @@ infra/docker/secrets/
 apps/web/tests
 apps/web/vitest*.config.ts
 
-# Código de medición de ADR-39: no se empaqueta en producción
+# Código de medición de ADR-39: no se empaqueta en producción. app/scripts va por LISTA BLANCA: se excluye entero y se
+# reincorporan solo los scripts de operación (US-058: el one-shot corpus-migrate corre con esta imagen). Cualquier otro
+# archivo, subdirectorio o artefacto de datos que aparezca en app/scripts queda fuera sin tocar este archivo.
 apps/rag-orchestrator/app/evaluation
 apps/rag-orchestrator/app/scripts
+!apps/rag-orchestrator/app/scripts/__init__.py
+!apps/rag-orchestrator/app/scripts/migrate_corpus_catalog.py
+!apps/rag-orchestrator/app/scripts/init_corpus_store.py
