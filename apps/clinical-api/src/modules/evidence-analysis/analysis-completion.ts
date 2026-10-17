@@ -5,7 +5,8 @@ import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AnalisisRepository } from './evidence-analysis.repository.js';
 import { armarRegistro, type RegistroDeAnalisis } from './analysis-record.js';
 import { aEvidenceAnalysis } from './evidence-analysis.mapper.js';
-import type { AnalysisBasisBuilder, AnalysisCompletion, RespuestaDeFallo } from './ports.js';
+import type { AnalysisBasisBuilder, AnalysisCompletion } from './ports.js';
+import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
 
 /** La respuesta de rag-orchestrator no cumple el contrato (o es incoherente): no se persiste ni se muestra. */
 export class RespuestaInternaInvalidaError extends Error {
@@ -55,12 +56,6 @@ export interface DependenciasDelCierre {
   disclaimer: string;
 }
 
-const FALLO_DEL_SERVICIO_IA: RespuestaDeFallo = {
-  status: 502,
-  codigo: 'ERROR_SERVICIO_IA',
-  resultado: 'error_servicio_ia',
-};
-
 /**
  * RN-06: el registro se persiste ANTES de responder. Resuelve solo cuando la escritura terminó y devuelve el registro
  * leído de la fila; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin sus detalles.
@@ -84,7 +79,8 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
   const { analisis, base, reloj, idsDeAnalisis, disclaimer } = dependencias;
   return {
     async completar(entrada) {
-      if (!entrada.respuesta.ok) return { tipo: 'fallo', respuesta: FALLO_DEL_SERVICIO_IA };
+      if (!entrada.respuesta.ok)
+        return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
       let respuesta: RagQueryInternalResponse;
       let topRelevanceScore: number | null;
       try {
@@ -92,7 +88,7 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
         topRelevanceScore = topRelevanceScorePersistible(respuesta);
       } catch (error) {
         if (error instanceof RespuestaInternaInvalidaError) {
-          return { tipo: 'fallo', respuesta: FALLO_DEL_SERVICIO_IA };
+          return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
         }
         throw error;
       }

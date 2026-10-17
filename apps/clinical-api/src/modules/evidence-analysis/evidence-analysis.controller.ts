@@ -11,6 +11,7 @@ import {
 } from '../../infrastructure/http-errores.js';
 import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import type { SesionAutenticada } from '../auth/auth.service.js';
+import { FalloDePersistenciaError } from './analysis-completion.js';
 import { TipoCancerNoRegistradoError } from './case-guards.js';
 import { DesidentificacionProvisionalRechazada } from './context-deidentifier.provisional.js';
 import { evidenceAnalysisRequestSchema } from './evidence-analysis.schema.js';
@@ -63,6 +64,11 @@ const CUERPO_INVALIDO: Rechazo = {
   codigo: 'CUERPO_INVALIDO',
   resultado: 'cuerpo_invalido',
 };
+const ERROR_INTERNO: Rechazo = {
+  status: 500,
+  codigo: 'ERROR_INTERNO',
+  resultado: 'error_de_persistencia',
+};
 const ERROR_SERVICIO_IA: Rechazo = {
   status: 502,
   codigo: 'ERROR_SERVICIO_IA',
@@ -81,6 +87,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
       resultado: 'tipo_cancer_no_registrado',
     };
   }
+  if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
   if (error instanceof DesidentificacionProvisionalRechazada) {
     return {
       ...ERROR_SERVICIO_IA,
