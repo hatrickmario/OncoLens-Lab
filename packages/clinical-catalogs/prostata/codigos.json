@@ -1,12 +1,12 @@
 {
   "entradas": [
     {
-      "terminoCanonico": "Deprivación androgénica",
-      "estandar": "atc",
-      "codigo": "L02AE02",
-      "nombreOficial": "leuprorelin",
-      "etiquetaEs": "Leuprorelina",
-      "versionFuente": "ATC/DDD Index 2026"
+      "terminoCanonico": "prostata",
+      "estandar": "cie10",
+      "codigo": "C61",
+      "nombreOficial": "Tumor maligno de la próstata",
+      "etiquetaEs": "Cáncer de próstata",
+      "versionFuente": "CIE-10 OMS/OPS · pendiente de verificar contra MinSalud/SISPRO"
     }
   ]
 }
