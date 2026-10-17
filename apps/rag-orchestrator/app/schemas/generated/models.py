@@ -853,6 +853,15 @@ class ErrorLlmLocalNoDisponible(BaseModel):
     traceId: str
 
 
+class ErrorInterno(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['ERROR_INTERNO']
+    message: str
+    traceId: str
+
+
 class ErrorRecuperacionNoDisponible(BaseModel):
     model_config = ConfigDict(
         extra='forbid',

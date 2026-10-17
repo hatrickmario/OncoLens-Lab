@@ -623,6 +623,12 @@ export type ErrorLlmLocalNoDisponible = {
     traceId: string;
 };
 
+export type ErrorInterno = {
+    error: 'ERROR_INTERNO';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorRecuperacionNoDisponible = {
     error: 'RETRIEVAL_UNAVAILABLE';
     message: string;
@@ -707,6 +713,10 @@ export type GetHealthData = {
 
 export type GetHealthErrors = {
     /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
+    /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
     503: ErrorLlmLocalNoDisponible;
@@ -750,6 +760,10 @@ export type RagQueryErrors = {
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
     /**
      * Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del LLM inválida o fuera de esquema) o recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings). Falla cerrada, sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
      */
@@ -798,6 +812,10 @@ export type AnswerFollowUpErrors = {
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
     /**
      * LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
@@ -850,6 +868,10 @@ export type ExtractDocumentErrors = {
      */
     422: ErrorValidacion;
     /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
+    /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */
     503: ErrorLlmLocalNoDisponible;
@@ -886,6 +908,10 @@ export type CaseSummaryErrors = {
      * Cola de inferencia llena.
      */
     429: ErrorColaInferenciaLlena;
+    /**
+     * Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10); no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+     */
+    500: ErrorInterno;
     /**
      * LLM local no disponible. Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
      */

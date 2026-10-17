@@ -431,6 +431,12 @@ export const zErrorLlmLocalNoDisponible = z.strictObject({
     traceId: z.string()
 });
 
+export const zErrorInterno = z.strictObject({
+    error: z.literal('ERROR_INTERNO'),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorRecuperacionNoDisponible = z.strictObject({
     error: z.literal('RETRIEVAL_UNAVAILABLE'),
     message: z.string(),

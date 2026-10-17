@@ -42,6 +42,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthStatus'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -93,6 +95,8 @@ paths:
                   - $ref: '#/components/schemas/ErrorTipoCancerNoRegistrado'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
             Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del
@@ -151,6 +155,8 @@ paths:
                   - $ref: '#/components/schemas/ErrorValidacion'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           description: >-
             LLM local no disponible (LOCAL_LLM_UNAVAILABLE). Con datos reales solo se usan
@@ -225,6 +231,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorValidacion'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -262,6 +270,8 @@ paths:
                 $ref: '#/components/schemas/ErrorValidacion'
         "429":
           $ref: '#/components/responses/ColaInferenciaLlena'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "503":
           $ref: '#/components/responses/LlmLocalNoDisponible'
 
@@ -313,6 +323,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+    ErrorInterno:
+      description: >-
+        Fallo inesperado que ningún borde tradujo. Cuerpo fijo, sin detalle ni eco de la petición (RN-10);
+        no es un camino de negocio: nada se reintenta ni se completa con una respuesta parcial.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorInterno'
     DeadlineVencido:
       description: Deadline vencido; la generación se aborta.
       content:
@@ -1397,6 +1415,14 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: LOCAL_LLM_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorInterno:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ERROR_INTERNO }
         message: { type: string }
         traceId: { type: string }
     ErrorRecuperacionNoDisponible:
