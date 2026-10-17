@@ -18,7 +18,12 @@ from typing import Any
 
 import yaml
 
-from app.evaluation.chunking_variants import ESTRATEGIA_TAMANO_FIJO, ChunkCandidato, Seccion, Variante
+from app.evaluation.chunking_variants import (
+    ESTRATEGIA_TAMANO_FIJO,
+    ChunkCandidato,
+    Seccion,
+    Variante,
+)
 from app.evaluation.config_medicion import ModeloSpec, spec_desde_yaml
 from app.evaluation.dataset_loader import Dataset, Pregunta
 from app.evaluation.envoltorios import MonitorRss, pico_rss_mb
@@ -103,7 +108,8 @@ def cargar_config_a3(ruta: Path) -> ConfigA3:
         embedding=spec_desde_yaml("embeddings", emb),
         reranker=spec_desde_yaml("reranker", rer),
         escenarios=tuple(
-            Escenario(e["id"], int(e["chunk"]), int(e["max_length"]), int(e["max_pairs"]), e["rol"]) for e in crudo["escenarios"]
+            Escenario(e["id"], int(e["chunk"]), int(e["max_length"]), int(e["max_pairs"]), e["rol"])
+            for e in crudo["escenarios"]
         ),
         reglas=ReglasA3(
             presupuesto_redondeo_ms=float(r["presupuesto_redondeo_ms"]),
@@ -137,7 +143,11 @@ def redondear_hacia_arriba(valor_ms: float, multiplo_ms: float) -> float:
 
 def p95_extremo_a_extremo_ms(p95_reranker_ms: float, reglas: ReglasA3) -> float:
     """Cota superior del p95 de ``/platform/evidence-analyses``: suma de p95 de etapas + generación del LLM (supuesto)."""
-    return sum(reglas.p95_otras_etapas_ms.values()) + p95_reranker_ms + reglas.llm_generacion_ms_supuesto
+    return (
+        sum(reglas.p95_otras_etapas_ms.values())
+        + p95_reranker_ms
+        + reglas.llm_generacion_ms_supuesto
+    )
 
 
 def evaluar_extremo_a_extremo(p95_reranker_ms: float, reglas: ReglasA3) -> dict[str, Any]:
@@ -151,7 +161,9 @@ def evaluar_extremo_a_extremo(p95_reranker_ms: float, reglas: ReglasA3) -> dict[
     }
 
 
-def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Sequence[Escenario], config: ConfigA3) -> dict[str, Any]:
+def derivar_conclusiones(
+    agregados: dict[str, dict[str, Any]], escenarios: Sequence[Escenario], config: ConfigA3
+) -> dict[str, Any]:
     """Presupuesto del *reranker*, riesgo extremo a extremo y palancas viables, con las reglas fijadas antes de medir."""
     reglas = config.reglas
     por_rol = {e.rol: e for e in escenarios if e.rol in ("referencia", "vigente")}
@@ -172,9 +184,12 @@ def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Seque
                 "delta_recall_vs_vigente": recall - recall_vigente,
                 "p95_ms": a["p95_ms"],
                 "delta_p95_vs_vigente_ms": a["p95_ms"] - vigente["p95_ms"],
-                "dentro_de_tolerancia_de_calidad": dentro_de_tolerancia(recall, recall_vigente, config.tolerancia_empate),
+                "dentro_de_tolerancia_de_calidad": dentro_de_tolerancia(
+                    recall, recall_vigente, config.tolerancia_empate
+                ),
                 "dentro_del_presupuesto_original": a["p95_ms"] <= reglas.p95_viable_ms,
-                "viable": dentro_de_tolerancia(recall, recall_vigente, config.tolerancia_empate) and a["p95_ms"] <= reglas.p95_viable_ms,
+                "viable": dentro_de_tolerancia(recall, recall_vigente, config.tolerancia_empate)
+                and a["p95_ms"] <= reglas.p95_viable_ms,
                 "extremo_a_extremo": evaluar_extremo_a_extremo(a["p95_ms"], reglas),
             }
         )
@@ -189,7 +204,9 @@ def derivar_conclusiones(agregados: dict[str, dict[str, Any]], escenarios: Seque
     }
 
 
-def _conclusion_del_adoptado(agregados: dict[str, dict[str, Any]], config: ConfigA3, recall_base: float) -> dict[str, Any] | None:
+def _conclusion_del_adoptado(
+    agregados: dict[str, dict[str, Any]], config: ConfigA3, recall_base: float
+) -> dict[str, Any] | None:
     """Mismo presupuesto (p95 mediano redondeado) y riesgo extremo a extremo para el escenario que adopta el usuario."""
     if config.escenario_adoptado is None or config.escenario_adoptado not in agregados:
         return None
@@ -199,7 +216,9 @@ def _conclusion_del_adoptado(agregados: dict[str, dict[str, Any]], config: Confi
     return {
         "escenario": config.escenario_adoptado,
         "recall_at_10": recall,
-        "calidad_sostiene_la_base": dentro_de_tolerancia(recall, recall_base, config.tolerancia_empate),
+        "calidad_sostiene_la_base": dentro_de_tolerancia(
+            recall, recall_base, config.tolerancia_empate
+        ),
         "p95_ms": a["p95_ms"],
         "rss_max_mb": a["rss_max_mb"],
         "presupuesto_reranker_ms": presupuesto,
@@ -211,7 +230,9 @@ def _conclusion_del_adoptado(agregados: dict[str, dict[str, Any]], config: Confi
 # --- trabajo de un proceso --------------------------------------------------------------------------------------
 
 
-def _leer_candidatos(carpeta: Path) -> tuple[list[ChunkCandidato], dict[str, list[tuple[int, float]]]]:
+def _leer_candidatos(
+    carpeta: Path,
+) -> tuple[list[ChunkCandidato], dict[str, list[tuple[int, float]]]]:
     chunks = json.loads((carpeta / "chunks.json").read_text(encoding="utf-8"))
     crudos = json.loads((carpeta / "rankings.json").read_text(encoding="utf-8"))
     return (
@@ -239,11 +260,23 @@ def agregar_corridas_a3(corridas: Sequence[dict[str, Any]]) -> dict[str, Any]:
 # --- trabajo de un proceso --------------------------------------------------------------------------------------
 
 
-def ejecutar_trabajo_a3(trabajo: TrabajoA3, config: ConfigA3, dataset: Dataset, fabrica: Fabrica, reloj: Callable[[], float]) -> dict[str, Any]:
+def ejecutar_trabajo_a3(
+    trabajo: TrabajoA3,
+    config: ConfigA3,
+    dataset: Dataset,
+    fabrica: Fabrica,
+    reloj: Callable[[], float],
+) -> dict[str, Any]:
     """Mide un escenario en esta corrida y escribe el resultado en ``trabajo.salida`` (solo agregados)."""
     e = trabajo.escenario
     candidatos, rankings = _leer_candidatos(trabajo.directorio_candidatos)
-    reranker = fabrica.reranker(config.reranker, trabajo.directorio_onnx_reranker, config.cuantizacion, config.hilos_cpu, e.max_length)
+    reranker = fabrica.reranker(
+        config.reranker,
+        trabajo.directorio_onnx_reranker,
+        config.cuantizacion,
+        config.hilos_cpu,
+        e.max_length,
+    )
     rss_carga = MonitorRss().actual_mb()
     con_respuesta = [p for p in dataset.preguntas if p.modo_acierto != "sin_evidencia"]
     lotes = [
@@ -252,22 +285,41 @@ def ejecutar_trabajo_a3(trabajo: TrabajoA3, config: ConfigA3, dataset: Dataset, 
         if isinstance(p, Pregunta)
     ]
     with MonitorRss() as monitor:
-        tiempos = cronometrar(lambda lote: reranker.puntuar(lote[0], lote[1]), lotes, config.calentamiento, reloj)  # type: ignore[index]
+        tiempos = cronometrar(
+            lambda lote: reranker.puntuar(lote[0], lote[1]), lotes, config.calentamiento, reloj
+        )  # type: ignore[index]
     resultado: dict[str, Any] = {
         "escenario": e.id,
         "corrida": trabajo.corrida,
         "rss_carga_mb": rss_carga,
         "rss_max_mb": monitor.maximo_mb,
         "pico_rss_mb": pico_rss_mb(),
-        "latencia": {"p50_ms": mediana(tiempos), "p95_ms": percentil_95(tiempos), "max_ms": float(max(tiempos)), "n": len(tiempos)},
+        "latencia": {
+            "p50_ms": mediana(tiempos),
+            "p95_ms": percentil_95(tiempos),
+            "max_ms": float(max(tiempos)),
+            "n": len(tiempos),
+        },
     }
     if trabajo.calidad:
-        reordenado = reordenar_con_reranker(reranker, dataset.preguntas, rankings, candidatos, e.max_pairs)
+        reordenado = reordenar_con_reranker(
+            reranker, dataset.preguntas, rankings, candidatos, e.max_pairs
+        )
         denso = {k: v[: e.max_pairs] for k, v in rankings.items()}
         resultado["calidad"] = {
             "pares_por_consulta": e.max_pairs,
-            "metricas": agregar(evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_SIGMOIDE),
-            "metricas_densas_mismo_conjunto": agregar(evaluar_rankings(dataset.preguntas, denso, candidatos, config.k), config.semilla_bootstrap, config.bootstrap_repeticiones, escala_puntaje=ESCALA_COSENO),
+            "metricas": agregar(
+                evaluar_rankings(dataset.preguntas, reordenado, candidatos, config.k),
+                config.semilla_bootstrap,
+                config.bootstrap_repeticiones,
+                escala_puntaje=ESCALA_SIGMOIDE,
+            ),
+            "metricas_densas_mismo_conjunto": agregar(
+                evaluar_rankings(dataset.preguntas, denso, candidatos, config.k),
+                config.semilla_bootstrap,
+                config.bootstrap_repeticiones,
+                escala_puntaje=ESCALA_COSENO,
+            ),
         }
     serializable: dict[str, Any] = a_json_seguro(resultado)
     trabajo.salida.parent.mkdir(parents=True, exist_ok=True)
@@ -294,7 +346,9 @@ def preparar_candidatos(
     """Top-``pool`` densos por pregunta con chunks de ``tamano_chunk`` tokens; devuelve el número de chunks (caché en disco)."""
     if _candidatos_en_cache(destino, pool):
         return len(json.loads((destino / "chunks.json").read_text(encoding="utf-8")))
-    embedder = fabrica.embedder(config.embedding, dir_onnx_embedding, config.cuantizacion, config.hilos_cpu)
+    embedder = fabrica.embedder(
+        config.embedding, dir_onnx_embedding, config.cuantizacion, config.hilos_cpu
+    )
     tokenizador = fabrica.tokenizador(config.embedding, dir_onnx_embedding)
     variante = Variante(tamano_chunk, 0.0, ESTRATEGIA_TAMANO_FIJO)
     chunks = construir_corpus(secciones, tokenizador, variante)
@@ -303,7 +357,11 @@ def preparar_candidatos(
     rankings = recuperar_densos(embedder, vectores, dataset.preguntas, pool)
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "chunks.json").write_text(
-        json.dumps([{"documento": c.documento, "texto": c.texto, "seccion": c.seccion} for c in chunks], ensure_ascii=False), encoding="utf-8"
+        json.dumps(
+            [{"documento": c.documento, "texto": c.texto, "seccion": c.seccion} for c in chunks],
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
     )
     (destino / "rankings.json").write_text(json.dumps(rankings), encoding="utf-8")
     (destino / "pool.json").write_text(json.dumps({"pool": pool}), encoding="utf-8")
@@ -334,19 +392,41 @@ def ejecutar_fase_a3(
     chunks_por_tamano: dict[int, int] = {}
     for tamano in sorted({e.tamano_chunk for e in config.escenarios}):
         chunks_por_tamano[tamano] = preparar_candidatos(
-            config, tamano, pool, dataset, secciones, fabrica,
-            dir_modelos / "onnx" / config.embedding.directorio, cache_datos / "adr39" / "vectores", dir_corridas / f"candidatos-{tamano}",
+            config,
+            tamano,
+            pool,
+            dataset,
+            secciones,
+            fabrica,
+            dir_modelos / "onnx" / config.embedding.directorio,
+            cache_datos / "adr39" / "vectores",
+            dir_corridas / f"candidatos-{tamano}",
         )
     agregados: dict[str, dict[str, Any]] = {}
     no_medibles: dict[str, dict[str, Any]] = {}
     for e in config.escenarios:
         corridas = []
-        descripcion = {"tamano_chunk": e.tamano_chunk, "max_length": e.max_length, "max_pairs": e.max_pairs, "rol": e.rol, "numero_chunks": chunks_por_tamano[e.tamano_chunk]}
+        descripcion = {
+            "tamano_chunk": e.tamano_chunk,
+            "max_length": e.max_length,
+            "max_pairs": e.max_pairs,
+            "rol": e.rol,
+            "numero_chunks": chunks_por_tamano[e.tamano_chunk],
+        }
         try:
             for n in range(1, config.corridas + 1):
                 salida = dir_corridas / f"{e.id}-corrida{n}.json"
                 if not salida.exists():
-                    ejecutor(TrabajoA3(e, n, n == 1, dir_corridas / f"candidatos-{e.tamano_chunk}", dir_modelos / "onnx" / config.reranker.directorio, salida))
+                    ejecutor(
+                        TrabajoA3(
+                            e,
+                            n,
+                            n == 1,
+                            dir_corridas / f"candidatos-{e.tamano_chunk}",
+                            dir_modelos / "onnx" / config.reranker.directorio,
+                            salida,
+                        )
+                    )
                 corridas.append(json.loads(salida.read_text(encoding="utf-8")))
         except TrabajoFallido as exc:
             no_medibles[e.id] = {"estado": "no_medible", "motivo": str(exc), **descripcion}
@@ -355,13 +435,32 @@ def ejecutar_fase_a3(
     reporte = {
         "fase": "A3",
         "fecha": ahora().date().isoformat(),
-        "dataset": {"nombre": dataset.nombre, "version": dataset.version, "preguntas": len(dataset.preguntas)},
-        "reranker": {"modelo": config.reranker.modelo, "revision": config.reranker.revision, "cuantizacion": config.cuantizacion},
-        "embedding": {"modelo": config.embedding.modelo, "revision": config.embedding.revision, "cuantizacion": config.cuantizacion},
-        "protocolo": {"corridas": config.corridas, "calentamiento": config.calentamiento, "hilos_cpu": config.hilos_cpu, "lotes_por_corrida": config.lotes_por_corrida},
+        "dataset": {
+            "nombre": dataset.nombre,
+            "version": dataset.version,
+            "preguntas": len(dataset.preguntas),
+        },
+        "reranker": {
+            "modelo": config.reranker.modelo,
+            "revision": config.reranker.revision,
+            "cuantizacion": config.cuantizacion,
+        },
+        "embedding": {
+            "modelo": config.embedding.modelo,
+            "revision": config.embedding.revision,
+            "cuantizacion": config.cuantizacion,
+        },
+        "protocolo": {
+            "corridas": config.corridas,
+            "calentamiento": config.calentamiento,
+            "hilos_cpu": config.hilos_cpu,
+            "lotes_por_corrida": config.lotes_por_corrida,
+        },
         "escenarios": agregados,
         "escenarios_no_medibles": no_medibles,
-        "conclusiones": derivar_conclusiones(agregados, [e for e in config.escenarios if e.id in agregados], config),
+        "conclusiones": derivar_conclusiones(
+            agregados, [e for e in config.escenarios if e.id in agregados], config
+        ),
     }
     escribir_reporte(ruta_reporte, reporte)
     print(f"reporte: {ruta_reporte}")
@@ -370,14 +469,24 @@ def ejecutar_fase_a3(
 
 def trabajo_desde_json(carga: dict[str, Any]) -> TrabajoA3:
     return TrabajoA3(
-        Escenario(**carga["escenario"]), carga["corrida"], carga["calidad"], Path(carga["directorio_candidatos"]),
-        Path(carga["directorio_onnx_reranker"]), Path(carga["salida"]),
+        Escenario(**carga["escenario"]),
+        carga["corrida"],
+        carga["calidad"],
+        Path(carga["directorio_candidatos"]),
+        Path(carga["directorio_onnx_reranker"]),
+        Path(carga["salida"]),
     )
 
 
 def trabajo_a_json(trabajo: TrabajoA3) -> dict[str, Any]:
     return {
-        "escenario": {"id": trabajo.escenario.id, "tamano_chunk": trabajo.escenario.tamano_chunk, "max_length": trabajo.escenario.max_length, "max_pairs": trabajo.escenario.max_pairs, "rol": trabajo.escenario.rol},
+        "escenario": {
+            "id": trabajo.escenario.id,
+            "tamano_chunk": trabajo.escenario.tamano_chunk,
+            "max_length": trabajo.escenario.max_length,
+            "max_pairs": trabajo.escenario.max_pairs,
+            "rol": trabajo.escenario.rol,
+        },
         "corrida": trabajo.corrida,
         "calidad": trabajo.calidad,
         "directorio_candidatos": str(trabajo.directorio_candidatos),

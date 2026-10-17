@@ -21,7 +21,10 @@ RUTA_ADR = Path("docs/architecture/adr/ADR-39-modelos-locales.md")
 RUTA_ENV = Path("apps/rag-orchestrator/.env.example")
 RUTA_MODELO_DATOS = Path("docs/architecture/data-model.md")
 CLAVES_OBLIGATORIAS = ("EMBEDDING_DIM", "SPARSE_VECTOR_SOURCE")
-BLOQUE = re.compile(r"<!-- adr39:decision:inicio -->\s*```ya?ml\n(?P<yaml>.*?)```\s*<!-- adr39:decision:fin -->", re.DOTALL)
+BLOQUE = re.compile(
+    r"<!-- adr39:decision:inicio -->\s*```ya?ml\n(?P<yaml>.*?)```\s*<!-- adr39:decision:fin -->",
+    re.DOTALL,
+)
 REFERENCIA = re.compile(r"\b(?:US|ADR|RN|FR|OL|resp\.)[- ]?\d+\b")
 LITERAL_NUMERICO = re.compile(r"\b\d{2,}\b")
 
@@ -65,7 +68,9 @@ def dimension_con_literal(texto_modelo_datos: str) -> list[str]:
     return malas
 
 
-def problemas_de_claves_contra_entorno(decision: dict[str, str], entorno: dict[str, str]) -> list[str]:
+def problemas_de_claves_contra_entorno(
+    decision: dict[str, str], entorno: dict[str, str]
+) -> list[str]:
     """Claves faltantes, desconocidas o divergentes entre el bloque del ADR y ``.env.example``."""
     problemas = []
     for clave in CLAVES_OBLIGATORIAS:
@@ -75,10 +80,16 @@ def problemas_de_claves_contra_entorno(decision: dict[str, str], entorno: dict[s
         if clave not in CLAVES_ADR39:
             problemas.append(f"{RUTA_ADR}: clave desconocida {clave}")
         elif clave in entorno and entorno[clave] != esperado:
-            problemas.append(f"{clave}: configuración {entorno[clave]!r} difiere del ADR-39 {esperado!r}")
+            problemas.append(
+                f"{clave}: configuración {entorno[clave]!r} difiere del ADR-39 {esperado!r}"
+            )
         elif clave not in entorno and clave not in CLAVES_OBLIGATORIAS:
             problemas.append(f"{RUTA_ENV}: falta {clave}")
-    problemas.extend(f"{RUTA_ADR}: el bloque de decisión no fija {clave}" for clave in CLAVES_ADR39 if clave not in decision)
+    problemas.extend(
+        f"{RUTA_ADR}: el bloque de decisión no fija {clave}"
+        for clave in CLAVES_ADR39
+        if clave not in decision
+    )
     return problemas
 
 
@@ -94,16 +105,29 @@ def problemas_de_dimension_en_modelo_datos(raiz: Path) -> list[str]:
     modelo_datos = raiz / RUTA_MODELO_DATOS
     if not modelo_datos.exists():
         return []
-    return [f"{m}: la dimensión de dense_vector no puede ser un literal" for m in dimension_con_literal(modelo_datos.read_text(encoding="utf-8"))]
+    return [
+        f"{m}: la dimensión de dense_vector no puede ser un literal"
+        for m in dimension_con_literal(modelo_datos.read_text(encoding="utf-8"))
+    ]
 
 
 def chequear(raiz: Path) -> ResultadoChequeo:
     resultado = ResultadoChequeo()
-    decision = leer_bloque_decision((raiz / RUTA_ADR).read_text(encoding="utf-8")) if (raiz / RUTA_ADR).exists() else {}
+    decision = (
+        leer_bloque_decision((raiz / RUTA_ADR).read_text(encoding="utf-8"))
+        if (raiz / RUTA_ADR).exists()
+        else {}
+    )
     if not decision:
-        resultado.problemas.append(f"{RUTA_ADR}: sin bloque de decisión (adr39:decision) con la fase A cerrada")
+        resultado.problemas.append(
+            f"{RUTA_ADR}: sin bloque de decisión (adr39:decision) con la fase A cerrada"
+        )
         return resultado
-    entorno = leer_env((raiz / RUTA_ENV).read_text(encoding="utf-8")) if (raiz / RUTA_ENV).exists() else {}
+    entorno = (
+        leer_env((raiz / RUTA_ENV).read_text(encoding="utf-8"))
+        if (raiz / RUTA_ENV).exists()
+        else {}
+    )
     resultado.problemas.extend(problemas_de_claves_contra_entorno(decision, entorno))
     resultado.problemas.extend(problemas_de_configuracion_invalida(entorno))
     resultado.problemas.extend(problemas_de_dimension_en_modelo_datos(raiz))

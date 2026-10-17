@@ -29,7 +29,14 @@ def _con_plantilla(origen: str, tmp_path: Path) -> Path:
 def test_spec_desde_yaml_conserva_las_plantillas_del_modelo() -> None:
     spec = spec_desde_yaml(
         "embeddings",
-        {"id": "B", "modelo": "x/y", "revision": "a" * 40, "tarea": "embedding", "max_length": 8, "plantilla_consulta": PLANTILLA},
+        {
+            "id": "B",
+            "modelo": "x/y",
+            "revision": "a" * 40,
+            "tarea": "embedding",
+            "max_length": 8,
+            "plantilla_consulta": PLANTILLA,
+        },
     )
 
     assert spec.plantilla_consulta == PLANTILLA and spec.plantilla_documento == "{texto}"
@@ -37,30 +44,54 @@ def test_spec_desde_yaml_conserva_las_plantillas_del_modelo() -> None:
 
 def test_spec_desde_yaml_rechaza_una_tarea_desconocida() -> None:
     with pytest.raises(ValueError, match="tarea desconocida"):
-        spec_desde_yaml("nli", {"id": "A", "modelo": "x/y", "revision": "a" * 40, "tarea": "otra", "max_length": 8})
+        spec_desde_yaml(
+            "nli",
+            {"id": "A", "modelo": "x/y", "revision": "a" * 40, "tarea": "otra", "max_length": 8},
+        )
 
 
 def test_fase_a2_conserva_la_plantilla_de_consulta_del_embedding(tmp_path: Path) -> None:
     config = cargar_config_a2(_con_plantilla("adr39-fase-a2.yaml", tmp_path))
 
-    assert config.spec.plantilla_consulta == PLANTILLA and config.spec.plantilla_documento == "Doc: {texto}"
+    assert (
+        config.spec.plantilla_consulta == PLANTILLA
+        and config.spec.plantilla_documento == "Doc: {texto}"
+    )
 
 
 def test_fase_a3_conserva_la_plantilla_de_consulta_del_embedding(tmp_path: Path) -> None:
     config = cargar_config_a3(_con_plantilla("adr39-fase-a3.yaml", tmp_path))
 
-    assert config.embedding.plantilla_consulta == PLANTILLA and config.embedding.plantilla_documento == "Doc: {texto}"
+    assert (
+        config.embedding.plantilla_consulta == PLANTILLA
+        and config.embedding.plantilla_documento == "Doc: {texto}"
+    )
 
 
 def test_spec_desde_yaml_rechaza_codigo_remoto_sin_revision_del_codigo() -> None:
-    crudo = {"id": "C", "modelo": "x/y", "revision": "a" * 40, "tarea": "reranker_cls", "max_length": 8, "codigo_remoto": True}
+    crudo = {
+        "id": "C",
+        "modelo": "x/y",
+        "revision": "a" * 40,
+        "tarea": "reranker_cls",
+        "max_length": 8,
+        "codigo_remoto": True,
+    }
 
     with pytest.raises(ValueError, match="code_revision"):
         spec_desde_yaml("reranker", crudo)
 
 
 def test_spec_desde_yaml_conserva_la_revision_del_codigo_remoto() -> None:
-    crudo = {"id": "C", "modelo": "x/y", "revision": "a" * 40, "tarea": "reranker_cls", "max_length": 8, "codigo_remoto": True, "code_revision": "b" * 40}
+    crudo = {
+        "id": "C",
+        "modelo": "x/y",
+        "revision": "a" * 40,
+        "tarea": "reranker_cls",
+        "max_length": 8,
+        "codigo_remoto": True,
+        "code_revision": "b" * 40,
+    }
 
     assert spec_desde_yaml("reranker", crudo).code_revision == "b" * 40
 
