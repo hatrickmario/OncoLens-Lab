@@ -42,6 +42,7 @@ from app.evaluation.medicion_modelos import (
 from app.evaluation.model_selection import MedicionVariante, seleccionar_variante
 from app.evaluation.reporte import escribir_reporte
 from app.evaluation.retrieval_metrics import ESCALA_COSENO, agregar
+from app.infrastructure.milvus.schema import parametros_de_busqueda, parametros_de_construccion
 from app.evaluation.trabajos import Fabrica
 
 SALIDA_OK, SALIDA_PREVIA = 0, 6
@@ -97,16 +98,6 @@ def cargar_config_a2(ruta: Path) -> ConfigA2:
             crudo["base"]["estrategia"],
         ),
     )
-
-
-def separar_parametros_indice(tipo: str, plano: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """``VECTOR_INDEX_PARAMS`` plano (M, efConstruction, ef) → parámetros de construcción y de búsqueda de Milvus."""
-    if tipo != "HNSW":
-        return {"construccion": {}, "busqueda": {}}
-    return {
-        "construccion": {k: plano[k] for k in ("M", "efConstruction") if k in plano},
-        "busqueda": {"ef": plano["ef"]} if "ef" in plano else {},
-    }
 
 
 class PruebasChunking:
@@ -218,7 +209,10 @@ def prueba_indice(
     por_tipo: dict[str, Any] = {}
     flat_ids: list[list[int]] = []
     for tipo in config.indices:
-        parametros = separar_parametros_indice(tipo, config.parametros_hnsw)
+        parametros = {
+            "construccion": parametros_de_construccion(tipo, config.parametros_hnsw),
+            "busqueda": parametros_de_busqueda(tipo, config.parametros_hnsw),
+        }
         pasadas = [
             comparador.evaluar(vectores, consultas, tipo, parametros, config.k)
             for _ in range(config.consultas_latencia_indice)

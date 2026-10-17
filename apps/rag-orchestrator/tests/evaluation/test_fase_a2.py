@@ -17,7 +17,6 @@ from app.evaluation.fase_a2 import (
     SALIDA_PREVIA,
     ConfigA2,
     ejecutar_etapa_con_puertos,
-    separar_parametros_indice,
 )
 from app.evaluation.indices_milvus import (
     ColeccionProhibida,
@@ -216,13 +215,6 @@ def test_el_reporte_de_a2_no_contiene_textos(escenario) -> None:
     crudo = reporte.read_text()
     for texto in ("valor de P interaction en SET", "Valor de P interaction = 0.028"):
         assert texto not in crudo
-
-
-def test_separar_parametros_indice_divide_construccion_y_busqueda_de_hnsw() -> None:
-    separados = separar_parametros_indice("HNSW", {"M": 16, "efConstruction": 200, "ef": 64})
-
-    assert separados == {"construccion": {"M": 16, "efConstruction": 200}, "busqueda": {"ef": 64}}
-    assert separar_parametros_indice("FLAT", {"M": 16}) == {"construccion": {}, "busqueda": {}}
 
 
 def test_recall_frente_a_flat_es_la_fraccion_de_vecinos_exactos_recuperados() -> None:
