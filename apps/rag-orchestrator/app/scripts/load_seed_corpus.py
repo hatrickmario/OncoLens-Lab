@@ -77,7 +77,7 @@ def politica_de_licencias(
 def _fuente_de_texto(ajustes: CorpusSeedSettings) -> FuenteDeTextoDelManifiesto:
     descargador = (
         DescargadorHttps(
-            httpx.Client(timeout=ajustes.corpus_fetch_timeout_seconds),
+            httpx.Client(timeout=ajustes.corpus_fetch_timeout_seconds, trust_env=False),
             ajustes.corpus_fetch_allowed_hosts,
             ajustes.corpus_fetch_max_bytes,
             ajustes.corpus_fetch_deadline_seconds,
