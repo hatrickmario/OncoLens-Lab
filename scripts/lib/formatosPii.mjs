@@ -73,7 +73,11 @@ function estanEnLaRutaDeUnaUrl(linea, inicioDeLaClave, inicioDelValor) {
  */
 const esIdentificadorDeRegistro = (linea, inicioDelValor, valor, formato) =>
   /^\d{8}$/.test(valor) &&
-  (formato.prefijosDeRegistroExentos ?? []).some((prefijo) => linea.slice(Math.max(0, inicioDelValor - prefijo.length), inicioDelValor) === prefijo);
+  (formato.prefijosDeRegistroExentos ?? []).some((prefijo) => {
+    const inicioDelPrefijo = Math.max(0, inicioDelValor - prefijo.length);
+    // El prefijo no puede ser el final de otra palabra (XNCT00712140 no es un registro de ClinicalTrials.gov).
+    return linea.slice(inicioDelPrefijo, inicioDelValor) === prefijo && !/[\p{L}\p{N}]/u.test(linea.slice(inicioDelPrefijo - 1, inicioDelPrefijo));
+  });
 
 function exento(linea, coincidencia, formato) {
   const { valor, dominio } = coincidencia.groups;

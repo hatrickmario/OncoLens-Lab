@@ -8,7 +8,7 @@ El cliente ``pymilvus`` se inyecta (real en integración y E2E).
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from pymilvus import MilvusClient
@@ -25,10 +25,30 @@ from app.infrastructure.milvus.schema import (
     search_params,
 )
 
-
 CODIGO_PARAMETRO_INVALIDO = (
     1100  # código de Milvus para 'invalid parameter' (dimensión incorrecta incluida)
 )
+
+
+# Tope de entidades que Milvus devuelve en una consulta por filtro (offset + limit <= 16384).
+LIMITE_DE_CONSULTA = 16384
+
+
+def _exigir_completo(filas: Sequence[Any]) -> None:
+    """Milvus corta una consulta en ``LIMITE_DE_CONSULTA``: con exactamente ese número puede faltar el resto."""
+    if len(filas) >= LIMITE_DE_CONSULTA:
+        raise ConsultaTruncada(f"la consulta alcanzó el tope de {LIMITE_DE_CONSULTA} entidades")
+
+
+def _filtro_por_documento(document_id: str) -> str:
+    """``document_id == "<id>"``; el identificador lo genera el cargador, y una comilla o barra se rechaza igualmente."""
+    if '"' in document_id or "\\" in document_id:
+        raise ValueError("document_id no puede llevar comillas ni barras invertidas")
+    return f'document_id == "{document_id}"'
+
+
+class ConsultaTruncada(RuntimeError):
+    """La consulta devolvió exactamente el tope de Milvus: puede faltar el resto, y no se actúa con un resultado parcial."""
 
 
 class CorpusCollectionSchemaMismatch(RuntimeError):
@@ -104,17 +124,27 @@ class MilvusRepository:
         Lanza ``DimensionDeVectorInvalida`` si algún vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección;
         cualquier otro error de Milvus se propaga sin traducir.
         """
+        return self._escribir(self._cliente.insert, "insert_count", chunks)
+
+    def upsert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
+        """Inserta o reescribe por ``chunk_id`` (idempotente: reintentos y readmisión de una versión retirada).
+
+        Mismos errores que ``insert_chunks``.
+        """
+        return self._escribir(self._cliente.upsert, "upsert_count", chunks)
+
+    def _escribir(
+        self, operacion: Callable[..., Any], clave_del_conteo: str, chunks: Sequence[ChunkDelCorpus]
+    ) -> int:
         try:
-            resultado = self._cliente.insert(
-                self._coleccion, [self._fila(chunk) for chunk in chunks]
-            )
+            resultado = operacion(self._coleccion, [self._fila(chunk) for chunk in chunks])
         except MilvusException as error:
             if CODIGO_PARAMETRO_INVALIDO == error.code and "dim" in str(error):
                 raise DimensionDeVectorInvalida(
                     f"el vector dense no tiene la dimensión {self._ajustes.embedding_dim} de la colección"
                 ) from None
             raise
-        return int(resultado["insert_count"])
+        return int(resultado[clave_del_conteo])
 
     def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]:
         """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03)."""
@@ -136,6 +166,35 @@ class MilvusRepository:
             )
             for hit in resultados[0]
         ]
+
+    def marcar_no_vigentes(self, document_id: str) -> int:
+        """``is_current = false`` en los chunks vigentes del documento, sin borrar ninguno (RN-05).
+
+        Milvus no actualiza un campo suelto: se relee cada entidad con sus vectores y se reescribe con ``upsert`` por
+        ``chunk_id`` (mismo PK). Devuelve cuántos chunks cambió; sin vigentes, 0.
+        """
+        return self._reescribir_vigencia(document_id, desde=True)
+
+    def marcar_vigentes(self, document_id: str) -> int:
+        """``is_current = true`` en los chunks no vigentes del documento (reconciliación de la vigente del catálogo).
+
+        Mismo mecanismo y mismos errores que ``marcar_no_vigentes``; sin chunks apagados, 0.
+        """
+        return self._reescribir_vigencia(document_id, desde=False)
+
+    def _reescribir_vigencia(self, document_id: str, *, desde: bool) -> int:
+        filas = self._cliente.query(
+            self._coleccion,
+            filter=f"{_filtro_por_documento(document_id)} and is_current == {str(desde).lower()}",
+            output_fields=["*"],
+            limit=LIMITE_DE_CONSULTA,
+            consistency_level="Strong",
+        )
+        _exigir_completo(filas)
+        if not filas:
+            return 0
+        self._cliente.upsert(self._coleccion, [{**fila, "is_current": not desde} for fila in filas])
+        return len(filas)
 
     @staticmethod
     def _fila(chunk: ChunkDelCorpus) -> dict[str, Any]:
