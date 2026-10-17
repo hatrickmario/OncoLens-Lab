@@ -137,3 +137,21 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_invocar_al_llm_cuando_
     assert entorno.generador.invocaciones == 0
     assert "milvus-interno" not in respuesta.text
     assert Q_HER2 not in respuesta.text
+
+
+def test_rag_query_responde_422_tipo_cancer_no_registrado_sin_buscar_ni_invocar_al_llm_cuando_diagnosis_es_null():
+    entorno = crear_entorno()
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer=None))
+
+    assert respuesta.status_code == 422
+    cuerpo = respuesta.json()
+    assert_matches_spec(RESPUESTA_422, cuerpo)
+    assert cuerpo["error"] == "TIPO_CANCER_NO_REGISTRADO"
+    assert cuerpo["traceId"] == "req_00000001"
+    assert "status" not in cuerpo, "un contexto sin tipo de cáncer no es un sin_evidencia"
+    assert Q_HER2 not in respuesta.text
+    assert entorno.embedder.invocaciones == 0
+    assert entorno.buscador.invocaciones == 0
+    assert entorno.reranker.invocaciones == 0
+    assert entorno.generador.invocaciones == 0
