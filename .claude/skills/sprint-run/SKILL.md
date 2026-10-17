@@ -23,7 +23,8 @@ disable-model-invocation: true
      backlog/sprints/$sprint-status.md (créalo si no existe; si existe, reanuda). Mantén Linear
      sincronizado según tu sección «Sincronización con Linear»: In Progress al empezar el trabajo,
      In Review en pruebas/Gate 2/PR, de vuelta a In Progress si fallan las pruebas o aparece un bug,
-     y nunca Done (eso es de /sprint-close)."
+     y Done cuando la historia esté completada (todos sus PR mergeados y los criterios de tu sección); /sprint-close
+     la revisará a fondo y puede devolverla a In Review."
    - **Antes de lanzar o reanudar:** pide al orquestador reconciliar Linear con el status (si el status
      dice `en-curso` y el issue sigue en Backlog, pasarlo a In Progress).
 
@@ -37,7 +38,7 @@ disable-model-invocation: true
      con SendMessage. Si el orquestador ya no existe, vuelve a ejecutar `/sprint-run $sprint`:
      reanuda desde el archivo de estado.
    - Para ver el progreso: `backlog/sprints/$sprint-status.md`, `/tasks` o el tablero de Linear
-     (In Progress = trabajo en curso; In Review = en pruebas, Gate 2 o PR; Done lo pone /sprint-close).
+     (In Progress = trabajo en curso; In Review = en pruebas, Gate 2 o PR; Done = historia completada y mergeada, que /sprint-close revisa a fondo y puede devolver a In Review).
 
 4. Cuando el orquestador informe "Sprint listo para /sprint-close", propón `/sprint-close $sprint`.
 
