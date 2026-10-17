@@ -27,6 +27,7 @@ from app.application.rag_orchestrator_service import (
 )
 from app.config.logging import silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings
+from app.schemas.generated.models import LlmProvider
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -154,6 +155,10 @@ def _exigir_claves(valores: dict[str, object]) -> None:
         raise ConfiguracionDeRecuperacionIncompleta(
             f"falta configurar para /rag/query: {', '.join(ausentes)}"
         )
+
+
+def _proveedor_de_meta(settings: Settings) -> LlmProvider:
+    raise NotImplementedError("no implementado")
 
 
 def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
