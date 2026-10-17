@@ -1,6 +1,6 @@
 # ADR-26 — El contrato se cambia solo de forma aditiva; todo ERR de oasdiff que se acepte se declara aquí, uno por uno
 
-> Linear: L1D-106 (aplicación de la excepción E-1) · Historia: US-055 · Feature: FEAT-06a
+> Linear: L1D-106 (aplicación de E-1; E-2 en L1D-103) · Historia: US-055 · Feature: FEAT-06a
 > Plantilla: MADR 4 (variante mínima, en español).
 > **Origen del número:** ADR-26 es una decisión previa al backlog (`readme.md` §3.3 #26: contrato `EvidenceAnalysis` congelado) que hasta ahora solo se citaba en historias y en `readme.md` §4. Este archivo la formaliza y registra el único mecanismo de excepción. **Amplía su alcance**: la regla aditiva se extiende a todo `openapi.yaml` de proveedor y se define cómo se declara una excepción; no cambia la decisión original.
 
@@ -48,6 +48,7 @@ El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando r
 | Id | Proveedor | Hallazgo de oasdiff | Change | Motivo |
 |---|---|---|---|---|
 | E-1 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorTipoCancerNoRegistrado` añadido al `oneOf` del `422` | l1d-106-retrieval-threshold-sin-evidencia | Alternativa aditiva del `422`; el consumidor no depende de la lista cerrada de alternativas `[S1 resp. 35]` |
+| E-2 | clinical-api | `response-property-enum-value-added` en `POST /platform/evidence-analyses`: valor `TIPO_CANCER_NO_REGISTRADO` en `error` del `422` | l1d-103-gateway-contexto-clinico | Valor aditivo del `422`; los consumidores tratan `error` como cadena abierta y el BFF de L1D-139 lo propaga sin interpretarlo. Decidido (usuario, 2026-10-17), recomendada por el orquestador tras medir que el enum extensible no evita el ERR |
 
 ### Consecuencias
 
