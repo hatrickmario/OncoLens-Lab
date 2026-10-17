@@ -82,6 +82,9 @@ describe('POST /platform/auth/login', () => {
     );
     expect(fila?.['token_hash']).toBe(createHash('sha256').update(TOKEN_EMITIDO).digest('hex'));
     expect((fila?.['expires_at'] as Date).toISOString()).toBe('2026-10-16T20:00:00.000Z');
+    // Nunca se guarda la IP ni el user agent reales en el S1 (decisión 2026-10-20): ambas columnas quedan en null.
+    expect(fila?.['ip_address']).toBeNull();
+    expect(fila?.['user_agent']).toBeNull();
     for (const valor of Object.values(fila ?? {})) {
       expect(String(valor)).not.toContain(TOKEN_EMITIDO);
     }
