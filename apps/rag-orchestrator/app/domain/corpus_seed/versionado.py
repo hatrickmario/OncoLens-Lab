@@ -35,6 +35,8 @@ class Accion(StrEnum):
 class DecisionDeVersion:
     accion: Accion
     anterior_id: str | None = None
+    # Versiones del grupo cuyos chunks deben quedar no vigentes en Milvus (RN-05); la decide el dominio.
+    a_apagar: tuple[str, ...] = ()
 
 
 def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> DecisionDeVersion:

@@ -7,7 +7,7 @@ Acceptance tests de los AC de US-059 sobre FX-06c-a: textos sintéticos, embeddi
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 import pytest
@@ -22,6 +22,7 @@ from app.infrastructure.catalog.corpus_document_repository import CorpusDocument
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
+from tests.support.almacenes_falsos import AlmacenConFallosInyectables
 from tests.support.fakes import RelojFijo
 from tests.support.pg import BaseDeTest
 from tests.support.semilla import (
@@ -48,6 +49,7 @@ class Entorno:
     embedder: EmbedderFalso
     reloj: RelojFijo
     cargador: SeedCorpusLoader
+    almacen: AlmacenConFallosInyectables
 
     def cargar(self, *claves: str) -> ReporteDeCarga:
         return self.cargador.cargar(documentos_fx_06c_a(*claves))
@@ -76,6 +78,15 @@ class Entorno:
             consistency_level="Strong",
         )
 
+    def documentos_con_chunks_vigentes(self) -> set[str]:
+        filas = self.cliente.query(
+            self.coleccion,
+            filter="is_current == true",
+            output_fields=["document_id"],
+            consistency_level="Strong",
+        )
+        return {fila["document_id"] for fila in filas}
+
     def total_de_chunks(self) -> int:
         self.cliente.flush(self.coleccion)
         return int(self.cliente.get_collection_stats(self.coleccion)["row_count"])
@@ -102,8 +113,9 @@ def entorno(
     base_migrada: BaseDeTest, cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings
 ) -> Iterator[Entorno]:
     motor = crear_motor(base_migrada.url_runtime)
-    almacen = MilvusRepository(cliente_milvus, ajustes_milvus)
-    almacen.ensure_collection()
+    real = MilvusRepository(cliente_milvus, ajustes_milvus)
+    real.ensure_collection()
+    almacen = AlmacenConFallosInyectables(real)
     embedder, reloj = EmbedderFalso(), RelojFijo()
     cargador = SeedCorpusLoader(
         catalogo=CorpusDocumentRepository(motor),
@@ -119,7 +131,13 @@ def entorno(
         fecha_de_corte=FECHA_DE_CORTE_DE_TEST,
     )
     yield Entorno(
-        motor, cliente_milvus, ajustes_milvus.milvus_collection_name, embedder, reloj, cargador
+        motor,
+        cliente_milvus,
+        ajustes_milvus.milvus_collection_name,
+        embedder,
+        reloj,
+        cargador,
+        almacen,
     )
     with motor.begin() as conexion:
         for tabla in ("corpus_release_document", "corpus_release", "corpus_document"):
@@ -279,3 +297,40 @@ def test_carga_de_semilla_rechaza_t_nccn_por_fuente_excluida_aunque_declare_lice
     assert nccn["status"] == "rechazado_licencia" and nccn["license"] == "Dominio público"
     assert entorno.chunks_de(nccn["document_id"]) == []
     assert entorno.ids_en_la_release() == [ok["document_id"]]
+
+
+def test_tras_un_fallo_real_al_apagar_la_anterior_una_tercera_version_deja_vigentes_solo_sus_chunks(
+    entorno: Entorno,
+) -> None:
+    """Gemelo de integración (Milvus real) del Bloqueante RN-05 del Gate 2: v1 OK, v2 falla al apagar v1, v3 OK."""
+    entorno.cargar("t-ok-1")
+    entorno.almacen.fallar_al_apagar = ConnectionError("milvus caído")
+    entorno.cargar("t-ok-1-v2")
+    entorno.almacen.fallar_al_apagar = None
+    v3 = replace(
+        documentos_fx_06c_a("t-ok-1-v2")[0],
+        document_key="t-ok-1-v3",
+        texto="Tercera versión sintética del documento uno de mama.",
+    )
+
+    entorno.cargador.cargar([v3])
+
+    id_v3 = str(entorno.fila("t-ok-1-v3")["document_id"])
+    assert entorno.documentos_con_chunks_vigentes() == {id_v3}
+    assert (
+        entorno.fila("t-ok-1-v3")["is_current"] is True
+        and entorno.fila("t-ok-1")["is_current"] is False
+    )
+
+
+def test_volver_al_texto_de_v1_tras_un_fallo_real_no_deja_chunks_vigentes_de_v2(
+    entorno: Entorno,
+) -> None:
+    entorno.cargar("t-ok-1")
+    entorno.almacen.fallar_al_apagar = ConnectionError("milvus caído")
+    entorno.cargar("t-ok-1-v2")
+    entorno.almacen.fallar_al_apagar = None
+
+    entorno.cargar("t-ok-1")
+
+    assert entorno.documentos_con_chunks_vigentes() == {str(entorno.fila("t-ok-1")["document_id"])}

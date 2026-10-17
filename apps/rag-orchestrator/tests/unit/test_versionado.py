@@ -92,3 +92,45 @@ def test_el_checksum_es_el_sha256_hexadecimal_del_texto_normalizado() -> None:
 def test_el_checksum_cambia_con_un_solo_caracter_y_se_repite_con_el_mismo_texto() -> None:
     assert calcular_checksum("texto uno") == calcular_checksum("texto uno")
     assert calcular_checksum("texto uno") != calcular_checksum("texto dos")
+
+
+def test_reemplazar_apaga_la_vigente_anterior_y_toda_version_del_grupo_que_no_este_embebida() -> (
+    None
+):
+    existentes = [
+        version("a@1", "c1"),
+        version("a@2", "c2", vigente=False, status="error"),
+        version("a@rechazado", "", vigente=False, status="rechazado_licencia"),
+    ]
+
+    decision = decidir_version("c3", existentes)
+
+    assert decision.accion is Accion.REEMPLAZAR
+    assert set(decision.a_apagar) == {"a@1", "a@2", "a@rechazado"} and decision.anterior_id == "a@1"
+
+
+def test_insertar_apaga_las_versiones_no_embebidas_de_otro_contenido_pero_no_el_reintento_propio() -> (
+    None
+):
+    existentes = [
+        version("a@2", "c2", vigente=False, status="error"),
+        version("a@3", "c3", vigente=False, status="error"),  # el reintento del mismo contenido
+    ]
+
+    decision = decidir_version("c3", existentes)
+
+    assert decision.accion is Accion.INSERTAR and decision.a_apagar == ("a@2",)
+
+
+def test_omitir_tambien_apaga_los_chunks_de_las_versiones_no_embebidas_de_otro_contenido() -> None:
+    """Volver al texto de la versión vigente tras un fallo no deja vigentes los chunks de la que falló."""
+    existentes = [version("a@1", "c1"), version("a@2", "c2", vigente=False, status="error")]
+
+    decision = decidir_version("c1", existentes)
+
+    assert decision.accion is Accion.OMITIR and decision.a_apagar == ("a@2",)
+
+
+def test_sin_versiones_no_embebidas_ni_vigente_no_hay_nada_que_apagar() -> None:
+    assert decidir_version("c1", []).a_apagar == ()
+    assert decidir_version("c1", [version("a@1", "c1")]).a_apagar == ()

@@ -6,12 +6,13 @@ congelados. La integración con PostgreSQL y Milvus reales está en ``tests/inte
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import pytest
 
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
 from app.application.seed_corpus.seed_corpus_loader import SeedCorpusLoader
+from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import calcular_checksum
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
@@ -40,6 +41,13 @@ class Montaje:
 
     def cargar(self, *claves: str):
         return self.cargador.cargar(documentos_fx_06c_a(*claves))
+
+    def vigentes_en_milvus(self) -> set[str]:
+        return {c.document_id for c in self.almacen.chunks.values() if c.is_current}
+
+    def encontrados_por_busqueda(self) -> set[str]:
+        consulta = self.embedder.embeber(["consulta"])[0]
+        return {r.document_id for r in self.almacen.search_dense(consulta, limit=1000)}
 
     def estados(self) -> dict[str, str]:
         return {i.split("@")[0]: r.status for i, r in self.catalogo.documentos.items()}
@@ -219,6 +227,9 @@ def test_un_fallo_al_apagar_la_version_anterior_deja_vigente_a_la_anterior_y_el_
     assert reporte.resultado_de("t-ok-1-v2").resultado is Resultado.ERROR
     assert (anterior.is_current, anterior.status) == (True, "embebido")
     assert (nuevo.is_current, nuevo.status) == (False, "error")
+    # Milvus: la ventana que el diseño admite. Los chunks nuevos ya están y los de la anterior siguen vigentes; el
+    # catálogo es la verdad y la siguiente carga lo repara (ver los dos tests siguientes).
+    assert montaje.vigentes_en_milvus() == {anterior.document_id, nuevo.document_id}
 
 
 def test_reintentar_la_nueva_version_tras_ese_fallo_la_deja_vigente_y_apaga_la_anterior(
@@ -281,3 +292,42 @@ def test_una_carga_sin_documentos_no_publica_release_ni_toca_el_almacen(montaje:
 
     assert reporte.resultados == () and reporte.release_id is None
     assert montaje.almacen.chunks == {} and montaje.embedder.invocaciones == 0
+
+
+def version_3(montaje: Montaje) -> DocumentoDeSemilla:
+    v2 = documentos_fx_06c_a("t-ok-1-v2")[0]
+    return replace(
+        v2, document_key="t-ok-1-v3", texto="Tercera versión sintética del documento uno."
+    )
+
+
+def test_tras_un_fallo_al_apagar_la_anterior_una_tercera_version_deja_la_busqueda_solo_con_la_vigente(
+    montaje: Montaje,
+) -> None:
+    montaje.cargar("t-ok-1")
+    montaje.almacen.fallar_en["marcar_no_vigentes"] = ConnectionError("milvus caído")
+    montaje.cargar("t-ok-1-v2")
+    montaje.almacen.fallar_en.clear()
+
+    reporte = montaje.cargador.cargar([version_3(montaje)])
+
+    v3 = next(i for i in montaje.catalogo.documentos if i.startswith("t-ok-1-v3@"))
+    assert reporte.resultado_de("t-ok-1-v3").resultado is Resultado.NUEVA_VERSION
+    assert montaje.vigentes_en_milvus() == {v3}
+    assert montaje.encontrados_por_busqueda() == {v3}
+
+
+def test_volver_al_texto_de_v1_tras_ese_fallo_no_deja_chunks_vigentes_de_v2(
+    montaje: Montaje,
+) -> None:
+    montaje.cargar("t-ok-1")
+    montaje.almacen.fallar_en["marcar_no_vigentes"] = ConnectionError("milvus caído")
+    montaje.cargar("t-ok-1-v2")
+    montaje.almacen.fallar_en.clear()
+
+    reporte = montaje.cargar("t-ok-1")
+
+    v1 = next(i for i in montaje.catalogo.documentos if i.startswith("t-ok-1@"))
+    assert reporte.resultado_de("t-ok-1").resultado is Resultado.OMITIDO
+    assert montaje.vigentes_en_milvus() == {v1}
+    assert montaje.encontrados_por_busqueda() == {v1}

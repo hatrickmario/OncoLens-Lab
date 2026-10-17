@@ -107,3 +107,19 @@ class AlmacenDeChunksEnMemoria:
         for identificador in cambiados:
             self.chunks[identificador] = replace(self.chunks[identificador], is_current=False)
         return len(cambiados)
+
+
+class AlmacenConFallosInyectables:
+    """Envuelve un ``ChunkStore`` REAL (Milvus) e inyecta un error en ``marcar_no_vigentes``; el resto delega tal cual."""
+
+    def __init__(self, real: object) -> None:
+        self._real = real
+        self.fallar_al_apagar: Exception | None = None
+
+    def marcar_no_vigentes(self, document_id: str) -> int:
+        if self.fallar_al_apagar is not None:
+            raise self.fallar_al_apagar
+        return self._real.marcar_no_vigentes(document_id)  # type: ignore[attr-defined, no-any-return]
+
+    def __getattr__(self, nombre: str) -> object:
+        return getattr(self._real, nombre)
