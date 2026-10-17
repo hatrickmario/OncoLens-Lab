@@ -19,12 +19,12 @@ import {
   PacienteNoEncontradoError,
   type EvidenceAnalysisService,
 } from './evidence-analysis.service.js';
-import type { IdGenerator } from './ports.js';
+import type { TraceIdGenerator } from './ports.js';
 import { crearTraceIdMiddleware } from './trace-id.middleware.js';
 
 export interface DependenciasDelController {
   service: EvidenceAnalysisService;
-  ids: IdGenerator;
+  traceIds: TraceIdGenerator;
   registrar: Registrar;
 }
 
@@ -114,7 +114,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
  * códigos: nunca la pregunta, el contexto ni identidad (RN-10).
  */
 export function evidenceAnalysisController(dependencias: DependenciasDelController): Router {
-  const { service, ids, registrar } = dependencias;
+  const { service, traceIds, registrar } = dependencias;
   const router = Router();
 
   function traceIdDe(response: Response): string {
@@ -192,7 +192,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
 
   router.post(
     '/evidence-analyses',
-    crearTraceIdMiddleware(ids),
+    crearTraceIdMiddleware(traceIds),
     soloDoctor,
     express.json(),
     solicitar,

@@ -44,7 +44,7 @@ afterAll(async () => {
 });
 
 /** Un `traceId` propio por test: el registro de un test nunca se confunde con el de otro. */
-const gateway = (traceId: string) => montarGateway(mundo, { ids: { traceId: () => traceId } });
+const gateway = (traceId: string) => montarGateway(mundo, { traceIds: { traceId: () => traceId } });
 
 const cuerpoDelAnalisis = (query: string, extra: Record<string, unknown> = {}) => ({
   patientId: idDePaciente('a'),

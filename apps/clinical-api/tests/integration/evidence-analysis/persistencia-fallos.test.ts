@@ -62,7 +62,7 @@ afterAll(async () => {
   await mundo.cerrar();
 });
 
-const gateway = (traceId: string) => montarGateway(mundo, { ids: { traceId: () => traceId } });
+const gateway = (traceId: string) => montarGateway(mundo, { traceIds: { traceId: () => traceId } });
 
 async function solicitar(app: Awaited<ReturnType<typeof gateway>>['app']) {
   return request(app)

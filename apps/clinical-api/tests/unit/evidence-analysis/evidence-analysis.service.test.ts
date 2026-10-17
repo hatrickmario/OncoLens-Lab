@@ -126,7 +126,7 @@ function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null }
         return caso;
       },
     },
-    deidentificador: {
+    desidentificador: {
       desidentificar: async (entrada) => {
         llamadas.push('desidentificar');
         recibido.desidentificacion = entrada;
@@ -188,7 +188,7 @@ describe('crearEvidenceAnalysisService', () => {
 
   it('no llama a la IA ni cierra el análisis cuando el desidentificador rechaza', async () => {
     const { dependencias, llamadas } = crearFakes();
-    dependencias.deidentificador = {
+    dependencias.desidentificador = {
       desidentificar: async () => {
         llamadas.push('desidentificar');
         throw new DesidentificacionProvisionalRechazada('app_env');

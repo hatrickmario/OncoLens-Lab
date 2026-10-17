@@ -11,7 +11,10 @@ import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.j
 import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
 import { componerGatewayDeAnalisis } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
-import type { IdGenerator, PseudonymGenerator } from '../../src/modules/evidence-analysis/ports.js';
+import type {
+  TraceIdGenerator,
+  PseudonymGenerator,
+} from '../../src/modules/evidence-analysis/ports.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { readFileSync } from 'node:fs';
 import { appConAuth } from './app-auth.js';
@@ -203,7 +206,7 @@ export interface OpcionesDeGateway {
   appEnv?: string | undefined;
   /** Sustituye al generador de token de sesión (por defecto, valores fijos). */
   tokens?: GeneradorDeToken;
-  ids?: IdGenerator;
+  traceIds?: TraceIdGenerator;
   pseudonimos?: PseudonymGenerator;
   /** `ANALYSIS_MAX_OPTIONS` (por defecto 1, el valor del S1). */
   analysisMaxOptions?: number;
@@ -250,7 +253,7 @@ export async function montarGateway(
       analysisBasisAssumptionText: SUPUESTO_S1_DE_TEST,
     },
     reloj,
-    ids: opciones.ids ?? { traceId: () => TRACE_ID_GENERADO },
+    traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },
     idsDeAnalisis: mundo.idsDeAnalisis,
     pseudonimos: opciones.pseudonimos ?? pseudonimosFijos(),
     registrar: logger.registrar,

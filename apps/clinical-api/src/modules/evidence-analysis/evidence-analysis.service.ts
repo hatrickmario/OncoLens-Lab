@@ -37,7 +37,7 @@ export interface ConfiguracionDelAnalisis {
 
 export interface DependenciasDelService {
   casos: CasoRepository;
-  deidentificador: ContextDeidentifier;
+  desidentificador: ContextDeidentifier;
   rag: RagQueryClient;
   cierre: AnalysisCompletion;
   catalogo: CatalogVersionProvider;
@@ -132,7 +132,7 @@ async function consultarConPlazo(
 export function crearEvidenceAnalysisService(
   dependencias: DependenciasDelService,
 ): EvidenceAnalysisService {
-  const { casos, deidentificador, rag, cierre, catalogo, reloj, config } = dependencias;
+  const { casos, desidentificador, rag, cierre, catalogo, reloj, config } = dependencias;
   return {
     async solicitar({ traceId, userId, peticion }) {
       const caso = await casos.leerCaso(peticion.patientId);
@@ -141,7 +141,7 @@ export function crearEvidenceAnalysisService(
 
       const ahora = reloj.now();
       const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
-      const { clinicalContext, query } = await deidentificador.desidentificar({
+      const { clinicalContext, query } = await desidentificador.desidentificar({
         contexto,
         query: peticion.query,
         dataOrigin: caso.paciente.dataOrigin,

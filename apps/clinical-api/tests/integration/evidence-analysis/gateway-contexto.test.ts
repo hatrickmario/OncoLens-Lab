@@ -170,7 +170,7 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
 
 describe('gateway de análisis: los filtros recibidos quedan persistidos', () => {
   it('responde 200 y persiste filters_applied con ultimosSeisMeses en true cuando la petición trae el filtro [US-052 AC-5]', async () => {
-    const { app } = await montarGateway(mundo, { ids: { traceId: () => 'req_Filtros0001' } });
+    const { app } = await montarGateway(mundo, { traceIds: { traceId: () => 'req_Filtros0001' } });
 
     const respuesta = await request(app)
       .post('/platform/evidence-analyses')

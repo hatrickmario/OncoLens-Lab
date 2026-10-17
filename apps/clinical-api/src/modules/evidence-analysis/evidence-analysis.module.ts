@@ -15,7 +15,7 @@ import {
 import type {
   CatalogVersionProvider,
   ContextDeidentifier,
-  IdGenerator,
+  TraceIdGenerator,
   PseudonymGenerator,
   RagQueryClient,
 } from './ports.js';
@@ -35,13 +35,13 @@ export interface DependenciasDelGateway {
   catalogo: CatalogVersionProvider;
   config: ConfiguracionDelGateway;
   reloj: Clock;
-  ids: IdGenerator;
-  /** UUID de los `AIAnalysisRecord`; distinto de `ids`, que solo genera `traceId`. */
+  traceIds: TraceIdGenerator;
+  /** UUID de los `AIAnalysisRecord`; distinto de `traceIds`, que solo genera `traceId`. */
   idsDeAnalisis: GeneradorDeIds;
   pseudonimos: PseudonymGenerator;
   registrar: Registrar;
   /** Sustituye al provisional (L1D-203). */
-  deidentificador?: ContextDeidentifier;
+  desidentificador?: ContextDeidentifier;
 }
 
 /** Composición del módulo `evidence-analysis`: devuelve el router que se monta detrás del guard de sesión. */
@@ -49,8 +49,8 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
   const repositorio = createEvidenceAnalysisRepository(dependencias.db);
   const service = crearEvidenceAnalysisService({
     casos: repositorio,
-    deidentificador:
-      dependencias.deidentificador ??
+    desidentificador:
+      dependencias.desidentificador ??
       crearDesidentificadorProvisional({
         pseudonimos: dependencias.pseudonimos,
         appEnv: dependencias.config.appEnv,
@@ -71,7 +71,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
   });
   return evidenceAnalysisController({
     service,
-    ids: dependencias.ids,
+    traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
   });
 }

@@ -80,7 +80,7 @@ arrancar({
             analysisBasisAssumptionText: configuracion.analisis.analysisBasisAssumptionText,
           },
           reloj,
-          ids: { traceId: nuevoTraceId },
+          traceIds: { traceId: nuevoTraceId },
           idsDeAnalisis: randomUUID,
           pseudonimos: { nuevo: nuevoSeudonimo },
           registrar: registrarEnConsola,
