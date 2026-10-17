@@ -31,9 +31,34 @@ def documentos_fx_06c_a(*claves: str) -> tuple[DocumentoDeSemilla, ...]:
     return tuple(todos[c] for c in claves) if claves else tuple(todos.values())
 
 
-def politica_de_test(*, permitir_cc_by_nc: bool = False) -> PoliticaDeLicencias:
+def documento_de_prueba(**cambios: object) -> DocumentoDeSemilla:
+    """Documento sintético válido de mama con licencia NCI; ``cambios`` sustituye campos."""
+    base: dict[str, object] = {
+        "document_key": "d-1",
+        "version_group_id": "d-1",
+        "source_type": "guideline",
+        "source_name": "NCI",
+        "external_id": "sintetico",
+        "title": "Documento sintético",
+        "language": "es",
+        "cancer_type_tags": ("mama",),
+        "published_at": date(2025, 1, 15),
+        "study_design": "guia",
+        "population": "adulto",
+        "original_format": "html",
+        "license": "Texto de NCI libre de copyright",
+        "texto": "Texto sintético.",
+    }
+    return DocumentoDeSemilla(**{**base, **cambios})  # type: ignore[arg-type]
+
+
+def politica_de_test(
+    *,
+    permitir_cc_by_nc: bool = False,
+    aceptadas: frozenset[str] = frozenset({"dominio_publico", "cc_by", "cc_by_sa"}),
+) -> PoliticaDeLicencias:
     return PoliticaDeLicencias(
-        aceptadas=frozenset({"dominio_publico", "cc_by", "cc_by_sa"}),
+        aceptadas=aceptadas,
         excluidas=FUENTES_EXCLUIDAS_DE_TEST,
         mapa_de_clases=MAPA_DE_LICENCIAS_POR_DEFECTO,
         permitir_cc_by_nc=permitir_cc_by_nc,

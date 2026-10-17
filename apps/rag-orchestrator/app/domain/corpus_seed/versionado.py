@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
+
+
+def calcular_checksum(texto_normalizado: str) -> str:
+    """SHA-256 hexadecimal del texto YA normalizado: el mismo texto da siempre el mismo checksum."""
+    return hashlib.sha256(texto_normalizado.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
