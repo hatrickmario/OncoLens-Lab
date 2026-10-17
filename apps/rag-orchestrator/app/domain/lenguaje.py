@@ -21,14 +21,19 @@ _LONGITUD_MINIMA_PARA_FLEXION = 4
 _ENCLITICO = re.compile(r"(ar|er|ir)(los|las|les|lo|la|le|se)$")
 _PLURAL_VERBAL = re.compile(r"(an|en)$")
 _GENERO = re.compile(r"[aeo]$")
-_SEMVER = re.compile(r"\d+\.\d+\.\d+")
+_SEMVER = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 # Marca que ocupa el lugar de una frase permitida: ninguna clave de la lista la iguala.
 _HUECO = ""
 
 
 def normalizar_texto(texto: str) -> str:
-    """NFKD sin marcas, minúsculas, todo lo que no es letra ni dígito a espacio, espacios colapsados."""
-    sin_marcas = "".join(c for c in unicodedata.normalize("NFKD", texto) if _categoria(c) != "M")
+    """NFKD sin marcas Mn (no Mc ni Me, como TypeScript), ``lower()`` (no ``casefold()``).
+
+    Todo lo que no es letra ni dígito pasa a espacio y los espacios se colapsan.
+    """
+    sin_marcas = "".join(
+        c for c in unicodedata.normalize("NFKD", texto) if unicodedata.category(c) != "Mn"
+    )
     minusculas = sin_marcas.lower()
     return " ".join("".join(c if _es_letra_o_digito(c) else " " for c in minusculas).split())
 
@@ -170,6 +175,7 @@ class _Candidata:
 def check_prohibited_terms(
     texto: str,
     lista: ListaTerminos,
+    *,
     niveles: Sequence[Nivel] = ("A",),
     permitir_frases: bool = False,
 ) -> list[Coincidencia]:
