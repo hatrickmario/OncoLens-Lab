@@ -12,7 +12,7 @@ from datetime import date
 
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import (
-    ChunkStore,
+    ChunkStoreDeIngesta,
     CorpusCatalog,
     IdGenerator,
     PassageEmbedder,
@@ -66,7 +66,7 @@ class SeedCorpusLoader:
         self,
         *,
         catalogo: CorpusCatalog,
-        almacen_de_chunks: ChunkStore,
+        almacen_de_chunks: ChunkStoreDeIngesta,
         embedder: PassageEmbedder,
         fuente: SourceFetcher,
         reloj: Clock,
@@ -103,7 +103,7 @@ class SeedCorpusLoader:
         """Rechazo por licencia o fuente: retira la vigente del grupo (RN-21, RN-05) y registra el rechazo, sin borrar nada."""
         try:
             retirada = self._retirar_vigente_del_grupo(documento)
-        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             # Error, no rechazado, y sin fila de rechazo: la siguiente carga repite el retiro desde cero.
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"retiro: {type(error).__name__}"
@@ -152,7 +152,7 @@ class SeedCorpusLoader:
             )
         try:
             self._indexar(registro, fragmentos, vectores, preparado.decision)
-        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             return self._registrar_error(documento, admision, preparado.checksum, "milvus", error)
         return self._confirmar(documento, registro, preparado.decision, len(fragmentos))
 
@@ -184,7 +184,7 @@ class SeedCorpusLoader:
         """
         try:
             self._apagar(decision.a_apagar)
-        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStore (Milvus)
+        except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"milvus: {type(error).__name__}"
             )

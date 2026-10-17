@@ -1,6 +1,6 @@
 """Catálogo y almacén de chunks en memoria para los unitarios del cargador (US-059), con el contrato de los reales.
 
-Son fakes de los PUERTOS (``CorpusCatalog`` y ``ChunkStore``): conservan lo que el cargador necesita observar y cumplen
+Son fakes de los PUERTOS (``CorpusCatalog`` y ``ChunkStoreDeIngesta``): conservan lo que el cargador necesita observar y cumplen
 las mismas reglas que los adapters reales (LSP): ``guardar_documento`` es un *upsert* por ``document_id``,
 ``reemplazar_version`` es atómico, ``insert_chunks`` rechaza una dimensión distinta con ``DimensionDeVectorInvalida`` y
 ``marcar_no_vigentes`` no borra nada. ``fallar_en`` inyecta un error en un método para probar los fallos de dependencias.
@@ -125,7 +125,7 @@ class AlmacenDeChunksEnMemoria:
 
 
 class AlmacenConFallosInyectables:
-    """Envuelve un ``ChunkStore`` REAL (Milvus) e inyecta un error en ``marcar_no_vigentes``; el resto delega tal cual."""
+    """Envuelve un ``ChunkStoreDeIngesta`` REAL (Milvus) e inyecta un error en ``marcar_no_vigentes``; el resto delega tal cual."""
 
     def __init__(self, real: object) -> None:
         self._real = real

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from app.application.ports import CorpusChunkStore
+from app.application.ports import ChunkDelCorpus
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import VersionExistente
 
@@ -40,8 +40,13 @@ class SourceFetcher(Protocol):
     def obtener_texto(self, documento: DocumentoDeSemilla) -> str: ...
 
 
-class ChunkStore(CorpusChunkStore, Protocol):
-    """``CorpusChunkStore`` más lo que necesita el versionado (RN-05): consultar y apagar chunks por documento."""
+class ChunkStoreDeIngesta(Protocol):
+    """Lo que la ingesta necesita del almacén vectorial: insertar, listar por documento y apagar la vigencia (RN-05).
+
+    ``MilvusRepository`` lo cumple junto con ``CorpusChunkStore``; la ingesta no depende de la búsqueda ni de la colección.
+    """
+
+    def insert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int: ...
 
     def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]: ...
 

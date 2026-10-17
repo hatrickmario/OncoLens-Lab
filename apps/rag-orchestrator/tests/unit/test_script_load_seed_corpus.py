@@ -50,16 +50,24 @@ def test_una_clave_obligatoria_ausente_sale_con_1_nombrandola_sin_conectar(
 
 
 @pytest.mark.parametrize(("valor", "esperado"), [(None, False), ("true", True), ("false", False)])
-def test_la_politica_toma_allow_cc_by_nc_aunque_el_entorno_traiga_claves_parciales_de_adr39(
+def test_allow_cc_by_nc_se_lee_por_settings_aunque_el_entorno_traiga_claves_parciales_de_adr39(
     entorno: pytest.MonkeyPatch, valor: str | None, esperado: bool
 ) -> None:
     if valor is not None:
         entorno.setenv("ALLOW_CC_BY_NC", valor)
+
+    assert load_seed_corpus.allow_cc_by_nc_del_entorno() is esperado
+
+
+@pytest.mark.parametrize("permitir", [True, False])
+def test_la_politica_lleva_la_configuracion_del_cargador_y_el_permiso_recibido(
+    entorno: pytest.MonkeyPatch, permitir: bool
+) -> None:
     ajustes = CorpusSeedSettings(_env_file=None)  # type: ignore[call-arg]
 
-    politica = load_seed_corpus.politica_de_licencias(ajustes)
+    politica = load_seed_corpus.politica_de_licencias(ajustes, permitir)
 
-    assert politica.permitir_cc_by_nc is esperado
+    assert politica.permitir_cc_by_nc is permitir
     assert politica.aceptadas == {"dominio_publico", "cc_by", "cc_by_sa"}
     assert politica.excluidas == ("NCCN", "ESMO")
 

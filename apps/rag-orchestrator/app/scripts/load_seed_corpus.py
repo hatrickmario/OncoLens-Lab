@@ -36,8 +36,8 @@ from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
-from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.fetch.descargador_https import DescargadorHttps
+from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.ids.uuid_id_generator import UuidIdGenerator
 from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.seed_manifest.lector import ManifiestoInvalido, leer_manifiesto
@@ -54,10 +54,18 @@ def fabricar_embedder_real(ajustes: MilvusSettings) -> PassageEmbedder:
     )
 
 
-def politica_de_licencias(ajustes: CorpusSeedSettings) -> PoliticaDeLicencias:
-    # ``modelos=None`` evita que Settings exija TODO el bloque de ADR-39 solo porque el entorno trae EMBEDDING_DIM o
-    # CORPUS_CHUNK_SIZE: aquí solo se lee ``ALLOW_CC_BY_NC``, la misma clave que usa el cargador de datasets (RN-21).
-    permitir_cc_by_nc = Settings(_env_file=None, modelos=None).allow_cc_by_nc  # type: ignore[call-arg]
+def allow_cc_by_nc_del_entorno() -> bool:
+    """``ALLOW_CC_BY_NC`` por ``Settings`` (RN-21), la misma clave del cargador de datasets.
+
+    ``modelos=None`` evita que Settings exija TODO el bloque de ADR-39 solo porque el entorno trae EMBEDDING_DIM o
+    CORPUS_CHUNK_SIZE.
+    """
+    return Settings(_env_file=None, modelos=None).allow_cc_by_nc  # type: ignore[call-arg]
+
+
+def politica_de_licencias(
+    ajustes: CorpusSeedSettings, permitir_cc_by_nc: bool
+) -> PoliticaDeLicencias:
     return PoliticaDeLicencias(
         aceptadas=frozenset(ajustes.corpus_accepted_licenses),
         excluidas=ajustes.corpus_excluded_sources,
@@ -128,7 +136,7 @@ def main(embedder: PassageEmbedder | None = None, reloj: Clock | None = None) ->
         semilla = CorpusSeedSettings(_env_file=None)  # type: ignore[call-arg]
         milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
         base = CorpusDatabaseSettings(_env_file=None)  # type: ignore[call-arg]
-        politica = politica_de_licencias(semilla)
+        politica = politica_de_licencias(semilla, allow_cc_by_nc_del_entorno())
     except ValidationError as error:
         print(
             f"load_seed_corpus: configuración inválida en: {_claves_invalidas(error)}",
