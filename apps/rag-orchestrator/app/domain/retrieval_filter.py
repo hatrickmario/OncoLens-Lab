@@ -43,9 +43,8 @@ def expresion_vigente_del_tipo(
     ``ta`` con ``prostata``. Lanza ``ValueError`` si ``cancer_type`` no es un código de catálogo.
     """
     tipo = _exigir_codigo_de_catalogo(cancer_type, longitud_maxima)
-    patron = _literal_de_patron_like(
-        tipo
-    )  # `_` es comodín de `like`: se escapa (la igualdad no lo necesita)
+    # `_` es comodín de `like`: se escapa (la igualdad exacta no lo necesita).
+    patron = _literal_de_patron_like(tipo)
     etiqueta = (
         f'cancer_type_tags == "{tipo}" or cancer_type_tags like "{patron},%"'
         f' or cancer_type_tags like "%,{patron}" or cancer_type_tags like "%,{patron},%"'
