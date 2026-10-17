@@ -29,6 +29,7 @@ infra/docker/secrets/
 apps/web/tests
 apps/web/vitest*.config.ts
 
-# Código de medición de ADR-39: no se empaqueta en producción
+# Código de medición de ADR-39: no se empaqueta en producción. Los scripts de operación (migrate_corpus_catalog,
+# init_corpus_store; US-058) SÍ van: el one-shot corpus-migrate corre con esta imagen. Solo se excluyen los de medición.
 apps/rag-orchestrator/app/evaluation
-apps/rag-orchestrator/app/scripts
+apps/rag-orchestrator/app/scripts/adr39_*.py

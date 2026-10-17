@@ -1,4 +1,7 @@
-"""La imagen de producción no lleva el código de medición (app/evaluation, app/scripts); la de medición sí."""
+"""La imagen de producción no lleva el código de medición (app/evaluation, app/scripts/adr39_*); la de medición sí.
+
+Los scripts de operación (``migrate_corpus_catalog``, ``init_corpus_store``; US-058) viajan en la imagen: el one-shot
+``corpus-migrate`` corre con ella."""
 
 from __future__ import annotations
 
@@ -6,7 +9,8 @@ import ast
 from pathlib import Path
 
 RAIZ_APP = Path(__file__).resolve().parents[2]
-EXCLUIDOS = ("apps/rag-orchestrator/app/evaluation", "apps/rag-orchestrator/app/scripts")
+EXCLUIDOS = ("apps/rag-orchestrator/app/evaluation", "apps/rag-orchestrator/app/scripts/adr39_*.py")
+PREFIJOS_DE_MEDICION = ("app.evaluation", "app.scripts.adr39_")
 DOCKERIGNORE = RAIZ_APP / "Dockerfile.dockerignore"
 DOCKERIGNORE_RAIZ = RAIZ_APP.parents[1] / ".dockerignore"
 
@@ -35,7 +39,7 @@ def _modulos_absolutos(nodo: ast.AST, relativa: tuple[str, ...]) -> list[str]:
     if not isinstance(nodo, ast.ImportFrom):
         return []
     if nodo.level == 0:
-        return [nodo.module or ""]
+        return [nodo.module or "", *(f"{nodo.module}.{a.name}" for a in nodo.names)]
     paquete = ["app", *relativa[:-1]]
     base = paquete[: len(paquete) - (nodo.level - 1)]
     nombre = ".".join([*base, *([nodo.module] if nodo.module else [])])
@@ -47,22 +51,24 @@ def test_los_imports_relativos_a_evaluacion_o_scripts_se_resuelven_y_se_rechazan
     assert "app.evaluation.fase_a" in _modulos_absolutos(nodo, ("config", "x.py"))
     nodo = ast.parse("from . import scripts").body[0]
     assert "app.scripts" in _modulos_absolutos(nodo, ("x.py",))
+    nodo = ast.parse("from app.scripts import adr39_measure").body[0]
+    assert "app.scripts.adr39_measure" in _modulos_absolutos(nodo, ("x.py",))
 
 
-def test_el_dockerignore_de_la_imagen_de_produccion_excluye_evaluacion_y_scripts() -> None:
+def test_el_dockerignore_de_la_imagen_de_produccion_excluye_evaluacion_y_scripts_de_medicion() -> None:
     lineas = _lineas_del_dockerignore()
 
     assert all(excluido in lineas for excluido in EXCLUIDOS)
 
 
-def test_el_codigo_de_produccion_no_importa_evaluacion_ni_scripts() -> None:
+def test_el_codigo_de_produccion_no_importa_evaluacion_ni_scripts_de_medicion() -> None:
     ofensores = []
     for ruta in (RAIZ_APP / "app").rglob("*.py"):
         relativa = ruta.relative_to(RAIZ_APP / "app").parts
-        if relativa[0] in ("evaluation", "scripts"):
+        if relativa[0] == "evaluation" or relativa[-1].startswith("adr39_"):
             continue
         for nodo in ast.walk(ast.parse(ruta.read_text(encoding="utf-8"))):
-            ofensores += [f"{ruta.name}: {m}" for m in _modulos_absolutos(nodo, relativa) if m.startswith(("app.evaluation", "app.scripts"))]
+            ofensores += [f"{ruta.name}: {m}" for m in _modulos_absolutos(nodo, relativa) if m.startswith(PREFIJOS_DE_MEDICION)]
 
     assert ofensores == []
 
