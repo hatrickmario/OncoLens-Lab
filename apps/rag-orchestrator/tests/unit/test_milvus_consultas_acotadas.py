@@ -31,11 +31,6 @@ def repositorio(cliente: ClienteQueDevuelve) -> MilvusRepository:
     return MilvusRepository(cliente, ajustes_de_milvus("http://x", "corpus_test_unitario"))  # type: ignore[arg-type]
 
 
-def test_un_resultado_que_alcanza_el_tope_no_se_toma_por_completo_al_listar_ids() -> None:
-    with pytest.raises(ConsultaTruncada):
-        repositorio(ClienteQueDevuelve(LIMITE_DE_CONSULTA)).ids_de_chunks_del_documento("d")
-
-
 def test_un_resultado_que_alcanza_el_tope_no_se_reescribe_a_medias_al_apagar() -> None:
     cliente = ClienteQueDevuelve(LIMITE_DE_CONSULTA)
 
@@ -48,5 +43,4 @@ def test_un_resultado_que_alcanza_el_tope_no_se_reescribe_a_medias_al_apagar() -
 def test_un_resultado_por_debajo_del_tope_se_procesa_completo() -> None:
     cliente = ClienteQueDevuelve(LIMITE_DE_CONSULTA - 1)
 
-    assert len(repositorio(cliente).ids_de_chunks_del_documento("d")) == LIMITE_DE_CONSULTA - 1
     assert repositorio(cliente).marcar_no_vigentes("d") == LIMITE_DE_CONSULTA - 1

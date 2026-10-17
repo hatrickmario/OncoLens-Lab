@@ -25,7 +25,6 @@ from app.infrastructure.milvus.schema import (
     search_params,
 )
 
-
 CODIGO_PARAMETRO_INVALIDO = (
     1100  # código de Milvus para 'invalid parameter' (dimensión incorrecta incluida)
 )
@@ -125,16 +124,18 @@ class MilvusRepository:
         Lanza ``DimensionDeVectorInvalida`` si algún vector dense no tiene la dimensión ``EMBEDDING_DIM`` de la colección;
         cualquier otro error de Milvus se propaga sin traducir.
         """
-        return self._escribir(self._cliente.insert, chunks)
+        return self._escribir(self._cliente.insert, "insert_count", chunks)
 
     def upsert_chunks(self, chunks: Sequence[ChunkDelCorpus]) -> int:
         """Inserta o reescribe por ``chunk_id`` (idempotente: reintentos y readmisión de una versión retirada).
 
         Mismos errores que ``insert_chunks``.
         """
-        return self._escribir(self._cliente.upsert, chunks)
+        return self._escribir(self._cliente.upsert, "upsert_count", chunks)
 
-    def _escribir(self, operacion: Callable[..., Any], chunks: Sequence[ChunkDelCorpus]) -> int:
+    def _escribir(
+        self, operacion: Callable[..., Any], clave_del_conteo: str, chunks: Sequence[ChunkDelCorpus]
+    ) -> int:
         try:
             resultado = operacion(self._coleccion, [self._fila(chunk) for chunk in chunks])
         except MilvusException as error:
@@ -143,7 +144,7 @@ class MilvusRepository:
                     f"el vector dense no tiene la dimensión {self._ajustes.embedding_dim} de la colección"
                 ) from None
             raise
-        return int(resultado.get("insert_count", resultado.get("upsert_count", 0)))
+        return int(resultado[clave_del_conteo])
 
     def search_dense(self, vector: Sequence[float], limit: int) -> list[ChunkEncontrado]:
         """Solo chunks ``is_current`` (RN-05); ``similitud_dense`` es la que devuelve Milvus con ``MILVUS_DENSE_METRIC_TYPE`` (no es ``relevance_score``, RN-03)."""
@@ -165,21 +166,6 @@ class MilvusRepository:
             )
             for hit in resultados[0]
         ]
-
-    def ids_de_chunks_del_documento(self, document_id: str) -> frozenset[str]:
-        """``chunk_id`` de TODOS los chunks del documento, vigentes o no (lectura con consistencia fuerte).
-
-        Lanza ``ConsultaTruncada`` si el resultado alcanza el tope de Milvus (``LIMITE_DE_CONSULTA``): no es una lista fiable.
-        """
-        filas = self._cliente.query(
-            self._coleccion,
-            filter=_filtro_por_documento(document_id),
-            output_fields=["chunk_id"],
-            limit=LIMITE_DE_CONSULTA,
-            consistency_level="Strong",
-        )
-        _exigir_completo(filas)
-        return frozenset(fila["chunk_id"] for fila in filas)
 
     def marcar_no_vigentes(self, document_id: str) -> int:
         """``is_current = false`` en los chunks vigentes del documento, sin borrar ninguno (RN-05).

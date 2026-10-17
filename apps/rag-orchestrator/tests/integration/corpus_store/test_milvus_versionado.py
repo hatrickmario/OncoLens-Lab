@@ -22,21 +22,6 @@ def repositorio(cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings) ->
     return repositorio
 
 
-def test_ids_de_chunks_del_documento_incluye_vigentes_y_no_vigentes_solo_de_ese_documento(
-    repositorio: MilvusRepository,
-) -> None:
-    repositorio.insert_chunks(
-        [
-            chunk_sintetico("a", vector_unitario(DIMENSION, 0)),
-            chunk_sintetico("b", vector_unitario(DIMENSION, 1), vigente=False),
-        ]
-    )
-
-    assert repositorio.ids_de_chunks_del_documento("doc-a") == frozenset({"a"})
-    assert repositorio.ids_de_chunks_del_documento("doc-b") == frozenset({"b"})
-    assert repositorio.ids_de_chunks_del_documento("doc-inexistente") == frozenset()
-
-
 def test_marcar_no_vigentes_apaga_los_chunks_del_documento_sin_borrarlos_ni_tocar_a_los_demas(
     repositorio: MilvusRepository, cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings
 ) -> None:
@@ -63,21 +48,27 @@ def test_marcar_no_vigentes_apaga_los_chunks_del_documento_sin_borrarlos_ni_toca
 
 
 def test_marcar_no_vigentes_repetido_no_cambia_nada_y_no_duplica_entidades(
-    repositorio: MilvusRepository,
+    repositorio: MilvusRepository, cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings
 ) -> None:
     repositorio.insert_chunks([chunk_sintetico("a", vector_unitario(DIMENSION, 0))])
     repositorio.marcar_no_vigentes("doc-a")
 
     assert repositorio.marcar_no_vigentes("doc-a") == 0
-    assert repositorio.ids_de_chunks_del_documento("doc-a") == frozenset({"a"})
+    filas = cliente_milvus.query(
+        ajustes_milvus.milvus_collection_name,
+        filter="document_id == 'doc-a'",
+        output_fields=["chunk_id"],
+        consistency_level="Strong",
+    )
+    assert [f["chunk_id"] for f in filas] == ["a"]
 
 
 @pytest.mark.parametrize("identificador", ['x" or true or "', "con\\barra"])
-def test_un_document_id_con_comilla_o_barra_se_rechaza_antes_de_consultar(
+def test_un_document_id_con_comilla_o_barra_se_rechaza_antes_de_consultar_o_reescribir(
     repositorio: MilvusRepository, identificador: str
 ) -> None:
     with pytest.raises(ValueError, match="comillas"):
-        repositorio.ids_de_chunks_del_documento(identificador)
+        repositorio.marcar_no_vigentes(identificador)
 
 
 def test_upsert_chunks_es_idempotente_y_deja_vigente_un_chunk_apagado(
@@ -104,3 +95,10 @@ def test_upsert_chunks_con_otra_dimension_lanza_dimension_de_vector_invalida(
 ) -> None:
     with pytest.raises(DimensionDeVectorInvalida):
         repositorio.upsert_chunks([chunk_sintetico("a", vector_unitario(16, 0))])
+
+
+def test_upsert_chunks_devuelve_cuantos_chunks_escribio(repositorio: MilvusRepository) -> None:
+    chunks = [chunk_sintetico(f"c{i}", vector_unitario(DIMENSION, i)) for i in range(3)]
+
+    assert repositorio.upsert_chunks(chunks) == 3
+    assert repositorio.upsert_chunks(chunks[:2]) == 2
