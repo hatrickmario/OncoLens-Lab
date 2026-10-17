@@ -6,7 +6,7 @@ export function readPort(env: NodeJS.ProcessEnv): number {
   if (raw === undefined || raw === '') return DEFAULT_PORT;
   const port = Number(raw);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT debe ser un puerto TCP válido');
+    throw new ConfiguracionInvalidaError('PORT', 'debe ser un puerto TCP válido');
   }
   return port;
 }
@@ -34,7 +34,7 @@ function readPositiveInteger(env: NodeJS.ProcessEnv, name: string, defaultValue:
   if (raw === undefined || raw === '') return defaultValue;
   const value = Number(raw);
   if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${name} debe ser un entero positivo`);
+    throw new ConfiguracionInvalidaError(name, 'debe ser un entero positivo');
   }
   return value;
 }
@@ -69,7 +69,7 @@ export interface ServiceJwtConfig {
 export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   const privateKeyFile = env['SERVICE_JWT_PRIVATE_KEY_FILE'];
   if (privateKeyFile === undefined || privateKeyFile === '') {
-    throw new Error('SERVICE_JWT_PRIVATE_KEY_FILE no está configurada');
+    throw new ConfiguracionInvalidaError('SERVICE_JWT_PRIVATE_KEY_FILE', 'no está configurada');
   }
   const rawTtl = env['SERVICE_JWT_TTL_SECONDS'];
   if (rawTtl === undefined || rawTtl === '') {
@@ -77,7 +77,7 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   }
   const ttlSeconds = Number(rawTtl);
   if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
-    throw new Error('SERVICE_JWT_TTL_SECONDS debe ser un entero positivo');
+    throw new ConfiguracionInvalidaError('SERVICE_JWT_TTL_SECONDS', 'debe ser un entero positivo');
   }
   return { ttlSeconds, privateKeyFile };
 }
@@ -102,7 +102,7 @@ function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
 }
 
 /** Entorno de ejecución (`local`, `test`, `piloto`...): obligatorio, sin valor por defecto (fallo cerrado). */
-export function readAppEnv(env: NodeJS.ProcessEnv): string {
+export function exigirAppEnv(env: NodeJS.ProcessEnv): string {
   return leerObligatoria(env, 'APP_ENV');
 }
 

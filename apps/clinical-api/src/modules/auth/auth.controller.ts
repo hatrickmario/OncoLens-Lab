@@ -11,6 +11,12 @@ export interface DependenciasDeAuthController {
 }
 
 const EVENTO_LOGIN = 'auth.login';
+const ERRORES_DE_CUERPO: ReadonlySet<string> = new Set([
+  'entity.parse.failed',
+  'entity.too.large',
+  'encoding.unsupported',
+  'charset.unsupported',
+]);
 
 /** Cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */
 function establecerCookieDeSesion(respuesta: Response, token: string): void {
@@ -57,8 +63,9 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
 
   // JSON malformado o cuerpo excesivo: mismo 422 del contrato, sin eco del error del parser.
   const cuerpoIlegible: ErrorRequestHandler = (error: unknown, _request, response, next) => {
-    const status = (error as { status?: number }).status;
-    if (typeof status !== 'number' || status < 400 || status >= 500) {
+    // Solo errores del parser de body-parser (`error.type`): cualquier otro error con `status` sigue al manejador final.
+    const tipo = (error as { type?: unknown }).type;
+    if (typeof tipo !== 'string' || !ERRORES_DE_CUERPO.has(tipo)) {
       next(error);
       return;
     }

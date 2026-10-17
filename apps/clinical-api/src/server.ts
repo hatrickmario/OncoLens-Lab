@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { componerAplicacion } from './composition.js';
 import {
   ConfiguracionInvalidaError,
-  readAppEnv,
+  exigirAppEnv,
   readAuthConfig,
   readDatabaseConfig,
   readServiceJwtConfig,
@@ -30,7 +30,7 @@ arrancar({
   listen: (puerto) => {
     let configuracion;
     try {
-      readAppEnv(process.env);
+      exigirAppEnv(process.env);
       configuracion = {
         auth: readAuthConfig(process.env),
         database: readDatabaseConfig(process.env, leerArchivo),
@@ -48,7 +48,7 @@ arrancar({
       process.exit(1);
     }
 
-    const pool = crearPool(configuracion.database);
+    const pool = crearPool(configuracion.database, registrarEnConsola);
     loadServicePrivateKey(configuracion.jwt.privateKeyFile)
       .then(() => {
         const app = componerAplicacion({

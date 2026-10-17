@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, readAppEnv, readDatabaseConfig } from '../../src/config.js';
+import { ConfiguracionInvalidaError, exigirAppEnv, readDatabaseConfig } from '../../src/config.js';
 import { crearPool } from '../../src/infrastructure/database.js';
 
 const ARCHIVOS: Record<string, string> = {
@@ -86,10 +86,10 @@ describe('readDatabaseConfig', () => {
   );
 });
 
-describe('readAppEnv', () => {
+describe('exigirAppEnv', () => {
   it('devuelve APP_ENV y falla nombrándola cuando falta', () => {
-    expect(readAppEnv({ APP_ENV: 'local' })).toBe('local');
-    expect(() => readAppEnv({})).toThrow(/APP_ENV/);
+    expect(exigirAppEnv({ APP_ENV: 'local' })).toBe('local');
+    expect(() => exigirAppEnv({})).toThrow(/APP_ENV/);
   });
 });
 

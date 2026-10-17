@@ -1,10 +1,7 @@
 import type { ErrorRequestHandler, Response } from 'express';
 import type { Registrar } from './logger.js';
 
-/**
- * `ERROR_INTERNO` no está declarado en `openapi.yaml` (el spec no define un 500 genérico): pregunta de contrato
- * abierta para el Gate 2 de L1D-197.
- */
+/** `ERROR_INTERNO` es el cuerpo del 500 declarado en `openapi.yaml` (`#/components/responses/ErrorInterno`). */
 export type CodigoDeError =
   | 'CREDENCIALES_INVALIDAS'
   | 'CUERPO_INVALIDO'

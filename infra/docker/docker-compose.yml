@@ -154,10 +154,10 @@ services:
       # verificación del certificado del servidor (SAN postgres) contra la CA propia (SEG-08).
       CLINICAL_DATABASE_URL: postgresql://clinical_api@postgres:5432/${POSTGRES_DB:-oncolens}
       CLINICAL_DATABASE_CA_FILE: /run/secrets/pg_ca.crt
-      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-8}
-      ARGON2_MEMORY_COST_KIB: ${ARGON2_MEMORY_COST_KIB:-19456}
-      ARGON2_TIME_COST: ${ARGON2_TIME_COST:-2}
-      ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-1}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-}
+      ARGON2_MEMORY_COST_KIB: ${ARGON2_MEMORY_COST_KIB:-}
+      ARGON2_TIME_COST: ${ARGON2_TIME_COST:-}
+      ARGON2_PARALLELISM: ${ARGON2_PARALLELISM:-}
       SERVICE_JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_service_private.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
