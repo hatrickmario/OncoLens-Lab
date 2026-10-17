@@ -4,7 +4,8 @@ Cubre todo `RequestValidationError` (body, header, query y path). La autenticaci
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
 También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
 recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`,
-todos con mensaje fijo y sin eco de la petición.
+todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
+`ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
 
 import logging
@@ -49,16 +50,6 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             ],
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
-
-    @app.exception_handler(Exception)
-    async def error_inesperado(request: Request, error: Exception) -> JSONResponse:
-        """500 fijo para lo que ningún borde tradujo: solo la clase y el traceId al log, nunca el mensaje ni la pregunta."""
-        trace_id = resolver_trace_id(request, trace_ids)
-        logger.error("event=error_interno clase=%s traceId=%s", type(error).__name__, trace_id)
-        return JSONResponse(
-            status_code=500,
-            content={"error": "ERROR_INTERNO", "message": "Error interno.", "traceId": trace_id},
-        )
 
     @app.exception_handler(RecuperacionNoDisponibleError)
     async def recuperacion_no_disponible(

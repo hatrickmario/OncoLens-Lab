@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from fastapi import FastAPI
 
+from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
@@ -65,6 +66,7 @@ def crear_app(
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
+    app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     _registrar_consulta_de_evidencia(
         app,
