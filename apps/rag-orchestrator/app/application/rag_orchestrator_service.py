@@ -15,6 +15,7 @@ from datetime import datetime
 from typing import TypeVar
 
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
+from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
     ChunkEncontrado,
     ChunkSearch,
@@ -83,7 +84,7 @@ class RAGOrchestratorService:
         self._buscador = buscador
         self._reranker = reranker
         self._lector_release = lector_release
-        self._generador = generador
+        self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros
 

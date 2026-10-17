@@ -1,0 +1,45 @@
+"""Envoltorio del ``EvidenceGenerator``: todo fallo del generador es el error contractual ``LOCAL_LLM_UNAVAILABLE``."""
+
+from __future__ import annotations
+
+import logging
+
+from app.application.errores import LlmLocalNoDisponibleError
+from app.application.ports import EvidenceGenerator, ResultadoDeRecuperacion
+from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+
+logger = logging.getLogger(__name__)
+
+
+class GeneradorFallandoCerrado:
+    """Implementa ``EvidenceGenerator`` sobre otro generador (RN-10, RN-12).
+
+    Una excepción inesperada o un valor que no es ``RagQueryInternalResponse`` (incluida una respuesta que el
+    generador entregue a medias) se traducen a ``LlmLocalNoDisponibleError`` sin mensaje ni traceback: ``from None``
+    evita que el texto de la pregunta o el detalle del modelo lleguen a los logs. Hoy ``generar`` devuelve la
+    respuesta completa; cuando L1D-275 la entregue como flujo, el envoltorio deberá consumirlo entero antes de
+    devolver nada (nunca tokens sin validar).
+    """
+
+    def __init__(self, generador: EvidenceGenerator) -> None:
+        self._generador = generador
+
+    async def generar(
+        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> RagQueryInternalResponse:
+        trace_id = solicitud.traceId.root
+        try:
+            respuesta = await self._generador.generar(solicitud, recuperacion)
+        except LlmLocalNoDisponibleError:
+            raise
+        except Exception as error:  # noqa: BLE001 - todo fallo del generador es "modelo local no disponible"
+            logger.warning(
+                "event=generacion_fallo error=%s traceId=%s", type(error).__name__, trace_id
+            )
+            raise LlmLocalNoDisponibleError() from None
+        if not isinstance(respuesta, RagQueryInternalResponse):
+            logger.warning(
+                "event=generacion_fallo error=%s traceId=%s", "RespuestaInvalida", trace_id
+            )
+            raise LlmLocalNoDisponibleError()
+        return respuesta
