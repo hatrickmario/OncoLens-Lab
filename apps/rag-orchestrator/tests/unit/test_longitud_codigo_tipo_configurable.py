@@ -8,7 +8,14 @@ from pydantic import ValidationError
 from app.bootstrap import _parametros_de_recuperacion
 from app.domain.retrieval_filter import LONGITUD_MAXIMA_POR_DEFECTO
 from tests.support.fakes import settings_de_prueba
-from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de, PARAMETROS_DE_PRUEBA
+from tests.support.recuperacion import (
+    PARAMETROS_DE_PRUEBA,
+    Q_HER2,
+    BuscadorFalso,
+    ChunkFx,
+    crear_entorno,
+    solicitud_de,
+)
 
 
 def _settings(**cambios):
@@ -40,3 +47,15 @@ def test_rag_query_responde_422_tipo_cancer_no_registrado_cuando_el_codigo_exced
     assert respuesta.status_code == 422
     assert respuesta.json()["error"] == "TIPO_CANCER_NO_REGISTRADO"
     assert entorno.buscador.invocaciones == 0
+
+
+def test_rag_query_llega_al_buscador_cuando_el_codigo_excede_el_defecto_pero_cabe_en_la_longitud_configurada():
+    tipo = "t" * 70
+    parametros = dataclasses.replace(PARAMETROS_DE_PRUEBA, longitud_maxima_codigo_tipo=80)
+    chunk = ChunkFx("ch-largo-1", "doc-largo", "texto sintético", [1.0] + [0.0] * 7, True, tipo)
+    entorno = crear_entorno(parametros=parametros, buscador=BuscadorFalso(chunks=[chunk]))
+
+    respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer=tipo))
+
+    assert respuesta.status_code == 200
+    assert entorno.buscador.invocaciones >= 1
