@@ -57,6 +57,10 @@ class ContencionDeErroresInesperados:
             return  # la cabecera ya salió: no se puede cambiar el estado; basta con no relanzar
         respuesta = JSONResponse(
             status_code=500,
-            content={"error": "ERROR_INTERNO", "message": "Error interno.", "traceId": trace_id},
+            content={
+                "error": "ERROR_INTERNO",
+                "message": "Error interno del servidor.",
+                "traceId": trace_id,
+            },
         )
         await respuesta(scope, receive, send)
