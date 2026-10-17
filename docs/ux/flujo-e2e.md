@@ -47,7 +47,7 @@ Patrón común a todas las pantallas autenticadas:
 | Título | "Iniciar sesión" | — |
 | Subtítulo | "Herramienta de apoyo para el análisis de evidencia. No sustituye el juicio clínico." | — |
 | Campos | Correo electrónico · Contraseña `[S1 resp. 4]` | `POST /platform/auth/login` |
-| Error | "Usuario o contraseña incorrectos." Es genérico y no dice qué campo falló | `401` |
+| Error | "Correo o contraseña incorrectos." Es genérico y no dice qué campo falló | `401` |
 | Pie | "La sesión expira tras un periodo de inactividad configurable." | TTL en configuración (RN-22) |
 | Registro | "¿No tienes cuenta? Solicitar registro" (S6, US-221) | `POST /platform/auth/register` |
 | Destino por rol | Oncólogo → Pacientes · administrador → Administración (pantalla 14) | rol de la sesión |

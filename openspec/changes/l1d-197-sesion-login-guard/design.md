@@ -47,15 +47,17 @@ mismos parámetros, y si la cuenta no está `activo` verifica igualmente antes d
 
 **D4 · Rotación en cada login.** El login ignora la cookie entrante y siempre crea una sesión nueva
 con un token nuevo (defensa contra fijación de sesión, AC-1). No revoca la sesión previa: revocar es
-del logout (US-044). `expires_at = reloj.now() + SESSION_TTL_HOURS` (lo aplica el guard, D5) y `last_seen_at = reloj.now()`;
-`ip_address` y `user_agent` quedan como cadena vacía en el S1 (las columnas son NOT NULL en la migración de L1D-168; nota para US-044: cuando el bloqueo por IP de US-044 definirá cómo `web`
-propaga la IP del cliente).
+del logout (US-044). `expires_at = reloj.ahora() + SESSION_TTL_HOURS` (lo aplica el guard, D5) y `last_seen_at = ahora`;
+`ip_address` y `user_agent` quedan `null` en el S1 (el bloqueo por IP de US-044 definirá cómo `web`
+propaga la IP del cliente). Decidido (usuario, 2026-10-20): ambas columnas de `auth.session` son
+**`nullable`** (`docs/architecture/data-model.md` corregido; migración en la tarea 2.0) y el valor
+es `null`, **no** cadena vacía: esto revierte la nota de cadena vacía que se había planteado.
 
 **D5 · Guard de `clinical-api`.** `src/middleware/auth.ts` (`requireSession`) se monta en el router
 `/platform` después de declarar `POST /platform/auth/login` y antes de cualquier otro router, y
 corre antes del `express.json()` de cada ruta para que un `401` llegue antes de validar el cuerpo
 (AC-3). Consulta `auth.session` por `token_hash` con `revoked = false` y usuario `activo`, y
-`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.now()` (reloj inyectado):
+`resolverSesion(token)` rechaza la sesión si `expires_at <= reloj.ahora()` (reloj inyectado):
 sesión caducada → `401 NO_AUTENTICADO`, igual que un token desconocido `[S1 resp. 14c]`. La
 inactividad sigue en US-044 (S2), que la añadirá en `resolverSesion` sin tocar el middleware.
 Adjunta `req.sesion = { userId, rol }`. El guard solo autentica: el `403` para un rol distinto de
@@ -68,14 +70,20 @@ Adjunta `req.sesion = { userId, rol }`. El guard solo autentica: el `403` para u
 `charset`); si alguna falla responde la respuesta propia del BFF `403` con el cuerpo
 `ErrorPermisoDenegado` del contrato (`error = PERMISO_DENEGADO`), registra `motivo=origen` o
 `motivo=content_type` y no llama a `clinical-api` (login CSRF: un formulario de otro sitio no puede
-enviar JSON sin *preflight*, `[S1 resp. 14a]`). Después valida con el schema Zod generado de
-`LoginRequest` (`packages/api-contracts/src/zod`), llama a la operación `login` del **SDK generado**
+enviar JSON sin *preflight*, `[S1 resp. 14a]`). Después valida con el schema Zod generado **`zLoginBody`**
+(`packages/api-contracts/src/zod/clinical-api`; **no** `zLoginRequest`, que omite `password` por ser
+`writeOnly`), llama a la operación `login` del **SDK generado**
 de `clinical-api` (L1D-105, `packages/api-contracts/src/client-web/clinical-api/`,
 `createClient({ baseUrl, fetch })`) con el `fetch` de `crearFetchJsonHaciaClinicalApi()` de L1D-139 (`crearSdkClinicalApi()` devuelve `{ client, cuerpoCrudo }`; `createClient` se importa de `.../client-web/clinical-api/client`), sin
 cookie entrante `[S1 resp. 13]`, lee el `Set-Cookie` de `response.headers.getSetCookie()` y retransmite
 **solo** la cabecera `Set-Cookie` de `oncolens_session` tal cual (los atributos los fija el
 proveedor; sin `Domain`, el navegador la asocia al host de `web`) y el cuerpo de error del contrato.
-El `422` local (Zod) y el remoto se muestran como el mismo error genérico. Descartado: reconstruir
+El `422` local (Zod) y el remoto se muestran como el mismo error genérico. Si `clinical-api` es
+inalcanzable o falla el transporte, el Route Handler responde `502` con `ErrorServicioAutenticacion`
+(`error = ERROR_SERVICIO_AUTENTICACION`, mensaje fijo, `traceId` generado, sin URL ni cuerpo parcial); un
+`500` de `clinical-api` se retransmite tal cual (`ErrorInterno`). El *helper* de fallos de transporte de L1D-139
+recibe el **código de error por parámetro** (el login pasa `ERROR_SERVICIO_AUTENTICACION`, no
+`ERROR_SERVICIO_IA`) o, si no lo admite, el login usa el suyo. Descartado: reconstruir
 la cookie en `web` con `cookies().set()` (dos lugares que deciden los atributos de la misma cookie).
 `Secure` funciona en el S1 porque Playwright y el navegador usan `localhost`, que es contexto seguro;
 HTTPS completo llega en el S6 (VPN/HTTPS).
@@ -86,7 +94,14 @@ solo crea `doc1@test.local` y `admin@test.local` (US-039 AC-1). `doc2@test.local
 (`tests/support/usuarios.ts`, con `createPasswordHasher()` y contraseña desde
 `TEST_DOC2_PASSWORD`), y el correo inexistente no se crea. Así el seed no crea cuentas que la demo
 no usa y FX-T4a-b queda cubierto. Si el humano prefiere que lo siembre el seed, solo cambia el
-*fixture*, no los AC.
+*fixture*, no los AC. **`doc1@test.local` lo crea el *fixture*/*builder* de test con el *hasher* de 197; en
+la demo, el seed de US-039** (decidido, usuario, 2026-10-20, ver abajo).
+
+**Decidido (usuario, 2026-10-20), circularidad con L1D-169:** `doc1@test.local` tampoco sale del seed en
+este change: el *builder* de `tests/support/usuarios.ts` lo inserta con `createPasswordHasher()`, igual que
+a `doc2@test.local`. L1D-169 adopta después el *hasher* de este change y el usuario `doc1` en su seed. El
+paciente semilla (a) que usan `WEB_HOME_PATH` y los tests de rutas sí llega del seed de L1D-169 solo en la
+ruta de inicio (UUID determinista); ningún test de este change lo lee de la BD.
 
 **D8 · Guard de páginas en `web` y AC-5 de punta a punta.** `apps/web/proxy.ts` (Next.js 16
 renombró `middleware.ts` a `proxy.ts`) con `matcher: ['/pacientes/:path*']`: sin cookie →
@@ -94,12 +109,11 @@ renombró `middleware.ts` a `proxy.ts`) con `matcher: ['/pacientes/:path*']`: si
 es el guard de `clinical-api`). La ruta `/login` no está en el `matcher`. En el S1 la página del
 análisis no consulta la ficha (solo usa el parámetro `[id]`), así que una cookie falsa no expone
 datos: el Route Handler de análisis (L1D-139) retransmite el `401` tal cual (un `fetch` JSON no
-redirige) y es el cliente del panel (L1D-140) el que navega a `/login`. AC-5 se verifica en
-dos niveles: integración en `clinical-api` (cookie real del login + MSW que captura el request a
-`rag-orchestrator`, una vez montado el gateway de L1D-103) y Playwright contra Compose con
-`LLM_PROVIDER=fake` leyendo `docker compose logs rag-orchestrator`. Ambos tests se escriben en este
-change y quedan en rojo hasta que L1D-103 y L1D-139 estén mergeados en la misma oleada (dependencia
-anotada en tasks.md).
+redirige) y es el cliente del panel (L1D-140) el que navega a `/login`.
+**Decidido (usuario, 2026-10-20, opción b): la verificación del AC-5 (integración con cookie real y
+logs de `rag-orchestrator`) pasa al change de L1D-103** (dueño del gateway); este change ya no
+la contiene ni deja ningún test en rojo. Solo garantiza que el guard adjunta `userId` y `rol` y que la cookie termina en
+`clinical-api`. El AC-5 de US-211 queda verificado cuando L1D-103 esté en `main`.
 
 **D9 · Ruta de inicio configurada.** `WEB_HOME_PATH` (variable de servidor, no `NEXT_PUBLIC_`): la
 página `/login` (RSC) la lee y la pasa al formulario cliente como prop; tras el `204`, el formulario
@@ -113,12 +127,38 @@ claves en `camelCase` y valores solo texto plano (sin HTML). Lo lee en servidor 
 (`mensajes()`: import tipado del JSON, sin librería de i18n; YAGNI hasta que haya un segundo idioma).
 Claves de este change: `login.titulo`, `login.subtitulo`, `login.correo` ("Correo electrónico"),
 `login.contrasena` ("Contraseña"), `login.enviar` ("Iniciar sesión"), `login.enviando`
-("Entrando…"), `login.errorCredenciales` ("Correo o contraseña incorrectos.") y
+("Entrando…"), `login.errorCredenciales` ("Correo o contraseña incorrectos."),
+`login.errorServicio` ("No se pudo iniciar sesión en este momento. Inténtalo de nuevo.", aviso neutro para el
+`502 ERROR_SERVICIO_AUTENTICACION` del Route Handler; fuente única `es.json`, sin copia del literal en componentes) y
 **`app.academicUseLabel` ("Uso académico/investigación")** (Gate 1, 2ª vuelta: `/login` sí lleva la
 etiqueta, S1-01 de `pantallas-s1.md`, RN-19). Este change crea la clave y la muestra en el login como
 texto visible; L1D-194 la **consume** en `AppHeader` (cabecera del *dashboard*) sin crearla ni cambiar su
 valor, de modo que hay una sola fuente del literal. Los demás changes añaden claves; no recrean el
 archivo.
+
+**D11 · Repository sobre `pg`, no Prisma Client (deuda D-1).** Decidido (usuario, 2026-10-20):
+`auth.repository.ts` se implementa con el *driver* `pg` (consultas parametrizadas, pool inyectado
+desde `server.ts`, tarea 2.6b), detrás del mismo puerto `AuthRepository`. Motivo: Prisma 7 exige
+`@prisma/adapter-pg` y un cliente generado (`prisma generate`) que **no están en el repo** y
+traerlos excede este change (3 pts). Los tests de integración siguen contra PostgreSQL real de
+test, sin `vi.mock` del repository. La migración a Prisma Client queda como historia de deuda D-1
+("`clinical-api`: repositories sobre Prisma Client (auth)", ID por asignar, `backlog/features/README.md`);
+al migrarla solo cambia la implementación del puerto. Esto sustituye las menciones a Prisma de la
+tabla de colaboradores.
+
+**D12 · UI provisional con CSS Modules.** Decidido (usuario, 2026-10-20): `/login` se mergea con
+**CSS Modules** y los tokens de `docs/ux/sistema-de-diseno.md` como variables CSS, **no** con
+Tailwind v4 ni shadcn/ui. Es provisional: la deuda D-2 (chore pequeño, ID por asignar) instala
+Tailwind v4 + shadcn/ui **antes de L1D-140** y migra `/login`. Sustituye la mención a
+`components/ui` de shadcn en "Componentes y patrones". El `visual-check` y los E2E de este change
+quedan pendientes hasta la deuda D-3 (Playwright y perfil de test en Compose).
+
+**D13 · Otras decisiones de la Oleada 4 (usuario, 2026-10-20).** (a) **AC-5 de US-211 pasa a
+L1D-103** (opción b, ver D8 y Riesgos): este change ya no contiene su test ni su escenario de spec.
+(b) **Contrato:** se añaden un `500` genérico y un código propio de login para el `502` (tarea 1.2,
+contract-first); la sección "Contratos" ya no dice "sin cambios". (c) **`WEB_HOME_PATH`** con el UUID
+del paciente semilla en `/login` (D9) queda **aceptado como deuda hasta US-048**. (d) **CSP y
+cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6); no se añaden aquí.
 
 ## Privacidad y ownership
 
@@ -139,7 +179,7 @@ archivo.
 
 ### Seguridad web
 
-- **Validación:** el mismo schema Zod generado de `LoginRequest` en el formulario cliente y en el
+- **Validación:** el mismo schema Zod generado `zLoginBody` en el formulario cliente y en el
   Route Handler; `clinical-api` vuelve a validar en su borde.
 - **Cookie:** `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain`; nunca accesible desde JS.
 - **CSRF / `Origin`:** `SameSite=Strict` + `verificarOrigen()` de L1D-139 + `Content-Type:
@@ -148,7 +188,9 @@ archivo.
 - **Módulos `server-only`:** el Route Handler y el cliente hacia `clinical-api`.
 - **Render:** solo textos fijos del diseño; el `message` del `401` no se pinta (se muestra el literal
   genérico), así que no hay HTML crudo.
-- **CSP y cabeceras:** sin cambios (las fija US-216); el formulario no usa scripts inline propios.
+- **CSP y cabeceras:** sin cambios en este change (las fija US-216, S6). **Excepción nombrada
+  (usuario, 2026-10-20):** `/login` se mergea sin CSP ni cabeceras anti-clickjacking hasta US-216,
+  antes de G-Piloto; el formulario no usa scripts inline propios.
 - **Dependencias nuevas:** `argon2` en `clinical-api` (`npm audit` sin vulnerabilidades altas en el
   PR). `web` no añade dependencias.
 
@@ -156,27 +198,72 @@ archivo.
 
 - **Proveedor:** `clinical-api` (`apps/clinical-api/openapi.yaml`). **Consumidor:** `web` (cliente
   y schemas Zod generados en `packages/api-contracts`).
-- **Diff propuesto del spec:** ninguno. Ya existen `POST /platform/auth/login` (`security: []`,
-  `x-permission: publico`, `204` con `Set-Cookie`, `401` `ErrorCredencialesInvalidas`, `422`, `429`),
-  `components.securitySchemes.sessionCookie` (`oncolens_session`) y `responses.NoAutenticado`.
-  Ejemplos usados por MSW: `login-request.json`, `error-credenciales-invalidas.json`,
-  `error-no-autenticado.json` (sin cambios). `info.version` no se toca (la sube L1D-164).
-- **Compatibilidad:** sin cambio incompatible (oasdiff vacío); ADR-26 respetado.
+- **Diff propuesto del spec (literal; tarea 1.2, aditivo, contract-first).** `POST /platform/auth/login`
+  (`security: []`, `x-permission: publico`, `204` con `Set-Cookie`, `401` `ErrorCredencialesInvalidas`,
+  `422`, `429`), `components.securitySchemes.sessionCookie` (`oncolens_session`) y `responses.NoAutenticado`
+  ya existen. Se añade:
+
+  ```diff
+   /platform/auth/login:
+     post:
+       responses:
+  +      "500":
+  +        $ref: '#/components/responses/ErrorInterno'
+   components:
+     responses:
+  +    ErrorInterno:
+  +      description: >-
+  +        Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+  +      content:
+  +        application/json:
+  +          schema:
+  +            $ref: '#/components/schemas/ErrorInterno'
+     schemas:
+  +    ErrorInterno:
+  +      type: object
+  +      additionalProperties: false
+  +      required: [error, message, traceId]
+  +      properties:
+  +        error: { type: string, const: ERROR_INTERNO }
+  +        message: { type: string }
+  +        traceId: { type: string }
+  +    ErrorServicioAutenticacion:
+  +      type: object
+  +      additionalProperties: false
+  +      required: [error, message, traceId]
+  +      properties:
+  +        error: { type: string, const: ERROR_SERVICIO_AUTENTICACION }
+  +        message: { type: string }
+  +        traceId: { type: string }
+  ```
+
+  `ErrorServicioAutenticacion` va **solo** en `components.schemas` y **no** como `502` bajo
+  `login.responses`: el `502` lo emite el BFF de `web` cuando `clinical-api` es inalcanzable, no
+  `clinical-api` (precedente: `ErrorServicioIa` de L1D-139, validado con `assertMatchesSpec('clinical-api',
+  '#/components/schemas/ErrorServicioAutenticacion', body)`). Ejemplos nombrados con su `target` en
+  `contracts/examples/index.json`: `error-interno.json` (`#/paths/~1platform~1auth~1login/post/responses/500`)
+  y `error-servicio-autenticacion.json` (`#/components/schemas/ErrorServicioAutenticacion`); mensajes fijos
+  sin eco. Los demás ejemplos (`login-request.json`, `error-credenciales-invalidas.json`,
+  `error-no-autenticado.json`) no cambian.
+  **Pendiente de decisión humana:** `ErrorInterno` está también en el diff de L1D-104 (mismo `ERROR_INTERNO` y
+  mensaje fijo); la recomendación del Gate 1 es que 197 (oleada 4) sea su dueño y 104 lo referencie. Hasta
+  esa decisión este change conserva el texto de arriba y no se edita 104.
+- **Compatibilidad:** los añadidos son aditivos (sin `ERR` de oasdiff; un `WARN` se declara en el PR); ADR-26 respetado. Comprobación con `contracts:breaking` de L1D-166 (↪ dependencia); si el script aún no existe, `oasdiff` manual contra `main`.
 - **Verificación del proveedor:** los tests de integración validan `204`, `401` y `422` del login y
   el `401 NO_AUTENTICADO` del guard contra el spec con el *helper*
   `assertMatchesSpec('clinical-api', <puntero>, body)` de L1D-164 (D5b, `[S1 resp. 17]`);
   `contracts:verify-provider` llega con US-214. El `403` propio del Route Handler de login se valida
   igual contra `ErrorPermisoDenegado`.
 - El Route Handler `web/app/api/auth/login` no tiene spec OpenAPI propio: es un proxy que reexpone
-  la forma del contrato de `clinical-api`; su `403` propio se declara como requisito de
-  `auth-session`.
+  la forma del contrato de `clinical-api`; sus respuestas propias (`403 PERMISO_DENEGADO`, `502
+  ERROR_SERVICIO_AUTENTICACION` y el `500` retransmitido) se declaran como requisitos de `auth-session`.
 
 ## Componentes y patrones
 
 - `app/login/page.tsx` (RSC): marca, etiqueta "Uso académico/investigación" (clave
   `app.academicUseLabel`), título y subtítulo de S1-01 desde `messages/es.json` (D10); lee `WEB_HOME_PATH` y monta el formulario.
 - `components/organisms/login-form.tsx` (`'use client'`, único punto cliente): campos con
-  `components/ui` de shadcn (`Input`, `Label`, `Button`), estado de carga "Entrando…" y región
+  CSS Modules provisionales (D12; `Input`, `Label` y `Button` de shadcn llegan con la deuda D-2), estado de carga "Entrando…" y región
   `role="alert"`. Previsto < 100 líneas; si las supera, se separa `login-error.tsx`.
 - Sin custom hooks, providers ni compound components: un solo consumidor (YAGNI).
 - `proxy.ts` no es un componente; sin providers nuevos.
@@ -189,9 +276,9 @@ archivo.
 | Módulo | Crea/mod. | Depende de | Reglas extraídas |
 |---|---|---|---|
 | `clinical-api/src/modules/auth/auth.controller.ts` | crea | `AuthService` (interfaz) | mapeo de error → `401` |
-| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, ids, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Clock` (`infrastructure/clock.ts`, método `now()`), `GeneradorDeIds` (`infrastructure/ids.ts`) | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
-| `auth.repository.ts` | crea | Prisma (`auth.user`, `auth.session`) | — |
-| `auth.schema.ts` | crea | Zod generado de `LoginRequest` | — |
+| `auth.service.ts` (`createAuthService({ repo, hasher, tokens, reloj, config })`) | crea | puertos `AuthRepository`, `PasswordHasher`, `GeneradorDeToken`, `Reloj` | `autenticarCredenciales()`, `resolverSesion()` (con `expires_at`), `hashDeToken()` |
+| `auth.repository.ts` | crea | `pg` (pool inyectado; `auth.user`, `auth.session`; D11) | — |
+| `auth.schema.ts` | crea | Zod generado `zLoginBody` | — |
 | `auth/password-hasher.ts` | crea | `argon2` | parámetros desde config |
 | `src/middleware/auth.ts` | crea | `AuthService.resolverSesion` | — |
 | `src/app.ts` / router `/platform` | mod. | guard | orden: login → guard → resto |
@@ -201,25 +288,27 @@ archivo.
 | `web/proxy.ts` | crea | — | `tieneCookieDeSesion()` |
 | `web/app/login/page.tsx`, `components/organisms/login-form.tsx` | crea | Route Handler por `fetch('/api/auth/login')` | — |
 
-Ningún service ni middleware importa Prisma ni `argon2` directamente: los reciben por la *factory*.
+Ningún service ni middleware importa `pg` ni `argon2` directamente: los reciben por la *factory*.
 
 ## Tests
 
 - **Integración `clinical-api`** (Supertest + PostgreSQL real de test de US-038 + seed de test):
   AC-1 (fila, hash, cookie rotada), AC-2 (tres casos), AC-3 (guard + MSW contador, y sesión
-  caducada con reloj congelado después de `expires_at`, `[S1 resp. 14c]`), AC-5 (MSW que
-  captura el request), AC-6 (logger capturado). Reloj y generador de token inyectados y congelados.
+  caducada con reloj congelado después de `expires_at`, `[S1 resp. 14c]`), AC-6 (logger capturado). Reloj y generador de token inyectados y congelados.
 - **`web`** (Vitest + MSW desde `contracts/examples/`): Route Handler (cookie retransmitida, `401`,
   `403` por `Origin` distinto y por `Content-Type` no JSON sin request a `clinical-api`, logs sin
   secretos) y formulario con Testing Library (error genérico, estado de carga).
 - **E2E** (Playwright contra Compose, perfil de test, `LLM_PROVIDER=fake`): AC-1 (redirección y
-  atributos de cookie), AC-4 (redirección y HTML sin datos) y AC-5 (logs de `rag-orchestrator`).
+  atributos de cookie) y AC-4 (redirección y HTML sin datos), **pendientes hasta la deuda D-3**
+  (decisión 49 del plan); el AC-5 (integración y logs de `rag-orchestrator`) lo verifica L1D-103.
 
 ## Riesgos
 
-- **Orden de la oleada:** AC-5 depende del gateway (L1D-103) y del Route Handler de análisis
-  (L1D-139). Mitigación: este change entra primero; sus tests de AC-5 se cierran cuando esos estén
-  en `main`, sin `.skip` (si no caben en la oleada, el test se mueve a L1D-103 con `Test-Removal:`).
+- **AC-5 fuera de este change (resuelto, usuario, 2026-10-20):** el riesgo de orden de la oleada
+  (AC-5 dependía del gateway de L1D-103 y del Route Handler de L1D-139) se resuelve moviendo el
+  test a L1D-103, con `Test-Removal:` en el commit de código de este change; no se mergea con test
+  rojo. Efecto de orden: L1D-197 ya no espera a L1D-103 ni a L1D-139 por AC-5, y L1D-103 (que
+  depende de L1D-197) hereda la verificación.
 - **Parámetros Argon2id** demasiado caros en CI: son configuración (`.env` de test puede bajarlos).
 
 ## Pendiente de definir

@@ -1,4 +1,5 @@
 # Manifiesto del mini-dataset ADR-39
+# CC BY-NC (RN-21): solo si la fuente lleva `nc_solo_academico: true` y ALLOW_CC_BY_NC=true; hoy ninguna fuente es NC.
 clase: sintetico
 nombre: adr39-mini
 version: 0.1.0-borrador

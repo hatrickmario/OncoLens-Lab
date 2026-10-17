@@ -63,7 +63,7 @@ con los campos de §4.7: `chunk_id` VARCHAR PK, `document_id` VARCHAR, `dense_ve
 FLOAT_VECTOR(`EMBEDDING_DIM`), `sparse_vector` SPARSE_FLOAT_VECTOR, `chunk_text` VARCHAR,
 `chunk_index` INT64, `section` VARCHAR, `source_type`/`language`/`cancer_type_tags`/`population`/
 `study_design` VARCHAR, `published_year` INT64, `is_current` BOOL, `created_at` INT64 (epoch en ms;
-Milvus no tiene tipo fecha). Índices: dense con `MILVUS_DENSE_INDEX_TYPE` y `MILVUS_DENSE_METRIC_TYPE`
+Milvus no tiene tipo fecha). Índices: dense con `VECTOR_INDEX_TYPE`/`VECTOR_INDEX_PARAMS` y `MILVUS_DENSE_METRIC_TYPE`
 (configuración; valor por defecto propuesto `HNSW` + `IP` sobre vectores normalizados, que el ADR-39
 puede cambiar), sparse con `MILVUS_SPARSE_INDEX_TYPE` (por defecto `SPARSE_INVERTED_INDEX`, métrica
 `IP`) e índices escalares (`INVERTED`) sobre `is_current` y `cancer_type_tags`. Milvus exige índice en
@@ -84,6 +84,13 @@ nombre, tipo y dimensión de cada campo con el esquema esperado: igual → no ha
 "existente"); distinto → lanza `CorpusCollectionSchemaMismatch` con el campo, lo esperado y lo
 encontrado. El código no contiene ninguna llamada a `drop_collection` (lo comprueba un test de humo).
 Reindexar por cambio de modelo es una operación manual gobernada por ADR-39.
+
+**Ampliación (decidido, usuario, 2026-10-20, revisión del PR de este change):** (a) `settings.py` valida que
+`MILVUS_DENSE_METRIC_TYPE ∈ {COSINE, IP}` al arrancar (cualquier otro valor → error que nombra la clave y el
+conjunto permitido, nunca otros valores); (b) si es barato con la API de `pymilvus` de la versión fijada,
+`assert_schema_matches()` compara además la **métrica** y el **tipo de índice** del campo denso con la configuración
+y lanza `CorpusCollectionSchemaMismatch` si difieren, también sin `drop_collection`. Si la API no expone la métrica
+o el tipo de índice sin una llamada costosa o inestable, (b) se omite y el PR lo declara; (a) no es opcional.
 
 ### D6. Comandos de migración e inicialización
 - `python -m app.scripts.migrate_corpus_catalog`: `alembic upgrade head` como `rag_corpus_migrator`.
@@ -185,3 +192,8 @@ configuración para que ADR-39 los ajuste sin tocar el código.
   publique `EMBEDDING_DIM`, habría que recrearla; D5 lo detecta y falla en lugar de borrar.
 - **Milvus en la CI**: añade tiempo (etcd + MinIO + standalone); se reutiliza el servicio de Compose
   de L1D-164 en un solo job de integración.
+
+## Pendiente de decisión (Gate 1, privacy-guardian, 2026-10-20)
+
+- **TLS de `CORPUS_DATABASE_URL`:** hoy `sslmode=require` (cifra, no verifica al servidor). Opción: `sslmode=verify-full` con la CA del servidor montada de solo lectura (secreto de L1D-165). Recomendación: `verify-full` antes de G-Piloto; decisión humana (dueña: privacy-guardian/humano). Este change no cambia el valor.
+- **Nombre de las claves del índice denso:** unificado a `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS` (US-012 AC-12, `[S1 resp. 38]`); `MILVUS_DENSE_INDEX_TYPE` ya no existe en este change.
