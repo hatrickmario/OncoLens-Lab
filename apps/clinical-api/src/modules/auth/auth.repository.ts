@@ -35,13 +35,63 @@ export interface Consultador {
   query(sql: string, valores?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
 }
 
-export function createAuthRepository(_db: Consultador): AuthRepository {
-  const noImplementado = (): never => {
-    throw new Error('no implementado');
-  };
+/**
+ * `ip_address` y `user_agent` son NOT NULL en `auth.session`: en el S1 se guardan vacíos (D4); el bloqueo por IP de
+ * US-044 definirá cómo `web` propaga la IP del cliente.
+ */
+export function createAuthRepository(db: Consultador): AuthRepository {
   return {
-    buscarUsuarioPorCorreo: noImplementado,
-    crearSesion: noImplementado,
-    buscarSesionPorTokenHash: noImplementado,
+    async buscarUsuarioPorCorreo(correo) {
+      const { rows } = await db.query(
+        `SELECT u.id, u.password_hash, u.account_status, r.name AS rol
+           FROM auth."user" u JOIN auth.role r ON r.id = u.role_id
+          WHERE u.email = $1`,
+        [correo],
+      );
+      const fila = rows[0];
+      if (fila === undefined) return null;
+      return {
+        id: fila['id'] as string,
+        passwordHash: fila['password_hash'] as string,
+        accountStatus: fila['account_status'] as EstadoDeCuenta,
+        rol: fila['rol'] as string,
+      };
+    },
+
+    async crearSesion(sesion) {
+      await db.query(
+        `INSERT INTO auth.session
+           (id, user_id, token_hash, expires_at, last_seen_at, ip_address, user_agent, revoked, created_at)
+         VALUES ($1, $2, $3, $4, $5, '', '', false, $6)`,
+        [
+          sesion.id,
+          sesion.userId,
+          sesion.tokenHash,
+          sesion.expiresAt,
+          sesion.lastSeenAt,
+          sesion.createdAt,
+        ],
+      );
+    },
+
+    async buscarSesionPorTokenHash(tokenHash) {
+      const { rows } = await db.query(
+        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol
+           FROM auth.session s
+           JOIN auth."user" u ON u.id = s.user_id
+           JOIN auth.role r ON r.id = u.role_id
+          WHERE s.token_hash = $1`,
+        [tokenHash],
+      );
+      const fila = rows[0];
+      if (fila === undefined) return null;
+      return {
+        userId: fila['user_id'] as string,
+        rol: fila['rol'] as string,
+        accountStatus: fila['account_status'] as EstadoDeCuenta,
+        expiresAt: fila['expires_at'] as Date,
+        revoked: fila['revoked'] as boolean,
+      };
+    },
   };
 }
