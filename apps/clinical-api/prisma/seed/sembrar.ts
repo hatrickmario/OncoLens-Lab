@@ -9,7 +9,8 @@ import { pacienteC } from './pacientes/c.js';
 import { pacienteD } from './pacientes/d.js';
 import { pacienteE } from './pacientes/e.js';
 import type { DiagnosticoSemilla, PacienteSemilla } from './pacientes/tipos.js';
-import { DESCRIPCION_DE_ROL, MATRIZ_DE_PERMISOS, type NombreDeRol } from './roles.js';
+import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
+import { DESCRIPCION_DE_ROL, MATRIZ_DE_PERMISOS } from './roles.js';
 
 /** Lo mínimo que el seed necesita de PostgreSQL: `pg.Client`/`PoolClient` cumplen, y el test pasa el cliente real. */
 export interface ClienteSql {
@@ -99,8 +100,8 @@ async function devolverId(siembra: Siembra, sql: string, valores: unknown[]): Pr
 }
 
 /** Roles y permisos de la matriz RBAC: se identifican por nombre/código, no por el id (puede existir de antes). */
-async function asegurarRolesYPermisos(siembra: Siembra): Promise<Record<NombreDeRol, string>> {
-  const roles = {} as Record<NombreDeRol, string>;
+async function asegurarRolesYPermisos(siembra: Siembra): Promise<Record<RolDeUsuario, string>> {
+  const roles = {} as Record<RolDeUsuario, string>;
   for (const nombre of ['doctor', 'admin'] as const) {
     roles[nombre] = await devolverId(
       siembra,
@@ -130,14 +131,14 @@ interface UsuarioDeDemo {
   readonly clave: string;
   readonly correo: string;
   readonly nombre: string;
-  readonly rol: NombreDeRol;
+  readonly rol: RolDeUsuario;
   readonly contrasena: string;
 }
 
 /** El hash se calcula SOLO si el usuario no existe: re-ejecutar no cambia `password_hash` (idempotencia). */
 async function asegurarUsuario(
   siembra: Siembra,
-  roles: Record<NombreDeRol, string>,
+  roles: Record<RolDeUsuario, string>,
   usuario: UsuarioDeDemo,
 ): Promise<string> {
   const existente = await siembra.db.query('SELECT id FROM auth."user" WHERE email = $1', [

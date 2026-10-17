@@ -1,24 +1,24 @@
+import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
+
 /**
  * Matriz de permisos RBAC de `docs/architecture/data-model.md` §8 (MVP: solo RBAC). El rol `admin` NO lee datos
  * clínicos ni análisis (mínimo privilegio, PRD v1.4 §11, E-04). `audit:read_patient` no lo tiene nadie todavía.
  */
-export type NombreDeRol = 'doctor' | 'admin';
-
 export interface PermisoSembrado {
   readonly codigo: string;
   readonly descripcion: string;
-  readonly roles: readonly NombreDeRol[];
+  readonly roles: readonly RolDeUsuario[];
 }
 
-export const DESCRIPCION_DE_ROL: Readonly<Record<NombreDeRol, string>> = {
+export const DESCRIPCION_DE_ROL: Readonly<Record<RolDeUsuario, string>> = {
   doctor: 'Médico tratante: lectura y escritura clínica, análisis de evidencia',
   admin: 'Administrador: cuentas, altas de pacientes y opt-out; sin acceso a datos clínicos',
 };
 
-const AMBOS: readonly NombreDeRol[] = ['doctor', 'admin'];
-const SOLO_DOCTOR: readonly NombreDeRol[] = ['doctor'];
-const SOLO_ADMIN: readonly NombreDeRol[] = ['admin'];
-const NINGUNO: readonly NombreDeRol[] = [];
+const AMBOS: readonly RolDeUsuario[] = ['doctor', 'admin'];
+const SOLO_DOCTOR: readonly RolDeUsuario[] = ['doctor'];
+const SOLO_ADMIN: readonly RolDeUsuario[] = ['admin'];
+const NINGUNO: readonly RolDeUsuario[] = [];
 
 export const MATRIZ_DE_PERMISOS: readonly PermisoSembrado[] = [
   { codigo: 'session:logout', descripcion: 'Cerrar sesión', roles: AMBOS },
