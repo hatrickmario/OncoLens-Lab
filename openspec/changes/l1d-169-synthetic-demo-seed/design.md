@@ -125,3 +125,9 @@ corre en el primer PR de US-041 que consuma este subconjunto.
   de integración (detección temprana, deseable).
 - **Choque con US-211** por los parámetros de Argon2id o por quién añade `argon2`: se coordina en la
   oleada; el seed solo usa la API de hash de la librería.
+
+## Decisiones del Gate 1 (usuario, 2026-10-20)
+
+- **Conexión a PostgreSQL (decisión 62 del plan):** el *one-shot* `clinical-seed` usa `CLINICAL_DATABASE_URL` sin credenciales + `PG_CLINICAL_API_PASSWORD_FILE` y TLS verificando la CA del servidor; ningún servicio declara `DATABASE_URL` con contraseña (tarea 3.9c).
+- **`APP_ENV` obligatorio en Compose (decisión 64):** `${APP_ENV:?APP_ENV obligatorio}` en `clinical-seed` (tarea 3.9d), además de la guarda `assertSeedPermitido()`.
+- **Contraseñas de respaldo (decisión 66):** el seed no define valores por defecto; un respaldo `SINT-…` solo bajo `apps/clinical-api/tests/`; si faltan, el error nombra la variable, nunca su valor (tarea 3.5).

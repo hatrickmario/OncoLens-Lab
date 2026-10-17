@@ -15,6 +15,6 @@
 - **WHEN** `contracts:check` revisa `EvidenceAnalysis.properties.disclaimer` y `FollowUpTurn.properties.disclaimer`
 - **THEN** cada descripción menciona `AI_DISCLAIMER_TEXT` y el literal de `[S1 resp. 32]`, y un parche que quita `disclaimer` del `required` o su `minLength` hace terminar el comando con código distinto de 0 nombrando el schema
 
-#### Scenario: El cambio no es incompatible [US-069 AC-1] [ADR-26] [S1 resp. 37]
+#### Scenario: El cambio no es incompatible [US-069 AC-1] [ADR-26] [decisión 58]
 - **WHEN** se compara el spec de la rama con el de `main` (`oasdiff breaking`, o a mano mientras `contracts:breaking` no exista)
-- **THEN** no hay cambios incompatibles (solo descripciones y ejemplos) y `info.version` de `clinical-api` pasa de 1.3.0 a 1.3.1 (patch, `[S1 resp. 37]`)
+- **THEN** no hay cambios incompatibles (solo descripciones y ejemplos) y `info.version` de `clinical-api` pasa de 1.4.0 a 1.4.1 (patch, decisión 58 del plan)

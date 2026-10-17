@@ -20,8 +20,8 @@ L1D-164 (Ajv2020 sobre el *bundle*) hasta US-214 · corrección del Gate 1: el `
 `clinical-api`; el `X-Trace-Id` entrante solo va al log y solo si cumple el patrón ·
 Validación clínica de los oncólogos asesores (2026-10-14, `backlog/sprints/S1-plan.md` §7): `[S1 resp. 35]` un caso
 sin tipo de cáncer no es "sin evidencia": `422 TIPO_CANCER_NO_REGISTRADO` antes de llamar a la IA, sin generar ni
-persistir análisis (cambio aditivo del contrato) · `[S1 resp. 37]` registro de versiones: clinical-api 1.1.0
-(L1D-164) → **1.2.0** en este change.
+persistir análisis (cambio aditivo del contrato) · registro de versiones (decisión 58 del plan, sustituye a `[S1 resp. 37]`): clinical-api 1.2.0
+(L1D-197) → **1.3.0** en este change.
 
 ## Why
 
@@ -76,7 +76,7 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
   `POST /platform/evidence-analyses` pasa a un schema propio `ErrorAnalisisNoProcesable` (`error` ∈
   `CUERPO_INVALIDO`, `PACIENTE_EGRESADO`, `TIPO_CANCER_NO_REGISTRADO`), de modo que el `ErrorSolicitudNoProcesable`
   compartido con la carga de documentos no cambia; ejemplo `contracts/examples/error-tipo-cancer-no-registrado.json`
-  con su entrada en `index.json`; `info.version` 1.1.0 → **1.2.0** `[S1 resp. 37]`. `apps/rag-orchestrator/openapi.yaml`
+  con su entrada en `index.json`; `info.version` 1.2.0 → **1.3.0** (decisión 58 del plan). `apps/rag-orchestrator/openapi.yaml`
   no cambia aquí (su `422` lo añade L1D-106). El resto (endpoint, `EvidenceAnalysisRequest`, `ClinicalContext`,
   `RagQueryInternalRequest`, `401`/`403` `PERMISO_DENEGADO`/`404`/`422 CUERPO_INVALIDO`/`502`) ya está congelado
   (US-033).
@@ -104,8 +104,9 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
 
 ## Bounded contexts
 
-- **clinical-platform** (único): `apps/clinical-api`.
-- No toca `ai-services` (usa el contrato de `/rag/query` tal cual) ni `frontend` (la UI y el Route Handler de `web`
+- **clinical-platform**: `apps/clinical-api`.
+- **ai-services** (solo un test, tarea 3.1; sin cambio de código): la mitad de logs del AC-5 de US-211 en `apps/rag-orchestrator/tests/`.
+- No modifica código de `ai-services` (usa el contrato de `/rag/query` tal cual) ni `frontend` (la UI y el Route Handler de `web`
   son de US-060, L1D-139).
 
 ## Dependencias
@@ -118,8 +119,8 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
 - ↪ **Depende de** el change de **L1D-197** (US-211): guard de sesión de `clinical-api` (AC-6) y el login real
   (`POST /platform/auth/login`) para el test de AC-5 de US-211.
 - **Hereda de L1D-197 (usuario, 2026-10-20, opción b):** el AC-5 de US-211 ("la sesión del doctor nunca llega a
-  `rag-orchestrator`"): su test de integración (tarea 2.8f) y su E2E de logs (2.8g) se escriben y se cierran aquí,
-  porque el gateway nace en este change; cambio de spec de ambos changes (requisito `La sesión del doctor nunca
+  `rag-orchestrator`"): su test de integración (tarea 2.8f) y su mitad de logs de `rag-orchestrator` (un test de integración, tarea 3.1) se escriben y se cierran aquí,
+  porque el gateway nace en este change; el E2E de logs pasa a la deuda D-3 (decisión 60 del plan); cambio de spec de ambos changes (requisito `La sesión del doctor nunca
   llega a rag-orchestrator` movido de `auth-session` a `evidence-analysis-gateway`). Efecto de orden: este change
   (oleada 6) ya dependía de L1D-197 (oleada 4); L1D-197 deja de depender de él por AC-5.
 - ↪ **Depende de** el change de **L1D-164** (US-034): esqueleto de `apps/clinical-api`, workspaces, Compose,
@@ -159,7 +160,7 @@ allowlist explícita y validada contra el esquema cerrado `ClinicalContext` es l
 - Configuración: `RAG_ORCHESTRATOR_URL`, `ANALYSIS_MAX_OPTIONS` (1 en el S1; nombre asumido), `CLINICAL_CATALOG_PATH`
   (lectura de `manifest.json`), `APP_ENV` (leído por el desidentificador provisional).
 - Contratos: `apps/clinical-api/openapi.yaml` (aditivo: `ErrorAnalisisNoProcesable` con `TIPO_CANCER_NO_REGISTRADO`,
-  ejemplo nuevo, `info.version` 1.2.0, `[S1 resp. 35]` `[S1 resp. 37]`) y regeneración del Zod y del cliente TS.
+  ejemplo nuevo, `info.version` 1.3.0, `[S1 resp. 35]`, decisión 58 del plan) y regeneración del Zod y del cliente TS.
   Las respuestas emitidas (`401`/`403`/`404`/`422`/`502`) se validan contra el spec con el
   *helper* de L1D-164 `[S1 resp. 17]` (no con `contracts:verify-provider`, que llega con US-214).
 - Datos: solo seed sintético y fixtures (RN-13, RN-14).

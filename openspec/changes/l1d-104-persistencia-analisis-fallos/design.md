@@ -101,7 +101,7 @@ service.analizar(peticion, sesion)
    `clinical-api`, nunca con el `message` de rag. En el flujo normal no se alcanza (L1D-103 corta antes).
    Fallo de `persistirAnalisis()` → `500 ERROR_INTERNO`. Los cuerpos usan los mensajes fijos de los ejemplos
    (`error-servicio-ia.json`, `error-llm-local-no-disponible.json`, `error-deadline-vencido.json`,
-   `error-interno.json`, `error-tipo-cancer-no-registrado.json`) más el `traceId` generado; jamás el *stack* de Backend 2 o de PostgreSQL. El `504` propio de
+   `error-interno-analisis.json`, `error-tipo-cancer-no-registrado.json`) más el `traceId` generado; jamás el *stack* de Backend 2 o de PostgreSQL. El `504` propio de
    rag se trata como *timeout* porque significa que venció el `X-Request-Deadline` propagado.
 6. **Deadline** `[S1 resp. 13]`. `RAG_TIMEOUT_MS` (propuesta 30000; RN-22, en `src/config.ts`). El service calcula
    `deadline = clock.now() + RAG_TIMEOUT_MS` y lo pasa como el **parámetro tipado** `X-Request-Deadline` (ISO 8601)
@@ -134,7 +134,7 @@ responder desde la respuesta de Backend 2 (abre divergencia con lo persistido).
 
 - **Proveedor:** `clinical-api` (`POST /platform/evidence-analyses`); **consumidor:** `web` (L1D-139). **Proveedor:**
   `rag-orchestrator` (`POST /rag/query`); **consumidor:** `clinical-api` (sin cambios).
-- **Diff propuesto** de `apps/clinical-api/openapi.yaml` (`info.version` **1.2.0 → 1.3.0**, `[S1 resp. 37]`):
+- **Diff propuesto** de `apps/clinical-api/openapi.yaml` (`info.version` **1.3.0 → 1.4.0**, decisión 58 del plan; `ErrorInterno` **ya existe**, lo posee L1D-197, decisión 59):
 
   ```diff
    /platform/evidence-analyses:
@@ -144,29 +144,11 @@ responder desde la respuesta de Backend 2 (abre divergencia con lo persistido).
   +        $ref: '#/components/responses/ErrorInterno'
          "502":
            $ref: '#/components/responses/ErrorServicioIa'
-   components:
-     responses:
-  +    ErrorInterno:
-  +      description: >-
-  +        Fallo interno de clinical-api (p. ej., al persistir el AIAnalysisRecord). Nunca incluye resultados
-  +        del análisis ni detalles internos (RN-06).
-  +      content:
-  +        application/json:
-  +          schema:
-  +            $ref: '#/components/schemas/ErrorInterno'
-     schemas:
-  +    ErrorInterno:
-  +      type: object
-  +      additionalProperties: false
-  +      required: [error, message, traceId]
-  +      properties:
-  +        error: { type: string, const: ERROR_INTERNO }
-  +        message: { type: string }
-  +        traceId: { type: string }
-  # info.version: 1.1.0 (L1D-164) → 1.2.0 (L1D-103) → 1.3.0 (este change); L1D-194 → 1.3.1 y L1D-203 → 1.4.0 [S1 resp. 37]
+  # components.responses.ErrorInterno y components.schemas.ErrorInterno: sin cambios (los define L1D-197)
+  # info.version: 1.1.0 (L1D-164) → 1.2.0 (L1D-197, dueño de ErrorInterno) → 1.3.0 (L1D-103) → 1.4.0 (este change); L1D-194 → 1.4.1 y L1D-203 → 1.5.0 (decisión 58 del plan)
   ```
 
-- **Ejemplos:** nuevo `contracts/examples/error-interno.json`
+- **Ejemplos:** nuevo `contracts/examples/error-interno-analisis.json` (`error-interno.json`, con target del login, es de L1D-197)
   (`{"error":"ERROR_INTERNO","message":"No se pudo completar el análisis.","traceId":"req_…"}`) con entrada en
   `index.json` (`target: #/paths/~1platform~1evidence-analyses/post/responses/500`). Se reutilizan
   `error-servicio-ia.json`, `error-deadline-vencido.json`, `rag-query-con-evidencia.json`,
@@ -177,7 +159,7 @@ responder desde la respuesta de Backend 2 (abre divergencia con lo persistido).
 - **Orden y archivos tocados** `[S1 resp. 17]`: `contracts:generate` (cliente, Zod y extracto del `readme.md` §4)
   **antes** de `contracts:check`; `readme.md` figura como archivo tocado (extracto generado). Ante conflicto de merge
   en `openapi.yaml`, lo generado o el extracto del readme, se rebasa y se **regenera**; nunca se fusiona a mano.
-- **Generado, nunca fuente:** el Zod de `RagQueryInternalResponse` (defensa en el borde) y de `ErrorInterno`, y el
+- **Generado, nunca fuente:** el Zod de `RagQueryInternalResponse` (defensa en el borde) y el
   cliente TS, salen de `packages/api-contracts` (skill `sync-contracts`).
 - **Verificación del proveedor:** `200` con evidencia, `200` sin evidencia, `500`, `502`, `503` y `504` se validan
   contra el spec de `clinical-api` con el *helper* de L1D-164 (Ajv2020 sobre el *bundle*, `[S1 resp. 17]`);
@@ -202,7 +184,7 @@ Ningún service importa Prisma ni un cliente HTTP concreto; los reciben por la *
 - **Contención con L1D-103 en los mismos archivos** (service, repository, `ports.ts`) → se implementa en la oleada
   siguiente sobre su rama mergeada; este change no redefine lo que L1D-103 crea.
 - **Choque de `info.version`** con L1D-164/L1D-103/L1D-194/L1D-203 → resuelto por el registro de versiones
-  `[S1 resp. 37]` (este change = 1.3.0); quien mergea segundo rebasa y regenera.
+  (decisión 58 del plan; este change = 1.4.0); quien mergea segundo rebasa y regenera.
 - **Fallo de persistencia en integración sin mockear Prisma** → se provoca en la BD real de test con un *trigger*
   temporal `BEFORE INSERT` que lanza `RAISE EXCEPTION` (creado y borrado por el test); el repository es real.
 
