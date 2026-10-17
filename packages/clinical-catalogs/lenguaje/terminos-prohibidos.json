@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -23,6 +23,16 @@
         "id": "es-indicado-para-usted",
         "idioma": "es",
         "texto": "indicado para usted"
+      },
+      {
+        "id": "es-indicado-para-este-paciente",
+        "idioma": "es",
+        "texto": "indicado para este paciente"
+      },
+      {
+        "id": "es-indicado-para-esta-paciente",
+        "idioma": "es",
+        "texto": "indicado para esta paciente"
       },
       {
         "id": "en-recommended-for-this-patient",

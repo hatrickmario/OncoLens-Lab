@@ -81,6 +81,13 @@ def _posiciones_de(haystack: Sequence[str], secuencia: Sequence[str]) -> list[in
     ]
 
 
+def _texto_normalizable(valor: str) -> str:
+    """Un texto que queda vacío tras la normalización base coincidiría con todo o con nada."""
+    if not normalizar_texto(valor):
+        raise ValueError("el texto queda vacío tras la normalización")
+    return valor
+
+
 class _Modelo(BaseModel):
     model_config = ConfigDict(frozen=True, populate_by_name=True)
 
@@ -91,6 +98,8 @@ class TerminoProhibido(_Modelo):
     texto: str = Field(min_length=1)
     formas: list[str] | None = Field(default=None, min_length=1)
     excepciones: list[str] | None = Field(default=None, min_length=1)
+
+    _texto_normalizable = field_validator("texto")(_texto_normalizable)
 
     @model_validator(mode="after")
     def _formas_y_excepciones_coherentes(self) -> Self:
@@ -108,6 +117,8 @@ class PrefijoProhibido(_Modelo):
     id: str = Field(min_length=1)
     idioma: Literal["es", "en"]
     prefijo: str = Field(min_length=1)
+
+    _prefijo_normalizable = field_validator("prefijo")(_texto_normalizable)
 
 
 class NivelA(_Modelo):

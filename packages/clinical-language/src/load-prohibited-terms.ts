@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { clavesDe, palabrasDe } from './normalizar.js';
+import { clavesDe, normalizarTexto, palabrasDe } from './normalizar.js';
 import { posicionesDe } from './secuencias.js';
 import type { ListaTerminos } from './tipos.js';
 
@@ -12,6 +12,10 @@ export const RUTA_LISTA_TERMINOS_PROHIBIDOS = new URL(
 );
 
 const texto = z.string().min(1);
+/** Texto que no queda vacío tras la normalización base: uno vacío coincidiría con todo o con nada. */
+const textoNormalizable = texto.refine((valor) => normalizarTexto(valor) !== '', {
+  message: 'el texto queda vacío tras la normalización',
+});
 const idioma = z.enum(['es', 'en']);
 const aplicaA = z.array(z.string().min(1));
 
@@ -19,7 +23,7 @@ const termino = z
   .object({
     id: texto,
     idioma,
-    texto,
+    texto: textoNormalizable,
     formas: z.array(texto).min(1).optional(),
     excepciones: z.array(texto).min(1).optional(),
   })
@@ -49,7 +53,7 @@ const esquemaLista = z
     nivelA: z.object({ aplicaA, terminos: z.array(termino).min(1) }),
     nivelB: z.object({
       aplicaA,
-      prefijos: z.array(z.object({ id: texto, idioma, prefijo: texto })).min(1),
+      prefijos: z.array(z.object({ id: texto, idioma, prefijo: textoNormalizable })).min(1),
       terminos: z.array(termino),
     }),
     frasesPermitidas: z.object({ aplicaA, frases: z.array(texto) }),
