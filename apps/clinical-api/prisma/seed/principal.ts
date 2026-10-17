@@ -12,7 +12,7 @@ import { relojDelSeed } from './determinismo.js';
 import { assertSeedPermitido, SeedBloqueadoError } from './guarda.js';
 import { leerArchivoDeTexto } from './archivos.js';
 import { leerSecreto } from './secretos.js';
-import type { ConexionDelSeed, CredencialesDelSeed, ResumenDelSeed } from './sembrar.js';
+import type { ConexionDelSeed, CredencialesDelSeed, FilasUpsertadas } from './sembrar.js';
 import { sembrar } from './sembrar.js';
 
 /** Dependencias de borde del seed: se inyectan para que el test no dependa del proceso ni de la red. */
@@ -37,7 +37,7 @@ function leerCredenciales(env: NodeJS.ProcessEnv, leerArchivo: LeerArchivo): Cre
 export async function ejecutarSeed(
   env: NodeJS.ProcessEnv,
   dependencias: DependenciasDelSeed,
-): Promise<ResumenDelSeed> {
+): Promise<FilasUpsertadas> {
   const { registrar, traceId } = dependencias;
   try {
     const filas = await sembrarTrasLaGuarda(env, dependencias);
@@ -64,7 +64,7 @@ function lineaDeFallo(error: unknown, traceId: string): Record<string, unknown> 
 async function sembrarTrasLaGuarda(
   env: NodeJS.ProcessEnv,
   dependencias: DependenciasDelSeed,
-): Promise<ResumenDelSeed> {
+): Promise<FilasUpsertadas> {
   const config = leerConfiguracionDelSeed(env);
   assertSeedPermitido(config);
   const credenciales = leerCredenciales(env, dependencias.leerArchivo);

@@ -117,11 +117,15 @@ describe('Contraseñas e idempotencia del seed', () => {
     const idsDiagnosticos = await cliente.query('SELECT id FROM clinical.diagnosis ORDER BY id');
     const hash = await hashDe('doc1@test.local');
 
-    await seed.ejecutar(
-      entornoDelSeed(
-        escribirArchivosDeContrasena({ doctor: 'SINT-cambiada-1', admin: 'SINT-cambiada-2' }),
-      ),
-    );
+    const archivosCambiados = escribirArchivosDeContrasena({
+      doctor: 'SINT-cambiada-1',
+      admin: 'SINT-cambiada-2',
+    });
+    try {
+      await seed.ejecutar(entornoDelSeed(archivosCambiados));
+    } finally {
+      archivosCambiados.limpiar();
+    }
 
     expect(await contarFilasDeTodasLasTablas(cliente)).toEqual(conteos);
     expect(conteos['clinical.patient']).toBe(5);

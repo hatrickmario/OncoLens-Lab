@@ -29,7 +29,11 @@ const DEFAULT_ARGON2_MEMORY_COST_KIB = 19456;
 const DEFAULT_ARGON2_TIME_COST = 2;
 const DEFAULT_ARGON2_PARALLELISM = 1;
 
-function readPositiveInteger(env: NodeJS.ProcessEnv, name: string, defaultValue: number): number {
+export function readPositiveInteger(
+  env: NodeJS.ProcessEnv,
+  name: string,
+  defaultValue: number,
+): number {
   const raw = env[name];
   if (raw === undefined || raw === '') return defaultValue;
   const value = Number(raw);

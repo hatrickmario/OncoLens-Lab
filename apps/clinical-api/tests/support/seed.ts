@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { Client } from 'pg';
 import { conexionDesdeCliente } from '../../prisma/seed/conexion.js';
 import { ejecutarSeed } from '../../prisma/seed/principal.js';
-import type { ConexionDelSeed, ResumenDelSeed } from '../../prisma/seed/sembrar.js';
+import type { ConexionDelSeed, FilasUpsertadas } from '../../prisma/seed/sembrar.js';
 import {
   createPasswordHasher,
   type PasswordHasher,
@@ -102,7 +102,7 @@ export const TRACE_ID_DE_PRUEBA = 'req_seed0001';
 
 export interface SeedEnProceso {
   readonly registro: LoggerEnMemoria;
-  readonly ejecutar: (env: NodeJS.ProcessEnv) => Promise<ResumenDelSeed>;
+  readonly ejecutar: (env: NodeJS.ProcessEnv) => Promise<FilasUpsertadas>;
 }
 
 /**

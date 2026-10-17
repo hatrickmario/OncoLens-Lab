@@ -12,6 +12,7 @@ export const pacienteB: PacienteSemilla = {
       histology: 'adenocarcinoma acinar',
       stagingSystem: 'TNM_8',
       stageValue: 'T2cN0M0',
+      escalaDeDesempeno: 'ECOG',
       performanceValue: 0,
       diasDesdeElDiagnostico: 57,
       activo: true,

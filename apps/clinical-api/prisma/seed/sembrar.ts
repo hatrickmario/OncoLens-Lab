@@ -45,7 +45,7 @@ export interface EntradasDelSeed {
 }
 
 /** Filas escritas por tabla (los logs del seed solo llevan conteos, nunca valores). */
-export type ResumenDelSeed = Readonly<Record<string, number>>;
+export type FilasUpsertadas = Readonly<Record<string, number>>;
 
 const PACIENTES_SEMILLA: readonly PacienteSemilla[] = [
   pacienteA,
@@ -206,7 +206,7 @@ async function sembrarDiagnostico(
     grade: gradacion === undefined ? null : derivarTextoGrade(gradacion),
     staging_system: diagnostico.stagingSystem,
     stage_value: diagnostico.stageValue,
-    performance_scale: 'ECOG',
+    performance_scale: diagnostico.escalaDeDesempeno,
     performance_value: diagnostico.performanceValue,
     diagnosed_at: fechaRelativa(siembra.ahora, diagnostico.diasDesdeElDiagnostico),
     is_active: diagnostico.activo,
@@ -219,7 +219,6 @@ async function sembrarDiagnostico(
     created_at: siembra.ahora,
   });
   if (gradacion === undefined) return;
-  const esGleason = gradacion.sistema === 'gleason_isup';
   const gleason =
     gradacion.sistema === 'gleason_isup'
       ? derivarGleason(gradacion.patronPrimario, gradacion.patronSecundario)
@@ -228,13 +227,16 @@ async function sembrarDiagnostico(
     id: idSembrado(`${contexto.paciente.clave}/${diagnostico.clave}/gradacion`),
     diagnosis_id: diagnosticoId,
     grading_system: gradacion.sistema,
-    specimen_type: esGleason ? (gradacion.muestra?.specimenType ?? null) : null,
-    grade_scope: esGleason ? (gradacion.muestra?.gradeScope ?? null) : null,
-    gleason_primary_pattern: esGleason ? gradacion.patronPrimario : null,
-    gleason_secondary_pattern: esGleason ? gradacion.patronSecundario : null,
+    specimen_type:
+      gradacion.sistema === 'gleason_isup' ? (gradacion.muestra?.specimenType ?? null) : null,
+    grade_scope:
+      gradacion.sistema === 'gleason_isup' ? (gradacion.muestra?.gradeScope ?? null) : null,
+    gleason_primary_pattern: gradacion.sistema === 'gleason_isup' ? gradacion.patronPrimario : null,
+    gleason_secondary_pattern:
+      gradacion.sistema === 'gleason_isup' ? gradacion.patronSecundario : null,
     gleason_score: gleason?.puntaje ?? null,
     isup_grade_group: gleason?.grupoIsup ?? null,
-    nottingham_grade: esGleason ? null : gradacion.grado,
+    nottingham_grade: gradacion.sistema === 'nottingham' ? gradacion.grado : null,
     is_reference: true,
     source_document_id: null,
     ...PROCEDENCIA_DEL_SEED,
@@ -292,7 +294,7 @@ async function sembrarExamenes(siembra: Siembra, contexto: ContextoDePaciente): 
   }
 }
 
-async function sembrarTratamientosEventosYAtributos(
+async function sembrarTratamientosPrevios(
   siembra: Siembra,
   contexto: ContextoDePaciente,
 ): Promise<void> {
@@ -319,6 +321,9 @@ async function sembrarTratamientosEventosYAtributos(
       created_at: siembra.ahora,
     });
   }
+}
+
+async function sembrarEventos(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
   for (const evento of contexto.paciente.eventos) {
     await upsertar(siembra, 'clinical.clinical_event', {
       id: idSembrado(`${contexto.paciente.clave}/${evento.clave}`),
@@ -342,6 +347,9 @@ async function sembrarTratamientosEventosYAtributos(
       created_at: siembra.ahora,
     });
   }
+}
+
+async function sembrarAtributos(siembra: Siembra, contexto: ContextoDePaciente): Promise<void> {
   for (const atributo of contexto.paciente.atributos) {
     await upsertar(siembra, 'clinical.clinical_attribute', {
       id: idSembrado(`${contexto.paciente.clave}/${atributo.clave}`),
@@ -397,7 +405,9 @@ async function sembrarPaciente(
     await sembrarDiagnostico(siembra, contexto, diagnostico);
   }
   await sembrarExamenes(siembra, contexto);
-  await sembrarTratamientosEventosYAtributos(siembra, contexto);
+  await sembrarTratamientosPrevios(siembra, contexto);
+  await sembrarEventos(siembra, contexto);
+  await sembrarAtributos(siembra, contexto);
   if (paciente.optOutAnalisisIa !== undefined) {
     await upsertar(siembra, 'clinical.patient_opt_out', {
       id: idSembrado(`${paciente.clave}/opt-out-analisis-ia`),
@@ -435,7 +445,7 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
 }
 
 /** Siembra roles, usuarios de demo y los pacientes (a)–(e), de forma idempotente, dentro de la sesión recibida. */
-export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<ResumenDelSeed> {
+export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<FilasUpsertadas> {
   const escritas: Record<string, number> = {};
   const siembra: Siembra = { db, entradas, ahora: entradas.reloj.now(), escritas };
   await sembrarTodo(siembra);

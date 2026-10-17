@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { ConfiguracionInvalidaError } from '../../src/config.js';
+import { ConfiguracionInvalidaError, readPositiveInteger } from '../../src/config.js';
 
 /**
  * Configuración del seed (RN-22): nada de lo que varía por entorno es un literal del dominio. Esta parte NO toca
@@ -49,17 +49,6 @@ function leerBandera(env: NodeJS.ProcessEnv, variable: string): boolean {
   return analizar(variable, z.enum(['true', 'false']), valor, 'debe ser true o false') === 'true';
 }
 
-function leerEnteroPositivo(env: NodeJS.ProcessEnv, variable: string, porDefecto: number): number {
-  const valor = valorOpcional(env, variable);
-  if (valor === undefined) return porDefecto;
-  return analizar(
-    variable,
-    z.coerce.number().int().positive(),
-    valor,
-    'debe ser un entero positivo',
-  );
-}
-
 export function leerConfiguracionDelSeed(env: NodeJS.ProcessEnv): ConfiguracionDelSeed {
   const entornos = valorOpcional(env, 'SEED_ALLOWED_ENVS') ?? ENTORNOS_PERMITIDOS_POR_DEFECTO;
   return {
@@ -77,12 +66,12 @@ export function leerConfiguracionDelSeed(env: NodeJS.ProcessEnv): ConfiguracionD
       'debe ser una fecha AAAA-MM-DD',
     ),
     rutaDelCatalogo: valorOpcional(env, 'CLINICAL_CATALOG_PATH') ?? CATALOGO_DEL_MONOREPO,
-    anosHastaRetencion: leerEnteroPositivo(
+    anosHastaRetencion: readPositiveInteger(
       env,
       'SEED_RETENTION_UNTIL_YEARS',
       ANOS_HASTA_RETENCION_POR_DEFECTO,
     ),
-    anosHastaRetencionMaxima: leerEnteroPositivo(
+    anosHastaRetencionMaxima: readPositiveInteger(
       env,
       'SEED_RETENTION_MAX_YEARS',
       ANOS_HASTA_RETENCION_MAXIMA_POR_DEFECTO,
