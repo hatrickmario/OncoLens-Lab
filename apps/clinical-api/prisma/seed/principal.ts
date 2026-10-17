@@ -10,7 +10,7 @@ import { conectarConTlsVerificado } from './conexion.js';
 import { relojDelSeed } from './determinismo.js';
 import { assertSeedPermitido, SeedBloqueadoError } from './guarda.js';
 import { leerArchivoDeTexto } from './archivos.js';
-import { SecretoDelSeedAusenteError, leerSecreto } from './secretos.js';
+import { leerSecreto } from './secretos.js';
 import type { ConexionDelSeed, CredencialesDelSeed, ResumenDelSeed } from './sembrar.js';
 import { sembrar } from './sembrar.js';
 
@@ -58,11 +58,7 @@ export async function ejecutarSeed(
   }
 }
 
-const ERRORES_CON_MENSAJE_SEGURO = [
-  SeedBloqueadoError,
-  ConfiguracionInvalidaError,
-  SecretoDelSeedAusenteError,
-];
+const ERRORES_CON_MENSAJE_SEGURO = [SeedBloqueadoError, ConfiguracionInvalidaError];
 
 /** Punto de entrada del proceso (`prisma db seed`): un error conocido se imprime sin valores y sale con código 1. */
 export async function ejecutarSeedDelProceso(): Promise<void> {

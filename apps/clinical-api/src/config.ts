@@ -118,12 +118,15 @@ export interface DatabaseConfig {
 
 const PUERTO_POSTGRES_POR_DEFECTO = 5432;
 
-function leerArchivoObligatorio(
-  env: NodeJS.ProcessEnv,
+/**
+ * Contenido (sin espacios de borde) del archivo de un secreto `*_FILE`. Única regla de lectura de secretos por archivo:
+ * el error nombra la variable y nunca la ruta ni el contenido (RN-10, RN-14).
+ */
+export function leerSecretoDeArchivo(
   variable: string,
+  ruta: string,
   readFile: (ruta: string) => string,
 ): string {
-  const ruta = leerObligatoria(env, variable);
   let contenido: string;
   try {
     contenido = readFile(ruta).trim();
@@ -133,6 +136,14 @@ function leerArchivoObligatorio(
   }
   if (contenido === '') throw new ConfiguracionInvalidaError(variable, 'apunta a un archivo vacío');
   return contenido;
+}
+
+function leerArchivoObligatorio(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  readFile: (ruta: string) => string,
+): string {
+  return leerSecretoDeArchivo(variable, leerObligatoria(env, variable), readFile);
 }
 
 function leerUrlDeBaseDeDatos(env: NodeJS.ProcessEnv): URL {
