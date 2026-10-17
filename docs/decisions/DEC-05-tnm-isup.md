@@ -4,6 +4,7 @@
 
 - **Estado:** Decidida por el usuario (2026-10-09; ampliada en el Gate 1 el 2026-10-11) `[Pre-S1 resp. 1, 2, 18, 29]`.
 - **Validación clínica:** **hecha** según el usuario (refinamiento del S1, 2026-10-13, `[S1 resp. 1]`), por el "Oncólogo asesor A" (DEC-02), antes de US-038. Si en adelante se rechazara, se escala a Ingeniería y no se difiere al S3 (AC-3).
+- **Decidido (usuario, 2026-10-20): la confirmación del usuario del 2026-10-13 de la validación del Oncólogo asesor A cumple el AC-1; la firma escrita del oncólogo queda como constancia opcional sin bloquear.**
 
 | Validación | Responsable | Fecha | Resultado |
 |---|---|---|---|
