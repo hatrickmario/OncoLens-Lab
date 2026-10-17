@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { ConfiguracionInvalidaError, readAuthConfig } from '../../src/config.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
@@ -21,6 +22,8 @@ export interface DependenciasDelSeed {
   readonly leerArchivo: LeerArchivo;
   readonly hasher: PasswordHasher;
   readonly registrar: Registrar;
+  /** Identificador de esta ejecución en los logs (`req_xxxxxxxx`); lo genera el borde del proceso. */
+  readonly traceId: string;
 }
 
 function leerCredenciales(env: NodeJS.ProcessEnv, leerArchivo: LeerArchivo): CredencialesDelSeed {
@@ -70,6 +73,7 @@ export async function ejecutarSeedDelProceso(): Promise<void> {
       leerArchivo: leerArchivoDeTexto,
       hasher: createPasswordHasher(readAuthConfig(process.env).argon2),
       registrar: registrarEnConsola,
+      traceId: `req_${randomUUID().slice(0, 8)}`,
     });
   } catch (error) {
     const conocido = ERRORES_CON_MENSAJE_SEGURO.some((clase) => error instanceof clase);

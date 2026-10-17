@@ -16,6 +16,10 @@ describe('idSembrado', () => {
     expect(idSembrado('paciente-a')).toBe(idSembrado('paciente-a'));
   });
 
+  it('devuelve el UUID fijo del paciente semilla (a), el que usa WEB_HOME_PATH', () => {
+    expect(idSembrado('paciente-a')).toBe('0fd028e2-f8b0-56c7-a748-2a4e473d879d');
+  });
+
   it('devuelve UUID distintos cuando la clave natural cambia', () => {
     expect(idSembrado('paciente-a')).not.toBe(idSembrado('paciente-b'));
   });

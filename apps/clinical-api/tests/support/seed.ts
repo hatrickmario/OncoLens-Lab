@@ -98,6 +98,8 @@ export function ejecutarSeedComoProceso(env: Record<string, string>): ResultadoD
   return { codigo: resultado.status, salida: `${resultado.stdout}\n${resultado.stderr}` };
 }
 
+export const TRACE_ID_DE_PRUEBA = 'req_seed0001';
+
 export interface SeedEnProceso {
   readonly registro: LoggerEnMemoria;
   readonly ejecutar: (env: NodeJS.ProcessEnv) => Promise<ResumenDelSeed>;
@@ -123,6 +125,7 @@ export function seedContraLaBase(
         leerArchivo: (ruta) => readFileSync(ruta, 'utf8'),
         hasher,
         registrar: registro.registrar,
+        traceId: TRACE_ID_DE_PRUEBA,
       }),
   };
 }

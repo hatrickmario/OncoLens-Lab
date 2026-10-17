@@ -5,6 +5,7 @@ import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
   CONTRASENA_FICTICIA_ADMIN,
   CONTRASENA_FICTICIA_DOCTOR,
+  TRACE_ID_DE_PRUEBA,
   crearBaseDelSeed,
   entornoDelSeed,
   escribirArchivosDeContrasena,
@@ -109,6 +110,7 @@ describe('Contenido del seed sintético', () => {
     const texto = seed.registro.texto();
 
     expect(texto).toContain('seed_completo');
+    expect(texto).toContain(TRACE_ID_DE_PRUEBA);
     expect(texto).not.toContain('test.local');
     expect(texto).not.toContain(CONTRASENA_FICTICIA_DOCTOR);
     expect(texto).not.toContain(CONTRASENA_FICTICIA_ADMIN);

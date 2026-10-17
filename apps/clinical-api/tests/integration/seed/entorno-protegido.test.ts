@@ -68,6 +68,7 @@ describe('Seed bloqueado fuera de los entornos permitidos', () => {
 
   it('no abre la conexión a la base cuando la guarda rechaza el entorno [US-039 AC-5]', async () => {
     let conexionesAbiertas = 0;
+    const lineas: Record<string, unknown>[] = [];
 
     await expect(
       ejecutarSeed(entornoDelSeed(archivos, { APP_ENV: 'piloto' }), {
@@ -77,10 +78,19 @@ describe('Seed bloqueado fuera de los entornos permitidos', () => {
         },
         leerArchivo: () => 'contenido-ficticio',
         hasher: { hash: () => Promise.resolve('hash'), verify: () => Promise.resolve(false) },
-        registrar: () => undefined,
+        registrar: (linea) => lineas.push(linea),
+        traceId: 'req_guarda01',
       }),
     ).rejects.toBeInstanceOf(SeedBloqueadoError);
 
     expect(conexionesAbiertas).toBe(0);
+    expect(lineas).toEqual([
+      {
+        event: 'seed_fallido',
+        traceId: 'req_guarda01',
+        clase: 'SeedBloqueadoError',
+        variable: 'APP_ENV',
+      },
+    ]);
   });
 });
