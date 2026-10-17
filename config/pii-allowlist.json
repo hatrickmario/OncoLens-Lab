@@ -134,5 +134,19 @@
       }
     ],
     "motivo": "Documento sintético sembrado en la descripción de un evento clínico (PII en texto libre, RN-11)."
+  },
+  {
+    "fixture": "FX-hook-pre-commit-gate-comentario",
+    "clase": "sintetico",
+    "rutas": [
+      ".claude/hooks/pre-commit-gate.sh"
+    ],
+    "valores": [
+      {
+        "formato": "correo",
+        "sha256": "6599e178e48b89cb998fb9535e2c5e2588858c7f139075d5581bae720f1a616a"
+      }
+    ],
+    "motivo": "Falso positivo (L1D-166): línea 24 del hook, un comentario que documenta el decorador @pytest.mark como contraejemplo del regex de emails; no es un correo ni una persona. Exención por valor y ruta exacta."
   }
 ]
