@@ -9,6 +9,8 @@
   --color-control-border: #7c8696;
   --color-status-nocoincide: #8e1f18;
   --color-status-nocoincide-bg: #f9e3e1;
+  --color-error: var(--color-status-nocoincide);
+  --color-error-bg: var(--color-status-nocoincide-bg);
 }
 
 body {

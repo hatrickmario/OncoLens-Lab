@@ -1,7 +1,6 @@
 import 'server-only';
 import { createEvidenceAnalysis } from '../../../../packages/api-contracts/src/client-web/clinical-api';
 import type { EvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/client-web/clinical-api';
-import type { ConfigWeb } from './config';
 import {
   cabecerasHaciaNavegador,
   crearSdkClinicalApi,
@@ -9,26 +8,19 @@ import {
   type SdkClinicalApi,
 } from './clinical-api';
 import { verificarOrigen } from './origen';
+import type { DependenciasDelBff } from './dependencias';
 import type { Registrar } from './registro';
 import { leerCuerpoAcotado } from './peticiones';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_PROXY = 'evidence_analyses.proxy';
 
-export interface DependenciasAnalisis {
-  config: ConfigWeb;
-  fetch: typeof globalThis.fetch;
-  nuevoTraceId: () => string;
-  ahora: () => number;
-  registrar: Registrar;
-}
-
 /**
  * Proxy transparente de `POST /platform/evidence-analyses` (design D1): sin validar ni traducir; devuelve
  * el status y el texto exacto de clinical-api con las cabeceras de la lista blanca. Sin streaming ni estado.
  */
 export function crearManejadorAnalisis(
-  dependencias: DependenciasAnalisis,
+  dependencias: DependenciasDelBff,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
     const rechazo = verificarOrigen(request, { ...dependencias, evento: EVENTO_PROXY });
@@ -86,7 +78,7 @@ function reenviar(respuesta: Response, cuerpoCrudo: string): Response {
   });
 }
 
-function responderCuerpoExcesivo(dependencias: DependenciasAnalisis): Response {
+function responderCuerpoExcesivo(dependencias: DependenciasDelBff): Response {
   const traceId = dependencias.nuevoTraceId();
   dependencias.registrar({ event: EVENTO_PROXY, status: 413, traceId, motivo: 'cuerpo_excesivo' });
   return respuestaPropia(
@@ -100,7 +92,7 @@ function responderCuerpoExcesivo(dependencias: DependenciasAnalisis): Response {
 }
 
 function responderConFallo(
-  dependencias: DependenciasAnalisis,
+  dependencias: DependenciasDelBff,
   inicio: number,
   motivo: MotivoDeFallo,
   respuesta: Response | undefined,

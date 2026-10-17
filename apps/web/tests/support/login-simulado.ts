@@ -1,6 +1,7 @@
 import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
-import type { DependenciasLogin, LineaDeRegistroLogin } from '../../app/api/auth/login/manejador';
+import type { DependenciasLogin } from '../../lib/server/auth-login';
+import type { LineaDeRegistro } from '../../lib/server/registro';
 import { ORIGEN_PERMITIDO, URL_CLINICAL_API } from './clinical-api-simulado';
 
 export const URL_LOGIN = `${ORIGEN_PERMITIDO}/api/auth/login`;
@@ -50,7 +51,7 @@ export function crearLoginSimulado() {
 }
 
 export function crearDependenciasDeLogin(sobrescribir: Partial<DependenciasLogin> = {}) {
-  const lineas: LineaDeRegistroLogin[] = [];
+  const lineas: LineaDeRegistro[] = [];
   const dependencias: DependenciasLogin = {
     config: {
       clinicalApiUrl: URL_CLINICAL_API,

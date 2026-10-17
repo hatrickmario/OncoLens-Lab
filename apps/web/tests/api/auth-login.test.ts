@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
-import { crearManejadorLogin } from '../../app/api/auth/login/manejador';
+import { crearManejadorLogin } from '../../lib/server/auth-login';
 import { ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
 import {
   crearDependenciasDeLogin,
@@ -21,7 +21,7 @@ afterEach(() => clinicalApi.reiniciar());
 afterAll(() => clinicalApi.detener());
 
 describe('POST /api/auth/login', () => {
-  it('retransmite solo la cookie oncolens_session y responde 204 cuando clinical-api acepta el login; reexpone el 401 cuando lo rechaza; sin contraseña ni token en sus logs [US-211 AC-1] [US-211 AC-2] [US-211 AC-6]', async () => {
+  it('responde 204 con solo la cookie oncolens_session y reexpone el 401 cuando clinical-api acepta o rechaza el login, sin contraseña ni token en los logs [US-211 AC-1] [US-211 AC-2] [US-211 AC-6]', async () => {
     const { dependencias, lineas } = crearDependenciasDeLogin();
     const manejador = crearManejadorLogin(dependencias);
 

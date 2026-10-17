@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { delay, http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
-import type { DependenciasAnalisis } from '../../lib/server/evidence-analyses';
+import type { DependenciasDelBff } from '../../lib/server/dependencias';
 import type { LineaDeRegistro } from '../../lib/server/registro';
 
 export const URL_CLINICAL_API = 'http://clinical-api.test:3000';
@@ -90,9 +90,9 @@ export function crearClinicalApiSimulado() {
 }
 
 /** Dependencias del handler con reloj, traceId y logger controlados por el test. */
-export function crearDependenciasDeTest(sobrescribir: Partial<DependenciasAnalisis> = {}) {
+export function crearDependenciasDeTest(sobrescribir: Partial<DependenciasDelBff> = {}) {
   const lineas: LineaDeRegistro[] = [];
-  const dependencias: DependenciasAnalisis = {
+  const dependencias: DependenciasDelBff = {
     config: {
       clinicalApiUrl: URL_CLINICAL_API,
       allowedOrigin: ORIGEN_PERMITIDO,

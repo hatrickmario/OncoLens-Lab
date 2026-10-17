@@ -1,6 +1,6 @@
 import 'server-only';
 import type { NextRequest } from 'next/server';
-import { NOMBRE_COOKIE_DE_SESION } from './clinical-api';
+export const NOMBRE_COOKIE_DE_SESION = 'oncolens_session';
 
 /**
  * Comprobación optimista del guard de páginas (design D8): solo mira que exista la cookie de sesión.

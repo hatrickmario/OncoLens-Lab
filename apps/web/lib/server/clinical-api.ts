@@ -6,7 +6,9 @@ import {
 import type { ConfigWeb } from './config';
 import { respuestaPropia } from './respuestas';
 
-export const NOMBRE_COOKIE_DE_SESION = 'oncolens_session';
+import { NOMBRE_COOKIE_DE_SESION } from './sesion';
+
+export { NOMBRE_COOKIE_DE_SESION };
 
 export interface OpcionesFetchClinicalApi {
   fetch: typeof globalThis.fetch;

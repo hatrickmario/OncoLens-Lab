@@ -1,11 +1,19 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { leerConfigWeb } from './config';
-import type { DependenciasAnalisis } from './evidence-analyses';
-import { registrarEnConsola } from './registro';
+import { registrarEnConsola, type Registrar } from './registro';
+import type { ConfigWeb } from './config';
 
 /** Cableado de producción: configuración de entorno, fetch real, reloj y generador de traceId reales. */
-export function dependenciasDeEntorno(): DependenciasAnalisis {
+export interface DependenciasDelBff {
+  config: ConfigWeb;
+  fetch: typeof globalThis.fetch;
+  nuevoTraceId: () => string;
+  ahora: () => number;
+  registrar: Registrar;
+}
+
+export function dependenciasDeEntorno(): DependenciasDelBff {
   return {
     config: leerConfigWeb(),
     fetch: globalThis.fetch,

@@ -1,31 +1,23 @@
 import 'server-only';
-import { login } from '../../../../../../packages/api-contracts/src/client-web/clinical-api';
-import { zLoginBody } from '../../../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import { login } from '../../../../packages/api-contracts/src/client-web/clinical-api';
+import { zLoginBody } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import {
   cabecerasHaciaNavegador,
   crearSdkClinicalApi,
   NOMBRE_COOKIE_DE_SESION,
   respuestaDeFalloDeTransporte,
-} from '../../../../lib/server/clinical-api';
-import type { ConfigWeb } from '../../../../lib/server/config';
-import { verificarOrigen } from '../../../../lib/server/origen';
-import { leerCuerpoAcotado } from '../../../../lib/server/peticiones';
-import type { LineaDeRegistro } from '../../../../lib/server/registro';
-import { respuestaPropia } from '../../../../lib/server/respuestas';
+} from './clinical-api';
+import type { DependenciasDelBff } from './dependencias';
+import { verificarOrigen } from './origen';
+import { leerCuerpoAcotado } from './peticiones';
+import { respuestaPropia } from './respuestas';
 
 const EVENTO_LOGIN = 'auth.login';
 
-/** `motivo=content_type` es propio del login: el registro compartido solo conoce los motivos del análisis. */
-export type LineaDeRegistroLogin = Omit<LineaDeRegistro, 'motivo'> & {
-  motivo?: LineaDeRegistro['motivo'] | 'content_type' | 'sin_cookie_de_sesion';
-};
-
-export interface DependenciasLogin {
-  config: ConfigWeb;
-  fetch: typeof globalThis.fetch;
-  nuevoTraceId: () => string;
-  registrar: (linea: LineaDeRegistroLogin) => void;
-}
+export type DependenciasLogin = Pick<
+  DependenciasDelBff,
+  'config' | 'fetch' | 'nuevoTraceId' | 'registrar'
+>;
 
 /**
  * Proxy del login (design D6). Orden fijo y antes de leer el cuerpo: `Origin` y `Content-Type: application/json`

@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
-import { crearManejadorLogin } from '../../app/api/auth/login/manejador';
+import { crearManejadorLogin } from '../../lib/server/auth-login';
 import { ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
 import {
   crearDependenciasDeLogin,
@@ -17,7 +17,7 @@ afterEach(() => clinicalApi.reiniciar());
 afterAll(() => clinicalApi.detener());
 
 describe('POST /api/auth/login (bordes)', () => {
-  it('acepta Content-Type application/json con charset', async () => {
+  it('responde 204 cuando el Content-Type es application/json con charset', async () => {
     clinicalApi.aceptar([COOKIE]);
     const { dependencias } = crearDependenciasDeLogin();
 
