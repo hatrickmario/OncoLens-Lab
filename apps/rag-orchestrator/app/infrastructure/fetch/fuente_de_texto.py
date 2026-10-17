@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.infrastructure.fetch.http_source_fetcher import HttpSourceFetcher
+from app.infrastructure.fetch.descargador_https import DescargadorHttps
 
 
 class RutaFueraDelManifiesto(ValueError):
@@ -13,7 +13,7 @@ class RutaFueraDelManifiesto(ValueError):
 
 
 class FuenteDeTextoDelManifiesto:
-    def __init__(self, directorio_base: Path, descargador: HttpSourceFetcher | None) -> None:
+    def __init__(self, directorio_base: Path, descargador: DescargadorHttps | None) -> None:
         self._base = directorio_base.resolve()
         self._descargador = descargador
 

@@ -51,7 +51,7 @@ def montaje() -> Montaje:
     embedder, reloj = EmbedderFalso(), RelojFijo()
     cargador = SeedCorpusLoader(
         catalogo=catalogo,
-        chunks=almacen,
+        almacen_de_chunks=almacen,
         embedder=embedder,
         fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
         reloj=reloj,

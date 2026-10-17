@@ -37,7 +37,7 @@ from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
-from app.infrastructure.fetch.http_source_fetcher import HttpSourceFetcher
+from app.infrastructure.fetch.descargador_https import DescargadorHttps
 from app.infrastructure.ids.uuid_id_generator import UuidIdGenerator
 from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.seed_manifest.lector import ManifiestoInvalido, leer_manifiesto
@@ -68,7 +68,7 @@ def politica_de_licencias(ajustes: CorpusSeedSettings) -> PoliticaDeLicencias:
 
 def _fuente_de_texto(ajustes: CorpusSeedSettings) -> FuenteDeTextoDelManifiesto:
     descargador = (
-        HttpSourceFetcher(
+        DescargadorHttps(
             httpx.Client(timeout=ajustes.corpus_fetch_timeout_seconds),
             ajustes.corpus_fetch_allowed_hosts,
             ajustes.corpus_fetch_max_bytes,
@@ -105,7 +105,7 @@ def _ejecutar_carga(
         almacen.ensure_collection()
         cargador = SeedCorpusLoader(
             catalogo=CorpusDocumentRepository(motor),
-            chunks=almacen,
+            almacen_de_chunks=almacen,
             embedder=embedder,
             fuente=_fuente_de_texto(semilla),
             reloj=reloj,

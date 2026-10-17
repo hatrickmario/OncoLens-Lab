@@ -146,7 +146,7 @@ Las cuatro decisiones siguen **vigentes** y corrigen o precisan lo anterior dond
 - **D8 · `excluded_sources`** se guarda como arreglo JSON en la columna `text` (`["NCCN", "ESMO"]`), el mismo formato del
   contrato; la release se publica solo si el conjunto de documentos vigentes cambia respecto de la última.
 - **D9 · integridad.** El manifiesto admite `checksum` (SHA-256 del texto normalizado) por documento; si el texto leído da
-  otro, el documento queda `error` (etapa `integridad`) y no se indexa. `HttpSourceFetcher` solo acepta `text/plain`:
+  otro, el documento queda `error` (etapa `integridad`) y no se indexa. `DescargadorHttps` solo acepta `text/plain`:
   parsear HTML o JATS en producción no es parte de este change (el texto de la semilla real ya está extraído en
   `data/raw/seed/docs/`). El manifiesto acepta además `text` (inline, solo fixtures) y `text_path` relativo al manifiesto.
 - **Fuera de la regla de fuente excluida**: la comparación es exacta tras `casefold` y espacios (spec); una variante como
@@ -201,7 +201,7 @@ se miden en el S5 (US-132) sobre el corpus del S4; esta semilla no los persigue.
 | `app/infrastructure/catalog/corpus_document_repository.py` | nuevo | SQLAlchemy/psycopg sobre las tablas de L1D-114; implementa `CorpusCatalog` |
 | `app/infrastructure/milvus/milvus_repository.py` | modifica (L1D-106/L1D-114) | `pymilvus`; añade `insertar_chunks()`, `marcar_no_vigentes()`; implementa `ChunkStore` |
 | `app/infrastructure/embeddings/` | modifica (L1D-106) | adapter falso determinista (tests) y real de ADR-39; implementa `PassageEmbedder` |
-| `app/infrastructure/fetch/http_source_fetcher.py` | nuevo | `httpx`; lista de hosts permitidos |
+| `app/infrastructure/fetch/descargador_https.py` | nuevo | `httpx`; lista de hosts permitidos |
 | `app/config/settings.py` | modifica | `pydantic-settings` (claves de What Changes) |
 
 El service nunca importa `pymilvus`, `httpx` ni SQLAlchemy. Reglas extraídas con nombre propio:

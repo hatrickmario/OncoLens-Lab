@@ -21,7 +21,7 @@ class FuenteNoDisponible(RuntimeError):
     """El host respondió con error, con un tipo que no es texto o con más bytes del tope."""
 
 
-class HttpSourceFetcher:
+class DescargadorHttps:
     def __init__(
         self, cliente: httpx.Client, hosts_permitidos: Collection[str], max_bytes: int
     ) -> None:

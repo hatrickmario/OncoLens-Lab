@@ -107,7 +107,7 @@ def entorno(
     embedder, reloj = EmbedderFalso(), RelojFijo()
     cargador = SeedCorpusLoader(
         catalogo=CorpusDocumentRepository(motor),
-        chunks=almacen,
+        almacen_de_chunks=almacen,
         embedder=embedder,
         fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
         reloj=reloj,

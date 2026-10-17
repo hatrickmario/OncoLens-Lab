@@ -65,7 +65,7 @@ class SeedCorpusLoader:
         self,
         *,
         catalogo: CorpusCatalog,
-        chunks: ChunkStore,
+        almacen_de_chunks: ChunkStore,
         embedder: PassageEmbedder,
         fuente: SourceFetcher,
         reloj: Clock,
@@ -77,7 +77,7 @@ class SeedCorpusLoader:
         fecha_de_corte: date,
     ) -> None:
         self._catalogo = catalogo
-        self._chunks = chunks
+        self._almacen_de_chunks = almacen_de_chunks
         self._embedder = embedder
         self._fuente = fuente
         self._reloj = reloj
@@ -159,27 +159,29 @@ class SeedCorpusLoader:
         decision: DecisionDeVersion,
     ) -> None:
         """Chunks nuevos -> apagar los de la versión anterior (D5). Re-ejecutable: no reinserta lo que ya quedó."""
-        ya_insertados = self._chunks.ids_de_chunks_del_documento(registro.document_id)
+        ya_insertados = self._almacen_de_chunks.ids_de_chunks_del_documento(registro.document_id)
         chunks = chunks_del_documento(registro, fragmentos, vectores, self._reloj.ahora())
         pendientes = [c for c in chunks if c.chunk_id not in ya_insertados]
         if pendientes:
-            self._chunks.insert_chunks(pendientes)
+            self._almacen_de_chunks.insert_chunks(pendientes)
         if decision.anterior_id is not None:
-            self._chunks.marcar_no_vigentes(decision.anterior_id)
+            self._almacen_de_chunks.marcar_no_vigentes(decision.anterior_id)
 
     def _confirmar(
         self,
         documento: DocumentoDeSemilla,
         registro: RegistroDeDocumento,
         decision: DecisionDeVersion,
-        chunks: int,
+        n_chunks: int,
     ) -> ResultadoDeDocumento:
         """Último paso: el catálogo es la verdad (``is_current``); un fallo aquí aborta la carga."""
         if decision.anterior_id is None:
             self._catalogo.guardar_documento(registro)
-            return ResultadoDeDocumento(documento.document_key, Resultado.CARGADO, chunks=chunks)
+            return ResultadoDeDocumento(documento.document_key, Resultado.CARGADO, chunks=n_chunks)
         self._catalogo.reemplazar_version(registro, decision.anterior_id, self._reloj.ahora())
-        return ResultadoDeDocumento(documento.document_key, Resultado.NUEVA_VERSION, chunks=chunks)
+        return ResultadoDeDocumento(
+            documento.document_key, Resultado.NUEVA_VERSION, chunks=n_chunks
+        )
 
     def _registrar_error(
         self,

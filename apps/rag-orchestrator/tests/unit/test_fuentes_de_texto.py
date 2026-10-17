@@ -12,10 +12,10 @@ from app.infrastructure.fetch.fuente_de_texto import (
     FuenteDeTextoDelManifiesto,
     RutaFueraDelManifiesto,
 )
-from app.infrastructure.fetch.http_source_fetcher import (
+from app.infrastructure.fetch.descargador_https import (
     FuenteNoDisponible,
     FuenteNoPermitida,
-    HttpSourceFetcher,
+    DescargadorHttps,
 )
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from tests.support.semilla import documento_de_prueba
@@ -23,8 +23,8 @@ from tests.support.semilla import documento_de_prueba
 URL = "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq.txt"
 
 
-def descargador(max_bytes: int = 1000) -> HttpSourceFetcher:
-    return HttpSourceFetcher(httpx.Client(), ["www.cancer.gov"], max_bytes)
+def descargador(max_bytes: int = 1000) -> DescargadorHttps:
+    return DescargadorHttps(httpx.Client(), ["www.cancer.gov"], max_bytes)
 
 
 @respx.mock
