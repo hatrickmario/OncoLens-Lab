@@ -135,6 +135,29 @@ def test_rechaza_un_checksum_que_no_es_sha256_hexadecimal_en_minusculas(
         leer_manifiesto(escribir(tmp_path, DOCUMENTO_VALIDO + f"    checksum: {valor}\n"))
 
 
+@pytest.mark.parametrize(
+    "clave",
+    ["sk-SECRETO/../etc", "con espacios y ñ", "x" * 200, "CC=123456789"],
+)
+def test_un_error_sobre_un_document_key_invalido_no_lo_repite_en_el_mensaje(
+    tmp_path: Path, clave: str
+) -> None:
+    contenido = DOCUMENTO_VALIDO.replace("document_key: d-1", f"document_key: '{clave}'")
+    contenido = contenido.replace("    title: Sintético\n", "")  # fuerza un error "faltan title"
+
+    with pytest.raises(ManifiestoInvalido) as error:
+        leer_manifiesto(escribir(tmp_path, contenido))
+
+    assert clave not in str(error.value) and str(error.value).startswith("documento #1:")
+
+
+def test_un_document_key_valido_si_se_nombra_en_el_error(tmp_path: Path) -> None:
+    contenido = DOCUMENTO_VALIDO.replace("    title: Sintético\n", "")
+
+    with pytest.raises(ManifiestoInvalido, match=r"^d-1: faltan title"):
+        leer_manifiesto(escribir(tmp_path, contenido))
+
+
 def test_rechaza_criterios_de_poblacion_que_no_son_de_las_seis_claves(tmp_path: Path) -> None:
     contenido = DOCUMENTO_VALIDO + "    population_criteria: {sexo: femenino}\n"
 

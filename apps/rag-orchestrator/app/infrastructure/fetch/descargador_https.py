@@ -7,7 +7,8 @@ saltaría la lista), con tope de bytes y de tiempo. Los mensajes de error nombra
 
 from __future__ import annotations
 
-from collections.abc import Collection
+import time
+from collections.abc import Callable, Collection
 from urllib.parse import urlsplit
 
 import httpx
@@ -23,8 +24,15 @@ class FuenteNoDisponible(RuntimeError):
 
 class DescargadorHttps:
     def __init__(
-        self, cliente: httpx.Client, hosts_permitidos: Collection[str], max_bytes: int
+        self,
+        cliente: httpx.Client,
+        hosts_permitidos: Collection[str],
+        max_bytes: int,
+        deadline_s: float = 60.0,
+        reloj_monotonico: Callable[[], float] = time.monotonic,
     ) -> None:
+        self._deadline_s = deadline_s
+        self._reloj_monotonico = reloj_monotonico
         self._cliente = cliente
         self._hosts = frozenset(h.casefold() for h in hosts_permitidos)
         self._max_bytes = max_bytes

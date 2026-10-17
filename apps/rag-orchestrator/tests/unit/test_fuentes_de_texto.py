@@ -49,6 +49,96 @@ def test_no_sale_a_otro_host_ni_por_http_y_no_llega_a_pedir_nada(url: str) -> No
     assert not ruta.called
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.cancer.gov:8443/a.txt",
+        "https://www.cancer.gov:80/a.txt",
+        "https://usuario@www.cancer.gov/a.txt",
+        "https://usuario:clave@www.cancer.gov/a.txt",
+        "https://www.cancer.gov@evil.example/a.txt",
+    ],
+)
+@respx.mock
+def test_solo_el_puerto_443_o_ninguno_y_sin_credenciales_en_la_url(url: str) -> None:
+    ruta = respx.route().respond(200, text="x", headers={"content-type": "text/plain"})
+
+    with pytest.raises(FuenteNoPermitida):
+        descargador().descargar_texto(url)
+
+    assert not ruta.called
+
+
+@respx.mock
+def test_el_puerto_443_explicito_se_acepta() -> None:
+    respx.get("https://www.cancer.gov:443/a.txt").respond(
+        200, text="Texto.", headers={"content-type": "text/plain"}
+    )
+
+    assert descargador().descargar_texto("https://www.cancer.gov:443/a.txt") == "Texto."
+
+
+@pytest.mark.parametrize("tipo", ["text/plainx", "text/plain-evil", "application/text/plain", ""])
+@respx.mock
+def test_el_tipo_de_medio_debe_ser_exactamente_text_plain(tipo: str) -> None:
+    respx.get(URL).respond(200, text="x", headers={"content-type": tipo})
+
+    with pytest.raises(FuenteNoDisponible, match="text/plain"):
+        descargador().descargar_texto(URL)
+
+
+@pytest.mark.parametrize(
+    "tipo", ["text/plain", "TEXT/PLAIN; charset=utf-8", " text/plain ;charset=UTF-8"]
+)
+@respx.mock
+def test_text_plain_con_parametros_o_mayusculas_se_acepta(tipo: str) -> None:
+    respx.get(URL).respond(200, text="Texto.", headers={"content-type": tipo})
+
+    assert descargador().descargar_texto(URL) == "Texto."
+
+
+class RelojQueAvanza:
+    """Reloj monotónico falso: cada lectura avanza ``paso`` segundos."""
+
+    def __init__(self, paso: float) -> None:
+        self.paso, self.ahora = paso, 0.0
+
+    def __call__(self) -> float:
+        self.ahora += self.paso
+        return self.ahora
+
+
+@respx.mock
+def test_un_cuerpo_que_llega_a_cuentagotas_excede_el_plazo_total_aunque_cada_bloque_llegue_a_tiempo() -> (
+    None
+):
+    respx.get(URL).respond(200, content=b"x" * 50, headers={"content-type": "text/plain"})
+    lento = DescargadorHttps(
+        httpx.Client(),
+        ["www.cancer.gov"],
+        1000,
+        deadline_s=10.0,
+        reloj_monotonico=RelojQueAvanza(4.0),
+    )
+
+    with pytest.raises(FuenteNoDisponible, match="plazo"):
+        lento.descargar_texto(URL)
+
+
+@respx.mock
+def test_dentro_del_plazo_total_la_descarga_termina() -> None:
+    respx.get(URL).respond(200, text="Texto.", headers={"content-type": "text/plain"})
+    rapido = DescargadorHttps(
+        httpx.Client(),
+        ["www.cancer.gov"],
+        1000,
+        deadline_s=10.0,
+        reloj_monotonico=RelojQueAvanza(0.1),
+    )
+
+    assert rapido.descargar_texto(URL) == "Texto."
+
+
 @respx.mock
 def test_no_sigue_redirecciones_que_saltarian_la_lista_de_hosts() -> None:
     respx.get(URL).respond(302, headers={"location": "https://evil.example/a.txt"})
