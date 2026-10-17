@@ -79,7 +79,7 @@ historia lo implementa con el mínimo que exige el S1.
 - **`web`, BFF:** Route Handler `app/api/auth/login/route.ts`: verifica `Origin` con
   `verificarOrigen()` de L1D-139 y exige `Content-Type: application/json` antes de leer el cuerpo
   (si no, `403 PERMISO_DENEGADO` propio del BFF, sin llamar a `clinical-api`, `[S1 resp. 14a]`); valida
-  con el schema Zod generado de `LoginRequest`; llama a `clinical-api` con la operación `login` del
+  con el schema Zod generado `zLoginBody` (no `zLoginRequest`); llama a `clinical-api` con la operación `login` del
   SDK generado de L1D-105 `[S1 resp. 13]`; y retransmite solo el `Set-Cookie` de `oncolens_session` y
   el cuerpo de error del contrato.
 - **`web`, guard de páginas:** `proxy.ts` (convención de Next.js 16, antes `middleware.ts`) redirige
@@ -127,8 +127,9 @@ historia lo implementa con el mínimo que exige el S1.
 
 - ↪ **Depende de** **l1d-168-initial-schema-migration** (US-038): tablas `auth.user`
   (`account_status`) y `auth.session` (`token_hash` UK, `expires_at`, `revoked`).
-- ↪ **Depende de** **l1d-169-synthetic-demo-seed** (US-039): `doc1@test.local` (doctor, activo,
-  Argon2id). El seed usa los parámetros Argon2id que fija este change (`createPasswordHasher()`).
+- ↪ **Ya no depende de** **l1d-169-synthetic-demo-seed** (US-039) (decidido, usuario, 2026-10-20):
+  `doc1@test.local` (doctor, activo, Argon2id) lo crea un *fixture* local de tests con
+  `createPasswordHasher()`. L1D-169 adopta después este *hasher* y el usuario `doc1` en su seed.
   **`doc2@test.local` (desactivado) lo crea el test de este change, no el seed** (confirmado; ver
   design D7), igual que el correo inexistente de AC-2.
 - ↪ **Depende de** **l1d-164-compose-stack** (US-034): esqueletos de `web` y `clinical-api`, logger,
@@ -142,6 +143,8 @@ historia lo implementa con el mínimo que exige el S1.
 - ↪ **Depende de** **l1d-139-bff-route-handler-analisis** (US-060), **solo en las tareas `web` del
   login**: `verificarOrigen()` (`lib/server/origen.ts`) y `crearFetchJsonHaciaClinicalApi()`
   (`lib/server/clinical-api.ts`) `[S1 resp. 14a]`. Las tareas de `clinical-api` no esperan.
+- ↪ **Depende de** **l1d-166-ci-build-contracts-scan** (US-036): `contracts:check` y `contracts:breaking` para la
+  tarea 1.2; si el script aún no existe, la comprobación de cambios incompatibles es manual con `oasdiff`.
 - ↪ **Depende de** **l1d-164-compose-stack** para el *helper* `assertMatchesSpec()` (design D5b,
   `[S1 resp. 17]`).
 - 🔗 **Consumido por** **l1d-103-gateway-contexto-clinico** (US-052 AC-6: el gateway se monta detrás

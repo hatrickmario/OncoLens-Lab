@@ -76,3 +76,16 @@ Regresión [RN-05] activa desde S1 en el change de L1D-106 (US-055 AC-3): la bú
 #### Scenario: Una colección con otra dimensión falla sin borrarse [US-058 AC-5] [US-058 AC-2] (asumido)
 - **WHEN** `corpus_chunks` existe con `dense_vector` de dimensión 8 y el inicializador se ejecuta con `EMBEDDING_DIM=16`
 - **THEN** el inicializador falla con un error que nombra `dense_vector`, la dimensión esperada y la encontrada, y la colección y sus entidades siguen intactas
+
+### Requirement: Métrica y tipo de índice del campo denso validados
+`MILVUS_DENSE_METRIC_TYPE` MUST ser `COSINE` o `IP`; otro valor SHALL impedir el arranque con un error que nombra la clave y el conjunto aceptado, nunca el valor recibido. Una colección existente con otra métrica o tipo de índice denso MUST hacer fallar el inicializador sin modificarla (usuario, 2026-10-20; la comparación aplica si es barato).
+
+#### Scenario: Una métrica L2 se rechaza al arrancar [US-058 AC-2] [RN-22]
+- **GIVEN** una configuración con `MILVUS_DENSE_METRIC_TYPE=L2`
+- **WHEN** arranca `rag-orchestrator` (o se cargan los `settings`)
+- **THEN** falla con un error que nombra `MILVUS_DENSE_METRIC_TYPE` y el conjunto aceptado `COSINE`, `IP`, y no contiene el valor `L2`
+
+#### Scenario: Una colección con otra métrica o índice falla sin borrarse [US-058 AC-5] (asumido)
+- **GIVEN** `corpus_chunks` creada con métrica `IP` y el inicializador ejecutado con `MILVUS_DENSE_METRIC_TYPE=COSINE`
+- **WHEN** se ejecuta el inicializador
+- **THEN** lanza `CorpusCollectionSchemaMismatch` nombrando el campo, lo esperado y lo encontrado, y la colección y sus entidades siguen intactas

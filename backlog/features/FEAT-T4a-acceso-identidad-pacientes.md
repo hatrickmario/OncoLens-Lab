@@ -40,6 +40,8 @@
 > - **`WEB_HOME_PATH`** con el UUID del paciente semilla: aceptado como deuda hasta US-048.
 > - **CSP y cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6).
 
+> **Decidido (usuario, 2026-10-20), circularidad con US-039:** L1D-197 crea su usuario `doc1@test.local` con un *fixture* local de tests (`tests/support/usuarios.ts`) usando el *hasher* de 197 (`createPasswordHasher()`), **sin depender del seed de L1D-169**; L1D-169 adopta después el seed usando ese mismo *hasher* y el mismo usuario `doc1`. Los AC no cambian (el AC-1 sigue hablando de `doc1@test.local` activo con hash Argon2id).
+
 ## Story
 Como oncólogo, quiero iniciar sesión con mi correo y mi contraseña antes de pedir un
 análisis, para que desde el primer sprint nadie sin sesión pueda ver datos de un

@@ -96,7 +96,7 @@ Ninguna.
   `seed_doctor_password` y `seed_admin_password`, y fija en su D3 que solo los recibe `clinical-seed`
   (`[S1 resp. 14b]`); los tests de integración usan el arnés del perfil test (L1D-168).
 - DEC-05: decidida y validada `[S1 resp. 1]` · DEC-04: decidida (2026-10-09) — sin bloqueo.
-- 🔗 Consumida por: **change de L1D-197 (US-211)** (usuario de demo `doc1@test.local`), **change de
+- 🔗 Adopta de **change de L1D-197 (US-211)** (decidido, usuario, 2026-10-20) el *hasher* `createPasswordHasher()` y el usuario `doc1@test.local`, que 197 ya crea como *fixture* local de tests; 197 ya no consume este seed. 🔗 Consumida por: **change de
   L1D-103 (US-052)** (pacientes semilla y `catalogVersion` desde `manifest.json`), **changes de L1D-180
   y L1D-193** (`manifest.json` sobre el que añaden `lenguaje/`),
   **change de L1D-203 (US-049)** (pacientes semilla), US-061 y los E2E del S1.

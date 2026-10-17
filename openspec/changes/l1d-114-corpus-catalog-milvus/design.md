@@ -63,7 +63,7 @@ con los campos de §4.7: `chunk_id` VARCHAR PK, `document_id` VARCHAR, `dense_ve
 FLOAT_VECTOR(`EMBEDDING_DIM`), `sparse_vector` SPARSE_FLOAT_VECTOR, `chunk_text` VARCHAR,
 `chunk_index` INT64, `section` VARCHAR, `source_type`/`language`/`cancer_type_tags`/`population`/
 `study_design` VARCHAR, `published_year` INT64, `is_current` BOOL, `created_at` INT64 (epoch en ms;
-Milvus no tiene tipo fecha). Índices: dense con `MILVUS_DENSE_INDEX_TYPE` y `MILVUS_DENSE_METRIC_TYPE`
+Milvus no tiene tipo fecha). Índices: dense con `VECTOR_INDEX_TYPE`/`VECTOR_INDEX_PARAMS` y `MILVUS_DENSE_METRIC_TYPE`
 (configuración; valor por defecto propuesto `HNSW` + `IP` sobre vectores normalizados, que el ADR-39
 puede cambiar), sparse con `MILVUS_SPARSE_INDEX_TYPE` (por defecto `SPARSE_INVERTED_INDEX`, métrica
 `IP`) e índices escalares (`INVERTED`) sobre `is_current` y `cancer_type_tags`. Milvus exige índice en
@@ -192,3 +192,8 @@ configuración para que ADR-39 los ajuste sin tocar el código.
   publique `EMBEDDING_DIM`, habría que recrearla; D5 lo detecta y falla en lugar de borrar.
 - **Milvus en la CI**: añade tiempo (etcd + MinIO + standalone); se reutiliza el servicio de Compose
   de L1D-164 en un solo job de integración.
+
+## Pendiente de decisión (Gate 1, privacy-guardian, 2026-10-20)
+
+- **TLS de `CORPUS_DATABASE_URL`:** hoy `sslmode=require` (cifra, no verifica al servidor). Opción: `sslmode=verify-full` con la CA del servidor montada de solo lectura (secreto de L1D-165). Recomendación: `verify-full` antes de G-Piloto; decisión humana (dueña: privacy-guardian/humano). Este change no cambia el valor.
+- **Nombre de las claves del índice denso:** unificado a `VECTOR_INDEX_TYPE` y `VECTOR_INDEX_PARAMS` (US-012 AC-12, `[S1 resp. 38]`); `MILVUS_DENSE_INDEX_TYPE` ya no existe en este change.

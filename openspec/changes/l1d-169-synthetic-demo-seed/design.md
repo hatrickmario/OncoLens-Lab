@@ -57,7 +57,7 @@ divergen de la base sembrada.
    no se pueda verificar en la fuente oficial **no entra** y el dato queda `no_mapeado`: es preferible a
    un nombre no literal (DEC-04). Al menos un término del seed queda deliberadamente sin entrada (p. ej.,
    un biomarcador de (c)) para ejercer el AC-4 sobre datos reales del seed.
-8. **Usuarios**: `doc1@test.local` y `admin@test.local`, Argon2id con los parámetros que fije US-211
+8. **Usuarios** (decidido, usuario, 2026-10-20: el seed **adopta** el *hasher* `createPasswordHasher()` y el usuario `doc1` que L1D-197 ya creó como *fixture* local de tests): `doc1@test.local` y `admin@test.local`, Argon2id con los parámetros que fije US-211
    (si aún no existen: los por defecto de la librería `argon2`); roles `doctor` y `admin` por *upsert* en
    `auth.role` con sus permisos de `data-model.md` §8. La contraseña se re-hashea solo si el usuario no
    existe (idempotencia: no cambia `password_hash` en cada ejecución).
