@@ -176,7 +176,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         relevance_threshold=settings.relevance_threshold,  # type: ignore[arg-type]
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
         rerank_top_n=settings.rerank_top_n,  # type: ignore[arg-type]
-        longitud_maxima_codigo_tipo=64,
+        longitud_maxima_codigo_tipo=settings.retrieval_cancer_type_max_length,
         llm_provider=_proveedor_de_meta(settings),
         llm_model=settings.llm_model,
         nli_model=settings.nli_model,  # type: ignore[arg-type]

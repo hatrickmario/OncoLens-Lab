@@ -114,14 +114,15 @@ class RAGOrchestratorService:
         )
         return await self._generador.generar(solicitud, recuperacion)
 
-    @staticmethod
-    def _filtro_de_recuperacion(solicitud: RagQueryInternalRequest) -> str:
+    def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""
         diagnostico = solicitud.clinicalContext.diagnosis
         if diagnostico is None:
             raise TipoCancerNoRegistradoError()
         try:
-            return expresion_vigente_del_tipo(diagnostico.cancerType.root)
+            return expresion_vigente_del_tipo(
+                diagnostico.cancerType.root, self._parametros.longitud_maxima_codigo_tipo
+            )
         except ValueError:
             raise TipoCancerNoRegistradoError() from None
 
