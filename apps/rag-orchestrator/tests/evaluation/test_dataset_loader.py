@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 import yaml
@@ -172,7 +173,11 @@ def test_dataset_loader_terminos_verificados_no_rescatan_una_licencia_nc(dataset
 def test_dataset_loader_terminos_verificados_solo_valen_para_clinicaltrials_sin_licencia_declarada(dataset_dir: Path) -> None:
     def poner(m: dict) -> None:
         for f in m["fuentes"]:
-            if f["fuente"].startswith("ClinicalTrials.gov"):
+            fuente = f["fuente"]
+            host = urlparse(fuente).hostname
+            if host is None:
+                host = urlparse(f"https://{fuente}").hostname
+            if host and host.lower() == "clinicaltrials.gov":
                 f["licencia"] = "CC BY-NC-ND 4.0"
 
     _editar(dataset_dir / "manifest.yaml", poner)
