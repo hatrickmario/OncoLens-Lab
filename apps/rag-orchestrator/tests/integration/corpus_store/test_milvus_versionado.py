@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pymilvus import MilvusClient
 
+from app.application.ports import DimensionDeVectorInvalida
 from app.config.settings import MilvusSettings
 from app.infrastructure.milvus.repository import MilvusRepository
 from tests.support.milvus import chunk_sintetico, vector_unitario
@@ -77,3 +78,29 @@ def test_un_document_id_con_comilla_o_barra_se_rechaza_antes_de_consultar(
 ) -> None:
     with pytest.raises(ValueError, match="comillas"):
         repositorio.ids_de_chunks_del_documento(identificador)
+
+
+def test_upsert_chunks_es_idempotente_y_deja_vigente_un_chunk_apagado(
+    repositorio: MilvusRepository, cliente_milvus: MilvusClient, ajustes_milvus: MilvusSettings
+) -> None:
+    chunk = chunk_sintetico("a", vector_unitario(DIMENSION, 0))
+    repositorio.upsert_chunks([chunk])
+    repositorio.upsert_chunks([chunk])
+    repositorio.marcar_no_vigentes("doc-a")
+
+    repositorio.upsert_chunks([chunk])
+
+    filas = cliente_milvus.query(
+        ajustes_milvus.milvus_collection_name,
+        filter="chunk_id == 'a'",
+        output_fields=["chunk_id", "is_current"],
+        consistency_level="Strong",
+    )
+    assert [(f["chunk_id"], f["is_current"]) for f in filas] == [("a", True)]
+
+
+def test_upsert_chunks_con_otra_dimension_lanza_dimension_de_vector_invalida(
+    repositorio: MilvusRepository,
+) -> None:
+    with pytest.raises(DimensionDeVectorInvalida):
+        repositorio.upsert_chunks([chunk_sintetico("a", vector_unitario(16, 0))])

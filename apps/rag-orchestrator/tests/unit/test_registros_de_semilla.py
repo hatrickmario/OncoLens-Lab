@@ -124,3 +124,10 @@ def test_los_vectores_se_asignan_a_los_fragmentos_en_orden() -> None:
     chunks = chunks_del_documento(registro, ["uno", "dos"], [[1.0] * 8, [2.0] * 8], AHORA)
 
     assert [(c.chunk_text, c.dense_vector[0]) for c in chunks] == [("uno", 1.0), ("dos", 2.0)]
+
+
+def test_la_clase_de_licencia_del_dominio_coincide_con_la_del_contrato_generado() -> None:
+    from app.domain.corpus_seed.admisibilidad import ClaseDeLicencia
+    from app.schemas.generated.models import LicenseClass
+
+    assert {c.value for c in ClaseDeLicencia} == {c.value for c in LicenseClass}
