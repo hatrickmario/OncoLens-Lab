@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, inject, it, vi } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { createApp } from '../../../src/app.js';
-import type { AuthRepository } from '../../../src/modules/auth/auth.repository.js';
+import type { Consultador } from '../../../src/modules/auth/auth.repository.js';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import {
@@ -19,10 +19,8 @@ const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 105;
 const DETALLE_INTERNO = 'detalle-interno-secreto password=hunter2 /ruta/interna.ts';
 
-const repoQueLanza: AuthRepository = {
-  buscarUsuarioPorCorreo: () => Promise.reject(new Error(DETALLE_INTERNO)),
-  crearSesion: () => Promise.reject(new Error(DETALLE_INTERNO)),
-  buscarSesionPorTokenHash: () => Promise.reject(new Error(DETALLE_INTERNO)),
+const dbQueRechaza: Consultador = {
+  query: () => Promise.reject(new Error(DETALLE_INTERNO)),
 };
 
 let cliente: Client;
@@ -51,7 +49,7 @@ describe('manejador final de errores', () => {
         tokens: tokensFijos('t'),
         reloj: relojFijo(),
         registrar: logger.registrar,
-        repo: repoQueLanza,
+        db: dbQueRechaza,
       });
 
       const login = await request(app)

@@ -1,15 +1,11 @@
 import type { Router } from 'express';
 import type { Client } from 'pg';
-import { createApp } from '../../src/app.js';
+import { componerAplicacion } from '../../src/composition.js';
 import type { AuthConfig } from '../../src/config.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
-import {
-  createAuthRepository,
-  type AuthRepository,
-} from '../../src/modules/auth/auth.repository.js';
-import { createAuthService, type GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
-import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
+import type { Consultador } from '../../src/modules/auth/auth.repository.js';
+import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { generadorDeIds } from './filas-sinteticas.js';
 import { ARGON2_DE_PRUEBA, traceIdsFijos } from './usuarios.js';
 
@@ -26,24 +22,20 @@ export interface OpcionesAppDeTest {
   reloj: Clock;
   registrar: Registrar;
   rutasProtegidas?: readonly Router[];
-  /** Sustituye al repository sobre PostgreSQL (p. ej. uno que lanza, para probar el manejador final de errores). */
-  repo?: AuthRepository;
+  /** Sustituye a la conexión de `cliente` (p. ej. una que rechaza, para probar el manejador final de errores). */
+  db?: Consultador;
 }
 
-/** Aplicación real con el módulo de sesión cableado a la BD de test y a un reloj/token/ids/traceId fijos. */
+/** La aplicación de producción (`componerAplicacion`) con la BD de test y reloj, token, ids y traceId fijos. */
 export function appConAuth(opciones: OpcionesAppDeTest) {
-  const service = createAuthService({
-    repo: opciones.repo ?? createAuthRepository(opciones.cliente),
-    hasher: createPasswordHasher(CONFIG_DE_TEST.argon2),
+  return componerAplicacion({
+    db: opciones.db ?? opciones.cliente,
+    auth: CONFIG_DE_TEST,
+    reloj: opciones.reloj,
     tokens: opciones.tokens,
     ids: generadorDeIds(opciones.espacio + 1000),
-    reloj: opciones.reloj,
-    config: CONFIG_DE_TEST,
-  });
-  return createApp({
-    plataforma: {
-      auth: { service, nuevoTraceId: traceIdsFijos(), registrar: opciones.registrar },
-      ...(opciones.rutasProtegidas !== undefined && { rutasProtegidas: opciones.rutasProtegidas }),
-    },
+    nuevoTraceId: traceIdsFijos(),
+    registrar: opciones.registrar,
+    ...(opciones.rutasProtegidas !== undefined && { rutasProtegidas: opciones.rutasProtegidas }),
   });
 }

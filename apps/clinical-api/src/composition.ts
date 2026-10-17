@@ -1,4 +1,4 @@
-import type { Express } from 'express';
+import type { Express, Router } from 'express';
 import { createApp } from './app.js';
 import type { AuthConfig } from './config.js';
 import type { Clock } from './infrastructure/clock.js';
@@ -16,6 +16,8 @@ export interface DependenciasDeComposicion {
   ids: GeneradorDeIds;
   nuevoTraceId: () => string;
   registrar: Registrar;
+  /** Routers que exigen sesión (gateway de análisis, pacientes...): se montan después del guard. */
+  rutasProtegidas?: readonly Router[];
 }
 
 /**
@@ -38,6 +40,9 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
         nuevoTraceId: dependencias.nuevoTraceId,
         registrar: dependencias.registrar,
       },
+      ...(dependencias.rutasProtegidas !== undefined && {
+        rutasProtegidas: dependencias.rutasProtegidas,
+      }),
     },
   });
 }
