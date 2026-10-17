@@ -79,6 +79,12 @@ class Entorno:
         self.cliente.flush(self.coleccion)
         return int(self.cliente.get_collection_stats(self.coleccion)["row_count"])
 
+    def releases_publicadas(self) -> int:
+        with self.motor.connect() as conexion:
+            return int(
+                conexion.execute(text("SELECT count(*) FROM corpus.corpus_release")).scalar_one()
+            )
+
     def ids_en_la_release(self) -> list[str]:
         with self.motor.connect() as conexion:
             return list(
@@ -158,6 +164,32 @@ def test_carga_de_semilla_conserva_estadio_y_linea_de_t_ok_2_y_deja_t_ok_1_en_no
     assert ok_1["population_criteria"] == dict.fromkeys(
         ("subtipo", "estadio", "linea", "biomarcadores", "edad", "ecog"), "no_disponible"
     )
+
+
+@pytest.mark.ac("US-059", 5)
+def test_carga_de_semilla_repetida_con_el_mismo_manifiesto_no_cambia_los_recuentos_ni_invoca_embeddings(
+    entorno: Entorno,
+) -> None:
+    claves = ("t-ok-1", "t-ok-2", "t-nd", "t-sin-licencia", "t-nccn")
+    entorno.cargar(*claves)
+    documentos_antes, chunks_antes = entorno.filas_del_catalogo(), entorno.total_de_chunks()
+    embeddings_antes = entorno.embedder.invocaciones
+
+    segunda = entorno.cargar(*claves)
+
+    assert (entorno.filas_del_catalogo(), entorno.total_de_chunks()) == (
+        documentos_antes,
+        chunks_antes,
+    )
+    assert entorno.embedder.invocaciones == embeddings_antes
+    assert segunda.release_id is None and entorno.releases_publicadas() == 1
+    assert [r.resultado for r in segunda.resultados] == [
+        Resultado.OMITIDO,
+        Resultado.OMITIDO,
+        Resultado.RECHAZADO,
+        Resultado.RECHAZADO,
+        Resultado.RECHAZADO,
+    ]
 
 
 @pytest.mark.ac("US-059", 3)
