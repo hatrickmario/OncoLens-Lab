@@ -3,7 +3,7 @@
 > Linear: [L1D-102](https://linear.app/l1der-lab-mjbc/issue/L1D-102) · Historia: US-012 (fase A) · Feature: FEAT-06a
 > Plantilla: MADR 4 (variante mínima, en español). La **fase B** (runtime, LLM, OCR, p95 extremo a extremo) es del change de L1D-274 (US-224).
 
-- **Estado:** propuesto (lo acepta el humano en el PR; ver "Puntos que decide el humano")
+- **Estado:** aceptado (usuario, 2026-10-20) — fase A. La fase B sigue en el change de L1D-274 (US-224). Se mantienen las salvedades y el riesgo de latencia alto aceptado (se cierra en L1D-274; la VM de Docker ≥ 10 GB es requisito de la fase B)
 - **Fecha:** 2026-10-16 · revisado 2026-10-20 (decisiones del usuario: reranker bge-reranker-v2-m3 con 12 pares, tope del LLM 21 GB y stack 30 GB)
 - **Decisores:** usuario (propietario del producto); oncólogo asesor para el dataset
 - **Consultados / informados:** ai-services-dev (mediciones), ai-eval-runner (revisión de reportes en el Gate 2)
@@ -204,9 +204,9 @@ ACADEMIC_LICENSES: mit,apache-2.0
 ## Puntos que decide el humano
 
 1. **Reranker A frente a C — resuelto (2026-10-20):** bge-reranker-v2-m3 (A), `RERANKER_MAX_PAIRS` = 12 (el usuario prioriza el recall), chunks de 1024 y `RERANKER_MAX_LENGTH` = 512. Presupuesto de p95 de la etapa: 4500 ms por la regla. Lo que queda abierto: el margen de ~0,4 s sobre el NFR de 15 s (14,6 s estimados) depende de un LLM de 10 s sin medir; lo cierra L1D-274. Alternativas medidas (no aplicadas): 8 pares (13,3 s, recall@10 0,667) o recalibrar el NFR en el S5. Las diferencias de recall entre 12, 16 y 24 pares están dentro del IC.
-2. **Tamaño de chunk 1024 y `RERANKER_MAX_LENGTH` = 512 — medido (2026-10-20):** el *reranker* no supera al denso en recall@10 (0,652 frente a 0,710) y cuesta 2,1× la latencia y 2,3× la memoria frente a chunks de 256. 768 y 1280 tokens no se pudieron medir en la VM de 7,75 GB. Decidir si se acepta, se repite con una VM mayor o se baja el tamaño de chunk (L1D-115 aún no indexó).
-3. **Metas de OL-06 no alcanzadas** (recall@10 0,71 y MRR 0,36–0,39 frente a 0,80 y 0,60): escalar el ajuste de metas (G-5 / NFR-01, TBD-02) o ampliar el dataset.
-4. **HNSW frente a FLAT** con 522 vectores: la regla elige HNSW; FLAT es equivalente hoy.
+2. **Tamaño de chunk 1024 y `RERANKER_MAX_LENGTH` = 512 — medido (2026-10-20):** el *reranker* no supera al denso en recall@10 (0,652 frente a 0,710) y cuesta 2,1× la latencia y 2,3× la memoria frente a chunks de 256. 768 y 1280 tokens no se pudieron medir en la VM de 7,75 GB. **Aceptado tal como se midió (usuario, 2026-10-20):** chunk de 1024 y `RERANKER_MAX_LENGTH` = 512. 768 y 1280 tokens quedan sin medir en la VM de 7,75 GB; repetirlos con una VM mayor es una medición nueva que no bloquea.
+3. **Metas de OL-06 no alcanzadas** (recall@10 0,71 y MRR 0,36–0,39 frente a 0,80 y 0,60): **Resuelto por referencia (usuario, 2026-10-20):** se atiende en ADR-45 (`ADR-45-mejora-recuperacion-ol06.md`) y en US-226…US-230; las metas de OL-06 siguen provisionales en US-017 y hoy no se cambian.
+4. **HNSW frente a FLAT** con 522 vectores: la regla elige HNSW; FLAT es equivalente hoy. **Aceptado (usuario, 2026-10-20):** HNSW por la regla (equivalente a FLAT con 522 vectores).
 5. **Tope de memoria — resuelto (2026-10-20):** LLM ≤ 21 GB y stack ≤ 30 GB. Con 12 pares el total estimado (29,7 GB) cabe con 0,3 GB de holgura y la holgura para macOS es de 2,3 a 6,1 GB; confirmar en la fase B con la pila real y subir la VM de Docker a ≥ 10 GB.
 
 ### Salvedades registradas en la revisión del Gate 2 (sin cambiar decisiones ni cifras)
