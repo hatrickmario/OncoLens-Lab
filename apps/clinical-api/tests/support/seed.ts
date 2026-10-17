@@ -1,17 +1,19 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Client } from 'pg';
-import { ARGON2_DE_PRUEBA } from './usuarios.js';
-import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
-import { readFileSync } from 'node:fs';
-import type { ConexionDelSeed, ResumenDelSeed } from '../../prisma/seed/sembrar.js';
+import { conexionDesdeCliente } from '../../prisma/seed/conexion.js';
 import { ejecutarSeed } from '../../prisma/seed/principal.js';
-import { SCHEMAS_CLINICOS, tablasDelCatalogo } from './catalogo.js';
+import type { ConexionDelSeed, ResumenDelSeed } from '../../prisma/seed/sembrar.js';
+import {
+  createPasswordHasher,
+  type PasswordHasher,
+} from '../../src/modules/auth/password-hasher.js';
+import { tablasDelCatalogo } from './catalogo.js';
 import { conectar, crearBaseDeTest, leerConfiguracionArnes, type BaseDeTest } from './db.js';
-import { loggerEnMemoria, type LoggerEnMemoria } from './usuarios.js';
+import { ARGON2_DE_PRUEBA, loggerEnMemoria, type LoggerEnMemoria } from './usuarios.js';
 
 /**
  * Soporte de los tests del seed (US-039). Cada archivo de test crea SU base: el seed y los conteos de "todas las tablas"
@@ -42,8 +44,6 @@ export async function contarFilasDeTodasLasTablas(
   }
   return conteos;
 }
-
-export { SCHEMAS_CLINICOS };
 
 export interface ArchivosDeContrasena {
   readonly directorio: string;
@@ -103,8 +103,14 @@ export interface SeedEnProceso {
   readonly ejecutar: (env: NodeJS.ProcessEnv) => Promise<ResumenDelSeed>;
 }
 
-/** Corre el seed en el proceso de test contra `urlDeLaBase` (Argon2id con costes de prueba, logger capturable). */
-export function seedContraLaBase(urlDeLaBase: string): SeedEnProceso {
+/**
+ * Corre el seed en el proceso de test contra `urlDeLaBase` (Argon2id con costes de prueba, logger capturable). La
+ * transacción es la de producción (`conexionDesdeCliente`); `hasher` permite inyectar uno que falle a mitad.
+ */
+export function seedContraLaBase(
+  urlDeLaBase: string,
+  hasher: PasswordHasher = createPasswordHasher(ARGON2_DE_PRUEBA),
+): SeedEnProceso {
   const registro = loggerEnMemoria();
   return {
     registro,
@@ -112,10 +118,10 @@ export function seedContraLaBase(urlDeLaBase: string): SeedEnProceso {
       ejecutarSeed(env, {
         conectar: async (): Promise<ConexionDelSeed> => {
           const cliente = await conectar(urlDeLaBase);
-          return { query: (sql, valores) => cliente.query(sql, valores), end: () => cliente.end() };
+          return conexionDesdeCliente(cliente, () => cliente.end());
         },
         leerArchivo: (ruta) => readFileSync(ruta, 'utf8'),
-        hasher: createPasswordHasher(ARGON2_DE_PRUEBA),
+        hasher,
         registrar: registro.registrar,
       }),
   };

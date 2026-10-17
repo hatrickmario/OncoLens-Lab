@@ -89,6 +89,26 @@ describe('Contraseñas e idempotencia del seed', () => {
     },
   );
 
+  it('no escribe nada cuando la siembra falla a mitad (el hash del segundo usuario lanza) [US-039 AC-3]', async () => {
+    let llamadas = 0;
+    const hasherQueFallaEnElSegundo = {
+      hash: () => {
+        llamadas += 1;
+        return llamadas === 2
+          ? Promise.reject(new Error('fallo simulado del hash'))
+          : Promise.resolve('$argon2id$hash-de-prueba');
+      },
+      verify: () => Promise.resolve(false),
+    };
+    const antes = await contarFilasDeTodasLasTablas(cliente);
+
+    await expect(
+      seedContraLaBase(base.url, hasherQueFallaEnElSegundo).ejecutar(entornoDelSeed(archivos)),
+    ).rejects.toThrow('fallo simulado del hash');
+
+    expect(await contarFilasDeTodasLasTablas(cliente)).toEqual(antes);
+  });
+
   it('una segunda ejecución no cambia conteos ni identificadores ni el hash [US-039 AC-3]', async () => {
     const seed = seedContraLaBase(base.url);
     await seed.ejecutar(entornoDelSeed(archivos));

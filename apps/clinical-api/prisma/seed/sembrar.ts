@@ -17,8 +17,12 @@ export interface ClienteSql {
   query(sql: string, valores?: unknown[]): Promise<{ rows: unknown[]; rowCount: number | null }>;
 }
 
-/** Conexión de escritura del seed; `end()` la libera. */
-export interface ConexionDelSeed extends ClienteSql {
+/**
+ * Conexión de escritura del seed. La atomicidad es de la conexión, no de quien siembra: `enTransaccion` abre la
+ * transacción, confirma si `fn` termina y revierte todo si falla; `fn` recibe solo la sesión de dentro.
+ */
+export interface ConexionDelSeed {
+  enTransaccion<T>(fn: (sesion: ClienteSql) => Promise<T>): Promise<T>;
   end(): Promise<void>;
 }
 
@@ -430,17 +434,10 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
   }
 }
 
-/** Siembra roles, usuarios de demo y los pacientes (a)–(e) en UNA transacción, de forma idempotente. */
+/** Siembra roles, usuarios de demo y los pacientes (a)–(e), de forma idempotente, dentro de la sesión recibida. */
 export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<ResumenDelSeed> {
   const escritas: Record<string, number> = {};
   const siembra: Siembra = { db, entradas, ahora: entradas.reloj.now(), escritas };
-  await db.query('BEGIN');
-  try {
-    await sembrarTodo(siembra);
-    await db.query('COMMIT');
-  } catch (error) {
-    await db.query('ROLLBACK');
-    throw error;
-  }
+  await sembrarTodo(siembra);
   return escritas;
 }

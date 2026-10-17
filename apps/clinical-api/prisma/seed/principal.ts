@@ -41,16 +41,18 @@ export async function ejecutarSeed(
   const catalogo = leerCatalogo(config.rutaDelCatalogo, dependencias.leerArchivo);
   const conexion = await dependencias.conectar(env);
   try {
-    const resumen = await sembrar(conexion, {
-      catalogo,
-      reloj: relojDelSeed(config.fechaDeReferencia),
-      hasher: dependencias.hasher,
-      credenciales,
-      retencion: {
-        anosHastaRetencion: config.anosHastaRetencion,
-        anosHastaRetencionMaxima: config.anosHastaRetencionMaxima,
-      },
-    });
+    const resumen = await conexion.enTransaccion((sesion) =>
+      sembrar(sesion, {
+        catalogo,
+        reloj: relojDelSeed(config.fechaDeReferencia),
+        hasher: dependencias.hasher,
+        credenciales,
+        retencion: {
+          anosHastaRetencion: config.anosHastaRetencion,
+          anosHastaRetencionMaxima: config.anosHastaRetencionMaxima,
+        },
+      }),
+    );
     dependencias.registrar({ event: 'seed_completo', filas: resumen });
     return resumen;
   } finally {
