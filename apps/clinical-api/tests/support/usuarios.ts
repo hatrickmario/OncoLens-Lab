@@ -110,8 +110,8 @@ export async function insertarSesion(
     token_hash: fila.tokenHash,
     expires_at: fila.expiresAt,
     last_seen_at: INSTANTE_FIJO,
-    ip_address: '',
-    user_agent: '',
+    ip_address: null,
+    user_agent: null,
     revoked: fila.revoked ?? false,
     created_at: INSTANTE_FIJO,
   });
