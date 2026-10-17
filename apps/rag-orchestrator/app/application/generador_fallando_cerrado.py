@@ -33,13 +33,13 @@ class GeneradorFallandoCerrado:
         except LlmLocalNoDisponibleError:
             raise
         except Exception as error:  # noqa: BLE001 - todo fallo del generador es "modelo local no disponible"
-            logger.warning(
-                "event=generacion_fallo error=%s traceId=%s", type(error).__name__, trace_id
-            )
-            raise LlmLocalNoDisponibleError() from None
+            raise self._fallo_del_generador(type(error).__name__, trace_id) from None
         if not isinstance(respuesta, RagQueryInternalResponse):
-            logger.warning(
-                "event=generacion_fallo error=%s traceId=%s", "RespuestaInvalida", trace_id
-            )
-            raise LlmLocalNoDisponibleError()
+            raise self._fallo_del_generador("RespuestaInvalida", trace_id)
         return respuesta
+
+    @staticmethod
+    def _fallo_del_generador(motivo: str, trace_id: str) -> LlmLocalNoDisponibleError:
+        """Registra solo el motivo (clase del error) y el ``traceId``; nunca el mensaje ni la pregunta."""
+        logger.warning("event=generacion_fallo error=%s traceId=%s", motivo, trace_id)
+        return LlmLocalNoDisponibleError()
