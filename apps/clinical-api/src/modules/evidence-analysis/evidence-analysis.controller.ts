@@ -53,6 +53,22 @@ interface Rechazo {
   extra?: LineaDeLog;
 }
 
+const PERMISO_DENEGADO: Rechazo = {
+  status: 403,
+  codigo: 'PERMISO_DENEGADO',
+  resultado: 'permiso_denegado',
+};
+const CUERPO_INVALIDO: Rechazo = {
+  status: 422,
+  codigo: 'CUERPO_INVALIDO',
+  resultado: 'cuerpo_invalido',
+};
+const ERROR_SERVICIO_IA: Rechazo = {
+  status: 502,
+  codigo: 'ERROR_SERVICIO_IA',
+  resultado: 'error_servicio_ia',
+};
+
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof PacienteNoEncontradoError) {
@@ -67,8 +83,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   }
   if (error instanceof DesidentificacionProvisionalRechazada) {
     return {
-      status: 502,
-      codigo: 'ERROR_SERVICIO_IA',
+      ...ERROR_SERVICIO_IA,
       resultado: 'desidentificacion_rechazada',
       extra: { motivo: error.motivo },
     };
@@ -110,11 +125,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
       exigirRolDoctor(request.sesion);
     } catch (error) {
       if (!(error instanceof PermisoDenegadoError)) throw error;
-      rechazar(response, {
-        status: 403,
-        codigo: 'PERMISO_DENEGADO',
-        resultado: 'permiso_denegado',
-      });
+      rechazar(response, PERMISO_DENEGADO);
       return;
     }
     next();
@@ -124,7 +135,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     const sesion = exigirRolDoctor(request.sesion);
     const cuerpo = evidenceAnalysisRequestSchema.safeParse(request.body);
     if (!cuerpo.success) {
-      rechazar(response, { status: 422, codigo: 'CUERPO_INVALIDO', resultado: 'cuerpo_invalido' });
+      rechazar(response, CUERPO_INVALIDO);
       return;
     }
     const peticion = cuerpo.data;
@@ -140,11 +151,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
         response.status(200).json(resultado.cuerpo);
         return;
       }
-      rechazar(
-        response,
-        { status: 502, codigo: 'ERROR_SERVICIO_IA', resultado: 'error_servicio_ia' },
-        trazaDelPaciente,
-      );
+      rechazar(response, ERROR_SERVICIO_IA, trazaDelPaciente);
     } catch (error) {
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;
@@ -158,7 +165,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
       next(error);
       return;
     }
-    rechazar(response, { status: 422, codigo: 'CUERPO_INVALIDO', resultado: 'cuerpo_invalido' });
+    rechazar(response, CUERPO_INVALIDO);
   };
 
   router.post(

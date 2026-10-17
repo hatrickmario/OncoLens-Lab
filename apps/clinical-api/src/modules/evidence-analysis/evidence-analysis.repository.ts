@@ -160,82 +160,93 @@ function eventoDe(fila: Fila): FilaDeEvento {
   };
 }
 
+/** Las consultas van de una en una: `pg.Client` no admite consultas concurrentes y el caso son cinco lecturas cortas. */
+type Leer = (sql: string) => Promise<Fila[]>;
+
+async function leerDiagnosticoActivo(leer: Leer): Promise<FilaDeDiagnostico | null> {
+  const [fila] = await leer(
+    `SELECT id, cancer_type, histology, grade, staging_system, stage_value, performance_scale,
+            performance_value, diagnosed_at::text AS diagnosed_at, entry_method,
+            extraction_confidence, review_status, conflicts_with_id
+       FROM clinical.diagnosis
+      WHERE patient_id = $1 AND is_active AND ${SIN_RECHAZADOS}
+      ORDER BY diagnosed_at DESC, created_at DESC
+      LIMIT 1`,
+  );
+  return fila === undefined ? null : diagnosticoDe(fila);
+}
+
+async function leerBiomarcadores(leer: Leer): Promise<FilaDeBiomarcador[]> {
+  const filas = await leer(
+    `SELECT b.id, b.name, b.value, b.result_type, b.clinical_significance, b.created_at,
+            e.performed_at::text AS performed_at, e.entry_method, b.extraction_confidence,
+            b.review_status, b.conflicts_with_id
+       FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+      WHERE e.patient_id = $1 AND b.${SIN_RECHAZADOS}
+      ORDER BY e.performed_at DESC, b.created_at DESC`,
+  );
+  return filas.map(biomarcadorDe);
+}
+
+async function leerAtributos(leer: Leer): Promise<FilaDeAtributo[]> {
+  const filas = await leer(
+    `SELECT id, attribute_key, value, observed_at::text AS observed_at, entry_method,
+            extraction_confidence, review_status
+       FROM clinical.clinical_attribute
+      WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+      ORDER BY attribute_key, observed_at DESC NULLS LAST`,
+  );
+  return filas.map(atributoDe);
+}
+
+async function leerTratamientosPrevios(leer: Leer): Promise<FilaDeTratamientoPrevio[]> {
+  const filas = await leer(
+    `SELECT id, line_number, setting, regimen_name, atc_codes, started_at::text AS started_at,
+            ended_at::text AS ended_at, ongoing, end_reason, entry_method,
+            extraction_confidence, review_status
+       FROM clinical.prior_treatment
+      WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+      ORDER BY line_number NULLS LAST, started_at NULLS LAST`,
+  );
+  return filas.map(tratamientoPrevioDe);
+}
+
+/** Los eventos con `analysis_id` son el reflejo de un análisis previo en el timeline: no son datos clínicos. */
+async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
+  const filas = await leer(
+    `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
+            extraction_confidence, review_status
+       FROM clinical.clinical_event
+      WHERE patient_id = $1 AND analysis_id IS NULL AND ${SIN_RECHAZADOS}
+      ORDER BY event_date NULLS LAST, created_at`,
+  );
+  return filas.map(eventoDe);
+}
+
 /**
  * Lectura del caso con `pg` sobre el pool inyectado de `server.ts` (migración a Prisma = deuda D-1). Solo lee las
  * columnas que el builder usa: las notas, la identidad y la referencia del convenio no se leen. Las fechas llegan como
  * texto `AAAA-MM-DD` para que la zona horaria del proceso no mueva el día.
  */
 export function createEvidenceAnalysisRepository(db: Consultador): CasoRepository {
-  const leer = async (sql: string, patientId: string): Promise<Fila[]> =>
-    (await db.query(sql, [patientId])).rows;
-
   return {
     async leerCaso(patientId) {
+      const leer: Leer = async (sql) => (await db.query(sql, [patientId])).rows;
       const [paciente] = await leer(
         'SELECT id, data_origin, population FROM clinical.patient WHERE id = $1',
-        patientId,
       );
       if (paciente === undefined) return null;
-
-      const [diagnosticos, biomarcadores, atributos, tratamientos, eventos] = await Promise.all([
-        leer(
-          `SELECT id, cancer_type, histology, grade, staging_system, stage_value, performance_scale,
-                  performance_value, diagnosed_at::text AS diagnosed_at, entry_method,
-                  extraction_confidence, review_status, conflicts_with_id
-             FROM clinical.diagnosis
-            WHERE patient_id = $1 AND is_active AND ${SIN_RECHAZADOS}
-            ORDER BY diagnosed_at DESC, created_at DESC
-            LIMIT 1`,
-          patientId,
-        ),
-        leer(
-          `SELECT b.id, b.name, b.value, b.result_type, b.clinical_significance, b.created_at,
-                  e.performed_at::text AS performed_at, e.entry_method, b.extraction_confidence,
-                  b.review_status, b.conflicts_with_id
-             FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-            WHERE e.patient_id = $1 AND b.${SIN_RECHAZADOS}
-            ORDER BY e.performed_at DESC, b.created_at DESC`,
-          patientId,
-        ),
-        leer(
-          `SELECT id, attribute_key, value, observed_at::text AS observed_at, entry_method,
-                  extraction_confidence, review_status
-             FROM clinical.clinical_attribute
-            WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
-            ORDER BY attribute_key, observed_at DESC NULLS LAST`,
-          patientId,
-        ),
-        leer(
-          `SELECT id, line_number, setting, regimen_name, atc_codes, started_at::text AS started_at,
-                  ended_at::text AS ended_at, ongoing, end_reason, entry_method,
-                  extraction_confidence, review_status
-             FROM clinical.prior_treatment
-            WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
-            ORDER BY line_number NULLS LAST, started_at NULLS LAST`,
-          patientId,
-        ),
-        // Los eventos con analysis_id son el reflejo de un análisis previo en el timeline: no son datos clínicos.
-        leer(
-          `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
-                  extraction_confidence, review_status
-             FROM clinical.clinical_event
-            WHERE patient_id = $1 AND analysis_id IS NULL AND ${SIN_RECHAZADOS}
-            ORDER BY event_date NULLS LAST, created_at`,
-          patientId,
-        ),
-      ]);
-
       return {
         paciente: {
           id: paciente['id'] as string,
           dataOrigin: paciente['data_origin'] as OrigenDeDatos,
           population: paciente['population'] as 'adulto' | 'pediatrico',
         },
-        diagnosticoActivo: diagnosticos[0] === undefined ? null : diagnosticoDe(diagnosticos[0]),
-        biomarcadores: biomarcadores.map(biomarcadorDe),
-        atributos: atributos.map(atributoDe),
-        tratamientosPrevios: tratamientos.map(tratamientoPrevioDe),
-        eventos: eventos.map(eventoDe),
+        diagnosticoActivo: await leerDiagnosticoActivo(leer),
+        biomarcadores: await leerBiomarcadores(leer),
+        atributos: await leerAtributos(leer),
+        tratamientosPrevios: await leerTratamientosPrevios(leer),
+        eventos: await leerEventos(leer),
       };
     },
   };
