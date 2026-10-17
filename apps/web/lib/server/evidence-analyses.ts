@@ -10,7 +10,7 @@ import {
 import { verificarOrigen } from './origen';
 import type { DependenciasDelBff } from './dependencias';
 import type { Registrar } from './registro';
-import { leerCuerpoAcotado } from './peticiones';
+import { esTipoJson, leerCuerpoAcotado } from './peticiones';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_PROXY = 'evidence_analyses.proxy';
@@ -44,7 +44,7 @@ export function crearManejadorAnalisis(
     if (cuerpoCrudo === undefined) {
       return responderConFallo(dependencias, inicio, 'cuerpo_cortado', respuesta);
     }
-    if (cuerpoCrudo !== '' && !esJson(respuesta)) {
+    if (cuerpoCrudo !== '' && !esTipoJson(respuesta.headers)) {
       return responderConFallo(dependencias, inicio, 'error_no_json', respuesta);
     }
     registrarReenvio(dependencias.registrar, respuesta, dependencias.ahora() - inicio);
@@ -64,12 +64,6 @@ function pedirAnalisisAClinicalApi(sdk: SdkClinicalApi, cuerpo: string) {
 }
 
 type MotivoDeFallo = 'clinical_api_inalcanzable' | 'cuerpo_cortado' | 'error_no_json';
-
-/** Compara solo el tipo MIME (sin parámetros como charset): `application/jsonx` no es JSON. */
-function esJson(respuesta: Response): boolean {
-  const tipo = (respuesta.headers.get('content-type') ?? '').split(';')[0] ?? '';
-  return tipo.trim().toLowerCase() === 'application/json';
-}
 
 function reenviar(respuesta: Response, cuerpoCrudo: string): Response {
   return new Response(cuerpoCrudo === '' ? null : cuerpoCrudo, {

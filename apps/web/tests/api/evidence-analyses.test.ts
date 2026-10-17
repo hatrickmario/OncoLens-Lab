@@ -156,6 +156,7 @@ describe('POST /api/evidence-analyses', () => {
         allowedOrigin: ORIGEN_PERMITIDO,
         upstreamTimeoutMs: 50,
         maxBodyBytes: 32768,
+        homePath: '/pacientes/x/analisis',
       },
     });
 
@@ -273,6 +274,7 @@ describe('POST /api/evidence-analyses', () => {
         allowedOrigin: ORIGEN_PERMITIDO,
         upstreamTimeoutMs: 5000,
         maxBodyBytes: 4096,
+        homePath: '/pacientes/x/analisis',
       },
     });
     const manejador = crearManejadorAnalisis(dependencias);
@@ -304,6 +306,7 @@ describe('POST /api/evidence-analyses', () => {
         allowedOrigin: ORIGEN_PERMITIDO,
         upstreamTimeoutMs: 5000,
         maxBodyBytes: 100,
+        homePath: '/pacientes/x/analisis',
       },
     });
     const solicitud = peticionDeAnalisis(

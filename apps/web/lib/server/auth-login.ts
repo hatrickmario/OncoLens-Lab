@@ -5,11 +5,10 @@ import {
   cabecerasHaciaNavegador,
   crearSdkClinicalApi,
   NOMBRE_COOKIE_DE_SESION,
-  respuestaDeFalloDeTransporte,
 } from './clinical-api';
 import type { DependenciasDelBff } from './dependencias';
 import { verificarOrigen } from './origen';
-import { leerCuerpoAcotado } from './peticiones';
+import { esTipoJson, leerCuerpoAcotado } from './peticiones';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_LOGIN = 'auth.login';
@@ -29,16 +28,19 @@ export function crearManejadorLogin(
   dependencias: DependenciasLogin,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
+    // TraceId propio del BFF, único para toda la petición; el de clinical-api va aparte en el log.
+    const traceId = dependencias.nuevoTraceId();
+    const propias = { ...dependencias, nuevoTraceId: () => traceId };
     const rechazo =
-      verificarOrigen(request, { ...dependencias, evento: EVENTO_LOGIN }) ??
-      exigirJson(request, dependencias);
+      verificarOrigen(request, { ...propias, evento: EVENTO_LOGIN }) ??
+      exigirJson(request, propias);
     if (rechazo !== null) {
       return rechazo;
     }
 
     const credenciales = await leerCredenciales(request, dependencias.config.maxBodyBytes);
     if (credenciales === null) {
-      return responderCuerpoInvalido(dependencias);
+      return responderCuerpoInvalido(propias);
     }
 
     const sdk = crearSdkClinicalApi(dependencias.config, { fetch: dependencias.fetch });
@@ -50,30 +52,47 @@ export function crearManejadorLogin(
     });
     const respuesta = resultado.response;
     if (respuesta === undefined) {
-      return responderConFallo(dependencias, 'clinical_api_inalcanzable');
+      return responderConFallo(propias, 'clinical_api_inalcanzable');
     }
-    const traceId = respuesta.headers.get('x-trace-id');
-    dependencias.registrar({
-      event: EVENTO_LOGIN,
-      status: respuesta.status,
-      ...(traceId !== null && { traceId }),
-    });
+    const cuerpoCrudo = sdk.cuerpoCrudo(respuesta);
+    if (cuerpoCrudo !== undefined && cuerpoCrudo !== '' && !esTipoJson(respuesta.headers)) {
+      return responderConFallo(propias, 'error_no_json', respuesta);
+    }
     if (respuesta.status === 204) {
-      return (
-        reenviarCookieDeSesion(respuesta) ?? responderConFallo(dependencias, 'sin_cookie_de_sesion')
-      );
+      const conCookie = reenviarCookieDeSesion(respuesta);
+      return conCookie === null
+        ? responderConFallo(propias, 'sin_cookie_de_sesion', respuesta)
+        : registrarYDevolver(propias, conCookie, respuesta);
     }
-    return new Response(sdk.cuerpoCrudo(respuesta) ?? null, {
-      status: respuesta.status,
-      headers: cabecerasHaciaNavegador(respuesta),
-    });
+    return registrarYDevolver(
+      propias,
+      new Response(cuerpoCrudo ?? null, {
+        status: respuesta.status,
+        headers: cabecerasHaciaNavegador(respuesta),
+      }),
+      respuesta,
+    );
   };
+}
+
+function registrarYDevolver(
+  dependencias: DependenciasLogin,
+  salida: Response,
+  upstream: Response,
+): Response {
+  const traceIdClinicalApi = upstream.headers.get('x-trace-id');
+  dependencias.registrar({
+    event: EVENTO_LOGIN,
+    status: salida.status,
+    traceId: dependencias.nuevoTraceId(),
+    ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
+  });
+  return salida;
 }
 
 /** Compara solo el tipo MIME (el parámetro `charset` es válido); cualquier otro tipo → 403 propio del BFF. */
 function exigirJson(request: Request, dependencias: DependenciasLogin): Response | null {
-  const tipo = (request.headers.get('content-type') ?? '').split(';')[0] ?? '';
-  if (tipo.trim().toLowerCase() === 'application/json') {
+  if (esTipoJson(request.headers)) {
     return null;
   }
   const traceId = dependencias.nuevoTraceId();
@@ -105,18 +124,32 @@ async function leerCredenciales(request: Request, maxBytes: number) {
 
 /**
  * 204 hacia el navegador con la única cabecera `Set-Cookie` de `oncolens_session`, tal cual la fijó el proveedor
- * (atributos incluidos, sin `Domain`). Cualquier otra cookie de clinical-api se descarta. `null` si no hay ninguna.
+ * (sin `Domain`). Falla cerrado: si a esa cookie le falta HttpOnly, Secure o SameSite=Strict, o lleva `Domain`,
+ * no se retransmite. Cualquier otra cookie de clinical-api se descarta. `null` si no hay una cookie válida.
  */
 function reenviarCookieDeSesion(respuesta: Response): Response | null {
   const cookie = respuesta.headers
     .getSetCookie()
     .find((valor) => valor.startsWith(`${NOMBRE_COOKIE_DE_SESION}=`));
-  if (cookie === undefined) {
+  if (cookie === undefined || !cookieEsSegura(cookie)) {
     return null;
   }
   const cabeceras = cabecerasHaciaNavegador(respuesta);
   cabeceras.append('Set-Cookie', cookie);
   return new Response(null, { status: 204, headers: cabeceras });
+}
+
+function cookieEsSegura(cookie: string): boolean {
+  const atributos = cookie
+    .split(';')
+    .slice(1)
+    .map((atributo) => atributo.trim().toLowerCase());
+  return (
+    atributos.includes('httponly') &&
+    atributos.includes('secure') &&
+    atributos.includes('samesite=strict') &&
+    !atributos.some((atributo) => atributo.startsWith('domain'))
+  );
 }
 
 /** 422 local (Zod o cuerpo excesivo): el formulario lo muestra como el mismo error genérico que el 401. */
@@ -133,11 +166,27 @@ function responderCuerpoInvalido(dependencias: DependenciasLogin): Response {
   );
 }
 
+/** 502 propio del login: mensaje fijo, sin hostname, causa ni cuerpo parcial (ErrorServicioAutenticacion). */
 function responderConFallo(
   dependencias: DependenciasLogin,
-  motivo: 'clinical_api_inalcanzable' | 'sin_cookie_de_sesion',
+  motivo: 'clinical_api_inalcanzable' | 'sin_cookie_de_sesion' | 'error_no_json',
+  upstream?: Response,
 ): Response {
   const traceId = dependencias.nuevoTraceId();
-  dependencias.registrar({ event: EVENTO_LOGIN, status: 502, traceId, motivo });
-  return respuestaDeFalloDeTransporte(traceId);
+  const traceIdClinicalApi = upstream?.headers.get('x-trace-id') ?? null;
+  dependencias.registrar({
+    event: EVENTO_LOGIN,
+    status: 502,
+    traceId,
+    ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
+    motivo,
+  });
+  return respuestaPropia(
+    {
+      error: 'ERROR_SERVICIO_AUTENTICACION',
+      message: 'El servicio de autenticación no respondió correctamente.',
+      traceId,
+    },
+    502,
+  );
 }

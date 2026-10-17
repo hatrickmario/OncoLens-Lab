@@ -2,9 +2,19 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import credencialesInvalidas from '../../../../contracts/examples/error-credenciales-invalidas.json';
 import cuerpoInvalido from '../../../../contracts/examples/error-cuerpo-invalido.json';
+import errorInterno from '../../../../contracts/examples/error-interno.json';
+import limiteSolicitudes from '../../../../contracts/examples/error-limite-solicitudes.json';
+import servicioAutenticacion from '../../../../contracts/examples/error-servicio-autenticacion.json';
 import loginRequest from '../../../../contracts/examples/login-request.json';
 
-export { credencialesInvalidas, cuerpoInvalido, loginRequest };
+export {
+  credencialesInvalidas,
+  cuerpoInvalido,
+  errorInterno,
+  limiteSolicitudes,
+  loginRequest,
+  servicioAutenticacion,
+};
 
 /** `POST /api/auth/login` del BFF simulado en el borde HTTP (MSW), con los ejemplos del contrato. */
 export function crearBffLoginSimulado() {

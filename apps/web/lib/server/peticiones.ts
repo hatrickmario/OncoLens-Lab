@@ -1,9 +1,9 @@
 import 'server-only';
 
-// Esqueleto del commit en rojo (Gate 2, diseño 1): todavía no distingue tipos.
+/** Compara solo el tipo MIME (sin parámetros como charset): `application/jsonx` no es JSON. */
 export function esTipoJson(cabeceras: Headers): boolean {
-  void cabeceras;
-  return false;
+  const tipo = (cabeceras.get('content-type') ?? '').split(';')[0] ?? '';
+  return tipo.trim().toLowerCase() === 'application/json';
 }
 
 /**

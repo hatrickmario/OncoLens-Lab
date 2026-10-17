@@ -12,6 +12,7 @@ export interface TextosLogin {
   enviar: string;
   enviando: string;
   errorCredenciales: string;
+  errorServicio: string;
 }
 
 export interface LoginFormProps {
@@ -20,19 +21,27 @@ export interface LoginFormProps {
   textos: TextosLogin;
 }
 
-type Estado = 'inactivo' | 'enviando' | 'error';
+type Estado = 'inactivo' | 'enviando' | 'errorCredenciales' | 'errorServicio';
 
-/** Un `204` es la única señal de sesión iniciada; cualquier otro resultado se trata como fallo genérico. */
-async function iniciarSesion(credenciales: unknown): Promise<boolean> {
+/**
+ * `204` = sesión iniciada; `401` y `422` = credenciales (mismo aviso genérico, no revela cuál falló);
+ * cualquier otra cosa (red, 429, 5xx) = aviso de servicio, para no culpar a la contraseña.
+ */
+async function iniciarSesion(
+  credenciales: unknown,
+): Promise<'iniciada' | 'errorCredenciales' | 'errorServicio'> {
   try {
     const respuesta = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credenciales),
     });
-    return respuesta.status === 204;
+    if (respuesta.status === 204) return 'iniciada';
+    return respuesta.status === 401 || respuesta.status === 422
+      ? 'errorCredenciales'
+      : 'errorServicio';
   } catch {
-    return false;
+    return 'errorServicio';
   }
 }
 
@@ -48,27 +57,34 @@ export function LoginForm({ homePath, textos }: LoginFormProps) {
       password: datos.get('password'),
     });
     if (!credenciales.success) {
-      setEstado('error');
+      setEstado('errorCredenciales');
       return;
     }
     setEstado('enviando');
-    if (await iniciarSesion(credenciales.data)) {
+    const resultado = await iniciarSesion(credenciales.data);
+    if (resultado === 'iniciada') {
       router.replace(homePath);
     } else {
-      setEstado('error');
+      setEstado(resultado);
     }
   }
 
-  const conError = estado === 'error';
+  const conError = estado === 'errorCredenciales' || estado === 'errorServicio';
   const ayudaDelError = {
     'aria-invalid': conError,
     'aria-describedby': conError ? 'login-error' : undefined,
   };
   return (
-    <form className={estilos.formulario} onSubmit={enviar} noValidate>
+    <form
+      className={estilos.formulario}
+      method="post"
+      action="/api/auth/login"
+      onSubmit={enviar}
+      noValidate
+    >
       {conError && (
         <p role="alert" id="login-error" className={estilos.error}>
-          {textos.errorCredenciales}
+          {estado === 'errorServicio' ? textos.errorServicio : textos.errorCredenciales}
         </p>
       )}
       <CampoConEtiqueta

@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearManejadorLogin } from '../../lib/server/auth-login';
 import { ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
 import {
@@ -12,11 +13,8 @@ const COOKIE_VALIDA = 'oncolens_session=abc; Path=/; HttpOnly; Secure; SameSite=
 const CABECERAS = { Origin: ORIGEN_PERMITIDO, 'Content-Type': 'application/json' };
 const credenciales = ejemplo('login-request.json');
 
-// Forma de ErrorServicioAutenticacion hasta que llegue el contrato generado (tarea 1.2): se migra a
-// assertMatchesSpec('#/components/schemas/ErrorServicioAutenticacion') en cuanto exista.
 const ERROR_502 = {
-  error: 'ERROR_SERVICIO_AUTENTICACION',
-  message: 'El servicio de autenticación no respondió correctamente.',
+  ...(ejemplo('error-servicio-autenticacion.json') as object),
   traceId: 'req_web00001',
 };
 
@@ -40,6 +38,7 @@ describe('POST /api/auth/login (fallos del proveedor)', () => {
 
     expect(respuesta.status).toBe(502);
     const cuerpo = await respuesta.json();
+    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorServicioAutenticacion', cuerpo);
     expect(cuerpo).toEqual(ERROR_502);
     expect(JSON.stringify(cuerpo)).not.toContain('clinical-api.test');
     expect(respuesta.headers.getSetCookie()).toEqual([]);
@@ -54,13 +53,15 @@ describe('POST /api/auth/login (fallos del proveedor)', () => {
   });
 
   it('retransmite el 500 ERROR_INTERNO sin cambios cuando clinical-api responde 500 [US-211 AC-2]', async () => {
-    const interno = { error: 'ERROR_INTERNO', message: 'Error interno.', traceId: 'req_remoto01' };
+    const interno = ejemplo('error-interno.json');
     clinicalApi.rechazar(500, interno);
 
     const { respuesta } = await iniciarSesion();
 
     expect(respuesta.status).toBe(500);
-    expect(await respuesta.json()).toEqual(interno);
+    const cuerpo = await respuesta.json();
+    assertMatchesSpec('clinical-api', '#/components/schemas/ErrorInterno', cuerpo);
+    expect(cuerpo).toEqual(interno);
   });
 
   it('responde 502 propio sin reenviar nada cuando clinical-api responde con un cuerpo que no es JSON', async () => {

@@ -192,7 +192,10 @@ cabeceras anti-clickjacking en `/login`:** excepción nombrada hasta US-216 (S6)
   (usuario, 2026-10-20):** `/login` se mergea sin CSP ni cabeceras anti-clickjacking hasta US-216,
   antes de G-Piloto; el formulario no usa scripts inline propios.
 - **Dependencias nuevas:** `argon2` en `clinical-api` (`npm audit` sin vulnerabilidades altas en el
-  PR). `web` no añade dependencias.
+  PR). `web` declara `zod` 4.6.6 (ya estaba en el monorepo: el Zod generado `zLoginBody` lo importa; en `web` se
+  declara con versión exacta, sin dependencia nueva en el lockfile) y, solo de desarrollo, `@testing-library/react`
+  16.3.3, `@testing-library/user-event` 14.6.8, `@testing-library/dom` 10.4.2 y `jsdom` 30.1.3 (pruebas de
+  componentes; `npm audit` sin vulnerabilidades).
 
 ## Contratos
 

@@ -9,7 +9,10 @@ import {
   credencialesInvalidas,
   crearBffLoginSimulado,
   cuerpoInvalido,
+  errorInterno,
+  limiteSolicitudes,
   loginRequest,
+  servicioAutenticacion,
 } from '../support/login-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -18,7 +21,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 const RUTA_DE_INICIO = '/pacientes/00000000-0000-4000-8000-000000000001/analisis';
 const { login } = mensajes();
 const bff = crearBffLoginSimulado();
-const ejemplo429 = { error: 'LIMITE_SOLICITUDES', message: 'x', traceId: 'req_1' };
 
 async function enviarCredenciales() {
   const usuario = userEvent.setup();
@@ -99,9 +101,9 @@ describe('LoginForm', () => {
   });
 
   it.each([
-    ['502', 502, { error: 'ERROR_SERVICIO_AUTENTICACION', message: 'x', traceId: 'req_1' }],
-    ['500', 500, { error: 'ERROR_INTERNO', message: 'x', traceId: 'req_1' }],
-    ['429', 429, ejemplo429],
+    ['502', 502, servicioAutenticacion],
+    ['500', 500, errorInterno],
+    ['429', 429, limiteSolicitudes],
   ])(
     'muestra el aviso de servicio en role=alert y sigue en /login cuando el Route Handler responde %s [US-211 AC-2]',
     async (_nombre, status, cuerpo) => {

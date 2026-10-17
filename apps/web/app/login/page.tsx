@@ -1,7 +1,7 @@
 import { LoginForm } from '../../components/organisms/login-form';
 import { mensajes } from '../../lib/mensajes';
+import { leerConfigWeb } from '../../lib/server/config';
 import estilos from './login.module.css';
-import { leerRutaDeInicio } from './ruta-de-inicio';
 
 export const metadata = { title: mensajes().login.titulo };
 
@@ -17,7 +17,7 @@ export default async function LoginPage() {
         <p className={estilos.etiquetaDeUso}>{app.academicUseLabel}</p>
         <h1 id="login-titulo">{login.titulo}</h1>
         <p className={estilos.subtitulo}>{login.subtitulo}</p>
-        <LoginForm homePath={leerRutaDeInicio()} textos={login} />
+        <LoginForm homePath={leerConfigWeb().homePath} textos={login} />
       </section>
     </main>
   );

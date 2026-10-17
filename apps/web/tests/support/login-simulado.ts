@@ -68,6 +68,7 @@ export function crearDependenciasDeLogin(sobrescribir: Partial<DependenciasLogin
       allowedOrigin: ORIGEN_PERMITIDO,
       upstreamTimeoutMs: 5000,
       maxBodyBytes: 32768,
+      homePath: '/pacientes/x/analisis',
     },
     fetch: globalThis.fetch,
     nuevoTraceId: () => 'req_web00001',

@@ -10,6 +10,8 @@ export interface ConfigWeb {
   upstreamTimeoutMs: number;
   /** Tope del cuerpo de las peticiones al BFF (RN-22); más allá, 413. */
   maxBodyBytes: number;
+  /** Ruta interna a la que navega el login tras el 204 (design D9); validada contra redirección abierta. */
+  homePath: string;
 }
 
 /** Valor por defecto de WEB_MAX_BODY_BYTES: holgado para una pregunta de 2000 caracteres y sus filtros. */
@@ -28,7 +30,8 @@ export function leerConfigWeb(
   if (!Number.isInteger(maxBodyBytes) || maxBodyBytes <= 0) {
     throw new Error('WEB_MAX_BODY_BYTES debe ser un entero positivo de bytes');
   }
-  return { clinicalApiUrl, allowedOrigin, upstreamTimeoutMs, maxBodyBytes };
+  const homePath = leerRutaDeInicio(exigir(entorno, 'WEB_HOME_PATH'));
+  return { clinicalApiUrl, allowedOrigin, upstreamTimeoutMs, maxBodyBytes, homePath };
 }
 
 function exigir(entorno: Record<string, string | undefined>, nombre: string): string {
@@ -37,4 +40,22 @@ function exigir(entorno: Record<string, string | undefined>, nombre: string): st
     throw new Error(`Falta la variable de entorno ${nombre}`);
   }
   return valor;
+}
+
+/** Solo rutas internas: ni `//otro.sitio`, ni `https://…`, ni caracteres de control que el navegador ignoraría. */
+function leerRutaDeInicio(ruta: string): string {
+  const interna =
+    ruta.startsWith('/') &&
+    ![...ruta].some(esControlOBarraInversa) &&
+    new URL(ruta, 'http://x').origin === 'http://x' &&
+    !ruta.startsWith('//');
+  if (!interna) {
+    throw new Error('WEB_HOME_PATH debe ser una ruta interna que empiece por una sola "/"');
+  }
+  return ruta;
+}
+
+function esControlOBarraInversa(caracter: string): boolean {
+  const codigo = caracter.charCodeAt(0);
+  return codigo <= 0x1f || codigo === 0x7f || caracter === '\\';
 }
