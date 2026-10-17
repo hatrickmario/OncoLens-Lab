@@ -17,7 +17,7 @@ from sqlalchemy.dialects.postgresql import insert
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     RegistroDeRelease,
-    VersionAnteriorInexistente,
+    VersionInexistente,
 )
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
@@ -58,7 +58,7 @@ class CorpusDocumentRepository:
             if (
                 apagadas.rowcount != 1
             ):  # dentro de la transacción: al lanzar se revierte también el nuevo
-                raise VersionAnteriorInexistente(anterior_id)
+                raise VersionInexistente(anterior_id)
 
     def retirar_version(self, document_id: str, superseded_at: datetime) -> None:
         with self._motor.begin() as conexion:
@@ -68,7 +68,7 @@ class CorpusDocumentRepository:
                 .values(is_current=False, superseded_at=superseded_at)
             )
             if retiradas.rowcount != 1:
-                raise VersionAnteriorInexistente(document_id)
+                raise VersionInexistente(document_id)
 
     def ids_de_documentos_vigentes(self) -> frozenset[str]:
         consulta = sa.select(corpus_document.c.document_id).where(

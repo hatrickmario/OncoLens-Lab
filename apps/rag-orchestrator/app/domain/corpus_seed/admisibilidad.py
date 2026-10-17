@@ -12,7 +12,7 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 
 
 class ClaseDeLicencia(StrEnum):
-    """Los cuatro valores de ``corpus_document.license_class`` (data-model §4.6): única definición."""
+    """Los cuatro valores de ``corpus_document.license_class`` (data-model §4.6) según el dominio; el contrato generado (``LicenseClass``) debe coincidir (lo fija un test)."""
 
     DOMINIO_PUBLICO = "dominio_publico"
     CC_BY = "cc_by"

@@ -15,7 +15,7 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import VersionExistente
 
 
-class VersionAnteriorInexistente(LookupError):
+class VersionInexistente(LookupError):
     """``reemplazar_version`` recibió un ``anterior_id`` que no existe: no se guardó nada (la transacción se revierte)."""
 
 
@@ -116,14 +116,14 @@ class CorpusCatalog(Protocol):
     ) -> None:
         """En UNA transacción: guarda el nuevo y marca el anterior ``is_current = false`` + ``superseded_at``.
 
-        Lanza ``VersionAnteriorInexistente`` (y no guarda nada) si ``anterior_id`` no existe.
+        Lanza ``VersionInexistente`` (y no guarda nada) si ``anterior_id`` no existe.
         """
         ...
 
     def retirar_version(self, document_id: str, superseded_at: datetime) -> None:
         """Marca ``is_current = false`` + ``superseded_at`` SIN borrar nada (RN-05, RN-21).
 
-        Lanza ``VersionAnteriorInexistente`` si el documento no existe.
+        Lanza ``VersionInexistente`` si el documento no existe.
         """
         ...
 

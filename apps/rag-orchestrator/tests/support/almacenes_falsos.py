@@ -15,7 +15,7 @@ from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVe
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     RegistroDeRelease,
-    VersionAnteriorInexistente,
+    VersionInexistente,
 )
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from tests.support.milvus import DIMENSION_DE_TEST
@@ -49,7 +49,7 @@ class CatalogoEnMemoria:
         self._puede("reemplazar_version")
         anterior = self.documentos.get(anterior_id)
         if anterior is None:  # antes de tocar nada: atómico, como la transacción del real
-            raise VersionAnteriorInexistente(anterior_id)
+            raise VersionInexistente(anterior_id)
         self.documentos[nuevo.document_id] = nuevo
         self.documentos[anterior_id] = replace(
             anterior, is_current=False, superseded_at=superseded_at
@@ -59,7 +59,7 @@ class CatalogoEnMemoria:
         self._puede("retirar_version")
         registro = self.documentos.get(document_id)
         if registro is None:
-            raise VersionAnteriorInexistente(document_id)
+            raise VersionInexistente(document_id)
         self.documentos[document_id] = replace(
             registro, is_current=False, superseded_at=superseded_at
         )

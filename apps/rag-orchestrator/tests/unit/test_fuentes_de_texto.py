@@ -26,7 +26,7 @@ URL = "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq.txt"
 
 
 def descargador(max_bytes: int = 1000) -> DescargadorHttps:
-    return DescargadorHttps(httpx.Client(), ["www.cancer.gov"], max_bytes)
+    return DescargadorHttps(httpx.Client(), ["www.cancer.gov"], max_bytes, deadline_s=60.0)
 
 
 @respx.mock

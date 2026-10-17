@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.seed_corpus.ports import VersionAnteriorInexistente
+from app.application.seed_corpus.ports import VersionInexistente
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
 from app.application.seed_corpus.seed_corpus_loader import SeedCorpusLoader
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -341,7 +341,7 @@ def test_el_fake_del_catalogo_cumple_el_mismo_contrato_que_el_real_con_un_anteri
 ):
     catalogo = CatalogoEnMemoria()
 
-    with pytest.raises(VersionAnteriorInexistente):
+    with pytest.raises(VersionInexistente):
         catalogo.reemplazar_version(registro_de_prueba("nuevo@1"), "no-existe@1", AHORA)
 
     assert catalogo.documentos == {}

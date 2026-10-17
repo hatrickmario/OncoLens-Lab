@@ -13,7 +13,7 @@ from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
-from app.domain.corpus_seed.admisibilidad import Admision
+from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO
@@ -25,7 +25,7 @@ SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia
 # (el catálogo no cambia en este change): un rechazado lleva la más restrictiva. La verdad de su licencia es el texto
 # literal de ``license`` y su ``status``; nunca es vigente ni tiene chunks.
-CLASE_DE_LICENCIA_DE_RECHAZADOS = "cc_by_nc"
+CLASE_DE_LICENCIA_DE_RECHAZADOS = ClaseDeLicencia.CC_BY_NC
 
 
 def identificador_de_documento(document_key: str, checksum: str) -> str:

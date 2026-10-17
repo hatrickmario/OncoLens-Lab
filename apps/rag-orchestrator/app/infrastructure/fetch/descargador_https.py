@@ -28,7 +28,7 @@ class DescargadorHttps:
         cliente: httpx.Client,
         hosts_permitidos: Collection[str],
         max_bytes: int,
-        deadline_s: float = 60.0,
+        deadline_s: float,
         reloj_monotonico: Callable[[], float] = time.monotonic,
     ) -> None:
         self._deadline_s = deadline_s

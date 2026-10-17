@@ -11,7 +11,7 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 from sqlalchemy import Engine, text
 
-from app.application.seed_corpus.ports import RegistroDeRelease, VersionAnteriorInexistente
+from app.application.seed_corpus.ports import RegistroDeRelease, VersionInexistente
 from app.domain.corpus_seed.versionado import VersionExistente
 from app.infrastructure.catalog.conexion import crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
@@ -157,7 +157,7 @@ def test_la_ultima_release_es_la_mas_reciente_y_sin_releases_es_none(
 def test_reemplazar_con_un_anterior_inexistente_lanza_y_revierte_sin_guardar_la_nueva(
     repositorio: CorpusDocumentRepository, motor: Engine
 ) -> None:
-    with pytest.raises(VersionAnteriorInexistente):
+    with pytest.raises(VersionInexistente):
         repositorio.reemplazar_version(
             registro_de_prueba("nuevo@1", version_group_id="g"), "no-existe@1", AHORA
         )
