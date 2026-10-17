@@ -1,7 +1,7 @@
 import pytest
 
 from app.domain.retrieval_filter import (
-    LONGITUD_MAXIMA_DE_CODIGO,
+    LONGITUD_MAXIMA_POR_DEFECTO,
     coincide_etiqueta,
     escapar_patron_like,
     exigir_filtro_vigente,
@@ -88,14 +88,14 @@ def test_escapar_patron_like_antepone_barra_a_barra_porcentaje_y_guion_bajo(text
 
 
 def test_expresion_vigente_del_tipo_acepta_un_codigo_de_la_longitud_maxima():
-    tipo = "a" * LONGITUD_MAXIMA_DE_CODIGO
+    tipo = "a" * LONGITUD_MAXIMA_POR_DEFECTO
 
     assert f'cancer_type_tags == "{tipo}"' in expresion_vigente_del_tipo(tipo)
 
 
 def test_expresion_vigente_del_tipo_rechaza_un_codigo_mas_largo_que_el_maximo():
     with pytest.raises(ValueError):
-        expresion_vigente_del_tipo("a" * (LONGITUD_MAXIMA_DE_CODIGO + 1))
+        expresion_vigente_del_tipo("a" * (LONGITUD_MAXIMA_POR_DEFECTO + 1))
 
 
 def test_exigir_filtro_vigente_acepta_la_expresion_solo_vigente():
@@ -125,3 +125,11 @@ def test_exigir_filtro_vigente_rechaza_el_filtro_que_no_deja_is_current_como_con
 ):
     with pytest.raises(ValueError):
         exigir_filtro_vigente(filtro)
+
+
+def test_expresion_vigente_del_tipo_usa_la_longitud_maxima_inyectada_cuando_difiere_de_la_de_defecto():
+    assert 'cancer_type_tags == "aaaaa"' in expresion_vigente_del_tipo("aaaaa", longitud_maxima=5)
+    with pytest.raises(ValueError):
+        expresion_vigente_del_tipo("aaaaaa", longitud_maxima=5)
+    # el mismo código, con el máximo por defecto, sí entra
+    assert 'cancer_type_tags == "aaaaaa"' in expresion_vigente_del_tipo("aaaaaa")

@@ -61,6 +61,7 @@ class ParametrosDeRecuperacion:
     relevance_threshold: float
     retrieval_top_k: int
     rerank_top_n: int
+    longitud_maxima_codigo_tipo: int
     llm_provider: LlmProvider
     llm_model: str
     nli_model: str

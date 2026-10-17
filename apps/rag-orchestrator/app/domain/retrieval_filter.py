@@ -15,7 +15,7 @@ _PREFIJO_CON_RESTRICCION = f"{FILTRO_VIGENTE} and ("
 _CODIGO_DE_CATALOGO = re.compile(r"[a-z][a-z0-9_]*")
 
 
-LONGITUD_MAXIMA_DE_CODIGO = 64
+LONGITUD_MAXIMA_POR_DEFECTO = 64  # valor por defecto de RETRIEVAL_CANCER_TYPE_MAX_LENGTH (RN-22)
 _COMODINES_DE_LIKE = str.maketrans({"\\": "\\\\", "%": "\\%", "_": "\\_"})
 
 
@@ -34,7 +34,9 @@ def expresion_solo_vigente() -> str:
     return FILTRO_VIGENTE
 
 
-def expresion_vigente_del_tipo(cancer_type: str) -> str:
+def expresion_vigente_del_tipo(
+    cancer_type: str, longitud_maxima: int = LONGITUD_MAXIMA_POR_DEFECTO
+) -> str:
     """Vigente y con la etiqueta COMPLETA ``cancer_type`` dentro de ``cancer_type_tags`` (lista separada por comas).
 
     Compara la etiqueta entera (sola, primera, última o intermedia), así ``mama`` no casa con ``mama_masculina`` ni
@@ -72,7 +74,7 @@ def coincide_etiqueta(cancer_type_tags: str, cancer_type: str) -> bool:
 
 def _exigir_codigo_de_catalogo(cancer_type: str) -> str:
     if (
-        len(cancer_type) > LONGITUD_MAXIMA_DE_CODIGO
+        len(cancer_type) > LONGITUD_MAXIMA_POR_DEFECTO
         or _CODIGO_DE_CATALOGO.fullmatch(cancer_type) is None
     ):
         raise ValueError("el tipo de cáncer no es un código de catálogo utilizable en el filtro")

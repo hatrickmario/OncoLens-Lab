@@ -299,6 +299,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
     retrieval_top_k=40,
     rerank_top_n=10,
+    longitud_maxima_codigo_tipo=64,
     llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
     nli_model="nli-test@1",
