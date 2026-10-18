@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import sys
+from typing import Any
 
 import httpx
 from pydantic import ValidationError
@@ -48,10 +49,8 @@ class AdapterDeEmbeddingsNoDisponible(RuntimeError):
     """El adapter real de ``PassageEmbedder`` (ADR-39) todavía no existe: lo aporta L1D-106."""
 
 
-def fabricar_embedder_real(ajustes: MilvusSettings) -> PassageEmbedder:
-    raise AdapterDeEmbeddingsNoDisponible(
-        "el adapter real de embeddings (ADR-39) aún no existe: lo aporta L1D-106"
-    )
+def fabricar_embedder_real(ajustes: Settings, **fabricas: Any) -> PassageEmbedder:
+    raise NotImplementedError("no implementado")
 
 
 def allow_cc_by_nc_del_entorno() -> bool:
