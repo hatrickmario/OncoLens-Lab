@@ -9,11 +9,17 @@
 - **THEN** el primer par devuelve `entailment`, el segundo `contradiction` y el tercero `neutral`
 - **AND** las probabilidades de cada par suman 1
 
-#### Scenario: El adapter normaliza los logits con softmax y mapea las clases por id2label [US-231b AC-1]
-- **GIVEN** el adapter NLI con una sesión de inferencia falsa que devuelve logits fijos y un `id2label` de configuración
+#### Scenario: El adapter normaliza los logits con softmax y mapea las clases con los índices de configuración [US-231b AC-1] [RN-01] [RN-22]
+- **GIVEN** el adapter NLI con una sesión de inferencia falsa que devuelve logits fijos y los índices `NLI_LABEL_INDEX_ENTAILMENT`, `NLI_LABEL_INDEX_NEUTRAL` y `NLI_LABEL_INDEX_CONTRADICTION` de configuración
 - **WHEN** clasifica un lote de pares
 - **THEN** cada par recibe el `label` de su probabilidad máxima y `p_entailment` es la probabilidad de `entailment`
 - **AND** un lote vacío devuelve una lista vacía sin invocar la sesión
+
+#### Scenario: Un mapeo de clases inválido impide el arranque y nunca se lee de un config.json sin verificar [US-231b AC-4] [RN-01] [RN-22]
+- **GIVEN** índices de clase repetidos o fuera de [0, 2], o un modelo cuya salida no tiene 3 clases
+- **WHEN** arranca `rag-orchestrator` con `MODEL_PROVIDER=local` como subproceso
+- **THEN** el proceso termina con código distinto de 0 nombrando la variable de índice, sin su valor
+- **AND** ningún módulo del paquete `nli` lee `config.json` ni `id2label`
 
 ### Requirement: Procedencia del NLI en meta.nliModel
 La metainformación del `NliClassifier` real MUST contener modelo, versión y SHA-256 iguales a los de la configuración, construidos a partir de ella y no del texto generado (FR-25).
@@ -47,6 +53,20 @@ Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la rut
 - **WHEN** arranca `rag-orchestrator` como subproceso
 - **THEN** el proceso termina con código distinto de 0
 - **AND** stdout y stderr completos contienen `NLI_MODEL_PATH` y no contienen la ruta
+
+### Requirement: Los datos externos del ONNX se verifican o el arranque falla
+Un modelo ONNX con datos externos (`*.onnx.data` o `*.onnx_data`) MUST tener su par `*_MODEL_DATA_PATH` / `*_MODEL_DATA_SHA256` verificado; sin él, `rag-orchestrator` SHALL fallar cerrado al arrancar nombrando la variable, y la sesión MUST crearse desde los bytes ya hasheados para cargar exactamente lo verificado (RN-22, RN-12, RN-14).
+
+#### Scenario: Un modelo con datos externos sin su par verificado impide el arranque [US-231b AC-4] [RN-22]
+- **GIVEN** un `.onnx` del NLI que referencia un archivo de datos externos y `MODEL_PROVIDER=local` sin `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `NLI_MODEL_DATA_PATH` y no contienen la ruta, el hash esperado ni el calculado
+
+#### Scenario: Los patrones de pesos excluyen también los datos externos [US-231b AC-4] [RN-14]
+- **GIVEN** `.gitignore`, el `.dockerignore` raíz y `apps/rag-orchestrator/Dockerfile.dockerignore`
+- **WHEN** se analizan sus patrones
+- **THEN** cada uno excluye `**/*.onnx.data` además de `**/*.onnx_data`
 
 ### Requirement: NLI local sin red
 El adapter NLI real MUST funcionar sin conexiones salientes y no SHALL importar un cliente de nube o HTTP ni descargar pesos en ejecución (RN-12, NFR-05).
@@ -96,6 +116,12 @@ Con `MODEL_PROVIDER` real, `load_seed_corpus` MUST obtener el *embedder* de pasa
 - **THEN** devuelve el adapter de `PassageEmbedder` de US-231a
 - **AND** con `MODEL_PROVIDER=fake` falla nombrando la variable, sin devolver un *embedder* falso
 
+#### Scenario: El cargador de la semilla verifica todos los archivos que abre y no revela rutas ni hashes [US-231b AC-8] [RN-22]
+- **GIVEN** `MODEL_PROVIDER=local` y un tokenizer de BGE-M3 cuyo SHA-256 no coincide con `EMBEDDING_TOKENIZER_SHA256`
+- **WHEN** corre `python -m app.scripts.load_seed_corpus` como subproceso
+- **THEN** termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `EMBEDDING_TOKENIZER_SHA256` y no contienen la ruta, el hash esperado ni el calculado
+
 ### Requirement: Smoke de la semilla con embeddings reales y recuperación compuesta
 El cargador de la semilla MUST dejar, con el manifiesto real y los *embeddings* reales contra Compose, todos los documentos `embebido` con `is_current = true`, chunks con `source_type`, `language` y `cancer_type_tags` copiados del catálogo y una `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`; y `app/main.py` MUST componer los bordes reales del corpus de modo que `/rag/query` deje de responder `503` por composición (RN-05, AC-06.1, `[S1 resp. 82]`).
 
@@ -106,11 +132,18 @@ El cargador de la semilla MUST dejar, con el manifiesto real y los *embeddings* 
 - **AND** sus chunks vigentes llevan copiados del catálogo `source_type`, `language` y `cancer_type_tags`
 - **AND** existe la `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`
 
-#### Scenario: Con LLM y modelos locales, main.py compone el corpus y /rag/query recupera [US-231b AC-9] [S1 resp. 82]
-- **GIVEN** `LLM_PROVIDER=local`, `MODEL_PROVIDER=local`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`
+#### Scenario: Con modelos locales, main.py compone el corpus y /rag/query recupera [US-231b AC-9] [S1 resp. 82]
+> Redactado para la opción (b) del smoke (`LLM_PROVIDER=fake` + `MODEL_PROVIDER=local`); pendiente de decisión del usuario (design, Open Questions 3).
+- **GIVEN** `MODEL_PROVIDER=local`, el corpus compuesto por `main.py`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`
 - **WHEN** se envía `Q-HER2` a `/rag/query` con un JWT de servicio válido
 - **THEN** la respuesta no es `503 RETRIEVAL_UNAVAILABLE` y se valida contra `RagQueryInternalResponse` del `openapi.yaml`
 - **AND** el *reranker* recibió como máximo 12 pares, recortados por puntaje de recuperación con desempate determinista
+
+#### Scenario: Milvus o el catálogo inaccesibles impiden el arranque sin revelar su dirección [US-231b AC-9] [RN-12] [RN-22]
+- **GIVEN** `MODEL_PROVIDER=local` y un Milvus (`MILVUS_URI`) o un catálogo (`CORPUS_DATABASE_URL`, rol `rag_corpus`) inaccesible
+- **WHEN** arranca `rag-orchestrator` como subproceso y ejecuta la sonda de arranque (`has_collection`; `SELECT 1`)
+- **THEN** el proceso termina con código distinto de 0 y stdout y stderr completos contienen `MILVUS_URI` o `CORPUS_DATABASE_URL`
+- **AND** no contienen la URI, el host, el puerto ni el DSN, y no se recurre a un corpus falso
 
 #### Scenario: Con modelos fake main.py no compone el corpus ni importa runtimes [US-231b AC-9]
 - **GIVEN** `MODEL_PROVIDER=fake`

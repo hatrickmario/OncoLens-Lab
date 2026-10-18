@@ -46,6 +46,10 @@ Desbloquea L1D-180 (puerto y adapter) y la medición de p95 de L1D-274.
   (`CandidatosSuperanLosParesDelReranker`, Gate 2 de US-231a) y el servicio no recorta: el PR #70 no entregó el corte.
   Este change lo entrega en el servicio de recuperación (etapa nueva «cortar a pares del reranker») y sustituye la
   negativa de arranque por la validación `RERANKER_MAX_PAIRS ≥ 1`. **Ver Pendientes: no tiene AC propio.**
+- **Endurecimiento del Gate 1 (privacy):** el mapeo de clases del NLI sale de configuración versionada y validada, no de un `config.json`
+  sin verificar; los datos externos del ONNX son un requisito verificado (la sesión se crea desde los **bytes ya hasheados**); `**/*.onnx.data`
+  entra a `.gitignore`, `.dockerignore` raíz y `Dockerfile.dockerignore` (RN-14); una sonda al arrancar (`SELECT 1` con `rag_corpus`,
+  `has_collection`) hace fail-closed el corpus sin eco de URI/host/DSN; el cargador de la semilla verifica **todos** los archivos que carga.
 - **Mediciones** (`@pytest.mark.models`, VM de Docker ≥ 10 GB): latencia de la etapa NLI (≤ 1500 ms, mediana de 3) y
   RSS conjunto de los tres modelos (≤ 4489 MiB); un exceso se reporta, no se oculta.
 - **Sin cambio de contrato HTTP** (`openapi.yaml` no cambia): `meta.nliModel` ya es `string`. No hay `## contratos`.
@@ -67,7 +71,9 @@ Desbloquea L1D-180 (puerto y adapter) y la medición de p95 de L1D-274.
 - **ai-services**: `apps/rag-orchestrator` (`app/application/ports.py`, `app/infrastructure/{nli,models}`, `app/scripts/load_seed_corpus.py`,
   `app/main.py`/`bootstrap.py`, `app/config`, `tests/`).
 - **infra**: variables del servicio `rag-orchestrator` en `infra/docker/docker-compose.yml` (`NLI_MODEL_PATH`, `NLI_MODEL_SHA256`,
-  `NLI_TOKENIZER_*`) y su test de configuración; `.env.example` lo aplica el humano (el agente solo reporta las claves).
+  `NLI_TOKENIZER_*`, índices de clase del NLI, `CORPUS_DATABASE_URL`, `MILVUS_URI`, `RETRIEVAL_TOP_K` por defecto 30) y su test de
+  configuración; `.gitignore`, `.dockerignore` y `apps/rag-orchestrator/Dockerfile.dockerignore` (`**/*.onnx.data`) con su caso en
+  `dockerignore.test.mjs`; `.env.example` lo aplica el humano (el agente solo reporta las claves).
 - No toca `clinical-platform`, `frontend` ni `contratos`.
 
 ## Dependencias
@@ -88,13 +94,29 @@ Desbloquea L1D-180 (puerto y adapter) y la medición de p95 de L1D-274.
 
 ## Pendientes de refinamiento (para /sprint-start)
 
-1. **Decisión 82 sin AC:** el corte previo a 12 pares y la composición del corpus en `main.py` son prerrequisitos del
-   *smoke* pero ningún AC de US-231b los nombra. Se verifican como escenarios del AC-9 (smoke a través de `/rag/query`).
+1. **Decisión 82 y composición sin AC propio (AC-10 `(asumido)`, a decidir por el usuario):** el corte previo a 12 pares y la composición del
+   corpus en `main.py` son prerrequisitos del *smoke* pero ningún AC de US-231b los nombra. Se verifican como escenarios del AC-9.
    Propuesta: añadir un AC-10 `(asumido)` en el Markdown de la historia; requiere aprobación (los AC son inmutables).
-2. **Formato fp32 del NLI:** el ADR fija fp32; se asume un ONNX fp32 exportado (un archivo + `tokenizer.json`). Si el
-   modelo trae datos externos (`.onnx_data`), se añade su par de variables a `ARCHIVOS_A_VERIFICAR`.
-3. **Memoria conjunta:** el ADR midió 964 + 2642 + 883 MiB por separado; el RSS de un solo proceso puede diferir. El AC-7 mide
-   el proceso real; un exceso se reporta.
+2. **Origen y formato del ONNX fp32 del NLI (a confirmar por el usuario):** opción por defecto, **reexportar en un solo archivo**
+   (sin datos externos) más `tokenizer.json`; alternativa, aceptar `*.onnx.data` con su par `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256`.
+   Un modelo con datos externos sin su par verificado hace fallar el arranque (requisito del spec). Tarea previa: inspeccionar
+   `MODEL_HOST_DIR` (`ls`) y comprobar si los modelos cuantizados de US-231a (embeddings y reranker) trajeron un `model.onnx.data` sin verificar
+   (deuda probable de US-231a si se exportaron con `use_external_data_format=True`).
+3. **Memoria conjunta:** el ADR midió 964 + 2642 + 883 MiB por separado; el RSS de un solo proceso puede diferir, y el pico de la
+   **carga** (bytes leídos para el hash más la sesión) puede superar el RSS en régimen. El AC-7 mide el proceso real y documenta ambos
+   picos (carga y régimen); un exceso se reporta.
+4. **Mapeo de clases del NLI (a confirmar por el usuario):** por defecto, índices de `entailment`/`neutral`/`contradiction` en configuración
+   versionada (RN-22) y validados al arrancar; alternativa, verificar `config.json` con `NLI_CONFIG_PATH` / `NLI_CONFIG_SHA256` en
+   `ARCHIVOS_A_VERIFICAR`. Nunca se lee un `config.json` sin verificar (un mapeo alterado invertiría el soporte, RN-01).
+5. **Matriz del *smoke* de `/rag/query` (a decidir por el usuario).** Hoy `bootstrap.py` (`_registrar_consulta_de_evidencia`) solo usa la
+   recuperación real con `LLM_PROVIDER=local`; con `fake` responde del fake. Opciones: **(a)** `LLM=local` + `MODEL=local` aceptando `200
+   sin_evidencia` o `503` con aserciones sobre el espía del *reranker* y los logs (≤ 12 pares); **(b)** componer también con `LLM=fake` +
+   `MODEL=local` cambiando `bootstrap.py` (el LLM falso responde y se ve la recuperación real de punta a punta); **(c)** probar la recuperación
+   por debajo del endpoint (servicio de recuperación con los bordes reales). **Recomendación: (b)** para el AC-9 (no depende del LLM local de
+   L1D-274, ejercita el cableado real y el 200 validable contra el spec); **(c)** como respaldo si no se quiere tocar `bootstrap.py`. Mientras no se
+   decida, el escenario del AC-9 queda redactado para (b) y marcado.
+6. **Origen de los pesos del tokenizer:** `TokenizadorDeArchivo` exige el token de relleno `<pad>` y mDeBERTa usa `[PAD]`: se lee el
+   `pad_token` del propio `tokenizer.json` (ya verificado por SHA-256) en lugar de un literal.
 
 ## Impact
 
