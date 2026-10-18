@@ -301,7 +301,7 @@ def _dos_opciones_y_una_limitacion():
 
 
 def test_cada_resultado_va_a_su_afirmacion_cuando_la_primera_opcion_y_la_limitacion_se_implican_y_la_segunda_no():
-    primera, segunda, plan = _dos_opciones_y_una_limitacion()
+    primera, _, plan = _dos_opciones_y_una_limitacion()
 
     resultado = verificar_soporte(plan, [IMPLICA, NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL], UMBRAL, "es")
 
@@ -311,7 +311,7 @@ def test_cada_resultado_va_a_su_afirmacion_cuando_la_primera_opcion_y_la_limitac
 
 
 def test_cada_resultado_va_a_su_afirmacion_cuando_las_posiciones_se_invierten():
-    primera, segunda, plan = _dos_opciones_y_una_limitacion()
+    _, segunda, plan = _dos_opciones_y_una_limitacion()
 
     resultado = verificar_soporte(plan, [NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL, NEUTRAL], UMBRAL, "es")
 
@@ -329,3 +329,13 @@ def test_una_opcion_prohibida_no_desplaza_los_resultados_de_las_afirmaciones_que
 
     assert resultado.soportadas == (limpia,)
     assert [d.opcion.option for d in resultado.descartadas] == [RETIRO_ES]
+
+
+def test_una_limitacion_prohibida_se_omite_y_cuenta_aunque_el_nli_implique_todo_lo_que_se_le_envia() -> (
+    None
+):
+    plan = _plan(limitaciones=("Limpia.", "PROHIBIDO l."))
+
+    resultado = verificar_soporte(plan, [IMPLICA, IMPLICA, IMPLICA], UMBRAL, "es")
+
+    assert resultado.limitaciones == ("Limpia.",) and resultado.omitidas == 1
