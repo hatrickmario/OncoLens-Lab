@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from app.application.ports import LanguageDetector, QueryEmbedder, Reranker
+from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import Settings
 from app.infrastructure.models.verificacion import verificar_modelo
 
@@ -12,6 +16,20 @@ ARCHIVOS_A_VERIFICAR: tuple[tuple[str, str], ...] = (
     ("RERANKER_MODEL_PATH", "RERANKER_MODEL_SHA256"),
     ("RERANKER_TOKENIZER_PATH", "RERANKER_TOKENIZER_SHA256"),
 )
+
+
+@dataclass(frozen=True)
+class ModelosDeRecuperacion:
+    """Los adapters reales de recuperación ya construidos (un núcleo de embeddings para los dos puertos)."""
+
+    detector_idioma: LanguageDetector
+    embedder_consulta: QueryEmbedder
+    embedder_pasajes: PassageEmbedder
+    reranker: Reranker
+
+
+def cargar_modelos_locales(settings: Settings) -> ModelosDeRecuperacion:
+    raise NotImplementedError
 
 
 def verificar_modelos_locales(settings: Settings) -> None:

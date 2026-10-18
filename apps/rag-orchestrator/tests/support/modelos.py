@@ -128,3 +128,11 @@ def arrancar_en_subproceso(entorno: dict[str, str]) -> subprocess.CompletedProce
 
 def salida_completa(proceso: subprocess.CompletedProcess[str]) -> str:
     return f"{proceso.stdout}\n{proceso.stderr}"
+
+
+def cargar_modelos_reales():
+    """Los adapters con los pesos de ``MODEL_CACHE_DIR`` (tests ``models``): rutas y SHA-256 salen del entorno."""
+    from app.config.settings import Settings
+    from app.infrastructure.models.local import cargar_modelos_locales
+
+    return cargar_modelos_locales(Settings(_env_file=None, model_provider="local"))  # type: ignore[call-arg]

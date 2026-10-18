@@ -109,6 +109,14 @@ class CorpusChunkStore(ChunkSearch, Protocol):
 Idioma = Literal["es", "en"]
 
 
+class FalloDeInferencia(RuntimeError):
+    """Un modelo local (embeddings, reranker) no pudo inferir: archivo corrupto, tokenizer o tensor inesperado.
+
+    Es el único error que los adapters reales de recuperación lanzan; el servicio lo convierte en
+    ``503 RETRIEVAL_UNAVAILABLE``. El mensaje nombra la etapa y nunca lleva texto de la pregunta ni del chunk.
+    """
+
+
 class LanguageDetector(Protocol):
     def detectar(self, texto: str) -> Idioma: ...
 
