@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 import pytest
 from pydantic import ValidationError
 
@@ -28,7 +30,9 @@ def test_acepta_un_host_local_de_la_lista_permitida_por_defecto(url: str) -> Non
 
 
 def test_el_valor_por_defecto_de_llm_base_url_es_un_host_local() -> None:
-    assert Settings(_env_file=None).llm_base_url.startswith("http://host.docker.internal")  # type: ignore[call-arg]
+    url = urlsplit(Settings(_env_file=None).llm_base_url)  # type: ignore[call-arg]
+
+    assert (url.scheme, url.hostname) == ("http", "host.docker.internal")
 
 
 @pytest.mark.parametrize(

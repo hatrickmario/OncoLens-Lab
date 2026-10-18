@@ -119,6 +119,9 @@ async def test_el_cliente_del_llm_envia_la_temperatura_configurada_y_0_por_defec
 async def test_crear_generador_local_propaga_la_temperatura_de_la_configuracion(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setenv(
+        "LLM_ALLOWED_HOSTS", "llm-nativo.test"
+    )  # RN-12: host declarado en la lista permitida
     monkeypatch.setenv("LLM_BASE_URL", URL_LLM)
     monkeypatch.setenv("LLM_MODEL", "m")
     monkeypatch.setenv("LLM_TEMPERATURE", "0.4")

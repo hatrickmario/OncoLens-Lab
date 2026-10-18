@@ -303,6 +303,8 @@ services:
       # 30 candidatos de Milvus y corte previo a RERANKER_MAX_PAIRS por puntaje de recuperación (decisión 82, US-231b).
       RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-30}
       RERANK_TOP_N: ${RERANK_TOP_N:-10}
+      # Soporte NLI (L1D-180, RN-01, RN-22): probabilidad mínima de entailment; provisional hasta US-072.
+      NLI_ENTAILMENT_THRESHOLD: ${NLI_ENTAILMENT_THRESHOLD:-0.7}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
