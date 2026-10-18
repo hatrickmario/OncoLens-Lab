@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.2.0
+  version: 1.3.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -100,8 +100,9 @@ paths:
         "503":
           description: >-
             Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del
-            LLM inválida o fuera de esquema) o recuperación (RETRIEVAL_UNAVAILABLE: Milvus o
-            embeddings). Falla cerrada, sin respuesta parcial. Con datos reales solo modelos
+            LLM inválida o fuera de esquema), recuperación (RETRIEVAL_UNAVAILABLE: Milvus o
+            embeddings) o verificador de soporte (NLI_UNAVAILABLE): falla cerrada, ninguna opción
+            se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos
             locales, sin fallback a la nube (RN-12).
           content:
             application/json:
@@ -109,6 +110,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
                   - $ref: '#/components/schemas/ErrorRecuperacionNoDisponible'
+                  - $ref: '#/components/schemas/ErrorNliNoDisponible'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
 
@@ -1431,6 +1433,14 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: RETRIEVAL_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorNliNoDisponible:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: NLI_UNAVAILABLE }
         message: { type: string }
         traceId: { type: string }
     ErrorTipoCancerNoRegistrado:

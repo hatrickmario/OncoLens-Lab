@@ -871,6 +871,15 @@ class ErrorRecuperacionNoDisponible(BaseModel):
     traceId: str
 
 
+class ErrorNliNoDisponible(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error: Literal['NLI_UNAVAILABLE']
+    message: str
+    traceId: str
+
+
 class ErrorTipoCancerNoRegistrado(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
