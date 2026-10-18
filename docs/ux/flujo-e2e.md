@@ -198,7 +198,7 @@ Layout C: el caso a la izquierda y el análisis a la derecha.
    - `rationale`, **siempre con "las fuentes" como sujeto** (RN-23);
    - `warnings` como avisos que no bloquean;
    - citas (`citedSources[]`) con `sourceName`, `title`, `authors` ("No disponible" si falta), `studyDesign`/`trialPhase`, `sampleSize`, `publishedAt`/`lastUpdatedAt`, `language`, **`licenseClass`**, "ver fragmento", "fuente original" (`sourceUrl`) y la marca `possiblyOutdated`;
-   - `relevanceScore` al final, con el texto "metadato secundario, no ordena ni mide eficacia" (RN-03).
+   - `relevanceScore` al final, con el rótulo "Relevancia de recuperación de evidencia" y la nota "no mide eficacia ni solidez clínica" (RN-03, US-061 AC-2, `[S1 resp. 28]`).
 7. **Descartadas** (`discardedOptions[]`), plegadas: "para revisión, no son opciones", con su `discardReason`.
 8. **Base del análisis** (`analysisBasis`): datos usados, faltantes, supuestos, fuentes consultadas, **no incluidas: "NCCN, ESMO (licencia no abierta)"** (solo como exclusión, `[Pre-S1 resp. 12]`), corte del corpus, limitaciones y afirmaciones omitidas (`omittedClaims`).
 9. **Preguntas de seguimiento sobre este análisis** (S5, US-218 y US-219, `[Pre-S1 resp. 14]`), antes del feedback:
@@ -212,7 +212,7 @@ Layout C: el caso a la izquierda y el análisis a la derecha.
 11. Acciones: "Registrar la decisión del oncólogo" (Post-MVP) · "Nueva pregunta".
 12. Pie con RN-19 y "Uso académico/investigación".
 
-**Variante S1–S4:** una sola opción, sin tabla (`applicability = []`), con el criterio "Seleccionada por relevancia de la búsqueda, no por eficacia" `[§15 resp. 7]`.
+**Variante S1–S4:** una sola opción, sin tabla (`applicability = []`), con el criterio "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica." (US-061 AC-3) `[§15 resp. 7]` `[S1 resp. 28]`.
 
 ## 10 · Estados del análisis
 
