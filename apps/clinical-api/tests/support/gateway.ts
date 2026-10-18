@@ -75,7 +75,9 @@ export const PREGUNTA_Q_HER2 =
   '¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?';
 export const PREGUNTA_Q_SIN =
   '¿Qué opciones describe la evidencia para un tumor inexistente en el corpus?';
-export const DISCLAIMER_DE_TEST = 'Aviso sintético de IA de test · Uso académico/investigación';
+/** Espeja el valor de `AI_DISCLAIMER_TEXT` de `.env.example`: el literal validado (PRD E-11, S1 resp. 32). */
+export const DISCLAIMER_DE_TEST =
+  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.';
 export const SUPUESTO_S1_DE_TEST =
   'Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes.';
 /** Plazo corto REAL: el temporizador que aborta la llamada es del runtime; el reloj de la aplicación sí está congelado. */
