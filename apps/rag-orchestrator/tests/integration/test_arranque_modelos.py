@@ -120,7 +120,9 @@ def test_arranque_con_datos_reales_y_model_provider_fake_termina_nombrando_model
 
 
 @pytest.mark.ac("US-231a", 7)
-def test_rag_query_con_llm_local_y_modelos_fake_responde_503_sin_recuperar_ni_invocar_al_llm() -> None:
+def test_rag_query_con_llm_local_y_modelos_fake_responde_503_sin_recuperar_ni_invocar_al_llm() -> (
+    None
+):
     app = crear_app(
         settings_de_prueba(
             llm_provider="local",
@@ -139,6 +141,4 @@ def test_rag_query_con_llm_local_y_modelos_fake_responde_503_sin_recuperar_ni_in
 
     assert respuesta.status_code == 503
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
-    assert_matches_spec(
-        "#/paths/~1rag~1query/post/responses/503", respuesta.json()
-    )
+    assert_matches_spec("#/paths/~1rag~1query/post/responses/503", respuesta.json())

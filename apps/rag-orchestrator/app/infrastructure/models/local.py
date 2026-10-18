@@ -1,0 +1,25 @@
+"""Modelos locales de recuperación: verificación de los pesos y construcción de los adapters (MODEL_PROVIDER=local)."""
+
+from __future__ import annotations
+
+from app.config.settings import Settings
+from app.infrastructure.models.verificacion import verificar_modelo
+
+# (variable de la ruta, variable del SHA-256) por cada archivo que se carga: modelo ONNX y tokenizer de cada modelo.
+ARCHIVOS_A_VERIFICAR: tuple[tuple[str, str], ...] = (
+    ("EMBEDDING_MODEL_PATH", "EMBEDDING_MODEL_SHA256"),
+    ("EMBEDDING_TOKENIZER_PATH", "EMBEDDING_TOKENIZER_SHA256"),
+    ("RERANKER_MODEL_PATH", "RERANKER_MODEL_SHA256"),
+    ("RERANKER_TOKENIZER_PATH", "RERANKER_TOKENIZER_SHA256"),
+)
+
+
+def verificar_modelos_locales(settings: Settings) -> None:
+    """Comprueba ruta y SHA-256 de cada archivo; el primero que falla termina el arranque nombrando su variable."""
+    for variable_ruta, variable_sha in ARCHIVOS_A_VERIFICAR:
+        verificar_modelo(
+            variable_ruta,
+            variable_sha,
+            getattr(settings, variable_ruta.lower()),
+            getattr(settings, variable_sha.lower()),
+        )

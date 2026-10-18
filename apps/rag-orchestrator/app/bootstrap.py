@@ -63,6 +63,7 @@ def crear_app(
     recuperacion: PuertosDeRecuperacion | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
+    _verificar_modelos_si_son_locales(settings)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -79,6 +80,14 @@ def crear_app(
     )
     app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
     return app
+
+
+def _verificar_modelos_si_son_locales(settings: Settings) -> None:
+    """Con ``MODEL_PROVIDER=local`` los pesos se verifican antes de aceptar tráfico; con ``fake`` no se importa nada."""
+    if settings.model_provider == "local":
+        from app.infrastructure.models.local import verificar_modelos_locales
+
+        verificar_modelos_locales(settings)
 
 
 def _crear_verificador_jwt_de_servicio(settings: Settings, clock: Clock) -> ServiceJwtVerifier:
