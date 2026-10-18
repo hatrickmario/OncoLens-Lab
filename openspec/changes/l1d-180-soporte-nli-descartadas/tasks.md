@@ -16,7 +16,7 @@
 
 - [x] 1.1 (test después) Editar `apps/rag-orchestrator/openapi.yaml` (skill `sync-contracts`, `[S1 resp. 12]`): añadir `ErrorNliNoDisponible` (`error: const NLI_UNAVAILABLE`) como tercera alternativa del `oneOf` del `503` de `POST /rag/query` que creó L1D-106, ampliando su descripción; `info.version` 1.2.0 → 1.3.0 `[S1 resp. 37]`. Verificación: diff del design.md `## Contratos`.
 - [x] 1.2 (test después) Añadir `contracts/examples/rag-nli-no-disponible.json` (sintético, sin eco) y su entrada en `contracts/examples/index.json` (`target: #/paths/~1rag~1query/post/responses/503`). Verificación: `contracts:check` en verde.
-- [x] 1.3 (test después) `contracts:generate` (Pydantic y cliente TS, sin edición manual), `contracts:check` y `contracts:breaking` (oasdiff contra `main`, `--fail-on ERR`): sin `ERR`; el warning `response-body-wrapped-in-one-of-original-preserved`, si aparece, se declara en el PR (design.md `## Contratos`); un `ERR` detiene el change (ADR-26). Commit `contract(L1D-180)`.
+- [x] 1.3 (test después) `contracts:generate` (Pydantic y cliente TS, sin edición manual), `contracts:check` y `contracts:breaking` (oasdiff contra `main`, `--fail-on ERR`): oasdiff da un `ERR` `response-body-one-of-added` en el `503` cubierto por la excepción declarada **E-3** (ADR-26; design.md `## Contratos`); cualquier otro `ERR` detiene el change. Commit `contract(L1D-180)`.
 
 ## 2. ai-services
 
@@ -50,7 +50,7 @@
 
 ## Desviaciones y precondiciones del Gate 2 de US-231b / L1D-275 (aplicadas aquí)
 
-- **Soporte por umbral (D2):** `soporta()` decide por `p_entailment >= NLI_ENTAILMENT_THRESHOLD` y una `contradiction` nunca soporta, en vez de `label == entailment`.
+- **Soporte por umbral (D2):** `soporta()` exige `label == entailment` Y `p_entailment >= NLI_ENTAILMENT_THRESHOLD` (equivale a la D2); `neutral` y `contradiction` nunca soportan aunque su `p_entailment` supere el umbral.
 - **Premisa por ventanas:** el adapter divide la PREMISA de un par más largo que `NLI_MAX_LENGTH` en ventanas solapadas y el soporte es el máximo de `p_entailment`; una hipótesis más larga falla cerrado.
 - **Desempate que falla cerrado:** `ORDEN_DE_DESEMPATE = (contradiction, neutral, entailment)`.
 - **Procedencia de `meta`:** `nliModel` sale de `NliClassifier.version` y `promptVersion` de `VERSION_DEL_PROMPT`; se eliminan `Settings.nli_model` y `Settings.prompt_version`.
