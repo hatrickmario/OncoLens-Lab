@@ -233,6 +233,15 @@ son los tests de aceptación con FX-T4a-a.
 - **Falsos positivos de los patrones nuevos** (un número de dosis o una fecha clínica en la pregunta pasan a
   `[FECHA]`/`[TELEFONO]`) → aceptado: RN-11 prima; la pregunta conserva el tiempo relativo si el médico lo escribe así.
 
+- **Nombre en la pregunta sin identidad registrada** (Gate 2): en el S1 el lector devuelve `null`, así que un nombre
+  escrito en la pregunta sin palabra clave llega sin enmascarar → aceptado hasta US-046 (`[S1 resp. 3]`), protegido por la
+  guarda de entorno sintético (RN-13).
+- **Deuda para US-046 (S2):** ampliar `IdentidadDelPaciente` con correo, dirección, fecha de nacimiento, número de
+  historia y teléfono del representante (E.164).
+- **Fechas absolutas** (Gate 2): `pii-masks.json` cubre `aaaa-mm-dd`/`aaaa/mm/dd`/`aaaa.mm.dd`, `dd/mm/aaaa` con `/`, `.` o
+  `-`, y el mes en palabras o abreviado (es/en) con `de` opcional; `verificarDesidentificado()` reutiliza esas mismas
+  expresiones (`expresionesDeFecha`), una sola fuente.
+
 ## Pendiente de definir
 
 - ~~Código del `503`~~: confirmado por el registro de versiones (decisión 58 del plan: L1D-203 → 1.5.0 por código nuevo; sustituye al de `[S1 resp. 37]`).

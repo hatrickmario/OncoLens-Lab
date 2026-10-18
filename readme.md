@@ -872,7 +872,7 @@ paths:
         "502":
           $ref: "#/components/responses/ErrorServicioIa"
         "503":
-          $ref: "#/components/responses/LlmLocalNoDisponible"
+          $ref: "#/components/responses/GeneracionNoDisponible"
         "504":
           $ref: "#/components/responses/DeadlineVencido"
   /platform/patients/{patientId}:

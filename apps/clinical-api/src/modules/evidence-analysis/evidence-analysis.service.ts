@@ -142,6 +142,8 @@ export function crearEvidenceAnalysisService(
       const ahora = reloj.now();
       const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
       const { clinicalContext, query } = await desidentificador.desidentificar({
+        traceId,
+        patientId: peticion.patientId,
         contexto,
         query: peticion.query,
         dataOrigin: caso.paciente.dataOrigin,

@@ -13,7 +13,8 @@ import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import type { SesionAutenticada } from '../auth/auth.service.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { TipoCancerNoRegistradoError } from './case-guards.js';
-import { DesidentificacionProvisionalRechazada } from './context-deidentifier.provisional.js';
+import { DesidentificacionNoDisponible } from './deidentification/context-deidentifier.js';
+import { EntornoNoSintetico } from './deidentification/entorno-sintetico.guard.js';
 import { evidenceAnalysisRequestSchema } from './evidence-analysis.schema.js';
 import {
   PacienteNoEncontradoError,
@@ -79,6 +80,11 @@ const ERROR_INTERNO: Rechazo = {
   codigo: 'ERROR_INTERNO',
   resultado: 'error_de_persistencia',
 };
+const DESIDENTIFICACION_NO_DISPONIBLE: Rechazo = {
+  status: 503,
+  codigo: 'DESIDENTIFICACION_NO_DISPONIBLE',
+  resultado: 'desidentificacion_no_disponible',
+};
 const ERROR_SERVICIO_IA: Rechazo = {
   status: 502,
   codigo: 'ERROR_SERVICIO_IA',
@@ -98,7 +104,8 @@ function rechazoDe(error: unknown): Rechazo | undefined {
     };
   }
   if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
-  if (error instanceof DesidentificacionProvisionalRechazada) {
+  if (error instanceof DesidentificacionNoDisponible) return DESIDENTIFICACION_NO_DISPONIBLE;
+  if (error instanceof EntornoNoSintetico) {
     return {
       ...ERROR_SERVICIO_IA,
       resultado: 'desidentificacion_rechazada',

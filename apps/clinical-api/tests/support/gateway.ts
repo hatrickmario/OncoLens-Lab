@@ -11,17 +11,24 @@ import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.j
 import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
 import { componerGatewayDeAnalisis } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
+import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
+  PatientIdentityReader,
+  PiiDetectorFactory,
   TraceIdGenerator,
   PseudonymGenerator,
 } from '../../src/modules/evidence-analysis/ports.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { readFileSync } from 'node:fs';
 import { appConAuth } from './app-auth.js';
+import {
+  configuracionDePiiDeTest,
+  detectoresReales,
+  lectorDeIdentidadFalso,
+} from './desidentificacion.js';
 import type { BaseDeTest } from './db.js';
 import { conectar } from './db.js';
 import {
-  FECHA_FIJA,
   INSTANTE_FIJO,
   filaDeDiagnostico,
   filaDeEpisodio,
@@ -210,6 +217,10 @@ export interface OpcionesDeGateway {
   tokens?: GeneradorDeToken;
   traceIds?: TraceIdGenerator;
   pseudonimos?: PseudonymGenerator;
+  /** Repositorio de identidad (por defecto, falso y vacío: nadie tiene identidad registrada, como en el S1). */
+  identidades?: PatientIdentityReader;
+  /** Detector de PII (por defecto, la opción A con la configuración real del repositorio). */
+  detectores?: PiiDetectorFactory;
   /** `ANALYSIS_MAX_OPTIONS` (por defecto 1, el valor del S1). */
   analysisMaxOptions?: number;
   evidenceDefaultYears?: number;
@@ -242,6 +253,7 @@ export async function montarGateway(
   const signer = createServiceTokenSigner({ privateKey, clock: reloj, ttlSeconds: 60 });
   const rag = crearRagQueryClient(createRagOrchestratorClient({ baseUrl: RAG_BASE_URL, signer }));
   const appEnv = Object.hasOwn(opciones, 'appEnv') ? opciones.appEnv : 'test';
+  const pseudonimos = opciones.pseudonimos ?? pseudonimosFijos();
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
@@ -249,7 +261,6 @@ export async function montarGateway(
       readFileSync(archivo, 'utf8'),
     ),
     config: {
-      appEnv,
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
@@ -259,7 +270,14 @@ export async function montarGateway(
     reloj,
     traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },
     idsDeAnalisis: mundo.idsDeAnalisis,
-    pseudonimos: opciones.pseudonimos ?? pseudonimosFijos(),
+    desidentificador: crearContextDeidentifier({
+      identidades: opciones.identidades ?? lectorDeIdentidadFalso({}),
+      detectores: opciones.detectores ?? detectoresReales(),
+      pseudonimos,
+      appEnv,
+      registrar: logger.registrar,
+      expresionesDeFecha: configuracionDePiiDeTest().fechas.expresiones,
+    }),
     registrar: logger.registrar,
   });
   const app = appConAuth({
@@ -372,6 +390,7 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
       stage_value: 'IIA',
       performance_scale: 'ECOG',
       performance_value: 1,
+      diagnosed_at: '2025-08-16', // hoy − 14 meses (AHORA = 2026-10-16)
     }),
   );
   const examen = await insertar(cliente, 'clinical.exam', {
@@ -382,7 +401,7 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
     exam_type: 'laboratorio',
     source_lab: null,
     entry_method: 'seed',
-    performed_at: FECHA_FIJA,
+    performed_at: '2025-09-16', // hoy − 13 meses
     created_at: INSTANTE_FIJO,
   });
   await insertar(cliente, 'clinical.biomarker', {
@@ -409,7 +428,7 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
     note_type: 'nota_libre',
     entry_method: 'seed',
     content: PII_FX_T4A_A.textoLibre,
-    recorded_at: FECHA_FIJA,
+    recorded_at: '2026-08-16', // hoy − 2 meses
     is_active: true,
     extraction_confidence: 'n_a',
     review_status: 'verificado',
@@ -424,7 +443,8 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
     regimen_name: 'AC-T',
     atc_codes: [],
     mapping_status: 'no_mapeado',
-    started_at: FECHA_FIJA,
+    started_at: '2025-10-16', // hoy − 12 meses
+    ended_at: '2026-02-16', // hoy − 8 meses
     ongoing: false,
     end_reason: 'completado',
     entry_method: 'seed',
@@ -437,7 +457,7 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
     patient_id: patientId,
     episode_id: episodeId,
     event_type: 'evolucion',
-    event_date: FECHA_FIJA,
+    event_date: '2026-08-16',
     date_precision: 'dia',
     description: PII_FX_T4A_A.textoLibre,
     mapping_status: 'n_a',

@@ -746,6 +746,12 @@ export type ErrorLlmLocalNoDisponible = {
     traceId: string;
 };
 
+export type ErrorDesidentificacionNoDisponible = {
+    error: 'DESIDENTIFICACION_NO_DISPONIBLE';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorDeadlineVencido = {
     error: 'DEADLINE_VENCIDO';
     message: string;
@@ -1185,9 +1191,9 @@ export type CreateEvidenceAnalysisErrors = {
      */
     502: ErrorServicioIa;
     /**
-     * LLM local no disponible; los datos reales nunca se envían a la nube.
+     * La generación no está disponible: LLM local caído (los datos reales nunca se envían a la nube) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
      */
-    503: ErrorLlmLocalNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorDesidentificacionNoDisponible;
     /**
      * rag-orchestrator no respondió dentro del deadline.
      */

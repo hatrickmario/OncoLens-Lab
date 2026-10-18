@@ -11,6 +11,7 @@ export type CodigoDeError =
   | 'TIPO_CANCER_NO_REGISTRADO'
   | 'ERROR_SERVICIO_IA'
   | 'LOCAL_LLM_UNAVAILABLE'
+  | 'DESIDENTIFICACION_NO_DISPONIBLE'
   | 'DEADLINE_VENCIDO'
   | 'ERROR_INTERNO';
 
@@ -24,6 +25,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
     'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
   ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   LOCAL_LLM_UNAVAILABLE: 'El modelo local no está disponible.',
+  DESIDENTIFICACION_NO_DISPONIBLE: 'No fue posible preparar la consulta.',
   DEADLINE_VENCIDO: 'El servicio de IA no respondió dentro del plazo.',
   ERROR_INTERNO: 'Error interno del servidor.',
 };
