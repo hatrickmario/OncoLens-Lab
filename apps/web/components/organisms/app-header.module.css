@@ -1,0 +1,23 @@
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  min-height: 3.5rem;
+  padding: 0 1rem;
+  background: var(--color-chrome);
+  color: #fff;
+}
+
+.cabecera :focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.marca {
+  font-weight: 700;
+}
+
+.etiqueta {
+  font-size: 0.875rem;
+}

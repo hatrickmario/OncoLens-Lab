@@ -38,7 +38,7 @@ describe('AiDisclaimer', () => {
 describe('AppHeader y layout del dashboard', () => {
   afterEach(cleanup);
 
-  it('muestra Uso académico/investigación en la cabecera del layout fuera de la región note [US-069 AC-3]', () => {
+  it('muestra la etiqueta de uso académico en la cabecera del layout fuera de la región note [US-069 AC-3]', () => {
     render(
       <DashboardLayout>
         <AiDisclaimer text={conEvidencia.disclaimer} />
