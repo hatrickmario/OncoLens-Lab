@@ -25,9 +25,9 @@ export interface DependenciasDelDesidentificador {
   /** `APP_ENV`: la guarda de entorno sintético solo admite `local` y `test`. */
   appEnv: string | undefined;
   registrar: Registrar;
+  /** Las expresiones de fecha de `pii-masks.json`: una sola fuente para enmascarar y para verificar (RN-11). */
+  expresionesDeFecha: readonly RegExp[];
 }
-
-const FECHA_ABSOLUTA = /\d{4}-\d{2}-\d{2}/;
 
 type Enmascarable =
   string | number | boolean | null | Enmascarable[] | { [clave: string]: Enmascarable };
@@ -70,12 +70,23 @@ export function enmascararTextoLibre(
   };
 }
 
+const contieneFecha = (texto: string, expresiones: readonly RegExp[]): boolean =>
+  expresiones.some((expresion) => texto.search(expresion) !== -1);
+
 /**
- * Única verificación de RN-11 sobre lo que sale hacia la IA: ninguna fecha absoluta `AAAA-MM-DD` (en el contexto ni en la
- * pregunta) y ninguna nota clínica (minimización del S1). Lanza si algo no se cumple; el llamador falla cerrado.
+ * Única verificación de RN-11 sobre lo que sale hacia la IA: ninguna fecha absoluta (las mismas formas que enmascara
+ * `pii-masks.json`, en el contexto y en la pregunta) y ninguna nota clínica (minimización del S1). Lanza si algo no se
+ * cumple; el llamador falla cerrado.
  */
-export function verificarDesidentificado(clinicalContext: ClinicalContext, query: string): void {
-  if (FECHA_ABSOLUTA.test(JSON.stringify(clinicalContext)) || FECHA_ABSOLUTA.test(query)) {
+export function verificarDesidentificado(
+  clinicalContext: ClinicalContext,
+  query: string,
+  expresionesDeFecha: readonly RegExp[],
+): void {
+  if (
+    contieneFecha(JSON.stringify(clinicalContext), expresionesDeFecha) ||
+    contieneFecha(query, expresionesDeFecha)
+  ) {
     throw new Error('fecha absoluta en lo que sale hacia la IA');
   }
   if (clinicalContext.clinicalNotes.length > 0) {
@@ -102,7 +113,8 @@ function resumirHallazgos(...partes: { findingTypes: string[]; hallazgos: number
 export function crearContextDeidentifier(
   dependencias: DependenciasDelDesidentificador,
 ): ContextDeidentifier {
-  const { identidades, detectores, pseudonimos, appEnv, registrar } = dependencias;
+  const { identidades, detectores, pseudonimos, appEnv, registrar, expresionesDeFecha } =
+    dependencias;
   return {
     async desidentificar({ traceId, patientId, contexto, query, dataOrigin }) {
       exigirEntornoSintetico(dataOrigin, appEnv);
@@ -115,7 +127,7 @@ export function crearContextDeidentifier(
           clinicalNotes: [],
           pseudoPatientId: pseudonimos.nuevo(),
         };
-        verificarDesidentificado(clinicalContext, consulta.texto);
+        verificarDesidentificado(clinicalContext, consulta.texto, expresionesDeFecha);
         registrar({
           event: 'desidentificacion.enmascarado',
           traceId,

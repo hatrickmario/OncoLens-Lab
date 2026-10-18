@@ -28,13 +28,42 @@
       "setiembre",
       "octubre",
       "noviembre",
-      "diciembre"
+      "diciembre",
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sept",
+      "sep",
+      "set",
+      "oct",
+      "nov",
+      "dic",
+      "january",
+      "february",
+      "march",
+      "april",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+      "jan",
+      "apr",
+      "aug",
+      "dec"
     ],
     "banderas": "iu",
     "patrones": [
-      "(?<![\\p{N}])\\d{4}-\\d{2}-\\d{2}(?:[T ]\\d{2}:\\d{2}(?::\\d{2})?)?(?![\\p{N}])",
-      "(?<![\\p{N}])\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}(?![\\p{N}])",
-      "(?<![\\p{L}\\p{N}])(?:\\d{1,2}\\s+de\\s+)?(?:{{meses}})\\s+(?:de|del)\\s+\\d{4}(?![\\p{N}])"
+      "(?<![\\p{N}])\\d{4}[-/.]\\d{2}[-/.]\\d{2}(?:[T ]\\d{2}:\\d{2}(?::\\d{2})?)?(?![\\p{N}])",
+      "(?<![\\p{N}])\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}(?![\\p{N}])",
+      "(?<![\\p{L}\\p{N}])(?:\\d{1,2}\\s+(?:de\\s+)?)?(?:{{meses}})\\.?,?\\s+(?:(?:de|del)\\s+)?(?:\\d{1,2},?\\s+)?\\d{4}(?![\\p{N}])"
     ]
   }
 }

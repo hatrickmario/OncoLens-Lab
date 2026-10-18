@@ -95,6 +95,7 @@ arrancar({
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,
             registrar: registrarEnConsola,
+            expresionesDeFecha: configuracion.pii.fechas.expresiones,
           }),
           registrar: registrarEnConsola,
         });

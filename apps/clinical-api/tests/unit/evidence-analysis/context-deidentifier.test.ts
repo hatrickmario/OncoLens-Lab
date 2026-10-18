@@ -6,11 +6,14 @@ import {
   verificarDesidentificado,
 } from '../../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { EntornoNoSintetico } from '../../../src/modules/evidence-analysis/deidentification/entorno-sintetico.guard.js';
+import { configuracionDePiiDeTest } from '../../support/desidentificacion.js';
 import type {
   ContextoPermitido,
   IdentidadDelPaciente,
   PiiDetector,
 } from '../../../src/modules/evidence-analysis/ports.js';
+
+const FECHAS = configuracionDePiiDeTest().fechas.expresiones;
 
 const CONTEXTO_VACIO: ContextoPermitido = {
   population: 'adulto',
@@ -74,6 +77,7 @@ function dependencias(
       },
       pseudonimos: { nuevo: cambios.pseudonimo ?? (() => 'psd_Fijo0001') },
       appEnv: Object.hasOwn(cambios, 'appEnv') ? cambios.appEnv : 'test',
+      expresionesDeFecha: FECHAS,
       registrar: (linea: Record<string, unknown>) => {
         lineas.push(linea);
       },
@@ -127,18 +131,28 @@ describe('verificarDesidentificado', () => {
   const valido = { ...CONTEXTO_VACIO, pseudoPatientId: 'psd_Fijo0001' };
 
   it('acepta un contexto sin fechas absolutas ni notas', () => {
-    expect(() => verificarDesidentificado(valido, 'pregunta')).not.toThrow();
+    expect(() => verificarDesidentificado(valido, 'pregunta', FECHAS)).not.toThrow();
   });
 
   it('rechaza un contexto con una cadena AAAA-MM-DD', () => {
     const conFecha = { ...valido, missingCriticalData: ['biopsia del 2024-03-15'] };
 
-    expect(() => verificarDesidentificado(conFecha, 'pregunta')).toThrow();
+    expect(() => verificarDesidentificado(conFecha, 'pregunta', FECHAS)).toThrow();
   });
 
   it('rechaza una pregunta con una fecha AAAA-MM-DD', () => {
-    expect(() => verificarDesidentificado(valido, 'tras el 2024-03-15')).toThrow();
+    expect(() => verificarDesidentificado(valido, 'tras el 2024-03-15', FECHAS)).toThrow();
   });
+
+  it.each(['control de marzo 2024', 'el 15.03.2024', 'el 2024/03/15', 'el 15 mar 2024'])(
+    'rechaza un contexto que todavía trae la fecha absoluta %s',
+    (fecha) => {
+      const conFecha = { ...valido, missingCriticalData: [fecha] };
+
+      expect(() => verificarDesidentificado(conFecha, 'pregunta', FECHAS)).toThrow();
+      expect(() => verificarDesidentificado(valido, fecha, FECHAS)).toThrow();
+    },
+  );
 
   it('rechaza un contexto con notas no vacías', () => {
     const conNotas = {
@@ -146,7 +160,7 @@ describe('verificarDesidentificado', () => {
       clinicalNotes: [{ dataRef: 'r9' }],
     } as unknown as typeof valido;
 
-    expect(() => verificarDesidentificado(conNotas, 'pregunta')).toThrow();
+    expect(() => verificarDesidentificado(conNotas, 'pregunta', FECHAS)).toThrow();
   });
 });
 

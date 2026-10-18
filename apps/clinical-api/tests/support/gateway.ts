@@ -21,7 +21,11 @@ import type {
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { readFileSync } from 'node:fs';
 import { appConAuth } from './app-auth.js';
-import { detectoresReales, lectorDeIdentidadFalso } from './desidentificacion.js';
+import {
+  configuracionDePiiDeTest,
+  detectoresReales,
+  lectorDeIdentidadFalso,
+} from './desidentificacion.js';
 import type { BaseDeTest } from './db.js';
 import { conectar } from './db.js';
 import {
@@ -272,6 +276,7 @@ export async function montarGateway(
       pseudonimos,
       appEnv,
       registrar: logger.registrar,
+      expresionesDeFecha: configuracionDePiiDeTest().fechas.expresiones,
     }),
     registrar: logger.registrar,
   });
