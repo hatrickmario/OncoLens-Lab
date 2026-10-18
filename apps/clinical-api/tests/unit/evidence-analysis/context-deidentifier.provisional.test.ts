@@ -20,6 +20,8 @@ const CONTEXTO_VACIO: ContextoPermitido = {
   priorAnalyses: [],
 };
 
+const ENTRADA_BASE = { traceId: 'req_Test0001', patientId: 'paciente-sintetico' } as const;
+
 function rechazoDe(accion: () => void): DesidentificacionProvisionalRechazada {
   try {
     accion();
@@ -64,6 +66,7 @@ describe('crearDesidentificadorProvisional', () => {
     });
 
     const salida = await desidentificador.desidentificar({
+      ...ENTRADA_BASE,
       contexto: CONTEXTO_VACIO,
       query: 'pregunta sintética',
       dataOrigin: 'sintetico',
@@ -82,6 +85,7 @@ describe('crearDesidentificadorProvisional', () => {
       appEnv: 'local',
     });
     const entrada = {
+      ...ENTRADA_BASE,
       contexto: CONTEXTO_VACIO,
       query: 'q',
       dataOrigin: 'sintetico' as const,
@@ -108,6 +112,7 @@ describe('crearDesidentificadorProvisional', () => {
 
     await expect(
       desidentificador.desidentificar({
+        ...ENTRADA_BASE,
         contexto: CONTEXTO_VACIO,
         query: 'q',
         dataOrigin: 'sintetico',
