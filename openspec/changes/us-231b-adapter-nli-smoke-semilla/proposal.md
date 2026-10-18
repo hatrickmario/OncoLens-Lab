@@ -108,13 +108,13 @@ Desbloquea L1D-180 (puerto y adapter) y la medición de p95 de L1D-274.
 4. **Mapeo de clases del NLI (a confirmar por el usuario):** por defecto, índices de `entailment`/`neutral`/`contradiction` en configuración
    versionada (RN-22) y validados al arrancar; alternativa, verificar `config.json` con `NLI_CONFIG_PATH` / `NLI_CONFIG_SHA256` en
    `ARCHIVOS_A_VERIFICAR`. Nunca se lee un `config.json` sin verificar (un mapeo alterado invertiría el soporte, RN-01).
-5. **Matriz del *smoke* de `/rag/query` (a decidir por el usuario).** Hoy `bootstrap.py` (`_registrar_consulta_de_evidencia`) solo usa la
-   recuperación real con `LLM_PROVIDER=local`; con `fake` responde del fake. Opciones: **(a)** `LLM=local` + `MODEL=local` aceptando `200
-   sin_evidencia` o `503` con aserciones sobre el espía del *reranker* y los logs (≤ 12 pares); **(b)** componer también con `LLM=fake` +
-   `MODEL=local` cambiando `bootstrap.py` (el LLM falso responde y se ve la recuperación real de punta a punta); **(c)** probar la recuperación
-   por debajo del endpoint (servicio de recuperación con los bordes reales). **Recomendación: (b)** para el AC-9 (no depende del LLM local de
-   L1D-274, ejercita el cableado real y el 200 validable contra el spec); **(c)** como respaldo si no se quiere tocar `bootstrap.py`. Mientras no se
-   decida, el escenario del AC-9 queda redactado para (b) y marcado.
+5. **Matriz del *smoke* de `/rag/query` (a confirmar por el usuario).** Hoy `bootstrap.py` solo usa la recuperación real con `LLM_PROVIDER=local`.
+   **Aplicada: (a)** `LLM=local` + `MODEL=local`, aceptando `200 sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE` (solo tras superar el umbral) y distinguiéndolo de
+   `503 RETRIEVAL_UNAVAILABLE`; el tope de ≤ 12 pares se prueba por el log de recuentos de la etapa y la integración 1.9, no en Compose; no se toca
+   `bootstrap.py:175` ni se inyecta un generador falso por entorno. Alternativas: **(b)** componer también con `LLM=fake` (desaconsejada por privacy: procedencia
+   falsa en `meta.llmProvider` y opciones enlatadas sin NLI) y **(c)** probar la recuperación por debajo del endpoint.
+5b. **Carga del ONNX (a confirmar por el usuario):** sesión desde bytes verificados (aplicado; modifica `test_adapters_sin_red.py:140` de US-231a con
+   `Test-Removal:`) o carga por ruta con inspección de *initializers* externos.
 6. **Origen de los pesos del tokenizer:** `TokenizadorDeArchivo` exige el token de relleno `<pad>` y mDeBERTa usa `[PAD]`: se lee el
    `pad_token` del propio `tokenizer.json` (ya verificado por SHA-256) en lugar de un literal.
 

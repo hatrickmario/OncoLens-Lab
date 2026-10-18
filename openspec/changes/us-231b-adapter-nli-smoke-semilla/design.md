@@ -25,7 +25,9 @@ US-231a (cuyo Gate 1 corrigió cuatro Mayores) sin reabrirlo.
    no importan `onnxruntime` ni `tokenizers`. **No se inlinean adapters ni puertos.** Un lote vacío devuelve `[]` sin invocar el modelo.
 2. **Probabilidades que suman 1.** El adapter aplica *softmax* a los tres logits del modelo y mapea los índices de clase con una
    **configuración versionada** (RN-22): `NLI_LABEL_INDEX_ENTAILMENT`, `NLI_LABEL_INDEX_NEUTRAL`, `NLI_LABEL_INDEX_CONTRADICTION`
-   (valores del ADR-39 para la revisión fijada), validados al arrancar (tres enteros distintos, dentro de [0, 2], salida del modelo de 3 clases). **Nunca**
+   (el ADR-39 **no** los fija: su origen versionado es una **adenda al ADR-39** o la model card de la revisión `b5113eb3…` fijada, registrada en
+   la tarea 1.1; el recuento de 25 claves de `clavesDeAdr39()` en `compose-modelos.test.mjs:73` no cambia si son claves de `rag-orchestrator`
+   ajenas al bloque del ADR, y se actualiza en el mismo commit si se decide añadirlas al bloque), validados al arrancar (tres enteros distintos, dentro de [0, 2], salida del modelo de 3 clases). **Nunca**
    se lee `config.json` ni `id2label` de un archivo sin verificar: un mapeo alterado que intercambie `entailment` y `contradiction` invertiría el soporte
    (RN-01). **A confirmar por el usuario** frente a la alternativa de verificar `config.json` (`NLI_CONFIG_PATH`/`NLI_CONFIG_SHA256` en
    `ARCHIVOS_A_VERIFICAR`); la prueba de AC-1 sobre los pares reales de FX-06a-c detecta además un mapeo invertido. Las tres probabilidades (`p_entailment`, `p_neutral`,
@@ -49,12 +51,12 @@ US-231a (cuyo Gate 1 corrigió cuatro Mayores) sin reabrirlo.
    público del peso y puede ir en `meta` y logs; nunca la ruta ni el hash esperado/calculado de un fallo (D4). La **lectura**
    de ese valor es una propiedad del adapter (`version`); que `meta.nliModel` salga en la respuesta HTTP lo cablea L1D-180.
 6. **Sin red, sin descargas, supply chain intacta.** Misma política que US-231a D7/D9: `Tokenizer.from_file(<ruta local>)`,
-   `InferenceSession(<ruta local>)`, `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, bind mount `read_only` de `MODEL_HOST_DIR`. La
+   `InferenceSession(<bytes leídos de la ruta ya verificada>)` (D12; no una ruta sin verificar), `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, bind mount `read_only` de `MODEL_HOST_DIR`. La
    lista prohibida estática se amplía a `app/infrastructure/nli`. **Sin dependencias nuevas**; `transformers` y `huggingface_hub`
    siguen sin importarse (el test de US-231a se extiende al nuevo paquete). El modelo NLI fp32 viene como ONNX exportado fuera
    del repo (ver D12 y Open Questions). RN-14: se añade `**/*.onnx.data` a `.gitignore`, `.dockerignore` raíz y
    `apps/rag-orchestrator/Dockerfile.dockerignore` (`torch.onnx.export` y `quantize_dynamic` nombran así los datos externos; los
-   patrones actuales cubren solo `**/*.onnx_data`), con su caso en `infra/docker/__tests__/dockerignore.test.mjs`. El tokenizer del NLI usa
+   patrones actuales cubren solo `**/*.onnx_data`), con `**/*.onnx.data` añadido al array de `infra/docker/__tests__/compose-modelos.test.mjs` (línea 80; cubre `.gitignore` y los dos dockerignore). El tokenizer del NLI usa
    `[PAD]` y `TokenizadorDeArchivo` exige `<pad>`: el token de relleno se lee del `pad_token` del propio `tokenizer.json` (verificado).
 7. **Semilla con modelos reales.** `fabricar_embedder_real(ajustes)` pasa de lanzar `AdapterDeEmbeddingsNoDisponible` a
    verificar con `verificar_modelos_locales` **todos** los archivos que el cargador abre (al menos los pares `EMBEDDING_MODEL_*` y
@@ -69,8 +71,8 @@ US-231a (cuyo Gate 1 corrigió cuatro Mayores) sin reabrirlo.
 8. **Composición del corpus en `main.py`.** Una función `crear_puertos_del_corpus(settings)` (módulo de composición bajo
    `app/infrastructure/corpus/`) construye `PuertosDelCorpus` con `MilvusRepository` (URI de `MilvusSettings`) y los lectores del
    schema `corpus` con el rol `rag_corpus` (`CorpusReleaseReader`, `CorpusCatalogReader`). `app/main.py` la invoca **solo**
-   cuando `MODEL_PROVIDER=local` y `LLM_PROVIDER=local` (**o también con `LLM_PROVIDER=fake` + `MODEL_PROVIDER=local` si el usuario elige la
-   opción (b) del smoke**, Open Questions; hoy `bootstrap.py:175` solo usa la recuperación real con `LLM=local`); con `fake` no se importa Milvus
+   cuando `MODEL_PROVIDER=local` y `LLM_PROVIDER=local` (`bootstrap.py:175` **no se toca**: la recuperación real sigue siendo solo con `LLM=local`, y no
+   se inyecta ningún generador falso por entorno); con `fake` no se importa Milvus
    ni SQLAlchemy de composición. La URL del catálogo se compone **reutilizando `CorpusDatabaseSettings` y `componer_url`** (usuario
    `rag_corpus`, URL sin contraseña en `CORPUS_DATABASE_URL`, contraseña desde archivo de secreto, `sslmode=require`); no se inventa otra ruta de
    conexión. **Sonda explícita al arrancar** (`create_engine` no conecta al construirse): `SELECT 1` con `rag_corpus` y `has_collection` en
@@ -96,14 +98,22 @@ US-231a (cuyo Gate 1 corrigió cuatro Mayores) sin reabrirlo.
 11. **Smoke (AC-9).** Tarea de infra, «test después»: contra el Compose de L1D-164 con el manifiesto real de la semilla y los pesos de
     `MODEL_HOST_DIR`, corre `python -m app.scripts.load_seed_corpus` y comprueba con `corpus` y Milvus reales documentos `embebido` +
     `is_current`, metadatos copiados del catálogo y `CorpusRelease` con `excluded_sources = ["NCCN","ESMO"]`; después envía `Q-HER2`
-    a `/rag/query` (JWT de servicio de prueba) con `LLM_PROVIDER=fake` y `MODEL_PROVIDER=local` y comprueba `200` con chunks recuperados.
-    Solo corpus público con licencia registrada (RN-21); sin datos de pacientes (RN-13). **La matriz del smoke (LLM=local vs fake, o recuperación
-    bajo el endpoint) está pendiente de decisión del usuario** (Open Questions): con (a) `200 sin_evidencia` o `503` y aserciones sobre el espía del
-    *reranker* y los logs; con (b) `200` completo; con (c) la recuperación se prueba por debajo del endpoint.
+    a `/rag/query` (JWT de servicio de prueba) con `LLM_PROVIDER=local` y `MODEL_PROVIDER=local` (**opción (a), la aplicada**). Se acepta `200
+    sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE` (solo se emite tras superar el umbral) como «compone y recupera», y se distingue de
+    `503 RETRIEVAL_UNAVAILABLE` (composición o recuperación rotas). El tope de ≤ 12 pares **no** se prueba en Compose: lo cubren el log de recuentos de
+    la etapa de corte y la integración de la tarea 1.9. No se toca `bootstrap.py:175` ni se inyecta un generador falso por entorno: con
+    `LLM_PROVIDER=fake`, `_proveedor_de_meta` lanzaría, y mapear `fake`→`local` daría procedencia falsa en `meta.llmProvider`/`AIAnalysisRecord`; un
+    generador falso serviría opciones enlatadas sobre chunks reales sin NLI. (b) y (c) quedan como alternativas (Open Questions 3).
+    Solo corpus público con licencia registrada (RN-21); sin datos de pacientes (RN-13).
 12. **Datos externos del ONNX: requisito verificado.** `torch.onnx.export` y `quantize_dynamic` pueden dejar `<modelo>.onnx.data` junto al
     `.onnx`; ONNX Runtime lo carga **desde la ruta**, fuera del SHA-256. Mecanismo: la sesión se crea **desde los bytes ya hasheados** del `.onnx`
-    (`InferenceSession(bytes)`), de modo que se carga exactamente lo verificado y un `.data` no declarado **falla cerrado** (la sesión no puede
-    resolver la referencia externa y el adaptador lo traduce al error de arranque nombrando `NLI_MODEL_DATA_PATH`). Si el modelo realmente
+    (`Tokenizer.from_file(<ruta local>)`; `InferenceSession(bytes leídos de la ruta verificada)`), de modo que se carga exactamente lo verificado y
+    un `.data` no declarado **falla cerrado** (la sesión no puede resolver la referencia externa y el adaptador lo traduce al error de arranque
+    nombrando `NLI_MODEL_DATA_PATH`; el test lanza el subproceso con `cwd` = directorio del `.data`, peor caso). **Consecuencia sobre US-231a:** el
+    test `test_adapters_sin_red.py:140` afirma `InferenceSession(str(ruta))`; cambia el AC y se modifica **con trailer `Test-Removal:`** (motivo:
+    la sesión pasa a crearse desde bytes verificados, D12), tanto para el NLI como para embeddings y reranker (si se aplica la deuda de la tarea 1.0
+    o por homogeneidad: no hay dos formas de cargar). **Alternativa explícita, a confirmar por el usuario:** mantener la carga por ruta e
+    inspeccionar los *initializers* del grafo con `data_location=EXTERNAL`, fallando cerrado si hay alguno no declarado. Si el modelo realmente
     trae datos externos, se exige el par `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256` en `ARCHIVOS_A_VERIFICAR`. **Origen por defecto:
     reexportar el fp32 en un solo archivo** (a confirmar por el usuario). **Tarea previa:** inspeccionar `MODEL_HOST_DIR` (`ls`) y comprobar si
     los modelos de embeddings y reranker de US-231a (cuantizados) tienen un `model.onnx.data` sin verificar: si existe, es **deuda de
@@ -175,8 +185,11 @@ Preguntas para el usuario (no se deciden en el change; con el valor por defecto 
 
 1. **Origen del ONNX fp32 del NLI:** reexportarlo en un solo archivo (por defecto) o aceptar `*.onnx.data` con `NLI_MODEL_DATA_PATH`/`_SHA256` (D12).
 2. **Mapeo de clases del NLI:** índices en configuración versionada validada (por defecto, D2) o `NLI_CONFIG_PATH`/`NLI_CONFIG_SHA256` verificando `config.json`.
-3. **Matriz del smoke de `/rag/query` (AC-9):** (a) `LLM=local` aceptando `200 sin_evidencia` o `503` con aserciones sobre el espía del *reranker* y los
-   logs; (b) componer el corpus también con `LLM=fake` + `MODEL=local` cambiando `bootstrap.py:175`; (c) probar la recuperación por debajo del
-   endpoint. **Recomendación: (b)**; los escenarios están redactados para (b).
+3. **Matriz del smoke de `/rag/query` (AC-9), a confirmar por el usuario:** **(a) es lo aplicado** (`LLM=local` + `MODEL=local`, se acepta `200
+   sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE`, distinto de `RETRIEVAL_UNAVAILABLE`; tope de 12 pares por log de recuentos e integración 1.9); alternativas
+   (b) componer el corpus también con `LLM=fake` + `MODEL=local` cambiando `bootstrap.py:175` (el guardián de privacy la desaconseja: procedencia falsa en
+   `meta.llmProvider` y opciones enlatadas sin NLI) y (c) probar la recuperación por debajo del endpoint.
+5. **Carga del ONNX (a confirmar por el usuario):** sesión desde bytes verificados (aplicado, D12; exige `Test-Removal:` en `test_adapters_sin_red.py:140`) o carga
+   por ruta con inspección de *initializers* externos.
 4. **¿Un AC-10 `(asumido)` para la decisión 82 y la composición de `main.py`?** (ver Pendientes 1; requiere aprobación del usuario).
 - **¿`psutil` ya está en `requirements`?** Si no, se usa `resource.getrusage` (sin dependencia nueva).

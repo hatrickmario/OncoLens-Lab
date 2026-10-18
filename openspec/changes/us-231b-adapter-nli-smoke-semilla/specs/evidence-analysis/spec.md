@@ -59,8 +59,8 @@ Un modelo ONNX con datos externos (`*.onnx.data` o `*.onnx_data`) MUST tener su 
 
 #### Scenario: Un modelo con datos externos sin su par verificado impide el arranque [US-231b AC-4] [RN-22]
 - **GIVEN** un `.onnx` del NLI que referencia un archivo de datos externos y `MODEL_PROVIDER=local` sin `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256`
-- **WHEN** arranca `rag-orchestrator` como subproceso
-- **THEN** el proceso termina con código distinto de 0
+- **WHEN** arranca `rag-orchestrator` como subproceso con `cwd` igual al directorio que contiene el `.data` (peor caso: una ruta relativa de la referencia externa sí resolvería)
+- **THEN** el proceso termina con código distinto de 0, porque la sesión se crea desde bytes y cualquier initializer externo no declarado se rechaza
 - **AND** stdout y stderr completos contienen `NLI_MODEL_DATA_PATH` y no contienen la ruta, el hash esperado ni el calculado
 
 #### Scenario: Los patrones de pesos excluyen también los datos externos [US-231b AC-4] [RN-14]
@@ -81,7 +81,7 @@ El adapter NLI real MUST funcionar sin conexiones salientes y no SHALL importar 
 - **GIVEN** los módulos de `app/infrastructure/nli`
 - **WHEN** se inspeccionan sus importaciones
 - **THEN** ninguno importa ni usa `huggingface_hub`, `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
-- **AND** la carga usa `Tokenizer.from_file` y `onnxruntime.InferenceSession` con rutas locales
+- **AND** la carga usa `Tokenizer.from_file(<ruta local>)` y `onnxruntime.InferenceSession(<bytes leídos de la ruta ya verificada>)`, nunca una ruta sin verificar
 
 ### Requirement: Latencia de la etapa NLI medida y reportada
 La latencia de la etapa NLI con el modelo real MUST medirse (3 corridas, mediana) contra su presupuesto de 1500 ms; un valor fuera de presupuesto SHALL reportarse y no ocultarse (NFR-01, ADR-39).
@@ -123,7 +123,7 @@ Con `MODEL_PROVIDER` real, `load_seed_corpus` MUST obtener el *embedder* de pasa
 - **AND** stdout y stderr completos contienen `EMBEDDING_TOKENIZER_SHA256` y no contienen la ruta, el hash esperado ni el calculado
 
 ### Requirement: Smoke de la semilla con embeddings reales y recuperación compuesta
-El cargador de la semilla MUST dejar, con el manifiesto real y los *embeddings* reales contra Compose, todos los documentos `embebido` con `is_current = true`, chunks con `source_type`, `language` y `cancer_type_tags` copiados del catálogo y una `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`; y `app/main.py` MUST componer los bordes reales del corpus de modo que `/rag/query` deje de responder `503` por composición (RN-05, AC-06.1, `[S1 resp. 82]`).
+El cargador de la semilla MUST dejar la semilla `embebido` y vigente con los metadatos del catálogo y su `CorpusRelease`, y `app/main.py` MUST componer los bordes reales del corpus de modo que `/rag/query` deje de responder `503 RETRIEVAL_UNAVAILABLE` por composición (RN-05, AC-06.1, `[S1 resp. 82]`).
 
 #### Scenario: Todos los documentos de la semilla quedan embebidos y la release publicada [US-231b AC-9] [US-059 AC-1] [AC-06.1] [RN-05]
 - **GIVEN** el manifiesto real `data/raw/seed/manifest.yaml`, los *embeddings* reales y el Compose de L1D-164
@@ -133,11 +133,16 @@ El cargador de la semilla MUST dejar, con el manifiesto real y los *embeddings* 
 - **AND** existe la `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`
 
 #### Scenario: Con modelos locales, main.py compone el corpus y /rag/query recupera [US-231b AC-9] [S1 resp. 82]
-> Redactado para la opción (b) del smoke (`LLM_PROVIDER=fake` + `MODEL_PROVIDER=local`); pendiente de decisión del usuario (design, Open Questions 3).
-- **GIVEN** `MODEL_PROVIDER=local`, el corpus compuesto por `main.py`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`
+- **GIVEN** `LLM_PROVIDER=local`, `MODEL_PROVIDER=local`, el corpus compuesto por `main.py`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`, sin ningún generador falso inyectado por entorno
 - **WHEN** se envía `Q-HER2` a `/rag/query` con un JWT de servicio válido
-- **THEN** la respuesta no es `503 RETRIEVAL_UNAVAILABLE` y se valida contra `RagQueryInternalResponse` del `openapi.yaml`
-- **AND** el *reranker* recibió como máximo 12 pares, recortados por puntaje de recuperación con desempate determinista
+- **THEN** la respuesta es `200` con `sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE`, y nunca `503 RETRIEVAL_UNAVAILABLE`
+- **AND** una respuesta `200` se valida contra `RagQueryInternalResponse` del `openapi.yaml`
+
+#### Scenario: La etapa de corte envía como máximo 12 pares al reranker y registra solo recuentos [US-231b AC-9] [S1 resp. 82]
+- **GIVEN** la integración de la tarea 1.9 (Milvus fingido en su puerto, *reranker* espía) con 30 candidatos y `RERANKER_MAX_PAIRS=12`
+- **WHEN** corre la recuperación
+- **THEN** el *reranker* recibe como máximo 12 pares, recortados por puntaje de recuperación con desempate determinista por `chunk_id`
+- **AND** el log de la etapa contiene solo recuentos (recibidos, descartados, enviados), sin ids ni texto
 
 #### Scenario: Milvus o el catálogo inaccesibles impiden el arranque sin revelar su dirección [US-231b AC-9] [RN-12] [RN-22]
 - **GIVEN** `MODEL_PROVIDER=local` y un Milvus (`MILVUS_URI`) o un catálogo (`CORPUS_DATABASE_URL`, rol `rag_corpus`) inaccesible

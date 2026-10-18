@@ -23,7 +23,9 @@
   (con su test en `compose-config.test.mjs`, línea 122); `.env.example` lo aplica el humano: el agente solo reporta las claves.
   Sin dependencias nuevas; el test de US-231a «`transformers`/`huggingface_hub` no se importan» cubre `app/infrastructure/nli`.
 - [ ] 1.1b (test después, RN-14) Añadir `**/*.onnx.data` a `.gitignore`, `.dockerignore` raíz y `apps/rag-orchestrator/Dockerfile.dockerignore`,
-  con su caso en `infra/docker/__tests__/dockerignore.test.mjs` (cada `*.dockerignore` repite todos los patrones raíz).
+  añadiendo `**/*.onnx.data` al array de `infra/docker/__tests__/compose-modelos.test.mjs` (línea 80; cubre `.gitignore` y los dos dockerignore).
+  Registrar también el origen versionado de los índices `NLI_LABEL_INDEX_*` (adenda al ADR-39 o model card de la revisión fijada; el ADR no
+  los fija) y, si se añaden al bloque del ADR, actualizar el recuento de 25 de `clavesDeAdr39()` (`compose-modelos.test.mjs:73`).
 - [ ] 1.2 (TDD estricto) Test de aceptación en rojo: «devuelve su clase esperada con probabilidades que suman 1 para los tres
   pares de FX-06a-c en un lote [US-231b AC-1]» · `@pytest.mark.models` + `@pytest.mark.ac("US-231b", 1)`, y su versión con sesión
   falsa en la ruta rápida. Esqueletos: `NliClassifier`/`ParNli`/`ResultadoNli` en `app/application/ports.py` y
@@ -46,7 +48,9 @@
   `fake` no se verifica. Commits `test(US-231b)` / `feat(US-231b)`.
 - [ ] 1.7 (TDD estricto) Test de aceptación en rojo: «responde con la red bloqueada y sin conexiones salientes [US-231b AC-5]»
   (fixture de bloqueo de sockets; `models`) más el chequeo estático con la lista prohibida de US-231a D7 extendido a
-  `app/infrastructure/nli` y la exigencia de `Tokenizer.from_file`/`InferenceSession(<ruta local>)`, en la ruta rápida.
+  `app/infrastructure/nli` y la exigencia de `Tokenizer.from_file(<ruta local>)`/`InferenceSession(<bytes leídos de la ruta verificada>)` (D12), en la ruta rápida. Esto
+  modifica `test_adapters_sin_red.py:140` de US-231a (hoy `== str(ruta)`): commit con `Test-Removal: la sesión de ONNX pasa a crearse desde bytes
+  verificados (D12); cambia el AC-8 de US-231a`, aplicado al NLI y, junto con la deuda de 1.0, a embeddings y reranker.
   Commits `test(US-231b)` / `feat(US-231b)`.
 - [ ] 1.8 (TDD estricto) Test de aceptación en rojo: «ch-largo-1 se trocea en ≥ 2 chunks de ≤ 1024 tokens de BGE-M3 [US-231b AC-8]»
   (`models`, con tokenizer real) y su versión con tokenizer de archivo falso en la ruta rápida; más «`fabricar_embedder_real` devuelve
@@ -64,8 +68,8 @@
   (commit con `Test-Removal: RETRIEVAL_TOP_K>RERANKER_MAX_PAIRS pasa de error de arranque a corte previo (decisión 82)`). Commits `test` / `feat`.
 - [ ] 1.10 (TDD estricto: lleva lógica de seguridad) Composición del corpus: `crear_puertos_del_corpus(settings)` (Milvus y lectores del schema
   `corpus` reutilizando `CorpusDatabaseSettings` y `componer_url`: usuario `rag_corpus`, URL sin contraseña, `sslmode=require`) en
-  `app/infrastructure/corpus/composicion.py`, invocada desde `app/main.py` con `MODEL_PROVIDER=local` y `LLM_PROVIDER=local` (y con
-  `LLM_PROVIDER=fake` si el usuario elige la opción (b) del smoke, que cambia `bootstrap.py:175`). **Sonda al arrancar** (`SELECT 1` con
+  `app/infrastructure/corpus/composicion.py`, invocada desde `app/main.py` con `MODEL_PROVIDER=local` y `LLM_PROVIDER=local` (sin tocar
+  `bootstrap.py:175` y sin generador falso por entorno). **Sonda al arrancar** (`SELECT 1` con
   `rag_corpus` y `has_collection`, cada una con `from None`; `create_engine` no conecta al construirse). Test en rojo en subproceso:
   «Milvus o catálogo inaccesible → código ≠ 0, nombra `MILVUS_URI` o `CORPUS_DATABASE_URL`, sin URI, host ni DSN en stdout/stderr, sin corpus
   falso [US-231b AC-9]». Verificación adicional: integración del
@@ -81,7 +85,8 @@
   `python -m app.scripts.load_seed_corpus` → todos los documentos `embebido` + `is_current`, chunks con `source_type`, `language` y
   `cancer_type_tags` copiados del catálogo, `CorpusRelease` con `excluded_sources = ["NCCN","ESMO"]`
   (`@pytest.mark.ac("US-059", 1)`) [US-231b AC-9] [US-059 AC-1] [AC-06.1] [RN-05]; después `Q-HER2` a `/rag/query` con
-  `LLM_PROVIDER=fake` y `MODEL_PROVIDER=local`. Salida adjunta al PR. **Al terminar, cerrar las tareas 1.13 y 2.13b de L1D-115 (nota en su
+  `LLM_PROVIDER=local` y `MODEL_PROVIDER=local` (opción (a)): se acepta `200 sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE`, nunca
+  `503 RETRIEVAL_UNAVAILABLE`; el tope de ≤ 12 pares se verifica con el log de recuentos y la integración de 1.9, no en Compose. Salida adjunta al PR. **Al terminar, cerrar las tareas 1.13 y 2.13b de L1D-115 (nota en su
   `tasks.md`).** Solo corpus público con licencia registrada (RN-21); sin datos de pacientes (RN-13).
 - [ ] 1.13 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(US-231b)`. No inlinear adapters ni puertos; candidatos: contenedor de modelos (D4), etapa de corte (D9).
