@@ -8,6 +8,7 @@ import {
   TODAS_LAS_FUENTES,
   abrirSesion,
   crearPacienteFxT4aA,
+  crearPacienteSintetico,
   leerRegistroPorTrace,
   montarGateway,
   prepararMundoConSeed,
@@ -185,5 +186,41 @@ describe('el contexto enviado excluye el reflejo de análisis previos', () => {
     );
     expect(descripciones).toHaveLength(1);
     expect(JSON.stringify(descripciones)).not.toContain('REFLEJO-DE-ANALISIS-PREVIO');
+  });
+});
+
+describe('fechas absolutas en el texto libre de un evento', () => {
+  it('sustituye por [FECHA] las fechas con mes en palabras sin de, con puntos y con año primero cuando la descripción del evento las trae [US-049 AC-3]', async () => {
+    const otro = await crearPacienteSintetico(mundo, { conDiagnostico: true });
+    const { rows } = await mundo.cliente.query<{ id: string }>(
+      'SELECT id FROM clinical.care_episode WHERE patient_id = $1',
+      [otro],
+    );
+    await insertar(mundo.cliente, 'clinical.clinical_event', {
+      id: mundo.ids(),
+      patient_id: otro,
+      episode_id: rows[0]!.id,
+      event_type: 'progresion',
+      event_date: '2026-08-16',
+      date_precision: 'dia',
+      description: 'Progresión en marzo 2024, control 15.03.2024 y 2024/03/15 con Gleason 4+3',
+      mapping_status: 'n_a',
+      entry_method: 'seed',
+      extraction_confidence: 'n_a',
+      review_status: 'verificado',
+      created_at: INSTANTE_FIJO,
+    });
+    const { app } = await montar();
+
+    await request(app)
+      .post('/platform/evidence-analyses')
+      .set('Cookie', cookie)
+      .send({ patientId: otro, query: PREGUNTA_AC1, sourcesSelected: TODAS_LAS_FUENTES });
+
+    expect(rag.llamadas()).toBe(1);
+    const eventos = contextoDe(0)['events'] as { description: string }[];
+    expect(eventos.map((e) => e.description)).toContain(
+      'Progresión en [FECHA], control [FECHA] y [FECHA] con Gleason 4+3',
+    );
   });
 });

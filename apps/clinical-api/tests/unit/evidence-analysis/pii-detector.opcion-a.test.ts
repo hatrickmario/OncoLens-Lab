@@ -145,6 +145,30 @@ describe('crearDetectorOpcionA · formatos de L1D-166 y fechas', () => {
     expect(resultado.findingTypes).toEqual(['fecha']);
   });
 
+  it.each([
+    [
+      'el mes en palabras sin de',
+      'tras la progresión de marzo 2024 hubo',
+      'tras la progresión de [FECHA] hubo',
+    ],
+    ['la fecha con puntos', 'el 15.03.2024 hubo', 'el [FECHA] hubo'],
+    ['la fecha con año primero y barras', 'el 2024/03/15 hubo', 'el [FECHA] hubo'],
+    ['la fecha con año primero y puntos', 'el 2024.03.15 hubo', 'el [FECHA] hubo'],
+    ['el mes abreviado en español', 'el 15 mar 2024 hubo', 'el [FECHA] hubo'],
+    ['el mes abreviado con punto', 'el 15 sept. 2024 hubo', 'el [FECHA] hubo'],
+    ['el mes en inglés', 'on March 15, 2024 hubo', 'on [FECHA] hubo'],
+    ['el mes abreviado en inglés', 'on 15 Mar 2024 hubo', 'on [FECHA] hubo'],
+  ])('[US-049 AC-3] sustituye por [FECHA] %s', (_caso, entrada, esperado) => {
+    expect(sinIdentidad.enmascarar(entrada).texto).toBe(esperado);
+  });
+
+  it('[US-049 AC-3] no mutila valores clínicos que se parecen a una fecha', () => {
+    const texto =
+      'Gleason 4+3, HER2 3+, T2cN0M0, PSA 4.5 ng/mL, mayo de dosis 2 mg, 3/4 ciclos, Ki-67 20-30%';
+
+    expect(sinIdentidad.enmascarar(texto).texto).toBe(texto);
+  });
+
   it('nunca rotula una fecha como teléfono ni documento aunque la preceda una palabra clave', () => {
     const resultado = sinIdentidad.enmascarar('Teléfono 15/03/2024 y DNI 15 de marzo de 2024');
 
