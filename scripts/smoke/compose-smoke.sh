@@ -28,6 +28,12 @@ espera="${SMOKE_WAIT_TIMEOUT:-900}"
 temporal="$(mktemp -d)"
 log="$temporal/compose.log"
 
+# US-231a: el smoke no tiene pesos de modelos reales (RN-14). Modelos en fake y un directorio vacío, fuera del repo, para el
+# montaje de solo lectura que el Compose exige (MODEL_HOST_DIR no tiene valor por defecto).
+mkdir -p "$temporal/modelos"
+export MODEL_PROVIDER="${MODEL_PROVIDER:-fake}"
+export MODEL_HOST_DIR="${MODEL_HOST_DIR:-$temporal/modelos}"
+
 archivos=(-f "$raiz/infra/docker/docker-compose.yml")
 [ -n "${SMOKE_COMPOSE_OVERRIDE:-}" ] && archivos+=(-f "$SMOKE_COMPOSE_OVERRIDE")
 compose() { docker compose -p "$proyecto" "${archivos[@]}" "$@"; }

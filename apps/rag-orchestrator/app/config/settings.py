@@ -1,11 +1,12 @@
 """Configuración de rag-orchestrator (RN-22): todo valor a calibrar viene del entorno."""
 
 import os
+import re
 from datetime import date
 from pathlib import Path
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -17,7 +18,12 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
-from app.domain.reglas_proveedor import reject_fake_provider_with_real_data
+from app.domain.reglas_proveedor import (
+    reject_fake_model_provider_with_real_data,
+    reject_fake_provider_with_real_data,
+)
+
+_SHA256 = re.compile(r"[0-9a-fA-F]{64}")
 
 
 class Settings(BaseSettings):
@@ -50,23 +56,82 @@ class Settings(BaseSettings):
     prompt_version: str | None = None
     # Modelos de recuperación y verificación (ADR-39): opcional; en producción no se exigen las claves de medición.
     modelos: ConfigModelos | None = None
+    # Modelos locales de recuperación (US-231a, RN-12): enum estricto fake|local. Sin definir es `fake`: con
+    # LLM_PROVIDER=local eso responde 503 fallando cerrado y nunca recupera con fakes.
+    model_provider: Literal["fake", "local"] = "fake"
+    # Idioma que se asume cuando el detector no puede decidir (RN-22).
+    default_query_language: Literal["es", "en"] = "es"
+    # Un archivo cargado = una ruta y un SHA-256 (RN-22); se verifican al arrancar con MODEL_PROVIDER=local.
+    embedding_model_path: Path | None = None
+    embedding_model_sha256: str | None = None
+    embedding_tokenizer_path: Path | None = None
+    embedding_tokenizer_sha256: str | None = None
+    reranker_model_path: Path | None = None
+    reranker_model_sha256: str | None = None
+    reranker_tokenizer_path: Path | None = None
+    reranker_tokenizer_sha256: str | None = None
+    embedding_max_length: int = Field(default=8192, gt=0)
+    model_intra_op_threads: int = Field(default=8, gt=0)
+    model_batch_max_tokens: int = Field(default=4096, gt=0)
 
     @model_validator(mode="before")
     @classmethod
     def _componer_modelos_desde_el_entorno(cls, datos: Any) -> Any:
-        """Si el entorno trae alguna clave de ADR-39 se validan todas juntas; si no trae ninguna, ``modelos`` es None."""
+        """Si el entorno trae alguna clave de ADR-39 se validan todas juntas; si no trae ninguna, ``modelos`` es None.
+
+        Una clave vacía (``${CLAVE:-}`` del Compose) cuenta como ausente.
+        """
         if (
             isinstance(datos, dict)
             and "modelos" not in datos
-            and any(k in os.environ for k in CLAVES_ADR39)
+            and any(os.environ.get(k) for k in CLAVES_ADR39)
         ):
             return {**datos, "modelos": cargar_config_modelos(os.environ)}
         return datos
+
+    @field_validator("model_provider", mode="before")
+    @classmethod
+    def _proveedor_de_modelos_estricto(cls, valor: Any) -> Any:
+        if valor not in ("fake", "local"):
+            raise ValueError("MODEL_PROVIDER: debe ser fake o local")
+        return valor
+
+    @field_validator(
+        "embedding_model_path",
+        "embedding_model_sha256",
+        "embedding_tokenizer_path",
+        "embedding_tokenizer_sha256",
+        "reranker_model_path",
+        "reranker_model_sha256",
+        "reranker_tokenizer_path",
+        "reranker_tokenizer_sha256",
+        "nli_model",
+        "prompt_version",
+        mode="before",
+    )
+    @classmethod
+    def _vacio_es_ausente(cls, valor: Any) -> Any:
+        return None if valor == "" else valor
+
+    @field_validator(
+        "embedding_model_sha256",
+        "embedding_tokenizer_sha256",
+        "reranker_model_sha256",
+        "reranker_tokenizer_sha256",
+    )
+    @classmethod
+    def _sha256_hexadecimal(cls, valor: str | None, info: ValidationInfo) -> str | None:
+        if valor is not None and not _SHA256.fullmatch(valor):
+            raise ValueError(f"{str(info.field_name).upper()}: debe ser un SHA-256 hexadecimal")
+        return valor
 
     @model_validator(mode="after")
     def _rechazar_fake_con_datos_reales(self) -> Self:
         reject_fake_provider_with_real_data(
             self.llm_provider, self.real_anonymized_enabled, self.real_identified_enabled
+        )
+        reject_fake_model_provider_with_real_data(
+            self.model_provider, self.real_anonymized_enabled, self.real_identified_enabled
         )
         return self
 

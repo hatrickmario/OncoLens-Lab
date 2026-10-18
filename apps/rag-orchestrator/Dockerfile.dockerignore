@@ -28,6 +28,12 @@ infra/docker/secrets/
 !**/.env.example
 apps/web/tests
 apps/web/vitest*.config.ts
+# Pesos de modelos (US-231a, RN-14): nunca en la imagen; llegan por el montaje de solo lectura de MODEL_HOST_DIR.
+.cache/
+**/model-cache/
+**/*.onnx
+**/*.onnx_data
+**/*.safetensors
 
 # Código de medición de ADR-39: no se empaqueta en producción. app/scripts va por LISTA BLANCA: se excluye entero y se
 # reincorporan solo los scripts de operación (US-058: el one-shot corpus-migrate corre con esta imagen). Cualquier otro

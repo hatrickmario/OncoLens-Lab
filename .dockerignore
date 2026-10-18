@@ -24,3 +24,8 @@ infra/docker/secrets/
 !**/.env.example
 apps/web/tests
 apps/web/vitest*.config.ts
+.cache/
+**/model-cache/
+**/*.onnx
+**/*.onnx_data
+**/*.safetensors
