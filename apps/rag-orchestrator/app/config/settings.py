@@ -58,9 +58,6 @@ class Settings(BaseSettings):
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
     # Probabilidad mínima de `entailment` que cuenta como soporte (RN-01, RN-22, L1D-180); la calibra la evaluación (US-072).
     nli_entailment_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
-    # Etiquetas que viajan en `meta` (el NLI y el prompt los usan los changes de generación y soporte).
-    nli_model: str | None = None
-    prompt_version: str | None = None
     # Modelos de recuperación y verificación (ADR-39): opcional; en producción no se exigen las claves de medición.
     modelos: ConfigModelos | None = None
     # Modelos locales de recuperación (US-231a, RN-12): enum estricto fake|local. Sin definir es `fake`: con
@@ -138,8 +135,6 @@ class Settings(BaseSettings):
         "nli_label_index_contradiction",
         "nli_entailment_threshold",
         "clinical_catalog_path",
-        "nli_model",
-        "prompt_version",
         mode="before",
     )
     @classmethod

@@ -65,8 +65,6 @@ def _ajustes(modelos: EntornoDeModelos, **cambios: object) -> Settings:
         "relevance_threshold": 0.30,
         "retrieval_top_k": 12,
         "rerank_top_n": 10,
-        "nli_model": "nli-test@1",
-        "prompt_version": "rag-query@test",
         "fake_responses_path": EJEMPLOS,
         **cambios,
     }

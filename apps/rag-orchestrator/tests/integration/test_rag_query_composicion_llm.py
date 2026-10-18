@@ -1,7 +1,8 @@
 """Composición de la generación en `app/bootstrap.py` (L1D-275, tarea 2.9): RN-12, `503` sin *fallback*.
 
-``crear_generador_local()`` enlaza el LLM nativo local; sin él (producción hasta L1D-180) la rama con evidencia sigue en
-``503``. Todo el HTTP saliente va por ``respx``: un host no declarado hace fallar el test.
+``crear_generador_local()`` enlaza el LLM nativo local; desde L1D-180 la composición de producción lo usa cuando no se
+inyecta otro generador (el soporte NLI verifica antes de responder). Todo el HTTP saliente va por ``respx``: un host no
+declarado hace fallar el test.
 """
 
 import httpx
@@ -34,8 +35,6 @@ def _cliente(*, con_llm_local: bool) -> TestClient:
         llm_provider="local",
         llm_base_url=BASE_LLM,
         llm_model="llm-test@1",
-        nli_model="nli-test@1",
-        prompt_version="rag-query@test",
     )
     app = crear_app(
         settings,
@@ -75,12 +74,16 @@ def test_rag_query_responde_503_local_llm_unavailable_sin_fallback_cuando_el_llm
     assert llm.call_count == 1  # una sola llamada y a ningún otro host
 
 
-def test_rag_query_responde_503_sin_llamar_al_llm_cuando_produccion_no_enlaza_el_generador_local():
+def test_rag_query_enlaza_el_generador_local_de_produccion_cuando_no_se_inyecta_ninguno():
     with respx.mock(assert_all_called=False) as red:
-        llm = red.post(URL_LLM).mock(return_value=httpx.Response(200, json={}))
+        llm = red.post(URL_LLM).mock(
+            return_value=httpx.Response(
+                200, json={"choices": [{"message": {"content": CONTENIDO_OK}}]}
+            )
+        )
 
         respuesta = _cliente(con_llm_local=False).post("/rag/query", json=solicitud_de(Q_HER2))
 
-    assert respuesta.status_code == 503
-    assert respuesta.json()["error"] == "LOCAL_LLM_UNAVAILABLE"
-    assert llm.call_count == 0
+    assert respuesta.status_code == 200
+    assert_matches_spec(RESPUESTA, respuesta.json())
+    assert llm.call_count == 1

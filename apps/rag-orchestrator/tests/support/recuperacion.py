@@ -350,9 +350,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     longitud_maxima_codigo_tipo=LONGITUD_MAXIMA_DE_PRUEBA,
     llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
-    nli_model="nli-test@1",
     nli_entailment_threshold=0.7,
-    prompt_version="rag-query@test",
 )
 
 

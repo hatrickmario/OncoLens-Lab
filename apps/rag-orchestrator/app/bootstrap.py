@@ -45,7 +45,6 @@ from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
-from app.infrastructure.llm.generador_no_disponible import GeneradorLocalNoDisponible
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
@@ -215,9 +214,9 @@ def _crear_servicio_de_recuperacion(
         catalogo=puertos.catalogo,
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
-        # Producción: la rama con evidencia responde 503 LOCAL_LLM_UNAVAILABLE hasta que L1D-180 (soporte NLI) active
-        # `crear_generador_local()`: ninguna opción sin verificar sale de este servicio (L1D-275, design D9).
-        generador=generador or GeneradorLocalNoDisponible(),
+        # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
+        # responder (L1D-180, D9 de L1D-275): ninguna opción sin verificar sale de este servicio.
+        generador=generador or crear_generador_local(settings),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
     )
@@ -269,9 +268,9 @@ def _proveedor_de_meta(settings: Settings) -> LlmProvider:
 
 
 def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
-    """Además de la configuración de recuperación, las etiquetas de ``meta`` (NLI_MODEL, PROMPT_VERSION)."""
+    """Los valores de configuración (RN-22) y la procedencia de ``meta``: ``nliModel`` sale del clasificador y
+    ``promptVersion`` del prompt, nunca de una copia en configuración."""
     _exigir_configuracion_de_recuperacion(settings)
-    _exigir_claves({"NLI_MODEL": settings.nli_model, "PROMPT_VERSION": settings.prompt_version})
     return ParametrosDeRecuperacion(
         relevance_threshold=settings.relevance_threshold,  # type: ignore[arg-type]
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
@@ -279,9 +278,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         longitud_maxima_codigo_tipo=settings.retrieval_cancer_type_max_length,
         llm_provider=_proveedor_de_meta(settings),
         llm_model=settings.llm_model,
-        nli_model=settings.nli_model,  # type: ignore[arg-type]
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
-        prompt_version=settings.prompt_version,  # type: ignore[arg-type]
         # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )

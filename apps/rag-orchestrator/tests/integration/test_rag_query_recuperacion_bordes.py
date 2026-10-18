@@ -5,6 +5,7 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
+from app.prompts.rag_query import VERSION_DEL_PROMPT
 from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
@@ -71,7 +72,7 @@ def test_rag_query_completa_meta_con_la_release_del_corpus_y_la_configuracion_cu
         "embeddingModel": "embedder-test@1",
         "rerankerModel": "reranker-test@1",
         "nliModel": "nli-test@1",
-        "promptVersion": "rag-query@test",
+        "promptVersion": VERSION_DEL_PROMPT,
         "catalogVersion": "2026.10.0",
         "corpusRelease": "rel-test-1",
         "corpusCutoffDate": "2026-09-30",

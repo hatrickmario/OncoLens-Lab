@@ -23,3 +23,7 @@ class TipoCancerNoRegistradoError(ErrorDeAplicacion):
 
 class LlmLocalNoDisponibleError(ErrorDeAplicacion):
     """El LLM local no está disponible o su salida no es válida (`503 LOCAL_LLM_UNAVAILABLE`)."""
+
+
+class NliNoDisponibleError(ErrorDeAplicacion):
+    """El verificador de soporte (NLI) falló o no respondió (`503 NLI_UNAVAILABLE`): ninguna opción sale sin validar (RN-01)."""

@@ -125,7 +125,6 @@ def entorno_de_arranque(modelos: EntornoDeModelos, **cambios: str | None) -> dic
         "RELEVANCE_THRESHOLD": "0.30",
         "RETRIEVAL_TOP_K": "12",
         "RERANK_TOP_N": "10",
-        "PROMPT_VERSION": "rag-query@test",
         "NLI_ENTAILMENT_THRESHOLD": "0.7",
         "CLINICAL_CATALOG_PATH": str(CATALOGOS),
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),
