@@ -1,18 +1,18 @@
 # S2 — Tarjetas de arrastre del Sprint 1
 
 > Creado el 2026-10-18 por `/sprint-close S1` y aprobado por el usuario. Reúnen **lo pendiente de verificación** de las historias del S1 que siguen en In Review (ver `S1-trazabilidad.md` y `S1-pendientes-humanos.md`). El código de esas historias está mergeado; aquí vive lo que falta para poder darlas por Done.
-> **Markdown = fuente.** `Linear: pendiente` hasta que haya cupo (se liberó moviendo Post-MVP y «si hay capacidad» a `V2-Post-MVP.md`). Los IDs `ARR-nn` son inmutables; cuando se creen las issues se anota su `L1D-nn` en cada tarjeta.
+> **Markdown = fuente.** Issues creadas el 2026-10-18 (L1D-277 a L1D-282, milestone Sprint 2) tras liberar cupo moviendo Post-MVP y «si hay capacidad» a `V2-Post-MVP.md`. Los IDs `ARR-nn` son inmutables; cuando se creen las issues se anota su `L1D-nn` en cada tarjeta.
 > Las historias de origen **no pasan a Done** por separar: se quedan In Review con un enlace a su tarjeta y cierran cuando la tarjeta cierra.
 > Prioridad Linear: 2 = Alta, 3 = Media, 4 = Baja. Estimación Fibonacci.
 
-| ID | Tarjeta | Est. | Prioridad | Desbloquea (S1) |
-|---|---|---|---|---|
-| ARR-01 | La CI ejecuta la integración y los `servicios_reales` | 5 | **Alta** | L1D-114, L1D-115 (y evidencia de 168, 169, 103, 104) |
-| ARR-02 | E2E y visual-check ejecutables (D-3 + D-2) | 8 | **Alta** | L1D-197, 139, 140, 193, 194 |
-| ARR-03 | OL-06 sobre lo ya implementado (con US-072) | 3 | **Alta** | L1D-180, 275, 115, 193 |
-| ARR-04 | Mediciones de ADR-39 fase B en el MacBook de referencia | 3 | **Alta (temprana)** | L1D-274 y US-231a/b (AC con `models`) |
-| ARR-05 | Baseline manual VM-1/VM-2 con los oncólogos | 3 | Media | L1D-238 |
-| ARR-06 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
+| ID | Linear | Tarjeta | Est. | Prioridad | Desbloquea (S1) |
+|---|---|---|---|---|---|
+| ARR-01 | L1D-277 | La CI ejecuta la integración y los `servicios_reales` | 5 | **Alta** | L1D-114, L1D-115 (y evidencia de 168, 169, 103, 104) |
+| ARR-02 | L1D-278 | E2E y visual-check ejecutables (D-3 + D-2) | 8 | **Alta** | L1D-197, 139, 140, 193, 194 |
+| ARR-03 | L1D-279 | OL-06 sobre lo ya implementado (con US-072) | 3 | **Alta** | L1D-180, 275, 115, 193 |
+| ARR-04 | L1D-280 | Mediciones de ADR-39 fase B en el MacBook de referencia | 3 | **Alta (temprana)** | L1D-274 y US-231a/b (AC con `models`) |
+| ARR-05 | L1D-281 | Baseline manual VM-1/VM-2 con los oncólogos | 3 | Media | L1D-238 |
+| ARR-06 | L1D-282 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
 
 Total: 25 puntos de arrastre.
 
@@ -20,7 +20,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-01 · La CI ejecuta la integración de `clinical-api` y los `servicios_reales`
 
-> Linear: pendiente · Prioridad Alta · Est. 5 · Origen: B-1 y B-2 de `S1-trazabilidad.md`; tarea 2.4 de L1D-114.
+> Linear: [L1D-277](https://linear.app/l1der-lab-mjbc/issue/L1D-277) · Prioridad Alta · Est. 5 · Origen: B-1 y B-2 de `S1-trazabilidad.md`; tarea 2.4 de L1D-114.
 
 **Como** equipo, **quiero** que la CI corra los tests de integración con PostgreSQL y Milvus reales, **para** que los AC de US-038, 039, 049, 052, 053, 058, 059 y 211 tengan evidencia automatizada y no solo local.
 
@@ -36,7 +36,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-02 · Los E2E y el visual-check se pueden ejecutar (D-3 + D-2)
 
-> Linear: pendiente · Prioridad Alta · Est. 8 · Origen: deudas D-2 y D-3; tareas E2E de L1D-197 (3.3, 3.5, 4.2), L1D-139 (2.8, 3.2), L1D-140 (2.7, 3.5, 4.2, 4.3), L1D-193 y L1D-194 (3.3).
+> Linear: [L1D-278](https://linear.app/l1der-lab-mjbc/issue/L1D-278) · Prioridad Alta · Est. 8 · Origen: deudas D-2 y D-3; tareas E2E de L1D-197 (3.3, 3.5, 4.2), L1D-139 (2.8, 3.2), L1D-140 (2.7, 3.5, 4.2, 4.3), L1D-193 y L1D-194 (3.3).
 
 **Como** equipo, **quiero** Playwright contra Compose en perfil de test con modelos fingidos y el sistema de diseño real (Tailwind v4 + shadcn/ui), **para** ejecutar los 12 E2E y los visual-checks que hoy están escritos o pendientes.
 
@@ -50,7 +50,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-03 · OL-06 sobre lo ya implementado (junto a US-072 / L1D-235)
 
-> Linear: pendiente · Prioridad Alta · Est. 3 (además de US-072, que ya está en el plan del S2) · Origen: L1D-180 (3.1, 4.4), L1D-275 (3.1), L1D-115 (2.1), L1D-193 (5.1).
+> Linear: [L1D-279](https://linear.app/l1der-lab-mjbc/issue/L1D-279) · Prioridad Alta · Est. 3 (además de US-072, que ya está en el plan del S2) · Origen: L1D-180 (3.1, 4.4), L1D-275 (3.1), L1D-115 (2.1), L1D-193 (5.1).
 
 **Como** responsable de calidad de IA, **quiero** correr la evaluación OL-06 con el NLI y el generador reales sobre las historias ya mergeadas, **para** adjuntar el reporte de `ai-eval-runner` que el Gate 2 dejó pendiente.
 
@@ -65,7 +65,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-04 · Mediciones de ADR-39 fase B en el MacBook de referencia
 
-> Linear: pendiente · Prioridad Alta, temprana en el S2 · Est. 3 (el desarrollo ya está en #83/#86) · Origen: L1D-274 (tareas 1.4 a 1.8), US-231a/b (1.11, 1.12).
+> Linear: [L1D-280](https://linear.app/l1der-lab-mjbc/issue/L1D-280) · Prioridad Alta, temprana en el S2 · Est. 3 (el desarrollo ya está en #83/#86) · Origen: L1D-274 (tareas 1.4 a 1.8), US-231a/b (1.11, 1.12).
 
 **Como** PO, **quiero** medir runtime, LLM, OCR y p95 extremo a extremo con el hardware y los modelos reales, **para** cerrar el ADR-39 y saber si la latencia del análisis (riesgo aceptado como alto) cumple.
 
@@ -80,7 +80,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-05 · Baseline manual VM-1/VM-2 con los oncólogos
 
-> Linear: pendiente · Prioridad Media (depende de la agenda) · Est. 3 · Origen: L1D-238 (3.1 a 3.5), DEC-02, decisión 81.
+> Linear: [L1D-281](https://linear.app/l1der-lab-mjbc/issue/L1D-281) · Prioridad Media (depende de la agenda) · Est. 3 · Origen: L1D-238 (3.1 a 3.5), DEC-02, decisión 81.
 
 **Como** PO, **quiero** medir el baseline manual con los oncólogos asesores, **para** tener VM-1 y VM-2 de referencia antes de comparar con OncoLens (G-Demo).
 
@@ -94,7 +94,7 @@ Total: 25 puntos de arrastre.
 
 ## ARR-06 · Conciliación y deuda del cierre del S1
 
-> Linear: pendiente · Prioridad Media · Est. 3 · Origen: `S1-cierre.md`, deudas D-7, D-9 y menores de los Gate 2.
+> Linear: [L1D-282](https://linear.app/l1der-lab-mjbc/issue/L1D-282) · Prioridad Media · Est. 3 · Origen: `S1-cierre.md`, deudas D-7, D-9 y menores de los Gate 2.
 
 **Como** equipo, **quiero** cerrar la deuda de conciliación y de higiene que dejó el S1, **para** que los changes pendientes se puedan archivar.
 
