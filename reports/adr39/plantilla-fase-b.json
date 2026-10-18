@@ -1,0 +1,94 @@
+{
+  "descripcion": "Plantilla de los reportes de la fase B de ADR-39 (US-224): cada clave de primer nivel es un archivo que `python -m app.scripts.adr39` escribe en reports/adr39/ (o que ai-eval-runner escribe, en el caso de revision-<id>.json). Todo null = sin medir; no se rellena a mano con estimaciones. Solo agregados, nunca textos (RN-14).",
+  "entorno": {
+    "fecha": null,
+    "plataforma": null,
+    "maquina": null,
+    "ram_total_gb": null,
+    "macos": null,
+    "ollama": null,
+    "vllm_metal": null,
+    "ollama_flash_attention": null,
+    "ollama_kv_cache_type": null,
+    "compose_levantado": null,
+    "vm_docker_gb": null
+  },
+  "runtime-ollama.json": {
+    "api": "ollama",
+    "version": null,
+    "modelo": null,
+    "gpu_porcentaje": null,
+    "api_openai_compatible": null,
+    "json_restringido_por_runtime": null
+  },
+  "runtime-vllm_metal.json": {
+    "api": "openai",
+    "version": null,
+    "modelo": null,
+    "gpu_porcentaje": null,
+    "gpu_nota": "comprobar a mano: dispositivo mps/Metal en el log de arranque y ocupación de GPU",
+    "api_openai_compatible": null,
+    "json_restringido_por_runtime": null,
+    "resolucion_manual": {
+      "vllm_instalado": null,
+      "usa_gpu_metal": null,
+      "comando_probado": null,
+      "motivo_si_se_descarta": null
+    }
+  },
+  "llm.json": {
+    "runtime": "ollama",
+    "contexto": "citas_del_dataset",
+    "candidatos": [
+      {
+        "id": "A",
+        "tag": "gemma4:26b-a4b-it-qat",
+        "digest": null,
+        "memoria_llm_gb": null,
+        "admitido": null,
+        "llamadas": null,
+        "json_valido": null,
+        "tokens_por_segundo": null,
+        "prefill_tokens_por_segundo": null,
+        "p50_ms": null,
+        "p95_ms": null,
+        "estructuracion": { "p95_ms": null, "json_valido": null, "documentos": null }
+      }
+    ]
+  },
+  "e2e-<id>.json": {
+    "perfil": "s1",
+    "candidato": "A",
+    "perfil_consultas": 30,
+    "corridas": 3,
+    "p95_total_ms": null,
+    "p50_total_ms": null,
+    "errores": null,
+    "etapas": "no desglosado",
+    "memoria_llm_gb": null,
+    "docker_pico_gb": null,
+    "memoria_stack_gb": null,
+    "swap_creciente": null,
+    "sistema_antes": { "docker_gb": null, "swap_usado_mb": null, "memoria_libre_porcentaje": null, "ram_total_gb": null },
+    "sistema_despues": { "docker_gb": null, "swap_usado_mb": null, "memoria_libre_porcentaje": null, "ram_total_gb": null }
+  },
+  "ocr-<motor>.json": {
+    "motor": "ocrmypdf-tesseract",
+    "disponible": null,
+    "exactitud": null,
+    "p95_ms": null,
+    "memoria_pico_mb": null,
+    "escribe_a_disco_observado": null,
+    "residuos": [],
+    "documentos": null,
+    "tmpdir": null
+  },
+  "revision-<id>.json": {
+    "fidelidad": null,
+    "salidas_prescriptivas": null,
+    "salidas_otro_idioma": null,
+    "muestra": 20,
+    "revisor": "ai-eval-runner",
+    "reporte": "reports/eval/<archivo>.md"
+  }
+}

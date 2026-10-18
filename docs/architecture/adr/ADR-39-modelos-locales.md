@@ -238,7 +238,181 @@ Sin cambiar ninguna decisión ni cifra del bloque de arriba (por eso `--check-co
 
 ## Fase B
 
-*(Marcador para el change de L1D-274, US-224: runtime del LLM, OCR, regla de proveedores RN-12 y p95 extremo a extremo con la pila completa.)*
+> Change de L1D-274 (US-224). **Estado de la fase B: propuesto, con las mediciones pendientes.** Lo que ya existe es el
+> protocolo, el script, el dataset de OCR y la configuración; **no hay todavía ninguna cifra de LLM, OCR ni p95 extremo a
+> extremo**, porque se miden con modelos reales en la MacBook de referencia y esta sesión no tiene ni el hardware ni los
+> modelos. Cada celda `pendiente` de las tablas la rellena el comando indicado; ninguna se estima. La decisión
+> (runtime, LLM, motor OCR, `LLM_MODEL`) se toma con `python -m app.scripts.adr39 decidir` sobre los reportes medidos y
+> pasa a «aceptado» cuando el usuario apruebe el PR con las cifras. Citas: `[S1 resp. 3, 5, 6, 10]`; reglas de
+> decisión fijadas el 2026-10-20 antes de medir (`design.md` D3) y copiadas a
+> `apps/rag-orchestrator/eval/configs/adr39-fase-b.yaml`.
+
+### Reglas de decisión (fijadas antes de medir; no se modifican tras ver las cifras)
+
+1. **Eliminatorias, en este orden** (la primera que falla descarta con su cifra): licencia académica/permisiva verificada
+   (HAI-DEF = «condicionada»: se mide, pero solo se elige con aceptación escrita del usuario) → memoria del LLM
+   (`ollama ps`, `num_ctx = 8192`, tras el prompt más largo) **≤ 21 GB** → memoria total del stack **≤ 30 GB** y swap sin
+   crecer → JSON válido **≥ 99 %** de 200 llamadas → p95 de `POST /platform/evidence-analyses` **≤ 15 s** y p95 de extracción
+   (OCR + estructuración) **≤ 60 s**.
+2. **Calidad en español** (muestra de ≥ 20 salidas revisadas a mano por `ai-eval-runner`): fidelidad ≥ 0,90, 0 salidas
+   prescriptivas (RN-23), 0 salidas en otro idioma, terminología clínica correcta.
+3. **Elección:** mayor fidelidad; empate si difieren en una salida de la muestra (0,05 con n = 20) o menos, y gana la
+   **menor memoria**. Un modelo más grande no gana por serlo.
+4. **Nadie cumple 1 y 2:** se escala al usuario (US-012 AC-5); no se elige uno que incumpla (`decidir` sale con código 4).
+5. **Margen < 1 GB** bajo 21 o 30 GB: se declara riesgo y se registra el respaldo con margen.
+
+Implementadas como funciones puras en `app/scripts/adr39/reglas.py` (`descartar_por_restriccion`, `desempatar_por_memoria`,
+`elegir_candidato`, `validar_contra_esquema`) y probadas en `tests/evaluation/test_adr39_reglas.py`. Una cifra no medida es
+`null` y deja al candidato `pendiente`: nunca cuenta como 0 ni se elige con datos incompletos.
+
+### Protocolo repetible y comandos (AC-5)
+
+Protocolo común (D1): 3 corridas, mediana; se anotan versión de macOS, de Ollama/vllm-metal, *digest* del modelo,
+`num_ctx`, temperatura, `OLLAMA_FLASH_ATTENTION`/`OLLAMA_KV_CACHE_TYPE`, RAM de la máquina, VM de Docker (≥ 10 GB) y si el
+Compose estaba levantado. Los reportes (solo agregados) quedan en `reports/adr39/`; la plantilla de cada uno es
+`reports/adr39/plantilla-fase-b.json`.
+
+```bash
+cd apps/rag-orchestrator
+python -m app.scripts.adr39 runtime --runtime ollama --candidato A          # AC-1
+python -m app.scripts.adr39 runtime --runtime vllm_metal --candidato A      # AC-1 (tras `vllm serve`, time-box 1 h)
+python -m app.scripts.adr39 llm --muestras ~/adr39-muestras                 # AC-2: admisión por memoria y 3 x 200 llamadas por candidato admitido
+python -m app.scripts.adr39 llm --candidato A,G --muestras ~/adr39-muestras # o un subconjunto
+ADR39_PASSWORD=... python -m app.scripts.adr39 e2e --candidato A \
+  --base-url https://localhost --origin https://localhost \
+  --cuerpo ../../contracts/examples/evidence-analysis-request.json          # AC-3: 3 x 30 consultas con el stack levantado con LLM_MODEL=<tag de A>
+python -m app.scripts.adr39 ocr --motor ocrmypdf-tesseract --tmpdir /tmp --vigilar /app   # AC-6, DENTRO del contenedor read_only con TMPDIR=/tmp en tmpfs
+python -m app.scripts.adr39 decidir --motor-ocr ocrmypdf-tesseract --licencias-aceptadas ""  # tabla de decisión → stdout y reports/adr39/decision.json
+```
+
+- `e2e` se repite por cada candidato que pase la admisión (hay que reiniciar el stack con su `LLM_MODEL`) y deja
+  `e2e-<id>.json`; la contraseña del usuario de prueba sintético `doc1@test.local` llega solo por `ADR39_PASSWORD`.
+- Las salidas de la muestra de fidelidad (`--muestras`) van **fuera del repo**; `ai-eval-runner` las revisa a mano y deja
+  `reports/adr39/revision-<id>.json` (`fidelidad`, `salidas_prescriptivas`, `salidas_otro_idioma`) y su reporte en
+  `reports/eval/` (tarea 2.1).
+- Perfil del S4: `--pipeline s4` en `e2e` (síntesis, aplicabilidad y agente) con el mismo protocolo; recalibra G-5.
+- El OCR se mide **un motor por proceso** (la memoria pico es la del proceso) y en una imagen que traiga ese motor
+  (`ocrmypdf` + `tesseract-ocr-spa`; `paddleocr` y `python-doctr` para los alternativos): la imagen de producción no los
+  trae hasta FEAT-01b, así que hace falta una imagen de medición construida a partir del `Dockerfile` del servicio.
+  Se pasa `--raiz` y `--config` si el repo se monta en otra ruta del contenedor.
+
+### Runtime del LLM (AC-1)
+
+| Runtime | Versión | (a) GPU Metal fuera de Docker | (b) API compatible con OpenAI | (c) JSON restringido por esquema | Resultado |
+|---|---|---|---|---|---|
+| Ollama (A) | pendiente (0.34.4 en el refinamiento) | pendiente (`ollama ps` → `100% GPU`) | pendiente | pendiente (¿lo aplica el runtime o solo se valida?) | pendiente |
+| vllm-metal 0.1.0 | pendiente | pendiente (log de arranque y monitor de GPU) | pendiente | pendiente | pendiente: instalar `vllm` en `~/.venvs/vllm-metal` según su README (time-box 1 h) o descartar con el motivo y el comando probado |
+
+Medición previa del refinamiento (no repetida aquí, `[S1 resp. 10]`, 2026-10-13, Ollama 0.34.4): `gemma4:26b-a4b-it-qat` =
+15 GB residentes, 100 % GPU, ~79 tok/s, JSON con esquema correcto en **una** prueba. Un runtime sin uso real de GPU queda
+descartado.
+
+### LLM (AC-2)
+
+Candidatos y licencias: los de la tabla de `design.md` D3 (A, B, C, E, F, G, H, I, J; **D `qwen3.6:35b-a3b-q4_K_M` descartado
+sin medir** por el usuario, 2026-10-20, 24 GB > 21 GB). H, I y J: licencia **no verificada** (se verifica en la fuente al medir).
+E y F: términos HAI-DEF, **condicionados** a la aceptación escrita del usuario (pendiente). El contexto de las llamadas
+son las citas literales etiquetadas del golden de `data/eval/adr39-mini` (el pipeline del S1 recupera con los adapters reales de
+US-231a/b; el ADR anotará cuál de los dos contextos se usó).
+
+| Cand. | Tag | Digest | Memoria (GB) | tok/s (gen.) | JSON válido (200) | Fidelidad (muestra) | Estruct. p95 (ms) | p95 e2e (ms) | Stack (GB) | Estado |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A | `gemma4:26b-a4b-it-qat` | `2dd70431afed` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| B | `gemma4:12b-mlx` | `ded7a2735003` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| C | `qwen3.5:9b-mlx` | `203e30078279` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| D | `qwen3.6:35b-a3b-q4_K_M` | `07d35212591f` | — | — | — | — | — | — | — | descartado sin medir (24 GB publicados > 21 GB, usuario 2026-10-20) |
+| E | `medgemma1.5:4b-it-q8_0` | `d6ae3cddb663` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (HAI-DEF: condicionada) |
+| F | `medgemma1.5:4b-it-bf16` | `32f17fbd85fe` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (HAI-DEF: condicionada) |
+| G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| H | `qwen3.6:27b-q4_K_M` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar) |
+| I | `qwen3.5:27b-q4_K_M` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar) |
+| J | `qwen3.5:27b-int4` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar; soporte INT4 en Ollama 0.34.4 sin comprobar) |
+
+Los tamaños publicados no valen: vale `ollama ps` del día de la medición. **Contrastar** la admisión con la medición del
+refinamiento (15 GB, 100 % GPU, ~79 tok/s) y anotar si el *prefill* de contextos largos desplaza esa cifra.
+
+### p95 extremo a extremo (AC-3)
+
+| Candidato en el stack | p95 total (ms) | p50 total (ms) | Errores | Memoria LLM (GB) | Pico Docker (GB) | Stack total (GB) | Swap creciente | `memory_pressure` libre (%) | RAM de la máquina (GB) |
+|---|---|---|---|---|---|---|---|---|---|
+| pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+
+Por etapa (gateway y desidentificación, recuperación *dense*, *reranker*, generación, validación de citas, NLI, persistencia
+del `AIAnalysisRecord`): **no desglosado hoy**. El script lee `etapa=<x> … ms=<n> … traceId=<id>` de un log
+(`--logs-etapas`), pero el pipeline actual de `rag-orchestrator` no emite tiempos por etapa (solo registra
+`rag_query_generacion`, `recuperacion_fallo` y `meta.latencyMs` hasta el fin de la recuperación). Hasta que una historia añada ese
+registro (sin contenido ni PHI), el ADR declara «no desglosado» en lugar de estimar. Si ninguna combinación cumple 15 s o
+30 GB: US-012 AC-5, escalar el ajuste de G-5 / NFR-01 (las palancas medidas son recortar la salida, MTP con
+`temperature = 0` y los respaldos B/C). La máquina de medición (M5 Pro de 48 GB) no es el equipo de referencia de 32 GB: no
+afirmar «cabe en 32 GB» solo con la suma (repetir allí es recomendado, no bloqueante, decisión del 2026-10-20).
+
+### OCR (AC-6)
+
+Dataset `data/eval/ocr-mini/` (6 PDF escaneados en español de mama y próstata, ficticios, generados por `generar.py` con
+semilla fija; `manifest.json` con `clase: sintetico`; verdad de terreno por campo crítico en `ground_truth.json`).
+
+| Motor | Licencia | Exactitud por campo crítico (meta ≥ 0,95) | p95 por documento (meta ≤ 60 s) | Memoria pico (MB) | ¿Escribe a disco? ¿dónde? | Residuos en `TMPDIR` | Estado |
+|---|---|---|---|---|---|---|---|
+| OCRmyPDF + Tesseract `spa` (A) | por verificar en la fuente (OCRmyPDF MPL-2.0 y Tesseract Apache-2.0, de memoria) | pendiente | pendiente | pendiente | sí (directorio de trabajo con páginas e intermedios; a confirmar) | pendiente | pendiente |
+| PaddleOCR (PP-OCRv5 latino) | por verificar (Apache-2.0, de memoria) | pendiente | pendiente | pendiente | puede escribir caché de modelos | pendiente | pendiente |
+| docTR | por verificar (Apache-2.0, de memoria) | pendiente | pendiente | pendiente | puede escribir caché de modelos | pendiente | pendiente |
+| Surya | GPL-3.0 + OpenRAIL-M con umbral comercial | — | — | — | — | — | **descartado por licencia** (`[S1 resp. 5]`) |
+
+Un motor que necesite escribir fuera de `TMPDIR` o quitar `read_only` queda descartado con el motivo (se corrige con una
+variable de directorio, nunca quitando `read_only`). El p95 de extracción de extremo a extremo es el p95 del OCR elegido más
+el de la estructuración del LLM elegido (`decidir` suma ambos medianas y exige ≤ 60 s).
+
+### Configuración resultante (AC-4)
+
+| Variable | Valor | Estado |
+|---|---|---|
+| `LLM_BASE_URL` | `http://host.docker.internal:11434/v1` | ya vigente: runtime nativo fuera de Docker |
+| `LLM_MODEL` | tag del candidato elegido, más su *digest* en este ADR | **pendiente** de la elección; sin literal en el código |
+| `LLM_NUM_CTX` | `8192` (`[S1 resp. 10]`) | en `Settings`; **lo aplica el runtime** (`OLLAMA_CONTEXT_LENGTH=8192` en el servidor de Ollama): la API compatible con OpenAI no lo recibe por petición |
+| `LLM_TEMPERATURE` | `0.0` (la del cliente actual) | en `Settings` y propagada al cliente del LLM; se actualiza si la medición fija otra |
+| `LLM_CLOUD_ENABLED` | `false` | sin cambio (RN-12) |
+| `OCR_ENGINE`, `OCR_LANGUAGES` | `ocrmypdf-tesseract`, `spa` | en `Settings` (valor por defecto = hipótesis A); los consume FEAT-01b; se cambia si la medición descarta A |
+
+**Regresión [RN-12] activa desde S6 (US-050):** la regla de proveedores se verifica con estos valores cuando exista su test.
+
+### Consecuencias obligatorias para FEAT-01b (adapter OCR, S2)
+
+- El adapter crea un `tempfile.TemporaryDirectory(dir=TMPDIR)` **por request**, pasa esa ruta al motor y lo limpia en un
+  `finally`, también si el motor falla o vence el *timeout* (al cancelar, se termina primero el subproceso del motor).
+  Nunca se comparte un directorio entre requests.
+- Su Pytest de integración reproduce el test de no-residuos en **tres casos**: extracción correcta, fallo del motor
+  (motor falso que escribe y luego lanza) y *timeout* (motor falso que escribe y se bloquea más allá del *deadline*); en los
+  tres `TMPDIR` queda vacío. El modelo está en `tests/evaluation/test_adr39_ocr.py`.
+- El contenedor corre con `read_only: true` y `TMPDIR=/tmp` sobre un `tmpfs` cuyo tamaño es configuración (RN-22), con la
+  caché de modelos en un volumen de solo lectura. RN-14: ningún PDF ni texto extraído persiste en el contenedor.
+- La imagen de producción incorpora el motor elegido (hoy no trae ninguno).
+
+### Desviaciones del `design.md`
+
+1. **Esquema de validación del JSON.** El script valida contra `ESQUEMA_DE_GENERACION` (el esquema de la salida del LLM del
+   S1, `app/application/generation.py`), que es lo que el LLM emite; `RagQueryInternalResponse` es la respuesta del endpoint,
+   ensamblada después de validar citas y NLI, y no es lo que el modelo genera.
+2. **Dos rutas HTTP a Ollama.** `llm` y `e2e` usan `/api/chat` (acepta `num_ctx`, `think: false` y entrega `eval_count` y
+   `eval_duration` para tok/s y *prefill*); el adapter de producción usa `/v1/chat/completions`. `runtime` mide la ruta `/v1`
+   (AC-1 b y c). Con vllm-metal no hay desglose de *prefill*/generación (solo `usage`).
+3. **Dataset en `data/eval/ocr-mini/`** (la ruta de `tasks.md` y `design.md`), junto a `adr39-mini`, y no en `data/evaluation/`.
+   La tipografía del generador debe tener tildes: toma DejaVu Sans (Linux) o Arial (macOS) y falla si no encuentra una; la usada
+   queda en el manifiesto.
+4. **Un motor OCR por proceso** y **un candidato del stack por corrida e2e** (hay que reiniciar el Compose con su `LLM_MODEL`).
+5. **Memoria del stack:** `docker stats` se toma al terminar cada corrida (con el stack caliente) y se informa el pico de
+   esas muestras más la memoria residente del LLM; no es un muestreo continuo.
+6. **Settings:** además de las claves de `design.md` D7, `LLM_TEMPERATURE` llega al cliente del LLM (antes fija en 0);
+   el valor por defecto no cambia el comportamiento.
+
+### Pendiente humano para cerrar la fase B
+
+1. Levantar Ollama y descargar los candidatos; correr `runtime`, `llm` y `e2e` (comandos arriba) y `ocr` en la imagen de
+   medición; copiar las medianas a las tablas de este ADR.
+2. Verificar en la fuente la licencia de H, I y J y registrar el *digest* (`ollama list`).
+3. Decidir si se acepta por escrito la licencia HAI-DEF si E o F ganan (hoy **no aceptada**).
+4. `ai-eval-runner` revisa la muestra de fidelidad y deja `revision-<id>.json` (tarea 2.1).
+5. `decidir` → fijar `LLM_MODEL` (y `OCR_ENGINE` si cambia), cerrar el estado de este ADR y aprobar el PR.
+6. Si el pipeline no emite tiempos por etapa, abrir la historia que lo añada antes de recalibrar G-5 en el S4.
 
 ## Pros y contras de las opciones
 
