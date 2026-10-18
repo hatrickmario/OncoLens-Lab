@@ -78,12 +78,10 @@ def _opcion_con_evidencia(
         perSource=[],
         relevanceScore=max(c.chunk.relevance_score for c in citados),
         warnings=[],
-        citedSources=[CitedSource.model_validate(asdict(_cita_de(c))) for c in citados],
+        citedSources=[
+            CitedSource.model_validate(asdict(construir_cita(c.chunk, c.ficha))) for c in citados
+        ],
     )
-
-
-def _cita_de(citable: ChunkCitable):
-    return construir_cita(citable.chunk, citable.ficha)
 
 
 def _opcion_descartada(descartada: OpcionDescartada) -> DiscardedOption:
