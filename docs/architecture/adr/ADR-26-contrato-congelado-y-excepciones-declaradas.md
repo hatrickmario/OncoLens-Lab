@@ -49,6 +49,7 @@ El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando r
 |---|---|---|---|---|
 | E-1 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorTipoCancerNoRegistrado` añadido al `oneOf` del `422` | l1d-106-retrieval-threshold-sin-evidencia | Alternativa aditiva del `422`; el consumidor no depende de la lista cerrada de alternativas `[S1 resp. 35]` |
 | E-2 | clinical-api | `response-property-enum-value-added` en `POST /platform/evidence-analyses`: valor `TIPO_CANCER_NO_REGISTRADO` en `error` del `422` | l1d-103-gateway-contexto-clinico | Valor aditivo del `422`; los consumidores tratan `error` como cadena abierta y el BFF de L1D-139 lo propaga sin interpretarlo. Decidido (usuario, 2026-10-17), recomendada por el orquestador tras medir que el enum extensible no evita el ERR |
+| E-3 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorNliNoDisponible` (`NLI_UNAVAILABLE`) añadido al `oneOf` del `503` | l1d-180-soporte-nli-descartadas | Alternativa aditiva del `503`; clinical-api y web clasifican por código HTTP y código de error y descartan los desconocidos. Reutilizar un código existente perdería el significado que exige US-064 AC-6. Decidido (usuario, 2026-10-18) |
 
 ### Consecuencias
 

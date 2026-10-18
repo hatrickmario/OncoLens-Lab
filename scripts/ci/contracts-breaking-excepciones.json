@@ -20,5 +20,16 @@
     "operacion": "POST",
     "ruta": "/platform/evidence-analyses",
     "texto": "added the new `TIPO_CANCER_NO_REGISTRADO` enum value to the `error` response property for the response status `422`"
+  },
+  {
+    "id": "E-3",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-180-soporte-nli-descartadas",
+    "proveedor": "rag-orchestrator",
+    "regla": "response-body-one-of-added",
+    "operacion": "POST",
+    "ruta": "/rag/query",
+    "texto": "added `#/components/schemas/ErrorNliNoDisponible` to the response body `oneOf` list for the response status `503`"
   }
 ]
