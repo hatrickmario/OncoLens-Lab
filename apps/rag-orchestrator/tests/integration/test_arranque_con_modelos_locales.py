@@ -18,14 +18,11 @@ from app.infrastructure.models.local import ModelosDeRecuperacion, cargar_modelo
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion
-from tests.support.inferencia_falsa import (
-    SesionDeEmbeddingsFalsa,
-    SesionDeLogitsFalsa,
-    TokenizadorFalso,
-)
+from tests.support.inferencia_falsa import TokenizadorFalso
 from tests.support.modelos import (
     EntornoDeModelos,
     crear_entorno_de_modelos,
+    fabricar_sesion_falsa,
     settings_de_modelos,
 )
 from tests.support.recuperacion import (
@@ -55,9 +52,7 @@ def _cargador_con_dobles(
         registro.append(settings)
         return cargar_modelos_locales(
             settings,
-            fabricar_sesion=lambda ruta, **_: (
-                SesionDeEmbeddingsFalsa(8) if "embedding" in ruta.name else SesionDeLogitsFalsa()
-            ),
+            fabricar_sesion=fabricar_sesion_falsa(8),
             fabricar_tokenizador=lambda ruta: TokenizadorFalso(),
         )
 

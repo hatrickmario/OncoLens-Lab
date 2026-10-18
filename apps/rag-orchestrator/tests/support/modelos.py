@@ -156,39 +156,55 @@ def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
     from app.config.modelos import cargar_config_modelos
     from app.config.settings import Settings
 
-    rutas = {
+    rutas: dict[str, object] = {
         variable.lower(): valor
         for variable, valor in modelos.variables.items()
         if variable.endswith(("_PATH", "_SHA256")) and variable != "MODEL_CACHE_DIR"
     }
+    indices: dict[str, object] = {
+        variable.lower(): int(valor)
+        for variable, valor in modelos.variables.items()
+        if variable.startswith("NLI_LABEL_INDEX_")
+    }
     return Settings(  # type: ignore[call-arg]
         _env_file=None,
         modelos=cargar_config_modelos(modelos.variables),
-        **{"model_provider": "local", **rutas, **cambios},
+        **{"model_provider": "local", **rutas, **indices, **cambios},
     )
+
+
+def fabricar_sesion_falsa(dimension: int, logits_nli: tuple[float, ...] = (0.0, 5.0, 0.0)):
+    """Fábrica de sesiones para ``cargar_modelos_locales``: elige el doble por el CONTENIDO verificado del archivo.
+
+    La sesión real recibe los bytes ya hasheados (US-231b D12), así que el doble se decide por ellos y no por la ruta.
+    """
+    from tests.support.inferencia_falsa import (
+        SesionDeEmbeddingsFalsa,
+        SesionDeLogitsFalsa,
+        SesionNliFalsa,
+    )
+
+    def sesion(contenido: bytes, **_: object):
+        if contenido == ARCHIVOS_DE_MODELO["EMBEDDING_MODEL"][2]:
+            return SesionDeEmbeddingsFalsa(dimension)
+        if contenido == ARCHIVOS_DE_MODELO["NLI_MODEL"][2]:
+            return SesionNliFalsa(fijo=logits_nli)
+        return SesionDeLogitsFalsa()
+
+    return sesion
 
 
 def construir_modelos_con_dobles(modelos: EntornoDeModelos, **cambios: object):
     """El cargador real con los archivos sintéticos verificados y la sesión y el tokenizer sustituidos por dobles."""
     from app.infrastructure.models.local import cargar_modelos_locales
-    from tests.support.inferencia_falsa import (
-        SesionDeEmbeddingsFalsa,
-        SesionDeLogitsFalsa,
-        TokenizadorFalso,
-    )
+    from tests.support.inferencia_falsa import TokenizadorFalso
 
     ajustes = settings_de_modelos(modelos, **cambios)
-    dimension = ajustes.modelos.embedding_dim
-
-    def sesion(ruta: Path, **_: object):
-        return (
-            SesionDeEmbeddingsFalsa(dimension)
-            if "embedding" in ruta.name
-            else SesionDeLogitsFalsa()
-        )
 
     return cargar_modelos_locales(
-        ajustes, fabricar_sesion=sesion, fabricar_tokenizador=lambda ruta: TokenizadorFalso()
+        ajustes,
+        fabricar_sesion=fabricar_sesion_falsa(ajustes.modelos.embedding_dim),
+        fabricar_tokenizador=lambda ruta: TokenizadorFalso(),
     )
 
 

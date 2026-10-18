@@ -44,13 +44,45 @@ def verificar_modelo(
 
     Se lanza siempre con ``from None``: ni la ruta ni los hashes viajan en el mensaje, en la causa ni en los logs.
     """
+    _exigir_declarado(variable_ruta, variable_sha, ruta, sha_esperado)
+    try:
+        calculado = calcular_sha256(leer_bloques(ruta))  # type: ignore[arg-type]
+    except OSError:
+        raise ModeloNoVerificadoError(variable_ruta) from None
+    _exigir_coincidencia(variable_sha, calculado, sha_esperado)  # type: ignore[arg-type]
+
+
+def leer_modelo_verificado(
+    variable_ruta: str,
+    variable_sha: str,
+    ruta: Path | None,
+    sha_esperado: str | None,
+    *,
+    leer: Callable[[Path], bytes] = Path.read_bytes,
+) -> bytes:
+    """Lee el archivo UNA vez y comprueba el SHA-256 de esos mismos bytes: lo que se carga es exactamente lo verificado.
+
+    Quien crea la sesión con estos bytes no vuelve a abrir la ruta, así que un cambio posterior del archivo (o un
+    archivo de datos vecino no declarado) no entra al proceso (US-231b D12).
+    """
+    _exigir_declarado(variable_ruta, variable_sha, ruta, sha_esperado)
+    try:
+        contenido = leer(ruta)  # type: ignore[arg-type]
+    except OSError:
+        raise ModeloNoVerificadoError(variable_ruta) from None
+    _exigir_coincidencia(variable_sha, calcular_sha256([contenido]), sha_esperado)  # type: ignore[arg-type]
+    return contenido
+
+
+def _exigir_declarado(
+    variable_ruta: str, variable_sha: str, ruta: Path | None, sha_esperado: str | None
+) -> None:
     if ruta is None:
         raise ModeloNoVerificadoError(variable_ruta)
     if not sha_esperado:
         raise ModeloNoVerificadoError(variable_sha)
-    try:
-        calculado = calcular_sha256(leer_bloques(ruta))
-    except OSError:
-        raise ModeloNoVerificadoError(variable_ruta) from None
+
+
+def _exigir_coincidencia(variable_sha: str, calculado: str, sha_esperado: str) -> None:
     if not hmac.compare_digest(calculado, sha_esperado.lower()):
         raise ModeloNoVerificadoError(variable_sha) from None

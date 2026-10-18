@@ -73,6 +73,21 @@ class Settings(BaseSettings):
     reranker_model_sha256: str | None = None
     reranker_tokenizer_path: Path | None = None
     reranker_tokenizer_sha256: str | None = None
+    # NLI de soporte (US-231b): mismo mecanismo, un SHA-256 por archivo cargado. Un ONNX con datos externos
+    # (`*.onnx.data`) exige además su par `NLI_MODEL_DATA_*`; el recomendado es reexportarlo en un solo archivo.
+    nli_model_path: Path | None = None
+    nli_model_sha256: str | None = None
+    nli_tokenizer_path: Path | None = None
+    nli_tokenizer_sha256: str | None = None
+    nli_model_data_path: Path | None = None
+    nli_model_data_sha256: str | None = None
+    # Columna de cada clase en la salida del modelo (configuración versionada, RN-22): nunca el config.json del modelo.
+    # Se validan al arrancar con MODEL_PROVIDER=local (tres enteros distintos en [0, 2]).
+    nli_label_index_entailment: int | None = None
+    nli_label_index_neutral: int | None = None
+    nli_label_index_contradiction: int | None = None
+    # Un par (premisa, hipótesis) más largo que esto falla cerrado (no se recorta la hipótesis, RN-01).
+    nli_max_length: int = Field(default=512, gt=0)
     embedding_max_length: int = Field(default=8192, gt=0)
     model_intra_op_threads: int = Field(default=8, gt=0)
     model_batch_max_tokens: int = Field(default=4096, gt=0)
@@ -108,6 +123,15 @@ class Settings(BaseSettings):
         "reranker_model_sha256",
         "reranker_tokenizer_path",
         "reranker_tokenizer_sha256",
+        "nli_model_path",
+        "nli_model_sha256",
+        "nli_tokenizer_path",
+        "nli_tokenizer_sha256",
+        "nli_model_data_path",
+        "nli_model_data_sha256",
+        "nli_label_index_entailment",
+        "nli_label_index_neutral",
+        "nli_label_index_contradiction",
         "nli_model",
         "prompt_version",
         mode="before",
@@ -121,6 +145,9 @@ class Settings(BaseSettings):
         "embedding_tokenizer_sha256",
         "reranker_model_sha256",
         "reranker_tokenizer_sha256",
+        "nli_model_sha256",
+        "nli_tokenizer_sha256",
+        "nli_model_data_sha256",
     )
     @classmethod
     def _sha256_hexadecimal(cls, valor: str | None, info: ValidationInfo) -> str | None:
