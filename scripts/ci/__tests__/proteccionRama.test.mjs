@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -139,6 +139,48 @@ describe('check-branch-protection.sh', () => {
   it('sale con código 0 cuando la respuesta de fixture cumple las cuatro condiciones [US-036 AC-6]', async () => {
     const { codigo, stdout } = await conRespuesta(protegida());
 
+    expect(codigo).toBe(0);
+    expect(stdout).not.toContain('FALTA');
+  });
+
+  // `gh` falso: sin protección clásica (404 con el JSON de error en stdout y código 1) y con un ruleset de main completo.
+  async function conGhSoloRulesets() {
+    const directorio = await mkdtemp(path.join(os.tmpdir(), 'oncolens-gh-'));
+    temporales.push(directorio);
+    const ruleset = {
+      id: 7,
+      target: 'branch',
+      enforcement: 'active',
+      bypass_actors: [],
+      conditions: { ref_name: { include: ['refs/heads/main'], exclude: [] } },
+      rules: [
+        { type: 'pull_request', parameters: {} },
+        { type: 'required_status_checks', parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: 'ci-ok' }] } },
+      ],
+    };
+    const reglas = ruleset.rules;
+    const gh = `#!/usr/bin/env bash
+case "$*" in
+  "repo view"*) echo "dueno/repo" ;;
+  *"/branches/main/protection") echo '{"message":"Branch not protected","status":"404"}'; exit 1 ;;
+  *"/rules/branches/main") echo '${JSON.stringify(reglas)}' ;;
+  *"/rulesets/7") echo '${JSON.stringify(ruleset)}' ;;
+  *"/rulesets"*) echo 7 ;;  # el script pide solo los ids con --jq '.[].id'
+  *) echo "gh falso: $*" >&2; exit 2 ;;
+esac
+`;
+    await writeFile(path.join(directorio, 'gh'), gh);
+    await chmod(path.join(directorio, 'gh'), 0o755);
+    return ejecutar('bash', [SCRIPT], { env: { ...process.env, PATH: `${directorio}:${process.env.PATH}` } }).then(
+      ({ stdout }) => ({ codigo: 0, stdout }),
+      (error) => ({ codigo: error.code, stdout: error.stdout, stderr: error.stderr }),
+    );
+  }
+
+  it('sale con código 0 cuando main está protegido solo por un ruleset y la API responde 404 a la protección clásica [US-036 AC-6]', async () => {
+    const { codigo, stdout, stderr } = await conGhSoloRulesets();
+
+    expect(stderr ?? '').not.toContain('invalid JSON');
     expect(codigo).toBe(0);
     expect(stdout).not.toContain('FALTA');
   });

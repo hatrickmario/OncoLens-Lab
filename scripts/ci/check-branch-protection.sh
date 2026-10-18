@@ -22,7 +22,8 @@ else
   if [ -z "$repo" ]; then
     repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
   fi
-  proteccion="$(gh api "repos/$repo/branches/main/protection" 2>/dev/null || echo null)"
+  # Sin protección clásica (solo rulesets) gh sale con 1 e imprime el JSON del 404 en stdout: se descarta y queda null.
+  proteccion="$(gh api "repos/$repo/branches/main/protection" 2>/dev/null)" || proteccion=null
   reglas="$(gh api "repos/$repo/rules/branches/main")"
   identificadores="$(gh api "repos/$repo/rulesets" --jq '.[].id' 2>/dev/null || true)"
   detalles="[]"
