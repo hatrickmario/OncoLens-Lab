@@ -13,6 +13,7 @@ from tests.support.recuperacion import (
     Q_HER2,
     Q_SIN,
     BuscadorFalso,
+    CatalogoFalso,
     DetectorIdiomaFalso,
     EmbedderFalso,
     LectorReleaseFalso,
@@ -37,6 +38,7 @@ def _puertos() -> PuertosDeRecuperacion:
         buscador=BuscadorFalso(),
         reranker=RerankerFalso(),
         lector_release=LectorReleaseFalso(),
+        catalogo=CatalogoFalso(),
     )
 
 

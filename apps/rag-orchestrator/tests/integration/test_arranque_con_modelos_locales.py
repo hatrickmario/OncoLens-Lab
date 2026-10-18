@@ -33,6 +33,7 @@ from tests.support.recuperacion import (
     Q_HER2,
     Q_SIN,
     BuscadorFalso,
+    CatalogoFalso,
     LectorReleaseFalso,
     solicitud_de,
 )
@@ -100,7 +101,7 @@ def test_con_modelos_locales_y_corpus_rag_query_recupera_con_los_adapters_reales
     )
     app = _app(
         _ajustes(modelos, llm_provider="local"),
-        corpus=PuertosDelCorpus(BuscadorFalso(), LectorReleaseFalso()),
+        corpus=PuertosDelCorpus(BuscadorFalso(), LectorReleaseFalso(), CatalogoFalso()),
         cargador_de_modelos=_cargador_con_dobles(registro),
     )
 

@@ -16,6 +16,7 @@ from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_requi
 from app.application.ports import (
     ChunkSearch,
     Clock,
+    CorpusCatalogReader,
     CorpusReleaseReader,
     EvidenceQueryPort,
     LanguageDetector,
@@ -60,6 +61,7 @@ class PuertosDeRecuperacion:
     buscador: ChunkSearch
     reranker: Reranker
     lector_release: CorpusReleaseReader
+    catalogo: CorpusCatalogReader
 
 
 @dataclass(frozen=True)
@@ -68,6 +70,7 @@ class PuertosDelCorpus:
 
     buscador: ChunkSearch
     lector_release: CorpusReleaseReader
+    catalogo: CorpusCatalogReader
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
@@ -133,6 +136,7 @@ def _componer_recuperacion(
         buscador=corpus.buscador,
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
+        catalogo=corpus.catalogo,
     )
 
 
@@ -186,6 +190,7 @@ def _crear_servicio_de_recuperacion(
         buscador=puertos.buscador,
         reranker=puertos.reranker,
         lector_release=puertos.lector_release,
+        catalogo=puertos.catalogo,
         # Hasta L1D-275 (US-225) la rama con evidencia responde 503 LOCAL_LLM_UNAVAILABLE.
         generador=GeneradorLocalNoDisponible(),
         reloj=clock,
