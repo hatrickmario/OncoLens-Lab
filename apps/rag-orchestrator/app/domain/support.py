@@ -132,6 +132,24 @@ def pares_a_verificar(plan: PlanDeSoporte) -> list[ParNli]:
     ]
 
 
+class _ResultadosEnOrden:
+    """Reparte los resultados del NLI, en el orden de ``pares_a_verificar``, entre las afirmaciones que los pidieron."""
+
+    def __init__(self, resultados: Sequence[ResultadoNli], umbral: float) -> None:
+        self._pendientes = iter(resultados)
+        self._umbral = umbral
+
+    def alguna_premisa_soporta(self, afirmacion: Afirmacion) -> bool:
+        tomados = [next(self._pendientes, None) for _ in afirmacion.premisas]
+        if None in tomados:
+            raise ValueError("faltan resultados del NLI")
+        return any(soporta(r, self._umbral) for r in tomados if r is not None)
+
+    def exigir_que_no_sobren(self) -> None:
+        if next(self._pendientes, None) is not None:
+            raise ValueError("sobran resultados del NLI")
+
+
 def verificar_soporte(
     plan: PlanDeSoporte, resultados: Sequence[ResultadoNli], umbral: float, idioma: str
 ) -> ResultadoSoporte:
@@ -139,52 +157,57 @@ def verificar_soporte(
 
     ``resultados`` alinea 1:1 con ``pares_a_verificar(plan)``; cualquier otra cantidad es un error de contrato.
     """
-    disponibles = iter(resultados)
-
-    def soportada(a: Afirmacion) -> bool:
-        tomados = [next(disponibles, None) for _ in a.premisas]
-        if None in tomados:
-            raise ValueError("faltan resultados del NLI")
-        return any(soporta(r, umbral) for r in tomados if r is not None)
-
+    por_orden = _ResultadosEnOrden(resultados, umbral)
     literal = literal_de_retiro(idioma)
     soportadas: list[OpcionAceptada] = []
     descartadas: list[OpcionSinSoporte] = []
     for planificada in plan.opciones:
-        sin_soporte, partes = [], []
-        retirada = bool(planificada.option.reglas)
-        if retirada:
-            sin_soporte.append(literal)
-        for a in planificada.afirmaciones:
-            if a.reglas:
-                sin_soporte.append(literal)
-                partes.append(literal)
-                continue
-            partes.append(a.texto)
-            if not retirada and not soportada(a):
-                sin_soporte.append(a.texto)
-        if planificada.afirmaciones and not sin_soporte:
+        sin_soporte = _descartar_si_no_se_soporta(planificada, por_orden, literal)
+        if sin_soporte is None:
             soportadas.append(planificada.aceptada)
-            continue
-        origen = planificada.aceptada.opcion
-        descartadas.append(
-            OpcionSinSoporte(
-                OpcionGenerada(
-                    literal if retirada else origen.option,
-                    " ".join(partes),
-                    origen.chunk_ids_citados,
-                ),
-                tuple(sin_soporte),
-            )
-        )
-    limitaciones = [x.texto for x in plan.limitaciones if not x.reglas and soportada(x)]
-    if next(disponibles, None) is not None:
-        raise ValueError("sobran resultados del NLI")
+        else:
+            descartadas.append(sin_soporte)
+    limitaciones = [
+        x.texto for x in plan.limitaciones if not x.reglas and por_orden.alguna_premisa_soporta(x)
+    ]
+    por_orden.exigir_que_no_sobren()
     return ResultadoSoporte(
         tuple(soportadas),
         tuple(descartadas),
         tuple(limitaciones),
         len(plan.limitaciones) - len(limitaciones),
+    )
+
+
+def _descartar_si_no_se_soporta(
+    planificada: OpcionPlanificada, por_orden: _ResultadosEnOrden, literal: str
+) -> OpcionSinSoporte | None:
+    """``None`` si todas las afirmaciones de la opción se soportan; si no, la opción descartada con sus afirmaciones.
+
+    Lo prohibido se reemplaza por ``literal`` (RN-23) y cuenta como sin soporte; una opción cuyo propio texto incumple
+    se descarta entera sin consumir resultados del NLI. Sin afirmaciones verificables no hay soporte (falla cerrado).
+    """
+    sin_soporte: list[str] = []
+    partes: list[str] = []
+    retirada = bool(planificada.option.reglas)
+    if retirada:
+        sin_soporte.append(literal)
+    for afirmacion in planificada.afirmaciones:
+        if afirmacion.reglas:
+            sin_soporte.append(literal)
+            partes.append(literal)
+            continue
+        partes.append(afirmacion.texto)
+        if not retirada and not por_orden.alguna_premisa_soporta(afirmacion):
+            sin_soporte.append(afirmacion.texto)
+    if planificada.afirmaciones and not sin_soporte:
+        return None
+    origen = planificada.aceptada.opcion
+    return OpcionSinSoporte(
+        OpcionGenerada(
+            literal if retirada else origen.option, " ".join(partes), origen.chunk_ids_citados
+        ),
+        tuple(sin_soporte),
     )
 
 
