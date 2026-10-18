@@ -125,7 +125,7 @@ describe('desidentificación de la pregunta enviada a la IA', () => {
     expect(consultaEnviada()).toBe('¿Opciones para HER2 3+? Contacto [CORREO], DNI [DOCUMENTO].');
   });
 
-  it('enmascara como [TELEFONO] un teléfono escrito teléfono 300 123 4567 con el formato de L1D-166 [US-049 AC-1]', async () => {
+  it('enmascara como [TELEFONO] un teléfono escrito con separadores tras la palabra clave teléfono con el formato de L1D-166 [US-049 AC-1]', async () => {
     const { app } = await montar();
 
     await analizar(

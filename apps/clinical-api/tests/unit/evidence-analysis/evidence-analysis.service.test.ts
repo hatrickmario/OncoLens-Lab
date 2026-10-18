@@ -7,7 +7,7 @@ import {
   crearEvidenceAnalysisService,
   type DependenciasDelService,
 } from '../../../src/modules/evidence-analysis/evidence-analysis.service.js';
-import { DesidentificacionProvisionalRechazada } from '../../../src/modules/evidence-analysis/context-deidentifier.provisional.js';
+import { EntornoNoSintetico } from '../../../src/modules/evidence-analysis/deidentification/entorno-sintetico.guard.js';
 import type {
   ClinicalContext,
   RagQueryInternalRequest,
@@ -191,13 +191,13 @@ describe('crearEvidenceAnalysisService', () => {
     dependencias.desidentificador = {
       desidentificar: async () => {
         llamadas.push('desidentificar');
-        throw new DesidentificacionProvisionalRechazada('app_env');
+        throw new EntornoNoSintetico('app_env');
       },
     };
 
     await expect(
       crearEvidenceAnalysisService(dependencias).solicitar(solicitud),
-    ).rejects.toBeInstanceOf(DesidentificacionProvisionalRechazada);
+    ).rejects.toBeInstanceOf(EntornoNoSintetico);
     expect(llamadas).toEqual(['leerCaso', 'desidentificar']);
   });
 

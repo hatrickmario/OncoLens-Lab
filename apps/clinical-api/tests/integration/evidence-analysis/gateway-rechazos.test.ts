@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
+import { detectoresContados, detectoresReales } from '../../support/desidentificacion.js';
 import {
   PREGUNTA_AC1,
   PUNTERO_401,
@@ -168,9 +169,10 @@ describe('gateway de análisis: sesión y rol', () => {
   });
 });
 
-describe('gateway de análisis: el desidentificador provisional falla cerrado', () => {
+describe('gateway de análisis: la guarda de entorno sintético se conserva hasta G-Piloto', () => {
   it('responde 502 sin llamar a rag-orchestrator cuando el paciente tiene data_origin real_anonimizado [S1 resp. 14d]', async () => {
-    const { app, logger } = await montarGateway(mundo);
+    const detector = detectoresContados(detectoresReales());
+    const { app, logger } = await montarGateway(mundo, { detectores: detector.fabrica });
     const patientId = await crearPacienteSintetico(mundo, {
       dataOrigin: 'real_anonimizado',
       conDiagnostico: true,
@@ -188,6 +190,7 @@ describe('gateway de análisis: el desidentificador provisional falla cerrado', 
     expect(logger.lineas).toContainEqual(
       expect.objectContaining({ motivo: 'data_origin', traceId: TRACE_ID_GENERADO }),
     );
+    expect(detector.construidos()).toBe(0);
     expect(logger.texto()).not.toContain(PREGUNTA_AC1);
   });
 
@@ -197,7 +200,11 @@ describe('gateway de análisis: el desidentificador provisional falla cerrado', 
   ])(
     'responde 502 sin llamar a rag-orchestrator cuando APP_ENV es %s [S1 resp. 14d]',
     async (_caso, opciones) => {
-      const { app, logger } = await montarGateway(mundo, opciones);
+      const detector = detectoresContados(detectoresReales());
+      const { app, logger } = await montarGateway(mundo, {
+        ...opciones,
+        detectores: detector.fabrica,
+      });
 
       const respuesta = await request(app)
         .post('/platform/evidence-analyses')
@@ -209,6 +216,7 @@ describe('gateway de análisis: el desidentificador provisional falla cerrado', 
       assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
       expect(rag.llamadas()).toBe(0);
       expect(logger.lineas).toContainEqual(expect.objectContaining({ motivo: 'app_env' }));
+      expect(detector.construidos()).toBe(0);
     },
   );
 });

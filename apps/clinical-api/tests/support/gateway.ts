@@ -257,7 +257,6 @@ export async function montarGateway(
       readFileSync(archivo, 'utf8'),
     ),
     config: {
-      appEnv,
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
@@ -267,7 +266,6 @@ export async function montarGateway(
     reloj,
     traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },
     idsDeAnalisis: mundo.idsDeAnalisis,
-    pseudonimos,
     desidentificador: crearContextDeidentifier({
       identidades: opciones.identidades ?? lectorDeIdentidadFalso({}),
       detectores: opciones.detectores ?? detectoresReales(),

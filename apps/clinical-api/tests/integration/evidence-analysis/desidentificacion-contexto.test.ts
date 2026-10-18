@@ -2,6 +2,7 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { nuevoSeudonimo } from '../../../src/infrastructure/ids.js';
 import { huellaDelContexto } from '../../../src/modules/evidence-analysis/analysis-record.js';
+import { INSTANTE_FIJO, insertar } from '../../support/filas-sinteticas.js';
 import {
   PII_FX_T4A_A,
   TODAS_LAS_FUENTES,
@@ -149,5 +150,40 @@ describe('desidentificación del contexto enviado a la IA', () => {
     }
     expect(registro!.query_text).toContain('[DOCUMENTO]');
     expect(registro!.query_text).toContain('HER2 3+');
+  });
+});
+
+describe('el contexto enviado excluye el reflejo de análisis previos', () => {
+  it('no incluye en events un evento con analysis_id y sí el evento clínico original cuando el paciente ya tiene un análisis [RN-24]', async () => {
+    const { app } = await montar({ traceIds: { traceId: () => 'req_RN24Filtro' } });
+    await analizar(app);
+    const previo = await leerRegistroPorTrace(mundo.cliente, 'req_RN24Filtro');
+    expect(previo).toBeDefined();
+    await insertar(mundo.cliente, 'clinical.clinical_event', {
+      id: mundo.ids(),
+      patient_id: pacienteA,
+      episode_id: previo!.episode_id,
+      event_type: 'evolucion',
+      event_date: '2026-09-16',
+      date_precision: 'dia',
+      description: 'REFLEJO-DE-ANALISIS-PREVIO',
+      mapping_status: 'n_a',
+      analysis_id: previo!.id,
+      entry_method: 'seed',
+      extraction_confidence: 'n_a',
+      review_status: 'verificado',
+      created_at: INSTANTE_FIJO,
+    });
+    rag.reiniciar();
+    const { app: otraApp } = await montar({ traceIds: { traceId: () => 'req_RN24Filtro2' } });
+
+    await analizar(otraApp);
+
+    expect(rag.llamadas()).toBe(1);
+    const descripciones = (contextoDe(0)['events'] as { description: string }[]).map(
+      (evento) => evento.description,
+    );
+    expect(descripciones).toHaveLength(1);
+    expect(JSON.stringify(descripciones)).not.toContain('REFLEJO-DE-ANALISIS-PREVIO');
   });
 });

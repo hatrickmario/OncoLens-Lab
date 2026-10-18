@@ -17,6 +17,9 @@ import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.c
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
+import { crearLectorDeIdentidadDelS1 } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
+import { crearDetectorOpcionA } from './modules/evidence-analysis/deidentification/pii-detector.opcion-a.js';
 import { cargarConfiguracionDePii } from './modules/evidence-analysis/deidentification/pii-formats.config.js';
 import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
@@ -76,7 +79,6 @@ arrancar({
           ),
           catalogo,
           config: {
-            appEnv: configuracion.appEnv,
             analysisMaxOptions: configuracion.analisis.analysisMaxOptions,
             evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
@@ -86,7 +88,14 @@ arrancar({
           reloj,
           traceIds: { traceId: nuevoTraceId },
           idsDeAnalisis: randomUUID,
-          pseudonimos: { nuevo: nuevoSeudonimo },
+          // Cableado explícito (RN-11): el desidentificador definitivo, no un valor por defecto del módulo.
+          desidentificador: crearContextDeidentifier({
+            identidades: crearLectorDeIdentidadDelS1(),
+            detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
+            pseudonimos: { nuevo: nuevoSeudonimo },
+            appEnv: configuracion.appEnv,
+            registrar: registrarEnConsola,
+          }),
           registrar: registrarEnConsola,
         });
         const app = componerAplicacion({

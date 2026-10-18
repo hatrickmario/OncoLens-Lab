@@ -67,6 +67,8 @@ export interface PatientIdentityReader {
 export interface ResultadoDeEnmascarado {
   texto: string;
   findingTypes: string[];
+  /** Cuántas coincidencias se sustituyeron. */
+  hallazgos: number;
 }
 
 /** Detector de PII (ADR-40): el adapter del S1 es la opción A (identidad conocida + formatos configurados). */
