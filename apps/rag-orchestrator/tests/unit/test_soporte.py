@@ -84,8 +84,9 @@ def test_un_entailment_bajo_el_umbral_no_soporta() -> None:
     assert not soporta(ResultadoNli("entailment", 0.55), UMBRAL)
 
 
-def test_neutral_no_soporta() -> None:
+def test_neutral_no_soporta_aunque_su_p_entailment_supere_el_umbral() -> None:
     assert not soporta(NEUTRAL, UMBRAL)
+    assert not soporta(ResultadoNli("neutral", 0.9), UMBRAL)
 
 
 def test_contradiction_nunca_soporta_aunque_su_p_entailment_supere_el_umbral() -> None:
@@ -279,3 +280,52 @@ def test_retirar_texto_prohibido_reemplaza_la_opcion_y_las_afirmaciones_que_incu
         RetiroDeLenguaje("option", ("regla-x",)),
         RetiroDeLenguaje("rationale", ("regla-x",)),
     )
+
+
+# --- el resultado se asigna a SU afirmación, no a la que ocupa la misma posición (Gate 2, Bloqueante RN-01) ----------
+
+
+def _dos_opciones_y_una_limitacion():
+    primera = _aceptada(option="Opción 1", rationale="Primera.", citas=("c1",))
+    segunda = _aceptada(option="Opción 2", rationale="Segunda.", citas=("c2",))
+    plan = _plan(primera, segunda, limitaciones=("Limitación.",))
+    # Pares en orden: Primera x c1, Segunda x c2, Limitación x (c1, c2, c3).
+    assert [(p.premisa, p.hipotesis) for p in pares_a_verificar(plan)] == [
+        ("premisa uno", "Primera."),
+        ("premisa dos", "Segunda."),
+        ("premisa uno", "Limitación."),
+        ("premisa dos", "Limitación."),
+        ("premisa tres", "Limitación."),
+    ]
+    return primera, segunda, plan
+
+
+def test_cada_resultado_va_a_su_afirmacion_cuando_la_primera_opcion_y_la_limitacion_se_implican_y_la_segunda_no():
+    primera, segunda, plan = _dos_opciones_y_una_limitacion()
+
+    resultado = verificar_soporte(plan, [IMPLICA, NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL], UMBRAL, "es")
+
+    assert resultado.soportadas == (primera,)
+    assert [d.opcion.option for d in resultado.descartadas] == ["Opción 2"]
+    assert resultado.limitaciones == ("Limitación.",) and resultado.omitidas == 0
+
+
+def test_cada_resultado_va_a_su_afirmacion_cuando_las_posiciones_se_invierten():
+    primera, segunda, plan = _dos_opciones_y_una_limitacion()
+
+    resultado = verificar_soporte(plan, [NEUTRAL, IMPLICA, NEUTRAL, NEUTRAL, NEUTRAL], UMBRAL, "es")
+
+    assert resultado.soportadas == (segunda,)
+    assert [d.opcion.option for d in resultado.descartadas] == ["Opción 1"]
+    assert resultado.limitaciones == () and resultado.omitidas == 1
+
+
+def test_una_opcion_prohibida_no_desplaza_los_resultados_de_las_afirmaciones_que_le_siguen():
+    prohibida = _aceptada(option="PROHIBIDO a", rationale="Ignorada.", citas=("c1",))
+    limpia = _aceptada(option="Opción 2", rationale="Segunda.", citas=("c2",))
+    plan = _plan(prohibida, limpia)
+
+    resultado = verificar_soporte(plan, [IMPLICA], UMBRAL, "es")
+
+    assert resultado.soportadas == (limpia,)
+    assert [d.opcion.option for d in resultado.descartadas] == [RETIRO_ES]
