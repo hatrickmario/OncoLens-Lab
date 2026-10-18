@@ -1,8 +1,8 @@
 {
   "clase": "sintetico",
   "nombre": "vm-baseline",
-  "version": "0.1.0-borrador",
-  "descripcion": "Casos sintéticos estandarizados para el baseline manual de VM-1 y VM-2 (US-075, DEC-02). Valores ficticios, fechas relativas, sin datos reales. mama-01 y prostata-01 reutilizan el contenido clínico de los pacientes semilla (a) y (b) de OL-01. Los checklists y las preguntas de referencia esperan la validación clínica de los oncólogos asesores (fecha_validacion_clinica pendiente).",
+  "version": "1.0.0",
+  "descripcion": "Casos sintéticos estandarizados para el baseline manual de VM-1 y VM-2 (US-075, DEC-02). Valores ficticios, fechas relativas, sin datos reales. Los checklists y las preguntas de referencia fueron validados clínicamente el 2026-10-18.",
   "casos": [
     {
       "id": "mama-01",
@@ -19,8 +19,8 @@
         "texto": "En una mujer posmenopáusica con cáncer de mama HER2 positivo y receptor de estrógeno positivo, estadio IIA, sin tratamiento previo y con intención curativa, ¿qué opciones de tratamiento sistémico están respaldadas por evidencia publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
@@ -72,8 +72,8 @@
         "texto": "En una mujer premenopáusica con cáncer de mama triple negativo, estadio IIB al diagnóstico, con enfermedad residual tras quimioterapia neoadyuvante y cirugía, ¿qué opciones de tratamiento posoperatorio están respaldadas por evidencia publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
@@ -125,8 +125,8 @@
         "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión tras inhibidor de aromatasa más inhibidor de CDK4/6 y actualmente en tratamiento con fulvestrant de segunda línea, ¿qué evidencia respalda el uso de fulvestrant en este escenario, publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
@@ -178,8 +178,8 @@
         "texto": "En un hombre con adenocarcinoma de próstata T2c N0 M0, PSA ascendente durante deprivación androgénica y testosterona no documentada, ¿qué evaluación adicional y qué opciones de manejo describe la evidencia publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
@@ -231,8 +231,8 @@
         "texto": "En un hombre con cáncer de próstata Gleason 4+4 (ISUP 4), T3a N0 M0, tras prostatectomía radical con margen positivo y PSA persistente, ¿qué opciones de tratamiento de rescate están respaldadas por evidencia publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
@@ -284,8 +284,8 @@
         "texto": "En un hombre con cáncer de próstata metastásico resistente a la castración, con progresión tras deprivación androgénica y abiraterona, actualmente en tratamiento con docetaxel, ¿qué evidencia respalda el uso de docetaxel en este escenario, publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
-        "version": "0.1-borrador",
-        "fecha_validacion_clinica": null,
+        "version": "1.0",
+        "fecha_validacion_clinica": "2026-10-18",
         "criticos": [
           {
             "eje": "diagnostico",
