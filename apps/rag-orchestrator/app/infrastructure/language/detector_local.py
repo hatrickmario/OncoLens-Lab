@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from app.application.ports import Idioma
+from app.domain.idioma import detectar_idioma
 
 
 class DetectorDeIdiomaLocal:
-    """``LanguageDetector``."""
+    """``LanguageDetector``: la regla vive en ``domain/idioma.py``; el idioma por defecto sale de la configuración."""
 
     def __init__(self, idioma_por_defecto: Idioma) -> None:
-        raise NotImplementedError
+        self._idioma_por_defecto = idioma_por_defecto
 
     def detectar(self, texto: str) -> Idioma:
-        raise NotImplementedError
+        return detectar_idioma(texto, self._idioma_por_defecto)
