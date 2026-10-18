@@ -47,6 +47,6 @@
 
 - [x] 4.1 `openspec validate l1d-203-desidentificacion-contexto-ia --strict` en verde.
 - [ ] 4.1b Al archivar: comprobar que `l1d-103-gateway-contexto-clinico` ya está archivado (su requisito "El desidentificador provisional falla cerrado fuera de datos sintéticos" está en `openspec/specs/evidence-analysis-gateway/spec.md`) antes de `openspec archive l1d-203-desidentificacion-contexto-ia`.
-- [ ] 4.2 Suites de `apps/clinical-api` (Vitest + Supertest con PostgreSQL real de test) y de `apps/rag-orchestrator` (Pytest) en verde.
+- [x] 4.2 Suites de `apps/clinical-api` (Vitest + Supertest con PostgreSQL real de test) y de `apps/rag-orchestrator` (Pytest) en verde.
 - [x] 4.3 El `503 DESIDENTIFICACION_NO_DISPONIBLE` de `POST /platform/evidence-analyses` validado con el *helper* de L1D-164 (Ajv2020, `[S1 resp. 17]`); `contracts:verify-provider` llega con US-214.
-- [ ] 4.4 Sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus; la métrica PII (G-8) la mide US-072.
+- [x] 4.4 Sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus; la métrica PII (G-8) la mide US-072.
