@@ -40,8 +40,8 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 (test de regresión, ⛔ después del merge de L1D-275) Test de aceptación `test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye` con `@pytest.mark.ac("US-049", 5)`: dado un `RagQueryInternalRequest` sintético con `pseudoPatientId = "psd_p7f3a"` `[S1 resp. 18]`, el texto de `construir_prompt_rag_query()` (L1D-275) no contiene `psd_p7f3a` ni `p7f3a`. Sin código de producto en `rag-orchestrator`: si falla, se reporta a L1D-275. Verificación: Pytest en verde.
-- [ ] 3.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-203)` (solo si 3.1 introdujo *builders* de test).
+- [x] 3.1 (test de regresión, ⛔ después del merge de L1D-275) Test de aceptación `test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye` con `@pytest.mark.ac("US-049", 5)`: dado un `RagQueryInternalRequest` sintético con `pseudoPatientId = "psd_p7f3a"` `[S1 resp. 18]`, el texto de `construir_prompt_rag_query()` (L1D-275) no contiene `psd_p7f3a` ni `p7f3a`. Sin código de producto en `rag-orchestrator`: si falla, se reporta a L1D-275. Verificación: Pytest en verde.
+- [x] 3.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-203)` (solo si 3.1 introdujo *builders* de test).
 
 ## 4. Verificación
 
