@@ -23,7 +23,7 @@ TEXTO_SECRETO = "texto-clinico-que-no-debe-salir-en-el-error"
 
 def _nucleo(
     sesion: object | None = None,
-    tokenizador: object | None = None,
+    codificador: object | None = None,
     **cambios: object,
 ) -> NucleoBgeM3:
     valores: dict[str, object] = {
@@ -35,7 +35,7 @@ def _nucleo(
     }
     return NucleoBgeM3(
         sesion or SesionDeEmbeddingsFalsa(DIMENSION),  # type: ignore[arg-type]
-        tokenizador or TokenizadorFalso(),  # type: ignore[arg-type]
+        codificador or TokenizadorFalso(),  # type: ignore[arg-type]
         **valores,  # type: ignore[arg-type]
     )
 
@@ -45,35 +45,35 @@ def test_el_embedder_de_consulta_expone_el_modelo_configurado() -> None:
 
 
 def test_el_puerto_de_consulta_antepone_el_prefijo_de_pregunta() -> None:
-    tokenizador = TokenizadorFalso()
+    codificador = TokenizadorFalso()
     nucleo = _nucleo(
-        tokenizador=tokenizador, prefijo_consulta="pregunta: ", prefijo_pasaje="pasaje: "
+        codificador=codificador, prefijo_consulta="pregunta: ", prefijo_pasaje="pasaje: "
     )
 
     EmbedderDeConsultaBgeM3(nucleo).embeber("her2")
 
-    assert tokenizador.llamadas == [("pregunta: her2", None)]
+    assert codificador.llamadas == [("pregunta: her2", None)]
 
 
 def test_el_puerto_de_pasaje_antepone_el_prefijo_de_pasaje() -> None:
-    tokenizador = TokenizadorFalso()
+    codificador = TokenizadorFalso()
     nucleo = _nucleo(
-        tokenizador=tokenizador, prefijo_consulta="pregunta: ", prefijo_pasaje="pasaje: "
+        codificador=codificador, prefijo_consulta="pregunta: ", prefijo_pasaje="pasaje: "
     )
 
     EmbedderDePasajesBgeM3(nucleo).embeber(["her2"])
 
-    assert tokenizador.llamadas == [("pasaje: her2", None)]
+    assert codificador.llamadas == [("pasaje: her2", None)]
 
 
 def test_sin_prefijos_configurados_el_texto_llega_intacto_al_modelo() -> None:
-    tokenizador = TokenizadorFalso()
-    nucleo = _nucleo(tokenizador=tokenizador)
+    codificador = TokenizadorFalso()
+    nucleo = _nucleo(codificador=codificador)
 
     EmbedderDeConsultaBgeM3(nucleo).embeber("her2")
     EmbedderDePasajesBgeM3(nucleo).embeber(["her2"])
 
-    assert tokenizador.llamadas == [("her2", None), ("her2", None)]
+    assert codificador.llamadas == [("her2", None), ("her2", None)]
 
 
 def test_los_dos_puertos_comparten_una_sola_sesion() -> None:
@@ -146,12 +146,12 @@ def test_una_salida_con_forma_inesperada_falla_con_el_error_del_puerto() -> None
         EmbedderDeConsultaBgeM3(_nucleo(sesion=SesionPlana())).embeber("her2")
 
 
-@pytest.mark.parametrize("origen", ["sesion", "tokenizador"])
+@pytest.mark.parametrize("origen", ["sesion", "codificador"])
 def test_un_fallo_del_modelo_se_traduce_al_error_del_puerto_sin_texto_ni_causa(origen: str) -> None:
     causa = RuntimeError(TEXTO_SECRETO)
     nucleo = _nucleo(
         sesion=SesionDeEmbeddingsFalsa(DIMENSION, error=causa if origen == "sesion" else None),
-        tokenizador=TokenizadorFalso(error=causa if origen == "tokenizador" else None),
+        codificador=TokenizadorFalso(error=causa if origen == "codificador" else None),
     )
 
     with pytest.raises(FalloDeInferencia) as error:

@@ -19,7 +19,7 @@ def _chunk(texto: str, id_: str = "c") -> ChunkEncontrado:
 
 
 def _reranker(
-    sesion: object | None = None, tokenizador: object | None = None, **cambios: object
+    sesion: object | None = None, codificador: object | None = None, **cambios: object
 ) -> BgeReranker:
     valores: dict[str, object] = {
         "version": "BAAI/bge-reranker-v2-m3@rev#sha256:abc",
@@ -30,7 +30,7 @@ def _reranker(
     }
     return BgeReranker(
         sesion or SesionDeLogitsFalsa(),  # type: ignore[arg-type]
-        tokenizador or TokenizadorFalso(),  # type: ignore[arg-type]
+        codificador or TokenizadorFalso(),  # type: ignore[arg-type]
         **valores,  # type: ignore[arg-type]
     )
 
@@ -60,11 +60,11 @@ def test_un_logit_muy_negativo_da_un_puntaje_en_cero_y_uno_muy_positivo_en_uno_s
 
 
 def test_envia_al_modelo_la_pareja_pregunta_pasaje() -> None:
-    tokenizador = TokenizadorFalso()
+    codificador = TokenizadorFalso()
 
-    _reranker(tokenizador=tokenizador).puntuar("her2 mama", [_chunk("anti her2")])
+    _reranker(codificador=codificador).puntuar("her2 mama", [_chunk("anti her2")])
 
-    assert tokenizador.llamadas == [("her2 mama", "anti her2")]
+    assert codificador.llamadas == [("her2 mama", "anti her2")]
 
 
 def test_el_puntaje_de_cada_candidato_no_depende_de_la_posicion_ni_del_lote() -> None:
@@ -127,12 +127,12 @@ def test_una_salida_no_finita_o_con_forma_inesperada_falla_en_vez_de_inventar_un
         _reranker(sesion=SesionFija()).puntuar("p", [_chunk("a")])
 
 
-@pytest.mark.parametrize("origen", ["sesion", "tokenizador"])
+@pytest.mark.parametrize("origen", ["sesion", "codificador"])
 def test_un_fallo_del_modelo_se_traduce_al_error_del_puerto_sin_texto_ni_causa(origen: str) -> None:
     causa = RuntimeError(TEXTO_SECRETO)
     reranker = _reranker(
         sesion=SesionDeLogitsFalsa(error=causa if origen == "sesion" else None),
-        tokenizador=TokenizadorFalso(error=causa if origen == "tokenizador" else None),
+        codificador=TokenizadorFalso(error=causa if origen == "codificador" else None),
     )
 
     with pytest.raises(FalloDeInferencia) as error:
