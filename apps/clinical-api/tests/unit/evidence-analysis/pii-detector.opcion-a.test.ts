@@ -169,6 +169,22 @@ describe('crearDetectorOpcionA · formatos de L1D-166 y fechas', () => {
     expect(sinIdentidad.enmascarar(texto).texto).toBe(texto);
   });
 
+  it.each([
+    'PSA 4.0-10.0 ng/mL',
+    'Hb 10.5-12.0 g/dL',
+    'dosis 1.5/2.5/10 mg',
+    'Ki-67 20-30%',
+    '3/4 ciclos',
+  ])('deja intacto el rango o la razón clínica «%s» cuando los separadores difieren', (texto) => {
+    expect(sinIdentidad.enmascarar(texto).texto).toBe(texto);
+  });
+
+  it('enmascara la fecha numérica cuando usa el mismo separador y el año de dos dígitos', () => {
+    expect(sinIdentidad.enmascarar('el 16/08/25 y el 16.08.25 y el 16-08-2025').texto).toBe(
+      'el [FECHA] y el [FECHA] y el [FECHA]',
+    );
+  });
+
   it('nunca rotula una fecha como teléfono ni documento aunque la preceda una palabra clave', () => {
     const resultado = sinIdentidad.enmascarar('Teléfono 15/03/2024 y DNI 15 de marzo de 2024');
 
