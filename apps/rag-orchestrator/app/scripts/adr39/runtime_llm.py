@@ -158,37 +158,29 @@ class ClienteRuntime:
 
     def memoria_residente_gb(self, tag: str) -> float | None:
         """Memoria residente (pesos + KV) que informa el runtime, como ``ollama ps``; ``None`` si no la expone."""
-        if self._api != "ollama":
-            return None
-        r = self._http.get(f"{self._base}/api/ps")
-        r.raise_for_status()
-        modelo = next(
-            (m for m in r.json().get("models", []) if tag in (m.get("name"), m.get("model"))), None
-        )
+        modelo = self._modelo_informado("/api/ps", tag)
         return modelo["size"] / BYTES_POR_GB if modelo else None
 
     def porcentaje_gpu(self, tag: str) -> float | None:
-        if self._api != "ollama":
-            return None
-        r = self._http.get(f"{self._base}/api/ps")
-        r.raise_for_status()
-        modelo = next(
-            (m for m in r.json().get("models", []) if tag in (m.get("name"), m.get("model"))), None
-        )
+        modelo = self._modelo_informado("/api/ps", tag)
         if not modelo or not modelo.get("size"):
             return None
         return 100.0 * modelo.get("size_vram", 0) / modelo["size"]
 
     def digest(self, tag: str) -> str | None:
         """ID del modelo que informa ``ollama list`` (el ADR lo registra junto al tag)."""
+        modelo = self._modelo_informado("/api/tags", tag)
+        return str(modelo["digest"])[:12] if modelo else None
+
+    def _modelo_informado(self, ruta: str, tag: str) -> dict[str, Any] | None:
+        """Entrada de ``tag`` en ``/api/ps`` o ``/api/tags``; ``None`` si el runtime no es Ollama o no lo lista."""
         if self._api != "ollama":
             return None
-        r = self._http.get(f"{self._base}/api/tags")
+        r = self._http.get(f"{self._base}{ruta}")
         r.raise_for_status()
-        modelo = next(
+        return next(
             (m for m in r.json().get("models", []) if tag in (m.get("name"), m.get("model"))), None
         )
-        return str(modelo["digest"])[:12] if modelo else None
 
     def descargar(self, tag: str) -> None:
         if self._api == "ollama":
