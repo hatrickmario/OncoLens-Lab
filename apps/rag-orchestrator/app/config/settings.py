@@ -200,6 +200,8 @@ class CorpusDatabaseSettings(BaseSettings):
 
     corpus_database_url: str
     pg_rag_corpus_password_file: Path
+    # Plazo de conexión (RN-22): un PostgreSQL que no responde no cuelga la sonda de arranque de `/rag/query`.
+    corpus_connect_timeout_seconds: int = Field(default=5, gt=0)
 
     @field_validator("corpus_database_url")
     @classmethod

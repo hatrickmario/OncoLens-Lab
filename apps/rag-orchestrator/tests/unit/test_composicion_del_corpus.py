@@ -258,5 +258,6 @@ def test_con_modelos_y_llm_locales_una_clave_ausente_termina_nombrandola(
             settings_de_prueba(model_provider="local", llm_provider="local")
         )
 
-    assert error.value.variable in {"MILVUS_URI", "CORPUS_DATABASE_URL"}
+    for clave in ("MILVUS_URI", "CORPUS_DATABASE_URL", "PG_RAG_CORPUS_PASSWORD_FILE"):
+        assert clave in error.value.variable
     assert error.value.__suppress_context__
