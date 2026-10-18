@@ -56,3 +56,24 @@ async def test_logs_no_registran_la_url_del_llm_cuando_el_logging_esta_configura
         await OpenAICompatibleLlmHealth(BASE, 2000).esta_disponible()
 
     assert "llm-nativo" not in caplog.text
+
+
+async def test_esta_disponible_no_confia_en_el_entorno_de_proxy_cuando_construye_su_cliente_http(
+    monkeypatch,
+):
+    """RN-12: la sonda tampoco puede salir por un proxy del entorno."""
+    construidos: list[dict] = []
+
+    class Espia(httpx.AsyncClient):
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
+            construidos.append(kwargs)
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", Espia)
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy-externo.test:3128")
+    with respx.mock(assert_all_called=False) as llm:
+        llm.get(f"{BASE}/models").mock(return_value=httpx.Response(200))
+
+        await OpenAICompatibleLlmHealth(BASE, 2000).esta_disponible()
+
+    assert [c.get("trust_env") for c in construidos] == [False]

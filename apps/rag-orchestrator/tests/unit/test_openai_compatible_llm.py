@@ -1,6 +1,8 @@
 """Cliente del LLM local OpenAI-compatible (L1D-275, tarea 2.9): RN-12, sin reintento, sin detalle en el error."""
 
+import asyncio
 import json
+import time
 
 import httpx
 import pytest
@@ -85,3 +87,51 @@ async def test_completar_json_lanza_fallo_del_llm_cuando_el_cuerpo_no_es_json():
 
         with pytest.raises(FalloDelLlm):
             await _cliente().completar_json("prompt", ESQUEMA)
+
+
+class _EspiaDeCliente(httpx.AsyncClient):
+    """Registra los argumentos con que el adapter construye su cliente HTTP."""
+
+    construidos: list[dict] = []
+
+    def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
+        _EspiaDeCliente.construidos.append(kwargs)
+        super().__init__(*args, **kwargs)
+
+
+async def test_completar_json_no_confia_en_el_entorno_de_proxy_cuando_construye_su_cliente_http(
+    monkeypatch,
+):
+    """RN-12: un `HTTPS_PROXY` del entorno no puede desviar el prompt hacia fuera del host local."""
+    _EspiaDeCliente.construidos = []
+    monkeypatch.setattr(httpx, "AsyncClient", _EspiaDeCliente)
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy-externo.test:3128")
+    monkeypatch.setenv("HTTP_PROXY", "http://proxy-externo.test:3128")
+    with respx.mock(assert_all_called=False) as llm:
+        llm.post(URL).mock(
+            return_value=httpx.Response(
+                200, json={"choices": [{"message": {"content": '{"a":1}'}}]}
+            )
+        )
+
+        await _cliente().completar_json("prompt", ESQUEMA)
+
+    assert [c.get("trust_env") for c in _EspiaDeCliente.construidos] == [False]
+
+
+async def test_completar_json_lanza_fallo_del_llm_al_vencer_el_plazo_total_aunque_ninguna_operacion_agote_su_timeout():
+    """El timeout de httpx es por operación: un servidor que gotea bytes no debe retener la consulta."""
+
+    async def responde_tarde(request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(2)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    cliente = OpenAICompatibleLlmClient(BASE, "llm-test@1", 100, 512)
+    with respx.mock(assert_all_called=False) as llm:
+        llm.post(URL).mock(side_effect=responde_tarde)
+        inicio = time.monotonic()
+
+        with pytest.raises(FalloDelLlm):
+            await cliente.completar_json("prompt", ESQUEMA)
+
+    assert time.monotonic() - inicio < 1.5
