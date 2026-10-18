@@ -1,0 +1,109 @@
+# S2 — Tarjetas de arrastre del Sprint 1
+
+> Creado el 2026-10-18 por `/sprint-close S1` y aprobado por el usuario. Reúnen **lo pendiente de verificación** de las historias del S1 que siguen en In Review (ver `S1-trazabilidad.md` y `S1-pendientes-humanos.md`). El código de esas historias está mergeado; aquí vive lo que falta para poder darlas por Done.
+> **Markdown = fuente.** `Linear: pendiente` hasta que haya cupo (se liberó moviendo Post-MVP y «si hay capacidad» a `V2-Post-MVP.md`). Los IDs `ARR-nn` son inmutables; cuando se creen las issues se anota su `L1D-nn` en cada tarjeta.
+> Las historias de origen **no pasan a Done** por separar: se quedan In Review con un enlace a su tarjeta y cierran cuando la tarjeta cierra.
+> Prioridad Linear: 2 = Alta, 3 = Media, 4 = Baja. Estimación Fibonacci.
+
+| ID | Tarjeta | Est. | Prioridad | Desbloquea (S1) |
+|---|---|---|---|---|
+| ARR-01 | La CI ejecuta la integración y los `servicios_reales` | 5 | **Alta** | L1D-114, L1D-115 (y evidencia de 168, 169, 103, 104) |
+| ARR-02 | E2E y visual-check ejecutables (D-3 + D-2) | 8 | **Alta** | L1D-197, 139, 140, 193, 194 |
+| ARR-03 | OL-06 sobre lo ya implementado (con US-072) | 3 | **Alta** | L1D-180, 275, 115, 193 |
+| ARR-04 | Mediciones de ADR-39 fase B en el MacBook de referencia | 3 | **Alta (temprana)** | L1D-274 y US-231a/b (AC con `models`) |
+| ARR-05 | Baseline manual VM-1/VM-2 con los oncólogos | 3 | Media | L1D-238 |
+| ARR-06 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
+
+Total: 25 puntos de arrastre.
+
+---
+
+## ARR-01 · La CI ejecuta la integración de `clinical-api` y los `servicios_reales`
+
+> Linear: pendiente · Prioridad Alta · Est. 5 · Origen: B-1 y B-2 de `S1-trazabilidad.md`; tarea 2.4 de L1D-114.
+
+**Como** equipo, **quiero** que la CI corra los tests de integración con PostgreSQL y Milvus reales, **para** que los AC de US-038, 039, 049, 052, 053, 058, 059 y 211 tengan evidencia automatizada y no solo local.
+
+**Estado de partida:** el job `integration` de `clinical-api` (PostgreSQL de test, `scripts/ci/integracion-clinical-api.sh`) lo añade #93; **falta** Milvus y los tests `-m servicios_reales` de `rag-orchestrator`.
+
+**AC**
+1. *Given* un PR, *when* corre la CI, *then* el job `integration` ejecuta los 199 tests de `clinical-api` contra el PostgreSQL de test y es parte de `ci-ok` (verificar que #93 lo dejó en verde en `main`).
+2. *Given* un PR, *when* corre la CI, *then* un job ejecuta `pytest -m servicios_reales` dentro de `corpus-db-net` y `ai-net` con PostgreSQL y Milvus de test (tarea 2.4 de L1D-114), y los 23 casos de Milvus de L1D-106 más los de catálogo, release, scripts y carga de semilla pasan.
+3. *Given* los 7 AC sin test ejecutado (US-058 AC-1, AC-3, AC-4; US-059 AC-1, AC-3, AC-4, AC-5), *when* se corre el job, *then* cada uno tiene un test con `@pytest.mark.ac` ejecutado en verde.
+4. *Given* el caso `ac2-cited-sources-build` de L1D-166, *when* se archive L1D-140, *then* el caso se activa con el build de `web` verificado en el entorno de la CI (ver ARR-06).
+
+**Dependencias:** ninguna. **Desbloquea:** L1D-114, L1D-115.
+
+## ARR-02 · Los E2E y el visual-check se pueden ejecutar (D-3 + D-2)
+
+> Linear: pendiente · Prioridad Alta · Est. 8 · Origen: deudas D-2 y D-3; tareas E2E de L1D-197 (3.3, 3.5, 4.2), L1D-139 (2.8, 3.2), L1D-140 (2.7, 3.5, 4.2, 4.3), L1D-193 y L1D-194 (3.3).
+
+**Como** equipo, **quiero** Playwright contra Compose en perfil de test con modelos fingidos y el sistema de diseño real (Tailwind v4 + shadcn/ui), **para** ejecutar los 12 E2E y los visual-checks que hoy están escritos o pendientes.
+
+**AC**
+1. *Given* Compose con `LLM_PROVIDER=fake` y `MODEL_PROVIDER=fake`, el seed de `doc1@test.local` y `npx playwright install chromium`, *when* corre el job de E2E, *then* se ejecutan sin `.skip` los E2E de login, panel, aviso de IA y lenguaje no prescriptivo, con `retries: 1` solo en la CI y con *trace*.
+2. *Given* el E2E de US-060 AC-3, *when* se escribe (hoy no existe), *then* comprueba con `page.on('request')` que el navegador solo habla con el origen de `web`.
+3. *Given* `/login` en CSS Modules provisional, *when* se migra a Tailwind v4 + shadcn/ui con los tokens de `docs/ux/sistema-de-diseno.md` (D-2), *then* el visual-check a 375 y 1280 px no deja errores de consola ni violaciones de CSP.
+4. *Given* el AC-4 de US-211 y el AC-1 en navegador, *when* corren, *then* quedan en verde (cookie HttpOnly Secure SameSite=Strict y redirección sin datos del paciente).
+
+**Dependencias:** ARR-01 (perfil de Compose) recomendable. **Desbloquea:** L1D-197, 139, 140, 193, 194.
+
+## ARR-03 · OL-06 sobre lo ya implementado (junto a US-072 / L1D-235)
+
+> Linear: pendiente · Prioridad Alta · Est. 3 (además de US-072, que ya está en el plan del S2) · Origen: L1D-180 (3.1, 4.4), L1D-275 (3.1), L1D-115 (2.1), L1D-193 (5.1).
+
+**Como** responsable de calidad de IA, **quiero** correr la evaluación OL-06 con el NLI y el generador reales sobre las historias ya mergeadas, **para** adjuntar el reporte de `ai-eval-runner` que el Gate 2 dejó pendiente.
+
+**AC**
+1. *Given* la suite `evaluate` de US-072, *when* se ejecuta con el NLI real, *then* hay reporte en `reports/eval/` con fidelidad, precisión de citas y «sin evidencia» frente a las metas (TBD-02).
+2. *Given* la evaluación manual del S1 de L1D-275, *when* se completa con el LLM real, *then* hay reporte de lenguaje no prescriptivo (salidas prescriptivas = 0).
+3. *Given* los casos de RN-23 que quedan fuera del Nivel A («La guía recomienda X»), *when* se mide, *then* el caso en `evaluate` mide si el generador los reproduce y el prompt fuerza «La fuente [cita] describe que…».
+4. *Given* «standard of care» y «recommended treatment» presentes en el corpus citado, *when* se mide, *then* se anota si el generador los reproduce literalmente (se retira la afirmación).
+5. *Given* el umbral `NLI_ENTAILMENT_THRESHOLD=0.7` y `RETRIEVAL_TOP_K=30` provisionales, *when* se calibran, *then* se registran los valores definitivos en configuración (RN-22).
+
+**Dependencias:** US-072 (L1D-235), modelos locales cargados (ARR-04).
+
+## ARR-04 · Mediciones de ADR-39 fase B en el MacBook de referencia
+
+> Linear: pendiente · Prioridad Alta, temprana en el S2 · Est. 3 (el desarrollo ya está en #83/#86) · Origen: L1D-274 (tareas 1.4 a 1.8), US-231a/b (1.11, 1.12).
+
+**Como** PO, **quiero** medir runtime, LLM, OCR y p95 extremo a extremo con el hardware y los modelos reales, **para** cerrar el ADR-39 y saber si la latencia del análisis (riesgo aceptado como alto) cumple.
+
+**AC**
+1. *Given* Ollama con `OLLAMA_CONTEXT_LENGTH=8192`, *when* se ejecuta `llm` (los `llm.json` previos usaron `/api/chat` y no son comparables), *then* hay medición por la ruta `/v1` de producción con admisión por memoria (`ollama ps`, `num_ctx=8192`).
+2. *Given* 3 corridas de ≥ 30 consultas a `POST /platform/evidence-analyses` vía web `/api/*`, *when* se miden, *then* se registra el p95 frente a ≤ 15 s y se decide si se recalibra en el S5.
+3. *Given* OCRmyPDF + Tesseract `spa`, PaddleOCR y docTR, *when* se miden, *then* el p95 de extracción se compara con ≤ 60 s y el OCR crítico con ≥ 0,95.
+4. *Given* el stack completo, *when* se mide la memoria, *then* el stack ≤ ~30 GB con LLM ≤ 21 GB y sin swap.
+5. *Given* las cifras, *when* se completa el ADR-39 fase B y su delta de spec, *then* L1D-274 puede cerrar y los tests `models` de US-231a/b (AC-9, AC-6, AC-7) corren en la VM de Docker ≥ 10 GB.
+
+**Dependencias:** modelos descargados en `MODEL_HOST_DIR` (con el `ls` previo por `model.onnx.data`). **Desbloquea:** L1D-274, US-231a/b.
+
+## ARR-05 · Baseline manual VM-1/VM-2 con los oncólogos
+
+> Linear: pendiente · Prioridad Media (depende de la agenda) · Est. 3 · Origen: L1D-238 (3.1 a 3.5), DEC-02, decisión 81.
+
+**Como** PO, **quiero** medir el baseline manual con los oncólogos asesores, **para** tener VM-1 y VM-2 de referencia antes de comparar con OncoLens (G-Demo).
+
+**AC**
+1. *Given* los 4 casos ficticios y los 6 checklists, *when* los dos oncólogos los validan en una sesión conjunta, *then* los checklists llevan `version` y `fecha_validacion_clinica`, y se decide la etiqueta de `prostata-01`.
+2. *Given* dos sesiones de ~3 h, *when* se miden VM-1 y VM-2 por separado, *then* `eval/vm/baseline-S1.csv` queda sin nombres, fechas ni justificaciones, y la correspondencia nombre ↔ `O1`/`O2` queda fuera del repo.
+3. *Given* un tercer oncólogo, *when* valida a ciegas los `pares-validacion`, *then* se registra la mediana de VM-2 validada.
+4. *Given* el CLI `baseline`, *when* se ejecuta dos veces con la misma fecha, *then* los reportes son idénticos byte a byte y se versionan en un PR `chore`.
+
+**Dependencias:** agenda de los oncólogos. **Desbloquea:** L1D-238. No bloquea a las demás tarjetas.
+
+## ARR-06 · Conciliación y deuda del cierre del S1
+
+> Linear: pendiente · Prioridad Media · Est. 3 · Origen: `S1-cierre.md`, deudas D-7, D-9 y menores de los Gate 2.
+
+**Como** equipo, **quiero** cerrar la deuda de conciliación y de higiene que dejó el S1, **para** que los changes pendientes se puedan archivar.
+
+**AC**
+1. *Given* `tasks.md` de L1D-194 y L1D-275 sin ninguna tarea marcada, *when* se concilian con la evidencia de `/opsx:verify`, *then* las cumplidas quedan `[x]` y las pendientes llevan su ID destino.
+2. *Given* L1D-265, *when* se cierra D-7 (`ruff format` limpio y `pytest tests/evaluation` sin fallos con las dependencias declaradas), *then* el change se archiva.
+3. *Given* L1D-166 (4.1, 4.2 y 5.2), *when* el administrador activa la protección de `main` y se archive L1D-140, *then* se cierran 4.1, 4.2 y 5.2 (ver el caso `ac2-cited-sources-build`).
+4. *Given* D-9, *when* se refina, *then* se decide si la seguridad web de `apps/web` (CSP, `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) se adelanta desde US-216 (S6).
+5. *Given* US-231a y US-231b (sin issue de Linear), *when* se crean sus issues, *then* se enlazan con sus changes y se concilian 231a (3.2, 3.3) y 231b (1.0, 2.1, 3.1, 4.2, 4.4).
+6. *Given* la deuda de 169 sin ID (one-shot `clinical-migrate`, rol `clinical_seed` solo DML) y el RN-06 que no bloquea `DELETE`/`TRUNCATE`, *when* se registran en `backlog/features/README.md`, *then* tienen ID por asignar.
+
+**Dependencias:** ARR-01 y ARR-02 para los puntos 2 y 3.
