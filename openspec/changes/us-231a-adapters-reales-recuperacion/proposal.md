@@ -36,8 +36,12 @@ L1D-106 ya definió. Desbloquea L1D-179, L1D-275, L1D-180 (vía US-231b) y L1D-2
   esperados en configuración (`*_MODEL_PATH`, `*_MODEL_SHA256`), comprobados al arrancar; si faltan o no
   coinciden, el proceso termina con código distinto de 0 y el error **nombra la variable**, nunca su contenido.
   Lo reutiliza US-231b para el NLI.
-- **Cableado** en `app/bootstrap.py` solo cuando el proveedor de modelos no es `fake`; con `fake` no se importa
-  ningún runtime de modelos.
+- **Cableado** en `app/bootstrap.py` según `MODEL_PROVIDER` (enum estricto `fake|local`); con `fake` no se importa
+  ningún runtime de modelos. Matriz de proveedores en `design.md` D6.
+- **Infraestructura (Compose):** hoy `docker-compose.yml` no monta `/models` en `rag-orchestrator`. Este change
+  añade un *bind mount* `read_only` desde un directorio del host **fuera del repo** hacia `MODEL_CACHE_DIR` y
+  pasa `MODEL_PROVIDER`, `*_MODEL_PATH`, `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y `TRANSFORMERS_OFFLINE=1`;
+  excluye directorios de modelos en `.gitignore` y `.dockerignore`.
 - **Batería de contrato** parametrizada sobre real y fake (mismas firmas, mismos errores, `None` ≠ `0.0`,
   fallo de modelo → `RETRIEVAL_UNAVAILABLE`), determinismo, funcionamiento sin red y medición de latencia por
   etapa.
@@ -62,7 +66,9 @@ L1D-106 ya definió. Desbloquea L1D-179, L1D-275, L1D-180 (vía US-231b) y L1D-2
 
 ## Bounded contexts
 
-- **ai-services** (único con código): `apps/rag-orchestrator`.
+- **ai-services**: `apps/rag-orchestrator`.
+- **infra**: `infra/docker/docker-compose.yml`, `.gitignore`, `.dockerignore` del Dockerfile de `rag-orchestrator`
+  y su test de configuración (patrón de `compose-config.test.mjs`).
 - No toca `clinical-platform`, `frontend` ni `contratos`.
 
 ## Dependencias
@@ -71,7 +77,7 @@ L1D-106 ya definió. Desbloquea L1D-179, L1D-275, L1D-180 (vía US-231b) y L1D-2
   `RAGOrchestratorService`. Orden de la oleada: 106 → **231a** → 231b → 179.
 - ↪ **L1D-114** (US-058, en `main`): `EMBEDDING_DIM` y esquema de la colección `corpus_chunks`.
 - ↪ **L1D-102** (US-012 · ADR-39 fase A, en `main`): modelos, revisiones y claves de configuración.
-- ↪ **L1D-164** (US-034, en `main`): Compose, volumen de modelos de solo lectura y `LLM_PROVIDER=fake`.
+- ↪ **L1D-164** (US-034, en `main`): Compose y `LLM_PROVIDER=fake`. El volumen de modelos **no existe** en `main`: lo crea este change.
 - ↪ **L1D-115** (US-059): puerto `PassageEmbedder` y `fabricar_embedder_real` (su sustitución es de US-231b).
 - 🔗 **Bloquea:** US-231b, L1D-179, L1D-275, la medición de p95 de L1D-274. **No bloquea** los AC de US-055,
   que siguen verificándose con fakes.
@@ -89,8 +95,8 @@ y el *tokenizer* de la semilla (US-231b).
 - Código: `apps/rag-orchestrator/app/{infrastructure/{embeddings,reranker,language,models},bootstrap.py,config}`
   y `apps/rag-orchestrator/tests/`. Dependencias nuevas de runtime de inferencia (ONNX Runtime, *tokenizers*,
   detector de idioma) con su licencia registrada en el PR.
-- Los pesos **no** entran al repo: viven en `MODEL_CACHE_DIR` (volumen de solo lectura) y no se descargan en
-  ejecución.
+- Los pesos **no** entran al repo ni a la imagen: viven en un directorio del host fuera del repo, montado
+  `read_only` en `MODEL_CACHE_DIR`, y no se descargan en ejecución (RN-14, RN-12).
 - Evaluación: el change **no** cambia modelo, umbral, prompt, catálogo ni corpus (ejecuta lo decidido en
   ADR-39); la medición de calidad es de US-072/US-073 y la de p95 conjunto, de L1D-274. La latencia por etapa
   (AC-9) se mide y reporta, no es una compuerta de la CI.

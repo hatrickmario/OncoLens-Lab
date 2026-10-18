@@ -70,24 +70,52 @@ Con los mismos pares y la misma configuración, el `relevance_score` MUST ser id
 - **THEN** los valores son idénticos
 
 ### Requirement: Modelo ausente o alterado impide el arranque
-Con un proveedor de modelos distinto de `fake`, `rag-orchestrator` MUST verificar al arrancar la ruta y el SHA-256 de los modelos de *embeddings* y de *reranker*; si el archivo falta o el *hash* no coincide, el proceso MUST terminar con código distinto de 0 y el error SHALL nombrar la variable de configuración, nunca su contenido (RN-22).
+Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la ruta y el SHA-256 de los modelos de *embeddings* y de *reranker*; si el archivo falta o el *hash* no coincide, el proceso MUST terminar con código distinto de 0 y el error SHALL nombrar la variable de configuración, nunca su contenido (RN-22).
 
 #### Scenario: Un hash alterado termina el proceso nombrando la variable [US-231a AC-7] [RN-22]
-- **GIVEN** un archivo de modelo de *reranker* cuyo SHA-256 no coincide con `RERANKER_MODEL_SHA256` y un proveedor de modelos distinto de `fake`
-- **WHEN** arranca `rag-orchestrator`
+- **GIVEN** un archivo de modelo de *reranker* cuyo SHA-256 no coincide con `RERANKER_MODEL_SHA256` y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
 - **THEN** el proceso termina con código distinto de 0
-- **AND** el error nombra `RERANKER_MODEL_SHA256` y no contiene la ruta, el hash esperado ni el calculado
+- **AND** stdout y stderr completos contienen `RERANKER_MODEL_SHA256` y no contienen la ruta, el hash esperado ni el calculado
 
 #### Scenario: Un archivo ausente termina el proceso nombrando la variable de ruta [US-231a AC-7] [RN-22]
-- **GIVEN** un modelo de *embeddings* cuya ruta (`EMBEDDING_MODEL_PATH`) no existe y un proveedor de modelos distinto de `fake`
-- **WHEN** arranca `rag-orchestrator`
+- **GIVEN** un modelo de *embeddings* cuya ruta (`EMBEDDING_MODEL_PATH`) no existe y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
 - **THEN** el proceso termina con código distinto de 0
-- **AND** el error nombra `EMBEDDING_MODEL_PATH` y no contiene la ruta
+- **AND** stdout y stderr completos contienen `EMBEDDING_MODEL_PATH` y no contienen la ruta
 
 #### Scenario: Con el proveedor fake no se verifica ni se carga ningún modelo [US-231a AC-7]
 - **GIVEN** el proveedor de modelos `fake` y sin archivos de modelo
 - **WHEN** arranca `rag-orchestrator`
 - **THEN** arranca sin error y sin importar ningún runtime de modelos
+
+### Requirement: Matriz estricta de proveedores de modelos
+`MODEL_PROVIDER` MUST ser exactamente `fake` o `local`; cualquier otro valor SHALL impedir el arranque nombrando la variable. La combinación `LLM_PROVIDER=local` con `MODEL_PROVIDER=fake` MUST fallar cerrado y, con `REAL_*_ENABLED=true`, `MODEL_PROVIDER=fake` MUST impedir el arranque (RN-12, RN-13).
+
+#### Scenario: Un valor fuera del enum impide arrancar [US-231a AC-7] [RN-12]
+- **GIVEN** `MODEL_PROVIDER` con un valor distinto de `fake` y `local`
+- **WHEN** arranca `rag-orchestrator`
+- **THEN** el proceso termina con código distinto de 0 y el error nombra `MODEL_PROVIDER` sin eco de su valor
+
+#### Scenario: LLM local con modelos fake responde 503 fail-closed [US-231a AC-7] [RN-12]
+- **GIVEN** `LLM_PROVIDER=local` y `MODEL_PROVIDER=fake`
+- **WHEN** se envía `Q-HER2` a `/rag/query` con un JWT de servicio válido
+- **THEN** responde `503` con `error = "RETRIEVAL_UNAVAILABLE"` sin recuperar con fakes ni invocar al LLM
+
+#### Scenario: Datos reales habilitados con MODEL_PROVIDER fake impiden el arranque [US-231a AC-7] [RN-13]
+- **GIVEN** `REAL_ANONYMIZED_ENABLED=true` y `MODEL_PROVIDER=fake`
+- **WHEN** arranca `rag-orchestrator`
+- **THEN** el proceso termina con código distinto de 0 y el error nombra `MODEL_PROVIDER`
+
+### Requirement: Pesos fuera del repo y de la imagen, sin red en Compose
+El Compose MUST montar los modelos como *bind mount* `read_only` desde un directorio del host fuera del repo y pasar las variables de proveedor, rutas, SHA-256 y modo sin conexión (RN-12, RN-14).
+
+#### Scenario: El Compose monta los modelos de solo lectura y fuerza el modo sin conexión [US-231a AC-8] [RN-14]
+- **GIVEN** `infra/docker/docker-compose.yml` y el `.dockerignore` del Dockerfile de `rag-orchestrator`
+- **WHEN** se analiza la configuración del servicio `rag-orchestrator`
+- **THEN** monta `MODEL_CACHE_DIR` como *bind mount* `read_only` desde fuera del repo
+- **AND** define `MODEL_PROVIDER`, `*_MODEL_PATH`, `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y `TRANSFORMERS_OFFLINE=1`
+- **AND** `.gitignore` y `.dockerignore` excluyen los directorios de modelos
 
 ### Requirement: Adapters locales sin red
 Los adapters reales MUST funcionar sin conexiones salientes y no SHALL importar un cliente de nube ni descargar pesos en ejecución (RN-12, NFR-05).
@@ -101,7 +129,8 @@ Los adapters reales MUST funcionar sin conexiones salientes y no SHALL importar 
 #### Scenario: Ningún módulo de los adapters importa un cliente de nube o HTTP [US-231a AC-8] [RN-12]
 - **GIVEN** los módulos de `app/infrastructure/{embeddings,reranker,language,models}`
 - **WHEN** se inspeccionan sus importaciones
-- **THEN** ninguno importa un cliente de nube ni de HTTP
+- **THEN** ninguno importa ni usa `huggingface_hub`, `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
+- **AND** la carga usa `Tokenizer.from_file` y `onnxruntime.InferenceSession` con rutas locales
 
 ### Requirement: Latencia por etapa medida y reportada
 La latencia de los *embeddings* y del *reranker* con modelos reales MUST medirse por etapa (3 corridas, mediana) contra su presupuesto: *embeddings* ≤ 500 ms y *reranker* (12 pares) ≤ 4500 ms; un valor fuera de presupuesto SHALL reportarse y no ocultarse (NFR-01, ADR-39).

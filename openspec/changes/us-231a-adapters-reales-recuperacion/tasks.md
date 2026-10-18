@@ -13,10 +13,12 @@
 
 ## 1. ai-services
 
-- [ ] 1.1 (test después) Decidir y registrar en el PR la librería del detector de idioma y las dependencias de
-  inferencia (ONNX Runtime, *tokenizers*) con su licencia y versión exacta; fijarlas en `requirements`. Verificación:
-  licencia permisiva/académica anotada y comprobación de que la instalación no descarga modelos.
-- [ ] 1.2 (test después) Configuración (RN-22): `MODEL_PROVIDER` (`fake|local`, ver design Open Questions),
+- [ ] 1.1 (test después) Supply chain: justificar en `design.md` y fijar en `requirements.txt` las dependencias de
+  inferencia (ONNX Runtime, *tokenizers*) y el detector de idioma: licencia permisiva (MIT/BSD/Apache), versión exacta
+  `==`, solo *wheel* (`--only-binary`), sin `setup.py` ni descarga en importación o primer uso, `pip-audit` sin
+  críticas ni altas; `huggingface_hub` y `transformers` prohibidos en el `requirements.txt` de ejecución (solo
+  `requirements-eval.txt`). Verificación: chequeo de `requirements.txt` y salida de `pip-audit`.
+- [ ] 1.2 (test después) Configuración (RN-22): `MODEL_PROVIDER` enum estricto `fake|local` (rechaza otro valor nombrando la variable), `DEFAULT_QUERY_LANGUAGE`, una clave `*_SHA256` por archivo cargado,
   `EMBEDDING_MODEL_PATH`, `EMBEDDING_MODEL_SHA256`, `RERANKER_MODEL_PATH`, `RERANKER_MODEL_SHA256` en `app/config/`
   y en `.env.example` (lo aplica el humano si el permiso del agente deniega la ruta; ver tarea 1.21 de L1D-102).
   Verificación: test de carga de configuración y del chequeo de claves de ADR-39 en verde.
@@ -24,7 +26,12 @@
   del modelo no coincide o el archivo falta [US-231a AC-7]" · integración (arranque con configuración alterada en un
   *fixture* temporal, `@pytest.mark.ac("US-231a", 7)`). Esqueleto `verificar_modelo()` / `ModeloNoVerificadoError`
   con `raise NotImplementedError`. Commit `test(US-231a)`.
-- [ ] 1.4 (TDD estricto) Verde de 1.3: unitarios uno a la vez en `app/infrastructure/models/verificacion.py`
+- [ ] 1.3b (TDD estricto) Los escenarios de AC-7 arrancan en **subproceso** y afirman sobre stdout+stderr completos
+  (código ≠ 0, contiene el nombre de la variable, no contiene ruta, hash esperado ni calculado), más los de la
+  matriz de proveedores (valor fuera del enum; `LLM=local`+`MODEL=fake` → 503; `REAL_*_ENABLED=true`+`fake` → no
+  arranca; extiende `reject_fake_provider_with_real_data`). Commit `test(US-231a)`.
+- [ ] 1.4 (TDD estricto) Verde de 1.3 y 1.3b, con `raise ModeloNoVerificadoError(variable) from None` sin registrar
+  ruta, hashes ni `exc_info`, verificando el SHA-256 de cada archivo cargado: unitarios uno a la vez en `app/infrastructure/models/verificacion.py`
   (hash correcto → ok; hash distinto → error con la variable de SHA; archivo ausente → error con la variable de
   ruta; el mensaje no contiene ruta ni hashes; proveedor `fake` → no verifica). Commit `feat(US-231a)`.
 - [ ] 1.5 (TDD estricto) Test de aceptación en rojo: "cada vector tiene 1024 dimensiones y ch-m1-1 queda primero
@@ -58,12 +65,17 @@
   [US-231a AC-6]" (`models`, subproceso) y su versión con sesión falsa. Verde: hilos y orden de lote fijados por
   configuración. Commits `test(US-231a)` / `feat(US-231a)`.
 - [ ] 1.14 (TDD estricto) Test de aceptación en rojo: "responde con la red bloqueada y sin conexiones salientes
-  [US-231a AC-8]" (fixture que bloquea sockets y registra intentos; `models`; más la comprobación estática de
-  importaciones, en la ruta rápida). Verde: carga local sin resolución remota (`HF_HUB_OFFLINE`, rutas locales).
+  [US-231a AC-8]" (fixture que bloquea sockets y registra intentos; `models`; más el chequeo estático con la lista
+  prohibida de design D7 y la exigencia de `Tokenizer.from_file`/`InferenceSession(<ruta local>)`, en la ruta rápida). Verde: carga local sin resolución remota (`HF_HUB_OFFLINE`, rutas locales).
   Commits `test(US-231a)` / `feat(US-231a)`.
-- [ ] 1.15 (test después) Cableado en `app/bootstrap.py`: con proveedor de modelos `local` verifica los modelos
+- [ ] 1.14b (test después, **infra**) `infra/docker/docker-compose.yml`: *bind mount* `read_only` desde un
+  directorio del host fuera del repo hacia `MODEL_CACHE_DIR`; pasa `MODEL_PROVIDER` (default `local` en Compose, `fake`
+  en la CI; decisión por defecto a confirmar), `*_MODEL_PATH`, `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y
+  `TRANSFORMERS_OFFLINE=1`; directorios de modelos en `.gitignore` y en el `.dockerignore` del Dockerfile. Test en
+  `infra/docker/__tests__` con el patrón de `compose-config.test.mjs`. Verificación: test en verde.
+- [ ] 1.15 (test después) Cableado en `app/bootstrap.py`: con `MODEL_PROVIDER=local` verifica los modelos
   (1.4), construye los adapters reales y los inyecta en `RAGOrchestratorService` (reemplaza la rama de
-  `503 RETRIEVAL_UNAVAILABLE` en la composición de L1D-106 cuando hay adapters); con `fake`, no importa el runtime.
+  `503 RETRIEVAL_UNAVAILABLE` en la composición de L1D-106 cuando hay adapters); con `fake`, no importa el runtime; `LLM=local`+`MODEL=fake` → `503` fail-closed.
   Verificación: test de integración del arranque en ambos modos y no regresión de los tests de L1D-106.
 - [ ] 1.16 (test después) Medición de latencia por etapa (AC-9): script/test `@pytest.mark.models` que mide
   *embeddings* y *reranker* (12 pares), 3 corridas, mediana, con reloj inyectado, y escribe el resultado (sin
