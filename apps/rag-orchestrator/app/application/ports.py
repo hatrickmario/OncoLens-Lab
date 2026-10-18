@@ -7,8 +7,8 @@ from typing import Any, Literal, Protocol
 
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.nli import ParNli, ResultadoNli
-from app.domain.support import CampoGenerado
 from app.domain.relevance import ChunkPuntuado
+from app.domain.support import CampoGenerado
 from app.schemas.generated.models import (
     RagMeta,
     RagQueryInternalRequest,

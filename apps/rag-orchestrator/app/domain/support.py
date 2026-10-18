@@ -125,8 +125,8 @@ def planificar_soporte(
 def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     """Lo que de verdad va al NLI, en un orden único que comparten ``pares_a_verificar`` y ``verificar_soporte``.
 
-    Una afirmación con lenguaje prohibido ya está perdida: no se envía (ahorra inferencia), y tampoco las de una opción
-    cuyo texto ya incumple.
+    RN-23: una afirmación con lenguaje prohibido nunca puede quedar soportada, ni aunque el NLI la implicara; por eso no
+    se envía (además ahorra inferencia), y tampoco las de una opción cuyo propio texto ya incumple.
     """
     for opcion in plan.opciones:
         if not opcion.option.reglas:
@@ -177,7 +177,7 @@ def verificar_soporte(
             soportadas.append(planificada.aceptada)
         else:
             descartadas.append(sin_soporte)
-    limitaciones = [x.texto for x in plan.limitaciones if veredictos.get(x, False)]
+    limitaciones = [x.texto for x in plan.limitaciones if not x.reglas and veredictos[x]]
     return ResultadoSoporte(
         tuple(soportadas),
         tuple(descartadas),

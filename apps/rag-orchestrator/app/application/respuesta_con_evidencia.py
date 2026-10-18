@@ -1,7 +1,8 @@
 """Ensamblado de la respuesta `con_evidencia` a partir de las citas validadas (RN-01, RN-04).
 
 Cada cita se construye desde el catálogo y el chunk recuperado; del generador solo se conserva qué chunks citó.
-Recibe las opciones ya validadas y recortadas a ``maxOptions`` (L1D-275); L1D-180 inserta el soporte NLI antes.
+Recibe las opciones soportadas (NLI y lenguaje, L1D-180) y recortadas a ``maxOptions`` (L1D-275), más las descartadas
+por citas y por soporte, las limitaciones verificadas y ``omittedClaims``.
 """
 
 from __future__ import annotations

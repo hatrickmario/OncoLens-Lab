@@ -57,3 +57,4 @@
 - **RN-12 en `LLM_BASE_URL`:** validador con `LLM_ALLOWED_HOSTS`, `trust_env=False` y plazo total (`asyncio.timeout`).
 - **RN-23 también en descartadas por citas:** el lenguaje prohibido de una opción descartada por `sin_citas`/`cita_invalida` se reemplaza por el literal de retiro.
 - **Producción:** `crear_generador_local()` activo; `GeneradorLocalNoDisponible` eliminado.
+- **Deuda a decidir en US-072 (P-1, sin cambio de código):** con `NLI_ENTAILMENT_THRESHOLD` < 0,5 la regla `label == entailment` y el umbral dejan de ser equivalentes (el argmax puede no ser `entailment` con `p_entailment` sobre el umbral), y el máximo de `p_entailment` sobre las ventanas de una premisa larga toma el label de esa ventana. Se revisa al calibrar el umbral.
