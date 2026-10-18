@@ -12,5 +12,92 @@
     "enviando": "Entrando…",
     "errorCredenciales": "Correo o contraseña incorrectos.",
     "errorServicio": "No se pudo iniciar sesión en este momento. Inténtalo de nuevo."
+  },
+  "evidence": {
+    "titulo": "Análisis de evidencia",
+    "paciente": "Paciente · ID",
+    "formulario": {
+      "pregunta": "Pregunta clínica",
+      "ayuda": "No escribas nombres ni documentos: el contexto que sale hacia la IA se desidentifica siempre.",
+      "contador": "{n} / {max}",
+      "analizar": "Analizar evidencia",
+      "analizando": "Analizando…",
+      "espera": "El contenido aparece completo cuando está validado."
+    },
+    "estado": {
+      "analizando": "Analizando…",
+      "listoUna": "Análisis listo: 1 opción descrita",
+      "listoVarias": "Análisis listo: {n} opciones descritas",
+      "sinEvidencia": "Sin evidencia sobre el umbral",
+      "error": "No se pudo completar el análisis. Código de traza {traceId}",
+      "noRealizado": "Análisis no realizado: falta el tipo de cáncer"
+    },
+    "resultado": {
+      "pregunta": "Pregunta",
+      "idioma": "Idioma",
+      "encabezado": "Opciones descritas en la evidencia",
+      "soloDescartadas": "No hay opciones descritas con soporte verificable en la evidencia recuperada.",
+      "sinOpciones": "La evidencia recuperada no describe opciones para esta pregunta.",
+      "sinEvidencia": "Ningún fragmento del corpus superó el umbral de relevancia. No se generaron opciones.",
+      "relevanciaMaxima": "Relevancia máxima",
+      "noAplica": "no aplica"
+    },
+    "orderCriterion": {
+      "relevance": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica."
+    },
+    "relevance": {
+      "label": "Relevancia de recuperación de evidencia",
+      "basis": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "note": "Metadato secundario: no mide eficacia ni solidez clínica",
+      "help": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción."
+    },
+    "cita": {
+      "lista": "Citas",
+      "autores": "Autores",
+      "diseno": "Diseño del estudio",
+      "publicado": "Publicado",
+      "actualizado": "Actualizado",
+      "idioma": "Idioma",
+      "licencia": "Licencia",
+      "verFragmento": "Ver fragmento",
+      "fuenteOriginal": "Fuente original",
+      "noDisponible": "No disponible",
+      "pestanaNueva": "(se abre en una pestaña nueva)"
+    },
+    "licencia": {
+      "dominio_publico": "Dominio público",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA",
+      "cc_by_nc": "CC BY-NC"
+    },
+    "fragmento": {
+      "titulo": "Fragmento citado",
+      "ayuda": "Abre «Ver fragmento» en una cita para leer el texto original recuperado en esta consulta",
+      "volver": "Volver a la cita"
+    },
+    "discarded": {
+      "titulo": "Descartadas por falta de soporte — solo para revisión",
+      "linea": "No son opciones descritas: se muestran solo para revisión.",
+      "auditoria": "Registro solo para auditoría: no es contenido clínico utilizable.",
+      "numero": "N.º {n}",
+      "analisis": "Análisis",
+      "sinSoporte": "Sin soporte"
+    },
+    "discardReason": {
+      "cita_invalida": "La cita no corresponde a un fragmento recuperado",
+      "afirmacion_sin_soporte": "Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido",
+      "sin_citas": "La opción no incluye citas a fragmentos recuperados",
+      "solo_soportada_por_analisis_previo": "Solo la respalda un análisis previo, que no es evidencia"
+    },
+    "error": {
+      "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
+      "tiempoAgotado": "El análisis superó el tiempo máximo de espera. No se muestra ningún resultado parcial.",
+      "generico": "No se pudo completar el análisis. No se muestra ningún resultado parcial.",
+      "codigoTraza": "Código de traza: {traceId}",
+      "reintentar": "Reintentar"
+    },
+    "noRealizado": {
+      "sinTipoCancer": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia."
+    }
   }
 }

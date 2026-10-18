@@ -1,0 +1,94 @@
+{
+  "traceId": "req_9a3f2c1b",
+  "query": "En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?",
+  "sourcesSelected": {
+    "guias": true,
+    "ensayos": false,
+    "publicaciones": true
+  },
+  "dataClassification": "sintetico",
+  "catalogVersion": "2026.10.0",
+  "maxOptions": 3,
+  "filtersApplied": {
+    "historiaCompleta": false,
+    "soloBiomarcadoresRelevantes": true,
+    "ultimosSeisMeses": true,
+    "antecedentesFamiliares": false,
+    "publishedFromYear": 2021
+  },
+  "clinicalContext": {
+    "pseudoPatientId": "psd_Qx7mR2vK9aLw",
+    "population": "adulto",
+    "diagnosis": {
+      "dataRef": "r1",
+      "cancerType": "mama",
+      "histology": "carcinoma ductal infiltrante",
+      "grade": "Nottingham grado 2",
+      "stagingSystem": "TNM_8",
+      "stageValue": "IIA",
+      "performanceScale": "ECOG",
+      "performanceValue": 1,
+      "monthsSinceDiagnosis": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    },
+    "biomarkers": [
+      {
+        "dataRef": "r2",
+        "biomarkerName": "HER2",
+        "value": "3+ (IHQ)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "ocr",
+          "extractionConfidence": "alta",
+          "reviewStatus": "auto_aceptado",
+          "conflict": false
+        }
+      },
+      {
+        "dataRef": "r3",
+        "biomarkerName": "Receptor de estrógeno",
+        "value": "Positivo (80%)",
+        "resultType": "cualitativo",
+        "clinicalSignificance": "relevante",
+        "monthsAgo": 1,
+        "provenance": {
+          "entryMethod": "ocr",
+          "extractionConfidence": "media",
+          "reviewStatus": "requiere_revision",
+          "conflict": false
+        }
+      }
+    ],
+    "clinicalNotes": [],
+    "currentLine": null,
+    "attributes": [],
+    "priorTreatments": [],
+    "events": [
+      {
+        "dataRef": "r4",
+        "eventType": "diagnostico",
+        "monthsAgo": 1,
+        "description": "Carcinoma ductal infiltrante de mama",
+        "provenance": {
+          "entryMethod": "seed",
+          "extractionConfidence": "n_a",
+          "reviewStatus": "verificado",
+          "conflict": false
+        }
+      }
+    ],
+    "biomarkerTrends": [],
+    "missingCriticalData": [
+      "estado_menopausico",
+      "ki67"
+    ],
+    "priorAnalyses": []
+  }
+}

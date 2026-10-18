@@ -9,6 +9,8 @@ RUN npm ci --include-workspace-root --workspace apps/web
 COPY apps/web apps/web
 # Solo el SDK generado de clinical-api para web (sin extensión .js; Turbopack); el resto de packages/ no se necesita.
 COPY packages/api-contracts/src/client-web/clinical-api packages/api-contracts/src/client-web/clinical-api
+# Los tipos generados del contrato (import type) también los comprueba el tsc del build.
+COPY packages/api-contracts/src/types/clinical-api packages/api-contracts/src/types/clinical-api
 # Los schemas Zod generados del contrato (login: zLoginBody y los de error) también se compilan con web.
 COPY packages/api-contracts/src/zod/clinical-api packages/api-contracts/src/zod/clinical-api
 ENV NEXT_TELEMETRY_DISABLED=1
