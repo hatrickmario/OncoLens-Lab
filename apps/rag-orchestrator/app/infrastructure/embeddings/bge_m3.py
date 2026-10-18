@@ -12,6 +12,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from app.application.ports import FalloDeInferencia
+from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
     agrupar_por_presupuesto_de_tokens,
     truncar_conservando_el_separador_final,
@@ -56,7 +57,7 @@ class NucleoBgeM3:
     def _vectorizar(self, textos: Sequence[str], prefijo: str) -> list[list[float]]:
         if not textos:
             return []
-        try:
+        with fallos_de_inferencia_como_error_del_puerto(_FALLO):
             secuencias = [
                 truncar_conservando_el_separador_final(
                     self._tokenizador.codificar(prefijo + t), self._max_length
@@ -68,10 +69,6 @@ class NucleoBgeM3:
                 salida = self._sesion.ejecutar([secuencias[i] for i in lote])
                 for indice, vector in zip(lote, self._vectores_del_lote(salida, len(lote))):
                     vectores[indice] = vector
-        except FalloDeInferencia:
-            raise
-        except Exception:  # noqa: BLE001 - cualquier fallo del runtime es "modelo no disponible"
-            raise FalloDeInferencia(_FALLO) from None
         return [v for v in vectores if v is not None]
 
     def _vectores_del_lote(self, salida: np.ndarray, tamano: int) -> list[list[float]]:

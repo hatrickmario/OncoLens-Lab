@@ -8,6 +8,7 @@ import numpy as np
 
 from app.application.ports import ChunkEncontrado, FalloDeInferencia
 from app.domain.normalizacion_puntaje import normalizar_a_unidad
+from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
     agrupar_por_presupuesto_de_tokens,
     truncar_conservando_el_separador_final,
@@ -47,12 +48,8 @@ class BgeReranker:
             raise FalloDeInferencia(_EXCESO_DE_PARES)
         if not candidatos:
             return []
-        try:
+        with fallos_de_inferencia_como_error_del_puerto(_FALLO):
             return self._puntuar_pares(pregunta, [c.chunk_text for c in candidatos])
-        except FalloDeInferencia:
-            raise
-        except Exception:  # noqa: BLE001 - cualquier fallo del runtime es "modelo no disponible"
-            raise FalloDeInferencia(_FALLO) from None
 
     def _puntuar_pares(self, pregunta: str, pasajes: list[str]) -> list[float]:
         secuencias = [
