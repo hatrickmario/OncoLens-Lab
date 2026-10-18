@@ -10,6 +10,7 @@ from app.domain.nli import (
     IndicesDeClaseInvalidos,
     ProbabilidadesNli,
     calcular_probabilidades,
+    dividir_premisa_en_ventanas,
     etiqueta_mas_probable,
     validar_indices_de_clase,
 )
@@ -110,3 +111,22 @@ def test_los_indices_repetidos_o_fuera_de_rango_nombran_la_clase_infractora_sin_
 def test_un_booleano_no_es_un_indice_de_clase() -> None:
     with pytest.raises(IndicesDeClaseInvalidos):
         validar_indices_de_clase(IndicesDeClase(True, 1, 2))  # type: ignore[arg-type]
+
+
+def test_una_premisa_corta_es_una_sola_ventana() -> None:
+    assert dividir_premisa_en_ventanas("uno dos tres", 10) == ["uno dos tres"]
+
+
+def test_las_ventanas_cubren_la_premisa_entera_y_se_solapan() -> None:
+    palabras = [f"p{i}" for i in range(20)]
+
+    ventanas = dividir_premisa_en_ventanas(" ".join(palabras), 8)
+
+    assert all(len(v.split()) <= 8 for v in ventanas)
+    assert {p for v in ventanas for p in v.split()} == set(palabras)
+    assert set(ventanas[0].split()) & set(ventanas[1].split())
+
+
+def test_una_ventana_de_cero_palabras_es_invalida() -> None:
+    with pytest.raises(ValueError):
+        dividir_premisa_en_ventanas("uno dos", 0)
