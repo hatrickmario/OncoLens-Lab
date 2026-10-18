@@ -21,7 +21,7 @@ const base = crearBaseDelAnalisisS1({ textoDelSupuesto: 'Supuesto sintético.' }
 
 function entrada(resto: Partial<EntradaDelRegistro> = {}): EntradaDelRegistro {
   return {
-    id: '00000000-0000-4000-8000-000000000001',
+    id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
     creadoEn: AHORA,
     traceId: 'req_Fijo0001',
     patientId: 'paciente-sintetico',
@@ -47,7 +47,7 @@ describe('armarRegistro', () => {
     const registro = armarRegistro(entrada());
 
     expect(registro).toMatchObject({
-      id: '00000000-0000-4000-8000-000000000001',
+      id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
       createdAt: AHORA,
       traceId: 'req_Fijo0001',
       patientId: 'paciente-sintetico',

@@ -11,6 +11,9 @@ COPY apps/clinical-api apps/clinical-api
 COPY packages/api-contracts/src/client/rag-orchestrator packages/api-contracts/src/client/rag-orchestrator
 # Los schemas Zod generados del propio contrato (auth.schema.ts) también se compilan con la app.
 COPY packages/api-contracts/src/zod/clinical-api packages/api-contracts/src/zod/clinical-api
+# El cierre del análisis importa los tipos del cliente de clinical-api y el Zod de la respuesta interna de rag-orchestrator.
+COPY packages/api-contracts/src/client/clinical-api packages/api-contracts/src/client/clinical-api
+COPY packages/api-contracts/src/zod/rag-orchestrator packages/api-contracts/src/zod/rag-orchestrator
 RUN npm run build --workspace apps/clinical-api
 
 FROM node:24.22.0-alpine3.24 AS runtime

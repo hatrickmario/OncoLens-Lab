@@ -14,7 +14,7 @@ const DISCLAIMER = 'Aviso sintético de test.';
 function registroDe(cuerpo: unknown, topRelevanceScore: number | null) {
   const respuesta = validarRespuestaInterna(structuredClone(cuerpo));
   return armarRegistro({
-    id: '00000000-0000-4000-8000-000000000001',
+    id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
     creadoEn: new Date('2026-10-16T12:00:00.000Z'),
     traceId: 'req_Fijo0001',
     patientId: 'paciente-sintetico',
