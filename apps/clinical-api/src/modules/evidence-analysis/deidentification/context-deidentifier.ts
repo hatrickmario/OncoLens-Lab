@@ -83,6 +83,17 @@ export function verificarDesidentificado(clinicalContext: ClinicalContext, query
   }
 }
 
+/** Tipos (sin valores, ordenados) y conteo de todo lo enmascarado en una desidentificación: lo único que se registra. */
+function resumirHallazgos(...partes: { findingTypes: string[]; hallazgos: number }[]): {
+  findingTypes: string[];
+  hallazgos: number;
+} {
+  return {
+    findingTypes: [...new Set(partes.flatMap((parte) => parte.findingTypes))].sort(),
+    hallazgos: partes.reduce((total, parte) => total + parte.hallazgos, 0),
+  };
+}
+
 /**
  * Adaptador definitivo de `ContextDeidentifier` (RN-10, RN-11): seudónimo aleatorio por consulta, texto libre y pregunta
  * enmascarados, notas fuera del contexto y fallo cerrado. La guarda de entorno sintético corta primero y su error se
@@ -109,8 +120,7 @@ export function crearContextDeidentifier(
           event: 'desidentificacion.enmascarado',
           traceId,
           patientId,
-          findingTypes: [...new Set([...consulta.findingTypes, ...textoLibre.findingTypes])].sort(),
-          hallazgos: consulta.hallazgos + textoLibre.hallazgos,
+          ...resumirHallazgos(consulta, textoLibre),
         });
         return { clinicalContext, query: consulta.texto };
       } catch {
