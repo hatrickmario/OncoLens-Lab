@@ -28,4 +28,5 @@ apps/web/vitest*.config.ts
 **/model-cache/
 **/*.onnx
 **/*.onnx_data
+**/*.onnx.data
 **/*.safetensors
