@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from app.bootstrap import PuertosDelCorpus, crear_app
+from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, PuertosDelCorpus, crear_app
 from app.config.settings import Settings
 from app.domain.modelos import describir_modelo
 from app.infrastructure.models.local import ModelosDeRecuperacion, cargar_modelos_locales
@@ -107,6 +107,7 @@ def test_con_modelos_locales_y_corpus_rag_query_recupera_con_los_adapters_reales
         "BAAI/bge-reranker-v2-m3", "rev-reranker-test", modelos.variables["RERANKER_MODEL_SHA256"]
     )
     assert meta["embeddingModel"].startswith("BAAI/bge-m3@rev-embeddings-test#sha256:")
+    assert meta["nliModel"].startswith("nli-test@")  # sale del clasificador cargado (FR-25)
     assert len(registro) == 1
 
 
@@ -158,3 +159,36 @@ def test_un_modelo_alterado_impide_construir_la_app_nombrando_la_variable(
         _app(_ajustes(modelos, llm_provider="fake"), cargador_de_modelos=_cargador_con_dobles([]))
 
     assert error.value.variable == "EMBEDDING_MODEL_SHA256"
+
+
+def _componer_con_corpus(modelos: EntornoDeModelos, **cambios: object):
+    return _app(
+        _ajustes(modelos, llm_provider="local", **cambios),
+        corpus=PuertosDelCorpus(BuscadorFalso(), LectorReleaseFalso(), CatalogoFalso()),
+        cargador_de_modelos=_cargador_con_dobles([]),
+    )
+
+
+def test_con_modelos_y_corpus_el_arranque_falla_nombrando_clinical_catalog_path_cuando_falta_la_ruta(
+    modelos: EntornoDeModelos,
+) -> None:
+    modelos.variables["EMBEDDING_DIM"] = "8"
+
+    with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
+        _componer_con_corpus(modelos, clinical_catalog_path=None)
+
+    assert "CLINICAL_CATALOG_PATH" in str(error.value)
+
+
+def test_con_modelos_y_corpus_el_arranque_falla_sin_la_ruta_cuando_la_lista_de_terminos_no_esta(
+    modelos: EntornoDeModelos, tmp_path: Path
+) -> None:
+    modelos.variables["EMBEDDING_DIM"] = "8"
+    sin_lista = tmp_path / "catalogo-sin-lista"
+    sin_lista.mkdir()
+
+    with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
+        _componer_con_corpus(modelos, clinical_catalog_path=sin_lista)
+
+    assert "CLINICAL_CATALOG_PATH" in str(error.value)
+    assert str(sin_lista) not in str(error.value)
