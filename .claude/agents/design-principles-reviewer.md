@@ -1,7 +1,7 @@
 ---
 name: design-principles-reviewer
 description: "Revisor de solo lectura de SOLID y CUPID en el código de OncoLens. En Gate 2 revisa el diff de un change o, en modo lote, el diff combinado de 2–3 changes relacionados. Señala exactamente qué viola cada principio (archivo:línea, símbolo), cómo confundiría a un agente de IA que modifique ese código, y propone un refactor mínimo con nombre. Prioriza las violaciones que engañan a un agente: efectos laterales ocultos, vocabulario ajeno al dominio, reglas duplicadas e invariantes mezcladas."
-model: opus
+model: sonnet
 effort: high
 disallowedTools: Edit, Write, NotebookEdit, Agent
 color: yellow

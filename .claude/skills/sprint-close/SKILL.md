@@ -19,6 +19,7 @@ el sí.
   `[L1D-nn]` está mergeado y `openspec validate <change> --strict` pasa.
 - **Pasa al siguiente sprint** (no se archiva) en cualquier otro caso: márcalo `movido-S<n+1>`
   con el motivo, y también a los changes que dependen de él.
+Un change mergeado con **0 tareas marcadas**, o con una tarea diferida sin ID destino, no entra al archivo: se devuelve al orquestador para conciliar su `tasks.md` (lección del S1: 179, 194 y 275).
 Muestra la tabla de ambos grupos antes de seguir.
 
 ## 2. Verificación global sobre main

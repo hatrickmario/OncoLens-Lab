@@ -154,6 +154,7 @@ tu pregunta va en el mensaje final.
 - Ningún dato real, secreto ni identificador de paciente en PRs, ramas, comentarios ni en Linear (RN-14).
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.
 - No archives changes: el archivo es en bloque en /sprint-close.
+- Conciliar `tasks.md` (lección del S1): al diferir una tarea escribe en su línea el **ID destino** (historia, deuda o US) y deja el PR con `tasks.md` al día; las tareas cumplidas se marcan `[x]` en el mismo PR de la historia. Un change mergeado con 0 tareas marcadas, o con una tarea diferida sin ID, no está completo.
 - Linear: **tú mantienes el estado de trabajo** (Backlog/Todo → In Progress → In Review) según la
   sección «Sincronización con Linear». Pasas una historia a `Done` **solo** si cumple los criterios de completada y todos
   sus PR están mergeados (un `Done` de la Feature, o devolver un `Done`, es de /sprint-close); no creas, borras ni cambias estimación, milestone, etiquetas ni relaciones.
