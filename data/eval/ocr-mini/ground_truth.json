@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "documentos": {
+    "mama-biomarcadores-02.pdf": {
+      "tipo": "informe_biomarcadores",
+      "cancer": "mama",
+      "campos": {
+        "diagnostico": "carcinoma lobulillar infiltrante grado 1",
+        "her2": "positivo (3+)",
+        "her2_fish": "amplificado",
+        "receptor_estrogeno": "positivo 80 %",
+        "receptor_progesterona": "negativo 0 %"
+      },
+      "texto": "INFORME DE BIOMARCADORES (SINTÉTICO)\nPaciente: PACIENTE FICTICIO 002   Documento: SIN-DOCUMENTO\nFecha del informe: día -12 respecto al evento índice\nDiagnóstico: carcinoma lobulillar infiltrante grado 1\nHER2 por inmunohistoquímica: positivo (3+)\nHER2 por hibridación in situ: amplificado\nReceptor de estrógeno: positivo 80 %\nReceptor de progesterona: negativo 0 %"
+    },
+    "mama-laboratorio-05.pdf": {
+      "tipo": "informe_laboratorio",
+      "cancer": "mama",
+      "campos": {
+        "hemoglobina": "12,8 g/dL",
+        "creatinina": "0,9 mg/dL",
+        "fosfatasa_alcalina": "85 U/L"
+      },
+      "texto": "INFORME DE LABORATORIO (SINTÉTICO)\nPaciente: PACIENTE FICTICIO 005   Documento: SIN-DOCUMENTO\nFecha de la muestra: día -3 respecto al evento índice\nHemoglobina: 12,8 g/dL\nCreatinina: 0,9 mg/dL\nFosfatasa alcalina: 85 U/L"
+    },
+    "mama-patologia-01.pdf": {
+      "tipo": "informe_anatomia_patologica",
+      "cancer": "mama",
+      "campos": {
+        "diagnostico": "carcinoma ductal infiltrante grado 2",
+        "estadio": "IIA",
+        "receptor_estrogeno": "positivo 90 %",
+        "receptor_progesterona": "positivo 70 %",
+        "her2": "negativo (1+)",
+        "ki67": "18 %"
+      },
+      "texto": "INFORME DE ANATOMÍA PATOLÓGICA (SINTÉTICO)\nPaciente: PACIENTE FICTICIO 001   Documento: SIN-DOCUMENTO\nFecha del informe: día -30 respecto al evento índice\nDiagnóstico: carcinoma ductal infiltrante grado 2\nEstadio: IIA (pT2 pN0 M0)\nReceptor de estrógeno: positivo 90 %\nReceptor de progesterona: positivo 70 %\nHER2 por inmunohistoquímica: negativo (1+)\nKi-67: 18 %"
+    },
+    "prostata-laboratorio-04.pdf": {
+      "tipo": "informe_laboratorio",
+      "cancer": "prostata",
+      "campos": {
+        "psa": "12,4 ng/mL",
+        "testosterona": "410 ng/dL",
+        "hemoglobina": "13,1 g/dL"
+      },
+      "texto": "INFORME DE LABORATORIO (SINTÉTICO)\nPaciente: PACIENTE FICTICIO 004   Documento: SIN-DOCUMENTO\nFecha de la muestra: día -7 respecto al evento índice\nAntígeno prostático específico (PSA): 12,4 ng/mL\nTestosterona total: 410 ng/dL\nHemoglobina: 13,1 g/dL"
+    },
+    "prostata-nota-06.pdf": {
+      "tipo": "nota_oncologia",
+      "cancer": "prostata",
+      "campos": {
+        "estadio": "cT2c N0 M0",
+        "ecog": "1",
+        "tratamiento_previo": "ninguno"
+      },
+      "texto": "NOTA DE ONCOLOGÍA (SINTÉTICA)\nPaciente: PACIENTE FICTICIO 006   Documento: SIN-DOCUMENTO\nFecha de la consulta: día 0 (evento índice)\nEstadio clínico: cT2c N0 M0\nECOG: 1\nTratamiento previo: ninguno"
+    },
+    "prostata-patologia-03.pdf": {
+      "tipo": "informe_anatomia_patologica",
+      "cancer": "prostata",
+      "campos": {
+        "diagnostico": "adenocarcinoma acinar de próstata",
+        "gleason": "3+4=7",
+        "grupo_isup": "2",
+        "cilindros_positivos": "4 de 12"
+      },
+      "texto": "INFORME DE ANATOMÍA PATOLÓGICA (SINTÉTICO)\nPaciente: PACIENTE FICTICIO 003   Documento: SIN-DOCUMENTO\nFecha del informe: día -45 respecto al evento índice\nDiagnóstico: adenocarcinoma acinar de próstata\nGleason: 3+4=7\nGrupo ISUP: 2\nCilindros positivos: 4 de 12"
+    }
+  }
+}

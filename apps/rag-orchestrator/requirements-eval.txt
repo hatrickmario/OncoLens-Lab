@@ -4,6 +4,7 @@
 # y la exportación usa torch.onnx (torch.export), por lo que no se registran sus licencias.
 pyyaml==6.0.3            # MIT
 numpy==2.5.4             # BSD-3-Clause
+pillow==13.0.0           # MIT-CMU (HPND) (solo data/eval/ocr-mini/generar.py)
 httpx==0.28.1            # BSD-3-Clause
 defusedxml==0.7.1        # PSF-2.0
 psutil==7.2.2            # BSD-3-Clause
