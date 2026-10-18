@@ -93,8 +93,8 @@ Regla de oro (`.claude/README.md`): los componentes `.tsx` tienen 100 líneas de
 2. **Sujeto del rationale:** siempre "las fuentes describen…" o "la población estudiada…", nunca el paciente como destinatario de una indicación.
 3. **Orden visible:**
    - Desde la aplicabilidad (S5): "Ordenadas por coincidencia con la población estudiada, no por eficacia", más la explicación de los tres pasos.
-   - En S1–S4: "Seleccionada por relevancia de la búsqueda, no por eficacia" `[§15 resp. 7]`.
-4. **La relevancia es metadato:** va al final de la tarjeta, en 12 px y con el texto "metadato secundario". Nunca como barra, estrella ni porcentaje destacado (RN-03).
+   - En S1–S4: "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica." (US-061 AC-3) `[§15 resp. 7]` `[S1 resp. 28]`.
+4. **La relevancia es metadato:** va al final de la tarjeta, en 12 px, con el rótulo "Relevancia de recuperación de evidencia" y la nota "no mide eficacia ni solidez clínica" (US-061 AC-2, `[S1 resp. 28]`). Nunca como barra, estrella ni porcentaje destacado (RN-03).
 5. **Avisos que no bloquean** (RN-26): ámbar o gris, siempre con una acción. Solo bloquean el `403` por opt-out, el `422` por egreso y la sesión. El tipo de cáncer no habilitado (`tipo_no_habilitado`, RN-20) no es un aviso clínico sino el alcance del piloto (`ENABLED_CANCER_TYPES`): deja sin IA y no bloquea ningún otro uso.
 6. **Sin evidencia:** se dice qué se buscó, y la relevancia máxima es "no aplica", nunca "0" (RN-02).
 7. **Citas verificables** (RN-01, RN-04, RN-25): cada opción tiene ≥ 1 cita con "ver fragmento" (el texto original) y "fuente original". Los metadatos salen del catálogo; si falta uno, se muestra "No disponible". **NCCN y ESMO solo aparecen como "no incluidas"** `[Pre-S1 resp. 12]`.
