@@ -63,3 +63,7 @@
 - [x] 4.1 `openspec validate l1d-106-retrieval-threshold-sin-evidencia --strict` en verde.
 - [x] 4.2 Suite de `apps/rag-orchestrator` en verde (Pytest), incluido el test contra Milvus de test en la CI.
 - [x] 4.3 `contracts:check` y `contracts:generate:check` en verde; respuestas de `/rag/query` (`200 sin_evidencia`, `401`, `503 LOCAL_LLM_UNAVAILABLE`, `503 RETRIEVAL_UNAVAILABLE`, `422 TIPO_CANCER_NO_REGISTRADO`) validadas con el *helper* de L1D-164 en la suite de integración.
+
+- **Nota (2026-10-17, decisión 82):** el valor provisional del Compose pasa de `RETRIEVAL_TOP_K=40` a `30`, con corte
+  previo a `RERANKER_MAX_PAIRS` = 12 antes del reranker (ver us-231a-adapters-reales-recuperacion). Los "40" anteriores
+  son historia y no se reescriben.

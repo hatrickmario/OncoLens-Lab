@@ -44,7 +44,7 @@ def _settings_locales(**cambios: object):
     valores: dict[str, object] = {
         "llm_provider": "local",
         "relevance_threshold": 0.30,
-        "retrieval_top_k": 40,
+        "retrieval_top_k": 30,
         "rerank_top_n": 10,
         "nli_model": "nli-test@1",
         "prompt_version": "rag-query@test",

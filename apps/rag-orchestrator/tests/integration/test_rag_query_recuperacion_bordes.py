@@ -77,7 +77,7 @@ def test_rag_query_completa_meta_con_la_release_del_corpus_y_la_configuracion_cu
         "corpusCutoffDate": "2026-09-30",
         "excludedSources": ["NCCN", "ESMO"],
         "retrievalParams": {
-            "topK": 40,
+            "topK": 30,
             "rerankTopN": 10,
             "relevanceThreshold": 0.3,
             "retrievalMode": "dense",

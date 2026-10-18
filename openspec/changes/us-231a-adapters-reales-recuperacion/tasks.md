@@ -102,3 +102,7 @@
   `tokenizers` ni el detector; `mypy` si está configurado.
 - [x] 3.4 Escaneo de secretos y PII (`pii-scan`) en verde; ningún peso, ruta de máquina ni hash real versionado
   fuera de la configuración.
+
+- **Nota (2026-10-17, decisión 82):** corte previo al reranker: `RETRIEVAL_TOP_K` = 30, `cortar_a_mejores` a
+  `RERANKER_MAX_PAIRS` = 12 antes de reranquear; la validación de arranque `RETRIEVAL_TOP_K` <= `RERANKER_MAX_PAIRS`
+  se retira. Claves para el humano (no se editó `.env.example`): `RETRIEVAL_TOP_K=30` (hoy 40 en `.env.example`).

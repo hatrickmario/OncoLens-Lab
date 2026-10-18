@@ -62,7 +62,7 @@ def settings_de_prueba(**cambios: object) -> Settings:
         "service_jwt_public_key_file": _ruta_publica_de_sesion,
         # Con LLM_PROVIDER=local el arranque de /rag/query exige estos tres (RN-22); los tests usan los de FX-06a-a.
         "relevance_threshold": 0.30,
-        "retrieval_top_k": 40,
+        "retrieval_top_k": 30,
         "rerank_top_n": 10,
         **cambios,
     }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 
 class Candidato(Protocol):
@@ -11,8 +11,6 @@ class Candidato(Protocol):
     similitud_dense: float
 
 
-C = TypeVar("C", bound=Candidato)
-
-
-def cortar_a_mejores(candidatos: Sequence[C], n: int) -> list[C]:
-    raise NotImplementedError
+def cortar_a_mejores[C: Candidato](candidatos: Sequence[C], n: int) -> list[C]:
+    """Los ``n`` de mayor similitud dense; empate estable por ``chunk_id``. Solo ordena el corte, no puntúa (RN-03)."""
+    return sorted(candidatos, key=lambda c: (-c.similitud_dense, c.chunk_id))[:n]

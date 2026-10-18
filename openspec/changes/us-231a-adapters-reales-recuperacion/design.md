@@ -205,3 +205,9 @@ SHA-256 en configuración). Rollback: proveedor de modelos en `fake` o revertir 
   (`DEFAULT_QUERY_LANGUAGE`, RN-22), no un literal en el adapter (decisión por defecto, **a confirmar por el usuario**).
 - **Fuente de los SHA-256:** claves de entorno (`EMBEDDING_MODEL_SHA256`, `RERANKER_MODEL_SHA256`) frente a un
   manifiesto en `MODEL_CACHE_DIR`; decisión por defecto, **a confirmar por el usuario**: una clave de entorno por archivo (RN-22).
+
+- **Actualización (decisión del usuario, 2026-10-17; decisión 82 del S1):** la nota anterior queda superada. El valor
+  por defecto es `RETRIEVAL_TOP_K` = 30 y el servicio recorta a los `RERANKER_MAX_PAIRS` (12) mejores por similitud
+  dense (desempate por `chunk_id`, `domain/candidatos.cortar_a_mejores`) **antes** del reranker; `relevance_score` sigue
+  saliendo solo del reranker (RN-03). El arranque ya no se niega por `RETRIEVAL_TOP_K` > `RERANKER_MAX_PAIRS`; el adapter
+  real y el falso conservan su límite duro (más pares es `FalloDeInferencia`).

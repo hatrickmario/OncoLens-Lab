@@ -31,14 +31,6 @@ ARCHIVOS_A_VERIFICAR: tuple[tuple[str, str], ...] = (
 )
 
 
-class CandidatosSuperanLosParesDelReranker(RuntimeError):
-    """``RETRIEVAL_TOP_K`` > ``RERANKER_MAX_PAIRS``: toda consulta con tantos candidatos daría 503. El mensaje nombra
-    las dos variables y nunca sus valores."""
-
-    def __init__(self) -> None:
-        super().__init__("RETRIEVAL_TOP_K no puede superar RERANKER_MAX_PAIRS")
-
-
 @dataclass(frozen=True)
 class ModelosDeRecuperacion:
     """Los adapters reales de recuperación ya construidos (un núcleo de embeddings para los dos puertos)."""
@@ -60,7 +52,6 @@ def cargar_modelos_locales(
     Las fábricas se inyectan para que la CI, que no tiene pesos reales (RN-14), ejercite el cableado completo.
     """
     config = _exigir_configuracion_de_modelos(settings)
-    _exigir_candidatos_dentro_de_los_pares_del_reranker(settings.retrieval_top_k, config)
     rutas = verificar_modelos_locales(settings)
     sesion_embeddings, tokenizador_embeddings = _cargar_modelo(
         rutas, "EMBEDDING", settings.model_intra_op_threads, fabricar_sesion, fabricar_tokenizador
@@ -139,13 +130,6 @@ def _exigir_configuracion_de_modelos(settings: Settings) -> ConfigModelos:
     if settings.modelos is None:
         raise ModeloNoVerificadoError("EMBEDDING_MODEL") from None
     return settings.modelos
-
-
-def _exigir_candidatos_dentro_de_los_pares_del_reranker(
-    retrieval_top_k: int | None, config: ConfigModelos
-) -> None:
-    if retrieval_top_k is not None and retrieval_top_k > config.reranker_max_pairs:
-        raise CandidatosSuperanLosParesDelReranker from None
 
 
 def _construir[T](variable_ruta: str, construir: Callable[[], T]) -> T:

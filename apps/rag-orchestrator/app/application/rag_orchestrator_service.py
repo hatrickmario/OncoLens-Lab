@@ -30,6 +30,7 @@ from app.application.ports import (
     ResultadoDeRecuperacion,
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.domain.candidatos import cortar_a_mejores
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.relevance import ChunkPuntuado, filtrar_sobre_umbral, top_relevance_score
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
@@ -100,7 +101,8 @@ class RAGOrchestratorService:
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, solicitud.query)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
         candidatos = await self._recuperar(trace_id, solicitud, filtro)
-        puntuados = await self._reranquear(trace_id, solicitud.query, candidatos)
+        a_reranquear = self._cortar_antes_del_reranker(candidatos)
+        puntuados = await self._reranquear(trace_id, solicitud.query, a_reranquear)
         sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
         logger.info(
             "event=rag_query_recuperacion traceId=%s retrieved=%d aboveThreshold=%d",
@@ -140,6 +142,13 @@ class RAGOrchestratorService:
         # La similitud dense solo elige candidatos: nunca es relevance_score ni se compara con el umbral (RN-03).
         ordenados = sorted(encontrados.values(), key=lambda c: (-c.similitud_dense, c.chunk_id))
         return ordenados[: self._parametros.retrieval_top_k]
+
+    def _cortar_antes_del_reranker(
+        self, candidatos: Sequence[ChunkEncontrado]
+    ) -> list[ChunkEncontrado]:
+        """Al reranker solo van los ``RERANKER_MAX_PAIRS`` mejores por similitud dense (RN-22); sin límite, todos."""
+        maximo = self._parametros.reranker_max_pairs
+        return list(candidatos) if maximo is None else cortar_a_mejores(candidatos, maximo)
 
     async def _buscar_cercanos_a(
         self, trace_id: str, texto: str, filtro: str

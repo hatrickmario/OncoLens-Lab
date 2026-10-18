@@ -102,7 +102,7 @@ def entorno_de_arranque(modelos: EntornoDeModelos, **cambios: str | None) -> dic
         "LLM_PROVIDER": "fake",
         "MODEL_PROVIDER": "local",
         "RELEVANCE_THRESHOLD": "0.30",
-        "RETRIEVAL_TOP_K": "12",
+        "RETRIEVAL_TOP_K": "30",
         "RERANK_TOP_N": "10",
         "PROMPT_VERSION": "rag-query@test",
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),

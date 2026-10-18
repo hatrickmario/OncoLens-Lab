@@ -238,4 +238,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_model=settings.nli_model,  # type: ignore[arg-type]
         prompt_version=settings.prompt_version,  # type: ignore[arg-type]
+        reranker_max_pairs=(
+            settings.modelos.reranker_max_pairs if settings.modelos is not None else None
+        ),
     )

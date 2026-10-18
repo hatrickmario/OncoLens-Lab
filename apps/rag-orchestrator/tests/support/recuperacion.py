@@ -303,7 +303,7 @@ class LectorReleaseFalso:
 
 PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     relevance_threshold=0.30,
-    retrieval_top_k=40,
+    retrieval_top_k=30,
     rerank_top_n=10,
     longitud_maxima_codigo_tipo=LONGITUD_MAXIMA_DE_PRUEBA,
     llm_provider=LlmProvider.local,
