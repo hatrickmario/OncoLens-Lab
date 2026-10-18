@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TypeVar
@@ -79,6 +79,12 @@ class ParametrosDeRecuperacion:
     llm_model: str
     nli_model: str
     prompt_version: str
+
+
+def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionValidada:
+    """La opción con la relevancia y la cita principal que hereda de su chunk citado más relevante (RN-03)."""
+    relevancia = relevancia_de_opcion(aceptada.chunk_ids_validos, puntajes)
+    return OpcionValidada(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
 
 
 class RAGOrchestratorService:
@@ -164,12 +170,7 @@ class RAGOrchestratorService:
     ) -> tuple[OpcionValidada, ...]:
         """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
-        validadas = []
-        for aceptada in aceptadas:
-            relevancia = relevancia_de_opcion(aceptada.chunk_ids_validos, puntajes)
-            validadas.append(
-                OpcionValidada(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
-            )
+        validadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
         recortadas = recortar_a_max_opciones(validadas, solicitud.maxOptions, [])
         logger.info(
             "event=rag_query_recorte traceId=%s opcionesRecortadas=%d",
