@@ -15,19 +15,27 @@ from app.application.ports import FalloDelLlm
 
 
 class OpenAICompatibleLlmClient:
-    """Implementa ``LlmClient``: temperatura 0 y salida restringida por el esquema JSON, sin reintentos."""
+    """Implementa ``LlmClient``: temperatura de la configuración (0 por defecto), salida restringida por el esquema."""
 
-    def __init__(self, base_url: str, model: str, timeout_ms: int, max_output_tokens: int) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        model: str,
+        timeout_ms: int,
+        max_output_tokens: int,
+        temperature: float = 0.0,
+    ) -> None:
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._model = model
         self._timeout_s = timeout_ms / 1000
         self._max_output_tokens = max_output_tokens
+        self._temperature = temperature
 
     async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
         cuerpo = {
             "model": self._model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0,
+            "temperature": self._temperature,
             "max_tokens": self._max_output_tokens,
             "stream": False,
             "response_format": {

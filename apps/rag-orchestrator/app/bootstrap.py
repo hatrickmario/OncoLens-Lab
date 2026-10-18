@@ -208,6 +208,7 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
             settings.llm_model,
             settings.llm_request_timeout_ms,
             settings.llm_max_output_tokens,
+            settings.llm_temperature,
         )
     )
 
