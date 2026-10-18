@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.4.1
+  version: 1.5.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -385,7 +385,7 @@ paths:
         "502":
           $ref: '#/components/responses/ErrorServicioIa'
         "503":
-          $ref: '#/components/responses/LlmLocalNoDisponible'
+          $ref: '#/components/responses/GeneracionNoDisponible'
         "504":
           $ref: '#/components/responses/DeadlineVencido'
 
@@ -638,6 +638,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+    GeneracionNoDisponible:
+      description: >-
+        La generación no está disponible: LLM local caído (los datos reales nunca se envían a la
+        nube) o desidentificación no disponible (falla cerrada, RN-11; no se invoca a Backend 2).
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ErrorLlmLocalNoDisponible'
+              - $ref: '#/components/schemas/ErrorDesidentificacionNoDisponible'
     DeadlineVencido:
       description: rag-orchestrator no respondió dentro del deadline.
       content:
@@ -2025,6 +2035,14 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, const: LOCAL_LLM_UNAVAILABLE }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorDesidentificacionNoDisponible:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: DESIDENTIFICACION_NO_DISPONIBLE }
         message: { type: string }
         traceId: { type: string }
     ErrorDeadlineVencido:

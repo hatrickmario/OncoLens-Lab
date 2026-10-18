@@ -118,6 +118,11 @@
       "target": "#/paths/~1platform~1auth~1login/post/responses/429"
     },
     {
+      "file": "error-desidentificacion-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"
+    },
+    {
       "file": "error-llm-local-no-disponible.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/503"

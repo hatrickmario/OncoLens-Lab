@@ -595,6 +595,12 @@ export const zErrorLlmLocalNoDisponible = z.strictObject({
     traceId: z.string()
 });
 
+export const zErrorDesidentificacionNoDisponible = z.strictObject({
+    error: z.literal('DESIDENTIFICACION_NO_DISPONIBLE'),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorDeadlineVencido = z.strictObject({
     error: z.literal('DEADLINE_VENCIDO'),
     message: z.string(),
