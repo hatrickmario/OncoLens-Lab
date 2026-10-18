@@ -119,10 +119,10 @@
       ],
       "pregunta_referencia": {
         "poblacion": "Mujer posmenopáusica con cáncer de mama metastásico",
-        "contexto_clinico": "Carcinoma lobulillar infiltrante, receptor hormonal positivo, HER2 negativo, estadio IV, progresión tras inhibidor de aromatasa con inhibidor de CDK4/6",
-        "decision": "Opciones de tratamiento sistémico de segunda línea tras la progresión a inhibidor de aromatasa más inhibidor de CDK4/6",
+        "contexto_clinico": "Carcinoma lobulillar infiltrante, receptor hormonal positivo, HER2 negativo, estadio IV, progresión tras inhibidor de aromatasa con inhibidor de CDK4/6; fulvestrant de segunda línea en curso desde el día -45",
+        "decision": "Evidencia para el uso de fulvestrant en la segunda línea actual",
         "fecha_corte_evidencia": "2026-06-30",
-        "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión a un inhibidor de aromatasa más un inhibidor de CDK4/6, ¿qué evidencia publicada hasta 2026-06-30 respalda las opciones de tratamiento sistémico de segunda línea?"
+        "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión tras inhibidor de aromatasa más inhibidor de CDK4/6 y actualmente en tratamiento con fulvestrant de segunda línea, ¿qué evidencia respalda el uso de fulvestrant en este escenario, publicada hasta 2026-06-30?"
       },
       "checklist_reconstruccion": {
         "version": "0.1-borrador",
