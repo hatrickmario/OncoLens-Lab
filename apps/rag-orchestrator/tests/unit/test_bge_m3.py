@@ -139,7 +139,7 @@ def test_una_dimension_distinta_de_la_configurada_falla_con_el_error_del_puerto(
 
 def test_una_salida_con_forma_inesperada_falla_con_el_error_del_puerto() -> None:
     class SesionPlana:
-        def ejecutar(self, secuencias):  # noqa: ANN001, ANN201
+        def ejecutar(self, secuencias):
             return np.zeros((len(secuencias), DIMENSION), dtype=np.float32)
 
     with pytest.raises(FalloDeInferencia):

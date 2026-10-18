@@ -120,7 +120,7 @@ def test_una_salida_no_finita_o_con_forma_inesperada_falla_en_vez_de_inventar_un
     salida: np.ndarray,
 ) -> None:
     class SesionFija:
-        def ejecutar(self, secuencias):  # noqa: ANN001, ANN201
+        def ejecutar(self, secuencias):
             return salida
 
     with pytest.raises(FalloDeInferencia):

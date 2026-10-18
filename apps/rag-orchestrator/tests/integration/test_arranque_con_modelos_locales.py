@@ -83,11 +83,11 @@ def _ruta_publica() -> Path:
     return Path(str(settings_de_prueba().service_jwt_public_key_file))
 
 
-def _cliente(app) -> TestClient:  # noqa: ANN001
+def _cliente(app) -> TestClient:
     return TestClient(app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion()))
 
 
-def _app(ajustes: Settings, **componentes: object):  # noqa: ANN202
+def _app(ajustes: Settings, **componentes: object):
     return crear_app(ajustes, trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), **componentes)  # type: ignore[arg-type]
 
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeVar
 
 from app.application.ports import LanguageDetector, QueryEmbedder, Reranker
 from app.application.seed_corpus.ports import PassageEmbedder
@@ -31,8 +30,6 @@ ARCHIVOS_A_VERIFICAR: tuple[tuple[str, str], ...] = (
     ("RERANKER_TOKENIZER_PATH", "RERANKER_TOKENIZER_SHA256"),
 )
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True)
 class ModelosDeRecuperacion:
@@ -55,30 +52,12 @@ def cargar_modelos_locales(
     Las fábricas se inyectan para que la CI, que no tiene pesos reales (RN-14), ejercite el cableado completo.
     """
     config = _exigir_configuracion_de_modelos(settings)
-    verificar_modelos_locales(settings)
-    tokenizador_embeddings = _construir(
-        "EMBEDDING_TOKENIZER_PATH",
-        lambda: fabricar_tokenizador(_ruta(settings.embedding_tokenizer_path)),
+    rutas = verificar_modelos_locales(settings)
+    sesion_embeddings, tokenizador_embeddings = _cargar_modelo(
+        rutas, "EMBEDDING", settings.model_intra_op_threads, fabricar_sesion, fabricar_tokenizador
     )
-    tokenizador_reranker = _construir(
-        "RERANKER_TOKENIZER_PATH",
-        lambda: fabricar_tokenizador(_ruta(settings.reranker_tokenizer_path)),
-    )
-    sesion_embeddings = _construir(
-        "EMBEDDING_MODEL_PATH",
-        lambda: fabricar_sesion(
-            _ruta(settings.embedding_model_path),
-            hilos=settings.model_intra_op_threads,
-            id_relleno=tokenizador_embeddings.id_relleno,
-        ),
-    )
-    sesion_reranker = _construir(
-        "RERANKER_MODEL_PATH",
-        lambda: fabricar_sesion(
-            _ruta(settings.reranker_model_path),
-            hilos=settings.model_intra_op_threads,
-            id_relleno=tokenizador_reranker.id_relleno,
-        ),
+    sesion_reranker, tokenizador_reranker = _cargar_modelo(
+        rutas, "RERANKER", settings.model_intra_op_threads, fabricar_sesion, fabricar_tokenizador
     )
     nucleo = NucleoBgeM3(
         sesion_embeddings,
@@ -112,15 +91,38 @@ def cargar_modelos_locales(
     )
 
 
-def verificar_modelos_locales(settings: Settings) -> None:
-    """Comprueba ruta y SHA-256 de cada archivo; el primero que falla termina el arranque nombrando su variable."""
+def verificar_modelos_locales(settings: Settings) -> dict[str, Path]:
+    """Comprueba ruta y SHA-256 de cada archivo; el primero que falla termina el arranque nombrando su variable.
+
+    Devuelve las rutas ya verificadas por nombre de variable: quien carga los modelos no vuelve a mirar ``Settings``.
+    """
+    rutas: dict[str, Path] = {}
     for variable_ruta, variable_sha in ARCHIVOS_A_VERIFICAR:
-        verificar_modelo(
-            variable_ruta,
-            variable_sha,
-            getattr(settings, variable_ruta.lower()),
-            getattr(settings, variable_sha.lower()),
-        )
+        ruta = getattr(settings, variable_ruta.lower())
+        verificar_modelo(variable_ruta, variable_sha, ruta, getattr(settings, variable_sha.lower()))
+        rutas[variable_ruta] = ruta
+    return rutas
+
+
+def _cargar_modelo(
+    rutas: dict[str, Path],
+    prefijo: str,
+    hilos: int,
+    fabricar_sesion: Callable[..., SesionDeInferencia],
+    fabricar_tokenizador: Callable[[Path], Tokenizador],
+) -> tuple[SesionDeInferencia, Tokenizador]:
+    """Tokenizer y sesión de un modelo (``EMBEDDING`` o ``RERANKER``); el relleno de la sesión sale de su tokenizer."""
+    variable_tokenizer, variable_modelo = f"{prefijo}_TOKENIZER_PATH", f"{prefijo}_MODEL_PATH"
+    tokenizador = _construir(
+        variable_tokenizer, lambda: fabricar_tokenizador(rutas[variable_tokenizer])
+    )
+    sesion = _construir(
+        variable_modelo,
+        lambda: fabricar_sesion(
+            rutas[variable_modelo], hilos=hilos, id_relleno=tokenizador.id_relleno
+        ),
+    )
+    return sesion, tokenizador
 
 
 def _exigir_configuracion_de_modelos(settings: Settings) -> ConfigModelos:
@@ -130,13 +132,7 @@ def _exigir_configuracion_de_modelos(settings: Settings) -> ConfigModelos:
     return settings.modelos
 
 
-def _ruta(ruta: Path | None) -> Path:
-    if ruta is None:  # ya verificado: solo para el tipado
-        raise ModeloNoVerificadoError("EMBEDDING_MODEL_PATH")
-    return ruta
-
-
-def _construir(variable_ruta: str, construir: Callable[[], _T]) -> _T:
+def _construir[T](variable_ruta: str, construir: Callable[[], T]) -> T:
     """Un archivo corrupto o ilegible termina el arranque nombrando su variable; el motivo (con la ruta) no sale."""
     try:
         return construir()
