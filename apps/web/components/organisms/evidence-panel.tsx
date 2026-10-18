@@ -6,9 +6,8 @@ import type {
   CitedSource,
   EvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { clasificarFallo } from '../../lib/evidence/clasificar-fallo';
-import { clasificarResultado } from '../../lib/evidence/clasificar-resultado';
-import { anunciarEstado, type FaseDelPanel } from '../../lib/evidence/anuncio-de-estado';
+import { anunciarEstado } from '../../lib/evidence/anuncio-de-estado';
+import { faseTrasSolicitud, type FaseDelPanel } from '../../lib/evidence/fase-del-panel';
 import { armarSolicitud, solicitarAnalisis } from '../../lib/evidence/solicitar-analisis';
 import estilos from '../evidence.module.css';
 import { AnalysisFailure } from '../molecules/analysis-failure';
@@ -42,20 +41,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
     setFase({ tipo: 'enviando' });
     const resultado = await solicitarAnalisis(solicitud);
     if (resultado.tipo === 'sin_sesion') return router.replace('/login');
-    if (resultado.tipo === 'ok') {
-      const soportado = clasificarResultado(resultado.analisis) !== 'no_soportado';
-      return setFase(
-        soportado
-          ? { tipo: 'ok', analisis: resultado.analisis }
-          : { tipo: 'error', httpStatus: 0, traceId: resultado.analisis.traceId },
-      );
-    }
-    const { httpStatus, codigo, traceId } = resultado;
-    setFase(
-      clasificarFallo(httpStatus, codigo) === 'no_realizado'
-        ? { tipo: 'no_realizado' }
-        : { tipo: 'error', httpStatus, traceId },
-    );
+    setFase(faseTrasSolicitud(resultado));
   }
 
   function reintentar() {

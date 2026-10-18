@@ -1,13 +1,6 @@
-import type { EvidenceAnalysis } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes, rellenar } from '../mensajes';
 import { clasificarResultado } from './clasificar-resultado';
-
-export type FaseDelPanel =
-  | { tipo: 'inactivo' }
-  | { tipo: 'enviando' }
-  | { tipo: 'ok'; analisis: EvidenceAnalysis }
-  | { tipo: 'error'; httpStatus: number; traceId: string | null }
-  | { tipo: 'no_realizado' };
+import type { FaseDelPanel } from './fase-del-panel';
 
 /** Texto breve de la región `role="status"` (design D7); vacío mientras no ocurre nada. */
 export function anunciarEstado(fase: FaseDelPanel): string {
