@@ -9,7 +9,9 @@
       "apps/clinical-api/test/**/deidentification/**",
       "openspec/specs/deidentification/**",
       "ci/tests/cases/ac4-allowlist/**",
-      "openspec/changes/l1d-103-gateway-contexto-clinico/**"
+      "openspec/changes/l1d-103-gateway-contexto-clinico/**",
+      "openspec/changes/archive/*-l1d-103-gateway-contexto-clinico/**",
+      "openspec/specs/evidence-analysis-gateway/spec.md"
     ],
     "valores": [
       {
@@ -55,7 +57,10 @@
     "fixture": "L1D-203-desidentificacion",
     "clase": "sintetico",
     "rutas": [
-      "openspec/changes/*-desidentificacion-*/**"
+      "openspec/changes/*-desidentificacion-*/**",
+      "openspec/changes/archive/*-desidentificacion-*/**",
+      "openspec/specs/deidentification/**",
+      "openspec/specs/evidence-analysis-gateway/spec.md"
     ],
     "valores": [
       {
