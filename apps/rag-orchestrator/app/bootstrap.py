@@ -70,6 +70,7 @@ class PuertosDelCorpus:
 
     buscador: ChunkSearch
     lector_release: CorpusReleaseReader
+    catalogo: CorpusCatalogReader
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
@@ -135,6 +136,7 @@ def _componer_recuperacion(
         buscador=corpus.buscador,
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
+        catalogo=corpus.catalogo,
     )
 
 
