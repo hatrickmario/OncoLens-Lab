@@ -48,6 +48,7 @@ describe('EvidencePanel', () => {
       {
         patientId: ID_PACIENTE,
         query: PREGUNTA_DE_PRUEBA,
+        continueWithWarning: false,
         sourcesSelected: { guias: true, ensayos: true, publicaciones: true },
       },
     ]);
