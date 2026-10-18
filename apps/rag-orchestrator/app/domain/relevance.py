@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 
@@ -14,6 +14,25 @@ class ChunkPuntuado:
     document_id: str
     chunk_text: str
     relevance_score: float
+
+
+@dataclass(frozen=True)
+class RelevanciaDeOpcion:
+    """``relevance_score`` de una opción (RN-03) y la cita principal de la que lo hereda."""
+
+    relevance_score: float
+    chunk_principal_id: str
+
+
+def relevancia_de_opcion(
+    chunk_ids_validos: Sequence[str], puntajes: Mapping[str, float]
+) -> RelevanciaDeOpcion:
+    """La de su cita válida más relevante (la cita principal; a igualdad, la de menor ``chunkId``, RN-28).
+
+    Es un metadato de ese chunk, no una medida de la opción ni de su solidez clínica (RN-03).
+    """
+    principal = min(chunk_ids_validos, key=lambda chunk_id: (-puntajes[chunk_id], chunk_id))
+    return RelevanciaDeOpcion(puntajes[principal], principal)
 
 
 def filtrar_sobre_umbral(

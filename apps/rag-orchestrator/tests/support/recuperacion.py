@@ -21,6 +21,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkSearch,
     CorpusChunkStore,
+    EvidenceGenerator,
     FalloDeInferencia,
     Idioma,
     ReleaseDelCorpus,
@@ -359,7 +360,7 @@ class EntornoDeRecuperacion:
     embedder: EmbedderFalso
     buscador: BuscadorFalso
     reranker: RerankerFalso
-    generador: FakeEvidenceGenerator
+    generador: EvidenceGenerator
     lector_release: LectorReleaseFalso
     catalogo: CatalogoFalso
     servicio: RAGOrchestratorService
@@ -377,7 +378,7 @@ def crear_entorno(
     lector_release: LectorReleaseFalso | None = None,
     catalogo: CatalogoFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
-    generador: FakeEvidenceGenerator | None = None,
+    generador: EvidenceGenerator | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -408,11 +409,15 @@ def crear_entorno(
     )
 
 
-def solicitud_de(pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama") -> dict[str, Any]:
+def solicitud_de(
+    pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama", max_options: int | None = None
+) -> dict[str, Any]:
     """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
     base = json.loads((EJEMPLOS / "rag-query-request.json").read_text(encoding="utf-8"))
     solicitud = copy.deepcopy(base)
     solicitud["query"] = pregunta
+    if max_options is not None:
+        solicitud["maxOptions"] = max_options
     if tipo_de_cancer is None:
         solicitud["clinicalContext"]["diagnosis"] = None
     else:

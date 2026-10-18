@@ -3,7 +3,7 @@
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.relevance import ChunkPuntuado
@@ -174,6 +174,8 @@ class EvidenciaGenerada:
     """Lo que devuelve el generador: opciones con sus ``chunkId`` citados, aún sin validar (RN-01, RN-04)."""
 
     opciones: tuple[OpcionGenerada, ...]
+    limitaciones_propuestas: tuple[str, ...] = ()
+    """Limitaciones que propone el generador; siempre vacío en el S1 `[S1 resp. 11]` (las verifica L1D-180)."""
 
 
 class EvidenceGenerator(Protocol):
@@ -192,4 +194,23 @@ class CorpusCatalogReader(Protocol):
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         """Solo devuelve los documentos que existen; un campo que el catálogo no registra es ``None``."""
+        ...
+
+
+# --- Generación de /rag/query (US-225, L1D-275) ----------------------------------------------------------------------
+
+
+class FalloDelLlm(RuntimeError):
+    """El LLM local no respondió o no entregó una respuesta utilizable (conexión, tiempo, estado HTTP o cuerpo).
+
+    Es el único error que los adapters del LLM lanzan; el generador lo convierte en ``503 LOCAL_LLM_UNAVAILABLE``.
+    El mensaje nunca lleva el prompt, la pregunta ni el texto generado.
+    """
+
+
+class LlmClient(Protocol):
+    """LLM local con salida JSON restringida por un esquema (RN-12: nunca un proveedor de nube con datos reales)."""
+
+    async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
+        """Texto crudo del modelo, que debe ser un JSON conforme a ``esquema``; sin reintento. Fallo: ``FalloDelLlm``."""
         ...
