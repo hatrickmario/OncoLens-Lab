@@ -39,6 +39,8 @@ def _ids(texto: str) -> list[int]:
 class TokenizadorFalso:
     """Registra cada texto recibido (con su prefijo) para que el test vea lo que llega al modelo."""
 
+    id_relleno = 1
+
     def __init__(self, error: Exception | None = None) -> None:
         self.error = error
         self.llamadas: list[tuple[str, str | None]] = []

@@ -130,6 +130,68 @@ def salida_completa(proceso: subprocess.CompletedProcess[str]) -> str:
     return f"{proceso.stdout}\n{proceso.stderr}"
 
 
+def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
+    """``Settings`` con ``MODEL_PROVIDER=local`` y los archivos sintéticos de ``modelos``, sin leer el entorno."""
+    from app.config.modelos import cargar_config_modelos
+    from app.config.settings import Settings
+
+    rutas = {
+        variable.lower(): valor
+        for variable, valor in modelos.variables.items()
+        if variable.endswith(("_PATH", "_SHA256")) and variable != "MODEL_CACHE_DIR"
+    }
+    return Settings(  # type: ignore[call-arg]
+        _env_file=None,
+        model_provider="local",
+        modelos=cargar_config_modelos(modelos.variables),
+        **{**rutas, **cambios},
+    )
+
+
+def construir_modelos_con_dobles(modelos: EntornoDeModelos, **cambios: object):
+    """El cargador real con los archivos sintéticos verificados y la sesión y el tokenizer sustituidos por dobles."""
+    from app.infrastructure.models.local import cargar_modelos_locales
+    from tests.support.inferencia_falsa import (
+        SesionDeEmbeddingsFalsa,
+        SesionDeLogitsFalsa,
+        TokenizadorFalso,
+    )
+
+    ajustes = settings_de_modelos(modelos, **cambios)
+    dimension = ajustes.modelos.embedding_dim
+
+    def sesion(ruta: Path, **_: object):
+        return (
+            SesionDeEmbeddingsFalsa(dimension)
+            if "embedding" in ruta.name
+            else SesionDeLogitsFalsa()
+        )
+
+    return cargar_modelos_locales(
+        ajustes, fabricar_sesion=sesion, fabricar_tokenizador=lambda ruta: TokenizadorFalso()
+    )
+
+
+def ejercitar_los_cuatro_adapters(modelos) -> None:
+    """Una pasada por FX-06a-c por cada adapter; lanza si alguno falla."""
+    from app.application.ports import ChunkEncontrado
+    from tests.support.inferencia_falsa import CH_M1_1, PASAJES_FX06AC, Q_HER2
+
+    candidatos = [
+        ChunkEncontrado(chunk_id=i, document_id=f"doc-{i}", chunk_text=t, similitud_dense=0.5)
+        for i, t in PASAJES_FX06AC.items()
+    ]
+    assert modelos.embedder_consulta.embeber(Q_HER2)
+    assert len(modelos.embedder_pasajes.embeber(list(PASAJES_FX06AC.values()))) == len(
+        PASAJES_FX06AC
+    )
+    assert len(modelos.reranker.puntuar(Q_HER2, candidatos)) == len(candidatos)
+    assert (
+        modelos.detector_idioma.detectar(Q_HER2),
+        modelos.detector_idioma.detectar(CH_M1_1),
+    ) == ("es", "en")
+
+
 def cargar_modelos_reales():
     """Los adapters con los pesos de ``MODEL_CACHE_DIR`` (tests ``models``): rutas y SHA-256 salen del entorno."""
     from app.config.settings import Settings

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from app.application.ports import LanguageDetector, QueryEmbedder, Reranker
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import Settings
+from app.infrastructure.models.onnx import SesionOnnx, TokenizadorDeArchivo
+from app.infrastructure.models.sesion import SesionDeInferencia, Tokenizador
 from app.infrastructure.models.verificacion import verificar_modelo
 
 # (variable de la ruta, variable del SHA-256) por cada archivo que se carga: modelo ONNX y tokenizer de cada modelo.
@@ -28,7 +32,12 @@ class ModelosDeRecuperacion:
     reranker: Reranker
 
 
-def cargar_modelos_locales(settings: Settings) -> ModelosDeRecuperacion:
+def cargar_modelos_locales(
+    settings: Settings,
+    *,
+    fabricar_sesion: Callable[..., SesionDeInferencia] = SesionOnnx.desde_archivo,
+    fabricar_tokenizador: Callable[[Path], Tokenizador] = TokenizadorDeArchivo,
+) -> ModelosDeRecuperacion:
     raise NotImplementedError
 
 

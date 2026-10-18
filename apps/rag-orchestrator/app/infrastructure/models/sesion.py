@@ -13,6 +13,11 @@ import numpy as np
 
 
 class Tokenizador(Protocol):
+    @property
+    def id_relleno(self) -> int:
+        """Id del token de relleno con el que la sesión alinea secuencias de largo distinto."""
+        ...
+
     def codificar(self, texto: str, par: str | None = None) -> list[int]:
         """Ids con los tokens especiales del modelo; con ``par``, la pareja (pregunta, pasaje) del cross-encoder."""
         ...
