@@ -17,11 +17,21 @@ El repositorio MUST contener `apps/clinical-api/openapi.yaml` y `apps/rag-orches
 - **THEN** el comando termina con código distinto de 0 y nombra el archivo y el error
 
 ### Requirement: Política de versión del contrato
-Ambos specs MUST declarar `info.version` semántico, `1.0.0` al congelar; un cambio incompatible declarado en su change (ADR-26) SHALL subir la *major*, uno aditivo la *minor* y uno de descripciones o ejemplos la *patch*.
+Ambos specs MUST declarar `info.version` semántico (`MAJOR.MINOR.PATCH`), `1.0.0` al congelar; un cambio incompatible declarado en su change (ADR-26) SHALL subir la *major*; una operación, una respuesta o un código de error nuevos, la *minor*; un cambio solo de texto (descripciones, `message`), la *patch*; y un change que solo añade ejemplos MUST NOT tocar `info.version`.
 
 #### Scenario: La versión es semántica en ambos specs [US-033 AC-1]
 - **WHEN** `assertSpecVersions()` revisa ambos specs, y un parche pone `info.version: "v1"` en uno de ellos
-- **THEN** los reales declaran `1.0.0` y el parcheado hace terminar el comando con código distinto de 0 nombrando el spec
+- **THEN** los reales declaran un `info.version` semántico `MAJOR.MINOR.PATCH` (tras este change, `1.1.0` en ambos) y el parcheado hace terminar el comando con código distinto de 0 nombrando el spec
+
+#### Scenario: Una operación nueva sube la minor [US-034 AC-1]
+- **GIVEN** `main` con ambos specs en `1.0.0` y un change que solo añade una operación (`GET /health`) y sus ejemplos
+- **WHEN** se comparan los specs del change con los de `main`
+- **THEN** ambos declaran `info.version: 1.1.0` (minor) y no hay cambios incompatibles
+
+#### Scenario: Dos changes que suben la versión del mismo spec a la vez
+- **GIVEN** dos changes abiertos a la vez que suben `info.version` del mismo spec
+- **WHEN** el segundo se mergea
+- **THEN** quien mergea segundo rebasa sobre `main` y conserva el número que tenía asignado
 
 ### Requirement: Operaciones del S1 en el spec de clinical-api
 Antes de la primera implementación del S1, el spec de `clinical-api` MUST contener `POST /platform/auth/login`, `POST /platform/auth/logout`, `GET /platform/patients`, `POST /platform/patients/search`, `GET /platform/patients/{patientId}`, `POST …/documents`, `POST /platform/evidence-analyses` y `GET /platform/patients/{patientId}/case` `[Pre-S1 resp. 34 (D-5)]`, además del registro manual y el seguimiento; cada historia posterior SHALL añadir su endpoint en su tarea `## contratos` (aditivo).
@@ -362,11 +372,15 @@ El spec de `clinical-api` MUST declarar `POST /platform/patients/search` con la 
 - **THEN** no reporta hallazgo
 
 ### Requirement: Permisos por operación y vista del administrador
-Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios códigos concretos de la matriz de `data-model.md`, sin comodines; `publico` SHALL admitirse solo en el login. `GET /platform/patients/{patientId}` SHALL responder `oneOf` `PatientSummary` o `PatientAdminSummary` (identificación enmascarada, `lifecycleStatus`, `registeredAt`, sin clínica), atado al permiso con `x-view-by-permission` `[Pre-S1 resp. 24, 27, 29]` (E-04).
+Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios códigos concretos de la matriz de `data-model.md`, sin comodines; `publico` SHALL admitirse solo en el login y en `GET /health` (operación interna del healthcheck que `web` nunca reenvía, US-034).
 
 #### Scenario: Una operación sin permiso declarado o con un código fuera de la matriz rompe la verificación [US-033 AC-17] [Pre-S1 resp. 29]
 - **WHEN** un parche quita `x-permission` de `POST …/follow-ups`, usa un código que no está en la matriz, usa el comodín `ai_analysis:*` o pone `publico` en `GET /platform/patients`
 - **THEN** `assertOperationsDeclarePermission()` reporta el hallazgo y el comando termina con código distinto de 0
+
+#### Scenario: publico solo se admite en el login y en el health [US-034 AC-1]
+- **WHEN** `assertOperationsDeclarePermission()` revisa el spec real, con `publico` en `POST /platform/auth/login` y en `GET /health`, y un parche pone `publico` en `POST /platform/auth/logout`
+- **THEN** el real no produce hallazgos y el parcheado reporta `POST /platform/auth/logout` y hace terminar el comando con código distinto de 0
 
 #### Scenario: La vista de la ficha está atada al permiso [US-033 AC-17] [Pre-S1 resp. 27]
 - **WHEN** un parche quita `x-view-by-permission` de `GET /platform/patients/{patientId}` o mapea `default` a `PatientSummary`
@@ -379,6 +393,10 @@ Cada operación de `clinical-api` MUST declarar `x-permission` con uno o varios 
 #### Scenario: La vista del administrador no tiene datos clínicos [US-033 AC-15] [Pre-S1 resp. 27]
 - **WHEN** se valida `patient-summary-admin.json` y un parche le agrega `diagnosis`
 - **THEN** el ejemplo original valida con `nationalIdMasked`, `lifecycleStatus` y `registeredAt`, y el parcheado falla por `additionalProperties: false`
+
+#### Scenario: El detalle del paciente se ata al permiso con x-view-by-permission [Pre-S1 resp. 24, 27, 29] (E-04)
+- **WHEN** `contracts:check` revisa `GET /platform/patients/{patientId}`
+- **THEN** responde `oneOf` `PatientSummary` o `PatientAdminSummary` (identificación enmascarada, `lifecycleStatus`, `registeredAt`, sin clínica), atado al permiso con `x-view-by-permission`
 
 ### Requirement: Filtro de antigüedad de la evidencia
 `filtersApplied.publishedFromYear` (`integer | null`; `null` = toda la evidencia) MUST existir como opcional en la petición de `POST /platform/evidence-analyses` (ausente = `año actual − EVIDENCE_DEFAULT_YEARS`, resuelto por Backend 1) y como requerido en `RagFiltersApplied` de `/rag/query` y `/rag/follow-up` (valor efectivo); `AnalysisBasis.sourcesConsulted.filters.publishedFromYear` SHALL registrar el valor efectivo (E-02).
@@ -397,3 +415,47 @@ Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos segú
 #### Scenario: Un ejemplo no sintético rompe la verificación [US-033 AC-17] [RN-14] [Pre-S1 resp. 12]
 - **WHEN** un parche pone `dataClassification = real_anonimizado` en `rag-query-request.json`, `sourceName = "NCCN"` en una cita, `nationalId = "12345678"` en `patient-search.json`, `name = "María Pérez"` en ese ejemplo, o la fecha `01/03/2026` dentro de `clinicalContext`
 - **THEN** el comando termina con código distinto de 0 y nombra el ejemplo y la ruta
+
+### Requirement: Clientes HTTP generados con fetch inyectable
+`contracts:generate` MUST generar con hey-api (plugins `@hey-api/client-fetch` + `@hey-api/sdk`, incluidos en `@hey-api/openapi-ts` con versión exacta fijada) un SDK por spec en `packages/api-contracts/src/client/clinical-api/` (para `web`) y `packages/api-contracts/src/client/rag-orchestrator/` (para `clinical-api`), con `baseUrl` y `fetch` inyectables; lo generado MUST NOT editarse a mano y `contracts:generate:check` SHALL detectarlo `[S1 resp. 13]`.
+
+#### Scenario: Un SDK editado a mano o desactualizado rompe la verificación [US-054 AC-6] [S1 resp. 13]
+- **WHEN** un parche edita un archivo de `packages/api-contracts/src/client/rag-orchestrator/` o el spec cambia sin regenerar
+- **THEN** `npm run contracts:generate:check` termina con código distinto de 0 nombrando el archivo, y con el SDK regenerado termina con código 0
+
+### Requirement: clinical-api llama a rag-orchestrator solo con el cliente generado sobre el transporte JWT
+`clinical-api` MUST llamar a `rag-orchestrator` solo con `createRagOrchestratorClient()`, construido sobre `createRagOrchestratorFetch()`. `X-Request-Deadline` SHALL ser un parámetro tipado de la operación que pasa el servicio llamador; el transporte MUST NOT calcularlo ni añadirlo `[S1 resp. 13]`.
+
+#### Scenario: El cliente de rag lleva el deadline del llamador y el JWT de servicio [US-054 AC-6] [S1 resp. 13]
+- **GIVEN** `createRagOrchestratorClient()` con un par ES256 efímero, reloj congelado y MSW interceptando `POST /rag/query` en el borde HTTP
+- **WHEN** el llamador invoca `ragQuery` con el cuerpo de `rag-query-request.json` y `X-Request-Deadline` = un instante sintético fijo, y en otra llamada sin ese parámetro
+- **THEN** el request capturado lleva `X-Request-Deadline` igual al valor pasado y `Authorization: Bearer <jwt>` verificable con la clave pública, sin `Cookie`; sin el parámetro la cabecera `X-Request-Deadline` no aparece; y la respuesta se tipa como `RagQueryInternalResponse`
+
+### Requirement: Health check declarado en ambos specs
+Ambos specs MUST declarar `GET /health` con `security: []`, tag `operacion` y `200 HealthStatus` (cerrado, `status` `const ok`, definido en cada spec); el de `rag-orchestrator` SHALL declarar además `503 LlmLocalNoDisponible`. Es aditivo (ADR-26): `info.version` 1.1.0 y ejemplos `health-ok.json` y `rag-health-llm-no-disponible.json` en `index.json`.
+
+#### Scenario: Ambos specs declaran el health con sus ejemplos [US-034 AC-1] [US-034 AC-4]
+- **WHEN** `npm run contracts:check` revisa los dos specs y los ejemplos
+- **THEN** `GET /health` existe en ambos con `HealthStatus` cerrado, el de `rag-orchestrator` declara el `503` `LOCAL_LLM_UNAVAILABLE`, `health-ok.json` y `rag-health-llm-no-disponible.json` validan contra su `target` y el comando termina con código 0
+
+#### Scenario: El cambio no es incompatible [US-034 AC-1]
+- **WHEN** se comparan los specs del change con los de `main` (`oasdiff breaking`, o la comprobación manual equivalente mientras `contracts:breaking` no exista, US-214)
+- **THEN** no se reporta ningún cambio incompatible y ambos declaran `info.version: 1.1.0`
+
+### Requirement: Ejemplos de request para las preguntas de fixture del modo fake
+`index.json` MUST asociar `rag-query-con-evidencia.json` a `rag-query-request.json` y `rag-query-sin-evidencia.json` a `rag-query-request-sin-evidencia.json`, un request sintético válido contra `RagQueryInternalRequest` que solo difiere en la `query` `[S1 resp. 7]`.
+
+#### Scenario: El request sin evidencia es un ejemplo sintético válido [US-034 AC-6] [S1 resp. 7]
+- **WHEN** `contracts:check` valida `rag-query-request-sin-evidencia.json` contra `RagQueryInternalRequest`
+- **THEN** el ejemplo valida, cumple `assertExamplesSynthetic()` y solo difiere de `rag-query-request.json` en la `query`
+
+### Requirement: Preguntas de fixture distintas en todos los pares request → RagQueryInternalResponse
+Toda entrada de `index.json` con `target` `#/components/schemas/RagQueryInternalResponse` MUST declarar su `request`, cada request de *fixture* SHALL asociarse a una sola respuesta y las `query` (sin espacios en los extremos) de todos esos requests MUST ser distintas, para que el modo `fake` elija sin ambigüedad aunque otros changes añadan pares. Lo verifica `assertFixtureQueriesDistinct()`.
+
+#### Scenario: Cada respuesta fija tiene su pregunta de fixture distinta [US-034 AC-6] [S1 resp. 7]
+- **WHEN** `assertFixtureQueriesDistinct()` compara las `query` de todos los requests asociados a una respuesta `RagQueryInternalResponse`
+- **THEN** las `query` son distintas entre sí, cada respuesta tiene su `request` y el comando termina con código 0
+
+#### Scenario: Un par nuevo con una pregunta repetida rompe la verificación [US-034 AC-6] [S1 resp. 7]
+- **WHEN** un parche añade a `index.json` una tercera respuesta `RagQueryInternalResponse` cuyo `request` tiene la misma `query` que `rag-query-request.json` (o una respuesta `RagQueryInternalResponse` sin `request`)
+- **THEN** `assertFixtureQueriesDistinct()` reporta ambos archivos y el comando termina con código distinto de 0
