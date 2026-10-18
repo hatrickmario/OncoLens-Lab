@@ -167,6 +167,24 @@ presupuesto). Es una medición local (`models`), no una compuerta de la CI.
 Sin datos ni esquema que migrar. Los pesos se aprovisionan fuera del repo (volumen de solo lectura, con su
 SHA-256 en configuración). Rollback: proveedor de modelos en `fake` o revertir el PR; puertos y L1D-106 no cambian.
 
+## Desviaciones de la implementación (US-231a)
+
+- **Dos fachadas, un núcleo.** `QueryEmbedder.embeber(texto)` y `PassageEmbedder.embeber(textos)` comparten nombre con
+  firmas incompatibles (un `str` también es `Sequence[str]`): no pueden convivir en una clase. `NucleoBgeM3` tiene la
+  única sesión y `EmbedderDeConsultaBgeM3` / `EmbedderDePasajesBgeM3` son las fachadas de cada puerto.
+- **Prefijos configurables, vacíos por defecto.** BGE-M3 no exige prefijo (ADR-39: plantilla `{texto}`); el adapter
+  los admite por constructor para cumplir "el prefijo que exija el modelo" sin inventar uno.
+- **Detector de idioma sin dependencia** (heurística de palabras funcionales, `app/domain/idioma.py`).
+- **Sparse de BGE-M3 no calculado.** Requiere `sparse_linear` (archivo adicional con su SHA-256) y nadie lo consume hasta
+  S3 (US-112); calcularlo hoy añade un archivo verificado sin uso. Queda para US-112.
+- **Un archivo ONNX por modelo.** Los pesos int8 de ADR-39 son un solo archivo; los «datos externos» del ONNX se
+  verificarán el día que un modelo los traiga (basta añadir su par de variables a `ARCHIVOS_A_VERIFICAR`).
+- **Composición parcial en `main.py`.** `crear_app` recibe `corpus: PuertosDelCorpus` (Milvus + catálogo) además de los
+  modelos; `app/main.py` aún no construye esos dos bordes reales (smoke del corpus semilla, US-231b), así que con
+  `LLM_PROVIDER=local` la ruta sigue respondiendo `503` fail-closed hasta entonces.
+- **`FalloDeInferencia`** (en `app/application/ports.py`) es el error del puerto; el servicio ya lo convierte en `503`.
+- **`Tokenizador.id_relleno`** forma parte del Protocol: la sesión alinea secuencias con el relleno de su tokenizer.
+
 ## Open Questions
 
 - **Nombre del selector:** la historia habla de `MODEL_PROVIDER`; hoy solo existe `LLM_PROVIDER` (`fake|local`),
