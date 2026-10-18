@@ -243,8 +243,8 @@ son los tests de aceptación con FX-T4a-a.
   expresiones (`expresionesDeFecha`), una sola fuente.
 - **Separador único en la fecha numérica** (fix Menor 4): cada fecha exige el MISMO separador (`(?<s>[/.-])…\k<s>`), así `PSA 4.0-10.0`,
   `Hb 10.5-12.0` y `dosis 1.5/2.5/10 mg` no se mutilan. Falso positivo residual aceptado: un valor con tres números y el
-  mismo separador (`1.5.2024`, `4.5.10`) es indistinguible de una fecha y se enmascara.
-- **Deuda antes del `preflight` de S6:** fechas sin cubrir (`03/2024`, `15-mar-2024`, `dic.2024`, `el 15 de marzo` sin año).
+  mismo separador (`1.5.2024`, `4.5.10`) es indistinguible de una fecha y se enmascara. Los separadores mezclados solo se admiten con año de cuatro dígitos (`15/03-2024`, `2024-03/15`), por dos patrones adicionales.
+- **Deuda antes del `preflight` de S6:** fechas sin cubrir (`03/2024`, `15-mar-2024`, `dic.2024`, `el 15 de marzo` sin año, `15/3.24` con separadores mezclados y año de dos dígitos, `15 / 03 / 2024` con espacios alrededor del separador).
 
 ## Pendiente de definir
 
