@@ -69,9 +69,13 @@ def test_la_etiqueta_es_la_clase_de_mayor_probabilidad(p: ProbabilidadesNli, esp
     assert etiqueta_mas_probable(p) == esperada
 
 
-def test_un_empate_se_resuelve_siempre_en_el_orden_entailment_neutral_contradiction() -> None:
-    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.4, 0.2)) == "entailment"
-    assert etiqueta_mas_probable(ProbabilidadesNli(0.2, 0.4, 0.4)) == "neutral"
+def test_un_empate_entre_entailment_y_contradiction_no_devuelve_entailment_porque_falla_cerrado() -> (
+    None
+):
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.2, 0.4)) == "contradiction"
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.4, 0.2)) == "neutral"
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.2, 0.4, 0.4)) == "contradiction"
+    assert etiqueta_mas_probable(ProbabilidadesNli(1 / 3, 1 / 3, 1 / 3)) == "contradiction"
     assert set(ETIQUETAS_NLI) == {"entailment", "neutral", "contradiction"}
 
 

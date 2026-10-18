@@ -8,7 +8,7 @@ import pytest
 from app.application.ports import FalloDeInferencia, ParNli
 from app.domain.nli import IndicesDeClase
 from app.infrastructure.nli.mdeberta import ClasificadorNliMdeberta, SalidaConClasesInesperadas
-from tests.support.inferencia_falsa import SesionNliFalsa, TokenizadorFalso
+from tests.support.inferencia_falsa import SesionNliFalsa, TokenizadorFalso, id_de_palabra
 
 
 def _clasificador(
@@ -92,16 +92,56 @@ def test_un_lote_grande_se_parte_por_el_presupuesto_de_tokens_y_todos_reciben_re
     assert [r.label for r in resultados] == ["neutral"] * 6
 
 
-def test_un_par_mas_largo_que_el_modelo_falla_cerrado_con_el_error_del_puerto_sin_su_texto() -> (
+def test_una_hipotesis_mas_larga_que_el_modelo_falla_cerrado_con_el_error_del_puerto_sin_su_texto() -> (
     None
 ):
     sesion = SesionNliFalsa()
-    par = ParNli("palabra " * 40, "hipotesis-secreta")
+    par = ParNli("premisa corta", "hipotesis-secreta " + "palabra " * 40)
 
     with pytest.raises(FalloDeInferencia) as error:
         _clasificador(sesion, max_length=16).clasificar([par])
 
     assert "hipotesis-secreta" not in str(error.value) and sesion.invocaciones == 0
+
+
+class _SesionQueImplicaSiVeLaClave:
+    """Entailment solo en las secuencias que contienen la palabra clave; neutral en las demás."""
+
+    def __init__(self) -> None:
+        self.secuencias: list[list[int]] = []
+
+    def ejecutar(self, secuencias):  # noqa: ANN001, ANN201
+        self.secuencias += [list(s) for s in secuencias]
+        clave = id_de_palabra("clave")
+        return np.array(
+            [[6.0, 0.0, 0.0] if clave in s else [0.0, 6.0, 0.0] for s in secuencias],
+            dtype=np.float32,
+        )
+
+
+def test_una_premisa_mas_larga_que_el_modelo_se_divide_en_ventanas_y_el_soporte_es_el_maximo_de_p_entailment() -> (
+    None
+):
+    premisa = "relleno " * 30 + "clave " + "relleno " * 30
+    sesion = _SesionQueImplicaSiVeLaClave()
+
+    resultado = _clasificador(sesion, max_length=16).clasificar(
+        [ParNli(premisa, "hipotesis")]  # type: ignore[arg-type]
+    )[0]
+
+    assert resultado.label == "entailment" and resultado.p_entailment > 0.99
+    assert len(sesion.secuencias) > 1
+    assert all(len(s) <= 16 for s in sesion.secuencias)
+
+
+def test_una_premisa_larga_sin_la_clave_en_ninguna_ventana_no_implica_la_hipotesis() -> None:
+    sesion = _SesionQueImplicaSiVeLaClave()
+
+    resultado = _clasificador(sesion, max_length=16).clasificar(
+        [ParNli("relleno " * 60, "hipotesis")]  # type: ignore[arg-type]
+    )[0]
+
+    assert resultado.label == "neutral" and resultado.p_entailment < 0.01
 
 
 def test_una_salida_sin_tres_clases_lanza_el_error_de_clases_inesperadas_que_es_del_puerto() -> (
