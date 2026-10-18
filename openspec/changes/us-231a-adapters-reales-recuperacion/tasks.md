@@ -16,11 +16,12 @@
 - [ ] 1.1 (test después) Supply chain: justificar en `design.md` y fijar en `requirements.txt` las dependencias de
   inferencia (ONNX Runtime, *tokenizers*) y el detector de idioma: licencia permisiva (MIT/BSD/Apache), versión exacta
   `==`, solo *wheel* (`--only-binary`), sin `setup.py` ni descarga en importación o primer uso, `pip-audit` sin
-  críticas ni altas; `huggingface_hub` y `transformers` prohibidos en el `requirements.txt` de ejecución (solo
-  `requirements-eval.txt`). Verificación: chequeo de `requirements.txt` y salida de `pip-audit`.
+  críticas ni altas; `transformers` prohibido en el `requirements.txt` de ejecución (solo `requirements-eval.txt`);
+  `huggingface_hub` solo como dependencia transitiva fijada de `tokenizers` y **nunca importada** (test: ningún módulo
+  de `app/` fuera de `app/evaluation` lo importa). Verificación: chequeo de `requirements.txt` y salida de `pip-audit`.
 - [ ] 1.2 (test después) Configuración (RN-22): `MODEL_PROVIDER` enum estricto `fake|local` (rechaza otro valor nombrando la variable), `DEFAULT_QUERY_LANGUAGE`, una clave `*_SHA256` por archivo cargado,
   `EMBEDDING_MODEL_PATH`, `EMBEDDING_MODEL_SHA256`, `RERANKER_MODEL_PATH`, `RERANKER_MODEL_SHA256` en `app/config/`
-  y en `.env.example` (lo aplica el humano si el permiso del agente deniega la ruta; ver tarea 1.21 de L1D-102).
+  y en `.env.example` (lo aplica el humano; el agente solo reporta las claves y sus valores de ejemplo si el permiso del agente deniega la ruta; ver tarea 1.21 de L1D-102).
   Verificación: test de carga de configuración y del chequeo de claves de ADR-39 en verde.
 - [ ] 1.3 (TDD estricto) Test de aceptación en rojo: "termina el proceso nombrando la variable cuando el SHA-256
   del modelo no coincide o el archivo falta [US-231a AC-7]" · integración (arranque con configuración alterada en un
@@ -69,10 +70,12 @@
   prohibida de design D7 y la exigencia de `Tokenizer.from_file`/`InferenceSession(<ruta local>)`, en la ruta rápida). Verde: carga local sin resolución remota (`HF_HUB_OFFLINE`, rutas locales).
   Commits `test(US-231a)` / `feat(US-231a)`.
 - [ ] 1.14b (test después, **infra**) `infra/docker/docker-compose.yml`: *bind mount* `read_only` desde un
-  directorio del host fuera del repo hacia `MODEL_CACHE_DIR`; pasa `MODEL_PROVIDER` (default `local` en Compose, `fake`
+  directorio del host fuera del repo (variable `MODEL_HOST_DIR`, obligatoria, sin default dentro del repo) hacia `MODEL_CACHE_DIR`; pasa `MODEL_PROVIDER` (default `local` en Compose, `fake`
   en la CI; decisión por defecto a confirmar), `*_MODEL_PATH`, `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y
-  `TRANSFORMERS_OFFLINE=1`; directorios de modelos en `.gitignore` y en el `.dockerignore` del Dockerfile. Test en
-  `infra/docker/__tests__` con el patrón de `compose-config.test.mjs`. Verificación: test en verde.
+  `TRANSFORMERS_OFFLINE=1`; patrones de pesos en `.gitignore`, en el `.dockerignore` raíz y repetidos en `apps/rag-orchestrator/Dockerfile.dockerignore`
+  (`dockerignore.test.mjs` lo exige). La CI usa `MODEL_PROVIDER=fake` y un `MODEL_HOST_DIR` temporal vacío (smoke y resolutor).
+  Test en `infra/docker/__tests__` con el patrón de `compose-config.test.mjs`, que comprueba también que la fuente
+  resuelta del montaje queda **fuera de la raíz del repo**. Verificación: test en verde.
 - [ ] 1.15 (test después) Cableado en `app/bootstrap.py`: con `MODEL_PROVIDER=local` verifica los modelos
   (1.4), construye los adapters reales y los inyecta en `RAGOrchestratorService` (reemplaza la rama de
   `503 RETRIEVAL_UNAVAILABLE` en la composición de L1D-106 cuando hay adapters); con `fake`, no importa el runtime; `LLM=local`+`MODEL=fake` → `503` fail-closed.

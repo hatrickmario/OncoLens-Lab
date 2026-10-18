@@ -48,7 +48,8 @@ por US-231b; cero red en ejecución; resultados deterministas; latencia por etap
    cambio de contrato: el campo ya es `string`.
 6. **Matriz de proveedores (RN-12, RN-13).** `MODEL_PROVIDER` es un enum **estricto** `fake|local`; cualquier otro
    valor (incluido vacío) impide arrancar y el error nombra la variable (nada de "distinto de `fake` ⇒ real").
-   Default **por decisión**: `local` en Compose, `fake` en la CI (a confirmar por el usuario). No existe proveedor
+   `Settings` toma `fake` si la variable no está definida (fail-closed con `LLM_PROVIDER=local`: responde `503`, nunca
+   recupera con fakes). Default **por decisión**: `local` en Compose, `fake` en la CI (a confirmar por el usuario). No existe proveedor
    de nube. Matriz con `LLM_PROVIDER`:
 
    | `LLM_PROVIDER` | `MODEL_PROVIDER` | Resultado |
@@ -65,7 +66,16 @@ por US-231b; cero red en ejecución; resultados deterministas; latencia por etap
    del host fuera del repo hacia `MODEL_CACHE_DIR`; el Compose pasa `MODEL_PROVIDER`, `*_MODEL_PATH`,
    `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y `TRANSFORMERS_OFFLINE=1`; los directorios de modelos se excluyen en
    `.gitignore` y en el `.dockerignore` del Dockerfile (nunca `COPY` de pesos). Los adapters cargan solo con
-   `Tokenizer.from_file(<ruta local>)` y `onnxruntime.InferenceSession(<ruta local>)`. El test del AC-8 bloquea
+   `Tokenizer.from_file(<ruta local>)` y `onnxruntime.InferenceSession(<ruta local>)`.
+
+   **Directorio del host del *bind mount*:** variable de Compose `MODEL_HOST_DIR`, **obligatoria** (`${MODEL_HOST_DIR:?}`),
+   sin valor por defecto dentro del repo; el destino en el contenedor es `MODEL_CACHE_DIR`. La CI no tiene pesos: corre
+   con `MODEL_PROVIDER=fake` y un `MODEL_HOST_DIR` temporal y vacío (el *smoke* de Compose y el resolutor de los tests
+   de `infra/docker/__tests__` lo fijan), de modo que el montaje se resuelve pero no se carga ningún modelo. Se
+   añaden `.cache/`, `**/model-cache/`, `**/*.onnx`, `**/*.onnx_data` y `**/*.safetensors` (no `**/models/`: chocaría con el paquete de código `app/infrastructure/models/`) al `.gitignore` y al `.dockerignore` raíz **y los mismos patrones se repiten en
+   `apps/rag-orchestrator/Dockerfile.dockerignore`** (BuildKit lee ese archivo en lugar del raíz; `dockerignore.test.mjs`
+   exige que cada `*.dockerignore` repita todos los patrones raíz). El test de 1.14b comprueba además que la fuente
+   resuelta del montaje queda **fuera de la raíz del repo**. El test del AC-8 bloquea
    sockets y registra intentos; además un chequeo estático con **lista explícita prohibida** sobre
    `app/infrastructure/{embeddings,reranker,language,models}`: `huggingface_hub`, `transformers`, `requests`,
    `httpx`, `urllib.request`, `socket`, SDK de nube, `from_pretrained`, `hf_hub_download`.
@@ -75,8 +85,17 @@ por US-231b; cero red en ejecución; resultados deterministas; latencia por etap
 9. **Supply chain de dependencias de inferencia.** Licencia permisiva de la librería (MIT/BSD/Apache; la licencia
    académica aplica a los **pesos**), versión exacta (`==`), solo *wheel* (`--only-binary`), sin `setup.py` ni
    descarga en importación o primer uso, `pip-audit` sin hallazgos críticos ni altos. La justificación de cada
-   dependencia se escribe en este `design.md` antes de añadirla. `huggingface_hub` y `transformers` quedan
-   prohibidos en el `requirements.txt` de ejecución (solo `requirements-eval.txt`).
+   dependencia se escribe en este `design.md` antes de añadirla. `transformers` queda prohibido en el
+   `requirements.txt` de ejecución (solo `requirements-eval.txt`). `huggingface_hub` entra únicamente como
+   dependencia **transitiva fijada** de `tokenizers` (que la declara) y **nunca se importa**: un test comprueba que
+   ningún módulo de `app/` fuera de `app/evaluation` (código de medición que no viaja en la imagen) lo importa.
+
+   **Dependencias fijadas (resueltas con `--only-binary=:all:` el 2026-10-17):** `onnxruntime==1.31.0` (MIT),
+   `tokenizers==0.23.3` (Apache-2.0) y sus transitivas `flatbuffers` (Apache-2.0), `huggingface-hub` (Apache-2.0),
+   `hf-xet` (Apache-2.0), `filelock` (Unlicense), `fsspec` (BSD-3), `httpx2`/`httpcore2` (BSD-3), `tqdm`
+   (MPL-2.0/MIT) y `truststore` (MIT). Sin `setup.py`: solo *wheels*; el `Dockerfile` instala con
+   `--only-binary=:all:`. **Detector de idioma: heurística propia de palabras funcionales** (sin dependencia nueva,
+   sin red, sin estado aleatorio), en vez de una librería.
    **Detector de idioma local y determinista.** Restringido a `es`/`en`, sin red y sin estado aleatorio. La
    elección de librería (o de heurística de palabras funcionales) no está fijada por el ADR-39 (Open Questions);
    cualquiera debe pasar la batería (AC-4, AC-5, AC-6, AC-8) y registrar su licencia.
@@ -91,8 +110,10 @@ por US-231b; cero red en ejecución; resultados deterministas; latencia por etap
   nunca entra a un modelo (RN-11, ya garantizado por L1D-106).
 - **RN-12:** modelos solo locales; sin *fallback* a nube; ningún import de clientes de nube ni HTTP; la batería
   lo comprueba (AC-8). Con datos reales no hay otra ruta.
-- **Logs:** nunca `query`, texto del contexto, texto de chunks, rutas ni hashes de configuración. Se registran
-  clase del error, etapa, `traceId`, versión del modelo y latencias.
+- **Logs:** nunca `query`, texto del contexto, texto de chunks, rutas ni hashes de **verificación** (el esperado ni
+  el calculado). El SHA-256 de **procedencia** del *reranker* (D5) es un identificador público del peso y sí puede
+  aparecer en `meta` y en los logs de versión. Se registran clase del error, etapa, `traceId`, versión del modelo y
+  latencias.
 - **Datos:** FX-06a-c es sintético (textos redactados para el test, sin pacientes). Los pesos no se versionan
   (RN-14: repositorio público); licencias académicas registradas (`ACADEMIC_LICENSES`, ADR-39).
 - **Aislamiento:** sin acceso a `clinical-minio` ni a schemas clínicos; sin credenciales nuevas.
@@ -125,7 +146,7 @@ presupuesto). Es una medición local (`models`), no una compuerta de la CI.
 | `app/config/modelos.py` / `settings.py` | modifica | rutas y SHA-256 (`*_MODEL_PATH`, `*_MODEL_SHA256`), selector de proveedor |
 | `infra/docker/docker-compose.yml`, `.gitignore`, `.dockerignore` | modifica | bind mount `read_only`, variables de entorno, exclusión de modelos |
 | `app/domain/reglas_proveedor.py` | modifica | extiende `reject_fake_provider_with_real_data` a `MODEL_PROVIDER` |
-| `app/bootstrap.py` | modifica | cablea los adapters reales si el proveedor no es `fake`; verifica modelos antes de servir |
+| `app/bootstrap.py` | modifica | con `MODEL_PROVIDER=local` verifica los modelos y cablea los adapters reales; con `fake` no; cualquier otro valor no arranca |
 | `tests/support/` | modifica | batería de contrato parametrizada real/fake; sesión de inferencia falsa; FX-06a-c |
 
 ## Risks / Trade-offs

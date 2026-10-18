@@ -94,8 +94,9 @@ Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la rut
 
 #### Scenario: Un valor fuera del enum impide arrancar [US-231a AC-7] [RN-12]
 - **GIVEN** `MODEL_PROVIDER` con un valor distinto de `fake` y `local`
-- **WHEN** arranca `rag-orchestrator`
-- **THEN** el proceso termina con código distinto de 0 y el error nombra `MODEL_PROVIDER` sin eco de su valor
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `MODEL_PROVIDER` sin eco de su valor
 
 #### Scenario: LLM local con modelos fake responde 503 fail-closed [US-231a AC-7] [RN-12]
 - **GIVEN** `LLM_PROVIDER=local` y `MODEL_PROVIDER=fake`
@@ -104,8 +105,9 @@ Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la rut
 
 #### Scenario: Datos reales habilitados con MODEL_PROVIDER fake impiden el arranque [US-231a AC-7] [RN-13]
 - **GIVEN** `REAL_ANONYMIZED_ENABLED=true` y `MODEL_PROVIDER=fake`
-- **WHEN** arranca `rag-orchestrator`
-- **THEN** el proceso termina con código distinto de 0 y el error nombra `MODEL_PROVIDER`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `MODEL_PROVIDER`
 
 ### Requirement: Pesos fuera del repo y de la imagen, sin red en Compose
 El Compose MUST montar los modelos como *bind mount* `read_only` desde un directorio del host fuera del repo y pasar las variables de proveedor, rutas, SHA-256 y modo sin conexión (RN-12, RN-14).
@@ -115,7 +117,8 @@ El Compose MUST montar los modelos como *bind mount* `read_only` desde un direct
 - **WHEN** se analiza la configuración del servicio `rag-orchestrator`
 - **THEN** monta `MODEL_CACHE_DIR` como *bind mount* `read_only` desde fuera del repo
 - **AND** define `MODEL_PROVIDER`, `*_MODEL_PATH`, `*_MODEL_SHA256`, `HF_HUB_OFFLINE=1` y `TRANSFORMERS_OFFLINE=1`
-- **AND** `.gitignore` y `.dockerignore` excluyen los directorios de modelos
+- **AND** la fuente resuelta del montaje (`MODEL_HOST_DIR`) queda fuera de la raíz del repo
+- **AND** `.gitignore`, el `.dockerignore` raíz y `apps/rag-orchestrator/Dockerfile.dockerignore` excluyen los pesos
 
 ### Requirement: Adapters locales sin red
 Los adapters reales MUST funcionar sin conexiones salientes y no SHALL importar un cliente de nube ni descargar pesos en ejecución (RN-12, NFR-05).
@@ -129,7 +132,7 @@ Los adapters reales MUST funcionar sin conexiones salientes y no SHALL importar 
 #### Scenario: Ningún módulo de los adapters importa un cliente de nube o HTTP [US-231a AC-8] [RN-12]
 - **GIVEN** los módulos de `app/infrastructure/{embeddings,reranker,language,models}`
 - **WHEN** se inspeccionan sus importaciones
-- **THEN** ninguno importa ni usa `huggingface_hub`, `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
+- **THEN** ninguno importa ni usa `huggingface_hub` (que solo existe como dependencia transitiva fijada de `tokenizers`), `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
 - **AND** la carga usa `Tokenizer.from_file` y `onnxruntime.InferenceSession` con rutas locales
 
 ### Requirement: Latencia por etapa medida y reportada
