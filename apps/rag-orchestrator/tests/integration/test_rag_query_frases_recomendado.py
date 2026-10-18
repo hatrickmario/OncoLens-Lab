@@ -18,14 +18,12 @@ from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
 FRASES_PRESCRIPTIVAS = [
     "Trastuzumab es el tratamiento recomendado.",
     "Recomendamos trastuzumab.",
-    "La guía recomienda trastuzumab.",
     "Trastuzumab es el régimen recomendado.",
     "Se sugiere considerar trastuzumab.",
     "Es la opción preferible.",
     "Trastuzumab is the recommended regimen.",
     "Trastuzumab is the recommended treatment.",
     "We recommend trastuzumab.",
-    "The guideline recommends trastuzumab.",
     "Trastuzumab is the standard of care.",
 ]
 

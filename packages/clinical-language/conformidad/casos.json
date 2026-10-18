@@ -1,6 +1,6 @@
 {
-  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.4.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
-  "listaVersion": "1.4.0",
+  "descripcion": "Casos de conformidad de checkProhibitedTerms (TS) y check_prohibited_terms (Python) sobre terminos-prohibidos.json 1.5.0. Ambas implementaciones deben dar, caso por caso, los mismos id y niveles, en orden de aparición (US-068 AC-2, RN-23). Solo texto sintético de dominio público.",
+  "listaVersion": "1.5.0",
   "casos": [
     {
       "grupo": "AC-2 (variantes de mayúsculas, tildes y puntuación)",
@@ -439,26 +439,26 @@
       ]
     },
     {
-      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "grupo": "AC-5 (raíz recomend, Nivel A desde 1.5.0)",
       "texto": "Opción recomendada",
       "niveles": ["A", "B"],
       "permitirFrases": true,
       "esperado": [
         {
-          "id": "b-recomend",
-          "nivel": "B"
+          "id": "es-opcion-recomendada",
+          "nivel": "A"
         }
       ]
     },
     {
-      "grupo": "AC-5 (raíz recomend, solo con el Nivel B)",
+      "grupo": "AC-5 (raíz recomend, Nivel A desde 1.5.0)",
       "texto": "Recommended option",
       "niveles": ["A", "B"],
       "permitirFrases": true,
       "esperado": [
         {
-          "id": "b-recommend",
-          "nivel": "B"
+          "id": "en-recommended-option",
+          "nivel": "A"
         }
       ]
     },
@@ -1675,6 +1675,204 @@
     {
       "grupo": "Nivel A inglés 1.4.0 (falsos positivos)",
       "texto": "the response rate was 80%",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "El tratamiento recomendado es trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-tratamiento-recomendado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Los tratamientos recomendados incluyen X.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-tratamiento-recomendado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Trastuzumab es el régimen recomendado.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-regimen-recomendado",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "La terapia recomendada es X.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-terapia-recomendada",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Es la opción recomendada.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-opcion-recomendada",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "RECOMENDAMOS trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-recomendamos",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Se sugiere considerar trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-se-sugiere-considerar",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Es la opción preferible.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "es-opcion-preferible",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Trastuzumab is the recommended regimen.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-recommended-regimen",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "The recommended treatment is X.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-recommended-treatment",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "A recommended therapy for X.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-recommended-therapy",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "It is the recommended option.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-recommended-option",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (recomendación directa)",
+      "texto": "Trastuzumab is the standard of care.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": [
+        {
+          "id": "en-standard-of-care",
+          "nivel": "A"
+        }
+      ]
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "Los autores no emiten una recomendación formal.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "Las recomendaciones del panel no se reproducen aquí.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "La opción descrita en la evidencia es trastuzumab.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "The trial describes a treatment regimen for X.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "The guideline describes trastuzumab as one option.",
+      "niveles": ["A"],
+      "permitirFrases": false,
+      "esperado": []
+    },
+    {
+      "grupo": "Nivel A 1.5.0 (falsos positivos)",
+      "texto": "Se sugiere el ensayo como lectura complementaria.",
       "niveles": ["A"],
       "permitirFrases": false,
       "esperado": []
