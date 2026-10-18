@@ -68,8 +68,8 @@ pregunta (`meta.queryLanguage`).
    `evidenceOptions = []`, `topRelevanceScore` numérico (hubo chunks sobre el umbral, RN-02 no aplica).
 6. **`meta` completo.** `llmModel` y `llmProvider = local` desde el adapter; `promptVersion` desde
    `PROMPT_VERSION`; `corpusRelease`, `corpusCutoffDate` y `excludedSources` desde
-   `CorpusCatalogReader` (L1D-179; tablas de L1D-114), al que este change añade, si no lo trae, la
-   lectura del `CorpusRelease` vigente; `responseLanguage = queryLanguage`; `latencyMs` con el reloj
+   `CorpusReleaseReader.release_vigente()` (L1D-106, ya en `main`; no `CorpusCatalogReader`, que solo
+   entrega fichas de fuente); `responseLanguage = queryLanguage`; `latencyMs` con el reloj
    inyectado.
 7. **Composición.** En la raíz de composición (`app/bootstrap.py`, L1D-164) `EvidenceGenerator` pasa del
    adapter `503` de L1D-106 a `LlmEvidenceGenerator` con `LlmClient` local (`LLM_PROVIDER=local`); con
