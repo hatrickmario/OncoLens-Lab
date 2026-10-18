@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://host.docker.internal:11434/v1"
     llm_model: str = ""
     llm_health_timeout_ms: int = Field(default=2000, gt=0)
+    # Generación de /rag/query (US-225, RN-22): plazo de la llamada al LLM local y tope de tokens de su salida.
+    llm_request_timeout_ms: int = Field(default=60000, gt=0)
+    llm_max_output_tokens: int = Field(default=1024, gt=0)
     llm_cloud_enabled: bool = False
     real_anonymized_enabled: bool = False
     real_identified_enabled: bool = False

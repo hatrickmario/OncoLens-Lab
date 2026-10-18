@@ -18,6 +18,7 @@ from app.application.ports import (
     Clock,
     CorpusCatalogReader,
     CorpusReleaseReader,
+    EvidenceGenerator,
     EvidenceQueryPort,
     LanguageDetector,
     LlmHealthPort,
@@ -26,6 +27,7 @@ from app.application.ports import (
     TraceIdGenerator,
 )
 from app.application.consulta_no_componible import ConsultaNoComponible
+from app.application.generation import LlmEvidenceGenerator
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -37,6 +39,7 @@ from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.llm.generador_no_disponible import GeneradorLocalNoDisponible
+from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
@@ -86,6 +89,7 @@ def crear_app(
     recuperacion: PuertosDeRecuperacion | None = None,
     corpus: PuertosDelCorpus | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
+    generador: EvidenceGenerator | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
@@ -103,6 +107,7 @@ def crear_app(
         autenticacion=crear_require_service_jwt(verificador),
         recuperacion=recuperacion,
         clock=clock,
+        generador=generador,
     )
     app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
     return app
@@ -165,6 +170,7 @@ def _registrar_consulta_de_evidencia(
     autenticacion: DependenciaJwtServicio,
     recuperacion: PuertosDeRecuperacion | None,
     clock: Clock,
+    generador: EvidenceGenerator | None,
 ) -> None:
     if consulta is None and settings.llm_provider == "fake":
         consulta = FakeEvidenceQuery.desde_directorio(settings.fake_responses_path)
@@ -173,7 +179,7 @@ def _registrar_consulta_de_evidencia(
         # (adapters de embeddings, reranker e idioma, US-231): sin ellos responde 503 fallando cerrado.
         _exigir_configuracion_de_recuperacion(settings)
         consulta = (
-            _crear_servicio_de_recuperacion(settings, recuperacion, clock)
+            _crear_servicio_de_recuperacion(settings, recuperacion, clock, generador)
             if recuperacion is not None
             else ConsultaNoComponible()
         )
@@ -182,7 +188,10 @@ def _registrar_consulta_de_evidencia(
 
 
 def _crear_servicio_de_recuperacion(
-    settings: Settings, puertos: PuertosDeRecuperacion, clock: Clock
+    settings: Settings,
+    puertos: PuertosDeRecuperacion,
+    clock: Clock,
+    generador: EvidenceGenerator | None,
 ) -> RAGOrchestratorService:
     return RAGOrchestratorService(
         detector_idioma=puertos.detector_idioma,
@@ -191,10 +200,23 @@ def _crear_servicio_de_recuperacion(
         reranker=puertos.reranker,
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
-        # Hasta L1D-275 (US-225) la rama con evidencia responde 503 LOCAL_LLM_UNAVAILABLE.
-        generador=GeneradorLocalNoDisponible(),
+        # Producción: la rama con evidencia responde 503 LOCAL_LLM_UNAVAILABLE hasta que L1D-180 (soporte NLI) active
+        # `crear_generador_local()`: ninguna opción sin verificar sale de este servicio (L1D-275, design D9).
+        generador=generador or GeneradorLocalNoDisponible(),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
+    )
+
+
+def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
+    """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
+    return LlmEvidenceGenerator(
+        OpenAICompatibleLlmClient(
+            settings.llm_base_url,
+            settings.llm_model,
+            settings.llm_request_timeout_ms,
+            settings.llm_max_output_tokens,
+        )
     )
 
 
