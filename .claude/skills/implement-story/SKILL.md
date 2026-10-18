@@ -53,6 +53,8 @@ implementador para que aplique cada refactor mínimo en su commit `refactor(L1D-
 lanzar solo ese revisor. Si la historia cierra un **lote de revisión** del plan, ejecuta también
 `gate-review` en modo `lote` y resuelve sus hallazgos en esta misma rama.
 
+**Tras integrar `origin/main` en la rama** (merge, nunca cherry-pick) y antes del push, el implementador ejecuta los mismos comandos que los jobs de `.github/workflows/ci.yml` que su diff puede tocar (`build-test`, `contracts`, `quality`, `lint-lenguaje`, `stack-smoke` si cambia Compose) y, abierto el PR, comprueba las alertas con la ref `refs/pull/<n>/head` (lección del S1: rojos de `build-test`, `stack-smoke` y `fixtures` que el implementador no vio al integrar).
+
 ## 4. PR
 
 Con el Gate 2 en PASS: `gh pr create --base main --head <rama> --title "[L1D-<nn>] <título>"`.

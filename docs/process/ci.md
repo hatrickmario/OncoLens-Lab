@@ -18,6 +18,7 @@ coincide).
 | `secret-scan` | gitleaks sobre el árbol y sobre los commits del PR (un secreto añadido y borrado en el mismo PR también falla), siempre con `--redact` | `scripts/ci/secret-scan.sh "$BASE_REF"` |
 | `data-scan` | PII en **todo** `git ls-files` y clase de datos de los datasets de evaluación | `node scripts/ci/pii-scan.mjs`, `node scripts/ci/dataset-class-check.mjs` |
 | `stack-smoke` | Levanta el Compose con `LLM_PROVIDER=fake` y secretos ficticios | `npm run smoke:compose` |
+| `integration` | Integración de `clinical-api` contra el PostgreSQL de test del Compose (secretos ficticios; B-1 del S1). Los tests `servicios_reales` de `rag-orchestrator` (Milvus) siguen fuera de la CI: historia S2 | `scripts/ci/integracion-clinical-api.sh` (secretos ficticios de test, postgres del Compose y `scripts/test-integration.sh`) |
 | `quality` | Lint y formato del código (L1D-265): ESLint con `--max-warnings 0`, Prettier y `ruff format` en modo `--check`, y los tests de `ci/tests/quality/` (fixtures de AC-1…AC-5). Instala `ruff` de `apps/rag-orchestrator/requirements-dev.txt`; sin él `format:check` falla (nunca se omite). Local: `npm run lint`, `npm run format` y `npm run format:check` antes de cada commit | `npm run lint`, `npm run format:check`, `npm run test:quality` (config propia `vitest.quality.config.ts`) |
 | `ci-ok` | Agregador: `needs` de todos los jobs, `if: always()`; falla si alguno no terminó en `success` (fallido, cancelado u omitido) y lo nombra | `node scripts/ci/verificar-needs.mjs` |
 

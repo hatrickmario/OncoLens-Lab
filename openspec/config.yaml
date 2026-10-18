@@ -110,6 +110,7 @@ rules:
     - "Todo número calibrable (umbral, TTL, límite, plazo) se especifica como clave de configuración, no como literal."
     - "Usa MODIFIED (no ADDED) cuando el requisito ya existe en openspec/specs; nunca dupliques requisitos entre capacidades."
   design:
+    - "Un centinela de texto (por ejemplo 'No disponible') no sustituye a null en un campo del dominio; una función no comprueba dos veces el mismo permiso; cada concepto del dominio usa una sola grafía y un identificador un solo significado (lección del S1: hallazgos Mayores de L1D-103)."
     - "Si el change toca apps/web o los Route Handlers, la sección '## Privacidad y ownership' incluye 'Seguridad web': validación con el schema Zod compartido en cliente y servidor, variables NEXT_PUBLIC_ nuevas (deben estar en la lista permitida), módulos server-only, cómo se renderiza el texto del LLM o del corpus (sin HTML crudo), impacto en la CSP y las cabeceras, y dependencias nuevas con su resultado de auditoría."
     - "Incluye una sección obligatoria '## Privacidad y ownership': qué datos cruzan qué frontera (web → clinical-api → rag-orchestrator), cómo se desidentifican (RN-11) y confirma que rag-orchestrator no toca datos clínicos ni clinical-minio."
     - "Si el change toca la UI de apps/web, cita la pantalla de referencia en docs/ux/ (sistema de diseño del Pre-S1 y diseño del sprint) y justifica cualquier desviación."
@@ -120,6 +121,8 @@ rules:
     - "Cita las decisiones existentes (ADR-n del readme §3.3) en lugar de reabrirlas; una decisión nueva requiere historia ADR-<n> en el backlog."
     - "Si cambia modelo, prompt, umbral, catálogo o corpus, incluye '## Evaluación' con las métricas OL-06 afectadas."
   tasks:
+    - "Un test que lance un proceso real (comprobador de contratos, Compose, CLI) declara un tiempo máximo explícito; el límite por defecto de 5 s de Vitest no se usa con procesos reales (lección del S1: contracts:check, #88)."
+    - "Al diferir una tarea, su línea nombra el ID destino (historia, deuda D-n o US); no se mergea un change con tareas sin marcar ni diferidas sin ID."
     - "Agrupa las tareas por bounded context con encabezados: '## clinical-platform', '## ai-services', '## frontend', '## contratos', '## evaluación'."
     - "Si el change toca una API, la PRIMERA tarea es '## contratos': editar el openapi.yaml del proveedor y sus ejemplos, contracts:check, contracts:breaking, contracts:generate y commit contract(L1D-<nn>); ninguna tarea de test o código del endpoint va antes."
     - "Clasifica cada tarea según la matriz de TDD proporcional de CLAUDE.md (estricto · test del AC primero · test después · evaluate · exento) y escríbelo en la tarea."
