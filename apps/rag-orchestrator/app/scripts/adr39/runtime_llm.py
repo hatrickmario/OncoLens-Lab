@@ -20,7 +20,12 @@ from app.domain.relevance import ChunkPuntuado
 from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.scripts.adr39.config import CandidatoLlm, ConfigFaseB
-from app.scripts.adr39.reglas import mediana, percentil_95, porcentaje_json_valido
+from app.scripts.adr39.reglas import (
+    mediana,
+    percentil_95,
+    porcentaje_json_valido,
+    validar_contra_esquema,
+)
 
 Reloj = Callable[[], float]
 BYTES_POR_GB = 1e9  # `ollama ps` informa en GB decimales
@@ -329,7 +334,11 @@ def _guardar_muestra(
 ) -> None:
     """Salidas para la revisión a mano de ``ai-eval-runner`` (≥ 20); fuera de ``reports/``: nunca se versionan."""
     directorio.mkdir(parents=True, exist_ok=True)
-    con_salida = [s for s in corrida["salidas"] if s is not None][:n]
+    con_salida = [
+        s
+        for s in corrida["salidas"]
+        if s is not None and validar_contra_esquema(s, ESQUEMA_DE_GENERACION)
+    ][:n]  # las inválidas ya cuentan en json_valido; la revisión es de fidelidad
     (directorio / f"{id_candidato}.jsonl").write_text(
         "".join(json.dumps({"salida": s}, ensure_ascii=False) + "\n" for s in con_salida),
         encoding="utf-8",

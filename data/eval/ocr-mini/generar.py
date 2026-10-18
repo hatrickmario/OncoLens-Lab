@@ -179,7 +179,9 @@ def _pagina(lineas: list[str], rng: np.random.Generator) -> Image.Image:
     angulo = float(rng.uniform(-1.0, 1.0))
     pagina = pagina.rotate(angulo, resample=Image.Resampling.BICUBIC, fillcolor=255)
     ruido = rng.normal(0.0, 6.0, size=(ALTO, ANCHO))
-    return Image.fromarray(np.clip(np.asarray(pagina, dtype=float) + ruido, 0, 255).astype("uint8"))
+    return Image.fromarray(
+        np.clip(np.asarray(pagina, dtype=float) + ruido, 0, 255).astype("uint8")
+    )
 
 
 def _normalizar(texto: str) -> str:
@@ -194,10 +196,17 @@ def generar(destino: Path) -> None:
         texto_pagina = "\n".join(lineas)
         for campo, valor in campos.items():
             if _normalizar(valor) not in _normalizar(texto_pagina):
-                raise ValueError(f"{nombre}: el valor de {campo} no aparece en el texto")
+                raise ValueError(
+                    f"{nombre}: el valor de {campo} no aparece en el texto"
+                )
         ruta = destino / nombre
         _pagina(lineas, rng).save(ruta, "PDF", resolution=108.0, quality=60)
-        verdad[nombre] = {"tipo": tipo, "cancer": cancer, "campos": campos, "texto": texto_pagina}
+        verdad[nombre] = {
+            "tipo": tipo,
+            "cancer": cancer,
+            "campos": campos,
+            "texto": texto_pagina,
+        }
         archivos.append(
             {
                 "archivo": nombre,
@@ -209,7 +218,9 @@ def generar(destino: Path) -> None:
         )
     (destino / "ground_truth.json").write_text(
         json.dumps(
-            {"version": VERSION_GENERADOR, "documentos": verdad}, ensure_ascii=False, indent=2
+            {"version": VERSION_GENERADOR, "documentos": verdad},
+            ensure_ascii=False,
+            indent=2,
         )
         + "\n",
         encoding="utf-8",

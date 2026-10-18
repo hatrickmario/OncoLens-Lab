@@ -243,9 +243,7 @@ COMANDOS = {
 }
 
 
-def main(
-    argv: Sequence[str] | None = None, ahora: Ahora = lambda: datetime.now(UTC)
-) -> int:
+def main(argv: Sequence[str] | None = None, ahora: Ahora = lambda: datetime.now(UTC)) -> int:
     a = _parser().parse_args(argv)
     try:
         config = cargar_config(a.config)
