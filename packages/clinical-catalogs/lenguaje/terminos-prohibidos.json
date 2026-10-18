@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "normalizacion": "nfkd-sin-diacriticos+minusculas+puntuacion-a-espacio+espacios-colapsados+clave-flexiva+formas-verbales+excepciones+secuencia-completa+tramo-mas-largo",
   "nivelA": {
     "aplicaA": ["salida_generada", "ui", "prompts", "contratos"],
@@ -388,6 +388,66 @@
         "id": "en-treatment-of-choice",
         "idioma": "en",
         "texto": "treatment of choice"
+      },
+      {
+        "id": "es-tratamiento-recomendado",
+        "idioma": "es",
+        "texto": "tratamiento recomendado"
+      },
+      {
+        "id": "es-regimen-recomendado",
+        "idioma": "es",
+        "texto": "régimen recomendado"
+      },
+      {
+        "id": "es-terapia-recomendada",
+        "idioma": "es",
+        "texto": "terapia recomendada"
+      },
+      {
+        "id": "es-opcion-recomendada",
+        "idioma": "es",
+        "texto": "opción recomendada"
+      },
+      {
+        "id": "es-recomendamos",
+        "idioma": "es",
+        "texto": "recomendamos"
+      },
+      {
+        "id": "es-se-sugiere-considerar",
+        "idioma": "es",
+        "texto": "se sugiere considerar"
+      },
+      {
+        "id": "es-opcion-preferible",
+        "idioma": "es",
+        "texto": "opción preferible"
+      },
+      {
+        "id": "en-recommended-regimen",
+        "idioma": "en",
+        "texto": "recommended regimen"
+      },
+      {
+        "id": "en-recommended-treatment",
+        "idioma": "en",
+        "texto": "recommended treatment"
+      },
+      {
+        "id": "en-recommended-therapy",
+        "idioma": "en",
+        "texto": "recommended therapy"
+      },
+      {
+        "id": "en-recommended-option",
+        "idioma": "en",
+        "texto": "recommended option"
+      },
+      {
+        "id": "en-standard-of-care",
+        "idioma": "en",
+        "texto": "standard of care"
       }
     ]
   },

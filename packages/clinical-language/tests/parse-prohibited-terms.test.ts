@@ -6,7 +6,7 @@ const valida = () => structuredClone(loadProhibitedTerms());
 
 describe('parseProhibitedTerms', () => {
   it('devuelve la lista cuando cumple el esquema', () => {
-    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.4.0');
+    expect(parseProhibitedTerms(valida(), origen).version).toBe('1.5.0');
   });
 
   it('lanza un error que nombra el origen cuando hay ids repetidos entre niveles', () => {
