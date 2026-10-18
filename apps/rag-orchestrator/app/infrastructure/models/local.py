@@ -91,46 +91,14 @@ def cargar_modelos_locales(
     sesion_nli, tokenizador_nli = _cargar_modelo(
         settings, rutas, "NLI", fabricar_sesion, fabricar_tokenizador
     )
-    nucleo = NucleoBgeM3(
-        sesion_embeddings,
-        tokenizador_embeddings,
-        modelo=describir_modelo(
-            config.embedding_model,
-            config.embedding_model_revision,
-            str(settings.embedding_model_sha256),
-        ),
-        dimension=config.embedding_dim,
-        max_length=settings.embedding_max_length,
-        max_tokens_por_lote=settings.model_batch_max_tokens,
-    )
-    reranker = BgeReranker(
-        sesion_reranker,
-        tokenizador_reranker,
-        version=describir_modelo(
-            config.reranker_model,
-            config.reranker_model_revision,
-            str(settings.reranker_model_sha256),
-        ),
-        max_length=config.reranker_max_length,
-        max_pairs=config.reranker_max_pairs,
-        max_tokens_por_lote=settings.model_batch_max_tokens,
-    )
-    clasificador_nli = ClasificadorNliMdeberta(
-        sesion_nli,
-        tokenizador_nli,
-        version=describir_modelo(
-            config.nli_model, config.nli_model_revision, str(settings.nli_model_sha256)
-        ),
-        indices=indices_nli,
-        max_length=settings.nli_max_length,
-        max_tokens_por_lote=settings.model_batch_max_tokens,
-    )
+    nucleo = _nucleo_de_embeddings(settings, config, sesion_embeddings, tokenizador_embeddings)
+    clasificador_nli = _clasificador_nli(settings, config, indices_nli, sesion_nli, tokenizador_nli)
     _comprobar_las_tres_clases_del_nli(clasificador_nli)
     return ModelosDeRecuperacion(
         detector_idioma=DetectorDeIdiomaLocal(settings.default_query_language),
         embedder_consulta=EmbedderDeConsultaBgeM3(nucleo),
         embedder_pasajes=EmbedderDePasajesBgeM3(nucleo),
-        reranker=reranker,
+        reranker=_reranker(settings, config, sesion_reranker, tokenizador_reranker),
         clasificador_nli=clasificador_nli,
     )
 
@@ -148,19 +116,59 @@ def cargar_embedder_de_pasajes(
     sesion, tokenizador = _cargar_modelo(
         settings, rutas, "EMBEDDING", fabricar_sesion, fabricar_tokenizador
     )
-    return EmbedderDePasajesBgeM3(
-        NucleoBgeM3(
-            sesion,
-            tokenizador,
-            modelo=describir_modelo(
-                config.embedding_model,
-                config.embedding_model_revision,
-                str(settings.embedding_model_sha256),
-            ),
-            dimension=config.embedding_dim,
-            max_length=settings.embedding_max_length,
-            max_tokens_por_lote=settings.model_batch_max_tokens,
-        )
+    return EmbedderDePasajesBgeM3(_nucleo_de_embeddings(settings, config, sesion, tokenizador))
+
+
+def _nucleo_de_embeddings(
+    settings: Settings, config: ConfigModelos, sesion: SesionDeInferencia, tokenizador: Tokenizador
+) -> NucleoBgeM3:
+    return NucleoBgeM3(
+        sesion,
+        tokenizador,
+        modelo=describir_modelo(
+            config.embedding_model,
+            config.embedding_model_revision,
+            str(settings.embedding_model_sha256),
+        ),
+        dimension=config.embedding_dim,
+        max_length=settings.embedding_max_length,
+        max_tokens_por_lote=settings.model_batch_max_tokens,
+    )
+
+
+def _reranker(
+    settings: Settings, config: ConfigModelos, sesion: SesionDeInferencia, tokenizador: Tokenizador
+) -> BgeReranker:
+    return BgeReranker(
+        sesion,
+        tokenizador,
+        version=describir_modelo(
+            config.reranker_model,
+            config.reranker_model_revision,
+            str(settings.reranker_model_sha256),
+        ),
+        max_length=config.reranker_max_length,
+        max_pairs=config.reranker_max_pairs,
+        max_tokens_por_lote=settings.model_batch_max_tokens,
+    )
+
+
+def _clasificador_nli(
+    settings: Settings,
+    config: ConfigModelos,
+    indices: IndicesDeClase,
+    sesion: SesionDeInferencia,
+    tokenizador: Tokenizador,
+) -> ClasificadorNliMdeberta:
+    return ClasificadorNliMdeberta(
+        sesion,
+        tokenizador,
+        version=describir_modelo(
+            config.nli_model, config.nli_model_revision, str(settings.nli_model_sha256)
+        ),
+        indices=indices,
+        max_length=settings.nli_max_length,
+        max_tokens_por_lote=settings.model_batch_max_tokens,
     )
 
 
