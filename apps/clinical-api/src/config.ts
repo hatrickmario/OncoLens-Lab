@@ -99,7 +99,7 @@ export class ConfiguracionInvalidaError extends Error {
 
 function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = env[variable];
-  if (valor === undefined || valor === '') {
+  if (valor === undefined || valor.trim() === '') {
     throw new ConfiguracionInvalidaError(variable, 'es obligatoria');
   }
   return valor;

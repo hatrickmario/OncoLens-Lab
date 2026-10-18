@@ -4,6 +4,7 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
+  DISCLAIMER_DE_TEST,
   PREGUNTA_Q_HER2,
   PREGUNTA_Q_SIN,
   PUNTERO_200,
@@ -26,8 +27,6 @@ const avisoDelContrato = (ejemplo: string): string =>
   (JSON.parse(readFileSync(path.join(RAIZ_DE_EJEMPLOS, ejemplo), 'utf8')) as { disclaimer: string })
     .disclaimer;
 
-const AVISO_VALIDADO =
-  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.';
 const AVISO_SINTETICO_DE_CONFIGURACION = 'Aviso sintético alterno de configuración.';
 
 const rag = ragSimulado();
@@ -62,7 +61,7 @@ describe('aviso de IA del análisis (RN-19)', () => {
     expect(respuesta.status).toBe(200);
     assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body.status).toBe('con_evidencia');
-    expect(respuesta.body.disclaimer).toBe(AVISO_VALIDADO);
+    expect(respuesta.body.disclaimer).toBe(DISCLAIMER_DE_TEST);
     expect(respuesta.body.disclaimer).toBe(avisoDelContrato('con-evidencia-s1.json'));
   });
 
@@ -75,7 +74,7 @@ describe('aviso de IA del análisis (RN-19)', () => {
     expect(respuesta.status).toBe(200);
     assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body.status).toBe('sin_evidencia');
-    expect(respuesta.body.disclaimer).toBe(AVISO_VALIDADO);
+    expect(respuesta.body.disclaimer).toBe(DISCLAIMER_DE_TEST);
     expect(respuesta.body.disclaimer).toBe(avisoDelContrato('sin-evidencia.json'));
   });
 
