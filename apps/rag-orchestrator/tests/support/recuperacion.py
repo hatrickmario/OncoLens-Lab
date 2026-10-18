@@ -9,7 +9,7 @@ from __future__ import annotations
 import copy
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
@@ -30,6 +30,7 @@ from app.application.rag_orchestrator_service import (
     RAGOrchestratorService,
 )
 from app.bootstrap import crear_app
+from app.domain.citations import FichaDeFuente
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
@@ -41,6 +42,7 @@ from app.schemas.generated.models import (
     RagQueryInternalResponse,
 )
 from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.service_jwt import con_token_valido
 
@@ -253,23 +255,59 @@ class RerankerFalso:
         return [tabla.get(c.chunk_id, PUNTAJE_POR_DEFECTO) for c in candidatos]
 
 
-class GeneradorFalso:
-    """``EvidenceGenerator`` con contador (FX-06b): ``LLM-OK`` devuelve la respuesta con evidencia de los ejemplos."""
+GeneradorFalso = FakeEvidenceGenerator  # nombre histórico de L1D-106; el generador de FX-06b vive en generador_falso.py
 
-    def __init__(self) -> None:
-        self.recuperaciones: list[ResultadoDeRecuperacion] = []
 
-    @property
-    def invocaciones(self) -> int:
-        return len(self.recuperaciones)
+def _ficha(documento: str, titulo: str, externo: str, publicado: date) -> FichaDeFuente:
+    return FichaDeFuente(
+        title=titulo,
+        source_name="NCI PDQ",
+        external_id=externo,
+        language="en",
+        source_type="guideline",
+        license_class="dominio_publico",
+        study_design="guia",
+        trial_phase=None,
+        primary_endpoint=None,
+        sample_size=None,
+        published_at=publicado,
+        last_updated_at=date(2026, 5, 1),
+        guideline_version="2026-05",
+        authors=None,
+        source_url=None,
+    )
 
-    async def generar(
-        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
-    ) -> RagQueryInternalResponse:
-        self.recuperaciones.append(recuperacion)
-        return RagQueryInternalResponse.model_validate(
-            json.loads((EJEMPLOS / "rag-query-con-evidencia.json").read_text(encoding="utf-8"))
-        )
+
+# Catálogo de FX-06a-a: una ficha por documento del corpus de prueba (títulos "(test)", ningún dato real).
+FICHAS_FX06A: dict[str, FichaDeFuente] = {
+    "doc-m1": _ficha("doc-m1", "Breast Cancer Treatment (test)", "CDR-TEST-001", date(2025, 3, 1)),
+    "doc-m1-v0": _ficha(
+        "doc-m1-v0", "Breast Cancer Treatment (test, v0)", "CDR-TEST-001", date(2024, 3, 1)
+    ),
+    "doc-p1": _ficha(
+        "doc-p1", "Prostate Cancer Treatment (test)", "CDR-TEST-002", date(2025, 4, 1)
+    ),
+    "doc-inj": _ficha("doc-inj", "Documento de prueba (test)", "CDR-TEST-003", date(2025, 5, 1)),
+}
+
+
+class CatalogoFalso:
+    """``CorpusCatalogReader`` en memoria: solo devuelve los documentos que existen; falla con el error recibido."""
+
+    def __init__(
+        self,
+        fichas: dict[str, FichaDeFuente] | None = None,
+        error: Exception | None = None,
+    ) -> None:
+        self._fichas = FICHAS_FX06A if fichas is None else fichas
+        self.error = error
+        self.consultas: list[frozenset[str]] = []
+
+    def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
+        self.consultas.append(frozenset(document_ids))
+        if self.error is not None:
+            raise self.error
+        return {d: self._fichas[d] for d in document_ids if d in self._fichas}
 
 
 class DetectorIdiomaFalso:
@@ -316,8 +354,9 @@ class EntornoDeRecuperacion:
     embedder: EmbedderFalso
     buscador: BuscadorFalso
     reranker: RerankerFalso
-    generador: GeneradorFalso
+    generador: FakeEvidenceGenerator
     lector_release: LectorReleaseFalso
+    catalogo: CatalogoFalso
     servicio: RAGOrchestratorService
 
     def consultar(self, solicitud: dict[str, Any]):
@@ -331,20 +370,23 @@ def crear_entorno(
     buscador: ChunkSearch | None = None,
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
+    catalogo: CatalogoFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
-    generador: GeneradorFalso | None = None,
+    generador: FakeEvidenceGenerator | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
     reranker = reranker or RerankerFalso()
     lector_release = lector_release or LectorReleaseFalso()
-    generador = generador or GeneradorFalso()
+    catalogo = catalogo or CatalogoFalso()
+    generador = generador or FakeEvidenceGenerator()
     servicio = RAGOrchestratorService(
         detector_idioma=detector_idioma or DetectorIdiomaFalso(),
         embedder=embedder,
         buscador=buscador,
         reranker=reranker,
         lector_release=lector_release,
+        catalogo=catalogo,
         generador=generador,
         reloj=RelojFijo(),
         parametros=parametros,
@@ -357,7 +399,7 @@ def crear_entorno(
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
     return EntornoDeRecuperacion(
-        cliente, embedder, buscador, reranker, generador, lector_release, servicio
+        cliente, embedder, buscador, reranker, generador, lector_release, catalogo, servicio
     )
 
 

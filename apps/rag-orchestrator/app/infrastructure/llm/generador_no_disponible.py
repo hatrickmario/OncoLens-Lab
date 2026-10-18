@@ -3,8 +3,8 @@
 import logging
 
 from app.application.errores import LlmLocalNoDisponibleError
-from app.application.ports import ResultadoDeRecuperacion
-from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from app.application.ports import EvidenciaGenerada, ResultadoDeRecuperacion
+from app.schemas.generated.models import RagQueryInternalRequest
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,6 @@ class GeneradorLocalNoDisponible:
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
-    ) -> RagQueryInternalResponse:
+    ) -> EvidenciaGenerada:
         logger.info("event=generacion_no_implementada traceId=%s", solicitud.traceId.root)
         raise LlmLocalNoDisponibleError()

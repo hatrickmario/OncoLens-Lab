@@ -20,8 +20,10 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkSearch,
     Clock,
+    CorpusCatalogReader,
     CorpusReleaseReader,
     EvidenceGenerator,
+    EvidenciaGenerada,
     Idioma,
     LanguageDetector,
     QueryEmbedder,
@@ -77,6 +79,7 @@ class RAGOrchestratorService:
         buscador: ChunkSearch,
         reranker: Reranker,
         lector_release: CorpusReleaseReader,
+        catalogo: CorpusCatalogReader,
         generador: EvidenceGenerator,
         reloj: Clock,
         parametros: ParametrosDeRecuperacion,
@@ -86,6 +89,7 @@ class RAGOrchestratorService:
         self._buscador = buscador
         self._reranker = reranker
         self._lector_release = lector_release
+        self._catalogo = catalogo
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros
@@ -112,7 +116,16 @@ class RAGOrchestratorService:
         recuperacion = ResultadoDeRecuperacion(
             tuple(sobre_umbral), len(candidatos), meta_de_recuperacion
         )
-        return await self._generador.generar(solicitud, recuperacion)
+        evidencia = await self._generador.generar(solicitud, recuperacion)
+        return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
+
+    async def _validar_citas_y_ensamblar(
+        self,
+        solicitud: RagQueryInternalRequest,
+        evidencia: EvidenciaGenerada,
+        recuperacion: ResultadoDeRecuperacion,
+    ) -> RagQueryInternalResponse:
+        raise NotImplementedError("no implementado")
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""

@@ -1,10 +1,11 @@
 """Puertos de la capa de aplicación. Cada change de rag-orchestrator añade aquí los suyos."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Literal, Protocol
 
+from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.relevance import ChunkPuntuado
 from app.schemas.generated.models import (
     RagMeta,
@@ -160,9 +161,27 @@ class ResultadoDeRecuperacion:
     meta: RagMeta
 
 
+@dataclass(frozen=True)
+class EvidenciaGenerada:
+    """Lo que devuelve el generador: opciones con sus ``chunkId`` citados, aún sin validar (RN-01, RN-04)."""
+
+    opciones: tuple[OpcionGenerada, ...]
+
+
 class EvidenceGenerator(Protocol):
-    """Rama con evidencia sobre el umbral (prompt, LLM, citas, soporte, recorte): la implementa L1D-275 (US-225)."""
+    """Rama con evidencia sobre el umbral (prompt, LLM): la implementa L1D-275 (US-225).
+
+    Entrega opciones crudas; las citas se validan y se completan desde el corpus en el servicio (L1D-179).
+    """
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
-    ) -> RagQueryInternalResponse: ...
+    ) -> EvidenciaGenerada: ...
+
+
+class CorpusCatalogReader(Protocol):
+    """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""
+
+    def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
+        """Solo devuelve los documentos que existen; un campo que el catálogo no registra es ``None``."""
+        ...
