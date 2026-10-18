@@ -6,6 +6,7 @@ from datetime import date, datetime
 from typing import Any, Literal, Protocol
 
 from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.nli import EtiquetaNli
 from app.domain.relevance import ChunkPuntuado
 from app.schemas.generated.models import (
     RagMeta,
@@ -213,4 +214,37 @@ class LlmClient(Protocol):
 
     async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
         """Texto crudo del modelo, que debe ser un JSON conforme a ``esquema``; sin reintento. Fallo: ``FalloDelLlm``."""
+        ...
+
+
+# --- Soporte NLI (US-231b; lo consume L1D-180) ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ParNli:
+    """Premisa (texto del corpus) e hipótesis (afirmación a verificar). Nunca ``clinicalContext`` ni identidad (RN-11)."""
+
+    premisa: str
+    hipotesis: str
+
+
+@dataclass(frozen=True)
+class ResultadoNli:
+    """Clase más probable y probabilidad de ``entailment`` ya en [0, 1]; jamás ``None`` (RN-01: ausente no es 0.0)."""
+
+    label: EtiquetaNli
+    p_entailment: float
+
+
+class NliClassifier(Protocol):
+    """Clasifica pares (premisa, hipótesis) por lotes. Un fallo del modelo lanza ``FalloDeInferencia`` (L1D-180 lo
+    traduce en ``503 NLI_UNAVAILABLE``); el mensaje nunca lleva la premisa ni la hipótesis."""
+
+    @property
+    def version(self) -> str:
+        """``<modelo>@<revisión>#sha256:<hash>`` de la configuración, para ``meta.nliModel`` (FR-25)."""
+        ...
+
+    def clasificar(self, pares: list[ParNli]) -> list[ResultadoNli]:
+        """Un resultado por par y en el mismo orden; la lista vacía devuelve ``[]`` sin invocar el modelo."""
         ...

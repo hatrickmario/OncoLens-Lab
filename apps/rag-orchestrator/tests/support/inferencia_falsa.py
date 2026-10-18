@@ -27,6 +27,26 @@ CH_C_1 = (
 )
 PASAJES_FX06AC = {"ch-m1-1": CH_M1_1, "ch-p1-1": CH_P1_1, "ch-c-1": CH_C_1}
 
+# Pares NLI de FX-06a-c (premisa, hipótesis, clase esperada): sintéticos, redactados para el test (US-231b AC-1).
+PREMISA_NEUTRAL = (
+    "Añadir terapia anti-HER2 a la quimioterapia adyuvante mejoró la supervivencia libre de enfermedad en el "
+    "cáncer de mama HER2 positivo temprano."
+)
+PARES_NLI_FX06AC: tuple[tuple[str, str, str], ...] = (
+    (
+        CH_M1_1,
+        "La adición de terapia anti-HER2 a la quimioterapia adyuvante mejoró la supervivencia libre de "
+        "enfermedad en el cáncer de mama HER2 positivo.",
+        "entailment",
+    ),
+    (
+        CH_M1_1,
+        "La terapia anti-HER2 empeoró la supervivencia libre de enfermedad en el cáncer de mama HER2 positivo.",
+        "contradiction",
+    ),
+    (PREMISA_NEUTRAL, "La terapia anti-HER2 reduce la mortalidad a la mitad.", "neutral"),
+)
+
 
 def id_de_palabra(palabra: str) -> int:
     return 3 + zlib.crc32(palabra.lower().encode()) % 100_000
@@ -108,6 +128,57 @@ class SesionDeLogitsFalsa:
         return 2.0 * len(pregunta & pasaje) - 4.0
 
 
+class SesionNliFalsa:
+    """Tres logits por par (``[lote, 3]``) tomados de una tabla ``ids de la secuencia -> logits`` o del ``fijo``.
+
+    La tabla permite que el resultado no dependa del orden en que el adapter agrupa el lote (por largo creciente).
+    """
+
+    def __init__(
+        self,
+        tabla: dict[tuple[int, ...], Sequence[float]] | None = None,
+        error: Exception | None = None,
+        fijo: Sequence[float] | None = None,
+        columnas: int = 3,
+    ) -> None:
+        self.tabla = tabla or {}
+        self.error = error
+        self.fijo = list(fijo) if fijo is not None else None
+        self.columnas = columnas
+        self.lotes: list[list[list[int]]] = []
+
+    @property
+    def invocaciones(self) -> int:
+        return len(self.lotes)
+
+    def ejecutar(self, secuencias: Sequence[Sequence[int]]) -> np.ndarray:
+        if self.error is not None:
+            raise self.error
+        self.lotes.append([list(s) for s in secuencias])
+        filas = [self._logits_de(tuple(s)) for s in secuencias]
+        return np.array(filas, dtype=np.float32).reshape(len(secuencias), -1)
+
+    def _logits_de(self, secuencia: tuple[int, ...]) -> Sequence[float]:
+        if secuencia in self.tabla:
+            return self.tabla[secuencia]
+        if self.fijo is not None:
+            return self.fijo
+        return [0.0] * self.columnas
+
+
+def logits_esperados_de_fx06ac(
+    tokenizador: TokenizadorFalso, indices: tuple[int, int, int] = (0, 1, 2)
+) -> dict[tuple[int, ...], list[float]]:
+    """Tabla de ``SesionNliFalsa`` para los tres pares de FX-06a-c; ``indices`` = columnas de (entailment, neutral, contradiction)."""
+    clase_a_columna = dict(zip(("entailment", "neutral", "contradiction"), indices, strict=True))
+    tabla: dict[tuple[int, ...], list[float]] = {}
+    for premisa, hipotesis, clase in PARES_NLI_FX06AC:
+        logits = [0.0, 0.0, 0.0]
+        logits[clase_a_columna[clase]] = 4.0
+        tabla[tuple(tokenizador.codificar(premisa, hipotesis))] = logits
+    return tabla
+
+
 def coseno(a: Sequence[float], b: Sequence[float]) -> float:
     va, vb = np.asarray(a, dtype=np.float64), np.asarray(b, dtype=np.float64)
     return float(va @ vb / (np.linalg.norm(va) * np.linalg.norm(vb)))
@@ -117,10 +188,13 @@ __all__ = [
     "CH_C_1",
     "CH_M1_1",
     "CH_P1_1",
+    "PARES_NLI_FX06AC",
     "PASAJES_FX06AC",
     "Q_HER2",
     "SesionDeEmbeddingsFalsa",
     "SesionDeLogitsFalsa",
+    "SesionNliFalsa",
     "TokenizadorFalso",
     "coseno",
+    "logits_esperados_de_fx06ac",
 ]
