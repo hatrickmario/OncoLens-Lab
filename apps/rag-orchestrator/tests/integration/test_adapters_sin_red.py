@@ -108,10 +108,10 @@ def _es_prohibido(modulo: str) -> bool:
     return any(modulo == p or modulo.startswith(f"{p}.") for p in IMPORTS_PROHIBIDOS)
 
 
-@pytest.mark.ac("US-231a", 8)
-def test_ningun_modulo_de_los_adapters_importa_ni_usa_un_cliente_de_nube_o_http() -> None:
-    archivos = _archivos(PAQUETES_DE_ADAPTERS)
-    assert archivos, "la inspección no encontró ningún módulo de los adapters"
+def _usos_de_nube_o_http_en(paquetes: tuple[str, ...]) -> list[str]:
+    """Importaciones y nombres prohibidos (nube, HTTP, ``from_pretrained``…) en los módulos de los paquetes dados."""
+    archivos = _archivos(paquetes)
+    assert archivos, f"la inspección no encontró ningún módulo de {paquetes}"
     infracciones: list[str] = []
     for archivo in archivos:
         arbol = ast.parse(archivo.read_text(encoding="utf-8"))
@@ -124,8 +124,12 @@ def test_ningun_modulo_de_los_adapters_importa_ni_usa_un_cliente_de_nube_o_http(
             if (isinstance(nodo, ast.Attribute) and nodo.attr in NOMBRES_PROHIBIDOS)
             or (isinstance(nodo, ast.Name) and nodo.id in NOMBRES_PROHIBIDOS)
         ]
+    return infracciones
 
-    assert infracciones == []
+
+@pytest.mark.ac("US-231a", 8)
+def test_ningun_modulo_de_los_adapters_importa_ni_usa_un_cliente_de_nube_o_http() -> None:
+    assert _usos_de_nube_o_http_en(PAQUETES_DE_ADAPTERS) == []
 
 
 @pytest.mark.ac("US-231a", 8)
@@ -169,22 +173,7 @@ def test_el_nli_con_pesos_reales_clasifica_con_la_red_bloqueada_y_sin_conexiones
 def test_ningun_modulo_del_paquete_nli_importa_un_cliente_de_nube_o_http_ni_usa_from_pretrained() -> (
     None
 ):
-    archivos = _archivos(("nli",))
-    assert archivos, "la inspección no encontró ningún módulo del paquete nli"
-    infracciones: list[str] = []
-    for archivo in archivos:
-        arbol = ast.parse(archivo.read_text(encoding="utf-8"))
-        infracciones += [
-            f"{archivo.name}: importa {m}" for m in _modulos_importados(arbol) if _es_prohibido(m)
-        ]
-        infracciones += [
-            f"{archivo.name}: usa {nodo.attr if isinstance(nodo, ast.Attribute) else nodo.id}"
-            for nodo in ast.walk(arbol)
-            if (isinstance(nodo, ast.Attribute) and nodo.attr in NOMBRES_PROHIBIDOS)
-            or (isinstance(nodo, ast.Name) and nodo.id in NOMBRES_PROHIBIDOS)
-        ]
-
-    assert infracciones == []
+    assert _usos_de_nube_o_http_en(("nli",)) == []
 
 
 @pytest.mark.ac("US-231b", 4)
