@@ -76,16 +76,22 @@ class SesionDeLogitsFalsa:
     """Un logit por par: ``2 * palabras compartidas entre pregunta y pasaje - 4`` (o los logits fijos recibidos)."""
 
     def __init__(
-        self, logits: Sequence[float] | None = None, error: Exception | None = None
+        self,
+        logits: Sequence[float] | None = None,
+        error: Exception | None = None,
+        constante: float | None = None,
     ) -> None:
         self.logits = list(logits) if logits is not None else None
         self.error = error
+        self.constante = constante
         self.lotes: list[list[list[int]]] = []
 
     def ejecutar(self, secuencias: Sequence[Sequence[int]]) -> np.ndarray:
         if self.error is not None:
             raise self.error
         self.lotes.append([list(s) for s in secuencias])
+        if self.constante is not None:
+            return np.full((len(secuencias), 1), self.constante, dtype=np.float32)
         if self.logits is not None:
             inicio = sum(len(lote) for lote in self.lotes[:-1])
             return np.array(
