@@ -21,6 +21,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkSearch,
     CorpusChunkStore,
+    FalloDeInferencia,
     Idioma,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
@@ -249,6 +250,8 @@ class RerankerFalso:
 
     def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
         self.candidatos_recibidos.append([c.chunk_id for c in candidatos])
+        if self.max_pairs is not None and len(candidatos) > self.max_pairs:
+            raise FalloDeInferencia("reranker falso: más pares que el máximo")
         if self.error is not None:
             raise self.error
         tabla = self._puntajes.get(pregunta, {})

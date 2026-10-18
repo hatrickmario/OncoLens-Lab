@@ -17,6 +17,9 @@ def agrupar_por_presupuesto_de_tokens(
 ) -> list[list[int]]:
     """Índices agrupados por largo creciente (desempate por posición) sin pasar del presupuesto, relleno incluido.
 
+    El presupuesto no es un tope duro: una secuencia que por sí sola lo excede va sola en su lote (el relleno no la
+    recorta; el recorte es de ``truncar_conservando_el_separador_final``).
+
     Determinista: la misma entrada da los mismos lotes, y con ellos el mismo relleno y los mismos puntajes (IA-07).
     """
     lotes: list[list[int]] = []

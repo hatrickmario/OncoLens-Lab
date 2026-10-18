@@ -69,6 +69,10 @@ class NucleoBgeM3:
                 salida = self._sesion.ejecutar([secuencias[i] for i in lote])
                 for indice, vector in zip(lote, self._vectores_del_lote(salida, len(lote))):
                     vectores[indice] = vector
+        if any(
+            v is None for v in vectores
+        ):  # un hueco sería un vector faltante disfrazado de resultado
+            raise FalloDeInferencia(_FALLO)
         return [v for v in vectores if v is not None]
 
     def _vectores_del_lote(self, salida: np.ndarray, tamano: int) -> list[list[float]]:

@@ -185,6 +185,15 @@ SHA-256 en configuración). Rollback: proveedor de modelos en `fake` o revertir 
 - **`FalloDeInferencia`** (en `app/application/ports.py`) es el error del puerto; el servicio ya lo convierte en `503`.
 - **`Tokenizador.id_relleno`** forma parte del Protocol: la sesión alinea secuencias con el relleno de su tokenizer.
 
+- **Gate 2 (Mayor corregido):** con `MODEL_PROVIDER=local` el arranque se niega si `RETRIEVAL_TOP_K` >
+  `RERANKER_MAX_PAIRS` (error con las dos variables, sin valores); `RerankerFalso(max_pairs=…)` lanza el mismo
+  `FalloDeInferencia`. El valor por defecto del Compose (`RETRIEVAL_TOP_K` 40) **no** se cambió: ni ADR-39 ni el plan lo
+  fijan; con 40 y 12 pares el arranque local se niega hasta que el usuario decida (bajar `RETRIEVAL_TOP_K` a ≤ 12 o que
+  el servicio recorte a los N mejores por embedding: decisión de producto).
+- **Deuda (menores del Gate 2):** `Idioma` definido en `domain/idioma.py` y en `application/ports.py`; claves de archivo
+  por `getattr` sobre `ARCHIVOS_A_VERIFICAR`; doble inyección `corpus`/`recuperacion` en `crear_app`; la matriz de D6
+  no está cubierta como tabla única de pruebas.
+
 ## Open Questions
 
 - **Nombre del selector:** la historia habla de `MODEL_PROVIDER`; hoy solo existe `LLM_PROVIDER` (`fake|local`),

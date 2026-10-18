@@ -58,12 +58,14 @@ class BgeReranker:
             )
             for pasaje in pasajes
         ]
-        logits: list[float] = [0.0] * len(secuencias)
+        logits: list[float | None] = [None] * len(secuencias)
         for lote in agrupar_por_presupuesto_de_tokens(secuencias, self._max_tokens_por_lote):
             salida = self._sesion.ejecutar([secuencias[i] for i in lote])
             for indice, logit in zip(lote, self._logits_del_lote(salida, len(lote))):
                 logits[indice] = logit
-        return normalizar_a_unidad(logits)
+        if any(logit is None for logit in logits):  # un hueco jamás se disfraza de un logit 0.0
+            raise FalloDeInferencia(_FALLO)
+        return normalizar_a_unidad([logit for logit in logits if logit is not None])
 
     @staticmethod
     def _logits_del_lote(salida: np.ndarray, tamano: int) -> list[float]:
