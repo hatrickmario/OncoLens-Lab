@@ -36,9 +36,15 @@ from app.application.respuesta_con_evidencia import (
     ensamblar_respuesta_con_evidencia,
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
-from app.domain.citations import validar_citas
+from app.domain.citations import OpcionAceptada, validar_citas
+from app.domain.option_selection import OpcionValidada, recortar_a_max_opciones
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
-from app.domain.relevance import ChunkPuntuado, filtrar_sobre_umbral, top_relevance_score
+from app.domain.relevance import (
+    ChunkPuntuado,
+    filtrar_sobre_umbral,
+    relevancia_de_opcion,
+    top_relevance_score,
+)
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.schemas.generated.models import (
     Limitation,
@@ -130,7 +136,11 @@ class RAGOrchestratorService:
         evidencia: EvidenciaGenerada,
         recuperacion: ResultadoDeRecuperacion,
     ) -> RagQueryInternalResponse:
-        """RN-01 y RN-04: solo se cita lo recuperado en esta consulta, con metadatos del catálogo."""
+        """RN-01 y RN-04: solo se cita lo recuperado en esta consulta, con metadatos del catálogo.
+
+        Etapas: validar citas → (soporte NLI, L1D-180) → recortar a ``maxOptions`` → ensamblar. Se recortan opciones
+        ya validadas, nunca candidatas.
+        """
         trace_id = solicitud.traceId.root
         citables = await self._chunks_citables(trace_id, recuperacion)
         resultado = validar_citas(evidencia.opciones, citables.keys())
@@ -140,7 +150,33 @@ class RAGOrchestratorService:
             len(resultado.aceptadas),
             len(resultado.descartadas),
         )
-        return ensamblar_respuesta_con_evidencia(resultado, citables, recuperacion)
+        recortadas = self._recortar_validadas(trace_id, resultado.aceptadas, citables, solicitud)
+        return ensamblar_respuesta_con_evidencia(
+            recortadas, resultado.descartadas, citables, recuperacion
+        )
+
+    @staticmethod
+    def _recortar_validadas(
+        trace_id: str,
+        aceptadas: Sequence[OpcionAceptada],
+        citables: dict[str, ChunkCitable],
+        solicitud: RagQueryInternalRequest,
+    ) -> tuple[OpcionValidada, ...]:
+        """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
+        puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
+        validadas = []
+        for aceptada in aceptadas:
+            relevancia = relevancia_de_opcion(aceptada.chunk_ids_validos, puntajes)
+            validadas.append(
+                OpcionValidada(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
+            )
+        recortadas = recortar_a_max_opciones(validadas, solicitud.maxOptions, [])
+        logger.info(
+            "event=rag_query_recorte traceId=%s opcionesRecortadas=%d",
+            trace_id,
+            len(validadas) - len(recortadas),
+        )
+        return recortadas
 
     async def _chunks_citables(
         self, trace_id: str, recuperacion: ResultadoDeRecuperacion

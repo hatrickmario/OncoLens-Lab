@@ -1,22 +1,17 @@
 """Ensamblado de la respuesta `con_evidencia` a partir de las citas validadas (RN-01, RN-04).
 
 Cada cita se construye desde el catálogo y el chunk recuperado; del generador solo se conserva qué chunks citó.
-L1D-275 amplía este ensamblado (recorte, aplicabilidad, síntesis) y L1D-180 inserta el soporte NLI antes de él.
+Recibe las opciones ya validadas y recortadas a ``maxOptions`` (L1D-275); L1D-180 inserta el soporte NLI antes.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 
 from app.application.ports import ResultadoDeRecuperacion
-from app.domain.citations import (
-    FichaDeFuente,
-    OpcionAceptada,
-    OpcionDescartada,
-    ResultadoCitas,
-    construir_cita,
-)
+from app.domain.citations import FichaDeFuente, OpcionDescartada, construir_cita
+from app.domain.option_selection import OpcionValidada
 from app.domain.relevance import ChunkPuntuado, top_relevance_score
 from app.schemas.generated.models import (
     ApplicabilitySummary,
@@ -40,7 +35,8 @@ class ChunkCitable:
 
 
 def ensamblar_respuesta_con_evidencia(
-    resultado: ResultadoCitas,
+    opciones: Sequence[OpcionValidada],
+    descartadas: Sequence[OpcionDescartada],
     citables: Mapping[str, ChunkCitable],
     recuperacion: ResultadoDeRecuperacion,
 ) -> RagQueryInternalResponse:
@@ -48,8 +44,8 @@ def ensamblar_respuesta_con_evidencia(
         status=RagQueryStatus.con_evidencia,
         synthesis=Synthesis(agreements=[], discrepancies=[]),
         applicability=[],
-        evidenceOptions=[_opcion_con_evidencia(a, citables) for a in resultado.aceptadas],
-        discardedOptions=[_opcion_descartada(d) for d in resultado.descartadas],
+        evidenceOptions=[_opcion_con_evidencia(o, citables) for o in opciones],
+        discardedOptions=[_opcion_descartada(d) for d in descartadas],
         limitations=[],
         assumptions=[],
         retrievalStats=RetrievalStats(
@@ -64,9 +60,10 @@ def ensamblar_respuesta_con_evidencia(
 
 
 def _opcion_con_evidencia(
-    aceptada: OpcionAceptada, citables: Mapping[str, ChunkCitable]
+    validada: OpcionValidada, citables: Mapping[str, ChunkCitable]
 ) -> EvidenceOption:
     """``relevanceScore`` = el del chunk citado más relevante: metadato secundario, no mide la opción (RN-03)."""
+    aceptada = validada.aceptada
     citados = [citables[chunk_id] for chunk_id in aceptada.chunk_ids_validos]
     return EvidenceOption(
         option=aceptada.opcion.option,
@@ -76,7 +73,7 @@ def _opcion_con_evidencia(
         ),
         populationNotComparable=False,
         perSource=[],
-        relevanceScore=max(c.chunk.relevance_score for c in citados),
+        relevanceScore=validada.relevance_score,
         warnings=[],
         citedSources=[
             CitedSource.model_validate(asdict(construir_cita(c.chunk, c.ficha))) for c in citados

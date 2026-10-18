@@ -174,6 +174,8 @@ class EvidenciaGenerada:
     """Lo que devuelve el generador: opciones con sus ``chunkId`` citados, aún sin validar (RN-01, RN-04)."""
 
     opciones: tuple[OpcionGenerada, ...]
+    limitaciones_propuestas: tuple[str, ...] = ()
+    """Limitaciones que propone el generador; siempre vacío en el S1 `[S1 resp. 11]` (las verifica L1D-180)."""
 
 
 class EvidenceGenerator(Protocol):
