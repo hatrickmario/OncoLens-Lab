@@ -79,6 +79,8 @@ class ParametrosDeRecuperacion:
     llm_model: str
     nli_model: str
     prompt_version: str
+    reranker_max_pairs: int | None = None
+    """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
 
 
 def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionValidada:
