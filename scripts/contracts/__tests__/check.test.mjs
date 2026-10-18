@@ -34,19 +34,22 @@ async function check(root) {
   }
 }
 
+// Cada caso lanza el comprobador real (lint de Redocly sobre los contratos): con el límite por defecto de 5 s depende de la carga del runner.
+const TIEMPO_MAXIMO_MS = 60_000;
+
 describe('contracts:check', () => {
   it('termina con código 0 y sin hallazgos cuando los contratos son los reales [US-033 AC-1]', async () => {
     const result = await check(ROOT);
     expect(result.code).toBe(0);
     expect(result.stdout).toContain('sin hallazgos');
-  });
+  }, TIEMPO_MAXIMO_MS);
 
   it('termina con código distinto de 0 y nombra el archivo cuando un spec no está en su ruta [US-033 AC-1]', async () => {
     const result = await check(await copyOfRepository(['apps/clinical-api/openapi.yaml']));
     expect(result.code).not.toBe(0);
     expect(result.stderr).toContain('apps/clinical-api/openapi.yaml:#');
     expect(result.stderr).toContain('archivo ausente');
-  });
+  }, TIEMPO_MAXIMO_MS);
 
   it('imprime una línea ARCHIVO:ruta — regla — AC/RN — mensaje por hallazgo cuando una regla de assertSpecVersions falla [US-033 AC-1]', async () => {
     const root = await copyOfRepository();
@@ -55,7 +58,7 @@ describe('contracts:check', () => {
     const result = await check(root);
     expect(result.code).not.toBe(0);
     expect(result.stderr).toMatch(/apps\/rag-orchestrator\/openapi\.yaml:#\/openapi — assertSpecVersions — AC-1 — /);
-  });
+  }, TIEMPO_MAXIMO_MS);
 
   it('imprime una línea con redocly:<regla> cuando el lint de Redocly encuentra un $ref sin resolver [US-033 AC-1]', async () => {
     const root = await copyOfRepository();
@@ -64,5 +67,5 @@ describe('contracts:check', () => {
     const result = await check(root);
     expect(result.code).not.toBe(0);
     expect(result.stderr).toMatch(/apps\/clinical-api\/openapi\.yaml:.* — redocly:no-unresolved-refs — AC-1 — /);
-  });
+  }, TIEMPO_MAXIMO_MS);
 });
