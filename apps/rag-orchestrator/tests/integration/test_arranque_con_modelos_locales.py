@@ -67,7 +67,7 @@ def _ajustes(modelos: EntornoDeModelos, **cambios: object) -> Settings:
     base: dict[str, object] = {
         "service_jwt_public_key_file": _ruta_publica(),
         "relevance_threshold": 0.30,
-        "retrieval_top_k": 40,
+        "retrieval_top_k": 12,
         "rerank_top_n": 10,
         "nli_model": "nli-test@1",
         "prompt_version": "rag-query@test",

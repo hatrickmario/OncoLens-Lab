@@ -45,6 +45,7 @@ from tests.support.recuperacion import (
 )
 from tests.support.semilla import EmbedderFalso as PasajesFalso
 
+MAX_PARES = 12  # RERANKER_MAX_PAIRS (ADR-39)
 DIMENSION = 8  # la de los vectores de FX-06a-a
 RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
 RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
@@ -76,7 +77,7 @@ def _reales(rompe: str | None = None) -> Adaptadores:
             TokenizadorFalso(),
             version="reranker-test@rev#sha256:abc",
             max_length=512,
-            max_pairs=12,
+            max_pairs=MAX_PARES,
             max_tokens_por_lote=4096,
         ),
         detector=DetectorDeIdiomaLocal("es"),
@@ -91,7 +92,7 @@ def _fakes(rompe: str | None = None) -> Adaptadores:
     return Adaptadores(
         consulta=EmbedderFalso(error=fallo if rompe == "embeddings" else None),
         pasajes=pasajes,
-        reranker=RerankerFalso(error=fallo if rompe == "reranker" else None),
+        reranker=RerankerFalso(error=fallo if rompe == "reranker" else None, max_pairs=MAX_PARES),
         detector=DetectorIdiomaFalso(),
     )
 
@@ -157,6 +158,16 @@ def _el_reranker_devuelve_un_puntaje_por_candidato_en_cero_uno_y_nunca_none(
     assert reranker.puntuar(Q_HER2, []) == []
 
 
+def _mas_pares_que_el_maximo_falla_con_el_error_del_puerto(
+    fabrica: Callable[..., Adaptadores],
+) -> None:
+    candidatos = _candidatos() * 5  # 15 > MAX_PARES
+
+    with pytest.raises(FalloDeInferencia):
+        fabrica().reranker.puntuar(Q_HER2, candidatos)
+    assert len(fabrica().reranker.puntuar(Q_HER2, candidatos[:MAX_PARES])) == MAX_PARES
+
+
 def _el_detector_devuelve_es_o_en(fabrica: Callable[..., Adaptadores]) -> None:
     assert fabrica().detector.detectar(Q_HER2) in ("es", "en")
 
@@ -194,6 +205,7 @@ BATERIA: Sequence[Callable[..., None]] = (
     _la_consulta_devuelve_floats_y_declara_su_modelo,
     _los_pasajes_devuelven_un_vector_por_texto_en_el_mismo_orden,
     _el_reranker_devuelve_un_puntaje_por_candidato_en_cero_uno_y_nunca_none,
+    _mas_pares_que_el_maximo_falla_con_el_error_del_puerto,
     _el_detector_devuelve_es_o_en,
     _el_fallo_de_un_modelo_se_propaga_con_el_error_del_puerto,
     _sin_evidencia_el_puntaje_maximo_es_null_y_nunca_cero,

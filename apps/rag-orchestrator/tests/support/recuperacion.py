@@ -236,9 +236,11 @@ class RerankerFalso:
         self,
         puntajes: dict[str, dict[str, float]] = PUNTAJES_FX06A,
         error: Exception | None = None,
+        max_pairs: int | None = None,
     ) -> None:
         self._puntajes = puntajes
         self.error = error
+        self.max_pairs = max_pairs
         self.candidatos_recibidos: list[list[str]] = []
 
     @property
