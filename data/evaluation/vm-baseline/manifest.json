@@ -120,9 +120,9 @@
       "pregunta_referencia": {
         "poblacion": "Mujer posmenopáusica con cáncer de mama metastásico",
         "contexto_clinico": "Carcinoma lobulillar infiltrante, receptor hormonal positivo, HER2 negativo, estadio IV, progresión tras inhibidor de aromatasa con inhibidor de CDK4/6",
-        "decision": "Opciones de tratamiento sistémico tras la progresión en primera línea",
+        "decision": "Opciones de tratamiento sistémico de segunda línea tras la progresión a inhibidor de aromatasa más inhibidor de CDK4/6",
         "fecha_corte_evidencia": "2026-06-30",
-        "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión tras un inhibidor de aromatasa más un inhibidor de CDK4/6, ¿qué opciones de tratamiento sistémico están respaldadas por evidencia publicada hasta 2026-06-30?"
+        "texto": "En una mujer posmenopáusica con cáncer de mama metastásico, receptor hormonal positivo y HER2 negativo, con progresión a un inhibidor de aromatasa más un inhibidor de CDK4/6, ¿qué evidencia publicada hasta 2026-06-30 respalda las opciones de tratamiento sistémico de segunda línea?"
       },
       "checklist_reconstruccion": {
         "version": "0.1-borrador",
@@ -211,7 +211,7 @@
             "respuesta_esperada": "ECOG 0"
           },
           {
-            "respuesta_esperada": "Estado de castración sensible"
+            "respuesta_esperada": "PSA ascendente durante ADT; estado de castración y extensión actual pendientes de confirmar con testosterona e imagen"
           }
         ]
       }
@@ -278,10 +278,10 @@
       ],
       "pregunta_referencia": {
         "poblacion": "Hombre con cáncer de próstata metastásico resistente a la castración",
-        "contexto_clinico": "Adenocarcinoma acinar Gleason 5+4 (ISUP 5), M1b, progresión tras deprivación androgénica y abiraterona, docetaxel en curso",
-        "decision": "Opciones de tratamiento sistémico posteriores",
+        "contexto_clinico": "Adenocarcinoma acinar Gleason 5+4 (ISUP 5), M1b, progresión tras deprivación androgénica y abiraterona; docetaxel en curso desde el día -60, sin progresión documentada bajo docetaxel",
+        "decision": "Evidencia para docetaxel tras la progresión con abiraterona",
         "fecha_corte_evidencia": "2026-06-30",
-        "texto": "En un hombre con cáncer de próstata metastásico resistente a la castración, con progresión tras deprivación androgénica y abiraterona, ¿qué opciones de tratamiento sistémico posteriores están respaldadas por evidencia publicada hasta 2026-06-30?"
+        "texto": "En un hombre con cáncer de próstata metastásico resistente a la castración, con progresión tras deprivación androgénica y abiraterona, ¿qué evidencia publicada hasta 2026-06-30 respalda el uso de docetaxel?"
       },
       "checklist_reconstruccion": {
         "version": "0.1-borrador",
