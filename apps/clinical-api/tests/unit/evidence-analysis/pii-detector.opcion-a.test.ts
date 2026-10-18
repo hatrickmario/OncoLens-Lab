@@ -179,6 +179,17 @@ describe('crearDetectorOpcionA · formatos de L1D-166 y fechas', () => {
     expect(sinIdentidad.enmascarar(texto).texto).toBe(texto);
   });
 
+  it.each(['15/03-2024', '15.03/2024', '2024-03/15'])(
+    'enmascara la fecha %s cuando los separadores se mezclan y el año tiene cuatro dígitos',
+    (fecha) => {
+      expect(sinIdentidad.enmascarar(`el ${fecha} hubo`).texto).toBe('el [FECHA] hubo');
+    },
+  );
+
+  it('deja intacto «Plaquetas 150-450.000» junto a los rangos decimales', () => {
+    expect(sinIdentidad.enmascarar('Plaquetas 150-450.000').texto).toBe('Plaquetas 150-450.000');
+  });
+
   it('enmascara la fecha numérica cuando usa el mismo separador y el año de dos dígitos', () => {
     expect(sinIdentidad.enmascarar('el 16/08/25 y el 16.08.25 y el 16-08-2025').texto).toBe(
       'el [FECHA] y el [FECHA] y el [FECHA]',
