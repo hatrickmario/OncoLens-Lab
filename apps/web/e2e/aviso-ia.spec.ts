@@ -23,7 +23,7 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194)', () => {
 
     const avisos = await avisosDelResultado(page);
     expect(avisos.length).toBeGreaterThan(0);
-    for (const aviso of avisos) expect(aviso).toBe(disclaimerPorDefecto);
+    for (const aviso of avisos) expect(aviso).toBe(disclaimerEsperado);
   });
 
   test('muestra el aviso cuando el análisis es sin_evidencia [US-069 AC-4]', async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194)', () => {
 
     const avisos = await avisosDelResultado(page);
     expect(avisos.length).toBeGreaterThan(0);
-    for (const aviso of avisos) expect(aviso).toBe(disclaimerPorDefecto);
+    for (const aviso of avisos) expect(aviso).toBe(disclaimerEsperado);
   });
 
   test('muestra el valor sintético de AI_DISCLAIMER_TEXT en el panel sin cambiar código de web [US-069 AC-2]', async ({
