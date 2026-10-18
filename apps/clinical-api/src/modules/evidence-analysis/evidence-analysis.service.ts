@@ -14,6 +14,7 @@ import type {
   Clock,
   ContextDeidentifier,
   RagQueryClient,
+  RespuestaDeRag,
   ResultadoDelAnalisis,
 } from './ports.js';
 
@@ -30,11 +31,13 @@ export interface ConfiguracionDelAnalisis {
   analysisMaxOptions: number;
   /** Años de antigüedad por defecto de la evidencia (`EVIDENCE_DEFAULT_YEARS`, RN-22). */
   evidenceDefaultYears: number;
+  /** Plazo hacia rag-orchestrator en ms (`RAG_TIMEOUT_MS`, RN-22). */
+  ragTimeoutMs: number;
 }
 
 export interface DependenciasDelService {
   casos: CasoRepository;
-  deidentificador: ContextDeidentifier;
+  desidentificador: ContextDeidentifier;
   rag: RagQueryClient;
   cierre: AnalysisCompletion;
   catalogo: CatalogVersionProvider;
@@ -96,6 +99,32 @@ export function armarRagQueryRequest(entrada: EntradaDelRequestInterno): RagQuer
   };
 }
 
+/** Valor de `X-Request-Deadline` (ISO 8601): ahora más `RAG_TIMEOUT_MS` (RN-22), con el reloj inyectado. */
+export function calcularDeadline(ahora: Date, ragTimeoutMs: number): string {
+  return new Date(ahora.getTime() + ragTimeoutMs).toISOString();
+}
+
+/**
+ * Consulta a rag-orchestrator con su plazo: envía el deadline y aborta la llamada al vencer `ragTimeoutMs`. El
+ * temporizador se limpia siempre, también cuando la llamada falla.
+ */
+async function consultarConPlazo(
+  rag: RagQueryClient,
+  request: RagQueryInternalRequest,
+  deadline: string,
+  ragTimeoutMs: number,
+): Promise<RespuestaDeRag> {
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => {
+    controlador.abort();
+  }, ragTimeoutMs);
+  try {
+    return await rag.consultar(request, { deadline, signal: controlador.signal });
+  } finally {
+    clearTimeout(temporizador);
+  }
+}
+
 /**
  * Gateway de `POST /platform/evidence-analyses`: leer el caso → cortar si no hay tipo de cáncer → contexto por
  * allowlist → desidentificar → consultar a rag-orchestrator → cerrar el análisis. Los puertos llegan por la factory.
@@ -103,7 +132,7 @@ export function armarRagQueryRequest(entrada: EntradaDelRequestInterno): RagQuer
 export function crearEvidenceAnalysisService(
   dependencias: DependenciasDelService,
 ): EvidenceAnalysisService {
-  const { casos, deidentificador, rag, cierre, catalogo, reloj, config } = dependencias;
+  const { casos, desidentificador, rag, cierre, catalogo, reloj, config } = dependencias;
   return {
     async solicitar({ traceId, userId, peticion }) {
       const caso = await casos.leerCaso(peticion.patientId);
@@ -112,7 +141,7 @@ export function crearEvidenceAnalysisService(
 
       const ahora = reloj.now();
       const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
-      const { clinicalContext, query } = await deidentificador.desidentificar({
+      const { clinicalContext, query } = await desidentificador.desidentificar({
         contexto,
         query: peticion.query,
         dataOrigin: caso.paciente.dataOrigin,
@@ -129,11 +158,19 @@ export function crearEvidenceAnalysisService(
         anioActual: ahora.getUTCFullYear(),
         aniosPorDefecto: config.evidenceDefaultYears,
       });
-      const respuesta = await rag.consultar(request);
+      const respuesta = await consultarConPlazo(
+        rag,
+        request,
+        calcularDeadline(ahora, config.ragTimeoutMs),
+        config.ragTimeoutMs,
+      );
       return cierre.completar({
         traceId,
         patientId: peticion.patientId,
+        episodeId: caso.episodioId,
         userId,
+        questionTemplateId: peticion.questionTemplateId ?? null,
+        continueWithWarning: peticion.continueWithWarning,
         request,
         dataRefs,
         respuesta,

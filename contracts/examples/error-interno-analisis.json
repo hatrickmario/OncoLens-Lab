@@ -1,0 +1,5 @@
+{
+  "error": "ERROR_INTERNO",
+  "message": "Error interno del servidor.",
+  "traceId": "req_a1b2c3d4"
+}

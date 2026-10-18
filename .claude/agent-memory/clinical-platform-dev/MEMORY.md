@@ -1,0 +1,1 @@
+- [Entorno de integracion en worktree](reference_entorno_integracion_worktree.md) — receta para PostgreSQL de test, secretos, redes y codegen sin chocar con otros agentes

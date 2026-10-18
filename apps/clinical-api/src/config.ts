@@ -202,12 +202,19 @@ export interface EvidenceAnalysisConfig {
   analysisMaxOptions: number;
   /** Años de antigüedad por defecto de la evidencia cuando la petición no trae `publishedFromYear` (RN-22). */
   evidenceDefaultYears: number;
+  /** Plazo de la llamada a rag-orchestrator en milisegundos (`RAG_TIMEOUT_MS`, RN-22): `X-Request-Deadline` y abortar. */
+  ragTimeoutMs: number;
+  /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069); nunca un literal del código. */
+  aiDisclaimerText: string;
+  /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`: supuesto fijo de la Base del análisis del S1 (`[S1 resp. 30]`). */
+  analysisBasisAssumptionText: string;
 }
 
 const DEFAULT_ANALYSIS_MAX_OPTIONS = 1;
 /** `maximum` de `maxOptions` en `RagQueryInternalRequest` (contrato de rag-orchestrator). */
 const CONTRACT_MAX_OPTIONS = 3;
 const DEFAULT_EVIDENCE_YEARS = 10;
+const DEFAULT_RAG_TIMEOUT_MS = 30_000;
 
 function leerUrlHttpObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = leerObligatoria(env, variable);
@@ -245,5 +252,8 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
       'EVIDENCE_DEFAULT_YEARS',
       DEFAULT_EVIDENCE_YEARS,
     ),
+    ragTimeoutMs: readPositiveInteger(env, 'RAG_TIMEOUT_MS', DEFAULT_RAG_TIMEOUT_MS),
+    aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
+    analysisBasisAssumptionText: leerObligatoria(env, 'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT'),
   };
 }

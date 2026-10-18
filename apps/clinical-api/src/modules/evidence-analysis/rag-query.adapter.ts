@@ -1,11 +1,24 @@
 import { ragQuery } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Client } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/client/index.js';
-import type { RagQueryClient } from './ports.js';
+import type { FalloDeRag, RagQueryClient } from './ports.js';
+
+/** Código `error` del cuerpo de un fallo de rag-orchestrator; cualquier otra forma del cuerpo es `null`. */
+function codigoDeError(cuerpo: unknown): string | null {
+  if (typeof cuerpo !== 'object' || cuerpo === null) return null;
+  const { error } = cuerpo as { error?: unknown };
+  return typeof error === 'string' ? error : null;
+}
+
+/** Sin respuesta HTTP (red caída o llamada abortada): `status` null, y `tiempoAgotado` si venció el plazo local. */
+function falloSinRespuesta(signal: AbortSignal | undefined): FalloDeRag {
+  return { ok: false, status: null, codigo: null, tiempoAgotado: signal?.aborted === true };
+}
 
 /**
- * Puerto `RagQueryClient` sobre el SDK generado de L1D-105 (transporte con JWT de servicio incluido). Un fallo de red
- * o de transporte se traduce a `{ ok: false, status: null }` sin su mensaje (puede traer host o ruta); el mapeo de
- * errores del contrato a respuestas HTTP es de L1D-104.
+ * Puerto `RagQueryClient` sobre el SDK generado de L1D-105 (transporte con JWT de servicio incluido). Del fallo solo
+ * sale el estado HTTP y el código `error`, nunca el mensaje ni el cuerpo (pueden traer texto interno): el mapeo a
+ * respuestas de clinical-api es `mapearFalloRag()`. Un fallo de red se traduce a `status: null` sin su mensaje (puede
+ * traer host o ruta); `tiempoAgotado` distingue el aborto por `RAG_TIMEOUT_MS`.
  */
 export function crearRagQueryClient(sdk: Client): RagQueryClient {
   return {
@@ -17,12 +30,14 @@ export function crearRagQueryClient(sdk: Client): RagQueryClient {
           ...(opciones?.deadline !== undefined && {
             headers: { 'X-Request-Deadline': opciones.deadline },
           }),
+          ...(opciones?.signal !== undefined && { signal: opciones.signal }),
         });
-        const { response, data } = resultado;
+        const { response, data, error } = resultado;
         if (response?.ok === true && data !== undefined) return { ok: true, cuerpo: data };
-        return { ok: false, status: response?.status ?? null };
+        if (response === undefined) return falloSinRespuesta(opciones?.signal);
+        return { ok: false, status: response.status, codigo: codigoDeError(error) };
       } catch {
-        return { ok: false, status: null };
+        return falloSinRespuesta(opciones?.signal);
       }
     },
   };

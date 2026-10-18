@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import type { IdGenerator } from './ports.js';
+import type { TraceIdGenerator } from './ports.js';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -25,9 +25,9 @@ export function traceIdEntranteRegistrable(valor: string | undefined): string | 
  * Genera el `traceId` de la petición con el generador inyectado. El `X-Trace-Id` entrante es un dato no confiable:
  * solo se conserva (para el log) si cumple el patrón; nunca llega a Backend 2, a la respuesta ni a la persistencia.
  */
-export function crearTraceIdMiddleware(ids: IdGenerator): RequestHandler {
+export function crearTraceIdMiddleware(traceIds: TraceIdGenerator): RequestHandler {
   return (peticion, respuesta, siguiente) => {
-    respuesta.locals.traceId = ids.traceId();
+    respuesta.locals.traceId = traceIds.traceId();
     const entrante = traceIdEntranteRegistrable(peticion.header('x-trace-id'));
     if (entrante !== undefined) respuesta.locals.traceIdEntrante = entrante;
     siguiente();

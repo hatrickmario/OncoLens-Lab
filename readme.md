@@ -867,6 +867,8 @@ paths:
                 $ref: "#/components/schemas/ErrorAnalisisNoProcesable"
         "429":
           $ref: "#/components/responses/LimiteGeneracion"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
         "502":
           $ref: "#/components/responses/ErrorServicioIa"
         "503":

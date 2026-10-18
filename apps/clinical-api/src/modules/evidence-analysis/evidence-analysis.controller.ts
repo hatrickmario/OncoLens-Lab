@@ -11,6 +11,7 @@ import {
 } from '../../infrastructure/http-errores.js';
 import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import type { SesionAutenticada } from '../auth/auth.service.js';
+import { FalloDePersistenciaError } from './analysis-completion.js';
 import { TipoCancerNoRegistradoError } from './case-guards.js';
 import { DesidentificacionProvisionalRechazada } from './context-deidentifier.provisional.js';
 import { evidenceAnalysisRequestSchema } from './evidence-analysis.schema.js';
@@ -18,13 +19,23 @@ import {
   PacienteNoEncontradoError,
   type EvidenceAnalysisService,
 } from './evidence-analysis.service.js';
-import type { IdGenerator } from './ports.js';
+import type { TraceIdGenerator } from './ports.js';
 import { crearTraceIdMiddleware } from './trace-id.middleware.js';
 
 export interface DependenciasDelController {
   service: EvidenceAnalysisService;
-  ids: IdGenerator;
+  traceIds: TraceIdGenerator;
   registrar: Registrar;
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Locals {
+      /** Sesión con rol `doctor`, puesta por `soloDoctor`; ausente en cualquier otro caso. */
+      sesionDoctor?: SesionAutenticada;
+    }
+  }
 }
 
 const EVENTO = 'evidence_analysis.solicitud';
@@ -63,6 +74,11 @@ const CUERPO_INVALIDO: Rechazo = {
   codigo: 'CUERPO_INVALIDO',
   resultado: 'cuerpo_invalido',
 };
+const ERROR_INTERNO: Rechazo = {
+  status: 500,
+  codigo: 'ERROR_INTERNO',
+  resultado: 'error_de_persistencia',
+};
 const ERROR_SERVICIO_IA: Rechazo = {
   status: 502,
   codigo: 'ERROR_SERVICIO_IA',
@@ -81,6 +97,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
       resultado: 'tipo_cancer_no_registrado',
     };
   }
+  if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
   if (error instanceof DesidentificacionProvisionalRechazada) {
     return {
       ...ERROR_SERVICIO_IA,
@@ -97,7 +114,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
  * códigos: nunca la pregunta, el contexto ni identidad (RN-10).
  */
 export function evidenceAnalysisController(dependencias: DependenciasDelController): Router {
-  const { service, ids, registrar } = dependencias;
+  const { service, traceIds, registrar } = dependencias;
   const router = Router();
 
   function traceIdDe(response: Response): string {
@@ -120,9 +137,10 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
   }
 
+  /** Única comprobación del rol (antes de leer el cuerpo): deja la sesión del doctor para el handler. */
   const soloDoctor: RequestHandler = (request, response, next) => {
     try {
-      exigirRolDoctor(request.sesion);
+      response.locals.sesionDoctor = exigirRolDoctor(request.sesion);
     } catch (error) {
       if (!(error instanceof PermisoDenegadoError)) throw error;
       rechazar(response, PERMISO_DENEGADO);
@@ -132,7 +150,11 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
   };
 
   const solicitar: RequestHandler = async (request, response) => {
-    const sesion = exigirRolDoctor(request.sesion);
+    const sesion = response.locals.sesionDoctor;
+    if (sesion === undefined) {
+      rechazar(response, PERMISO_DENEGADO); // cerrado ante una cadena de middlewares mal montada
+      return;
+    }
     const cuerpo = evidenceAnalysisRequestSchema.safeParse(request.body);
     if (!cuerpo.success) {
       rechazar(response, CUERPO_INVALIDO);
@@ -151,7 +173,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
         response.status(200).json(resultado.cuerpo);
         return;
       }
-      rechazar(response, ERROR_SERVICIO_IA, trazaDelPaciente);
+      rechazar(response, resultado.respuesta, trazaDelPaciente);
     } catch (error) {
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;
@@ -170,7 +192,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
 
   router.post(
     '/evidence-analyses',
-    crearTraceIdMiddleware(ids),
+    crearTraceIdMiddleware(traceIds),
     soloDoctor,
     express.json(),
     solicitar,

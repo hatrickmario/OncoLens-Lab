@@ -17,6 +17,11 @@ set -euo pipefail
 # datos sintéticos y lo fija explícitamente, salvo que el llamador ya lo defina.
 export APP_ENV="${APP_ENV:-test}"
 
+# clinical-api rechaza arrancar sin los dos textos configurables del cierre del análisis (fallo cerrado, RN-22) y la CI no
+# tiene .env: el smoke pasa textos SINTÉTICOS, salvo que el llamador ya los defina. No son los literales de producción.
+export AI_DISCLAIMER_TEXT="${AI_DISCLAIMER_TEXT:-Aviso sintético de IA del smoke · Uso académico/investigación}"
+export ANALYSIS_BASIS_S1_ASSUMPTION_TEXT="${ANALYSIS_BASIS_S1_ASSUMPTION_TEXT:-Supuesto sintético de la Base del análisis del smoke.}"
+
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 proyecto="oncolens-smoke-$$"
 espera="${SMOKE_WAIT_TIMEOUT:-900}"

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.3.0
+  version: 1.4.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -380,6 +380,8 @@ paths:
                 $ref: '#/components/schemas/ErrorAnalisisNoProcesable'
         "429":
           $ref: '#/components/responses/LimiteGeneracion'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
         "502":
           $ref: '#/components/responses/ErrorServicioIa'
         "503":

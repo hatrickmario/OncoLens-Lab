@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TipoCancerNoRegistradoError } from '../../../src/modules/evidence-analysis/case-guards.js';
 import {
   PacienteNoEncontradoError,
   armarRagQueryRequest,
+  calcularDeadline,
   crearEvidenceAnalysisService,
   type DependenciasDelService,
 } from '../../../src/modules/evidence-analysis/evidence-analysis.service.js';
@@ -14,6 +15,7 @@ import type {
 import type {
   EntradaDeCierre,
   EntradaDeDesidentificacion,
+  OpcionesDeConsultaRag,
 } from '../../../src/modules/evidence-analysis/ports.js';
 import { AHORA_DE_EJEMPLO, casoDeEjemplo } from './casos.js';
 
@@ -32,6 +34,11 @@ const CONTEXTO: ClinicalContext = {
   missingCriticalData: [],
   priorAnalyses: [],
 };
+
+const RESULTADO_DEL_CIERRE = {
+  tipo: 'fallo',
+  respuesta: { status: 502, codigo: 'ERROR_SERVICIO_IA', resultado: 'error_servicio_ia' },
+} as const;
 
 const entradaBase = {
   traceId: 'req_Fijo0001',
@@ -119,7 +126,7 @@ function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null }
         return caso;
       },
     },
-    deidentificador: {
+    desidentificador: {
       desidentificar: async (entrada) => {
         llamadas.push('desidentificar');
         recibido.desidentificacion = entrada;
@@ -137,12 +144,12 @@ function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null }
       completar: async (entrada) => {
         llamadas.push('completar');
         recibido.cierre = entrada;
-        return { tipo: 'error_servicio_ia' };
+        return RESULTADO_DEL_CIERRE;
       },
     },
     catalogo: { version: () => '1.0.0' },
     reloj: { now: () => AHORA_DE_EJEMPLO },
-    config: { analysisMaxOptions: 1, evidenceDefaultYears: 10 },
+    config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },
   };
   return { dependencias, llamadas, recibido };
 }
@@ -181,7 +188,7 @@ describe('crearEvidenceAnalysisService', () => {
 
   it('no llama a la IA ni cierra el análisis cuando el desidentificador rechaza', async () => {
     const { dependencias, llamadas } = crearFakes();
-    dependencias.deidentificador = {
+    dependencias.desidentificador = {
       desidentificar: async () => {
         llamadas.push('desidentificar');
         throw new DesidentificacionProvisionalRechazada('app_env');
@@ -216,8 +223,69 @@ describe('crearEvidenceAnalysisService', () => {
       traceId: 'req_Fijo0001',
       patientId: 'paciente-sintetico',
       userId: 'usuario-sintetico',
+      episodeId: 'episodio-sintetico',
+      questionTemplateId: null,
+      continueWithWarning: false,
       respuesta: { ok: false, status: 500 },
     });
-    expect(resultado).toEqual({ tipo: 'error_servicio_ia' });
+    expect(resultado).toEqual(RESULTADO_DEL_CIERRE);
+  });
+});
+
+describe('calcularDeadline', () => {
+  it('devuelve el instante actual más RAG_TIMEOUT_MS en ISO 8601', () => {
+    expect(calcularDeadline(new Date('2026-10-16T12:00:00.000Z'), 30_000)).toBe(
+      '2026-10-16T12:00:30.000Z',
+    );
+  });
+});
+
+describe('plazo hacia rag-orchestrator', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('envía el deadline calculado con el reloj inyectado y una señal sin abortar cuando rag responde a tiempo', async () => {
+    const { dependencias } = crearFakes();
+    let opcionesRecibidas: OpcionesDeConsultaRag | undefined;
+    dependencias.rag = {
+      consultar: async (_request, opciones) => {
+        opcionesRecibidas = opciones;
+        return { ok: false, status: 500 };
+      },
+    };
+
+    await crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
+
+    expect(opcionesRecibidas?.deadline).toBe(
+      calcularDeadline(AHORA_DE_EJEMPLO, dependencias.config.ragTimeoutMs),
+    );
+    expect(opcionesRecibidas?.signal?.aborted).toBe(false);
+  });
+
+  it('no deja temporizadores pendientes cuando rag responde a tiempo', async () => {
+    vi.useFakeTimers();
+    const { dependencias } = crearFakes();
+
+    await crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('aborta la llamada y cierra con tiempoAgotado cuando rag no responde dentro de ragTimeoutMs', async () => {
+    vi.useFakeTimers();
+    const { dependencias, recibido } = crearFakes();
+    dependencias.rag = {
+      consultar: (_request, opciones) =>
+        new Promise((resolve) => {
+          opciones?.signal?.addEventListener('abort', () =>
+            resolve({ ok: false, status: null, tiempoAgotado: true }),
+          );
+        }),
+    };
+
+    const pendiente = crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
+    await vi.advanceTimersByTimeAsync(dependencias.config.ragTimeoutMs);
+    await pendiente;
+
+    expect(recibido.cierre?.respuesta).toEqual({ ok: false, status: null, tiempoAgotado: true });
   });
 });
