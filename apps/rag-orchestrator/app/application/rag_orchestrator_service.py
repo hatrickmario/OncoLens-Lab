@@ -31,7 +31,12 @@ from app.application.ports import (
     Reranker,
     ResultadoDeRecuperacion,
 )
+from app.application.respuesta_con_evidencia import (
+    ChunkCitable,
+    ensamblar_respuesta_con_evidencia,
+)
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.domain.citations import validar_citas
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.relevance import ChunkPuntuado, filtrar_sobre_umbral, top_relevance_score
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
@@ -125,7 +130,34 @@ class RAGOrchestratorService:
         evidencia: EvidenciaGenerada,
         recuperacion: ResultadoDeRecuperacion,
     ) -> RagQueryInternalResponse:
-        raise NotImplementedError("no implementado")
+        """RN-01 y RN-04: solo se cita lo recuperado en esta consulta, con metadatos del catálogo."""
+        trace_id = solicitud.traceId.root
+        citables = await self._chunks_citables(trace_id, recuperacion)
+        resultado = validar_citas(evidencia.opciones, citables.keys())
+        logger.info(
+            "event=rag_query_citas traceId=%s opcionesAceptadas=%d opcionesDescartadas=%d",
+            trace_id,
+            len(resultado.aceptadas),
+            len(resultado.descartadas),
+        )
+        return ensamblar_respuesta_con_evidencia(resultado, citables, recuperacion)
+
+    async def _chunks_citables(
+        self, trace_id: str, recuperacion: ResultadoDeRecuperacion
+    ) -> dict[str, ChunkCitable]:
+        """Los chunks sobre el umbral entregados a la generación cuyo documento tiene ficha en el catálogo."""
+        chunks = recuperacion.chunks_sobre_umbral
+        fichas = await self._invocar_borde_fallando_cerrado(
+            trace_id,
+            "catalogo",
+            self._catalogo.fichas_por_documento,
+            {chunk.document_id for chunk in chunks},
+        )
+        return {
+            chunk.chunk_id: ChunkCitable(chunk, fichas[chunk.document_id])
+            for chunk in chunks
+            if chunk.document_id in fichas
+        }
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""

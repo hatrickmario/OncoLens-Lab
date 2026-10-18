@@ -95,8 +95,47 @@ class CitaDelCorpus:
 def validar_citas(
     opciones: Sequence[OpcionGenerada], chunk_ids_citables: Collection[str]
 ) -> ResultadoCitas:
-    raise NotImplementedError("no implementado")
+    """Reparte las opciones en aceptadas (con solo sus citas válidas) y descartadas con su motivo (RN-01).
+
+    ``chunk_ids_citables`` son los chunks recuperados en esta consulta y entregados a la generación; la regla no
+    consulta ninguna fuente para decidir (un análisis previo nunca está en ese conjunto, RN-24).
+    """
+    aceptadas: list[OpcionAceptada] = []
+    descartadas: list[OpcionDescartada] = []
+    for opcion in opciones:
+        if not opcion.chunk_ids_citados:
+            descartadas.append(OpcionDescartada(opcion, MotivoDeDescarte.sin_citas))
+            continue
+        validos = tuple(
+            dict.fromkeys(c for c in opcion.chunk_ids_citados if c in chunk_ids_citables)
+        )
+        if validos:
+            aceptadas.append(OpcionAceptada(opcion, validos))
+        else:
+            descartadas.append(OpcionDescartada(opcion, MotivoDeDescarte.cita_invalida))
+    return ResultadoCitas(tuple(aceptadas), tuple(descartadas))
 
 
 def construir_cita(chunk: ChunkPuntuado, ficha: FichaDeFuente) -> CitaDelCorpus:
-    raise NotImplementedError("no implementado")
+    """Cita copiada del catálogo y del chunk recuperado; nada viene del texto generado (RN-04, RN-25)."""
+    return CitaDelCorpus(
+        title=ficha.title,
+        sourceName=ficha.source_name,
+        externalId=ficha.external_id,
+        language=ficha.language,
+        sourceType=ficha.source_type,
+        licenseClass=ficha.license_class,
+        studyDesign=ficha.study_design,
+        trialPhase=ficha.trial_phase,
+        primaryEndpoint=ficha.primary_endpoint,
+        sampleSize=ficha.sample_size,
+        publishedAt=ficha.published_at,
+        lastUpdatedAt=ficha.last_updated_at,
+        guidelineVersion=ficha.guideline_version,
+        authors=ficha.authors,
+        sourceUrl=ficha.source_url,
+        possiblyOutdated=False,  # FR-26 (vigencia) fuera del S1
+        newerVersionAvailable=False,
+        chunkTextSnapshot=chunk.chunk_text,
+        chunkId=chunk.chunk_id,
+    )
