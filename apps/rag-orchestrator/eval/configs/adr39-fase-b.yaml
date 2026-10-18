@@ -9,6 +9,9 @@ protocolo:
   consultas_por_corrida_e2e: 30  # D4: >= 30 consultas por corrida
   muestra_fidelidad: 20        # D3: >= 20 salidas revisadas a mano por ai-eval-runner
   repeticiones_admision: 3     # D3: admisión por memoria, mediana de 3
+  # Paridad con producción: json_valido, p50 y p95 salen de las 200 llamadas por /v1 (la ruta del adapter); tok/s y
+  # prefill solo los entrega /api/chat, y se miden en una muestra de este tamaño por corrida (no inventa cifras).
+  llamadas_nativas_por_corrida: 20
 
 # Eliminatorias de D3 regla 1 (en este orden; la primera que falla descarta con su cifra) y reglas 2 y 3.
 restricciones:
@@ -31,7 +34,7 @@ restricciones:
 runtime:
   ollama:
     base_url: http://localhost:11434
-    api: ollama                    # /api/chat (num_ctx, think, métricas por llamada) y /v1 para AC-1(b)
+    api: ollama                    # /v1 (ruta de producción) para json_valido y latencia; /api/chat solo para tok/s y prefill
   vllm_metal:
     base_url: http://localhost:8000
     api: openai

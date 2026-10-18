@@ -68,6 +68,12 @@
       (US-050)** · **test después** `[US-224 AC-4]` `[RN-22]`
 - [x] 1.10 Refactor (Extract Method `ClienteRuntime._modelo_informado` en `runtime_llm.py`): Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-274)
+- [x] 1.11 Paridad de la ruta de medición con producción (seguimiento, decisión del usuario 2026-10-18, hallazgos 7 y 9 del
+      design-principles-reviewer): Extract Method `cuerpo_de_peticion()` en el adapter, reutilizado por `runtime_llm`;
+      `llm` mide JSON válido, latencia y p95 por `/v1` y deja `/api/chat` solo para tok/s y prefill (rotulado en
+      `rutas`); `runtime` y `llm` registran `context_length` de `/api/ps` con `aviso_contexto`; `e2e --candidato` sale con
+      código 2 si `/api/ps` no lista el tag · **test igualdad primero (rojo)**, el resto test después · ADR-39,
+      desviación 2 corregida. Los reportes ya medidos con `/api/chat` no son comparables: repetir `llm`.
 
 ## 2. evaluación
 

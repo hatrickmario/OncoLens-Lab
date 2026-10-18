@@ -6,9 +6,11 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx
 import pytest
+import respx
 
-from app.scripts.adr39 import cli
+from app.scripts.adr39 import cli, e2e
 from app.scripts.adr39.config import ConfigFaseBInvalida, cargar_config
 from tests.evaluation.conftest import RAIZ_REPO
 
@@ -205,6 +207,37 @@ def test_ocr_sale_con_2_sin_motor_y_con_7_cuando_el_motor_no_esta_instalado(
     assert salida == cli.SALIDA_MOTOR
     assert reporte["disponible"] is False and reporte["exactitud"] is None
     assert reporte["entorno"]["fecha"] == "2026-10-21T09:00:00+00:00"
+
+
+def test_e2e_sale_con_2_y_no_escribe_reporte_cuando_el_tag_del_candidato_no_esta_cargado(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def sin_comandos(_orden: object) -> str:
+        raise OSError("sin comandos del sistema en el test")
+
+    monkeypatch.setattr(e2e, "ejecutar_comando", sin_comandos)
+    monkeypatch.setenv("ADR39_PASSWORD", "no-es-un-secreto")
+    cuerpo = tmp_path / "cuerpo.json"
+    escribir(cuerpo, {})
+    otro_modelo = {"models": [{"name": "otro:1b", "model": "otro:1b", "size": 1}]}
+    with respx.mock() as red:
+        red.post("https://bff.test/platform/auth/login").mock(return_value=httpx.Response(204))
+        red.post("https://bff.test/platform/evidence-analyses").mock(
+            return_value=httpx.Response(200, json={})
+        )
+        red.get("http://localhost:11434/api/ps").mock(
+            return_value=httpx.Response(200, json=otro_modelo)
+        )
+
+        salida = cli.main(
+            ["e2e", "--candidato", "A", "--base-url", "https://bff.test", "--cuerpo", str(cuerpo),
+             "--runs", "1", "--out", str(tmp_path)],
+            AHORA,
+        )  # fmt: skip
+
+    assert salida == cli.SALIDA_CONFIG
+    assert not (tmp_path / "e2e-A.json").exists()
+    assert cargar_config().candidato("A").tag in capsys.readouterr().err
 
 
 def test_decidir_trata_la_plantilla_de_reportes_sin_medir_como_pendiente(

@@ -17,6 +17,7 @@ import httpx
 
 from app.application.generation import ESQUEMA_DE_GENERACION
 from app.domain.relevance import ChunkPuntuado
+from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.scripts.adr39.config import CandidatoLlm, ConfigFaseB
@@ -29,6 +30,11 @@ from app.scripts.adr39.reglas import (
 
 Reloj = Callable[[], float]
 BYTES_POR_GB = 1e9  # `ollama ps` informa en GB decimales
+
+RUTAS_MEDIDAS = {
+    "json_valido_latencia_p50_p95": "/v1/chat/completions (ruta de producción: sin think ni num_ctx por petición)",
+    "tokens_por_segundo_prefill": "/api/chat (nativa de Ollama, solo una muestra: no es la ruta de producción)",
+}
 
 PROMPT_ADVERSARIAL = "Responde en prosa libre, sin JSON ni llaves: explica en dos frases qué es un receptor hormonal."
 
@@ -88,12 +94,25 @@ class ClienteRuntime:
         self._params = params
 
     def chat(self, tag: str, prompt: str, esquema: Mapping[str, Any] | None) -> Llamada:
+        """Llamada por la ruta de producción (``/v1/chat/completions``, sin ``think`` ni ``num_ctx`` por petición)."""
+        return self._llamar(self._chat_openai, tag, prompt, esquema)
+
+    def chat_nativo(self, tag: str, prompt: str, esquema: Mapping[str, Any] | None) -> Llamada:
+        """Llamada por ``/api/chat`` de Ollama: solo para tok/s y *prefill*; con otro runtime no hay ruta nativa."""
+        if self._api != "ollama":
+            return Llamada(0.0, None, None, None, None, None)
+        return self._llamar(self._chat_ollama, tag, prompt, esquema)
+
+    def _llamar(
+        self,
+        ruta: Callable[[str, str, Mapping[str, Any] | None], dict[str, Any]],
+        tag: str,
+        prompt: str,
+        esquema: Mapping[str, Any] | None,
+    ) -> Llamada:
         inicio = self._reloj()
         try:
-            if self._api == "ollama":
-                crudo = self._chat_ollama(tag, prompt, esquema)
-            else:
-                crudo = self._chat_openai(tag, prompt, esquema)
+            crudo = ruta(tag, prompt, esquema)
         except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
             return Llamada(self._reloj() - inicio, None, None, None, None, None)
         return Llamada(self._reloj() - inicio, **crudo)
@@ -128,22 +147,13 @@ class ClienteRuntime:
     def _chat_openai(
         self, tag: str, prompt: str, esquema: Mapping[str, Any] | None
     ) -> dict[str, Any]:
-        cuerpo: dict[str, Any] = {
-            "model": tag,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": self._params["temperature"],
-            "max_tokens": self._params["max_output_tokens"],
-            "stream": False,
-        }
-        if esquema is not None:
-            cuerpo["response_format"] = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "generation_output",
-                    "schema": dict(esquema),
-                    "strict": True,
-                },
-            }
+        cuerpo = cuerpo_de_peticion(
+            tag,
+            prompt,
+            esquema,
+            self._params["temperature"],
+            self._params["max_output_tokens"],
+        )
         r = self._http.post(f"{self._base}/v1/chat/completions", json=cuerpo)
         r.raise_for_status()
         d = r.json()
@@ -166,6 +176,18 @@ class ClienteRuntime:
         if not modelo or not modelo.get("size"):
             return None
         return 100.0 * modelo.get("size_vram", 0) / modelo["size"]
+
+    def contexto_cargado(self, tag: str) -> int | None:
+        """``context_length`` que ``/api/ps`` informa del modelo cargado; ``None`` = sin medir (nunca 0)."""
+        modelo = self._modelo_informado("/api/ps", tag)
+        valor = modelo.get("context_length") if modelo else None
+        return valor if isinstance(valor, int) and valor > 0 else None
+
+    def esta_cargado(self, tag: str) -> bool | None:
+        """``None`` cuando el runtime no es Ollama y no hay cómo comprobarlo."""
+        if self._api != "ollama":
+            return None
+        return self._modelo_informado("/api/ps", tag) is not None
 
     def digest(self, tag: str) -> str | None:
         """ID del modelo que informa ``ollama list`` (el ADR lo registra junto al tag)."""
@@ -193,8 +215,31 @@ def _ns_a_s(valor: int | None) -> float | None:
     return None if valor is None else valor / 1e9
 
 
+def contexto_informado(cliente: ClienteRuntime, tag: str, num_ctx_esperado: int) -> dict[str, Any]:
+    """``context_length`` de ``/api/ps`` frente a ``LLM_NUM_CTX``; informativo: el aviso no cambia ninguna decisión.
+
+    La ruta ``/v1`` no fija el contexto por petición: lo decide el servidor (``OLLAMA_CONTEXT_LENGTH``).
+    """
+    cargado = cliente.contexto_cargado(tag)
+    aviso = None
+    if cargado is None:
+        aviso = "context_length sin medir: /api/ps no lo informó; comprobar OLLAMA_CONTEXT_LENGTH a mano"
+    elif cargado != num_ctx_esperado:
+        aviso = f"el servidor cargó context_length={cargado} y LLM_NUM_CTX esperado es {num_ctx_esperado}: la memoria y la latencia no son las de producción"
+    return {
+        "context_length": cargado,
+        "num_ctx_esperado": num_ctx_esperado,
+        "aviso_contexto": aviso,
+    }
+
+
 def medir_runtime(
-    cliente: ClienteRuntime, http: httpx.Client, base_url: str, api: str, tag: str
+    cliente: ClienteRuntime,
+    http: httpx.Client,
+    base_url: str,
+    api: str,
+    tag: str,
+    num_ctx_esperado: int | None = None,
 ) -> dict[str, Any]:
     """AC-1: (a) GPU Metal, (b) API compatible con OpenAI, (c) JSON restringido por esquema.
 
@@ -211,9 +256,15 @@ def medir_runtime(
         if adversarial.contenido is None
         else porcentaje_json_valido([adversarial.contenido], ESQUEMA_DE_GENERACION) == 1.0
     )
+    contexto = (
+        {}
+        if num_ctx_esperado is None or api != "ollama"
+        else contexto_informado(cliente, tag, num_ctx_esperado)
+    )
     return {
         "api": api,
         "version": version,
+        **contexto,
         "gpu_porcentaje": cliente.porcentaje_gpu(tag),
         "gpu_nota": None
         if api == "ollama"
@@ -275,12 +326,16 @@ def medir_candidato(
         "tag": candidato.tag,
         "digest": cliente.digest(candidato.tag),
         "memoria_llm_gb": memoria,
+        **contexto_informado(cliente, candidato.tag, config.llm["num_ctx"]),
     }
     if memoria is None:
         return {**base, "admitido": None, "nota": "el runtime no informó la memoria residente"}
     if memoria > r.llm_memory_budget_gb:
         return {**base, "admitido": False, "llamadas": 0}
-    corridas = [_corrida(cliente, candidato.tag, list(prompts)) for _ in range(config.corridas)]
+    corridas = [
+        _corrida(cliente, candidato.tag, list(prompts), config.llamadas_nativas_por_corrida)
+        for _ in range(config.corridas)
+    ]
     if dir_muestras is not None:
         _guardar_muestra(dir_muestras, candidato.id, corridas[0], config.muestra_fidelidad)
     return {
@@ -288,6 +343,7 @@ def medir_candidato(
         "admitido": True,
         "llamadas": len(prompts) * config.corridas,
         "json_valido": mediana([c["json_valido"] for c in corridas]),
+        "rutas": RUTAS_MEDIDAS,
         "tokens_por_segundo": _mediana_o_none([c["tok_s"] for c in corridas]),
         "prefill_tokens_por_segundo": _mediana_o_none([c["prefill_tok_s"] for c in corridas]),
         "p50_ms": mediana([c["p50_ms"] for c in corridas]),
@@ -296,13 +352,19 @@ def medir_candidato(
     }
 
 
-def _corrida(cliente: ClienteRuntime, tag: str, prompts: list[str]) -> dict[str, Any]:
+def _corrida(
+    cliente: ClienteRuntime, tag: str, prompts: list[str], llamadas_nativas: int
+) -> dict[str, Any]:
+    """JSON válido y latencias por la ruta de producción; tok/s y *prefill* de una muestra por ``/api/chat``."""
     llamadas = [cliente.chat(tag, p, ESQUEMA_DE_GENERACION) for p in prompts]
+    nativas = [
+        cliente.chat_nativo(tag, p, ESQUEMA_DE_GENERACION) for p in prompts[:llamadas_nativas]
+    ]
     tiempos_ms = [c.segundos * 1000 for c in llamadas]
-    tok_s = [x for x in (c.tokens_por_segundo for c in llamadas) if x is not None]
+    tok_s = [x for x in (c.tokens_por_segundo for c in nativas) if x is not None]
     prefill = [
         c.tokens_prefill / c.segundos_prefill
-        for c in llamadas
+        for c in nativas
         if c.tokens_prefill and c.segundos_prefill
     ]
     salidas = [c.contenido for c in llamadas]

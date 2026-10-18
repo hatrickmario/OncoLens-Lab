@@ -42,6 +42,7 @@ class ConfigFaseB:
     consultas_por_corrida_e2e: int
     muestra_fidelidad: int
     repeticiones_admision: int
+    llamadas_nativas_por_corrida: int
     restricciones: Restricciones
     runtimes: dict[str, dict[str, str]]
     llm: dict[str, Any]
@@ -67,6 +68,7 @@ def cargar_config(ruta: Path = RUTA_CONFIG_POR_DEFECTO) -> ConfigFaseB:
             consultas_por_corrida_e2e=int(protocolo["consultas_por_corrida_e2e"]),
             muestra_fidelidad=int(protocolo["muestra_fidelidad"]),
             repeticiones_admision=int(protocolo["repeticiones_admision"]),
+            llamadas_nativas_por_corrida=int(protocolo["llamadas_nativas_por_corrida"]),
             restricciones=Restricciones(
                 llm_memory_budget_gb=float(rest["llm_memory_budget_gb"]),
                 stack_memory_limit_gb=float(rest["stack_memory_limit_gb"]),
