@@ -1,6 +1,7 @@
 """`RAGOrchestratorService`: implementa `EvidenceQueryPort` con el tramo de recuperación de `/rag/query` (US-055).
 
-Cada etapa del pipeline es un método: recuperar → reranquear → umbral → (sin evidencia | generar). Las reglas viven
+Cada etapa del pipeline es un método: recuperar → cortar a los pares del reranker → reranquear → umbral →
+(sin evidencia | generar). Las reglas viven
 en `domain/`; aquí solo se orquestan los puertos. Sin chunks sobre el umbral no se invoca al generador, es decir, ni
 al LLM ni al agente (RN-02).
 """
@@ -39,6 +40,7 @@ from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.citations import OpcionAceptada, validar_citas
 from app.domain.option_selection import OpcionValidada, recortar_a_max_opciones
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
+from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
     ChunkPuntuado,
     filtrar_sobre_umbral,
@@ -121,7 +123,8 @@ class RAGOrchestratorService:
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, solicitud.query)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
         candidatos = await self._recuperar(trace_id, solicitud, filtro)
-        puntuados = await self._reranquear(trace_id, solicitud.query, candidatos)
+        a_reranquear = self._cortar_a_pares_del_reranker(trace_id, candidatos)
+        puntuados = await self._reranquear(trace_id, solicitud.query, a_reranquear)
         sobre_umbral = filtrar_sobre_umbral(puntuados, self._parametros.relevance_threshold)
         logger.info(
             "event=rag_query_recuperacion traceId=%s retrieved=%d aboveThreshold=%d",
@@ -236,6 +239,26 @@ class RAGOrchestratorService:
             self._parametros.retrieval_top_k,
             filtro,
         )
+
+    def _cortar_a_pares_del_reranker(
+        self, trace_id: str, candidatos: Sequence[ChunkEncontrado]
+    ) -> list[ChunkEncontrado]:
+        """Decisión 82: al reranker solo van los ``RERANKER_MAX_PAIRS`` mejores por puntaje de recuperación.
+
+        Se registran solo recuentos (recibidos, descartados, enviados): nunca ids ni texto de chunk.
+        """
+        maximo = self._parametros.reranker_max_pairs
+        if maximo is None:
+            return list(candidatos)
+        enviados = recortar_a_pares_del_reranker(candidatos, maximo)
+        logger.info(
+            "event=rag_query_corte traceId=%s recibidos=%d descartados=%d enviados=%d",
+            trace_id,
+            len(candidatos),
+            len(candidatos) - len(enviados),
+            len(enviados),
+        )
+        return enviados
 
     async def _reranquear(
         self, trace_id: str, pregunta: str, candidatos: Sequence[ChunkEncontrado]

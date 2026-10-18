@@ -57,14 +57,6 @@ PAR_DE_DATOS_EXTERNOS_DEL_NLI = ("NLI_MODEL_DATA_PATH", "NLI_MODEL_DATA_SHA256")
 PARES_DE_EMBEDDINGS = ARCHIVOS_A_VERIFICAR[:2]
 
 
-class CandidatosSuperanLosParesDelReranker(RuntimeError):
-    """``RETRIEVAL_TOP_K`` > ``RERANKER_MAX_PAIRS``: toda consulta con tantos candidatos daría 503. El mensaje nombra
-    las dos variables y nunca sus valores."""
-
-    def __init__(self) -> None:
-        super().__init__("RETRIEVAL_TOP_K no puede superar RERANKER_MAX_PAIRS")
-
-
 @dataclass(frozen=True)
 class ModelosDeRecuperacion:
     """Los adapters reales ya construidos (un núcleo de embeddings para los dos puertos y el NLI de soporte)."""
@@ -88,7 +80,6 @@ def cargar_modelos_locales(
     Nada que identifique un modelo se calcula hasta que TODOS sus archivos están verificados.
     """
     config = _exigir_configuracion_de_modelos(settings)
-    _exigir_candidatos_dentro_de_los_pares_del_reranker(settings.retrieval_top_k, config)
     indices_nli = _indices_de_clase_del_nli(settings)
     rutas = verificar_modelos_locales(settings)
     sesion_embeddings, tokenizador_embeddings = _cargar_modelo(
@@ -273,13 +264,6 @@ def _exigir_configuracion_de_modelos(settings: Settings) -> ConfigModelos:
     if settings.modelos is None:
         raise ModeloNoVerificadoError("EMBEDDING_MODEL") from None
     return settings.modelos
-
-
-def _exigir_candidatos_dentro_de_los_pares_del_reranker(
-    retrieval_top_k: int | None, config: ConfigModelos
-) -> None:
-    if retrieval_top_k is not None and retrieval_top_k > config.reranker_max_pairs:
-        raise CandidatosSuperanLosParesDelReranker from None
 
 
 def _construir[T](

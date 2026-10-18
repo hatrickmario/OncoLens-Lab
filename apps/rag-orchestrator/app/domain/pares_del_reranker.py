@@ -17,4 +17,12 @@ class CandidatoRecuperado(Protocol):
 def recortar_a_pares_del_reranker[T: CandidatoRecuperado](
     candidatos: Sequence[T], max_pares: int
 ) -> list[T]:
-    raise NotImplementedError("no implementado")
+    """Los ``max_pares`` mejores por similitud de recuperación; un empate se resuelve por ``chunk_id`` (determinista, IA-07).
+
+    Con menos candidatos que pares no hay nada que recortar. La similitud solo elige candidatos: no es
+    ``relevance_score`` (RN-03) ni se compara con el umbral.
+    """
+    if max_pares <= 0:
+        raise ValueError("max_pares debe ser positivo")
+    ordenados = sorted(candidatos, key=lambda c: (-c.similitud_dense, c.chunk_id))
+    return ordenados[:max_pares]
