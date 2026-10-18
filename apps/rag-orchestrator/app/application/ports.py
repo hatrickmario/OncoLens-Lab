@@ -7,6 +7,7 @@ from typing import Any, Literal, Protocol
 
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.nli import ParNli, ResultadoNli
+from app.domain.support import CampoGenerado
 from app.domain.relevance import ChunkPuntuado
 from app.schemas.generated.models import (
     RagMeta,
@@ -254,7 +255,7 @@ class ProhibitedTermsChecker(Protocol):
         """``version`` de ``terminos-prohibidos.json`` cargada (``languagePolicyVersion`` del log)."""
         ...
 
-    def reglas_coincidentes(self, texto: str, campo: str) -> tuple[str, ...]:
+    def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
         """``id`` de cada regla que coincide con ``texto`` (``campo`` es uno de ``CAMPOS_GENERADOS``); vacío = limpio.
 
         Un campo que no es generado (copiado del corpus) nunca coincide. Nunca devuelve el término ni el texto.

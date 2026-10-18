@@ -4,25 +4,33 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal, get_args
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import dividir_en_afirmaciones
 from app.domain.nli import ParNli, ResultadoNli
 
-CAMPOS_GENERADOS = ("option", "rationale", "unsupportedClaims", "limitations[].text", "synthesis")
+CampoGenerado = Literal[
+    "option", "rationale", "unsupportedClaims", "limitations[].text", "synthesis"
+]
+CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
 RETIRO_ES = "[afirmación retirada: formulación no permitida]"
 RETIRO_EN = "[claim removed: disallowed wording]"
 
-BuscadorDeTerminos = Callable[[str, str], Sequence[str]]
+BuscadorDeTerminos = Callable[[str, CampoGenerado], Sequence[str]]
 """``(texto, campo) -> ids de regla``: el puerto ``ProhibitedTermsChecker`` visto desde el dominio."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class Afirmacion:
-    """Un fragmento generado, el campo del que sale y las reglas de lenguaje que incumple (vacío = limpio)."""
+    """Un fragmento generado, el campo del que sale y las reglas de lenguaje que incumple (vacío = limpio).
+
+    Sin igualdad por valor (``eq=False``): dos afirmaciones idénticas son dos fragmentos distintos y cada una conserva su
+    propio veredicto.
+    """
 
     texto: str
-    campo: str
+    campo: CampoGenerado
     reglas: tuple[str, ...]
     premisas: tuple[str, ...]
 
@@ -31,7 +39,7 @@ class Afirmacion:
 class RetiroDeLenguaje:
     """Un fragmento retirado por lenguaje no permitido: solo el campo y las reglas, jamás el texto (RN-23, RN-10)."""
 
-    campo: str
+    campo: CampoGenerado
     reglas: tuple[str, ...]
 
 
@@ -76,8 +84,8 @@ def literal_de_retiro(idioma: str) -> str:
 
 
 def soporta(resultado: ResultadoNli, umbral: float) -> bool:
-    """Soporte por UMBRAL sobre ``p_entailment`` (RN-01, RN-22); una ``contradiction`` jamás soporta (falla cerrado)."""
-    return resultado.label != "contradiction" and resultado.p_entailment >= umbral
+    """Soporte: la clase más probable es ``entailment`` Y su probabilidad alcanza el umbral (RN-01, RN-22, D2)."""
+    return resultado.label == "entailment" and resultado.p_entailment >= umbral
 
 
 def planificar_soporte(
@@ -91,7 +99,7 @@ def planificar_soporte(
     Las premisas de una opción son los chunks que cita; las de una limitación, todos los entregados a la generación.
     """
 
-    def afirmacion(texto: str, campo: str, premisas: tuple[str, ...]) -> Afirmacion:
+    def afirmacion(texto: str, campo: CampoGenerado, premisas: tuple[str, ...]) -> Afirmacion:
         return Afirmacion(texto, campo, tuple(buscar_terminos(texto, campo)), premisas)
 
     todas = tuple(textos_de_chunks.values())
@@ -132,22 +140,24 @@ def pares_a_verificar(plan: PlanDeSoporte) -> list[ParNli]:
     ]
 
 
-class _ResultadosEnOrden:
-    """Reparte los resultados del NLI, en el orden de ``pares_a_verificar``, entre las afirmaciones que los pidieron."""
+def _veredictos_por_afirmacion(
+    plan: PlanDeSoporte, resultados: Sequence[ResultadoNli], umbral: float
+) -> dict[Afirmacion, bool]:
+    """Asigna los resultados del NLI a SU afirmación: único recorrido de ``_afirmaciones_para_el_nli``.
 
-    def __init__(self, resultados: Sequence[ResultadoNli], umbral: float) -> None:
-        self._pendientes = iter(resultados)
-        self._umbral = umbral
-
-    def alguna_premisa_soporta(self, afirmacion: Afirmacion) -> bool:
-        tomados = [next(self._pendientes, None) for _ in afirmacion.premisas]
-        if None in tomados:
-            raise ValueError("faltan resultados del NLI")
-        return any(soporta(r, self._umbral) for r in tomados if r is not None)
-
-    def exigir_que_no_sobren(self) -> None:
-        if next(self._pendientes, None) is not None:
-            raise ValueError("sobran resultados del NLI")
+    Cada afirmación toma tantos resultados como premisas envió, en el orden de ``pares_a_verificar``; una afirmación es
+    soportada si alguna premisa la soporta (``soporta``). Si el total no cuadra, es un error de contrato (RN-01): el
+    NLI nunca reparte un ``entailment`` a una afirmación que no lo pidió.
+    """
+    if len(resultados) != sum(len(a.premisas) for a in _afirmaciones_para_el_nli(plan)):
+        raise ValueError("la cantidad de resultados del NLI no coincide con la de pares")
+    veredictos: dict[Afirmacion, bool] = {}
+    inicio = 0
+    for afirmacion in _afirmaciones_para_el_nli(plan):
+        fin = inicio + len(afirmacion.premisas)
+        veredictos[afirmacion] = any(soporta(r, umbral) for r in resultados[inicio:fin])
+        inicio = fin
+    return veredictos
 
 
 def verificar_soporte(
@@ -157,20 +167,17 @@ def verificar_soporte(
 
     ``resultados`` alinea 1:1 con ``pares_a_verificar(plan)``; cualquier otra cantidad es un error de contrato.
     """
-    por_orden = _ResultadosEnOrden(resultados, umbral)
+    veredictos = _veredictos_por_afirmacion(plan, resultados, umbral)
     literal = literal_de_retiro(idioma)
     soportadas: list[OpcionAceptada] = []
     descartadas: list[OpcionSinSoporte] = []
     for planificada in plan.opciones:
-        sin_soporte = _descartar_si_no_se_soporta(planificada, por_orden, literal)
+        sin_soporte = _descartar_si_no_se_soporta(planificada, veredictos, literal)
         if sin_soporte is None:
             soportadas.append(planificada.aceptada)
         else:
             descartadas.append(sin_soporte)
-    limitaciones = [
-        x.texto for x in plan.limitaciones if not x.reglas and por_orden.alguna_premisa_soporta(x)
-    ]
-    por_orden.exigir_que_no_sobren()
+    limitaciones = [x.texto for x in plan.limitaciones if veredictos.get(x, False)]
     return ResultadoSoporte(
         tuple(soportadas),
         tuple(descartadas),
@@ -180,12 +187,12 @@ def verificar_soporte(
 
 
 def _descartar_si_no_se_soporta(
-    planificada: OpcionPlanificada, por_orden: _ResultadosEnOrden, literal: str
+    planificada: OpcionPlanificada, veredictos: dict[Afirmacion, bool], literal: str
 ) -> OpcionSinSoporte | None:
     """``None`` si todas las afirmaciones de la opción se soportan; si no, la opción descartada con sus afirmaciones.
 
     Lo prohibido se reemplaza por ``literal`` (RN-23) y cuenta como sin soporte; una opción cuyo propio texto incumple
-    se descarta entera sin consumir resultados del NLI. Sin afirmaciones verificables no hay soporte (falla cerrado).
+    se descarta entera sin veredictos del NLI. Sin afirmaciones verificables no hay soporte (falla cerrado).
     """
     sin_soporte: list[str] = []
     partes: list[str] = []
@@ -198,7 +205,7 @@ def _descartar_si_no_se_soporta(
             partes.append(literal)
             continue
         partes.append(afirmacion.texto)
-        if not retirada and not por_orden.alguna_premisa_soporta(afirmacion):
+        if not retirada and not veredictos[afirmacion]:
             sin_soporte.append(afirmacion.texto)
     if planificada.afirmaciones and not sin_soporte:
         return None

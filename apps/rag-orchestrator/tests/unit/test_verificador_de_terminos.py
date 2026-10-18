@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import get_args
 
 import pytest
 
-from app.domain.support import CAMPOS_GENERADOS
+from app.domain.support import CAMPOS_GENERADOS, CampoGenerado
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
@@ -46,7 +47,7 @@ def test_revisa_todos_los_campos_generados(verificador, campo: str) -> None:
 def test_no_revisa_los_campos_copiados_del_corpus_aunque_traigan_vocabulario_de_la_lista(
     verificador, campo: str
 ) -> None:
-    assert verificador.reglas_coincidentes("Patients should receive adjuvant therapy.", campo) == ()
+    assert verificador.reglas_coincidentes("Patients should receive adjuvant therapy.", campo) == ()  # type: ignore[arg-type]
 
 
 def test_no_repite_una_regla_que_coincide_dos_veces_en_el_mismo_texto(verificador) -> None:
@@ -87,6 +88,10 @@ def test_la_coherencia_se_rompe_cuando_se_altera_el_archivo_de_origen(tmp_path: 
     alterado.write_text(json.dumps(contenido), encoding="utf-8")
 
     assert set(CAMPOS_GENERADOS) != _campos_generados_del_origen(alterado)
+
+
+def test_campos_generados_es_igual_a_los_valores_del_tipo_campo_generado() -> None:
+    assert CAMPOS_GENERADOS == get_args(CampoGenerado)
 
 
 def test_los_campos_copiados_del_corpus_no_estan_entre_los_generados() -> None:

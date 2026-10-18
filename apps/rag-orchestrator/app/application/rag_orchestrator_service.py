@@ -177,7 +177,7 @@ class RAGOrchestratorService:
         soporte = await self._soporte.verificar(
             trace_id, idioma, resultado.aceptadas, evidencia.limitaciones_propuestas, textos
         )
-        recortadas = self._recortar_validadas(trace_id, soporte.soportadas, citables, solicitud)
+        recortadas = self._recortar_soportadas(trace_id, soporte.soportadas, citables, solicitud)
         return ensamblar_respuesta_con_evidencia(
             recortadas,
             self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
@@ -189,7 +189,7 @@ class RAGOrchestratorService:
         )
 
     @staticmethod
-    def _recortar_validadas(
+    def _recortar_soportadas(
         trace_id: str,
         aceptadas: Sequence[OpcionAceptada],
         citables: dict[str, ChunkCitable],
@@ -197,12 +197,12 @@ class RAGOrchestratorService:
     ) -> tuple[OpcionConRelevancia, ...]:
         """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
-        validadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
-        recortadas = recortar_a_max_opciones(validadas, solicitud.maxOptions, [])
+        soportadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
+        recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions, [])
         logger.info(
             "event=rag_query_recorte traceId=%s opcionesRecortadas=%d",
             trace_id,
-            len(validadas) - len(recortadas),
+            len(soportadas) - len(recortadas),
         )
         return recortadas
 
