@@ -586,7 +586,7 @@ export type EvidenceAnalysis = {
     rerunOfAnalysisId: string | null;
     patientDataLinks: Array<PatientDataLink>;
     /**
-     * Un solo texto configurable (AI_DISCLAIMER_TEXT, que manda sobre la redacción) con las dos frases de RN-19: "Análisis generado por IA — requiere validación clínica del oncólogo tratante" y "Uso académico/investigación".
+     * Un solo texto configurable (AI_DISCLAIMER_TEXT, que manda sobre la redacción) con la frase de RN-19 en el literal validado (PRD E-11): "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.". "Uso académico/investigación" es una etiqueta permanente de la UI y no forma parte de este campo.
      */
     disclaimer: string;
     createdAt: string;
@@ -623,7 +623,7 @@ export type FollowUpTurn = {
     omittedClaims: number;
     patientDataLinks: Array<PatientDataLink>;
     /**
-     * Un solo texto configurable (AI_DISCLAIMER_TEXT) con las dos frases de RN-19: "Análisis generado por IA — requiere validación clínica del oncólogo tratante" y "Uso académico/investigación".
+     * Un solo texto configurable (AI_DISCLAIMER_TEXT, que manda sobre la redacción) con la frase de RN-19 en el literal validado (PRD E-11): "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.". "Uso académico/investigación" es una etiqueta permanente de la UI y no forma parte de este campo.
      */
     disclaimer: string;
     createdAt: string;
