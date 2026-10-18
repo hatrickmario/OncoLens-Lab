@@ -228,6 +228,8 @@ class MilvusSettings(BaseSettings):
 
     milvus_uri: str
     milvus_collection_name: str = "corpus_chunks"
+    # Plazo de la conexión y de la sonda de arranque de `/rag/query` (RN-22): un Milvus caído no cuelga el proceso.
+    milvus_connect_timeout_seconds: float = Field(default=5.0, gt=0)
     embedding_dim: int
     vector_index_type: str
     vector_index_params: dict[str, Any]

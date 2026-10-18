@@ -22,6 +22,7 @@ from app.application.ports import (
     EvidenceQueryPort,
     LanguageDetector,
     LlmHealthPort,
+    PuertosDelCorpus,
     QueryEmbedder,
     Reranker,
     TraceIdGenerator,
@@ -63,15 +64,6 @@ class PuertosDeRecuperacion:
     embedder: QueryEmbedder
     buscador: ChunkSearch
     reranker: Reranker
-    lector_release: CorpusReleaseReader
-    catalogo: CorpusCatalogReader
-
-
-@dataclass(frozen=True)
-class PuertosDelCorpus:
-    """Bordes del corpus (Milvus y schema ``corpus``) que se suman a los modelos para completar la recuperación."""
-
-    buscador: ChunkSearch
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
 

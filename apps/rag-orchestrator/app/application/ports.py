@@ -198,6 +198,15 @@ class CorpusCatalogReader(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class PuertosDelCorpus:
+    """Bordes del corpus (Milvus y schema ``corpus``) que se suman a los modelos para completar la recuperación."""
+
+    buscador: ChunkSearch
+    lector_release: CorpusReleaseReader
+    catalogo: CorpusCatalogReader
+
+
 # --- Generación de /rag/query (US-225, L1D-275) ----------------------------------------------------------------------
 
 
