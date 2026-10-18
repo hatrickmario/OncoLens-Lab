@@ -142,9 +142,8 @@ def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
     }
     return Settings(  # type: ignore[call-arg]
         _env_file=None,
-        model_provider="local",
         modelos=cargar_config_modelos(modelos.variables),
-        **{**rutas, **cambios},
+        **{"model_provider": "local", **rutas, **cambios},
     )
 
 
