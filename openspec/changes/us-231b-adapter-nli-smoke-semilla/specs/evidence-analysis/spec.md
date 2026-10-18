@@ -1,0 +1,123 @@
+## ADDED Requirements
+
+### Requirement: Clasificación NLI real por lotes con mDeBERTa
+`rag-orchestrator` MUST disponer de un puerto `NliClassifier` (`clasificar(pares: list[ParNli]) -> list[ResultadoNli]`, por lotes) y de un adapter local de mDeBERTa-v3-base-xnli-multilingual-nli-2mil7 (fp32, ONNX Runtime/CPU) que devuelva, por par, `label` ∈ {`entailment`, `neutral`, `contradiction`} y `p_entailment` ∈ [0,1] a partir de probabilidades que suman 1 (ADR-39, FR-10). El NLI MUST recibir solo premisa (texto del corpus) e hipótesis (RN-11).
+
+#### Scenario: Los tres pares de FX-06a-c se clasifican en un lote con su clase esperada [US-231b AC-1] [ADR-39] [FR-10]
+- **GIVEN** los tres pares NLI de FX-06a-c y el `NliClassifier` real con los pesos de `MODEL_CACHE_DIR`
+- **WHEN** los clasifica en un único lote
+- **THEN** el primer par devuelve `entailment`, el segundo `contradiction` y el tercero `neutral`
+- **AND** las probabilidades de cada par suman 1
+
+#### Scenario: El adapter normaliza los logits con softmax y mapea las clases por id2label [US-231b AC-1]
+- **GIVEN** el adapter NLI con una sesión de inferencia falsa que devuelve logits fijos y un `id2label` de configuración
+- **WHEN** clasifica un lote de pares
+- **THEN** cada par recibe el `label` de su probabilidad máxima y `p_entailment` es la probabilidad de `entailment`
+- **AND** un lote vacío devuelve una lista vacía sin invocar la sesión
+
+### Requirement: Procedencia del NLI en meta.nliModel
+La metainformación del `NliClassifier` real MUST contener modelo, versión y SHA-256 iguales a los de la configuración, construidos a partir de ella y no del texto generado (FR-25).
+
+#### Scenario: La metainformación del NLI coincide con la configuración [US-231b AC-2] [FR-25]
+- **GIVEN** el `NliClassifier` real cableado con `NLI_MODEL`, `NLI_MODEL_REVISION` y `NLI_MODEL_SHA256` definidos
+- **WHEN** se lee la metainformación que alimenta `meta.nliModel`
+- **THEN** contiene el modelo, la versión y el SHA-256 de la configuración
+
+### Requirement: El NLI real cumple el mismo contrato que su fake
+El `NliClassifier` real y su fake MUST superar la misma batería de contrato: misma firma, nunca `None`, `label` dentro del conjunto permitido y el mismo tipo de error del puerto ante un fallo del modelo (el que L1D-180 traduce en `NLI_UNAVAILABLE`) (`[S1 resp. 3]`).
+
+#### Scenario: La misma batería pasa sobre el adapter real y sobre el fake [US-231b AC-3] [S1 resp. 3]
+- **GIVEN** el `NliClassifier` real (sesión falsa en la ruta rápida, modelo real con `models`) y su fake
+- **WHEN** se ejecuta sobre ambos la misma batería de contrato
+- **THEN** cumplen la firma `clasificar(pares) -> list[ResultadoNli]` y nunca devuelven `None`
+- **AND** cada `label` pertenece a {`entailment`, `neutral`, `contradiction`}
+- **AND** un fallo del modelo lanza `FalloDeInferencia` en ambos, sin texto de premisa ni hipótesis en el mensaje
+
+### Requirement: NLI ausente o alterado impide el arranque
+Con `MODEL_PROVIDER=local`, `rag-orchestrator` MUST verificar al arrancar la ruta y el SHA-256 del modelo NLI y de su tokenizer con el mecanismo común de US-231a; si el archivo falta o el *hash* no coincide, el proceso MUST terminar con código distinto de 0 y el error SHALL nombrar la variable de configuración, nunca su contenido (RN-22).
+
+#### Scenario: Un hash alterado del NLI termina el proceso nombrando la variable [US-231b AC-4] [RN-22]
+- **GIVEN** un archivo del NLI cuyo SHA-256 no coincide con `NLI_MODEL_SHA256` y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `NLI_MODEL_SHA256` y no contienen la ruta, el hash esperado ni el calculado
+
+#### Scenario: Un archivo del NLI ausente termina el proceso nombrando la variable de ruta [US-231b AC-4] [RN-22]
+- **GIVEN** `NLI_MODEL_PATH` apuntando a un archivo que no existe y `MODEL_PROVIDER=local`
+- **WHEN** arranca `rag-orchestrator` como subproceso
+- **THEN** el proceso termina con código distinto de 0
+- **AND** stdout y stderr completos contienen `NLI_MODEL_PATH` y no contienen la ruta
+
+### Requirement: NLI local sin red
+El adapter NLI real MUST funcionar sin conexiones salientes y no SHALL importar un cliente de nube o HTTP ni descargar pesos en ejecución (RN-12, NFR-05).
+
+#### Scenario: Con la red bloqueada clasifica y no registra conexiones salientes [US-231b AC-5] [RN-12] [NFR-05]
+- **GIVEN** el `NliClassifier` real y la red bloqueada en el test, con registro de conexiones salientes
+- **WHEN** clasifica los pares de FX-06a-c
+- **THEN** responde sin error
+- **AND** el registro de conexiones salientes queda vacío
+
+#### Scenario: Ningún módulo del paquete nli importa un cliente de nube o HTTP [US-231b AC-5] [RN-12]
+- **GIVEN** los módulos de `app/infrastructure/nli`
+- **WHEN** se inspeccionan sus importaciones
+- **THEN** ninguno importa ni usa `huggingface_hub`, `transformers`, `requests`, `httpx`, `urllib.request`, `socket`, un SDK de nube, `from_pretrained` ni `hf_hub_download`
+- **AND** la carga usa `Tokenizer.from_file` y `onnxruntime.InferenceSession` con rutas locales
+
+### Requirement: Latencia de la etapa NLI medida y reportada
+La latencia de la etapa NLI con el modelo real MUST medirse (3 corridas, mediana) contra su presupuesto de 1500 ms; un valor fuera de presupuesto SHALL reportarse y no ocultarse (NFR-01, ADR-39).
+
+#### Scenario: La mediana de la etapa NLI se compara con 1500 ms y el exceso se reporta [US-231b AC-6] [NFR-01] [ADR-39]
+- **GIVEN** FX-06a-c en la VM de Docker de ≥ 10 GB del ADR-39 y el `NliClassifier` real
+- **WHEN** se mide la etapa NLI en 3 corridas y se toma la mediana
+- **THEN** la mediana es ≤ 1500 ms
+- **AND** un valor fuera de presupuesto queda en el reporte de la medición para el refinamiento
+
+### Requirement: Memoria conjunta de los tres modelos medida y reportada
+La memoria residente de `rag-orchestrator` con BGE-M3, bge-reranker-v2-m3 y mDeBERTa cargados a la vez MUST medirse contra la cifra del ADR-39 (4489 MiB); un valor fuera de presupuesto SHALL reportarse (NFR-01, ADR-39).
+
+#### Scenario: El RSS conjunto no excede 4489 MiB y el exceso se reporta [US-231b AC-7] [NFR-01] [ADR-39]
+- **GIVEN** los tres modelos cargados a la vez en la VM de Docker de ≥ 10 GB y una inferencia ejecutada con cada uno
+- **WHEN** se mide la memoria residente máxima del proceso de `rag-orchestrator`
+- **THEN** no excede 4489 MiB
+- **AND** un valor fuera de presupuesto queda en el reporte de la medición para el refinamiento
+
+### Requirement: Chunking de la semilla en tokens de BGE-M3
+Con `MODEL_PROVIDER` real, `load_seed_corpus` MUST obtener el *embedder* de pasajes real de US-231a y trocear contando tokens con el tokenizer de BGE-M3, de modo que ningún chunk exceda `CORPUS_CHUNK_SIZE` tokens (`[S1 resp. 38]`).
+
+#### Scenario: ch-largo-1 se trocea en al menos dos chunks de ≤ 1024 tokens [US-231b AC-8] [S1 resp. 38]
+- **GIVEN** `load_seed_corpus` con `MODEL_PROVIDER=local`, `CORPUS_CHUNK_SIZE = 1024` y `ch-largo-1` de FX-06a-c (1500 tokens de BGE-M3)
+- **WHEN** se trocea
+- **THEN** cada chunk tiene ≤ 1024 tokens contados con el tokenizer de BGE-M3
+- **AND** se producen al menos 2 chunks (el número exacto depende de `CORPUS_CHUNK_OVERLAP`, asumido)
+
+#### Scenario: La fábrica de embeddings devuelve el adapter real y no sale con código 1 [US-231b AC-8]
+- **GIVEN** `MODEL_PROVIDER=local` con los pesos de embeddings verificados
+- **WHEN** `fabricar_embedder_real` construye el *embedder* de pasajes
+- **THEN** devuelve el adapter de `PassageEmbedder` de US-231a
+- **AND** con `MODEL_PROVIDER=fake` falla nombrando la variable, sin devolver un *embedder* falso
+
+### Requirement: Smoke de la semilla con embeddings reales y recuperación compuesta
+El cargador de la semilla MUST dejar, con el manifiesto real y los *embeddings* reales contra Compose, todos los documentos `embebido` con `is_current = true`, chunks con `source_type`, `language` y `cancer_type_tags` copiados del catálogo y una `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`; y `app/main.py` MUST componer los bordes reales del corpus de modo que `/rag/query` deje de responder `503` por composición (RN-05, AC-06.1, `[S1 resp. 82]`).
+
+#### Scenario: Todos los documentos de la semilla quedan embebidos y la release publicada [US-231b AC-9] [US-059 AC-1] [AC-06.1] [RN-05]
+- **GIVEN** el manifiesto real `data/raw/seed/manifest.yaml`, los *embeddings* reales y el Compose de L1D-164
+- **WHEN** corre `python -m app.scripts.load_seed_corpus`
+- **THEN** todos los documentos quedan `embebido` con `is_current = true`
+- **AND** sus chunks vigentes llevan copiados del catálogo `source_type`, `language` y `cancer_type_tags`
+- **AND** existe la `CorpusRelease` con `excluded_sources = ["NCCN", "ESMO"]`
+
+#### Scenario: Con LLM y modelos locales, main.py compone el corpus y /rag/query recupera [US-231b AC-9] [S1 resp. 82]
+- **GIVEN** `LLM_PROVIDER=local`, `MODEL_PROVIDER=local`, la semilla cargada y `RETRIEVAL_TOP_K=30` con `RERANKER_MAX_PAIRS=12`
+- **WHEN** se envía `Q-HER2` a `/rag/query` con un JWT de servicio válido
+- **THEN** la respuesta no es `503 RETRIEVAL_UNAVAILABLE` y se valida contra `RagQueryInternalResponse` del `openapi.yaml`
+- **AND** el *reranker* recibió como máximo 12 pares, recortados por puntaje de recuperación con desempate determinista
+
+#### Scenario: Con modelos fake main.py no compone el corpus ni importa runtimes [US-231b AC-9]
+- **GIVEN** `MODEL_PROVIDER=fake`
+- **WHEN** arranca `rag-orchestrator`
+- **THEN** arranca sin construir Milvus ni los lectores del schema `corpus` y sin importar ningún runtime de modelos
+
+## Regresiones anotadas (no son escenarios de este change)
+
+- Regresión [RN-12] ausencia de *fallback* a la nube con datos reales: activa desde S6 (proveedores locales, `preflight`).
+- La etapa de soporte, el umbral `NLI_ENTAILMENT_THRESHOLD` y el `503 NLI_UNAVAILABLE` son de L1D-180 (US-064).
