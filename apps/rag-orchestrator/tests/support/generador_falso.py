@@ -24,6 +24,16 @@ def _opcion(citas: list[dict[str, Any]]) -> dict[str, Any]:
     return {"option": OPCION_ANTI_HER2, "rationale": RAZON_ANTI_HER2, "citedSources": citas}
 
 
+RAZON_SIN_SOPORTE = "reduce la mortalidad a la mitad"
+RAZON_PRESCRIPTIVA = "recomendado para este paciente"
+LIMITACION_SIN_SOPORTE = "La evidencia recuperada no describe la supervivencia global a diez años."
+LIMITACION_PRESCRIPTIVA = "El paciente debe recibir la combinación."
+
+
+def _opcion_con(razon: str, citas: list[dict[str, Any]]) -> dict[str, Any]:
+    return {"option": OPCION_ANTI_HER2, "rationale": razon, "citedSources": citas}
+
+
 ESCENARIOS: dict[str, list[dict[str, Any]]] = {
     "LLM-OK": [_opcion([{"chunkId": "ch-m1-1"}])],
     "LLM-CITA-AJENA": [_opcion([{"chunkId": "ch-x-999"}])],
@@ -32,6 +42,9 @@ ESCENARIOS: dict[str, list[dict[str, Any]]] = {
     ],
     "LLM-SIN-CITAS": [_opcion([])],
     "LLM-CITA-MIXTA": [_opcion([{"chunkId": "ch-m1-1"}, {"chunkId": "ch-x-999"}])],
+    "LLM-SIN-SOPORTE": [_opcion_con(RAZON_SIN_SOPORTE, [{"chunkId": "ch-m1-1"}])],
+    "LLM-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-m1-1"}])],
+    "LLM-CITA-AJENA-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-x-999"}])],
 }
 
 
@@ -49,8 +62,9 @@ def _parsear(opciones_crudas: list[dict[str, Any]]) -> tuple[OpcionGenerada, ...
 class FakeEvidenceGenerator:
     """``EvidenceGenerator`` con salidas fijas por escenario y contador de invocaciones (FX-06b)."""
 
-    def __init__(self, escenario: str = "LLM-OK") -> None:
+    def __init__(self, escenario: str = "LLM-OK", limitaciones: tuple[str, ...] = ()) -> None:
         self._opciones = _parsear(ESCENARIOS[escenario])
+        self._limitaciones = limitaciones
         self.recuperaciones: list[ResultadoDeRecuperacion] = []
 
     @property
@@ -61,4 +75,6 @@ class FakeEvidenceGenerator:
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> EvidenciaGenerada:
         self.recuperaciones.append(recuperacion)
-        return EvidenciaGenerada(opciones=self._opciones)
+        return EvidenciaGenerada(
+            opciones=self._opciones, limitaciones_propuestas=self._limitaciones
+        )

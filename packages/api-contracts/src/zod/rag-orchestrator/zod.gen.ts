@@ -443,6 +443,12 @@ export const zErrorRecuperacionNoDisponible = z.strictObject({
     traceId: z.string()
 });
 
+export const zErrorNliNoDisponible = z.strictObject({
+    error: z.literal('NLI_UNAVAILABLE'),
+    message: z.string(),
+    traceId: z.string()
+});
+
 export const zErrorTipoCancerNoRegistrado = z.strictObject({
     error: z.literal('TIPO_CANCER_NO_REGISTRADO'),
     message: z.string(),

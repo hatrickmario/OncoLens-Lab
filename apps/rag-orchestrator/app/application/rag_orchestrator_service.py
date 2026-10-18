@@ -27,6 +27,8 @@ from app.application.ports import (
     EvidenciaGenerada,
     Idioma,
     LanguageDetector,
+    NliClassifier,
+    ProhibitedTermsChecker,
     QueryEmbedder,
     ReleaseDelCorpus,
     Reranker,
@@ -37,8 +39,9 @@ from app.application.respuesta_con_evidencia import (
     ensamblar_respuesta_con_evidencia,
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.citations import OpcionAceptada, validar_citas
-from app.domain.option_selection import OpcionValidada, recortar_a_max_opciones
+from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
@@ -48,6 +51,7 @@ from app.domain.relevance import (
     top_relevance_score,
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
+from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
     Limitation,
     LlmProvider,
@@ -79,16 +83,15 @@ class ParametrosDeRecuperacion:
     longitud_maxima_codigo_tipo: int
     llm_provider: LlmProvider
     llm_model: str
-    nli_model: str
-    prompt_version: str
+    nli_entailment_threshold: float
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
 
 
-def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionValidada:
+def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
     """La opción con la relevancia y la cita principal que hereda de su chunk citado más relevante (RN-03)."""
     relevancia = relevancia_de_opcion(aceptada.chunk_ids_validos, puntajes)
-    return OpcionValidada(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
+    return OpcionConRelevancia(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
 
 
 class RAGOrchestratorService:
@@ -102,6 +105,8 @@ class RAGOrchestratorService:
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
         generador: EvidenceGenerator,
+        clasificador_nli: NliClassifier,
+        verificador_terminos: ProhibitedTermsChecker,
         reloj: Clock,
         parametros: ParametrosDeRecuperacion,
     ) -> None:
@@ -114,6 +119,12 @@ class RAGOrchestratorService:
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros
+        self._soporte = VerificadorDeSoporte(
+            clasificador=clasificador_nli,
+            terminos=verificador_terminos,
+            umbral=parametros.nli_entailment_threshold,
+            reloj=reloj,
+        )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
         trace_id = solicitud.traceId.root
@@ -149,10 +160,11 @@ class RAGOrchestratorService:
     ) -> RagQueryInternalResponse:
         """RN-01 y RN-04: solo se cita lo recuperado en esta consulta, con metadatos del catálogo.
 
-        Etapas: validar citas → (soporte NLI, L1D-180) → recortar a ``maxOptions`` → ensamblar. Se recortan opciones
-        ya validadas, nunca candidatas.
+        Etapas: validar citas → soporte NLI y lenguaje (RN-01, RN-23) → recortar a ``maxOptions`` → ensamblar. El
+        soporte va antes del recorte: se recortan opciones ya verificadas, nunca candidatas.
         """
         trace_id = solicitud.traceId.root
+        idioma = recuperacion.meta.responseLanguage.value
         citables = await self._chunks_citables(trace_id, recuperacion)
         resultado = validar_citas(evidencia.opciones, citables.keys())
         logger.info(
@@ -161,26 +173,36 @@ class RAGOrchestratorService:
             len(resultado.aceptadas),
             len(resultado.descartadas),
         )
-        recortadas = self._recortar_validadas(trace_id, resultado.aceptadas, citables, solicitud)
+        textos = {chunk_id: c.chunk.chunk_text for chunk_id, c in citables.items()}
+        soporte = await self._soporte.verificar(
+            trace_id, idioma, resultado.aceptadas, evidencia.limitaciones_propuestas, textos
+        )
+        recortadas = self._recortar_soportadas(trace_id, soporte.soportadas, citables, solicitud)
         return ensamblar_respuesta_con_evidencia(
-            recortadas, resultado.descartadas, citables, recuperacion
+            recortadas,
+            self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
+            soporte.descartadas,
+            soporte.limitaciones,
+            soporte.omitidas,
+            citables,
+            recuperacion,
         )
 
     @staticmethod
-    def _recortar_validadas(
+    def _recortar_soportadas(
         trace_id: str,
         aceptadas: Sequence[OpcionAceptada],
         citables: dict[str, ChunkCitable],
         solicitud: RagQueryInternalRequest,
-    ) -> tuple[OpcionValidada, ...]:
+    ) -> tuple[OpcionConRelevancia, ...]:
         """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
-        validadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
-        recortadas = recortar_a_max_opciones(validadas, solicitud.maxOptions, [])
+        soportadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
+        recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions, [])
         logger.info(
             "event=rag_query_recorte traceId=%s opcionesRecortadas=%d",
             trace_id,
-            len(validadas) - len(recortadas),
+            len(soportadas) - len(recortadas),
         )
         return recortadas
 
@@ -313,8 +335,8 @@ class RAGOrchestratorService:
             llmModel=parametros.llm_model,
             embeddingModel=self._embedder.modelo,
             rerankerModel=self._reranker.version,
-            nliModel=parametros.nli_model,
-            promptVersion=parametros.prompt_version,
+            nliModel=self._soporte.nli_model,
+            promptVersion=VERSION_DEL_PROMPT,
             catalogVersion=solicitud.catalogVersion,
             corpusRelease=release.release_id,
             corpusCutoffDate=release.cutoff_date,

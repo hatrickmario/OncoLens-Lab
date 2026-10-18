@@ -87,8 +87,6 @@ def test_con_modelos_locales_30_candidatos_y_12_pares_el_reranker_real_responde_
         relevance_threshold=0.99,
         retrieval_top_k=30,
         rerank_top_n=10,
-        nli_model="nli-test@1",
-        prompt_version="rag-query@test",
         fake_responses_path=EJEMPLOS,
     )
     app = crear_app(

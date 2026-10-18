@@ -14,7 +14,7 @@ from app.domain.citations import OpcionAceptada
 
 
 @dataclass(frozen=True)
-class OpcionValidada:
+class OpcionConRelevancia:
     """Una opción con sus citas ya validadas, su relevancia (RN-03) y su cita principal."""
 
     aceptada: OpcionAceptada
@@ -23,8 +23,8 @@ class OpcionValidada:
 
 
 def recortar_a_max_opciones(
-    opciones: Sequence[OpcionValidada], max_options: int, applicability: Sequence[object]
-) -> tuple[OpcionValidada, ...]:
+    opciones: Sequence[OpcionConRelevancia], max_options: int, applicability: Sequence[object]
+) -> tuple[OpcionConRelevancia, ...]:
     """Las ``max_options`` primeras en el orden determinista; ``applicability`` debe estar vacío hasta US-125."""
     if applicability:
         raise ValueError("la selección por aplicabilidad (RN-28) llega con US-125")

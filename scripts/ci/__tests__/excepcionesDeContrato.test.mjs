@@ -102,8 +102,8 @@ describe('CLI de excepcionesDeContrato (falla cerrado)', () => {
 });
 
 describe('contracts-breaking-excepciones.json', () => {
-  it('declara solo las excepciones E-1 y E-2 del 422 TIPO_CANCER_NO_REGISTRADO, cada una con su ADR-26 y un proveedor válido', () => {
-    expect(EXCEPCIONES.map((excepcion) => excepcion.id)).toEqual(['E-1', 'E-2']);
+  it('declara solo las excepciones E-1, E-2 y E-3 (422 TIPO_CANCER_NO_REGISTRADO y 503 NLI_UNAVAILABLE), cada una con su ADR-26 y un proveedor válido', () => {
+    expect(EXCEPCIONES.map((excepcion) => excepcion.id)).toEqual(['E-1', 'E-2', 'E-3']);
     for (const excepcion of EXCEPCIONES) {
       expect(PROVIDERS).toContain(excepcion.proveedor);
       expect(excepcion.adr).toBe('ADR-26');

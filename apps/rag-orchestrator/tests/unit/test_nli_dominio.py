@@ -10,6 +10,7 @@ from app.domain.nli import (
     IndicesDeClaseInvalidos,
     ProbabilidadesNli,
     calcular_probabilidades,
+    dividir_premisa_en_ventanas,
     etiqueta_mas_probable,
     validar_indices_de_clase,
 )
@@ -69,9 +70,13 @@ def test_la_etiqueta_es_la_clase_de_mayor_probabilidad(p: ProbabilidadesNli, esp
     assert etiqueta_mas_probable(p) == esperada
 
 
-def test_un_empate_se_resuelve_siempre_en_el_orden_entailment_neutral_contradiction() -> None:
-    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.4, 0.2)) == "entailment"
-    assert etiqueta_mas_probable(ProbabilidadesNli(0.2, 0.4, 0.4)) == "neutral"
+def test_un_empate_entre_entailment_y_contradiction_no_devuelve_entailment_porque_falla_cerrado() -> (
+    None
+):
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.2, 0.4)) == "contradiction"
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.4, 0.4, 0.2)) == "neutral"
+    assert etiqueta_mas_probable(ProbabilidadesNli(0.2, 0.4, 0.4)) == "contradiction"
+    assert etiqueta_mas_probable(ProbabilidadesNli(1 / 3, 1 / 3, 1 / 3)) == "contradiction"
     assert set(ETIQUETAS_NLI) == {"entailment", "neutral", "contradiction"}
 
 
@@ -106,3 +111,22 @@ def test_los_indices_repetidos_o_fuera_de_rango_nombran_la_clase_infractora_sin_
 def test_un_booleano_no_es_un_indice_de_clase() -> None:
     with pytest.raises(IndicesDeClaseInvalidos):
         validar_indices_de_clase(IndicesDeClase(True, 1, 2))  # type: ignore[arg-type]
+
+
+def test_una_premisa_corta_es_una_sola_ventana() -> None:
+    assert dividir_premisa_en_ventanas("uno dos tres", 10) == ["uno dos tres"]
+
+
+def test_las_ventanas_cubren_la_premisa_entera_y_se_solapan() -> None:
+    palabras = [f"p{i}" for i in range(20)]
+
+    ventanas = dividir_premisa_en_ventanas(" ".join(palabras), 8)
+
+    assert all(len(v.split()) <= 8 for v in ventanas)
+    assert {p for v in ventanas for p in v.split()} == set(palabras)
+    assert set(ventanas[0].split()) & set(ventanas[1].split())
+
+
+def test_una_ventana_de_cero_palabras_es_invalida() -> None:
+    with pytest.raises(ValueError):
+        dividir_premisa_en_ventanas("uno dos", 0)

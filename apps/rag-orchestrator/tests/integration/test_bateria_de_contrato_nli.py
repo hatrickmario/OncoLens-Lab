@@ -92,11 +92,34 @@ def _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de
     assert error.value.__suppress_context__ or error.value.__context__ is None
 
 
+def _un_par_con_hipotesis_mas_larga_que_el_maximo_lanza_el_error_del_puerto(
+    fabrica: Callable[..., NliClassifier],
+) -> None:
+    hipotesis_larga = (
+        "palabra " * 600
+    )  # recortar la hipótesis validaría una afirmación a medias (RN-01)
+
+    with pytest.raises(FalloDeInferencia):
+        fabrica().clasificar([ParNli(premisa="premisa corta", hipotesis=hipotesis_larga)])
+
+
+def _una_premisa_mas_larga_que_el_maximo_se_clasifica_por_ventanas_sin_fallar(
+    fabrica: Callable[..., NliClassifier],
+) -> None:
+    premisa_larga = "palabra " * 600
+
+    resultados = fabrica().clasificar([ParNli(premisa=premisa_larga, hipotesis="hipotesis corta")])
+
+    assert len(resultados) == 1 and resultados[0].label in ETIQUETAS_NLI
+
+
 BATERIA: Sequence[Callable[..., None]] = (
     _devuelve_un_resultado_por_par_en_el_mismo_orden_y_nunca_none,
     _un_lote_vacio_devuelve_lista_vacia,
     _declara_su_version_como_texto_no_vacio,
     _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de_la_hipotesis,
+    _un_par_con_hipotesis_mas_larga_que_el_maximo_lanza_el_error_del_puerto,
+    _una_premisa_mas_larga_que_el_maximo_se_clasifica_por_ventanas_sin_fallar,
 )
 
 
@@ -105,7 +128,11 @@ def _combinaciones() -> list[object]:
     casos: list[object] = []
     for nombre, fabrica in FABRICAS.items():
         for verificacion in BATERIA:
-            if nombre == "real-con-pesos" and verificacion is BATERIA[-1]:
+            if (
+                nombre == "real-con-pesos"
+                and verificacion
+                is _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de_la_hipotesis
+            ):
                 continue
             marcas = [pytest.mark.models] if nombre == "real-con-pesos" else []
             casos.append(

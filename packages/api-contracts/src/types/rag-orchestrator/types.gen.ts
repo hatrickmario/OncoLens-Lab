@@ -635,6 +635,12 @@ export type ErrorRecuperacionNoDisponible = {
     traceId: string;
 };
 
+export type ErrorNliNoDisponible = {
+    error: 'NLI_UNAVAILABLE';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorTipoCancerNoRegistrado = {
     error: 'TIPO_CANCER_NO_REGISTRADO';
     message: string;
@@ -765,9 +771,9 @@ export type RagQueryErrors = {
      */
     500: ErrorInterno;
     /**
-     * Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del LLM inválida o fuera de esquema) o recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings). Falla cerrada, sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
+     * Un componente local no está disponible: LLM (LOCAL_LLM_UNAVAILABLE, también salida del LLM inválida o fuera de esquema), recuperación (RETRIEVAL_UNAVAILABLE: Milvus o embeddings) o verificador de soporte (NLI_UNAVAILABLE): falla cerrada, ninguna opción se devuelve sin validar (RN-01), sin respuesta parcial. Con datos reales solo modelos locales, sin fallback a la nube (RN-12).
      */
-    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible;
+    503: ErrorLlmLocalNoDisponible | ErrorRecuperacionNoDisponible | ErrorNliNoDisponible;
     /**
      * Deadline vencido; la generación se aborta.
      */

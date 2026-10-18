@@ -8,7 +8,7 @@ from tests.support.fakes import settings_de_prueba
 
 
 def _settings(**cambios):
-    return settings_de_prueba(nli_model="nli-test@1", prompt_version="rag-query@test", **cambios)
+    return settings_de_prueba(**cambios)
 
 
 def test_settings_usa_64_como_longitud_maxima_del_codigo_cuando_el_entorno_no_la_fija():

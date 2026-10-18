@@ -1,7 +1,8 @@
 """Ensamblado de la respuesta `con_evidencia` a partir de las citas validadas (RN-01, RN-04).
 
 Cada cita se construye desde el catálogo y el chunk recuperado; del generador solo se conserva qué chunks citó.
-Recibe las opciones ya validadas y recortadas a ``maxOptions`` (L1D-275); L1D-180 inserta el soporte NLI antes.
+Recibe las opciones soportadas (NLI y lenguaje, L1D-180) y recortadas a ``maxOptions`` (L1D-275), más las descartadas
+por citas y por soporte, las limitaciones verificadas y ``omittedClaims``.
 """
 
 from __future__ import annotations
@@ -11,14 +12,17 @@ from dataclasses import asdict, dataclass
 
 from app.application.ports import ResultadoDeRecuperacion
 from app.domain.citations import FichaDeFuente, OpcionDescartada, construir_cita
-from app.domain.option_selection import OpcionValidada
+from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import ChunkPuntuado, top_relevance_score
+from app.domain.support import OpcionSinSoporte
 from app.schemas.generated.models import (
     ApplicabilitySummary,
     CitedSource,
     DiscardedOption,
     DiscardReason,
     EvidenceOption,
+    Limitation,
+    Origin,
     RagQueryInternalResponse,
     RagQueryStatus,
     RetrievalStats,
@@ -35,8 +39,11 @@ class ChunkCitable:
 
 
 def ensamblar_respuesta_con_evidencia(
-    opciones: Sequence[OpcionValidada],
+    opciones: Sequence[OpcionConRelevancia],
     descartadas: Sequence[OpcionDescartada],
+    sin_soporte: Sequence[OpcionSinSoporte],
+    limitaciones: Sequence[str],
+    omitidas: int,
     citables: Mapping[str, ChunkCitable],
     recuperacion: ResultadoDeRecuperacion,
 ) -> RagQueryInternalResponse:
@@ -45,14 +52,17 @@ def ensamblar_respuesta_con_evidencia(
         synthesis=Synthesis(agreements=[], discrepancies=[]),
         applicability=[],
         evidenceOptions=[_opcion_con_evidencia(o, citables) for o in opciones],
-        discardedOptions=[_opcion_descartada(d) for d in descartadas],
-        limitations=[],
+        discardedOptions=[
+            *(_opcion_descartada(d) for d in descartadas),
+            *(_opcion_sin_soporte(d) for d in sin_soporte),
+        ],
+        limitations=[Limitation(text=t, origin=Origin.llm_verificado) for t in limitaciones],
         assumptions=[],
         retrievalStats=RetrievalStats(
             retrieved=recuperacion.recuperados,
             aboveThreshold=len(recuperacion.chunks_sobre_umbral),
         ),
-        omittedClaims=0,
+        omittedClaims=omitidas,
         agentSteps=[],
         topRelevanceScore=top_relevance_score(recuperacion.chunks_sobre_umbral),
         meta=recuperacion.meta,
@@ -60,7 +70,7 @@ def ensamblar_respuesta_con_evidencia(
 
 
 def _opcion_con_evidencia(
-    validada: OpcionValidada, citables: Mapping[str, ChunkCitable]
+    validada: OpcionConRelevancia, citables: Mapping[str, ChunkCitable]
 ) -> EvidenceOption:
     """``relevanceScore`` = el del chunk citado más relevante: metadato secundario, no mide la opción (RN-03)."""
     aceptada = validada.aceptada
@@ -88,4 +98,14 @@ def _opcion_descartada(descartada: OpcionDescartada) -> DiscardedOption:
         rationale=descartada.opcion.rationale,
         discardReason=DiscardReason(descartada.motivo.value),
         unsupportedClaims=[],
+    )
+
+
+def _opcion_sin_soporte(descartada: OpcionSinSoporte) -> DiscardedOption:
+    """Descartada por RN-01: la afirmación sin soporte (o su literal de retiro, RN-23) figura en ``unsupportedClaims``."""
+    return DiscardedOption(
+        option=descartada.opcion.option,
+        rationale=descartada.opcion.rationale,
+        discardReason=DiscardReason.afirmacion_sin_soporte,
+        unsupportedClaims=list(descartada.afirmaciones_sin_soporte),
     )

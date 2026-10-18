@@ -14,6 +14,10 @@ from typing import Literal
 EtiquetaNli = Literal["entailment", "neutral", "contradiction"]
 ETIQUETAS_NLI: tuple[EtiquetaNli, ...] = ("entailment", "neutral", "contradiction")
 NUMERO_DE_CLASES = len(ETIQUETAS_NLI)
+# Un empate falla cerrado (RN-01): gana la clase que menos soporta. Orden distinto de ETIQUETAS_NLI a propósito.
+ORDEN_DE_DESEMPATE: tuple[EtiquetaNli, ...] = ("contradiction", "neutral", "entailment")
+# Las ventanas de una premisa larga se solapan en 1/DIVISOR_DEL_SOLAPE de su tamaño, para no partir una frase por la mitad.
+DIVISOR_DEL_SOLAPE = 4
 
 
 class IndicesDeClaseInvalidos(ValueError):
@@ -34,6 +38,22 @@ class IndicesDeClase:
     entailment: int
     neutral: int
     contradiction: int
+
+
+@dataclass(frozen=True)
+class ParNli:
+    """Premisa (texto del corpus) e hipótesis (afirmación a verificar). Nunca ``clinicalContext`` ni identidad (RN-11)."""
+
+    premisa: str
+    hipotesis: str
+
+
+@dataclass(frozen=True)
+class ResultadoNli:
+    """Clase más probable y probabilidad de ``entailment`` ya en [0, 1]; jamás ``None`` (RN-01: ausente no es 0.0)."""
+
+    label: EtiquetaNli
+    p_entailment: float
 
 
 @dataclass(frozen=True)
@@ -72,8 +92,25 @@ def calcular_probabilidades(logits: Sequence[float], indices: IndicesDeClase) ->
 
 
 def etiqueta_mas_probable(probabilidades: ProbabilidadesNli) -> EtiquetaNli:
-    """Argmax; un empate se resuelve en el orden fijo de ``ETIQUETAS_NLI`` para que el resultado sea determinista."""
+    """Argmax; un empate se resuelve en ``ORDEN_DE_DESEMPATE``: nunca a favor de ``entailment`` (RN-01)."""
     return max(
-        ETIQUETAS_NLI,
-        key=lambda clase: (getattr(probabilidades, clase), -ETIQUETAS_NLI.index(clase)),
+        ORDEN_DE_DESEMPATE,
+        key=lambda clase: (getattr(probabilidades, clase), -ORDEN_DE_DESEMPATE.index(clase)),
     )
+
+
+def dividir_premisa_en_ventanas(premisa: str, palabras_por_ventana: int) -> list[str]:
+    """Ventanas de ``palabras_por_ventana`` palabras, solapadas, que cubren la premisa entera (RN-01).
+
+    Se divide la PREMISA, nunca la hipótesis: recortar la afirmación podría validar la mitad de lo que se dijo.
+    """
+    if palabras_por_ventana < 1:
+        raise ValueError("una ventana necesita al menos una palabra")
+    palabras = premisa.split()
+    paso = max(1, palabras_por_ventana - palabras_por_ventana // DIVISOR_DEL_SOLAPE)
+    ventanas: list[str] = []
+    for inicio in range(0, len(palabras), paso):
+        ventanas.append(" ".join(palabras[inicio : inicio + palabras_por_ventana]))
+        if inicio + palabras_por_ventana >= len(palabras):
+            break
+    return ventanas

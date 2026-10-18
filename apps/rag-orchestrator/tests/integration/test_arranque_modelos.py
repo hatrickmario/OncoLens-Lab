@@ -127,8 +127,6 @@ def test_rag_query_con_llm_local_y_modelos_fake_responde_503_sin_recuperar_ni_in
         settings_de_prueba(
             llm_provider="local",
             model_provider="fake",
-            nli_model="nli-test@1",
-            prompt_version="rag-query@test",
         ),
         trace_ids=GeneradorTraceFijo(),
         clock=RelojFijo(),

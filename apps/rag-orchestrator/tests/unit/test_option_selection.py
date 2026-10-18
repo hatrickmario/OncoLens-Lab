@@ -3,13 +3,13 @@
 import pytest
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
-from app.domain.option_selection import OpcionValidada, recortar_a_max_opciones
+from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.relevance import relevancia_de_opcion
 
 
-def _validada(nombre: str, puntaje: float, principal: str) -> OpcionValidada:
+def _validada(nombre: str, puntaje: float, principal: str) -> OpcionConRelevancia:
     generada = OpcionGenerada(nombre, "razón", (principal,))
-    return OpcionValidada(OpcionAceptada(generada, (principal,)), puntaje, principal)
+    return OpcionConRelevancia(OpcionAceptada(generada, (principal,)), puntaje, principal)
 
 
 def _nombres(opciones) -> list[str]:

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.config.settings import Settings
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
+from tests.support.contract import CATALOGOS
 from tests.support.service_jwt import AHORA, ParClavesServicio, escribir_clave_publica
 
 _par_de_sesion: ParClavesServicio | None = None
@@ -64,6 +65,8 @@ def settings_de_prueba(**cambios: object) -> Settings:
         "relevance_threshold": 0.30,
         "retrieval_top_k": 40,
         "rerank_top_n": 10,
+        "nli_entailment_threshold": 0.7,
+        "clinical_catalog_path": CATALOGOS,
         **cambios,
     }
     return Settings(_env_file=None, **valores)  # type: ignore[call-arg, arg-type]

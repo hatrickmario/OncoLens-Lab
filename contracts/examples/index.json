@@ -260,6 +260,11 @@
       "target": "#/paths/~1rag~1follow-up/post/responses/503"
     },
     {
+      "file": "rag-nli-no-disponible.json",
+      "spec": "rag-orchestrator",
+      "target": "#/paths/~1rag~1query/post/responses/503"
+    },
+    {
       "file": "rag-query-con-evidencia.json",
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalResponse",

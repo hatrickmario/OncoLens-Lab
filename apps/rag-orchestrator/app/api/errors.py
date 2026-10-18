@@ -3,7 +3,7 @@
 Cubre todo `RequestValidationError` (body, header, query y path). La autenticación (L1D-105)
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
 También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
-recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`,
+recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE`, `503 NLI_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`,
 todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
 `ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 from app.api.trace import resolver_trace_id
 from app.application.errores import (
     LlmLocalNoDisponibleError,
+    NliNoDisponibleError,
     RecuperacionNoDisponibleError,
     TipoCancerNoRegistradoError,
 )
@@ -25,6 +26,7 @@ from app.domain.token_servicio import TokenServicioInvalido
 from app.schemas.generated.models import (
     DetailItem,
     ErrorLlmLocalNoDisponible,
+    ErrorNliNoDisponible,
     ErrorRecuperacionNoDisponible,
     ErrorTipoCancerNoRegistrado,
     ErrorTokenServicioInvalido,
@@ -75,6 +77,18 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
         cuerpo = ErrorLlmLocalNoDisponible(
             error="LOCAL_LLM_UNAVAILABLE",
             message="El modelo local no está disponible.",
+            traceId=trace_id,
+        )
+        return JSONResponse(status_code=503, content=cuerpo.model_dump())
+
+    @app.exception_handler(NliNoDisponibleError)
+    async def nli_no_disponible(request: Request, error: NliNoDisponibleError) -> JSONResponse:
+        """503 NLI_UNAVAILABLE: falla cerrada, ninguna opción sale sin verificar (RN-01); sin eco ni detalle del modelo."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning("event=nli_unavailable traceId=%s", trace_id)
+        cuerpo = ErrorNliNoDisponible(
+            error="NLI_UNAVAILABLE",
+            message="El verificador de soporte no está disponible.",
             traceId=trace_id,
         )
         return JSONResponse(status_code=503, content=cuerpo.model_dump())

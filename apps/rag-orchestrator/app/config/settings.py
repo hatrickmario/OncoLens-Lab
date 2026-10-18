@@ -4,6 +4,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Annotated, Any, Literal, Self
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
@@ -24,6 +25,7 @@ from app.domain.reglas_proveedor import (
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
+HOSTS_LOCALES_DEL_LLM = ("localhost", "127.0.0.1", "host.docker.internal")
 
 
 class Settings(BaseSettings):
@@ -31,6 +33,8 @@ class Settings(BaseSettings):
 
     app_env: str = "local"
     llm_provider: Literal["local", "fake"] = "local"
+    # RN-12: el LLM solo vive en el equipo (nativo, fuera de Docker). La lista de hosts permitidos es configuración (RN-22).
+    llm_allowed_hosts: Annotated[tuple[str, ...], NoDecode] = HOSTS_LOCALES_DEL_LLM
     llm_base_url: str = "http://host.docker.internal:11434/v1"
     llm_model: str = ""
     llm_health_timeout_ms: int = Field(default=2000, gt=0)
@@ -50,6 +54,8 @@ class Settings(BaseSettings):
     # RN-21: CC BY-NC solo en el MVP académico; sin esta clave el cargador de datasets la rechaza.
     allow_cc_by_nc: bool = False
     fake_responses_path: Path = Path("/contracts/examples")
+    # Catálogos versionados montados de solo lectura (lista de términos prohibidos, RN-23); sin valor por defecto en código.
+    clinical_catalog_path: Path | None = None
     # JWT de servicio (US-054): la vida máxima y la tolerancia de reloj se calibran; la clave pública es de L1D-165.
     service_jwt_ttl_seconds: int = Field(default=60, gt=0)
     service_jwt_clock_skew_seconds: int = Field(default=5, ge=0)
@@ -61,9 +67,8 @@ class Settings(BaseSettings):
     rerank_top_n: int | None = Field(default=None, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
-    # Etiquetas que viajan en `meta` (el NLI y el prompt los usan los changes de generación y soporte).
-    nli_model: str | None = None
-    prompt_version: str | None = None
+    # Probabilidad mínima de `entailment` que cuenta como soporte (RN-01, RN-22, L1D-180); la calibra la evaluación (US-072).
+    nli_entailment_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
     # Modelos de recuperación y verificación (ADR-39): opcional; en producción no se exigen las claves de medición.
     modelos: ConfigModelos | None = None
     # Modelos locales de recuperación (US-231a, RN-12): enum estricto fake|local. Sin definir es `fake`: con
@@ -114,6 +119,30 @@ class Settings(BaseSettings):
             return {**datos, "modelos": cargar_config_modelos(os.environ)}
         return datos
 
+    @field_validator("llm_allowed_hosts", mode="before")
+    @classmethod
+    def _hosts_del_llm_separados_por_comas(cls, valor: Any) -> Any:
+        return _lista_separada_por_comas(valor)
+
+    @field_validator("llm_base_url")
+    @classmethod
+    def _llm_base_url_en_un_host_local(cls, valor: str, info: ValidationInfo) -> str:
+        """RN-12: ni credenciales ni un host fuera de la lista; el error nombra la clave y NUNCA el valor."""
+        try:
+            url = urlsplit(valor)
+            host = url.hostname
+            credenciales = url.username is not None or url.password is not None
+        except ValueError:
+            raise ValueError("LLM_BASE_URL: no es una URL válida") from None
+        if url.scheme not in ("http", "https") or not host:
+            raise ValueError("LLM_BASE_URL: debe ser una URL http(s) con host")
+        if credenciales:
+            raise ValueError("LLM_BASE_URL: no puede llevar credenciales")
+        permitidos = info.data.get("llm_allowed_hosts", HOSTS_LOCALES_DEL_LLM)
+        if host.lower() not in {h.lower() for h in permitidos}:
+            raise ValueError("LLM_BASE_URL: el host no es local (RN-12); ver LLM_ALLOWED_HOSTS")
+        return valor
+
     @field_validator("model_provider", mode="before")
     @classmethod
     def _proveedor_de_modelos_estricto(cls, valor: Any) -> Any:
@@ -139,8 +168,8 @@ class Settings(BaseSettings):
         "nli_label_index_entailment",
         "nli_label_index_neutral",
         "nli_label_index_contradiction",
-        "nli_model",
-        "prompt_version",
+        "nli_entailment_threshold",
+        "clinical_catalog_path",
         mode="before",
     )
     @classmethod

@@ -13,7 +13,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
 from tests.support.fakes import settings_de_prueba
 
 RAIZ_APP = RAIZ_REPOSITORIO / "apps" / "rag-orchestrator"
@@ -125,7 +125,8 @@ def entorno_de_arranque(modelos: EntornoDeModelos, **cambios: str | None) -> dic
         "RELEVANCE_THRESHOLD": "0.30",
         "RETRIEVAL_TOP_K": "12",
         "RERANK_TOP_N": "10",
-        "PROMPT_VERSION": "rag-query@test",
+        "NLI_ENTAILMENT_THRESHOLD": "0.7",
+        "CLINICAL_CATALOG_PATH": str(CATALOGOS),
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),
         "SERVICE_JWT_PUBLIC_KEY_FILE": str(settings_de_prueba().service_jwt_public_key_file),
         **modelos.variables,
@@ -169,7 +170,14 @@ def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
     return Settings(  # type: ignore[call-arg]
         _env_file=None,
         modelos=cargar_config_modelos(modelos.variables),
-        **{"model_provider": "local", **rutas, **indices, **cambios},
+        **{
+            "model_provider": "local",
+            "nli_entailment_threshold": 0.7,
+            "clinical_catalog_path": CATALOGOS,
+            **rutas,
+            **indices,
+            **cambios,
+        },
     )
 
 

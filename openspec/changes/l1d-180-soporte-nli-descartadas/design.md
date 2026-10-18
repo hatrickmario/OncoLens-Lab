@@ -151,9 +151,10 @@ infraestructura y RN-01); "autoverificación" por el propio LLM (confianza autor
   `rag-llm-local-no-disponible.json` y `rag-recuperacion-no-disponible.json` siguen válidos. No cambian
   `DiscardedOption`, `omittedClaims` ni `limitations[].origin` (congelados en US-033).
 - **Compatibilidad (ADR-26):** se conservan los schemas originales; las alternativas son disjuntas por
-  el `const` de `error`. `oasdiff` puede emitir el **warning**
-  `response-body-wrapped-in-one-of-original-preserved` (no un error); se declara aquí y en el PR. La CI
-  corre `oasdiff` con `--fail-on ERR`, así que no bloquea; un `ERR` detiene el change y se declara.
+  el `const` de `error`. `oasdiff` emite un **ERR**
+  `response-body-one-of-added` (alternativa nueva en el `oneOf` del `503` de `POST /rag/query`), medido en la
+  implementación; está cubierto por la **excepción declarada E-3** (ADR-26,
+  `scripts/ci/contracts-breaking-excepciones.json`), igual que E-1 en el `422`. Cualquier otro `ERR` detiene el change.
   Cumple "Códigos de error cerrados y sin eco" (`const` + ejemplo) de `openspec/specs/api-contracts`.
 - **Generados:** modelos Pydantic (`app/schemas/generated/`) y cliente TS (`packages/api-contracts`) se
   regeneran del spec (skill `sync-contracts`: spec → ejemplo e índice → `contracts:generate` →

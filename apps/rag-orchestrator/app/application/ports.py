@@ -6,8 +6,9 @@ from datetime import date, datetime
 from typing import Any, Literal, Protocol
 
 from app.domain.citations import FichaDeFuente, OpcionGenerada
-from app.domain.nli import EtiquetaNli
+from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
+from app.domain.support import CampoGenerado
 from app.schemas.generated.models import (
     RagMeta,
     RagQueryInternalRequest,
@@ -229,22 +230,6 @@ class LlmClient(Protocol):
 # --- Soporte NLI (US-231b; lo consume L1D-180) ---------------------------------------------------------------------
 
 
-@dataclass(frozen=True)
-class ParNli:
-    """Premisa (texto del corpus) e hipótesis (afirmación a verificar). Nunca ``clinicalContext`` ni identidad (RN-11)."""
-
-    premisa: str
-    hipotesis: str
-
-
-@dataclass(frozen=True)
-class ResultadoNli:
-    """Clase más probable y probabilidad de ``entailment`` ya en [0, 1]; jamás ``None`` (RN-01: ausente no es 0.0)."""
-
-    label: EtiquetaNli
-    p_entailment: float
-
-
 class NliClassifier(Protocol):
     """Clasifica pares (premisa, hipótesis) por lotes. Un fallo del modelo lanza ``FalloDeInferencia`` (L1D-180 lo
     traduce en ``503 NLI_UNAVAILABLE``); el mensaje nunca lleva la premisa ni la hipótesis."""
@@ -256,4 +241,23 @@ class NliClassifier(Protocol):
 
     def clasificar(self, pares: list[ParNli]) -> list[ResultadoNli]:
         """Un resultado por par y en el mismo orden; la lista vacía devuelve ``[]`` sin invocar el modelo."""
+        ...
+
+
+# --- Lenguaje no prescriptivo de la salida generada (L1D-180, RN-23) ---------------------------------------
+
+
+class ProhibitedTermsChecker(Protocol):
+    """Términos prohibidos de nivel A en un texto GENERADO (RN-23). Los campos copiados del corpus no pasan por aquí."""
+
+    @property
+    def version(self) -> str:
+        """``version`` de ``terminos-prohibidos.json`` cargada (``languagePolicyVersion`` del log)."""
+        ...
+
+    def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
+        """``id`` de cada regla que coincide con ``texto`` (``campo`` es uno de ``CAMPOS_GENERADOS``); vacío = limpio.
+
+        Un campo que no es generado (copiado del corpus) nunca coincide. Nunca devuelve el término ni el texto.
+        """
         ...

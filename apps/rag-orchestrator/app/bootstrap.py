@@ -22,6 +22,8 @@ from app.application.ports import (
     EvidenceQueryPort,
     LanguageDetector,
     LlmHealthPort,
+    NliClassifier,
+    ProhibitedTermsChecker,
     PuertosDelCorpus,
     QueryEmbedder,
     Reranker,
@@ -39,7 +41,10 @@ from app.schemas.generated.models import LlmProvider
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
-from app.infrastructure.llm.generador_no_disponible import GeneradorLocalNoDisponible
+from app.infrastructure.lenguaje.terminos_prohibidos import (
+    ListaDeTerminosNoDisponible,
+    cargar_verificador_de_terminos,
+)
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
@@ -66,6 +71,8 @@ class PuertosDeRecuperacion:
     reranker: Reranker
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
+    clasificador_nli: NliClassifier
+    verificador_terminos: ProhibitedTermsChecker
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
@@ -85,7 +92,7 @@ def crear_app(
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
-    recuperacion = recuperacion or _componer_recuperacion(modelos, corpus)
+    recuperacion = recuperacion or _componer_recuperacion(settings, modelos, corpus)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -122,7 +129,7 @@ def _cargar_modelos_segun(
 
 
 def _componer_recuperacion(
-    modelos: ModelosDeRecuperacion | None, corpus: PuertosDelCorpus | None
+    settings: Settings, modelos: ModelosDeRecuperacion | None, corpus: PuertosDelCorpus | None
 ) -> PuertosDeRecuperacion | None:
     """Modelos reales + corpus (Milvus y catálogo) = los bordes completos; si falta alguno, no hay recuperación."""
     if modelos is None or corpus is None:
@@ -134,7 +141,20 @@ def _componer_recuperacion(
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
         catalogo=corpus.catalogo,
+        clasificador_nli=modelos.clasificador_nli,
+        verificador_terminos=_cargar_lista_de_terminos(settings),
     )
+
+
+def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
+    """La lista versionada de términos prohibidos del catálogo montado (RN-23); sin ella no hay respuesta con evidencia."""
+    _exigir_claves({"CLINICAL_CATALOG_PATH": settings.clinical_catalog_path})
+    try:
+        return cargar_verificador_de_terminos(settings.clinical_catalog_path)  # type: ignore[arg-type]
+    except ListaDeTerminosNoDisponible:
+        raise ConfiguracionDeRecuperacionIncompleta(
+            "CLINICAL_CATALOG_PATH: no contiene lenguaje/terminos-prohibidos.json válido"
+        ) from None
 
 
 def _crear_verificador_jwt_de_servicio(settings: Settings, clock: Clock) -> ServiceJwtVerifier:
@@ -192,9 +212,11 @@ def _crear_servicio_de_recuperacion(
         reranker=puertos.reranker,
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
-        # Producción: la rama con evidencia responde 503 LOCAL_LLM_UNAVAILABLE hasta que L1D-180 (soporte NLI) active
-        # `crear_generador_local()`: ninguna opción sin verificar sale de este servicio (L1D-275, design D9).
-        generador=generador or GeneradorLocalNoDisponible(),
+        clasificador_nli=puertos.clasificador_nli,
+        verificador_terminos=puertos.verificador_terminos,
+        # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
+        # responder (L1D-180, D9 de L1D-275): ninguna opción sin verificar sale de este servicio.
+        generador=generador or crear_generador_local(settings),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
     )
@@ -220,6 +242,7 @@ def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
             "RELEVANCE_THRESHOLD": settings.relevance_threshold,
             "RETRIEVAL_TOP_K": settings.retrieval_top_k,
             "RERANK_TOP_N": settings.rerank_top_n,
+            "NLI_ENTAILMENT_THRESHOLD": settings.nli_entailment_threshold,
         }
     )
 
@@ -246,9 +269,9 @@ def _proveedor_de_meta(settings: Settings) -> LlmProvider:
 
 
 def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
-    """Además de la configuración de recuperación, las etiquetas de ``meta`` (NLI_MODEL, PROMPT_VERSION)."""
+    """Los valores de configuración (RN-22) y la procedencia de ``meta``: ``nliModel`` sale del clasificador y
+    ``promptVersion`` del prompt, nunca de una copia en configuración."""
     _exigir_configuracion_de_recuperacion(settings)
-    _exigir_claves({"NLI_MODEL": settings.nli_model, "PROMPT_VERSION": settings.prompt_version})
     return ParametrosDeRecuperacion(
         relevance_threshold=settings.relevance_threshold,  # type: ignore[arg-type]
         retrieval_top_k=settings.retrieval_top_k,  # type: ignore[arg-type]
@@ -256,8 +279,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         longitud_maxima_codigo_tipo=settings.retrieval_cancer_type_max_length,
         llm_provider=_proveedor_de_meta(settings),
         llm_model=settings.llm_model,
-        nli_model=settings.nli_model,  # type: ignore[arg-type]
-        prompt_version=settings.prompt_version,  # type: ignore[arg-type]
+        nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )
