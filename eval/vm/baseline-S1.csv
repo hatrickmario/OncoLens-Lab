@@ -1,0 +1,13 @@
+participante,caso,condicion,tiempo_reconstruccion_min,reconstruido,tiempo_evidencia_min,autoidentificada,fuente_id,validada
+O1,mama-01,manual,14,si,18,si,NCI:breast-treatment-pdq,si
+O1,mama-02,manual,22,si,30,no,,no
+O1,mama-03,manual,19,si,24,si,NCI:breast-treatment-pdq,si
+O1,prostata-01,manual,26,si,30,no,,no
+O1,prostata-02,manual,17,si,21,si,NCI:prostate-treatment-pdq,si
+O1,prostata-03,manual,20,si,27,si,NCI:prostate-treatment-pdq,si
+O2,mama-01,manual,16,si,20,si,NCI:breast-treatment-pdq,si
+O2,mama-02,manual,30,no,30,no,,no
+O2,mama-03,manual,23,si,30,no,,no
+O2,prostata-01,manual,30,no,30,no,,no
+O2,prostata-02,manual,15,si,16,si,NCI:prostate-treatment-pdq,si
+O2,prostata-03,manual,28,si,30,no,,no
