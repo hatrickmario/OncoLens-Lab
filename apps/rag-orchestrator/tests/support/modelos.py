@@ -58,6 +58,19 @@ ARCHIVOS_DE_MODELO: dict[str, tuple[str, str, bytes]] = {
         "RERANKER_TOKENIZER_SHA256",
         b'{"tokenizer": "rer"}',
     ),
+    "NLI_MODEL": ("NLI_MODEL_PATH", "NLI_MODEL_SHA256", b"pesos-sinteticos-nli"),
+    "NLI_TOKENIZER": (
+        "NLI_TOKENIZER_PATH",
+        "NLI_TOKENIZER_SHA256",
+        b'{"tokenizer": "nli"}',
+    ),
+}
+
+# Columnas de (entailment, neutral, contradiction) en la salida del NLI: configuración versionada (US-231b D2).
+INDICES_NLI_DE_PRUEBA: dict[str, str] = {
+    "NLI_LABEL_INDEX_ENTAILMENT": "0",
+    "NLI_LABEL_INDEX_NEUTRAL": "1",
+    "NLI_LABEL_INDEX_CONTRADICTION": "2",
 }
 
 
@@ -81,10 +94,18 @@ class EntornoDeModelos:
         return {k: v for k, v in copia.items() if v is not None}
 
 
-def crear_entorno_de_modelos(directorio: Path) -> EntornoDeModelos:
+def crear_entorno_de_modelos(
+    directorio: Path, contenidos: dict[str, bytes] | None = None
+) -> EntornoDeModelos:
+    """``contenidos`` sustituye los bytes sintéticos de un archivo (p. ej. un ONNX mínimo REAL) por su nombre lógico."""
     directorio.mkdir(parents=True, exist_ok=True)
-    variables: dict[str, str] = {**CLAVES_ADR39_DE_PRUEBA, "MODEL_CACHE_DIR": str(directorio)}
-    for nombre, (var_ruta, var_sha, contenido) in ARCHIVOS_DE_MODELO.items():
+    variables: dict[str, str] = {
+        **CLAVES_ADR39_DE_PRUEBA,
+        **INDICES_NLI_DE_PRUEBA,
+        "MODEL_CACHE_DIR": str(directorio),
+    }
+    for nombre, (var_ruta, var_sha, sintetico) in ARCHIVOS_DE_MODELO.items():
+        contenido = (contenidos or {}).get(nombre, sintetico)
         archivo = directorio / f"{nombre.lower()}.bin"
         archivo.write_bytes(contenido)
         variables[var_ruta] = str(archivo)
@@ -189,6 +210,15 @@ def ejercitar_los_cuatro_adapters(modelos) -> None:
         modelos.detector_idioma.detectar(Q_HER2),
         modelos.detector_idioma.detectar(CH_M1_1),
     ) == ("es", "en")
+
+
+def ejercitar_el_nli(modelos) -> None:
+    """Una pasada del NLI por los tres pares de FX-06a-c en un lote; lanza si falla (US-231b)."""
+    from app.application.ports import ParNli
+    from tests.support.inferencia_falsa import PARES_NLI_FX06AC
+
+    pares = [ParNli(premisa=p, hipotesis=h) for p, h, _ in PARES_NLI_FX06AC]
+    assert len(modelos.clasificador_nli.clasificar(pares)) == len(pares)
 
 
 def cargar_modelos_reales():
