@@ -20,6 +20,13 @@ targetRules = ["generic-api-key"]
 paths = ['''openspec/changes/l1d-139-bff-route-handler-analisis/specs/web-bff/spec\.md''']
 regexes = ['''^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$''']
 
+[[allowlists]]
+description = "Falso positivo: el argumento de test `tokenizador=tokenizador` (nombre de variable de un doble de tokenizer, commit 33e05c9 de US-231a) no es una credencial"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''apps/rag-orchestrator/tests/unit/test_bge_m3\.py''']
+regexes = ['''^tokenizador$''']
+
 # Plantilla para nuevas entradas (ruta exacta + regla + forma del valor, todo con condition = "AND"):
 # [[allowlists]]
 # description = "Justificación obligatoria"
