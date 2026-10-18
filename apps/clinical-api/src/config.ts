@@ -99,7 +99,7 @@ export class ConfiguracionInvalidaError extends Error {
 
 function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = env[variable];
-  if (valor === undefined || valor === '') {
+  if (valor === undefined || valor.trim() === '') {
     throw new ConfiguracionInvalidaError(variable, 'es obligatoria');
   }
   return valor;
@@ -204,7 +204,7 @@ export interface EvidenceAnalysisConfig {
   evidenceDefaultYears: number;
   /** Plazo de la llamada a rag-orchestrator en milisegundos (`RAG_TIMEOUT_MS`, RN-22): `X-Request-Deadline` y abortar. */
   ragTimeoutMs: number;
-  /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069); nunca un literal del código. */
+  /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069 y PRD E-11, sin la etiqueta de uso académico); obligatorio y no vacío, nunca un literal del código. */
   aiDisclaimerText: string;
   /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`: supuesto fijo de la Base del análisis del S1 (`[S1 resp. 30]`). */
   analysisBasisAssumptionText: string;

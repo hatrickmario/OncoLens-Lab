@@ -80,22 +80,50 @@
     "ac": "AC-17",
     "regla": "assertDisclaimerRequired",
     "escenario": "un parche deja disclaimer vacío en con-evidencia-s1.json (RN-19)",
-    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace", "path": "/disclaimer", "value": "" }] }],
-    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "rutaContiene": "#/disclaimer", "mensajeContiene": "requiere validación clínica del oncólogo tratante" }
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": ""}] }],
+    "esperado": {"archivo": "contracts/examples/con-evidencia-s1.json", "rutaContiene": "#/disclaimer", "mensajeContiene": "requiere validación clínica independiente por el oncólogo tratante"}
   },
   {
     "ac": "AC-17",
     "regla": "assertDisclaimerRequired",
-    "escenario": "un parche quita la frase \"Uso académico/investigación\" del aviso de follow-up-turn.json (RN-19)",
-    "parches": [{ "destino": "ejemplo:follow-up-turn.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": "Uso académico/investigación", "reemplazar": "Uso general" }] }],
-    "esperado": { "archivo": "contracts/examples/follow-up-turn.json", "mensajeContiene": "Uso académico/investigación" }
+    "escenario": "un parche agrega \" · Uso académico/investigación\" al aviso de follow-up-turn.json (la etiqueta va fuera del campo)",
+    "parches": [{ "destino": "ejemplo:follow-up-turn.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante. · Uso académico/investigación"}] }],
+    "esperado": {"archivo": "contracts/examples/follow-up-turn.json", "mensajeContiene": "exactamente"}
   },
   {
     "ac": "AC-17",
     "regla": "assertDisclaimerRequired",
-    "escenario": "el aviso usa dos puntos en lugar de raya y sigue completo",
-    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": " · ", "reemplazar": ": " }] }],
-    "esperado": { "sinHallazgos": true }
+    "escenario": "el aviso usa el literal anterior de B-06 con dos puntos",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Análisis generado por IA: requiere validación clínica del oncólogo tratante"}] }],
+    "esperado": {"archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "exactamente"}
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "el aviso usa la raya del readme y de RN-19 v1.2",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Análisis generado por IA — requiere validación clínica del oncólogo tratante"}] }],
+    "esperado": {"archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "exactamente"}
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "el aviso pierde la palabra \"independiente\"",
+    "parches": [{ "destino": "ejemplo:sin-evidencia.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Generado por IA; requiere validación clínica por el oncólogo tratante."}] }],
+    "esperado": {"archivo": "contracts/examples/sin-evidencia.json", "mensajeContiene": "exactamente"}
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "el aviso pierde el punto final",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante"}] }],
+    "esperado": {"archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "exactamente"}
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertDisclaimerRequired",
+    "escenario": "el aviso lleva el literal exacto de S1 resp. 32",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{"op": "replace", "path": "/disclaimer", "value": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante."}] }],
+    "esperado": {"sinHallazgos": true}
   },
   {
     "ac": "AC-17",

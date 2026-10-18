@@ -109,6 +109,6 @@
   },
   "rerunOfAnalysisId": null,
   "patientDataLinks": [],
-  "disclaimer": "Análisis generado por IA — requiere validación clínica del oncólogo tratante · Uso académico/investigación",
+  "disclaimer": "Generado por IA; requiere validación clínica independiente por el oncólogo tratante.",
   "createdAt": "2026-10-12T15:04:00Z"
 }

@@ -13,7 +13,9 @@ const temporal = mkdtempSync(path.join(os.tmpdir(), 'oncolens-fake-secrets-'));
 afterAll(() => rmSync(temporal, { recursive: true, force: true }));
 
 const nombresDelCatalogo = () =>
-  execFileSync('bash', ['-c', `source "${CATALOGO}"; archivos_del_catalogo test`], { encoding: 'utf8' })
+  execFileSync('bash', ['-c', `source "${CATALOGO}"; archivos_del_catalogo test`], {
+    encoding: 'utf8',
+  })
     .split('\n')
     .filter(Boolean)
     .sort();
@@ -26,16 +28,28 @@ describe('fake-secrets.sh', () => {
     const privadaPem = readFileSync(path.join(destino, 'jwt_service_private.pem'), 'utf8');
     const publicaPem = readFileSync(path.join(destino, 'jwt_service_public.pem'), 'utf8');
 
-    const curva = execFileSync('openssl', ['ec', '-noout', '-text'], { input: privadaPem, encoding: 'utf8' });
+    const curva = execFileSync('openssl', ['ec', '-noout', '-text'], {
+      input: privadaPem,
+      encoding: 'utf8',
+    });
     expect(curva).toMatch(/prime256v1|P-256/);
 
-    const derivada = createPublicKey(createPrivateKey(privadaPem)).export({ type: 'spki', format: 'pem' });
+    const derivada = createPublicKey(createPrivateKey(privadaPem)).export({
+      type: 'spki',
+      format: 'pem',
+    });
     expect(derivada).toBe(publicaPem);
 
     const mensaje = 'cabecera.carga-sintetica';
-    const firma = createSign('SHA256').update(mensaje).sign({ key: privadaPem, dsaEncoding: 'ieee-p1363' });
+    const firma = createSign('SHA256')
+      .update(mensaje)
+      .sign({ key: privadaPem, dsaEncoding: 'ieee-p1363' });
     expect(firma).toHaveLength(64);
-    expect(createVerify('SHA256').update(mensaje).verify({ key: publicaPem, dsaEncoding: 'ieee-p1363' }, firma)).toBe(true);
+    expect(
+      createVerify('SHA256')
+        .update(mensaje)
+        .verify({ key: publicaPem, dsaEncoding: 'ieee-p1363' }, firma),
+    ).toBe(true);
 
     expect(salida).not.toContain('BEGIN');
   });

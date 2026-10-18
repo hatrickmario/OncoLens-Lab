@@ -71,6 +71,7 @@ describe('readEvidenceAnalysisConfig', () => {
     ['RAG_TIMEOUT_MS', { ...ENV_VALIDO, RAG_TIMEOUT_MS: 'abc' }],
     ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: undefined }],
     ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: '' }],
+    ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: '   ' }],
     [
       'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT',
       { ...ENV_VALIDO, ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined },

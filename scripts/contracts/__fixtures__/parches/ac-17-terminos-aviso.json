@@ -86,8 +86,8 @@
   {
     "ac": "AC-17",
     "regla": "assertDisclaimerRequired",
-    "escenario": "un parche quita \"Análisis generado por IA\" del aviso de con-evidencia-s1.json (CLA-2)",
-    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": "Análisis generado por IA", "reemplazar": "Análisis" }] }],
-    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "Análisis generado por IA" }
+    "escenario": "un parche cambia el inicio \"Generado por IA\" del aviso de con-evidencia-s1.json (CLA-2)",
+    "parches": [{ "destino": "ejemplo:con-evidencia-s1.json", "operaciones": [{ "op": "replace-text", "path": "/disclaimer", "buscar": "Generado por IA", "reemplazar": "Análisis" }] }],
+    "esperado": { "archivo": "contracts/examples/con-evidencia-s1.json", "mensajeContiene": "Generado por IA" }
   }
 ]
