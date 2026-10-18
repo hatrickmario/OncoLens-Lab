@@ -49,9 +49,9 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 (evaluate) Cambio de catálogo (lista 1.4.0, `[S1 resp. 33]`): mientras no exista la suite (US-072, S2), `ai-eval-runner` aplica `check_prohibited_terms()` a la salida del análisis del paciente semilla de la demo y registra M-10.2 (= 0) en `reports/eval/`. Desde US-072: `run-ai-eval`.
+- [ ] 5.1 (evaluate) Cambio de catálogo (lista 1.4.0, `[S1 resp. 33]`): mientras no exista la suite (US-072, S2), `ai-eval-runner` aplica `check_prohibited_terms()` a la salida del análisis del paciente semilla de la demo y registra M-10.2 (= 0) en `reports/eval/`. Desde US-072: `run-ai-eval`. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
 
 ## 6. cierre
 
-- [ ] 6.1 `openspec validate l1d-193-terminos-prohibidos-rn23 --strict` en verde.
-- [ ] 6.2 Tests del contexto en verde: Vitest de `packages/clinical-language` (incluido 2.8), Pytest de `rag-orchestrator` y `npm run lint:lenguaje`. El Playwright `apps/web/e2e/lenguaje-no-prescriptivo.spec.ts` cierra en la rama de L1D-140. Sin `contracts:verify-provider` (sin cambios de API).
+- [x] 6.1 `openspec validate l1d-193-terminos-prohibidos-rn23 --strict` en verde.
+- [x] 6.2 Tests del contexto en verde: Vitest de `packages/clinical-language` (incluido 2.8), Pytest de `rag-orchestrator` y `npm run lint:lenguaje`. El Playwright `apps/web/e2e/lenguaje-no-prescriptivo.spec.ts` cierra en la rama de L1D-140. Sin `contracts:verify-provider` (sin cambios de API).
