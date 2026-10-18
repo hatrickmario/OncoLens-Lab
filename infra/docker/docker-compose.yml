@@ -300,7 +300,8 @@ services:
       # Recuperación de /rag/query (RN-22): valores provisionales hasta US-072 (calibración con la suite evaluate).
       # Sin ellos, con LLM_PROVIDER=local el arranque se niega (sin valor por defecto en el código).
       RELEVANCE_THRESHOLD: ${RELEVANCE_THRESHOLD:-0.30}
-      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-40}
+      # 30 candidatos de Milvus y corte previo a RERANKER_MAX_PAIRS por puntaje de recuperación (decisión 82, US-231b).
+      RETRIEVAL_TOP_K: ${RETRIEVAL_TOP_K:-30}
       RERANK_TOP_N: ${RERANK_TOP_N:-10}
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
@@ -319,6 +320,27 @@ services:
       RERANKER_MODEL_SHA256: ${RERANKER_MODEL_SHA256:-}
       RERANKER_TOKENIZER_PATH: ${RERANKER_TOKENIZER_PATH:-}
       RERANKER_TOKENIZER_SHA256: ${RERANKER_TOKENIZER_SHA256:-}
+      # NLI de soporte (US-231b): un SHA-256 por archivo cargado. El ONNX se reexporta en UN solo archivo; si trajera datos
+      # externos (`*.onnx.data`) exige además su par NLI_MODEL_DATA_*. Las columnas de cada clase son configuración
+      # versionada (nunca el config.json del modelo) y se validan al arrancar.
+      NLI_MODEL_PATH: ${NLI_MODEL_PATH:-}
+      NLI_MODEL_SHA256: ${NLI_MODEL_SHA256:-}
+      NLI_TOKENIZER_PATH: ${NLI_TOKENIZER_PATH:-}
+      NLI_TOKENIZER_SHA256: ${NLI_TOKENIZER_SHA256:-}
+      NLI_MODEL_DATA_PATH: ${NLI_MODEL_DATA_PATH:-}
+      NLI_MODEL_DATA_SHA256: ${NLI_MODEL_DATA_SHA256:-}
+      NLI_LABEL_INDEX_ENTAILMENT: ${NLI_LABEL_INDEX_ENTAILMENT:-}
+      NLI_LABEL_INDEX_NEUTRAL: ${NLI_LABEL_INDEX_NEUTRAL:-}
+      NLI_LABEL_INDEX_CONTRADICTION: ${NLI_LABEL_INDEX_CONTRADICTION:-}
+      NLI_MAX_LENGTH: ${NLI_MAX_LENGTH:-512}
+      # Corpus real (US-231b): con MODEL_PROVIDER=local y LLM_PROVIDER=local el proceso compone Milvus y el schema `corpus`
+      # y los sonda al arrancar; si no responden, termina nombrando la variable (sin corpus falso). Sin contraseña en la
+      # URL (la lee del archivo del secreto) y TLS obligatorio (SEG-08).
+      CORPUS_DATABASE_URL: postgresql+psycopg://rag_corpus@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require
+      MILVUS_URI: http://milvus-standalone:19530
+      MILVUS_DENSE_METRIC_TYPE: ${MILVUS_DENSE_METRIC_TYPE:-}
+      MILVUS_CONNECT_TIMEOUT_SECONDS: ${MILVUS_CONNECT_TIMEOUT_SECONDS:-5}
+      CORPUS_CONNECT_TIMEOUT_SECONDS: ${CORPUS_CONNECT_TIMEOUT_SECONDS:-5}
       # Claves de ADR-39 (app/config/modelos.py): vacías = ausentes. Con MODEL_PROVIDER=local se exigen todas.
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
       EMBEDDING_MODEL_REVISION: ${EMBEDDING_MODEL_REVISION:-}

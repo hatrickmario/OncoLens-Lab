@@ -58,6 +58,19 @@ ARCHIVOS_DE_MODELO: dict[str, tuple[str, str, bytes]] = {
         "RERANKER_TOKENIZER_SHA256",
         b'{"tokenizer": "rer"}',
     ),
+    "NLI_MODEL": ("NLI_MODEL_PATH", "NLI_MODEL_SHA256", b"pesos-sinteticos-nli"),
+    "NLI_TOKENIZER": (
+        "NLI_TOKENIZER_PATH",
+        "NLI_TOKENIZER_SHA256",
+        b'{"tokenizer": "nli"}',
+    ),
+}
+
+# Columnas de (entailment, neutral, contradiction) en la salida del NLI: configuración versionada (US-231b D2).
+INDICES_NLI_DE_PRUEBA: dict[str, str] = {
+    "NLI_LABEL_INDEX_ENTAILMENT": "0",
+    "NLI_LABEL_INDEX_NEUTRAL": "1",
+    "NLI_LABEL_INDEX_CONTRADICTION": "2",
 }
 
 
@@ -81,10 +94,18 @@ class EntornoDeModelos:
         return {k: v for k, v in copia.items() if v is not None}
 
 
-def crear_entorno_de_modelos(directorio: Path) -> EntornoDeModelos:
+def crear_entorno_de_modelos(
+    directorio: Path, contenidos: dict[str, bytes] | None = None
+) -> EntornoDeModelos:
+    """``contenidos`` sustituye los bytes sintéticos de un archivo (p. ej. un ONNX mínimo REAL) por su nombre lógico."""
     directorio.mkdir(parents=True, exist_ok=True)
-    variables: dict[str, str] = {**CLAVES_ADR39_DE_PRUEBA, "MODEL_CACHE_DIR": str(directorio)}
-    for nombre, (var_ruta, var_sha, contenido) in ARCHIVOS_DE_MODELO.items():
+    variables: dict[str, str] = {
+        **CLAVES_ADR39_DE_PRUEBA,
+        **INDICES_NLI_DE_PRUEBA,
+        "MODEL_CACHE_DIR": str(directorio),
+    }
+    for nombre, (var_ruta, var_sha, sintetico) in ARCHIVOS_DE_MODELO.items():
+        contenido = (contenidos or {}).get(nombre, sintetico)
         archivo = directorio / f"{nombre.lower()}.bin"
         archivo.write_bytes(contenido)
         variables[var_ruta] = str(archivo)
@@ -135,39 +156,55 @@ def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
     from app.config.modelos import cargar_config_modelos
     from app.config.settings import Settings
 
-    rutas = {
+    rutas: dict[str, object] = {
         variable.lower(): valor
         for variable, valor in modelos.variables.items()
         if variable.endswith(("_PATH", "_SHA256")) and variable != "MODEL_CACHE_DIR"
     }
+    indices: dict[str, object] = {
+        variable.lower(): int(valor)
+        for variable, valor in modelos.variables.items()
+        if variable.startswith("NLI_LABEL_INDEX_")
+    }
     return Settings(  # type: ignore[call-arg]
         _env_file=None,
         modelos=cargar_config_modelos(modelos.variables),
-        **{"model_provider": "local", **rutas, **cambios},
+        **{"model_provider": "local", **rutas, **indices, **cambios},
     )
+
+
+def fabricar_sesion_falsa(dimension: int, logits_nli: tuple[float, ...] = (0.0, 5.0, 0.0)):
+    """Fábrica de sesiones para ``cargar_modelos_locales``: elige el doble por el CONTENIDO verificado del archivo.
+
+    La sesión real recibe los bytes ya hasheados (US-231b D12), así que el doble se decide por ellos y no por la ruta.
+    """
+    from tests.support.inferencia_falsa import (
+        SesionDeEmbeddingsFalsa,
+        SesionDeLogitsFalsa,
+        SesionNliFalsa,
+    )
+
+    def sesion(contenido: bytes, **_: object):
+        if contenido == ARCHIVOS_DE_MODELO["EMBEDDING_MODEL"][2]:
+            return SesionDeEmbeddingsFalsa(dimension)
+        if contenido == ARCHIVOS_DE_MODELO["NLI_MODEL"][2]:
+            return SesionNliFalsa(fijo=logits_nli)
+        return SesionDeLogitsFalsa()
+
+    return sesion
 
 
 def construir_modelos_con_dobles(modelos: EntornoDeModelos, **cambios: object):
     """El cargador real con los archivos sintéticos verificados y la sesión y el tokenizer sustituidos por dobles."""
     from app.infrastructure.models.local import cargar_modelos_locales
-    from tests.support.inferencia_falsa import (
-        SesionDeEmbeddingsFalsa,
-        SesionDeLogitsFalsa,
-        TokenizadorFalso,
-    )
+    from tests.support.inferencia_falsa import TokenizadorFalso
 
     ajustes = settings_de_modelos(modelos, **cambios)
-    dimension = ajustes.modelos.embedding_dim
-
-    def sesion(ruta: Path, **_: object):
-        return (
-            SesionDeEmbeddingsFalsa(dimension)
-            if "embedding" in ruta.name
-            else SesionDeLogitsFalsa()
-        )
 
     return cargar_modelos_locales(
-        ajustes, fabricar_sesion=sesion, fabricar_tokenizador=lambda ruta: TokenizadorFalso()
+        ajustes,
+        fabricar_sesion=fabricar_sesion_falsa(ajustes.modelos.embedding_dim),
+        fabricar_tokenizador=lambda ruta: TokenizadorFalso(),
     )
 
 
@@ -189,6 +226,15 @@ def ejercitar_los_cuatro_adapters(modelos) -> None:
         modelos.detector_idioma.detectar(Q_HER2),
         modelos.detector_idioma.detectar(CH_M1_1),
     ) == ("es", "en")
+
+
+def ejercitar_el_nli(modelos) -> None:
+    """Una pasada del NLI por los tres pares de FX-06a-c en un lote; lanza si falla (US-231b)."""
+    from app.application.ports import ParNli
+    from tests.support.inferencia_falsa import PARES_NLI_FX06AC
+
+    pares = [ParNli(premisa=p, hipotesis=h) for p, h, _ in PARES_NLI_FX06AC]
+    assert len(modelos.clasificador_nli.clasificar(pares)) == len(pares)
 
 
 def cargar_modelos_reales():

@@ -77,7 +77,8 @@ describe('docker-compose.yml · modelos locales de recuperación', () => {
   });
 
   it('no copia pesos a la imagen: el Dockerfile no los copia y los tres ignore los excluyen [US-231a AC-8]', () => {
-    const patrones = ['.cache/', '**/model-cache/', '**/*.onnx', '**/*.onnx_data', '**/*.safetensors'];
+    // `**/*.onnx.data` (US-231b, RN-14): así nombran `torch.onnx.export` y `quantize_dynamic` los datos externos de un ONNX.
+    const patrones = ['.cache/', '**/model-cache/', '**/*.onnx', '**/*.onnx_data', '**/*.onnx.data', '**/*.safetensors'];
     const lineas = (ruta) =>
       readFileSync(path.join(RAIZ, ruta), 'utf8')
         .split('\n')
@@ -88,5 +89,43 @@ describe('docker-compose.yml · modelos locales de recuperación', () => {
     }
     const dockerfile = readFileSync(path.join(RAIZ, 'apps/rag-orchestrator/Dockerfile'), 'utf8');
     expect(dockerfile).not.toMatch(/COPY[^\n]*(models|modelos|\.onnx|safetensors)/i);
+  });
+});
+
+// US-231b, tarea 1.1 (test después, RN-22): NLI de soporte, mapeo de clases por configuración y corpus real.
+describe('docker-compose.yml · NLI local y corpus real', () => {
+  it('pasa una ruta y un SHA-256 por cada archivo del NLI, y el par de datos externos, vacíos cuando el entorno no los fija [US-231b AC-4]', () => {
+    const entorno = rag(resolver()).environment;
+    for (const clave of ['MODEL_PATH', 'MODEL_SHA256', 'TOKENIZER_PATH', 'TOKENIZER_SHA256', 'MODEL_DATA_PATH', 'MODEL_DATA_SHA256']) {
+      expect(entorno[`NLI_${clave}`], clave).toBe('');
+    }
+    const fijado = rag(resolver({ entorno: { NLI_MODEL_SHA256: 'b'.repeat(64) } })).environment;
+    expect(fijado.NLI_MODEL_SHA256).toBe('b'.repeat(64));
+  });
+
+  it('el mapeo de clases del NLI es configuración versionada, sin valor por defecto en el Compose [US-231b AC-4]', () => {
+    const entorno = rag(resolver()).environment;
+    for (const clase of ['ENTAILMENT', 'NEUTRAL', 'CONTRADICTION']) {
+      expect(entorno[`NLI_LABEL_INDEX_${clase}`], clase).toBe('');
+    }
+    const fijado = rag(resolver({ entorno: { NLI_LABEL_INDEX_NEUTRAL: '1' } })).environment;
+    expect(fijado.NLI_LABEL_INDEX_NEUTRAL).toBe('1');
+  });
+
+  it('el catálogo se conecta con el rol rag_corpus sin contraseña en la URL y TLS obligatorio, y Milvus por la red de IA [US-231b AC-9]', () => {
+    const entorno = rag(resolver()).environment;
+    expect(entorno.CORPUS_DATABASE_URL).toMatch(/^postgresql\+psycopg:\/\/rag_corpus@postgres:5432\/[^?]+\?sslmode=require$/);
+    expect(entorno.CORPUS_DATABASE_URL).not.toMatch(/rag_corpus:/);
+    expect(entorno.MILVUS_URI).toBe('http://milvus-standalone:19530');
+    expect(entorno.PG_RAG_CORPUS_PASSWORD_FILE).toBe('/run/secrets/pg_rag_corpus_password');
+  });
+
+  it('los plazos de conexión del corpus y el largo máximo del NLI viven en configuración y el entorno los puede cambiar [US-231b AC-9]', () => {
+    const porDefecto = rag(resolver()).environment;
+    const fijadas = rag(
+      resolver({ entorno: { MILVUS_CONNECT_TIMEOUT_SECONDS: '9', CORPUS_CONNECT_TIMEOUT_SECONDS: '7', NLI_MAX_LENGTH: '256' } }),
+    ).environment;
+    expect([porDefecto.MILVUS_CONNECT_TIMEOUT_SECONDS, porDefecto.CORPUS_CONNECT_TIMEOUT_SECONDS, porDefecto.NLI_MAX_LENGTH]).toEqual(['5', '5', '512']);
+    expect([fijadas.MILVUS_CONNECT_TIMEOUT_SECONDS, fijadas.CORPUS_CONNECT_TIMEOUT_SECONDS, fijadas.NLI_MAX_LENGTH]).toEqual(['9', '7', '256']);
   });
 });

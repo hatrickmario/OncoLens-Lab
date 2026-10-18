@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -42,6 +43,27 @@ def test_huggingface_hub_solo_figura_como_transitiva_fijada_de_tokenizers() -> N
 
     assert re.fullmatch(r"huggingface-hub==\d+(\.\d+)+", requisitos["huggingface-hub"])
     assert "tokenizers" in requisitos
+
+
+def test_application_y_domain_no_importan_onnxruntime_ni_tokenizers() -> None:
+    """Frontera hexagonal (US-231b D1): el runtime de inferencia vive solo en ``infrastructure/``."""
+    infracciones: list[str] = []
+    for capa in ("application", "domain"):
+        for archivo in sorted((RAIZ_APP / "app" / capa).rglob("*.py")):
+            for nodo in ast.walk(ast.parse(archivo.read_text(encoding="utf-8"))):
+                if isinstance(nodo, ast.Import):
+                    modulos = [alias.name for alias in nodo.names]
+                elif isinstance(nodo, ast.ImportFrom):
+                    modulos = [nodo.module or ""]
+                else:
+                    continue
+                infracciones += [
+                    f"{archivo.relative_to(RAIZ_APP)}: importa {m}"
+                    for m in modulos
+                    if m.split(".")[0] in {"onnxruntime", "tokenizers"}
+                ]
+
+    assert infracciones == []
 
 
 def test_la_imagen_instala_solo_wheels() -> None:

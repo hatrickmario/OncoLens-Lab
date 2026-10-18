@@ -14,6 +14,7 @@ __pycache__/
 **/model-cache/
 **/*.onnx
 **/*.onnx_data
+**/*.onnx.data
 **/*.safetensors
 
 # Build y entorno local (US-034)

@@ -119,7 +119,7 @@ describe('docker-compose.yml', () => {
     const fijadas = resolver({ entorno: { RELEVANCE_THRESHOLD: '0.45', RETRIEVAL_TOP_K: '20', RERANK_TOP_N: '5' } }).services['rag-orchestrator']
       .environment;
 
-    expect([porDefecto.RELEVANCE_THRESHOLD, porDefecto.RETRIEVAL_TOP_K, porDefecto.RERANK_TOP_N]).toEqual(['0.30', '40', '10']);
+    expect([porDefecto.RELEVANCE_THRESHOLD, porDefecto.RETRIEVAL_TOP_K, porDefecto.RERANK_TOP_N]).toEqual(['0.30', '30', '10']);
     expect([fijadas.RELEVANCE_THRESHOLD, fijadas.RETRIEVAL_TOP_K, fijadas.RERANK_TOP_N]).toEqual(['0.45', '20', '5']);
   });
 

@@ -217,6 +217,25 @@ ACADEMIC_LICENSES: mit,apache-2.0
 4. **Congelación de la fase A, A2 y A3 (2026-10-20).** `eval/configs/adr39-fase-a*.yaml`, `reports/adr39/*.json` y el dataset no se modifican; cualquier medición nueva va en archivos con fecha nueva. `adr39-fase-a.yaml` conserva `stack_memory_limit_gb: 30` y `llm_budget_gb: 21` aunque el reporte `2026-10-16-fase-a.json` se midió con 24 / 16; ningún descarte de la fase A fue por memoria, así que el reporte sigue siendo válido. Un test (`test_reproducibilidad_fase_a.py`) fija que esa es la única diferencia.
 5. **Código remoto.** Solo el exportador de gte-multilingual-reranker-base (candidato C, no elegido) ejecuta código remoto (`trust_remote_code`), fijado al commit `40ced75c3017eb27626c9d4ea981bde21a2662f4` de `Alibaba-NLP/new-impl` (`CODIGO_REMOTO_FIJADO` en `config_medicion.py`); la medición no lo importa y el reranker decidido no lo requiere.
 
+### Adenda de US-231b (2026-10-17): cómo se carga el NLI y de dónde salen sus clases
+
+Sin cambiar ninguna decisión ni cifra del bloque de arriba (por eso `--check-config` no cambia):
+
+1. **Mapeo de clases (`NLI_LABEL_INDEX_ENTAILMENT`, `NLI_LABEL_INDEX_NEUTRAL`, `NLI_LABEL_INDEX_CONTRADICTION`).** Son configuración
+   versionada de `rag-orchestrator` (RN-22), no claves del bloque de ADR-39. Su origen es el `id2label` de la model card de la
+   revisión fijada `b5113eb38ab63efdd7f280f8c144ea8b13f978ce`, que el responsable del aprovisionamiento transcribe a la configuración:
+   la referencia es `entailment` = 0, `neutral` = 1, `contradiction` = 2, **a confirmar contra esa model card al exportar** (el
+   valor lo fija la persona, no este documento). El servicio nunca lee el `config.json` del modelo en ejecución: un mapeo alterado
+   que intercambiara `entailment` y `contradiction` invertiría el soporte (RN-01). La prueba del AC-1 de US-231b con los pares reales de
+   FX-06a-c (`@pytest.mark.models`) detecta un mapeo invertido.
+2. **Formato del ONNX fp32 del NLI.** Se reexporta en **un solo archivo** (sin `model.onnx.data`) junto con su `tokenizer.json`. Si
+   un modelo trajera datos externos, exige el par `NLI_MODEL_DATA_PATH` / `NLI_MODEL_DATA_SHA256` verificado; sin él, el arranque
+   falla cerrado nombrando la variable. `**/*.onnx.data` se ignora en `.gitignore` y en los dos `.dockerignore` (RN-14).
+3. **Carga.** La sesión de ONNX Runtime se crea desde los **bytes que se acaban de hashear**, nunca desde una ruta sin verificar. El
+   pico de memoria durante la carga incluye esos bytes hasta crear la sesión: se mide junto con el RSS en régimen (US-231b AC-7).
+4. **Largo del par.** `NLI_MAX_LENGTH` (512 por defecto) acota el par (premisa, hipótesis); uno más largo falla cerrado en vez de
+   recortar la hipótesis. L1D-180 elige el fragmento de premisa que envía.
+
 ## Fase B
 
 *(Marcador para el change de L1D-274, US-224: runtime del LLM, OCR, regla de proveedores RN-12 y p95 extremo a extremo con la pila completa.)*

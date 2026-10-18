@@ -22,6 +22,7 @@ from app.application.ports import (
     EvidenceQueryPort,
     LanguageDetector,
     LlmHealthPort,
+    PuertosDelCorpus,
     QueryEmbedder,
     Reranker,
     TraceIdGenerator,
@@ -63,15 +64,6 @@ class PuertosDeRecuperacion:
     embedder: QueryEmbedder
     buscador: ChunkSearch
     reranker: Reranker
-    lector_release: CorpusReleaseReader
-    catalogo: CorpusCatalogReader
-
-
-@dataclass(frozen=True)
-class PuertosDelCorpus:
-    """Bordes del corpus (Milvus y schema ``corpus``) que se suman a los modelos para completar la recuperación."""
-
-    buscador: ChunkSearch
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
 
@@ -265,4 +257,6 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_model=settings.nli_model,  # type: ignore[arg-type]
         prompt_version=settings.prompt_version,  # type: ignore[arg-type]
+        # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
+        reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )

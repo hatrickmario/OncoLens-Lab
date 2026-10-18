@@ -33,6 +33,7 @@ apps/web/vitest*.config.ts
 **/model-cache/
 **/*.onnx
 **/*.onnx_data
+**/*.onnx.data
 **/*.safetensors
 
 # Código de medición de ADR-39: no se empaqueta en producción. app/scripts va por LISTA BLANCA: se excluye entero y se
