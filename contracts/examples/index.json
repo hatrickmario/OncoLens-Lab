@@ -315,6 +315,38 @@
       "file": "tipo-no-habilitado.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-solo-descartadas.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-sin-opciones.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "rag-query-request-solo-descartadas.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-solo-descartadas.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-solo-descartadas.json"
+    },
+    {
+      "file": "rag-query-request-sin-opciones.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-sin-opciones.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-sin-opciones.json"
     }
   ],
   "pendingExamples": [
