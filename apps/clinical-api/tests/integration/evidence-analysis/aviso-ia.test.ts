@@ -26,7 +26,8 @@ const avisoDelContrato = (ejemplo: string): string =>
   (JSON.parse(readFileSync(path.join(RAIZ_DE_EJEMPLOS, ejemplo), 'utf8')) as { disclaimer: string })
     .disclaimer;
 
-const AVISO_VALIDADO = 'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.';
+const AVISO_VALIDADO =
+  'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.';
 const AVISO_SINTETICO_DE_CONFIGURACION = 'Aviso sintético alterno de configuración.';
 
 const rag = ragSimulado();
