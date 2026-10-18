@@ -1,0 +1,59 @@
+{
+  "clase": "sintetico",
+  "nombre": "ocr-mini",
+  "version": "1.0.0",
+  "generador": "generar.py",
+  "semilla": 224,
+  "licencia": "CC0 1.0 (contenido ficticio generado; sin datos de personas)",
+  "descripcion": "PDF escaneados en español de mama y próstata con valores ficticios; verdad de terreno por campo crítico en ground_truth.json (US-224 AC-6)",
+  "resolucion_dpi": 108,
+  "tipografia": "Arial.ttf",
+  "archivos": [
+    {
+      "archivo": "mama-biomarcadores-02.pdf",
+      "tipo": "informe_biomarcadores",
+      "cancer": "mama",
+      "campos_criticos": 5,
+      "sha256": "b2d080cedcd88c7fe06816283fda805f513d438727eba400b9f33e874b038802"
+    },
+    {
+      "archivo": "mama-laboratorio-05.pdf",
+      "tipo": "informe_laboratorio",
+      "cancer": "mama",
+      "campos_criticos": 3,
+      "sha256": "ff0a691472c2ea9653118f9f92d6e0730eba6fcc04dd25727a409a0406ab25a1"
+    },
+    {
+      "archivo": "mama-patologia-01.pdf",
+      "tipo": "informe_anatomia_patologica",
+      "cancer": "mama",
+      "campos_criticos": 6,
+      "sha256": "8650fe2ad3f8ec9029ddcb0f7d83e0dcb05dadfd66984907ede262ceae26464a"
+    },
+    {
+      "archivo": "prostata-laboratorio-04.pdf",
+      "tipo": "informe_laboratorio",
+      "cancer": "prostata",
+      "campos_criticos": 3,
+      "sha256": "d03a466641c850b3e693908d2a6ffae3ec31f9998928e9022a968b91096370e9"
+    },
+    {
+      "archivo": "prostata-nota-06.pdf",
+      "tipo": "nota_oncologia",
+      "cancer": "prostata",
+      "campos_criticos": 3,
+      "sha256": "e54fd60beb151a15e6759285340abaf98b5916e7a0b44a5f833b8f8d39bccadd"
+    },
+    {
+      "archivo": "prostata-patologia-03.pdf",
+      "tipo": "informe_anatomia_patologica",
+      "cancer": "prostata",
+      "campos_criticos": 4,
+      "sha256": "b88be5b5fb17712751a3bf8511c9ef4b56e8729a0f857e564249000df39e7e4c"
+    }
+  ],
+  "fuentes_excluidas": [
+    "NCCN",
+    "ESMO"
+  ]
+}
