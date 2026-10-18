@@ -10,6 +10,12 @@ __pycache__/
 .env.*
 !.env.example
 
+# Pesos de modelos (US-231a): viven fuera del repo, en MODEL_HOST_DIR; nunca se versionan (RN-14)
+**/model-cache/
+**/*.onnx
+**/*.onnx_data
+**/*.safetensors
+
 # Build y entorno local (US-034)
 dist/
 .next/

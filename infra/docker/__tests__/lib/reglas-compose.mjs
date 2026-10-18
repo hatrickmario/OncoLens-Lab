@@ -71,6 +71,28 @@ export function assertRagSoloLecturaConTmpfs(config) {
 }
 
 /**
+ * US-231a AC-8 (RN-12, RN-14): los pesos de los modelos entran por un bind mount de solo lectura desde un directorio del
+ * HOST fuera del repo, hacia MODEL_CACHE_DIR, y el servicio fuerza el modo sin conexión de los clientes de modelos.
+ */
+export function assertModelosSoloLecturaFueraDelRepo(config, raiz) {
+  const rag = servicio(config, RAG);
+  const montaje = (rag.volumes ?? []).find((volumen) => volumen.target === (entorno(rag).MODEL_CACHE_DIR || '/models'));
+  if (!montaje) throw new Error(`${RAG} debe montar los modelos en MODEL_CACHE_DIR`);
+  if (montaje.type !== 'bind') throw new Error(`${RAG} debe montar los modelos como bind mount desde el host`);
+  if (montaje.read_only !== true) throw new Error(`${RAG} debe montar los modelos de solo lectura`);
+  const relativa = path.relative(raiz, montaje.source ?? '');
+  if (relativa === '' || (!relativa.startsWith('..') && !path.isAbsolute(relativa))) {
+    throw new Error(`${RAG}: la fuente del montaje de modelos está dentro del repositorio`);
+  }
+  for (const variable of ['HF_HUB_OFFLINE', 'TRANSFORMERS_OFFLINE']) {
+    if (entorno(rag)[variable] !== '1') throw new Error(`${RAG} debe fijar ${variable}=1`);
+  }
+  for (const variable of ['MODEL_PROVIDER', 'EMBEDDING_MODEL_PATH', 'EMBEDDING_MODEL_SHA256', 'RERANKER_MODEL_PATH', 'RERANKER_MODEL_SHA256']) {
+    if (!(variable in entorno(rag))) throw new Error(`${RAG} debe recibir ${variable}`);
+  }
+}
+
+/**
  * Quién puede recibir cada secreto (US-035, design D3). El one-shot `corpus-migrate` (L1D-114) aún puede
  * no existir: la regla solo lo exige cuando existe. `clinical-seed` (L1D-169) ya existe.
  */

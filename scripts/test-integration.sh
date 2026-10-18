@@ -2,7 +2,7 @@
 # Corre la integración de clinical-api contra el PostgreSQL de test del Compose (US-038, [S1 resp. 14b]).
 #
 #   scripts/setup-secrets.sh --profile test
-#   docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml \
+#   MODEL_PROVIDER=fake MODEL_HOST_DIR="$(mktemp -d)" docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml \
 #     -f apps/clinical-api/tests/support/docker-compose.integration.yml up -d --wait postgres
 #   scripts/test-integration.sh [argumentos de vitest]
 #

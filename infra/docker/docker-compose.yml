@@ -291,6 +291,46 @@ services:
       SERVICE_JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_service_public.pem
       SERVICE_JWT_TTL_SECONDS: *service-jwt-ttl
       PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
+      # Modelos locales de recuperación (US-231a, RN-12, RN-22). MODEL_PROVIDER es fake|local: en Compose `local` (verifica
+      # los pesos montados y recupera con ellos); la CI, sin pesos reales, usa `fake`. Sin red ni descargas: los pesos
+      # llegan por el montaje de solo lectura de MODEL_HOST_DIR y los clientes de modelos no consultan ningún hub.
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-local}
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-}
+      EMBEDDING_MODEL_SHA256: ${EMBEDDING_MODEL_SHA256:-}
+      EMBEDDING_TOKENIZER_PATH: ${EMBEDDING_TOKENIZER_PATH:-}
+      EMBEDDING_TOKENIZER_SHA256: ${EMBEDDING_TOKENIZER_SHA256:-}
+      RERANKER_MODEL_PATH: ${RERANKER_MODEL_PATH:-}
+      RERANKER_MODEL_SHA256: ${RERANKER_MODEL_SHA256:-}
+      RERANKER_TOKENIZER_PATH: ${RERANKER_TOKENIZER_PATH:-}
+      RERANKER_TOKENIZER_SHA256: ${RERANKER_TOKENIZER_SHA256:-}
+      # Claves de ADR-39 (app/config/modelos.py): vacías = ausentes. Con MODEL_PROVIDER=local se exigen todas.
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_MODEL_REVISION: ${EMBEDDING_MODEL_REVISION:-}
+      EMBEDDING_DIM: ${EMBEDDING_DIM:-}
+      SPARSE_VECTOR_SOURCE: ${SPARSE_VECTOR_SOURCE:-}
+      RERANKER_MODEL: ${RERANKER_MODEL:-}
+      RERANKER_MODEL_REVISION: ${RERANKER_MODEL_REVISION:-}
+      RERANKER_MAX_PAIRS: ${RERANKER_MAX_PAIRS:-}
+      RERANKER_MAX_LENGTH: ${RERANKER_MAX_LENGTH:-}
+      NLI_MODEL: ${NLI_MODEL:-}
+      NLI_MODEL_REVISION: ${NLI_MODEL_REVISION:-}
+      MODEL_QUANTIZATION: ${MODEL_QUANTIZATION:-}
+      NLI_QUANTIZATION: ${NLI_QUANTIZATION:-}
+      MODEL_CACHE_DIR: ${MODEL_CACHE_DIR:-}
+      CORPUS_CHUNK_SIZE: ${CORPUS_CHUNK_SIZE:-}
+      CORPUS_CHUNK_OVERLAP: ${CORPUS_CHUNK_OVERLAP:-}
+      CORPUS_CHUNKING_STRATEGY: ${CORPUS_CHUNKING_STRATEGY:-}
+      VECTOR_INDEX_TYPE: ${VECTOR_INDEX_TYPE:-}
+      VECTOR_INDEX_PARAMS: ${VECTOR_INDEX_PARAMS:-}
+      CHUNK_SELECTION_MARGIN: ${CHUNK_SELECTION_MARGIN:-}
+      INDEX_MIN_RECALL_VS_FLAT: ${INDEX_MIN_RECALL_VS_FLAT:-}
+      DATA_CACHE_DIR: ${DATA_CACHE_DIR:-}
+      STACK_MEMORY_LIMIT_GB: ${STACK_MEMORY_LIMIT_GB:-}
+      LLM_MEMORY_BUDGET_GB: ${LLM_MEMORY_BUDGET_GB:-}
+      STAGE_P95_BUDGET_MS: ${STAGE_P95_BUDGET_MS:-}
+      ACADEMIC_LICENSES: ${ACADEMIC_LICENSES:-}
     secrets:
       - jwt_service_public.pem
       - pg_rag_corpus_password
@@ -298,6 +338,12 @@ services:
       - type: bind
         source: ../../contracts/examples
         target: ${FAKE_RESPONSES_PATH:-/contracts/examples}
+        read_only: true
+      # Pesos de los modelos (US-231a): directorio del HOST fuera del repo (RN-14), sin valor por defecto. La CI, que
+      # no tiene pesos, fija MODEL_PROVIDER=fake y un MODEL_HOST_DIR temporal y vacío. Nunca se copian a la imagen.
+      - type: bind
+        source: ${MODEL_HOST_DIR:?MODEL_HOST_DIR obligatorio - directorio del host, fuera del repo, con los pesos de los modelos}
+        target: ${MODEL_CACHE_DIR:-/models}
         read_only: true
       - type: bind
         source: ../../packages/clinical-catalogs

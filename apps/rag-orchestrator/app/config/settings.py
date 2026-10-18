@@ -105,6 +105,8 @@ class Settings(BaseSettings):
         "reranker_model_sha256",
         "reranker_tokenizer_path",
         "reranker_tokenizer_sha256",
+        "nli_model",
+        "prompt_version",
         mode="before",
     )
     @classmethod
