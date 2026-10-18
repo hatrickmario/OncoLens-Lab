@@ -39,14 +39,14 @@
 
 ## 3. evaluación
 
-- [ ] 3.1 (evaluate) **NO-EJECUTABLE en la rama (anotado):** la CI no tiene pesos y la suite `evaluate` llega con US-072; queda para `ai-eval-runner` en el Gate 2 con el NLI real. Introduce el umbral `NLI_ENTAILMENT_THRESHOLD` y el modelo NLI: `run-ai-eval` obligatoria. En el S1 (sin suite, US-072 en S2), evaluación manual de `ai-eval-runner` sobre el análisis del paciente semilla con el NLI real: fidelidad, precisión de citas, M-10.1 y salidas prescriptivas = 0, **junto con `false_positive_language_filter_rate`** `[S1 resp. 34]` (antes "tasa de opciones descartadas por lenguaje no permitido"), el recuento bruto de descartes por lenguaje y la lista de sus falsos positivos (justificaciones fieles al corpus del tipo "patients should receive…" descartadas solo por el término; design §Evaluación, Gate 1 2ª vuelta), informativa y sin meta en el S1; la suite `evaluate` de US-072 la registra en cada ejecución y se revisa periódicamente. Verificación: reporte en `reports/eval/` con ambas cifras.
+- [ ] 3.1 (evaluate) **NO-EJECUTABLE en la rama (anotado):** la CI no tiene pesos y la suite `evaluate` llega con US-072; queda para `ai-eval-runner` en el Gate 2 con el NLI real. Introduce el umbral `NLI_ENTAILMENT_THRESHOLD` y el modelo NLI: `run-ai-eval` obligatoria. En el S1 (sin suite, US-072 en S2), evaluación manual de `ai-eval-runner` sobre el análisis del paciente semilla con el NLI real: fidelidad, precisión de citas, M-10.1 y salidas prescriptivas = 0, **junto con `false_positive_language_filter_rate`** `[S1 resp. 34]` (antes "tasa de opciones descartadas por lenguaje no permitido"), el recuento bruto de descartes por lenguaje y la lista de sus falsos positivos (justificaciones fieles al corpus del tipo "patients should receive…" descartadas solo por el término; design §Evaluación, Gate 1 2ª vuelta), informativa y sin meta en el S1; la suite `evaluate` de US-072 la registra en cada ejecución y se revisa periódicamente. Verificación: reporte en `reports/eval/` con ambas cifras. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
 
 ## 4. Verificación
 
 - [x] 4.1 `openspec validate l1d-180-soporte-nli-descartadas --strict` en verde.
 - [x] 4.2 Suite de `apps/rag-orchestrator` en verde (Pytest).
 - [x] 4.3 `contracts:check` en verde; `200 con_evidencia` con descartadas y `503 NLI_UNAVAILABLE` de `/rag/query` validados con el *helper* de L1D-164 en la suite de integración.
-- [ ] 4.4 (pendiente del Gate 2) `run-ai-eval` (o evaluación manual del S1) adjunta al PR.
+- [ ] 4.4 (pendiente del Gate 2) `run-ai-eval` (o evaluación manual del S1) adjunta al PR. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
 
 ## Desviaciones y precondiciones del Gate 2 de US-231b / L1D-275 (aplicadas aquí)
 
