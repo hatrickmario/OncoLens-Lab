@@ -213,6 +213,8 @@ export interface OpcionesDeGateway {
   evidenceDefaultYears?: number;
   /** `RAG_TIMEOUT_MS` (por defecto, el plazo corto de test). */
   ragTimeoutMs?: number;
+  /** `AI_DISCLAIMER_TEXT` (por defecto, `DISCLAIMER_DE_TEST`). */
+  aiDisclaimerText?: string;
 }
 
 export interface GatewayDeTest {
@@ -249,7 +251,7 @@ export async function montarGateway(
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
-      aiDisclaimerText: DISCLAIMER_DE_TEST,
+      aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
       analysisBasisAssumptionText: SUPUESTO_S1_DE_TEST,
     },
     reloj,
