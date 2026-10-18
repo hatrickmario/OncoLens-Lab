@@ -43,6 +43,9 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("subcomando", choices=["runtime", "llm", "e2e", "ocr", "decidir"])
     p.add_argument("--config", type=Path, default=RUTA_CONFIG_POR_DEFECTO)
     p.add_argument("--runs", type=int, help="corridas (por defecto, las de la configuración)")
+    p.add_argument(
+        "--raiz", type=Path, default=raiz_repo(), help="raíz del repo o del volumen con data/eval"
+    )
     p.add_argument("--out", type=Path, default=raiz_repo() / "reports" / "adr39")
     p.add_argument("--runtime", choices=["ollama", "vllm_metal"], default="ollama")
     p.add_argument(
@@ -131,8 +134,8 @@ def _cmd_runtime(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> in
 def _cmd_llm(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> int:
     ids = a.candidato.split(",") if a.candidato else [c.id for c in config.candidatos]
     llamadas = a.llamadas or config.llamadas_por_candidato
-    prompts = runtime_llm.cargar_prompts(config, raiz_repo(), llamadas)
-    dataset_ocr = raiz_repo() / config.ocr["dataset"]
+    prompts = runtime_llm.cargar_prompts(config, a.raiz, llamadas)
+    dataset_ocr = a.raiz / config.ocr["dataset"]
     resultados = []
     with httpx.Client(timeout=a.plazo_s) as http:
         cliente = _cliente_runtime(config, a.runtime, http)
@@ -201,7 +204,7 @@ def _cmd_ocr(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> int:
     motor = ocr.motor_por_id(a.motor, os.environ.get("OCR_LANGUAGES", "spa"))
     vigiladas = a.vigilar or [Path.cwd()]
     resultado = ocr.medir_motor(
-        motor, raiz_repo() / config.ocr["dataset"], a.runs or config.corridas,
+        motor, a.raiz / config.ocr["dataset"], a.runs or config.corridas,
         a.plazo_s, a.tmpdir, vigiladas, time.monotonic,
     )  # fmt: skip
     escribir_reporte(

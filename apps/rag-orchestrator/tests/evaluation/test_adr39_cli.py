@@ -10,6 +10,7 @@ import pytest
 
 from app.scripts.adr39 import cli
 from app.scripts.adr39.config import ConfigFaseBInvalida, cargar_config
+from tests.evaluation.conftest import RAIZ_REPO
 
 AHORA = lambda: datetime(2026, 10, 21, 9, 0, tzinfo=timezone.utc)  # noqa: E731
 
@@ -204,3 +205,24 @@ def test_ocr_sale_con_2_sin_motor_y_con_7_cuando_el_motor_no_esta_instalado(
     assert salida == cli.SALIDA_MOTOR
     assert reporte["disponible"] is False and reporte["exactitud"] is None
     assert reporte["entorno"]["fecha"] == "2026-10-21T09:00:00+00:00"
+
+
+def test_decidir_trata_la_plantilla_de_reportes_sin_medir_como_pendiente(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    plantilla = json.loads(
+        (RAIZ_REPO / "reports" / "adr39" / "plantilla-fase-b.json").read_text(encoding="utf-8")
+    )
+    escribir(tmp_path / "llm.json", plantilla["llm.json"])
+    escribir(tmp_path / "e2e-A.json", plantilla["e2e-<id>.json"])
+    escribir(tmp_path / "ocr-ocrmypdf-tesseract.json", plantilla["ocr-<motor>.json"])
+    escribir(tmp_path / "revision-A.json", plantilla["revision-<id>.json"])
+
+    salida = cli.main(
+        ["decidir", "--out", str(tmp_path), "--motor-ocr", "ocrmypdf-tesseract"], AHORA
+    )
+
+    decision = json.loads((tmp_path / "decision.json").read_text(encoding="utf-8"))
+    assert salida == cli.SALIDA_OK
+    assert {v["estado"] for v in decision["veredictos"]} == {"pendiente"}
+    assert "sin elegir" in capsys.readouterr().out
