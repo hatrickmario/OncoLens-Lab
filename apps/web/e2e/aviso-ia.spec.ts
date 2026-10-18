@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import es from '../messages/es.json' with { type: 'json' };
 import { analizar, ejemplo, esperarResultado, iniciarSesion } from './soporte';
 
 const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
 const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').query as string;
 const disclaimerPorDefecto = ejemplo('con-evidencia-s1.json').disclaimer as string;
-const ETIQUETA = 'Uso académico/investigación';
+const ETIQUETA = es.app.academicUseLabel;
 
 /** Valor de AI_DISCLAIMER_TEXT con el que se arrancó Compose; sin él, el literal por defecto del contrato. */
 const disclaimerEsperado = process.env.AI_DISCLAIMER_TEXT ?? disclaimerPorDefecto;
@@ -43,7 +44,7 @@ test.describe('Aviso de IA y etiqueta académica (L1D-194)', () => {
     for (const aviso of await avisosDelResultado(page)) expect(aviso).toBe(disclaimerEsperado);
   });
 
-  test('muestra Uso académico/investigación en la cabecera de cada página autenticada del S1 fuera del aviso de IA [US-069 AC-3]', async ({
+  test(`muestra ${ETIQUETA} en la cabecera de cada página autenticada del S1 fuera del aviso de IA [US-069 AC-3]`, async ({
     page,
   }) => {
     await iniciarSesion(page);
