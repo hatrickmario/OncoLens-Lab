@@ -12,6 +12,10 @@ from collections.abc import Sequence
 import numpy as np
 
 from app.application.ports import FalloDeInferencia
+from app.infrastructure.models.lotes import (
+    agrupar_por_presupuesto_de_tokens,
+    truncar_conservando_el_separador_final,
+)
 from app.infrastructure.models.sesion import SesionDeInferencia, Tokenizador
 
 _FALLO = "embeddings: fallo de inferencia del modelo local"
@@ -53,9 +57,14 @@ class NucleoBgeM3:
         if not textos:
             return []
         try:
-            secuencias = [self._truncar(self._tokenizador.codificar(prefijo + t)) for t in textos]
+            secuencias = [
+                truncar_conservando_el_separador_final(
+                    self._tokenizador.codificar(prefijo + t), self._max_length
+                )
+                for t in textos
+            ]
             vectores: list[list[float] | None] = [None] * len(secuencias)
-            for lote in self._lotes_por_presupuesto(secuencias):
+            for lote in agrupar_por_presupuesto_de_tokens(secuencias, self._max_tokens_por_lote):
                 salida = self._sesion.ejecutar([secuencias[i] for i in lote])
                 for indice, vector in zip(lote, self._vectores_del_lote(salida, len(lote))):
                     vectores[indice] = vector
@@ -64,25 +73,6 @@ class NucleoBgeM3:
         except Exception:  # noqa: BLE001 - cualquier fallo del runtime es "modelo no disponible"
             raise FalloDeInferencia(_FALLO) from None
         return [v for v in vectores if v is not None]
-
-    def _truncar(self, ids: list[int]) -> list[int]:
-        """Conserva el token especial final (separador) al recortar, como en la medición de ADR-39."""
-        if len(ids) <= self._max_length:
-            return ids
-        return [*ids[: self._max_length - 1], ids[-1]]
-
-    def _lotes_por_presupuesto(self, secuencias: list[list[int]]) -> list[list[int]]:
-        """Índices agrupados por largo creciente sin pasar del presupuesto de tokens (relleno incluido)."""
-        lotes: list[list[int]] = []
-        actual: list[int] = []
-        for indice in sorted(range(len(secuencias)), key=lambda i: (len(secuencias[i]), i)):
-            if actual and (len(actual) + 1) * len(secuencias[indice]) > self._max_tokens_por_lote:
-                lotes.append(actual)
-                actual = []
-            actual.append(indice)
-        if actual:
-            lotes.append(actual)
-        return lotes
 
     def _vectores_del_lote(self, salida: np.ndarray, tamano: int) -> list[list[float]]:
         """Pooling CLS y normalización L2; una forma o dimensión inesperada rompe el contrato del puerto."""
