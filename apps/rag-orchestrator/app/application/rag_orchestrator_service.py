@@ -66,6 +66,8 @@ class ParametrosDeRecuperacion:
     llm_model: str
     nli_model: str
     prompt_version: str
+    # Corte previo al reranker (RERANKER_MAX_PAIRS): ``None`` = sin corte (adapters falsos sin límite de pares).
+    reranker_max_pairs: int | None = None
 
 
 class RAGOrchestratorService:
