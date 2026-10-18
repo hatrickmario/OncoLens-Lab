@@ -197,6 +197,33 @@ def test_un_milvus_inaccesible_termina_nombrando_milvus_uri_sin_la_uri_ni_el_mot
     assert error.value.__cause__ is None and error.value.__suppress_context__
 
 
+@pytest.mark.ac("US-231b", 9)
+def test_con_pymilvus_real_y_un_puerto_cerrado_ni_el_error_ni_los_logs_ni_la_salida_llevan_la_direccion(
+    ajustes: tuple[MilvusSettings, CorpusDatabaseSettings],
+    caplog: pytest.LogCaptureFixture,
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    _, base = ajustes
+    milvus = MilvusSettings(  # type: ignore[call-arg]
+        _env_file=None,
+        milvus_uri="http://127.0.0.1:1",
+        milvus_connect_timeout_seconds=2,
+        embedding_dim=8,
+        vector_index_type="HNSW",
+        vector_index_params={"M": 16, "efConstruction": 200, "ef": 64},
+        milvus_dense_metric_type="COSINE",
+    )
+    caplog.set_level(0)
+
+    with pytest.raises(CorpusNoDisponibleError) as error:
+        crear_puertos_del_corpus(milvus, base, fabricar_motor=lambda url: MotorFalso(url))
+
+    salida = capfd.readouterr()
+    todo = f"{error.value} {error.value!r} {caplog.text} {salida.out} {salida.err}"
+    assert error.value.variable == "MILVUS_URI"
+    assert "127.0.0.1" not in todo
+
+
 def test_un_cliente_de_milvus_que_no_se_puede_crear_termina_nombrando_milvus_uri(
     ajustes: tuple[MilvusSettings, CorpusDatabaseSettings],
 ) -> None:
