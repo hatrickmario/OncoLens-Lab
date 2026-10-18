@@ -266,4 +266,15 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(entorno.AI_DISCLAIMER_TEXT).toBe('');
     expect(entorno.ANALYSIS_BASIS_S1_ASSUMPTION_TEXT).toBe('');
   });
+
+  it('monta config/pii-formats.json de solo lectura en clinical-api y le pasa las rutas de desidentificación [L1D-203 RN-11]', () => {
+    const servicio = resolver().services['clinical-api'];
+    const formatos = (servicio.volumes ?? []).find((volumen) => /config\/pii-formats\.json$/.test(volumen.source ?? ''));
+
+    expect(servicio.environment.PII_FORMATS_PATH).toBe('/config/pii-formats.json');
+    expect(servicio.environment.PII_MASKS_PATH).toBe('/app/apps/clinical-api/config/pii-masks.json');
+    expect(servicio.environment.PII_NAME_TOKEN_MIN_LENGTH).toBe('');
+    expect(formatos?.target).toBe(servicio.environment.PII_FORMATS_PATH);
+    expect(formatos?.read_only).toBe(true);
+  });
 });

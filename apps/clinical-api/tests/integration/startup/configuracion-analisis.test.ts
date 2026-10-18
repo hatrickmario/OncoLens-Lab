@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 const RAIZ_CLINICAL_API = path.resolve(import.meta.dirname, '../../..');
 const RAIZ_REPO = path.resolve(RAIZ_CLINICAL_API, '../..');
 const CATALOGO_DEL_MONOREPO = path.join(RAIZ_REPO, 'packages/clinical-catalogs');
+const FORMATOS_DE_PII = path.join(RAIZ_REPO, 'config/pii-formats.json');
+const MASCARAS_DE_PII = path.join(RAIZ_CLINICAL_API, 'config/pii-masks.json');
 
 let directorio: string;
 beforeEach(() => {
@@ -35,6 +37,8 @@ function entornoValido(): Record<string, string> {
     CLINICAL_DATABASE_CA_FILE: archivo('pg_ca.crt', 'ca-ficticia'),
     RAG_ORCHESTRATOR_URL: 'http://rag-orchestrator:8000',
     CLINICAL_CATALOG_PATH: CATALOGO_DEL_MONOREPO,
+    PII_FORMATS_PATH: FORMATOS_DE_PII,
+    PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
     ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto sintético de test.',
   };
@@ -61,6 +65,9 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
     ['RAG_TIMEOUT_MS', { RAG_TIMEOUT_MS: '0' }],
     ['AI_DISCLAIMER_TEXT', { AI_DISCLAIMER_TEXT: undefined }],
     ['ANALYSIS_BASIS_S1_ASSUMPTION_TEXT', { ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined }],
+    ['PII_FORMATS_PATH', { PII_FORMATS_PATH: undefined }],
+    ['PII_MASKS_PATH', { PII_MASKS_PATH: undefined }],
+    ['PII_NAME_TOKEN_MIN_LENGTH', { PII_NAME_TOKEN_MIN_LENGTH: '0' }],
   ])(
     'termina con código 1 sin escuchar y su stderr nombra %s cuando la configuración es inválida',
     (variable, cambios) => {
@@ -90,4 +97,43 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
     });
     expect(proceso.stderr).not.toContain('secreto-sin-manifest');
   });
+
+  it.each([
+    ['PII_FORMATS_PATH', 'pii-formats-ausente.json'],
+    ['PII_MASKS_PATH', 'pii-masks-ausente.json'],
+  ])(
+    'termina con código 1 nombrando %s, sin la ruta, cuando el archivo no existe',
+    (variable, nombre) => {
+      const ruta = path.join(directorio, nombre);
+
+      const proceso = arrancarConEntorno({ [variable]: ruta });
+
+      expect(proceso.status).toBe(1);
+      expect(JSON.parse(proceso.stderr.trim())).toEqual({
+        level: 'error',
+        event: 'configuracion_invalida',
+        variable,
+      });
+      expect(proceso.stderr).not.toContain(nombre);
+    },
+  );
+
+  it.each([
+    ['PII_FORMATS_PATH', 'formatos-invalidos.json'],
+    ['PII_MASKS_PATH', 'mascaras-invalidas.json'],
+  ])(
+    'termina con código 1 nombrando %s cuando el archivo existe pero es inválido',
+    (variable, nombre) => {
+      const ruta = archivo(nombre, '{ "version": 1 }');
+
+      const proceso = arrancarConEntorno({ [variable]: ruta });
+
+      expect(proceso.status).toBe(1);
+      expect(JSON.parse(proceso.stderr.trim())).toEqual({
+        level: 'error',
+        event: 'configuracion_invalida',
+        variable,
+      });
+    },
+  );
 });

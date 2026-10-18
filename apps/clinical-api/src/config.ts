@@ -193,6 +193,30 @@ export function readDatabaseConfig(
   };
 }
 
+/** Rutas y umbral de la desidentificación (L1D-203, RN-11, RN-22); el contenido de los archivos lo valida `cargarConfiguracionDePii`. */
+export interface DeidentificationConfig {
+  /** `PII_FORMATS_PATH`: `config/pii-formats.json` de L1D-166 (fuente única de formatos), montado de solo lectura. */
+  formatsPath: string;
+  /** `PII_MASKS_PATH`: reglas de reemplazo (`apps/clinical-api/config/pii-masks.json`). */
+  masksPath: string;
+  /** `PII_NAME_TOKEN_MIN_LENGTH`: longitud mínima de un token de nombre para enmascararlo. */
+  nameTokenMinLength: number;
+}
+
+const DEFAULT_PII_NAME_TOKEN_MIN_LENGTH = 3;
+
+export function readDeidentificationConfig(env: NodeJS.ProcessEnv): DeidentificationConfig {
+  return {
+    formatsPath: leerObligatoria(env, 'PII_FORMATS_PATH'),
+    masksPath: leerObligatoria(env, 'PII_MASKS_PATH'),
+    nameTokenMinLength: readPositiveInteger(
+      env,
+      'PII_NAME_TOKEN_MIN_LENGTH',
+      DEFAULT_PII_NAME_TOKEN_MIN_LENGTH,
+    ),
+  };
+}
+
 export interface EvidenceAnalysisConfig {
   /** Hostname interno de rag-orchestrator en Compose (nunca publicado al host). */
   ragOrchestratorUrl: string;

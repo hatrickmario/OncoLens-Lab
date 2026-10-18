@@ -169,6 +169,11 @@ services:
       RAG_TIMEOUT_MS: ${RAG_TIMEOUT_MS:-}
       AI_DISCLAIMER_TEXT: ${AI_DISCLAIMER_TEXT:-}
       ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: ${ANALYSIS_BASIS_S1_ASSUMPTION_TEXT:-}
+      # Desidentificación (L1D-203, RN-11): formatos de PII de L1D-166 (fuente única, montados de solo lectura) y reglas
+      # de reemplazo de la imagen; vacío = por defecto. Archivos ausentes o inválidos: clinical-api no arranca.
+      PII_FORMATS_PATH: ${PII_FORMATS_PATH:-/config/pii-formats.json}
+      PII_MASKS_PATH: ${PII_MASKS_PATH:-/app/apps/clinical-api/config/pii-masks.json}
+      PII_NAME_TOKEN_MIN_LENGTH: ${PII_NAME_TOKEN_MIN_LENGTH:-}
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
       BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
@@ -186,6 +191,10 @@ services:
       - type: bind
         source: ../../packages/clinical-catalogs
         target: ${CLINICAL_CATALOG_PATH:-/catalogs}
+        read_only: true
+      - type: bind
+        source: ../../config/pii-formats.json
+        target: ${PII_FORMATS_PATH:-/config/pii-formats.json}
         read_only: true
     networks: [clinical-net, ai-net]
     # No depende de rag-orchestrator: con el LLM caído la ficha sigue sirviendo (US-034 AC-4).

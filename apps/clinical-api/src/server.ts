@@ -6,6 +6,7 @@ import {
   exigirAppEnv,
   readAuthConfig,
   readDatabaseConfig,
+  readDeidentificationConfig,
   readEvidenceAnalysisConfig,
   readServiceJwtConfig,
 } from './config.js';
@@ -16,6 +17,7 @@ import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.c
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { cargarConfiguracionDePii } from './modules/evidence-analysis/deidentification/pii-formats.config.js';
 import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
 import { arrancar, registrarConfiguracionInvalida } from './startup.js';
@@ -45,6 +47,8 @@ arrancar({
         database: readDatabaseConfig(process.env, leerArchivo),
         jwt: readServiceJwtConfig(process.env),
         analisis: readEvidenceAnalysisConfig(process.env),
+        // Formatos de PII (L1D-166) y reglas de reemplazo: inválidos o ausentes, no se arranca (RN-11, fallo cerrado).
+        pii: cargarConfiguracionDePii(readDeidentificationConfig(process.env), leerArchivo),
       };
       catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
     } catch (error) {
