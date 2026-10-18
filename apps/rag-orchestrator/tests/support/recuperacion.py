@@ -21,6 +21,7 @@ from app.application.ports import (
     ChunkEncontrado,
     ChunkSearch,
     CorpusChunkStore,
+    FalloDeInferencia,
     Idioma,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
@@ -238,9 +239,11 @@ class RerankerFalso:
         self,
         puntajes: dict[str, dict[str, float]] = PUNTAJES_FX06A,
         error: Exception | None = None,
+        max_pairs: int | None = None,
     ) -> None:
         self._puntajes = puntajes
         self.error = error
+        self.max_pairs = max_pairs
         self.candidatos_recibidos: list[list[str]] = []
 
     @property
@@ -249,6 +252,8 @@ class RerankerFalso:
 
     def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
         self.candidatos_recibidos.append([c.chunk_id for c in candidatos])
+        if self.max_pairs is not None and len(candidatos) > self.max_pairs:
+            raise FalloDeInferencia("reranker falso: más pares que el máximo")
         if self.error is not None:
             raise self.error
         tabla = self._puntajes.get(pregunta, {})

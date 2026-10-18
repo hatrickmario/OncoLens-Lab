@@ -1,6 +1,10 @@
 """Raíz de composición: único lugar que conoce las clases concretas."""
 
+from __future__ import annotations
+
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 
@@ -38,6 +42,11 @@ from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
 
+if (
+    TYPE_CHECKING
+):  # solo para el tipado: importarlo en ejecución cargaría onnxruntime aun con MODEL_PROVIDER=fake
+    from app.infrastructure.models.local import ModelosDeRecuperacion
+
 
 class ConfiguracionDeRecuperacionIncompleta(ValueError):
     """Falta una clave de la recuperación de `/rag/query` (RN-22); el mensaje las nombra, nunca sus valores."""
@@ -55,6 +64,17 @@ class PuertosDeRecuperacion:
     catalogo: CorpusCatalogReader
 
 
+@dataclass(frozen=True)
+class PuertosDelCorpus:
+    """Bordes del corpus (Milvus y schema ``corpus``) que se suman a los modelos para completar la recuperación."""
+
+    buscador: ChunkSearch
+    lector_release: CorpusReleaseReader
+
+
+CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
+
+
 def crear_app(
     settings: Settings,
     *,
@@ -63,8 +83,12 @@ def crear_app(
     clock: Clock | None = None,
     consulta: EvidenceQueryPort | None = None,
     recuperacion: PuertosDeRecuperacion | None = None,
+    corpus: PuertosDelCorpus | None = None,
+    cargador_de_modelos: CargadorDeModelos | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
+    modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
+    recuperacion = recuperacion or _componer_recuperacion(modelos, corpus)
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -81,6 +105,37 @@ def crear_app(
     )
     app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
     return app
+
+
+def _cargar_modelos_segun(
+    settings: Settings, cargador: CargadorDeModelos | None
+) -> ModelosDeRecuperacion | None:
+    """``MODEL_PROVIDER=local``: verifica los pesos y construye los adapters antes de aceptar tráfico.
+
+    Con ``fake`` no se importa ningún runtime de modelos (``onnxruntime``, ``tokenizers``); el import es diferido.
+    """
+    if settings.model_provider == "fake":
+        return None
+    if cargador is None:
+        from app.infrastructure.models.local import cargar_modelos_locales
+
+        cargador = cargar_modelos_locales
+    return cargador(settings)
+
+
+def _componer_recuperacion(
+    modelos: ModelosDeRecuperacion | None, corpus: PuertosDelCorpus | None
+) -> PuertosDeRecuperacion | None:
+    """Modelos reales + corpus (Milvus y catálogo) = los bordes completos; si falta alguno, no hay recuperación."""
+    if modelos is None or corpus is None:
+        return None
+    return PuertosDeRecuperacion(
+        detector_idioma=modelos.detector_idioma,
+        embedder=modelos.embedder_consulta,
+        buscador=corpus.buscador,
+        reranker=modelos.reranker,
+        lector_release=corpus.lector_release,
+    )
 
 
 def _crear_verificador_jwt_de_servicio(settings: Settings, clock: Clock) -> ServiceJwtVerifier:

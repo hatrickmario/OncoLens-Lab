@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TMPDIR=/tmp
 WORKDIR /app
 COPY apps/rag-orchestrator/requirements.txt ./requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --only-binary=:all: -r requirements.txt
 COPY apps/rag-orchestrator/app ./app
 # Usuario sin privilegios; /app queda de root y sin escritura (el Compose añade read_only: true).
 RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin oncolens
