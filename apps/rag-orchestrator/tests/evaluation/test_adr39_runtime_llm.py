@@ -46,12 +46,22 @@ def respuesta_chat(contenido: str = SALIDA_VALIDA) -> httpx.Response:
     )
 
 
-def respuesta_ps(gb: float, gpu: float = 1.0) -> httpx.Response:
-    size = int(gb * 1e9)
+def respuesta_v1(contenido: str = SALIDA_VALIDA) -> httpx.Response:
     return httpx.Response(
         200,
-        json={"models": [{"name": TAG, "model": TAG, "size": size, "size_vram": int(size * gpu)}]},
+        json={
+            "choices": [{"message": {"content": contenido}}],
+            "usage": {"completion_tokens": 50, "prompt_tokens": 300},
+        },
     )
+
+
+def respuesta_ps(gb: float, gpu: float = 1.0, contexto: int | None = 8192) -> httpx.Response:
+    size = int(gb * 1e9)
+    modelo = {"name": TAG, "model": TAG, "size": size, "size_vram": int(size * gpu)}
+    if contexto is not None:
+        modelo["context_length"] = contexto
+    return httpx.Response(200, json={"models": [modelo]})
 
 
 def test_prompts_del_dataset_repite_las_preguntas_con_evidencia_hasta_completar_las_llamadas() -> (
@@ -67,11 +77,11 @@ def test_prompts_del_dataset_repite_las_preguntas_con_evidencia_hasta_completar_
     assert sin_evidencia and all(q.texto not in "".join(prompts) for q in sin_evidencia)  # RN-02
 
 
-def test_chat_ollama_envia_num_ctx_esquema_y_sin_thinking_y_lee_las_metricas_del_runtime() -> None:
+def test_chat_nativo_envia_num_ctx_esquema_y_sin_thinking_y_lee_las_metricas_del_runtime() -> None:
     with respx.mock() as llm, httpx.Client() as http:
         ruta = llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
 
-        llamada = cliente_ollama(http).chat(TAG, "prompt", ESQUEMA_DE_GENERACION)
+        llamada = cliente_ollama(http).chat_nativo(TAG, "prompt", ESQUEMA_DE_GENERACION)
 
     cuerpo = json.loads(ruta.calls[0].request.content)
     assert cuerpo["options"] == {"num_ctx": 8192, "temperature": 0.0, "num_predict": 256}
@@ -82,9 +92,22 @@ def test_chat_ollama_envia_num_ctx_esquema_y_sin_thinking_y_lee_las_metricas_del
     assert llamada.segundos == 0.5
 
 
+def test_chat_de_ollama_usa_la_ruta_v1_de_produccion_sin_think_ni_num_ctx() -> None:
+    with respx.mock(assert_all_called=False) as llm, httpx.Client() as http:
+        v1 = llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
+        nativa = llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+
+        llamada = cliente_ollama(http).chat(TAG, "prompt", ESQUEMA_DE_GENERACION)
+
+    assert v1.call_count == 1 and nativa.call_count == 0
+    cuerpo = json.loads(v1.calls[0].request.content)
+    assert "think" not in cuerpo and "options" not in cuerpo
+    assert llamada.tokens_por_segundo is None  # /v1 no separa la generación: null, nunca 0
+
+
 def test_chat_devuelve_contenido_none_cuando_el_runtime_responde_error() -> None:
     with respx.mock() as llm, httpx.Client() as http:
-        llm.post(f"{BASE}/api/chat").mock(return_value=httpx.Response(500))
+        llm.post(f"{BASE}/v1/chat/completions").mock(return_value=httpx.Response(500))
 
         llamada = cliente_ollama(http).chat(TAG, "prompt", None)
 
@@ -112,12 +135,31 @@ def test_chat_openai_usa_chat_completions_con_response_format_y_toma_los_tokens_
     assert llamada.tokens_generados == 50 and llamada.tokens_por_segundo is None
 
 
+@pytest.mark.parametrize("esquema", [ESQUEMA_DE_GENERACION, None])
+def test_el_cuerpo_v1_del_script_es_el_del_adapter_de_produccion_cuando_se_mide_la_ruta_de_produccion(
+    esquema: dict | None,
+) -> None:
+    from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
+
+    with respx.mock() as llm, httpx.Client() as http:
+        ruta = llm.post(f"{BASE}/v1/chat/completions").mock(
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+        )
+        cliente = runtime_llm.ClienteRuntime(http, BASE, "openai", reloj_de_medio_segundo(), PARAMS)
+
+        cliente.chat(TAG, "prompt", esquema)
+
+    enviado = json.loads(ruta.calls[0].request.content)
+    assert enviado == cuerpo_de_peticion(TAG, "prompt", esquema, 0.0, 256)
+
+
 def test_medir_admision_devuelve_la_mediana_de_las_memorias_residentes_tras_el_prompt_mas_largo() -> (
     None
 ):
     memorias = iter([15.0, 16.0, 15.5])
     with respx.mock() as llm, httpx.Client() as http:
         llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+        llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
         llm.get(f"{BASE}/api/ps").mock(side_effect=lambda _: respuesta_ps(next(memorias)))
 
         memoria = runtime_llm.medir_admision(cliente_ollama(http), TAG, "prompt largo", 3)
@@ -128,6 +170,7 @@ def test_medir_admision_devuelve_la_mediana_de_las_memorias_residentes_tras_el_p
 def test_medir_admision_devuelve_none_cuando_el_runtime_no_informa_el_modelo_cargado() -> None:
     with respx.mock() as llm, httpx.Client() as http:
         llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+        llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
         llm.get(f"{BASE}/api/ps").mock(return_value=httpx.Response(200, json={"models": []}))
 
         assert runtime_llm.medir_admision(cliente_ollama(http), TAG, "p", 3) is None
@@ -137,7 +180,8 @@ def test_medir_admision_devuelve_none_cuando_el_runtime_no_informa_el_modelo_car
 def test_medir_candidato_descarta_por_memoria_sin_hacer_las_llamadas_cuando_supera_21_gb() -> None:
     config = cargar_config()
     with respx.mock() as llm, httpx.Client() as http:
-        chat = llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+        descarga = llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+        carga = llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
         llm.get(f"{BASE}/api/ps").mock(return_value=respuesta_ps(24.0))
         llm.get(f"{BASE}/api/tags").mock(return_value=httpx.Response(200, json={"models": []}))
 
@@ -152,9 +196,8 @@ def test_medir_candidato_descarta_por_memoria_sin_hacer_las_llamadas_cuando_supe
     assert medido["admitido"] is False
     assert medido["memoria_llm_gb"] == 24.0
     assert medido["llamadas"] == 0
-    assert (
-        chat.call_count == config.repeticiones_admision * 2
-    )  # descarga + carga por repetición, ninguna de las 200
+    # descarga (/api/chat) + carga (/v1) por repetición, ninguna de las 200
+    assert (descarga.call_count, carga.call_count) == (config.repeticiones_admision,) * 2
 
 
 @pytest.mark.ac("US-224", 2)
@@ -164,7 +207,10 @@ def test_medir_candidato_mide_json_valido_tokens_por_segundo_y_p95_cuando_es_adm
     config = cargar_config()
     salidas = itertools.cycle([SALIDA_VALIDA, "no es json"])
     with respx.mock() as llm, httpx.Client() as http:
-        llm.post(f"{BASE}/api/chat").mock(side_effect=lambda _: respuesta_chat(next(salidas)))
+        llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
+        llm.post(f"{BASE}/v1/chat/completions").mock(
+            side_effect=lambda _: respuesta_v1(next(salidas))
+        )
         llm.get(f"{BASE}/api/ps").mock(return_value=respuesta_ps(15.0))
         llm.get(f"{BASE}/api/tags").mock(
             return_value=httpx.Response(
@@ -183,7 +229,9 @@ def test_medir_candidato_mide_json_valido_tokens_por_segundo_y_p95_cuando_es_adm
     assert medido["admitido"] is True
     assert medido["digest"] == "2dd70431afed"
     assert medido["json_valido"] == 0.5
-    assert medido["tokens_por_segundo"] == 80.0
+    assert medido["tokens_por_segundo"] == 80.0  # de la muestra nativa (/api/chat)
+    assert medido["rutas"] == runtime_llm.RUTAS_MEDIDAS
+    assert medido["context_length"] == 8192 and medido["aviso_contexto"] is None
     assert medido["p95_ms"] == 500.0
     assert medido["llamadas"] == 10 * config.corridas
     muestra = (tmp_path / "A.jsonl").read_text(encoding="utf-8").splitlines()
@@ -197,18 +245,36 @@ def test_medir_runtime_ollama_registra_gpu_api_openai_y_restriccion_por_esquema(
         llm.get(f"{BASE}/api/version").mock(
             return_value=httpx.Response(200, json={"version": "0.34.4"})
         )
-        llm.post(f"{BASE}/api/chat").mock(return_value=respuesta_chat())
         llm.get(f"{BASE}/api/ps").mock(return_value=respuesta_ps(15.0, gpu=1.0))
-        llm.post(f"{BASE}/v1/chat/completions").mock(
-            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
-        )
+        llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
 
-        medido = runtime_llm.medir_runtime(cliente_ollama(http), http, BASE, "ollama", TAG)
+        medido = runtime_llm.medir_runtime(cliente_ollama(http), http, BASE, "ollama", TAG, 8192)
 
     assert medido["version"] == "0.34.4"
     assert medido["gpu_porcentaje"] == 100.0
     assert medido["api_openai_compatible"] is True
     assert medido["json_restringido_por_runtime"] is True
+    assert medido["context_length"] == 8192 and medido["aviso_contexto"] is None
+
+
+def test_contexto_informado_avisa_cuando_el_servidor_cargo_otro_contexto_que_llm_num_ctx() -> None:
+    with respx.mock() as llm, httpx.Client() as http:
+        llm.get(f"{BASE}/api/ps").mock(return_value=respuesta_ps(15.0, contexto=4096))
+
+        medido = runtime_llm.contexto_informado(cliente_ollama(http), TAG, 8192)
+
+    assert medido["context_length"] == 4096 and medido["num_ctx_esperado"] == 8192
+    assert "4096" in medido["aviso_contexto"] and "8192" in medido["aviso_contexto"]
+
+
+def test_contexto_informado_deja_none_sin_inventar_cifra_cuando_ps_no_trae_context_length() -> None:
+    with respx.mock() as llm, httpx.Client() as http:
+        llm.get(f"{BASE}/api/ps").mock(return_value=respuesta_ps(15.0, contexto=None))
+
+        medido = runtime_llm.contexto_informado(cliente_ollama(http), TAG, 8192)
+
+    assert medido["context_length"] is None  # sin medir, nunca 0 ni el esperado
+    assert "sin medir" in medido["aviso_contexto"]
 
 
 def test_medir_runtime_deja_la_gpu_en_none_con_la_instruccion_manual_cuando_el_runtime_no_la_expone() -> (
@@ -242,10 +308,10 @@ def test_medir_estructuracion_calcula_el_p95_por_documento_sobre_el_texto_de_ver
     with respx.mock() as llm, httpx.Client() as http:
 
         def responder(peticion: httpx.Request) -> httpx.Response:
-            esquema = json.loads(peticion.content)["format"]
-            return respuesta_chat(json.dumps({k: "v" for k in esquema["required"]}))
+            esquema = json.loads(peticion.content)["response_format"]["json_schema"]["schema"]
+            return respuesta_v1(json.dumps({k: "v" for k in esquema["required"]}))
 
-        llm.post(f"{BASE}/api/chat").mock(side_effect=responder)
+        llm.post(f"{BASE}/v1/chat/completions").mock(side_effect=responder)
 
         medido = runtime_llm.medir_estructuracion(cliente_ollama(http), TAG, dataset_ocr, 3)
 

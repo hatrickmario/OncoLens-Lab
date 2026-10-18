@@ -124,7 +124,9 @@ def _cmd_runtime(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> in
     rt = config.runtimes[a.runtime]
     with httpx.Client(timeout=a.plazo_s) as http:
         cliente = _cliente_runtime(config, a.runtime, http)
-        medido = runtime_llm.medir_runtime(cliente, http, rt["base_url"], rt["api"], tag)
+        medido = runtime_llm.medir_runtime(
+            cliente, http, rt["base_url"], rt["api"], tag, config.llm["num_ctx"]
+        )
     escribir_reporte(
         a.out / f"runtime-{a.runtime}.json", {"entorno": _entorno(ahora), "modelo": tag, **medido}
     )
@@ -190,6 +192,12 @@ def _cmd_e2e(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> int:
             a.logs_etapas,
             (lambda: cliente.memoria_residente_gb(tag)) if tag else (lambda: None),
         )
+        # Tras medir el modelo ya está cargado: si /api/ps no lista el tag, el stack corrió con otro LLM_MODEL.
+        if tag and cliente.esta_cargado(tag) is False:
+            sys.stderr.write(
+                f"e2e: el runtime no tiene cargado {tag} (candidato {a.candidato}); reiniciar el stack con su LLM_MODEL\n"
+            )
+            return SALIDA_CONFIG
     escribir_reporte(
         a.out / f"e2e-{etiqueta}.json",
         {"entorno": _entorno(ahora), "perfil": a.pipeline, "candidato": etiqueta, **medido},

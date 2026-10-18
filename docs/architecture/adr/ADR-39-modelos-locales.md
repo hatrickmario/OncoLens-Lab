@@ -392,9 +392,16 @@ el de la estructuración del LLM elegido (`decidir` suma ambos medianas y exige 
 1. **Esquema de validación del JSON.** El script valida contra `ESQUEMA_DE_GENERACION` (el esquema de la salida del LLM del
    S1, `app/application/generation.py`), que es lo que el LLM emite; `RagQueryInternalResponse` es la respuesta del endpoint,
    ensamblada después de validar citas y NLI, y no es lo que el modelo genera.
-2. **Dos rutas HTTP a Ollama.** `llm` y `e2e` usan `/api/chat` (acepta `num_ctx`, `think: false` y entrega `eval_count` y
-   `eval_duration` para tok/s y *prefill*); el adapter de producción usa `/v1/chat/completions`. `runtime` mide la ruta `/v1`
-   (AC-1 b y c). Con vllm-metal no hay desglose de *prefill*/generación (solo `usage`).
+2. **Dos rutas HTTP a Ollama, con paridad de producción (corregido el 2026-10-18, L1D-274).** `runtime`, `llm` (JSON válido,
+   latencia p50/p95, admisión por memoria y estructuración) y el cuerpo de la petición usan la **ruta de producción**:
+   `/v1/chat/completions`, sin `think` ni `num_ctx` por petición, con el cuerpo que construye
+   `cuerpo_de_peticion()` del adapter (`OpenAICompatibleLlmClient`; un test comprueba la igualdad). El contexto lo fija el
+   servidor (`OLLAMA_CONTEXT_LENGTH`): el reporte registra el `context_length` que informa `/api/ps` y un `aviso_contexto`
+   si difiere de `LLM_NUM_CTX` (informativo; `null` = sin medir). `/api/chat` (acepta `think: false`, entrega `eval_count`
+   y `eval_duration`) se usa **solo** para tok/s y *prefill*, sobre una muestra de `llamadas_nativas_por_corrida` por
+   corrida, y el reporte lo rotula en `rutas`. `e2e` no usa `/api/chat`: entra por la BFF y solo lee `/api/ps` para la memoria
+   del LLM y, con `--candidato`, para comprobar que el tag está cargado (si no, sale con código 2 sin reporte). Con
+   vllm-metal no hay desglose de *prefill*/generación (solo `usage`) ni `context_length`.
 3. **Dataset en `data/eval/ocr-mini/`** (la ruta de `tasks.md` y `design.md`), junto a `adr39-mini`, y no en `data/evaluation/`.
    La tipografía del generador debe tener tildes: toma DejaVu Sans (Linux) o Arial (macOS) y falla si no encuentra una; la usada
    queda en el manifiesto.

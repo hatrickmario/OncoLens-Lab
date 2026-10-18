@@ -15,6 +15,29 @@ import httpx
 from app.application.ports import FalloDelLlm
 
 
+def cuerpo_de_peticion(
+    modelo: str,
+    prompt: str,
+    esquema: Mapping[str, Any] | None,
+    temperatura: float,
+    max_tokens: int,
+) -> dict[str, Any]:
+    """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 lo reutiliza para medir la misma ruta."""
+    cuerpo: dict[str, Any] = {
+        "model": modelo,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperatura,
+        "max_tokens": max_tokens,
+        "stream": False,
+    }
+    if esquema is not None:
+        cuerpo["response_format"] = {
+            "type": "json_schema",
+            "json_schema": {"name": "generation_output", "schema": dict(esquema), "strict": True},
+        }
+    return cuerpo
+
+
 class OpenAICompatibleLlmClient:
     """Implementa ``LlmClient``: temperatura de la configuración (0 por defecto), salida restringida por el esquema."""
 
@@ -33,21 +56,9 @@ class OpenAICompatibleLlmClient:
         self._temperature = temperature
 
     async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
-        cuerpo = {
-            "model": self._model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": self._temperature,
-            "max_tokens": self._max_output_tokens,
-            "stream": False,
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "generation_output",
-                    "schema": dict(esquema),
-                    "strict": True,
-                },
-            },
-        }
+        cuerpo = cuerpo_de_peticion(
+            self._model, prompt, esquema, self._temperature, self._max_output_tokens
+        )
         try:
             # `trust_env=False`: un proxy del entorno no puede sacar el prompt del host local (RN-12). El timeout de
             # httpx es por operación; el plazo total (`asyncio.timeout`) corta a un servidor que gotea bytes.
