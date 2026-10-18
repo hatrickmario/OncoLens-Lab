@@ -21,6 +21,7 @@ def test_arranque_falla_nombrando_llm_provider_y_la_bandera_cuando_llm_provider_
     bandera, monkeypatch
 ):
     monkeypatch.setenv("LLM_PROVIDER", "fake")
+    monkeypatch.setenv("LLM_ALLOWED_HOSTS", "url-confidencial.test")
     monkeypatch.setenv("LLM_BASE_URL", URL_CONFIDENCIAL)
     monkeypatch.setenv(bandera, "true")
 

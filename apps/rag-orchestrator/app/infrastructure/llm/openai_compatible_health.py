@@ -1,5 +1,7 @@
 """Sonda del LLM nativo por la API compatible con OpenAI (Ollama, vLLM)."""
 
+import asyncio
+
 import httpx
 
 
@@ -12,8 +14,10 @@ class OpenAICompatibleLlmHealth:
 
     async def esta_disponible(self) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=self._timeout_s) as cliente:
-                respuesta = await cliente.get(self._url)
-        except httpx.HTTPError:
+            # `trust_env=False` (RN-12) y plazo total: la sonda no sale por un proxy del entorno ni se queda colgada.
+            async with asyncio.timeout(self._timeout_s):
+                async with httpx.AsyncClient(timeout=self._timeout_s, trust_env=False) as cliente:
+                    respuesta = await cliente.get(self._url)
+        except (httpx.HTTPError, TimeoutError):
             return False
         return respuesta.status_code < 500

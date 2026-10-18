@@ -13,7 +13,12 @@ SONDA = f"{URL_LLM}/models"
 
 
 def _cliente(**cambios: object) -> TestClient:
-    settings = settings_de_prueba(llm_provider="local", llm_base_url=URL_LLM, **cambios)
+    settings = settings_de_prueba(
+        llm_provider="local",
+        llm_allowed_hosts=("llm-nativo.test",),
+        llm_base_url=URL_LLM,
+        **cambios,
+    )
     sonda = OpenAICompatibleLlmHealth(settings.llm_base_url, settings.llm_health_timeout_ms)
     return TestClient(crear_app(settings, llm_health=sonda, trace_ids=GeneradorTraceFijo()))
 

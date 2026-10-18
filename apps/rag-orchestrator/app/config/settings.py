@@ -4,6 +4,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Annotated, Any, Literal, Self
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
@@ -24,6 +25,7 @@ from app.domain.reglas_proveedor import (
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
+HOSTS_LOCALES_DEL_LLM = ("localhost", "127.0.0.1", "host.docker.internal")
 
 
 class Settings(BaseSettings):
@@ -31,6 +33,8 @@ class Settings(BaseSettings):
 
     app_env: str = "local"
     llm_provider: Literal["local", "fake"] = "local"
+    # RN-12: el LLM solo vive en el equipo (nativo, fuera de Docker). La lista de hosts permitidos es configuración (RN-22).
+    llm_allowed_hosts: Annotated[tuple[str, ...], NoDecode] = HOSTS_LOCALES_DEL_LLM
     llm_base_url: str = "http://host.docker.internal:11434/v1"
     llm_model: str = ""
     llm_health_timeout_ms: int = Field(default=2000, gt=0)
@@ -107,6 +111,30 @@ class Settings(BaseSettings):
         ):
             return {**datos, "modelos": cargar_config_modelos(os.environ)}
         return datos
+
+    @field_validator("llm_allowed_hosts", mode="before")
+    @classmethod
+    def _hosts_del_llm_separados_por_comas(cls, valor: Any) -> Any:
+        return _lista_separada_por_comas(valor)
+
+    @field_validator("llm_base_url")
+    @classmethod
+    def _llm_base_url_en_un_host_local(cls, valor: str, info: ValidationInfo) -> str:
+        """RN-12: ni credenciales ni un host fuera de la lista; el error nombra la clave y NUNCA el valor."""
+        try:
+            url = urlsplit(valor)
+            host = url.hostname
+            credenciales = url.username is not None or url.password is not None
+        except ValueError:
+            raise ValueError("LLM_BASE_URL: no es una URL válida") from None
+        if url.scheme not in ("http", "https") or not host:
+            raise ValueError("LLM_BASE_URL: debe ser una URL http(s) con host")
+        if credenciales:
+            raise ValueError("LLM_BASE_URL: no puede llevar credenciales")
+        permitidos = info.data.get("llm_allowed_hosts", HOSTS_LOCALES_DEL_LLM)
+        if host.lower() not in {h.lower() for h in permitidos}:
+            raise ValueError("LLM_BASE_URL: el host no es local (RN-12); ver LLM_ALLOWED_HOSTS")
+        return valor
 
     @field_validator("model_provider", mode="before")
     @classmethod

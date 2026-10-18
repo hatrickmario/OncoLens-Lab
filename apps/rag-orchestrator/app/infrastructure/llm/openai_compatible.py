@@ -6,6 +6,7 @@ de 200 o un cuerpo sin contenido es ``FalloDelLlm`` sin detalle: ni el prompt ni
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -40,11 +41,14 @@ class OpenAICompatibleLlmClient:
             },
         }
         try:
-            async with httpx.AsyncClient(timeout=self._timeout_s) as cliente:
-                respuesta = await cliente.post(self._url, json=cuerpo)
+            # `trust_env=False`: un proxy del entorno no puede sacar el prompt del host local (RN-12). El timeout de
+            # httpx es por operación; el plazo total (`asyncio.timeout`) corta a un servidor que gotea bytes.
+            async with asyncio.timeout(self._timeout_s):
+                async with httpx.AsyncClient(timeout=self._timeout_s, trust_env=False) as cliente:
+                    respuesta = await cliente.post(self._url, json=cuerpo)
             respuesta.raise_for_status()
             contenido = respuesta.json()["choices"][0]["message"]["content"]
-        except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
+        except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError):
             raise FalloDelLlm("el LLM local no entregó una respuesta utilizable") from None
         if not isinstance(contenido, str):
             raise FalloDelLlm("el LLM local no entregó una respuesta utilizable")

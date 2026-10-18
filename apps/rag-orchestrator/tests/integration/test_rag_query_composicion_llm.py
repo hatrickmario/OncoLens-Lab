@@ -33,6 +33,7 @@ def _puertos() -> PuertosDeRecuperacion:
 def _cliente(*, con_llm_local: bool) -> TestClient:
     settings = settings_de_prueba(
         llm_provider="local",
+        llm_allowed_hosts=("llm-nativo.test",),
         llm_base_url=BASE_LLM,
         llm_model="llm-test@1",
     )
