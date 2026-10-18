@@ -112,6 +112,24 @@ def test_chat_openai_usa_chat_completions_con_response_format_y_toma_los_tokens_
     assert llamada.tokens_generados == 50 and llamada.tokens_por_segundo is None
 
 
+@pytest.mark.parametrize("esquema", [ESQUEMA_DE_GENERACION, None])
+def test_el_cuerpo_v1_del_script_es_el_del_adapter_de_produccion_cuando_se_mide_la_ruta_de_produccion(
+    esquema: dict | None,
+) -> None:
+    from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
+
+    with respx.mock() as llm, httpx.Client() as http:
+        ruta = llm.post(f"{BASE}/v1/chat/completions").mock(
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+        )
+        cliente = runtime_llm.ClienteRuntime(http, BASE, "openai", reloj_de_medio_segundo(), PARAMS)
+
+        cliente.chat(TAG, "prompt", esquema)
+
+    enviado = json.loads(ruta.calls[0].request.content)
+    assert enviado == cuerpo_de_peticion(TAG, "prompt", esquema, 0.0, 256)
+
+
 def test_medir_admision_devuelve_la_mediana_de_las_memorias_residentes_tras_el_prompt_mas_largo() -> (
     None
 ):

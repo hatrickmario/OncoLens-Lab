@@ -15,6 +15,17 @@ import httpx
 from app.application.ports import FalloDelLlm
 
 
+def cuerpo_de_peticion(
+    modelo: str,
+    prompt: str,
+    esquema: Mapping[str, Any] | None,
+    temperatura: float,
+    max_tokens: int,
+) -> dict[str, Any]:
+    """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 lo reutiliza para medir la misma ruta."""
+    raise NotImplementedError
+
+
 class OpenAICompatibleLlmClient:
     """Implementa ``LlmClient``: temperatura de la configuración (0 por defecto), salida restringida por el esquema."""
 
