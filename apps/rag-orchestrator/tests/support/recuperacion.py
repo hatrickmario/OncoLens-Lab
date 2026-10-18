@@ -24,6 +24,8 @@ from app.application.ports import (
     EvidenceGenerator,
     FalloDeInferencia,
     Idioma,
+    NliClassifier,
+    ProhibitedTermsChecker,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
 )
@@ -31,8 +33,9 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.bootstrap import crear_app
+from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.citations import FichaDeFuente
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
@@ -43,7 +46,7 @@ from app.schemas.generated.models import (
     RagQueryInternalRequest,
     RagQueryInternalResponse,
 )
-from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
 from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.service_jwt import con_token_valido
@@ -348,8 +351,31 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
     nli_model="nli-test@1",
+    nli_entailment_threshold=0.7,
     prompt_version="rag-query@test",
 )
+
+
+def puertos_de_recuperacion(
+    clasificador_nli: NliClassifier | None = None,
+    verificador_terminos: ProhibitedTermsChecker | None = None,
+) -> PuertosDeRecuperacion:
+    """Los bordes de la recuperación con adapters falsos; el NLI implica todo y la lista de términos es la real."""
+    from tests.support.nli_falso import (
+        IMPLICA,
+        NliFalso,
+    )  # import diferido: nli_falso importa este módulo
+
+    return PuertosDeRecuperacion(
+        detector_idioma=DetectorIdiomaFalso(),
+        embedder=EmbedderFalso(),
+        buscador=BuscadorFalso(),
+        reranker=RerankerFalso(),
+        lector_release=LectorReleaseFalso(),
+        catalogo=CatalogoFalso(),
+        clasificador_nli=clasificador_nli or NliFalso(por_defecto=IMPLICA),
+        verificador_terminos=verificador_terminos or cargar_verificador_de_terminos(CATALOGOS),
+    )
 
 
 @dataclass
@@ -361,6 +387,7 @@ class EntornoDeRecuperacion:
     buscador: BuscadorFalso
     reranker: RerankerFalso
     generador: EvidenceGenerator
+    clasificador_nli: NliClassifier
     lector_release: LectorReleaseFalso
     catalogo: CatalogoFalso
     servicio: RAGOrchestratorService
@@ -379,6 +406,8 @@ def crear_entorno(
     catalogo: CatalogoFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
     generador: EvidenceGenerator | None = None,
+    clasificador_nli: NliClassifier | None = None,
+    verificador_terminos: ProhibitedTermsChecker | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -386,6 +415,13 @@ def crear_entorno(
     lector_release = lector_release or LectorReleaseFalso()
     catalogo = catalogo or CatalogoFalso()
     generador = generador or FakeEvidenceGenerator()
+    from tests.support.nli_falso import (
+        IMPLICA,
+        NliFalso,
+    )  # import diferido: nli_falso importa este módulo
+
+    clasificador_nli = clasificador_nli or NliFalso(por_defecto=IMPLICA)
+    verificador_terminos = verificador_terminos or cargar_verificador_de_terminos(CATALOGOS)
     servicio = RAGOrchestratorService(
         detector_idioma=detector_idioma or DetectorIdiomaFalso(),
         embedder=embedder,
@@ -394,6 +430,8 @@ def crear_entorno(
         lector_release=lector_release,
         catalogo=catalogo,
         generador=generador,
+        clasificador_nli=clasificador_nli,
+        verificador_terminos=verificador_terminos,
         reloj=RelojFijo(),
         parametros=parametros,
     )
@@ -405,7 +443,15 @@ def crear_entorno(
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
     return EntornoDeRecuperacion(
-        cliente, embedder, buscador, reranker, generador, lector_release, catalogo, servicio
+        cliente,
+        embedder,
+        buscador,
+        reranker,
+        generador,
+        clasificador_nli,
+        lector_release,
+        catalogo,
+        servicio,
     )
 
 

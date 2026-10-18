@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass
 
 from app.application.ports import ResultadoDeRecuperacion
 from app.domain.citations import FichaDeFuente, OpcionDescartada, construir_cita
-from app.domain.option_selection import OpcionValidada
+from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import ChunkPuntuado, top_relevance_score
 from app.schemas.generated.models import (
     ApplicabilitySummary,
@@ -35,7 +35,7 @@ class ChunkCitable:
 
 
 def ensamblar_respuesta_con_evidencia(
-    opciones: Sequence[OpcionValidada],
+    opciones: Sequence[OpcionConRelevancia],
     descartadas: Sequence[OpcionDescartada],
     citables: Mapping[str, ChunkCitable],
     recuperacion: ResultadoDeRecuperacion,
@@ -60,7 +60,7 @@ def ensamblar_respuesta_con_evidencia(
 
 
 def _opcion_con_evidencia(
-    validada: OpcionValidada, citables: Mapping[str, ChunkCitable]
+    validada: OpcionConRelevancia, citables: Mapping[str, ChunkCitable]
 ) -> EvidenceOption:
     """``relevanceScore`` = el del chunk citado más relevante: metadato secundario, no mide la opción (RN-03)."""
     aceptada = validada.aceptada

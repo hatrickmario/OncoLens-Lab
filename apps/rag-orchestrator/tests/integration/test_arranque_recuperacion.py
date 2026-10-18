@@ -12,12 +12,7 @@ from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
     Q_SIN,
-    BuscadorFalso,
-    CatalogoFalso,
-    DetectorIdiomaFalso,
-    EmbedderFalso,
-    LectorReleaseFalso,
-    RerankerFalso,
+    puertos_de_recuperacion,
     solicitud_de,
 )
 from tests.support.service_jwt import con_token_valido
@@ -32,14 +27,7 @@ CLAVES_DE_RECUPERACION = {
 
 
 def _puertos() -> PuertosDeRecuperacion:
-    return PuertosDeRecuperacion(
-        detector_idioma=DetectorIdiomaFalso(),
-        embedder=EmbedderFalso(),
-        buscador=BuscadorFalso(),
-        reranker=RerankerFalso(),
-        lector_release=LectorReleaseFalso(),
-        catalogo=CatalogoFalso(),
-    )
+    return puertos_de_recuperacion()
 
 
 def _settings_locales(**cambios: object):

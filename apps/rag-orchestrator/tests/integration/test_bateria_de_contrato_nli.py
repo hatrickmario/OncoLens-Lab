@@ -95,7 +95,9 @@ def _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de
 def _un_par_con_hipotesis_mas_larga_que_el_maximo_lanza_el_error_del_puerto(
     fabrica: Callable[..., NliClassifier],
 ) -> None:
-    hipotesis_larga = "palabra " * 600  # recortar la hipótesis validaría una afirmación a medias (RN-01)
+    hipotesis_larga = (
+        "palabra " * 600
+    )  # recortar la hipótesis validaría una afirmación a medias (RN-01)
 
     with pytest.raises(FalloDeInferencia):
         fabrica().clasificar([ParNli(premisa="premisa corta", hipotesis=hipotesis_larga)])
@@ -126,7 +128,11 @@ def _combinaciones() -> list[object]:
     casos: list[object] = []
     for nombre, fabrica in FABRICAS.items():
         for verificacion in BATERIA:
-            if nombre == "real-con-pesos" and verificacion is _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de_la_hipotesis:
+            if (
+                nombre == "real-con-pesos"
+                and verificacion
+                is _el_fallo_del_modelo_lanza_el_error_del_puerto_sin_texto_de_la_premisa_ni_de_la_hipotesis
+            ):
                 continue
             marcas = [pytest.mark.models] if nombre == "real-con-pesos" else []
             casos.append(

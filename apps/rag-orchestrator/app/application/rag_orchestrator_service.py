@@ -27,6 +27,8 @@ from app.application.ports import (
     EvidenciaGenerada,
     Idioma,
     LanguageDetector,
+    NliClassifier,
+    ProhibitedTermsChecker,
     QueryEmbedder,
     ReleaseDelCorpus,
     Reranker,
@@ -38,7 +40,7 @@ from app.application.respuesta_con_evidencia import (
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.citations import OpcionAceptada, validar_citas
-from app.domain.option_selection import OpcionValidada, recortar_a_max_opciones
+from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
@@ -80,15 +82,16 @@ class ParametrosDeRecuperacion:
     llm_provider: LlmProvider
     llm_model: str
     nli_model: str
+    nli_entailment_threshold: float
     prompt_version: str
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
 
 
-def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionValidada:
+def _con_relevancia(aceptada: OpcionAceptada, puntajes: Mapping[str, float]) -> OpcionConRelevancia:
     """La opción con la relevancia y la cita principal que hereda de su chunk citado más relevante (RN-03)."""
     relevancia = relevancia_de_opcion(aceptada.chunk_ids_validos, puntajes)
-    return OpcionValidada(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
+    return OpcionConRelevancia(aceptada, relevancia.relevance_score, relevancia.chunk_principal_id)
 
 
 class RAGOrchestratorService:
@@ -102,6 +105,8 @@ class RAGOrchestratorService:
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
         generador: EvidenceGenerator,
+        clasificador_nli: NliClassifier,
+        verificador_terminos: ProhibitedTermsChecker,
         reloj: Clock,
         parametros: ParametrosDeRecuperacion,
     ) -> None:
@@ -112,6 +117,8 @@ class RAGOrchestratorService:
         self._lector_release = lector_release
         self._catalogo = catalogo
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
+        self._clasificador_nli = clasificador_nli
+        self._verificador_terminos = verificador_terminos
         self._reloj = reloj
         self._parametros = parametros
 
@@ -172,7 +179,7 @@ class RAGOrchestratorService:
         aceptadas: Sequence[OpcionAceptada],
         citables: dict[str, ChunkCitable],
         solicitud: RagQueryInternalRequest,
-    ) -> tuple[OpcionValidada, ...]:
+    ) -> tuple[OpcionConRelevancia, ...]:
         """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
         validadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]

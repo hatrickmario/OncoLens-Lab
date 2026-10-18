@@ -13,6 +13,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 RAIZ_REPOSITORIO = Path(__file__).resolve().parents[4]
+CATALOGOS = RAIZ_REPOSITORIO / "packages" / "clinical-catalogs"
 PROVEEDOR = "rag-orchestrator"
 
 _spec: dict[str, Any] | None = None

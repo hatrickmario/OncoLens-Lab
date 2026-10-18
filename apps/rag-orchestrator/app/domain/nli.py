@@ -41,6 +41,22 @@ class IndicesDeClase:
 
 
 @dataclass(frozen=True)
+class ParNli:
+    """Premisa (texto del corpus) e hipótesis (afirmación a verificar). Nunca ``clinicalContext`` ni identidad (RN-11)."""
+
+    premisa: str
+    hipotesis: str
+
+
+@dataclass(frozen=True)
+class ResultadoNli:
+    """Clase más probable y probabilidad de ``entailment`` ya en [0, 1]; jamás ``None`` (RN-01: ausente no es 0.0)."""
+
+    label: EtiquetaNli
+    p_entailment: float
+
+
+@dataclass(frozen=True)
 class ProbabilidadesNli:
     entailment: float
     neutral: float

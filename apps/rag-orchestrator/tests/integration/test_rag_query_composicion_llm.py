@@ -13,12 +13,7 @@ from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import (
     Q_HER2,
-    BuscadorFalso,
-    CatalogoFalso,
-    DetectorIdiomaFalso,
-    EmbedderFalso,
-    LectorReleaseFalso,
-    RerankerFalso,
+    puertos_de_recuperacion,
     solicitud_de,
 )
 from tests.support.service_jwt import con_token_valido
@@ -31,14 +26,7 @@ CONTENIDO_OK = '{"options":[{"option":"Opción","rationale":"Razón","citedChunk
 
 
 def _puertos() -> PuertosDeRecuperacion:
-    return PuertosDeRecuperacion(
-        detector_idioma=DetectorIdiomaFalso(),
-        embedder=EmbedderFalso(),
-        buscador=BuscadorFalso(),
-        reranker=RerankerFalso(),
-        lector_release=LectorReleaseFalso(),
-        catalogo=CatalogoFalso(),
-    )
+    return puertos_de_recuperacion()
 
 
 def _cliente(*, con_llm_local: bool) -> TestClient:

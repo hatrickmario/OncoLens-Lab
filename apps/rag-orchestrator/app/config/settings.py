@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     # RN-21: CC BY-NC solo en el MVP académico; sin esta clave el cargador de datasets la rechaza.
     allow_cc_by_nc: bool = False
     fake_responses_path: Path = Path("/contracts/examples")
+    # Catálogos versionados montados de solo lectura (lista de términos prohibidos, RN-23); sin valor por defecto en código.
+    clinical_catalog_path: Path | None = None
     # JWT de servicio (US-054): la vida máxima y la tolerancia de reloj se calibran; la clave pública es de L1D-165.
     service_jwt_ttl_seconds: int = Field(default=60, gt=0)
     service_jwt_clock_skew_seconds: int = Field(default=5, ge=0)
@@ -54,6 +56,8 @@ class Settings(BaseSettings):
     rerank_top_n: int | None = Field(default=None, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)
+    # Probabilidad mínima de `entailment` que cuenta como soporte (RN-01, RN-22, L1D-180); la calibra la evaluación (US-072).
+    nli_entailment_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
     # Etiquetas que viajan en `meta` (el NLI y el prompt los usan los changes de generación y soporte).
     nli_model: str | None = None
     prompt_version: str | None = None
@@ -132,6 +136,8 @@ class Settings(BaseSettings):
         "nli_label_index_entailment",
         "nli_label_index_neutral",
         "nli_label_index_contradiction",
+        "nli_entailment_threshold",
+        "clinical_catalog_path",
         "nli_model",
         "prompt_version",
         mode="before",
