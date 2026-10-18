@@ -63,3 +63,8 @@ Contrato `EvidenceAnalysis` y esquema congelados (PRD §18 CAP de caso → opcio
 - Aprobar o ajustar las propuestas del punto 3 (ninguna aplicada).
 - Mergear el PR de este cierre (`sprint/S1-close`); el milestone de Linear lo cierra el humano.
 - Tareas humanas: ver `S1-pendientes-humanos.md` (oncólogos L1D-238, mediciones L1D-274, protección de `main`, etc.).
+
+## 5. Arrastre al S2 y Post-MVP fuera de Linear (2026-10-18)
+
+- `backlog/sprints/S2-arrastre.md`: 6 tarjetas de arrastre (25 puntos) aprobadas por el usuario con prioridades; las 12 historias del S1 en In Review no pasan a Done hasta cerrar su tarjeta.
+- `backlog/sprints/V2-Post-MVP.md`: 80 historias (29 Post-MVP y 51 de «si hay capacidad», 295 puntos) pasan a Markdown para liberar cupo en Linear. El humano las archiva en Linear (reversible); luego se crean las issues de `S2-arrastre.md`.
