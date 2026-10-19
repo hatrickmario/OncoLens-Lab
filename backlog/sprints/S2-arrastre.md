@@ -11,7 +11,7 @@
 | ARR-02 | L1D-278 | E2E y visual-check ejecutables (D-3 + D-2) | 8 | **Alta** | L1D-197, 139, 140, 193, 194 |
 | ARR-03 | L1D-279 | OL-06 sobre lo ya implementado (con US-072) | 3 | **Alta** | L1D-180, 275, 115, 193 |
 | ARR-04 | L1D-280 | Mediciones de ADR-39 fase B en el MacBook de referencia | 3 | **Alta (temprana)** | L1D-274 y US-231a/b (AC con `models`) |
-| ARR-05 | L1D-281 | Baseline manual VM-1/VM-2 con los oncólogos | 3 | Media | L1D-238 |
+| ARR-05 | L1D-281 | Baseline manual VM-1/VM-2 con los oncólogos (movida: antes de G-Demo) | 3 | Media | L1D-238 |
 | ARR-06 | L1D-282 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
 
 Total: 25 puntos de arrastre.
@@ -79,6 +79,8 @@ Total: 25 puntos de arrastre.
 **Dependencias:** modelos descargados en `MODEL_HOST_DIR` (con el `ls` previo por `model.onnx.data`). **Desbloquea:** L1D-274, US-231a/b.
 
 ## ARR-05 · Baseline manual VM-1/VM-2 con los oncólogos
+
+> **Decisión 88 (usuario, 2026-10-19):** los primeros sprints usan la simulación académica como baseline; las sesiones reales se mueven a un sprint posterior, **antes de G-Demo (S5)**, y el baseline se ajustará entonces. Esta tarjeta deja de ser del S2: milestone a decidir en el refinamiento (propuesta: S4).
 
 > Linear: [L1D-281](https://linear.app/l1der-lab-mjbc/issue/L1D-281) · Prioridad Media (depende de la agenda) · Est. 3 · Origen: L1D-238 (3.1 a 3.5), DEC-02, decisión 81.
 
