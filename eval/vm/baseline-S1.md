@@ -1,7 +1,7 @@
 # Baseline manual de VM-1 y VM-2 — S1
 
 > **SIMULACIÓN ACADÉMICA DE ENTRADA — no son mediciones con oncólogos.**
-> Las 12 sesiones de `eval/vm/baseline-S1.csv` son una simulación: el repositorio no permite confirmar que se entregaron PDFs, que hubo sesiones humanas, que las justificaciones se guardaron fuera del repo ni que se hizo la validación ciega de VM-2 (la columna `validada` no tiene evaluador independiente).
+> Las 12 sesiones de `eval/vm/baseline-S1.csv` son una simulación: el repositorio no permite confirmar que se entregaron PDFs, que hubo sesiones humanas ni que las justificaciones se guardaron fuera del repo. La columna `validada` se revisó de forma independiente el 2026-10-19 (tarea 3.3b: 4 pares caso–fuente, los cuatro `validada=si`), pero esa revisión se hizo sobre tiempos simulados.
 > Estas medianas **solo comprueban la mecánica del cálculo**. No deben usarse para comparar con OncoLens, para fijar metas ni como evidencia de VM-1/VM-2 (DEC-02). Las sesiones reales con los oncólogos asesores siguen pendientes en L1D-281 (ARR-05) y la cohorte real se mide después de G-Piloto (US-152).
 > Reporte generado con `python -m app.evaluation.vm baseline --fecha 2026-10-18` (dos ejecuciones con la misma fecha dieron salidas idénticas byte a byte); este aviso se añadió a mano debajo del título y no lo regenera el CLI.
 
