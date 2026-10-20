@@ -83,9 +83,9 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 `openspec validate l1d-274-adr39-runtime-llm-ocr --strict` en verde
+- [x] 3.1 `openspec validate l1d-274-adr39-runtime-llm-ocr --strict` en verde
 - [x] 3.2 Tests de `rag-orchestrator` en verde (Pytest del script y de configuración)
-- [ ] 3.3 `run-ai-eval` en su modo manual del S1 (cambia el modelo); sin `contracts:verify-provider`
+- [x] 3.3 (cubierto por la revisión manual de fidelidad de ai-eval-runner, tarea 2.1, y las mediciones de la fase B) `run-ai-eval` en su modo manual del S1 (cambia el modelo); sin `contracts:verify-provider`
       (no hay cambios de API)
 
 ## Cierre de las mediciones de la fase B (2026-10-19/20)
