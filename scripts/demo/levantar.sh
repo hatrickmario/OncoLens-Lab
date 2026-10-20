@@ -16,6 +16,10 @@ export LLM_MODEL="${LLM_MODEL:-gemma4:26b-a4b-it-q4_K_M}"
 # Paciente semilla (a): idSembrado('paciente-a'); ruta de inicio tras el login.
 PACIENTE_SEMILLA="0fd028e2-f8b0-56c7-a748-2a4e473d879d"
 export WEB_HOME_PATH="/pacientes/${PACIENTE_SEMILLA}/analisis"
+# Plazos del demo (RN-22): el p95 de 15 s del NFR no se cumple con consultas variadas (ADR-39 fase B) y una pregunta larga
+# vence a los 30 s con DEADLINE_VENCIDO. El del web debe ser mayor que el de clinical-api hacia rag-orchestrator.
+export RAG_TIMEOUT_MS="${RAG_TIMEOUT_MS:-90000}"
+export WEB_UPSTREAM_TIMEOUT_MS="${WEB_UPSTREAM_TIMEOUT_MS:-100000}"
 compose=(docker compose -f "$raiz/infra/docker/docker-compose.yml")
 estado="${TMPDIR:-/tmp}/oncolens-demo"
 mkdir -p "$estado"
@@ -35,6 +39,9 @@ mem_docker_gb=$(docker info --format '{{.MemTotal}}' | awk '{printf "%d", $1/107
 
 paso "Ollama (contexto 8192, flash attention)"
 if curl -fsS -m 2 http://127.0.0.1:11434/api/version >/dev/null 2>&1; then
+  if pgrep -f "Ollama.app/Contents/Resources/ollama serve" >/dev/null; then
+    fallar "la app de Ollama está abierta y usa su propio contexto (32768), no el de ADR-39 (8192): ciérrala (icono de la barra de menú > Quit Ollama) y repite"
+  fi
   echo "Ollama ya responde: debe haberse iniciado con OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 (ADR-39)"
 else
   OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1 nohup ollama serve >"$estado/ollama.log" 2>&1 &
@@ -43,6 +50,16 @@ else
   curl -fsS -m 2 http://127.0.0.1:11434/api/version >/dev/null || fallar "Ollama no arrancó (ver $estado/ollama.log)"
 fi
 ollama list | awk 'NR>1{print $1}' | grep -qx "$LLM_MODEL" || fallar "falta el modelo: ollama pull $LLM_MODEL"
+
+paso "Modelo en memoria (se comprueba el contexto de 8192)"
+curl -fsS -m 300 http://127.0.0.1:11434/api/generate \
+  -d "{\"model\":\"$LLM_MODEL\",\"prompt\":\"hola\",\"stream\":false,\"think\":false,\"options\":{\"num_predict\":1}}" >/dev/null \
+  || fallar "no pude cargar $LLM_MODEL en Ollama"
+contexto=$(curl -fsS -m 5 http://127.0.0.1:11434/api/ps | python3 -c "
+import json, sys
+modelos = [m for m in json.load(sys.stdin).get('models', []) if sys.argv[1] in (m.get('name'), m.get('model'))]
+print(modelos[0].get('context_length', '') if modelos else '')" "$LLM_MODEL")
+[ "$contexto" = "8192" ] || fallar "Ollama cargó $LLM_MODEL con contexto '${contexto:-desconocido}' y no 8192 (ADR-39): reinícialo con OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1"
 
 paso "Secretos y configuración"
 "$raiz/scripts/setup-secrets.sh" >/dev/null
