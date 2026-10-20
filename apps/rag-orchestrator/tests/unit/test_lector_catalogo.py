@@ -47,6 +47,8 @@ def test_ficha_de_fila_devuelve_none_y_no_cadena_vacia_cuando_el_catalogo_no_reg
 
 
 def test_ficha_de_fila_copia_la_url_de_la_fuente_cuando_el_catalogo_la_registra():
-    ficha = ficha_de_fila({**FILA, "source_url": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"})
+    ficha = ficha_de_fila(
+        {**FILA, "source_url": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"}
+    )
 
     assert ficha.source_url == "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"

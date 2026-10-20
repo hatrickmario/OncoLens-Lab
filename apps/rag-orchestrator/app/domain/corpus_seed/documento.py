@@ -43,3 +43,5 @@ class DocumentoDeSemilla:
     texto: str | None = None
     ruta_texto: str | None = None
     url_fuente: str | None = None
+    # URL pública del documento original de donde se extrajo el texto; se guarda en el catálogo y la UI la enlaza (RN-25).
+    url_original: str | None = None

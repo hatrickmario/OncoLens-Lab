@@ -52,7 +52,9 @@ def test_la_ficha_devuelve_la_url_de_la_fuente_guardada_en_el_catalogo(motor: En
     )
     CorpusDocumentRepository(motor).guardar_documento(registro_de_prueba("doc-sin-url@abcdef"))
 
-    fichas = LectorCatalogoPostgres(motor).fichas_por_documento({"doc-url@abcdef", "doc-sin-url@abcdef"})
+    fichas = LectorCatalogoPostgres(motor).fichas_por_documento(
+        {"doc-url@abcdef", "doc-sin-url@abcdef"}
+    )
 
     assert fichas["doc-url@abcdef"].source_url == url
     assert fichas["doc-sin-url@abcdef"].source_url is None

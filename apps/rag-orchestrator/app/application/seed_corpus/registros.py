@@ -142,6 +142,7 @@ def _registro(
         ingested_at=ahora,
         last_checked_at=ahora,
         status=status,
+        source_url=documento.url_original,
     )
 
 

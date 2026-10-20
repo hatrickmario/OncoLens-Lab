@@ -494,6 +494,7 @@ erDiagram
         jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
         string metadata_source "fuente_estructurada|extraido_verificado"
         string guideline_version "nullable"
+        string source_url "nullable; URL https del documento original (ARR-07)"
         date last_updated_at "nullable"
         string original_format "jats_xml|xml|pdf|html"
         string object_key_raw "corpus-raw"
@@ -1099,6 +1100,7 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible |
 | `metadata_source` | text |  | fuente_estructurada\|extraido_verificado |
 | `guideline_version` | text |  | nullable |
+| `source_url` | text |  | nullable; URL pública (https) del documento original de donde se extrajo el texto; la UI la enlaza en «Fragmento citado» (ARR-07) |
 | `last_updated_at` | date |  | nullable |
 | `original_format` | text |  | jats_xml\|xml\|pdf\|html |
 | `object_key_raw` | text |  | corpus-raw |

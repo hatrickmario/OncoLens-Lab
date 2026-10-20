@@ -23,6 +23,7 @@ documentos:
   study_design: guia
   population: adulto
   original_format: html
+  original_url: https://www.cancer.gov/types/breast/hp/breast-treatment-pdq
   license: Texto de NCI libre de copyright
   license_url: https://www.cancer.gov/policies/copyright-reuse
   license_verified_at: '2026-10-16'
@@ -44,6 +45,7 @@ documentos:
   study_design: guia
   population: adulto
   original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/seno/tratamiento-mama
   license: Texto de NCI libre de copyright
   license_url: https://www.cancer.gov/policies/copyright-reuse
   license_verified_at: '2026-10-16'
@@ -65,6 +67,7 @@ documentos:
   study_design: guia
   population: adulto
   original_format: html
+  original_url: https://www.cancer.gov/types/prostate/hp/prostate-treatment-pdq
   license: Texto de NCI libre de copyright
   license_url: https://www.cancer.gov/policies/copyright-reuse
   license_verified_at: '2026-10-16'
@@ -86,6 +89,7 @@ documentos:
   study_design: guia
   population: adulto
   original_format: html
+  original_url: https://www.cancer.gov/espanol/tipos/prostata/paciente/tratamiento-prostata-pdq
   license: Texto de NCI libre de copyright
   license_url: https://www.cancer.gov/policies/copyright-reuse
   license_verified_at: '2026-10-16'
@@ -108,6 +112,7 @@ documentos:
   study_design: guia
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12384589/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'
@@ -129,6 +134,7 @@ documentos:
   study_design: eca
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13339100/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'
@@ -152,6 +158,7 @@ documentos:
   study_design: revision_sistematica
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13607463/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'
@@ -175,6 +182,7 @@ documentos:
   study_design: revision_sistematica
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13456578/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'
@@ -197,6 +205,7 @@ documentos:
   study_design: revision_sistematica
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12832964/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'
@@ -220,6 +229,7 @@ documentos:
   study_design: revision_sistematica
   population: adulto
   original_format: jats_xml
+  original_url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13223009/fullTextXML
   license: CC BY 4.0
   license_url: https://creativecommons.org/licenses/by/4.0/
   license_verified_at: '2026-10-16'

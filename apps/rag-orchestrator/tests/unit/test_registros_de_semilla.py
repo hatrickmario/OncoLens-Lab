@@ -134,7 +134,9 @@ def test_la_clase_de_licencia_del_dominio_coincide_con_la_del_contrato_generado(
 
 
 def test_el_registro_embebido_copia_la_url_original_del_documento_en_source_url() -> None:
-    documento = documento_de_prueba(url_original="https://www.cancer.gov/types/breast/hp/breast-treatment-pdq")
+    documento = documento_de_prueba(
+        url_original="https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
+    )
 
     registro = registro_embebido(documento, ADMITIDO, CHECKSUM, AHORA)
 
