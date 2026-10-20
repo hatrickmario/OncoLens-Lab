@@ -144,6 +144,12 @@ describe('docker-compose.yml', () => {
     expect(Object.keys(entorno).filter((nombre) => nombre.startsWith('NEXT_PUBLIC_'))).toEqual([]);
   });
 
+  it('web recibe WEB_HOME_PATH del entorno y resuelve a vacío si no se fija', () => {
+    const fijada = resolver({ entorno: { WEB_HOME_PATH: '/pacientes/p/analisis' } }).services.web.environment;
+    expect(fijada.WEB_HOME_PATH).toBe('/pacientes/p/analisis');
+    expect(resolver().services.web.environment.WEB_HOME_PATH).toBe('');
+  });
+
   it('falla nombrando ambos servicios cuando un override cambia el SERVICE_JWT_TTL_SECONDS de rag-orchestrator [US-054 AC-5]', () => {
     const config = resolver({ override: 'services:\n  rag-orchestrator:\n    environment:\n      SERVICE_JWT_TTL_SECONDS: "3600"\n' });
     expect(() => assertTtlDelJwtCompartido(config)).toThrow(/clinical-api.*rag-orchestrator/);
