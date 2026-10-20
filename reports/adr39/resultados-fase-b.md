@@ -36,7 +36,7 @@ Reglas: fidelidad ≥ 0,90 · salidas prescriptivas = 0 (RN-23) · salidas en ot
 Salvedades: n = 20 por candidato (los IC son amplios); una sola revisora automática (sonnet), no un oncólogo; las salidas se asociaron a su pregunta por posición. Casos límite dejados como fieles: C1, B9, E20, B20.
 
 ## E2E `POST /platform/evidence-analyses` (entrando por el web, `/api/evidence-analyses`), stack completo
-Stack: Compose real (postgres, milvus, clinical-api, rag-orchestrator con BGE-M3 int8, bge-reranker-v2-m3 int8 y mDeBERTa fp32 en CPU, web), corpus semilla de 10 documentos (292 chunks), paciente semilla `a`, usuario `doc1`; 3 corridas × 30 consultas; Docker 13 GB / 8 vCPU. Etapas: "no desglosado" (el pipeline no registra tiempos por etapa).
+Stack: Compose real (postgres, milvus, clinical-api, rag-orchestrator con BGE-M3 int8, bge-reranker-v2-m3 int8 y mDeBERTa fp32 en CPU, web), corpus semilla de 10 documentos (310 chunks), paciente semilla `a`, usuario `doc1`; 3 corridas × 30 consultas; Docker 13 GB / 8 vCPU. Etapas: "no desglosado" (el pipeline no registra tiempos por etapa).
 | Cand. | Errores | p50 / p95 total (s) | LLM (ollama ps) | Docker pico | Stack (LLM + Docker) ≤ 30 | Swap creciente | NFR-01 p95 ≤ 15 s |
 |---|---|---|---|---|---|---|---|
 | B | 0/90 | 18,05 / 18,36 | 10,8 GB | 11,8 GB | 22,6 GB | no | **no cumple (+3,4 s)** |
