@@ -34,3 +34,33 @@ scripts/demo/apagar.sh       # detiene el stack y el Ollama que arrancó el scri
 - `rag-orchestrator` sale al arrancar nombrando una variable → ejecuta de nuevo `scripts/demo/levantar.sh` (crea la colección de Milvus antes del arranque final).
 - Análisis lento o error 5xx → `ollama ps` (¿está G cargado al 100 % GPU?) y `docker logs oncolens-rag-orchestrator-1`.
 - Memoria justa → cierra otras apps; `scripts/demo/apagar.sh` libera Docker y Ollama.
+
+## 6. Ver qué entró a Milvus (corpus)
+La colección `corpus_chunks` guarda **310 chunks** de los 10 documentos semilla: `document_id`, `chunk_text`, `chunk_index`, `section`, `source_type`, `language`, `population`, `study_design`, `published_year`, `is_current`, `created_at` y los vectores `dense` (1024) y `sparse`. El catálogo (documentos y licencias) está en PostgreSQL, schema `corpus`; los textos originales, en `data/raw/seed/docs/`. Milvus no publica puerto al host (solo `web` lo hace), así que se consulta de tres formas, con el stack arriba:
+
+**a) Interfaz gráfica (Attu), solo en tu máquina y mientras la uses:**
+```bash
+docker run -d --name attu --network oncolens_ai-net -p 127.0.0.1:8000:3000 \
+  -e MILVUS_URL=milvus-standalone:19530 zilliz/attu:v2.6.1
+# http://127.0.0.1:8000 -> Connect (sin "Authentication") -> Database -> default -> corpus_chunks -> Data / Schema
+docker rm -f attu          # al terminar: vuelve a cumplirse "solo web publica puerto"
+```
+Usa **`v2.6.1`**, compatible con Milvus 2.6.25. La imagen `latest` (sept. 2026) respondía `401 Authentication required` en todas las rutas y la página no cargaba. En **Data**, oculta las columnas de vectores y filtra, por ejemplo, con `document_id == "nci-mama-hp-en"` o `is_current == true`.
+
+**b) Por terminal, sin abrir puertos:**
+```bash
+docker exec oncolens-rag-orchestrator-1 python -c "
+from pymilvus import MilvusClient
+c = MilvusClient(uri='http://milvus-standalone:19530')
+print(c.list_collections(), c.get_collection_stats('corpus_chunks'))
+for x in c.query('corpus_chunks', filter='is_current == true',
+        output_fields=['document_id','chunk_index','section','language','published_year','chunk_text'], limit=5):
+    print({k: (v[:150] if isinstance(v, str) else v) for k, v in x.items()})
+"
+```
+
+**c) Catálogo en PostgreSQL:**
+```bash
+docker exec -u postgres oncolens-postgres-1 psql -d oncolens -c '\dt corpus.*'
+docker exec -u postgres oncolens-postgres-1 psql -d oncolens -c '\d corpus.corpus_document'
+```
