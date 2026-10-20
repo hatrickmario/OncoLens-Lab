@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { CitedFragment } from '../../components/molecules/cited-fragment';
 import { conEvidencia } from '../support/msw/evidence-analyses';
 import { evidence } from '../support/panel-ui';
 
-const cita = conEvidencia.evidenceOptions[0]!.citedSources[0]!;
+const cita = conEvidencia.evidenceOptions[0]!.citedSources[0]! as CitedSource;
 
 describe('CitedFragment', () => {
   afterEach(cleanup);

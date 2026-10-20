@@ -90,7 +90,8 @@ describe('EvidencePanel', () => {
     'muestra No disponible en lugar del enlace en el Fragmento citado cuando la fuente no registra URL (%s) [ARR-07 AC-4]',
     async (sourceUrl) => {
       const sinUrl = structuredClone(conEvidencia);
-      sinUrl.evidenceOptions[0]!.citedSources[0]!.sourceUrl = sourceUrl;
+      (sinUrl.evidenceOptions[0]!.citedSources[0]! as { sourceUrl: string | null }).sourceUrl =
+        sourceUrl;
       bff.responder({ status: 200, cuerpo: sinUrl });
       const usuario = await analizar();
       await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
