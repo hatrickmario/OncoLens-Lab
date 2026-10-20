@@ -153,6 +153,7 @@ class ClienteRuntime:
             esquema,
             self._params["temperature"],
             self._params["max_output_tokens"],
+            razonar=bool(self._params.get("thinking", False)),
         )
         r = self._http.post(f"{self._base}/v1/chat/completions", json=cuerpo)
         r.raise_for_status()

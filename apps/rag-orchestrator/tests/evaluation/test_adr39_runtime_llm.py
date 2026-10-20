@@ -151,6 +151,19 @@ def test_el_cuerpo_v1_del_script_es_el_del_adapter_de_produccion_cuando_se_mide_
 
     enviado = json.loads(ruta.calls[0].request.content)
     assert enviado == cuerpo_de_peticion(TAG, "prompt", esquema, 0.0, 256)
+    assert enviado["reasoning_effort"] == "none"
+
+
+def test_chat_openai_no_envia_reasoning_effort_cuando_la_configuracion_activa_el_thinking() -> None:
+    with respx.mock() as llm, httpx.Client() as http:
+        ruta = llm.post(f"{BASE}/v1/chat/completions").mock(return_value=respuesta_v1())
+        cliente = runtime_llm.ClienteRuntime(
+            http, BASE, "openai", reloj_de_medio_segundo(), {**PARAMS, "thinking": True}
+        )
+
+        cliente.chat(TAG, "prompt", ESQUEMA_DE_GENERACION)
+
+    assert "reasoning_effort" not in json.loads(ruta.calls[0].request.content)
 
 
 def test_medir_admision_devuelve_la_mediana_de_las_memorias_residentes_tras_el_prompt_mas_largo() -> (
