@@ -28,3 +28,6 @@ infra/docker/.env
 infra/docker/secrets/
 .ci-tools/
 .venv-codegen/
+
+# Estado local de la ejecución de cada sprint (lo escribe el orquestador; no se versiona)
+backlog/sprints/*-status.md
