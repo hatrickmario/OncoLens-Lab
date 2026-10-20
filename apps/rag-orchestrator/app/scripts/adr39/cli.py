@@ -42,6 +42,11 @@ def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="python -m app.scripts.adr39", description=__doc__)
     p.add_argument("subcomando", choices=["runtime", "llm", "e2e", "ocr", "decidir"])
     p.add_argument("--config", type=Path, default=RUTA_CONFIG_POR_DEFECTO)
+    p.add_argument(
+        "--bff",
+        action="store_true",
+        help="e2e: entrar por las rutas del web (/api/auth/login, /api/evidence-analyses) en vez de las de clinical-api",
+    )
     p.add_argument("--runs", type=int, help="corridas (por defecto, las de la configuración)")
     p.add_argument(
         "--raiz", type=Path, default=raiz_repo(), help="raíz del repo o del volumen con data/eval"
@@ -176,12 +181,19 @@ def _cmd_e2e(a: argparse.Namespace, config: ConfigFaseB, ahora: Ahora) -> int:
     etiqueta = a.candidato or "stack"
     tag = config.candidato(a.candidato).tag if a.candidato else None
     with httpx.Client(timeout=a.plazo_s) as http, httpx.Client(timeout=PLAZO_HTTP_S) as http_llm:
-        e2e.iniciar_sesion(http, a.base_url, config.e2e["usuario_de_prueba"], password, a.origin)
+        ruta_login, ruta = (
+            ("/api/auth/login", "/api/evidence-analyses")
+            if a.bff
+            else ("/platform/auth/login", config.e2e["ruta"])
+        )
+        e2e.iniciar_sesion(
+            http, a.base_url, config.e2e["usuario_de_prueba"], password, a.origin, ruta_login
+        )
         cliente = _cliente_runtime(config, a.runtime, http_llm)
         medido = e2e.medir_e2e(
             http,
             a.base_url,
-            config.e2e["ruta"],
+            ruta,
             json.loads(a.cuerpo.read_text(encoding="utf-8")),
             a.runs or config.corridas,
             config.consultas_por_corrida_e2e,

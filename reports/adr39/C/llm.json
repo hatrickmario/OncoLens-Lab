@@ -1,0 +1,61 @@
+{
+  "candidatos": [
+    {
+      "admitido": true,
+      "aviso_contexto": null,
+      "context_length": 8192,
+      "corridas": [
+        {
+          "json_valido": 1.0,
+          "p50_ms": 3766.663416987285,
+          "p95_ms": 8695.092755946096,
+          "prefill_tok_s": 10962.192442799727,
+          "tok_s": 38.824631214728086
+        }
+      ],
+      "digest": "203e30078279",
+      "estructuracion": {
+        "documentos": 6,
+        "json_valido": 1.0,
+        "p95_ms": 2638.8435730186757
+      },
+      "id": "C",
+      "json_valido": 1.0,
+      "llamadas": 100,
+      "memoria_llm_gb": 9.029356528,
+      "num_ctx_esperado": 8192,
+      "p50_ms": 3766.663416987285,
+      "p95_ms": 8695.092755946096,
+      "prefill_tokens_por_segundo": 10962.192442799727,
+      "rutas": {
+        "json_valido_latencia_p50_p95": "/v1/chat/completions (ruta de producción: sin think ni num_ctx por petición)",
+        "tokens_por_segundo_prefill": "/api/chat (nativa de Ollama, solo una muestra: no es la ruta de producción)"
+      },
+      "tag": "qwen3.5:9b-mlx",
+      "tokens_por_segundo": 38.824631214728086
+    }
+  ],
+  "contexto": "citas_del_dataset",
+  "descartados_sin_medir": [
+    {
+      "id": "D",
+      "motivo": "24 GB publicados > 21 GB (Decidido, usuario, 2026-10-20)",
+      "tag": "qwen3.6:35b-a3b-q4_K_M"
+    }
+  ],
+  "entorno": {
+    "fecha": "2026-10-20T05:35:58+00:00",
+    "maquina": "arm64",
+    "ollama_flash_attention": null,
+    "ollama_kv_cache_type": null,
+    "plataforma": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.15"
+  },
+  "parametros": {
+    "max_output_tokens": 1024,
+    "num_ctx": 8192,
+    "temperature": 0.0,
+    "thinking": false
+  },
+  "runtime": "ollama"
+}

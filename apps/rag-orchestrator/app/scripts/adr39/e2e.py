@@ -98,16 +98,25 @@ def _libre(salida: str) -> float:
 
 
 def iniciar_sesion(
-    http: httpx.Client, base_url: str, email: str, password: str, origin: str
+    http: httpx.Client,
+    base_url: str,
+    email: str,
+    password: str,
+    origin: str,
+    ruta: str = "/platform/auth/login",
 ) -> None:
-    """``POST /platform/auth/login`` (204 + cookie opaca); la contraseña llega por entorno, nunca en el código."""
+    """``POST <ruta>`` (por defecto ``/platform/auth/login``; 204 + cookie opaca); la contraseña llega por entorno."""
     r = http.post(
-        f"{base_url.rstrip('/')}/platform/auth/login",
+        f"{base_url.rstrip('/')}{ruta}",
         json={"email": email, "password": password},
         headers={"Origin": origin},
     )
     if r.status_code != 204:
         raise RuntimeError(f"el inicio de sesión de prueba respondió {r.status_code}")
+    # La cookie de sesión es `Secure`: httpx la descarta sobre http://127.0.0.1, así que se reenvía a mano.
+    pares = [c.split(";", 1)[0] for c in r.headers.get_list("set-cookie")]
+    if pares:
+        http.headers["Cookie"] = "; ".join(pares)
 
 
 def medir_corrida(

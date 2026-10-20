@@ -1,0 +1,80 @@
+# PROTOCOLO REDUCIDO del LLM (decisión del usuario 2026-10-19): ~21 s por llamada hacen inviable 3x200 por candidato (~3,5 h).
+# Aplica a C, G, H y E; B se mide con el protocolo original (3x200). Solo para `adr39 llm`; e2e y OCR usan adr39-fase-b.yaml.
+# Medición de la fase B de ADR-39 (US-224, L1D-274): runtime del LLM local, LLM, p95 extremo a extremo y OCR.
+# Reglas y candidatos fijados ANTES de medir (design.md D3, 2026-10-20); no se modifican después de ver las cifras:
+# si una regla resulta inaplicable se registra la desviación en el ADR, no se reescribe. Todo valor a calibrar vive
+# aquí o en el entorno (RN-22). Solo datos sintéticos y modelos locales (RN-12, RN-13, RN-14).
+version: 1
+protocolo:
+  corridas: 1                  # REDUCIDO (usuario, 2026-10-19): 1 corrida; el original es 3 (D1)
+  llamadas_por_candidato: 100  # REDUCIDO (usuario, 2026-10-19): original 200 (D3)
+  consultas_por_corrida_e2e: 30  # D4: >= 30 consultas por corrida
+  muestra_fidelidad: 20        # D3: >= 20 salidas revisadas a mano por ai-eval-runner
+  repeticiones_admision: 3     # D3: admisión por memoria, mediana de 3
+  # Paridad con producción: json_valido, p50 y p95 salen de las 200 llamadas por /v1 (la ruta del adapter); tok/s y
+  # prefill solo los entrega /api/chat, y se miden en una muestra de este tamaño por corrida (no inventa cifras).
+  llamadas_nativas_por_corrida: 20
+
+# Eliminatorias de D3 regla 1 (en este orden; la primera que falla descarta con su cifra) y reglas 2 y 3.
+restricciones:
+  llm_memory_budget_gb: 21.0       # tope del LLM local (ollama ps, num_ctx=8192, tras el prompt más largo)
+  stack_memory_limit_gb: 30.0      # LLM + docker stats + modelos de CPU de la fase A, sin swap creciente
+  json_valido_minimo: 0.99
+  e2e_p95_budget_ms: 15000         # NFR-01: POST /platform/evidence-analyses
+  extraccion_p95_budget_ms: 60000  # OCR + estructuración
+  fidelidad_minima: 0.90
+  salidas_prescriptivas_maximas: 0 # RN-23
+  salidas_otro_idioma_maximas: 0
+  margen_de_seguridad_gb: 1.0      # D3 regla 5: menos de 1 GB de margen se declara como riesgo
+  licencias_academicas:
+    - Apache-2.0
+    - MIT
+    - BSD-3-Clause
+  licencias_condicionadas:         # se miden, pero solo se eligen con aceptación escrita del usuario (RN-21)
+    - HAI-DEF
+
+runtime:
+  ollama:
+    base_url: http://localhost:11434
+    api: ollama                    # /v1 (ruta de producción) para json_valido y latencia; /api/chat solo para tok/s y prefill
+  vllm_metal:
+    base_url: http://localhost:8000
+    api: openai
+
+llm:
+  num_ctx: 8192                    # [S1 resp. 10]
+  temperature: 0.0
+  max_output_tokens: 1024
+  thinking: false                  # C, H, I, J sin thinking; el resto lo ignora
+  dataset: data/eval/adr39-mini
+  # Contexto fijo: las citas literales etiquetadas de cada pregunta del golden hacen de chunks recuperados
+  # (el pipeline del S1 recupera con adapters reales; el ADR anota cuál de los dos contextos se usó).
+  contexto: citas_del_dataset
+  candidatos:
+    - {id: A, tag: "gemma4:26b-a4b-it-qat", licencia: Apache-2.0}
+    - {id: B, tag: "gemma4:12b-mlx", licencia: Apache-2.0}
+    - {id: C, tag: "qwen3.5:9b-mlx", licencia: Apache-2.0}
+    - {id: E, tag: "medgemma1.5:4b", licencia: HAI-DEF}   # = 4b-it-q4_K_M (hash 433252621ab1, 3,3 GB); antes q8_0. Cambio del usuario 2026-10-19, antes de medir E
+    - {id: F, tag: "medgemma1.5:4b-it-bf16", licencia: HAI-DEF}
+    - {id: G, tag: "gemma4:26b-a4b-it-q4_K_M", licencia: Apache-2.0}
+    - {id: H, tag: "qwen3.6:27b-q4_K_M", licencia: Apache-2.0, licencia_verificada: false}
+    - {id: I, tag: "qwen3.5:27b-q4_K_M", licencia: Apache-2.0, licencia_verificada: false}
+    - {id: J, tag: "qwen3.5:27b-int4", licencia: Apache-2.0, licencia_verificada: false}
+  descartados_sin_medir:
+    - {id: D, tag: "qwen3.6:35b-a3b-q4_K_M", motivo: "24 GB publicados > 21 GB (Decidido, usuario, 2026-10-20)"}
+
+e2e:
+  perfil: s1                       # s4 añade síntesis, aplicabilidad y agente sin cambiar el protocolo
+  usuario_de_prueba: doc1@test.local
+  ruta: /platform/evidence-analyses
+
+ocr:
+  dataset: data/eval/ocr-mini
+  tmpfs_mb_maximo: 512
+  motores:
+    - {id: ocrmypdf-tesseract, licencia: MPL-2.0, escribe_a_disco: true}
+    - {id: paddleocr, licencia: Apache-2.0, escribe_a_disco: true}
+    - {id: doctr, licencia: Apache-2.0, escribe_a_disco: true}
+  descartados_por_licencia:
+    - {id: surya, motivo: "GPL-3.0 + OpenRAIL-M con umbral comercial"}
+  exactitud_minima: 0.95           # OCR crítico, orientativo con >= 5 PDF

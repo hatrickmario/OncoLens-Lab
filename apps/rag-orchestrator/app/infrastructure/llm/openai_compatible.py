@@ -21,6 +21,7 @@ def cuerpo_de_peticion(
     esquema: Mapping[str, Any] | None,
     temperatura: float,
     max_tokens: int,
+    razonar: bool = False,
 ) -> dict[str, Any]:
     """Cuerpo de ``POST /chat/completions`` de producción; el script de ADR-39 lo reutiliza para medir la misma ruta."""
     cuerpo: dict[str, Any] = {
@@ -30,6 +31,9 @@ def cuerpo_de_peticion(
         "max_tokens": max_tokens,
         "stream": False,
     }
+    if not razonar:
+        # Los modelos que razonan por defecto agotan max_tokens y dejan el contenido vacío (ADR-39 fase B, hallazgo).
+        cuerpo["reasoning_effort"] = "none"
     if esquema is not None:
         cuerpo["response_format"] = {
             "type": "json_schema",

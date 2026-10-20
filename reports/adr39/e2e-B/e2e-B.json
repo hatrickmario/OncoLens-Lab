@@ -1,0 +1,34 @@
+{
+  "candidato": "B",
+  "corridas": 3,
+  "docker_pico_gb": 11.81356130304,
+  "entorno": {
+    "fecha": "2026-10-20T07:15:11+00:00",
+    "maquina": "arm64",
+    "ollama_flash_attention": null,
+    "ollama_kv_cache_type": null,
+    "plataforma": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.15"
+  },
+  "errores": 0,
+  "etapas": "no desglosado",
+  "memoria_llm_gb": 10.788257732,
+  "memoria_stack_gb": 22.601819035040002,
+  "p50_total_ms": 18050.758166529704,
+  "p95_total_ms": 18363.123952504247,
+  "perfil": "s1",
+  "perfil_consultas": 30,
+  "sistema_antes": {
+    "docker_gb": 11.63268194304,
+    "memoria_libre_porcentaje": 89.0,
+    "ram_total_gb": 51.539607552,
+    "swap_usado_mb": 2017.69
+  },
+  "sistema_despues": {
+    "docker_gb": 11.81356130304,
+    "memoria_libre_porcentaje": 89.0,
+    "ram_total_gb": 51.539607552,
+    "swap_usado_mb": 2017.69
+  },
+  "swap_creciente": false
+}

@@ -1,0 +1,135 @@
+{
+  "desempatado_por_memoria": false,
+  "elegido": "G",
+  "entorno": {
+    "fecha": "2026-10-20T07:38:37+00:00",
+    "maquina": "arm64",
+    "ollama_flash_attention": null,
+    "ollama_kv_cache_type": null,
+    "plataforma": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.15"
+  },
+  "escalar_al_usuario": false,
+  "respaldo": null,
+  "riesgo_de_margen": [
+    "memoria_stack"
+  ],
+  "veredictos": [
+    {
+      "candidato": "A",
+      "descarte": null,
+      "estado": "pendiente",
+      "pendientes": [
+        "memoria_llm_gb",
+        "memoria_stack_gb",
+        "swap_creciente",
+        "json_valido",
+        "e2e_p95_ms",
+        "extraccion_p95_ms",
+        "fidelidad",
+        "salidas_prescriptivas",
+        "salidas_otro_idioma"
+      ]
+    },
+    {
+      "candidato": "B",
+      "descarte": {
+        "candidato": "B",
+        "cifra": "18363 ms > 15000 ms",
+        "eliminatoria": "p95_e2e"
+      },
+      "estado": "descartado",
+      "pendientes": []
+    },
+    {
+      "candidato": "C",
+      "descarte": {
+        "candidato": "C",
+        "cifra": "0.75 < 0.90",
+        "eliminatoria": "fidelidad"
+      },
+      "estado": "descartado",
+      "pendientes": []
+    },
+    {
+      "candidato": "E",
+      "descarte": {
+        "candidato": "E",
+        "cifra": "1 salidas > 0 (RN-23)",
+        "eliminatoria": "prescriptivo"
+      },
+      "estado": "descartado",
+      "pendientes": []
+    },
+    {
+      "candidato": "F",
+      "descarte": null,
+      "estado": "pendiente",
+      "pendientes": [
+        "memoria_llm_gb",
+        "memoria_stack_gb",
+        "swap_creciente",
+        "json_valido",
+        "e2e_p95_ms",
+        "extraccion_p95_ms",
+        "fidelidad",
+        "salidas_prescriptivas",
+        "salidas_otro_idioma"
+      ]
+    },
+    {
+      "candidato": "G",
+      "descarte": null,
+      "estado": "elegible",
+      "pendientes": []
+    },
+    {
+      "candidato": "H",
+      "descarte": null,
+      "estado": "pendiente",
+      "pendientes": [
+        "licencia_verificada",
+        "memoria_stack_gb",
+        "swap_creciente",
+        "e2e_p95_ms",
+        "fidelidad",
+        "salidas_prescriptivas",
+        "salidas_otro_idioma"
+      ]
+    },
+    {
+      "candidato": "I",
+      "descarte": null,
+      "estado": "pendiente",
+      "pendientes": [
+        "licencia_verificada",
+        "memoria_llm_gb",
+        "memoria_stack_gb",
+        "swap_creciente",
+        "json_valido",
+        "e2e_p95_ms",
+        "extraccion_p95_ms",
+        "fidelidad",
+        "salidas_prescriptivas",
+        "salidas_otro_idioma"
+      ]
+    },
+    {
+      "candidato": "J",
+      "descarte": null,
+      "estado": "pendiente",
+      "pendientes": [
+        "licencia_verificada",
+        "memoria_llm_gb",
+        "memoria_stack_gb",
+        "swap_creciente",
+        "json_valido",
+        "e2e_p95_ms",
+        "extraccion_p95_ms",
+        "fidelidad",
+        "salidas_prescriptivas",
+        "salidas_otro_idioma"
+      ]
+    }
+  ]
+}
