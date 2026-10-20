@@ -185,3 +185,32 @@ def test_un_manifiesto_ilegible_no_filtra_la_ruta(tmp_path: Path) -> None:
         leer_manifiesto(tmp_path / "no-existe.yaml")
 
     assert str(tmp_path) not in str(error.value)
+
+
+def test_lee_la_url_original_https_del_documento_y_es_none_cuando_no_se_declara(
+    tmp_path: Path,
+) -> None:
+    con_url = DOCUMENTO_VALIDO + "    original_url: https://pmc.ncbi.nlm.nih.gov/articles/PMC1/\n"
+
+    documento_con = leer_manifiesto(escribir(tmp_path, con_url))[0]
+    documento_sin = leer_manifiesto(escribir(tmp_path, DOCUMENTO_VALIDO))[0]
+
+    assert documento_con.url_original == "https://pmc.ncbi.nlm.nih.gov/articles/PMC1/"
+    assert documento_sin.url_original is None
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://www.cancer.gov/types/breast",
+        "javascript:alert(1)",
+        "ftp://servidor.test/doc",
+        "no es una url",
+        "https://",
+    ],
+)
+def test_rechaza_una_url_original_que_no_es_https_con_host(tmp_path: Path, url: str) -> None:
+    contenido = DOCUMENTO_VALIDO + f"    original_url: {url!r}\n"
+
+    with pytest.raises(ManifiestoInvalido, match="d-1: original_url"):
+        leer_manifiesto(escribir(tmp_path, contenido))

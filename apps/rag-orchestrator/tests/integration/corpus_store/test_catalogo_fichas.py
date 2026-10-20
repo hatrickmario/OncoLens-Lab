@@ -43,3 +43,16 @@ def test_fichas_por_documento_devuelve_solo_los_documentos_que_existen(motor: En
 
 def test_fichas_por_documento_devuelve_vacio_cuando_no_se_piden_documentos(motor: Engine) -> None:
     assert LectorCatalogoPostgres(motor).fichas_por_documento(set()) == {}
+
+
+def test_la_ficha_devuelve_la_url_de_la_fuente_guardada_en_el_catalogo(motor: Engine) -> None:
+    url = "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
+    CorpusDocumentRepository(motor).guardar_documento(
+        registro_de_prueba("doc-url@abcdef", source_url=url)
+    )
+    CorpusDocumentRepository(motor).guardar_documento(registro_de_prueba("doc-sin-url@abcdef"))
+
+    fichas = LectorCatalogoPostgres(motor).fichas_por_documento({"doc-url@abcdef", "doc-sin-url@abcdef"})
+
+    assert fichas["doc-url@abcdef"].source_url == url
+    assert fichas["doc-sin-url@abcdef"].source_url is None
