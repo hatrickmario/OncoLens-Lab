@@ -22,6 +22,7 @@
     "test:quality": "vitest run --config vitest.quality.config.ts",
     "test:infra": "vitest run infra scripts/smoke",
     "smoke:compose": "bash scripts/smoke/compose-smoke.sh",
+    "test:e2e": "bash scripts/e2e/ejecutar.sh",
     "test:secrets": "bash scripts/tests/setup-secrets.test.sh",
     "lint": "eslint . --max-warnings 0",
     "format:js": "prettier \"apps/web/**/*.{ts,tsx,js,jsx,mjs,cjs,css}\" \"apps/clinical-api/**/*.{ts,js,mjs,cjs}\" \"packages/**/*.{ts,tsx,js,mjs,cjs}\"",
