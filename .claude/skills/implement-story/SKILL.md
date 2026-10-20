@@ -63,6 +63,23 @@ evaluación (si hubo), tests añadidos por AC, y al final la línea
 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 **Nunca** mergear ni archivar el change: el merge es humano y el archivo es en `/sprint-close`.
 
+**Controles de GitHub en 0 errores antes de informar (obligatorio).** Publicar el PR no es
+terminar: los controles (CI, CodeQL / code scanning, secret-scan, data-scan, fixtures,
+`ci-ok`, comentarios de `github-advanced-security`) tardan segundos o minutos. Tras abrir el
+PR, y tras **cada** push posterior:
+
+1. Espera a que terminen: `gh pr checks <n> --watch` (o repite `gh pr checks <n>` hasta que no
+   quede ninguno pendiente).
+2. Lee las alertas: `gh api repos/{owner}/{repo}/pulls/<n>/comments` (bot
+   `github-advanced-security`) y `gh api "repos/{owner}/{repo}/code-scanning/alerts?ref=refs/pull/<n>/head&state=open"`.
+3. Si algo falla, lee el log (`gh run view <run> --job <job> --log-failed`) y reanuda al
+   implementador con el error exacto. Estas vueltas **no** cuentan como vueltas del Gate 2,
+   pero ante la misma causa dos veces, escala. Nunca desactives un control, edites la
+   allowlist del escáner ni descartes una alerta a mano para ponerlo en verde.
+4. Solo con **0 checks en fallo, 0 pendientes y 0 alertas abiertas** marca `pr-listo` e informa.
+   Si no puedes llegar a 0 (p. ej. rojo heredado de `main`), no digas «listo»: informa del
+   control, su causa y la decisión humana que falta.
+
 ## 5. Estado
 
 Si corres dentro de un sprint, actualiza la fila de la historia en `backlog/sprints/S<n>-status.md`

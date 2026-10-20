@@ -65,6 +65,12 @@ Para cada oleada del plan, en orden:
 5. **PR listo:** con el Gate 2 en verde, abre el PR (`gh pr create --base main --head <rama>`),
    título `[L1D-<nn>] <título>`, cuerpo con: change, Trazabilidad, veredicto del Gate 2 por
    guardián, métricas de evaluación si hubo, y la línea de atribución. **Nunca** `gh pr merge`.
+   **Controles de GitHub en 0 antes de informar:** tras abrir el PR y tras cada push, espera a que
+   terminen los controles (`gh pr checks <n> --watch`), lee las alertas de code scanning y los
+   comentarios de `github-advanced-security`, y si algo falla lee el log
+   (`gh run view … --log-failed`) y reanuda al implementador con el error exacto. Solo con 0
+   checks en fallo, 0 pendientes y 0 alertas abiertas el PR es `pr-listo`; si no, no informes
+   «listo». Nunca desactives un control, toques la allowlist ni descartes una alerta a mano.
 6. Actualiza `S<n>-status.md` después de **cada** transición de estado.
 
 Cuando ninguna historia sea elegible porque todas esperan merges, **devuelve el control**.
