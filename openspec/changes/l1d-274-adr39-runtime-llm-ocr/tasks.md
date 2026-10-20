@@ -27,11 +27,11 @@
       y próstata, valores ficticios), `ground_truth.json` por campo crítico y `manifest.json` con
       `clase: sintetico` y licencia; test de humo que comprueba conteo, manifiesto y que cada PDF
       tiene su verdad de terreno · **test después** `[US-224 AC-6]` `[RN-13]` `[RN-14]`
-- [ ] 1.4 **[HUMANO: mediciones con hardware y modelos reales]** Runtime: medir Ollama 0.34.4 y vllm-metal 0.1.0 (instalar `vllm` en
+- [x] 1.4 **[HUMANO: mediciones con hardware y modelos reales]** Runtime: medir Ollama 0.34.4 y vllm-metal 0.1.0 (instalar `vllm` en
       `~/.venvs/vllm-metal` según su README, time-box 1 h, o descartar con el motivo y el comando
       probado); registrar GPU Metal real, API OpenAI-compatible y JSON restringido por esquema ·
       **exento** `[US-224 AC-1]`
-- [ ] 1.5 **[HUMANO]** LLM: medición de admisión por memoria (`ollama ps`, `num_ctx=8192`, tras el prompt más largo;
+- [x] 1.5 **[HUMANO]** LLM: medición de admisión por memoria (`ollama ps`, `num_ctx=8192`, tras el prompt más largo;
       descarte con cifra si > 21 GB) y después 200 llamadas por candidato admitido (A
       `gemma4:26b-a4b-it-qat`, B `gemma4:12b-mlx`, C `qwen3.5:9b-mlx` sin *thinking*, **H** `qwen3.6:27b-q4_K_M`, **I** `qwen3.5:27b-q4_K_M`, **J** `qwen3.5:27b-int4` (los tres sin *thinking*), **E** `medgemma1.5:4b-it-q8_0`, **F**
       `medgemma1.5:4b-it-bf16`, **G** `gemma4:26b-a4b-it-q4_K_M`; E–J añadidos el 2026-10-20; D `qwen3.6:35b-a3b-q4_K_M` descartado sin medir por el usuario el 2026-10-20) con el
@@ -41,11 +41,11 @@
       sujeta a aceptación del usuario) y quién aplica la restricción; aplicar las reglas de decisión de
       design.md D3 (fijadas antes de medir); contrastar con la medición del refinamiento (15 GB, 100 %
       GPU, ~79 tok/s, `[S1 resp. 10]`) · **evaluate** `[US-224 AC-2]`
-- [ ] 1.6 **[HUMANO]** p95 extremo a extremo: 3 corridas de ≥ 30 consultas a `POST /platform/evidence-analyses`
+- [x] 1.6 **[HUMANO]** p95 extremo a extremo: 3 corridas de ≥ 30 consultas a `POST /platform/evidence-analyses`
       contra Compose con seed sintético y LLM real; p95 total y por etapa; memoria total del stack;
       descartar con cifra o escalar al usuario (US-012 AC-5); registrar `memory_pressure` y swap (holgura
       de macOS) y la RAM de la máquina de medición · **evaluate** `[US-224 AC-3]` `[NFR-01]` `[NFR-05]`
-- [ ] 1.7 **[HUMANO]** OCR: medir OCRmyPDF + Tesseract `spa`, PaddleOCR (PP-OCRv5 latino) y docTR dentro del
+- [ ] 1.7 (**parcial, 2026-10-20**: `ocrmypdf-tesseract` medido (exactitud 0,917, p95 0,54 s, sin residuos); PaddleOCR bloqueado (`lang='latin'` sin modelos PP-OCRv5 en 3.7.0); docTR dejó `/tmp/perf-1.map`; pendiente decidir si se aceptan o se repiten) **[HUMANO]** OCR: medir OCRmyPDF + Tesseract `spa`, PaddleOCR (PP-OCRv5 latino) y docTR dentro del
       contenedor de `rag-orchestrator` sobre `data/eval/ocr-mini/`: exactitud por campo crítico,
       p95 por documento (≤ 60 s), memoria, licencia y **si escribe a disco y dónde**, con el
       contenedor en `read_only: true` y `TMPDIR=/tmp` sobre `tmpfs` (Compose de L1D-164); motor que
@@ -57,7 +57,7 @@
       `finally`; el ADR registra como consecuencia obligatoria del adapter OCR de FEAT-01b ese
       directorio por request y el test de no-residuos también con **fallo** del motor y con
       **timeout** · **test después** `[US-224 AC-6]` `[RN-14]`
-- [ ] 1.8 (**borrador hecho**: protocolo, reglas, comandos, tablas con `pendiente`, consecuencias y desviaciones; **faltan las cifras y la decisión**, tareas 1.4–1.7) Completar `docs/architecture/adr/ADR-39-modelos-locales.md` (sección Fase B): tablas de
+- [x] 1.8 (**borrador hecho**: protocolo, reglas, comandos, tablas con `pendiente`, consecuencias y desviaciones; **faltan las cifras y la decisión**, tareas 1.4–1.7) Completar `docs/architecture/adr/ADR-39-modelos-locales.md` (sección Fase B): tablas de
       AC-1, AC-2, AC-3 y AC-6 con medianas y descartes con cifra, decisión, consecuencias,
       configuración (RN-22), confirmación y comando repetible; citar `[S1 resp. 3, 5, 6, 10]`;
       estado propuesto hasta la aprobación del usuario · **exento** `[US-224 AC-1…AC-6]`
@@ -77,7 +77,7 @@
 
 ## 2. evaluación
 
-- [ ] 2.1 `ai-eval-runner` revisa a mano la muestra de fidelidad y la ausencia de lenguaje
+- [x] 2.1 `ai-eval-runner` revisa a mano la muestra de fidelidad y la ausencia de lenguaje
       prescriptivo (RN-23) del LLM elegido y deja el reporte en `reports/eval/` (insumo del baseline
       de US-072/US-073) · **evaluate** `[US-224 AC-2]`
 
@@ -87,3 +87,7 @@
 - [x] 3.2 Tests de `rag-orchestrator` en verde (Pytest del script y de configuración)
 - [ ] 3.3 `run-ai-eval` en su modo manual del S1 (cambia el modelo); sin `contracts:verify-provider`
       (no hay cambios de API)
+
+## Cierre de las mediciones de la fase B (2026-10-19/20)
+
+Medido con protocolo reducido (usuario): 1.4 runtime Ollama 0.34.4 (vllm-metal descartado con motivo); 1.5 LLM B, C, G, H, E (A, F, I, J sin medir); 1.6 e2e solo B y G (C y E descartados por calidad, H por latencia del LLM); 2.1 fidelidad B, C, E, G (n = 20). Decisión propuesta: G `gemma4:26b-a4b-it-q4_K_M`; 1.9 `LLM_MODEL` queda a la espera de aprobar el ADR y de la excepción del usuario para `.env.example`. Ver `docs/architecture/adr/ADR-39-modelos-locales.md` § Fase B y `reports/adr39/resultados-fase-b.md`.

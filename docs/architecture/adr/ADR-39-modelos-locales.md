@@ -238,14 +238,12 @@ Sin cambiar ninguna decisión ni cifra del bloque de arriba (por eso `--check-co
 
 ## Fase B
 
-> Change de L1D-274 (US-224). **Estado de la fase B: propuesto, con las mediciones pendientes.** Lo que ya existe es el
-> protocolo, el script, el dataset de OCR y la configuración; **no hay todavía ninguna cifra de LLM, OCR ni p95 extremo a
-> extremo**, porque se miden con modelos reales en la MacBook de referencia y esta sesión no tiene ni el hardware ni los
-> modelos. Cada celda `pendiente` de las tablas la rellena el comando indicado; ninguna se estima. La decisión
-> (runtime, LLM, motor OCR, `LLM_MODEL`) se toma con `python -m app.scripts.adr39 decidir` sobre los reportes medidos y
-> pasa a «aceptado» cuando el usuario apruebe el PR con las cifras. Citas: `[S1 resp. 3, 5, 6, 10]`; reglas de
-> decisión fijadas el 2026-10-20 antes de medir (`design.md` D3) y copiadas a
-> `apps/rag-orchestrator/eval/configs/adr39-fase-b.yaml`.
+> Change de L1D-274 (US-224). **Estado de la fase B: propuesto, medido el 2026-10-19/20 en la MacBook de referencia (M5 Pro, 48 GB)
+> con un protocolo reducido y Ollama 0.34.4. Pasa a «aceptado» cuando el usuario apruebe el PR.** Resultado resumido: **runtime Ollama;
+> LLM elegido G `gemma4:26b-a4b-it-q4_K_M` (propuesto, con el riesgo de margen < 1 GB en el stack); motor OCR `ocrmypdf-tesseract`
+> (pendiente de aceptar su exactitud de 0,917).** Cifras en las tablas de abajo; reportes agregados en `reports/adr39/`
+> (`decision/`, `B/`…`E/`, `e2e-B/`, `e2e-G/`, `ocr*/`) y crónica en `reports/adr39/resultados-fase-b.md`. Citas: `[S1 resp. 3, 5, 6, 10]`; reglas
+> de decisión fijadas el 2026-10-20 antes de medir (`design.md` D3) y copiadas a `apps/rag-orchestrator/eval/configs/adr39-fase-b.yaml`.
 
 ### Reglas de decisión (fijadas antes de medir; no se modifican tras ver las cifras)
 
@@ -300,8 +298,8 @@ python -m app.scripts.adr39 decidir --motor-ocr ocrmypdf-tesseract --licencias-a
 
 | Runtime | Versión | (a) GPU Metal fuera de Docker | (b) API compatible con OpenAI | (c) JSON restringido por esquema | Resultado |
 |---|---|---|---|---|---|
-| Ollama (A) | pendiente (0.34.4 en el refinamiento) | pendiente (`ollama ps` → `100% GPU`) | pendiente | pendiente (¿lo aplica el runtime o solo se valida?) | pendiente |
-| vllm-metal 0.1.0 | pendiente | pendiente (log de arranque y monitor de GPU) | pendiente | pendiente | pendiente: instalar `vllm` en `~/.venvs/vllm-metal` según su README (time-box 1 h) o descartar con el motivo y el comando probado |
+| Ollama | 0.34.4 | sí: `ollama ps` → `100% GPU` (modelo `gemma4:26b-a4b-it-qat`, 15,33 GB, ctx 8192) | sí (`/v1/chat/completions`) | sí: el runtime aplica el esquema (salida válida con un prompt que pide prosa libre) | **cumple (a), (b) y (c)** |
+| vllm-metal 0.1.0 | 0.1.0 | no medido | no medido | no medido | **descartado con motivo (decisión del usuario, 2026-10-19):** el paquete `vllm` no es dependencia declarada; instalarlo (`uv pip install vllm` → vllm 0.11.0) bajaría torch 2.14.1 → 2.8.0; el CLI mide con tags de Ollama y vllm-metal sirve modelos HF/MLX, así que no hay un candidato equivalente a A para comparar de igual a igual; 0.1.0 inmaduro. Reversible: una medición nueva con fecha nueva. |
 
 Medición previa del refinamiento (no repetida aquí, `[S1 resp. 10]`, 2026-10-13, Ollama 0.34.4): `gemma4:26b-a4b-it-qat` =
 15 GB residentes, 100 % GPU, ~79 tok/s, JSON con esquema correcto en **una** prueba. Un runtime sin uso real de GPU queda
@@ -315,18 +313,22 @@ E y F: términos HAI-DEF, **condicionados** a la aceptación escrita del usuario
 son las citas literales etiquetadas del golden de `data/eval/adr39-mini` (el pipeline del S1 recupera con los adapters reales de
 US-231a/b; el ADR anotará cuál de los dos contextos se usó).
 
-| Cand. | Tag | Digest | Memoria (GB) | tok/s (gen.) | JSON válido (200) | Fidelidad (muestra) | Estruct. p95 (ms) | p95 e2e (ms) | Stack (GB) | Estado |
+| Cand. | Tag | Digest | Memoria (GB) | tok/s (gen.) | JSON válido (llamadas) | Fidelidad (muestra) | Estruct. p95 (ms) | p95 e2e (ms) | Stack (GB) | Estado |
 |---|---|---|---|---|---|---|---|---|---|---|
 | A | `gemma4:26b-a4b-it-qat` | `2dd70431afed` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
-| B | `gemma4:12b-mlx` | `ded7a2735003` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
-| C | `qwen3.5:9b-mlx` | `203e30078279` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| B | `gemma4:12b-mlx` | `ded7a2735003` | 8,14 | 46,1 | 1,00 (100) | 1,00 (20/20) | 2103 | 18363 | 22,6 | **descartado: p95 e2e 18363 ms > 15000 ms** |
+| C | `qwen3.5:9b-mlx` | `203e30078279` | 9,03 | 38,8 | 1,00 (100) | 0,75 (15/20) | 2639 | no medido | no medido | **descartado: fidelidad 0,75 < 0,90** (y 1 salida prescriptiva) |
 | D | `qwen3.6:35b-a3b-q4_K_M` | `07d35212591f` | — | — | — | — | — | — | — | descartado sin medir (24 GB publicados > 21 GB, usuario 2026-10-20) |
-| E | `medgemma1.5:4b-it-q8_0` | `d6ae3cddb663` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (HAI-DEF: condicionada) |
+| E | `medgemma1.5:4b` (= `4b-it-q4_K_M`, antes q8_0) | `433252621ab1` | 3,05 | 67,5 | 1,00 (100) | 0,90 (18/20) | 1405 | no medido | no medido | **descartado: 1 salida prescriptiva (RN-23)**; HAI-DEF aceptada por el usuario |
 | F | `medgemma1.5:4b-it-bf16` | `32f17fbd85fe` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (HAI-DEF: condicionada) |
-| G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
-| H | `qwen3.6:27b-q4_K_M` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar) |
+| G | `gemma4:26b-a4b-it-q4_K_M` | `5571076f3d70` | 17,69 | 59,0 | 1,00 (100) | 0,95 (19/20) | 1822 | 9897 | 29,29 | **elegible: cumple las eliminatorias; riesgo: margen de stack 0,71 GB < 1 GB** |
+| H | `qwen3.6:27b-q4_K_M` | `3a40c32f1450` | 16,81 | 12,5 | 1,00 (100) | no revisado | 8920 | no medido | no medido | pendiente según `decidir` (licencia Apache-2.0 verificada en Hugging Face, no en la config); **p95 del LLM solo 30,7 s > 15 s: no puede cumplir el e2e** |
 | I | `qwen3.5:27b-q4_K_M` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar) |
 | J | `qwen3.5:27b-int4` | por registrar | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente (licencia sin verificar; soporte INT4 en Ollama 0.34.4 sin comprobar) |
+
+**Protocolo reducido (usuario, 2026-10-19):** cada llamada tarda ~21 s con razonamiento activo; 3 × 200 llamadas por candidato (~3,5 h) era inviable. B, C, G, H y E se midieron con 1 corrida × 100 llamadas por `/v1` + 20 nativas (`eval/configs/adr39-fase-b-reducido.yaml`); con 100 llamadas un fallo ya es 1 % (el límite es 99 %). La admisión por memoria (mediana de 3, tras el prompt más largo) y las 20 salidas de fidelidad no cambian. A, F, I y J quedaron `pendiente` (sin medir; nunca contados como fallo) y D descartado sin medir.
+
+**Hallazgo del instrumento que invalidó la primera corrida de B:** por `/v1` y sin control de razonamiento, `gemma4:12b-mlx` razonaba hasta agotar `max_tokens` y devolvía el contenido vacío en ~80 % de las llamadas (JSON válido 0,20, p50 21,9 s; `reports/adr39/B-con-razonamiento/`). `reasoning_effort: "none"` por `/v1` lo desactiva (3,6–7 s); `think: false` por `/v1` no. El script y el **adapter de producción** (`cuerpo_de_peticion`, parámetro `razonar=False`) lo envían ahora; sin eso el análisis real falla con un LLM que razona por defecto.
 
 Los tamaños publicados no valen: vale `ollama ps` del día de la medición. **Contrastar** la admisión con la medición del
 refinamiento (15 GB, 100 % GPU, ~79 tok/s) y anotar si el *prefill* de contextos largos desplaza esa cifra.
@@ -335,7 +337,10 @@ refinamiento (15 GB, 100 % GPU, ~79 tok/s) y anotar si el *prefill* de contextos
 
 | Candidato en el stack | p95 total (ms) | p50 total (ms) | Errores | Memoria LLM (GB) | Pico Docker (GB) | Stack total (GB) | Swap creciente | `memory_pressure` libre (%) | RAM de la máquina (GB) |
 |---|---|---|---|---|---|---|---|---|---|
-| pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente | pendiente |
+| B (`gemma4:12b-mlx`) | 18363 | 18051 | 0/90 | 10,79 | 11,81 | 22,60 | no | 89 | 51,5 |
+| **G** (`gemma4:26b-a4b-it-q4_K_M`) | **9897** | 9710 | 0/90 | 17,69 | 11,60 | **29,29** | no | 89 | 51,5 |
+
+Condiciones: stack real (clinical-api, rag-orchestrator con BGE-M3 int8, bge-reranker-v2-m3 int8 y mDeBERTa fp32 en CPU, Milvus, web), corpus semilla de 10 documentos, paciente semilla `a`, usuario `doc1`; 3 corridas × 30 consultas por la BFF (`/api/evidence-analyses`, opción `--bff`); Docker Desktop 13 GB / 8 vCPU. p50 ≈ p95 porque la consulta es la misma (el p95 real con consultas variadas será mayor). **La latencia del LLM aislada en el arnés (3,3 s B, 3,1 s G) no predice el e2e** (B 18,4 s, G 9,9 s); la causa de la diferencia no se determinó. Pesos ONNX exportados con `app.evaluation.exportar_onnx` a una carpeta fuera del repo, un solo archivo por modelo.
 
 Por etapa (gateway y desidentificación, recuperación *dense*, *reranker*, generación, validación de citas, NLI, persistencia
 del `AIAnalysisRecord`): **no desglosado hoy**. El script lee `etapa=<x> … ms=<n> … traceId=<id>` de un log
@@ -353,9 +358,9 @@ semilla fija; `manifest.json` con `clase: sintetico`; verdad de terreno por camp
 
 | Motor | Licencia | Exactitud por campo crítico (meta ≥ 0,95) | p95 por documento (meta ≤ 60 s) | Memoria pico (MB) | ¿Escribe a disco? ¿dónde? | Residuos en `TMPDIR` | Estado |
 |---|---|---|---|---|---|---|---|
-| OCRmyPDF + Tesseract `spa` (A) | por verificar en la fuente (OCRmyPDF MPL-2.0 y Tesseract Apache-2.0, de memoria) | pendiente | pendiente | pendiente | sí (directorio de trabajo con páginas e intermedios; a confirmar) | pendiente | pendiente |
-| PaddleOCR (PP-OCRv5 latino) | por verificar (Apache-2.0, de memoria) | pendiente | pendiente | pendiente | puede escribir caché de modelos | pendiente | pendiente |
-| docTR | por verificar (Apache-2.0, de memoria) | pendiente | pendiente | pendiente | puede escribir caché de modelos | pendiente | pendiente |
+| OCRmyPDF + Tesseract `spa` (A) | MPL-2.0 / Apache-2.0 (de memoria) | **0,917** (6 PDF; meta orientativa ≥ 0,95) | 0,54 s (+ estructuración 1,82 s con G) | 110 | sí: directorio de trabajo bajo `TMPDIR` (tmpfs) | ninguno | p95 cumple con holgura; **exactitud 0,917 < 0,95** (orientativa con n = 6) |
+| PaddleOCR (PP-OCRv5 latino) | Apache-2.0 (de memoria) | no medido | no medido | no medido | caché de modelos | no medido | **bloqueado:** PaddleOCR 3.7.0 no ofrece modelos para `lang='latin'` con `PP-OCRv5` (`ValueError`); requiere otro idioma/versión. Pendiente |
+| docTR | Apache-2.0 (de memoria) | no medido | no medido | no medido | caché de modelos bajo el directorio de trabajo | **`/tmp/perf-1.map`** | **falló la regla de residuos (salida 6)**; causa no investigada (¿perfilador JIT de oneDNN de torch?), no se probó desactivarlo |
 | Surya | GPL-3.0 + OpenRAIL-M con umbral comercial | — | — | — | — | — | **descartado por licencia** (`[S1 resp. 5]`) |
 
 Un motor que necesite escribir fuera de `TMPDIR` o quitar `read_only` queda descartado con el motivo (se corrige con una
@@ -367,7 +372,7 @@ el de la estructuración del LLM elegido (`decidir` suma ambos medianas y exige 
 | Variable | Valor | Estado |
 |---|---|---|
 | `LLM_BASE_URL` | `http://host.docker.internal:11434/v1` | ya vigente: runtime nativo fuera de Docker |
-| `LLM_MODEL` | tag del candidato elegido, más su *digest* en este ADR | **pendiente** de la elección; sin literal en el código |
+| `LLM_MODEL` | `gemma4:26b-a4b-it-q4_K_M` (digest `5571076f3d70`) | **propuesto** (queda en el entorno/.env; sin literal en el código); aplica al aprobar el PR |
 | `LLM_NUM_CTX` | `8192` (`[S1 resp. 10]`) | en `Settings`; **lo aplica el runtime** (`OLLAMA_CONTEXT_LENGTH=8192` en el servidor de Ollama): la API compatible con OpenAI no lo recibe por petición |
 | `LLM_TEMPERATURE` | `0.0` (la del cliente actual) | en `Settings` y propagada al cliente del LLM; se actualiza si la medición fija otra |
 | `LLM_CLOUD_ENABLED` | `false` | sin cambio (RN-12) |
@@ -411,33 +416,39 @@ el de la estructuración del LLM elegido (`decidir` suma ambos medianas y exige 
 6. **Settings:** además de las claves de `design.md` D7, `LLM_TEMPERATURE` llega al cliente del LLM (antes fija en 0);
    el valor por defecto no cambia el comportamiento.
 
+### Decisión de la fase B (`decidir`, 2026-10-20)
+
+Salida del comando sobre los reportes medidos (`reports/adr39/decision/decision.json`, `--motor-ocr ocrmypdf-tesseract --licencias-aceptadas HAI-DEF`):
+
+| Candidato | Estado | Motivo o cifras pendientes |
+|---|---|---|
+| A, F, I, J | pendiente | sin medir (nunca contados como fallo) |
+| B | descartado | p95_e2e: 18363 ms > 15000 ms |
+| C | descartado | fidelidad: 0,75 < 0,90 |
+| E | descartado | prescriptivo: 1 salida > 0 (RN-23) |
+| **G** | **elegible** | cumple las eliminatorias |
+| H | pendiente | sin e2e ni revisión (el comando no lo descarta; ver abajo) |
+
+**Elegido: G `gemma4:26b-a4b-it-q4_K_M`** (propuesto, a aprobar por el usuario). Único medido que cumple todas las eliminatorias: LLM 17,69 GB ≤ 21 GB, stack 29,29 GB ≤ 30 GB sin swap creciente, JSON válido 1,00, e2e p95 9,9 s ≤ 15 s, fidelidad 0,95 con 0 salidas prescriptivas y 0 en otro idioma, extracción p95 ≈ 2,4 s (OCR 0,54 s + estructuración 1,82 s) ≤ 60 s. **Runtime: Ollama 0.34.4.** **Motor OCR: `ocrmypdf-tesseract`** (PaddleOCR bloqueado por configuración, docTR falló la regla de residuos).
+
+**Riesgos y salvedades (declarados, no resueltos):**
+1. **Margen de memoria del stack 0,71 GB < 1 GB** (regla 5): sin respaldo con margen. En el equipo de referencia de 32 GB la suma LLM + Docker (29,3 GB) deja ~2,7 GB al sistema, la VM y el resto de apps: no afirmar «cabe en 32 GB»; repetir allí es recomendado. Palancas no medidas: `OLLAMA_KV_CACHE_TYPE=q8_0`, menos memoria de Docker.
+2. **Protocolo reducido** (1 × 100 llamadas, no 3 × 200): con 100 llamadas un fallo de JSON ya es 1 %. La fidelidad usa n = 20 por candidato (IC amplios), una sola revisora automática (`ai-eval-runner`, no un oncólogo) y asociación salida-pregunta por posición. La diferencia G 0,95 frente a B 1,00 es de **una** salida y no decide por sí sola (regla 3): B solo queda fuera por el e2e.
+3. **El e2e depende del pipeline y no solo del LLM**; la causa de que B tarde 8,5 s más que G no se determinó (no hay tiempos por etapa). H (27B denso) mide 15,3 s p50 / 30,7 s p95 solo en el LLM, por lo que no puede cumplir 15 s; no se midió e2e.
+4. **El e2e usó una sola consulta repetida**; el p95 con consultas variadas será mayor (margen de 5 s a 15 s). Recalibrar en el S5 (NFR-01).
+5. **Exactitud del OCR 0,917 < 0,95** (orientativa con 6 PDF): decisión del usuario si acepta el motor o se prueba otro.
+6. **Equipo de medición:** M5 Pro de 48 GB frente a los 32 GB de referencia; Docker Desktop 13 GB; Ollama con `OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_FLASH_ATTENTION=1`.
+
+**Hallazgos para el producto (arrastre):**
+- El adapter de producción debe enviar `reasoning_effort: "none"` (ya añadido en este PR, parámetro `razonar`); sin él, gemma4 deja el contenido vacío.
+- Compose no pasa `WEB_HOME_PATH` al servicio `web` (el login responde 500), ni las claves `AI_DISCLAIMER_TEXT`/`ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`/ADR-39/`MILVUS_DENSE_METRIC_TYPE` sin un `.env` preparado; no hay one-shot que migre el esquema clínico (se aplicó `prisma migrate deploy` a mano como `clinical_api`, dueño de la base) ni cargue el corpus.
+- El cuerpo `contracts/examples/evidence-analysis-request.json` usa un `patientId` que no existe en el seed.
+- La cookie de sesión es `Secure`: los clientes sobre `http://127.0.0.1` deben reenviarla a mano (httpx la descarta).
+- El pipeline no emite tiempos por etapa (necesario para desglosar el p95).
+
 ### Pendiente humano para cerrar la fase B
 
-1. Levantar Ollama y descargar los candidatos; correr `runtime`, `llm` y `e2e` (comandos arriba) y `ocr` en la imagen de
-   medición; copiar las medianas a las tablas de este ADR.
-2. Verificar en la fuente la licencia de H, I y J y registrar el *digest* (`ollama list`).
-3. Decidir si se acepta por escrito la licencia HAI-DEF si E o F ganan (hoy **no aceptada**).
-4. `ai-eval-runner` revisa la muestra de fidelidad y deja `revision-<id>.json` (tarea 2.1).
-5. `decidir` → fijar `LLM_MODEL` (y `OCR_ENGINE` si cambia), cerrar el estado de este ADR y aprobar el PR.
-6. Si el pipeline no emite tiempos por etapa, abrir la historia que lo añada antes de recalibrar G-5 en el S4.
-
-## Pros y contras de las opciones
-
-### A (BGE-M3 · bge-reranker-v2-m3 · mDeBERTa)
-
-- A favor: mejor *embedding* medido; *sparse* propio; mejor *reranker* en calidad (MRR 0,49–0,51; 0,491 con la configuración decidida).
-- En contra: el *reranker* tarda 3,2–4,0 s con chunks de 256 y 8,3 s con chunks de 1024 en 8 vCPU; con ello el p95 extremo a extremo estimado supera los 15 s.
-
-### B (Qwen3-Embedding-0.6B · Qwen3-Reranker-0.6B)
-
-- A favor: pesos pequeños; MRR del *embedding* fp32 el más alto (0,413).
-- En contra: int8 degrada (0,449); el *reranker* usa 5,5–6,7 GB de RSS y 11–26 s por lote; sin *sparse* nativo.
-
-### C (multilingual-e5-large-instruct · gte-multilingual-reranker-base)
-
-- A favor: el *reranker* int8 es el más rápido (1140 ms) y ligero (el único dentro de 2000 ms).
-- En contra: el *embedding* rinde la mitad (0,31) en español → inglés; el *reranker* exige código remoto y rinde menos (0,623).
-
-## Más información
-
-Reportes: `reports/adr39/2026-10-16-fase-a.json`, `reports/adr39/2026-10-16-fase-a2.json`, `reports/adr39/2026-10-20-fase-a3-reranker.json`. Dataset: `data/eval/adr39-mini` (NCI libre de copyright con crédito, PMC CC BY 4.0, ClinicalTrials.gov: *Source: ClinicalTrials.gov, National Library of Medicine*, sin aval de NLM). Bloquea o informa a: L1D-114 (US-058: dimensión e índice), L1D-115 (US-059: tamaño en tokens, solapamiento y estrategia; hoy `fragmentar()` corta por caracteres), L1D-106 (US-055), L1D-274 (US-224), US-072, US-073, ADR-41. Revisión prevista: al medir la fase B y cuando la imagen de L1D-164 esté mergeada.
+1. **Aprobar o rechazar** G como `LLM_MODEL` y Ollama como runtime (el ADR sigue «propuesto»); decidir si se acepta el riesgo del margen de 0,71 GB.
+2. Decidir sobre la exactitud del OCR (0,917) y si se prueban PaddleOCR/docTR corregidos.
+3. Registrada: aceptación de la licencia HAI-DEF por el usuario (2026-10-19; E no ganó por calidad). H verificada Apache-2.0 en Hugging Face (`Qwen/Qwen3.6-27B`).
+4. Repetir en el equipo de 32 GB (recomendado) y, si se quiere más rigor, el protocolo original 3 × 200.
