@@ -414,6 +414,8 @@ services:
       WEB_UPSTREAM_TIMEOUT_MS: ${WEB_UPSTREAM_TIMEOUT_MS:-40000}
       # Tope del cuerpo de las peticiones al BFF; más allá, 413 (RN-22).
       WEB_MAX_BODY_BYTES: ${WEB_MAX_BODY_BYTES:-32768}
+      # Ruta de inicio tras el login (solo servidor). Sin valor por defecto: el web se niega a servir /login sin ella.
+      WEB_HOME_PATH: ${WEB_HOME_PATH:-}
     # Único puerto publicado del stack (SEG-09); en el S1 solo en la máquina local.
     ports:
       - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
