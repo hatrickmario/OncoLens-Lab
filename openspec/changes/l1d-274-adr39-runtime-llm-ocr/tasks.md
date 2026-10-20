@@ -45,7 +45,7 @@
       contra Compose con seed sintético y LLM real; p95 total y por etapa; memoria total del stack;
       descartar con cifra o escalar al usuario (US-012 AC-5); registrar `memory_pressure` y swap (holgura
       de macOS) y la RAM de la máquina de medición · **evaluate** `[US-224 AC-3]` `[NFR-01]` `[NFR-05]`
-- [ ] 1.7 (**parcial, 2026-10-20**: `ocrmypdf-tesseract` medido (exactitud 0,917, p95 0,54 s, sin residuos); PaddleOCR bloqueado (`lang='latin'` sin modelos PP-OCRv5 en 3.7.0); docTR dejó `/tmp/perf-1.map`; pendiente decidir si se aceptan o se repiten) **[HUMANO]** OCR: medir OCRmyPDF + Tesseract `spa`, PaddleOCR (PP-OCRv5 latino) y docTR dentro del
+- [x] 1.7 (**cerrado con decisión del usuario 2026-10-20: se acepta `ocrmypdf-tesseract` con exactitud 0,917; PaddleOCR y docTR sin repetir**; **parcial**: `ocrmypdf-tesseract` medido (exactitud 0,917, p95 0,54 s, sin residuos); PaddleOCR bloqueado (`lang='latin'` sin modelos PP-OCRv5 en 3.7.0); docTR dejó `/tmp/perf-1.map`; pendiente decidir si se aceptan o se repiten) **[HUMANO]** OCR: medir OCRmyPDF + Tesseract `spa`, PaddleOCR (PP-OCRv5 latino) y docTR dentro del
       contenedor de `rag-orchestrator` sobre `data/eval/ocr-mini/`: exactitud por campo crítico,
       p95 por documento (≤ 60 s), memoria, licencia y **si escribe a disco y dónde**, con el
       contenedor en `read_only: true` y `TMPDIR=/tmp` sobre `tmpfs` (Compose de L1D-164); motor que
@@ -61,7 +61,7 @@
       AC-1, AC-2, AC-3 y AC-6 con medianas y descartes con cifra, decisión, consecuencias,
       configuración (RN-22), confirmación y comando repetible; citar `[S1 resp. 3, 5, 6, 10]`;
       estado propuesto hasta la aprobación del usuario · **exento** `[US-224 AC-1…AC-6]`
-- [ ] 1.9 (**hecho en `Settings` y su test**; **faltan `.env.example`** —lo edita el orquestador: `LLM_NUM_CTX=8192`, `LLM_TEMPERATURE=0`, `OCR_ENGINE=ocrmypdf-tesseract`, `OCR_LANGUAGES=spa`— **y `LLM_MODEL`**, que fija la elección de 1.5) Configuración: fijar `LLM_BASE_URL`, `LLM_MODEL`, `LLM_NUM_CTX`, `LLM_TEMPERATURE`,
+- [x] 1.9 (**cerrado 2026-10-20: `LLM_MODEL=gemma4:26b-a4b-it-q4_K_M` en PR #108; las demás claves se aplicaron en #90 según el registro del orquestador**; antes: **hecho en `Settings` y su test**; **faltan `.env.example`** —lo edita el orquestador: `LLM_NUM_CTX=8192`, `LLM_TEMPERATURE=0`, `OCR_ENGINE=ocrmypdf-tesseract`, `OCR_LANGUAGES=spa`— **y `LLM_MODEL`**, que fija la elección de 1.5) Configuración: fijar `LLM_BASE_URL`, `LLM_MODEL`, `LLM_NUM_CTX`, `LLM_TEMPERATURE`,
       `OCR_ENGINE`, `OCR_LANGUAGES` (y `LLM_CLOUD_ENABLED=false`) en `.env.example` y en la
       configuración de `rag-orchestrator`; test de configuración: valores leídos del entorno y ningún
       nombre de modelo literal fuera de la configuración. Anotar **Regresión [RN-12] activa desde S6

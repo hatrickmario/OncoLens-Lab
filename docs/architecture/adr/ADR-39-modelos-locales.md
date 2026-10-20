@@ -238,8 +238,8 @@ Sin cambiar ninguna decisión ni cifra del bloque de arriba (por eso `--check-co
 
 ## Fase B
 
-> Change de L1D-274 (US-224). **Estado de la fase B: propuesto, medido el 2026-10-19/20 en la MacBook de referencia (M5 Pro, 48 GB)
-> con un protocolo reducido y Ollama 0.34.4. Pasa a «aceptado» cuando el usuario apruebe el PR.** Resultado resumido: **runtime Ollama;
+> Change de L1D-274 (US-224). **Estado de la fase B: aceptado por el usuario el 2026-10-20 (Ollama, G como `LLM_MODEL` y la exactitud del OCR de 0,917), medido el 2026-10-19/20 en la MacBook de referencia (M5 Pro, 48 GB)
+> con un protocolo reducido y Ollama 0.34.4. Decidido (usuario, 2026-10-20).** Resultado resumido: **runtime Ollama;
 > LLM elegido G `gemma4:26b-a4b-it-q4_K_M` (propuesto, con el riesgo de margen < 1 GB en el stack); motor OCR `ocrmypdf-tesseract`
 > (pendiente de aceptar su exactitud de 0,917).** Cifras en las tablas de abajo; reportes agregados en `reports/adr39/`
 > (`decision/`, `B/`…`E/`, `e2e-B/`, `e2e-G/`, `ocr*/`) y crónica en `reports/adr39/resultados-fase-b.md`. Citas: `[S1 resp. 3, 5, 6, 10]`; reglas
@@ -372,7 +372,7 @@ el de la estructuración del LLM elegido (`decidir` suma ambos medianas y exige 
 | Variable | Valor | Estado |
 |---|---|---|
 | `LLM_BASE_URL` | `http://host.docker.internal:11434/v1` | ya vigente: runtime nativo fuera de Docker |
-| `LLM_MODEL` | `gemma4:26b-a4b-it-q4_K_M` (digest `5571076f3d70`) | **propuesto** (queda en el entorno/.env; sin literal en el código); aplica al aprobar el PR |
+| `LLM_MODEL` | `gemma4:26b-a4b-it-q4_K_M` (digest `5571076f3d70`) | **decidido (usuario, 2026-10-20)**; en los `.env.example` (PR #108); sin literal en el código |
 | `LLM_NUM_CTX` | `8192` (`[S1 resp. 10]`) | en `Settings`; **lo aplica el runtime** (`OLLAMA_CONTEXT_LENGTH=8192` en el servidor de Ollama): la API compatible con OpenAI no lo recibe por petición |
 | `LLM_TEMPERATURE` | `0.0` (la del cliente actual) | en `Settings` y propagada al cliente del LLM; se actualiza si la medición fija otra |
 | `LLM_CLOUD_ENABLED` | `false` | sin cambio (RN-12) |
@@ -429,7 +429,7 @@ Salida del comando sobre los reportes medidos (`reports/adr39/decision/decision.
 | **G** | **elegible** | cumple las eliminatorias |
 | H | pendiente | sin e2e ni revisión (el comando no lo descarta; ver abajo) |
 
-**Elegido: G `gemma4:26b-a4b-it-q4_K_M`** (propuesto, a aprobar por el usuario). Único medido que cumple todas las eliminatorias: LLM 17,69 GB ≤ 21 GB, stack 29,29 GB ≤ 30 GB sin swap creciente, JSON válido 1,00, e2e p95 9,9 s ≤ 15 s, fidelidad 0,95 con 0 salidas prescriptivas y 0 en otro idioma, extracción p95 ≈ 2,4 s (OCR 0,54 s + estructuración 1,82 s) ≤ 60 s. **Runtime: Ollama 0.34.4.** **Motor OCR: `ocrmypdf-tesseract`** (PaddleOCR bloqueado por configuración, docTR falló la regla de residuos).
+**Elegido: G `gemma4:26b-a4b-it-q4_K_M`** (**aceptado, usuario 2026-10-20**; margen de stack < 1 GB aceptado como riesgo). Único medido que cumple todas las eliminatorias: LLM 17,69 GB ≤ 21 GB, stack 29,29 GB ≤ 30 GB sin swap creciente, JSON válido 1,00, e2e p95 9,9 s ≤ 15 s, fidelidad 0,95 con 0 salidas prescriptivas y 0 en otro idioma, extracción p95 ≈ 2,4 s (OCR 0,54 s + estructuración 1,82 s) ≤ 60 s. **Runtime: Ollama 0.34.4.** **Motor OCR: `ocrmypdf-tesseract`** (PaddleOCR bloqueado por configuración, docTR falló la regla de residuos).
 
 **Riesgos y salvedades (declarados, no resueltos):**
 1. **Margen de memoria del stack 0,71 GB < 1 GB** (regla 5): sin respaldo con margen. En el equipo de referencia de 32 GB la suma LLM + Docker (29,3 GB) deja ~2,7 GB al sistema, la VM y el resto de apps: no afirmar «cabe en 32 GB»; repetir allí es recomendado. Palancas no medidas: `OLLAMA_KV_CACHE_TYPE=q8_0`, menos memoria de Docker.
@@ -448,7 +448,6 @@ Salida del comando sobre los reportes medidos (`reports/adr39/decision/decision.
 
 ### Pendiente humano para cerrar la fase B
 
-1. **Aprobar o rechazar** G como `LLM_MODEL` y Ollama como runtime (el ADR sigue «propuesto»); decidir si se acepta el riesgo del margen de 0,71 GB.
-2. Decidir sobre la exactitud del OCR (0,917) y si se prueban PaddleOCR/docTR corregidos.
-3. Registrada: aceptación de la licencia HAI-DEF por el usuario (2026-10-19; E no ganó por calidad). H verificada Apache-2.0 en Hugging Face (`Qwen/Qwen3.6-27B`).
-4. Repetir en el equipo de 32 GB (recomendado) y, si se quiere más rigor, el protocolo original 3 × 200.
+1. **Decidido (usuario, 2026-10-20):** Ollama como runtime y G como `LLM_MODEL`, con el margen de stack de 0,71 GB aceptado como riesgo; exactitud del OCR de 0,917 aceptada para `ocrmypdf-tesseract`. Aplicado en `.env.example` (PR #108, excepción del usuario).
+2. Registrada: aceptación de la licencia HAI-DEF por el usuario (2026-10-19; E no ganó por calidad). H verificada Apache-2.0 en Hugging Face (`Qwen/Qwen3.6-27B`).
+3. Recomendado, no bloqueante: repetir en el equipo de 32 GB; PaddleOCR/docTR corregidos y el protocolo original 3 × 200 solo si se quiere más rigor.
