@@ -69,6 +69,41 @@ describe('EvidencePanel', () => {
     expect(fragmento.getByText(cita.chunkTextSnapshot).getAttribute('lang')).toBe(cita.language);
   });
 
+  it('muestra al final del Fragmento citado el enlace a la fuente original en una pestaña nueva cuando la cita trae una URL https [ARR-07 AC-4]', async () => {
+    bff.responder({ status: 200, cuerpo: conEvidencia });
+    const usuario = await analizar();
+    await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
+    await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
+
+    const panel = screen.getByRole('complementary', { name: evidence.fragmento.titulo });
+    const enlace = within(panel).getByRole('link', { name: cita.sourceUrl! });
+    expect(enlace.getAttribute('href')).toBe(cita.sourceUrl);
+    expect(enlace.getAttribute('target')).toBe('_blank');
+    expect(enlace.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(within(panel).getByText(evidence.cita.fuenteOriginal)).toBeTruthy();
+    const botonVolver = within(panel).getByRole('button', { name: evidence.fragmento.volver });
+    const orden = enlace.compareDocumentPosition(botonVolver);
+    expect(orden & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it.each([null])(
+    'muestra No disponible en lugar del enlace en el Fragmento citado cuando la fuente no registra URL (%s) [ARR-07 AC-4]',
+    async (sourceUrl) => {
+      const sinUrl = structuredClone(conEvidencia);
+      sinUrl.evidenceOptions[0]!.citedSources[0]!.sourceUrl = sourceUrl;
+      bff.responder({ status: 200, cuerpo: sinUrl });
+      const usuario = await analizar();
+      await usuario.click(await screen.findByRole('button', { name: new RegExp(cita.externalId) }));
+      await usuario.click(screen.getByRole('button', { name: evidence.cita.verFragmento }));
+
+      const panel = within(screen.getByRole('complementary', { name: evidence.fragmento.titulo }));
+      expect(panel.queryByRole('link')).toBeNull();
+      expect(panel.getByText(evidence.cita.fuenteOriginal).nextElementSibling?.textContent).toBe(
+        evidence.cita.noDisponible,
+      );
+    },
+  );
+
   it('marca con data-origen solo las hojas copiadas del corpus y nunca el texto generado cuando se expande la cita [US-061 AC-1]', async () => {
     bff.responder({ status: 200, cuerpo: conEvidencia });
     const usuario = await analizar();
