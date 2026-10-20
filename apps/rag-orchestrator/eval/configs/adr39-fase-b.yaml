@@ -52,7 +52,7 @@ llm:
     - {id: A, tag: "gemma4:26b-a4b-it-qat", licencia: Apache-2.0}
     - {id: B, tag: "gemma4:12b-mlx", licencia: Apache-2.0}
     - {id: C, tag: "qwen3.5:9b-mlx", licencia: Apache-2.0}
-    - {id: E, tag: "medgemma1.5:4b-it-q8_0", licencia: HAI-DEF}
+    - {id: E, tag: "medgemma1.5:4b", licencia: HAI-DEF}   # = 4b-it-q4_K_M (hash 433252621ab1, 3,3 GB); antes q8_0. Cambio del usuario 2026-10-19, antes de medir E
     - {id: F, tag: "medgemma1.5:4b-it-bf16", licencia: HAI-DEF}
     - {id: G, tag: "gemma4:26b-a4b-it-q4_K_M", licencia: Apache-2.0}
     - {id: H, tag: "qwen3.6:27b-q4_K_M", licencia: Apache-2.0, licencia_verificada: false}

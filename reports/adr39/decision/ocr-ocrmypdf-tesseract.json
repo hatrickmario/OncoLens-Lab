@@ -1,0 +1,19 @@
+{
+  "disponible": true,
+  "documentos": 6,
+  "entorno": {
+    "fecha": "2026-10-20T07:34:54+00:00",
+    "maquina": "aarch64",
+    "ollama_flash_attention": null,
+    "ollama_kv_cache_type": null,
+    "plataforma": "Linux-7.0.12-linuxkit-aarch64-with-glibc2.41",
+    "python": "3.13.16"
+  },
+  "escribe_a_disco_observado": true,
+  "exactitud": 0.9166666666666666,
+  "memoria_pico_mb": 110.032,
+  "motor": "ocrmypdf-tesseract",
+  "p95_ms": 539.2408755003544,
+  "residuos": [],
+  "tmpdir": "/tmp"
+}

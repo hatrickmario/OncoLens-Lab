@@ -135,3 +135,15 @@ async def test_completar_json_lanza_fallo_del_llm_al_vencer_el_plazo_total_aunqu
             await cliente.completar_json("prompt", ESQUEMA)
 
     assert time.monotonic() - inicio < 1.5
+
+
+def test_cuerpo_de_peticion_desactiva_el_razonamiento_por_defecto_y_lo_permite_cuando_se_pide() -> (
+    None
+):
+    from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
+
+    sin_razonar = cuerpo_de_peticion("modelo:1b", "prompt", None, 0.0, 256)
+    razonando = cuerpo_de_peticion("modelo:1b", "prompt", None, 0.0, 256, razonar=True)
+
+    assert sin_razonar["reasoning_effort"] == "none"
+    assert "reasoning_effort" not in razonando
