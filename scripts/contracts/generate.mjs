@@ -91,7 +91,7 @@ async function generatePydantic(root, bundled) {
 export async function generate(root = DEFAULT_ROOT) {
   const { specs } = await loadContext(root);
   for (const provider of Object.keys(SPEC_FILES)) {
-    if (!specs[provider].bundled) throw new Error(`${SPEC_FILES[provider]}: ${specs[provider].error}`);
+    if (!specs[provider].bundled) throw new Error(specs[provider].error ?? `${SPEC_FILES[provider]}: spec vacío o ilegible`);
   }
   for (const provider of Object.keys(SPEC_FILES)) {
     await generateTypesAndZod(root, provider, specs[provider].bundled);

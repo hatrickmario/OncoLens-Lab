@@ -3,7 +3,7 @@ import { assertFollowUpContract } from '../../rules/assertFollowUpContract.mjs';
 import { patchedContracts, realContracts } from '../helpers/parches.mjs';
 
 const mensajesTrasParchar = async (operaciones) => {
-  const mutated = patchedContracts(await realContracts(), [{ destino: 'rag-orchestrator', operaciones }]);
+  const mutated = await patchedContracts(await realContracts(), [{ destino: 'rag-orchestrator', operaciones }]);
   return assertFollowUpContract(mutated.specs, mutated.examples, mutated.docs).map((item) => item.message);
 };
 
