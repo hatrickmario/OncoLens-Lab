@@ -282,7 +282,10 @@ export async function montarGateway(
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
     },
-    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata']),
+    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata'], [
+      'mama',
+      'prostata',
+    ]),
     alcanceDelCorpus: {
       corpusExcludedSources: opciones.corpusExcludedSources ?? ['NCCN', 'ESMO'],
       corpusCutoffDate: opciones.corpusCutoffDate ?? '2026-09-30',

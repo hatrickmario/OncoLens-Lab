@@ -4,7 +4,6 @@ import {
   cargarConfiguracion,
   cargarConfiguracionDeServicios,
   exigirGateDeDatosReales,
-  validarTiposHabilitados,
   type ConfiguracionDeArranque,
   type ConfiguracionDeServicios,
 } from './config/index.js';
@@ -109,15 +108,14 @@ export function cargarEtapaDeServicios(
     readFile,
     servicios.analisis.catalogExpectedVersion,
   );
-  const habilitados = validarTiposHabilitados(
-    servicios.alcance.enabledCancerTypes,
-    catalogo.cancerTypes(),
-  );
   return {
     configuracion: { ...servicios, pii },
     catalogo,
     clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
-    tiposHabilitados: crearTiposHabilitados(habilitados),
+    tiposHabilitados: crearTiposHabilitados(
+      servicios.alcance.enabledCancerTypes,
+      catalogo.cancerTypes(),
+    ),
   };
 }
 

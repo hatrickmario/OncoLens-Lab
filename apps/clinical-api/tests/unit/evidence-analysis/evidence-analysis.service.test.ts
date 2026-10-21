@@ -160,7 +160,10 @@ function crearFakes(
         return RESULTADO_DEL_CIERRE;
       },
     },
-    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata']),
+    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata'], [
+      'mama',
+      'prostata',
+    ]),
     catalogo: { version: () => '1.0.0' },
     reloj: { now: () => AHORA_DE_EJEMPLO },
     config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },

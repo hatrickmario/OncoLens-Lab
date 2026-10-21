@@ -6,6 +6,7 @@ import {
 } from '../../src/config/index.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 
+const CATALOGO = ['mama', 'prostata'];
 const ENV_VALIDO = {
   ENABLED_CANCER_TYPES: 'mama, prostata',
   CORPUS_EXCLUDED_SOURCES: 'NCCN,ESMO',
@@ -77,15 +78,21 @@ describe('validarTiposHabilitados', () => {
 
 describe('crearTiposHabilitados', () => {
   it('informa true para mama y próstata cuando ambos están habilitados [US-043 AC-1]', () => {
-    const tipos = crearTiposHabilitados(['mama', 'prostata']);
+    const tipos = crearTiposHabilitados(['mama', 'prostata'], CATALOGO);
 
     expect(tipos.estaHabilitado('mama')).toBe(true);
     expect(tipos.estaHabilitado('prostata')).toBe(true);
   });
 
   it('informa false para próstata cuando solo mama está habilitada [US-043 AC-3]', () => {
-    const tipos = crearTiposHabilitados(['mama']);
+    const tipos = crearTiposHabilitados(['mama'], CATALOGO);
 
     expect(tipos.estaHabilitado('prostata')).toBe(false);
+  });
+
+  it('lanza tipo_no_en_catalogo cuando un tipo habilitado no está en el catálogo: no se puede crear sin validar', () => {
+    expect(() => crearTiposHabilitados(['mama', 'leucemia'], CATALOGO)).toThrow(
+      expect.objectContaining({ motivo: 'tipo_no_en_catalogo', valorInvalido: 'leucemia' }),
+    );
   });
 });
