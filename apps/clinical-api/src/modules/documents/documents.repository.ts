@@ -26,9 +26,12 @@ export interface DocumentsRepository {
 }
 
 const VIOLACION_DE_UNICIDAD = '23505';
+const UNICIDAD_PACIENTE_Y_CHECKSUM = 'document_patient_id_checksum_key';
 
-function esViolacionDeUnicidad(error: unknown): boolean {
-  return (error as { code?: unknown } | null)?.code === VIOLACION_DE_UNICIDAD;
+/** Solo la `UNIQUE(patient_id, checksum)` es un duplicado; cualquier otra violación (p. ej. la clave primaria) es un fallo. */
+function esDuplicadoPorChecksum(error: unknown): boolean {
+  const { code, constraint } = (error ?? {}) as { code?: unknown; constraint?: unknown };
+  return code === VIOLACION_DE_UNICIDAD && constraint === UNICIDAD_PACIENTE_Y_CHECKSUM;
 }
 
 export function createDocumentsRepository(db: Consultador): DocumentsRepository {
@@ -65,7 +68,7 @@ export function createDocumentsRepository(db: Consultador): DocumentsRepository 
         );
         return 'creado';
       } catch (error) {
-        if (esViolacionDeUnicidad(error)) return 'duplicado';
+        if (esDuplicadoPorChecksum(error)) return 'duplicado';
         throw error;
       }
     },
