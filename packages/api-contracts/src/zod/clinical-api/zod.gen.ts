@@ -5,7 +5,8 @@ import * as z from 'zod';
 export const zHealthStatus = z.strictObject({
     status: z.literal('ok'),
     configKeys: z.array(z.string().regex(/^[A-Z][A-Z0-9_]*$/)).optional(),
-    serviceVersion: z.string().min(1).optional()
+    serviceVersion: z.string().min(1).optional(),
+    catalogVersion: z.string().min(1).optional()
 });
 
 /**
@@ -581,6 +582,12 @@ export const zErrorLimiteSolicitudes = z.strictObject({
 
 export const zErrorLimiteGeneracion = z.strictObject({
     error: z.enum(['LIMITE_SOLICITUDES', 'COLA_INFERENCIA_LLENA']),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorCatalogVersionMismatch = z.strictObject({
+    error: z.literal('CATALOG_VERSION_MISMATCH'),
     message: z.string(),
     traceId: z.string()
 });

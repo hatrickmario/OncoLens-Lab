@@ -191,6 +191,14 @@ class EvidenceGenerator(Protocol):
     ) -> EvidenciaGenerada: ...
 
 
+class CatalogoClinico(Protocol):
+    """Catálogo clínico versionado y montado de solo lectura (``CLINICAL_CATALOG_PATH``), no el catálogo del corpus."""
+
+    def version(self) -> str:
+        """Versión efectiva del catálogo montado (la de su ``manifest.json``)."""
+        ...
+
+
 class CorpusCatalogReader(Protocol):
     """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""
 

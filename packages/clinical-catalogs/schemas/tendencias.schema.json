@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tendencias.json por tipo de cáncer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "items",
+    "estado"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "items": {
+      "type": "array"
+    },
+    "estado": {
+      "enum": [
+        "propuesta",
+        "aprobada"
+      ]
+    }
+  }
+}
