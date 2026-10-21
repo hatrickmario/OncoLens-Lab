@@ -44,6 +44,37 @@ describe('excepciones del cliente verificado', () => {
   });
 });
 
+describe('ruta de mentira con esquema', () => {
+  const ESQUEMA = '#/components/responses/ErrorInterno';
+  const appDeMentira = (cuerpo: unknown) => {
+    const app = express();
+    app.get('/platform/de-mentira', (_peticion, respuesta) => {
+      respuesta.status(500).json(cuerpo);
+    });
+    return app;
+  };
+  const opciones = {
+    respuestasAjenasAlContrato: [{ ruta: '/platform/de-mentira', esquema: ESQUEMA }],
+  };
+
+  it('valida la respuesta contra el esquema declarado y acepta un cuerpo conforme [US-214 AC-3]', async () => {
+    const respuesta = await clienteVerificado(
+      appDeMentira(ejemplo('error-interno.json')),
+      opciones,
+    ).get('/platform/de-mentira');
+
+    expect(respuesta.status).toBe(500);
+  });
+
+  it('falla nombrando el campo, sin el valor, cuando el cuerpo incumple el esquema declarado [US-214 AC-3]', async () => {
+    const app = appDeMentira({ ...ejemplo('error-interno.json'), error: VALOR_SENTINELA });
+    const peticion = async () => clienteVerificado(app, opciones).get('/platform/de-mentira');
+
+    await expect(peticion()).rejects.toThrow(/\/error/);
+    await expect(peticion()).rejects.not.toThrow(VALOR_SENTINELA);
+  });
+});
+
 describe('verificación automática del proveedor', () => {
   it('falla nombrando proveedor, operación, código y campo, sin el valor, cuando EvidenceAnalysis trae un campo no declarado [US-214 AC-2]', async () => {
     const app = proveedorQueResponde(200, {

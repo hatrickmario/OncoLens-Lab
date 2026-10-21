@@ -5,6 +5,7 @@ import * as zodClinical from '../../../packages/api-contracts/src/zod/clinical-a
 import * as refinadoClinical from '../../../packages/api-contracts/src/zod/clinical-api/refinamientos.gen.ts';
 import * as zodRag from '../../../packages/api-contracts/src/zod/rag-orchestrator/zod.gen.ts';
 import * as refinadoRag from '../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.ts';
+import { NOMBRE_DE_CAMPO, PROPIEDAD_NO_DECLARADA } from '../lib/nombreDeCampo.mjs';
 import { generarRefinamientos } from '../lib/refinamientos.mjs';
 import { ROOT, patchedContracts, realContracts } from './helpers/parches.mjs';
 
@@ -72,7 +73,7 @@ describe('Zod refinado generado (US-214 AC-6)', () => {
 
     const resultado = refinadoClinical.zEvidenceAnalysisRefinado.safeParse(analisis);
 
-    expect(campos(resultado)).toContain('evidenceOptions.0.citedSources.0.{propiedad no evaluada}');
+    expect(campos(resultado)).toContain(`evidenceOptions.0.citedSources.0.${PROPIEDAD_NO_DECLARADA}`);
   });
 
   it('rechaza una propiedad no evaluada en un FollowUpCitedSource y acepta isNewSource [US-214 AC-6]', () => {
@@ -106,6 +107,15 @@ describe('Zod refinado generado (US-214 AC-6)', () => {
     const afirmacion = { text: 'afirmación sintética', citedSources: [], patientDataRefs: [] };
 
     expect(refinadoClinical.zSupportedClaimRefinado.safeParse(afirmacion).success).toBe(false);
+  });
+});
+
+describe('regla de nombres de campo compartida (RN-10)', () => {
+  it('el TS generado usa exactamente la expresión de NOMBRE_DE_CAMPO y el mismo marcador', async () => {
+    const generado = generarRefinamientos((await realContracts()).specs['clinical-api'].bundled, '// cabecera');
+
+    expect(generado).toContain(`/${NOMBRE_DE_CAMPO.source}/.test(clave)`);
+    expect(generado).toContain(PROPIEDAD_NO_DECLARADA);
   });
 });
 
