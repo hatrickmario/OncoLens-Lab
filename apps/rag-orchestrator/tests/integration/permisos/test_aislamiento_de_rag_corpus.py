@@ -75,5 +75,11 @@ def test_rag_corpus_tabla_futura_en_schema_clinico_permission_denied(
     base = base_con_schemas_clinicos
     tabla = f"futura_{esquema}"
     crear_tabla_posterior_a_la_migracion(base.url_administracion, esquema, tabla)
+    # El REVOKE por defecto (no solo la falta de USAGE en el schema) es lo que impide el privilegio sobre la tabla futura.
+    with conectar(base.url_administracion) as admin:
+        concedido = admin.execute(
+            "SELECT has_table_privilege('rag_corpus', %s, 'SELECT')", (f'"{esquema}"."{tabla}"',)
+        ).fetchone()
+    assert concedido == (False,)
     with pytest.raises(psycopg.errors.InsufficientPrivilege):
         _seleccionar(base.url_runtime, esquema, tabla)
