@@ -110,7 +110,7 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
   endpoint de la ficha. Aquí se entrega el adaptador `crearTiposHabilitados()` (puerto `TiposDeCancerHabilitados` en
   `evidence-analysis/ports.ts`) probado en unitario; los escenarios de ficha de AC-1/AC-3 se cubren al implementar L1D-72.
 - **Manifiesto**: `crearProveedorDeVersionDeCatalogo()` expone `cancerTypes()`; sin `cancerTypes` en el manifiesto, toda lista habilitada es inválida.
-- **Claves nuevas obligatorias en `clinical-api`** (pendiente para el usuario, no tocado por este agente):
-  `ENABLED_CANCER_TYPES`, `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE` en `infra/docker/.env.example` y como
-  pass-through en el servicio `clinical-api` de `infra/docker/docker-compose.yml` (patrón `${CLAVE:-}`), y en
-  `scripts/demo/levantar.sh`; sin ellas `clinical-api` no arranca en Compose.
+- **Claves nuevas obligatorias en `clinical-api`**: `ENABLED_CANCER_TYPES` (demo `mama,prostata`), `CORPUS_EXCLUDED_SOURCES`
+  (demo `NCCN,ESMO`) y `CORPUS_CUTOFF_DATE` (demo `2026-09-30`). El servicio `clinical-api` de `docker-compose.yml` las pasa
+  con `${CLAVE:-<valor demo>}`, así que Compose arranca sin `.env`. **Pendiente del usuario**: añadirlas a
+  `infra/docker/.env.example` y a `docs/operations/claves.md`.
