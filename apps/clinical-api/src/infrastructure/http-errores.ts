@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, Response } from 'express';
+import { IdentityIntegrityError } from './crypto/identity-integrity-error.js';
 import type { Registrar } from './logger.js';
 
 /** `ERROR_INTERNO` es el cuerpo del 500 declarado en `openapi.yaml` (`#/components/responses/ErrorInterno`). */
@@ -71,7 +72,11 @@ export function manejadorFinalDeErrores(dependencias: {
       return;
     }
     const traceId = dependencias.nuevoTraceId();
-    dependencias.registrar({ event: 'error.no_controlado', traceId });
+    dependencias.registrar({
+      event: 'error.no_controlado',
+      ...(error instanceof IdentityIntegrityError && { code: error.code }),
+      traceId,
+    });
     enviarError(respuesta, 500, 'ERROR_INTERNO', traceId);
   };
 }

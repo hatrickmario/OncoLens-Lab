@@ -1,4 +1,5 @@
 import { ConfiguracionInvalidaError, readAuthConfig } from '../../src/config.js';
+import { leerClavesDeIdentidadDelEntorno } from '../../src/modules/patients/identity.module.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { nuevoTraceId } from '../../src/infrastructure/ids.js';
 import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
@@ -68,6 +69,8 @@ async function sembrarTrasLaGuarda(
   const config = leerConfiguracionDelSeed(env);
   assertSeedPermitido(config);
   const credenciales = leerCredenciales(env, dependencias.leerArchivo);
+  // Las claves de la identidad se abren solo después de la guarda: en piloto el seed ni las toca (RN-13).
+  const claves = leerClavesDeIdentidadDelEntorno(env, dependencias.leerArchivo);
   const catalogo = leerCatalogo(config.rutaDelCatalogo, dependencias.leerArchivo);
   const conexion = await dependencias.conectar(env);
   try {
@@ -77,6 +80,7 @@ async function sembrarTrasLaGuarda(
         reloj: relojDelSeed(config.fechaDeReferencia),
         hasher: dependencias.hasher,
         credenciales,
+        claves,
         retencion: {
           anosHastaRetencion: config.anosHastaRetencion,
           anosHastaRetencionMaxima: config.anosHastaRetencionMaxima,

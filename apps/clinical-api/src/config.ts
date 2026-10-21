@@ -193,6 +193,44 @@ export function readDatabaseConfig(
   };
 }
 
+/** Archivos de clave de la identidad cifrada (US-046, D3). Los archivos se leen en `cargarClavesDeIdentidad`. */
+export interface IdentityKeyConfig {
+  /** `IDENTITY_KEY_VERSION`: versión con la que se cifra (por defecto 1). */
+  keyVersion: number;
+  /** `IDENTITY_AES_KEY_FILE`: la clave de la versión activa. */
+  activeKeyFile: string;
+  /** `IDENTITY_AES_KEY_V<n>_FILE`: claves de versiones anteriores, solo para descifrar. */
+  previousKeyFiles: ReadonlyMap<number, string>;
+  /** `BLIND_INDEX_HMAC_KEY_FILE`: clave HMAC del índice ciego (no rota en el MVP). */
+  hmacKeyFile: string;
+}
+
+const DEFAULT_IDENTITY_KEY_VERSION = 1;
+const PATRON_DE_CLAVE_ANTERIOR = /^IDENTITY_AES_KEY_V(\d+)_FILE$/;
+
+/** Lee los nombres de archivo de las claves de identidad; el error nombra la variable, nunca un valor (RN-10, RN-14). */
+export function readIdentityKeyConfig(env: NodeJS.ProcessEnv): IdentityKeyConfig {
+  const keyVersion = readPositiveInteger(env, 'IDENTITY_KEY_VERSION', DEFAULT_IDENTITY_KEY_VERSION);
+  const previousKeyFiles = new Map<number, string>();
+  for (const [variable, ruta] of Object.entries(env)) {
+    const version = PATRON_DE_CLAVE_ANTERIOR.exec(variable)?.[1];
+    if (version === undefined || ruta === undefined || ruta === '') continue;
+    if (Number(version) === keyVersion) {
+      throw new ConfiguracionInvalidaError(
+        variable,
+        'no puede definirse para la versión activa (va en IDENTITY_AES_KEY_FILE)',
+      );
+    }
+    previousKeyFiles.set(Number(version), ruta);
+  }
+  return {
+    keyVersion,
+    activeKeyFile: leerObligatoria(env, 'IDENTITY_AES_KEY_FILE'),
+    previousKeyFiles,
+    hmacKeyFile: leerObligatoria(env, 'BLIND_INDEX_HMAC_KEY_FILE'),
+  };
+}
+
 /** Rutas y umbral de la desidentificación (L1D-203, RN-11, RN-22); el contenido de los archivos lo valida `cargarConfiguracionDePii`. */
 export interface DeidentificationConfig {
   /** `PII_FORMATS_PATH`: `config/pii-formats.json` de L1D-166 (fuente única de formatos), montado de solo lectura. */

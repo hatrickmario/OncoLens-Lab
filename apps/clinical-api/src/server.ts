@@ -16,9 +16,13 @@ import { registrarEnConsola } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
+import {
+  crearServicioDeIdentidad,
+  leerClavesDeIdentidadDelEntorno,
+} from './modules/patients/identity.module.js';
 import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
-import { crearLectorDeIdentidadDelS1 } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
+import { crearLectorDeIdentidad } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import { crearDetectorOpcionA } from './modules/evidence-analysis/deidentification/pii-detector.opcion-a.js';
 import { cargarConfiguracionDePii } from './modules/evidence-analysis/deidentification/pii-formats.config.js';
 import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
@@ -42,6 +46,7 @@ arrancar({
   listen: (puerto) => {
     let configuracion;
     let catalogo;
+    let clavesDeIdentidad;
     try {
       const appEnv = exigirAppEnv(process.env);
       configuracion = {
@@ -54,6 +59,8 @@ arrancar({
         pii: cargarConfiguracionDePii(readDeidentificationConfig(process.env), leerArchivo),
       };
       catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
+      // Fallo cerrado (US-046 AC-5): las claves de la identidad deben ser legibles y de 32 bytes antes de escuchar.
+      clavesDeIdentidad = leerClavesDeIdentidadDelEntorno(process.env, leerArchivo);
     } catch (error) {
       if (!(error instanceof ConfiguracionInvalidaError)) throw error;
       registrarConfiguracionInvalida((linea) => console.error(linea), error);
@@ -90,7 +97,9 @@ arrancar({
           idsDeAnalisis: randomUUID,
           // Cableado explícito (RN-11): el desidentificador definitivo, no un valor por defecto del módulo.
           desidentificador: crearContextDeidentifier({
-            identidades: crearLectorDeIdentidadDelS1(),
+            identidades: crearLectorDeIdentidad(
+              crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool }),
+            ),
             detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,

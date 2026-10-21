@@ -1,4 +1,4 @@
-import { ConfiguracionInvalidaError, readPort } from './config.js';
+import { ConfiguracionInvalidaError, readIdentityKeyConfig, readPort } from './config.js';
 import { SecretoAusenteError, loadRequiredSecrets, type LeerArchivo } from './config/secrets.js';
 
 export interface DependenciasDeArranque {
@@ -7,6 +7,14 @@ export interface DependenciasDeArranque {
   readonly log: (linea: string) => void;
   readonly exit: (codigo: number) => void;
   readonly listen: (puerto: number) => void;
+}
+
+/**
+ * Valida las VARIABLES de identidad (`IDENTITY_KEY_VERSION` y los nombres de archivo de clave), no los archivos: las
+ * claves en sí se validan en server.ts. Falla con `ConfiguracionInvalidaError` si alguna no es válida.
+ */
+function validarVariablesDeIdentidad(env: NodeJS.ProcessEnv): void {
+  readIdentityKeyConfig(env);
 }
 
 /** Línea de log de una configuración inválida: nombra la variable, nunca su valor (RN-10, RN-14). */
@@ -29,6 +37,7 @@ export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArr
   let puerto: number;
   try {
     loadRequiredSecrets(env, readFile);
+    validarVariablesDeIdentidad(env);
     puerto = readPort(env);
   } catch (error) {
     if (error instanceof SecretoAusenteError) {
