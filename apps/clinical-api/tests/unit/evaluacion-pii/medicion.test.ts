@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   valorAusenteDelEnmascarado,
   falsosPositivosClinicos,
-  percentil95,
+  p95PorRango,
   sensibilidadPorTipo,
   TOTAL,
+  veredictoPorTipoDirecto,
   type TextoMedido,
   type TextoSembrado,
 } from '../../../src/evaluacion/pii/medicion.js';
@@ -114,14 +115,70 @@ describe('falsosPositivosClinicos', () => {
   });
 });
 
-describe('percentil95', () => {
+describe('veredictoPorTipoDirecto', () => {
+  const sens = (aciertos: number, total: number) => ({
+    aciertos,
+    total,
+    valor: total === 0 ? null : aciertos / total,
+  });
+  const TIPOS = ['nombre', 'correo'] as const;
+
+  it('cumple cuando cada tipo directo y el total alcanzan el mínimo', () => {
+    const veredicto = veredictoPorTipoDirecto(
+      { nombre: sens(10, 10), correo: sens(10, 10), [TOTAL]: sens(20, 20) },
+      TIPOS,
+      0.95,
+    );
+
+    expect(veredicto).toEqual({ cumple: true, porDebajo: [] });
+  });
+
+  it('no cumple y lista el tipo cuando un tipo directo queda por debajo del mínimo', () => {
+    const veredicto = veredictoPorTipoDirecto(
+      { nombre: sens(5, 10), correo: sens(10, 10), [TOTAL]: sens(15, 20) },
+      TIPOS,
+      0.95,
+    );
+
+    expect(veredicto.cumple).toBe(false);
+    expect(veredicto.porDebajo).toEqual(['nombre', TOTAL]);
+  });
+
+  it('no cumple y lista el tipo cuando un tipo requerido no tiene etiquetas medidas', () => {
+    const veredicto = veredictoPorTipoDirecto(
+      { correo: sens(10, 10), [TOTAL]: sens(10, 10) },
+      TIPOS,
+      0.95,
+    );
+
+    expect(veredicto).toEqual({ cumple: false, porDebajo: ['nombre'] });
+  });
+
+  it('no cumple cuando el total es null aunque los tipos pasen', () => {
+    const veredicto = veredictoPorTipoDirecto(
+      { nombre: sens(1, 1), correo: sens(1, 1), [TOTAL]: sens(0, 0) },
+      TIPOS,
+      0.95,
+    );
+
+    expect(veredicto).toEqual({ cumple: false, porDebajo: [TOTAL] });
+  });
+});
+
+describe('p95PorRango', () => {
   it('devuelve el valor del rango por techo cuando hay veinte muestras ordenadas al revés', () => {
     const muestras = Array.from({ length: 20 }, (_, i) => 20 - i);
 
-    expect(percentil95(muestras)).toBe(19);
+    expect(p95PorRango(muestras)).toBe(19);
+  });
+
+  it('devuelve el rango 285 por techo cuando hay trescientas muestras de 1 a 300 (np.percentile interpola a 285,05)', () => {
+    const muestras = Array.from({ length: 300 }, (_, i) => i + 1);
+
+    expect(p95PorRango(muestras)).toBe(285);
   });
 
   it('devuelve cero cuando no hay muestras', () => {
-    expect(percentil95([])).toBe(0);
+    expect(p95PorRango([])).toBe(0);
   });
 });

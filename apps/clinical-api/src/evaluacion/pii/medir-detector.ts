@@ -3,7 +3,7 @@ import type { ConfiguracionDePii } from '../../modules/evidence-analysis/deident
 import type { IdentidadDelPaciente, PiiDetector } from '../../modules/evidence-analysis/ports.js';
 import {
   falsosPositivosClinicos,
-  percentil95,
+  p95PorRango,
   sensibilidadPorTipo,
   type FalsosPositivos,
   type Sensibilidad,
@@ -107,7 +107,7 @@ function medirModo(
   const documentos = medidos.filter(({ original }) => original.contexto === CONTEXTO_DE_DOCUMENTO);
   const sensibilidadDocumentos = sensibilidadPorTipo(documentos, parametros.coberturaMinima);
   const porCorrida = Array.from({ length: parametros.corridas }, () =>
-    percentil95(medirLatenciasMs(textos, detectorDe, parametros.reloj)),
+    p95PorRango(medirLatenciasMs(textos, detectorDe, parametros.reloj)),
   );
   const porDebajo = tiposDirectosPorDebajo(sensibilidadDocumentos, parametros.sensibilidadMinima);
   return {

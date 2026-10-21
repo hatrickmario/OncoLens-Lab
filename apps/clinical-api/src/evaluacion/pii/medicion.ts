@@ -127,8 +127,22 @@ export function falsosPositivosClinicos(textos: TextoMedido[]): FalsosPositivos 
 }
 
 /** Percentil 95 por rango (método del techo); 0 sin muestras. */
-export function percentil95(valores: number[]): number {
+export function p95PorRango(valores: number[]): number {
   if (valores.length === 0) return 0;
   const ordenados = [...valores].sort((a, b) => a - b);
   return ordenados[Math.ceil(0.95 * ordenados.length) - 1] ?? 0;
+}
+
+export interface VeredictoPorTipoDirecto {
+  cumple: boolean;
+  /** Tipos directos (y `total`) sin medir o por debajo del mínimo. */
+  porDebajo: string[];
+}
+
+export function veredictoPorTipoDirecto(
+  _sensibilidad: Record<string, Sensibilidad>,
+  _tiposDirectos: readonly string[],
+  _minima: number,
+): VeredictoPorTipoDirecto {
+  throw new Error('no implementado');
 }
