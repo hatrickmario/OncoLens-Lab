@@ -24,7 +24,7 @@ La CI MUST tener un job `integration-rag`, incluido en `needs` de `ci-ok`, que e
 #### Scenario: El contenedor de Pytest no recibe credenciales clínicas [ARR-01 AC-2] (asumido) [RN-10]
 - **GIVEN** el job `integration-rag` en ejecución
 - **WHEN** se inspeccionan los secretos y variables del contenedor de Pytest
-- **THEN** solo contiene las credenciales de `rag_corpus`, las de Milvus de test y la clave pública fingida del JWT de servicio, y ninguna credencial de `clinical`, de cifrado de identidad ni de `clinical-minio`
+- **THEN** solo contiene las contraseñas de `rag_corpus`, de `rag_corpus_migrator` y del rol de test `oncolens_test_admin` (solo `CREATEDB`), y ninguna credencial de `clinical`, de cifrado de identidad ni de `clinical-minio`
 
 #### Scenario: Milvus no disponible hace fallar el job en lugar de omitir los tests [ARR-01 AC-2] (asumido)
 - **GIVEN** que `milvus-standalone` no queda sano dentro del tiempo de espera
