@@ -33,6 +33,13 @@ function falloDe503(codigo: string | null | undefined): RespuestaDeFallo {
   }
 }
 
+/** `409` de rag-orchestrator según su código: solo el de catálogo es público; cualquier otro conflicto es `502`. */
+function falloDe409(codigo: string | null | undefined): RespuestaDeFallo {
+  return codigo === 'CATALOG_VERSION_MISMATCH'
+    ? CATALOGO_EN_CONFLICTO
+    : servicioIa('conflicto_de_rag');
+}
+
 /**
  * Tabla ÚNICA de fallos de rag-orchestrator (`[S1 resp. 12]`, `[S1 resp. 35]`): qué responde clinical-api ante cada uno.
  * Ninguna fila persiste un registro ni reenvía el cuerpo, el `message` o las cabeceras de rag-orchestrator.
@@ -53,9 +60,7 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
     case 401:
       return servicioIa('token_de_servicio_rechazado');
     case 409:
-      return fallo.codigo === 'CATALOG_VERSION_MISMATCH'
-        ? CATALOGO_EN_CONFLICTO
-        : servicioIa('conflicto_de_rag');
+      return falloDe409(fallo.codigo);
     case 429:
       return servicioIa('limite_de_rag_alcanzado');
     case null:
