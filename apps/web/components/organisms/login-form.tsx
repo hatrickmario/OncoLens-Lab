@@ -3,8 +3,10 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { zLoginBody } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
-import { CampoConEtiqueta } from '../molecules/campo-con-etiqueta';
-import estilos from './login-form.module.css';
+import { Alert } from '../ui/alert';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 export interface TextosLogin {
   correo: string;
@@ -76,36 +78,42 @@ export function LoginForm({ homePath, textos }: LoginFormProps) {
   };
   return (
     <form
-      className={estilos.formulario}
+      className="flex flex-col gap-4"
       method="post"
       action="/api/auth/login"
       onSubmit={enviar}
       noValidate
     >
       {conError && (
-        <p role="alert" id="login-error" className={estilos.error}>
+        <Alert id="login-error">
           {estado === 'errorServicio' ? textos.errorServicio : textos.errorCredenciales}
-        </p>
+        </Alert>
       )}
-      <CampoConEtiqueta
-        etiqueta={textos.correo}
-        name="email"
-        type="email"
-        autoComplete="username"
-        required
-        {...ayudaDelError}
-      />
-      <CampoConEtiqueta
-        etiqueta={textos.contrasena}
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-        {...ayudaDelError}
-      />
-      <button type="submit" disabled={estado === 'enviando'} className={estilos.boton}>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="login-correo">{textos.correo}</Label>
+        <Input
+          id="login-correo"
+          name="email"
+          type="email"
+          autoComplete="username"
+          required
+          {...ayudaDelError}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="login-contrasena">{textos.contrasena}</Label>
+        <Input
+          id="login-contrasena"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          {...ayudaDelError}
+        />
+      </div>
+      <Button type="submit" disabled={estado === 'enviando'}>
         {estado === 'enviando' ? textos.enviando : textos.enviar}
-      </button>
+      </Button>
     </form>
   );
 }
