@@ -40,6 +40,12 @@ function schemaPointerOfTarget(spec, target) {
   return resolved.node?.content ? (jsonSchemaOf(spec, resolved)?.pointer ?? null) : resolved.pointer;
 }
 
+/** Ruta JSON del campo incumplido; en propiedades no declaradas o ausentes incluye su nombre (nunca su valor). */
+function rutaDelCampo(item) {
+  const nombre = item.params?.additionalProperty ?? item.params?.unevaluatedProperty ?? item.params?.missingProperty;
+  return `${item.instancePath}${nombre === undefined ? '' : `/${nombre}`}` || '#';
+}
+
 /**
  * @typedef {{ error: string } | { problems: { path: string, message: string }[] }} Verdict
  */
@@ -63,7 +69,7 @@ export function createExampleValidator(specs) {
         return { error: `el schema de ${entry.target} no compila: ${error.message}` };
       }
       validate(data);
-      return { problems: (validate.errors ?? []).map((item) => ({ path: item.instancePath || '#', message: `${item.message} (${item.schemaPath})` })) };
+      return { problems: (validate.errors ?? []).map((item) => ({ path: rutaDelCampo(item), message: `${item.message} (${item.schemaPath})` })) };
     },
   };
 }

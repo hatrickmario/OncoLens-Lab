@@ -62,3 +62,32 @@ export function jsonSchemaOf(spec, holder) {
 export function requestBodyOf(spec, entry) {
   return resolvePointer(spec, `${entry.pointer}/requestBody`);
 }
+
+const esParametro = (segmento) => /^\{[^{}/]+\}$/.test(segmento);
+const segmentosDeRuta = (ruta) => ruta.split(/[?#]/, 1)[0].split('/').filter((segmento) => segmento !== '');
+
+/** Una plantilla (`/a/{id}/b`) admite la ruta concreta si tiene los mismos segmentos y los literales coinciden. */
+function plantillaAdmite(plantilla, segmentosConcretos) {
+  const segmentosPlantilla = segmentosDeRuta(plantilla);
+  return (
+    segmentosPlantilla.length === segmentosConcretos.length &&
+    segmentosPlantilla.every((segmento, indice) => esParametro(segmento) || segmento === segmentosConcretos[indice])
+  );
+}
+
+const literalesDe = (plantilla) => segmentosDeRuta(plantilla).filter((segmento) => !esParametro(segmento)).length;
+
+/**
+ * Operación del spec a la que corresponde una petición concreta (`GET /platform/patients/<id>` → `/platform/patients/{patientId}`).
+ * Gana la plantilla con más segmentos literales; un empate entre plantillas distintas no se resuelve (falla cerrado).
+ * @returns {OperationEntry | undefined}
+ */
+export function resolverOperacion(spec, method, rutaConcreta) {
+  const segmentosConcretos = segmentosDeRuta(rutaConcreta);
+  const candidatas = listOperations(spec).filter(
+    (entry) => entry.method === method.toLowerCase() && plantillaAdmite(entry.route, segmentosConcretos),
+  );
+  const mejor = Math.max(0, ...candidatas.map((entry) => literalesDe(entry.route)));
+  const ganadoras = candidatas.filter((entry) => literalesDe(entry.route) === mejor);
+  return ganadoras.length === 1 ? ganadoras[0] : undefined;
+}
