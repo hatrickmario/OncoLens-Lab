@@ -1,6 +1,6 @@
 import type { Express, Router } from 'express';
 import { createApp } from './app.js';
-import type { AuthConfig } from './config/index.js';
+import type { AuthConfig, SesionConfig } from './config/index.js';
 import type { Clock } from './infrastructure/clock.js';
 import type { GeneradorDeIds } from './infrastructure/ids.js';
 import type { Registrar } from './infrastructure/logger.js';
@@ -25,6 +25,8 @@ export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Ro
 export interface DependenciasDeComposicion {
   db: Consultador;
   auth: AuthConfig;
+  /** Inactividad, bloqueo del login y saltos de proxy de confianza (RN-22, US-044). */
+  sesion: SesionConfig;
   reloj: Clock;
   tokens: GeneradorDeToken;
   ids: GeneradorDeIds;

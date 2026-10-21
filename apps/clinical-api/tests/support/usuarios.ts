@@ -164,6 +164,23 @@ export function relojFijo(instante: string = INSTANTE_FIJO): Clock {
   return { now: () => new Date(instante) };
 }
 
+/** Reloj de test que el propio test mueve (`fijar`, `avanzarMinutos`); nunca lee el reloj real. */
+export function relojAjustable(instante: string = INSTANTE_FIJO): Clock & {
+  fijar(instante: string): void;
+  avanzarMinutos(minutos: number): void;
+} {
+  let actual = new Date(instante);
+  return {
+    now: () => new Date(actual),
+    fijar: (nuevo) => {
+      actual = new Date(nuevo);
+    },
+    avanzarMinutos: (minutos) => {
+      actual = new Date(actual.getTime() + minutos * 60_000);
+    },
+  };
+}
+
 export interface LoggerEnMemoria {
   registrar: Registrar;
   lineas: LineaDeLog[];

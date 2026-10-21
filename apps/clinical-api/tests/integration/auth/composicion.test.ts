@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { componerAplicacion } from '../../../src/composition.js';
 import { crearGeneradorDeToken } from '../../../src/infrastructure/token.js';
 import { conectar } from '../../support/db.js';
-import { CONFIG_DE_TEST } from '../../support/app-auth.js';
+import { CONFIG_DE_SESION_DE_TEST, CONFIG_DE_TEST } from '../../support/app-auth.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   cookiesEmitidas,
@@ -38,6 +38,7 @@ describe('composición de producción (componerAplicacion)', () => {
     const app = componerAplicacion({
       db: cliente,
       auth: CONFIG_DE_TEST,
+      sesion: CONFIG_DE_SESION_DE_TEST,
       reloj: relojFijo(),
       tokens: crearGeneradorDeToken(),
       ids: generadorDeIds(ESPACIO_DE_IDS + 1000),
