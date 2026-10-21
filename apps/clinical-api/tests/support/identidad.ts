@@ -9,6 +9,10 @@ import type { LeerArchivo } from '../../src/config/secrets.js';
 import { crearAnilloDeClaves } from '../../src/infrastructure/crypto/anillo-de-claves.js';
 import { crearCifradorAesGcm } from '../../src/infrastructure/crypto/cifrador-aes-gcm.js';
 import { crearIndiceCiego } from '../../src/infrastructure/crypto/indice-ciego.js';
+import {
+  crearServicioDeIdentidad,
+  leerClavesDeIdentidadDelEntorno,
+} from '../../src/modules/patients/identity.module.js';
 import { createIdentityRepository } from '../../src/modules/patients/identity.repository.js';
 import {
   createIdentityService,
@@ -124,6 +128,19 @@ export function identidadDeFx(
     nombreCompleto: FX_T4A_A.nombreCompleto,
     ...resto,
   };
+}
+
+/** `IdentityService` con las claves leídas de un entorno con archivos `*_FILE` (como lo hacen el seed y el servidor). */
+export function servicioDesdeEntorno(entrada: {
+  readonly env: NodeJS.ProcessEnv;
+  readonly db: Client;
+  readonly generarNonce?: () => Buffer;
+}): IdentityService {
+  return crearServicioDeIdentidad({
+    claves: leerClavesDeIdentidadDelEntorno(entrada.env, leerArchivoDeTest),
+    db: entrada.db,
+    ...(entrada.generarNonce !== undefined && { generarNonce: entrada.generarNonce }),
+  });
 }
 
 export interface OpcionesDeServicio {

@@ -9,6 +9,11 @@ export interface DependenciasDeArranque {
   readonly listen: (puerto: number) => void;
 }
 
+/** Falla con `ConfiguracionInvalidaError` si `IDENTITY_KEY_VERSION` o las variables de clave de identidad no son válidas. */
+function validarConfiguracionDeIdentidad(env: NodeJS.ProcessEnv): void {
+  readIdentityKeyConfig(env);
+}
+
 /** Línea de log de una configuración inválida: nombra la variable, nunca su valor (RN-10, RN-14). */
 export function registrarConfiguracionInvalida(
   log: (linea: string) => void,
@@ -29,7 +34,7 @@ export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArr
   let puerto: number;
   try {
     loadRequiredSecrets(env, readFile);
-    readIdentityKeyConfig(env);
+    validarConfiguracionDeIdentidad(env);
     puerto = readPort(env);
   } catch (error) {
     if (error instanceof SecretoAusenteError) {

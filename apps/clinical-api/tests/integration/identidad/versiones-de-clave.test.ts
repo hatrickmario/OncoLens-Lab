@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
-import { componerIdentidad } from '../../../src/modules/patients/identity.module.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
@@ -8,9 +7,9 @@ import {
   archivosDeClaves,
   crearBaseDeIdentidad,
   entornoDeClaves,
+  servicioDesdeEntorno,
   identidadDeFx,
   insertarPacienteSintetico,
-  leerArchivoDeTest,
   nonceSecuencial,
   type ArchivosDeClaves,
 } from '../../support/identidad.js';
@@ -36,17 +35,15 @@ describe('Convivencia de versiones de clave de la identidad', () => {
     const ids = generadorDeIds(11);
     const antiguo = await insertarPacienteSintetico(cliente, ids);
     const nuevo = await insertarPacienteSintetico(cliente, ids);
-    const servicioV1 = componerIdentidad({
+    const servicioV1 = servicioDesdeEntorno({
       env: entornoDeClaves(claves, 1),
-      readFile: leerArchivoDeTest,
       db: cliente,
       generarNonce: nonceSecuencial(),
     });
     await servicioV1.guardar(identidadDeFx(antiguo));
 
-    const servicioV2 = componerIdentidad({
+    const servicioV2 = servicioDesdeEntorno({
       env: entornoDeClaves(claves, 2, [1]),
-      readFile: leerArchivoDeTest,
       db: cliente,
       generarNonce: nonceSecuencial(),
     });

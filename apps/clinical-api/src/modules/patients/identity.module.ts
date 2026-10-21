@@ -12,14 +12,6 @@ import { createIdentityService, type IdentityService } from './identity.service.
 
 const BYTES_DE_NONCE = 12;
 
-export interface DependenciasDeLaIdentidad {
-  readonly env: NodeJS.ProcessEnv;
-  readonly readFile: LeerArchivo;
-  readonly db: ConsultadorSql;
-  /** 12 bytes aleatorios; solo los tests lo inyectan (por defecto, el generador del sistema). */
-  readonly generarNonce?: () => Buffer;
-}
-
 /** Lee `IDENTITY_KEY_VERSION`, las claves AES por versión y la del índice ciego (todas por archivo, RN-10, RN-14). */
 export function leerClavesDeIdentidadDelEntorno(
   env: NodeJS.ProcessEnv,
@@ -42,22 +34,5 @@ export function crearServicioDeIdentidad({
     cifrador: crearCifradorAesGcm({ anillo: claves.anillo, generarNonce }),
     indice: crearIndiceCiego(claves.claveDeIndice),
     repo: createIdentityRepository(db),
-  });
-}
-
-/**
- * Compone el `IdentityService` desde la configuración. Un fallo de configuración nombra la variable, nunca el valor
- * (RN-10, RN-14).
- */
-export function componerIdentidad({
-  env,
-  readFile,
-  db,
-  generarNonce,
-}: DependenciasDeLaIdentidad): IdentityService {
-  return crearServicioDeIdentidad({
-    claves: leerClavesDeIdentidadDelEntorno(env, readFile),
-    db,
-    ...(generarNonce !== undefined && { generarNonce }),
   });
 }

@@ -1,12 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
-import { componerIdentidad } from '../../../src/modules/patients/identity.module.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
-import { claveDeTest, entornoDeClaves } from '../../support/identidad.js';
+import { claveDeTest, entornoDeClaves, servicioDesdeEntorno } from '../../support/identidad.js';
 import {
   crearBaseDelSeed,
   entornoDelSeed,
@@ -78,9 +76,8 @@ describe('Identidades cifradas del seed sintético', () => {
     );
     expect(nonces).toHaveLength(10);
     expect(new Set(nonces).size).toBe(10);
-    const servicio = componerIdentidad({
+    const servicio = servicioDesdeEntorno({
       env: entornoDeClaves(archivos.claves, 1),
-      readFile: (ruta) => readFileSync(ruta, 'utf8'),
       db: cliente,
     });
     const indice = crearIndiceCiego(claveDeTest('hmac'));
