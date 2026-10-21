@@ -69,7 +69,7 @@ def _correr_uvicorn_y_pedir_con_query(cmd: list[str], tmp_path: Path) -> tuple[s
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),
         "SERVICE_JWT_PUBLIC_KEY_FILE": str(escribir_clave_publica(par_de_sesion(), tmp_path)),
     }
-    proceso = subprocess.Popen(  # noqa: S603
+    proceso = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", *argumentos],
         cwd=RAIZ_SERVICIO,
         env=entorno,
@@ -79,7 +79,7 @@ def _correr_uvicorn_y_pedir_con_query(cmd: list[str], tmp_path: Path) -> tuple[s
     )
     try:
         _esperar_health(puerto, proceso)
-        urllib.request.urlopen(  # noqa: S310
+        urllib.request.urlopen(
             f"http://127.0.0.1:{puerto}/health?documento={DOCUMENTO}", timeout=10
         ).read()
     finally:
@@ -93,7 +93,7 @@ def _esperar_health(puerto: int, proceso: subprocess.Popen) -> None:
     while time.monotonic() < limite:
         assert proceso.poll() is None, "uvicorn terminó antes de quedar listo"
         try:
-            urllib.request.urlopen(f"http://127.0.0.1:{puerto}/health", timeout=2).read()  # noqa: S310
+            urllib.request.urlopen(f"http://127.0.0.1:{puerto}/health", timeout=2).read()
             return
         except OSError:
             time.sleep(0.2)

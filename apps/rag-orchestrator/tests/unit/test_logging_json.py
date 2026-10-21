@@ -1,10 +1,9 @@
 """Formateador JSON: una línea por registro, solo campos cerrados, sin *traceback* (RN-10, NFR-11)."""
 
+import contextvars
 import json
 import logging
 import sys
-
-import contextvars
 
 import pytest
 
