@@ -2,7 +2,11 @@ import request from 'supertest';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { appConAuth } from '../../support/app-auth.js';
-import { entornoDeCliDeTest, PLAZO_DE_PROCESO_MS, type EntornoDeCliDeTest } from '../../support/cli.js';
+import {
+  entornoDeCliDeTest,
+  PLAZO_DE_PROCESO_MS,
+  type EntornoDeCliDeTest,
+} from '../../support/cli.js';
 import { conectar } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {

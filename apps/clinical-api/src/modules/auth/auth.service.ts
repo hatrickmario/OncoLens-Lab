@@ -55,7 +55,7 @@ function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
   return estado === 'activo';
 }
 
-function normalizarCorreo(correo: string): string {
+export function normalizarCorreo(correo: string): string {
   return correo.trim().toLowerCase();
 }
 

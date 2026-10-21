@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ_APP = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const RAIZ_REPO = resolve(RAIZ_APP, '../..');
-const PRECARGA = resolve(RAIZ_APP, 'tests/support/resolver-postgres.cjs');
+const PRECARGA = resolve(RAIZ_APP, 'tests/support/resolver-postgres.mjs');
 /** Tiempo máximo explícito de un proceso real (US-045): pasado el plazo se mata y el test falla. */
 export const PLAZO_DE_PROCESO_MS = 30_000;
 
@@ -35,7 +35,7 @@ export function entornoDeCliDeTest(urlBase: string): EntornoDeCliDeTest {
   const entorno: Record<string, string> = {
     PATH: process.env['PATH'] ?? '',
     HOME: process.env['HOME'] ?? '',
-    NODE_OPTIONS: `--require ${PRECARGA}`,
+    NODE_OPTIONS: `--import ${PRECARGA}`,
     CLINICAL_DATABASE_URL: `postgresql://${url.username}@postgres:${url.port}${url.pathname}`,
     PG_CLINICAL_API_PASSWORD_FILE: archivoDeClave,
     CLINICAL_DATABASE_CA_FILE: join(secretos, 'pg_ca.crt'),
