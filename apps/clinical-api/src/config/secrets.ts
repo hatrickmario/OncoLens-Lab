@@ -1,4 +1,4 @@
-import { leerSecretoDeArchivo } from '../config.js';
+import { leerSecretoDeArchivo } from './secciones.js';
 
 /** Lector de archivos inyectado: la carga de secretos no hace E/S directa (determinista en test). */
 export type LeerArchivo = (ruta: string) => string;

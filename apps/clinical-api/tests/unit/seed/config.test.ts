@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { leerConfiguracionDelSeed } from '../../../prisma/seed/config.js';
-import { ConfiguracionInvalidaError } from '../../../src/config.js';
+import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
 
 describe('leerConfiguracionDelSeed', () => {
   it('usa local y test como entornos permitidos y 10 y 20 años de retención cuando no hay variables', () => {

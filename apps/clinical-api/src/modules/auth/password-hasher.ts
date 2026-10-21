@@ -1,5 +1,5 @@
 import argon2 from 'argon2';
-import type { Argon2Config } from '../../config.js';
+import type { Argon2Config } from '../../config/index.js';
 
 /** Puerto de hash de contraseñas: Argon2id en producción, intercambiable en tests de lógica pura. */
 export interface PasswordHasher {

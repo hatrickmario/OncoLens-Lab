@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, readEvidenceAnalysisConfig } from '../../src/config.js';
+import { ConfiguracionInvalidaError, readEvidenceAnalysisConfig } from '../../src/config/index.js';
 
 const ENV_VALIDO = {
   RAG_ORCHESTRATOR_URL: 'http://rag-orchestrator:8000',

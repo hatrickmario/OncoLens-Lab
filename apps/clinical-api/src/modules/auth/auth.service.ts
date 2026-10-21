@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { AuthConfig } from '../../config.js';
+import type { AuthConfig } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type {

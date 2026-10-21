@@ -3,13 +3,9 @@ import { readFileSync } from 'node:fs';
 import { componerAplicacion } from './composition.js';
 import {
   ConfiguracionInvalidaError,
-  exigirAppEnv,
-  readAuthConfig,
-  readDatabaseConfig,
-  readDeidentificationConfig,
-  readEvidenceAnalysisConfig,
-  readServiceJwtConfig,
-} from './config.js';
+  cargarConfiguracionDeServicios,
+  observarEntorno,
+} from './config/index.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { registrarEnConsola } from './infrastructure/logger.js';
@@ -38,29 +34,31 @@ const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
  * valor), que el catálogo tenga `manifest.json` y que la clave privada del JWT de servicio sea legible y utilizable
  * (fallo cerrado, US-054).
  */
+const entorno = observarEntorno(process.env);
+
 arrancar({
-  env: process.env,
+  env: entorno.env,
   readFile: leerArchivo,
   log: (linea) => console.error(linea),
   exit: (codigo) => process.exit(codigo),
-  listen: (puerto) => {
+  listen: (puerto, arranque) => {
     let configuracion;
     let catalogo;
     let clavesDeIdentidad;
     try {
-      const appEnv = exigirAppEnv(process.env);
+      const servicios = cargarConfiguracionDeServicios(entorno.env, leerArchivo);
       configuracion = {
-        appEnv,
-        auth: readAuthConfig(process.env),
-        database: readDatabaseConfig(process.env, leerArchivo),
-        jwt: readServiceJwtConfig(process.env),
-        analisis: readEvidenceAnalysisConfig(process.env),
+        appEnv: servicios.appEnv,
+        auth: arranque.auth,
+        database: servicios.database,
+        jwt: servicios.jwt,
+        analisis: servicios.analisis,
         // Formatos de PII (L1D-166) y reglas de reemplazo: inválidos o ausentes, no se arranca (RN-11, fallo cerrado).
-        pii: cargarConfiguracionDePii(readDeidentificationConfig(process.env), leerArchivo),
+        pii: cargarConfiguracionDePii(servicios.deidentificacion, leerArchivo),
       };
       catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
       // Fallo cerrado (US-046 AC-5): las claves de la identidad deben ser legibles y de 32 bytes antes de escuchar.
-      clavesDeIdentidad = leerClavesDeIdentidadDelEntorno(process.env, leerArchivo);
+      clavesDeIdentidad = leerClavesDeIdentidadDelEntorno(entorno.env, leerArchivo);
     } catch (error) {
       if (!(error instanceof ConfiguracionInvalidaError)) throw error;
       registrarConfiguracionInvalida((linea) => console.error(linea), error);

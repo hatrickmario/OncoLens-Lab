@@ -1,5 +1,5 @@
 import pg from 'pg';
-import type { DatabaseConfig } from '../config.js';
+import type { DatabaseConfig } from '../config/index.js';
 import type { Registrar } from './logger.js';
 
 /**

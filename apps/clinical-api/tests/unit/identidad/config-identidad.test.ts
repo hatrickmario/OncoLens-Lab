@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, readIdentityKeyConfig } from '../../../src/config.js';
+import { ConfiguracionInvalidaError, readIdentityKeyConfig } from '../../../src/config/index.js';
 import { cargarClavesDeIdentidad } from '../../../src/infrastructure/crypto/claves-de-identidad.js';
 import { arrancar } from '../../../src/startup.js';
 import { claveDeTest } from '../../support/identidad.js';

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError } from '../../../src/config.js';
+import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
 import { cargarConfiguracionDePii } from '../../../src/modules/evidence-analysis/deidentification/pii-formats.config.js';
 
 const RAIZ_CLINICAL_API = path.resolve(import.meta.dirname, '../../..');

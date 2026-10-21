@@ -1,5 +1,5 @@
 import type { Client } from 'pg';
-import type { Argon2Config } from '../../src/config.js';
+import type { Argon2Config } from '../../src/config/index.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { LineaDeLog, Registrar } from '../../src/infrastructure/logger.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';

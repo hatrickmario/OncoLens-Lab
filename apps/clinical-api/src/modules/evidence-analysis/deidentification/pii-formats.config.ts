@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ConfiguracionInvalidaError } from '../../../config.js';
+import { ConfiguracionInvalidaError } from '../../../config/index.js';
 
 /**
  * Configuración del enmascarado de PII en ejecución (RN-11, RN-22). Los FORMATOS (documento con palabra clave,
