@@ -28,7 +28,10 @@ pesados ni red; el reporte real se adjunta desde la máquina de referencia.
   una línea `regresión en <metrica>: mínimo …, actual …` por métrica en stderr; 2 entrada inválida. Formato de
   `regression.yaml`: `<metrica>_min: <0..1>` (`recall_at_10`, `mrr`, `precision_citas`, `exactitud_sin_evidencia`,
   `opciones_con_cita_y_soporte`), medidas en `metricas.completa`; una métrica `null` incumple (no es 0).
-  `scripts/ci/eval-required.mjs` la invoca además de la comparación con el baseline (cableado de plataforma).
+  `scripts/ci/eval-required.mjs` DEBE invocarla además de la comparación con el baseline (cableado de
+  plataforma, tarea 1.x; hasta entonces el CLI existe pero la CI no lo ejecuta). El aviso es el mismo literal
+  que el de `AVISO_SIN_BASELINE` del `.mjs`; el `.mjs` debe reenviar el stdout del CLI para no duplicarlo. El
+  mensaje de error del CLI solo trae el tipo de la excepción: no imprimir `str(error)` ni `__cause__` (RN-14).
 - **D3 · Comentario** con `gh pr comment --edit-last` (un comentario por PR, actualizado), permisos
   mínimos `pull-requests: write` solo en ese job; acciones fijadas por SHA como el resto del
   workflow.

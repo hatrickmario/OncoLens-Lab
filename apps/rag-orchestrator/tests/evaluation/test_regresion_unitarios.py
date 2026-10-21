@@ -8,11 +8,14 @@ from typing import Any
 import pytest
 
 from app.evaluation.regresion import (
+    EntradaInvalida,
     Incumplimiento,
-    UmbralesInvalidos,
     cargar_umbrales,
     comparar_con_regresion,
 )
+from tests.evaluation.conftest import RAIZ_APP
+
+REGRESION_VERSIONADA = RAIZ_APP / "eval" / "configs" / "regression.yaml"
 
 
 def reporte(recall: float | None, mrr: float = 1.0) -> dict[str, Any]:
@@ -72,5 +75,14 @@ def test_cargar_umbrales_rechaza_claves_desconocidas_o_valores_fuera_de_rango(
     archivo = tmp_path / "regression.yaml"
     archivo.write_text(contenido, encoding="utf-8")
 
-    with pytest.raises(UmbralesInvalidos):
+    with pytest.raises(EntradaInvalida):
         cargar_umbrales(archivo)
+
+
+def test_comparar_con_reporte_sin_metricas_completas_lanza_entrada_invalida() -> None:
+    with pytest.raises(EntradaInvalida):
+        comparar_con_regresion({}, {"mrr": 0.5})
+
+
+def test_regression_yaml_versionado_es_valido_para_cargar_umbrales() -> None:
+    assert isinstance(cargar_umbrales(REGRESION_VERSIONADA), dict)

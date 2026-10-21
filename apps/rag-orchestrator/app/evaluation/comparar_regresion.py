@@ -17,7 +17,7 @@ from typing import Any
 from app.evaluation.regresion import (
     AVISO_SIN_BASELINE,
     ResultadoRegresion,
-    UmbralesInvalidos,
+    EntradaInvalida,
     cargar_umbrales,
     comparar_con_regresion,
 )
@@ -34,18 +34,11 @@ def _leer_reporte(ruta: Path) -> dict[str, Any]:
     try:
         reporte = json.loads(ruta.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
-        raise UmbralesInvalidos("el reporte no se puede leer") from error
-    if not _trae_metricas_completas(reporte):
-        raise UmbralesInvalidos("el reporte no trae metricas.completa")
+        raise EntradaInvalida("el reporte no se puede leer") from error
     return reporte
 
 
-def _trae_metricas_completas(reporte: object) -> bool:
-    metricas = reporte.get("metricas") if isinstance(reporte, dict) else None
-    return isinstance(metricas, dict) and isinstance(metricas.get("completa"), dict)
-
-
-def _informar(resultado: ResultadoRegresion) -> int:
+def _imprimir_y_codigo_de_salida(resultado: ResultadoRegresion) -> int:
     if not resultado.aplicado:
         print(AVISO_SIN_BASELINE)
         return 0
@@ -62,10 +55,10 @@ def main(argv: Sequence[str]) -> int:
         args = _parser().parse_args(list(argv))
         reporte = _leer_reporte(args.reporte)
         resultado = comparar_con_regresion(reporte, cargar_umbrales(args.config))
-    except (argparse.ArgumentError, SystemExit, UmbralesInvalidos) as error:
+    except (argparse.ArgumentError, SystemExit, EntradaInvalida) as error:
         print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
         return 2
-    return _informar(resultado)
+    return _imprimir_y_codigo_de_salida(resultado)
 
 
 if __name__ == "__main__":

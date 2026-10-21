@@ -39,10 +39,12 @@ def comparar(reporte: Path, config: Path) -> int:
 
 
 @pytest.mark.ac("US-074", 4)
-def test_comparar_con_regression_yaml_versionado_sin_umbrales_pasa_con_aviso(
+def test_comparar_con_regression_yaml_sin_umbrales_pasa_con_aviso(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    codigo = comparar(reporte_con_recall(tmp_path, 0.5), REGRESION_VERSIONADA)
+    config = umbrales(tmp_path, "# sin umbrales\n")
+
+    codigo = comparar(reporte_con_recall(tmp_path, 0.5), config)
 
     salida = capsys.readouterr()
     assert (codigo, AVISO_SIN_BASELINE in salida.out) == (0, True)
@@ -60,3 +62,40 @@ def test_comparar_con_recall_bajo_el_minimo_falla_nombrando_recall_at_10(
     assert codigo == 1
     assert "recall_at_10" in salida.err
     assert AVISO_SIN_BASELINE not in salida.out
+
+
+def test_comparar_con_reporte_ilegible_sale_con_2_sin_filtrar_su_contenido(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    reporte = tmp_path / "reporte.json"
+    reporte.write_text('{"metricas": {}, "secreto": "texto-clinico"}', encoding="utf-8")
+
+    codigo = comparar(reporte, REGRESION_VERSIONADA)
+
+    salida = capsys.readouterr()
+    assert (codigo, "texto-clinico" in salida.err + salida.out) == (2, False)
+
+
+def test_comparar_con_umbral_desconocido_sale_con_2(tmp_path: Path) -> None:
+    config = umbrales(tmp_path, "inventada_min: 0.5\n")
+
+    assert comparar(reporte_con_recall(tmp_path, 0.9), config) == 2
+
+
+def test_comparar_sin_argumentos_sale_con_2() -> None:
+    assert main([]) == 2
+
+
+def test_comparar_con_varias_metricas_bajas_las_nombra_todas(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = umbrales(tmp_path, "recall_at_10_min: 0.80\nmrr_min: 1.0\n")
+    reporte = reporte_con_recall(tmp_path, 0.5)
+    datos = json.loads(reporte.read_text(encoding="utf-8"))
+    datos["metricas"]["completa"]["recuperacion"]["total"]["mrr"] = 0.4
+    reporte.write_text(json.dumps(datos), encoding="utf-8")
+
+    codigo = comparar(reporte, config)
+
+    err = capsys.readouterr().err
+    assert (codigo, "recall_at_10" in err, "mrr" in err) == (1, True, True)

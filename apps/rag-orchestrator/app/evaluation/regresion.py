@@ -27,8 +27,8 @@ METRICAS_CON_UMBRAL: dict[str, tuple[str, ...]] = {
 }
 
 
-class UmbralesInvalidos(ValueError):
-    """``regression.yaml`` no es utilizable; el mensaje nombra la clave, nunca su valor."""
+class EntradaInvalida(ValueError):
+    """``regression.yaml`` o el reporte de ``evaluate`` no son utilizables; el mensaje nombra la clave, nunca su valor."""
 
 
 @dataclass(frozen=True)
@@ -49,11 +49,11 @@ def cargar_umbrales(ruta: Path) -> dict[str, float]:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError) as error:
-        raise UmbralesInvalidos("regression.yaml no se puede leer") from error
+        raise EntradaInvalida("regression.yaml no se puede leer") from error
     if crudo is None:
         return {}
     if not isinstance(crudo, dict):
-        raise UmbralesInvalidos("regression.yaml debe ser un mapa de <metrica>_min")
+        raise EntradaInvalida("regression.yaml debe ser un mapa de <metrica>_min")
     return {_metrica_de(clave): _minimo_de(clave, valor) for clave, valor in crudo.items()}
 
 
@@ -62,12 +62,12 @@ def _metrica_de(clave: object) -> str:
         metrica = clave.removesuffix(SUFIJO_MINIMO)
         if metrica in METRICAS_CON_UMBRAL:
             return metrica
-    raise UmbralesInvalidos(f"umbral desconocido: {clave}")
+    raise EntradaInvalida(f"umbral desconocido: {clave}")
 
 
 def _minimo_de(clave: object, valor: object) -> float:
     if isinstance(valor, bool) or not isinstance(valor, int | float) or not 0 <= valor <= 1:
-        raise UmbralesInvalidos(f"{clave} debe ser un número entre 0 y 1")
+        raise EntradaInvalida(f"{clave} debe ser un número entre 0 y 1")
     return float(valor)
 
 
@@ -75,7 +75,7 @@ def comparar_con_regresion(
     reporte: dict[str, Any], umbrales: dict[str, float]
 ) -> ResultadoRegresion:
     """Métricas del reporte por debajo de su mínimo, en el orden del archivo de umbrales."""
-    seccion = reporte["metricas"][SECCION_DEL_UMBRAL]
+    seccion = _seccion_del_umbral(reporte)
     medidas = {metrica: _valor_en(seccion, METRICAS_CON_UMBRAL[metrica]) for metrica in umbrales}
     incumplimientos = tuple(
         Incumplimiento(metrica, minimo, medidas[metrica])
@@ -83,6 +83,14 @@ def comparar_con_regresion(
         if (actual := medidas[metrica]) is None or actual < minimo
     )
     return ResultadoRegresion(aplicado=bool(umbrales), incumplimientos=incumplimientos)
+
+
+def _seccion_del_umbral(reporte: object) -> dict[str, Any]:
+    metricas = reporte.get("metricas") if isinstance(reporte, dict) else None
+    seccion = metricas.get(SECCION_DEL_UMBRAL) if isinstance(metricas, dict) else None
+    if not isinstance(seccion, dict):
+        raise EntradaInvalida(f"el reporte no trae metricas.{SECCION_DEL_UMBRAL}")
+    return seccion
 
 
 def _valor_en(seccion: dict[str, Any], ruta: tuple[str, ...]) -> float | None:
