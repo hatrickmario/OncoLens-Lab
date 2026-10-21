@@ -11,9 +11,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
-import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, clientWebDir, zodPath } from './generated.mjs';
+import { GENERATED_ROOTS, PYDANTIC_DIR, clientDir, clientWebDir, refinamientosPath, zodPath } from './generated.mjs';
 import { loadContext } from './io.mjs';
 import { DEFAULT_ROOT, SPEC_FILES, generatedHeader, typesPath } from './lib/paths.mjs';
+import { generarRefinamientos } from './lib/refinamientos.mjs';
 import { RAG_ORCHESTRATOR } from './lib/specs.mjs';
 import { writeReadmeExtract } from './readme-extract.mjs';
 
@@ -52,6 +53,13 @@ async function generateSdk(root, provider, bundled, { dir, importFileExtension }
 async function generateTypesAndZod(root, provider, bundled) {
   await generateWithHeyApi(root, provider, bundled, '@hey-api/typescript', typesPath(provider));
   await generateWithHeyApi(root, provider, bundled, 'zod', zodPath(provider));
+  await generateRefinements(root, provider, bundled);
+}
+
+/** Refinamientos del Zod (US-214 AC-6): va después del Zod porque hey-api limpia su directorio al generar. */
+async function generateRefinements(root, provider, bundled) {
+  const text = generarRefinamientos(bundled, generatedHeader(provider));
+  await writeFile(path.join(root, refinamientosPath(provider)), text);
 }
 
 /** Instrucción de instalación cuando falta Python o el paquete: no hay *fallback*. */
