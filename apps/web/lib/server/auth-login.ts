@@ -73,9 +73,17 @@ export function crearManejadorLogin(
 
     // Sin cookie entrante (el login crea la sesión), pero con la IP que web fijó para el bloqueo por IP (US-044 D4b).
     const ip = ipDelCliente(request.headers);
+    if (ip === undefined) {
+      return responderConFalloDeAutenticacion(
+        dependencias,
+        EVENTO_LOGIN,
+        traceId,
+        'sin_ip_del_cliente',
+      );
+    }
     const sdk = crearSdkClinicalApi(dependencias.config, {
       fetch: dependencias.fetch,
-      ...(ip !== undefined && { ipDelCliente: ip }),
+      ipDelCliente: ip,
     });
     const resultado = await login({
       client: sdk.client,

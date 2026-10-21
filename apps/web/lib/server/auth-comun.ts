@@ -13,7 +13,10 @@ export type DependenciasDeAutenticacion = Pick<
 
 export type MotivoDeFalloDeAutenticacion =
   | MotivoDeFalloDeTransporte
-  | Extract<NonNullable<LineaDeRegistro['motivo']>, 'cuerpo_no_conforme' | 'sin_cookie_de_sesion'>;
+  | Extract<
+      NonNullable<LineaDeRegistro['motivo']>,
+      'cuerpo_no_conforme' | 'sin_cookie_de_sesion' | 'sin_ip_del_cliente'
+    >;
 
 export function analizarJson(texto: string): unknown {
   try {

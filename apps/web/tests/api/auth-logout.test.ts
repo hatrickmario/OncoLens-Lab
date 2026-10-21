@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearManejadorLogout } from '../../lib/server/auth-logout';
+import { CABECERA_IP_DEL_SOCKET, firmarIpDelSocket } from '../../lib/server/cabecera-ip-del-socket';
 import { ejemplo, ORIGEN_PERMITIDO } from '../support/clinical-api-simulado';
 import { crearDependenciasDeLogin, invocarComoNext } from '../support/login-simulado';
 import { crearLogoutSimulado, peticionDeLogout } from '../support/logout-simulado';
@@ -104,15 +105,30 @@ describe('POST /api/auth/logout', () => {
     expect(JSON.stringify(cuerpo)).not.toContain('clinical-api.test');
   });
 
-  it('reenvía a clinical-api la IP que web fijó en X-Forwarded-For [US-044 AC-3]', async () => {
+  it('reenvía a clinical-api la IP firmada por web como X-Forwarded-For [US-044 AC-3]', async () => {
     const { dependencias } = crearDependenciasDeLogin();
     clinicalApi.aceptar([COOKIE_BORRADA]);
 
     await invocarComoNext(
       crearManejadorLogout(dependencias),
-      peticionDeLogout({ ...CABECERAS_VALIDAS, 'X-Forwarded-For': '198.51.100.7' }),
+      peticionDeLogout({
+        ...CABECERAS_VALIDAS,
+        [CABECERA_IP_DEL_SOCKET]: firmarIpDelSocket('198.51.100.7'),
+      }),
     );
 
     expect(clinicalApi.peticiones[0]?.cabeceras['x-forwarded-for']).toBe('198.51.100.7');
+  });
+
+  it('no reenvía X-Forwarded-For cuando el cliente falsifica la cabecera y no hay IP firmada [US-044 AC-3]', async () => {
+    const { dependencias } = crearDependenciasDeLogin();
+    clinicalApi.aceptar([COOKIE_BORRADA]);
+
+    await invocarComoNext(
+      crearManejadorLogout(dependencias),
+      peticionDeLogout({ ...CABECERAS_VALIDAS, 'X-Forwarded-For': '203.0.113.66' }),
+    );
+
+    expect(clinicalApi.peticiones[0]?.cabeceras['x-forwarded-for']).toBeUndefined();
   });
 });
