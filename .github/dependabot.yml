@@ -1,0 +1,47 @@
+# Dependabot (US-217 AC-4, design.md D3): actualizaciones de seguridad y de versión, semanales y agrupadas por
+# ecosistema. Sus PRs pasan por la misma CI (ci-ok); el merge sigue siendo humano (sin automerge).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ['*']
+
+  - package-ecosystem: pip
+    directory: /apps/rag-orchestrator
+    schedule:
+      interval: weekly
+    groups:
+      pip:
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  # Los Dockerfiles viven en apps/*; Compose en infra/docker (design.md D3, desviación del texto del AC-4).
+  - package-ecosystem: docker
+    directories:
+      - /apps/web
+      - /apps/clinical-api
+      - /apps/rag-orchestrator
+    schedule:
+      interval: weekly
+    groups:
+      docker:
+        patterns: ['*']
+
+  - package-ecosystem: docker-compose
+    directory: /infra/docker
+    schedule:
+      interval: weekly
+    groups:
+      docker-compose:
+        patterns: ['*']
