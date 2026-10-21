@@ -307,10 +307,10 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
   });
 
   it.each([
-    ['409', 409, ragCatalogo, undefined],
+    ['409 de otro código', 409, { ...ragCatalogo, error: 'OTRO_CONFLICTO' }, undefined],
     ['429', 429, ragColaLlena, { 'Retry-After': '30' }],
   ])(
-    'responde 502 sin Retry-After ni registro cuando rag-orchestrator responde %s en el S1 [US-053 AC-4]',
+    'responde 502 sin Retry-After ni registro cuando rag-orchestrator responde %s [US-053 AC-4]',
     async (_nombre, status, cuerpo, cabeceras) => {
       responderJson(status, cuerpo, cabeceras);
       const { app } = await gateway(`req_Mapeo${status}002`);
