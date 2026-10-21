@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 import type { AuthConfig, SesionConfig } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
-import type { AuthRepository, EstadoDeCuenta, UsuarioParaLogin } from './auth.repository.js';
+import type {
+  AuthRepository,
+  EstadoDeCuenta,
+  ReservaDeIntentoDeCuenta,
+  UsuarioParaLogin,
+} from './auth.repository.js';
 import { normalizarCorreo } from './correo.js';
 import { cuentaBloqueada, debeTocarseLaSesion, sesionVigente } from './sesion.reglas.js';
 import type { PasswordHasher } from './password-hasher.js';
@@ -43,14 +48,21 @@ export class CredencialesInvalidasError extends Error {
   }
 }
 
+/** Un intento reservado en el registro por IP; si el login resulta correcto se libera, si falla se queda anotado. */
+export interface ReservaDeIntentoPorIp {
+  liberar(): void;
+}
+
 /**
- * Puerto del bloqueo por IP (US-044 D4): el adaptador decide dónde viven los fallos. La IP es la que Express atribuye
+ * Puerto del bloqueo por IP (US-044 D4): el adaptador decide dónde viven los intentos. La IP es la que Express atribuye
  * al cliente con `trust proxy`; el puerto nunca la registra en logs.
  */
 export interface RegistroDeIntentosPorIp {
-  /** `true` si la IP acumuló el máximo de fallos dentro de la ventana vigente. */
-  estaBloqueada(ip: string): boolean;
-  registrarFallo(ip: string): void;
+  /**
+   * Comprueba el bloqueo y anota el intento en una sola operación SÍNCRONA, antes de verificar la contraseña: devuelve
+   * `null` si la IP ya agotó sus intentos en la ventana vigente (contando los que están en curso).
+   */
+  reservar(ip: string): ReservaDeIntentoPorIp | null;
 }
 
 export interface DependenciasDeAuthService {
@@ -68,6 +80,8 @@ export interface DependenciasDeAuthService {
 }
 
 const MILISEGUNDOS_POR_HORA = 3_600_000;
+/** Sin IP atribuible no hay límite por IP: la reserva existe pero no anota nada. */
+const RESERVA_SIN_IP: ReservaDeIntentoPorIp = { liberar: () => undefined };
 const CONTRASENA_DEL_SENUELO = 'señuelo';
 
 /** SHA-256 en hex del token opaco (D1): el token tiene entropía completa, basta un hash rápido y exacto. */
@@ -82,78 +96,74 @@ function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
 
 export function createAuthService(dependencias: DependenciasDeAuthService): AuthService {
   const { repo, hasher, tokens, ids, reloj, config, registroDeIntentosPorIp } = dependencias;
-  const bloqueo = dependencias.sesion;
+  const sesionConfig = dependencias.sesion;
   // Hash señuelo con los mismos parámetros: verificar contra él iguala el tiempo cuando el correo no existe (D3).
   const hashSenuelo = hasher.hash(CONTRASENA_DEL_SENUELO);
   hashSenuelo.catch(() => undefined);
 
   /**
    * Un solo camino y un solo error para correo inexistente, contraseña errónea, cuenta no activa y bloqueos por cuenta
-   * o por IP (D3, US-044 D5). Bajo bloqueo se verifica contra el *hash* señuelo: mismo coste, mismo 401, y la
-   * contraseña correcta no se evalúa de forma observable.
+   * o por IP (D3, US-044 D5). Los intentos se RESERVAN antes de verificar la contraseña (el estado que decide es el
+   * que devuelven las reservas atómicas, no una lectura previa): ninguna ráfaga evalúa más de `LOGIN_MAX_FAILED_ATTEMPTS`
+   * conjeturas. Bajo bloqueo se verifica contra el *hash* señuelo: mismo coste, mismo 401, y la contraseña correcta no
+   * se evalúa de forma observable.
    */
-  async function autenticarCredenciales(
+  async function verificarCredencialesYContarFallos(
     email: string,
     password: string,
     ahora: Date,
     ip: string | undefined,
   ): Promise<UsuarioParaLogin> {
     const usuario = await repo.buscarUsuarioPorCorreo(normalizarCorreo(email));
-    const motivoDeBloqueo = motivoDeBloqueoDe(usuario, ahora, ip);
+    const reservaDeIp = ip === undefined ? RESERVA_SIN_IP : registroDeIntentosPorIp.reservar(ip);
+    const reservaDeCuenta =
+      reservaDeIp === null ? null : await reservarIntentoDeCuenta(usuario, ahora);
+    const motivoDeBloqueo = motivoDeBloqueoDe(reservaDeIp, reservaDeCuenta);
     const hashAVerificar =
       motivoDeBloqueo !== null || usuario === null ? await hashSenuelo : usuario.passwordHash;
     const contrasenaCorrecta = await hasher.verify(hashAVerificar, password);
-    if (motivoDeBloqueo !== null) throw new CredencialesInvalidasError(motivoDeBloqueo);
-    if (usuario === null) throw new CredencialesInvalidasError();
-    if (!contrasenaCorrecta) {
-      await registrarFallo(usuario, ahora);
+    if (reservaDeIp === null) throw new CredencialesInvalidasError('bloqueo_ip');
+    if (motivoDeBloqueo !== null) {
+      // Un intento rechazado por bloqueo de la cuenta no cuenta contra la IP.
+      reservaDeIp.liberar();
+      throw new CredencialesInvalidasError(motivoDeBloqueo);
+    }
+    if (usuario === null || reservaDeCuenta === null || !contrasenaCorrecta) {
       throw new CredencialesInvalidasError();
     }
-    if (!cuentaHabilitada(usuario.accountStatus)) throw new CredencialesInvalidasError();
-    await repo.reiniciarFallos(usuario.id);
+    reservaDeIp.liberar();
+    await repo.reiniciarFallos(usuario.id, reservaDeCuenta.intentos);
     return usuario;
   }
 
-  /** La IP manda sobre la cuenta; sin IP atribuible no hay bloqueo por IP. */
-  function motivoDeBloqueoDe(
+  /** `null` si no hay cuenta que proteger: correo inexistente o cuenta no activa (no hay contador que mover). */
+  async function reservarIntentoDeCuenta(
     usuario: UsuarioParaLogin | null,
     ahora: Date,
-    ip: string | undefined,
-  ): MotivoDeRechazo | null {
-    if (ip !== undefined && registroDeIntentosPorIp.estaBloqueada(ip)) return 'bloqueo_ip';
-    if (usuario !== null && cuentaBloqueada(usuario, ahora)) return 'bloqueo_cuenta';
-    return null;
-  }
-
-  /** Cuenta un fallo de contraseña y bloquea la cuenta al llegar a `LOGIN_MAX_FAILED_ATTEMPTS`. */
-  function registrarFallo(usuario: UsuarioParaLogin, ahora: Date): Promise<void> {
-    return repo.registrarFalloDeLogin(usuario.id, ahora, {
-      maxIntentos: bloqueo.loginMaxFailedAttempts,
-      minutosDeBloqueo: bloqueo.loginLockoutMinutes,
+  ): Promise<ReservaDeIntentoDeCuenta | null> {
+    if (usuario === null || !cuentaHabilitada(usuario.accountStatus)) return null;
+    // Atajo: con el bloqueo ya visible no hace falta escribir; la reserva atómica cubre el resto.
+    if (cuentaBloqueada(usuario, ahora)) return { permitido: false, intentos: 0 };
+    return repo.reservarIntentoDeLogin(usuario.id, ahora, {
+      maxIntentos: sesionConfig.loginMaxFailedAttempts,
+      minutosDeBloqueo: sesionConfig.loginLockoutMinutes,
     });
   }
 
-  /** Todo rechazo por credenciales (no por bloqueo) cuenta contra la IP del cliente, exista o no el correo. */
-  async function autenticarContandoFallosPorIp(
-    email: string,
-    password: string,
-    ahora: Date,
-    ip: string | undefined,
-  ): Promise<UsuarioParaLogin> {
-    try {
-      return await autenticarCredenciales(email, password, ahora, ip);
-    } catch (error) {
-      if (error instanceof CredencialesInvalidasError && error.motivo === 'credenciales') {
-        if (ip !== undefined) registroDeIntentosPorIp.registrarFallo(ip);
-      }
-      throw error;
-    }
+  /** La IP manda sobre la cuenta. */
+  function motivoDeBloqueoDe(
+    reservaDeIp: ReservaDeIntentoPorIp | null,
+    reservaDeCuenta: ReservaDeIntentoDeCuenta | null,
+  ): MotivoDeRechazo | null {
+    if (reservaDeIp === null) return 'bloqueo_ip';
+    if (reservaDeCuenta !== null && !reservaDeCuenta.permitido) return 'bloqueo_cuenta';
+    return null;
   }
 
   return {
     async iniciarSesion({ email, password }, ip) {
       const ahora = reloj.now();
-      const usuario = await autenticarContandoFallosPorIp(email, password, ahora, ip);
+      const usuario = await verificarCredencialesYContarFallos(email, password, ahora, ip);
       const token = tokens.nuevo();
       const creada = await repo.crearSesion({
         id: ids(),
@@ -171,8 +181,9 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
       const sesion = await repo.buscarSesionPorTokenHash(hashDeToken(token));
       if (sesion === null || sesion.revoked || !cuentaHabilitada(sesion.accountStatus)) return null;
       const ahora = reloj.now();
-      if (!sesionVigente(sesion, ahora, bloqueo)) return null;
-      if (debeTocarseLaSesion(sesion, ahora, bloqueo)) await repo.tocarSesion(sesion.id, ahora);
+      if (!sesionVigente(sesion, ahora, sesionConfig)) return null;
+      if (debeTocarseLaSesion(sesion, ahora, sesionConfig))
+        await repo.tocarSesion(sesion.id, ahora);
       return { userId: sesion.userId, rol: sesion.rol, permisos: new Set(sesion.permisos) };
     },
     async cerrarSesion(token) {

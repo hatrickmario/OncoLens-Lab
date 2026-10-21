@@ -15,6 +15,12 @@ export interface ParametrosDeBloqueo {
   minutosDeBloqueo: number;
 }
 
+export interface ReservaDeIntentoDeCuenta {
+  permitido: boolean;
+  /** Conteo de intentos de la cuenta tras la reserva. */
+  intentos: number;
+}
+
 export interface NuevaSesion {
   id: string;
   userId: string;
@@ -40,21 +46,26 @@ export interface SesionConUsuario {
 export interface AuthRepository {
   buscarUsuarioPorCorreo(correo: string): Promise<UsuarioParaLogin | null>;
   /**
-   * Crea la sesión solo si la cuenta sigue `activo` en ese instante (la baja o el rechazo concurrentes no dejan una
-   * sesión viva, design L1D-199). Devuelve `false` si no se creó.
+   * Crea la sesión solo si la cuenta sigue `activo` y sin bloqueo vigente en ese instante (la baja o un bloqueo
+   * concurrentes no dejan una sesión viva). Devuelve `false` si no se creó.
    */
   crearSesion(sesion: NuevaSesion): Promise<boolean>;
   /**
-   * Cuenta un fallo de contraseña: si el bloqueo anterior ya venció, el conteo reinicia en 1; al llegar a
-   * `maxIntentos` fija `locked_until = ahora + minutosDeBloqueo`.
+   * Reserva un intento de login ANTES de verificar la contraseña, en una sola sentencia atómica: si el bloqueo anterior
+   * ya venció el conteo reinicia en 0; si la cuenta está bloqueada no cuenta y devuelve `permitido = false`; si no,
+   * suma 1 y, al llegar a `maxIntentos`, fija `locked_until = ahora + minutosDeBloqueo`. `intentos` es el conteo
+   * resultante, con el que el llamador decide después.
    */
-  registrarFalloDeLogin(
+  reservarIntentoDeLogin(
     userId: string,
     ahora: Date,
     parametros: ParametrosDeBloqueo,
-  ): Promise<void>;
-  /** Un login correcto pone el contador a 0 y quita el bloqueo (sin escribir si no había nada que limpiar). */
-  reiniciarFallos(userId: string): Promise<void>;
+  ): Promise<ReservaDeIntentoDeCuenta>;
+  /**
+   * Un login correcto pone el contador a 0 y quita el bloqueo, pero solo si nadie reservó otro intento desde que se
+   * reservó éste (`intentosReservados` sigue siendo el conteo): así no borra el rastro de intentos concurrentes.
+   */
+  reiniciarFallos(userId: string, intentosReservados: number): Promise<void>;
   buscarSesionPorTokenHash(tokenHash: string): Promise<SesionConUsuario | null>;
   /** Registra la actividad de la sesión (`last_seen_at`); una sesión revocada entretanto no se toca. */
   tocarSesion(id: string, ahora: Date): Promise<void>;
@@ -107,7 +118,10 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         `INSERT INTO auth.session
            (id, user_id, token_hash, expires_at, last_seen_at, ip_address, user_agent, revoked, created_at)
          SELECT $1, $2, $3, $4, $5, NULL, NULL, false, $6
-          WHERE EXISTS (SELECT 1 FROM auth."user" WHERE id = $2 AND account_status = 'activo' FOR SHARE)
+          WHERE EXISTS (SELECT 1 FROM auth."user"
+                         WHERE id = $2 AND account_status = 'activo'
+                           AND (locked_until IS NULL OR locked_until <= $6)
+                         FOR SHARE)
          RETURNING id`,
         [
           sesion.id,
@@ -121,16 +135,21 @@ export function createAuthRepository(db: Consultador): AuthRepository {
       return rows.length > 0;
     },
 
-    async registrarFalloDeLogin(userId, ahora, parametros) {
-      await db.query(
+    async reservarIntentoDeLogin(userId, ahora, parametros) {
+      const { rows } = await db.query(
         `WITH previo AS (
-           SELECT CASE WHEN locked_until IS NOT NULL AND locked_until <= $2 THEN 0 ELSE failed_login_count END AS n
+           SELECT id,
+                  CASE WHEN locked_until IS NOT NULL AND locked_until <= $2 THEN 0 ELSE failed_login_count END AS n,
+                  (locked_until IS NOT NULL AND locked_until > $2) AS bloqueada
              FROM auth."user" WHERE id = $1 FOR UPDATE)
          UPDATE auth."user" u
-            SET failed_login_count = previo.n + 1,
-                locked_until = CASE WHEN previo.n + 1 >= $3 THEN $4::timestamptz ELSE NULL END
+            SET failed_login_count = CASE WHEN previo.bloqueada THEN u.failed_login_count ELSE previo.n + 1 END,
+                locked_until = CASE WHEN previo.bloqueada THEN u.locked_until
+                                    WHEN previo.n + 1 >= $3 THEN $4::timestamptz
+                                    ELSE NULL END
            FROM previo
-          WHERE u.id = $1`,
+          WHERE u.id = previo.id
+      RETURNING NOT previo.bloqueada AS permitido, u.failed_login_count AS intentos`,
         [
           userId,
           ahora,
@@ -138,13 +157,19 @@ export function createAuthRepository(db: Consultador): AuthRepository {
           new Date(ahora.getTime() + parametros.minutosDeBloqueo * 60_000),
         ],
       );
+      const fila = rows[0];
+      return {
+        permitido: fila?.['permitido'] === true,
+        intentos: (fila?.['intentos'] as number | undefined) ?? 0,
+      };
     },
 
-    async reiniciarFallos(userId) {
+    async reiniciarFallos(userId, intentosReservados) {
       await db.query(
         `UPDATE auth."user" SET failed_login_count = 0, locked_until = NULL
-          WHERE id = $1 AND (failed_login_count <> 0 OR locked_until IS NOT NULL)`,
-        [userId],
+          WHERE id = $1 AND failed_login_count = $2
+            AND (failed_login_count <> 0 OR locked_until IS NOT NULL)`,
+        [userId, intentosReservados],
       );
     },
 

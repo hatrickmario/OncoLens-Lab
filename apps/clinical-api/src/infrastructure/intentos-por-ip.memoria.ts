@@ -1,16 +1,19 @@
+import type {
+  RegistroDeIntentosPorIp,
+  ReservaDeIntentoPorIp,
+} from '../modules/auth/auth.service.js';
 import type { Clock } from './clock.js';
-import type { RegistroDeIntentosPorIp } from '../modules/auth/auth.service.js';
 
 export interface OpcionesDelRegistroEnMemoria {
   reloj: Clock;
-  /** Fallos dentro de la ventana a partir de los cuales la IP queda bloqueada (`LOGIN_MAX_FAILED_ATTEMPTS`). */
+  /** Intentos dentro de la ventana a partir de los cuales la IP queda bloqueada (`LOGIN_MAX_FAILED_ATTEMPTS`). */
   maxIntentos: number;
   /** Ventana deslizante y plazo de bloqueo (`LOGIN_LOCKOUT_MINUTES`). */
   ventanaMinutos: number;
 }
 
 export interface RegistroDeIntentosPorIpEnMemoria extends RegistroDeIntentosPorIp {
-  /** Cuántas IP conservan fallos vigentes (observabilidad y pruebas del barrido); nunca expone las direcciones. */
+  /** Cuántas IP conservan intentos vigentes (observabilidad y pruebas del barrido); nunca expone las direcciones. */
   ipsRegistradas(): number;
 }
 
@@ -25,43 +28,58 @@ function normalizarIp(ip: string): string {
     : minusculas;
 }
 
+interface Intento {
+  readonly instante: number;
+}
+
 /**
- * Registro de fallos de login por IP, solo en memoria (US-044 D4): ventana deslizante, mismo umbral y plazo que el
- * bloqueo por cuenta. Guarda como mucho los últimos `maxIntentos` instantes por IP y NUNCA escribe la dirección en
- * ningún log (NFR-11). Un reinicio lo vacía y no escala a varias réplicas: riesgo aceptado del MVP (una sola instancia).
+ * Registro de intentos de login por IP, solo en memoria (US-044 D4): ventana deslizante, mismo umbral y plazo que el
+ * bloqueo por cuenta. `reservar` comprueba el bloqueo y anota el intento en una sola operación síncrona, ANTES de
+ * verificar la contraseña: las peticiones concurrentes de una IP no pueden evaluar más de `maxIntentos` conjeturas.
+ * Un intento correcto se libera; uno fallido se queda anotado. NUNCA escribe la dirección en ningún log (NFR-11).
+ * Un reinicio lo vacía y no escala a varias réplicas: riesgo aceptado del MVP (una sola instancia).
  */
 export function createRegistroDeIntentosPorIp(
   opciones: OpcionesDelRegistroEnMemoria,
 ): RegistroDeIntentosPorIpEnMemoria {
   const { reloj, maxIntentos } = opciones;
   const ventanaMs = opciones.ventanaMinutos * MILISEGUNDOS_POR_MINUTO;
-  const fallosPorIp = new Map<string, number[]>();
+  const intentosPorIp = new Map<string, Intento[]>();
   let ultimoBarrido = reloj.now().getTime();
 
-  /** Un fallo cuenta mientras `instante > ahora − ventana`: al cumplirse la ventana exacta ya no cuenta. */
-  const vigente = (instante: number, ahora: number) => instante > ahora - ventanaMs;
+  /** Un intento cuenta mientras `instante > ahora − ventana`: al cumplirse la ventana exacta ya no cuenta. */
+  const vigente = (intento: Intento, ahora: number) => intento.instante > ahora - ventanaMs;
 
   function barrerVencidas(ahora: number): void {
     if (ahora - ultimoBarrido < ventanaMs) return;
     ultimoBarrido = ahora;
-    for (const [ip, instantes] of fallosPorIp) {
-      if (!vigente(instantes[instantes.length - 1] ?? 0, ahora)) fallosPorIp.delete(ip);
+    for (const [ip, intentos] of intentosPorIp) {
+      if (!intentos.some((intento) => vigente(intento, ahora))) intentosPorIp.delete(ip);
     }
   }
 
   return {
-    estaBloqueada(ip) {
-      const instantes = fallosPorIp.get(normalizarIp(ip));
-      if (instantes === undefined || instantes.length < maxIntentos) return false;
-      return vigente(instantes[instantes.length - maxIntentos] ?? 0, reloj.now().getTime());
-    },
-    registrarFallo(ip) {
+    reservar(ip): ReservaDeIntentoPorIp | null {
       const ahora = reloj.now().getTime();
       barrerVencidas(ahora);
       const clave = normalizarIp(ip);
-      const instantes = [...(fallosPorIp.get(clave) ?? []), ahora].slice(-maxIntentos);
-      fallosPorIp.set(clave, instantes);
+      const vigentes = (intentosPorIp.get(clave) ?? []).filter((intento) =>
+        vigente(intento, ahora),
+      );
+      if (vigentes.length >= maxIntentos) {
+        intentosPorIp.set(clave, vigentes);
+        return null;
+      }
+      const intento: Intento = { instante: ahora };
+      intentosPorIp.set(clave, [...vigentes, intento]);
+      return {
+        liberar() {
+          const restantes = (intentosPorIp.get(clave) ?? []).filter((otro) => otro !== intento);
+          if (restantes.length === 0) intentosPorIp.delete(clave);
+          else intentosPorIp.set(clave, restantes);
+        },
+      };
     },
-    ipsRegistradas: () => fallosPorIp.size,
+    ipsRegistradas: () => intentosPorIp.size,
   };
 }

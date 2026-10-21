@@ -26,7 +26,7 @@ function servicioCon(sesion: SesionConUsuario | null) {
     repo: {
       buscarUsuarioPorCorreo: () => Promise.resolve(null),
       crearSesion: () => Promise.resolve(true),
-      registrarFalloDeLogin: () => Promise.resolve(),
+      reservarIntentoDeLogin: () => Promise.resolve({ permitido: true, intentos: 1 }),
       reiniciarFallos: () => Promise.resolve(),
       revocarSesion: () => Promise.resolve(),
       tocarSesion: (id, ahora) => {

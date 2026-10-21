@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRegistroDeIntentosPorIp } from '../../src/infrastructure/intentos-por-ip.memoria.js';
+import type { RegistroDeIntentosPorIp } from '../../src/modules/auth/auth.service.js';
 import { relojAjustable } from '../support/usuarios.js';
 
 const IP = '198.51.100.7';
@@ -10,83 +11,121 @@ function registroDeTest() {
   return { reloj, registro };
 }
 
+/** Un intento fallido: se reserva y la reserva no se libera. */
+function fallar(registro: RegistroDeIntentosPorIp, ip: string): void {
+  registro.reservar(ip);
+}
+
+/** Consulta sin dejar rastro: reserva y, si la obtuvo, la libera enseguida. */
+function estaBloqueada(registro: RegistroDeIntentosPorIp, ip: string): boolean {
+  const reserva = registro.reservar(ip);
+  reserva?.liberar();
+  return reserva === null;
+}
+
 describe('RegistroDeIntentosPorIp en memoria', () => {
-  it('no bloquea una IP sin fallos', () => {
+  it('concede la reserva a una IP sin intentos', () => {
     const { registro } = registroDeTest();
 
-    expect(registro.estaBloqueada(IP)).toBe(false);
+    expect(registro.reservar(IP)).not.toBeNull();
   });
 
-  it('no bloquea mientras los fallos no alcanzan el máximo', () => {
+  it('no bloquea mientras los intentos no alcanzan el máximo', () => {
     const { registro } = registroDeTest();
 
-    registro.registrarFallo(IP);
-    registro.registrarFallo(IP);
+    fallar(registro, IP);
+    fallar(registro, IP);
 
-    expect(registro.estaBloqueada(IP)).toBe(false);
+    expect(estaBloqueada(registro, IP)).toBe(false);
   });
 
-  it('bloquea al alcanzar el máximo de fallos dentro de la ventana', () => {
+  it('bloquea al alcanzar el máximo de intentos dentro de la ventana', () => {
     const { registro } = registroDeTest();
 
-    for (let i = 0; i < 3; i += 1) registro.registrarFallo(IP);
+    for (let i = 0; i < 3; i += 1) fallar(registro, IP);
 
-    expect(registro.estaBloqueada(IP)).toBe(true);
+    expect(estaBloqueada(registro, IP)).toBe(true);
   });
 
-  it('no mezcla los fallos de IP distintas', () => {
+  it('cuenta los intentos en curso: reservas sin resolver agotan el máximo antes de verificar ninguna', () => {
     const { registro } = registroDeTest();
-    registro.registrarFallo(IP);
-    registro.registrarFallo(IP);
 
-    registro.registrarFallo('203.0.113.9');
+    const reservas = Array.from({ length: 20 }, () => registro.reservar(IP));
 
-    expect(registro.estaBloqueada(IP)).toBe(false);
-    expect(registro.estaBloqueada('203.0.113.9')).toBe(false);
+    expect(reservas.filter((reserva) => reserva !== null)).toHaveLength(3);
+  });
+
+  it('devuelve el cupo cuando se libera la reserva de un intento correcto', () => {
+    const { registro } = registroDeTest();
+    const reservas = Array.from({ length: 3 }, () => registro.reservar(IP));
+    expect(estaBloqueada(registro, IP)).toBe(true);
+
+    reservas[0]?.liberar();
+
+    expect(estaBloqueada(registro, IP)).toBe(false);
+  });
+
+  it('no mezcla los intentos de IP distintas', () => {
+    const { registro } = registroDeTest();
+    fallar(registro, IP);
+    fallar(registro, IP);
+
+    fallar(registro, '203.0.113.9');
+
+    expect(estaBloqueada(registro, IP)).toBe(false);
+    expect(estaBloqueada(registro, '203.0.113.9')).toBe(false);
   });
 
   it('sigue bloqueada un instante antes de cumplirse la ventana y se libera al cumplirse exactamente', () => {
     const { reloj, registro } = registroDeTest();
-    for (let i = 0; i < 3; i += 1) registro.registrarFallo(IP);
+    for (let i = 0; i < 3; i += 1) fallar(registro, IP);
 
     reloj.avanzarMinutos(14);
-    expect(registro.estaBloqueada(IP)).toBe(true);
+    expect(estaBloqueada(registro, IP)).toBe(true);
     reloj.avanzarMinutos(1);
-    expect(registro.estaBloqueada(IP)).toBe(false);
+    expect(estaBloqueada(registro, IP)).toBe(false);
   });
 
-  it('desliza la ventana: los fallos más viejos dejan de contar y los nuevos vuelven a bloquear', () => {
+  it('desliza la ventana: los intentos más viejos dejan de contar y los nuevos vuelven a bloquear', () => {
     const { reloj, registro } = registroDeTest();
-    registro.registrarFallo(IP);
+    fallar(registro, IP);
     reloj.avanzarMinutos(10);
-    registro.registrarFallo(IP);
-    registro.registrarFallo(IP);
-    expect(registro.estaBloqueada(IP)).toBe(true);
+    fallar(registro, IP);
+    fallar(registro, IP);
+    expect(estaBloqueada(registro, IP)).toBe(true);
 
     reloj.avanzarMinutos(5);
-    expect(registro.estaBloqueada(IP)).toBe(false);
-    registro.registrarFallo(IP);
-    expect(registro.estaBloqueada(IP)).toBe(true);
+    expect(estaBloqueada(registro, IP)).toBe(false);
+    fallar(registro, IP);
+    expect(estaBloqueada(registro, IP)).toBe(true);
   });
 
   it('trata la forma IPv4 y la forma IPv4 mapeada a IPv6 como la misma IP', () => {
     const { registro } = registroDeTest();
-    registro.registrarFallo(IP);
-    registro.registrarFallo(`::ffff:${IP}`);
-    registro.registrarFallo(IP);
+    fallar(registro, IP);
+    fallar(registro, `::ffff:${IP}`);
+    fallar(registro, IP);
 
-    expect(registro.estaBloqueada(`::FFFF:${IP}`)).toBe(true);
+    expect(estaBloqueada(registro, `::FFFF:${IP}`)).toBe(true);
   });
 
-  it('descarta las IP con todos sus fallos vencidos cuando pasa una ventana completa', () => {
+  it('descarta las IP con todos sus intentos vencidos cuando pasa una ventana completa', () => {
     const { reloj, registro } = registroDeTest();
-    registro.registrarFallo(IP);
-    registro.registrarFallo('203.0.113.9');
+    fallar(registro, IP);
+    fallar(registro, '203.0.113.9');
     expect(registro.ipsRegistradas()).toBe(2);
 
     reloj.avanzarMinutos(16);
-    registro.registrarFallo('192.0.2.1');
+    fallar(registro, '192.0.2.1');
 
     expect(registro.ipsRegistradas()).toBe(1);
+  });
+
+  it('olvida la IP cuando se libera su única reserva', () => {
+    const { registro } = registroDeTest();
+
+    registro.reservar(IP)?.liberar();
+
+    expect(registro.ipsRegistradas()).toBe(0);
   });
 });
