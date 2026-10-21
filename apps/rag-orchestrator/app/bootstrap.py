@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
+from pydantic import ValidationError
 
 from app.api.contencion_de_errores import ContencionDeErroresInesperados
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
+from app.api.trace import ContextoDeTraceId
 from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
@@ -35,8 +38,10 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
+from app.config.errores_de_configuracion import describir_errores
 from app.config.logging import silenciar_urls_de_httpx_en_logs
-from app.config.settings import Settings
+from app.config.settings import Settings, nombres_de_claves
+from app.config.version import VERSION_DEL_SERVICIO
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -55,6 +60,9 @@ if (
     TYPE_CHECKING
 ):  # solo para el tipado: importarlo en ejecución cargaría onnxruntime aun con MODEL_PROVIDER=fake
     from app.infrastructure.models.local import ModelosDeRecuperacion
+
+
+logger = logging.getLogger(__name__)
 
 
 class ConfiguracionDeRecuperacionIncompleta(ValueError):
@@ -79,7 +87,16 @@ CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 
 
 def cargar_settings_o_salir() -> Settings:
-    raise NotImplementedError("no implementado")
+    """Carga ``Settings`` una sola vez; si el entorno es inválido registra un ``configuracion_invalida`` por variable
+    (nombre y regla, nunca el valor) y termina el proceso con código 1 antes de escuchar (US-037 AC-2, RN-22)."""
+    try:
+        return Settings()
+    except ValidationError as error:
+        for evento in describir_errores(error):
+            logger.error(
+                "configuracion_invalida", extra={"event": "configuracion_invalida", **evento}
+            )
+        raise SystemExit(1) from None
 
 
 def crear_app(
@@ -102,6 +119,9 @@ def crear_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
+    app.add_middleware(
+        ContextoDeTraceId, trace_ids=trace_ids
+    )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     _registrar_consulta_de_evidencia(
         app,
@@ -112,7 +132,14 @@ def crear_app(
         clock=clock,
         generador=generador,
     )
-    app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
+    app.include_router(
+        crear_router_health(
+            llm_health or _sonda_llm_segun(settings),
+            trace_ids,
+            nombres_de_claves(settings),
+            VERSION_DEL_SERVICIO,
+        )
+    )
     return app
 
 
