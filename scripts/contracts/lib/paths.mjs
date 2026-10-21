@@ -21,6 +21,8 @@ export const PATHS = {
   dataModel: 'docs/architecture/data-model.md',
   readme: 'readme.md',
   prohibitedTerms: 'packages/clinical-catalogs/lenguaje/terminos-prohibidos.json',
+  /** Código de los consumidores de los proveedores (sin tests): lo revisa assertConsumersUseGeneratedClients (US-214 AC-1). */
+  consumerSources: ['apps/web/app', 'apps/web/lib', 'apps/web/components', 'apps/web/proxy.ts', 'apps/clinical-api/src'],
 };
 
 /** Los specs de los dos proveedores (sin el archivo compartido), de los que se genera código. */
