@@ -1,0 +1,5 @@
+{
+  "clase": "sintetico",
+  "nombre": "evaluation",
+  "descripcion": "Salidas versionadas de la suite evaluate (baseline.json): solo métricas agregadas y configuración de la CI con adapters falsos, sin textos ni datos reales. vm-baseline/ conserva su propio manifiesto."
+}
