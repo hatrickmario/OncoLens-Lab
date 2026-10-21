@@ -40,7 +40,6 @@ function entornoValido(): Record<string, string> {
     PII_FORMATS_PATH: FORMATOS_DE_PII,
     PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
-    ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto sintético de test.',
   };
 }
 
@@ -64,7 +63,6 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
     ['EVIDENCE_DEFAULT_YEARS', { EVIDENCE_DEFAULT_YEARS: '0' }],
     ['RAG_TIMEOUT_MS', { RAG_TIMEOUT_MS: '0' }],
     ['AI_DISCLAIMER_TEXT', { AI_DISCLAIMER_TEXT: undefined }],
-    ['ANALYSIS_BASIS_S1_ASSUMPTION_TEXT', { ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined }],
     ['PII_FORMATS_PATH', { PII_FORMATS_PATH: undefined }],
     ['PII_MASKS_PATH', { PII_MASKS_PATH: undefined }],
     ['PII_NAME_TOKEN_MIN_LENGTH', { PII_NAME_TOKEN_MIN_LENGTH: '0' }],

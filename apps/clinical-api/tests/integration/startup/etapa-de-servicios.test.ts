@@ -42,7 +42,6 @@ function entornoValido(): Record<string, string> {
     PII_FORMATS_PATH: FORMATOS_DE_PII,
     PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
-    ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto sintético de test.',
   };
 }
 
