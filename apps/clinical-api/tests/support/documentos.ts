@@ -49,8 +49,8 @@ export function pdfSinteticoDe(megabytes: number): Buffer {
 export interface ObjetoGuardado {
   readonly clave: string;
   readonly bytes: Buffer;
-  /** Nombres (en minúscula) de las cabeceras con las que el cliente envió el objeto. */
-  readonly cabeceras: readonly string[];
+  /** Cabeceras (nombre en minúscula → valor) con las que el cliente envió el objeto. */
+  readonly cabeceras: Readonly<Record<string, string>>;
 }
 
 export interface EntornoSimulado {
@@ -86,7 +86,7 @@ export function entornoSimulado(): EntornoSimulado {
       objetos.set(clave, {
         clave,
         bytes: Buffer.from(await request.arrayBuffer()),
-        cabeceras: [...request.headers.keys()],
+        cabeceras: Object.fromEntries(request.headers.entries()),
       });
       return new HttpResponse(null, { status: 200, headers: { ETag: '"sintetico"' } });
     }),
