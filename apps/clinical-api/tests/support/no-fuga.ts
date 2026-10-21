@@ -103,6 +103,27 @@ export function clavesDeIdentidadEnJson(texto: string): string[] {
   return [...claves];
 }
 
+/** La Base del análisis que sale hacia el navegador (US-066, RN-10): una fuente más para el arnés, con sus claves. */
+export function fuenteDeLaBaseDelAnalisis(base: unknown): Fuente {
+  return { nombre: 'respuesta:analysisBasis', texto: JSON.stringify(base) };
+}
+
+/**
+ * Etiquetas de `patientDataUsed` que traen una fecha absoluta (con las mismas expresiones que `verificarDesidentificado`,
+ * de `config/pii-formats.json`) o el seudónimo de la consulta (RN-10, RN-11).
+ */
+export function etiquetasConDatoAbsoluto(
+  etiquetas: readonly string[],
+  seudonimo: string,
+  expresionesDeFecha: readonly RegExp[],
+): string[] {
+  return etiquetas.filter(
+    (etiqueta) =>
+      etiqueta.includes(seudonimo) ||
+      expresionesDeFecha.some((expresion) => etiqueta.search(expresion) !== -1),
+  );
+}
+
 const TABLAS_DE_SALIDA = [
   { esquema: 'audit', tabla: null },
   { esquema: 'research', tabla: null },

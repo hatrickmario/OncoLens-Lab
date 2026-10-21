@@ -88,3 +88,24 @@ Reglas extraídas con nombre propio: `verbalizarDatoDelContexto()` (ADR-34) y `d
   `l1d-173-tipos-cancer-habilitados` (D7): inciso (a) **vacío** (`patientDataUsed = []`), (d) con 0 recuperados y 0
   sobre el umbral, (e) desde la configuración de fuentes excluidas y (f) desde `CORPUS_CUTOFF_DATE`. Este change solo
   cubre las ramas que llaman a Backend 2.
+
+## Desviaciones de la implementación
+
+- **Etiquetas:** el contexto desidentificado no trae unidad ni método del biomarcador (el valor ya incluye "(IHQ)"), así que la etiqueta es `<nombre> <valor>`; el resto de formatos sigue la decisión 2. Un campo vacío o "No disponible" se omite (se reutiliza `NO_DISPONIBLE` de `clinical-context.builder.ts`).
+- **Orden:** `patientDataUsed` conserva el orden de asignación de los `dataRef` de `construirContextoPermitido()` (diagnóstico, biomarcadores, atributos, tratamientos, eventos); no hay ordenamiento propio del builder (una sola regla de formato `r<n>`, en `asignarDataRefs()`). Las notas clínicas viajan vacías en el S1 (`verificarDesidentificado()` lo exige).
+- **Ausentes (RN-25):** ninguna etiqueta sale vacía; un valor ausente se escribe «No disponible» («HER2: No disponible»); el estadio y la línea de tratamiento, que son opcionales, se omiten.
+- **Limitaciones:** el builder copia las `limitations` de la respuesta interna (como el adaptador del S1); el escenario AC-1 usa `LLM-OK` sin limitaciones para que `limitations = []`.
+- **AC-6:** se verifica en integración (repositorio real + `construirContextoPermitido()` real + builder), porque FX-T1a-a son filas de la BD.
+- **Verificación del proveedor:** el helper vigente es `assertMatchesSpec` (`scripts/contracts/lib/responseValidator.mjs`); no existe `contracts:verify-provider` ni `clienteVerificado` en `main`.
+- **Clave obsoleta:** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` ya no se lee; su retiro de `.env.example` y del Compose queda fuera de este PR.
+
+## Deuda
+
+- Retiro de `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` de `.env.example`, `docker-compose`, `compose-smoke`, scripts de demo/e2e y tests: PR aparte con aprobación del usuario; historia por crear en `/sprint-close`.
+
+## Preguntas abiertas (para el humano)
+
+1. `limitations` de AC-1: ¿copiar las de la respuesta interna (hoy) o dejar `[]` como dice el AC literal?
+2. Etiquetas con códigos internos (`estado_menopausico`, `diagnostico`, `TNM_8`): ¿se traducen en L1D-187 o en el builder?
+3. `origin = regla_catalogo` del supuesto declarado: ¿es el origen correcto mientras no exista el cálculo de faltantes?
+4. Texto libre de atributos en la etiqueta (ADR-34): hoy se escribe el valor ya enmascarado; ¿se acepta o se verbaliza solo la clave?
