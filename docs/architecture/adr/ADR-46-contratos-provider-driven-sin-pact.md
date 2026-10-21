@@ -18,7 +18,7 @@ Hechos: un solo equipo; dos proveedores (`clinical-api`, `rag-orchestrator`) y c
 ## Factores de decisión
 
 - Sin infraestructura nueva (un *broker* es un servicio más que operar con 32 GB y un equipo).
-- Mismo criterio en ambos proveedores: dos implementaciones (Ajv2020 en `scripts/contracts`, que es también el de `contracts:check`, y `jsonschema` en `rag-orchestrator`) que deben coincidir en los mismos vectores de prueba (los ejemplos de `contracts/examples/` y sus variantes inválidas), para que "el ejemplo cumple" y "la respuesta cumple" signifiquen lo mismo.
+- Mismo criterio en ambos proveedores: dos implementaciones (Ajv2020 en `scripts/contracts`, que es también el de `contracts:check`, y `jsonschema` en `rag-orchestrator`) y el objetivo es que coincidan en los mismos vectores de prueba (los ejemplos de `contracts/examples/` y sus variantes inválidas; vectores dorados compartidos aún por crear, ver deuda en `design.md`), para que "el ejemplo cumple" y "la respuesta cumple" signifiquen lo mismo.
 - Los errores también son contrato (US-214 AC-3) y no se imprime nunca el valor de un campo (RN-10, RN-14).
 - La verificación debe ser automática y fallar cerrada (spec ilegible, operación no resuelta o código no declarado son error).
 

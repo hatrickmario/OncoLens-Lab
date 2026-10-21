@@ -1,7 +1,6 @@
 import type { Client } from 'pg';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, inject, it, vi } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { createApp } from '../../../src/app.js';
 import type { Consultador } from '../../../src/modules/auth/auth.repository.js';
 import { appConAuth } from '../../support/app-auth.js';
@@ -18,7 +17,11 @@ import {
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 105;
 /** Ruta de mentira para ejercitar el guard: el contrato no la describe, así que no se verifica contra el spec. */
-const RUTA_DE_MENTIRA = { respuestasAjenasAlContrato: [{ ruta: '/platform/otra-ruta' }] };
+const RUTA_DE_MENTIRA = {
+  respuestasAjenasAlContrato: [
+    { ruta: '/platform/otra-ruta', esquema: '#/components/responses/ErrorInterno' },
+  ],
+};
 const DETALLE_INTERNO = 'detalle-interno-secreto password=hunter2 /ruta/interna.ts';
 
 const dbQueRechaza: Consultador = {
@@ -63,7 +66,6 @@ describe('manejador final de errores', () => {
 
       for (const respuesta of [login, guard]) {
         expect(respuesta.status).toBe(500);
-        assertMatchesSpec('clinical-api', '#/components/responses/ErrorInterno', respuesta.body);
         expect(respuesta.headers['content-type']).toMatch(/application\/json/);
         expect(Object.keys(respuesta.body as object).sort()).toEqual([
           'error',

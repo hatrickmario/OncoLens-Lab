@@ -12,6 +12,7 @@
  * construcción; nunca se omite en silencio. Módulo puro: recibe el spec ya empaquetado y devuelve texto.
  */
 
+import { NOMBRE_DE_CAMPO, PROPIEDAD_NO_DECLARADA } from './nombreDeCampo.mjs';
 import { schemaNameOf } from './specs.mjs';
 import { allSchemas, isObject as esObjeto } from './walk.mjs';
 
@@ -301,7 +302,7 @@ type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?:
 const esObjeto = (valor: unknown): valor is Record<string, unknown> => typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 const tiene = (objeto: Record<string, unknown>, clave: string): boolean => Object.hasOwn(objeto, clave);
 // Una propiedad desconocida puede ser un dato: solo se nombra en la ruta si parece un identificador de campo (RN-10).
-const nombreDeCampo = (clave: string): string => (/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(clave) ? clave : '{propiedad no evaluada}');
+const nombreDeCampo = (clave: string): string => (/${NOMBRE_DE_CAMPO.source}/.test(clave) ? clave : '${PROPIEDAD_NO_DECLARADA}');
 const esUnoDe = (valor: unknown, posibles: readonly unknown[]): boolean => posibles.includes(valor);
 const esTipo = (valor: unknown, tipo: string): boolean => {
   if (tipo === 'null') return valor === null;

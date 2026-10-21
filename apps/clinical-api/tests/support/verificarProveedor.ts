@@ -2,6 +2,7 @@ import { appendFileSync } from 'node:fs';
 import type { Express } from 'express';
 import request, { type Response, type Test } from 'supertest';
 import {
+  assertMatchesSpec,
   rutaExisteEnElSpec,
   verificarRespuesta,
 } from '../../../../scripts/contracts/lib/responseValidator.mjs';
@@ -23,6 +24,8 @@ export interface RespuestaAjenaAlContrato {
   readonly ruta: string;
   /** Solo ese código (p. ej. el 200 de un controlador de mentira montado en una ruta real); sin él, todos los de la ruta. */
   readonly status?: number;
+  /** Puntero del spec (`#/components/...`) contra el que se valida el cuerpo de esa respuesta de mentira (p. ej. un error genérico). */
+  readonly esquema?: string;
 }
 
 export interface OpcionesDelClienteVerificado {
@@ -52,13 +55,13 @@ function registrarRespuestaVerificada(): void {
   if (archivo !== undefined && archivo !== '') appendFileSync(archivo, `${PROVEEDOR}\n`);
 }
 
-/** ¿El test declaró esta ruta (y este código, si lo acotó) como de mentira? */
-function esRespuestaAjenaAlContrato(
+/** La excepción con la que el test declaró esta ruta (y este código, si lo acotó) como de mentira, si la hay. */
+function excepcionDeLaRespuesta(
   ajenas: readonly RespuestaAjenaAlContrato[],
   ruta: string,
   status: number,
-): boolean {
-  return ajenas.some(
+): RespuestaAjenaAlContrato | undefined {
+  return ajenas.find(
     (ajena) => ajena.ruta === sinQuery(ruta) && (ajena.status ?? status) === status,
   );
 }
@@ -69,7 +72,13 @@ function verificadorDe(
   ajenas: readonly RespuestaAjenaAlContrato[],
 ): (respuesta: Response) => void {
   return (respuesta) => {
-    if (esRespuestaAjenaAlContrato(ajenas, ruta, respuesta.status)) return;
+    const excepcion = excepcionDeLaRespuesta(ajenas, ruta, respuesta.status);
+    if (excepcion !== undefined) {
+      if (excepcion.esquema !== undefined) {
+        assertMatchesSpec(PROVEEDOR, excepcion.esquema, cuerpoDe(respuesta));
+      }
+      return;
+    }
     verificarRespuesta({
       proveedor: PROVEEDOR,
       metodo,

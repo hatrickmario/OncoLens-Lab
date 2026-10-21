@@ -99,3 +99,7 @@ Compatible con ADR-26.
   que sí existe debe acotarse con `status` (el cliente lo exige).
 - La detección de `assertConsumersUseGeneratedClients` es léxica (no ve alias de `fetch`) y recorre las rutas de
   `PATHS.consumerSources`; un directorio de código nuevo hay que añadirlo allí.
+- Vectores dorados de verificación compartidos en `contracts/` (Ajv y jsonschema): hoy cada proveedor prueba su propio
+  validador con sus tests; historia por crear en /sprint-close.
+- Un empaquetado por job: cada job de la CI vuelve a empaquetar los specs; compartirlo es una historia por crear en
+  /sprint-close.

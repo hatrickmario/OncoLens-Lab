@@ -8,11 +8,17 @@
  * llevar datos.
  */
 import { getBundledSpecs } from './bundledSpecs.mjs';
-import { findResponse, labelOf, listOperations, resolverOperacion } from './operations.mjs';
+import { findResponse, labelOf, listOperations, resolverOperacion, rutaSinValores } from './operations.mjs';
 import { followRefs } from './pointer.mjs';
 import { createExampleValidator } from './validator.mjs';
 
-let validator;
+let validador;
+
+/** El validador (Ajv2020) sobre los specs empaquetados, compartido por `matchesSpec` y `verificarRespuesta`. */
+function validadorCompartido() {
+  validador ??= createExampleValidator(getBundledSpecs());
+  return validador;
+}
 
 /**
  * @param {string} provider `clinical-api` o `rag-orchestrator`
@@ -21,8 +27,7 @@ let validator;
  * @returns {{ path: string, message: string }[]} vacío si el cuerpo cumple el spec
  */
 export function matchesSpec(provider, pointer, body) {
-  validator ??= createExampleValidator(getBundledSpecs());
-  const verdict = validator.validate({ spec: provider, target: pointer }, body);
+  const verdict = validadorCompartido().validate({ spec: provider, target: pointer }, body);
   if (verdict.error) throw new Error(verdict.error);
   return verdict.problems;
 }
@@ -33,16 +38,6 @@ export function assertMatchesSpec(provider, pointer, body) {
   if (problems.length > 0) {
     throw new Error(`la respuesta no cumple ${provider}${pointer}:\n${problems.map((item) => `  ${item.path}: ${item.message}`).join('\n')}`);
   }
-}
-
-/** Ruta concreta sin query y con `{…}` en todo segmento que no sea un literal del spec: un id o un valor nunca se imprime (RN-10). */
-function rutaSinValores(spec, ruta) {
-  const literales = new Set(listOperations(spec).flatMap((entry) => entry.route.split('/').filter((segmento) => segmento !== '' && !segmento.startsWith('{'))));
-  return ruta
-    .split(/[?#]/, 1)[0]
-    .split('/')
-    .map((segmento) => (segmento === '' || literales.has(segmento) ? segmento : '{…}'))
-    .join('/');
 }
 
 /** ¿Alguna operación del spec de `proveedor` (con cualquier método) corresponde a esta ruta concreta? */
@@ -98,8 +93,8 @@ function problemasDelCuerpo(validador, proveedor, declarada, cuerpo) {
  * Crea un verificador de respuestas sobre unos specs ya empaquetados (los de `getBundledSpecs()` o, en los tests, sintéticos).
  * @param {{ [proveedor: string]: { bundled: any } }} specs
  */
-export function crearVerificadorDeRespuestas(specs) {
-  const validador = createExampleValidator(specs);
+export function crearVerificadorDeRespuestas(specs, validadorPropio = createExampleValidator(specs)) {
+  const validador = validadorPropio;
   return function verificar(respuesta) {
     const { proveedor, status, cabeceras, cuerpo } = respuesta;
     const spec = specs[proveedor]?.bundled;
@@ -124,6 +119,6 @@ let verificadorGlobal;
  * @returns {{ plantilla: string, codigo: string }}
  */
 export function verificarRespuesta(respuesta) {
-  verificadorGlobal ??= crearVerificadorDeRespuestas(getBundledSpecs());
+  verificadorGlobal ??= crearVerificadorDeRespuestas(getBundledSpecs(), validadorCompartido());
   return verificadorGlobal(respuesta);
 }

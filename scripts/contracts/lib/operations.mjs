@@ -91,3 +91,9 @@ export function resolverOperacion(spec, method, rutaConcreta) {
   const ganadoras = candidatas.filter((entry) => literalesDe(entry.route) === mejor);
   return ganadoras.length === 1 ? ganadoras[0] : undefined;
 }
+
+/** Ruta concreta sin query y con `{…}` en todo segmento que no sea un literal del spec: un id o un valor nunca se imprime (RN-10). */
+export function rutaSinValores(spec, ruta) {
+  const literales = new Set(listOperations(spec).flatMap((entry) => segmentosDeRuta(entry.route).filter((segmento) => !esParametro(segmento))));
+  return `/${segmentosDeRuta(ruta).map((segmento) => (literales.has(segmento) ? segmento : '{…}')).join('/')}`;
+}

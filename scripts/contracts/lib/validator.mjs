@@ -1,6 +1,7 @@
 /** Validación de ejemplos contra los specs empaquetados con Ajv (JSON Schema 2020-12, estricto). */
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
+import { NOMBRE_DE_CAMPO, PROPIEDAD_NO_DECLARADA } from './nombreDeCampo.mjs';
 import { jsonSchemaOf } from './operations.mjs';
 import { resolvePointer } from './pointer.mjs';
 import { PROVIDERS } from './specs.mjs';
@@ -40,16 +41,13 @@ function schemaPointerOfTarget(spec, target) {
   return resolved.node?.content ? (jsonSchemaOf(spec, resolved)?.pointer ?? null) : resolved.pointer;
 }
 
-/** Un nombre de campo se imprime solo si parece un identificador; cualquier otra cosa podría ser un dato (RN-10). */
-const NOMBRE_DE_CAMPO = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
-
 /**
  * Ruta JSON del campo incumplido; en propiedades no declaradas incluye su nombre solo si parece un identificador, y en las
  * ausentes el declarado por el spec (nunca un valor).
  */
 function rutaDelCampo(item) {
   const noDeclarada = item.params?.additionalProperty ?? item.params?.unevaluatedProperty;
-  const nombre = noDeclarada === undefined ? item.params?.missingProperty : (NOMBRE_DE_CAMPO.test(noDeclarada) ? noDeclarada : '{propiedad no declarada}');
+  const nombre = noDeclarada === undefined ? item.params?.missingProperty : (NOMBRE_DE_CAMPO.test(noDeclarada) ? noDeclarada : PROPIEDAD_NO_DECLARADA);
   return `${item.instancePath}${nombre === undefined ? '' : `/${nombre}`}` || '#';
 }
 
