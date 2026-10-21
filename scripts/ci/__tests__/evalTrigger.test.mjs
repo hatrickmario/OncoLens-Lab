@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import YAML from 'yaml';
-import { tocaDisparador } from '../eval-trigger.mjs';
+import { detectar, tocaDisparador } from '../eval-trigger.mjs';
 
 const REGLAS = YAML.parse(readFileSync(path.resolve(import.meta.dirname, '../eval-trigger-paths.yaml'), 'utf8'));
 
@@ -54,5 +54,35 @@ describe('tocaDisparador', () => {
 
   it('no dispara cuando el diff está vacío [US-074 AC-1]', () => {
     expect(tocaDisparador([], REGLAS)).toEqual({ dispara: false, motivos: [] });
+  });
+
+  it('dispara cuando cambia MODEL_QUANTIZATION [US-074 AC-3]', () => {
+    expect(tocaDisparador([cambio('infra/docker/.env.example', '+MODEL_QUANTIZATION=int8')], REGLAS).dispara).toBe(true);
+  });
+});
+
+describe('claves de las reglas frente a la configuración de rag-orchestrator', () => {
+  const fuente = readFileSync(path.resolve(import.meta.dirname, '../../../apps/rag-orchestrator/app/config/modelos.py'), 'utf8');
+  const claves = (nombre) => [...fuente.match(new RegExp(`${nombre} = \\(([^)]*)\\)`))[1].matchAll(/"([A-Z_0-9]+)"/g)].map((m) => m[1]);
+  // Rutas locales de cachés: no cambian modelo, prompt, umbral, catálogo ni corpus.
+  const EXENTAS = ['MODEL_CACHE_DIR', 'DATA_CACHE_DIR'];
+
+  it('dispara con toda clave de modelos, chunking e índice salvo las exentas [US-074 AC-3]', () => {
+    const todas = [...claves('CLAVES_MODELOS'), ...claves('CLAVES_CHUNKING_E_INDICE')].filter((c) => !EXENTAS.includes(c));
+
+    expect(todas.length).toBeGreaterThan(10);
+    expect(todas.filter((c) => !tocaDisparador([cambio('infra/docker/.env.example', `+${c}=x`)], REGLAS).dispara)).toEqual([]);
+  });
+});
+
+describe('detectar', () => {
+  it('ejecuta la suite con el motivo base-desconocida cuando la base no existe [US-074 AC-1]', () => {
+    const resultado = detectar({ base: '0000000000000000000000000000000000000000' });
+
+    expect(resultado.motivos).toEqual([{ ruta: '(diff completo)', motivo: 'base-desconocida' }]);
+  });
+
+  it('propaga el error de las reglas en vez de disfrazarlo de base desconocida [US-074 AC-1]', () => {
+    expect(() => detectar({ base: 'HEAD~3', reglas: { rutas: ['{sin-cierre'], claves: { archivos: [] } } })).toThrow();
   });
 });

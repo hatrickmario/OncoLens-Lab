@@ -47,7 +47,9 @@ function ejecutarSuite(raiz, salida) {
   return resultado.status ?? 1;
 }
 
-const lineasDeMotivos = (motivos) => motivos.map(({ ruta, motivo }) => `- ${motivo}: \`${ruta}\``).join('\n');
+/** Una ruta con saltos de línea, comillas invertidas o barras no puede añadir Markdown propio al resumen. */
+const rutaSegura = (ruta) => ruta.replace(/[\r\n`|]/g, '?');
+const lineasDeMotivos = (motivos) => motivos.map(({ ruta, motivo }) => `- ${motivo}: \`${rutaSegura(ruta)}\``).join('\n');
 
 function informe({ motivos, tolerancia, comparacion }) {
   const encabezado = ['## eval-required', '', 'La suite `evaluate` se ejecutó (adapters falsos, FX-T5a-a) porque el diff toca:', lineasDeMotivos(motivos), ''];

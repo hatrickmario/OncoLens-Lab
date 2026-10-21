@@ -33,7 +33,9 @@ const valorEn = (nodo, metrica) => metrica.split('.').reduce((actual, clave) => 
 function estadoDe({ metrica, baseline, actual }, tolerancia) {
   if (typeof actual !== 'number') return 'regresion';
   const empeora = menosEsMejor(metrica) ? actual - baseline : baseline - actual;
-  if (empeora > tolerancia + EPSILON) return 'regresion';
+  // Un conteo de invariante (`violaciones_*`, RN-02) no admite caída tolerada: cualquier aumento es regresión.
+  const permitida = menosEsMejor(metrica) ? 0 : tolerancia;
+  if (empeora > permitida + EPSILON) return 'regresion';
   if (empeora > EPSILON) return 'tolerada';
   return empeora < -EPSILON ? 'mejora' : 'igual';
 }

@@ -65,13 +65,23 @@ export function cambiosDesdeBase(raiz, base) {
   return rutas.map((ruta) => ({ ruta, lineas: lineasCambiadas(git(raiz, 'diff', '-U0', '--no-renames', base, 'HEAD', '--', ruta)) }));
 }
 
-/** Detección completa; con una base ausente o ilegible falla hacia ejecutar la suite (nunca se omite por error). */
+/**
+ * Detección completa. Solo una base ausente o ilegible falla hacia ejecutar la suite (nunca se omite por error);
+ * un error de las reglas (glob inválido, forma incorrecta) se propaga con su mensaje.
+ */
 export function detectar({ raiz = RAIZ, base, reglas = cargarReglas() }) {
+  const cambios = cambiosDeLaBase(raiz, base);
+  if (cambios === null) return { dispara: true, motivos: [{ ruta: '(diff completo)', motivo: 'base-desconocida' }] };
+  return tocaDisparador(cambios, reglas);
+}
+
+/** Cambios del diff, o `null` si la base no se puede resolver en este clon. */
+function cambiosDeLaBase(raiz, base) {
+  if (!base || base.startsWith('-')) return null;
   try {
-    if (!base) throw new Error('sin base');
-    return tocaDisparador(cambiosDesdeBase(raiz, base), reglas);
+    return cambiosDesdeBase(raiz, base);
   } catch {
-    return { dispara: true, motivos: [{ ruta: '(diff completo)', motivo: 'base-desconocida' }] };
+    return null;
   }
 }
 

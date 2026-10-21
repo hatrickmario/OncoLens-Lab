@@ -42,6 +42,10 @@ describe('job eval-required de ci.yml', () => {
     expect(previos.some((paso) => /requirements-eval\.txt/.test(paso.run ?? ''))).toBe(true);
   });
 
+  it('impide a las librerías de modelos descargar nada durante la suite (RN-12) [US-074 AC-1]', () => {
+    expect(job.env).toMatchObject({ HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1' });
+  });
+
   it('publica el reporte como artefacto aunque la suite falle, con retención corta [US-074 AC-1]', () => {
     const publicacion = pasos.find((paso) => paso.uses?.startsWith('actions/upload-artifact@'));
 

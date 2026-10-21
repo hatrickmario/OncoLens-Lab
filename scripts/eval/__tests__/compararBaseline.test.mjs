@@ -39,6 +39,12 @@ describe('compararConBaseline', () => {
     expect(resultado.regresiones.map((r) => r.metrica)).toEqual(['completa.sin_evidencia.violaciones_rn02']);
   });
 
+  it('no tolera ningún aumento de violaciones aunque la tolerancia sea mayor [US-074 AC-5]', () => {
+    const resultado = compararConBaseline(reporteCon({ violaciones: 1 }), reporteCon(), { tolerancia: 1 });
+
+    expect(resultado.regresiones.map((r) => r.metrica)).toEqual(['completa.sin_evidencia.violaciones_rn02']);
+  });
+
   it('no cuenta una mejora como regresión [US-074 AC-5]', () => {
     const resultado = compararConBaseline(reporteCon({ exactitud: 1 }), reporteCon({ exactitud: 0.8 }), { tolerancia: 0 });
 
