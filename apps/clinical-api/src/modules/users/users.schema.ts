@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { normalizarCorreo } from '../auth/auth.service.js';
+import { normalizarCorreo } from '../auth/correo.js';
 
 /** Correo normalizado igual que en el login (misma regla, una sola función) y con forma de correo. */
 export const correoSchema = z.string().transform(normalizarCorreo).pipe(z.email());

@@ -18,7 +18,7 @@ function repositorioFalso(
   const repo: UsersRepository = {
     buscarRolPorNombre: (nombre) =>
       Promise.resolve(roles.includes(nombre) ? { id: `rol-${nombre}` } : null),
-    buscarUsuarioPorCorreo: (correo) =>
+    buscarUsuarioRegistradoPorCorreo: (correo) =>
       Promise.resolve(usuarios.find((usuario) => usuario.email === correo) ?? null),
     crearUsuario: (usuario) => {
       creados.push(usuario);

@@ -1,5 +1,6 @@
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
+import { normalizarCorreo } from '../auth/correo.js';
 import type { PasswordHasher } from '../auth/password-hasher.js';
 import type { UsersRepository, UsuarioRegistrado } from './users.repository.js';
 
@@ -42,7 +43,8 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
   }
 
   return {
-    async crear({ email, rol, password }) {
+    async crear({ email: correo, rol, password }) {
+      const email = normalizarCorreo(correo);
       const { id: roleId } = await exigirRol(rol);
       const id = ids();
       await repo.crearUsuario({
@@ -58,7 +60,7 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
     },
 
     async cambiarRol({ email, rol }) {
-      const usuario = await repo.buscarUsuarioPorCorreo(email);
+      const usuario = await repo.buscarUsuarioRegistradoPorCorreo(email);
       if (usuario === null) throw new UsuarioInexistenteError();
       const { id: roleId } = await exigirRol(rol);
       await repo.cambiarRol(usuario.id, roleId, reloj.now());
@@ -66,7 +68,7 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
     },
 
     async desactivar({ email }) {
-      const usuario = await repo.buscarUsuarioPorCorreo(email);
+      const usuario = await repo.buscarUsuarioRegistradoPorCorreo(email);
       if (usuario === null) throw new UsuarioInexistenteError();
       await repo.desactivarYRevocarSesiones(usuario.id, reloj.now());
       return usuario;

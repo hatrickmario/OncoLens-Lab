@@ -3,6 +3,7 @@ import type { AuthConfig } from '../../config.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AuthRepository, EstadoDeCuenta, UsuarioParaLogin } from './auth.repository.js';
+import { normalizarCorreo } from './correo.js';
 import type { PasswordHasher } from './password-hasher.js';
 
 export interface GeneradorDeToken {
@@ -50,10 +51,6 @@ export function hashDeToken(token: string): string {
 /** Única regla de "puede iniciar o mantener sesión": solo `activo` (data-model, tabla de cuentas). */
 function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
   return estado === 'activo';
-}
-
-export function normalizarCorreo(correo: string): string {
-  return correo.trim().toLowerCase();
 }
 
 export function createAuthService(dependencias: DependenciasDeAuthService): AuthService {
