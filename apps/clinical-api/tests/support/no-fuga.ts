@@ -103,6 +103,23 @@ export function clavesDeIdentidadEnJson(texto: string): string[] {
   return [...claves];
 }
 
+/** La Base del análisis que sale hacia el navegador (US-066, RN-10): una fuente más para el arnés, con sus claves. */
+export function fuenteDeLaBaseDelAnalisis(base: unknown): Fuente {
+  return { nombre: 'respuesta:analysisBasis', texto: JSON.stringify(base) };
+}
+
+const FECHA_ABSOLUTA = /\d{4}-\d{2}-\d{2}/;
+
+/** Etiquetas de `patientDataUsed` que traen una fecha absoluta o el seudónimo de la consulta (RN-10, RN-11). */
+export function etiquetasConDatoAbsoluto(
+  etiquetas: readonly string[],
+  seudonimo: string,
+): string[] {
+  return etiquetas.filter(
+    (etiqueta) => FECHA_ABSOLUTA.test(etiqueta) || etiqueta.includes(seudonimo),
+  );
+}
+
 const TABLAS_DE_SALIDA = [
   { esquema: 'audit', tabla: null },
   { esquema: 'research', tabla: null },
