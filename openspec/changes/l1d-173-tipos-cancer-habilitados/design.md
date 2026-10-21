@@ -114,3 +114,18 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
   (demo `NCCN,ESMO`) y `CORPUS_CUTOFF_DATE` (demo `2026-09-30`). El servicio `clinical-api` de `docker-compose.yml` las pasa
   con `${CLAVE:-<valor demo>}`, así que Compose arranca sin `.env`. **Pendiente del usuario**: añadirlas a
   `infra/docker/.env.example` y a `docs/operations/claves.md`.
+
+## Notas de implementación (ai-services)
+
+- **Orden en el servicio.** `RAGOrchestratorService.consultar` comprueba el tipo **después** de `_filtro_de_recuperacion` (un
+  tipo inutilizable sigue siendo `422 TIPO_CANCER_NO_REGISTRADO`, comportamiento previo de OL-02) y **antes** de cualquier
+  puerto: idioma, release, embeddings, Milvus, reranker, LLM y NLI quedan en cero invocaciones. Sin `diagnosis` no hay tipo
+  que comprobar y responde `TIPO_CANCER_NO_REGISTRADO`.
+- **Puerto `CatalogoClinico.tipos_de_cancer()`** (adapter del manifiesto; `cancerTypes` obligatorio, si falta `CatalogoNoDisponible`).
+- **`ENABLED_CANCER_TYPES`** (`Settings.enabled_cancer_types`, lista por comas, defecto vacío = ningún tipo habilitado, falla
+  cerrada). Al arrancar: con `LLM_PROVIDER=local` vacía es `configuracion_invalida` (`variable_ausente`); con cualquier proveedor un
+  tipo ausente del manifiesto es `configuracion_invalida` (`tipo_no_en_catalogo`); el evento nunca lleva el tipo.
+- **Pendiente de plataforma (Compose):** el servicio `rag-orchestrator` de `infra/docker/docker-compose.yml` aún no pasa
+  `ENABLED_CANCER_TYPES`; con `LLM_PROVIDER=local` no arrancará hasta añadir
+  `ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}` (mismo valor demo que `clinical-api`). El modo `fake`
+  (`ConsultaConCatalogoExigido`) no aplica la regla: lo cubre el gateway de `clinical-api`.

@@ -13,9 +13,9 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 (TDD estricto) Test de aceptación en rojo (Pytest, adapters falsos con contador): "test_rag_query_tipo_no_habilitado_responde_422_sin_invocar_llm" `@pytest.mark.ac("US-043", 4)`, respuesta validada contra el spec. Commit `test(L1D-173)`.
-- [ ] 3.2 (TDD estricto) Implementar `enabled_cancer_types` en `Settings` (validado contra el manifiesto de L1D-171), `exigir_tipo_habilitado()` en `domain/` y el mapeo a `422` en `api/errors.py`. Verificación: 3.1 en verde. Commit `feat(L1D-173)`.
-- [ ] 3.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
+- [x] 3.1 (TDD estricto) Test de aceptación en rojo (Pytest, adapters falsos con contador): "test_rag_query_tipo_no_habilitado_responde_422_sin_invocar_llm" `@pytest.mark.ac("US-043", 4)`, respuesta validada contra el spec. Commit `test(L1D-173)`.
+- [x] 3.2 (TDD estricto) Implementar `enabled_cancer_types` en `Settings` (validado contra el manifiesto de L1D-171), `exigir_tipo_habilitado()` en `domain/` y el mapeo a `422` en `api/errors.py`. Verificación: 3.1 en verde. Commit `feat(L1D-173)`.
+- [x] 3.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
 
 ## 4. frontend
 
