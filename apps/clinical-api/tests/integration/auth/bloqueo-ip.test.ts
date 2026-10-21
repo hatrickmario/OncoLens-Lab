@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearRegistrador } from '../../../src/infrastructure/logger.js';
 import { appConAuth } from '../../support/app-auth.js';
+import { capturarSalidas } from '../../support/captura-de-salidas.js';
 import { conectar } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
@@ -135,5 +136,29 @@ describe('bloqueo por IP', () => {
 
     expect(durante.status).toBe(401);
     expect(despues.status).toBe(204);
+  });
+
+  it('no escribe la IP ni el correo en consola ni en los flujos estándar cuando bloquea por IP, con una sonda que prueba la captura [US-044 AC-3]', async () => {
+    const reloj = relojAjustable();
+    const app = appConAuth({
+      cliente,
+      espacio: ESPACIO_DE_IDS * 10 + (aplicaciones += 1),
+      tokens: tokensFijos('tokenSinteticoBloqueoIpDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD'),
+      reloj,
+      // Igual que producción: el registrador escribe cada línea con console.info.
+      registrar: crearRegistrador((linea) => console.info(linea)),
+    });
+
+    const salidas = await capturarSalidas(async () => {
+      await cincoFallosDesdeLaIp(app, IP_ATACANTE);
+      await intentar(app, IP_ATACANTE, administrador.email, administrador.password);
+      // Sonda de mutación: si la captura no vigilara console.*, esta línea no aparecería y el test fallaría.
+      console.info(`sonda ${IP_ATACANTE}`);
+    });
+
+    expect(salidas).toContain('"motivo":"bloqueo_ip"');
+    expect(salidas).toContain(`sonda ${IP_ATACANTE}`);
+    expect(salidas.replace(`sonda ${IP_ATACANTE}`, '')).not.toContain(IP_ATACANTE);
+    expect(salidas).not.toContain('test.local');
   });
 });

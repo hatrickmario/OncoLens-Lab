@@ -38,10 +38,27 @@ activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.sessi
   salto de ese proxy, decisión de ese change). Test en `web` con la cabecera falsificada. La IP no se
   registra en *logs* (NFR-11): el registro la guarda solo en memoria y nunca la escribe; los *logs*
   llevan `motivo=bloqueo_ip` sin la dirección.
+- **D4c · Cómo escribe `web` la IP del socket (hallazgo de la implementación).** Next 16 completa
+  `x-forwarded-for` con `??=` (`base-server.js`): si el cliente envía la cabecera, el Route Handler nunca ve la
+  dirección del socket y no distingue una cabecera falsificada de la real. Decisión: `apps/web/instrumentation.ts`
+  (`register()` solo bajo `NEXT_RUNTIME === 'nodejs'`) instala `fijarIpDelSocket()` (`lib/server/fijar-ip-del-socket.ts`),
+  que envuelve el evento `request` de `http.Server` y sobrescribe `x-forwarded-for` con `socket.remoteAddress` antes de que
+  Next lea la cabecera; es idempotente (marca con `Symbol.for`). `ipDelCliente()` (`lib/server/ip-del-cliente.ts`) toma el
+  último valor, lo valida con `net.isIP` y lo reenvía como único `X-Forwarded-For` hacia `clinical-api`; si no es una IP no
+  reenvía nada. Verificado con el servidor real (`next start` y el `server.js` standalone de la imagen, puertos efímeros;
+  `tests/build/ip-del-socket.test.ts`) y con `next dev` (Turbopack). Alternativa descartada: confiar en el último salto
+  del `X-Forwarded-For` recibido sin reescribirlo (sin proxy delante el último salto lo controla el cliente). Límite: con
+  el proxy HTTPS del S6 delante, el socket será el del proxy; entonces `fijarIpDelSocket` deberá leer el salto que ese
+  proxy escriba y `TRUST_PROXY_HOPS` (2) decide cuántos saltos valen en `clinical-api`: ambos cambios van juntos en ese change.
 - **D5 · Respuesta única.** Cuenta bloqueada, IP bloqueada, contraseña errónea y cuenta no activa
   producen el mismo `401 ErrorCredencialesInvalidas` y el mismo tiempo aproximado (US-211 AC-2,
   `[Pre-S1 resp. 29]`). El motivo solo aparece en el log como `motivo` cerrado
   (`credenciales | bloqueo_cuenta | bloqueo_ip`), sin correo.
+- **D7 · Baja o bloqueo concurrentes con el login.** `crearSesion` inserta solo si la cuenta sigue `activo`
+  (`INSERT … SELECT … WHERE EXISTS (… FOR SHARE)`): una baja (L1D-199, que revoca las sesiones en su transacción) que
+  llegue entre la verificación de la contraseña y la inserción espera al `FOR SHARE` y, si gana, el login responde el
+  mismo `401`; si gana el login, la baja revoca la sesión recién creada. El guard rechaza además toda cuenta no activa. El
+  bloqueo por intentos (cuenta o IP) no revoca sesiones ya abiertas: solo impide iniciar nuevas.
 - **D6 · `web`.** `app/api/auth/logout/route.ts` (`server-only`) aplica `verificarOrigen()` de
   L1D-139 antes de contactar a `clinical-api` (`403 PERMISO_DENEGADO` y la sesión sigue activa,
   AC-5), llama a `logout` del SDK generado y retransmite el borrado de la cookie. Cuando cualquier
@@ -92,8 +109,9 @@ bloqueo por IP en PostgreSQL (descartado: esquema congelado y una sola instancia
   extraídas `sesionVigente()`, `cuentaBloqueada()`, `registrarFallo()`.
 - `auth.repository.ts`: `revocarSesion(tokenHash)`, `tocarSesion(id, ahora)`,
   `registrarFalloDeLogin(userId, ahora, config)`, `reiniciarFallos(userId)`.
-- `infrastructure/intentos-por-ip.memoria.ts`: adaptador en memoria.
-- `config.ts`: `SESSION_IDLE_MINUTES`, `SESSION_TOUCH_SECONDS`, `LOGIN_MAX_FAILED_ATTEMPTS`,
+- `infrastructure/intentos-por-ip.memoria.ts`: adaptador en memoria (ventana deslizante de los últimos `LOGIN_MAX_FAILED_ATTEMPTS` fallos por IP, barrido de IP vencidas, forma IPv4 y IPv4 mapeada tratadas como la misma).
+- Log del login: `motivo` (`bloqueo_cuenta` | `bloqueo_ip`) solo acompaña a los rechazos por bloqueo; el rechazo por credenciales conserva `event`, `resultado`, `traceId` (US-211 AC-6).
+- `src/config/index.ts` (`SesionConfig`, `readSesionConfig`): `SESSION_IDLE_MINUTES`, `SESSION_TOUCH_SECONDS`, `LOGIN_MAX_FAILED_ATTEMPTS`,
   `LOGIN_LOCKOUT_MINUTES`, `TRUST_PROXY_HOPS` (RN-22). Las claves nuevas se documentan en el PR para
   `infra/docker/.env.example` (no se editan en este change de planificación).
 - `web`: `lib/server/auth-logout.ts`, `app/api/auth/logout/route.ts`, redirección en el lector de
