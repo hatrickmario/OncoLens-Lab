@@ -33,6 +33,15 @@ function supuestosDeLaBase(
   ];
 }
 
+/** Base del análisis del S2 (US-066): esqueleto; la implementación llega con su `feat`. */
+export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
+  return {
+    construir() {
+      throw new Error('no implementado');
+    },
+  };
+}
+
 /**
  * `construirBaseS1()`: la Base del análisis mínima del S1, con la forma final del contrato y lo que ya devuelve
  * Backend 2. El detalle de datos usados y faltantes llega con US-066 (S2), que sustituye este adaptador.
