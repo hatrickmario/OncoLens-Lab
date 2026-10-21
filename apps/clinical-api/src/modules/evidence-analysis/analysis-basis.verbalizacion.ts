@@ -16,8 +16,7 @@ function unirLoPresente(partes: readonly string[], separador: string): string {
 
 /**
  * Etiqueta determinista de un dato del contexto desidentificado (ADR-34, FR-27 a). Solo usa campos ya enmascarados
- * del contexto: nunca fechas (el contexto solo trae meses relativos y aquí tampoco se escriben), ni `dataRef`, ni
- * texto libre de eventos.
+ * del contexto; no escribe los meses relativos, el `dataRef` ni el texto libre de los eventos.
  */
 export function verbalizarDatoDelContexto(entrada: DatoDelContexto): string {
   switch (entrada.tipo) {
