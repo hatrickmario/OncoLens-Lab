@@ -103,3 +103,5 @@ Compatible con ADR-26.
   validador con sus tests; historia por crear en /sprint-close.
 - Un empaquetado por job: cada job de la CI vuelve a empaquetar los specs; compartirlo es una historia por crear en
   /sprint-close.
+- Nombres de claves de mapas abiertos (`extractedData`) y marca `sin_verificacion_de_proveedor` con motivo: historia por crear
+  en /sprint-close.

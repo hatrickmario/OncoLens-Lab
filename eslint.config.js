@@ -43,6 +43,9 @@ export const bloqueWeb = (files) => ({
   },
 });
 
+const AVISO_DE_SUPERTEST =
+  'Usa clienteVerificado (apps/clinical-api/tests/support/verificarProveedor.ts): valida cada respuesta contra openapi.yaml (US-214).';
+
 export default defineConfig(
   {
     ignores: [
@@ -81,13 +84,17 @@ export default defineConfig(
       'no-restricted-imports': [
         'error',
         {
-          paths: [
-            {
-              name: 'supertest',
-              message:
-                'Usa clienteVerificado (apps/clinical-api/tests/support/verificarProveedor.ts): valida cada respuesta contra openapi.yaml (US-214).',
-            },
-          ],
+          paths: [{ name: 'supertest', message: AVISO_DE_SUPERTEST }],
+          patterns: [{ group: ['supertest/*'], message: AVISO_DE_SUPERTEST }],
+        },
+      ],
+      // `require('supertest')` e `import('supertest')` no los ve no-restricted-imports.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.name='require'][arguments.0.value=/^supertest(\\/.*)?$/], ImportExpression[source.value=/^supertest(\\/.*)?$/]",
+          message: AVISO_DE_SUPERTEST,
         },
       ],
     },

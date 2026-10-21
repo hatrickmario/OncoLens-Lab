@@ -3,6 +3,7 @@ import type { Express } from 'express';
 import request, { type Response, type Test } from 'supertest';
 import {
   assertMatchesSpec,
+  describirRuta,
   rutaExisteEnElSpec,
   verificarRespuesta,
 } from '../../../../scripts/contracts/lib/responseValidator.mjs';
@@ -95,7 +96,9 @@ function verificadorDe(
 function exigirExcepcionesAcotadas(ajenas: readonly RespuestaAjenaAlContrato[]): void {
   for (const ajena of ajenas) {
     if (ajena.status === undefined && rutaExisteEnElSpec(PROVEEDOR, ajena.ruta)) {
-      throw new Error(`la ruta ${ajena.ruta} existe en el contrato: acota la excepción con status`);
+      throw new Error(
+        `la ruta ${describirRuta(PROVEEDOR, ajena.ruta)} existe en el contrato: acota la excepción con status`,
+      );
     }
   }
 }

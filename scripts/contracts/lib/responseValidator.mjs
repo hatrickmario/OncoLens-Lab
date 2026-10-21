@@ -40,6 +40,13 @@ export function assertMatchesSpec(provider, pointer, body) {
   }
 }
 
+/** La ruta concreta sin valores (ids ni query), apta para un mensaje: solo conserva los literales del spec de `proveedor`. */
+export function describirRuta(proveedor, ruta) {
+  const spec = getBundledSpecs()[proveedor]?.bundled;
+  if (!spec) throw new Error(`proveedor sin spec empaquetado: ${proveedor}`);
+  return rutaSinValores(spec, ruta);
+}
+
 /** ¿Alguna operación del spec de `proveedor` (con cualquier método) corresponde a esta ruta concreta? */
 export function rutaExisteEnElSpec(proveedor, ruta) {
   const spec = getBundledSpecs()[proveedor]?.bundled;
