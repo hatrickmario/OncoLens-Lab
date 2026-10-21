@@ -42,10 +42,21 @@ export function leerCargaMultipart(
       return;
     }
     const carga: { documentType?: string; archivo?: ArchivoRecibido } = {};
+    let terminado = false;
+    // Un error del lector, del archivo o de la petición (abortada) rechaza una sola vez: sin 'error' sin atender, que
+    // tumbaría el proceso, y sin promesa colgada.
+    const fallar = (): void => {
+      if (terminado) return;
+      terminado = true;
+      request.unpipe(lector);
+      lector.destroy();
+      reject(new MultipartIlegible());
+    };
     lector.on('field', (nombre, valor) => {
       if (nombre === 'documentType') carga.documentType = valor;
     });
     lector.on('file', (nombre, flujo, info) => {
+      flujo.on('error', fallar);
       if (nombre !== 'file') {
         flujo.resume();
         return;
@@ -58,8 +69,16 @@ export function leerCargaMultipart(
         }
       });
     });
-    lector.on('error', () => reject(new MultipartIlegible()));
-    lector.on('close', () => resolve({ documentType: carga.documentType, archivo: carga.archivo }));
+    lector.on('error', fallar);
+    lector.on('close', () => {
+      if (terminado) return;
+      terminado = true;
+      resolve({ documentType: carga.documentType, archivo: carga.archivo });
+    });
+    request.once('error', fallar);
+    request.once('close', () => {
+      if (!request.complete) fallar();
+    });
     request.pipe(lector);
   });
 }
