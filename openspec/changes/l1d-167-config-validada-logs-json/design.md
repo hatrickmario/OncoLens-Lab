@@ -131,3 +131,14 @@ Aceptadas por el orquestador del S2 sin cambio de alcance.
 - Dos aserciones de texto exacto `{"status":"ok"}` pasan a comprobar `status` (requisito MODIFIED; trailer `Test-Removal`).
 - Logging (D7): `logging` estándar con `FormateadorJson` propio (sin dependencia nueva); `traceId` en un `ContextVar` de `app/api/trace.py` fijado por el middleware `ContextoDeTraceId`; campos de evento cerrados y sin traceback.
 - Observación para el Gate 2 de privacy-guardian: el access log en texto de uvicorn (IP, ruta, sin `traceId`) queda fuera de este change.
+
+## Adiciones aceptadas en la implementación (clinical-api)
+
+Aceptadas por el orquestador del S2 sin cambio de alcance.
+
+- `SESSION_IDLE_MINUTES` (entero positivo, por defecto 30) en `readSesionConfig()`: es la clave del AC-2. `l1d-198` la consume y añade `SESSION_TOUCH_SECONDS`.
+- `src/config.ts` pasa a `src/config/secciones.ts`; `src/config/index.ts` reexporta todo y añade `cargarConfiguracion()` (etapa 1, solo entorno, la usa `arrancar`) y `cargarConfiguracionDeServicios()` (etapa 2, con lectura de archivos, la usa `server.ts`).
+- Helpers `leerBooleano`, `leerEnumNoSensible` (D2: `valorInvalido` solo con la forma `^[a-z0-9_]{1,32}$`) y `observarEntorno()`: un Proxy que anota solo los NOMBRES de las claves leídas con valor; de ahí sale `configKeys` de `/health`, sin segunda lista que se desincronice.
+- `ConfiguracionInvalidaError` gana `regla`, `motivo` y `valorInvalido`; el evento pasa a `{level,event,variable,regla,motivo[,valorInvalido]}`. `REAL_DATA_GATE_NOT_PASSED` lleva además `variable` (nombre, sin valor).
+- El adaptador de `/rag/query` envía también `X-Trace-Id` (el traceId generado) como cabecera, además del cuerpo; `rag-orchestrator` ya lee la cabecera. Observación para contract-keeper: el spec de `rag-orchestrator` no declara `X-Trace-Id` como parámetro `in: header`; hoy solo lo menciona la descripción de `TraceId`.
+- Desviación de D1: las primitivas de lectura (entero positivo, puerto, booleano, enum) usan esquemas Zod, pero las secciones antiguas (base de datos, JWT de servicio, gateway, PII, identidad) conservan su validación manual para no cambiar mensajes ni comportamiento en el mismo change. Queda para un refactor posterior migrarlas a un schema Zod por sección.
