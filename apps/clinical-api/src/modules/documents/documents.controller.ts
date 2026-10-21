@@ -135,6 +135,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
     const patientId = paciente.data;
     try {
       const documento = await service.cargar({
+        traceId: traceIdDe(response),
         patientId,
         userId: sesion.userId,
         documentType: tipo.data,

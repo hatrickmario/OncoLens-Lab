@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
+import type { Registrar } from '../../infrastructure/logger.js';
 import type { DocumentsRepository, NuevoDocumento } from './documents.repository.js';
 import {
   ArchivoDemasiadoGrande,
@@ -13,6 +14,8 @@ import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documen
 import type { AlmacenDeDocumentos } from './ports.js';
 
 export interface SolicitudDeCarga {
+  /** `traceId` de la petición: solo para el log de la compensación. */
+  traceId: string;
   patientId: string;
   userId: string;
   documentType: TipoDeDocumento;
@@ -38,6 +41,7 @@ export interface DependenciasDelService {
   almacen: AlmacenDeDocumentos;
   reloj: Clock;
   ids: GeneradorDeIds;
+  registrar: Registrar;
   /** `MAX_UPLOAD_MB` (RN-22). */
   maxUploadMb: number;
 }
@@ -48,19 +52,39 @@ const sha256 = (contenido: Buffer): string => createHash('sha256').update(conten
 
 /** Carga de un documento: guarda el binario y deja la fila encolada (`pendiente`) para la extracción (US-078). */
 export function crearDocumentsService(dependencias: DependenciasDelService): DocumentsService {
-  const { repo, almacen, reloj, ids, maxUploadMb } = dependencias;
+  const { repo, almacen, reloj, ids, registrar, maxUploadMb } = dependencias;
 
-  /** Inserta la fila; si falla o pierde la carrera por el checksum, borra el objeto recién escrito (compensación). */
+  /**
+   * Borra el objeto recién escrito cuando la carga no llegó a encolarse. Es de mejor esfuerzo: si el borrado falla no
+   * cambia la respuesta (un duplicado sigue siendo 409) y queda un objeto huérfano que solo se registra por UUID (nunca
+   * la clave ni el nombre, RN-10) para el job de retención.
+   */
+  async function compensar(clave: string, solicitud: SolicitudDeCarga, documentId: string) {
+    try {
+      await almacen.borrar(clave);
+    } catch {
+      registrar({
+        event: 'documents.compensacion',
+        resultado: 'fallida',
+        documentId,
+        patientId: solicitud.patientId,
+        traceId: solicitud.traceId,
+      });
+    }
+  }
+
+  /** Inserta la fila; si falla o pierde la carrera por el checksum, compensa el objeto recién escrito. */
   async function insertarOCompensar(
+    solicitud: SolicitudDeCarga,
     clave: string,
     documento: NuevoDocumento,
   ): Promise<'creado' | 'duplicado'> {
     try {
       const resultado = await repo.insertar(documento);
-      if (resultado === 'duplicado') await almacen.borrar(clave);
+      if (resultado === 'duplicado') await compensar(clave, solicitud, documento.id);
       return resultado;
     } catch (error) {
-      await almacen.borrar(clave).catch(() => undefined);
+      await compensar(clave, solicitud, documento.id);
       throw error;
     }
   }
@@ -88,7 +112,7 @@ export function crearDocumentsService(dependencias: DependenciasDelService): Doc
     const clave = claveDeObjeto(solicitud.patientId, id);
     const subidoEn = reloj.now();
     await almacen.guardar(clave, solicitud.contenido);
-    const resultado = await insertarOCompensar(clave, {
+    const resultado = await insertarOCompensar(solicitud, clave, {
       id,
       patientId: solicitud.patientId,
       documentType: solicitud.documentType,
