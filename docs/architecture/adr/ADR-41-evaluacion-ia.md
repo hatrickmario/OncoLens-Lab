@@ -7,13 +7,13 @@
 - **Fecha:** 2026-10-21
 - **Decisores:** usuario (propietario del producto); el encuadre (propio con Pytest, NLI principal, juez G secundario) lo decidió el usuario el 2026-10-21 (`[S2 resp. 3]`, P-3)
 - **Consultados / informados:** ai-services-dev (redacción), ai-eval-runner (revisión de coherencia con `run-ai-eval`), privacy-guardian, clinical-language-auditor
-- **Requisitos:** FR-20, IA-10, RN-12, RN-13, RN-14, RN-22, RN-23; OL-06 (`readme.md` §6, líneas 1767 y siguientes); AC-T5.3, AC-T5.4; C-10
+- **Requisitos:** FR-20, IA-10, RN-12, RN-13, RN-14, RN-22, RN-23; OL-06 (`readme.md` §6); AC-T5.3, AC-T5.4; C-10
 
 > **Alcance y honestidad de las cifras.** Este ADR no ejecuta ningún modelo ni fija ninguna meta (las metas son de DEC-07 / US-017; las de recuperación son provisionales hasta US-229, nota del usuario en ADR-45). Los hechos de herramientas externas llevan su fuente y fecha de verificación (2026-10-21); lo no verificado está marcado **[supuesto]** y se lista al final.
 
 ## Contexto y problema
 
-La suite `evaluate` (US-072) y su exigencia en la Definition of Done (US-074) dependen de una decisión cara de revertir: con qué framework se calculan las métricas de OL-06, cuáles son deterministas, qué juez mide la fidelidad y cómo se adjunta el reporte al PR. ADR-39 fase B está aceptada ([ADR-39](ADR-39-modelos-locales.md), 2026-10-20): LLM `gemma4:26b-a4b-it-q4_K_M` (G) por Ollama `/v1`, NLI `mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` en fp32, BGE-M3 y bge-reranker-v2-m3 en int8. Eso desbloquea el juez local.
+La suite `evaluate` (US-072) y su exigencia en la Definition of Done (US-074) dependen de una decisión cara de revertir: con qué framework se calculan las métricas de OL-06, cuáles son deterministas, qué juez mide la fidelidad y cómo se adjunta el reporte al PR. Estado de [ADR-39](ADR-39-modelos-locales.md) verificado el 2026-10-21 en `main` (PR #107 fusionado el 2026-10-20): el campo *Estado* de la cabecera dice «aceptado … fase A» y no recoge la fase B; la sección «Fase B» registra que el usuario aceptó el 2026-10-20 el runtime Ollama y G como `LLM_MODEL`, pero el resumen de esa misma sección todavía rotula G como «propuesto, con el riesgo de margen < 1 GB en el stack». Este ADR trata G como el LLM decidido por el usuario, **y el juez secundario depende de ello**: si ADR-39 cambia el LLM, solo cambia `EVAL_JUDGE_MODEL`, no el framework ni el juez principal (NLI). Modelos: LLM `gemma4:26b-a4b-it-q4_K_M` (G) por Ollama `/v1`, NLI `mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` en fp32, BGE-M3 y bge-reranker-v2-m3 en int8. Eso desbloquea el juez local (US-014 solo depende de ADR-39 por la elección del LLM juez).
 
 Base ya escrita en `apps/rag-orchestrator/app/evaluation/` (inventario del 2026-10-21): `retrieval_metrics.py` (acierto@10, MRR, IC 95 % por *bootstrap* con `semilla` recibida por parámetro), `reporte.py` (`escribir_reporte` rechaza claves que podrían contener textos: `CLAVES_PROHIBIDAS`), `dataset_loader.py` (exige `clase: sintetico` en el manifiesto y en cada archivo; `CLASE_SINTETICA`), `config_medicion.py` (`semilla_bootstrap`), `model_selection.py`, subpaquete `vm/` (baseline manual VM-1/VM-2). Tests en `apps/rag-orchestrator/tests/evaluation/` (entre ellos `test_retrieval_metrics.py`, `test_dataset_loader.py`, `test_reproducibilidad_fase_a.py`). Datasets sintéticos en `data/eval/adr39-mini/`, `data/eval/ocr-mini/` y la partición congelada `data/eval/ol06-particion-v1/` (ADR-45); casos de VM en `data/evaluation/vm-baseline/`. `requirements-eval.txt` (dependencias de la medición de ADR-39) no incluye ragas ni DeepEval.
 
@@ -90,17 +90,23 @@ Lectura: **todas las métricas de OL-06 salvo la fidelidad son deterministas y p
 
 ### Reproducibilidad (AC-2)
 
-- Misma configuración implica métricas deterministas idénticas. La **huella SHA-256 de la configuración** forma parte del nombre del resultado; ninguna métrica depende del reloj (el reloj se inyecta, CLAUDE.md).
-- El IC por *bootstrap* usa semilla de configuración (hoy `semilla_bootstrap`).
-- El juez LLM se configura con `EVAL_JUDGE_MODEL`, `EVAL_JUDGE_BASE_URL`, `EVAL_JUDGE_TEMPERATURE` (0) y `EVAL_JUDGE_SEED`. **No se promete bit a bit** la salida del juez LLM entre versiones del runtime o del hardware **[supuesto: no se midió]**; por eso su cifra no es "determinista" en la tabla y no decide umbrales.
-- **Se descarta lo que no garantice métricas deterministas idénticas:** una opción cuya métrica determinista dependa de una llamada a un juez LLM o de una red externa queda fuera. Con B, C y D la fidelidad dependería de un juez configurable por el framework; en A el juez principal es el NLI.
+**Existe hoy (inventario del 2026-10-21):** `semilla_bootstrap` en `config_medicion.py` y su uso en `retrieval_metrics.py` (`metrica`, `_bootstrap_ic`); `huella_sondas` en `trabajos.py` (huella de vectores de sondeo, no de la configuración de la suite); `test_reproducibilidad_fase_a.py` (la configuración congelada de la fase A coincide con su reporte).
+
+**Se crea en US-072a (L1D-235)** y no existe todavía:
+
+- La **huella SHA-256 de la configuración** de la suite, que forma parte del nombre del resultado. Ninguna métrica depende del reloj (se inyecta, CLAUDE.md).
+- Semilla de *bootstrap* y repeticiones como configuración de la suite (hoy solo en la configuración de ADR-39).
+- Las claves del juez LLM `EVAL_JUDGE_MODEL`, `EVAL_JUDGE_BASE_URL`, `EVAL_JUDGE_TEMPERATURE` (0) y `EVAL_JUDGE_SEED`. **No se promete bit a bit** la salida del juez LLM entre versiones del runtime o del hardware **[supuesto: no se midió]**; por eso su cifra no es «determinista» en la tabla y no decide umbrales.
+- El test de que dos corridas con la misma configuración producen métricas deterministas idénticas.
+
+**Se descarta lo que no garantice métricas deterministas idénticas:** una opción cuya métrica determinista dependa de una llamada a un juez LLM o de una red externa queda fuera. Con B, C y D la fidelidad dependería de un juez configurable por el framework; en A el juez principal es el NLI.
 
 ### Reporte (AC-4)
 
-JSON de **agregados + configuración**, escrito por `escribir_reporte` (que rechaza claves con textos). Contenido:
+JSON de **agregados + configuración**, escrito por `escribir_reporte`. **Límite actual:** `escribir_reporte` y `claves_con_texto` (`reporte.py`) solo rechazan por **nombre de clave** (`CLAVES_PROHIBIDAS`); un texto bajo una clave permitida pasaría. **Regla de esquema cerrado (se crea en US-072a):** el reporte se valida contra una lista blanca de claves, y cada valor es numérico, booleano o una cadena de un conjunto enumerado (identificadores de modelo, versiones, huellas, rótulos); cualquier otra clave o cadena libre hace fallar la escritura. Contenido:
 
 1. Métricas con IC y `n`.
-2. Por métrica, el conteo de ítems **revisados por el oncólogo** y **no revisados**, y una etiqueta `validada` / `no_validada`. Una métrica solo se rotula `validada` si todo su dataset (o la muestra declarada) fue revisado; la concordancia de aplicabilidad exige revisión.
+2. **Origen del estado «revisado por el oncólogo»:** un campo del manifiesto del dataset (p. ej. `revision_oncologo` por archivo o por ítem, con la fecha de revisión), que se **crea en US-072a**: `dataset_loader.py` hoy solo conoce `clase`. Por métrica, el conteo de ítems **revisados por el oncólogo** y **no revisados**, y una etiqueta `validada` / `no_validada`. Una métrica solo se rotula `validada` si todo su dataset (o la muestra declarada) fue revisado; la concordancia de aplicabilidad exige revisión.
 3. Configuración: modelos (con revisión o digest), prompt (versión o huella), umbrales, `corpusRelease`, `catalogVersion`, semillas, huella de la configuración y clase del dataset.
 4. Nunca preguntas, salidas, citas ni datos reales (RN-14). Ejemplos ilustrativos de este ADR usan solo lenguaje descriptivo, por ejemplo "Opciones descritas en la evidencia".
 
@@ -115,11 +121,17 @@ JSON de **agregados + configuración**, escrito por `escribir_reporte` (que rech
 
 - **Positivas:** sin telemetría ni dependencias de nube en el árbol de evaluación; métricas deterministas reproducibles; reutiliza el código y los datasets existentes; sin memoria adicional (el juez reutiliza G y el NLI).
 - **Negativas:** más código propio a mantener (mitigado con la base existente y los tests del *runner* con adapters falsos); el juez secundario comparte sesgo con el generador; no hay métricas de RAG prefabricadas.
-- **Configuración (RN-22):** `EVAL_JUDGE_MODEL`, `EVAL_JUDGE_BASE_URL`, `EVAL_JUDGE_TEMPERATURE`, `EVAL_JUDGE_SEED`, semilla del *bootstrap* y repeticiones; metas y umbrales en configuración (valores de DEC-07, no de este ADR). `HOSTS_LOCALES` queda en código a propósito.
+- **Configuración (RN-22):** `EVAL_JUDGE_MODEL`, `EVAL_JUDGE_BASE_URL`, `EVAL_JUDGE_TEMPERATURE`, `EVAL_JUDGE_SEED`, `EVAL_MAX_REGRESSION` (tolerancia del comparador de regresión), semilla del *bootstrap* y repeticiones; metas y umbrales en configuración (valores de DEC-07, no de este ADR). `HOSTS_LOCALES` queda en código a propósito.
 
 ### Confirmación
 
-Test de Pytest sin red y `es_proveedor_local()` (US-072a); test de aborto con dataset no `sintetico`; test de que dos corridas con la misma configuración producen métricas deterministas idénticas (OL-06); test de que `escribir_reporte` rechaza textos; job `eval-required` (l1d-237); revisión de `ai-eval-runner` y del Gate 2.
+Existe hoy: `test_retrieval_metrics.py`, `test_dataset_loader.py` (rechazo de `clase` distinta de `sintetico` al cargar) y `test_reproducibilidad_fase_a.py`. **Se crea en US-072a (L1D-235):** test de Pytest sin red y `es_proveedor_local()`; test de aborto de la suite con dataset no `sintetico` y adapters no locales (US-072a); test de dos corridas con la misma configuración y métricas deterministas idénticas; test del esquema cerrado del reporte (rechaza claves y cadenas fuera de la lista blanca, no solo claves prohibidas). **Se crea en l1d-237:** job `eval-required`. Además, revisión de `ai-eval-runner` y del Gate 2.
+
+### Preguntas abiertas
+
+1. **Ruta de los datasets:** OL-06 y la skill `run-ai-eval` dicen `data/evaluation/`; el repo usa `data/eval/` (`adr39-mini`, `ocr-mini`, `ol06-particion-v1`) y `data/evaluation/vm-baseline/`. Decisión pendiente: US-072a fija una sola ruta y actualiza la skill o el ADR.
+2. **Baseline en la CI:** `eval-required` con adapters falsos compara contra un baseline propio de la configuración de prueba, **no** contra `data/evaluation/baseline.json` (que corresponde a modelos reales). Se precisa en `l1d-237-eval-required-ci`.
+3. **Reporte con modelos reales:** quién lo ejecuta y lo sube (propuesta: quien abre el PR, desde la máquina de referencia) y qué verifica la regla «huella que no corresponde al diff» (propuesta: el job compara la huella del reporte adjunto con la que calcula desde la configuración del PR). Lo cierra `l1d-237-eval-required-ci`.
 
 ## Pros y contras de las opciones
 
@@ -164,5 +176,5 @@ Test de Pytest sin red y `es_proveedor_local()` (US-072a); test de aborto con da
 | AC-1 | Opciones consideradas; "Qué calcula cada opción" |
 | AC-2 | "Reproducibilidad" |
 | AC-3 | "Fidelidad y juez"; descarte de B, C y D |
-| AC-4 | "Reporte" |
-| AC-5 | "DoD: cómo se adjunta el reporte al PR" |
+| AC-4 | "Reporte" (esquema cerrado y origen de «revisado») |
+| AC-5 | "DoD: cómo se adjunta el reporte al PR"; "Preguntas abiertas" 2 y 3 |
