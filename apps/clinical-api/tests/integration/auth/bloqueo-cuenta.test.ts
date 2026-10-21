@@ -2,8 +2,10 @@ import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
+import { capturarSalidas } from '../../support/captura-de-salidas.js';
 import { conectar } from '../../support/db.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
+import { crearRegistrador } from '../../../src/infrastructure/logger.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   asegurarRol,
@@ -149,5 +151,30 @@ describe('bloqueo de la cuenta por intentos fallidos', () => {
       intentos: 5,
       hasta: '2026-10-16T12:15:00.000Z',
     });
+  });
+
+  it('no escribe correo, contraseña ni token en consola ni en los flujos estándar durante el bloqueo, con una sonda que prueba la captura', async () => {
+    const doc = await usuarioNuevo('logsbloqueo');
+    const reloj = relojAjustable(INICIO);
+    const aplicacion = appConAuth({
+      cliente,
+      espacio: ESPACIO_DE_IDS * 10 + (aplicaciones += 1),
+      tokens: tokensFijos('tokenSinteticoBloqueoLogsEEEEEEEEEEEEEEEEEEEEEEEEEEEE'),
+      reloj,
+      registrar: crearRegistrador((linea) => console.info(linea)),
+    });
+
+    const salidas = await capturarSalidas(async () => {
+      for (let i = 0; i < 5; i += 1) await intentar(aplicacion, doc.email, CONTRASENA_INCORRECTA);
+      await intentar(aplicacion, doc.email, doc.password);
+      console.info(`sonda ${doc.email}`);
+    });
+
+    expect(salidas).toContain('"motivo":"bloqueo_cuenta"');
+    expect(salidas).toContain(`sonda ${doc.email}`);
+    const sinSonda = salidas.replace(`sonda ${doc.email}`, '');
+    for (const secreto of [doc.email, doc.password, CONTRASENA_INCORRECTA, 'tokenSintetico']) {
+      expect(sinSonda).not.toContain(secreto);
+    }
   });
 });

@@ -3,8 +3,10 @@ import { Router } from 'express';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
+import { crearRegistrador } from '../../../src/infrastructure/logger.js';
 import { logoutController } from '../../../src/modules/auth/auth.controller.js';
 import { appConAuth } from '../../support/app-auth.js';
+import { capturarSalidas } from '../../support/captura-de-salidas.js';
 import { conectar } from '../../support/db.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
@@ -151,6 +153,40 @@ describe('POST /platform/auth/logout', () => {
       expect(respuesta.headers['set-cookie']).toBeUndefined();
     }
     expect(await revocada(vigente)).toBe(false);
+  });
+});
+
+describe('logs del logout', () => {
+  it('no escribe el token, la cookie ni el correo en consola ni en los flujos estándar, con una sonda que prueba la captura [US-044 AC-1]', async () => {
+    const token = 'tokenSinteticoLogoutLogsDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD';
+    await insertarSesion(cliente, ids, {
+      userId: doc1.id,
+      tokenHash: hashDe(token),
+      expiresAt: '2026-10-16T20:00:00.000Z',
+    });
+    const aplicacion = appConAuth({
+      cliente,
+      espacio: ESPACIO_DE_IDS,
+      tokens: tokensFijos('no-se-usa'),
+      reloj: relojFijo(),
+      // Igual que producción: el registrador escribe cada línea con console.info.
+      registrar: crearRegistrador((linea) => console.info(linea)),
+    });
+
+    const salidas = await capturarSalidas(async () => {
+      await clienteVerificado(aplicacion)
+        .post('/platform/auth/logout')
+        .set('Cookie', `oncolens_session=${token}`);
+      // Sonda de mutación: si la captura no vigilara console.*, esta línea no aparecería y el test fallaría.
+      console.info(`sonda ${token}`);
+    });
+
+    expect(salidas).toContain('"event":"auth.logout"');
+    expect(salidas).toContain(`sonda ${token}`);
+    const sinSonda = salidas.replace(`sonda ${token}`, '');
+    expect(sinSonda).not.toContain(token);
+    expect(sinSonda).not.toContain('oncolens_session');
+    expect(sinSonda).not.toContain('test.local');
   });
 });
 
