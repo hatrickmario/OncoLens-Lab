@@ -17,11 +17,18 @@ subconjunto de los tokens de `docs/ux/sistema-de-diseno.md` §1. Next.js 16 con 
   `npm run test:e2e` con `CI=true`. `playwright.config.ts` ya decide `retries: process.env.CI ? 1 : 0`
   y `trace: 'on-first-retry'`; el job sube `playwright-report/` y `test-results/` como artefacto con
   **`retention-days: 3`** (repo público: el artefacto es descargable).
-- **Trazas sin cuerpos de request:** el *fixture* de E2E quita de la traza los `postData` y cuerpos
-  de `POST /api/*` (en particular `/api/auth/login`) antes de escribirla; un test del *fixture*
-  comprueba que la traza de un login fallido no contiene la contraseña de prueba. Los usuarios de los
-  E2E son **sintéticos** (`@example.test`, contraseñas de test generadas por `scripts/e2e/ejecutar.sh`,
-  nunca versionadas ni reutilizadas fuera de la CI).
+- **Trazas sin cuerpos de request ni contraseñas:** un *fixture* de red no basta. Medido con Playwright 1.64, la
+  contraseña de un login fallido queda en el `fill` del `trace.trace`, en el valor de los `input` de los snapshots del DOM,
+  en el recurso del `postData` y en `error-context.md` (que el informe HTML copia a `data/`). Por eso un **reporter**
+  (`apps/web/e2e/reporte-sin-secretos.ts`, siempre el primero de la lista, para que el informe copie adjuntos ya
+  depurados) depura cada `trace.zip` y cada adjunto de texto al terminar el intento: elimina `postData` y las respuestas de
+  `POST /api/*` y sustituye por `[REDACTADO]` cada `E2E_*CONTRASENA` (literal, escapada en JSON y codificada en URL).
+  **Falla cerrado:** un adjunto que no se pueda depurar se borra. Sin dependencias nuevas (el zip se lee y escribe con
+  `node:zlib`). Un test (`scripts/e2e/__tests__/depurarTraza.test.mjs`, con sonda de control) comprueba que la traza de un
+  login fallido no contiene la contraseña de prueba. Los usuarios de los E2E son **sintéticos** (dominios de prueba
+  permitidos por el hook de commits, p. ej. `@oncolens.test`; el seed actual usa `doc1@test.local`) y su contraseña la
+  genera `setup-secrets.sh` dentro de `scripts/e2e/ejecutar.sh`, en una carpeta temporal propia: nunca versionada ni
+  reutilizada fuera de la CI.
 - Descartadas: job dentro de `ci.yml` excluido de `needs` de `ci-ok` (contradice el requisito de
   L1D-166 «`ci-ok` depende de todos los jobs»); `continue-on-error` (prohibido por ese mismo spec).
 
@@ -88,7 +95,9 @@ Sin cambios de contrato.
 ## Dependencias y colaboradores
 
 `login-form` depende de los átomos `ui/*` y de `lib/mensajes`; `ejecutar.sh` gana un modo CI (sin
-`--mantener`, salida de Playwright en formato `github` + `html`).
+`--mantener`, salida de Playwright en formato `github` + `html`) y deja de heredar `COMPOSE_PROJECT_NAME` y
+`ONCOLENS_SECRETS_DIR` del entorno. Compila solo `@oncolens/clinical-language` (lo único que importan los E2E; `web` y
+`clinical-api` se compilan en sus imágenes).
 
 ## Risks / Trade-offs
 
