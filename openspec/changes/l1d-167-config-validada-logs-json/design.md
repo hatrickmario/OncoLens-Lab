@@ -30,7 +30,7 @@ que añaden otros changes: `catalogo_no_disponible` y `version_catalogo_distinta
 `tipo_no_en_catalogo` de `l1d-173`). Nunca se registra el valor (puede ser un secreto o un literal con PII).
 **Excepción explícita (Gate 1 del S2):** las claves que el schema declara como *enum no sensible* (p. ej.
 `ENABLED_CANCER_TYPES`) registran el elemento inválido en el campo cerrado `valorInvalido`, solo si cumple
-`^[a-z0-9_]{1,32}$`; si no, el campo se omite. Ninguna otra clave puede usar `valorInvalido`.
+`^[a-z]{1,24}$` (Gate 2: solo letras minúsculas, sin dígitos ni guiones, para no registrar números, hexadecimales ni claves); si no, el campo se omite. Ninguna otra clave puede usar `valorInvalido`.
 
 **D3 · Guarda de datos reales en `clinical-api`.** Con `REAL_ANONYMIZED_ENABLED=true` o
 `REAL_IDENTIFIED_ENABLED=true`, `clinical-api` no arranca y registra `REAL_DATA_GATE_NOT_PASSED` mientras
@@ -50,7 +50,7 @@ AC-5 se verifica con `POST /platform/evidence-analyses` con un cuerpo inválido 
 El serializador descarta en cualquier profundidad (sin distinguir mayúsculas) una lista **cerrada en código**
 (`CAMPOS_SENSIBLES_BASE`): `body`, `question`, `identification`, `name`, `fullName`, `nationalId`,
 `documentNumber`, `originalFilename`, `email`, `ip`, `remoteAddress`, `x-forwarded-for`, `cookie`, `set-cookie`,
-`authorization`, `password`, `birthDate`, `phone`, `address` y `legalRepresentative` (y sus subcampos; aún no existen en el S2, se añaden ya por ser la base mínima). `LOG_REDACT_EXTRA_FIELDS` (configuración, RN-22) solo **añade** campos: la lista
+`authorization`, `password`, `birthDate`, `phone`, `address`, `legalRepresentative`, `query` (el texto libre de `EvidenceAnalysisRequest`), `token`, `sessionToken`, `secret`, `clinicalContext` y `clinicalNotes` (Gate 2) (y sus subcampos; aún no existen en el S2, se añaden ya por ser la base mínima). `LOG_REDACT_EXTRA_FIELDS` (configuración, RN-22) solo **añade** campos: la lista
 efectiva es la unión, nunca menor que la base, y no existe clave para quitar campos. Nunca registra cuerpos de request.
 🔗 Regresión [RN-10] con la búsqueda por documento (US-048) y el alta (US-047, S4).
 
@@ -145,7 +145,16 @@ Aceptadas por el orquestador del S2 sin cambio de alcance.
 
 - `SESSION_IDLE_MINUTES` (entero positivo, por defecto 30) en `readSesionConfig()`: es la clave del AC-2. `l1d-198` la consume y añade `SESSION_TOUCH_SECONDS`.
 - `src/config.ts` pasa a `src/config/secciones.ts`; `src/config/index.ts` reexporta todo y añade `cargarConfiguracion()` (etapa 1, solo entorno, la usa `arrancar`) y `cargarConfiguracionDeServicios()` (etapa 2, con lectura de archivos, la usa `server.ts`).
-- Helpers `leerBooleano`, `leerEnumNoSensible` (D2: `valorInvalido` solo con la forma `^[a-z0-9_]{1,32}$`) y `observarEntorno()`: un Proxy que anota solo los NOMBRES de las claves leídas con valor; de ahí sale `configKeys` de `/health`, sin segunda lista que se desincronice.
+- Helpers `leerBooleano`, `leerEnumNoSensible` (D2: `valorInvalido` solo con la forma `^[a-z]{1,24}$`) y `observarEntorno()`: un Proxy que anota solo los NOMBRES de las claves leídas con valor; de ahí sale `configKeys` de `/health`, sin segunda lista que se desincronice.
 - `ConfiguracionInvalidaError` gana `regla`, `motivo` y `valorInvalido`; el evento pasa a `{level,event,variable,regla,motivo[,valorInvalido]}`. `REAL_DATA_GATE_NOT_PASSED` lleva además `variable` (nombre, sin valor).
 - El adaptador de `/rag/query` envía también `X-Trace-Id` (el traceId generado) como cabecera, además del cuerpo; `rag-orchestrator` ya lee la cabecera. Observación para contract-keeper: el spec de `rag-orchestrator` no declara `X-Trace-Id` como parámetro `in: header`; hoy solo lo menciona la descripción de `TraceId`.
 - Desviación de D1: las primitivas de lectura (entero positivo, puerto, booleano, enum) usan esquemas Zod, pero las secciones antiguas (base de datos, JWT de servicio, gateway, PII, identidad) conservan su validación manual para no cambiar mensajes ni comportamiento en el mismo change. Queda para un refactor posterior migrarlas a un schema Zod por sección.
+
+## Correcciones del Gate 2 (clinical-api)
+
+- **Contrato:** `X-Trace-Id` queda declarado como parámetro de `rag-orchestrator` (`TraceIdHeader`) y `serviceVersion` documenta que es `info.version`; `clinical-api` mueve `x-trace-id` a `CABECERAS_DEL_CONTRATO`. `serviceVersion` se lee de `info.version` del `openapi.yaml` (`versionDelServicio()`; la imagen de Docker copia el spec junto a `dist/`), no del `version` del paquete.
+- **Smokes:** `scripts/smoke/compose-smoke.sh` ya no compara el cuerpo exacto `{"status":"ok"}` de `/health` (rompía `stack-smoke` al añadir `configKeys` y `serviceVersion`): comprueba `200` y que el cuerpo empiece por `{"status":"ok"`. Se verificó la sintaxis (`bash -n`) y el patrón con cuerpos de ejemplo; el Compose completo no se levantó en local.
+- **Privacidad:** `configKeys` solo lista claves de configuración (`readIdentityKeyConfig` ya no lee el valor de variables ajenas); el logger reduce un `Error` a `{errorClase, code}`; `valorInvalido` solo lo fija la fábrica `ConfiguracionInvalidaError.deEnumNoSensible`; `server.ts` y `startup.ts` escriben todos sus eventos como JSON (`registrarEventoDeArranque`).
+- **Arranque:** la etapa de servicios (`cargarEtapaDeServicios`) vive en `startup.ts` dentro de `arrancar`, con el mismo registro de fallos y `exit(1)`; las claves de identidad se parsean una sola vez (etapa 1) y un secreto requerido ausente produce el mismo evento `configuracion_invalida` (`motivo = variable_ausente`) por cualquier camino, en lugar de `secreto_ausente`. `SECRETOS_REQUERIDOS` sigue como lista propia (comprueba que el archivo sea legible); derivarla de las secciones no es trivial.
+- **Seed:** `prisma/seed/principal.ts` es una segunda raíz de composición aceptada (CLI fuera de `src/`) y puede leer el entorno que recibe.
+- **Deuda:** migrar las secciones antiguas (base de datos, JWT de servicio, gateway, PII, identidad) a un schema Zod por sección (D1) queda para un change posterior.
