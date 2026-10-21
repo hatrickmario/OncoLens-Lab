@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import { Router } from 'express';
 import type { Client } from 'pg';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
+import { clienteVerificado, type Response } from '../../support/verificarProveedor.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   asegurarRol,
@@ -24,6 +24,14 @@ const ESPACIO_DE_IDS = 1984;
 const AHORA = '2026-10-16T12:00:00.000Z';
 const VIGENTE_HASTA = '2026-10-16T20:00:00.000Z';
 const PUNTERO_NO_AUTENTICADO = '#/components/responses/NoAutenticado';
+/** Ruta de mentira que ejercita el guard: el contrato no la describe; solo su 200 y el 401 del guard se declaran ajenos. */
+const RUTA_DE_PRUEBA = '/platform/ruta-protegida-de-prueba';
+const RUTA_DE_MENTIRA = {
+  respuestasAjenasAlContrato: [
+    { ruta: RUTA_DE_PRUEBA, status: 200 },
+    { ruta: RUTA_DE_PRUEBA, status: 401, esquema: '#/components/responses/NoAutenticado' },
+  ],
+};
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 
 let cliente: Client;
@@ -90,10 +98,10 @@ async function ultimaActividad(alias: string): Promise<string> {
 }
 
 function pedirRutaProtegida(cookie: string) {
-  return request(app()).get('/platform/ruta-protegida-de-prueba').set('Cookie', cookie);
+  return clienteVerificado(app(), RUTA_DE_MENTIRA).get(RUTA_DE_PRUEBA).set('Cookie', cookie);
 }
 
-function esperarNoAutenticado(respuesta: request.Response) {
+function esperarNoAutenticado(respuesta: Response) {
   expect(respuesta.status).toBe(401);
   assertMatchesSpec('clinical-api', PUNTERO_NO_AUTENTICADO, respuesta.body);
   expect(respuesta.body.error).toBe('NO_AUTENTICADO');

@@ -1,9 +1,9 @@
 import type { Client } from 'pg';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   asegurarRol,
@@ -54,7 +54,7 @@ let siguienteIp = 0;
 const ipNueva = () => `198.51.100.${(siguienteIp += 1)}`;
 
 function intentar(app: ReturnType<typeof appDeTest>['app'], email: string, password: string) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/auth/login')
     .set('X-Forwarded-For', ipNueva())
     .send({ email, password });

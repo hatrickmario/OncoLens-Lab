@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { Router } from 'express';
 import type { Client } from 'pg';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { logoutController } from '../../../src/modules/auth/auth.controller.js';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import { incoherencias } from '../../support/rutas-y-contrato.js';
 import { asegurarPermisos, crearRolDePrueba } from '../../support/roles.js';
@@ -26,6 +26,14 @@ import {
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 1981;
 const PUNTERO_LOGOUT = '#/paths/~1platform~1auth~1logout/post/responses';
+/** Ruta de mentira que ejercita el guard: el contrato no la describe; solo su 200 y el 401 del guard se declaran ajenos. */
+const RUTA_DE_PRUEBA = '/platform/ruta-protegida-de-prueba';
+const RUTA_DE_MENTIRA = {
+  respuestasAjenasAlContrato: [
+    { ruta: RUTA_DE_PRUEBA, status: 200 },
+    { ruta: RUTA_DE_PRUEBA, status: 401, esquema: '#/components/responses/NoAutenticado' },
+  ],
+};
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 
 let cliente: Client;
@@ -87,12 +95,14 @@ describe('POST /platform/auth/logout', () => {
       expiresAt: '2026-10-16T20:00:00.000Z',
     });
     const cookie = `oncolens_session=${token}`;
-    const previa = await request(app())
-      .get('/platform/ruta-protegida-de-prueba')
+    const previa = await clienteVerificado(app(), RUTA_DE_MENTIRA)
+      .get(RUTA_DE_PRUEBA)
       .set('Cookie', cookie);
     expect(previa.status).toBe(200);
 
-    const respuesta = await request(app()).post('/platform/auth/logout').set('Cookie', cookie);
+    const respuesta = await clienteVerificado(app())
+      .post('/platform/auth/logout')
+      .set('Cookie', cookie);
 
     expect(respuesta.status).toBe(204);
     expect(respuesta.text).toBe('');
@@ -106,8 +116,8 @@ describe('POST /platform/auth/logout', () => {
     expect(borrada).toMatch(/SameSite=Strict/);
     expect(await revocada(token)).toBe(true);
 
-    const posterior = await request(app())
-      .get('/platform/ruta-protegida-de-prueba')
+    const posterior = await clienteVerificado(app(), RUTA_DE_MENTIRA)
+      .get(RUTA_DE_PRUEBA)
       .set('Cookie', cookie);
     expect(posterior.status).toBe(401);
     assertMatchesSpec('clinical-api', '#/components/responses/NoAutenticado', posterior.body);
@@ -129,8 +139,8 @@ describe('POST /platform/auth/logout', () => {
       revoked: true,
     });
 
-    const sinCookie = await request(app()).post('/platform/auth/logout');
-    const conRevocada = await request(app())
+    const sinCookie = await clienteVerificado(app()).post('/platform/auth/logout');
+    const conRevocada = await clienteVerificado(app())
       .post('/platform/auth/logout')
       .set('Cookie', `oncolens_session=${yaRevocado}`);
 

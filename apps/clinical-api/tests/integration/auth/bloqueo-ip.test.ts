@@ -1,11 +1,11 @@
 import type { Client } from 'pg';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearRegistrador } from '../../../src/infrastructure/logger.js';
 import { appConAuth } from '../../support/app-auth.js';
 import { capturarSalidas } from '../../support/captura-de-salidas.js';
 import { conectar } from '../../support/db.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   asegurarRol,
@@ -61,7 +61,7 @@ function appDeTest(token: string) {
 type App = ReturnType<typeof appDeTest>['app'];
 
 function intentar(app: App, ipsDeLaCabecera: string, email: string, password: string) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/auth/login')
     .set('X-Forwarded-For', ipsDeLaCabecera)
     .send({ email, password });
