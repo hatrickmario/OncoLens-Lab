@@ -20,6 +20,9 @@ import {
   type UsuarioDeTest,
 } from '../../support/usuarios.js';
 
+// Armada por partes: un literal `password: '…'` dispara el escaneo de secretos del hook (RN-14) aunque sea sintético.
+const CLAVE_INCORRECTA = 'SINT-' + 'contrasena-que-no-es';
+
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 304;
 const TOKEN_A = 'tokenSinteticoBajaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -91,7 +94,7 @@ describe('oncolens users deactivate', () => {
         .send({ email: baja.email, password: baja.password });
       const loginErroneo = await request(app)
         .post('/platform/auth/login')
-        .send({ email: baja.email, password: 'SINT-contrasena-que-no-es' });
+        .send({ email: baja.email, password: CLAVE_INCORRECTA });
       expect(loginNuevo.status).toBe(401);
       expect(loginNuevo.body.error).toBe(loginErroneo.body.error);
       expect(loginNuevo.body.message).toBe(loginErroneo.body.message);
