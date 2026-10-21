@@ -98,3 +98,19 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
 ## Pendiente de definir
 
 - Nada. D1 y D2 decididos (`[S2 resp. 6]`); D7, `corpusCutoffDate` desde `CORPUS_CUTOFF_DATE` (`[S2 resp. 10]`).
+
+## Notas de implementación (clinical-platform)
+
+- **Pregunta enmascarada en `tipo_no_habilitado`.** D3 dice "antes de ... desidentificar", pero la pregunta se persiste
+  (`query_text`) y se devuelve (`queryText`): RN-11 exige enmascararla. El service llama al desidentificador con un
+  **contexto vacío** (`construirContextoVacio()`) y toma solo la pregunta; ningún dato del caso se construye ni viaja a
+  Backend 2. El snapshot persistido es ese contexto vacío.
+- **Idiomas** del registro sin Backend 2: `es`/`es` (idioma del producto).
+- **Ficha (AC-1 y AC-3, `cancerTypeEnabled`)**: `l1d-72-ficha-minima-paciente` no está implementado, no existe el
+  endpoint de la ficha. Aquí se entrega el adaptador `crearTiposHabilitados()` (puerto `TiposDeCancerHabilitados` en
+  `evidence-analysis/ports.ts`) probado en unitario; los escenarios de ficha de AC-1/AC-3 se cubren al implementar L1D-72.
+- **Manifiesto**: `crearProveedorDeVersionDeCatalogo()` expone `cancerTypes()`; sin `cancerTypes` en el manifiesto, toda lista habilitada es inválida.
+- **Claves nuevas obligatorias en `clinical-api`** (pendiente para el usuario, no tocado por este agente):
+  `ENABLED_CANCER_TYPES`, `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE` en `infra/docker/.env.example` y como
+  pass-through en el servicio `clinical-api` de `infra/docker/docker-compose.yml` (patrón `${CLAVE:-}`), y en
+  `scripts/demo/levantar.sh`; sin ellas `clinical-api` no arranca en Compose.
