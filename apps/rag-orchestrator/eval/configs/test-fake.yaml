@@ -21,3 +21,7 @@ umbrales:
 catalogo:
   version: '2026.10.0'
   ruta_terminos: packages/clinical-catalogs
+barrido: # US-073 (RN-22): RELEVANCE_THRESHOLD_GRID y la regla D1; `evaluate --sweep relevance_threshold` solo lee esta sección
+  relevance_threshold_grid: [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+  umbral_de_referencia: 0.30 # el umbral vigente antes del barrido; fijar el elegido no lo cambia (el barrido es reproducible)
+  tolerancia_recall: 0.05 # THRESHOLD_RECALL_TOLERANCE: caída máxima de recall@10 frente a la referencia

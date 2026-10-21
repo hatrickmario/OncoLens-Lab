@@ -28,6 +28,7 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
+from app.evaluation.corrida_barrido import ejecutar_barrido
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE
@@ -52,6 +53,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--salida", type=Path, default=None)
     parser.add_argument("--nombre-archivo", default=None)
     parser.add_argument("--prueba-final", action="store_true")
+    parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
+    parser.add_argument("--fijar", action="store_true")
+    parser.add_argument("--p95-e2e-s", type=float, default=None)
     return parser
 
 
@@ -97,6 +101,17 @@ def _ejecutar(
     exigir_adapters_locales(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
+    if args.sweep:
+        return ejecutar_barrido(
+            config,
+            args.config,
+            fuente.cargar(),
+            reloj=reloj,
+            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
+            salida=args.salida,
+            fijar=args.fijar,
+            p95_e2e_s=args.p95_e2e_s,
+        )
     reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
     return 0

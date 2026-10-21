@@ -17,7 +17,14 @@ from tests.support.fakes import RelojFijo
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
 METAS = RAIZ_APP / "eval" / "configs" / "metas-iniciales.yaml"
 GRILLA = [0.2, 0.5, 0.9, 1.0]
-METRICAS = ("recall@10", "recall@10 es→en", "MRR", "fidelidad", "precisión de citas", "sin evidencia")
+METRICAS = (
+    "recall@10",
+    "recall@10 es→en",
+    "MRR",
+    "fidelidad",
+    "precisión de citas",
+    "sin evidencia",
+)
 
 
 def config_de_barrido(tmp_path: Path) -> Path:
@@ -36,7 +43,15 @@ def config_de_barrido(tmp_path: Path) -> Path:
 
 def barrer(salida: Path, config: Path, *extra: str) -> int:
     return main(
-        ["--config", str(config), "--sweep", "relevance_threshold", "--salida", str(salida), *extra],
+        [
+            "--config",
+            str(config),
+            "--sweep",
+            "relevance_threshold",
+            "--salida",
+            str(salida),
+            *extra,
+        ],
         reloj=RelojFijo(),
     )
 
@@ -102,7 +117,9 @@ def test_informe_marca_cada_metrica_en_meta_o_fuera_de_meta_sin_tocar_el_archivo
     sin_marca = [
         m
         for m in METRICAS
-        if not re.search(rf"^\| {re.escape(m)} \|.*\| (en meta|fuera de meta) \|$", informe, re.M)
+        if not re.search(
+            rf"^\| {re.escape(m)} \|.*\| (en meta|fuera de meta) \|$", informe, re.MULTILINE
+        )
     ]
     assert sin_marca == []
     assert hashlib.sha256(METAS.read_bytes()).hexdigest() == metas_antes

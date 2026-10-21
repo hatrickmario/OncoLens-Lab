@@ -1,0 +1,123 @@
+{
+  "barrido": {
+    "elegido": 0.9,
+    "fijado": false,
+    "filas": [
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.1
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.2
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.3
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.4
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.5
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.6
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.7
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.8
+      },
+      {
+        "exactitudSinEvidencia": 1.0,
+        "recallAt10": 1.0,
+        "umbral": 0.9
+      }
+    ],
+    "toleranciaRecall": 0.05,
+    "umbralDeReferencia": 0.3
+  },
+  "claseDataset": "sintetico",
+  "esquema": "oncolens.baseline.v1",
+  "hashConfig": "57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced",
+  "metricas": [
+    {
+      "estado": "en meta",
+      "meta": "≥ 0.8",
+      "metrica": "recall_at_10",
+      "valor": 1.0
+    },
+    {
+      "estado": "en meta",
+      "meta": "≥ 0.7",
+      "metrica": "recall_at_10_es_a_en",
+      "valor": 1.0
+    },
+    {
+      "estado": "en meta",
+      "meta": "≥ 0.6",
+      "metrica": "mrr",
+      "valor": 1.0
+    },
+    {
+      "estado": "fuera de meta",
+      "meta": "≥ 0.9",
+      "metrica": "fidelidad",
+      "valor": 0.6
+    },
+    {
+      "estado": "fuera de meta",
+      "meta": "≥ 0.9",
+      "metrica": "precision_citas",
+      "valor": 0.8
+    },
+    {
+      "estado": "en meta",
+      "meta": "≥ 0.9",
+      "metrica": "sin_evidencia",
+      "valor": 1.0
+    },
+    {
+      "estado": "sin medir",
+      "meta": "≤ 15",
+      "metrica": "p95_evidence_analyses_s",
+      "valor": null
+    }
+  ],
+  "metricasPorCancer": {
+    "mama": {
+      "fidelidad": 1.0,
+      "mrr": 1.0,
+      "precision_citas": 1.0,
+      "recall_at_10": 1.0,
+      "recall_at_10_es_a_en": 1.0,
+      "sin_evidencia": 1.0
+    },
+    "prostata": {
+      "fidelidad": 0.3333333333333333,
+      "mrr": 1.0,
+      "precision_citas": 0.6666666666666666,
+      "recall_at_10": 1.0,
+      "recall_at_10_es_a_en": 1.0,
+      "sin_evidencia": 1.0
+    }
+  },
+  "p95E2eS": null,
+  "proveedor": "fake",
+  "referenciaDeterminista": true
+}
