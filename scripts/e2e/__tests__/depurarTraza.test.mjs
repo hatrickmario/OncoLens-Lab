@@ -65,6 +65,14 @@ afterEach(() => rmSync(carpeta, { recursive: true, force: true }));
 const entradas = () => Object.fromEntries(leerZip(readFileSync(ruta)).map((e) => [e.nombre, e.datos]));
 
 describe('depurarTraza', () => {
+  it('sonda de control: la traza sin depurar sí contiene la contraseña y su cuerpo de request', () => {
+    const nombres = Object.keys(entradas());
+    const texto = Object.values(entradas()).map((datos) => datos.toString('latin1')).join('\n');
+
+    expect(texto).toContain(CONTRASENA);
+    expect(nombres).toContain(`resources/${SHA_CUERPO_LOGIN}.json`);
+  });
+
   it('la traza de un login fallido no contiene la contraseña de prueba cuando se depura [ARR-02 AC-1]', () => {
     depurarTraza(ruta, [CONTRASENA]);
 
