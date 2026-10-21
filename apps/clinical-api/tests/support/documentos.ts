@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Express } from 'express';
+import { Router, type Express } from 'express';
 import { http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
 import { crearAlmacenMinio } from '../../src/infrastructure/almacen-documentos.minio.js';
@@ -137,6 +137,8 @@ export function entornoSimulado(): EntornoSimulado {
 
 export interface AppDeDocumentos {
   readonly app: Express;
+  /** Routers protegidos montados tras el guard (para recorrer sus rutas contra el contrato). */
+  readonly rutas: readonly Router[];
   readonly logger: LoggerEnMemoria;
 }
 
@@ -187,7 +189,7 @@ export function montarDocumentos(
     registrar: logger.registrar,
     rutasProtegidas: [router],
   });
-  return { app, logger };
+  return { app, logger, rutas: [router] };
 }
 
 /** Hace fallar todo `INSERT` en `clinical.document` hasta que se quite (el fallo posterior a escribir el objeto). */
