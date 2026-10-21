@@ -6,7 +6,7 @@
       "backlog/features/FEAT-T4a-*.md",
       "backlog/features/FEAT-PL1-plataforma-base.md",
       "apps/clinical-api/prisma/seed/**",
-      "apps/clinical-api/test/**/deidentification/**",
+      "apps/clinical-api/tests/**/deidentification/**",
       "openspec/specs/deidentification/**",
       "ci/tests/cases/ac4-allowlist/**",
       "openspec/changes/l1d-103-gateway-contexto-clinico/**",
