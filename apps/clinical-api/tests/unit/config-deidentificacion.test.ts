@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, readDeidentificationConfig } from '../../src/config.js';
+import { ConfiguracionInvalidaError, readDeidentificationConfig } from '../../src/config/index.js';
 
 const ENV_VALIDO = {
   PII_FORMATS_PATH: '/config/pii-formats.json',

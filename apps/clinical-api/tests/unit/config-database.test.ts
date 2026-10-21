@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, exigirAppEnv, readDatabaseConfig } from '../../src/config.js';
+import { ConfiguracionInvalidaError, exigirAppEnv, readDatabaseConfig } from '../../src/config/index.js';
 import { crearPool } from '../../src/infrastructure/database.js';
 
 const ARCHIVOS: Record<string, string> = {

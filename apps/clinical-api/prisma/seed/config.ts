@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { ConfiguracionInvalidaError, readPositiveInteger } from '../../src/config.js';
+import { ConfiguracionInvalidaError, readPositiveInteger } from '../../src/config/index.js';
 
 /**
  * Configuración del seed (RN-22): nada de lo que varía por entorno es un literal del dominio. Esta parte NO toca

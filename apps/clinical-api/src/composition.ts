@@ -1,6 +1,6 @@
 import type { Express, Router } from 'express';
 import { createApp } from './app.js';
-import type { AuthConfig } from './config.js';
+import type { AuthConfig } from './config/index.js';
 import type { Clock } from './infrastructure/clock.js';
 import type { GeneradorDeIds } from './infrastructure/ids.js';
 import type { Registrar } from './infrastructure/logger.js';

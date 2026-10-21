@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readAuthConfig } from '../../src/config.js';
+import { readAuthConfig } from '../../src/config/index.js';
 
 describe('readAuthConfig', () => {
   it('usa 8 horas y el mínimo de OWASP para Argon2id cuando no hay variables', () => {

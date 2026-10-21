@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readPort } from '../../src/config.js';
+import { readPort } from '../../src/config/index.js';
 
 describe('readPort', () => {
   it('devuelve el puerto por defecto cuando PORT no está definido', () => {

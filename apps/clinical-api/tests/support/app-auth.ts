@@ -1,7 +1,7 @@
 import type { Router } from 'express';
 import type { Client } from 'pg';
 import { componerAplicacion } from '../../src/composition.js';
-import type { AuthConfig } from '../../src/config.js';
+import type { AuthConfig } from '../../src/config/index.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
 import type { Consultador } from '../../src/modules/auth/auth.repository.js';

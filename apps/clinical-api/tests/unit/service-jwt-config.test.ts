@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { exportPKCS8 } from 'jose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { readServiceJwtConfig } from '../../src/config.js';
+import { readServiceJwtConfig } from '../../src/config/index.js';
 import { loadServicePrivateKey } from '../../src/infrastructure/service-jwt.js';
 import { generarParEfimero } from '../support/service-jwt.js';
 

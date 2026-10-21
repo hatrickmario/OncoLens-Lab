@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { leerSecreto } from '../../../prisma/seed/secretos.js';
-import { ConfiguracionInvalidaError } from '../../../src/config.js';
+import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
 
 /** Lector de archivos en memoria: el test no hace E/S. */
 function archivos(contenidos: Record<string, string>) {

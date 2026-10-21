@@ -1,4 +1,4 @@
-import { ConfiguracionInvalidaError, leerSecretoDeArchivo } from '../../src/config.js';
+import { ConfiguracionInvalidaError, leerSecretoDeArchivo } from '../../src/config/index.js';
 import type { LeerArchivo } from '../../src/config/secrets.js';
 
 /**
