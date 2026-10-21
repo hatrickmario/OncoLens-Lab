@@ -8,9 +8,12 @@ import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/response
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import type { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { asegurarPermisos, crearRolDePrueba } from '../../support/roles.js';
 import { servidorMswConLoopback } from '../../support/servidor-msw.js';
 import {
   crearUsuariosDeAuth,
+  contrasenaDeTest,
+  insertarUsuario,
   insertarSesion,
   limpiarUsuarios,
   loggerEnMemoria,
@@ -42,7 +45,9 @@ function rutaProtegidaDePrueba(): Router {
   ruta.post('/evidence-analyses', express.json(), async (peticion, respuesta) => {
     ejecuciones += 1;
     await fetch(RAG_URL, { method: 'POST' });
-    respuesta.status(200).json({ sesion: peticion.sesion });
+    const sesion = peticion.sesion;
+    // `permisos` es un Set: se serializa como lista para poder compararlo.
+    respuesta.status(200).json({ sesion: sesion && { ...sesion, permisos: [...sesion.permisos] } });
   });
   return ruta;
 }
@@ -62,7 +67,11 @@ beforeEach(() => {
   ejecuciones = 0;
   llamadasARag = 0;
 });
-afterEach(() => ragSimulado.servidor.resetHandlers());
+const usuariosAEliminar: string[] = [];
+afterEach(async () => {
+  ragSimulado.servidor.resetHandlers();
+  await limpiarUsuarios(cliente, usuariosAEliminar.splice(0));
+});
 afterAll(async () => {
   ragSimulado.detener();
   await limpiarUsuarios(cliente, [doc1.id, doc2Desactivado.id]);
@@ -163,7 +172,7 @@ describe('guard de sesión de /platform/*', () => {
     esperarNoAutenticado(respuesta);
   });
 
-  it('deja pasar al controlador con userId y rol adjuntos cuando la sesión está vigente', async () => {
+  it('deja pasar al controlador con userId, rol y permisos adjuntos cuando la sesión está vigente', async () => {
     await insertarSesion(cliente, ids, {
       userId: doc1.id,
       tokenHash: hashDe('tokenVigente'),
@@ -176,7 +185,37 @@ describe('guard de sesión de /platform/*', () => {
       .send({});
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.sesion).toEqual({ userId: doc1.id, rol: 'doctor' });
+    expect(respuesta.body.sesion).toEqual({ userId: doc1.id, rol: 'doctor', permisos: [] });
     expect(ejecuciones).toBe(1);
+  });
+
+  it('adjunta a la sesión exactamente los permisos de su rol cuando el rol tiene permisos explícitos', async () => {
+    await asegurarPermisos(cliente, ids, ['clinical:read', 'ai_analysis:create']);
+    const rolId = await crearRolDePrueba(cliente, ids, `guardia.${ESPACIO_DE_IDS}`, [
+      'clinical:read',
+      'ai_analysis:create',
+    ]);
+    const guardia = await insertarUsuario(cliente, ids, {
+      email: `guardia.${ESPACIO_DE_IDS}@test.local`,
+      password: contrasenaDeTest('TEST_DOC1_PASSWORD'),
+      rolId,
+    });
+    usuariosAEliminar.push(guardia.id);
+    await insertarSesion(cliente, ids, {
+      userId: guardia.id,
+      tokenHash: hashDe('tokenGuardia'),
+      expiresAt: '2026-10-16T20:00:00.000Z',
+    });
+
+    const respuesta = await request(appProtegida())
+      .post('/platform/evidence-analyses')
+      .set('Cookie', 'oncolens_session=tokenGuardia')
+      .send({});
+
+    expect(respuesta.body.sesion.rol).toBe(`guardia.${ESPACIO_DE_IDS}`);
+    expect([...respuesta.body.sesion.permisos].sort()).toEqual([
+      'ai_analysis:create',
+      'clinical:read',
+    ]);
   });
 });

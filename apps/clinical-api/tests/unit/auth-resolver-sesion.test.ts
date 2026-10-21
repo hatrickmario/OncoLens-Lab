@@ -12,6 +12,7 @@ const vigente: SesionConUsuario = {
   accountStatus: 'activo',
   expiresAt: new Date('2026-10-16T20:00:00.000Z'),
   revoked: false,
+  permisos: ['clinical:read', 'ai_analysis:create'],
 };
 
 /** Servicio con un repository falso que solo conoce la sesión de `tokenConocido`. */
@@ -36,12 +37,13 @@ function servicioCon(sesion: SesionConUsuario | null) {
 }
 
 describe('AuthService.resolverSesion', () => {
-  it('devuelve userId y rol cuando la sesión está vigente y la cuenta activa', async () => {
+  it('devuelve userId, rol y permisos del rol cuando la sesión está vigente y la cuenta activa', async () => {
     const { service } = servicioCon(vigente);
 
     expect(await service.resolverSesion('tokenConocido')).toEqual({
       userId: 'usuario-1',
       rol: 'doctor',
+      permisos: new Set(['clinical:read', 'ai_analysis:create']),
     });
   });
 

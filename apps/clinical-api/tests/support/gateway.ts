@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
-import type { Express } from 'express';
+import type { Express, Router } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
@@ -20,6 +20,7 @@ import type {
 } from '../../src/modules/evidence-analysis/ports.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { readFileSync } from 'node:fs';
+import { componerRutasProtegidas } from '../../src/composition.js';
 import { appConAuth } from './app-auth.js';
 import {
   configuracionDePiiDeTest,
@@ -238,6 +239,8 @@ export interface GatewayDeTest {
   readonly app: Express;
   readonly logger: LoggerEnMemoria;
   readonly clavePublica: CryptoKey;
+  /** Routers protegidos montados tras el guard (para recorrer sus rutas contra el contrato). */
+  readonly rutas: readonly Router[];
 }
 
 /** Seudónimos sucesivos y deterministas: `psd_TestPseudonimo0001`, `…0002`. */
@@ -284,15 +287,16 @@ export async function montarGateway(
     }),
     registrar: logger.registrar,
   });
+  const rutas = componerRutasProtegidas({ gateway: ruta });
   const app = appConAuth({
     cliente: mundo.cliente,
     espacio: mundo.espacio,
     tokens: opciones.tokens ?? tokensFijos('no-se-usa'),
     reloj,
     registrar: logger.registrar,
-    rutasProtegidas: [ruta],
+    rutasProtegidas: rutas,
   });
-  return { app, logger, clavePublica: publicKey };
+  return { app, logger, clavePublica: publicKey, rutas };
 }
 
 /** Usuario sembrado por correo → cabecera `Cookie` de una sesión vigente creada para el test. */

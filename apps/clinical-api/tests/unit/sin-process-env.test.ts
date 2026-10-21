@@ -4,7 +4,11 @@ import { describe, expect, it } from 'vitest';
 
 const RAIZ_SRC = path.resolve(import.meta.dirname, '../../src');
 /** Único lugar donde el entorno entra al proceso: la raíz de composición se lo pasa al módulo de configuración. */
-const RAIZ_DE_COMPOSICION = path.join(RAIZ_SRC, 'server.ts');
+const RAICES_DE_COMPOSICION = [
+  path.join(RAIZ_SRC, 'server.ts'),
+  // CLI `oncolens` (L1D-199): segunda raíz de composición, igual que el seed fuera de `src/`.
+  path.join(RAIZ_SRC, 'cli', 'oncolens.ts'),
+];
 const MODULO_DE_CONFIGURACION = path.join(RAIZ_SRC, 'config') + path.sep;
 
 /**
@@ -54,7 +58,10 @@ describe('lectura del entorno', () => {
 
   it('ningún archivo de src fuera de src/config y de la raíz de composición lee process.env [US-037 AC-1]', () => {
     const infractores = archivosTs(RAIZ_SRC)
-      .filter((ruta) => ruta !== RAIZ_DE_COMPOSICION && !ruta.startsWith(MODULO_DE_CONFIGURACION))
+      .filter(
+        (ruta) =>
+          !RAICES_DE_COMPOSICION.includes(ruta) && !ruta.startsWith(MODULO_DE_CONFIGURACION),
+      )
       .filter((ruta) => leeElEntorno(readFileSync(ruta, 'utf8')))
       .map((ruta) => path.relative(RAIZ_SRC, ruta));
 

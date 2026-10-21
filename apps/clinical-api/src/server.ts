@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { componerAplicacion } from './composition.js';
+import { componerAplicacion, componerRutasProtegidas } from './composition.js';
 import { observarEntorno } from './config/index.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
@@ -90,7 +90,7 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar,
-          rutasProtegidas: [gateway],
+          rutasProtegidas: componerRutasProtegidas({ gateway }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: { configKeys: entorno.clavesCargadas(), serviceVersion: versionDelServicio() },
         });

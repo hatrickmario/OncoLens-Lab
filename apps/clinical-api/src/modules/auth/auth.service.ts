@@ -2,12 +2,8 @@ import { createHash } from 'node:crypto';
 import type { AuthConfig } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
-import type {
-  AuthRepository,
-  EstadoDeCuenta,
-  RolDeUsuario,
-  UsuarioParaLogin,
-} from './auth.repository.js';
+import type { AuthRepository, EstadoDeCuenta, UsuarioParaLogin } from './auth.repository.js';
+import { normalizarCorreo } from './correo.js';
 import type { PasswordHasher } from './password-hasher.js';
 
 export interface GeneradorDeToken {
@@ -16,7 +12,9 @@ export interface GeneradorDeToken {
 
 export interface SesionAutenticada {
   userId: string;
-  rol: RolDeUsuario;
+  rol: string;
+  /** Permisos del rol en el momento de la request: la autorización (`authorize`) mira estos, no el nombre del rol. */
+  permisos: ReadonlySet<string>;
 }
 
 export interface AuthService {
@@ -53,10 +51,6 @@ export function hashDeToken(token: string): string {
 /** Única regla de "puede iniciar o mantener sesión": solo `activo` (data-model, tabla de cuentas). */
 function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
   return estado === 'activo';
-}
-
-function normalizarCorreo(correo: string): string {
-  return correo.trim().toLowerCase();
 }
 
 export function createAuthService(dependencias: DependenciasDeAuthService): AuthService {
@@ -99,7 +93,7 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
       if (sesion === null || sesion.revoked || !cuentaHabilitada(sesion.accountStatus)) return null;
       // `expires_at` es absoluto y excluyente: en el instante exacto la sesión ya caducó (S1 resp. 14c).
       if (sesion.expiresAt.getTime() <= reloj.now().getTime()) return null;
-      return { userId: sesion.userId, rol: sesion.rol };
+      return { userId: sesion.userId, rol: sesion.rol, permisos: new Set(sesion.permisos) };
     },
   };
 }
