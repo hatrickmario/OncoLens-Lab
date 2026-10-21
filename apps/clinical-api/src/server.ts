@@ -67,10 +67,7 @@ arrancar({
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
           },
           tiposHabilitados,
-          alcanceDelCorpus: {
-            corpusExcludedSources: configuracion.alcance.corpusExcludedSources,
-            corpusCutoffDate: configuracion.alcance.corpusCutoffDate,
-          },
+          alcanceDelCorpus: configuracion.alcance,
           reloj,
           traceIds: { traceId: nuevoTraceId },
           idsDeAnalisis: randomUUID,

@@ -1,5 +1,6 @@
 import type { RagQueryInternalResponse } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { zRagQueryInternalResponseRefinado } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
+import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AnalisisRepository } from './evidence-analysis.repository.js';
@@ -63,7 +64,7 @@ export interface DependenciasDelCierre {
   /** `AI_DISCLAIMER_TEXT` (literal de US-069). */
   disclaimer: string;
   /** `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE`: lo que la Base de un `tipo_no_habilitado` dice del corpus. */
-  alcanceDelCorpus: { corpusExcludedSources: readonly string[]; corpusCutoffDate: string };
+  alcanceDelCorpus: AlcanceDelCorpus;
 }
 
 interface RespuestaInterpretada {

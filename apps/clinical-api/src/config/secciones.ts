@@ -421,14 +421,18 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
   };
 }
 
-/** Tipos de cáncer habilitados (RN-20, RN-22) y lo que la Base del análisis dice del corpus sin consultarlo (D7). */
-export interface AlcanceDelAnalisisConfig {
-  /** `ENABLED_CANCER_TYPES`: tipos analizables; se valida contra `cancerTypes` del `manifest.json` (`validarTiposHabilitados`). */
-  enabledCancerTypes: readonly string[];
+/** Lo que la Base de un `tipo_no_habilitado` dice del corpus sin consultarlo (US-043 D7, RN-22). */
+export interface AlcanceDelCorpus {
   /** `CORPUS_EXCLUDED_SOURCES`: fuentes que el corpus no incluye (RN-21), para `sourcesNotIncluded`. */
   corpusExcludedSources: readonly string[];
   /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`): fecha de corte del corpus, para `corpusCutoffDate`. */
   corpusCutoffDate: string;
+}
+
+/** Tipos de cáncer habilitados (RN-20, RN-22) más el alcance del corpus. */
+export interface AlcanceDelAnalisisConfig extends AlcanceDelCorpus {
+  /** `ENABLED_CANCER_TYPES`: tipos analizables; se valida contra `cancerTypes` del `manifest.json` (`validarTiposHabilitados`). */
+  enabledCancerTypes: readonly string[];
 }
 
 const FORMA_DE_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;

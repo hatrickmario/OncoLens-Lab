@@ -2,6 +2,7 @@ import type { Router } from 'express';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
+import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
@@ -22,14 +23,6 @@ import type {
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
   /** `AI_DISCLAIMER_TEXT` (RN-19, RN-22). */
   aiDisclaimerText: string;
-}
-
-/** Lo que la Base de un `tipo_no_habilitado` dice del corpus sin consultarlo (US-043 D7, RN-22). */
-export interface AlcanceDelCorpus {
-  /** `CORPUS_EXCLUDED_SOURCES`. */
-  corpusExcludedSources: readonly string[];
-  /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`). */
-  corpusCutoffDate: string;
 }
 
 export interface DependenciasDelGateway {
