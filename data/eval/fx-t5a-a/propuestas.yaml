@@ -1,0 +1,22 @@
+# Salida cruda del generador falso por pregunta (lo que un LLM propondría ANTES de validar citas y soporte).
+clase: sintetico
+propuestas:
+  FX-01:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.'
+      justificacion: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.'
+      citas: [ch-m1-1]
+  FX-02:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.'
+      justificacion: 'Adding anti-HER2 therapy to adjuvant chemotherapy improved disease-free survival in HER2-positive early breast cancer.'
+      citas: [ch-m1-1]
+  FX-03:
+    - opcion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.'
+      justificacion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.'
+      citas: [ch-p1-1]
+    - opcion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.'
+      justificacion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.'
+      citas: [ch-x-999]
+  FX-04:
+    - opcion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor prolonged survival in metastatic hormone-sensitive prostate cancer.'
+      justificacion: 'Hormone therapy cures the disease in every patient.'
+      citas: [ch-p1-1]

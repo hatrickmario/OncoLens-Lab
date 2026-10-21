@@ -1,5 +1,30 @@
 """Reglas puras de proveedores de modelos (RN-12, RN-13)."""
 
+import ipaddress
+from urllib.parse import urlsplit
+
+# Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
+# ninguna variable ni YAML la amplía. ``Settings.llm_allowed_hosts`` toma de aquí su valor por defecto, y
+# ``LLM_ALLOWED_HOSTS`` lo sustituye por entorno en el arranque del servicio (RN-22); eso no afecta a la suite.
+HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "127.0.0.1", "::1", "host.docker.internal"})
+
+
+def es_proveedor_local(url: str) -> bool:
+    """RN-12: ``True`` solo si el host de ``url`` es loopback (``127.0.0.0/8``, ``::1``), ``localhost`` o
+    ``host.docker.internal``. Falla cerrada: una URL sin host o que no se puede interpretar no es local."""
+    try:
+        host = urlsplit(url).hostname
+    except ValueError:
+        return False
+    if not host:
+        return False
+    if host in HOSTS_LOCALES:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
 
 def _banderas_de_datos_reales_activas(
     real_anonymized_enabled: bool, real_identified_enabled: bool

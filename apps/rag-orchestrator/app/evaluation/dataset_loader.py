@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 from app.config.settings import Settings
+from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 
 CLASE_SINTETICA = "sintetico"
 ETIQUETAS_NLI = ("entailment", "neutral", "contradiction")
@@ -28,7 +29,6 @@ CLASE_LICENCIA_ACEPTADA = re.compile(r"^(?:CC0 \d\.\d|CC BY(?:-SA)? \d\.\d)(?=$|
 CLASE_LICENCIA_NC = re.compile(r"^CC BY-NC \d\.\d(?=$| \()")
 CONTIENE_ND = re.compile(r"(?<![A-Za-z])ND(?![A-Za-z])", re.IGNORECASE)
 TERMINOS_VERIFICADOS_ACEPTADOS = ("terminos_NLM_ClinicalTrials_gov",)
-FUENTES_EXCLUIDAS_SIEMPRE = ("NCCN", "ESMO")
 
 MINIMO_PREGUNTAS = 30
 MINIMO_PREGUNTAS_ES = 10
@@ -158,7 +158,7 @@ def _validar_manifiesto(
     fuentes: list[Fuente] = []
     for crudo in manifiesto.get("fuentes", []):
         nombre = str(crudo.get("fuente", ""))
-        if any(nombre.upper().startswith(e) for e in (*FUENTES_EXCLUIDAS_SIEMPRE, *excluidas)):
+        if any(nombre.upper().startswith(e) for e in (*PISO_DE_FUENTES_EXCLUIDAS, *excluidas)):
             raise DatasetInvalido(f"la fuente {crudo.get('id')} ({nombre}) está excluida (RN-21)")
         motivo = _motivo_de_rechazo_de_licencia(crudo, permitir_cc_by_nc)
         if motivo is not None:
