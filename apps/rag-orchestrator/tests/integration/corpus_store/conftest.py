@@ -8,7 +8,6 @@ del change. Si falta una variable el test FALLA nombrándola.
 from __future__ import annotations
 
 import os
-import uuid
 from collections.abc import Callable, Iterator
 
 import pytest
@@ -21,39 +20,8 @@ from tests.support.milvus import (
     eliminar_coleccion_de_test,
     nombre_de_coleccion_de_test,
 )
-from tests.support.pg import (
-    BaseDeTest,
-    ConfiguracionArnes,
-    ErrorArnes,
-    crear_base_de_test,
-    leer_configuracion_arnes,
-)
-
-
-def nuevo_sufijo() -> str:
-    """Generador de ids del arnés (borde de los tests): 10 caracteres hexadecimales."""
-    return uuid.uuid4().hex[:10]
-
-
-@pytest.fixture(scope="session")
-def configuracion_arnes() -> ConfiguracionArnes:
-    return leer_configuracion_arnes(os.environ)
-
-
-@pytest.fixture
-def base_con_schema_vacio(configuracion_arnes: ConfiguracionArnes) -> Iterator[BaseDeTest]:
-    """Base de test con el schema ``corpus`` vacío y sus privilegios, SIN migrar."""
-    base = crear_base_de_test(configuracion_arnes, nuevo_sufijo(), migrar_catalogo=False)
-    yield base
-    base.destruir()
-
-
-@pytest.fixture(scope="module")
-def base_migrada(configuracion_arnes: ConfiguracionArnes) -> Iterator[BaseDeTest]:
-    """Base de test migrada con Alembic como ``rag_corpus_migrator``. Los tests que escriben revierten."""
-    base = crear_base_de_test(configuracion_arnes, nuevo_sufijo())
-    yield base
-    base.destruir()
+from tests.integration.conftest import nuevo_sufijo
+from tests.support.pg import ErrorArnes
 
 
 @pytest.fixture(scope="session")
