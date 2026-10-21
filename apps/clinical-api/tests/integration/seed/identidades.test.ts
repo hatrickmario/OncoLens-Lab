@@ -5,7 +5,8 @@ import { SeedBloqueadoError } from '../../../prisma/seed/guarda.js';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
 import { componerIdentidad } from '../../../src/modules/patients/identity.module.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
-import { entornoDeClaves } from '../../support/identidad.js';
+import { crearIndiceCiego } from '../../../src/infrastructure/crypto/indice-ciego.js';
+import { claveDeTest, entornoDeClaves } from '../../support/identidad.js';
 import {
   crearBaseDelSeed,
   entornoDelSeed,
@@ -18,6 +19,7 @@ interface FilaCruda {
   patient_id: string;
   id_type: string;
   national_id_ciphertext: Buffer;
+  national_id_hmac: string;
   full_name_ciphertext: Buffer;
   fila_como_texto: string;
 }
@@ -30,7 +32,7 @@ describe('Identidades cifradas del seed sintético', () => {
   const leerFilas = async () =>
     (
       await cliente.query<FilaCruda>(
-        `SELECT patient_id, id_type::text AS id_type, national_id_ciphertext, full_name_ciphertext,
+        `SELECT patient_id, id_type::text AS id_type, national_id_ciphertext, national_id_hmac, full_name_ciphertext,
                 patient_identity::text AS fila_como_texto
            FROM identity.patient_identity ORDER BY patient_id`,
       )
@@ -58,30 +60,42 @@ describe('Identidades cifradas del seed sintético', () => {
 
     expect(primera).toHaveLength(5);
     expect(new Set(primera.map((fila) => fila.id_type))).toEqual(new Set(['sintetico']));
-    for (const [indice, fila] of primera.entries()) {
-      const numero = `SINT-000000${indice + 1}`;
-      const nombre = `Prueba Sintética ${indice + 1}`;
-      expect(fila.fila_como_texto).not.toContain(numero);
-      expect(fila.fila_como_texto).not.toContain(nombre);
-      expect(fila.national_id_ciphertext.includes(Buffer.from(numero))).toBe(false);
-      expect(fila.full_name_ciphertext.includes(Buffer.from(nombre))).toBe(false);
+    const numeros = [1, 2, 3, 4, 5].map((n) => `SINT-000000${n}`);
+    const nombres = [1, 2, 3, 4, 5].map((n) => `Prueba Sintética ${n}`);
+    // Ninguna fila contiene ninguno de los 5 números ni de los 5 nombres (no solo el suyo).
+    for (const fila of primera) {
+      for (const valor of [...numeros, ...nombres]) {
+        expect(fila.fila_como_texto).not.toContain(valor);
+        expect(fila.national_id_ciphertext.includes(Buffer.from(valor))).toBe(false);
+        expect(fila.full_name_ciphertext.includes(Buffer.from(valor))).toBe(false);
+      }
     }
+    // El generador de nonce de producción (aleatorio) no repite los 12 B iniciales de los 10 blobs.
+    const nonces = primera.flatMap((fila) =>
+      [fila.national_id_ciphertext, fila.full_name_ciphertext].map((blob) =>
+        blob.subarray(0, 12).toString('hex'),
+      ),
+    );
+    expect(nonces).toHaveLength(10);
+    expect(new Set(nonces).size).toBe(10);
     const servicio = componerIdentidad({
       env: entornoDeClaves(archivos.claves, 1),
       readFile: (ruta) => readFileSync(ruta, 'utf8'),
       db: cliente,
     });
-    const descifradas: (string | undefined)[] = [];
+    const indice = crearIndiceCiego(claveDeTest('hmac'));
+    const descifradas: string[] = [];
     for (const fila of primera) {
-      descifradas.push((await servicio.descifrar(fila.patient_id))?.numeroDeDocumento);
+      const identidad = await servicio.descifrar(fila.patient_id);
+      descifradas.push(identidad?.numeroDeDocumento ?? '');
+      // El emparejamiento solo se hace con lo descifrado: nombre e índice ciego corresponden al número de su fila.
+      const ordinal = Number(identidad?.numeroDeDocumento.slice(-1));
+      expect(identidad?.nombreCompleto).toBe(`Prueba Sintética ${ordinal}`);
+      expect(fila.national_id_hmac).toBe(
+        indice.indiceDeDocumento('sintetico', identidad?.numeroDeDocumento ?? ''),
+      );
     }
-    expect(descifradas.sort()).toEqual([
-      'SINT-0000001',
-      'SINT-0000002',
-      'SINT-0000003',
-      'SINT-0000004',
-      'SINT-0000005',
-    ]);
+    expect(descifradas.sort()).toEqual(numeros);
     expect(segunda).toHaveLength(5);
     for (const [indice, fila] of segunda.entries()) {
       expect(
