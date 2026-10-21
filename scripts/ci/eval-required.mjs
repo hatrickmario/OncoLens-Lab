@@ -87,9 +87,14 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
     console.log(`eval-required — ${AVISO_SIN_BASELINE}`);
     return 0;
   }
-  comparacion.regresiones.forEach((r) => console.error(`eval-required — regresión en ${r.metrica}: baseline ${r.baseline}, actual ${r.actual ?? 'sin valor'}`));
-  if (comparacion.regresiones.length === 0) console.log(`eval-required — sin regresión contra ${baseline} (tolerancia ${tolerancia})`);
-  return comparacion.regresiones.length === 0 ? 0 : 1;
+  return veredictoDeRegresion(comparacion, { baseline, tolerancia });
+}
+
+/** Imprime cada métrica en regresión (o la ausencia de ellas) y devuelve el código de salida. */
+function veredictoDeRegresion({ regresiones }, { baseline, tolerancia }) {
+  regresiones.forEach((r) => console.error(`eval-required — regresión en ${r.metrica}: baseline ${r.baseline}, actual ${r.actual ?? 'sin valor'}`));
+  if (regresiones.length === 0) console.log(`eval-required — sin regresión contra ${baseline} (tolerancia ${tolerancia})`);
+  return regresiones.length === 0 ? 0 : 1;
 }
 
 function main(argumentos) {
