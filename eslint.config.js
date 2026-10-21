@@ -43,6 +43,9 @@ export const bloqueWeb = (files) => ({
   },
 });
 
+const AVISO_DE_SUPERTEST =
+  'Usa clienteVerificado (apps/clinical-api/tests/support/verificarProveedor.ts): valida cada respuesta contra openapi.yaml (US-214).';
+
 export default defineConfig(
   {
     ignores: [
@@ -71,6 +74,29 @@ export default defineConfig(
     rules: {
       // Parámetros reservados para la inyección de dependencias de cada historia (`_dependencies`).
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    // US-214 AC-1: la verificación del proveedor es automática solo si los tests pasan por `clienteVerificado`.
+    files: ['apps/clinical-api/**/*.ts'],
+    ignores: ['apps/clinical-api/tests/support/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: 'supertest', message: AVISO_DE_SUPERTEST }],
+          patterns: [{ group: ['supertest/*'], message: AVISO_DE_SUPERTEST }],
+        },
+      ],
+      // `require('supertest')` e `import('supertest')` no los ve no-restricted-imports.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.name='require'][arguments.0.value=/^supertest(\\/.*)?$/], ImportExpression[source.value=/^supertest(\\/.*)?$/]",
+          message: AVISO_DE_SUPERTEST,
+        },
+      ],
     },
   },
   // SIEMPRE el último: desactiva toda regla de estilo que choque con Prettier [US-215 AC-5].

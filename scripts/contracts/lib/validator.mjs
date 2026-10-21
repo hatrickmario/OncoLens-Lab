@@ -1,6 +1,7 @@
 /** Validación de ejemplos contra los specs empaquetados con Ajv (JSON Schema 2020-12, estricto). */
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
+import { NOMBRE_DE_CAMPO, PROPIEDAD_NO_DECLARADA } from './nombreDeCampo.mjs';
 import { jsonSchemaOf } from './operations.mjs';
 import { resolvePointer } from './pointer.mjs';
 import { PROVIDERS } from './specs.mjs';
@@ -41,6 +42,16 @@ function schemaPointerOfTarget(spec, target) {
 }
 
 /**
+ * Ruta JSON del campo incumplido; en propiedades no declaradas incluye su nombre solo si parece un identificador, y en las
+ * ausentes el declarado por el spec (nunca un valor).
+ */
+function rutaDelCampo(item) {
+  const noDeclarada = item.params?.additionalProperty ?? item.params?.unevaluatedProperty;
+  const nombre = noDeclarada === undefined ? item.params?.missingProperty : (NOMBRE_DE_CAMPO.test(noDeclarada) ? noDeclarada : PROPIEDAD_NO_DECLARADA);
+  return `${item.instancePath}${nombre === undefined ? '' : `/${nombre}`}` || '#';
+}
+
+/**
  * @typedef {{ error: string } | { problems: { path: string, message: string }[] }} Verdict
  */
 
@@ -63,7 +74,7 @@ export function createExampleValidator(specs) {
         return { error: `el schema de ${entry.target} no compila: ${error.message}` };
       }
       validate(data);
-      return { problems: (validate.errors ?? []).map((item) => ({ path: item.instancePath || '#', message: `${item.message} (${item.schemaPath})` })) };
+      return { problems: (validate.errors ?? []).map((item) => ({ path: rutaDelCampo(item), message: `${item.message} (${item.schemaPath})` })) };
     },
   };
 }

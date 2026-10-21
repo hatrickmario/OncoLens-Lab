@@ -56,6 +56,28 @@ async function loadDoc(root, file) {
   return read.error ? null : { file, text: read.text };
 }
 
+const EXTENSIONES_DE_CODIGO = ['.ts', '.tsx', '.mjs', '.js'];
+const NO_ES_CODIGO_DE_PRODUCCION = /(^|\/)(node_modules|\.next|__tests__|tests|e2e|dist)\/|\.(test|spec)\.[cm]?[jt]sx?$|\.d\.[cm]?ts$/;
+
+/** Archivos de código de producción bajo `ruta` (un directorio o un archivo), relativos a la raíz; nada si no existe. */
+async function listSourceFiles(root, ruta) {
+  const entries = await readdir(path.join(root, ruta), { recursive: true, withFileTypes: true }).catch(() => null);
+  const files = entries === null ? [ruta] : entries.filter((entry) => entry.isFile()).map((entry) => path.posix.join(ruta, path.relative(path.join(root, ruta), path.join(entry.parentPath, entry.name)).split(path.sep).join('/')));
+  return files.filter((file) => EXTENSIONES_DE_CODIGO.includes(path.extname(file)) && !NO_ES_CODIGO_DE_PRODUCCION.test(file));
+}
+
+/** Código de los consumidores de los proveedores (US-214 AC-1): `{ archivo: texto }`; un directorio ausente no aporta archivos. */
+async function loadConsumerSources(root) {
+  const consumers = {};
+  for (const ruta of PATHS.consumerSources) {
+    for (const file of await listSourceFiles(root, ruta)) {
+      const read = await readText(root, file);
+      if (!read.error) consumers[file] = read.text;
+    }
+  }
+  return consumers;
+}
+
 /** Lee todo lo que las reglas necesitan y arma su contexto. */
 export async function loadContext(root) {
   const specs = {};
@@ -66,6 +88,7 @@ export async function loadContext(root) {
     readme: await loadDoc(root, PATHS.readme),
     terminosProhibidos: terms.data ?? null,
     generatedTypes: {},
+    consumers: await loadConsumerSources(root),
   };
   for (const provider of PROVIDERS) docs.generatedTypes[provider] = await loadDoc(root, typesPath(provider));
   return buildContext({ specs, examples: await loadExamples(root), docs });

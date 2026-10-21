@@ -1,7 +1,7 @@
 """`POST /rag/query`, soporte NLI y lenguaje de la rama con evidencia (US-064 / L1D-180): RN-01, RN-22, RN-23.
 
 Corpus FX-06a-a, catálogo, generador (FX-06b) y NLI falsos (FX-06a-b); cada respuesta se valida contra el spec del
-proveedor (`assert_matches_spec`) [S1 resp. 17]. Los textos de prueba no son prescriptivos salvo los que ejercitan RN-23.
+proveedor (hook de `verificacion_proveedor.py`, US-214). Los textos de prueba no son prescriptivos salvo los que ejercitan RN-23.
 """
 
 import json
@@ -14,7 +14,7 @@ from app.application.ports import ResultadoNli
 from app.domain.lenguaje import ListaTerminos
 from app.domain.support import RETIRO_ES
 from app.prompts.rag_query import VERSION_DEL_PROMPT
-from tests.support.contract import CATALOGOS, assert_matches_spec
+from tests.support.contract import CATALOGOS
 from tests.support.generador_falso import (
     LIMITACION_PRESCRIPTIVA,
     LIMITACION_SIN_SOPORTE,
@@ -54,7 +54,6 @@ def _consultar(
 def _respuesta_valida(respuesta) -> dict:
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     return cuerpo
 
 
@@ -146,7 +145,6 @@ def test_rag_query_responde_503_nli_unavailable_sin_opciones_cuando_el_adapter_n
 
     assert respuesta.status_code == 503
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_503, cuerpo)
     assert cuerpo["error"] == "NLI_UNAVAILABLE"
     assert "evidenceOptions" not in cuerpo and RAZON_ANTI_HER2 not in respuesta.text
 

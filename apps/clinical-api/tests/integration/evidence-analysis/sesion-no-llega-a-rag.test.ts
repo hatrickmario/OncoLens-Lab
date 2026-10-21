@@ -1,10 +1,8 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearGeneradorDeToken } from '../../../src/infrastructure/token.js';
 import {
   PREGUNTA_AC1,
-  PUNTERO_200,
   TODAS_LAS_FUENTES,
   idDePaciente,
   montarGateway,
@@ -33,7 +31,7 @@ afterAll(async () => {
 describe('la sesión del doctor nunca llega a rag-orchestrator', () => {
   it('envía Authorization Bearer y ninguna cabecera Cookie ni el token hacia rag-orchestrator cuando se pide un análisis con la cookie del login [US-211 AC-5]', async () => {
     const { app } = await montarGateway(mundo, { tokens: crearGeneradorDeToken() });
-    const login = await request(app)
+    const login = await clienteVerificado(app)
       .post('/platform/auth/login')
       .send({ email: 'doc1@test.local', password: CONTRASENA_FICTICIA_DOCTOR });
     const parDeLaCookie = cookiesEmitidas(login)[0]?.split(';')[0] ?? '';
@@ -41,7 +39,7 @@ describe('la sesión del doctor nunca llega a rag-orchestrator', () => {
     expect(login.status).toBe(204);
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', parDeLaCookie)
       .send({
@@ -61,6 +59,5 @@ describe('la sesión del doctor nunca llega a rag-orchestrator', () => {
     expect(texto).not.toContain(token);
     expect(texto).not.toContain('oncolens_session');
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
   });
 });

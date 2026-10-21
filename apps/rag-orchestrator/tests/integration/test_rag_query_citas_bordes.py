@@ -2,7 +2,6 @@
 
 import logging
 
-from tests.support.contract import assert_matches_spec
 from tests.support.generador_falso import TITULO_INVENTADO, FakeEvidenceGenerator
 from tests.support.recuperacion import (
     CORPUS_FX06A,
@@ -37,7 +36,6 @@ def test_rag_query_descarta_con_cita_invalida_la_opcion_cuyo_documento_no_esta_e
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["evidenceOptions"] == []
     assert [d["discardReason"] for d in cuerpo["discardedOptions"]] == ["cita_invalida"]
 

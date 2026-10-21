@@ -1,7 +1,7 @@
 import { bundle, createConfig } from '@redocly/openapi-core';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { getBundledSpecs, prepararSpecsEmpaquetados } from '../lib/bundledSpecs.mjs';
+import { getBundledSpecs, calcularSpecsEmpaquetados } from '../lib/bundledSpecs.mjs';
 import { bundleSpecs } from '../lib/context.mjs';
 import { assertSharedSchemasSingleOrigin } from '../rules/assertSharedSchemasSingleOrigin.mjs';
 import { CLINICAL_API, EVIDENCE, PROVIDERS, SHARED_SCHEMAS } from '../lib/specs.mjs';
@@ -88,9 +88,9 @@ describe('specs empaquetados registrados', () => {
   // Otra clave de caché con el mismo contenido: el worker ya registró la raíz por defecto.
   const otraRaiz = `${ROOT}/scripts/..`;
 
-  it('lanza specs sin empaquetar cuando no se registraron y prepararSpecsEmpaquetados no los habilita', async () => {
+  it('lanza specs sin empaquetar cuando no se registraron y calcularSpecsEmpaquetados no los habilita', async () => {
     expect(() => getBundledSpecs(otraRaiz)).toThrow('specs sin empaquetar');
-    await prepararSpecsEmpaquetados(otraRaiz);
+    await calcularSpecsEmpaquetados(otraRaiz);
     expect(() => getBundledSpecs(otraRaiz)).toThrow('specs sin empaquetar');
   });
 });

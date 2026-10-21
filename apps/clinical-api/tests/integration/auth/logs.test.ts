@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { crearRegistrador } from '../../../src/infrastructure/logger.js';
@@ -51,7 +51,7 @@ describe('logs de clinical-api durante el login', () => {
 
     const respuestas = [];
     for (const intento of intentos) {
-      respuestas.push(await request(app).post('/platform/auth/login').send(intento));
+      respuestas.push(await clienteVerificado(app).post('/platform/auth/login').send(intento));
     }
 
     expect(respuestas.map((respuesta) => respuesta.status)).toEqual([204, 401, 401, 401]);

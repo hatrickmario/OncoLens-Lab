@@ -1,11 +1,8 @@
 import { createHash } from 'node:crypto';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   PREGUNTA_AC1,
-  PUNTERO_200,
-  PUNTERO_403,
   TODAS_LAS_FUENTES,
   abrirSesion,
   idDePaciente,
@@ -88,14 +85,13 @@ describe('autorización por permiso', () => {
     const { app } = await montarGateway(mundo);
     const antes = await analisisPersistidos();
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieLector)
       .send(cuerpo);
 
     expect(respuesta.status).toBe(403);
     expect(respuesta.body.error).toBe('PERMISO_DENEGADO');
-    assertMatchesSpec('clinical-api', PUNTERO_403, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(await analisisPersistidos()).toBe(antes);
   });
@@ -103,13 +99,12 @@ describe('autorización por permiso', () => {
   it('responde 200 cuando un rol que no se llama doctor tiene ai_analysis:create, porque se autoriza por permiso y no por rol', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieAnalista)
       .send(cuerpo);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(rag.llamadas()).toBe(1);
   });
 
@@ -139,14 +134,12 @@ describe('autorización por permiso', () => {
 
     for (const { montada, operacion } of vedadas) {
       const ruta = montada.ruta.replace(/\{\w+\}/g, PACIENTE_A);
-      const respuesta = await request(app)
+      const respuesta = await clienteVerificado(app)
         [montada.metodo as 'post'](ruta)
         .set('Cookie', cookieAdmin)
         .send(cuerpo);
 
       expect(respuesta.status, operacion?.operationId).toBe(403);
-      const puntero = `#/paths/${montada.ruta.replaceAll('/', '~1')}/${montada.metodo}/responses/403`;
-      assertMatchesSpec('clinical-api', puntero, respuesta.body);
     }
     expect(rag.llamadas()).toBe(0);
   });

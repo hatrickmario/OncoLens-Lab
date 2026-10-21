@@ -1,9 +1,7 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { crearLectorDeIdentidad } from '../../../src/modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import {
-  PUNTERO_503,
   PREGUNTA_Q_HER2,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -50,7 +48,7 @@ describe('Identidad alterada en el camino real del análisis', () => {
       identidades: crearLectorDeIdentidad(identidad),
     });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId, query: PREGUNTA_Q_HER2, sourcesSelected: TODAS_LAS_FUENTES });
@@ -61,7 +59,6 @@ describe('Identidad alterada en el camino real del análisis', () => {
       message: 'No fue posible preparar la consulta.',
       traceId: TRACE_ID,
     });
-    assertMatchesSpec('clinical-api', PUNTERO_503, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(await contarRegistrosPorTrace(mundo.cliente, TRACE_ID)).toBe(0);
     for (const prohibido of [

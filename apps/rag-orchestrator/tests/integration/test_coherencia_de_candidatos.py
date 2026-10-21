@@ -16,7 +16,6 @@ from app.application.ports import ChunkEncontrado, FalloDeInferencia
 from app.bootstrap import PuertosDelCorpus, crear_app
 from app.config.settings import Settings
 from app.infrastructure.models.local import cargar_modelos_locales
-from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.inferencia_falsa import TokenizadorFalso
 from tests.support.modelos import (
@@ -107,7 +106,6 @@ def test_con_modelos_locales_30_candidatos_y_12_pares_el_reranker_real_responde_
     respuesta = cliente.post("/rag/query", json=solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 200
-    assert_matches_spec("#/components/schemas/RagQueryInternalResponse", respuesta.json())
     assert respuesta.json()["retrievalStats"]["retrieved"] == 30
 
 
