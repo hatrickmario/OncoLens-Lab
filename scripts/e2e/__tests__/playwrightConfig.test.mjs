@@ -33,11 +33,12 @@ describe('playwright.config.ts', () => {
     expect(nombresDeReporters(await cargarConfig(''))).not.toEqual(expect.arrayContaining(['html']));
   });
 
-  it('pone el reporter de depuración de trazas antes que el html para que el informe copie la traza ya depurada', async () => {
+  it('pone el depurador de adjuntos antes que el html y el verificador del informe después [ARR-02 AC-1]', async () => {
     for (const ci of ['true', '']) {
       const nombres = nombresDeReporters(await cargarConfig(ci));
 
-      expect(nombres[0]).toMatch(/reporte-sin-secretos/);
+      expect(nombres[0]).toMatch(/depurador-de-adjuntos/);
+      expect(nombres.at(-1)).toMatch(/verificador-de-informe/);
     }
   });
 });

@@ -19,7 +19,7 @@ const depuradorDe = (adjunto: TestResult['attachments'][number]) =>
  * de texto. Va PRIMERO en la lista de reporters de `playwright.config.ts`, para que el informe HTML (que copia los
  * adjuntos al terminar la corrida) y `test-results/` solo vean adjuntos ya depurados. No imprime nunca un secreto.
  */
-export default class ReporteSinSecretos implements Reporter {
+export default class DepuradorDeAdjuntos implements Reporter {
   onTestEnd(test: TestCase, result: TestResult): void {
     const secretos = secretosDeE2e(process.env);
     for (const adjunto of result.attachments) {

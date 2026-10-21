@@ -95,13 +95,28 @@ export function escribirZip(entradas: Entrada[]): Buffer {
   return Buffer.concat([...locales, directorio, fin]);
 }
 
+type Cabecera = { name: string; value: string };
 type RegistroDeRed = {
   type?: string;
   snapshot?: {
-    request?: { method?: string; url?: string; postData?: { _sha1?: string; _file?: string } };
-    response?: { content?: { _sha1?: string; _file?: string; text?: string } };
+    request?: {
+      method?: string;
+      url?: string;
+      headers?: Cabecera[];
+      cookies?: unknown[];
+      postData?: { _sha1?: string; _file?: string };
+    };
+    response?: {
+      headers?: Cabecera[];
+      cookies?: unknown[];
+      content?: { _sha1?: string; _file?: string; text?: string };
+    };
   };
 };
+
+const CABECERAS_DE_CREDENCIALES = new Set(['cookie', 'set-cookie', 'authorization']);
+const sinCredenciales = (cabeceras?: Cabecera[]) =>
+  cabeceras?.filter(({ name }) => !CABECERAS_DE_CREDENCIALES.has(name.toLowerCase()));
 
 const esPostDeApi = (metodo?: string, url?: string) => {
   if (metodo !== 'POST' || !url) return false;
@@ -127,6 +142,10 @@ function depurarRegistroDeRed(texto: string): { texto: string; recursos: Set<str
     for (const referencia of [request.postData?._sha1, request.postData?._file])
       if (referencia) recursos.add(referencia);
     delete request.postData;
+    for (const mensaje of [request, response]) {
+      if (mensaje?.headers) mensaje.headers = sinCredenciales(mensaje.headers);
+      if (mensaje?.cookies) mensaje.cookies = [];
+    }
     if (response?.content && esPostDeApi(request.method, request.url)) {
       for (const referencia of [response.content._sha1, response.content._file])
         if (referencia) recursos.add(referencia);
@@ -143,18 +162,23 @@ function depurarRegistroDeRed(texto: string): { texto: string; recursos: Set<str
  * Formas en que un secreto puede quedar escrito en una traza: literal, escapado en JSON y codificado en URL. Se trabaja
  * en `latin1` (un carácter por byte) para sustituir en cualquier entrada, de texto o binaria, sin alterar los demás bytes.
  */
-function variantesDe(secretos: string[]): string[] {
-  const variantes = secretos
+export function formasDe(secretos: string[]): string[] {
+  const formas = secretos
     .filter((secreto) => secreto.length > 0)
     .flatMap((secreto) => [
       secreto,
       JSON.stringify(secreto).slice(1, -1),
       encodeURIComponent(secreto),
     ]);
-  return [...new Set(variantes)].map((variante) =>
-    Buffer.from(variante, 'utf8').toString('latin1'),
-  );
+  return [...new Set(formas)];
 }
+
+const variantesDe = (secretos: string[]): string[] =>
+  formasDe(secretos).map((forma) => Buffer.from(forma, 'utf8').toString('latin1'));
+
+/** Sustituye cada forma del secreto en un texto ya decodificado (p. ej. el título de un paso). */
+export const redactarTexto = (texto: string, formas: string[]): string =>
+  formas.reduce((acumulado, forma) => acumulado.replaceAll(forma, MARCA_REDACTADO), texto);
 
 const sustituir = (datos: Buffer, variantes: string[]): Buffer => {
   const texto = datos.toString('latin1');
@@ -203,10 +227,14 @@ export function depurarAdjuntoDeTexto(ruta: string, secretos: string[]): void {
   writeFileSync(ruta, sustituir(datos, variantesDe(secretos)));
 }
 
-/** Variables de entorno cuyo valor es una contraseña de E2E: `E2E_*CONTRASENA`. */
+/** Convención de nombre de las variables de E2E que guardan un secreto (la única definición; ejecutar.sh y soporte.ts la siguen). */
+export const esVariableSecretaDeE2e = (nombre: string): boolean =>
+  /^E2E_.*(CONTRASENA|PASSWORD|CLAVE|SECRET|TOKEN)/.test(nombre);
+
+/** Valores de las variables de entorno de E2E que son secretos. */
 export function secretosDeE2e(entorno: NodeJS.ProcessEnv): string[] {
   return Object.entries(entorno)
-    .filter(([nombre, valor]) => /^E2E_.*CONTRASENA$/.test(nombre) && valor)
+    .filter(([nombre, valor]) => esVariableSecretaDeE2e(nombre) && valor)
     .map(([, valor]) => valor as string);
 }
 
