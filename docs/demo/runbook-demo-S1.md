@@ -25,7 +25,8 @@ scripts/demo/apagar.sh       # detiene el stack y el Ollama que arrancó el scri
 ## 4. Límites honestos (decirlos antes de que pregunten)
 - **Una opción por respuesta** y sin aplicabilidad, síntesis, preguntas de seguimiento ni orden por aplicabilidad: son S4–S5. El S1 es el esqueleto «caso → opción citada y validada».
 - **Latencia**: 3 s sin evidencia; 13–22 s con evidencia y consultas distintas (el NFR es p95 ≤ 15 s; con una sola consulta repetida G midió 9,9 s). La **primera** consulta tras arrancar suma la carga del modelo (~15–25 s). Se recalibra en el S5.
-- **Corpus pequeño**: 10 documentos (NCI y PMC de mama y próstata). Con el paciente de mama, una pregunta de **próstata devolvió «sin evidencia»** (probado por API; hipótesis: el contexto del caso es de mama; no se probó con un paciente de próstata). Quédate en mama con el paciente (a).
+- **Corpus pequeño**: 10 documentos (NCI y PMC de mama y próstata). La recuperación **filtra por el tipo de cáncer del paciente** (`retrieval_filter.py`): con el paciente de mama (a), una pregunta de próstata devuelve «sin evidencia» aunque el texto exista en el corpus. Para preguntar por próstata abre el paciente de próstata (`/pacientes/175557e5-e90e-59e2-a6d7-020a133b0eb5/analisis`); su pregunta sobre complicaciones tras la cirugía tarda ~30 s y devuelve la opción «impotencia o disfunción sexual» con citas de NCI.
+- **Plazos**: `levantar.sh` fija `RAG_TIMEOUT_MS=90000` y `WEB_UPSTREAM_TIMEOUT_MS=100000` (con los valores por defecto de 30 s, esa pregunta vence con `DEADLINE_VENCIDO`). Se pueden cambiar exportando las variables antes de ejecutarlo.
 - Los recorridos Playwright E2E aún no son ejecutables (L1D-278); este guion se ensaya a mano. La consola del navegador muestra un 404 de `favicon.ico` (cosmético).
 - El LLM puede dar justificaciones demasiado literales o, en raros casos, añadir un matiz no respaldado (fidelidad 0,95 en la revisión de ADR-39): la validación de citas y NLI es la red de seguridad, no la fluidez.
 
@@ -33,6 +34,8 @@ scripts/demo/apagar.sh       # detiene el stack y el Ollama que arrancó el scri
 - `/login` da 500 → falta `WEB_HOME_PATH` (lo fija `levantar.sh`; sin él el web se niega a servir).
 - `rag-orchestrator` sale al arrancar nombrando una variable → ejecuta de nuevo `scripts/demo/levantar.sh` (crea la colección de Milvus antes del arranque final).
 - Análisis lento o error 5xx → `ollama ps` (¿está G cargado al 100 % GPU?) y `docker logs oncolens-rag-orchestrator-1`.
+- `DEADLINE_VENCIDO` → la consulta pasó del plazo; confirma que el stack se levantó con `levantar.sh` (plazos de 90/100 s) y que Ollama corre con contexto 8192 (`ollama ps` debe mostrar `8192`).
+- `levantar.sh` se detiene diciendo que la app de Ollama está abierta → ciérrala (icono de la barra de menú → Quit Ollama) y repite: la app usa contexto 32768 y vuelve a abrirse al iniciar sesión.
 - Memoria justa → cierra otras apps; `scripts/demo/apagar.sh` libera Docker y Ollama.
 
 ## 6. Ver qué entró a Milvus (corpus)
