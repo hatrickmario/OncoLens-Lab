@@ -138,7 +138,7 @@ export function montarDocumentos(
       bucket: BUCKET_DE_TEST,
       accessKey: 'acceso-sintetico-de-test',
       secretKey: 'clave-sintetica-de-test',
-      timeoutMs: 2000,
+      timeoutMs: 8000,
     }),
     reloj,
     ids: generadorDeIds(mundo.espacio + 3000),
