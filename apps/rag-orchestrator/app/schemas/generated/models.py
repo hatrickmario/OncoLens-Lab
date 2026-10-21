@@ -31,6 +31,13 @@ class HealthStatus(BaseModel):
             min_length=1,
         ),
     ] = None
+    catalogVersion: Annotated[
+        str | None,
+        Field(
+            description='Versión del catálogo clínico montado (manifest.json); sin ruta ni contenido.',
+            min_length=1,
+        ),
+    ] = None
 
 
 class Detail(RootModel[str]):
