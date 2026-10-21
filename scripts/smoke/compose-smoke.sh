@@ -141,6 +141,21 @@ compose exec -T rag-orchestrator python -c "import os; open(os.path.join(os.envi
   || fallo "AC-3: rag-orchestrator no pudo escribir en TMPDIR"
 bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
+# US-041 AC-3: el catálogo clínico se monta de solo lectura en ambos backends; escribir en CLINICAL_CATALOG_PATH falla con
+# EROFS (código 7). Cada intento lleva su plazo (5 s) para que un montaje colgado no cuelgue el smoke; la salida no nombra la ruta.
+en_node clinical-api "const t=setTimeout(()=>process.exit(3),5000);try{require('fs').writeFileSync(require('path').join(process.env.CLINICAL_CATALOG_PATH,'escritura-de-prueba'),'x');clearTimeout(t);process.exit(0)}catch(e){clearTimeout(t);process.exit(e.code==='EROFS'?7:1)}" >/dev/null 2>&1 \
+  && fallo "US-041 AC-3: clinical-api pudo escribir en el catálogo montado" || [ "$?" = "7" ] \
+  || fallo "US-041 AC-3: la escritura de clinical-api en el catálogo no falló por solo lectura (EROFS)"
+compose exec -T rag-orchestrator python -c "import errno,os,signal,sys; signal.alarm(5)
+try:
+    open(os.path.join(os.environ['CLINICAL_CATALOG_PATH'], 'escritura-de-prueba'), 'w')
+except OSError as e:
+    sys.exit(7 if e.errno == errno.EROFS else 1)
+sys.exit(0)" >/dev/null 2>&1 \
+  && fallo "US-041 AC-3: rag-orchestrator pudo escribir en el catálogo montado" || [ "$?" = "7" ] \
+  || fallo "US-041 AC-3: la escritura de rag-orchestrator en el catálogo no falló por solo lectura (EROFS)"
+bien "US-041 AC-3 el catálogo clínico es de solo lectura en clinical-api y rag-orchestrator"
+
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".
 # US-054: /rag/query exige el JWT de servicio ES256. Se firma DENTRO del contenedor clinical-api con el código
 # compilado real (clave y TTL de su configuración, reloj del sistema, transporte createRagOrchestratorFetch):
