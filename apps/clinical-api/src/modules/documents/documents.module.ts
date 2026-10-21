@@ -32,10 +32,12 @@ export function componerModuloDeDocumentos(dependencias: DependenciasDelModulo):
     almacen: dependencias.almacen,
     reloj: dependencias.reloj,
     ids: dependencias.ids,
+    maxUploadMb: dependencias.config.maxUploadMb,
   });
   return documentsController({
     service,
     traceIds: dependencias.traceIds,
     registrar: dependencias.registrar,
+    maxUploadMb: dependencias.config.maxUploadMb,
   });
 }

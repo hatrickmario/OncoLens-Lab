@@ -53,7 +53,12 @@ export function crearAlmacenMinio(config: ConfiguracionDelAlmacen): AlmacenMinio
     async guardar(clave, contenido) {
       try {
         await cliente.send(
-          new PutObjectCommand({ Bucket, Key: clave, Body: contenido, ContentType: TIPO_DE_CONTENIDO }),
+          new PutObjectCommand({
+            Bucket,
+            Key: clave,
+            Body: contenido,
+            ContentType: TIPO_DE_CONTENIDO,
+          }),
         );
       } catch {
         throw new AlmacenNoDisponible();

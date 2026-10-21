@@ -6,3 +6,10 @@ export class ArchivoNoPdf extends Error {
     this.name = 'ArchivoNoPdf';
   }
 }
+
+export class ArchivoDemasiadoGrande extends Error {
+  constructor() {
+    super('El archivo supera el tamaño máximo');
+    this.name = 'ArchivoDemasiadoGrande';
+  }
+}

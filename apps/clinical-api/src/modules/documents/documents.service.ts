@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { DocumentsRepository } from './documents.repository.js';
-import { ArchivoNoPdf } from './documents.errores.js';
-import { claveDeObjeto, esPdfPorMagicBytes } from './documents.reglas.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
+import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
 
 export type TipoDeDocumento = 'historia_clinica' | 'examen';
@@ -34,6 +34,8 @@ export interface DependenciasDelService {
   almacen: AlmacenDeDocumentos;
   reloj: Clock;
   ids: GeneradorDeIds;
+  /** `MAX_UPLOAD_MB` (RN-22). */
+  maxUploadMb: number;
 }
 
 const TIPO_MIME_DEL_PDF = 'application/pdf';
@@ -42,9 +44,11 @@ const sha256 = (contenido: Buffer): string => createHash('sha256').update(conten
 
 /** Carga de un documento: guarda el binario y deja la fila encolada (`pendiente`) para la extracción (US-078). */
 export function crearDocumentsService(dependencias: DependenciasDelService): DocumentsService {
-  const { repo, almacen, reloj, ids } = dependencias;
+  const { repo, almacen, reloj, ids, maxUploadMb } = dependencias;
   return {
     async cargar(solicitud) {
+      if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
+        throw new ArchivoDemasiadoGrande();
       if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
       const id = ids();
       const clave = claveDeObjeto(solicitud.patientId, id);

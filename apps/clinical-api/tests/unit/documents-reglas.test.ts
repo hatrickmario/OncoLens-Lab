@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { claveDeObjeto, esPdfPorMagicBytes } from '../../src/modules/documents/documents.reglas.js';
+import {
+  bytesMaximosDeCarga,
+  claveDeObjeto,
+  esPdfPorMagicBytes,
+  superaTamanoMaximo,
+} from '../../src/modules/documents/documents.reglas.js';
 
 const PACIENTE = '00000000-0000-4000-8000-0000000000a1';
 const DOCUMENTO = '3f1b8c52-7a4e-4d0b-9c1e-2a6f5d8e7b10';
@@ -35,5 +40,32 @@ describe('esPdfPorMagicBytes', () => {
 
   it('es falso cuando el contenido es un contenedor ZIP (docx) aunque se llame .pdf', () => {
     expect(esPdfPorMagicBytes(Buffer.from('PK\x03\x04SINT', 'latin1'))).toBe(false);
+  });
+});
+
+describe('superaTamanoMaximo', () => {
+  const UN_MIB = 1024 * 1024;
+
+  it('es falso cuando el archivo mide justo el máximo configurado', () => {
+    expect(superaTamanoMaximo(20 * UN_MIB, 20)).toBe(false);
+  });
+
+  it('es verdadero cuando el archivo mide un byte más que el máximo configurado', () => {
+    expect(superaTamanoMaximo(20 * UN_MIB + 1, 20)).toBe(true);
+  });
+
+  it('es falso cuando el archivo está vacío', () => {
+    expect(superaTamanoMaximo(0, 20)).toBe(false);
+  });
+
+  it('respeta un máximo distinto cuando la configuración cambia', () => {
+    expect(superaTamanoMaximo(2 * UN_MIB + 1, 2)).toBe(true);
+    expect(superaTamanoMaximo(2 * UN_MIB, 2)).toBe(false);
+  });
+});
+
+describe('bytesMaximosDeCarga', () => {
+  it('convierte los MiB configurados a bytes', () => {
+    expect(bytesMaximosDeCarga(20)).toBe(20_971_520);
   });
 });

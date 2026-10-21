@@ -95,7 +95,10 @@ export function entornoSimulado(): EntornoSimulado {
       objetos.delete(claveDe(request.url));
       return new HttpResponse(null, { status: 204 });
     }),
-    http.head(`${ENDPOINT_DEL_ALMACEN}/${BUCKET_DE_TEST}`, () => new HttpResponse(null, { status: 200 })),
+    http.head(
+      `${ENDPOINT_DEL_ALMACEN}/${BUCKET_DE_TEST}`,
+      () => new HttpResponse(null, { status: 200 }),
+    ),
   );
   return {
     objetos: () => objetos,
@@ -198,8 +201,16 @@ export async function iniciarEscenarioDeDocumentos(
   const entorno = entornoSimulado();
   entorno.iniciar();
   const mundo = await prepararMundoConSeed(etiqueta, espacio);
-  const cookieDoctor = await abrirSesion(mundo, 'doc1@test.local', `SINT-cookie-doctor-${etiqueta}-0001`);
-  const cookieAdmin = await abrirSesion(mundo, 'admin@test.local', `SINT-cookie-admin-${etiqueta}-0001`);
+  const cookieDoctor = await abrirSesion(
+    mundo,
+    'doc1@test.local',
+    `SINT-cookie-doctor-${etiqueta}-0001`,
+  );
+  const cookieAdmin = await abrirSesion(
+    mundo,
+    'admin@test.local',
+    `SINT-cookie-admin-${etiqueta}-0001`,
+  );
   const { rows } = await mundo.cliente.query<{ id: string }>(
     `SELECT id FROM auth."user" WHERE email = 'doc1@test.local'`,
   );

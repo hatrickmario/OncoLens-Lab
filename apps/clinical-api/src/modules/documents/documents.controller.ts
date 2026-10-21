@@ -4,7 +4,8 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { ArchivoNoPdf } from './documents.errores.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
+import { bytesMaximosDeCarga } from './documents.reglas.js';
 import { leerCargaMultipart } from './documents.multipart.js';
 import type { DocumentsService, TipoDeDocumento } from './documents.service.js';
 
@@ -12,6 +13,8 @@ export interface DependenciasDelController {
   service: DocumentsService;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
+  /** `MAX_UPLOAD_MB` (RN-22). */
+  maxUploadMb: number;
 }
 
 const EVENTO = 'documents.carga';
@@ -27,6 +30,13 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof ArchivoNoPdf) {
     return { status: 422, codigo: 'ARCHIVO_NO_PDF', resultado: 'archivo_no_pdf' };
   }
+  if (error instanceof ArchivoDemasiadoGrande) {
+    return {
+      status: 422,
+      codigo: 'ARCHIVO_DEMASIADO_GRANDE',
+      resultado: 'archivo_demasiado_grande',
+    };
+  }
   return undefined;
 }
 
@@ -36,7 +46,9 @@ function rechazoDe(error: unknown): Rechazo | undefined {
  * nombre del archivo, su contenido ni la clave del objeto (RN-10).
  */
 export function documentsController(dependencias: DependenciasDelController): Router {
-  const { service, traceIds, registrar } = dependencias;
+  const { service, traceIds, registrar, maxUploadMb } = dependencias;
+  // Un byte más que el máximo permite distinguir "mide justo el máximo" de "lo excede" sin leer el resto.
+  const limiteDeLectura = bytesMaximosDeCarga(maxUploadMb) + 1;
   const router = Router();
 
   const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
@@ -44,7 +56,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
   const cargar: RequestHandler = async (request, response) => {
     const sesion = request.sesion;
     const patientId = String(request.params['patientId']);
-    const carga = await leerCargaMultipart(request);
+    const carga = await leerCargaMultipart(request, limiteDeLectura);
     if (sesion === undefined || carga.archivo === undefined) {
       enviarError(response, 422, 'CUERPO_INVALIDO', traceIdDe(response));
       return;
@@ -68,7 +80,12 @@ export function documentsController(dependencias: DependenciasDelController): Ro
     } catch (error) {
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;
-      registrar({ event: EVENTO, resultado: rechazo.resultado, traceId: traceIdDe(response), patientId });
+      registrar({
+        event: EVENTO,
+        resultado: rechazo.resultado,
+        traceId: traceIdDe(response),
+        patientId,
+      });
       enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
     }
   };

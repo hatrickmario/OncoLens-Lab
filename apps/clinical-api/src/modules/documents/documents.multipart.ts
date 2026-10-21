@@ -22,13 +22,21 @@ export class MultipartIlegible extends Error {
 
 /**
  * Lee el `multipart/form-data` de la carga en memoria: un archivo (`file`) y el campo `documentType`. Ignora cualquier
- * otro campo o archivo.
+ * otro campo o archivo. El archivo se corta en `limiteDelArchivoEnBytes`: nunca se guarda más que eso en memoria; el
+ * resto del cuerpo se descarta al leerlo.
  */
-export function leerCargaMultipart(request: IncomingMessage): Promise<CargaRecibida> {
+export function leerCargaMultipart(
+  request: IncomingMessage,
+  limiteDelArchivoEnBytes: number,
+): Promise<CargaRecibida> {
   return new Promise((resolve, reject) => {
     let lector: busboy.Busboy;
     try {
-      lector = busboy({ headers: request.headers, defParamCharset: 'utf8', limits: { files: 1 } });
+      lector = busboy({
+        headers: request.headers,
+        defParamCharset: 'utf8',
+        limits: { files: 1, fileSize: limiteDelArchivoEnBytes },
+      });
     } catch {
       reject(new MultipartIlegible());
       return;

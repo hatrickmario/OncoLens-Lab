@@ -1,3 +1,4 @@
+import { readDocumentosConfig, type DocumentosConfig } from './documentos.js';
 import {
   ConfiguracionInvalidaError,
   exigirAppEnv,
@@ -24,6 +25,7 @@ import {
  * solo la raíz de composición (`server.ts`) le pasa el entorno.
  */
 export * from './secciones.js';
+export * from './documentos.js';
 
 /** Inactividad máxima de la sesión (RN-22). Lo aplica el guard de L1D-198; aquí solo se valida. */
 export interface SesionConfig {
@@ -113,13 +115,14 @@ export function cargarConfiguracion(env: NodeJS.ProcessEnv): ConfiguracionDeArra
   };
 }
 
-/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII). */
+/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII, almacén de documentos). */
 export interface ConfiguracionDeServicios {
   appEnv: string;
   database: DatabaseConfig;
   jwt: ServiceJwtConfig;
   analisis: EvidenceAnalysisConfig;
   deidentificacion: DeidentificationConfig;
+  documentos: DocumentosConfig;
 }
 
 export function cargarConfiguracionDeServicios(
@@ -132,6 +135,7 @@ export function cargarConfiguracionDeServicios(
     jwt: readServiceJwtConfig(env),
     analisis: readEvidenceAnalysisConfig(env),
     deidentificacion: readDeidentificationConfig(env),
+    documentos: readDocumentosConfig(env, readFile),
   };
 }
 
