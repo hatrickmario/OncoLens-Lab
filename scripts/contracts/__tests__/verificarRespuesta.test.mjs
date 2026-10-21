@@ -48,6 +48,14 @@ describe('verificarRespuesta', () => {
     expect(mensaje).not.toContain(VALOR_SENTINELA);
   });
 
+  it('no imprime el nombre de una propiedad no declarada que no parece un identificador de campo [US-214 AC-2] [RN-10]', () => {
+    const intruso = 'dato con espacios y 1234567';
+    const mensaje = mensajeDe(respuestaDeAnalisis({ cuerpo: { ...ejemplo('con-evidencia-s1.json'), [intruso]: 1 } }));
+
+    expect(mensaje).toContain('{propiedad no declarada}');
+    expect(mensaje).not.toContain(intruso);
+  });
+
   it('nombra la ruta JSON anidada sin el valor cuando un campo requerido falta [US-214 AC-2]', () => {
     const { status, ...sinStatus } = ejemplo('con-evidencia-s1.json');
     expect(status).toBeDefined();

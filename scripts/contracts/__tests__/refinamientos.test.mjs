@@ -66,6 +66,15 @@ describe('Zod refinado generado (US-214 AC-6)', () => {
     expect(campos(resultado)).toContain('evidenceOptions.0.citedSources.0.campoNoEvaluado');
   });
 
+  it('no pone en la ruta de la incidencia el nombre de una propiedad que no parece un identificador de campo [RN-10]', () => {
+    const analisis = leer('con-evidencia-s1.json');
+    analisis.evidenceOptions[0].citedSources[0]['dato con espacios'] = 'x';
+
+    const resultado = refinadoClinical.zEvidenceAnalysisRefinado.safeParse(analisis);
+
+    expect(campos(resultado)).toContain('evidenceOptions.0.citedSources.0.{propiedad no evaluada}');
+  });
+
   it('rechaza una propiedad no evaluada en un FollowUpCitedSource y acepta isNewSource [US-214 AC-6]', () => {
     const turno = leer('follow-up-turn.json');
     expect(refinadoClinical.zFollowUpTurnRefinado.safeParse(turno).success).toBe(true);
@@ -132,6 +141,12 @@ describe('generarRefinamientos falla cerrado (US-214 AC-6)', () => {
     const parche = [{ op: 'add', path: '/components/schemas/Envoltorio', value: { oneOf: [{ $ref: '#/components/schemas/EvidenceOption' }, { type: 'null' }] } }];
 
     await expect(generar('clinical-api', parche)).rejects.toThrow(/Envoltorio.*oneOf cuyas alternativas llevan refinamientos/);
+  });
+
+  it('falla cuando un schema declara unevaluatedProperties distinto de false, aunque no lleve otro refinamiento [US-214 AC-6]', async () => {
+    const parche = [{ op: 'add', path: '/components/schemas/Abierto', value: { type: 'object', unevaluatedProperties: true } }];
+
+    await expect(generar('clinical-api', parche)).rejects.toThrow(/Abierto.*unevaluatedProperties distinto de false/);
   });
 
   it('falla cuando additionalProperties apunta a un schema con refinamientos [US-214 AC-6]', async () => {
