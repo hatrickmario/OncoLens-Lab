@@ -7,7 +7,7 @@ export function Input({ className, ...props }: ComponentProps<'input'>) {
     <input
       data-slot="input"
       className={cn(
-        'rounded-control border-control-border bg-surface text-text min-h-11 w-full border px-3 py-2',
+        'rounded-control border-control-border bg-surface text-text box-border min-h-11 w-full border px-3 py-2',
         'aria-invalid:border-error disabled:cursor-not-allowed disabled:opacity-75',
         className,
       )}

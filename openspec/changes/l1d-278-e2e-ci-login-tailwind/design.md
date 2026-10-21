@@ -39,6 +39,15 @@ autoalojado (no hay `.woff2` en el repo) y la CSP prohíbe Google Fonts en runti
 autoalojada (`next/font/local`, OFL) queda para otra historia y solo cambia el token. Escala de 4 px, radios 6/8/10, foco visible `outline 3px primary offset 2px`.
 shadcn/ui por copia (`components/ui/`, Atomic Design: átomos), sin su CLI en runtime.
 
+**Desviación (visual-check, aceptada por sprint-S2, 2026-10-21):** `globals.css` importa solo
+`tailwindcss/theme.css` y `tailwindcss/utilities.css` (sin preflight) en lugar de `@import "tailwindcss"`:
+el preflight quitaba tamaño y peso a h1-h3, listas, `dl`, `button` y `summary` de la pantalla de análisis
+(aún en CSS Modules). Los átomos de `components/ui/` declaran `box-border`. Se adopta el preflight
+completo cuando se migre el resto de pantallas del S2; hasta entonces las pantallas en CSS Modules
+conservan sus estilos. La dependencia `@radix-ui/react-slot` no se instala (sin uso, YAGNI) y
+`@radix-ui/react-label` queda en 2.1.15 (versiones posteriores con menos de 14 días de antigüedad).
+Componentes propios: `Button` con variantes `primario`/`secundario`/`fantasma`; `Card` con `elevada`.
+
 ### D4. Migración sin cambio de comportamiento
 Se conservan textos (`lib/mensajes`), `id`/`aria-labelledby`, `role="alert"` del error, nombres
 accesibles y el `<form>`; por eso `tests/ui/login-*.test.tsx` y los E2E de login no cambian sus

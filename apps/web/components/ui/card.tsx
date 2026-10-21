@@ -11,7 +11,7 @@ export function Card({
     <div
       data-slot="card"
       className={cn(
-        'bg-surface p-6',
+        'bg-surface box-border p-6',
         // tailwind-merge no conoce los radios propios: se elige uno solo, no se pisan entre sí.
         elevada ? 'rounded-dialogo shadow-dialogo' : 'rounded-tarjeta',
         className,

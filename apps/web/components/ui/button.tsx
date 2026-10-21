@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { cn } from '../../lib/utils';
 
 const variantes = cva(
-  'inline-flex min-h-11 cursor-pointer items-center justify-center rounded-control px-4 font-semibold disabled:cursor-progress disabled:opacity-75',
+  'box-border inline-flex min-h-11 cursor-pointer items-center justify-center rounded-control px-4 font-semibold disabled:cursor-progress disabled:opacity-75',
   {
     variants: {
       variante: {
