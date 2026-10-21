@@ -10,8 +10,8 @@ de diseño del Pre-S1 (`docs/ux/sistema-de-diseno.md`) y el prototipo `docs/ux/p
 
 ## Decisiones
 
-**D1 · `pendingReviewCount` cuenta solo `requiere_revision`.** Propuesto en el refinamiento del S2 (P-4,
-pendiente de confirmación) (`S2-refinamiento.md` §3.3): el contador suma las filas del paciente con
+**D1 · `pendingReviewCount` cuenta solo `requiere_revision`.** Decidido en el refinamiento del S2 (P-4,
+decidido por el usuario el 2026-10-21) (`S2-refinamiento.md` §3.3): el contador suma las filas del paciente con
 `review_status = requiere_revision` en las entidades clínicas con ese eje (`diagnosis`,
 `diagnosis_grading`, `biomarker`, `prior_treatment`, `clinical_event`, `clinical_attribute`,
 `clinical_note`). `auto_aceptado` **no** cuenta: se muestra como "Sin verificar" en el dato (aviso aparte,
@@ -20,8 +20,7 @@ contador con datos que no esperan acción). La regla vive en un método con nomb
 `contarPendientesDeRevision()`, en el repository (consulta) y su lista de estados en una constante del
 dominio `ESTADOS_PENDIENTES_DE_REVISION = ['requiere_revision']`.
 
-**D2 · Histología y gradación en la ficha.** Propuesto en el refinamiento del S2 (P-4, pendiente de
-confirmación), resuelto sin cambio de contrato: `Diagnosis` ya trae `histology`, `histologyCode`, `grade` y
+**D2 · Histología y gradación en la ficha.** Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21), resuelto sin cambio de contrato: `Diagnosis` ya trae `histology`, `histologyCode`, `grade` y
 `gradings[]`, así que la ficha los muestra (S2-04, filas "Histología" y "Gradación"; en próstata, Gleason/ISUP
 con espécimen y alcance, DEC-05). Cierra el `Pendiente de definir` de US-051 sobre `PatientSummary.diagnosis`.
 
@@ -132,5 +131,5 @@ ARR-02 resto (L1D-278); hasta entonces se registran como pendientes con ese ID.
 
 ## Pendiente de definir
 
-- D1 y D2: propuestos (P-4), pendientes de confirmación del usuario.
+- Nada. D1 decidido (`[S2 resp. 5]`); D2 resuelto por el contrato.
 - D8 resuelto en el Gate 1: `200 PatientAdminSummary` para el admin, como dicta el contrato.

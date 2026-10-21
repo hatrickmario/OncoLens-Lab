@@ -1,8 +1,8 @@
 # S2 · Plan de ejecución
 
 > `/sprint-start S2` · 2026-10-21 · Fuente: `backlog/sprints/S2-refinamiento.md` (PR #120, **sin mergear**: este plan está encadenado sobre esa rama). Milestone **Sprint 2** de OncoLens-1.
-> **Estado: pendiente de aprobación del usuario** (paso 6). Las propuestas marcadas *propuesto* en los changes esperan las respuestas P-1…P-6 y G-1…G-4 (§5).
-> Changes creados en el checkout de `sprint/S2-planning`; `openspec validate --changes --strict`: **36/36** (22 nuevos + 14 del S1 que pasan al S2).
+> **Estado: aprobado por el usuario (2026-10-21, `[S2 resp. 8]`).** Respuestas P-1…P-6 y G-1…G-4 registradas en `S2-refinamiento.md` §7 (`[S2 resp. 1…14]`) y aplicadas a los changes.
+> Changes creados en el checkout de `sprint/S2-planning`; `openspec validate --changes --strict`: **37/37** (23 nuevos + 14 del S1 que pasan al S2).
 
 ## 1. Historias y changes
 
@@ -34,9 +34,9 @@
 | L1D-279 | ARR-03 | sin change (reporte sobre los changes de 180, 275, 115, 193) | ai-services | O6 | 072b | — | 3 |
 | L1D-282 | ARR-06 | sin change (conciliación y archivo de los 14 changes del S1) | — | O6 | 277, 278 | — | 3 |
 | L1D-234 | US-017 · DEC-07 | sin change (decisión al cierre) | — | cierre | 236 | — | 1 |
-| L1D-263 | US-213a | *sin change hasta P-1* | clinical-platform | O6 | P-1 | — | 5 |
+| L1D-263 | US-213a | `l1d-263-calidad-capas-umbrales` (AC-1…AC-7) | clinical-platform | O6 | — | — | 5 |
 
-**Total: 99 pts** pendientes (+24 ya Done del arrastre). Quedan fuera, pendientes de P-1: US-078 y US-079 (→ S3), US-213b (→ S3), DEC-06, DEC-08, DEC-09 y ARR-05 (→ S4).
+**Total: 99 pts** pendientes (+24 ya Done del arrastre). Fuera del S2 (`[S2 resp. 1]`): US-078 y US-079 (→ S3), US-213b (→ S3), DEC-06, DEC-08, DEC-09 y ARR-05 (→ S4).
 
 ## 2. Grafo
 
@@ -84,6 +84,8 @@ Veredicto global: PASS (tras la vuelta 2 acotada)
 - **Contratos:** el admin recibe `200 PatientAdminSummary` en `getPatient` como dicta el contrato (72, 199); UUID inválido → `404` (72); `500 ErrorInterno` declarado en las tres operaciones de pacientes (202); deltas MODIFIED del *health* (167, 171) y un único `health-ok.json`; evento único `configuracion_invalida` con `valorInvalido` para enums no sensibles; versiones explícitas en serie (167 1.6.0/1.4.0 → 171 1.7.0/1.5.0 → 56 1.8.0 → 202 1.9.0).
 - **Lenguaje:** los faltantes no calculados ya no se muestran como «0» (supuesto declarado «Los faltantes críticos aún no se calculan en esta versión», 186/187); Base de `tipo_no_habilitado` definida (173: «No se consultó el corpus: tipo fuera de alcance»); aviso agregado «[n] datos sin verificar · no bloquean el análisis» (72); métrica de prescriptivas sobre la salida cruda y la mostrada (235).
 
+**Change añadido tras el Gate 1 (2026-10-21):** `l1d-263-calidad-capas-umbrales` (US-213a). Es configuración de CI: no toca datos, contratos ni texto visible, así que no se relanzaron los guardianes del Gate 1. Lo cubre su Gate 2, con `privacy-guardian` por tocar `scripts/` y `ci.yml`.
+
 **Abiertos menores (no bloquean):** `CORPUS_CUTOFF_DATE` se valida en 167 solo si 167 se implementa antes que 173 (lo garantiza el orden); 72 depende de que 202 mergee antes.
 
 ## 4. Notas para el orquestador
@@ -92,6 +94,7 @@ Veredicto global: PASS (tras la vuelta 2 acotada)
 - `main` tiene 4 avisos `high` en dependencias de desarrollo (`@next/eslint-plugin-next` → `braces`): 267 decide actualizar o registrar excepción con caducidad.
 - Reglas de eficiencia vigentes: 1 Gate 2 + 1 re-gate acotado; bloquea solo un invariante del MVP; guardianes por ruta; deuda menor al Markdown.
 
-## 5. Preguntas abiertas (con dueño: usuario)
+## 5. Preguntas abiertas
 
-Ver el resumen de la sesión: **P-1…P-6** del refinamiento y **G-1…G-4** del Gate 1. Aprobación del paso 6 (orden, paralelismo, merges por oleada): *pendiente*.
+Ninguna. Todas resueltas el 2026-10-21 (`S2-refinamiento.md` §7). Aprobación del paso 6: **sí** (`[S2 resp. 8]`).
+Siguen requiriendo mensaje expreso del usuario: las claves de `.env.example` de §4.

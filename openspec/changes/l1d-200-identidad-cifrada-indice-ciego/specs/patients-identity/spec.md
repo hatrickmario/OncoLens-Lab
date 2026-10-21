@@ -6,23 +6,23 @@
 #### Scenario: El SQL crudo no ve el documento ni el nombre y el servicio los descifra [US-046 AC-1] [NFR-09] [RN-10] [ADR-6] [OL-01]
 - **GIVEN** FX-T4a-a guardado con `IdentityService`
 - **WHEN** un test lee `identity.patient_identity` con SQL crudo
-- **THEN** `national_id_ciphertext` y `full_name_ciphertext` no contienen `52123456` ni `Rondón` (ni en UTF-8 ni en hex) y `key_version = 1`
-- **AND** `IdentityService.descifrar` devuelve `52123456` y "Lucía Fernanda Rondón Peña"
+- **THEN** `national_id_ciphertext` y `full_name_ciphertext` no contienen `1234567` ni `Rondón` (ni en UTF-8 ni en hex) y `key_version = 1`
+- **AND** `IdentityService.descifrar` devuelve `1234567` y "Lucía Fernanda Rondón Peña"
 
 ### Requirement: Índice ciego HMAC-SHA256 del documento
 El índice ciego MUST ser `HMAC-SHA256` con una clave distinta de la de cifrado sobre `id_type` y el número normalizado (sin separadores); `issuing_country` MUST NOT entrar en el HMAC (la búsqueda no lo recibe) y sigue en su columna y en la restricción única. SHALL ser determinista para la misma entrada y distinto para números distintos.
 
 #### Scenario: Mismo documento, mismo índice; otro número, otro índice [US-046 AC-2] [ADR-6] [FR-02]
-- **GIVEN** dos cálculos del índice para `cedula_ciudadania` + `52123456` y uno para `cedula_ciudadania` + `52123457`
+- **GIVEN** dos cálculos del índice para `cedula_ciudadania` + `1234567` y uno para `cedula_ciudadania` + `123456`
 - **WHEN** se comparan
-- **THEN** los dos primeros son iguales, el tercero es distinto y ninguno contiene `52123456` ni `52123457`
+- **THEN** los dos primeros son iguales, el tercero es distinto y ninguno contiene `1234567` ni `123456`
 
 #### Scenario: Los separadores no cambian el índice [US-046 AC-2] (asumido)
-- **WHEN** se calcula el índice de `cedula_ciudadania` + `52.123.456` y de `cedula_ciudadania` + `52123456`
+- **WHEN** se calcula el índice de `cedula_ciudadania` + `1.234.567` y de `cedula_ciudadania` + `1234567`
 - **THEN** ambos índices son iguales
 
 #### Scenario: El país emisor no cambia el índice [US-046 AC-2] [FR-02] (Gate 1)
-- **WHEN** se calcula el índice de `cedula_ciudadania` + `52123456` con `issuing_country = CO` y con `issuing_country` nulo
+- **WHEN** se calcula el índice de `cedula_ciudadania` + `1234567` con `issuing_country = CO` y con `issuing_country` nulo
 - **THEN** ambos índices son iguales
 
 ### Requirement: Error de integridad sin datos del paciente
@@ -31,7 +31,7 @@ Un texto cifrado alterado o con versión de clave desconocida MUST producir el e
 #### Scenario: Un byte alterado da 500 genérico y un log sin texto cifrado ni descifrado [US-046 AC-3] (asumido)
 - **GIVEN** FX-T4a-a guardado y su `national_id_ciphertext` alterado en un byte con SQL crudo
 - **WHEN** una operación de `clinical-api` descifra esa identidad
-- **THEN** la respuesta es `500` con el cuerpo de `ErrorInterno` (`{ error, message, traceId }`), validado contra el spec, sin `52123456`, `Lucía` ni `Rondón`
+- **THEN** la respuesta es `500` con el cuerpo de `ErrorInterno` (`{ error, message, traceId }`), validado contra el spec, sin `1234567`, `Lucía` ni `Rondón`
 - **AND** el log contiene `IDENTITY_INTEGRITY_ERROR` y no contiene bytes del cifrado ni el texto descifrado
 
 ### Requirement: La identidad nunca sale de clinical-api
@@ -39,7 +39,7 @@ El documento y el nombre del paciente MUST NOT aparecer en los *logs* de `web`, 
 
 #### Scenario: Registrar y analizar no filtran la identidad [US-046 AC-4] [RN-10] [NFR-11] [AC-T4.2]
 - **GIVEN** FX-T4a-a registrado con `IdentityService` y un análisis ejecutado sobre él con `rag-orchestrator` simulado por MSW que captura el payload
-- **WHEN** el test busca `52123456`, `Lucía`, `Rondón`, la forma normalizada "lucia fernanda rondon pena" y los valores de `national_id_hmac` (y `full_name_hmac` cuando exista) de la fila en los logs de los tres servicios, en todas las columnas de texto y `jsonb` de `audit.*`, `research.*` y `clinical.ai_analysis_record`, y en el payload capturado
+- **WHEN** el test busca `1234567`, `Lucía`, `Rondón`, la forma normalizada "lucia fernanda rondon pena" y los valores de `national_id_hmac` (y `full_name_hmac` cuando exista) de la fila en los logs de los tres servicios, en todas las columnas de texto y `jsonb` de `audit.*`, `research.*` y `clinical.ai_analysis_record`, y en el payload capturado
 - **THEN** no aparece ninguno
 - **AND** los pasos "consultar la ficha" (`l1d-72-ficha-minima-paciente`) y "buscarlo por documento" (`l1d-202-listado-busqueda-pacientes`) se añaden a este mismo test (`Regresión [RN-10] → US-046`)
 

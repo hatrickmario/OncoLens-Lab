@@ -10,13 +10,13 @@ memoria para buscar; P-4 lo sustituye.
 
 ## Decisiones
 
-### D1 · Búsqueda por nombre — Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación)
+### D1 · Búsqueda por nombre — Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21)
 
 Decisión cara de revertir (esquema y privacidad):
 
 | Opción | A favor | En contra |
 |---|---|---|
-| **A · Exacta sobre el nombre completo normalizado por índice ciego HMAC** (propuesta) | Igual que el documento (ADR-6): ni el nombre ni fragmentos se guardan en claro; búsqueda por igualdad indexada; sin descifrar en lote | Un apellido suelto o un nombre incompleto no encuentra nada; añade la columna `full_name_hmac` |
+| **A · Exacta sobre el nombre completo normalizado por índice ciego HMAC** (decidida) | Igual que el documento (ADR-6): ni el nombre ni fragmentos se guardan en claro; búsqueda por igualdad indexada; sin descifrar en lote | Un apellido suelto o un nombre incompleto no encuentra nada; añade la columna `full_name_hmac` |
 | B · Parcial descifrando en memoria el conjunto paginable (contexto técnico original) | Encuentra "Rondón" | Descifra todas las identidades en cada búsqueda (contra RN-10 y el mínimo privilegio); coste lineal; difícil de auditar |
 | C · Parcial con n-gramas HMAC | Encuentra fragmentos sin descifrar | Los n-gramas filtran estructura del nombre (ataque de frecuencias); más columnas y tablas |
 
@@ -24,7 +24,7 @@ Decisión cara de revertir (esquema y privacidad):
 
 **Por qué A:** es la única que mantiene RN-10 y el índice ciego sin descifrar en lote; B, C y D
 debilitan la protección para una comodidad que el piloto (10 usuarios, búsqueda por documento
-disponible) no necesita. `privacy-guardian` la prefiere frente a D. Sigue **propuesta**: el AC-3 del
+disponible) no necesita. `privacy-guardian` la prefiere frente a D. Está **decidida** (`[S2 resp. 4]`): el AC-3 del
 backlog con `{ name: "Rondón" }` se actualiza tras la confirmación.
 
 Detalles de A:
@@ -46,7 +46,7 @@ Detalles de A:
   espacio ("Lucía Fernanda Rondón Peña" → "L. F. R. P."). `enmascararNombre()`.
 - `nationalIdMasked` (Gate 1): **longitud fija**, que no revela la del documento: cuatro `•`
   (U+2022), un espacio y los 2 últimos caracteres del número normalizado, para todo `id_type`:
-  "52123456" → "•••• 56", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
+  "1234567" → "•••• 56", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
   `dataOrigin`). Cambia `contracts/examples/patient-summary-admin.json` ("SINT-*****01" →
   "•••• 01"). `enmascararDocumento()`.
 - Ambas se calculan en `clinical-api` tras descifrar en memoria solo las filas de la página; nunca se
@@ -175,6 +175,5 @@ cuando exista el job de E2E (ARR-02 resto).
 
 ## Pendiente de definir
 
-- **P-4 (dueño: usuario · afecta: AC-3, migración, contrato):** confirmar D1. Hasta el sí, el AC-3
-  del backlog conserva su texto y este change no se implementa en su parte de nombre.
+- **P-4:** D1 decidido (usuario, 2026-10-21, `[S2 resp. 4]`); el AC-3 del backlog ya está corregido (nombre completo encuentra, apellido suelto no).
 - **Formato de máscaras (D2):** lo fija esta historia; se somete al Gate 1.

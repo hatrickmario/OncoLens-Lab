@@ -17,7 +17,7 @@ entrada del recorrido de la demo del S2 (login → listado → ficha → anális
 - `clinical-api`: módulo `patients` (lectura) con `GET /platform/patients/{patientId}` → `PatientSummary`
   (vista `doctor`, permiso `clinical:read`): identidad descifrada solo en esta respuesta (vía
   `IdentityService` de L1D-200), diagnóstico con `is_active = true`, último valor por biomarcador con
-  `trend = null`, `pendingReviewCount` (solo `requiere_revision`, propuesto P-4), `missingCriticalCount = 0`
+  `trend = null`, `pendingReviewCount` (solo `requiere_revision`, decidido P-4, `[S2 resp. 5]`), `missingCriticalCount = 0`
   hasta el S3 y `cancerTypeEnabled` desde un puerto de tipos habilitados. `404` para un UUID inexistente
   o mal formado. El `admin` (sin `clinical:read`, con `patients:lookup`) recibe `200 PatientAdminSummary`
   (vista `default` del `x-view-by-permission`), nunca `403` ni datos clínicos.

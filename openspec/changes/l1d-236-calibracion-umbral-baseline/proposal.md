@@ -3,7 +3,7 @@
 ## Trazabilidad
 
 L1D-236 · US-073 · FEAT-T5a (L1D-46) · Sprint 2 · Estimación **3** (re-estimada desde `?`, **P-1
-pendiente**) · FR-20 · TBD-02, TBD-03, TBD-08 · OL-06 · M-06.1, M-06.2, M-07.2 · G-4, G-5 · RN-02,
+decidido, `[S2 resp. 1]`**) · FR-20 · TBD-02, TBD-03, TBD-08 · OL-06 · M-06.1, M-06.2, M-07.2 · G-4, G-5 · RN-02,
 RN-22 · US-073 AC-1…AC-4 · Fuente: `backlog/features/FEAT-T5a-baseline-evaluacion.md` §US-073;
 contexto: `backlog/sprints/S2-refinamiento.md` §2 (re-estimación: reusa `retrieval_metrics.py` y el
 modo `sin_evidencia` de ADR-39; se solapa con ARR-03 AC-5).

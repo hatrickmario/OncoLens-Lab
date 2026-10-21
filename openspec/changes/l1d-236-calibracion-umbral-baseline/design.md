@@ -4,7 +4,7 @@
 
 El runner de `l1d-235-suite-evaluate` ya calcula las métricas; ADR-39 dejó un modo `sin_evidencia`
 y `retrieval_metrics.py` con IC. ADR-45: metas de recuperación provisionales; la prueba congelada
-solo con `--prueba-final`. Re-estimación a 3 pts (P-1 pendiente).
+solo con `--prueba-final`. Re-estimación a 3 pts (P-1 decidido, `[S2 resp. 1]`).
 
 ## Goals / Non-Goals
 
@@ -50,4 +50,4 @@ recall@10, MRR, fidelidad, precisión de citas; p95 ≤ 15 s (G-5).
 
 ## Open Questions
 
-- P-1 (re-estimación a 3) pendiente del usuario.
+- P-1 (re-estimación a 3) decidido (`[S2 resp. 1]`).

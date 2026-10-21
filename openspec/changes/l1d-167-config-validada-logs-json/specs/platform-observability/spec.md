@@ -28,8 +28,8 @@ El logger de `clinical-api` MUST descartar los cuerpos de request y, a cualquier
 
 #### Scenario: Una request inválida con identidad sembrada no deja rastro en los logs [US-037 AC-5] [NFR-11] [RN-10] (asumido: adaptado a un endpoint existente en el S2)
 - **GIVEN** `doc1@test.local` autenticado y un logger capturado
-- **WHEN** envía `POST /platform/evidence-analyses` con `patientId = "no-es-uuid"` y una `question` que contiene el documento `52123456` y el nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a), y la respuesta es `422`
-- **THEN** ninguna línea de log contiene `52123456`, `Lucía`, `Rondón` ni el cuerpo de la request
+- **WHEN** envía `POST /platform/evidence-analyses` con `patientId = "no-es-uuid"` y una `question` que contiene el documento `1234567` y el nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a), y la respuesta es `422`
+- **THEN** ninguna línea de log contiene `1234567`, `Lucía`, `Rondón` ni el cuerpo de la request
 
 Regresión [RN-10, logs sin identidad] con la búsqueda por documento activa desde S2 (US-048) y con el alta de pacientes activa desde S4 (US-047).
 

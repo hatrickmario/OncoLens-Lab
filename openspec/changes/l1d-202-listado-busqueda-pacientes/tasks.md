@@ -1,6 +1,6 @@
 # Tasks — l1d-202-listado-busqueda-pacientes
 
-> La parte de nombre (2.5–2.7 y la columna `full_name_hmac`) no se implementa hasta que el usuario confirme P-4.
+> La parte de nombre (2.5–2.7 y la columna `full_name_hmac`) se implementa: P-4 confirmado (`[S2 resp. 4]`).
 
 ## 1. contratos
 

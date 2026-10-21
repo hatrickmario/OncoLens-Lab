@@ -10,12 +10,12 @@ El contrato ya incluye `status = tipo_no_habilitado` en `EvidenceAnalysis` (ejem
 
 ## Decisiones
 
-**D1 · Criterio de "listo" (DEC-19).** Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación): el
+**D1 · Criterio de "listo" (DEC-19).** Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21): el
 criterio de "listo" de RN-20 aplica como **prerrequisito de G-Piloto**, no de la demo sintética. Mama y próstata
 se habilitan desde el S2 con corpus semilla y catálogo `propuesta`. Este change no implementa el criterio; deja
 la regla de habilitación en configuración (RN-22).
 
-**D2 · Literal unificado.** Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación): el texto de UI es
+**D2 · Literal unificado.** Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21): el texto de UI es
 "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA" (contiene el literal de US-043 AC-3 y el de
 `flujo-e2e.md`). Vive en `apps/web/messages/es.json`, clave `alcance.tipoNoHabilitado`, consumida por la ficha,
 el listado (L1D-202) y el panel; la crea el primer change que mergee y este change es su dueño semántico.
@@ -51,8 +51,7 @@ llaman a Backend 2): (a) `patientDataUsed = []` (no se envió ningún dato); (d)
 (f) `corpusCutoffDate` desde `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`, RN-22), la clave que actualiza el script de carga
 del corpus (`load_seed_corpus`) al publicar una release; `limitations` con la estructural "El tipo de cáncer no está
 habilitado en este entorno." (como `tipo-no-habilitado.json`); `missingCriticalData`, `assumptions`,
-`priorAnalysesUsed`, `agentSteps` vacíos y `omittedClaims = 0`. **Propuesto en el Gate 1 del S2 (pendiente de
-confirmación del usuario)** el origen de (f) en `CORPUS_CUTOFF_DATE`. Ambas claves se validan en el módulo de
+`priorAnalysesUsed`, `agentSteps` vacíos y `omittedClaims = 0`. **Decidido (usuario, 2026-10-21, `[S2 resp. 10]`)** el origen de (f) en `CORPUS_CUTOFF_DATE`. Ambas claves se validan en el módulo de
 configuración de `l1d-167` (fecha inválida o ausente → `configuracion_invalida`).
 
 ## Privacidad y ownership
@@ -98,5 +97,4 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
 
 ## Pendiente de definir
 
-- D1 y D2: propuestos (P-4), pendientes de confirmación del usuario.
-- D7, origen de `corpusCutoffDate` en `CORPUS_CUTOFF_DATE`: Propuesto en el Gate 1 del S2 (pendiente de confirmación del usuario).
+- Nada. D1 y D2 decididos (`[S2 resp. 6]`); D7, `corpusCutoffDate` desde `CORPUS_CUTOFF_DATE` (`[S2 resp. 10]`).

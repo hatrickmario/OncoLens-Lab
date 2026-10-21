@@ -2,7 +2,7 @@
 
 > `/sprint-refine S2` · 2026-10-20 · Milestone **Sprint 2** del proyecto OncoLens-1 · Fuente: `backlog/features/` y `backlog/sprints/S2-arrastre.md` (Linear es el espejo).
 > **Demo del S2:** login → listado → ficha → análisis con Base del análisis; suite `evaluate` en la DoD de cada PR que cambia la IA; baseline técnico calibrado y umbral de regresión activo.
-> Respuestas citables como `[S2 resp. n]`. **Estado: propuestas de la sesión principal pendientes de confirmación del usuario** (preguntas P-1…P-6, §7). Lo marcado *propuesto* no se aplica al Markdown de las historias ni a Linear hasta el sí.
+> Respuestas citables como `[S2 resp. n]`. **Estado: decidido (usuario, 2026-10-21).** El usuario aceptó todas las recomendaciones salvo el fixture de identidad (resp. 11); respuestas en §7, ya aplicadas al Markdown de las historias, a los changes y a Linear.
 
 ## 1. Alcance cruzado (Linear ↔ Markdown)
 
@@ -126,7 +126,44 @@ Impacto: S3 85 → **96** (+US-078, US-079, US-213b). S4 79 → 82. **Nada sale 
 
 ## 7. Preguntas para el usuario
 
-Ver el informe de la sesión (P-1…P-6). Las respuestas se registran aquí como `[S2 resp. n]` y en cada historia como `Decidido (usuario, fecha)`.
+Respuestas del usuario (2026-10-21). En cada historia van como `Decidido (usuario, 2026-10-21)`.
+
+| Resp. | Pregunta | Decisión |
+|---|---|---|
+| 1 | P-1 · Ajuste del slicing | Aprobado tal cual §4: US-078 y US-079 → S3; US-213 = 8, partida en 213a (5, S2) y 213b (3, S3); US-072 partida 5 + 3 (S2); US-073 = 3; DEC-06, DEC-08, DEC-09 y ARR-05 → S4; el resto de ARR-02 vuelve a *In Progress* |
+| 2 | P-2 · ADR-40 | Encuadre §3.1: medir candidato 1 frente a 2 sobre `pii-mini` sintético y elegir el más simple que cumpla G-8 ≥ 0,95; GLiNER descartado; adapter `pii/` en el S3 |
+| 3 | P-3 · ADR-41 | Opción A: propio con Pytest; NLI juez principal, G juez secundario con su sesgo declarado; ragas y DeepEval descartados |
+| 4 | P-4a · Búsqueda por nombre (US-048 AC-3) | Exacta sobre el nombre completo normalizado (`full_name_hmac`); un apellido suelto no encuentra; AC-3 corregido |
+| 5 | P-4b · `pendingReviewCount` (US-051) | Solo `requiere_revision`; `auto_aceptado` como «sin verificar» aparte |
+| 6 | P-4c · DEC-19 y literal del tipo no habilitado (US-043) | El criterio de «listo» es prerrequisito de G-Piloto, no de la demo sintética; literal unificado de §6 |
+| 7 | P-5 · US-216 | Se queda en el S6, antes de G-Piloto |
+| 8 | P-6 · Plan (paso 6 de `/sprint-start`) | Aprobado: oleadas O1–O6, 3 historias en paralelo, merges por oleada |
+| 9 | G-1 · ERR de `oasdiff` en US-076 | Excepciones E-4 y E-5 en ADR-26, con su test |
+| 10 | G-2 · `corpusCutoffDate` sin consultar el corpus | Clave `CORPUS_CUTOFF_DATE`, actualizada por el script de carga del corpus |
+| 11 | G-3 · Documento de FX-T4a-a | **Excepción del usuario:** numérico, sin prefijo `SINT-`. FX-T4a-a = `1234567`; el número distinto del AC-2 de US-046 = `123456`; el parcial del AC-2 de US-048 = `12345`. Aplicado en `backlog/` y en los changes del S2; los tests del S1 los cambia `l1d-200` (tarea 2.10) |
+| 12 | G-4 · Versión con excepción E-n | Sube la versión **menor** (precedente E-1, E-3); se corrige el texto de ADR-26 en `l1d-56` |
+| 13 | ¿Separar mama y próstata en dos bases o instancias de Milvus? | **No** (ver nota 13) |
+| 14 | ¿Ampliar el corpus de mama y próstata en el S2, al doble o más? | **No en el S2.** Se mantiene en el **S4**, con una meta 4 veces mayor que hoy (ver nota 14) |
+
+**Nota 13 · Corpus por tipo de cáncer.**
+- **Ya está separado lógicamente desde el S1, con una sola colección.** `corpus_chunks` guarda el tipo de cáncer de cada fragmento (`cancer_type_tags`). Toda consulta filtra por el tipo del paciente y por `is_current` (`app/domain/retrieval_filter.py`, `expresion_vigente_del_tipo`). Una pregunta de mama nunca recupera fragmentos de próstata.
+- **Es lo que ya decidió el ADR #5** (readme §3.3). Allí se descartaron la colección por fuente y las particiones por prematuras.
+- **Dos instancias no caben en memoria.** Cada Milvus *standalone* trae su etcd y su MinIO, y cuesta 1–2 GB. Al stack de ADR-39 solo le quedan 0,71 GB.
+- **Dos colecciones tampoco ayudan.** Duplican el índice cargado y los documentos que valen para ambos tipos. A esta escala (decenas de documentos, miles de fragmentos), la búsqueda filtrada tarda milisegundos y la latencia la marca el LLM.
+- **La calidad depende de otras cosas:** la recuperación híbrida y el *reranker* (FEAT-06b, T5e) y el tamaño del corpus.
+- **Cuándo revisarlo:** con el corpus del S4 medido. Si un tipo rinde peor, la primera opción es una *partition key* escalar, que no consume memoria extra, y siempre mediante un ADR.
+
+**Nota 14 · Tamaño del corpus.**
+- **Hoy:** 10 documentos, 5 de mama y 5 de próstata, de NCI y PMC (`data/raw/seed/`).
+- **Plan del S4:**
+  - US-117: ingesta reanudable, *dense* + *sparse*, versionada y con licencia verificada.
+  - US-118: metadatos.
+  - US-120: **≥ 20 documentos por tipo, de ≥ 3 fuentes abiertas**. Son ≥ 40 documentos, 4 veces lo actual, lo que supera el «doble o más».
+- **Por qué no en el S2:**
+  - Sin la ingesta de US-117, crecer exige cargar a mano con el script semilla, sin reanudación ni versionado.
+  - El S2 construye la suite `evaluate` y calibra el baseline (US-072, US-073). Medir antes de ampliar permite mostrar el efecto del crecimiento en el S4.
+  - Ampliar ahora movería el baseline justo cuando se calibra.
+- **Alternativa no aplicada:** adelantar +10 documentos con el cargador semilla. Costaría ~3 pts, dejaría el S2 en ~102 y obligaría a recalibrar en el S4.
 
 ## 8. Revisión del diseño
 

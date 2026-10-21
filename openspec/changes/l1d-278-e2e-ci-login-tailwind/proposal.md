@@ -71,7 +71,7 @@ que el sistema de diseño del Pre-S1 fija y que las pantallas del S2 (S2-00…S2
 
 Migrar el resto de `apps/web` (panel de análisis, cabecera, aviso de IA siguen en CSS Modules; cada
 pantalla del S2 lo hace en su historia). Los textos nuevos de S2-01 (US-044). Cabeceras de seguridad
-y CSP con nonce (US-216, S6, `[S2 resp.]` P-5). Hacer el job de E2E requerido en este change.
+y CSP con nonce (US-216, S6, `[S2 resp. 7]`). Hacer el job de E2E requerido en este change.
 
 ## Impact
 

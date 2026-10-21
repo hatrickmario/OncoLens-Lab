@@ -14,7 +14,7 @@
 - **WHEN** se renderiza `/pacientes/[id]`
 - **THEN** el encabezado muestra el nombre completo y la etiqueta "SINTÉTICO" como texto, y `<title>` es "Paciente · OncoLens" sin datos de identidad
 
-#### Scenario: La ficha muestra histología y gradación del diagnóstico vigente [US-051 AC-1] [DEC-05] (asumido: propuesto en el refinamiento del S2, P-4)
+#### Scenario: La ficha muestra histología y gradación del diagnóstico vigente [US-051 AC-1] [DEC-05] (resuelto por el contrato)
 - **GIVEN** un `PatientSummary` cuyo `diagnosis` trae `histology`, `histologyCode`, `grade` y `gradings[]` (ejemplo `diagnosis-con-gradings.json`)
 - **WHEN** se renderiza la ficha
 - **THEN** las filas "Histología" y "Gradación" muestran esos valores y, por cada `gradings[]`, su sistema, valor, espécimen y alcance; un campo `null` se muestra como "No registrado"
@@ -72,16 +72,16 @@ Cada valor del diagnóstico y de los biomarcadores en la ficha MUST mostrar su o
 - **THEN** esa fila muestra "Registro manual" y "Por revisar" como texto, y el resto de filas no cambia
 
 ### Requirement: Contador de datos pendientes de revisión
-`pendingReviewCount` MUST contar las filas clínicas del paciente con `review_status = requiere_revision` y MUST NOT contar `auto_aceptado`, `verificado`, `corregido`, `rechazado` ni `reemplazado` (propuesto en el refinamiento del S2, P-4). Si es mayor que 0, la ficha SHALL mostrar el aviso informativo "[n] datos por revisar · no bloquean el análisis" y la acción "Analizar evidencia" sigue disponible (RN-26).
+`pendingReviewCount` MUST contar las filas clínicas del paciente con `review_status = requiere_revision` y MUST NOT contar `auto_aceptado`, `verificado`, `corregido`, `rechazado` ni `reemplazado` (decidido en el refinamiento del S2, P-4). Si es mayor que 0, la ficha SHALL mostrar el aviso informativo "[n] datos por revisar · no bloquean el análisis" y la acción "Analizar evidencia" sigue disponible (RN-26).
 
-#### Scenario: Con todo verificado el contador es 0 y sube a 1 con un biomarcador por revisar [US-051 AC-6] [FR-04] (asumido: propuesto en el refinamiento del S2, P-4)
+#### Scenario: Con todo verificado el contador es 0 y sube a 1 con un biomarcador por revisar [US-051 AC-6] [FR-04] [S2 resp. 5]
 - **GIVEN** el paciente semilla (a) con todos sus datos `verificado`
 - **WHEN** se solicita la ficha
 - **THEN** `pendingReviewCount = 0`
 - **AND WHEN** el test cambia un biomarcador del paciente a `requiere_revision` y vuelve a solicitarla
 - **THEN** `pendingReviewCount = 1`
 
-#### Scenario: Un dato auto_aceptado no cuenta como pendiente [US-051 AC-6] [RN-26] (asumido: propuesto en el refinamiento del S2, P-4)
+#### Scenario: Un dato auto_aceptado no cuenta como pendiente [US-051 AC-6] [RN-26] [S2 resp. 5]
 - **GIVEN** el paciente semilla (a) con un biomarcador cambiado a `auto_aceptado`
 - **WHEN** se solicita la ficha
 - **THEN** `pendingReviewCount = 0` y la fila de ese biomarcador muestra "Sin verificar" como texto
@@ -119,6 +119,6 @@ La página `/pacientes/[id]` y sus lecturas del BFF MUST usar `cache: 'no-store'
 #### Scenario: Consultar la ficha no filtra la identidad [US-046 AC-4] [RN-10] (Regresión → US-046)
 - **GIVEN** el arnés de no-fuga de L1D-200 con FX-T4a-a
 - **WHEN** se añade el paso "consultar la ficha"
-- **THEN** ni `52123456`, "Lucía", "Rondón", "lucia fernanda rondon pena" ni los valores de los índices ciegos aparecen en *logs*, `audit.*`, `research.*` ni URLs
+- **THEN** ni `1234567`, "Lucía", "Rondón", "lucia fernanda rondon pena" ni los valores de los índices ciegos aparecen en *logs*, `audit.*`, `research.*` ni URLs
 
 Regresión [FR-18, auditoría de la lectura de la ficha] activa desde S6 (US-102).

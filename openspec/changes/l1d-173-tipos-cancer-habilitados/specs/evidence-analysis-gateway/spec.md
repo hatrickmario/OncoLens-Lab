@@ -10,13 +10,13 @@ Si el tipo del `Diagnosis` activo del paciente no está en `ENABLED_CANCER_TYPES
 - **AND** el cliente de `rag-orchestrator` registra cero llamadas
 - **AND** existe un `AIAnalysisRecord` con ese `trace_id`, `status = tipo_no_habilitado` y `top_relevance_score` nulo
 
-#### Scenario: La Base de tipo_no_habilitado dice que no se consultó el corpus [US-043 AC-2] [FR-27] (asumido: Propuesto en el Gate 1 del S2, pendiente de confirmación del usuario, para corpusCutoffDate)
+#### Scenario: La Base de tipo_no_habilitado dice que no se consultó el corpus [US-043 AC-2] [FR-27] [S2 resp. 10]
 - **GIVEN** el contexto del escenario anterior, `CORPUS_EXCLUDED_SOURCES=NCCN,ESMO`, `CORPUS_CUTOFF_DATE=2026-09-30` y un request con `guias` y `publicaciones` seleccionadas
 - **WHEN** solicita un análisis
 - **THEN** `analysisBasis.patientDataUsed = []`, `sourcesConsulted.selected = ["guias","publicaciones"]`, `filters` igual al request, `retrieved = 0` y `aboveThreshold = 0`
 - **AND** `sourcesNotIncluded = ["NCCN","ESMO"]` y `corpusCutoffDate = 2026-09-30`, la respuesta valida contra `EvidenceAnalysis` y el `analysis_basis` persistido es igual
 
-#### Scenario: El panel muestra el aviso de alcance ante tipo_no_habilitado [US-043 AC-2] [RN-26] (asumido: literal unificado propuesto en el refinamiento del S2, P-4)
+#### Scenario: El panel muestra el aviso de alcance ante tipo_no_habilitado [US-043 AC-2] [RN-26] [S2 resp. 6]
 - **GIVEN** el panel de análisis con MSW respondiendo desde `contracts/examples/tipo-no-habilitado.json`
 - **WHEN** se muestra el resultado
 - **THEN** el panel muestra el aviso informativo "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA" y la Base del análisis, sin ninguna opción y sin estilo de error

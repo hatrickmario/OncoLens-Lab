@@ -5,8 +5,7 @@
 L1D-232 · US-014 · ADR-41 · FEAT-T5a (L1D-46) · Sprint 2 (desde S1, `[Pre-S1 resp. 9]`) ·
 Estimación **3** · Historia de ADR · FR-20, IA-10 · OL-06 · RN-12, RN-14, RN-22 · AC-T5.3,
 AC-T5.4 · US-014 AC-1…AC-5 · Fuente: `backlog/features/FEAT-T5a-baseline-evaluacion.md` §US-014;
-contexto: `backlog/sprints/S2-refinamiento.md` §3.2 (**P-3, pendiente de confirmación del
-usuario**); nota ADR-45 del usuario (2026-10-20): metas de recuperación provisionales hasta US-229.
+contexto: `backlog/sprints/S2-refinamiento.md` §3.2 (**P-3, decidido por el usuario el 2026-10-21**); nota ADR-45 del usuario (2026-10-20): metas de recuperación provisionales hasta US-229.
 
 ## Why
 
@@ -18,7 +17,7 @@ aceptada (LLM G), lo que desbloquea el juez local.
 ## What Changes
 
 - **Nuevo** `docs/architecture/adr/ADR-41-evaluacion-ia.md` (MADR) con el encuadre **propuesto**
-  (P-3, pendiente de confirmación):
+  (P-3, decidido por el usuario el 2026-10-21):
   - **Opción A elegida: framework propio con Pytest**, sobre la base existente en
     `apps/rag-orchestrator/app/evaluation/` (`retrieval_metrics.py`: recall@10, MRR con IC 95 %
     *bootstrap*; NLI; partición congelada `data/eval/ol06-particion-v1/` de ADR-45).

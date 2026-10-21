@@ -40,8 +40,7 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
   `BLIND_INDEX_HMAC_KEY_FILE` (test). Identidades sintéticas `SINT-000000n` y nombres "Prueba Sintética n", ya usados en
   `contracts/examples/patient-summary-doctor.json`. Idempotente: si la fila existe, no recifra.
 - **D6 · No-fuga (AC-4).** Arnés `buscarFugaDeIdentidad(valores, fuentes)` en
-  `tests/support/no-fuga.ts`. **Valores buscados:** documento en claro (`52123456` y, si se confirma
-  el fixture, `SINT-52123456` y su forma normalizada), "Lucía", "Rondón", la forma normalizada del
+  `tests/support/no-fuga.ts`. **Valores buscados:** documento en claro (`1234567` y su forma con puntos `1.234.567`), "Lucía", "Rondón", la forma normalizada del
   nombre ("lucia fernanda rondon pena") y los valores hex de `national_id_hmac` y `full_name_hmac`
   (este último cuando exista la columna, L1D-202) leídos de la fila. **Fuentes:** logs capturados de los tres servicios, todas las columnas `text`/`jsonb`
   de `audit.*`, `research.*` y `clinical.ai_analysis_record`, y el payload capturado por MSW hacia
@@ -79,8 +78,8 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
   `config.ts` (`IDENTITY_KEY_VERSION`, `IDENTITY_AES_KEY_V<n>_FILE`; claves listadas en el PR para
   `.env.example`).
 
-- **D7 · FX-T4a-a sintético (propuesto, pendiente de confirmación).** Documento `SINT-52123456` en
-  lugar de `52123456`; ver proposal. No cambia ningún mecanismo.
+- **D7 · FX-T4a-a sintético. Decidido (usuario, 2026-10-21, `[S2 resp. 11]`):** el documento es numérico, `1234567`
+  (FX-T4a-a), y `123456` el número distinto del AC-2; sin prefijo `SINT-`. No cambia ningún mecanismo.
 
 ## Tests
 

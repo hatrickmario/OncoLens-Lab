@@ -123,13 +123,14 @@ components:
 - **Compatibilidad (ADR-26):** `oasdiff` da **2 ERR `response-property-enum-value-added`** en el `422` de
   `uploadDocument` (valores `ARCHIVO_NO_PDF` y `ARCHIVO_DEMASIADO_GRANDE` en `error`). Retirar `413`/`415` (pendientes
   con `x-pending-owner`) y añadir `503` son solo **INFO**: no bloquean. El problema son los enums.
-  - **Propuesto (pendiente de confirmación del usuario):** excepciones **E-4** y **E-5** de ADR-26, una por valor,
+  - **Decidido (usuario, 2026-10-21, `[S2 resp. 9]`):** excepciones **E-4** y **E-5** de ADR-26, una por valor,
     con la misma forma que E-1…E-3: declaradas en la tabla de ADR-26, en `scripts/ci/contracts-breaking-excepciones.json`
     (regla, operación `POST`, ruta, texto exacto del hallazgo, `change: l1d-56-carga-documento-api`) y con su caso en
     `scripts/ci/__tests__/excepcionesDeContrato.test.mjs` (la lista declarada pasa a `E-1…E-5`; un valor distinto o
     en otra ruta sigue rompiendo). Se hace en la **primera tarea de contratos**, antes de editar el `openapi.yaml`.
     Justificación: el endpoint no tiene implementación ni consumidor (US-079 llega en el S3) y `error` se trata como
-    cadena abierta. Sin la confirmación no se edita ADR-26 ni el JSON y la tarea 1.1 queda bloqueada.
+    cadena abierta. En la misma tarea se corrige el texto de política de ADR-26: una excepción E-n declarada sube la versión **menor**
+    (precedente E-1, E-3), no la mayor (`[S2 resp. 12]`).
   - **Descartada:** `x-extensible-enum` en lugar de `enum`. Su efecto en el Zod generado (`contracts:generate`) no
     está verificado (podría perder la validación cerrada del borde), y en E-2 se midió que el enum extensible no
     evitaba el ERR.
@@ -145,7 +146,7 @@ components:
 ## Open Questions
 
 - **Route Handler BFF** (`app/api/patients/[patientId]/documents/route.ts`, en el Contexto técnico de US-076): sin
-  consumidor en el S2. Propuesta: lo entrega US-079 en el S3 junto a la UI (depende de P-1). Si el humano lo quiere en
+  consumidor en el S2. Decidido: lo entrega US-079 en el S3 junto a la UI (`[S2 resp. 1]`). Si el humano lo quiere en
   el S2, se añade como tarea `clinical-platform` con su sección de Seguridad web.
 - **Variables nuevas** (`MAX_UPLOAD_MB`, `CLINICAL_MINIO_ENDPOINT`, `CLINICAL_DOCUMENTS_BUCKET`): su alta en
   `.env.example` y en el Compose la hace el implementador en el PR con aprobación del humano (no se editan en la

@@ -8,7 +8,7 @@ RN-22 · AC-01.1 (parte de carga: *magic bytes*, 20 MB, `409`), AC-03.4 (checksu
 (DoR ✓, "n/a, sin UI en S2") · 🔗 Regresión [RN-17] → US-198 (Post-MVP: `422` por paciente egresado) ·
 🔗 Regresión [RN-15] → US-148 (activa desde S6: la carga **no** responde `403` por opt-out, FR-16).
 
-> **Alcance del S2 (propuesta P-1 del refinamiento, pendiente de aprobación):** solo la API de `clinical-api`
+> **Alcance del S2 (P-1 del refinamiento, aprobada por el usuario el 2026-10-21, `[S2 resp. 1]`):** solo la API de `clinical-api`
 > (subida, validación por *magic bytes*, `MAX_UPLOAD_MB`, checksum `409` y almacenamiento en `clinical-minio`). El
 > *worker* de la cola (US-078) y la UI con estados (US-079) se proponen para el S3 junto a la extracción (US-082) y
 > **no** entran en este change.
@@ -40,7 +40,7 @@ cola: `ocr_status = pendiente`, `attempts = 0`) para que la extracción del S3 l
 - **Contrato:** se concretan los códigos que el spec dejaba pendientes (`413`/`415` con `x-pending-owner`): `422`
   para "no es PDF" y "tamaño excedido" según los AC, con códigos de error cerrados, y `503` por almacén no disponible.
   Los dos valores nuevos del enum del `422` son ERR de `oasdiff`: se proponen como excepciones E-4/E-5 de ADR-26
-  (pendiente de confirmación del usuario). `clinical-api` pasa a `1.8.0`.
+  (decidido por el usuario el 2026-10-21). `clinical-api` pasa a `1.8.0`.
 - **Logs:** solo UUID de paciente y documento y `traceId`; nunca el nombre del archivo, su contenido ni la clave.
   `original_filename` es identidad: solo en la fila `document`; nunca a Backend 2, `audit` ni metadatos de MinIO.
 

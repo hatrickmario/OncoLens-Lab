@@ -1,7 +1,7 @@
 # Tasks — l1d-232-adr41-framework-evaluacion
 
 > Historia de ADR (US-014 · ADR-41). Matriz TDD: **exento** (documento). Sin código de producto ni
-> cambios de API. Encuadre pendiente de P-3.
+> cambios de API. Encuadre decidido en P-3 (`[S2 resp. 3]`).
 
 ## 1. ai-services
 

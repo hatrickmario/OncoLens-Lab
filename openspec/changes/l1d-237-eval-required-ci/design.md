@@ -4,7 +4,7 @@
 
 `.github/workflows/ci.yml` ya instala `requirements-eval.txt` y corre `dataset-class-check`; falta
 detección de disparadores y publicación del reporte. `npm run evaluate` lo crea
-`l1d-235-suite-evaluate` (072a). ADR-41 (propuesto) fija: en CI, configuración de prueba sin modelos
+`l1d-235-suite-evaluate` (072a). ADR-41 (encuadre decidido, `[S2 resp. 3]`) fija: en CI, configuración de prueba sin modelos
 pesados ni red; el reporte real se adjunta desde la máquina de referencia.
 
 ## Goals / Non-Goals

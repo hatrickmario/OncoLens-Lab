@@ -26,10 +26,10 @@ ni ficha con identidad (US-048, US-051), y RN-10 no tiene un test de no-fuga due
 - Arnés de no-fuga de identidad (RN-10, dueño) sobre fuentes enumeradas, que amplían L1D-202 y L1D-72;
   busca el valor en claro, la forma normalizada del nombre y los valores de los índices ciegos.
 
-> **Propuesto en el Gate 1 del S2 (pendiente de confirmación):** el documento de FX-T4a-a pasa de la
-> cédula plausible `52123456` a un documento sintético con prefijo `SINT-` (`SINT-52123456`), para que
-> ningún fixture parezca un documento real. Hasta la confirmación, los escenarios conservan `52123456`
-> y el arnés busca ambas formas; el cambio del fixture en `backlog/` lo hace la sesión principal.
+> **Decidido (usuario, 2026-10-21, `[S2 resp. 11]`):** el documento de FX-T4a-a deja la cédula plausible
+> `52123456` y pasa a `1234567`, numérico (el campo es numérico para `cedula_ciudadania`); el número distinto
+> del AC-2 es `123456`. Ya aplicado en `backlog/` y en los changes del S2. Los tests del S1 que aún usan
+> `52123456` se actualizan en la tarea 2.10.
 
 ## Capacidades
 

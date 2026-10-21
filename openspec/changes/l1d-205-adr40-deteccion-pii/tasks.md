@@ -2,7 +2,7 @@
 
 > Historia de ADR (US-013 · ADR-40). Matriz TDD: ADR y mediciones **exento**; scripts, dataset y
 > configuración **test después** (test en el mismo PR); la elección del detector es **evaluate**.
-> Sin cambios de API (no hay `## contratos`). Solo datos sintéticos. Encuadre pendiente de P-2.
+> Sin cambios de API (no hay `## contratos`). Solo datos sintéticos. Encuadre decidido en P-2 (`[S2 resp. 2]`).
 
 ## 1. ai-services
 

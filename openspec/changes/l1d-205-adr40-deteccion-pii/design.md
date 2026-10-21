@@ -8,7 +8,7 @@ Hechos (S2-refinamiento §3.1, verificados en la fuente el 2026-10-20): la opci�
 (consumidor del gate de B2) llega en el S3. Margen de memoria del stack con el LLM G
 (`gemma4:26b-a4b-it-q4_K_M`, ADR-39 fase B): **0,71 GB**.
 
-> **Encuadre propuesto, pendiente de confirmación del usuario (P-2).** Si el usuario lo cambia, se
+> **Encuadre decidido por el usuario el 2026-10-21 (P-2, `[S2 resp. 2]`).** Si el usuario lo cambia, se
 > actualiza este design antes de implementar (`/opsx:update`).
 
 ## Goals / Non-Goals
@@ -132,4 +132,4 @@ Sin migraciones. El estado del ADR queda `propuesto` hasta la aprobación del us
 ## Open Questions
 
 - **P-2** (usuario): confirmar el encuadre (1 frente a 2, regla "más simple que cumpla", GLiNER
-  descartado). Pendiente.
+  descartado). **Decidido (usuario, 2026-10-21, `[S2 resp. 2]`).**

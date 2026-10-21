@@ -46,7 +46,7 @@ contradice el requisito vigente del S1 (el entrante nunca se copia). Se especifi
 
 **D5 · Logs sin PHI (adaptación del AC-5).** En el S2 no existe el registro de pacientes (US-047, S4): el
 AC-5 se verifica con `POST /platform/evidence-analyses` con un cuerpo inválido (`patientId` no UUID) cuya
-`question` contiene el documento `52123456` y el nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a) → `422`.
+`question` contiene el documento `1234567` y el nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a) → `422`.
 El serializador descarta en cualquier profundidad (sin distinguir mayúsculas) una lista **cerrada en código**
 (`CAMPOS_SENSIBLES_BASE`): `body`, `question`, `identification`, `name`, `fullName`, `nationalId`,
 `documentNumber`, `originalFilename`, `email`, `ip`, `remoteAddress`, `x-forwarded-for`, `cookie`, `set-cookie`,

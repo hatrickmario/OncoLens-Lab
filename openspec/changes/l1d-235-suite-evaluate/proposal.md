@@ -2,7 +2,7 @@
 
 ## Trazabilidad
 
-L1D-235 · US-072 (partida propuesta **US-072a** 5 pts + **US-072b** 3 pts, P-1 pendiente) ·
+L1D-235 · US-072 (partida **US-072a** 5 pts + **US-072b** 3 pts, P-1 decidido, `[S2 resp. 1]`) ·
 FEAT-T5a (L1D-46) · Sprint 2 (desde S1, `[Pre-S1 resp. 9]`) · Estimación **8** · FR-20, IA-10 ·
 OL-06 · AC-T5.3 · M-06.1, M-07.2, M-10.1, M-10.2 · G-4, G-8 · RN-12, RN-14, RN-22, RN-23 · SEG-13 ·
 US-072 AC-1…AC-7 · Fuente: `backlog/features/FEAT-T5a-baseline-evaluacion.md` §US-072; contexto:

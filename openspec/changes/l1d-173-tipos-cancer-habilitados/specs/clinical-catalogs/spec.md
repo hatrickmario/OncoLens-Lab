@@ -8,7 +8,7 @@
 - **WHEN** `doc1@test.local` consulta su ficha
 - **THEN** la respuesta `200` tiene `cancerTypeEnabled = true`
 
-#### Scenario: Con solo mama habilitada la ficha del paciente (b) informa false y muestra el aviso sin ocultar datos [US-043 AC-3] [FR-04] (asumido: literal unificado propuesto en el refinamiento del S2, P-4)
+#### Scenario: Con solo mama habilitada la ficha del paciente (b) informa false y muestra el aviso sin ocultar datos [US-043 AC-3] [FR-04] [S2 resp. 6]
 - **GIVEN** `ENABLED_CANCER_TYPES=mama` y el paciente semilla (b) (próstata)
 - **WHEN** consulta su ficha
 - **THEN** la respuesta tiene `cancerTypeEnabled = false`

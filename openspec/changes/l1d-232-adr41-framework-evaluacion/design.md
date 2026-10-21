@@ -7,7 +7,7 @@ Base existente: `apps/rag-orchestrator/app/evaluation/` (`retrieval_metrics.py`,
 datasets `data/eval/adr39-mini/`, `data/eval/ocr-mini/` y partición `data/eval/ol06-particion-v1/`
 (ADR-45, P2–P3: la prueba se toca una vez con `--prueba-final`). LLM G aceptado en ADR-39 fase B.
 
-> **Encuadre propuesto, pendiente de confirmación del usuario (P-3).**
+> **Encuadre decidido por el usuario el 2026-10-21 (P-3, `[S2 resp. 3]`).**
 
 ## Goals / Non-Goals
 
@@ -109,4 +109,4 @@ Sin migraciones; estado `propuesto` hasta la aprobación.
 
 ## Open Questions
 
-- **P-3** (usuario): confirmar A, NLI principal y juez G secundario. Pendiente.
+- **P-3** (usuario): confirmar A, NLI principal y juez G secundario. **Decidido (usuario, 2026-10-21, `[S2 resp. 3]`).**

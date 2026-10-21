@@ -6,7 +6,7 @@ L1D-205 · US-013 · ADR-40 · FEAT-T4a (L1D-40) · Sprint 2 · Estimación **5*
 RN-10, RN-11, RN-12, RN-14, RN-22 · G-8 · FR-20 · readme §2.5, §2.6, §4.2 · OL-03, OL-05 tarea 12 ·
 US-013 AC-1…AC-6 · `[S1 resp. 3]` (opción A vigente en US-049) · Fuente:
 `backlog/features/FEAT-T4a-acceso-identidad-pacientes.md` §US-013; contexto:
-`backlog/sprints/S2-refinamiento.md` §3.1 (**P-2, pendiente de confirmación del usuario**).
+`backlog/sprints/S2-refinamiento.md` §3.1 (**P-2, decidido por el usuario el 2026-10-21**).
 
 ## Why
 
@@ -22,7 +22,7 @@ contamina de forma irreversible `clinical_context_snapshot` y la memoria de aná
 ## What Changes
 
 - **Nuevo** `docs/architecture/adr/ADR-40-deteccion-pii.md` (MADR, plantilla `_plantilla-madr.md`)
-  con la medición y la decisión (encuadre **propuesto**, P-2, pendiente de confirmación):
+  con la medición y la decisión (encuadre **propuesto**, P-2, decidido por el usuario el 2026-10-21):
   - **Candidato 1** · patrones configurables en ambos backends + identidad exacta solo en B1. B1 no
     envía a B2 ningún dato de identidad (ni hashes ni indicios); la única excepción del contrato es
     `identityFound` en la **respuesta** de `/documents/extract`.

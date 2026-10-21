@@ -28,24 +28,24 @@
 
 #### Scenario: El documento exacto encuentra al paciente y el parcial no encuentra nada [US-048 AC-2] [FR-02] [ADR-6]
 - **GIVEN** FX-T4a-a registrado con `IdentityService`
-- **WHEN** se busca con `POST /platform/patients/search` y `{ idType: "cedula_ciudadania", nationalId: "52123456" }`
+- **WHEN** se busca con `POST /platform/patients/search` y `{ idType: "cedula_ciudadania", nationalId: "1234567" }`
 - **THEN** la respuesta `200` contiene exactamente ese paciente, enmascarado
-- **AND** con `nationalId = "5212345"` la respuesta contiene cero resultados
+- **AND** con `nationalId = "12345"` la respuesta contiene cero resultados
 
 #### Scenario: El país emisor no participa en la búsqueda por documento [US-048 AC-2] [ADR-6] (Gate 1)
 - **GIVEN** FX-T4a-a registrado con `issuing_country = CO`
-- **WHEN** se busca con `{ idType: "cedula_ciudadania", nationalId: "52123456" }` (sin país, como permite `PatientSearchRequest`)
+- **WHEN** se busca con `{ idType: "cedula_ciudadania", nationalId: "1234567" }` (sin país, como permite `PatientSearchRequest`)
 - **THEN** la respuesta contiene a FX-T4a-a; el índice se calcula sin `issuing_country`, como fija L1D-200
 
 ### Requirement: Búsqueda por nombre exacta sobre el nombre normalizado
-Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación): `POST /platform/patients/search` con `name` MUST buscar por igualdad del índice ciego del nombre completo normalizado (Unicode sin marcas diacríticas, minúsculas, espacios colapsados), sin descifrar identidades para comparar y sin restringir por equipo tratante (P-02); un nombre parcial MUST NOT encontrar nada.
+Decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21): `POST /platform/patients/search` con `name` MUST buscar por igualdad del índice ciego del nombre completo normalizado (Unicode sin marcas diacríticas, minúsculas, espacios colapsados), sin descifrar identidades para comparar y sin restringir por equipo tratante (P-02); un nombre parcial MUST NOT encontrar nada.
 
-#### Scenario: El nombre completo con otras tildes, mayúsculas y espacios encuentra al paciente [US-048 AC-3] [FR-02] [P-02] (asumido en la semántica de coincidencia; P-4 pendiente de confirmación)
+#### Scenario: El nombre completo con otras tildes, mayúsculas y espacios encuentra al paciente [US-048 AC-3] [FR-02] [P-02] (asumido en la semántica de coincidencia; P-4 decidido por el usuario el 2026-10-21)
 - **GIVEN** FX-T4a-a ("Lucía Fernanda Rondón Peña") registrado
 - **WHEN** se busca con `{ name: "LUCIA  fernanda rondon PEÑA" }`
 - **THEN** el resultado contiene a FX-T4a-a, sin consultar `clinical.care_team_member`
 
-#### Scenario: Un apellido suelto no encuentra al paciente [US-048 AC-3] (asumido; P-4 pendiente de confirmación)
+#### Scenario: Un apellido suelto no encuentra al paciente [US-048 AC-3] [S2 resp. 4]
 - **GIVEN** FX-T4a-a registrado
 - **WHEN** se busca con `{ name: "Rondón" }`
 - **THEN** la respuesta `200` contiene cero resultados y la UI muestra "No hay pacientes con ese nombre."
@@ -65,7 +65,7 @@ Las rutas de listado MUST NOT aceptar identidad en la URL ni en cabeceras, y los
 #### Scenario: Tras buscar por documento ninguna URL ni log contiene la identidad [US-048 AC-5] [RN-10] [NFR-11] [Pre-S1 resp. 22]
 - **GIVEN** la búsqueda del AC-2 hecha desde `/pacientes` en `web`
 - **WHEN** se leen los *logs* de acceso de `web` y `clinical-api` y las URLs pedidas
-- **THEN** ninguna contiene `52123456`, `Lucía`, `Rondón`, "lucia fernanda rondon pena" ni los valores de `national_id_hmac` o `full_name_hmac` de FX-T4a-a
+- **THEN** ninguna contiene `1234567`, `Lucía`, `Rondón`, "lucia fernanda rondon pena" ni los valores de `national_id_hmac` o `full_name_hmac` de FX-T4a-a
 - **AND** el test de no-fuga de L1D-200 gana el paso "buscarlo por documento y por nombre" y sigue sin encontrar esas formas (`Regresión [RN-10] → US-046`)
 
 #### Scenario: Las respuestas con identidad no se cachean [US-048 AC-5] [RN-10] (Gate 1)
@@ -78,7 +78,7 @@ Las rutas de listado MUST NOT aceptar identidad en la URL ni en cabeceras, y los
 #### Scenario: Una identidad alterada en la página da 500 genérico en el listado [US-046 AC-3] [US-048 AC-7] (Gate 1)
 - **GIVEN** FX-T4a-a con `full_name_ciphertext` alterado en un byte con SQL crudo
 - **WHEN** se pide `GET /platform/patients`
-- **THEN** responde `500 ErrorInterno` validado contra el spec, sin `52123456`, `Lucía` ni `Rondón`
+- **THEN** responde `500 ErrorInterno` validado contra el spec, sin `1234567`, `Lucía` ni `Rondón`
 
 #### Scenario: La búsqueda de web rechaza un Origin ajeno [US-048 AC-5] [SEG-01] (asumido)
 - **WHEN** llega `POST /api/patients/search` con `Origin: https://evil.example`
@@ -90,10 +90,10 @@ Cada fila del listado y de la búsqueda MUST devolver `fullNameMasked` como las 
 #### Scenario: FX-T4a-a sale enmascarado con el formato fijado [US-048 AC-7] [Pre-S1 resp. 36] [Pre-S1 resp. 42] [Pre-S1 trazabilidad M-1]
 - **GIVEN** FX-T4a-a registrado
 - **WHEN** aparece en el listado o en la búsqueda
-- **THEN** su fila trae `fullNameMasked = "L. F. R. P."` y `nationalIdMasked = "•••• 56"`, y el cuerpo de la respuesta no contiene `52123456`, `Lucía` ni `Rondón`
+- **THEN** su fila trae `fullNameMasked = "L. F. R. P."` y `nationalIdMasked = "•••• 56"`, y el cuerpo de la respuesta no contiene `1234567`, `Lucía` ni `Rondón`
 
 #### Scenario: La máscara no revela la longitud del documento [US-048 AC-7] (Gate 1)
-- **GIVEN** el paciente semilla con documento `SINT-0000001` y FX-T4a-a con `52123456`
+- **GIVEN** el paciente semilla con documento `SINT-0000001` y FX-T4a-a con `1234567`
 - **WHEN** aparecen en el listado
 - **THEN** sus máscaras son `"•••• 01"` y `"•••• 56"`, de la misma longitud
 

@@ -21,8 +21,8 @@ para no recibir un análisis sobre evidencia y reglas que nadie ha preparado par
 - Base del análisis en `tipo_no_habilitado` (armada por este change, sin Backend 2): `patientDataUsed = []`,
   `sourcesConsulted` con las fuentes y filtros del request y `retrieved = 0`, `aboveThreshold = 0`,
   `sourcesNotIncluded` desde `CORPUS_EXCLUDED_SOURCES` y `corpusCutoffDate` desde una clave nueva de `clinical-api`
-  `CORPUS_CUTOFF_DATE` (RN-22) que actualiza el script de carga del corpus — **Propuesto en el Gate 1 del S2
-  (pendiente de confirmación del usuario)**.
+  `CORPUS_CUTOFF_DATE` (RN-22) que actualiza el script de carga del corpus — **Decidido en el Gate 1 del S2
+  (decidido por el usuario el 2026-10-21)**.
 - Un `ENABLED_CANCER_TYPES` inválido se registra con el evento único `configuracion_invalida` de `l1d-167` y el
   tipo inválido en su campo cerrado `valorInvalido`.
 - `rag-orchestrator`: defensa en profundidad con el mismo catálogo: `cancerType` no habilitado → `422
@@ -53,6 +53,5 @@ clinical-platform · ai-services · frontend.
 
 ## Fuera de alcance
 
-El criterio de "listo" para habilitar un tipo (DEC-19): propuesto en el refinamiento del S2 (P-4, pendiente de
-confirmación) como prerrequisito de G-Piloto (S6), no de la demo sintética; leucemia (RN-20, Post-MVP hasta
+El criterio de "listo" para habilitar un tipo (DEC-19): decidido en el refinamiento del S2 (P-4, decidido por el usuario el 2026-10-21) como prerrequisito de G-Piloto (S6), no de la demo sintética; leucemia (RN-20, Post-MVP hasta
 cumplir el criterio). Contenido de la Base del análisis más allá de los incisos del S1 (US-066/US-067).

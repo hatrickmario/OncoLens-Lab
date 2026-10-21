@@ -5,8 +5,8 @@
 Base: `app/evaluation/` (`retrieval_metrics.py` con recall@10, MRR e IC *bootstrap*, `reporte.py`,
 `dataset_loader.py`), tests en `tests/evaluation/`, datasets `data/eval/adr39-mini/`,
 `data/eval/ol06-particion-v1/` (ADR-45), `scripts/ci/dataset-class-check.mjs` en la CI. Framework
-según ADR-41 (propuesto, P-3): propio con Pytest, NLI principal, juez G secundario. Partición en dos
-PR propuesta (P-1): **072a** (5) y **072b** (3).
+según ADR-41 (encuadre decidido, P-3, `[S2 resp. 3]`): propio con Pytest, NLI principal, juez G secundario. Partición en dos
+PR decidida (P-1, `[S2 resp. 1]`): **072a** (5) y **072b** (3).
 
 ## Goals / Non-Goals
 
@@ -77,4 +77,4 @@ prescriptivas = 0. Este change no las cambia: las mide.
 
 ## Open Questions
 
-- P-1 (partición 072a/072b) y P-3 (juez) pendientes del usuario.
+- P-1 (partición 072a/072b) y P-3 (juez) decididos (`[S2 resp. 1]`, `[S2 resp. 3]`).
