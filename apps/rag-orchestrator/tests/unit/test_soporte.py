@@ -422,3 +422,16 @@ def test_descarta_la_opcion_cuando_su_justificacion_no_se_soporta_aunque_el_deta
 
     assert resultado.soportadas == ()
     assert [d.afirmaciones_sin_soporte for d in resultado.descartadas] == [("Afirmación uno.",)]
+
+
+def test_omite_el_parrafo_completo_sin_error_cuando_solo_una_de_sus_afirmaciones_tiene_lenguaje_prohibido() -> (
+    None
+):
+    plan = _plan(_con_detalles("Detalle limpio. Detalle PROHIBIDO.", "Detalle tres."))
+
+    pares = pares_a_verificar(plan)
+    resultado = verificar_soporte(plan, [IMPLICA] * len(pares), UMBRAL, "es")
+
+    assert [p.hipotesis for p in pares] == ["Afirmación uno.", "Detalle tres."]
+    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle tres.",)]
+    assert resultado.omitidas == 1
