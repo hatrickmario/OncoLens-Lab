@@ -9,7 +9,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from collections.abc import Sequence
+import time
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from app.application.ports import Clock
@@ -20,7 +21,8 @@ from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE, SUITES
-from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio
+from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio, ids_de_subconjunto
+from app.evaluation.guardas import SuiteAbortada, exigir_marca_final
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -39,9 +41,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _reloj_de_medicion(config: ConfigSuite):  # type: ignore[no-untyped-def]
-    import time
-
+def _reloj_de_medicion(config: ConfigSuite) -> Callable[[], float]:
     return RelojSimulado() if config.reloj == "simulado" else time.perf_counter
 
 
@@ -55,13 +55,22 @@ def main(argv: Sequence[str], *, reloj: Clock | None = None) -> int:
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
-    except DatasetInvalido as error:
-        print(f"evaluate: dataset rechazado: {error}", file=sys.stderr)
+    except (DatasetInvalido, SuiteAbortada) as error:
+        print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
         return 1
 
 
+def _fuente_de(config: ConfigSuite) -> FuenteDatasetEnDirectorio:
+    if config.subconjunto is None or config.particion is None:
+        return FuenteDatasetEnDirectorio(config.dataset)
+    return FuenteDatasetEnDirectorio(
+        config.dataset, ids_de_subconjunto(config.particion, config.subconjunto)
+    )
+
+
 def _ejecutar(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> int:
-    dataset = FuenteDatasetEnDirectorio(config.dataset).cargar()
+    exigir_marca_final(config, args.prueba_final)
+    dataset = _fuente_de(config).cargar()
     cronometro = Cronometro(_reloj_de_medicion(config))
     suite = componer_servicio(config, dataset, cronometro, reloj)
     resultados, respuestas = asyncio.run(evaluar_dataset(suite, dataset))

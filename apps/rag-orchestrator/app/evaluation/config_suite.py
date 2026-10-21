@@ -85,6 +85,8 @@ def cargar_config_suite(ruta: Path) -> ConfigSuite:
     dataset = _clave(crudo, "dataset")
     sub = dataset.get("subconjunto")
     particion = dataset.get("particion") if sub else None
+    if sub and not particion:
+        raise ConfigInvalida("dataset.subconjunto exige dataset.particion")
     return ConfigSuite(
         nombre=str(_clave(crudo, "nombre")),
         fixture=str(_clave(crudo, "fixture")),
