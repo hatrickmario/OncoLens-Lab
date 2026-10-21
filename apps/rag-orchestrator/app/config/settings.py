@@ -223,8 +223,15 @@ CAMPOS_DE_RECUPERACION = (
 
 
 def claves_de_recuperacion_ausentes(settings: Settings) -> list[str]:
-    """Nombres de las variables de la recuperación que faltan; una sola fuente para el arranque y la composición."""
-    return [campo.upper() for campo in CAMPOS_DE_RECUPERACION if getattr(settings, campo) is None]
+    """Nombres de las variables de la recuperación que faltan; una sola fuente para el arranque y la composición.
+
+    ``ENABLED_CANCER_TYPES`` vacía cuenta como ausente (RN-20): sin ella ningún tipo está habilitado."""
+    ausentes = [
+        campo.upper() for campo in CAMPOS_DE_RECUPERACION if getattr(settings, campo) is None
+    ]
+    if not settings.enabled_cancer_types:
+        ausentes.append("ENABLED_CANCER_TYPES")
+    return ausentes
 
 
 def nombres_de_claves(settings: Settings) -> list[str]:
