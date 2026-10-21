@@ -102,3 +102,15 @@ real (con *timeout* explícito).
 ## Pendiente de definir
 
 - D1 (semántica de `CLINICAL_CATALOG_VERSION`): asumida; confirmar en el Gate 1.
+
+## Deuda y preguntas abiertas (Gate 2)
+
+- **Deuda de esquemas:** `packages/clinical-catalogs/schemas/*.schema.json` repite `version` (semver), la envoltura
+  `{version, items}` y el enum de estándares. Queda para un `schemas/comunes.schema.json` con `$defs` y `$ref`
+  cuando US-042/FEAT-04 amplíen el validador (requiere `$id` por esquema y `addSchema` en Ajv).
+- **Pregunta para el humano · CUPS en el enum de estándares:** los esquemas aceptan `cups`, pero el `manifest.json`
+  declara solo `cie10`, `loinc` y `atc` y no existe `NOTICE-cups.txt` (DEC-04 / RN-27, Q-07). ¿Se quita `cups` del
+  enum hasta que DEC-04 lo cierre?
+- **Pregunta para el humano · `CLINICAL_CATALOG_VERSION`:** D1 está implementada solo en `clinical-api`
+  (`rag-orchestrator` no la lee) y la clave no está en `infra/docker/.env.example`; falta decidir si se declara allí y
+  si `rag-orchestrator` debe aplicar la misma expectativa.

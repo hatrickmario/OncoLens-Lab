@@ -142,18 +142,27 @@ compose exec -T rag-orchestrator python -c "import os; open(os.path.join(os.envi
 bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
 # US-041 AC-3: el catálogo clínico se monta de solo lectura en ambos backends; escribir en CLINICAL_CATALOG_PATH falla con
-# EROFS (código 7). Cada intento lleva su plazo (5 s) para que un montaje colgado no cuelgue el smoke; la salida no nombra la ruta.
-en_node clinical-api "const t=setTimeout(()=>process.exit(3),5000);try{require('fs').writeFileSync(require('path').join(process.env.CLINICAL_CATALOG_PATH,'escritura-de-prueba'),'x');clearTimeout(t);process.exit(0)}catch(e){clearTimeout(t);process.exit(e.code==='EROFS'?7:1)}" >/dev/null 2>&1 \
-  && fallo "US-041 AC-3: clinical-api pudo escribir en el catálogo montado" || [ "$?" = "7" ] \
-  || fallo "US-041 AC-3: la escritura de clinical-api en el catálogo no falló por solo lectura (EROFS)"
-compose exec -T rag-orchestrator python -c "import errno,os,signal,sys; signal.alarm(5)
+# EROFS (código de salida 7). Cada intento corre bajo `timeout 10` DENTRO del contenedor (un montaje colgado no cuelga el
+# smoke; si vence sale 124 y falla). Si el montaje resultara rw, se borra el archivo de prueba antes de fallar, para no
+# dejar `escritura-de-prueba` en packages/clinical-catalogs del host. La salida no nombra la ruta.
+catalogo_es_de_solo_lectura() {
+  local servicio="$1"
+  shift
+  local codigo=0
+  compose exec -T "$servicio" timeout 10 "$@" >/dev/null 2>&1 || codigo=$?
+  if [ "$codigo" = "0" ]; then
+    compose exec -T "$servicio" sh -c 'rm -f "$CLINICAL_CATALOG_PATH/escritura-de-prueba"' >/dev/null 2>&1 || true
+    fallo "US-041 AC-3: $servicio pudo escribir en el catálogo montado"
+  fi
+  [ "$codigo" = "7" ] || fallo "US-041 AC-3: la escritura de $servicio en el catálogo no falló por solo lectura (EROFS); salida $codigo"
+}
+catalogo_es_de_solo_lectura clinical-api node -e "try{require('fs').writeFileSync(require('path').join(process.env.CLINICAL_CATALOG_PATH,'escritura-de-prueba'),'x');process.exit(0)}catch(e){process.exit(e.code==='EROFS'?7:1)}"
+catalogo_es_de_solo_lectura rag-orchestrator python -c "import errno,os,sys
 try:
     open(os.path.join(os.environ['CLINICAL_CATALOG_PATH'], 'escritura-de-prueba'), 'w')
 except OSError as e:
     sys.exit(7 if e.errno == errno.EROFS else 1)
-sys.exit(0)" >/dev/null 2>&1 \
-  && fallo "US-041 AC-3: rag-orchestrator pudo escribir en el catálogo montado" || [ "$?" = "7" ] \
-  || fallo "US-041 AC-3: la escritura de rag-orchestrator en el catálogo no falló por solo lectura (EROFS)"
+sys.exit(0)"
 bien "US-041 AC-3 el catálogo clínico es de solo lectura en clinical-api y rag-orchestrator"
 
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".

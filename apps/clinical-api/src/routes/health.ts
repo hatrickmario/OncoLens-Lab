@@ -12,12 +12,16 @@ export interface InformacionDeSalud {
  * Compone lo que `/health` expone a partir de lo que el arranque ya cargó: nombres de claves, versión del servicio y
  * versión efectiva del catálogo (`manifest.json`). Nunca valores de configuración (RN-14).
  */
-export function componerInformacionDeSalud(_entrada: {
+export function componerInformacionDeSalud(entrada: {
   readonly configKeys: readonly string[];
   readonly serviceVersion: string;
   readonly catalogo: { version(): string };
 }): InformacionDeSalud {
-  throw new Error('no implementado');
+  return {
+    configKeys: entrada.configKeys,
+    serviceVersion: entrada.serviceVersion,
+    catalogVersion: entrada.catalogo.version(),
+  };
 }
 
 /** Sin información inyectada (`createApp({})`): ninguna clave y versión desconocida, pero siempre las dos propiedades. */
