@@ -25,7 +25,9 @@ def test_rag_query_responde_422_tipo_cancer_no_registrado_cuando_el_codigo_exced
 
 def test_rag_query_llega_al_buscador_cuando_el_codigo_excede_el_defecto_pero_cabe_en_la_longitud_configurada():
     tipo = "t" * 70
-    parametros = dataclasses.replace(PARAMETROS_DE_PRUEBA, longitud_maxima_codigo_tipo=80)
+    parametros = dataclasses.replace(
+        PARAMETROS_DE_PRUEBA, longitud_maxima_codigo_tipo=80, tipos_habilitados=(tipo,)
+    )
     chunk = ChunkFx("ch-largo-1", "doc-largo", "texto sintético", [1.0] + [0.0] * 7, True, tipo)
     entorno = crear_entorno(parametros=parametros, buscador=BuscadorFalso(chunks=[chunk]))
 

@@ -4,7 +4,7 @@ Cubre todo `RequestValidationError` (body, header, query y path). La autenticaci
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
 También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
 recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE`, `503 NLI_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`
-y `CatalogVersionMismatchError` (NFR-14) a `409 CATALOG_VERSION_MISMATCH`, todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
+`TipoNoHabilitadoError` (RN-20) a `422 TIPO_NO_HABILITADO` y `CatalogVersionMismatchError` (NFR-14) a `409 CATALOG_VERSION_MISMATCH`, todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
 `ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
 
@@ -23,6 +23,7 @@ from app.application.errores import (
 )
 from app.application.ports import TraceIdGenerator
 from app.domain.catalogo import CatalogVersionMismatchError
+from app.domain.tipos_habilitados import TipoNoHabilitadoError
 from app.domain.token_servicio import TokenServicioInvalido
 from app.schemas.generated.models import (
     DetailItem,
@@ -31,6 +32,7 @@ from app.schemas.generated.models import (
     ErrorNliNoDisponible,
     ErrorRecuperacionNoDisponible,
     ErrorTipoCancerNoRegistrado,
+    ErrorTipoNoHabilitado,
     ErrorTokenServicioInvalido,
     ErrorValidacion,
 )
@@ -103,6 +105,16 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
         cuerpo = ErrorTipoCancerNoRegistrado(
             error="TIPO_CANCER_NO_REGISTRADO",
             message="El contexto no tiene tipo de cáncer; no es posible filtrar la evidencia.",
+            traceId=resolver_trace_id(request, trace_ids),
+        )
+        return JSONResponse(status_code=422, content=cuerpo.model_dump())
+
+    @app.exception_handler(TipoNoHabilitadoError)
+    async def tipo_no_habilitado(request: Request, error: TipoNoHabilitadoError) -> JSONResponse:
+        """422 TIPO_NO_HABILITADO (RN-20): mensaje fijo, sin eco del tipo ni de la pregunta (RN-10)."""
+        cuerpo = ErrorTipoNoHabilitado(
+            error="TIPO_NO_HABILITADO",
+            message="El tipo de cáncer no está habilitado en este entorno.",
             traceId=resolver_trace_id(request, trace_ids),
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())

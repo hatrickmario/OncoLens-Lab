@@ -174,6 +174,7 @@ def settings_de_modelos(modelos: EntornoDeModelos, **cambios: object):
             "model_provider": "local",
             "nli_entailment_threshold": 0.7,
             "clinical_catalog_path": CATALOGOS,
+            "enabled_cancer_types": ("mama", "prostata"),
             **rutas,
             **indices,
             **cambios,
