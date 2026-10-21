@@ -14,7 +14,6 @@ import {
   cookieDeSesionSegura,
   responderConFalloDeAutenticacion,
   type DependenciasDeAutenticacion,
-  type MotivoDeFalloDeAutenticacion,
 } from './auth-comun';
 import {
   cabecerasHaciaNavegador,
@@ -86,7 +85,12 @@ export function crearManejadorLogin(
     });
     const clasificada = clasificarRespuestaDeClinicalApi(sdk, resultado.response);
     if ('fallo' in clasificada) {
-      return responderConFallo(dependencias, traceId, clasificada.fallo);
+      return responderConFalloDeAutenticacion(
+        dependencias,
+        EVENTO_LOGIN,
+        traceId,
+        clasificada.fallo,
+      );
     }
     const { respuesta, cuerpoCrudo } = clasificada;
     if (respuesta.status === 204) {
@@ -108,7 +112,12 @@ function reenviarErrorDelContrato(
 ): Response {
   const conforme = esquemaDelStatus(respuesta.status)?.safeParse(analizarJson(cuerpoCrudo));
   if (conforme === undefined || !conforme.success) {
-    return responderConFallo(dependencias, traceId, 'cuerpo_no_conforme');
+    return responderConFalloDeAutenticacion(
+      dependencias,
+      EVENTO_LOGIN,
+      traceId,
+      'cuerpo_no_conforme',
+    );
   }
   dependencias.registrar({
     event: EVENTO_LOGIN,
@@ -162,7 +171,12 @@ function reenviarCookieDeSesion(
 ): Response {
   const cookie = cookieDeSesionSegura(respuesta);
   if (cookie === undefined) {
-    return responderConFallo(dependencias, traceId, 'sin_cookie_de_sesion');
+    return responderConFalloDeAutenticacion(
+      dependencias,
+      EVENTO_LOGIN,
+      traceId,
+      'sin_cookie_de_sesion',
+    );
   }
   dependencias.registrar({ event: EVENTO_LOGIN, status: 204, traceId });
   const cabeceras = cabecerasHaciaNavegador(respuesta);
@@ -181,12 +195,4 @@ function responderCuerpoInvalido(dependencias: DependenciasLogin, traceId: strin
     },
     422,
   );
-}
-
-function responderConFallo(
-  dependencias: DependenciasLogin,
-  traceId: string,
-  motivo: MotivoDeFalloDeAutenticacion,
-): Response {
-  return responderConFalloDeAutenticacion(dependencias, EVENTO_LOGIN, traceId, motivo);
 }

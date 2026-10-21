@@ -15,25 +15,21 @@ export interface DependenciasDeAuthController {
 const EVENTO_LOGIN = 'auth.login';
 const EVENTO_LOGOUT = 'auth.logout';
 
-/** Cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */
+/** Atributos de la cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */
+const ATRIBUTOS_DE_LA_COOKIE_DE_SESION = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/',
+} as const;
+
 function establecerCookieDeSesion(respuesta: Response, token: string): void {
-  respuesta.cookie(NOMBRE_COOKIE_DE_SESION, token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-  });
+  respuesta.cookie(NOMBRE_COOKIE_DE_SESION, token, ATRIBUTOS_DE_LA_COOKIE_DE_SESION);
 }
 
 /** Borra la cookie con los mismos atributos con los que se emitió (`Max-Age=0`); el navegador la descarta. */
 function borrarCookieDeSesion(respuesta: Response): void {
-  respuesta.cookie(NOMBRE_COOKIE_DE_SESION, '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 0,
-  });
+  respuesta.cookie(NOMBRE_COOKIE_DE_SESION, '', { ...ATRIBUTOS_DE_LA_COOKIE_DE_SESION, maxAge: 0 });
 }
 
 /**

@@ -17,7 +17,7 @@
 - [x] 2.9 (TDD estricto) Implementar en `resolverSesion()` la inactividad y el toque de `last_seen_at`; extraer `sesionVigente()`. Commit `feat(L1D-198)`.
 - [x] 2.10 (TDD estricto) Test de aceptación en rojo en `web`: "responde 403 PERMISO_DENEGADO sin request a clinical-api y la sesión sigue activa cuando el Origin del logout es ajeno [US-044 AC-5]" y "retransmite el 204 y borra la cookie cuando clinical-api acepta el logout [US-044 AC-1]" · Vitest + MSW desde `contracts/examples/`. y "reenvía a clinical-api la IP del socket y descarta el X-Forwarded-For falsificado por el cliente [US-044 AC-3]". Esqueleto de `app/api/auth/logout/route.ts`. Commit `test(L1D-198)`.
 - [x] 2.11 (TDD estricto) Implementar `app/api/auth/logout/route.ts` (`server-only`, `verificarOrigen()` de L1D-139, SDK generado) y la escritura de `X-Forwarded-For` en el cliente de `web` hacia `clinical-api` con la IP real del socket, descartando la cabecera recibida del cliente. Commit `feat(L1D-198)`.
-- [ ] 2.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-198)`.
+- [x] 2.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-198)`.
 
 ## 3. frontend
 
