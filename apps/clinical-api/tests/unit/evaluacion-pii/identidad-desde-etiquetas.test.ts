@@ -19,10 +19,11 @@ const NUMERO_A = ['111', '222'].join('');
 const NUMERO_B = ['333', '444'].join('');
 
 describe('identidadDesdeEtiquetas', () => {
-  it('arma nombre, documento y teléfono desde las etiquetas del texto cuando están presentes', () => {
+  it('arma solo nombre y documento, como patient-identity.reader.ts, y toma la primera etiqueta de nombre (paciente) cuando hay representante', () => {
     const identidad = identidadDesdeEtiquetas(
-      textoCon(`Ana Pérez / ${NUMERO_A} / ${NUMERO_B}`, [
+      textoCon(`Ana Pérez / ${NUMERO_A} / ${NUMERO_B} / Luis Gómez`, [
         ['nombre', 'Ana Pérez'],
+        ['nombre', 'Luis Gómez'],
         ['documento', NUMERO_A],
         ['telefono', NUMERO_B],
       ]),
@@ -31,15 +32,13 @@ describe('identidadDesdeEtiquetas', () => {
     expect(identidad).toEqual({
       nombreCompleto: 'Ana Pérez',
       documento: NUMERO_A,
-      telefono: NUMERO_B,
     });
   });
 
-  it('deja vacíos documento y nombre y el teléfono en null cuando el texto no tiene esas etiquetas', () => {
+  it('deja vacíos nombre y documento cuando el texto no tiene esas etiquetas', () => {
     expect(identidadDesdeEtiquetas(textoCon('sin datos', []))).toEqual({
       nombreCompleto: '',
       documento: '',
-      telefono: null,
     });
   });
 });

@@ -102,9 +102,10 @@ export async function ejecutarComandoPii(
       }),
       (ruta) => readFileSync(ruta, 'utf8'),
     );
-    const textos = await cargarCorpusPiiMini({
+    const { textos, tiposDirectos } = await cargarCorpusPiiMini({
       raizDelRepo,
       python: entorno['PII_EVAL_PYTHON'] ?? 'python3',
+      rutaDeBinarios: entorno['PATH'] ?? '',
       ...(dependencias.ejecutarProceso === undefined
         ? {}
         : { ejecutar: dependencias.ejecutarProceso }),
@@ -114,6 +115,7 @@ export async function ejecutarComandoPii(
       sensibilidadMinima: opciones.sensibilidadMinima,
       corridas: opciones.corridas,
       reloj: dependencias.reloj,
+      tiposDirectos,
     });
     escribirInforme(opciones.salida, informe);
     resumir(informe, dependencias.stdout);
@@ -135,7 +137,7 @@ function resumir(informe: InformeDePii, stdout: (texto: string) => void): void {
   for (const [modo, medicion] of Object.entries(informe.modos)) {
     const fp = medicion.falsosPositivosClinicos;
     stdout(
-      `${modo}: G-8 en documentos ${medicion.cumpleG8EnDocumentos ? 'cumple' : 'no cumple'}` +
+      `${modo}: sensibilidad mínima por tipo directo ${medicion.cumpleSensibilidadMinimaPorTipoDirecto ? 'cumple' : 'no cumple'}` +
         ` (por debajo: ${medicion.tiposDirectosPorDebajo.join(', ') || 'ninguno'});` +
         ` falsos positivos clínicos ${fp.marcados}/${fp.controles};` +
         ` p95 ${medicion.latenciaP95Ms.toFixed(3)} ms\n`,

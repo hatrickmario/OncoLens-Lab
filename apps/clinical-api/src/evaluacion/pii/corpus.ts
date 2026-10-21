@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { z } from 'zod';
@@ -57,13 +58,16 @@ function parsearJson(salida: string): unknown {
   }
 }
 
+/** `entorno` es el ÚNICO entorno del hijo: no hereda el entorno del padre (secretos, claves, rutas de producción). */
 export type EjecutarProceso = (
   programa: string,
   argumentos: string[],
+  entorno: Record<string, string>,
 ) => Promise<{ stdout: string }>;
 
-const ejecutarConExecFile: EjecutarProceso = async (programa, argumentos) =>
+const ejecutarConExecFile: EjecutarProceso = async (programa, argumentos, entorno) =>
   promisify(execFile)(programa, argumentos, {
+    env: entorno,
     maxBuffer: MAXIMO_DE_SALIDA_EN_BYTES,
     timeout: TIEMPO_MAXIMO_DEL_GENERADOR_MS,
     encoding: 'utf8',
@@ -73,21 +77,47 @@ export interface OpcionesDeCorpus {
   raizDelRepo: string;
   /** `PII_EVAL_PYTHON`: intérprete de Python 3 (solo biblioteca estándar). */
   python: string;
+  /** `PATH` heredado del proceso (lo pasa la raíz de composición); es lo único que el hijo recibe además de `LANG`. */
+  rutaDeBinarios: string;
   ejecutar?: EjecutarProceso;
 }
 
-export async function cargarCorpusPiiMini(opciones: OpcionesDeCorpus): Promise<TextoSembrado[]> {
+export interface CorpusPiiMini {
+  textos: TextoSembrado[];
+  /** `tipos_directos` del manifiesto: identificadores directos que exige G-8. */
+  tiposDirectos: string[];
+}
+
+const esquemaDelManifiesto = z.object({ tipos_directos: z.array(z.string().min(1)).min(1) });
+
+function leerTiposDirectos(raizDelRepo: string): string[] {
+  try {
+    const crudo = readFileSync(
+      path.join(raizDelRepo, DIRECTORIO_DEL_DATASET, 'manifest.json'),
+      'utf8',
+    );
+    return esquemaDelManifiesto.parse(JSON.parse(crudo)).tipos_directos;
+  } catch {
+    throw new CorpusInvalidoError('manifest.json no declara tipos_directos');
+  }
+}
+
+export async function cargarCorpusPiiMini(opciones: OpcionesDeCorpus): Promise<CorpusPiiMini> {
   const ejecutar = opciones.ejecutar ?? ejecutarConExecFile;
   let salida: string;
   try {
     // `-I`: aislado; no carga código del directorio actual ni del entorno.
-    ({ stdout: salida } = await ejecutar(opciones.python, [
-      '-I',
-      '-B',
-      '-c',
-      PROGRAMA_DEL_GENERADOR,
-      path.join(opciones.raizDelRepo, DIRECTORIO_DEL_DATASET),
-    ]));
+    ({ stdout: salida } = await ejecutar(
+      opciones.python,
+      [
+        '-I',
+        '-B',
+        '-c',
+        PROGRAMA_DEL_GENERADOR,
+        path.join(opciones.raizDelRepo, DIRECTORIO_DEL_DATASET),
+      ],
+      { PATH: opciones.rutaDeBinarios, LANG: 'C.UTF-8' },
+    ));
   } catch {
     // El error del proceso podría arrastrar fragmentos del corpus: no se propaga su mensaje.
     throw new CorpusInvalidoError(
@@ -97,5 +127,5 @@ export async function cargarCorpusPiiMini(opciones: OpcionesDeCorpus): Promise<T
   const corpus = esquemaDelCorpus.safeParse(parsearJson(salida));
   if (!corpus.success)
     throw new CorpusInvalidoError('la salida del generador no cumple el esquema');
-  return corpus.data;
+  return { textos: corpus.data, tiposDirectos: leerTiposDirectos(opciones.raizDelRepo) };
 }

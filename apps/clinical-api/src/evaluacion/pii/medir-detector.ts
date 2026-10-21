@@ -9,6 +9,7 @@ import {
   type Sensibilidad,
   type TextoMedido,
   type TextoSembrado,
+  veredictoPorTipoDirecto,
 } from './medicion.js';
 
 /**
@@ -19,14 +20,12 @@ import {
  */
 
 const CONTEXTO_DE_DOCUMENTO = 'documento';
-const TIPOS_DIRECTOS = [
-  'nombre',
-  'documento',
-  'telefono',
-  'correo',
-  'direccion',
-  'fecha_nacimiento',
-] as const;
+const NOTAS_DEL_INFORME = [
+  'identidad_de_referencia usa etiquetas de oro (cota de oráculo): no es la sensibilidad de producción.',
+  'Los documentos no pasan por Backend 1: el gate de documentos es de Backend 2; este informe mide solo la capa de B1.',
+  'La latencia p95 excluye la creación del detector por consulta (PiiDetectorFactory.para).',
+  'Cobertura por palabras ausentes y falsos positivos por recuento: no equivalen a la medición por spans de B2.',
+];
 
 export type Reloj = () => number;
 
@@ -37,6 +36,8 @@ export interface ParametrosDeMedicion {
   sensibilidadMinima: number;
   corridas: number;
   reloj: Reloj;
+  /** Identificadores directos de G-8: salen de `tipos_directos` del manifiesto del dataset. */
+  tiposDirectos: readonly string[];
 }
 
 export interface MedicionDeModo {
@@ -45,17 +46,19 @@ export interface MedicionDeModo {
   falsosPositivosClinicos: FalsosPositivos;
   latenciaP95Ms: number;
   latenciaP95MsPorCorrida: number[];
-  /** G-8: todos los identificadores directos de los textos de documento alcanzan la sensibilidad mínima. */
-  cumpleG8EnDocumentos: boolean;
+  /** Cada tipo directo y `total` alcanzan la sensibilidad mínima en los textos de documento (falta de medición = no cumple). */
+  cumpleSensibilidadMinimaPorTipoDirecto: boolean;
   tiposDirectosPorDebajo: string[];
 }
 
-export type ModoDeMedicion = 'solo_formatos' | 'con_identidad_conocida';
+export type ModoDeMedicion = 'solo_formatos' | 'identidad_de_referencia';
 
 export interface InformeDePii {
   detector: 'opcion-a';
   textos: number;
   parametros: { coberturaMinima: number; sensibilidadMinima: number; corridas: number };
+  /** Sesgos de la medición que quien lea el informe debe conocer. */
+  notas: string[];
   modos: Record<ModoDeMedicion, MedicionDeModo>;
 }
 
@@ -64,12 +67,15 @@ const valorDe = (texto: TextoSembrado, tipo: string): string[] =>
     .filter((etiqueta) => etiqueta.tipo === tipo)
     .map((etiqueta) => texto.texto.slice(etiqueta.inicio, etiqueta.fin));
 
-/** La identidad que B1 conocería de ese texto, armada desde sus etiquetas sembradas (solo en memoria). */
+/**
+ * Identidad de referencia: la que entrega `patient-identity.reader.ts` (nombre completo y documento; sin teléfono ni
+ * representante), armada con las primeras etiquetas de oro del texto. Es una cota de oráculo, no una medición de
+ * producción (solo en memoria).
+ */
 export function identidadDesdeEtiquetas(texto: TextoSembrado): IdentidadDelPaciente {
   return {
-    nombreCompleto: valorDe(texto, 'nombre').join(' '),
+    nombreCompleto: valorDe(texto, 'nombre')[0] ?? '',
     documento: valorDe(texto, 'documento')[0] ?? '',
-    telefono: valorDe(texto, 'telefono')[0] ?? null,
   };
 }
 
@@ -88,13 +94,6 @@ function medirLatenciasMs(
   });
 }
 
-function tiposDirectosPorDebajo(
-  sensibilidad: Record<string, Sensibilidad>,
-  minima: number,
-): string[] {
-  return TIPOS_DIRECTOS.filter((tipo) => (sensibilidad[tipo]?.valor ?? 0) < minima);
-}
-
 function medirModo(
   textos: TextoSembrado[],
   detectorDe: FabricaDeDetector,
@@ -109,15 +108,19 @@ function medirModo(
   const porCorrida = Array.from({ length: parametros.corridas }, () =>
     p95PorRango(medirLatenciasMs(textos, detectorDe, parametros.reloj)),
   );
-  const porDebajo = tiposDirectosPorDebajo(sensibilidadDocumentos, parametros.sensibilidadMinima);
+  const veredicto = veredictoPorTipoDirecto(
+    sensibilidadDocumentos,
+    parametros.tiposDirectos,
+    parametros.sensibilidadMinima,
+  );
   return {
     sensibilidadDocumentos,
     sensibilidadTodosLosContextos: sensibilidadPorTipo(medidos, parametros.coberturaMinima),
     falsosPositivosClinicos: falsosPositivosClinicos(medidos),
     latenciaP95Ms: [...porCorrida].sort((a, b) => a - b)[Math.floor(porCorrida.length / 2)] ?? 0,
     latenciaP95MsPorCorrida: porCorrida,
-    cumpleG8EnDocumentos: porDebajo.length === 0,
-    tiposDirectosPorDebajo: porDebajo,
+    cumpleSensibilidadMinimaPorTipoDirecto: veredicto.cumple,
+    tiposDirectosPorDebajo: veredicto.porDebajo,
   };
 }
 
@@ -135,9 +138,10 @@ export function medirDetectorOpcionA(
       sensibilidadMinima: parametros.sensibilidadMinima,
       corridas: parametros.corridas,
     },
+    notas: NOTAS_DEL_INFORME,
     modos: {
       solo_formatos: medirModo(textos, () => sinIdentidad, parametros),
-      con_identidad_conocida: medirModo(
+      identidad_de_referencia: medirModo(
         textos,
         (texto) => crearDetectorOpcionA(identidadDesdeEtiquetas(texto), configuracion),
         parametros,

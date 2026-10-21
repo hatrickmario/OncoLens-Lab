@@ -10,14 +10,12 @@ import type { InformeDePii } from '../../../src/evaluacion/pii/medir-detector.js
 const RAIZ_CLINICAL_API = path.resolve(import.meta.dirname, '../../..');
 const RAIZ_REPO = path.resolve(RAIZ_CLINICAL_API, '../..');
 const TIEMPO_MAXIMO_DEL_COMANDO_MS = 60_000;
-const TIPOS_DIRECTOS = [
-  'correo',
-  'direccion',
-  'documento',
-  'fecha_nacimiento',
-  'nombre',
-  'telefono',
-];
+/** Misma fuente que el comando: `tipos_directos` del manifiesto del dataset. */
+const TIPOS_DIRECTOS = (
+  JSON.parse(readFileSync(path.join(RAIZ_REPO, 'data/eval/pii-mini/manifest.json'), 'utf8')) as {
+    tipos_directos: string[];
+  }
+).tipos_directos;
 const execFileAsync = promisify(execFile);
 
 interface Resultado {
@@ -78,9 +76,15 @@ describe('npm run eval:pii', () => {
         expect(modo.latenciaP95Ms).toBeGreaterThan(0);
       }
       // RN-10/RN-14: ni el informe ni la salida contienen un solo valor de PII sembrada.
-      const corpus = await cargarCorpusPiiMini({ raizDelRepo: RAIZ_REPO, python: 'python3' });
+      const corpus = await cargarCorpusPiiMini({
+        raizDelRepo: RAIZ_REPO,
+        python: 'python3',
+        rutaDeBinarios: process.env['PATH'] ?? '',
+      });
       const salidaVisible = `${crudo}${resultado.stdout}${resultado.stderr}`;
-      const valores = corpus.flatMap((t) => t.etiquetas.map((e) => t.texto.slice(e.inicio, e.fin)));
+      const valores = corpus.textos.flatMap((t) =>
+        t.etiquetas.map((e) => t.texto.slice(e.inicio, e.fin)),
+      );
       expect(valores.length).toBeGreaterThan(900);
       expect(valores.filter((valor) => salidaVisible.includes(valor)).length).toBe(0);
     },
@@ -124,6 +128,27 @@ describe('npm run eval:pii', () => {
 
       expect(resultado.codigo).toBe(1);
       expect(resultado.stderr).toContain('las huellas no coinciden');
+    },
+    TIEMPO_MAXIMO_DEL_COMANDO_MS,
+  );
+
+  it(
+    'no hereda el entorno del proceso padre cuando lanza el generador de Python',
+    async () => {
+      const envoltorio = path.join(directorio, 'python-envoltorio.sh');
+      writeFileSync(
+        envoltorio,
+        '#!/bin/sh\n[ -z "$SECRETO_DE_PRUEBA" ] || exit 4\nexec python3 "$@"\n',
+        { mode: 0o755 },
+      );
+
+      const resultado = await correrComando(['--salida', path.join(directorio, 'z.json')], {
+        PII_EVAL_PYTHON: envoltorio,
+        SECRETO_DE_PRUEBA: 'valor-que-no-debe-llegar',
+      });
+
+      expect(resultado.stderr).toBe('');
+      expect(resultado.codigo).toBe(0);
     },
     TIEMPO_MAXIMO_DEL_COMANDO_MS,
   );

@@ -156,3 +156,23 @@ Sin migraciones. El estado del ADR queda `propuesto` hasta la aprobación del us
 - **Tarea 1.4 [HUMANO]:** la memoria se midio como RSS de carga del modelo (481 MB `md`, 284 MB `sm`) en un proceso aparte; falta medirla con el stack y el LLM G cargados en la maquina de referencia.
 - **Claves nuevas para el usuario (no se tocaron `.env*`):** `PII_ENGINE`, `PII_ENGINE_VERSION`, `PII_NER_MODEL`, `PII_NER_MIN_SCORE` (solo diseno, aun sin codigo que las lea; el adapter es de S3).
 - **Dependencias de medicion (solo `requirements-eval.txt`):** `regex==2026.9.29`, `spacy==3.8.14`; pesos `es_core_news_md` 3.8.0 (GPL-3.0, wheel de 42 284 033 bytes, sha256 `478b8bb3f3e8eb149192f7d80e7cd64f990b7e9bccbc5329df41a57e86326be2`) descargados fuera del repo.
+
+## Notas de la medición en clinical-platform (Gate 2, ronda única)
+
+- `npm run eval:pii` mide solo la capa de Backend 1 (opción A). Los documentos no pasan por B1: el gate de
+  documentos es de B2, así que el veredicto `cumpleSensibilidadMinimaPorTipoDirecto` de `solo_formatos` es
+  informativo y no sustituye a la medición de B2. El modo `identidad_de_referencia` usa las etiquetas de oro
+  como identidad (cota de oráculo, solo nombre completo y documento como `patient-identity.reader.ts`, primera
+  etiqueta de nombre = paciente, sin representante ni teléfono): no es la sensibilidad de producción.
+- Los identificadores directos de G-8 salen de `tipos_directos` de `data/eval/pii-mini/manifest.json`; un tipo
+  requerido sin medir (o `total` sin medir) no cumple. `null` significa "sin medir", nunca 0.
+- El p95 de `identidad_de_referencia` excluye la creación del detector por consulta (`PiiDetectorFactory.para`).
+  `p95PorRango` es rango por techo sin interpolar y la latencia por modo es la mediana superior de los p95: no
+  equivalen al `np.percentile` de B2.
+- `PII_EVAL_PYTHON` es una variable de evaluación del comando (no de la aplicación): intérprete de Python 3 que
+  materializa `pii-mini`; el hijo recibe solo `PATH` y `LANG`. No se lee desde `src/config`.
+- Deuda (historia futura, no bloquea el change): los umbrales 0,5 de cobertura y 0,95 de sensibilidad están
+  duplicados entre `comando.ts` y los scripts de B2; B1 y B2 miden con definiciones distintas hasta que
+  `ResultadoDeEnmascarado` exponga rangos; el esquema Zod del corpus y `TextoSembrado` se mantienen a mano en
+  paralelo (anotado con `z.ZodType`); el orden de las constantes de salida de `comando.ts`; el informe usa
+  `detector: 'opcion-a'` para lo que el diseño llama candidato 1 (tabla de equivalencias pendiente en el ADR).

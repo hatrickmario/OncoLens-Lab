@@ -126,7 +126,10 @@ export function falsosPositivosClinicos(textos: TextoMedido[]): FalsosPositivos 
   };
 }
 
-/** Percentil 95 por rango (método del techo); 0 sin muestras. */
+/**
+ * Percentil 95 por rango (método del techo, sin interpolar); 0 sin muestras. NO es equivalente al `np.percentile` de B2
+ * (que interpola): sobre 1..300 este da 285 y aquel 285,05. La latencia por modo es la mediana superior de los p95.
+ */
 export function p95PorRango(valores: number[]): number {
   if (valores.length === 0) return 0;
   const ordenados = [...valores].sort((a, b) => a - b);
@@ -139,10 +142,15 @@ export interface VeredictoPorTipoDirecto {
   porDebajo: string[];
 }
 
+/** Cierre en fallo: un tipo requerido (o `total`) sin medir cuenta como por debajo (null no es 0, pero tampoco cumple). */
 export function veredictoPorTipoDirecto(
-  _sensibilidad: Record<string, Sensibilidad>,
-  _tiposDirectos: readonly string[],
-  _minima: number,
+  sensibilidad: Record<string, Sensibilidad>,
+  tiposDirectos: readonly string[],
+  minima: number,
 ): VeredictoPorTipoDirecto {
-  throw new Error('no implementado');
+  const porDebajo = [...tiposDirectos, TOTAL].filter((tipo) => {
+    const valor = sensibilidad[tipo]?.valor ?? null;
+    return valor === null || valor < minima;
+  });
+  return { cumple: porDebajo.length === 0, porDebajo };
 }
