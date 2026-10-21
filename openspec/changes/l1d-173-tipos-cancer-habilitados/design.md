@@ -25,7 +25,7 @@ del `Diagnosis` activo después de las guardas existentes (sesión, rol, pacient
 construir el contexto clínico o desidentificar. Si no está habilitado: construye el `EvidenceAnalysis` con
 `status = tipo_no_habilitado`, `evidenceOptions = []`, `discardedOptions = []`, `topRelevanceScore = null` y la
 `analysisBasis` de D7, lo persiste (RN-06) y responde `200`. Regla extraída:
-`exigirTipoHabilitado()` en `case-guards.ts` (devuelve un resultado, no lanza: no es error).
+`alcanceDelTipo()` en `case-guards.ts` (devuelve un resultado, no lanza: no es error).
 Orden respecto del caso sin tipo (`422 TIPO_CANCER_NO_REGISTRADO`): sin tipo → `422`; con tipo no habilitado → `200 tipo_no_habilitado`.
 
 **D4 · Validación de la configuración.** `ENABLED_CANCER_TYPES` (lista separada por comas) se valida al arrancar
@@ -57,7 +57,7 @@ configuración de `l1d-167` (fecha inválida o ausente → `configuracion_invali
 ## Privacidad y ownership
 
 - Con tipo no habilitado **no** se construye ni se envía contexto a `rag-orchestrator`: menos datos cruzan la
-  frontera. Si llegara un contexto (defensa), B2 lo rechaza sin procesarlo ni registrarlo.
+  frontera. Si llegara un contexto (defensa), B2 lo rechaza sin procesarlo ni registrarlo, **con `LLM_PROVIDER=local`**; con `LLM_PROVIDER=fake` la defensa no se aplica (ver preguntas para el humano).
 - El registro persistido no contiene identidad (mismo `AIAnalysisRecord` del S1). `rag-orchestrator` sigue sin datos
   clínicos ni `clinical-minio`.
 
@@ -80,7 +80,7 @@ no valida con la Base del S1, se corrige el ejemplo (no el spec) en un commit `c
 
 ## Dependencias y colaboradores
 
-- `clinical-api`: `case-guards.ts` (`exigirTipoHabilitado()`), `evidence-analysis.service.ts` (rama `tipo_no_habilitado`
+- `clinical-api`: `case-guards.ts` (`alcanceDelTipo()`), `evidence-analysis.service.ts` (rama `tipo_no_habilitado`
   con persistencia vía el repository existente), `config/` (`validarTiposHabilitados()`), adaptador de `TiposDeCancerHabilitados`.
 - `rag-orchestrator`: `domain/tipos_habilitados.py` (`exigir_tipo_habilitado()`), `config/settings.py`
   (`enabled_cancer_types`), `api/errors.py` (mapeo a `422`).
@@ -103,13 +103,14 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
 
 - **Pregunta enmascarada en `tipo_no_habilitado`.** D3 dice "antes de ... desidentificar", pero la pregunta se persiste
   (`query_text`) y se devuelve (`queryText`): RN-11 exige enmascararla. El service llama al desidentificador con un
-  **contexto vacío** (`construirContextoVacio()`) y toma solo la pregunta; ningún dato del caso se construye ni viaja a
+  **contexto vacío** (`construirContextoSinDatosClinicos()`) y toma solo la pregunta; ningún dato del caso se construye ni viaja a
   Backend 2. El snapshot persistido es ese contexto vacío.
 - **Idiomas** del registro sin Backend 2: `es`/`es` (idioma del producto).
 - **Ficha (AC-1 y AC-3, `cancerTypeEnabled`)**: `l1d-72-ficha-minima-paciente` no está implementado, no existe el
   endpoint de la ficha. Aquí se entrega el adaptador `crearTiposHabilitados()` (puerto `TiposDeCancerHabilitados` en
   `evidence-analysis/ports.ts`) probado en unitario; los escenarios de ficha de AC-1/AC-3 se cubren al implementar L1D-72.
-- **Manifiesto**: `crearProveedorDeVersionDeCatalogo()` expone `cancerTypes()`; sin `cancerTypes` en el manifiesto, toda lista habilitada es inválida.
+- **Manifiesto**: `crearProveedorDeCatalogo()` expone `cancerTypes()`. El esquema (`infrastructure/catalogo/manifiesto.schema.ts`) es único para el arranque y el seed y `cancerTypes` es obligatorio (como en Python y en `manifest.schema.json`): un manifiesto sin él da `catalogo_no_disponible`, no `tipo_no_en_catalogo`.
+- **Piso de fuentes excluidas (RN-21)**: `CORPUS_EXCLUDED_SOURCES` debe incluir NCCN y ESMO (`configuracion_invalida` si no). `crearTiposHabilitados()` valida contra los tipos del catálogo al crearse.
 - **Claves nuevas obligatorias en `clinical-api`**: `ENABLED_CANCER_TYPES` (demo `mama,prostata`), `CORPUS_EXCLUDED_SOURCES`
   (demo `NCCN,ESMO`) y `CORPUS_CUTOFF_DATE` (demo `2026-09-30`). El servicio `clinical-api` de `docker-compose.yml` las pasa
   con `${CLAVE:-<valor demo>}`, así que Compose arranca sin `.env`. **Pendiente del usuario**: añadirlas a
@@ -129,3 +130,17 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
   `ENABLED_CANCER_TYPES`; con `LLM_PROVIDER=local` no arrancará hasta añadir
   `ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}` (mismo valor demo que `clinical-api`). El modo `fake`
   (`ConsultaConCatalogoExigido`) no aplica la regla: lo cubre el gateway de `clinical-api`.
+
+## Preguntas y decisiones para el humano (Gate 2)
+
+- **`CORPUS_CUTOFF_DATE`**: `.env.example` dice `2026-10-01` frente a `2026-09-30` del Compose y de los ejemplos. No lo alineé
+  (no leo ni edito `.env*`): decisión y acción del usuario.
+- **P2-1**: ¿aplicar RN-20 también con `LLM_PROVIDER=fake` en Backend 2, o aceptar que ahí no se aplica? Hoy Python con
+  `fake` arranca con la lista vacía.
+- **Desviación de D5**: en Backend 2 la comprobación del tipo va después de `_filtro_de_recuperacion`, no antes de recuperar.
+
+## Deuda (a historia propuesta)
+
+- **Fuente única de los hechos del corpus en la Base del análisis**: hoy `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE`
+  se configuran en clinical-api y en el cargador; lo correcto es leerlos del release del corpus de Backend 2.
+- Hallazgos menores P3-8, P3-11 y P3-12 del Gate 2: diferidos.
