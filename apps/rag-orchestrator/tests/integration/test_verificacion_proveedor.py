@@ -48,6 +48,19 @@ def test_rag_query_falla_nombrando_la_ruta_json_cuando_sin_evidencia_trae_top_re
     assert "0.0" not in mensaje
 
 
+def test_health_deja_una_linea_en_el_archivo_de_reporte_cuando_la_respuesta_se_verifica(
+    tmp_path, monkeypatch
+):
+    reporte = tmp_path / "reporte.txt"
+    monkeypatch.setenv("CONTRACT_VERIFY_REPORT", str(reporte))
+    settings = settings_de_prueba(llm_provider="fake", fake_responses_path=EJEMPLOS)
+    cliente = TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()))
+
+    cliente.get("/health")
+
+    assert reporte.read_text(encoding="utf-8") == "rag-orchestrator\n"
+
+
 def _sin_evidencia_con_cero() -> dict:
     return {**_ejemplo("rag-query-sin-evidencia.json"), "topRelevanceScore": 0.0}
 
