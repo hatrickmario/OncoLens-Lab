@@ -1,20 +1,21 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
+import { conectar, type BaseDeTest } from '../../support/db.js';
+import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
-  conectar,
-  crearBaseDeTest,
-  leerConfiguracionArnes,
-  type BaseDeTest,
-} from '../../support/db.js';
-import { filaDePaciente, generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
-import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
+  FX_T4A_A,
+  crearBaseDeIdentidad,
+  identidadDeFx,
+  insertarPacienteSintetico,
+  servicioDeIdentidad,
+} from '../../support/identidad.js';
 
 describe('Identidad cifrada en PostgreSQL', () => {
   let base: BaseDeTest;
   let cliente: Client;
 
   beforeAll(async () => {
-    base = await crearBaseDeTest(leerConfiguracionArnes(process.env), `ident_cifrado_${process.pid}`);
+    base = await crearBaseDeIdentidad('cifrado');
     cliente = await conectar(base.url);
   });
 
@@ -24,18 +25,10 @@ describe('Identidad cifrada en PostgreSQL', () => {
   });
 
   it('el SQL crudo no contiene el documento ni el nombre, key_version es 1 y el servicio descifra los originales [US-046 AC-1]', async () => {
-    const ids = generadorDeIds(10);
-    const paciente = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
-    const patientId = paciente['id'] as string;
+    const patientId = await insertarPacienteSintetico(cliente, generadorDeIds(10));
     const servicio = servicioDeIdentidad(cliente);
 
-    await servicio.guardar({
-      patientId,
-      idType: FX_T4A_A.idType,
-      issuingCountry: null,
-      numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
-      nombreCompleto: FX_T4A_A.nombreCompleto,
-    });
+    await servicio.guardar(identidadDeFx(patientId));
 
     const { rows } = await cliente.query<{
       national_id_ciphertext: Buffer;

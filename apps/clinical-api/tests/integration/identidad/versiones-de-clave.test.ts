@@ -1,17 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
 import { componerIdentidad } from '../../../src/modules/patients/identity.module.js';
-import {
-  conectar,
-  crearBaseDeTest,
-  leerConfiguracionArnes,
-  type BaseDeTest,
-} from '../../support/db.js';
-import { filaDePaciente, generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
+import { conectar, type BaseDeTest } from '../../support/db.js';
+import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
   FX_T4A_A,
   archivosDeClaves,
+  crearBaseDeIdentidad,
   entornoDeClaves,
+  identidadDeFx,
+  insertarPacienteSintetico,
   leerArchivoDeTest,
   nonceSecuencial,
   type ArchivosDeClaves,
@@ -23,7 +21,7 @@ describe('Convivencia de versiones de clave de la identidad', () => {
   let claves: ArchivosDeClaves;
 
   beforeAll(async () => {
-    base = await crearBaseDeTest(leerConfiguracionArnes(process.env), `ident_versiones_${process.pid}`);
+    base = await crearBaseDeIdentidad('versiones');
     cliente = await conectar(base.url);
     claves = archivosDeClaves([1, 2]);
   });
@@ -36,21 +34,15 @@ describe('Convivencia de versiones de clave de la identidad', () => {
 
   it('descifra una identidad v1 y una v2 nueva cuando IDENTITY_KEY_VERSION es 2 [US-046 AC-5]', async () => {
     const ids = generadorDeIds(11);
-    const antiguo = (await insertar(cliente, 'clinical.patient', filaDePaciente(ids)))['id'] as string;
-    const nuevo = (await insertar(cliente, 'clinical.patient', filaDePaciente(ids)))['id'] as string;
+    const antiguo = await insertarPacienteSintetico(cliente, ids);
+    const nuevo = await insertarPacienteSintetico(cliente, ids);
     const servicioV1 = componerIdentidad({
       env: entornoDeClaves(claves, 1),
       readFile: leerArchivoDeTest,
       db: cliente,
       generarNonce: nonceSecuencial(),
     });
-    await servicioV1.guardar({
-      patientId: antiguo,
-      idType: FX_T4A_A.idType,
-      issuingCountry: null,
-      numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
-      nombreCompleto: FX_T4A_A.nombreCompleto,
-    });
+    await servicioV1.guardar(identidadDeFx(antiguo));
 
     const servicioV2 = componerIdentidad({
       env: entornoDeClaves(claves, 2, [1]),
@@ -58,13 +50,12 @@ describe('Convivencia de versiones de clave de la identidad', () => {
       db: cliente,
       generarNonce: nonceSecuencial(),
     });
-    await servicioV2.guardar({
-      patientId: nuevo,
-      idType: FX_T4A_A.idType,
-      issuingCountry: null,
-      numeroDeDocumento: FX_T4A_A.numeroDistinto,
-      nombreCompleto: 'Prueba Sintética 2',
-    });
+    await servicioV2.guardar(
+      identidadDeFx(nuevo, {
+        numeroDeDocumento: FX_T4A_A.numeroDistinto,
+        nombreCompleto: 'Prueba Sintética 2',
+      }),
+    );
 
     expect(await servicioV2.descifrar(antiguo)).toMatchObject({
       keyVersion: 1,

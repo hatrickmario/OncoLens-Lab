@@ -17,7 +17,9 @@ const identidadDescifrada: IdentidadDescifrada = {
 
 describe('crearLectorDeIdentidad', () => {
   it('devuelve nombre y documento descifrados para el detector de PII', async () => {
-    const lector = crearLectorDeIdentidad({ descifrar: () => Promise.resolve(identidadDescifrada) });
+    const lector = crearLectorDeIdentidad({
+      descifrar: () => Promise.resolve(identidadDescifrada),
+    });
 
     expect(await lector.leer(PACIENTE)).toEqual({
       nombreCompleto: FX_T4A_A.nombreCompleto,

@@ -28,10 +28,30 @@ describe('buscarFugaDeIdentidad', () => {
   });
 
   it.each([
-    ['un log', 'log:clinical-api[0]', JSON.stringify({ event: 'x', documento: FX_T4A_A.numeroDeDocumento }), FX_T4A_A.numeroDeDocumento],
-    ['un payload', 'payload:rag[0]', `{"query":"paciente ${FX_T4A_A.apellido.toUpperCase()}"}`, 'rondon'],
-    ['una fila de audit', 'audit.audit_log[0]', `{"metadata":{"nota":"${FX_T4A_A.nombreNormalizado}"}}`, FX_T4A_A.nombreNormalizado],
-    ['un índice ciego', 'research.episode_snapshot[0]', `{"snapshot":{"h":"${'a'.repeat(64)}"}}`, 'a'.repeat(64)],
+    [
+      'un log',
+      'log:clinical-api[0]',
+      JSON.stringify({ event: 'x', documento: FX_T4A_A.numeroDeDocumento }),
+      FX_T4A_A.numeroDeDocumento,
+    ],
+    [
+      'un payload',
+      'payload:rag[0]',
+      `{"query":"paciente ${FX_T4A_A.apellido.toUpperCase()}"}`,
+      'rondon',
+    ],
+    [
+      'una fila de audit',
+      'audit.audit_log[0]',
+      `{"metadata":{"nota":"${FX_T4A_A.nombreNormalizado}"}}`,
+      FX_T4A_A.nombreNormalizado,
+    ],
+    [
+      'un índice ciego',
+      'research.episode_snapshot[0]',
+      `{"snapshot":{"h":"${'a'.repeat(64)}"}}`,
+      'a'.repeat(64),
+    ],
   ])('detecta la fuga en %s', (_donde, fuente, texto, valor) => {
     const hallazgos = buscarFugaDeIdentidad(VALORES, [{ nombre: fuente, texto }]);
 
@@ -45,9 +65,15 @@ describe('buscarFugaDeIdentidad', () => {
   });
 
   it('detecta una clave con nombre de identidad en un JSON aunque su valor no sea ninguno de los buscados', () => {
-    const hallazgos = buscarFugaDeIdentidad([], [
-      { nombre: 'payload', texto: JSON.stringify({ clinicalContext: { patient: { fullName: 'x' } } }) },
-    ]);
+    const hallazgos = buscarFugaDeIdentidad(
+      [],
+      [
+        {
+          nombre: 'payload',
+          texto: JSON.stringify({ clinicalContext: { patient: { fullName: 'x' } } }),
+        },
+      ],
+    );
 
     expect(hallazgos).toEqual([{ fuente: 'payload', valor: 'clave:fullName' }]);
   });
@@ -55,11 +81,15 @@ describe('buscarFugaDeIdentidad', () => {
 
 describe('clavesDeIdentidadEnJson', () => {
   it('no marca originalName porque está en la lista blanca de los contratos', () => {
-    expect(clavesDeIdentidadEnJson(JSON.stringify({ biomarkers: [{ originalName: 'HER2' }] }))).toEqual([]);
+    expect(
+      clavesDeIdentidadEnJson(JSON.stringify({ biomarkers: [{ originalName: 'HER2' }] })),
+    ).toEqual([]);
   });
 
   it('sigue marcando fullName y nationalId (la excepción no ensancha la regla)', () => {
-    const claves = clavesDeIdentidadEnJson(JSON.stringify({ fullName: 'x', a: { nationalId: 'y' } }));
+    const claves = clavesDeIdentidadEnJson(
+      JSON.stringify({ fullName: 'x', a: { nationalId: 'y' } }),
+    );
 
     expect(claves.sort()).toEqual(['fullName', 'nationalId']);
   });

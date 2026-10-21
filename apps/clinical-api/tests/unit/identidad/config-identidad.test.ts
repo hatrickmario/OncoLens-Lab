@@ -114,7 +114,11 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
         IDENTITY_AES_KEY_V1_FILE: '/run/secrets/identity_aes_key_v1',
         SERVICE_JWT_PRIVATE_KEY_FILE: '/run/secrets/jwt',
       },
-      [ENTORNO_BASE.BLIND_INDEX_HMAC_KEY_FILE, '/run/secrets/identity_aes_key_v1', '/run/secrets/jwt'],
+      [
+        ENTORNO_BASE.BLIND_INDEX_HMAC_KEY_FILE,
+        '/run/secrets/identity_aes_key_v1',
+        '/run/secrets/jwt',
+      ],
     );
 
     expect(resultado.salidas).toEqual([1]);
@@ -128,8 +132,16 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
 
   it('no arranca y el log nombra IDENTITY_KEY_VERSION cuando no es un entero positivo', () => {
     const resultado = arrancarCapturando(
-      { ...ENTORNO_BASE, IDENTITY_KEY_VERSION: 'dos', SERVICE_JWT_PRIVATE_KEY_FILE: '/run/secrets/jwt' },
-      [ENTORNO_BASE.IDENTITY_AES_KEY_FILE, ENTORNO_BASE.BLIND_INDEX_HMAC_KEY_FILE, '/run/secrets/jwt'],
+      {
+        ...ENTORNO_BASE,
+        IDENTITY_KEY_VERSION: 'dos',
+        SERVICE_JWT_PRIVATE_KEY_FILE: '/run/secrets/jwt',
+      },
+      [
+        ENTORNO_BASE.IDENTITY_AES_KEY_FILE,
+        ENTORNO_BASE.BLIND_INDEX_HMAC_KEY_FILE,
+        '/run/secrets/jwt',
+      ],
     );
 
     expect(resultado.salidas).toEqual([1]);

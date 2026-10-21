@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
-import { conectar, crearBaseDeTest, leerConfiguracionArnes, type BaseDeTest } from '../../support/db.js';
+import { conectar, type BaseDeTest } from '../../support/db.js';
 import {
   filaDeAnalisisSinEvidencia,
   generadorDeIds,
@@ -8,7 +8,7 @@ import {
   insertarContextoClinico,
   INSTANTE_FIJO,
 } from '../../support/filas-sinteticas.js';
-import { FX_T4A_A } from '../../support/identidad.js';
+import { FX_T4A_A, crearBaseDeIdentidad } from '../../support/identidad.js';
 import { buscarFugaDeIdentidad, fuentesDeBaseDeDatos } from '../../support/no-fuga.js';
 
 /**
@@ -21,7 +21,7 @@ describe('fuentesDeBaseDeDatos: sondas de fuga en las tablas de salida', () => {
   const ids = generadorDeIds(14);
 
   beforeAll(async () => {
-    base = await crearBaseDeTest(leerConfiguracionArnes(process.env), `ident_sondas_${process.pid}`);
+    base = await crearBaseDeIdentidad('sondas');
     cliente = await conectar(base.url);
   });
   afterAll(async () => {
@@ -71,7 +71,10 @@ describe('fuentesDeBaseDeDatos: sondas de fuga en las tablas de salida', () => {
     const hallazgos = await buscar();
 
     expect(hallazgos.filter((hallazgo) => hallazgo.valor.startsWith('clave:'))).toEqual([
-      { fuente: expect.stringMatching(/^audit\.audit_log\[\d\]\.metadata$/) as string, valor: 'clave:fullName' },
+      {
+        fuente: expect.stringMatching(/^audit\.audit_log\[\d\]\.metadata$/) as string,
+        valor: 'clave:fullName',
+      },
     ]);
   });
 
@@ -102,6 +105,8 @@ describe('fuentesDeBaseDeDatos: sondas de fuga en las tablas de salida', () => {
 
     const hallazgos = await buscar();
 
-    expect(hallazgos.map((hallazgo) => hallazgo.fuente)).toContain('clinical.ai_analysis_record[0]');
+    expect(hallazgos.map((hallazgo) => hallazgo.fuente)).toContain(
+      'clinical.ai_analysis_record[0]',
+    );
   });
 });

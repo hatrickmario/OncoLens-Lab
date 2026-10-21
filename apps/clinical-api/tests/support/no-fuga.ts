@@ -37,7 +37,9 @@ const sinTildesYEnMinusculas = (texto: string): string =>
 /** Valores que no pueden aparecer en ninguna fuente. Los de menos de 4 caracteres se ignoran: darían falsos positivos. */
 export function valoresProhibidos(valores: readonly string[]): string[] {
   const minimo = 4;
-  return [...new Set(valores.filter((valor) => valor.length >= minimo).map(sinTildesYEnMinusculas))];
+  return [
+    ...new Set(valores.filter((valor) => valor.length >= minimo).map(sinTildesYEnMinusculas)),
+  ];
 }
 
 /** Fuentes que contienen alguno de los valores, o claves de JSON con nombre de identidad. */

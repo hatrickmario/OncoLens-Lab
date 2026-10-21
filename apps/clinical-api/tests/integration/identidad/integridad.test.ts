@@ -5,14 +5,15 @@ import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
+import { conectar, type BaseDeTest } from '../../support/db.js';
+import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
-  conectar,
-  crearBaseDeTest,
-  leerConfiguracionArnes,
-  type BaseDeTest,
-} from '../../support/db.js';
-import { filaDePaciente, generadorDeIds, insertar } from '../../support/filas-sinteticas.js';
-import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
+  FX_T4A_A,
+  crearBaseDeIdentidad,
+  identidadDeFx,
+  insertarPacienteSintetico,
+  servicioDeIdentidad,
+} from '../../support/identidad.js';
 import {
   crearUsuariosDeAuth,
   insertarSesion,
@@ -33,18 +34,10 @@ describe('Error de integridad de la identidad cifrada', () => {
   let cookie: string;
 
   beforeAll(async () => {
-    base = await crearBaseDeTest(leerConfiguracionArnes(process.env), `ident_integridad_${process.pid}`);
+    base = await crearBaseDeIdentidad('integridad');
     cliente = await conectar(base.url);
-    patientId = (await insertar(cliente, 'clinical.patient', filaDePaciente(generadorDeIds(ESPACIO_DE_IDS))))[
-      'id'
-    ] as string;
-    await servicioDeIdentidad(cliente).guardar({
-      patientId,
-      idType: FX_T4A_A.idType,
-      issuingCountry: null,
-      numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
-      nombreCompleto: FX_T4A_A.nombreCompleto,
-    });
+    patientId = await insertarPacienteSintetico(cliente, generadorDeIds(ESPACIO_DE_IDS));
+    await servicioDeIdentidad(cliente).guardar(identidadDeFx(patientId));
     const { ids, doc1 } = await crearUsuariosDeAuth(cliente, ESPACIO_DE_IDS);
     await insertarSesion(cliente, ids, {
       userId: doc1.id,

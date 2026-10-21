@@ -19,7 +19,10 @@ describe('aadDeCampo', () => {
 
 describe('CifradorDeCampos', () => {
   it('descifra al texto original cuando el contexto y la versión coinciden', () => {
-    const cifrador = crearCifradorAesGcm({ anillo: anilloDeTest(), generarNonce: nonceSecuencial() });
+    const cifrador = crearCifradorAesGcm({
+      anillo: anilloDeTest(),
+      generarNonce: nonceSecuencial(),
+    });
 
     const { blob, keyVersion } = cifrador.cifrar('Lucía Rondón', CONTEXTO);
 
@@ -40,7 +43,10 @@ describe('CifradorDeCampos', () => {
   });
 
   it('produce textos cifrados distintos para el mismo valor cuando el nonce cambia', () => {
-    const cifrador = crearCifradorAesGcm({ anillo: anilloDeTest(), generarNonce: nonceSecuencial() });
+    const cifrador = crearCifradorAesGcm({
+      anillo: anilloDeTest(),
+      generarNonce: nonceSecuencial(),
+    });
 
     const primero = cifrador.cifrar('igual', CONTEXTO).blob;
     const segundo = cifrador.cifrar('igual', CONTEXTO).blob;
@@ -89,14 +95,20 @@ describe('CifradorDeCampos', () => {
   );
 
   it('lanza IdentityIntegrityError cuando la versión de clave no está configurada', () => {
-    const cifrador = crearCifradorAesGcm({ anillo: anilloDeTest(), generarNonce: nonceSecuencial() });
+    const cifrador = crearCifradorAesGcm({
+      anillo: anilloDeTest(),
+      generarNonce: nonceSecuencial(),
+    });
     const { blob } = cifrador.cifrar('valor', CONTEXTO);
 
     expect(() => cifrador.descifrar(blob, CONTEXTO, 7)).toThrow(IdentityIntegrityError);
   });
 
   it('lanza IdentityIntegrityError cuando el blob es más corto que nonce y etiqueta', () => {
-    const cifrador = crearCifradorAesGcm({ anillo: anilloDeTest(), generarNonce: nonceSecuencial() });
+    const cifrador = crearCifradorAesGcm({
+      anillo: anilloDeTest(),
+      generarNonce: nonceSecuencial(),
+    });
 
     expect(() => cifrador.descifrar(Buffer.alloc(10), CONTEXTO, 1)).toThrow(IdentityIntegrityError);
   });

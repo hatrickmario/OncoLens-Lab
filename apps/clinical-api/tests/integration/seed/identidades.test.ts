@@ -84,8 +84,14 @@ describe('Identidades cifradas del seed sintético', () => {
     ]);
     expect(segunda).toHaveLength(5);
     for (const [indice, fila] of segunda.entries()) {
-      expect(fila.national_id_ciphertext.equals(primera[indice]?.national_id_ciphertext ?? Buffer.alloc(0))).toBe(true);
-      expect(fila.full_name_ciphertext.equals(primera[indice]?.full_name_ciphertext ?? Buffer.alloc(0))).toBe(true);
+      expect(
+        fila.national_id_ciphertext.equals(
+          primera[indice]?.national_id_ciphertext ?? Buffer.alloc(0),
+        ),
+      ).toBe(true);
+      expect(
+        fila.full_name_ciphertext.equals(primera[indice]?.full_name_ciphertext ?? Buffer.alloc(0)),
+      ).toBe(true);
     }
   });
 

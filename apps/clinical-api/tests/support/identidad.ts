@@ -3,6 +3,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Client } from 'pg';
+import { crearBaseDeTest, leerConfiguracionArnes, type BaseDeTest } from './db.js';
+import { filaDePaciente, insertar, type GeneradorDeIds } from './filas-sinteticas.js';
 import type { LeerArchivo } from '../../src/config/secrets.js';
 import { crearAnilloDeClaves } from '../../src/infrastructure/crypto/anillo-de-claves.js';
 import { crearCifradorAesGcm } from '../../src/infrastructure/crypto/cifrador-aes-gcm.js';
@@ -10,6 +12,7 @@ import { crearIndiceCiego } from '../../src/infrastructure/crypto/indice-ciego.j
 import { createIdentityRepository } from '../../src/modules/patients/identity.repository.js';
 import {
   createIdentityService,
+  type IdentidadAGuardar,
   type IdentityService,
 } from '../../src/modules/patients/identity.service.js';
 
@@ -93,6 +96,35 @@ export function entornoDeClaves(
 }
 
 export const leerArchivoDeTest: LeerArchivo = (ruta) => readFileSync(ruta, 'utf8');
+
+/** Base migrada propia del archivo de test (el nombre lleva el pid para no chocar con restos). */
+export function crearBaseDeIdentidad(etiqueta: string): Promise<BaseDeTest> {
+  return crearBaseDeTest(leerConfiguracionArnes(process.env), `ident_${etiqueta}_${process.pid}`);
+}
+
+/** Paciente sintético sin identidad; devuelve su id. */
+export async function insertarPacienteSintetico(
+  cliente: Client,
+  ids: GeneradorDeIds,
+): Promise<string> {
+  const paciente = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
+  return paciente['id'] as string;
+}
+
+/** FX-T4a-a lista para `IdentityService.guardar`; `resto` sobrescribe campos (p. ej. otro número de documento). */
+export function identidadDeFx(
+  patientId: string,
+  resto: Partial<IdentidadAGuardar> = {},
+): IdentidadAGuardar {
+  return {
+    patientId,
+    idType: FX_T4A_A.idType,
+    issuingCountry: null,
+    numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
+    nombreCompleto: FX_T4A_A.nombreCompleto,
+    ...resto,
+  };
+}
 
 export interface OpcionesDeServicio {
   readonly versionActiva?: number;

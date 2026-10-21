@@ -13,11 +13,7 @@ import {
 } from '../../src/modules/auth/password-hasher.js';
 import { tablasDelCatalogo } from './catalogo.js';
 import { conectar, crearBaseDeTest, leerConfiguracionArnes, type BaseDeTest } from './db.js';
-import {
-  archivosDeClaves,
-  entornoDeClaves,
-  type ArchivosDeClaves,
-} from './identidad.js';
+import { archivosDeClaves, entornoDeClaves, type ArchivosDeClaves } from './identidad.js';
 import { ARGON2_DE_PRUEBA, loggerEnMemoria, type LoggerEnMemoria } from './usuarios.js';
 
 /**
