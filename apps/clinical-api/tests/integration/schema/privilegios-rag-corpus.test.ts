@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Client } from 'pg';
 import { describe, expect, inject, it } from 'vitest';
 import { conTransaccionRevertida } from '../../support/db.js';
 
@@ -11,13 +12,23 @@ import { conTransaccionRevertida } from '../../support/db.js';
  */
 
 const urlBase = inject('urlBaseDeTest');
+// Espacio de ids propio de este archivo (los archivos corren en paralelo sobre una sola base): nombra sus tablas.
+const ESPACIO_DE_IDS = 41;
+const TABLA_FUTURA = `clinical.tabla_futura_${ESPACIO_DE_IDS}_t`;
 const MIGRACION = resolve(
-  fileURLToPath(new URL('../../../prisma/migrations/20261021120000_privilegios_roles', import.meta.url)),
+  fileURLToPath(
+    new URL('../../../prisma/migrations/20261021120000_privilegios_roles', import.meta.url),
+  ),
   'migration.sql',
 );
 const ROLES_DEL_CORPUS = ['rag_corpus', 'rag_corpus_migrator'];
 const ESQUEMAS_CLINICOS = ['auth', 'identity', 'clinical', 'audit', 'research'];
 const PRIVILEGIOS_DE_TABLA = 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER';
+
+/** Vuelve a ejecutar el SQL de la migración sobre la base de test (dentro de la transacción revertida del test). */
+async function aplicarMigracionDePrivilegios(cliente: Client): Promise<void> {
+  await cliente.query(readFileSync(MIGRACION, 'utf8'));
+}
 
 describe('privilegios de rag_corpus y rag_corpus_migrator', () => {
   it.each(ROLES_DEL_CORPUS)(
@@ -57,11 +68,11 @@ describe('privilegios de rag_corpus y rag_corpus_migrator', () => {
         await cliente.query(
           `ALTER DEFAULT PRIVILEGES IN SCHEMA clinical GRANT SELECT ON TABLES TO ${rol}`,
         );
-        await cliente.query(readFileSync(MIGRACION, 'utf8'));
+        await aplicarMigracionDePrivilegios(cliente);
 
-        await cliente.query('CREATE TABLE clinical.tabla_futura_t (id int)');
+        await cliente.query(`CREATE TABLE ${TABLA_FUTURA} (id int)`);
         const acceso = await cliente.query<{ puede: boolean }>(
-          `SELECT has_table_privilege($1, 'clinical.tabla_futura_t', $2) AS puede`,
+          `SELECT has_table_privilege($1, '${TABLA_FUTURA}', $2) AS puede`,
           [rol, PRIVILEGIOS_DE_TABLA],
         );
 
@@ -75,8 +86,8 @@ describe('privilegios de rag_corpus y rag_corpus_migrator', () => {
       await cliente.query('GRANT USAGE ON SCHEMA clinical TO rag_corpus');
       await cliente.query('GRANT SELECT ON clinical.patient TO rag_corpus');
 
-      await cliente.query(readFileSync(MIGRACION, 'utf8'));
-      await cliente.query(readFileSync(MIGRACION, 'utf8'));
+      await aplicarMigracionDePrivilegios(cliente);
+      await aplicarMigracionDePrivilegios(cliente);
 
       const acceso = await cliente.query<{ puede: boolean }>(
         `SELECT has_table_privilege('rag_corpus', 'clinical.patient', 'SELECT')
@@ -90,13 +101,13 @@ describe('privilegios de rag_corpus y rag_corpus_migrator', () => {
 describe('privilegios de PUBLIC', () => {
   it('no hereda nada en public ni en los schemas clínicos [US-040 AC-3]', async () => {
     await conTransaccionRevertida(urlBase, async (cliente) => {
-      await cliente.query('CREATE TABLE clinical.tabla_futura_publica_t (id int)');
+      await cliente.query(`CREATE TABLE ${TABLA_FUTURA} (id int)`);
       const acceso = await cliente.query<{ puede: boolean }>(
         `SELECT bool_or(has_schema_privilege('rag_corpus', s, 'USAGE, CREATE')) AS puede
            FROM unnest(ARRAY['public', 'auth', 'identity', 'clinical', 'audit', 'research']) AS s`,
       );
       const tabla = await cliente.query<{ acl: string | null }>(
-        `SELECT relacl::text AS acl FROM pg_class WHERE oid = 'clinical.tabla_futura_publica_t'::regclass`,
+        `SELECT relacl::text AS acl FROM pg_class WHERE oid = '${TABLA_FUTURA}'::regclass`,
       );
 
       expect(acceso.rows[0]?.puede).toBe(false);
