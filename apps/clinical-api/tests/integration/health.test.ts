@@ -102,7 +102,10 @@ describe('GET /health', () => {
   it('informa catalogVersion 1.0.1 validado contra el spec cuando CLINICAL_CATALOG_PATH apunta a un catálogo 1.0.1 [US-041 AC-4]', async () => {
     const directorio = mkdtempSync(path.join(tmpdir(), 'clinical-api-catalogo-'));
     try {
-      writeFileSync(path.join(directorio, 'manifest.json'), JSON.stringify({ version: '1.0.1' }));
+      writeFileSync(
+        path.join(directorio, 'manifest.json'),
+        JSON.stringify({ version: '1.0.1', cancerTypes: ['mama', 'prostata'] }),
+      );
       const catalogo = crearProveedorDeCatalogo(directorio, (ruta) => readFileSync(ruta, 'utf8'));
 
       const respuesta = await clienteVerificado(

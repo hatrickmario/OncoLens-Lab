@@ -14,23 +14,19 @@ describe('crearProveedorDeCatalogo', () => {
     expect(leidos).toEqual(['/catalogs/manifest.json']);
   });
 
-  it('devuelve los cancerTypes del manifiesto y una lista vacía cuando el manifiesto no los trae', () => {
-    const conTipos = crearProveedorDeCatalogo('/catalogs', () =>
+  it('devuelve los cancerTypes del manifiesto', () => {
+    const proveedor = crearProveedorDeCatalogo('/catalogs', () =>
       JSON.stringify({ version: '1.0.0', cancerTypes: ['mama', 'prostata'] }),
     );
-    const sinTipos = crearProveedorDeCatalogo('/catalogs', () =>
-      JSON.stringify({ version: '1.0.0' }),
-    );
 
-    expect(conTipos.cancerTypes()).toEqual(['mama', 'prostata']);
-    expect(sinTipos.cancerTypes()).toEqual([]);
+    expect(proveedor.cancerTypes()).toEqual(['mama', 'prostata']);
   });
 
   it('lee el manifiesto una sola vez, al crearse', () => {
     let lecturas = 0;
     const proveedor = crearProveedorDeCatalogo('/catalogs', () => {
       lecturas += 1;
-      return JSON.stringify({ version: '1.0.0' });
+      return JSON.stringify({ version: '1.0.0', cancerTypes: [] });
     });
 
     proveedor.version();
@@ -41,7 +37,11 @@ describe('crearProveedorDeCatalogo', () => {
 
   it('falla con version_catalogo_distinta sin citar versiones cuando la expectativa difiere del manifiesto', () => {
     try {
-      crearProveedorDeCatalogo('/catalogs', () => JSON.stringify({ version: '1.0.0' }), '9.9.9');
+      crearProveedorDeCatalogo(
+        '/catalogs',
+        () => JSON.stringify({ version: '1.0.0', cancerTypes: [] }),
+        '9.9.9',
+      );
     } catch (error) {
       expect((error as ConfiguracionInvalidaError).variable).toBe('CLINICAL_CATALOG_VERSION');
       expect((error as ConfiguracionInvalidaError).motivo).toBe('version_catalogo_distinta');
@@ -54,7 +54,7 @@ describe('crearProveedorDeCatalogo', () => {
   it('acepta la expectativa cuando coincide con el manifiesto', () => {
     const proveedor = crearProveedorDeCatalogo(
       '/catalogs',
-      () => JSON.stringify({ version: '1.0.0' }),
+      () => JSON.stringify({ version: '1.0.0', cancerTypes: [] }),
       '1.0.0',
     );
 
@@ -69,7 +69,8 @@ describe('crearProveedorDeCatalogo', () => {
     ['no existe', noExiste],
     ['no es JSON', () => 'no es json'],
     ['no tiene version', () => JSON.stringify({ cancerTypes: [] })],
-    ['tiene una version vacía', () => JSON.stringify({ version: '' })],
+    ['tiene una version vacía', () => JSON.stringify({ version: '', cancerTypes: [] })],
+    ['no tiene cancerTypes', () => JSON.stringify({ version: '1.0.0' })],
   ])(
     'falla nombrando CLINICAL_CATALOG_PATH y sin citar la ruta ni el contenido cuando el manifiesto %s',
     (_caso, lector) => {

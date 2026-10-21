@@ -1,12 +1,6 @@
-import { z } from 'zod';
 import { ConfiguracionInvalidaError } from '../../config/index.js';
+import { esquemaDeManifest } from '../../infrastructure/catalogo/manifiesto.schema.js';
 import type { CatalogVersionProvider } from './ports.js';
-
-const esquemaDeManifest = z.object({
-  version: z.string().min(1),
-  // Ausente = ningún tipo en el catálogo: `validarTiposHabilitados` rechaza cualquier habilitado (US-043 AC-5).
-  cancerTypes: z.array(z.string()).default([]),
-});
 
 /** Lo que el arranque lee del `manifest.json`: la versión (todo despliegue) y los tipos de cáncer del catálogo. */
 export interface ProveedorDeCatalogo extends CatalogVersionProvider {
