@@ -22,6 +22,7 @@ function servicioCon(sesion: SesionConUsuario | null) {
     repo: {
       buscarUsuarioPorCorreo: () => Promise.resolve(null),
       crearSesion: () => Promise.resolve(),
+      revocarSesion: () => Promise.resolve(),
       buscarSesionPorTokenHash: (hash) => {
         consultas.push(hash);
         return Promise.resolve(hash === hashDeToken('tokenConocido') ? sesion : null);

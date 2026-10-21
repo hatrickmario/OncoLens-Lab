@@ -32,6 +32,8 @@ export interface AuthRepository {
   buscarUsuarioPorCorreo(correo: string): Promise<UsuarioParaLogin | null>;
   crearSesion(sesion: NuevaSesion): Promise<void>;
   buscarSesionPorTokenHash(tokenHash: string): Promise<SesionConUsuario | null>;
+  /** Marca `revoked = true` en la sesión de ese token (idempotente). */
+  revocarSesion(tokenHash: string): Promise<void>;
 }
 
 /** Consulta SQL mínima que necesita el repository (la cumplen `pg.Pool` y `pg.Client`). */
@@ -111,6 +113,10 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         expiresAt: fila['expires_at'] as Date,
         revoked: fila['revoked'] as boolean,
       };
+    },
+
+    async revocarSesion(tokenHash) {
+      await db.query('UPDATE auth.session SET revoked = true WHERE token_hash = $1', [tokenHash]);
     },
   };
 }

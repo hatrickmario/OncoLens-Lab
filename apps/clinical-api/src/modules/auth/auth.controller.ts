@@ -1,5 +1,6 @@
 import express, { Router, type ErrorRequestHandler, type Response } from 'express';
 import { authorize } from '../../middleware/authorize.js';
+import { tokenDeCookie } from '../../middleware/auth.js';
 import { enviarError, esErrorDeCuerpoDelCliente } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { loginSchema, NOMBRE_COOKIE_DE_SESION } from './auth.schema.js';
@@ -12,6 +13,7 @@ export interface DependenciasDeAuthController {
 }
 
 const EVENTO_LOGIN = 'auth.login';
+const EVENTO_LOGOUT = 'auth.logout';
 
 /** Cookie opaca de sesión: `HttpOnly; Secure; SameSite=Strict; Path=/`, sin `Domain` (design D6). */
 function establecerCookieDeSesion(respuesta: Response, token: string): void {
@@ -20,6 +22,17 @@ function establecerCookieDeSesion(respuesta: Response, token: string): void {
     secure: true,
     sameSite: 'strict',
     path: '/',
+  });
+}
+
+/** Borra la cookie con los mismos atributos con los que se emitió (`Max-Age=0`); el navegador la descarta. */
+function borrarCookieDeSesion(respuesta: Response): void {
+  respuesta.cookie(NOMBRE_COOKIE_DE_SESION, '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 0,
   });
 }
 
@@ -70,13 +83,18 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
 }
 
 /**
- * `POST /auth/logout` (se monta bajo `/platform`, DESPUÉS del guard). Esqueleto: el comportamiento llega con el commit
- * `feat(L1D-198)`.
+ * `POST /auth/logout` (se monta bajo `/platform`, DESPUÉS del guard): revoca la sesión del token presentado y borra la
+ * cookie. Una sesión ausente o ya revocada no llega aquí: el guard responde 401 (idempotencia, design D2).
  */
-export function logoutController(_dependencias: DependenciasDeAuthController): Router {
+export function logoutController(dependencias: DependenciasDeAuthController): Router {
+  const { service, nuevoTraceId, registrar } = dependencias;
   const router = Router();
-  router.post('/auth/logout', authorize('session:logout'), () => {
-    throw new Error('no implementado');
+  router.post('/auth/logout', authorize('session:logout'), async (request, response) => {
+    const token = tokenDeCookie(request.headers.cookie);
+    if (token !== undefined) await service.cerrarSesion(token);
+    borrarCookieDeSesion(response);
+    registrar({ event: EVENTO_LOGOUT, resultado: 'ok', traceId: nuevoTraceId() });
+    response.status(204).end();
   });
   return router;
 }

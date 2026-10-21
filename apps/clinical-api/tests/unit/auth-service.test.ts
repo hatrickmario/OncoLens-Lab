@@ -41,6 +41,7 @@ function repositorioFalso(usuarios: Record<string, UsuarioParaLogin>) {
       return Promise.resolve();
     },
     buscarSesionPorTokenHash: () => Promise.resolve(null),
+    revocarSesion: () => Promise.resolve(),
   };
   return { repo, sesiones, consultados };
 }

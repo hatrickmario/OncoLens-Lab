@@ -4,9 +4,11 @@ import type { Client } from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
+import { logoutController } from '../../../src/modules/auth/auth.controller.js';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { incoherencias } from '../../support/rutas-y-contrato.js';
 import { asegurarPermisos, crearRolDePrueba } from '../../support/roles.js';
 import {
   contrasenaDeTest,
@@ -17,6 +19,7 @@ import {
   loggerEnMemoria,
   relojFijo,
   tokensFijos,
+  traceIdsFijos,
   type UsuarioDeTest,
 } from '../../support/usuarios.js';
 
@@ -138,5 +141,17 @@ describe('POST /platform/auth/logout', () => {
       expect(respuesta.headers['set-cookie']).toBeUndefined();
     }
     expect(await revocada(vigente)).toBe(false);
+  });
+});
+
+describe('coherencia del logout con el contrato', () => {
+  it('monta POST /platform/auth/logout con authorize(session:logout) igual que su x-permission', () => {
+    const router = logoutController({
+      service: { cerrarSesion: () => Promise.resolve() } as never,
+      nuevoTraceId: traceIdsFijos(),
+      registrar: loggerEnMemoria().registrar,
+    });
+
+    expect(incoherencias([router])).toEqual([]);
   });
 });

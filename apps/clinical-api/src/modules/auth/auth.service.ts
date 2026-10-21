@@ -22,6 +22,8 @@ export interface AuthService {
   iniciarSesion(credenciales: { email: string; password: string }): Promise<{ token: string }>;
   /** `null` si el token no corresponde a una sesión vigente de un usuario activo. */
   resolverSesion(token: string): Promise<SesionAutenticada | null>;
+  /** Revoca la sesión del token presentado (cierre de sesión, US-044 AC-1). */
+  cerrarSesion(token: string): Promise<void>;
 }
 
 export class CredencialesInvalidasError extends Error {
@@ -94,6 +96,9 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
       // `expires_at` es absoluto y excluyente: en el instante exacto la sesión ya caducó (S1 resp. 14c).
       if (sesion.expiresAt.getTime() <= reloj.now().getTime()) return null;
       return { userId: sesion.userId, rol: sesion.rol, permisos: new Set(sesion.permisos) };
+    },
+    async cerrarSesion(token) {
+      await repo.revocarSesion(hashDeToken(token));
     },
   };
 }
