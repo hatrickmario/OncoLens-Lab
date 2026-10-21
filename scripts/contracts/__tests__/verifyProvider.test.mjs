@@ -22,10 +22,13 @@ const nombreDe = (suite) => [suite.comando, ...suite.args].join(' ');
  * Un ejecutor falso: `verificadas` dice cuántas respuestas deja cada suite (por nombre) en SU archivo de reporte; `salidas`
  * lo que imprime (para el recuento de Pytest). El segundo argumento es el reporte propio de la suite.
  */
+/** El proveedor cuyas respuestas deja una suite en su reporte: el hook de Pytest escribe `rag-orchestrator`, el cliente de Vitest `clinical-api`. */
+const proveedorDe = (nombreDeSuite) => (nombreDeSuite.includes('pytest') ? 'rag-orchestrator' : 'clinical-api');
+
 const ejecutorFalso = ({ verificadas = {}, salidas = {}, codigos = {}, motivos = {} } = {}) =>
   async (suite, { archivoDeReporte: propio } = {}) => {
     const nombre = nombreDe(suite);
-    if (propio !== undefined) appendFileSync(propio, 'clinical-api\n'.repeat(verificadas[nombre] ?? 0));
+    if (propio !== undefined) appendFileSync(propio, `${proveedorDe(nombre)}\n`.repeat(verificadas[nombre] ?? 0));
     return { codigo: codigos[nombre] ?? 0, salida: salidas[nombre] ?? '', ...(motivos[nombre] && { motivo: motivos[nombre] }) };
   };
 
@@ -48,8 +51,7 @@ describe('leerArgumentos', () => {
 describe('verificarProveedores', () => {
   it('suma las respuestas de cada suite de clinical-api y toma las de rag-orchestrator de la salida de Pytest [US-214 AC-1]', async () => {
     const ejecutar = ejecutorFalso({
-      verificadas: { [SUITE_UNITARIA]: 2, [SUITE_INTEGRACION]: 5 },
-      salidas: { 'python -m pytest': '.....\nverificación del proveedor: 7 respuestas verificadas contra rag-orchestrator\n' },
+      verificadas: { [SUITE_UNITARIA]: 2, [SUITE_INTEGRACION]: 5, 'python -m pytest': 7 },
     });
 
     const resumen = await verificarProveedores({ proveedores: PROVIDERS, ejecutar, archivoDeReporte, estricto: true });
@@ -58,6 +60,22 @@ describe('verificarProveedores', () => {
       { proveedor: 'clinical-api', verificadas: 7, errores: [] },
       { proveedor: 'rag-orchestrator', verificadas: 7, errores: [] },
     ]);
+  });
+
+  it('cuenta rag-orchestrator desde el archivo de reporte aunque Pytest no imprima ninguna frase de resumen [US-214 AC-1]', async () => {
+    const ejecutar = ejecutorFalso({ verificadas: { 'python -m pytest': 3 } });
+
+    const [resumen] = await verificarProveedores({ proveedores: ['rag-orchestrator'], ejecutar, archivoDeReporte, estricto: true });
+
+    expect(resumen).toEqual({ proveedor: 'rag-orchestrator', verificadas: 3, errores: [] });
+  });
+
+  it('falla en estricto cuando el archivo de la suite de Pytest queda vacío aunque imprima una frase de resumen [US-214 AC-1]', async () => {
+    const ejecutar = ejecutorFalso({ salidas: { 'python -m pytest': 'verificación del proveedor: 9 respuestas verificadas contra rag-orchestrator\n' } });
+
+    const [resumen] = await verificarProveedores({ proveedores: ['rag-orchestrator'], ejecutar, archivoDeReporte, estricto: true });
+
+    expect(resumen.errores).toEqual(['python -m pytest: no verificó ninguna respuesta (la verificación del proveedor no estaba activa en esa suite)']);
   });
 
   it('ejecuta las dos suites de clinical-api y la de rag-orchestrator con el intérprete indicado', async () => {
