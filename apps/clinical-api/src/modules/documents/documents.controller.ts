@@ -1,9 +1,10 @@
 import { Router, type RequestHandler, type Response } from 'express';
-import { enviarError } from '../../infrastructure/http-errores.js';
+import { enviarError, type CodigoDeError } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import { ArchivoNoPdf } from './documents.errores.js';
 import { leerCargaMultipart } from './documents.multipart.js';
 import type { DocumentsService, TipoDeDocumento } from './documents.service.js';
 
@@ -14,6 +15,20 @@ export interface DependenciasDelController {
 }
 
 const EVENTO = 'documents.carga';
+
+interface Rechazo {
+  status: number;
+  codigo: CodigoDeError;
+  resultado: string;
+}
+
+/** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
+function rechazoDe(error: unknown): Rechazo | undefined {
+  if (error instanceof ArchivoNoPdf) {
+    return { status: 422, codigo: 'ARCHIVO_NO_PDF', resultado: 'archivo_no_pdf' };
+  }
+  return undefined;
+}
 
 /**
  * `POST /patients/{patientId}/documents` (se monta bajo `/platform`, detrás del guard de sesión). Solo traduce
@@ -34,21 +49,28 @@ export function documentsController(dependencias: DependenciasDelController): Ro
       enviarError(response, 422, 'CUERPO_INVALIDO', traceIdDe(response));
       return;
     }
-    const documento = await service.cargar({
-      patientId,
-      userId: sesion.userId,
-      documentType: carga.documentType as TipoDeDocumento,
-      nombreOriginal: carga.archivo.nombre,
-      contenido: carga.archivo.contenido,
-    });
-    registrar({
-      event: EVENTO,
-      resultado: 'ok',
-      traceId: traceIdDe(response),
-      patientId,
-      documentId: documento.id,
-    });
-    response.status(202).json(documento);
+    try {
+      const documento = await service.cargar({
+        patientId,
+        userId: sesion.userId,
+        documentType: carga.documentType as TipoDeDocumento,
+        nombreOriginal: carga.archivo.nombre,
+        contenido: carga.archivo.contenido,
+      });
+      registrar({
+        event: EVENTO,
+        resultado: 'ok',
+        traceId: traceIdDe(response),
+        patientId,
+        documentId: documento.id,
+      });
+      response.status(202).json(documento);
+    } catch (error) {
+      const rechazo = rechazoDe(error);
+      if (rechazo === undefined) throw error;
+      registrar({ event: EVENTO, resultado: rechazo.resultado, traceId: traceIdDe(response), patientId });
+      enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
+    }
   };
 
   router.post(

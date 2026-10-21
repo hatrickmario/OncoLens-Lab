@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { DocumentsRepository } from './documents.repository.js';
-import { claveDeObjeto } from './documents.reglas.js';
+import { ArchivoNoPdf } from './documents.errores.js';
+import { claveDeObjeto, esPdfPorMagicBytes } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
 
 export type TipoDeDocumento = 'historia_clinica' | 'examen';
@@ -44,6 +45,7 @@ export function crearDocumentsService(dependencias: DependenciasDelService): Doc
   const { repo, almacen, reloj, ids } = dependencias;
   return {
     async cargar(solicitud) {
+      if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
       const id = ids();
       const clave = claveDeObjeto(solicitud.patientId, id);
       const subidoEn = reloj.now();
