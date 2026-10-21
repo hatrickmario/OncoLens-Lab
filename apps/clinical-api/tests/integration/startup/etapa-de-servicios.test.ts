@@ -89,6 +89,23 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
     });
   });
 
+  it('no escucha y registra configuracion_invalida con catalogo_no_disponible, sin ruta, cuando el catálogo no existe [US-041 AC-5]', () => {
+    const catalogoAusente = path.join(directorio, 'catalogo-secreto-ausente');
+
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: catalogoAusente });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_PATH',
+      regla: 'manifest.json legible',
+      motivo: 'catalogo_no_disponible',
+    });
+    expect(resultado.log).not.toContain('catalogo-secreto-ausente');
+  });
+
   it('no escucha y registra configuracion_invalida con CLINICAL_CATALOG_VERSION, sin versiones ni ruta, cuando difiere del manifiesto [US-041 D1]', () => {
     const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '9.9.9' });
 

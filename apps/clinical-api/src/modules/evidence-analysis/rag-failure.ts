@@ -13,6 +13,7 @@ const TIPO_CANCER_NO_REGISTRADO = respuesta(
   'TIPO_CANCER_NO_REGISTRADO',
   'tipo_cancer_no_registrado_en_rag',
 );
+const CATALOGO_EN_CONFLICTO = respuesta(409, 'CATALOG_VERSION_MISMATCH', 'catalogo_en_conflicto');
 const servicioIa = (resultado: string) => respuesta(502, 'ERROR_SERVICIO_IA', resultado);
 
 /** `200` de rag-orchestrator que no cumple `RagQueryInternalResponse` o es incoherente. */
@@ -35,7 +36,8 @@ function falloDe503(codigo: string | null | undefined): RespuestaDeFallo {
 /**
  * Tabla ÚNICA de fallos de rag-orchestrator (`[S1 resp. 12]`, `[S1 resp. 35]`): qué responde clinical-api ante cada uno.
  * Ninguna fila persiste un registro ni reenvía el cuerpo, el `message` o las cabeceras de rag-orchestrator.
- * En el S1 `409` y `429` caen en `502`; US-041 (S2) y US-056 (S4) los cambian por regresión.
+ * `409` con `CATALOG_VERSION_MISMATCH` se traduce a `409` (US-041); cualquier otro `409` y el `429` caen en `502`
+ * hasta que US-056 (S4) cambie el `429` por regresión.
  */
 export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
   if (fallo.tiempoAgotado === true) return DEADLINE_VENCIDO;
@@ -51,7 +53,9 @@ export function mapearFalloRag(fallo: FalloDeRag): RespuestaDeFallo {
     case 401:
       return servicioIa('token_de_servicio_rechazado');
     case 409:
-      return servicioIa('catalogo_en_conflicto');
+      return fallo.codigo === 'CATALOG_VERSION_MISMATCH'
+        ? CATALOGO_EN_CONFLICTO
+        : servicioIa('conflicto_de_rag');
     case 429:
       return servicioIa('limite_de_rag_alcanzado');
     case null:

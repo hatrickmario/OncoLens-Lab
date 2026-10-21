@@ -25,6 +25,7 @@ export function createHealthRouter(salud: InformacionDeSalud = SALUD_POR_DEFECTO
       status: 'ok',
       configKeys: salud.configKeys,
       serviceVersion: salud.serviceVersion,
+      ...(salud.catalogVersion !== undefined && { catalogVersion: salud.catalogVersion }),
     });
   });
   return router;
