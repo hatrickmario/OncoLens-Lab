@@ -44,6 +44,31 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
 - **D5 · `baseline.json`:** lo escribe 072a con la configuración de CI (FX-T5a-a) para que US-074
   compare; el baseline con modelos reales lo registra US-073.
 
+## Decisiones de implementación 072a
+
+- **D6 · Una ruta por función.** Los **datasets de entrada** viven en `data/eval/` (donde ya están `adr39-mini`,
+  `ocr-mini` y `ol06-particion-v1`, citados por ADR-39 y ADR-45); el FX-T5a-a es `data/eval/fx-t5a-a/`. En
+  `data/evaluation/` solo quedan las **salidas versionadas** (`baseline.json`) y el histórico `vm-baseline/`.
+  Respuesta a la pregunta abierta 1 de ADR-41: no se mueve ningún dataset. **Pendiente fuera de este change:** la
+  skill `run-ai-eval` y OL-06 dicen «datasets de `data/evaluation/`»; deben decir `data/eval/`.
+- **D7 · Configuración y resultados.** Las configuraciones viven donde ya están las de ADR-39:
+  `apps/rag-orchestrator/eval/configs/` (la CI usa `test-fake.yaml`); el resultado va a
+  `apps/rag-orchestrator/eval/results/<fecha>-<hashConfig>.json` (`--salida` lo cambia). `hashConfig` es el SHA-256
+  del YAML cargado, serializado de forma canónica; la `<fecha>` sale del reloj inyectado, nunca de las métricas.
+- **D8 · Adaptadores falsos como código de `app/evaluation/`.** `adaptadores_falsos.py` implementa los puertos de
+  `app/application/ports.py` (mismo contrato que los reales: un puntaje por candidato y en [0, 1], `null` ≠ `0.0`) y
+  se compone con `adaptadores.proveedor: fake`. Con `proveedor: local` el runner solo valida las URL con
+  `es_proveedor_local()`; los adapters reales con URL se cablean en US-073 (calibración).
+- **D9 · Reloj de medición.** `medicion.reloj: simulado` (1 ms por lectura) hace reproducible también el p95 por
+  etapa en la CI; `real` usa `time.perf_counter` y su p95 **no** es una métrica determinista (AC-2).
+- **D10 · Esquema cerrado del reporte.** `escribir_reporte_cerrado` valida contra `ESQUEMA_SUITE` (lista blanca
+  de claves; hojas numéricas, booleanas, de cadenas enumeradas o identificadores sin espacios bajo
+  `configuracion`). `escribir_reporte` (ADR-39) no cambia. Cada familia de métricas se calcula sobre la muestra
+  completa y sobre la revisada por el oncólogo; el rótulo lo decide `rotular_validada()`.
+- **D11 · Familias.** `--suite retrieval|generation|all`; `pii` y las demás familias de `run-ai-eval` terminan con
+  código 2 («familia no disponible») hasta su bloque. `--prueba-final` es obligatoria si `dataset.subconjunto` es
+  `prueba` (ADR-45 P3); el registro de accesos y la huella previa de P3 no se implementan en 072a.
+
 ## Privacidad y ownership
 
 Solo sintéticos; los reales anonimizados se pasan por ruta local y nunca a la CI (RN-13, RN-14).
