@@ -1,3 +1,4 @@
+import { AvisoDeSesion } from '../../components/molecules/aviso-de-sesion';
 import { LoginForm } from '../../components/organisms/login-form';
 import { Card } from '../../components/ui/card';
 import { mensajes } from '../../lib/mensajes';
@@ -13,8 +14,8 @@ export default async function LoginPage(
     searchParams?: Promise<Record<string, string | string[] | undefined>>;
   } = {},
 ) {
-  void props.searchParams; // esqueleto del AC-4: se consume en el feat
   const { app, login } = mensajes();
+  const { motivo } = (await props.searchParams) ?? {};
   return (
     <main className="grid min-h-screen place-items-center p-4">
       <Card
@@ -31,6 +32,7 @@ export default async function LoginPage(
           {login.titulo}
         </h1>
         <p className="text-text-muted m-0 mb-6">{login.subtitulo}</p>
+        <AvisoDeSesion motivo={motivo} textos={login} className="mb-4" />
         <LoginForm homePath={leerConfigWeb().homePath} textos={login} />
       </Card>
     </main>
