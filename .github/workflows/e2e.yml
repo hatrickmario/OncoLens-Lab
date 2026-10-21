@@ -1,0 +1,60 @@
+# E2E de Playwright en la CI (L1D-278, ARR-02 AC-1; docs/process/ci.md). Workflow APARTE de ci.yml: no forma parte de `ci-ok`
+# (que depende de todos los jobs de ci.yml) hasta cumplir el criterio de estabilidad (design.md D2). Mismas reglas que ci.yml:
+# sin secretos del repositorio, sin pull_request_target, acciones por SHA, permisos de solo lectura.
+# El stack es el Compose con LLM y modelos FINGIDOS y seed sintético; los usuarios y contraseñas de los E2E los genera
+# scripts/e2e/ejecutar.sh en una carpeta temporal del runner (nunca versionados, RN-14).
+name: E2E
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Rechazar E2E desactivados (test.skip, test.only, test.fixme)
+        run: node scripts/ci/verificar-e2e-activos.mjs
+      - name: Instalar Chromium de Playwright con sus dependencias del sistema
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Prueba de que el informe de Playwright no conserva la contraseña de prueba (Playwright y Chromium reales)
+        run: npx vitest run --config scripts/e2e/vitest.integracion.config.mjs
+        env:
+          CI: 'true'
+      - name: E2E contra el Compose fingido
+        run: npm run test:e2e
+        env:
+          CI: 'true'
+      # Informe HTML y trazas del reintento, depurados por depurador-de-adjuntos y verificados por verificador-de-informe
+      # (sin cuerpos de request ni contraseñas; si queda un secreto, el verificador borra el informe y falla la corrida). El repositorio es público: el artefacto es descargable, de ahí la retención corta.
+      - name: Publicar informe y trazas
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-informe
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 3
+          include-hidden-files: false
+          if-no-files-found: ignore
