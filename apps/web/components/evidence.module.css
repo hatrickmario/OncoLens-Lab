@@ -120,6 +120,22 @@
   margin: 0 0 0.5rem;
 }
 
+.masDetalle {
+  margin: 0.75rem 0;
+}
+
+.masDetalle summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.masDetalle p {
+  margin: 0.5rem 0 0;
+}
+
 .enlace {
   min-height: 2.75rem;
   color: var(--color-primary);

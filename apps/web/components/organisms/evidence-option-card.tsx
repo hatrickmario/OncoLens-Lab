@@ -25,6 +25,14 @@ export function EvidenceOptionCard({ opcion, indice, onVerFragmento }: EvidenceO
     <article className={estilos.tarjeta}>
       <h3>{opcion.option}</h3>
       <p>{opcion.rationale}</p>
+      {opcion.details && opcion.details.length > 0 && (
+        <details className={estilos.masDetalle}>
+          <summary>{mensajes().evidence.detalle.resumen}</summary>
+          {opcion.details.map((parrafo) => (
+            <p key={parrafo}>{parrafo}</p>
+          ))}
+        </details>
+      )}
       <ul className={estilos.citas} aria-label={mensajes().evidence.cita.lista}>
         {opcion.citedSources.map((cita) => {
           const idChip = `cita-${indice}-${cita.chunkId}`;

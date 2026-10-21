@@ -134,7 +134,9 @@ describe('EvidencePanel', () => {
   });
 
   it('no muestra el control Ver más detalle cuando la opción no trae details [ARR-08 AC-4]', async () => {
-    bff.responder({ status: 200, cuerpo: conEvidencia });
+    const sinDetalle = structuredClone(conEvidencia);
+    delete (sinDetalle.evidenceOptions[0] as { details?: string[] }).details;
+    bff.responder({ status: 200, cuerpo: sinDetalle });
     await analizar();
 
     await screen.findByText(opcion.rationale);
