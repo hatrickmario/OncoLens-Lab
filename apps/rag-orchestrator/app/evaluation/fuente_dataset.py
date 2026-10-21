@@ -15,6 +15,7 @@ from typing import Any, Protocol
 import yaml
 
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido, Evidencia, Pregunta
+from app.evaluation.rutas import raiz_repo
 
 CLASE_REAL_ANONIMIZADO = "real_anonimizado"
 CLASES_ADMITIDAS = (CLASE_SINTETICA, CLASE_REAL_ANONIMIZADO)
@@ -146,7 +147,14 @@ class FuenteDatasetEnDirectorio:
         clase = str(manifiesto.get("clase"))
         if clase not in CLASES_ADMITIDAS:
             raise DatasetInvalido("el manifiesto no declara una clase de datos admitida (RN-13)")
+        if clase != CLASE_SINTETICA and self._esta_en_el_repo():
+            raise DatasetInvalido(
+                "un dataset del repositorio debe declarar 'clase: sintetico' (RN-13, RN-14)"
+            )
         return clase
+
+    def _esta_en_el_repo(self) -> bool:
+        return self._directorio.resolve().is_relative_to((self._raiz or raiz_repo()).resolve())
 
     def _leer_con_clase(self, archivo: str, clase: str) -> dict[str, Any]:
         contenido = _leer(self._directorio / archivo)

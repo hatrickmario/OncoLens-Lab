@@ -51,7 +51,7 @@ def main(argv: Sequence[str], *, reloj: Clock | None = None, raiz: Path | None =
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
         config = cargar_config_suite(args.config)
-        return _ejecutar(config, args, reloj or RelojDelSistema())
+        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
@@ -60,17 +60,19 @@ def main(argv: Sequence[str], *, reloj: Clock | None = None, raiz: Path | None =
         return 1
 
 
-def _fuente_de(config: ConfigSuite) -> FuenteDatasetEnDirectorio:
+def _fuente_de(config: ConfigSuite, raiz: Path | None) -> FuenteDatasetEnDirectorio:
     if config.subconjunto is None or config.particion is None:
-        return FuenteDatasetEnDirectorio(config.dataset)
+        return FuenteDatasetEnDirectorio(config.dataset, raiz=raiz)
     return FuenteDatasetEnDirectorio(
-        config.dataset, ids_de_subconjunto(config.particion, config.subconjunto)
+        config.dataset, ids_de_subconjunto(config.particion, config.subconjunto), raiz
     )
 
 
-def _ejecutar(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> int:
+def _ejecutar(
+    config: ConfigSuite, args: argparse.Namespace, reloj: Clock, raiz: Path | None
+) -> int:
     exigir_marca_final(config, args.prueba_final)
-    dataset = _fuente_de(config).cargar()
+    dataset = _fuente_de(config, raiz).cargar()
     cronometro = Cronometro(_reloj_de_medicion(config))
     suite = componer_servicio(config, dataset, cronometro, reloj)
     resultados, respuestas = asyncio.run(evaluar_dataset(suite, dataset))
