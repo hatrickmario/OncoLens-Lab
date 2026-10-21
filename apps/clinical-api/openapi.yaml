@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.5.0
+  version: 1.6.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -662,6 +662,11 @@ components:
       required: [status]
       properties:
         status: { type: string, const: ok }
+        configKeys:
+          type: array
+          description: Nombres de las claves de configuración cargadas; nunca valores (RN-14).
+          items: { type: string, pattern: '^[A-Z][A-Z0-9_]*$' }
+        serviceVersion: { type: string, minLength: 1 }
     # ---- Schemas compartidos con rag-orchestrator: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'
