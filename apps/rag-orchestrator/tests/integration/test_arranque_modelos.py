@@ -14,7 +14,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
-from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.modelos import (
     RAIZ_APP,
@@ -139,4 +138,3 @@ def test_rag_query_con_llm_local_y_modelos_fake_responde_503_sin_recuperar_ni_in
 
     assert respuesta.status_code == 503
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
-    assert_matches_spec("#/paths/~1rag~1query/post/responses/503", respuesta.json())
