@@ -7,8 +7,7 @@ el repositorio) y lo entrega el fixture de sesión de `conftest.py`. Es el equiv
 respuesta de rag-orchestrator (por ejemplo, un ejemplo de `contracts/examples/`).
 
 Diferencias de paridad con el verificador JS, declaradas (deuda: vectores dorados comunes en `contracts/`,
-ver design-principles L1D-264): aquí no se resuelve un código por rango `NXX` ni `default`, no se elige la
-plantilla más específica cuando dos coinciden y no se rechaza un cuerpo cuando el spec no declara contenido;
+ver design-principles lote R6): aquí no se elige la plantilla más específica cuando dos coinciden;
 los formatos se validan con el `FORMAT_CHECKER` de jsonschema (sin `date-time`, que exige una dependencia
 extra) y no con ajv-formats. Ningún mensaje imprime valores: solo método, plantilla, código y ruta JSON (RN-10).
 """
@@ -30,17 +29,21 @@ _spec: dict[str, Any] | None = None
 
 def empaquetar_spec() -> dict[str, Any]:
     """Ejecuta el empaquetador de contratos y devuelve el spec con los schemas compartidos."""
-    salida = subprocess.run(
-        ["node", str(RAIZ_REPOSITORIO / "scripts/contracts/bundle-json.mjs"), PROVEEDOR],
-        check=True,
-        capture_output=True,
-        cwd=RAIZ_REPOSITORIO,
-    )
+    try:
+        salida = subprocess.run(
+            ["node", str(RAIZ_REPOSITORIO / "scripts/contracts/bundle-json.mjs"), PROVEEDOR],
+            check=True,
+            capture_output=True,
+            cwd=RAIZ_REPOSITORIO,
+        )
+    except subprocess.CalledProcessError as fallo:
+        stderr = fallo.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"no se pudo empaquetar el spec de {PROVEEDOR}: {stderr}") from fallo
     return json.loads(salida.stdout)
 
 
-def usar_spec(spec: dict[str, Any]) -> None:
-    """Fija el spec de la sesión (lo llama el fixture de `conftest.py`)."""
+def usar_spec(spec: dict[str, Any] | None) -> None:
+    """Fija el spec de la sesión (`None` lo deja para empaquetarse en el primer uso)."""
     global _spec
     _spec = spec
 
@@ -79,8 +82,10 @@ def _schema_de(spec: dict[str, Any], pointer: str) -> dict[str, Any]:
 
 
 def _spec_configurado() -> dict[str, Any]:
+    """El spec de la sesión, empaquetado en el primer uso: los tests de dominio puro no invocan node."""
+    global _spec
     if _spec is None:
-        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
+        _spec = empaquetar_spec()
     return _spec
 
 
@@ -146,6 +151,14 @@ def _ruta_sin_valores(spec: dict[str, Any], ruta: str) -> str:
     return "/".join(s if s == "" or s in literales else "{…}" for s in segmentos)
 
 
+def _respuesta_declarada(declaradas: dict[str, Any], status: int) -> dict[str, Any] | None:
+    """La respuesta del spec para `status`: código exacto, rango `NXX` o `default`, en ese orden."""
+    for clave in (str(status), f"{str(status)[0]}XX", "default"):
+        if clave in declaradas:
+            return declaradas[clave]
+    return None
+
+
 def _cabeceras_obligatorias(spec: dict[str, Any], respuesta: dict[str, Any]) -> list[str]:
     declaradas = _seguir_ref(spec, respuesta).get("headers", {})
     return [
@@ -179,7 +192,7 @@ def verificar_respuesta(metodo: str, ruta: str, status: int, cabeceras: Any, cue
         )
     donde = f"{PROVEEDOR} {metodo.upper()} {plantilla} {status}"
     declaradas = spec["paths"][plantilla][verbo]["responses"]
-    respuesta = declaradas.get(str(status))
+    respuesta = _respuesta_declarada(declaradas, status)
     if respuesta is None:
         raise AssertionError(f"la respuesta no cumple {donde}: código no declarado")
     for nombre in _cabeceras_obligatorias(spec, respuesta):
@@ -187,6 +200,8 @@ def verificar_respuesta(metodo: str, ruta: str, status: int, cabeceras: Any, cue
             raise AssertionError(f"la respuesta no cumple {donde}: falta la cabecera {nombre}")
     contenido = _seguir_ref(spec, respuesta).get("content", {}).get("application/json")
     if contenido is None:
+        if cuerpo.strip():
+            raise AssertionError(f"la respuesta no cumple {donde}: la respuesta no declara cuerpo")
         return
     try:
         cuerpo_json = json.loads(cuerpo)
