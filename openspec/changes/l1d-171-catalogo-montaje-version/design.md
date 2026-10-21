@@ -32,6 +32,12 @@ listos; log con el evento único de `l1d-167`:
 `{"event":"configuracion_invalida","variable":"CLINICAL_CATALOG_PATH","regla":"manifest.json legible","motivo":"catalogo_no_disponible"}`,
 sin ruta ni contenido.
 `clinical-api` ya lo hace (L1D-104); `rag-orchestrator` lo añade en `bootstrap.py`.
+Con `CLINICAL_CATALOG_PATH` **sin definir** el motivo es `variable_ausente` (regla `obligatoria`, igual que
+`clinical-api`, que usa `leerObligatoria`); `catalogo_no_disponible` queda para el manifiesto ausente o ilegible.
+`rag-orchestrator` lee el manifiesto una sola vez (`cargar_configuracion_o_salir()`, único traductor a `SystemExit`) y
+pasa el catálogo cargado a `crear_app`, que lanza `CatalogoNoDisponible` si no hay ruta o manifiesto; los eventos de
+catálogo se suman a los de recuperación (un `configuracion_invalida` por variable). El modo `LLM_PROVIDER=fake` también
+exige la versión (decorador `ConsultaConCatalogoExigido`), de modo que Compose, CI y E2E ven el mismo `409`.
 
 **D5 · Estructura del paquete.** Esquemas JSON por archivo en `packages/clinical-catalogs/schemas/`; archivos
 vacíos válidos (`{"version":"1.0.0","items":[]}`); `tendencias.json` con `estado: "propuesta"`. Ningún archivo
@@ -101,4 +107,11 @@ real (con *timeout* explícito).
 
 ## Pendiente de definir
 
-- D1 (semántica de `CLINICAL_CATALOG_VERSION`): asumida; confirmar en el Gate 1.
+- D1 (semántica de `CLINICAL_CATALOG_VERSION`): asumida; confirmar en el Gate 1. Hoy la expectativa existe solo en
+  `clinical-api` (B1) y falta en `.env.example`; pregunta abierta para el humano.
+- Pregunta abierta para el humano (privacy Q6): ¿se incluye CUPS en el enum de estándares de los esquemas del catálogo?
+
+## Deuda
+
+- Lector único de `CLINICAL_CATALOG_PATH` en `rag-orchestrator` (manifiesto, `terminos-prohibidos.json`) con un solo
+  tipo de error: hoy conviven `CatalogoNoDisponible` y `ListaDeTerminosNoDisponible` (historia por crear).

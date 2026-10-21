@@ -10,6 +10,10 @@ class CatalogoNoDisponible(RuntimeError):
     """``manifest.json`` falta, no se puede leer o no declara una versión. El mensaje nunca lleva la ruta."""
 
 
+class CatalogoNoConfigurado(CatalogoNoDisponible):
+    """``CLINICAL_CATALOG_PATH`` no está definida (variable ausente, no manifiesto ilegible)."""
+
+
 class CatalogoDelManifiesto:
     """Implementa ``CatalogoClinico`` sobre una versión ya leída del manifiesto."""
 

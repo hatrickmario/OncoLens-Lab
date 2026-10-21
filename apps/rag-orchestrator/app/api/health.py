@@ -13,17 +13,16 @@ def crear_router_health(
     trace_ids: TraceIdGenerator,
     config_keys: list[str],
     service_version: str,
-    catalogo_clinico: CatalogoClinico | None,
+    catalogo_clinico: CatalogoClinico,
 ) -> APIRouter:
     """``config_keys`` son solo nombres de variables, ya ordenados: `/health` nunca expone un valor (RN-14, RN-22).
 
-    ``catalogVersion`` es la del catálogo montado, sin ruta ni contenido; sin catálogo configurado se omite."""
+    ``catalogVersion`` es la del catálogo montado, sin ruta ni contenido; el servicio no arranca sin catálogo."""
     router = APIRouter(tags=["operacion"])
 
     @router.get(
         "/health",
         response_model=HealthStatus,
-        response_model_exclude_none=True,
         responses={503: {"model": ErrorLlmLocalNoDisponible}},
     )
     async def health(request: Request):
@@ -32,7 +31,7 @@ def crear_router_health(
                 status="ok",
                 configKeys=config_keys,
                 serviceVersion=service_version,
-                catalogVersion=catalogo_clinico.version() if catalogo_clinico else None,
+                catalogVersion=catalogo_clinico.version(),
             )
         error = ErrorLlmLocalNoDisponible(
             error="LOCAL_LLM_UNAVAILABLE",

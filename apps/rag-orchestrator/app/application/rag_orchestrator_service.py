@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TypeVar
 
+from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
@@ -41,7 +42,6 @@ from app.application.respuesta_con_evidencia import (
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
-from app.domain.catalogo import CatalogVersionMismatchError, exigir_misma_version_de_catalogo
 from app.domain.citations import OpcionAceptada, validar_citas
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
@@ -133,7 +133,7 @@ class RAGOrchestratorService:
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
         trace_id = solicitud.traceId.root
         # Primer paso, antes de todo borde (D2): un catálogo de otra versión no consume embeddings, Milvus, LLM ni NLI.
-        self._exigir_catalogo_de_la_solicitud(trace_id, solicitud.catalogVersion)
+        exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
         inicio = self._reloj.ahora()
         filtro = self._filtro_de_recuperacion(solicitud)  # antes de cualquier puerto (OL-02)
         borde = self._invocar_borde_fallando_cerrado
@@ -157,14 +157,6 @@ class RAGOrchestratorService:
         )
         evidencia = await self._generador.generar(solicitud, recuperacion)
         return await self._validar_citas_y_ensamblar(solicitud, evidencia, recuperacion)
-
-    def _exigir_catalogo_de_la_solicitud(self, trace_id: str, solicitada: str) -> None:
-        """NFR-14: la solicitud y este servicio deben usar el mismo catálogo; el evento no lleva ninguna versión."""
-        try:
-            exigir_misma_version_de_catalogo(solicitada, self._catalogo_clinico.version())
-        except CatalogVersionMismatchError:
-            logger.warning("event=catalog_version_mismatch traceId=%s", trace_id)
-            raise
 
     async def _validar_citas_y_ensamblar(
         self,

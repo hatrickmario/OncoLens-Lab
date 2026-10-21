@@ -114,7 +114,7 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
         """409 CATALOG_VERSION_MISMATCH: mensaje fijo; ninguna de las dos versiones sale en la respuesta (RN-10)."""
         cuerpo = ErrorCatalogVersionMismatch(
             error="CATALOG_VERSION_MISMATCH",
-            message="La versión del catálogo clínico difiere entre servicios.",
+            message="La versión del catálogo difiere de la cargada.",
             traceId=resolver_trace_id(request, trace_ids),
         )
         return JSONResponse(status_code=409, content=cuerpo.model_dump())
