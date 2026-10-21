@@ -4,7 +4,12 @@ import json
 import logging
 import sys
 
-from app.config.logging import FormateadorJson
+import contextvars
+
+import pytest
+
+from app.api.trace import fijar_trace_id, trace_id_actual
+from app.config.logging import FormateadorJson, configurar_logging_json, registrar_evento
 
 
 def _formatear(mensaje: str = "hola", *, trace_id: str | None = "req_abc12345", **extra) -> dict:
@@ -55,3 +60,24 @@ def test_formateador_registra_solo_la_clase_de_la_excepcion_cuando_hay_exc_info(
 
     assert linea["errorClase"] == "RuntimeError"
     assert "SENTINELA" not in json.dumps(linea)
+
+
+@pytest.mark.ac("US-037", 4)
+def test_registrar_evento_deja_el_trace_id_como_campo_y_no_dentro_del_message(capsys):
+    def registrar() -> None:
+        fijar_trace_id("req_abcdef12")
+        registrar_evento(
+            logging.getLogger("app.prueba"), logging.WARNING, "evento_de_prueba", motivo="m"
+        )
+
+    handler = configurar_logging_json(trace_id_actual)
+    try:
+        contextvars.copy_context().run(registrar)
+    finally:
+        logging.getLogger().removeHandler(handler)
+
+    linea = json.loads(capsys.readouterr().out)
+    assert linea["traceId"] == "req_abcdef12"
+    assert "req_abcdef12" not in linea["message"]
+    assert linea["event"] == "evento_de_prueba"
+    assert linea["motivo"] == "m"

@@ -84,6 +84,7 @@ def test_health_lista_config_keys_sin_valores():
         llm_provider="fake",
         fake_responses_path=EJEMPLOS,
         relevance_threshold=0.42,
+        llm_cloud_enabled=False,
         llm_model="SENTINELA-MODELO-ZZ",
     )
     contenido_de_la_clave = settings.service_jwt_public_key_file.read_text(encoding="utf-8")

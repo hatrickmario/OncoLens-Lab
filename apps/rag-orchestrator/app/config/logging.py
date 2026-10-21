@@ -64,6 +64,10 @@ class _HandlerAStdout(logging.StreamHandler):
         pass
 
 
+def registrar_evento(logger: logging.Logger, nivel: int, evento: str, **campos: object) -> None:
+    raise NotImplementedError("no implementado")
+
+
 def configurar_logging_json(
     trace_id_actual: TraceIdActual, nivel: int = logging.INFO
 ) -> logging.Handler:
