@@ -22,19 +22,15 @@ import { CLINICAL_API, PROVIDERS, RAG_ORCHESTRATOR } from './lib/specs.mjs';
 
 const SEGUNDOS_POR_DEFECTO = 600;
 
-/** Suites de cada proveedor y cómo se cuentan las respuestas verificadas de CADA una (una suite apagada no la tapa otra). */
+/** Suites de cada proveedor. Todas cuentan igual: una línea con el nombre del proveedor por respuesta verificada en su CONTRACT_VERIFY_REPORT. */
 function suitesDe(proveedor, python) {
-  const contarReporte = ({ archivoDeReporte }) => contarLineas(archivoDeReporte, CLINICAL_API);
+  const contarReporte = ({ archivoDeReporte }) => contarLineas(archivoDeReporte, proveedor);
   const suites = {
     [CLINICAL_API]: [
-      // El cliente de test deja una línea por respuesta verificada en el CONTRACT_VERIFY_REPORT propio de cada suite.
       { comando: 'npm', args: ['run', 'test', '-w', 'apps/clinical-api'], contar: contarReporte },
       { comando: 'bash', args: ['scripts/test-integration.sh'], contar: contarReporte },
     ],
-    [RAG_ORCHESTRATOR]: [
-      // conftest.py imprime «verificación del proveedor: N respuestas verificadas contra rag-orchestrator».
-      { comando: python, args: ['-m', 'pytest'], cwd: 'apps/rag-orchestrator', contar: ({ salida }) => contarEnSalida(salida, RAG_ORCHESTRATOR) },
-    ],
+    [RAG_ORCHESTRATOR]: [{ comando: python, args: ['-m', 'pytest'], cwd: 'apps/rag-orchestrator', contar: contarReporte }],
   };
   return suites[proveedor];
 }
@@ -45,11 +41,6 @@ function contarLineas(archivo, proveedor) {
   } catch {
     return 0;
   }
-}
-
-function contarEnSalida(salida, proveedor) {
-  const patron = new RegExp(`verificación del proveedor: (\\d+) respuestas verificadas contra ${proveedor}`, 'g');
-  return [...salida.matchAll(patron)].reduce((total, coincidencia) => total + Number(coincidencia[1]), 0);
 }
 
 /**
@@ -94,7 +85,7 @@ export async function verificarProveedores({ proveedores, ejecutar, archivoDeRep
       appendFileSync(propio, '');
       const resultado = await ejecutar(suite, { archivoDeReporte: propio });
       if (resultado.codigo !== 0) errores.push(`${nombreDeSuite(suite)}: ${resultado.motivo ?? `terminó con código ${resultado.codigo}`}`);
-      const deLaSuite = suite.contar({ archivoDeReporte: propio, salida: resultado.salida });
+      const deLaSuite = suite.contar({ archivoDeReporte: propio });
       verificadas += deLaSuite;
       if (estricto && deLaSuite === 0) errores.push(`${nombreDeSuite(suite)}: no verificó ninguna respuesta (la verificación del proveedor no estaba activa en esa suite)`);
     }
@@ -157,7 +148,9 @@ async function main() {
   const estricto = esEstricto(process.env.CONTRACT_VERIFY, process.env.CI);
   const carpeta = mkdtempSync(path.join(tmpdir(), 'verify-provider-'));
   const archivoDeReporte = path.join(carpeta, 'respuestas');
-  const entorno = { ...process.env, CONTRACT_VERIFY: estricto ? 'strict' : 'lax' };
+  // La exigencia de verificar es del CLI: los hijos no reciben CONTRACT_VERIFY.
+  const entorno = { ...process.env };
+  delete entorno.CONTRACT_VERIFY;
   try {
     const resumen = await verificarProveedores({
       proveedores,
