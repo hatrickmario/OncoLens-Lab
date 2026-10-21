@@ -18,6 +18,7 @@ from typing import TypeVar
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
+    CatalogoClinico,
     ChunkEncontrado,
     ChunkSearch,
     Clock,
@@ -104,6 +105,7 @@ class RAGOrchestratorService:
         reranker: Reranker,
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
+        catalogo_clinico: CatalogoClinico,
         generador: EvidenceGenerator,
         clasificador_nli: NliClassifier,
         verificador_terminos: ProhibitedTermsChecker,
@@ -116,6 +118,7 @@ class RAGOrchestratorService:
         self._reranker = reranker
         self._lector_release = lector_release
         self._catalogo = catalogo
+        self._catalogo_clinico = catalogo_clinico
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros

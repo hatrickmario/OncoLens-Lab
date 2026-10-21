@@ -19,6 +19,7 @@ from app.api.trace import ContextoDeTraceId
 from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
+    CatalogoClinico,
     ChunkSearch,
     Clock,
     CorpusCatalogReader,
@@ -42,6 +43,7 @@ from app.config.errores_de_configuracion import MOTIVO_VARIABLE_AUSENTE, describ
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
+from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -79,6 +81,7 @@ class PuertosDeRecuperacion:
     reranker: Reranker
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
+    catalogo_clinico: CatalogoClinico
     clasificador_nli: NliClassifier
     verificador_terminos: ProhibitedTermsChecker
 
@@ -189,9 +192,16 @@ def _componer_recuperacion(
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
         catalogo=corpus.catalogo,
+        catalogo_clinico=_cargar_catalogo_clinico(settings),
         clasificador_nli=modelos.clasificador_nli,
         verificador_terminos=_cargar_lista_de_terminos(settings),
     )
+
+
+def _cargar_catalogo_clinico(settings: Settings) -> CatalogoClinico:
+    """La versión del catálogo montado, para exigir que coincida con la de la solicitud (US-041)."""
+    _exigir_claves({"CLINICAL_CATALOG_PATH": settings.clinical_catalog_path})
+    return cargar_catalogo_del_manifiesto(settings.clinical_catalog_path)  # type: ignore[arg-type]
 
 
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
@@ -260,6 +270,7 @@ def _crear_servicio_de_recuperacion(
         reranker=puertos.reranker,
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
+        catalogo_clinico=puertos.catalogo_clinico,
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
