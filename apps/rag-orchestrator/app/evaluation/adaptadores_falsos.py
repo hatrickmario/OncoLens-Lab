@@ -18,6 +18,7 @@ from app.application.ports import (
     ResultadoDeRecuperacion,
 )
 from app.domain.citations import FichaDeFuente, OpcionGenerada
+from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
 from app.evaluation.fuente_dataset import DatasetSuite
@@ -149,7 +150,7 @@ def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:
 
 class LectorReleaseFijo:
     def __init__(self, dataset: DatasetSuite) -> None:
-        self._release = ReleaseDelCorpus(dataset.release, dataset.corte, ("NCCN", "ESMO"))
+        self._release = ReleaseDelCorpus(dataset.release, dataset.corte, PISO_DE_FUENTES_EXCLUIDAS)
 
     def release_vigente(self) -> ReleaseDelCorpus:
         return self._release

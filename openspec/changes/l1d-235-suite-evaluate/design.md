@@ -84,7 +84,14 @@ Aceptadas para 072a: (1) datasets en `data/eval/` y salidas en `data/evaluation/
 de los adapters reales (D8); (4) `medicion.reloj: simulado` (D9); (5) `--suite` con `retrieval|generation|all` y código
 2 para las demás familias (D11); (6) flags `--config`, `--salida`, `--nombre-archivo`, `--prueba-final` (D11, D12).
 
-**Deuda:** `.claude/skills/run-ai-eval/SKILL.md` y OL-06 (`readme.md` §6) apuntan a `data/evaluation/` para los datasets
+**Gate 2 (design-principles-reviewer, Mayores 1 y 2):** `HOSTS_LOCALES` es la única lista de hosts locales
+(`Settings.llm_allowed_hosts` la toma como valor por defecto), las fuentes excluidas salen de
+`PISO_DE_FUENTES_EXCLUIDAS` y los vocabularios cerrados del esquema (suites, proveedores, relojes, clases, rótulos) se
+derivan de sus fuentes. El resultado de una familia parcial se llama `<fecha>-<hashConfig>-<suite>.json` para no pisar
+el de `all`.
+
+**Deuda:** actualizar `run-ai-eval` y OL-06 a `data/eval/` y a la ruta de resultados vigente
+(`apps/rag-orchestrator/eval/results/`, no `reports/eval/`). `.claude/skills/run-ai-eval/SKILL.md` y OL-06 (`readme.md` §6) apuntan a `data/evaluation/` para los datasets
 y deben apuntar a `data/eval/`; `.gitignore` debe ignorar `apps/rag-orchestrator/eval/results/` (fuera de las rutas de
 este change). Con `proveedor: local` la composición de adapters reales queda para US-073.
 

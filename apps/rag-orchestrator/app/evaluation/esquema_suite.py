@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
+from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.reporte import Enumerado, Identificador, Numero, Objeto
+from app.evaluation.rotulo import ROTULOS
 
-SUITES = ("retrieval", "generation", "all")
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
 
 _IC = Objeto({"inferior": Numero(), "superior": Numero()})
@@ -22,7 +24,7 @@ _VALIDACION = Objeto(
     {
         "preguntas_validadas": Numero(),
         "preguntas_no_validadas": Numero(),
-        "rotulo": Enumerado(frozenset({"validada", "no_validada"})),
+        "rotulo": Enumerado(frozenset(ROTULOS)),
     }
 )
 
@@ -61,10 +63,10 @@ _CONFIGURACION = Objeto(
         "nombre": Identificador(),
         "hashConfig": Identificador(),
         "fixture": Identificador(),
-        "claseDataset": Enumerado(frozenset({"sintetico", "real_anonimizado"})),
+        "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
         "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),
-        "proveedor": Enumerado(frozenset({"fake", "local"})),
-        "reloj": Enumerado(frozenset({"simulado", "real"})),
+        "proveedor": Enumerado(frozenset(PROVEEDORES)),
+        "reloj": Enumerado(frozenset(RELOJES)),
         "semillaBootstrap": Numero(),
         "bootstrapRepeticiones": Numero(),
         "modelos": _MODELOS,

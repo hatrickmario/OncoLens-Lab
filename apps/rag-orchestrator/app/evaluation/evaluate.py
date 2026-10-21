@@ -17,11 +17,17 @@ from typing import Any
 from app.application.ports import Clock
 from app.evaluation.armado_reporte import armar_reporte
 from app.evaluation.composicion_suite import componer_servicio
-from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, cargar_config_suite
+from app.evaluation.config_suite import (
+    SUITE_COMPLETA,
+    SUITES,
+    ConfigInvalida,
+    ConfigSuite,
+    cargar_config_suite,
+)
 from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
-from app.evaluation.esquema_suite import ESQUEMA_SUITE, SUITES
+from app.evaluation.esquema_suite import ESQUEMA_SUITE
 from app.evaluation.fuente_dataset import (
     DatasetSuite,
     FuenteDatasetEnDirectorio,
@@ -38,7 +44,7 @@ SALIDA_POR_DEFECTO = Path("eval") / "results"
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evaluate", exit_on_error=False)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--suite", default="all")
+    parser.add_argument("--suite", default=SUITE_COMPLETA)
     parser.add_argument("--report", choices=("json",), default="json")
     parser.add_argument("--salida", type=Path, default=None)
     parser.add_argument("--nombre-archivo", default=None)
@@ -98,10 +104,13 @@ def _correr_suite(
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:
-    """``<salida>/<fecha>-<hashConfig>.json``: la fecha viene del reloj inyectado, la huella de la configuración."""
+    """``<salida>/<fecha>-<hashConfig>[-<suite>].json``: la fecha viene del reloj inyectado, la huella de la
+    configuración; una familia parcial lleva su nombre para no pisar el resultado de la suite completa."""
     carpeta = args.salida or raiz_repo() / "apps" / "rag-orchestrator" / SALIDA_POR_DEFECTO
+    sufijo = "" if args.suite == SUITE_COMPLETA else f"-{args.suite}"
     return carpeta / (
-        args.nombre_archivo or f"{reloj.ahora().date().isoformat()}-{config.hash_config}.json"
+        args.nombre_archivo
+        or f"{reloj.ahora().date().isoformat()}-{config.hash_config}{sufijo}.json"
     )
 
 

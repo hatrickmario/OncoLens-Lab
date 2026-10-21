@@ -12,6 +12,8 @@ import yaml
 
 from app.evaluation.rutas import raiz_repo
 
+SUITES = ("retrieval", "generation", "all")
+SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
 SUBCONJUNTOS = ("desarrollo", "validacion", "prueba")

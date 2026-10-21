@@ -4,7 +4,8 @@ import ipaddress
 from urllib.parse import urlsplit
 
 # Lista CERRADA EN CÓDIGO a propósito (ADR-41 D4): ninguna variable de entorno ni YAML puede ampliarla.
-HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "host.docker.internal"})
+# Única fuente: ``Settings.llm_allowed_hosts`` toma de aquí su valor por defecto.
+HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "127.0.0.1", "::1", "host.docker.internal"})
 
 
 def es_proveedor_local(url: str) -> bool:

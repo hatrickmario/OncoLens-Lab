@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, get_args
 
 Rotulo = Literal["validada", "no_validada"]
+ROTULOS: tuple[str, ...] = get_args(Rotulo)
 
 
 @dataclass(frozen=True)
