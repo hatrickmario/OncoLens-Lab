@@ -88,4 +88,30 @@ describe('validación del archivo cargado', () => {
     expect(await documentosDelPaciente(escenario.mundo, PACIENTE)).toHaveLength(0);
     expect(escenario.entorno.escrituras()).toBe(0);
   });
+
+  it('responde 422 CUERPO_INVALIDO cuando el cuerpo es JSON en lugar de multipart', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${PACIENTE}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .send({ documentType: 'examen' });
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+
+  it('responde 422 CUERPO_INVALIDO cuando el multipart no trae el archivo', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${PACIENTE}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
 });

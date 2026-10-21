@@ -153,3 +153,34 @@ components:
   planificación).
 - **`x-pending-owner: FEAT-01b`** apuntaba a la Feature equivocada (la dueña de la carga es FEAT-01a, US-076): se
   corrige al retirar esas respuestas.
+
+## Desviaciones y notas de la implementación
+
+- **`clinical-minio` en la integración:** el adapter real (`@aws-sdk/client-s3` contra el endpoint S3) corre en los tests y
+  el almacén se simula **en su borde HTTP con MSW** (`tests/support/documentos.ts`: `PUT`/`DELETE` de objeto, `HEAD` de
+  bucket). CLAUDE.md lista MinIO como borde mockeable y así la CI de `clinical-api` no necesita MinIO. El adapter se
+  comprobó además **a mano contra un MinIO real** (`pgsty/minio`, la imagen del Compose): `asegurarBucket` idempotente,
+  `PUT`, `DELETE` idempotente y credencial mala → `AlmacenNoDisponible`. No hay override de Compose de test para MinIO.
+- **Cliente S3:** `@aws-sdk/client-s3` 3.1148.0 en lugar de `minio` 8.0.7, que arrastra 4 avisos moderados
+  (`stream-json`, `decode-uri-component`). `busboy` 1.6.0 (+ `@types/busboy` 1.5.5). `npm audit --omit=dev`: 0
+  vulnerabilidades (2.13).
+- **Orden de validación:** el *multipart* se lee primero (el campo `documentType` puede llegar tras el archivo), con el
+  archivo cortado en `MAX_UPLOAD_MB` + 1 byte; después `documentType` (Zod generado) → UUID de la ruta (no UUID = `404`) →
+  paciente → tamaño → *magic bytes* → checksum → `putObject` → `INSERT`. Nada toca el almacén antes del paso `putObject`.
+- **Fixtures:** `tests/fixtures/documents/` (el repo usa `tests/`, no `test/`). `grande.pdf` no se versiona ni se genera en
+  `global-setup`: `pdfSinteticoDe(21)` lo arma en memoria en el test.
+- **Rojos de los AC:** en AC-3 a AC-6 y AC-8 el rojo falla porque el endpoint aún no mapea el caso (devuelve `202` o un `500`
+  que la verificación del proveedor rechaza por no estar declarado), no por un `import`. AC-7 (`401`) y el `403` del
+  administrador pasaron desde el primer día: el guard (L1D-197) y `authorize('documents:upload')` ya existían.
+- **Contrato fuera de `apps/clinical-api`:** E-4/E-5 obligaron a tocar `docs/architecture/adr/ADR-26-…`,
+  `scripts/ci/contracts-breaking-excepciones.json` y su test (tarea 1.1), el fixture de parches
+  `scripts/contracts/__fixtures__/parches/ac-17-errores-identidad-permisos.json` (al quitar los `pendingExamples` de
+  `uploadDocument`, el índice 0 pasa a ser de `rag-orchestrator`) y `readme.md` (extracto generado por
+  `contracts:readme-extract`).
+- **`TraceIdGenerator` y `crearTraceIdMiddleware`** se importan del módulo `evidence-analysis`: son genéricos y
+  convendría moverlos a `src/middleware/` en un refactor propio (fuera del alcance de este change).
+- **Variables nuevas (RN-22), para el humano en `.env.example`** (todas opcionales; vacías = por defecto):
+  `MAX_UPLOAD_MB` (20), `CLINICAL_MINIO_ENDPOINT` (`http://clinical-minio:9000`), `CLINICAL_DOCUMENTS_BUCKET`
+  (`clinical-documents`), `CLINICAL_MINIO_ROOT_USER` (`clinical-minio-admin`, ya la usa el servicio MinIO) y
+  `CLINICAL_MINIO_TIMEOUT_MS` (10000; no se pasa desde el Compose). `CLINICAL_MINIO_PASSWORD_FILE` pasa a ser
+  obligatoria: sin ella `clinical-api` no arranca (fallo cerrado). `docker-compose.yml` ya pasa las cuatro primeras.
