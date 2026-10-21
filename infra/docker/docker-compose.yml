@@ -314,6 +314,8 @@ services:
       REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
       FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      # Defensa en profundidad (L1D-173, RN-20): mismo valor de demo que clinical-api; se valida contra manifest.json.
+      ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}
       # Recuperación de /rag/query (RN-22): valores provisionales hasta US-072 (calibración con la suite evaluate).
       # Sin ellos, con LLM_PROVIDER=local el arranque se niega (sin valor por defecto en el código).
       RELEVANCE_THRESHOLD: ${RELEVANCE_THRESHOLD:-0.30}
