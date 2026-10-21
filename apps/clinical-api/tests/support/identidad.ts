@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Client } from 'pg';
+import type { LeerArchivo } from '../../src/config/secrets.js';
 import { crearAnilloDeClaves } from '../../src/infrastructure/crypto/anillo-de-claves.js';
 import { crearCifradorAesGcm } from '../../src/infrastructure/crypto/cifrador-aes-gcm.js';
 import { crearIndiceCiego } from '../../src/infrastructure/crypto/indice-ciego.js';
@@ -47,6 +51,48 @@ export function anilloDeTest(versionActiva = 1, versiones: readonly number[] = [
     claves: new Map(versiones.map((version) => [version, claveDeTest(`aes-v${version}`)])),
   });
 }
+
+export interface ArchivosDeClaves {
+  readonly directorio: string;
+  readonly rutaAes: (version: number) => string;
+  readonly rutaHmac: string;
+  readonly limpiar: () => void;
+}
+
+/** Archivos temporales con las claves de test en base64 (el formato de `setup-secrets.sh`): una AES por versión y la HMAC. */
+export function archivosDeClaves(versiones: readonly number[] = [1]): ArchivosDeClaves {
+  const directorio = mkdtempSync(join(tmpdir(), 'identidad-test-'));
+  const rutaAes = (version: number) => join(directorio, `identity_aes_key_v${version}`);
+  const rutaHmac = join(directorio, 'blind_index_hmac_key');
+  for (const version of versiones) {
+    writeFileSync(rutaAes(version), `${claveDeTest(`aes-v${version}`).toString('base64')}\n`, {
+      mode: 0o600,
+    });
+  }
+  writeFileSync(rutaHmac, `${claveDeTest('hmac').toString('base64')}\n`, { mode: 0o600 });
+  return { directorio, rutaAes, rutaHmac, limpiar: () => rmSync(directorio, { recursive: true }) };
+}
+
+/**
+ * Entorno de un despliegue: la clave de la versión activa va en `IDENTITY_AES_KEY_FILE` y las anteriores, solo para
+ * descifrar, en `IDENTITY_AES_KEY_V<n>_FILE` (D3).
+ */
+export function entornoDeClaves(
+  archivos: ArchivosDeClaves,
+  versionActiva: number,
+  anteriores: readonly number[] = [],
+): NodeJS.ProcessEnv {
+  return {
+    IDENTITY_KEY_VERSION: String(versionActiva),
+    IDENTITY_AES_KEY_FILE: archivos.rutaAes(versionActiva),
+    BLIND_INDEX_HMAC_KEY_FILE: archivos.rutaHmac,
+    ...Object.fromEntries(
+      anteriores.map((version) => [`IDENTITY_AES_KEY_V${version}_FILE`, archivos.rutaAes(version)]),
+    ),
+  };
+}
+
+export const leerArchivoDeTest: LeerArchivo = (ruta) => readFileSync(ruta, 'utf8');
 
 export interface OpcionesDeServicio {
   readonly versionActiva?: number;
