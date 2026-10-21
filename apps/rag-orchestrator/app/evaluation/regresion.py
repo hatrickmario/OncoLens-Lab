@@ -87,4 +87,5 @@ def _valor_en(seccion: dict[str, Any], ruta: tuple[str, ...]) -> float | None:
     nodo: Any = seccion
     for clave in ruta:
         nodo = nodo.get(clave) if isinstance(nodo, dict) else None
-    return nodo if isinstance(nodo, int | float) else None
+    es_numero = isinstance(nodo, int | float) and not isinstance(nodo, bool)
+    return nodo if es_numero else None

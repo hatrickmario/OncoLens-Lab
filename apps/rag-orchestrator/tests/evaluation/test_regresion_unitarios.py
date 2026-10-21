@@ -38,6 +38,12 @@ def test_metrica_nula_incumple_su_minimo_sin_tratarse_como_cero() -> None:
     assert resultado.incumplimientos == (Incumplimiento("recall_at_10", 0.8, None),)
 
 
+def test_metrica_booleana_incumple_en_lugar_de_contar_como_uno() -> None:
+    resultado = comparar_con_regresion(reporte(True), {"recall_at_10": 0.8})  # type: ignore[arg-type]
+
+    assert resultado.incumplimientos == (Incumplimiento("recall_at_10", 0.8, None),)
+
+
 def test_nombra_solo_las_metricas_por_debajo_de_su_minimo() -> None:
     resultado = comparar_con_regresion(reporte(0.5, mrr=0.9), {"recall_at_10": 0.8, "mrr": 0.6})
 
