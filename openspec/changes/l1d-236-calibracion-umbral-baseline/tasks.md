@@ -31,7 +31,7 @@
 
 ## 2. evaluación
 
-- [ ] 2.1 `run-ai-eval` `--suite all` sobre la rama (cambia un umbral) · **evaluate**
+- [x] 2.1 `run-ai-eval` `--suite all` sobre la rama (cambia un umbral) · **evaluate**
 
 ## 3. Verificación
 
