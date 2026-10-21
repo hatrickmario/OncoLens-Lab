@@ -859,6 +859,12 @@ paths:
           $ref: "#/components/responses/PermisoDenegadoOOptOut"
         "404":
           $ref: "#/components/responses/NoEncontrado"
+        "409":
+          description: "CATALOG_VERSION_MISMATCH: la versión del catálogo clínico difiere entre los backends (NFR-14). No se persiste análisis ni se reenvía el cuerpo de rag-orchestrator."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorCatalogVersionMismatch"
         "422":
           description: "Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no tiene tipo de cáncer y el análisis no se realiza (no se llama a la IA ni se persiste análisis)."
           content:

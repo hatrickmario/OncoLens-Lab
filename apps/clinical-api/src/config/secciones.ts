@@ -105,8 +105,9 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   return { ttlSeconds, privateKeyFile };
 }
 
-/** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (catálogo, tipos). */
-export type MotivoDeConfiguracionInvalida = 'valor_invalido' | 'variable_ausente';
+/** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (tipos). */
+export type MotivoDeConfiguracionInvalida =
+  'valor_invalido' | 'variable_ausente' | 'catalogo_no_disponible' | 'version_catalogo_distinta';
 
 /**
  * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,
@@ -353,6 +354,8 @@ export interface EvidenceAnalysisConfig {
   ragOrchestratorUrl: string;
   /** Directorio de solo lectura del catálogo clínico; de él sale `catalogVersion` (`manifest.json`). */
   catalogPath: string;
+  /** `CLINICAL_CATALOG_VERSION`: expectativa opcional; si difiere del `manifest.json` montado el servicio no arranca. */
+  catalogExpectedVersion?: string;
   /** `maxOptions` del request interno: 1 en el S1, 3 desde el S4 (RN-22). */
   analysisMaxOptions: number;
   /** Años de antigüedad por defecto de la evidencia cuando la petición no trae `publishedFromYear` (RN-22). */
@@ -361,8 +364,6 @@ export interface EvidenceAnalysisConfig {
   ragTimeoutMs: number;
   /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069 y PRD E-11, sin la etiqueta de uso académico); obligatorio y no vacío, nunca un literal del código. */
   aiDisclaimerText: string;
-  /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`: supuesto fijo de la Base del análisis del S1 (`[S1 resp. 30]`). */
-  analysisBasisAssumptionText: string;
 }
 
 const DEFAULT_ANALYSIS_MAX_OPTIONS = 1;
@@ -401,6 +402,9 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
   return {
     ragOrchestratorUrl: leerUrlHttpObligatoria(env, 'RAG_ORCHESTRATOR_URL'),
     catalogPath: leerObligatoria(env, 'CLINICAL_CATALOG_PATH'),
+    ...(env['CLINICAL_CATALOG_VERSION']?.trim() && {
+      catalogExpectedVersion: env['CLINICAL_CATALOG_VERSION'].trim(),
+    }),
     analysisMaxOptions,
     evidenceDefaultYears: readPositiveInteger(
       env,
@@ -409,6 +413,5 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
     ),
     ragTimeoutMs: readPositiveInteger(env, 'RAG_TIMEOUT_MS', DEFAULT_RAG_TIMEOUT_MS),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
-    analysisBasisAssumptionText: leerObligatoria(env, 'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT'),
   };
 }

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.bootstrap import crear_app
 from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
+from tests.support.recuperacion import ejemplo_con_catalogo_montado
 from tests.support.service_jwt import con_token_valido
 
 EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
@@ -38,7 +39,9 @@ def llm_vigilado():
 def test_rag_query_devuelve_rag_query_con_evidencia_validado_cuando_llega_la_pregunta_de_fixture_con_evidencia(
     llm_vigilado,
 ):
-    respuesta = _cliente_fake().post("/rag/query", json=_ejemplo("rag-query-request.json"))
+    respuesta = _cliente_fake().post(
+        "/rag/query", json=ejemplo_con_catalogo_montado("rag-query-request.json")
+    )
 
     assert respuesta.status_code == 200
     assert respuesta.json() == _ejemplo("rag-query-con-evidencia.json")
@@ -50,7 +53,7 @@ def test_rag_query_devuelve_rag_query_sin_evidencia_cuando_llega_la_pregunta_de_
     llm_vigilado,
 ):
     respuesta = _cliente_fake().post(
-        "/rag/query", json=_ejemplo("rag-query-request-sin-evidencia.json")
+        "/rag/query", json=ejemplo_con_catalogo_montado("rag-query-request-sin-evidencia.json")
     )
 
     assert respuesta.status_code == 200
@@ -60,7 +63,10 @@ def test_rag_query_devuelve_rag_query_sin_evidencia_cuando_llega_la_pregunta_de_
 
 @pytest.mark.ac("US-034", 6)
 def test_rag_query_devuelve_sin_evidencia_cuando_la_pregunta_no_es_de_fixture(llm_vigilado):
-    solicitud = {**_ejemplo("rag-query-request.json"), "query": "Pregunta que no es de fixture"}
+    solicitud = {
+        **ejemplo_con_catalogo_montado("rag-query-request.json"),
+        "query": "Pregunta que no es de fixture",
+    }
 
     respuesta = _cliente_fake().post("/rag/query", json=solicitud)
 
@@ -80,7 +86,7 @@ def test_health_responde_200_sin_llamar_al_llm_cuando_llm_provider_es_fake(llm_v
 def test_rag_query_ignora_los_espacios_de_los_extremos_de_la_pregunta_al_elegir_el_fixture(
     llm_vigilado,
 ):
-    base = _ejemplo("rag-query-request.json")
+    base = ejemplo_con_catalogo_montado("rag-query-request.json")
     solicitud = {**base, "query": f"  {base['query']}\n"}
 
     respuesta = _cliente_fake().post("/rag/query", json=solicitud)
@@ -95,7 +101,7 @@ def test_rag_query_responde_503_retrieval_unavailable_fallando_cerrado_cuando_ll
         crear_app(settings, trace_ids=GeneradorTraceFijo(), clock=RelojFijo()),
         raise_server_exceptions=False,
         headers=con_token_valido(par_de_sesion()),
-    ).post("/rag/query", json=_ejemplo("rag-query-request.json"))
+    ).post("/rag/query", json=ejemplo_con_catalogo_montado("rag-query-request.json"))
 
     assert respuesta.status_code == 503
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from fastapi import FastAPI
 from pydantic import ValidationError
@@ -16,9 +16,11 @@ from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
+from app.application.catalogo_exigido import ConsultaConCatalogoExigido
 from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
+    CatalogoClinico,
     ChunkSearch,
     Clock,
     CorpusCatalogReader,
@@ -38,10 +40,19 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.config.errores_de_configuracion import MOTIVO_VARIABLE_AUSENTE, describir_errores
+from app.config.errores_de_configuracion import (
+    MOTIVO_CATALOGO_NO_DISPONIBLE,
+    MOTIVO_VARIABLE_AUSENTE,
+    describir_errores,
+)
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
+from app.infrastructure.catalogo_clinico.manifiesto import (
+    CatalogoNoConfigurado,
+    CatalogoNoDisponible,
+    cargar_catalogo_del_manifiesto,
+)
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -79,6 +90,7 @@ class PuertosDeRecuperacion:
     reranker: Reranker
     lector_release: CorpusReleaseReader
     catalogo: CorpusCatalogReader
+    catalogo_clinico: CatalogoClinico
     clasificador_nli: NliClassifier
     verificador_terminos: ProhibitedTermsChecker
 
@@ -87,16 +99,28 @@ CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 
 
 def cargar_settings_o_salir() -> Settings:
-    """Carga ``Settings`` una sola vez; si el entorno es inválido registra un ``configuracion_invalida`` por variable
-    (nombre y regla, nunca el valor) y termina el proceso con código 1 antes de escuchar (US-037 AC-2, RN-22)."""
+    """Solo los ``Settings`` de ``cargar_configuracion_o_salir`` (los tests de arranque no necesitan el catálogo)."""
+    return cargar_configuracion_o_salir()[0]
+
+
+def cargar_configuracion_o_salir() -> tuple[Settings, CatalogoClinico]:
+    """Carga ``Settings`` y el catálogo clínico montado una sola vez (el manifiesto se lee una vez, sin TOCTOU).
+
+    Si el entorno es inválido registra un ``configuracion_invalida`` por variable (nombre y regla, nunca el valor) y
+    termina el proceso con código 1 antes de escuchar (US-037 AC-2, RN-22, US-041 AC-5). Es el único traductor a
+    ``SystemExit``: ``crear_app`` lanza ``CatalogoNoDisponible`` y no sabe de procesos."""
     try:
         settings = Settings()
     except ValidationError as error:
-        eventos = describir_errores(error)
-    else:
-        eventos = _eventos_de_recuperacion_ausente(settings)
-        if not eventos:
-            return settings
+        _salir_registrando(describir_errores(error))
+    catalogo, eventos_del_catalogo = cargar_catalogo_clinico_o_eventos(settings)
+    eventos = [*_eventos_de_recuperacion_ausente(settings), *eventos_del_catalogo]
+    if eventos or catalogo is None:
+        _salir_registrando(eventos)
+    return settings, catalogo
+
+
+def _salir_registrando(eventos: list[dict[str, str]]) -> NoReturn:
     for evento in eventos:
         registrar_evento(logger, logging.ERROR, "configuracion_invalida", **evento)
     raise SystemExit(1)
@@ -116,6 +140,21 @@ def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]
     ]
 
 
+def cargar_catalogo_clinico_o_eventos(
+    settings: Settings,
+) -> tuple[CatalogoClinico | None, list[dict[str, str]]]:
+    """El catálogo montado o el evento que explica por qué no (US-041 AC-5, D4); nunca la ruta ni el contenido.
+
+    Variable sin definir = ``variable_ausente``; manifiesto ausente o ilegible = ``catalogo_no_disponible``."""
+    try:
+        return _montar_catalogo_clinico(settings), []
+    except CatalogoNoConfigurado:
+        regla, motivo = "obligatoria", MOTIVO_VARIABLE_AUSENTE
+    except CatalogoNoDisponible:
+        regla, motivo = "manifest.json legible", MOTIVO_CATALOGO_NO_DISPONIBLE
+    return None, [{"variable": "CLINICAL_CATALOG_PATH", "regla": regla, "motivo": motivo}]
+
+
 def crear_app(
     settings: Settings,
     *,
@@ -127,10 +166,14 @@ def crear_app(
     corpus: PuertosDelCorpus | None = None,
     cargador_de_modelos: CargadorDeModelos | None = None,
     generador: EvidenceGenerator | None = None,
+    catalogo_clinico: CatalogoClinico | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
-    recuperacion = recuperacion or _componer_recuperacion(settings, modelos, corpus)
+    catalogo_clinico = catalogo_clinico or _montar_catalogo_clinico(settings)
+    recuperacion = recuperacion or _componer_recuperacion(
+        settings, modelos, corpus, catalogo_clinico
+    )
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -148,6 +191,7 @@ def crear_app(
         recuperacion=recuperacion,
         clock=clock,
         generador=generador,
+        catalogo_clinico=catalogo_clinico,
     )
     app.include_router(
         crear_router_health(
@@ -155,6 +199,7 @@ def crear_app(
             trace_ids,
             nombres_de_claves(settings),
             VERSION_DEL_SERVICIO,
+            catalogo_clinico,
         )
     )
     return app
@@ -177,7 +222,10 @@ def _cargar_modelos_segun(
 
 
 def _componer_recuperacion(
-    settings: Settings, modelos: ModelosDeRecuperacion | None, corpus: PuertosDelCorpus | None
+    settings: Settings,
+    modelos: ModelosDeRecuperacion | None,
+    corpus: PuertosDelCorpus | None,
+    catalogo_clinico: CatalogoClinico,
 ) -> PuertosDeRecuperacion | None:
     """Modelos reales + corpus (Milvus y catálogo) = los bordes completos; si falta alguno, no hay recuperación."""
     if modelos is None or corpus is None:
@@ -189,9 +237,17 @@ def _componer_recuperacion(
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
         catalogo=corpus.catalogo,
+        catalogo_clinico=catalogo_clinico,
         clasificador_nli=modelos.clasificador_nli,
         verificador_terminos=_cargar_lista_de_terminos(settings),
     )
+
+
+def _montar_catalogo_clinico(settings: Settings) -> CatalogoClinico:
+    """El catálogo montado (su versión). Sin ruta o sin manifiesto legible lanza ``CatalogoNoDisponible`` (D4)."""
+    if settings.clinical_catalog_path is None:
+        raise CatalogoNoConfigurado("CLINICAL_CATALOG_PATH no está configurada")
+    return cargar_catalogo_del_manifiesto(settings.clinical_catalog_path)
 
 
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
@@ -231,9 +287,12 @@ def _registrar_consulta_de_evidencia(
     recuperacion: PuertosDeRecuperacion | None,
     clock: Clock,
     generador: EvidenceGenerator | None,
+    catalogo_clinico: CatalogoClinico,
 ) -> None:
     if consulta is None and settings.llm_provider == "fake":
-        consulta = FakeEvidenceQuery.desde_directorio(settings.fake_responses_path)
+        consulta = ConsultaConCatalogoExigido(
+            FakeEvidenceQuery.desde_directorio(settings.fake_responses_path), catalogo_clinico
+        )
     elif consulta is None:
         # LLM_PROVIDER=local: la ruta siempre existe. La configuración se exige aunque falten los bordes reales
         # (adapters de embeddings, reranker e idioma, US-231): sin ellos responde 503 fallando cerrado.
@@ -260,6 +319,7 @@ def _crear_servicio_de_recuperacion(
         reranker=puertos.reranker,
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
+        catalogo_clinico=puertos.catalogo_clinico,
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de

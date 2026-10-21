@@ -15,7 +15,7 @@ import uvicorn.config
 
 from app.api.trace import trace_id_actual
 from app.config.logging import configurar_logging_json
-from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
 from tests.support.fakes import par_de_sesion
 from tests.support.logs import exigir_sin_valores_prohibidos, parsear_lineas_json
 from tests.support.service_jwt import escribir_clave_publica
@@ -66,6 +66,7 @@ def _correr_uvicorn_y_pedir_con_query(cmd: list[str], tmp_path: Path) -> tuple[s
         "PATH": "/usr/bin:/bin",
         "LLM_PROVIDER": "fake",
         "MODEL_PROVIDER": "fake",
+        "CLINICAL_CATALOG_PATH": str(CATALOGOS),
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),
         "SERVICE_JWT_PUBLIC_KEY_FILE": str(escribir_clave_publica(par_de_sesion(), tmp_path)),
     }

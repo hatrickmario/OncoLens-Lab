@@ -3,7 +3,7 @@ import conEvidencia from '../../../../../contracts/examples/rag-query-con-eviden
 import sinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { crearBaseDelAnalisisS1 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
+import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
 import { armarRegistro } from '../../../src/modules/evidence-analysis/analysis-record.js';
 import { aEvidenceAnalysis } from '../../../src/modules/evidence-analysis/evidence-analysis.mapper.js';
@@ -25,11 +25,7 @@ function registroDe(cuerpo: unknown, topRelevanceScore: number | null) {
     request,
     dataRefs: new Map([['r1', { tabla: 'diagnosis', id: 'dx-1' }]]),
     respuesta,
-    base: crearBaseDelAnalisisS1({ textoDelSupuesto: 'Supuesto sintético.' }).construir(
-      request,
-      respuesta,
-      false,
-    ),
+    base: crearBaseDelAnalisis().construir(request, respuesta, false),
     topRelevanceScore,
   });
 }
