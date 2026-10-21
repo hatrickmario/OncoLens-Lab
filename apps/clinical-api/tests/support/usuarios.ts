@@ -117,14 +117,21 @@ export async function crearUsuariosDeAuth(cliente: Client, espacio: number) {
 export async function insertarSesion(
   cliente: Client,
   ids: GeneradorDeIds,
-  fila: { userId: string; tokenHash: string; expiresAt: string; revoked?: boolean },
+  fila: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: string;
+    revoked?: boolean;
+    /** Instante de la última actividad; por defecto `INSTANTE_FIJO`. */
+    lastSeenAt?: string;
+  },
 ): Promise<void> {
   await insertar(cliente, 'auth.session', {
     id: ids(),
     user_id: fila.userId,
     token_hash: fila.tokenHash,
     expires_at: fila.expiresAt,
-    last_seen_at: INSTANTE_FIJO,
+    last_seen_at: fila.lastSeenAt ?? INSTANTE_FIJO,
     ip_address: null,
     user_agent: null,
     revoked: fila.revoked ?? false,
