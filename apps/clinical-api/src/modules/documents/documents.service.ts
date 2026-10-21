@@ -64,38 +64,56 @@ export function crearDocumentsService(dependencias: DependenciasDelService): Doc
       throw error;
     }
   }
+
+  /**
+   * Todas las reglas que rechazan una carga, en orden de barato a caro y ANTES de tocar el almacén (nada se escribe
+   * si alguna falla). Devuelve el checksum que ya calculó para no repetirlo.
+   */
+  async function validarAntesDeAlmacenar(solicitud: SolicitudDeCarga): Promise<string> {
+    if (!(await repo.existePaciente(solicitud.patientId))) throw new PacienteNoEncontrado();
+    if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
+      throw new ArchivoDemasiadoGrande();
+    if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
+    const checksum = sha256(solicitud.contenido);
+    if (await repo.existeChecksum(solicitud.patientId, checksum)) throw new DocumentoDuplicado();
+    return checksum;
+  }
+
+  /** Guarda el binario bajo una clave opaca y deja la fila encolada (`pendiente`) para la extracción. */
+  async function almacenarYEncolar(
+    solicitud: SolicitudDeCarga,
+    checksum: string,
+  ): Promise<DocumentoCargado> {
+    const id = ids();
+    const clave = claveDeObjeto(solicitud.patientId, id);
+    const subidoEn = reloj.now();
+    await almacen.guardar(clave, solicitud.contenido);
+    const resultado = await insertarOCompensar(clave, {
+      id,
+      patientId: solicitud.patientId,
+      documentType: solicitud.documentType,
+      objectStorageKey: clave,
+      checksum,
+      originalFilename: solicitud.nombreOriginal,
+      mimeType: TIPO_MIME_DEL_PDF,
+      uploadedBy: solicitud.userId,
+      uploadedAt: subidoEn,
+    });
+    if (resultado === 'duplicado') throw new DocumentoDuplicado();
+    return {
+      id,
+      patientId: solicitud.patientId,
+      documentType: solicitud.documentType,
+      originalFilename: solicitud.nombreOriginal,
+      ocrStatus: 'pendiente',
+      uploadedAt: subidoEn.toISOString(),
+    };
+  }
+
   return {
     async cargar(solicitud) {
-      if (!(await repo.existePaciente(solicitud.patientId))) throw new PacienteNoEncontrado();
-      if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
-        throw new ArchivoDemasiadoGrande();
-      if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
-      const checksum = sha256(solicitud.contenido);
-      if (await repo.existeChecksum(solicitud.patientId, checksum)) throw new DocumentoDuplicado();
-      const id = ids();
-      const clave = claveDeObjeto(solicitud.patientId, id);
-      const subidoEn = reloj.now();
-      await almacen.guardar(clave, solicitud.contenido);
-      const resultado = await insertarOCompensar(clave, {
-        id,
-        patientId: solicitud.patientId,
-        documentType: solicitud.documentType,
-        objectStorageKey: clave,
-        checksum,
-        originalFilename: solicitud.nombreOriginal,
-        mimeType: TIPO_MIME_DEL_PDF,
-        uploadedBy: solicitud.userId,
-        uploadedAt: subidoEn,
-      });
-      if (resultado === 'duplicado') throw new DocumentoDuplicado();
-      return {
-        id,
-        patientId: solicitud.patientId,
-        documentType: solicitud.documentType,
-        originalFilename: solicitud.nombreOriginal,
-        ocrStatus: 'pendiente',
-        uploadedAt: subidoEn.toISOString(),
-      };
+      const checksum = await validarAntesDeAlmacenar(solicitud);
+      return almacenarYEncolar(solicitud, checksum);
     },
   };
 }
