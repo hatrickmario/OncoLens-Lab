@@ -12,22 +12,22 @@ import pytest
 from psycopg import sql
 from sqlalchemy.engine import URL
 
-from tests.integration.conftest import nuevo_sufijo
+from app.config.settings import ROL_MIGRADOR_CORPUS, ROL_RUNTIME_CORPUS
+from tests.support.ids import nuevo_sufijo
 from tests.support.pg import BaseDeTest, conectar
 from tests.support.schemas_clinicos import (
+    ROL_QUE_MIGRA_CLINICAL,
     SCHEMAS_CLINICOS,
+    SCHEMAS_VEDADOS,
     TABLA_SINTETICA,
     crear_tabla_posterior_a_la_migracion,
 )
 
 pytestmark = pytest.mark.servicios_reales
 
-RUNTIME = "rag_corpus"
-MIGRADOR = "rag_corpus_migrator"
-
 
 def _url_del_rol(base: BaseDeTest, rol: str) -> URL:
-    url = {RUNTIME: base.url_runtime, MIGRADOR: base.url_migrador}[rol]
+    url = {ROL_RUNTIME_CORPUS: base.url_runtime, ROL_MIGRADOR_CORPUS: base.url_migrador}[rol]
     assert url.username == rol
     return url
 
@@ -56,8 +56,8 @@ def test_rag_corpus_dentro_de_corpus_inserta_y_lee_lo_creado_por_el_migrator(
             runtime.execute(f"CREATE TABLE corpus.{tabla}_del_runtime (id integer)")
 
 
-@pytest.mark.parametrize("rol", [RUNTIME, MIGRADOR])
-@pytest.mark.parametrize("esquema", SCHEMAS_CLINICOS)
+@pytest.mark.parametrize("rol", [ROL_RUNTIME_CORPUS, ROL_MIGRADOR_CORPUS])
+@pytest.mark.parametrize("esquema", SCHEMAS_VEDADOS)
 @pytest.mark.ac("US-040", 2)
 def test_rol_del_corpus_select_en_schema_clinico_permission_denied(
     base_con_schemas_clinicos: BaseDeTest, esquema: str, rol: str
@@ -74,7 +74,9 @@ def test_rag_corpus_tabla_futura_en_schema_clinico_permission_denied(
 ) -> None:
     base = base_con_schemas_clinicos
     tabla = f"futura_{esquema}"
-    crear_tabla_posterior_a_la_migracion(base.url_administracion, esquema, tabla)
+    crear_tabla_posterior_a_la_migracion(
+        base.url_administracion, esquema, tabla, ROL_QUE_MIGRA_CLINICAL
+    )
     # El REVOKE por defecto (no solo la falta de USAGE en el schema) es lo que impide el privilegio sobre la tabla futura.
     with conectar(base.url_administracion) as admin:
         concedido = admin.execute(

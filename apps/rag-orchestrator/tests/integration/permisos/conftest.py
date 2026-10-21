@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.integration.conftest import nuevo_sufijo
+from tests.support.ids import nuevo_sufijo
 from tests.support.pg import BaseDeTest, ConfiguracionArnes, crear_base_de_test
 from tests.support.schemas_clinicos import (
     aplicar_migracion_de_privilegios,
