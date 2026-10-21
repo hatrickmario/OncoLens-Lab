@@ -31,12 +31,25 @@ describe('readAlcanceDelAnalisisConfig', () => {
     ['CORPUS_CUTOFF_DATE', '2026-13-01'],
     ['CORPUS_EXCLUDED_SOURCES', undefined],
     ['CORPUS_EXCLUDED_SOURCES', 'NCCN,<script>'],
+    ['CORPUS_EXCLUDED_SOURCES', 'NCCN'],
+    ['CORPUS_EXCLUDED_SOURCES', 'ESMO,OtraFuente'],
   ])('lanza ConfiguracionInvalidaError que nombra %s cuando vale %j', (variable, valor) => {
     const env: NodeJS.ProcessEnv = { ...ENV_VALIDO, [variable]: valor };
 
     expect(() => readAlcanceDelAnalisisConfig(env)).toThrow(
       expect.objectContaining({ name: 'ConfiguracionInvalidaError', variable }),
     );
+  });
+});
+
+describe('readAlcanceDelAnalisisConfig: piso de fuentes excluidas (RN-21)', () => {
+  it('acepta NCCN y ESMO en cualquier orden y mayúsculas, con fuentes adicionales', () => {
+    const config = readAlcanceDelAnalisisConfig({
+      ...ENV_VALIDO,
+      CORPUS_EXCLUDED_SOURCES: 'esmo, Otra Fuente ,nccn',
+    });
+
+    expect(config.corpusExcludedSources).toEqual(['esmo', 'Otra Fuente', 'nccn']);
   });
 });
 

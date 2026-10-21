@@ -436,6 +436,8 @@ export interface AlcanceDelAnalisisConfig extends AlcanceDelCorpus {
 }
 
 const FORMA_DE_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
+/** Piso de fuentes excluidas del corpus (RN-21): NCCN y ESMO siempre; la configuración solo puede añadir más. */
+const FUENTES_EXCLUIDAS_MINIMAS = ['nccn', 'esmo'] as const;
 const FORMA_DE_FUENTE = /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$/;
 
 /** Lista separada por comas, sin elementos vacíos ni espacios de borde; ausente o vacía lanza `variable_ausente`. */
@@ -476,6 +478,13 @@ export function readAlcanceDelAnalisisConfig(env: NodeJS.ProcessEnv): AlcanceDel
     throw new ConfiguracionInvalidaError(
       'CORPUS_EXCLUDED_SOURCES',
       'debe ser una lista de nombres de fuente separados por comas',
+    );
+  }
+  const nombres = corpusExcludedSources.map((fuente) => fuente.toLowerCase());
+  if (!FUENTES_EXCLUIDAS_MINIMAS.every((fuente) => nombres.includes(fuente))) {
+    throw new ConfiguracionInvalidaError(
+      'CORPUS_EXCLUDED_SOURCES',
+      'debe incluir al menos las fuentes excluidas por licencia (NCCN y ESMO)',
     );
   }
   return {
