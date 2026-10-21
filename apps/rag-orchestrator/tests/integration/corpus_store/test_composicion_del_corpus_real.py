@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 from pymilvus import MilvusClient
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, Engine
 
 from app.config.settings import CorpusDatabaseSettings
 from app.infrastructure.corpus.composicion import CorpusNoDisponibleError, crear_puertos_del_corpus
@@ -46,12 +46,17 @@ def test_con_milvus_y_catalogo_reales_compone_los_puertos_y_el_catalogo_vacio_no
     base_migrada: BaseDeTest,
     uri_de_milvus: str,
     nueva_coleccion: Callable[[], str],
+    fabricar_motor_cerrable: Callable[[URL], Engine],
     tmp_path: Path,
 ) -> None:
     milvus = ajustes_de_milvus(uri_de_milvus, nueva_coleccion())
     MilvusRepository(MilvusClient(uri=uri_de_milvus), milvus).ensure_collection()
 
-    puertos = crear_puertos_del_corpus(milvus, _ajustes_del_catalogo(base_migrada, tmp_path))
+    puertos = crear_puertos_del_corpus(
+        milvus,
+        _ajustes_del_catalogo(base_migrada, tmp_path),
+        fabricar_motor=fabricar_motor_cerrable,
+    )
 
     assert puertos.catalogo.fichas_por_documento(["no-existe"]) == {}
     assert puertos.buscador.search_dense([0.0] * milvus.embedding_dim, 3) == []
@@ -67,7 +72,10 @@ def test_con_una_coleccion_inexistente_termina_nombrando_milvus_collection_name(
     milvus = ajustes_de_milvus(uri_de_milvus, nueva_coleccion())  # nadie la creó
 
     with pytest.raises(CorpusNoDisponibleError) as error:
-        crear_puertos_del_corpus(milvus, _ajustes_del_catalogo(base_migrada, tmp_path))
+        crear_puertos_del_corpus(
+            milvus,
+            _ajustes_del_catalogo(base_migrada, tmp_path),
+        )
 
     assert error.value.variable == "MILVUS_COLLECTION_NAME"
     assert uri_de_milvus not in f"{error.value} {error.value!r}"

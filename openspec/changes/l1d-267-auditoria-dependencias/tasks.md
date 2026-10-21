@@ -2,7 +2,7 @@
 
 ## 1. clinical-platform
 
-- [ ] 1.0 (adelantada a O1, dentro de `l1d-277`) Subir `certifi` a `==2026.10.19` en `apps/rag-orchestrator/requirements.txt` por el aviso crítico de Dependabot (#2); `pip-audit` sin hallazgos críticos · test después
+- [x] 1.0 (adelantada a O1, dentro de `l1d-277`) Subir `certifi` a `==2026.10.19` en `apps/rag-orchestrator/requirements.txt` por el aviso crítico de Dependabot (#2); `pip-audit` sin hallazgos críticos · test después
 - [ ] 1.1 [Test después · CI] Tests de `hallazgosBloqueantes()` en `scripts/ci/__tests__/auditarDependencias.test.mjs` con salidas JSON fijas de `npm audit` y `pip-audit` (sin red) y fecha inyectada: limpio, aviso alto de npm, aviso de pip, excepción vigente, vencida y sin `mitigacion` [US-217 AC-1, AC-2, AC-3]
 - [ ] 1.2 `scripts/ci/auditar-dependencias.mjs` (función pura + CLI) y schema de `security/audit-exceptions.json`; extraer `excepcionVencida()` [US-217 AC-2, AC-3]
 - [ ] 1.3 `pip-audit` fijado en `scripts/ci/install-tools.sh`; job `dependencies` en `ci.yml` (`permissions: contents: read`, acciones por SHA, `timeout-minutes`) y en `needs` de `ci-ok` [US-217 AC-1]

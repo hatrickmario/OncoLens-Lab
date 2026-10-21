@@ -164,6 +164,23 @@ jobs:
       - name: Integración de clinical-api contra PostgreSQL real de test (US-038)
         run: scripts/ci/integracion-clinical-api.sh
 
+  integration-rag:
+    name: integration-rag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Instalar dependencias de Node
+        run: npm ci
+      - name: Integración de rag-orchestrator contra PostgreSQL y Milvus reales de test (L1D-277, pytest -m servicios_reales)
+        run: scripts/ci/integracion-rag-orchestrator.sh
+
   quality:
     name: quality
     runs-on: ubuntu-24.04
@@ -216,7 +233,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, quality, lint-lenguaje]
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

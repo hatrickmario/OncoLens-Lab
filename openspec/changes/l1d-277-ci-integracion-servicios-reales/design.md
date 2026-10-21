@@ -18,15 +18,18 @@ alcanzables **dentro** de `corpus-db-net` (no hay puertos publicados al host).
 - Descartadas: publicar puertos de PostgreSQL/Milvus al *runner* (rompe la invariante y difiere de
   local); servicios de GitHub Actions (`services:`) (no reproducen las redes, `pg_hba` ni los roles).
 
-### D1b. Credenciales del contenedor de Pytest: solo `rag_corpus`
-El contenedor de Pytest recibe **solo** los secretos de `rag_corpus` (usuario y contraseña por
-`*_FILE`, `CORPUS_DATABASE_URL`), los de Milvus de test y la clave **pública** del JWT de servicio
-fingida que necesiten los tests; **nada** de `clinical`: ni credenciales de `clinical_app` ni del
-superusuario de PostgreSQL, ni claves de cifrado/HMAC de identidad, ni la privada del JWT, ni
-`clinical-minio`. Los secretos se montan por archivo solo en ese servicio (`secrets:` del Compose de
-test), no como variables del job ni en `env:` del *workflow*. La creación de roles y esquemas la hace
-el *init* de `postgres` (con su propio secreto) antes de `run`, fuera del contenedor de Pytest. El
-script verifica que el contenedor no tiene montado ningún secreto fuera de esa lista.
+### D1b. Credenciales del contenedor de Pytest: solo los tres secretos del arnés de corpus
+El contenedor de Pytest recibe **solo** tres secretos, por archivo (`secrets:` del Compose de test, solo en ese
+servicio): `pg_rag_corpus_password`, `pg_rag_corpus_migrator_password` y `pg_test_admin_password`. Los dos primeros son
+los roles de `corpus`; el tercero es el de `oncolens_test_admin`, que el arnés `tests/support/pg.py` exige para crear y
+destruir una base por módulo y que solo tiene `CREATEDB` (sin superusuario) y entra únicamente por la regla de `pg_hba` del
+perfil test (bases `oltest_*` y `postgres`). No recibe Milvus con credenciales (no tiene autenticación en el Compose de test)
+ni clave del JWT (los tests no la leen). **Nada** de `clinical`: ni credenciales de `clinical_api` ni del superusuario de
+PostgreSQL, ni claves de cifrado/HMAC de identidad, ni la privada del JWT, ni `clinical-minio`; tampoco una red `clinical-net`.
+No hay secretos como variables del job ni en `env:` del *workflow*. La creación de roles y esquemas la hace el *init* de
+`postgres` (con su propio secreto) antes de `run`. El script comprueba **dentro del contenedor en ejecución**, antes de
+Pytest, que los secretos montados son exactamente esos tres, que el entorno no tiene variables clínicas y que el árbol que ve
+no contiene secretos ni `.env`; el árbol es una copia de solo lectura de los archivos versionados que leen los tests. Excepción aceptada: el `node_modules` del host se monta de solo lectura en `/repo/node_modules` (los tests empaquetan el spec con él) y la inspección del árbol no lo recorre; no contiene secretos del repositorio. Los dos scripts de integración fijan su propio proyecto de Compose (`oncolens-ci-rag`, `oncolens-ci-clinical`) y sus directorios temporales, de modo que su `down -v` y su `rm -rf` no alcanzan el stack local.
 
 ### D2. Job aparte y en `ci-ok`
 `integration-rag` separado de `integration` (paralelos; ~10 min con Milvus). `timeout-minutes: 30`.

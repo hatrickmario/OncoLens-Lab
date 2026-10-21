@@ -13,7 +13,9 @@ from collections.abc import Callable, Iterator
 
 import pytest
 from pymilvus import MilvusClient
+from sqlalchemy.engine import URL, Engine
 
+from app.infrastructure.catalog.conexion import crear_motor
 from tests.support.milvus import (
     ajustes_de_milvus,
     eliminar_coleccion_de_test,
@@ -83,5 +85,21 @@ def nueva_coleccion(cliente_milvus: MilvusClient) -> Iterator[Callable[[], str]]
 
 
 @pytest.fixture
-def ajustes_milvus(uri_de_milvus: str, nueva_coleccion: Callable[[], str]):  # noqa: ANN201
+def ajustes_milvus(uri_de_milvus: str, nueva_coleccion: Callable[[], str]):
     return ajustes_de_milvus(uri_de_milvus, nueva_coleccion())
+
+
+@pytest.fixture
+def fabricar_motor_cerrable() -> Iterator[Callable[[URL], Engine]]:
+    """Fábrica de motores reales que los cierra al terminar el test: una conexión abierta de ``rag_corpus`` impediría
+    ``DROP DATABASE`` de la base de test (el dueño no puede terminar procesos ajenos)."""
+    motores: list[Engine] = []
+
+    def fabricar(url: URL) -> Engine:
+        motor = crear_motor(url)
+        motores.append(motor)
+        return motor
+
+    yield fabricar
+    for motor in motores:
+        motor.dispose()
