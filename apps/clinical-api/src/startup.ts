@@ -12,6 +12,8 @@ export interface DependenciasDeArranque {
   readonly readFile: LeerArchivo;
   readonly log: (linea: string) => void;
   readonly exit: (codigo: number) => void;
+  /** Etapa de servicios (esqueleto del commit test: `arrancar` aún no la invoca). */
+  readonly cargarServicios?: (...args: never[]) => unknown;
   readonly listen: (puerto: number, configuracion: ConfiguracionDeArranque) => void;
 }
 
@@ -33,6 +35,21 @@ export function registrarConfiguracionInvalida(
       ...(error.valorInvalido !== undefined && { valorInvalido: error.valorInvalido }),
     }),
   );
+}
+
+/** Evento de arranque en JSON (esqueleto del commit test). */
+export function registrarEventoDeArranque(
+  _log: (linea: string) => void,
+  _nivel: 'info' | 'error',
+  _evento: string,
+  _campos?: Record<string, string | number>,
+): void {
+  throw new Error('no implementado');
+}
+
+/** Etapa 2 de la configuración (esqueleto del commit test). */
+export function cargarEtapaDeServicios(): never {
+  throw new Error('no implementado');
 }
 
 /** Registra el fallo de arranque que conoce (secreto, configuración, gate de datos reales); cualquier otro se relanza. */

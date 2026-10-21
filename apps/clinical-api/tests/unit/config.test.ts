@@ -14,4 +14,11 @@ describe('readPort', () => {
     expect(() => readPort({ PORT: 'abc' })).toThrow('PORT');
     expect(() => readPort({ PORT: '70000' })).toThrow('PORT');
   });
+
+  it.each(['0x50', '1e3', ' 80 ', '+80', '8.0', '-1'])(
+    'lanza nombrando PORT cuando el valor %s no es una cadena de dígitos',
+    (valor) => {
+      expect(() => readPort({ PORT: valor })).toThrow('PORT');
+    },
+  );
 });

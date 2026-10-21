@@ -140,7 +140,8 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
     expect(resultado.salidas).toEqual([1]);
     expect(resultado.escuchas).toEqual([]);
     expect(JSON.parse(resultado.log)).toMatchObject({
-      event: 'secreto_ausente',
+      event: 'configuracion_invalida',
+      motivo: 'variable_ausente',
       variable: 'IDENTITY_AES_KEY_FILE',
     });
     expect(resultado.log).not.toContain('contenido-ficticio');

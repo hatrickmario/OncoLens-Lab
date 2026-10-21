@@ -69,6 +69,33 @@ describe('GET /health', () => {
     assertMatchesSpec('clinical-api', '#/paths/~1health/get/responses/200', respuesta.body);
   });
 
+  it('no lista variables ajenas del entorno (HOSTNAME, AWS_SECRET_ACCESS_KEY) en configKeys cuando el proceso las tiene [US-037 AC-1]', async () => {
+    const observado = observarEntorno({
+      PORT: '4123',
+      IDENTITY_AES_KEY_FILE: '/ruta/ficticia/aes',
+      BLIND_INDEX_HMAC_KEY_FILE: '/ruta/ficticia/hmac',
+      HOSTNAME: 'contenedor-sintetico',
+      AWS_SECRET_ACCESS_KEY: 'valor-sintetico-de-prueba',
+      IDENTITY_KEY_VERSION: '2',
+      IDENTITY_AES_KEY_V1_FILE: '/ruta/ficticia/aes-v1',
+    });
+    cargarConfiguracion(observado.env);
+
+    const respuesta = await request(
+      createApp({ salud: { configKeys: observado.clavesCargadas(), serviceVersion: '1.2.3' } }),
+    ).get('/health');
+
+    expect(respuesta.body.configKeys).not.toContain('HOSTNAME');
+    expect(respuesta.body.configKeys).not.toContain('AWS_SECRET_ACCESS_KEY');
+    expect(respuesta.body.configKeys).toEqual([
+      'BLIND_INDEX_HMAC_KEY_FILE',
+      'IDENTITY_AES_KEY_FILE',
+      'IDENTITY_AES_KEY_V1_FILE',
+      'IDENTITY_KEY_VERSION',
+      'PORT',
+    ]);
+  });
+
   it('responde 200 sin emitir cookie cuando la aplicación se crea sin dependencias (no consulta a rag-orchestrator)', async () => {
     const respuesta = await request(createApp({})).get('/health');
 
