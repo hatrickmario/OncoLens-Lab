@@ -7,11 +7,15 @@ import re
 
 import pytest
 
-from app.scripts.adr40.dataset import CONTEXTO_DE_DOCUMENTO, DatasetInvalido, cargar_corpus
+from app.scripts.adr40.dataset import (
+    CONTEXTO_DE_DOCUMENTO,
+    DatasetInvalido,
+    cargar_corpus,
+    tipos_directos,
+)
 from tests.evaluation.conftest import RAIZ_REPO
 
 PII_MINI = RAIZ_REPO / "data" / "eval" / "pii-mini"
-TIPOS_DIRECTOS = {"nombre", "documento", "telefono", "correo", "direccion", "fecha_nacimiento"}
 
 
 def _manifiesto() -> dict:  # type: ignore[type-arg]
@@ -43,7 +47,7 @@ def test_el_corpus_cubre_los_seis_tipos_directos_y_al_menos_tres_paises() -> Non
     tipos = {e.tipo for t in corpus for e in t.etiquetas}
     paises = _manifiesto()["paises"]
 
-    assert tipos == TIPOS_DIRECTOS
+    assert tipos == set(tipos_directos())
     assert len(paises) >= 3
     assert any(t.contexto == CONTEXTO_DE_DOCUMENTO and len(t.etiquetas) >= 6 for t in corpus)
 

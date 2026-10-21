@@ -156,3 +156,10 @@ Sin migraciones. El estado del ADR queda `propuesto` hasta la aprobación del us
 - **Tarea 1.4 [HUMANO]:** la memoria se midio como RSS de carga del modelo (481 MB `md`, 284 MB `sm`) en un proceso aparte; falta medirla con el stack y el LLM G cargados en la maquina de referencia.
 - **Claves nuevas para el usuario (no se tocaron `.env*`):** `PII_ENGINE`, `PII_ENGINE_VERSION`, `PII_NER_MODEL`, `PII_NER_MIN_SCORE` (solo diseno, aun sin codigo que las lea; el adapter es de S3).
 - **Dependencias de medicion (solo `requirements-eval.txt`):** `regex==2026.9.29`, `spacy==3.8.14`; pesos `es_core_news_md` 3.8.0 (GPL-3.0, wheel de 42 284 033 bytes, sha256 `478b8bb3f3e8eb149192f7d80e7cd64f990b7e9bccbc5329df41a57e86326be2`) descargados fuera del repo.
+
+## Gate 2: ronda unica (ai-services)
+
+- `reglas.py` (B2) entro sin commit rojo previo porque las tareas 1.2 y 1.3 la clasificaban "test despues".
+- La lista de identificadores directos de G-8 vive ahora solo en `data/eval/pii-mini/manifest.json` (`tipos_directos`); B2 la lee y exige todos los tipos (un tipo sin etiquetas descarta al candidato). Se borro la constante muerta de `generar.py`.
+- **Deuda propuesta, historia "gemelo B1/B2 antes de FEAT-01b":** (a) B1 aplica los mismos formatos ampliados que B2 (ADR-40, decision 7; condicion de G-Piloto); (b) clase y huellas del dataset estan triplicadas (`dataset.py`, `corpus.ts`, `generar.py`); (c) test de paridad B1/B2 de formatos y la restriccion de `(?i:` frente a Node 22; (d) identidad exacta solo por cifras (CURP, letra del DNI).
+- El modo `con_identidad_conocida` de B1 es optimista; las cifras de B1 y B2 no son comparables 1:1 (ver ADR, limites).

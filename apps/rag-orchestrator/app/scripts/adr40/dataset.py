@@ -42,6 +42,14 @@ def _importar_generador(directorio: Path) -> ModuleType:
     return modulo
 
 
+def tipos_directos(raiz: Path | None = None) -> list[str]:
+    """Identificadores directos de G-8: una sola lista, la del manifiesto (la leen B1 y B2)."""
+    manifiesto = json.loads(
+        ((raiz or raiz_repo()) / DIRECTORIO / "manifest.json").read_text(encoding="utf-8")
+    )
+    return list(manifiesto["tipos_directos"])
+
+
 def cargar_corpus(raiz: Path | None = None) -> list[TextoSembrado]:
     directorio = (raiz or raiz_repo()) / DIRECTORIO
     manifiesto = json.loads((directorio / "manifest.json").read_text(encoding="utf-8"))

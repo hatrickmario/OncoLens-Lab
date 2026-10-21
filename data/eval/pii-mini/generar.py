@@ -25,7 +25,6 @@ N_IDENTIDADES = 60
 AQUI = Path(__file__).resolve().parent
 PAISES = ("CO", "ES", "AR", "MX", "PE", "CL")
 CONTEXTOS = ("pregunta", "nota", "evento", "atributo", "documento")
-TIPOS_DIRECTOS = ("nombre", "documento", "telefono", "correo", "direccion", "fecha_nacimiento")
 
 NOMBRES = (
     "Lucía", "Mateo", "Valentina", "Santiago", "Camila", "Andrés", "Sofía", "Javier", "Daniela", "Rafael",
