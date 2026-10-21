@@ -44,6 +44,59 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
 - **D5 · `baseline.json`:** lo escribe 072a con la configuración de CI (FX-T5a-a) para que US-074
   compare; el baseline con modelos reales lo registra US-073.
 
+## Decisiones de implementación 072a
+
+- **D6 · Una ruta por función.** Los **datasets de entrada** viven en `data/eval/` (donde ya están `adr39-mini`,
+  `ocr-mini` y `ol06-particion-v1`, citados por ADR-39 y ADR-45); el FX-T5a-a es `data/eval/fx-t5a-a/`. En
+  `data/evaluation/` solo quedan las **salidas versionadas** (`baseline.json`) y el histórico `vm-baseline/`.
+  Respuesta a la pregunta abierta 1 de ADR-41: no se mueve ningún dataset. **Pendiente fuera de este change:** la
+  skill `run-ai-eval` y OL-06 dicen «datasets de `data/evaluation/`»; deben decir `data/eval/`.
+- **D7 · Configuración y resultados.** Las configuraciones viven donde ya están las de ADR-39:
+  `apps/rag-orchestrator/eval/configs/` (la CI usa `test-fake.yaml`); el resultado va a
+  `apps/rag-orchestrator/eval/results/<fecha>-<hashConfig>.json` (`--salida` lo cambia). `hashConfig` es el SHA-256
+  del YAML cargado, serializado de forma canónica; la `<fecha>` sale del reloj inyectado, nunca de las métricas.
+- **D8 · Adaptadores falsos como código de `app/evaluation/`.** `adaptadores_falsos.py` implementa los puertos de
+  `app/application/ports.py` (mismo contrato que los reales: un puntaje por candidato y en [0, 1], `null` ≠ `0.0`) y
+  se compone con `adaptadores.proveedor: fake`. Con `proveedor: local` el runner solo valida las URL con
+  `es_proveedor_local()`; los adapters reales con URL se cablean en US-073 (calibración).
+- **D9 · Reloj de medición.** `medicion.reloj: simulado` (1 ms por lectura) hace reproducible también el p95 por
+  etapa en la CI; `real` usa `time.perf_counter` y su p95 **no** es una métrica determinista (AC-2).
+- **D10 · Esquema cerrado del reporte.** `escribir_reporte_cerrado` valida contra `ESQUEMA_SUITE` (lista blanca
+  de claves; hojas numéricas, booleanas, de cadenas enumeradas o identificadores sin espacios bajo
+  `configuracion`). `escribir_reporte` (ADR-39) no cambia. Cada familia de métricas se calcula sobre la muestra
+  completa y sobre la revisada por el oncólogo; el rótulo lo decide `rotular_validada()`.
+- **D11 · Familias.** `--suite retrieval|generation|all`; `pii` y las demás familias de `run-ai-eval` terminan con
+  código 2 («familia no disponible») hasta su bloque. `--prueba-final` es obligatoria si `dataset.subconjunto` es
+  `prueba` (ADR-45 P3); el registro de accesos y la huella previa de P3 no se implementan en 072a.
+- **D12 · Envoltorio y baseline.** `scripts/eval/evaluate.mjs` (`npm run evaluate`) llama a Python dentro de
+  `apps/rag-orchestrator`, resuelve `--config` y `--salida` contra el directorio de quien lo invoca y usa la
+  configuración de la CI si no hay `--config`; variables `EVAL_PYTHON` y `EVAL_TIMEOUT_S`. **Paso previo:** `EVAL_PYTHON`
+  debe apuntar a un Python con `pip install -r apps/rag-orchestrator/requirements.txt -r requirements-dev.txt` (sin
+  eso, `python3` del sistema no tiene las dependencias).
+  `data/evaluation/baseline.json` es la salida de `test-fake.yaml`; un test falla si deja de coincidir byte a byte.
+- **D13 · Guardas RN-12 y red.** `exigir_adapters_locales(clase, urls)` corre antes de cargar preguntas; un dataset
+  del repo solo puede ser `sintetico`, uno fuera del repo puede ser `real_anonimizado` solo con adapters locales. Un
+  fixture autouse de `tests/evaluation/` bloquea `connect`, `connect_ex` y `getaddrinfo` fuera de loopback y falla el
+  test que lo intente.
+
+## Adiciones aceptadas por el orquestador del sprint (sprint-S2) y deuda
+
+Aceptadas para 072a: (1) datasets en `data/eval/` y salidas en `data/evaluation/` (D6); (2) configs en
+`apps/rag-orchestrator/eval/configs/` y resultados en `eval/results/` (D7); (3) `adaptadores_falsos.py` con el contrato
+de los adapters reales (D8); (4) `medicion.reloj: simulado` (D9); (5) `--suite` con `retrieval|generation|all` y código
+2 para las demás familias (D11); (6) flags `--config`, `--salida`, `--nombre-archivo`, `--prueba-final` (D11, D12).
+
+**Gate 2 (design-principles-reviewer, Mayores 1 y 2):** `HOSTS_LOCALES` es la única lista de hosts locales
+(`Settings.llm_allowed_hosts` la toma como valor por defecto), las fuentes excluidas salen de
+`PISO_DE_FUENTES_EXCLUIDAS` y los vocabularios cerrados del esquema (suites, proveedores, relojes, clases, rótulos) se
+derivan de sus fuentes. El resultado de una familia parcial se llama `<fecha>-<hashConfig>-<suite>.json` para no pisar
+el de `all`.
+
+**Deuda:** actualizar `run-ai-eval` y OL-06 a `data/eval/` y a la ruta de resultados vigente
+(`apps/rag-orchestrator/eval/results/`, no `reports/eval/`). `.claude/skills/run-ai-eval/SKILL.md` y OL-06 (`readme.md` §6) apuntan a `data/evaluation/` para los datasets
+y deben apuntar a `data/eval/`; `.gitignore` debe ignorar `apps/rag-orchestrator/eval/results/` (fuera de las rutas de
+este change). Con `proveedor: local` la composición de adapters reales queda para US-073.
+
 ## Privacidad y ownership
 
 Solo sintéticos; los reales anonimizados se pasan por ruta local y nunca a la CI (RN-13, RN-14).

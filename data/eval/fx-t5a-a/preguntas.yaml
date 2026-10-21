@@ -1,0 +1,43 @@
+clase: sintetico
+preguntas:
+  - id: FX-01
+    idioma: es
+    cancer: mama
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre anti-HER2 adyuvante en cáncer de mama HER2 positivo?'
+    evidencia: [{documento: doc-m1, cita: 'Adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false
+  - id: FX-02
+    idioma: en
+    cancer: mama
+    modo_acierto: cualquiera
+    control_de: FX-01
+    pregunta: 'What does the evidence describe about adjuvant anti-HER2 therapy in HER2-positive breast cancer?'
+    evidencia: [{documento: doc-m1, cita: 'Adding anti-HER2 therapy to adjuvant chemotherapy'}]
+    revisada_por_oncologo: false
+  - id: FX-03
+    idioma: es
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: '¿Qué describe la evidencia sobre androgen deprivation en cáncer de próstata metastásico?'
+    evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy combined with an androgen receptor inhibitor'}]
+    revisada_por_oncologo: false
+  - id: FX-04
+    idioma: en
+    cancer: prostata
+    modo_acierto: cualquiera
+    pregunta: 'What does the evidence describe about androgen deprivation instructions in metastatic prostate cancer?'
+    evidencia: [{documento: doc-p1, cita: 'Androgen deprivation therapy combined with an androgen receptor inhibitor'}]
+    revisada_por_oncologo: false
+  - id: FX-05
+    idioma: es
+    cancer: mama
+    modo_acierto: sin_evidencia
+    pregunta: '¿Qué describe la evidencia sobre melanoma uveal?'
+    revisada_por_oncologo: false
+  - id: FX-06
+    idioma: en
+    cancer: prostata
+    modo_acierto: sin_evidencia
+    pregunta: 'What does the evidence describe about uveal melanoma?'
+    revisada_por_oncologo: false
