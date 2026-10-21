@@ -12,6 +12,7 @@ import pytest
 from psycopg import sql
 from sqlalchemy.engine import URL
 
+from tests.integration.conftest import nuevo_sufijo
 from tests.support.pg import BaseDeTest, conectar
 from tests.support.schemas_clinicos import (
     SCHEMAS_CLINICOS,
@@ -43,13 +44,16 @@ def test_rag_corpus_dentro_de_corpus_inserta_y_lee_lo_creado_por_el_migrator(
     base_con_schemas_clinicos: BaseDeTest,
 ) -> None:
     base = base_con_schemas_clinicos
+    tabla = (
+        f"tabla_de_prueba_{nuevo_sufijo()}"  # la base es de módulo: sin nombres fijos entre tests
+    )
     with conectar(base.url_migrador) as migrador:
-        migrador.execute("CREATE TABLE corpus.tabla_de_prueba (id integer)")
+        migrador.execute(f"CREATE TABLE corpus.{tabla} (id integer)")
     with conectar(base.url_runtime) as runtime:
-        runtime.execute("INSERT INTO corpus.tabla_de_prueba (id) VALUES (1)")
-        assert runtime.execute("SELECT id FROM corpus.tabla_de_prueba").fetchall() == [(1,)]
+        runtime.execute(f"INSERT INTO corpus.{tabla} (id) VALUES (1)")
+        assert runtime.execute(f"SELECT id FROM corpus.{tabla}").fetchall() == [(1,)]
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
-            runtime.execute("CREATE TABLE corpus.tabla_del_runtime (id integer)")
+            runtime.execute(f"CREATE TABLE corpus.{tabla}_del_runtime (id integer)")
 
 
 @pytest.mark.parametrize("rol", [RUNTIME, MIGRADOR])

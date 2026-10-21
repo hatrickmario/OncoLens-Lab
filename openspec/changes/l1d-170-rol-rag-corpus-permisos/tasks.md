@@ -12,7 +12,7 @@
 ## 2. ai-services
 
 - [x] 2.1 (test después: migración; en rojo antes de 1.2) Pytest en `tests/integration/permisos/`, conectado por TLS: "test_rag_corpus_dentro_de_corpus_inserta_y_lee_lo_creado_por_el_migrator" `@pytest.mark.ac("US-040", 1)` (y `CREATE` del runtime → *permission denied*), "test_rag_corpus_select_en_schema_clinico_permission_denied" parametrizado por los cinco schemas `@pytest.mark.ac("US-040", 2)`, el mismo para `rag_corpus_migrator`, y "test_rag_corpus_tabla_futura_en_clinical_permission_denied" `@pytest.mark.ac("US-040", 3)`. Sin mocks (PostgreSQL real).
-- [ ] 2.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-170)`.
+- [x] 2.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-170)`.
 
 ## 3. cierre
 
