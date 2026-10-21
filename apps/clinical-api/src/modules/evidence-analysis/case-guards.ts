@@ -15,16 +15,16 @@ export function exigirTipoCancer(caso: Pick<CasoClinico, 'diagnosticoActivo'>): 
 }
 
 /** Alcance del análisis: el tipo de cáncer del diagnóstico activo está o no en `ENABLED_CANCER_TYPES` (RN-20). */
-export type AlcanceDelCaso = 'habilitado' | 'tipo_no_habilitado';
+export type EstadoDeHabilitacion = 'habilitado' | 'tipo_no_habilitado';
 
 /**
  * Corte de alcance previo a la IA: un tipo no habilitado NO es un error (responde `200 tipo_no_habilitado`), por eso
  * devuelve el resultado en vez de lanzar. Se evalúa tras `exigirTipoCancer()` y antes de construir el contexto.
  */
-export function exigirTipoHabilitado(
+export function alcanceDelTipo(
   caso: Pick<CasoClinico, 'diagnosticoActivo'>,
   tipos: TiposDeCancerHabilitados,
-): AlcanceDelCaso {
+): EstadoDeHabilitacion {
   const tipo = caso.diagnosticoActivo?.cancerType;
   return tipo !== undefined && tipos.estaHabilitado(tipo) ? 'habilitado' : 'tipo_no_habilitado';
 }

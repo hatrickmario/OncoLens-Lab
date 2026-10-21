@@ -5,7 +5,7 @@ import type {
   RagQueryInternalRequest,
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { exigirTipoCancer, exigirTipoHabilitado } from './case-guards.js';
+import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
 import { construirContextoPermitido, construirContextoVacio } from './clinical-context.builder.js';
 import type { CasoClinico, CasoRepository } from './evidence-analysis.repository.js';
 import type { PeticionDeAnalisis } from './evidence-analysis.schema.js';
@@ -193,7 +193,7 @@ export function crearEvidenceAnalysisService(
       exigirTipoCancer(caso);
 
       const ahora = reloj.now();
-      if (exigirTipoHabilitado(caso, tiposHabilitados) === 'tipo_no_habilitado') {
+      if (alcanceDelTipo(caso, tiposHabilitados) === 'tipo_no_habilitado') {
         return cerrarTipoNoHabilitado(solicitud, caso, ahora);
       }
       const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
