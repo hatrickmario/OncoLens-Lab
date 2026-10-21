@@ -63,6 +63,11 @@
       "target": "#/paths/~1platform~1evidence-analyses~1{analysisId}~1follow-ups/post/responses/422"
     },
     {
+      "file": "error-catalog-version-mismatch.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1evidence-analyses/post/responses/409"
+    },
+    {
       "file": "error-cola-inferencia-llena.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1evidence-analyses/post/responses/429"

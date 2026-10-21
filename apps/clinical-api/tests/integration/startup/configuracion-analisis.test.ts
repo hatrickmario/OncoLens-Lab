@@ -94,8 +94,8 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
       level: 'error',
       event: 'configuracion_invalida',
       variable: 'CLINICAL_CATALOG_PATH',
-      regla: expect.any(String),
-      motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
+      regla: 'manifest.json legible',
+      motivo: 'catalogo_no_disponible',
     });
     expect(proceso.stderr).not.toContain('secreto-sin-manifest');
   });
