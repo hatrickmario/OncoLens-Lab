@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING
 from fastapi import FastAPI
 
 from app.api.contencion_de_errores import ContencionDeErroresInesperados
+from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
-from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
+from app.application.consulta_no_componible import ConsultaNoComponible
+from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
     ChunkSearch,
     Clock,
@@ -29,15 +31,12 @@ from app.application.ports import (
     Reranker,
     TraceIdGenerator,
 )
-from app.application.consulta_no_componible import ConsultaNoComponible
-from app.application.generation import LlmEvidenceGenerator
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
 from app.config.logging import silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings
-from app.schemas.generated.models import LlmProvider
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -50,6 +49,7 @@ from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmH
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
+from app.schemas.generated.models import LlmProvider
 
 if (
     TYPE_CHECKING
@@ -76,6 +76,10 @@ class PuertosDeRecuperacion:
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
+
+
+def cargar_settings_o_salir() -> Settings:
+    raise NotImplementedError("no implementado")
 
 
 def crear_app(
