@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
+import dataclasses
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from app.application.ports import Clock
-from app.evaluation.barrido import ValorBarrido, barrer, elegir_umbral, sin_nan
+from app.evaluation.barrido import FilaBarrido, elegir_umbral, sin_nan
+from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite
+from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.informe_baseline import (
@@ -20,7 +25,9 @@ from app.evaluation.informe_baseline import (
 from app.evaluation.metas import cargar_metas
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
 from app.evaluation.reporte import escribir_reporte
+from app.evaluation.retrieval_metrics import ChunkRecuperado, evaluar_pregunta, metrica
 from app.evaluation.rutas import raiz_repo
 
 SALIDA_DEL_BASELINE = Path("eval") / "reports"
@@ -31,6 +38,55 @@ _UMBRAL_EN_CONFIG = re.compile(r"^(\s+relevance_threshold:\s*)[0-9.]+", re.MULTI
 
 def _directorio_de_la_app() -> Path:
     return raiz_repo() / "apps" / "rag-orchestrator"
+
+
+@dataclass(frozen=True)
+class ValorBarrido:
+    """La fila del barrido y las consultas que la produjeron (para el baseline por tipo de cáncer)."""
+
+    fila: FilaBarrido
+    resultados: list[ResultadoConsulta]
+
+
+def _recall_tras_umbral(
+    dataset: DatasetSuite,
+    rankings: dict[str, list[ChunkRecuperado]],
+    umbral: float,
+    config: ConfigSuite,
+) -> float | None:
+    """recall@10 de los chunks que superan el umbral (``>``, como ``filtrar_sobre_umbral``): lo que el generador ve."""
+    entregados = [
+        evaluar_pregunta(p, [c for c in rankings.get(p.texto, []) if c.puntaje > umbral])
+        for p in dataset.preguntas
+    ]
+    recall = metrica(
+        entregados, config.semilla_bootstrap, config.bootstrap_repeticiones
+    ).recall_at_10
+    return sin_nan(recall)  # NaN: ninguna pregunta con evidencia esperada
+
+
+def barrer(
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    grilla: Sequence[float],
+    reloj: Clock,
+    cronometro_de: Callable[[], Cronometro],
+) -> list[ValorBarrido]:
+    """Una corrida completa de la suite por valor de la grilla; solo cambia ``relevance_threshold``."""
+    valores: list[ValorBarrido] = []
+    for umbral in grilla:
+        umbrales = dataclasses.replace(config.umbrales, relevance_threshold=umbral)
+        suite = componer_servicio(
+            dataclasses.replace(config, umbrales=umbrales), dataset, cronometro_de(), reloj
+        )
+        resultados, _ = asyncio.run(evaluar_dataset(suite, dataset))
+        fila = FilaBarrido(
+            umbral,
+            exactitud_sin_evidencia(resultados)["exactitud"],
+            _recall_tras_umbral(dataset, suite.observaciones.rankings, umbral, config),
+        )
+        valores.append(ValorBarrido(fila, resultados))
+    return valores
 
 
 def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:

@@ -7,21 +7,9 @@ conservador frente a RN-02). Es una función pura: no lee archivos ni toca la co
 
 from __future__ import annotations
 
-import asyncio
-import dataclasses
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-
-from app.application.ports import Clock
-from app.evaluation.composicion_suite import componer_servicio
-from app.evaluation.config_suite import ConfigSuite
-from app.evaluation.corrida import evaluar_dataset
-from app.evaluation.cronometro import Cronometro
-from app.evaluation.fuente_dataset import DatasetSuite
-from app.evaluation.metricas.resultado import ResultadoConsulta
-from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
-from app.evaluation.retrieval_metrics import ChunkRecuperado, evaluar_pregunta, metrica
 
 
 @dataclass(frozen=True)
@@ -37,14 +25,6 @@ class FilaBarrido:
 class Eleccion:
     umbral: float
     justificacion: str
-
-
-@dataclass(frozen=True)
-class ValorBarrido:
-    """La fila del barrido y las consultas que la produjeron (para el baseline por tipo de cáncer)."""
-
-    fila: FilaBarrido
-    resultados: list[ResultadoConsulta]
 
 
 def sin_nan(valor: float | None) -> float | None:
@@ -87,44 +67,3 @@ def elegir_umbral(
         f"(referencia {umbral_de_referencia:.2f}, tolerancia {tolerancia_recall:g}); empate → el más alto."
         + (f" {motivos}." if motivos else ""),
     )
-
-
-def _recall_tras_umbral(
-    dataset: DatasetSuite,
-    rankings: dict[str, list[ChunkRecuperado]],
-    umbral: float,
-    config: ConfigSuite,
-) -> float | None:
-    """recall@10 de los chunks que superan el umbral (``>``, como ``filtrar_sobre_umbral``): lo que el generador ve."""
-    entregados = [
-        evaluar_pregunta(p, [c for c in rankings.get(p.texto, []) if c.puntaje > umbral])
-        for p in dataset.preguntas
-    ]
-    recall = metrica(
-        entregados, config.semilla_bootstrap, config.bootstrap_repeticiones
-    ).recall_at_10
-    return sin_nan(recall)  # NaN: ninguna pregunta con evidencia esperada
-
-
-def barrer(
-    config: ConfigSuite,
-    dataset: DatasetSuite,
-    grilla: Sequence[float],
-    reloj: Clock,
-    cronometro_de: Callable[[], Cronometro],
-) -> list[ValorBarrido]:
-    """Una corrida completa de la suite por valor de la grilla; solo cambia ``relevance_threshold``."""
-    valores: list[ValorBarrido] = []
-    for umbral in grilla:
-        umbrales = dataclasses.replace(config.umbrales, relevance_threshold=umbral)
-        suite = componer_servicio(
-            dataclasses.replace(config, umbrales=umbrales), dataset, cronometro_de(), reloj
-        )
-        resultados, _ = asyncio.run(evaluar_dataset(suite, dataset))
-        fila = FilaBarrido(
-            umbral,
-            exactitud_sin_evidencia(resultados)["exactitud"],
-            _recall_tras_umbral(dataset, suite.observaciones.rankings, umbral, config),
-        )
-        valores.append(ValorBarrido(fila, resultados))
-    return valores
