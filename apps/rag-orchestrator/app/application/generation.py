@@ -88,9 +88,10 @@ class LlmEvidenceGenerator:
             raise LlmLocalNoDisponibleError() from None
         salida = self._parsear(crudo, trace_id)
         logger.info(
-            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d",
+            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d parrafosDeDetalle=%d",
             trace_id,
             len(salida.options),
+            sum(len(self._parrafos_de_detalle(o.details)) for o in salida.options),
         )
         return EvidenciaGenerada(
             opciones=tuple(
@@ -115,6 +116,12 @@ class LlmEvidenceGenerator:
         """JSON inválido o fuera de esquema = modelo local no disponible; solo se registra la clase del error."""
         try:
             return GenerationOutput.model_validate_json(crudo)
-        except ValidationError:
-            logger.warning("event=generacion_salida_invalida traceId=%s", trace_id)
+        except ValidationError as error:
+            # Solo la clase de cada error y la longitud: nunca el contenido generado a partir del corpus (RN-14).
+            logger.warning(
+                "event=generacion_salida_invalida traceId=%s caracteres=%d errores=%s",
+                trace_id,
+                len(crudo),
+                ",".join(sorted({e["type"] for e in error.errors()})),
+            )
             raise LlmLocalNoDisponibleError() from None
