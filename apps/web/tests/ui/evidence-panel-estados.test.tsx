@@ -96,14 +96,14 @@ describe('EvidencePanel · estados mínimos del S1', () => {
     expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
   });
 
-  it('redirige a /login cuando la petición responde 401', async () => {
+  it('redirige a /login?motivo=expirada sin renderizar datos cuando la petición responde 401 [US-044 AC-4]', async () => {
     bff.responder({
       status: 401,
       cuerpo: { error: 'NO_AUTENTICADO', message: 'x', traceId: 'req_1' },
     });
     await analizar();
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/login?motivo=expirada'));
     esperarSinResultadoParcial();
   });
 

@@ -21,12 +21,12 @@
 
 ## 3. frontend
 
-- [ ] 3.1 (Test del AC primero) Tests en rojo: "muestra Tu sesión expiró en role=status cuando /login llega con motivo=expirada y Cerraste sesión con motivo=cerrada; no muestra nada con otro valor [US-044 AC-4] [US-044 AC-1]", "redirige a /login?motivo=expirada sin renderizar datos cuando el BFF recibe 401 en una página [US-044 AC-4]" y "el botón Cerrar sesión de la cabecera envía POST /api/auth/logout y lleva a /login?motivo=cerrada [US-044 AC-1]" · Vitest + Testing Library + MSW. Commit `test(L1D-198)`.
-- [ ] 3.2 Implementar `BotonCerrarSesion` en `AppHeader` (correo de la sesión leído en el BFF, S2-00), `AvisoDeSesion` en `/login` y las claves `login.sesionExpirada`, `login.sesionCerrada`, `app.cerrarSesion` en `messages/es.json`. Commit `feat(L1D-198)`.
-- [ ] 3.3 (Test del AC primero) E2E Playwright "una sesión inactiva más de SESSION_IDLE_MINUTES lleva al login sin datos del paciente [US-044 AC-4]" contra Compose con seed sintético; corre cuando exista el job de E2E de ARR-02 resto (L1D-278); si no está en `main` al cerrar el change, la tarea se difiere a L1D-278 con su ID.
-- [ ] 3.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
-- [ ] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-198)`.
+- [x] 3.1 (Test del AC primero) Tests en rojo: "muestra Tu sesión expiró en role=status cuando /login llega con motivo=expirada y Cerraste sesión con motivo=cerrada; no muestra nada con otro valor [US-044 AC-4] [US-044 AC-1]", "redirige a /login?motivo=expirada sin renderizar datos cuando el BFF recibe 401 en una página [US-044 AC-4]" y "el botón Cerrar sesión de la cabecera envía POST /api/auth/logout y lleva a /login?motivo=cerrada [US-044 AC-1]" · Vitest + Testing Library + MSW. Commit `test(L1D-198)`.
+- [x] 3.2 Implementar `BotonCerrarSesion` en `AppHeader`, `AvisoDeSesion` en `/login` y las claves `login.sesionExpirada`, `login.sesionCerrada`, `app.cerrarSesion` en `messages/es.json`. Commit `feat(L1D-198)`. DESVIACIÓN (D8): la cabecera de S2-00 va sin correo en el S2: el contrato no tiene GET de sesión/usuario y el login responde `204` sin cuerpo; propuesta: `GET /platform/auth/session` aditivo con su propio change contract-first, o diferir.
+- [x] 3.3 (Test del AC primero) E2E Playwright "una sesión inactiva más de SESSION_IDLE_MINUTES lleva al login sin datos del paciente [US-044 AC-4]" contra Compose con seed sintético; corre cuando exista el job de E2E de ARR-02 resto (L1D-278); si no está en `main` al cerrar el change, la tarea se difiere a L1D-278 con su ID.
+- [x] 3.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
+- [x] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-198)`.
 
 ## 4. cierre
 
-- [ ] 4.1 `openspec validate l1d-198-sesion-expiracion-bloqueo --strict`, tests de `clinical-api` y `web` en verde.
+- [x] 4.1 `openspec validate l1d-198-sesion-expiracion-bloqueo --strict`, tests de `clinical-api` y `web` en verde.

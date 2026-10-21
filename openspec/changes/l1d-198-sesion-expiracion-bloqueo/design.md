@@ -65,6 +65,14 @@ activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.sessi
   llamada del BFF recibe `401` en una **página**, se redirige a `/login?motivo=expirada` sin renderizar
   datos; `motivo` solo admite `expirada | cerrada` (US-211 AC-4, S2-01).
 
+- **D8 · Desviación de S2-00: cabecera sin correo.** El diseño muestra el correo del usuario junto a «Cerrar sesión», pero el
+  contrato no tiene un GET de sesión/usuario y el login responde `204` sin cuerpo: `web` no tiene de dónde leerlo sin un
+  endpoint nuevo. La cabecera del S2 lleva solo el botón. Propuesta: `GET /platform/auth/session` aditivo con su propio change
+  contract-first, o diferir; entonces `AppHeader` recibe el correo como prop opcional. Adiciones de este change fuera de D6:
+  clave `app.errorCerrarSesion` (aviso `role="alert"` si el logout falla por red o 5xx; el médico sigue en la página) y la
+  redirección del panel de análisis ante `401` a `/login?motivo=expirada` (antes `/login`). E2E: Compose pasa
+  `SESSION_IDLE_MINUTES` y `SESSION_TOUCH_SECONDS` a `clinical-api` y `scripts/e2e/ejecutar.sh` los fija en 1 minuto y 10 s.
+
 Alternativas baratas: guardar la inactividad en un JWT (descartado: la cookie es opaca por ADR-1);
 bloqueo por IP en PostgreSQL (descartado: esquema congelado y una sola instancia).
 
