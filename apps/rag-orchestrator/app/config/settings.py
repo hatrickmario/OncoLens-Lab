@@ -4,8 +4,8 @@ import os
 import re
 from datetime import date
 from pathlib import Path
-from urllib.parse import urlsplit
 from typing import Annotated, Any, Literal, Self
+from urllib.parse import urlsplit
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -204,6 +204,14 @@ class Settings(BaseSettings):
             self.model_provider, self.real_anonymized_enabled, self.real_identified_enabled
         )
         return self
+
+
+def nombres_de_claves(settings: Settings) -> list[str]:
+    """Nombres (nunca valores) de las variables de configuración reconocidas, ordenados: lo que `/health` expone."""
+    claves = {nombre.upper() for nombre in type(settings).model_fields if nombre != "modelos"}
+    if settings.modelos is not None:
+        claves.update(CLAVES_ADR39)
+    return sorted(claves)
 
 
 # --- Corpus (US-058, L1D-114): tres configuraciones separadas por mínimo privilegio -----------------------------------

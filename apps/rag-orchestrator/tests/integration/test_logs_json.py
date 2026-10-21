@@ -24,6 +24,12 @@ class _ConsultaQueExplota:
         raise RuntimeError("fallo inesperado")
 
 
+def _lineas_del_servicio(salida: str) -> list[dict]:
+    """Las líneas JSON del servicio: se excluye el logger `httpx2`, que es el del propio TestClient (el cliente del
+    test, fuera de la request); `httpx` (el que usa el servicio hacia el LLM) sí cuenta y está en WARNING."""
+    return [linea for linea in parsear_lineas_json(salida) if linea["logger"] != "httpx2"]
+
+
 def _app():
     return crear_app(
         settings_de_prueba(),
@@ -45,7 +51,7 @@ def test_logs_request_con_trace_id_todas_las_lineas_json_con_ese_trace_id(logs_j
     respuesta = _cliente(**{"X-Trace-Id": TRACE_GENERADO}).post("/rag/query", json=solicitud)
 
     salida = logs_json()
-    lineas = parsear_lineas_json(salida)
+    lineas = _lineas_del_servicio(salida)
     assert respuesta.status_code == 500
     assert lineas, "la request debe dejar al menos una línea de log"
     assert [linea["traceId"] for linea in lineas] == [TRACE_GENERADO] * len(lineas)
@@ -58,7 +64,7 @@ def test_logs_request_con_trace_id_invalido_usa_el_generado_y_no_registra_el_ent
     respuesta = cliente.post("/rag/query", json={})
 
     salida = logs_json()
-    lineas = parsear_lineas_json(salida)
+    lineas = _lineas_del_servicio(salida)
     assert respuesta.status_code == 401
     assert lineas
     assert [linea["traceId"] for linea in lineas] == [TRACE_GENERADO] * len(lineas)
@@ -70,7 +76,7 @@ def test_logs_request_sin_cabecera_genera_el_trace_id_en_todas_las_lineas(logs_j
 
     respuesta = cliente.post("/rag/query", json={})
 
-    lineas = parsear_lineas_json(logs_json())
+    lineas = _lineas_del_servicio(logs_json())
     assert respuesta.status_code == 401
     assert lineas
     assert [linea["traceId"] for linea in lineas] == [TRACE_GENERADO] * len(lineas)
