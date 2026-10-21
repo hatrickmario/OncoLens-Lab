@@ -4,6 +4,7 @@ import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import { AlmacenNoDisponible } from './ports.js';
 import {
   ArchivoDemasiadoGrande,
   ArchivoNoPdf,
@@ -62,6 +63,9 @@ function rechazoDe(error: unknown): Rechazo | undefined {
     return { status: 409, codigo: 'DOCUMENTO_DUPLICADO', resultado: 'documento_duplicado' };
   }
   if (error instanceof PacienteNoEncontrado) return PACIENTE_NO_ENCONTRADO;
+  if (error instanceof AlmacenNoDisponible) {
+    return { status: 503, codigo: 'ALMACEN_NO_DISPONIBLE', resultado: 'almacen_no_disponible' };
+  }
   return undefined;
 }
 
