@@ -12,9 +12,9 @@
 
 ## 2. ai-services
 
-- [ ] 2.1 Ejecutar `pytest -m servicios_reales` con el script en local; ajustar solo la configuración de conexión de los fixtures (host del Compose, no `localhost`) si hiciera falta, sin cambiar aserciones [ARR-01 AC-2]
-- [ ] 2.2 Confirmar que US-058 AC-1, AC-3, AC-4 y US-059 AC-1, AC-3, AC-4, AC-5 tienen `@pytest.mark.ac` y se ejecutan en verde; si alguno no tiene test, escribirlo (test de aceptación del AC) [ARR-01 AC-3]
-- [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-277)`
+- [x] 2.1 Ejecutar `pytest -m servicios_reales` con el script en local; ajustar solo la configuración de conexión de los fixtures (host del Compose, no `localhost`) si hiciera falta, sin cambiar aserciones [ARR-01 AC-2]
+- [x] 2.2 Confirmar que US-058 AC-1, AC-3, AC-4 y US-059 AC-1, AC-3, AC-4, AC-5 tienen `@pytest.mark.ac` y se ejecutan en verde; si alguno no tiene test, escribirlo (test de aceptación del AC) [ARR-01 AC-3]
+- [x] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-277)`
 
 ## 3. Cierre
 
