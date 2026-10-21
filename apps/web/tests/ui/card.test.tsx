@@ -7,7 +7,7 @@ describe('Card', () => {
   afterEach(cleanup);
 
   it('usa solo el radio de diálogo de 10 px y la sombra cuando es elevada [ARR-02 AC-3]', () => {
-    render(<Card elevada>contenido</Card>);
+    render(<Card variante="elevada">contenido</Card>);
 
     const clases = screen.getByText('contenido').className.split(' ');
     expect(clases).toContain('rounded-dialogo');

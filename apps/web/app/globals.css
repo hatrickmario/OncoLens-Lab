@@ -8,8 +8,9 @@
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 /*
- * Única fuente de los tokens de docs/ux/sistema-de-diseno.md §1 (contrastes AA verificados allí).
- * `static` emite todas las variables en :root aunque ninguna utilidad las use: los CSS Modules
+ * Único origen de los tokens en el código; los valores están duplicados con
+ * docs/ux/sistema-de-diseno.md §1 (contrastes AA verificados allí) y ningún test detecta un desvío:
+ * al cambiar uno, cámbialo en ambos sitios. `static` emite todas las variables en :root aunque ninguna utilidad las use: los CSS Modules
  * que aún quedan (panel de análisis, cabecera) las leen con var(--color-*).
  */
 @theme static {

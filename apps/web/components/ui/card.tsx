@@ -1,19 +1,19 @@
 import type { ComponentProps } from 'react';
 import { cn } from '../../lib/utils';
 
-/** Superficie blanca con radio de tarjeta; con `elevada` lleva la única sombra del sistema (login). */
-export function Card({
-  className,
-  elevada = false,
-  ...props
-}: ComponentProps<'div'> & { elevada?: boolean }) {
+interface CardProps extends ComponentProps<'div'> {
+  /** `elevada` lleva el radio de diálogo y la única sombra del sistema (login). */
+  variante?: 'plana' | 'elevada';
+}
+
+/** Superficie blanca con radio de tarjeta. */
+export function Card({ className, variante = 'plana', ...props }: CardProps) {
   return (
     <div
       data-slot="card"
       className={cn(
-        'bg-surface box-border p-6',
-        // tailwind-merge no conoce los radios propios: se elige uno solo, no se pisan entre sí.
-        elevada ? 'rounded-dialogo shadow-dialogo' : 'rounded-tarjeta',
+        'rounded-tarjeta bg-surface box-border p-6',
+        variante === 'elevada' && 'rounded-dialogo shadow-dialogo',
         className,
       )}
       {...props}

@@ -13,7 +13,7 @@ export default async function LoginPage() {
   return (
     <main className="grid min-h-screen place-items-center p-4">
       <Card
-        elevada
+        variante="elevada"
         role="region"
         aria-labelledby="login-titulo"
         className="w-full max-w-104 px-6 py-8"
