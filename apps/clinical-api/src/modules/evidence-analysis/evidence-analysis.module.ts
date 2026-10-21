@@ -3,7 +3,7 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
-import { crearBaseDelAnalisisS1 } from './analysis-basis.js';
+import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
 import { evidenceAnalysisController } from './evidence-analysis.controller.js';
 import { createEvidenceAnalysisRepository } from './evidence-analysis.repository.js';
@@ -21,8 +21,6 @@ import type {
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
   /** `AI_DISCLAIMER_TEXT` (RN-19, RN-22). */
   aiDisclaimerText: string;
-  /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` (`[S1 resp. 30]`). */
-  analysisBasisAssumptionText: string;
 }
 
 export interface DependenciasDelGateway {
@@ -48,9 +46,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     rag: dependencias.rag,
     cierre: crearAnalysisCompletion({
       analisis: repositorio,
-      base: crearBaseDelAnalisisS1({
-        textoDelSupuesto: dependencias.config.analysisBasisAssumptionText,
-      }),
+      base: crearBaseDelAnalisis(),
       reloj: dependencias.reloj,
       idsDeAnalisis: dependencias.idsDeAnalisis,
       disclaimer: dependencias.config.aiDisclaimerText,
