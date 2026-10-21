@@ -14,6 +14,18 @@ describe('crearProveedorDeVersionDeCatalogo', () => {
     expect(leidos).toEqual(['/catalogs/manifest.json']);
   });
 
+  it('devuelve los cancerTypes del manifiesto y una lista vacía cuando el manifiesto no los trae', () => {
+    const conTipos = crearProveedorDeVersionDeCatalogo('/catalogs', () =>
+      JSON.stringify({ version: '1.0.0', cancerTypes: ['mama', 'prostata'] }),
+    );
+    const sinTipos = crearProveedorDeVersionDeCatalogo('/catalogs', () =>
+      JSON.stringify({ version: '1.0.0' }),
+    );
+
+    expect(conTipos.cancerTypes()).toEqual(['mama', 'prostata']);
+    expect(sinTipos.cancerTypes()).toEqual([]);
+  });
+
   it('lee el manifiesto una sola vez, al crearse', () => {
     let lecturas = 0;
     const proveedor = crearProveedorDeVersionDeCatalogo('/catalogs', () => {

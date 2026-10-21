@@ -4,6 +4,7 @@ import {
   cargarConfiguracion,
   cargarConfiguracionDeServicios,
   exigirGateDeDatosReales,
+  validarTiposHabilitados,
   type ConfiguracionDeArranque,
   type ConfiguracionDeServicios,
 } from './config/index.js';
@@ -13,6 +14,8 @@ import {
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
 import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import type { TiposDeCancerHabilitados } from './modules/evidence-analysis/ports.js';
+import { crearTiposHabilitados } from './modules/evidence-analysis/tipos-habilitados.js';
 import {
   cargarConfiguracionDePii,
   type ConfiguracionDePii,
@@ -25,6 +28,8 @@ export interface ServiciosCargados {
   readonly configuracion: ConfiguracionDeServicios & { readonly pii: ConfiguracionDePii };
   readonly catalogo: ReturnType<typeof crearProveedorDeVersionDeCatalogo>;
   readonly clavesDeIdentidad: ClavesDeIdentidad;
+  /** `ENABLED_CANCER_TYPES` ya validada contra el `manifest.json` (US-043, RN-20). */
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
 }
 
 export interface DependenciasDeArranque<S> {
@@ -90,7 +95,7 @@ function registrarFalloDeArranque(log: Log, error: unknown): void {
 
 /**
  * Etapa 2: PostgreSQL, JWT de servicio, gateway de análisis y PII (con los archivos que leen), el catálogo con su
- * `manifest.json` y las claves de identidad ya parseadas en la etapa 1 (fallo cerrado, US-046 AC-5, RN-11).
+ * `manifest.json` (contra el que se validan los tipos de cáncer habilitados, US-043) y las claves de identidad ya parseadas en la etapa 1 (fallo cerrado, US-046 AC-5, RN-11).
  */
 export function cargarEtapaDeServicios(
   env: NodeJS.ProcessEnv,
@@ -99,14 +104,20 @@ export function cargarEtapaDeServicios(
 ): ServiciosCargados {
   const servicios = cargarConfiguracionDeServicios(env, readFile);
   const pii = cargarConfiguracionDePii(servicios.deidentificacion, readFile);
+  const catalogo = crearProveedorDeVersionDeCatalogo(
+    servicios.analisis.catalogPath,
+    readFile,
+    servicios.analisis.catalogExpectedVersion,
+  );
+  const habilitados = validarTiposHabilitados(
+    servicios.alcance.enabledCancerTypes,
+    catalogo.cancerTypes(),
+  );
   return {
     configuracion: { ...servicios, pii },
-    catalogo: crearProveedorDeVersionDeCatalogo(
-      servicios.analisis.catalogPath,
-      readFile,
-      servicios.analisis.catalogExpectedVersion,
-    ),
+    catalogo,
     clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
+    tiposHabilitados: crearTiposHabilitados(habilitados),
   };
 }
 

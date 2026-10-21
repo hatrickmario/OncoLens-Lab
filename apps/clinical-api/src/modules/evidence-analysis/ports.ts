@@ -28,6 +28,11 @@ export interface CatalogVersionProvider {
   version(): string;
 }
 
+/** Tipos de cáncer que este despliegue analiza (`ENABLED_CANCER_TYPES` validada contra el catálogo, RN-20). */
+export interface TiposDeCancerHabilitados {
+  estaHabilitado(tipo: string): boolean;
+}
+
 export type OrigenDeDatos = DataClassification;
 
 /** Contexto que arma `construirContextoPermitido()`: todo el `ClinicalContext` salvo el seudónimo. */
