@@ -190,7 +190,7 @@ corpus es de US-074. *Mutation testing* (S6).
 
 ## US-213 — La CI aplica umbrales de tamaño y complejidad, reglas de dependencias entre capas y la higiene de tests (TDD) en los dos backends y en `web`
 
-> Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
+> Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (US-213a) · [L1D-285](https://linear.app/l1der-lab-mjbc/issue/L1D-285) (US-213b)
 
 `FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* **US-213a** · Sprint 3 **US-213b** · Estimación **8** = **US-213a** 5 (AC-1…AC-7, capas y umbrales, S2) + **US-213b** 3 (AC-8…AC-12, higiene de tests, mocks, cobertura y ejemplos, S3) `[S2 resp. 1]` · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 

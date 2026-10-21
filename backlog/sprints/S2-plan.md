@@ -91,6 +91,7 @@ Veredicto global: PASS (tras la vuelta 2 acotada)
 ## 4. Notas para el orquestador
 
 - Claves nuevas de `.env.example` que el orquestador **no** puede tocar sin mensaje expreso del usuario: `SESSION_TOUCH_SECONDS`, `LOGIN_*`, `TRUST_PROXY_HOPS` (198); `IDENTITY_AES_KEY_V<n>_FILE` (200); `MAX_UPLOAD_MB`, `CLINICAL_MINIO_ENDPOINT`, `CLINICAL_DOCUMENTS_BUCKET` (56); `CORPUS_CUTOFF_DATE` (173); `LOG_REDACT_EXTRA_FIELDS` (167); `RELEVANCE_THRESHOLD` calibrado (236); retirar `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` (186). Se aplican con el procedimiento de la memoria (bloques idempotentes, PR aparte).
+- **Urgente, en O1 (2026-10-21):** Dependabot marca un aviso **crítico** en `main`: `certifi` (runtime de `rag-orchestrator`, `requirements.txt`) incluye CA raíz emSign con claves intermedias comprometidas; la versión corregida es `2026.10.19`. Se sube el *pin* en el primer PR de O1 que toque `apps/rag-orchestrator` (`l1d-277`), con commit propio `fix(L1D-267)`, sin esperar a O6.
 - `main` tiene 4 avisos `high` en dependencias de desarrollo (`@next/eslint-plugin-next` → `braces`): 267 decide actualizar o registrar excepción con caducidad.
 - Reglas de eficiencia vigentes: 1 Gate 2 + 1 re-gate acotado; bloquea solo un invariante del MVP; guardianes por ruta; deuda menor al Markdown.
 
