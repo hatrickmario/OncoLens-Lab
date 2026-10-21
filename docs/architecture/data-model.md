@@ -1324,6 +1324,8 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 ALTER ROLE rag_corpus NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT <límite configurable>;
 ```
 
+**Implementación (US-040, L1D-170):** las medidas 2 a 4 las aplica la migración de Prisma `apps/clinical-api/prisma/migrations/20261021120000_privilegios_roles/migration.sql` (extendida a `rag_corpus_migrator`, a las funciones y a PUBLIC, e idempotente). Los privilegios por defecto se fijan para el rol que ejecuta la migración (`ALTER DEFAULT PRIVILEGES` sin `FOR ROLE`; en Compose, `clinical_api`, dueño de la base). `research_writer` recibe solo `USAGE` en `research` e `INSERT` en `research.episode_snapshot`. Los *timeouts* de `rag_corpus` (`statement_timeout`, `idle_in_transaction_session_timeout`) se fijan en `infra/docker/postgres/initdb/10-roles.sh` con `PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS` y `PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS`, porque `ALTER ROLE … SET` exige superusuario.
+
 ```conf
 # 5. pg_hba.conf: rag_corpus solo entra desde corpus-db-net, con TLS; ninguna otra regla lo admite.
 hostssl  <base de datos>  rag_corpus  <subred de corpus-db-net>  scram-sha-256

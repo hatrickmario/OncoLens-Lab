@@ -225,6 +225,17 @@ bien "US-035 AC-4 rag_corpus_migrator crea en corpus, recibe permission denied e
 debe_fallar_con "permission denied" psql_desde corpus-db-net rag_corpus "$secretos/pg_rag_corpus_password" require "$base_clinica" 'CREATE TABLE corpus.smoke_t(id int)'
 bien "US-035 AC-4 rag_corpus no puede crear en corpus"
 
+# US-040 AC-4 (SEG-06): rag_corpus solo entra desde corpus-db-net, con TLS y SCRAM. Desde clinical-net (aun con TLS) y
+# sin TLS lo rechaza pg_hba.conf; el superusuario comprueba que su contraseña está almacenada como SCRAM.
+rag_corpus_clave="$secretos/pg_rag_corpus_password"
+debe_fallar_con "pg_hba.conf" psql_desde clinical-net rag_corpus "$rag_corpus_clave" require "$base_clinica" 'SELECT 1'
+debe_fallar_con "pg_hba.conf" psql_desde corpus-db-net rag_corpus "$rag_corpus_clave" disable "$base_clinica" 'SELECT 1'
+[ "$(psql_desde corpus-db-net rag_corpus "$rag_corpus_clave" require "$base_clinica" 'SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()')" = t ] \
+  || fallo "US-040 AC-4: rag_corpus desde corpus-db-net con sslmode=require no quedó con TLS"
+[ "$(compose exec -T -u postgres postgres psql -U postgres -tAc "SELECT left(rolpassword, 14) FROM pg_authid WHERE rolname = 'rag_corpus'")" = 'SCRAM-SHA-256$' ] \
+  || fallo "US-040 AC-4: la contraseña de rag_corpus no está almacenada como SCRAM-SHA-256"
+bien "US-040 AC-4 rag_corpus se rechaza desde clinical-net y sin TLS y se acepta desde corpus-db-net con TLS y SCRAM"
+
 # ---------- fase 3: LLM nativo caído ----------
 export LLM_PROVIDER=local
 export LLM_BASE_URL="http://host.docker.internal:9/v1"

@@ -28,9 +28,11 @@ readonly RUTAS_QUE_LEEN_LOS_TESTS=(
   package.json readme.md config contracts scripts/contracts scripts/ci/pytest_plugins packages/clinical-catalogs
   data/raw/seed docs/architecture/data-model.md infra/docker/postgres/sql
   apps/rag-orchestrator apps/clinical-api/openapi.yaml
+  apps/clinical-api/prisma/migrations
 )
 # AC de US-058 y US-059 que no tenían ejecución (ARR-01 AC-3): el job falla si alguno no queda en verde.
-readonly ACS_REQUERIDOS=(US-058:1 US-058:3 US-058:4 US-059:1 US-059:3 US-059:4 US-059:5)
+# US-040 AC-1 a AC-3 (L1D-170): el permission denied de rag_corpus en ejecución; si no corre, el aislamiento no está probado.
+readonly ACS_REQUERIDOS=(US-058:1 US-058:3 US-058:4 US-059:1 US-059:3 US-059:4 US-059:5 US-040:1 US-040:2 US-040:3)
 
 espera_segundos="${INTEGRACION_RAG_ESPERA_SEGUNDOS:-420}"
 pytest_segundos="${INTEGRACION_RAG_PYTEST_SEGUNDOS:-1500}"

@@ -98,3 +98,30 @@ export function assertAppsConUsuarioDeLosSecretos(config) {
   const distintos = new Set(usuarios.map(([, usuario]) => usuario));
   if (distintos.size > 1) throw new Error(`${usuarios.map(([nombre, usuario]) => `${nombre}=${usuario}`).join(' y ')} deben ejecutarse con el mismo usuario dueño de los secretos`);
 }
+
+const SECRETOS_DE_CLINICAL = [
+  'pg_clinical_api_password',
+  'pg_research_writer_password',
+  'pg_superuser_password',
+  'clinical_minio_root_password',
+  'identity_aes_key',
+  'blind_index_hmac_key',
+  'jwt_service_private.pem',
+];
+const VARIABLE_DE_CLINICAL = /CLINICAL_API|CLINICAL_DATABASE|PG_CLINICAL|RESEARCH_WRITER|MINIO/i;
+const VALOR_DE_CLINICAL = /clinical[-_]minio|clinical_api|research_writer/i;
+
+/**
+ * US-040 AC-5 (OL-01, RN-10): el servicio rag-orchestrator resuelto no contiene credenciales ni destinos del rol
+ * clinical_api, de research_writer ni de clinical-minio: ni secretos montados (se compara el archivo, no el alias), ni
+ * variables de entorno, ni valores (URLs con ese usuario o ese host).
+ */
+export function assertRagSinCredencialesClinicas(config) {
+  const rag = servicio(config, 'rag-orchestrator');
+  const ajeno = archivosDeSecretos(config, rag).find((archivo) => SECRETOS_DE_CLINICAL.includes(archivo));
+  if (ajeno) throw new Error(`rag-orchestrator monta el secreto ${ajeno}, que es de clinical-api o de clinical-minio`);
+  for (const [variable, valor] of Object.entries(entorno(rag))) {
+    if (VARIABLE_DE_CLINICAL.test(variable)) throw new Error(`rag-orchestrator declara ${variable}, que es de clinical-api o de clinical-minio`);
+    if (VALOR_DE_CLINICAL.test(String(valor))) throw new Error(`rag-orchestrator declara ${variable} con una credencial o un destino de clinical-api o de clinical-minio`);
+  }
+}
