@@ -62,6 +62,10 @@ export interface EntornoSimulado {
   llamadasARag(): number;
   /** Desde ya, el almacén falla toda operación (red caída) hasta `reiniciar()`. */
   caerAlmacen(): void;
+  /** Desde ya, solo falla el borrado de objetos (la escritura sigue bien) hasta `reiniciar()`. */
+  caerBorrado(): void;
+  /** Ejecuta `accion` cuando llega la próxima escritura al almacén, antes de contestarla (otra carga que gana la carrera). */
+  alEscribir(accion: () => Promise<void>): void;
   reiniciar(): void;
   iniciar(): void;
   detener(): void;
@@ -72,6 +76,8 @@ export function entornoSimulado(): EntornoSimulado {
   let escrituras = 0;
   let llamadasARag = 0;
   let caido = false;
+  let borradoCaido = false;
+  let alEscribir: (() => Promise<void>) | undefined;
   const claveDe = (url: string): string =>
     decodeURIComponent(new URL(url).pathname).slice(`/${BUCKET_DE_TEST}/`.length);
   const servidor = servidorMswConLoopback(
@@ -82,6 +88,9 @@ export function entornoSimulado(): EntornoSimulado {
     http.put(`${ENDPOINT_DEL_ALMACEN}/${BUCKET_DE_TEST}/*`, async ({ request }) => {
       escrituras += 1;
       if (caido) return HttpResponse.error();
+      const pendiente = alEscribir;
+      alEscribir = undefined;
+      await pendiente?.();
       const clave = claveDe(request.url);
       objetos.set(clave, {
         clave,
@@ -91,7 +100,7 @@ export function entornoSimulado(): EntornoSimulado {
       return new HttpResponse(null, { status: 200, headers: { ETag: '"sintetico"' } });
     }),
     http.delete(`${ENDPOINT_DEL_ALMACEN}/${BUCKET_DE_TEST}/*`, ({ request }) => {
-      if (caido) return HttpResponse.error();
+      if (caido || borradoCaido) return HttpResponse.error();
       objetos.delete(claveDe(request.url));
       return new HttpResponse(null, { status: 204 });
     }),
@@ -107,8 +116,16 @@ export function entornoSimulado(): EntornoSimulado {
     caerAlmacen: () => {
       caido = true;
     },
+    caerBorrado: () => {
+      borradoCaido = true;
+    },
+    alEscribir: (accion) => {
+      alEscribir = accion;
+    },
     reiniciar: () => {
       caido = false;
+      borradoCaido = false;
+      alEscribir = undefined;
       escrituras = 0;
       llamadasARag = 0;
     },
