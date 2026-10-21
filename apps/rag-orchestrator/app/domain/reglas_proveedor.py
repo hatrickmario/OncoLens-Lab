@@ -1,5 +1,12 @@
 """Reglas puras de proveedores de modelos (RN-12, RN-13)."""
 
+# Lista CERRADA EN CÓDIGO a propósito (ADR-41 D4): ninguna variable de entorno ni YAML puede ampliarla.
+HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "host.docker.internal"})
+
+
+def es_proveedor_local(url: str) -> bool:
+    raise NotImplementedError("no implementado")
+
 
 def _banderas_de_datos_reales_activas(
     real_anonymized_enabled: bool, real_identified_enabled: bool

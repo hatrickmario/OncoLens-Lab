@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from app.evaluation.config_suite import ConfigSuite
 
 
 class SuiteAbortada(RuntimeError):
     """La suite no corre; el mensaje nombra la causa y nunca un valor de configuración ni un texto."""
+
+
+def exigir_adapters_locales(clase_dataset: str, urls: Mapping[str, str]) -> None:
+    raise NotImplementedError("no implementado")
 
 
 def exigir_marca_final(config: ConfigSuite, prueba_final: bool) -> None:
