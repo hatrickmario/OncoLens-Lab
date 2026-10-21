@@ -7,7 +7,7 @@ import sys
 import pytest
 
 from app.bootstrap import cargar_settings_o_salir
-from tests.support.contract import RAIZ_REPOSITORIO
+from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
 from tests.support.logs import (
     exigir_sin_valores_prohibidos,
     parsear_lineas_json,
@@ -120,6 +120,9 @@ def test_arranque_devuelve_los_settings_sin_registrar_nada_cuando_la_configuraci
 ):
     monkeypatch.setenv("LLM_PROVIDER", "fake")
     monkeypatch.setenv("RELEVANCE_THRESHOLD", "0.42")
+    monkeypatch.setenv(
+        "CLINICAL_CATALOG_PATH", str(CATALOGOS)
+    )  # el catálogo montado es obligatorio (US-041)
 
     settings = cargar_settings_o_salir()
 

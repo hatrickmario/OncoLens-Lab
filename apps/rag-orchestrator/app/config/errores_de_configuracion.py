@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 MOTIVO_VALOR_INVALIDO = "valor_invalido"
 MOTIVO_VARIABLE_AUSENTE = "variable_ausente"
+MOTIVO_CATALOGO_NO_DISPONIBLE = "catalogo_no_disponible"
 _PREFIJO_DE_VALIDADOR = "Value error, "
 
 

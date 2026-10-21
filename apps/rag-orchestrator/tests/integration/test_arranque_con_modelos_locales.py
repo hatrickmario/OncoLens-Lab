@@ -29,6 +29,7 @@ from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
     Q_SIN,
+    VERSION_DEL_CATALOGO_MONTADO,
     BuscadorFalso,
     CatalogoFalso,
     LectorReleaseFalso,
@@ -98,7 +99,9 @@ def test_con_modelos_locales_y_corpus_rag_query_recupera_con_los_adapters_reales
         cargador_de_modelos=_cargador_con_dobles(registro),
     )
 
-    respuesta = _cliente(app).post("/rag/query", json=solicitud_de(Q_SIN))
+    respuesta = _cliente(app).post(
+        "/rag/query", json=solicitud_de(Q_SIN, version_de_catalogo=VERSION_DEL_CATALOGO_MONTADO)
+    )
 
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())
@@ -186,6 +189,7 @@ def test_con_modelos_y_corpus_el_arranque_falla_sin_la_ruta_cuando_la_lista_de_t
     modelos.variables["EMBEDDING_DIM"] = "8"
     sin_lista = tmp_path / "catalogo-sin-lista"
     sin_lista.mkdir()
+    (sin_lista / "manifest.json").write_text('{"version": "1.0.0"}', encoding="utf-8")
 
     with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
         _componer_con_corpus(modelos, clinical_catalog_path=sin_lista)

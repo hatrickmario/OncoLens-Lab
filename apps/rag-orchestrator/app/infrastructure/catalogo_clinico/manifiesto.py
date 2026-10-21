@@ -1,6 +1,9 @@
 """Adapter de ``CatalogoClinico``: la versión sale de ``manifest.json`` del catálogo montado (US-041, D1 y D4)."""
 
+import json
 from pathlib import Path
+
+NOMBRE_DEL_MANIFIESTO = "manifest.json"
 
 
 class CatalogoNoDisponible(RuntimeError):
@@ -19,4 +22,11 @@ class CatalogoDelManifiesto:
 
 def cargar_catalogo_del_manifiesto(catalogos: Path) -> CatalogoDelManifiesto:
     """Lee una vez ``<catálogos>/manifest.json`` (``CLINICAL_CATALOG_PATH``, solo lectura)."""
-    raise NotImplementedError("no implementado")
+    try:
+        manifiesto = json.loads((catalogos / NOMBRE_DEL_MANIFIESTO).read_text(encoding="utf-8"))
+        version = manifiesto["version"]
+    except (OSError, ValueError, KeyError, TypeError):
+        raise CatalogoNoDisponible("manifest.json no está disponible") from None
+    if not isinstance(version, str) or not version:
+        raise CatalogoNoDisponible("manifest.json no declara una versión")
+    return CatalogoDelManifiesto(version)

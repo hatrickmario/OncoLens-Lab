@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from app.api.trace import resolver_trace_id
-from app.application.ports import LlmHealthPort, TraceIdGenerator
+from app.application.ports import CatalogoClinico, LlmHealthPort, TraceIdGenerator
 from app.schemas.generated.models import ErrorLlmLocalNoDisponible, HealthStatus
 
 
@@ -13,18 +13,27 @@ def crear_router_health(
     trace_ids: TraceIdGenerator,
     config_keys: list[str],
     service_version: str,
+    catalogo_clinico: CatalogoClinico | None,
 ) -> APIRouter:
-    """``config_keys`` son solo nombres de variables, ya ordenados: `/health` nunca expone un valor (RN-14, RN-22)."""
+    """``config_keys`` son solo nombres de variables, ya ordenados: `/health` nunca expone un valor (RN-14, RN-22).
+
+    ``catalogVersion`` es la del catálogo montado, sin ruta ni contenido; sin catálogo configurado se omite."""
     router = APIRouter(tags=["operacion"])
 
     @router.get(
         "/health",
         response_model=HealthStatus,
+        response_model_exclude_none=True,
         responses={503: {"model": ErrorLlmLocalNoDisponible}},
     )
     async def health(request: Request):
         if await llm_health.esta_disponible():
-            return HealthStatus(status="ok", configKeys=config_keys, serviceVersion=service_version)
+            return HealthStatus(
+                status="ok",
+                configKeys=config_keys,
+                serviceVersion=service_version,
+                catalogVersion=catalogo_clinico.version() if catalogo_clinico else None,
+            )
         error = ErrorLlmLocalNoDisponible(
             error="LOCAL_LLM_UNAVAILABLE",
             message="El modelo local no está disponible.",

@@ -24,7 +24,9 @@ VERSION_AJENA = "9.9.9-ajena"
 
 
 def _ejemplo_409() -> dict:
-    return json.loads((EJEMPLOS / "error-catalog-version-mismatch.json").read_text(encoding="utf-8"))
+    return json.loads(
+        (EJEMPLOS / "error-catalog-version-mismatch.json").read_text(encoding="utf-8")
+    )
 
 
 def _solicitud_con_catalogo(version: str) -> dict:
@@ -71,6 +73,8 @@ def test_rag_query_no_registra_las_versiones_de_catalogo_ni_la_pregunta_cuando_r
 
     salida = logs_json()
     assert respuesta.status_code == 409
-    assert "catalog_version_mismatch" in salida, "el 409 debe dejar su evento en el canal real de logs"
+    assert "catalog_version_mismatch" in salida, (
+        "el 409 debe dejar su evento en el canal real de logs"
+    )
     for prohibido in (VERSION_AJENA, VERSION_DE_CATALOGO_DE_TEST, Q_HER2):
         assert prohibido not in salida

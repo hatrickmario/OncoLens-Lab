@@ -3,8 +3,8 @@
 Cubre todo `RequestValidationError` (body, header, query y path). La autenticación (L1D-105)
 lanza 401 desde una dependencia, nunca con un `Header()` obligatorio: ese caso terminaría aquí como 422.
 También traduce `TokenServicioInvalido` a `401 TOKEN_SERVICIO_INVALIDO` y los errores de aplicación de la
-recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE`, `503 NLI_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`,
-todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
+recuperación (US-055) a `503 RETRIEVAL_UNAVAILABLE`, `503 LOCAL_LLM_UNAVAILABLE`, `503 NLI_UNAVAILABLE` y `422 TIPO_CANCER_NO_REGISTRADO`
+y `CatalogVersionMismatchError` (NFR-14) a `409 CATALOG_VERSION_MISMATCH`, todos con mensaje fijo y sin eco de la petición. El 500 de lo inesperado NO se maneja aquí: lo responde sin relanzar
 `ContencionDeErroresInesperados` (un manejador de `Exception` relanza y uvicorn escribiría el traceback).
 """
 
@@ -22,9 +22,11 @@ from app.application.errores import (
     TipoCancerNoRegistradoError,
 )
 from app.application.ports import TraceIdGenerator
+from app.domain.catalogo import CatalogVersionMismatchError
 from app.domain.token_servicio import TokenServicioInvalido
 from app.schemas.generated.models import (
     DetailItem,
+    ErrorCatalogVersionMismatch,
     ErrorLlmLocalNoDisponible,
     ErrorNliNoDisponible,
     ErrorRecuperacionNoDisponible,
@@ -104,6 +106,18 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
             traceId=resolver_trace_id(request, trace_ids),
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
+
+    @app.exception_handler(CatalogVersionMismatchError)
+    async def catalogo_de_otra_version(
+        request: Request, error: CatalogVersionMismatchError
+    ) -> JSONResponse:
+        """409 CATALOG_VERSION_MISMATCH: mensaje fijo; ninguna de las dos versiones sale en la respuesta (RN-10)."""
+        cuerpo = ErrorCatalogVersionMismatch(
+            error="CATALOG_VERSION_MISMATCH",
+            message="La versión del catálogo clínico difiere entre servicios.",
+            traceId=resolver_trace_id(request, trace_ids),
+        )
+        return JSONResponse(status_code=409, content=cuerpo.model_dump())
 
     @app.exception_handler(TokenServicioInvalido)
     async def token_servicio_invalido(

@@ -12,6 +12,7 @@ import re
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -27,7 +28,6 @@ from app.application.ports import (
     NliClassifier,
     ProhibitedTermsChecker,
     ReleaseDelCorpus,
-    ResultadoDeRecuperacion,
 )
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
@@ -35,20 +35,18 @@ from app.application.rag_orchestrator_service import (
 )
 from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.citations import FichaDeFuente
-from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
     expresion_solo_vigente,
 )
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
-    RagQueryInternalRequest,
-    RagQueryInternalResponse,
 )
 from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
-from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
+from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.service_jwt import con_token_valido
 
 EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
@@ -65,9 +63,16 @@ RELEASE_DE_TEST = ReleaseDelCorpus(
 )
 
 
-VERSION_DE_CATALOGO_DE_TEST = json.loads(
-    (RAIZ_REPOSITORIO / "contracts/examples/rag-query-request.json").read_text(encoding="utf-8")
-)["catalogVersion"]  # la de la solicitud de ejemplo: los tests de recuperación montan ese mismo catálogo
+def _clave_json(ruta: Path, clave: str) -> str:
+    return json.loads(ruta.read_text(encoding="utf-8"))[clave]
+
+
+# La de la solicitud de ejemplo: los tests de recuperación montan ese mismo catálogo (falso).
+VERSION_DE_CATALOGO_DE_TEST = _clave_json(
+    RAIZ_REPOSITORIO / "contracts/examples/rag-query-request.json", "catalogVersion"
+)
+# La del catálogo real que montan `settings_de_prueba` y los arranques con adapters reales.
+VERSION_DEL_CATALOGO_MONTADO = _clave_json(CATALOGOS / "manifest.json", "version")
 
 
 def _vector(**componentes: float) -> list[float]:
@@ -477,12 +482,20 @@ def crear_entorno(
 
 
 def solicitud_de(
-    pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama", max_options: int | None = None
+    pregunta: str = Q_HER2,
+    *,
+    tipo_de_cancer: str | None = "mama",
+    max_options: int | None = None,
+    version_de_catalogo: str | None = None,
 ) -> dict[str, Any]:
-    """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
+    """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null.
+
+    ``version_de_catalogo`` sustituye la del ejemplo (los arranques con el catálogo real montan otra)."""
     base = json.loads((EJEMPLOS / "rag-query-request.json").read_text(encoding="utf-8"))
     solicitud = copy.deepcopy(base)
     solicitud["query"] = pregunta
+    if version_de_catalogo is not None:
+        solicitud["catalogVersion"] = version_de_catalogo
     if max_options is not None:
         solicitud["maxOptions"] = max_options
     if tipo_de_cancer is None:

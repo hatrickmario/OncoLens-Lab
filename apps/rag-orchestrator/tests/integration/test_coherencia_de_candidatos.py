@@ -30,6 +30,7 @@ from tests.support.modelos import (
 from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
+    VERSION_DEL_CATALOGO_MONTADO,
     BuscadorFalso,
     CatalogoFalso,
     ChunkFx,
@@ -104,7 +105,10 @@ def test_con_modelos_locales_30_candidatos_y_12_pares_el_reranker_real_responde_
         app, raise_server_exceptions=False, headers=con_token_valido(par_de_sesion())
     )
 
-    respuesta = cliente.post("/rag/query", json=solicitud_de(Q_HER2))
+    respuesta = cliente.post(
+        "/rag/query",
+        json=solicitud_de(Q_HER2, version_de_catalogo=VERSION_DEL_CATALOGO_MONTADO),
+    )
 
     assert respuesta.status_code == 200
     assert_matches_spec("#/components/schemas/RagQueryInternalResponse", respuesta.json())

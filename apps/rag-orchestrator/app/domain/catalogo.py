@@ -10,4 +10,5 @@ class CatalogVersionMismatchError(Exception):
 
 def exigir_misma_version_de_catalogo(solicitada: str, montada: str) -> None:
     """Lanza ``CatalogVersionMismatchError`` si ``solicitada`` no es exactamente la versión ``montada``."""
-    raise NotImplementedError("no implementado")
+    if solicitada != montada:
+        raise CatalogVersionMismatchError("el catálogo clínico es de otra versión")

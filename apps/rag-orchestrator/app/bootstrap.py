@@ -39,11 +39,18 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.config.errores_de_configuracion import MOTIVO_VARIABLE_AUSENTE, describir_errores
+from app.config.errores_de_configuracion import (
+    MOTIVO_CATALOGO_NO_DISPONIBLE,
+    MOTIVO_VARIABLE_AUSENTE,
+    describir_errores,
+)
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
-from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
+from app.infrastructure.catalogo_clinico.manifiesto import (
+    CatalogoNoDisponible,
+    cargar_catalogo_del_manifiesto,
+)
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -97,7 +104,9 @@ def cargar_settings_o_salir() -> Settings:
     except ValidationError as error:
         eventos = describir_errores(error)
     else:
-        eventos = _eventos_de_recuperacion_ausente(settings)
+        eventos = _eventos_de_recuperacion_ausente(settings) or _eventos_de_catalogo_ausente(
+            settings
+        )
         if not eventos:
             return settings
     for evento in eventos:
@@ -119,6 +128,25 @@ def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]
     ]
 
 
+def _eventos_de_catalogo_ausente(settings: Settings) -> list[dict[str, str]]:
+    """Sin ``manifest.json`` legible en ``CLINICAL_CATALOG_PATH`` el servicio no queda listo (US-041 AC-5, D4).
+
+    El evento nombra la variable y la regla; nunca la ruta ni el contenido del manifiesto."""
+    try:
+        catalogo = _montar_catalogo_clinico(settings)
+    except CatalogoNoDisponible:
+        catalogo = None
+    if catalogo is not None:
+        return []
+    return [
+        {
+            "variable": "CLINICAL_CATALOG_PATH",
+            "regla": "manifest.json legible",
+            "motivo": MOTIVO_CATALOGO_NO_DISPONIBLE,
+        }
+    ]
+
+
 def crear_app(
     settings: Settings,
     *,
@@ -133,7 +161,10 @@ def crear_app(
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
-    recuperacion = recuperacion or _componer_recuperacion(settings, modelos, corpus)
+    catalogo_clinico = _montar_catalogo_clinico(settings)
+    recuperacion = recuperacion or _componer_recuperacion(
+        settings, modelos, corpus, catalogo_clinico
+    )
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -158,6 +189,7 @@ def crear_app(
             trace_ids,
             nombres_de_claves(settings),
             VERSION_DEL_SERVICIO,
+            catalogo_clinico,
         )
     )
     return app
@@ -180,11 +212,15 @@ def _cargar_modelos_segun(
 
 
 def _componer_recuperacion(
-    settings: Settings, modelos: ModelosDeRecuperacion | None, corpus: PuertosDelCorpus | None
+    settings: Settings,
+    modelos: ModelosDeRecuperacion | None,
+    corpus: PuertosDelCorpus | None,
+    catalogo_clinico: CatalogoClinico | None,
 ) -> PuertosDeRecuperacion | None:
     """Modelos reales + corpus (Milvus y catálogo) = los bordes completos; si falta alguno, no hay recuperación."""
     if modelos is None or corpus is None:
         return None
+    _exigir_claves({"CLINICAL_CATALOG_PATH": catalogo_clinico})
     return PuertosDeRecuperacion(
         detector_idioma=modelos.detector_idioma,
         embedder=modelos.embedder_consulta,
@@ -192,16 +228,19 @@ def _componer_recuperacion(
         reranker=modelos.reranker,
         lector_release=corpus.lector_release,
         catalogo=corpus.catalogo,
-        catalogo_clinico=_cargar_catalogo_clinico(settings),
+        catalogo_clinico=catalogo_clinico,  # type: ignore[arg-type]
         clasificador_nli=modelos.clasificador_nli,
         verificador_terminos=_cargar_lista_de_terminos(settings),
     )
 
 
-def _cargar_catalogo_clinico(settings: Settings) -> CatalogoClinico:
-    """La versión del catálogo montado, para exigir que coincida con la de la solicitud (US-041)."""
-    _exigir_claves({"CLINICAL_CATALOG_PATH": settings.clinical_catalog_path})
-    return cargar_catalogo_del_manifiesto(settings.clinical_catalog_path)  # type: ignore[arg-type]
+def _montar_catalogo_clinico(settings: Settings) -> CatalogoClinico | None:
+    """El catálogo montado (su versión), o ``None`` si ``CLINICAL_CATALOG_PATH`` no está configurada.
+
+    Una ruta configurada cuyo manifiesto no se puede leer lanza ``CatalogoNoDisponible`` (fallo cerrado, D4)."""
+    if settings.clinical_catalog_path is None:
+        return None
+    return cargar_catalogo_del_manifiesto(settings.clinical_catalog_path)
 
 
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:

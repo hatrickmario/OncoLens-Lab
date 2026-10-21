@@ -95,7 +95,9 @@ def test_arranque_devuelve_los_settings_sin_registrar_nada_cuando_el_catalogo_es
 
 def test_la_sonda_detecta_la_ruta_inyectada_en_la_salida_del_arranque():
     # Mutación: si la comprobación de la ruta no mirara la salida real, un log con la ruta pasaría inadvertido.
-    salida = f'{{"event": "configuracion_invalida", "message": "no existe /tmp/{SENTINELA_DE_RUTA}"}}'
+    salida = (
+        f'{{"event": "configuracion_invalida", "message": "no existe /tmp/{SENTINELA_DE_RUTA}"}}'
+    )
 
     with pytest.raises(AssertionError, match=SENTINELA_DE_RUTA):
         exigir_sin_valores_prohibidos(salida, [SENTINELA_DE_RUTA])
