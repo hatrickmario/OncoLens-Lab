@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
-import type { Express } from 'express';
+import type { Express, Router } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
@@ -236,6 +236,8 @@ export interface GatewayDeTest {
   readonly app: Express;
   readonly logger: LoggerEnMemoria;
   readonly clavePublica: CryptoKey;
+  /** Routers protegidos montados tras el guard (para recorrer sus rutas contra el contrato). */
+  readonly rutas: readonly Router[];
 }
 
 /** Seudónimos sucesivos y deterministas: `psd_TestPseudonimo0001`, `…0002`. */
@@ -290,7 +292,7 @@ export async function montarGateway(
     registrar: logger.registrar,
     rutasProtegidas: [ruta],
   });
-  return { app, logger, clavePublica: publicKey };
+  return { app, logger, clavePublica: publicKey, rutas: [ruta] };
 }
 
 /** Usuario sembrado por correo → cabecera `Cookie` de una sesión vigente creada para el test. */
