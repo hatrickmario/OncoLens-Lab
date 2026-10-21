@@ -9,7 +9,7 @@ import {
   sinEvidencia,
   tipoNoHabilitado,
 } from '../support/msw/evidence-analyses';
-import { analizar } from '../support/panel-ui';
+import { analizar, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -48,7 +48,7 @@ describe('AnalysisBasisPanel', () => {
     await analizar();
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Base del análisis' }),
+      await screen.findByRole('heading', { level: 3, name: 'Base del análisis' }),
     ).toBeTruthy();
     expect(
       screen.getByText(
@@ -73,7 +73,9 @@ describe('AnalysisBasisPanel', () => {
     const usuario = await analizar();
     await usuario.click(await screen.findByRole('button', { name: VER_DETALLE }));
 
-    expect(screen.getByText('Datos del paciente usados')).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { level: 4, name: 'Datos del paciente usados' }),
+    ).toBeTruthy();
     expect(screen.getByText('HER2 3+ (IHQ): Por revisar · En conflicto')).toBeTruthy();
     expect(screen.getByText('Estadio IIA (TNM_8): Verificado')).toBeTruthy();
     expect(screen.getByText('Fuentes consultadas')).toBeTruthy();
@@ -111,14 +113,14 @@ describe('AnalysisBasisPanel', () => {
     await analizar();
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Base del análisis' }),
+      await screen.findByRole('heading', { level: 3, name: 'Base del análisis' }),
     ).toBeTruthy();
     expect(
       screen.getByText(
         'Qué se buscó: fuentes Guías, Publicaciones · filtros solo biomarcadores relevantes, últimos 6 meses, publicado desde 2021 · 0 fragmentos sobre el umbral',
       ),
     ).toBeTruthy();
-    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
   });
 
   it('dice filtros ninguno cuando no hay filtros aplicados y no hay evidencia [US-067 AC-3]', async () => {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { analizar, ejemplo, esperarResultado } from './soporte';
+import { analizar, ejemplo, esperarResultado, SIN_BASE } from './soporte';
 
 const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
 const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').query as string;
@@ -13,7 +13,7 @@ test.describe('Base del análisis (L1D-187)', () => {
     await analizar(page, preguntaHer2);
     await esperarResultado(page);
 
-    await expect(page.getByRole('heading', { level: 2, name: 'Base del análisis' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: 'Base del análisis' })).toBeVisible();
     await expect(
       page.getByText(
         'Faltantes: 0 · Supuestos: 1 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
@@ -38,8 +38,6 @@ test.describe('Base del análisis (L1D-187)', () => {
     await expect(
       page.getByText(/^Qué se buscó: fuentes .* · 0 fragmentos sobre el umbral$/),
     ).toBeVisible();
-    await expect(
-      page.getByRole('region', { name: 'Base del análisis' }).getByRole('heading', { level: 3 }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 3, name: SIN_BASE })).toHaveCount(0);
   });
 });
