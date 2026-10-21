@@ -1,54 +1,136 @@
-import { ConfiguracionInvalidaError, readIdentityKeyConfig, readPort } from './config.js';
+import {
+  ConfiguracionInvalidaError,
+  GateDeDatosRealesNoSuperado,
+  cargarConfiguracion,
+  cargarConfiguracionDeServicios,
+  exigirGateDeDatosReales,
+  type ConfiguracionDeArranque,
+  type ConfiguracionDeServicios,
+} from './config/index.js';
 import { SecretoAusenteError, loadRequiredSecrets, type LeerArchivo } from './config/secrets.js';
+import {
+  cargarClavesDeIdentidad,
+  type ClavesDeIdentidad,
+} from './infrastructure/crypto/claves-de-identidad.js';
+import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import {
+  cargarConfiguracionDePii,
+  type ConfiguracionDePii,
+} from './modules/evidence-analysis/deidentification/pii-formats.config.js';
 
-export interface DependenciasDeArranque {
+type Log = (linea: string) => void;
+
+/** Lo que la etapa de servicios deja listo antes de escuchar: configuración, catálogo y claves de identidad. */
+export interface ServiciosCargados {
+  readonly configuracion: ConfiguracionDeServicios & { readonly pii: ConfiguracionDePii };
+  readonly catalogo: ReturnType<typeof crearProveedorDeVersionDeCatalogo>;
+  readonly clavesDeIdentidad: ClavesDeIdentidad;
+}
+
+export interface DependenciasDeArranque<S> {
   readonly env: NodeJS.ProcessEnv;
   readonly readFile: LeerArchivo;
-  readonly log: (linea: string) => void;
+  readonly log: Log;
   readonly exit: (codigo: number) => void;
-  readonly listen: (puerto: number) => void;
+  /** Etapa 2 (archivos): su fallo se registra y termina igual que el de la etapa 1. */
+  readonly cargarServicios: (
+    env: NodeJS.ProcessEnv,
+    readFile: LeerArchivo,
+    arranque: ConfiguracionDeArranque,
+  ) => S;
+  readonly listen: (puerto: number, arranque: ConfiguracionDeArranque, servicios: S) => void;
+}
+
+/** Evento de arranque como una línea JSON (nivel, evento y campos sin valores de configuración ni identidad). */
+export function registrarEventoDeArranque(
+  log: Log,
+  nivel: 'info' | 'error',
+  evento: string,
+  campos: Record<string, string | number> = {},
+): void {
+  log(JSON.stringify({ level: nivel, event: evento, ...campos }));
 }
 
 /**
- * Valida las VARIABLES de identidad (`IDENTITY_KEY_VERSION` y los nombres de archivo de clave), no los archivos: las
- * claves en sí se validan en server.ts. Falla con `ConfiguracionInvalidaError` si alguna no es válida.
+ * Línea de log de una configuración inválida: nombra la variable, la regla y el motivo cerrado, nunca el valor (RN-10,
+ * RN-14). Única excepción: `valorInvalido` de un enum no sensible, que el propio error ya filtró por forma (design D2).
  */
-function validarVariablesDeIdentidad(env: NodeJS.ProcessEnv): void {
-  readIdentityKeyConfig(env);
+export function registrarConfiguracionInvalida(log: Log, error: ConfiguracionInvalidaError): void {
+  registrarEventoDeArranque(log, 'error', 'configuracion_invalida', {
+    variable: error.variable,
+    regla: error.regla,
+    motivo: error.motivo,
+    ...(error.valorInvalido !== undefined && { valorInvalido: error.valorInvalido }),
+  });
 }
 
-/** Línea de log de una configuración inválida: nombra la variable, nunca su valor (RN-10, RN-14). */
-export function registrarConfiguracionInvalida(
-  log: (linea: string) => void,
-  error: ConfiguracionInvalidaError,
-): void {
-  log(
-    JSON.stringify({ level: 'error', event: 'configuracion_invalida', variable: error.variable }),
+/** Un secreto requerido ausente, vacío o ilegible es una variable ausente: el mismo evento que cualquier configuración. */
+function comoConfiguracionInvalida(error: SecretoAusenteError): ConfiguracionInvalidaError {
+  return new ConfiguracionInvalidaError(
+    error.variable,
+    'es un secreto obligatorio, legible y no vacío',
+    { motivo: 'variable_ausente' },
   );
 }
 
+/** Registra el fallo de arranque que conoce (configuración, secreto, gate de datos reales); cualquier otro se relanza. */
+function registrarFalloDeArranque(log: Log, error: unknown): void {
+  if (error instanceof SecretoAusenteError) {
+    registrarConfiguracionInvalida(log, comoConfiguracionInvalida(error));
+  } else if (error instanceof ConfiguracionInvalidaError) {
+    registrarConfiguracionInvalida(log, error);
+  } else if (error instanceof GateDeDatosRealesNoSuperado) {
+    registrarEventoDeArranque(log, 'error', 'REAL_DATA_GATE_NOT_PASSED', {
+      variable: error.variable,
+    });
+  } else {
+    throw error;
+  }
+}
+
 /**
- * Raíz de composición testable: comprueba los secretos ANTES de escuchar (US-035 AC-5, fail-fast). Si falta uno,
- * registra el evento `secreto_ausente` con el nombre de la variable —nunca un valor, RN-10— y termina con código 1;
- * el healthcheck del Compose ve el contenedor sin escuchar y no lo da por healthy. Un puerto inválido se registra
- * igual, como `configuracion_invalida` con la variable.
+ * Etapa 2: PostgreSQL, JWT de servicio, gateway de análisis y PII (con los archivos que leen), el catálogo con su
+ * `manifest.json` y las claves de identidad ya parseadas en la etapa 1 (fallo cerrado, US-046 AC-5, RN-11).
  */
-export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArranque): void {
-  let puerto: number;
+export function cargarEtapaDeServicios(
+  env: NodeJS.ProcessEnv,
+  readFile: LeerArchivo,
+  arranque: ConfiguracionDeArranque,
+): ServiciosCargados {
+  const servicios = cargarConfiguracionDeServicios(env, readFile);
+  const pii = cargarConfiguracionDePii(servicios.deidentificacion, readFile);
+  return {
+    configuracion: { ...servicios, pii },
+    catalogo: crearProveedorDeVersionDeCatalogo(servicios.analisis.catalogPath, readFile),
+    clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
+  };
+}
+
+/**
+ * Raíz de composición testable: comprueba los secretos, la configuración (etapas 1 y 2) y la guarda de datos reales
+ * (RN-13) ANTES de escuchar (US-035 AC-5, US-037 AC-2/AC-3, fail-fast). Si algo falla registra un único evento —con
+ * el nombre de la variable, nunca un valor, RN-10— y termina con código 1; el healthcheck del Compose ve el contenedor
+ * sin escuchar y no lo da por healthy.
+ */
+export function arrancar<S>({
+  env,
+  readFile,
+  log,
+  exit,
+  cargarServicios,
+  listen,
+}: DependenciasDeArranque<S>): void {
+  let arranque: ConfiguracionDeArranque;
+  let servicios: S;
   try {
     loadRequiredSecrets(env, readFile);
-    validarVariablesDeIdentidad(env);
-    puerto = readPort(env);
+    arranque = cargarConfiguracion(env);
+    exigirGateDeDatosReales(arranque.datosReales);
+    servicios = cargarServicios(env, readFile, arranque);
   } catch (error) {
-    if (error instanceof SecretoAusenteError) {
-      log(JSON.stringify({ level: 'error', event: 'secreto_ausente', variable: error.variable }));
-    } else if (error instanceof ConfiguracionInvalidaError) {
-      registrarConfiguracionInvalida(log, error);
-    } else {
-      throw error;
-    }
+    registrarFalloDeArranque(log, error);
     exit(1);
     return;
   }
-  listen(puerto);
+  listen(arranque.puerto, arranque, servicios);
 }

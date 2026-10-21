@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
+from pydantic import ValidationError
 
 from app.api.contencion_de_errores import ContencionDeErroresInesperados
+from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
 from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
-from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_require_service_jwt
+from app.api.trace import ContextoDeTraceId
+from app.application.consulta_no_componible import ConsultaNoComponible
+from app.application.generation import LlmEvidenceGenerator
 from app.application.ports import (
     ChunkSearch,
     Clock,
@@ -29,15 +34,14 @@ from app.application.ports import (
     Reranker,
     TraceIdGenerator,
 )
-from app.application.consulta_no_componible import ConsultaNoComponible
-from app.application.generation import LlmEvidenceGenerator
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.config.logging import silenciar_urls_de_httpx_en_logs
-from app.config.settings import Settings
-from app.schemas.generated.models import LlmProvider
+from app.config.errores_de_configuracion import MOTIVO_VARIABLE_AUSENTE, describir_errores
+from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
+from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
+from app.config.version import VERSION_DEL_SERVICIO
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
@@ -50,11 +54,15 @@ from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmH
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
+from app.schemas.generated.models import LlmProvider
 
 if (
     TYPE_CHECKING
 ):  # solo para el tipado: importarlo en ejecución cargaría onnxruntime aun con MODEL_PROVIDER=fake
     from app.infrastructure.models.local import ModelosDeRecuperacion
+
+
+logger = logging.getLogger(__name__)
 
 
 class ConfiguracionDeRecuperacionIncompleta(ValueError):
@@ -78,6 +86,36 @@ class PuertosDeRecuperacion:
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 
 
+def cargar_settings_o_salir() -> Settings:
+    """Carga ``Settings`` una sola vez; si el entorno es inválido registra un ``configuracion_invalida`` por variable
+    (nombre y regla, nunca el valor) y termina el proceso con código 1 antes de escuchar (US-037 AC-2, RN-22)."""
+    try:
+        settings = Settings()
+    except ValidationError as error:
+        eventos = describir_errores(error)
+    else:
+        eventos = _eventos_de_recuperacion_ausente(settings)
+        if not eventos:
+            return settings
+    for evento in eventos:
+        registrar_evento(logger, logging.ERROR, "configuracion_invalida", **evento)
+    raise SystemExit(1)
+
+
+def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]:
+    """Con ``LLM_PROVIDER=local`` /rag/query exige sus valores de recuperación (RN-22): falta = variable_ausente."""
+    if settings.llm_provider != "local":
+        return []
+    return [
+        {
+            "variable": clave,
+            "regla": "obligatoria con LLM_PROVIDER=local",
+            "motivo": MOTIVO_VARIABLE_AUSENTE,
+        }
+        for clave in claves_de_recuperacion_ausentes(settings)
+    ]
+
+
 def crear_app(
     settings: Settings,
     *,
@@ -98,6 +136,9 @@ def crear_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
+    app.add_middleware(
+        ContextoDeTraceId, trace_ids=trace_ids
+    )  # el más externo: fija el traceId de los logs
     verificador = _crear_verificador_jwt_de_servicio(settings, clock)
     _registrar_consulta_de_evidencia(
         app,
@@ -108,7 +149,14 @@ def crear_app(
         clock=clock,
         generador=generador,
     )
-    app.include_router(crear_router_health(llm_health or _sonda_llm_segun(settings), trace_ids))
+    app.include_router(
+        crear_router_health(
+            llm_health or _sonda_llm_segun(settings),
+            trace_ids,
+            nombres_de_claves(settings),
+            VERSION_DEL_SERVICIO,
+        )
+    )
     return app
 
 
@@ -239,14 +287,11 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
 
 def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
     """Umbral y tamaños de la recuperación (RN-22): sin valor por defecto en código, el arranque se niega si faltan."""
-    _exigir_claves(
-        {
-            "RELEVANCE_THRESHOLD": settings.relevance_threshold,
-            "RETRIEVAL_TOP_K": settings.retrieval_top_k,
-            "RERANK_TOP_N": settings.rerank_top_n,
-            "NLI_ENTAILMENT_THRESHOLD": settings.nli_entailment_threshold,
-        }
-    )
+    ausentes = claves_de_recuperacion_ausentes(settings)
+    if ausentes:
+        raise ConfiguracionDeRecuperacionIncompleta(
+            f"falta configurar para /rag/query: {', '.join(ausentes)}"
+        )
 
 
 def _exigir_claves(valores: dict[str, object]) -> None:

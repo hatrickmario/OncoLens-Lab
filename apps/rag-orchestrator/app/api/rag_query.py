@@ -1,8 +1,9 @@
 """`POST /rag/query`: router delgado que delega en `EvidenceQueryPort`."""
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
 from app.api.dependencies.service_jwt import DependenciaJwtServicio, crear_router_interno
+from app.api.trace import fijar_trace_id
 from app.application.ports import EvidenceQueryPort
 from app.schemas.generated.models import RagQueryInternalRequest, RagQueryInternalResponse
 
@@ -17,9 +18,9 @@ def crear_router_rag_query(
     @router.post(
         "/rag/query", response_model=RagQueryInternalResponse, response_model_exclude_unset=True
     )
-    async def rag_query(solicitud: RagQueryInternalRequest, request: Request):
+    async def rag_query(solicitud: RagQueryInternalRequest):
         # Una sola fuente de traceId por petición: el del cuerpo (el mismo X-Trace-Id, TraceId del contrato).
-        request.state.trace_id = solicitud.traceId.root
+        fijar_trace_id(solicitud.traceId.root)
         return await consulta.consultar(solicitud)
 
     return router

@@ -73,7 +73,7 @@ def test_health_responde_200_sin_llamar_al_llm_cuando_llm_provider_es_fake(llm_v
     respuesta = _cliente_fake().get("/health")
 
     assert respuesta.status_code == 200
-    assert respuesta.text == '{"status":"ok"}'
+    assert respuesta.json()["status"] == "ok"
     assert not llm_vigilado.calls
 
 

@@ -6,6 +6,14 @@ export type ClientOptions = {
 
 export type HealthStatus = {
     status: 'ok';
+    /**
+     * Nombres de las claves de configuración cargadas; nunca valores (RN-14).
+     */
+    configKeys?: Array<string>;
+    /**
+     * Versión del contrato (info.version) del servicio que responde.
+     */
+    serviceVersion?: string;
 };
 
 /**

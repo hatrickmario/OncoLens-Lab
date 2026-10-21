@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError } from '../../../src/config.js';
+import { ConfiguracionInvalidaError } from '../../../src/config/index.js';
 import { crearProveedorDeVersionDeCatalogo } from '../../../src/modules/evidence-analysis/catalog-version.provider.js';
 
 describe('crearProveedorDeVersionDeCatalogo', () => {

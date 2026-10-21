@@ -2,7 +2,7 @@ import {
   ConfiguracionInvalidaError,
   leerSecretoDeArchivo,
   type IdentityKeyConfig,
-} from '../../config.js';
+} from '../../config/index.js';
 import type { LeerArchivo } from '../../config/secrets.js';
 import {
   BYTES_DE_CLAVE_AES,

@@ -1,7 +1,11 @@
+import logging
+from collections.abc import Callable, Iterator
 from typing import Any
 
 import pytest
 
+from app.api.trace import trace_id_actual
+from app.config.logging import configurar_logging_json
 from tests.support import contract, fakes
 from tests.support.service_jwt import ParClavesServicio, generar_par_es256
 from tests.support.verificacion_proveedor import (  # noqa: F401  (los fixtures se registran al importarlos)
@@ -24,3 +28,15 @@ def pytest_terminal_summary(terminalreporter: Any) -> None:
         f"verificación del proveedor: {respuestas_verificadas()} respuestas verificadas contra "
         f"{contract.PROVEEDOR}"
     )
+
+
+@pytest.fixture
+def logs_json(capsys: pytest.CaptureFixture[str]) -> Iterator[Callable[[], str]]:
+    """Instala el logging JSON de producción en el root y devuelve una función que lee lo escrito en stdout."""
+    raiz = logging.getLogger()
+    nivel_previo = raiz.level
+    handler = configurar_logging_json(trace_id_actual)
+    capsys.readouterr()
+    yield lambda: capsys.readouterr().out
+    raiz.removeHandler(handler)
+    raiz.setLevel(nivel_previo)

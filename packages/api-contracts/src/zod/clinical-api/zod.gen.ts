@@ -3,7 +3,9 @@
 import * as z from 'zod';
 
 export const zHealthStatus = z.strictObject({
-    status: z.literal('ok')
+    status: z.literal('ok'),
+    configKeys: z.array(z.string().regex(/^[A-Z][A-Z0-9_]*$/)).optional(),
+    serviceVersion: z.string().min(1).optional()
 });
 
 /**

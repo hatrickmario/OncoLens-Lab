@@ -1,4 +1,4 @@
-import { readDatabaseConfig } from '../../src/config.js';
+import { readDatabaseConfig } from '../../src/config/index.js';
 import type { LeerArchivo } from '../../src/config/secrets.js';
 import { crearPool } from '../../src/infrastructure/database.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
