@@ -1,18 +1,11 @@
+import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { CifradorDeCampos } from '../../infrastructure/crypto/cifrador-aes-gcm.js';
 import type { IndiceCiego } from '../../infrastructure/crypto/indice-ciego.js';
 import type { IdentityRepository } from './identity.repository.js';
 
-export type TipoDeDocumento =
-  | 'cedula_ciudadania'
-  | 'tarjeta_identidad'
-  | 'cedula_extranjeria'
-  | 'pasaporte'
-  | 'seudonimo'
-  | 'sintetico';
-
 export interface IdentidadAGuardar {
   readonly patientId: string;
-  readonly idType: TipoDeDocumento;
+  readonly idType: IdType;
   readonly issuingCountry: string | null;
   readonly numeroDeDocumento: string;
   readonly nombreCompleto: string;
@@ -20,7 +13,7 @@ export interface IdentidadAGuardar {
 
 export interface IdentidadDescifrada {
   readonly patientId: string;
-  readonly idType: TipoDeDocumento;
+  readonly idType: IdType;
   readonly issuingCountry: string | null;
   readonly numeroDeDocumento: string;
   readonly nombreCompleto: string;
@@ -31,7 +24,7 @@ export interface IdentityService {
   /** Cifra y guarda; si el paciente ya tiene identidad no la recifra (`'existente'`). */
   guardar(identidad: IdentidadAGuardar): Promise<'creada' | 'existente'>;
   descifrar(patientId: string): Promise<IdentidadDescifrada | null>;
-  indiceCiegoDeDocumento(idType: TipoDeDocumento, numeroDeDocumento: string): string;
+  indiceCiegoDeDocumento(idType: IdType, numeroDeDocumento: string): string;
 }
 
 export interface DependenciasDeIdentidad {
@@ -69,7 +62,7 @@ export function createIdentityService({
       if (fila === null) return null;
       return {
         patientId,
-        idType: fila.idType as TipoDeDocumento,
+        idType: fila.idType,
         issuingCountry: fila.issuingCountry,
         numeroDeDocumento: cifrador.descifrar(
           fila.nationalIdCiphertext,

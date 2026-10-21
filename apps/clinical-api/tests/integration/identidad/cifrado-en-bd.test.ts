@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from 'pg';
+import { zIdType } from '../../../../../packages/api-contracts/src/zod/clinical-api/zod.gen.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
 import {
@@ -57,5 +58,13 @@ describe('Identidad cifrada en PostgreSQL', () => {
       numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
       nombreCompleto: FX_T4A_A.nombreCompleto,
     });
+  });
+
+  it('los valores de identity.id_type en la BD son los mismos de IdType del contrato', async () => {
+    const { rows } = await cliente.query<{ valor: string }>(
+      'SELECT unnest(enum_range(NULL::identity.id_type))::text AS valor',
+    );
+
+    expect(rows.map((fila) => fila.valor).sort()).toEqual([...zIdType.options].sort());
   });
 });

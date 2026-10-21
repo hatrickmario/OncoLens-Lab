@@ -1,6 +1,8 @@
+import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+
 export interface FilaDeIdentidad {
   readonly patientId: string;
-  readonly idType: string;
+  readonly idType: IdType;
   readonly issuingCountry: string | null;
   readonly nationalIdCiphertext: Buffer;
   readonly nationalIdHmac: string;
@@ -21,7 +23,7 @@ export interface ConsultadorSql {
 
 interface FilaSql {
   patient_id: string;
-  id_type: string;
+  id_type: IdType;
   issuing_country: string | null;
   national_id_ciphertext: Buffer;
   national_id_hmac: string;
