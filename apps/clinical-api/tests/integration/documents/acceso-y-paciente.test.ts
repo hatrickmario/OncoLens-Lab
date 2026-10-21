@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { TRACE_ID_GENERADO } from '../../support/gateway.js';
+import { TRACE_ID_GENERADO, idDePaciente } from '../../support/gateway.js';
 import {
+  documentosDelPaciente,
   fixture,
   iniciarEscenarioDeDocumentos,
   montarDocumentos,
@@ -48,6 +49,38 @@ describe('paciente de la carga', () => {
       .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
 
     expect(respuesta.status).toBe(404);
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+});
+
+describe('sesión y permiso de la carga', () => {
+  it('responde 401 NO_AUTENTICADO antes del controlador cuando no hay sesión [US-076 AC-7]', async () => {
+    const { app, logger } = montarDocumentos(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${idDePaciente('a')}/documents`)
+      .field('documentType', 'examen')
+      .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
+
+    expect(respuesta.status).toBe(401);
+    expect(respuesta.body.error).toBe('NO_AUTENTICADO');
+    expect(logger.lineas.some((linea) => linea['event'] === 'documents.carga')).toBe(false);
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+
+  it('responde 403 PERMISO_DENEGADO sin fila ni objeto cuando carga el administrador', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+    const paciente = idDePaciente('a');
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${paciente}/documents`)
+      .set('Cookie', escenario.cookieAdmin)
+      .field('documentType', 'examen')
+      .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
+
+    expect(respuesta.status).toBe(403);
+    expect(respuesta.body.error).toBe('PERMISO_DENEGADO');
+    expect(await documentosDelPaciente(escenario.mundo, paciente)).toHaveLength(0);
     expect(escenario.entorno.escrituras()).toBe(0);
   });
 });
