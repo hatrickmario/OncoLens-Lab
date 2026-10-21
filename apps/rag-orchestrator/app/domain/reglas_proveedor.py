@@ -1,11 +1,27 @@
 """Reglas puras de proveedores de modelos (RN-12, RN-13)."""
 
+import ipaddress
+from urllib.parse import urlsplit
+
 # Lista CERRADA EN CÓDIGO a propósito (ADR-41 D4): ninguna variable de entorno ni YAML puede ampliarla.
 HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "host.docker.internal"})
 
 
 def es_proveedor_local(url: str) -> bool:
-    raise NotImplementedError("no implementado")
+    """RN-12: ``True`` solo si el host de ``url`` es loopback (``127.0.0.0/8``, ``::1``), ``localhost`` o
+    ``host.docker.internal``. Falla cerrada: una URL sin host o que no se puede interpretar no es local."""
+    try:
+        host = urlsplit(url).hostname
+    except ValueError:
+        return False
+    if not host:
+        return False
+    if host in HOSTS_LOCALES:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def _banderas_de_datos_reales_activas(

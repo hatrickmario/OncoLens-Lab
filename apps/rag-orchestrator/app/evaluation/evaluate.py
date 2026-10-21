@@ -22,7 +22,7 @@ from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE, SUITES
 from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio, ids_de_subconjunto
-from app.evaluation.guardas import SuiteAbortada, exigir_marca_final
+from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_marca_final
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -72,7 +72,11 @@ def _ejecutar(
     config: ConfigSuite, args: argparse.Namespace, reloj: Clock, raiz: Path | None
 ) -> int:
     exigir_marca_final(config, args.prueba_final)
-    dataset = _fuente_de(config, raiz).cargar()
+    fuente = _fuente_de(config, raiz)
+    exigir_adapters_locales(
+        fuente.clase(), config.urls
+    )  # RN-12: antes de cargar nada ni crear un cliente
+    dataset = fuente.cargar()
     cronometro = Cronometro(_reloj_de_medicion(config))
     suite = componer_servicio(config, dataset, cronometro, reloj)
     resultados, respuestas = asyncio.run(evaluar_dataset(suite, dataset))
