@@ -61,32 +61,45 @@ function cabecerasObligatoriasAusentes(spec, respuestaDelSpec, cabeceras) {
     .filter((nombre) => !recibidas.has(nombre.toLowerCase()));
 }
 
+/** La operación del spec a la que corresponde la petición; sin ella la verificación falla cerrado (nunca se omite). */
+function exigirOperacion(spec, { proveedor, metodo, ruta }) {
+  const operacion = resolverOperacion(spec, metodo, ruta);
+  if (!operacion) throw new Error(`${proveedor} ${metodo.toUpperCase()} ${rutaSinIdentificadores(ruta)}: la operación no existe en el spec`);
+  return operacion;
+}
+
+/** La respuesta que el spec declara para el status recibido; un código no declarado hace fallar la verificación. */
+function exigirRespuestaDeclarada(spec, operacion, { proveedor, status }) {
+  const declarada = respuestaDeclarada(spec, operacion, status);
+  if (declarada) return declarada;
+  const declarados = Object.keys(operacion.operation.responses ?? {}).join(', ');
+  throw new Error(`${proveedor} ${labelOf(operacion)} ${status}: código no declarado (el spec declara ${declarados})`);
+}
+
+/** Incumplimientos del cuerpo: el que la respuesta no declara, el que falta, o los de su schema (ruta JSON y mensaje, sin el valor). */
+function problemasDelCuerpo(validador, proveedor, declarada, cuerpo) {
+  const declaraJson = declarada.node.content?.['application/json'] !== undefined;
+  if (!declaraJson) return cuerpo === undefined ? [] : [{ path: '#', message: 'la respuesta no declara cuerpo' }];
+  if (cuerpo === undefined) return [{ path: '#', message: 'falta el cuerpo que la respuesta declara' }];
+  const veredicto = validador.validate({ spec: proveedor, target: declarada.pointer }, cuerpo);
+  if (veredicto.error) throw new Error(veredicto.error);
+  return veredicto.problems;
+}
+
 /**
  * Crea un verificador de respuestas sobre unos specs ya empaquetados (los de `getBundledSpecs()` o, en los tests, sintéticos).
  * @param {{ [proveedor: string]: { bundled: any } }} specs
  */
 export function crearVerificadorDeRespuestas(specs) {
-  const validadorPropio = createExampleValidator(specs);
-  const problemasDeCuerpo = (proveedor, declarada, cuerpo) => {
-    const declaraJson = declarada.node.content?.['application/json'] !== undefined;
-    if (!declaraJson) return cuerpo === undefined ? [] : [{ path: '#', message: 'la respuesta no declara cuerpo' }];
-    if (cuerpo === undefined) return [{ path: '#', message: 'falta el cuerpo que la respuesta declara' }];
-    const veredicto = validadorPropio.validate({ spec: proveedor, target: declarada.pointer }, cuerpo);
-    if (veredicto.error) throw new Error(veredicto.error);
-    return veredicto.problems;
-  };
-  return function verificar({ proveedor, metodo, ruta, status, cabeceras, cuerpo }) {
+  const validador = createExampleValidator(specs);
+  return function verificar(respuesta) {
+    const { proveedor, status, cabeceras, cuerpo } = respuesta;
     const spec = specs[proveedor]?.bundled;
     if (!spec) throw new Error(`proveedor sin spec empaquetado: ${proveedor}`);
-    const operacion = resolverOperacion(spec, metodo, ruta);
-    if (!operacion) throw new Error(`${proveedor} ${metodo.toUpperCase()} ${rutaSinIdentificadores(ruta)}: la operación no existe en el spec`);
-    const declarada = respuestaDeclarada(spec, operacion, status);
-    if (!declarada) {
-      const declarados = Object.keys(operacion.operation.responses ?? {}).join(', ');
-      throw new Error(`${proveedor} ${labelOf(operacion)} ${status}: código no declarado (el spec declara ${declarados})`);
-    }
+    const operacion = exigirOperacion(spec, respuesta);
+    const declarada = exigirRespuestaDeclarada(spec, operacion, respuesta);
     const ausentes = cabecerasObligatoriasAusentes(spec, declarada, cabeceras).map((nombre) => ({ path: `header ${nombre}`, message: 'cabecera obligatoria ausente' }));
-    const problemas = [...ausentes, ...problemasDeCuerpo(proveedor, declarada, cuerpo)];
+    const problemas = [...ausentes, ...problemasDelCuerpo(validador, proveedor, declarada, cuerpo)];
     if (problemas.length > 0) {
       throw new Error(problemas.map((item) => `la respuesta no cumple ${proveedor} ${labelOf(operacion)} ${status}: ${item.path}: ${item.message}`).join('\n'));
     }

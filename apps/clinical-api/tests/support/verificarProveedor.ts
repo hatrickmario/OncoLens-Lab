@@ -46,17 +46,24 @@ function registrarRespuestaVerificada(): void {
   if (archivo !== undefined && archivo !== '') appendFileSync(archivo, `${PROVEEDOR}\n`);
 }
 
+/** ¿El test declaró esta ruta (y este código, si lo acotó) como de mentira? */
+function esRespuestaAjenaAlContrato(
+  ajenas: readonly RespuestaAjenaAlContrato[],
+  ruta: string,
+  status: number,
+): boolean {
+  return ajenas.some(
+    (ajena) => ajena.ruta === sinQuery(ruta) && (ajena.status ?? status) === status,
+  );
+}
+
 function verificadorDe(
   metodo: Metodo,
   ruta: string,
   ajenas: readonly RespuestaAjenaAlContrato[],
 ): (respuesta: Response) => void {
   return (respuesta) => {
-    const esAjena = ajenas.some(
-      (ajena) =>
-        ajena.ruta === sinQuery(ruta) && (ajena.status ?? respuesta.status) === respuesta.status,
-    );
-    if (esAjena) return;
+    if (esRespuestaAjenaAlContrato(ajenas, ruta, respuesta.status)) return;
     verificarRespuesta({
       proveedor: PROVEEDOR,
       metodo,

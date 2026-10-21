@@ -132,9 +132,7 @@ function esAnyOfDeRestricciones(miembros) {
  */
 export function generarRefinamientos(spec, encabezado) {
   const schemas = spec?.components?.schemas ?? {};
-  for (const nombre of Object.keys(schemas)) {
-    if (!/^[A-Za-z0-9]+$/.test(nombre)) throw new ConstruccionNoTraducible(`el schema «${nombre}»`, 'un nombre con caracteres que Zod renombra');
-  }
+  exigirNombresDeSchemaConocidos(schemas);
   verificarConstruccionesProhibidas(spec);
 
   const resolver = (ref, donde) => {
@@ -261,6 +259,18 @@ export function generarRefinamientos(spec, encabezado) {
     const cuerpo = comprobaciones(schemas[nombre], 'valor', 'ruta', nombre, 0);
     return indentar([`function verificar${nombre}(valor: unknown, ctx: Contexto, ruta: Ruta): void {`, ...cuerpo, '}']);
   });
+  return ensamblarArchivo({ encabezado, refinados, funciones });
+}
+
+/** Zod renombra los schemas con caracteres especiales: el generador solo importa nombres que conoce por construcción. */
+function exigirNombresDeSchemaConocidos(schemas) {
+  for (const nombre of Object.keys(schemas)) {
+    if (!/^[A-Za-z0-9]+$/.test(nombre)) throw new ConstruccionNoTraducible(`el schema «${nombre}»`, 'un nombre con caracteres que Zod renombra');
+  }
+}
+
+/** El texto de `refinamientos.gen.ts`: encabezado, importaciones, ayudas, una función de verificación y un export por schema. */
+function ensamblarArchivo({ encabezado, refinados, funciones }) {
   return [
     encabezado,
     '',
