@@ -17,18 +17,20 @@ subconjunto de los tokens de `docs/ux/sistema-de-diseno.md` §1. Next.js 16 con 
   `npm run test:e2e` con `CI=true`. `playwright.config.ts` ya decide `retries: process.env.CI ? 1 : 0`
   y `trace: 'on-first-retry'`; el job sube `playwright-report/` y `test-results/` como artefacto con
   **`retention-days: 3`** (repo público: el artefacto es descargable).
-- **Trazas sin cuerpos de request ni contraseñas:** un *fixture* de red no basta. Medido con Playwright 1.64, la
-  contraseña de un login fallido queda en el `fill` del `trace.trace`, en el valor de los `input` de los snapshots del DOM,
-  en el recurso del `postData` y en `error-context.md` (que el informe HTML copia a `data/`). Por eso un **reporter**
-  (`apps/web/e2e/reporte-sin-secretos.ts`, siempre el primero de la lista, para que el informe copie adjuntos ya
-  depurados) depura cada `trace.zip` y cada adjunto de texto al terminar el intento: elimina `postData` y las respuestas de
-  `POST /api/*` y sustituye por `[REDACTADO]` cada `E2E_*CONTRASENA` (literal, escapada en JSON y codificada en URL).
-  **Falla cerrado:** un adjunto que no se pueda depurar se borra. Sin dependencias nuevas (el zip se lee y escribe con
-  `node:zlib`). Un test (`scripts/e2e/__tests__/depurarTraza.test.mjs`, con sonda de control) comprueba que la traza de un
-  login fallido no contiene la contraseña de prueba. Los usuarios de los E2E son **sintéticos** (dominios de prueba
-  permitidos por el hook de commits, p. ej. `@oncolens.test`; el seed actual usa `doc1@test.local`) y su contraseña la
-  genera `setup-secrets.sh` dentro de `scripts/e2e/ejecutar.sh`, en una carpeta temporal propia: nunca versionada ni
-  reutilizada fuera de la CI.
+- **Informe y trazas sin cuerpos de request ni contraseñas:** un *fixture* de red no basta. Medido con Playwright 1.64,
+  la contraseña de un login fallido queda en el título del paso (`Fill "<contraseña>"`, que el informe HTML incrusta en
+  base64 en `index.html`, también con todo en verde), en el `fill` del `trace.trace`, en el valor de los `input` de los
+  snapshots, en el recurso del `postData` y en `error-context.md` (copiado a `data/`). Por eso hay dos reporters alrededor
+  de `html`: `apps/web/e2e/depurador-de-adjuntos.ts` (primero) sustituye el secreto en los títulos de paso y depura cada
+  `trace.zip` y adjunto de texto —quitando `postData`, las respuestas de `POST /api/*` y las cabeceras de credenciales— y
+  descarta lo que no pueda depurar; `apps/web/e2e/verificador-de-informe.ts` (último, porque el informe se escribe en
+  `onExit`) reescanea `playwright-report/` y `test-results/`, zips anidados y el zip incrustado en base64 incluidos, y si
+  queda un secreto borra las carpetas y termina la corrida con error (**falla cerrado**). Sin dependencias nuevas (el zip
+  se lee y escribe con `node:zlib`). La prueba (`scripts/e2e/integracion/informe.integracion.mjs`) lanza Playwright
+  real contra un servidor local mínimo, con sonda de control (sin reporters la contraseña aparece). Los usuarios de los
+  E2E son **sintéticos** (dominios de prueba permitidos por el hook de commits, p. ej. `@oncolens.test`; el seed actual
+  usa `doc1@test.local`) y su contraseña la genera `setup-secrets.sh` dentro de `scripts/e2e/ejecutar.sh`, en una carpeta
+  temporal propia: nunca versionada ni reutilizada fuera de la CI; en CI se enmascara con `::add-mask::`.
 - Descartadas: job dentro de `ci.yml` excluido de `needs` de `ci-ok` (contradice el requisito de
   L1D-166 «`ci-ok` depende de todos los jobs»); `continue-on-error` (prohibido por ese mismo spec).
 
@@ -72,9 +74,9 @@ el cuerpo de `POST /api/auth/login`. `rag-orchestrator` no interviene.
 - Validación: el formulario sigue usando el schema Zod compartido de login en cliente y servidor.
 - Sin variables `NEXT_PUBLIC_` nuevas. Sin módulos `server-only` nuevos.
 - Sin texto del LLM ni del corpus en esta pantalla; sin `dangerouslySetInnerHTML`.
-- CSP y cabeceras: Tailwind v4 compila a una hoja estática (sin estilos en línea inyectados en
-  runtime); los componentes de Radix usados (`Label`, `Slot`) no inyectan estilos. El visual-check
-  verifica 0 violaciones de CSP. Sin fuentes ni recursos de terceros.
+- CSP y cabeceras: Tailwind v4 compila a una hoja estática (sin estilos en línea inyectados en runtime), compatible con
+  `style-src 'self'` + nonce cuando US-144 defina la CSP (hoy pendiente). El visual-check verifica 0 violaciones de la
+  política que haya. Sin fuentes ni recursos de terceros.
 - Dependencias nuevas: las 7 de Impact, versiones exactas; resultado de `npm audit` en el PR (job de
   `l1d-267` si ya existe; si no, adjunto).
 

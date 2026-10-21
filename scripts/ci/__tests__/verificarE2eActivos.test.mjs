@@ -61,6 +61,23 @@ describe('verificar-e2e-activos', () => {
     expect(resultado.stderr).not.toContain('ok.spec.ts');
   });
 
+  it('detecta un test.fixme en una subcarpeta y nombra su ruta relativa [ARR-02 AC-1]', () => {
+    mkdirSync(path.join(carpeta, 'sub'));
+    writeFileSync(path.join(carpeta, 'sub/x.spec.ts'), "test('a', async () => {});\ntest.fixme('b', async () => {});\n");
+
+    const resultado = ejecutar();
+
+    expect(resultado.status).toBe(1);
+    expect(resultado.stderr).toContain('sub/x.spec.ts:2');
+  });
+
+  it('termina en 2 con el uso cuando --dir no trae valor', () => {
+    const resultado = spawnSync('node', [SCRIPT, '--root', raiz, '--dir'], { encoding: 'utf8' });
+
+    expect(resultado.status).toBe(2);
+    expect(resultado.stderr).toContain('uso:');
+  });
+
   it('ignora los archivos de soporte que no son especificaciones', () => {
     writeFileSync(path.join(carpeta, 'soporte.ts'), "// test.skip se documenta aquí\ntest.skip('x', () => {});\n");
 

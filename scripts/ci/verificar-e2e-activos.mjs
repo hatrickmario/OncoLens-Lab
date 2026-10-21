@@ -23,13 +23,16 @@ export function lineasDesactivadas(texto) {
     .filter(Boolean);
 }
 
-/** `{ archivo, linea }` de cada E2E desactivado bajo `carpeta` (ruta absoluta). */
+/** `{ archivo, linea }` de cada E2E desactivado bajo `carpeta` (ruta absoluta), subcarpetas incluidas como el `testDir` de Playwright. */
 export function e2eDesactivados(carpeta) {
-  return readdirSync(carpeta)
-    .filter((nombre) => ESPECIFICACION.test(nombre))
+  return readdirSync(carpeta, { recursive: true })
+    .filter((relativa) => ESPECIFICACION.test(path.basename(relativa)))
     .sort()
-    .flatMap((nombre) =>
-      lineasDesactivadas(readFileSync(path.join(carpeta, nombre), 'utf8')).map((linea) => ({ archivo: nombre, linea })),
+    .flatMap((relativa) =>
+      lineasDesactivadas(readFileSync(path.join(carpeta, relativa), 'utf8')).map((linea) => ({
+        archivo: relativa.split(path.sep).join('/'),
+        linea,
+      })),
     );
 }
 
@@ -37,7 +40,12 @@ function main() {
   const argumentos = process.argv.slice(2);
   const { raiz } = parametros(argumentos, '');
   const indice = argumentos.indexOf('--dir');
-  const carpeta = path.resolve(raiz, indice === -1 ? CARPETA_POR_DEFECTO : argumentos[indice + 1]);
+  const valorDeDir = indice === -1 ? CARPETA_POR_DEFECTO : argumentos[indice + 1];
+  if (!valorDeDir || valorDeDir.startsWith('--')) {
+    console.error('uso: node scripts/ci/verificar-e2e-activos.mjs [--root <dir>] [--dir <carpeta relativa a la raíz>]');
+    return 2;
+  }
+  const carpeta = path.resolve(raiz, valorDeDir);
   const encontrados = e2eDesactivados(carpeta);
   encontrados.forEach(({ archivo, linea }) =>
     console.error(`verificar-e2e-activos — ${archivo}:${linea} desactiva o aísla un E2E (test.skip, test.only o test.fixme)`),

@@ -37,12 +37,16 @@ jobs:
       - name: Instalar Chromium de Playwright con sus dependencias del sistema
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
+      - name: Prueba de que el informe de Playwright no conserva la contraseña de prueba (Playwright y Chromium reales)
+        run: npx vitest run --config scripts/e2e/vitest.integracion.config.mjs
+        env:
+          CI: 'true'
       - name: E2E contra el Compose fingido
         run: npm run test:e2e
         env:
           CI: 'true'
-      # Informe HTML y trazas del reintento, ya depurados por el reporter reporte-sin-secretos (sin cuerpos de request ni
-      # contraseñas). El repositorio es público: el artefacto es descargable, de ahí la retención corta.
+      # Informe HTML y trazas del reintento, depurados por depurador-de-adjuntos y verificados por verificador-de-informe
+      # (sin cuerpos de request ni contraseñas; si queda un secreto, el verificador borra el informe y falla la corrida). El repositorio es público: el artefacto es descargable, de ahí la retención corta.
       - name: Publicar informe y trazas
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -52,4 +56,5 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
           retention-days: 3
+          include-hidden-files: false
           if-no-files-found: ignore

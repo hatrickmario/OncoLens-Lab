@@ -43,6 +43,13 @@ describe('e2e.yml', () => {
     expect(indiceDe(/playwright install --with-deps chromium/)).toBeLessThan(indiceE2e);
   });
 
+  it('prueba con Playwright real que el informe no conserva la contraseña, tras instalar Chromium y antes del stack [ARR-02 AC-1]', () => {
+    const indiceSonda = indiceDe(/vitest\.integracion\.config\.mjs/);
+
+    expect(indiceSonda).toBeGreaterThan(indiceDe(/playwright install --with-deps chromium/));
+    expect(indiceSonda).toBeLessThan(indiceDe(/npm run test:e2e/));
+  });
+
   it('ejecuta los E2E con CI=true para activar retries y traza [ARR-02 AC-1]', () => {
     const paso = pasos[indiceDe(/npm run test:e2e/)];
 
@@ -54,6 +61,7 @@ describe('e2e.yml', () => {
 
     expect(paso.if).toBe('always()');
     expect(paso.with['retention-days']).toBe(3);
+    expect(paso.with['include-hidden-files']).toBe(false);
     expect(paso.with.path).toContain('apps/web/playwright-report');
     expect(paso.with.path).toContain('apps/web/test-results');
   });

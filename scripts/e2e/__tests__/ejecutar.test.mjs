@@ -81,7 +81,7 @@ describe('scripts/e2e/ejecutar.sh en modo CI', () => {
     expect(existsSync(carpetaDeSecretos)).toBe(false);
   });
 
-  it('ejecuta Playwright con CI y con la contraseña generada, sin imprimirla [ARR-02 AC-1]', () => {
+  it('ejecuta Playwright con CI y con la contraseña generada, enmascarada en el registro y sin imprimirla en otro sitio [ARR-02 AC-1]', () => {
     const resultado = ejecutar(['--', '--grep', 'US-061']);
 
     expect(resultado.status, resultado.stderr).toBe(0);
@@ -89,7 +89,8 @@ describe('scripts/e2e/ejecutar.sh en modo CI', () => {
     expect(playwright).toEqual(['playwright test --grep US-061|CI=true|clave_presente=si']);
     const clave = leer(`${registro}.clave`)[0].replace('clave:', '');
     expect(clave.length).toBeGreaterThanOrEqual(16);
-    expect(resultado.stdout + resultado.stderr).not.toContain(clave);
+    expect(resultado.stdout).toContain(`::add-mask::${clave}`);
+    expect(resultado.stdout.replace(`::add-mask::${clave}`, '') + resultado.stderr).not.toContain(clave);
   });
 
   it('rechaza --mantener cuando hay CI [ARR-02 AC-1]', () => {

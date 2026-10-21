@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { depurarAdjuntoDeTexto, depurarOBorrar, depurarTraza, escribirZip, leerZip, MARCA_REDACTADO, secretosDeE2e } from '../../../apps/web/e2e/depurar-traza.ts';
+import { depurarAdjuntoDeTexto, depurarOBorrar, depurarTraza, esVariableSecretaDeE2e, escribirZip, leerZip, MARCA_REDACTADO, secretosDeE2e } from '../../../apps/web/e2e/depurar-traza.ts';
 
 // L1D-278 (test después, ARR-02 AC-1, RN-14): la traza que sube la CI como artefacto no contiene cuerpos de request ni la
 // contraseña de prueba. El zip imita el que escribe Playwright con `trace: 'on-first-retry'` para un login fallido
@@ -110,6 +110,25 @@ describe('depurarTraza', () => {
     expect(Object.keys(entradas())).toEqual(['trace.network']);
   });
 
+  it('quita las cabeceras Cookie, Set-Cookie y Authorization y las cookies de los registros de red cuando se depura', () => {
+    const registro = {
+      type: 'resource-snapshot',
+      snapshot: {
+        request: { method: 'GET', url: 'http://127.0.0.1:3000/api/pacientes', cookies: [{ name: 'oncolens_session', value: 'abc' }], headers: [{ name: 'Cookie', value: 'oncolens_session=abc' }, { name: 'Authorization', value: 'Bearer x' }, { name: 'Accept', value: '*/*' }] },
+        response: { status: 200, cookies: [{ name: 'oncolens_session', value: 'abc' }], headers: [{ name: 'set-cookie', value: 'oncolens_session=abc' }, { name: 'Content-Type', value: 'application/json' }], content: {} },
+      },
+    };
+    writeFileSync(ruta, escribirZip([{ nombre: 'trace.network', datos: Buffer.from(JSON.stringify(registro)) }]));
+
+    depurarTraza(ruta, [CONTRASENA]);
+
+    const red = JSON.parse(entradas()['trace.network'].toString('utf8')).snapshot;
+    expect(red.request.headers).toEqual([{ name: 'Accept', value: '*/*' }]);
+    expect(red.response.headers).toEqual([{ name: 'Content-Type', value: 'application/json' }]);
+    expect(red.request.cookies).toEqual([]);
+    expect(red.response.cookies).toEqual([]);
+  });
+
   it('redacta también la forma escapada en JSON y la codificada en URL del secreto', () => {
     const secreto = 'a"b+c/d';
     writeFileSync(
@@ -162,5 +181,31 @@ describe('secretosDeE2e', () => {
     const entorno = { E2E_DOC_CONTRASENA: 'uno', E2E_OTRA_CONTRASENA: '', E2E_DOC_CORREO: 'doc1@oncolens.test', PATH: '/bin' };
 
     expect(secretosDeE2e(entorno)).toEqual(['uno']);
+  });
+});
+
+// Qué variable de E2E es un secreto lo decide una sola convención de nombre (esVariableSecretaDeE2e). Si alguien añade una
+// variable E2E_* a los scripts, a los E2E o a .env.example, o casa con la convención (y se depura) o se declara aquí no secreta.
+const RAIZ = path.resolve(import.meta.dirname, '../../..');
+const E2E_NO_SECRETAS = ['E2E_BASE_URL', 'E2E_DOC_CORREO', 'E2E_ESPERA_STACK_SEGUNDOS', 'E2E_ESPERA_INTERVALO_SEGUNDOS', 'E2E_INTEGRACION_FALLA'];
+const FUENTES_DE_VARIABLES_E2E = ['scripts/e2e/ejecutar.sh', 'apps/web/e2e/soporte.ts', 'apps/web/playwright.config.ts', 'apps/web/.env.example'];
+
+describe('esVariableSecretaDeE2e', () => {
+  it.each(['E2E_DOC_CONTRASENA', 'E2E_ADMIN_PASSWORD', 'E2E_API_TOKEN', 'E2E_CLAVE_X', 'E2E_X_SECRET'])('considera secreta %s', (nombre) => {
+    expect(esVariableSecretaDeE2e(nombre)).toBe(true);
+  });
+
+  it.each(E2E_NO_SECRETAS)('no considera secreta %s', (nombre) => {
+    expect(esVariableSecretaDeE2e(nombre)).toBe(false);
+  });
+
+  it('cubre toda variable E2E_* de los scripts, los E2E y .env.example o la declara no secreta de forma explícita', () => {
+    const nombres = new Set(
+      FUENTES_DE_VARIABLES_E2E.flatMap((archivo) => readFileSync(path.join(RAIZ, archivo), 'utf8').match(/E2E_[A-Z0-9_]+/g) ?? []),
+    );
+
+    expect(nombres.size).toBeGreaterThan(0);
+    const sinClasificar = [...nombres].filter((nombre) => !esVariableSecretaDeE2e(nombre) && !E2E_NO_SECRETAS.includes(nombre));
+    expect(sinClasificar).toEqual([]);
   });
 });

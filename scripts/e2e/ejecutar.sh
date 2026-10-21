@@ -65,7 +65,8 @@ docker run --rm --network "$red" \
 "${compose[@]}" --profile seed run --rm clinical-seed 2>&1 | tail -1 | cut -c1-80
 "${compose[@]}" up -d 2>&1 | tail -1
 espera="${E2E_ESPERA_STACK_SEGUNDOS:-180}"; intervalo="${E2E_ESPERA_INTERVALO_SEGUNDOS:-2}"
-web_responde() { [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/login)" = "200" ]; }
+url_web="${E2E_BASE_URL:-http://127.0.0.1:3000}"   # la misma que usa playwright.config.ts
+web_responde() { [ "$(curl -s -o /dev/null -w '%{http_code}' "$url_web/login")" = "200" ]; }
 transcurrido=0
 until web_responde; do
   if [ "$transcurrido" -ge "$espera" ]; then
@@ -84,4 +85,8 @@ cd "$raiz"
 if ! salida_build="$(npm run build --workspace @oncolens/clinical-language 2>&1)"; then printf '%s\n' "$salida_build" | tail -30 >&2; echo "ejecutar: falló el build de @oncolens/clinical-language" >&2; exit 1; fi
 cd apps/web
 npx playwright install chromium >/dev/null 2>&1
-E2E_DOC_CONTRASENA="$(cat "$secretos/seed_doctor_password")" npx playwright test ${args[@]+"${args[@]}"}
+E2E_DOC_CONTRASENA="$(cat "$secretos/seed_doctor_password")"
+# En GitHub Actions, enmascara el valor en los registros del job (única línea donde se escribe, como orden del runner).
+[ "$en_ci" = 0 ] || echo "::add-mask::$E2E_DOC_CONTRASENA"
+export E2E_DOC_CONTRASENA
+npx playwright test ${args[@]+"${args[@]}"}
