@@ -19,4 +19,4 @@
 
 ## 3. cierre
 
-- [ ] 3.1 `openspec validate l1d-199-usuarios-cli-rbac --strict` y tests de `clinical-api` en verde.
+- [x] 3.1 `openspec validate l1d-199-usuarios-cli-rbac --strict` y tests de `clinical-api` en verde.
