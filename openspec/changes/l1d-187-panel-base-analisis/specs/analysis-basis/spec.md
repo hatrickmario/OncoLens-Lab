@@ -33,7 +33,7 @@ El panel MUST ofrecer un botón que expande y colapsa el detalle de la Base, con
 #### Scenario: El detalle aclara por qué no se incluyeron fuentes [US-067 AC-2] [RN-21] (asumido: Gate 1 del S2)
 - **GIVEN** el panel de [US-067 AC-1] con `sourcesNotIncluded = ["NCCN","ESMO"]` y una limitación con `origin = estructural`
 - **WHEN** el doctor expande la Base
-- **THEN** cada fuente no incluida aparece con "sin licencia abierta; su contenido no se consultó"
+- **THEN** cada fuente no incluida aparece con "fuente no incluida; su contenido no se consultó" (sin afirmar la causa, Gate 2)
 - **AND** la limitación aparece rotulada "Limitación estructural"
 
 #### Scenario: El control de expansión funciona con teclado [US-067 AC-5] [NFR-12]

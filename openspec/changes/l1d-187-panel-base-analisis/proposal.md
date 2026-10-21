@@ -27,7 +27,7 @@ de corte del corpus y, cuando no hay evidencia, **qué se buscó**, sin leerlo t
   - **Control** `<button aria-expanded aria-controls="base-detalle">` "Ver detalle de la Base" ↔ "Ocultar detalle".
   - **Detalle:** "Datos del paciente usados" (`patientDataUsed[]` con `reviewStatus` en texto y el conflicto en
     texto), "Fuentes consultadas" (`sourcesConsulted`: fuentes, "[n] fragmentos recuperados · [m] sobre el umbral"),
-    "Fuentes no incluidas" con la aclaración "sin licencia abierta; su contenido no se consultó", y "Supuestos" /
+    "Fuentes no incluidas" con la aclaración "fuente no incluida; su contenido no se consultó" (sin afirmar la causa, Gate 2), y "Supuestos" /
     "Limitaciones" rotulados por `origin` si existen (`estructural` → "Limitación estructural").
   - **`sin_evidencia`:** el resumen añade "Qué se buscó: fuentes [lista] · filtros [lista o 'ninguno'] · 0
     fragmentos sobre el umbral".
