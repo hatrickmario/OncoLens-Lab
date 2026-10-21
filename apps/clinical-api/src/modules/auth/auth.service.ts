@@ -29,8 +29,11 @@ export interface AuthService {
     credenciales: { email: string; password: string },
     ip?: string,
   ): Promise<{ token: string }>;
-  /** `null` si el token no corresponde a una sesión vigente de un usuario activo. */
-  resolverSesion(token: string): Promise<SesionAutenticada | null>;
+  /**
+   * `null` si el token no corresponde a una sesión vigente de un usuario activo. Con una sesión vigente ESCRIBE
+   * `last_seen_at` (como mucho una vez cada `SESSION_TOUCH_SECONDS`); una sesión no vigente no se toca.
+   */
+  resolverYTocarSesion(token: string): Promise<SesionAutenticada | null>;
   /** Revoca la sesión del token presentado (cierre de sesión, US-044 AC-1). */
   cerrarSesion(token: string): Promise<void>;
 }
@@ -177,7 +180,7 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
       if (!creada) throw new CredencialesInvalidasError();
       return { token };
     },
-    async resolverSesion(token) {
+    async resolverYTocarSesion(token) {
       const sesion = await repo.buscarSesionPorTokenHash(hashDeToken(token));
       if (sesion === null || sesion.revoked || !cuentaHabilitada(sesion.accountStatus)) return null;
       const ahora = reloj.now();

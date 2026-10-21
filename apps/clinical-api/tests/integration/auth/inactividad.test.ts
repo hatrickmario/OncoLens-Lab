@@ -115,6 +115,7 @@ describe('expiración de la sesión por inactividad y por TTL', () => {
 
     esperarNoAutenticado(await pedirRutaProtegida(inactiva));
     esperarNoAutenticado(await pedirRutaProtegida(caducada));
+    expect(await ultimaActividad('Caducada')).toBe('2026-10-16T11:59:00.000Z');
     const viva = await pedirRutaProtegida(activa);
 
     expect(viva.status).toBe(200);

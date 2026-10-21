@@ -49,11 +49,11 @@ function servicioCon(sesion: SesionConUsuario | null) {
   return { service, consultas, toques };
 }
 
-describe('AuthService.resolverSesion', () => {
+describe('AuthService.resolverYTocarSesion', () => {
   it('devuelve userId, rol y permisos del rol cuando la sesión está vigente y la cuenta activa', async () => {
     const { service } = servicioCon(vigente);
 
-    expect(await service.resolverSesion('tokenConocido')).toEqual({
+    expect(await service.resolverYTocarSesion('tokenConocido')).toEqual({
       userId: 'usuario-1',
       rol: 'doctor',
       permisos: new Set(['clinical:read', 'ai_analysis:create']),
@@ -63,7 +63,7 @@ describe('AuthService.resolverSesion', () => {
   it('consulta por el hash del token y nunca por el token en claro', async () => {
     const { service, consultas } = servicioCon(vigente);
 
-    await service.resolverSesion('tokenConocido');
+    await service.resolverYTocarSesion('tokenConocido');
 
     expect(consultas).toEqual([hashDeToken('tokenConocido')]);
   });
@@ -71,21 +71,21 @@ describe('AuthService.resolverSesion', () => {
   it('devuelve null cuando el token no corresponde a ninguna sesión', async () => {
     const { service } = servicioCon(vigente);
 
-    expect(await service.resolverSesion('tokenDesconocido')).toBeNull();
+    expect(await service.resolverYTocarSesion('tokenDesconocido')).toBeNull();
   });
 
   it('devuelve null cuando expires_at es el instante actual o anterior', async () => {
     const enElLimite = servicioCon({ ...vigente, expiresAt: new Date(AHORA) });
     const pasada = servicioCon({ ...vigente, expiresAt: new Date('2026-10-16T11:59:59.999Z') });
 
-    expect(await enElLimite.service.resolverSesion('tokenConocido')).toBeNull();
-    expect(await pasada.service.resolverSesion('tokenConocido')).toBeNull();
+    expect(await enElLimite.service.resolverYTocarSesion('tokenConocido')).toBeNull();
+    expect(await pasada.service.resolverYTocarSesion('tokenConocido')).toBeNull();
   });
 
   it('devuelve null cuando la sesión está revocada', async () => {
     const { service } = servicioCon({ ...vigente, revoked: true });
 
-    expect(await service.resolverSesion('tokenConocido')).toBeNull();
+    expect(await service.resolverYTocarSesion('tokenConocido')).toBeNull();
   });
 
   it.each(['pendiente', 'desactivado', 'rechazado'] as const)(
@@ -93,7 +93,7 @@ describe('AuthService.resolverSesion', () => {
     async (accountStatus) => {
       const { service } = servicioCon({ ...vigente, accountStatus });
 
-      expect(await service.resolverSesion('tokenConocido')).toBeNull();
+      expect(await service.resolverYTocarSesion('tokenConocido')).toBeNull();
     },
   );
 });
@@ -118,7 +118,7 @@ describe('tokenDeCookie', () => {
   });
 });
 
-describe('AuthService.resolverSesion e inactividad', () => {
+describe('AuthService.resolverYTocarSesion e inactividad', () => {
   const haceMinutos = (minutos: number): SesionConUsuario => ({
     ...vigente,
     lastSeenAt: new Date(new Date(AHORA).getTime() - minutos * 60_000),
@@ -127,7 +127,7 @@ describe('AuthService.resolverSesion e inactividad', () => {
   it('toca la sesión con el instante del reloj cuando la última actividad supera SESSION_TOUCH_SECONDS', async () => {
     const { service, toques } = servicioCon(haceMinutos(29));
 
-    expect(await service.resolverSesion('tokenConocido')).not.toBeNull();
+    expect(await service.resolverYTocarSesion('tokenConocido')).not.toBeNull();
 
     expect(toques).toEqual([{ id: 'sesion-1', ahora: AHORA }]);
   });
@@ -135,7 +135,7 @@ describe('AuthService.resolverSesion e inactividad', () => {
   it('no toca la sesión cuando la última actividad es más reciente que SESSION_TOUCH_SECONDS', async () => {
     const { service, toques } = servicioCon(haceMinutos(0.5));
 
-    expect(await service.resolverSesion('tokenConocido')).not.toBeNull();
+    expect(await service.resolverYTocarSesion('tokenConocido')).not.toBeNull();
 
     expect(toques).toEqual([]);
   });
@@ -143,7 +143,7 @@ describe('AuthService.resolverSesion e inactividad', () => {
   it('devuelve null y no toca la sesión cuando lleva 31 minutos inactiva', async () => {
     const { service, toques } = servicioCon(haceMinutos(31));
 
-    expect(await service.resolverSesion('tokenConocido')).toBeNull();
+    expect(await service.resolverYTocarSesion('tokenConocido')).toBeNull();
 
     expect(toques).toEqual([]);
   });

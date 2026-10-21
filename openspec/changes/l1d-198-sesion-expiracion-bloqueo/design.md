@@ -3,14 +3,14 @@
 ## Contexto
 
 `apps/clinical-api/src/modules/auth/` (L1D-197) ya crea la sesión con `expires_at = ahora +
-SESSION_TTL_HOURS` y `resolverSesion()` rechaza sesiones revocadas, caducadas o de cuentas no
+SESSION_TTL_HOURS` y `resolverYTocarSesion()` rechaza sesiones revocadas, caducadas o de cuentas no
 activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.session` ya tiene
 `last_seen_at` y `revoked`. El contrato ya declara `POST /platform/auth/logout` (`204`, `401`,
 `x-permission: session:logout`). No hace falta migración.
 
 ## Decisiones
 
-- **D1 · Inactividad en el guard.** `resolverSesion()` rechaza si `ahora − last_seen_at ≥
+- **D1 · Inactividad en el guard.** `resolverYTocarSesion()` rechaza si `ahora − last_seen_at ≥
   SESSION_IDLE_MINUTES` (límite excluyente, como `expires_at`) y, si acepta, actualiza
   `last_seen_at = ahora`. Se extrae `sesionVigente(sesion, ahora, config)` (regla pura, unitaria).
   La actualización se hace solo si `ahora − last_seen_at ≥ SESSION_TOUCH_SECONDS` (por defecto 60)
