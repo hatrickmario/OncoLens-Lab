@@ -1,8 +1,16 @@
-"""Verificación del proveedor [S1 resp. 17]: valida el cuerpo de una respuesta contra el spec empaquetado.
+"""Verificación del proveedor [S1 resp. 17, US-214]: valida respuestas contra el spec empaquetado.
 
 El spec lo empaqueta `node scripts/contracts/bundle-json.mjs rag-orchestrator` (a stdout, sin escribir en
 el repositorio) y lo entrega el fixture de sesión de `conftest.py`. Es el equivalente en Pytest de
-`scripts/contracts/lib/responseValidator.mjs`; lo reemplaza `contracts:verify-provider` (US-214).
+`scripts/contracts/lib/responseValidator.mjs`. `verificar_respuesta` la llama el hook de
+`verificacion_proveedor.py` con cada respuesta; `assert_matches_spec` queda para cuerpos que no son una
+respuesta de rag-orchestrator (por ejemplo, un ejemplo de `contracts/examples/`).
+
+Diferencias de paridad con el verificador JS, declaradas (deuda: vectores dorados comunes en `contracts/`,
+ver design-principles L1D-264): aquí no se resuelve un código por rango `NXX` ni `default`, no se elige la
+plantilla más específica cuando dos coinciden y no se rechaza un cuerpo cuando el spec no declara contenido;
+los formatos se validan con el `FORMAT_CHECKER` de jsonschema (sin `date-time`, que exige una dependencia
+extra) y no con ajv-formats. Ningún mensaje imprime valores: solo método, plantilla, código y ruta JSON (RN-10).
 """
 
 import json
@@ -78,7 +86,10 @@ def _spec_configurado() -> dict[str, Any]:
 
 def _incumplimientos(spec: dict[str, Any], schema: dict[str, Any], cuerpo: Any) -> list[Any]:
     """Errores de `cuerpo` contra `schema` (con los componentes del spec), ordenados por ruta JSON."""
-    validador = Draft202012Validator({**schema, "components": spec["components"]})
+    validador = Draft202012Validator(
+        {**schema, "components": spec["components"]},
+        format_checker=Draft202012Validator.FORMAT_CHECKER,
+    )
     return sorted(validador.iter_errors(cuerpo), key=lambda e: list(e.absolute_path))
 
 
@@ -90,9 +101,7 @@ def assert_matches_spec(pointer: str, body: Any) -> None:
     spec = _spec_configurado()
     errores = _incumplimientos(spec, _schema_de(spec, pointer), body)
     if errores:
-        detalle = "\n".join(
-            f"  /{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errores
-        )
+        detalle = "\n".join(f"  {_describir_incumplimiento(e)}" for e in errores)
         raise AssertionError(f"la respuesta no cumple {PROVEEDOR}{pointer}:\n{detalle}")
 
 
@@ -125,6 +134,18 @@ def resolver_plantilla(spec: dict[str, Any], ruta: str) -> str | None:
     return None
 
 
+def _ruta_sin_valores(spec: dict[str, Any], ruta: str) -> str:
+    """Ruta sin query ni fragmento y con `{…}` en todo segmento que no sea un literal del spec (RN-10)."""
+    literales = {
+        segmento
+        for plantilla in spec["paths"]
+        for segmento in plantilla.split("/")
+        if segmento and not segmento.startswith("{")
+    }
+    segmentos = re.split(r"[?#]", ruta, maxsplit=1)[0].split("/")
+    return "/".join(s if s == "" or s in literales else "{…}" for s in segmentos)
+
+
 def _cabeceras_obligatorias(spec: dict[str, Any], respuesta: dict[str, Any]) -> list[str]:
     declaradas = _seguir_ref(spec, respuesta).get("headers", {})
     return [
@@ -152,8 +173,9 @@ def verificar_respuesta(metodo: str, ruta: str, status: int, cabeceras: Any, cue
     plantilla = resolver_plantilla(spec, ruta)
     verbo = metodo.lower()
     if plantilla is None or verbo not in spec["paths"][plantilla]:
+        sin_valores = _ruta_sin_valores(spec, ruta)
         raise AssertionError(
-            f"la respuesta no cumple {PROVEEDOR} {metodo.upper()} {ruta} {status}: operación no declarada"
+            f"la respuesta no cumple {PROVEEDOR} {metodo.upper()} {sin_valores} {status}: operación no declarada"
         )
     donde = f"{PROVEEDOR} {metodo.upper()} {plantilla} {status}"
     declaradas = spec["paths"][plantilla][verbo]["responses"]
