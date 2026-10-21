@@ -15,10 +15,10 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 (TDD estricto) Tests de aceptación en rojo (Pytest): "test_arranque_umbral_fuera_de_rango_no_queda_listo" `@pytest.mark.ac("US-037", 2)` (log con `RELEVANCE_THRESHOLD` y la regla, sin `1.7`), "test_logs_request_con_trace_id_todas_las_lineas_json_con_ese_trace_id" `@pytest.mark.ac("US-037", 4)` (`TestClient`, adapters falsos), "test_health_lista_config_keys_sin_valores" `@pytest.mark.ac("US-037", 1)`. Commit `test(L1D-167)`.
-- [ ] 3.2 (TDD estricto) Implementar `configurar_logging_json()` (D7, contextvar del `traceId` en `app/api/trace.py`), fallo de arranque con nombre de variable en `bootstrap.py` y `configKeys`/`serviceVersion` en `app/api/health.py`; `Settings` instanciada una vez e inyectada. Verificación: 3.1 en verde. Commit `feat(L1D-167)`.
-- [ ] 3.3 (test después) "test_settings_sin_llm_cloud_enabled_valor_efectivo_false" `@pytest.mark.ac("US-037", 6)` y test estático de "sin `os.environ` fuera de `app/config/`" [US-037 AC-1].
-- [ ] 3.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-167)`.
+- [x] 3.1 (TDD estricto) Tests de aceptación en rojo (Pytest): "test_arranque_umbral_fuera_de_rango_no_queda_listo" `@pytest.mark.ac("US-037", 2)` (log con `RELEVANCE_THRESHOLD` y la regla, sin `1.7`), "test_logs_request_con_trace_id_todas_las_lineas_json_con_ese_trace_id" `@pytest.mark.ac("US-037", 4)` (`TestClient`, adapters falsos), "test_health_lista_config_keys_sin_valores" `@pytest.mark.ac("US-037", 1)`. Commit `test(L1D-167)`.
+- [x] 3.2 (TDD estricto) Implementar `configurar_logging_json()` (D7, contextvar del `traceId` en `app/api/trace.py`), fallo de arranque con nombre de variable en `bootstrap.py` y `configKeys`/`serviceVersion` en `app/api/health.py`; `Settings` instanciada una vez e inyectada. Verificación: 3.1 en verde. Commit `feat(L1D-167)`.
+- [x] 3.3 (test después) "test_settings_sin_llm_cloud_enabled_valor_efectivo_false" `@pytest.mark.ac("US-037", 6)` y test estático de "sin `os.environ` fuera de `app/config/`" [US-037 AC-1].
+- [x] 3.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-167)`.
 
 ## 4. cierre
 
