@@ -73,6 +73,13 @@ async function empaquetarProveedor({ file, raw }, evidence, config) {
   return { empaquetado: bundle.parsed, ...verificarEmpaquetadoCerrado(file, bundle.parsed, raw, evidence.raw) };
 }
 
+/** La entrada del proveedor con su versión empaquetada; sin spec que leer, queda sin empaquetar y sin error propio. */
+async function entradaEmpaquetada(spec, evidence, config) {
+  if (!spec.raw) return { ...spec, bundled: null, externalRefs: [] };
+  const { empaquetado, externalRefs, error } = await empaquetarProveedor(spec, evidence, config);
+  return { ...spec, bundled: error ? null : empaquetado, externalRefs, ...(error ? { error } : {}) };
+}
+
 /**
  * Añade a cada spec su versión empaquetada en memoria con `bundleDocument` de Redocly (los schemas compartidos ya
  * definidos en su `components.schemas`); el archivo compartido se empaqueta a sí mismo. Si el empaquetado no queda
@@ -84,14 +91,7 @@ export async function bundleSpecs(specs) {
   const evidence = specs[EVIDENCE];
   const config = await cargarConfiguracion();
   const bundled = { [EVIDENCE]: { ...evidence, bundled: evidence.raw } };
-  for (const name of PROVIDERS) {
-    if (!specs[name].raw) {
-      bundled[name] = { ...specs[name], bundled: null, externalRefs: [] };
-      continue;
-    }
-    const { empaquetado, externalRefs, error } = await empaquetarProveedor(specs[name], evidence, config);
-    bundled[name] = { ...specs[name], bundled: error ? null : empaquetado, externalRefs, ...(error ? { error } : {}) };
-  }
+  for (const name of PROVIDERS) bundled[name] = await entradaEmpaquetada(specs[name], evidence, config);
   return bundled;
 }
 
