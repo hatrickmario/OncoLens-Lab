@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Contexto de construcción: la raíz del repositorio (infra/docker/docker-compose.yml usa context ../..).
-FROM python:3.13.16-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+FROM python:3.13.16-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f AS dependencias
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -9,6 +9,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 COPY apps/rag-orchestrator/requirements.txt ./requirements.txt
 RUN pip install --only-binary=:all: -r requirements.txt
+
+# Target de test (L1D-277, solo CI y local; el Compose de producción no lo usa): dependencias de desarrollo y el `node` que
+# el fixture de sesión de Pytest necesita para empaquetar el spec (scripts/contracts/bundle-json.mjs, misma versión que
+# .nvmrc). Sin código de la aplicación ni de los tests: el Compose de test los monta de solo lectura.
+FROM dependencias AS pruebas
+COPY apps/rag-orchestrator/requirements-dev.txt ./requirements-dev.txt
+RUN pip install --only-binary=:all: -r requirements-dev.txt
+COPY --from=node:22.23.3-slim@sha256:3ed98443660ff48413b5af19ecefce3b9d50845a901a43420d47cc63a9fddbe9 /usr/local/bin/node /usr/local/bin/node
+
+# Imagen de producción: es el ÚLTIMO stage, el que construye `docker compose build` sin `target`.
+FROM dependencias AS runtime
 COPY apps/rag-orchestrator/app ./app
 # Usuario sin privilegios; /app queda de root y sin escritura (el Compose añade read_only: true).
 RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin oncolens

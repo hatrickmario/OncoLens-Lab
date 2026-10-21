@@ -9,6 +9,74 @@ services:
       - pg_test_admin_password
       - pg_hba.test.conf
 
+  # Perfil `integracion-rag` (L1D-277, design D1/D1b): Pytest de rag-orchestrator (`-m servicios_reales`) DENTRO de
+  # corpus-db-net y ai-net, sin puertos publicados. Lo corre scripts/ci/integracion-rag-orchestrator.sh con `run`; el
+  # script levanta antes sus `depends_on` (postgres y milvus-standalone, que arrastra etcd y el MinIO de Milvus).
+  # Solo recibe los secretos del arnés de corpus: sin clinical-net, sin claves de identidad, sin clinical-minio.
+  rag-pruebas:
+    profiles: ["integracion-rag"]
+    build:
+      context: ../..
+      dockerfile: apps/rag-orchestrator/Dockerfile
+      target: pruebas
+    user: "${ONCOLENS_UID:-1000}:${ONCOLENS_GID:-1000}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=${RAG_TMPFS_SIZE:-256m}
+    working_dir: /repo/apps/rag-orchestrator
+    command:
+      - python
+      - -m
+      - pytest
+      - -m
+      - servicios_reales and not models
+      - -p
+      - resumen_por_ac
+      - -p
+      - no:cacheprovider
+      - --junitxml=/resultados/junit.xml
+      # Solo tests/integration: ahí viven todos los `servicios_reales` (lo comprueba infra/docker/__tests__); tests/evaluation
+      # importa dependencias de requirements-eval.txt que esta imagen no instala y no es de este job.
+      - tests/integration
+    environment:
+      TMPDIR: /tmp
+      APP_ENV: test
+      MODEL_PROVIDER: fake
+      PYTHONPATH: /repo/scripts/ci/pytest_plugins
+      RESUMEN_AC_ARCHIVO: /resultados/resumen-ac.json
+      POSTGRES_DB: ${POSTGRES_DB:-oncolens}
+      PG_TEST_DB_PREFIX: ${PG_TEST_DB_PREFIX:-oltest_}
+      TEST_DATABASE_URL: postgresql://oncolens_test_admin@postgres:5432/postgres?sslmode=require
+      PG_TEST_ADMIN_PASSWORD_FILE: /run/secrets/pg_test_admin_password
+      PG_RAG_CORPUS_PASSWORD_FILE: /run/secrets/pg_rag_corpus_password
+      PG_RAG_CORPUS_MIGRATOR_PASSWORD_FILE: /run/secrets/pg_rag_corpus_migrator_password
+      MILVUS_URI: http://milvus-standalone:19530
+    secrets:
+      - pg_test_admin_password
+      - pg_rag_corpus_password
+      - pg_rag_corpus_migrator_password
+    volumes:
+      # Copia de solo lectura de los archivos versionados que los tests leen (la prepara el script: sin secretos, .env
+      # ni datos locales) y los node_modules del `node` que empaqueta el spec. Los valores por defecto solo permiten
+      # que `config` resuelva el archivo sin el script; el script siempre los fija.
+      - type: bind
+        source: ${RAG_PRUEBAS_REPO_DIR:-/dev/null}
+        target: /repo
+        read_only: true
+      - type: bind
+        source: ${RAG_PRUEBAS_NODE_MODULES_DIR:-/dev/null}
+        target: /repo/node_modules
+        read_only: true
+      - type: bind
+        source: ${RAG_PRUEBAS_RESULTADOS_DIR:-/dev/null}
+        target: /resultados
+    networks: [corpus-db-net, ai-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+
 secrets:
   pg_test_admin_password:
     file: ${ONCOLENS_SECRETS_DIR:-./secrets}/pg_test_admin_password
