@@ -119,6 +119,57 @@ function snapshotSinSeudonimo(
   return snapshot;
 }
 
+type CamposBase = Pick<
+  RegistroDeAnalisis,
+  | 'id'
+  | 'patientId'
+  | 'episodeId'
+  | 'requestedBy'
+  | 'analysisType'
+  | 'traceId'
+  | 'questionTemplateId'
+  | 'caseSummary'
+  | 'analysisBasis'
+  | 'missingCriticalData'
+  | 'continuedWithWarning'
+  | 'priorAnalysesUsed'
+  | 'rerunOfAnalysisId'
+  | 'createdAt'
+>;
+
+/** Lo que comparten el registro con IA y el de `tipo_no_habilitado`: identidad, trazabilidad y los vacíos del S2. */
+function registroBase(
+  entrada: Pick<
+    EntradaDelRegistro,
+    | 'id'
+    | 'patientId'
+    | 'episodeId'
+    | 'userId'
+    | 'traceId'
+    | 'questionTemplateId'
+    | 'base'
+    | 'continueWithWarning'
+    | 'creadoEn'
+  >,
+): CamposBase {
+  return {
+    id: entrada.id,
+    patientId: entrada.patientId,
+    episodeId: entrada.episodeId,
+    requestedBy: entrada.userId,
+    analysisType: 'analisis_evidencia',
+    traceId: entrada.traceId,
+    questionTemplateId: entrada.questionTemplateId,
+    caseSummary: null,
+    analysisBasis: entrada.base,
+    missingCriticalData: [],
+    continuedWithWarning: entrada.continueWithWarning,
+    priorAnalysesUsed: [],
+    rerunOfAnalysisId: null,
+    createdAt: entrada.creadoEn,
+  };
+}
+
 /**
  * Función pura: arma el `AIAnalysisRecord` (data-model.md §4.3) con lo enviado a Backend 2, lo recibido y la Base del
  * análisis. Reloj e identificador llegan inyectados.
@@ -128,14 +179,8 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
   const snapshot = snapshotSinSeudonimo(request);
   const { meta } = respuesta;
   return {
-    id: entrada.id,
-    patientId: entrada.patientId,
-    episodeId: entrada.episodeId,
-    requestedBy: entrada.userId,
-    analysisType: 'analisis_evidencia',
-    traceId: entrada.traceId,
+    ...registroBase(entrada),
     queryText: request.query,
-    questionTemplateId: entrada.questionTemplateId,
     queryLanguage: meta.queryLanguage,
     responseLanguage: meta.responseLanguage,
     sourcesSelected: request.sourcesSelected,
@@ -144,19 +189,13 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
     applicability: respuesta.applicability,
     evidenceOptions: respuesta.evidenceOptions,
     discardedOptions: respuesta.discardedOptions,
-    caseSummary: null,
-    analysisBasis: entrada.base,
     agentSteps: respuesta.agentSteps,
     omittedClaims: respuesta.omittedClaims,
-    missingCriticalData: [],
-    continuedWithWarning: entrada.continueWithWarning,
-    priorAnalysesUsed: [],
     patientDataLinks: enlacesDeDatos(entrada.dataRefs),
     topRelevanceScore: entrada.topRelevanceScore,
     status: respuesta.status,
     clinicalContextSnapshot: snapshot,
     contextFingerprint: huellaDelContexto(snapshot),
-    rerunOfAnalysisId: null,
     dataClassification: request.dataClassification,
     llmProvider: meta.llmProvider,
     llmModel: meta.llmModel,
@@ -167,7 +206,6 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
     corpusRelease: meta.corpusRelease,
     catalogVersion: meta.catalogVersion,
     retrievalParams: meta.retrievalParams,
-    createdAt: entrada.creadoEn,
   };
 }
 
@@ -202,14 +240,8 @@ export function armarRegistroTipoNoHabilitado(
   entrada: EntradaDelRegistroSinIA,
 ): RegistroDeAnalisis {
   return {
-    id: entrada.id,
-    patientId: entrada.patientId,
-    episodeId: entrada.episodeId,
-    requestedBy: entrada.userId,
-    analysisType: 'analisis_evidencia',
-    traceId: entrada.traceId,
+    ...registroBase(entrada),
     queryText: entrada.query,
-    questionTemplateId: entrada.questionTemplateId,
     queryLanguage: 'es',
     responseLanguage: 'es',
     sourcesSelected: entrada.sourcesSelected,
@@ -218,19 +250,13 @@ export function armarRegistroTipoNoHabilitado(
     applicability: [],
     evidenceOptions: [],
     discardedOptions: [],
-    caseSummary: null,
-    analysisBasis: entrada.base,
     agentSteps: [],
     omittedClaims: 0,
-    missingCriticalData: [],
-    continuedWithWarning: entrada.continueWithWarning,
-    priorAnalysesUsed: [],
     patientDataLinks: [],
     topRelevanceScore: null,
     status: 'tipo_no_habilitado',
     clinicalContextSnapshot: entrada.contextoVacio,
     contextFingerprint: huellaDelContexto(entrada.contextoVacio),
-    rerunOfAnalysisId: null,
     dataClassification: entrada.dataClassification,
     llmProvider: null,
     llmModel: null,
@@ -241,6 +267,5 @@ export function armarRegistroTipoNoHabilitado(
     corpusRelease: null,
     catalogVersion: entrada.catalogVersion,
     retrievalParams: null,
-    createdAt: entrada.creadoEn,
   };
 }
