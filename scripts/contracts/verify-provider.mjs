@@ -22,22 +22,19 @@ import { CLINICAL_API, PROVIDERS, RAG_ORCHESTRATOR } from './lib/specs.mjs';
 
 const SEGUNDOS_POR_DEFECTO = 600;
 
-/** Suites de cada proveedor y cómo se cuentan sus respuestas verificadas. */
+/** Suites de cada proveedor y cómo se cuentan las respuestas verificadas de CADA una (una suite apagada no la tapa otra). */
 function suitesDe(proveedor, python) {
+  const contarReporte = ({ archivoDeReporte }) => contarLineas(archivoDeReporte, CLINICAL_API);
   const suites = {
-    [CLINICAL_API]: {
-      comandos: [
-        { comando: 'npm', args: ['run', 'test', '-w', 'apps/clinical-api'] },
-        { comando: 'bash', args: ['scripts/test-integration.sh'] },
-      ],
-      // El cliente de test deja una línea por respuesta verificada en CONTRACT_VERIFY_REPORT.
-      contar: ({ archivoDeReporte }) => contarLineas(archivoDeReporte, CLINICAL_API),
-    },
-    [RAG_ORCHESTRATOR]: {
-      comandos: [{ comando: python, args: ['-m', 'pytest'], cwd: 'apps/rag-orchestrator' }],
+    [CLINICAL_API]: [
+      // El cliente de test deja una línea por respuesta verificada en el CONTRACT_VERIFY_REPORT propio de cada suite.
+      { comando: 'npm', args: ['run', 'test', '-w', 'apps/clinical-api'], contar: contarReporte },
+      { comando: 'bash', args: ['scripts/test-integration.sh'], contar: contarReporte },
+    ],
+    [RAG_ORCHESTRATOR]: [
       // conftest.py imprime «verificación del proveedor: N respuestas verificadas contra rag-orchestrator».
-      contar: ({ salida }) => contarEnSalida(salida, RAG_ORCHESTRATOR),
-    },
+      { comando: python, args: ['-m', 'pytest'], cwd: 'apps/rag-orchestrator', contar: ({ salida }) => contarEnSalida(salida, RAG_ORCHESTRATOR) },
+    ],
   };
   return suites[proveedor];
 }
@@ -55,8 +52,14 @@ function contarEnSalida(salida, proveedor) {
   return [...salida.matchAll(patron)].reduce((total, coincidencia) => total + Number(coincidencia[1]), 0);
 }
 
-/** Estricto por defecto; `CONTRACT_VERIFY=lax` solo relaja la exigencia de al menos una respuesta verificada (uso local). */
-export const esEstricto = (valor) => valor !== 'lax';
+/**
+ * Estricto por defecto; `CONTRACT_VERIFY=lax` solo relaja la exigencia de al menos una respuesta verificada por suite (uso
+ * local) y se rechaza en la CI (`CI` definido): allí una verificación apagada no puede dar verde.
+ */
+export function esEstricto(valor, ci = undefined) {
+  if (valor === 'lax' && ci !== undefined) throw new Error('CONTRACT_VERIFY=lax no se admite en la CI (variable CI definida)');
+  return valor !== 'lax';
+}
 
 /** Argumentos de la línea de comandos: los proveedores pedidos (todos si no se pide ninguno). Lanza ante un argumento desconocido. */
 export function leerArgumentos(argv) {
@@ -71,9 +74,12 @@ export function leerArgumentos(argv) {
   return proveedores.length > 0 ? proveedores : [...PROVIDERS];
 }
 
+const nombreDeSuite = ({ comando, args }) => [comando, ...args].join(' ');
+
 /**
- * Ejecuta las suites y devuelve un resumen por proveedor. `ejecutar(comando, opciones)` devuelve `{ codigo, salida }` y lo
- * inyecta quien llama (el CLI usa procesos reales; los tests, uno falso).
+ * Ejecuta las suites y devuelve un resumen por proveedor. `ejecutar(suite, { archivoDeReporte })` devuelve `{ codigo, salida }`
+ * y lo inyecta quien llama (el CLI usa procesos reales; los tests, uno falso). Cada suite tiene su propio archivo de reporte y
+ * en modo estricto debe verificar más de 0 respuestas por sí misma.
  * @returns {Promise<{ proveedor: string, verificadas: number, errores: string[] }[]>}
  */
 export async function verificarProveedores({ proveedores, ejecutar, archivoDeReporte, estricto, python = 'python' }) {
@@ -82,29 +88,50 @@ export async function verificarProveedores({ proveedores, ejecutar, archivoDeRep
     const suites = suitesDe(proveedor, python);
     if (!suites) throw new Error(`el proveedor ${proveedor} no tiene suites de verificación definidas`);
     const errores = [];
-    let salida = '';
-    for (const suite of suites.comandos) {
-      const resultado = await ejecutar(suite);
-      salida += resultado.salida;
-      if (resultado.codigo !== 0) errores.push(`${suite.comando} ${suite.args.join(' ')}: ${resultado.motivo ?? `terminó con código ${resultado.codigo}`}`);
+    let verificadas = 0;
+    for (const [indice, suite] of suites.entries()) {
+      const propio = `${archivoDeReporte}.${proveedor}.${indice}`;
+      appendFileSync(propio, '');
+      const resultado = await ejecutar(suite, { archivoDeReporte: propio });
+      if (resultado.codigo !== 0) errores.push(`${nombreDeSuite(suite)}: ${resultado.motivo ?? `terminó con código ${resultado.codigo}`}`);
+      const deLaSuite = suite.contar({ archivoDeReporte: propio, salida: resultado.salida });
+      verificadas += deLaSuite;
+      if (estricto && deLaSuite === 0) errores.push(`${nombreDeSuite(suite)}: no verificó ninguna respuesta (la verificación del proveedor no estaba activa en esa suite)`);
     }
-    const verificadas = suites.contar({ archivoDeReporte, salida });
-    if (estricto && verificadas === 0) errores.push('no se verificó ninguna respuesta: la verificación del proveedor no estaba activa');
     resumen.push({ proveedor, verificadas, errores });
   }
   return resumen;
 }
 
 /** Ejecuta un comando como proceso hijo, reenvía su salida y lo mata al pasar `segundos`. */
-function ejecutarProceso({ comando, args, cwd }, { raiz, entorno, segundos }) {
+function ejecutarProceso({ comando, args, cwd }, { raiz, entorno, segundos }, { archivoDeReporte }) {
   return new Promise((resolver) => {
-    const hijo = spawn(comando, args, { cwd: path.join(raiz, cwd ?? '.'), env: entorno, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
+    const hijo = spawn(comando, args, { cwd: path.join(raiz, cwd ?? '.'), env: { ...entorno, CONTRACT_VERIFY_REPORT: archivoDeReporte }, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
     let salida = '';
     let vencido = false;
+    const terminarGrupo = (senal) => {
+      // Todo el grupo de procesos: los nietos (vitest, pytest) heredan el pipe y mantendrian abierto el cierre.
+      try {
+        process.kill(-hijo.pid, senal);
+      } catch {
+        // El grupo ya terminó.
+      }
+    };
+    const reenviar = (senal) => () => {
+      terminarGrupo(senal);
+      process.exit(130);
+    };
+    const alInterrumpir = reenviar('SIGINT');
+    const alTerminar = reenviar('SIGTERM');
+    process.once('SIGINT', alInterrumpir);
+    process.once('SIGTERM', alTerminar);
+    const soltarSenales = () => {
+      process.off('SIGINT', alInterrumpir);
+      process.off('SIGTERM', alTerminar);
+    };
     const temporizador = setTimeout(() => {
       vencido = true;
-      // Todo el grupo de procesos: los nietos (vitest, pytest) heredan el pipe y mantendrian abierto el cierre.
-      process.kill(-hijo.pid, 'SIGKILL');
+      terminarGrupo('SIGKILL');
     }, segundos * 1000);
     hijo.stdout.on('data', (trozo) => {
       salida += trozo;
@@ -112,10 +139,12 @@ function ejecutarProceso({ comando, args, cwd }, { raiz, entorno, segundos }) {
     });
     hijo.on('error', (error) => {
       clearTimeout(temporizador);
+      soltarSenales();
       resolver({ codigo: 127, salida, motivo: `no se pudo ejecutar (${error.code})` });
     });
     hijo.on('close', (codigo) => {
       clearTimeout(temporizador);
+      soltarSenales();
       resolver({ codigo: vencido ? 124 : (codigo ?? 1), salida, motivo: vencido ? `superó el tiempo máximo de ${segundos} s` : undefined });
     });
   });
@@ -125,17 +154,17 @@ async function main() {
   const proveedores = leerArgumentos(process.argv.slice(2));
   const segundos = Number(process.env.VERIFY_PROVIDER_SEGUNDOS ?? SEGUNDOS_POR_DEFECTO);
   if (!Number.isFinite(segundos) || segundos <= 0) throw new Error('VERIFY_PROVIDER_SEGUNDOS debe ser un número de segundos mayor que 0');
+  const estricto = esEstricto(process.env.CONTRACT_VERIFY, process.env.CI);
   const carpeta = mkdtempSync(path.join(tmpdir(), 'verify-provider-'));
-  const archivoDeReporte = path.join(carpeta, 'respuestas.txt');
-  appendFileSync(archivoDeReporte, '');
-  const entorno = { ...process.env, CONTRACT_VERIFY: esEstricto(process.env.CONTRACT_VERIFY) ? 'strict' : 'lax', CONTRACT_VERIFY_REPORT: archivoDeReporte };
+  const archivoDeReporte = path.join(carpeta, 'respuestas');
+  const entorno = { ...process.env, CONTRACT_VERIFY: estricto ? 'strict' : 'lax' };
   try {
     const resumen = await verificarProveedores({
       proveedores,
       archivoDeReporte,
-      estricto: entorno.CONTRACT_VERIFY === 'strict',
+      estricto,
       python: process.env.VERIFY_PROVIDER_PYTHON ?? 'python',
-      ejecutar: (suite) => ejecutarProceso(suite, { raiz: DEFAULT_ROOT, entorno, segundos }),
+      ejecutar: (suite, propio) => ejecutarProceso(suite, { raiz: DEFAULT_ROOT, entorno, segundos }, propio),
     });
     for (const { proveedor, verificadas } of resumen) console.log(`contracts:verify-provider — ${proveedor}: ${verificadas} respuestas verificadas`);
     const fallos = resumen.flatMap(({ proveedor, errores }) => errores.map((error) => `contracts:verify-provider — ${proveedor}: ${error}`));

@@ -45,6 +45,14 @@ function rutaSinValores(spec, ruta) {
     .join('/');
 }
 
+/** ¿Alguna operación del spec de `proveedor` (con cualquier método) corresponde a esta ruta concreta? */
+export function rutaExisteEnElSpec(proveedor, ruta) {
+  const spec = getBundledSpecs()[proveedor]?.bundled;
+  if (!spec) throw new Error(`proveedor sin spec empaquetado: ${proveedor}`);
+  const metodos = new Set(listOperations(spec).map((entry) => entry.method));
+  return [...metodos].some((metodo) => resolverOperacion(spec, metodo, ruta) !== undefined);
+}
+
 /** La respuesta que el spec declara para `status`: código exacto, rango `NXX` o `default`. */
 function respuestaDeclarada(spec, operacion, status) {
   const declaradas = Object.keys(operacion.operation.responses ?? {});

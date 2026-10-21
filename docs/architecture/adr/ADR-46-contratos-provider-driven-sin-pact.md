@@ -18,7 +18,7 @@ Hechos: un solo equipo; dos proveedores (`clinical-api`, `rag-orchestrator`) y c
 ## Factores de decisión
 
 - Sin infraestructura nueva (un *broker* es un servicio más que operar con 32 GB y un equipo).
-- Un solo validador, el mismo que ya usa `contracts:check` (Ajv2020), para que "el ejemplo cumple" y "la respuesta cumple" signifiquen lo mismo.
+- Mismo criterio en ambos proveedores: dos implementaciones (Ajv2020 en `scripts/contracts`, que es también el de `contracts:check`, y `jsonschema` en `rag-orchestrator`) que deben coincidir en los mismos vectores de prueba (los ejemplos de `contracts/examples/` y sus variantes inválidas), para que "el ejemplo cumple" y "la respuesta cumple" signifiquen lo mismo.
 - Los errores también son contrato (US-214 AC-3) y no se imprime nunca el valor de un campo (RN-10, RN-14).
 - La verificación debe ser automática y fallar cerrada (spec ilegible, operación no resuelta o código no declarado son error).
 
@@ -35,6 +35,7 @@ Opción elegida: **1**. Cada proveedor verifica sus propias respuestas en sus te
 - `clinical-api`: `clienteVerificado(app)` (`apps/clinical-api/tests/support/verificarProveedor.ts`) envuelve `supertest` y valida cada respuesta con `verificarRespuesta()` de `scripts/contracts` (código declarado, cabeceras `required` y cuerpo). Las rutas de mentira de un test se declaran una a una.
 - `rag-orchestrator`: un *hook* de respuesta del `TestClient` (`tests/conftest.py`) con el mismo criterio sobre el spec empaquetado.
 - `npm run contracts:verify-provider` ejecuta ambas suites con `CONTRACT_VERIFY=strict` (falla si un proveedor no verificó ninguna respuesta); corre en los jobs `integration` (necesita PostgreSQL) y `build-test`, ambos en `ci-ok`.
+- `supertest` solo se importa desde `apps/clinical-api/tests/support/` (regla `no-restricted-imports` de ESLint): un test nuevo no puede saltarse `clienteVerificado`.
 - Los consumidores usan solo los clientes generados; `contracts:check` rechaza un `fetch` o cliente HTTP directo fuera de los transportes declarados.
 - Los cambios incompatibles los detecta `contracts:breaking` (`oasdiff`); solo pasan si están declarados como excepción E-n (ADR-26).
 - El Zod generado se completa con refinamientos generados (`refinamientos.gen.ts`) de lo que `@hey-api` no traduce (`if/then`, `anyOf`, `allOf` con `unevaluatedProperties: false`), y falla cerrado ante una construcción desconocida.
@@ -43,7 +44,7 @@ Opción elegida: **1**. Cada proveedor verifica sus propias respuestas en sus te
 
 - **Positivas:** cero infraestructura nueva; un solo intérprete del spec; un campo no declarado, un `topRelevanceScore: 0.0` en `sin_evidencia` o un `code` de error fuera del enum rompen el test del proveedor, no al consumidor.
 - **Negativas:** el proveedor no sabe qué usa cada consumidor (no hay contratos por consumidor); un cambio compatible pero no usado nunca se detecta como innecesario. Aceptable con dos consumidores conocidos. La verificación de las respuestas del BFF (`apps/web/app/api`) sigue con el *helper* en sus tests (fuera de alcance).
-- **Configuración (RN-22):** `VERIFY_PROVIDER_SEGUNDOS` (tope por suite) y `VERIFY_PROVIDER_PYTHON` (intérprete); `CONTRACT_VERIFY=strict` lo fija el script.
+- **Configuración (RN-22):** `VERIFY_PROVIDER_SEGUNDOS` (tope por suite) y `VERIFY_PROVIDER_PYTHON` (intérprete); `CONTRACT_VERIFY` es estricto por defecto y `lax` solo se admite en local: `contracts:verify-provider` lo rechaza con código 2 si `CI` está definido. En estricto, cada suite (no el proveedor en conjunto) debe verificar más de 0 respuestas.
 
 ### Confirmación
 

@@ -7,12 +7,15 @@ import { loadContext } from '../../io.mjs';
 import { TRANSPORTES_DECLARADOS, assertConsumersUseGeneratedClients } from '../../rules/assertConsumersUseGeneratedClients.mjs';
 import { ROOT } from '../helpers/parches.mjs';
 
-const ARCHIVO_TRANSPORTE = TRANSPORTES_DECLARADOS[0].file;
-const LLAMADA_DECLARADA = TRANSPORTES_DECLARADOS[0].llamada;
+const TRANSPORTE_WEB = TRANSPORTES_DECLARADOS.find((transporte) => transporte.file.startsWith('apps/web/'));
+const ARCHIVO_TRANSPORTE = TRANSPORTE_WEB.file;
+const LLAMADA_DECLARADA = TRANSPORTE_WEB.llamada;
+/** Cada transporte declarado con su llamada intacta: la base sobre la que cada caso añade o pisa archivos. */
+const TRANSPORTES_INTACTOS = Object.fromEntries(TRANSPORTES_DECLARADOS.map((transporte) => [transporte.file, `return ${transporte.llamada}url, init);`]));
 
 /** Hallazgos de la regla sobre el código de consumidores dado (más el transporte declarado intacto, salvo que se pise). */
 const hallazgosDe = (consumers) =>
-  assertConsumersUseGeneratedClients(null, null, { consumers: { [ARCHIVO_TRANSPORTE]: `return ${LLAMADA_DECLARADA}url, init);`, ...consumers } });
+  assertConsumersUseGeneratedClients(null, null, { consumers: { ...TRANSPORTES_INTACTOS, ...consumers } });
 
 describe('assertConsumersUseGeneratedClients · clientes generados como única vía [US-214 AC-1]', () => {
   it('no reporta nada sobre el código real y lo encuentra: la regla no pasa en vacío [US-214 AC-1]', async () => {
@@ -105,7 +108,7 @@ describe('contracts:check con un fetch directo en clinical-api', () => {
   it('devuelve un hallazgo que nombra el archivo y la línea cuando un archivo de clinical-api llama con fetch a rag-orchestrator [US-214 AC-1]', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'oncolens-consumidores-'));
     temporales.push(dir);
-    for (const entrada of ['apps/clinical-api/openapi.yaml', 'apps/rag-orchestrator/openapi.yaml', 'contracts', 'docs/architecture/data-model.md', 'readme.md', ARCHIVO_TRANSPORTE]) {
+    for (const entrada of ['apps/clinical-api/openapi.yaml', 'apps/rag-orchestrator/openapi.yaml', 'contracts', 'docs/architecture/data-model.md', 'readme.md', ...TRANSPORTES_DECLARADOS.map((transporte) => transporte.file)]) {
       await mkdir(path.dirname(path.join(dir, entrada)), { recursive: true });
       await cp(path.join(ROOT, entrada), path.join(dir, entrada), { recursive: true });
     }

@@ -138,7 +138,7 @@ export function generarRefinamientos(spec, encabezado) {
     return hijos(nodo).some((hijo) => llevaRefinamientos(hijo, donde, enCurso));
   }
   // Un anyOf que mezcla restricciones sueltas y schemas completos cuenta como propio para que `comprobaciones` lo rechace.
-  const propios = (nodo) => nodo.if !== undefined || (Array.isArray(nodo.anyOf) && esAnyOfDeRestricciones(nodo.anyOf) !== false) || nodo.unevaluatedProperties === false;
+  const propios = (nodo) => nodo.if !== undefined || (Array.isArray(nodo.anyOf) && esAnyOfDeRestricciones(nodo.anyOf) !== false) || nodo.unevaluatedProperties !== undefined;
   const hijos = (nodo) => [
     ...Object.values(nodo.properties ?? {}),
     ...(nodo.items ? [nodo.items] : []),
@@ -229,7 +229,7 @@ export function generarRefinamientos(spec, encabezado) {
     const permitidas = [...propiedadesEvaluadas(nodo, donde)].sort();
     return [
       `const permitidas = new Set<string>(${literal(permitidas)});`,
-      `for (const clave of Object.keys(${o})) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...${ruta}, clave], message: ${literal(`${donde}: propiedad no evaluada por el schema`)} });`,
+      `for (const clave of Object.keys(${o})) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...${ruta}, nombreDeCampo(clave)], message: ${literal(`${donde}: propiedad no evaluada por el schema`)} });`,
     ];
   }
 
@@ -261,7 +261,7 @@ function ensamblarArchivo({ encabezado, refinados, funciones }) {
     encabezado,
     '',
     "import * as z from 'zod';",
-    refinados.length > 0 ? `import { ${refinados.map((nombre) => `z${nombre}`).join(', ')} } from './zod.gen';` : '',
+    refinados.length > 0 ? `import { ${refinados.map((nombre) => `z${nombre}`).join(', ')} } from './zod.gen.js';` : '',
     '',
     AYUDAS,
     ...funciones,
@@ -300,6 +300,8 @@ type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?:
 
 const esObjeto = (valor: unknown): valor is Record<string, unknown> => typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 const tiene = (objeto: Record<string, unknown>, clave: string): boolean => Object.hasOwn(objeto, clave);
+// Una propiedad desconocida puede ser un dato: solo se nombra en la ruta si parece un identificador de campo (RN-10).
+const nombreDeCampo = (clave: string): string => (/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(clave) ? clave : '{propiedad no evaluada}');
 const esUnoDe = (valor: unknown, posibles: readonly unknown[]): boolean => posibles.includes(valor);
 const esTipo = (valor: unknown, tipo: string): boolean => {
   if (tipo === 'null') return valor === null;

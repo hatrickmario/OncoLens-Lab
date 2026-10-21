@@ -24,7 +24,9 @@ describe('excepciones del cliente verificado', () => {
     const app = proveedorQueResponde(200, {});
 
     expect(() =>
-      clienteVerificado(app, { respuestasAjenasAlContrato: [{ ruta: '/platform/evidence-analyses' }] }),
+      clienteVerificado(app, {
+        respuestasAjenasAlContrato: [{ ruta: '/platform/evidence-analyses' }],
+      }),
     ).toThrow(/existe en el contrato.*status/);
   });
 
@@ -33,7 +35,10 @@ describe('excepciones del cliente verificado', () => {
 
     expect(() =>
       clienteVerificado(app, {
-        respuestasAjenasAlContrato: [{ ruta: '/platform/de-mentira' }, { ruta: '/platform/evidence-analyses', status: 200 }],
+        respuestasAjenasAlContrato: [
+          { ruta: '/platform/de-mentira' },
+          { ruta: '/platform/evidence-analyses', status: 200 },
+        ],
       }),
     ).not.toThrow();
   });

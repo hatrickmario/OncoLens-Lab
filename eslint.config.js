@@ -73,6 +73,25 @@ export default defineConfig(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
+  {
+    // US-214 AC-1: la verificación del proveedor es automática solo si los tests pasan por `clienteVerificado`.
+    files: ['apps/clinical-api/**/*.ts'],
+    ignores: ['apps/clinical-api/tests/support/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'supertest',
+              message:
+                'Usa clienteVerificado (apps/clinical-api/tests/support/verificarProveedor.ts): valida cada respuesta contra openapi.yaml (US-214).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // SIEMPRE el último: desactiva toda regla de estilo que choque con Prettier [US-215 AC-5].
   prettier,
 );

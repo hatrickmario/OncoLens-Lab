@@ -1,13 +1,15 @@
 // GENERADO desde apps/clinical-api/openapi.yaml — no editar a mano (npm run contracts:generate)
 
 import * as z from 'zod';
-import { zApplicabilityCriterion, zCitedSource, zEvidenceAnalysis, zEvidenceAnalysisRequest, zEvidenceOption, zFollowUpCitedSource, zFollowUpTurn, zPatientSearchRequest, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen';
+import { zApplicabilityCriterion, zCitedSource, zEvidenceAnalysis, zEvidenceAnalysisRequest, zEvidenceOption, zFollowUpCitedSource, zFollowUpTurn, zPatientSearchRequest, zSourceApplicability, zSupportedClaim, zSynthesis } from './zod.gen.js';
 
 type Ruta = readonly PropertyKey[];
 type Contexto = { addIssue(incidencia: { code: 'custom'; message: string; path?: PropertyKey[] }): void };
 
 const esObjeto = (valor: unknown): valor is Record<string, unknown> => typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 const tiene = (objeto: Record<string, unknown>, clave: string): boolean => Object.hasOwn(objeto, clave);
+// Una propiedad desconocida puede ser un dato: solo se nombra en la ruta si parece un identificador de campo (RN-10).
+const nombreDeCampo = (clave: string): string => (/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(clave) ? clave : '{propiedad no evaluada}');
 const esUnoDe = (valor: unknown, posibles: readonly unknown[]): boolean => posibles.includes(valor);
 const esTipo = (valor: unknown, tipo: string): boolean => {
   if (tipo === 'null') return valor === null;
@@ -34,7 +36,7 @@ function verificarCitedSource(valor: unknown, ctx: Contexto, ruta: Ruta): void {
   if (esObjeto(valor)) {
     const objeto0 = valor;
     const permitidas = new Set<string>(["authors","chunkId","chunkTextSnapshot","externalId","guidelineVersion","language","lastUpdatedAt","licenseClass","newerVersionAvailable","possiblyOutdated","primaryEndpoint","publishedAt","sampleSize","sourceName","sourceType","sourceUrl","studyDesign","title","trialPhase"]);
-    for (const clave of Object.keys(objeto0)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...ruta, clave], message: "CitedSource: propiedad no evaluada por el schema" });
+    for (const clave of Object.keys(objeto0)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...ruta, nombreDeCampo(clave)], message: "CitedSource: propiedad no evaluada por el schema" });
   }
 }
 function verificarEvidenceAnalysis(valor: unknown, ctx: Contexto, ruta: Ruta): void {
@@ -97,7 +99,7 @@ function verificarFollowUpCitedSource(valor: unknown, ctx: Contexto, ruta: Ruta)
   if (esObjeto(valor)) {
     const objeto0 = valor;
     const permitidas = new Set<string>(["authors","chunkId","chunkTextSnapshot","externalId","guidelineVersion","isNewSource","language","lastUpdatedAt","licenseClass","newerVersionAvailable","possiblyOutdated","primaryEndpoint","publishedAt","sampleSize","sourceName","sourceType","sourceUrl","studyDesign","title","trialPhase"]);
-    for (const clave of Object.keys(objeto0)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...ruta, clave], message: "FollowUpCitedSource: propiedad no evaluada por el schema" });
+    for (const clave of Object.keys(objeto0)) if (!permitidas.has(clave)) ctx.addIssue({ code: 'custom', path: [...ruta, nombreDeCampo(clave)], message: "FollowUpCitedSource: propiedad no evaluada por el schema" });
   }
 }
 function verificarFollowUpTurn(valor: unknown, ctx: Contexto, ruta: Ruta): void {

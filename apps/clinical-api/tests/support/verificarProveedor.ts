@@ -1,7 +1,10 @@
 import { appendFileSync } from 'node:fs';
 import type { Express } from 'express';
 import request, { type Response, type Test } from 'supertest';
-import { verificarRespuesta } from '../../../../scripts/contracts/lib/responseValidator.mjs';
+import {
+  rutaExisteEnElSpec,
+  verificarRespuesta,
+} from '../../../../scripts/contracts/lib/responseValidator.mjs';
 
 /**
  * Verificación del proveedor (US-214 AC-1…AC-3, design D1): envuelve `supertest(app)` y valida CADA respuesta contra
@@ -29,6 +32,9 @@ export interface OpcionesDelClienteVerificado {
    */
   readonly respuestasAjenasAlContrato?: readonly RespuestaAjenaAlContrato[];
 }
+
+/** El tipo de la respuesta de un test: lo reexporta el cliente verificado para que los tests no importen supertest. */
+export type { Response } from 'supertest';
 
 export type ClienteVerificado = Record<Metodo, (ruta: string) => Test>;
 
@@ -76,12 +82,22 @@ function verificadorDe(
   };
 }
 
+/** Una ruta que SÍ existe en el contrato no puede excusarse entera: hay que acotarla al código de mentira (`status`). */
+function exigirExcepcionesAcotadas(ajenas: readonly RespuestaAjenaAlContrato[]): void {
+  for (const ajena of ajenas) {
+    if (ajena.status === undefined && rutaExisteEnElSpec(PROVEEDOR, ajena.ruta)) {
+      throw new Error(`la ruta ${ajena.ruta} existe en el contrato: acota la excepción con status`);
+    }
+  }
+}
+
 /** `request(app)` con la verificación del proveedor activa en cada respuesta. */
 export function clienteVerificado(
   app: Express,
   opciones: OpcionesDelClienteVerificado = {},
 ): ClienteVerificado {
   const ajenas = opciones.respuestasAjenasAlContrato ?? [];
+  exigirExcepcionesAcotadas(ajenas);
   const cliente = request(app);
   const metodoVerificado = (metodo: Metodo) => (ruta: string) => {
     return cliente[metodo](ruta).expect(verificadorDe(metodo, ruta, ajenas));

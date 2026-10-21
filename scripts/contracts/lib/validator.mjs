@@ -40,9 +40,16 @@ function schemaPointerOfTarget(spec, target) {
   return resolved.node?.content ? (jsonSchemaOf(spec, resolved)?.pointer ?? null) : resolved.pointer;
 }
 
-/** Ruta JSON del campo incumplido; en propiedades no declaradas o ausentes incluye su nombre (nunca su valor). */
+/** Un nombre de campo se imprime solo si parece un identificador; cualquier otra cosa podría ser un dato (RN-10). */
+const NOMBRE_DE_CAMPO = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
+
+/**
+ * Ruta JSON del campo incumplido; en propiedades no declaradas incluye su nombre solo si parece un identificador, y en las
+ * ausentes el declarado por el spec (nunca un valor).
+ */
 function rutaDelCampo(item) {
-  const nombre = item.params?.additionalProperty ?? item.params?.unevaluatedProperty ?? item.params?.missingProperty;
+  const noDeclarada = item.params?.additionalProperty ?? item.params?.unevaluatedProperty;
+  const nombre = noDeclarada === undefined ? item.params?.missingProperty : (NOMBRE_DE_CAMPO.test(noDeclarada) ? noDeclarada : '{propiedad no declarada}');
   return `${item.instancePath}${nombre === undefined ? '' : `/${nombre}`}` || '#';
 }
 

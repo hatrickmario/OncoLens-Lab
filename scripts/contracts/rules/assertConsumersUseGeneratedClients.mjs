@@ -15,6 +15,7 @@ const report = reporter('assertConsumersUseGeneratedClients', 'AC-1 · US-214 ·
 
 /** Transportes declarados: el único sitio de cada servicio donde se llama al `fetch` que se inyecta en el SDK generado. */
 export const TRANSPORTES_DECLARADOS = [
+  { file: 'apps/clinical-api/src/infrastructure/rag-orchestrator.http.ts', llamada: 'enviar(', motivo: 'fetch inyectado en el SDK generado de rag-orchestrator (JWT de servicio por petición, sin cookie, sin redirecciones)' },
   { file: 'apps/web/lib/server/clinical-api.ts', llamada: 'opciones.fetch(', motivo: 'fetch inyectado en el SDK generado de clinical-api (lista blanca de cabeceras, timeout, sin redirecciones)' },
 ];
 

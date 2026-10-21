@@ -32,7 +32,7 @@ configuración de GitHub.
   `CONTRACT_VERIFY=strict`, muestra cuántas respuestas verificó por proveedor y falla si alguno verificó cero. Tope por suite:
   `VERIFY_PROVIDER_SEGUNDOS` (600). Local: `clinical-api` necesita el PostgreSQL de test (`scripts/test-integration.sh`) y
   `rag-orchestrator` el intérprete de `VERIFY_PROVIDER_PYTHON` (`python`) con `requirements*.txt`.
-- La verificación es automática, no opt-in. Los mensajes nombran proveedor, método, plantilla, código y ruta JSON, **nunca el
+- La verificación es automática, no opt-in: `supertest` solo se importa desde `apps/clinical-api/tests/support/` (regla de ESLint). `CONTRACT_VERIFY=lax` (solo local) relaja la exigencia de ≥1 respuesta por suite y se rechaza con `CI` definido. En `build-test` el Pytest de `rag-orchestrator` corre dos veces (redundancia aceptada: `ci/tests/workflow.test.mjs` exige el paso con `pytest`). Los mensajes nombran proveedor, método, plantilla, código y ruta JSON, **nunca el
   valor** (un cuerpo puede llevar datos). Las rutas de mentira de un test (guard, manejador de errores) se declaran una a una en
   `clienteVerificado(app, { respuestasAjenasAlContrato })`; cualquier otra operación que el spec no resuelva falla cerrado.
 - `npm run contracts:breaking` compara los specs con los de `origin/main`; un cambio incompatible solo pasa si está declarado en

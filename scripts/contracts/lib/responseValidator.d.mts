@@ -24,5 +24,8 @@ export interface RespuestaAVerificar {
 /** Lanza nombrando proveedor, método, plantilla, código y ruta JSON (nunca el valor) si la respuesta incumple el spec. */
 export function verificarRespuesta(respuesta: RespuestaAVerificar): { plantilla: string; codigo: string };
 
+/** ¿Alguna operación del spec del proveedor (con cualquier método) corresponde a esta ruta concreta? */
+export function rutaExisteEnElSpec(proveedor: 'clinical-api' | 'rag-orchestrator', ruta: string): boolean;
+
 /** Verificador de respuestas sobre unos specs ya empaquetados (los tests de `verificarRespuesta` usan specs sintéticos). */
 export function crearVerificadorDeRespuestas(specs: Record<string, { bundled: unknown }>): (respuesta: RespuestaAVerificar) => { plantilla: string; codigo: string };
