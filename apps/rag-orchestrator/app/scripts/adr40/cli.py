@@ -23,7 +23,7 @@ import psutil
 
 from app.evaluation.reporte import escribir_reporte
 from app.evaluation.rutas import raiz_repo
-from app.scripts.adr40.dataset import DatasetInvalido, TextoSembrado, cargar_corpus
+from app.scripts.adr40.dataset import DatasetInvalido, TextoSembrado, cargar_corpus, tipos_directos
 from app.scripts.adr40.detectores import (
     DetectorConNer,
     DetectorDePatrones,
@@ -76,7 +76,11 @@ def cargar_ner(modelo: str, version: str) -> tuple[Any, float] | None:
     return canalizacion, _rss_mb() - antes
 
 
-def _decidir(candidatos: dict[str, dict[str, Any]], argumentos: argparse.Namespace) -> Decision:
+def _decidir(
+    candidatos: dict[str, dict[str, Any]],
+    argumentos: argparse.Namespace,
+    tipos_requeridos: list[str],
+) -> Decision:
     mediciones = [
         Medicion(
             id_c,
@@ -86,7 +90,7 @@ def _decidir(candidatos: dict[str, dict[str, Any]], argumentos: argparse.Namespa
         )
         for id_c, c in candidatos.items()
     ]
-    tipos = [t for t in mediciones[0].sensibilidad if t != TOTAL] + [TOTAL]
+    tipos = [*tipos_requeridos, TOTAL]  # un tipo requerido sin etiquetas queda sin medir y descarta
     return elegir_mas_simple_que_cumple(
         mediciones, argumentos.minimo, tipos, argumentos.margen_memoria_mb
     )
@@ -168,7 +172,7 @@ def ejecutar(
 ) -> int:
     ner = cargador_ner(argumentos.ner_modelo, argumentos.ner_version)
     candidatos = _medir_candidatos(_armar_detectores(raiz, ner), textos, argumentos)
-    decision = _decidir(candidatos, argumentos)
+    decision = _decidir(candidatos, argumentos, tipos_directos(raiz))
     reporte = _armar_reporte(
         argumentos, ahora(), len(textos), ner is not None, candidatos, decision
     )
@@ -178,11 +182,15 @@ def ejecutar(
     return SALIDA_SIN_NER if ner is None else SALIDA_NINGUNO_CUMPLE
 
 
-def main(argv: Sequence[str] | None = None, ahora: Ahora = lambda: datetime.now(UTC)) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    ahora: Ahora = lambda: datetime.now(UTC),
+    raiz: Path | None = None,
+) -> int:
     argumentos = _parser().parse_args(argv)
     try:
-        textos = cargar_corpus()
+        textos = cargar_corpus(raiz)
     except DatasetInvalido as error:
         print(f"dataset invalido: {error}", file=sys.stderr)
         return SALIDA_DATASET
-    return ejecutar(argumentos, textos, ahora, raiz_repo())
+    return ejecutar(argumentos, textos, ahora, raiz or raiz_repo())

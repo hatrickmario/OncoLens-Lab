@@ -6,6 +6,8 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
 from typing import Any
 
 from app.scripts.adr40.cli import (
@@ -105,6 +107,7 @@ class TestDetectorConNer:
 
 
 class TestCli:
+    @pytest.mark.ac("US-013", 1)
     def test_elige_el_candidato_2_cuando_el_ner_completa_la_sensibilidad_de_nombres(
         self, tmp_path: Path
     ) -> None:
@@ -156,17 +159,18 @@ class TestCli:
         assert reporte["dataset"] == {"clase": "sintetico", "n_textos": 300, "nombre": "pii-mini"}
 
     def test_main_devuelve_dataset_invalido_si_el_manifiesto_no_es_sintetico(
-        self, monkeypatch
-    ) -> None:  # type: ignore[no-untyped-def]
-        from app.scripts.adr40 import cli
-        from app.scripts.adr40.dataset import DatasetInvalido
+        self, tmp_path: Path
+    ) -> None:
+        copia = tmp_path / "data" / "eval" / "pii-mini"
+        copia.mkdir(parents=True)
+        for archivo in (RAIZ_REPO / "data" / "eval" / "pii-mini").iterdir():
+            if archivo.is_file():
+                (copia / archivo.name).write_bytes(archivo.read_bytes())
+        manifiesto = json.loads((copia / "manifest.json").read_text(encoding="utf-8"))
+        manifiesto["clase"] = "real"
+        (copia / "manifest.json").write_text(json.dumps(manifiesto), encoding="utf-8")
 
-        def _falla() -> list:  # type: ignore[type-arg]
-            raise DatasetInvalido("no es sintetico")
-
-        monkeypatch.setattr(cli, "cargar_corpus", _falla)
-
-        assert main([]) == SALIDA_DATASET
+        assert main(["--out", str(tmp_path / "r")], lambda: FECHA, tmp_path) == SALIDA_DATASET
 
 
 def test_spacy_y_los_pesos_gpl_solo_estan_en_requirements_eval() -> None:

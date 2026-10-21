@@ -10,6 +10,7 @@
   "descripcion": "Textos en espanol con PII sembrada y etiquetada por span y tipo (nombre, documento, telefono, correo, direccion, fecha_nacimiento) en pregunta, nota, evento, atributo y texto de documento, formatos de 6 paises, mas terminos clinicos de control para falsos positivos (US-013 AC-1, ADR-40; lo reutiliza US-072 AC-6)",
   "valores_en_el_repo": false,
   "nota_valores": "Los valores de PII se generan al azar al materializar el dataset (generar.py) y no se escriben en el repo; telefonos con numeracion de ficcion, correos en example.test.",
+  "tipos_directos": ["nombre", "documento", "telefono", "correo", "direccion", "fecha_nacimiento"],
   "contextos": ["pregunta", "nota", "evento", "atributo", "documento"],
   "paises": ["CO", "ES", "AR", "MX", "PE", "CL"],
   "tipos_etiquetados": {

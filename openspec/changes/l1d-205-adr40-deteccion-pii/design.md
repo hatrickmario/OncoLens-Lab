@@ -176,3 +176,10 @@ Sin migraciones. El estado del ADR queda `propuesto` hasta la aprobación del us
   `ResultadoDeEnmascarado` exponga rangos; el esquema Zod del corpus y `TextoSembrado` se mantienen a mano en
   paralelo (anotado con `z.ZodType`); el orden de las constantes de salida de `comando.ts`; el informe usa
   `detector: 'opcion-a'` para lo que el diseño llama candidato 1 (tabla de equivalencias pendiente en el ADR).
+
+## Gate 2: ronda unica (ai-services)
+
+- `reglas.py` (B2) entro sin commit rojo previo porque las tareas 1.2 y 1.3 la clasificaban "test despues".
+- La lista de identificadores directos de G-8 vive ahora solo en `data/eval/pii-mini/manifest.json` (`tipos_directos`); B2 la lee y exige todos los tipos (un tipo sin etiquetas descarta al candidato). Se borro la constante muerta de `generar.py`.
+- **Deuda propuesta, historia "gemelo B1/B2 antes de FEAT-01b":** (a) B1 aplica los mismos formatos ampliados que B2 (ADR-40, decision 7; condicion de G-Piloto); (b) clase y huellas del dataset estan triplicadas (`dataset.py`, `corpus.ts`, `generar.py`); (c) test de paridad B1/B2 de formatos y la restriccion de `(?i:` frente a Node 22; (d) identidad exacta solo por cifras (CURP, letra del DNI).
+- El modo `con_identidad_conocida` de B1 es optimista; las cifras de B1 y B2 no son comparables 1:1 (ver ADR, limites).
