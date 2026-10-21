@@ -50,3 +50,8 @@ export function contenidoExcedeElLimiteDeCarga(
 export function limiteDeLecturaDeCarga(maxUploadMb: number): number {
   return bytesMaximosDeCarga(maxUploadMb) + 1;
 }
+
+/** Esqueleto: aún no normaliza. */
+export function normalizarNombreOriginal(nombre: string): string {
+  return nombre;
+}

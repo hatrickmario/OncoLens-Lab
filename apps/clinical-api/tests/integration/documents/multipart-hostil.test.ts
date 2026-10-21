@@ -150,3 +150,38 @@ describe('límite de tamaño de la carga', () => {
     expect(escenario.entorno.escrituras()).toBe(0);
   });
 });
+
+describe('nombre del archivo hostil', () => {
+  it('guarda el nombre normalizado sin NUL ni saltos de línea y responde 202 cuando el nombre trae caracteres de control', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+    const paciente = await pacienteNuevo();
+    const cuerpo = Buffer.concat([
+      Buffer.from(
+        '--XB\r\nContent-Disposition: form-data; name="documentType"\r\n\r\nexamen\r\n' +
+          '--XB\r\nContent-Disposition: form-data; name="file"; filename*=UTF-8\'\'inf%00orme%0D%0A.pdf\r\n' +
+          'Content-Type: application/pdf\r\n\r\n',
+      ),
+      fixture('mama-examen.pdf'),
+      Buffer.from('\r\n--XB--\r\n'),
+    ]);
+
+    const respuesta = await clienteVerificado(app, {
+      respuestasAjenasAlContrato: [
+        {
+          ruta: `/platform/patients/${paciente}/documents`,
+          status: 500,
+          esquema: '#/components/schemas/ErrorInterno',
+        },
+      ],
+    })
+      .post(`/platform/patients/${paciente}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .set('Content-Type', 'multipart/form-data; boundary=XB')
+      .send(cuerpo);
+
+    expect(respuesta.status).toBe(202);
+    expect(respuesta.body.originalFilename).toBe('informe.pdf');
+    const [fila] = await documentosDelPaciente(escenario.mundo, paciente);
+    expect(fila?.original_filename).toBe('informe.pdf');
+  });
+});

@@ -6,6 +6,7 @@ import {
   MARGEN_DEL_MULTIPART_BYTES,
   esPdfPorMagicBytes,
   limiteDeLecturaDeCarga,
+  normalizarNombreOriginal,
   superaTamanoMaximo,
 } from '../../src/modules/documents/documents.reglas.js';
 
@@ -92,5 +93,33 @@ describe('contenidoExcedeElLimiteDeCarga', () => {
 describe('limiteDeLecturaDeCarga', () => {
   it('es un byte más que el máximo porque el lector marca el límite al alcanzarlo, no al superarlo', () => {
     expect(limiteDeLecturaDeCarga(20)).toBe(bytesMaximosDeCarga(20) + 1);
+  });
+});
+
+describe('normalizarNombreOriginal', () => {
+  it('deja intacto un nombre corriente', () => {
+    expect(normalizarNombreOriginal('mama-examen.pdf')).toBe('mama-examen.pdf');
+  });
+
+  it('quita NUL, saltos de línea y demás caracteres de control', () => {
+    expect(normalizarNombreOriginal('inf\u0000orme\r\n\t.pdf')).toBe('informe.pdf');
+  });
+
+  it('quita los caracteres de formato invisibles (cero ancho y sobrescritura bidireccional)', () => {
+    expect(normalizarNombreOriginal('a\u200Bb\u202Ec.pdf')).toBe('abc.pdf');
+  });
+
+  it('compone a NFC cuando la tilde llega como carácter combinante', () => {
+    expect(normalizarNombreOriginal('exame\u0301n.pdf')).toBe('examén.pdf');
+  });
+
+  it('trunca a 255 caracteres sin partir un par sustituto', () => {
+    const largo = `${'😀'.repeat(300)}.pdf`;
+
+    expect(Array.from(normalizarNombreOriginal(largo))).toHaveLength(255);
+  });
+
+  it('usa sin-nombre.pdf cuando solo quedaba basura', () => {
+    expect(normalizarNombreOriginal('\u0000\r\n')).toBe('sin-nombre.pdf');
   });
 });
