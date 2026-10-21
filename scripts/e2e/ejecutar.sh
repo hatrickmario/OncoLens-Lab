@@ -6,7 +6,7 @@
 # Usa un proyecto de Compose PROPIO (`oncolens-e2e`: volúmenes y redes propios) y una carpeta de secretos temporal PROPIA,
 # nunca los del entorno (COMPOSE_PROJECT_NAME, ONCOLENS_SECRETS_DIR): el trap hace `down -v` y `rm -rf`, y con los del
 # desarrollador borraría su stack. Sin red ni modelos reales: responde con los ejemplos de contracts/examples/.
-# Hace: secretos -> stack -> esquema clínico -> seed -> compilar workspaces -> Chromium -> playwright test -> down.
+# Hace: secretos -> stack -> esquema clínico -> seed -> compilar clinical-language -> Chromium -> playwright test -> down.
 # Con --mantener deja el stack y los secretos (para depurar). La contraseña de doc1 la genera setup-secrets.sh en esa
 # carpeta temporal, llega a Playwright solo por entorno y nunca se imprime ni se versiona (RN-14).
 # Modo CI (CI no vacía, p. ej. en GitHub Actions): rechaza --mantener, deja el informe `github` + `html` y trazas (config
@@ -79,7 +79,9 @@ done
 paso "Playwright (Chromium)"
 cd "$raiz"
 [ -d node_modules ] || npm ci --ignore-scripts --silent
-npm run build --workspaces --if-present >/dev/null 2>&1   # los E2E importan paquetes compilados (clinical-language)
+# Los E2E solo importan un paquete compilado (clinical-language); web y clinical-api se compilan en sus imágenes de Docker.
+# Si el build falla se muestra su cola: en la CI no hay otra pista.
+if ! salida_build="$(npm run build --workspace @oncolens/clinical-language 2>&1)"; then printf '%s\n' "$salida_build" | tail -30 >&2; echo "ejecutar: falló el build de @oncolens/clinical-language" >&2; exit 1; fi
 cd apps/web
 npx playwright install chromium >/dev/null 2>&1
 E2E_DOC_CONTRASENA="$(cat "$secretos/seed_doctor_password")" npx playwright test ${args[@]+"${args[@]}"}

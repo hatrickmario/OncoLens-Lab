@@ -18,7 +18,7 @@ case "$1 $2" in
 esac
 exit 0`),
   curl: falso(`[ "$STUB_WEB" = caido ] && { printf 000; exit 0; }; printf 200`),
-  npm: falso('exit 0'),
+  npm: falso('[ "$1 $2" = "run build" ] && [ -n "$STUB_BUILD_FALLA" ] && { echo "error de build simulado"; exit 1; }\nexit 0'),
   npx: falso(`echo "$*|CI=$CI|clave_presente=$([ -n "$E2E_DOC_CONTRASENA" ] && echo si || echo no)" >> "$STUB_LOG.npx"
 [ "$1" = playwright ] && [ "$2" = test ] && echo "clave:$E2E_DOC_CONTRASENA" >> "$STUB_LOG.clave"
 exit 0`),
@@ -107,6 +107,15 @@ describe('scripts/e2e/ejecutar.sh en modo CI', () => {
     expect(resultado.stderr).toContain('el web no responde en /login tras 1 s');
     expect(leer(`${registro}.npx`).filter((linea) => linea.startsWith('playwright test'))).toEqual([]);
     expect(leer(registro).some((linea) => /down -v/.test(linea))).toBe(true);
+  });
+
+  it('muestra la cola del build y no ejecuta Playwright cuando el build de clinical-language falla', () => {
+    const resultado = ejecutar([], { STUB_BUILD_FALLA: '1' });
+
+    expect(resultado.status).toBe(1);
+    expect(resultado.stderr).toContain('error de build simulado');
+    expect(resultado.stderr).toContain('falló el build de @oncolens/clinical-language');
+    expect(leer(`${registro}.npx`).filter((linea) => linea.startsWith('playwright test'))).toEqual([]);
   });
 
   it('falla sin seguir con una ruta vacía cuando mktemp no crea el directorio', () => {
