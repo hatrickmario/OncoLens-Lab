@@ -168,22 +168,27 @@ const sustituir = (datos: Buffer, variantes: string[]): Buffer => {
 const contiene = (datos: Buffer, variantes: string[]) =>
   variantes.some((variante) => datos.toString('latin1').includes(variante));
 
+/** Quita de las entradas los cuerpos de request y las respuestas de `POST /api/*` (registros de red y sus recursos). */
+function quitarCuerposDeRed(entradas: Entrada[]): Entrada[] {
+  const recursosAEliminar = new Set<string>();
+  const sinReferencias = entradas.map((entrada) => {
+    if (!entrada.nombre.endsWith('.network')) return entrada;
+    const { texto, recursos } = depurarRegistroDeRed(entrada.datos.toString('utf8'));
+    recursos.forEach((referencia) => recursosAEliminar.add(referencia));
+    return { nombre: entrada.nombre, datos: Buffer.from(texto, 'utf8') };
+  });
+  return sinReferencias.filter(
+    ({ nombre }) => ![...recursosAEliminar].some((referencia) => esElRecurso(nombre, referencia)),
+  );
+}
+
 /** Depura el zip de la traza en el sitio. Si algún secreto sobrevive, lanza sin escribir nada. */
 export function depurarTraza(ruta: string, secretos: string[]): void {
   const variantes = variantesDe(secretos);
-  const entradas = leerZip(readFileSync(ruta));
-  const recursosAEliminar = new Set<string>();
-  const depuradas: Entrada[] = entradas.map((entrada) => {
-    if (!entrada.nombre.endsWith('.network')) return entrada;
-    const { texto, recursos } = depurarRegistroDeRed(entrada.datos.toString('utf8'));
-    recursos.forEach((sha1) => recursosAEliminar.add(sha1));
-    return { nombre: entrada.nombre, datos: Buffer.from(texto, 'utf8') };
-  });
-  const resultado = depuradas
-    .filter(
-      ({ nombre }) => ![...recursosAEliminar].some((referencia) => esElRecurso(nombre, referencia)),
-    )
-    .map(({ nombre, datos }) => ({ nombre, datos: sustituir(datos, variantes) }));
+  const resultado = quitarCuerposDeRed(leerZip(readFileSync(ruta))).map(({ nombre, datos }) => ({
+    nombre,
+    datos: sustituir(datos, variantes),
+  }));
   const supervivientes = resultado.filter(({ datos }) => contiene(datos, variantes));
   if (supervivientes.length > 0)
     throw new Error(
