@@ -4,6 +4,10 @@ import {
   crearTraceIdMiddleware,
   traceIdEntranteRegistrable,
 } from '../../../src/modules/evidence-analysis/trace-id.middleware.js';
+import { FX_T4A_A } from '../../support/identidad.js';
+
+/** Cabecera con la PII sembrada de FX-T4a-a (documento numérico `[S2 resp. 11]`, armado por partes en el soporte). */
+const CABECERA_CON_PII = `Lucía Rondón ${FX_T4A_A.numeroDeDocumento}`;
 
 describe('traceIdEntranteRegistrable', () => {
   it('devuelve el valor cuando cumple el patrón req_ + 8 a 32 alfanuméricos', () => {
@@ -12,7 +16,7 @@ describe('traceIdEntranteRegistrable', () => {
   });
 
   it('descarta el valor cuando contiene PII sembrada', () => {
-    expect(traceIdEntranteRegistrable('Lucía Rondón 52123456')).toBeUndefined();
+    expect(traceIdEntranteRegistrable(CABECERA_CON_PII)).toBeUndefined();
   });
 
   it.each([
@@ -51,7 +55,7 @@ describe('crearTraceIdMiddleware', () => {
   });
 
   it('no guarda traceIdEntrante cuando el entrante no cumple el patrón', () => {
-    const { locals } = ejecutar('Lucía Rondón 52123456');
+    const { locals } = ejecutar(CABECERA_CON_PII);
 
     expect(locals).toEqual({ traceId: 'req_Generado01' });
     expect(Object.hasOwn(locals, 'traceIdEntrante')).toBe(false);

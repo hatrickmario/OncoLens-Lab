@@ -99,8 +99,9 @@ export function assertModelosSoloLecturaFueraDelRepo(config, raiz) {
 export const DUENOS_DE_SECRETOS = {
   [CLAVE_PRIVADA_JWT]: [CLINICAL_API],
   [CLAVE_PUBLICA_JWT]: [RAG],
-  identity_aes_key: [CLINICAL_API],
-  blind_index_hmac_key: [CLINICAL_API],
+  // clinical-seed (US-046 AC-6) siembra identidades con IdentityService: misma imagen que clinical-api, sin puertos.
+  identity_aes_key: [CLINICAL_API, CLINICAL_SEED],
+  blind_index_hmac_key: [CLINICAL_API, CLINICAL_SEED],
   pg_clinical_api_password: [CLINICAL_API, POSTGRES, CLINICAL_SEED],
   pg_research_writer_password: [CLINICAL_API, POSTGRES],
   pg_rag_corpus_password: [RAG, POSTGRES],
@@ -123,7 +124,7 @@ export const DUENOS_DE_SECRETOS = {
 };
 const VARIABLES_DE_CLAVE_JWT = { SERVICE_JWT_PRIVATE_KEY_FILE: [CLAVE_PRIVADA_JWT, CLINICAL_API], SERVICE_JWT_PUBLIC_KEY_FILE: [CLAVE_PUBLICA_JWT, RAG] };
 
-/** AC-3: cada backend recibe solo su mitad del par del JWT de servicio y los secretos de identidad solo llegan a clinical-api. */
+/** AC-3: cada backend recibe solo su mitad del par del JWT de servicio y los secretos de identidad solo llegan a clinical-api y al one-shot clinical-seed (US-046 AC-6), nunca a rag-orchestrator ni a web. */
 export function assertClavesPorServicio(config) {
   for (const [nombre, definicion] of Object.entries(config.services)) {
     for (const secreto of archivosDeSecretos(config, definicion)) {

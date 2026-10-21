@@ -28,12 +28,15 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
 - **D3 · Anillo de claves (AC-5, asumido).** `IDENTITY_KEY_VERSION` (activa, para cifrar) y
   `IDENTITY_AES_KEY_FILE` (clave de esa versión); las anteriores, opcionales, en
   `IDENTITY_AES_KEY_V<n>_FILE` solo para descifrar. Al arrancar, falta la clave activa → no arranca
-  (el error nombra la clave, nunca su valor, como US-035 AC-5). El HMAC no rota en el MVP (rotarlo
+  (el error nombra la clave, nunca su valor, como US-035 AC-5). La rotación operativa por Compose de
+  `IDENTITY_AES_KEY_V<n>_FILE` (montar las claves anteriores) queda diferida: el anillo la soporta en el código, pero
+  Compose y `.env.example` no las declaran en este change. El HMAC no rota en el MVP (rotarlo
   obliga a recalcular todos los índices; se anota como deuda si se pide).
 - **D4 · Error de integridad (AC-3, asumido).** Fallo del tag GCM o versión desconocida →
   `IdentityIntegrityError` (código `IDENTITY_INTEGRITY_ERROR`); `manejadorFinalDeErrores` lo mapea a
   `500 ErrorInterno` (`error-interno.json`, cuerpo `{ error, message, traceId }` fijo) y registra solo
-  `code` y `traceId`, nunca bytes ni texto.
+  `code` y `traceId`, nunca bytes ni texto. En el análisis (`/platform/evidence-analyses`), el fallo de
+  integridad se convierte en `503 DESIDENTIFICACION_NO_DISPONIBLE` por fallo cerrado.
 - **D5 · Seed (AC-6).** El *one-shot* `clinical-seed` usa `IdentityService` (no una copia del
   cifrador) y recibe los mismos dos secretos en Compose. La guarda de entorno piloto / datos reales se
   comprueba **antes de leer las claves**: en piloto termina sin abrir `IDENTITY_AES_KEY_FILE` ni
@@ -42,12 +45,12 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
 - **D6 · No-fuga (AC-4).** Arnés `buscarFugaDeIdentidad(valores, fuentes)` en
   `tests/support/no-fuga.ts`. **Valores buscados:** documento en claro (`1234567` y su forma con puntos `1.234.567`), "Lucía", "Rondón", la forma normalizada del
   nombre ("lucia fernanda rondon pena") y los valores hex de `national_id_hmac` y `full_name_hmac`
-  (este último cuando exista la columna, L1D-202) leídos de la fila. **Fuentes:** logs capturados de los tres servicios, todas las columnas `text`/`jsonb`
-  de `audit.*`, `research.*` y `clinical.ai_analysis_record`, y el payload capturado por MSW hacia
-  `rag-orchestrator`. En este change cubre **registrar** (fixture vía `IdentityService`) y **analizar**
+  (este último cuando exista la columna, L1D-202) leídos de la fila. **Fuentes (lo que cubre el test):** los logs de `clinical-api` (registrador y todo lo que `clinical-api` escriba con `console.*` o `process.stdout/stderr.write` durante los pasos, capturado por `capturarSalidaDelProceso()`; Vitest intercepta `console.*`, por eso se espía además de `process.std*`), el payload y las cabeceras capturados por MSW hacia
+  `rag-orchestrator` (su única entrada: no se capturan logs propios de `rag-orchestrator` ni de `web`) y todas las filas de `audit.*`, `research.*` y `clinical.ai_analysis_record`. Los valores se derivan de la identidad guardada (documento, forma con puntos, nombre completo, forma normalizada y cada token del nombre de 4 o más caracteres). En este change cubre **registrar** (fixture vía `IdentityService`) y **analizar**
   (gateway de L1D-103); **ficha** y **búsqueda** las añaden sus changes (L1D-72, L1D-202) al mismo test
   como pasos nuevos (`🔗 Regresión [RN-10] → US-046`). US-046 pasa a Done cuando los cuatro pasos
   corren en `main`.
+  **Limitaciones conocidas:** los tokens del nombre de menos de 4 caracteres (p. ej. "de", "Li") no se buscan, porque darían falsos positivos; solo se detectan en el nombre completo y su forma normalizada. Y el arnés ve lo que escribe `clinical-api` en este proceso de test, no los logs de contenedores. Tampoco se capturan `fs.writeSync(2, …)` ni las referencias a `console` o `process.stdout.write` guardadas antes de instalar el espía; un registrador futuro (pino, sonic-boom) debe capturarse por su propio destino.
 
 ## Privacidad y ownership
 

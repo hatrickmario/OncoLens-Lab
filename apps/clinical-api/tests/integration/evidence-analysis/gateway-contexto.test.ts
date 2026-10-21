@@ -17,6 +17,7 @@ import {
   versionDelCatalogo,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { FX_T4A_A } from '../../support/identidad.js';
 
 const ESPACIO_DE_IDS = 201;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-contexto-0001';
@@ -187,7 +188,7 @@ describe('gateway de análisis: los filtros recibidos quedan persistidos', () =>
 });
 
 describe('gateway de análisis: el traceId lo genera siempre clinical-api', () => {
-  const PII_EN_LA_CABECERA = 'Lucía Rondón 52123456';
+  const PII_EN_LA_CABECERA = `Lucía Rondón ${FX_T4A_A.numeroDeDocumento}`;
 
   it('envía y responde el traceId generado y no registra el X-Trace-Id entrante cuando este contiene PII sembrada [US-052 AC-1]', async () => {
     const { app, logger } = await montarGateway(mundo);
@@ -202,7 +203,7 @@ describe('gateway de análisis: el traceId lo genera siempre clinical-api', () =
     const capturada = rag.capturadas[0]!;
     expect(capturada.cuerpo['traceId']).toBe(TRACE_ID_GENERADO);
     const todoLoEnviado = `${capturada.texto}\n${[...capturada.headers].join('\n')}`;
-    for (const pii of ['Lucía', 'Rondón', '52123456']) {
+    for (const pii of ['Lucía', 'Rondón', FX_T4A_A.numeroDeDocumento]) {
       expect(todoLoEnviado, pii).not.toContain(pii);
       expect(JSON.stringify(respuesta.body), pii).not.toContain(pii);
       expect(logger.texto(), pii).not.toContain(pii);
