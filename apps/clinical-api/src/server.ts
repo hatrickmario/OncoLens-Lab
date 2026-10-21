@@ -7,6 +7,7 @@ import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { crearRegistrador } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
+import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
@@ -92,11 +93,11 @@ arrancar({
           registrar,
           rutasProtegidas: componerRutasProtegidas({ gateway }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
-          salud: {
+          salud: componerInformacionDeSalud({
             configKeys: entorno.clavesCargadas(),
             serviceVersion: versionDelServicio(),
-            catalogVersion: catalogo.version(),
-          },
+            catalogo,
+          }),
         });
         const servidor = app.listen(puerto, () => {
           registrarEventoDeArranque((linea) => console.info(linea), 'info', 'servidor_escuchando', {

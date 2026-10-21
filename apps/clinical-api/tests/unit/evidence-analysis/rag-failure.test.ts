@@ -70,7 +70,7 @@ describe('mapearFalloRag', () => {
       'ERROR_SERVICIO_IA',
     ],
     ['error de red', fallo({ status: null }), 502, 'ERROR_SERVICIO_IA'],
-  ])('traduce %s a %i %s', (_caso, entrada, status, codigo) => {
+  ])('traduce %s', (_caso, entrada, status, codigo) => {
     expect(mapearFalloRag(entrada)).toMatchObject({ status, codigo });
   });
 
