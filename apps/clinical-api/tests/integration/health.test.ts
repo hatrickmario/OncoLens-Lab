@@ -30,7 +30,7 @@ afterEach(() => {
 afterAll(() => servidor.close());
 
 describe('GET /health', () => {
-  it('responde 200 con status ok, configKeys y serviceVersion validado contra el spec cuando el proceso está listo [US-037 AC-1]', async () => {
+  it('responde 200 con status ok, configKeys y serviceVersion validado contra el spec cuando el proceso está listo [US-034 AC-1] [US-037 AC-1]', async () => {
     const respuesta = await request(
       createApp({ salud: { configKeys: ['PORT', 'SESSION_TTL_HOURS'], serviceVersion: '1.2.3' } }),
     ).get('/health');
