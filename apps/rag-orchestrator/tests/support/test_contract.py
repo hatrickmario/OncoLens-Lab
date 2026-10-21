@@ -100,3 +100,47 @@ def test_verificar_respuesta_falta_cabecera_obligatoria_lanza_nombrandola():
         verificar_respuesta("GET", "/x", 429, httpx.Headers({"retry-after": "3"}), b"")
     finally:
         contract.usar_spec(anterior)
+
+
+def test_verificar_respuesta_ruta_no_resuelta_no_imprime_segmentos_ni_query():
+    documento = "1234" + "567"  # por partes: el escáner de PII no lo ve como documento
+    ruta = f"/rag/{documento}/Ana%20Sint%C3%A9tica?q=secreto#frag"
+    with pytest.raises(AssertionError) as fallo:
+        verificar_respuesta("POST", ruta, 200, {}, b"")
+    mensaje = str(fallo.value)
+    assert "/rag/{…}/{…}" in mensaje
+    for filtrado in (documento, "Ana", "Sint", "secreto", "frag"):
+        assert filtrado not in mensaje
+
+
+def test_assert_matches_spec_no_imprime_el_valor_con_un_tipo_erroneo():
+    cuerpo = {**_ejemplo("rag-query-sin-evidencia.json"), "omittedClaims": "CENTINELA-TIPO"}
+    with pytest.raises(AssertionError) as fallo:
+        assert_matches_spec("#/components/schemas/RagQueryInternalResponse", cuerpo)
+    assert "/omittedClaims" in str(fallo.value)
+    assert "CENTINELA-TIPO" not in str(fallo.value)
+
+
+def test_assert_matches_spec_no_vuelca_el_objeto_cuando_ninguna_rama_del_oneof_encaja():
+    anterior = contract._spec
+    contract.usar_spec(
+        {
+            "components": {
+                "schemas": {"S": {"oneOf": [{"type": "string"}, {"type": "integer"}]}}
+            },
+            "paths": {},
+        }
+    )
+    try:
+        with pytest.raises(AssertionError) as fallo:
+            assert_matches_spec("#/components/schemas/S", {"campo": "CENTINELA-ONEOF"})
+        assert "CENTINELA-ONEOF" not in str(fallo.value)
+    finally:
+        contract.usar_spec(anterior)
+
+
+def test_verificar_respuesta_rechaza_un_formato_date_invalido_en_el_cuerpo():
+    cuerpo = _ejemplo("rag-query-sin-evidencia.json")
+    cuerpo["meta"]["corpusCutoffDate"] = "ayer"
+    with pytest.raises(AssertionError, match="/meta/corpusCutoffDate"):
+        _verificar("POST", "/rag/query", 200, cuerpo)

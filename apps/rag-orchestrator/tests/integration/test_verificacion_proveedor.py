@@ -1,7 +1,9 @@
 """Verificación automática del proveedor (US-214): cada respuesta del TestClient se valida contra el spec."""
 
+import asyncio
 import json
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -44,3 +46,30 @@ def test_rag_query_falla_nombrando_la_ruta_json_cuando_sin_evidencia_trae_top_re
     for pieza in ("rag-orchestrator", "POST", "/rag/query", "200", "/topRelevanceScore"):
         assert pieza in mensaje
     assert "0.0" not in mensaje
+
+
+def _sin_evidencia_con_cero() -> dict:
+    return {**_ejemplo("rag-query-sin-evidencia.json"), "topRelevanceScore": 0.0}
+
+
+def test_rag_query_falla_con_un_asyncclient_asgi_cuando_la_respuesta_incumple_el_spec():
+    cliente = _cliente_con(_sin_evidencia_con_cero())
+
+    async def consultar() -> None:
+        transporte = httpx.ASGITransport(app=cliente.app)
+        async with httpx.AsyncClient(
+            transport=transporte, base_url="http://prueba", headers=cliente.headers
+        ) as asincrono:
+            await asincrono.post("/rag/query", json=_ejemplo("rag-query-request.json"))
+
+    with pytest.raises(AssertionError, match="/topRelevanceScore"):
+        asyncio.run(consultar())
+
+
+@pytest.mark.sin_verificacion_de_proveedor
+def test_rag_query_no_verifica_la_respuesta_cuando_el_test_declara_la_salida_explicita():
+    respuesta = _cliente_con(_sin_evidencia_con_cero()).post(
+        "/rag/query", json=_ejemplo("rag-query-request.json")
+    )
+
+    assert respuesta.status_code == 200
