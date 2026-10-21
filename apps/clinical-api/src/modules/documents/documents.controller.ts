@@ -3,6 +3,7 @@ import { enviarError, type CodigoDeError } from '../../infrastructure/http-error
 import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
+import type { SesionAutenticada } from '../auth/auth.service.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
 import { AlmacenNoDisponible } from './ports.js';
 import {
@@ -70,6 +71,12 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   return undefined;
 }
 
+/** El guard de sesión corre antes que este router: sin sesión es un montaje roto, no un error del cliente. */
+const sesionDe = (request: Request): SesionAutenticada => {
+  if (request.sesion === undefined) throw new Error('documents montado sin el guard de sesión');
+  return request.sesion;
+};
+
 const contentLengthDe = (request: Request): number | undefined => {
   const declarado = request.headers['content-length'];
   return declarado === undefined ? undefined : Number(declarado);
@@ -112,7 +119,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
   }
 
   const cargar: RequestHandler = async (request, response) => {
-    const sesion = request.sesion;
+    const sesion = sesionDe(request);
     if (contenidoExcedeElLimiteDeCarga(contentLengthDe(request), maxUploadMb)) {
       rechazarYCerrar(response, ARCHIVO_DEMASIADO_GRANDE, 'content_length');
       return;
@@ -123,7 +130,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
       return;
     }
     const tipo = tipoDeDocumentoSchema.safeParse(carga?.documentType);
-    if (sesion === undefined || carga?.archivo === undefined || !tipo.success) {
+    if (carga?.archivo === undefined || !tipo.success) {
       rechazar(response, CUERPO_INVALIDO);
       return;
     }
