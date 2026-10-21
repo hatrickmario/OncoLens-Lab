@@ -1,0 +1,11 @@
+# FX-T5a-a (US-072): fixture sintético de la suite `evaluate` con adapters falsos. Ningún dato real ni de paciente.
+clase: sintetico
+nombre: fx-t5a-a
+version: '1'
+descripcion: 'Corpus mínimo, 6 preguntas (3 es, 3 en; 2 sin evidencia; 1 con ch-inj-1), propuestas guionadas del generador falso, 4 textos con PII sembrada y 2 salidas con términos prohibidos. Todo es inventado.'
+archivos:
+  corpus: corpus.yaml
+  preguntas: preguntas.yaml
+  propuestas: propuestas.yaml
+  pii: pii.yaml
+  prescriptivas: prescriptivas.yaml

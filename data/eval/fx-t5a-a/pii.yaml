@@ -1,0 +1,11 @@
+# Textos con PII sembrada e INVENTADA (sin datos reales). La parte de privacidad la mide el bloque 072b.
+clase: sintetico
+textos:
+  - id: PII-01
+    texto: 'Nota de prueba: la paciente Ana Ejemplo Prueba, documento SINT-4820173, consulta por control.'
+  - id: PII-02
+    texto: 'Contacto de prueba: ana.ejemplo@example.com.'
+  - id: PII-03
+    texto: 'Paciente sintético Luis Muestra Prueba, nacido el 1970-01-01, vive en la Calle Inventada 1.'
+  - id: PII-04
+    texto: 'Familiar de prueba: Marta Simulada Prueba, documento SINT-5530916.'
