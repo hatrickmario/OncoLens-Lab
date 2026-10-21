@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { resolverOperacion } from '../lib/operations.mjs';
-import { crearVerificadorDeRespuestas, verificarRespuesta } from '../lib/responseValidator.mjs';
+import { crearVerificadorDeRespuestas, matchesSpec, verificarRespuesta } from '../lib/responseValidator.mjs';
 import { ROOT } from './helpers/parches.mjs';
 
 const ejemplo = (nombre) => JSON.parse(readFileSync(path.join(ROOT, 'contracts/examples', nombre), 'utf8'));
@@ -54,6 +54,15 @@ describe('verificarRespuesta', () => {
 
     expect(mensaje).toContain('{propiedad no declarada}');
     expect(mensaje).not.toContain(intruso);
+  });
+
+  it('da el mismo veredicto que matchesSpec sobre el mismo cuerpo, porque comparten el validador [US-214 AC-2]', () => {
+    const cuerpo = { ...ejemplo('con-evidencia-s1.json'), campoNoDeclarado: 1 };
+    const problemas = matchesSpec('clinical-api', '#/paths/~1platform~1evidence-analyses/post/responses/200', cuerpo);
+    const mensaje = mensajeDe(respuestaDeAnalisis({ cuerpo }));
+
+    expect(problemas.length).toBeGreaterThan(0);
+    for (const problema of problemas) expect(mensaje).toContain(`${problema.path}: ${problema.message}`);
   });
 
   it('nombra la ruta JSON anidada sin el valor cuando un campo requerido falta [US-214 AC-2]', () => {
