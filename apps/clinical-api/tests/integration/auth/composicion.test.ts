@@ -1,5 +1,5 @@
 import type { Client } from 'pg';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { componerAplicacion } from '../../../src/composition.js';
 import { crearGeneradorDeToken } from '../../../src/infrastructure/token.js';
@@ -18,6 +18,8 @@ import {
 
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 106;
+/** Ruta de mentira para ejercitar el guard: el contrato no la describe, así que no se verifica contra el spec. */
+const RUTA_DE_MENTIRA = { respuestasAjenasAlContrato: [{ ruta: '/platform/cualquier-ruta' }] };
 
 let cliente: Client;
 let doc1: UsuarioDeTest;
@@ -45,12 +47,14 @@ describe('composición de producción (componerAplicacion)', () => {
       registrar: logger.registrar,
     });
 
-    const login = await request(app)
+    const login = await clienteVerificado(app)
       .post('/platform/auth/login')
       .send({ email: doc1.email, password: doc1.password });
     const cookie = cookiesEmitidas(login)[0]?.split(';')[0] ?? '';
-    const sinSesion = await request(app).get('/platform/cualquier-ruta');
-    const conSesion = await request(app).get('/platform/cualquier-ruta').set('Cookie', cookie);
+    const sinSesion = await clienteVerificado(app, RUTA_DE_MENTIRA).get('/platform/cualquier-ruta');
+    const conSesion = await clienteVerificado(app, RUTA_DE_MENTIRA)
+      .get('/platform/cualquier-ruta')
+      .set('Cookie', cookie);
 
     expect(login.status).toBe(204);
     expect(cookie).toMatch(/^oncolens_session=[A-Za-z0-9_-]{43}$/);

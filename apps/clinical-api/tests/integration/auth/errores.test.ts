@@ -1,5 +1,5 @@
 import type { Client } from 'pg';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, inject, it, vi } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { createApp } from '../../../src/app.js';
@@ -17,6 +17,8 @@ import {
 
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 105;
+/** Ruta de mentira para ejercitar el guard: el contrato no la describe, así que no se verifica contra el spec. */
+const RUTA_DE_MENTIRA = { respuestasAjenasAlContrato: [{ ruta: '/platform/otra-ruta' }] };
 const DETALLE_INTERNO = 'detalle-interno-secreto password=hunter2 /ruta/interna.ts';
 
 const dbQueRechaza: Consultador = {
@@ -52,10 +54,10 @@ describe('manejador final de errores', () => {
         db: dbQueRechaza,
       });
 
-      const login = await request(app)
+      const login = await clienteVerificado(app)
         .post('/platform/auth/login')
         .send({ email: doc1.email, password: doc1.password });
-      const guard = await request(app)
+      const guard = await clienteVerificado(app, RUTA_DE_MENTIRA)
         .post('/platform/otra-ruta')
         .set('Cookie', 'oncolens_session=cualquiera');
 
@@ -96,7 +98,7 @@ describe('manejador de cuerpo ilegible del login', () => {
     const error429 = Object.assign(new Error('límite'), { status: 429 });
     const app = appConDb({ query: () => Promise.reject(error429) });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/auth/login')
       .send({ email: doc1.email, password: doc1.password });
 
@@ -110,7 +112,7 @@ describe('manejador de cuerpo ilegible del login', () => {
       const errorDelParser = Object.assign(new Error('parser'), { type: tipo, status: 400 });
       const app = appConDb({ query: () => Promise.reject(errorDelParser) });
 
-      const respuesta = await request(app)
+      const respuesta = await clienteVerificado(app)
         .post('/platform/auth/login')
         .send({ email: doc1.email, password: doc1.password });
 
@@ -120,7 +122,7 @@ describe('manejador de cuerpo ilegible del login', () => {
   );
 
   it('responde 422 CUERPO_INVALIDO cuando el cuerpo supera el límite del parser', async () => {
-    const respuesta = await request(appConDb(dbQueRechaza))
+    const respuesta = await clienteVerificado(appConDb(dbQueRechaza))
       .post('/platform/auth/login')
       .send({ email: doc1.email, password: 'x'.repeat(200_000) });
 

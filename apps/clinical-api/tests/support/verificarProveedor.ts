@@ -14,12 +14,20 @@ const PROVEEDOR = 'clinical-api';
 const METODOS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 type Metodo = (typeof METODOS)[number];
 
+/** Una respuesta que el test fabrica con una ruta de mentira y que, por tanto, el contrato no describe. */
+export interface RespuestaAjenaAlContrato {
+  /** Ruta sin query, tal como la pide el test. */
+  readonly ruta: string;
+  /** Solo ese código (p. ej. el 200 de un controlador de mentira montado en una ruta real); sin él, todos los de la ruta. */
+  readonly status?: number;
+}
+
 export interface OpcionesDelClienteVerificado {
   /**
-   * Rutas de prueba que NO existen en el contrato (p. ej. una ruta protegida de mentira para probar el guard). Se
-   * declaran una por una: cualquier otra ruta que el spec no resuelva falla cerrado.
+   * Excepciones a la verificación, declaradas una por una: cualquier otra respuesta que el spec no describa falla
+   * cerrado. Solo para rutas o controladores de prueba que existen para ejercitar el guard o el manejador de errores.
    */
-  readonly rutasAjenasAlContrato?: readonly string[];
+  readonly respuestasAjenasAlContrato?: readonly RespuestaAjenaAlContrato[];
 }
 
 export type ClienteVerificado = Record<Metodo, (ruta: string) => Test>;
@@ -38,8 +46,17 @@ function registrarRespuestaVerificada(): void {
   if (archivo !== undefined && archivo !== '') appendFileSync(archivo, `${PROVEEDOR}\n`);
 }
 
-function verificadorDe(metodo: Metodo, ruta: string): (respuesta: Response) => void {
+function verificadorDe(
+  metodo: Metodo,
+  ruta: string,
+  ajenas: readonly RespuestaAjenaAlContrato[],
+): (respuesta: Response) => void {
   return (respuesta) => {
+    const esAjena = ajenas.some(
+      (ajena) =>
+        ajena.ruta === sinQuery(ruta) && (ajena.status ?? respuesta.status) === respuesta.status,
+    );
+    if (esAjena) return;
     verificarRespuesta({
       proveedor: PROVEEDOR,
       metodo,
@@ -57,11 +74,12 @@ export function clienteVerificado(
   app: Express,
   opciones: OpcionesDelClienteVerificado = {},
 ): ClienteVerificado {
-  const ajenas = new Set(opciones.rutasAjenasAlContrato ?? []);
+  const ajenas = opciones.respuestasAjenasAlContrato ?? [];
   const cliente = request(app);
   const metodoVerificado = (metodo: Metodo) => (ruta: string) => {
-    const peticion = cliente[metodo](ruta);
-    return ajenas.has(sinQuery(ruta)) ? peticion : peticion.expect(verificadorDe(metodo, ruta));
+    return cliente[metodo](ruta).expect(verificadorDe(metodo, ruta, ajenas));
   };
-  return Object.fromEntries(METODOS.map((metodo) => [metodo, metodoVerificado(metodo)])) as ClienteVerificado;
+  return Object.fromEntries(
+    METODOS.map((metodo) => [metodo, metodoVerificado(metodo)]),
+  ) as ClienteVerificado;
 }

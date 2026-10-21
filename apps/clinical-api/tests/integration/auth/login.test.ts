@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import {
@@ -21,7 +20,6 @@ const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 101;
 const TOKEN_EMITIDO = 'tokenSinteticoDeSesionUnoAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const COOKIE_PREVIA = 'cookiePreviaArbitrariaQueNoDebeReutilizarse';
-const PUNTERO_LOGIN = '#/paths/~1platform~1auth~1login/post/responses';
 
 let cliente: Client;
 let doc1: UsuarioDeTest;
@@ -53,7 +51,7 @@ describe('POST /platform/auth/login', () => {
   it('crea una sesión con token_hash y responde 204 con cookie HttpOnly Secure SameSite=Strict distinta de la previa cuando doc1 envía credenciales correctas [US-211 AC-1]', async () => {
     const antes = await contarSesiones(cliente, [doc1.id]);
 
-    const respuesta = await request(appDeLogin())
+    const respuesta = await clienteVerificado(appDeLogin())
       .post('/platform/auth/login')
       .set('Cookie', `oncolens_session=${COOKIE_PREVIA}`)
       .send({ email: doc1.email, password: doc1.password });
@@ -109,13 +107,12 @@ describe('POST /platform/auth/login con credenciales rechazadas', () => {
     async (_caso, credenciales) => {
       const antes = await sesionesDeLosUsuarios();
 
-      const respuesta = await request(appDeLogin())
+      const respuesta = await clienteVerificado(appDeLogin())
         .post('/platform/auth/login')
         .send(credenciales());
 
       expect(respuesta.status).toBe(401);
       expect(respuesta.headers['set-cookie']).toBeUndefined();
-      assertMatchesSpec('clinical-api', `${PUNTERO_LOGIN}/401`, respuesta.body);
       expect(respuesta.body).toMatchObject({
         error: 'CREDENCIALES_INVALIDAS',
         message: 'Las credenciales no son válidas.',
@@ -134,22 +131,22 @@ describe('POST /platform/auth/login con cuerpo inválido', () => {
   ])('responde 422 CUERPO_INVALIDO sin crear sesión cuando %s', async (_caso, cuerpo) => {
     const antes = await sesionesDeLosUsuarios();
 
-    const respuesta = await request(appDeLogin()).post('/platform/auth/login').send(cuerpo);
+    const respuesta = await clienteVerificado(appDeLogin())
+      .post('/platform/auth/login')
+      .send(cuerpo);
 
     expect(respuesta.status).toBe(422);
-    assertMatchesSpec('clinical-api', `${PUNTERO_LOGIN}/422`, respuesta.body);
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
     expect(await sesionesDeLosUsuarios()).toBe(antes);
   });
 
   it('responde 422 CUERPO_INVALIDO sin eco del parser cuando el JSON viene malformado', async () => {
-    const respuesta = await request(appDeLogin())
+    const respuesta = await clienteVerificado(appDeLogin())
       .post('/platform/auth/login')
       .set('Content-Type', 'application/json')
       .send('{"email": "x@test.local", "password": ');
 
     expect(respuesta.status).toBe(422);
-    assertMatchesSpec('clinical-api', `${PUNTERO_LOGIN}/422`, respuesta.body);
     expect(JSON.stringify(respuesta.body)).not.toContain('JSON');
   });
 });

@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import {
@@ -22,6 +22,8 @@ import {
 
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 304;
+/** Ruta de mentira para ejercitar el guard: el contrato no la describe, así que no se verifica contra el spec. */
+const RUTA_DE_MENTIRA = { respuestasAjenasAlContrato: [{ ruta: '/platform/ruta-protegida' }] };
 const TOKEN_A = 'tokenSinteticoBajaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const TOKEN_B = 'tokenSinteticoBajaBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
 
@@ -64,7 +66,7 @@ afterAll(async () => {
 });
 
 async function abrirSesion(usuario: UsuarioDeTest): Promise<string> {
-  const login = await request(app)
+  const login = await clienteVerificado(app)
     .post('/platform/auth/login')
     .send({ email: usuario.email, password: usuario.password });
   expect(login.status).toBe(204);
@@ -77,19 +79,23 @@ describe('oncolens users deactivate', () => {
     { timeout: PLAZO_DE_PROCESO_MS },
     async () => {
       const cookie = await abrirSesion(baja);
-      const antes = await request(app).get('/platform/ruta-protegida').set('Cookie', cookie);
+      const antes = await clienteVerificado(app, RUTA_DE_MENTIRA)
+        .get('/platform/ruta-protegida')
+        .set('Cookie', cookie);
       expect(antes.status).not.toBe(401);
 
       const resultado = await cli.ejecutar(['users', 'deactivate', '--email', baja.email], '');
 
       expect(resultado.codigo).toBe(0);
-      const despues = await request(app).get('/platform/ruta-protegida').set('Cookie', cookie);
+      const despues = await clienteVerificado(app, RUTA_DE_MENTIRA)
+        .get('/platform/ruta-protegida')
+        .set('Cookie', cookie);
       expect(despues.status).toBe(401);
       expect(despues.body.error).toBe('NO_AUTENTICADO');
-      const loginNuevo = await request(app)
+      const loginNuevo = await clienteVerificado(app)
         .post('/platform/auth/login')
         .send({ email: baja.email, password: baja.password });
-      const loginErroneo = await request(app)
+      const loginErroneo = await clienteVerificado(app)
         .post('/platform/auth/login')
         .send({ email: baja.email, password: 'SINT-contrasena-que-no-es' });
       expect(loginNuevo.status).toBe(401);
@@ -99,7 +105,7 @@ describe('oncolens users deactivate', () => {
       await cliente.query(`UPDATE auth."user" SET account_status = 'activo' WHERE id = $1`, [
         baja.id,
       ]);
-      const trasReactivar = await request(app)
+      const trasReactivar = await clienteVerificado(app, RUTA_DE_MENTIRA)
         .get('/platform/ruta-protegida')
         .set('Cookie', cookie);
       expect(trasReactivar.status).toBe(401);

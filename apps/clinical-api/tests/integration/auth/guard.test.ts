@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto';
 import express, { Router } from 'express';
 import { http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
-import request from 'supertest';
+import type { Response } from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import type { generadorDeIds } from '../../support/filas-sinteticas.js';
@@ -25,7 +25,6 @@ import {
 const urlBase = inject('urlBaseDeTest');
 const ESPACIO_DE_IDS = 102;
 const RAG_URL = 'http://rag-orchestrator:8000/rag/query';
-const PUNTERO_NO_AUTENTICADO = '#/components/responses/NoAutenticado';
 const AHORA = '2026-10-16T12:00:00.000Z';
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -51,6 +50,12 @@ function rutaProtegidaDePrueba(): Router {
   });
   return ruta;
 }
+
+/** El controlador de mentira responde 200 con la sesión adjunta: no es el contrato del análisis. Los 401/403 sí se verifican. */
+const clienteDelStub = (app: ReturnType<typeof appProtegida>) =>
+  clienteVerificado(app, {
+    respuestasAjenasAlContrato: [{ ruta: '/platform/evidence-analyses', status: 200 }],
+  });
 
 let cliente: Client;
 let doc1: UsuarioDeTest;
@@ -89,9 +94,8 @@ function appProtegida() {
   });
 }
 
-function esperarNoAutenticado(respuesta: request.Response) {
+function esperarNoAutenticado(respuesta: Response) {
   expect(respuesta.status).toBe(401);
-  assertMatchesSpec('clinical-api', PUNTERO_NO_AUTENTICADO, respuesta.body);
   expect(respuesta.body.error).toBe('NO_AUTENTICADO');
   expect(ejecuciones).toBe(0);
   expect(llamadasARag).toBe(0);
@@ -99,10 +103,12 @@ function esperarNoAutenticado(respuesta: request.Response) {
 
 describe('guard de sesión de /platform/*', () => {
   it('responde 401 NO_AUTENTICADO antes del controlador y sin llamar a rag-orchestrator cuando el análisis llega sin cookie o con una cookie desconocida [US-211 AC-3]', async () => {
-    const sinCookie = await request(appProtegida()).post('/platform/evidence-analyses').send({});
+    const sinCookie = await clienteDelStub(appProtegida())
+      .post('/platform/evidence-analyses')
+      .send({});
     esperarNoAutenticado(sinCookie);
 
-    const desconocida = await request(appProtegida())
+    const desconocida = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', 'oncolens_session=tokenAleatorioQueNoEstaEnLaBase')
       .send({});
@@ -116,7 +122,7 @@ describe('guard de sesión de /platform/*', () => {
       expiresAt: '2026-10-16T11:59:59.000Z',
     });
 
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', 'oncolens_session=tokenDeSesionCaducada')
       .send({});
@@ -125,7 +131,7 @@ describe('guard de sesión de /platform/*', () => {
   });
 
   it('responde 401 antes de validar el cuerpo cuando no hay sesión y el JSON viene malformado', async () => {
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Content-Type', 'application/json')
       .send('{"malformado":');
@@ -140,7 +146,7 @@ describe('guard de sesión de /platform/*', () => {
       expiresAt: AHORA,
     });
 
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', 'oncolens_session=tokenQueCaducaAhora')
       .send({});
@@ -164,7 +170,7 @@ describe('guard de sesión de /platform/*', () => {
       revoked,
     });
 
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', `oncolens_session=${token}`)
       .send({});
@@ -179,7 +185,7 @@ describe('guard de sesión de /platform/*', () => {
       expiresAt: '2026-10-16T20:00:00.000Z',
     });
 
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', 'otraCookie=1; oncolens_session=tokenVigente; tema=oscuro')
       .send({});
@@ -207,7 +213,7 @@ describe('guard de sesión de /platform/*', () => {
       expiresAt: '2026-10-16T20:00:00.000Z',
     });
 
-    const respuesta = await request(appProtegida())
+    const respuesta = await clienteDelStub(appProtegida())
       .post('/platform/evidence-analyses')
       .set('Cookie', 'oncolens_session=tokenGuardia')
       .send({});

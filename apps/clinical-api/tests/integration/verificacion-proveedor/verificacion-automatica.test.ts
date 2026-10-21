@@ -26,7 +26,8 @@ describe('verificación automática del proveedor', () => {
       campoNoDeclarado: VALOR_SENTINELA,
     });
 
-    const peticion = async () => clienteVerificado(app).post('/platform/evidence-analyses').send({});
+    const peticion = async () =>
+      clienteVerificado(app).post('/platform/evidence-analyses').send({});
 
     await expect(peticion()).rejects.toThrow(
       /clinical-api POST \/platform\/evidence-analyses 200: .*\/campoNoDeclarado/,
@@ -40,7 +41,8 @@ describe('verificación automática del proveedor', () => {
       error: VALOR_SENTINELA,
     });
 
-    const peticion = async () => clienteVerificado(app).post('/platform/evidence-analyses').send({});
+    const peticion = async () =>
+      clienteVerificado(app).post('/platform/evidence-analyses').send({});
 
     await expect(peticion()).rejects.toThrow(
       /clinical-api POST \/platform\/evidence-analyses 422: \/error/,
