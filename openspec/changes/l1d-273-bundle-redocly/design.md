@@ -47,6 +47,7 @@ Sin cambios en `apps/*/openapi.yaml`, `contracts/` ni en lo generado; el AC-1 lo
 - Redocly puede reordenar claves: el AC-1 exige que lo generado y el extracto del readme no cambien;
   si cambian solo por orden, se normaliza el orden antes de generar (nunca se acepta un diff).
 - El `globalSetup` añade ~1 s por suite.
+- En modo `watch` el empaquetado no se recalcula: reinicia vitest tras editar un `openapi.yaml`.
 
 ## Open Questions
 

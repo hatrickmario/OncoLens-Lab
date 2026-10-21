@@ -1,18 +1,25 @@
 import { bundle, createConfig } from '@redocly/openapi-core';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { getBundledSpecs, prepararSpecsEmpaquetados } from '../lib/bundledSpecs.mjs';
 import { bundleSpecs } from '../lib/context.mjs';
+import { assertSharedSchemasSingleOrigin } from '../rules/assertSharedSchemasSingleOrigin.mjs';
 import { CLINICAL_API, EVIDENCE, PROVIDERS, SHARED_SCHEMAS } from '../lib/specs.mjs';
 import { ROOT, realContracts } from './helpers/parches.mjs';
 
 const EVIDENCE_REF = '../../contracts/schemas/evidence.yaml#/components/schemas';
 
-/** Los specs crudos reales con `cambios` aplicados sobre una copia; empaqueta y devuelve la entrada del proveedor. */
-async function empaquetarConCambios(provider, cambiar) {
+/** Los specs crudos reales con `cambios` aplicados sobre una copia, empaquetados. */
+async function empaquetarSpecsConCambios(provider, cambiar) {
   const real = await realContracts();
   const specs = Object.fromEntries(Object.entries(real.specs).map(([name, { file, raw }]) => [name, { file, raw: structuredClone(raw) }]));
   cambiar(specs[provider].raw);
-  return (await bundleSpecs(specs))[provider];
+  return bundleSpecs(specs);
+}
+
+/** Empaqueta con `cambios` y devuelve la entrada del proveedor. */
+async function empaquetarConCambios(provider, cambiar) {
+  return (await empaquetarSpecsConCambios(provider, cambiar))[provider];
 }
 
 describe('empaquetado en memoria con bundleDocument', () => {
@@ -31,7 +38,7 @@ describe('empaquetado en memoria con bundleDocument', () => {
     expect(JSON.stringify(bundled)).not.toMatch(/"\$ref":"[^#]/);
   });
 
-  it('nombra el archivo y la $ref cuando apunta a una subruta inexistente de evidence.yaml [US-223 AC-2]', async () => {
+  it('nombra el archivo y la $ref cuando apunta a una subruta inexistente de evidence.yaml [US-223 AC-2] [US-033 AC-8]', async () => {
     const entrada = await empaquetarConCambios(CLINICAL_API, (raw) => {
       raw.components.schemas.EvidenceOption = { $ref: `${EVIDENCE_REF}/EvidenceOption/properties/noExiste` };
     });
@@ -47,7 +54,7 @@ describe('empaquetado en memoria con bundleDocument', () => {
       raw.components.schemas.CitedSource = { allOf: [{ $ref: `${EVIDENCE_REF}/CitedSourceFields` }] };
     });
     expect(entrada.bundled).toBeNull();
-    expect(entrada.error).toContain('apps/clinical-api/openapi.yaml: schema repetido CitedSourceFields');
+    expect(entrada.error).toContain('apps/clinical-api/openapi.yaml: schema repetido o derivado CitedSourceFields');
   });
 
   it('deja el spec crudo intacto cuando empaqueta', async () => {
@@ -55,6 +62,35 @@ describe('empaquetado en memoria con bundleDocument', () => {
     expect(real.specs[CLINICAL_API].raw.components.schemas.EvidenceOption).toEqual({
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption',
     });
-    expect(real.specs[EVIDENCE].bundled).toBe(real.specs[EVIDENCE].raw);
+    expect(real.specs[EVIDENCE].bundled).toEqual(real.specs[EVIDENCE].raw);
+  });
+
+  it('reporta el error del empaquetado una vez cuando un schema derivado de una subruta deja el spec sin empaquetar [US-223 AC-2]', async () => {
+    const specs = await empaquetarSpecsConCambios(CLINICAL_API, (raw) => {
+      raw.components.schemas.OpcionDerivada = { $ref: `${EVIDENCE_REF}/EvidenceOption/properties/option` };
+    });
+    const hallazgos = assertSharedSchemasSingleOrigin(specs);
+    expect(specs[CLINICAL_API].bundled).toBeNull();
+    expect(hallazgos.filter((item) => item.file === 'apps/clinical-api/openapi.yaml' && item.message.includes('schema repetido o derivado'))).toHaveLength(1);
+  });
+
+  it('reporta la colisión una sola vez cuando el spec define un nombre de evidence.yaml [US-223 AC-2]', async () => {
+    const specs = await empaquetarSpecsConCambios(CLINICAL_API, (raw) => {
+      raw.components.schemas.CitedSourceFields = { type: 'object', properties: { distinto: { type: 'string' } } };
+      raw.components.schemas.CitedSource = { allOf: [{ $ref: `${EVIDENCE_REF}/CitedSourceFields` }] };
+    });
+    const hallazgos = assertSharedSchemasSingleOrigin(specs).filter((item) => item.message.includes('CitedSourceFields'));
+    expect(hallazgos).toHaveLength(1);
+  });
+});
+
+describe('specs empaquetados registrados', () => {
+  // Otra clave de caché con el mismo contenido: el worker ya registró la raíz por defecto.
+  const otraRaiz = `${ROOT}/scripts/..`;
+
+  it('lanza specs sin empaquetar cuando no se registraron y prepararSpecsEmpaquetados no los habilita', async () => {
+    expect(() => getBundledSpecs(otraRaiz)).toThrow('specs sin empaquetar');
+    await prepararSpecsEmpaquetados(otraRaiz);
+    expect(() => getBundledSpecs(otraRaiz)).toThrow('specs sin empaquetar');
   });
 });

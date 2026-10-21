@@ -3,7 +3,7 @@
  * empaquetado (`bundleSpecs()`), con la misma configuración de Ajv2020 que `contracts:check`.
  * Lo usan los tests de integración hasta que exista `contracts:verify-provider` (US-214).
  */
-import { loadBundledSpecs } from './bundledSpecs.mjs';
+import { getBundledSpecs } from './bundledSpecs.mjs';
 import { createExampleValidator } from './validator.mjs';
 
 let validator;
@@ -15,7 +15,7 @@ let validator;
  * @returns {{ path: string, message: string }[]} vacío si el cuerpo cumple el spec
  */
 export function matchesSpec(provider, pointer, body) {
-  validator ??= createExampleValidator(loadBundledSpecs());
+  validator ??= createExampleValidator(getBundledSpecs());
   const verdict = validator.validate({ spec: provider, target: pointer }, body);
   if (verdict.error) throw new Error(verdict.error);
   return verdict.problems;

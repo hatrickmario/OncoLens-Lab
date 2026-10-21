@@ -1,11 +1,11 @@
 import { defineConfig } from 'vitest/config';
+import { vitestEmpaquetado } from '../../scripts/contracts/vitest/index.mjs';
 
 export default defineConfig({
   test: {
     environment: 'node',
     // Los tests que validan respuestas contra openapi.yaml leen el empaquetado precalculado (US-223).
-    globalSetup: ['../../scripts/contracts/vitest/globalSetup.mjs'],
-    setupFiles: ['../../scripts/contracts/vitest/setupFile.mjs'],
+    ...vitestEmpaquetado,
     include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
     // La suite contra PostgreSQL real tiene su propia configuración (npm run test:integration, US-038).
     exclude: [
