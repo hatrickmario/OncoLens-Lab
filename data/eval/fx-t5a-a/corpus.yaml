@@ -6,7 +6,7 @@ documentos:
   - {id: doc-m2, titulo: 'Anti-HER2 Safety (test)', cancer: mama}
   - {id: doc-p1, titulo: 'Prostate Cancer Treatment (test)', cancer: prostata}
   - {id: doc-p2, titulo: 'Prostate Screening (test)', cancer: prostata}
-  - {id: doc-inj, titulo: 'Documento de prueba (test)', cancer: mama}
+  - {id: doc-inj, titulo: 'Documento de prueba (test)', cancer: prostata}
 chunks:
   - id: ch-m1-1
     documento: doc-m1

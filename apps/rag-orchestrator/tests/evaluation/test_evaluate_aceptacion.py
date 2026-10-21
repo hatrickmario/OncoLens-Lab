@@ -12,12 +12,31 @@ from tests.evaluation.conftest import RAIZ_APP
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
-ETAPAS = {"idioma", "catalogo", "embeddings", "busqueda", "reranker", "generacion", "nli", "consulta"}
+ETAPAS = {
+    "idioma",
+    "catalogo",
+    "embeddings",
+    "busqueda",
+    "reranker",
+    "generacion",
+    "nli",
+    "consulta",
+}
 
 
 def correr(salida: Path, *extra: str, config: Path = CONFIG) -> int:
     return main(
-        ["--config", str(config), "--suite", "all", "--report", "json", "--salida", str(salida), *extra],
+        [
+            "--config",
+            str(config),
+            "--suite",
+            "all",
+            "--report",
+            "json",
+            "--salida",
+            str(salida),
+            *extra,
+        ],
         reloj=RelojFijo(),
     )
 
@@ -37,7 +56,9 @@ def test_evaluate_con_fx_t5a_a_escribe_el_reporte_con_metricas_y_configuracion(
     assert completa["recuperacion"]["total"]["n"] == 4
     assert completa["recuperacion"]["es_a_en"]["n"] == 2
     assert completa["recuperacion"]["total"]["recall_at_10"] is not None
-    assert completa["citas"]["precision"] == pytest.approx(3 / 4)
+    assert completa["citas"]["precision"] == pytest.approx(
+        4 / 5
+    )  # 5 citas propuestas, 1 a un chunk no recuperado
     assert completa["sin_evidencia"]["exactitud"] == 1.0
     assert completa["opciones_con_cita_y_soporte"]["porcentaje"] == pytest.approx(3 / 5)
     assert set(reporte["latencia_p95_ms"]) == ETAPAS
