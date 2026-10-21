@@ -17,10 +17,10 @@
 - [x] 2.3 Átomos `components/ui/{card,input,label,button,alert}.tsx`, `lib/utils.ts` (`cn`) y `components.json`
 - [x] 2.4 Migrar `app/login/page.tsx` y `organisms/login-form.tsx`; borrar `login.module.css`, `login-form.module.css` y `molecules/campo-con-etiqueta*`; tests de UI y E2E de login en verde sin cambiar aserciones [ARR-02 AC-3] · commit `feat(L1D-278)`
 - [x] 2.5 Tipografía: token `--font-sans` con `system-ui` (Public Sans autoalojada queda para otra historia; design.md D3)
-- [ ] 2.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo. Incluir la pantalla de análisis a 1280 px para descartar efectos del *preflight* de Tailwind [ARR-02 AC-3]
-- [ ] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-278)`
+- [x] 2.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo. Incluir la pantalla de análisis a 1280 px para descartar efectos del *preflight* de Tailwind [ARR-02 AC-3]
+- [x] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-278)`
 
 ## 3. Cierre
 
-- [ ] 3.1 `openspec validate l1d-278-e2e-ci-login-tailwind --strict`
+- [x] 3.1 `openspec validate l1d-278-e2e-ci-login-tailwind --strict`
 - [ ] 3.2 `npm test --workspace apps/web`, `npm run build --workspace apps/web` y `npm run test:e2e` en verde; job `e2e` verde en el PR
