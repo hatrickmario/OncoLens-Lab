@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv } from 'node:crypto';
 import type { AnilloDeClaves } from './anillo-de-claves.js';
+import { IdentityIntegrityError } from './identity-integrity-error.js';
 
 const ALGORITMO = 'aes-256-gcm';
 const BYTES_DE_NONCE = 12;
@@ -53,7 +54,9 @@ export function crearCifradorAesGcm({
     },
     descifrar(blob, contexto, keyVersion) {
       const clave = anillo.claveDe(keyVersion);
-      if (clave === undefined) throw new Error('versión de clave desconocida');
+      if (clave === undefined || blob.length < BYTES_DE_NONCE + BYTES_DE_ETIQUETA) {
+        throw new IdentityIntegrityError();
+      }
       const nonce = blob.subarray(0, BYTES_DE_NONCE);
       const texto = blob.subarray(BYTES_DE_NONCE, blob.length - BYTES_DE_ETIQUETA);
       const etiqueta = blob.subarray(blob.length - BYTES_DE_ETIQUETA);
@@ -62,7 +65,12 @@ export function crearCifradorAesGcm({
       });
       descifrador.setAAD(aadDeCampo(contexto, keyVersion));
       descifrador.setAuthTag(etiqueta);
-      return Buffer.concat([descifrador.update(texto), descifrador.final()]).toString('utf8');
+      try {
+        return Buffer.concat([descifrador.update(texto), descifrador.final()]).toString('utf8');
+      } catch {
+        // El error de OpenSSL se descarta: la causa no importa y no debe viajar a ningún log.
+        throw new IdentityIntegrityError();
+      }
     },
   };
 }
