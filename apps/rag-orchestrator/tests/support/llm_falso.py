@@ -38,6 +38,12 @@ ESCENARIOS_LLM: dict[str, str] = {
             "details": [DETALLE_UNO, DETALLE_DOS, DETALLE_TRES],
         }
     ),
+    "LLM-DETALLE-CON-ARTEFACTO": _salida(
+        {
+            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1"),
+            "details": [DETALLE_UNO, "El ensayo NSABP-B-3隀 reportó el mismo beneficio."],
+        }
+    ),
     "LLM-DOS": _salida(
         _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1"),
         _opcion(OPCION_SOLA, RAZON_SOLA, "ch-inj-1"),

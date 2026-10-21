@@ -88,3 +88,9 @@ def test_el_prompt_recorta_los_fragmentos_al_presupuesto_dejando_siempre_el_mas_
     (prompt,) = _prompts_enviados(max_chars_fragmentos=1)
 
     assert prompt.count("[chunkId:") == 1
+
+
+def test_rag_query_omite_el_parrafo_de_detalle_con_artefactos_de_generacion_aunque_el_nli_lo_implique():
+    cuerpo = _consultar("LLM-DETALLE-CON-ARTEFACTO", NliFalso(por_defecto=IMPLICA))
+
+    assert cuerpo["evidenceOptions"][0]["details"] == [DETALLE_UNO]
