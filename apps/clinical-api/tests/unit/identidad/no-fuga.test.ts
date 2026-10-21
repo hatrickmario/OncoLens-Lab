@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { FX_T4A_A } from '../../support/identidad.js';
 import {
   buscarFugaDeIdentidad,
+  capturarSalidaDelProceso,
   clavesDeIdentidadEnJson,
   ejecutarArnesDeNoFuga,
   valoresDeIdentidad,
@@ -156,5 +157,69 @@ describe('valoresDeIdentidad', () => {
     ]);
 
     expect(hallazgos).toContainEqual({ fuente: 'log:clinical-api[0]', valor: 'fernanda' });
+  });
+});
+
+describe('capturarSalidaDelProceso', () => {
+  const identidad = {
+    numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
+    nombreCompleto: FX_T4A_A.nombreCompleto,
+  };
+
+  /** Ejecuta un paso con la captura activa y revisa la salida del proceso con el mismo arnés del test de no-fuga. */
+  async function hallazgosDelPaso(ejecutar: () => Promise<void>) {
+    const { salida, restaurar } = capturarSalidaDelProceso();
+    try {
+      const hallazgos = await ejecutarArnesDeNoFuga({
+        pasos: [{ nombre: 'paso', ejecutar }],
+        valores: () => Promise.resolve(valoresDeIdentidad(identidad)),
+        fuentes: () =>
+          Promise.resolve(
+            salida.map((texto, indice) => ({ nombre: `salida:proceso[${indice}]`, texto })),
+          ),
+      });
+      return { hallazgos, salida: [...salida] };
+    } finally {
+      restaurar();
+    }
+  }
+
+  it.each(['log', 'info', 'warn', 'error', 'debug'] as const)(
+    'detecta Fernanda escrita con console.%s (sonda de mutación)',
+    async (metodo) => {
+      const { hallazgos } = await hallazgosDelPaso(() => {
+        console[metodo]('Fernanda');
+        return Promise.resolve();
+      });
+
+      expect(hallazgos).toContainEqual({ fuente: 'salida:proceso[0]', valor: 'fernanda' });
+    },
+  );
+
+  it('captura algo en un paso de control que escribe en el proceso (la captura no está ciega)', async () => {
+    const { salida } = await hallazgosDelPaso(() => {
+      process.stdout.write('línea de control');
+      console.info('control');
+      return Promise.resolve();
+    });
+
+    expect(salida.length).toBeGreaterThan(0);
+  });
+
+  it('detecta Fernanda escrita en process.stderr como Uint8Array', async () => {
+    const { hallazgos } = await hallazgosDelPaso(() => {
+      process.stderr.write(new TextEncoder().encode('Fernanda'));
+      return Promise.resolve();
+    });
+
+    expect(hallazgos).toContainEqual({ fuente: 'salida:proceso[0]', valor: 'fernanda' });
+  });
+
+  it('restaura console y process.stdout al terminar', () => {
+    const { restaurar } = capturarSalidaDelProceso();
+    restaurar();
+
+    expect(vi.isMockFunction(console.info)).toBe(false);
+    expect(vi.isMockFunction(process.stdout.write)).toBe(false);
   });
 });

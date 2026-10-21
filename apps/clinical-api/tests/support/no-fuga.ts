@@ -1,4 +1,5 @@
 import type { Client } from 'pg';
+import { vi } from 'vitest';
 // @ts-expect-error TS7016: scripts/contracts/lib/identity.mjs no trae declaración de tipos (lista única de campos de identidad, no se duplica).
 import { IDENTIDAD_PII, matchesIdentity } from '../../../../scripts/contracts/lib/identity.mjs';
 
@@ -153,4 +154,26 @@ export interface EntradaDelArnes {
 export async function ejecutarArnesDeNoFuga(entrada: EntradaDelArnes): Promise<Hallazgo[]> {
   for (const paso of entrada.pasos) await paso.ejecutar();
   return buscarFugaDeIdentidad(await entrada.valores(), await entrada.fuentes());
+}
+
+export interface CapturaDeSalida {
+  /** Cada escritura del proceso en orden, como texto. */
+  readonly salida: string[];
+  restaurar: () => void;
+}
+
+/**
+ * Borde del proceso: todo lo que clinical-api escriba en stdout/stderr durante los pasos es una fuente más.
+ */
+export function capturarSalidaDelProceso(): CapturaDeSalida {
+  const salida: string[] = [];
+  const capturar = (chunk: unknown) => {
+    salida.push(String(chunk));
+    return true;
+  };
+  const espias = [
+    vi.spyOn(process.stdout, 'write').mockImplementation(capturar),
+    vi.spyOn(process.stderr, 'write').mockImplementation(capturar),
+  ];
+  return { salida, restaurar: () => espias.forEach((espia) => espia.mockRestore()) };
 }

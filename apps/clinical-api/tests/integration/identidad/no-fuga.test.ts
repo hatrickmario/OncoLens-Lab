@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { crearLectorDeIdentidad } from '../../../src/modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import type { IdentityService } from '../../../src/modules/patients/identity.service.js';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../../support/gateway.js';
 import { servicioDeIdentidad } from '../../support/identidad.js';
 import {
+  capturarSalidaDelProceso,
   ejecutarArnesDeNoFuga,
   fuentesDeBaseDeDatos,
   type Fuente,
@@ -78,16 +79,7 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
       },
     ];
 
-    // Borde del proceso: todo lo que clinical-api escriba en stdout/stderr durante los pasos es una fuente más.
-    const salida: string[] = [];
-    const capturar = (chunk: unknown) => {
-      salida.push(String(chunk));
-      return true;
-    };
-    const espias = [
-      vi.spyOn(process.stdout, 'write').mockImplementation(capturar),
-      vi.spyOn(process.stderr, 'write').mockImplementation(capturar),
-    ];
+    const { salida, restaurar } = capturarSalidaDelProceso();
     let hallazgos: Awaited<ReturnType<typeof ejecutarArnesDeNoFuga>>;
     try {
       hallazgos = await ejecutarArnesDeNoFuga({
@@ -115,7 +107,7 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
         ],
       });
     } finally {
-      espias.forEach((espia) => espia.mockRestore());
+      restaurar();
     }
     expect(rag.llamadas()).toBe(1);
     expect(hallazgos).toEqual([]);
