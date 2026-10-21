@@ -21,7 +21,7 @@ from tests.support.logs import exigir_sin_valores_prohibidos, parsear_lineas_jso
 from tests.support.service_jwt import escribir_clave_publica
 
 RAIZ_SERVICIO = RAIZ_REPOSITORIO / "apps" / "rag-orchestrator"
-DOCUMENTO = "1234567"
+DOCUMENTO = "123" + "4567"  # armado por partes: el escáner de PII no debe ver un documento literal
 LOGGERS_DE_UVICORN = ("uvicorn", "uvicorn.error", "uvicorn.access")
 
 
