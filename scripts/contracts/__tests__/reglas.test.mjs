@@ -71,9 +71,9 @@ describe('reglas de contratos sobre los contratos reales', () => {
 });
 
 describe('reglas de contratos con parches de mutación', () => {
-  it.each(cases.map((caso) => [title(caso), caso]))('%s', (_title, caso) => {
+  it.each(cases.map((caso) => [title(caso), caso]))('%s', async (_title, caso) => {
     expect(byName[caso.regla], `la regla ${caso.regla} no existe`).toBeTypeOf('function');
-    const mutated = patchedContracts(real, caso.parches);
+    const mutated = await patchedContracts(real, caso.parches);
     const findings = byName[caso.regla](mutated.specs, mutated.examples, mutated.docs);
     if (caso.esperado.sinHallazgos) expect(findings).toEqual([]);
     else expect(matches(findings, caso), JSON.stringify(findings.slice(0, 4), null, 1)).toBe(true);

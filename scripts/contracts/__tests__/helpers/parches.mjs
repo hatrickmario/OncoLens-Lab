@@ -91,7 +91,7 @@ function applyPatch(parts, patch) {
  * `destino` es un spec (`clinical-api`, `rag-orchestrator`, `evidence`), `ejemplo:<archivo>`, `indice`,
  * `doc:data-model`, `doc:readme` o `catalogo:terminos-prohibidos`.
  */
-export function patchedContracts(base, patches) {
+export async function patchedContracts(base, patches) {
   const parts = {
     specs: Object.fromEntries(Object.entries(base.specs).map(([name, entry]) => [name, { file: entry.file, raw: structuredClone(entry.raw), error: entry.error }])),
     examples: structuredClone(base.examples),

@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { vitestEmpaquetado } from '../../scripts/contracts/vitest/index.mjs';
 
 export default defineConfig({
   resolve: {
@@ -12,6 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Los tests que validan respuestas contra openapi.yaml leen el empaquetado precalculado (US-223).
+    ...vitestEmpaquetado,
     include: ['tests/**/*.test.{ts,tsx}', 'app/**/*.test.{ts,tsx}'],
     // El test de build (AC-5) ejecuta `next build` y se lanza aparte: npm run test:build.
     exclude: ['tests/build/**', 'node_modules/**'],

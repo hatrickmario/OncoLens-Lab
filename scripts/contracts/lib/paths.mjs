@@ -8,6 +8,9 @@ import { CLINICAL_API, EVIDENCE, PROVIDERS, RAG_ORCHESTRATOR } from './specs.mjs
 /** Raíz del repositorio cuando no se indica otra (CONTRACTS_ROOT). */
 export const DEFAULT_ROOT = path.resolve(import.meta.dirname, '../../..');
 
+/** Reglas estructurales de Redocly: las usan el lint de `contracts:check` y el empaquetado. */
+export const REDOCLY_CONFIG = path.join(import.meta.dirname, '../redocly.yaml');
+
 export const PATHS = {
   specs: {
     [CLINICAL_API]: 'apps/clinical-api/openapi.yaml',
