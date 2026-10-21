@@ -107,6 +107,20 @@ antes de aplicar la migración (evidencia útil para el Gate 2 aunque no es TDD 
   contenerlos o `integration-rag` falla. El simulacro de Pytest de `scripts/ci/__tests__/integracionRag.test.mjs` ya los incluye.
 - `tests/integration/` solo se ejecuta con `-m servicios_reales`: marcar los tests con ese marker.
 
+### Ronda del Gate 2 (privacy y design-principles)
+
+- Aplicado: defaults globales de `rag_corpus`, `rag_corpus_migrator` y `research_writer` (un `IN SCHEMA` no los quita), `EXECUTE` de
+  PUBLIC sobre funciones (default global), `REVOKE TEMPORARY ON DATABASE FROM PUBLIC` (la suite de integración de clinical-api y
+  el humo siguen en verde; el dueño de la base conserva su `TEMPORARY`; el Pytest de ai-services lo comprobará la CI), pruebas de
+  membresía, secuencias, funciones y enumeración de `pg_namespace`.
+- Fuente única de la lista de schemas dentro de la migración (`schemas_vedados = schemas_clinicos || public`) y en los tests TS
+  (`SCHEMAS_CLINICOS` de `tests/support/catalogo.ts`).
+- **Decisiones pendientes del humano:** (1) los *timeouts* de `ALTER ROLE SET` son protección operativa: el rol puede cambiarlos con
+  `SET` de sesión; (2) `clinical_api` es dueño del schema `corpus`: ¿invariante escrita de que nunca hace DML sobre él, o dueño
+  distinto (ADR-43)?
+- **Deuda:** TD-1 sincronizar la lista de schemas con `schema.prisma` y `assertDataModelDocument.mjs`; los Menores P3-8, P3-9 y
+  P3-10 del Gate 2 quedan sin aplicar.
+
 ## Pendiente de definir
 
 - D1 (AC-1 con el migrator): asumido según `[S1 resp. 14b]`; confirmar en el Gate 1.
