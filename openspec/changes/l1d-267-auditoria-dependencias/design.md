@@ -58,3 +58,9 @@ un CLI fino; `excepcionVencida()` con nombre propio.
 - **AC-1 (los 4 `high`):** son un solo aviso, `GHSA-vfj7-8cjw-p6xm` sobre `braces@3.0.3`, que es la última versión publicada (el aviso cubre `<=3.0.3`); `@next/eslint-plugin-next`, `fast-glob` y `micromatch` solo lo heredan, y npm solo ofrece bajar a la 14.2.35. No hay actualización: se registra como excepción de 30 días (`revisarAntesDe: 2026-11-20`), solo cadena de desarrollo.
 - **AC-4:** `docker` en `apps/web`, `apps/clinical-api` y `apps/rag-orchestrator`, más `docker-compose` en `infra/docker` (D3).
 - `pip-audit` se instala desde `scripts/ci/requirements-audit.txt` (versión exacta) y corre con `--no-deps --disable-pip` sobre los tres `requirements*.txt` (todos con versiones exactas), sin instalar el entorno. Los pasos del job viven en `scripts/ci/auditar-dependencias.sh` (los pasos de `ci.yml` no llevan lógica).
+
+## Decisiones y deuda para el humano (Gate 2)
+
+- Excepción de `braces` (30 días, sin parche) y desviación de AC-4 (`docker` en `apps/*`): pendientes de confirmación humana.
+- Deuda menor: argumentos del CLI posicionales en vez de `parseArgs`, `skip_reason` del caso de PR y tope del plazo máximo de una excepción.
+- `dependabot.yml` añade `pip` en `/scripts/ci` y `/scripts/contracts` (requirements propios).

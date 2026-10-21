@@ -18,6 +18,23 @@ updates:
       pip:
         patterns: ['*']
 
+  # Herramientas de la CI (pip-audit) y generador de Pydantic: requirements propios fuera de rag-orchestrator.
+  - package-ecosystem: pip
+    directory: /scripts/ci
+    schedule:
+      interval: weekly
+    groups:
+      pip-ci:
+        patterns: ['*']
+
+  - package-ecosystem: pip
+    directory: /scripts/contracts
+    schedule:
+      interval: weekly
+    groups:
+      pip-contracts:
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

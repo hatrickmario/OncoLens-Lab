@@ -10,7 +10,8 @@ cd "$raiz"
 salida="$(mktemp -d)"
 trap 'rm -rf "$salida"' EXIT
 
-npm audit --audit-level=high --json > "$salida/npm.json" || test -s "$salida/npm.json"
+# Sin umbral en la herramienta: el umbral (high y critical) vive en SEVERIDADES_BLOQUEANTES de auditar-dependencias.mjs.
+npm audit --json > "$salida/npm.json" || test -s "$salida/npm.json"
 req=apps/rag-orchestrator
 pip-audit --no-deps --disable-pip -f json -o "$salida/pip.json" \
   -r "$req/requirements.txt" -r "$req/requirements-dev.txt" -r "$req/requirements-eval.txt" || test -s "$salida/pip.json"

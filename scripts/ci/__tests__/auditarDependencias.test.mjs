@@ -30,7 +30,7 @@ const avisoNpm = (severidad = 'high') => ({
 const VERSIONES = { 'node_modules/braces': '3.0.3' };
 
 const AVISO_PIP = {
-  dependencies: [{ name: 'certifi', version: '2024.1.1', vulns: [{ id: 'PYSEC-2024-1', aliases: ['CVE-2024-0001'], fix_versions: ['2024.2.2'] }] }],
+  dependencies: [{ name: 'certifi', version: '2024.1.1', vulns: [{ id: 'PYSEC-2024-1', aliases: ['CVE-2024-1'], fix_versions: ['2024.2.2'] }] }],
 };
 
 const excepcion = (cambios = {}) => ({
@@ -73,7 +73,7 @@ describe('hallazgosBloqueantes', () => {
   });
 
   it('acepta un alias CVE de pip-audit como identificador de la excepción [US-217 AC-3]', () => {
-    const cubierta = excepcion({ id: 'CVE-2024-0001', paquete: 'certifi' });
+    const cubierta = excepcion({ id: 'CVE-2024-1', paquete: 'certifi' });
 
     expect(hallazgosBloqueantes(NPM_LIMPIO, AVISO_PIP, [cubierta], HOY).bloqueantes).toEqual([]);
   });
@@ -165,14 +165,21 @@ describe('auditar-dependencias.mjs', () => {
   });
 });
 
+describe('auditar-dependencias.sh', () => {
+  it('no fija un umbral en npm audit: el umbral vive en el intérprete [US-217 AC-1]', () => {
+    expect(readFileSync(path.join(RAIZ, 'scripts/ci/auditar-dependencias.sh'), 'utf8')).not.toContain('--audit-level');
+  });
+});
+
 describe('.github/dependabot.yml', () => {
   const config = parse(readFileSync(path.join(RAIZ, '.github/dependabot.yml'), 'utf8'));
-  const por = (ecosistema) => config.updates.find((u) => u.ecosystem === ecosistema || u['package-ecosystem'] === ecosistema);
+  const por = (ecosistema) => config.updates.find((u) => u['package-ecosystem'] === ecosistema);
+  const todos = (ecosistema) => config.updates.filter((u) => u['package-ecosystem'] === ecosistema);
   const directorios = (u) => u.directories ?? [u.directory];
 
   it('declara npm, pip, github-actions y docker en los directorios del stack [US-217 AC-4]', () => {
     expect(directorios(por('npm'))).toEqual(['/']);
-    expect(directorios(por('pip'))).toEqual(['/apps/rag-orchestrator']);
+    expect(todos('pip').flatMap(directorios).sort()).toEqual(['/apps/rag-orchestrator', '/scripts/ci', '/scripts/contracts']);
     expect(directorios(por('github-actions'))).toEqual(['/']);
     expect(directorios(por('docker')).sort()).toEqual(['/apps/clinical-api', '/apps/rag-orchestrator', '/apps/web']);
     expect(directorios(por('docker-compose'))).toEqual(['/infra/docker']);
