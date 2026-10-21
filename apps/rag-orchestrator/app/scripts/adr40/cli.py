@@ -92,6 +92,73 @@ def _decidir(candidatos: dict[str, dict[str, Any]], argumentos: argparse.Namespa
     )
 
 
+def _armar_detectores(
+    raiz: Path, ner: tuple[Any, float] | None
+) -> dict[str, tuple[DetectorPii, float | None]]:
+    """Del mas simple al mas complejo; el segundo valor es la memoria de carga (``None`` si no carga modelo)."""
+    formatos_repo = raiz / "config" / "pii-formats.json"
+    ampliado = DetectorDePatrones(cargar_formatos([formatos_repo, FORMATOS_B2]))
+    detectores: dict[str, tuple[DetectorPii, float | None]] = {
+        "1-base": (DetectorDePatrones(cargar_formatos([formatos_repo])), None),
+        "1": (ampliado, None),
+    }
+    if ner is not None:
+        detectores["2"] = (DetectorConNer(ampliado, ner[0]), ner[1])
+    return detectores
+
+
+def _medir_candidatos(
+    detectores: dict[str, tuple[DetectorPii, float | None]],
+    textos: Sequence[TextoSembrado],
+    argumentos: argparse.Namespace,
+) -> dict[str, dict[str, Any]]:
+    return {
+        id_c: {
+            **medir_candidato(
+                detector,
+                textos,
+                corridas=argumentos.corridas,
+                minimo_cobertura=argumentos.cobertura,
+                remuestreos=argumentos.remuestreos,
+                semilla=argumentos.semilla,
+                reloj=time.perf_counter,
+            ),
+            "memoria_carga_mb": memoria,
+        }
+        for id_c, (detector, memoria) in detectores.items()
+    }
+
+
+def _armar_reporte(
+    argumentos: argparse.Namespace,
+    ahora: datetime,
+    n_textos: int,
+    ner_medido: bool,
+    candidatos: dict[str, dict[str, Any]],
+    decision: Decision,
+) -> dict[str, Any]:
+    return {
+        "fecha": ahora.isoformat(),
+        "equipo": {"sistema": platform.platform(), "python": platform.python_version()},
+        "dataset": {"nombre": "pii-mini", "n_textos": n_textos, "clase": "sintetico"},
+        "criterio": {
+            "minimo": argumentos.minimo,
+            "cobertura": argumentos.cobertura,
+            "margen_memoria_mb": argumentos.margen_memoria_mb,
+        },
+        "modelo_ner": {
+            "nombre": argumentos.ner_modelo,
+            "version": argumentos.ner_version,
+            "medido": ner_medido,
+        },
+        "candidatos": candidatos,
+        "decision": {
+            "elegido": decision.elegido,
+            "descartes": [{"candidato": c, "motivo": m} for c, m in decision.descartes],
+        },
+    }
+
+
 def ejecutar(
     argumentos: argparse.Namespace,
     textos: Sequence[TextoSembrado],
@@ -99,53 +166,13 @@ def ejecutar(
     raiz: Path,
     cargador_ner: CargadorNer = cargar_ner,
 ) -> int:
-    base = DetectorDePatrones(cargar_formatos([raiz / "config" / "pii-formats.json"]))
-    ampliado = DetectorDePatrones(
-        cargar_formatos([raiz / "config" / "pii-formats.json", FORMATOS_B2])
-    )
-    detectores: dict[str, tuple[DetectorPii, float | None]] = {
-        "1-base": (base, None),
-        "1": (ampliado, None),
-    }
     ner = cargador_ner(argumentos.ner_modelo, argumentos.ner_version)
-    if ner is not None:
-        detectores["2"] = (DetectorConNer(ampliado, ner[0]), ner[1])
-    candidatos: dict[str, dict[str, Any]] = {}
-    for id_c, (detector, memoria) in detectores.items():
-        candidatos[id_c] = medir_candidato(
-            detector,
-            textos,
-            corridas=argumentos.corridas,
-            minimo_cobertura=argumentos.cobertura,
-            remuestreos=argumentos.remuestreos,
-            semilla=argumentos.semilla,
-            reloj=time.perf_counter,
-        )
-        candidatos[id_c]["memoria_carga_mb"] = memoria
+    candidatos = _medir_candidatos(_armar_detectores(raiz, ner), textos, argumentos)
     decision = _decidir(candidatos, argumentos)
-    escribir_reporte(
-        argumentos.out / "medicion.json",
-        {
-            "fecha": ahora().isoformat(),
-            "equipo": {"sistema": platform.platform(), "python": platform.python_version()},
-            "dataset": {"nombre": "pii-mini", "n_textos": len(textos), "clase": "sintetico"},
-            "criterio": {
-                "minimo": argumentos.minimo,
-                "cobertura": argumentos.cobertura,
-                "margen_memoria_mb": argumentos.margen_memoria_mb,
-            },
-            "modelo_ner": {
-                "nombre": argumentos.ner_modelo,
-                "version": argumentos.ner_version,
-                "medido": ner is not None,
-            },
-            "candidatos": candidatos,
-            "decision": {
-                "elegido": decision.elegido,
-                "descartes": [{"candidato": c, "motivo": m} for c, m in decision.descartes],
-            },
-        },
+    reporte = _armar_reporte(
+        argumentos, ahora(), len(textos), ner is not None, candidatos, decision
     )
+    escribir_reporte(argumentos.out / "medicion.json", reporte)
     if decision.elegido is not None:
         return SALIDA_OK
     return SALIDA_SIN_NER if ner is None else SALIDA_NINGUNO_CUMPLE
