@@ -112,10 +112,12 @@ def registrar_manejadores_de_error(app: FastAPI, trace_ids: TraceIdGenerator) ->
     @app.exception_handler(TipoNoHabilitadoError)
     async def tipo_no_habilitado(request: Request, error: TipoNoHabilitadoError) -> JSONResponse:
         """422 TIPO_NO_HABILITADO (RN-20): mensaje fijo, sin eco del tipo ni de la pregunta (RN-10)."""
+        trace_id = resolver_trace_id(request, trace_ids)
+        logger.warning("event=tipo_no_habilitado traceId=%s", trace_id)
         cuerpo = ErrorTipoNoHabilitado(
             error="TIPO_NO_HABILITADO",
             message="El tipo de cáncer no está habilitado en este entorno.",
-            traceId=resolver_trace_id(request, trace_ids),
+            traceId=trace_id,
         )
         return JSONResponse(status_code=422, content=cuerpo.model_dump())
 

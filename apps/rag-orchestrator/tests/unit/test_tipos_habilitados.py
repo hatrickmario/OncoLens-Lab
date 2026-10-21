@@ -19,12 +19,17 @@ def test_exigir_tipo_habilitado_no_lanza_cuando_el_tipo_esta_en_la_lista():
     exigir_tipo_habilitado("mama", ("mama", "prostata"))
 
 
-@pytest.mark.parametrize("tipo", ["pulmon", "Mama", "mama ", ""])
+@pytest.mark.parametrize("tipo", ["pulmon", "Mama", "mama "])
 def test_exigir_tipo_habilitado_lanza_sin_eco_del_tipo_cuando_no_coincide_exactamente(tipo):
     with pytest.raises(TipoNoHabilitadoError) as error:
         exigir_tipo_habilitado(tipo, ("mama", "prostata"))
 
-    assert tipo not in str(error.value) or tipo == ""
+    assert tipo not in str(error.value)
+
+
+def test_exigir_tipo_habilitado_lanza_cuando_el_tipo_esta_vacio():
+    with pytest.raises(TipoNoHabilitadoError):
+        exigir_tipo_habilitado("", ("mama", "prostata"))
 
 
 def test_exigir_tipo_habilitado_lanza_cuando_la_lista_esta_vacia():

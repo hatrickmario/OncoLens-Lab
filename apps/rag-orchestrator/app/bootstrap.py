@@ -49,12 +49,12 @@ from app.config.errores_de_configuracion import (
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
+from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
     cargar_catalogo_del_manifiesto,
 )
-from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth

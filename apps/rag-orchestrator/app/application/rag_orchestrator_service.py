@@ -53,7 +53,7 @@ from app.domain.relevance import (
     top_relevance_score,
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
-from app.domain.tipos_habilitados import TipoNoHabilitadoError, exigir_tipo_habilitado
+from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
     Limitation,
@@ -240,11 +240,7 @@ class RAGOrchestratorService:
         diagnostico = solicitud.clinicalContext.diagnosis
         if diagnostico is None:
             return
-        try:
-            exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
-        except TipoNoHabilitadoError:
-            logger.warning("event=tipo_no_habilitado traceId=%s", solicitud.traceId.root)
-            raise
+        exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""
