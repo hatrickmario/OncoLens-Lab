@@ -40,6 +40,41 @@ L1D-193 (`lint-lenguaje`), L1D-265 (`lint`), US-213/214/217 y US-068 cuelgan sus
 Nunca se usa `continue-on-error`. Un paso que depende de un change aún no mergeado se condiciona a su existencia e imprime
 `omitido: <motivo>`; el test del workflow falla si queda un `omitido:` cuando lo que esperaba ya existe.
 
+## E2E de Playwright: `.github/workflows/e2e.yml` (L1D-278, ARR-02)
+
+Workflow **aparte** de `ci.yml`, así que **no forma parte de `ci-ok`** (que depende de todos los jobs de `ci.yml`) y no
+bloquea el merge mientras sea informativo. Mismas reglas que `ci.yml`: `pull_request` y `push` a `main`, nunca
+`pull_request_target`, sin secretos del repositorio, acciones por SHA (las mismas versiones), `permissions: contents: read`
+y `timeout-minutes: 30`.
+
+| Paso | Qué hace |
+|---|---|
+| `npm ci` | Dependencias del monorepo |
+| `node scripts/ci/verificar-e2e-activos.mjs` | Falla nombrando archivo y línea si un E2E de `apps/web/e2e/` usa `test.skip`, `test.only` o `test.fixme` (también en `describe`) |
+| `npx playwright install --with-deps chromium` | Chromium y sus dependencias del sistema en el *runner* |
+| `npm run test:e2e` con `CI=true` | `scripts/e2e/ejecutar.sh`: Compose fingido (`LLM_PROVIDER=fake`, `MODEL_PROVIDER=fake`, seed sintético), `playwright test` y `down -v` |
+| `actions/upload-artifact` (`if: always()`) | `apps/web/playwright-report` y `apps/web/test-results`, **`retention-days: 3`** (repositorio público: el artefacto es descargable) |
+
+- **Modo CI de `ejecutar.sh`** (`CI` no vacía): rechaza `--mantener`; usa SIEMPRE su proyecto de Compose (`oncolens-e2e`)
+  y una carpeta de secretos temporal propia, nunca `COMPOSE_PROJECT_NAME` ni `ONCOLENS_SECRETS_DIR` del entorno (su `trap`
+  hace `down -v` y `rm -rf`); espera al web como máximo `E2E_ESPERA_STACK_SEGUNDOS` (180) y, si falla, imprime `compose ps`;
+  si el build de `@oncolens/clinical-language` falla, imprime su cola. Si otra pila local ocupa las subredes `172.28.x`, fija
+  `CLINICAL_NET_SUBNET` y `CORPUS_DB_NET_SUBNET`.
+- **`playwright.config.ts`:** `retries: 1` y `trace: 'on-first-retry'` solo con `CI` (sin `CI`: `retries: 0`, sin traza);
+  reporters `github` + `list` + `html`.
+- **Trazas sin credenciales (RN-14):** la contraseña de un E2E queda en el `fill` del `trace.trace`, en el valor de los
+  `input` de los snapshots y en `error-context.md` (que el informe HTML copia), no solo en el `postData`. El reporter
+  `apps/web/e2e/reporte-sin-secretos.ts`, siempre el primero, depura cada `trace.zip` y cada adjunto de texto al terminar el
+  intento: elimina `postData` y las respuestas de `POST /api/*` y sustituye por `[REDACTADO]` cada `E2E_*CONTRASENA`
+  (literal, escapada en JSON y codificada en URL). **Falla cerrado:** un adjunto que no se pueda depurar se borra. Los
+  usuarios de los E2E son sintéticos y su contraseña la genera `setup-secrets.sh` dentro de `ejecutar.sh`: no se versiona.
+- **Criterio de estabilidad para hacerlo requerido (design.md D2):** 10 ejecuciones consecutivas en verde en `main` sin
+  depender del reintento. Pasarlo a `ci.yml` y `ci-ok` (o marcar su check como requerido en la protección de `main`) es una
+  acción humana posterior, diferida a ARR-06 (**L1D-282**). Un E2E inestable es un bug del sprint: se arregla o se quita con
+  `Test-Removal:`, nunca se pone en cuarentena.
+- **Pendiente de verificar en el primer PR:** que el job corra en el *runner* real con los 17 E2E en verde (en local pasa
+  con `CI=true npm run test:e2e`).
+
 ## Fixtures de PR (`ci/tests/`)
 
 Cada AC de US-036 es un caso `ci/tests/cases/<caso>/case.json` que clona el repositorio con `git clone --local` a un
