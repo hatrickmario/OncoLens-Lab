@@ -17,6 +17,8 @@ export interface DependenciasDeAuth {
  * suyas en su historia; `createApp({})` sigue siendo válido (solo `/health`).
  */
 export interface AppDependencies {
+  /** Saltos de proxy de confianza para `req.ip` (`TRUST_PROXY_HOPS`); sin valor, Express no confía en ninguna cabecera. */
+  trustProxyHops?: number;
   /** Nombres de las claves de configuración cargadas y versión del servicio para `/health` (US-037); nunca valores. */
   salud?: InformacionDeSalud;
   /**
@@ -33,6 +35,8 @@ export interface AppDependencies {
 export function createApp(dependencies: AppDependencies): Express {
   const app = express();
   app.disable('x-powered-by');
+  if (dependencies.trustProxyHops !== undefined)
+    app.set('trust proxy', dependencies.trustProxyHops);
   app.use(createHealthRouter(dependencies.salud));
   const { plataforma } = dependencies;
   if (plataforma !== undefined) {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SesionConUsuario } from '../../src/modules/auth/auth.repository.js';
 import { createAuthService, hashDeToken } from '../../src/modules/auth/auth.service.js';
 import { tokenDeCookie } from '../../src/middleware/auth.js';
+import { registroDeIntentosDeTest } from '../support/intentos-por-ip.js';
 import { relojFijo, tokensFijos } from '../support/usuarios.js';
 
 const AHORA = '2026-10-16T12:00:00.000Z';
@@ -36,6 +37,7 @@ function servicioCon(sesion: SesionConUsuario | null) {
     reloj: relojFijo(AHORA),
     config: { sessionTtlHours: 8 },
     sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+    registroDeIntentosPorIp: registroDeIntentosDeTest(),
   });
   return { service, consultas };
 }

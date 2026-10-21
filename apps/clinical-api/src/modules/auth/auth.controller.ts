@@ -58,7 +58,7 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
     }
     const traceId = nuevoTraceId();
     try {
-      const { token } = await service.iniciarSesion(cuerpo.data);
+      const { token } = await service.iniciarSesion(cuerpo.data, request.ip);
       establecerCookieDeSesion(response, token);
       registrar({ event: EVENTO_LOGIN, resultado: 'ok', traceId });
       response.status(204).end();

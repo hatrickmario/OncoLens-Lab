@@ -5,6 +5,7 @@ import type { Clock } from './infrastructure/clock.js';
 import type { GeneradorDeIds } from './infrastructure/ids.js';
 import type { Registrar } from './infrastructure/logger.js';
 import type { InformacionDeSalud } from './routes/health.js';
+import { createRegistroDeIntentosPorIp } from './infrastructure/intentos-por-ip.memoria.js';
 import { createAuthRepository, type Consultador } from './modules/auth/auth.repository.js';
 import { createAuthService, type GeneradorDeToken } from './modules/auth/auth.service.js';
 import { createPasswordHasher } from './modules/auth/password-hasher.js';
@@ -51,8 +52,14 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
     reloj: dependencias.reloj,
     config: dependencias.auth,
     sesion: dependencias.sesion,
+    registroDeIntentosPorIp: createRegistroDeIntentosPorIp({
+      reloj: dependencias.reloj,
+      maxIntentos: dependencias.sesion.loginMaxFailedAttempts,
+      ventanaMinutos: dependencias.sesion.loginLockoutMinutes,
+    }),
   });
   return createApp({
+    trustProxyHops: dependencias.sesion.trustProxyHops,
     ...(dependencias.salud !== undefined && { salud: dependencias.salud }),
     plataforma: {
       auth: {

@@ -8,8 +8,10 @@ import {
   createAuthService,
   CredencialesInvalidasError,
   hashDeToken,
+  type RegistroDeIntentosPorIp,
 } from '../../src/modules/auth/auth.service.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
+import { registroDeIntentosDeTest } from '../support/intentos-por-ip.js';
 import { relojFijo, tokensFijos } from '../support/usuarios.js';
 
 const CORREO = 'ana@test.local';
@@ -68,6 +70,7 @@ function crearServicio(usuarios: Record<string, UsuarioParaLogin>) {
     reloj: relojFijo('2026-10-16T12:00:00.000Z'),
     config: { sessionTtlHours: 8 },
     sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+    registroDeIntentosPorIp: registroDeIntentosDeTest(),
   });
   return { service, hasher, sesiones, consultados, fallos, reinicios };
 }
@@ -236,10 +239,78 @@ describe('AuthService.iniciarSesion y el bloqueo de la cuenta', () => {
       reloj: relojFijo('2026-10-16T12:00:00.000Z'),
       config: { sessionTtlHours: 8 },
       sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+      registroDeIntentosPorIp: registroDeIntentosDeTest(),
     });
 
     await expect(
       service.iniciarSesion({ email: CORREO, password: CONTRASENA }),
     ).rejects.toBeInstanceOf(CredencialesInvalidasError);
+  });
+});
+
+describe('AuthService.iniciarSesion y el bloqueo por IP', () => {
+  function servicioConRegistro(registro: RegistroDeIntentosPorIp) {
+    const { repo, sesiones } = repositorioFalso({ [CORREO]: activo });
+    const hasher = hasherFalso();
+    const service = createAuthService({
+      repo,
+      hasher,
+      tokens: tokensFijos('token-uno'),
+      ids: () => 'sesion-1',
+      reloj: relojFijo('2026-10-16T12:00:00.000Z'),
+      config: { sessionTtlHours: 8 },
+      sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+      registroDeIntentosPorIp: registro,
+    });
+    return { service, hasher, sesiones };
+  }
+
+  function registroFalso(bloqueadas: string[] = []) {
+    const fallos: string[] = [];
+    const registro: RegistroDeIntentosPorIp = {
+      estaBloqueada: (ip) => bloqueadas.includes(ip),
+      registrarFallo: (ip) => {
+        fallos.push(ip);
+      },
+    };
+    return { registro, fallos };
+  }
+
+  it('cuenta un fallo contra la IP cuando la contraseña es incorrecta o el correo no existe', async () => {
+    const { registro, fallos } = registroFalso();
+    const { service } = servicioConRegistro(registro);
+
+    await expect(
+      service.iniciarSesion({ email: CORREO, password: 'otra' }, '198.51.100.7'),
+    ).rejects.toThrow();
+    await expect(
+      service.iniciarSesion({ email: 'nadie@test.local', password: 'x' }, '198.51.100.7'),
+    ).rejects.toThrow();
+
+    expect(fallos).toEqual(['198.51.100.7', '198.51.100.7']);
+  });
+
+  it('rechaza con motivo bloqueo_ip, verifica el hash señuelo y no cuenta otro fallo cuando la IP está bloqueada', async () => {
+    const { registro, fallos } = registroFalso(['198.51.100.7']);
+    const { service, hasher, sesiones } = servicioConRegistro(registro);
+
+    const error = await service
+      .iniciarSesion({ email: CORREO, password: CONTRASENA }, '198.51.100.7')
+      .catch((e: unknown) => e);
+
+    expect((error as CredencialesInvalidasError).motivo).toBe('bloqueo_ip');
+    expect(hasher.verificaciones).toEqual(['hash(señuelo)']);
+    expect(sesiones).toEqual([]);
+    expect(fallos).toEqual([]);
+  });
+
+  it('inicia sesión sin consultar el registro cuando no hay IP atribuible', async () => {
+    const { registro, fallos } = registroFalso(['198.51.100.7']);
+    const { service } = servicioConRegistro(registro);
+
+    await expect(service.iniciarSesion({ email: CORREO, password: CONTRASENA })).resolves.toEqual({
+      token: 'token-uno',
+    });
+    expect(fallos).toEqual([]);
   });
 });

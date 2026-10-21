@@ -20,7 +20,10 @@ export interface SesionAutenticada {
 
 export interface AuthService {
   /** Crea una sesión nueva y devuelve el token opaco en claro (solo viaja en la cookie). */
-  iniciarSesion(credenciales: { email: string; password: string }): Promise<{ token: string }>;
+  iniciarSesion(
+    credenciales: { email: string; password: string },
+    ip?: string,
+  ): Promise<{ token: string }>;
   /** `null` si el token no corresponde a una sesión vigente de un usuario activo. */
   resolverSesion(token: string): Promise<SesionAutenticada | null>;
   /** Revoca la sesión del token presentado (cierre de sesión, US-044 AC-1). */
@@ -31,13 +34,23 @@ export interface AuthService {
  * Por qué se rechazó el login. Solo el log lo distingue (US-044 D5): la respuesta HTTP es siempre la misma.
  * Valores cerrados: nunca llevan correo, IP ni contraseña.
  */
-export type MotivoDeRechazo = 'credenciales' | 'bloqueo_cuenta';
+export type MotivoDeRechazo = 'credenciales' | 'bloqueo_cuenta' | 'bloqueo_ip';
 
 export class CredencialesInvalidasError extends Error {
   constructor(readonly motivo: MotivoDeRechazo = 'credenciales') {
     super('Credenciales inválidas');
     this.name = 'CredencialesInvalidasError';
   }
+}
+
+/**
+ * Puerto del bloqueo por IP (US-044 D4): el adaptador decide dónde viven los fallos. La IP es la que Express atribuye
+ * al cliente con `trust proxy`; el puerto nunca la registra en logs.
+ */
+export interface RegistroDeIntentosPorIp {
+  /** `true` si la IP acumuló el máximo de fallos dentro de la ventana vigente. */
+  estaBloqueada(ip: string): boolean;
+  registrarFallo(ip: string): void;
 }
 
 export interface DependenciasDeAuthService {
@@ -48,6 +61,7 @@ export interface DependenciasDeAuthService {
   reloj: Clock;
   config: Pick<AuthConfig, 'sessionTtlHours'>;
   sesion: Pick<SesionConfig, 'loginMaxFailedAttempts' | 'loginLockoutMinutes'>;
+  registroDeIntentosPorIp: RegistroDeIntentosPorIp;
 }
 
 const MILISEGUNDOS_POR_HORA = 3_600_000;
@@ -64,26 +78,29 @@ function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
 }
 
 export function createAuthService(dependencias: DependenciasDeAuthService): AuthService {
-  const { repo, hasher, tokens, ids, reloj, config, sesion } = dependencias;
+  const { repo, hasher, tokens, ids, reloj, config, registroDeIntentosPorIp } = dependencias;
+  const bloqueo = dependencias.sesion;
   // Hash señuelo con los mismos parámetros: verificar contra él iguala el tiempo cuando el correo no existe (D3).
   const hashSenuelo = hasher.hash(CONTRASENA_DEL_SENUELO);
   hashSenuelo.catch(() => undefined);
 
   /**
-   * Un solo camino y un solo error para correo inexistente, contraseña errónea, cuenta no activa y cuenta bloqueada
-   * (D3, US-044 D5). Con la cuenta bloqueada se verifica contra el *hash* señuelo: mismo coste, mismo 401, y la
+   * Un solo camino y un solo error para correo inexistente, contraseña errónea, cuenta no activa y bloqueos por cuenta
+   * o por IP (D3, US-044 D5). Bajo bloqueo se verifica contra el *hash* señuelo: mismo coste, mismo 401, y la
    * contraseña correcta no se evalúa de forma observable.
    */
   async function autenticarCredenciales(
     email: string,
     password: string,
     ahora: Date,
+    ip: string | undefined,
   ): Promise<UsuarioParaLogin> {
     const usuario = await repo.buscarUsuarioPorCorreo(normalizarCorreo(email));
-    const bloqueada = usuario !== null && cuentaBloqueada(usuario, ahora);
-    const hashAVerificar = bloqueada || usuario === null ? await hashSenuelo : usuario.passwordHash;
+    const motivoDeBloqueo = motivoDeBloqueoDe(usuario, ahora, ip);
+    const hashAVerificar =
+      motivoDeBloqueo !== null || usuario === null ? await hashSenuelo : usuario.passwordHash;
     const contrasenaCorrecta = await hasher.verify(hashAVerificar, password);
-    if (bloqueada) throw new CredencialesInvalidasError('bloqueo_cuenta');
+    if (motivoDeBloqueo !== null) throw new CredencialesInvalidasError(motivoDeBloqueo);
     if (usuario === null) throw new CredencialesInvalidasError();
     if (!contrasenaCorrecta) {
       await registrarFallo(usuario, ahora);
@@ -94,18 +111,46 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
     return usuario;
   }
 
+  /** La IP manda sobre la cuenta; sin IP atribuible no hay bloqueo por IP. */
+  function motivoDeBloqueoDe(
+    usuario: UsuarioParaLogin | null,
+    ahora: Date,
+    ip: string | undefined,
+  ): MotivoDeRechazo | null {
+    if (ip !== undefined && registroDeIntentosPorIp.estaBloqueada(ip)) return 'bloqueo_ip';
+    if (usuario !== null && cuentaBloqueada(usuario, ahora)) return 'bloqueo_cuenta';
+    return null;
+  }
+
   /** Cuenta un fallo de contraseña y bloquea la cuenta al llegar a `LOGIN_MAX_FAILED_ATTEMPTS`. */
   function registrarFallo(usuario: UsuarioParaLogin, ahora: Date): Promise<void> {
     return repo.registrarFalloDeLogin(usuario.id, ahora, {
-      maxIntentos: sesion.loginMaxFailedAttempts,
-      minutosDeBloqueo: sesion.loginLockoutMinutes,
+      maxIntentos: bloqueo.loginMaxFailedAttempts,
+      minutosDeBloqueo: bloqueo.loginLockoutMinutes,
     });
   }
 
+  /** Todo rechazo por credenciales (no por bloqueo) cuenta contra la IP del cliente, exista o no el correo. */
+  async function autenticarContandoFallosPorIp(
+    email: string,
+    password: string,
+    ahora: Date,
+    ip: string | undefined,
+  ): Promise<UsuarioParaLogin> {
+    try {
+      return await autenticarCredenciales(email, password, ahora, ip);
+    } catch (error) {
+      if (error instanceof CredencialesInvalidasError && error.motivo === 'credenciales') {
+        if (ip !== undefined) registroDeIntentosPorIp.registrarFallo(ip);
+      }
+      throw error;
+    }
+  }
+
   return {
-    async iniciarSesion({ email, password }) {
+    async iniciarSesion({ email, password }, ip) {
       const ahora = reloj.now();
-      const usuario = await autenticarCredenciales(email, password, ahora);
+      const usuario = await autenticarContandoFallosPorIp(email, password, ahora, ip);
       const token = tokens.nuevo();
       const creada = await repo.crearSesion({
         id: ids(),
