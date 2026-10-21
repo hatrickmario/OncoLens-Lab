@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "datos-criticos.json (lo llena FEAT-04)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "items"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "items": {
+      "type": "array"
+    }
+  }
+}

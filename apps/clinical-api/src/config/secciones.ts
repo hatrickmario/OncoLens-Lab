@@ -107,10 +107,7 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
 
 /** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (tipos). */
 export type MotivoDeConfiguracionInvalida =
-  | 'valor_invalido'
-  | 'variable_ausente'
-  | 'catalogo_no_disponible'
-  | 'version_catalogo_distinta';
+  'valor_invalido' | 'variable_ausente' | 'catalogo_no_disponible' | 'version_catalogo_distinta';
 
 /**
  * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,
