@@ -1,4 +1,4 @@
-import { ConfiguracionInvalidaError, readPort } from './config.js';
+import { ConfiguracionInvalidaError, readIdentityKeyConfig, readPort } from './config.js';
 import { SecretoAusenteError, loadRequiredSecrets, type LeerArchivo } from './config/secrets.js';
 
 export interface DependenciasDeArranque {
@@ -29,6 +29,7 @@ export function arrancar({ env, readFile, log, exit, listen }: DependenciasDeArr
   let puerto: number;
   try {
     loadRequiredSecrets(env, readFile);
+    readIdentityKeyConfig(env);
     puerto = readPort(env);
   } catch (error) {
     if (error instanceof SecretoAusenteError) {
