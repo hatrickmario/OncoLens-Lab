@@ -59,7 +59,10 @@ def test_rag_query_no_incluye_details_en_la_opcion_cuando_el_llm_no_los_trae():
 
 
 def test_rag_query_no_incluye_details_cuando_ningun_parrafo_se_soporta():
-    cuerpo = _consultar("LLM-CON-DETALLE", NliFalso(por_defecto=IMPLICA, resultados={DETALLE_UNO: NEUTRAL, DETALLE_DOS: NEUTRAL}))
+    cuerpo = _consultar(
+        "LLM-CON-DETALLE",
+        NliFalso(por_defecto=IMPLICA, resultados={DETALLE_UNO: NEUTRAL, DETALLE_DOS: NEUTRAL}),
+    )
 
     assert "details" not in cuerpo["evidenceOptions"][0]
     assert cuerpo["omittedClaims"] == 2

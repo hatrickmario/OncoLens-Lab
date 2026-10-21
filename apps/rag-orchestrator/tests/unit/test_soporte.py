@@ -401,7 +401,9 @@ def test_la_opcion_queda_sin_detalle_y_no_con_lista_vacia_cuando_ningun_parrafo_
     assert resultado.omitidas == 1
 
 
-def test_omite_sin_consultar_al_nli_el_parrafo_con_lenguaje_prohibido_y_conserva_la_opcion() -> None:
+def test_omite_sin_consultar_al_nli_el_parrafo_con_lenguaje_prohibido_y_conserva_la_opcion() -> (
+    None
+):
     plan = _plan(_con_detalles("Detalle PROHIBIDO.", "Detalle limpio."))
 
     pares = pares_a_verificar(plan)

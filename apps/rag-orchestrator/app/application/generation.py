@@ -33,6 +33,7 @@ class _OpcionCruda(BaseModel):
     option: str = Field(min_length=1)
     rationale: str = Field(min_length=1)
     chunk_ids_citados: list[str] = Field(alias="citedChunkIds")
+    details: list[str] = Field(default_factory=list)
 
 
 class GenerationOutput(BaseModel):
@@ -49,8 +50,9 @@ ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
 class LlmEvidenceGenerator:
     """Implementa ``EvidenceGenerator`` sobre el puerto ``LlmClient``."""
 
-    def __init__(self, cliente: LlmClient) -> None:
+    def __init__(self, cliente: LlmClient, max_parrafos_detalle: int = 2) -> None:
         self._cliente = cliente
+        self._max_parrafos_detalle = max_parrafos_detalle
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
@@ -61,6 +63,7 @@ class LlmEvidenceGenerator:
             resumen_del_contexto_clinico(solicitud.clinicalContext),
             recuperacion.chunks_sobre_umbral,
             recuperacion.meta.responseLanguage,
+            self._max_parrafos_detalle,
         )
         try:
             crudo = await self._cliente.completar_json(prompt, ESQUEMA_DE_GENERACION)
@@ -75,11 +78,21 @@ class LlmEvidenceGenerator:
         )
         return EvidenciaGenerada(
             opciones=tuple(
-                OpcionGenerada(o.option, o.rationale, tuple(o.chunk_ids_citados))
+                OpcionGenerada(
+                    o.option,
+                    o.rationale,
+                    tuple(o.chunk_ids_citados),
+                    self._parrafos_de_detalle(o.details),
+                )
                 for o in salida.options
             ),
             limitaciones_propuestas=(),  # el LLM no genera limitaciones en el S1 [S1 resp. 11]
         )
+
+    def _parrafos_de_detalle(self, crudos: list[str]) -> tuple[str, ...]:
+        """Sin párrafos vacíos y hasta el máximo configurado (RN-22): lo que sobra se descarta sin validarlo."""
+        limpios = (p.strip() for p in crudos)
+        return tuple(p for p in limpios if p)[: self._max_parrafos_detalle]
 
     @staticmethod
     def _parsear(crudo: str, trace_id: str) -> GenerationOutput:

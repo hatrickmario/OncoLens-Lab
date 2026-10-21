@@ -231,7 +231,8 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
             settings.llm_request_timeout_ms,
             settings.llm_max_output_tokens,
             settings.llm_temperature,
-        )
+        ),
+        settings.details_max_paragraphs,
     )
 
 

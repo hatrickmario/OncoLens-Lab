@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal, get_args
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
@@ -11,7 +11,7 @@ from app.domain.claims import dividir_en_afirmaciones
 from app.domain.nli import ParNli, ResultadoNli
 
 CampoGenerado = Literal[
-    "option", "rationale", "unsupportedClaims", "limitations[].text", "synthesis"
+    "option", "rationale", "details", "unsupportedClaims", "limitations[].text", "synthesis"
 ]
 CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
 RETIRO_ES = "[afirmación retirada: formulación no permitida]"
@@ -48,6 +48,8 @@ class OpcionPlanificada:
     aceptada: OpcionAceptada
     option: Afirmacion
     afirmaciones: tuple[Afirmacion, ...]
+    # Un elemento por párrafo de detalle, con las afirmaciones que lo componen (ARR-08).
+    detalles: tuple[tuple[Afirmacion, ...], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -58,9 +60,11 @@ class PlanDeSoporte:
     @property
     def retiros(self) -> tuple[RetiroDeLenguaje, ...]:
         """Los fragmentos que incumplen el lenguaje (RN-23): campo y reglas, nunca el texto."""
-        fragmentos = [f for o in self.opciones for f in (o.option, *o.afirmaciones)] + list(
-            self.limitaciones
-        )
+        fragmentos = [
+            f
+            for o in self.opciones
+            for f in (o.option, *o.afirmaciones, *(a for p in o.detalles for a in p))
+        ] + list(self.limitaciones)
         return tuple(RetiroDeLenguaje(f.campo, f.reglas) for f in fragmentos if f.reglas)
 
 
@@ -114,6 +118,10 @@ def planificar_soporte(
                     afirmacion(a, "rationale", premisas)
                     for a in dividir_en_afirmaciones(aceptada.opcion.rationale)
                 ),
+                tuple(
+                    tuple(afirmacion(a, "details", premisas) for a in dividir_en_afirmaciones(p))
+                    for p in aceptada.opcion.details
+                ),
             )
         )
     limitaciones = tuple(
@@ -131,6 +139,9 @@ def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     for opcion in plan.opciones:
         if not opcion.option.reglas:
             yield from (a for a in opcion.afirmaciones if not a.reglas)
+            for parrafo in opcion.detalles:
+                if not any(a.reglas for a in parrafo):
+                    yield from parrafo
     yield from (limitacion for limitacion in plan.limitaciones if not limitacion.reglas)
 
 
@@ -171,10 +182,13 @@ def verificar_soporte(
     literal = literal_de_retiro(idioma)
     soportadas: list[OpcionAceptada] = []
     descartadas: list[OpcionSinSoporte] = []
+    parrafos_omitidos = 0
     for planificada in plan.opciones:
         sin_soporte = _descartar_si_no_se_soporta(planificada, veredictos, literal)
         if sin_soporte is None:
-            soportadas.append(planificada.aceptada)
+            aceptada, omitidos = _con_detalles_soportados(planificada, veredictos)
+            soportadas.append(aceptada)
+            parrafos_omitidos += omitidos
         else:
             descartadas.append(sin_soporte)
     limitaciones = [x.texto for x in plan.limitaciones if not x.reglas and veredictos[x]]
@@ -182,8 +196,28 @@ def verificar_soporte(
         tuple(soportadas),
         tuple(descartadas),
         tuple(limitaciones),
-        len(plan.limitaciones) - len(limitaciones),
+        len(plan.limitaciones) - len(limitaciones) + parrafos_omitidos,
     )
+
+
+def _con_detalles_soportados(
+    planificada: OpcionPlanificada, veredictos: dict[Afirmacion, bool]
+) -> tuple[OpcionAceptada, int]:
+    """El detalle es opcional: un párrafo se conserva solo si TODAS sus afirmaciones se soportan y cumplen RN-23.
+
+    El que no, se omite (no descarta la opción, que ya se soportó) y se cuenta; sin párrafos válidos, ``details`` queda
+    vacío y la respuesta lo omite.
+    """
+    aceptada = planificada.aceptada
+    if not planificada.detalles:
+        return aceptada, 0
+    conservados = [
+        texto
+        for texto, parrafo in zip(aceptada.opcion.details, planificada.detalles, strict=True)
+        if parrafo and all(not a.reglas and veredictos[a] for a in parrafo)
+    ]
+    omitidos = len(planificada.detalles) - len(conservados)
+    return replace(aceptada, opcion=replace(aceptada.opcion, details=tuple(conservados))), omitidos
 
 
 def _descartar_si_no_se_soporta(

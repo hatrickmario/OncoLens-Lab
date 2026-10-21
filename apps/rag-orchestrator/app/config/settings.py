@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.
     llm_num_ctx: int = Field(default=8192, gt=0)
     llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    # Párrafos de detalle por opción que se piden al LLM (ARR-08, RN-22); 0 desactiva el detalle. El contrato admite hasta 2.
+    details_max_paragraphs: int = Field(default=2, ge=0, le=2)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.
     ocr_engine: Literal["ocrmypdf-tesseract", "paddleocr", "doctr"] = "ocrmypdf-tesseract"
     ocr_languages: str = Field(default="spa", min_length=1)

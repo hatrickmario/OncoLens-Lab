@@ -16,6 +16,10 @@ class HealthStatus(BaseModel):
     status: Literal['ok']
 
 
+class Detail(RootModel[str]):
+    root: Annotated[str, Field(min_length=1)]
+
+
 class Warning(StrEnum):
     datos_sin_verificar = 'datos_sin_verificar'
     datos_en_conflicto = 'datos_en_conflicto'
@@ -1004,6 +1008,13 @@ class EvidenceOption(BaseModel):
     )
     option: str
     rationale: Annotated[str, Field(description='En el idioma de la pregunta.')]
+    details: Annotated[
+        list[Detail] | None,
+        Field(
+            description='Párrafos opcionales de detalle que amplían la justificación, en el idioma de la pregunta. Cada afirmación pasó citas y NLI (RN-01) y el filtro de lenguaje (RN-23); el párrafo que no las supera se omite y cuenta en omittedClaims. Ausente (nunca vacío) si ninguno se soporta.',
+            max_length=2,
+        ),
+    ] = None
     applicabilitySummary: ApplicabilitySummary
     populationNotComparable: Annotated[
         bool, Field(description='true solo si todas sus fuentes lo son (ADR-31).')
