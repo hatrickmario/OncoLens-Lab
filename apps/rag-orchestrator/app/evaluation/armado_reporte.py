@@ -46,6 +46,14 @@ def configuracion_evaluada(
     }
 
 
+def _familias(
+    resultados: Sequence[ResultadoConsulta], suite: str, config: ConfigSuite
+) -> dict[str, Any]:
+    return calcular_familias(
+        resultados, suite, config.semilla_bootstrap, config.bootstrap_repeticiones
+    )
+
+
 def armar_reporte(
     config: ConfigSuite,
     dataset: DatasetSuite,
@@ -59,9 +67,8 @@ def armar_reporte(
         "suite": suite,
         "configuracion": configuracion_evaluada(config, dataset, meta),
         "metricas": {
-            "completa": calcular_familias(
-                resultados, suite, config.semilla_bootstrap, config.bootstrap_repeticiones
-            )
+            "completa": _familias(resultados, suite, config),
+            "revisada": _familias([r for r in resultados if r.revisada], suite, config),
         },
         "latencia_p95_ms": latencia_p95_ms,
     }

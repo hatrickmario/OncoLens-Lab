@@ -18,17 +18,28 @@ _RECUPERACION = Objeto(
         "mrr_ic95": _IC,
     }
 )
-_FAMILIAS = Objeto(
+_VALIDACION = Objeto(
     {
-        "recuperacion": Objeto({"total": _RECUPERACION, "es_a_en": _RECUPERACION}),
-        "citas": Objeto({"precision": Numero(), "n": Numero()}),
-        "sin_evidencia": Objeto(
-            {"exactitud": Numero(), "n": Numero(), "violaciones_rn02": Numero()}
-        ),
-        "opciones_con_cita_y_soporte": Objeto({"porcentaje": Numero(), "n": Numero()}),
-    },
-    opcionales=frozenset({"recuperacion", "citas", "sin_evidencia", "opciones_con_cita_y_soporte"}),
+        "preguntas_validadas": Numero(),
+        "preguntas_no_validadas": Numero(),
+        "rotulo": Enumerado(frozenset({"validada", "no_validada"})),
+    }
 )
+
+
+def _familia(campos: dict[str, object]) -> Objeto:
+    """Toda familia de métricas declara cuántas preguntas validadas y no validadas la componen (AC-4)."""
+    return Objeto({**campos, "validacion": _VALIDACION})
+
+
+_CAMPOS_DE_FAMILIA = {
+    "recuperacion": _familia({"total": _RECUPERACION, "es_a_en": _RECUPERACION}),
+    "citas": _familia({"precision": Numero(), "n": Numero()}),
+    "sin_evidencia": _familia({"exactitud": Numero(), "n": Numero(), "violaciones_rn02": Numero()}),
+    "opciones_con_cita_y_soporte": _familia({"porcentaje": Numero(), "n": Numero()}),
+}
+# Cada suite calcula solo algunas familias: todas son opcionales en el esquema.
+_FAMILIAS = Objeto(_CAMPOS_DE_FAMILIA, opcionales=frozenset(_CAMPOS_DE_FAMILIA))
 _MODELOS = Objeto(
     {
         "embeddings": Identificador(),
@@ -69,7 +80,7 @@ ESQUEMA_SUITE = Objeto(
         "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
         "suite": Enumerado(frozenset(SUITES)),
         "configuracion": _CONFIGURACION,
-        "metricas": Objeto({"completa": _FAMILIAS}),
+        "metricas": Objeto({"completa": _FAMILIAS, "revisada": _FAMILIAS}),
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
     }
 )

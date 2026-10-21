@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Sequence
 from typing import Any
 
@@ -10,6 +11,7 @@ from app.evaluation.metricas.opciones import porcentaje_con_cita_y_soporte
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
 from app.evaluation.retrieval_metrics import Metrica, metrica
+from app.evaluation.rotulo import rotular_validada
 
 
 def _recuperacion(m: Metrica) -> dict[str, Any]:
@@ -44,4 +46,12 @@ def calcular_familias(
         familias["citas"] = precision_de_citas(resultados)
         familias["sin_evidencia"] = exactitud_sin_evidencia(resultados)
         familias["opciones_con_cita_y_soporte"] = porcentaje_con_cita_y_soporte(resultados)
+    validacion = _validacion_de(resultados)
+    for familia in familias.values():
+        familia["validacion"] = validacion
     return familias
+
+
+def _validacion_de(resultados: Sequence[ResultadoConsulta]) -> dict[str, Any]:
+    validadas = sum(r.revisada for r in resultados)
+    return dataclasses.asdict(rotular_validada(validadas, len(resultados) - validadas))

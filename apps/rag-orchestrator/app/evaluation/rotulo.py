@@ -16,4 +16,8 @@ class Validacion:
 
 
 def rotular_validada(preguntas_validadas: int, preguntas_no_validadas: int) -> Validacion:
-    raise NotImplementedError("no implementado")
+    """«validada» solo si la métrica se calculó sobre preguntas revisadas por el oncólogo y ninguna sin revisar."""
+    validada = preguntas_validadas > 0 and preguntas_no_validadas == 0
+    return Validacion(
+        preguntas_validadas, preguntas_no_validadas, "validada" if validada else "no_validada"
+    )
