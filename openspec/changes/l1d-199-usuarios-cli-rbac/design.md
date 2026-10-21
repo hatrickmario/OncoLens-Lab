@@ -76,3 +76,26 @@ contando llamadas.
   `l1d-72-ficha-minima-paciente`, que ya los tiene como escenarios y tareas (admin → `200
   PatientAdminSummary`, nunca `403`, porque `getPatient` lleva `x-permission: [clinical:read,
   patients:lookup]`).
+
+## Adiciones aceptadas en la implementación
+
+Aceptadas por el orquestador del sprint (no cambian el alcance):
+
+- **`full_name` provisional = correo.** `auth.user.full_name` es NOT NULL y la CLI no recibe nombre. Un `--name`
+  opcional queda para cuando haya pantalla de administración (Post-MVP).
+- **`revocarSesiones(db, userId)`** se exporta como función desde `src/modules/auth/auth.repository.ts` (firma exacta:
+  `(db: Consultador, userId: string) => Promise<void>`). `l1d-198` la reutiliza sin redefinirla; recibe el consultador
+  para participar en la transacción de quien la llama (la baja la ejecuta en la misma transacción que `account_status`).
+- **Sesión con permisos.** `SesionAutenticada` gana `permisos: ReadonlySet<string>` y `rol` pasa a `string`; el guard los
+  resuelve en la misma consulta de la sesión (`array_agg` sobre `role_permission`). El 403 lo emite el manejador final
+  de errores (`PermisoDenegadoError`); `exigirRolDoctor` y `soloDoctor` desaparecen (D1).
+- **Registro de rutas = stack de Express.** En vez de un registro paralelo, `authorize()` deja los códigos asociados al
+  manejador (`permisosExigidos()`) y el test de coherencia recorre los routers montados y casa método + ruta con el
+  spec. Los routers protegidos deben ser planos (rutas directas), no anidados.
+- **Preload `tests/support/resolver-postgres.mjs`** (solo tests): los procesos reales de la CLI conectan con TLS
+  verificado contra la CA; el certificado solo tiene SAN `postgres`, así que el preload resuelve ese nombre a loopback.
+  La verificación TLS no se relaja.
+- **Soporte de tests y configuración:** glob `tests/integration/usuarios/**` en `vitest.integration.config.ts` (y su
+  exclusión en `vitest.config.ts`), `bin`/scripts `oncolens` en `apps/clinical-api/package.json` (+ 3 líneas del
+  `package-lock.json`), y `normalizarCorreo` exportada de `auth.service.ts` para no duplicar la regla en `users`.
+- **Comando extra:** `oncolens users deactivate` es idempotente (repite la revocación si ya estaba desactivado).
