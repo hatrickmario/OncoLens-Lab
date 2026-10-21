@@ -38,6 +38,8 @@ function arrancarCon(env: NodeJS.ProcessEnv) {
     readFile: (ruta) => readFileSync(ruta, 'utf8'),
     log: (linea) => log.push(linea),
     exit: (codigo) => salidas.push(codigo),
+    // Estos casos prueban la etapa 1: la de servicios se cubre en etapa-de-servicios.test.ts.
+    cargarServicios: () => undefined,
     listen: (puerto) => escuchas.push(puerto),
   });
   return { log, salidas, escuchas };

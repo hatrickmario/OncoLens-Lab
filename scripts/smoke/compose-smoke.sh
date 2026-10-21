@@ -103,11 +103,19 @@ bien "AC-1 corpus-migrate terminó con código 0"
 # one-shot clinical-migrate (hoy nada migra el esquema clínico en Compose); se consultó al usuario.
 
 salida="$(get_desde web http://clinical-api:3000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de clinical-api desde web respondió: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-1: /health de clinical-api desde web respondió: $salida" ;;
+esac
 bien "AC-1 /health de clinical-api responde 200 desde web"
 
 salida="$(get_desde clinical-api http://rag-orchestrator:8000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de rag-orchestrator desde clinical-api respondió: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-1: /health de rag-orchestrator desde clinical-api respondió: $salida" ;;
+esac
 bien "AC-1 /health de rag-orchestrator responde 200 desde clinical-api (LLM_PROVIDER=fake)"
 
 [ -z "$(find "$secretos" -type f \( -name '*password' -o -name '*_key' -o -name '*.key' -o -name jwt_service_private.pem \) ! -perm 600)" ] \
@@ -234,7 +242,11 @@ esac
 case "$salida" in *host.docker.internal*) fallo "AC-4: el cuerpo del 503 filtra LLM_BASE_URL" ;; esac
 bien "AC-4 rag-orchestrator responde 503 LOCAL_LLM_UNAVAILABLE sin la URL del LLM"
 salida="$(get_desde web http://clinical-api:3000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-4: clinical-api dejó de responder 200 con el LLM caído: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-4: clinical-api dejó de responder 200 con el LLM caído: $salida" ;;
+esac
 bien "AC-4 clinical-api sigue respondiendo 200"
 
 # ---------- fase 4: sin la clave AES clinical-api no queda healthy (US-035 AC-5) ----------

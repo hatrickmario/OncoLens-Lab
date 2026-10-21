@@ -24,6 +24,8 @@ COPY apps/clinical-api/package.json apps/clinical-api/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN npm ci --omit=dev --workspace apps/clinical-api && npm cache clean --force
 COPY --from=build /app/apps/clinical-api/dist apps/clinical-api/dist
+# `serviceVersion` de /health sale de `info.version` de este archivo (US-037): una sola fuente de la versión.
+COPY --from=build /app/apps/clinical-api/openapi.yaml apps/clinical-api/openapi.yaml
 # Reglas de reemplazo del enmascarado de PII (L1D-203); los formatos (config/pii-formats.json) se montan de solo lectura.
 COPY --from=build /app/apps/clinical-api/config apps/clinical-api/config
 USER node

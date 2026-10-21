@@ -1,30 +1,21 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import paquete from '../package.json' with { type: 'json' };
 import { componerAplicacion } from './composition.js';
-import {
-  ConfiguracionInvalidaError,
-  cargarConfiguracionDeServicios,
-  observarEntorno,
-} from './config/index.js';
+import { observarEntorno } from './config/index.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { crearRegistrador } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
-import {
-  crearServicioDeIdentidad,
-  leerClavesDeIdentidadDelEntorno,
-} from './modules/patients/identity.module.js';
-import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { versionDelServicio } from './infrastructure/version-servicio.js';
+import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidad } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import { crearDetectorOpcionA } from './modules/evidence-analysis/deidentification/pii-detector.opcion-a.js';
-import { cargarConfiguracionDePii } from './modules/evidence-analysis/deidentification/pii-formats.config.js';
 import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
-import { arrancar, registrarConfiguracionInvalida } from './startup.js';
+import { arrancar, cargarEtapaDeServicios, registrarEventoDeArranque } from './startup.js';
 
 const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
 
@@ -43,30 +34,9 @@ arrancar({
   readFile: leerArchivo,
   log: (linea) => console.error(linea),
   exit: (codigo) => process.exit(codigo),
-  listen: (puerto, arranque) => {
-    let configuracion;
-    let catalogo;
-    let clavesDeIdentidad;
-    try {
-      const servicios = cargarConfiguracionDeServicios(entorno.env, leerArchivo);
-      configuracion = {
-        appEnv: servicios.appEnv,
-        auth: arranque.auth,
-        database: servicios.database,
-        jwt: servicios.jwt,
-        analisis: servicios.analisis,
-        // Formatos de PII (L1D-166) y reglas de reemplazo: inválidos o ausentes, no se arranca (RN-11, fallo cerrado).
-        pii: cargarConfiguracionDePii(servicios.deidentificacion, leerArchivo),
-      };
-      catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
-      // Fallo cerrado (US-046 AC-5): las claves de la identidad deben ser legibles y de 32 bytes antes de escuchar.
-      clavesDeIdentidad = leerClavesDeIdentidadDelEntorno(entorno.env, leerArchivo);
-    } catch (error) {
-      if (!(error instanceof ConfiguracionInvalidaError)) throw error;
-      registrarConfiguracionInvalida((linea) => console.error(linea), error);
-      process.exit(1);
-    }
-
+  cargarServicios: cargarEtapaDeServicios,
+  listen: (puerto, arranque, servicios) => {
+    const { configuracion, catalogo, clavesDeIdentidad } = servicios;
     // La lista de campos redactados es la base cerrada del logger más los extra de configuración (RN-10, RN-22).
     const registrar = crearRegistrador((linea) => console.info(linea), {
       camposSensiblesExtra: arranque.logs.camposSensiblesExtra,
@@ -114,7 +84,7 @@ arrancar({
         });
         const app = componerAplicacion({
           db: pool,
-          auth: configuracion.auth,
+          auth: arranque.auth,
           reloj,
           tokens: crearGeneradorDeToken(),
           ids: randomUUID,
@@ -122,10 +92,12 @@ arrancar({
           registrar,
           rutasProtegidas: [gateway],
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
-          salud: { configKeys: entorno.clavesCargadas(), serviceVersion: paquete.version },
+          salud: { configKeys: entorno.clavesCargadas(), serviceVersion: versionDelServicio() },
         });
         const servidor = app.listen(puerto, () => {
-          console.info(`clinical-api escuchando en el puerto ${puerto}`);
+          registrarEventoDeArranque((linea) => console.info(linea), 'info', 'servidor_escuchando', {
+            puerto,
+          });
         });
         process.once('SIGTERM', () => {
           servidor.close(() => {
@@ -135,7 +107,11 @@ arrancar({
       })
       .catch(() => {
         // Sin eco del error: puede traer la ruta o parte de la clave (RN-10).
-        console.error(JSON.stringify({ level: 'error', event: 'clave_servicio_invalida' }));
+        registrarEventoDeArranque(
+          (linea) => console.error(linea),
+          'error',
+          'clave_servicio_invalida',
+        );
         process.exit(1);
       });
   },

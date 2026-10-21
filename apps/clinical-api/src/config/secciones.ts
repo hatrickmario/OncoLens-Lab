@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const DEFAULT_PORT = 3000;
 
+const FORMA_DE_ENTERO = /^\d+$/;
 const esquemaDePuerto = z.number().int().min(1).max(65535);
 const esquemaDeEnteroPositivo = z.number().int().positive();
 const esquemaDeBooleano = z.enum(['true', 'false']);
@@ -19,7 +20,8 @@ function leerNumero(
 ): number {
   const crudo = env[variable];
   if (crudo === undefined || crudo === '') return valorPorDefecto;
-  const resultado = esquema.safeParse(Number(crudo));
+  // Solo cadenas de dígitos: `Number()` aceptaría `0x50`, `1e3` o espacios.
+  const resultado = esquema.safeParse(FORMA_DE_ENTERO.test(crudo) ? Number(crudo) : Number.NaN);
   if (!resultado.success) throw new ConfiguracionInvalidaError(variable, regla);
   return resultado.data;
 }
@@ -106,36 +108,50 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
 /** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (catálogo, tipos). */
 export type MotivoDeConfiguracionInvalida = 'valor_invalido' | 'variable_ausente';
 
-/** Un elemento inválido de un enum no sensible se registra solo si tiene esta forma (design D2). */
-const FORMA_DE_VALOR_REGISTRABLE = /^[a-z0-9_]{1,32}$/;
+/**
+ * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,
+ * identificadores hexadecimales, correos y claves con guiones o dígitos (design D2).
+ */
+const FORMA_DE_VALOR_REGISTRABLE = /^[a-z]{1,24}$/;
 
 /**
  * Falta o es inválida una variable de configuración: el mensaje nombra la clave y la regla, nunca su valor (RN-10,
- * RN-14). `valorInvalido` solo existe para enums no sensibles (`leerEnumNoSensible`) y con la forma cerrada.
+ * RN-14). El constructor público no admite el valor; solo `deEnumNoSensible` fija `valorInvalido`.
  */
 export class ConfiguracionInvalidaError extends Error {
   readonly motivo: MotivoDeConfiguracionInvalida;
-  readonly valorInvalido: string | undefined;
+  #valorInvalido: string | undefined;
 
   constructor(
     readonly variable: string,
     readonly regla: string,
-    opciones: { motivo?: MotivoDeConfiguracionInvalida; valorInvalido?: string } = {},
+    opciones: { motivo?: MotivoDeConfiguracionInvalida } = {},
   ) {
     super(`${variable} ${regla}`);
     this.name = 'ConfiguracionInvalidaError';
     this.motivo = opciones.motivo ?? 'valor_invalido';
-    this.valorInvalido =
-      opciones.valorInvalido !== undefined &&
-      FORMA_DE_VALOR_REGISTRABLE.test(opciones.valorInvalido)
-        ? opciones.valorInvalido
-        : undefined;
+  }
+
+  /** Elemento inválido de un enum no sensible, solo si cumple la forma cerrada; `undefined` en cualquier otro caso. */
+  get valorInvalido(): string | undefined {
+    return this.#valorInvalido;
+  }
+
+  /** Única vía para registrar el valor: una clave declarada como enum no sensible (`leerEnumNoSensible`). */
+  static deEnumNoSensible(
+    variable: string,
+    regla: string,
+    valor: string,
+  ): ConfiguracionInvalidaError {
+    const error = new ConfiguracionInvalidaError(variable, regla);
+    if (FORMA_DE_VALOR_REGISTRABLE.test(valor)) error.#valorInvalido = valor;
+    return error;
   }
 }
 
 /**
  * Variable cuyo valor es un elemento de un enum NO sensible (p. ej. un tipo de cáncer): si es inválida, el error lleva
- * el elemento en `valorInvalido` solo cuando cumple `^[a-z0-9_]{1,32}$` (design D2). Ninguna otra clave puede usarlo.
+ * el elemento en `valorInvalido` solo cuando cumple `^[a-z]{1,24}$` (design D2). Ninguna otra clave puede usarlo.
  */
 export function leerEnumNoSensible<T extends string>(
   env: NodeJS.ProcessEnv,
@@ -147,9 +163,11 @@ export function leerEnumNoSensible<T extends string>(
   if (crudo === undefined || crudo === '') return valorPorDefecto;
   const resultado = z.enum(permitidos).safeParse(crudo);
   if (!resultado.success) {
-    throw new ConfiguracionInvalidaError(variable, `debe ser uno de: ${permitidos.join(', ')}`, {
-      valorInvalido: crudo,
-    });
+    throw ConfiguracionInvalidaError.deEnumNoSensible(
+      variable,
+      `debe ser uno de: ${permitidos.join(', ')}`,
+      crudo,
+    );
   }
   return resultado.data;
 }
@@ -287,8 +305,9 @@ export function readIdentityKeyConfig(env: NodeJS.ProcessEnv): IdentityKeyConfig
   // Se recorren solo los NOMBRES: el valor se lee únicamente de las variables que coinciden con el patrón.
   for (const variable of Object.keys(env)) {
     const version = PATRON_DE_CLAVE_ANTERIOR.exec(variable)?.[1];
+    if (version === undefined) continue;
     const ruta = env[variable];
-    if (version === undefined || ruta === undefined || ruta === '') continue;
+    if (ruta === undefined || ruta === '') continue;
     if (Number(version) === keyVersion) {
       throw new ConfiguracionInvalidaError(
         variable,

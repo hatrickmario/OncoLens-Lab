@@ -29,6 +29,12 @@ export const CAMPOS_SENSIBLES_BASE: readonly string[] = Object.freeze([
   'phone',
   'address',
   'legalRepresentative',
+  'query',
+  'token',
+  'sessionToken',
+  'secret',
+  'clinicalContext',
+  'clinicalNotes',
 ]);
 const MARCA_DE_REDACCION = '[REDACTADO]';
 
@@ -37,10 +43,20 @@ function camposSensiblesEfectivos(extra: readonly string[]): ReadonlySet<string>
   return new Set([...CAMPOS_SENSIBLES_BASE, ...extra].map((campo) => campo.toLowerCase()));
 }
 
+/**
+ * Un `Error` se reduce a su clase y su `code`: ni `message`, ni pila, ni propiedades como el `detail` de pg, que cita
+ * valores de la fila (RN-10).
+ */
+function reducirError(error: Error): { errorClase: string; code?: string } {
+  const { code } = error as { code?: unknown };
+  return { errorClase: error.name, ...(typeof code === 'string' && { code }) };
+}
+
 /** Copia el valor sustituyendo, a cualquier profundidad, los campos sensibles (sin distinguir mayúsculas). */
 export function descartarCamposSensibles(valor: unknown, campos: ReadonlySet<string>): unknown {
   if (Array.isArray(valor))
     return valor.map((elemento) => descartarCamposSensibles(elemento, campos));
+  if (valor instanceof Error) return reducirError(valor);
   if (valor === null || typeof valor !== 'object') return valor;
   return Object.fromEntries(
     Object.entries(valor).map(([campo, contenido]) => [

@@ -10,6 +10,10 @@ const CATALOGO_DEL_MONOREPO = path.join(RAIZ_REPO, 'packages/clinical-catalogs')
 const FORMATOS_DE_PII = path.join(RAIZ_REPO, 'config/pii-formats.json');
 const MASCARAS_DE_PII = path.join(RAIZ_REPO, 'apps/clinical-api/config/pii-masks.json');
 
+/** Claves AES y HMAC distintas, de 32 bytes en base64 (formato de setup-secrets.sh); ficticias. */
+const CLAVE_AES_FICTICIA = Buffer.alloc(32, 7).toString('base64');
+const CLAVE_HMAC_FICTICIA = Buffer.alloc(32, 9).toString('base64');
+
 let directorio: string;
 beforeEach(() => {
   directorio = mkdtempSync(path.join(tmpdir(), 'clinical-api-etapa-'));
@@ -27,8 +31,8 @@ function entornoValido(): Record<string, string> {
   return {
     PORT: '4998',
     APP_ENV: 'test',
-    IDENTITY_AES_KEY_FILE: archivo('aes', 'aes-ficticia'),
-    BLIND_INDEX_HMAC_KEY_FILE: archivo('hmac', 'hmac-ficticia'),
+    IDENTITY_AES_KEY_FILE: archivo('aes', CLAVE_AES_FICTICIA),
+    BLIND_INDEX_HMAC_KEY_FILE: archivo('hmac', CLAVE_HMAC_FICTICIA),
     SERVICE_JWT_PRIVATE_KEY_FILE: archivo('jwt.pem', 'clave-servicio-ficticia'),
     CLINICAL_DATABASE_URL: 'postgresql://clinical_api@postgres:5432/oncolens',
     PG_CLINICAL_API_PASSWORD_FILE: archivo('pg_password', 'contrasena-ficticia'),

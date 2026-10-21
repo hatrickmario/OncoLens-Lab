@@ -7,7 +7,19 @@ const RAIZ_SRC = path.resolve(import.meta.dirname, '../../src');
 const RAIZ_DE_COMPOSICION = path.join(RAIZ_SRC, 'server.ts');
 const MODULO_DE_CONFIGURACION = path.join(RAIZ_SRC, 'config') + path.sep;
 
-const LECTURA_DE_ENTORNO = /\bprocess\s*(?:\.\s*env\b|\[\s*['"`]env['"`]\s*\])/;
+/**
+ * Formas de leer el entorno del proceso: `process.env`, `process['env']`, `const { env } = process`,
+ * `import { env } from 'node:process'` y los import por defecto o de espacio de nombres del módulo `process`.
+ */
+const LECTURAS_DE_ENTORNO: readonly RegExp[] = [
+  /\bprocess\s*(?:\.\s*env\b|\[\s*['"`]env['"`]\s*\])/,
+  /\{[^}]*\benv\b[^}]*\}\s*=\s*(?:globalThis\s*\.\s*)?process\b/,
+  /import\s*\{[^}]*\benv\b[^}]*\}\s*from\s*['"`](?:node:)?process['"`]/,
+  /import\s+(?:\*\s+as\s+\w+|\w+)\s+from\s*['"`](?:node:)?process['"`]/,
+];
+
+const leeElEntorno = (texto: string): boolean =>
+  LECTURAS_DE_ENTORNO.some((regla) => regla.test(texto));
 
 function archivosTs(directorio: string): string[] {
   return readdirSync(directorio, { withFileTypes: true }).flatMap((entrada) => {
@@ -33,17 +45,17 @@ describe('lectura del entorno', () => {
       "import proceso from 'node:process';",
       'const e = globalThis.process.env;',
     ]) {
-      expect(LECTURA_DE_ENTORNO.test(lectura), lectura).toBe(true);
+      expect(leeElEntorno(lectura), lectura).toBe(true);
     }
-    expect(LECTURA_DE_ENTORNO.test('const e = entorno.env;')).toBe(false);
-    expect(LECTURA_DE_ENTORNO.test('const { pid } = process;')).toBe(false);
-    expect(LECTURA_DE_ENTORNO.test("import { pid } from 'node:process';")).toBe(false);
+    expect(leeElEntorno('const e = entorno.env;')).toBe(false);
+    expect(leeElEntorno('const { pid } = process;')).toBe(false);
+    expect(leeElEntorno("import { pid } from 'node:process';")).toBe(false);
   });
 
   it('ningún archivo de src fuera de src/config y de la raíz de composición lee process.env [US-037 AC-1]', () => {
     const infractores = archivosTs(RAIZ_SRC)
       .filter((ruta) => ruta !== RAIZ_DE_COMPOSICION && !ruta.startsWith(MODULO_DE_CONFIGURACION))
-      .filter((ruta) => LECTURA_DE_ENTORNO.test(readFileSync(ruta, 'utf8')))
+      .filter((ruta) => leeElEntorno(readFileSync(ruta, 'utf8')))
       .map((ruta) => path.relative(RAIZ_SRC, ruta));
 
     expect(infractores).toEqual([]);
@@ -51,7 +63,7 @@ describe('lectura del entorno', () => {
 
   it('el módulo de configuración tampoco lee process.env: recibe el entorno por parámetro [US-037 AC-1]', () => {
     const infractores = archivosTs(path.join(RAIZ_SRC, 'config'))
-      .filter((ruta) => LECTURA_DE_ENTORNO.test(readFileSync(ruta, 'utf8')))
+      .filter((ruta) => leeElEntorno(readFileSync(ruta, 'utf8')))
       .map((ruta) => path.relative(RAIZ_SRC, ruta));
 
     expect(infractores).toEqual([]);

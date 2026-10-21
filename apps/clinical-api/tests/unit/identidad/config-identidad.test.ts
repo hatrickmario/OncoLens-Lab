@@ -117,6 +117,8 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
       },
       log: (linea) => log.push(linea),
       exit: (codigo) => salidas.push(codigo),
+      // Estos casos prueban la etapa 1: la de servicios se cubre en etapa-de-servicios.test.ts.
+      cargarServicios: () => undefined,
       listen: (puerto) => escuchas.push(puerto),
     });
     return { log: log.join('\n'), salidas, escuchas };
