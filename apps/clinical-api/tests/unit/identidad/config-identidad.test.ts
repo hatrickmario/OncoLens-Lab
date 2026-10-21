@@ -88,6 +88,22 @@ describe('cargarClavesDeIdentidad', () => {
   });
 });
 
+describe('cargarClavesDeIdentidad: claves separadas', () => {
+  it('rechaza nombrando BLIND_INDEX_HMAC_KEY_FILE cuando la clave HMAC es igual a una clave AES', () => {
+    const config = {
+      keyVersion: 1,
+      activeKeyFile: 'aes',
+      previousKeyFiles: new Map<number, string>(),
+      hmacKeyFile: 'hmac',
+    };
+    const misma = base64('aes-v1');
+    const cargar = () => cargarClavesDeIdentidad(config, () => misma);
+
+    expect(cargar).toThrow(ConfiguracionInvalidaError);
+    expect(cargar).toThrow(/BLIND_INDEX_HMAC_KEY_FILE/);
+  });
+});
+
 describe('arranque de clinical-api con la versión de clave de identidad', () => {
   function arrancarCapturando(env: NodeJS.ProcessEnv, existentes: readonly string[]) {
     const log: string[] = [];

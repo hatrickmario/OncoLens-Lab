@@ -7,7 +7,7 @@ import { RUTA_DEL_CATALOGO } from '../../support/seed.js';
 /** Contraseñas ficticias para cualquier `*_password`, claves de identidad de test para `*_key` y el catálogo real para lo demás. */
 const leerArchivo = (ruta: string): string => {
   if (ruta.endsWith('_password')) return 'SINT-ficticia-0001';
-  if (ruta.endsWith('_key')) return claveDeTest('seed-unitario').toString('base64');
+  if (ruta.endsWith('_key')) return claveDeTest(`seed-unitario-${ruta}`).toString('base64');
   return readFileSync(ruta, 'utf8');
 };
 

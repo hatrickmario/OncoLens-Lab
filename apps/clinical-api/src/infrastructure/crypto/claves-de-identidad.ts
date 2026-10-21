@@ -38,8 +38,16 @@ export function cargarClavesDeIdentidad(
   for (const [version, ruta] of config.previousKeyFiles) {
     claves.set(version, leerClave(`IDENTITY_AES_KEY_V${version}_FILE`, ruta, readFile));
   }
+  const claveDeIndice = leerClave('BLIND_INDEX_HMAC_KEY_FILE', config.hmacKeyFile, readFile);
+  if ([...claves.values()].some((clave) => clave.equals(claveDeIndice))) {
+    // Claves separadas (ADR-6): comprometer una no debe comprometer la otra.
+    throw new ConfiguracionInvalidaError(
+      'BLIND_INDEX_HMAC_KEY_FILE',
+      'debe ser distinta de las claves AES de la identidad',
+    );
+  }
   return {
     anillo: crearAnilloDeClaves({ versionActiva: config.keyVersion, claves }),
-    claveDeIndice: leerClave('BLIND_INDEX_HMAC_KEY_FILE', config.hmacKeyFile, readFile),
+    claveDeIndice,
   };
 }
