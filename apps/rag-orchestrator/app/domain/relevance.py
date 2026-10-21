@@ -35,6 +35,10 @@ def relevancia_de_opcion(
     return RelevanciaDeOpcion(puntajes[principal], principal)
 
 
+def supera_umbral(relevance_score: float, umbral: float) -> bool:
+    raise NotImplementedError("no implementado")
+
+
 def filtrar_sobre_umbral(
     chunks_puntuados: Sequence[ChunkPuntuado], umbral: float
 ) -> list[ChunkPuntuado]:

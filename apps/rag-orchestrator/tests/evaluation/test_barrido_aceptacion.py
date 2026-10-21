@@ -53,6 +53,7 @@ def barrer(salida: Path, config: Path, *extra: str) -> int:
             *extra,
         ],
         reloj=RelojFijo(),
+        directorio_de_configs=config.parent,  # --fijar solo escribe dentro del directorio de configuraciones
     )
 
 

@@ -112,7 +112,7 @@ def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
     return {k: sin_nan(v) for k, v in crudas.items()}
 
 
-def fijar_umbral_en_config(ruta: Path, umbral: float) -> None:
+def fijar_umbral_en_config(ruta: Path, umbral: float, directorio: Path | None = None) -> None:
     """Reescribe solo el valor de ``umbrales.relevance_threshold``; los comentarios y el resto del YAML quedan como están."""
     texto = ruta.read_text(encoding="utf-8")
     nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", texto)
