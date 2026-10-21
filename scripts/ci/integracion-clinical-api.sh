@@ -7,7 +7,8 @@ set -euo pipefail
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 cd "$raiz"
 
-export ONCOLENS_SECRETS_DIR="${ONCOLENS_SECRETS_DIR:-$(mktemp -d)}"
+# Directorio propio (nunca el del entorno): el trap de salida lo borra con rm -rf.
+export ONCOLENS_SECRETS_DIR="$(mktemp -d)"
 export MODEL_PROVIDER=fake
 export MODEL_HOST_DIR="$(mktemp -d)"
 export APP_ENV=test

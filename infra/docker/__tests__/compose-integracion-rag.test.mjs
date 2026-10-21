@@ -9,7 +9,19 @@ import { archivosDeSecretos, assertSoloWebPublicaPuertos, entorno, servicio } fr
 const SERVICIO = 'rag-pruebas';
 const PERFIL = 'integracion-rag';
 const SCRIPT = path.join(RAIZ, 'scripts/ci/integracion-rag-orchestrator.sh');
-const CLINICAL = /clinical|identity|blind_index|aes|hmac|jwt_service_private|minio|seed_|pg_superuser|pg_research/i;
+// Variables clínicas que el contenedor de Pytest jamás debe recibir: el patrón del script tiene que cubrirlas todas.
+const VARIABLES_CLINICAS = [
+  'CLINICAL_DATABASE_URL',
+  'PG_CLINICAL_PASSWORD',
+  'IDENTITY_AES_KEY_FILE',
+  'BLIND_INDEX_HMAC_KEY_FILE',
+  'JWT_PRIVATE_KEY_FILE',
+  'MINIO_ROOT_PASSWORD',
+  'CLINICAL_MINIO_ACCESS_KEY',
+  'SEED_PATIENT_ID',
+  'PG_SUPERUSER_PASSWORD',
+  'PG_RESEARCH_PASSWORD',
+];
 
 let resolver;
 let limpiar;
@@ -20,6 +32,8 @@ beforeAll(() => {
 afterAll(() => limpiar());
 
 const conPerfil = () => resolver({ archivosExtra: [COMPOSE_TEST], entorno: { COMPOSE_PROFILES: PERFIL } });
+// Una sola definición de lo clínico: la del script, que es la que se comprueba dentro del contenedor.
+const patronClinico = () => new RegExp(readFileSync(SCRIPT, 'utf8').match(/PATRON_ENTORNO_CLINICO='([^']*)'/)[1], 'i');
 const secretosPermitidos = () => {
   const [, lista] = readFileSync(SCRIPT, 'utf8').match(/SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS=\(([^)]*)\)/);
   return lista.trim().split(/\s+/).sort();
@@ -52,12 +66,16 @@ describe('docker-compose.test.yml · perfil integracion-rag', () => {
     const config = conPerfil();
     const montados = archivosDeSecretos(config, servicio(config, SERVICIO)).sort();
     expect(montados).toEqual(secretosPermitidos());
-    expect(montados.filter((nombre) => CLINICAL.test(nombre))).toEqual([]);
+    expect(montados.filter((nombre) => patronClinico().test(nombre))).toEqual([]);
+  });
+
+  it('el patrón clínico del script cubre cada variable clínica conocida [ARR-01 AC-2, RN-10]', () => {
+    expect(VARIABLES_CLINICAS.filter((variable) => !patronClinico().test(variable))).toEqual([]);
   });
 
   it('no recibe variables de entorno ni montajes clínicos y solo escribe en /resultados [ARR-01 AC-2, RN-10]', () => {
     const definicion = servicio(conPerfil(), SERVICIO);
-    expect(Object.keys(entorno(definicion)).filter((clave) => CLINICAL.test(clave))).toEqual([]);
+    expect(Object.keys(entorno(definicion)).filter((clave) => patronClinico().test(clave))).toEqual([]);
     expect(definicion.volumes.map(({ target }) => target).sort()).toEqual(['/repo', '/repo/node_modules', '/resultados']);
     expect(definicion.volumes.filter(({ target, read_only: soloLectura }) => !soloLectura && target !== '/resultados')).toEqual([]);
     expect(definicion.read_only).toBe(true);
@@ -77,7 +95,10 @@ describe('docker-compose.test.yml · perfil integracion-rag', () => {
 
   it('el job solo recoge tests/integration, y ahí viven todos los servicios_reales (nadie más los ejecuta) [ARR-01 AC-2]', () => {
     expect(servicio(conPerfil(), SERVICIO).command).toContain('tests/integration');
-    const fuera = execFileSync('grep', ['-rl', 'servicios_reales', 'apps/rag-orchestrator/tests', '--include=*.py'], { cwd: RAIZ, encoding: 'utf8' })
+    const fuera = execFileSync('grep', ['-rl', 'servicios_reales', 'apps/rag-orchestrator/tests', '--include=*.py'], {
+      cwd: RAIZ,
+      encoding: 'utf8',
+    })
       .split('\n')
       .filter((archivo) => archivo && !archivo.startsWith('apps/rag-orchestrator/tests/integration/'));
     expect(fuera).toEqual([]);

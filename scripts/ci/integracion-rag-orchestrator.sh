@@ -10,7 +10,9 @@
 # de Pytest recibe solo los secretos de SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS y nada de clinical (design D1b, RN-10): el
 # script lo comprueba dentro del contenedor antes de correr Pytest. Sin reintentos: un test que falla deja el job en rojo.
 # Variables (RN-22): INTEGRACION_RAG_ESPERA_SEGUNDOS (espera de salud de postgres y Milvus), INTEGRACION_RAG_PYTEST_SEGUNDOS
-# (tope de Pytest, si el sistema tiene `timeout`), PG_TEST_DB_PREFIX, COMPOSE_PROJECT_NAME.
+# (tope de Pytest, si el sistema tiene `timeout`), PG_TEST_DB_PREFIX. El proyecto de Compose (oncolens-ci-rag) y el directorio de
+# secretos (mktemp -d) son fijos y propios: ONCOLENS_SECRETS_DIR y COMPOSE_PROJECT_NAME del entorno se ignoran, de modo que el
+# `down -v` y el `rm -rf` del final nunca alcanzan un directorio ni un stack ajenos.
 set -euo pipefail
 
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
@@ -20,7 +22,7 @@ readonly SERVICIO_DE_PRUEBAS="rag-pruebas"
 readonly PERFIL="integracion-rag"
 readonly SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS=(pg_test_admin_password pg_rag_corpus_password pg_rag_corpus_migrator_password)
 # Nada de lo clínico entra al contenedor: ni en el entorno ni en el árbol que ve (design D1b).
-readonly PATRON_ENTORNO_CLINICO='CLINICAL|IDENTITY|BLIND_INDEX|AES|HMAC|JWT_SERVICE_PRIVATE|MINIO|SEED_|PG_SUPERUSER|PG_CLINICAL|PG_RESEARCH'
+readonly PATRON_ENTORNO_CLINICO='CLINICAL|IDENTITY|BLIND_INDEX|AES|HMAC|JWT_PRIVATE|MINIO|SEED_|PG_SUPERUSER|PG_CLINICAL|PG_RESEARCH'
 # Lo único del repositorio que leen los tests (rutas versionadas). Todo lo demás, incluidos los secretos y el .env locales, no existe en el contenedor.
 readonly RUTAS_QUE_LEEN_LOS_TESTS=(
   package.json readme.md config contracts scripts/contracts scripts/ci/pytest_plugins packages/clinical-catalogs
@@ -39,8 +41,9 @@ command -v docker > /dev/null || fallar "falta docker"
 command -v node > /dev/null || fallar "falta node (empaqueta el spec y resume los AC)"
 [ -d "$raiz/node_modules" ] || fallar "faltan node_modules en la raíz: corre npm ci antes (los tests empaquetan el spec con ellos)"
 
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-oncolens-ci-rag}"
-export ONCOLENS_SECRETS_DIR="${ONCOLENS_SECRETS_DIR:-$(mktemp -d)}"
+# Proyecto y directorio de secretos PROPIOS: nunca se leen del entorno, para que `limpiar` (down -v y rm -rf) solo borre lo que creó este script.
+export COMPOSE_PROJECT_NAME="oncolens-ci-rag"
+export ONCOLENS_SECRETS_DIR="$(mktemp -d)"
 export MODEL_PROVIDER=fake
 export MODEL_HOST_DIR="$(mktemp -d)"
 export APP_ENV=test
@@ -61,9 +64,13 @@ limpiar() {
 }
 trap limpiar EXIT
 
-# Copia los archivos versionados (y los nuevos sin ignorar) que leen los tests a un directorio temporal de solo lectura.
+# Copia solo los archivos versionados que leen los tests a un directorio temporal de solo lectura. Los nuevos sin versionar no
+# se copian (podrían ser secretos o datos locales): se avisa por nombre de archivo.
 preparar_arbol_de_pruebas() {
-  git ls-files -z --cached --others --exclude-standard -- "${RUTAS_QUE_LEEN_LOS_TESTS[@]}" \
+  local sin_versionar
+  sin_versionar="$(git ls-files --others --exclude-standard -- "${RUTAS_QUE_LEEN_LOS_TESTS[@]}")"
+  [ -z "$sin_versionar" ] || echo "integracion-rag: archivos sin versionar que NO se copian al contenedor: $(printf '%s' "$sin_versionar" | tr '\n' ' ')" >&2
+  git ls-files -z --cached -- "${RUTAS_QUE_LEEN_LOS_TESTS[@]}" \
     | tar --null -T - -cf - | tar -xf - -C "$RAG_PRUEBAS_REPO_DIR"
   mkdir "$RAG_PRUEBAS_REPO_DIR/node_modules"
   # Lo monta el contenedor sin permisos de escritura; el uid del runner es el mismo con el que corre Pytest.
@@ -97,17 +104,17 @@ levantar_servicios_reales() {
 # Comprobación REAL (no solo del archivo): dentro del contenedor, los secretos montados son exactamente los permitidos, el
 # entorno no tiene variables clínicas y el árbol que ve no contiene secretos ni .env (design D1b).
 verificar_que_pytest_no_ve_nada_de_clinical() {
-  local salida montados esperados entorno
+  local salida montados esperados entorno arbol
   salida="$(compose run --rm --no-deps --entrypoint sh "$SERVICIO_DE_PRUEBAS" -c \
-    'ls -1 /run/secrets; echo "--entorno--"; env | cut -d= -f1; echo "--arbol--"; ls -A /repo/infra/docker; find /repo -name "*.pem" -o -name "*.key" -o -name ".env*" -o -name secrets')" \
+    'ls -1 /run/secrets; echo "--entorno--"; env | cut -d= -f1; echo "--arbol--"; find /repo -path /repo/node_modules -prune -o \( -name "*.pem" -o -name "*.key" -o -name "*.crt" -o -name "*_password" -o -name "*_key" -o -name "pg_hba*" -o -name ".env*" -o -name secrets \) -print')" \
     || fallar "no se pudo inspeccionar el contenedor de Pytest"
   montados="$(printf '%s\n' "$salida" | sed '/^--entorno--$/,$d' | sort)"
   esperados="$(printf '%s\n' "${SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS[@]}" | sort)"
   [ "$montados" = "$esperados" ] || fallar "el contenedor de Pytest monta secretos distintos de los permitidos: $(printf '%s' "$montados" | tr '\n' ' ')"
   entorno="$(printf '%s\n' "$salida" | sed -n '/^--entorno--$/,/^--arbol--$/p' | grep -E "$PATRON_ENTORNO_CLINICO" || true)"
   [ -z "$entorno" ] || fallar "el contenedor de Pytest tiene variables de entorno clínicas: $(printf '%s' "$entorno" | tr '\n' ' ')"
-  [ -z "$(printf '%s\n' "$salida" | sed -n '/^--arbol--$/,$p' | grep -E '\.pem$|\.key$|/\.env(\.|$)|/secrets$' | grep -v '\.env\.example$' || true)" ] \
-    || fallar "el árbol que ve el contenedor de Pytest contiene secretos o .env"
+  arbol="$(printf '%s\n' "$salida" | sed -n '/^--arbol--$/,$p' | sed '1d' | grep -v '\.env\.example$' || true)"
+  [ -z "$arbol" ] || fallar "el árbol que ve el contenedor de Pytest contiene secretos o .env: $(printf '%s' "$arbol" | tr '\n' ' ')"
   echo "integracion-rag: el contenedor de Pytest solo monta ${SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS[*]} y no ve nada de clinical"
 }
 
