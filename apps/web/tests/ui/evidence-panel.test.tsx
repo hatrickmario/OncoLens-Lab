@@ -105,6 +105,43 @@ describe('EvidencePanel', () => {
     },
   );
 
+  it('muestra el resumen y un control Ver más detalle cerrado que al abrirse revela los párrafos de detalle cuando la opción los trae [ARR-08 AC-4]', async () => {
+    const conDetalle = structuredClone(conEvidencia);
+    (conDetalle.evidenceOptions[0] as { details?: string[] }).details = [
+      'Primer párrafo de detalle sobre el diseño del estudio.',
+      'Segundo párrafo de detalle sobre los resultados reportados.',
+    ];
+    bff.responder({ status: 200, cuerpo: conDetalle });
+    const usuario = await analizar();
+
+    const resumen = await screen.findByText(evidence.detalle.resumen);
+    const detalle = resumen.closest('details') as HTMLDetailsElement;
+    expect(detalle.open).toBe(false);
+    expect(screen.getByText(opcion.rationale)).toBeTruthy();
+    expect(detalle.contains(screen.getByText(opcion.rationale))).toBe(false);
+
+    await usuario.click(resumen);
+
+    expect(detalle.open).toBe(true);
+    expect(
+      within(detalle)
+        .getAllByRole('paragraph')
+        .map((p) => p.textContent),
+    ).toEqual([
+      'Primer párrafo de detalle sobre el diseño del estudio.',
+      'Segundo párrafo de detalle sobre los resultados reportados.',
+    ]);
+  });
+
+  it('no muestra el control Ver más detalle cuando la opción no trae details [ARR-08 AC-4]', async () => {
+    bff.responder({ status: 200, cuerpo: conEvidencia });
+    await analizar();
+
+    await screen.findByText(opcion.rationale);
+    expect(screen.queryByText(evidence.detalle.resumen)).toBeNull();
+    expect(document.querySelector('details')).toBeNull();
+  });
+
   it('marca con data-origen solo las hojas copiadas del corpus y nunca el texto generado cuando se expande la cita [US-061 AC-1]', async () => {
     bff.responder({ status: 200, cuerpo: conEvidencia });
     const usuario = await analizar();

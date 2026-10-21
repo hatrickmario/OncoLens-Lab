@@ -69,6 +69,7 @@ def test_los_campos_generados_son_los_de_la_decision_79() -> None:
     assert CAMPOS_GENERADOS == (
         "option",
         "rationale",
+        "details",
         "unsupportedClaims",
         "limitations[].text",
         "synthesis",
@@ -339,3 +340,83 @@ def test_una_limitacion_prohibida_se_omite_y_cuenta_aunque_el_nli_implique_todo_
     resultado = verificar_soporte(plan, [IMPLICA, IMPLICA, IMPLICA], UMBRAL, "es")
 
     assert resultado.limitaciones == ("Limpia.",) and resultado.omitidas == 1
+
+
+# --- detalle expandible (ARR-08): párrafos opcionales, validados como el resto de lo generado (RN-01, RN-23) -----
+
+
+def _con_detalles(
+    *detalles: str, rationale: str = "Afirmación uno.", citas: tuple[str, ...] = ("c1",)
+) -> OpcionAceptada:
+    return OpcionAceptada(OpcionGenerada("Opción A", rationale, citas, tuple(detalles)), citas)
+
+
+def test_los_pares_del_nli_incluyen_las_afirmaciones_de_cada_parrafo_de_detalle_con_las_premisas_de_la_opcion() -> (
+    None
+):
+    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
+
+    pares = pares_a_verificar(plan)
+
+    assert [p.hipotesis for p in pares] == [
+        "Afirmación uno.",
+        "Detalle uno.",
+        "Detalle dos.",
+        "Detalle tres.",
+    ]
+    assert {p.premisa for p in pares} == {TEXTOS["c1"]}
+
+
+def test_conserva_en_orden_los_parrafos_de_detalle_cuyas_afirmaciones_se_soportan_todas() -> None:
+    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
+
+    resultado = verificar_soporte(plan, [IMPLICA] * 4, UMBRAL, "es")
+
+    assert [o.opcion.details for o in resultado.soportadas] == [
+        ("Detalle uno. Detalle dos.", "Detalle tres.")
+    ]
+    assert resultado.omitidas == 0
+
+
+def test_omite_el_parrafo_con_una_afirmacion_sin_soporte_y_cuenta_la_omision_sin_descartar_la_opcion() -> (
+    None
+):
+    plan = _plan(_con_detalles("Detalle uno. Detalle dos.", "Detalle tres."))
+
+    resultado = verificar_soporte(plan, [IMPLICA, IMPLICA, NEUTRAL, IMPLICA], UMBRAL, "es")
+
+    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle tres.",)]
+    assert resultado.descartadas == ()
+    assert resultado.omitidas == 1
+
+
+def test_la_opcion_queda_sin_detalle_y_no_con_lista_vacia_cuando_ningun_parrafo_se_soporta() -> (
+    None
+):
+    plan = _plan(_con_detalles("Detalle uno."))
+
+    resultado = verificar_soporte(plan, [IMPLICA, CONTRADICE], UMBRAL, "es")
+
+    assert [o.opcion.details for o in resultado.soportadas] == [()]
+    assert resultado.omitidas == 1
+
+
+def test_omite_sin_consultar_al_nli_el_parrafo_con_lenguaje_prohibido_y_conserva_la_opcion() -> None:
+    plan = _plan(_con_detalles("Detalle PROHIBIDO.", "Detalle limpio."))
+
+    pares = pares_a_verificar(plan)
+    resultado = verificar_soporte(plan, [IMPLICA] * len(pares), UMBRAL, "es")
+
+    assert [p.hipotesis for p in pares] == ["Afirmación uno.", "Detalle limpio."]
+    assert [o.opcion.details for o in resultado.soportadas] == [("Detalle limpio.",)]
+    assert resultado.omitidas == 1
+    assert RetiroDeLenguaje("details", ("regla-x",)) in plan.retiros
+
+
+def test_descarta_la_opcion_cuando_su_justificacion_no_se_soporta_aunque_el_detalle_si() -> None:
+    plan = _plan(_con_detalles("Detalle uno."))
+
+    resultado = verificar_soporte(plan, [NEUTRAL, IMPLICA], UMBRAL, "es")
+
+    assert resultado.soportadas == ()
+    assert [d.afirmaciones_sin_soporte for d in resultado.descartadas] == [("Afirmación uno.",)]

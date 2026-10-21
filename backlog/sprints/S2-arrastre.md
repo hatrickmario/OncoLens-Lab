@@ -14,6 +14,7 @@
 | ARR-05 | L1D-281 | Baseline manual VM-1/VM-2 con los oncólogos (movida: antes de G-Demo) | 3 | Media | L1D-238 |
 | ARR-06 | L1D-282 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
 | ARR-07 | L1D-283 | URL de la fuente original en «Fragmento citado» (manifiesto, catálogo, UI) | 5 | **Alta** | ARR-02 (E2E) |
+| ARR-08 | L1D-284 | Detalle expandible en «Opciones descritas en la evidencia» (resumen + 1–2 párrafos generados y validados) | 8 | **Alta** | ARR-07, US-072 (OL-06) |
 
 Total: 25 puntos de arrastre.
 
@@ -127,3 +128,19 @@ Total: 25 puntos de arrastre.
 5. *Given* el stack fingido, *when* corre el E2E, *then* una spec comprueba el enlace en el panel.
 
 **Notas:** sin cambio de contrato (`sourceUrl` ya existe, nullable). Un corpus ya cargado exige recargar la semilla (los documentos con el mismo checksum se omiten). **Dependencias:** ARR-02 (E2E ejecutables, hecho en #111).
+
+## ARR-08 · Detalle expandible en «Opciones descritas en la evidencia»
+
+> Linear: [L1D-284](https://linear.app/l1der-lab-mjbc/issue/L1D-284) · Prioridad Alta · Est. 8 · Origen: petición del usuario, 2026-10-20. **Decidido (usuario, 2026-10-20):** el detalle lo genera el LLM (alternativas descartadas: copiar un pasaje de la fuente, o solo alargar la justificación).
+
+**Como** médico que lee «Opciones descritas en la evidencia», **quiero** ver cada opción como un resumen (titular + justificación) y poder expandir 1–2 párrafos más de detalle, **para** entender qué reporta la fuente sin salir de la tarjeta.
+
+**AC**
+1. *Given* la salida del LLM, *when* se genera una opción, *then* puede traer `details` (0–2 párrafos, máximo configurable, RN-22); el prompt pide describir solo lo que reportan los fragmentos.
+2. *Given* los párrafos de `details`, *when* se validan, *then* cada afirmación pasa por citas y NLI (RN-01) y por la lista de términos prohibidos (RN-23): el párrafo con alguna afirmación sin soporte o con lenguaje prohibido se **omite** y cuenta en `omittedClaims`; la opción se mantiene si su justificación se soporta; sin párrafos válidos, `details` queda ausente (nunca vacío).
+3. *Given* el contrato `EvidenceOption`, *when* se añade `details` (array de texto, máx. 2, opcional), *then* el cambio es aditivo (excepción E-n de ADR-26 si `oasdiff` lo marca ERR); clientes generados, ejemplos y modo fingido incluyen el campo; clinical-api lo persiste y lo devuelve.
+4. *Given* una opción con `details`, *when* se muestra, *then* la tarjeta presenta el resumen y un `<details>` «Ver más detalle» (teclado y lector de pantalla); sin `details`, no hay control.
+5. *Given* el stack fingido, *when* corre el E2E, *then* una spec verifica el control y su contenido.
+6. *Given* el cambio de prompt y de salida, *when* se mide, *then* hay reporte de `ai-eval-runner` (OL-06): fidelidad, 0 salidas prescriptivas, JSON válido y latencia/tokens con detalle (sin agotar el tope de tokens de salida).
+
+**Riesgos:** más tokens y segundos en una consulta que ya tarda ~30 s; más afirmaciones para el NLI. **Dependencias:** ARR-07 (mismo panel), US-072 (OL-06 en la DoD).
