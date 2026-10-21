@@ -361,8 +361,6 @@ export interface EvidenceAnalysisConfig {
   ragTimeoutMs: number;
   /** `AI_DISCLAIMER_TEXT`: aviso de IA de la respuesta (literal de US-069 y PRD E-11, sin la etiqueta de uso académico); obligatorio y no vacío, nunca un literal del código. */
   aiDisclaimerText: string;
-  /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`: supuesto fijo de la Base del análisis del S1 (`[S1 resp. 30]`). */
-  analysisBasisAssumptionText: string;
 }
 
 const DEFAULT_ANALYSIS_MAX_OPTIONS = 1;
@@ -409,6 +407,5 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
     ),
     ragTimeoutMs: readPositiveInteger(env, 'RAG_TIMEOUT_MS', DEFAULT_RAG_TIMEOUT_MS),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
-    analysisBasisAssumptionText: leerObligatoria(env, 'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT'),
   };
 }
