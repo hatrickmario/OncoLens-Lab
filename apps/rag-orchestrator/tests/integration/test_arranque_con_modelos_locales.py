@@ -29,7 +29,6 @@ from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
     Q_SIN,
-    VERSION_DEL_CATALOGO_MONTADO,
     BuscadorFalso,
     CatalogoFalso,
     LectorReleaseFalso,
@@ -99,9 +98,7 @@ def test_con_modelos_locales_y_corpus_rag_query_recupera_con_los_adapters_reales
         cargador_de_modelos=_cargador_con_dobles(registro),
     )
 
-    respuesta = _cliente(app).post(
-        "/rag/query", json=solicitud_de(Q_SIN, version_de_catalogo=VERSION_DEL_CATALOGO_MONTADO)
-    )
+    respuesta = _cliente(app).post("/rag/query", json=solicitud_de(Q_SIN))
 
     assert respuesta.status_code == 200
     assert_matches_spec(RESPUESTA, respuesta.json())

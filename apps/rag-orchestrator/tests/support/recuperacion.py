@@ -67,11 +67,8 @@ def _clave_json(ruta: Path, clave: str) -> str:
     return json.loads(ruta.read_text(encoding="utf-8"))[clave]
 
 
-# La de la solicitud de ejemplo: los tests de recuperación montan ese mismo catálogo (falso).
-VERSION_DE_CATALOGO_DE_TEST = _clave_json(
-    RAIZ_REPOSITORIO / "contracts/examples/rag-query-request.json", "catalogVersion"
-)
-# La del catálogo real que montan `settings_de_prueba` y los arranques con adapters reales.
+# Una sola constante: la del catálogo real que montan `settings_de_prueba` y los arranques con adapters reales;
+# también la que declaran el catálogo falso y las solicitudes de los tests.
 VERSION_DEL_CATALOGO_MONTADO = _clave_json(CATALOGOS / "manifest.json", "version")
 
 
@@ -332,7 +329,7 @@ class CatalogoFalso:
 class CatalogoClinicoFalso:
     """``CatalogoClinico`` en memoria: la versión montada y las veces que se consultó (misma forma que el adapter)."""
 
-    def __init__(self, version: str = VERSION_DE_CATALOGO_DE_TEST) -> None:
+    def __init__(self, version: str = VERSION_DEL_CATALOGO_MONTADO) -> None:
         self._version = version
         self.consultas = 0
 
@@ -345,8 +342,10 @@ class DetectorIdiomaFalso:
     def __init__(self, idioma: Idioma = "es", error: Exception | None = None) -> None:
         self.idioma = idioma
         self.error = error
+        self.invocaciones = 0
 
     def detectar(self, texto: str) -> Idioma:
+        self.invocaciones += 1
         if self.error is not None:
             raise self.error
         return self.idioma
@@ -358,8 +357,10 @@ class LectorReleaseFalso:
     ) -> None:
         self._release = release
         self.error = error
+        self.invocaciones = 0
 
     def release_vigente(self) -> ReleaseDelCorpus:
+        self.invocaciones += 1
         if self.error is not None:
             raise self.error
         return self._release
@@ -413,6 +414,7 @@ class EntornoDeRecuperacion:
     catalogo: CatalogoFalso
     catalogo_clinico: CatalogoClinicoFalso
     servicio: RAGOrchestratorService
+    detector_idioma: DetectorIdiomaFalso
 
     def consultar(self, solicitud: dict[str, Any]):
         return self.cliente.post("/rag/query", json=solicitud)
@@ -439,6 +441,7 @@ def crear_entorno(
     catalogo = catalogo or CatalogoFalso()
     catalogo_clinico = catalogo_clinico or CatalogoClinicoFalso()
     generador = generador or FakeEvidenceGenerator()
+    detector_idioma = detector_idioma or DetectorIdiomaFalso()
     from tests.support.nli_falso import (
         IMPLICA,
         NliFalso,
@@ -447,7 +450,7 @@ def crear_entorno(
     clasificador_nli = clasificador_nli or NliFalso(por_defecto=IMPLICA)
     verificador_terminos = verificador_terminos or cargar_verificador_de_terminos(CATALOGOS)
     servicio = RAGOrchestratorService(
-        detector_idioma=detector_idioma or DetectorIdiomaFalso(),
+        detector_idioma=detector_idioma,
         embedder=embedder,
         buscador=buscador,
         reranker=reranker,
@@ -478,7 +481,14 @@ def crear_entorno(
         catalogo,
         catalogo_clinico,
         servicio,
+        detector_idioma,
     )
+
+
+def ejemplo_con_catalogo_montado(nombre: str) -> dict[str, Any]:
+    """Una solicitud de ``contracts/examples`` declarando el catálogo que montan los tests (no el del ejemplo)."""
+    ejemplo = json.loads((EJEMPLOS / nombre).read_text(encoding="utf-8"))
+    return {**copy.deepcopy(ejemplo), "catalogVersion": VERSION_DEL_CATALOGO_MONTADO}
 
 
 def solicitud_de(
@@ -486,16 +496,11 @@ def solicitud_de(
     *,
     tipo_de_cancer: str | None = "mama",
     max_options: int | None = None,
-    version_de_catalogo: str | None = None,
 ) -> dict[str, Any]:
-    """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null.
-
-    ``version_de_catalogo`` sustituye la del ejemplo (los arranques con el catálogo real montan otra)."""
-    base = json.loads((EJEMPLOS / "rag-query-request.json").read_text(encoding="utf-8"))
-    solicitud = copy.deepcopy(base)
+    """Petición de ``contracts/examples`` con la pregunta dada y el catálogo montado de los tests;
+    ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
+    solicitud = ejemplo_con_catalogo_montado("rag-query-request.json")
     solicitud["query"] = pregunta
-    if version_de_catalogo is not None:
-        solicitud["catalogVersion"] = version_de_catalogo
     if max_options is not None:
         solicitud["maxOptions"] = max_options
     if tipo_de_cancer is None:
