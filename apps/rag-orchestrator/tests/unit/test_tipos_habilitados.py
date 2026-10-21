@@ -2,6 +2,10 @@
 
 import pytest
 
+from app.bootstrap import (
+    ConfiguracionDeRecuperacionIncompleta,
+    _exigir_configuracion_de_recuperacion,
+)
 from app.config.settings import Settings
 from app.domain.tipos_habilitados import (
     TipoNoHabilitadoError,
@@ -13,6 +17,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
     cargar_catalogo_del_manifiesto,
 )
 from tests.support.contract import CATALOGOS
+from tests.support.fakes import settings_de_prueba
 
 
 def test_exigir_tipo_habilitado_no_lanza_cuando_el_tipo_esta_en_la_lista():
@@ -71,3 +76,10 @@ def test_el_adapter_lanza_catalogo_no_disponible_cuando_cancer_types_no_es_una_l
 
     with pytest.raises(CatalogoNoDisponible):
         cargar_catalogo_del_manifiesto(tmp_path)
+
+
+def test_la_configuracion_de_recuperacion_falla_nombrando_la_clave_cuando_el_proveedor_es_local_y_la_lista_esta_vacia():
+    ajustes = settings_de_prueba(llm_provider="local", enabled_cancer_types=())
+
+    with pytest.raises(ConfiguracionDeRecuperacionIncompleta, match="ENABLED_CANCER_TYPES"):
+        _exigir_configuracion_de_recuperacion(ajustes)
