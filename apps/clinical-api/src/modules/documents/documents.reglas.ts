@@ -24,3 +24,29 @@ export function bytesMaximosDeCarga(maxUploadMb: number): number {
 export function superaTamanoMaximo(tamanoEnBytes: number, maxUploadMb: number): boolean {
   return tamanoEnBytes > bytesMaximosDeCarga(maxUploadMb);
 }
+
+/** Cabeceras, campos y boundaries del multipart que acompañan al archivo: no cuentan para el máximo del PDF. */
+export const MARGEN_DEL_MULTIPART_BYTES = 64 * 1024;
+
+/**
+ * `Content-Length` declara un cuerpo que no puede contener un PDF dentro del máximo: se rechaza antes de leerlo. Sin
+ * `Content-Length` (transferencia por trozos) no se decide aquí; el lector corta el archivo en el máximo.
+ */
+export function contenidoExcedeElLimiteDeCarga(
+  contentLength: number | undefined,
+  maxUploadMb: number,
+): boolean {
+  return (
+    contentLength !== undefined &&
+    contentLength > bytesMaximosDeCarga(maxUploadMb) + MARGEN_DEL_MULTIPART_BYTES
+  );
+}
+
+/**
+ * Límite que se le da al lector multipart (busboy). El lector marca el archivo como excedido al ALCANZAR el límite, no
+ * al superarlo: con el máximo exacto rechazaría un PDF válido que mide justo `MAX_UPLOAD_MB`. Un byte más separa
+ * "mide el máximo" (válido) de "lo excede".
+ */
+export function limiteDeLecturaDeCarga(maxUploadMb: number): number {
+  return bytesMaximosDeCarga(maxUploadMb) + 1;
+}

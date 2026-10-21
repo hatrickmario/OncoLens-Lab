@@ -10,7 +10,12 @@ export interface ArchivoRecibido {
 export interface CargaRecibida {
   documentType: string | undefined;
   archivo: ArchivoRecibido | undefined;
+  /** El archivo superó el límite de lectura: se dejó de leer el cuerpo y `archivo` no está completo. */
+  excedeElLimite: boolean;
 }
+
+/** Un formulario legítimo trae `documentType` y `file`: lo demás es ruido o ataque y se rechaza. */
+const LIMITES_DEL_MULTIPART = { campos: 4, partes: 6, bytesPorCampo: 1024, paresDeCabecera: 20 };
 
 /** El cuerpo no es un `multipart/form-data` legible. */
 export class MultipartIlegible extends Error {
@@ -35,7 +40,14 @@ export function leerCargaMultipart(
       lector = busboy({
         headers: request.headers,
         defParamCharset: 'utf8',
-        limits: { files: 1, fileSize: limiteDelArchivoEnBytes },
+        limits: {
+          files: 1,
+          fields: LIMITES_DEL_MULTIPART.campos,
+          parts: LIMITES_DEL_MULTIPART.partes,
+          fieldSize: LIMITES_DEL_MULTIPART.bytesPorCampo,
+          headerPairs: LIMITES_DEL_MULTIPART.paresDeCabecera,
+          fileSize: limiteDelArchivoEnBytes,
+        },
       });
     } catch {
       reject(new MultipartIlegible());
@@ -52,9 +64,16 @@ export function leerCargaMultipart(
       lector.destroy();
       reject(new MultipartIlegible());
     };
-    lector.on('field', (nombre, valor) => {
+    lector.on('field', (nombre, valor, info) => {
+      if (info.valueTruncated || info.nameTruncated) {
+        fallar();
+        return;
+      }
       if (nombre === 'documentType') carga.documentType = valor;
     });
+    for (const evento of ['partsLimit', 'filesLimit', 'fieldsLimit'] as const) {
+      lector.on(evento, fallar);
+    }
     lector.on('file', (nombre, flujo, info) => {
       flujo.on('error', fallar);
       if (nombre !== 'file') {
@@ -63,6 +82,14 @@ export function leerCargaMultipart(
       }
       const trozos: Buffer[] = [];
       flujo.on('data', (trozo: Buffer) => trozos.push(trozo));
+      flujo.on('limit', () => {
+        // Se deja de leer el cuerpo: el resto del archivo no se descarga ni se guarda.
+        if (terminado) return;
+        terminado = true;
+        request.unpipe(lector);
+        lector.destroy();
+        resolve({ documentType: carga.documentType, archivo: undefined, excedeElLimite: true });
+      });
       flujo.on('end', () => {
         if (info.filename !== undefined) {
           carga.archivo = { nombre: info.filename, contenido: Buffer.concat(trozos) };
@@ -73,7 +100,11 @@ export function leerCargaMultipart(
     lector.on('close', () => {
       if (terminado) return;
       terminado = true;
-      resolve({ documentType: carga.documentType, archivo: carga.archivo });
+      resolve({
+        documentType: carga.documentType,
+        archivo: carga.archivo,
+        excedeElLimite: false,
+      });
     });
     request.once('error', fallar);
     request.once('close', () => {

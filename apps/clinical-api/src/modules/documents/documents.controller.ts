@@ -16,7 +16,7 @@ import {
   MultipartIlegible,
   type CargaRecibida,
 } from './documents.multipart.js';
-import { bytesMaximosDeCarga } from './documents.reglas.js';
+import { contenidoExcedeElLimiteDeCarga, limiteDeLecturaDeCarga } from './documents.reglas.js';
 import { idDePacienteSchema, tipoDeDocumentoSchema } from './documents.schema.js';
 import type { DocumentsService } from './documents.service.js';
 
@@ -41,6 +41,11 @@ const CUERPO_INVALIDO: Rechazo = {
   codigo: 'CUERPO_INVALIDO',
   resultado: 'cuerpo_invalido',
 };
+const ARCHIVO_DEMASIADO_GRANDE: Rechazo = {
+  status: 422,
+  codigo: 'ARCHIVO_DEMASIADO_GRANDE',
+  resultado: 'archivo_demasiado_grande',
+};
 const PACIENTE_NO_ENCONTRADO: Rechazo = {
   status: 404,
   codigo: 'NO_ENCONTRADO',
@@ -53,11 +58,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
     return { status: 422, codigo: 'ARCHIVO_NO_PDF', resultado: 'archivo_no_pdf' };
   }
   if (error instanceof ArchivoDemasiadoGrande) {
-    return {
-      status: 422,
-      codigo: 'ARCHIVO_DEMASIADO_GRANDE',
-      resultado: 'archivo_demasiado_grande',
-    };
+    return ARCHIVO_DEMASIADO_GRANDE;
   }
   if (error instanceof DocumentoDuplicado) {
     return { status: 409, codigo: 'DOCUMENTO_DUPLICADO', resultado: 'documento_duplicado' };
@@ -69,6 +70,11 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   return undefined;
 }
 
+const contentLengthDe = (request: Request): number | undefined => {
+  const declarado = request.headers['content-length'];
+  return declarado === undefined ? undefined : Number(declarado);
+};
+
 /**
  * `POST /patients/{patientId}/documents` (se monta bajo `/platform`, detrás del guard de sesión). Solo traduce
  * HTTP ↔ service. El log lleva únicamente evento, resultado, `traceId` y UUID del paciente y del documento: nunca el
@@ -76,8 +82,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
  */
 export function documentsController(dependencias: DependenciasDelController): Router {
   const { service, traceIds, registrar, maxUploadMb } = dependencias;
-  // Un byte más que el máximo permite distinguir "mide justo el máximo" de "lo excede" sin leer el resto.
-  const limiteDeLectura = bytesMaximosDeCarga(maxUploadMb) + 1;
+  const limiteDeLectura = limiteDeLecturaDeCarga(maxUploadMb);
   const router = Router();
 
   const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
@@ -91,6 +96,12 @@ export function documentsController(dependencias: DependenciasDelController): Ro
     enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
   }
 
+  /** Rechaza sin esperar al resto del cuerpo: la conexión se cierra para no seguir recibiéndolo. */
+  function rechazarYCerrar(response: Response, rechazo: Rechazo, deteccion: string): void {
+    response.setHeader('Connection', 'close');
+    rechazar(response, rechazo, { deteccion });
+  }
+
   async function leerCarga(request: Request): Promise<CargaRecibida | undefined> {
     try {
       return await leerCargaMultipart(request, limiteDeLectura);
@@ -102,7 +113,15 @@ export function documentsController(dependencias: DependenciasDelController): Ro
 
   const cargar: RequestHandler = async (request, response) => {
     const sesion = request.sesion;
+    if (contenidoExcedeElLimiteDeCarga(contentLengthDe(request), maxUploadMb)) {
+      rechazarYCerrar(response, ARCHIVO_DEMASIADO_GRANDE, 'content_length');
+      return;
+    }
     const carga = await leerCarga(request);
+    if (carga?.excedeElLimite === true) {
+      rechazarYCerrar(response, ARCHIVO_DEMASIADO_GRANDE, 'limite_de_lectura');
+      return;
+    }
     const tipo = tipoDeDocumentoSchema.safeParse(carga?.documentType);
     if (sesion === undefined || carga?.archivo === undefined || !tipo.success) {
       rechazar(response, CUERPO_INVALIDO);

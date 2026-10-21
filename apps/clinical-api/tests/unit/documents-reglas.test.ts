@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   bytesMaximosDeCarga,
   claveDeObjeto,
+  contenidoExcedeElLimiteDeCarga,
+  MARGEN_DEL_MULTIPART_BYTES,
   esPdfPorMagicBytes,
+  limiteDeLecturaDeCarga,
   superaTamanoMaximo,
 } from '../../src/modules/documents/documents.reglas.js';
 
@@ -67,5 +70,27 @@ describe('superaTamanoMaximo', () => {
 describe('bytesMaximosDeCarga', () => {
   it('convierte los MiB configurados a bytes', () => {
     expect(bytesMaximosDeCarga(20)).toBe(20_971_520);
+  });
+});
+
+describe('contenidoExcedeElLimiteDeCarga', () => {
+  const UN_MIB = 1024 * 1024;
+
+  it('es falso cuando no hay Content-Length', () => {
+    expect(contenidoExcedeElLimiteDeCarga(undefined, 1)).toBe(false);
+  });
+
+  it('es falso cuando el cuerpo mide el máximo más el margen del multipart', () => {
+    expect(contenidoExcedeElLimiteDeCarga(UN_MIB + MARGEN_DEL_MULTIPART_BYTES, 1)).toBe(false);
+  });
+
+  it('es verdadero cuando el cuerpo supera el máximo más el margen en un byte', () => {
+    expect(contenidoExcedeElLimiteDeCarga(UN_MIB + MARGEN_DEL_MULTIPART_BYTES + 1, 1)).toBe(true);
+  });
+});
+
+describe('limiteDeLecturaDeCarga', () => {
+  it('es un byte más que el máximo porque el lector marca el límite al alcanzarlo, no al superarlo', () => {
+    expect(limiteDeLecturaDeCarga(20)).toBe(bytesMaximosDeCarga(20) + 1);
   });
 });
