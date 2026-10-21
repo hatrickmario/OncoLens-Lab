@@ -35,11 +35,38 @@ directorio_temporal_propio() {
 export COMPOSE_PROJECT_NAME=oncolens-e2e APP_ENV=local LLM_PROVIDER=fake MODEL_PROVIDER=fake
 modelos="$(directorio_temporal_propio)"; export MODEL_HOST_DIR="$modelos"
 secretos="$(directorio_temporal_propio)"; export ONCOLENS_SECRETS_DIR="$secretos"
+# Los secretos conservan el 0600 de quien los genera (uid del runner: 1001 en GitHub Actions) y los servicios corren con
+# ONCOLENS_UID:ONCOLENS_GID (por defecto 1000:1000) para poder leerlos; sin esto clinical-api no arranca en la CI.
+ONCOLENS_UID="$(id -u)"; ONCOLENS_GID="$(id -g)"; export ONCOLENS_UID ONCOLENS_GID
 export WEB_HOME_PATH="/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis"   # paciente semilla (a)
 export AI_DISCLAIMER_TEXT="Generado por IA; requiere validación clínica independiente por el oncólogo tratante."
 export ANALYSIS_BASIS_S1_ASSUMPTION_TEXT="Supuesto fijo del S1 para pruebas: caso sintético."
 compose=(docker compose -f "$raiz/infra/docker/docker-compose.yml")
+# Líneas de stdin que contienen un secreto generado (un valor por archivo de una línea) se descartan: los logs de un
+# servicio caído se imprimen en el registro público de la CI.
+sin_secretos() {
+  local patrones archivo
+  patrones="$(mktemp)"
+  for archivo in "$secretos"/*; do
+    [ -f "$archivo" ] && [ "$(wc -l < "$archivo")" -le 1 ] && [ "$(wc -c < "$archivo")" -ge 8 ] && printf '%s\n' "$(cat "$archivo")" >> "$patrones"
+  done
+  grep -v -F -f "$patrones" || true
+  rm -f "$patrones"
+}
+
+# Diagnóstico en la CI: últimas líneas de los servicios que salieron con error, antes de bajar el stack.
+mostrar_servicios_caidos() {
+  local servicio codigo
+  "${compose[@]}" ps -a --format '{{.Service}} {{.ExitCode}}' 2>/dev/null | while read -r servicio codigo; do
+    [ -n "$servicio" ] && [ "${codigo:-0}" != 0 ] || continue
+    echo "== logs de $servicio (salió con $codigo; últimas 80 líneas)" >&2
+    "${compose[@]}" logs --no-color --tail=80 "$servicio" 2>&1 | sin_secretos >&2
+  done
+}
+
 limpiar() {
+  local estado=$?
+  [ "$estado" = 0 ] || [ "$en_ci" = 0 ] || mostrar_servicios_caidos
   if [ "$mantener" = 1 ]; then echo "ejecutar: stack y secretos conservados en $secretos" >&2; return; fi
   "${compose[@]}" --profile seed down -v >/dev/null 2>&1 || true
   rm -rf "$modelos" "$secretos"

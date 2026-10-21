@@ -12,9 +12,15 @@ const SCRIPT = path.join(RAIZ, 'scripts/e2e/ejecutar.sh');
 
 const falso = (cuerpo) => `#!/usr/bin/env bash\n${cuerpo}\n`;
 const STUBS = {
-  docker: falso(`echo "$COMPOSE_PROJECT_NAME|$ONCOLENS_SECRETS_DIR|$*" >> "$STUB_LOG"
+  docker: falso(`echo "$COMPOSE_PROJECT_NAME|$ONCOLENS_SECRETS_DIR|$*|uid=$ONCOLENS_UID:$ONCOLENS_GID" >> "$STUB_LOG"
+for argumento in "$@"; do case "$argumento" in ps|logs|up|network) subcomando="$argumento"; break ;; esac; done
 case "$1 $2" in
   "network ls") echo oncolens-e2e_clinical-net ;;
+esac
+case "$subcomando" in
+  up) [ "$STUB_SERVICIO_CAIDO" = 1 ] && { echo "dependency failed to start: container oncolens-e2e-clinical-api-1 exited (1)" >&2; exit 1; } ;;
+  ps) printf '%s\\n' "postgres 0" "clinical-api 1" ;;
+  logs) echo "arranque de $*"; echo "clave filtrada $(cat "$ONCOLENS_SECRETS_DIR/seed_doctor_password")"; echo "no puedo leer el secreto" ;;
 esac
 exit 0`),
   curl: falso(`[ "$STUB_WEB" = caido ] && { printf 000; exit 0; }; printf 200`),
@@ -91,6 +97,36 @@ describe('scripts/e2e/ejecutar.sh en modo CI', () => {
     expect(clave.length).toBeGreaterThanOrEqual(16);
     expect(resultado.stdout).toContain(`::add-mask::${clave}`);
     expect(resultado.stdout.replace(`::add-mask::${clave}`, '') + resultado.stderr).not.toContain(clave);
+  });
+
+  it('ejecuta los servicios con el uid y gid de quien genera los secretos aunque el entorno defina otros [ARR-02 AC-1]', () => {
+    const resultado = ejecutar([], { ONCOLENS_UID: '1000', ONCOLENS_GID: '1000' });
+
+    expect(resultado.status, resultado.stderr).toBe(0);
+    const uid = spawnSync('id', ['-u'], { encoding: 'utf8' }).stdout.trim();
+    const gid = spawnSync('id', ['-g'], { encoding: 'utf8' }).stdout.trim();
+    const llamadas = leer(registro);
+    expect(llamadas.length).toBeGreaterThan(0);
+    for (const llamada of llamadas) expect(llamada.endsWith(`|uid=${uid}:${gid}`), llamada).toBe(true);
+  });
+
+  it('imprime las últimas líneas de los servicios caídos, sin secretos, cuando el stack no arranca en la CI [ARR-02 AC-1]', () => {
+    const resultado = ejecutar([], { STUB_SERVICIO_CAIDO: '1' });
+
+    expect(resultado.status).not.toBe(0);
+    expect(resultado.stderr).toContain('== logs de clinical-api (salió con 1; últimas 80 líneas)');
+    expect(resultado.stderr).toContain('logs --no-color --tail=80 clinical-api');
+    expect(resultado.stderr).toContain('no puedo leer el secreto');
+    expect(resultado.stderr).not.toContain('clave filtrada');
+    expect(resultado.stderr).not.toContain('postgres (salió');
+    const llamadas = leer(registro);
+    expect(llamadas.findIndex((l) => /logs --no-color/.test(l))).toBeLessThan(llamadas.findLastIndex((l) => /down -v/.test(l)));
+  });
+
+  it('no imprime logs cuando la corrida termina bien', () => {
+    const resultado = ejecutar();
+
+    expect(resultado.stderr).not.toContain('== logs de');
   });
 
   it('rechaza --mantener cuando hay CI [ARR-02 AC-1]', () => {
