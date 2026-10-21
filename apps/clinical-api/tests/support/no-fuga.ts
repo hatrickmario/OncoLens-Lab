@@ -162,18 +162,31 @@ export interface CapturaDeSalida {
   restaurar: () => void;
 }
 
+const METODOS_DE_CONSOLE = ['log', 'info', 'warn', 'error', 'debug'] as const;
+
+const comoTexto = (chunk: unknown): string =>
+  Buffer.isBuffer(chunk) || chunk instanceof Uint8Array
+    ? Buffer.from(chunk).toString('utf8')
+    : String(chunk);
+
 /**
- * Borde del proceso: todo lo que clinical-api escriba en stdout/stderr durante los pasos es una fuente más.
+ * Borde del proceso: todo lo que clinical-api escriba con `console.*` o `process.std*.write` durante los pasos es una
+ * fuente más. Vitest intercepta `console.*` con su propia consola antes de `process.stdout`, así que se espían ambos.
  */
 export function capturarSalidaDelProceso(): CapturaDeSalida {
   const salida: string[] = [];
-  const capturar = (chunk: unknown) => {
-    salida.push(String(chunk));
-    return true;
-  };
   const espias = [
-    vi.spyOn(process.stdout, 'write').mockImplementation(capturar),
-    vi.spyOn(process.stderr, 'write').mockImplementation(capturar),
+    ...(['stdout', 'stderr'] as const).map((flujo) =>
+      vi.spyOn(process[flujo], 'write').mockImplementation((chunk: unknown) => {
+        salida.push(comoTexto(chunk));
+        return true;
+      }),
+    ),
+    ...METODOS_DE_CONSOLE.map((metodo) =>
+      vi.spyOn(console, metodo).mockImplementation((...argumentos: unknown[]) => {
+        salida.push(argumentos.map(comoTexto).join(' '));
+      }),
+    ),
   ];
   return { salida, restaurar: () => espias.forEach((espia) => espia.mockRestore()) };
 }
