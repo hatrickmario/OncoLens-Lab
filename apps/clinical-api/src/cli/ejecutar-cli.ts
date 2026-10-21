@@ -1,7 +1,10 @@
 import { parseArgs } from 'node:util';
 import { ZodError } from 'zod';
 import type { Registrar } from '../infrastructure/logger.js';
-import { CorreoYaRegistradoError } from '../modules/users/users.repository.js';
+import {
+  CorreoYaRegistradoError,
+  type UsuarioRegistrado,
+} from '../modules/users/users.repository.js';
 import {
   altaDeUsuarioSchema,
   bajaDeUsuarioSchema,
@@ -58,6 +61,11 @@ function leerOpciones(
   return { email: values['email'] ?? '', role: values['role'] ?? '' };
 }
 
+/** Única forma de mostrar un usuario: solo id, correo y rol (nunca contraseña ni hash). */
+function lineaDeUsuario(usuario: UsuarioRegistrado): string {
+  return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
+}
+
 async function crearUsuario(
   argumentos: string[],
   entorno: EntornoDeCli,
@@ -67,21 +75,21 @@ async function crearUsuario(
   const password = await entorno.leerContrasena();
   const datos = altaDeUsuarioSchema.parse({ email, rol: role, password });
   const usuario = await users.crear(datos);
-  return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
+  return lineaDeUsuario(usuario);
 }
 
 async function cambiarRol(argumentos: string[], users: UsersService): Promise<string> {
   const { email, role } = leerOpciones(argumentos);
   const datos = cambioDeRolSchema.parse({ email, rol: role });
   const usuario = await users.cambiarRol(datos);
-  return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
+  return lineaDeUsuario(usuario);
 }
 
 async function desactivarUsuario(argumentos: string[], users: UsersService): Promise<string> {
   const { email } = leerOpciones(argumentos, ['email']);
   const datos = bajaDeUsuarioSchema.parse({ email });
   const usuario = await users.desactivar(datos);
-  return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
+  return lineaDeUsuario(usuario);
 }
 
 /** Despacha `users <acción>`; devuelve la línea de resultado (solo id, correo y rol). */
