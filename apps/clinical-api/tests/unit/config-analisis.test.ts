@@ -5,7 +5,6 @@ const ENV_VALIDO = {
   RAG_ORCHESTRATOR_URL: 'http://rag-orchestrator:8000',
   CLINICAL_CATALOG_PATH: '/catalogs',
   AI_DISCLAIMER_TEXT: 'Texto de aviso sintético de test.',
-  ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto fijo sintético de test.',
 };
 
 function variableInvalida(env: NodeJS.ProcessEnv): string {
@@ -27,7 +26,6 @@ describe('readEvidenceAnalysisConfig', () => {
       evidenceDefaultYears: 10,
       ragTimeoutMs: 30_000,
       aiDisclaimerText: 'Texto de aviso sintético de test.',
-      analysisBasisAssumptionText: 'Supuesto fijo sintético de test.',
     });
   });
 
@@ -72,10 +70,6 @@ describe('readEvidenceAnalysisConfig', () => {
     ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: undefined }],
     ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: '' }],
     ['AI_DISCLAIMER_TEXT', { ...ENV_VALIDO, AI_DISCLAIMER_TEXT: '   ' }],
-    [
-      'ANALYSIS_BASIS_S1_ASSUMPTION_TEXT',
-      { ...ENV_VALIDO, ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: undefined },
-    ],
   ])('rechaza nombrando %s cuando el entorno es inválido', (variable, env) => {
     expect(variableInvalida(env)).toBe(variable);
   });

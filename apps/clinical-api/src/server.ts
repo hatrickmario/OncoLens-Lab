@@ -64,7 +64,6 @@ arrancar({
             evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
-            analysisBasisAssumptionText: configuracion.analisis.analysisBasisAssumptionText,
           },
           reloj,
           traceIds: { traceId: nuevoTraceId },
