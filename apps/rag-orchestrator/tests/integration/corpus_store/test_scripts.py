@@ -99,9 +99,13 @@ def test_migrate_corpus_catalog_main_migra_como_rag_corpus_migrator_y_es_idempot
             tablas = conexion.execute(
                 text("SELECT count(*) FROM pg_tables WHERE schemaname = 'corpus'")
             ).scalar_one()
+            version_en_la_base = conexion.execute(
+                text("SELECT version_num FROM corpus.alembic_version")
+            ).scalar_one()
     finally:
         motor.dispose()
     assert (primera, segunda, tablas) == (0, 0, 4), capturado.err
+    assert version_en_la_base == revision_head()  # fuente independiente de la salida
     assert salida.count(revision_head()) == 2  # una por corrida; head real, no fijo
     contrasena_en_la_salida = url.password in salida
     assert not contrasena_en_la_salida, "la salida del one-shot contiene la contraseña del migrator"
