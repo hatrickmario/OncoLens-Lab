@@ -20,7 +20,7 @@ import {
 
 /**
  * Único módulo que lee el entorno de `clinical-api` (US-037, RN-22): cada sección valida sus variables y falla con
- * `ConfiguracionInvalidaError` (variable, regla, motivo; nunca el valor). Fuera de él, nadie toca `process.env`;
+ * `ConfiguracionInvalidaError` (variable, regla, motivo; nunca el valor). Fuera de él, nadie lee el entorno del proceso;
  * solo la raíz de composición (`server.ts`) le pasa el entorno.
  */
 export * from './secciones.js';

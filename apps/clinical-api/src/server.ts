@@ -28,15 +28,16 @@ import { arrancar, registrarConfiguracionInvalida } from './startup.js';
 
 const leerArchivo = (ruta: string): string => readFileSync(ruta, 'utf8');
 
-/**
- * Raíz de composición: conecta el proceso real (entorno, sistema de archivos, consola) con `arrancar`.
- * `arrancar` comprueba primero que los secretos existan (US-035 AC-5); aquí, ya antes de escuchar, se
- * valida la configuración de sesión, de PostgreSQL y del gateway de análisis (el error nombra la variable, nunca su
- * valor), que el catálogo tenga `manifest.json` y que la clave privada del JWT de servicio sea legible y utilizable
- * (fallo cerrado, US-054).
- */
 const entorno = observarEntorno(process.env);
 
+/**
+ * Raíz de composición: conecta el proceso real (entorno, sistema de archivos, consola) con `arrancar`.
+ * `arrancar` comprueba primero los secretos (US-035 AC-5), la configuración de arranque y la guarda de datos reales
+ * (US-037, RN-13), y el entorno se lee una sola vez, aquí, para pasárselo al módulo de configuración. Ya antes de
+ * escuchar, aquí se valida la configuración de PostgreSQL, del JWT de servicio, del gateway de análisis y de PII (el
+ * error nombra la variable, nunca su valor), que el catálogo tenga `manifest.json` y que la clave privada del JWT de servicio sea legible y utilizable
+ * (fallo cerrado, US-054).
+ */
 arrancar({
   env: entorno.env,
   readFile: leerArchivo,
