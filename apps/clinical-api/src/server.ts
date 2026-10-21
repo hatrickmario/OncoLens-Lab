@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import paquete from '../package.json' with { type: 'json' };
 import { componerAplicacion } from './composition.js';
 import {
   ConfiguracionInvalidaError,
@@ -8,7 +9,7 @@ import {
 } from './config/index.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
-import { registrarEnConsola } from './infrastructure/logger.js';
+import { crearRegistrador } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
@@ -65,7 +66,11 @@ arrancar({
       process.exit(1);
     }
 
-    const pool = crearPool(configuracion.database, registrarEnConsola);
+    // La lista de campos redactados es la base cerrada del logger más los extra de configuración (RN-10, RN-22).
+    const registrar = crearRegistrador((linea) => console.info(linea), {
+      camposSensiblesExtra: arranque.logs.camposSensiblesExtra,
+    });
+    const pool = crearPool(configuracion.database, registrar);
     loadServicePrivateKey(configuracion.jwt.privateKeyFile)
       .then((privateKey) => {
         const reloj = { now: () => new Date() };
@@ -101,10 +106,10 @@ arrancar({
             detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,
-            registrar: registrarEnConsola,
+            registrar,
             expresionesDeFecha: configuracion.pii.fechas.expresiones,
           }),
-          registrar: registrarEnConsola,
+          registrar,
         });
         const app = componerAplicacion({
           db: pool,
@@ -113,8 +118,10 @@ arrancar({
           tokens: crearGeneradorDeToken(),
           ids: randomUUID,
           nuevoTraceId,
-          registrar: registrarEnConsola,
+          registrar,
           rutasProtegidas: [gateway],
+          // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
+          salud: { configKeys: entorno.clavesCargadas(), serviceVersion: paquete.version },
         });
         const servidor = app.listen(puerto, () => {
           console.info(`clinical-api escuchando en el puerto ${puerto}`);
