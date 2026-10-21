@@ -11,7 +11,17 @@
       "ci/tests/cases/ac4-allowlist/**",
       "openspec/changes/l1d-103-gateway-contexto-clinico/**",
       "openspec/changes/archive/*-l1d-103-gateway-contexto-clinico/**",
-      "openspec/specs/evidence-analysis-gateway/spec.md"
+      "openspec/specs/evidence-analysis-gateway/spec.md",
+      "openspec/changes/l1d-167-config-validada-logs-json/**",
+      "openspec/changes/archive/*-l1d-167-config-validada-logs-json/**",
+      "openspec/changes/l1d-200-identidad-cifrada-indice-ciego/**",
+      "openspec/changes/archive/*-l1d-200-identidad-cifrada-indice-ciego/**",
+      "openspec/changes/l1d-202-listado-busqueda-pacientes/**",
+      "openspec/changes/archive/*-l1d-202-listado-busqueda-pacientes/**",
+      "openspec/changes/l1d-72-ficha-minima-paciente/**",
+      "openspec/changes/archive/*-l1d-72-ficha-minima-paciente/**",
+      "openspec/specs/patients-identity/spec.md",
+      "openspec/specs/platform-observability/spec.md"
     ],
     "valores": [
       {
@@ -21,9 +31,17 @@
       {
         "formato": "telefono_local",
         "sha256": "bf58149e002652b8d49cabfbfd8aa987d097f3de32306dc2ccf50a0f72065e09"
+      },
+      {
+        "formato": "documento_identidad",
+        "sha256": "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414"
+      },
+      {
+        "formato": "documento_identidad",
+        "sha256": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
       }
     ],
-    "motivo": "Paciente sintético con PII conocida (FEAT-T4a, FX-T4a-a): documento y teléfono de prueba de la desidentificación y de la búsqueda exacta."
+    "motivo": "Paciente sintético con PII conocida (FEAT-T4a, FX-T4a-a): documento y teléfono de prueba de la desidentificación y de la búsqueda exacta; desde el S2 el fixture usa un valor numérico nuevo y el número vecino del AC-2 de US-046 ([S2 resp. 11]); el valor anterior se conserva hasta que l1d-200 actualice los tests del S1."
   },
   {
     "fixture": "FX-T4a-c",
