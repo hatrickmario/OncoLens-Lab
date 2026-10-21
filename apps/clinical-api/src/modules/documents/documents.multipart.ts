@@ -1,4 +1,4 @@
-import type { IncomingMessage } from 'node:http';
+import type { Request } from 'express';
 import busboy from 'busboy';
 
 export interface ArchivoRecibido {
@@ -26,7 +26,7 @@ export class MultipartIlegible extends Error {
  * resto del cuerpo se descarta al leerlo.
  */
 export function leerCargaMultipart(
-  request: IncomingMessage,
+  request: Request,
   limiteDelArchivoEnBytes: number,
 ): Promise<CargaRecibida> {
   return new Promise((resolve, reject) => {
