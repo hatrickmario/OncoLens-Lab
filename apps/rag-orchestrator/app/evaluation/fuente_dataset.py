@@ -122,21 +122,9 @@ class FuenteDatasetEnDirectorio:
             revisadas=revisadas,
             release=str(corpus["release"]),
             corte=date.fromisoformat(str(corpus["corte"])),
-            documentos=tuple(
-                DocumentoCorpus(str(d["id"]), str(d["titulo"]), str(d["cancer"]))
-                for d in corpus.get("documentos", [])
-            ),
-            chunks=tuple(
-                ChunkCorpus(str(c["id"]), str(c["documento"]), str(c["texto"]))
-                for c in corpus.get("chunks", [])
-            ),
-            propuestas={
-                str(pid): tuple(
-                    OpcionPropuesta(o["opcion"], o["justificacion"], tuple(o["citas"]))
-                    for o in opciones
-                )
-                for pid, opciones in partes["propuestas"].get("propuestas", {}).items()
-            },
+            documentos=_documentos(corpus),
+            chunks=_chunks(corpus),
+            propuestas=_propuestas(partes["propuestas"]),
             textos_pii=tuple(str(t["texto"]) for t in partes["pii"].get("textos", [])),
             salidas_prescriptivas=tuple(
                 str(s["texto"]) for s in partes["prescriptivas"].get("salidas", [])
@@ -173,6 +161,29 @@ class FuenteDatasetEnDirectorio:
         preguntas = tuple(_pregunta(p) for p in elegidas)
         revisadas = frozenset(str(p["id"]) for p in elegidas if p.get("revisada_por_oncologo"))
         return preguntas, revisadas
+
+
+def _documentos(corpus: dict[str, Any]) -> tuple[DocumentoCorpus, ...]:
+    return tuple(
+        DocumentoCorpus(str(d["id"]), str(d["titulo"]), str(d["cancer"]))
+        for d in corpus.get("documentos", [])
+    )
+
+
+def _chunks(corpus: dict[str, Any]) -> tuple[ChunkCorpus, ...]:
+    return tuple(
+        ChunkCorpus(str(c["id"]), str(c["documento"]), str(c["texto"]))
+        for c in corpus.get("chunks", [])
+    )
+
+
+def _propuestas(crudo: dict[str, Any]) -> dict[str, tuple[OpcionPropuesta, ...]]:
+    return {
+        str(pregunta): tuple(
+            OpcionPropuesta(o["opcion"], o["justificacion"], tuple(o["citas"])) for o in opciones
+        )
+        for pregunta, opciones in crudo.get("propuestas", {}).items()
+    }
 
 
 def _pregunta(crudo: dict[str, Any]) -> Pregunta:

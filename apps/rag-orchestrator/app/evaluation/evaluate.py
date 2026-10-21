@@ -12,6 +12,7 @@ import sys
 import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 from app.application.ports import Clock
 from app.evaluation.armado_reporte import armar_reporte
@@ -21,7 +22,11 @@ from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE, SUITES
-from app.evaluation.fuente_dataset import FuenteDatasetEnDirectorio, ids_de_subconjunto
+from app.evaluation.fuente_dataset import (
+    DatasetSuite,
+    FuenteDatasetEnDirectorio,
+    ids_de_subconjunto,
+)
 from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_marca_final
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
@@ -76,18 +81,28 @@ def _ejecutar(
     exigir_adapters_locales(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
-    dataset = fuente.cargar()
+    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj)
+    escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
+    return 0
+
+
+def _correr_suite(
+    config: ConfigSuite, dataset: DatasetSuite, suite: str, reloj: Clock
+) -> dict[str, Any]:
     cronometro = Cronometro(_reloj_de_medicion(config))
-    suite = componer_servicio(config, dataset, cronometro, reloj)
-    resultados, respuestas = asyncio.run(evaluar_dataset(suite, dataset))
-    reporte = armar_reporte(
-        config, dataset, args.suite, respuestas[0].meta, resultados, cronometro.p95_ms()
+    servicio = componer_servicio(config, dataset, cronometro, reloj)
+    resultados, respuestas = asyncio.run(evaluar_dataset(servicio, dataset))
+    return armar_reporte(
+        config, dataset, suite, respuestas[0].meta, resultados, cronometro.p95_ms()
     )
-    destino = (args.salida or raiz_repo() / "apps" / "rag-orchestrator" / SALIDA_POR_DEFECTO) / (
+
+
+def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:
+    """``<salida>/<fecha>-<hashConfig>.json``: la fecha viene del reloj inyectado, la huella de la configuración."""
+    carpeta = args.salida or raiz_repo() / "apps" / "rag-orchestrator" / SALIDA_POR_DEFECTO
+    return carpeta / (
         args.nombre_archivo or f"{reloj.ahora().date().isoformat()}-{config.hash_config}.json"
     )
-    escribir_reporte_cerrado(destino, reporte, ESQUEMA_SUITE)
-    return 0
 
 
 if __name__ == "__main__":
