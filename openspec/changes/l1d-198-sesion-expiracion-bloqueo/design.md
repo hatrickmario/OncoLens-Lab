@@ -115,6 +115,10 @@ bloqueo por IP en PostgreSQL (descartado: esquema congelado y una sola instancia
   `contracts:breaking` en verde sin cambios; `info.version` no se toca. Compatible con ADR-26.
 - Las respuestas propias del Route Handler de `web` (`403` por `Origin`) se validan contra
   `ErrorPermisoDenegado` con `assertMatchesSpec()`.
+- `X-Forwarded-For` de `web` a `clinical-api` es transporte fijado desde el socket (D4c), consumido solo por
+  `trust proxy` / `TRUST_PROXY_HOPS`; no es parámetro del contrato (ADR-26 no aplica). El hook entrante que lo escribe
+  (`fijar-ip-del-socket.ts`, `import … from 'node:http'`) no es un cliente saliente y figura en `TRANSPORTES_DECLARADOS`
+  de `assertConsumersUseGeneratedClients`.
 
 ## Componentes y patrones
 
