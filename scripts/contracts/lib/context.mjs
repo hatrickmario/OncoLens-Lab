@@ -1,4 +1,4 @@
-/** Contexto que reciben las reglas: specs (crudos y empaquetados), ejemplos y documentos. Sin E/S de archivos. */
+/** Contexto que reciben las reglas: specs (crudos y empaquetados), ejemplos y documentos. Sin lectura de archivos (el empaquetado es en memoria). */
 import { BaseResolver, Source, bundleDocument, detectSpec, getTypes, loadConfig } from '@redocly/openapi-core';
 import YAML from 'yaml';
 import { REDOCLY_CONFIG } from './paths.mjs';
@@ -42,7 +42,7 @@ function referenciasExternasSinResolver(empaquetado) {
 }
 
 /** Nombres de schema que Redocly renombró con sufijo de colisión (`Nombre-2`): los de origen no los traen. */
-function schemasRepetidos(empaquetado, ...origenes) {
+function schemasRenombradosPorColision(empaquetado, ...origenes) {
   const nombresDeOrigen = new Set(origenes.flatMap((spec) => Object.keys(spec?.components?.schemas ?? {})));
   return Object.keys(empaquetado.components?.schemas ?? {})
     .filter((nombre) => !nombresDeOrigen.has(nombre))
@@ -57,7 +57,7 @@ function verificarEmpaquetadoCerrado(file, empaquetado, raw, evidence) {
   const externalRefs = referenciasExternasSinResolver(empaquetado);
   const errores = [
     ...externalRefs.map(({ pointer, ref }) => `${file}: ${pointer}: $ref externa sin resolver ${ref}`),
-    ...new Set(schemasRepetidos(empaquetado, raw, evidence).map((nombre) => `${file}: schema repetido ${nombre}`)),
+    ...new Set(schemasRenombradosPorColision(empaquetado, raw, evidence).map((nombre) => `${file}: schema repetido o derivado ${nombre}`)),
   ];
   return errores.length === 0 ? { externalRefs } : { externalRefs, error: errores.join('; ') };
 }
