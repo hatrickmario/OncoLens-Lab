@@ -169,7 +169,7 @@ describe('integracion-rag-orchestrator.sh', () => {
 
     const inspeccion = llamadas.find((llamada) => llamada.includes('--entrypoint'));
     for (const patron of ['*.pem', '*.key', '*.crt', '*_password', '*_key', 'pg_hba*', '.env*', 'secrets']) {
-      expect(inspeccion).toMatch(new RegExp(`-name "?${patron.replace(/[.*]/g, '\\$&')}"?( |$)`));
+      expect([`-name "${patron}"`, `-name ${patron} `].some((fragmento) => inspeccion.includes(fragmento))).toBe(true);
     }
     expect(inspeccion).toContain('-path /repo/node_modules -prune');
   });
