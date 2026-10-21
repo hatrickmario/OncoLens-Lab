@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { TRACE_ID_GENERADO, idDePaciente } from '../../support/gateway.js';
+import { TRACE_ID_GENERADO, crearPacienteSintetico, idDePaciente } from '../../support/gateway.js';
 import {
   documentosDelPaciente,
   fixture,
+  pdfSinteticoDe,
   iniciarEscenarioDeDocumentos,
   montarDocumentos,
   type EscenarioDeDocumentos,
@@ -19,6 +20,8 @@ beforeAll(async () => {
 });
 beforeEach(() => escenario.entorno.reiniciar());
 afterAll(() => escenario.cerrar());
+
+const pacienteNuevo = () => crearPacienteSintetico(escenario.mundo, { conDiagnostico: false });
 
 /** Multipart al que le falta el boundary final: el cuerpo termina a mitad del archivo. */
 const MULTIPART_TRUNCADO = Buffer.from(
@@ -50,4 +53,100 @@ describe('multipart hostil', () => {
       .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
     expect(siguiente.status).toBe(202);
   }, 5000);
+
+  it('responde 422 CUERPO_INVALIDO sin escribir cuando el multipart trae más campos que los permitidos', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+    let peticion = clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen');
+    for (let i = 0; i < 10; i += 1) peticion = peticion.field(`relleno${i}`, 'x');
+
+    const respuesta = await peticion.attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+
+  it('responde 422 CUERPO_INVALIDO sin escribir cuando un campo supera el tamaño permitido', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen')
+      .field('comentario', 'a'.repeat(2000))
+      .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+
+  it('responde 422 CUERPO_INVALIDO sin escribir cuando el multipart trae dos archivos', async () => {
+    const { app } = montarDocumentos(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen')
+      .attach('file', fixture('mama-examen.pdf'), 'mama-examen.pdf')
+      .attach('file', fixture('mama-examen.pdf'), 'otro.pdf');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+});
+
+describe('límite de tamaño de la carga', () => {
+  it('responde 202 cuando el PDF mide exactamente MAX_UPLOAD_MB MiB [US-076 AC-3]', async () => {
+    const { app } = montarDocumentos(escenario.mundo, { maxUploadMb: 1 });
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen')
+      .attach('file', pdfSinteticoDe(1), 'justo.pdf');
+
+    expect(respuesta.status).toBe(202);
+  });
+
+  it('responde 422 ARCHIVO_DEMASIADO_GRANDE cuando el PDF mide un byte más que MAX_UPLOAD_MB MiB [US-076 AC-3]', async () => {
+    const { app } = montarDocumentos(escenario.mundo, { maxUploadMb: 1 });
+    const unByteDeMas = Buffer.concat([pdfSinteticoDe(1), Buffer.from(' ')]);
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen')
+      .attach('file', unByteDeMas, 'pasado.pdf');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('ARCHIVO_DEMASIADO_GRANDE');
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
+
+  it('rechaza por Content-Length antes de leer el cuerpo cuando supera el máximo con margen', async () => {
+    const { app, logger } = montarDocumentos(escenario.mundo, { maxUploadMb: 1 });
+
+    const respuesta = await clienteVerificado(app)
+      .post(`/platform/patients/${await pacienteNuevo()}/documents`)
+      .set('Cookie', escenario.cookieDoctor)
+      .field('documentType', 'examen')
+      .attach('file', pdfSinteticoDe(2), 'enorme.pdf');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('ARCHIVO_DEMASIADO_GRANDE');
+    expect(respuesta.headers['connection']).toBe('close');
+    expect(logger.lineas).toContainEqual(
+      expect.objectContaining({
+        event: 'documents.carga',
+        resultado: 'archivo_demasiado_grande',
+        deteccion: 'content_length',
+      }),
+    );
+    expect(escenario.entorno.escrituras()).toBe(0);
+  });
 });

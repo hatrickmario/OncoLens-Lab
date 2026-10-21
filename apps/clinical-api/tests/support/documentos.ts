@@ -109,6 +109,7 @@ export function entornoSimulado(): EntornoSimulado {
     },
     reiniciar: () => {
       caido = false;
+      escrituras = 0;
       llamadasARag = 0;
     },
     iniciar: servidor.iniciar,
