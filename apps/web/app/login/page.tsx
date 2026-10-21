@@ -8,7 +8,12 @@ export const metadata = { title: mensajes().login.titulo };
 // Lee WEB_HOME_PATH al atender cada petición, no al compilar.
 export const dynamic = 'force-dynamic';
 
-export default async function LoginPage() {
+export default async function LoginPage(
+  props: {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  } = {},
+) {
+  void props.searchParams; // esqueleto del AC-4: se consume en el feat
   const { app, login } = mensajes();
   return (
     <main className="grid min-h-screen place-items-center p-4">
