@@ -7,7 +7,7 @@ import { crearAlmacenMinio } from '../../src/infrastructure/almacen-documentos.m
 import type { Registrar } from '../../src/infrastructure/logger.js';
 import { componerModuloDeDocumentos } from '../../src/modules/documents/documents.module.js';
 import { appConAuth } from './app-auth.js';
-import { generadorDeIds } from './filas-sinteticas.js';
+import { generadorDeIds, type GeneradorDeIds } from './filas-sinteticas.js';
 import {
   AHORA,
   RAG_BASE_URL,
@@ -127,6 +127,17 @@ export interface OpcionesDeDocumentos {
   registrar?: Registrar;
 }
 
+/** Un generador de ids de documento por mundo: varias apps del mismo archivo comparten base y no pueden repetir ids. */
+const idsDeDocumentoPorMundo = new WeakMap<MundoDeGateway, GeneradorDeIds>();
+
+function idsDeDocumento(mundo: MundoDeGateway): GeneradorDeIds {
+  const existente = idsDeDocumentoPorMundo.get(mundo);
+  if (existente !== undefined) return existente;
+  const nuevo = generadorDeIds(mundo.espacio + 3000);
+  idsDeDocumentoPorMundo.set(mundo, nuevo);
+  return nuevo;
+}
+
 /** La aplicación de producción (login → guard → documentos) con la BD de test y `clinical-minio` simulado en su borde HTTP. */
 export function montarDocumentos(
   mundo: MundoDeGateway,
@@ -144,7 +155,7 @@ export function montarDocumentos(
       timeoutMs: 8000,
     }),
     reloj,
-    ids: generadorDeIds(mundo.espacio + 3000),
+    ids: idsDeDocumento(mundo),
     traceIds: { traceId: () => TRACE_ID_GENERADO },
     registrar: logger.registrar,
     config: { maxUploadMb: opciones.maxUploadMb ?? MAX_UPLOAD_MB_DE_TEST },
