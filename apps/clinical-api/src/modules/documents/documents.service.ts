@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import type { Document } from '../../../../../packages/api-contracts/src/types/clinical-api/types.gen.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
@@ -23,14 +24,8 @@ export interface SolicitudDeCarga {
   contenido: Buffer;
 }
 
-export interface DocumentoCargado {
-  id: string;
-  patientId: string;
-  documentType: TipoDeDocumento;
-  originalFilename: string;
-  ocrStatus: 'pendiente';
-  uploadedAt: string;
-}
+/** El `Document` del contrato, siempre `pendiente` al encolarse (la extracción lo mueve después). */
+export type DocumentoCargado = Document & { ocrStatus: 'pendiente' };
 
 export interface DocumentsService {
   cargar(solicitud: SolicitudDeCarga): Promise<DocumentoCargado>;
