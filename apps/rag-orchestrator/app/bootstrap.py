@@ -132,11 +132,7 @@ def _eventos_de_catalogo_ausente(settings: Settings) -> list[dict[str, str]]:
     """Sin ``manifest.json`` legible en ``CLINICAL_CATALOG_PATH`` el servicio no queda listo (US-041 AC-5, D4).
 
     El evento nombra la variable y la regla; nunca la ruta ni el contenido del manifiesto."""
-    try:
-        catalogo = _montar_catalogo_clinico(settings)
-    except CatalogoNoDisponible:
-        catalogo = None
-    if catalogo is not None:
+    if _catalogo_clinico_legible(settings):
         return []
     return [
         {
@@ -145,6 +141,13 @@ def _eventos_de_catalogo_ausente(settings: Settings) -> list[dict[str, str]]:
             "motivo": MOTIVO_CATALOGO_NO_DISPONIBLE,
         }
     ]
+
+
+def _catalogo_clinico_legible(settings: Settings) -> bool:
+    try:
+        return _montar_catalogo_clinico(settings) is not None
+    except CatalogoNoDisponible:
+        return False
 
 
 def crear_app(

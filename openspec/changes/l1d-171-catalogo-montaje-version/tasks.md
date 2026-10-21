@@ -6,9 +6,9 @@
 
 ## 2. ai-services
 
-- [ ] 2.1 (TDD estricto) Tests de aceptación en rojo (Pytest + `TestClient`, adapters falsos que cuentan invocaciones): "test_rag_query_catalogo_distinto_responde_409_sin_invocar" `@pytest.mark.ac("US-041", 2)` (respuesta validada contra el spec) y "test_arranque_sin_catalogo_no_queda_listo_y_log_sin_ruta" `@pytest.mark.ac("US-041", 5)`. Esqueletos de `exigir_misma_version_de_catalogo()` y del adapter del manifiesto. Commit `test(L1D-171)`.
-- [ ] 2.2 (TDD estricto) Implementar el puerto `CatalogoClinico`, el adapter `infrastructure/catalogo_clinico/manifiesto.py`, `exigir_misma_version_de_catalogo()` (dominio, primer paso de `RAGOrchestratorService`), el mapeo a `409` en `api/errors.py` y `catalogVersion` en `/health`. Verificación: 2.1 en verde. Commit `feat(L1D-171)`.
-- [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-171)`.
+- [x] 2.1 (TDD estricto) Tests de aceptación en rojo (Pytest + `TestClient`, adapters falsos que cuentan invocaciones): "test_rag_query_catalogo_distinto_responde_409_sin_invocar" `@pytest.mark.ac("US-041", 2)` (respuesta validada contra el spec) y "test_arranque_sin_catalogo_no_queda_listo_y_log_sin_ruta" `@pytest.mark.ac("US-041", 5)`. Esqueletos de `exigir_misma_version_de_catalogo()` y del adapter del manifiesto. Commit `test(L1D-171)`.
+- [x] 2.2 (TDD estricto) Implementar el puerto `CatalogoClinico`, el adapter `infrastructure/catalogo_clinico/manifiesto.py`, `exigir_misma_version_de_catalogo()` (dominio, primer paso de `RAGOrchestratorService`), el mapeo a `409` en `api/errors.py` y `catalogVersion` en `/health`. Verificación: 2.1 en verde. Commit `feat(L1D-171)`.
+- [x] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-171)`.
 
 ## 3. clinical-platform
 
