@@ -11,8 +11,9 @@ export function Card({
     <div
       data-slot="card"
       className={cn(
-        'rounded-tarjeta bg-surface p-6',
-        elevada && 'rounded-dialogo shadow-dialogo',
+        'bg-surface p-6',
+        // tailwind-merge no conoce los radios propios: se elige uno solo, no se pisan entre sí.
+        elevada ? 'rounded-dialogo shadow-dialogo' : 'rounded-tarjeta',
         className,
       )}
       {...props}
