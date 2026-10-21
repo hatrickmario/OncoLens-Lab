@@ -67,8 +67,9 @@ describe('Error de integridad de la identidad cifrada', () => {
     const servicio = servicioDeIdentidad(cliente);
     const rutaDeDescifrado = Router();
     // Ruta del propio test (sin vi.mock): descifra la identidad como lo hará la ficha (L1D-72).
-    rutaDeDescifrado.get('/identidad-de-prueba/:patientId', async (peticion, respuesta) => {
-      const identidad = await servicio.descifrar(String(peticion.params['patientId']));
+    // Ruta fija: el id sale del cierre del test, no de la petición.
+    rutaDeDescifrado.get('/identidad-de-prueba', async (_peticion, respuesta) => {
+      const identidad = await servicio.descifrar(patientId);
       respuesta.status(200).json(identidad);
     });
     const logger = loggerEnMemoria();
@@ -81,9 +82,7 @@ describe('Error de integridad de la identidad cifrada', () => {
       rutasProtegidas: [rutaDeDescifrado],
     });
 
-    const respuesta = await request(app)
-      .get(`/platform/identidad-de-prueba/${patientId}`)
-      .set('Cookie', cookie);
+    const respuesta = await request(app).get('/platform/identidad-de-prueba').set('Cookie', cookie);
 
     expect(respuesta.status).toBe(500);
     assertMatchesSpec('clinical-api', PUNTERO_ERROR_INTERNO, respuesta.body);
