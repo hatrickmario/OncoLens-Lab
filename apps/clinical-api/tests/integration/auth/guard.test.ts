@@ -8,9 +8,12 @@ import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/response
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar } from '../../support/db.js';
 import type { generadorDeIds } from '../../support/filas-sinteticas.js';
+import { asegurarPermisos, crearRolDePrueba } from '../../support/roles.js';
 import { servidorMswConLoopback } from '../../support/servidor-msw.js';
 import {
   crearUsuariosDeAuth,
+  contrasenaDeTest,
+  insertarUsuario,
   insertarSesion,
   limpiarUsuarios,
   loggerEnMemoria,
@@ -180,5 +183,36 @@ describe('guard de sesión de /platform/*', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.sesion).toEqual({ userId: doc1.id, rol: 'doctor', permisos: [] });
     expect(ejecuciones).toBe(1);
+  });
+
+  it('adjunta a la sesión exactamente los permisos de su rol cuando el rol tiene permisos explícitos', async () => {
+    await asegurarPermisos(cliente, ids, ['clinical:read', 'ai_analysis:create']);
+    const rolId = await crearRolDePrueba(cliente, ids, `guardia.${ESPACIO_DE_IDS}`, [
+      'clinical:read',
+      'ai_analysis:create',
+    ]);
+    const guardia = await insertarUsuario(cliente, ids, {
+      email: `guardia.${ESPACIO_DE_IDS}@test.local`,
+      password: contrasenaDeTest('TEST_DOC1_PASSWORD'),
+      rolId,
+    });
+    await insertarSesion(cliente, ids, {
+      userId: guardia.id,
+      tokenHash: hashDe('tokenGuardia'),
+      expiresAt: '2026-10-16T20:00:00.000Z',
+    });
+
+    const respuesta = await request(appProtegida())
+      .post('/platform/evidence-analyses')
+      .set('Cookie', 'oncolens_session=tokenGuardia')
+      .send({});
+
+    expect(respuesta.body.sesion.rol).toBe(`guardia.${ESPACIO_DE_IDS}`);
+    expect([...respuesta.body.sesion.permisos].sort()).toEqual([
+      'ai_analysis:create',
+      'clinical:read',
+    ]);
+    await cliente.query('DELETE FROM auth.session WHERE user_id = $1', [guardia.id]);
+    await cliente.query('DELETE FROM auth."user" WHERE id = $1', [guardia.id]);
   });
 });

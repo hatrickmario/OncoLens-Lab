@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { describe, expect, it } from 'vitest';
 import { authorize } from '../../src/middleware/authorize.js';
 import { incoherencias } from '../support/rutas-y-contrato.js';
@@ -43,6 +43,58 @@ describe('incoherencias (verificador de rutas contra el contrato)', () => {
 
     expect(incoherencias([router])).toEqual([
       'createEvidenceAnalysis: authorize(clinical:read) no coincide con x-permission [ai_analysis:create]',
+    ]);
+  });
+
+  it('reporta el router anidado en vez de omitirlo cuando se monta con use() [sonda D]', () => {
+    const hijo = Router();
+    hijo.post('/evidence-analyses', (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+    const padre = Router();
+    padre.use(hijo);
+
+    expect(incoherencias([padre])).toEqual([
+      'ruta anidada no verificable: los routers protegidos montan rutas planas',
+    ]);
+  });
+
+  it('reporta el middleware montado con ruta en vez de omitirlo [sonda G]', () => {
+    const router = Router();
+    router.use('/evidence-analyses', (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+
+    expect(incoherencias([router])).toEqual([
+      'middleware montado con ruta no verificable: los routers protegidos montan rutas planas',
+    ]);
+  });
+
+  it('acepta un middleware global sin ruta (por ejemplo el traceId) en el router', () => {
+    const router = Router();
+    router.use((_peticion, _respuesta, siguiente) => {
+      siguiente();
+    });
+    router.post('/evidence-analyses', authorize('ai_analysis:create'), (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+
+    expect(incoherencias([router])).toEqual([]);
+  });
+
+  it('reporta authorize() colocado después de un parser de cuerpo [sonda F]', () => {
+    const router = Router();
+    router.post(
+      '/evidence-analyses',
+      express.json(),
+      authorize('ai_analysis:create'),
+      (_peticion, respuesta) => {
+        respuesta.sendStatus(204);
+      },
+    );
+
+    expect(incoherencias([router])).toEqual([
+      'createEvidenceAnalysis: authorize() debe ir antes de cualquier parser de cuerpo (jsonParser)',
     ]);
   });
 });

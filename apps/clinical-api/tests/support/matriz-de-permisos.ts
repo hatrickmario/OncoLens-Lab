@@ -28,9 +28,10 @@ export function leerMatrizDeLaDocumentacion(): FilaDeMatriz[] {
   return filas;
 }
 
-/** Códigos que el `admin` NO tiene según la documentación (mínimo privilegio, E-04). */
-export function permisosVedadosAlAdmin(): string[] {
+/** Códigos que la documentación da al rol (ordenados): la fuente contra la que se compara el seed. */
+export function permisosDocumentadosDe(rol: 'doctor' | 'admin'): string[] {
   return leerMatrizDeLaDocumentacion()
-    .filter((fila) => !fila.admin)
-    .map((fila) => fila.codigo);
+    .filter((fila) => fila[rol])
+    .map((fila) => fila.codigo)
+    .sort();
 }

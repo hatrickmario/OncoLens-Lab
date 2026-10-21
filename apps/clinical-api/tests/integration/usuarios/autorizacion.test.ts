@@ -14,7 +14,7 @@ import {
   ragSimulado,
   type MundoDeGateway,
 } from '../../support/gateway.js';
-import { permisosVedadosAlAdmin } from '../../support/matriz-de-permisos.js';
+import { permisosDocumentadosDe } from '../../support/matriz-de-permisos.js';
 import { abrirSesionDeUsuarioConRol, crearRolDePrueba } from '../../support/roles.js';
 import {
   incoherencias,
@@ -151,16 +151,36 @@ describe('autorización por permiso', () => {
     expect(rag.llamadas()).toBe(0);
   });
 
-  it('no incluye en la matriz sembrada del admin ningún permiso que la documentación le veda [US-045 AC-6]', async () => {
+  async function permisosSembradosDe(rol: string): Promise<string[]> {
     const { rows } = await mundo.cliente.query<{ code: string }>(
       `SELECT p.code FROM auth.role r
          JOIN auth.role_permission rp ON rp.role_id = r.id
          JOIN auth.permission p ON p.id = rp.permission_id
-        WHERE r.name = 'admin'`,
+        WHERE r.name = $1 ORDER BY p.code`,
+      [rol],
     );
-    const vedados = permisosVedadosAlAdmin();
+    return rows.map((fila) => fila.code);
+  }
 
-    expect(vedados).toContain('clinical:read');
-    expect(rows.map((fila) => fila.code).filter((codigo) => vedados.includes(codigo))).toEqual([]);
+  it.each(['doctor', 'admin'] as const)(
+    'siembra para el rol %s exactamente los permisos de data-model §8 [US-045 AC-6]',
+    async (rol) => {
+      expect(await permisosSembradosDe(rol)).toEqual(permisosDocumentadosDe(rol));
+    },
+  );
+
+  it('veda al admin los permisos clínicos y de análisis de la lista E-04 [US-045 AC-6]', async () => {
+    const delAdmin = await permisosSembradosDe('admin');
+
+    for (const vedado of [
+      'clinical:read',
+      'documents:read',
+      'ai_analysis:create',
+      'ai_analysis:read',
+      'follow_ups:create',
+      'follow_ups:read',
+    ]) {
+      expect(delAdmin).not.toContain(vedado);
+    }
   });
 });

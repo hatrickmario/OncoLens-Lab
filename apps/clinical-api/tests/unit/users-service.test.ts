@@ -110,4 +110,17 @@ describe('UsersService', () => {
     );
     expect(bajas).toEqual([]);
   });
+
+  it('persiste el correo en minúsculas y sin espacios cuando crea un usuario con mayúsculas', async () => {
+    const { repo, creados } = repositorioFalso(['doctor']);
+
+    const usuario = await servicio(repo).crear({
+      email: '  A@Test.local ',
+      rol: 'doctor',
+      password: 'x',
+    });
+
+    expect(usuario.email).toBe('a@test.local');
+    expect(creados[0]?.email).toBe('a@test.local');
+  });
 });
