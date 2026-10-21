@@ -88,3 +88,12 @@ Reglas extraídas con nombre propio: `verbalizarDatoDelContexto()` (ADR-34) y `d
   `l1d-173-tipos-cancer-habilitados` (D7): inciso (a) **vacío** (`patientDataUsed = []`), (d) con 0 recuperados y 0
   sobre el umbral, (e) desde la configuración de fuentes excluidas y (f) desde `CORPUS_CUTOFF_DATE`. Este change solo
   cubre las ramas que llaman a Backend 2.
+
+## Desviaciones de la implementación
+
+- **Etiquetas:** el contexto desidentificado no trae unidad ni método del biomarcador (el valor ya incluye "(IHQ)"), así que la etiqueta es `<nombre> <valor>`; el resto de formatos sigue la decisión 2. Un campo vacío o "No disponible" se omite (se reutiliza `NO_DISPONIBLE` de `clinical-context.builder.ts`).
+- **Orden:** `patientDataUsed` se ordena por el número del `dataRef` (`r1…rN`), no por la lista de origen.
+- **Limitaciones:** el builder copia las `limitations` de la respuesta interna (como el adaptador del S1); el escenario AC-1 usa `LLM-OK` sin limitaciones para que `limitations = []`.
+- **AC-6:** se verifica en integración (repositorio real + `construirContextoPermitido()` real + builder), porque FX-T1a-a son filas de la BD.
+- **Verificación del proveedor:** el helper vigente es `assertMatchesSpec` (`scripts/contracts/lib/responseValidator.mjs`); no existe `contracts:verify-provider` ni `clienteVerificado` en `main`.
+- **Clave obsoleta:** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` ya no se lee; su retiro de `.env.example` y del Compose queda fuera de este PR.
