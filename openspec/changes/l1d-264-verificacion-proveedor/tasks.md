@@ -16,9 +16,9 @@
 
 ## 2. ai-services
 
-- [ ] 2.1 Test de aceptación: adapter falso que devuelve `sin_evidencia` con `topRelevanceScore: 0.0` hace fallar el test de `/rag/query` nombrando la ruta JSON [US-214 AC-2] · integración (`@pytest.mark.ac("US-214", 2)`), commit `test(L1D-264)`
-- [ ] 2.2 `event_hook` de respuesta del `TestClient` en `conftest.py` que usa `tests/support/contract.py` para validar status, cabeceras y cuerpo de cada respuesta; suite en verde [US-214 AC-1, AC-3] · commit `feat(L1D-264)`
-- [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-264)`
+- [x] 2.1 Test de aceptación: adapter falso que devuelve `sin_evidencia` con `topRelevanceScore: 0.0` hace fallar el test de `/rag/query` nombrando la ruta JSON [US-214 AC-2] · integración (`@pytest.mark.ac("US-214", 2)`), commit `test(L1D-264)`
+- [x] 2.2 `event_hook` de respuesta del `TestClient` en `conftest.py` que usa `tests/support/contract.py` para validar status, cabeceras y cuerpo de cada respuesta; suite en verde [US-214 AC-1, AC-3] · commit `feat(L1D-264)`
+- [x] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-264)`
 
 ## 3. Cierre
 
