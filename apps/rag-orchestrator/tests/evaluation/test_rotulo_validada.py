@@ -59,13 +59,11 @@ def test_el_reporte_separa_validadas_de_no_validadas_y_solo_la_muestra_revisada_
     reporte = reporte_de(tmp_path, dataset_con_revisadas(tmp_path, total=20, revisadas=15))
 
     metricas = reporte["metricas"]
-    assert {f: metricas["completa"][f].get("validacion") for f in FAMILIAS} == dict.fromkeys(
-        FAMILIAS, {"preguntas_validadas": 15, "preguntas_no_validadas": 5, "rotulo": "no_validada"}
-    )
+    completa = {"preguntas_validadas": 15, "preguntas_no_validadas": 5, "rotulo": "no_validada"}
+    solo_revisadas = {"preguntas_validadas": 15, "preguntas_no_validadas": 0, "rotulo": "validada"}
+    assert [metricas["completa"][f].get("validacion") for f in FAMILIAS] == [completa] * 4
     revisada = metricas.get("revisada", {})
-    assert {f: revisada.get(f, {}).get("validacion") for f in FAMILIAS} == dict.fromkeys(
-        FAMILIAS, {"preguntas_validadas": 15, "preguntas_no_validadas": 0, "rotulo": "validada"}
-    )
+    assert [revisada.get(f, {}).get("validacion") for f in FAMILIAS] == [solo_revisadas] * 4
 
 
 @pytest.mark.ac("US-072", 4)

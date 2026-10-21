@@ -10,7 +10,7 @@
 - [ ] Gate 2 en verde con los guardianes que tocan según los paths del diff. Los Menores van en el cuerpo del PR.
 - [ ] `openspec validate <change> --strict` y `/opsx:verify` en verde.
 - [ ] Ningún dato real, secreto ni identificador de paciente (RN-13, RN-14). Ejemplos y fixtures solo sintéticos (`SINT-`).
-- [ ] Suite `evaluate` con su reporte adjunto si el PR toca modelo, prompt, umbral, catálogo o corpus (OL-06).
+- [ ] Suite `evaluate` con su reporte adjunto si el PR toca modelo, prompt, umbral, catálogo o corpus (OL-06). Comando: `npm run evaluate -- --suite <familia> --report json` (sin `--config` usa la de la CI, adapters falsos).
 - [ ] `visual-check` en PASS si el PR toca la UI de `apps/web`.
 - [ ] Sin `.skip`, `.only`, `xit`, `xfail` ni tests borrados sin el *trailer* `Test-Removal:`.
 - [ ] `ci-ok` en verde (build y tests, contratos, secretos, PII y clase de datos, smoke del stack): `docs/process/ci.md`.

@@ -7,29 +7,29 @@
 
 ## 1. ai-services · 072a (runner y deterministas)
 
-- [ ] 1.1 Fixture FX-T5a-a en `eval/configs/test-fake.yaml` y datos de prueba (6 preguntas, 4 PII,
+- [x] 1.1 Fixture FX-T5a-a en `eval/configs/test-fake.yaml` y datos de prueba (6 preguntas, 4 PII,
       2 prescriptivas, `ch-inj-1`) · **test después**
-- [ ] 1.2 Test de aceptación en rojo: "escribe el reporte con métricas y configuración cuando se
+- [x] 1.2 Test de aceptación en rojo: "escribe el reporte con métricas y configuración cuando se
       ejecuta con FX-T5a-a [US-072 AC-1]" · integración (Pytest), commit test(L1D-235) · **estricto**
-- [ ] 1.3 Implementar `evaluate.py`, métricas de recuperación (reutiliza `retrieval_metrics.py`),
+- [x] 1.3 Implementar `evaluate.py`, métricas de recuperación (reutiliza `retrieval_metrics.py`),
       citas, "sin evidencia", p95 por etapa y reporte con configuración; guarda `--prueba-final` de
       ADR-45; unitarios uno a uno; commit feat(L1D-235) · **estricto** `[US-072 AC-1]`
-- [ ] 1.4 Test en rojo "métricas idénticas cuando se ejecuta dos veces con la misma configuración
+- [x] 1.4 Test en rojo "métricas idénticas cuando se ejecuta dos veces con la misma configuración
       [US-072 AC-2]" y su implementación (semilla y reloj inyectados) · **estricto**
-- [ ] 1.5 Test en rojo "solo lleva 'validada' la métrica calculada sobre las revisadas [US-072 AC-4]"
+- [x] 1.5 Test en rojo "solo lleva 'validada' la métrica calculada sobre las revisadas [US-072 AC-4]"
       y extraer `rotular_validada()` (AC-T5.3) · **estricto**
-- [ ] 1.6 Test en rojo "termina ≠ 0 con un dataset sin clase sintética / el resultado no contiene
+- [x] 1.6 Test en rojo "termina ≠ 0 con un dataset sin clase sintética / el resultado no contiene
       textos [US-072 AC-5]" e implementación en `FuenteDataset` · **estricto**
-- [ ] 1.6b Test en rojo "aborta sin enviar requests cuando un adapter apunta a un host fuera de la
+- [x] 1.6b Test en rojo "aborta sin enviar requests cuando un adapter apunta a un host fuera de la
       lista local y el dataset no es sintético / `es_proveedor_local()` rechaza hosts no listados y no
       lee configuración" (`respx` con 0 requests) y extraer `es_proveedor_local()` con `HOSTS_LOCALES`
       cerrada en código (loopback, `host.docker.internal`) · **estricto** `[RN-12]`
-- [ ] 1.6c Test de CI sin salida a red durante la suite (ADR-41 D6: bloquea sockets salientes salvo
+- [x] 1.6c Test de CI sin salida a red durante la suite (ADR-41 D6: bloquea sockets salientes salvo
       loopback y falla si se intenta una conexión) · **test después** `[RN-12]`
-- [ ] 1.7 Envoltorio `npm run evaluate -- --suite … --report json` y `data/evaluation/baseline.json`
+- [x] 1.7 Envoltorio `npm run evaluate -- --suite … --report json` y `data/evaluation/baseline.json`
       con la configuración de CI; test de humo del envoltorio con tiempo máximo explícito (proceso
       real) · **test después**
-- [ ] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
+- [x] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-235)
 
 ## 2. evaluación · 072a

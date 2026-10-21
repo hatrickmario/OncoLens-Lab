@@ -68,6 +68,25 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
 - **D11 · Familias.** `--suite retrieval|generation|all`; `pii` y las demás familias de `run-ai-eval` terminan con
   código 2 («familia no disponible») hasta su bloque. `--prueba-final` es obligatoria si `dataset.subconjunto` es
   `prueba` (ADR-45 P3); el registro de accesos y la huella previa de P3 no se implementan en 072a.
+- **D12 · Envoltorio y baseline.** `scripts/eval/evaluate.mjs` (`npm run evaluate`) llama a Python dentro de
+  `apps/rag-orchestrator`, resuelve `--config` y `--salida` contra el directorio de quien lo invoca y usa la
+  configuración de la CI si no hay `--config`; variables `EVAL_PYTHON` y `EVAL_TIMEOUT_S`.
+  `data/evaluation/baseline.json` es la salida de `test-fake.yaml`; un test falla si deja de coincidir byte a byte.
+- **D13 · Guardas RN-12 y red.** `exigir_adapters_locales(clase, urls)` corre antes de cargar preguntas; un dataset
+  del repo solo puede ser `sintetico`, uno fuera del repo puede ser `real_anonimizado` solo con adapters locales. Un
+  fixture autouse de `tests/evaluation/` bloquea `connect`, `connect_ex` y `getaddrinfo` fuera de loopback y falla el
+  test que lo intente.
+
+## Adiciones aceptadas por el orquestador del sprint (sprint-S2) y deuda
+
+Aceptadas para 072a: (1) datasets en `data/eval/` y salidas en `data/evaluation/` (D6); (2) configs en
+`apps/rag-orchestrator/eval/configs/` y resultados en `eval/results/` (D7); (3) `adaptadores_falsos.py` con el contrato
+de los adapters reales (D8); (4) `medicion.reloj: simulado` (D9); (5) `--suite` con `retrieval|generation|all` y código
+2 para las demás familias (D11); (6) flags `--config`, `--salida`, `--nombre-archivo`, `--prueba-final` (D11, D12).
+
+**Deuda:** `.claude/skills/run-ai-eval/SKILL.md` y OL-06 (`readme.md` §6) apuntan a `data/evaluation/` para los datasets
+y deben apuntar a `data/eval/`; `.gitignore` debe ignorar `apps/rag-orchestrator/eval/results/` (fuera de las rutas de
+este change). Con `proveedor: local` la composición de adapters reales queda para US-073.
 
 ## Privacidad y ownership
 
