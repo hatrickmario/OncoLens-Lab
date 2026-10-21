@@ -26,7 +26,16 @@ activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.sessi
   *hash* señuelo de US-211 (tiempo uniforme) y responde el `401` genérico. Un login correcto fuera
   del bloqueo pone el contador a 0 y `locked_until = null`. Se extrae
   `cuentaBloqueada(usuario, ahora)`.
-- **D4 · Bloqueo por IP (asumido, AC-3).** Puerto `RegistroDeIntentosPorIp` con adaptador **en
+  **Corrección del Gate 2 (reserva antes de verificar, SEG-01).** El estado no se lee antes de `await hasher.verify`
+  y se anota después: ráfagas concurrentes evaluaban más conjeturas que el umbral. El intento se RESERVA antes de
+  verificar: `reservarIntentoDeLogin` es un único `UPDATE … RETURNING` atómico que suma 1 (reinicia en 0 si el
+  bloqueo venció, no cuenta si la cuenta está bloqueada) y fija `locked_until` al llegar al máximo; el servicio decide
+  con lo que devuelve la reserva. Un login correcto reinicia el contador solo si nadie reservó otro intento desde la
+  suya (`reiniciarFallos(userId, intentos)`), para no borrar el rastro de intentos concurrentes. Defensa adicional:
+  `crearSesion` exige también `locked_until IS NULL OR locked_until <= ahora`.
+- **D4 · Bloqueo por IP (asumido, AC-3).** El puerto es `reservar(ip)`: comprueba el bloqueo y anota el intento en una
+  sola operación síncrona (cuenta los intentos en curso) y devuelve `null` si la IP agotó su cupo; un login correcto
+  libera su reserva, uno fallido la conserva. Puerto `RegistroDeIntentosPorIp` con adaptador **en
   memoria** (ventana deslizante por IP, reloj inyectado), mismos umbral y plazo que por cuenta. Se
   descarta una tabla nueva: el esquema está congelado (OL-01) y `clinical-api` corre como una sola
   instancia en el MVP; un reinicio vacía el registro (riesgo aceptado, se anota en el PR).
@@ -153,3 +162,19 @@ AC-5), Playwright (AC-4, cuando exista el job de E2E). Respuestas validadas cont
 - `trust proxy` mal configurado permitiría falsificar la IP con `X-Forwarded-For`: `web` reescribe
   la cabecera con la IP del socket (test con cabecera falsificada) y `clinical-api` confía solo en
   `TRUST_PROXY_HOPS` saltos (test). Al llegar el proxy HTTPS del S6 hay que subir a 2.
+- Decisión pendiente para el humano: `TRUST_PROXY_HOPS = 1` supone que `clinical-api` solo la alcanza `web` (red
+  `clinical-net`, sin `ai-net`); el login del S6 debe exigir `X-Forwarded-For` (sin él todos los clientes comparten la IP
+  del socket de `web` y 5 fallos bloquearían a todos).
+- Decisión pendiente para el humano: el bloqueo por IP trata cada dirección IPv6 como una IP distinta; un cliente con un
+  prefijo /64 puede rotar de dirección. Agrupar por /64 queda para el S6 si se acepta el costo de bloquear vecinos.
+- Decisión pendiente para el humano: el `401` de `logout` (sesión ausente o ya revocada) no borra la cookie; la cookie
+  residual del navegador solo se limpia con el siguiente login.
+
+## Deuda anotada (Gate 2)
+
+- DT-1 (design P1-6): `sesion.reglas.ts` y `auth.service.ts` mezclan reglas puras de sesión y de bloqueo; separarlas en
+  dos módulos cuando crezca la política de sesión.
+- Contract-keeper Menor 3-5: el spec no declara el `403` del logout, la cabecera `Set-Cookie` del `204` ni una descripción
+  del borrado de cookie; se corregirá en el próximo cambio que toque `openapi.yaml` (aquí no se edita).
+- Cabecera de la cookie de sesión duplicada en `web` (P1-5) la resuelve el agente de web.
+
