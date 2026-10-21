@@ -1,4 +1,5 @@
 import express, { Router, type ErrorRequestHandler, type Response } from 'express';
+import { authorize } from '../../middleware/authorize.js';
 import { enviarError, esErrorDeCuerpoDelCliente } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { loginSchema, NOMBRE_COOKIE_DE_SESION } from './auth.schema.js';
@@ -65,5 +66,17 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
   };
   router.use(cuerpoIlegible);
 
+  return router;
+}
+
+/**
+ * `POST /auth/logout` (se monta bajo `/platform`, DESPUÉS del guard). Esqueleto: el comportamiento llega con el commit
+ * `feat(L1D-198)`.
+ */
+export function logoutController(_dependencias: DependenciasDeAuthController): Router {
+  const router = Router();
+  router.post('/auth/logout', authorize('session:logout'), () => {
+    throw new Error('no implementado');
+  });
   return router;
 }
