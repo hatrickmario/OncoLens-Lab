@@ -57,6 +57,17 @@ describe('leerEnumNoSensible', () => {
     expect(error.message).not.toContain('Lucía');
   });
 
+  it.each([['AKIA','IOSFODNN7EJEMPLO'].join(''), 'clave-secreta-con-guiones', 'a'.repeat(33), 'x@y.test'])(
+    'nunca registra un valor con forma de secreto ni de dato personal (%#) aunque la clave sea un enum [US-037 AC-2]',
+    (valor) => {
+      const error = capturarError(() =>
+        leerEnumNoSensible({ TIPO_DE_PRUEBA: valor }, 'TIPO_DE_PRUEBA', TIPOS, 'mama'),
+      );
+
+      expect(JSON.stringify(lineaDe(error))).not.toContain(valor);
+    },
+  );
+
   it('devuelve el valor por defecto cuando la variable está ausente o vacía', () => {
     expect(leerEnumNoSensible({}, 'TIPO_DE_PRUEBA', TIPOS, 'mama')).toBe('mama');
     expect(leerEnumNoSensible({ TIPO_DE_PRUEBA: '' }, 'TIPO_DE_PRUEBA', TIPOS, 'prostata')).toBe(
