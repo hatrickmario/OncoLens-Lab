@@ -12,6 +12,7 @@ import re
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -27,7 +28,6 @@ from app.application.ports import (
     NliClassifier,
     ProhibitedTermsChecker,
     ReleaseDelCorpus,
-    ResultadoDeRecuperacion,
 )
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
@@ -35,20 +35,18 @@ from app.application.rag_orchestrator_service import (
 )
 from app.bootstrap import PuertosDeRecuperacion, crear_app
 from app.domain.citations import FichaDeFuente
-from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
     expresion_solo_vigente,
 )
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
-    RagQueryInternalRequest,
-    RagQueryInternalResponse,
 )
 from tests.support.contract import CATALOGOS, RAIZ_REPOSITORIO
-from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
+from tests.support.generador_falso import FakeEvidenceGenerator
 from tests.support.service_jwt import con_token_valido
 
 EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
@@ -63,6 +61,15 @@ RELEASE_DE_TEST = ReleaseDelCorpus(
     cutoff_date=date(2026, 9, 30),
     excluded_sources=("NCCN", "ESMO"),
 )
+
+
+def _clave_json(ruta: Path, clave: str) -> str:
+    return json.loads(ruta.read_text(encoding="utf-8"))[clave]
+
+
+# Una sola constante: la del catálogo real que montan `settings_de_prueba` y los arranques con adapters reales;
+# también la que declaran el catálogo falso y las solicitudes de los tests.
+VERSION_DEL_CATALOGO_MONTADO = _clave_json(CATALOGOS / "manifest.json", "version")
 
 
 def _vector(**componentes: float) -> list[float]:
@@ -319,12 +326,26 @@ class CatalogoFalso:
         return {d: self._fichas[d] for d in document_ids if d in self._fichas}
 
 
+class CatalogoClinicoFalso:
+    """``CatalogoClinico`` en memoria: la versión montada y las veces que se consultó (misma forma que el adapter)."""
+
+    def __init__(self, version: str = VERSION_DEL_CATALOGO_MONTADO) -> None:
+        self._version = version
+        self.consultas = 0
+
+    def version(self) -> str:
+        self.consultas += 1
+        return self._version
+
+
 class DetectorIdiomaFalso:
     def __init__(self, idioma: Idioma = "es", error: Exception | None = None) -> None:
         self.idioma = idioma
         self.error = error
+        self.invocaciones = 0
 
     def detectar(self, texto: str) -> Idioma:
+        self.invocaciones += 1
         if self.error is not None:
             raise self.error
         return self.idioma
@@ -336,8 +357,10 @@ class LectorReleaseFalso:
     ) -> None:
         self._release = release
         self.error = error
+        self.invocaciones = 0
 
     def release_vigente(self) -> ReleaseDelCorpus:
+        self.invocaciones += 1
         if self.error is not None:
             raise self.error
         return self._release
@@ -371,6 +394,7 @@ def puertos_de_recuperacion(
         reranker=RerankerFalso(),
         lector_release=LectorReleaseFalso(),
         catalogo=CatalogoFalso(),
+        catalogo_clinico=CatalogoClinicoFalso(),
         clasificador_nli=clasificador_nli or NliFalso(por_defecto=IMPLICA),
         verificador_terminos=verificador_terminos or cargar_verificador_de_terminos(CATALOGOS),
     )
@@ -388,7 +412,9 @@ class EntornoDeRecuperacion:
     clasificador_nli: NliClassifier
     lector_release: LectorReleaseFalso
     catalogo: CatalogoFalso
+    catalogo_clinico: CatalogoClinicoFalso
     servicio: RAGOrchestratorService
+    detector_idioma: DetectorIdiomaFalso
 
     def consultar(self, solicitud: dict[str, Any]):
         return self.cliente.post("/rag/query", json=solicitud)
@@ -402,6 +428,7 @@ def crear_entorno(
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
     catalogo: CatalogoFalso | None = None,
+    catalogo_clinico: CatalogoClinicoFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
     generador: EvidenceGenerator | None = None,
     clasificador_nli: NliClassifier | None = None,
@@ -412,7 +439,9 @@ def crear_entorno(
     reranker = reranker or RerankerFalso()
     lector_release = lector_release or LectorReleaseFalso()
     catalogo = catalogo or CatalogoFalso()
+    catalogo_clinico = catalogo_clinico or CatalogoClinicoFalso()
     generador = generador or FakeEvidenceGenerator()
+    detector_idioma = detector_idioma or DetectorIdiomaFalso()
     from tests.support.nli_falso import (
         IMPLICA,
         NliFalso,
@@ -421,12 +450,13 @@ def crear_entorno(
     clasificador_nli = clasificador_nli or NliFalso(por_defecto=IMPLICA)
     verificador_terminos = verificador_terminos or cargar_verificador_de_terminos(CATALOGOS)
     servicio = RAGOrchestratorService(
-        detector_idioma=detector_idioma or DetectorIdiomaFalso(),
+        detector_idioma=detector_idioma,
         embedder=embedder,
         buscador=buscador,
         reranker=reranker,
         lector_release=lector_release,
         catalogo=catalogo,
+        catalogo_clinico=catalogo_clinico,
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,
@@ -449,16 +479,27 @@ def crear_entorno(
         clasificador_nli,
         lector_release,
         catalogo,
+        catalogo_clinico,
         servicio,
+        detector_idioma,
     )
 
 
+def ejemplo_con_catalogo_montado(nombre: str) -> dict[str, Any]:
+    """Una solicitud de ``contracts/examples`` declarando el catálogo que montan los tests (no el del ejemplo)."""
+    ejemplo = json.loads((EJEMPLOS / nombre).read_text(encoding="utf-8"))
+    return {**copy.deepcopy(ejemplo), "catalogVersion": VERSION_DEL_CATALOGO_MONTADO}
+
+
 def solicitud_de(
-    pregunta: str = Q_HER2, *, tipo_de_cancer: str | None = "mama", max_options: int | None = None
+    pregunta: str = Q_HER2,
+    *,
+    tipo_de_cancer: str | None = "mama",
+    max_options: int | None = None,
 ) -> dict[str, Any]:
-    """Petición de ``contracts/examples`` con la pregunta dada; ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
-    base = json.loads((EJEMPLOS / "rag-query-request.json").read_text(encoding="utf-8"))
-    solicitud = copy.deepcopy(base)
+    """Petición de ``contracts/examples`` con la pregunta dada y el catálogo montado de los tests;
+    ``tipo_de_cancer=None`` deja ``diagnosis`` en null."""
+    solicitud = ejemplo_con_catalogo_montado("rag-query-request.json")
     solicitud["query"] = pregunta
     if max_options is not None:
         solicitud["maxOptions"] = max_options

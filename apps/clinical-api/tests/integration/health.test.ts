@@ -1,8 +1,14 @@
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { setupServer } from 'msw/node';
 import { clienteVerificado } from '../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { cargarConfiguracion, observarEntorno } from '../../src/config/index.js';
+import { componerInformacionDeSalud } from '../../src/routes/health.js';
+import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { RUTA_DEL_CATALOGO } from '../support/seed.js';
 
 // Sin handlers: cualquier petición saliente (p. ej. a rag-orchestrator) falla el test. Supertest llama a la propia
 // aplicación por loopback; esa petición pasa y no cuenta como saliente.
@@ -91,6 +97,51 @@ describe('GET /health', () => {
       'IDENTITY_KEY_VERSION',
       'PORT',
     ]);
+  });
+
+  it('informa catalogVersion 1.0.1 validado contra el spec cuando CLINICAL_CATALOG_PATH apunta a un catálogo 1.0.1 [US-041 AC-4]', async () => {
+    const directorio = mkdtempSync(path.join(tmpdir(), 'clinical-api-catalogo-'));
+    try {
+      writeFileSync(path.join(directorio, 'manifest.json'), JSON.stringify({ version: '1.0.1' }));
+      const catalogo = crearProveedorDeVersionDeCatalogo(directorio, (ruta) =>
+        readFileSync(ruta, 'utf8'),
+      );
+
+      const respuesta = await clienteVerificado(
+        createApp({
+          salud: { configKeys: [], serviceVersion: '1.2.3', catalogVersion: catalogo.version() },
+        }),
+      ).get('/health');
+
+      expect(respuesta.status).toBe(200);
+      expect(respuesta.body.catalogVersion).toBe('1.0.1');
+      expect(JSON.stringify(respuesta.body)).not.toContain(directorio);
+    } finally {
+      rmSync(directorio, { recursive: true, force: true });
+    }
+  });
+
+  it('responde catalogVersion exacto del manifiesto, sin añadidos, cuando /health se compone con el proveedor del arranque [US-041 AC-4]', async () => {
+    const manifiesto = JSON.parse(
+      readFileSync(path.join(RUTA_DEL_CATALOGO, 'manifest.json'), 'utf8'),
+    ) as { version: string };
+    const catalogo = crearProveedorDeVersionDeCatalogo(RUTA_DEL_CATALOGO, (ruta) =>
+      readFileSync(ruta, 'utf8'),
+    );
+
+    const salud = componerInformacionDeSalud({
+      configKeys: ['PORT'],
+      serviceVersion: '1.2.3',
+      catalogo,
+    });
+    const respuesta = await clienteVerificado(createApp({ salud })).get('/health');
+
+    expect(respuesta.body).toEqual({
+      status: 'ok',
+      configKeys: ['PORT'],
+      serviceVersion: '1.2.3',
+      catalogVersion: manifiesto.version,
+    });
   });
 
   it('responde 200 sin emitir cookie cuando la aplicación se crea sin dependencias (no consulta a rag-orchestrator)', async () => {

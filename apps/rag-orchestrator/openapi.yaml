@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — RAG & AI Services API (Backend 2 / rag-orchestrator)
-  version: 1.4.0
+  version: 1.5.0
   description: >-
     API interna, alcanzable solo desde la red ai-net y solo por clinical-api (JWT de servicio
     asimétrico; la cookie de sesión del doctor nunca llega aquí). No persiste PHI y procesa los
@@ -366,6 +366,10 @@ components:
           type: string
           minLength: 1
           description: Versión del contrato (info.version) del servicio que responde.
+        catalogVersion:
+          type: string
+          minLength: 1
+          description: Versión del catálogo clínico montado (manifest.json); sin ruta ni contenido.
     # ---- Schemas compartidos con clinical-api: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'

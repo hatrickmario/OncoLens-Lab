@@ -18,6 +18,7 @@ export type CodigoDeError =
   | 'PERMISO_DENEGADO'
   | 'NO_ENCONTRADO'
   | 'TIPO_CANCER_NO_REGISTRADO'
+  | 'CATALOG_VERSION_MISMATCH'
   | 'ERROR_SERVICIO_IA'
   | 'LOCAL_LLM_UNAVAILABLE'
   | 'DESIDENTIFICACION_NO_DISPONIBLE'
@@ -32,6 +33,7 @@ const MENSAJES: Record<CodigoDeError, string> = {
   NO_ENCONTRADO: 'No existe el recurso solicitado.',
   TIPO_CANCER_NO_REGISTRADO:
     'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
+  CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',
   ERROR_SERVICIO_IA: 'El servicio de IA no respondió correctamente.',
   LOCAL_LLM_UNAVAILABLE: 'El modelo local no está disponible.',
   DESIDENTIFICACION_NO_DISPONIBLE: 'No fue posible preparar la consulta.',

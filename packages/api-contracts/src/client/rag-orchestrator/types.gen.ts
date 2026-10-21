@@ -14,6 +14,10 @@ export type HealthStatus = {
      * Versión del contrato (info.version) del servicio que responde.
      */
     serviceVersion?: string;
+    /**
+     * Versión del catálogo clínico montado (manifest.json); sin ruta ni contenido.
+     */
+    catalogVersion?: string;
 };
 
 /**
