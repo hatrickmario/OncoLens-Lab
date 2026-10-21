@@ -5,47 +5,47 @@
     "filas": [
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.1
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.2
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.3
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.4
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.5
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.6
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.7
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.8
       },
       {
         "exactitudSinEvidencia": 1.0,
-        "recallAt10": 1.0,
+        "recallAt10TrasUmbral": 1.0,
         "umbral": 0.9
       }
     ],
@@ -58,50 +58,57 @@
   "metricas": [
     {
       "estado": "en meta",
-      "meta": "≥ 0.8",
+      "metaMaximo": null,
+      "metaMinimo": 0.8,
       "metrica": "recall_at_10",
       "valor": 1.0
     },
     {
       "estado": "en meta",
-      "meta": "≥ 0.7",
+      "metaMaximo": null,
+      "metaMinimo": 0.7,
       "metrica": "recall_at_10_es_a_en",
       "valor": 1.0
     },
     {
       "estado": "en meta",
-      "meta": "≥ 0.6",
+      "metaMaximo": null,
+      "metaMinimo": 0.6,
       "metrica": "mrr",
       "valor": 1.0
     },
     {
       "estado": "fuera de meta",
-      "meta": "≥ 0.9",
-      "metrica": "fidelidad",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
+      "metrica": "fidelidad_proxy",
       "valor": 0.6
     },
     {
       "estado": "fuera de meta",
-      "meta": "≥ 0.9",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
       "metrica": "precision_citas",
       "valor": 0.8
     },
     {
       "estado": "en meta",
-      "meta": "≥ 0.9",
+      "metaMaximo": null,
+      "metaMinimo": 0.9,
       "metrica": "sin_evidencia",
       "valor": 1.0
     },
     {
       "estado": "sin medir",
-      "meta": "≤ 15",
+      "metaMaximo": 15,
+      "metaMinimo": null,
       "metrica": "p95_evidence_analyses_s",
       "valor": null
     }
   ],
   "metricasPorCancer": {
     "mama": {
-      "fidelidad": 1.0,
+      "fidelidad_proxy": 1.0,
       "mrr": 1.0,
       "precision_citas": 1.0,
       "recall_at_10": 1.0,
@@ -109,7 +116,7 @@
       "sin_evidencia": 1.0
     },
     "prostata": {
-      "fidelidad": 0.3333333333333333,
+      "fidelidad_proxy": 0.3333333333333333,
       "mrr": 1.0,
       "precision_citas": 0.6666666666666666,
       "recall_at_10": 1.0,

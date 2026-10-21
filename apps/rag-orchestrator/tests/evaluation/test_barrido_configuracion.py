@@ -67,3 +67,32 @@ def test_fijar_umbral_falla_cuando_la_configuracion_no_tiene_el_valor(tmp_path: 
 
     with pytest.raises(ConfigInvalida):
         fijar_umbral_en_config(ruta, 0.4)
+
+
+def test_el_json_del_baseline_cumple_la_lista_blanca_y_rechaza_claves_ajenas() -> None:
+    import json
+
+    from app.evaluation.informe_baseline import ESQUEMA_BASELINE
+    from app.evaluation.reporte import ReporteFueraDeEsquema, validar_esquema_cerrado
+
+    reporte = json.loads(
+        (RAIZ_APP / "eval" / "reports" / "S1-baseline.json").read_text(encoding="utf-8")
+    )
+    validar_esquema_cerrado(reporte, ESQUEMA_BASELINE)
+
+    with pytest.raises(ReporteFueraDeEsquema):
+        validar_esquema_cerrado({**reporte, "texto": 1}, ESQUEMA_BASELINE)
+    with pytest.raises(ReporteFueraDeEsquema):
+        validar_esquema_cerrado(
+            {**reporte, "metricasPorCancer": {"paciente-x": reporte["metricasPorCancer"]["mama"]}},
+            ESQUEMA_BASELINE,
+        )
+
+
+def test_el_barrido_se_niega_con_un_dataset_que_no_es_sintetico() -> None:
+    from app.evaluation.corrida_barrido import exigir_dataset_sintetico
+    from app.evaluation.guardas import SuiteAbortada
+
+    exigir_dataset_sintetico("sintetico")
+    with pytest.raises(SuiteAbortada):
+        exigir_dataset_sintetico("real_anonimizado")

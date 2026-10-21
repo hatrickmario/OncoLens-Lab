@@ -17,7 +17,9 @@ TOLERANCIA = 0.05
 
 
 def fila(umbral: float, exactitud: float | None, recall: float | None) -> FilaBarrido:
-    return FilaBarrido(umbral=umbral, exactitud_sin_evidencia=exactitud, recall_at_10=recall)
+    return FilaBarrido(
+        umbral=umbral, exactitud_sin_evidencia=exactitud, recall_at_10_tras_umbral=recall
+    )
 
 
 def test_elegir_umbral_toma_el_de_mayor_exactitud_cuando_el_recall_no_empeora() -> None:

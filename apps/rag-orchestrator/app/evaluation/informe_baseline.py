@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.evaluation.barrido import Eleccion, FilaBarrido
+from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.metas import Meta, MetricaMarcada, marcar_frente_a_meta, nota_adr42
+from app.evaluation.reporte import Booleano, Enumerado, Identificador, Lista, Numero, Objeto
 
 NO_EJECUTABLE = "NO-EJECUTABLE aquí"
 CLAVE_P95 = "p95_evidence_analyses_s"
@@ -67,7 +69,7 @@ def _tabla_del_barrido(filas: Sequence[FilaBarrido]) -> list[str]:
         "| Umbral | Exactitud de «sin evidencia» | recall@10 tras umbral |",
         "|---|---|---|",
         *(
-            f"| {f.umbral:.2f} | {_numero(f.exactitud_sin_evidencia)} | {_numero(f.recall_at_10)} |"
+            f"| {f.umbral:.2f} | {_numero(f.exactitud_sin_evidencia)} | {_numero(f.recall_at_10_tras_umbral)} |"
             for f in filas
         ),
     ]
@@ -126,7 +128,7 @@ def _seccion_baseline(d: DatosDelInforme) -> list[str]:
         "",
         (
             f"Dataset {d.dataset} (clase {d.clase_dataset}) · proveedor `{d.proveedor}` · hashConfig `{d.hash_config}`. "
-            "fidelidad = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales)."
+            "fidelidad (proxy) = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales)."
         ),
         "",
         "### Total",
@@ -162,7 +164,7 @@ def _seccion_real(d: DatosDelInforme) -> list[str]:
             "recall@10",
             "MRR",
             "recall@10 es→en",
-            "fidelidad",
+            "fidelidad (proxy)",
             "precisión de citas",
             "sin evidencia",
         )
@@ -208,7 +210,7 @@ def agregados_del_informe(d: DatosDelInforme) -> dict[str, Any]:
                 {
                     "umbral": f.umbral,
                     "exactitudSinEvidencia": f.exactitud_sin_evidencia,
-                    "recallAt10": f.recall_at_10,
+                    "recallAt10TrasUmbral": f.recall_at_10_tras_umbral,
                 }
                 for f in d.filas
             ],
@@ -216,9 +218,68 @@ def agregados_del_informe(d: DatosDelInforme) -> dict[str, Any]:
             "fijado": d.fijado,
         },
         "metricas": [
-            {"metrica": m.clave, "valor": m.valor, "meta": m.meta, "estado": m.estado}
+            {
+                "metrica": m.clave,
+                "valor": m.valor,
+                "metaMinimo": d.metas[m.clave].minimo,
+                "metaMaximo": d.metas[m.clave].maximo,
+                "estado": m.estado,
+            }
             for m in marcas
         ],
         "metricasPorCancer": {c: dict(v) for c, v in d.metricas_por_cancer.items()},
         "p95E2eS": d.p95_e2e_s,
     }
+
+
+_METRICAS_DE_META = (
+    "recall_at_10",
+    "recall_at_10_es_a_en",
+    "mrr",
+    "fidelidad_proxy",
+    "precision_citas",
+    "sin_evidencia",
+)
+_POR_CANCER = Objeto({m: Numero() for m in _METRICAS_DE_META})
+ESQUEMA_BASELINE = Objeto(
+    {
+        "esquema": Enumerado(frozenset({"oncolens.baseline.v1"})),
+        "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
+        "proveedor": Enumerado(frozenset({"fake", "local"})),
+        "hashConfig": Identificador(),
+        "referenciaDeterminista": Booleano(),
+        "barrido": Objeto(
+            {
+                "umbralDeReferencia": Numero(),
+                "toleranciaRecall": Numero(),
+                "filas": Lista(
+                    Objeto(
+                        {
+                            "umbral": Numero(),
+                            "exactitudSinEvidencia": Numero(),
+                            "recallAt10TrasUmbral": Numero(),
+                        }
+                    )
+                ),
+                "elegido": Numero(),
+                "fijado": Booleano(),
+            }
+        ),
+        "metricas": Lista(
+            Objeto(
+                {
+                    "metrica": Enumerado(frozenset((*_METRICAS_DE_META, CLAVE_P95))),
+                    "valor": Numero(),
+                    "metaMinimo": Numero(),
+                    "metaMaximo": Numero(),
+                    "estado": Enumerado(frozenset({"en meta", "fuera de meta", "sin medir"})),
+                }
+            )
+        ),
+        # Una clave por tipo de cáncer habilitado: una clave ajena (texto del dataset) no entra al reporte.
+        "metricasPorCancer": Objeto(
+            {c: _POR_CANCER for c in ETIQUETAS_CANCER}, opcionales=frozenset(ETIQUETAS_CANCER)
+        ),
+        "p95E2eS": Numero(),
+    }
+)

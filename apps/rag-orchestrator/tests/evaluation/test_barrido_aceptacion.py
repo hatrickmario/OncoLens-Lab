@@ -21,7 +21,7 @@ METRICAS = (
     "recall@10",
     "recall@10 es→en",
     "MRR",
-    "fidelidad",
+    "fidelidad (proxy)",
     "precisión de citas",
     "sin evidencia",
 )

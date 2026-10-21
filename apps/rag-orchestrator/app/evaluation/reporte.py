@@ -89,6 +89,13 @@ class Objeto:
     opcionales: frozenset[str] = frozenset()
 
 
+@dataclasses.dataclass(frozen=True)
+class Lista:
+    """Lista de elementos que cumplen todos el mismo esquema."""
+
+    elemento: Any
+
+
 _IDENTIFICADOR = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{0,127}")
 
 
@@ -96,6 +103,10 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     """Lista blanca de claves y de tipos de hoja (ADR-41, «Reporte»): lo demás hace fallar la escritura."""
     if isinstance(esquema, Objeto):
         _validar_objeto(valor, esquema, ruta)
+    elif isinstance(esquema, Lista):
+        _exigir(isinstance(valor, list), ruta, "no es una lista")
+        for i, elemento in enumerate(valor):
+            validar_esquema_cerrado(elemento, esquema.elemento, f"{ruta}[{i}]")
     elif isinstance(esquema, Numero):
         _exigir(
             valor is None or (_es_numero(valor) and math.isfinite(valor)), ruta, "no es un número"

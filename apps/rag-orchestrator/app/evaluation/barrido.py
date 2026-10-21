@@ -18,7 +18,7 @@ class FilaBarrido:
 
     umbral: float
     exactitud_sin_evidencia: float | None
-    recall_at_10: float | None
+    recall_at_10_tras_umbral: float | None
 
 
 @dataclass(frozen=True)
@@ -33,15 +33,15 @@ def sin_nan(valor: float | None) -> float | None:
 
 
 def _recall_minimo(referencia: FilaBarrido, tolerancia: float) -> float:
-    return (referencia.recall_at_10 or 0.0) - tolerancia
+    return (referencia.recall_at_10_tras_umbral or 0.0) - tolerancia
 
 
 def _descarte(fila: FilaBarrido, minimo: float, tolerancia: float) -> str | None:
-    if fila.exactitud_sin_evidencia is None or fila.recall_at_10 is None:
+    if fila.exactitud_sin_evidencia is None or fila.recall_at_10_tras_umbral is None:
         return f"{fila.umbral:.2f} sin medir (falta una clase de preguntas)"
-    if fila.recall_at_10 < minimo:
+    if fila.recall_at_10_tras_umbral < minimo:
         return (
-            f"{fila.umbral:.2f} descartado: recall@10 {fila.recall_at_10:.3f} < {minimo:.3f} "
+            f"{fila.umbral:.2f} descartado: recall@10 {fila.recall_at_10_tras_umbral:.3f} < {minimo:.3f} "
             f"(recall de la referencia menos la tolerancia {tolerancia:g})"
         )
     return None

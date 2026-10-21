@@ -19,6 +19,7 @@ from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.informe_baseline import (
     DatosDelInforme,
+    ESQUEMA_BASELINE,
     agregados_del_informe,
     renderizar_informe,
 )
@@ -26,7 +27,9 @@ from app.evaluation.metas import cargar_metas
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
-from app.evaluation.reporte import escribir_reporte
+from app.evaluation.fuente_dataset import CLASE_SINTETICA
+from app.evaluation.guardas import SuiteAbortada
+from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.retrieval_metrics import ChunkRecuperado, evaluar_pregunta, metrica
 from app.evaluation.rutas import raiz_repo
 
@@ -89,6 +92,12 @@ def barrer(
     return valores
 
 
+def exigir_dataset_sintetico(clase: str) -> None:
+    """El informe se escribe en una ruta versionada (``eval/reports/``): el barrido solo corre con datos sintéticos (RN-14)."""
+    if clase != CLASE_SINTETICA:
+        raise SuiteAbortada("el barrido solo corre con un dataset sintético")
+
+
 def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
     """Las seis métricas de las metas iniciales a partir de las familias de la suite; NaN y ausentes → ``None``."""
     recuperacion = familias.get("recuperacion", {})
@@ -96,7 +105,7 @@ def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
         "recall_at_10": recuperacion.get("total", {}).get("recall_at_10"),
         "recall_at_10_es_a_en": recuperacion.get("es_a_en", {}).get("recall_at_10"),
         "mrr": recuperacion.get("total", {}).get("mrr"),
-        "fidelidad": familias.get("opciones_con_cita_y_soporte", {}).get("porcentaje"),
+        "fidelidad_proxy": familias.get("opciones_con_cita_y_soporte", {}).get("porcentaje"),
         "precision_citas": familias.get("citas", {}).get("precision"),
         "sin_evidencia": familias.get("sin_evidencia", {}).get("exactitud"),
     }
@@ -172,12 +181,16 @@ def ejecutar_barrido(
 ) -> int:
     if config.barrido is None:
         raise ConfigInvalida("falta la sección barrido en la configuración")
+    exigir_dataset_sintetico(dataset.clase)
     valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de)
     datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_e2e_s)
     carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
     carpeta.mkdir(parents=True, exist_ok=True)
+    # El JSON se valida contra la lista blanca ANTES de escribir nada: un rechazo no deja un informe a medias.
+    escribir_reporte_cerrado(
+        carpeta / f"{NOMBRE_DEL_INFORME}.json", agregados_del_informe(datos), ESQUEMA_BASELINE
+    )
     (carpeta / f"{NOMBRE_DEL_INFORME}.md").write_text(renderizar_informe(datos), encoding="utf-8")
-    escribir_reporte(carpeta / f"{NOMBRE_DEL_INFORME}.json", agregados_del_informe(datos))
     if fijar:
         fijar_umbral_en_config(ruta_config, datos.eleccion.umbral)
     return 0

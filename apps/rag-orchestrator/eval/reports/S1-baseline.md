@@ -24,7 +24,7 @@ Justificación: regla D1: mayor exactitud de «sin evidencia» con recall@10 ≥
 
 ## 2. Referencia determinista (adapters falsos): valida el mecanismo, no cuantifica el sistema
 
-Dataset fx-t5a-a@1 (clase sintetico) · proveedor `fake` · hashConfig `57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced`. fidelidad = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales).
+Dataset fx-t5a-a@1 (clase sintetico) · proveedor `fake` · hashConfig `57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced`. fidelidad (proxy) = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales).
 
 ### Total
 
@@ -33,7 +33,7 @@ Dataset fx-t5a-a@1 (clase sintetico) · proveedor `fake` · hashConfig `57b8a05d
 | recall@10 | 1.000 | ≥ 0.8 | en meta |
 | recall@10 es→en | 1.000 | ≥ 0.7 | en meta |
 | MRR | 1.000 | ≥ 0.6 | en meta |
-| fidelidad | 0.600 | ≥ 0.9 | fuera de meta |
+| fidelidad (proxy) | 0.600 | ≥ 0.9 | fuera de meta |
 | precisión de citas | 0.800 | ≥ 0.9 | fuera de meta |
 | sin evidencia | 1.000 | ≥ 0.9 | en meta |
 | p95 de /platform/evidence-analyses | sin medir | ≤ 15 s | sin medir |
@@ -45,13 +45,13 @@ Dataset fx-t5a-a@1 (clase sintetico) · proveedor `fake` · hashConfig `57b8a05d
 | mama · recall@10 | 1.000 | ≥ 0.8 | en meta |
 | mama · recall@10 es→en | 1.000 | ≥ 0.7 | en meta |
 | mama · MRR | 1.000 | ≥ 0.6 | en meta |
-| mama · fidelidad | 1.000 | ≥ 0.9 | en meta |
+| mama · fidelidad (proxy) | 1.000 | ≥ 0.9 | en meta |
 | mama · precisión de citas | 1.000 | ≥ 0.9 | en meta |
 | mama · sin evidencia | 1.000 | ≥ 0.9 | en meta |
 | próstata · recall@10 | 1.000 | ≥ 0.8 | en meta |
 | próstata · recall@10 es→en | 1.000 | ≥ 0.7 | en meta |
 | próstata · MRR | 1.000 | ≥ 0.6 | en meta |
-| próstata · fidelidad | 0.333 | ≥ 0.9 | fuera de meta |
+| próstata · fidelidad (proxy) | 0.333 | ≥ 0.9 | fuera de meta |
 | próstata · precisión de citas | 0.667 | ≥ 0.9 | fuera de meta |
 | próstata · sin evidencia | 1.000 | ≥ 0.9 | en meta |
 
@@ -66,7 +66,7 @@ p95 de `/platform/evidence-analyses` de punta a punta: NO-EJECUTABLE aquí (requ
 | recall@10 | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
 | MRR | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
 | recall@10 es→en | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
-| fidelidad | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
+| fidelidad (proxy) | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
 | precisión de citas | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
 | sin evidencia | NO-EJECUTABLE aquí | NO-EJECUTABLE aquí |
 
