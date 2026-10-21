@@ -31,7 +31,7 @@ if (generador.huella(corpus) != manifiesto["sha256_corpus"]
 json.dump(corpus, sys.stdout, ensure_ascii=False)
 `;
 
-const esquemaDelCorpus = z.array(
+const esquemaDelCorpus: z.ZodType<TextoSembrado[]> = z.array(
   z.object({
     id: z.string(),
     contexto: z.string(),
@@ -45,6 +45,15 @@ export class CorpusInvalidoError extends Error {
   constructor(motivo: string) {
     super(`pii-mini no se pudo cargar: ${motivo}`);
     this.name = 'CorpusInvalidoError';
+  }
+}
+
+/** Un JSON ilegible no propaga el mensaje original: podría citar un fragmento del corpus. */
+function parsearJson(salida: string): unknown {
+  try {
+    return JSON.parse(salida);
+  } catch {
+    throw new CorpusInvalidoError('la salida del generador no es JSON');
   }
 }
 
@@ -84,7 +93,7 @@ export async function cargarCorpusPiiMini(opciones: OpcionesDeCorpus): Promise<T
       'el generador falló o las huellas no coinciden con el manifiesto',
     );
   }
-  const corpus = esquemaDelCorpus.safeParse(JSON.parse(salida));
+  const corpus = esquemaDelCorpus.safeParse(parsearJson(salida));
   if (!corpus.success)
     throw new CorpusInvalidoError('la salida del generador no cumple el esquema');
   return corpus.data;

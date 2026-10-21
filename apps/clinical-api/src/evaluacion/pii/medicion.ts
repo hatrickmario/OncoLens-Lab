@@ -1,7 +1,10 @@
 /**
  * Medición del detector de PII de Backend 1 (ADR-40, opción A) sobre `data/eval/pii-mini`: sensibilidad por tipo,
  * falsos positivos sobre términos clínicos de control y latencia p95. Lógica pura y determinista (el reloj se inyecta
- * desde el comando). Los reportes llevan solo agregados y tipos, nunca valores ni textos (RN-14).
+ * desde el comando). Las definiciones de B1 NO son equivalentes a las del script de B2 (`adr40/reglas.py`): aquí un valor
+ * está "cubierto" si sus palabras ya no aparecen en el texto enmascarado (el detector de B1 no devuelve rangos) y un
+ * falso positivo es un control clínico cuyo recuento baja; en B2 se mide por solapamiento de spans. No se comparan
+ * cifras de ambos lados 1:1. Sin muestras el resultado es `null` ("sin medir"), nunca 0. Los reportes llevan solo agregados y tipos, nunca valores ni textos (RN-14).
  */
 
 export interface EtiquetaSembrada {
@@ -31,13 +34,13 @@ export interface TextoMedido {
 export interface Sensibilidad {
   aciertos: number;
   total: number;
-  valor: number;
+  valor: number | null;
 }
 
 export interface FalsosPositivos {
   controles: number;
   marcados: number;
-  tasa: number;
+  tasa: number | null;
   criticosMarcados: Record<string, number>;
   porTermino: Record<string, number>;
 }
@@ -48,7 +51,7 @@ const contarCaracteres = (palabras: string[]): number =>
   palabras.reduce((suma, palabra) => suma + palabra.length, 0);
 
 /** Un valor está cubierto cuando el enmascarado hizo desaparecer al menos `minimoDeCobertura` de sus caracteres. */
-export function etiquetaCubierta(
+export function valorAusenteDelEnmascarado(
   valor: string,
   enmascarado: string,
   minimoDeCobertura: number,
@@ -61,7 +64,7 @@ export function etiquetaCubierta(
 const sensibilidadDe = (aciertos: number, total: number): Sensibilidad => ({
   aciertos,
   total,
-  valor: total === 0 ? 0 : aciertos / total,
+  valor: total === 0 ? null : aciertos / total,
 });
 
 export function sensibilidadPorTipo(
@@ -73,7 +76,7 @@ export function sensibilidadPorTipo(
     for (const etiqueta of original.etiquetas) {
       const valor = original.texto.slice(etiqueta.inicio, etiqueta.fin);
       const aciertos = porTipo.get(etiqueta.tipo) ?? [];
-      aciertos.push(etiquetaCubierta(valor, enmascarado, minimoDeCobertura));
+      aciertos.push(valorAusenteDelEnmascarado(valor, enmascarado, minimoDeCobertura));
       porTipo.set(etiqueta.tipo, aciertos);
     }
   }
@@ -117,7 +120,7 @@ export function falsosPositivosClinicos(textos: TextoMedido[]): FalsosPositivos 
   return {
     controles,
     marcados,
-    tasa: controles === 0 ? 0 : marcados / controles,
+    tasa: controles === 0 ? null : marcados / controles,
     criticosMarcados,
     porTermino,
   };

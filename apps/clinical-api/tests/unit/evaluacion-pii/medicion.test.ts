@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  etiquetaCubierta,
+  valorAusenteDelEnmascarado,
   falsosPositivosClinicos,
   percentil95,
   sensibilidadPorTipo,
@@ -30,24 +30,28 @@ function medido(
   return { original, enmascarado };
 }
 
-describe('etiquetaCubierta', () => {
+describe('valorAusenteDelEnmascarado', () => {
   it('es verdadera cuando el valor ya no aparece en el texto enmascarado', () => {
-    expect(etiquetaCubierta('correo-x', 'escribir a [CORREO]', COBERTURA)).toBe(true);
+    expect(valorAusenteDelEnmascarado('correo-x', 'escribir a [CORREO]', COBERTURA)).toBe(true);
   });
 
   it('es falsa cuando el valor sigue completo en el texto enmascarado', () => {
-    expect(etiquetaCubierta('correo-x', 'escribir a correo-x', COBERTURA)).toBe(false);
+    expect(valorAusenteDelEnmascarado('correo-x', 'escribir a correo-x', COBERTURA)).toBe(false);
   });
 
   it('es verdadera cuando se enmascara al menos la mitad de los caracteres de un valor de varias palabras', () => {
     expect(
-      etiquetaCubierta('Lucía Romero Vidal', 'Paciente [NOMBRE] [NOMBRE] Vidal', COBERTURA),
+      valorAusenteDelEnmascarado(
+        'Lucía Romero Vidal',
+        'Paciente [NOMBRE] [NOMBRE] Vidal',
+        COBERTURA,
+      ),
     ).toBe(true);
   });
 
   it('es falsa cuando se enmascara menos de la mitad de los caracteres', () => {
     expect(
-      etiquetaCubierta('Lucía Romero Vidal', 'Paciente [NOMBRE] Romero Vidal', COBERTURA),
+      valorAusenteDelEnmascarado('Lucía Romero Vidal', 'Paciente [NOMBRE] Romero Vidal', COBERTURA),
     ).toBe(false);
   });
 });
@@ -70,9 +74,9 @@ describe('sensibilidadPorTipo', () => {
     expect(resultado[TOTAL]).toEqual({ aciertos: 2, total: 3, valor: 2 / 3 });
   });
 
-  it('devuelve solo el total en cero cuando no hay etiquetas', () => {
+  it('devuelve solo el total con valor null cuando no hay etiquetas', () => {
     expect(sensibilidadPorTipo([medido('texto', 'texto')], COBERTURA)).toEqual({
-      [TOTAL]: { aciertos: 0, total: 0, valor: 0 },
+      [TOTAL]: { aciertos: 0, total: 0, valor: null },
     });
   });
 });
@@ -99,11 +103,11 @@ describe('falsosPositivosClinicos', () => {
     expect(resultado.porTermino).toEqual({ 'Gleason 7': 1 });
   });
 
-  it('devuelve ceros cuando no hay controles', () => {
+  it('devuelve tasa null cuando no hay controles', () => {
     expect(falsosPositivosClinicos([medido('x', 'x')])).toEqual({
       controles: 0,
       marcados: 0,
-      tasa: 0,
+      tasa: null,
       criticosMarcados: {},
       porTermino: {},
     });
