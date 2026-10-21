@@ -1,7 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import { readIdentityKeyConfig } from '../../config.js';
 import type { LeerArchivo } from '../../config/secrets.js';
-import { cargarClavesDeIdentidad } from '../../infrastructure/crypto/claves-de-identidad.js';
+import {
+  cargarClavesDeIdentidad,
+  type ClavesDeIdentidad,
+} from '../../infrastructure/crypto/claves-de-identidad.js';
 import { crearCifradorAesGcm } from '../../infrastructure/crypto/cifrador-aes-gcm.js';
 import { crearIndiceCiego } from '../../infrastructure/crypto/indice-ciego.js';
 import { createIdentityRepository, type ConsultadorSql } from './identity.repository.js';
@@ -17,20 +20,44 @@ export interface DependenciasDeLaIdentidad {
   readonly generarNonce?: () => Buffer;
 }
 
+/** Lee `IDENTITY_KEY_VERSION`, las claves AES por versión y la del índice ciego (todas por archivo, RN-10, RN-14). */
+export function leerClavesDeIdentidadDelEntorno(
+  env: NodeJS.ProcessEnv,
+  readFile: LeerArchivo,
+): ClavesDeIdentidad {
+  return cargarClavesDeIdentidad(readIdentityKeyConfig(env), readFile);
+}
+
+/** `IdentityService` sobre una conexión (o la sesión de una transacción) con las claves ya leídas. */
+export function crearServicioDeIdentidad({
+  claves,
+  db,
+  generarNonce = () => randomBytes(BYTES_DE_NONCE),
+}: {
+  readonly claves: ClavesDeIdentidad;
+  readonly db: ConsultadorSql;
+  readonly generarNonce?: () => Buffer;
+}): IdentityService {
+  return createIdentityService({
+    cifrador: crearCifradorAesGcm({ anillo: claves.anillo, generarNonce }),
+    indice: crearIndiceCiego(claves.claveDeIndice),
+    repo: createIdentityRepository(db),
+  });
+}
+
 /**
- * Compone el `IdentityService` desde la configuración: lee `IDENTITY_KEY_VERSION`, las claves AES por versión y la clave
- * del índice ciego (todas por archivo). Un fallo de configuración nombra la variable, nunca el valor (RN-10, RN-14).
+ * Compone el `IdentityService` desde la configuración. Un fallo de configuración nombra la variable, nunca el valor
+ * (RN-10, RN-14).
  */
 export function componerIdentidad({
   env,
   readFile,
   db,
-  generarNonce = () => randomBytes(BYTES_DE_NONCE),
+  generarNonce,
 }: DependenciasDeLaIdentidad): IdentityService {
-  const { anillo, claveDeIndice } = cargarClavesDeIdentidad(readIdentityKeyConfig(env), readFile);
-  return createIdentityService({
-    cifrador: crearCifradorAesGcm({ anillo, generarNonce }),
-    indice: crearIndiceCiego(claveDeIndice),
-    repo: createIdentityRepository(db),
+  return crearServicioDeIdentidad({
+    claves: leerClavesDeIdentidadDelEntorno(env, readFile),
+    db,
+    ...(generarNonce !== undefined && { generarNonce }),
   });
 }

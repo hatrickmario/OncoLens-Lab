@@ -1,17 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ejecutarSeed } from '../../../prisma/seed/principal.js';
+import { claveDeTest } from '../../support/identidad.js';
 import { RUTA_DEL_CATALOGO } from '../../support/seed.js';
 
-/** Contraseñas ficticias para cualquier `*_password` y el catálogo real para lo demás. */
-const leerArchivo = (ruta: string): string =>
-  ruta.endsWith('_password') ? 'SINT-ficticia-0001' : readFileSync(ruta, 'utf8');
+/** Contraseñas ficticias para cualquier `*_password`, claves de identidad de test para `*_key` y el catálogo real para lo demás. */
+const leerArchivo = (ruta: string): string => {
+  if (ruta.endsWith('_password')) return 'SINT-ficticia-0001';
+  if (ruta.endsWith('_key')) return claveDeTest('seed-unitario').toString('base64');
+  return readFileSync(ruta, 'utf8');
+};
 
 const ENTORNO = {
   APP_ENV: 'test',
   CLINICAL_CATALOG_PATH: RUTA_DEL_CATALOGO,
   SEED_DOCTOR_PASSWORD_FILE: '/x/seed_doctor_password',
   SEED_ADMIN_PASSWORD_FILE: '/x/seed_admin_password',
+  IDENTITY_AES_KEY_FILE: '/x/identity_aes_key',
+  BLIND_INDEX_HMAC_KEY_FILE: '/x/blind_index_hmac_key',
 };
 
 describe('ejecutarSeed', () => {

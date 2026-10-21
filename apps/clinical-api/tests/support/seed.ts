@@ -13,6 +13,11 @@ import {
 } from '../../src/modules/auth/password-hasher.js';
 import { tablasDelCatalogo } from './catalogo.js';
 import { conectar, crearBaseDeTest, leerConfiguracionArnes, type BaseDeTest } from './db.js';
+import {
+  archivosDeClaves,
+  entornoDeClaves,
+  type ArchivosDeClaves,
+} from './identidad.js';
 import { ARGON2_DE_PRUEBA, loggerEnMemoria, type LoggerEnMemoria } from './usuarios.js';
 
 /**
@@ -49,10 +54,12 @@ export interface ArchivosDeContrasena {
   readonly directorio: string;
   readonly doctor: string;
   readonly admin: string;
+  /** Claves de la identidad cifrada (`IDENTITY_AES_KEY_FILE`, `BLIND_INDEX_HMAC_KEY_FILE`): US-046. */
+  readonly claves: ArchivosDeClaves;
   readonly limpiar: () => void;
 }
 
-/** Archivos temporales con las contraseñas ficticias (lo que L1D-165 monta como `*_FILE` en `clinical-seed`). */
+/** Archivos temporales con las contraseñas y las claves de identidad ficticias (lo que Compose monta como `*_FILE` en `clinical-seed`). */
 export function escribirArchivosDeContrasena(
   contrasenas: { doctor: string; admin: string } = {
     doctor: CONTRASENA_FICTICIA_DOCTOR,
@@ -64,7 +71,17 @@ export function escribirArchivosDeContrasena(
   const admin = join(directorio, 'seed_admin_password');
   writeFileSync(doctor, `${contrasenas.doctor}\n`, { mode: 0o600 });
   writeFileSync(admin, `${contrasenas.admin}\n`, { mode: 0o600 });
-  return { directorio, doctor, admin, limpiar: () => rmSync(directorio, { recursive: true }) };
+  const claves = archivosDeClaves();
+  return {
+    directorio,
+    doctor,
+    admin,
+    claves,
+    limpiar: () => {
+      claves.limpiar();
+      rmSync(directorio, { recursive: true });
+    },
+  };
 }
 
 /** Entorno de un seed permitido (`APP_ENV=test`) con contraseñas por archivo; `extra` lo sobrescribe. */
@@ -76,6 +93,7 @@ export function entornoDelSeed(
     APP_ENV: 'test',
     SEED_DOCTOR_PASSWORD_FILE: archivos.doctor,
     SEED_ADMIN_PASSWORD_FILE: archivos.admin,
+    ...entornoDeClaves(archivos.claves, 1),
     ...extra,
   };
 }

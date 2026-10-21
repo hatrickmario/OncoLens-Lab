@@ -130,7 +130,7 @@ describe('Contraseñas e idempotencia del seed', () => {
     expect(await contarFilasDeTodasLasTablas(cliente)).toEqual(conteos);
     expect(conteos['clinical.patient']).toBe(5);
     expect(conteos['auth.user']).toBe(2);
-    expect(conteos['identity.patient_identity']).toBe(0);
+    expect(conteos['identity.patient_identity']).toBe(5); // US-046 AC-6: una identidad cifrada por paciente
     expect((await cliente.query('SELECT id FROM clinical.patient ORDER BY id')).rows).toEqual(
       ids.rows,
     );

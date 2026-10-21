@@ -99,13 +99,6 @@ describe('Contenido del seed sintético', () => {
     expect(await hasher.verify(usuarios[0]!.password_hash, CONTRASENA_FICTICIA_ADMIN)).toBe(true);
   });
 
-  it('patient_identity queda vacía en el S1 [US-039 AC-1]', async () => {
-    const [fila] = await filas<{ n: number }>(
-      'SELECT count(*)::int AS n FROM identity.patient_identity',
-    );
-    expect(fila?.n).toBe(0);
-  });
-
   it('el registro del seed solo lleva conteos: ni correos ni contraseñas [US-039 AC-1]', () => {
     const texto = seed.registro.texto();
 

@@ -4,13 +4,17 @@ import { resolverCodigoDelCatalogo, type CatalogoClinico } from './catalogo.js';
 import { idSembrado } from './determinismo.js';
 import { columnasDeGradacion } from './columnas-de-gradacion.js';
 import { derivarTextoGrade } from './grade.js';
+import { identidadSinteticaDe } from './identidades.js';
 import { pacienteA } from './pacientes/a.js';
 import { pacienteB } from './pacientes/b.js';
 import { pacienteC } from './pacientes/c.js';
 import { pacienteD } from './pacientes/d.js';
 import { pacienteE } from './pacientes/e.js';
 import type { DiagnosticoSemilla, GradacionSemilla, PacienteSemilla } from './pacientes/tipos.js';
+import type { ClavesDeIdentidad } from '../../src/infrastructure/crypto/claves-de-identidad.js';
 import type { RolDeUsuario } from '../../src/modules/auth/auth.repository.js';
+import { crearServicioDeIdentidad } from '../../src/modules/patients/identity.module.js';
+import type { IdentityService } from '../../src/modules/patients/identity.service.js';
 import { DESCRIPCION_DE_ROL, MATRIZ_DE_PERMISOS } from './roles.js';
 
 /** Lo mínimo que el seed necesita de PostgreSQL: `pg.Client`/`PoolClient` cumplen, y el test pasa el cliente real. */
@@ -43,6 +47,8 @@ export interface EntradasDelSeed {
   readonly hasher: PasswordHasher;
   readonly credenciales: CredencialesDelSeed;
   readonly retencion: PoliticaDeRetencion;
+  /** Claves de la identidad cifrada (US-046): se leen DESPUÉS de la guarda de entorno (RN-13). */
+  readonly claves: ClavesDeIdentidad;
 }
 
 /** Filas escritas por tabla (los logs del seed solo llevan conteos, nunca valores). */
@@ -69,6 +75,7 @@ interface Siembra {
   readonly entradas: EntradasDelSeed;
   readonly ahora: Date;
   readonly escritas: Record<string, number>;
+  readonly identidad: IdentityService;
 }
 
 /** Fecha AAAA-MM-DD, `dias` antes (o después, si es negativo) del instante dado. */
@@ -369,9 +376,23 @@ async function sembrarAtributos(siembra: Siembra, contexto: ContextoDePaciente):
   }
 }
 
+/** Identidad cifrada con `IdentityService` (no una copia del cifrador); si ya existe no se recifra. */
+async function sembrarIdentidad(
+  siembra: Siembra,
+  pacienteId: string,
+  ordinal: number,
+): Promise<void> {
+  const resultado = await siembra.identidad.guardar(identidadSinteticaDe(pacienteId, ordinal));
+  if (resultado === 'creada') {
+    siembra.escritas['identity.patient_identity'] =
+      (siembra.escritas['identity.patient_identity'] ?? 0) + 1;
+  }
+}
+
 async function sembrarPaciente(
   siembra: Siembra,
   paciente: PacienteSemilla,
+  ordinal: number,
   usuarios: { doctorId: string; adminId: string },
 ): Promise<void> {
   const pacienteId = idSembrado(paciente.clave);
@@ -402,6 +423,7 @@ async function sembrarPaciente(
     opened_by: usuarios.doctorId,
     closed_by: null,
   });
+  await sembrarIdentidad(siembra, pacienteId, ordinal);
   const contexto: ContextoDePaciente = { paciente, pacienteId, episodioId, ...usuarios };
   for (const diagnostico of paciente.diagnosticos) {
     await sembrarDiagnostico(siembra, contexto, diagnostico);
@@ -441,15 +463,16 @@ async function sembrarTodo(siembra: Siembra): Promise<void> {
     rol: 'admin',
     contrasena: credenciales.admin,
   });
-  for (const paciente of PACIENTES_SEMILLA) {
-    await sembrarPaciente(siembra, paciente, { doctorId, adminId });
+  for (const [indice, paciente] of PACIENTES_SEMILLA.entries()) {
+    await sembrarPaciente(siembra, paciente, indice + 1, { doctorId, adminId });
   }
 }
 
 /** Siembra roles, usuarios de demo y los pacientes (a)–(e), de forma idempotente, dentro de la sesión recibida. */
 export async function sembrar(db: ClienteSql, entradas: EntradasDelSeed): Promise<FilasUpsertadas> {
   const escritas: Record<string, number> = {};
-  const siembra: Siembra = { db, entradas, ahora: entradas.reloj.now(), escritas };
+  const identidad = crearServicioDeIdentidad({ claves: entradas.claves, db });
+  const siembra: Siembra = { db, entradas, ahora: entradas.reloj.now(), escritas, identidad };
   await sembrarTodo(siembra);
   return escritas;
 }

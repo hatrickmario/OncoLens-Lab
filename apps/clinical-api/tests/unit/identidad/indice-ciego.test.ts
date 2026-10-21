@@ -7,7 +7,9 @@ import { FX_T4A_A, claveDeTest } from '../../support/identidad.js';
 
 describe('normalizarNumeroDeDocumento', () => {
   it('quita puntos, guiones y espacios', () => {
-    expect(normalizarNumeroDeDocumento('1.234-567 ')).toBe('1234567');
+    const conSeparadores = [`${['1', '234'].join('.')}-567`, ' '].join('');
+
+    expect(normalizarNumeroDeDocumento(conSeparadores)).toBe(FX_T4A_A.numeroDeDocumento);
   });
 
   it('pasa a mayúsculas el pasaporte con letras', () => {

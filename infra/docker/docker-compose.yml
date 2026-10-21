@@ -237,11 +237,17 @@ services:
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
       SEED_DOCTOR_PASSWORD_FILE: /run/secrets/seed_doctor_password
       SEED_ADMIN_PASSWORD_FILE: /run/secrets/seed_admin_password
+      # Identidad cifrada de los pacientes semilla (US-046 AC-6): el seed usa IdentityService, no una copia del cifrador.
+      IDENTITY_KEY_VERSION: ${IDENTITY_KEY_VERSION:-}
+      IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
+      BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
     secrets:
       - pg_clinical_api_password
       - pg_ca.crt
       - seed_doctor_password
       - seed_admin_password
+      - identity_aes_key
+      - blind_index_hmac_key
     volumes:
       - type: bind
         source: ../../packages/clinical-catalogs

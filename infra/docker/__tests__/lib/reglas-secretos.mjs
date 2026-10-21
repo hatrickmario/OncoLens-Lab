@@ -8,8 +8,16 @@ import { archivosDeSecretos, assertClavesPorServicio, entorno, servicio } from '
 
 /** Servicios que reciben exactamente estos secretos (design D3). Los one-shot solo se exigen si existen. */
 const SECRETOS_EXACTOS = {
-  // One-shot del seed (L1D-169): contraseña del rol, CA pública para verificar el TLS y las dos del seed. Nada más.
-  'clinical-seed': ['pg_clinical_api_password', 'pg_ca.crt', 'seed_doctor_password', 'seed_admin_password'],
+  // One-shot del seed (L1D-169): contraseña del rol, CA pública para verificar el TLS, las dos del seed y, desde US-046
+  // AC-6, las dos claves de la identidad cifrada (siembra con IdentityService). Nada más.
+  'clinical-seed': [
+    'pg_clinical_api_password',
+    'pg_ca.crt',
+    'seed_doctor_password',
+    'seed_admin_password',
+    'identity_aes_key',
+    'blind_index_hmac_key',
+  ],
   'rag-orchestrator': ['jwt_service_public.pem', 'pg_rag_corpus_password'],
   web: [],
   'milvus-etcd': [],

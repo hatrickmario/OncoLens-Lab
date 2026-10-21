@@ -8,16 +8,15 @@ import {
   readDatabaseConfig,
   readDeidentificationConfig,
   readEvidenceAnalysisConfig,
-  readIdentityKeyConfig,
   readServiceJwtConfig,
 } from './config.js';
-import { cargarClavesDeIdentidad } from './infrastructure/crypto/claves-de-identidad.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { registrarEnConsola } from './infrastructure/logger.js';
 import { createRagOrchestratorClient } from './infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructure/service-jwt.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
+import { leerClavesDeIdentidadDelEntorno } from './modules/patients/identity.module.js';
 import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidadDelS1 } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
@@ -57,7 +56,7 @@ arrancar({
       };
       catalogo = crearProveedorDeVersionDeCatalogo(configuracion.analisis.catalogPath, leerArchivo);
       // Fallo cerrado (US-046 AC-5): las claves de la identidad deben ser legibles y de 32 bytes antes de escuchar.
-      cargarClavesDeIdentidad(readIdentityKeyConfig(process.env), leerArchivo);
+      leerClavesDeIdentidadDelEntorno(process.env, leerArchivo);
     } catch (error) {
       if (!(error instanceof ConfiguracionInvalidaError)) throw error;
       registrarConfiguracionInvalida((linea) => console.error(linea), error);

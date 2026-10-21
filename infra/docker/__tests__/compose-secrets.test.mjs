@@ -26,9 +26,15 @@ describe('docker-compose.yml · reparto de secretos', () => {
     expect(() => assertRepartoDeSecretos(config)).not.toThrow();
     const montados = (nombre) => (config.services[nombre].secrets ?? []).map((secreto) => secreto.source).sort();
     expect(montados('rag-orchestrator')).toEqual(['jwt_service_public.pem', 'pg_rag_corpus_password']);
-    for (const secreto of ['jwt_service_private.pem', 'identity_aes_key', 'blind_index_hmac_key']) {
+    // Las dos claves de la identidad también las monta el one-shot clinical-seed (US-046 AC-6); nunca rag-orchestrator ni web.
+    const duenos = {
+      'jwt_service_private.pem': ['clinical-api'],
+      identity_aes_key: ['clinical-api', 'clinical-seed'],
+      blind_index_hmac_key: ['clinical-api', 'clinical-seed'],
+    };
+    for (const [secreto, esperados] of Object.entries(duenos)) {
       const conSecreto = Object.keys(config.services).filter((nombre) => montados(nombre).includes(secreto));
-      expect(conSecreto).toEqual(['clinical-api']);
+      expect(conSecreto.sort()).toEqual(esperados);
     }
   });
 
@@ -186,11 +192,11 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     }
   });
 
-  it('recibe exactamente la contraseña de clinical_api, la CA pública y las dos del seed [US-039 AC-1]', () => {
+  it('recibe exactamente la contraseña de clinical_api, la CA pública, las dos del seed y las dos claves de la identidad [US-039 AC-1] [US-046 AC-6]', () => {
     const config = resolver();
     expect(() => assertRepartoDeSecretos(config)).not.toThrow();
     expect((config.services['clinical-seed'].secrets ?? []).map((secreto) => secreto.source).sort()).toEqual(
-      ['pg_ca.crt', 'pg_clinical_api_password', 'seed_admin_password', 'seed_doctor_password'],
+      ['blind_index_hmac_key', 'identity_aes_key', 'pg_ca.crt', 'pg_clinical_api_password', 'seed_admin_password', 'seed_doctor_password'],
     );
   });
 
