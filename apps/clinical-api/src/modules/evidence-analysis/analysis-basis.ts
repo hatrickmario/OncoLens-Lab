@@ -11,7 +11,7 @@ import type { AnalysisBasisBuilder } from './ports.js';
  * Supuesto declarado mientras el inciso (b) no se calcule (US-128, S3/S4): sin él, `missingCriticalData = []` se
  * leería como "no falta nada". US-128 lo retira. Texto fijo del builder, no configurable (design 4).
  */
-export const SUPUESTO_FALTANTES_NO_CALCULADOS: AnalysisBasis['assumptions'][number] = {
+const SUPUESTO_FALTANTES_NO_CALCULADOS: AnalysisBasis['assumptions'][number] = {
   text: 'Los faltantes críticos aún no se calculan en esta versión',
   origin: 'regla_catalogo',
 };
@@ -25,11 +25,12 @@ function fuentesSeleccionadas(
   return FUENTES_EN_ORDEN.filter((fuente) => seleccion[fuente] === true);
 }
 
-/** `r12` → 12: la referencia opaca que asigna `construirContextoPermitido()` es correlativa por petición. */
-function posicionDeDataRef(dataRef: string): number {
-  return Number(/^r(\d+)$/.exec(dataRef)?.[1] ?? Number.MAX_SAFE_INTEGER);
-}
-
+/**
+ * Los datos del paciente con procedencia que viajan a Backend 2, en el orden en que `construirContextoPermitido()`
+ * les asigna el `dataRef`: diagnóstico, biomarcadores, atributos, tratamientos previos y eventos. Las notas clínicas
+ * viajan vacías en el S1 (`verificarDesidentificado()` lo exige) y las tendencias y los análisis previos no son datos
+ * del paciente con procedencia.
+ */
 function datosDelContexto(contexto: ClinicalContext): DatoDelContexto[] {
   return [
     ...(contexto.diagnosis === null
@@ -43,17 +44,15 @@ function datosDelContexto(contexto: ClinicalContext): DatoDelContexto[] {
 }
 
 /**
- * Inciso (a): una entrada por dato del contexto desidentificado que se envió a Backend 2, en el orden de su `dataRef`.
+ * Inciso (a): una entrada por dato del contexto desidentificado que se envió a Backend 2, en el orden de `datosDelContexto()`.
  * Los ejes de revisión se copian de la procedencia; los rechazados y reemplazados nunca llegan al contexto (RN-07).
  */
 function datosDelPacienteUsados(contexto: ClinicalContext): AnalysisBasis['patientDataUsed'] {
-  return datosDelContexto(contexto)
-    .sort((a, b) => posicionDeDataRef(a.dato.dataRef) - posicionDeDataRef(b.dato.dataRef))
-    .map((entrada) => ({
-      label: verbalizarDatoDelContexto(entrada),
-      reviewStatus: entrada.dato.provenance.reviewStatus,
-      conflict: entrada.dato.provenance.conflict,
-    }));
+  return datosDelContexto(contexto).map((entrada) => ({
+    label: verbalizarDatoDelContexto(entrada),
+    reviewStatus: entrada.dato.provenance.reviewStatus,
+    conflict: entrada.dato.provenance.conflict,
+  }));
 }
 
 /** Supuestos que verificó el LLM (la respuesta interna no trae su origen) tras el supuesto declarado del builder. */

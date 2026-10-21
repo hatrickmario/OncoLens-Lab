@@ -9,9 +9,14 @@ export type DatoDelContexto =
   | { tipo: 'tratamiento'; dato: ClinicalContext['priorTreatments'][number] }
   | { tipo: 'evento'; dato: ClinicalContext['events'][number] };
 
-/** Une las partes que el dato sí trae: un campo ausente (vacío o "No disponible") no se escribe en la etiqueta. */
+/** Un campo ausente (vacío o "No disponible", RN-25) se escribe como ausente, nunca como texto vacío. */
+const datoPresente = (valor: string): string => (valor === '' ? NO_DISPONIBLE : valor);
+
+const estaAusente = (valor: string): boolean => valor === '' || valor === NO_DISPONIBLE;
+
+/** Une las partes que el dato sí trae (el estadio y la línea de tratamiento son opcionales y se omiten si faltan). */
 function unirLoPresente(partes: readonly string[], separador: string): string {
-  return partes.filter((parte) => parte !== '' && parte !== NO_DISPONIBLE).join(separador);
+  return partes.filter((parte) => !estaAusente(parte)).join(separador);
 }
 
 /**
@@ -22,17 +27,23 @@ export function verbalizarDatoDelContexto(entrada: DatoDelContexto): string {
   switch (entrada.tipo) {
     case 'diagnostico': {
       const { cancerType, stagingSystem, stageValue } = entrada.dato;
-      return unirLoPresente([cancerType, unirLoPresente([stagingSystem, stageValue], ' ')], ' · ');
+      const estadio = unirLoPresente([stagingSystem, stageValue], ' ');
+      return [datoPresente(cancerType), estadio].filter((parte) => parte !== '').join(' · ');
     }
-    case 'biomarcador':
-      return unirLoPresente([entrada.dato.biomarkerName, entrada.dato.value], ' ');
+    case 'biomarcador': {
+      const { biomarkerName, value } = entrada.dato;
+      return estaAusente(value)
+        ? `${datoPresente(biomarkerName)}: ${NO_DISPONIBLE}`
+        : `${datoPresente(biomarkerName)} ${value}`;
+    }
     case 'atributo':
-      return `${entrada.dato.key}: ${entrada.dato.value}`;
+      return `${datoPresente(entrada.dato.key)}: ${estaAusente(entrada.dato.value) ? NO_DISPONIBLE : entrada.dato.value}`;
     case 'tratamiento': {
       const { regimenName, lineNumber } = entrada.dato;
-      return unirLoPresente([regimenName, lineNumber === null ? '' : `línea ${lineNumber}`], ' · ');
+      const linea = lineNumber === null ? '' : `línea ${lineNumber}`;
+      return [datoPresente(regimenName), linea].filter((parte) => parte !== '').join(' · ');
     }
     case 'evento':
-      return entrada.dato.eventType;
+      return datoPresente(entrada.dato.eventType);
   }
 }
