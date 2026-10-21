@@ -14,6 +14,7 @@ function repositorioFalso(
 ) {
   const creados: NuevoUsuario[] = [];
   const cambios: { userId: string; roleId: string }[] = [];
+  const bajas: string[] = [];
   const repo: UsersRepository = {
     buscarRolPorNombre: (nombre) =>
       Promise.resolve(roles.includes(nombre) ? { id: `rol-${nombre}` } : null),
@@ -27,8 +28,12 @@ function repositorioFalso(
       cambios.push({ userId, roleId });
       return Promise.resolve();
     },
+    desactivarYRevocarSesiones: (userId) => {
+      bajas.push(userId);
+      return Promise.resolve();
+    },
   };
-  return { repo, creados, cambios };
+  return { repo, creados, cambios, bajas };
 }
 
 const hasher = {
@@ -83,5 +88,26 @@ describe('UsersService', () => {
     await expect(
       servicio(repo).cambiarRol({ email: 'nadie@test.local', rol: 'admin' }),
     ).rejects.toBeInstanceOf(UsuarioInexistenteError);
+  });
+
+  it('da de baja al usuario existente y devuelve lo que la CLI imprime cuando recibe su correo', async () => {
+    const { repo, bajas } = repositorioFalso(
+      [],
+      [{ id: 'u1', email: 'a@test.local', rol: 'doctor' }],
+    );
+
+    const usuario = await servicio(repo).desactivar({ email: 'a@test.local' });
+
+    expect(usuario).toEqual({ id: 'u1', email: 'a@test.local', rol: 'doctor' });
+    expect(bajas).toEqual(['u1']);
+  });
+
+  it('lanza UsuarioInexistenteError sin dar de baja a nadie cuando el correo no existe', async () => {
+    const { repo, bajas } = repositorioFalso([]);
+
+    await expect(servicio(repo).desactivar({ email: 'nadie@test.local' })).rejects.toBeInstanceOf(
+      UsuarioInexistenteError,
+    );
+    expect(bajas).toEqual([]);
   });
 });

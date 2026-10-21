@@ -37,6 +37,16 @@ export interface Consultador {
 }
 
 /**
+ * Revoca todas las sesiones vivas del usuario. Recibe el consultador para participar en la transacción de quien la
+ * llama (la baja de una cuenta, US-045; el bloqueo por intentos, US-044): una sola implementación de la regla.
+ */
+export async function revocarSesiones(db: Consultador, userId: string): Promise<void> {
+  await db.query('UPDATE auth.session SET revoked = true WHERE user_id = $1 AND NOT revoked', [
+    userId,
+  ]);
+}
+
+/**
  * `ip_address` y `user_agent` son nullable en `auth.session` y en el S1 se guardan NULL (D4, nunca la IP ni el UA reales); el bloqueo por IP de
  * US-044 definirá cómo `web` propaga la IP del cliente.
  */

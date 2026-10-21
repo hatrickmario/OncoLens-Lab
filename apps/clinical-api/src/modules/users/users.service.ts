@@ -21,6 +21,8 @@ export interface UsersService {
   /** Alta de una cuenta `activa`; la contraseña solo existe en memoria hasta hashearla (Argon2id). */
   crear(entrada: { email: string; rol: string; password: string }): Promise<UsuarioRegistrado>;
   cambiarRol(entrada: { email: string; rol: string }): Promise<UsuarioRegistrado>;
+  /** Baja de la cuenta: `desactivado` y sesiones revocadas en la misma transacción (idempotente). */
+  desactivar(entrada: { email: string }): Promise<UsuarioRegistrado>;
 }
 
 export interface DependenciasDeUsersService {
@@ -61,6 +63,13 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
       const { id: roleId } = await exigirRol(rol);
       await repo.cambiarRol(usuario.id, roleId, reloj.now());
       return { ...usuario, rol };
+    },
+
+    async desactivar({ email }) {
+      const usuario = await repo.buscarUsuarioPorCorreo(email);
+      if (usuario === null) throw new UsuarioInexistenteError();
+      await repo.desactivarYRevocarSesiones(usuario.id, reloj.now());
+      return usuario;
     },
   };
 }

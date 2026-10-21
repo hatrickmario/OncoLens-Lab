@@ -1,4 +1,4 @@
-import type { Consultador } from '../auth/auth.repository.js';
+import { revocarSesiones, type Consultador } from '../auth/auth.repository.js';
 
 export interface UsuarioRegistrado {
   id: string;
@@ -28,6 +28,8 @@ export interface UsersRepository {
   /** Lanza `CorreoYaRegistradoError` si el correo ya existe. */
   crearUsuario(usuario: NuevoUsuario): Promise<void>;
   cambiarRol(userId: string, roleId: string, now: Date): Promise<void>;
+  /** Pone la cuenta en `desactivado` y revoca sus sesiones vivas en una sola transacción (todo o nada). */
+  desactivarYRevocarSesiones(userId: string, now: Date): Promise<void>;
 }
 
 const VIOLACION_DE_UNICIDAD = '23505';
@@ -89,6 +91,21 @@ export function createUsersRepository(db: Consultador): UsersRepository {
         roleId,
         now,
       ]);
+    },
+
+    async desactivarYRevocarSesiones(userId, now) {
+      await db.query('BEGIN');
+      try {
+        await db.query(
+          `UPDATE auth."user" SET account_status = 'desactivado', updated_at = $2 WHERE id = $1`,
+          [userId, now],
+        );
+        await revocarSesiones(db, userId);
+        await db.query('COMMIT');
+      } catch (error) {
+        await db.query('ROLLBACK').catch(() => undefined);
+        throw error;
+      }
     },
   };
 }

@@ -2,7 +2,11 @@ import { parseArgs } from 'node:util';
 import { ZodError } from 'zod';
 import type { Registrar } from '../infrastructure/logger.js';
 import { CorreoYaRegistradoError } from '../modules/users/users.repository.js';
-import { altaDeUsuarioSchema, cambioDeRolSchema } from '../modules/users/users.schema.js';
+import {
+  altaDeUsuarioSchema,
+  bajaDeUsuarioSchema,
+  cambioDeRolSchema,
+} from '../modules/users/users.schema.js';
 import {
   RolInexistenteError,
   UsuarioInexistenteError,
@@ -26,7 +30,8 @@ export interface DependenciasDeCli {
   registrar: Registrar;
 }
 
-const USO = 'uso: oncolens users <create|set-role> --email <correo> --role <rol>';
+const USO =
+  'uso: oncolens users <create|set-role> --email <correo> --role <rol> | oncolens users deactivate --email <correo>';
 const OPCION_DE_CAMPO: Readonly<Record<string, string>> = {
   email: '--email',
   rol: '--role',
@@ -41,13 +46,16 @@ function mensajeDeValidacion(error: ZodError): string {
   return `valor inválido en ${[...new Set(opciones)].join(', ')}`;
 }
 
-function leerOpciones(argumentos: string[]): { email: string; role: string } {
+function leerOpciones(
+  argumentos: string[],
+  permitidas: ('email' | 'role')[] = ['email', 'role'],
+): { email: string; role: string } {
   const { values } = parseArgs({
     args: argumentos,
-    options: { email: { type: 'string' }, role: { type: 'string' } },
+    options: Object.fromEntries(permitidas.map((nombre) => [nombre, { type: 'string' as const }])),
     strict: true,
   });
-  return { email: values.email ?? '', role: values.role ?? '' };
+  return { email: values['email'] ?? '', role: values['role'] ?? '' };
 }
 
 async function crearUsuario(
@@ -69,6 +77,13 @@ async function cambiarRol(argumentos: string[], users: UsersService): Promise<st
   return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
 }
 
+async function desactivarUsuario(argumentos: string[], users: UsersService): Promise<string> {
+  const { email } = leerOpciones(argumentos, ['email']);
+  const datos = bajaDeUsuarioSchema.parse({ email });
+  const usuario = await users.desactivar(datos);
+  return `id=${usuario.id} email=${usuario.email} rol=${usuario.rol}`;
+}
+
 /** Despacha `users <acción>`; devuelve la línea de resultado (solo id, correo y rol). */
 function despachar(
   argv: string[],
@@ -79,6 +94,7 @@ function despachar(
   if (grupo !== 'users') throw new UsoIncorrectoError(USO);
   if (accion === 'create') return { accion, resultado: crearUsuario(resto, entorno, users) };
   if (accion === 'set-role') return { accion, resultado: cambiarRol(resto, users) };
+  if (accion === 'deactivate') return { accion, resultado: desactivarUsuario(resto, users) };
   throw new UsoIncorrectoError(USO);
 }
 
