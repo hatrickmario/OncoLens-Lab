@@ -16,7 +16,7 @@ function Lista({ titulo, items }: ListaProps) {
   if (items.length === 0) return null;
   return (
     <section>
-      <h3>{titulo}</h3>
+      <h4>{titulo}</h4>
       <ul>
         {items.map((item, indice) => (
           <li key={`${indice}-${item}`}>{item}</li>

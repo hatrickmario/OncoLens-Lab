@@ -22,7 +22,7 @@ export function AnalysisBasisPanel({ base, estado }: AnalysisBasisPanelProps) {
   const { titulo, verDetalle, ocultarDetalle } = mensajes().evidence.base;
   return (
     <section className={estilos.tarjeta} aria-labelledby={idTitulo}>
-      <h2 id={idTitulo}>{titulo}</h2>
+      <h3 id={idTitulo}>{titulo}</h3>
       <BasisSummary base={base} estado={estado} />
       <button
         type="button"
