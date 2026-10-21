@@ -1,9 +1,10 @@
 import type { Request } from 'express';
 import busboy from 'busboy';
+import { normalizarNombreOriginal } from './documents.reglas.js';
 
 export interface ArchivoRecibido {
-  /** Nombre que declaró el cliente. Es identidad (RN-10): solo va a la fila `document`. */
-  nombre: string;
+  /** Nombre que declaró el cliente, ya normalizado. Es identidad (RN-10): solo va a la fila `document`. */
+  nombreOriginal: string;
   contenido: Buffer;
 }
 
@@ -92,7 +93,10 @@ export function leerCargaMultipart(
       });
       flujo.on('end', () => {
         if (info.filename !== undefined) {
-          carga.archivo = { nombre: info.filename, contenido: Buffer.concat(trozos) };
+          carga.archivo = {
+            nombreOriginal: normalizarNombreOriginal(info.filename),
+            contenido: Buffer.concat(trozos),
+          };
         }
       });
     });

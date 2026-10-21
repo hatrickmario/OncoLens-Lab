@@ -138,7 +138,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
         patientId,
         userId: sesion.userId,
         documentType: tipo.data,
-        nombreOriginal: carga.archivo.nombre,
+        nombreOriginal: carga.archivo.nombreOriginal,
         contenido: carga.archivo.contenido,
       });
       registrarResultado(response, 'ok', { patientId, documentId: documento.id });

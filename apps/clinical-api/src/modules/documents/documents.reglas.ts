@@ -51,7 +51,19 @@ export function limiteDeLecturaDeCarga(maxUploadMb: number): number {
   return bytesMaximosDeCarga(maxUploadMb) + 1;
 }
 
-/** Esqueleto: aún no normaliza. */
+const LARGO_MAXIMO_DEL_NOMBRE = 255;
+const NOMBRE_SIN_DATOS = 'sin-nombre.pdf';
+
+/**
+ * Nombre que declaró el cliente, saneado en el borde: NFC, sin caracteres de control (NUL, CR, LF...) ni de formato
+ * invisibles (cero ancho, sobrescritura bidireccional) y de hasta 255 caracteres. El nombre es identidad (RN-10) y un
+ * dato no confiable: con NUL el `INSERT` fallaba y con CRLF podía inyectar líneas en cualquier salida de texto.
+ */
 export function normalizarNombreOriginal(nombre: string): string {
-  return nombre;
+  const limpio = nombre
+    .normalize('NFC')
+    .replace(/[\p{Cc}\p{Cf}]/gu, '')
+    .trim();
+  const recortado = Array.from(limpio).slice(0, LARGO_MAXIMO_DEL_NOMBRE).join('');
+  return recortado === '' ? NOMBRE_SIN_DATOS : recortado;
 }
