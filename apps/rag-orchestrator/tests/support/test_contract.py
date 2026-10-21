@@ -1,8 +1,15 @@
 import json
 
+import httpx
 import pytest
 
-from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec
+from tests.support import contract
+from tests.support.contract import (
+    RAIZ_REPOSITORIO,
+    assert_matches_spec,
+    resolver_plantilla,
+    verificar_respuesta,
+)
 
 
 def _ejemplo(nombre: str) -> dict:
@@ -34,3 +41,62 @@ def test_assert_matches_spec_campo_requerido_ausente_lanza_nombrandolo():
 def test_assert_matches_spec_destino_inexistente_lanza_nombrandolo():
     with pytest.raises(AssertionError, match="NoExiste"):
         assert_matches_spec("#/components/schemas/NoExiste", {})
+
+
+def _verificar(metodo, ruta, status, cuerpo, cabeceras=None):
+    verificar_respuesta(metodo, ruta, status, cabeceras or {}, json.dumps(cuerpo).encode())
+
+
+def test_verificar_respuesta_ejemplo_valido_no_lanza():
+    _verificar("GET", "/health", 200, _ejemplo("health-ok.json"))
+
+
+def test_verificar_respuesta_codigo_no_declarado_lanza_nombrando_operacion_y_codigo():
+    with pytest.raises(
+        AssertionError, match=r"rag-orchestrator GET /health 404.*código no declarado"
+    ):
+        _verificar("GET", "/health", 404, {})
+
+
+def test_verificar_respuesta_operacion_no_declarada_lanza_nombrandola():
+    with pytest.raises(AssertionError, match=r"DELETE /health 200.*operación no declarada"):
+        _verificar("DELETE", "/health", 200, {})
+
+
+def test_verificar_respuesta_sin_schema_en_el_spec_no_valida_el_cuerpo():
+    verificar_respuesta("POST", "/documents/extract", 413, {}, b"")
+
+
+def test_verificar_respuesta_cuerpo_incumplido_nombra_la_ruta_json_sin_el_valor():
+    cuerpo = {**_ejemplo("health-ok.json"), "status": "VALOR-SENTINELA"}
+    with pytest.raises(AssertionError) as fallo:
+        _verificar("GET", "/health", 200, cuerpo)
+    assert "/status" in str(fallo.value)
+    assert "VALOR-SENTINELA" not in str(fallo.value)
+
+
+def test_resolver_plantilla_devuelve_la_plantilla_de_la_ruta_concreta():
+    spec = {"paths": {"/a/{id}/b": {}, "/c": {}}}
+    assert resolver_plantilla(spec, "/a/123/b") == "/a/{id}/b"
+    assert resolver_plantilla(spec, "/c") == "/c"
+    assert resolver_plantilla(spec, "/zzz") is None
+
+
+def test_verificar_respuesta_falta_cabecera_obligatoria_lanza_nombrandola():
+    anterior = contract._spec
+    contract.usar_spec(
+        {
+            "components": {},
+            "paths": {
+                "/x": {
+                    "get": {"responses": {"429": {"headers": {"Retry-After": {"required": True}}}}}
+                }
+            },
+        }
+    )
+    try:
+        with pytest.raises(AssertionError, match=r"GET /x 429.*cabecera Retry-After"):
+            verificar_respuesta("GET", "/x", 429, {}, b"")
+        verificar_respuesta("GET", "/x", 429, httpx.Headers({"retry-after": "3"}), b"")
+    finally:
+        contract.usar_spec(anterior)
