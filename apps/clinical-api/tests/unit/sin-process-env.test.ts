@@ -25,10 +25,19 @@ describe('lectura del entorno', () => {
       'const c = process . env;',
       "const d = process['env'];",
       'const { PORT } = process.env;',
+      'const { env } = process;',
+      'const { env: entorno } = process;',
+      "import { env } from 'node:process';",
+      "import { env as entorno } from 'process';",
+      "import * as proceso from 'node:process';",
+      "import proceso from 'node:process';",
+      'const e = globalThis.process.env;',
     ]) {
       expect(LECTURA_DE_ENTORNO.test(lectura), lectura).toBe(true);
     }
     expect(LECTURA_DE_ENTORNO.test('const e = entorno.env;')).toBe(false);
+    expect(LECTURA_DE_ENTORNO.test('const { pid } = process;')).toBe(false);
+    expect(LECTURA_DE_ENTORNO.test("import { pid } from 'node:process';")).toBe(false);
   });
 
   it('ningún archivo de src fuera de src/config y de la raíz de composición lee process.env [US-037 AC-1]', () => {

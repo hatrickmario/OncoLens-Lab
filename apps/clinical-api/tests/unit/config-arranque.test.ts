@@ -57,7 +57,17 @@ describe('leerEnumNoSensible', () => {
     expect(error.message).not.toContain('Lucía');
   });
 
-  it.each([['AKIA','IOSFODNN7EJEMPLO'].join(''), 'clave-secreta-con-guiones', 'a'.repeat(33), 'x@y.test'])(
+  it.each([
+    ['AKIA', 'IOSFODNN7EJEMPLO'].join(''),
+    'clave-secreta-con-guiones',
+    'a'.repeat(33),
+    'x@y.test',
+    ['123', '4567890'].join(''),
+    '5f4dcc3b5aa765d61d8327deb882cf99',
+    'lucia_rondon',
+    'admin2024',
+    'a1b2c3d4e5f60718',
+  ])(
     'nunca registra un valor con forma de secreto ni de dato personal (%#) aunque la clave sea un enum [US-037 AC-2]',
     (valor) => {
       const error = capturarError(() =>
@@ -67,6 +77,14 @@ describe('leerEnumNoSensible', () => {
       expect(JSON.stringify(lineaDe(error))).not.toContain(valor);
     },
   );
+
+  it('no admite valorInvalido por el constructor público: solo la fábrica de enums no sensibles lo fija [US-037 AC-2]', () => {
+    const error = new ConfiguracionInvalidaError('CLAVE', 'regla', {
+      valorInvalido: 'leucemia',
+    } as never);
+
+    expect(error.valorInvalido).toBeUndefined();
+  });
 
   it('devuelve el valor por defecto cuando la variable está ausente o vacía', () => {
     expect(leerEnumNoSensible({}, 'TIPO_DE_PRUEBA', TIPOS, 'mama')).toBe('mama');

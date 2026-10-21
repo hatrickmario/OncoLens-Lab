@@ -62,6 +62,12 @@ const CAMPOS_DE_DESIGN_D5 = [
   'phone',
   'address',
   'legalRepresentative',
+  'query',
+  'token',
+  'sessionToken',
+  'secret',
+  'clinicalContext',
+  'clinicalNotes',
 ];
 
 describe('descarte de campos sensibles', () => {
@@ -108,5 +114,35 @@ describe('descarte de campos sensibles', () => {
 
     for (const campo of CAMPOS_DE_DESIGN_D5) expect(base).toContain(campo.toLowerCase());
     expect(Object.isFrozen(CAMPOS_SENSIBLES_BASE)).toBe(true);
+  });
+
+  it('redacta query anidado en un request, que es el texto libre del análisis (EvidenceAnalysisRequest.query) [US-037 AC-5]', () => {
+    const pregunta = `¿Qué opciones describe la evidencia para ${'Lucía Rondón'}, documento ${['123', '4567'].join('')}?`;
+
+    const linea = registrarYLeer({ event: 'x', request: { patientId: 'u', query: pregunta } });
+
+    expect(JSON.stringify(linea)).not.toContain('Lucía');
+    expect(JSON.stringify(linea)).not.toContain(['123', '4567'].join(''));
+    expect(linea).toMatchObject({ request: { patientId: 'u', query: '[REDACTADO]' } });
+  });
+
+  it('reduce un Error a su clase y su code, sin message, pila ni propiedades como el detail de pg [US-037 AC-5]', () => {
+    const error = Object.assign(new TypeError('falla con Lucía Rondón'), {
+      code: '23505',
+      detail: 'Key (national_id)=(valor-sintetico) already exists.',
+    });
+
+    const linea = registrarYLeer({ event: 'pool_error', error });
+
+    expect(linea).toEqual({
+      event: 'pool_error',
+      error: { errorClase: 'TypeError', code: '23505' },
+    });
+  });
+
+  it('reduce un Error sin code a solo su clase [US-037 AC-5]', () => {
+    expect(registrarYLeer({ error: new Error('mensaje con datos') })).toEqual({
+      error: { errorClase: 'Error' },
+    });
   });
 });
