@@ -20,6 +20,12 @@ def silenciar_urls_de_httpx_en_logs() -> None:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+def _campos_del_evento(record: logging.LogRecord) -> dict[str, object]:
+    """Solo los campos de la lista cerrada que el registro trae con valor."""
+    campos = {campo: getattr(record, campo, None) for campo in CAMPOS_DE_EVENTO}
+    return {campo: valor for campo, valor in campos.items() if valor is not None}
+
+
 class FormateadorJson(logging.Formatter):
     """Una línea JSON por registro. Nunca vuelca el *traceback*: puede arrastrar el texto de la petición (RN-10)."""
 
@@ -37,10 +43,7 @@ class FormateadorJson(logging.Formatter):
         trace_id = self._trace_id_actual()
         if trace_id is not None:
             linea["traceId"] = trace_id
-        for campo in CAMPOS_DE_EVENTO:
-            valor = getattr(record, campo, None)
-            if valor is not None:
-                linea[campo] = valor
+        linea.update(_campos_del_evento(record))
         if record.exc_info and record.exc_info[0] is not None:
             linea["errorClase"] = record.exc_info[0].__name__
         return json.dumps(linea, ensure_ascii=False)
