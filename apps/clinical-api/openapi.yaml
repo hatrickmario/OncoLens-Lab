@@ -666,7 +666,10 @@ components:
           type: array
           description: Nombres de las claves de configuración cargadas; nunca valores (RN-14).
           items: { type: string, pattern: '^[A-Z][A-Z0-9_]*$' }
-        serviceVersion: { type: string, minLength: 1 }
+        serviceVersion:
+          type: string
+          minLength: 1
+          description: Versión del contrato (info.version) del servicio que responde.
     # ---- Schemas compartidos con rag-orchestrator: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'

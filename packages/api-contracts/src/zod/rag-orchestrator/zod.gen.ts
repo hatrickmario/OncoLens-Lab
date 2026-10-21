@@ -637,6 +637,11 @@ export const zRagFollowUpResponse = z.strictObject({
 export const zRequestDeadline = z.iso.datetime();
 
 /**
+ * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
+ */
+export const zTraceIdHeader = zTraceId;
+
+/**
  * El proceso está listo y, con LLM_PROVIDER=local, el LLM nativo responde.
  */
 export const zGetHealthResponse = zHealthStatus;
@@ -644,7 +649,8 @@ export const zGetHealthResponse = zHealthStatus;
 export const zRagQueryBody = zRagQueryInternalRequest;
 
 export const zRagQueryHeaders = z.object({
-    'X-Request-Deadline': z.iso.datetime().optional()
+    'X-Request-Deadline': z.iso.datetime().optional(),
+    'X-Trace-Id': zTraceId.optional()
 });
 
 /**
@@ -655,7 +661,8 @@ export const zRagQueryResponse = zRagQueryInternalResponse;
 export const zAnswerFollowUpBody = zRagFollowUpRequest;
 
 export const zAnswerFollowUpHeaders = z.object({
-    'X-Request-Deadline': z.iso.datetime().optional()
+    'X-Request-Deadline': z.iso.datetime().optional(),
+    'X-Trace-Id': zTraceId.optional()
 });
 
 /**

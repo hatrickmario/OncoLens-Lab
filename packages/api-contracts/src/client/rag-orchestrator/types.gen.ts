@@ -10,6 +10,9 @@ export type HealthStatus = {
      * Nombres de las claves de configuración cargadas; nunca valores (RN-14).
      */
     configKeys?: Array<string>;
+    /**
+     * Versión del contrato (info.version) del servicio que responde.
+     */
     serviceVersion?: string;
 };
 
@@ -719,6 +722,11 @@ export type CitedSourceFields = {
 
 export type RequestDeadline = string;
 
+/**
+ * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
+ */
+export type TraceIdHeader = TraceId;
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -752,6 +760,10 @@ export type RagQueryData = {
     body: RagQueryInternalRequest;
     headers?: {
         'X-Request-Deadline'?: string;
+        /**
+         * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
+         */
+        'X-Trace-Id'?: TraceId;
     };
     path?: never;
     query?: never;
@@ -804,6 +816,10 @@ export type AnswerFollowUpData = {
     body: RagFollowUpRequest;
     headers?: {
         'X-Request-Deadline'?: string;
+        /**
+         * Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log de la request (NFR-10).
+         */
+        'X-Trace-Id'?: TraceId;
     };
     path?: never;
     query?: never;

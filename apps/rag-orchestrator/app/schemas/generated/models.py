@@ -24,7 +24,13 @@ class HealthStatus(BaseModel):
             description='Nombres de las claves de configuración cargadas; nunca valores (RN-14).'
         ),
     ] = None
-    serviceVersion: Annotated[str | None, Field(min_length=1)] = None
+    serviceVersion: Annotated[
+        str | None,
+        Field(
+            description='Versión del contrato (info.version) del servicio que responde.',
+            min_length=1,
+        ),
+    ] = None
 
 
 class Detail(RootModel[str]):
