@@ -20,6 +20,7 @@ import type {
 } from '../../src/modules/evidence-analysis/ports.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { readFileSync } from 'node:fs';
+import { componerRutasProtegidas } from '../../src/composition.js';
 import { appConAuth } from './app-auth.js';
 import {
   configuracionDePiiDeTest,
@@ -284,15 +285,16 @@ export async function montarGateway(
     }),
     registrar: logger.registrar,
   });
+  const rutas = componerRutasProtegidas({ gateway: ruta });
   const app = appConAuth({
     cliente: mundo.cliente,
     espacio: mundo.espacio,
     tokens: opciones.tokens ?? tokensFijos('no-se-usa'),
     reloj,
     registrar: logger.registrar,
-    rutasProtegidas: [ruta],
+    rutasProtegidas: rutas,
   });
-  return { app, logger, clavePublica: publicKey, rutas: [ruta] };
+  return { app, logger, clavePublica: publicKey, rutas };
 }
 
 /** Usuario sembrado por correo → cabecera `Cookie` de una sesión vigente creada para el test. */

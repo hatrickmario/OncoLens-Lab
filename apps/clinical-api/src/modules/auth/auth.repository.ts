@@ -5,7 +5,7 @@ export interface UsuarioParaLogin {
   id: string;
   passwordHash: string;
   accountStatus: EstadoDeCuenta;
-  rol: RolDeUsuario;
+  rol: string;
 }
 
 export interface NuevaSesion {
@@ -41,7 +41,7 @@ export interface Consultador {
 
 /**
  * Revoca todas las sesiones vivas del usuario. Recibe el consultador para participar en la transacción de quien la
- * llama (la baja de una cuenta, US-045; el bloqueo por intentos, US-044): una sola implementación de la regla.
+ * llama. NO abre transacción: participa en la de quien la llama (la baja de una cuenta, US-045; el bloqueo por intentos, US-044): una sola implementación de la regla.
  */
 export async function revocarSesiones(db: Consultador, userId: string): Promise<void> {
   await db.query('UPDATE auth.session SET revoked = true WHERE user_id = $1 AND NOT revoked', [
@@ -68,7 +68,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         id: fila['id'] as string,
         passwordHash: fila['password_hash'] as string,
         accountStatus: fila['account_status'] as EstadoDeCuenta,
-        rol: fila['rol'] as RolDeUsuario,
+        rol: fila['rol'] as string,
       };
     },
 

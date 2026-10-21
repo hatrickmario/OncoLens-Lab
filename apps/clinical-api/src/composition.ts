@@ -8,6 +8,19 @@ import { createAuthRepository, type Consultador } from './modules/auth/auth.repo
 import { createAuthService, type GeneradorDeToken } from './modules/auth/auth.service.js';
 import { createPasswordHasher } from './modules/auth/password-hasher.js';
 
+/** Routers de dominio que exigen sesión. Cada historia añade el suyo aquí. */
+export interface RoutersProtegidos {
+  gateway: Router;
+}
+
+/**
+ * ÚNICO lugar donde se decide qué routers van detrás del guard: lo usan `server.ts` y los tests, de modo que el test de
+ * coherencia ruta ↔ contrato (US-045 AC-3) recorre los mismos routers que producción.
+ */
+export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Router[] {
+  return [routers.gateway];
+}
+
 export interface DependenciasDeComposicion {
   db: Consultador;
   auth: AuthConfig;

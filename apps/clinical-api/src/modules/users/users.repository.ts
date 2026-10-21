@@ -1,4 +1,5 @@
-import { revocarSesiones, type Consultador } from '../auth/auth.repository.js';
+import type { Client, PoolClient } from 'pg';
+import { revocarSesiones } from '../auth/auth.repository.js';
 
 export interface UsuarioRegistrado {
   id: string;
@@ -24,7 +25,7 @@ export class CorreoYaRegistradoError extends Error {
 
 export interface UsersRepository {
   buscarRolPorNombre(nombre: string): Promise<{ id: string } | null>;
-  buscarUsuarioPorCorreo(correo: string): Promise<UsuarioRegistrado | null>;
+  buscarUsuarioRegistradoPorCorreo(correo: string): Promise<UsuarioRegistrado | null>;
   /** Lanza `CorreoYaRegistradoError` si el correo ya existe. */
   crearUsuario(usuario: NuevoUsuario): Promise<void>;
   cambiarRol(userId: string, roleId: string, now: Date): Promise<void>;
@@ -35,10 +36,13 @@ export interface UsersRepository {
 const VIOLACION_DE_UNICIDAD = '23505';
 
 /**
- * Repository de usuarios. `db` es UNA conexión (no un pool): así `BEGIN`/`COMMIT` de las operaciones compuestas caen
- * en la misma sesión de PostgreSQL.
+ * UNA conexión de PostgreSQL (`Client` o `PoolClient`), nunca un `Pool`: `BEGIN`/`COMMIT` de las operaciones compuestas
+ * deben caer en la misma sesión, y un `Pool` repartiría las sentencias entre conexiones (la baja dejaría de ser atómica).
  */
-export function createUsersRepository(db: Consultador): UsersRepository {
+export type ConexionTransaccional = Client | PoolClient;
+
+/** Repository de usuarios; las operaciones compuestas abren su transacción sobre `db`. */
+export function createUsersRepository(db: ConexionTransaccional): UsersRepository {
   return {
     async buscarRolPorNombre(nombre) {
       const { rows } = await db.query('SELECT id FROM auth.role WHERE name = $1', [nombre]);
@@ -46,7 +50,7 @@ export function createUsersRepository(db: Consultador): UsersRepository {
       return fila === undefined ? null : { id: fila['id'] as string };
     },
 
-    async buscarUsuarioPorCorreo(correo) {
+    async buscarUsuarioRegistradoPorCorreo(correo) {
       const { rows } = await db.query(
         `SELECT u.id, u.email, r.name AS rol
            FROM auth."user" u JOIN auth.role r ON r.id = u.role_id

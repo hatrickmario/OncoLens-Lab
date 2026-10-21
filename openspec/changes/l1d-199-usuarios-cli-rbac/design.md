@@ -99,3 +99,24 @@ Aceptadas por el orquestador del sprint (no cambian el alcance):
   exclusión en `vitest.config.ts`), `bin`/scripts `oncolens` en `apps/clinical-api/package.json` (+ 3 líneas del
   `package-lock.json`), y `normalizarCorreo` exportada de `auth.service.ts` para no duplicar la regla en `users`.
 - **Comando extra:** `oncolens users deactivate` es idempotente (repite la revocación si ya estaba desactivado).
+
+## Gate 2: correcciones y deuda registrada
+
+Aplicadas: el verificador de rutas (`tests/support/rutas-y-contrato.ts`) ya no omite en silencio routers anidados ni
+`use('/ruta', fn)` y exige `authorize()` antes de cualquier parser de cuerpo; `createUsersRepository` solo acepta una
+conexión única (`Client` o `PoolClient`, no `Pool`) y `revocarSesiones` documenta que no abre transacción; la lista de
+rutas protegidas sale de una sola función (`componerRutasProtegidas`, usada por `server.ts` y por los tests);
+`normalizarCorreo` vive en `auth/correo.ts` y `UsersService.crear` normaliza; la matriz sembrada se compara de forma
+exacta con `data-model.md` §8 para `doctor` y `admin`.
+
+Deuda y preguntas abiertas (no bloquean esta historia):
+
+- **Política de longitud/complejidad de contraseña** (privacy P1): hoy solo se rechaza la vacía. Pregunta para el S6
+  (US-044, bloqueo y política de credenciales).
+- **Carrera login/baja** (privacy #2): un login concurrente a la baja puede crear una sesión tras la revocación; la
+  cuenta `desactivado` la invalida en el siguiente `resolverSesion` (solo `activo` mantiene sesión), así que el riesgo
+  queda acotado a esa ventana. Pendiente de cerrar con un bloqueo de fila si US-044 lo pide.
+- **`traceId` en la CLI** (privacy #4): las líneas de log de la CLI no llevan `traceId`; se añade cuando haya auditoría
+  de la CLI (S6, US-148 / US-222).
+- **Permisos de ejecución del bin** (P2): el `bin` `oncolens` se invoca con `npm run oncolens`/`node`; fijar `chmod +x`
+  en la imagen queda para la historia de la imagen del contenedor.
