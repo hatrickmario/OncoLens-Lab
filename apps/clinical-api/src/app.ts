@@ -2,7 +2,7 @@ import express, { Router, type Express } from 'express';
 import { manejadorFinalDeErrores } from './infrastructure/http-errores.js';
 import type { Registrar } from './infrastructure/logger.js';
 import { requireSession } from './middleware/auth.js';
-import { authController, logoutController } from './modules/auth/auth.controller.js';
+import { authController } from './modules/auth/auth.controller.js';
 import type { AuthService } from './modules/auth/auth.service.js';
 import { createHealthRouter, type InformacionDeSalud } from './routes/health.js';
 
@@ -43,7 +43,6 @@ export function createApp(dependencies: AppDependencies): Express {
     const router = Router();
     router.use(authController(plataforma.auth)); // público: el login va antes del guard
     router.use(requireSession(plataforma.auth));
-    router.use(logoutController(plataforma.auth));
     for (const ruta of plataforma.rutasProtegidas ?? []) router.use(ruta);
     app.use('/platform', router);
     app.use(manejadorFinalDeErrores(plataforma.auth));

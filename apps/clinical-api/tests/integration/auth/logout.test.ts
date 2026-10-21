@@ -157,7 +157,7 @@ describe('POST /platform/auth/logout', () => {
 describe('coherencia del logout con el contrato', () => {
   it('monta POST /platform/auth/logout con authorize(session:logout) igual que su x-permission', () => {
     const router = logoutController({
-      service: { cerrarSesion: () => Promise.resolve() } as never,
+      service: { cerrarSesion: () => Promise.resolve() },
       nuevoTraceId: traceIdsFijos(),
       registrar: loggerEnMemoria().registrar,
     });

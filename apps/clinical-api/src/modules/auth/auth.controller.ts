@@ -12,6 +12,12 @@ export interface DependenciasDeAuthController {
   registrar: Registrar;
 }
 
+export interface DependenciasDeLogoutController {
+  service: Pick<AuthService, 'cerrarSesion'>;
+  nuevoTraceId: () => string;
+  registrar: Registrar;
+}
+
 const EVENTO_LOGIN = 'auth.login';
 const EVENTO_LOGOUT = 'auth.logout';
 
@@ -88,7 +94,7 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
  * `POST /auth/logout` (se monta bajo `/platform`, DESPUÉS del guard): revoca la sesión del token presentado y borra la
  * cookie. Una sesión ausente o ya revocada no llega aquí: el guard responde 401 (idempotencia, design D2).
  */
-export function logoutController(dependencias: DependenciasDeAuthController): Router {
+export function logoutController(dependencias: DependenciasDeLogoutController): Router {
   const { service, nuevoTraceId, registrar } = dependencias;
   const router = Router();
   router.post('/auth/logout', authorize('session:logout'), async (request, response) => {
