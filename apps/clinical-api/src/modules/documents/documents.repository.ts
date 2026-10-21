@@ -15,30 +15,54 @@ export interface NuevoDocumento {
 
 /** Acceso a `clinical.document` (la cola de extracción: `ocr_status = pendiente`, `attempts = 0`). */
 export interface DocumentsRepository {
-  /** Inserta el documento encolado (`pendiente`, 0 intentos). */
-  insertar(documento: NuevoDocumento): Promise<void>;
+  /** El paciente ya tiene un documento con ese checksum (deduplicación, AC-03.4). */
+  existeChecksum(patientId: string, checksum: string): Promise<boolean>;
+  /**
+   * Inserta el documento encolado (`pendiente`, 0 intentos). `duplicado` si la `UNIQUE(patient_id, checksum)` lo
+   * rechaza: otra carga idéntica ganó la carrera entre la comprobación previa y este `INSERT`.
+   */
+  insertar(documento: NuevoDocumento): Promise<'creado' | 'duplicado'>;
+}
+
+const VIOLACION_DE_UNICIDAD = '23505';
+
+function esViolacionDeUnicidad(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === VIOLACION_DE_UNICIDAD;
 }
 
 export function createDocumentsRepository(db: Consultador): DocumentsRepository {
   return {
+    async existeChecksum(patientId, checksum) {
+      const { rows } = await db.query(
+        'SELECT 1 FROM clinical.document WHERE patient_id = $1 AND checksum = $2',
+        [patientId, checksum],
+      );
+      return rows.length > 0;
+    },
     async insertar(documento) {
-      await db.query(
-        `INSERT INTO clinical.document
+      try {
+        await db.query(
+          `INSERT INTO clinical.document
            (id, patient_id, document_type, object_storage_key, checksum, original_filename, mime_type,
             ocr_status, attempts, uploaded_by, uploaded_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, 'pendiente', 0, $8, $9)`,
-        [
-          documento.id,
-          documento.patientId,
-          documento.documentType,
-          documento.objectStorageKey,
-          documento.checksum,
-          documento.originalFilename,
-          documento.mimeType,
-          documento.uploadedBy,
-          documento.uploadedAt,
-        ],
-      );
+          [
+            documento.id,
+            documento.patientId,
+            documento.documentType,
+            documento.objectStorageKey,
+            documento.checksum,
+            documento.originalFilename,
+            documento.mimeType,
+            documento.uploadedBy,
+            documento.uploadedAt,
+          ],
+        );
+        return 'creado';
+      } catch (error) {
+        if (esViolacionDeUnicidad(error)) return 'duplicado';
+        throw error;
+      }
     },
   };
 }

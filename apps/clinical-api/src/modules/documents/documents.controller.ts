@@ -4,7 +4,7 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
 import { bytesMaximosDeCarga } from './documents.reglas.js';
 import { leerCargaMultipart } from './documents.multipart.js';
 import { tipoDeDocumentoSchema } from './documents.schema.js';
@@ -37,6 +37,9 @@ function rechazoDe(error: unknown): Rechazo | undefined {
       codigo: 'ARCHIVO_DEMASIADO_GRANDE',
       resultado: 'archivo_demasiado_grande',
     };
+  }
+  if (error instanceof DocumentoDuplicado) {
+    return { status: 409, codigo: 'DOCUMENTO_DUPLICADO', resultado: 'documento_duplicado' };
   }
   return undefined;
 }

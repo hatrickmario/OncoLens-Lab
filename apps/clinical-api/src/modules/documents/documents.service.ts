@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
-import type { DocumentsRepository } from './documents.repository.js';
-import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
+import type { DocumentsRepository, NuevoDocumento } from './documents.repository.js';
+import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
 import type { TipoDeDocumento } from './documents.schema.js';
 import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
@@ -44,26 +44,44 @@ const sha256 = (contenido: Buffer): string => createHash('sha256').update(conten
 /** Carga de un documento: guarda el binario y deja la fila encolada (`pendiente`) para la extracción (US-078). */
 export function crearDocumentsService(dependencias: DependenciasDelService): DocumentsService {
   const { repo, almacen, reloj, ids, maxUploadMb } = dependencias;
+
+  /** Inserta la fila; si falla o pierde la carrera por el checksum, borra el objeto recién escrito (compensación). */
+  async function insertarOCompensar(
+    clave: string,
+    documento: NuevoDocumento,
+  ): Promise<'creado' | 'duplicado'> {
+    try {
+      const resultado = await repo.insertar(documento);
+      if (resultado === 'duplicado') await almacen.borrar(clave);
+      return resultado;
+    } catch (error) {
+      await almacen.borrar(clave).catch(() => undefined);
+      throw error;
+    }
+  }
   return {
     async cargar(solicitud) {
       if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
         throw new ArchivoDemasiadoGrande();
       if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();
+      const checksum = sha256(solicitud.contenido);
+      if (await repo.existeChecksum(solicitud.patientId, checksum)) throw new DocumentoDuplicado();
       const id = ids();
       const clave = claveDeObjeto(solicitud.patientId, id);
       const subidoEn = reloj.now();
       await almacen.guardar(clave, solicitud.contenido);
-      await repo.insertar({
+      const resultado = await insertarOCompensar(clave, {
         id,
         patientId: solicitud.patientId,
         documentType: solicitud.documentType,
         objectStorageKey: clave,
-        checksum: sha256(solicitud.contenido),
+        checksum,
         originalFilename: solicitud.nombreOriginal,
         mimeType: TIPO_MIME_DEL_PDF,
         uploadedBy: solicitud.userId,
         uploadedAt: subidoEn,
       });
+      if (resultado === 'duplicado') throw new DocumentoDuplicado();
       return {
         id,
         patientId: solicitud.patientId,

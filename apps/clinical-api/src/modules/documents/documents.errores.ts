@@ -13,3 +13,10 @@ export class ArchivoDemasiadoGrande extends Error {
     this.name = 'ArchivoDemasiadoGrande';
   }
 }
+
+export class DocumentoDuplicado extends Error {
+  constructor() {
+    super('El paciente ya tiene un documento con el mismo checksum');
+    this.name = 'DocumentoDuplicado';
+  }
+}
