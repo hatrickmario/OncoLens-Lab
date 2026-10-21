@@ -29,13 +29,16 @@ def _solicitud_base() -> dict[str, Any]:
 
 
 def solicitud_de(
-    base: dict[str, Any], pregunta: Pregunta, clase: str, indice: int
+    base: dict[str, Any], pregunta: Pregunta, clase: str, indice: int, catalogo_version: str
 ) -> RagQueryInternalRequest:
     """La solicitud de ``contracts/examples`` con la pregunta del dataset; el ``traceId`` es el índice (sin azar)."""
     cruda = copy.deepcopy(base)
     cruda["traceId"] = f"req_eval{indice:04d}"
     cruda["query"] = pregunta.texto
     cruda["maxOptions"] = MAX_OPCIONES
+    cruda["catalogVersion"] = (
+        catalogo_version  # NFR-14: la solicitud usa el catálogo de la configuración
+    )
     cruda["dataClassification"] = DataClassification(clase).value
     cruda["clinicalContext"]["diagnosis"]["cancerType"] = pregunta.cancer
     return RagQueryInternalRequest.model_validate(cruda)
@@ -48,7 +51,7 @@ async def evaluar_dataset(
     resultados: list[ResultadoConsulta] = []
     respuestas: list[RagQueryInternalResponse] = []
     for indice, pregunta in enumerate(dataset.preguntas):
-        solicitud = solicitud_de(base, pregunta, dataset.clase, indice)
+        solicitud = solicitud_de(base, pregunta, dataset.clase, indice, suite.catalogo_version)
         generaciones_previas = suite.observaciones.generaciones
         respuesta = await suite.cronometro.medir_async(
             "consulta", suite.servicio.consultar, solicitud

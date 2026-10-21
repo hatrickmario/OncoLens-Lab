@@ -148,6 +148,16 @@ def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:
     )
 
 
+class CatalogoClinicoDeConfig:
+    """``CatalogoClinico``: la versión efectiva del catálogo es la de la configuración de la suite (no hay montaje)."""
+
+    def __init__(self, version: str) -> None:
+        self._version = version
+
+    def version(self) -> str:
+        return self._version
+
+
 class LectorReleaseFijo:
     def __init__(self, dataset: DatasetSuite) -> None:
         self._release = ReleaseDelCorpus(dataset.release, dataset.corte, PISO_DE_FUENTES_EXCLUIDAS)

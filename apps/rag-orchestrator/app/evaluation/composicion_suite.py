@@ -11,6 +11,7 @@ from app.application.rag_orchestrator_service import (
 )
 from app.evaluation.adaptadores_falsos import (
     BuscadorEnMemoria,
+    CatalogoClinicoDeConfig,
     CatalogoEnMemoria,
     EmbedderBolsaDePalabras,
     GeneradorGuionado,
@@ -44,6 +45,7 @@ class ServicioDeSuite:
     servicio: RAGOrchestratorService
     observaciones: Observaciones
     cronometro: Cronometro
+    catalogo_version: str
 
 
 def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
@@ -73,10 +75,11 @@ def componer_servicio(
         reranker=RerankerObservado(RerankerLexico(), cronometro, observaciones),
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
+        catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version),
         generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
         clasificador_nli=NliMedido(NliLexico(), cronometro),
         verificador_terminos=cargar_verificador_de_terminos(config.ruta_terminos),
         reloj=reloj,
         parametros=parametros_de_recuperacion(config),
     )
-    return ServicioDeSuite(servicio, observaciones, cronometro)
+    return ServicioDeSuite(servicio, observaciones, cronometro, config.catalogo_version)
