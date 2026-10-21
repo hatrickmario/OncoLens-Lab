@@ -2,7 +2,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 (contract-first, skill `sync-contracts`; commit `contract(L1D-171)`) Aplicar el diff de design `## Contratos`: `409` + `ErrorCatalogVersionMismatch` en `createEvidenceAnalysis` de `apps/clinical-api/openapi.yaml`; `catalogVersion` opcional en `HealthStatus` de ambos specs; ejemplo `error-catalog-version-mismatch.json` en `contracts/examples/index.json` y `catalogVersion` en el único `health-ok.json` de L1D-167 (válido contra ambos specs); `info.version` `clinical-api` 1.7.0 y `rag-orchestrator` 1.5.0; `contracts:check`, `contracts:breaking` (sin `ERR`) y `contracts:generate`.
+- [x] 1.1 (contract-first, skill `sync-contracts`; commit `contract(L1D-171)`) Aplicar el diff de design `## Contratos`: `409` + `ErrorCatalogVersionMismatch` en `createEvidenceAnalysis` de `apps/clinical-api/openapi.yaml`; `catalogVersion` opcional en `HealthStatus` de ambos specs; ejemplo `error-catalog-version-mismatch.json` en `contracts/examples/index.json` y `catalogVersion` en el único `health-ok.json` de L1D-167 (válido contra ambos specs); `info.version` `clinical-api` 1.7.0 y `rag-orchestrator` 1.5.0; `contracts:check`, `contracts:breaking` (sin `ERR`) y `contracts:generate`.
 
 ## 2. ai-services
 
@@ -12,11 +12,11 @@
 
 ## 3. clinical-platform
 
-- [ ] 3.1 (TDD estricto) Tests de aceptación en rojo: "responde 200 y persiste catalog_version 1.0.0 cuando ambos backends montan 1.0.0 [US-041 AC-1]", "responde 409 CATALOG_VERSION_MISMATCH sin persistir registro cuando rag-orchestrator responde 409 de catálogo [US-041 AC-2]" (MSW desde `rag-catalog-version-mismatch.json`), "sigue respondiendo 502 cuando el 409 trae otro código" y "el health informa catalogVersion 1.0.1 cuando CLINICAL_CATALOG_PATH apunta a un catálogo 1.0.1 [US-041 AC-4]" · integración (Supertest + PostgreSQL de test; respuestas validadas contra el spec). Commit `test(L1D-171)`.
-- [ ] 3.2 (TDD estricto) Implementar la fila de `CATALOG_VERSION_MISMATCH` en `mapearFalloRag()` y `catalogVersion` en `routes/health.ts`; expectativa `CLINICAL_CATALOG_VERSION` (D1) en el módulo de configuración de L1D-167. Verificación: 3.1 en verde. Commit `feat(L1D-171)`.
-- [ ] 3.3 (test después: arranque e infraestructura) "no queda listo y registra configuracion_invalida con motivo catalogo_no_disponible, sin ruta, cuando el catálogo no existe [US-041 AC-5]" (Vitest de arranque) y humo en contenedor "la escritura en CLINICAL_CATALOG_PATH falla por solo lectura [US-041 AC-3]" (`docker compose exec`, *timeout* explícito).
-- [ ] 3.4 (test después: datos) Estructura v1 de `packages/clinical-catalogs` (D5) con esquemas en `schemas/` y test que valida cada archivo [US-041 AC-1]; claves de catálogo en `.env.example` si faltan.
-- [ ] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-171)`.
+- [x] 3.1 (TDD estricto) Tests de aceptación en rojo: "responde 200 y persiste catalog_version 1.0.0 cuando ambos backends montan 1.0.0 [US-041 AC-1]", "responde 409 CATALOG_VERSION_MISMATCH sin persistir registro cuando rag-orchestrator responde 409 de catálogo [US-041 AC-2]" (MSW desde `rag-catalog-version-mismatch.json`), "sigue respondiendo 502 cuando el 409 trae otro código" y "el health informa catalogVersion 1.0.1 cuando CLINICAL_CATALOG_PATH apunta a un catálogo 1.0.1 [US-041 AC-4]" · integración (Supertest + PostgreSQL de test; respuestas validadas contra el spec). Commit `test(L1D-171)`.
+- [x] 3.2 (TDD estricto) Implementar la fila de `CATALOG_VERSION_MISMATCH` en `mapearFalloRag()` y `catalogVersion` en `routes/health.ts`; expectativa `CLINICAL_CATALOG_VERSION` (D1) en el módulo de configuración de L1D-167. Verificación: 3.1 en verde. Commit `feat(L1D-171)`.
+- [x] 3.3 (test después: arranque e infraestructura) "no queda listo y registra configuracion_invalida con motivo catalogo_no_disponible, sin ruta, cuando el catálogo no existe [US-041 AC-5]" (Vitest de arranque) y humo en contenedor "la escritura en CLINICAL_CATALOG_PATH falla por solo lectura [US-041 AC-3]" (`docker compose exec`, *timeout* explícito).
+- [x] 3.4 (test después: datos) Estructura v1 de `packages/clinical-catalogs` (D5) con esquemas en `schemas/` y test que valida cada archivo [US-041 AC-1]; claves de catálogo en `.env.example` si faltan.
+- [x] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-171)`.
 
 ## 4. evaluación
 
