@@ -13,6 +13,7 @@ Salida explícita: `@pytest.mark.sin_verificacion_de_proveedor` desactiva el hoo
 fabrica a propósito una respuesta fuera de contrato para probar otra cosa). Se usa con motivo en el test.
 """
 
+import os
 from collections.abc import Iterator
 from typing import Any
 
@@ -33,8 +34,13 @@ def respuestas_verificadas() -> int:
 
 
 def _registrar_verificacion() -> None:
+    """Cuenta la respuesta y, si `CONTRACT_VERIFY_REPORT` existe, deja una línea para `verify-provider.mjs`."""
     global _respuestas_verificadas
     _respuestas_verificadas += 1
+    archivo = os.environ.get("CONTRACT_VERIFY_REPORT")
+    if archivo:
+        with open(archivo, "a", encoding="utf-8") as reporte:
+            reporte.write(f"{contract.PROVEEDOR}\n")
 
 
 def _verificar(respuesta: httpx.Response) -> None:
@@ -64,7 +70,7 @@ async def verificar_respuesta_asincrona(respuesta: httpx.Response) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def verificacion_del_proveedor(spec_empaquetado: dict) -> Iterator[None]:
+def verificacion_del_proveedor() -> Iterator[None]:
     """Instala el hook en cada cliente de la app creado durante la sesión, sin que el test lo pida."""
     cliente_original = TestClient.__init__
     asincrono_original = httpx.AsyncClient.__init__

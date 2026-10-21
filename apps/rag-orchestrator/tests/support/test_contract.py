@@ -149,6 +149,7 @@ def test_un_test_de_dominio_puro_corre_sin_node_en_el_path():
         env=entorno,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert resultado.returncode == 0, resultado.stdout[-400:]
 
