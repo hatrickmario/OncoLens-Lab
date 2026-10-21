@@ -1,7 +1,6 @@
 import { setupServer } from 'msw/node';
-import request from 'supertest';
+import { clienteVerificado } from '../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../scripts/contracts/lib/responseValidator.mjs';
 import { createApp } from '../../src/app.js';
 import { cargarConfiguracion, observarEntorno } from '../../src/config/index.js';
 
@@ -31,7 +30,7 @@ afterAll(() => servidor.close());
 
 describe('GET /health', () => {
   it('responde 200 con status ok, configKeys y serviceVersion validado contra el spec cuando el proceso está listo [US-034 AC-1] [US-037 AC-1]', async () => {
-    const respuesta = await request(
+    const respuesta = await clienteVerificado(
       createApp({ salud: { configKeys: ['PORT', 'SESSION_TTL_HOURS'], serviceVersion: '1.2.3' } }),
     ).get('/health');
 
@@ -41,7 +40,6 @@ describe('GET /health', () => {
       configKeys: ['PORT', 'SESSION_TTL_HOURS'],
       serviceVersion: '1.2.3',
     });
-    assertMatchesSpec('clinical-api', '#/paths/~1health/get/responses/200', respuesta.body);
   });
 
   it('responde configKeys con los nombres cargados y ningún valor de configuración ni ruta de secreto cuando el entorno trae valores [US-037 AC-1]', async () => {
@@ -53,7 +51,7 @@ describe('GET /health', () => {
     });
     cargarConfiguracion(observado.env);
 
-    const respuesta = await request(
+    const respuesta = await clienteVerificado(
       createApp({ salud: { configKeys: observado.clavesCargadas(), serviceVersion: '1.2.3' } }),
     ).get('/health');
 
@@ -66,7 +64,6 @@ describe('GET /health', () => {
     for (const valor of ['4123', '/ruta/ficticia', 'secreto-aes', 'secreto-hmac']) {
       expect(JSON.stringify(respuesta.body), valor).not.toContain(valor);
     }
-    assertMatchesSpec('clinical-api', '#/paths/~1health/get/responses/200', respuesta.body);
   });
 
   it('no lista variables ajenas del entorno (HOSTNAME, AWS_SECRET_ACCESS_KEY) en configKeys cuando el proceso las tiene [US-037 AC-1]', async () => {
@@ -81,7 +78,7 @@ describe('GET /health', () => {
     });
     cargarConfiguracion(observado.env);
 
-    const respuesta = await request(
+    const respuesta = await clienteVerificado(
       createApp({ salud: { configKeys: observado.clavesCargadas(), serviceVersion: '1.2.3' } }),
     ).get('/health');
 
@@ -97,7 +94,7 @@ describe('GET /health', () => {
   });
 
   it('responde 200 sin emitir cookie cuando la aplicación se crea sin dependencias (no consulta a rag-orchestrator)', async () => {
-    const respuesta = await request(createApp({})).get('/health');
+    const respuesta = await clienteVerificado(createApp({})).get('/health');
 
     expect(respuesta.status).toBe(200);
     expect(respuesta.headers['set-cookie']).toBeUndefined();

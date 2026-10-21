@@ -4,6 +4,7 @@ import { assertCamelCaseProperties } from './assertCamelCaseProperties.mjs';
 import { assertCitedSourceAttribution } from './assertCitedSourceAttribution.mjs';
 import { assertClaimsAnchored } from './assertClaimsAnchored.mjs';
 import { assertClosedSchemas } from './assertClosedSchemas.mjs';
+import { assertConsumersUseGeneratedClients } from './assertConsumersUseGeneratedClients.mjs';
 import { assertDataModelDocument } from './assertDataModelDocument.mjs';
 import { assertDerivedEventDescription } from './assertDerivedEventDescription.mjs';
 import { assertDiagnosisGrading } from './assertDiagnosisGrading.mjs';
@@ -79,6 +80,8 @@ export const RULES = [
   assertOperationsDeclarePermission,
   assertViewByPermission,
   assertExamplesSynthetic,
+  // US-214 AC-1
+  assertConsumersUseGeneratedClients,
   // US-034 AC-6
   assertFixtureQueriesDistinct,
 ];

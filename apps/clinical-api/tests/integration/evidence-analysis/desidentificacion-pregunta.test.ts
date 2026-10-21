@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   PII_FX_T4A_A,
@@ -70,7 +70,7 @@ async function analizar(
   patientId: string,
   query: string,
 ) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({ patientId, query, sourcesSelected: TODAS_LAS_FUENTES });

@@ -1,14 +1,8 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { detectoresContados, detectoresReales } from '../../support/desidentificacion.js';
 import {
   PREGUNTA_AC1,
-  PUNTERO_401,
-  PUNTERO_403,
-  PUNTERO_404,
-  PUNTERO_422,
-  PUNTERO_502,
   TODAS_LAS_FUENTES,
   TRACE_ID_GENERADO,
   abrirSesion,
@@ -61,7 +55,7 @@ describe('gateway de análisis: validación del borde', () => {
     ];
 
     for (const cuerpo of invalidos) {
-      const respuesta = await request(app)
+      const respuesta = await clienteVerificado(app)
         .post('/platform/evidence-analyses')
         .set('Cookie', cookieDoctor)
         .send(cuerpo);
@@ -69,7 +63,6 @@ describe('gateway de análisis: validación del borde', () => {
       expect(respuesta.status).toBe(422);
       expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
       expect(respuesta.body.traceId).toBe(TRACE_ID_GENERADO);
-      assertMatchesSpec('clinical-api', PUNTERO_422, respuesta.body);
     }
     expect(rag.llamadas()).toBe(0);
   });
@@ -77,7 +70,7 @@ describe('gateway de análisis: validación del borde', () => {
   it('acepta una query de exactamente 2000 caracteres y llama a rag-orchestrator una vez [US-052 AC-2]', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieDoctor)
       .send({ ...cuerpoValido(idDePaciente('b')), query: 'a'.repeat(2000) });
@@ -89,7 +82,7 @@ describe('gateway de análisis: validación del borde', () => {
   it('responde 422 CUERPO_INVALIDO sin eco del cuerpo cuando el JSON llega malformado', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieDoctor)
       .set('Content-Type', 'application/json')
@@ -97,7 +90,6 @@ describe('gateway de análisis: validación del borde', () => {
 
     expect(respuesta.status).toBe(422);
     expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
-    assertMatchesSpec('clinical-api', PUNTERO_422, respuesta.body);
     expect(rag.llamadas()).toBe(0);
   });
 });
@@ -106,14 +98,13 @@ describe('gateway de análisis: paciente inexistente', () => {
   it('responde 404 NO_ENCONTRADO sin llamar a rag-orchestrator cuando el patientId no existe [US-052 AC-3]', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieDoctor)
       .send(cuerpoValido(PACIENTE_INEXISTENTE));
 
     expect(respuesta.status).toBe(404);
     expect(respuesta.body.error).toBe('NO_ENCONTRADO');
-    assertMatchesSpec('clinical-api', PUNTERO_404, respuesta.body);
     expect(rag.llamadas()).toBe(0);
   });
 });
@@ -122,10 +113,10 @@ describe('gateway de análisis: sesión y rol', () => {
   it('responde 401 antes del controlador y sin llamar a rag-orchestrator cuando no hay cookie de sesión válida [US-052 AC-6]', async () => {
     const { app, logger } = await montarGateway(mundo);
 
-    const sinCookie = await request(app)
+    const sinCookie = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .send(cuerpoValido(idDePaciente('b')));
-    const cookieInexistente = await request(app)
+    const cookieInexistente = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', 'oncolens_session=tokenQueNoEstaEnLaBase')
       .send(cuerpoValido(idDePaciente('b')));
@@ -133,7 +124,6 @@ describe('gateway de análisis: sesión y rol', () => {
     for (const respuesta of [sinCookie, cookieInexistente]) {
       expect(respuesta.status).toBe(401);
       expect(respuesta.body.error).toBe('NO_AUTENTICADO');
-      assertMatchesSpec('clinical-api', PUNTERO_401, respuesta.body);
     }
     expect(rag.llamadas()).toBe(0);
     expect(
@@ -144,7 +134,7 @@ describe('gateway de análisis: sesión y rol', () => {
   it('responde 403 PERMISO_DENEGADO sin llamar a rag-orchestrator cuando admin solicita un análisis [US-052 AC-6]', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieAdmin)
       .send(cuerpoValido(idDePaciente('b')));
@@ -152,14 +142,13 @@ describe('gateway de análisis: sesión y rol', () => {
     expect(respuesta.status).toBe(403);
     expect(respuesta.body.error).toBe('PERMISO_DENEGADO');
     expect(respuesta.body.traceId).toBe(TRACE_ID_GENERADO);
-    assertMatchesSpec('clinical-api', PUNTERO_403, respuesta.body);
     expect(rag.llamadas()).toBe(0);
   });
 
   it('responde 403 y no 422 cuando admin envía además un cuerpo inválido, porque el rol se exige antes del cuerpo [US-052 AC-6]', async () => {
     const { app } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieAdmin)
       .send({ patientId: 'no-es-un-uuid' });
@@ -178,14 +167,13 @@ describe('gateway de análisis: la guarda de entorno sintético se conserva hast
       conDiagnostico: true,
     });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieDoctor)
       .send(cuerpoValido(patientId));
 
     expect(respuesta.status).toBe(502);
     expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
-    assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(logger.lineas).toContainEqual(
       expect.objectContaining({ motivo: 'data_origin', traceId: TRACE_ID_GENERADO }),
@@ -206,14 +194,13 @@ describe('gateway de análisis: la guarda de entorno sintético se conserva hast
         detectores: detector.fabrica,
       });
 
-      const respuesta = await request(app)
+      const respuesta = await clienteVerificado(app)
         .post('/platform/evidence-analyses')
         .set('Cookie', cookieDoctor)
         .send(cuerpoValido(idDePaciente('b')));
 
       expect(respuesta.status).toBe(502);
       expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
-      assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
       expect(rag.llamadas()).toBe(0);
       expect(logger.lineas).toContainEqual(expect.objectContaining({ motivo: 'app_env' }));
       expect(detector.construidos()).toBe(0);
@@ -227,7 +214,7 @@ describe('gateway de análisis: caso sin tipo de cáncer', () => {
     const patientId = await crearPacienteSintetico(mundo, { conDiagnostico: false });
     const antes = await contarAnalisisDelPaciente(mundo.cliente, patientId);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookieDoctor)
       .send(cuerpoValido(patientId));
@@ -239,7 +226,6 @@ describe('gateway de análisis: caso sin tipo de cáncer', () => {
         'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
       traceId: TRACE_ID_GENERADO,
     });
-    assertMatchesSpec('clinical-api', PUNTERO_422, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(await contarAnalisisDelPaciente(mundo.cliente, patientId)).toBe(antes);
   });

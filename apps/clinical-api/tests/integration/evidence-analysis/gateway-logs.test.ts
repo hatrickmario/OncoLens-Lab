@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   PII_FX_T4A_A,
@@ -37,7 +37,7 @@ describe('gateway de análisis: logs sin PII', () => {
   it('no registra la pregunta, el texto del contexto ni los identificadores de FX-T4a-a, y sí el traceId generado, cuando el análisis llega a rag-orchestrator', async () => {
     const { app, logger } = await montarGateway(mundo);
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId, query: PREGUNTA_CON_PII, sourcesSelected: TODAS_LAS_FUENTES });
@@ -66,7 +66,7 @@ describe('gateway de análisis: logs sin PII', () => {
   it('no registra la pregunta cuando el desidentificador provisional rechaza el entorno', async () => {
     const { app, logger } = await montarGateway(mundo, { appEnv: 'piloto' });
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId, query: PREGUNTA_CON_PII, sourcesSelected: TODAS_LAS_FUENTES });

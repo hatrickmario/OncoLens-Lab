@@ -1,5 +1,5 @@
 import type { RagQueryInternalResponse } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { zRagQueryInternalResponse } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/zod.gen.js';
+import { zRagQueryInternalResponseRefinado } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AnalisisRepository } from './evidence-analysis.repository.js';
@@ -16,9 +16,12 @@ export class RespuestaInternaInvalidaError extends Error {
   }
 }
 
-/** Defensa en el borde con el Zod generado de `RagQueryInternalResponse`; el error no hace eco del contenido. */
+/**
+ * Defensa en el borde con el Zod generado y refinado de `RagQueryInternalResponse` (incluye el if/then de RN-02: `sin_evidencia`
+ * exige puntaje null y ninguna opción); el error no hace eco del contenido.
+ */
 export function validarRespuestaInterna(cuerpo: unknown): RagQueryInternalResponse {
-  const resultado = zRagQueryInternalResponse.safeParse(cuerpo);
+  const resultado = zRagQueryInternalResponseRefinado.safeParse(cuerpo);
   if (!resultado.success) throw new RespuestaInternaInvalidaError();
   return resultado.data;
 }
