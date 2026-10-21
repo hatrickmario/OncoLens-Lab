@@ -214,7 +214,7 @@ def _con_detalles_soportados(
     conservados = [
         texto
         for texto, parrafo in zip(aceptada.opcion.details, planificada.detalles, strict=True)
-        if parrafo and all(not a.reglas and veredictos[a] for a in parrafo)
+        if parrafo and not any(a.reglas for a in parrafo) and all(veredictos[a] for a in parrafo)
     ]
     omitidos = len(planificada.detalles) - len(conservados)
     return replace(aceptada, opcion=replace(aceptada.opcion, details=tuple(conservados))), omitidos
