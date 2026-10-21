@@ -101,6 +101,50 @@
     },
     "noRealizado": {
       "sinTipoCancer": "Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia."
+    },
+    "base": {
+      "titulo": "Base del análisis",
+      "resumen": "Faltantes: {faltantes} · Supuestos: {supuestos} · Fuentes no incluidas: {fuentes} · Afirmaciones omitidas: {omitidas}",
+      "ninguna": "ninguna",
+      "ninguno": "ninguno",
+      "fechaDeCorte": "Evidencia del corpus al {fecha}",
+      "verDetalle": "Ver detalle de la Base",
+      "ocultarDetalle": "Ocultar detalle",
+      "busqueda": "Qué se buscó: fuentes {fuentes} · filtros {filtros} · {n} fragmentos sobre el umbral",
+      "sinConsulta": "No se consultó el corpus: tipo fuera de alcance",
+      "datosUsados": "Datos del paciente usados",
+      "fuentesConsultadas": "Fuentes consultadas",
+      "fragmentos": "{retrieved} fragmentos recuperados · {above} sobre el umbral",
+      "fuentesNoIncluidas": "Fuentes no incluidas",
+      "sinLicencia": "{fuente}: sin licencia abierta; su contenido no se consultó",
+      "supuestos": "Supuestos",
+      "limitaciones": "Limitaciones",
+      "rotulada": "{rotulo}: {texto}",
+      "etiquetaDato": "{etiqueta}: {revision}",
+      "enConflicto": "En conflicto",
+      "fuentes": {
+        "guias": "Guías",
+        "ensayos": "Ensayos",
+        "publicaciones": "Publicaciones"
+      },
+      "filtros": {
+        "historiaCompleta": "historia completa",
+        "soloBiomarcadoresRelevantes": "solo biomarcadores relevantes",
+        "ultimosSeisMeses": "últimos 6 meses",
+        "antecedentesFamiliares": "antecedentes familiares",
+        "publicadoDesde": "publicado desde {anio}"
+      },
+      "revision": {
+        "verificado": "Verificado",
+        "corregido": "Corregido",
+        "requiere_revision": "Por revisar",
+        "auto_aceptado": "Sin verificar"
+      },
+      "origen": {
+        "regla_catalogo": "Regla del catálogo",
+        "llm_verificado": "Redactado por IA y verificado",
+        "estructural": "Limitación estructural"
+      }
     }
   }
 }

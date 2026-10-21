@@ -1,4 +1,11 @@
+'use client';
+
+import { useState } from 'react';
 import type { AnalysisBasis } from '../../../../packages/api-contracts/src/types/clinical-api';
+import { mensajes } from '../../lib/mensajes';
+import estilos from '../evidence.module.css';
+import { BasisDetail } from '../molecules/basis-detail';
+import { BasisSummary } from '../molecules/basis-summary';
 
 export interface AnalysisBasisPanelProps {
   base: AnalysisBasis;
@@ -6,7 +13,26 @@ export interface AnalysisBasisPanelProps {
   estado: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado';
 }
 
-/** Base del análisis (S2-09, US-067). Esqueleto: se implementa en el commit feat. */
-export function AnalysisBasisPanel(_props: AnalysisBasisPanelProps) {
-  return null;
+/** Base del análisis (S2-09, US-067): resumen siempre visible y detalle colapsable. Solo informa, no bloquea (RN-26). */
+export function AnalysisBasisPanel({ base, estado }: AnalysisBasisPanelProps) {
+  const [abierta, setAbierta] = useState(false);
+  const { titulo, verDetalle, ocultarDetalle } = mensajes().evidence.base;
+  return (
+    <section className={estilos.tarjeta} aria-labelledby="base-titulo">
+      <h2 id="base-titulo">{titulo}</h2>
+      <BasisSummary base={base} estado={estado} />
+      <button
+        type="button"
+        className={estilos.chip}
+        aria-expanded={abierta}
+        aria-controls="base-detalle"
+        onClick={() => setAbierta(!abierta)}
+      >
+        {abierta ? ocultarDetalle : verDetalle}
+      </button>
+      <div id="base-detalle" hidden={!abierta}>
+        {abierta && <BasisDetail base={base} />}
+      </div>
+    </section>
+  );
 }

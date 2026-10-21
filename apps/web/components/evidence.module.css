@@ -199,3 +199,15 @@
   margin: 0 auto;
   padding: 1rem;
 }
+
+.resumenBase {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.resumenBase p {
+  margin: 0;
+}
