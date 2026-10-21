@@ -97,7 +97,9 @@ arrancar({
           idsDeAnalisis: randomUUID,
           // Cableado explícito (RN-11): el desidentificador definitivo, no un valor por defecto del módulo.
           desidentificador: crearContextDeidentifier({
-            identidades: crearLectorDeIdentidad(crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool })),
+            identidades: crearLectorDeIdentidad(
+              crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool }),
+            ),
             detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,

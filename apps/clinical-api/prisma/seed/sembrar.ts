@@ -103,6 +103,11 @@ async function upsertar(siembra: Siembra, tabla: string, fila: Fila): Promise<vo
      ON CONFLICT (id) DO UPDATE SET ${actualizables.join(', ')}`,
     Object.values(fila),
   );
+  contarFilaEscrita(siembra, tabla);
+}
+
+/** Los logs del seed solo llevan conteos por tabla (nunca valores). */
+function contarFilaEscrita(siembra: Siembra, tabla: string): void {
   siembra.escritas[tabla] = (siembra.escritas[tabla] ?? 0) + 1;
 }
 
@@ -383,10 +388,7 @@ async function sembrarIdentidad(
   ordinal: number,
 ): Promise<void> {
   const resultado = await siembra.identidad.guardar(identidadSinteticaDe(pacienteId, ordinal));
-  if (resultado === 'creada') {
-    siembra.escritas['identity.patient_identity'] =
-      (siembra.escritas['identity.patient_identity'] ?? 0) + 1;
-  }
+  if (resultado === 'creada') contarFilaEscrita(siembra, 'identity.patient_identity');
 }
 
 async function sembrarPaciente(

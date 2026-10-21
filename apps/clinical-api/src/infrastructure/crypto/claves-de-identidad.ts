@@ -4,7 +4,11 @@ import {
   type IdentityKeyConfig,
 } from '../../config.js';
 import type { LeerArchivo } from '../../config/secrets.js';
-import { BYTES_DE_CLAVE_AES, crearAnilloDeClaves, type AnilloDeClaves } from './anillo-de-claves.js';
+import {
+  BYTES_DE_CLAVE_AES,
+  crearAnilloDeClaves,
+  type AnilloDeClaves,
+} from './anillo-de-claves.js';
 
 export interface ClavesDeIdentidad {
   readonly anillo: AnilloDeClaves;
@@ -15,7 +19,10 @@ export interface ClavesDeIdentidad {
 function leerClave(variable: string, ruta: string, readFile: LeerArchivo): Buffer {
   const clave = Buffer.from(leerSecretoDeArchivo(variable, ruta, readFile), 'base64');
   if (clave.length !== BYTES_DE_CLAVE_AES) {
-    throw new ConfiguracionInvalidaError(variable, `debe contener ${BYTES_DE_CLAVE_AES} bytes en base64`);
+    throw new ConfiguracionInvalidaError(
+      variable,
+      `debe contener ${BYTES_DE_CLAVE_AES} bytes en base64`,
+    );
   }
   return clave;
 }
