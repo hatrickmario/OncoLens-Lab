@@ -13,7 +13,7 @@ import {
   cargarClavesDeIdentidad,
   type ClavesDeIdentidad,
 } from './infrastructure/crypto/claves-de-identidad.js';
-import { crearProveedorDeVersionDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from './modules/evidence-analysis/catalog-version.provider.js';
 import type { TiposDeCancerHabilitados } from './modules/evidence-analysis/ports.js';
 import { crearTiposHabilitados } from './modules/evidence-analysis/tipos-habilitados.js';
 import {
@@ -26,7 +26,7 @@ type Log = (linea: string) => void;
 /** Lo que la etapa de servicios deja listo antes de escuchar: configuración, catálogo y claves de identidad. */
 export interface ServiciosCargados {
   readonly configuracion: ConfiguracionDeServicios & { readonly pii: ConfiguracionDePii };
-  readonly catalogo: ReturnType<typeof crearProveedorDeVersionDeCatalogo>;
+  readonly catalogo: ReturnType<typeof crearProveedorDeCatalogo>;
   readonly clavesDeIdentidad: ClavesDeIdentidad;
   /** `ENABLED_CANCER_TYPES` ya validada contra el `manifest.json` (US-043, RN-20). */
   readonly tiposHabilitados: TiposDeCancerHabilitados;
@@ -104,7 +104,7 @@ export function cargarEtapaDeServicios(
 ): ServiciosCargados {
   const servicios = cargarConfiguracionDeServicios(env, readFile);
   const pii = cargarConfiguracionDePii(servicios.deidentificacion, readFile);
-  const catalogo = crearProveedorDeVersionDeCatalogo(
+  const catalogo = crearProveedorDeCatalogo(
     servicios.analisis.catalogPath,
     readFile,
     servicios.analisis.catalogExpectedVersion,

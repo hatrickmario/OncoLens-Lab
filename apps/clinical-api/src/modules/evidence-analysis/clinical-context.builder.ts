@@ -158,7 +158,7 @@ function lineaActual(tratamientos: readonly FilaDeTratamientoPrevio[]): number |
 }
 
 /** Contexto sin ningún dato del paciente: lo que se guarda cuando no se envía nada a Backend 2 (`tipo_no_habilitado`). */
-export function construirContextoVacio(
+export function construirContextoSinDatosClinicos(
   population: CasoClinico['paciente']['population'],
 ): ContextoPermitido {
   return {

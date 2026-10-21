@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { cargarConfiguracion, observarEntorno } from '../../src/config/index.js';
 import { componerInformacionDeSalud } from '../../src/routes/health.js';
-import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
 import { RUTA_DEL_CATALOGO } from '../support/seed.js';
 
 // Sin handlers: cualquier petición saliente (p. ej. a rag-orchestrator) falla el test. Supertest llama a la propia
@@ -103,9 +103,7 @@ describe('GET /health', () => {
     const directorio = mkdtempSync(path.join(tmpdir(), 'clinical-api-catalogo-'));
     try {
       writeFileSync(path.join(directorio, 'manifest.json'), JSON.stringify({ version: '1.0.1' }));
-      const catalogo = crearProveedorDeVersionDeCatalogo(directorio, (ruta) =>
-        readFileSync(ruta, 'utf8'),
-      );
+      const catalogo = crearProveedorDeCatalogo(directorio, (ruta) => readFileSync(ruta, 'utf8'));
 
       const respuesta = await clienteVerificado(
         createApp({
@@ -125,7 +123,7 @@ describe('GET /health', () => {
     const manifiesto = JSON.parse(
       readFileSync(path.join(RUTA_DEL_CATALOGO, 'manifest.json'), 'utf8'),
     ) as { version: string };
-    const catalogo = crearProveedorDeVersionDeCatalogo(RUTA_DEL_CATALOGO, (ruta) =>
+    const catalogo = crearProveedorDeCatalogo(RUTA_DEL_CATALOGO, (ruta) =>
       readFileSync(ruta, 'utf8'),
     );
 

@@ -6,7 +6,10 @@ import type {
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { exigirTipoCancer, alcanceDelTipo } from './case-guards.js';
-import { construirContextoPermitido, construirContextoVacio } from './clinical-context.builder.js';
+import {
+  construirContextoPermitido,
+  construirContextoSinDatosClinicos,
+} from './clinical-context.builder.js';
 import type { CasoClinico, CasoRepository } from './evidence-analysis.repository.js';
 import type { PeticionDeAnalisis } from './evidence-analysis.schema.js';
 import type {
@@ -157,7 +160,7 @@ export function crearEvidenceAnalysisService(
     caso: CasoClinico,
     ahora: Date,
   ): Promise<ResultadoDelAnalisis> {
-    const contextoVacio = construirContextoVacio(caso.paciente.population);
+    const contextoVacio = construirContextoSinDatosClinicos(caso.paciente.population);
     const { query } = await desidentificador.desidentificar({
       traceId,
       patientId: peticion.patientId,

@@ -19,7 +19,7 @@ export interface ProveedorDeCatalogo extends CatalogVersionProvider {
  * nunca la ruta ni el contenido (RN-10, RN-14). La expectativa `CLINICAL_CATALOG_VERSION`, si existe, debe
  * coincidir con esa versión (US-041 D1); el `409` por versión distinta entre backends lo traduce `mapearFalloRag()`.
  */
-export function crearProveedorDeVersionDeCatalogo(
+export function crearProveedorDeCatalogo(
   rutaDelCatalogo: string,
   leerArchivo: (ruta: string) => string,
   versionEsperada?: string,

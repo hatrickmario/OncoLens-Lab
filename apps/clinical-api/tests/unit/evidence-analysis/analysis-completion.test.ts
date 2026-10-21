@@ -8,7 +8,7 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import type { RegistroDeAnalisis } from '../../../src/modules/evidence-analysis/analysis-record.js';
-import { construirContextoVacio } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
+import { construirContextoSinDatosClinicos } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
 import type {
   EntradaDeCierre,
   EntradaDeCierreSinIA,
@@ -155,7 +155,7 @@ function entradaSinIA(resto: Partial<EntradaDeCierreSinIA> = {}): EntradaDeCierr
     filtersApplied,
     dataClassification: 'sintetico',
     catalogVersion: '1.0.0',
-    contextoVacio: construirContextoVacio('adulto'),
+    contextoVacio: construirContextoSinDatosClinicos('adulto'),
     ...resto,
   };
 }

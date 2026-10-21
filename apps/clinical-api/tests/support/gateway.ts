@@ -8,7 +8,7 @@ import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
-import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
 import { componerGatewayDeAnalisis } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
@@ -273,7 +273,7 @@ export async function montarGateway(
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
-    catalogo: crearProveedorDeVersionDeCatalogo(RUTA_DEL_CATALOGO, (archivo) =>
+    catalogo: crearProveedorDeCatalogo(RUTA_DEL_CATALOGO, (archivo) =>
       readFileSync(archivo, 'utf8'),
     ),
     config: {
