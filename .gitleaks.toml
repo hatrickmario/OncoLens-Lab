@@ -14,10 +14,14 @@ regex = '''eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'''
 keywords = ["eyj"]
 
 [[allowlists]]
-description = "Falso positivo: UUID sintético de ejemplo de la cabecera Idempotency-Key en un escenario de L1D-139 (no es una credencial)"
+description = "Falso positivo: UUID sintético de ejemplo de la cabecera Idempotency-Key en un escenario de L1D-139 (no es una credencial). Al archivar el change (2026-10-21) el mismo texto vive en la spec `web-bff` y en la copia archivada: mismas condiciones, rutas nuevas"
 condition = "AND"
 targetRules = ["generic-api-key"]
-paths = ['''openspec/changes/l1d-139-bff-route-handler-analisis/specs/web-bff/spec\.md''']
+paths = [
+  '''openspec/changes/l1d-139-bff-route-handler-analisis/specs/web-bff/spec\.md''',
+  '''openspec/changes/archive/2026-10-20-l1d-139-bff-route-handler-analisis/specs/web-bff/spec\.md''',
+  '''openspec/specs/web-bff/spec\.md''',
+]
 regexes = ['''^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$''']
 
 [[allowlists]]
