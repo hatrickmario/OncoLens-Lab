@@ -8,15 +8,20 @@ import pytest
 
 from tests.integration.conftest import nuevo_sufijo
 from tests.support.pg import BaseDeTest, ConfiguracionArnes, crear_base_de_test
-from tests.support.schemas_clinicos import sembrar_schemas_clinicos_hostiles
+from tests.support.schemas_clinicos import (
+    aplicar_migracion_de_privilegios,
+    sembrar_schemas_clinicos_hostiles,
+)
 
 
 @pytest.fixture(scope="module")
 def base_con_schemas_clinicos(configuracion_arnes: ConfiguracionArnes) -> Iterator[BaseDeTest]:
-    """Base migrada del corpus más los cinco schemas clínicos sintéticos."""
+    """Base migrada del corpus más los cinco schemas clínicos sintéticos, con la precondición hostil
+    y DESPUÉS la migración de privilegios de clinical-api (US-040)."""
     base = crear_base_de_test(configuracion_arnes, nuevo_sufijo())
     try:
         sembrar_schemas_clinicos_hostiles(base.url_administracion)
+        aplicar_migracion_de_privilegios(base.url_administracion)
     except Exception:
         base.destruir()
         raise

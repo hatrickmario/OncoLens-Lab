@@ -29,6 +29,9 @@ def sembrar_schemas_clinicos_hostiles(url_administracion: URL) -> None:
         for esquema in SCHEMAS_CLINICOS:
             admin.execute(f'CREATE SCHEMA "{esquema}"')
             admin.execute(f'CREATE TABLE "{esquema}"."{TABLA_SINTETICA}" (id integer)')
+            # la migración concede INSERT al writer sobre esta tabla (ADR-19)
+            if esquema == "research":
+                admin.execute('CREATE TABLE "research"."episode_snapshot" (id integer)')
             for rol in ROLES_DEL_CORPUS:
                 admin.execute(f'GRANT USAGE ON SCHEMA "{esquema}" TO "{rol}"')
                 admin.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA "{esquema}" TO "{rol}"')
@@ -37,7 +40,15 @@ def sembrar_schemas_clinicos_hostiles(url_administracion: URL) -> None:
                 )
 
 
-def crear_tabla_posterior_a_la_migracion(url_administracion: URL, esquema: str, nombre: str) -> None:
+def aplicar_migracion_de_privilegios(url_administracion: URL) -> None:
+    """Ejecuta completo el SQL de la migración de clinical-api (puro e idempotente) como el dueño de la base de test."""
+    with conectar(url_administracion) as admin:
+        admin.execute(MIGRACION_DE_PRIVILEGIOS.read_text(encoding="utf-8"))
+
+
+def crear_tabla_posterior_a_la_migracion(
+    url_administracion: URL, esquema: str, nombre: str
+) -> None:
     """Tabla creada DESPUÉS de la migración por el rol que migra el esquema clínico (AC-3)."""
     with conectar(url_administracion) as admin:
         admin.execute(f'CREATE TABLE "{esquema}"."{nombre}" (id integer)')
