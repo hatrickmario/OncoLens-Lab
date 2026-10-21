@@ -1,0 +1,171 @@
+{
+  "configuracion": {
+    "bootstrapRepeticiones": 200,
+    "catalogVersion": "2026.10.0",
+    "claseDataset": "sintetico",
+    "corpusRelease": "rel-fx-t5a-a-1",
+    "dataset": {
+      "nombre": "fx-t5a-a",
+      "version": "1"
+    },
+    "fixture": "FX-T5a-a",
+    "hashConfig": "40ee55c8fed96e16511602dac2bcdc7f626bff7d8364d3cb24dd452b2da0f8a5",
+    "modelos": {
+      "embeddings": "fake-bow@1",
+      "llm": "fake-guion@1",
+      "nli": "fake-nli@1",
+      "reranker": "fake-lexical@1"
+    },
+    "nombre": "test-fake",
+    "promptVersion": "rag-query@0.2.0",
+    "proveedor": "fake",
+    "reloj": "simulado",
+    "semillaBootstrap": 20261021,
+    "umbrales": {
+      "nliEntailmentThreshold": 0.7,
+      "relevanceThreshold": 0.3,
+      "rerankTopN": 10,
+      "retrievalTopK": 40
+    }
+  },
+  "esquema": "oncolens.evaluate.v1",
+  "latencia_p95_ms": {
+    "busqueda": 1.0,
+    "catalogo": 1.0,
+    "consulta": 21.0,
+    "embeddings": 1.0,
+    "generacion": 1.0,
+    "idioma": 1.0,
+    "nli": 1.0,
+    "reranker": 1.0
+  },
+  "metricas": {
+    "completa": {
+      "citas": {
+        "n": 5,
+        "precision": 0.8,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 5,
+        "porcentaje": 0.6,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 2,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "total": {
+          "mrr": 1.0,
+          "mrr_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          },
+          "n": 4,
+          "recall_at_10": 1.0,
+          "recall_ic95": {
+            "inferior": 1.0,
+            "superior": 1.0
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": 1.0,
+        "n": 6,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      }
+    },
+    "revisada": {
+      "citas": {
+        "n": 0,
+        "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "opciones_con_cita_y_soporte": {
+        "n": 0,
+        "porcentaje": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "recuperacion": {
+        "es_a_en": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "total": {
+          "mrr": null,
+          "mrr_ic95": {
+            "inferior": null,
+            "superior": null
+          },
+          "n": 0,
+          "recall_at_10": null,
+          "recall_ic95": {
+            "inferior": null,
+            "superior": null
+          }
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "sin_evidencia": {
+        "exactitud": null,
+        "n": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        },
+        "violaciones_rn02": 0
+      }
+    }
+  },
+  "suite": "all"
+}
