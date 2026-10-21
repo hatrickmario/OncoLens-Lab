@@ -10,7 +10,7 @@ import {
   type CodigoDeError,
 } from '../../infrastructure/http-errores.js';
 import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
-import type { SesionAutenticada } from '../auth/auth.service.js';
+import { authorize } from '../../middleware/authorize.js';
 import { FalloDePersistenciaError } from './analysis-completion.js';
 import { TipoCancerNoRegistradoError } from './case-guards.js';
 import { DesidentificacionNoDisponible } from './deidentification/context-deidentifier.js';
@@ -29,34 +29,7 @@ export interface DependenciasDelController {
   registrar: Registrar;
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Locals {
-      /** Sesión con rol `doctor`, puesta por `soloDoctor`; ausente en cualquier otro caso. */
-      sesionDoctor?: SesionAutenticada;
-    }
-  }
-}
-
 const EVENTO = 'evidence_analysis.solicitud';
-
-/** La sesión no tiene el rol que exige la acción. */
-export class PermisoDenegadoError extends Error {
-  constructor() {
-    super('Permiso denegado');
-    this.name = 'PermisoDenegadoError';
-  }
-}
-
-/**
- * En el S1 solo el rol `doctor` solicita análisis; `admin` no lee datos clínicos ni análisis (mínimo privilegio, PRD
- * E-04, `[S1 resp. 14c]`). US-045 (S2) lo reemplaza por el permiso `ai_analysis:create`.
- */
-export function exigirRolDoctor(sesion: SesionAutenticada | undefined): SesionAutenticada {
-  if (sesion?.rol !== 'doctor') throw new PermisoDenegadoError();
-  return sesion;
-}
 
 interface Rechazo {
   status: number;
@@ -144,22 +117,10 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
     enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
   }
 
-  /** Única comprobación del rol (antes de leer el cuerpo): deja la sesión del doctor para el handler. */
-  const soloDoctor: RequestHandler = (request, response, next) => {
-    try {
-      response.locals.sesionDoctor = exigirRolDoctor(request.sesion);
-    } catch (error) {
-      if (!(error instanceof PermisoDenegadoError)) throw error;
-      rechazar(response, PERMISO_DENEGADO);
-      return;
-    }
-    next();
-  };
-
   const solicitar: RequestHandler = async (request, response) => {
-    const sesion = response.locals.sesionDoctor;
+    const sesion = request.sesion;
     if (sesion === undefined) {
-      rechazar(response, PERMISO_DENEGADO); // cerrado ante una cadena de middlewares mal montada
+      rechazar(response, PERMISO_DENEGADO); // cerrado ante un guard mal montado
       return;
     }
     const cuerpo = evidenceAnalysisRequestSchema.safeParse(request.body);
@@ -200,7 +161,7 @@ export function evidenceAnalysisController(dependencias: DependenciasDelControll
   router.post(
     '/evidence-analyses',
     crearTraceIdMiddleware(traceIds),
-    soloDoctor,
+    authorize('ai_analysis:create'), // x-permission de createEvidenceAnalysis; el rol no se mira
     express.json(),
     solicitar,
     cuerpoIlegible,

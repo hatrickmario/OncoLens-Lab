@@ -5,7 +5,7 @@ export interface UsuarioParaLogin {
   id: string;
   passwordHash: string;
   accountStatus: EstadoDeCuenta;
-  rol: RolDeUsuario;
+  rol: string;
 }
 
 export interface NuevaSesion {
@@ -19,7 +19,10 @@ export interface NuevaSesion {
 
 export interface SesionConUsuario {
   userId: string;
-  rol: RolDeUsuario;
+  /** Nombre del rol tal como está en `auth.role` (los permisos mandan, no el nombre). */
+  rol: string;
+  /** Códigos de `auth.permission` del rol del usuario, resueltos en la misma consulta de la sesión. */
+  permisos: readonly string[];
   accountStatus: EstadoDeCuenta;
   expiresAt: Date;
   revoked: boolean;
@@ -34,6 +37,16 @@ export interface AuthRepository {
 /** Consulta SQL mínima que necesita el repository (la cumplen `pg.Pool` y `pg.Client`). */
 export interface Consultador {
   query(sql: string, valores?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
+}
+
+/**
+ * Revoca todas las sesiones vivas del usuario. Recibe el consultador para participar en la transacción de quien la
+ * llama. NO abre transacción: participa en la de quien la llama (la baja de una cuenta, US-045; el bloqueo por intentos, US-044): una sola implementación de la regla.
+ */
+export async function revocarSesiones(db: Consultador, userId: string): Promise<void> {
+  await db.query('UPDATE auth.session SET revoked = true WHERE user_id = $1 AND NOT revoked', [
+    userId,
+  ]);
 }
 
 /**
@@ -55,7 +68,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         id: fila['id'] as string,
         passwordHash: fila['password_hash'] as string,
         accountStatus: fila['account_status'] as EstadoDeCuenta,
-        rol: fila['rol'] as RolDeUsuario,
+        rol: fila['rol'] as string,
       };
     },
 
@@ -77,18 +90,23 @@ export function createAuthRepository(db: Consultador): AuthRepository {
 
     async buscarSesionPorTokenHash(tokenHash) {
       const { rows } = await db.query(
-        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol
+        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol,
+                COALESCE(array_agg(p.code) FILTER (WHERE p.code IS NOT NULL), '{}') AS permisos
            FROM auth.session s
            JOIN auth."user" u ON u.id = s.user_id
            JOIN auth.role r ON r.id = u.role_id
-          WHERE s.token_hash = $1`,
+           LEFT JOIN auth.role_permission rp ON rp.role_id = r.id
+           LEFT JOIN auth.permission p ON p.id = rp.permission_id
+          WHERE s.token_hash = $1
+          GROUP BY s.user_id, s.expires_at, s.revoked, u.account_status, r.name`,
         [tokenHash],
       );
       const fila = rows[0];
       if (fila === undefined) return null;
       return {
         userId: fila['user_id'] as string,
-        rol: fila['rol'] as RolDeUsuario,
+        rol: fila['rol'] as string,
+        permisos: fila['permisos'] as string[],
         accountStatus: fila['account_status'] as EstadoDeCuenta,
         expiresAt: fila['expires_at'] as Date,
         revoked: fila['revoked'] as boolean,

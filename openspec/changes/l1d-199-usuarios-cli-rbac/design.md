@@ -76,3 +76,50 @@ contando llamadas.
   `l1d-72-ficha-minima-paciente`, que ya los tiene como escenarios y tareas (admin → `200
   PatientAdminSummary`, nunca `403`, porque `getPatient` lleva `x-permission: [clinical:read,
   patients:lookup]`).
+
+## Adiciones aceptadas en la implementación
+
+Aceptadas por el orquestador del sprint (no cambian el alcance):
+
+- **`full_name` provisional = correo.** `auth.user.full_name` es NOT NULL y la CLI no recibe nombre. Un `--name`
+  opcional queda para cuando haya pantalla de administración (Post-MVP).
+- **`revocarSesiones(db, userId)`** se exporta como función desde `src/modules/auth/auth.repository.ts` (firma exacta:
+  `(db: Consultador, userId: string) => Promise<void>`). `l1d-198` la reutiliza sin redefinirla; recibe el consultador
+  para participar en la transacción de quien la llama (la baja la ejecuta en la misma transacción que `account_status`).
+- **Sesión con permisos.** `SesionAutenticada` gana `permisos: ReadonlySet<string>` y `rol` pasa a `string`; el guard los
+  resuelve en la misma consulta de la sesión (`array_agg` sobre `role_permission`). El 403 lo emite el manejador final
+  de errores (`PermisoDenegadoError`); `exigirRolDoctor` y `soloDoctor` desaparecen (D1).
+- **Registro de rutas = stack de Express.** En vez de un registro paralelo, `authorize()` deja los códigos asociados al
+  manejador (`permisosExigidos()`) y el test de coherencia recorre los routers montados y casa método + ruta con el
+  spec. Los routers protegidos deben ser planos (rutas directas), no anidados.
+- **Preload `tests/support/resolver-postgres.mjs`** (solo tests): los procesos reales de la CLI conectan con TLS
+  verificado contra la CA; el certificado solo tiene SAN `postgres`, así que el preload resuelve ese nombre a loopback.
+  La verificación TLS no se relaja.
+- **Soporte de tests y configuración:** glob `tests/integration/usuarios/**` en `vitest.integration.config.ts` (y su
+  exclusión en `vitest.config.ts`), `bin`/scripts `oncolens` en `apps/clinical-api/package.json` (+ 3 líneas del
+  `package-lock.json`), y `normalizarCorreo` exportada de `auth.service.ts` para no duplicar la regla en `users`.
+- **Comando extra:** `oncolens users deactivate` es idempotente (repite la revocación si ya estaba desactivado).
+
+## Gate 2: correcciones y deuda registrada
+
+Aplicadas: el verificador de rutas (`tests/support/rutas-y-contrato.ts`) ya no omite en silencio routers anidados ni
+`use('/ruta', fn)` y exige `authorize()` antes de cualquier parser de cuerpo; `createUsersRepository` solo acepta una
+conexión única (`Client` o `PoolClient`, no `Pool`) y `revocarSesiones` documenta que no abre transacción; la lista de
+rutas protegidas sale de una sola función (`componerRutasProtegidas`, usada por `server.ts` y por los tests);
+`normalizarCorreo` vive en `auth/correo.ts` y `UsersService.crear` normaliza; la matriz sembrada se compara de forma
+exacta con `data-model.md` §8 para `doctor` y `admin`.
+
+Deuda y preguntas abiertas (no bloquean esta historia):
+
+- **Política de longitud/complejidad de contraseña** (privacy P1): hoy solo se rechaza la vacía. Pregunta para el S6
+  (US-044, bloqueo y política de credenciales).
+- **Carrera login/baja** (privacy #2): un login concurrente a la baja puede crear una sesión tras la revocación; la
+  cuenta `desactivado` la invalida en el siguiente `resolverSesion` (solo `activo` mantiene sesión), así que el riesgo
+  queda acotado a esa ventana. Pendiente de cerrar con un bloqueo de fila si US-044 lo pide.
+- **`traceId` en la CLI** (privacy #4): las líneas de log de la CLI no llevan `traceId`; se añade cuando haya auditoría
+  de la CLI (S6, US-148 / US-222).
+- **Permisos de ejecución del bin** (P2): el `bin` `oncolens` se invoca con `npm run oncolens`/`node`; fijar `chmod +x`
+  en la imagen queda para la historia de la imagen del contenedor.
+- **Pregunta de planning (P3-1):** el CI de `clinical-api` no ejecuta `tsc --noEmit`; el test de tipos del `Pool` solo lo
+  verifica `npm run typecheck`. Propuesta: añadir `tsc --noEmit` al job `build-test` (no se toca `ci.yml` en esta historia).
+- **Límite conocido del verificador de rutas:** un parser de cuerpo envuelto en una lambda propia no se reconoce por nombre.

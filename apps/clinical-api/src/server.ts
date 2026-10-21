@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { componerAplicacion } from './composition.js';
+import { componerAplicacion, componerRutasProtegidas } from './composition.js';
 import {
   ConfiguracionInvalidaError,
   exigirAppEnv,
@@ -116,7 +116,7 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar: registrarEnConsola,
-          rutasProtegidas: [gateway],
+          rutasProtegidas: componerRutasProtegidas({ gateway }),
         });
         const servidor = app.listen(puerto, () => {
           console.info(`clinical-api escuchando en el puerto ${puerto}`);
