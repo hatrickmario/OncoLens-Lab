@@ -6,22 +6,17 @@ Necesitan el PostgreSQL de test del Compose y correr dentro de ``corpus-db-net``
 from __future__ import annotations
 
 import os
-import uuid
 from collections.abc import Iterator
 
 import pytest
 
+from tests.support.ids import nuevo_sufijo
 from tests.support.pg import (
     BaseDeTest,
     ConfiguracionArnes,
     crear_base_de_test,
     leer_configuracion_arnes,
 )
-
-
-def nuevo_sufijo() -> str:
-    """Generador de ids del arnés (borde de los tests): 10 caracteres hexadecimales."""
-    return uuid.uuid4().hex[:10]
 
 
 @pytest.fixture(scope="session")

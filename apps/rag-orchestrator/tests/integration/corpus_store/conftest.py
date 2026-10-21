@@ -15,7 +15,7 @@ from pymilvus import MilvusClient
 from sqlalchemy.engine import URL, Engine
 
 from app.infrastructure.catalog.conexion import crear_motor
-from tests.integration.conftest import nuevo_sufijo
+from tests.support.ids import nuevo_sufijo
 from tests.support.milvus import (
     ajustes_de_milvus,
     eliminar_coleccion_de_test,
