@@ -7,7 +7,8 @@ import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware
 import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
 import { bytesMaximosDeCarga } from './documents.reglas.js';
 import { leerCargaMultipart } from './documents.multipart.js';
-import type { DocumentsService, TipoDeDocumento } from './documents.service.js';
+import { tipoDeDocumentoSchema } from './documents.schema.js';
+import type { DocumentsService } from './documents.service.js';
 
 export interface DependenciasDelController {
   service: DocumentsService;
@@ -57,7 +58,8 @@ export function documentsController(dependencias: DependenciasDelController): Ro
     const sesion = request.sesion;
     const patientId = String(request.params['patientId']);
     const carga = await leerCargaMultipart(request, limiteDeLectura);
-    if (sesion === undefined || carga.archivo === undefined) {
+    const tipo = tipoDeDocumentoSchema.safeParse(carga.documentType);
+    if (sesion === undefined || carga.archivo === undefined || !tipo.success) {
       enviarError(response, 422, 'CUERPO_INVALIDO', traceIdDe(response));
       return;
     }
@@ -65,7 +67,7 @@ export function documentsController(dependencias: DependenciasDelController): Ro
       const documento = await service.cargar({
         patientId,
         userId: sesion.userId,
-        documentType: carga.documentType as TipoDeDocumento,
+        documentType: tipo.data,
         nombreOriginal: carga.archivo.nombre,
         contenido: carga.archivo.contenido,
       });

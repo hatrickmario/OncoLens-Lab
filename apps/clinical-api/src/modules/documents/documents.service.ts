@@ -3,10 +3,9 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { DocumentsRepository } from './documents.repository.js';
 import { ArchivoDemasiadoGrande, ArchivoNoPdf } from './documents.errores.js';
+import type { TipoDeDocumento } from './documents.schema.js';
 import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
-
-export type TipoDeDocumento = 'historia_clinica' | 'examen';
 
 export interface SolicitudDeCarga {
   patientId: string;

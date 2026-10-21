@@ -1,5 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import type { TipoDeDocumento } from './documents.service.js';
+import type { TipoDeDocumento } from './documents.schema.js';
 
 export interface NuevoDocumento {
   id: string;
