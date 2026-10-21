@@ -21,7 +21,9 @@ function servicioCon(sesion: SesionConUsuario | null) {
   const service = createAuthService({
     repo: {
       buscarUsuarioPorCorreo: () => Promise.resolve(null),
-      crearSesion: () => Promise.resolve(),
+      crearSesion: () => Promise.resolve(true),
+      registrarFalloDeLogin: () => Promise.resolve(),
+      reiniciarFallos: () => Promise.resolve(),
       revocarSesion: () => Promise.resolve(),
       buscarSesionPorTokenHash: (hash) => {
         consultas.push(hash);
@@ -33,6 +35,7 @@ function servicioCon(sesion: SesionConUsuario | null) {
     ids: () => 'id',
     reloj: relojFijo(AHORA),
     config: { sessionTtlHours: 8 },
+    sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
   });
   return { service, consultas };
 }

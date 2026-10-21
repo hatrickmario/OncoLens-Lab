@@ -64,7 +64,13 @@ export function authController(dependencias: DependenciasDeAuthController): Rout
       response.status(204).end();
     } catch (error) {
       if (!(error instanceof CredencialesInvalidasError)) throw error;
-      registrar({ event: EVENTO_LOGIN, resultado: 'credenciales_invalidas', traceId });
+      // `motivo` solo acompaña a los bloqueos (valor cerrado, sin correo ni IP); el resto conserva su forma (NFR-11).
+      registrar({
+        event: EVENTO_LOGIN,
+        resultado: 'credenciales_invalidas',
+        ...(error.motivo !== 'credenciales' && { motivo: error.motivo }),
+        traceId,
+      });
       enviarError(response, 401, 'CREDENCIALES_INVALIDAS', traceId);
     }
   });

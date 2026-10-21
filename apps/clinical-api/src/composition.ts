@@ -50,6 +50,7 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
     ids: dependencias.ids,
     reloj: dependencias.reloj,
     config: dependencias.auth,
+    sesion: dependencias.sesion,
   });
   return createApp({
     ...(dependencias.salud !== undefined && { salud: dependencias.salud }),

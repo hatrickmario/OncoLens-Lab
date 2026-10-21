@@ -49,6 +49,7 @@ async function usuarioNuevo(alias: string): Promise<UsuarioDeTest> {
 }
 
 /** Cada intento llega desde una IP distinta (documentación RFC 5737): aísla el bloqueo de la cuenta del de la IP. */
+let aplicaciones = 0;
 let siguienteIp = 0;
 const ipNueva = () => `198.51.100.${(siguienteIp += 1)}`;
 
@@ -64,7 +65,7 @@ function appDeTest(token = 'tokenSinteticoBloqueoCuentaAAAAAAAAAAAAAAAAAAAAAAAA'
   const logger = loggerEnMemoria();
   const app = appConAuth({
     cliente,
-    espacio: ESPACIO_DE_IDS,
+    espacio: ESPACIO_DE_IDS * 10 + (aplicaciones += 1),
     tokens: tokensFijos(token),
     reloj,
     registrar: logger.registrar,

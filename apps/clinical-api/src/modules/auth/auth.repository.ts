@@ -6,6 +6,13 @@ export interface UsuarioParaLogin {
   passwordHash: string;
   accountStatus: EstadoDeCuenta;
   rol: string;
+  /** Fin del bloqueo por intentos fallidos; `null` si la cuenta no está bloqueada. */
+  lockedUntil: Date | null;
+}
+
+export interface ParametrosDeBloqueo {
+  maxIntentos: number;
+  minutosDeBloqueo: number;
 }
 
 export interface NuevaSesion {
@@ -30,7 +37,22 @@ export interface SesionConUsuario {
 
 export interface AuthRepository {
   buscarUsuarioPorCorreo(correo: string): Promise<UsuarioParaLogin | null>;
-  crearSesion(sesion: NuevaSesion): Promise<void>;
+  /**
+   * Crea la sesión solo si la cuenta sigue `activo` en ese instante (la baja o el rechazo concurrentes no dejan una
+   * sesión viva, design L1D-199). Devuelve `false` si no se creó.
+   */
+  crearSesion(sesion: NuevaSesion): Promise<boolean>;
+  /**
+   * Cuenta un fallo de contraseña: si el bloqueo anterior ya venció, el conteo reinicia en 1; al llegar a
+   * `maxIntentos` fija `locked_until = ahora + minutosDeBloqueo`.
+   */
+  registrarFalloDeLogin(
+    userId: string,
+    ahora: Date,
+    parametros: ParametrosDeBloqueo,
+  ): Promise<void>;
+  /** Un login correcto pone el contador a 0 y quita el bloqueo (sin escribir si no había nada que limpiar). */
+  reiniciarFallos(userId: string): Promise<void>;
   buscarSesionPorTokenHash(tokenHash: string): Promise<SesionConUsuario | null>;
   /** Marca `revoked = true` en la sesión de ese token (idempotente). */
   revocarSesion(tokenHash: string): Promise<void>;
@@ -59,7 +81,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
   return {
     async buscarUsuarioPorCorreo(correo) {
       const { rows } = await db.query(
-        `SELECT u.id, u.password_hash, u.account_status, r.name AS rol
+        `SELECT u.id, u.password_hash, u.account_status, u.locked_until, r.name AS rol
            FROM auth."user" u JOIN auth.role r ON r.id = u.role_id
           WHERE u.email = $1`,
         [correo],
@@ -71,14 +93,18 @@ export function createAuthRepository(db: Consultador): AuthRepository {
         passwordHash: fila['password_hash'] as string,
         accountStatus: fila['account_status'] as EstadoDeCuenta,
         rol: fila['rol'] as string,
+        lockedUntil: fila['locked_until'] as Date | null,
       };
     },
 
     async crearSesion(sesion) {
-      await db.query(
+      // FOR SHARE: si la baja tiene bloqueada la fila, espera y reevalúa el estado; si gana la sesión, la baja la revoca.
+      const { rows } = await db.query(
         `INSERT INTO auth.session
            (id, user_id, token_hash, expires_at, last_seen_at, ip_address, user_agent, revoked, created_at)
-         VALUES ($1, $2, $3, $4, $5, NULL, NULL, false, $6)`,
+         SELECT $1, $2, $3, $4, $5, NULL, NULL, false, $6
+          WHERE EXISTS (SELECT 1 FROM auth."user" WHERE id = $2 AND account_status = 'activo' FOR SHARE)
+         RETURNING id`,
         [
           sesion.id,
           sesion.userId,
@@ -87,6 +113,34 @@ export function createAuthRepository(db: Consultador): AuthRepository {
           sesion.lastSeenAt,
           sesion.createdAt,
         ],
+      );
+      return rows.length > 0;
+    },
+
+    async registrarFalloDeLogin(userId, ahora, parametros) {
+      await db.query(
+        `WITH previo AS (
+           SELECT CASE WHEN locked_until IS NOT NULL AND locked_until <= $2 THEN 0 ELSE failed_login_count END AS n
+             FROM auth."user" WHERE id = $1 FOR UPDATE)
+         UPDATE auth."user" u
+            SET failed_login_count = previo.n + 1,
+                locked_until = CASE WHEN previo.n + 1 >= $3 THEN $4::timestamptz ELSE NULL END
+           FROM previo
+          WHERE u.id = $1`,
+        [
+          userId,
+          ahora,
+          parametros.maxIntentos,
+          new Date(ahora.getTime() + parametros.minutosDeBloqueo * 60_000),
+        ],
+      );
+    },
+
+    async reiniciarFallos(userId) {
+      await db.query(
+        `UPDATE auth."user" SET failed_login_count = 0, locked_until = NULL
+          WHERE id = $1 AND (failed_login_count <> 0 OR locked_until IS NOT NULL)`,
+        [userId],
       );
     },
 

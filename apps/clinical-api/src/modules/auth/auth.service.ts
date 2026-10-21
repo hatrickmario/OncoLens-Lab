@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import type { AuthConfig } from '../../config/index.js';
+import type { AuthConfig, SesionConfig } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AuthRepository, EstadoDeCuenta, UsuarioParaLogin } from './auth.repository.js';
 import { normalizarCorreo } from './correo.js';
+import { cuentaBloqueada } from './sesion.reglas.js';
 import type { PasswordHasher } from './password-hasher.js';
 
 export interface GeneradorDeToken {
@@ -26,8 +27,14 @@ export interface AuthService {
   cerrarSesion(token: string): Promise<void>;
 }
 
+/**
+ * Por qué se rechazó el login. Solo el log lo distingue (US-044 D5): la respuesta HTTP es siempre la misma.
+ * Valores cerrados: nunca llevan correo, IP ni contraseña.
+ */
+export type MotivoDeRechazo = 'credenciales' | 'bloqueo_cuenta';
+
 export class CredencialesInvalidasError extends Error {
-  constructor() {
+  constructor(readonly motivo: MotivoDeRechazo = 'credenciales') {
     super('Credenciales inválidas');
     this.name = 'CredencialesInvalidasError';
   }
@@ -40,6 +47,7 @@ export interface DependenciasDeAuthService {
   ids: GeneradorDeIds;
   reloj: Clock;
   config: Pick<AuthConfig, 'sessionTtlHours'>;
+  sesion: Pick<SesionConfig, 'loginMaxFailedAttempts' | 'loginLockoutMinutes'>;
 }
 
 const MILISEGUNDOS_POR_HORA = 3_600_000;
@@ -56,31 +64,50 @@ function cuentaHabilitada(estado: EstadoDeCuenta): boolean {
 }
 
 export function createAuthService(dependencias: DependenciasDeAuthService): AuthService {
-  const { repo, hasher, tokens, ids, reloj, config } = dependencias;
+  const { repo, hasher, tokens, ids, reloj, config, sesion } = dependencias;
   // Hash señuelo con los mismos parámetros: verificar contra él iguala el tiempo cuando el correo no existe (D3).
   const hashSenuelo = hasher.hash(CONTRASENA_DEL_SENUELO);
   hashSenuelo.catch(() => undefined);
 
-  /** Un solo camino y un solo error para correo inexistente, contraseña errónea y cuenta no activa (D3). */
+  /**
+   * Un solo camino y un solo error para correo inexistente, contraseña errónea, cuenta no activa y cuenta bloqueada
+   * (D3, US-044 D5). Con la cuenta bloqueada se verifica contra el *hash* señuelo: mismo coste, mismo 401, y la
+   * contraseña correcta no se evalúa de forma observable.
+   */
   async function autenticarCredenciales(
     email: string,
     password: string,
+    ahora: Date,
   ): Promise<UsuarioParaLogin> {
     const usuario = await repo.buscarUsuarioPorCorreo(normalizarCorreo(email));
-    const hashAVerificar = usuario?.passwordHash ?? (await hashSenuelo);
+    const bloqueada = usuario !== null && cuentaBloqueada(usuario, ahora);
+    const hashAVerificar = bloqueada || usuario === null ? await hashSenuelo : usuario.passwordHash;
     const contrasenaCorrecta = await hasher.verify(hashAVerificar, password);
-    if (usuario === null || !contrasenaCorrecta || !cuentaHabilitada(usuario.accountStatus)) {
+    if (bloqueada) throw new CredencialesInvalidasError('bloqueo_cuenta');
+    if (usuario === null) throw new CredencialesInvalidasError();
+    if (!contrasenaCorrecta) {
+      await registrarFallo(usuario, ahora);
       throw new CredencialesInvalidasError();
     }
+    if (!cuentaHabilitada(usuario.accountStatus)) throw new CredencialesInvalidasError();
+    await repo.reiniciarFallos(usuario.id);
     return usuario;
+  }
+
+  /** Cuenta un fallo de contraseña y bloquea la cuenta al llegar a `LOGIN_MAX_FAILED_ATTEMPTS`. */
+  function registrarFallo(usuario: UsuarioParaLogin, ahora: Date): Promise<void> {
+    return repo.registrarFalloDeLogin(usuario.id, ahora, {
+      maxIntentos: sesion.loginMaxFailedAttempts,
+      minutosDeBloqueo: sesion.loginLockoutMinutes,
+    });
   }
 
   return {
     async iniciarSesion({ email, password }) {
-      const usuario = await autenticarCredenciales(email, password);
-      const token = tokens.nuevo();
       const ahora = reloj.now();
-      await repo.crearSesion({
+      const usuario = await autenticarCredenciales(email, password, ahora);
+      const token = tokens.nuevo();
+      const creada = await repo.crearSesion({
         id: ids(),
         userId: usuario.id,
         tokenHash: hashDeToken(token),
@@ -88,6 +115,8 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
         lastSeenAt: ahora,
         createdAt: ahora,
       });
+      // La cuenta dejó de estar activa entre la verificación y la inserción (baja concurrente): mismo 401.
+      if (!creada) throw new CredencialesInvalidasError();
       return { token };
     },
     async resolverSesion(token) {
