@@ -8,7 +8,7 @@
 - [x] 1.4 Job `integration-rag` en `ci.yml` (acciones por SHA, `permissions: contents: read`, `timeout-minutes: 30`, sin `continue-on-error`) y en `needs` de `ci-ok` [ARR-01 AC-2]
 - [ ] 1.5 Activar `ac2-cited-sources-build` cuando se archive `l1d-140-panel-opcion-citas`; si no se archiva en este sprint, diferir a ARR-06 (L1D-282) [ARR-01 AC-4]
 - [x] 1.6 Actualizar `docs/process/ci.md` (fila `integration-rag`)
-- [ ] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-277)`
+- [x] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-277)`
 
 ## 2. ai-services
 
@@ -18,5 +18,5 @@
 
 ## 3. Cierre
 
-- [ ] 3.1 `openspec validate l1d-277-ci-integracion-servicios-reales --strict`
+- [x] 3.1 `openspec validate l1d-277-ci-integracion-servicios-reales --strict`
 - [ ] 3.2 Jobs `integration` e `integration-rag` en verde en el PR; enlazar la salida en L1D-114 y L1D-115

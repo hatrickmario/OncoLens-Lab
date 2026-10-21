@@ -49,8 +49,10 @@ export RAG_PRUEBAS_REPO_DIR="$(mktemp -d)"
 export RAG_PRUEBAS_RESULTADOS_DIR="$(mktemp -d)"
 export RAG_PRUEBAS_NODE_MODULES_DIR="$raiz/node_modules"
 
+readonly ARCHIVOS_DE_COMPOSE=(--profile "$PERFIL" -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml)
+
 compose() {
-  docker compose --profile "$PERFIL" -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml "$@"
+  docker compose "${ARCHIVOS_DE_COMPOSE[@]}" "$@"
 }
 
 limpiar() {
@@ -112,8 +114,8 @@ verificar_que_pytest_no_ve_nada_de_clinical() {
 correr_pytest() {
   local limite=()
   if command -v timeout > /dev/null; then limite=(timeout "$pytest_segundos"); else echo "integracion-rag: sin 'timeout' en el sistema; el tope lo pone el job" >&2; fi
-  ${limite[@]+"${limite[@]}"} docker compose --profile "$PERFIL" -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml \
-    run --rm --no-deps "$SERVICIO_DE_PRUEBAS"
+  # `timeout` no ejecuta funciones de bash: la llamada completa a docker compose se repite aquí con las mismas opciones.
+  ${limite[@]+"${limite[@]}"} docker compose "${ARCHIVOS_DE_COMPOSE[@]}" run --rm --no-deps "$SERVICIO_DE_PRUEBAS"
 }
 
 scripts/setup-secrets.sh --profile test
