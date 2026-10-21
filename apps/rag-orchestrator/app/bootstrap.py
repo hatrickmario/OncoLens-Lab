@@ -147,18 +147,8 @@ def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]
 def _eventos_de_tipos_habilitados(
     settings: Settings, catalogo: CatalogoClinico
 ) -> list[dict[str, str]]:
-    """``ENABLED_CANCER_TYPES`` (RN-20, US-043): obligatoria con ``LLM_PROVIDER=local`` y, si trae un tipo que el
-    manifiesto no declara, inválida. El evento nombra la variable y la regla, nunca el tipo."""
-    if not settings.enabled_cancer_types:
-        if settings.llm_provider != "local":
-            return []
-        return [
-            {
-                "variable": "ENABLED_CANCER_TYPES",
-                "regla": "obligatoria con LLM_PROVIDER=local",
-                "motivo": MOTIVO_VARIABLE_AUSENTE,
-            }
-        ]
+    """``ENABLED_CANCER_TYPES`` (RN-20, US-043) con un tipo que el manifiesto no declara es inválida; que falte con
+    ``LLM_PROVIDER=local`` lo informa ``_eventos_de_recuperacion_ausente``. El evento nombra la variable, nunca el tipo."""
     if tipos_ausentes_del_catalogo(settings.enabled_cancer_types, catalogo.tipos_de_cancer()):
         return [
             {

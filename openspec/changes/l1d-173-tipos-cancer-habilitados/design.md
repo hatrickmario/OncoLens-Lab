@@ -126,7 +126,17 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
 - **`ENABLED_CANCER_TYPES`** (`Settings.enabled_cancer_types`, lista por comas, defecto vacío = ningún tipo habilitado, falla
   cerrada). Al arrancar: con `LLM_PROVIDER=local` vacía es `configuracion_invalida` (`variable_ausente`); con cualquier proveedor un
   tipo ausente del manifiesto es `configuracion_invalida` (`tipo_no_en_catalogo`); el evento nunca lleva el tipo.
-- **Pendiente de plataforma (Compose):** el servicio `rag-orchestrator` de `infra/docker/docker-compose.yml` aún no pasa
+- **Regla única de «obligatoria con local».** La lista vacía se detecta en `claves_de_recuperacion_ausentes` (fuente única del
+  arranque y de la composición); `_eventos_de_tipos_habilitados` conserva solo el cruce con el manifiesto.
+- **Preguntas para el humano (sin cambio de comportamiento):**
+  1. Modo `fake`: `ConsultaConCatalogoExigido` no aplica RN-20 (lo cubre el gateway de `clinical-api`). Alternativas: aplicar
+     la regla también en `fake` (más defensa, el E2E con LLM fingido la ejercería) o aceptar la omisión.
+  2. D5 dice «tras la versión del catálogo»; la comprobación va tras `_filtro_de_recuperacion` para que un tipo
+     inutilizable siga siendo `TIPO_CANCER_NO_REGISTRADO`. Alternativas: dejarlo así o mover la comprobación antes del
+     filtro (un tipo inutilizable pasaría a `TIPO_NO_HABILITADO`).
+- **Deuda:** el puerto `CatalogoClinico` crece con `tipos_de_cancer()` (versión + tipos); si sigue creciendo, separar un
+  puerto de lectura de tipos (ISP).
+- **Pendiente de plataforma (Compose) — resuelto en f0128f0:** el servicio `rag-orchestrator` de `infra/docker/docker-compose.yml` aún no pasa
   `ENABLED_CANCER_TYPES`; con `LLM_PROVIDER=local` no arrancará hasta añadir
   `ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}` (mismo valor demo que `clinical-api`). El modo `fake`
   (`ConsultaConCatalogoExigido`) no aplica la regla: lo cubre el gateway de `clinical-api`.
