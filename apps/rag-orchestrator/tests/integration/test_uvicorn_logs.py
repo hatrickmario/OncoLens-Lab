@@ -36,7 +36,7 @@ def test_el_cmd_de_uvicorn_del_dockerfile_desactiva_el_access_log():
     assert "--no-access-log" in _cmd_del_dockerfile()
 
 
-def test_los_loggers_de_uvicorn_quedan_sin_handler_propio_y_propagando_al_root_tras_configurar():
+def test_los_loggers_de_uvicorn_quedan_sin_handler_propio_tras_configurar_y_el_access_log_sin_propagar():
     logging.config.dictConfig(uvicorn.config.LOGGING_CONFIG)
     assert logging.getLogger("uvicorn.access").handlers, (
         "la sonda necesita el estado inicial de uvicorn"
@@ -46,7 +46,7 @@ def test_los_loggers_de_uvicorn_quedan_sin_handler_propio_y_propagando_al_root_t
         for nombre in LOGGERS_DE_UVICORN:
             logger = logging.getLogger(nombre)
             assert logger.handlers == [], nombre
-            assert logger.propagate is True, nombre
+            assert logger.propagate is (nombre != "uvicorn.access"), nombre
     finally:
         logging.getLogger().removeHandler(handler)
 
@@ -69,7 +69,7 @@ def _correr_uvicorn_y_pedir_con_query(cmd: list[str], tmp_path: Path) -> tuple[s
         "FAKE_RESPONSES_PATH": str(RAIZ_REPOSITORIO / "contracts" / "examples"),
         "SERVICE_JWT_PUBLIC_KEY_FILE": str(escribir_clave_publica(par_de_sesion(), tmp_path)),
     }
-    proceso = subprocess.Popen(  # noqa: S603
+    proceso = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", *argumentos],
         cwd=RAIZ_SERVICIO,
         env=entorno,
@@ -79,7 +79,7 @@ def _correr_uvicorn_y_pedir_con_query(cmd: list[str], tmp_path: Path) -> tuple[s
     )
     try:
         _esperar_health(puerto, proceso)
-        urllib.request.urlopen(  # noqa: S310
+        urllib.request.urlopen(
             f"http://127.0.0.1:{puerto}/health?documento={DOCUMENTO}", timeout=10
         ).read()
     finally:
@@ -93,26 +93,19 @@ def _esperar_health(puerto: int, proceso: subprocess.Popen) -> None:
     while time.monotonic() < limite:
         assert proceso.poll() is None, "uvicorn terminó antes de quedar listo"
         try:
-            urllib.request.urlopen(f"http://127.0.0.1:{puerto}/health", timeout=2).read()  # noqa: S310
+            urllib.request.urlopen(f"http://127.0.0.1:{puerto}/health", timeout=2).read()
             return
         except OSError:
             time.sleep(0.2)
     raise AssertionError("uvicorn no quedó listo en 60 s")
 
 
-def test_uvicorn_real_no_deja_la_query_en_ninguna_linea_y_todo_sale_en_json(tmp_path):
-    salida, errores = _correr_uvicorn_y_pedir_con_query(_cmd_del_dockerfile(), tmp_path)
-
-    assert parsear_lineas_json(salida), "uvicorn debe dejar al menos una línea JSON"
-    exigir_sin_valores_prohibidos(salida + errores, [DOCUMENTO])
-
-
-def test_la_sonda_ve_la_query_cuando_uvicorn_corre_sin_no_access_log(tmp_path):
-    # Mutación: sin el flag el access log pasa por el formateador y la query aparece; si no apareciera, la prueba
-    # real de arriba no estaría observando el canal correcto.
-    cmd = [a for a in _cmd_del_dockerfile() if a != "--no-access-log"]
+@pytest.mark.parametrize("con_flag", [True, False], ids=["cmd_del_dockerfile", "sin_no_access_log"])
+def test_uvicorn_real_no_deja_la_query_en_ninguna_linea_y_todo_sale_en_json(con_flag, tmp_path):
+    cmd = [a for a in _cmd_del_dockerfile() if con_flag or a != "--no-access-log"]
 
     salida, errores = _correr_uvicorn_y_pedir_con_query(cmd, tmp_path)
 
-    with pytest.raises(AssertionError, match=DOCUMENTO):
-        exigir_sin_valores_prohibidos(salida + errores, [DOCUMENTO])
+    # Sonda de canal: el log de arranque de uvicorn sí aparece, así que la ausencia de la query es significativa.
+    assert any("Uvicorn running" in linea["message"] for linea in parsear_lineas_json(salida))
+    exigir_sin_valores_prohibidos(salida + errores, [DOCUMENTO])

@@ -206,9 +206,24 @@ class Settings(BaseSettings):
         return self
 
 
+# Valores de /rag/query sin defecto en código (RN-22): los calibra la evaluación (US-072).
+CAMPOS_DE_RECUPERACION = (
+    "relevance_threshold",
+    "retrieval_top_k",
+    "rerank_top_n",
+    "nli_entailment_threshold",
+)
+
+
+def claves_de_recuperacion_ausentes(settings: Settings) -> list[str]:
+    """Nombres de las variables de la recuperación que faltan; una sola fuente para el arranque y la composición."""
+    return [campo.upper() for campo in CAMPOS_DE_RECUPERACION if getattr(settings, campo) is None]
+
+
 def nombres_de_claves(settings: Settings) -> list[str]:
-    """Nombres (nunca valores) de las variables de configuración reconocidas, ordenados: lo que `/health` expone."""
-    claves = {nombre.upper() for nombre in type(settings).model_fields if nombre != "modelos"}
+    """Nombres (nunca valores) de las variables realmente definidas, ordenados: lo que `/health` expone como
+    ``configKeys`` (mismo significado que en clinical-api: claves leídas con valor, no las que solo tienen defecto)."""
+    claves = {nombre.upper() for nombre in settings.model_fields_set if nombre != "modelos"}
     if settings.modelos is not None:
         claves.update(CLAVES_ADR39)
     return sorted(claves)

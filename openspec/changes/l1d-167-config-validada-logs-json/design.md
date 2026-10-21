@@ -137,7 +137,13 @@ Aceptadas por el orquestador del S2 sin cambio de alcance.
 - El test estático "sin `os.environ` fuera de `app/config/`" excluye `app/scripts/**` (CLI de desarrollo, no el servicio).
 - Dos aserciones de texto exacto `{"status":"ok"}` pasan a comprobar `status` (requisito MODIFIED; trailer `Test-Removal`).
 - Logging (D7): `logging` estándar con `FormateadorJson` propio (sin dependencia nueva); `traceId` en un `ContextVar` de `app/api/trace.py` fijado por el middleware `ContextoDeTraceId`; campos de evento cerrados y sin traceback.
-- Observación para el Gate 2 de privacy-guardian: el access log en texto de uvicorn (IP, ruta, sin `traceId`) queda fuera de este change.
+- Correcciones del Gate 2 (rag-orchestrator): el CMD de uvicorn lleva `--no-access-log`; `configurar_logging_json` quita los handlers de `uvicorn` y `uvicorn.error` (propagan al root y salen por `FormateadorJson`, traceback reducido a `errorClase`) y silencia `uvicorn.access` siempre (IP y query completa). Verificado con uvicorn real en `tests/integration/test_uvicorn_logs.py`.
+- `configKeys` de rag-orchestrator = claves definidas (`model_fields_set` + `CLAVES_ADR39` si `modelos` está cargado), mismo significado que en clinical-api.
+- `registrar_evento(logger, nivel, evento, **campos)` en `app/config/logging.py` (el `traceId` va como campo, nunca en el `message`). **Deuda:** migrar las llamadas viejas (`event=... traceId=...` en `errors.py` y `contencion_de_errores.py`) a `registrar_evento`; sus tests fijan hoy el texto exacto.
+- Desviación de D1/#8: los valores de recuperación obligatorios con `LLM_PROVIDER=local` se validan en `cargar_settings_o_salir` (evento `configuracion_invalida`, `motivo = variable_ausente`) y no en un `model_validator` de `Settings`, porque los CLI (`load_seed_corpus`, `app/evaluation`) instancian `Settings` con `llm_provider` local por defecto y sin esos valores.
+- El test estático de `os.environ` solo exime `app/scripts/adr39*` (medición); nada fuera de `app/scripts` puede importar `app.scripts`.
+- **Obligación del futuro adapter de nube:** `LLM_CLOUD_ENABLED=true` junto con `REAL_ANONYMIZED_ENABLED` o `REAL_IDENTIFIED_ENABLED` debe fallar el arranque (RN-12); hoy no existe adapter de nube, y esa regla de proveedores debe añadirse en `domain/reglas_proveedor.py` con el adapter.
+- Observación para el Gate 2 de privacy-guardian (resuelta arriba): el access log de uvicorn.
 
 ## Adiciones aceptadas en la implementación (clinical-api)
 
