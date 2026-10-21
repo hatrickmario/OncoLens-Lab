@@ -1,4 +1,8 @@
-import { ConfiguracionInvalidaError, leerSecretoDeArchivo, readPositiveInteger } from './secciones.js';
+import {
+  ConfiguracionInvalidaError,
+  leerSecretoDeArchivo,
+  readPositiveInteger,
+} from './secciones.js';
 
 export interface DocumentosConfig {
   /** `MAX_UPLOAD_MB`: tamaño máximo de un PDF cargado, en MiB (RN-22). */

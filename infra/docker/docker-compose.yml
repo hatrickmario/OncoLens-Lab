@@ -181,6 +181,11 @@ services:
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password
       PG_RESEARCH_WRITER_PASSWORD_FILE: /run/secrets/pg_research_writer_password
       CLINICAL_MINIO_PASSWORD_FILE: /run/secrets/clinical_minio_root_password
+      # Carga de documentos (L1D-56, RN-22): vacío = por defecto (20 MiB, http://clinical-minio:9000, bucket clinical-documents).
+      CLINICAL_MINIO_ENDPOINT: ${CLINICAL_MINIO_ENDPOINT:-}
+      CLINICAL_MINIO_ROOT_USER: ${CLINICAL_MINIO_ROOT_USER:-clinical-minio-admin}
+      CLINICAL_DOCUMENTS_BUCKET: ${CLINICAL_DOCUMENTS_BUCKET:-}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}
     secrets:
       - jwt_service_private.pem
       - identity_aes_key
