@@ -86,9 +86,39 @@ def test_arranque_omite_la_variable_cuando_la_regla_cruza_varias_claves(monkeypa
     assert "variable" not in eventos[0]
 
 
+@pytest.mark.ac("US-037", 2)
+@pytest.mark.parametrize(
+    "clave", ["RELEVANCE_THRESHOLD", "RETRIEVAL_TOP_K", "RERANK_TOP_N", "NLI_ENTAILMENT_THRESHOLD"]
+)
+def test_arranque_con_llm_local_sale_con_variable_ausente_cuando_falta_un_valor_de_recuperacion(
+    clave, monkeypatch, logs_json
+):
+    entorno = {
+        "RELEVANCE_THRESHOLD": "0.3",
+        "RETRIEVAL_TOP_K": "40",
+        "RERANK_TOP_N": "10",
+        "NLI_ENTAILMENT_THRESHOLD": "0.7",
+        "LLM_PROVIDER": "local",
+    }
+    for nombre, valor in entorno.items():
+        monkeypatch.setenv(nombre, valor)
+    monkeypatch.delenv(clave)
+
+    with pytest.raises(SystemExit) as salida:
+        cargar_settings_o_salir()
+
+    eventos = parsear_lineas_json(logs_json())
+    assert salida.value.code == 1
+    assert len(eventos) == 1
+    assert eventos[0]["event"] == "configuracion_invalida"
+    assert eventos[0]["variable"] == clave
+    assert eventos[0]["motivo"] == "variable_ausente"
+
+
 def test_arranque_devuelve_los_settings_sin_registrar_nada_cuando_la_configuracion_es_valida(
     monkeypatch, logs_json
 ):
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
     monkeypatch.setenv("RELEVANCE_THRESHOLD", "0.42")
 
     settings = cargar_settings_o_salir()
