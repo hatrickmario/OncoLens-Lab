@@ -174,6 +174,8 @@ services:
       PII_FORMATS_PATH: ${PII_FORMATS_PATH:-/config/pii-formats.json}
       PII_MASKS_PATH: ${PII_MASKS_PATH:-/app/apps/clinical-api/config/pii-masks.json}
       PII_NAME_TOKEN_MIN_LENGTH: ${PII_NAME_TOKEN_MIN_LENGTH:-}
+      # Versión con la que se cifra la identidad (US-046); vacío = 1. Debe coincidir con la de clinical-seed.
+      IDENTITY_KEY_VERSION: ${IDENTITY_KEY_VERSION:-}
       IDENTITY_AES_KEY_FILE: /run/secrets/identity_aes_key
       BLIND_INDEX_HMAC_KEY_FILE: /run/secrets/blind_index_hmac_key
       PG_CLINICAL_API_PASSWORD_FILE: /run/secrets/pg_clinical_api_password

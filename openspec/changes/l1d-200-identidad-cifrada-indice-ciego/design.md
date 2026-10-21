@@ -42,9 +42,8 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
 - **D6 · No-fuga (AC-4).** Arnés `buscarFugaDeIdentidad(valores, fuentes)` en
   `tests/support/no-fuga.ts`. **Valores buscados:** documento en claro (`1234567` y su forma con puntos `1.234.567`), "Lucía", "Rondón", la forma normalizada del
   nombre ("lucia fernanda rondon pena") y los valores hex de `national_id_hmac` y `full_name_hmac`
-  (este último cuando exista la columna, L1D-202) leídos de la fila. **Fuentes:** logs capturados de los tres servicios, todas las columnas `text`/`jsonb`
-  de `audit.*`, `research.*` y `clinical.ai_analysis_record`, y el payload capturado por MSW hacia
-  `rag-orchestrator`. En este change cubre **registrar** (fixture vía `IdentityService`) y **analizar**
+  (este último cuando exista la columna, L1D-202) leídos de la fila. **Fuentes (lo que cubre el test):** los logs de `clinical-api` (registrador y `stdout`/`stderr` del proceso durante los pasos), el payload y las cabeceras capturados por MSW hacia
+  `rag-orchestrator` (su única entrada: no se capturan logs propios de `rag-orchestrator` ni de `web`) y todas las filas de `audit.*`, `research.*` y `clinical.ai_analysis_record`. Los valores se derivan de la identidad guardada (documento, forma con puntos, nombre completo, forma normalizada y cada token del nombre de 4 o más caracteres). En este change cubre **registrar** (fixture vía `IdentityService`) y **analizar**
   (gateway de L1D-103); **ficha** y **búsqueda** las añaden sus changes (L1D-72, L1D-202) al mismo test
   como pasos nuevos (`🔗 Regresión [RN-10] → US-046`). US-046 pasa a Done cuando los cuatro pasos
   corren en `main`.
