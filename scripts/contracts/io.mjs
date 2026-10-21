@@ -5,10 +5,8 @@ import path from 'node:path';
 import YAML from 'yaml';
 import { buildContext } from './lib/context.mjs';
 import { finding } from './lib/findings.mjs';
-import { PATHS, typesPath } from './lib/paths.mjs';
+import { PATHS, REDOCLY_CONFIG, typesPath } from './lib/paths.mjs';
 import { PROVIDERS } from './lib/specs.mjs';
-
-const REDOCLY_CONFIG = path.join(import.meta.dirname, 'redocly.yaml');
 
 /** Texto de un archivo, o el motivo por el que no se pudo leer (`archivo ausente` si no existe). */
 async function readText(root, file) {

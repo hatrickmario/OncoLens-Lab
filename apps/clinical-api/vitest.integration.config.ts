@@ -12,7 +12,8 @@ export default defineConfig({
       'tests/integration/seed/**/*.test.ts',
       'tests/integration/evidence-analysis/**/*.test.ts',
     ],
-    globalSetup: ['tests/support/global-setup.ts'],
+    globalSetup: ['tests/support/global-setup.ts', '../../scripts/contracts/vitest/globalSetup.mjs'],
+    setupFiles: ['../../scripts/contracts/vitest/setupFile.mjs'],
     testTimeout: 30_000,
     hookTimeout: 120_000,
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).

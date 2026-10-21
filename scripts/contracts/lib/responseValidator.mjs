@@ -1,6 +1,6 @@
 /**
  * Helper de verificación del proveedor [S1 resp. 17]: valida el cuerpo de una respuesta contra el spec
- * empaquetado (`bundleSpec()`), con la misma configuración de Ajv2020 que `contracts:check`.
+ * empaquetado (`bundleSpecs()`), con la misma configuración de Ajv2020 que `contracts:check`.
  * Lo usan los tests de integración hasta que exista `contracts:verify-provider` (US-214).
  */
 import { loadBundledSpecs } from './bundledSpecs.mjs';
