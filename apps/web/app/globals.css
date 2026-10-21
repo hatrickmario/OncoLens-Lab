@@ -1,22 +1,62 @@
-/* Tokens de docs/ux/sistema-de-diseno.md (contrastes AA verificados allí). */
-:root {
+@import 'tailwindcss';
+
+/*
+ * Única fuente de los tokens de docs/ux/sistema-de-diseno.md §1 (contrastes AA verificados allí).
+ * `static` emite todas las variables en :root aunque ninguna utilidad las use: los CSS Modules
+ * que aún quedan (panel de análisis, cabecera) las leen con var(--color-*).
+ */
+@theme static {
   --color-chrome: #13233a;
+  --color-chrome-muted: #c9d4e5;
   --color-bg: #edf0f4;
   --color-surface: #fff;
+  --color-surface-alt: #f3f5f8;
   --color-text: #172133;
   --color-text-muted: #44506a;
   --color-primary: #1f4fb8;
+  --color-border: #c4cddb;
   --color-control-border: #7c8696;
+  --color-status-coincide: #17592f;
+  --color-status-coincide-bg: #e4f1e8;
+  --color-status-parcial: #774500;
+  --color-status-parcial-bg: #fbefd6;
   --color-status-nocoincide: #8e1f18;
   --color-status-nocoincide-bg: #f9e3e1;
+  --color-status-desconocido: #3a4553;
+  --color-status-desconocido-bg: #eceef1;
+  --color-warn: #5e3a00;
+  --color-warn-bg: #fff4e0;
+  --color-warn-border: #e8c77a;
+  --color-postmvp: #4a2f86;
+  --color-postmvp-bg: #e9e4f5;
   --color-error: var(--color-status-nocoincide);
   --color-error-bg: var(--color-status-nocoincide-bg);
+
+  /* Public Sans autoalojada queda para otra historia (design.md D3): solo cambia este token. */
+  --font-sans: system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* Radios: etiquetas 4, controles 6, tarjetas 8, diálogo de login 10. */
+  --radius-etiqueta: 4px;
+  --radius-control: 6px;
+  --radius-tarjeta: 8px;
+  --radius-dialogo: 10px;
+
+  --shadow-dialogo: 0 1px 3px rgb(19 35 58 / 15%);
+}
+
+@layer base {
+  /* Foco visible global (2.4.7); sobre superficies navy cada componente cambia el color. */
+  :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
 
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
 }
