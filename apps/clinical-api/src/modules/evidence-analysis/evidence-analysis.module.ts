@@ -16,6 +16,7 @@ import type {
   ContextDeidentifier,
   TraceIdGenerator,
   RagQueryClient,
+  TiposDeCancerHabilitados,
 } from './ports.js';
 
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
@@ -23,11 +24,22 @@ export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
   aiDisclaimerText: string;
 }
 
+/** Lo que la Base de un `tipo_no_habilitado` dice del corpus sin consultarlo (US-043 D7, RN-22). */
+export interface AlcanceDelCorpus {
+  /** `CORPUS_EXCLUDED_SOURCES`. */
+  corpusExcludedSources: readonly string[];
+  /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`). */
+  corpusCutoffDate: string;
+}
+
 export interface DependenciasDelGateway {
   db: Consultador;
   rag: RagQueryClient;
   catalogo: CatalogVersionProvider;
   config: ConfiguracionDelGateway;
+  /** `ENABLED_CANCER_TYPES` ya validada contra el manifiesto (RN-20). */
+  tiposHabilitados: TiposDeCancerHabilitados;
+  alcanceDelCorpus: AlcanceDelCorpus;
   reloj: Clock;
   traceIds: TraceIdGenerator;
   /** UUID de los `AIAnalysisRecord`; distinto de `traceIds`, que solo genera `traceId`. */

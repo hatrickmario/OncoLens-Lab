@@ -88,3 +88,17 @@ export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
     },
   };
 }
+
+export interface EntradaDeLaBaseSinIA {
+  sourcesSelected: RagQueryInternalRequest['sourcesSelected'];
+  filters: RagQueryInternalRequest['filtersApplied'];
+  /** `CORPUS_EXCLUDED_SOURCES` (RN-21). */
+  sourcesNotIncluded: readonly string[];
+  /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`, RN-22). */
+  corpusCutoffDate: string;
+}
+
+/** Base del análisis de un `tipo_no_habilitado` (US-043 D7): no se consultó el corpus ni se envió ningún dato. */
+export function construirBaseTipoNoHabilitado(_entrada: EntradaDeLaBaseSinIA): AnalysisBasis {
+  throw new Error('no implementado');
+}
