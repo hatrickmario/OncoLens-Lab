@@ -11,7 +11,7 @@ import {
   type RegistroDeIntentosPorIp,
 } from '../../src/modules/auth/auth.service.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
-import { registroDeIntentosDeTest } from '../support/intentos-por-ip.js';
+import { registroDeIntentosDeTest, SESION_DE_TEST } from '../support/intentos-por-ip.js';
 import { relojFijo, tokensFijos } from '../support/usuarios.js';
 
 const CORREO = 'ana@test.local';
@@ -55,6 +55,7 @@ function repositorioFalso(usuarios: Record<string, UsuarioParaLogin>) {
     },
     buscarSesionPorTokenHash: () => Promise.resolve(null),
     revocarSesion: () => Promise.resolve(),
+    tocarSesion: () => Promise.resolve(),
   };
   return { repo, sesiones, consultados, fallos, reinicios };
 }
@@ -69,7 +70,7 @@ function crearServicio(usuarios: Record<string, UsuarioParaLogin>) {
     ids: () => 'sesion-1',
     reloj: relojFijo('2026-10-16T12:00:00.000Z'),
     config: { sessionTtlHours: 8 },
-    sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+    sesion: SESION_DE_TEST,
     registroDeIntentosPorIp: registroDeIntentosDeTest(),
   });
   return { service, hasher, sesiones, consultados, fallos, reinicios };
@@ -238,7 +239,7 @@ describe('AuthService.iniciarSesion y el bloqueo de la cuenta', () => {
       ids: () => 'sesion-1',
       reloj: relojFijo('2026-10-16T12:00:00.000Z'),
       config: { sessionTtlHours: 8 },
-      sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+      sesion: SESION_DE_TEST,
       registroDeIntentosPorIp: registroDeIntentosDeTest(),
     });
 
@@ -259,7 +260,7 @@ describe('AuthService.iniciarSesion y el bloqueo por IP', () => {
       ids: () => 'sesion-1',
       reloj: relojFijo('2026-10-16T12:00:00.000Z'),
       config: { sessionTtlHours: 8 },
-      sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+      sesion: SESION_DE_TEST,
       registroDeIntentosPorIp: registro,
     });
     return { service, hasher, sesiones };

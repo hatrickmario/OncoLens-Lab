@@ -2,16 +2,18 @@ import { describe, expect, it } from 'vitest';
 import type { SesionConUsuario } from '../../src/modules/auth/auth.repository.js';
 import { createAuthService, hashDeToken } from '../../src/modules/auth/auth.service.js';
 import { tokenDeCookie } from '../../src/middleware/auth.js';
-import { registroDeIntentosDeTest } from '../support/intentos-por-ip.js';
+import { registroDeIntentosDeTest, SESION_DE_TEST } from '../support/intentos-por-ip.js';
 import { relojFijo, tokensFijos } from '../support/usuarios.js';
 
 const AHORA = '2026-10-16T12:00:00.000Z';
 
 const vigente: SesionConUsuario = {
+  id: 'sesion-1',
   userId: 'usuario-1',
   rol: 'doctor',
   accountStatus: 'activo',
   expiresAt: new Date('2026-10-16T20:00:00.000Z'),
+  lastSeenAt: new Date(AHORA),
   revoked: false,
   permisos: ['clinical:read', 'ai_analysis:create'],
 };
@@ -19,6 +21,7 @@ const vigente: SesionConUsuario = {
 /** Servicio con un repository falso que solo conoce la sesión de `tokenConocido`. */
 function servicioCon(sesion: SesionConUsuario | null) {
   const consultas: string[] = [];
+  const toques: { id: string; ahora: string }[] = [];
   const service = createAuthService({
     repo: {
       buscarUsuarioPorCorreo: () => Promise.resolve(null),
@@ -26,6 +29,10 @@ function servicioCon(sesion: SesionConUsuario | null) {
       registrarFalloDeLogin: () => Promise.resolve(),
       reiniciarFallos: () => Promise.resolve(),
       revocarSesion: () => Promise.resolve(),
+      tocarSesion: (id, ahora) => {
+        toques.push({ id, ahora: ahora.toISOString() });
+        return Promise.resolve();
+      },
       buscarSesionPorTokenHash: (hash) => {
         consultas.push(hash);
         return Promise.resolve(hash === hashDeToken('tokenConocido') ? sesion : null);
@@ -36,10 +43,10 @@ function servicioCon(sesion: SesionConUsuario | null) {
     ids: () => 'id',
     reloj: relojFijo(AHORA),
     config: { sessionTtlHours: 8 },
-    sesion: { loginMaxFailedAttempts: 5, loginLockoutMinutes: 15 },
+    sesion: SESION_DE_TEST,
     registroDeIntentosPorIp: registroDeIntentosDeTest(),
   });
-  return { service, consultas };
+  return { service, consultas, toques };
 }
 
 describe('AuthService.resolverSesion', () => {
@@ -108,5 +115,36 @@ describe('tokenDeCookie', () => {
 
   it('conserva un valor con signo igual', () => {
     expect(tokenDeCookie('oncolens_session=a=b')).toBe('a=b');
+  });
+});
+
+describe('AuthService.resolverSesion e inactividad', () => {
+  const haceMinutos = (minutos: number): SesionConUsuario => ({
+    ...vigente,
+    lastSeenAt: new Date(new Date(AHORA).getTime() - minutos * 60_000),
+  });
+
+  it('toca la sesión con el instante del reloj cuando la última actividad supera SESSION_TOUCH_SECONDS', async () => {
+    const { service, toques } = servicioCon(haceMinutos(29));
+
+    expect(await service.resolverSesion('tokenConocido')).not.toBeNull();
+
+    expect(toques).toEqual([{ id: 'sesion-1', ahora: AHORA }]);
+  });
+
+  it('no toca la sesión cuando la última actividad es más reciente que SESSION_TOUCH_SECONDS', async () => {
+    const { service, toques } = servicioCon(haceMinutos(0.5));
+
+    expect(await service.resolverSesion('tokenConocido')).not.toBeNull();
+
+    expect(toques).toEqual([]);
+  });
+
+  it('devuelve null y no toca la sesión cuando lleva 31 minutos inactiva', async () => {
+    const { service, toques } = servicioCon(haceMinutos(31));
+
+    expect(await service.resolverSesion('tokenConocido')).toBeNull();
+
+    expect(toques).toEqual([]);
   });
 });

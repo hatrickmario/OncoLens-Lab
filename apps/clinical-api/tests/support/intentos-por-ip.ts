@@ -6,3 +6,11 @@ import { relojFijo } from './usuarios.js';
 export function registroDeIntentosDeTest(reloj: Clock = relojFijo()) {
   return createRegistroDeIntentosPorIp({ reloj, maxIntentos: 5, ventanaMinutos: 15 });
 }
+
+/** Configuración de sesión y bloqueo de los unitarios de `AuthService` (los valores del diseño). */
+export const SESION_DE_TEST = {
+  loginMaxFailedAttempts: 5,
+  loginLockoutMinutes: 15,
+  idleMinutes: 30,
+  touchSeconds: 60,
+};

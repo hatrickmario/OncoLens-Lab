@@ -4,7 +4,7 @@ import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AuthRepository, EstadoDeCuenta, UsuarioParaLogin } from './auth.repository.js';
 import { normalizarCorreo } from './correo.js';
-import { cuentaBloqueada } from './sesion.reglas.js';
+import { cuentaBloqueada, debeTocarseLaSesion, sesionVigente } from './sesion.reglas.js';
 import type { PasswordHasher } from './password-hasher.js';
 
 export interface GeneradorDeToken {
@@ -60,7 +60,10 @@ export interface DependenciasDeAuthService {
   ids: GeneradorDeIds;
   reloj: Clock;
   config: Pick<AuthConfig, 'sessionTtlHours'>;
-  sesion: Pick<SesionConfig, 'loginMaxFailedAttempts' | 'loginLockoutMinutes'>;
+  sesion: Pick<
+    SesionConfig,
+    'loginMaxFailedAttempts' | 'loginLockoutMinutes' | 'idleMinutes' | 'touchSeconds'
+  >;
   registroDeIntentosPorIp: RegistroDeIntentosPorIp;
 }
 
@@ -167,8 +170,9 @@ export function createAuthService(dependencias: DependenciasDeAuthService): Auth
     async resolverSesion(token) {
       const sesion = await repo.buscarSesionPorTokenHash(hashDeToken(token));
       if (sesion === null || sesion.revoked || !cuentaHabilitada(sesion.accountStatus)) return null;
-      // `expires_at` es absoluto y excluyente: en el instante exacto la sesión ya caducó (S1 resp. 14c).
-      if (sesion.expiresAt.getTime() <= reloj.now().getTime()) return null;
+      const ahora = reloj.now();
+      if (!sesionVigente(sesion, ahora, bloqueo)) return null;
+      if (debeTocarseLaSesion(sesion, ahora, bloqueo)) await repo.tocarSesion(sesion.id, ahora);
       return { userId: sesion.userId, rol: sesion.rol, permisos: new Set(sesion.permisos) };
     },
     async cerrarSesion(token) {

@@ -25,6 +25,7 @@ export interface NuevaSesion {
 }
 
 export interface SesionConUsuario {
+  id: string;
   userId: string;
   /** Nombre del rol tal como está en `auth.role` (los permisos mandan, no el nombre). */
   rol: string;
@@ -32,6 +33,7 @@ export interface SesionConUsuario {
   permisos: readonly string[];
   accountStatus: EstadoDeCuenta;
   expiresAt: Date;
+  lastSeenAt: Date;
   revoked: boolean;
 }
 
@@ -54,6 +56,8 @@ export interface AuthRepository {
   /** Un login correcto pone el contador a 0 y quita el bloqueo (sin escribir si no había nada que limpiar). */
   reiniciarFallos(userId: string): Promise<void>;
   buscarSesionPorTokenHash(tokenHash: string): Promise<SesionConUsuario | null>;
+  /** Registra la actividad de la sesión (`last_seen_at`); una sesión revocada entretanto no se toca. */
+  tocarSesion(id: string, ahora: Date): Promise<void>;
   /** Marca `revoked = true` en la sesión de ese token (idempotente). */
   revocarSesion(tokenHash: string): Promise<void>;
 }
@@ -146,7 +150,7 @@ export function createAuthRepository(db: Consultador): AuthRepository {
 
     async buscarSesionPorTokenHash(tokenHash) {
       const { rows } = await db.query(
-        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol,
+        `SELECT s.id, s.user_id, s.expires_at, s.last_seen_at, s.revoked, u.account_status, r.name AS rol,
                 COALESCE(array_agg(p.code) FILTER (WHERE p.code IS NOT NULL), '{}') AS permisos
            FROM auth.session s
            JOIN auth."user" u ON u.id = s.user_id
@@ -154,19 +158,28 @@ export function createAuthRepository(db: Consultador): AuthRepository {
            LEFT JOIN auth.role_permission rp ON rp.role_id = r.id
            LEFT JOIN auth.permission p ON p.id = rp.permission_id
           WHERE s.token_hash = $1
-          GROUP BY s.user_id, s.expires_at, s.revoked, u.account_status, r.name`,
+          GROUP BY s.id, s.user_id, s.expires_at, s.last_seen_at, s.revoked, u.account_status, r.name`,
         [tokenHash],
       );
       const fila = rows[0];
       if (fila === undefined) return null;
       return {
+        id: fila['id'] as string,
         userId: fila['user_id'] as string,
         rol: fila['rol'] as string,
         permisos: fila['permisos'] as string[],
         accountStatus: fila['account_status'] as EstadoDeCuenta,
         expiresAt: fila['expires_at'] as Date,
+        lastSeenAt: fila['last_seen_at'] as Date,
         revoked: fila['revoked'] as boolean,
       };
+    },
+
+    async tocarSesion(id, ahora) {
+      await db.query('UPDATE auth.session SET last_seen_at = $2 WHERE id = $1 AND NOT revoked', [
+        id,
+        ahora,
+      ]);
     },
 
     async revocarSesion(tokenHash) {
