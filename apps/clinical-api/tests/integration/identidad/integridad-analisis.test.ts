@@ -36,7 +36,7 @@ describe('Identidad alterada en el camino real del análisis', () => {
     await mundo.cerrar();
   });
 
-  it('falla cerrado con 503 DESIDENTIFICACION_NO_DISPONIBLE, sin llamar a rag-orchestrator ni persistir y sin datos del paciente cuando un byte del cifrado fue alterado [US-046 AC-3]', async () => {
+  it('falla cerrado con 503 DESIDENTIFICACION_NO_DISPONIBLE, sin llamar a rag-orchestrator ni persistir y sin datos del paciente cuando un byte del cifrado fue alterado 🔗 Regresión [RN-10] → US-046', async () => {
     const identidad = servicioDeIdentidad(mundo.cliente);
     const patientId = await crearPacienteFxT4aA(mundo, identidad);
     await mundo.cliente.query(
