@@ -104,7 +104,7 @@
     },
     "base": {
       "titulo": "Base del análisis",
-      "resumen": "Faltantes: {faltantes} · Supuestos: {supuestos} · Fuentes no incluidas: {fuentes} · Afirmaciones omitidas: {omitidas}",
+      "resumen": "Faltantes: {faltantes} · Supuestos: {supuestos} · Fuentes no incluidas: {noIncluidas} · Afirmaciones omitidas: {omitidas}",
       "supuestoDeRegla": "Supuesto (regla del catálogo): {texto}",
       "ninguna": "ninguna",
       "ninguno": "ninguno",

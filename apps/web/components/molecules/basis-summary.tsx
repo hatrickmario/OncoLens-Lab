@@ -20,7 +20,7 @@ export function BasisSummary({ base, estado }: BasisSummaryProps) {
         {rellenar(resumen, {
           faltantes: cifras.faltantes,
           supuestos: cifras.supuestos,
-          fuentes: cifras.fuentesNoIncluidas,
+          noIncluidas: cifras.fuentesNoIncluidas,
           omitidas: cifras.omitidas,
         })}
       </p>
