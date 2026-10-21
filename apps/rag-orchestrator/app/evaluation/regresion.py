@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -75,17 +76,19 @@ def comparar_con_regresion(
 ) -> ResultadoRegresion:
     """Métricas del reporte por debajo de su mínimo, en el orden del archivo de umbrales."""
     seccion = reporte["metricas"][SECCION_DEL_UMBRAL]
+    medidas = {metrica: _valor_en(seccion, METRICAS_CON_UMBRAL[metrica]) for metrica in umbrales}
     incumplimientos = tuple(
-        Incumplimiento(metrica, minimo, actual)
+        Incumplimiento(metrica, minimo, medidas[metrica])
         for metrica, minimo in umbrales.items()
-        if (actual := _valor_en(seccion, METRICAS_CON_UMBRAL[metrica])) is None or actual < minimo
+        if (actual := medidas[metrica]) is None or actual < minimo
     )
     return ResultadoRegresion(aplicado=bool(umbrales), incumplimientos=incumplimientos)
 
 
 def _valor_en(seccion: dict[str, Any], ruta: tuple[str, ...]) -> float | None:
+    """Valor numérico finito en la ruta; ``null``, booleanos, ``NaN`` e infinitos cuentan como sin valor."""
     nodo: Any = seccion
     for clave in ruta:
         nodo = nodo.get(clave) if isinstance(nodo, dict) else None
     es_numero = isinstance(nodo, int | float) and not isinstance(nodo, bool)
-    return nodo if es_numero else None
+    return nodo if es_numero and math.isfinite(nodo) else None
