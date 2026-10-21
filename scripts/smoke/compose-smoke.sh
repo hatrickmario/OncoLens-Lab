@@ -184,23 +184,36 @@ require('assert').deepStrictEqual(JSON.parse(resto.join(' ')), require('$raiz/co
 " "$1" "$2"
 }
 
+# El 409 de versión de catálogo (US-041) se aplica también al modo fake: los ejemplos de petición llevan catalogVersion
+# "2026.10.0" y el catálogo montado es otro. El smoke sustituye SOLO ese campo por la versión del manifest.json montado
+# (la misma fuente que lee rag-orchestrator); el ejemplo del contrato no cambia y el 409 no se relaja.
+peticion_con_catalogo_montado() {
+  node -e "
+const fs = require('fs');
+const manifiesto = JSON.parse(fs.readFileSync('$raiz/packages/clinical-catalogs/manifest.json', 'utf8'));
+const cuerpo = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+cuerpo.catalogVersion = manifiesto.version;
+process.stdout.write(JSON.stringify(cuerpo));
+" "$1"
+}
+
 pares="$(node -e "
 const i=require('$raiz/contracts/examples/index.json').examples;
 for (const e of i.filter(e=>e.target==='#/components/schemas/RagQueryInternalResponse')) console.log(e.request+' '+e.file);
 ")"
 while read -r peticion respuesta; do
-  salida="$(consultar_rag <"$raiz/contracts/examples/$peticion")"
+  salida="$(peticion_con_catalogo_montado "$raiz/contracts/examples/$peticion" | consultar_rag)"
   es_respuesta_200_igual_a "$salida" "$respuesta" || fallo "AC-6: $peticion no devolvió $respuesta"
   bien "AC-6 $peticion devuelve $respuesta"
 done <<< "$pares"
-ajena="$(node -e "const b=require('$raiz/contracts/examples/rag-query-request.json');b.query='Pregunta que no es de fixture';console.log(JSON.stringify(b))")"
+ajena="$(peticion_con_catalogo_montado "$raiz/contracts/examples/rag-query-request.json" | node -e "let c='';process.stdin.on('data',d=>c+=d).on('end',()=>{const b=JSON.parse(c);b.query='Pregunta que no es de fixture';console.log(JSON.stringify(b))})")"
 salida="$(printf '%s' "$ajena" | consultar_rag)"
 es_respuesta_200_igual_a "$salida" rag-query-sin-evidencia.json || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
 bien "AC-6 una pregunta que no es de fixture devuelve sin evidencia"
 # US-054 AC-1: las consultas de arriba (200 idéntico al ejemplo) ya van con el token del firmador real.
 bien "US-054 AC-1 un token firmado por el firmador real de clinical-api devuelve 200"
 # US-054 AC-2: sin JWT de servicio, /rag/query responde 401 con el cuerpo del contrato (y sin invocar al LLM).
-salida="$(consultar_rag_con sin-jwt <"$raiz/contracts/examples/rag-query-request.json")"
+salida="$(peticion_con_catalogo_montado "$raiz/contracts/examples/rag-query-request.json" | consultar_rag_con sin-jwt)"
 case "$salida" in
   401*TOKEN_SERVICIO_INVALIDO*) ;;
   *) fallo "US-054: /rag/query sin JWT de servicio respondió: $salida" ;;
