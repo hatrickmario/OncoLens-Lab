@@ -13,7 +13,7 @@ from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
-    VERSION_DE_CATALOGO_DE_TEST,
+    VERSION_DEL_CATALOGO_MONTADO,
     CatalogoClinicoFalso,
     crear_entorno,
     solicitud_de,
@@ -24,9 +24,7 @@ VERSION_AJENA = "9.9.9-ajena"
 
 
 def _ejemplo_409() -> dict:
-    return json.loads(
-        (EJEMPLOS / "error-catalog-version-mismatch.json").read_text(encoding="utf-8")
-    )
+    return json.loads((EJEMPLOS / "rag-catalog-version-mismatch.json").read_text(encoding="utf-8"))
 
 
 def _solicitud_con_catalogo(version: str) -> dict:
@@ -35,7 +33,7 @@ def _solicitud_con_catalogo(version: str) -> dict:
 
 @pytest.mark.ac("US-041", 2)
 def test_rag_query_catalogo_distinto_responde_409_sin_invocar():
-    entorno = crear_entorno(catalogo_clinico=CatalogoClinicoFalso(VERSION_DE_CATALOGO_DE_TEST))
+    entorno = crear_entorno(catalogo_clinico=CatalogoClinicoFalso(VERSION_DEL_CATALOGO_MONTADO))
     solicitud = _solicitud_con_catalogo(VERSION_AJENA)
 
     respuesta = entorno.consultar(solicitud)
@@ -44,6 +42,8 @@ def test_rag_query_catalogo_distinto_responde_409_sin_invocar():
     cuerpo = respuesta.json()
     assert_matches_spec(RESPUESTA_409, cuerpo)
     assert cuerpo == {**_ejemplo_409(), "traceId": solicitud["traceId"]}
+    assert entorno.detector_idioma.invocaciones == 0
+    assert entorno.lector_release.invocaciones == 0
     assert entorno.embedder.invocaciones == 0
     assert entorno.buscador.invocaciones == 0
     assert entorno.reranker.invocaciones == 0
@@ -51,17 +51,17 @@ def test_rag_query_catalogo_distinto_responde_409_sin_invocar():
     assert entorno.clasificador_nli.invocaciones == 0
     assert entorno.catalogo.consultas == []
     assert entorno.catalogo_clinico.consultas == 1
-    for ajeno in (VERSION_AJENA, VERSION_DE_CATALOGO_DE_TEST, Q_HER2):
+    for ajeno in (VERSION_AJENA, VERSION_DEL_CATALOGO_MONTADO, Q_HER2):
         assert ajeno not in respuesta.text
 
 
 def test_rag_query_responde_200_cuando_la_version_del_catalogo_coincide():
-    entorno = crear_entorno(catalogo_clinico=CatalogoClinicoFalso(VERSION_DE_CATALOGO_DE_TEST))
+    entorno = crear_entorno(catalogo_clinico=CatalogoClinicoFalso(VERSION_DEL_CATALOGO_MONTADO))
 
-    respuesta = entorno.consultar(_solicitud_con_catalogo(VERSION_DE_CATALOGO_DE_TEST))
+    respuesta = entorno.consultar(_solicitud_con_catalogo(VERSION_DEL_CATALOGO_MONTADO))
 
     assert respuesta.status_code == 200
-    assert respuesta.json()["meta"]["catalogVersion"] == VERSION_DE_CATALOGO_DE_TEST
+    assert respuesta.json()["meta"]["catalogVersion"] == VERSION_DEL_CATALOGO_MONTADO
 
 
 def test_rag_query_no_registra_las_versiones_de_catalogo_ni_la_pregunta_cuando_responde_409(
@@ -76,5 +76,5 @@ def test_rag_query_no_registra_las_versiones_de_catalogo_ni_la_pregunta_cuando_r
     assert "catalog_version_mismatch" in salida, (
         "el 409 debe dejar su evento en el canal real de logs"
     )
-    for prohibido in (VERSION_AJENA, VERSION_DE_CATALOGO_DE_TEST, Q_HER2):
+    for prohibido in (VERSION_AJENA, VERSION_DEL_CATALOGO_MONTADO, Q_HER2):
         assert prohibido not in salida
