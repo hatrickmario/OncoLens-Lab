@@ -277,6 +277,16 @@ components:
         rationale:
           type: string
           description: En el idioma de la pregunta.
+        details:
+          type: array
+          maxItems: 2
+          description: >-
+            Párrafos opcionales de detalle que amplían la justificación, en el idioma de la pregunta.
+            Cada afirmación pasó citas y NLI (RN-01) y el filtro de lenguaje (RN-23); el párrafo que no
+            las supera se omite y cuenta en omittedClaims. Ausente (nunca vacío) si ninguno se soporta.
+          items:
+            type: string
+            minLength: 1
         applicabilitySummary:
           $ref: '#/components/schemas/ApplicabilitySummary'
         populationNotComparable:

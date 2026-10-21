@@ -98,7 +98,7 @@ imagen_node=$(awk '/^FROM/{print $2; exit}' "$raiz/apps/clinical-api/Dockerfile"
 version_prisma=$(python3 -c "import json;print(json.load(open('$raiz/apps/clinical-api/package.json'))['devDependencies']['prisma'])")
 docker run --rm --network "$red" \
   -v "$raiz/apps/clinical-api/prisma:/w/prisma:ro" -v "$raiz/apps/clinical-api/prisma.config.ts:/w/prisma.config.ts:ro" -w /w \
-  -e DATABASE_URL="postgresql://clinical_api:$(cat "$raiz/infra/docker/secrets/pg_clinical_api_password")@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require" \
+  -e DATABASE_URL="postgresql://clinical_api:$(cat "${ONCOLENS_SECRETS_DIR:-$raiz/infra/docker/secrets}/pg_clinical_api_password")@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require" \
   "$imagen_node" sh -c "npm init -y >/dev/null && npm i --silent prisma@${version_prisma} dotenv >/dev/null 2>&1; npx prisma migrate deploy" 2>&1 | tail -2
 
 paso "Seed clínico sintético"
@@ -126,7 +126,7 @@ paso "Listo"
 cat <<FIN
 Web:        http://127.0.0.1:3000/login
 Usuario:    doc1@test.local   (médico)   ·   admin@test.local (administrador, no ve datos clínicos)
-Contraseña: cat infra/docker/secrets/seed_doctor_password   (o seed_admin_password)
+Contraseña: cat ${ONCOLENS_SECRETS_DIR:-infra/docker/secrets}/seed_doctor_password   (o seed_admin_password)
 LLM:        $LLM_MODEL (Ollama, contexto 8192) · datos 100 % sintéticos
 La primera consulta tarda más: carga el modelo en memoria (~15-25 s). Para apagar: scripts/demo/apagar.sh
 FIN

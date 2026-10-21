@@ -70,6 +70,9 @@
       "cc_by_sa": "CC BY-SA",
       "cc_by_nc": "CC BY-NC"
     },
+    "detalle": {
+      "resumen": "Ver más detalle"
+    },
     "fragmento": {
       "titulo": "Fragmento citado",
       "ayuda": "Abre «Ver fragmento» en una cita para leer el texto original recuperado en esta consulta",

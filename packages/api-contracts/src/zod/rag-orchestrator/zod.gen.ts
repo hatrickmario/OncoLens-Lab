@@ -507,6 +507,7 @@ export const zCitedSource = zCitedSourceFields;
 export const zEvidenceOption = z.strictObject({
     option: z.string(),
     rationale: z.string(),
+    details: z.array(z.string().min(1)).max(2).optional(),
     applicabilitySummary: zApplicabilitySummary,
     populationNotComparable: z.boolean(),
     perSource: z.array(z.strictObject({

@@ -78,6 +78,7 @@ def _opcion_con_evidencia(
     return EvidenceOption(
         option=aceptada.opcion.option,
         rationale=aceptada.opcion.rationale,
+        **({"details": list(aceptada.opcion.details)} if aceptada.opcion.details else {}),
         applicabilitySummary=ApplicabilitySummary(
             coincide=0, parcial=0, noCoincide=0, desconocido=0
         ),

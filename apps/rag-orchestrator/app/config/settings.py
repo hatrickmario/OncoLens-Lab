@@ -40,12 +40,16 @@ class Settings(BaseSettings):
     llm_health_timeout_ms: int = Field(default=2000, gt=0)
     # Generación de /rag/query (US-225, RN-22): plazo de la llamada al LLM local y tope de tokens de su salida.
     llm_request_timeout_ms: int = Field(default=60000, gt=0)
-    llm_max_output_tokens: int = Field(default=1024, gt=0)
+    llm_max_output_tokens: int = Field(default=2048, gt=0)
     llm_cloud_enabled: bool = False
     # ADR-39 fase B (US-224, RN-22). `LLM_NUM_CTX` lo aplica el runtime nativo (OLLAMA_CONTEXT_LENGTH): la API
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.
     llm_num_ctx: int = Field(default=8192, gt=0)
     llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    # Párrafos de detalle por opción que se piden al LLM (ARR-08, RN-22); 0 desactiva el detalle. El contrato admite hasta 2.
+    details_max_paragraphs: int = Field(default=2, ge=0, le=2)
+    # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
+    llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.
     ocr_engine: Literal["ocrmypdf-tesseract", "paddleocr", "doctr"] = "ocrmypdf-tesseract"
     ocr_languages: str = Field(default="spa", min_length=1)

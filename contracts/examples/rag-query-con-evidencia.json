@@ -87,6 +87,10 @@
     {
       "option": "Quimioterapia combinada con terapia dirigida anti-HER2",
       "rationale": "La evidencia recuperada describe la adición de terapia anti-HER2 a la quimioterapia adyuvante en tumores HER2 positivos.",
+      "details": [
+        "Texto sintético de ejemplo: el detalle describe, según los fragmentos recuperados, el diseño del estudio y la población incluida.",
+        "Texto sintético de ejemplo: el detalle describe los resultados que reporta la fuente para el grupo estudiado."
+      ],
       "applicabilitySummary": {
         "coincide": 2,
         "parcial": 0,

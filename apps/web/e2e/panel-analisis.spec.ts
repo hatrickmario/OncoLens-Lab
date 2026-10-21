@@ -55,6 +55,23 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(panel.getByRole('button', { name: textos.fragmento.volver })).toBeVisible();
   });
 
+  test('despliega el detalle de la opción con el teclado y muestra sus párrafos cuando la opción trae details [ARR-08 AC-5]', async ({
+    page,
+  }) => {
+    const detalle = respuestaConEvidencia.evidenceOptions[0].details as string[];
+    expect(detalle.length).toBeGreaterThanOrEqual(1);
+    await analizar(page, preguntaHer2);
+    await esperarResultado(page);
+
+    const control = page.getByText(textos.detalle.resumen);
+    await expect(control).toBeVisible();
+    await expect(page.getByText(detalle[0]!)).toBeHidden();
+    await control.focus();
+    await page.keyboard.press('Enter');
+
+    for (const parrafo of detalle) await expect(page.getByText(parrafo)).toBeVisible();
+  });
+
   test('muestra la relevancia como metadato secundario después de las citas [US-061 AC-2]', async ({
     page,
   }) => {

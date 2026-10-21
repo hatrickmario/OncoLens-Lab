@@ -42,7 +42,7 @@ imagen_node=$(awk '/^FROM/{print $2; exit}' "$raiz/apps/clinical-api/Dockerfile"
 version_prisma=$(python3 -c "import json;print(json.load(open('$raiz/apps/clinical-api/package.json'))['devDependencies']['prisma'])")
 docker run --rm --network "$red" \
   -v "$raiz/apps/clinical-api/prisma:/w/prisma:ro" -v "$raiz/apps/clinical-api/prisma.config.ts:/w/prisma.config.ts:ro" -w /w \
-  -e DATABASE_URL="postgresql://clinical_api:$(cat "$raiz/infra/docker/secrets/pg_clinical_api_password")@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require" \
+  -e DATABASE_URL="postgresql://clinical_api:$(cat "${ONCOLENS_SECRETS_DIR:-$raiz/infra/docker/secrets}/pg_clinical_api_password")@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require" \
   "$imagen_node" sh -c "npm init -y >/dev/null && npm i --silent prisma@${version_prisma} dotenv >/dev/null 2>&1; npx prisma migrate deploy" 2>&1 | tail -1
 "${compose[@]}" --profile seed run --rm clinical-seed 2>&1 | tail -1 | cut -c1-80
 "${compose[@]}" up -d 2>&1 | tail -1
@@ -57,4 +57,4 @@ cd "$raiz"
 npm run build --workspaces --if-present >/dev/null 2>&1   # los E2E importan paquetes compilados (clinical-language)
 cd apps/web
 npx playwright install chromium >/dev/null 2>&1
-E2E_DOC_CONTRASENA="$(cat "$raiz/infra/docker/secrets/seed_doctor_password")" npx playwright test ${args[@]+"${args[@]}"}
+E2E_DOC_CONTRASENA="$(cat "${ONCOLENS_SECRETS_DIR:-$raiz/infra/docker/secrets}/seed_doctor_password")" npx playwright test ${args[@]+"${args[@]}"}

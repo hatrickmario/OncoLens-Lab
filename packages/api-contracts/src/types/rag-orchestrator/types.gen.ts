@@ -17,6 +17,10 @@ export type EvidenceOption = {
      * En el idioma de la pregunta.
      */
     rationale: string;
+    /**
+     * Párrafos opcionales de detalle que amplían la justificación, en el idioma de la pregunta. Cada afirmación pasó citas y NLI (RN-01) y el filtro de lenguaje (RN-23); el párrafo que no las supera se omite y cuenta en omittedClaims. Ausente (nunca vacío) si ninguno se soporta.
+     */
+    details?: Array<string>;
     applicabilitySummary: ApplicabilitySummary;
     /**
      * true solo si todas sus fuentes lo son (ADR-31).
