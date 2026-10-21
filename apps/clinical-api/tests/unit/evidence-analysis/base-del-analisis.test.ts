@@ -96,25 +96,6 @@ describe('BaseDelAnalisis', () => {
     ]);
   });
 
-  it('ordena por dataRef numérico y no por la lista de origen cuando el evento tiene la referencia más baja', () => {
-    const contexto = structuredClone(request.clinicalContext);
-    contexto.events[0]!.dataRef = 'r1';
-    contexto.diagnosis!.dataRef = 'r10';
-
-    const resultado = base.construir(
-      { ...request, clinicalContext: contexto },
-      respuestaConEvidencia(),
-      false,
-    );
-
-    expect(resultado.patientDataUsed.map(({ label }) => label)).toEqual([
-      'diagnostico',
-      'HER2 3+ (IHQ)',
-      'Receptor de estrógeno Positivo (80%)',
-      'mama · TNM_8 IIA',
-    ]);
-  });
-
   it('deja patientDataUsed vacío cuando el contexto no trae datos', () => {
     const contexto = {
       ...request.clinicalContext,

@@ -403,7 +403,7 @@ export async function insertarFxT1aA(
     exam_type: 'inmunohistoquimica',
     source_lab: null,
     entry_method: 'ocr',
-    performed_at: '2026-10-01', // el más reciente del paciente (AHORA = 2026-10-16)
+    performed_at: FECHA_FIJA, // el más reciente del paciente (los del seed son de hace semanas)
     created_at: INSTANTE_FIJO,
   });
   const biomarcador = (nombre: string, resto: Fila) =>

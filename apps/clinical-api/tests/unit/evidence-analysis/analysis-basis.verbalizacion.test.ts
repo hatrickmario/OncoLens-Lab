@@ -99,8 +99,26 @@ describe('verbalizarDatoDelContexto', () => {
     expect(verbalizarDatoDelContexto(evento)).toBe('diagnostico');
   });
 
-  it('omite el valor cuando el biomarcador no lo trae', () => {
-    expect(verbalizarDatoDelContexto(biomarcador({ value: '' }))).toBe('HER2');
+  it('escribe No disponible como valor cuando el biomarcador no lo trae', () => {
+    expect(verbalizarDatoDelContexto(biomarcador({ value: '' }))).toBe('HER2: No disponible');
+  });
+
+  it('escribe No disponible como valor cuando el atributo viene con valor vacío', () => {
+    const atributo = {
+      tipo: 'atributo',
+      dato: { dataRef: 'r3', key: 'estado_menopausico', value: '', monthsAgo: 1, provenance },
+    } as const;
+
+    expect(verbalizarDatoDelContexto(atributo)).toBe('estado_menopausico: No disponible');
+  });
+
+  it('escribe No disponible cuando el evento no trae tipo', () => {
+    const evento = {
+      tipo: 'evento',
+      dato: { dataRef: 'r5', eventType: '', monthsAgo: 1, description: 'x', provenance },
+    } as const;
+
+    expect(verbalizarDatoDelContexto(evento)).toBe('No disponible');
   });
 
   it('omite el estadio cuando el contexto lo trae como No disponible', () => {

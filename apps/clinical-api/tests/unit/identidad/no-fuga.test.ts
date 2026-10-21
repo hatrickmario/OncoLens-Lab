@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { configuracionDePiiDeTest } from '../../support/desidentificacion.js';
 import { FX_T4A_A } from '../../support/identidad.js';
 import {
   buscarFugaDeIdentidad,
@@ -262,11 +263,19 @@ describe('capturarSalidaDelProceso', () => {
 });
 
 describe('etiquetasConDatoAbsoluto', () => {
-  it('devuelve solo las etiquetas con fecha absoluta o con el seudónimo de la consulta', () => {
-    const etiquetas = ['HER2 3+ (IHQ)', 'Evolución 2026-08-16', 'Ki-67 psd_Abc123'];
+  const fechas = configuracionDePiiDeTest().fechas.expresiones;
 
-    expect(etiquetasConDatoAbsoluto(etiquetas, 'psd_Abc123')).toEqual([
+  it('devuelve solo las etiquetas con fecha absoluta (ISO o dd/mm/yyyy) o con el seudónimo de la consulta', () => {
+    const etiquetas = [
+      'HER2 3+ (IHQ)',
       'Evolución 2026-08-16',
+      'Control 16/08/2026',
+      'Ki-67 psd_Abc123',
+    ];
+
+    expect(etiquetasConDatoAbsoluto(etiquetas, 'psd_Abc123', fechas)).toEqual([
+      'Evolución 2026-08-16',
+      'Control 16/08/2026',
       'Ki-67 psd_Abc123',
     ]);
   });

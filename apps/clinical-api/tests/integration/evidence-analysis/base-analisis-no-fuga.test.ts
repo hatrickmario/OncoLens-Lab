@@ -9,8 +9,11 @@ import {
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
+  PII_FX_T4A_A,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { configuracionDePiiDeTest } from '../../support/desidentificacion.js';
+import { INSTANTE_FIJO, insertar } from '../../support/filas-sinteticas.js';
 import { servicioDeIdentidad } from '../../support/identidad.js';
 import {
   buscarFugaDeIdentidad,
@@ -38,10 +41,47 @@ describe('La Base del análisis no filtra identidad (RN-10, RN-11)', () => {
     await mundo.cerrar();
   });
 
+  /** PII sintética (nombre, texto libre y fecha ISO) en los campos que `verbalizarDatoDelContexto()` sí escribe. */
+  async function sembrarPiiEnCamposDelContexto(patientId: string): Promise<void> {
+    const sembrado = `${PII_FX_T4A_A.nombre} (CC ${PII_FX_T4A_A.cedula}) 2026-08-16`;
+    const { cliente, ids } = mundo;
+    await cliente.query('UPDATE clinical.diagnosis SET stage_value = $2 WHERE patient_id = $1', [
+      patientId,
+      sembrado,
+    ]);
+    await cliente.query(
+      `UPDATE clinical.biomarker SET value = $2
+        WHERE exam_id IN (SELECT id FROM clinical.exam WHERE patient_id = $1)`,
+      [patientId, sembrado],
+    );
+    await cliente.query(
+      'UPDATE clinical.prior_treatment SET regimen_name = $2 WHERE patient_id = $1',
+      [patientId, sembrado],
+    );
+    const { rows } = await cliente.query<{ id: string }>(
+      'SELECT id FROM clinical.care_episode WHERE patient_id = $1',
+      [patientId],
+    );
+    await insertar(cliente, 'clinical.clinical_attribute', {
+      id: ids(),
+      patient_id: patientId,
+      episode_id: rows[0]?.id ?? '',
+      attribute_key: 'antecedente',
+      value: sembrado,
+      observed_at: null,
+      date_precision: 'dia',
+      entry_method: 'seed',
+      extraction_confidence: 'n_a',
+      review_status: 'verificado',
+      created_at: INSTANTE_FIJO,
+    });
+  }
+
   it('no deja nombre, documento, índice ciego, fecha absoluta ni pseudoPatientId en la Base cuando se analiza FX-T4a-a [RN-10]', async () => {
     const identidad = servicioDeIdentidad(mundo.cliente);
     const { app } = await montarGateway(mundo, { identidades: crearLectorDeIdentidad(identidad) });
     const patientId = await crearPacienteFxT4aA(mundo, identidad);
+    await sembrarPiiEnCamposDelContexto(patientId);
 
     const respuesta = await request(app)
       .post('/platform/evidence-analyses')
@@ -65,8 +105,12 @@ describe('La Base del análisis no filtra identidad (RN-10, RN-11)', () => {
       ),
     ).toEqual([]);
     const enviado = rag.capturadas[0]!.cuerpo as { clinicalContext: { pseudoPatientId: string } };
-    expect(etiquetasConDatoAbsoluto(etiquetas, enviado.clinicalContext.pseudoPatientId)).toEqual(
-      [],
-    );
+    expect(
+      etiquetasConDatoAbsoluto(
+        etiquetas,
+        enviado.clinicalContext.pseudoPatientId,
+        configuracionDePiiDeTest().fechas.expresiones,
+      ),
+    ).toEqual([]);
   });
 });

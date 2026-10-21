@@ -2,7 +2,6 @@ import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import type { ClinicalContext } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import {
   CON_AFIRMACION_OMITIDA,
   LLM_OK,
@@ -55,15 +54,20 @@ async function analizar(traceId: string, query: string) {
   return respuesta.body as EvidenceAnalysis;
 }
 
+/** Toda clave `dataRef` del contexto capturado, a cualquier profundidad: un dato nuevo del contexto no puede quedar fuera. */
 const dataRefsEnviados = (): string[] => {
-  const contexto = rag.capturadas[0]!.cuerpo['clinicalContext'] as ClinicalContext;
-  return [
-    contexto.diagnosis,
-    ...contexto.biomarkers,
-    ...contexto.attributes,
-    ...contexto.priorTreatments,
-    ...contexto.events,
-  ].flatMap((dato) => (dato === null ? [] : [dato.dataRef]));
+  const encontrados: string[] = [];
+  const recorrer = (valor: unknown): void => {
+    if (Array.isArray(valor)) valor.forEach(recorrer);
+    else if (valor !== null && typeof valor === 'object') {
+      for (const [clave, contenido] of Object.entries(valor)) {
+        if (clave === 'dataRef') encontrados.push(String(contenido));
+        else recorrer(contenido);
+      }
+    }
+  };
+  recorrer(rag.capturadas[0]!.cuerpo['clinicalContext']);
+  return encontrados;
 };
 
 describe('Base del análisis (FR-27)', () => {

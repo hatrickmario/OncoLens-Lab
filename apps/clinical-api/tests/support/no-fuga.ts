@@ -108,15 +108,19 @@ export function fuenteDeLaBaseDelAnalisis(base: unknown): Fuente {
   return { nombre: 'respuesta:analysisBasis', texto: JSON.stringify(base) };
 }
 
-const FECHA_ABSOLUTA = /\d{4}-\d{2}-\d{2}/;
-
-/** Etiquetas de `patientDataUsed` que traen una fecha absoluta o el seudónimo de la consulta (RN-10, RN-11). */
+/**
+ * Etiquetas de `patientDataUsed` que traen una fecha absoluta (con las mismas expresiones que `verificarDesidentificado`,
+ * de `config/pii-formats.json`) o el seudónimo de la consulta (RN-10, RN-11).
+ */
 export function etiquetasConDatoAbsoluto(
   etiquetas: readonly string[],
   seudonimo: string,
+  expresionesDeFecha: readonly RegExp[],
 ): string[] {
   return etiquetas.filter(
-    (etiqueta) => FECHA_ABSOLUTA.test(etiqueta) || etiqueta.includes(seudonimo),
+    (etiqueta) =>
+      etiqueta.includes(seudonimo) ||
+      expresionesDeFecha.some((expresion) => etiqueta.search(expresion) !== -1),
   );
 }
 

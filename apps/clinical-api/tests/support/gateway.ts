@@ -171,19 +171,8 @@ export const LLM_OK: EscenarioDeRag = {
 
 /** Como `LLM-OK`, pero Backend 2 descartó una afirmación sin soporte (`omittedClaims = 1`, US-064 AC-3). */
 export const CON_AFIRMACION_OMITIDA: EscenarioDeRag = {
-  tipo: 'json',
-  status: 200,
-  cuerpo: { ...structuredClone(respuestaEjemplo), omittedClaims: 1 },
-};
-
-/** Como `LLM-OK`, pero con un supuesto verificado que declara el modelo. */
-export const CON_SUPUESTO_VERIFICADO: EscenarioDeRag = {
-  tipo: 'json',
-  status: 200,
-  cuerpo: {
-    ...structuredClone(respuestaEjemplo),
-    assumptions: [{ text: 'Supuesto verificado sintético.' }],
-  },
+  ...LLM_OK,
+  cuerpo: { ...structuredClone(respuestaEjemplo), limitations: [], omittedClaims: 1 },
 };
 
 export interface RagSimulado {
