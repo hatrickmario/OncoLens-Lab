@@ -70,8 +70,16 @@ def _schema_de(spec: dict[str, Any], pointer: str) -> dict[str, Any]:
     return destino
 
 
-def _validador_de(spec: dict[str, Any], schema: dict[str, Any]) -> Draft202012Validator:
-    return Draft202012Validator({**schema, "components": spec["components"]})
+def _spec_configurado() -> dict[str, Any]:
+    if _spec is None:
+        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
+    return _spec
+
+
+def _incumplimientos(spec: dict[str, Any], schema: dict[str, Any], cuerpo: Any) -> list[Any]:
+    """Errores de `cuerpo` contra `schema` (con los componentes del spec), ordenados por ruta JSON."""
+    validador = Draft202012Validator({**schema, "components": spec["components"]})
+    return sorted(validador.iter_errors(cuerpo), key=lambda e: list(e.absolute_path))
 
 
 def assert_matches_spec(pointer: str, body: Any) -> None:
@@ -79,12 +87,8 @@ def assert_matches_spec(pointer: str, body: Any) -> None:
 
     `pointer`: `#/components/schemas/<Nombre>` o `#/paths/<ruta>/<método>/responses/<código>`.
     """
-    if _spec is None:
-        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
-    errores = sorted(
-        _validador_de(_spec, _schema_de(_spec, pointer)).iter_errors(body),
-        key=lambda e: list(e.absolute_path),
-    )
+    spec = _spec_configurado()
+    errores = _incumplimientos(spec, _schema_de(spec, pointer), body)
     if errores:
         detalle = "\n".join(
             f"  /{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errores
@@ -94,11 +98,10 @@ def assert_matches_spec(pointer: str, body: Any) -> None:
 
 def operaciones_con_jwt_de_servicio() -> list[tuple[str, str]]:
     """(método, ruta) de cada operación del spec con `security: serviceJwt` (la global, salvo `security: []`)."""
-    if _spec is None:
-        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
-    global_requiere = {"serviceJwt"} <= {n for req in _spec.get("security", []) for n in req}
+    spec = _spec_configurado()
+    global_requiere = {"serviceJwt"} <= {n for req in spec.get("security", []) for n in req}
     protegidas = []
-    for ruta, operaciones in _spec["paths"].items():
+    for ruta, operaciones in spec["paths"].items():
         for metodo, operacion in operaciones.items():
             seguridad = operacion.get("security")
             requiere = (
@@ -109,12 +112,6 @@ def operaciones_con_jwt_de_servicio() -> list[tuple[str, str]]:
             if requiere:
                 protegidas.append((metodo.upper(), ruta))
     return protegidas
-
-
-def _spec_configurado() -> dict[str, Any]:
-    if _spec is None:
-        raise RuntimeError("spec no configurado: usa el fixture de sesión de conftest.py")
-    return _spec
 
 
 def resolver_plantilla(spec: dict[str, Any], ruta: str) -> str | None:
@@ -173,10 +170,7 @@ def verificar_respuesta(metodo: str, ruta: str, status: int, cabeceras: Any, cue
         cuerpo_json = json.loads(cuerpo)
     except ValueError:
         raise AssertionError(f"la respuesta no cumple {donde}: el cuerpo no es JSON") from None
-    errores = sorted(
-        _validador_de(spec, contenido["schema"]).iter_errors(cuerpo_json),
-        key=lambda e: list(e.absolute_path),
-    )
+    errores = _incumplimientos(spec, contenido["schema"], cuerpo_json)
     if errores:
         detalle = "\n".join(f"  {_describir_incumplimiento(e)}" for e in errores)
         raise AssertionError(f"la respuesta no cumple {donde}:\n{detalle}")
