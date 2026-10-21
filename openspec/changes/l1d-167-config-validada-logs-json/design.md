@@ -120,3 +120,14 @@ lance el proceso real declara *timeout* explícito.
 - D4 (adaptación del AC-4 al requisito vigente del `traceId`) y D5 (AC-5 sobre `evidence-analyses` en lugar del registro): confirmar en el Gate 1.
 - Resuelto en el Gate 1 del S2: lista cerrada de campos (D5), evento único `configuracion_invalida` con `motivo` y
   excepción `valorInvalido` (D2), ejemplo de health único y versiones 1.6.0 / 1.4.0 (Contratos).
+
+## Adiciones aceptadas en la implementación (rag-orchestrator)
+
+Aceptadas por el orquestador del S2 sin cambio de alcance.
+
+- `app/config/version.py` con `VERSION_DEL_SERVICIO` (sin versión de paquete en rag-orchestrator); un test la compara con `info.version` de su `openapi.yaml`. **`l1d-171` debe subirla a 1.5.0** al subir el contrato.
+- `nombres_de_claves()` en `app/config/settings.py`: campos de `Settings` en mayúsculas, sin `MODELOS`, más `CLAVES_ADR39` si `modelos` está cargado; es lo que `/health` expone como `configKeys`.
+- El test estático "sin `os.environ` fuera de `app/config/`" excluye `app/scripts/**` (CLI de desarrollo, no el servicio).
+- Dos aserciones de texto exacto `{"status":"ok"}` pasan a comprobar `status` (requisito MODIFIED; trailer `Test-Removal`).
+- Logging (D7): `logging` estándar con `FormateadorJson` propio (sin dependencia nueva); `traceId` en un `ContextVar` de `app/api/trace.py` fijado por el middleware `ContextoDeTraceId`; campos de evento cerrados y sin traceback.
+- Observación para el Gate 2 de privacy-guardian: el access log en texto de uvicorn (IP, ruta, sin `traceId`) queda fuera de este change.
