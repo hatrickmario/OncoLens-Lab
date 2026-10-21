@@ -15,4 +15,5 @@ van como DEC en [`docs/decisions/`](../../decisions/).
 | ADR-43 | Catálogo del corpus en base separada | pendiente | — | — |
 | ADR-44 | Stack de observabilidad (Prometheus, Grafana, OpenTelemetry) | pendiente (Post-MVP) | — | US-028 |
 | [ADR-45](ADR-45-mejora-recuperacion-ol06.md) | Mejora de la recuperación frente a las metas de OL-06: diagnóstico, protocolo anti-sobreajuste y plan por ablaciones | propuesto | 2026-10-16 | US-226…US-230 (borrador, sin Linear) |
+| [ADR-46](ADR-46-contratos-provider-driven-sin-pact.md) | Los contratos son provider-driven: el proveedor verifica sus respuestas y los consumidores usan clientes generados, sin Pact | propuesto | 2026-10-21 | US-214 (L1D-264) |
 | ADR-7 | Scoring de evidencia clínica | futuro | — | — |
