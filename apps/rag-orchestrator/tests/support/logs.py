@@ -5,6 +5,7 @@ suite que lo usa incluye una sonda de mutación (`test_la_sonda_...`) que inyect
 """
 
 import json
+import re
 
 
 def parsear_lineas_json(salida: str) -> list[dict]:
@@ -22,31 +23,57 @@ def parsear_lineas_json(salida: str) -> list[dict]:
     return lineas
 
 
-# Metadato del reloj del formateador: sus dígitos y puntos pueden coincidir por azar con un valor prohibido (p. ej.
-# "23:27:11.789225" contiene "1.7"). Es el único campo excluido; todo lo demás se busca.
-CAMPOS_DE_METADATO_DEL_RELOJ = ("time",)
+# Metadato del reloj del formateador (`datetime.isoformat()` en UTC): sus dígitos y puntos pueden coincidir por azar
+# con un valor prohibido (p. ej. "23:27:11.789225" contiene "1.7"). Solo se excluye el campo `time` de primer nivel
+# cuando es un texto con esta forma exacta; cualquier otra cosa en `time` se busca como el resto del log.
+MARCA_DE_TIEMPO = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\+00:00"
+_MARCA_COMPLETA = re.compile(MARCA_DE_TIEMPO)
+_TRAMO_DEL_RELOJ = re.compile(rf'"time"\s*:\s*"{MARCA_DE_TIEMPO}"')
+
+
+class _Objeto(list):
+    """Objeto JSON como lista de pares (clave, valor): conserva las claves repetidas que ``dict`` colapsaría."""
+
+
+def _cargar_objeto(linea: str) -> _Objeto | None:
+    """El objeto JSON de la línea, o ``None`` si es otra cosa (texto suelto, array, texto delante del JSON)."""
+    try:
+        cargado = json.loads(linea, object_pairs_hook=_Objeto)
+    except json.JSONDecodeError:
+        return None
+    return cargado if isinstance(cargado, _Objeto) else None
 
 
 def _hojas_de_texto(valor: object) -> list[str]:
     """Claves y valores escalares (en su forma de texto) de un valor JSON, a cualquier profundidad."""
-    if isinstance(valor, dict):
-        return [t for k, v in valor.items() for t in [str(k), *_hojas_de_texto(v)]]
+    if isinstance(valor, _Objeto):
+        return [t for k, v in valor for t in [str(k), *_hojas_de_texto(v)]]
     if isinstance(valor, list):
         return [t for v in valor for t in _hojas_de_texto(v)]
     return [str(valor)]
 
 
-def _textos_a_buscar(linea: str) -> list[str]:
-    """El contenido de la línea sin el reloj; una línea que no es un objeto JSON se busca entera (no se afloja)."""
-    try:
-        objeto = json.loads(linea)
-    except json.JSONDecodeError:
-        return [linea]
-    if not isinstance(objeto, dict):
-        return [linea]
-    return _hojas_de_texto(
-        {k: v for k, v in objeto.items() if k not in CAMPOS_DE_METADATO_DEL_RELOJ}
+def _es_reloj_del_formateador(clave: str, valor: object) -> bool:
+    return (
+        clave == "time" and isinstance(valor, str) and _MARCA_COMPLETA.fullmatch(valor) is not None
     )
+
+
+def _textos_a_buscar(linea: str) -> list[str]:
+    """Todo el contenido de la línea salvo el reloj. Lo que no es un objeto JSON se busca entero (no se afloja).
+
+    Se busca en los valores decodificados y también en la línea cruda sin el tramo del reloj: la forma original de
+    números y literales (1.70, 1e5, true, null, NaN) se pierde al decodificar.
+    """
+    objeto = _cargar_objeto(linea)
+    if objeto is None:
+        return [linea]
+    pares = [(k, v) for k, v in objeto if not _es_reloj_del_formateador(k, v)]
+    excluidos = len(objeto) - len(pares)
+    cruda = linea
+    if excluidos and len(_TRAMO_DEL_RELOJ.findall(linea)) == excluidos:
+        cruda = _TRAMO_DEL_RELOJ.sub("", linea)
+    return [cruda, *_hojas_de_texto(_Objeto(pares))]
 
 
 def exigir_sin_valores_prohibidos(salida: str, prohibidos: list[str]) -> None:
