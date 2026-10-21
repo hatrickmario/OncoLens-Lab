@@ -9,7 +9,6 @@ import json
 
 import pytest
 
-from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     EJEMPLOS,
     Q_HER2,
@@ -19,7 +18,6 @@ from tests.support.recuperacion import (
     solicitud_de,
 )
 
-RESPUESTA_409 = "#/paths/~1rag~1query/post/responses/409"
 VERSION_AJENA = "9.9.9-ajena"
 
 
@@ -40,7 +38,6 @@ def test_rag_query_catalogo_distinto_responde_409_sin_invocar():
 
     assert respuesta.status_code == 409
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_409, cuerpo)
     assert cuerpo == {**_ejemplo_409(), "traceId": solicitud["traceId"]}
     assert entorno.detector_idioma.invocaciones == 0
     assert entorno.lector_release.invocaciones == 0

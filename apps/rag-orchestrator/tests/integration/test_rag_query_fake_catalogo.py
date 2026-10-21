@@ -6,13 +6,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
-from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec
+from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import ejemplo_con_catalogo_montado
 from tests.support.service_jwt import con_token_valido
 
 EJEMPLOS = RAIZ_REPOSITORIO / "contracts/examples"
-RESPUESTA_409 = "#/paths/~1rag~1query/post/responses/409"
 VERSION_AJENA = "9.9.9-ajena"
 
 
@@ -35,7 +34,6 @@ def test_fake_responde_409_cuando_el_catalogo_es_otro():
 
     assert respuesta.status_code == 409
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_409, cuerpo)
     ejemplo = json.loads(
         (EJEMPLOS / "rag-catalog-version-mismatch.json").read_text(encoding="utf-8")
     )

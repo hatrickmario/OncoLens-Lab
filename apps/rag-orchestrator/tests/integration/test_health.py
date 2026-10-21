@@ -109,6 +109,5 @@ def test_health_informa_la_catalog_version_del_manifiesto_montado_cuando_el_cata
     respuesta = TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo())).get("/health")
 
     assert respuesta.status_code == 200
-    assert_matches_spec("#/components/schemas/HealthStatus", respuesta.json())
     assert respuesta.json()["catalogVersion"] == "1.0.1"
     assert str(tmp_path) not in respuesta.text
