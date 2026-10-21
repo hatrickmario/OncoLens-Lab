@@ -9,6 +9,8 @@ from datetime import UTC, datetime
 # Lista cerrada de lo que una línea puede llevar además de nivel, logger y mensaje. Todo lo demás que alguien pase en
 # `extra=` (cuerpos, preguntas, identidad) se descarta aquí, sin depender de que cada llamada se acuerde de no pasarlo.
 CAMPOS_DE_EVENTO = ("event", "variable", "regla", "motivo")
+LOGGER_DE_ACCESO_DE_UVICORN = "uvicorn.access"
+LOGGERS_DE_UVICORN = ("uvicorn", "uvicorn.error", "uvicorn.access")
 _MARCA_DEL_HANDLER = "_oncolens_json"
 
 TraceIdActual = Callable[[], str | None]
@@ -65,7 +67,24 @@ class _HandlerAStdout(logging.StreamHandler):
 
 
 def registrar_evento(logger: logging.Logger, nivel: int, evento: str, **campos: object) -> None:
-    raise NotImplementedError("no implementado")
+    """Un evento estructurado: el nombre es el ``message`` y los campos de la lista cerrada viajan como campos JSON.
+
+    El ``traceId`` lo añade el formateador desde la request en curso; nunca va dentro del texto del mensaje.
+    """
+    logger.log(nivel, evento, extra={"event": evento, **campos})
+
+
+def _encaminar_uvicorn_al_formateador() -> None:
+    """uvicorn instala handlers propios (texto, con IP y query, y *traceback* completo): se quitan para que sus
+    registros suban al root y salgan por el formateador JSON (el *traceback* se reduce a ``errorClase``).
+
+    El access log se silencia siempre (sin handler y sin propagar), con o sin ``--no-access-log``: registra la IP y la
+    query completa de cada request y no puede pasar por el formateador sin ellas (RN-10).
+    """
+    for nombre in LOGGERS_DE_UVICORN:
+        logger = logging.getLogger(nombre)
+        logger.handlers.clear()
+        logger.propagate = nombre != LOGGER_DE_ACCESO_DE_UVICORN
 
 
 def configurar_logging_json(
@@ -75,6 +94,7 @@ def configurar_logging_json(
 
     ``trace_id_actual`` se inyecta (lo aporta `app.api.trace`): la configuración no depende de la capa de API.
     """
+    _encaminar_uvicorn_al_formateador()
     raiz = logging.getLogger()
     for previo in [h for h in raiz.handlers if getattr(h, _MARCA_DEL_HANDLER, False)]:
         raiz.removeHandler(previo)

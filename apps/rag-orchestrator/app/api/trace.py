@@ -36,12 +36,8 @@ def _trace_id_de_la_cabecera(request: Request) -> str | None:
 
 
 def resolver_trace_id(request: Request, generador: TraceIdGenerator) -> str:
-    del_cuerpo = getattr(
-        request.state, "trace_id", None
-    )  # lo fija el endpoint al leer el cuerpo ya validado
-    if del_cuerpo is not None:
-        return del_cuerpo
-    return _trace_id_de_la_cabecera(request) or trace_id_actual() or generador.nuevo()
+    # El ContextVar lo fija el middleware (cabecera o generado) y el endpoint lo reemplaza por el del cuerpo validado.
+    return trace_id_actual() or _trace_id_de_la_cabecera(request) or generador.nuevo()
 
 
 class ContextoDeTraceId:

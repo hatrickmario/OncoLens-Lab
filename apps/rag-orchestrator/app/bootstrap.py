@@ -38,9 +38,9 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
-from app.config.errores_de_configuracion import describir_errores
-from app.config.logging import silenciar_urls_de_httpx_en_logs
-from app.config.settings import Settings, nombres_de_claves
+from app.config.errores_de_configuracion import MOTIVO_VARIABLE_AUSENTE, describir_errores
+from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
+from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
@@ -90,13 +90,30 @@ def cargar_settings_o_salir() -> Settings:
     """Carga ``Settings`` una sola vez; si el entorno es inválido registra un ``configuracion_invalida`` por variable
     (nombre y regla, nunca el valor) y termina el proceso con código 1 antes de escuchar (US-037 AC-2, RN-22)."""
     try:
-        return Settings()
+        settings = Settings()
     except ValidationError as error:
-        for evento in describir_errores(error):
-            logger.error(
-                "configuracion_invalida", extra={"event": "configuracion_invalida", **evento}
-            )
-        raise SystemExit(1) from None
+        eventos = describir_errores(error)
+    else:
+        eventos = _eventos_de_recuperacion_ausente(settings)
+        if not eventos:
+            return settings
+    for evento in eventos:
+        registrar_evento(logger, logging.ERROR, "configuracion_invalida", **evento)
+    raise SystemExit(1)
+
+
+def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]:
+    """Con ``LLM_PROVIDER=local`` /rag/query exige sus valores de recuperación (RN-22): falta = variable_ausente."""
+    if settings.llm_provider != "local":
+        return []
+    return [
+        {
+            "variable": clave,
+            "regla": "obligatoria con LLM_PROVIDER=local",
+            "motivo": MOTIVO_VARIABLE_AUSENTE,
+        }
+        for clave in claves_de_recuperacion_ausentes(settings)
+    ]
 
 
 def crear_app(
@@ -270,14 +287,11 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
 
 def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
     """Umbral y tamaños de la recuperación (RN-22): sin valor por defecto en código, el arranque se niega si faltan."""
-    _exigir_claves(
-        {
-            "RELEVANCE_THRESHOLD": settings.relevance_threshold,
-            "RETRIEVAL_TOP_K": settings.retrieval_top_k,
-            "RERANK_TOP_N": settings.rerank_top_n,
-            "NLI_ENTAILMENT_THRESHOLD": settings.nli_entailment_threshold,
-        }
-    )
+    ausentes = claves_de_recuperacion_ausentes(settings)
+    if ausentes:
+        raise ConfiguracionDeRecuperacionIncompleta(
+            f"falta configurar para /rag/query: {', '.join(ausentes)}"
+        )
 
 
 def _exigir_claves(valores: dict[str, object]) -> None:
