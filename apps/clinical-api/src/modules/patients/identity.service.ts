@@ -40,6 +40,51 @@ export interface DependenciasDeIdentidad {
   readonly repo: IdentityRepository;
 }
 
-export function createIdentityService(_dependencias: DependenciasDeIdentidad): IdentityService {
-  throw new Error('no implementado');
+export function createIdentityService({
+  cifrador,
+  indice,
+  repo,
+}: DependenciasDeIdentidad): IdentityService {
+  return {
+    async guardar(identidad) {
+      const { patientId } = identidad;
+      const documento = cifrador.cifrar(identidad.numeroDeDocumento, {
+        patientId,
+        campo: 'national_id',
+      });
+      const nombre = cifrador.cifrar(identidad.nombreCompleto, { patientId, campo: 'full_name' });
+      const insertada = await repo.insertarSiNoExiste({
+        patientId,
+        idType: identidad.idType,
+        issuingCountry: identidad.issuingCountry,
+        nationalIdCiphertext: documento.blob,
+        nationalIdHmac: indice.indiceDeDocumento(identidad.idType, identidad.numeroDeDocumento),
+        fullNameCiphertext: nombre.blob,
+        keyVersion: documento.keyVersion,
+      });
+      return insertada ? 'creada' : 'existente';
+    },
+    async descifrar(patientId) {
+      const fila = await repo.buscarPorPaciente(patientId);
+      if (fila === null) return null;
+      return {
+        patientId,
+        idType: fila.idType as TipoDeDocumento,
+        issuingCountry: fila.issuingCountry,
+        numeroDeDocumento: cifrador.descifrar(
+          fila.nationalIdCiphertext,
+          { patientId, campo: 'national_id' },
+          fila.keyVersion,
+        ),
+        nombreCompleto: cifrador.descifrar(
+          fila.fullNameCiphertext,
+          { patientId, campo: 'full_name' },
+          fila.keyVersion,
+        ),
+        keyVersion: fila.keyVersion,
+      };
+    },
+    indiceCiegoDeDocumento: (idType, numeroDeDocumento) =>
+      indice.indiceDeDocumento(idType, numeroDeDocumento),
+  };
 }
