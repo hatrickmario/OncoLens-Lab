@@ -1,4 +1,5 @@
 import type { Client } from 'pg';
+import { formatWithOptions } from 'node:util';
 import { vi } from 'vitest';
 // @ts-expect-error TS7016: scripts/contracts/lib/identity.mjs no trae declaración de tipos (lista única de campos de identidad, no se duplica).
 import { IDENTIDAD_PII, matchesIdentity } from '../../../../scripts/contracts/lib/identity.mjs';
@@ -162,12 +163,21 @@ export interface CapturaDeSalida {
   restaurar: () => void;
 }
 
-const METODOS_DE_CONSOLE = ['log', 'info', 'warn', 'error', 'debug'] as const;
+const METODOS_DE_CONSOLE = ['log', 'info', 'warn', 'error', 'debug', 'dir', 'table'] as const;
 
 const comoTexto = (chunk: unknown): string =>
   Buffer.isBuffer(chunk) || chunk instanceof Uint8Array
     ? Buffer.from(chunk).toString('utf8')
     : String(chunk);
+
+/** Como la consola: objetos y `Error` (con `cause` y propiedades como `detail`) a profundidad completa. */
+const comoConsola = (argumentos: readonly unknown[]): string =>
+  formatWithOptions(
+    { depth: null },
+    ...argumentos.map((argumento) =>
+      argumento instanceof Uint8Array ? Buffer.from(argumento).toString('utf8') : argumento,
+    ),
+  );
 
 /**
  * Borde del proceso: todo lo que clinical-api escriba con `console.*` o `process.std*.write` durante los pasos es una
@@ -184,7 +194,7 @@ export function capturarSalidaDelProceso(): CapturaDeSalida {
     ),
     ...METODOS_DE_CONSOLE.map((metodo) =>
       vi.spyOn(console, metodo).mockImplementation((...argumentos: unknown[]) => {
-        salida.push(argumentos.map(comoTexto).join(' '));
+        salida.push(comoConsola(argumentos));
       }),
     ),
   ];

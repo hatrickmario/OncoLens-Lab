@@ -50,7 +50,7 @@ Decisión cara de revertir (formato del cifrado persistido); ADR-6 ya la tomó, 
   (gateway de L1D-103); **ficha** y **búsqueda** las añaden sus changes (L1D-72, L1D-202) al mismo test
   como pasos nuevos (`🔗 Regresión [RN-10] → US-046`). US-046 pasa a Done cuando los cuatro pasos
   corren en `main`.
-  **Limitaciones conocidas:** los tokens del nombre de menos de 4 caracteres (p. ej. "de", "Li") no se buscan, porque darían falsos positivos; solo se detectan en el nombre completo y su forma normalizada. Y el arnés ve lo que escribe `clinical-api` en este proceso de test, no los logs de contenedores.
+  **Limitaciones conocidas:** los tokens del nombre de menos de 4 caracteres (p. ej. "de", "Li") no se buscan, porque darían falsos positivos; solo se detectan en el nombre completo y su forma normalizada. Y el arnés ve lo que escribe `clinical-api` en este proceso de test, no los logs de contenedores. Tampoco se capturan `fs.writeSync(2, …)` ni las referencias a `console` o `process.stdout.write` guardadas antes de instalar el espía; un registrador futuro (pino, sonic-boom) debe capturarse por su propio destino.
 
 ## Privacidad y ownership
 
