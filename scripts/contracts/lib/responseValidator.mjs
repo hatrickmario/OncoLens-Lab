@@ -21,6 +21,15 @@ export function matchesSpec(provider, pointer, body) {
   return verdict.problems;
 }
 
+/**
+ * Verifica una respuesta HTTP completa (código declarado, cabeceras obligatorias y cuerpo) contra el spec del proveedor.
+ * @param {{ proveedor: string, metodo: string, ruta: string, status: number, cabeceras: Record<string, unknown>, cuerpo: unknown }} respuesta
+ * @returns {{ plantilla: string, codigo: string }} la operación y el código del spec contra los que se verificó
+ */
+export function verificarRespuesta(respuesta) {
+  throw new Error(`no implementado (${respuesta.proveedor})`);
+}
+
 /** Lanza un error que nombra cada campo incumplido si el cuerpo no cumple el spec. */
 export function assertMatchesSpec(provider, pointer, body) {
   const problems = matchesSpec(provider, pointer, body);
