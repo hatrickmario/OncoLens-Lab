@@ -17,7 +17,7 @@ de corte del corpus y, cuando no hay evidencia, **qué se buscó**, sin leerlo t
 
 - **Organismo `AnalysisBasisPanel`** en `apps/web/components/organisms/`, montado en `AnalysisResult` después de las
   opciones y las descartadas y antes del pie, dentro del mismo contenedor anunciado (S2-09):
-  - `h2` "Base del análisis".
+  - `h3` "Base del análisis" (subsección del resultado cuyo único h2 es "Opciones descritas en la evidencia"; desviación de S2-09).
   - **Resumen siempre visible** (también en `sin_evidencia`): "Faltantes: [n] · Supuestos: [n] · Fuentes no
     incluidas: [lista] · Afirmaciones omitidas: [n]" y la fecha de corte `dd/mm/aaaa`, desde
     `analysisBasis.missingCriticalData.length`, `assumptions.length`, `sourcesNotIncluded[]`, `omittedClaims` y
