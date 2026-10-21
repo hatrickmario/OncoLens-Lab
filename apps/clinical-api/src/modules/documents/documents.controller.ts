@@ -1,20 +1,61 @@
-import { Router, type RequestHandler } from 'express';
+import { Router, type RequestHandler, type Response } from 'express';
 import { enviarError } from '../../infrastructure/http-errores.js';
+import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
-import type { DocumentsService } from './documents.service.js';
+import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
+import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
+import { leerCargaMultipart } from './documents.multipart.js';
+import type { DocumentsService, TipoDeDocumento } from './documents.service.js';
 
 export interface DependenciasDelController {
   service: DocumentsService;
+  traceIds: TraceIdGenerator;
+  registrar: Registrar;
 }
 
-/** `POST /patients/{patientId}/documents` (se monta bajo `/platform`, detrás del guard de sesión). */
+const EVENTO = 'documents.carga';
+
+/**
+ * `POST /patients/{patientId}/documents` (se monta bajo `/platform`, detrás del guard de sesión). Solo traduce
+ * HTTP ↔ service. El log lleva únicamente evento, resultado, `traceId` y UUID del paciente y del documento: nunca el
+ * nombre del archivo, su contenido ni la clave del objeto (RN-10).
+ */
 export function documentsController(dependencias: DependenciasDelController): Router {
-  void dependencias.service;
+  const { service, traceIds, registrar } = dependencias;
   const router = Router();
-  // Esqueleto (no implementado): responde con un error declarado en el contrato para que el rojo falle en la aserción.
-  const cargar: RequestHandler = (_request, response) => {
-    enviarError(response, 422, 'CUERPO_INVALIDO', 'req_noimplementado');
+
+  const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
+
+  const cargar: RequestHandler = async (request, response) => {
+    const sesion = request.sesion;
+    const patientId = String(request.params['patientId']);
+    const carga = await leerCargaMultipart(request);
+    if (sesion === undefined || carga.archivo === undefined) {
+      enviarError(response, 422, 'CUERPO_INVALIDO', traceIdDe(response));
+      return;
+    }
+    const documento = await service.cargar({
+      patientId,
+      userId: sesion.userId,
+      documentType: carga.documentType as TipoDeDocumento,
+      nombreOriginal: carga.archivo.nombre,
+      contenido: carga.archivo.contenido,
+    });
+    registrar({
+      event: EVENTO,
+      resultado: 'ok',
+      traceId: traceIdDe(response),
+      patientId,
+      documentId: documento.id,
+    });
+    response.status(202).json(documento);
   };
-  router.post('/patients/:patientId/documents', authorize('documents:upload'), cargar);
+
+  router.post(
+    '/patients/:patientId/documents',
+    crearTraceIdMiddleware(traceIds),
+    authorize('documents:upload'), // x-permission de uploadDocument; el rol no se mira
+    cargar,
+  );
   return router;
 }

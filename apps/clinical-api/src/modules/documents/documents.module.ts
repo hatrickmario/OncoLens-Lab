@@ -5,6 +5,7 @@ import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { documentsController } from './documents.controller.js';
+import { createDocumentsRepository } from './documents.repository.js';
 import { crearDocumentsService } from './documents.service.js';
 import type { AlmacenDeDocumentos } from './ports.js';
 
@@ -26,6 +27,15 @@ export interface DependenciasDelModulo {
 
 /** Composición del módulo `documents`: devuelve el router que se monta detrás del guard de sesión. */
 export function componerModuloDeDocumentos(dependencias: DependenciasDelModulo): Router {
-  const service = crearDocumentsService({ reloj: dependencias.reloj, ids: dependencias.ids });
-  return documentsController({ service });
+  const service = crearDocumentsService({
+    repo: createDocumentsRepository(dependencias.db),
+    almacen: dependencias.almacen,
+    reloj: dependencias.reloj,
+    ids: dependencias.ids,
+  });
+  return documentsController({
+    service,
+    traceIds: dependencias.traceIds,
+    registrar: dependencias.registrar,
+  });
 }
