@@ -12,7 +12,7 @@ const IMPORTA_SUPERTEST = "import request from 'supertest';\nexport const client
 
 const mensajesDe = async (filePath, codigo = IMPORTA_SUPERTEST) => {
   const [resultado] = await eslint.lintText(codigo, { filePath: path.join(RAIZ, filePath) });
-  return resultado.messages.filter((mensaje) => mensaje.ruleId === 'no-restricted-imports').map((mensaje) => mensaje.message);
+  return resultado.messages.filter((mensaje) => ['no-restricted-imports', 'no-restricted-syntax'].includes(mensaje.ruleId)).map((mensaje) => mensaje.message);
 };
 
 describe('supertest solo en tests/support de clinical-api [US-214 AC-1]', () => {
@@ -27,6 +27,17 @@ describe('supertest solo en tests/support de clinical-api [US-214 AC-1]', () => 
     const codigo = "import type { Response } from 'supertest';\nexport type R = Response;\n";
 
     expect(await mensajesDe('apps/clinical-api/tests/unit/nuevo.test.ts', codigo)).toHaveLength(1);
+  });
+
+  it.each([
+    ['require', "const request = require('supertest');\nexport const cliente = request;\n"],
+    ['import dinámico', "export const cargar = () => import('supertest');\n"],
+    ['subruta', "import agente from 'supertest/lib/agent';\nexport const cliente = agente;\n"],
+  ])('rechaza supertest cuando se carga con %s', async (_forma, codigo) => {
+    const mensajes = await mensajesDe('apps/clinical-api/tests/unit/nuevo.test.ts', codigo);
+
+    expect(mensajes).toHaveLength(1);
+    expect(mensajes[0]).toContain('clienteVerificado');
   });
 
   it('permite importar supertest en tests/support, que es donde vive clienteVerificado', async () => {

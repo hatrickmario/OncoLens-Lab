@@ -44,6 +44,20 @@ describe('excepciones del cliente verificado', () => {
   });
 });
 
+describe('mensaje de una excepción sin acotar', () => {
+  it('no imprime el identificador de la ruta concreta [US-214 AC-1] [RN-10]', () => {
+    const idSintetico = '00000000-0000-4000-8000-000000000001';
+    const app = proveedorQueResponde(200, {});
+    const crear = () =>
+      clienteVerificado(app, {
+        respuestasAjenasAlContrato: [{ ruta: `/platform/patients/${idSintetico}` }],
+      });
+
+    expect(crear).toThrow(/existe en el contrato/);
+    expect(crear).not.toThrow(idSintetico);
+  });
+});
+
 describe('ruta de mentira con esquema', () => {
   const ESQUEMA = '#/components/responses/ErrorInterno';
   const appDeMentira = (cuerpo: unknown) => {
