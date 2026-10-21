@@ -42,7 +42,6 @@ function entornoValido(): Record<string, string> {
     PII_FORMATS_PATH: FORMATOS_DE_PII,
     PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
-    ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: 'Supuesto sintético de test.',
   };
 }
 
@@ -87,6 +86,46 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
       variable: 'RAG_TIMEOUT_MS',
       motivo: 'valor_invalido',
     });
+  });
+
+  it('no escucha y registra configuracion_invalida con catalogo_no_disponible, sin ruta, cuando el catálogo no existe [US-041 AC-5]', () => {
+    const catalogoAusente = path.join(directorio, 'catalogo-secreto-ausente');
+
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: catalogoAusente });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_PATH',
+      regla: 'manifest.json legible',
+      motivo: 'catalogo_no_disponible',
+    });
+    expect(resultado.log).not.toContain('catalogo-secreto-ausente');
+  });
+
+  it('no escucha y registra configuracion_invalida con CLINICAL_CATALOG_VERSION, sin versiones ni ruta, cuando difiere del manifiesto [US-041 D1]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '9.9.9' });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_VERSION',
+      regla: expect.any(String),
+      motivo: 'version_catalogo_distinta',
+    });
+    expect(resultado.log).not.toContain('9.9.9');
+    expect(resultado.log).not.toContain(CATALOGO_DEL_MONOREPO);
+  });
+
+  it('escucha una vez cuando CLINICAL_CATALOG_VERSION coincide con el manifiesto [US-041 D1]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '1.0.0' });
+
+    expect(resultado.salidas).toEqual([]);
+    expect(resultado.escuchas).toEqual([4998]);
   });
 
   it('escucha una vez y no registra nada cuando las dos etapas son válidas [US-037 AC-2]', () => {

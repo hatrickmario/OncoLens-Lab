@@ -32,6 +32,12 @@ listos; log con el evento único de `l1d-167`:
 `{"event":"configuracion_invalida","variable":"CLINICAL_CATALOG_PATH","regla":"manifest.json legible","motivo":"catalogo_no_disponible"}`,
 sin ruta ni contenido.
 `clinical-api` ya lo hace (L1D-104); `rag-orchestrator` lo añade en `bootstrap.py`.
+Con `CLINICAL_CATALOG_PATH` **sin definir** el motivo es `variable_ausente` (regla `obligatoria`, igual que
+`clinical-api`, que usa `leerObligatoria`); `catalogo_no_disponible` queda para el manifiesto ausente o ilegible.
+`rag-orchestrator` lee el manifiesto una sola vez (`cargar_configuracion_o_salir()`, único traductor a `SystemExit`) y
+pasa el catálogo cargado a `crear_app`, que lanza `CatalogoNoDisponible` si no hay ruta o manifiesto; los eventos de
+catálogo se suman a los de recuperación (un `configuracion_invalida` por variable). El modo `LLM_PROVIDER=fake` también
+exige la versión (decorador `ConsultaConCatalogoExigido`), de modo que Compose, CI y E2E ven el mismo `409`.
 
 **D5 · Estructura del paquete.** Esquemas JSON por archivo en `packages/clinical-catalogs/schemas/`; archivos
 vacíos válidos (`{"version":"1.0.0","items":[]}`); `tendencias.json` con `estado: "propuesta"`. Ningún archivo
@@ -102,3 +108,17 @@ real (con *timeout* explícito).
 ## Pendiente de definir
 
 - D1 (semántica de `CLINICAL_CATALOG_VERSION`): asumida; confirmar en el Gate 1.
+
+## Deuda y preguntas abiertas (Gate 2)
+
+- **Deuda de esquemas:** `packages/clinical-catalogs/schemas/*.schema.json` repite `version` (semver), la envoltura
+  `{version, items}` y el enum de estándares. Queda para un `schemas/comunes.schema.json` con `$defs` y `$ref`
+  cuando US-042/FEAT-04 amplíen el validador (requiere `$id` por esquema y `addSchema` en Ajv).
+- **Pregunta para el humano · CUPS en el enum de estándares:** los esquemas aceptan `cups`, pero el `manifest.json`
+  declara solo `cie10`, `loinc` y `atc` y no existe `NOTICE-cups.txt` (DEC-04 / RN-27, Q-07). ¿Se quita `cups` del
+  enum hasta que DEC-04 lo cierre?
+- **Pregunta para el humano · `CLINICAL_CATALOG_VERSION`:** D1 está implementada solo en `clinical-api`
+  (`rag-orchestrator` no la lee) y la clave no está en `infra/docker/.env.example`; falta decidir si se declara allí y
+  si `rag-orchestrator` debe aplicar la misma expectativa.
+- **Deuda en `rag-orchestrator`:** lector único de `CLINICAL_CATALOG_PATH` (manifiesto, `terminos-prohibidos.json`)
+  con un solo tipo de error: hoy conviven `CatalogoNoDisponible` y `ListaDeTerminosNoDisponible` (historia por crear).

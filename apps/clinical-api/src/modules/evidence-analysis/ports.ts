@@ -132,8 +132,9 @@ export interface EntradaDeCierre {
 
 /** Respuesta HTTP de un fallo de rag-orchestrator ya traducida (`mapearFalloRag()`), sin eco de su cuerpo. */
 export interface RespuestaDeFallo {
-  status: 422 | 502 | 503 | 504;
+  status: 409 | 422 | 502 | 503 | 504;
   codigo:
+    | 'CATALOG_VERSION_MISMATCH'
     | 'TIPO_CANCER_NO_REGISTRADO'
     | 'ERROR_SERVICIO_IA'
     | 'LOCAL_LLM_UNAVAILABLE'

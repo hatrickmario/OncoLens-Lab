@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.6.0
+  version: 1.7.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -369,6 +369,14 @@ paths:
           $ref: '#/components/responses/PermisoDenegadoOOptOut'
         "404":
           $ref: '#/components/responses/NoEncontrado'
+        "409":
+          description: >-
+            CATALOG_VERSION_MISMATCH: la versión del catálogo clínico difiere entre los backends
+            (NFR-14). No se persiste análisis ni se reenvía el cuerpo de rag-orchestrator.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCatalogVersionMismatch'
         "422":
           description: >-
             Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no
@@ -670,6 +678,10 @@ components:
           type: string
           minLength: 1
           description: Versión del contrato (info.version) del servicio que responde.
+        catalogVersion:
+          type: string
+          minLength: 1
+          description: Versión del catálogo clínico montado (manifest.json); sin ruta ni contenido.
     # ---- Schemas compartidos con rag-orchestrator: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'
@@ -2027,6 +2039,14 @@ components:
       required: [error, message, traceId]
       properties:
         error: { type: string, enum: [LIMITE_SOLICITUDES, COLA_INFERENCIA_LLENA] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorCatalogVersionMismatch:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: CATALOG_VERSION_MISMATCH }
         message: { type: string }
         traceId: { type: string }
     ErrorServicioIa:
