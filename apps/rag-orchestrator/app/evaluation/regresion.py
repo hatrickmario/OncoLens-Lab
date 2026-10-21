@@ -57,10 +57,11 @@ def cargar_umbrales(ruta: Path) -> dict[str, float]:
 
 
 def _metrica_de(clave: object) -> str:
-    metrica = clave.removesuffix(SUFIJO_MINIMO) if isinstance(clave, str) else None
-    if metrica not in METRICAS_CON_UMBRAL or not str(clave).endswith(SUFIJO_MINIMO):
-        raise UmbralesInvalidos(f"umbral desconocido: {clave}")
-    return metrica
+    if isinstance(clave, str) and clave.endswith(SUFIJO_MINIMO):
+        metrica = clave.removesuffix(SUFIJO_MINIMO)
+        if metrica in METRICAS_CON_UMBRAL:
+            return metrica
+    raise UmbralesInvalidos(f"umbral desconocido: {clave}")
 
 
 def _minimo_de(clave: object, valor: object) -> float:

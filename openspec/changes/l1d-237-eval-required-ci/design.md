@@ -22,6 +22,13 @@ pesados ni red; el reporte real se adjunta desde la máquina de referencia.
   limitaciones con claves).
 - **D2 · Comparador** `comparar_con_regresion()` en `app/evaluation/` (Python, junto al reporte);
   sale con código ≠ 0 y lista de métricas.
+  **Punto de entrada para la CI:** `python -m app.evaluation.comparar_regresion --reporte <reporte.json>
+  --config eval/configs/regression.yaml` (desde `apps/rag-orchestrator`; las rutas pasan absolutas). Salida 0 con
+  el aviso "Sin baseline de regresión: umbral no aplicado" en stdout si no hay umbrales, o si todos se cumplen; 1 y
+  una línea `regresión en <metrica>: mínimo …, actual …` por métrica en stderr; 2 entrada inválida. Formato de
+  `regression.yaml`: `<metrica>_min: <0..1>` (`recall_at_10`, `mrr`, `precision_citas`, `exactitud_sin_evidencia`,
+  `opciones_con_cita_y_soporte`), medidas en `metricas.completa`; una métrica `null` incumple (no es 0).
+  `scripts/ci/eval-required.mjs` la invoca además de la comparación con el baseline (cableado de plataforma).
 - **D3 · Comentario** con `gh pr comment --edit-last` (un comentario por PR, actualizado), permisos
   mínimos `pull-requests: write` solo en ese job; acciones fijadas por SHA como el resto del
   workflow.

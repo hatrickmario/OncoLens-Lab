@@ -22,11 +22,11 @@
 
 ## 2. ai-services
 
-- [ ] 2.1 Test en rojo "pasa con aviso cuando `regression.yaml` no tiene umbrales [US-074 AC-4]" y
+- [x] 2.1 Test en rojo "pasa con aviso cuando `regression.yaml` no tiene umbrales [US-074 AC-4]" y
       "falla nombrando `recall_at_10` cuando queda en 0,50 bajo 0,80 [US-074 AC-5]" · Pytest, commit
       test(L1D-237) · **test del AC primero**
-- [ ] 2.2 `comparar_con_regresion()` y `eval/configs/regression.yaml` vacío; commit feat(L1D-237)
-- [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
+- [x] 2.2 `comparar_con_regresion()` y `eval/configs/regression.yaml` vacío; commit feat(L1D-237)
+- [x] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-237)
 
 ## 3. Verificación

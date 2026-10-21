@@ -33,12 +33,16 @@ def _parser() -> argparse.ArgumentParser:
 def _leer_reporte(ruta: Path) -> dict[str, Any]:
     try:
         reporte = json.loads(ruta.read_text(encoding="utf-8"))
-        reporte["metricas"]["completa"]
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        raise UmbralesInvalidos(
-            "el reporte no se puede leer o no trae metricas.completa"
-        ) from error
+    except (OSError, ValueError) as error:
+        raise UmbralesInvalidos("el reporte no se puede leer") from error
+    if not _trae_metricas_completas(reporte):
+        raise UmbralesInvalidos("el reporte no trae metricas.completa")
     return reporte
+
+
+def _trae_metricas_completas(reporte: object) -> bool:
+    metricas = reporte.get("metricas") if isinstance(reporte, dict) else None
+    return isinstance(metricas, dict) and isinstance(metricas.get("completa"), dict)
 
 
 def _informar(resultado: ResultadoRegresion) -> int:
