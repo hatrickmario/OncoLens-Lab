@@ -4,6 +4,13 @@
 > Ninguno de estos pendientes bloquea `/sprint-close S1`: están diferidos por escrito con su ID.
 > Los puntos marcados con (*) vienen de notas de sesiones anteriores y no se verificaron de nuevo contra el repo ni Linear el 2026-10-18: confirmarlos antes de agendarlos.
 
+## Estado al 2026-10-21 (lo resuelto desde esta lista)
+
+- **A (L1D-238):** 3.1 a 3.4 hechas con la **simulación académica** (decisión 88, #102 a #106); L1D-238 está en Done. **Sigue abierta la 3.5** (sprint review, humana) y las sesiones reales (ARR-05/L1D-281, a mover de milestone).
+- **B (L1D-274):** hecho y archivado (ver `S1-cierre.md` §5).
+- **C:** protección de `main` (L1D-166) hecha; `MODEL_HOST_DIR` verificado (ONNX de un solo archivo); E2E de L1D-139/140 ejecutados (17/17, ver ARR-02). **Siguen abiertos:** CIE-10 (C50.9, C61), LOINC (DEC-04), automatización GitHub–Linear y cuota de issues, D-9 (US-216), `servicios_reales` de L1D-115 (ARR-01).
+- **D:** sin cambios (diferidas a US-072/ARR-03).
+
 ## A. Con los oncólogos — L1D-238 (US-075, baseline manual VM-1/VM-2; DEC-02)
 
 Estado: In Review, tareas 3.1 a 3.5 abiertas, sin plazo fijo (decisión 81). El CLI se niega a generar el reporte hasta que se registren `version` y `fecha_validacion_clinica` en los 6 checklists (hoy `0.1-borrador`, `null`).

@@ -43,5 +43,5 @@
 ## 4. cierre
 
 - [x] 4.1 `openspec validate l1d-140-panel-opcion-citas --strict`.
-- [ ] 4.2 Suite de `web` (Vitest) y E2E de Playwright en verde, incluidos los importados del grupo 3 (`lenguaje-no-prescriptivo.spec.ts`, `aviso-ia.spec.ts`); `contracts:check` en verde. `contracts:verify-provider` no aplica (sin cambio de API). `run-ai-eval` no aplica. **Diferida a L1D-278 (ARR-02, E2E/visual-check) (cierre S1, 2026-10-18).**
+- [x] 4.2 Suite de `web` (Vitest) y E2E de Playwright en verde, incluidos los importados del grupo 3 (`lenguaje-no-prescriptivo.spec.ts`, `aviso-ia.spec.ts`); `contracts:check` en verde. `contracts:verify-provider` no aplica (sin cambio de API). `run-ai-eval` no aplica. **Diferida a L1D-278 (ARR-02, E2E/visual-check) (cierre S1, 2026-10-18).** **Cerrada 2026-10-21:** Vitest de `web` (155) y Playwright 17/17 en verde, incluidos `lenguaje-no-prescriptivo.spec.ts` y `aviso-ia.spec.ts`; `contracts:check` en verde (PR #111 y #118). Quedan abiertas 2.7 y 3.5 (visual-check, L1D-278).
 - [x] 4.3 Aviso al orquestador: con este change en `main` quedan cerrados los E2E de US-068 AC-3/AC-4 (L1D-193) y de US-069 AC-1…AC-4 (L1D-194); anotarlo en el PR para la trazabilidad de ambas historias.

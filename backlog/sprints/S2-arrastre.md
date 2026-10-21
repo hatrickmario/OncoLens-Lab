@@ -16,6 +16,8 @@
 | ARR-07 | L1D-283 | URL de la fuente original en «Fragmento citado» (manifiesto, catálogo, UI) | 5 | **Alta** | ARR-02 (E2E) |
 | ARR-08 | L1D-284 | Detalle expandible en «Opciones descritas en la evidencia» (resumen + 1–2 párrafos generados y validados) | 8 | **Alta** | ARR-07, US-072 (OL-06) |
 
+**Estado al 2026-10-21:** ARR-04 (L1D-280) hecha; ARR-02 (L1D-278) parcial (E2E ejecutables; faltan el job de CI y la migración de `/login`); ARR-07 (L1D-283) y ARR-08 (L1D-284) hechas; ARR-01, 03, 05 y 06 sin empezar (ARR-05 se propone mover a Sprint 4, decisión 88).
+
 Total: 25 puntos de arrastre.
 
 ---

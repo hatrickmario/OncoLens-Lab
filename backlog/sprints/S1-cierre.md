@@ -68,3 +68,18 @@ Contrato `EvidenceAnalysis` y esquema congelados (PRD §18 CAP de caso → opcio
 
 - `backlog/sprints/S2-arrastre.md`: 6 tarjetas de arrastre (25 puntos) aprobadas por el usuario con prioridades; las 12 historias del S1 en In Review no pasan a Done hasta cerrar su tarjeta.
 - `backlog/sprints/V2-Post-MVP.md`: 80 historias (29 Post-MVP y 51 de «si hay capacidad», 295 puntos) pasan a Markdown para liberar cupo en Linear. El humano las archiva en Linear (reversible); luego se crean las issues de `S2-arrastre.md`.
+
+## 5. Actualización posterior al cierre (2026-10-21)
+
+Lo ocurrido después del PR de cierre (#92); el cuerpo de arriba no se reescribe.
+
+| Tema | Estado |
+|---|---|
+| ADR-39 fase B (L1D-274 / ARR-04 = L1D-280) | **Hecho y archivado.** Mediciones en #107, `LLM_MODEL` en #108, change archivado en #109. Decidido (usuario, 2026-10-20): Ollama 0.34.4 y **G `gemma4:26b-a4b-it-q4_K_M`** (margen de stack 0,71 GB, exactitud OCR 0,917 aceptada). Desviaciones: protocolo del LLM reducido (1 × 100), e2e solo B y G, A/F/I/J sin medir, equipo de 48 GB. Pendiente: tests `models` de US-231a/b en la VM de Docker. |
+| E2E de Playwright (ARR-02 / L1D-278) | **Parcial.** `npm run test:e2e` (`scripts/e2e/ejecutar.sh`): 17 de 17 en Chromium contra Compose fingido (#111, #118). Cerradas por ello: L1D-139 (2.8, 3.2; archivado), L1D-140 (4.2), L1D-197 (3.3). Siguen en S2: job de CI de E2E y migración de `/login` a Tailwind + shadcn con su visual-check (140: 2.7 y 3.5; 194: 3.3; 197: 3.5). |
+| Demo con LLM real | `scripts/demo/levantar.sh`, `apagar.sh`, `exportar-modelos.py` y `docs/demo/runbook-demo-S1.md` (#110, #117, #114). Sustituye el guion con LLM fingido de §2 para quien tenga el equipo de referencia. |
+| Mejoras de la historia del demo | ARR-07 (L1D-283, URL de la fuente original en «Fragmento citado», #116) y ARR-08 (L1D-284, detalle expandible de la opción, #118): creadas y hechas, ambas en el milestone Sprint 2. |
+| Proceso | #112: regla «controles de GitHub en 0 antes de informar», `.gitignore` de los `*-status.md` y `scripts/dev/actualizar-main.sh`. |
+| Corrección | #113: el corpus semilla tiene 310 chunks, no 292. |
+| Sin cerrar (deuda registrada) | L1D-265 sigue sin archivar por D-7 (`ruff format` y `tests/evaluation`: 10 fallos antiguos). OL-06 manual de L1D-180, 193 y 275 sigue diferida a L1D-279 (ARR-03). Hallazgos del montaje del demo (Compose sin migración clínica ni carga de corpus, memoria del orquestador ~10 GiB que tumba Milvus con 13 GB de Docker) anotados en ADR-39 y en el runbook. |
+| Falta del PO | Cerrar las 9 Features del milestone Sprint 1 en Linear (L1D-16, 18, 23, 30, 31, 40 en In Progress; L1D-34, 39, 46 en Backlog) y el propio milestone; baseline con oncólogos reales (ARR-05/L1D-281: mover de Sprint 2, se propone Sprint 4); CIE-10 (C50.9, C61) y LOINC (DEC-04); automatización GitHub–Linear y cuota de issues; decidir si D-9 (US-216) se adelanta. |
