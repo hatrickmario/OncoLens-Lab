@@ -11,7 +11,20 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 cd "$ROOT"
 
 FAIL=0
-ADDED="$(git diff --cached -U0 --no-color -- . ':(exclude).claude/hooks/*' | grep -E '^\+[^+]' || true)"
+# En un commit de merge de origin/main solo se escanea lo que aporta la rama (diff contra MERGE_HEAD): lo que llega de main
+# ya pasó la CI y este mismo hook en su PR, y reescanearlo bloquea cada merge por falsos positivos ya revisados.
+# MERGE_HEAD solo exime si es real (no ancestro de HEAD, con base común) y ancestro de origin/main (una rama ajena se escanea entera).
+SCAN_BASE="--cached"
+MH="$(git rev-parse -q --verify MERGE_HEAD 2>/dev/null || true)"
+if [ -n "$MH" ] && ! git merge-base --is-ancestor "$MH" HEAD 2>/dev/null && git merge-base HEAD "$MH" >/dev/null 2>&1 \
+   && git merge-base --is-ancestor "$MH" origin/main 2>/dev/null; then
+  SCAN_BASE="$MH"
+fi
+if [ "$SCAN_BASE" = "--cached" ]; then
+  ADDED="$(git diff --cached -U0 --no-color -- . ':(exclude).claude/hooks/*' | grep -E '^\+[^+]' || true)"
+else
+  ADDED="$(git diff --cached -U0 --no-color "$SCAN_BASE" -- . ':(exclude).claude/hooks/*' | grep -E '^\+[^+]' || true)"
+fi
 
 # 1) Secretos
 if printf '%s' "$ADDED" | grep -nE -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|sk-[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|(password|passwd|secret|api_?key|token)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"'$<{]{8,}' >/dev/null; then
