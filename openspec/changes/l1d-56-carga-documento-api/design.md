@@ -219,8 +219,8 @@ Recomendación: añadirlo en L1D-202 junto con los demás `500` de los endpoints
 - `limiteDeLecturaDeCarga(maxMb)` (el +1 byte se explica en la regla) con PDF de exactamente `MAX_UPLOAD_MB` → `202`.
 - `normalizarNombreOriginal` en el borde. `compensar()` de mejor esfuerzo: el duplicado siempre responde `409` y la
   compensación fallida se registra por UUID. `esDuplicadoPorChecksum` compara el nombre de la restricción.
-- `documents` sigue **opcional** en `componerRutasProtegidas` (los tests de otros módulos no lo montan); producción lo
-  pasa en `server.ts` y la suite de documents verifica el montaje y la coherencia con el contrato.
+- `documents` es **obligatorio** en `RoutersProtegidos`: olvidarlo en `server.ts` rompe el build. El arnés del gateway
+  pasa un `Router()` vacío; la suite de documents verifica el montaje y la coherencia con el contrato.
 
 ### Deuda propuesta (historia «infraestructura compartida de ingesta» antes de US-077)
 

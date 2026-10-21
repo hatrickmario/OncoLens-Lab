@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { delay, http, HttpResponse } from 'msw';
 import type { Client } from 'pg';
-import type { Express, Router } from 'express';
+import { Router, type Express } from 'express';
 import type { CryptoKey } from 'jose';
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
@@ -288,7 +288,7 @@ export async function montarGateway(
     }),
     registrar: logger.registrar,
   });
-  const rutas = componerRutasProtegidas({ gateway: ruta });
+  const rutas = componerRutasProtegidas({ gateway: ruta, documents: Router() });
   const app = appConAuth({
     cliente: mundo.cliente,
     espacio: mundo.espacio,

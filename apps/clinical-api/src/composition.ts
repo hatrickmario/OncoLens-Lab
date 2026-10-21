@@ -12,8 +12,8 @@ import { createPasswordHasher } from './modules/auth/password-hasher.js';
 /** Routers de dominio que exigen sesión. Cada historia añade el suyo aquí. */
 export interface RoutersProtegidos {
   gateway: Router;
-  /** Carga de documentos (L1D-56); opcional para los tests que solo ejercitan otro módulo. */
-  documents?: Router;
+  /** Carga de documentos (L1D-56). Obligatorio: olvidarlo en `server.ts` rompe el build. */
+  documents: Router;
 }
 
 /**
@@ -21,7 +21,7 @@ export interface RoutersProtegidos {
  * coherencia ruta ↔ contrato (US-045 AC-3) recorre los mismos routers que producción.
  */
 export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Router[] {
-  return [routers.gateway, ...(routers.documents === undefined ? [] : [routers.documents])];
+  return [routers.gateway, routers.documents];
 }
 
 export interface DependenciasDeComposicion {

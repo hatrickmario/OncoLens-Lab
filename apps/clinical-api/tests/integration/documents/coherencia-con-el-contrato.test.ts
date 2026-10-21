@@ -36,7 +36,7 @@ describe('coherencia del módulo documents con el contrato [US-045 AC-3]', () =>
     expect(incoherencias(rutas)).toEqual([]);
   });
 
-  it('incluye el router de documents en las rutas protegidas cuando la raíz de composición lo recibe', () => {
+  it('monta el router de documents después del gateway en las rutas protegidas', () => {
     const { rutas } = montarDocumentos(escenario.mundo);
     const gateway = Router();
 
