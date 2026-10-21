@@ -1,0 +1,102 @@
+# Design — l1d-173-tipos-cancer-habilitados
+
+## Contexto
+
+El contrato ya incluye `status = tipo_no_habilitado` en `EvidenceAnalysis` (ejemplo `tipo-no-habilitado.json`),
+`cancerTypeEnabled` en `PatientSummary`/`PatientListItem` y el `422 TIPO_NO_HABILITADO` de `rag-orchestrator`
+(`rag-query-tipo-no-habilitado-422.json`). Nada de esto está implementado: el gateway no comprueba el tipo,
+`rag-orchestrator` no lee `ENABLED_CANCER_TYPES` y el panel trata cualquier estado distinto de
+`con_evidencia`/`sin_evidencia` como `no_soportado`.
+
+## Decisiones
+
+**D1 · Criterio de "listo" (DEC-19).** Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación): el
+criterio de "listo" de RN-20 aplica como **prerrequisito de G-Piloto**, no de la demo sintética. Mama y próstata
+se habilitan desde el S2 con corpus semilla y catálogo `propuesta`. Este change no implementa el criterio; deja
+la regla de habilitación en configuración (RN-22).
+
+**D2 · Literal unificado.** Propuesto en el refinamiento del S2 (P-4, pendiente de confirmación): el texto de UI es
+"Tipo de cáncer fuera del alcance del piloto: sin análisis con IA" (contiene el literal de US-043 AC-3 y el de
+`flujo-e2e.md`). Vive en `apps/web/messages/es.json`, clave `alcance.tipoNoHabilitado`, consumida por la ficha,
+el listado (L1D-202) y el panel; la crea el primer change que mergee y este change es su dueño semántico.
+
+**D3 · Comprobación en el gateway antes del contexto.** `EvidenceAnalysisService` evalúa `estaHabilitado(tipo)`
+del `Diagnosis` activo después de las guardas existentes (sesión, rol, paciente, tipo registrado) y **antes** de
+construir el contexto clínico o desidentificar. Si no está habilitado: construye el `EvidenceAnalysis` con
+`status = tipo_no_habilitado`, `evidenceOptions = []`, `discardedOptions = []`, `topRelevanceScore = null` y la
+`analysisBasis` de D7, lo persiste (RN-06) y responde `200`. Regla extraída:
+`exigirTipoHabilitado()` en `case-guards.ts` (devuelve un resultado, no lanza: no es error).
+Orden respecto del caso sin tipo (`422 TIPO_CANCER_NO_REGISTRADO`): sin tipo → `422`; con tipo no habilitado → `200 tipo_no_habilitado`.
+
+**D4 · Validación de la configuración.** `ENABLED_CANCER_TYPES` (lista separada por comas) se valida al arrancar
+contra `manifest.cancerTypes`: vacía o con un tipo ausente → no listo, con el evento único de `l1d-167`
+`configuracion_invalida` (`variable = ENABLED_CANCER_TYPES`, `motivo = variable_ausente` si está vacía o
+`tipo_no_en_catalogo`) y el tipo inválido **solo** en el campo cerrado `valorInvalido` (excepción de `l1d-167` D2
+para enums no sensibles: no es PII ni secreto; el AC-5 lo exige). Misma regla en ambos backends (`validarTiposHabilitados()`).
+El adaptador `TiposDeCancerHabilitados` de L1D-72 pasa a usar esta lista validada.
+
+**D5 · Defensa en B2.** `RAGOrchestratorService` comprueba `clinicalContext.diagnosis.cancerType` contra
+`ENABLED_CANCER_TYPES` tras la versión del catálogo (L1D-171) y antes de recuperar: no habilitado → `422
+TIPO_NO_HABILITADO` (`message` fijo, sin eco). El enum de `status` interno sigue `con_evidencia | sin_evidencia`.
+
+**D6 · Panel.** `clasificarResultado()` gana la clase `tipo_no_habilitado`; el panel muestra el aviso informativo
+con el literal de D2 y la Base del análisis (sin opciones), no un error. La acción "Analizar evidencia" de la
+ficha sigue visible (el backend es dueño de la regla, S2-04).
+
+**D7 · Base del análisis en `tipo_no_habilitado`.** Sin llamada a Backend 2 no hay `meta` ni `retrievalStats`;
+la arma `construirBaseTipoNoHabilitado()` (pura, en el módulo `evidence-analysis`; `l1d-186` cubre solo las ramas que
+llaman a Backend 2): (a) `patientDataUsed = []` (no se envió ningún dato); (d) `sourcesConsulted.selected` y
+`filters` iguales al request, `retrieved = 0`, `aboveThreshold = 0`; (e) `sourcesNotIncluded` desde
+`CORPUS_EXCLUDED_SOURCES` (la misma clave que usa el cargador del corpus para `CorpusRelease.excluded_sources`);
+(f) `corpusCutoffDate` desde `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`, RN-22), la clave que actualiza el script de carga
+del corpus (`load_seed_corpus`) al publicar una release; `limitations` con la estructural "El tipo de cáncer no está
+habilitado en este entorno." (como `tipo-no-habilitado.json`); `missingCriticalData`, `assumptions`,
+`priorAnalysesUsed`, `agentSteps` vacíos y `omittedClaims = 0`. **Propuesto en el Gate 1 del S2 (pendiente de
+confirmación del usuario)** el origen de (f) en `CORPUS_CUTOFF_DATE`. Ambas claves se validan en el módulo de
+configuración de `l1d-167` (fecha inválida o ausente → `configuracion_invalida`).
+
+## Privacidad y ownership
+
+- Con tipo no habilitado **no** se construye ni se envía contexto a `rag-orchestrator`: menos datos cruzan la
+  frontera. Si llegara un contexto (defensa), B2 lo rechaza sin procesarlo ni registrarlo.
+- El registro persistido no contiene identidad (mismo `AIAnalysisRecord` del S1). `rag-orchestrator` sigue sin datos
+  clínicos ni `clinical-minio`.
+
+### Seguridad web
+
+Sin `NEXT_PUBLIC_` nuevas ni dependencias; el aviso es texto de React desde `es.json`; sin cambios de CSP.
+
+## Contratos
+
+**Sin diff.** Proveedor `clinical-api`: `EvidenceAnalysis.status` ya admite `tipo_no_habilitado`
+(`tipo-no-habilitado.json`), `PatientSummary.cancerTypeEnabled`. Proveedor `rag-orchestrator`: `422`
+`ErrorTipoNoHabilitado` (`rag-query-tipo-no-habilitado-422.json`). Si al implementar `tipo-no-habilitado.json`
+no valida con la Base del S1, se corrige el ejemplo (no el spec) en un commit `contract(L1D-173)`. Compatible con ADR-26.
+
+## Componentes y patrones
+
+- `molecules/scope-notice.tsx` (aviso informativo de alcance, `Alert` de shadcn en variante informativa, nunca de
+  error); lo usan la ficha (L1D-72) y el panel. Dos consumidores: componente compartido, sin patrón adicional.
+- `lib/evidence/clasificar-resultado.ts`: nueva clase. RSC en la ficha; el panel ya es `'use client'` (sin cambios de montaje).
+
+## Dependencias y colaboradores
+
+- `clinical-api`: `case-guards.ts` (`exigirTipoHabilitado()`), `evidence-analysis.service.ts` (rama `tipo_no_habilitado`
+  con persistencia vía el repository existente), `config/` (`validarTiposHabilitados()`), adaptador de `TiposDeCancerHabilitados`.
+- `rag-orchestrator`: `domain/tipos_habilitados.py` (`exigir_tipo_habilitado()`), `config/settings.py`
+  (`enabled_cancer_types`), `api/errors.py` (mapeo a `422`).
+
+## Tests
+
+AC-1…AC-3: Supertest + PostgreSQL de test con el seed y MSW con contador hacia `rag-orchestrator`; AC-3 en la UI con
+Testing Library; AC-4: Pytest con adapters falsos; AC-5: arranque. E2E (ficha del paciente b con `ENABLED_CANCER_TYPES=mama`)
+cuando exista el job de L1D-278.
+
+## Evaluación
+
+No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
+
+## Pendiente de definir
+
+- D1 y D2: propuestos (P-4), pendientes de confirmación del usuario.
+- D7, origen de `corpusCutoffDate` en `CORPUS_CUTOFF_DATE`: Propuesto en el Gate 1 del S2 (pendiente de confirmación del usuario).
