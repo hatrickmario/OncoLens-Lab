@@ -5,16 +5,12 @@ import pytest
 
 from app.api.trace import trace_id_actual
 from app.config.logging import configurar_logging_json
-from tests.support import contract, fakes
+from tests.support import fakes
 from tests.support.service_jwt import ParClavesServicio, generar_par_es256
-
-
-@pytest.fixture(scope="session", autouse=True)
-def spec_empaquetado() -> dict:
-    """Spec de rag-orchestrator empaquetado una vez por sesión para `assert_matches_spec`."""
-    spec = contract.empaquetar_spec()
-    contract.usar_spec(spec)
-    return spec
+from tests.support.verificacion_proveedor import (  # noqa: F401  (los fixtures se registran al importarlos)
+    salida_explicita_de_la_verificacion,
+    verificacion_del_proveedor,
+)
 
 
 @pytest.fixture(scope="session", autouse=True)

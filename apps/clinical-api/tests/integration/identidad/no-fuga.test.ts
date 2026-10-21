@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { crearLectorDeIdentidad } from '../../../src/modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import type { IdentityService } from '../../../src/modules/patients/identity.service.js';
@@ -70,7 +70,7 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
       {
         nombre: 'analizar',
         ejecutar: async () => {
-          const respuesta = await request(app)
+          const respuesta = await clienteVerificado(app)
             .post('/platform/evidence-analyses')
             .set('Cookie', cookie)
             .send({ patientId, query: PREGUNTA_Q_HER2, sourcesSelected: TODAS_LAS_FUENTES });

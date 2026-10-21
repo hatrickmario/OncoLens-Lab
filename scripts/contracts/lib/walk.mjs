@@ -3,7 +3,7 @@ import { listOperations } from './operations.mjs';
 import { pointerOf } from './pointer.mjs';
 import { SCHEMA_KEYWORDS, SCHEMA_LIST_KEYWORDS, SCHEMA_MAP_KEYWORDS } from './schemaKeywords.mjs';
 
-const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+export const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /**
  * Cada (sub)schema de `schema`, con su puntero y la palabra clave del padre que lo contiene.

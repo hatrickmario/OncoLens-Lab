@@ -11,7 +11,6 @@ from dataclasses import replace
 
 import pytest
 
-from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     PARAMETROS_DE_PRUEBA,
     Q_HER2,
@@ -63,7 +62,6 @@ def test_recorta_a_los_12_mejores_por_puntaje_de_recuperacion_con_desempate_por_
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 200
-    assert_matches_spec(RESPUESTA, respuesta.json())
     esperados = [f"w-{i:02d}" for i in range(11)] + ["t-a"]
     assert entorno.reranker.candidatos_recibidos == [esperados]
     assert respuesta.json()["retrievalStats"]["retrieved"] == 30

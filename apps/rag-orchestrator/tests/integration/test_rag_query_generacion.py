@@ -1,14 +1,13 @@
 """`POST /rag/query`, generación y recorte de la rama con evidencia (US-225 / L1D-275): FR-09, RN-01, RN-03, RN-28.
 
 El ``LlmEvidenceGenerator`` REAL recibe un LLM falso que devuelve JSON crudo (FX-06a-b): el parseo, la validación del
-esquema interno y el recorte corren como en producción. Cada respuesta se valida contra el spec del proveedor
-(`assert_matches_spec`) [S1 resp. 17].
+esquema interno y el recorte corren como en producción. Cada respuesta del proveedor
+se valida contra el spec con el hook de `verificacion_proveedor.py` (US-214).
 """
 
 import pytest
 
 from app.application.generation import LlmEvidenceGenerator
-from tests.support.contract import assert_matches_spec
 from tests.support.generador_falso import OPCION_ANTI_HER2, TITULO_INVENTADO
 from tests.support.llm_falso import OPCION_SOLA, FakeLlmClient
 from tests.support.recuperacion import Q_HER2, Q_TOX, crear_entorno, solicitud_de
@@ -30,7 +29,6 @@ def test_rag_query_devuelve_con_evidencia_con_una_opcion_que_cita_ch_m1_1_cuando
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["status"] == "con_evidencia"
     assert len(cuerpo["evidenceOptions"]) == 1
     opcion = cuerpo["evidenceOptions"][0]
@@ -52,7 +50,6 @@ def test_rag_query_toma_el_puntaje_de_la_cita_mas_relevante_cuando_la_opcion_cit
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["evidenceOptions"][0]["relevanceScore"] == 0.87
     assert cuerpo["topRelevanceScore"] == 0.87
 
@@ -63,7 +60,6 @@ def test_rag_query_devuelve_con_evidencia_vacio_tras_una_invocacion_del_llm_cuan
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["status"] == "con_evidencia"
     assert cuerpo["evidenceOptions"] == []
     assert cuerpo["topRelevanceScore"] == 0.60
@@ -76,7 +72,6 @@ def test_rag_query_conserva_solo_la_opcion_de_mayor_relevancia_sin_descartar_la_
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert [o["relevanceScore"] for o in cuerpo["evidenceOptions"]] == [0.87]
     assert OPCION_SOLA not in respuesta.text
     assert cuerpo["discardedOptions"] == []
@@ -96,7 +91,6 @@ def test_rag_query_no_emite_titulo_ni_fuente_inventados_cuando_el_llm_los_agrega
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     cita = cuerpo["evidenceOptions"][0]["citedSources"][0]
     assert cita["title"] == "Breast Cancer Treatment (test)"
     assert cita["sourceName"] == "NCI PDQ"
@@ -112,6 +106,5 @@ def test_rag_query_responde_503_local_llm_unavailable_sin_opciones_cuando_el_llm
     assert llm.invocaciones == 1  # sin reintento silencioso
     assert respuesta.status_code == 503
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_503, cuerpo)
     assert cuerpo["error"] == "LOCAL_LLM_UNAVAILABLE"
     assert "evidenceOptions" not in cuerpo

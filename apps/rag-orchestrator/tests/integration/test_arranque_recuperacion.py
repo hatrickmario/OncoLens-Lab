@@ -1,12 +1,9 @@
 """Composición de `/rag/query` con `LLM_PROVIDER=local` (US-055 / L1D-106, tarea 2.12)."""
 
-import logging
-
 import pytest
 from fastapi.testclient import TestClient
 
 from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, PuertosDeRecuperacion, crear_app
-from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import (
     EJEMPLOS,
@@ -54,7 +51,6 @@ def test_rag_query_responde_sin_evidencia_validado_cuando_la_composicion_local_n
     respuesta = _cliente().post("/rag/query", json=solicitud_de(Q_SIN))
 
     assert respuesta.status_code == 200
-    assert_matches_spec("#/components/schemas/RagQueryInternalResponse", respuesta.json())
     assert respuesta.json()["status"] == "sin_evidencia"
 
 

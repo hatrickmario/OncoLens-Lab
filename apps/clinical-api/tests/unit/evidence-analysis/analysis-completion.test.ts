@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import sinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
-import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import type {
+  RagQueryInternalRequest,
+  RagQueryInternalResponse,
+} from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { crearBaseDelAnalisisS1 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import type { RegistroDeAnalisis } from '../../../src/modules/evidence-analysis/analysis-record.js';
 import type { EntradaDeCierre } from '../../../src/modules/evidence-analysis/ports.js';
@@ -36,6 +39,23 @@ describe('validarRespuestaInterna', () => {
     );
   });
 
+  it('lanza RespuestaInternaInvalidaError cuando sin_evidencia trae topRelevanceScore 0.0 porque null no es 0.0 [US-214 AC-6] [RN-02]', () => {
+    const incoherente = { ...copia(sinEvidencia), topRelevanceScore: 0 };
+
+    expect(() => validarRespuestaInterna(incoherente)).toThrow(RespuestaInternaInvalidaError);
+  });
+
+  it('lanza RespuestaInternaInvalidaError cuando con_evidencia no trae puntaje o sin_evidencia trae opciones [US-214 AC-6]', () => {
+    const sinPuntaje = { ...copia(conEvidencia), topRelevanceScore: null };
+    const conOpciones = {
+      ...copia(sinEvidencia),
+      evidenceOptions: copia(conEvidencia).evidenceOptions,
+    };
+
+    expect(() => validarRespuestaInterna(sinPuntaje)).toThrow(RespuestaInternaInvalidaError);
+    expect(() => validarRespuestaInterna(conOpciones)).toThrow(RespuestaInternaInvalidaError);
+  });
+
   it('lanza RespuestaInternaInvalidaError sin eco del contenido cuando no es un objeto', () => {
     expect(() => validarRespuestaInterna('texto interno sintético')).toThrow(
       RespuestaInternaInvalidaError,
@@ -56,25 +76,28 @@ describe('topRelevanceScorePersistible', () => {
   });
 
   it('rechaza sin_evidencia con 0.0 porque null no es 0.0 (RN-02)', () => {
-    const incoherente = validarRespuestaInterna({ ...copia(sinEvidencia), topRelevanceScore: 0 });
+    const incoherente = {
+      ...copia(sinEvidencia),
+      topRelevanceScore: 0,
+    } as RagQueryInternalResponse;
 
     expect(() => topRelevanceScorePersistible(incoherente)).toThrow(RespuestaInternaInvalidaError);
   });
 
   it('rechaza con_evidencia sin puntaje', () => {
-    const incoherente = validarRespuestaInterna({
+    const incoherente = {
       ...copia(conEvidencia),
       topRelevanceScore: null,
-    });
+    } as RagQueryInternalResponse;
 
     expect(() => topRelevanceScorePersistible(incoherente)).toThrow(RespuestaInternaInvalidaError);
   });
 
   it('rechaza sin_evidencia que trae opciones', () => {
-    const incoherente = validarRespuestaInterna({
+    const incoherente = {
       ...copia(sinEvidencia),
       evidenceOptions: copia(conEvidencia).evidenceOptions,
-    });
+    } as RagQueryInternalResponse;
 
     expect(() => topRelevanceScorePersistible(incoherente)).toThrow(RespuestaInternaInvalidaError);
   });

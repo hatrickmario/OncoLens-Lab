@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 import { appConAuth } from '../../support/app-auth.js';
@@ -83,7 +83,7 @@ describe('oncolens users create', () => {
         reloj: relojFijo(),
         registrar: loggerEnMemoria().registrar,
       });
-      const login = await request(app)
+      const login = await clienteVerificado(app)
         .post('/platform/auth/login')
         .send({ email: CORREO_ALTA, password: contrasena });
       expect(login.status).toBe(204);
