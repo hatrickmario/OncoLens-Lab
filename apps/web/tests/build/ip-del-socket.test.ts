@@ -24,6 +24,8 @@ const ESPERA_MAXIMA_MS = 60_000;
 let clinicalApiFalso: Server;
 let urlClinicalApi = '';
 let cabecerasRecibidas: IncomingHttpHeaders[] = [];
+/** `X-Forwarded-For` de TODA petición que llegó a clinical-api, sin reinicios entre pruebas. */
+const xffDeTodasLasPeticiones: string[] = [];
 
 function puertoLibre(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -65,21 +67,26 @@ interface ServidorDeWeb {
   proceso: ChildProcess;
 }
 
-async function arrancar(comando: 'next-start' | 'standalone'): Promise<ServidorDeWeb> {
-  const puerto = await puertoLibre();
+type Comando = 'next-start' | 'standalone';
+
+function lanzar(comando: Comando, puerto: number): ChildProcess {
   const entorno = entornoDeWeb(puerto);
-  const proceso =
-    comando === 'next-start'
-      ? spawn(
-          path.join(raizMonorepo, 'node_modules/.bin/next'),
-          ['start', '-p', String(puerto), '-H', '127.0.0.1'],
-          { cwd: raizWeb, env: entorno, stdio: 'ignore' },
-        )
-      : spawn('node', [path.join(raizWeb, '.next/standalone/apps/web/server.js')], {
-          cwd: path.join(raizWeb, '.next/standalone/apps/web'),
-          env: { ...entorno, PORT: String(puerto), HOSTNAME: '127.0.0.1' },
-          stdio: 'ignore',
-        });
+  return comando === 'next-start'
+    ? spawn(
+        path.join(raizMonorepo, 'node_modules/.bin/next'),
+        ['start', '-p', String(puerto), '-H', '127.0.0.1'],
+        { cwd: raizWeb, env: entorno, stdio: 'ignore' },
+      )
+    : spawn('node', [path.join(raizWeb, '.next/standalone/apps/web/server.js')], {
+        cwd: path.join(raizWeb, '.next/standalone/apps/web'),
+        env: { ...entorno, PORT: String(puerto), HOSTNAME: '127.0.0.1' },
+        stdio: 'ignore',
+      });
+}
+
+async function arrancar(comando: Comando): Promise<ServidorDeWeb> {
+  const puerto = await puertoLibre();
+  const proceso = lanzar(comando, puerto);
   const origen = `http://127.0.0.1:${puerto}`;
   await esperarA(`${origen}/api/health`);
   return { origen, proceso };
@@ -103,6 +110,7 @@ async function loginDesde(servidor: ServidorDeWeb, xForwardedFor: string | undef
 beforeAll(async () => {
   clinicalApiFalso = createServer((peticion, respuesta) => {
     cabecerasRecibidas.push(peticion.headers);
+    xffDeTodasLasPeticiones.push(String(peticion.headers['x-forwarded-for']));
     respuesta.writeHead(204, {
       'Set-Cookie':
         'oncolens_session=tokenSinteticoSocket; Path=/; HttpOnly; Secure; SameSite=Strict',
@@ -149,4 +157,51 @@ describe.each([
 
     expect(sinCabecera).toEqual({ estado: 204, recibida: '127.0.0.1' });
   }, 60_000);
+});
+
+const IP_FALSIFICADA = '203.0.113.66';
+const PETICIONES_DURANTE_EL_ARRANQUE = 30;
+
+/** Dispara logins con la IP falsificada desde el primer instante en que el puerto acepta conexiones. */
+async function falsificarDuranteElArranque(origen: string): Promise<number> {
+  const limite = Date.now() + ESPERA_MAXIMA_MS;
+  let respondidas = 0;
+  while (Date.now() < limite && respondidas < PETICIONES_DURANTE_EL_ARRANQUE) {
+    try {
+      const respuesta = await fetch(`${origen}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: origen,
+          'X-Forwarded-For': IP_FALSIFICADA,
+        },
+        body: credenciales,
+      });
+      await respuesta.arrayBuffer();
+      respondidas += 1;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+    }
+  }
+  return respondidas;
+}
+
+describe.each([
+  ['next start', 'next-start'],
+  ['server.js standalone', 'standalone'],
+] as const)('arranque del servidor real de web (%s)', (_nombre, comando) => {
+  it('no reenvía a clinical-api la IP falsificada por peticiones que llegan durante el arranque [US-044 AC-3]', async () => {
+    xffDeTodasLasPeticiones.length = 0;
+    const puerto = await puertoLibre();
+    const proceso = lanzar(comando, puerto);
+
+    try {
+      const respondidas = await falsificarDuranteElArranque(`http://127.0.0.1:${puerto}`);
+
+      expect(respondidas).toBe(PETICIONES_DURANTE_EL_ARRANQUE);
+      expect(xffDeTodasLasPeticiones).not.toContain(IP_FALSIFICADA);
+    } finally {
+      proceso.kill('SIGTERM');
+    }
+  }, 120_000);
 });

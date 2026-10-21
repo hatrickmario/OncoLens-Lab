@@ -3,7 +3,7 @@ import { logout } from '../../../../packages/api-contracts/src/client-web/clinic
 import { zErrorNoAutenticado } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import {
   analizarJson,
-  cookieDeSesionSegura,
+  reenviarCookieDeSesionSegura,
   responderConFalloDeAutenticacion,
   type DependenciasDeAutenticacion,
 } from './auth-comun';
@@ -57,31 +57,10 @@ export function crearManejadorLogout(
     }
     const { respuesta, cuerpoCrudo } = clasificada;
     if (respuesta.status === 204) {
-      return reenviarBorradoDeCookie(respuesta, dependencias, traceId);
+      return reenviarCookieDeSesionSegura(respuesta, dependencias, EVENTO_LOGOUT, traceId);
     }
     return reenviarNoAutenticado(respuesta, cuerpoCrudo, dependencias, traceId);
   };
-}
-
-/** 204 hacia el navegador con la `Set-Cookie` que borra `oncolens_session`, validada igual que la del login. */
-function reenviarBorradoDeCookie(
-  respuesta: Response,
-  dependencias: DependenciasLogout,
-  traceId: string,
-): Response {
-  const cookie = cookieDeSesionSegura(respuesta);
-  if (cookie === undefined) {
-    return responderConFalloDeAutenticacion(
-      dependencias,
-      EVENTO_LOGOUT,
-      traceId,
-      'sin_cookie_de_sesion',
-    );
-  }
-  dependencias.registrar({ event: EVENTO_LOGOUT, status: 204, traceId });
-  const cabeceras = cabecerasHaciaNavegador(respuesta);
-  cabeceras.append('Set-Cookie', cookie);
-  return new Response(null, { status: 204, headers: cabeceras });
 }
 
 /** El contrato solo declara 204 y 401 para `logout`: otro status o un cuerpo que no cumple el schema es 502 propio. */

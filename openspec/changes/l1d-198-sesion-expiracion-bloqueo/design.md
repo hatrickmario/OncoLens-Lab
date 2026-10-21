@@ -73,6 +73,19 @@ activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.sessi
   redirección del panel de análisis ante `401` a `/login?motivo=expirada` (antes `/login`). E2E: Compose pasa
   `SESSION_IDLE_MINUTES` y `SESSION_TOUCH_SECONDS` a `clinical-api` y `scripts/e2e/ejecutar.sh` los fija en 1 minuto y 10 s.
 
+- **D9 · IP del socket firmada (Gate 2, privacy Mayor 2) y decisión pendiente del logout.** D4c dejaba un hueco: Next
+  escucha y encola peticiones antes de que `instrumentation.register()` envuelva `Server.prototype.emit`, y esas
+  primeras peticiones llegaban con el `X-Forwarded-For` falsificado (6 de 6 arranques). Corrección que falla cerrado y no
+  depende del arranque: el wrapper escribe la IP del socket en `x-oncolens-ip-del-socket` firmada con un secreto
+  aleatorio de proceso (`lib/server/cabecera-ip-del-socket.ts`, compartido por `globalThis`) y `ipDelCliente()` solo
+  acepta ese valor y nunca lee `X-Forwarded-For`. Sin firma (cola de arranque, cliente directo) el login responde `502`
+  propio con `motivo=sin_ip_del_cliente` y no llama a `clinical-api`; el logout no necesita la IP y no la reenvía.
+  Sustituye la parte de D4c que decía que `ipDelCliente` tomaba el último valor del `X-Forwarded-For`. Con el proxy del
+  S6 habrá que firmar el salto que ese proxy escriba, no el del socket.
+  **Pendiente (no implementado):** que el BFF de logout emita también la cookie de borrado cuando `clinical-api` responde
+  `401` (sesión ya expirada). Hoy el `401` se retransmite sin `Set-Cookie` y un test existente lo afirma
+  (`reexpone el 401 … sin cookies`, US-044 AC-1); cambiarlo es decisión del usuario, sin impacto de contrato.
+
 Alternativas baratas: guardar la inactividad en un JWT (descartado: la cookie es opaca por ADR-1);
 bloqueo por IP en PostgreSQL (descartado: esquema congelado y una sola instancia).
 

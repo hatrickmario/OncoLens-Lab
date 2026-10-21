@@ -11,7 +11,7 @@ import {
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import {
   analizarJson,
-  cookieDeSesionSegura,
+  reenviarCookieDeSesionSegura,
   responderConFalloDeAutenticacion,
   type DependenciasDeAutenticacion,
 } from './auth-comun';
@@ -73,9 +73,17 @@ export function crearManejadorLogin(
 
     // Sin cookie entrante (el login crea la sesión), pero con la IP que web fijó para el bloqueo por IP (US-044 D4b).
     const ip = ipDelCliente(request.headers);
+    if (ip === undefined) {
+      return responderConFalloDeAutenticacion(
+        dependencias,
+        EVENTO_LOGIN,
+        traceId,
+        'sin_ip_del_cliente',
+      );
+    }
     const sdk = crearSdkClinicalApi(dependencias.config, {
       fetch: dependencias.fetch,
-      ...(ip !== undefined && { ipDelCliente: ip }),
+      ipDelCliente: ip,
     });
     const resultado = await login({
       client: sdk.client,
@@ -94,7 +102,7 @@ export function crearManejadorLogin(
     }
     const { respuesta, cuerpoCrudo } = clasificada;
     if (respuesta.status === 204) {
-      return reenviarCookieDeSesion(respuesta, dependencias, traceId);
+      return reenviarCookieDeSesionSegura(respuesta, dependencias, EVENTO_LOGIN, traceId);
     }
     return reenviarErrorDelContrato(respuesta, cuerpoCrudo, dependencias, traceId);
   };
@@ -158,30 +166,6 @@ async function leerCredenciales(request: Request, maxBytes: number) {
   }
   const credenciales = zLoginBody.safeParse(analizarJson(texto));
   return credenciales.success ? credenciales.data : null;
-}
-
-/**
- * 204 hacia el navegador con la única cabecera `Set-Cookie` de `oncolens_session`, tal cual la fijó el proveedor y solo
- * si cumple `cookieDeSesionSegura`; si no, 502 propio.
- */
-function reenviarCookieDeSesion(
-  respuesta: Response,
-  dependencias: DependenciasLogin,
-  traceId: string,
-): Response {
-  const cookie = cookieDeSesionSegura(respuesta);
-  if (cookie === undefined) {
-    return responderConFalloDeAutenticacion(
-      dependencias,
-      EVENTO_LOGIN,
-      traceId,
-      'sin_cookie_de_sesion',
-    );
-  }
-  dependencias.registrar({ event: EVENTO_LOGIN, status: 204, traceId });
-  const cabeceras = cabecerasHaciaNavegador(respuesta);
-  cabeceras.append('Set-Cookie', cookie);
-  return new Response(null, { status: 204, headers: cabeceras });
 }
 
 /** 422 local (Zod o cuerpo excesivo): el formulario lo muestra como el mismo error genérico que el 401. */

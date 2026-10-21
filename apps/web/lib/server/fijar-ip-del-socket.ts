@@ -1,4 +1,5 @@
 import { Server, type IncomingMessage } from 'node:http';
+import { CABECERA_IP_DEL_SOCKET, firmarIpDelSocket } from './cabecera-ip-del-socket';
 
 /*
  * Sin `import 'server-only'` a propósito: este módulo lo carga `instrumentation.ts` en el arranque del servidor Node,
@@ -11,17 +12,17 @@ type Emit = (this: Server, evento: string | symbol, ...argumentos: unknown[]) =>
 type EmitMarcado = Emit & { [MARCA_INSTALADA]?: true };
 
 /**
- * Escribe la dirección del socket en `X-Forwarded-For`, descartando lo que traiga el cliente. Next 16 solo la
- * completa con `??=` (`base-server.js`): si el cliente envía la cabecera, esa cabecera falsificada llegaría a los Route
- * Handlers y a clinical-api como "IP del cliente". Con esto el único valor posible es el del socket (US-044 D4b).
+ * Escribe la dirección del socket, firmada, en `CABECERA_IP_DEL_SOCKET`, pisando lo que el cliente envíe en esa
+ * cabecera. `ipDelCliente()` solo acepta la cabecera firmada y nunca lee el `X-Forwarded-For`: una petición que Next
+ * atendió antes de instalar este wrapper (cola de arranque) no produce IP, en vez de producir una falsificada.
  */
 export function escribirIpDelSocket(peticion: IncomingMessage): void {
   const direccion = peticion.socket.remoteAddress;
   if (direccion === undefined) {
-    delete peticion.headers['x-forwarded-for'];
+    delete peticion.headers[CABECERA_IP_DEL_SOCKET];
     return;
   }
-  peticion.headers['x-forwarded-for'] = direccion;
+  peticion.headers[CABECERA_IP_DEL_SOCKET] = firmarIpDelSocket(direccion);
 }
 
 /**
