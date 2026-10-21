@@ -8,7 +8,11 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import type { RegistroDeAnalisis } from '../../../src/modules/evidence-analysis/analysis-record.js';
-import type { EntradaDeCierre } from '../../../src/modules/evidence-analysis/ports.js';
+import { construirContextoVacio } from '../../../src/modules/evidence-analysis/clinical-context.builder.js';
+import type {
+  EntradaDeCierre,
+  EntradaDeCierreSinIA,
+} from '../../../src/modules/evidence-analysis/ports.js';
 import {
   FalloDePersistenciaError,
   RespuestaInternaInvalidaError,
@@ -132,8 +136,28 @@ function cierreConFake(persistir: (registro: RegistroDeAnalisis) => Promise<Regi
     reloj: { now: () => new Date('2026-10-16T12:00:00.000Z') },
     idsDeAnalisis: () => UUID_FIJO,
     disclaimer: 'Aviso sintético.',
+    alcanceDelCorpus: { corpusExcludedSources: ['NCCN', 'ESMO'], corpusCutoffDate: '2026-09-30' },
   });
   return { cierre, persistidos };
+}
+
+function entradaSinIA(resto: Partial<EntradaDeCierreSinIA> = {}): EntradaDeCierreSinIA {
+  const { filtersApplied, sourcesSelected } = peticion as RagQueryInternalRequest;
+  return {
+    traceId: 'req_Fijo0001',
+    patientId: 'paciente-sintetico',
+    episodeId: 'episodio-sintetico',
+    userId: 'usuario-sintetico',
+    questionTemplateId: null,
+    continueWithWarning: false,
+    query: 'pregunta enmascarada',
+    sourcesSelected,
+    filtersApplied,
+    dataClassification: 'sintetico',
+    catalogVersion: '1.0.0',
+    contextoVacio: construirContextoVacio('adulto'),
+    ...resto,
+  };
 }
 
 describe('crearAnalysisCompletion', () => {
@@ -170,6 +194,49 @@ describe('crearAnalysisCompletion', () => {
 
     await expect(
       cierre.completar({ ...entradaDeCierre(conEvidencia), episodeId: null }),
+    ).rejects.toBeInstanceOf(FalloDePersistenciaError);
+    expect(persistidos).toEqual([]);
+  });
+});
+
+describe('crearAnalysisCompletion: tipo_no_habilitado', () => {
+  it('persiste un registro tipo_no_habilitado con la Base del corpus no consultado y responde desde lo persistido', async () => {
+    const { cierre, persistidos } = cierreConFake(async (registro) => ({
+      ...registro,
+      id: 'id-de-la-fila',
+    }));
+
+    const resultado = await cierre.completarTipoNoHabilitado(entradaSinIA());
+
+    expect(persistidos).toHaveLength(1);
+    expect(persistidos[0]).toMatchObject({
+      id: UUID_FIJO,
+      status: 'tipo_no_habilitado',
+      topRelevanceScore: null,
+      analysisBasis: { sourcesNotIncluded: ['NCCN', 'ESMO'], corpusCutoffDate: '2026-09-30' },
+    });
+    expect(resultado).toMatchObject({
+      tipo: 'completado',
+      cuerpo: { id: 'id-de-la-fila', status: 'tipo_no_habilitado', topRelevanceScore: null },
+    });
+  });
+
+  it('lanza FalloDePersistenciaError sin el mensaje de la base cuando el repository falla', async () => {
+    const { cierre } = cierreConFake(async () => {
+      throw new Error('valor sintético de la fila en el mensaje de PostgreSQL');
+    });
+
+    const fallo = await cierre.completarTipoNoHabilitado(entradaSinIA()).catch((e: unknown) => e);
+
+    expect(fallo).toBeInstanceOf(FalloDePersistenciaError);
+    expect((fallo as Error).message).not.toContain('valor sintético');
+  });
+
+  it('no persiste cuando el paciente no tiene episodio al que asociar el registro', async () => {
+    const { cierre, persistidos } = cierreConFake(async (registro) => registro);
+
+    await expect(
+      cierre.completarTipoNoHabilitado(entradaSinIA({ episodeId: null })),
     ).rejects.toBeInstanceOf(FalloDePersistenciaError);
     expect(persistidos).toEqual([]);
   });

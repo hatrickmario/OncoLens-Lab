@@ -157,6 +157,25 @@ function lineaActual(tratamientos: readonly FilaDeTratamientoPrevio[]): number |
   return lineas.length === 0 ? null : Math.max(...lineas);
 }
 
+/** Contexto sin ningún dato del paciente: lo que se guarda cuando no se envía nada a Backend 2 (`tipo_no_habilitado`). */
+export function construirContextoVacio(
+  population: CasoClinico['paciente']['population'],
+): ContextoPermitido {
+  return {
+    population,
+    diagnosis: null,
+    biomarkers: [],
+    clinicalNotes: [],
+    currentLine: null,
+    attributes: [],
+    priorTreatments: [],
+    events: [],
+    biomarkerTrends: [],
+    missingCriticalData: [],
+    priorAnalyses: [],
+  };
+}
+
 /**
  * Allowlist del contexto clínico (RN-10): arma cada objeto campo a campo desde las filas leídas, nunca copiando
  * entidades completas. Devuelve además qué dato respalda cada `dataRef`.

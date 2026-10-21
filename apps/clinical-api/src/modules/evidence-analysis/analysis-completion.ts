@@ -3,7 +3,12 @@ import { zRagQueryInternalResponseRefinado } from '../../../../../packages/api-c
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AnalisisRepository } from './evidence-analysis.repository.js';
-import { armarRegistro, type RegistroDeAnalisis } from './analysis-record.js';
+import { construirBaseTipoNoHabilitado } from './analysis-basis.js';
+import {
+  armarRegistro,
+  armarRegistroTipoNoHabilitado,
+  type RegistroDeAnalisis,
+} from './analysis-record.js';
 import { aEvidenceAnalysis } from './evidence-analysis.mapper.js';
 import type { AnalysisBasisBuilder, AnalysisCompletion } from './ports.js';
 import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
@@ -57,6 +62,8 @@ export interface DependenciasDelCierre {
   idsDeAnalisis: GeneradorDeIds;
   /** `AI_DISCLAIMER_TEXT` (literal de US-069). */
   disclaimer: string;
+  /** `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE`: lo que la Base de un `tipo_no_habilitado` dice del corpus. */
+  alcanceDelCorpus: { corpusExcludedSources: readonly string[]; corpusCutoffDate: string };
 }
 
 interface RespuestaInterpretada {
@@ -95,7 +102,7 @@ async function persistirAntesDeResponder(
  * responde desde lo persistido.
  */
 export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): AnalysisCompletion {
-  const { analisis, base, reloj, idsDeAnalisis, disclaimer } = dependencias;
+  const { analisis, base, reloj, idsDeAnalisis, disclaimer, alcanceDelCorpus } = dependencias;
   return {
     async completar(entrada) {
       if (!entrada.respuesta.ok)
@@ -118,6 +125,34 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
         respuesta,
         base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
         topRelevanceScore,
+      });
+      const persistido = await persistirAntesDeResponder(analisis, registro);
+      return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
+    },
+    async completarTipoNoHabilitado(entrada) {
+      if (entrada.episodeId === null) throw new FalloDePersistenciaError();
+      const registro = armarRegistroTipoNoHabilitado({
+        id: idsDeAnalisis(),
+        creadoEn: reloj.now(),
+        traceId: entrada.traceId,
+        patientId: entrada.patientId,
+        episodeId: entrada.episodeId,
+        userId: entrada.userId,
+        questionTemplateId: entrada.questionTemplateId,
+        continueWithWarning: entrada.continueWithWarning,
+        query: entrada.query,
+        sourcesSelected: entrada.sourcesSelected,
+        filtersApplied: entrada.filtersApplied,
+        dataClassification: entrada.dataClassification,
+        catalogVersion: entrada.catalogVersion,
+        contextoVacio: entrada.contextoVacio,
+        base: construirBaseTipoNoHabilitado({
+          sourcesSelected: entrada.sourcesSelected,
+          filters: entrada.filtersApplied,
+          continuedWithWarning: entrada.continueWithWarning,
+          sourcesNotIncluded: alcanceDelCorpus.corpusExcludedSources,
+          corpusCutoffDate: alcanceDelCorpus.corpusCutoffDate,
+        }),
       });
       const persistido = await persistirAntesDeResponder(analisis, registro);
       return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };

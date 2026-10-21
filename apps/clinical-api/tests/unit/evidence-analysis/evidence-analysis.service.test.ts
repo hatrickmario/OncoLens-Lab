@@ -7,6 +7,7 @@ import {
   crearEvidenceAnalysisService,
   type DependenciasDelService,
 } from '../../../src/modules/evidence-analysis/evidence-analysis.service.js';
+import { crearTiposHabilitados } from '../../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { EntornoNoSintetico } from '../../../src/modules/evidence-analysis/deidentification/entorno-sintetico.guard.js';
 import type {
   ClinicalContext,
@@ -14,6 +15,7 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type {
   EntradaDeCierre,
+  EntradaDeCierreSinIA,
   EntradaDeDesidentificacion,
   OpcionesDeConsultaRag,
 } from '../../../src/modules/evidence-analysis/ports.js';
@@ -111,12 +113,18 @@ describe('armarRagQueryRequest', () => {
 });
 
 /** Fakes de los puertos: registran qué se llamó y en qué orden. */
-function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null } = {}) {
+function crearFakes(
+  opciones: {
+    caso?: ReturnType<typeof casoDeEjemplo> | null;
+    tiposHabilitados?: readonly string[];
+  } = {},
+) {
   const llamadas: string[] = [];
   const recibido: {
     desidentificacion?: EntradaDeDesidentificacion;
     request?: RagQueryInternalRequest;
     cierre?: EntradaDeCierre;
+    cierreSinIA?: EntradaDeCierreSinIA;
   } = {};
   const caso = opciones.caso === undefined ? casoDeEjemplo() : opciones.caso;
   const dependencias: DependenciasDelService = {
@@ -146,7 +154,13 @@ function crearFakes(opciones: { caso?: ReturnType<typeof casoDeEjemplo> | null }
         recibido.cierre = entrada;
         return RESULTADO_DEL_CIERRE;
       },
+      completarTipoNoHabilitado: async (entrada) => {
+        llamadas.push('completarTipoNoHabilitado');
+        recibido.cierreSinIA = entrada;
+        return RESULTADO_DEL_CIERRE;
+      },
     },
+    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata']),
     catalogo: { version: () => '1.0.0' },
     reloj: { now: () => AHORA_DE_EJEMPLO },
     config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },
@@ -229,6 +243,81 @@ describe('crearEvidenceAnalysisService', () => {
       respuesta: { ok: false, status: 500 },
     });
     expect(resultado).toEqual(RESULTADO_DEL_CIERRE);
+  });
+});
+
+describe('crearEvidenceAnalysisService: tipo de cáncer no habilitado', () => {
+  const soloMama = { tiposHabilitados: ['mama'] } as const;
+
+  it('no consulta a la IA ni construye el contexto: desidentifica solo la pregunta y cierra sin IA, en ese orden', async () => {
+    const { dependencias, llamadas, recibido } = crearFakes(soloMama);
+
+    const resultado = await crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
+
+    expect(llamadas).toEqual(['leerCaso', 'desidentificar', 'completarTipoNoHabilitado']);
+    expect(recibido.desidentificacion?.contexto).toMatchObject({
+      diagnosis: null,
+      biomarkers: [],
+      attributes: [],
+      priorTreatments: [],
+      events: [],
+    });
+    expect(resultado).toEqual(RESULTADO_DEL_CIERRE);
+  });
+
+  it('cierra con la pregunta enmascarada, las fuentes, los filtros efectivos y la versión del catálogo', async () => {
+    const { dependencias, recibido } = crearFakes(soloMama);
+
+    await crearEvidenceAnalysisService(dependencias).solicitar({
+      ...solicitud,
+      peticion: {
+        ...solicitud.peticion,
+        questionTemplateId: 'plantilla-1',
+        continueWithWarning: true,
+      },
+    });
+
+    expect(recibido.cierreSinIA).toMatchObject({
+      traceId: 'req_Fijo0001',
+      patientId: 'paciente-sintetico',
+      userId: 'usuario-sintetico',
+      episodeId: 'episodio-sintetico',
+      questionTemplateId: 'plantilla-1',
+      continueWithWarning: true,
+      query: 'pregunta enmascarada',
+      sourcesSelected: FUENTES,
+      dataClassification: 'sintetico',
+      catalogVersion: '1.0.0',
+      filtersApplied: { historiaCompleta: false, publishedFromYear: 2016 },
+      contextoVacio: { diagnosis: null, population: 'adulto' },
+    });
+  });
+
+  it('no cierra sin IA cuando el desidentificador rechaza', async () => {
+    const { dependencias, llamadas } = crearFakes(soloMama);
+    dependencias.desidentificador = {
+      desidentificar: async () => {
+        llamadas.push('desidentificar');
+        throw new EntornoNoSintetico('app_env');
+      },
+    };
+
+    await expect(
+      crearEvidenceAnalysisService(dependencias).solicitar(solicitud),
+    ).rejects.toBeInstanceOf(EntornoNoSintetico);
+    expect(llamadas).toEqual(['leerCaso', 'desidentificar']);
+  });
+
+  it('prioriza TipoCancerNoRegistradoError sobre el alcance cuando no hay diagnóstico activo', async () => {
+    const { dependencias, llamadas } = crearFakes({
+      ...soloMama,
+      caso: casoDeEjemplo({ diagnosticoActivo: null }),
+    });
+
+    await expect(
+      crearEvidenceAnalysisService(dependencias).solicitar(solicitud),
+    ).rejects.toBeInstanceOf(TipoCancerNoRegistradoError);
+    expect(llamadas).toEqual(['leerCaso']);
   });
 });
 

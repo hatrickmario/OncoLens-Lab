@@ -1,12 +1,13 @@
+import type { AppliedFilters } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
   ClinicalContext,
   DataClassification,
   RagQueryInternalRequest,
   SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { exigirTipoCancer } from './case-guards.js';
-import { construirContextoPermitido } from './clinical-context.builder.js';
-import type { CasoRepository } from './evidence-analysis.repository.js';
+import { exigirTipoCancer, exigirTipoHabilitado } from './case-guards.js';
+import { construirContextoPermitido, construirContextoVacio } from './clinical-context.builder.js';
+import type { CasoClinico, CasoRepository } from './evidence-analysis.repository.js';
 import type { PeticionDeAnalisis } from './evidence-analysis.schema.js';
 import type {
   AnalysisCompletion,
@@ -16,6 +17,7 @@ import type {
   RagQueryClient,
   RespuestaDeRag,
   ResultadoDelAnalisis,
+  TiposDeCancerHabilitados,
 } from './ports.js';
 
 /** El `patientId` de la petición no corresponde a ningún paciente. */
@@ -41,6 +43,8 @@ export interface DependenciasDelService {
   rag: RagQueryClient;
   cierre: AnalysisCompletion;
   catalogo: CatalogVersionProvider;
+  /** `ENABLED_CANCER_TYPES` validada contra el manifiesto (RN-20). */
+  tiposHabilitados: TiposDeCancerHabilitados;
   reloj: Clock;
   config: ConfiguracionDelAnalisis;
 }
@@ -78,9 +82,23 @@ function anioMinimoEfectivo(
   return pedido === undefined ? anioActual - aniosPorDefecto : pedido;
 }
 
+/** Filtros efectivos de la petición (cuatro booleanos y año): los que viajan a Backend 2 y los que quedan en la Base. */
+export function filtrosEfectivos(
+  filtros: PeticionDeAnalisis['filtersApplied'],
+  anioActual: number,
+  aniosPorDefecto: number,
+): AppliedFilters {
+  return {
+    historiaCompleta: filtros?.historiaCompleta ?? false,
+    soloBiomarcadoresRelevantes: filtros?.soloBiomarcadoresRelevantes ?? false,
+    ultimosSeisMeses: filtros?.ultimosSeisMeses ?? false,
+    antecedentesFamiliares: filtros?.antecedentesFamiliares ?? false,
+    publishedFromYear: anioMinimoEfectivo(filtros, anioActual, aniosPorDefecto),
+  };
+}
+
 /** `RagQueryInternalRequest` completo: filtros efectivos (cuatro booleanos y año) y nada que no esté en el contrato. */
 export function armarRagQueryRequest(entrada: EntradaDelRequestInterno): RagQueryInternalRequest {
-  const { filtros } = entrada;
   return {
     traceId: entrada.traceId,
     query: entrada.query,
@@ -88,13 +106,7 @@ export function armarRagQueryRequest(entrada: EntradaDelRequestInterno): RagQuer
     dataClassification: entrada.dataClassification,
     catalogVersion: entrada.catalogVersion,
     maxOptions: entrada.maxOptions,
-    filtersApplied: {
-      historiaCompleta: filtros?.historiaCompleta ?? false,
-      soloBiomarcadoresRelevantes: filtros?.soloBiomarcadoresRelevantes ?? false,
-      ultimosSeisMeses: filtros?.ultimosSeisMeses ?? false,
-      antecedentesFamiliares: filtros?.antecedentesFamiliares ?? false,
-      publishedFromYear: anioMinimoEfectivo(filtros, entrada.anioActual, entrada.aniosPorDefecto),
-    },
+    filtersApplied: filtrosEfectivos(entrada.filtros, entrada.anioActual, entrada.aniosPorDefecto),
     clinicalContext: entrada.clinicalContext,
   };
 }
@@ -126,20 +138,64 @@ async function consultarConPlazo(
 }
 
 /**
- * Gateway de `POST /platform/evidence-analyses`: leer el caso → cortar si no hay tipo de cáncer → contexto por
- * allowlist → desidentificar → consultar a rag-orchestrator → cerrar el análisis. Los puertos llegan por la factory.
+ * Gateway de `POST /platform/evidence-analyses`: leer el caso → cortar si no hay tipo de cáncer → cerrar sin IA si el
+ * tipo no está habilitado → contexto por allowlist → desidentificar → consultar a rag-orchestrator → cerrar el
+ * análisis. Los puertos llegan por la factory.
  */
 export function crearEvidenceAnalysisService(
   dependencias: DependenciasDelService,
 ): EvidenceAnalysisService {
-  const { casos, desidentificador, rag, cierre, catalogo, reloj, config } = dependencias;
+  const { casos, desidentificador, rag, cierre, catalogo, tiposHabilitados, reloj, config } =
+    dependencias;
+
+  /**
+   * RN-20: un tipo no habilitado no se analiza. Nada del caso viaja a Backend 2; solo la pregunta se desidentifica,
+   * porque se persiste (RN-11), y el registro se escribe antes de responder (RN-06).
+   */
+  async function cerrarTipoNoHabilitado(
+    { traceId, userId, peticion }: SolicitudDeAnalisis,
+    caso: CasoClinico,
+    ahora: Date,
+  ): Promise<ResultadoDelAnalisis> {
+    const contextoVacio = construirContextoVacio(caso.paciente.population);
+    const { query } = await desidentificador.desidentificar({
+      traceId,
+      patientId: peticion.patientId,
+      contexto: contextoVacio,
+      query: peticion.query,
+      dataOrigin: caso.paciente.dataOrigin,
+    });
+    return cierre.completarTipoNoHabilitado({
+      traceId,
+      patientId: peticion.patientId,
+      episodeId: caso.episodioId,
+      userId,
+      questionTemplateId: peticion.questionTemplateId ?? null,
+      continueWithWarning: peticion.continueWithWarning,
+      query,
+      sourcesSelected: peticion.sourcesSelected,
+      filtersApplied: filtrosEfectivos(
+        peticion.filtersApplied,
+        ahora.getUTCFullYear(),
+        config.evidenceDefaultYears,
+      ),
+      dataClassification: caso.paciente.dataOrigin,
+      catalogVersion: catalogo.version(),
+      contextoVacio,
+    });
+  }
+
   return {
-    async solicitar({ traceId, userId, peticion }) {
+    async solicitar(solicitud) {
+      const { traceId, userId, peticion } = solicitud;
       const caso = await casos.leerCaso(peticion.patientId);
       if (caso === null) throw new PacienteNoEncontradoError();
       exigirTipoCancer(caso);
 
       const ahora = reloj.now();
+      if (exigirTipoHabilitado(caso, tiposHabilitados) === 'tipo_no_habilitado') {
+        return cerrarTipoNoHabilitado(solicitud, caso, ahora);
+      }
       const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
       const { clinicalContext, query } = await desidentificador.desidentificar({
         traceId,

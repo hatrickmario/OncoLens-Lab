@@ -47,7 +47,7 @@ export interface RegistroDeAnalisis {
   patientDataLinks: PatientDataLink[];
   /** Copiado de Backend 2 (RN-02): `null` cuando no hay evidencia, nunca `0`. */
   topRelevanceScore: number | null;
-  status: 'con_evidencia' | 'sin_evidencia';
+  status: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado';
   /** Contexto enviado a Backend 2 en su versión desidentificada y SIN `pseudoPatientId` (RN-11). */
   clinicalContextSnapshot: Omit<ClinicalContext, 'pseudoPatientId'>;
   /** SHA-256 hexadecimal del JSON canónico (claves ordenadas) del snapshot. */
@@ -167,6 +167,80 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
     corpusRelease: meta.corpusRelease,
     catalogVersion: meta.catalogVersion,
     retrievalParams: meta.retrievalParams,
+    createdAt: entrada.creadoEn,
+  };
+}
+
+export interface EntradaDelRegistroSinIA {
+  /** UUID del registro (generador inyectado). */
+  id: string;
+  /** Instante de creación (reloj inyectado). */
+  creadoEn: Date;
+  traceId: string;
+  patientId: string;
+  episodeId: string;
+  userId: string;
+  questionTemplateId: string | null;
+  continueWithWarning: boolean;
+  /** Pregunta ya desidentificada (RN-11). */
+  query: string;
+  sourcesSelected: SourcesSelected;
+  filtersApplied: AppliedFilters;
+  dataClassification: DataClassification;
+  catalogVersion: string;
+  /** Contexto sin datos del paciente (nada se envió): lo único que se guarda como snapshot. */
+  contextoVacio: RegistroDeAnalisis['clinicalContextSnapshot'];
+  base: AnalysisBasis;
+}
+
+/**
+ * Registro de un `tipo_no_habilitado` (US-043, RN-06): no hubo llamada a Backend 2, así que no hay modelos, versión de
+ * prompt, release del corpus ni parámetros de recuperación, y el puntaje es `null` (RN-02). Los idiomas son los del
+ * producto (español): sin Backend 2 no hay detección de idioma.
+ */
+export function armarRegistroTipoNoHabilitado(
+  entrada: EntradaDelRegistroSinIA,
+): RegistroDeAnalisis {
+  return {
+    id: entrada.id,
+    patientId: entrada.patientId,
+    episodeId: entrada.episodeId,
+    requestedBy: entrada.userId,
+    analysisType: 'analisis_evidencia',
+    traceId: entrada.traceId,
+    queryText: entrada.query,
+    questionTemplateId: entrada.questionTemplateId,
+    queryLanguage: 'es',
+    responseLanguage: 'es',
+    sourcesSelected: entrada.sourcesSelected,
+    filtersApplied: entrada.filtersApplied,
+    synthesis: { agreements: [], discrepancies: [] },
+    applicability: [],
+    evidenceOptions: [],
+    discardedOptions: [],
+    caseSummary: null,
+    analysisBasis: entrada.base,
+    agentSteps: [],
+    omittedClaims: 0,
+    missingCriticalData: [],
+    continuedWithWarning: entrada.continueWithWarning,
+    priorAnalysesUsed: [],
+    patientDataLinks: [],
+    topRelevanceScore: null,
+    status: 'tipo_no_habilitado',
+    clinicalContextSnapshot: entrada.contextoVacio,
+    contextFingerprint: huellaDelContexto(entrada.contextoVacio),
+    rerunOfAnalysisId: null,
+    dataClassification: entrada.dataClassification,
+    llmProvider: null,
+    llmModel: null,
+    embeddingModel: null,
+    rerankerModel: null,
+    nliModel: null,
+    promptVersion: null,
+    corpusRelease: null,
+    catalogVersion: entrada.catalogVersion,
+    retrievalParams: null,
     createdAt: entrada.creadoEn,
   };
 }

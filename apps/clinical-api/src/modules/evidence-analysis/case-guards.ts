@@ -22,8 +22,9 @@ export type AlcanceDelCaso = 'habilitado' | 'tipo_no_habilitado';
  * devuelve el resultado en vez de lanzar. Se evalúa tras `exigirTipoCancer()` y antes de construir el contexto.
  */
 export function exigirTipoHabilitado(
-  _caso: Pick<CasoClinico, 'diagnosticoActivo'>,
-  _tipos: TiposDeCancerHabilitados,
+  caso: Pick<CasoClinico, 'diagnosticoActivo'>,
+  tipos: TiposDeCancerHabilitados,
 ): AlcanceDelCaso {
-  throw new Error('no implementado');
+  const tipo = caso.diagnosticoActivo?.cancerType;
+  return tipo !== undefined && tipos.estaHabilitado(tipo) ? 'habilitado' : 'tipo_no_habilitado';
 }

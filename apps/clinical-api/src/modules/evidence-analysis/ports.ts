@@ -1,5 +1,6 @@
 import type {
   AnalysisBasis,
+  AppliedFilters,
   EvidenceAnalysis,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
@@ -7,6 +8,7 @@ import type {
   DataClassification,
   RagQueryInternalRequest,
   RagQueryInternalResponse,
+  SourcesSelected,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 
@@ -135,6 +137,25 @@ export interface EntradaDeCierre {
   respuesta: RespuestaDeRag;
 }
 
+/** Cierre de un `tipo_no_habilitado` (US-043): no hubo llamada a Backend 2, así que no hay request ni respuesta internas. */
+export interface EntradaDeCierreSinIA {
+  traceId: string;
+  patientId: string;
+  episodeId: string | null;
+  userId: string;
+  questionTemplateId: string | null;
+  continueWithWarning: boolean;
+  /** Pregunta ya desidentificada (RN-11). */
+  query: string;
+  sourcesSelected: SourcesSelected;
+  /** Filtros efectivos de la petición (los mismos que habría enviado a Backend 2). */
+  filtersApplied: AppliedFilters;
+  dataClassification: DataClassification;
+  catalogVersion: string;
+  /** Contexto sin datos del paciente: nada se envió. */
+  contextoVacio: Omit<ClinicalContext, 'pseudoPatientId'>;
+}
+
 /** Respuesta HTTP de un fallo de rag-orchestrator ya traducida (`mapearFalloRag()`), sin eco de su cuerpo. */
 export interface RespuestaDeFallo {
   status: 409 | 422 | 502 | 503 | 504;
@@ -163,4 +184,6 @@ export interface AnalysisBasisBuilder {
 /** Cierre del análisis: persistir el `AIAnalysisRecord` ANTES de responder (RN-06). Lo implementa L1D-104. */
 export interface AnalysisCompletion {
   completar(entrada: EntradaDeCierre): Promise<ResultadoDelAnalisis>;
+  /** Cierre sin IA de un `tipo_no_habilitado`: persiste el registro antes de responder (RN-06). */
+  completarTipoNoHabilitado(entrada: EntradaDeCierreSinIA): Promise<ResultadoDelAnalisis>;
 }
