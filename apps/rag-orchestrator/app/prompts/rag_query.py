@@ -40,10 +40,10 @@ Fragmentos:
 
 
 INSTRUCCION_DE_DETALLE = (
-    '- Cuando los fragmentos lo permitan, añade a cada opción en "details" hasta {maximo} párrafos que amplíen la '
-    "justificación con lo que la fuente reporta (diseño del estudio, población, resultados o seguimiento); cada párrafo "
-    "se apoya solo en los fragmentos citados de esa opción y no repite la justificación. Si no hay más que describir, "
-    'deja "details" vacío.\n'
+    '- En "details" de cada opción entrega de 1 a {maximo} párrafos completos (de 2 a 4 oraciones cada uno, sin viñetas '
+    "ni listas) que amplíen la justificación con lo que la fuente reporta: diseño del estudio, población, resultados o "
+    "seguimiento. Cada párrafo se apoya solo en los fragmentos citados de esa opción y no repite la justificación. "
+    'Si la fuente no aporta más, deja "details" vacío.\n'
 )
 
 

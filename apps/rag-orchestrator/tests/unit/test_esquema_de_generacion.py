@@ -7,7 +7,9 @@ def _opcion(esquema: dict) -> dict:
     return esquema["$defs"]["_OpcionCruda"]
 
 
-def test_el_esquema_con_detalle_exige_details_y_lo_acota_al_maximo_de_parrafos_configurado() -> None:
+def test_el_esquema_con_detalle_exige_details_y_lo_acota_al_maximo_de_parrafos_configurado() -> (
+    None
+):
     opcion = _opcion(esquema_de_generacion(2))
 
     assert "details" in opcion["required"]

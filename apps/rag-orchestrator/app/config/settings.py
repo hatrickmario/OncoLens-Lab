@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     llm_health_timeout_ms: int = Field(default=2000, gt=0)
     # Generación de /rag/query (US-225, RN-22): plazo de la llamada al LLM local y tope de tokens de su salida.
     llm_request_timeout_ms: int = Field(default=60000, gt=0)
-    llm_max_output_tokens: int = Field(default=1024, gt=0)
+    llm_max_output_tokens: int = Field(default=2048, gt=0)
     llm_cloud_enabled: bool = False
     # ADR-39 fase B (US-224, RN-22). `LLM_NUM_CTX` lo aplica el runtime nativo (OLLAMA_CONTEXT_LENGTH): la API
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.

@@ -7,6 +7,7 @@ puntajes) se descarta al parsear. Una salida que no es JSON o no valida contra e
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Any
 
@@ -47,12 +48,27 @@ class GenerationOutput(BaseModel):
 ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
 
 
+def esquema_de_generacion(max_parrafos_detalle: int) -> dict[str, Any]:
+    """Esquema entregado al LLM (salida estructurada). ``details`` es opcional para el parseo, pero con la gramática
+    del runtime un campo no requerido se omite siempre: se exige y se acota al máximo configurado (RN-22). Con 0
+    párrafos el campo ni se ofrece."""
+    esquema = copy.deepcopy(ESQUEMA_DE_GENERACION)
+    opcion = esquema["$defs"]["_OpcionCruda"]
+    if max_parrafos_detalle > 0:
+        opcion["required"] = [*opcion["required"], "details"]
+        opcion["properties"]["details"]["maxItems"] = max_parrafos_detalle
+    else:
+        del opcion["properties"]["details"]
+    return esquema
+
+
 class LlmEvidenceGenerator:
     """Implementa ``EvidenceGenerator`` sobre el puerto ``LlmClient``."""
 
     def __init__(self, cliente: LlmClient, max_parrafos_detalle: int = 2) -> None:
         self._cliente = cliente
         self._max_parrafos_detalle = max_parrafos_detalle
+        self._esquema = esquema_de_generacion(max_parrafos_detalle)
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
@@ -66,7 +82,7 @@ class LlmEvidenceGenerator:
             self._max_parrafos_detalle,
         )
         try:
-            crudo = await self._cliente.completar_json(prompt, ESQUEMA_DE_GENERACION)
+            crudo = await self._cliente.completar_json(prompt, self._esquema)
         except FalloDelLlm:
             logger.warning("event=generacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
