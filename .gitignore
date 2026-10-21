@@ -31,3 +31,7 @@ infra/docker/secrets/
 
 # Estado local de la ejecución de cada sprint (lo escribe el orquestador; no se versiona)
 backlog/sprints/*-status.md
+
+# Artefactos de Playwright
+test-results/
+playwright-report/
