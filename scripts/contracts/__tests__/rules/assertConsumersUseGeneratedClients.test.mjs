@@ -58,6 +58,14 @@ describe('assertConsumersUseGeneratedClients · clientes generados como única v
     expect(hallazgosDe({ 'apps/web/lib/server/otra.ts': `return ${LLAMADA_DECLARADA}url);\n` })).toHaveLength(1);
   });
 
+  it('declara también el transporte de rag-orchestrator de clinical-api y lo encuentra en el código real [US-214 AC-1]', async () => {
+    const { docs } = await loadContext(ROOT);
+    const transporteRag = TRANSPORTES_DECLARADOS.find((transporte) => transporte.file === 'apps/clinical-api/src/infrastructure/rag-orchestrator.http.ts');
+
+    expect(transporteRag).toBeDefined();
+    expect(docs.consumers[transporteRag.file]).toContain(transporteRag.llamada);
+  });
+
   it('sigue reportando un fetch directo a rag-orchestrator escrito en el archivo del transporte declarado [US-214 AC-1]', () => {
     const hallazgos = hallazgosDe({ [ARCHIVO_TRANSPORTE]: `return ${LLAMADA_DECLARADA}url, init);\nawait fetch('http://rag-orchestrator:8000/rag/query');\n` });
 

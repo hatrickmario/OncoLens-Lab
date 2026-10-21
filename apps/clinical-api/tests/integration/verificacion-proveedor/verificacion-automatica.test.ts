@@ -19,6 +19,26 @@ function proveedorQueResponde(status: number, cuerpo: unknown) {
 
 const VALOR_SENTINELA = 'VALOR-SINTETICO-QUE-NO-DEBE-IMPRIMIRSE';
 
+describe('excepciones del cliente verificado', () => {
+  it('lanza cuando una ruta que existe en el contrato se declara ajena sin acotarla con status [US-214 AC-1]', () => {
+    const app = proveedorQueResponde(200, {});
+
+    expect(() =>
+      clienteVerificado(app, { respuestasAjenasAlContrato: [{ ruta: '/platform/evidence-analyses' }] }),
+    ).toThrow(/existe en el contrato.*status/);
+  });
+
+  it('acepta una ruta de mentira o una ruta del contrato acotada con status [US-214 AC-1]', () => {
+    const app = proveedorQueResponde(200, {});
+
+    expect(() =>
+      clienteVerificado(app, {
+        respuestasAjenasAlContrato: [{ ruta: '/platform/de-mentira' }, { ruta: '/platform/evidence-analyses', status: 200 }],
+      }),
+    ).not.toThrow();
+  });
+});
+
 describe('verificación automática del proveedor', () => {
   it('falla nombrando proveedor, operación, código y campo, sin el valor, cuando EvidenceAnalysis trae un campo no declarado [US-214 AC-2]', async () => {
     const app = proveedorQueResponde(200, {

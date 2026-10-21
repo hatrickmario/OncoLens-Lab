@@ -36,6 +36,20 @@ describe('validarRespuestaInterna', () => {
     );
   });
 
+  it('lanza RespuestaInternaInvalidaError cuando sin_evidencia trae topRelevanceScore 0.0 porque null no es 0.0 [US-214 AC-6] [RN-02]', () => {
+    const incoherente = { ...copia(sinEvidencia), topRelevanceScore: 0 };
+
+    expect(() => validarRespuestaInterna(incoherente)).toThrow(RespuestaInternaInvalidaError);
+  });
+
+  it('lanza RespuestaInternaInvalidaError cuando con_evidencia no trae puntaje o sin_evidencia trae opciones [US-214 AC-6]', () => {
+    const sinPuntaje = { ...copia(conEvidencia), topRelevanceScore: null };
+    const conOpciones = { ...copia(sinEvidencia), evidenceOptions: copia(conEvidencia).evidenceOptions };
+
+    expect(() => validarRespuestaInterna(sinPuntaje)).toThrow(RespuestaInternaInvalidaError);
+    expect(() => validarRespuestaInterna(conOpciones)).toThrow(RespuestaInternaInvalidaError);
+  });
+
   it('lanza RespuestaInternaInvalidaError sin eco del contenido cuando no es un objeto', () => {
     expect(() => validarRespuestaInterna('texto interno sintético')).toThrow(
       RespuestaInternaInvalidaError,
