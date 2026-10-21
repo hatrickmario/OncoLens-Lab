@@ -35,3 +35,13 @@
 - [x] 3.1 `openspec validate l1d-56-carga-documento-api --strict` en verde.
 - [x] 3.2 Suite de `apps/clinical-api` en verde (Vitest + Supertest).
 - [x] 3.3 `contracts:verify-provider` (o el helper vigente de US-214) sobre `202`, `401`, `403`, `404`, `409`, `422` y `503` de `uploadDocument`.
+
+## 4. Ronda del Gate 2
+
+- [x] 4.1 (TDD) Multipart truncado y petición abortada: `422` sin tumbar el proceso ni dejar la promesa colgada.
+- [x] 4.2 (TDD) Límites del multipart, corte al superar el archivo y rechazo por `Content-Length` con `Connection: close`; PDF de exactamente `MAX_UPLOAD_MB` → `202`.
+- [x] 4.3 (TDD) Normalización de `original_filename` en el borde (NUL, CRLF, formato, NFC, 255).
+- [x] 4.4 (TDD) `compensar()`: el duplicado siempre `409`, compensación fallida registrada por UUID.
+- [x] 4.5 (test después) No-fuga parametrizada con PII sintética en los caminos 202, 409, 422, 503 y 500; coherencia ruta-contrato del módulo.
+- [x] 4.6 (refactor) `esDuplicadoPorChecksum`, `DocumentoCargado` derivado del contrato, `sesionDe(request)`, `ArchivoRecibido.nombreOriginal`.
+- [x] 4.7 (docs) `original_filename` en claro (opciones A/B), `500` no declarado, deuda propuesta: ver design, "Gate 2".
