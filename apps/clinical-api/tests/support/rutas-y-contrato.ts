@@ -71,6 +71,8 @@ const PARSERS_DE_CUERPO: ReadonlySet<string> = new Set([
   'rawParser',
   'textParser',
 ]);
+const AVISO_DE_PARSER_GLOBAL =
+  'parser de cuerpo a nivel de router: monte el parser por ruta, después de authorize()';
 const SOLO_PLANOS = 'los routers protegidos montan rutas planas';
 
 function rutaComoContrato(rutaDeExpress: string): string {
@@ -98,6 +100,9 @@ function rutaDeLaCapa(capa: CapaDeExpress & Required<Pick<CapaDeExpress, 'route'
 
 /** Aviso de una capa que no es una ruta directa: no se puede casar con el contrato y NUNCA se omite en silencio. */
 function avisoDeCapaSinRuta(capa: CapaDeExpress): string | undefined {
+  // Un parser a nivel de router lee el cuerpo ANTES del 403. Límite conocido: un parser envuelto en una lambda propia
+  // no se reconoce por nombre.
+  if (PARSERS_DE_CUERPO.has(capa.handle.name ?? '')) return AVISO_DE_PARSER_GLOBAL;
   if (capa.handle.stack !== undefined) return `ruta anidada no verificable: ${SOLO_PLANOS}`;
   if (capa.slash === false) return `middleware montado con ruta no verificable: ${SOLO_PLANOS}`;
   return undefined;

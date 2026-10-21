@@ -156,10 +156,10 @@ describe('autorización por permiso', () => {
       `SELECT p.code FROM auth.role r
          JOIN auth.role_permission rp ON rp.role_id = r.id
          JOIN auth.permission p ON p.id = rp.permission_id
-        WHERE r.name = $1 ORDER BY p.code`,
+        WHERE r.name = $1`,
       [rol],
     );
-    return rows.map((fila) => fila.code);
+    return rows.map((fila) => fila.code).sort();
   }
 
   it.each(['doctor', 'admin'] as const)(

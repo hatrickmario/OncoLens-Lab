@@ -67,7 +67,11 @@ beforeEach(() => {
   ejecuciones = 0;
   llamadasARag = 0;
 });
-afterEach(() => ragSimulado.servidor.resetHandlers());
+const usuariosAEliminar: string[] = [];
+afterEach(async () => {
+  ragSimulado.servidor.resetHandlers();
+  await limpiarUsuarios(cliente, usuariosAEliminar.splice(0));
+});
 afterAll(async () => {
   ragSimulado.detener();
   await limpiarUsuarios(cliente, [doc1.id, doc2Desactivado.id]);
@@ -196,6 +200,7 @@ describe('guard de sesión de /platform/*', () => {
       password: contrasenaDeTest('TEST_DOC1_PASSWORD'),
       rolId,
     });
+    usuariosAEliminar.push(guardia.id);
     await insertarSesion(cliente, ids, {
       userId: guardia.id,
       tokenHash: hashDe('tokenGuardia'),
@@ -212,7 +217,5 @@ describe('guard de sesión de /platform/*', () => {
       'ai_analysis:create',
       'clinical:read',
     ]);
-    await cliente.query('DELETE FROM auth.session WHERE user_id = $1', [guardia.id]);
-    await cliente.query('DELETE FROM auth."user" WHERE id = $1', [guardia.id]);
   });
 });

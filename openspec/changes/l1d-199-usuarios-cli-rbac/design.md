@@ -120,3 +120,6 @@ Deuda y preguntas abiertas (no bloquean esta historia):
   de la CLI (S6, US-148 / US-222).
 - **Permisos de ejecución del bin** (P2): el `bin` `oncolens` se invoca con `npm run oncolens`/`node`; fijar `chmod +x`
   en la imagen queda para la historia de la imagen del contenedor.
+- **Pregunta de planning (P3-1):** el CI de `clinical-api` no ejecuta `tsc --noEmit`; el test de tipos del `Pool` solo lo
+  verifica `npm run typecheck`. Propuesta: añadir `tsc --noEmit` al job `build-test` (no se toca `ci.yml` en esta historia).
+- **Límite conocido del verificador de rutas:** un parser de cuerpo envuelto en una lambda propia no se reconoce por nombre.

@@ -2,7 +2,10 @@ import type { Client } from 'pg';
 import type { GeneradorDeIds } from './filas-sinteticas.js';
 import { insertarSesion, insertarUsuario, type UsuarioDeTest } from './usuarios.js';
 
-/** Garantiza que existan los permisos en una base sin seed (las demás usan el que siembra el seed). */
+/**
+ * Roles y permisos de PRUEBA: viven solo en los tests. `asegurarPermisos` los crea en una base sin seed;
+ * `crearRolDePrueba` exige que ya existan (los siembra el seed o `asegurarPermisos`).
+ */
 export async function asegurarPermisos(
   cliente: Client,
   ids: GeneradorDeIds,
@@ -17,10 +20,7 @@ export async function asegurarPermisos(
   }
 }
 
-/**
- * Roles de PRUEBA con permisos acotados (design D6): viven solo en los tests, no entran al seed ni a la matriz.
- * Los permisos deben existir en `auth.permission` (los siembra el seed): si falta alguno, el test falla nombrándolo.
- */
+/** Rol con permisos acotados (design D6); si falta algún permiso en `auth.permission`, falla nombrándolo. */
 export async function crearRolDePrueba(
   cliente: Client,
   ids: GeneradorDeIds,

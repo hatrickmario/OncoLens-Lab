@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import { PermisoDenegadoError } from '../infrastructure/http-errores.js';
 
 /** Manejador de `authorize` con los códigos con los que se montó (lo lee el test de coherencia con el contrato). */
-export type ManejadorAutorizado = RequestHandler & { readonly permisos: readonly string[] };
+export type ManejadorAutorizado = RequestHandler & { readonly permisosExigidos: readonly string[] };
 
 /**
  * Autorización por PERMISO (no por rol): deja pasar si la sesión tiene alguno de los códigos (semántica de lista del
@@ -18,11 +18,11 @@ export function authorize(...codigos: string[]): ManejadorAutorizado {
     }
     next(new PermisoDenegadoError());
   };
-  return Object.assign(manejador, { permisos: codigos });
+  return Object.assign(manejador, { permisosExigidos: codigos });
 }
 
 /** Permisos con los que se montó un manejador creado por `authorize`; `undefined` si no lo es (lo usa el test de coherencia con el contrato). */
 export function permisosExigidos(manejador: unknown): readonly string[] | undefined {
-  const permisos = (manejador as Partial<ManejadorAutorizado> | undefined)?.permisos;
-  return typeof manejador === 'function' && Array.isArray(permisos) ? permisos : undefined;
+  const codigos = (manejador as Partial<ManejadorAutorizado> | undefined)?.permisosExigidos;
+  return typeof manejador === 'function' && Array.isArray(codigos) ? codigos : undefined;
 }

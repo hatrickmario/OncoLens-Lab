@@ -42,6 +42,13 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
     return rol;
   }
 
+  /** Busca por el correo normalizado (misma regla que el alta y el login) o lanza `UsuarioInexistenteError`. */
+  async function buscarOFallar(correo: string): Promise<UsuarioRegistrado> {
+    const usuario = await repo.buscarUsuarioRegistradoPorCorreo(normalizarCorreo(correo));
+    if (usuario === null) throw new UsuarioInexistenteError();
+    return usuario;
+  }
+
   return {
     async crear({ email: correo, rol, password }) {
       const email = normalizarCorreo(correo);
@@ -60,16 +67,14 @@ export function createUsersService(dependencias: DependenciasDeUsersService): Us
     },
 
     async cambiarRol({ email, rol }) {
-      const usuario = await repo.buscarUsuarioRegistradoPorCorreo(email);
-      if (usuario === null) throw new UsuarioInexistenteError();
+      const usuario = await buscarOFallar(email);
       const { id: roleId } = await exigirRol(rol);
       await repo.cambiarRol(usuario.id, roleId, reloj.now());
       return { ...usuario, rol };
     },
 
     async desactivar({ email }) {
-      const usuario = await repo.buscarUsuarioRegistradoPorCorreo(email);
-      if (usuario === null) throw new UsuarioInexistenteError();
+      const usuario = await buscarOFallar(email);
       await repo.desactivarYRevocarSesiones(usuario.id, reloj.now());
       return usuario;
     },
