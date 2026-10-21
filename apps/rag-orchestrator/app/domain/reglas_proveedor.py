@@ -3,8 +3,9 @@
 import ipaddress
 from urllib.parse import urlsplit
 
-# Lista CERRADA EN CÓDIGO a propósito (ADR-41 D4): ninguna variable de entorno ni YAML puede ampliarla.
-# Única fuente: ``Settings.llm_allowed_hosts`` toma de aquí su valor por defecto.
+# Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
+# ninguna variable ni YAML la amplía. ``Settings.llm_allowed_hosts`` toma de aquí su valor por defecto, y
+# ``LLM_ALLOWED_HOSTS`` lo sustituye por entorno en el arranque del servicio (RN-22); eso no afecta a la suite.
 HOSTS_LOCALES: frozenset[str] = frozenset({"localhost", "127.0.0.1", "::1", "host.docker.internal"})
 
 

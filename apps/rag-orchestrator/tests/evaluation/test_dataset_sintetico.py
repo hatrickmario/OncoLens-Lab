@@ -83,6 +83,37 @@ def test_un_archivo_con_otra_clase_que_el_manifiesto_se_rechaza(tmp_path: Path) 
         FuenteDatasetEnDirectorio(dataset).cargar()
 
 
+@pytest.mark.parametrize(
+    ("cambio", "codigo_esperado"),
+    [
+        ({"pregunta": ""}, 2),  # pydantic.ValidationError al armar la solicitud
+        ({"cancer": "TEXTO CONFIDENCIAL INVALIDO"}, 1),  # TipoCancerNoRegistradoError del servicio
+    ],
+    ids=["validacion_pydantic", "error_de_aplicacion"],
+)
+def test_un_error_al_evaluar_termina_sin_traceback_y_sin_valores_de_entrada(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    cambio: dict[str, str],
+    codigo_esperado: int,
+) -> None:
+    dataset = dataset_con_clase(tmp_path / "ds", "sintetico")
+    preguntas = dataset / "preguntas.yaml"
+    contenido = yaml.safe_load(preguntas.read_text(encoding="utf-8"))
+    contenido["preguntas"][0].update(cambio)
+    preguntas.write_text(yaml.safe_dump(contenido, allow_unicode=True), encoding="utf-8")
+
+    codigo = main(
+        ["--config", str(config_para(tmp_path, dataset)), "--salida", str(tmp_path / "s")],
+        reloj=RelojFijo(),
+    )
+
+    err = capsys.readouterr().err
+    assert codigo == codigo_esperado
+    assert "CONFIDENCIAL" not in err and "input_value" not in err and "Traceback" not in err
+    assert not (tmp_path / "s").exists()
+
+
 def textos_del_dataset() -> list[str]:
     dataset = FuenteDatasetEnDirectorio(FX).cargar()
     return [

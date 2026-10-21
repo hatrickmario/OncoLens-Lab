@@ -70,7 +70,9 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
   `prueba` (ADR-45 P3); el registro de accesos y la huella previa de P3 no se implementan en 072a.
 - **D12 · Envoltorio y baseline.** `scripts/eval/evaluate.mjs` (`npm run evaluate`) llama a Python dentro de
   `apps/rag-orchestrator`, resuelve `--config` y `--salida` contra el directorio de quien lo invoca y usa la
-  configuración de la CI si no hay `--config`; variables `EVAL_PYTHON` y `EVAL_TIMEOUT_S`.
+  configuración de la CI si no hay `--config`; variables `EVAL_PYTHON` y `EVAL_TIMEOUT_S`. **Paso previo:** `EVAL_PYTHON`
+  debe apuntar a un Python con `pip install -r apps/rag-orchestrator/requirements.txt -r requirements-dev.txt` (sin
+  eso, `python3` del sistema no tiene las dependencias).
   `data/evaluation/baseline.json` es la salida de `test-fake.yaml`; un test falla si deja de coincidir byte a byte.
 - **D13 · Guardas RN-12 y red.** `exigir_adapters_locales(clase, urls)` corre antes de cargar preguntas; un dataset
   del repo solo puede ser `sintetico`, uno fuera del repo puede ser `real_anonimizado` solo con adapters locales. Un

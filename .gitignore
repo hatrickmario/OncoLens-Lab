@@ -35,3 +35,6 @@ backlog/sprints/*-status.md
 # Artefactos de Playwright
 test-results/
 playwright-report/
+
+# Resultados locales de la suite evaluate (L1D-235)
+apps/rag-orchestrator/eval/results/

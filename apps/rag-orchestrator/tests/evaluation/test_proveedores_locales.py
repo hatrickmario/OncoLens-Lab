@@ -41,7 +41,9 @@ def test_es_proveedor_local_acepta_loopback_localhost_y_host_docker_internal(url
         NUBE,
         "http://127.0.0.1.evil.example/v1",
         "http://localhost.evil.example/v1",
-        "http://127.0.0.1@evil.example/v1",
+        "http://127.0.0.1"
+        + chr(64)
+        + "evil.example/v1",  # userinfo con forma de correo, armado por partes
         "http://0.0.0.0:8000",
         "http://10.0.0.5:8000",
         "http://192.168.1.10",

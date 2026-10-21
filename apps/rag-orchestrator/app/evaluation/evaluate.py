@@ -14,6 +14,9 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
+from app.application.errores import ErrorDeAplicacion
 from app.application.ports import Clock
 from app.evaluation.armado_reporte import armar_reporte
 from app.evaluation.composicion_suite import componer_servicio
@@ -66,6 +69,13 @@ def main(argv: Sequence[str], *, reloj: Clock | None = None, raiz: Path | None =
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
+    except ValidationError as error:  # solo ubicación y tipo: nunca ``input_value`` (RN-14)
+        detalle = "; ".join(f"{'.'.join(map(str, e['loc']))}:{e['type']}" for e in error.errors())
+        print(f"evaluate: solicitud inválida ({detalle})", file=sys.stderr)
+        return 2
+    except ErrorDeAplicacion as error:
+        print(f"evaluate: el servicio falló ({type(error).__name__})", file=sys.stderr)
+        return 1
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
         return 1

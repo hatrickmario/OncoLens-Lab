@@ -34,7 +34,7 @@
 
 ## 2. evaluación · 072a
 
-- [ ] 2.1 `run-ai-eval` sobre la rama con `--suite retrieval` deja de devolver `NO-EJECUTABLE` ·
+- [x] 2.1 `run-ai-eval` sobre la rama con `--suite retrieval` deja de devolver `NO-EJECUTABLE` ·
       **evaluate**
 
 ## 3. ai-services · 072b (fidelidad, PII y prescriptivas) — ⛔ `l1d-232-adr41-framework-evaluacion`
