@@ -10,28 +10,25 @@ import {
   zLoginBody,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import {
+  analizarJson,
+  cookieDeSesionSegura,
+  responderConFalloDeAutenticacion,
+  type DependenciasDeAutenticacion,
+  type MotivoDeFalloDeAutenticacion,
+} from './auth-comun';
+import {
   cabecerasHaciaNavegador,
   clasificarRespuestaDeClinicalApi,
   crearSdkClinicalApi,
-  type MotivoDeFalloDeTransporte,
-  NOMBRE_COOKIE_DE_SESION,
 } from './clinical-api';
-import type { DependenciasDelBff } from './dependencias';
+import { ipDelCliente } from './ip-del-cliente';
 import { verificarOrigen } from './origen';
 import { esTipoJson, leerCuerpoAcotado } from './peticiones';
-import type { LineaDeRegistro } from './registro';
 import { respuestaPropia } from './respuestas';
 
 const EVENTO_LOGIN = 'auth.login';
 
-export type DependenciasLogin = Pick<
-  DependenciasDelBff,
-  'config' | 'fetch' | 'nuevoTraceId' | 'registrar'
->;
-
-type MotivoDeFallo =
-  | MotivoDeFalloDeTransporte
-  | Extract<NonNullable<LineaDeRegistro['motivo']>, 'cuerpo_no_conforme' | 'sin_cookie_de_sesion'>;
+export type DependenciasLogin = DependenciasDeAutenticacion;
 
 /**
  * Errores que el contrato declara para `login`, por status. `satisfies` ata el mapa al tipo generado: un status
@@ -75,7 +72,12 @@ export function crearManejadorLogin(
       return responderCuerpoInvalido(dependencias, traceId);
     }
 
-    const sdk = crearSdkClinicalApi(dependencias.config, { fetch: dependencias.fetch });
+    // Sin cookie entrante (el login crea la sesión), pero con la IP que web fijó para el bloqueo por IP (US-044 D4b).
+    const ip = ipDelCliente(request.headers);
+    const sdk = crearSdkClinicalApi(dependencias.config, {
+      fetch: dependencias.fetch,
+      ...(ip !== undefined && { ipDelCliente: ip }),
+    });
     const resultado = await login({
       client: sdk.client,
       body: credenciales,
@@ -120,14 +122,6 @@ function reenviarErrorDelContrato(
   });
 }
 
-function analizarJson(texto: string): unknown {
-  try {
-    return JSON.parse(texto);
-  } catch {
-    return undefined;
-  }
-}
-
 /** Compara solo el tipo MIME (el parámetro `charset` es válido); cualquier otro tipo → 403 propio del BFF. */
 function exigirJson(
   request: Request,
@@ -158,38 +152,22 @@ async function leerCredenciales(request: Request, maxBytes: number) {
 }
 
 /**
- * 204 hacia el navegador con la única cabecera `Set-Cookie` de `oncolens_session`, tal cual la fijó el proveedor
- * (sin `Domain`). Falla cerrado: si a esa cookie le falta HttpOnly, Secure o SameSite=Strict, o lleva `Domain`,
- * no se retransmite y responde 502. Cualquier otra cookie de clinical-api se descarta.
+ * 204 hacia el navegador con la única cabecera `Set-Cookie` de `oncolens_session`, tal cual la fijó el proveedor y solo
+ * si cumple `cookieDeSesionSegura`; si no, 502 propio.
  */
 function reenviarCookieDeSesion(
   respuesta: Response,
   dependencias: DependenciasLogin,
   traceId: string,
 ): Response {
-  const cookie = respuesta.headers
-    .getSetCookie()
-    .find((valor) => valor.startsWith(`${NOMBRE_COOKIE_DE_SESION}=`));
-  if (cookie === undefined || !cookieEsSegura(cookie)) {
+  const cookie = cookieDeSesionSegura(respuesta);
+  if (cookie === undefined) {
     return responderConFallo(dependencias, traceId, 'sin_cookie_de_sesion');
   }
   dependencias.registrar({ event: EVENTO_LOGIN, status: 204, traceId });
   const cabeceras = cabecerasHaciaNavegador(respuesta);
   cabeceras.append('Set-Cookie', cookie);
   return new Response(null, { status: 204, headers: cabeceras });
-}
-
-function cookieEsSegura(cookie: string): boolean {
-  const atributos = cookie
-    .split(';')
-    .slice(1)
-    .map((atributo) => atributo.trim().toLowerCase());
-  return (
-    atributos.includes('httponly') &&
-    atributos.includes('secure') &&
-    atributos.includes('samesite=strict') &&
-    !atributos.some((atributo) => atributo.startsWith('domain'))
-  );
 }
 
 /** 422 local (Zod o cuerpo excesivo): el formulario lo muestra como el mismo error genérico que el 401. */
@@ -205,19 +183,10 @@ function responderCuerpoInvalido(dependencias: DependenciasLogin, traceId: strin
   );
 }
 
-/** 502 propio del login: mensaje fijo, sin hostname, causa ni cuerpo parcial (ErrorServicioAutenticacion). */
 function responderConFallo(
   dependencias: DependenciasLogin,
   traceId: string,
-  motivo: MotivoDeFallo,
+  motivo: MotivoDeFalloDeAutenticacion,
 ): Response {
-  dependencias.registrar({ event: EVENTO_LOGIN, status: 502, traceId, motivo });
-  return respuestaPropia(
-    {
-      error: 'ERROR_SERVICIO_AUTENTICACION',
-      message: 'El servicio de autenticación no respondió correctamente.',
-      traceId,
-    },
-    502,
-  );
+  return responderConFalloDeAutenticacion(dependencias, EVENTO_LOGIN, traceId, motivo);
 }
