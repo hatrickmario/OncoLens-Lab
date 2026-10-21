@@ -125,9 +125,7 @@ def test_assert_matches_spec_no_vuelca_el_objeto_cuando_ninguna_rama_del_oneof_e
     anterior = contract._spec
     contract.usar_spec(
         {
-            "components": {
-                "schemas": {"S": {"oneOf": [{"type": "string"}, {"type": "integer"}]}}
-            },
+            "components": {"schemas": {"S": {"oneOf": [{"type": "string"}, {"type": "integer"}]}}},
             "paths": {},
         }
     )

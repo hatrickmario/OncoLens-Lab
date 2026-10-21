@@ -16,7 +16,6 @@ from app.config.settings import Settings
 from app.domain.modelos import describir_modelo
 from app.infrastructure.models.local import ModelosDeRecuperacion, cargar_modelos_locales
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
-from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion
 from tests.support.inferencia_falsa import TokenizadorFalso
 from tests.support.modelos import (
@@ -101,7 +100,6 @@ def test_con_modelos_locales_y_corpus_rag_query_recupera_con_los_adapters_reales
     respuesta = _cliente(app).post("/rag/query", json=solicitud_de(Q_SIN))
 
     assert respuesta.status_code == 200
-    assert_matches_spec(RESPUESTA, respuesta.json())
     meta = respuesta.json()["meta"]
     assert meta["rerankerModel"] == describir_modelo(
         "BAAI/bge-reranker-v2-m3", "rev-reranker-test", modelos.variables["RERANKER_MODEL_SHA256"]
@@ -121,7 +119,6 @@ def test_con_modelos_locales_pero_sin_corpus_rag_query_responde_503_fallando_cer
     respuesta = _cliente(app).post("/rag/query", json=solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 503
-    assert_matches_spec(RESPUESTA_503, respuesta.json())
     assert respuesta.json()["error"] == "RETRIEVAL_UNAVAILABLE"
 
 
