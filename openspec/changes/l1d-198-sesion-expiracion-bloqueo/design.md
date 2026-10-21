@@ -88,7 +88,8 @@ activas. `auth.user` ya tiene `failed_login_count` y `locked_until`; `auth.sessi
   depende del arranque: el wrapper escribe la IP del socket en `x-oncolens-ip-del-socket` firmada con un secreto
   aleatorio de proceso (`lib/server/cabecera-ip-del-socket.ts`, compartido por `globalThis`) y `ipDelCliente()` solo
   acepta ese valor y nunca lee `X-Forwarded-For`. Sin firma (cola de arranque, cliente directo) el login responde `502`
-  propio con `motivo=sin_ip_del_cliente` y no llama a `clinical-api`; el logout no necesita la IP y no la reenvía.
+  propio con `motivo=sin_ip_del_cliente` y no llama a `clinical-api`; el logout no exige la IP: si la cabecera firmada es válida la reenvía como `X-Forwarded-For` (clinical-api no la usa
+  en esa ruta) y, si falta, llama igualmente sin ella.
   Sustituye la parte de D4c que decía que `ipDelCliente` tomaba el último valor del `X-Forwarded-For`. Con el proxy del
   S6 habrá que firmar el salto que ese proxy escriba, no el del socket.
   **Pendiente (no implementado):** que el BFF de logout emita también la cookie de borrado cuando `clinical-api` responde
@@ -177,4 +178,15 @@ AC-5), Playwright (AC-4, cuando exista el job de E2E). Respuestas validadas cont
 - Contract-keeper Menor 3-5: el spec no declara el `403` del logout, la cabecera `Set-Cookie` del `204` ni una descripción
   del borrado de cookie; se corregirá en el próximo cambio que toque `openapi.yaml` (aquí no se edita).
 - Cabecera de la cookie de sesión duplicada en `web` (P1-5) la resuelve el agente de web.
+
+## Riesgos aceptados (Gate 2, privacy Menores)
+
+- `reiniciarFallos` residual: si un login correcto coincide con intentos erróneos concurrentes, el contador no se
+  reinicia (solo reinicia si nadie reservó otro intento desde el suyo); el usuario conserva el conteo hasta su siguiente
+  acierto o hasta que venza el bloqueo. Aceptado: prima no borrar el rastro de intentos concurrentes.
+- Fallo de BD en la reserva: si `reservarIntentoDeLogin` falla, el login responde `500` (falla cerrado, sin evaluar la
+  contraseña ni abrir sesión); la reserva de IP ya anotada se conserva y cuenta como intento. Aceptado.
+- Rechazo por cuenta bloqueada: libera la reserva de IP, de modo que los intentos contra una cuenta ya bloqueada no
+  consumen el cupo de la IP. Decisión: un atacante que insista contra una cuenta bloqueada no agota la IP, pero tampoco
+  prueba contraseñas (la cuenta rechaza antes de evaluar).
 
