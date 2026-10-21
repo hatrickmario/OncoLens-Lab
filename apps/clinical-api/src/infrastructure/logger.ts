@@ -3,12 +3,13 @@ export type LineaDeLog = Record<string, unknown>;
 
 export type Registrar = (linea: LineaDeLog) => void;
 
-const CAMPOS_SENSIBLES: ReadonlySet<string> = new Set([
+export const CAMPOS_SENSIBLES_BASE: readonly string[] = [
   'password',
   'cookie',
   'set-cookie',
   'authorization',
-]);
+];
+const CAMPOS_SENSIBLES: ReadonlySet<string> = new Set(CAMPOS_SENSIBLES_BASE);
 const MARCA_DE_REDACCION = '[REDACTADO]';
 
 /** Copia el valor sustituyendo, a cualquier profundidad, los campos sensibles (sin distinguir mayúsculas). */
@@ -24,7 +25,10 @@ function redactar(valor: unknown): unknown {
 }
 
 /** Registrador que redacta los campos sensibles y escribe una línea JSON por evento. */
-export function crearRegistrador(escribir: (linea: string) => void): Registrar {
+export function crearRegistrador(
+  escribir: (linea: string) => void,
+  _opciones: { camposSensiblesExtra?: readonly string[] } = {},
+): Registrar {
   return (linea) => {
     escribir(JSON.stringify(redactar(linea)));
   };

@@ -4,7 +4,7 @@ import type { Registrar } from './infrastructure/logger.js';
 import { requireSession } from './middleware/auth.js';
 import { authController } from './modules/auth/auth.controller.js';
 import type { AuthService } from './modules/auth/auth.service.js';
-import { createHealthRouter } from './routes/health.js';
+import { createHealthRouter, type InformacionDeSalud } from './routes/health.js';
 
 export interface DependenciasDeAuth {
   service: AuthService;
@@ -17,6 +17,8 @@ export interface DependenciasDeAuth {
  * suyas en su historia; `createApp({})` sigue siendo válido (solo `/health`).
  */
 export interface AppDependencies {
+  /** Nombres de las claves de configuración cargadas y versión del servicio para `/health` (US-037); nunca valores. */
+  salud?: InformacionDeSalud;
   /**
    * `/platform/*`: el módulo de autenticación y los routers que exigen sesión. Van juntos a propósito: no se pueden
    * montar `rutasProtegidas` sin el guard. Se montan DESPUÉS de él (gateway de análisis, pacientes...).
