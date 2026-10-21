@@ -91,12 +91,15 @@ describe('bloqueo de la cuenta por intentos fallidos', () => {
   it('responde el 401 genérico sin crear sesión con la contraseña correcta durante el bloqueo y 204 al vencer el plazo [US-044 AC-2]', async () => {
     const doc = await usuarioNuevo('bloqueo');
     const { app, reloj } = appDeTest();
+    const sesionesIniciales = await contarSesiones(cliente, [doc.id]);
     const erronea = await intentar(app, doc.email, CONTRASENA_INCORRECTA);
     for (let i = 1; i < 5; i += 1) await intentar(app, doc.email, CONTRASENA_INCORRECTA);
     expect(await estadoDeBloqueo(doc.id)).toEqual({
       intentos: 5,
       hasta: '2026-10-16T12:15:00.000Z',
     });
+    // El bloqueo no revoca ni crea sesiones: el quinto fallo no cambia las que ya existían.
+    expect(await contarSesiones(cliente, [doc.id])).toBe(sesionesIniciales);
     const sesionesAntes = await contarSesiones(cliente, [doc.id]);
 
     reloj.avanzarMinutos(14);
