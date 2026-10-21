@@ -38,10 +38,10 @@
 
 ## 2. clinical-platform
 
-- [ ] 2.1 Comando `npm run eval:pii` en `clinical-api`: corre el detector opción A sobre `pii-mini`
+- [x] 2.1 Comando `npm run eval:pii` en `clinical-api`: corre el detector opción A sobre `pii-mini`
       y escribe JSON de agregados (sensibilidad por tipo, FP clínicos, p95); test de integración del
       comando con tiempo máximo explícito (proceso real) · **test después** `[US-013 AC-1]`
-- [ ] 2.2 Test de configuración: ningún patrón de país literal fuera de `config/pii-formats.json` ·
+- [x] 2.2 Test de configuración: ningún patrón de país literal fuera de `config/pii-formats.json` ·
       **test después** `[US-013 AC-4]` `[RN-22]`
 - [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-205)

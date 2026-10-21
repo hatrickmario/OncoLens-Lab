@@ -8,6 +8,8 @@ const RAICES_DE_COMPOSICION = [
   path.join(RAIZ_SRC, 'server.ts'),
   // CLI `oncolens` (L1D-199): segunda raíz de composición, igual que el seed fuera de `src/`.
   path.join(RAIZ_SRC, 'cli', 'oncolens.ts'),
+  // Comando `eval:pii` (L1D-205): tercera raíz de composición; pasa el entorno a `readDeidentificationConfig`.
+  path.join(RAIZ_SRC, 'cli', 'medir-pii.ts'),
 ];
 const MODULO_DE_CONFIGURACION = path.join(RAIZ_SRC, 'config') + path.sep;
 
