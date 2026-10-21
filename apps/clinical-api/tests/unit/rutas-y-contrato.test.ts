@@ -46,7 +46,7 @@ describe('incoherencias (verificador de rutas contra el contrato)', () => {
     ]);
   });
 
-  it('reporta el router anidado en vez de omitirlo cuando se monta con use() [sonda D]', () => {
+  it('reporta el router anidado en vez de omitirlo cuando se monta con use()', () => {
     const hijo = Router();
     hijo.post('/evidence-analyses', (_peticion, respuesta) => {
       respuesta.sendStatus(204);
@@ -59,7 +59,7 @@ describe('incoherencias (verificador de rutas contra el contrato)', () => {
     ]);
   });
 
-  it('reporta el middleware montado con ruta en vez de omitirlo [sonda G]', () => {
+  it('reporta el middleware montado con ruta en vez de omitirlo', () => {
     const router = Router();
     router.use('/evidence-analyses', (_peticion, respuesta) => {
       respuesta.sendStatus(204);
@@ -82,7 +82,7 @@ describe('incoherencias (verificador de rutas contra el contrato)', () => {
     expect(incoherencias([router])).toEqual([]);
   });
 
-  it('reporta authorize() colocado después de un parser de cuerpo [sonda F]', () => {
+  it('reporta authorize() colocado después de un parser de cuerpo', () => {
     const router = Router();
     router.post(
       '/evidence-analyses',
@@ -96,5 +96,41 @@ describe('incoherencias (verificador de rutas contra el contrato)', () => {
     expect(incoherencias([router])).toEqual([
       'createEvidenceAnalysis: authorize() debe ir antes de cualquier parser de cuerpo (jsonParser)',
     ]);
+  });
+
+  it('avisa del parser de cuerpo montado a nivel de router aunque la ruta tenga authorize()', () => {
+    const router = Router();
+    router.use(express.json());
+    router.post('/evidence-analyses', authorize('ai_analysis:create'), (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+
+    expect(incoherencias([router])).toEqual([
+      'parser de cuerpo a nivel de router: monte el parser por ruta, después de authorize()',
+    ]);
+  });
+
+  it('avisa del parser de cuerpo montado con use("/") a nivel de router', () => {
+    const router = Router();
+    router.use('/', express.urlencoded());
+    router.post('/evidence-analyses', authorize('ai_analysis:create'), (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+
+    expect(incoherencias([router])).toEqual([
+      'parser de cuerpo a nivel de router: monte el parser por ruta, después de authorize()',
+    ]);
+  });
+
+  it('no avisa de un middleware global que no es un parser de cuerpo', () => {
+    const router = Router();
+    router.use((_peticion, _respuesta, siguiente) => {
+      siguiente();
+    });
+    router.post('/evidence-analyses', authorize('ai_analysis:create'), (_peticion, respuesta) => {
+      respuesta.sendStatus(204);
+    });
+
+    expect(incoherencias([router])).toEqual([]);
   });
 });

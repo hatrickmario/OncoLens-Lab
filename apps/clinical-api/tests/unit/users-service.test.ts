@@ -123,4 +123,27 @@ describe('UsersService', () => {
     expect(usuario.email).toBe('a@test.local');
     expect(creados[0]?.email).toBe('a@test.local');
   });
+
+  it('encuentra al usuario y cambia su rol cuando set-role recibe el correo con mayúsculas y espacios', async () => {
+    const { repo, cambios } = repositorioFalso(
+      ['doctor', 'admin'],
+      [{ id: 'u1', email: 'a@test.local', rol: 'doctor' }],
+    );
+
+    const usuario = await servicio(repo).cambiarRol({ email: '  A@Test.local ', rol: 'admin' });
+
+    expect(usuario.id).toBe('u1');
+    expect(cambios).toEqual([{ userId: 'u1', roleId: 'rol-admin' }]);
+  });
+
+  it('encuentra al usuario y lo da de baja cuando deactivate recibe el correo con mayúsculas', async () => {
+    const { repo, bajas } = repositorioFalso(
+      [],
+      [{ id: 'u1', email: 'a@test.local', rol: 'doctor' }],
+    );
+
+    await servicio(repo).desactivar({ email: 'A@TEST.local' });
+
+    expect(bajas).toEqual(['u1']);
+  });
 });
