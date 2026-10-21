@@ -82,9 +82,15 @@ def ids_de_subconjunto(particion: Path, subconjunto: str) -> frozenset[str]:
 
 
 class FuenteDatasetEnDirectorio:
-    def __init__(self, directorio: Path, solo_ids: frozenset[str] | None = None) -> None:
+    def __init__(
+        self,
+        directorio: Path,
+        solo_ids: frozenset[str] | None = None,
+        raiz: Path | None = None,
+    ) -> None:
         self._directorio = directorio
         self._solo_ids = solo_ids
+        self._raiz = raiz
 
     def clase(self) -> str:
         return str(_leer(self._directorio / "manifest.yaml").get("clase"))

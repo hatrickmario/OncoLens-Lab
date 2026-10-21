@@ -45,7 +45,7 @@ def _reloj_de_medicion(config: ConfigSuite) -> Callable[[], float]:
     return RelojSimulado() if config.reloj == "simulado" else time.perf_counter
 
 
-def main(argv: Sequence[str], *, reloj: Clock | None = None) -> int:
+def main(argv: Sequence[str], *, reloj: Clock | None = None, raiz: Path | None = None) -> int:
     try:
         args = _parser().parse_args(list(argv))
         if args.suite not in SUITES:
