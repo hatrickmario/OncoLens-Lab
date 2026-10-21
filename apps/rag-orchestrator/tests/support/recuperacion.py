@@ -65,6 +65,11 @@ RELEASE_DE_TEST = ReleaseDelCorpus(
 )
 
 
+VERSION_DE_CATALOGO_DE_TEST = json.loads(
+    (RAIZ_REPOSITORIO / "contracts/examples/rag-query-request.json").read_text(encoding="utf-8")
+)["catalogVersion"]  # la de la solicitud de ejemplo: los tests de recuperación montan ese mismo catálogo
+
+
 def _vector(**componentes: float) -> list[float]:
     """Vector sintético de ``DIMENSION`` posiciones: ``e0=1.0`` pone 1.0 en la posición 0."""
     vector = [0.0] * DIMENSION
@@ -319,6 +324,18 @@ class CatalogoFalso:
         return {d: self._fichas[d] for d in document_ids if d in self._fichas}
 
 
+class CatalogoClinicoFalso:
+    """``CatalogoClinico`` en memoria: la versión montada y las veces que se consultó (misma forma que el adapter)."""
+
+    def __init__(self, version: str = VERSION_DE_CATALOGO_DE_TEST) -> None:
+        self._version = version
+        self.consultas = 0
+
+    def version(self) -> str:
+        self.consultas += 1
+        return self._version
+
+
 class DetectorIdiomaFalso:
     def __init__(self, idioma: Idioma = "es", error: Exception | None = None) -> None:
         self.idioma = idioma
@@ -371,6 +388,7 @@ def puertos_de_recuperacion(
         reranker=RerankerFalso(),
         lector_release=LectorReleaseFalso(),
         catalogo=CatalogoFalso(),
+        catalogo_clinico=CatalogoClinicoFalso(),
         clasificador_nli=clasificador_nli or NliFalso(por_defecto=IMPLICA),
         verificador_terminos=verificador_terminos or cargar_verificador_de_terminos(CATALOGOS),
     )
@@ -388,6 +406,7 @@ class EntornoDeRecuperacion:
     clasificador_nli: NliClassifier
     lector_release: LectorReleaseFalso
     catalogo: CatalogoFalso
+    catalogo_clinico: CatalogoClinicoFalso
     servicio: RAGOrchestratorService
 
     def consultar(self, solicitud: dict[str, Any]):
@@ -402,6 +421,7 @@ def crear_entorno(
     reranker: RerankerFalso | None = None,
     lector_release: LectorReleaseFalso | None = None,
     catalogo: CatalogoFalso | None = None,
+    catalogo_clinico: CatalogoClinicoFalso | None = None,
     detector_idioma: DetectorIdiomaFalso | None = None,
     generador: EvidenceGenerator | None = None,
     clasificador_nli: NliClassifier | None = None,
@@ -412,6 +432,7 @@ def crear_entorno(
     reranker = reranker or RerankerFalso()
     lector_release = lector_release or LectorReleaseFalso()
     catalogo = catalogo or CatalogoFalso()
+    catalogo_clinico = catalogo_clinico or CatalogoClinicoFalso()
     generador = generador or FakeEvidenceGenerator()
     from tests.support.nli_falso import (
         IMPLICA,
@@ -427,6 +448,7 @@ def crear_entorno(
         reranker=reranker,
         lector_release=lector_release,
         catalogo=catalogo,
+        catalogo_clinico=catalogo_clinico,
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,
@@ -449,6 +471,7 @@ def crear_entorno(
         clasificador_nli,
         lector_release,
         catalogo,
+        catalogo_clinico,
         servicio,
     )
 
