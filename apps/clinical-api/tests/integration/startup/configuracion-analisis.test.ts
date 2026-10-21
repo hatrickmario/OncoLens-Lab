@@ -78,6 +78,8 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
         level: 'error',
         event: 'configuracion_invalida',
         variable,
+        regla: expect.any(String),
+        motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
       });
       expect(proceso.stdout).not.toContain('escuchando');
     },
@@ -94,6 +96,8 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
       level: 'error',
       event: 'configuracion_invalida',
       variable: 'CLINICAL_CATALOG_PATH',
+      regla: expect.any(String),
+      motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
     });
     expect(proceso.stderr).not.toContain('secreto-sin-manifest');
   });
@@ -113,6 +117,8 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
         level: 'error',
         event: 'configuracion_invalida',
         variable,
+        regla: expect.any(String),
+        motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
       });
       expect(proceso.stderr).not.toContain(nombre);
     },
@@ -133,6 +139,8 @@ describe('arranque de clinical-api con el gateway de análisis montado', () => {
         level: 'error',
         event: 'configuracion_invalida',
         variable,
+        regla: expect.any(String),
+        motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
       });
     },
   );

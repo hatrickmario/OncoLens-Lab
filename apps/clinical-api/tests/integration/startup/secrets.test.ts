@@ -34,6 +34,8 @@ function arrancarCapturando(env: NodeJS.ProcessEnv) {
     readFile: (ruta) => readFileSync(ruta, 'utf8'),
     log: (linea) => log.push(linea),
     exit: (codigo) => salidas.push(codigo),
+    // Estos casos prueban la etapa 1: la de servicios se cubre en etapa-de-servicios.test.ts.
+    cargarServicios: () => undefined,
     listen: (puerto) => escuchas.push(puerto),
   });
   return { log: log.join('\n'), salidas, escuchas };
@@ -50,8 +52,10 @@ describe('arranque de clinical-api', () => {
     expect(resultado.escuchas).toEqual([]);
     expect(JSON.parse(resultado.log)).toEqual({
       level: 'error',
-      event: 'secreto_ausente',
+      event: 'configuracion_invalida',
+      motivo: 'variable_ausente',
       variable: 'IDENTITY_AES_KEY_FILE',
+      regla: expect.any(String),
     });
     expect(resultado.log).not.toContain(VALOR_HMAC);
   });
@@ -65,7 +69,8 @@ describe('arranque de clinical-api', () => {
     expect(resultado.salidas).toEqual([1]);
     expect(resultado.escuchas).toEqual([]);
     expect(JSON.parse(resultado.log)).toMatchObject({
-      event: 'secreto_ausente',
+      event: 'configuracion_invalida',
+      motivo: 'variable_ausente',
       variable: 'BLIND_INDEX_HMAC_KEY_FILE',
     });
     expect(resultado.log).not.toContain(VALOR_AES);
@@ -94,7 +99,8 @@ describe('arranque de clinical-api', () => {
 
     expect(proceso.status).toBe(1);
     expect(JSON.parse(proceso.stderr.trim())).toMatchObject({
-      event: 'secreto_ausente',
+      event: 'configuracion_invalida',
+      motivo: 'variable_ausente',
       variable: 'IDENTITY_AES_KEY_FILE',
     });
     expect(proceso.stdout).not.toContain('escuchando');

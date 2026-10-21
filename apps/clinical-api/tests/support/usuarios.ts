@@ -1,7 +1,11 @@
 import type { Client } from 'pg';
-import type { Argon2Config } from '../../src/config.js';
+import type { Argon2Config } from '../../src/config/index.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
-import type { LineaDeLog, Registrar } from '../../src/infrastructure/logger.js';
+import {
+  crearRegistrador,
+  type LineaDeLog,
+  type Registrar,
+} from '../../src/infrastructure/logger.js';
 import type { GeneradorDeToken } from '../../src/modules/auth/auth.service.js';
 import { createPasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import {
@@ -176,6 +180,24 @@ export function loggerEnMemoria(): LoggerEnMemoria {
     lineas,
     texto: () => JSON.stringify(lineas),
   };
+}
+
+/**
+ * Logger que pasa por `crearRegistrador` (redacción y serialización de producción) y guarda las líneas ya serializadas:
+ * así las pruebas de "sin PHI" y de "JSON válido con traceId" ven lo que realmente se escribiría (US-037).
+ */
+export function loggerJsonEnMemoria(
+  opciones: { camposSensiblesExtra?: readonly string[] } = {},
+): LoggerEnMemoria & {
+  crudas: string[];
+} {
+  const crudas: string[] = [];
+  const lineas: LineaDeLog[] = [];
+  const registrar = crearRegistrador((texto) => {
+    crudas.push(texto);
+    lineas.push(JSON.parse(texto) as LineaDeLog);
+  }, opciones);
+  return { registrar, lineas, crudas, texto: () => crudas.join('\n') };
 }
 
 /** Generador de traceId determinista con el formato del contrato (`req_xxxxxxxx`). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfiguracionInvalidaError, readIdentityKeyConfig } from '../../../src/config.js';
+import { ConfiguracionInvalidaError, readIdentityKeyConfig } from '../../../src/config/index.js';
 import { cargarClavesDeIdentidad } from '../../../src/infrastructure/crypto/claves-de-identidad.js';
 import { arrancar } from '../../../src/startup.js';
 import { claveDeTest } from '../../support/identidad.js';
@@ -117,6 +117,8 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
       },
       log: (linea) => log.push(linea),
       exit: (codigo) => salidas.push(codigo),
+      // Estos casos prueban la etapa 1: la de servicios se cubre en etapa-de-servicios.test.ts.
+      cargarServicios: () => undefined,
       listen: (puerto) => escuchas.push(puerto),
     });
     return { log: log.join('\n'), salidas, escuchas };
@@ -140,7 +142,8 @@ describe('arranque de clinical-api con la versión de clave de identidad', () =>
     expect(resultado.salidas).toEqual([1]);
     expect(resultado.escuchas).toEqual([]);
     expect(JSON.parse(resultado.log)).toMatchObject({
-      event: 'secreto_ausente',
+      event: 'configuracion_invalida',
+      motivo: 'variable_ausente',
       variable: 'IDENTITY_AES_KEY_FILE',
     });
     expect(resultado.log).not.toContain('contenido-ficticio');

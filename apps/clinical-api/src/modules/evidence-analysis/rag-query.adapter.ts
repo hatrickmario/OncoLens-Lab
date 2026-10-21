@@ -27,9 +27,11 @@ export function crearRagQueryClient(sdk: Client): RagQueryClient {
         const resultado = await ragQuery({
           client: sdk,
           body: request,
-          ...(opciones?.deadline !== undefined && {
-            headers: { 'X-Request-Deadline': opciones.deadline },
-          }),
+          headers: {
+            // El mismo traceId del cuerpo, en la cabecera: rag-orchestrator lo liga a todas sus líneas de log (NFR-10).
+            'X-Trace-Id': request.traceId,
+            ...(opciones?.deadline !== undefined && { 'X-Request-Deadline': opciones.deadline }),
+          },
           ...(opciones?.signal !== undefined && { signal: opciones.signal }),
         });
         const { response, data, error } = resultado;

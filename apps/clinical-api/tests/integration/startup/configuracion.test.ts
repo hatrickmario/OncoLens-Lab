@@ -79,6 +79,8 @@ describe('arranque de clinical-api con el login montado', () => {
         level: 'error',
         event: 'configuracion_invalida',
         variable,
+        regla: expect.any(String),
+        motivo: expect.stringMatching(/^(valor_invalido|variable_ausente)$/),
       });
       expect(proceso.stderr).not.toContain(CONTRASENA_EN_URL);
       expect(proceso.stdout).not.toContain('escuchando');

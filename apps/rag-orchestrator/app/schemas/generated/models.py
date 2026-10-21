@@ -9,11 +9,28 @@ from typing import Annotated, Any, Literal
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
 
+class ConfigKey(RootModel[str]):
+    root: Annotated[str, Field(pattern='^[A-Z][A-Z0-9_]*$')]
+
+
 class HealthStatus(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     status: Literal['ok']
+    configKeys: Annotated[
+        list[ConfigKey] | None,
+        Field(
+            description='Nombres de las claves de configuración cargadas; nunca valores (RN-14).'
+        ),
+    ] = None
+    serviceVersion: Annotated[
+        str | None,
+        Field(
+            description='Versión del contrato (info.version) del servicio que responde.',
+            min_length=1,
+        ),
+    ] = None
 
 
 class Detail(RootModel[str]):

@@ -4,10 +4,10 @@ import type { ServiceTokenSigner } from './service-jwt.js';
  * Parámetros `in: header` del spec de rag-orchestrator (espejo en minúsculas). Un test los compara con el spec
  * empaquetado en ambos sentidos: un parámetro nuevo en el contrato sin reflejo aquí, o al revés, falla.
  */
-export const CABECERAS_DEL_CONTRATO = ['x-request-deadline'] as const;
+export const CABECERAS_DEL_CONTRATO = ['x-request-deadline', 'x-trace-id'] as const;
 
-/** Cabeceras de transporte: tipo de contenido, `Accept` y la trazabilidad (X-Trace-Id, documentada en el spec). */
-const CABECERAS_DE_TRANSPORTE = ['content-type', 'accept', 'x-trace-id'] as const;
+/** Cabeceras de transporte: tipo de contenido y `Accept` (no son parámetros del contrato). */
+const CABECERAS_DE_TRANSPORTE = ['content-type', 'accept'] as const;
 
 /**
  * Única lista de cabeceras que sobreviven del request del llamador. Todo lo demás (Cookie, Origin,

@@ -1,14 +1,34 @@
+import { z } from 'zod';
+
 const DEFAULT_PORT = 3000;
+
+const FORMA_DE_ENTERO = /^\d+$/;
+const esquemaDePuerto = z.number().int().min(1).max(65535);
+const esquemaDeEnteroPositivo = z.number().int().positive();
+const esquemaDeBooleano = z.enum(['true', 'false']);
+
+/**
+ * Valor numérico de una variable opcional validado con su esquema Zod. Única regla de lectura numérica: ausente o
+ * vacía devuelve el valor por defecto; inválida lanza un error que nombra la variable y la regla, nunca el valor.
+ */
+function leerNumero(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  esquema: z.ZodType<number>,
+  regla: string,
+  valorPorDefecto: number,
+): number {
+  const crudo = env[variable];
+  if (crudo === undefined || crudo === '') return valorPorDefecto;
+  // Solo cadenas de dígitos: `Number()` aceptaría `0x50`, `1e3` o espacios.
+  const resultado = esquema.safeParse(FORMA_DE_ENTERO.test(crudo) ? Number(crudo) : Number.NaN);
+  if (!resultado.success) throw new ConfiguracionInvalidaError(variable, regla);
+  return resultado.data;
+}
 
 /** Puerto de escucha desde `PORT` (RN-22: configuración, no literal en el código de arranque). */
 export function readPort(env: NodeJS.ProcessEnv): number {
-  const raw = env['PORT'];
-  if (raw === undefined || raw === '') return DEFAULT_PORT;
-  const port = Number(raw);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new ConfiguracionInvalidaError('PORT', 'debe ser un puerto TCP válido');
-  }
-  return port;
+  return leerNumero(env, 'PORT', esquemaDePuerto, 'debe ser un puerto TCP válido', DEFAULT_PORT);
 }
 
 export interface Argon2Config {
@@ -34,13 +54,13 @@ export function readPositiveInteger(
   name: string,
   defaultValue: number,
 ): number {
-  const raw = env[name];
-  if (raw === undefined || raw === '') return defaultValue;
-  const value = Number(raw);
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new ConfiguracionInvalidaError(name, 'debe ser un entero positivo');
-  }
-  return value;
+  return leerNumero(
+    env,
+    name,
+    esquemaDeEnteroPositivo,
+    'debe ser un entero positivo',
+    defaultValue,
+  );
 }
 
 /** TTL absoluto de la sesión y parámetros de Argon2id (RN-22: configuración, nunca literales del dominio). */
@@ -73,34 +93,104 @@ export interface ServiceJwtConfig {
 export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
   const privateKeyFile = env['SERVICE_JWT_PRIVATE_KEY_FILE'];
   if (privateKeyFile === undefined || privateKeyFile === '') {
-    throw new ConfiguracionInvalidaError('SERVICE_JWT_PRIVATE_KEY_FILE', 'no está configurada');
+    throw new ConfiguracionInvalidaError('SERVICE_JWT_PRIVATE_KEY_FILE', 'no está configurada', {
+      motivo: 'variable_ausente',
+    });
   }
-  const rawTtl = env['SERVICE_JWT_TTL_SECONDS'];
-  if (rawTtl === undefined || rawTtl === '') {
-    return { ttlSeconds: DEFAULT_SERVICE_JWT_TTL_SECONDS, privateKeyFile };
-  }
-  const ttlSeconds = Number(rawTtl);
-  if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
-    throw new ConfiguracionInvalidaError('SERVICE_JWT_TTL_SECONDS', 'debe ser un entero positivo');
-  }
+  const ttlSeconds = readPositiveInteger(
+    env,
+    'SERVICE_JWT_TTL_SECONDS',
+    DEFAULT_SERVICE_JWT_TTL_SECONDS,
+  );
   return { ttlSeconds, privateKeyFile };
 }
 
-/** Falta o es inválida una variable de configuración: el mensaje nombra la clave, nunca su valor (RN-10, RN-14). */
+/** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (catálogo, tipos). */
+export type MotivoDeConfiguracionInvalida = 'valor_invalido' | 'variable_ausente';
+
+/**
+ * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,
+ * identificadores hexadecimales, correos y claves con guiones o dígitos (design D2).
+ */
+const FORMA_DE_VALOR_REGISTRABLE = /^[a-z]{1,24}$/;
+
+/**
+ * Falta o es inválida una variable de configuración: el mensaje nombra la clave y la regla, nunca su valor (RN-10,
+ * RN-14). El constructor público no admite el valor; solo `deEnumNoSensible` fija `valorInvalido`.
+ */
 export class ConfiguracionInvalidaError extends Error {
+  readonly motivo: MotivoDeConfiguracionInvalida;
+  #valorInvalido: string | undefined;
+
   constructor(
     readonly variable: string,
-    motivo: string,
+    readonly regla: string,
+    opciones: { motivo?: MotivoDeConfiguracionInvalida } = {},
   ) {
-    super(`${variable} ${motivo}`);
+    super(`${variable} ${regla}`);
     this.name = 'ConfiguracionInvalidaError';
+    this.motivo = opciones.motivo ?? 'valor_invalido';
   }
+
+  /** Elemento inválido de un enum no sensible, solo si cumple la forma cerrada; `undefined` en cualquier otro caso. */
+  get valorInvalido(): string | undefined {
+    return this.#valorInvalido;
+  }
+
+  /** Única vía para registrar el valor: una clave declarada como enum no sensible (`leerEnumNoSensible`). */
+  static deEnumNoSensible(
+    variable: string,
+    regla: string,
+    valor: string,
+  ): ConfiguracionInvalidaError {
+    const error = new ConfiguracionInvalidaError(variable, regla);
+    if (FORMA_DE_VALOR_REGISTRABLE.test(valor)) error.#valorInvalido = valor;
+    return error;
+  }
+}
+
+/**
+ * Variable cuyo valor es un elemento de un enum NO sensible (p. ej. un tipo de cáncer): si es inválida, el error lleva
+ * el elemento en `valorInvalido` solo cuando cumple `^[a-z]{1,24}$` (design D2). Ninguna otra clave puede usarlo.
+ */
+export function leerEnumNoSensible<T extends string>(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  permitidos: readonly [T, ...T[]],
+  valorPorDefecto: T,
+): T {
+  const crudo = env[variable];
+  if (crudo === undefined || crudo === '') return valorPorDefecto;
+  const resultado = z.enum(permitidos).safeParse(crudo);
+  if (!resultado.success) {
+    throw ConfiguracionInvalidaError.deEnumNoSensible(
+      variable,
+      `debe ser uno de: ${permitidos.join(', ')}`,
+      crudo,
+    );
+  }
+  return resultado.data;
+}
+
+/** Booleano estricto (`true` | `false`); ausente o vacío devuelve el valor por defecto. */
+export function leerBooleano(
+  env: NodeJS.ProcessEnv,
+  variable: string,
+  valorPorDefecto: boolean,
+): boolean {
+  const crudo = env[variable]?.trim().toLowerCase();
+  if (crudo === undefined || crudo === '') return valorPorDefecto;
+  const resultado = esquemaDeBooleano.safeParse(crudo);
+  if (!resultado.success) throw new ConfiguracionInvalidaError(variable, 'debe ser true o false');
+  return resultado.data === 'true';
 }
 
 function leerObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const valor = env[variable];
   if (valor === undefined || valor.trim() === '') {
-    throw new ConfiguracionInvalidaError(variable, 'es obligatoria');
+    throw new ConfiguracionInvalidaError(variable, 'es obligatoria', {
+      motivo: 'variable_ausente',
+    });
   }
   return valor;
 }
@@ -212,9 +302,12 @@ const PATRON_DE_CLAVE_ANTERIOR = /^IDENTITY_AES_KEY_V(\d+)_FILE$/;
 export function readIdentityKeyConfig(env: NodeJS.ProcessEnv): IdentityKeyConfig {
   const keyVersion = readPositiveInteger(env, 'IDENTITY_KEY_VERSION', DEFAULT_IDENTITY_KEY_VERSION);
   const previousKeyFiles = new Map<number, string>();
-  for (const [variable, ruta] of Object.entries(env)) {
+  // Se recorren solo los NOMBRES: el valor se lee únicamente de las variables que coinciden con el patrón.
+  for (const variable of Object.keys(env)) {
     const version = PATRON_DE_CLAVE_ANTERIOR.exec(variable)?.[1];
-    if (version === undefined || ruta === undefined || ruta === '') continue;
+    if (version === undefined) continue;
+    const ruta = env[variable];
+    if (ruta === undefined || ruta === '') continue;
     if (Number(version) === keyVersion) {
       throw new ConfiguracionInvalidaError(
         variable,

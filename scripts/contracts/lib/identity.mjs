@@ -96,6 +96,7 @@ export const IDENTIFIER_ALLOWLIST = [
   'chunkId', // referencia best-effort a un chunk del corpus
   'externalId', // identificador de la fuente del corpus (DOI, NCT, PMID)
   'traceId', // trazabilidad de la llamada, nuevo por turno
+  'X-Trace-Id', // la misma trazabilidad como cabecera (NFR-10); solo este nombre exacto, no 'X-Patient-Trace-Id'
   'pseudoPatientId', // seudónimo aleatorio por consulta (RN-11), nunca en el prompt
 ].map(normalizeName);
 

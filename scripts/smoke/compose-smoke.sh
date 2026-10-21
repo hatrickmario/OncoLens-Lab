@@ -103,11 +103,19 @@ bien "AC-1 corpus-migrate terminó con código 0"
 # one-shot clinical-migrate (hoy nada migra el esquema clínico en Compose); se consultó al usuario.
 
 salida="$(get_desde web http://clinical-api:3000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de clinical-api desde web respondió: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-1: /health de clinical-api desde web respondió: $salida" ;;
+esac
 bien "AC-1 /health de clinical-api responde 200 desde web"
 
 salida="$(get_desde clinical-api http://rag-orchestrator:8000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-1: /health de rag-orchestrator desde clinical-api respondió: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-1: /health de rag-orchestrator desde clinical-api respondió: $salida" ;;
+esac
 bien "AC-1 /health de rag-orchestrator responde 200 desde clinical-api (LLM_PROVIDER=fake)"
 
 [ -z "$(find "$secretos" -type f \( -name '*password' -o -name '*_key' -o -name '*.key' -o -name jwt_service_private.pem \) ! -perm 600)" ] \
@@ -137,7 +145,7 @@ bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 # US-054: /rag/query exige el JWT de servicio ES256. Se firma DENTRO del contenedor clinical-api con el código
 # compilado real (clave y TTL de su configuración, reloj del sistema, transporte createRagOrchestratorFetch):
 # el smoke no reimplementa el firmador y el token nunca sale del contenedor ni viaja como argumento.
-consulta='const D="./dist/apps/clinical-api/src";let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const base="http://rag-orchestrator:8000";let f=fetch;if(process.argv[1]==="firmado"){const {readServiceJwtConfig}=await import(D+"/config.js");const j=await import(D+"/infrastructure/service-jwt.js");const h=await import(D+"/infrastructure/rag-orchestrator.http.js");const cfg=readServiceJwtConfig(process.env);const signer=j.createServiceTokenSigner({privateKey:await j.loadServicePrivateKey(cfg.privateKeyFile),clock:{now:()=>new Date()},ttlSeconds:cfg.ttlSeconds});f=h.createRagOrchestratorFetch({baseUrl:base,signer})}const r=await f(base+"/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
+consulta='const D="./dist/apps/clinical-api/src";let c="";process.stdin.on("data",d=>c+=d).on("end",async()=>{const base="http://rag-orchestrator:8000";let f=fetch;if(process.argv[1]==="firmado"){const {readServiceJwtConfig}=await import(D+"/config/index.js");const j=await import(D+"/infrastructure/service-jwt.js");const h=await import(D+"/infrastructure/rag-orchestrator.http.js");const cfg=readServiceJwtConfig(process.env);const signer=j.createServiceTokenSigner({privateKey:await j.loadServicePrivateKey(cfg.privateKeyFile),clock:{now:()=>new Date()},ttlSeconds:cfg.ttlSeconds});f=h.createRagOrchestratorFetch({baseUrl:base,signer})}const r=await f(base+"/rag/query",{method:"POST",headers:{"content-type":"application/json"},body:c});console.log(r.status+" "+await r.text())})'
 # Consulta /rag/query desde clinical-api con el cuerpo de stdin: "firmado" usa el firmador real, "sin-jwt" no envía token.
 # Imprime "<status> <cuerpo>".
 consultar_rag_con() { en_node clinical-api "$consulta" "$1"; }
@@ -234,7 +242,11 @@ esac
 case "$salida" in *host.docker.internal*) fallo "AC-4: el cuerpo del 503 filtra LLM_BASE_URL" ;; esac
 bien "AC-4 rag-orchestrator responde 503 LOCAL_LLM_UNAVAILABLE sin la URL del LLM"
 salida="$(get_desde web http://clinical-api:3000/health)"
-[ "$salida" = '200 {"status":"ok"}' ] || fallo "AC-4: clinical-api dejó de responder 200 con el LLM caído: $salida"
+# /health responde 200 y status ok; configKeys y serviceVersion (US-037) no se comparan: varían con la configuración.
+case "$salida" in
+  '200 {"status":"ok"'*) ;;
+  *) fallo "AC-4: clinical-api dejó de responder 200 con el LLM caído: $salida" ;;
+esac
 bien "AC-4 clinical-api sigue respondiendo 200"
 
 # ---------- fase 4: sin la clave AES clinical-api no queda healthy (US-035 AC-5) ----------

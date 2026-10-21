@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ConfiguracionInvalidaError } from '../../config.js';
+import { ConfiguracionInvalidaError } from '../../config/index.js';
 import type { CatalogVersionProvider } from './ports.js';
 
 const esquemaDeManifest = z.object({ version: z.string().min(1) });

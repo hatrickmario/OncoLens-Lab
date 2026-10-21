@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { readIdentityKeyConfig } from '../../config.js';
+import { readIdentityKeyConfig } from '../../config/index.js';
 import type { LeerArchivo } from '../../config/secrets.js';
 import {
   cargarClavesDeIdentidad,

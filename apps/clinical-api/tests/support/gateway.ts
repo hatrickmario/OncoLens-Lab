@@ -231,6 +231,8 @@ export interface OpcionesDeGateway {
   ragTimeoutMs?: number;
   /** `AI_DISCLAIMER_TEXT` (por defecto, `DISCLAIMER_DE_TEST`). */
   aiDisclaimerText?: string;
+  /** Logger a usar (por defecto, en memoria con las líneas crudas; `loggerJsonEnMemoria` pasa por la redacción real). */
+  logger?: LoggerEnMemoria;
 }
 
 export interface GatewayDeTest {
@@ -254,7 +256,7 @@ export async function montarGateway(
 ): Promise<GatewayDeTest> {
   const { privateKey, publicKey } = await generarParEfimero();
   const reloj = relojFijo(AHORA);
-  const logger = loggerEnMemoria();
+  const logger = opciones.logger ?? loggerEnMemoria();
   const signer = createServiceTokenSigner({ privateKey, clock: reloj, ttlSeconds: 60 });
   const rag = crearRagQueryClient(createRagOrchestratorClient({ baseUrl: RAG_BASE_URL, signer }));
   const appEnv = Object.hasOwn(opciones, 'appEnv') ? opciones.appEnv : 'test';

@@ -1,5 +1,10 @@
+import logging
+from collections.abc import Callable, Iterator
+
 import pytest
 
+from app.api.trace import trace_id_actual
+from app.config.logging import configurar_logging_json
 from tests.support import contract, fakes
 from tests.support.service_jwt import ParClavesServicio, generar_par_es256
 
@@ -18,3 +23,15 @@ def par_jwt_servicio(tmp_path_factory: pytest.TempPathFactory) -> ParClavesServi
     par = generar_par_es256()
     fakes.usar_par_de_sesion(par, tmp_path_factory.mktemp("claves-jwt"))
     return par
+
+
+@pytest.fixture
+def logs_json(capsys: pytest.CaptureFixture[str]) -> Iterator[Callable[[], str]]:
+    """Instala el logging JSON de producción en el root y devuelve una función que lee lo escrito en stdout."""
+    raiz = logging.getLogger()
+    nivel_previo = raiz.level
+    handler = configurar_logging_json(trace_id_actual)
+    capsys.readouterr()
+    yield lambda: capsys.readouterr().out
+    raiz.removeHandler(handler)
+    raiz.setLevel(nivel_previo)

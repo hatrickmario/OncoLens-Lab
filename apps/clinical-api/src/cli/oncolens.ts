@@ -3,7 +3,7 @@
 // Raíz de composición del proceso: lee el entorno y los secretos (por archivo) y delega en `ejecutarCli`.
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { ConfiguracionInvalidaError, readAuthConfig, readDatabaseConfig } from '../config.js';
+import { ConfiguracionInvalidaError, readAuthConfig, readDatabaseConfig } from '../config/index.js';
 import { crearPool } from '../infrastructure/database.js';
 import { crearRegistrador } from '../infrastructure/logger.js';
 import { createPasswordHasher } from '../modules/auth/password-hasher.js';

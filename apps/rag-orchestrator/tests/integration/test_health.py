@@ -7,6 +7,7 @@ from app.bootstrap import crear_app
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, settings_de_prueba
+from tests.support.recuperacion import EJEMPLOS
 
 URL_LLM = "http://llm-nativo.test:11434/v1"
 SONDA = f"{URL_LLM}/models"
@@ -55,7 +56,7 @@ def test_health_responde_200_validado_contra_el_spec_cuando_el_llm_responde():
 
     assert sonda.call_count == 1
     assert respuesta.status_code == 200
-    assert respuesta.text == '{"status":"ok"}'
+    assert respuesta.json()["status"] == "ok"
     assert_matches_spec("#/components/schemas/HealthStatus", respuesta.json())
 
 
@@ -75,3 +76,27 @@ def test_health_genera_un_trace_id_cuando_el_x_trace_id_recibido_no_cumple_el_fo
 
     assert respuesta.status_code == 503
     assert respuesta.json()["traceId"] == "req_00000001"
+
+
+@pytest.mark.ac("US-037", 1)
+def test_health_lista_config_keys_sin_valores():
+    settings = settings_de_prueba(
+        llm_provider="fake",
+        fake_responses_path=EJEMPLOS,
+        relevance_threshold=0.42,
+        llm_cloud_enabled=False,
+        llm_model="SENTINELA-MODELO-ZZ",
+    )
+    contenido_de_la_clave = settings.service_jwt_public_key_file.read_text(encoding="utf-8")
+    cliente = TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo()))
+
+    respuesta = cliente.get("/health")
+
+    cuerpo = respuesta.json()
+    assert respuesta.status_code == 200
+    assert_matches_spec("#/components/schemas/HealthStatus", cuerpo)
+    assert cuerpo["configKeys"] == sorted(cuerpo["configKeys"])
+    assert {"RELEVANCE_THRESHOLD", "LLM_CLOUD_ENABLED", "LLM_PROVIDER"} <= set(cuerpo["configKeys"])
+    assert cuerpo["serviceVersion"]
+    for valor in ("0.42", "SENTINELA-MODELO-ZZ", contenido_de_la_clave.splitlines()[1]):
+        assert valor not in respuesta.text

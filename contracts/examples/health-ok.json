@@ -1,3 +1,9 @@
 {
-  "status": "ok"
+  "status": "ok",
+  "configKeys": [
+    "APP_ENV",
+    "LOG_LEVEL",
+    "PORT"
+  ],
+  "serviceVersion": "1.0.0"
 }

@@ -1,4 +1,4 @@
-import { ConfiguracionInvalidaError, readAuthConfig } from '../../src/config.js';
+import { ConfiguracionInvalidaError, readAuthConfig } from '../../src/config/index.js';
 import { leerClavesDeIdentidadDelEntorno } from '../../src/modules/patients/identity.module.js';
 import type { PasswordHasher } from '../../src/modules/auth/password-hasher.js';
 import { nuevoTraceId } from '../../src/infrastructure/ids.js';
