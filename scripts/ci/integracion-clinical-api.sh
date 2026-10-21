@@ -7,10 +7,21 @@ set -euo pipefail
 raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 cd "$raiz"
 
-# Directorio propio (nunca el del entorno): el trap de salida lo borra con rm -rf.
-export ONCOLENS_SECRETS_DIR="$(mktemp -d)"
+# Crea un directorio temporal propio y falla si no queda un directorio real (evita `export X="$(mktemp -d)"`, que oculta el error, SC2155).
+directorio_temporal_propio() {
+  local directorio
+  directorio="$(mktemp -d)"
+  [ -n "$directorio" ] && [ -d "$directorio" ] || { echo "integracion-clinical-api: mktemp -d no creó un directorio" >&2; exit 1; }
+  printf '%s' "$directorio"
+}
+
+# Proyecto y directorios PROPIOS (nunca los del entorno): el trap hace `down -v` y `rm -rf`, y con el proyecto por defecto
+# (`oncolens`) borraría los volúmenes del stack local del desarrollador.
+export COMPOSE_PROJECT_NAME="oncolens-ci-clinical"
+ONCOLENS_SECRETS_DIR="$(directorio_temporal_propio)"
+MODEL_HOST_DIR="$(directorio_temporal_propio)"
+export ONCOLENS_SECRETS_DIR MODEL_HOST_DIR
 export MODEL_PROVIDER=fake
-export MODEL_HOST_DIR="$(mktemp -d)"
 export APP_ENV=test
 trap 'docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml -f apps/clinical-api/tests/support/docker-compose.integration.yml down -v >/dev/null 2>&1 || true; rm -rf "$ONCOLENS_SECRETS_DIR" "$MODEL_HOST_DIR"' EXIT
 

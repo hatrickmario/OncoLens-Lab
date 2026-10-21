@@ -29,7 +29,7 @@ PostgreSQL, ni claves de cifrado/HMAC de identidad, ni la privada del JWT, ni `c
 No hay secretos como variables del job ni en `env:` del *workflow*. La creación de roles y esquemas la hace el *init* de
 `postgres` (con su propio secreto) antes de `run`. El script comprueba **dentro del contenedor en ejecución**, antes de
 Pytest, que los secretos montados son exactamente esos tres, que el entorno no tiene variables clínicas y que el árbol que ve
-no contiene secretos ni `.env`; el árbol es una copia de solo lectura de los archivos versionados que leen los tests.
+no contiene secretos ni `.env`; el árbol es una copia de solo lectura de los archivos versionados que leen los tests. Excepción aceptada: el `node_modules` del host se monta de solo lectura en `/repo/node_modules` (los tests empaquetan el spec con él) y la inspección del árbol no lo recorre; no contiene secretos del repositorio. Los dos scripts de integración fijan su propio proyecto de Compose (`oncolens-ci-rag`, `oncolens-ci-clinical`) y sus directorios temporales, de modo que su `down -v` y su `rm -rf` no alcanzan el stack local.
 
 ### D2. Job aparte y en `ci-ok`
 `integration-rag` separado de `integration` (paralelos; ~10 min con Milvus). `timeout-minutes: 30`.

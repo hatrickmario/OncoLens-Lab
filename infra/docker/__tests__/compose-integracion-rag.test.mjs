@@ -9,19 +9,6 @@ import { archivosDeSecretos, assertSoloWebPublicaPuertos, entorno, servicio } fr
 const SERVICIO = 'rag-pruebas';
 const PERFIL = 'integracion-rag';
 const SCRIPT = path.join(RAIZ, 'scripts/ci/integracion-rag-orchestrator.sh');
-// Variables clínicas que el contenedor de Pytest jamás debe recibir: el patrón del script tiene que cubrirlas todas.
-const VARIABLES_CLINICAS = [
-  'CLINICAL_DATABASE_URL',
-  'PG_CLINICAL_PASSWORD',
-  'IDENTITY_AES_KEY_FILE',
-  'BLIND_INDEX_HMAC_KEY_FILE',
-  'JWT_PRIVATE_KEY_FILE',
-  'MINIO_ROOT_PASSWORD',
-  'CLINICAL_MINIO_ACCESS_KEY',
-  'SEED_PATIENT_ID',
-  'PG_SUPERUSER_PASSWORD',
-  'PG_RESEARCH_PASSWORD',
-];
 
 let resolver;
 let limpiar;
@@ -33,6 +20,14 @@ afterAll(() => limpiar());
 
 const conPerfil = () => resolver({ archivosExtra: [COMPOSE_TEST], entorno: { COMPOSE_PROFILES: PERFIL } });
 // Una sola definición de lo clínico: la del script, que es la que se comprueba dentro del contenedor.
+// Variables con credenciales o rutas a secretos de los servicios clínicos, leídas del Compose real (no escritas a mano):
+// el patrón del script tiene que cubrirlas todas, así una variable clínica nueva que no cubra falla aquí.
+const variablesClinicas = () => {
+  const config = resolver();
+  return ['clinical-api', 'clinical-seed']
+    .flatMap((nombre) => Object.keys(entorno(servicio(config, nombre))))
+    .filter((clave) => /_FILE$|DATABASE_URL$/.test(clave));
+};
 const patronClinico = () => new RegExp(readFileSync(SCRIPT, 'utf8').match(/PATRON_ENTORNO_CLINICO='([^']*)'/)[1], 'i');
 const secretosPermitidos = () => {
   const [, lista] = readFileSync(SCRIPT, 'utf8').match(/SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS=\(([^)]*)\)/);
@@ -70,7 +65,9 @@ describe('docker-compose.test.yml · perfil integracion-rag', () => {
   });
 
   it('el patrón clínico del script cubre cada variable clínica conocida [ARR-01 AC-2, RN-10]', () => {
-    expect(VARIABLES_CLINICAS.filter((variable) => !patronClinico().test(variable))).toEqual([]);
+    const variables = variablesClinicas();
+    expect(variables.length).toBeGreaterThan(5);
+    expect(variables.filter((variable) => !patronClinico().test(variable))).toEqual([]);
   });
 
   it('no recibe variables de entorno ni montajes clínicos y solo escribe en /resultados [ARR-01 AC-2, RN-10]', () => {

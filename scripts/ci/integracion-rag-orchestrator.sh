@@ -41,15 +41,25 @@ command -v docker > /dev/null || fallar "falta docker"
 command -v node > /dev/null || fallar "falta node (empaqueta el spec y resume los AC)"
 [ -d "$raiz/node_modules" ] || fallar "faltan node_modules en la raíz: corre npm ci antes (los tests empaquetan el spec con ellos)"
 
+# Crea un directorio temporal propio y falla si no queda un directorio real (evita `export X="$(mktemp -d)"`, que oculta el error, SC2155).
+directorio_temporal_propio() {
+  local directorio
+  directorio="$(mktemp -d)"
+  [ -n "$directorio" ] && [ -d "$directorio" ] || { echo "integracion-rag: mktemp -d no creó un directorio" >&2; exit 1; }
+  printf '%s' "$directorio"
+}
+
 # Proyecto y directorio de secretos PROPIOS: nunca se leen del entorno, para que `limpiar` (down -v y rm -rf) solo borre lo que creó este script.
 export COMPOSE_PROJECT_NAME="oncolens-ci-rag"
-export ONCOLENS_SECRETS_DIR="$(mktemp -d)"
+ONCOLENS_SECRETS_DIR="$(directorio_temporal_propio)"
+MODEL_HOST_DIR="$(directorio_temporal_propio)"
+RAG_PRUEBAS_REPO_DIR="$(directorio_temporal_propio)"
+RAG_PRUEBAS_RESULTADOS_DIR="$(directorio_temporal_propio)"
+ONCOLENS_UID="$(id -u)"
+ONCOLENS_GID="$(id -g)"
+export ONCOLENS_SECRETS_DIR MODEL_HOST_DIR RAG_PRUEBAS_REPO_DIR RAG_PRUEBAS_RESULTADOS_DIR ONCOLENS_UID ONCOLENS_GID
 export MODEL_PROVIDER=fake
-export MODEL_HOST_DIR="$(mktemp -d)"
 export APP_ENV=test
-export ONCOLENS_UID="$(id -u)" ONCOLENS_GID="$(id -g)"
-export RAG_PRUEBAS_REPO_DIR="$(mktemp -d)"
-export RAG_PRUEBAS_RESULTADOS_DIR="$(mktemp -d)"
 export RAG_PRUEBAS_NODE_MODULES_DIR="$raiz/node_modules"
 
 readonly ARCHIVOS_DE_COMPOSE=(--profile "$PERFIL" -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml)
@@ -111,7 +121,7 @@ verificar_que_pytest_no_ve_nada_de_clinical() {
   montados="$(printf '%s\n' "$salida" | sed '/^--entorno--$/,$d' | sort)"
   esperados="$(printf '%s\n' "${SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS[@]}" | sort)"
   [ "$montados" = "$esperados" ] || fallar "el contenedor de Pytest monta secretos distintos de los permitidos: $(printf '%s' "$montados" | tr '\n' ' ')"
-  entorno="$(printf '%s\n' "$salida" | sed -n '/^--entorno--$/,/^--arbol--$/p' | grep -E "$PATRON_ENTORNO_CLINICO" || true)"
+  entorno="$(printf '%s\n' "$salida" | sed -n '/^--entorno--$/,/^--arbol--$/p' | grep -iE "$PATRON_ENTORNO_CLINICO" || true)"
   [ -z "$entorno" ] || fallar "el contenedor de Pytest tiene variables de entorno clínicas: $(printf '%s' "$entorno" | tr '\n' ' ')"
   arbol="$(printf '%s\n' "$salida" | sed -n '/^--arbol--$/,$p' | sed '1d' | grep -v '\.env\.example$' || true)"
   [ -z "$arbol" ] || fallar "el árbol que ve el contenedor de Pytest contiene secretos o .env: $(printf '%s' "$arbol" | tr '\n' ' ')"

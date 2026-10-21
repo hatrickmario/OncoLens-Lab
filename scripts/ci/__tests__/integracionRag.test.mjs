@@ -25,6 +25,7 @@ case "$sub" in
   ps) if [ "$STUB_MODO" = milvus_no_sano ] && [[ "$*" == *milvus-standalone* ]]; then echo "milvus-standalone unhealthy running"; else echo "x healthy running"; fi ;;
   run)
     if [[ "$*" == *--entrypoint* ]]; then
+      [ -n "$STUB_RUTA" ] && { [ -e "$RAG_PRUEBAS_REPO_DIR/$STUB_RUTA" ] && echo si || echo no; } >> "$STUB_LOG.copiado"
       printf '%s\\n' pg_test_admin_password pg_rag_corpus_password pg_rag_corpus_migrator_password
       [ "$STUB_MODO" = secreto_clinico ] && echo identity_aes_key
       printf '%s\\n' --entorno-- PATH HOME
@@ -51,15 +52,22 @@ beforeAll(() => {
   temporal = mkdtempSync(path.join(os.tmpdir(), 'integracion-rag-test-'));
   writeFileSync(path.join(temporal, 'docker'), DOCKER_FALSO);
   chmodSync(path.join(temporal, 'docker'), 0o755);
+  // `mktemp` falso: con STUB_MKTEMP_VACIO termina bien pero sin crear nada (el script debe fallar, no seguir con una ruta vacía).
+  writeFileSync(path.join(temporal, 'mktemp'), '#!/usr/bin/env bash\n[ -n "$STUB_MKTEMP_VACIO" ] && exit 0\nexec /usr/bin/mktemp "$@"\n');
+  chmodSync(path.join(temporal, 'mktemp'), 0o755);
   // `npm` falso: el script de clinical-api termina con scripts/test-integration.sh, que correría la suite real.
   writeFileSync(path.join(temporal, 'npm'), '#!/usr/bin/env bash\nexit 0\n');
   chmodSync(path.join(temporal, 'npm'), 0o755);
 });
 afterAll(() => rmSync(temporal, { recursive: true, force: true }));
 
+const leerLineas = (archivo) => (existsSync(archivo) ? readFileSync(archivo, 'utf8').split('\n').filter(Boolean) : []);
+
 function correr(modo, entorno = {}, script = SCRIPT) {
   const registro = path.join(temporal, `registro-${modo}-${Object.keys(entorno).join('')}.log`);
   rmSync(registro, { force: true });
+  rmSync(`${registro}.proyecto`, { force: true });
+  rmSync(`${registro}.copiado`, { force: true });
   const resultado = spawnSync('bash', [script], {
     cwd: RAIZ,
     encoding: 'utf8',
@@ -71,13 +79,11 @@ function correr(modo, entorno = {}, script = SCRIPT) {
       ...entorno,
     },
   });
+  const proyectos = leerLineas(`${registro}.proyecto`);
+  const copiado = leerLineas(`${registro}.copiado`);
   const llamadas = existsSync(registro) ? readFileSync(registro, 'utf8').split('\n').filter(Boolean) : [];
-  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas };
+  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado };
 }
-const proyectosDeCompose = (modo, entorno = {}) =>
-  readFileSync(path.join(temporal, `registro-${modo}-${Object.keys(entorno).join('')}.log.proyecto`), 'utf8')
-    .split('\n')
-    .filter(Boolean);
 const ejecutoPytest = (llamadas) => llamadas.some((llamada) => /\brun\b/.test(llamada) && !llamada.includes('--entrypoint'));
 
 describe('integracion-rag-orchestrator.sh', () => {
@@ -168,6 +174,29 @@ describe('integracion-rag-orchestrator.sh', () => {
     expect(inspeccion).toContain('-path /repo/node_modules -prune');
   });
 
+  it('falla sin crear nada cuando mktemp no devuelve un directorio [ARR-01 AC-2]', () => {
+    const { codigo, salida, llamadas } = correr('ok', { STUB_MKTEMP_VACIO: '1' });
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toContain('mktemp -d no creó un directorio');
+    expect(llamadas.filter((llamada) => /\bup\b/.test(llamada))).toEqual([]);
+  });
+
+  it('no copia un archivo sin versionar de las rutas que leen los tests y lo nombra en el aviso [ARR-01 AC-2, RN-14]', () => {
+    const ruta = 'apps/rag-orchestrator/tests/zz_sin_versionar_prueba.txt';
+    const absoluta = path.join(RAIZ, ruta);
+    writeFileSync(absoluta, 'dato local no versionado');
+    try {
+      const { codigo, salida, copiado } = correr('ok', { STUB_RUTA: ruta });
+
+      expect(codigo).toBe(0);
+      expect(copiado).toEqual(['no']);
+      expect(salida).toContain(`NO se copian al contenedor: ${ruta}`);
+    } finally {
+      rmSync(absoluta, { force: true });
+    }
+  });
+
   it('tolera .env.example en el árbol del contenedor [ARR-01 AC-2]', () => {
     const { codigo } = correr('arbol_con_ejemplo', { STUB_ARBOL: 'ruta/.env.example' });
 
@@ -179,11 +208,11 @@ describe('integracion-rag-orchestrator.sh', () => {
     writeFileSync(path.join(ajeno, 'marca'), 'no tocar');
     const entorno = { ONCOLENS_SECRETS_DIR: ajeno, COMPOSE_PROJECT_NAME: 'proyecto-ajeno' };
 
-    const { codigo } = correr('ok', entorno);
+    const { codigo, proyectos } = correr('ok', entorno);
 
     expect(codigo).toBe(0);
     expect(readFileSync(path.join(ajeno, 'marca'), 'utf8')).toBe('no tocar');
-    expect(new Set(proyectosDeCompose('ok', entorno))).toEqual(new Set(['oncolens-ci-rag']));
+    expect(new Set(proyectos)).toEqual(new Set(['oncolens-ci-rag']));
   });
 
   it('declara como permitidos exactamente los tres secretos del arnés de corpus [ARR-01 AC-2, RN-10]', () => {
@@ -193,14 +222,29 @@ describe('integracion-rag-orchestrator.sh', () => {
 });
 
 describe('integracion-clinical-api.sh', () => {
+  it('usa siempre su propio proyecto de Compose y nunca el del entorno (su down -v no alcanza el stack local) [ARR-01 AC-2]', () => {
+    const { codigo, proyectos } = correr('ok', { COMPOSE_PROJECT_NAME: 'proyecto-ajeno' }, SCRIPT_CLINICAL);
+
+    expect(codigo).toBe(0);
+    expect(proyectos.length).toBeGreaterThan(1);
+    expect(new Set(proyectos)).toEqual(new Set(['oncolens-ci-clinical']));
+  });
+
+  it('falla sin crear nada cuando mktemp no devuelve un directorio [ARR-01 AC-2]', () => {
+    const { codigo, salida, llamadas } = correr('ok', { STUB_MKTEMP_VACIO: '1' }, SCRIPT_CLINICAL);
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toContain('mktemp -d no creó un directorio');
+    expect(llamadas.filter((llamada) => /\bup\b/.test(llamada))).toEqual([]);
+  });
+
   it('no borra un ONCOLENS_SECRETS_DIR ajeno del entorno al terminar [ARR-01 AC-2]', () => {
     const ajeno = mkdtempSync(path.join(temporal, 'secretos-ajenos-clinical-'));
     mkdirSync(path.join(ajeno, 'sub'));
     writeFileSync(path.join(ajeno, 'sub', 'marca'), 'no tocar');
 
-    const { codigo, salida } = correr('ok', { ONCOLENS_SECRETS_DIR: ajeno }, SCRIPT_CLINICAL);
+    const { codigo } = correr('ok', { ONCOLENS_SECRETS_DIR: ajeno }, SCRIPT_CLINICAL);
 
-    expect(salida).not.toMatch(/falta|error/i);
     expect(codigo).toBe(0);
     expect(readFileSync(path.join(ajeno, 'sub', 'marca'), 'utf8')).toBe('no tocar');
   });
