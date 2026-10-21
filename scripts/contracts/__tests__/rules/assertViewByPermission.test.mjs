@@ -3,7 +3,7 @@ import { assertViewByPermission } from '../../rules/assertViewByPermission.mjs';
 import { patchedContracts, realContracts } from '../helpers/parches.mjs';
 
 const mensajesTrasParchar = async (operaciones) => {
-  const mutated = patchedContracts(await realContracts(), [{ destino: 'clinical-api', operaciones }]);
+  const mutated = await patchedContracts(await realContracts(), [{ destino: 'clinical-api', operaciones }]);
   return assertViewByPermission(mutated.specs, mutated.examples, mutated.docs).map((item) => item.message);
 };
 

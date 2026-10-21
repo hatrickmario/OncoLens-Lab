@@ -108,7 +108,7 @@ escenario de L1D-139). Los fixtures de AC-3 generan la clave y el token en tiemp
 
 ## Contratos
 
-`scripts/ci/contracts-breaking.sh <base-ref>` empaqueta (con `scripts/ci/bundle-specs.mjs`, que usa `scripts/contracts/lib/bundle.mjs` para internalizar los
+`scripts/ci/contracts-breaking.sh <base-ref>` empaqueta (con `scripts/ci/bundle-specs.mjs`, que usa `bundleDocument` de Redocly vía `scripts/contracts/lib/context.mjs` para internalizar los
 `$ref` a `contracts/schemas/`) los proveedores de `PROVIDERS` (`scripts/contracts/lib/specs.mjs`) el `openapi.yaml` de cada proveedor en la base y en `HEAD` y ejecuta
 `oasdiff breaking --fail-on ERR`. Solo rompen los cambios de nivel `ERR`; los `WARN`, incluido
 `response-body-wrapped-in-one-of-original-preserved` de los `oneOf` aditivos del S1, se imprimen y no rompen (ADR-26).

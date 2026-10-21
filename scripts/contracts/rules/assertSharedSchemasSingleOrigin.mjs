@@ -1,7 +1,8 @@
 /**
  * AC-8 [NFR-13, Pre-S1 resp. 25]: los ocho schemas compartidos se definen solo en evidence.yaml y ambos specs, crudos,
- * los referencian con $ref. Un schema local no puede llamarse como uno de evidence.yaml (colisión), y ninguna $ref
- * externa puede quedar sin empaquetar (el empaquetado solo internaliza components/schemas de evidence.yaml).
+ * los referencian con $ref. Un schema local no puede llamarse como uno de evidence.yaml (colisión), ninguna $ref
+ * externa puede quedar sin resolver por el empaquetado y cualquier otro motivo por el que un spec no se pueda
+ * empaquetar (p. ej. un schema derivado de una subruta) se reporta una vez, con el error del empaquetado.
  */
 import { reporter } from '../lib/findings.mjs';
 import { EVIDENCE, PROVIDERS, SHARED_SCHEMAS, schemaPointer } from '../lib/specs.mjs';
@@ -31,7 +32,14 @@ function checkCollisions({ file, raw }, evidence) {
 
 /** Cada $ref externa que el empaquetado dejó sin resolver. */
 const checkExternalRefs = ({ file, externalRefs }) =>
-  (externalRefs ?? []).map(({ pointer, ref }) => report(file, pointer, `ref externa sin empaquetar: ${ref} (el empaquetado solo internaliza components/schemas de evidence.yaml)`));
+  (externalRefs ?? []).map(({ pointer, ref }) => report(file, pointer, `ref externa sin empaquetar: ${ref} ($ref externa que el empaquetado no pudo resolver)`));
+
+/**
+ * El error del empaquetado cuando no lo explica ningún otro hallazgo de este spec (ni `$ref` externa ni colisión):
+ * sin él, un spec sin versión empaquetada dejaría pasar `contracts:check` en verde.
+ */
+const checkBundleError = ({ file, bundled, error }, otherFindings) =>
+  !bundled && error && otherFindings.length === 0 ? [report(file, '#', error)] : [];
 
 function checkOrigin({ file, raw }) {
   const defined = raw.components?.schemas ?? {};
@@ -42,10 +50,9 @@ function checkOrigin({ file, raw }) {
 }
 
 export function assertSharedSchemasSingleOrigin(specs) {
-  const hosts = PROVIDERS.filter((name) => specs[name].raw).flatMap((name) => [
-    ...checkHost(specs[name]),
-    ...checkCollisions(specs[name], specs[EVIDENCE].raw),
-    ...checkExternalRefs(specs[name]),
-  ]);
+  const hosts = PROVIDERS.filter((name) => specs[name].raw).flatMap((name) => {
+    const explained = [...checkCollisions(specs[name], specs[EVIDENCE].raw), ...checkExternalRefs(specs[name])];
+    return [...checkHost(specs[name]), ...explained, ...checkBundleError(specs[name], explained)];
+  });
   return specs[EVIDENCE].raw ? [...hosts, ...checkOrigin(specs[EVIDENCE])] : hosts;
 }

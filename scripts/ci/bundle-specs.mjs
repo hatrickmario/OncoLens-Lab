@@ -7,7 +7,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { loadBundledSpecs } from '../contracts/lib/bundledSpecs.mjs';
+import { prepararSpecsEmpaquetados } from '../contracts/lib/bundledSpecs.mjs';
 import { PROVIDERS } from '../contracts/lib/specs.mjs';
 
 const [raiz, salida] = process.argv.slice(2);
@@ -15,7 +15,7 @@ if (!raiz || !salida) {
   console.error('uso: node scripts/ci/bundle-specs.mjs <raíz> <directorio-de-salida>');
   process.exit(2);
 }
-const especificaciones = loadBundledSpecs(path.resolve(raiz));
+const especificaciones = await prepararSpecsEmpaquetados(path.resolve(raiz));
 mkdirSync(salida, { recursive: true });
 for (const proveedor of PROVIDERS) {
   writeFileSync(path.join(salida, `${proveedor}.json`), JSON.stringify(especificaciones[proveedor].bundled));
