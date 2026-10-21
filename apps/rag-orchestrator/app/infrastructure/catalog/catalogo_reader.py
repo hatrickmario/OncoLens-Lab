@@ -47,7 +47,7 @@ def ficha_de_fila(fila: Mapping[str, Any]) -> FichaDeFuente:
         last_updated_at=fila["last_updated_at"],
         guideline_version=_o_none(fila["guideline_version"]),
         authors=None,  # el catálogo (data-model §4.6) aún no registra autoría: la UI muestra "No disponible" (RN-25)
-        source_url=None,  # ídem para el enlace a la fuente
+        source_url=_o_none(fila["source_url"]),
     )
 
 

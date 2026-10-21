@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
-import { AutoresDeLaCita } from './citation-details';
+import { AutoresDeLaCita, EnlaceFuenteOriginal } from './citation-details';
 
 /** Texto original recuperado (`[S1 resp. 8]`: sin traducción); el foco va al encabezado al abrirse. */
 export function CitedFragment({ cita, onVolver }: { cita: CitedSource; onVolver: () => void }) {
@@ -32,6 +32,12 @@ export function CitedFragment({ cita, onVolver }: { cita: CitedSource; onVolver:
         {textos.licencia}: {licencia[cita.licenseClass]} · {textos.autores}:{' '}
         <AutoresDeLaCita autores={cita.authors} />
       </p>
+      <dl className={estilos.detalle}>
+        <dt>{textos.fuenteOriginal}</dt>
+        <dd>
+          <EnlaceFuenteOriginal url={cita.sourceUrl} />
+        </dd>
+      </dl>
       <button type="button" className={estilos.chip} onClick={onVolver}>
         {fragmento.volver}
       </button>

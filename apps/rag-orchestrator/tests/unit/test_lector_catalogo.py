@@ -16,6 +16,7 @@ FILA = {
     "published_at": date(2025, 3, 1),
     "last_updated_at": None,
     "guideline_version": "",
+    "source_url": "",
 }
 
 
@@ -43,3 +44,11 @@ def test_ficha_de_fila_devuelve_none_y_no_cadena_vacia_cuando_el_catalogo_no_reg
     assert ficha.guideline_version is None
     assert ficha.authors is None
     assert ficha.source_url is None
+
+
+def test_ficha_de_fila_copia_la_url_de_la_fuente_cuando_el_catalogo_la_registra():
+    ficha = ficha_de_fila(
+        {**FILA, "source_url": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"}
+    )
+
+    assert ficha.source_url == "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"

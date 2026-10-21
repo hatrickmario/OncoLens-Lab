@@ -95,6 +95,8 @@ class RegistroDeDocumento:
     ingested_at: datetime
     last_checked_at: datetime
     status: str
+    # URL pública del documento original (data-model §4.6); ausente = la UI muestra "No disponible" (RN-25).
+    source_url: str | None = None
 
 
 @dataclass(frozen=True)
