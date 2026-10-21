@@ -145,6 +145,18 @@
   {
     "ac": "AC-17",
     "regla": "assertNoIdentityInRagContract",
+    "escenario": "la excepción de X-Trace-Id es exacta: un parche declara X-Patient-Trace-Id en /rag/query (RN-10)",
+    "parches": [
+      {
+        "destino": "rag-orchestrator",
+        "operaciones": [{ "op": "add", "path": "/paths/~1rag~1query/post/parameters/-", "value": { "name": "X-Patient-Trace-Id", "in": "header", "required": false, "schema": { "type": "string" } } }]
+      }
+    ],
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "mensajeContiene": "X-Patient-Trace-Id" }
+  },
+  {
+    "ac": "AC-17",
+    "regla": "assertNoIdentityInRagContract",
     "escenario": "un ejemplo de Backend 2 trae una clave nationalId fuera de identityFound",
     "parches": [{ "destino": "ejemplo:rag-query-request.json", "operaciones": [{ "op": "add", "path": "/clinicalContext/nationalId", "value": "SINT-0000001" }] }],
     "esperado": { "archivo": "contracts/examples/rag-query-request.json", "rutaContiene": "nationalId" }

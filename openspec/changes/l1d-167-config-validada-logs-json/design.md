@@ -96,6 +96,13 @@ lleva `status`, `configKeys`, `serviceVersion` y `catalogVersion` y valida contr
 `clinical-api` 1.5.0 → **1.6.0**, `rag-orchestrator` 1.3.0 → **1.4.0** (`l1d-171` sube después a 1.7.0 / 1.5.0).
 `oasdiff`: sin `ERR` (propiedades opcionales). Compatible con ADR-26. Zod y Pydantic se regeneran del spec.
 
+**Commit `contract(L1D-167)` adicional (Gate 2):** `rag-orchestrator` declara `components.parameters.TraceIdHeader`
+(`X-Trace-Id`, `in: header`, opcional, `$ref TraceId`) y lo referencia en `/rag/query` y en el turno de seguimiento
+(las operaciones que ya llevan `RequestDeadline`); `serviceVersion` gana `description` ("versión del contrato
+(`info.version`) del servicio que responde") en ambos specs. Sin subir `info.version` (1.4.0 / 1.6.0): es aditivo y
+opcional. `X-Trace-Id` entra en `IDENTIFIER_ALLOWLIST` de `assertNoIdentityInRagContract` solo con ese nombre exacto
+(fixture: `X-Patient-Trace-Id` se sigue rechazando).
+
 ## Dependencias y colaboradores
 
 - `clinical-api`: `src/config/index.ts` (nuevo, absorbe `src/config.ts`), `src/startup.ts` (usa `cargarConfiguracion`

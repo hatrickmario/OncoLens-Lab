@@ -63,6 +63,7 @@ paths:
         modelos locales (RN-12).
       parameters:
         - $ref: '#/components/parameters/RequestDeadline'
+        - $ref: '#/components/parameters/TraceIdHeader'
       requestBody:
         required: true
         content:
@@ -130,6 +131,7 @@ paths:
         Con datos reales solo se usan modelos locales, sin fallback a la nube (RN-12).
       parameters:
         - $ref: '#/components/parameters/RequestDeadline'
+        - $ref: '#/components/parameters/TraceIdHeader'
       requestBody:
         required: true
         content:
@@ -292,6 +294,15 @@ components:
       schema:
         type: string
         format: date-time
+    TraceIdHeader:
+      name: X-Trace-Id
+      in: header
+      required: false
+      description: >-
+        Mismo valor que traceId del cuerpo (o uno nuevo si falta o no cumple el patrón); liga todas las líneas de log
+        de la request (NFR-10).
+      schema:
+        $ref: '#/components/schemas/TraceId'
 
   responses:
     TokenServicioInvalido:
@@ -351,7 +362,10 @@ components:
           type: array
           description: Nombres de las claves de configuración cargadas; nunca valores (RN-14).
           items: { type: string, pattern: '^[A-Z][A-Z0-9_]*$' }
-        serviceVersion: { type: string, minLength: 1 }
+        serviceVersion:
+          type: string
+          minLength: 1
+          description: Versión del contrato (info.version) del servicio que responde.
     # ---- Schemas compartidos con clinical-api: un solo origen (contracts/schemas/evidence.yaml)
     EvidenceOption:
       $ref: '../../contracts/schemas/evidence.yaml#/components/schemas/EvidenceOption'
