@@ -196,6 +196,42 @@ describe('capturarSalidaDelProceso', () => {
     },
   );
 
+  it.each([
+    ['un objeto con el nombre', () => ({ nombre: 'Fernanda' }), 'fernanda'],
+    [
+      'un objeto anidado con el documento',
+      () => ({ p: { numeroDeDocumento: FX_T4A_A.numeroDeDocumento } }),
+      FX_T4A_A.numeroDeDocumento,
+    ],
+    [
+      'un Error con el documento en cause',
+      () => new Error('fallo', { cause: FX_T4A_A.numeroDeDocumento }),
+      FX_T4A_A.numeroDeDocumento,
+    ],
+    [
+      'un Error con el documento en la propiedad detail (como un error de pg)',
+      () =>
+        Object.assign(new Error('fallo'), { detail: `Key (hmac)=(${FX_T4A_A.numeroDeDocumento})` }),
+      FX_T4A_A.numeroDeDocumento,
+    ],
+  ])('detecta la fuga escrita con console.error de %s', async (_caso, argumento, valor) => {
+    const { hallazgos } = await hallazgosDelPaso(() => {
+      console.error(argumento());
+      return Promise.resolve();
+    });
+
+    expect(hallazgos).toContainEqual({ fuente: 'salida:proceso[0]', valor });
+  });
+
+  it.each(['dir', 'table'] as const)('detecta Fernanda escrita con console.%s', async (metodo) => {
+    const { hallazgos } = await hallazgosDelPaso(() => {
+      console[metodo]({ nombre: 'Fernanda' });
+      return Promise.resolve();
+    });
+
+    expect(hallazgos).toContainEqual({ fuente: 'salida:proceso[0]', valor: 'fernanda' });
+  });
+
   it('captura algo en un paso de control que escribe en el proceso (la captura no está ciega)', async () => {
     const { salida } = await hallazgosDelPaso(() => {
       process.stdout.write('línea de control');
