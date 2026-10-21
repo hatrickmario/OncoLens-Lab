@@ -1,5 +1,9 @@
 import 'server-only';
-import { NOMBRE_COOKIE_DE_SESION, type MotivoDeFalloDeTransporte } from './clinical-api';
+import {
+  cabecerasHaciaNavegador,
+  NOMBRE_COOKIE_DE_SESION,
+  type MotivoDeFalloDeTransporte,
+} from './clinical-api';
 import type { DependenciasDelBff } from './dependencias';
 import type { LineaDeRegistro } from './registro';
 import { respuestaPropia } from './respuestas';
@@ -54,6 +58,26 @@ export function cookieDeSesionSegura(respuesta: Response): string | undefined {
     .getSetCookie()
     .find((valor) => valor.startsWith(`${NOMBRE_COOKIE_DE_SESION}=`));
   return cookie !== undefined && cookieEsSegura(cookie) ? cookie : undefined;
+}
+
+/**
+ * 204 hacia el navegador con la única `Set-Cookie` de `oncolens_session` tal cual la fijó el proveedor (la sesión nueva
+ * en el login, la borrada en el logout) y solo si cumple `cookieDeSesionSegura`; si no, 502 propio.
+ */
+export function reenviarCookieDeSesionSegura(
+  respuesta: Response,
+  dependencias: DependenciasDeAutenticacion,
+  evento: string,
+  traceId: string,
+): Response {
+  const cookie = cookieDeSesionSegura(respuesta);
+  if (cookie === undefined) {
+    return responderConFalloDeAutenticacion(dependencias, evento, traceId, 'sin_cookie_de_sesion');
+  }
+  dependencias.registrar({ event: evento, status: 204, traceId });
+  const cabeceras = cabecerasHaciaNavegador(respuesta);
+  cabeceras.append('Set-Cookie', cookie);
+  return new Response(null, { status: 204, headers: cabeceras });
 }
 
 function cookieEsSegura(cookie: string): boolean {
