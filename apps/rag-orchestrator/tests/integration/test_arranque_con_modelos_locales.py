@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, PuertosDelCorpus, crear_app
 from app.config.settings import Settings
 from app.domain.modelos import describir_modelo
+from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.infrastructure.models.local import ModelosDeRecuperacion, cargar_modelos_locales
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion
@@ -171,7 +172,9 @@ def test_con_modelos_y_corpus_el_arranque_falla_nombrando_clinical_catalog_path_
 ) -> None:
     modelos.variables["EMBEDDING_DIM"] = "8"
 
-    with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
+    with pytest.raises(
+        CatalogoNoDisponible
+    ) as error:  # el fallo cerrado ya ocurre al montar el catálogo (US-041)
         _componer_con_corpus(modelos, clinical_catalog_path=None)
 
     assert "CLINICAL_CATALOG_PATH" in str(error.value)
@@ -183,6 +186,7 @@ def test_con_modelos_y_corpus_el_arranque_falla_sin_la_ruta_cuando_la_lista_de_t
     modelos.variables["EMBEDDING_DIM"] = "8"
     sin_lista = tmp_path / "catalogo-sin-lista"
     sin_lista.mkdir()
+    (sin_lista / "manifest.json").write_text('{"version": "1.0.0"}', encoding="utf-8")
 
     with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
         _componer_con_corpus(modelos, clinical_catalog_path=sin_lista)

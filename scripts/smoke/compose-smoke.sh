@@ -141,6 +141,30 @@ compose exec -T rag-orchestrator python -c "import os; open(os.path.join(os.envi
   || fallo "AC-3: rag-orchestrator no pudo escribir en TMPDIR"
 bien "AC-3 rag-orchestrator no escribe en /app y sí en TMPDIR"
 
+# US-041 AC-3: el catálogo clínico se monta de solo lectura en ambos backends; escribir en CLINICAL_CATALOG_PATH falla con
+# EROFS (código de salida 7). Cada intento corre bajo `timeout 10` DENTRO del contenedor (un montaje colgado no cuelga el
+# smoke; si vence sale 124 y falla). Si el montaje resultara rw, se borra el archivo de prueba antes de fallar, para no
+# dejar `escritura-de-prueba` en packages/clinical-catalogs del host. La salida no nombra la ruta.
+catalogo_es_de_solo_lectura() {
+  local servicio="$1"
+  shift
+  local codigo=0
+  compose exec -T "$servicio" timeout 10 "$@" >/dev/null 2>&1 || codigo=$?
+  if [ "$codigo" = "0" ]; then
+    compose exec -T "$servicio" sh -c 'rm -f "$CLINICAL_CATALOG_PATH/escritura-de-prueba"' >/dev/null 2>&1 || true
+    fallo "US-041 AC-3: $servicio pudo escribir en el catálogo montado"
+  fi
+  [ "$codigo" = "7" ] || fallo "US-041 AC-3: la escritura de $servicio en el catálogo no falló por solo lectura (EROFS); salida $codigo"
+}
+catalogo_es_de_solo_lectura clinical-api node -e "try{require('fs').writeFileSync(require('path').join(process.env.CLINICAL_CATALOG_PATH,'escritura-de-prueba'),'x');process.exit(0)}catch(e){process.exit(e.code==='EROFS'?7:1)}"
+catalogo_es_de_solo_lectura rag-orchestrator python -c "import errno,os,sys
+try:
+    open(os.path.join(os.environ['CLINICAL_CATALOG_PATH'], 'escritura-de-prueba'), 'w')
+except OSError as e:
+    sys.exit(7 if e.errno == errno.EROFS else 1)
+sys.exit(0)"
+bien "US-041 AC-3 el catálogo clínico es de solo lectura en clinical-api y rag-orchestrator"
+
 # AC-6: cada pregunta de fixture devuelve su ejemplo; una pregunta que no es de fixture devuelve "sin evidencia".
 # US-054: /rag/query exige el JWT de servicio ES256. Se firma DENTRO del contenedor clinical-api con el código
 # compilado real (clave y TTL de su configuración, reloj del sistema, transporte createRagOrchestratorFetch):
@@ -160,23 +184,36 @@ require('assert').deepStrictEqual(JSON.parse(resto.join(' ')), require('$raiz/co
 " "$1" "$2"
 }
 
+# El 409 de versión de catálogo (US-041) se aplica también al modo fake: los ejemplos de petición llevan catalogVersion
+# "2026.10.0" y el catálogo montado es otro. El smoke sustituye SOLO ese campo por la versión del manifest.json montado
+# (la misma fuente que lee rag-orchestrator); el ejemplo del contrato no cambia y el 409 no se relaja.
+peticion_con_catalogo_montado() {
+  node -e "
+const fs = require('fs');
+const manifiesto = JSON.parse(fs.readFileSync('$raiz/packages/clinical-catalogs/manifest.json', 'utf8'));
+const cuerpo = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+cuerpo.catalogVersion = manifiesto.version;
+process.stdout.write(JSON.stringify(cuerpo));
+" "$1"
+}
+
 pares="$(node -e "
 const i=require('$raiz/contracts/examples/index.json').examples;
 for (const e of i.filter(e=>e.target==='#/components/schemas/RagQueryInternalResponse')) console.log(e.request+' '+e.file);
 ")"
 while read -r peticion respuesta; do
-  salida="$(consultar_rag <"$raiz/contracts/examples/$peticion")"
+  salida="$(peticion_con_catalogo_montado "$raiz/contracts/examples/$peticion" | consultar_rag)"
   es_respuesta_200_igual_a "$salida" "$respuesta" || fallo "AC-6: $peticion no devolvió $respuesta"
   bien "AC-6 $peticion devuelve $respuesta"
 done <<< "$pares"
-ajena="$(node -e "const b=require('$raiz/contracts/examples/rag-query-request.json');b.query='Pregunta que no es de fixture';console.log(JSON.stringify(b))")"
+ajena="$(peticion_con_catalogo_montado "$raiz/contracts/examples/rag-query-request.json" | node -e "let c='';process.stdin.on('data',d=>c+=d).on('end',()=>{const b=JSON.parse(c);b.query='Pregunta que no es de fixture';console.log(JSON.stringify(b))})")"
 salida="$(printf '%s' "$ajena" | consultar_rag)"
 es_respuesta_200_igual_a "$salida" rag-query-sin-evidencia.json || fallo "AC-6: una pregunta que no es de fixture no devolvió sin evidencia"
 bien "AC-6 una pregunta que no es de fixture devuelve sin evidencia"
 # US-054 AC-1: las consultas de arriba (200 idéntico al ejemplo) ya van con el token del firmador real.
 bien "US-054 AC-1 un token firmado por el firmador real de clinical-api devuelve 200"
 # US-054 AC-2: sin JWT de servicio, /rag/query responde 401 con el cuerpo del contrato (y sin invocar al LLM).
-salida="$(consultar_rag_con sin-jwt <"$raiz/contracts/examples/rag-query-request.json")"
+salida="$(peticion_con_catalogo_montado "$raiz/contracts/examples/rag-query-request.json" | consultar_rag_con sin-jwt)"
 case "$salida" in
   401*TOKEN_SERVICIO_INVALIDO*) ;;
   *) fallo "US-054: /rag/query sin JWT de servicio respondió: $salida" ;;

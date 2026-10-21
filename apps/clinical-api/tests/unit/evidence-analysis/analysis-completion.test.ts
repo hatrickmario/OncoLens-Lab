@@ -6,7 +6,7 @@ import type {
   RagQueryInternalRequest,
   RagQueryInternalResponse,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { crearBaseDelAnalisisS1 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
+import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import type { RegistroDeAnalisis } from '../../../src/modules/evidence-analysis/analysis-record.js';
 import type { EntradaDeCierre } from '../../../src/modules/evidence-analysis/ports.js';
 import {
@@ -128,7 +128,7 @@ function cierreConFake(persistir: (registro: RegistroDeAnalisis) => Promise<Regi
         return persistir(registro);
       },
     },
-    base: crearBaseDelAnalisisS1({ textoDelSupuesto: 'Supuesto sintético.' }),
+    base: crearBaseDelAnalisis(),
     reloj: { now: () => new Date('2026-10-16T12:00:00.000Z') },
     idsDeAnalisis: () => UUID_FIJO,
     disclaimer: 'Aviso sintético.',
