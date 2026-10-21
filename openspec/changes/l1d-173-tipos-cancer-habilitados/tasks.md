@@ -1,0 +1,30 @@
+# Tasks — l1d-173-tipos-cancer-habilitados
+
+## 1. contratos
+
+- [ ] 1.1 (exento: sin cambio de spec) Confirmar con `contracts:check` que `tipo-no-habilitado.json` y `rag-query-tipo-no-habilitado-422.json` validan contra sus specs; si el ejemplo de `clinical-api` no valida con la Base del S1, corregir solo el ejemplo (commit `contract(L1D-173)`). No editar los `openapi.yaml`.
+
+## 2. clinical-platform
+
+- [ ] 2.1 (TDD estricto) Tests de aceptación en rojo: "responde 200 tipo_no_habilitado con evidenceOptions vacío y topRelevanceScore null, cero llamadas a rag-orchestrator y registro persistido cuando ENABLED_CANCER_TYPES=mama y el paciente (b) es de próstata [US-043 AC-2]", "la Base de tipo_no_habilitado trae patientDataUsed vacío, 0 recuperados y 0 sobre el umbral, las fuentes excluidas y la fecha de CORPUS_CUTOFF_DATE [US-043 AC-2]", "la ficha del paciente (a) informa cancerTypeEnabled true con mama,prostata [US-043 AC-1]" y "la ficha del paciente (b) informa false con solo mama [US-043 AC-3]" · integración (Supertest + PostgreSQL de test + MSW con contador; respuestas validadas contra el spec). Esqueleto de `exigirTipoHabilitado()`. Commit `test(L1D-173)`.
+- [ ] 2.2 (TDD estricto) Implementar `exigirTipoHabilitado()` en `case-guards.ts`, `construirBaseTipoNoHabilitado()` (D7) y la rama `tipo_no_habilitado` del service (persistencia antes de responder, RN-06; antes de construir el contexto); el adaptador `TiposDeCancerHabilitados` de L1D-72 usa la lista validada. Verificación: 2.1 en verde. Commit `feat(L1D-173)`.
+- [ ] 2.3 (test después: arranque) "no queda listo y nombra ENABLED_CANCER_TYPES y el valor cuando la lista está vacía o trae un tipo ausente del manifiesto [US-043 AC-5]" (Vitest sobre `arrancar()`); `validarTiposHabilitados()` en el módulo de configuración de L1D-167 (evento `configuracion_invalida`, tipo en `valorInvalido`); claves `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE` en la sección de `clinical-api` (D7) y en `.env.example` si faltan, con comentario de que la actualiza el script de carga del corpus.
+- [ ] 2.4 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
+
+## 3. ai-services
+
+- [ ] 3.1 (TDD estricto) Test de aceptación en rojo (Pytest, adapters falsos con contador): "test_rag_query_tipo_no_habilitado_responde_422_sin_invocar_llm" `@pytest.mark.ac("US-043", 4)`, respuesta validada contra el spec. Commit `test(L1D-173)`.
+- [ ] 3.2 (TDD estricto) Implementar `enabled_cancer_types` en `Settings` (validado contra el manifiesto de L1D-171), `exigir_tipo_habilitado()` en `domain/` y el mapeo a `422` en `api/errors.py`. Verificación: 3.1 en verde. Commit `feat(L1D-173)`.
+- [ ] 3.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
+
+## 4. frontend
+
+- [ ] 4.1 (Test del AC primero) Tests en rojo (Vitest + Testing Library + MSW desde `contracts/examples/`): "la ficha muestra el aviso de alcance y mantiene visibles diagnóstico y biomarcadores cuando cancerTypeEnabled es false [US-043 AC-3]" y "el panel muestra el aviso de alcance y la Base del análisis sin opciones ante tipo_no_habilitado [US-043 AC-2]". Commit `test(L1D-173)`.
+- [ ] 4.2 (Test del AC primero) Implementar `molecules/scope-notice.tsx`, la clave `alcance.tipoNoHabilitado` en `messages/es.json` (si no existe) y la clase `tipo_no_habilitado` en `clasificarResultado()`; montar el aviso en la ficha de L1D-72 y en el panel. Verificación: 4.1 en verde. Commit `feat(L1D-173)`.
+- [ ] 4.3 (Test del AC primero, E2E) Playwright con `ENABLED_CANCER_TYPES=mama`: ficha del paciente (b) con el aviso [US-043 AC-3]. **Diferida a L1D-278 (ARR-02 resto)** si el job de E2E no está en `main`.
+- [ ] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
+- [ ] 4.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
+
+## 5. cierre
+
+- [ ] 5.1 `openspec validate l1d-173-tipos-cancer-habilitados --strict`; suites de los tres contextos en verde; respuestas validadas contra el spec del proveedor (`contracts:verify-provider` o `assertMatchesSpec()`). `run-ai-eval` no aplica.

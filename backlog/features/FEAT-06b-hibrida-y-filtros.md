@@ -129,7 +129,7 @@ el análisis use exactamente eso, para que los filtros del panel no sean decorat
 - **AC-4 (invariante · historia completa enmascarada)** · Dado
   `filtersApplied.historiaCompleta = true` y FX-T4a-a, cuando se captura el payload,
   entonces `clinicalNotes` trae la nota con "refiere dolor leve" y sin "Lucía", "Rondón",
-  "52123456" ni "3001234567". `[RN-11]` `[readme §5.0 S3]` `[AC-T4.3]`
+  "1234567" ni "3001234567". `[RN-11]` `[readme §5.0 S3]` `[AC-T4.3]`
 - **AC-5 (borde · población)** · Dado un paciente adulto, cuando se procesa `Q-HER2`,
   entonces `doc-ped-1` (`pediatrico`) no llega a los candidatos y `doc-g1` (`adulto`) sí.
   `[IA-03]` `[AC-06.1]`

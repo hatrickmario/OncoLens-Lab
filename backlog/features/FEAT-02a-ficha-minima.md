@@ -49,6 +49,7 @@ decidir qué preguntarle al asistente de IA.
   si un test cambia un biomarcador a `requiere_revision`, entonces
   `pendingReviewCount = 1`. `[FR-04]` (asumido en la definición del contador)
   > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-6): ¿qué estados cuentan como "pendiente de revisión" en el contador de la ficha: solo `requiere_revision`, o también `auto_aceptado`?
+  > **Decidido (usuario, 2026-10-21):** `pendingReviewCount` cuenta solo `requiere_revision`; `auto_aceptado` se muestra como «sin verificar» en cada dato, en un aviso aparte que no bloquea (RN-26). `[S2 resp. 5]`
 
 ## Contexto técnico
 Módulo `patients` de `clinical-api` (lectura) + `IdentityService` para descifrar la
@@ -62,6 +63,7 @@ Tests: Supertest (AC-1 a AC-4, AC-6) y Playwright contra Compose con el seed (AC
 AC-2, AC-5).
 
 > Pendiente de definir en refinamiento (dueño: usuario · afecta: campo `PatientSummary.diagnosis`): FR-04 pide "diagnóstico vigente" y `PatientSummary` (readme §4.1) no trae `histology` ni `grade`; ¿la ficha debe mostrar la histología y el Gleason/ISUP de próstata (DEC-05) o quedan solo en la vista de caso (AC-02.7, S2)?
+> **Resuelto (refinamiento del S2, 2026-10-21):** el contrato vigente ya trae `histology`, `histologyCode`, `grade` y `gradings[]` en `Diagnosis`; la ficha los muestra (`docs/ux/S2/pantallas-s2.md` S2-04). Sin cambio de contrato.
 
 ## Non-goals
 Tendencia ↑ ↓ = (S2, US-091, tras DEC-08). Visor del documento de origen y datos
@@ -78,7 +80,7 @@ Acceso a la vista de caso (S2, US-090).
 
 > Linear: [L1D-73](https://linear.app/l1der-lab-mjbc/issue/L1D-73)
 
-`FEAT-02a` · Sprint 2 · Estimación **1** · — (decisión) · RN-08 · TBD-06 (reglas clínicas), ADR-12 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-01b (regla de diagnóstico extraído vs. vigente y origen del semáforo, S2), FEAT-03a (S2), FEAT-03b (conflictos, S3)
+`FEAT-02a` · Sprint 4 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`)* · Estimación **1** · — (decisión) · RN-08 · TBD-06 (reglas clínicas), ADR-12 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-01b (regla de diagnóstico extraído vs. vigente y origen del semáforo, S2), FEAT-03a (S2), FEAT-03b (conflictos, S3)
 
 ## Story
 Como oncólogo asesor, quiero validar la regla de vigencia de diagnósticos y las reglas
@@ -120,3 +122,4 @@ aplicación a datos extraídos es del S2 (FEAT-01b, FEAT-03a).
 | — | PRD FR-04: "Sprint 1–2" con tendencia | PRD §18.3.2 AC-02.4 (S2) y TBD-13 (umbrales antes del S2) | Tendencia en el S2 (US-091); en el S1 `trend = null` (US-051 AC-4) |
 | — | backlog/02-adrs.md: DEC-09 en la Feature FEAT-01b | Mapa de lotes de F3: DEC-09 en el S1 | Se ubica en FEAT-02a (S1) para que la historia quede en el milestone de su sprint; la bloqueada sigue siendo FEAT-01b |
 | Slicing v2 | readme §5.0 S1 (HU-02) y PRD §14 S1: ficha mínima en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): ficha en el S2 | El walking skeleton del S1 abre el panel del paciente semilla por ruta directa; la ficha llega en el S2 |
+| Ajuste del S2 | Slicing v2: US-019 · DEC-09 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S4, sesión con oncólogos | Se siguió el ajuste del S2 |

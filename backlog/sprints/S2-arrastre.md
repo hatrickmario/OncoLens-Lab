@@ -40,6 +40,8 @@ Total: 25 puntos de arrastre.
 
 ## ARR-02 · Los E2E y el visual-check se pueden ejecutar (D-3 + D-2)
 
+> **Estado (usuario, 2026-10-21, `[S2 resp. 1]`):** el cierre automático de L1D-278 al mergear #111 fue un error de la automatización GitHub → Linear; el resto (job de E2E en la CI y AC-3, `/login` con Tailwind v4 + shadcn/ui, ~3 pts) vuelve a *In Progress* en el S2 (change `l1d-278-e2e-ci-login-tailwind`).
+
 > Linear: [L1D-278](https://linear.app/l1der-lab-mjbc/issue/L1D-278) · Prioridad Alta · Est. 8 · Origen: deudas D-2 y D-3; tareas E2E de L1D-197 (3.3, 3.5, 4.2), L1D-139 (2.8, 3.2), L1D-140 (2.7, 3.5, 4.2, 4.3), L1D-193 y L1D-194 (3.3).
 
 **Como** equipo, **quiero** Playwright contra Compose en perfil de test con modelos fingidos y el sistema de diseño real (Tailwind v4 + shadcn/ui), **para** ejecutar los 12 E2E y los visual-checks que hoy están escritos o pendientes.
@@ -90,6 +92,8 @@ Total: 25 puntos de arrastre.
 
 > Linear: [L1D-281](https://linear.app/l1der-lab-mjbc/issue/L1D-281) · Prioridad Media (depende de la agenda) · Est. 3 · Origen: L1D-238 (3.1 a 3.5), DEC-02, decisión 81.
 
+> **Movida al S4 (usuario, 2026-10-21, `[S2 resp. 1]`):** en la misma sesión con los oncólogos que DEC-06, DEC-08 y DEC-09.
+
 **Como** PO, **quiero** medir el baseline manual con los oncólogos asesores, **para** tener VM-1 y VM-2 de referencia antes de comparar con OncoLens (G-Demo).
 
 **AC**
@@ -111,6 +115,7 @@ Total: 25 puntos de arrastre.
 2. *Given* L1D-265, *when* se cierra D-7 (`ruff format` limpio y `pytest tests/evaluation` sin fallos con las dependencias declaradas), *then* el change se archiva.
 3. *Given* L1D-166 (4.1, 4.2 y 5.2), *when* el administrador activa la protección de `main` y se archive L1D-140, *then* se cierran 4.1, 4.2 y 5.2 (ver el caso `ac2-cited-sources-build`).
 4. *Given* D-9, *when* se refina, *then* se decide si la seguridad web de `apps/web` (CSP, `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) se adelanta desde US-216 (S6).
+   > **Decidido (usuario, 2026-10-21):** US-216 se queda en el S6, antes de G-Piloto. `[S2 resp. 7]`
 5. *Given* US-231a y US-231b (sin issue de Linear), *when* se crean sus issues, *then* se enlazan con sus changes y se concilian 231a (3.2, 3.3) y 231b (1.0, 2.1, 3.1, 4.2, 4.4).
 6. *Given* la deuda de 169 sin ID (one-shot `clinical-migrate`, rol `clinical_seed` solo DML) y el RN-06 que no bloquea `DELETE`/`TRUNCATE`, *when* se registran en `backlog/features/README.md`, *then* tienen ID por asignar.
 

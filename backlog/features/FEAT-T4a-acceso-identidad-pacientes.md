@@ -13,9 +13,9 @@
 
 ## Fixtures
 
-- **FX-T4a-a · Paciente sintético con PII conocida.** `data_origin = sintetico`, `id_type = cedula_ciudadania`, `national_id = "52123456"`, `full_name = "Lucía Fernanda Rondón Peña"`, `birth_year = 1971`, `sex = F`, `agreement_reference = "CONV-TEST-01"`. `Diagnosis` activo: `cancer_type = mama`, `icd10_code = C50.9`, `TNM_8` `IIA`, `ECOG 1`, `diagnosed_at = hoy − 14 meses`. `Biomarker` HER2 `3+ (IHQ)`, `performed_at = hoy − 13 meses`, `review_status = verificado`. `ClinicalNote` (`nota_evolucion`, `hoy − 2 meses`): "Paciente Lucía Rondón (CC 52123456), tel. 3001234567, refiere dolor leve." `PriorTreatment` línea 1 "AC-T", inicio `hoy − 12 meses`, fin `hoy − 8 meses`, `end_reason = completado`. Fechas relativas a un reloj de test fijo.
+- **FX-T4a-a · Paciente sintético con PII conocida.** `data_origin = sintetico`, `id_type = cedula_ciudadania`, `national_id = "1234567"`, `full_name = "Lucía Fernanda Rondón Peña"`, `birth_year = 1971`, `sex = F`, `agreement_reference = "CONV-TEST-01"`. `Diagnosis` activo: `cancer_type = mama`, `icd10_code = C50.9`, `TNM_8` `IIA`, `ECOG 1`, `diagnosed_at = hoy − 14 meses`. `Biomarker` HER2 `3+ (IHQ)`, `performed_at = hoy − 13 meses`, `review_status = verificado`. `ClinicalNote` (`nota_evolucion`, `hoy − 2 meses`): "Paciente Lucía Rondón (CC 1234567), tel. 3001234567, refiere dolor leve." `PriorTreatment` línea 1 "AC-T", inicio `hoy − 12 meses`, fin `hoy − 8 meses`, `end_reason = completado`. Fechas relativas a un reloj de test fijo.
 - **FX-T4a-b · Usuarios.** `doc1@test.local` (rol `doctor`, activo), `admin@test.local` (rol `admin`, activo), `doc2@test.local` (rol `doctor`, `account_status = desactivado`), `lector@test.local` (rol de prueba `lectura` con solo `patients:read`). Contraseñas desde variables de entorno de test.
-- **FX-T4a-c · Paciente menor.** `data_origin = sintetico`, `id_type = tarjeta_identidad`, `national_id = "1098765432"`, `birth_year = año actual − 15`, `full_name = "Tomás Rondón"`; representante legal `madre`, `cedula_ciudadania` `"52123456"`, "Lucía Fernanda Rondón Peña".
+- **FX-T4a-c · Paciente menor.** `data_origin = sintetico`, `id_type = tarjeta_identidad`, `national_id = "1098765432"`, `birth_year = año actual − 15`, `full_name = "Tomás Rondón"`; representante legal `madre`, `cedula_ciudadania` `"1234567"`, "Lucía Fernanda Rondón Peña".
 
 ---
 
@@ -233,10 +233,10 @@ ni la auditoría, ni el histórico de investigación puedan exponer mi identidad
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** `[NFR-09]` · Dado FX-T4a-a guardado con `IdentityService`, cuando un test
   lee `identity.patient_identity` con SQL crudo, entonces `national_id_ciphertext` y
-  `full_name_ciphertext` no contienen `52123456` ni `Rondón`, `key_version = 1`, y
+  `full_name_ciphertext` no contienen `1234567` ni `Rondón`, `key_version = 1`, y
   `IdentityService.decrypt` devuelve los valores originales. `[RN-10]` `[ADR-6]` `[OL-01]`
 - **AC-2 (borde · índice ciego)** · Dados dos cálculos del índice para
-  `cedula_ciudadania` + `52123456`, y uno para `52123457`, cuando se comparan, entonces
+  `cedula_ciudadania` + `1234567`, y uno para `123456`, cuando se comparan, entonces
   los dos primeros son iguales y el tercero distinto, y ninguno contiene el número en
   claro. `[ADR-6]` `[FR-02]`
 - **AC-3 (borde · manipulación)** · Dado un `national_id_ciphertext` alterado en un
@@ -245,7 +245,7 @@ ni la auditoría, ni el histórico de investigación puedan exponer mi identidad
   código `IDENTITY_INTEGRITY_ERROR` sin texto cifrado ni descifrado. (asumido)
 - **AC-4 (invariante · no-fuga de identidad)** · Dado FX-T4a-a, después de registrarlo,
   consultar su ficha, buscarlo por documento y ejecutar un análisis, cuando un test
-  busca `52123456`, `Lucía` y `Rondón` en los logs de los tres servicios, en todas las
+  busca `1234567`, `Lucía` y `Rondón` en los logs de los tres servicios, en todas las
   tablas de `audit`, `research` y `clinical.ai_analysis_record` (todas las columnas
   `jsonb` y de texto) y en el payload capturado hacia `rag-orchestrator`, entonces no
   aparece ninguno. `[RN-10]` `[NFR-11]` `[AC-T4.2]`
@@ -350,19 +350,19 @@ paciente que voy a analizar.
   "SINTÉTICO" en todos los pacientes semilla. `[HU-06]` `[FR-02]`
 - **AC-2 (borde · búsqueda exacta por documento)** · Dado FX-T4a-a registrado, cuando
   se busca con `POST /platform/patients/search` y el cuerpo
-  `{ idType: "cedula_ciudadania", nationalId: "52123456" }`, entonces el resultado es
-  exactamente ese paciente; y con `nationalId = "5212345"` (número parcial), cero
+  `{ idType: "cedula_ciudadania", nationalId: "1234567" }`, entonces el resultado es
+  exactamente ese paciente; y con `nationalId = "12345"` (número parcial), cero
   resultados. `[FR-02]` `[ADR-6]`
 - **AC-3 (borde · búsqueda por nombre)** · Dado FX-T4a-a, cuando se busca
-  con `POST /platform/patients/search` y `{ name: "Rondón" }`, entonces el resultado contiene a FX-T4a-a, sin restringir por equipo
-  tratante (P-02). `[FR-02]` `[P-02]` (asumido en la semántica de coincidencia)
-  > Pendiente de definir en refinamiento (dueño: usuario · afecta: AC-3): ¿la búsqueda por nombre es exacta (nombre completo) o por coincidencia parcial sin tildes ni mayúsculas? FR-02 solo dice "búsqueda exacta" para el documento.
+  con `POST /platform/patients/search` y `{ name: "LUCIA  fernanda rondon PEÑA" }` (nombre completo, sin distinguir tildes, mayúsculas ni espacios repetidos), entonces el resultado contiene a FX-T4a-a, sin restringir por equipo
+  tratante (P-02); y con `{ name: "Rondón" }` (apellido suelto), cero resultados. `[FR-02]` `[P-02]` `[S2 resp. 4]`
+  > **Decidido (usuario, 2026-10-21):** búsqueda exacta sobre el nombre completo normalizado (`full_name_hmac`); sin índice por palabra, que revelaría qué pacientes comparten apellidos. `[S2 resp. 4]`
 - **AC-4 (borde · filtros)** · Dado el seed, cuando se filtra `dataOrigin=real_identificado`,
   entonces la lista está vacía; y con `status=activo`, contiene los cinco pacientes
   semilla. `[FR-02]`
 - **AC-5 (borde · identidad fuera de la URL)** · Dada la búsqueda del AC-2, cuando se
   leen los logs de acceso de `web` y `clinical-api`, entonces ninguna URL contiene
-  `52123456` ni el nombre, porque la identidad viaja solo en el cuerpo de
+  `1234567` ni el nombre, porque la identidad viaja solo en el cuerpo de
   `POST /platform/patients/search` (`GET /platform/patients` solo acepta filtros sin
   identidad: `status`, `dataOrigin`, `page`), y los cuerpos no se registran.
   `[RN-10]` `[NFR-11]` `[Pre-S1 resp. 22]`
@@ -406,9 +406,9 @@ arriesgar la identidad del paciente aunque escriba su nombre por error.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path · pregunta con PII)** `[SEG-04]` · Dado FX-T4a-a y la pregunta "¿Qué opciones
-  describe la evidencia para Lucía Rondón, CC 52123456, HER2 3+?", cuando se ejecuta el
+  describe la evidencia para Lucía Rondón, CC 1234567, HER2 3+?", cuando se ejecuta el
   análisis, entonces el payload capturado hacia `rag-orchestrator` no contiene
-  `52123456`, `Lucía`, `Rondón`, `3001234567`, el `patientId` ni `birthYear`, y la
+  `1234567`, `Lucía`, `Rondón`, `3001234567`, el `patientId` ni `birthYear`, y la
   `query` enviada conserva "HER2 3+" con marcadores de enmascaramiento en lugar de los
   identificadores. `[RN-11]` `[OL-03]` `[AC-T4.3]`
 - **AC-2 (borde · seudónimo por consulta)** · Dados dos análisis seguidos sobre
