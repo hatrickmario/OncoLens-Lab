@@ -349,3 +349,96 @@ export async function insertarContextoClinico(
     episodeId: episodio.id as string,
   };
 }
+
+/** Ids de las filas que añade FX-T1a-a (backlog FEAT-T1a): los tests afirman por ellos, no por posición. */
+export interface FilasDeFxT1aA {
+  ki67Id: string;
+  receptorEstrogenoEnConflictoId: string;
+  receptorEstrogenoDelSeedId: string;
+  progesteronaRechazadaId: string;
+  progesteronaReemplazadaId: string;
+}
+
+function filaDeBiomarcadorSintetico(ids: GeneradorDeIds, examId: string, resto: Fila): Fila {
+  return {
+    id: ids(),
+    exam_id: examId,
+    reference_range: '',
+    result_type: 'cualitativo',
+    clinical_significance: 'relevante',
+    significance_source: 'documento',
+    mapping_status: 'no_mapeado',
+    extraction_confidence: 'media',
+    source_span: '{}',
+    created_at: INSTANTE_FIJO,
+    ...resto,
+  };
+}
+
+/**
+ * FX-T1a-a: al paciente semilla (a) le añade un examen reciente con Ki-67 `20 %` (`requiere_revision`), receptor de
+ * estrógeno `90 %` (`requiere_revision`, en conflicto con el del seed) y dos receptores de progesterona que no deben
+ * llegar al contexto: uno `rechazado` y otro `reemplazado` (RN-07). Todo sintético (RN-13).
+ */
+export async function insertarFxT1aA(
+  cliente: Client,
+  ids: GeneradorDeIds,
+  patientId: string,
+): Promise<FilasDeFxT1aA> {
+  const { rows: episodios } = await cliente.query<{ id: string }>(
+    'SELECT id FROM clinical.care_episode WHERE patient_id = $1 ORDER BY opened_at LIMIT 1',
+    [patientId],
+  );
+  const { rows: seed } = await cliente.query<{ id: string }>(
+    `SELECT b.id FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
+      WHERE e.patient_id = $1 AND b.name = 'Receptor de estrógeno'`,
+    [patientId],
+  );
+  const receptorEstrogenoDelSeedId = seed[0]?.id ?? '';
+  const examen = await insertar(cliente, 'clinical.exam', {
+    id: ids(),
+    patient_id: patientId,
+    episode_id: episodios[0]?.id ?? '',
+    source_document_id: null,
+    exam_type: 'inmunohistoquimica',
+    source_lab: null,
+    entry_method: 'ocr',
+    performed_at: '2026-10-01', // el más reciente del paciente (AHORA = 2026-10-16)
+    created_at: INSTANTE_FIJO,
+  });
+  const biomarcador = (nombre: string, resto: Fila) =>
+    insertar(
+      cliente,
+      'clinical.biomarker',
+      filaDeBiomarcadorSintetico(ids, examen['id'] as string, {
+        name: nombre,
+        original_name: nombre,
+        ...resto,
+      }),
+    );
+  const ki67 = await biomarcador('Ki-67', {
+    value: '20 %',
+    result_type: 'cuantitativo',
+    review_status: 'requiere_revision',
+  });
+  const estrogeno = await biomarcador('Receptor de estrógeno', {
+    value: '90 %',
+    review_status: 'requiere_revision',
+    conflicts_with_id: receptorEstrogenoDelSeedId,
+  });
+  const rechazada = await biomarcador('Receptor de progesterona', {
+    value: 'Negativo',
+    review_status: 'rechazado',
+  });
+  const reemplazada = await biomarcador('Receptor de progesterona', {
+    value: 'Positivo',
+    review_status: 'reemplazado',
+  });
+  return {
+    ki67Id: ki67['id'] as string,
+    receptorEstrogenoEnConflictoId: estrogeno['id'] as string,
+    receptorEstrogenoDelSeedId,
+    progesteronaRechazadaId: rechazada['id'] as string,
+    progesteronaReemplazadaId: reemplazada['id'] as string,
+  };
+}

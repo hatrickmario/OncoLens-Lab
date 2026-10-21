@@ -164,6 +164,30 @@ export const SIN_EVIDENCIA: EscenarioDeRag = {
   cuerpo: respuestaSinEvidencia,
 };
 
+/** `LLM-OK` de FEAT-T2a: el ejemplo con evidencia sin limitaciones, para que la Base del builder no arrastre ninguna. */
+export const LLM_OK: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: { ...structuredClone(respuestaEjemplo), limitations: [] },
+};
+
+/** Como `LLM-OK`, pero Backend 2 descartó una afirmación sin soporte (`omittedClaims = 1`, US-064 AC-3). */
+export const CON_AFIRMACION_OMITIDA: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: { ...structuredClone(respuestaEjemplo), omittedClaims: 1 },
+};
+
+/** Como `LLM-OK`, pero con un supuesto verificado que declara el modelo. */
+export const CON_SUPUESTO_VERIFICADO: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: {
+    ...structuredClone(respuestaEjemplo),
+    assumptions: [{ text: 'Supuesto verificado sintético.' }],
+  },
+};
+
 export interface RagSimulado {
   readonly capturadas: CapturaDeRag[];
   llamadas(): number;
