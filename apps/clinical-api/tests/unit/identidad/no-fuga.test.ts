@@ -4,6 +4,7 @@ import {
   buscarFugaDeIdentidad,
   clavesDeIdentidadEnJson,
   ejecutarArnesDeNoFuga,
+  valoresDeIdentidad,
   valoresProhibidos,
 } from '../../support/no-fuga.js';
 
@@ -124,5 +125,36 @@ describe('ejecutarArnesDeNoFuga', () => {
     });
 
     expect(orden).toEqual(['registrar', 'analizar', 'valores', 'fuentes']);
+  });
+});
+
+describe('valoresDeIdentidad', () => {
+  const identidad = {
+    numeroDeDocumento: FX_T4A_A.numeroDeDocumento,
+    nombreCompleto: FX_T4A_A.nombreCompleto,
+  };
+
+  it('deriva documento, forma con puntos, nombre completo, forma normalizada y cada token del nombre', () => {
+    const valores = valoresProhibidos(valoresDeIdentidad(identidad));
+
+    expect(valores).toEqual(
+      expect.arrayContaining([
+        FX_T4A_A.numeroDeDocumento,
+        ['1', '234', '567'].join('.'),
+        FX_T4A_A.nombreNormalizado,
+        'lucia',
+        'fernanda',
+        'rondon',
+        'pena',
+      ]),
+    );
+  });
+
+  it('detecta Fernanda inyectada en un log (sonda de mutación)', () => {
+    const hallazgos = buscarFugaDeIdentidad(valoresDeIdentidad(identidad), [
+      { nombre: 'log:clinical-api[0]', texto: JSON.stringify({ event: 'x', nota: 'Fernanda' }) },
+    ]);
+
+    expect(hallazgos).toContainEqual({ fuente: 'log:clinical-api[0]', valor: 'fernanda' });
   });
 });

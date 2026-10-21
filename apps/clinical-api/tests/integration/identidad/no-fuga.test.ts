@@ -1,9 +1,8 @@
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { crearLectorDeIdentidad } from '../../../src/modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import type { IdentityService } from '../../../src/modules/patients/identity.service.js';
 import {
-  PII_FX_T4A_A,
   PREGUNTA_Q_HER2,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -13,11 +12,12 @@ import {
   ragSimulado,
   type MundoDeGateway,
 } from '../../support/gateway.js';
-import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
+import { servicioDeIdentidad } from '../../support/identidad.js';
 import {
   ejecutarArnesDeNoFuga,
   fuentesDeBaseDeDatos,
   type Fuente,
+  valoresDeIdentidad,
   type PasoDeNoFuga,
 } from '../../support/no-fuga.js';
 
@@ -78,35 +78,45 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
       },
     ];
 
-    const hallazgos = await ejecutarArnesDeNoFuga({
-      pasos,
-      valores: async () => [
-        FX_T4A_A.numeroDeDocumento,
-        ['1', '234', '567'].join('.'),
-        FX_T4A_A.nombre,
-        FX_T4A_A.apellido,
-        FX_T4A_A.nombreCompleto,
-        FX_T4A_A.nombreNormalizado,
-        PII_FX_T4A_A.nombre,
-        ...(await indicesCiegosDe(patientId)),
-      ],
-      fuentes: async (): Promise<Fuente[]> => [
-        ...logger.lineas.map((linea, indice) => ({
-          nombre: `log:clinical-api[${indice}]`,
-          texto: JSON.stringify(linea),
-        })),
-        ...rag.capturadas.map((captura, indice) => ({
-          nombre: `payload:rag-orchestrator[${indice}]`,
-          texto: captura.texto,
-        })),
-        ...rag.capturadas.map((captura, indice) => ({
-          nombre: `cabeceras:rag-orchestrator[${indice}]`,
-          texto: [...captura.headers].join('\n'),
-        })),
-        ...(await fuentesDeBaseDeDatos(mundo.cliente)),
-      ],
-    });
-
+    // Borde del proceso: todo lo que clinical-api escriba en stdout/stderr durante los pasos es una fuente más.
+    const salida: string[] = [];
+    const capturar = (chunk: unknown) => {
+      salida.push(String(chunk));
+      return true;
+    };
+    const espias = [
+      vi.spyOn(process.stdout, 'write').mockImplementation(capturar),
+      vi.spyOn(process.stderr, 'write').mockImplementation(capturar),
+    ];
+    let hallazgos: Awaited<ReturnType<typeof ejecutarArnesDeNoFuga>>;
+    try {
+      hallazgos = await ejecutarArnesDeNoFuga({
+        pasos,
+        valores: async () => {
+          const guardada = await identidad.descifrar(patientId);
+          if (guardada === null) throw new Error('la identidad de FX-T4a-a no quedó guardada');
+          return [...valoresDeIdentidad(guardada), ...(await indicesCiegosDe(patientId))];
+        },
+        fuentes: async (): Promise<Fuente[]> => [
+          ...logger.lineas.map((linea, indice) => ({
+            nombre: `log:clinical-api[${indice}]`,
+            texto: JSON.stringify(linea),
+          })),
+          ...rag.capturadas.map((captura, indice) => ({
+            nombre: `payload:rag-orchestrator[${indice}]`,
+            texto: captura.texto,
+          })),
+          ...rag.capturadas.map((captura, indice) => ({
+            nombre: `cabeceras:rag-orchestrator[${indice}]`,
+            texto: [...captura.headers].join('\n'),
+          })),
+          ...salida.map((texto, indice) => ({ nombre: `salida:proceso[${indice}]`, texto })),
+          ...(await fuentesDeBaseDeDatos(mundo.cliente)),
+        ],
+      });
+    } finally {
+      espias.forEach((espia) => espia.mockRestore());
+    }
     expect(rag.llamadas()).toBe(1);
     expect(hallazgos).toEqual([]);
   });

@@ -34,6 +34,25 @@ export interface PasoDeNoFuga {
 const sinTildesYEnMinusculas = (texto: string): string =>
   texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
+/**
+ * Valores de una identidad guardada que no pueden salir: documento y su forma con puntos, nombre completo, su forma
+ * sin tildes y cada token del nombre (`Fernanda` y `Peña` incluidos), derivados de lo que hay en la fila.
+ */
+export function valoresDeIdentidad(identidad: {
+  readonly numeroDeDocumento: string;
+  readonly nombreCompleto: string;
+}): string[] {
+  const conPuntos = identidad.numeroDeDocumento.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const tokens = identidad.nombreCompleto.split(/\s+/);
+  return [
+    identidad.numeroDeDocumento,
+    conPuntos,
+    identidad.nombreCompleto,
+    sinTildesYEnMinusculas(identidad.nombreCompleto),
+    ...tokens,
+  ];
+}
+
 /** Valores que no pueden aparecer en ninguna fuente. Los de menos de 4 caracteres se ignoran: darían falsos positivos. */
 export function valoresProhibidos(valores: readonly string[]): string[] {
   const minimo = 4;
