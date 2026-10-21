@@ -25,18 +25,11 @@ from tests.support import contract
 
 MARCADOR_SALIDA = "sin_verificacion_de_proveedor"
 
-_respuestas_verificadas = 0
 _activa = True
 
 
-def respuestas_verificadas() -> int:
-    return _respuestas_verificadas
-
-
 def _registrar_verificacion() -> None:
-    """Cuenta la respuesta y, si `CONTRACT_VERIFY_REPORT` existe, deja una línea para `verify-provider.mjs`."""
-    global _respuestas_verificadas
-    _respuestas_verificadas += 1
+    """Si `CONTRACT_VERIFY_REPORT` existe, deja una línea por respuesta para `verify-provider.mjs`."""
     archivo = os.environ.get("CONTRACT_VERIFY_REPORT")
     if archivo:
         with open(archivo, "a", encoding="utf-8") as reporte:
