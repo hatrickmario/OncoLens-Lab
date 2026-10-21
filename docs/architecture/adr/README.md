@@ -10,7 +10,7 @@ van como DEC en [`docs/decisions/`](../../decisions/).
 | [ADR-36](ADR-36-fuentes-y-licencias.md) | Fuentes y licencias del corpus científico | aceptado | 2026-10-09 | US-007 (L1D-50) |
 | [ADR-39](ADR-39-modelos-locales.md) | Modelos locales y runtime (fase A: recuperación y verificación; fase B pendiente) | propuesto | 2026-10-16 | US-012 (L1D-102) |
 | ADR-40 | PII | pendiente | — | — |
-| ADR-41 | Evaluación RAG | pendiente | — | US-014 |
+| [ADR-41](ADR-41-evaluacion-ia.md) | Evaluación de la calidad de la IA: framework propio con Pytest, NLI como juez principal de fidelidad y juez LLM local secundario | propuesto | 2026-10-21 | US-014 (L1D-232) |
 | ADR-42 | Streaming de progreso | pendiente | — | — |
 | ADR-43 | Catálogo del corpus en base separada | pendiente | — | — |
 | ADR-44 | Stack de observabilidad (Prometheus, Grafana, OpenTelemetry) | pendiente (Post-MVP) | — | US-028 |
