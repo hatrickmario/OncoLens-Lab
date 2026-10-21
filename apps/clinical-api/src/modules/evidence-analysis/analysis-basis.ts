@@ -1,14 +1,20 @@
 import type { AnalysisBasis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type {
+  ClinicalContext,
   RagQueryInternalRequest,
   RagQueryInternalResponse,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
+import { verbalizarDatoDelContexto, type DatoDelContexto } from './analysis-basis.verbalizacion.js';
 import type { AnalysisBasisBuilder } from './ports.js';
 
-export interface ConfiguracionDeLaBase {
-  /** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`: supuesto fijo de la Base del análisis del S1 (`[S1 resp. 30]`). */
-  textoDelSupuesto: string;
-}
+/**
+ * Supuesto declarado mientras el inciso (b) no se calcule (US-128, S3/S4): sin él, `missingCriticalData = []` se
+ * leería como "no falta nada". US-128 lo retira. Texto fijo del builder, no configurable (design 4).
+ */
+export const SUPUESTO_FALTANTES_NO_CALCULADOS: AnalysisBasis['assumptions'][number] = {
+  text: 'Los faltantes críticos aún no se calculan en esta versión',
+  origin: 'regla_catalogo',
+};
 
 const FUENTES_EN_ORDEN = ['guias', 'ensayos', 'publicaciones'] as const;
 
@@ -19,41 +25,54 @@ function fuentesSeleccionadas(
   return FUENTES_EN_ORDEN.filter((fuente) => seleccion[fuente] === true);
 }
 
-/**
- * Supuestos de la Base: los que verificó el LLM (vienen sin origen en la respuesta interna) y, al final, el supuesto
- * fijo del S1 que impide leer las listas vacías como "no se usaron datos" ni "no faltan datos".
- */
-function supuestosDeLaBase(
-  respuesta: RagQueryInternalResponse,
-  textoDelSupuesto: string,
-): AnalysisBasis['assumptions'] {
+/** `r12` → 12: la referencia opaca que asigna `construirContextoPermitido()` es correlativa por petición. */
+function posicionDeDataRef(dataRef: string): number {
+  return Number(/^r(\d+)$/.exec(dataRef)?.[1] ?? Number.MAX_SAFE_INTEGER);
+}
+
+function datosDelContexto(contexto: ClinicalContext): DatoDelContexto[] {
   return [
-    ...respuesta.assumptions.map(({ text }) => ({ text, origin: 'llm_verificado' as const })),
-    { text: textoDelSupuesto, origin: 'regla_catalogo' as const },
+    ...(contexto.diagnosis === null
+      ? []
+      : [{ tipo: 'diagnostico' as const, dato: contexto.diagnosis }]),
+    ...contexto.biomarkers.map((dato) => ({ tipo: 'biomarcador' as const, dato })),
+    ...contexto.attributes.map((dato) => ({ tipo: 'atributo' as const, dato })),
+    ...contexto.priorTreatments.map((dato) => ({ tipo: 'tratamiento' as const, dato })),
+    ...contexto.events.map((dato) => ({ tipo: 'evento' as const, dato })),
   ];
 }
 
-/** Base del análisis del S2 (US-066): esqueleto; la implementación llega con su `feat`. */
-export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
-  return {
-    construir() {
-      throw new Error('no implementado');
-    },
-  };
+/**
+ * Inciso (a): una entrada por dato del contexto desidentificado que se envió a Backend 2, en el orden de su `dataRef`.
+ * Los ejes de revisión se copian de la procedencia; los rechazados y reemplazados nunca llegan al contexto (RN-07).
+ */
+function datosDelPacienteUsados(contexto: ClinicalContext): AnalysisBasis['patientDataUsed'] {
+  return datosDelContexto(contexto)
+    .sort((a, b) => posicionDeDataRef(a.dato.dataRef) - posicionDeDataRef(b.dato.dataRef))
+    .map((entrada) => ({
+      label: verbalizarDatoDelContexto(entrada),
+      reviewStatus: entrada.dato.provenance.reviewStatus,
+      conflict: entrada.dato.provenance.conflict,
+    }));
+}
+
+/** Supuestos que verificó el LLM (la respuesta interna no trae su origen) tras el supuesto declarado del builder. */
+function supuestosVerificados(respuesta: RagQueryInternalResponse): AnalysisBasis['assumptions'] {
+  return respuesta.assumptions.map(({ text }) => ({ text, origin: 'llm_verificado' as const }));
 }
 
 /**
- * `construirBaseS1()`: la Base del análisis mínima del S1, con la forma final del contrato y lo que ya devuelve
- * Backend 2. El detalle de datos usados y faltantes llega con US-066 (S2), que sustituye este adaptador.
+ * Base del análisis del S2 (FR-27, US-066): determinista y sin E/S. Función pura de la petición interna, la respuesta
+ * interna y `continueWithWarning`; la sustituye en la raíz de composición sin tocar el service.
  */
-export function crearBaseDelAnalisisS1(config: ConfiguracionDeLaBase): AnalysisBasisBuilder {
+export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
   return {
     construir(request, respuesta, continueWithWarning) {
       return {
-        patientDataUsed: [],
+        patientDataUsed: datosDelPacienteUsados(request.clinicalContext),
         missingCriticalData: [],
         continuedWithWarning: continueWithWarning,
-        assumptions: supuestosDeLaBase(respuesta, config.textoDelSupuesto),
+        assumptions: [{ ...SUPUESTO_FALTANTES_NO_CALCULADOS }, ...supuestosVerificados(respuesta)],
         sourcesConsulted: {
           selected: fuentesSeleccionadas(request.sourcesSelected),
           filters: request.filtersApplied,

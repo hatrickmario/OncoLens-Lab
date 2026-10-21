@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
+import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import type { ClinicalContext } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import {
   CON_AFIRMACION_OMITIDA,
   LLM_OK,
@@ -50,20 +52,18 @@ async function analizar(traceId: string, query: string) {
     .send({ patientId: idDePaciente('a'), query, sourcesSelected: TODAS_LAS_FUENTES });
   expect(respuesta.status).toBe(200);
   assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
-  return respuesta.body as { analysisBasis: Record<string, any> } & Record<string, any>;
+  return respuesta.body as EvidenceAnalysis;
 }
 
 const dataRefsEnviados = (): string[] => {
-  const contexto = rag.capturadas[0]!.cuerpo['clinicalContext'] as Record<string, any>;
+  const contexto = rag.capturadas[0]!.cuerpo['clinicalContext'] as ClinicalContext;
   return [
-    contexto['diagnosis'],
-    ...contexto['biomarkers'],
-    ...contexto['attributes'],
-    ...contexto['priorTreatments'],
-    ...contexto['events'],
-  ]
-    .filter((dato) => dato !== null)
-    .map((dato) => dato.dataRef as string);
+    contexto.diagnosis,
+    ...contexto.biomarkers,
+    ...contexto.attributes,
+    ...contexto.priorTreatments,
+    ...contexto.events,
+  ].flatMap((dato) => (dato === null ? [] : [dato.dataRef]));
 };
 
 describe('Base del análisis (FR-27)', () => {

@@ -73,7 +73,7 @@ describe('verbalizarDatoDelContexto', () => {
         lineNumber: linea,
         setting: 'adyuvante',
         regimenName: 'AC-T',
-        atcCodes: [],
+        atcCodes: [] as string[],
         monthsSinceStart: 12,
         monthsSinceEnd: 8,
         endReason: 'completado',

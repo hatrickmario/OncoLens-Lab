@@ -88,8 +88,6 @@ export const PREGUNTA_Q_SIN =
 /** Espeja el valor de `AI_DISCLAIMER_TEXT` de `.env.example`: el literal validado (PRD E-11, S1 resp. 32). */
 export const DISCLAIMER_DE_TEST =
   'Generado por IA; requiere validación clínica independiente por el oncólogo tratante.';
-export const SUPUESTO_S1_DE_TEST =
-  'Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes.';
 /** Plazo corto REAL: el temporizador que aborta la llamada es del runtime; el reloj de la aplicación sí está congelado. */
 export const RAG_TIMEOUT_MS_DE_TEST = 150;
 const RESPUESTA_TARDIA_MS = 2000;
@@ -296,7 +294,6 @@ export async function montarGateway(
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
-      analysisBasisAssumptionText: SUPUESTO_S1_DE_TEST,
     },
     reloj,
     traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },

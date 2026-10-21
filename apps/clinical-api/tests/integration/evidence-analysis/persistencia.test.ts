@@ -7,7 +7,6 @@ import {
   PREGUNTA_Q_SIN,
   PUNTERO_200,
   SIN_EVIDENCIA,
-  SUPUESTO_S1_DE_TEST,
   TODAS_LAS_FUENTES,
   abrirSesion,
   contarEventosDelPaciente,
@@ -155,7 +154,7 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
     ['con evidencia', PREGUNTA_Q_HER2, undefined],
     ['sin evidencia', PREGUNTA_Q_SIN, SIN_EVIDENCIA],
   ])(
-    'incluye en analysisBasis.assumptions el supuesto fijo de configuración con patientDataUsed y missingCriticalData vacíos cuando el análisis es %s [US-053 AC-1]',
+    'incluye en analysisBasis.assumptions el supuesto declarado de faltantes no calculados con missingCriticalData vacío cuando el análisis es %s [US-053 AC-1]',
     async (_caso, pregunta, escenario) => {
       if (escenario !== undefined) rag.responder(escenario);
       const { app } = await gateway(`req_Supuesto${escenario === undefined ? 'A' : 'B'}01`);
@@ -164,10 +163,9 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
 
       expect(respuesta.status).toBe(200);
       const base = respuesta.body.analysisBasis;
-      expect(base.patientDataUsed).toEqual([]);
       expect(base.missingCriticalData).toEqual([]);
       expect(base.assumptions).toContainEqual({
-        text: SUPUESTO_S1_DE_TEST,
+        text: 'Los faltantes críticos aún no se calculan en esta versión',
         origin: 'regla_catalogo',
       });
       const fila = await leerRegistroPorTrace(

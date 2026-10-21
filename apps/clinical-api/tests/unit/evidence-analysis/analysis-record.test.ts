@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { crearBaseDelAnalisisS1 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
+import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
 import {
   armarRegistro,
@@ -13,11 +13,7 @@ import {
 const AHORA = new Date('2026-10-16T12:00:00.000Z');
 const request = peticion as RagQueryInternalRequest;
 const respuesta = validarRespuestaInterna(conEvidencia);
-const base = crearBaseDelAnalisisS1({ textoDelSupuesto: 'Supuesto sintético.' }).construir(
-  request,
-  respuesta,
-  true,
-);
+const base = crearBaseDelAnalisis().construir(request, respuesta, true);
 
 function entrada(resto: Partial<EntradaDelRegistro> = {}): EntradaDelRegistro {
   return {
