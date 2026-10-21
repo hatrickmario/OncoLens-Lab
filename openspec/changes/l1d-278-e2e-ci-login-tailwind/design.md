@@ -1,0 +1,93 @@
+# Design — l1d-278-e2e-ci-login-tailwind
+
+## Context
+
+`scripts/e2e/ejecutar.sh` hace secretos → stack fingido (`oncolens-e2e`) → esquema clínico → seed →
+`npm run build --workspaces` → Chromium → `playwright test` → `down -v` (~1 min desde cero en local).
+`apps/web` no tiene Tailwind ni shadcn; `/login` usa `login.module.css`, `login-form.module.css` y
+`campo-con-etiqueta.module.css` (este último solo lo usa `login-form`). `globals.css` define un
+subconjunto de los tokens de `docs/ux/sistema-de-diseno.md` §1. Next.js 16 con Turbopack, sin
+`webpack()` personalizado (CLAUDE.md).
+
+## Decisions
+
+### D1. Workflow aparte para los E2E
+- **Recomendada:** `.github/workflows/e2e.yml` (`pull_request` y `push` a `main`,
+  `permissions: contents: read`, acciones por SHA, `timeout-minutes: 30`) que llama a
+  `npm run test:e2e` con `CI=true`. `playwright.config.ts` ya decide `retries: process.env.CI ? 1 : 0`
+  y `trace: 'on-first-retry'`; el job sube `playwright-report/` y `test-results/` como artefacto con
+  **`retention-days: 3`** (repo público: el artefacto es descargable).
+- **Trazas sin cuerpos de request:** el *fixture* de E2E quita de la traza los `postData` y cuerpos
+  de `POST /api/*` (en particular `/api/auth/login`) antes de escribirla; un test del *fixture*
+  comprueba que la traza de un login fallido no contiene la contraseña de prueba. Los usuarios de los
+  E2E son **sintéticos** (`@example.test`, contraseñas de test generadas por `scripts/e2e/ejecutar.sh`,
+  nunca versionadas ni reutilizadas fuera de la CI).
+- Descartadas: job dentro de `ci.yml` excluido de `needs` de `ci-ok` (contradice el requisito de
+  L1D-166 «`ci-ok` depende de todos los jobs»); `continue-on-error` (prohibido por ese mismo spec).
+
+### D2. Criterio de estabilidad para hacerlo requerido
+10 ejecuciones consecutivas en verde en `main` sin depender del reintento. Hacerlo requerido (pasarlo
+a `ci.yml` y a `ci-ok`, o marcar el check como requerido en la protección de `main`) es una acción
+humana posterior (ARR-06 / L1D-282). Un E2E inestable es un bug del sprint (CLAUDE.md), no se pone en
+cuarentena.
+
+### D3. Tailwind v4 con los tokens del sistema de diseño como única fuente
+`globals.css`: `@import "tailwindcss";` y `@theme` que **referencia** los `--color-*` de `:root`
+(los completa con los de §1 que faltan); tipografía: **`system-ui` por ahora** (`--font-sans:
+system-ui, …`). El sistema de diseño (§Tipografía) nombra Public Sans pero no trae el archivo
+autoalojado (no hay `.woff2` en el repo) y la CSP prohíbe Google Fonts en runtime; Public Sans
+autoalojada (`next/font/local`, OFL) queda para otra historia y solo cambia el token. Escala de 4 px, radios 6/8/10, foco visible `outline 3px primary offset 2px`.
+shadcn/ui por copia (`components/ui/`, Atomic Design: átomos), sin su CLI en runtime.
+
+### D4. Migración sin cambio de comportamiento
+Se conservan textos (`lib/mensajes`), `id`/`aria-labelledby`, `role="alert"` del error, nombres
+accesibles y el `<form>`; por eso `tests/ui/login-*.test.tsx` y los E2E de login no cambian sus
+aserciones. El diálogo de login es el único con sombra (§1 Elevación).
+
+## Privacidad y ownership
+
+Sin cambios de flujo de datos: el navegador sigue hablando solo con `web`; la contraseña solo viaja en
+el cuerpo de `POST /api/auth/login`. `rag-orchestrator` no interviene.
+
+**Seguridad web:**
+- Validación: el formulario sigue usando el schema Zod compartido de login en cliente y servidor.
+- Sin variables `NEXT_PUBLIC_` nuevas. Sin módulos `server-only` nuevos.
+- Sin texto del LLM ni del corpus en esta pantalla; sin `dangerouslySetInnerHTML`.
+- CSP y cabeceras: Tailwind v4 compila a una hoja estática (sin estilos en línea inyectados en
+  runtime); los componentes de Radix usados (`Label`, `Slot`) no inyectan estilos. El visual-check
+  verifica 0 violaciones de CSP. Sin fuentes ni recursos de terceros.
+- Dependencias nuevas: las 7 de Impact, versiones exactas; resultado de `npm audit` en el PR (job de
+  `l1d-267` si ya existe; si no, adjunto).
+
+## Componentes y patrones
+
+- Átomos nuevos `components/ui/{card,input,label,button,alert}.tsx` (copias de shadcn ajustadas a los
+  tokens); `lib/utils.ts` con `cn()`.
+- `organisms/login-form.tsx` se mantiene como **un** organismo (`'use client'`, ya lo es) y deja de
+  usar `CampoConEtiqueta`, que se borra (su único consumidor pasa a `Label` + `Input`).
+- `app/login/page.tsx` sigue siendo RSC.
+- Sin patrones nuevos (ni hooks, ni providers, ni compound components): no hay evidencia (YAGNI).
+  Límite de 150 líneas por componente.
+- Referencia de pantalla: `docs/ux/S2/pantallas-s2.md` S2-01 (estructura de S1-01 con `Card`,
+  `Input`, `Label`, `Button`, `Alert`). Desviación: el pie y los avisos `?motivo=` de S2-01 quedan para
+  US-044 (l1d-198).
+
+## Contratos
+
+Sin cambios de contrato.
+
+## Dependencias y colaboradores
+
+`login-form` depende de los átomos `ui/*` y de `lib/mensajes`; `ejecutar.sh` gana un modo CI (sin
+`--mantener`, salida de Playwright en formato `github` + `html`).
+
+## Risks / Trade-offs
+
+- Primera adopción de Tailwind: puede alterar estilos globales (preflight) del resto de pantallas en
+  CSS Modules. Mitigación: visual-check también de la pantalla de análisis a 1280 px y E2E en verde.
+- Tiempo del job E2E en el *runner* (build de imágenes): caché de capas de Docker de Actions si supera
+  15 min.
+
+## Open Questions
+
+Ninguna. (Tipografía resuelta: `system-ui` hasta que exista Public Sans autoalojada, D3.)

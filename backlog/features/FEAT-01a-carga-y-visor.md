@@ -130,7 +130,7 @@ FX-01a-a y MinIO de test con inyección de fallos.
 
 > Linear: [L1D-58](https://linear.app/l1der-lab-mjbc/issue/L1D-58)
 
-`FEAT-01a` · Sprint 2 · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
+`FEAT-01a` · Sprint 3 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** la extracción (US-082, US-087) llega en el S3. En el S2 la cola se verifica con `rag-orchestrator` simulado (respuestas controladas de FX-01a-a); la extracción real se integra en el S3.
 
@@ -190,7 +190,7 @@ Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extr
 
 > Linear: [L1D-59](https://linear.app/l1der-lab-mjbc/issue/L1D-59)
 
-`FEAT-01a` · Sprint 2 · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
+`FEAT-01a` · Sprint 3 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
 
 ## Story
 Como oncólogo, quiero subir documentos desde la ficha o la vista de caso y ver cómo
@@ -400,3 +400,4 @@ US-081).
 | — | readme §4.1 lista `POST …/documents/batch` con `207` sin esquema de respuesta | — | No es conflicto sino vacío: US-077 propone el esquema y lo agrega al spec |
 | Slicing v2 | PRD FR-05, FR-07 y §14 S2; AC-01.1 (visor) y AC-01.2 (carga múltiple); readme §5.0 S2 (HU-04, HU-05) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): carga múltiple, visor y UI de cuarentena `si-hay-capacidad` | AC-01.2 (lote) y la parte de visor de AC-01.1 quedan en historias `si-hay-capacidad`; la cola y la carga individual siguen en el S2 |
 | Ajuste del 2026-10-07 | PRD FR-07 (Sprint 2) y readme §4.1: el archivo y el visor como una sola capacidad | Decisión del usuario (`01-requisitos.md` §15, "Ajustes al slicing v2"): descarga del PDF de origen en US-212 (S3, recorrido principal), visor en US-080 (`si-hay-capacidad`) | Decisión del usuario: US-212 sirve y audita el archivo en el S3; el visor con resaltado sigue diferido |
+| Ajuste del S2 | Slicing v2: US-078 y US-079 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S3 con US-082 (`/documents/extract` no existe aún) | Se siguió el ajuste del S2 |

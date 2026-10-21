@@ -190,9 +190,9 @@ corpus es de US-074. *Mutation testing* (S6).
 
 ## US-213 — La CI aplica umbrales de tamaño y complejidad, reglas de dependencias entre capas y la higiene de tests (TDD) en los dos backends y en `web`
 
-> Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263)
+> Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (US-213a) · [L1D-285](https://linear.app/l1der-lab-mjbc/issue/L1D-285) (US-213b)
 
-`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* · Estimación **5** *(a re-estimar en el planning del S1 tras añadir AC-8…AC-11 el 2026-10-09; propuesta: 8)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
+`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* **US-213a** · Sprint 3 **US-213b** · Estimación **8** = **US-213a** 5 (AC-1…AC-7, capas y umbrales, S2) + **US-213b** 3 (AC-8…AC-12, higiene de tests, mocks, cobertura y ejemplos, S3) `[S2 resp. 1]` · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
@@ -636,7 +636,7 @@ punta a punta sin registrar datos clínicos.
   `traceId = "t-123"`; y sin la cabecera, `clinical-api` genera uno y lo propaga.
   `[NFR-10]` `[readme §2.7]`
 - **AC-5 (borde · logs sin PHI)** · Dada una request de registro de paciente con
-  documento `52123456` y nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a) que falla con
+  documento `1234567` y nombre "Lucía Fernanda Rondón Peña" (FX-T4a-a) que falla con
   `422`, cuando se leen los logs de `clinical-api`, entonces no contienen el documento,
   el nombre ni el cuerpo de la request, y el paciente aparece solo por UUID cuando
   existe. `[NFR-11]` `[CLAUDE.md]`
@@ -670,3 +670,4 @@ del stream de logs).
 | S-01 | PRD §14 / readme §5.0: slicing original | Slicing "por hipótesis" (01-requisitos §15) | Sin cambio de sprint para esta Feature (S1 en ambos) |
 | Slicing v2 | readme §5.0 S1 y OL-01/OL-02: configuración validada al arranque y logs JSON con `traceId` en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-037 en el S2 | En el S1 la configuración se lee sin validación de arranque; no hay datos reales ni bandera `REAL_*` que guardar (RN-13) hasta el S6 |
 | S-Pre1 | Slicing v2 y ajustes del 2026-10-07/09: US-213, US-214, US-216 y US-217 en el S1 | DEC-03 (2026-10-09): capacidad de 80–90 puntos; el S1 tenía 124 | DEC-03 (`[Pre-S1 resp. 9]`): US-213, US-214 y US-217 al S2; US-216 al S6, antes de G-Piloto |
+| Ajuste del S2 | Slicing v2: US-213 (5) en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): re-estimada a 8 y partida: US-213a (5) S2 · US-213b (3) S3 | Se siguió el ajuste del S2 |

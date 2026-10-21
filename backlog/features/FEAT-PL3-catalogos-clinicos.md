@@ -160,6 +160,7 @@ como defensa en profundidad con el mismo catálogo montado (respuesta 3 del usua
 contra Compose con el seed; AC-4: Pytest con adapters falsos; AC-5: test de arranque.
 
 > Pendiente de definir en refinamiento (dueño: DEC-19 · afecta: nada en el S1): RN-20 exige el criterio de "listo" para habilitar un tipo, pero mama y próstata se habilitan desde el S1 con corpus semilla y catálogo `propuesta` (V-16). Escenario más probable de DEC-19: el criterio aplica como prerrequisito de G-Piloto, no de la demo sintética.
+> **Decidido (usuario, 2026-10-21):** se acepta el escenario más probable: el criterio de «listo» de DEC-19 es prerrequisito de G-Piloto (S6), no de la demo sintética. `[S2 resp. 6]`
 
 ## INVEST
 **Small** ✓ una comprobación en el gateway, un campo en la ficha y una defensa en Backend 2.
@@ -171,7 +172,7 @@ contra Compose con el seed; AC-4: Pytest con adapters falsos; AC-5: test de arra
 
 > Linear: [L1D-174](https://linear.app/l1der-lab-mjbc/issue/L1D-174)
 
-`FEAT-PL3` · Sprint 2 · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
+`FEAT-PL3` · Sprint 4 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`)* · Estimación **1** · — (decisión) · FR-04 · TBD-13 (tendencias), R-24 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-02b (cálculo de la tendencia ↑ ↓ = en ficha, vista de caso y contexto, US-091)
 
 ## Story
 Como oncólogo asesor, quiero validar el umbral de cambio de cada biomarcador del
@@ -211,3 +212,4 @@ FEAT-02b (S2).
 | V-12 | readme §3.3 #29 y PRD §14: validador de RN-29 con FEAT-04 en el S3 | El catálogo existe y se consume desde el S1 | Validador mínimo en el S1 (US-042); FEAT-04 US-001 lo amplía y sigue siendo la dueña de RN-29 |
 | — | PRD §7: "Backend 2 rechaza con `409` una versión distinta" (no dice qué responde `clinical-api`) | readme OL-03: mapeo de errores de Backend 2 a `502` | Se propaga `409` al cliente (no es un error de comunicación sino de configuración visible; regla del encargo: "si difieren, el análisis responde `409`") |
 | Slicing v2 | readme §5.0 S1 y OL-01: catálogo clínico v1 montado en ambos backends desde el S1; validador mínimo RN-29 en el S1 (lote 1) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): catálogo y tipos habilitados en el S2; validador mínimo `si-hay-capacidad` | El S1 usa el subconjunto CIE-10 del catálogo como datos del seed; montaje, `409` y `tipo_no_habilitado` llegan en el S2; RN-29 la verifica US-001 en el S4 |
+| Ajuste del S2 | Slicing v2: US-018 · DEC-08 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S4, sesión con oncólogos | Se siguió el ajuste del S2 |
