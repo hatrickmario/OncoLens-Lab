@@ -13,6 +13,7 @@
 | ARR-04 | L1D-280 | Mediciones de ADR-39 fase B en el MacBook de referencia | 3 | **Alta (temprana)** | L1D-274 y US-231a/b (AC con `models`) |
 | ARR-05 | L1D-281 | Baseline manual VM-1/VM-2 con los oncólogos (movida: antes de G-Demo) | 3 | Media | L1D-238 |
 | ARR-06 | L1D-282 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
+| ARR-07 | L1D-283 | URL de la fuente original en «Fragmento citado» (manifiesto, catálogo, UI) | 5 | **Alta** | ARR-02 (E2E) |
 
 Total: 25 puntos de arrastre.
 
@@ -111,3 +112,18 @@ Total: 25 puntos de arrastre.
 6. *Given* la deuda de 169 sin ID (one-shot `clinical-migrate`, rol `clinical_seed` solo DML) y el RN-06 que no bloquea `DELETE`/`TRUNCATE`, *when* se registran en `backlog/features/README.md`, *then* tienen ID por asignar.
 
 **Dependencias:** ARR-01 y ARR-02 para los puntos 2 y 3.
+
+## ARR-07 · URL de la fuente original en «Fragmento citado»
+
+> Linear: [L1D-283](https://linear.app/l1der-lab-mjbc/issue/L1D-283) · Prioridad Alta · Est. 5 · Origen: petición del usuario, 2026-10-20 (el panel «Fragmento citado» no muestra la URL de donde se extrajo el texto; el catálogo del corpus no la guarda: `source_url = None`, RN-25).
+
+**Como** médico que revisa una cita, **quiero** ver al final del panel «Fragmento citado» la URL de donde se extrajo el texto del documento, **para** abrir la fuente original y verificarla.
+
+**AC**
+1. *Given* `original_url` (https, con host) en un documento del manifiesto, *when* se lee, *then* `DocumentoDeSemilla.url_original` la trae; sin ella es `None`; `http`, `javascript:`, `ftp` o texto que no sea URL se rechazan nombrando documento y campo. El `source_url` existente (URL de descarga del texto) no cambia.
+2. *Given* el manifiesto real, *when* se lee, *then* los 10 documentos declaran `original_url` https (cancer.gov para NCI; XML JATS de Europe PMC para PMC).
+3. *Given* la migración de Alembic y `data-model.md` §4.6, *when* se carga la semilla, *then* `corpus.corpus_document.source_url` (text, nullable) guarda la URL y la ficha de la cita la devuelve como `sourceUrl`; sin URL, `null`.
+4. *Given* una cita con `sourceUrl`, *when* se abre «Ver fragmento», *then* el panel muestra al final «Fuente original: <enlace>» (pestaña nueva, solo http(s) seguro); sin URL, «No disponible».
+5. *Given* el stack fingido, *when* corre el E2E, *then* una spec comprueba el enlace en el panel.
+
+**Notas:** sin cambio de contrato (`sourceUrl` ya existe, nullable). Un corpus ya cargado exige recargar la semilla (los documentos con el mismo checksum se omiten). **Dependencias:** ARR-02 (E2E ejecutables, hecho en #111).

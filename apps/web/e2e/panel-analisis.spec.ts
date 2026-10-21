@@ -37,6 +37,24 @@ test.describe('Panel de análisis (L1D-140)', () => {
     expect(peticiones.filter((u) => u.endsWith('/api/evidence-analyses'))).toHaveLength(1);
   });
 
+  test('muestra al final del Fragmento citado el enlace a la fuente original cuando la cita trae su URL [ARR-07 AC-4]', async ({
+    page,
+  }) => {
+    await analizar(page, preguntaHer2);
+    await esperarResultado(page);
+    await page
+      .getByRole('button', { name: new RegExp(`${cita.sourceName}.*${cita.externalId}`) })
+      .click();
+    await page.getByRole('button', { name: textos.cita.verFragmento }).click();
+
+    const panel = page.getByRole('complementary', { name: textos.fragmento.titulo });
+    const enlace = panel.getByRole('link', { name: cita.sourceUrl });
+    await expect(enlace).toHaveAttribute('href', cita.sourceUrl);
+    await expect(enlace).toHaveAttribute('target', '_blank');
+    await expect(enlace).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(panel.getByRole('button', { name: textos.fragmento.volver })).toBeVisible();
+  });
+
   test('muestra la relevancia como metadato secundario después de las citas [US-061 AC-2]', async ({
     page,
   }) => {

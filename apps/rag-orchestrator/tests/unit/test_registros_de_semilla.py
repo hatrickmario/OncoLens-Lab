@@ -131,3 +131,13 @@ def test_la_clase_de_licencia_del_dominio_coincide_con_la_del_contrato_generado(
     from app.schemas.generated.models import LicenseClass
 
     assert {c.value for c in ClaseDeLicencia} == {c.value for c in LicenseClass}
+
+
+def test_el_registro_embebido_copia_la_url_original_del_documento_en_source_url() -> None:
+    documento = documento_de_prueba(
+        url_original="https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
+    )
+
+    registro = registro_embebido(documento, ADMITIDO, CHECKSUM, AHORA)
+
+    assert registro.source_url == "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"

@@ -9,6 +9,7 @@ del catálogo no lo es.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
@@ -58,6 +59,7 @@ CLAVES_OPCIONALES = frozenset(
         "text",
         "text_path",
         "source_url",
+        "original_url",
     }
 )
 CLAVES_DE_TEXTO = ("text", "text_path", "source_url")
@@ -124,6 +126,7 @@ def _documento(crudo: Any, posicion: int) -> DocumentoDeSemilla:
         texto=crudo.get("text"),
         ruta_texto=crudo.get("text_path"),
         url_fuente=crudo.get("source_url"),
+        url_original=_url_https(crudo.get("original_url"), clave),
     )
 
 
@@ -166,6 +169,16 @@ def _texto(crudo: Mapping[str, Any], campo: str, clave: str) -> str:
 
 def _opcional(valor: Any) -> str | None:
     return valor.strip() if isinstance(valor, str) and valor.strip() else None
+
+
+def _url_https(valor: Any, clave: str) -> str | None:
+    """URL pública del documento original: solo ``https`` con host (la UI la abre en una pestaña nueva)."""
+    if valor is None:
+        return None
+    partes = urlsplit(valor) if isinstance(valor, str) else None
+    if partes is None or partes.scheme != "https" or not partes.hostname:
+        raise ManifiestoInvalido(f"{clave}: original_url debe ser una URL https con host")
+    return valor.strip()
 
 
 def _fecha(valor: Any, campo: str, clave: str) -> date:

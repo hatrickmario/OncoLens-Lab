@@ -113,3 +113,10 @@ def test_la_atribucion_nombra_cada_documento_de_la_semilla_real() -> None:
     atribucion = (DIRECTORIO / "ATTRIBUTION.md").read_text(encoding="utf-8")
 
     assert all(f"`{d.document_key}`" in atribucion for d in DOCUMENTOS)
+
+
+@pytest.mark.parametrize("documento", DOCUMENTOS, ids=lambda d: d.document_key)
+def test_cada_documento_de_la_semilla_real_declara_la_url_https_de_donde_se_extrajo_el_texto(
+    documento: DocumentoDeSemilla,
+) -> None:
+    assert documento.url_original is not None and documento.url_original.startswith("https://")

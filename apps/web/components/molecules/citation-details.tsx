@@ -14,6 +14,17 @@ export function AutoresDeLaCita({ autores }: { autores: string | null }) {
   );
 }
 
+/** Enlace a la fuente original solo si la URL es segura; si no, "No disponible" (RN-25). Lo comparten la cita y el fragmento. */
+export function EnlaceFuenteOriginal({ url }: { url: string | null | undefined }) {
+  return esUrlHttpSegura(url) ? (
+    <a className={estilos.enlace} href={url ?? undefined} target="_blank" rel="noopener noreferrer">
+      {url}
+    </a>
+  ) : (
+    valorONoDisponible(null)
+  );
+}
+
 export interface CitationDetailsProps {
   cita: CitedSource;
   id: string;
@@ -47,18 +58,7 @@ export function CitationDetails({ cita, id, onVerFragmento }: CitationDetailsPro
         <dd>{licencia[cita.licenseClass]}</dd>
         <dt>{textos.fuenteOriginal}</dt>
         <dd>
-          {esUrlHttpSegura(cita.sourceUrl) ? (
-            <a
-              className={estilos.enlace}
-              href={cita.sourceUrl ?? undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {cita.sourceUrl}
-            </a>
-          ) : (
-            valorONoDisponible(null)
-          )}
+          <EnlaceFuenteOriginal url={cita.sourceUrl} />
         </dd>
       </dl>
       <button type="button" className={estilos.chip} onClick={onVerFragmento}>
