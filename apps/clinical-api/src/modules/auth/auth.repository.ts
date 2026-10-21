@@ -19,7 +19,10 @@ export interface NuevaSesion {
 
 export interface SesionConUsuario {
   userId: string;
-  rol: RolDeUsuario;
+  /** Nombre del rol tal como está en `auth.role` (los permisos mandan, no el nombre). */
+  rol: string;
+  /** Códigos de `auth.permission` del rol del usuario, resueltos en la misma consulta de la sesión. */
+  permisos: readonly string[];
   accountStatus: EstadoDeCuenta;
   expiresAt: Date;
   revoked: boolean;
@@ -87,18 +90,23 @@ export function createAuthRepository(db: Consultador): AuthRepository {
 
     async buscarSesionPorTokenHash(tokenHash) {
       const { rows } = await db.query(
-        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol
+        `SELECT s.user_id, s.expires_at, s.revoked, u.account_status, r.name AS rol,
+                COALESCE(array_agg(p.code) FILTER (WHERE p.code IS NOT NULL), '{}') AS permisos
            FROM auth.session s
            JOIN auth."user" u ON u.id = s.user_id
            JOIN auth.role r ON r.id = u.role_id
-          WHERE s.token_hash = $1`,
+           LEFT JOIN auth.role_permission rp ON rp.role_id = r.id
+           LEFT JOIN auth.permission p ON p.id = rp.permission_id
+          WHERE s.token_hash = $1
+          GROUP BY s.user_id, s.expires_at, s.revoked, u.account_status, r.name`,
         [tokenHash],
       );
       const fila = rows[0];
       if (fila === undefined) return null;
       return {
         userId: fila['user_id'] as string,
-        rol: fila['rol'] as RolDeUsuario,
+        rol: fila['rol'] as string,
+        permisos: fila['permisos'] as string[],
         accountStatus: fila['account_status'] as EstadoDeCuenta,
         expiresAt: fila['expires_at'] as Date,
         revoked: fila['revoked'] as boolean,

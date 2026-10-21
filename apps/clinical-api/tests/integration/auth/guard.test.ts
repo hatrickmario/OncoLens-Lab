@@ -42,7 +42,9 @@ function rutaProtegidaDePrueba(): Router {
   ruta.post('/evidence-analyses', express.json(), async (peticion, respuesta) => {
     ejecuciones += 1;
     await fetch(RAG_URL, { method: 'POST' });
-    respuesta.status(200).json({ sesion: peticion.sesion });
+    const sesion = peticion.sesion;
+    // `permisos` es un Set: se serializa como lista para poder compararlo.
+    respuesta.status(200).json({ sesion: sesion && { ...sesion, permisos: [...sesion.permisos] } });
   });
   return ruta;
 }
@@ -163,7 +165,7 @@ describe('guard de sesión de /platform/*', () => {
     esperarNoAutenticado(respuesta);
   });
 
-  it('deja pasar al controlador con userId y rol adjuntos cuando la sesión está vigente', async () => {
+  it('deja pasar al controlador con userId, rol y permisos adjuntos cuando la sesión está vigente', async () => {
     await insertarSesion(cliente, ids, {
       userId: doc1.id,
       tokenHash: hashDe('tokenVigente'),
@@ -176,7 +178,7 @@ describe('guard de sesión de /platform/*', () => {
       .send({});
 
     expect(respuesta.status).toBe(200);
-    expect(respuesta.body.sesion).toEqual({ userId: doc1.id, rol: 'doctor' });
+    expect(respuesta.body.sesion).toEqual({ userId: doc1.id, rol: 'doctor', permisos: [] });
     expect(ejecuciones).toBe(1);
   });
 });

@@ -2,6 +2,14 @@ import type { ErrorRequestHandler, Response } from 'express';
 import { IdentityIntegrityError } from './crypto/identity-integrity-error.js';
 import type { Registrar } from './logger.js';
 
+/** La sesión no tiene ninguno de los permisos que exige la operación; el manejador final lo traduce a 403. */
+export class PermisoDenegadoError extends Error {
+  constructor() {
+    super('Permiso denegado');
+    this.name = 'PermisoDenegadoError';
+  }
+}
+
 /** `ERROR_INTERNO` es el cuerpo del 500 declarado en `openapi.yaml` (`#/components/responses/ErrorInterno`). */
 export type CodigoDeError =
   | 'CREDENCIALES_INVALIDAS'
@@ -69,6 +77,16 @@ export function manejadorFinalDeErrores(dependencias: {
   return (error: unknown, _request, respuesta, next) => {
     if (respuesta.headersSent) {
       next(error);
+      return;
+    }
+    if (error instanceof PermisoDenegadoError) {
+      const traceId = respuesta.locals.traceId ?? dependencias.nuevoTraceId();
+      dependencias.registrar({
+        event: 'auth.authorize',
+        resultado: 'permiso_denegado',
+        traceId,
+      });
+      enviarError(respuesta, 403, 'PERMISO_DENEGADO', traceId);
       return;
     }
     const traceId = dependencias.nuevoTraceId();
