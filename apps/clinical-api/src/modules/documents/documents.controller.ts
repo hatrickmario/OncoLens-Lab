@@ -1,13 +1,22 @@
-import { Router, type RequestHandler, type Response } from 'express';
+import { Router, type Request, type RequestHandler, type Response } from 'express';
 import { enviarError, type CodigoDeError } from '../../infrastructure/http-errores.js';
-import type { Registrar } from '../../infrastructure/logger.js';
+import type { LineaDeLog, Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
+import {
+  ArchivoDemasiadoGrande,
+  ArchivoNoPdf,
+  DocumentoDuplicado,
+  PacienteNoEncontrado,
+} from './documents.errores.js';
+import {
+  leerCargaMultipart,
+  MultipartIlegible,
+  type CargaRecibida,
+} from './documents.multipart.js';
 import { bytesMaximosDeCarga } from './documents.reglas.js';
-import { leerCargaMultipart } from './documents.multipart.js';
-import { tipoDeDocumentoSchema } from './documents.schema.js';
+import { idDePacienteSchema, tipoDeDocumentoSchema } from './documents.schema.js';
 import type { DocumentsService } from './documents.service.js';
 
 export interface DependenciasDelController {
@@ -26,6 +35,17 @@ interface Rechazo {
   resultado: string;
 }
 
+const CUERPO_INVALIDO: Rechazo = {
+  status: 422,
+  codigo: 'CUERPO_INVALIDO',
+  resultado: 'cuerpo_invalido',
+};
+const PACIENTE_NO_ENCONTRADO: Rechazo = {
+  status: 404,
+  codigo: 'NO_ENCONTRADO',
+  resultado: 'paciente_no_encontrado',
+};
+
 /** Errores del dominio → respuesta HTTP; `undefined` si no es uno de ellos (sigue al 500 genérico). */
 function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof ArchivoNoPdf) {
@@ -41,6 +61,7 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof DocumentoDuplicado) {
     return { status: 409, codigo: 'DOCUMENTO_DUPLICADO', resultado: 'documento_duplicado' };
   }
+  if (error instanceof PacienteNoEncontrado) return PACIENTE_NO_ENCONTRADO;
   return undefined;
 }
 
@@ -57,15 +78,38 @@ export function documentsController(dependencias: DependenciasDelController): Ro
 
   const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
 
+  function registrarResultado(response: Response, resultado: string, extra: LineaDeLog): void {
+    registrar({ event: EVENTO, resultado, traceId: traceIdDe(response), ...extra });
+  }
+
+  function rechazar(response: Response, rechazo: Rechazo, extra: LineaDeLog = {}): void {
+    registrarResultado(response, rechazo.resultado, extra);
+    enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
+  }
+
+  async function leerCarga(request: Request): Promise<CargaRecibida | undefined> {
+    try {
+      return await leerCargaMultipart(request, limiteDeLectura);
+    } catch (error) {
+      if (error instanceof MultipartIlegible) return undefined;
+      throw error;
+    }
+  }
+
   const cargar: RequestHandler = async (request, response) => {
     const sesion = request.sesion;
-    const patientId = String(request.params['patientId']);
-    const carga = await leerCargaMultipart(request, limiteDeLectura);
-    const tipo = tipoDeDocumentoSchema.safeParse(carga.documentType);
-    if (sesion === undefined || carga.archivo === undefined || !tipo.success) {
-      enviarError(response, 422, 'CUERPO_INVALIDO', traceIdDe(response));
+    const carga = await leerCarga(request);
+    const tipo = tipoDeDocumentoSchema.safeParse(carga?.documentType);
+    if (sesion === undefined || carga?.archivo === undefined || !tipo.success) {
+      rechazar(response, CUERPO_INVALIDO);
       return;
     }
+    const paciente = idDePacienteSchema.safeParse(request.params['patientId']);
+    if (!paciente.success) {
+      rechazar(response, PACIENTE_NO_ENCONTRADO);
+      return;
+    }
+    const patientId = paciente.data;
     try {
       const documento = await service.cargar({
         patientId,
@@ -74,24 +118,12 @@ export function documentsController(dependencias: DependenciasDelController): Ro
         nombreOriginal: carga.archivo.nombre,
         contenido: carga.archivo.contenido,
       });
-      registrar({
-        event: EVENTO,
-        resultado: 'ok',
-        traceId: traceIdDe(response),
-        patientId,
-        documentId: documento.id,
-      });
+      registrarResultado(response, 'ok', { patientId, documentId: documento.id });
       response.status(202).json(documento);
     } catch (error) {
       const rechazo = rechazoDe(error);
       if (rechazo === undefined) throw error;
-      registrar({
-        event: EVENTO,
-        resultado: rechazo.resultado,
-        traceId: traceIdDe(response),
-        patientId,
-      });
-      enviarError(response, rechazo.status, rechazo.codigo, traceIdDe(response));
+      rechazar(response, rechazo, { patientId });
     }
   };
 

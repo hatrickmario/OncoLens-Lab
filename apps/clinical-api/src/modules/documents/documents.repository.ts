@@ -15,6 +15,7 @@ export interface NuevoDocumento {
 
 /** Acceso a `clinical.document` (la cola de extracción: `ocr_status = pendiente`, `attempts = 0`). */
 export interface DocumentsRepository {
+  existePaciente(patientId: string): Promise<boolean>;
   /** El paciente ya tiene un documento con ese checksum (deduplicación, AC-03.4). */
   existeChecksum(patientId: string, checksum: string): Promise<boolean>;
   /**
@@ -32,6 +33,10 @@ function esViolacionDeUnicidad(error: unknown): boolean {
 
 export function createDocumentsRepository(db: Consultador): DocumentsRepository {
   return {
+    async existePaciente(patientId) {
+      const { rows } = await db.query('SELECT 1 FROM clinical.patient WHERE id = $1', [patientId]);
+      return rows.length > 0;
+    },
     async existeChecksum(patientId, checksum) {
       const { rows } = await db.query(
         'SELECT 1 FROM clinical.document WHERE patient_id = $1 AND checksum = $2',

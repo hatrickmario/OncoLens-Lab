@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { DocumentsRepository, NuevoDocumento } from './documents.repository.js';
-import { ArchivoDemasiadoGrande, ArchivoNoPdf, DocumentoDuplicado } from './documents.errores.js';
+import {
+  ArchivoDemasiadoGrande,
+  ArchivoNoPdf,
+  DocumentoDuplicado,
+  PacienteNoEncontrado,
+} from './documents.errores.js';
 import type { TipoDeDocumento } from './documents.schema.js';
 import { claveDeObjeto, esPdfPorMagicBytes, superaTamanoMaximo } from './documents.reglas.js';
 import type { AlmacenDeDocumentos } from './ports.js';
@@ -61,6 +66,7 @@ export function crearDocumentsService(dependencias: DependenciasDelService): Doc
   }
   return {
     async cargar(solicitud) {
+      if (!(await repo.existePaciente(solicitud.patientId))) throw new PacienteNoEncontrado();
       if (superaTamanoMaximo(solicitud.contenido.length, maxUploadMb))
         throw new ArchivoDemasiadoGrande();
       if (!esPdfPorMagicBytes(solicitud.contenido)) throw new ArchivoNoPdf();

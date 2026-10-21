@@ -20,3 +20,10 @@ export class DocumentoDuplicado extends Error {
     this.name = 'DocumentoDuplicado';
   }
 }
+
+export class PacienteNoEncontrado extends Error {
+  constructor() {
+    super('El paciente no existe');
+    this.name = 'PacienteNoEncontrado';
+  }
+}
