@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -22,6 +23,7 @@ from app.application.ports import (
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.citations import OpcionGenerada
+from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -65,9 +67,15 @@ def esquema_de_generacion(max_parrafos_detalle: int) -> dict[str, Any]:
 class LlmEvidenceGenerator:
     """Implementa ``EvidenceGenerator`` sobre el puerto ``LlmClient``."""
 
-    def __init__(self, cliente: LlmClient, max_parrafos_detalle: int = 2) -> None:
+    def __init__(
+        self,
+        cliente: LlmClient,
+        max_parrafos_detalle: int = 2,
+        max_chars_fragmentos: int = 12000,
+    ) -> None:
         self._cliente = cliente
         self._max_parrafos_detalle = max_parrafos_detalle
+        self._max_chars_fragmentos = max_chars_fragmentos
         self._esquema = esquema_de_generacion(max_parrafos_detalle)
 
     async def generar(
@@ -77,7 +85,7 @@ class LlmEvidenceGenerator:
         prompt = construir_prompt_rag_query(
             solicitud.query,
             resumen_del_contexto_clinico(solicitud.clinicalContext),
-            recuperacion.chunks_sobre_umbral,
+            self._fragmentos_dentro_del_presupuesto(recuperacion.chunks_sobre_umbral),
             recuperacion.meta.responseLanguage,
             self._max_parrafos_detalle,
         )
@@ -105,6 +113,23 @@ class LlmEvidenceGenerator:
             ),
             limitaciones_propuestas=(),  # el LLM no genera limitaciones en el S1 [S1 resp. 11]
         )
+
+    def _fragmentos_dentro_del_presupuesto(
+        self, chunks: Sequence[ChunkPuntuado]
+    ) -> list[ChunkPuntuado]:
+        """Los más relevantes que caben en ``max_chars_fragmentos`` (el primero siempre entra).
+
+        La ventana de contexto del runtime se reparte entre el prompt y la salida: con demasiados fragmentos la salida se
+        trunca y el JSON queda inválido (503). Los chunks llegan ordenados por relevancia (RN-22).
+        """
+        elegidos: list[ChunkPuntuado] = []
+        total = 0
+        for chunk in chunks:
+            if elegidos and total + len(chunk.chunk_text) > self._max_chars_fragmentos:
+                break
+            elegidos.append(chunk)
+            total += len(chunk.chunk_text)
+        return elegidos
 
     def _parrafos_de_detalle(self, crudos: list[str]) -> tuple[str, ...]:
         """Sin párrafos vacíos y hasta el máximo configurado (RN-22): lo que sobra se descarta sin validarlo."""

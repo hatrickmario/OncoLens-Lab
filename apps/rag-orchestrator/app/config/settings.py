@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     # Párrafos de detalle por opción que se piden al LLM (ARR-08, RN-22); 0 desactiva el detalle. El contrato admite hasta 2.
     details_max_paragraphs: int = Field(default=2, ge=0, le=2)
+    # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
+    llm_fragments_max_chars: int = Field(default=12000, gt=0)
     # Motor y idiomas del OCR (los consume FEAT-01b, S2): un motor desconocido falla al arrancar.
     ocr_engine: Literal["ocrmypdf-tesseract", "paddleocr", "doctr"] = "ocrmypdf-tesseract"
     ocr_languages: str = Field(default="spa", min_length=1)

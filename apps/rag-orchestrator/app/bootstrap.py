@@ -233,6 +233,7 @@ def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
             settings.llm_temperature,
         ),
         settings.details_max_paragraphs,
+        settings.llm_fragments_max_chars,
     )
 
 
