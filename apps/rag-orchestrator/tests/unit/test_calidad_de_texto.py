@@ -32,6 +32,7 @@ def test_detecta_un_artefacto_cuando_hay_caracteres_de_otra_escritura_o_una_pala
         "Pacientes de ≥ 65 años con PSA > 10 ng/mL tratados con 5-fluorouracilo, 10 mg/día.",
         "La supervivencia libre de enfermedad a 10-year follow-up (HER2+, CDK4/6) mejoró 3rd línea.",
         "La dosis de 20 µg se administró a 2 cm de la lesión (T2N0M0).",
+        "Tratamiento de 1.ª línea y de 2.º intento en 3.ª etapa.",
         "Estudio «PROSPER» (Gleason ≤ 7): « 12 meses » de seguimiento.",
     ],
 )

@@ -22,6 +22,7 @@ from app.application.ports import (
     ResultadoDeRecuperacion,
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.domain.calidad_de_texto import tiene_artefactos
 from app.domain.citations import OpcionGenerada
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import construir_prompt_rag_query
@@ -134,7 +135,8 @@ class LlmEvidenceGenerator:
     def _parrafos_de_detalle(self, crudos: list[str]) -> tuple[str, ...]:
         """Sin párrafos vacíos y hasta el máximo configurado (RN-22): lo que sobra se descarta sin validarlo."""
         limpios = (p.strip() for p in crudos)
-        return tuple(p for p in limpios if p)[: self._max_parrafos_detalle]
+        sin_artefactos = (p for p in limpios if p and not tiene_artefactos(p))
+        return tuple(sin_artefactos)[: self._max_parrafos_detalle]
 
     @staticmethod
     def _parsear(crudo: str, trace_id: str) -> GenerationOutput:
