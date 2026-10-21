@@ -1,3 +1,4 @@
+import type { IdentityService } from '../../patients/identity.service.js';
 import type { PatientIdentityReader } from '../ports.js';
 
 /**
@@ -7,4 +8,9 @@ import type { PatientIdentityReader } from '../ports.js';
  */
 export function crearLectorDeIdentidadDelS1(): PatientIdentityReader {
   return { leer: () => Promise.resolve(null) };
+}
+
+/** Esqueleto (US-046 AC-4): por ahora conserva el comportamiento del S1. */
+export function crearLectorDeIdentidad(_identidad: Pick<IdentityService, 'descifrar'>): PatientIdentityReader {
+  return crearLectorDeIdentidadDelS1();
 }

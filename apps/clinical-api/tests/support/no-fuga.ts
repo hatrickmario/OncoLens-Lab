@@ -1,0 +1,135 @@
+import type { Client } from 'pg';
+// @ts-expect-error TS7016: scripts/contracts/lib/identity.mjs no trae declaración de tipos (lista única de campos de identidad, no se duplica).
+import { IDENTIDAD_PII, matchesIdentity } from '../../../../scripts/contracts/lib/identity.mjs';
+
+/**
+ * Arnés de no-fuga de identidad (US-046 AC-4, RN-10, NFR-11). Dueño de la regla "la identidad nunca sale de
+ * clinical-api": cada salida nueva (ficha en L1D-72, búsqueda en L1D-202) añade su PASO al mismo test.
+ *
+ * Busca (a) los VALORES de la identidad —documento en claro, nombre, forma normalizada, índices ciegos— en el texto de
+ * cada fuente y (b) CLAVES con nombre de identidad (la lista `IDENTIDAD_PII` de los contratos) en los JSON que salen.
+ * La comparación ignora mayúsculas y tildes: `Lucía` y `LUCIA` son la misma fuga.
+ */
+
+export interface Fuente {
+  readonly nombre: string;
+  readonly texto: string;
+  /**
+   * `false` para filas de tablas completas: ahí las CLAVES son nombres de columna del esquema (p. ej. `ip_address`) y no
+   * una fuga; las claves de lo que contienen las columnas jsonb sí se revisan, como fuentes aparte.
+   */
+  readonly revisarClaves?: boolean;
+}
+
+export interface Hallazgo {
+  readonly fuente: string;
+  readonly valor: string;
+}
+
+export interface PasoDeNoFuga {
+  readonly nombre: string;
+  readonly ejecutar: () => Promise<void>;
+}
+
+const sinTildesYEnMinusculas = (texto: string): string =>
+  texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/** Valores que no pueden aparecer en ninguna fuente. Los de menos de 4 caracteres se ignoran: darían falsos positivos. */
+export function valoresProhibidos(valores: readonly string[]): string[] {
+  const minimo = 4;
+  return [...new Set(valores.filter((valor) => valor.length >= minimo).map(sinTildesYEnMinusculas))];
+}
+
+/** Fuentes que contienen alguno de los valores, o claves de JSON con nombre de identidad. */
+export function buscarFugaDeIdentidad(
+  valores: readonly string[],
+  fuentes: readonly Fuente[],
+): Hallazgo[] {
+  const buscados = valoresProhibidos(valores);
+  const hallazgos: Hallazgo[] = [];
+  for (const fuente of fuentes) {
+    const texto = sinTildesYEnMinusculas(fuente.texto);
+    for (const valor of buscados) {
+      if (texto.includes(valor)) hallazgos.push({ fuente: fuente.nombre, valor });
+    }
+    if (fuente.revisarClaves === false) continue;
+    for (const clave of clavesDeIdentidadEnJson(fuente.texto)) {
+      hallazgos.push({ fuente: fuente.nombre, valor: `clave:${clave}` });
+    }
+  }
+  return hallazgos;
+}
+
+/** Claves (a cualquier profundidad) de los JSON embebidos en el texto cuyo nombre es de identidad según `IDENTIDAD_PII`. */
+export function clavesDeIdentidadEnJson(texto: string): string[] {
+  const claves = new Set<string>();
+  const recorrer = (valor: unknown): void => {
+    if (Array.isArray(valor)) valor.forEach(recorrer);
+    else if (valor !== null && typeof valor === 'object') {
+      for (const [clave, contenido] of Object.entries(valor)) {
+        if (matchesIdentity(clave, IDENTIDAD_PII)) claves.add(clave);
+        recorrer(contenido);
+      }
+    }
+  };
+  try {
+    recorrer(JSON.parse(texto));
+  } catch {
+    // No es un JSON completo (una línea de log, un texto): solo se busca por valores.
+  }
+  return [...claves];
+}
+
+const TABLAS_DE_SALIDA = [
+  { esquema: 'audit', tabla: null },
+  { esquema: 'research', tabla: null },
+  { esquema: 'clinical', tabla: 'ai_analysis_record' },
+] as const;
+
+/** Cada fila de `audit.*`, `research.*` y `clinical.ai_analysis_record` como JSON (todas sus columnas, no solo texto). */
+export async function fuentesDeBaseDeDatos(cliente: Client): Promise<Fuente[]> {
+  const fuentes: Fuente[] = [];
+  for (const { esquema, tabla } of TABLAS_DE_SALIDA) {
+    const { rows: tablas } = await cliente.query<{ table_name: string }>(
+      `SELECT table_name FROM information_schema.tables
+        WHERE table_schema = $1 AND table_type = 'BASE TABLE' AND ($2::text IS NULL OR table_name = $2)
+        ORDER BY table_name`,
+      [esquema, tabla],
+    );
+    for (const { table_name: nombre } of tablas) {
+      const { rows } = await cliente.query<{ fila: string }>(
+        `SELECT to_jsonb(t)::text AS fila FROM ${esquema}.${nombre} t`,
+      );
+      for (const [indice, { fila }] of rows.entries()) {
+        const nombreDeFila = `${esquema}.${nombre}[${indice}]`;
+        fuentes.push({ nombre: nombreDeFila, texto: fila, revisarClaves: false });
+        fuentes.push(...columnasJson(nombreDeFila, fila));
+      }
+    }
+  }
+  return fuentes;
+}
+
+/** Cada columna jsonb de la fila como fuente propia, para revisar también las claves de su contenido. */
+function columnasJson(nombreDeFila: string, fila: string): Fuente[] {
+  return Object.entries(JSON.parse(fila) as Record<string, unknown>)
+    .filter(([, valor]) => valor !== null && typeof valor === 'object')
+    .map(([columna, valor]) => ({
+      nombre: `${nombreDeFila}.${columna}`,
+      texto: JSON.stringify(valor),
+    }));
+}
+
+export interface EntradaDelArnes {
+  readonly pasos: readonly PasoDeNoFuga[];
+  /** Valores de identidad, ya conocidos tras ejecutar los pasos (p. ej. los índices ciegos leídos de la fila). */
+  readonly valores: () => Promise<readonly string[]>;
+  /** Fuentes a revisar tras los pasos: logs, tablas y payloads capturados. */
+  readonly fuentes: () => Promise<readonly Fuente[]>;
+}
+
+/** Ejecuta los pasos en orden y devuelve lo que encontró; vacío significa que no hubo fuga. */
+export async function ejecutarArnesDeNoFuga(entrada: EntradaDelArnes): Promise<Hallazgo[]> {
+  for (const paso of entrada.pasos) await paso.ejecutar();
+  return buscarFugaDeIdentidad(await entrada.valores(), await entrada.fuentes());
+}

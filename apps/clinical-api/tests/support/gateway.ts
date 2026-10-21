@@ -38,6 +38,7 @@ import {
   insertar,
   type GeneradorDeIds,
 } from './filas-sinteticas.js';
+import type { IdentityService } from '../../src/modules/patients/identity.service.js';
 import { FX_T4A_A } from './identidad.js';
 import { servidorMswConLoopback } from './servidor-msw.js';
 import {
@@ -355,10 +356,13 @@ export const PII_FX_T4A_A = {
 } as const;
 
 /**
- * FX-T4a-a: paciente sintético con PII conocida en la identidad cifrada (bytes ficticios), el convenio y el texto libre
+ * FX-T4a-a: paciente sintético con PII conocida en la identidad cifrada (bytes ficticios, o la real si se pasa `identidad`), el convenio y el texto libre
  * de una nota y de un evento, con diagnóstico de mama, HER2 y un tratamiento previo. Devuelve su id.
  */
-export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string> {
+export async function crearPacienteFxT4aA(
+  mundo: MundoDeGateway,
+  identidad?: IdentityService,
+): Promise<string> {
   const { cliente, ids } = mundo;
   const { rows } = await cliente.query<{ id: string }>(
     `SELECT id FROM auth."user" WHERE email = 'doc1@test.local'`,
@@ -374,7 +378,18 @@ export async function crearPacienteFxT4aA(mundo: MundoDeGateway): Promise<string
     }),
   );
   const patientId = paciente['id'] as string;
-  await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(patientId));
+  if (identidad === undefined) {
+    await insertar(cliente, 'identity.patient_identity', filaDeIdentidad(patientId));
+  } else {
+    // Identidad REAL cifrada con `IdentityService` (US-046): el arnés de no-fuga la usa de punta a punta.
+    await identidad.guardar({
+      patientId,
+      idType: FX_T4A_A.idType,
+      issuingCountry: null,
+      numeroDeDocumento: PII_FX_T4A_A.cedula,
+      nombreCompleto: PII_FX_T4A_A.nombre,
+    });
+  }
   const episodio = await insertar(
     cliente,
     'clinical.care_episode',
