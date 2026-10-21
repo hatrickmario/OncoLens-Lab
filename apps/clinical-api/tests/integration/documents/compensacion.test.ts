@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-import type { Client } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { TRACE_ID_GENERADO, idDePaciente } from '../../support/gateway.js';
 import type { LineaDeLog } from '../../../src/infrastructure/logger.js';
@@ -7,6 +6,8 @@ import {
   documentosDelPaciente,
   fixture,
   iniciarEscenarioDeDocumentos,
+  instalarFalloDeInsercionDeDocumento,
+  quitarFalloDeInsercionDeDocumento,
   montarDocumentos,
   type EscenarioDeDocumentos,
 } from '../../support/documentos.js';
@@ -21,20 +22,6 @@ beforeAll(async () => {
 });
 beforeEach(() => escenario.entorno.reiniciar());
 afterAll(() => escenario.cerrar());
-
-async function instalarFalloDeInsercionDeDocumento(cliente: Client): Promise<void> {
-  await cliente.query(`
-    CREATE FUNCTION clinical.test_falla_insercion_documento() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN RAISE EXCEPTION 'fallo sintetico de test'; END $$`);
-  await cliente.query(`
-    CREATE TRIGGER test_falla_insercion_documento BEFORE INSERT ON clinical.document
-    FOR EACH ROW EXECUTE FUNCTION clinical.test_falla_insercion_documento()`);
-}
-
-async function quitarFalloDeInsercionDeDocumento(cliente: Client): Promise<void> {
-  await cliente.query('DROP TRIGGER test_falla_insercion_documento ON clinical.document');
-  await cliente.query('DROP FUNCTION clinical.test_falla_insercion_documento()');
-}
 
 const compensacionesFallidas = (lineas: readonly LineaDeLog[]): LineaDeLog[] =>
   lineas.filter(

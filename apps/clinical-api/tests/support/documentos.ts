@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Express } from 'express';
 import { http, HttpResponse } from 'msw';
+import type { Client } from 'pg';
 import { crearAlmacenMinio } from '../../src/infrastructure/almacen-documentos.minio.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
 import { componerModuloDeDocumentos } from '../../src/modules/documents/documents.module.js';
@@ -187,6 +188,21 @@ export function montarDocumentos(
     rutasProtegidas: [router],
   });
   return { app, logger };
+}
+
+/** Hace fallar todo `INSERT` en `clinical.document` hasta que se quite (el fallo posterior a escribir el objeto). */
+export async function instalarFalloDeInsercionDeDocumento(cliente: Client): Promise<void> {
+  await cliente.query(`
+    CREATE FUNCTION clinical.test_falla_insercion_documento() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'fallo sintetico de test'; END $$`);
+  await cliente.query(`
+    CREATE TRIGGER test_falla_insercion_documento BEFORE INSERT ON clinical.document
+    FOR EACH ROW EXECUTE FUNCTION clinical.test_falla_insercion_documento()`);
+}
+
+export async function quitarFalloDeInsercionDeDocumento(cliente: Client): Promise<void> {
+  await cliente.query('DROP TRIGGER test_falla_insercion_documento ON clinical.document');
+  await cliente.query('DROP FUNCTION clinical.test_falla_insercion_documento()');
 }
 
 export interface FilaDeDocumento {
