@@ -82,7 +82,7 @@ describe('npm run eval:pii', () => {
       const salidaVisible = `${crudo}${resultado.stdout}${resultado.stderr}`;
       const valores = corpus.flatMap((t) => t.etiquetas.map((e) => t.texto.slice(e.inicio, e.fin)));
       expect(valores.length).toBeGreaterThan(900);
-      expect(valores.filter((valor) => salidaVisible.includes(valor))).toEqual([]);
+      expect(valores.filter((valor) => salidaVisible.includes(valor)).length).toBe(0);
     },
     TIEMPO_MAXIMO_DEL_COMANDO_MS,
   );

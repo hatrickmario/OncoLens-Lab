@@ -43,7 +43,7 @@
       comando con tiempo máximo explícito (proceso real) · **test después** `[US-013 AC-1]`
 - [x] 2.2 Test de configuración: ningún patrón de país literal fuera de `config/pii-formats.json` ·
       **test después** `[US-013 AC-4]` `[RN-22]`
-- [ ] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
+- [x] 2.3 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-205)
 
 ## 3. evaluación

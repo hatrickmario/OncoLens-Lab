@@ -83,6 +83,7 @@ export async function cargarCorpusPiiMini(opciones: OpcionesDeCorpus): Promise<T
     // `-I`: aislado; no carga código del directorio actual ni del entorno.
     ({ stdout: salida } = await ejecutar(opciones.python, [
       '-I',
+      '-B',
       '-c',
       PROGRAMA_DEL_GENERADOR,
       path.join(opciones.raizDelRepo, DIRECTORIO_DEL_DATASET),
