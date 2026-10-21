@@ -11,7 +11,7 @@ import type {
 import type { ContextoPermitido, EnlaceDeDato, MapaDeDataRefs } from './ports.js';
 
 /** Valor que ocupa un campo obligatorio del contrato que el dato clínico no registra (RN-25: "No disponible"). */
-const NO_DISPONIBLE = 'No disponible';
+export const NO_DISPONIBLE = 'No disponible';
 
 /** Meses completos entre una fecha `AAAA-MM-DD` y `ahora`; `null` si la fecha es `null` (nunca negativo). */
 export function mesesTranscurridos(fecha: string | null, ahora: Date): number | null {
