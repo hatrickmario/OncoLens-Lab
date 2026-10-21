@@ -92,7 +92,11 @@ arrancar({
           registrar,
           rutasProtegidas: componerRutasProtegidas({ gateway }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
-          salud: { configKeys: entorno.clavesCargadas(), serviceVersion: versionDelServicio() },
+          salud: {
+            configKeys: entorno.clavesCargadas(),
+            serviceVersion: versionDelServicio(),
+            catalogVersion: catalogo.version(),
+          },
         });
         const servidor = app.listen(puerto, () => {
           registrarEventoDeArranque((linea) => console.info(linea), 'info', 'servidor_escuchando', {

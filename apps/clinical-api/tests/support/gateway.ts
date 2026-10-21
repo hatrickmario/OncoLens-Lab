@@ -75,6 +75,7 @@ export const PUNTERO_422 = '#/paths/~1platform~1evidence-analyses/post/responses
 export const PUNTERO_404 = '#/paths/~1platform~1evidence-analyses/post/responses/404';
 export const PUNTERO_403 = '#/paths/~1platform~1evidence-analyses/post/responses/403';
 export const PUNTERO_401 = '#/paths/~1platform~1evidence-analyses/post/responses/401';
+export const PUNTERO_409 = '#/paths/~1platform~1evidence-analyses/post/responses/409';
 export const PUNTERO_502 = '#/paths/~1platform~1evidence-analyses/post/responses/502';
 export const PUNTERO_200 = '#/paths/~1platform~1evidence-analyses/post/responses/200';
 export const PUNTERO_500 = '#/paths/~1platform~1evidence-analyses/post/responses/500';
