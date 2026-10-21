@@ -14,6 +14,10 @@ export type HealthStatus = {
      * Versión del contrato (info.version) del servicio que responde.
      */
     serviceVersion?: string;
+    /**
+     * Versión del catálogo clínico montado (manifest.json); sin ruta ni contenido.
+     */
+    catalogVersion?: string;
 };
 
 /**
@@ -746,6 +750,12 @@ export type ErrorLimiteGeneracion = {
     traceId: string;
 };
 
+export type ErrorCatalogVersionMismatch = {
+    error: 'CATALOG_VERSION_MISMATCH';
+    message: string;
+    traceId: string;
+};
+
 export type ErrorServicioIa = {
     error: 'ERROR_SERVICIO_IA';
     message: string;
@@ -1186,6 +1196,10 @@ export type CreateEvidenceAnalysisErrors = {
      * Recurso no encontrado.
      */
     404: ErrorNoEncontrado;
+    /**
+     * CATALOG_VERSION_MISMATCH: la versión del catálogo clínico difiere entre los backends (NFR-14). No se persiste análisis ni se reenvía el cuerpo de rag-orchestrator.
+     */
+    409: ErrorCatalogVersionMismatch;
     /**
      * Cuerpo inválido; paciente egresado (RN-17); o TIPO_CANCER_NO_REGISTRADO: el caso no tiene tipo de cáncer y el análisis no se realiza (no se llama a la IA ni se persiste análisis).
      */

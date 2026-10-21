@@ -4,6 +4,24 @@ import { Router } from 'express';
 export interface InformacionDeSalud {
   readonly configKeys: readonly string[];
   readonly serviceVersion: string;
+  /** Versión del catálogo clínico montado (`manifest.json`); sin ruta ni contenido. Ausente si no se inyecta. */
+  readonly catalogVersion?: string;
+}
+
+/**
+ * Compone lo que `/health` expone a partir de lo que el arranque ya cargó: nombres de claves, versión del servicio y
+ * versión efectiva del catálogo (`manifest.json`). Nunca valores de configuración (RN-14).
+ */
+export function componerInformacionDeSalud(entrada: {
+  readonly configKeys: readonly string[];
+  readonly serviceVersion: string;
+  readonly catalogo: { version(): string };
+}): InformacionDeSalud {
+  return {
+    configKeys: entrada.configKeys,
+    serviceVersion: entrada.serviceVersion,
+    catalogVersion: entrada.catalogo.version(),
+  };
 }
 
 /** Sin información inyectada (`createApp({})`): ninguna clave y versión desconocida, pero siempre las dos propiedades. */
@@ -23,6 +41,7 @@ export function createHealthRouter(salud: InformacionDeSalud = SALUD_POR_DEFECTO
       status: 'ok',
       configKeys: salud.configKeys,
       serviceVersion: salud.serviceVersion,
+      ...(salud.catalogVersion !== undefined && { catalogVersion: salud.catalogVersion }),
     });
   });
   return router;

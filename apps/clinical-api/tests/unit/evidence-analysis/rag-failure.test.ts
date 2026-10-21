@@ -56,11 +56,13 @@ describe('mapearFalloRag', () => {
     ['401', fallo({ status: 401, codigo: 'TOKEN_SERVICIO_INVALIDO' }), 502, 'ERROR_SERVICIO_IA'],
     ['500', fallo({ status: 500 }), 502, 'ERROR_SERVICIO_IA'],
     [
-      '409 (en el S1)',
+      '409 CATALOG_VERSION_MISMATCH',
       fallo({ status: 409, codigo: 'CATALOG_VERSION_MISMATCH' }),
-      502,
-      'ERROR_SERVICIO_IA',
+      409,
+      'CATALOG_VERSION_MISMATCH',
     ],
+    ['409 con otro código', fallo({ status: 409, codigo: 'OTRO' }), 502, 'ERROR_SERVICIO_IA'],
+    ['409 sin código', fallo({ status: 409 }), 502, 'ERROR_SERVICIO_IA'],
     [
       '429 (en el S1)',
       fallo({ status: 429, codigo: 'COLA_INFERENCIA_LLENA' }),
@@ -68,7 +70,7 @@ describe('mapearFalloRag', () => {
       'ERROR_SERVICIO_IA',
     ],
     ['error de red', fallo({ status: null }), 502, 'ERROR_SERVICIO_IA'],
-  ])('traduce %s a %i %s', (_caso, entrada, status, codigo) => {
+  ])('traduce %s', (_caso, entrada, status, codigo) => {
     expect(mapearFalloRag(entrada)).toMatchObject({ status, codigo });
   });
 

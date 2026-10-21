@@ -27,6 +27,32 @@ describe('crearProveedorDeVersionDeCatalogo', () => {
     expect(lecturas).toBe(1);
   });
 
+  it('falla con version_catalogo_distinta sin citar versiones cuando la expectativa difiere del manifiesto', () => {
+    try {
+      crearProveedorDeVersionDeCatalogo(
+        '/catalogs',
+        () => JSON.stringify({ version: '1.0.0' }),
+        '9.9.9',
+      );
+    } catch (error) {
+      expect((error as ConfiguracionInvalidaError).variable).toBe('CLINICAL_CATALOG_VERSION');
+      expect((error as ConfiguracionInvalidaError).motivo).toBe('version_catalogo_distinta');
+      expect((error as Error).message).not.toMatch(/9\.9\.9|1\.0\.0/);
+      return;
+    }
+    throw new Error('debía fallar y no lo hizo');
+  });
+
+  it('acepta la expectativa cuando coincide con el manifiesto', () => {
+    const proveedor = crearProveedorDeVersionDeCatalogo(
+      '/catalogs',
+      () => JSON.stringify({ version: '1.0.0' }),
+      '1.0.0',
+    );
+
+    expect(proveedor.version()).toBe('1.0.0');
+  });
+
   const noExiste = (): string => {
     throw new Error('ENOENT: /catalogs/secreto');
   };
@@ -44,6 +70,7 @@ describe('crearProveedorDeVersionDeCatalogo', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ConfiguracionInvalidaError);
         expect((error as ConfiguracionInvalidaError).variable).toBe('CLINICAL_CATALOG_PATH');
+        expect((error as ConfiguracionInvalidaError).motivo).toBe('catalogo_no_disponible');
         expect((error as Error).message).not.toContain('secreto');
         return;
       }

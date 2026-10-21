@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "codigos.json por tipo de cáncer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entradas"
+  ],
+  "properties": {
+    "entradas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "terminoCanonico",
+          "estandar",
+          "codigo",
+          "nombreOficial",
+          "etiquetaEs",
+          "versionFuente"
+        ],
+        "properties": {
+          "terminoCanonico": {
+            "type": "string",
+            "minLength": 1
+          },
+          "estandar": {
+            "enum": [
+              "cie10",
+              "loinc",
+              "atc",
+              "cups"
+            ]
+          },
+          "codigo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nombreOficial": {
+            "type": "string",
+            "minLength": 1
+          },
+          "etiquetaEs": {
+            "type": "string",
+            "minLength": 1
+          },
+          "versionFuente": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

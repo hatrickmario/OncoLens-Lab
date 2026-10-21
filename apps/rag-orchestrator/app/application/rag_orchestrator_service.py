@@ -15,9 +15,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TypeVar
 
+from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
+    CatalogoClinico,
     ChunkEncontrado,
     ChunkSearch,
     Clock,
@@ -41,8 +43,8 @@ from app.application.respuesta_con_evidencia import (
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.citations import OpcionAceptada, validar_citas
-from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
+from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
     ChunkPuntuado,
@@ -104,6 +106,7 @@ class RAGOrchestratorService:
         reranker: Reranker,
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
+        catalogo_clinico: CatalogoClinico,
         generador: EvidenceGenerator,
         clasificador_nli: NliClassifier,
         verificador_terminos: ProhibitedTermsChecker,
@@ -116,6 +119,7 @@ class RAGOrchestratorService:
         self._reranker = reranker
         self._lector_release = lector_release
         self._catalogo = catalogo
+        self._catalogo_clinico = catalogo_clinico
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros
@@ -128,6 +132,8 @@ class RAGOrchestratorService:
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
         trace_id = solicitud.traceId.root
+        # Primer paso, antes de todo borde (D2): un catálogo de otra versión no consume embeddings, Milvus, LLM ni NLI.
+        exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
         inicio = self._reloj.ahora()
         filtro = self._filtro_de_recuperacion(solicitud)  # antes de cualquier puerto (OL-02)
         borde = self._invocar_borde_fallando_cerrado
