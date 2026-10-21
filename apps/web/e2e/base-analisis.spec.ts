@@ -15,7 +15,12 @@ test.describe('Base del análisis (L1D-187)', () => {
 
     await expect(page.getByRole('heading', { level: 2, name: 'Base del análisis' })).toBeVisible();
     await expect(
-      page.getByText(/^Faltantes: \d+ · Supuestos: \d+ · Fuentes no incluidas: /),
+      page.getByText(
+        'Faltantes: 0 · Supuestos: 1 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Los faltantes críticos aún no se calculan en esta versión'),
     ).toBeVisible();
     await expect(page.getByText(/^Evidencia del corpus al \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ver detalle de la Base' })).toHaveAttribute(
@@ -33,6 +38,11 @@ test.describe('Base del análisis (L1D-187)', () => {
     await expect(
       page.getByText(/^Qué se buscó: fuentes .* · 0 fragmentos sobre el umbral$/),
     ).toBeVisible();
-    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(0);
+    await expect(
+      page.getByRole('region', { name: 'Base del análisis' }).getByRole('heading', { level: 3 }),
+    ).toHaveCount(0);
+    await expect(page.getByTestId('analysis-result').getByRole('heading', { level: 3 })).toHaveCount(
+      0,
+    );
   });
 });

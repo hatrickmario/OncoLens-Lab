@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { AnalysisResult } from '../../components/organisms/analysis-result';
 import {
@@ -54,7 +55,7 @@ describe('AnalysisBasisPanel', () => {
         'Faltantes: 0 · Supuestos: 1 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
       ),
     ).toBeTruthy();
-    expect(screen.getByText(SUPUESTO)).toBeTruthy();
+    expect(screen.getByText(`Supuesto (regla del catálogo): ${SUPUESTO}`)).toBeTruthy();
     expect(screen.getByText('Evidencia del corpus al 30/09/2026')).toBeTruthy();
     expect(screen.getByRole('button', { name: VER_DETALLE })).toBeTruthy();
   });
@@ -80,16 +81,16 @@ describe('AnalysisBasisPanel', () => {
     expect(screen.getByRole('button', { name: 'Ocultar detalle' })).toBeTruthy();
   });
 
-  it('en el detalle las fuentes no incluidas dicen sin licencia abierta; su contenido no se consultó [US-067 AC-2]', async () => {
+  it('en el detalle las fuentes no incluidas dicen fuente no incluida; su contenido no se consultó [US-067 AC-2]', async () => {
     bff.responder({ status: 200, cuerpo: conBaseDeUs066 });
     const usuario = await analizar();
     await screen.findByRole('button', { name: VER_DETALLE });
-    expect(screen.queryByText(/sin licencia abierta/)).toBeNull();
+    expect(screen.queryByText(/fuente no incluida; su contenido/)).toBeNull();
     await usuario.click(screen.getByRole('button', { name: VER_DETALLE }));
 
     for (const fuente of ['NCCN', 'ESMO']) {
       expect(
-        screen.getByText(`${fuente}: sin licencia abierta; su contenido no se consultó`),
+        screen.getByText(`${fuente}: fuente no incluida; su contenido no se consultó`),
       ).toBeTruthy();
     }
   });
@@ -158,12 +159,14 @@ describe('AnalysisBasisPanel', () => {
 
   it('muestra Afirmaciones omitidas: 1 y nunca el texto de la afirmación cuando omittedClaims es 1 [US-067 AC-4]', async () => {
     const textoOmitido = 'Afirmación omitida de prueba';
-    bff.responder({ status: 200, cuerpo: conBase({ omittedClaims: 1 }) });
-    const usuario = await analizar();
+    // El esquema del contrato rechaza campos extra en el borde, así que el campo no contractual se
+    // inyecta directo al organismo: si el panel lo pintara alguna vez, esta aserción lo detectaría.
+    const analisis = conBase({ omittedClaims: 1, omittedClaimTexts: [textoOmitido] });
+    render(<AnalysisResult analisis={analisis as never} onVerFragmento={() => {}} />);
 
-    expect(await screen.findByText(/Afirmaciones omitidas: 1$/)).toBeTruthy();
+    expect(screen.getByText(/Afirmaciones omitidas: 1$/)).toBeTruthy();
     expect(document.body.textContent).not.toContain(textoOmitido);
-    await usuario.click(screen.getByRole('button', { name: VER_DETALLE }));
+    await userEvent.click(screen.getByRole('button', { name: VER_DETALLE }));
     expect(screen.getByText(/Afirmaciones omitidas: 1$/)).toBeTruthy();
     expect(document.body.textContent).not.toContain(textoOmitido);
   });
@@ -185,5 +188,32 @@ describe('AnalysisBasisPanel', () => {
 
     await usuario.keyboard(' ');
     expect(boton.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('lista dos datos con la misma etiqueta como dos elementos sin advertencias de React cuando 186 emite etiquetas idénticas', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const dato = { label: 'HER2 3+ (IHQ)', reviewStatus: 'verificado', conflict: false };
+    bff.responder({ status: 200, cuerpo: conBase({ patientDataUsed: [dato, dato] }) });
+    const usuario = await analizar();
+    await usuario.click(await screen.findByRole('button', { name: VER_DETALLE }));
+
+    expect(screen.getAllByText('HER2 3+ (IHQ): Verificado')).toHaveLength(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('usa ids distintos para el control y el detalle cuando hay dos paneles de Base', () => {
+    render(
+      <>
+        <AnalysisResult analisis={conBaseDeUs066 as never} onVerFragmento={() => {}} />
+        <AnalysisResult analisis={conBaseDeUs066 as never} onVerFragmento={() => {}} />
+      </>,
+    );
+    const ids = screen
+      .getAllByRole('button', { name: VER_DETALLE })
+      .map((boton) => boton.getAttribute('aria-controls'));
+
+    expect(new Set(ids).size).toBe(2);
+    for (const id of ids) expect(document.querySelectorAll(`[id="${id}"]`)).toHaveLength(1);
   });
 });

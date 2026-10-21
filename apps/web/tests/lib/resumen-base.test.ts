@@ -21,7 +21,7 @@ describe('resumirBase', () => {
       supuestos: 0,
       fuentesNoIncluidas: 'ninguna',
       omitidas: 0,
-      supuestosDeCatalogo: [],
+      supuestosDeReglaCatalogo: [],
     });
   });
 
@@ -36,7 +36,20 @@ describe('resumirBase', () => {
     expect(resumen.fuentesNoIncluidas).toBe('NCCN, ESMO');
     expect(resumen.faltantes).toBe(2);
     expect(resumen.supuestos).toBe(2);
-    expect(resumen.supuestosDeCatalogo).toEqual(['del catálogo']);
+    expect(resumen.supuestosDeReglaCatalogo).toEqual(['del catálogo']);
+  });
+});
+
+describe('resumirBase · supuestos', () => {
+  it('devuelve el texto de cada supuesto regla_catalogo cuando hay dos', () => {
+    const resumen = resumirBase({
+      ...conEvidencia.analysisBasis,
+      assumptions: [
+        { text: 'uno', origin: 'regla_catalogo' },
+        { text: 'dos', origin: 'regla_catalogo' },
+      ],
+    } as never);
+    expect(resumen.supuestosDeReglaCatalogo).toEqual(['uno', 'dos']);
   });
 });
 
@@ -66,6 +79,10 @@ describe('describirBusqueda', () => {
       },
     } as never;
     expect(describirBusqueda(sinFiltros, 'sin_evidencia')).toContain('filtros ninguno');
+  });
+
+  it('devuelve null cuando hay evidencia porque el resumen no dice qué se buscó', () => {
+    expect(describirBusqueda(consultadas, 'con_evidencia')).toBeNull();
   });
 
   it('dice que no se consultó el corpus cuando el tipo no está habilitado', () => {
