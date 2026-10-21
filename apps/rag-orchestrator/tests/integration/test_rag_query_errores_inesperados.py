@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
 from app.schemas.generated.models import RagQueryInternalRequest
-from tests.support.contract import assert_matches_spec
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.recuperacion import EJEMPLOS, Q_HER2, solicitud_de
 from tests.support.service_jwt import con_token_valido
@@ -36,7 +35,6 @@ def test_rag_query_responde_500_fijo_y_registra_solo_clase_y_trace_id_cuando_fal
     respuesta = cliente.post("/rag/query", json=solicitud)
 
     assert respuesta.status_code == 500
-    assert_matches_spec("#/paths/~1rag~1query/post/responses/500", respuesta.json())
     ejemplo = json.loads((EJEMPLOS / "error-interno.json").read_text(encoding="utf-8"))
     assert respuesta.json() == {**ejemplo, "traceId": solicitud["traceId"]}
     propios = [r.getMessage() for r in caplog.records if "event=error_interno" in r.getMessage()]

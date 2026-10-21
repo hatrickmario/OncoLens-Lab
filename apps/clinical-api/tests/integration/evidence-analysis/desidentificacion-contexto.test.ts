@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { nuevoSeudonimo } from '../../../src/infrastructure/ids.js';
 import { huellaDelContexto } from '../../../src/modules/evidence-analysis/analysis-record.js';
@@ -57,7 +57,7 @@ const montar = (opciones: Parameters<typeof montarGateway>[1] = {}) =>
   });
 
 const analizar = (app: App, query: string = PREGUNTA_AC1) =>
-  request(app)
+  clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({ patientId: pacienteA, query, sourcesSelected: TODAS_LAS_FUENTES });
@@ -212,7 +212,7 @@ describe('fechas absolutas en el texto libre de un evento', () => {
     });
     const { app } = await montar();
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId: otro, query: PREGUNTA_AC1, sourcesSelected: TODAS_LAS_FUENTES });

@@ -1,13 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   DISCLAIMER_DE_TEST,
   PREGUNTA_Q_HER2,
   PREGUNTA_Q_SIN,
-  PUNTERO_200,
   SIN_EVIDENCIA,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -46,7 +44,7 @@ afterAll(async () => {
 });
 
 async function solicitar(app: Awaited<ReturnType<typeof montarGateway>>['app'], query: string) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({ patientId: idDePaciente('a'), query, sourcesSelected: TODAS_LAS_FUENTES });
@@ -59,7 +57,6 @@ describe('aviso de IA del análisis (RN-19)', () => {
     const respuesta = await solicitar(app, PREGUNTA_Q_HER2);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body.status).toBe('con_evidencia');
     expect(respuesta.body.disclaimer).toBe(DISCLAIMER_DE_TEST);
     expect(respuesta.body.disclaimer).toBe(avisoDelContrato('con-evidencia-s1.json'));
@@ -72,7 +69,6 @@ describe('aviso de IA del análisis (RN-19)', () => {
     const respuesta = await solicitar(app, PREGUNTA_Q_SIN);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body.status).toBe('sin_evidencia');
     expect(respuesta.body.disclaimer).toBe(DISCLAIMER_DE_TEST);
     expect(respuesta.body.disclaimer).toBe(avisoDelContrato('sin-evidencia.json'));
@@ -87,7 +83,6 @@ describe('aviso de IA del análisis (RN-19)', () => {
     const respuesta = await solicitar(app, PREGUNTA_Q_HER2);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body.disclaimer).toBe(AVISO_SINTETICO_DE_CONFIGURACION);
   });
 });

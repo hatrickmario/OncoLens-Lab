@@ -1,12 +1,11 @@
 """`POST /rag/query`, citas de la rama con evidencia (US-063 / L1D-179): RN-01, RN-04, RN-24, RN-25.
 
-Corpus FX-06a-a, catálogo y generador falsos (FX-06a-b); cada respuesta se valida contra el spec del proveedor
-(`assert_matches_spec`) [S1 resp. 17].
+Corpus FX-06a-a, catálogo y generador falsos (FX-06a-b); cada respuesta la valida contra el spec del proveedor el hook
+de `verificacion_proveedor.py` (US-214).
 """
 
 import pytest
 
-from tests.support.contract import assert_matches_spec
 from tests.support.generador_falso import TITULO_INVENTADO, FakeEvidenceGenerator
 from tests.support.recuperacion import CORPUS_FX06A, Q_HER2, crear_entorno, solicitud_de
 
@@ -19,7 +18,6 @@ def _consultar(escenario: str, pregunta: str = Q_HER2):
     respuesta = entorno.consultar(solicitud_de(pregunta))
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     return cuerpo, respuesta.text
 
 

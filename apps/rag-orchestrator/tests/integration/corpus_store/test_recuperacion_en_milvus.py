@@ -14,11 +14,10 @@ from pymilvus import MilvusClient
 from app.config.settings import MilvusSettings
 from app.domain.retrieval_filter import expresion_solo_vigente, expresion_vigente_del_tipo
 from app.infrastructure.milvus.repository import MilvusRepository
-from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
-    LONGITUD_MAXIMA_DE_PRUEBA,
     CORPUS_FX06A,
     DIMENSION,
+    LONGITUD_MAXIMA_DE_PRUEBA,
     Q_HER2,
     cargar_fx06a_en_milvus,
     chunk_del_corpus,
@@ -119,7 +118,6 @@ def test_rag_query_no_cita_ni_reranquea_el_chunk_no_vigente_con_milvus_real(
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 200
-    assert_matches_spec(RESPUESTA, respuesta.json())
     candidatos = {c for lote in entorno.reranker.candidatos_recibidos for c in lote}
     assert candidatos == {"ch-m1-1", "ch-inj-1"}
     assert "ch-m1v0-1" not in respuesta.text and "ch-p1-1" not in respuesta.text

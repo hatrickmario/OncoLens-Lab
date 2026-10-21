@@ -1,14 +1,9 @@
-import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import ragCatalogo from '../../../../../contracts/examples/rag-catalog-version-mismatch.json' with { type: 'json' };
 import ragConEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import errorCatalogo from '../../../../../contracts/examples/error-catalog-version-mismatch.json' with { type: 'json' };
 import {
   PREGUNTA_Q_HER2,
-  PUNTERO_200,
-  PUNTERO_409,
-  PUNTERO_502,
   TODAS_LAS_FUENTES,
   abrirSesion,
   contarRegistrosPorTrace,
@@ -20,6 +15,7 @@ import {
   versionDelCatalogo,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 171;
 const rag = ragSimulado();
@@ -41,7 +37,7 @@ afterAll(async () => {
 const gateway = (traceId: string) => montarGateway(mundo, { traceIds: { traceId: () => traceId } });
 
 async function solicitar(app: Awaited<ReturnType<typeof gateway>>['app']) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({
@@ -63,7 +59,6 @@ describe('versión del catálogo clínico entre backends', () => {
     const respuesta = await solicitar(app);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(versionDelCatalogo()).toBe('1.0.0');
     expect(rag.capturadas[0]!.cuerpo['catalogVersion']).toBe('1.0.0');
     const fila = await leerRegistroPorTrace(mundo.cliente, 'req_Catalogo0001');
@@ -82,7 +77,6 @@ describe('versión del catálogo clínico entre backends', () => {
       message: errorCatalogo.message,
       traceId: 'req_Catalogo0002',
     });
-    assertMatchesSpec('clinical-api', PUNTERO_409, respuesta.body);
     expect(await contarRegistrosPorTrace(mundo.cliente, 'req_Catalogo0002')).toBe(0);
   });
 
@@ -98,7 +92,6 @@ describe('versión del catálogo clínico entre backends', () => {
 
     expect(respuesta.status).toBe(502);
     expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
-    assertMatchesSpec('clinical-api', PUNTERO_502, respuesta.body);
     expect(await contarRegistrosPorTrace(mundo.cliente, 'req_Catalogo0003')).toBe(0);
   });
 });

@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.bootstrap import crear_app
-from tests.support.contract import RAIZ_REPOSITORIO, assert_matches_spec
+from tests.support.contract import RAIZ_REPOSITORIO
 from tests.support.fakes import GeneradorTraceFijo, RelojFijo, par_de_sesion, settings_de_prueba
 from tests.support.service_jwt import con_token_valido
 
@@ -36,7 +36,6 @@ def test_rag_query_responde_422_cuerpo_invalido_validado_y_sin_eco_del_cuerpo_cu
     respuesta = _cliente().post("/rag/query", json=_solicitud_invalida())
 
     assert respuesta.status_code == 422
-    assert_matches_spec(RESPUESTA_422, respuesta.json())
     cuerpo = respuesta.json()
     assert cuerpo["error"] == "CUERPO_INVALIDO"
     assert cuerpo["traceId"] == "req_00000001"

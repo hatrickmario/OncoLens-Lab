@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import deadlineVencido from '../../../../../contracts/examples/error-deadline-vencido.json' with { type: 'json' };
 import errorInterno from '../../../../../contracts/examples/error-interno-analisis.json' with { type: 'json' };
@@ -15,15 +15,9 @@ import ragRecuperacion from '../../../../../contracts/examples/rag-recuperacion-
 import ragTipoCancer from '../../../../../contracts/examples/rag-tipo-cancer-no-registrado.json' with { type: 'json' };
 import ragTokenInvalido from '../../../../../contracts/examples/rag-token-servicio-invalido.json' with { type: 'json' };
 import ragValidacion from '../../../../../contracts/examples/rag-validacion-422.json' with { type: 'json' };
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   AHORA,
   PREGUNTA_Q_HER2,
-  PUNTERO_422,
-  PUNTERO_500,
-  PUNTERO_502,
-  PUNTERO_503,
-  PUNTERO_504,
   RAG_TIMEOUT_MS_DE_TEST,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -65,7 +59,7 @@ afterAll(async () => {
 const gateway = (traceId: string) => montarGateway(mundo, { traceIds: { traceId: () => traceId } });
 
 async function solicitar(app: Awaited<ReturnType<typeof gateway>>['app']) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({
@@ -82,7 +76,7 @@ const responderJson = (status: number, cuerpo: object, cabeceras?: Record<string
 async function afirmarFallo(
   respuesta: Awaited<ReturnType<typeof solicitar>>,
   traceId: string,
-  esperado: { status: number; error: string; message: string; puntero: string },
+  esperado: { status: number; error: string; message: string },
 ) {
   expect(respuesta.status).toBe(esperado.status);
   expect(respuesta.body).toEqual({
@@ -90,7 +84,6 @@ async function afirmarFallo(
     message: esperado.message,
     traceId,
   });
-  assertMatchesSpec('clinical-api', esperado.puntero, respuesta.body);
   expect(await contarRegistrosPorTrace(mundo.cliente, traceId)).toBe(0);
 }
 
@@ -105,7 +98,6 @@ describe('un fallo de persistencia nunca muestra el análisis (RN-06)', () => {
     const respuesta = await solicitar(app);
 
     expect(respuesta.status).toBe(500);
-    assertMatchesSpec('clinical-api', PUNTERO_500, respuesta.body);
     expect(respuesta.body).toEqual({
       error: 'ERROR_INTERNO',
       message: errorInterno.message,
@@ -132,7 +124,6 @@ describe('deadline hacia rag-orchestrator sin registro persistido', () => {
       status: 504,
       error: 'DEADLINE_VENCIDO',
       message: deadlineVencido.message,
-      puntero: PUNTERO_504,
     });
     const esperado = new Date(new Date(AHORA).getTime() + RAG_TIMEOUT_MS_DE_TEST).toISOString();
     expect(rag.capturadas[0]!.headers.get('x-request-deadline')).toBe(esperado);
@@ -148,7 +139,6 @@ describe('deadline hacia rag-orchestrator sin registro persistido', () => {
       status: 504,
       error: 'DEADLINE_VENCIDO',
       message: deadlineVencido.message,
-      puntero: PUNTERO_504,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain(ragDeadline.message);
   });
@@ -163,7 +153,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 503,
       error: 'LOCAL_LLM_UNAVAILABLE',
       message: llmLocalNoDisponible.message,
-      puntero: PUNTERO_503,
     });
   });
 
@@ -177,7 +166,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 502,
       error: 'ERROR_SERVICIO_IA',
       message: errorServicioIa.message,
-      puntero: PUNTERO_502,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain(TEXTO_INTERNO);
   });
@@ -194,7 +182,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 502,
       error: 'ERROR_SERVICIO_IA',
       message: errorServicioIa.message,
-      puntero: PUNTERO_502,
     });
   });
 
@@ -208,7 +195,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 502,
       error: 'ERROR_SERVICIO_IA',
       message: errorServicioIa.message,
-      puntero: PUNTERO_502,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain('maxOptions');
   });
@@ -223,7 +209,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 422,
       error: 'TIPO_CANCER_NO_REGISTRADO',
       message: tipoCancerNoRegistrado.message,
-      puntero: PUNTERO_422,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain(TEXTO_INTERNO);
   });
@@ -242,7 +227,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 502,
       error: 'ERROR_SERVICIO_IA',
       message: errorServicioIa.message,
-      puntero: PUNTERO_502,
     });
     expect(JSON.stringify(respuesta.body)).not.toContain(TEXTO_INTERNO);
   });
@@ -262,7 +246,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
         status: 502,
         error: 'ERROR_SERVICIO_IA',
         message: errorServicioIa.message,
-        puntero: PUNTERO_502,
       });
       expect(JSON.stringify(respuesta.body)).not.toContain(TEXTO_INTERNO);
     },
@@ -289,7 +272,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
         status: 502,
         error: 'ERROR_SERVICIO_IA',
         message: errorServicioIa.message,
-        puntero: PUNTERO_502,
       });
     },
   );
@@ -302,7 +284,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
       status: 502,
       error: 'ERROR_SERVICIO_IA',
       message: errorServicioIa.message,
-      puntero: PUNTERO_502,
     });
   });
 
@@ -321,7 +302,6 @@ describe('una sola tabla de mapeo de fallos de rag-orchestrator', () => {
         status: 502,
         error: 'ERROR_SERVICIO_IA',
         message: errorServicioIa.message,
-        puntero: PUNTERO_502,
       });
       expect(respuesta.headers['retry-after']).toBeUndefined();
     },

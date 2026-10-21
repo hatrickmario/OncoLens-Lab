@@ -57,6 +57,8 @@ jobs:
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
         run: python -m pytest
         working-directory: apps/rag-orchestrator
+      - name: Verificación del proveedor de rag-orchestrator, estricta (contracts:verify-provider, US-214)
+        run: npm run contracts:verify-provider -- --proveedor rag-orchestrator
       - name: Tests de secretos (L1D-165)
         run: npm run test:secrets
 
@@ -161,7 +163,7 @@ jobs:
           cache: npm
       - name: Instalar dependencias de Node
         run: npm ci
-      - name: Integración de clinical-api contra PostgreSQL real de test (US-038)
+      - name: Integración de clinical-api contra PostgreSQL real de test con verificación del proveedor (US-038, US-214)
         run: scripts/ci/integracion-clinical-api.sh
 
   integration-rag:

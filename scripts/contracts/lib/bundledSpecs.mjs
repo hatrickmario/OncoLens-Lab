@@ -1,5 +1,5 @@
 /**
- * Specs empaquetados en memoria. El empaquetado de Redocly es asíncrono: `prepararSpecsEmpaquetados()` lo calcula una
+ * Specs empaquetados en memoria. El empaquetado de Redocly es asíncrono: `calcularSpecsEmpaquetados()` lo calcula una
  * vez (los CLIs lo esperan; en Vitest lo hace `vitest/globalSetup.mjs` y `vitest/setupFile.mjs` lo registra) y `getBundledSpecs()` lo lee de forma síncrona
  * para los helpers de validación de respuestas. Sin precálculo, falla cerrado: nunca empaqueta a medias.
  */
@@ -21,7 +21,7 @@ function readSpec(root, name) {
  * Empaqueta los specs de `root` (cálculo puro: solo `registrarSpecsEmpaquetados()` los deja disponibles para `getBundledSpecs()`); falla si algún proveedor no se pudo empaquetar.
  * @returns {Promise<{ [name: string]: { file: string, raw: any, bundled: any } }>}
  */
-export async function prepararSpecsEmpaquetados(root = DEFAULT_ROOT) {
+export async function calcularSpecsEmpaquetados(root = DEFAULT_ROOT) {
   const specs = Object.fromEntries(Object.keys(PATHS.specs).map((name) => [name, readSpec(root, name)]));
   const bundledSpecs = (await buildContext({ specs, examples: null, docs: null })).specs;
   for (const name of PROVIDERS) {
@@ -38,6 +38,6 @@ export function registrarSpecsEmpaquetados(bundledSpecs, root = DEFAULT_ROOT) {
 /** Los specs con su versión empaquetada, ya registrados. */
 export function getBundledSpecs(root = DEFAULT_ROOT) {
   const bundledSpecs = precalculados.get(root);
-  if (!bundledSpecs) throw new Error('specs sin empaquetar: registra el empaquetado antes con registrarSpecsEmpaquetados(await prepararSpecsEmpaquetados()) (en Vitest, vitest/globalSetup.mjs y vitest/setupFile.mjs)');
+  if (!bundledSpecs) throw new Error('specs sin empaquetar: registra el empaquetado antes con registrarSpecsEmpaquetados(await calcularSpecsEmpaquetados()) (en Vitest, vitest/globalSetup.mjs y vitest/setupFile.mjs)');
   return bundledSpecs;
 }
