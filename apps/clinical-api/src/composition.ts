@@ -4,6 +4,7 @@ import type { AuthConfig } from './config/index.js';
 import type { Clock } from './infrastructure/clock.js';
 import type { GeneradorDeIds } from './infrastructure/ids.js';
 import type { Registrar } from './infrastructure/logger.js';
+import type { InformacionDeSalud } from './routes/health.js';
 import { createAuthRepository, type Consultador } from './modules/auth/auth.repository.js';
 import { createAuthService, type GeneradorDeToken } from './modules/auth/auth.service.js';
 import { createPasswordHasher } from './modules/auth/password-hasher.js';
@@ -18,6 +19,8 @@ export interface DependenciasDeComposicion {
   registrar: Registrar;
   /** Routers que exigen sesión (gateway de análisis, pacientes...): se montan después del guard. */
   rutasProtegidas?: readonly Router[];
+  /** Nombres de claves de configuración y versión que expone `/health` (US-037). */
+  salud?: InformacionDeSalud;
 }
 
 /**
@@ -34,6 +37,7 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
     config: dependencias.auth,
   });
   return createApp({
+    ...(dependencias.salud !== undefined && { salud: dependencias.salud }),
     plataforma: {
       auth: {
         service,

@@ -33,7 +33,7 @@ export interface AppDependencies {
 export function createApp(dependencies: AppDependencies): Express {
   const app = express();
   app.disable('x-powered-by');
-  app.use(createHealthRouter());
+  app.use(createHealthRouter(dependencies.salud));
   const { plataforma } = dependencies;
   if (plataforma !== undefined) {
     const router = Router();
