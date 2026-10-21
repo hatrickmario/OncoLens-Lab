@@ -36,6 +36,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-oncolens}
       PG_RAG_CORPUS_CONNECTION_LIMIT: ${PG_RAG_CORPUS_CONNECTION_LIMIT:-10}
       PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT: ${PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT:-2}
+      # Timeouts de sesión de rag_corpus en ms (US-040, RN-22): valores a calibrar; claves en .env.example.
+      PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS: ${PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS:-30000}
+      PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS: ${PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS:-60000}
     secrets:
       - pg_superuser_password
       - pg_clinical_api_password

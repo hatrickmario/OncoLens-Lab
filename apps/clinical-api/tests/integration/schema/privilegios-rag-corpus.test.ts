@@ -104,3 +104,19 @@ describe('privilegios de PUBLIC', () => {
     });
   });
 });
+
+describe('límites de sesión de rag_corpus', () => {
+  it('fija statement_timeout e idle_in_transaction_session_timeout positivos en el rol, con valores de configuración [US-040 AC-2]', async () => {
+    await conTransaccionRevertida(urlBase, async (cliente) => {
+      const rol = await cliente.query<{ rolconfig: string[] | null }>(
+        `SELECT rolconfig FROM pg_roles WHERE rolname = 'rag_corpus'`,
+      );
+      const ajustes = Object.fromEntries(
+        (rol.rows[0]?.rolconfig ?? []).map((par) => par.split('=') as [string, string]),
+      );
+
+      expect(Number(ajustes.statement_timeout)).toBeGreaterThan(0);
+      expect(Number(ajustes.idle_in_transaction_session_timeout)).toBeGreaterThan(0);
+    });
+  });
+});
