@@ -92,7 +92,7 @@ Las respuestas `401`, `403`, `409` y `422` de los endpoints existentes MUST cump
 #### Scenario: Un error con un código de error no declarado hace fallar el test [US-214 AC-3]
 - **GIVEN** un endpoint que responde `422` con un `code` que no está en el enum de errores de su operación
 - **WHEN** corre su test con la verificación activa
-- **THEN** falla nombrando la operación, `422` y `/code`
+- **THEN** falla nombrando la operación, `422` y `/error`
 
 ### Requirement: Los consumidores solo llaman a los proveedores con clientes generados
 El código de `apps/web` (Route Handlers y `lib/server`) y de `apps/clinical-api` MUST llamar a `clinical-api` y a `rag-orchestrator` solo mediante los clientes generados de `packages/api-contracts`; `contracts:check` MUST rechazar un `fetch` o un cliente HTTP directo hacia esos servicios fuera de los transportes declarados.

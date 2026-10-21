@@ -1,4 +1,4 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PII_FX_T4A_A,
@@ -64,7 +64,7 @@ describe('logs JSON con el traceId generado por clinical-api', () => {
     const logger = loggerJsonEnMemoria();
     const { app } = await montarGateway(mundo, { logger });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .set('X-Trace-Id', 't-123')
@@ -85,7 +85,7 @@ describe('logs JSON con el traceId generado por clinical-api', () => {
     const logger = loggerJsonEnMemoria();
     const { app } = await montarGateway(mundo, { logger });
 
-    await request(app).post('/platform/evidence-analyses').set('Cookie', cookie).send({
+    await clienteVerificado(app).post('/platform/evidence-analyses').set('Cookie', cookie).send({
       patientId: PACIENTE_DE_LA_DEMO,
       query: PREGUNTA_AC1,
       sourcesSelected: TODAS_LAS_FUENTES,
@@ -104,7 +104,7 @@ describe('logs sin identidad, PHI ni cuerpos', () => {
     const { app } = await montarGateway(mundo, { logger });
     const pregunta = `¿Qué opciones describe la evidencia para ${PII_FX_T4A_A.nombre}, cédula ${PII_FX_T4A_A.cedula}?`;
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId: 'no-es-uuid', query: pregunta, sourcesSelected: TODAS_LAS_FUENTES });

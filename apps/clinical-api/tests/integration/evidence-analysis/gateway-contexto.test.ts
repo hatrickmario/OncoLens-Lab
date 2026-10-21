@@ -1,11 +1,10 @@
 import { jwtVerify } from 'jose';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   AHORA,
   PREGUNTA_AC1,
-  PUNTERO_200,
   TODAS_LAS_FUENTES,
   TRACE_ID_GENERADO,
   abrirSesion,
@@ -51,7 +50,7 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
   it('envía traceId, query, sourcesSelected, dataClassification sintetico, catalogVersion, maxOptions 1 y un clinicalContext con diagnóstico de próstata, grupo ISUP, ADT y progresión cuando doc1 pregunta por el paciente semilla (b) [US-052 AC-1]', async () => {
     const { app } = await montarGateway(mundo);
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send(cuerpoDelAnalisis());
@@ -84,7 +83,7 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
   it('envía Authorization Bearer verificable y ninguna cabecera Cookie hacia /rag/query cuando doc1 solicita un análisis con su cookie de sesión [US-054 AC-4]', async () => {
     const { app, clavePublica } = await montarGateway(mundo);
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send(cuerpoDelAnalisis());
@@ -108,7 +107,7 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
   it('el clinicalContext valida contra ClinicalContext con additionalProperties false y no contiene patientId, identification, birthYear, agreementReference ni sourceDataset [US-052 AC-4]', async () => {
     const { app } = await montarGateway(mundo);
 
-    await request(app)
+    await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send(cuerpoDelAnalisis());
@@ -140,7 +139,7 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
   it('reenvía ultimosSeisMeses true sin cambiar el clinicalContext respecto del AC-1 [US-052 AC-5]', async () => {
     const { app } = await montarGateway(mundo);
     const enviar = (extra: Record<string, unknown>) =>
-      request(app)
+      clienteVerificado(app)
         .post('/platform/evidence-analyses')
         .set('Cookie', cookie)
         .send(cuerpoDelAnalisis(extra));
@@ -173,7 +172,7 @@ describe('gateway de análisis: los filtros recibidos quedan persistidos', () =>
   it('responde 200 y persiste filters_applied con ultimosSeisMeses en true cuando la petición trae el filtro [US-052 AC-5]', async () => {
     const { app } = await montarGateway(mundo, { traceIds: { traceId: () => 'req_Filtros0001' } });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send(cuerpoDelAnalisis({ filtersApplied: { ultimosSeisMeses: true } }));
@@ -183,7 +182,6 @@ describe('gateway de análisis: los filtros recibidos quedan persistidos', () =>
     expect(fila).toBeDefined();
     expect(fila!.id).toBe(respuesta.body.id);
     expect(fila!.filters_applied).toMatchObject({ ultimosSeisMeses: true });
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
   });
 });
 
@@ -193,7 +191,7 @@ describe('gateway de análisis: el traceId lo genera siempre clinical-api', () =
   it('envía y responde el traceId generado y no registra el X-Trace-Id entrante cuando este contiene PII sembrada [US-052 AC-1]', async () => {
     const { app, logger } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .set('X-Trace-Id', PII_EN_LA_CABECERA)
@@ -210,14 +208,13 @@ describe('gateway de análisis: el traceId lo genera siempre clinical-api', () =
     }
     expect(respuesta.body.traceId).toBe(TRACE_ID_GENERADO);
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(logger.texto()).not.toContain('traceIdEntrante');
   });
 
   it('registra traceIdEntrante solo en el log cuando el X-Trace-Id entrante cumple el patrón [US-052 AC-1]', async () => {
     const { app, logger } = await montarGateway(mundo);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .set('X-Trace-Id', 'req_Entrante01')

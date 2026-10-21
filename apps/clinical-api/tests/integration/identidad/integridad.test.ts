@@ -1,9 +1,8 @@
 import { createHash } from 'node:crypto';
 import { Router } from 'express';
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import type { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { appConAuth } from '../../support/app-auth.js';
 import { conectar, type BaseDeTest } from '../../support/db.js';
 import { generadorDeIds } from '../../support/filas-sinteticas.js';
@@ -23,8 +22,13 @@ import {
 } from '../../support/usuarios.js';
 
 const ESPACIO_DE_IDS = 12;
+/** Ruta de mentira para ejercitar el guard: el contrato no la describe, así que no se verifica contra el spec. */
+const RUTA_DE_MENTIRA = {
+  respuestasAjenasAlContrato: [
+    { ruta: '/platform/identidad-de-prueba', esquema: '#/components/schemas/ErrorInterno' },
+  ],
+};
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-identidad-0001';
-const PUNTERO_ERROR_INTERNO = '#/components/schemas/ErrorInterno';
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 
 describe('Error de integridad de la identidad cifrada', () => {
@@ -82,10 +86,11 @@ describe('Error de integridad de la identidad cifrada', () => {
       rutasProtegidas: [rutaDeDescifrado],
     });
 
-    const respuesta = await request(app).get('/platform/identidad-de-prueba').set('Cookie', cookie);
+    const respuesta = await clienteVerificado(app, RUTA_DE_MENTIRA)
+      .get('/platform/identidad-de-prueba')
+      .set('Cookie', cookie);
 
     expect(respuesta.status).toBe(500);
-    assertMatchesSpec('clinical-api', PUNTERO_ERROR_INTERNO, respuesta.body);
     expect(respuesta.body).toEqual({
       error: 'ERROR_INTERNO',
       message: 'Error interno del servidor.',

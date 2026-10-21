@@ -71,15 +71,6 @@ export const TRACE_ID_GENERADO = 'req_TestGen0001';
 export const PREGUNTA_AC1 =
   '¿Qué opciones describe la evidencia para cáncer de próstata con progresión tras terapia de deprivación androgénica?';
 export const TODAS_LAS_FUENTES = { guias: true, ensayos: true, publicaciones: true } as const;
-export const PUNTERO_422 = '#/paths/~1platform~1evidence-analyses/post/responses/422';
-export const PUNTERO_404 = '#/paths/~1platform~1evidence-analyses/post/responses/404';
-export const PUNTERO_403 = '#/paths/~1platform~1evidence-analyses/post/responses/403';
-export const PUNTERO_401 = '#/paths/~1platform~1evidence-analyses/post/responses/401';
-export const PUNTERO_502 = '#/paths/~1platform~1evidence-analyses/post/responses/502';
-export const PUNTERO_200 = '#/paths/~1platform~1evidence-analyses/post/responses/200';
-export const PUNTERO_500 = '#/paths/~1platform~1evidence-analyses/post/responses/500';
-export const PUNTERO_503 = '#/paths/~1platform~1evidence-analyses/post/responses/503';
-export const PUNTERO_504 = '#/paths/~1platform~1evidence-analyses/post/responses/504';
 /** Preguntas del plan de pruebas de FEAT-06a: `Q-HER2` obtiene evidencia (`LLM-OK`) y `Q-SIN` no. */
 export const PREGUNTA_Q_HER2 =
   '¿Qué opciones adyuvantes describe la evidencia para cáncer de mama HER2 positivo en estadio IIA?';

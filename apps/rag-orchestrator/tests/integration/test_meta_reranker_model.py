@@ -9,7 +9,6 @@ import pytest
 
 from app.domain.modelos import describir_modelo
 from app.infrastructure.reranker.bge_reranker import BgeReranker
-from tests.support.contract import assert_matches_spec
 from tests.support.inferencia_falsa import SesionDeLogitsFalsa, TokenizadorFalso
 from tests.support.recuperacion import Q_HER2, Q_SIN, crear_entorno, solicitud_de
 
@@ -37,7 +36,6 @@ def test_meta_reranker_model_contiene_modelo_revision_y_hash_de_la_configuracion
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 200
-    assert_matches_spec("#/components/schemas/RagQueryInternalResponse", respuesta.json())
     assert [r.meta.rerankerModel for r in entorno.generador.recuperaciones] == [ESPERADO]
 
 
@@ -48,7 +46,6 @@ def test_meta_reranker_model_de_la_respuesta_sin_evidencia_tiene_la_misma_proced
 
     assert respuesta.status_code == 200
     assert respuesta.json()["meta"]["rerankerModel"] == ESPERADO
-    assert_matches_spec("#/components/schemas/RagQueryInternalResponse", respuesta.json())
 
 
 @pytest.mark.models

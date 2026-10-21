@@ -1,11 +1,9 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   DISCLAIMER_DE_TEST,
   PREGUNTA_Q_HER2,
   PREGUNTA_Q_SIN,
-  PUNTERO_200,
   SIN_EVIDENCIA,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -58,7 +56,7 @@ async function solicitar(
   extra: Record<string, unknown> = {},
   cabeceras: Record<string, string> = {},
 ) {
-  return request(app)
+  return clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .set(cabeceras)
@@ -72,7 +70,6 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
     const respuesta = await solicitar(app, PREGUNTA_Q_HER2);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     const fila = await leerRegistroPorTrace(mundo.cliente, 'req_Persist0001');
     expect(fila).toBeDefined();
     expect(fila!.id).toBe(respuesta.body.id);
@@ -183,7 +180,6 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
     const respuesta = await solicitar(app, PREGUNTA_Q_SIN);
 
     expect(respuesta.status).toBe(200);
-    assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
     expect(respuesta.body).toMatchObject({
       status: 'sin_evidencia',
       topRelevanceScore: null,

@@ -1,9 +1,7 @@
-import request from 'supertest';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import {
   PII_FX_T4A_A,
-  PUNTERO_503,
   TODAS_LAS_FUENTES,
   abrirSesion,
   contarRegistrosPorTrace,
@@ -43,7 +41,7 @@ afterAll(async () => {
 });
 
 const solicitar = (app: Awaited<ReturnType<typeof montarGateway>>['app']) =>
-  request(app)
+  clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({ patientId: pacienteA, query: PREGUNTA, sourcesSelected: TODAS_LAS_FUENTES });
@@ -66,7 +64,6 @@ describe('la desidentificación falla cerrada', () => {
       message: 'No fue posible preparar la consulta.',
       traceId: TRACE_ID,
     });
-    assertMatchesSpec('clinical-api', PUNTERO_503, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(await contarRegistrosPorTrace(mundo.cliente, TRACE_ID)).toBe(0);
     expect(logger.texto()).not.toContain(PREGUNTA);
@@ -83,7 +80,6 @@ describe('la desidentificación falla cerrada', () => {
 
     expect(respuesta.status).toBe(503);
     expect(respuesta.body.error).toBe('DESIDENTIFICACION_NO_DISPONIBLE');
-    assertMatchesSpec('clinical-api', PUNTERO_503, respuesta.body);
     expect(rag.llamadas()).toBe(0);
     expect(await contarRegistrosPorTrace(mundo.cliente, TRACE_ID)).toBe(0);
   });

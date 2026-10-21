@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Job `integration` de la CI (B-1 del S1): integración de clinical-api contra el PostgreSQL de test del Compose (US-038).
-# Genera secretos ficticios de test, levanta solo postgres con el perfil de test y corre scripts/test-integration.sh.
+# Genera secretos ficticios de test, levanta solo postgres con el perfil de test y corre `npm run contracts:verify-provider`
+# (US-214), que ejecuta los tests de clinical-api y scripts/test-integration.sh con la verificación del proveedor activa.
 # Los secretos viven en un directorio temporal y se borran al terminar; nada se versiona (RN-14).
 set -euo pipefail
 
@@ -28,4 +29,4 @@ trap 'docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-c
 scripts/setup-secrets.sh --profile test
 docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.test.yml \
   -f apps/clinical-api/tests/support/docker-compose.integration.yml up -d --wait postgres
-scripts/test-integration.sh
+npm run contracts:verify-provider -- --proveedor clinical-api

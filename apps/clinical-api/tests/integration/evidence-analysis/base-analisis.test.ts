@@ -1,13 +1,10 @@
-import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import type { EvidenceAnalysis } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import {
   CON_AFIRMACION_OMITIDA,
   LLM_OK,
   PREGUNTA_Q_HER2,
   PREGUNTA_Q_SIN,
-  PUNTERO_200,
   SIN_EVIDENCIA,
   TODAS_LAS_FUENTES,
   abrirSesion,
@@ -18,6 +15,7 @@ import {
   ragSimulado,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 662;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-base-analisis-0001';
@@ -45,12 +43,11 @@ afterAll(async () => {
 /** Un `traceId` propio por test: el registro de un test nunca se confunde con el de otro. */
 async function analizar(traceId: string, query: string) {
   const { app } = await montarGateway(mundo, { traceIds: { traceId: () => traceId } });
-  const respuesta = await request(app)
+  const respuesta = await clienteVerificado(app)
     .post('/platform/evidence-analyses')
     .set('Cookie', cookie)
     .send({ patientId: idDePaciente('a'), query, sourcesSelected: TODAS_LAS_FUENTES });
   expect(respuesta.status).toBe(200);
-  assertMatchesSpec('clinical-api', PUNTERO_200, respuesta.body);
   return respuesta.body as EvidenceAnalysis;
 }
 

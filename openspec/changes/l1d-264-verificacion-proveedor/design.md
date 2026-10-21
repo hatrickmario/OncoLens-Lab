@@ -85,3 +85,23 @@ Compatible con ADR-26.
   `build-test` (ambos en `ci-ok`) en lugar del job `contracts`? Recomendado: sí.
 - **Pendiente (humano, afecta AC-5):** confirmar que la «etiqueta en `design.md`» se materializa como
   la excepción E-n de `contracts-breaking-excepciones.json` citada desde el `design.md`.
+
+## Deuda anotada (cierre del Gate 2)
+
+- Los Zod refinados (`z<Nombre>Refinado`) los consume ya `clinical-api` en `validarRespuestaInterna` (respuesta de
+  `rag-orchestrator`, RN-02). Falta que `web` valide con ellos las respuestas del BFF (p. ej. `apps/web/lib/evidence/solicitar-analisis.ts`):
+  este change no toca `web`; queda para su historia. Los refinamientos se importan como `./zod.gen.js` (NodeNext); `web`
+  (Turbopack) necesitará una variante sin extensión, como `client-web`.
+- `ci.yml` ejecuta el Pytest de `rag-orchestrator` dos veces en `build-test` (el paso existente y `contracts:verify-provider`):
+  `ci/tests/workflow.test.mjs` exige un paso con `pytest` y `working-directory`. Redundancia aceptada y documentada en
+  `docs/process/ci.md`; se elimina cuando ese test se ajuste.
+- `respuestasAjenasAlContrato` sin `status` exime los códigos de una ruta de mentira (no existente en el contrato); una ruta
+  que sí existe debe acotarse con `status` (el cliente lo exige).
+- La detección de `assertConsumersUseGeneratedClients` es léxica (no ve alias de `fetch`) y recorre las rutas de
+  `PATHS.consumerSources`; un directorio de código nuevo hay que añadirlo allí.
+- Vectores dorados de verificación compartidos en `contracts/` (Ajv y jsonschema): hoy cada proveedor prueba su propio
+  validador con sus tests; historia por crear en /sprint-close.
+- Un empaquetado por job: cada job de la CI vuelve a empaquetar los specs; compartirlo es una historia por crear en
+  /sprint-close.
+- Nombres de claves de mapas abiertos (`extractedData`) y marca `sin_verificacion_de_proveedor` con motivo: historia por crear
+  en /sprint-close.

@@ -16,6 +16,8 @@
     "contracts:check": "node scripts/contracts/check.mjs",
     "contracts:generate": "node scripts/contracts/generate.mjs",
     "contracts:generate:check": "node scripts/contracts/generate-check.mjs",
+    "contracts:verify-provider": "node scripts/contracts/verify-provider.mjs",
+    "contracts:breaking": "bash scripts/ci/contracts-breaking.sh origin/main",
     "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs",
     "lint:lenguaje": "tsx packages/clinical-language/bin/lint-lenguaje.ts",
     "test:lenguaje": "vitest run ci/tests/lenguaje",

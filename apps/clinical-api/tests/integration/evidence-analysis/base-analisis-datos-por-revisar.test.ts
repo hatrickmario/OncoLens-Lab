@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
@@ -19,6 +18,7 @@ import {
   ragSimulado,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 663;
 
@@ -90,7 +90,7 @@ describe('Base del análisis con FX-T1a-a', () => {
       traceIds: { traceId: () => 'req_BaseRevisar01' },
     });
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({

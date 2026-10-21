@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { crearLectorDeIdentidad } from '../../../src/modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import {
@@ -12,6 +11,7 @@ import {
   PII_FX_T4A_A,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { configuracionDePiiDeTest } from '../../support/desidentificacion.js';
 import { INSTANTE_FIJO, insertar } from '../../support/filas-sinteticas.js';
 import { servicioDeIdentidad } from '../../support/identidad.js';
@@ -83,7 +83,7 @@ describe('La Base del análisis no filtra identidad (RN-10, RN-11)', () => {
     const patientId = await crearPacienteFxT4aA(mundo, identidad);
     await sembrarPiiEnCamposDelContexto(patientId);
 
-    const respuesta = await request(app)
+    const respuesta = await clienteVerificado(app)
       .post('/platform/evidence-analyses')
       .set('Cookie', cookie)
       .send({ patientId, query: PREGUNTA_Q_HER2, sourcesSelected: TODAS_LAS_FUENTES });

@@ -2,7 +2,7 @@
 # AC-2 de US-036 (design.md D3, ADR-26): compara el openapi.yaml de cada proveedor de HEAD con el de la base del PR,
 # ambos empaquetados con sus $ref a contracts/, con `oasdiff breaking --fail-on ERR`.
 # Solo rompen los cambios de nivel ERR; los WARN (p. ej. response-body-wrapped-in-one-of-original-preserved de los
-# oneOf aditivos) se imprimen y no rompen. Lo sustituirá `contracts:breaking` de US-214.
+# oneOf aditivos) se imprimen y no rompen. Lo invoca `npm run contracts:breaking` (US-214) contra origin/main.
 # Uso: scripts/ci/contracts-breaking.sh <base-ref>     (p. ej. origin/main o el SHA base del PR)
 set -uo pipefail
 

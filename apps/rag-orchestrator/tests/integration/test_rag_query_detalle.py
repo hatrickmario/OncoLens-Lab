@@ -1,13 +1,12 @@
 """`POST /rag/query`, detalle expandible de cada opción (ARR-08 / L1D-284): RN-01, RN-23, RN-22.
 
 El ``LlmEvidenceGenerator`` REAL recibe un LLM falso que devuelve JSON crudo con ``details``; el NLI falso decide el soporte
-de cada afirmación. Cada respuesta se valida contra el spec del proveedor (`assert_matches_spec`).
+de cada afirmación. Cada respuesta la valida contra el spec del proveedor el hook de `verificacion_proveedor.py` (US-214).
 """
 
 import pytest
 
 from app.application.generation import LlmEvidenceGenerator
-from tests.support.contract import assert_matches_spec
 from tests.support.llm_falso import DETALLE_DOS, DETALLE_UNO, FakeLlmClient
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 from tests.support.recuperacion import Q_HER2, crear_entorno, solicitud_de
@@ -22,7 +21,6 @@ def _consultar(escenario: str, nli: NliFalso, **generador):
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     return cuerpo
 
 

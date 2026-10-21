@@ -25,7 +25,12 @@ export function errNoDeclarados(proveedor, hallazgos, excepciones) {
 
 /** ¿Algún ERR coincide con una excepción declarada? (sin esto no hay nada que perdonar). */
 export function hayErrDeclarado(proveedor, hallazgos, excepciones) {
-  return hallazgos.filter(esErr).some((hallazgo) => excepciones.some((excepcion) => esLaExcepcion(excepcion, proveedor, hallazgo)));
+  return excepcionesAplicadas(proveedor, hallazgos, excepciones).length > 0;
+}
+
+/** Las excepciones declaradas que cubren al menos un ERR (sin repetir), para dejar constancia de cuáles se aplicaron. */
+export function excepcionesAplicadas(proveedor, hallazgos, excepciones) {
+  return excepciones.filter((excepcion) => hallazgos.filter(esErr).some((hallazgo) => esLaExcepcion(excepcion, proveedor, hallazgo)));
 }
 
 function esLaExcepcion(excepcion, proveedor, hallazgo) {
@@ -58,6 +63,8 @@ if (esElProgramaPrincipal()) {
   const restantes = errNoDeclarados(proveedor, hallazgos, excepciones);
   for (const hallazgo of restantes) console.log(`${proveedor}: ERR no declarado [${hallazgo.id}] ${hallazgo.operation} ${hallazgo.path}: ${hallazgo.text}`);
   const perdona = restantes.length === 0 && hayErrDeclarado(proveedor, hallazgos, excepciones);
+  // A stderr: stdout lleva solo la decisión explícita que contracts-breaking.sh compara.
+  if (perdona) excepcionesAplicadas(proveedor, hallazgos, excepciones).forEach((excepcion) => console.error(`${proveedor}: excepción aplicada ${excepcion.id} (${excepcion.adr}, ${excepcion.change}) [${excepcion.regla}] ${excepcion.operacion} ${excepcion.ruta}`));
   if (perdona) console.log(DECISION_PERDONADO);
   process.exit(perdona ? 0 : 1);
 }

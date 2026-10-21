@@ -1,6 +1,6 @@
 """`POST /rag/query`, tramo de recuperación (US-055 / L1D-106): corpus FX-06a-a y bordes falsos, JWT de servicio de test.
 
-Cada respuesta se valida contra el spec del proveedor con `assert_matches_spec` [S1 resp. 17].
+Cada respuesta la valida contra el spec del proveedor el hook de `verificacion_proveedor.py` (US-214).
 """
 
 from dataclasses import replace
@@ -8,7 +8,6 @@ from dataclasses import replace
 import pytest
 
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
-from tests.support.contract import assert_matches_spec
 from tests.support.recuperacion import (
     LONGITUD_MAXIMA_DE_PRUEBA,
     PARAMETROS_DE_PRUEBA,
@@ -33,7 +32,6 @@ def test_rag_query_responde_sin_evidencia_sin_invocar_al_llm_cuando_la_pregunta_
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["status"] == "sin_evidencia"
     assert cuerpo["evidenceOptions"] == []
     assert cuerpo["retrievalStats"]["aboveThreshold"] == 0
@@ -50,7 +48,6 @@ def test_rag_query_responde_sin_evidencia_sin_invocar_al_llm_cuando_el_umbral_de
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA, cuerpo)
     assert cuerpo["status"] == "sin_evidencia"
     assert cuerpo["meta"]["retrievalParams"]["relevanceThreshold"] == 0.90
     assert entorno.generador.invocaciones == 0
@@ -63,7 +60,6 @@ def test_rag_query_excluye_el_chunk_no_vigente_de_los_candidatos_del_reranker_y_
     respuesta = entorno.consultar(solicitud_de(Q_HER2))
 
     assert respuesta.status_code == 200
-    assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
     assert set(entorno.buscador.expresiones) == {
         expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
@@ -83,7 +79,6 @@ def test_rag_query_excluye_el_chunk_de_prostata_de_los_candidatos_cuando_el_cont
     respuesta = entorno.consultar(solicitud_de(Q_HER2, tipo_de_cancer="mama"))
 
     assert respuesta.status_code == 200
-    assert_matches_spec(RESPUESTA, respuesta.json())
     assert entorno.buscador.expresiones, "la búsqueda en Milvus no se ejecutó"
     assert set(entorno.buscador.expresiones) == {
         expresion_vigente_del_tipo("mama", LONGITUD_MAXIMA_DE_PRUEBA)
@@ -139,7 +134,6 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_invocar_al_llm_cuando_
 
     assert respuesta.status_code == 503
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_503, cuerpo)
     assert cuerpo["error"] == "RETRIEVAL_UNAVAILABLE"
     assert cuerpo["traceId"] == solicitud["traceId"]  # una sola fuente: el traceId del cuerpo
     assert entorno.generador.invocaciones == 0
@@ -156,7 +150,6 @@ def test_rag_query_responde_422_tipo_cancer_no_registrado_sin_buscar_ni_invocar_
 
     assert respuesta.status_code == 422
     cuerpo = respuesta.json()
-    assert_matches_spec(RESPUESTA_422, cuerpo)
     assert cuerpo["error"] == "TIPO_CANCER_NO_REGISTRADO"
     assert cuerpo["traceId"] == solicitud["traceId"]
     assert "status" not in cuerpo, "un contexto sin tipo de cáncer no es un sin_evidencia"
