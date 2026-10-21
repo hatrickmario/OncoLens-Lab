@@ -53,7 +53,10 @@ el preflight quitaba tamaño y peso a h1-h3, listas, `dl`, `button` y `summary` 
 completo cuando se migre el resto de pantallas del S2; hasta entonces las pantallas en CSS Modules
 conservan sus estilos. La dependencia `@radix-ui/react-slot` no se instala (sin uso, YAGNI) y
 `@radix-ui/react-label` queda en 2.1.15 (versiones posteriores con menos de 14 días de antigüedad).
-Componentes propios: `Button` con variantes `primario`/`secundario`/`fantasma`; `Card` con `elevada`.
+Componentes propios: `Button` con variantes `primario`/`secundario`/`fantasma`; `Card` con `variante: 'plana' | 'elevada'`.
+`cn()` usa `extendTailwindMerge` con los radios y la sombra de los tokens propios (tailwind-merge no los conoce).
+`tests/ui/globals-css.test.ts` exige la ausencia del preflight mientras exista algún `*.module.css` bajo `apps/web`;
+al migrar la última pantalla ese test se retira con `Test-Removal: ya no hay CSS Modules` y se adopta el preflight.
 
 ### D4. Migración sin cambio de comportamiento
 Se conservan textos (`lib/mensajes`), `id`/`aria-labelledby`, `role="alert"` del error, nombres

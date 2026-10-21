@@ -13,6 +13,7 @@ describe('cn', () => {
   });
 
   it('une clases condicionales y descarta los valores falsos', () => {
-    expect(cn('p-4', false && 'hidden', undefined, 'text-sm')).toBe('p-4 text-sm');
+    const oculto: boolean = Number('0') > 1;
+    expect(cn('p-4', oculto && 'hidden', undefined, 'text-sm')).toBe('p-4 text-sm');
   });
 });
