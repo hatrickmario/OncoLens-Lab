@@ -1,4 +1,7 @@
 import json
+import pathlib
+import subprocess
+import sys
 
 import httpx
 import pytest
@@ -100,6 +103,54 @@ def test_verificar_respuesta_falta_cabecera_obligatoria_lanza_nombrandola():
         verificar_respuesta("GET", "/x", 429, httpx.Headers({"retry-after": "3"}), b"")
     finally:
         contract.usar_spec(anterior)
+
+
+def _con_spec_sintetico(respuestas: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    spec = {"components": {}, "paths": {"/x": {"get": {"responses": respuestas}}}}
+    monkeypatch.setattr(contract, "_spec", spec)
+
+
+def test_verificar_respuesta_acepta_un_codigo_cubierto_por_nxx_o_default(monkeypatch):
+    _con_spec_sintetico({"200": {}, "4XX": {}, "default": {}}, monkeypatch)
+    verificar_respuesta("GET", "/x", 404, {}, b"")
+    verificar_respuesta("GET", "/x", 503, {}, b"")
+
+
+def test_verificar_respuesta_codigo_exacto_gana_a_nxx(monkeypatch):
+    schema = {"content": {"application/json": {"schema": {"type": "object", "required": ["a"]}}}}
+    _con_spec_sintetico({"404": schema, "4XX": {}}, monkeypatch)
+    with pytest.raises(AssertionError, match="GET /x 404"):
+        verificar_respuesta("GET", "/x", 404, {}, b"{}")
+
+
+def test_verificar_respuesta_codigo_sin_nxx_ni_default_lanza(monkeypatch):
+    _con_spec_sintetico({"200": {}, "4XX": {}}, monkeypatch)
+    with pytest.raises(AssertionError, match="GET /x 503.*código no declarado"):
+        verificar_respuesta("GET", "/x", 503, {}, b"")
+
+
+def test_verificar_respuesta_cuerpo_no_vacio_sin_contenido_declarado_lanza():
+    with pytest.raises(AssertionError, match=r"POST /documents/extract 413.*no declara cuerpo"):
+        verificar_respuesta("POST", "/documents/extract", 413, {}, b'{"x": 1}')
+
+
+def test_empaquetar_spec_incluye_el_stderr_de_node_cuando_node_falla(monkeypatch):
+    monkeypatch.setattr(contract, "PROVEEDOR", "proveedor-inexistente")
+    with pytest.raises(RuntimeError, match="proveedor-inexistente"):
+        contract.empaquetar_spec()
+
+
+def test_un_test_de_dominio_puro_corre_sin_node_en_el_path():
+    pura = "tests/unit/test_admisibilidad.py"
+    entorno = {"PATH": str(pathlib.Path(sys.executable).parent), "HOME": str(pathlib.Path.home())}
+    resultado = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", pura],
+        cwd=contract.RAIZ_REPOSITORIO / "apps/rag-orchestrator",
+        env=entorno,
+        capture_output=True,
+        text=True,
+    )
+    assert resultado.returncode == 0, resultado.stdout[-400:]
 
 
 def test_verificar_respuesta_ruta_no_resuelta_no_imprime_segmentos_ni_query():
