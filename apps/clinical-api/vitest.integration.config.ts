@@ -13,6 +13,7 @@ export default defineConfig({
       'tests/integration/seed/**/*.test.ts',
       'tests/integration/evidence-analysis/**/*.test.ts',
       'tests/integration/identidad/**/*.test.ts',
+      'tests/integration/usuarios/**/*.test.ts',
     ],
     // El empaquetado de los specs va antes que la BD: si falla, no se crea ninguna base de test.
     globalSetup: [...vitestEmpaquetado.globalSetup, 'tests/support/global-setup.ts'],

@@ -7,7 +7,12 @@
   "engines": {
     "node": ">=22.18.0"
   },
+  "bin": {
+    "oncolens": "dist/apps/clinical-api/src/cli/oncolens.js"
+  },
   "scripts": {
+    "oncolens": "node dist/apps/clinical-api/src/cli/oncolens.js",
+    "oncolens:dev": "tsx src/cli/oncolens.ts",
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/apps/clinical-api/src/server.js",
