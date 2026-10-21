@@ -18,6 +18,9 @@ export const TRANSPORTES_DECLARADOS = [
   { file: 'apps/web/lib/server/clinical-api.ts', llamada: 'opciones.fetch(', motivo: 'fetch inyectado en el SDK generado de clinical-api (lista blanca de cabeceras, timeout, sin redirecciones)' },
 ];
 
+/** Paquetes de cliente HTTP que se detectan por import, require y mención: una sola lista. */
+const CLIENTES_HTTP = ['axios', 'undici', 'got', 'node-fetch', 'ky', 'superagent', 'needle'].join('|');
+
 /** Cada patrón nombra la forma de llamada directa que detecta. */
 const LLAMADAS_DIRECTAS = [
   { patron: /(?<![\w$.])fetch\s*\(/, forma: 'fetch(...)' },
@@ -25,9 +28,9 @@ const LLAMADAS_DIRECTAS = [
   { patron: /\baxios\b/, forma: 'axios' },
   { patron: /\bXMLHttpRequest\b/, forma: 'XMLHttpRequest' },
   { patron: /\bhttps?\.(?:request|get)\s*\(/, forma: 'http(s).request/get(...)' },
-  { patron: /\bfrom\s+['"](?:undici|got|node-fetch|ky|superagent|needle|axios)['"]/, forma: 'import de un cliente HTTP' },
+  { patron: new RegExp(`\\bfrom\\s+['"](?:${CLIENTES_HTTP})['"]`), forma: 'import de un cliente HTTP' },
   { patron: /\bfrom\s+['"](?:node:)?https?['"]/, forma: 'import de node:http(s)' },
-  { patron: /\brequire\(\s*['"](?:undici|got|node-fetch|ky|superagent|needle|axios|(?:node:)?https?)['"]\s*\)/, forma: 'require de un cliente HTTP' },
+  { patron: new RegExp(`\\brequire\\(\\s*['"](?:${CLIENTES_HTTP}|(?:node:)?https?)['"]\\s*\\)`), forma: 'require de un cliente HTTP' },
 ];
 
 /** `fetch('/api/…')`: el navegador hablando con el BFF de su propio origen. */
@@ -51,7 +54,12 @@ function llamadasDirectas(file, linea) {
  */
 export function assertConsumersUseGeneratedClients(_specs, _examples, docs) {
   const consumers = docs?.consumers;
-  if (!consumers || Object.keys(consumers).length === 0) return [];
+  // Sin `consumers` el contexto no los cargó (lo usan los tests de otras reglas); un conjunto vacío significa que no se encontró
+  // ningún archivo, y eso no puede dar verde: la regla estaría apagada.
+  if (!consumers) return [];
+  if (Object.keys(consumers).length === 0) {
+    return [report('scripts/contracts/lib/paths.mjs', 'consumerSources', 'no se encontró ningún archivo de código de los consumidores: revisa PATHS.consumerSources')];
+  }
   const hallazgos = Object.entries(consumers).flatMap(([file, text]) =>
     text.split('\n').flatMap((linea, indice) =>
       llamadasDirectas(file, linea).map((forma) => report(file, `L${indice + 1}`, `llamada HTTP directa (${forma}) fuera de los transportes declarados: usa el cliente generado de packages/api-contracts (el SDK de clinical-api o de rag-orchestrator)`)),

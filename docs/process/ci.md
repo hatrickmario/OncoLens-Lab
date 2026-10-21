@@ -30,7 +30,7 @@ configuración de GitHub.
 
 - `npm run contracts:verify-provider [-- --proveedor clinical-api|rag-orchestrator]...` ejecuta las suites de cada proveedor con
   `CONTRACT_VERIFY=strict`, muestra cuántas respuestas verificó por proveedor y falla si alguno verificó cero. Tope por suite:
-  `VERIFY_PROVIDER_SEGUNDOS` (1200). Local: `clinical-api` necesita el PostgreSQL de test (`scripts/test-integration.sh`) y
+  `VERIFY_PROVIDER_SEGUNDOS` (600). Local: `clinical-api` necesita el PostgreSQL de test (`scripts/test-integration.sh`) y
   `rag-orchestrator` el intérprete de `VERIFY_PROVIDER_PYTHON` (`python`) con `requirements*.txt`.
 - La verificación es automática, no opt-in. Los mensajes nombran proveedor, método, plantilla, código y ruta JSON, **nunca el
   valor** (un cuerpo puede llevar datos). Las rutas de mentira de un test (guard, manejador de errores) se declaran una a una en

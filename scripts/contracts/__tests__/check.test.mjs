@@ -8,7 +8,7 @@ import { ROOT } from './helpers/parches.mjs';
 
 const run = promisify(execFile);
 const CHECK = path.join(ROOT, 'scripts/contracts/check.mjs');
-const COPIED = ['apps/clinical-api/openapi.yaml', 'apps/rag-orchestrator/openapi.yaml', 'contracts', 'docs/architecture/data-model.md', 'readme.md'];
+const COPIED = ['apps/web/lib/server/clinical-api.ts', 'apps/clinical-api/openapi.yaml', 'apps/rag-orchestrator/openapi.yaml', 'contracts', 'docs/architecture/data-model.md', 'readme.md'];
 
 const temporaries = [];
 afterEach(async () => {

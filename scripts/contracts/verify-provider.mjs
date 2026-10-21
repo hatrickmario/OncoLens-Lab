@@ -9,7 +9,7 @@
  *    (`scripts/test-integration.sh`); en la CI corre dentro de `scripts/ci/integracion-clinical-api.sh`.
  *  - rag-orchestrator: Pytest con adapters falsos (los tests `servicios_reales` los corre `integration-rag`).
  *
- * Variables (RN-22): VERIFY_PROVIDER_SEGUNDOS (tope por suite, 1200), VERIFY_PROVIDER_PYTHON (intérprete, `python`).
+ * Variables (RN-22): VERIFY_PROVIDER_SEGUNDOS (tope por suite, 600: las dos de clinical-api caben en los 30 min del job), VERIFY_PROVIDER_PYTHON (intérprete, `python`).
  * Los tests nunca imprimen el valor de un campo: los mensajes nombran proveedor, método, plantilla, código y ruta JSON.
  */
 import { spawn } from 'node:child_process';
@@ -20,7 +20,7 @@ import { pathToFileURL } from 'node:url';
 import { DEFAULT_ROOT } from './lib/paths.mjs';
 import { CLINICAL_API, PROVIDERS, RAG_ORCHESTRATOR } from './lib/specs.mjs';
 
-const SEGUNDOS_POR_DEFECTO = 1200;
+const SEGUNDOS_POR_DEFECTO = 600;
 
 /** Suites de cada proveedor y cómo se cuentan sus respuestas verificadas. */
 function suitesDe(proveedor, python) {
@@ -54,6 +54,9 @@ function contarEnSalida(salida, proveedor) {
   const patron = new RegExp(`verificación del proveedor: (\\d+) respuestas verificadas contra ${proveedor}`, 'g');
   return [...salida.matchAll(patron)].reduce((total, coincidencia) => total + Number(coincidencia[1]), 0);
 }
+
+/** Estricto por defecto; `CONTRACT_VERIFY=lax` solo relaja la exigencia de al menos una respuesta verificada (uso local). */
+export const esEstricto = (valor) => valor !== 'lax';
 
 /** Argumentos de la línea de comandos: los proveedores pedidos (todos si no se pide ninguno). Lanza ante un argumento desconocido. */
 export function leerArgumentos(argv) {
@@ -95,12 +98,13 @@ export async function verificarProveedores({ proveedores, ejecutar, archivoDeRep
 /** Ejecuta un comando como proceso hijo, reenvía su salida y lo mata al pasar `segundos`. */
 function ejecutarProceso({ comando, args, cwd }, { raiz, entorno, segundos }) {
   return new Promise((resolver) => {
-    const hijo = spawn(comando, args, { cwd: path.join(raiz, cwd ?? '.'), env: entorno, stdio: ['ignore', 'pipe', 'inherit'] });
+    const hijo = spawn(comando, args, { cwd: path.join(raiz, cwd ?? '.'), env: entorno, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
     let salida = '';
     let vencido = false;
     const temporizador = setTimeout(() => {
       vencido = true;
-      hijo.kill('SIGKILL');
+      // Todo el grupo de procesos: los nietos (vitest, pytest) heredan el pipe y mantendrian abierto el cierre.
+      process.kill(-hijo.pid, 'SIGKILL');
     }, segundos * 1000);
     hijo.stdout.on('data', (trozo) => {
       salida += trozo;
@@ -124,12 +128,12 @@ async function main() {
   const carpeta = mkdtempSync(path.join(tmpdir(), 'verify-provider-'));
   const archivoDeReporte = path.join(carpeta, 'respuestas.txt');
   appendFileSync(archivoDeReporte, '');
-  const entorno = { ...process.env, CONTRACT_VERIFY: 'strict', CONTRACT_VERIFY_REPORT: archivoDeReporte };
+  const entorno = { ...process.env, CONTRACT_VERIFY: esEstricto(process.env.CONTRACT_VERIFY) ? 'strict' : 'lax', CONTRACT_VERIFY_REPORT: archivoDeReporte };
   try {
     const resumen = await verificarProveedores({
       proveedores,
       archivoDeReporte,
-      estricto: true,
+      estricto: entorno.CONTRACT_VERIFY === 'strict',
       python: process.env.VERIFY_PROVIDER_PYTHON ?? 'python',
       ejecutar: (suite) => ejecutarProceso(suite, { raiz: DEFAULT_ROOT, entorno, segundos }),
     });

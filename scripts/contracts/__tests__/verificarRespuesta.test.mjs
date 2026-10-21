@@ -82,7 +82,7 @@ describe('verificarRespuesta', () => {
   it('falla cerrado sin imprimir identificadores cuando la operación no existe en el spec', () => {
     const idSintetico = '00000000-0000-4000-8000-000000000001';
     const mensaje = mensajeDe(respuestaDeAnalisis({ ruta: `/platform/no-existe/${idSintetico}?q=x`, metodo: 'get' }));
-    expect(mensaje).toBe('clinical-api GET /platform/no-existe/{id}: la operación no existe en el spec');
+    expect(mensaje).toBe('clinical-api GET /platform/{…}/{…}: la operación no existe en el spec');
   });
 
   it('falla cerrado cuando el proveedor no tiene spec', () => {

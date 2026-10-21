@@ -8,7 +8,7 @@
  * llevar datos.
  */
 import { getBundledSpecs } from './bundledSpecs.mjs';
-import { findResponse, labelOf, resolverOperacion } from './operations.mjs';
+import { findResponse, labelOf, listOperations, resolverOperacion } from './operations.mjs';
 import { followRefs } from './pointer.mjs';
 import { createExampleValidator } from './validator.mjs';
 
@@ -35,15 +35,15 @@ export function assertMatchesSpec(provider, pointer, body) {
   }
 }
 
-const SEGMENTO_CON_IDENTIFICADOR = /^(?:[0-9a-f]{8}-[0-9a-f-]{27}|\d+)$/i;
-
-/** Ruta concreta sin query ni identificadores, para el mensaje de una operación que no se resolvió. */
-const rutaSinIdentificadores = (ruta) =>
-  ruta
+/** Ruta concreta sin query y con `{…}` en todo segmento que no sea un literal del spec: un id o un valor nunca se imprime (RN-10). */
+function rutaSinValores(spec, ruta) {
+  const literales = new Set(listOperations(spec).flatMap((entry) => entry.route.split('/').filter((segmento) => segmento !== '' && !segmento.startsWith('{'))));
+  return ruta
     .split(/[?#]/, 1)[0]
     .split('/')
-    .map((segmento) => (SEGMENTO_CON_IDENTIFICADOR.test(segmento) ? '{id}' : segmento))
+    .map((segmento) => (segmento === '' || literales.has(segmento) ? segmento : '{…}'))
     .join('/');
+}
 
 /** La respuesta que el spec declara para `status`: código exacto, rango `NXX` o `default`. */
 function respuestaDeclarada(spec, operacion, status) {
@@ -64,7 +64,7 @@ function cabecerasObligatoriasAusentes(spec, respuestaDelSpec, cabeceras) {
 /** La operación del spec a la que corresponde la petición; sin ella la verificación falla cerrado (nunca se omite). */
 function exigirOperacion(spec, { proveedor, metodo, ruta }) {
   const operacion = resolverOperacion(spec, metodo, ruta);
-  if (!operacion) throw new Error(`${proveedor} ${metodo.toUpperCase()} ${rutaSinIdentificadores(ruta)}: la operación no existe en el spec`);
+  if (!operacion) throw new Error(`${proveedor} ${metodo.toUpperCase()} ${rutaSinValores(spec, ruta)}: la operación no existe en el spec`);
   return operacion;
 }
 

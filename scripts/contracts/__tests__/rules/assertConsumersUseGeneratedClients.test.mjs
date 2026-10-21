@@ -71,9 +71,20 @@ describe('assertConsumersUseGeneratedClients · clientes generados como única v
     expect(hallazgos.map((item) => item.message)).toEqual([expect.stringContaining('ya no contiene')]);
   });
 
-  it('no reporta nada cuando no hay código de consumidores que revisar (contexto sin cargar)', () => {
+  it('no reporta nada cuando el contexto no cargó los consumidores (lo usan los tests de otras reglas)', () => {
     expect(assertConsumersUseGeneratedClients(null, null, {})).toEqual([]);
-    expect(assertConsumersUseGeneratedClients(null, null, { consumers: {} })).toEqual([]);
+  });
+
+  it('reporta que la regla está apagada cuando no se encontró ningún archivo de consumidores [US-214 AC-1]', () => {
+    const hallazgos = assertConsumersUseGeneratedClients(null, null, { consumers: {} });
+
+    expect(hallazgos.map((item) => item.message)).toEqual([expect.stringContaining('no se encontró ningún archivo')]);
+  });
+
+  it.each(['axios', 'undici', 'got', 'node-fetch', 'ky', 'superagent', 'needle'])('detecta %s tanto por import como por require [US-214 AC-1]', (cliente) => {
+    const hallazgos = hallazgosDe({ 'apps/web/lib/server/otra.ts': `import x from '${cliente}';\nconst y = require('${cliente}');\n` });
+
+    expect(hallazgos.map((item) => item.path)).toEqual(['L1', 'L2']);
   });
 });
 

@@ -134,6 +134,12 @@ describe('generarRefinamientos falla cerrado (US-214 AC-6)', () => {
     await expect(generar('clinical-api', parche)).rejects.toThrow(/Envoltorio.*oneOf cuyas alternativas llevan refinamientos/);
   });
 
+  it('falla cuando additionalProperties apunta a un schema con refinamientos [US-214 AC-6]', async () => {
+    const parche = [{ op: 'add', path: '/components/schemas/Diccionario', value: { type: 'object', additionalProperties: { $ref: '#/components/schemas/EvidenceOption' } } }];
+
+    await expect(generar('clinical-api', parche)).rejects.toThrow(/Diccionario.*additionalProperties cuyo schema lleva refinamientos/);
+  });
+
   it('falla cuando un if aparece en un schema en línea de una operación [US-214 AC-6]', async () => {
     const parche = [{ op: 'add', path: '/paths/~1health/get/responses/200/content/application~1json/schema', value: { type: 'object', if: { required: ['status'] }, then: { required: ['status'] } } }];
 
