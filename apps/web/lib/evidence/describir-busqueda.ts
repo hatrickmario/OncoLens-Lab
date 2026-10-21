@@ -25,8 +25,9 @@ export function nombrarFuentes(seleccionadas: FuentesConsultadas['selected']): s
 export function describirBusqueda(
   consultadas: FuentesConsultadas,
   estado: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado',
-): string {
+): string | null {
   const { busqueda, sinConsulta } = mensajes().evidence.base;
+  if (estado === 'con_evidencia') return null;
   if (estado === 'tipo_no_habilitado') return sinConsulta;
   return rellenar(busqueda, {
     fuentes: nombrarFuentes(consultadas.selected),

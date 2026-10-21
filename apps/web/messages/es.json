@@ -105,6 +105,7 @@
     "base": {
       "titulo": "Base del análisis",
       "resumen": "Faltantes: {faltantes} · Supuestos: {supuestos} · Fuentes no incluidas: {fuentes} · Afirmaciones omitidas: {omitidas}",
+      "supuestoDeRegla": "Supuesto (regla del catálogo): {texto}",
       "ninguna": "ninguna",
       "ninguno": "ninguno",
       "fechaDeCorte": "Evidencia del corpus al {fecha}",
@@ -116,7 +117,7 @@
       "fuentesConsultadas": "Fuentes consultadas",
       "fragmentos": "{retrieved} fragmentos recuperados · {above} sobre el umbral",
       "fuentesNoIncluidas": "Fuentes no incluidas",
-      "sinLicencia": "{fuente}: sin licencia abierta; su contenido no se consultó",
+      "sinLicencia": "{fuente}: fuente no incluida; su contenido no se consultó",
       "supuestos": "Supuestos",
       "limitaciones": "Limitaciones",
       "rotulada": "{rotulo}: {texto}",

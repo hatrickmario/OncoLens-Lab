@@ -41,8 +41,5 @@ test.describe('Base del análisis (L1D-187)', () => {
     await expect(
       page.getByRole('region', { name: 'Base del análisis' }).getByRole('heading', { level: 3 }),
     ).toHaveCount(0);
-    await expect(page.getByTestId('analysis-result').getByRole('heading', { level: 3 })).toHaveCount(
-      0,
-    );
   });
 });

@@ -8,7 +8,7 @@ export interface ResumenDeBase {
   fuentesNoIncluidas: string;
   omitidas: number;
   /** Texto de los supuestos de origen `regla_catalogo`, para que "Faltantes: 0" no se lea como "nada falta". */
-  supuestosDeCatalogo: string[];
+  supuestosDeReglaCatalogo: string[];
 }
 
 export function resumirBase(base: AnalysisBasis): ResumenDeBase {
@@ -18,7 +18,7 @@ export function resumirBase(base: AnalysisBasis): ResumenDeBase {
     supuestos: base.assumptions.length,
     fuentesNoIncluidas: base.sourcesNotIncluded.join(', ') || ninguna,
     omitidas: base.omittedClaims,
-    supuestosDeCatalogo: base.assumptions
+    supuestosDeReglaCatalogo: base.assumptions
       .filter((supuesto) => supuesto.origin === 'regla_catalogo')
       .map((supuesto) => supuesto.text),
   };

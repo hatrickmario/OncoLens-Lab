@@ -18,8 +18,8 @@ function Lista({ titulo, items }: ListaProps) {
     <section>
       <h3>{titulo}</h3>
       <ul>
-        {items.map((item) => (
-          <li key={item}>{item}</li>
+        {items.map((item, indice) => (
+          <li key={`${indice}-${item}`}>{item}</li>
         ))}
       </ul>
     </section>

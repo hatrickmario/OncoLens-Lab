@@ -11,9 +11,9 @@ export interface BasisSummaryProps {
 
 /** Resumen siempre visible de la Base (S2-09): cifras, supuestos declarados, fecha de corte y, si aplica, qué se buscó. */
 export function BasisSummary({ base, estado }: BasisSummaryProps) {
-  const { resumen, fechaDeCorte } = mensajes().evidence.base;
+  const { resumen, fechaDeCorte, supuestoDeRegla } = mensajes().evidence.base;
   const cifras = resumirBase(base);
-  const mostrarBusqueda = estado !== 'con_evidencia';
+  const busqueda = describirBusqueda(base.sourcesConsulted, estado);
   return (
     <div className={estilos.resumenBase}>
       <p>
@@ -24,10 +24,10 @@ export function BasisSummary({ base, estado }: BasisSummaryProps) {
           omitidas: cifras.omitidas,
         })}
       </p>
-      {cifras.supuestosDeCatalogo.map((texto) => (
-        <p key={texto}>{texto}</p>
+      {cifras.supuestosDeReglaCatalogo.map((texto, indice) => (
+        <p key={`${indice}-${texto}`}>{rellenar(supuestoDeRegla, { texto })}</p>
       ))}
-      {mostrarBusqueda && <p>{describirBusqueda(base.sourcesConsulted, estado)}</p>}
+      {busqueda && <p>{busqueda}</p>}
       <p>{rellenar(fechaDeCorte, { fecha: formatearFechaDeCorte(base.corpusCutoffDate) })}</p>
     </div>
   );
