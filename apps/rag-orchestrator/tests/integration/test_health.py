@@ -96,3 +96,18 @@ def test_health_lista_config_keys_sin_valores():
     assert cuerpo["serviceVersion"]
     for valor in ("0.42", "SENTINELA-MODELO-ZZ", contenido_de_la_clave.splitlines()[1]):
         assert valor not in respuesta.text
+
+
+def test_health_informa_la_catalog_version_del_manifiesto_montado_cuando_el_catalogo_es_otro(
+    tmp_path,
+):
+    (tmp_path / "manifest.json").write_text('{"version": "1.0.1"}', encoding="utf-8")
+    settings = settings_de_prueba(
+        llm_provider="fake", fake_responses_path=EJEMPLOS, clinical_catalog_path=tmp_path
+    )
+
+    respuesta = TestClient(crear_app(settings, trace_ids=GeneradorTraceFijo())).get("/health")
+
+    assert respuesta.status_code == 200
+    assert respuesta.json()["catalogVersion"] == "1.0.1"
+    assert str(tmp_path) not in respuesta.text

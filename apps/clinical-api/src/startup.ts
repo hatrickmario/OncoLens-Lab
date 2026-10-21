@@ -101,7 +101,11 @@ export function cargarEtapaDeServicios(
   const pii = cargarConfiguracionDePii(servicios.deidentificacion, readFile);
   return {
     configuracion: { ...servicios, pii },
-    catalogo: crearProveedorDeVersionDeCatalogo(servicios.analisis.catalogPath, readFile),
+    catalogo: crearProveedorDeVersionDeCatalogo(
+      servicios.analisis.catalogPath,
+      readFile,
+      servicios.analisis.catalogExpectedVersion,
+    ),
     clavesDeIdentidad: cargarClavesDeIdentidad(arranque.identidad, readFile),
   };
 }

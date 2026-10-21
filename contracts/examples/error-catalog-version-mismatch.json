@@ -1,0 +1,5 @@
+{
+  "error": "CATALOG_VERSION_MISMATCH",
+  "message": "La versión del catálogo clínico difiere entre servicios.",
+  "traceId": "req_6c7d8e9f"
+}
