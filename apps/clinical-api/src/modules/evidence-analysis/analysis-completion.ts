@@ -10,7 +10,7 @@ import {
   type RegistroDeAnalisis,
 } from './analysis-record.js';
 import { aEvidenceAnalysis } from './evidence-analysis.mapper.js';
-import type { AnalysisBasisBuilder, AnalysisCompletion } from './ports.js';
+import type { AnalysisBasisBuilder, AnalysisCompletion, ResultadoDelAnalisis } from './ports.js';
 import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
 
 /** La respuesta de rag-orchestrator no cumple el contrato (o es incoherente): no se persiste ni se muestra. */
@@ -83,18 +83,22 @@ function interpretarRespuestaInterna(cuerpo: unknown): RespuestaInterpretada | n
 }
 
 /**
- * RN-06: el registro se persiste ANTES de responder. Resuelve solo cuando la escritura terminó y devuelve el registro
- * leído de la fila; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin sus detalles.
+ * RN-06: el registro se persiste ANTES de responder y la respuesta sale de la fila leída, nunca de lo armado en memoria.
+ * Resuelve solo cuando la escritura terminó; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin
+ * sus detalles.
  */
-async function persistirAntesDeResponder(
+async function persistirAnalisisAntesDeResponder(
   analisis: AnalisisRepository,
   registro: RegistroDeAnalisis,
-): Promise<RegistroDeAnalisis> {
+  disclaimer: string,
+): Promise<ResultadoDelAnalisis> {
+  let persistido: RegistroDeAnalisis;
   try {
-    return await analisis.persistirAnalisis(registro);
+    persistido = await analisis.persistirAnalisis(registro);
   } catch {
     throw new FalloDePersistenciaError();
   }
+  return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
 }
 
 /**
@@ -126,8 +130,7 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
         base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
         topRelevanceScore,
       });
-      const persistido = await persistirAntesDeResponder(analisis, registro);
-      return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
+      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
     },
     async completarTipoNoHabilitado(entrada) {
       if (entrada.episodeId === null) throw new FalloDePersistenciaError();
@@ -154,8 +157,7 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
           corpusCutoffDate: alcanceDelCorpus.corpusCutoffDate,
         }),
       });
-      const persistido = await persistirAntesDeResponder(analisis, registro);
-      return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
+      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
     },
   };
 }
