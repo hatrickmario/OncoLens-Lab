@@ -38,6 +38,7 @@ import {
   insertar,
   type GeneradorDeIds,
 } from './filas-sinteticas.js';
+import { FX_T4A_A } from './identidad.js';
 import { servidorMswConLoopback } from './servidor-msw.js';
 import {
   RUTA_DEL_CATALOGO,
@@ -342,7 +343,7 @@ export async function crearPacienteSintetico(
 }
 
 /** PII SINTÉTICA de FX-T4a-a (backlog FEAT-T4a): nada de esto es de una persona real (RN-13, RN-14). */
-const CEDULA_SINTETICA = ['5212', '3456'].join('');
+const CEDULA_SINTETICA = FX_T4A_A.numeroDeDocumento;
 const TELEFONO_SINTETICO = ['300', '1234567'].join('');
 // Los números se arman por partes: el escáner de PII de la CI no distingue un valor sintético de uno real (US-036).
 export const PII_FX_T4A_A = {
