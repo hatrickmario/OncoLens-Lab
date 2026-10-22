@@ -26,6 +26,10 @@ updates:
     groups:
       pip:
         patterns: ['*']
+    ignore:
+      # ADR-40: la versión de spaCy es parte de la medición del detector de PII (un test exige el pin); se cambia con una
+      # nueva medición, no con una subida automática.
+      - dependency-name: "spacy"
 
   # Herramientas de la CI (pip-audit) y generador de Pydantic: requirements propios fuera de rag-orchestrator.
   - package-ecosystem: pip
