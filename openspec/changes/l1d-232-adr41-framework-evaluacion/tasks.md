@@ -17,7 +17,7 @@
 
 ## 2. evaluación
 
-- [ ] 2.1 Revisión del ADR por `ai-eval-runner` (coherencia con `run-ai-eval`) · **exento**
+- [x] 2.1 Revisión del ADR por `ai-eval-runner` (coherencia con `run-ai-eval`) · **exento** _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_
 
 ## 3. Verificación
 

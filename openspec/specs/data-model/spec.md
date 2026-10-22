@@ -262,9 +262,9 @@ Las columnas de `data-model.md` con lista cerrada de valores MUST materializarse
 - **WHEN** fuera de Compose se ejecuta el seed con `SEED_DOCTOR_PASSWORD` y `SEED_ADMIN_PASSWORD` definidas y sin las variables `*_FILE`
 - **THEN** el seed termina con código 0 y los `password_hash` verifican contra esos valores
 
-#### Scenario: El seed del S1 no escribe identidad [US-039 AC-1] (asumido)
+#### Scenario: El seed escribe cinco identidades cifradas [US-039 AC-1] [US-046 AC-6] (asumido)
 - **WHEN** se ejecuta el seed y se cuentan las filas de `identity.patient_identity`
-- **THEN** el conteo es 0
+- **THEN** el conteo es 5, con `id_type = sintetico` y sin el número ni el nombre sintético en claro
 
 Regresión [RN-10] activa desde S2 (US-046 AC-6): identidades sintéticas del seed cifradas con la librería de la aplicación e índice ciego.
 

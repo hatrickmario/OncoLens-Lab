@@ -16,4 +16,4 @@
 
 ## 3. cierre
 
-- [ ] 3.1 `openspec validate l1d-170-rol-rag-corpus-permisos --strict`; suites de `clinical-api` y `rag-orchestrator` en verde, job de *permission denied* en verde en la CI. Sin cambios de API (`contracts:verify-provider` no aplica); `run-ai-eval` no aplica.
+- [x] 3.1 `openspec validate l1d-170-rol-rag-corpus-permisos --strict`; suites de `clinical-api` y `rag-orchestrator` en verde, job de *permission denied* en verde en la CI. Sin cambios de API (`contracts:verify-provider` no aplica); `run-ai-eval` no aplica. _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_

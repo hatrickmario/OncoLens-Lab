@@ -23,4 +23,4 @@
 
 ## 4. cierre
 
-- [ ] 4.1 `openspec validate l1d-167-config-validada-logs-json --strict`; suites de `clinical-api` y `rag-orchestrator` en verde; `contracts:verify-provider` (o `assertMatchesSpec()` si US-214 no está en `main`) sobre `/health`; `npm audit` / `pip-audit` si entra una dependencia de logging. `run-ai-eval` no aplica.
+- [x] 4.1 `openspec validate l1d-167-config-validada-logs-json --strict`; suites de `clinical-api` y `rag-orchestrator` en verde; `contracts:verify-provider` (o `assertMatchesSpec()` si US-214 no está en `main`) sobre `/health`; `npm audit` / `pip-audit` si entra una dependencia de logging. `run-ai-eval` no aplica. _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_

@@ -13,10 +13,9 @@ El `AIAnalysisRecord` MUST incluir `trace_id`, `analysis_type = analisis_evidenc
 - **WHEN** se lee el `ai_analysis_record` del `id` respondido
 - **THEN** `trace_id = req_TestGen0001` y ninguna columna del registro contiene `req_Entrante01`
 
-#### Scenario: La Base del análisis del S1 declara que el detalle de datos y faltantes no se evaluó [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
+#### Scenario: La Base del análisis del S1 declara los datos usados y que los faltantes críticos aún no se calculan [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
 - **GIVEN** el análisis del AC-1, y en otro caso el de `Q-SIN` sin evidencia, sobre el paciente semilla (a)
 - **WHEN** se completa el análisis
-- **NOTE** (l1d-186): el escenario deja de exigir `patientDataUsed = []` y `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT`; los sustituye el supuesto declarado del builder [US-066 AC-1]
 - **THEN** en ambos `analysisBasis.patientDataUsed` tiene una entrada por dato del contexto enviado, `analysisBasis.missingCriticalData = []` y `analysisBasis.assumptions` contiene `{ text: "Los faltantes críticos aún no se calculan en esta versión", origin: regla_catalogo }`, igual en la respuesta y en `analysis_basis` persistido
 - **AND** el texto del supuesto es un literal del builder, no una clave de configuración
 

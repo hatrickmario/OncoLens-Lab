@@ -20,8 +20,8 @@
 
 ## 4. evaluación
 
-- [ ] 4.1 (evaluate) El change toca el catálogo (estructura, sin cambiar códigos ni reglas): correr `run-ai-eval` y confirmar que las métricas OL-06 no cambian respecto del baseline (o anotar en el PR que la suite `evaluate` aún no está en `main`, L1D-235).
+- [x] 4.1 (evaluate) El change toca el catálogo (estructura, sin cambiar códigos ni reglas): correr `run-ai-eval` y confirmar que las métricas OL-06 no cambian respecto del baseline (o anotar en el PR que la suite `evaluate` aún no está en `main`, L1D-235). _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_
 
 ## 5. cierre
 
-- [ ] 5.1 `openspec validate l1d-171-catalogo-montaje-version --strict`; suites de ambos backends en verde; `contracts:verify-provider` (o `assertMatchesSpec()`) sobre `/health` y el `409`.
+- [x] 5.1 `openspec validate l1d-171-catalogo-montaje-version --strict`; suites de ambos backends en verde; `contracts:verify-provider` (o `assertMatchesSpec()`) sobre `/health` y el `409`. _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_

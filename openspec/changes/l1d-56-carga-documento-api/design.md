@@ -187,12 +187,13 @@ components:
 
 ## Gate 2: decisiones pendientes y deuda
 
-### Para el usuario: `original_filename` en claro (privacy-guardian, Mayor 2; RN-10)
+### Decidido (usuario, 2026-10-22, `[S2 resp. 19]`): `original_filename` en claro (privacy-guardian, Mayor 2; RN-10)
+
+**Decidido: opción A, formalizada en `docs/decisions/DEC-21-nombre-original-del-pdf.md`.** Se acepta el nombre en claro en la fila `document` mientras todo sea sintético (`clinical-api` no lo registra ni lo envía a Backend 2); la historia **US-235** (S6) lo cifra o enmascara y bloquea `preflight real-data` hasta entonces. El texto siguiente conserva el análisis original.
 
 `docs/architecture/data-model.md` (líneas 220 y 811) pide que `original_filename` "se guarde cifrado o enmascarado". Este
 change lo guarda **en claro** en `clinical.document` (nunca en logs, `audit`, metadatos de MinIO ni Backend 2: lo cubre el
-test parametrizado de no-fuga). Es una desviación del data-model, no un descuido. Dos opciones, sin implementar ninguna
-hasta que el usuario decida:
+test parametrizado de no-fuga). Es una desviación del data-model, no un descuido. Dos opciones (analizadas antes de decidir):
 
 - **A. Cifrar ahora** con el AES-256-GCM de `identity` (claves y anillo de versiones ya existentes) y descifrar solo al
   responder el `Document`. Coste: el cifrador de identidad se abre a un segundo módulo, columna `bytea` o nueva migración

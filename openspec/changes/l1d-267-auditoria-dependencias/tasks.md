@@ -17,4 +17,4 @@
 ## 3. Cierre
 
 - [x] 3.1 `openspec validate l1d-267-auditoria-dependencias --strict`
-- [ ] 3.2 `npx vitest run scripts/ci` en verde y el job `dependencies` verde en el PR
+- [x] 3.2 `npx vitest run scripts/ci` en verde y el job `dependencies` verde en el PR _(verificado 2026-10-22: CI de main verde en 11dc5cc8 y openspec validate --strict ok)_

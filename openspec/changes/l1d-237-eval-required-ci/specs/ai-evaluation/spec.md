@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: Evaluación obligatoria en PR que cambian la IA
-La CI MUST ejecutar el job `eval-required` en todo PR cuyo diff toque una ruta o clave de `scripts/ci/eval-trigger-paths.yaml` (prompts, catálogo, manifiesto del corpus, claves de modelos y umbrales) y SHALL publicar el reporte de `evaluate` con la configuración de CI como artefacto y como comentario del PR.
+La CI MUST ejecutar el job `eval-required` en todo PR cuyo diff toque una ruta o clave de `scripts/ci/eval-trigger-paths.yaml` (prompts, catálogo, manifiesto del corpus, claves de modelos y umbrales) y SHALL publicar el reporte de `evaluate` con la configuración de CI como artefacto `eval-reporte` y en el resumen del job (`GITHUB_STEP_SUMMARY`).
 
 #### Scenario: Un cambio de prompt dispara la suite y publica el reporte [US-074 AC-1] [AC-T5.4] [FR-20]
 - **GIVEN** un PR que modifica un archivo de `apps/rag-orchestrator/app/prompts/`
 - **WHEN** corre la CI
-- **THEN** el job `eval-required` ejecuta `evaluate` con la configuración de CI y publica el reporte como artefacto y como comentario del PR
+- **THEN** el job `eval-required` ejecuta `evaluate` con la configuración de CI y publica el reporte en el resumen del job (`GITHUB_STEP_SUMMARY`) y como artefacto `eval-reporte`
 
 #### Scenario: Un cambio de catálogo también dispara la suite [US-074 AC-2] [AC-T5.4] [C-10]
 - **GIVEN** un PR que modifica `packages/clinical-catalogs/mama/codigos.json`
@@ -23,8 +23,8 @@ La CI MUST ejecutar el job `eval-required` en todo PR cuyo diff toque una ruta o
 - **WHEN** corre la CI
 - **THEN** el job `eval-required` termina sin ejecutar `evaluate` y lo indica en su resumen
 
-#### Scenario: El comentario trae la marca validada o no validada [US-074 AC-6] [AC-T5.3]
-- **GIVEN** el comentario del PR del primer escenario
+#### Scenario: El resumen trae la marca validada o no validada [US-074 AC-6] [AC-T5.3]
+- **GIVEN** el resumen del job (`GITHUB_STEP_SUMMARY`) y el artefacto `eval-reporte` del primer escenario
 - **WHEN** se lee
 - **THEN** contiene la tabla de métricas con la marca "validada / no validada" de cada una
 
@@ -34,7 +34,7 @@ El job MUST comparar el reporte con `eval/configs/regression.yaml`; sin umbrales
 #### Scenario: Sin baseline de regresión el job pasa con aviso [US-074 AC-4] [TBD-02] (asumido en el texto del aviso)
 - **GIVEN** `eval/configs/regression.yaml` sin umbrales
 - **WHEN** corre la CI sobre el PR que cambia un prompt
-- **THEN** el job `eval-required` termina en éxito, publica el reporte y el comentario indica "Sin baseline de regresión: umbral no aplicado"
+- **THEN** el job `eval-required` termina en éxito, publica el reporte (resumen del job y artefacto `eval-reporte`) y el resumen indica "Sin baseline de regresión: umbral no aplicado"
 
 #### Scenario: Una regresión rompe el job y nombra la métrica [US-074 AC-5] [RN-22]
 - **GIVEN** un `regression.yaml` de prueba con `recall_at_10_min: 0.80` y un reporte con FX-T5a-a cuyo recall@10 es 0,50

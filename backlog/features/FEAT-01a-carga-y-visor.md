@@ -175,6 +175,7 @@ un resultado que nunca llega.
 reintentos según configuración `[RN-22]` `[readme §6.1 #9]`. No hay broker
 `[readme §3.3 #11]`. `dataClassification` sale de `Patient.data_origin`. Tests: Vitest
 con PostgreSQL de test y `rag-orchestrator` simulado; AC-6 además con MinIO de test.
+`[S2 resp. 19]` Deuda de seguridad (Medio): `clinical-api` usa las credenciales root de `clinical-minio` (`PutObject` con root, HTTP sin TLS ni SSE). Se resuelve aquí (S3) con un usuario de servicio con política limitada a `PutObject`/`DeleteObject` sobre `clinical-documents`; TLS/SSE y red interna, en US-144 (S6).
 
 ## Non-goals
 Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extraído
@@ -388,6 +389,33 @@ US-081).
 ## INVEST
 **Small** ✓ un endpoint de *streaming* de solo lectura, un Route Handler y una fila de auditoría.
 **Testable** ✓ siete tests de integración y E2E sobre status, cabeceras, contadores, BD y logs.
+
+---
+
+## US-235 — El nombre original del PDF se guarda cifrado o enmascarado y bloquea preflight real-data hasta entonces
+
+> Linear: pendiente (límite de issues del workspace; registrada por el usuario el 2026-10-22, `[S2 resp. 19]`)
+
+`FEAT-01a` · Sprint 6 *(requisito de G-Piloto, deuda del S2: L1D-56 / US-076)* · Estimación **2** *(a confirmar en el planning del S6)* · — (técnica y seguridad) · RN-10, RN-13, FR-07 · ↪ US-076 (`Document.original_filename`), US-046 (cifrado de identidad), US-143 (`preflight`) · 🔗 Decisión: DEC-21 · 🔗 Origen: Gate 2 de L1D-56, `privacy-guardian` Mayor 2
+
+## Story
+Como responsable de seguridad, quiero que el nombre original del PDF se guarde cifrado o enmascarado y que `preflight real-data` falle mientras haya nombres en claro, para que ningún nombre de archivo con identidad llegue a datos reales (G-Piloto).
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · cifrado)** · Dada la migración y un documento nuevo con nombre `mama-examen.pdf`, cuando se lee la fila `clinical.document` con SQL crudo, entonces `original_filename` no contiene el nombre en claro: está cifrado con la clave de identidad (o enmascarado). `[RN-10]` `[DEC-21]`
+- **AC-2 (borde · respuesta de la carga)** · Dado el `202` de `uploadDocument`, cuando se inspecciona la respuesta, entonces deja de devolver el nombre en claro o lo devuelve enmascarado. `[RN-10]`
+- **AC-3 (invariante · preflight)** · Dada una base con filas cuyo `original_filename` está en claro, cuando se ejecuta `oncolens preflight real-data`, entonces falla nombrando solo el conteo; y con todas las filas cifradas o enmascaradas pasa esa comprobación. `[RN-13]`
+- **AC-4 (borde · no-fuga)** · Dada la carga del AC-1, cuando se inspeccionan los logs de `clinical-api` y `web`, `audit.audit_log`, los metadatos del objeto y lo recibido por Backend 2, entonces ninguno contiene el nombre. `[RN-10]` `[NFR-11]`
+
+## Contexto técnico
+Reutiliza el cifrador de `identity` (claves y anillo de versiones) o un enmascarado determinista; migración de las filas existentes (sintéticas). Debe estar antes de habilitar datos reales (US-143). Deuda anotada en `backlog/sprints/S2-deuda.md`.
+
+## Non-goals
+Cifrado del contenido del PDF en reposo (US-144). Cualquier cambio en la clave de objeto (ya no lleva nombre).
+
+## INVEST
+**Small** ✓ una migración, un uso del cifrador y una comprobación de `preflight`.
+**Testable** ✓ SQL crudo, respuesta del `202`, logs y `preflight` sobre filas de prueba.
 
 ---
 

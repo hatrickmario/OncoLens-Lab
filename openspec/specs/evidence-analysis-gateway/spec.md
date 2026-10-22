@@ -129,10 +129,10 @@ Los logs que emite `clinical-api` al atender `POST /platform/evidence-analyses` 
 
 #### Scenario: Un X-Trace-Id con PII sembrada no llega a la IA, a la respuesta ni al log [US-052 AC-1] [RN-10] (asumido: corrección del Gate 1, 2026-10-14)
 - **GIVEN** `doc1@test.local` con sesión válida, el paciente semilla (b), el generador de `traceId` inyectado con `req_TestGen0001` y `rag-orchestrator` simulado que captura el request
-- **WHEN** envía `POST /platform/evidence-analyses` con la pregunta del AC-1 y la cabecera `X-Trace-Id: Lucía Rondón 52123456`
-- **THEN** el request capturado lleva `traceId = req_TestGen0001` y ninguna parte del body ni de sus cabeceras contiene `Lucía`, `Rondón` ni `52123456`
+- **WHEN** envía `POST /platform/evidence-analyses` con la pregunta del AC-1 y la cabecera `X-Trace-Id: Lucía Rondón 1234567`
+- **THEN** el request capturado lleva `traceId = req_TestGen0001` y ninguna parte del body ni de sus cabeceras contiene `Lucía`, `Rondón` ni `1234567`
 - **AND** el `traceId` de la respuesta es `req_TestGen0001`
-- **AND** las líneas de log capturadas no contienen `Lucía`, `Rondón` ni `52123456` ni una clave `traceIdEntrante`
+- **AND** las líneas de log capturadas no contienen `Lucía`, `Rondón` ni `1234567` ni una clave `traceIdEntrante`
 
 #### Scenario: Un X-Trace-Id con el patrón válido solo aparece en el log [US-052 AC-1] (asumido: corrección del Gate 1, 2026-10-14)
 - **GIVEN** el mismo contexto y la cabecera `X-Trace-Id: req_Entrante01`
@@ -165,7 +165,7 @@ El `AIAnalysisRecord` MUST incluir `trace_id`, `analysis_type = analisis_evidenc
 - **WHEN** se lee el `ai_analysis_record` del `id` respondido
 - **THEN** `trace_id = req_TestGen0001` y ninguna columna del registro contiene `req_Entrante01`
 
-#### Scenario: La Base del análisis del S1 declara que el detalle de datos y faltantes no se evaluó [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
+#### Scenario: La Base del análisis del S1 declara los datos usados y que los faltantes críticos aún no se calculan [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
 - **GIVEN** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` = "Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes." en la configuración de test
 - **WHEN** se completa el análisis del AC-1, y en otro caso el de `Q-SIN` sin evidencia
 - **THEN** en ambos `analysisBasis.patientDataUsed = []`, `analysisBasis.missingCriticalData = []` y `analysisBasis.assumptions` contiene `{ text: <ese literal>, origin: regla_catalogo }`, igual en la respuesta y en `analysis_basis` persistido

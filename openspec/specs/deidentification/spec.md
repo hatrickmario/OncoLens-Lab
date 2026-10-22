@@ -17,7 +17,7 @@ Antes de llamar a `rag-orchestrator`, `clinical-api` MUST enmascarar la `query` 
 #### Scenario: La identidad del representante legal también se enmascara [US-049 AC-1] [RN-11] (asumido: la historia incluye la identidad del representante en la coincidencia exacta; aceptado [S1 resp. 3])
 - **GIVEN** FX-T4a-c con su representante "Lucía Fernanda Rondón Peña" en el repositorio de identidad falso
 - **WHEN** se ejecuta el análisis con una pregunta que nombra a la representante y al paciente
-- **THEN** la `query` capturada no contiene `Tomás`, `Lucía`, `Rondón`, `1098765432` ni `52123456`
+- **THEN** la `query` capturada no contiene `Tomás`, `Lucía`, `Rondón`, `1098765432` ni `1234567`
 
 #### Scenario: Sin identidad registrada se aplican solo los patrones configurados [US-049 AC-1] [RN-22] (asumido: en el S1 no hay identidad almacenada hasta US-046; aceptado [S1 resp. 3])
 - **GIVEN** el paciente semilla (b) sin identidad registrada y una pregunta que contiene un correo y un documento precedido de su palabra clave (`DNI 12345678`), ambos sintéticos y con los formatos de `config/pii-formats.json`
@@ -78,7 +78,7 @@ El `clinical_context_snapshot` del `AIAnalysisRecord` MUST ser el `clinicalConte
 - **GIVEN** el análisis del escenario del AC-1
 - **WHEN** se lee `clinical_context_snapshot` del `AIAnalysisRecord`
 - **THEN** su hash canónico es igual al del `clinicalContext` enviado, ambos sin `pseudoPatientId`
-- **AND** ni el snapshot ni `query_text` contienen `52123456`, `Lucía`, `Rondón`, `3001234567`, el `patientId` ni `birthYear`
+- **AND** ni el snapshot ni `query_text` contienen `1234567`, `Lucía`, `Rondón`, `3001234567`, el `patientId` ni `birthYear`
 
 ### Requirement: La desidentificación falla cerrada
 Si el detector de PII o el lector de identidad lanzan una excepción, o si `verificarDesidentificado()` rechaza el resultado, `clinical-api` MUST responder `503` con `error = DESIDENTIFICACION_NO_DISPONIBLE` y `{ error, message, traceId }` sin detalles internos, SHALL no invocar a `rag-orchestrator` y MUST NOT persistir ningún `AIAnalysisRecord`; nunca envía el texto sin enmascarar como respaldo (RN-11).
@@ -118,5 +118,5 @@ Los logs de la desidentificación MUST contener solo `traceId`, el UUID del paci
 #### Scenario: Con PII sintética sembrada los logs solo llevan tipos [US-049 AC-1] [RN-10] (asumido: regla de logs de CLAUDE.md aplicada al detector, US-013 Contexto técnico)
 - **GIVEN** el análisis del escenario del AC-1 con los logs capturados
 - **WHEN** se inspeccionan las líneas emitidas por la desidentificación
-- **THEN** no contienen `52123456`, `Lucía`, `Rondón` ni la pregunta
+- **THEN** no contienen `1234567`, `Lucía`, `Rondón` ni la pregunta
 - **AND** contienen el `traceId` y los tipos `nombre` y `documento`

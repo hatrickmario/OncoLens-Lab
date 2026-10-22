@@ -1,25 +1,20 @@
 ## ADDED Requirements
 
 ### Requirement: Calibración del umbral de relevancia por barrido
-`evaluate --sweep relevance_threshold` MUST recorrer los valores de `RELEVANCE_THRESHOLD_GRID` (configuración) y SHALL reportar por valor la exactitud de "sin evidencia" y el recall@10. El valor elegido MUST quedar en la configuración como `RELEVANCE_THRESHOLD`, nunca en el código, con su justificación en el reporte.
+`evaluate --sweep relevance_threshold` MUST recorrer los valores de `RELEVANCE_THRESHOLD_GRID` (configuración) y SHALL reportar por valor la exactitud de "sin evidencia" y el recall@10. El valor elegido MUST salir de una función pura (`elegir_umbral()`), nunca del código del barrido, y el reporte SHALL incluir su justificación. La fijación definitiva de `RELEVANCE_THRESHOLD` en la configuración con modelos reales se traslada a US-233 (AC-8), `[S2 resp. 19]`.
 
-#### Scenario: El barrido muestra cada valor y fija el elegido en configuración [US-073 AC-1] [TBD-03] [RN-22]
+#### Scenario: El barrido muestra cada valor y justifica el elegido [US-073 AC-1] [TBD-03] [RN-22]
 - **GIVEN** el dataset de US-072 y `RELEVANCE_THRESHOLD_GRID` en la configuración
 - **WHEN** se ejecuta `evaluate --sweep relevance_threshold`
-- **THEN** `eval/reports/S1-baseline.md` muestra por valor la exactitud de "sin evidencia" y el recall@10, y `RELEVANCE_THRESHOLD` en la configuración toma el valor elegido con su justificación
+- **THEN** `eval/reports/S1-baseline.md` muestra por valor la exactitud de "sin evidencia" y el recall@10, y el umbral elegido aparece con su justificación; `RELEVANCE_THRESHOLD_GRID` vive en la configuración
 
 #### Scenario: El barrido es reproducible con la configuración de prueba [US-073 AC-1]
 - **GIVEN** FX-T5a-a con una grilla de 3 valores
 - **WHEN** el barrido se ejecuta dos veces
 - **THEN** las tablas por valor son idénticas
 
-### Requirement: Baseline técnico registrado por tipo de cáncer
-El baseline MUST registrar recall@10, MRR, español → inglés, fidelidad, precisión de citas y "sin evidencia" para mama y para próstata, y el p95 de `/platform/evidence-analyses` de punta a punta como mediana de 3 corridas, con la configuración de modelos de ADR-39.
-
-#### Scenario: El reporte contiene el baseline completo [US-073 AC-2] [M-06.1] [M-06.2]
-- **GIVEN** los modelos de ADR-39 y el stack de Compose
-- **WHEN** se registra el baseline
-- **THEN** el reporte contiene recall@10, MRR, español → inglés, fidelidad, precisión de citas y "sin evidencia" para mama y para próstata, y el p95 de `/platform/evidence-analyses` de punta a punta (3 corridas, mediana)
+### Requirement: Anotación del p95 fuera de meta
+Cuando el p95 medido de `/platform/evidence-analyses` supere la meta, el reporte MUST anotarlo como insumo de ADR-42 sin modificar la meta de la configuración. El baseline técnico por tipo de cáncer (US-073 AC-2) y la fijación definitiva de `RELEVANCE_THRESHOLD` se trasladan a US-233 (AC-8), `[S2 resp. 19]`.
 
 #### Scenario: Un p95 fuera de meta se anota sin cambiar la meta [US-073 AC-3] [G-5] [TBD-08]
 - **GIVEN** un p95 medido mayor que 15 s

@@ -77,7 +77,7 @@ Ninguna propia; depende de P-3 (ADR-41).
   `*_ic95` y `validacion`; en `violaciones*` menos es mejor) con la tolerancia `EVAL_MAX_REGRESSION` o, si no está,
   `regresion.tolerancia_maxima` del YAML (0: la suite es determinista). Una métrica ausente o `null` frente a un
   baseline numérico es regresión. Es **independiente** del comparador por umbrales mínimos de `regression.yaml`.
-- **Comentario en el PR diferido:** publicar un comentario exige `pull-requests: write` en el job, y
+- **Comentario en el PR descartado (usuario, 2026-10-22, `[S2 resp. 19]`):** no se da `pull-requests: write` a la CI; el resumen del job y el artefacto `eval-reporte` son la salida definitiva. Antecedente:  publicar un comentario exige `pull-requests: write` en el job, y
   `ci/tests/workflow.test.mjs` prohíbe todo `permissions` a nivel de job (control de US-036 AC-1 que no se relaja
   aquí). Sustituto: la tabla con la marca validada / no validada va al **resumen del job**
   (`GITHUB_STEP_SUMMARY`) y al artefacto `eval-reporte` (`reporte.json` + `comentario.md`). Para el comentario hace

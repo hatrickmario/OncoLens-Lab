@@ -35,7 +35,7 @@ que `@hey-api` no traduce.
 `clinical-api` necesita PostgreSQL de test, el paso va en el job `integration`
 (`scripts/ci/integracion-clinical-api.sh`) y la de `rag-orchestrator` en `build-test`; ambos están en
 `ci-ok`. El AC-1 dice «job `contracts`»: se cumple el fondo (cada PR, bloqueante) en los jobs que ya
-tienen los servicios. **Pendiente** confirmarlo (ver Open Questions).
+tienen los servicios. **Decidido (usuario, 2026-10-22, `[S2 resp. 19]`)**: se adopta la opción ya implementada (ver Open Questions).
 
 ### D3. Refinamientos del Zod generados, no escritos a mano
 `generate.mjs` recorre el spec empaquetado y, por cada `if/then`, `anyOf` de `required` y `allOf` con
@@ -81,9 +81,9 @@ Compatible con ADR-26.
 
 ## Open Questions
 
-- **Pendiente (humano, afecta AC-1):** ¿basta con que `verify-provider` corra en `integration` y
-  `build-test` (ambos en `ci-ok`) en lugar del job `contracts`? Recomendado: sí.
-- **Pendiente (humano, afecta AC-5):** confirmar que la «etiqueta en `design.md`» se materializa como
+- **Decidido (usuario, 2026-10-22, `[S2 resp. 19]`), afecta AC-1:** ¿basta con que `verify-provider` corra en `integration` y
+  `build-test` (ambos en `ci-ok`) en lugar del job `contracts`? Decisión: sí (opción adoptada por el código).
+- **Decidido (usuario, 2026-10-22, `[S2 resp. 19]`), afecta AC-5:** confirmado que la «etiqueta en `design.md`» se materializa como
   la excepción E-n de `contracts-breaking-excepciones.json` citada desde el `design.md`.
 
 ## Deuda anotada (cierre del Gate 2)
