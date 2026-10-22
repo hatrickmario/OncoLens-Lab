@@ -435,7 +435,6 @@ export interface AlcanceDelAnalisisConfig extends AlcanceDelCorpus {
   enabledCancerTypes: readonly string[];
 }
 
-const FORMA_DE_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
 /** Piso de fuentes excluidas del corpus (RN-21): NCCN y ESMO siempre; la configuración solo puede añadir más. */
 const FUENTES_EXCLUIDAS_MINIMAS = ['nccn', 'esmo'] as const;
 const FORMA_DE_FUENTE = /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$/;
@@ -456,15 +455,10 @@ function leerListaObligatoria(env: NodeJS.ProcessEnv, variable: string): string[
 
 function leerFechaObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
   const crudo = leerObligatoria(env, variable).trim();
-  const [, anio, mes, dia] = FORMA_DE_FECHA.exec(crudo) ?? [];
-  const fecha = new Date(`${crudo}T00:00:00Z`);
-  const esFechaReal =
-    anio !== undefined &&
-    !Number.isNaN(fecha.getTime()) &&
-    fecha.getUTCFullYear() === Number(anio) &&
-    fecha.getUTCMonth() + 1 === Number(mes) &&
-    fecha.getUTCDate() === Number(dia);
-  if (!esFechaReal) throw new ConfiguracionInvalidaError(variable, 'debe ser una fecha AAAA-MM-DD');
+  // `z.iso.date()` exige AAAA-MM-DD y un día real del calendario (rechaza 2026-02-31).
+  if (!z.iso.date().safeParse(crudo).success) {
+    throw new ConfiguracionInvalidaError(variable, 'debe ser una fecha AAAA-MM-DD');
+  }
   return crudo;
 }
 
