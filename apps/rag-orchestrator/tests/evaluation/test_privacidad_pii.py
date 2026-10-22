@@ -190,11 +190,11 @@ def test_una_sensibilidad_sin_muestras_conserva_el_valor_none() -> None:
 
 def test_cuenta_las_llamadas_a_destinos_fuera_de_la_lista_local_con_datos_reales() -> None:
     llamadas = [
-        LlamadaSaliente(NUBE, "real_anonimizado"),
-        LlamadaSaliente(NUBE, "sintetico"),
-        LlamadaSaliente("http://127.0.0.1:11434/v1", "real_anonimizado"),
-        LlamadaSaliente("http://host.docker.internal:11434/v1", "real_identificado"),
-        LlamadaSaliente("", "real_anonimizado"),
+        LlamadaSaliente(NUBE, "real_anonimizado", ""),
+        LlamadaSaliente(NUBE, "sintetico", ""),
+        LlamadaSaliente("http://127.0.0.1:11434/v1", "real_anonimizado", ""),
+        LlamadaSaliente("http://host.docker.internal:11434/v1", "real_identificado", ""),
+        LlamadaSaliente("", "real_anonimizado", ""),
     ]
 
     assert llamadas_a_nube_con_datos_reales(llamadas) == 2
@@ -280,3 +280,16 @@ def test_tipos_por_debajo_que_no_son_cadenas_se_rechazan(tmp_path: Path) -> None
 
     with pytest.raises(InformePiiInvalido):
         ProveedorPiiDeArchivo(informe).leer()
+
+
+def test_la_llamada_con_un_modelo_de_nube_con_espacio_cuenta_como_llamada_a_la_nube() -> None:
+    llamada = LlamadaSaliente("http://127.0.0.1:11434/v1", "real_anonimizado", "x:cloud ")
+
+    assert llamadas_a_nube_con_datos_reales([llamada]) == 1
+
+
+def test_el_modelo_es_obligatorio_en_la_llamada_y_en_el_registro() -> None:
+    with pytest.raises(TypeError):
+        LlamadaSaliente("http://127.0.0.1:1", "sintetico")  # type: ignore[call-arg]
+    with pytest.raises(TypeError):
+        RegistroDeLlamadas().registrar("http://127.0.0.1:1", "sintetico")  # type: ignore[call-arg]

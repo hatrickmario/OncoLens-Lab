@@ -18,6 +18,7 @@ from app.domain.support import pares_a_verificar
 from app.evaluation.afirmaciones import afirmaciones_a_juzgar, plan_de_la_propuesta
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 from app.evaluation.llamadas import RegistroDeLlamadas
+from app.domain.reglas_proveedor import es_modelo_de_nube
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
 from app.evaluation.evaluate import main
 from app.evaluation.guardas import SuiteAbortada, exigir_juez_local
@@ -405,3 +406,47 @@ def test_crear_juez_llm_tambien_rechaza_un_modelo_de_nube_antes_de_crear_el_clie
 
     with pytest.raises(SuiteAbortada):
         asyncio.run(crear())
+
+
+NOMBRES_DE_NUBE_CON_RUIDO = ["x:cloud ", "x:cloud\t", "x:cloud\u00a0", "x:cloud\r", " X:1B-CLOUD "]
+
+
+@pytest.mark.parametrize("modelo", NOMBRES_DE_NUBE_CON_RUIDO)
+@pytest.mark.parametrize("canal", ["yaml", "entorno", "flag"])
+def test_un_modelo_de_nube_con_espacios_o_control_no_envia_requests_por_ningun_canal(
+    tmp_path: Path, modelo: str, canal: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    argv = ["--suite", "all", "--salida", str(tmp_path / "s")]
+    entorno: dict[str, str] = {}
+    if canal == "yaml":
+        config = config_con_juez(tmp_path, proveedor="local", base_url=LOCAL, modelo=modelo)
+    else:
+        config = CONFIG
+        if canal == "entorno":
+            entorno = {"EVAL_JUDGE_BASE_URL": LOCAL, "EVAL_JUDGE_MODEL": modelo}
+        else:
+            argv += ["--juez-base-url", LOCAL, "--juez-modelo", modelo]
+
+    with respx.mock(assert_all_called=False) as http:
+        http.route().respond(200)
+        codigo = main(["--config", str(config), *argv], reloj=RelojFijo(), entorno=entorno)
+        peticiones = len(http.calls)
+
+    assert (codigo in (1, 2), peticiones, (tmp_path / "s").exists()) == (True, 0, False)
+    assert modelo.strip() not in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("modelo", NOMBRES_DE_NUBE_CON_RUIDO)
+def test_es_modelo_de_nube_normaliza_espacios_y_compatibilidad_unicode(modelo: str) -> None:
+    assert es_modelo_de_nube(modelo) is True
+
+
+@pytest.mark.parametrize("modelo", ["gemma4:26b-a4b-it-q4_K_M", "cloudy:1b", "x:cloudless"])
+def test_es_modelo_de_nube_no_marca_un_modelo_local(modelo: str) -> None:
+    assert es_modelo_de_nube(modelo) is False
+
+
+def test_un_modelo_con_espacios_es_un_identificador_invalido_antes_de_cualquier_request() -> None:
+    with pytest.raises(ConfigInvalida) as error:
+        cargar_config_suite(CONFIG, {"EVAL_JUDGE_BASE_URL": LOCAL, "EVAL_JUDGE_MODEL": "m@1 "})
+    assert "m@1" not in str(error.value)

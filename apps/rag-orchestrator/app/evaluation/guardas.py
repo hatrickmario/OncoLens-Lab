@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.domain.reglas_proveedor import es_proveedor_local
+from app.domain.reglas_proveedor import es_modelo_de_nube, es_proveedor_local
 from app.evaluation.config_suite import ConfigJuez, ConfigSuite
 from app.evaluation.dataset_loader import CLASE_SINTETICA
-from app.evaluation.modelo_de_nube import es_modelo_de_nube
 
 
 class SuiteAbortada(RuntimeError):
