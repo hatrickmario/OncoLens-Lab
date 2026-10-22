@@ -113,6 +113,18 @@ export function desdeImportLinter(texto, directorio) {
   return hallazgos;
 }
 
+/** Contratos de capas que `lint-imports` debe nombrar siempre (apps/rag-orchestrator/.importlinter). */
+export const CONTRATOS_DE_IMPORT_LINTER = ['dominio-independiente', 'capas-hexagonales'];
+
+/**
+ * Interpreta la ejecución de `lint-imports`: estado 0 y los contratos exigidos en KEPT = sin hallazgos;
+ * estado 1 con contratos rotos = hallazgos; cualquier otra cosa (configuración inválida, contratos ausentes,
+ * estado 1 sin contrato roto) es una herramienta rota y lanza, nunca "0 hallazgos".
+ */
+export function evaluarImportLinter() {
+  throw new Error('no implementado');
+}
+
 /** Descarta la alerta de tamaño de un archivo que ya falla por el límite duro (evita el doble reporte). */
 export function sinAlertaDondeHayError(hallazgos) {
   const conError = new Set(
