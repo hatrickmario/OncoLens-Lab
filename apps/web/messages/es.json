@@ -302,6 +302,7 @@
     "error": "No pudimos cargar la ficha. Intenta de nuevo. Código de traza {traceId}",
     "errorSinTraza": "No pudimos cargar la ficha. Intenta de nuevo.",
     "admin": {
+      "titulo": "Paciente",
       "nota": "Vista de administración: sin datos clínicos ni nombre."
     }
   }

@@ -56,7 +56,8 @@ describe('FichaPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Prueba Sintética 1' })).toBeTruthy();
     expect(screen.getAllByText('SINTÉTICO').length).toBeGreaterThan(0);
-    expect(screen.getByText('SINT-0000001')).toBeTruthy();
+    const identificacion = within(screen.getByRole('region', { name: 'Identificación' }));
+    expect(identificacion.getByText('Sintético SINT-0000001')).toBeTruthy();
     expect(metadata.title).toBe('Paciente · OncoLens');
     expect(clinicalApi.peticiones[0]!.cookie).toBe('oncolens_session=sesion-sintetica-1');
   });
