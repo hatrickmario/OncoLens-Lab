@@ -101,3 +101,8 @@ export function excepcionesVigentes(excepciones, hoy) {
   const hoyIso = hoy.toISOString().slice(0, 10);
   return excepciones.filter((excepcion) => excepcion.caduca >= hoyIso);
 }
+
+/** Escapa los caracteres con significado de glob (incluida la barra invertida) para usar una ruta literal en `files`. */
+export function escaparGlob() {
+  throw new Error('no implementado');
+}

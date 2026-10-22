@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  escaparGlob,
   excepcionesVigentes,
   rutaDeUmbrales,
   validarUmbrales,
@@ -138,5 +139,17 @@ describe('rutaDeUmbrales', () => {
     expect(() => rutaDeUmbrales({ QUALITY_THRESHOLDS: '/tmp/u.json', CI: 'true' })).toThrow(
       /QUALITY_THRESHOLDS/,
     );
+  });
+});
+
+describe('escaparGlob', () => {
+  it('escapa corchetes, paréntesis y comodines de una ruta de Next.js [US-213 AC-6]', () => {
+    expect(escaparGlob('apps/web/app/(dashboard)/[id]/page.tsx')).toBe(
+      'apps/web/app/\\(dashboard\\)/\\[id\\]/page.tsx',
+    );
+  });
+
+  it('escapa primero la barra invertida para que no anule el escape siguiente [US-213 AC-6]', () => {
+    expect(escaparGlob('a\\*b')).toBe('a\\\\\\*b');
   });
 });
