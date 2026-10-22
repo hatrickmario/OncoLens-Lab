@@ -6,9 +6,17 @@ import type {
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import type { IdentidadDescifrada, IdentityService } from './identity.service.js';
-import type { BusquedaDePacientes, FiltrosDelListado } from './patients.schema.js';
+import type {
+  BusquedaDePacientes,
+  CriterioDeBusqueda,
+  FiltrosDelListado,
+} from './patients.schema.js';
 import { enmascararDocumento, enmascararNombre } from './patients.reglas.js';
-import type { FilaDePaciente, PatientsRepository } from './patients.repository.js';
+import type {
+  FilaDePaciente,
+  FiltroDePacientes,
+  PatientsRepository,
+} from './patients.repository.js';
 
 /** Vista de cada elemento según el permiso de la sesión (`x-view-by-permission`). */
 export type VistaDeListado = 'doctor_listado' | 'admin';
@@ -79,30 +87,45 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
     return porPaciente;
   }
 
+  /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
+  async function paginar(
+    filtro: Omit<FiltroDePacientes, 'limit' | 'offset'>,
+    page: number,
+    vista: VistaDeListado,
+  ): Promise<PatientPage> {
+    const { filas, total } = await repo.listar({
+      ...filtro,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+    const identidades = await identidadesDe(filas);
+    const pendientes =
+      vista === 'doctor_listado'
+        ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
+        : new Map<string, number>();
+    const items = filas.map((fila) => {
+      const identificacion = identidades.get(fila.id) as IdentidadDescifrada;
+      return vista === 'doctor_listado'
+        ? elementoDoctor(fila, identificacion, pendientes.get(fila.id) ?? 0)
+        : elementoAdmin(fila, identificacion);
+    });
+    return { items, page, pageSize, total };
+  }
+
+  /** Pacientes que coinciden con el criterio, por índice ciego: la identidad no se descifra para comparar (RN-10). */
+  async function pacientesQueCoinciden(criterio: CriterioDeBusqueda): Promise<string[]> {
+    if (criterio.tipo === 'documento') {
+      return identidad.buscarPorDocumento(criterio.idType, criterio.nationalId);
+    }
+    throw new Error('no implementado');
+  }
+
   return {
-    async listar({ filtros, vista }) {
-      const { status, dataOrigin, page } = filtros;
-      const { filas, total } = await repo.listar({
-        status,
-        dataOrigin,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-      const identidades = await identidadesDe(filas);
-      const pendientes =
-        vista === 'doctor_listado'
-          ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
-          : new Map<string, number>();
-      const items = filas.map((fila) => {
-        const identificacion = identidades.get(fila.id) as IdentidadDescifrada;
-        return vista === 'doctor_listado'
-          ? elementoDoctor(fila, identificacion, pendientes.get(fila.id) ?? 0)
-          : elementoAdmin(fila, identificacion);
-      });
-      return { items, page, pageSize, total };
-    },
-    buscar() {
-      return Promise.reject(new Error('no implementado'));
+    listar: ({ filtros, vista }) =>
+      paginar({ status: filtros.status, dataOrigin: filtros.dataOrigin }, filtros.page, vista),
+    async buscar({ busqueda, vista }) {
+      const ids = await pacientesQueCoinciden(busqueda.criterio);
+      return paginar({ ids }, busqueda.page, vista);
     },
   };
 }

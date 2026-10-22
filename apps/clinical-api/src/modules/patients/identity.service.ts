@@ -27,6 +27,8 @@ export interface IdentityService {
   /** Descifra la identidad de varios pacientes en una consulta (la página de un listado); los que no tienen no aparecen. */
   descifrarVarios(patientIds: readonly string[]): Promise<IdentidadDescifrada[]>;
   indiceCiegoDeDocumento(idType: IdType, numeroDeDocumento: string): string;
+  /** Pacientes con ese documento exacto, por índice ciego: no descifra nada. */
+  buscarPorDocumento(idType: IdType, numeroDeDocumento: string): Promise<string[]>;
 }
 
 export interface DependenciasDeIdentidad {
@@ -84,5 +86,7 @@ export function createIdentityService({
     },
     indiceCiegoDeDocumento: (idType, numeroDeDocumento) =>
       indice.indiceDeDocumento(idType, numeroDeDocumento),
+    buscarPorDocumento: (idType, numeroDeDocumento) =>
+      repo.buscarPacientesPorDocumento(idType, indice.indiceDeDocumento(idType, numeroDeDocumento)),
   };
 }

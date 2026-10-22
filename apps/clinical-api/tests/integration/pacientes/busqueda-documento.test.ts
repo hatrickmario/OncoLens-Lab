@@ -74,4 +74,60 @@ describe('búsqueda por documento', () => {
       expect(texto).not.toContain(prohibido.toLowerCase());
     }
   });
+
+  it('responde 422 sin eco cuando el cuerpo no trae un criterio completo', async () => {
+    for (const cuerpo of [{}, { idType: FX_T4A_A.idType }, { name: 'L' }]) {
+      const respuesta = await buscar(cuerpo);
+      expect(respuesta.status).toBe(422);
+      expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+    }
+  });
+
+  it('responde 422 cuando el JSON está mal formado', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post('/platform/patients/search')
+      .set('Cookie', escenario.cookieDoctor)
+      .set('Content-Type', 'application/json')
+      .send('{"idType": ');
+
+    expect(respuesta.status).toBe(422);
+    expect(respuesta.body.error).toBe('CUERPO_INVALIDO');
+  });
+
+  it('responde 401 sin datos cuando falta la cookie [US-048 AC-6]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .post('/platform/patients/search')
+      .send({ idType: FX_T4A_A.idType, nationalId: FX_T4A_A.numeroDeDocumento });
+
+    expect(respuesta.status).toBe(401);
+    expect(respuesta.body.items).toBeUndefined();
+  });
+
+  it('entrega al admin PatientAdminSummary sin nombre ni contadores clínicos [US-048 AC-7]', async () => {
+    const respuesta = await buscar(
+      { idType: FX_T4A_A.idType, nationalId: FX_T4A_A.numeroDeDocumento },
+      escenario.cookieAdmin,
+    );
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body.items[0]).toMatchObject({
+      view: 'admin',
+      nationalIdMasked: `${MARCADOR} 67`,
+    });
+    expect(respuesta.body.items[0]).not.toHaveProperty('fullNameMasked');
+    expect(respuesta.body.items[0]).not.toHaveProperty('pendingReviewCount');
+  });
+
+  it('responde Cache-Control: no-store cuando la búsqueda encuentra al paciente', async () => {
+    const respuesta = await buscar({
+      idType: FX_T4A_A.idType,
+      nationalId: FX_T4A_A.numeroDeDocumento,
+    });
+
+    expect(respuesta.headers['cache-control']).toBe('no-store');
+  });
 });

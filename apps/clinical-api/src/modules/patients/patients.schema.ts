@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import {
   zListPatientsQuery,
   zSearchPatientsBody,
@@ -23,4 +24,42 @@ export function leerFiltrosDelListado(query: unknown): z.ZodSafeParseResult<Filt
   });
 }
 
-export type BusquedaDePacientes = z.output<typeof zSearchPatientsBody>;
+/** Campos que `PatientSearchRequest` declara (`additionalProperties: false`, que el Zod generado no hace cumplir). */
+const CAMPOS_DE_LA_BUSQUEDA: ReadonlySet<string> = new Set([
+  'idType',
+  'nationalId',
+  'name',
+  'page',
+]);
+
+function soloCamposDelContrato(cuerpo: unknown): boolean {
+  return (
+    typeof cuerpo === 'object' &&
+    cuerpo !== null &&
+    Object.keys(cuerpo).every((campo) => CAMPOS_DE_LA_BUSQUEDA.has(campo))
+  );
+}
+
+export type CriterioDeBusqueda =
+  | { readonly tipo: 'documento'; readonly idType: IdType; readonly nationalId: string }
+  | { readonly tipo: 'nombre'; readonly name: string };
+
+export interface BusquedaDePacientes {
+  readonly criterio: CriterioDeBusqueda;
+  readonly page: number;
+}
+
+/**
+ * Valida el cuerpo de la búsqueda con el Zod generado y exige un criterio completo: documento (`idType` y
+ * `nationalId`) o nombre. Si trae ambos gana el documento (design D4).
+ */
+export function leerBusqueda(cuerpo: unknown): BusquedaDePacientes | undefined {
+  if (!soloCamposDelContrato(cuerpo)) return undefined;
+  const leido = zSearchPatientsBody.safeParse(cuerpo);
+  if (!leido.success) return undefined;
+  const { idType, nationalId, name, page } = leido.data;
+  if (idType !== undefined && nationalId !== undefined) {
+    return { criterio: { tipo: 'documento', idType, nationalId }, page };
+  }
+  return name === undefined ? undefined : { criterio: { tipo: 'nombre', name }, page };
+}
