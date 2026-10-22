@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
+import {
+  construirBaseTipoNoHabilitado,
+  crearBaseDelAnalisis,
+} from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
 import {
   armarRegistro,
+  armarRegistroTipoNoHabilitado,
   huellaDelContexto,
   type EntradaDelRegistro,
+  type EntradaDelRegistroSinIA,
 } from '../../../src/modules/evidence-analysis/analysis-record.js';
 
 const AHORA = new Date('2026-10-16T12:00:00.000Z');
@@ -154,5 +159,95 @@ describe('huellaDelContexto', () => {
 
   it('distingue el orden de los elementos de una lista', () => {
     expect(huellaDelContexto({ a: [1, 2] })).not.toBe(huellaDelContexto({ a: [2, 1] }));
+  });
+});
+
+describe('armarRegistroTipoNoHabilitado', () => {
+  const baseSinIA = construirBaseTipoNoHabilitado({
+    sourcesSelected: request.sourcesSelected,
+    filters: request.filtersApplied,
+    continuedWithWarning: false,
+    sourcesNotIncluded: ['NCCN', 'ESMO'],
+    corpusCutoffDate: '2026-09-30',
+  });
+  const contextoVacio: EntradaDelRegistroSinIA['contextoVacio'] = {
+    population: 'adulto',
+    diagnosis: null,
+    biomarkers: [],
+    clinicalNotes: [],
+    currentLine: null,
+    attributes: [],
+    priorTreatments: [],
+    events: [],
+    biomarkerTrends: [],
+    missingCriticalData: [],
+    priorAnalyses: [],
+  };
+
+  function entradaSinIA(resto: Partial<EntradaDelRegistroSinIA> = {}): EntradaDelRegistroSinIA {
+    return {
+      id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+      creadoEn: AHORA,
+      traceId: 'req_Fijo0001',
+      patientId: 'paciente-sintetico',
+      episodeId: 'episodio-sintetico',
+      userId: 'usuario-sintetico',
+      questionTemplateId: null,
+      continueWithWarning: false,
+      query: request.query,
+      sourcesSelected: request.sourcesSelected,
+      filtersApplied: request.filtersApplied,
+      dataClassification: 'sintetico',
+      catalogVersion: '2026.10.0',
+      contextoVacio,
+      base: baseSinIA,
+      ...resto,
+    };
+  }
+
+  it('arma un registro tipo_no_habilitado sin opciones, sin puntaje (null, no 0) y sin enlaces a datos del paciente', () => {
+    const registro = armarRegistroTipoNoHabilitado(entradaSinIA());
+
+    expect(registro).toMatchObject({
+      id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+      createdAt: AHORA,
+      analysisType: 'analisis_evidencia',
+      status: 'tipo_no_habilitado',
+      topRelevanceScore: null,
+      synthesis: { agreements: [], discrepancies: [] },
+      applicability: [],
+      evidenceOptions: [],
+      discardedOptions: [],
+      patientDataLinks: [],
+      omittedClaims: 0,
+      agentSteps: [],
+      analysisBasis: baseSinIA,
+    });
+  });
+
+  it('deja en null modelos, versión del prompt, corpus y parámetros de recuperación: no se invocó ningún modelo', () => {
+    const registro = armarRegistroTipoNoHabilitado(entradaSinIA());
+
+    expect(registro).toMatchObject({
+      llmProvider: null,
+      llmModel: null,
+      embeddingModel: null,
+      rerankerModel: null,
+      nliModel: null,
+      promptVersion: null,
+      corpusRelease: null,
+      retrievalParams: null,
+      catalogVersion: '2026.10.0',
+    });
+  });
+
+  it('guarda la pregunta ya desidentificada, las fuentes, los filtros y la huella del contexto vacío', () => {
+    const registro = armarRegistroTipoNoHabilitado(entradaSinIA({ query: 'pregunta enmascarada' }));
+
+    expect(registro.queryText).toBe('pregunta enmascarada');
+    expect(registro.sourcesSelected).toEqual(request.sourcesSelected);
+    expect(registro.filtersApplied).toEqual(request.filtersApplied);
+    expect(registro.clinicalContextSnapshot).toEqual(contextoVacio);
+    expect(registro.contextFingerprint).toBe(huellaDelContexto(contextoVacio));
   });
 });
