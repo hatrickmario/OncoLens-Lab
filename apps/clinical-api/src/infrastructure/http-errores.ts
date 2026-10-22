@@ -17,6 +17,10 @@ export type CodigoDeError =
   | 'NO_AUTENTICADO'
   | 'PERMISO_DENEGADO'
   | 'NO_ENCONTRADO'
+  | 'ARCHIVO_NO_PDF'
+  | 'ARCHIVO_DEMASIADO_GRANDE'
+  | 'DOCUMENTO_DUPLICADO'
+  | 'ALMACEN_NO_DISPONIBLE'
   | 'TIPO_CANCER_NO_REGISTRADO'
   | 'CATALOG_VERSION_MISMATCH'
   | 'ERROR_SERVICIO_IA'
@@ -31,6 +35,10 @@ const MENSAJES: Record<CodigoDeError, string> = {
   NO_AUTENTICADO: 'La sesión no existe o expiró.',
   PERMISO_DENEGADO: 'El rol de la sesión no tiene permiso para esta acción.',
   NO_ENCONTRADO: 'No existe el recurso solicitado.',
+  ARCHIVO_NO_PDF: 'El archivo no es un PDF.',
+  ARCHIVO_DEMASIADO_GRANDE: 'El archivo supera el tamaño máximo permitido.',
+  DOCUMENTO_DUPLICADO: 'El mismo archivo ya fue cargado para este paciente.',
+  ALMACEN_NO_DISPONIBLE: 'El almacén de documentos no está disponible.',
   TIPO_CANCER_NO_REGISTRADO:
     'Análisis no realizado: falta el tipo de cáncer; no fue posible filtrar la evidencia.',
   CATALOG_VERSION_MISMATCH: 'La versión del catálogo clínico difiere entre servicios.',

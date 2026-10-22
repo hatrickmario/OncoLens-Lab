@@ -1,0 +1,5 @@
+{
+  "error": "ALMACEN_NO_DISPONIBLE",
+  "message": "El almacén de documentos no está disponible.",
+  "traceId": "req_c3d4e5f6"
+}

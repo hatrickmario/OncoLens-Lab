@@ -28,6 +28,49 @@ export interface ConfiguracionArnes {
   readonly baseClinica: string;
 }
 
+export interface OpcionesDeEliminacion {
+  /** Intentos totales del `DROP DATABASE` (por defecto 5). */
+  readonly intentos?: number;
+  /** Pausa entre intentos en milisegundos (por defecto 250). */
+  readonly pausaMs?: number;
+  /** Espera inyectable (los tests no duermen). */
+  readonly pausar?: (ms: number) => Promise<void>;
+}
+
+const PROCESO_NO_TERMINABLE = '42501';
+const INTENTOS_DE_ELIMINACION = 5;
+const PAUSA_DE_ELIMINACION_MS = 250;
+const dormir = (ms: number): Promise<void> =>
+  new Promise((resolver) => {
+    setTimeout(resolver, ms);
+  });
+
+/**
+ * Ejecuta el `DROP DATABASE ... WITH (FORCE)` de una base de test. PostgreSQL intenta terminar TODOS los procesos de la
+ * base y, si hay uno que el administrador de test no puede señalar (típicamente el worker de autovacuum del
+ * superusuario, que aparece tras sembrar filas y se va en milisegundos), responde 42501
+ * (`TerminateOtherDBBackends`) y la base queda sin eliminar. Se reintenta SOLO ese código unas pocas veces; no se
+ * concede `pg_signal_backend` (el aislamiento de roles de L1D-170 no se toca) y, si el proceso ajeno sigue ahí (una
+ * conexión de otro rol que no se cerró), el error se relanza.
+ */
+export async function eliminarBaseConReintentos(
+  ejecutar: () => Promise<void>,
+  opciones: OpcionesDeEliminacion = {},
+): Promise<void> {
+  const { intentos = INTENTOS_DE_ELIMINACION, pausaMs = PAUSA_DE_ELIMINACION_MS } = opciones;
+  const pausar = opciones.pausar ?? dormir;
+  for (let intento = 1; ; intento += 1) {
+    try {
+      await ejecutar();
+      return;
+    } catch (error) {
+      const codigo = (error as { code?: unknown } | null)?.code;
+      if (codigo !== PROCESO_NO_TERMINABLE || intento >= intentos) throw error;
+      await pausar(pausaMs);
+    }
+  }
+}
+
 export interface BaseDeTest {
   readonly nombre: string;
   /** URL de la base recién migrada (misma credencial, otra base). Contiene la contraseña: no se imprime. */
@@ -161,7 +204,9 @@ export async function crearBaseDeTest(
     validarNombreBaseDeTest(nombre, config.prefijo, config.baseClinica);
     const cliente = await conectar(urlDeBase(config.urlAdministracion, BASE_DE_MANTENIMIENTO));
     try {
-      await cliente.query(`DROP DATABASE IF EXISTS "${nombre}" WITH (FORCE)`);
+      await eliminarBaseConReintentos(async () => {
+        await cliente.query(`DROP DATABASE IF EXISTS "${nombre}" WITH (FORCE)`);
+      });
     } finally {
       await cliente.end();
     }
