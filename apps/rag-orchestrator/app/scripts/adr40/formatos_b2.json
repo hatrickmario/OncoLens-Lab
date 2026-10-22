@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "descripcion": "Formatos adicionales del candidato 1 de ADR-40 en Backend 2 (solo medicion, S2). Mismo esquema que config/pii-formats.json: 'patron' es una expresion con un grupo con nombre 'valor' y '{{palabrasClave}}' se sustituye por las palabras clave del formato. No toca config/pii-formats.json, que comparte el escaner de la CI. Si el candidato 1 gana, FEAT-01b decide donde viven (gemelo de B2, RN-22).",
+  "formatos": [
+    {
+      "id": "documento_alfanumerico",
+      "tipo": "documento_identidad",
+      "descripcion": "Documentos con letras (DNI con letra de control, CURP, RUT con digito K) precedidos de su palabra clave.",
+      "palabrasClave": [
+        "DNI",
+        "CURP",
+        "RUT"
+      ],
+      "patron": "(?:{{palabrasClave}})[^\\n\\d\\p{L}]{0,8}(?<valor>[\\p{L}\\p{N}][\\p{L}\\p{N}.\\-]{6,20}[\\p{L}\\p{N}])(?![\\p{L}\\p{N}])",
+      "banderas": "iu",
+      "digitosMin": 6,
+      "digitosMax": 18
+    },
+    {
+      "id": "telefono_e164_espaciado",
+      "tipo": "telefono",
+      "descripcion": "Telefono internacional con '+' y separadores entre grupos.",
+      "patron": "(?<![\\p{N}+])(?<valor>\\+\\d{1,3}(?:[ .\\-]\\d{2,4}){2,4})(?!\\d)",
+      "banderas": "u",
+      "digitosMin": 8,
+      "digitosMax": 15
+    },
+    {
+      "id": "fecha_nacimiento",
+      "tipo": "fecha_nacimiento",
+      "descripcion": "Fecha precedida de una palabra clave de nacimiento (numerica o con el mes en letras).",
+      "palabrasClave": [
+        "nacimiento",
+        "nacido",
+        "nacida",
+        "nació",
+        "nacio"
+      ],
+      "patron": "(?:{{palabrasClave}})[^\\n\\d]{0,16}(?<valor>\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{4}|\\d{4}-\\d{2}-\\d{2}|\\d{1,2} de \\p{L}+ de \\d{4})",
+      "banderas": "iu",
+      "digitosMin": 5,
+      "digitosMax": 8
+    },
+    {
+      "id": "direccion",
+      "tipo": "direccion",
+      "descripcion": "Direccion postal estructurada: via (calle, carrera, avenida, pasaje) con nombre opcional, numero, complemento '# a-b' o 'No. a-b' y, si aparece, barrio, piso o puerta.",
+      "patron": "(?<![\\p{L}])(?<valor>(?i:Calle|Carrera|Avenida|Av\\.|Pasaje)\\s(?:(?:\\p{Lu}\\p{Ll}+|de|del|la|las|los)\\s){0,3}\\d{1,3}(?:\\s?(?:#|No\\.)\\s?\\d{1,3}-\\d{1,3})?(?:,\\s(?:barrio(?:\\s(?:\\p{Lu}\\p{Ll}+|de|del|la|las|los))+|piso\\s\\d+|\\d+\\s[A-C]))?)",
+      "banderas": "u"
+    }
+  ]
+}
