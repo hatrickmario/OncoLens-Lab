@@ -133,3 +133,11 @@ ARR-02 resto (L1D-278); hasta entonces se registran como pendientes con ese ID.
 
 - Nada. D1 decidido (`[S2 resp. 5]`); D2 resuelto por el contrato.
 - D8 resuelto en el Gate 1: `200 PatientAdminSummary` para el admin, como dicta el contrato.
+
+## Notas de implementación (clinical-platform)
+
+- **Reutilización de L1D-202:** `patients/` ya tenía identidad, máscara, vistas y el catálogo `FUENTES_POR_REVISAR`; la ficha añade `ficha.repository.ts` (lecturas clínicas), `ficha.reglas.ts` (`seleccionarDiagnosticoVigente`, `ultimoValorPorBiomarcador`, mapeos a `Provenance`) y `ficha.service.ts`. `contarPendientesDeRevision()` es el del listado (sin duplicar) y `ESTADOS_PENDIENTES_DE_REVISION` vive en `estados-de-revision.ts` y alimenta su consulta (`= ANY(...)`).
+- **«El repository no lee clinical» (admin):** la vista del admin lee `clinical.patient` (necesita `dataOrigin`, `lifecycleStatus` y `registeredAt`) y nada de las tablas de datos clínicos ni de `care_team_member`; el test lo comprueba sobre el SQL real. De la identidad solo descifra el documento (`conNombre: false`).
+- **2.5:** `ENABLED_CANCER_TYPES` y el puerto `TiposDeCancerHabilitados` ya existen (L1D-173); la ficha usa el mismo adaptador que el listado. No se tocó `.env*`.
+- **404 sin BD:** el borde valida `patientId` con `zGetPatientPath` y responde 404 sin consultar; el log de la ficha no lleva el UUID pedido en un 404.
+- **Referencia vacía:** `reference_range = ''` se entrega como `null` (el contrato lo admite).
