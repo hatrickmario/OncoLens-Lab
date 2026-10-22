@@ -109,7 +109,9 @@ describe('umbral único en quality-thresholds.json', () => {
     const sinComplexity = { ...UMBRALES, complexity: undefined };
     writeFileSync(ruta, JSON.stringify(sinComplexity));
 
-    const resultado = ejecutar('node', ['scripts/quality/quality.mjs', '--umbrales', ruta]);
+    const resultado = ejecutar('node', ['scripts/quality/quality.mjs'], {
+      env: { ...process.env, QUALITY_THRESHOLDS: ruta },
+    });
 
     expect(resultado.estado).toBe(1);
     expect(resultado.salida).toContain('complexity');

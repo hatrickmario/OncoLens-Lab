@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluarTamanoComponente,
   excepcionesVigentes,
+  rutaDeUmbrales,
   validarUmbrales,
 } from '../../../scripts/quality/umbrales.mjs';
 
@@ -48,6 +49,7 @@ describe('validarUmbrales', () => {
       archivo: 'a.ts',
       caduca: '30/11/2026',
       motivo: 'deuda',
+      historia: 'L1D-263',
     };
     expect(() => validarUmbrales({ ...BASE, excepciones: [excepcion] })).toThrow(/caduca/);
   });
@@ -58,6 +60,7 @@ describe('validarUmbrales', () => {
       archivo: 'apps/web/x.tsx',
       caduca: '2026-11-30',
       motivo: 'x',
+      historia: 'L1D-263',
     };
     expect(() => validarUmbrales({ ...BASE, excepciones: [excepcion] })).toThrow(/regla/);
   });
@@ -135,5 +138,23 @@ describe('validación de excepciones con caducidad', () => {
 
   it('falla nombrando archivo cuando la ruta sale del repositorio con .. [US-213 AC-6]', () => {
     expect(validar(excepcion({ archivo: '../fuera.ts' }))).toThrow(/archivo/);
+  });
+});
+
+describe('rutaDeUmbrales', () => {
+  it('usa quality-thresholds.json cuando no hay variable [US-213 AC-6]', () => {
+    expect(rutaDeUmbrales({})).toMatch(/quality-thresholds\.json$/);
+  });
+
+  it('acepta la variable en los tests de Vitest [US-213 AC-6]', () => {
+    expect(rutaDeUmbrales({ QUALITY_THRESHOLDS: '/tmp/u.json', VITEST: 'true' })).toBe(
+      '/tmp/u.json',
+    );
+  });
+
+  it('rechaza la variable en la CI fuera de los tests [US-213 AC-6]', () => {
+    expect(() => rutaDeUmbrales({ QUALITY_THRESHOLDS: '/tmp/u.json', CI: 'true' })).toThrow(
+      /QUALITY_THRESHOLDS/,
+    );
   });
 });

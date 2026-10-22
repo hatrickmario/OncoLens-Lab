@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  buscarDesactivacionesDeTamano,
   desdeDependencyCruiser,
   desdeImportLinter,
   desdeRuff,
@@ -152,6 +153,24 @@ describe('normalización de hallazgos', () => {
     expect(linea).toBe(
       '[eslint] ERROR max-lines-per-function apps/clinical-api/src/x.ts:7 larga medido 41, umbral 40',
     );
+  });
+});
+
+describe('desactivaciones de reglas de tamaño', () => {
+  const buscar = (texto) => buscarDesactivacionesDeTamano([{ file: 'apps/x.ts', texto }]);
+
+  it('marca un eslint-disable-next-line de max-lines-per-function [US-213 AC-4]', () => {
+    expect(buscar('// eslint-disable-next-line max-lines-per-function\nfunction f() {}')).toEqual([
+      expect.objectContaining({ rule: 'sin-eslint-disable-de-tamano', file: 'apps/x.ts', line: 1 }),
+    ]);
+  });
+
+  it('marca un bloque eslint-disable que silencia todo [US-213 AC-4]', () => {
+    expect(buscar('/* eslint-disable */\nconst a = 1;')).toHaveLength(1);
+  });
+
+  it('no marca un eslint-disable de otra regla [US-213 AC-4]', () => {
+    expect(buscar('// eslint-disable-next-line no-console -- registro de arranque')).toEqual([]);
   });
 });
 

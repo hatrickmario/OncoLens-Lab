@@ -140,6 +140,31 @@ export function evaluarImportLinter(estado, texto, directorio) {
   return hallazgos;
 }
 
+const REGLAS_DE_TAMANO = 'max-lines-per-function|complexity|max-lines';
+// `eslint-disable` que nombra una regla de tamaño, o que desactiva todo (sin lista de reglas).
+const DESACTIVA_TAMANO = new RegExp(
+  `eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${REGLAS_DE_TAMANO})\\b|\\s*(?:\\*/|--|$))`,
+);
+
+/** Hallazgo por cada comentario `eslint-disable` que silencia tamaño o complejidad (o todo). */
+export function buscarDesactivacionesDeTamano(archivos) {
+  return archivos.flatMap(({ file, texto }) =>
+    texto.split('\n').flatMap((linea, indice) =>
+      DESACTIVA_TAMANO.test(linea)
+        ? [
+            hallazgo({
+              tool: 'quality',
+              rule: 'sin-eslint-disable-de-tamano',
+              file,
+              line: indice + 1,
+              symbol: linea.trim(),
+            }),
+          ]
+        : [],
+    ),
+  );
+}
+
 /** Descarta la alerta de tamaño de un archivo que ya falla por el límite duro (evita el doble reporte). */
 export function sinAlertaDondeHayError(hallazgos) {
   const conError = new Set(

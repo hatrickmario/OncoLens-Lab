@@ -1,14 +1,15 @@
 // `npm run quality` y `npm run quality:report` (L1D-263, US-213 AC-1, design D2).
 // Ejecuta ESLint, dependency-cruiser, Ruff e import-linter SIN detenerse en la primera que falla y termina
 // con el peor código. Con `--reporte` escribe reports/quality/latest.json (ignorado por git).
-// `--umbrales <ruta>` apunta a otro quality-thresholds.json (los tests de la CI lo usan).
+// `QUALITY_THRESHOLDS=<ruta>` apunta a otro quality-thresholds.json (solo los tests; rechazado con CI=true).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
 import {
   desdeDependencyCruiser,
+  buscarDesactivacionesDeTamano,
   desdeEslint,
   evaluarImportLinter,
   desdeRuff,
@@ -18,15 +19,6 @@ import {
 } from './normalizar.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { excepcionesVigentes, leerUmbrales } from './umbrales.mjs';
-
-function leerArgumento(nombre) {
-  const indice = process.argv.indexOf(nombre);
-  return indice === -1 ? null : process.argv[indice + 1];
-}
-
-// Antes de cargar eslint.config.js: ESLint y dependency-cruiser leen los umbrales de esta variable.
-if (leerArgumento('--umbrales'))
-  process.env.QUALITY_THRESHOLDS = path.resolve(leerArgumento('--umbrales'));
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const RAG = 'apps/rag-orchestrator';
@@ -52,6 +44,30 @@ async function ejecutarAlertaDeComponentes(umbrales) {
     ],
   });
   return desdeEslint(await eslint.lintFiles(['apps/web']), RAIZ);
+}
+
+/** Fuentes TypeScript de apps/ y packages/ (sin dependencias, build ni generado). */
+function fuentesTypeScript(directorio = RAIZ, relativo = '') {
+  return readdirSync(path.join(directorio, relativo), { withFileTypes: true }).flatMap(
+    (entrada) => {
+      const ruta = path.posix.join(relativo, entrada.name);
+      if (entrada.isDirectory()) {
+        return /^(node_modules|\.next|dist|coverage|\.venv|generated)$/.test(entrada.name)
+          ? []
+          : fuentesTypeScript(directorio, ruta);
+      }
+      return /\.(ts|tsx)$/.test(entrada.name) ? [ruta] : [];
+    },
+  );
+}
+
+/** Un `eslint-disable` no puede silenciar tamaño ni complejidad: solo las excepciones con caducidad del JSON. */
+function ejecutarBusquedaDeDesactivaciones() {
+  const archivos = ['apps', 'packages']
+    .filter((raiz) => existsSync(path.join(RAIZ, raiz)))
+    .flatMap((raiz) => fuentesTypeScript(RAIZ, raiz))
+    .map((file) => ({ file, texto: readFileSync(path.join(RAIZ, file), 'utf8') }));
+  return buscarDesactivacionesDeTamano(archivos);
 }
 
 function ejecutarHerramienta(comando, argumentos, cwd = RAIZ) {
@@ -133,6 +149,7 @@ async function medir(umbrales) {
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
+    ...ejecutarBusquedaDeDesactivaciones(),
     ...ejecutarDependencyCruiser(),
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
