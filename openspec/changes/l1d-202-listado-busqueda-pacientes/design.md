@@ -218,9 +218,4 @@ cuando exista el job de E2E (ARR-02 resto).
   listado descifra únicamente la identidad de las filas de la página (`descifrarVarios`) y, si la página está vacía,
   no llama al servicio.
 - **Orden:** `clinical.patient.created_at` descendente y `id` como desempate (el seed comparte `created_at`).
-- **Tareas web diferidas:** 2.8 (parte `web`) y 2.9 (`app/api/patients/**`) quedan fuera de los paths asignados a este
-  agente (`apps/web/**`); la parte `clinical-api` de 2.8 (logs/URLs, no-fuga, `Cache-Control`) está hecha.
-- **`getPatient` (500) y `403`/`429`:** el `500 ErrorInterno` de `getPatient` es contrato adelantado: la ruta y su test los
-  entrega L1D-72 (ficha). Un `403` de lista/búsqueda no se puede provocar con los roles sembrados (ambos tienen
-  `patients:lookup`) y el `429` queda para su historia (RN-30). Los commits `wip` del contrato no se reescriben (sin
-  force): el orden contract → test → feat → refactor se conserva.
+- **Tareas web (ronda 2):** 2.8 (parte `web`) y 2.9 hechas en `apps/web/lib/server/patients.ts`, `proxy-json.ts` y `app/api/patients/**`, con tests MSW desde `contracts/examples/`. `CAMPOS_DE_LA_BUSQUEDA` está duplicada en `web` (el Zod generado no los expresa): si el contrato añade un campo hay que tocar los dos sitios.
