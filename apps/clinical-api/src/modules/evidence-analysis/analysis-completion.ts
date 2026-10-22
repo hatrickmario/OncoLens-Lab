@@ -102,63 +102,76 @@ async function persistirAnalisisAntesDeResponder(
   return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
 }
 
+type EntradaDeCierre = Parameters<AnalysisCompletion['completar']>[0];
+type EntradaTipoNoHabilitado = Parameters<AnalysisCompletion['completarTipoNoHabilitado']>[0];
+
+async function completarConRespuestaInterna(
+  dependencias: DependenciasDelCierre,
+  entrada: EntradaDeCierre,
+): Promise<ResultadoDelAnalisis> {
+  const { analisis, base, reloj, idsDeAnalisis, disclaimer } = dependencias;
+  if (!entrada.respuesta.ok) return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
+  const interpretada = interpretarRespuestaInterna(entrada.respuesta.cuerpo);
+  if (interpretada === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
+  const { respuesta, topRelevanceScore } = interpretada;
+  if (entrada.episodeId === null) throw new FalloDePersistenciaError();
+  const registro = armarRegistro({
+    id: idsDeAnalisis(),
+    creadoEn: reloj.now(),
+    traceId: entrada.traceId,
+    patientId: entrada.patientId,
+    episodeId: entrada.episodeId,
+    userId: entrada.userId,
+    questionTemplateId: entrada.questionTemplateId,
+    continueWithWarning: entrada.continueWithWarning,
+    request: entrada.request,
+    dataRefs: entrada.dataRefs,
+    respuesta,
+    base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
+    topRelevanceScore,
+  });
+  return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
+}
+
+async function completarSinCorpusHabilitado(
+  dependencias: DependenciasDelCierre,
+  entrada: EntradaTipoNoHabilitado,
+): Promise<ResultadoDelAnalisis> {
+  const { analisis, reloj, idsDeAnalisis, disclaimer, alcanceDelCorpus } = dependencias;
+  if (entrada.episodeId === null) throw new FalloDePersistenciaError();
+  const registro = armarRegistroTipoNoHabilitado({
+    id: idsDeAnalisis(),
+    creadoEn: reloj.now(),
+    traceId: entrada.traceId,
+    patientId: entrada.patientId,
+    episodeId: entrada.episodeId,
+    userId: entrada.userId,
+    questionTemplateId: entrada.questionTemplateId,
+    continueWithWarning: entrada.continueWithWarning,
+    query: entrada.query,
+    sourcesSelected: entrada.sourcesSelected,
+    filtersApplied: entrada.filtersApplied,
+    dataClassification: entrada.dataClassification,
+    catalogVersion: entrada.catalogVersion,
+    contextoVacio: entrada.contextoVacio,
+    base: construirBaseTipoNoHabilitado({
+      sourcesSelected: entrada.sourcesSelected,
+      filters: entrada.filtersApplied,
+      continuedWithWarning: entrada.continueWithWarning,
+      sourcesNotIncluded: alcanceDelCorpus.corpusExcludedSources,
+      corpusCutoffDate: alcanceDelCorpus.corpusCutoffDate,
+    }),
+  });
+  return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
+}
+
 /**
  * Cierre del análisis (RN-06): valida la respuesta interna, persiste el `AIAnalysisRecord` y solo entonces
  * responde desde lo persistido.
  */
 export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): AnalysisCompletion {
-  const { analisis, base, reloj, idsDeAnalisis, disclaimer, alcanceDelCorpus } = dependencias;
   return {
-    async completar(entrada) {
-      if (!entrada.respuesta.ok)
-        return { tipo: 'fallo', respuesta: mapearFalloRag(entrada.respuesta) };
-      const interpretada = interpretarRespuestaInterna(entrada.respuesta.cuerpo);
-      if (interpretada === null) return { tipo: 'fallo', respuesta: RESPUESTA_INTERNA_INVALIDA };
-      const { respuesta, topRelevanceScore } = interpretada;
-      if (entrada.episodeId === null) throw new FalloDePersistenciaError();
-      const registro = armarRegistro({
-        id: idsDeAnalisis(),
-        creadoEn: reloj.now(),
-        traceId: entrada.traceId,
-        patientId: entrada.patientId,
-        episodeId: entrada.episodeId,
-        userId: entrada.userId,
-        questionTemplateId: entrada.questionTemplateId,
-        continueWithWarning: entrada.continueWithWarning,
-        request: entrada.request,
-        dataRefs: entrada.dataRefs,
-        respuesta,
-        base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
-        topRelevanceScore,
-      });
-      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
-    },
-    async completarTipoNoHabilitado(entrada) {
-      if (entrada.episodeId === null) throw new FalloDePersistenciaError();
-      const registro = armarRegistroTipoNoHabilitado({
-        id: idsDeAnalisis(),
-        creadoEn: reloj.now(),
-        traceId: entrada.traceId,
-        patientId: entrada.patientId,
-        episodeId: entrada.episodeId,
-        userId: entrada.userId,
-        questionTemplateId: entrada.questionTemplateId,
-        continueWithWarning: entrada.continueWithWarning,
-        query: entrada.query,
-        sourcesSelected: entrada.sourcesSelected,
-        filtersApplied: entrada.filtersApplied,
-        dataClassification: entrada.dataClassification,
-        catalogVersion: entrada.catalogVersion,
-        contextoVacio: entrada.contextoVacio,
-        base: construirBaseTipoNoHabilitado({
-          sourcesSelected: entrada.sourcesSelected,
-          filters: entrada.filtersApplied,
-          continuedWithWarning: entrada.continueWithWarning,
-          sourcesNotIncluded: alcanceDelCorpus.corpusExcludedSources,
-          corpusCutoffDate: alcanceDelCorpus.corpusCutoffDate,
-        }),
-      });
-      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
-    },
+    completar: (entrada) => completarConRespuestaInterna(dependencias, entrada),
+    completarTipoNoHabilitado: (entrada) => completarSinCorpusHabilitado(dependencias, entrada),
   };
 }
