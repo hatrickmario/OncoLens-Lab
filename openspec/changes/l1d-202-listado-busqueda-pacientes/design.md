@@ -59,7 +59,8 @@ Detalles de A:
 - `pendingReviewCount` = datos clínicos con `review_status = requiere_revision` (recomendación del
   refinamiento del S2 §3.3 para US-051); `missingCriticalCount = 0` hasta el S3/S4 (FEAT-02a, FEAT-04);
   `cancerTypeEnabled` = el `cancer_type` del diagnóstico activo está en `ENABLED_CANCER_TYPES`.
-  Contadores en `contadoresDelPaciente()`, compartido con la ficha de L1D-72.
+  Contadores en `contarPendientesDeRevision()` (repository de `patients`; catálogo `FUENTES_POR_REVISAR`), que la
+  ficha de L1D-72 puede reutilizar; `missingCriticalCount` es la constante `FALTANTES_CRITICOS_POR_AHORA = 0`.
 - Sin autorización por paciente (P-02): no se consulta `care_team_member`.
 
 ### D4 · Búsqueda
@@ -74,8 +75,15 @@ Detalles de A:
   semántica exacta de D1.
 - Error de integridad de la identidad (L1D-200) → `500 ErrorInterno` en las tres operaciones; este
   change lo declara en el contrato (L1D-72 depende de ello para `getPatient`).
-- Respuesta `PatientPage` (página 1 con los resultados); `429` por RN-30 queda en el contrato y su
-  control llega con su historia (Regresión [RN-30] activa desde S6).
+- Respuesta `PatientPage` (página 1 con los resultados). **Corrección (Gate 2, privacy-guardian):** RN-30 **no
+  cubre** `POST /platform/patients/search`. La búsqueda exacta por índice ciego es un oráculo de pertenencia (con la
+  máscara «•••• NN» el espacio por paciente baja 100 veces, y el admin también tiene `patients:lookup`). Se registra
+  como **prerrequisito de G-Piloto (S6)**, candidato a `preflight` (US-143): (1) límite de peticiones por usuario en
+  `patients/search`, con el valor en configuración (RN-22); (2) auditoría `patient.search` (usuario, tipo de criterio y
+  nº de resultados; **sin criterio ni HMAC**). ID de historia: **por asignar** (lo crea la sesión principal). El `429`
+  queda en el contrato y NO se implementa en este change; depende de ese requisito.
+- Un nombre que queda vacío tras normalizar (solo espacios o marcas) responde `422`. El listado del admin descifra solo
+  el documento (`descifrarVarios(ids, { conNombre: false })`) y no lee el tipo de cáncer del diagnóstico.
 
 ## Privacidad y ownership
 
@@ -172,6 +180,13 @@ Detalles de A:
 Supertest + PostgreSQL real (AC-1…AC-4, AC-6, AC-7) con respuestas validadas contra el spec;
 integración con lectura de *logs* (AC-5); Vitest + Testing Library + MSW (UI); Playwright (AC-1)
 cuando exista el job de E2E (ARR-02 resto).
+
+## Pregunta abierta
+
+- **Q-1 (decide la sesión principal):** `fullNameMasked` de `patient-page-doctor.json` es «Prueba Sintética 1» porque la
+  regla AC-17 vigente solo exime a `nationalIdMasked`. Para mostrar las iniciales («P. S. 1.») y declarar un `pattern`
+  en `fullNameMasked` hay que eximir ese campo en `assertExamplesSynthetic.mjs`. Este change no toca la regla ni el
+  patrón.
 
 ## Pendiente de definir
 
