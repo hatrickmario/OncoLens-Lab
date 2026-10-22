@@ -82,6 +82,39 @@ def test_comparar_con_umbral_desconocido_sale_con_2(tmp_path: Path) -> None:
     assert comparar(reporte_con_recall(tmp_path, 0.9), config) == 2
 
 
+@pytest.mark.ac("US-074", 5)
+@pytest.mark.parametrize(
+    ("bytes_config", "bytes_reporte"),
+    [
+        (b"mrr_min: 2024-02-30\n", b"{}"),
+        (b"\xff\xfe mrr_min: 0.5\n", b"{}"),
+        (b"# sin umbrales\n", b"[" * 100_000),
+    ],
+    ids=["fecha_imposible", "config_no_utf8", "reporte_anidado_profundo"],
+)
+def test_comparar_con_entrada_corrupta_sale_con_2_sin_traceback(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    bytes_config: bytes,
+    bytes_reporte: bytes,
+) -> None:
+    config = tmp_path / "regression.yaml"
+    reporte = tmp_path / "reporte.json"
+    config.write_bytes(bytes_config)
+    reporte.write_bytes(bytes_reporte)
+
+    codigo = comparar(reporte, config)
+
+    salida = capsys.readouterr()
+    assert (codigo, "Traceback" in salida.err + salida.out) == (2, False)
+
+
+def test_comparar_con_clave_repetida_en_regression_yaml_sale_con_2(tmp_path: Path) -> None:
+    config = umbrales(tmp_path, "recall_at_10_min: 0.8\nrecall_at_10_min: 0.1\n")
+
+    assert comparar(reporte_con_recall(tmp_path, 0.5), config) == 2
+
+
 def test_comparar_sin_argumentos_sale_con_2() -> None:
     assert main([]) == 2
 
