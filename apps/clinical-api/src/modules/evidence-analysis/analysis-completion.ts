@@ -11,7 +11,13 @@ import {
   type RegistroDeAnalisis,
 } from './analysis-record.js';
 import { aEvidenceAnalysis } from './evidence-analysis.mapper.js';
-import type { AnalysisBasisBuilder, AnalysisCompletion, ResultadoDelAnalisis } from './ports.js';
+import type {
+  AnalysisBasisBuilder,
+  AnalysisCompletion,
+  EntradaDeCierre,
+  EntradaDeCierreSinIA,
+  ResultadoDelAnalisis,
+} from './ports.js';
 import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
 
 /** La respuesta de rag-orchestrator no cumple el contrato (o es incoherente): no se persiste ni se muestra. */
@@ -102,9 +108,6 @@ async function persistirAnalisisAntesDeResponder(
   return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
 }
 
-type EntradaDeCierre = Parameters<AnalysisCompletion['completar']>[0];
-type EntradaTipoNoHabilitado = Parameters<AnalysisCompletion['completarTipoNoHabilitado']>[0];
-
 async function completarConRespuestaInterna(
   dependencias: DependenciasDelCierre,
   entrada: EntradaDeCierre,
@@ -133,9 +136,9 @@ async function completarConRespuestaInterna(
   return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
 }
 
-async function completarSinCorpusHabilitado(
+async function completarTipoNoHabilitado(
   dependencias: DependenciasDelCierre,
-  entrada: EntradaTipoNoHabilitado,
+  entrada: EntradaDeCierreSinIA,
 ): Promise<ResultadoDelAnalisis> {
   const { analisis, reloj, idsDeAnalisis, disclaimer, alcanceDelCorpus } = dependencias;
   if (entrada.episodeId === null) throw new FalloDePersistenciaError();
@@ -172,6 +175,6 @@ async function completarSinCorpusHabilitado(
 export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): AnalysisCompletion {
   return {
     completar: (entrada) => completarConRespuestaInterna(dependencias, entrada),
-    completarTipoNoHabilitado: (entrada) => completarSinCorpusHabilitado(dependencias, entrada),
+    completarTipoNoHabilitado: (entrada) => completarTipoNoHabilitado(dependencias, entrada),
   };
 }
