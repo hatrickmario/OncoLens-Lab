@@ -1,0 +1,124 @@
+{
+  "maxLinesPerFunction": 40,
+  "complexity": 10,
+  "c901MaxComplexity": 10,
+  "plr0915MaxStatements": 50,
+  "web": {
+    "componentLinesWarn": 100,
+    "componentLinesError": 150
+  },
+  "excepciones": [
+    {
+      "regla": "complexity",
+      "archivo": "apps/clinical-api/src/evaluacion/pii/comando.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "complexity",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/rag-query.adapter.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/prisma/seed/sembrar.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/evaluacion/pii/comando.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/auth/auth.controller.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/auth/auth.repository.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/auth/auth.service.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/analysis-record.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/deidentification/pii-formats.config.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/evidence-analysis.controller.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/evidence-analysis.repository.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/evidence-analysis/evidence-analysis.service.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/patients/identity.repository.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/patients/identity.service.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/users/users.repository.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/server.ts",
+      "caduca": "2026-11-30",
+      "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    }
+  ]
+}
