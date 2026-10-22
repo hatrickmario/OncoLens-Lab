@@ -22,6 +22,7 @@ from app.evaluation.adaptadores_falsos import (
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.lenguaje_estricto import VerificadorEstricto, cargar_verificador_estricto
 from app.evaluation.medidores import (
     BuscadorMedido,
     CatalogoMedido,
@@ -46,6 +47,7 @@ class ServicioDeSuite:
     observaciones: Observaciones
     cronometro: Cronometro
     catalogo_version: str
+    verificador_estricto: VerificadorEstricto
 
 
 def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
@@ -82,4 +84,10 @@ def componer_servicio(
         reloj=reloj,
         parametros=parametros_de_recuperacion(config),
     )
-    return ServicioDeSuite(servicio, observaciones, cronometro, config.catalogo_version)
+    return ServicioDeSuite(
+        servicio,
+        observaciones,
+        cronometro,
+        config.catalogo_version,
+        cargar_verificador_estricto(config.ruta_terminos),
+    )

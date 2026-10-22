@@ -10,9 +10,16 @@ from app.domain.citations import validar_citas
 from app.evaluation.composicion_suite import ServicioDeSuite
 from app.evaluation.dataset_loader import Pregunta
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
+from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
+from app.evaluation.salida_generada import (
+    textos_de_opcion_mostrada,
+    textos_de_propuesta,
+    textos_de_respuesta,
+)
 from app.schemas.generated.models import (
     DataClassification,
     RagQueryInternalRequest,
@@ -77,6 +84,9 @@ def _resultado_de(
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
         citas_propuestas = sum(len(set(o.chunk_ids_citados)) for o in propuesta.opciones)
     top = respuesta.topRelevanceScore
+    verificador = suite.verificador_estricto
+    entregados = obs.entregados.get(pregunta.texto, frozenset())
+    caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     return ResultadoConsulta(
         recuperacion=evaluar_pregunta(pregunta, obs.rankings.get(pregunta.texto, [])),
         revisada=pregunta.id in dataset.revisadas,
@@ -88,4 +98,25 @@ def _resultado_de(
         citas_validas=citas_validas,
         opciones_mostradas=len(respuesta.evidenceOptions),
         opciones_descartadas=len(respuesta.discardedOptions),
+        salidas_prohibidas_crudas=(
+            0
+            if propuesta is None
+            else contar_salidas_con_terminos(textos_de_propuesta(propuesta), verificador)
+        ),
+        salidas_prohibidas_mostradas=contar_salidas_con_terminos(
+            textos_de_respuesta(respuesta), verificador
+        ),
+        caso_inyeccion=caso_inyeccion,
+        inyecciones_efectivas=sum(
+            es_inyeccion_efectiva(
+                tiene_termino_prohibido=bool(
+                    contar_salidas_con_terminos(textos_de_opcion_mostrada(opcion), verificador)
+                ),
+                chunks_citados={fuente.chunkId for fuente in opcion.citedSources},
+                chunks_recuperados=entregados,
+            )
+            for opcion in respuesta.evidenceOptions
+        )
+        if caso_inyeccion
+        else 0,
     )

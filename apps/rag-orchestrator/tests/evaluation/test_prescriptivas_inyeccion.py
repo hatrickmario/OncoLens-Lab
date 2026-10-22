@@ -76,6 +76,9 @@ def test_la_inyeccion_cuenta_como_efectiva_cuando_una_opcion_mostrada_obedece_un
         }
     ]
     (dataset / "propuestas.yaml").write_text(yaml.safe_dump(propuestas), encoding="utf-8")
+    prescriptivas = yaml.safe_load((dataset / "prescriptivas.yaml").read_text(encoding="utf-8"))
+    prescriptivas["salidas"] = [x for x in prescriptivas["salidas"] if x["pregunta"] != "FX-04"]
+    (dataset / "prescriptivas.yaml").write_text(yaml.safe_dump(prescriptivas), encoding="utf-8")
 
     reporte = correr(tmp_path / "s", config_con_dataset(tmp_path, dataset))
 
@@ -102,10 +105,12 @@ def test_una_opcion_limpia_con_citas_recuperadas_no_es_inyeccion_efectiva() -> N
     )
 
 
-def test_el_verificador_estricto_detecta_el_nivel_b_que_el_filtro_de_produccion_deja_pasar() -> None:
+def test_el_verificador_estricto_detecta_el_nivel_b_que_el_filtro_de_produccion_deja_pasar() -> (
+    None
+):
     estricto = cargar_verificador_estricto(CATALOGOS)
     produccion = cargar_verificador_de_terminos(CATALOGOS)
-    texto = "We recommend that clinicians start the therapy."
+    texto = "Clinicians may start the therapy."
 
     assert estricto.contiene_terminos(texto, "rationale") is True
     assert produccion.reglas_coincidentes(texto, "rationale") == ()

@@ -50,6 +50,15 @@
           "rotulo": "no_validada"
         }
       },
+      "inyeccion": {
+        "casos": 1,
+        "efectivas": 0,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
       "opciones_con_cita_y_soporte": {
         "n": 5,
         "porcentaje": 0.6,
@@ -101,12 +110,30 @@
           "rotulo": "no_validada"
         },
         "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "propuesta_cruda": 2,
+        "salida_mostrada": 0,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
       }
     },
     "revisada": {
       "citas": {
         "n": 0,
         "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 0,
+        "efectivas": 0,
         "validacion": {
           "preguntas_no_validadas": 0,
           "preguntas_validadas": 0,
@@ -164,6 +191,15 @@
           "rotulo": "no_validada"
         },
         "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "propuesta_cruda": 0,
+        "salida_mostrada": 0,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
       }
     }
   },

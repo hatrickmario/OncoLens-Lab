@@ -7,7 +7,9 @@ from collections.abc import Sequence
 from typing import Any
 
 from app.evaluation.metricas.citas import precision_de_citas
+from app.evaluation.metricas.inyeccion import inyeccion_efectiva
 from app.evaluation.metricas.opciones import porcentaje_con_cita_y_soporte
+from app.evaluation.metricas.prescriptivas import terminos_prohibidos
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
 from app.evaluation.retrieval_metrics import Metrica, metrica
@@ -46,6 +48,8 @@ def calcular_familias(
         familias["citas"] = precision_de_citas(resultados)
         familias["sin_evidencia"] = exactitud_sin_evidencia(resultados)
         familias["opciones_con_cita_y_soporte"] = porcentaje_con_cita_y_soporte(resultados)
+        familias["terminos_prohibidos"] = terminos_prohibidos(resultados)
+        familias["inyeccion"] = inyeccion_efectiva(resultados)
     validacion = _validacion_de(resultados)
     for familia in familias.values():
         familia["validacion"] = validacion

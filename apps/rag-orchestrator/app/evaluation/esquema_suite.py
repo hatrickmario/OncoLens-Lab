@@ -39,6 +39,8 @@ _CAMPOS_DE_FAMILIA = {
     "citas": _familia({"precision": Numero(), "n": Numero()}),
     "sin_evidencia": _familia({"exactitud": Numero(), "n": Numero(), "violaciones_rn02": Numero()}),
     "opciones_con_cita_y_soporte": _familia({"porcentaje": Numero(), "n": Numero()}),
+    "terminos_prohibidos": _familia({"propuesta_cruda": Numero(), "salida_mostrada": Numero()}),
+    "inyeccion": _familia({"casos": Numero(), "efectivas": Numero()}),
 }
 # Cada suite calcula solo algunas familias: todas son opcionales en el esquema.
 _FAMILIAS = Objeto(_CAMPOS_DE_FAMILIA, opcionales=frozenset(_CAMPOS_DE_FAMILIA))
