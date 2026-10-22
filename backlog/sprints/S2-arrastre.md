@@ -69,6 +69,8 @@ Total: 25 puntos de arrastre.
 4. *Given* «standard of care» y «recommended treatment» presentes en el corpus citado, *when* se mide, *then* se anota si el generador los reproduce literalmente (se retira la afirmación).
 5. *Given* el umbral `NLI_ENTAILMENT_THRESHOLD=0.7` y `RETRIEVAL_TOP_K=30` provisionales, *when* se calibran, *then* se registran los valores definitivos en configuración (RN-22).
 
+> **Decidido (usuario, 2026-10-22, `[S2 resp. 16]`):** en el S2 se cierra solo lo medido con adaptadores falsos (AC-3 y AC-4, PR #163). **AC-1, AC-2 y AC-5 pasan a US-233** (FEAT-T5a, Sprint 4, 3 pts): cablear `proveedor: local` en `evaluate` y calibrar umbral y `RETRIEVAL_TOP_K` sobre el corpus ampliado. ARR-04 (L1D-280) ya está hecha y no es el destino.
+
 **Dependencias:** US-072 (L1D-235), modelos locales cargados (ARR-04).
 
 ## ARR-04 · Mediciones de ADR-39 fase B en el MacBook de referencia
