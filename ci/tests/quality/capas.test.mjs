@@ -1,4 +1,5 @@
-import { cpSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { cpSync, mkdtempSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { RAIZ, binLocal, ejecutar } from './soporte.mjs';
@@ -7,15 +8,14 @@ const FIXTURES_CAPAS = path.join(import.meta.dirname, 'fixtures/capas');
 const CONFIGURACION = path.join(RAIZ, '.dependency-cruiser.cjs');
 
 /**
- * Copia el árbol de un fixture a un directorio temporal bajo node_modules/.cache (ignorado por git, y donde
- * `@prisma/client` se resuelve desde el node_modules de la raíz) y corre dependency-cruiser desde allí, para
- * que las rutas relativas (`apps/clinical-api/...`) coincidan con las de las reglas.
+ * Copia el árbol de un fixture a un directorio FUERA de node_modules (os.tmpdir) con `node_modules` enlazado a
+ * la raíz, y corre dependency-cruiser desde allí: las dependencias de terceros resuelven a `node_modules/...`
+ * con la misma forma que en el árbol real (un directorio bajo node_modules/.cache daba un verde falso).
  */
 function cruzar(caso) {
-  const base = path.join(RAIZ, 'node_modules/.cache/oncolens-quality');
-  mkdirSync(base, { recursive: true });
-  const destino = mkdtempSync(path.join(base, 'capas-'));
+  const destino = mkdtempSync(path.join(tmpdir(), 'oncolens-capas-'));
   cpSync(path.join(FIXTURES_CAPAS, caso), destino, { recursive: true });
+  symlinkSync(path.join(RAIZ, 'node_modules'), path.join(destino, 'node_modules'), 'dir');
   return ejecutar(binLocal('depcruise'), ['.', '--config', CONFIGURACION, '--output-type', 'err'], {
     cwd: destino,
   });
@@ -56,6 +56,28 @@ describe('reglas de capas de dependency-cruiser', () => {
     expect(resultado.estado).not.toBe(0);
     expect(resultado.salida).toContain('componentes-sin-datos');
     expect(resultado.salida).toContain('apps/web/components/organisms/panel.tsx');
+  });
+
+  it('falla con controller-sin-acceso-a-datos cuando un controller importa pg [US-213 AC-2]', () => {
+    const resultado = cruzar('controller-pg');
+
+    expect(resultado.estado).not.toBe(0);
+    expect(resultado.salida).toContain('controller-sin-acceso-a-datos');
+    expect(resultado.salida).toContain('apps/clinical-api/src/modules/x/x.controller.ts');
+  });
+
+  it('falla con componentes-sin-datos cuando un componente importa pg [US-213 AC-2]', () => {
+    const resultado = cruzar('componente-pg');
+
+    expect(resultado.estado).not.toBe(0);
+    expect(resultado.salida).toContain('componentes-sin-datos');
+  });
+
+  it('falla con componentes-sin-datos cuando un componente importa un cliente HTTP como undici [US-213 AC-2]', () => {
+    const resultado = cruzar('componente-undici');
+
+    expect(resultado.estado).not.toBe(0);
+    expect(resultado.salida).toContain('componentes-sin-datos');
   });
 
   it('falla con sin-ciclos y nombra los archivos cuando dos módulos se importan entre sí [US-213 AC-2]', () => {
