@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import os
 import sys
 import time
 from contextlib import AsyncExitStack
@@ -23,6 +22,7 @@ from app.application.ports import Clock
 from app.evaluation.armado_reporte import armar_reporte
 from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import (
+    ENTORNO_DEL_JUEZ,
     SUITE_COMPLETA,
     SUITES,
     ConfigInvalida,
@@ -74,6 +74,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--nombre-archivo", default=None)
     parser.add_argument("--prueba-final", action="store_true")
     parser.add_argument("--informe-pii", type=Path, default=None)
+    for (
+        clave
+    ) in ENTORNO_DEL_JUEZ:  # --juez-modelo, --juez-base-url, --juez-temperatura, --juez-semilla
+        parser.add_argument(f"--juez-{clave.replace('_', '-')}", dest=f"juez_{clave}", default=None)
     return parser
 
 
@@ -92,7 +96,7 @@ def main(
         args = _parser().parse_args(list(argv))
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
-        config = cargar_config_suite(args.config, os.environ if entorno is None else entorno)
+        config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
         return _ejecutar(config, args, reloj or RelojDelSistema(), raiz)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
@@ -113,6 +117,21 @@ def main(
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
         return 1
+
+
+def _ajustes_del_juez(
+    args: argparse.Namespace, entorno: Mapping[str, str] | None
+) -> dict[str, str]:
+    """``EVAL_JUDGE_*`` (ADR-41) sin leer el entorno del proceso (US-037 AC-1: solo ``app/config/`` lo hace).
+
+    Llegan por ``entorno`` (quien invoca ``main``: el envoltorio o un test) y los flags ``--juez-*`` los sustituyen.
+    """
+    ajustes = dict(entorno or {})
+    for clave, variable in ENTORNO_DEL_JUEZ.items():
+        valor = getattr(args, f"juez_{clave}")
+        if valor is not None:
+            ajustes[variable] = valor
+    return ajustes
 
 
 def _fuente_de(config: ConfigSuite, raiz: Path | None) -> FuenteDatasetEnDirectorio:
@@ -142,7 +161,9 @@ def _ejecutar(
 
 def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPii:
     ruta = args.informe_pii or config.informe_pii
-    return SinInformePii() if ruta is None else ProveedorPiiDeArchivo(ruta)
+    if ruta is None:
+        return SinInformePii()
+    return ProveedorPiiDeArchivo(ruta if ruta.is_absolute() else raiz_repo() / ruta)
 
 
 def _correr_suite(

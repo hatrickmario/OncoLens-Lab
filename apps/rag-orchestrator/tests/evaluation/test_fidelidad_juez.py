@@ -275,3 +275,19 @@ def test_las_afirmaciones_a_juzgar_son_las_que_el_pipeline_envia_al_nli() -> Non
         "Detalle limpio.",
         "Limitación limpia.",
     ]
+
+
+def test_los_flags_juez_sustituyen_a_las_variables_y_al_yaml_y_la_guarda_los_alcanza(
+    tmp_path: Path,
+) -> None:
+    with respx.mock(assert_all_called=False) as http:
+        http.route().respond(200)
+        codigo = main(
+            ["--config", str(CONFIG), "--salida", str(tmp_path / "s"), "--juez-modelo", "m@1"]
+            + ["--juez-base-url", NUBE],
+            reloj=RelojFijo(),
+            entorno={"EVAL_JUDGE_BASE_URL": LOCAL},
+        )
+        peticiones = len(http.calls)
+
+    assert (codigo != 0, peticiones, (tmp_path / "s").exists()) == (True, 0, False)
