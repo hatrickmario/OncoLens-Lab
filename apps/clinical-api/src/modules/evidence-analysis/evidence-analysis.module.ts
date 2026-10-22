@@ -2,6 +2,7 @@ import type { Router } from 'express';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
+import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import { crearBaseDelAnalisis } from './analysis-basis.js';
 import { crearAnalysisCompletion } from './analysis-completion.js';
@@ -16,6 +17,7 @@ import type {
   ContextDeidentifier,
   TraceIdGenerator,
   RagQueryClient,
+  TiposDeCancerHabilitados,
 } from './ports.js';
 
 export interface ConfiguracionDelGateway extends ConfiguracionDelAnalisis {
@@ -28,6 +30,9 @@ export interface DependenciasDelGateway {
   rag: RagQueryClient;
   catalogo: CatalogVersionProvider;
   config: ConfiguracionDelGateway;
+  /** `ENABLED_CANCER_TYPES` ya validada contra el manifiesto (RN-20). */
+  tiposHabilitados: TiposDeCancerHabilitados;
+  alcanceDelCorpus: AlcanceDelCorpus;
   reloj: Clock;
   traceIds: TraceIdGenerator;
   /** UUID de los `AIAnalysisRecord`; distinto de `traceIds`, que solo genera `traceId`. */
@@ -50,7 +55,9 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
       reloj: dependencias.reloj,
       idsDeAnalisis: dependencias.idsDeAnalisis,
       disclaimer: dependencias.config.aiDisclaimerText,
+      alcanceDelCorpus: dependencias.alcanceDelCorpus,
     }),
+    tiposHabilitados: dependencias.tiposHabilitados,
     catalogo: dependencias.catalogo,
     reloj: dependencias.reloj,
     config: dependencias.config,
