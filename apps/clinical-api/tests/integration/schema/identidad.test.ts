@@ -88,6 +88,7 @@ describe('identity.patient_identity', () => {
         ['national_id_hmac', 'text'],
         ['full_name_ciphertext', 'bytea'],
         ['key_version', 'int4'],
+        ['full_name_hmac', 'text'],
       ],
     ],
     [

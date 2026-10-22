@@ -81,6 +81,8 @@ export function crearFetchJsonHaciaClinicalApi(
       headers: cabecerasHaciaClinicalApi(opciones.cookieDeSesion, opciones.ipDelCliente),
       ...(cuerpo !== '' && { body: cuerpo }),
       redirect: 'manual',
+      // Las respuestas llevan identidad (aunque enmascarada) o datos clínicos: nunca de la caché de Next (RN-10).
+      cache: 'no-store',
       signal: AbortSignal.timeout(opciones.timeoutMs),
     });
   };

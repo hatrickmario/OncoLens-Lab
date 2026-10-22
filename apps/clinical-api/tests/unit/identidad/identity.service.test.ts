@@ -19,6 +19,26 @@ function repositorioEnMemoria(): IdentityRepository & { filas: Map<string, FilaD
       return Promise.resolve(true);
     },
     buscarPorPaciente: (patientId) => Promise.resolve(filas.get(patientId) ?? null),
+    buscarPacientesPorNombre: (indiceDeNombre) =>
+      Promise.resolve(
+        [...filas.values()]
+          .filter((fila) => fila.fullNameHmac === indiceDeNombre)
+          .map((fila) => fila.patientId),
+      ),
+    completarIndiceDeNombre: (patientId, indiceDeNombre) => {
+      const fila = filas.get(patientId);
+      if (fila === undefined || fila.fullNameHmac !== null) return Promise.resolve(false);
+      filas.set(patientId, { ...fila, fullNameHmac: indiceDeNombre });
+      return Promise.resolve(true);
+    },
+    buscarPacientesPorDocumento: (idType, indice) =>
+      Promise.resolve(
+        [...filas.values()]
+          .filter((fila) => fila.idType === idType && fila.nationalIdHmac === indice)
+          .map((fila) => fila.patientId),
+      ),
+    buscarPorPacientes: (patientIds) =>
+      Promise.resolve(patientIds.flatMap((patientId) => filas.get(patientId) ?? [])),
   };
 }
 

@@ -33,7 +33,7 @@ puede devolver la identidad **enmascarada**.
 - Búsqueda por documento exacta por índice ciego (L1D-200); búsqueda por nombre exacta por índice
   ciego del nombre normalizado (P-4, `[S2 resp. 4]`).
 - Formato de las máscaras `fullNameMasked` y `nationalIdMasked` (AC-7, documento con longitud fija
-  `•••• 56`), que reemplaza `x-pending-owner: US-048` del contrato.
+  `•••• 67`), que reemplaza `x-pending-owner: US-048` del contrato.
 - Contrato: `500 ErrorInterno` en `getPatient`, `listPatients` y `searchPatients` (error de integridad
   de L1D-200); *minor* → `info.version` **1.9.0** (orden: 167 → 1.6.0, 171 → 1.7.0, 56 → 1.8.0,
   202 → 1.9.0).

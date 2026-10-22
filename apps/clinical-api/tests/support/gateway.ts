@@ -303,7 +303,11 @@ export async function montarGateway(
     }),
     registrar: logger.registrar,
   });
-  const rutas = componerRutasProtegidas({ gateway: ruta, documents: Router() });
+  const rutas = componerRutasProtegidas({
+    gateway: ruta,
+    documents: Router(),
+    patients: Router(),
+  });
   const app = appConAuth({
     cliente: mundo.cliente,
     espacio: mundo.espacio,

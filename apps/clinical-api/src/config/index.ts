@@ -1,4 +1,5 @@
 import { readDocumentosConfig, type DocumentosConfig } from './documentos.js';
+import { readPacientesConfig, type PacientesConfig } from './pacientes.js';
 import {
   ConfiguracionInvalidaError,
   exigirAppEnv,
@@ -28,6 +29,7 @@ import {
  */
 export * from './secciones.js';
 export * from './documentos.js';
+export * from './pacientes.js';
 
 /**
  * Sesión por inactividad y bloqueo del login (RN-22, US-044): lo aplican el guard y el servicio de autenticación.
@@ -166,6 +168,7 @@ export interface ConfiguracionDeServicios {
   alcance: AlcanceDelAnalisisConfig;
   deidentificacion: DeidentificationConfig;
   documentos: DocumentosConfig;
+  pacientes: PacientesConfig;
 }
 
 export function cargarConfiguracionDeServicios(
@@ -180,6 +183,7 @@ export function cargarConfiguracionDeServicios(
     alcance: readAlcanceDelAnalisisConfig(env),
     deidentificacion: readDeidentificationConfig(env),
     documentos: readDocumentosConfig(env, readFile),
+    pacientes: readPacientesConfig(env),
   };
 }
 

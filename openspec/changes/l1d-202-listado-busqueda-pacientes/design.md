@@ -46,7 +46,7 @@ Detalles de A:
   espacio ("Lucía Fernanda Rondón Peña" → "L. F. R. P."). `enmascararNombre()`.
 - `nationalIdMasked` (Gate 1): **longitud fija**, que no revela la del documento: cuatro `•`
   (U+2022), un espacio y los 2 últimos caracteres del número normalizado, para todo `id_type`:
-  "1234567" → "•••• 56", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
+  "1234567" → "•••• 67", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
   `dataOrigin`). Cambia `contracts/examples/patient-summary-admin.json` ("SINT-*****01" →
   "•••• 01"). `enmascararDocumento()`.
 - Ambas se calculan en `clinical-api` tras descifrar en memoria solo las filas de la página; nunca se
@@ -59,7 +59,8 @@ Detalles de A:
 - `pendingReviewCount` = datos clínicos con `review_status = requiere_revision` (recomendación del
   refinamiento del S2 §3.3 para US-051); `missingCriticalCount = 0` hasta el S3/S4 (FEAT-02a, FEAT-04);
   `cancerTypeEnabled` = el `cancer_type` del diagnóstico activo está en `ENABLED_CANCER_TYPES`.
-  Contadores en `contadoresDelPaciente()`, compartido con la ficha de L1D-72.
+  Contadores en `contarPendientesDeRevision()` (repository de `patients`; catálogo `FUENTES_POR_REVISAR`), que la
+  ficha de L1D-72 puede reutilizar; `missingCriticalCount` es la constante `FALTANTES_CRITICOS_POR_AHORA = 0`.
 - Sin autorización por paciente (P-02): no se consulta `care_team_member`.
 
 ### D4 · Búsqueda
@@ -74,8 +75,15 @@ Detalles de A:
   semántica exacta de D1.
 - Error de integridad de la identidad (L1D-200) → `500 ErrorInterno` en las tres operaciones; este
   change lo declara en el contrato (L1D-72 depende de ello para `getPatient`).
-- Respuesta `PatientPage` (página 1 con los resultados); `429` por RN-30 queda en el contrato y su
-  control llega con su historia (Regresión [RN-30] activa desde S6).
+- Respuesta `PatientPage` (página 1 con los resultados). **Corrección (Gate 2, privacy-guardian):** RN-30 **no
+  cubre** `POST /platform/patients/search`. La búsqueda exacta por índice ciego es un oráculo de pertenencia (con la
+  máscara «•••• NN» el espacio por paciente baja 100 veces, y el admin también tiene `patients:lookup`). Se registra
+  como **prerrequisito de G-Piloto (S6)**, candidato a `preflight` (US-143): (1) límite de peticiones por usuario en
+  `patients/search`, con el valor en configuración (RN-22); (2) auditoría `patient.search` (usuario, tipo de criterio y
+  nº de resultados; **sin criterio ni HMAC**). ID de historia: **por asignar** (lo crea la sesión principal). El `429`
+  queda en el contrato y NO se implementa en este change; depende de ese requisito.
+- Un nombre que queda vacío tras normalizar (solo espacios o marcas) responde `422`. El listado del admin descifra solo
+  el documento (`descifrarVarios(ids, { conNombre: false })`) y no lee el tipo de cáncer del diagnóstico.
 
 ## Privacidad y ownership
 
@@ -123,7 +131,7 @@ Detalles de A:
   -      x-pending-owner: US-048
   +      description: >-
   +        Documento enmascarado de longitud fija: "•••• " seguido de los 2 últimos caracteres
-  +        ("•••• 56"); no revela la longitud. El completo solo en la ficha, auditado.
+  +        ("•••• 67"); no revela la longitud. El completo solo en la ficha, auditado.
        fullNameMasked:
   -      description: Nombre enmascarado (iniciales o primer nombre); ... (US-048).
   -      x-pending-owner: US-048
@@ -173,7 +181,53 @@ Supertest + PostgreSQL real (AC-1…AC-4, AC-6, AC-7) con respuestas validadas c
 integración con lectura de *logs* (AC-5); Vitest + Testing Library + MSW (UI); Playwright (AC-1)
 cuando exista el job de E2E (ARR-02 resto).
 
+## Pregunta abierta
+
+- **Q-1 (decide la sesión principal):** `fullNameMasked` de `patient-page-doctor.json` es «Prueba Sintética 1» porque la
+  regla AC-17 vigente solo exime a `nationalIdMasked`. Para mostrar las iniciales («P. S. 1.») y declarar un `pattern`
+  en `fullNameMasked` hay que eximir ese campo en `assertExamplesSynthetic.mjs`. Este change no toca la regla ni el
+  patrón.
+
 ## Pendiente de definir
 
 - **P-4:** D1 decidido (usuario, 2026-10-21, `[S2 resp. 4]`); el AC-3 del backlog ya está corregido (nombre completo encuentra, apellido suelto no).
 - **Formato de máscaras (D2):** lo fija esta historia; se somete al Gate 1.
+
+## Notas de implementación (clinical-platform)
+
+- **Erratum de la máscara:** el ejemplo del documento `1234567` es `"•••• 67"` (la regla es "los 2 últimos caracteres"),
+  no `"•••• 56"` como decían el diseño, la delta y el contrato en su primera versión; corregido en `openapi.yaml` (commit
+  `contract(L1D-202)` aparte), en la delta y en las tareas. `SINT-0000001` sigue siendo `"•••• 01"`.
+- **Contrato:** `nationalIdMasked` declara `pattern: '^•{4} [A-Za-z0-9]{2}$'` (PatientListItem y PatientAdminSummary). La
+  máscara real rellena a la izquierda con `0` si el documento tiene menos de 2 caracteres alfanuméricos y descarta
+  los no alfanuméricos. **Pregunta para `privacy-guardian`:** ¿basta el `pattern` (y el Zod generado lo hace cumplir
+  también en `web`) o prefiere no declarar el formato en el contrato para no fijar cuántos caracteres se revelan?
+- **Ejemplo `patient-page-doctor.json`:** la regla AC-17 vigente (#161) exime solo a `nationalIdMasked`; para
+  `fullNameMasked` sigue exigiendo "Prueba Sintética [n]", así que el ejemplo usa `"Prueba Sintética 1"` y no las
+  iniciales `"P. S. 1."`. Es un ejemplo no normativo; la máscara real (`"L. F. R. P."`) la prueban los tests. Si se quiere
+  que el ejemplo muestre el formato de iniciales, hay que eximir también `fullNameMasked` en la regla (decisión del
+  dueño de la regla, no de este change).
+- **AC-3 del backlog:** el literal `{ name: "Rondón" }` queda superado por P-4: el nombre completo (otras mayúsculas,
+  tildes y espacios) encuentra y un apellido suelto da cero resultados; lo actualiza la sesión principal en `backlog/`.
+- **Configuración:** `PATIENTS_PAGE_SIZE` (entero positivo, por defecto 20; `src/config/pacientes.ts`). **Para el
+  usuario:** añadirla a `infra/docker/.env.example` (este change no lo toca; el valor por defecto de código basta).
+- **Zod generado:** `PatientSearchRequest` se genera como `intersection(unknown, strictObject)`, sin el `anyOf` ni el
+  rechazo de campos extra; `patients.schema.ts` añade (a) el rechazo de campos no declarados, (b) el criterio completo
+  (documento o nombre) y (c) que el listado rechaza todo parámetro que no sea `status`, `dataOrigin` o `page`.
+- **Búsqueda sin descifrar:** `IdentityService.buscarPorDocumento` y `buscarPorNombre` solo comparan índices ciegos; el
+  listado descifra únicamente la identidad de las filas de la página (`descifrarVarios`) y, si la página está vacía,
+  no llama al servicio.
+- **Orden:** `clinical.patient.created_at` descendente y `id` como desempate (el seed comparte `created_at`).
+- **Tareas web (ronda 2):** 2.8 (parte `web`) y 2.9 hechas en `apps/web/lib/server/patients.ts`, `proxy-json.ts` y `app/api/patients/**`, con tests MSW desde `contracts/examples/`. `CAMPOS_DE_LA_BUSQUEDA` está duplicada en `web` (el Zod generado no los expresa): si el contrato añade un campo hay que tocar los dos sitios.
+
+## Notas de implementación (frontend)
+
+- **Pestañas:** `Tabs` de shadcn exige `@radix-ui/react-tabs` (dependencia nueva); no hay evidencia que la justifique para dos pestañas, así que `PestanasDeBusqueda` implementa a mano el patrón ARIA (roles `tablist`/`tab`/`tabpanel`, foco itinerante, flechas, Inicio y Fin).
+- **Tipos de documento:** el selector ofrece todos los valores de `IdType` del contrato (`web` aún no tiene "valores habilitados en configuración"); no se usa `inputmode="numeric"` porque `sintetico` y `pasaporte` son alfanuméricos.
+- **Búsqueda:** muestra solo la página 1 de resultados (exacta por índice ciego: pocos resultados); sin paginación de búsqueda. Más de un resultado por nombre muestra el aviso de homónimos (máscara y año de nacimiento).
+- **Lectura del listado:** la página (RSC) reutiliza `crearManejadorListadoDePacientes` en proceso (`lib/server/leer-listado-de-pacientes.ts`): una sola ruta hacia clinical-api.
+- **Cache-Control:** `proxy.ts` añade `Cache-Control: no-store` a toda página `/pacientes/**` con sesión.
+- **Vista admin:** las filas `view: 'admin'` muestran solo el documento enmascarado, sin enlace ni contadores.
+- **Loop visual:** hecho contra `next dev` + clinical-api simulado desde `contracts/examples/` (sin Compose: hay otros stacks en la máquina).
+
+- **Gate 2 (frontend):** el formulario de búsqueda declara `method="post"` y `action="/api/patients/search"` para que un envío nativo antes de hidratar nunca ponga identidad en la URL. Deuda menor registrada: `mensajeDeError` duplicado entre `listado-de-pacientes` y `busqueda-de-pacientes`, e ids de pestaña/panel fijos.
