@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     llm_request_timeout_ms: int = Field(default=60000, gt=0)
     llm_max_output_tokens: int = Field(default=2048, gt=0)
     llm_cloud_enabled: bool = False
+    # RN-20, RN-22, US-043: tipos de cáncer con análisis (separados por comas); vacía = ninguno (falla cerrada).
+    enabled_cancer_types: Annotated[tuple[str, ...], NoDecode] = ()
     # ADR-39 fase B (US-224, RN-22). `LLM_NUM_CTX` lo aplica el runtime nativo (OLLAMA_CONTEXT_LENGTH): la API
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.
     llm_num_ctx: int = Field(default=8192, gt=0)
@@ -127,6 +129,11 @@ class Settings(BaseSettings):
     @field_validator("llm_allowed_hosts", mode="before")
     @classmethod
     def _hosts_del_llm_separados_por_comas(cls, valor: Any) -> Any:
+        return _lista_separada_por_comas(valor)
+
+    @field_validator("enabled_cancer_types", mode="before")
+    @classmethod
+    def _tipos_habilitados_separados_por_comas(cls, valor: Any) -> Any:
         return _lista_separada_por_comas(valor)
 
     @field_validator("llm_base_url")
@@ -217,8 +224,15 @@ CAMPOS_DE_RECUPERACION = (
 
 
 def claves_de_recuperacion_ausentes(settings: Settings) -> list[str]:
-    """Nombres de las variables de la recuperación que faltan; una sola fuente para el arranque y la composición."""
-    return [campo.upper() for campo in CAMPOS_DE_RECUPERACION if getattr(settings, campo) is None]
+    """Nombres de las variables de la recuperación que faltan; una sola fuente para el arranque y la composición.
+
+    ``ENABLED_CANCER_TYPES`` vacía cuenta como ausente (RN-20): sin ella ningún tipo está habilitado."""
+    ausentes = [
+        campo.upper() for campo in CAMPOS_DE_RECUPERACION if getattr(settings, campo) is None
+    ]
+    if not settings.enabled_cancer_types:
+        ausentes.append("ENABLED_CANCER_TYPES")
+    return ausentes
 
 
 def nombres_de_claves(settings: Settings) -> list[str]:

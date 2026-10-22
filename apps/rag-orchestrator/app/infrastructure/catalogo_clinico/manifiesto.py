@@ -17,11 +17,15 @@ class CatalogoNoConfigurado(CatalogoNoDisponible):
 class CatalogoDelManifiesto:
     """Implementa ``CatalogoClinico`` sobre una versión ya leída del manifiesto."""
 
-    def __init__(self, version: str) -> None:
+    def __init__(self, version: str, tipos_de_cancer: tuple[str, ...]) -> None:
         self._version = version
+        self._tipos_de_cancer = tipos_de_cancer
 
     def version(self) -> str:
         return self._version
+
+    def tipos_de_cancer(self) -> tuple[str, ...]:
+        return self._tipos_de_cancer
 
 
 def cargar_catalogo_del_manifiesto(catalogos: Path) -> CatalogoDelManifiesto:
@@ -29,8 +33,11 @@ def cargar_catalogo_del_manifiesto(catalogos: Path) -> CatalogoDelManifiesto:
     try:
         manifiesto = json.loads((catalogos / NOMBRE_DEL_MANIFIESTO).read_text(encoding="utf-8"))
         version = manifiesto["version"]
+        tipos = manifiesto["cancerTypes"]
     except (OSError, ValueError, KeyError, TypeError):
         raise CatalogoNoDisponible("manifest.json no está disponible") from None
     if not isinstance(version, str) or not version:
         raise CatalogoNoDisponible("manifest.json no declara una versión")
-    return CatalogoDelManifiesto(version)
+    if not isinstance(tipos, list) or not all(isinstance(t, str) for t in tipos):
+        raise CatalogoNoDisponible("manifest.json no declara cancerTypes")
+    return CatalogoDelManifiesto(version, tuple(tipos))

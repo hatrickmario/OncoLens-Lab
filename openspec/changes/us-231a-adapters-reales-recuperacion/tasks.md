@@ -97,8 +97,8 @@
 
 - [x] 3.1 `openspec validate us-231a-adapters-reales-recuperacion --strict` en verde.
 - [ ] 3.2 Suite de `apps/rag-orchestrator` en verde en la ruta rápida de la CI (sin pesos reales): `pytest -m "not models"`;
-  y los tests `models` en verde en la VM local con los pesos de `MODEL_CACHE_DIR`, con la salida adjunta al PR.
+  y los tests `models` en verde en la VM local con los pesos de `MODEL_CACHE_DIR`, con la salida adjunta al PR. **Conciliada en L1D-282 (2026-10-21):** la ruta rápida está en verde (`pytest` de `rag-orchestrator` sobre `main` 806dfa78: 1806 passed, 122 deselected; `integration` e `integration-rag` en la CI de `main`); **pendiente la parte `-m models` (VM de Docker ≥ 10 GB): ID destino L1D-280 (ARR-04) AC-5**, hoy sin ejecutar.
 - [ ] 3.3 `npm run quality` (Ruff + import-linter): `application/` y `domain/` sin importar `onnxruntime`,
-  `tokenizers` ni el detector; `mypy` si está configurado.
+  `tokenizers` ni el detector; `mypy` si está configurado. **ID destino (L1D-282, 2026-10-21): L1D-263 (US-213a) 1.5 y 2.1**: `npm run quality` y `import-linter` (`.importlinter`) aún no existen en `main`; hoy la regla solo se verifica con `tests/unit/test_dependencias_de_inferencia.py`.
 - [x] 3.4 Escaneo de secretos y PII (`pii-scan`) en verde; ningún peso, ruta de máquina ni hash real versionado
   fuera de la configuración.

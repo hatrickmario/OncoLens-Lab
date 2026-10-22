@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { componerAplicacion, componerRutasProtegidas } from './composition.js';
 import { observarEntorno } from './config/index.js';
+import { crearAlmacenMinio } from './infrastructure/almacen-documentos.minio.js';
 import { crearPool } from './infrastructure/database.js';
 import { nuevoSeudonimo, nuevoTraceId } from './infrastructure/ids.js';
 import { crearRegistrador } from './infrastructure/logger.js';
@@ -10,6 +11,7 @@ import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructur
 import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
+import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidad } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
@@ -37,7 +39,7 @@ arrancar({
   exit: (codigo) => process.exit(codigo),
   cargarServicios: cargarEtapaDeServicios,
   listen: (puerto, arranque, servicios) => {
-    const { configuracion, catalogo, clavesDeIdentidad } = servicios;
+    const { configuracion, catalogo, clavesDeIdentidad, tiposHabilitados } = servicios;
     // La lista de campos redactados es la base cerrada del logger más los extra de configuración (RN-10, RN-22).
     const registrar = crearRegistrador((linea) => console.info(linea), {
       camposSensiblesExtra: arranque.logs.camposSensiblesExtra,
@@ -66,6 +68,8 @@ arrancar({
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
           },
+          tiposHabilitados,
+          alcanceDelCorpus: configuracion.alcance,
           reloj,
           traceIds: { traceId: nuevoTraceId },
           idsDeAnalisis: randomUUID,
@@ -82,6 +86,21 @@ arrancar({
           }),
           registrar,
         });
+        // clinical-api es el único dueño de clinical-minio. El bucket se asegura sin bloquear el arranque ni /health:
+        // si MinIO no responde, la carga contesta 503 y el siguiente arranque lo reintenta.
+        const almacen = crearAlmacenMinio(configuracion.documentos);
+        almacen.asegurarBucket().catch(() => {
+          registrar({ event: 'almacen_documentos.bucket', resultado: 'no_asegurado' });
+        });
+        const documents = componerModuloDeDocumentos({
+          db: pool,
+          almacen,
+          reloj,
+          ids: randomUUID,
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
+          config: { maxUploadMb: configuracion.documentos.maxUploadMb },
+        });
         const app = componerAplicacion({
           db: pool,
           auth: arranque.auth,
@@ -91,7 +110,7 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar,
-          rutasProtegidas: componerRutasProtegidas({ gateway }),
+          rutasProtegidas: componerRutasProtegidas({ gateway, documents }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({
             configKeys: entorno.clavesCargadas(),

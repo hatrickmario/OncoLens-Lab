@@ -186,7 +186,9 @@ def test_con_modelos_y_corpus_el_arranque_falla_sin_la_ruta_cuando_la_lista_de_t
     modelos.variables["EMBEDDING_DIM"] = "8"
     sin_lista = tmp_path / "catalogo-sin-lista"
     sin_lista.mkdir()
-    (sin_lista / "manifest.json").write_text('{"version": "1.0.0"}', encoding="utf-8")
+    (sin_lista / "manifest.json").write_text(
+        '{"version": "1.0.0", "cancerTypes": ["mama"]}', encoding="utf-8"
+    )
 
     with pytest.raises(ConfiguracionDeRecuperacionIncompleta) as error:
         _componer_con_corpus(modelos, clinical_catalog_path=sin_lista)
