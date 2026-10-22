@@ -15,7 +15,9 @@ export function anunciarEstado(fase: FaseDelPanel): string {
     case 'error':
       return rellenar(estado.error, { traceId: fase.traceId ?? '' }).trim();
     case 'ok': {
-      if (clasificarResultado(fase.analisis) === 'sin_evidencia') return estado.sinEvidencia;
+      const clase = clasificarResultado(fase.analisis);
+      if (clase === 'sin_evidencia') return estado.sinEvidencia;
+      if (clase === 'tipo_no_habilitado') return ''; // el propio aviso de alcance es la región de estado
       const n = fase.analisis.evidenceOptions.length;
       return n === 1 ? estado.listoUna : rellenar(estado.listoVarias, { n });
     }

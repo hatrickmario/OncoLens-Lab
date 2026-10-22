@@ -33,6 +33,7 @@ describe('EvidencePanel · aviso de alcance (tipo_no_habilitado)', () => {
     expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
     expect(screen.queryByTestId('relevance-label')).toBeNull();
     expect(screen.queryByText(/Relevancia máxima/)).toBeNull();
+    expect(screen.queryByText(/Análisis listo/)).toBeNull();
     for (const nota of screen.getAllByRole('note')) {
       expect(nota.textContent).toBe(tipoNoHabilitado.disclaimer);
     }
