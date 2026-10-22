@@ -25,7 +25,7 @@ export function leerFiltrosDelListado(query: unknown): z.ZodSafeParseResult<Filt
 }
 
 /** Campos que `PatientSearchRequest` declara (`additionalProperties: false`, que el Zod generado no hace cumplir). */
-const CAMPOS_DE_LA_BUSQUEDA: ReadonlySet<string> = new Set([
+export const CAMPOS_DE_LA_BUSQUEDA: ReadonlySet<string> = new Set([
   'idType',
   'nationalId',
   'name',

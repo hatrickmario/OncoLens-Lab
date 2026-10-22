@@ -54,6 +54,8 @@ arrancar({
           clock: reloj,
           ttlSeconds: configuracion.jwt.ttlSeconds,
         });
+        // Una sola instancia para el desidentificador y el listado: las mismas claves y la misma conexión.
+        const identidad = crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool });
         const gateway = componerGatewayDeAnalisis({
           db: pool,
           rag: crearRagQueryClient(
@@ -76,9 +78,7 @@ arrancar({
           idsDeAnalisis: randomUUID,
           // Cableado explícito (RN-11): el desidentificador definitivo, no un valor por defecto del módulo.
           desidentificador: crearContextDeidentifier({
-            identidades: crearLectorDeIdentidad(
-              crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool }),
-            ),
+            identidades: crearLectorDeIdentidad(identidad),
             detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,
@@ -104,7 +104,7 @@ arrancar({
         });
         const patients = componerModuloDePacientes({
           db: pool,
-          identidad: crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool }),
+          identidad,
           tiposHabilitados: servicios.tiposHabilitados,
           traceIds: { traceId: nuevoTraceId },
           registrar,

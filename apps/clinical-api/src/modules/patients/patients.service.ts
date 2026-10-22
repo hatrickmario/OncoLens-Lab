@@ -40,106 +40,145 @@ export interface DependenciasDelService {
  */
 const FALTANTES_CRITICOS_POR_AHORA = 0;
 
-export function crearPatientsService(dependencias: DependenciasDelService): PatientsService {
-  const { repo, identidad, tiposHabilitados, pageSize } = dependencias;
+type Elemento = PatientListItem | PatientAdminSummary;
 
-  function elementoDoctor(
-    fila: FilaDePaciente,
-    identificacion: IdentidadDescifrada,
-    pendientes: number,
-  ): PatientListItem {
-    return {
-      view: 'doctor_listado',
-      id: fila.id,
-      idType: identificacion.idType,
-      nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
-      fullNameMasked: enmascararNombre(identificacion.nombreCompleto),
-      dataOrigin: fila.dataOrigin,
-      lifecycleStatus: fila.lifecycleStatus,
-      birthYear: fila.birthYear,
-      cancerTypeEnabled:
-        fila.cancerType !== null && tiposHabilitados.estaHabilitado(fila.cancerType),
-      pendingReviewCount: pendientes,
-      missingCriticalCount: FALTANTES_CRITICOS_POR_AHORA,
-    };
-  }
+/** Lo que una vista necesita además de la fila para armar su elemento. */
+interface ContextoDeElemento {
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
+  readonly pendientes: Map<string, number>;
+}
 
-  function elementoAdmin(
-    fila: FilaDePaciente,
-    identificacion: IdentidadDescifrada,
-  ): PatientAdminSummary {
-    return {
-      view: 'admin',
-      id: fila.id,
-      idType: identificacion.idType,
-      nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
-      dataOrigin: fila.dataOrigin,
-      lifecycleStatus: fila.lifecycleStatus,
-      registeredAt: fila.registeredAt.toISOString(),
-    };
-  }
-
-  /** Descifra solo la identidad de las filas de la página y la entrega por paciente. */
-  async function identidadesDe(filas: FilaDePaciente[]): Promise<Map<string, IdentidadDescifrada>> {
-    if (filas.length === 0) return new Map();
-    const descifradas = await identidad.descifrarVarios(filas.map((fila) => fila.id));
-    return new Map(descifradas.map((fila) => [fila.patientId, fila]));
-  }
-
-  /** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
-  function identidadObligatoria(
-    identidades: Map<string, IdentidadDescifrada>,
-    patientId: string,
-  ): IdentidadDescifrada {
-    const encontrada = identidades.get(patientId);
-    if (encontrada === undefined) throw new IdentityIntegrityError();
-    return encontrada;
-  }
-
-  /** Los contadores clínicos solo se calculan para quien los ve (el admin no lee datos clínicos). */
-  async function pendientesDe(filas: FilaDePaciente[], vista: VistaDeListado) {
-    return vista === 'doctor_listado'
-      ? repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
-      : new Map<string, number>();
-  }
-
-  /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
-  async function paginar(
-    filtro: Omit<FiltroDePacientes, 'limit' | 'offset' | 'conDatosClinicos'>,
-    page: number,
-    vista: VistaDeListado,
-  ): Promise<PatientPage> {
-    const { filas, total } = await repo.listar({
-      ...filtro,
-      conDatosClinicos: vista === 'doctor_listado',
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    });
-    const identidades = await identidadesDe(filas);
-    const pendientes = await pendientesDe(filas, vista);
-    const items = filas.map((fila) => {
-      const identificacion = identidadObligatoria(identidades, fila.id);
-      return vista === 'doctor_listado'
-        ? elementoDoctor(fila, identificacion, pendientes.get(fila.id) ?? 0)
-        : elementoAdmin(fila, identificacion);
-    });
-    return { items, page, pageSize, total };
-  }
-
-  /** Pacientes que coinciden con el criterio, por índice ciego: la identidad no se descifra para comparar (RN-10). */
-  async function pacientesQueCoinciden(criterio: CriterioDeBusqueda): Promise<string[]> {
-    if (criterio.tipo === 'documento') {
-      return identidad.buscarPorDocumento(criterio.idType, criterio.nationalId);
-    }
-    return identidad.buscarPorNombre(criterio.name);
-  }
-
+function elementoDoctor(
+  fila: FilaDePaciente,
+  identificacion: IdentidadDescifrada,
+  contexto: ContextoDeElemento,
+): PatientListItem {
   return {
+    view: 'doctor_listado',
+    id: fila.id,
+    idType: identificacion.idType,
+    nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
+    fullNameMasked: enmascararNombre(identificacion.nombreCompleto),
+    dataOrigin: fila.dataOrigin,
+    lifecycleStatus: fila.lifecycleStatus,
+    birthYear: fila.birthYear,
+    cancerTypeEnabled:
+      fila.cancerType !== null && contexto.tiposHabilitados.estaHabilitado(fila.cancerType),
+    pendingReviewCount: contexto.pendientes.get(fila.id) ?? 0,
+    missingCriticalCount: FALTANTES_CRITICOS_POR_AHORA,
+  };
+}
+
+function elementoAdmin(
+  fila: FilaDePaciente,
+  identificacion: IdentidadDescifrada,
+): PatientAdminSummary {
+  return {
+    view: 'admin',
+    id: fila.id,
+    idType: identificacion.idType,
+    nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
+    dataOrigin: fila.dataOrigin,
+    lifecycleStatus: fila.lifecycleStatus,
+    registeredAt: fila.registeredAt.toISOString(),
+  };
+}
+
+/**
+ * Las dos vistas en un solo lugar: si cada una lee datos clínicos (el admin no, mínimo privilegio) y cómo arma su
+ * elemento. Una tercera vista se añade aquí y el compilador exige el resto.
+ */
+const VISTAS: Record<
+  VistaDeListado,
+  {
+    readonly conDatosClinicos: boolean;
+    elemento(
+      fila: FilaDePaciente,
+      identificacion: IdentidadDescifrada,
+      contexto: ContextoDeElemento,
+    ): Elemento;
+  }
+> = {
+  doctor_listado: { conDatosClinicos: true, elemento: elementoDoctor },
+  admin: {
+    conDatosClinicos: false,
+    elemento: (fila, identificacion) => elementoAdmin(fila, identificacion),
+  },
+};
+
+/** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
+function identidadObligatoria(
+  identidades: Map<string, IdentidadDescifrada>,
+  patientId: string,
+): IdentidadDescifrada {
+  const encontrada = identidades.get(patientId);
+  if (encontrada === undefined) throw new IdentityIntegrityError();
+  return encontrada;
+}
+
+/** Descifra solo la identidad de las filas de la página y la entrega por paciente. */
+async function identidadesDe(
+  identidad: IdentityService,
+  filas: FilaDePaciente[],
+): Promise<Map<string, IdentidadDescifrada>> {
+  if (filas.length === 0) return new Map();
+  const descifradas = await identidad.descifrarVarios(filas.map((fila) => fila.id));
+  return new Map(descifradas.map((fila) => [fila.patientId, fila]));
+}
+
+/** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
+async function paginar(
+  dependencias: DependenciasDelService,
+  entrada: {
+    filtro: Omit<FiltroDePacientes, 'limit' | 'offset' | 'conDatosClinicos'>;
+    page: number;
+    vista: VistaDeListado;
+  },
+): Promise<PatientPage> {
+  const { repo, identidad, tiposHabilitados, pageSize } = dependencias;
+  const { filtro, page, vista } = entrada;
+  const presentador = VISTAS[vista];
+  const { filas, total } = await repo.listar({
+    ...filtro,
+    conDatosClinicos: presentador.conDatosClinicos,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const identidades = await identidadesDe(identidad, filas);
+  const pendientes = presentador.conDatosClinicos
+    ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
+    : new Map<string, number>();
+  const items = filas.map((fila) =>
+    presentador.elemento(fila, identidadObligatoria(identidades, fila.id), {
+      tiposHabilitados,
+      pendientes,
+    }),
+  );
+  return { items, page, pageSize, total };
+}
+
+/** Pacientes que coinciden con el criterio, por índice ciego: la identidad no se descifra para comparar (RN-10). */
+function pacientesQueCoinciden(
+  identidad: IdentityService,
+  criterio: CriterioDeBusqueda,
+): Promise<string[]> {
+  return criterio.tipo === 'documento'
+    ? identidad.buscarPorDocumento(criterio.idType, criterio.nationalId)
+    : identidad.buscarPorNombre(criterio.name);
+}
+
+export function crearPatientsService(dependencias: DependenciasDelService): PatientsService {
+  return {
+    // El `status` del query se queda en el borde: aquí es el ciclo de vida del paciente.
     listar: ({ filtros, vista }) =>
-      paginar({ status: filtros.status, dataOrigin: filtros.dataOrigin }, filtros.page, vista),
+      paginar(dependencias, {
+        filtro: { lifecycleStatus: filtros.status, dataOrigin: filtros.dataOrigin },
+        page: filtros.page,
+        vista,
+      }),
     async buscar({ busqueda, vista }) {
-      const ids = await pacientesQueCoinciden(busqueda.criterio);
-      return paginar({ ids }, busqueda.page, vista);
+      const ids = await pacientesQueCoinciden(dependencias.identidad, busqueda.criterio);
+      return paginar(dependencias, { filtro: { ids }, page: busqueda.page, vista });
     },
   };
 }
