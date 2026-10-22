@@ -7,7 +7,7 @@ from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
-from app.evaluation.reporte import Booleano, Enumerado, Identificador, Numero, Objeto
+from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -94,7 +94,7 @@ _JUEZ = Objeto(
 _CONFIGURACION = Objeto(
     {
         "nombre": Identificador(),
-        "hashConfig": Identificador(),
+        "hashConfig": Huella(),
         "fixture": Identificador(),
         "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
         "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),

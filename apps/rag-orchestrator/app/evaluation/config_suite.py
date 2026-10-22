@@ -54,6 +54,15 @@ class ConfigJuez:
 
 
 @dataclass(frozen=True)
+class Barrido:
+    """``RELEVANCE_THRESHOLD_GRID`` y la regla D1 del barrido (US-073); el umbral de referencia no cambia al fijar el elegido."""
+
+    grilla: tuple[float, ...]
+    umbral_de_referencia: float
+    tolerancia_recall: float
+
+
+@dataclass(frozen=True)
 class ConfigSuite:
     nombre: str
     fixture: str
@@ -73,6 +82,7 @@ class ConfigSuite:
     juez: ConfigJuez | None = None
     informe_pii: Path | None = None
     """Ruta del JSON de `npm run eval:pii` (B1); ``--informe-pii`` la sustituye."""
+    barrido: Barrido | None = None
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -143,6 +153,22 @@ def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
         ) from None
 
 
+def _barrido_de(crudo: dict[str, Any]) -> Barrido | None:
+    seccion = crudo.get("barrido")
+    if seccion is None:
+        return None
+    grilla = tuple(float(v) for v in _clave(seccion, "relevance_threshold_grid"))
+    referencia = float(_clave(seccion, "umbral_de_referencia"))
+    tolerancia = float(_clave(seccion, "tolerancia_recall"))
+    if not grilla or any(not 0.0 <= v <= 1.0 for v in grilla):
+        raise ConfigInvalida("barrido.relevance_threshold_grid debe tener valores en [0, 1]")
+    if referencia not in grilla:
+        raise ConfigInvalida("barrido.umbral_de_referencia debe estar en la grilla")
+    if not 0.0 <= tolerancia <= 1.0:
+        raise ConfigInvalida("barrido.tolerancia_recall debe estar en [0, 1]")
+    return Barrido(grilla, referencia, tolerancia)
+
+
 def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
@@ -186,4 +212,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
             if (crudo.get("pii") or {}).get("informe_b1")
             else None
         ),
+        barrido=_barrido_de(crudo),
     )

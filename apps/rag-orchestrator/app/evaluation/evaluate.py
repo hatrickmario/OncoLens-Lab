@@ -30,6 +30,7 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
+from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE
@@ -79,6 +80,9 @@ def _parser() -> argparse.ArgumentParser:
         clave
     ) in ENTORNO_DEL_JUEZ:  # --juez-modelo, --juez-base-url, --juez-temperatura, --juez-semilla
         parser.add_argument(f"--juez-{clave.replace('_', '-')}", dest=f"juez_{clave}", default=None)
+    parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
+    parser.add_argument("--fijar", action="store_true")
+    parser.add_argument("--p95-e2e-s", type=float, default=None)
     return parser
 
 
@@ -92,13 +96,14 @@ def main(
     reloj: Clock | None = None,
     raiz: Path | None = None,
     entorno: Mapping[str, str] | None = None,
+    directorio_de_configs: Path | None = None,
 ) -> int:
     try:
         args = _parser().parse_args(list(argv))
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
         config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
-        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz)
+        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz, directorio_de_configs)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
@@ -150,7 +155,11 @@ def _fuente_de(config: ConfigSuite, raiz: Path | None) -> FuenteDatasetEnDirecto
 
 
 def _ejecutar(
-    config: ConfigSuite, args: argparse.Namespace, reloj: Clock, raiz: Path | None
+    config: ConfigSuite,
+    args: argparse.Namespace,
+    reloj: Clock,
+    raiz: Path | None,
+    directorio_de_configs: Path | None = None,
 ) -> int:
     exigir_marca_final(config, args.prueba_final)
     exigir_juez_local(config.juez)  # RN-12: antes de cargar nada ni crear un cliente
@@ -158,6 +167,19 @@ def _ejecutar(
     exigir_adapters_locales(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
+    if args.sweep:
+        exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
+        return ejecutar_barrido(
+            config,
+            args.config,
+            fuente.cargar(),
+            reloj=reloj,
+            cronometro_de=lambda: Cronometro(_reloj_de_medicion(config)),
+            salida=args.salida,
+            fijar=args.fijar,
+            p95_e2e_s=args.p95_e2e_s,
+            directorio_de_configs=directorio_de_configs,
+        )
     informe_pii = _proveedor_pii(
         config, args
     ).leer()  # antes de consultar: un informe roto no cuesta una corrida

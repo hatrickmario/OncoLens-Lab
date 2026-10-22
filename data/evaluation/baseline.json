@@ -9,7 +9,7 @@
       "version": "1"
     },
     "fixture": "FX-T5a-a",
-    "hashConfig": "40ee55c8fed96e16511602dac2bcdc7f626bff7d8364d3cb24dd452b2da0f8a5",
+    "hashConfig": "57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced",
     "modelos": {
       "embeddings": "fake-bow@1",
       "llm": "fake-guion@1",
