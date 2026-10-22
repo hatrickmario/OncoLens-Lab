@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { idDePaciente } from '../../support/gateway.js';
 import {
   PAGE_SIZE_DE_TEST,
   iniciarEscenarioDePacientes,
@@ -102,5 +103,73 @@ describe('listado de pacientes', () => {
       expect(elemento).not.toHaveProperty('pendingReviewCount');
       expect(elemento).not.toHaveProperty('missingCriticalCount');
     }
+  });
+
+  it('devuelve los dos pacientes restantes en la página 2 sin repetir los de la página 1 [US-048 AC-1]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+    const pedir = (pagina: number) =>
+      clienteVerificado(app)
+        .get(`/platform/patients?page=${pagina}`)
+        .set('Cookie', escenario.cookieDoctor);
+
+    const primera = await pedir(1);
+    const segunda = await pedir(2);
+
+    const ids = (cuerpo: { items: { id: string }[] }) =>
+      cuerpo.items.map((elemento) => elemento.id);
+    expect(segunda.body.page).toBe(2);
+    expect(ids(segunda.body)).toHaveLength(2);
+    expect(new Set([...ids(primera.body), ...ids(segunda.body)]).size).toBe(5);
+  });
+
+  it('responde 422 cuando page es 0 [US-048 AC-4]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .get('/platform/patients?page=0')
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect(respuesta.status).toBe(422);
+  });
+
+  it('responde Cache-Control: no-store y marca habilitado el tipo de cáncer de cada paciente semilla [US-048 AC-1]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .get('/platform/patients')
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect(respuesta.headers['cache-control']).toBe('no-store');
+    for (const elemento of respuesta.body.items) {
+      expect(elemento.missingCriticalCount).toBe(0);
+      expect(elemento.cancerTypeEnabled).toBe(true);
+    }
+  });
+
+  it('cuenta en pendingReviewCount los datos clínicos en requiere_revision del paciente [US-048 AC-1]', async () => {
+    const paciente = idDePaciente('a');
+    const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
+    const pendientesDe = async (): Promise<number> => {
+      const respuesta = await clienteVerificado(app)
+        .get('/platform/patients')
+        .set('Cookie', escenario.cookieDoctor);
+      return respuesta.body.items.find((elemento: { id: string }) => elemento.id === paciente)
+        .pendingReviewCount;
+    };
+    const antes = await pendientesDe();
+    await escenario.mundo.cliente.query(
+      `UPDATE clinical.diagnosis SET review_status = 'requiere_revision' WHERE patient_id = $1`,
+      [paciente],
+    );
+    const { rows } = await escenario.mundo.cliente.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM clinical.diagnosis WHERE patient_id = $1 AND review_status = 'requiere_revision'`,
+      [paciente],
+    );
+
+    const despues = await pendientesDe();
+
+    expect(antes).toBe(0);
+    expect(rows[0]?.n).toBeGreaterThan(0);
+    expect(despues).toBe(rows[0]?.n);
   });
 });

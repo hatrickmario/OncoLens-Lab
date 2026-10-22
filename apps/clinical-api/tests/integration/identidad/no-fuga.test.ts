@@ -6,13 +6,15 @@ import {
   PREGUNTA_Q_HER2,
   TODAS_LAS_FUENTES,
   abrirSesion,
+  PII_FX_T4A_A,
   crearPacienteFxT4aA,
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
   type MundoDeGateway,
 } from '../../support/gateway.js';
-import { servicioDeIdentidad } from '../../support/identidad.js';
+import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
+import { montarPacientes } from '../../support/pacientes.js';
 import {
   capturarSalidaDelProceso,
   ejecutarArnesDeNoFuga,
@@ -75,6 +77,29 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
             .set('Cookie', cookie)
             .send({ patientId, query: PREGUNTA_Q_HER2, sourcesSelected: TODAS_LAS_FUENTES });
           expect(respuesta.status).toBe(200);
+        },
+      },
+      // L1D-202 (US-048 AC-5): buscarlo por documento y por nombre también cuenta como salida de la identidad.
+      {
+        nombre: 'buscar por documento',
+        ejecutar: async () => {
+          const buscador = montarPacientes(mundo, { logger, identidad });
+          const respuesta = await clienteVerificado(buscador.app)
+            .post('/platform/patients/search')
+            .set('Cookie', cookie)
+            .send({ idType: FX_T4A_A.idType, nationalId: PII_FX_T4A_A.cedula });
+          expect(respuesta.body.items).toHaveLength(1);
+        },
+      },
+      {
+        nombre: 'buscar por nombre',
+        ejecutar: async () => {
+          const buscador = montarPacientes(mundo, { logger, identidad });
+          const respuesta = await clienteVerificado(buscador.app)
+            .post('/platform/patients/search')
+            .set('Cookie', cookie)
+            .send({ name: FX_T4A_A.nombreNormalizado });
+          expect(respuesta.body.items).toHaveLength(1);
         },
       },
     ];
