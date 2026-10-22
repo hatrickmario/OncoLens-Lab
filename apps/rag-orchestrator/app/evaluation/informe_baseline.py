@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, get_args
 
 from app.evaluation.barrido import Eleccion, FilaBarrido
+from app.evaluation.config_suite import PROVEEDORES
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
-from app.evaluation.metas import Meta, MetricaMarcada, marcar_frente_a_meta, nota_adr42
+from app.evaluation.metas import Estado, Meta, MetricaMarcada, marcar_frente_a_meta, nota_adr42
 from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
 
 NO_EJECUTABLE = "NO-EJECUTABLE aquí"
@@ -24,7 +25,7 @@ Cifras reales (modelos de ADR-39 + Compose) en la máquina de referencia (MacBoo
 2. Levantar el stack: `docker compose -f infra/docker/docker-compose.yml up -d` y el LLM nativo (`ollama serve`).
 3. Barrido real: `npm run evaluate -- --config apps/rag-orchestrator/eval/configs/<config-local>.yaml --sweep relevance_threshold --fijar --salida apps/rag-orchestrator/eval/reports` (la regla D1 usa solo desarrollo + validación de `ol06-particion-v1`; la prueba solo con `--prueba-final`).
 4. p95 de punta a punta: 3 corridas de ≥ 30 consultas desde el host, por la BFF: `python -m app.scripts.adr39 e2e --bff --base-url https://localhost --origin https://localhost` (`ADR39_PASSWORD` en el entorno); nunca desde un contenedor de clinical-net/ai-net ni desde rag-orchestrator. La mediana de los p95 se pasa con `--p95-e2e-s <segundos>`.
-5. Regenerar el baseline: `npm run evaluate -- --suite all --report json --config <config-local> --salida data/evaluation --nombre-archivo baseline.json`.
+5. Reporte de la suite con modelos reales: `npm run evaluate -- --suite all --report json --config <config-local> --salida apps/rag-orchestrator/eval/reports --nombre-archivo S1-reporte-real.json`. El baseline versionado de la CI (adapters falsos) es la referencia determinista y no se sobrescribe nunca con este reporte.
 6. Aplicar el valor elegido en `RELEVANCE_THRESHOLD` de `.env.example` (lo hace el orquestador) y registrarlo para DEC-07 (US-017) y `regression.yaml` (US-074).
 """
 
@@ -252,7 +253,7 @@ ESQUEMA_BASELINE = Objeto(
     {
         "esquema": Enumerado(frozenset({"oncolens.baseline.v1"})),
         "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
-        "proveedor": Enumerado(frozenset({"fake", "local"})),
+        "proveedor": Enumerado(frozenset(PROVEEDORES)),
         "dataset": Identificador(),
         "hashConfig": Huella(),
         "referenciaDeterminista": Booleano(),
@@ -280,7 +281,7 @@ ESQUEMA_BASELINE = Objeto(
                     "valor": Numero(),
                     "metaMinimo": Numero(),
                     "metaMaximo": Numero(),
-                    "estado": Enumerado(frozenset({"en meta", "fuera de meta", "sin medir"})),
+                    "estado": Enumerado(frozenset(get_args(Estado))),
                 }
             )
         ),

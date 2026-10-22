@@ -50,6 +50,13 @@ la configuración se calcula antes de escribir nada y `config_con_umbral` rechaz
   inferior del IC (ADR-45, enmienda 3).
 - `corte_para_el_generador` (dominio) es la regla del corte top-N + umbral; el servicio aún repite el corte en
   `_reranquear` (`app/application`, fuera de los paths de este change): enchufarla ahí es un cambio de una línea.
+- `data/evaluation/baseline.json` es SIEMPRE la referencia determinista con adapters falsos (`manifest.json` de
+  `data/evaluation`, el test de 235a, `docs/process/ci.md`); el reporte con modelos reales va a
+  `eval/reports/S1-reporte-real.json`. La pregunta abierta 2 de ADR-41 (dónde vive el baseline real) queda por cerrar.
+- Claves por tipo de cáncer literales en `ESQUEMA_BASELINE`/`ETIQUETAS_CANCER` (OCP/RN-20): derivarlas de
+  `ENABLED_CANCER_TYPES` o del catálogo. `ejecutar_barrido` con banderas y 9 parámetros: Parameter Object
+  `OpcionesDeBarrido`. `exigir_dataset_sintetico` se llama dos veces y vive en `corrida_barrido.py`: llevarla a
+  `guardas.py`.
 - Mover el subcomando `e2e` de `app/scripts/adr39/` (cliente con sesión sintética) a una ubicación neutral fuera de
   `apps/rag-orchestrator`.
 
