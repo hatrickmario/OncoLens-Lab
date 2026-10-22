@@ -14,11 +14,28 @@ from app.schemas.generated.models import RagMeta
 
 
 def configuracion_evaluada(
-    config: ConfigSuite, dataset: DatasetSuite, meta: RagMeta
+    config: ConfigSuite, dataset: DatasetSuite, meta: RagMeta | None
 ) -> dict[str, Any]:
-    """La configuración con los modelos, el prompt y las versiones que respondieron (``meta``), no los deseados."""
+    """La configuración con los modelos, el prompt y las versiones que respondieron (``meta``), no los deseados.
+
+    Sin ``meta`` (la familia ``pii`` no consulta al servicio) no hay modelos ni prompt que reportar: la versión del
+    corpus sale del dataset y la del catálogo, de la configuración.
+    """
     u = config.umbrales
+    juez = config.juez
     return {
+        **(
+            {}
+            if juez is None
+            else {
+                "juez": {
+                    "proveedor": juez.proveedor,
+                    "modelo": juez.modelo,
+                    "temperatura": juez.temperatura,
+                    "semilla": juez.semilla,
+                }
+            }
+        ),
         "nombre": config.nombre,
         "hashConfig": config.hash_config,
         "fixture": config.fixture,
@@ -28,6 +45,20 @@ def configuracion_evaluada(
         "reloj": config.reloj,
         "semillaBootstrap": config.semilla_bootstrap,
         "bootstrapRepeticiones": config.bootstrap_repeticiones,
+        **({} if meta is None else _versiones_que_respondieron(meta)),
+        "umbrales": {
+            "relevanceThreshold": u.relevance_threshold,
+            "nliEntailmentThreshold": u.nli_entailment_threshold,
+            "retrievalTopK": u.retrieval_top_k,
+            "rerankTopN": u.rerank_top_n,
+        },
+        "corpusRelease": dataset.release if meta is None else meta.corpusRelease,
+        "catalogVersion": config.catalogo_version if meta is None else meta.catalogVersion,
+    }
+
+
+def _versiones_que_respondieron(meta: RagMeta) -> dict[str, Any]:
+    return {
         "modelos": {
             "embeddings": meta.embeddingModel,
             "reranker": meta.rerankerModel,
@@ -35,14 +66,6 @@ def configuracion_evaluada(
             "llm": meta.llmModel,
         },
         "promptVersion": meta.promptVersion,
-        "umbrales": {
-            "relevanceThreshold": u.relevance_threshold,
-            "nliEntailmentThreshold": u.nli_entailment_threshold,
-            "retrievalTopK": u.retrieval_top_k,
-            "rerankTopN": u.rerank_top_n,
-        },
-        "corpusRelease": meta.corpusRelease,
-        "catalogVersion": meta.catalogVersion,
     }
 
 
@@ -58,11 +81,13 @@ def armar_reporte(
     config: ConfigSuite,
     dataset: DatasetSuite,
     suite: str,
-    meta: RagMeta,
+    meta: RagMeta | None,
     resultados: Sequence[ResultadoConsulta],
     latencia_p95_ms: dict[str, float | None],
+    privacidad: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
+        **({} if privacidad is None else {"privacidad": privacidad}),
         "esquema": VERSION_ESQUEMA,
         "suite": suite,
         "configuracion": configuracion_evaluada(config, dataset, meta),

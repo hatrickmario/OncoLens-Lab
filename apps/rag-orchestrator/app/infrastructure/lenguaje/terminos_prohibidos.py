@@ -38,12 +38,15 @@ class VerificadorDeTerminosProhibidos:
         return tuple(dict.fromkeys(c.id for c in coincidencias))
 
 
-def cargar_verificador_de_terminos(catalogos: Path) -> VerificadorDeTerminosProhibidos:
-    """Lee la lista de ``<catálogos>/lenguaje/terminos-prohibidos.json`` (``CLINICAL_CATALOG_PATH``, solo lectura)."""
+def cargar_lista_de_terminos(catalogos: Path) -> ListaTerminos:
+    """Lee y valida ``<catálogos>/lenguaje/terminos-prohibidos.json`` (``CLINICAL_CATALOG_PATH``, solo lectura)."""
     try:
-        lista = ListaTerminos.model_validate_json(
+        return ListaTerminos.model_validate_json(
             (catalogos / RUTA_DE_LA_LISTA).read_text(encoding="utf-8")
         )
     except (OSError, ValueError):
         raise ListaDeTerminosNoDisponible("terminos-prohibidos.json no está disponible") from None
-    return VerificadorDeTerminosProhibidos(lista)
+
+
+def cargar_verificador_de_terminos(catalogos: Path) -> VerificadorDeTerminosProhibidos:
+    return VerificadorDeTerminosProhibidos(cargar_lista_de_terminos(catalogos))

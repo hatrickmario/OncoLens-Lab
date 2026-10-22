@@ -122,7 +122,7 @@ def textos_del_dataset() -> list[str]:
         *(o.opcion for ops in dataset.propuestas.values() for o in ops),
         *(o.justificacion for ops in dataset.propuestas.values() for o in ops),
         *dataset.textos_pii,
-        *dataset.salidas_prescriptivas,
+        *(s.texto for s in dataset.salidas_prescriptivas),
     ]
 
 
@@ -188,3 +188,15 @@ def test_el_esquema_cerrado_acepta_null_donde_la_metrica_no_existe_y_lo_escribe_
     escribir_reporte_cerrado(destino, {**VALIDO, "n": float("nan")}, ESQUEMA)
 
     assert json.loads(destino.read_text(encoding="utf-8"))["n"] is None
+
+
+def test_una_salida_prescriptiva_con_un_campo_desconocido_se_rechaza(tmp_path: Path) -> None:
+    copia = tmp_path / "fx"
+    shutil.copytree(FX, copia)
+    ruta = copia / "prescriptivas.yaml"
+    crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    crudo["salidas"][0]["campo"] = "details"
+    ruta.write_text(yaml.safe_dump(crudo), encoding="utf-8")
+
+    with pytest.raises(DatasetInvalido):
+        FuenteDatasetEnDirectorio(copia).cargar()
