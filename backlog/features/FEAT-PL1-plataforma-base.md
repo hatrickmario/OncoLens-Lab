@@ -660,6 +660,37 @@ del stream de logs).
 **Small** ✓ un módulo de configuración por servicio y un logger.
 **Testable** ✓ seis tests de arranque o integración con aserciones sobre el estado de salud y los logs.
 
+## US-232 — Las funciones de `clinical-api` que superan los umbrales de tamaño y complejidad se refactorizan y la CI queda sin excepciones
+
+> Linear: pendiente (límite de issues del workspace; deuda registrada por el usuario el 2026-10-22, `[S2 resp. 15]`)
+
+`FEAT-PL1` · Sprint 6 *(deuda del S2, antes del 2026-11-30 por la caducidad de las excepciones)* · Estimación **5** *(a confirmar en el planning del S6)* · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-213a (L1D-263: `quality-thresholds.json`, regla `max-lines-per-function` y `complexity`) · 🔗 Origen: 16 excepciones por archivo preexistentes del S1 (D5 de `l1d-263-calidad-capas-umbrales`)
+
+## Story
+Como equipo de desarrollo, quiero partir las funciones de `clinical-api` que superan `max-lines-per-function` (40) y `complexity` (10) y retirar las excepciones por archivo de `quality-thresholds.json`, para que la regla de la CI vuelva a proteger todo el código y ningún agente copie funciones largas como patrón válido.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path)** · Dado `quality-thresholds.json` con las 16 excepciones por archivo del S1, cuando se aplican los refactores, entonces `excepciones` queda vacío (o ausente) y `npm run quality` termina con código 0 sin ellas. `[NFR-13]` `[RN-22]`
+- **AC-2 (borde · sin cambio de comportamiento)** · Dado cada archivo refactorizado, cuando se ejecutan sus tests, entonces pasan antes y después sin aserciones relajadas y la cobertura de líneas del módulo no baja respecto de `main` (regla de refactor de la DoD). `[CLAUDE.md Política TDD]`
+- **AC-3 (borde · función no divisible)** · Dada una función que no se puede partir sin perder cohesión, cuando se documenta, entonces el usuario decide en la retro si se recalibra el umbral y la excepción queda con motivo y nueva caducidad; nunca se aplica en silencio. `[RN-22]` (asumido)
+- **AC-4 (invariante · sin tocar privacidad ni contratos)** · Dado el refactor, cuando se revisa el diff, entonces no cambia ningún `openapi.yaml`, mensaje de error visible, regla de desidentificación ni de cifrado. `[RN-10]` `[ADR-26]`
+
+## Contexto técnico
+Alcance, 16 excepciones por archivo (21 hallazgos medidos el 2026-10-21 en el S1; todas caducan el **2026-11-30**):
+- `max-lines-per-function` (14 archivos): `prisma/seed/sembrar.ts` (3 funciones), `src/evaluacion/pii/comando.ts`, `src/modules/auth/auth.controller.ts`, `auth.repository.ts`, `auth.service.ts`, `src/modules/evidence-analysis/analysis-record.ts`, `deidentification/pii-formats.config.ts`, `evidence-analysis.controller.ts`, `evidence-analysis.repository.ts` (2), `evidence-analysis.service.ts` (2), `src/modules/patients/identity.repository.ts`, `identity.service.ts`, `src/modules/users/users.repository.ts`, `src/server.ts` (2).
+- `complexity` (2 archivos): `src/evaluacion/pii/comando.ts` (`leerArgumentos`), `src/modules/evidence-analysis/rag-query.adapter.ts` (`consultar`).
+- Al implementarla, sustituir `historia: L1D-263 (deuda D5: historia por registrar)` en `quality-thresholds.json` por el ID de esta historia (o retirar las excepciones). Si la caducidad llega antes del S6, el usuario decide ampliarla con motivo escrito.
+- Dependencia de calendario: el 2026-11-30 es anterior al S6 previsto; si la CI exige las excepciones vigentes, se renueva la caducidad con decisión del usuario en el cierre del S3/S4.
+
+## Non-goals
+Módulo `documents` (L1D-56): ya se refactorizó en el S2 sin excepciones. Nuevas reglas de calidad (US-213b, S3).
+
+## INVEST
+**Small** ⚠ 14 archivos de dos módulos; si en el planning pasa de 5, dividir por módulo (auth, evidence-analysis, patients/users/server/seed).
+**Testable** ✓ `npm run quality` sin excepciones y tests del módulo en verde antes y después.
+
+---
+
 ---
 
 ## Conflictos de fuentes
