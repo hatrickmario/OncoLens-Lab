@@ -217,7 +217,7 @@ def test_el_juez_llm_registra_cada_llamada_con_su_destino_y_la_clase_de_datos() 
             clase_datos="real_anonimizado",
         )
 
-        asyncio.run(juez.soporta("a", ["p"]))
+        asyncio.run(juez.juzgar_soporte("a", ["p"]))
 
     assert llamadas_a_nube_con_datos_reales(registro.llamadas) == 1
 

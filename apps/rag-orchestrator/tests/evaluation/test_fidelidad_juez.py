@@ -16,6 +16,8 @@ from app.application.ports import EvidenciaGenerada
 from app.domain.citations import OpcionGenerada
 from app.domain.support import pares_a_verificar
 from app.evaluation.afirmaciones import afirmaciones_a_juzgar, plan_de_la_propuesta
+from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
 from app.evaluation.evaluate import main
 from app.evaluation.guardas import SuiteAbortada, exigir_juez_local
@@ -134,10 +136,15 @@ def test_el_juez_llm_local_envia_modelo_temperatura_y_semilla_de_la_configuracio
     with respx.mock() as http:
         ruta = http.post(COMPLETIONS).mock(return_value=veredicto("SOPORTADA"))
         juez = JuezLlmLocal(
-            httpx.AsyncClient(base_url=LOCAL), modelo="juez@1", temperatura=0.0, semilla=7
+            httpx.AsyncClient(base_url=LOCAL),
+            modelo="juez@1",
+            temperatura=0.0,
+            semilla=7,
+            registro=RegistroDeLlamadas(),
+            clase_datos=CLASE_SINTETICA,
         )
 
-        resultado = asyncio.run(juez.soporta("afirmación", ["premisa"]))
+        resultado = asyncio.run(juez.juzgar_soporte("afirmación", ["premisa"]))
         cuerpo = json.loads(ruta.calls[0].request.content)
 
     assert resultado is True
@@ -151,10 +158,15 @@ def test_el_juez_llm_local_interpreta_su_veredicto(contenido: str, esperado: boo
     with respx.mock() as http:
         http.post(COMPLETIONS).mock(return_value=veredicto(contenido))
         juez = JuezLlmLocal(
-            httpx.AsyncClient(base_url=LOCAL), modelo="juez@1", temperatura=0.0, semilla=1
+            httpx.AsyncClient(base_url=LOCAL),
+            modelo="juez@1",
+            temperatura=0.0,
+            semilla=1,
+            registro=RegistroDeLlamadas(),
+            clase_datos=CLASE_SINTETICA,
         )
 
-        assert asyncio.run(juez.soporta("a", ["p"])) is esperado
+        assert asyncio.run(juez.juzgar_soporte("a", ["p"])) is esperado
 
 
 @pytest.mark.parametrize(
@@ -167,11 +179,16 @@ def test_el_juez_llm_local_falla_cerrado_sin_detalle_cuando_no_responde_o_no_se_
     with respx.mock() as http:
         http.post(COMPLETIONS).mock(return_value=respuesta)
         juez = JuezLlmLocal(
-            httpx.AsyncClient(base_url=LOCAL), modelo="juez@1", temperatura=0.0, semilla=1
+            httpx.AsyncClient(base_url=LOCAL),
+            modelo="juez@1",
+            temperatura=0.0,
+            semilla=1,
+            registro=RegistroDeLlamadas(),
+            clase_datos=CLASE_SINTETICA,
         )
 
         with pytest.raises(JuezNoDisponible) as error:
-            asyncio.run(juez.soporta("afirmación secreta", ["premisa secreta"]))
+            asyncio.run(juez.juzgar_soporte("afirmación secreta", ["premisa secreta"]))
 
     assert "secreta" not in str(error.value)
 
@@ -269,7 +286,9 @@ def test_las_afirmaciones_a_juzgar_son_las_que_el_pipeline_envia_al_nli() -> Non
     afirmaciones = afirmaciones_a_juzgar(plan)
 
     pares = pares_a_verificar(plan)
-    assert [p.hipotesis for p in pares] == [a.texto for a in afirmaciones for _ in a.premisas]
+    assert [(p.premisa, p.hipotesis) for p in pares] == [
+        (premisa, a.texto) for a in afirmaciones for premisa in a.premisas
+    ]
     assert [a.texto for a in afirmaciones] == [
         "Primera afirmación limpia.",
         "Detalle limpio.",
@@ -294,8 +313,6 @@ def test_los_flags_juez_sustituyen_a_las_variables_y_al_yaml_y_la_guarda_los_alc
 
 
 def test_el_juez_llm_local_no_llama_ni_registra_cuando_la_afirmacion_no_tiene_premisas() -> None:
-    from app.evaluation.llamadas import RegistroDeLlamadas
-
     registro = RegistroDeLlamadas()
     with respx.mock(assert_all_called=False) as http:
         http.route().respond(200)
@@ -305,8 +322,9 @@ def test_el_juez_llm_local_no_llama_ni_registra_cuando_la_afirmacion_no_tiene_pr
             temperatura=0.0,
             semilla=1,
             registro=registro,
+            clase_datos=CLASE_SINTETICA,
         )
-        resultado = asyncio.run(juez.soporta("afirmación", []))
+        resultado = asyncio.run(juez.juzgar_soporte("afirmación", []))
         peticiones = len(http.calls)
 
     assert (resultado, peticiones, registro.llamadas) == (False, 0, [])
@@ -337,7 +355,7 @@ def test_el_cliente_del_juez_ignora_los_proxies_del_entorno_para_no_desviar_el_p
 
     async def crear() -> object:
         async with AsyncExitStack() as pila:
-            juez = await crear_juez_llm(config.juez, pila)
+            juez = await crear_juez_llm(config.juez, pila, RegistroDeLlamadas(), CLASE_SINTETICA)
             assert isinstance(juez, JuezLlmLocal)
             return juez._cliente._mounts
 
@@ -383,7 +401,7 @@ def test_crear_juez_llm_tambien_rechaza_un_modelo_de_nube_antes_de_crear_el_clie
 
     async def crear() -> None:
         async with AsyncExitStack() as pila:
-            await crear_juez_llm(config.juez, pila)
+            await crear_juez_llm(config.juez, pila, RegistroDeLlamadas(), CLASE_SINTETICA)
 
     with pytest.raises(SuiteAbortada):
         asyncio.run(crear())

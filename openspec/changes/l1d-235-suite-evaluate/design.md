@@ -113,14 +113,18 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
   `PII_EVAL_PYTHON` apuntando a un Python con `data/eval/pii-mini/generar.py`) y luego `npm run evaluate -- --suite pii
   --report json --informe-pii reports/adr40/clinical-api-pii.json`. La corrida de 072b contra el JSON real de `eval:pii`
   se verificó a mano (código 0, solo conteos en el reporte).
-- **D16b · Deuda de Gate 2 (privacy-guardian).** El cliente del juez usa `trust_env=False` (RN-12). `llamadas_nube_datos_reales`
-  cuenta hoy **solo las llamadas del juez**: los adapters del pipeline son siempre `fake`; **US-073 debe registrar cada
-  adapter HTTP en `RegistroDeLlamadas`** al cablear `proveedor: local`. Un modelo `:cloud`/`-cloud` de Ollama se ejecuta fuera
-  aunque la URL sea local: pendiente de decidir en ADR-39/41 (rechazarlo por nombre). La traducción de `EVAL_JUDGE_*` a
-  flags en `scripts/eval/evaluate.mjs` queda para el usuario (D15). Del design-principles-reviewer quedan sin aplicar
-  (fuera de rutas o de alcance): hacer público `afirmaciones_para_el_nli` en `domain/support.py` y un `cargar_lista_de_terminos`
-  común en `infrastructure/lenguaje` (hallazgos 1 y 2), `FAMILIAS_POR_SUITE` como catálogo único (4) y TypedDict de los
-  reportes (8).
+- **D16b · Ronda de Gate 2 (privacy-guardian y design-principles-reviewer).** Aplicado: cliente del juez con
+  `trust_env=False`; un `juez.modelo` que case con `(?i)(?:^|[:\-])cloud$` (modelos que Ollama ejecuta en la nube desde un host
+  local) aborta con código 1 antes de crear el cliente, sin nombrar el modelo, y cuenta como llamada a la nube si hubiera
+  salido; `llamadas_salientes_registradas` distingue 0 de «no se registró nada»; rangos y tipos del informe de PII;
+  `afirmaciones_para_el_nli` público en `domain/support.py`; `cargar_lista_de_terminos` común (la lista se parsea una vez);
+  `juzgar_soporte` en el puerto del juez; `chunks_entregados`; `registro` y `clase_datos` obligatorios;
+  `scripts/eval/evaluate.mjs` traduce `EVAL_JUDGE_*` a `--juez-*` (`flagsDelJuezDesdeEntorno`).
+  **Deuda:** `llamadas_nube_datos_reales` cuenta hoy solo las llamadas del juez; **US-073 debe registrar cada adapter HTTP en
+  `RegistroDeLlamadas`** al cablear `proveedor: local`. Menores sin aplicar: `FAMILIAS_POR_SUITE` como catálogo único, kwargs
+  en `ServicioDeSuite`, `Literal` para `CampoGenerado`/proveedores, la clave `traceId`, mover `JuezLlmLexico` a
+  `adaptadores_falsos.py`, `ruta_terminos` → `ruta_catalogos` (cambia el `hashConfig`: coordinar con L1D-237), TypedDict de los
+  reportes y el contrato del informe de PII en `contracts/examples/`.
 - **D18 · Prescriptivas e inyección (AC-1, AC-7).** `prescriptivas.yaml` dice en qué propuesta cruda aparece cada
   salida (`pregunta`): `rationale` se suma a la justificación de la primera opción y `limitations[].text` se propone
   como limitación; `ch-inj-1` lleva `inyeccion: true` y la consulta que lo recibe es un **caso de inyección**.

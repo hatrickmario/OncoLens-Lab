@@ -126,6 +126,7 @@ _MODO_PII = Objeto(
 _PRIVACIDAD = Objeto(
     {
         "textos_sembrados": Numero(),
+        "llamadas_salientes_registradas": Numero(),
         "llamadas_nube_datos_reales": Numero(),
         "sensibilidad_b1_medida": Booleano(),
         "sensibilidad_b1": Objeto(

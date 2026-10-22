@@ -23,7 +23,7 @@ from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli
-from app.evaluation.lenguaje_estricto import VerificadorEstricto, cargar_verificador_estricto
+from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.medidores import (
     BuscadorMedido,
     CatalogoMedido,
@@ -37,7 +37,10 @@ from app.evaluation.medidores import (
 )
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
-from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
+from app.infrastructure.lenguaje.terminos_prohibidos import (
+    VerificadorDeTerminosProhibidos,
+    cargar_lista_de_terminos,
+)
 from app.schemas.generated.models import LlmProvider
 
 LONGITUD_MAXIMA_CODIGO_TIPO = 64
@@ -83,7 +86,8 @@ def componer_servicio(
     observaciones = Observaciones()
     embedder = EmbedderBolsaDePalabras()
     nli = NliLexico()
-    terminos = cargar_verificador_de_terminos(config.ruta_terminos)
+    lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
+    terminos = VerificadorDeTerminosProhibidos(lista)
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
     servicio = RAGOrchestratorService(
@@ -105,7 +109,7 @@ def componer_servicio(
         observaciones,
         cronometro,
         config.catalogo_version,
-        cargar_verificador_estricto(config.ruta_terminos),
+        VerificadorEstricto(lista),
         terminos,
         JuezNli(
             nli, config.umbrales.nli_entailment_threshold

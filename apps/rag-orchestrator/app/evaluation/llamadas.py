@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from app.domain.reglas_proveedor import es_proveedor_local
 from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.modelo_de_nube import es_modelo_de_nube
 
 
 @dataclass(frozen=True)
@@ -24,13 +25,14 @@ class LlamadaSaliente:
 class RegistroDeLlamadas:
     llamadas: list[LlamadaSaliente] = field(default_factory=list)
 
-    def registrar(self, destino: str, clase_datos: str) -> None:
-        self.llamadas.append(LlamadaSaliente(destino, clase_datos))
+    def registrar(self, destino: str, clase_datos: str, modelo: str = "") -> None:
+        self.llamadas.append(LlamadaSaliente(destino, clase_datos, modelo))
 
 
 def llamadas_a_nube_con_datos_reales(llamadas: Iterable[LlamadaSaliente]) -> int:
     """Llamadas a un destino fuera de la lista local con datos que no son sintéticos (la nube solo con sintéticos)."""
     return sum(
-        not es_proveedor_local(llamada.destino) and llamada.clase_datos != CLASE_SINTETICA
+        (not es_proveedor_local(llamada.destino) or es_modelo_de_nube(llamada.modelo))
+        and llamada.clase_datos != CLASE_SINTETICA
         for llamada in llamadas
     )

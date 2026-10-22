@@ -23,13 +23,31 @@ function conRutasAbsolutas(argumentos, cwd) {
   );
 }
 
+const FLAGS_DEL_JUEZ = {
+  EVAL_JUDGE_MODEL: '--juez-modelo',
+  EVAL_JUDGE_BASE_URL: '--juez-base-url',
+  EVAL_JUDGE_TEMPERATURE: '--juez-temperatura',
+  EVAL_JUDGE_SEED: '--juez-semilla',
+};
+
+/**
+ * ADR-41: las claves EVAL_JUDGE_* del entorno llegan al runner como flags `--juez-*` (el runner no lee el entorno,
+ * US-037 AC-1). Van antes que los argumentos del usuario: un flag explícito gana.
+ */
+export function flagsDelJuezDesdeEntorno(entorno) {
+  return Object.entries(FLAGS_DEL_JUEZ).flatMap(([variable, flag]) =>
+    entorno[variable] ? [flag, entorno[variable]] : [],
+  );
+}
+
 /** Argumentos para el módulo Python: añade la configuración de la CI si no se pasó `--config`. */
-export function argumentosDePython(argumentos, cwd = process.cwd()) {
+export function argumentosDePython(argumentos, cwd = process.cwd(), entorno = {}) {
   const conConfig = argumentos.includes('--config');
   return [
     '-m',
     'app.evaluation.evaluate',
     ...(conConfig ? [] : ['--config', CONFIG_DE_LA_CI]),
+    ...flagsDelJuezDesdeEntorno(entorno),
     ...conRutasAbsolutas(argumentos, cwd),
   ];
 }
@@ -37,7 +55,7 @@ export function argumentosDePython(argumentos, cwd = process.cwd()) {
 function main(argumentos, entorno) {
   const python = entorno.EVAL_PYTHON || 'python3';
   const segundos = Number(entorno.EVAL_TIMEOUT_S) || TIMEOUT_POR_DEFECTO_S;
-  const resultado = spawnSync(python, argumentosDePython(argumentos), {
+  const resultado = spawnSync(python, argumentosDePython(argumentos, process.cwd(), entorno), {
     cwd: DIRECTORIO,
     stdio: 'inherit',
     timeout: segundos * 1000,

@@ -17,8 +17,10 @@ def privacidad(
     textos_sembrados: int, informe_b1: InformePiiB1 | None, llamadas: Iterable[LlamadaSaliente]
 ) -> dict[str, Any]:
     """Sin informe de B1 la sensibilidad queda «sin medir» (clave ausente), nunca en cero."""
+    llamadas = list(llamadas)
     bloque: dict[str, Any] = {
         "textos_sembrados": textos_sembrados,
+        "llamadas_salientes_registradas": len(llamadas),
         "llamadas_nube_datos_reales": llamadas_a_nube_con_datos_reales(llamadas),
         "sensibilidad_b1_medida": informe_b1 is not None,
     }

@@ -6,10 +6,7 @@ from pathlib import Path
 
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.support import CAMPOS_GENERADOS, CampoGenerado
-from app.infrastructure.lenguaje.terminos_prohibidos import (
-    RUTA_DE_LA_LISTA,
-    ListaDeTerminosNoDisponible,
-)
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_lista_de_terminos
 
 
 class VerificadorEstricto:
@@ -28,11 +25,5 @@ class VerificadorEstricto:
 
 
 def cargar_verificador_estricto(catalogos: Path) -> VerificadorEstricto:
-    """Lee la misma lista versionada que el filtro de producción (``<catálogos>/lenguaje/terminos-prohibidos.json``)."""
-    try:
-        lista = ListaTerminos.model_validate_json(
-            (catalogos / RUTA_DE_LA_LISTA).read_text(encoding="utf-8")
-        )
-    except (OSError, ValueError):
-        raise ListaDeTerminosNoDisponible("terminos-prohibidos.json no está disponible") from None
-    return VerificadorEstricto(lista)
+    """Lee la misma lista versionada que el filtro de producción."""
+    return VerificadorEstricto(cargar_lista_de_terminos(catalogos))

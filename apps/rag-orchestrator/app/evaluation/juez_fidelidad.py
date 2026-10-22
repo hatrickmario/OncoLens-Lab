@@ -36,7 +36,7 @@ class JuezNoDisponible(RuntimeError):
 
 
 class JuezFidelidad(Protocol):
-    async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
+    async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         """``True`` si la afirmación se desprende de las premisas (los chunks que cita)."""
         ...
 
@@ -48,7 +48,7 @@ class JuezNli:
         self._clasificador = clasificador
         self._umbral = umbral
 
-    async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
+    async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         if not premisas:
             return False
         resultados = self._clasificador.clasificar([ParNli(p, afirmacion) for p in premisas])
@@ -58,7 +58,7 @@ class JuezNli:
 class JuezLlmLexico:
     """Juez LLM fingido de la CI: soportada si todas sus palabras están en las premisas (sin modelo ni red)."""
 
-    async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
+    async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         disponibles = frozenset().union(*(tokens(p) for p in premisas)) if premisas else frozenset()
         return bool(premisas) and tokens(afirmacion) <= disponibles
 
@@ -73,8 +73,8 @@ class JuezLlmLocal:
         modelo: str,
         temperatura: float,
         semilla: int,
-        registro: RegistroDeLlamadas | None = None,
-        clase_datos: str = "sintetico",
+        registro: RegistroDeLlamadas,
+        clase_datos: str,
     ) -> None:
         self._cliente = cliente
         self._modelo = modelo
@@ -83,7 +83,7 @@ class JuezLlmLocal:
         self._registro = registro
         self._clase_datos = clase_datos
 
-    async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
+    async def juzgar_soporte(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         if (
             not premisas
         ):  # igual que JuezNli y JuezLlmLexico: sin premisas no hay soporte ni llamada
@@ -102,8 +102,7 @@ class JuezLlmLocal:
                 },
             ],
         }
-        if self._registro is not None:
-            self._registro.registrar(str(self._cliente.base_url), self._clase_datos)
+        self._registro.registrar(str(self._cliente.base_url), self._clase_datos, self._modelo)
         try:
             respuesta = await self._cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
             respuesta.raise_for_status()
@@ -125,8 +124,8 @@ def _interpretar(contenido: str) -> bool:
 async def crear_juez_llm(
     config: ConfigJuez | None,
     pila: AsyncExitStack,
-    registro: RegistroDeLlamadas | None = None,
-    clase_datos: str = "sintetico",
+    registro: RegistroDeLlamadas,
+    clase_datos: str,
 ) -> JuezFidelidad | None:
     """El juez secundario de la configuración, o ``None`` si no hay; el cliente HTTP se cierra con ``pila``."""
     if config is None:

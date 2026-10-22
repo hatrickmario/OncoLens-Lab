@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from app.domain.reglas_proveedor import es_proveedor_local
 from app.evaluation.config_suite import ConfigJuez, ConfigSuite
 from app.evaluation.dataset_loader import CLASE_SINTETICA
+from app.evaluation.modelo_de_nube import es_modelo_de_nube
 
 
 class SuiteAbortada(RuntimeError):
@@ -32,8 +33,12 @@ def exigir_juez_local(juez: ConfigJuez | None) -> None:
 
     Se llama antes de cargar preguntas y de crear el cliente del juez: con una URL de nube no sale ningún request.
     """
-    if juez is not None and juez.base_url is not None and not es_proveedor_local(juez.base_url):
+    if juez is None:
+        return
+    if juez.base_url is not None and not es_proveedor_local(juez.base_url):
         raise SuiteAbortada("el juez de fidelidad no es un proveedor local (RN-12, ADR-41)")
+    if es_modelo_de_nube(juez.modelo):  # un host local puede servir un modelo que corre en la nube
+        raise SuiteAbortada("el modelo del juez de fidelidad se ejecuta en la nube (RN-12, ADR-41)")
 
 
 def exigir_marca_final(config: ConfigSuite, prueba_final: bool) -> None:

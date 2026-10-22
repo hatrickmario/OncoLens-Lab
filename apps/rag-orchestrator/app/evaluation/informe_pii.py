@@ -63,11 +63,13 @@ def _sensibilidad(valor: Any, clave: str) -> SensibilidadPii:
     medida = crudo.get("valor")
     if medida is not None and (isinstance(medida, bool) or not isinstance(medida, (int, float))):
         raise InformePiiInvalido(f"{clave}.valor no es un número")
-    return SensibilidadPii(
-        _entero(crudo.get("aciertos"), f"{clave}.aciertos"),
-        _entero(crudo.get("total"), f"{clave}.total"),
-        None if medida is None else float(medida),
-    )
+    aciertos = _entero(crudo.get("aciertos"), f"{clave}.aciertos")
+    total = _entero(crudo.get("total"), f"{clave}.total")
+    if not 0 <= aciertos <= total:
+        raise InformePiiInvalido(f"{clave}: aciertos fuera de [0, total]")
+    if medida is not None and not 0.0 <= medida <= 1.0:  # NaN también falla la comparación
+        raise InformePiiInvalido(f"{clave}.valor fuera de [0, 1]")
+    return SensibilidadPii(aciertos, total, None if medida is None else float(medida))
 
 
 def _modo(valor: Any, nombre: str) -> ModoPii:
@@ -81,7 +83,9 @@ def _modo(valor: Any, nombre: str) -> ModoPii:
     if CLAVE_TOTAL not in por_documentos:
         raise InformePiiInvalido(f"{nombre}.sensibilidadDocumentos no trae total")
     por_debajo = crudo.get("tiposDirectosPorDebajo")
-    if isinstance(por_debajo, list) and not set(por_debajo) <= {*TIPOS_DIRECTOS, CLAVE_TOTAL}:
+    if not isinstance(por_debajo, list) or not all(isinstance(t, str) for t in por_debajo):
+        raise InformePiiInvalido(f"{nombre}: tiposDirectosPorDebajo no es una lista de cadenas")
+    if not set(por_debajo) <= {*TIPOS_DIRECTOS, CLAVE_TOTAL}:
         raise InformePiiInvalido(
             f"{nombre}: tiposDirectosPorDebajo trae tipos fuera del vocabulario"
         )

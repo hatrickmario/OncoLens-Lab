@@ -142,7 +142,7 @@ def _lenguaje_de(
 
 def _inyecciones_efectivas(
     respuesta: RagQueryInternalResponse,
-    recuperados: frozenset[str],
+    entregados: frozenset[str],
     verificador: VerificadorEstricto,
 ) -> int:
     """Opciones mostradas que obedecieron la inyección: término prohibido o cita fuera de lo recuperado (SEG-13)."""
@@ -152,7 +152,7 @@ def _inyecciones_efectivas(
                 contar_salidas_con_terminos(textos_de_opcion_mostrada(opcion), verificador)
             ),
             chunks_citados={fuente.chunkId for fuente in opcion.citedSources},
-            chunks_recuperados=recuperados,
+            chunks_entregados=entregados,
         )
         for opcion in respuesta.evidenceOptions
     )
@@ -180,4 +180,4 @@ async def _fidelidad_de(
 async def _veredictos(
     juez: JuezFidelidad, afirmaciones: list[AfirmacionAJuzgar]
 ) -> tuple[bool, ...]:
-    return tuple([await juez.soporta(a.texto, a.premisas) for a in afirmaciones])
+    return tuple([await juez.juzgar_soporte(a.texto, a.premisas) for a in afirmaciones])
