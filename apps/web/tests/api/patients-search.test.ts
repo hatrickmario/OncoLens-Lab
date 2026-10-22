@@ -107,6 +107,17 @@ describe('POST /api/patients/search', () => {
     expect(clinicalApi.peticiones).toHaveLength(0);
   });
 
+  it('responde 422 sin llamar a clinical-api cuando el cuerpo trae un criterio válido y un campo no declarado [US-048 AC-3]', async () => {
+    const { dependencias } = crearDependenciasDeTest();
+
+    const respuesta = await crearManejadorBusquedaDePacientes(dependencias)(
+      peticionDeBusqueda(VALIDAS, { name: 'Prueba Sintética 1', apellido: 'x' }),
+    );
+
+    expect(respuesta.status).toBe(422);
+    expect(clinicalApi.peticiones).toHaveLength(0);
+  });
+
   it('responde 413 sin llamar a clinical-api cuando el cuerpo supera el máximo [US-048 AC-5]', async () => {
     const { dependencias } = crearDependenciasDeTest();
 
@@ -118,7 +129,7 @@ describe('POST /api/patients/search', () => {
     expect(clinicalApi.peticiones).toHaveLength(0);
   });
 
-  it('reexpone el 401 y el 422 de clinical-api tal cual [US-048 AC-6]', async () => {
+  it('reexpone el 401 NO_AUTENTICADO de clinical-api tal cual [US-048 AC-6]', async () => {
     const { dependencias } = crearDependenciasDeTest();
     clinicalApi.responderBusqueda({ status: 401, cuerpo: ejemplo('error-no-autenticado.json') });
 
