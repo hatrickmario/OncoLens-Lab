@@ -154,3 +154,9 @@ No cambia modelo, prompt, umbral, catálogo ni corpus: `run-ai-eval` no aplica.
 - **Fuente única de los hechos del corpus en la Base del análisis**: hoy `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE`
   se configuran en clinical-api y en el cargador; lo correcto es leerlos del release del corpus de Backend 2.
 - Hallazgos menores P3-8, P3-11 y P3-12 del Gate 2: diferidos.
+
+## Notas de implementación (frontend)
+
+- Entregado: clase `tipo_no_habilitado` en `clasificarResultado()` (sustituye el comportamiento del S1 que lo trataba como `no_soportado`; el test que lo fijaba se reemplazó con `Test-Removal:`), `molecules/scope-notice.tsx` (`role="status"`, informativo, sin estilo de error) montado por `AnalysisResult`, y la clave `alcance.tipoNoHabilitado`. La región viva del formulario no anuncia "Análisis listo: 0 opciones" en este estado: el aviso es la región de estado.
+- "Uso académico/investigación" (RN-19) lo muestra la cabecera de la app (`AppHeader`), no el panel; el aviso de IA sale de `disclaimer` de la respuesta.
+- **Diferido a L1D-72**: montar `ScopeNotice` en la ficha con `cancerTypeEnabled` (AC-1/AC-3 de la ficha). **Diferido a L1D-278 / L1D-72**: E2E 4.3. visual-check pendiente (sin Compose local).
