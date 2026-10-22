@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import { normalizarNombre } from '../../infrastructure/crypto/indice-ciego.js';
 import {
+  zGetPatientPath,
   zListPatientsQuery,
   zSearchPatientsBody,
 } from '../../../../../packages/api-contracts/src/zod/clinical-api/zod.gen.js';
@@ -66,3 +67,6 @@ export function leerBusqueda(cuerpo: unknown): BusquedaDePacientes | undefined {
   if (name === undefined || normalizarNombre(name) === '') return undefined;
   return { criterio: { tipo: 'nombre', name }, page };
 }
+
+/** `patientId` de la ruta de la ficha: un UUID; cualquier otra cosa es un 404 sin consultar la BD (D7). */
+export const idDePacienteSchema = zGetPatientPath.shape.patientId;

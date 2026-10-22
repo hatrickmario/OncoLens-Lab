@@ -102,6 +102,18 @@ describe('La identidad nunca sale de clinical-api (RN-10)', () => {
           expect(respuesta.body.items).toHaveLength(1);
         },
       },
+      // L1D-72 (US-051): consultar la ficha descifra la identidad solo para su respuesta; no puede quedar en ninguna otra salida.
+      {
+        nombre: 'consultar la ficha',
+        ejecutar: async () => {
+          const lector = montarPacientes(mundo, { logger, identidad });
+          const respuesta = await clienteVerificado(lector.app)
+            .get(`/platform/patients/${patientId}`)
+            .set('Cookie', cookie);
+          expect(respuesta.status).toBe(200);
+          expect(respuesta.body.identification.nationalId).toBe(PII_FX_T4A_A.cedula);
+        },
+      },
     ];
 
     const { salida, restaurar } = capturarSalidaDelProceso();

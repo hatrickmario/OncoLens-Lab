@@ -14,13 +14,11 @@ import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 2023;
 let escenario: EscenarioDePacientes;
+let idDeFx: string;
 
 beforeAll(async () => {
   escenario = await iniciarEscenarioDePacientes('pac_integridad', ESPACIO_DE_IDS);
-  const idDeFx = await crearPacienteFxT4aA(
-    escenario.mundo,
-    servicioDeIdentidad(escenario.mundo.cliente),
-  );
+  idDeFx = await crearPacienteFxT4aA(escenario.mundo, servicioDeIdentidad(escenario.mundo.cliente));
   // Altera un byte del nombre cifrado con SQL crudo (la etiqueta GCM deja de coincidir, US-046 AC-3).
   await escenario.mundo.cliente.query(
     `UPDATE identity.patient_identity
@@ -69,5 +67,17 @@ describe('identidad alterada en la página', () => {
 
     expect(respuesta.status).toBe(500);
     expect(respuesta.body.error).toBe('ERROR_INTERNO');
+  });
+
+  it('responde 500 ErrorInterno sin identidad cuando la ficha del paciente tiene un blob alterado [US-046 AC-3]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .get(`/platform/patients/${idDeFx}`)
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect(respuesta.status).toBe(500);
+    expect(respuesta.body.error).toBe('ERROR_INTERNO');
+    expect(JSON.stringify(respuesta.body)).not.toContain(FX_T4A_A.numeroDeDocumento);
   });
 });
