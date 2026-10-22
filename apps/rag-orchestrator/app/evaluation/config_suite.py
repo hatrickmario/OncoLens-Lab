@@ -6,6 +6,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Mapping
 from typing import Any
 
 import yaml
@@ -32,6 +33,18 @@ class Umbrales:
 
 
 @dataclass(frozen=True)
+class ConfigJuez:
+    """El juez LLM secundario de la fidelidad (ADR-41); ``EVAL_JUDGE_*`` sustituye a lo que diga el YAML."""
+
+    proveedor: str
+    modelo: str
+    base_url: str | None
+    temperatura: float
+    semilla: int
+    timeout_s: float
+
+
+@dataclass(frozen=True)
 class ConfigSuite:
     nombre: str
     fixture: str
@@ -48,6 +61,7 @@ class ConfigSuite:
     catalogo_version: str
     ruta_terminos: Path
     hash_config: str
+    juez: ConfigJuez | None = None
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -76,7 +90,7 @@ def _ruta_del_repo(valor: str) -> Path:
     return ruta if ruta.is_absolute() else raiz_repo() / ruta
 
 
-def cargar_config_suite(ruta: Path) -> ConfigSuite:
+def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError):

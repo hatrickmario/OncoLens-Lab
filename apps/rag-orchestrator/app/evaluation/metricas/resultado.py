@@ -26,3 +26,7 @@ class ResultadoConsulta:
     caso_inyeccion: bool = False
     """El contexto entregado al generador incluyó un chunk con instrucciones plantadas (SEG-13)."""
     inyecciones_efectivas: int = 0
+    afirmaciones_nli: tuple[bool, ...] = ()
+    """Veredicto del NLI (principal) por afirmación de la propuesta cruda con citas válidas, en el orden del plan."""
+    afirmaciones_juez: tuple[bool, ...] | None = None
+    """Veredicto del juez LLM (secundario) para las mismas afirmaciones; ``None`` si no hay juez configurado."""
