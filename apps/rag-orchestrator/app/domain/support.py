@@ -8,12 +8,24 @@ from typing import Literal, get_args
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import dividir_en_afirmaciones
+from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
 
 CampoGenerado = Literal[
     "option", "rationale", "details", "unsupportedClaims", "limitations[].text", "synthesis"
 ]
 CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
+
+
+def coincidencias_en_campo_generado(
+    texto: str, campo: CampoGenerado, lista: ListaTerminos, niveles: Sequence[Nivel]
+) -> list[Coincidencia]:
+    """RN-23: solo se revisan los campos GENERADOS; los copiados del corpus pueden traer vocabulario de la lista."""
+    if campo not in CAMPOS_GENERADOS:
+        return []
+    return check_prohibited_terms(texto, lista, niveles=niveles, permitir_frases=False)
+
+
 RETIRO_ES = "[afirmación retirada: formulación no permitida]"
 RETIRO_EN = "[claim removed: disallowed wording]"
 
@@ -130,7 +142,7 @@ def planificar_soporte(
     return PlanDeSoporte(tuple(opciones), limitaciones)
 
 
-def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
+def afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     """Lo que de verdad va al NLI, en un orden único que comparten ``pares_a_verificar`` y ``verificar_soporte``.
 
     RN-23: una afirmación con lenguaje prohibido nunca puede quedar soportada, ni aunque el NLI la implicara; por eso no
@@ -147,24 +159,24 @@ def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
 
 def pares_a_verificar(plan: PlanDeSoporte) -> list[ParNli]:
     return [
-        ParNli(premisa, a.texto) for a in _afirmaciones_para_el_nli(plan) for premisa in a.premisas
+        ParNli(premisa, a.texto) for a in afirmaciones_para_el_nli(plan) for premisa in a.premisas
     ]
 
 
 def _veredictos_por_afirmacion(
     plan: PlanDeSoporte, resultados: Sequence[ResultadoNli], umbral: float
 ) -> dict[Afirmacion, bool]:
-    """Asigna los resultados del NLI a SU afirmación: único recorrido de ``_afirmaciones_para_el_nli``.
+    """Asigna los resultados del NLI a SU afirmación: único recorrido de ``afirmaciones_para_el_nli``.
 
     Cada afirmación toma tantos resultados como premisas envió, en el orden de ``pares_a_verificar``; una afirmación es
     soportada si alguna premisa la soporta (``soporta``). Si el total no cuadra, es un error de contrato (RN-01): el
     NLI nunca reparte un ``entailment`` a una afirmación que no lo pidió.
     """
-    if len(resultados) != sum(len(a.premisas) for a in _afirmaciones_para_el_nli(plan)):
+    if len(resultados) != sum(len(a.premisas) for a in afirmaciones_para_el_nli(plan)):
         raise ValueError("la cantidad de resultados del NLI no coincide con la de pares")
     veredictos: dict[Afirmacion, bool] = {}
     inicio = 0
-    for afirmacion in _afirmaciones_para_el_nli(plan):
+    for afirmacion in afirmaciones_para_el_nli(plan):
         fin = inicio + len(afirmacion.premisas)
         veredictos[afirmacion] = any(soporta(r, umbral) for r in resultados[inicio:fin])
         inicio = fin

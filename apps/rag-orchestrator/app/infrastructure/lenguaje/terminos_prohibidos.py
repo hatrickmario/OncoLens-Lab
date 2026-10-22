@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
-from app.domain.support import CAMPOS_GENERADOS, CampoGenerado
+from app.domain.lenguaje import ListaTerminos
+from app.domain.support import CampoGenerado, coincidencias_en_campo_generado
 
 RUTA_DE_LA_LISTA = Path("lenguaje") / "terminos-prohibidos.json"
 
@@ -30,20 +30,19 @@ class VerificadorDeTerminosProhibidos:
         return self._lista.version
 
     def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
-        if campo not in CAMPOS_GENERADOS:
-            return ()
-        coincidencias = check_prohibited_terms(
-            texto, self._lista, niveles=("A",), permitir_frases=False
-        )
+        coincidencias = coincidencias_en_campo_generado(texto, campo, self._lista, ("A",))
         return tuple(dict.fromkeys(c.id for c in coincidencias))
 
 
-def cargar_verificador_de_terminos(catalogos: Path) -> VerificadorDeTerminosProhibidos:
-    """Lee la lista de ``<catálogos>/lenguaje/terminos-prohibidos.json`` (``CLINICAL_CATALOG_PATH``, solo lectura)."""
+def cargar_lista_de_terminos(catalogos: Path) -> ListaTerminos:
+    """Lee y valida ``<catálogos>/lenguaje/terminos-prohibidos.json`` (``CLINICAL_CATALOG_PATH``, solo lectura)."""
     try:
-        lista = ListaTerminos.model_validate_json(
+        return ListaTerminos.model_validate_json(
             (catalogos / RUTA_DE_LA_LISTA).read_text(encoding="utf-8")
         )
     except (OSError, ValueError):
         raise ListaDeTerminosNoDisponible("terminos-prohibidos.json no está disponible") from None
-    return VerificadorDeTerminosProhibidos(lista)
+
+
+def cargar_verificador_de_terminos(catalogos: Path) -> VerificadorDeTerminosProhibidos:
+    return VerificadorDeTerminosProhibidos(cargar_lista_de_terminos(catalogos))

@@ -46,7 +46,7 @@
 
 ## evaluación
 
-- [ ] 2.1 Cambia el corpus: `run-ai-eval` si la suite existe; si no (US-072 llega en el S2), `ai-eval-runner` revisa a mano la recuperación del paciente semilla de mama y próstata sobre esta semilla (recall@10, MRR, precisión de citas, "sin evidencia"), como evidencia del Gate 2. **Pendiente del orquestador:** requiere el adapter real de embeddings (L1D-106); el implementador deja la semilla lista **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
+- [ ] 2.1 Cambia el corpus: `run-ai-eval` si la suite existe; si no (US-072 llega en el S2), `ai-eval-runner` revisa a mano la recuperación del paciente semilla de mama y próstata sobre esta semilla (recall@10, MRR, precisión de citas, "sin evidencia"), como evidencia del Gate 2. **Pendiente del orquestador:** requiere el adapter real de embeddings (L1D-106); el implementador deja la semilla lista **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).** **Estado 2026-10-22 (ARR-03):** sigue NO-EJECUTABLE con modelos reales: la suite no cablea `proveedor: local` (`componer_servicio`) y faltan los pesos de NLI/reranker; procedimiento en `l1d-235-suite-evaluate/design.md` D21; ID destino propuesto **L1D-280 (ARR-04)** + cableado de `proveedor: local` (a confirmar por sprint-S2).
 
 ## Verificación
 

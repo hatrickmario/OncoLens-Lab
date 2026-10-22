@@ -37,28 +37,29 @@
 - [x] 2.1 `run-ai-eval` sobre la rama con `--suite retrieval` deja de devolver `NO-EJECUTABLE` ·
       **evaluate**
 
-## 3. ai-services · 072b (fidelidad, PII y prescriptivas) — ⛔ `l1d-232-adr41-framework-evaluacion`
+## 3. ai-services · 072b (fidelidad, PII y prescriptivas) — ✅ `l1d-232-adr41-framework-evaluacion` (ADR-41, mergeado como propuesto)
 
-- [ ] 3.1 Test en rojo "un juez de nube aborta sin enviar requests / con el juez local reporta
+- [x] 3.1 Test en rojo "un juez de nube aborta sin enviar requests / con el juez local reporta
       fidelidad por afirmación [US-072 AC-3]" (`respx`, juez y NLI fingidos) · **estricto**
-- [ ] 3.2 Implementar `JuezFidelidad` (NLI principal, LLM local secundario, `EVAL_JUDGE_*` en
+- [x] 3.2 Implementar `JuezFidelidad` (NLI principal, LLM local secundario, `EVAL_JUDGE_*` en
       configuración), con la guarda `es_proveedor_local()` de 1.6b antes de crear el cliente · **estricto**
-- [ ] 3.3 Test en rojo "incluye la sensibilidad de PII de B1 y 0 llamadas a la nube [US-072 AC-6]" e
+- [x] 3.3 Test en rojo "incluye la sensibilidad de PII de B1 y 0 llamadas a la nube [US-072 AC-6]" e
       integración del JSON de `npm run eval:pii` (de `l1d-205-adr40-deteccion-pii`; si no está, con
       los 4 textos de FX-T5a-a y la cifra sobre `pii-mini` diferida a L1D-205) · **estricto**
-- [ ] 3.4 Test en rojo "cuenta 2 salidas con términos prohibidos en la propuesta cruda y 0 en la
+- [x] 3.4 Test en rojo "cuenta 2 salidas con términos prohibidos en la propuesta cruda y 0 en la
       salida mostrada [US-072 AC-1] / inyección efectiva = 0 con `ch-inj-1` [US-072 AC-7]"; métrica
       sobre `CAMPOS_GENERADOS` con niveles A+B y `permitirFrases: false` (design D4b), y extraer
       `es_inyeccion_efectiva()` (SEG-13) · **estricto**
-- [ ] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
+- [x] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-235)
 
 ## 4. evaluación · 072b
 
-- [ ] 4.1 `run-ai-eval` `--suite all` con reporte de `ai-eval-runner` · **evaluate**
+- [x] 4.1 `run-ai-eval` `--suite all` con reporte de `ai-eval-runner` · **evaluate** (adapters falsos; el juez LLM
+      real y la cifra de PII sobre `pii-mini` son **NO-EJECUTABLE** en la CI: procedimiento en design.md D17)
 
 ## 5. Verificación
 
-- [ ] 5.1 `openspec validate l1d-235-suite-evaluate --strict` en verde
-- [ ] 5.2 Tests de `rag-orchestrator` en verde; sin `contracts:verify-provider` (sin cambios de API)
-- [ ] 5.3 `run-ai-eval` en cada PR (072a y 072b)
+- [x] 5.1 `openspec validate l1d-235-suite-evaluate --strict` en verde (2026-10-22, rama `feat/l1d-279-ol06-sobre-lo-implementado`: «Change 'l1d-235-suite-evaluate' is valid»)
+- [x] 5.2 Tests de `rag-orchestrator` en verde; sin `contracts:verify-provider` (sin cambios de API) (2026-10-22: `python -m pytest` en `apps/rag-orchestrator` = 2002 passed, 122 deselected `servicios_reales`/`models`)
+- [x] 5.3 `run-ai-eval` en cada PR (072a y 072b) (2026-10-22: `npm run evaluate -- --suite all --report json` dos veces seguidas con `test-fake.yaml` da el mismo SHA-256 `d4e544c7…9466f`, idéntico al de `data/evaluation/baseline.json`; reportes de `ai-eval-runner` de 072a #136 y 072b #159 en sus PR. Las partes **NO-EJECUTABLE** del juez LLM real y de la sensibilidad de PII están en 4.1/D17, con destino en design.md D21)

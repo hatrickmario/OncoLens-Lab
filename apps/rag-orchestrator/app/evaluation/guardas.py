@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.domain.reglas_proveedor import es_proveedor_local
-from app.evaluation.config_suite import ConfigSuite
+from app.domain.reglas_proveedor import es_modelo_de_nube, es_proveedor_local
+from app.evaluation.config_suite import ConfigJuez, ConfigSuite
 from app.evaluation.dataset_loader import CLASE_SINTETICA
 
 
@@ -25,6 +25,19 @@ def exigir_adapters_locales(clase_dataset: str, urls: Mapping[str, str]) -> None
         raise SuiteAbortada(
             f"con datos '{clase_dataset}' todo adapter debe ser local; no lo es: {', '.join(remotos)} (RN-12)"
         )
+
+
+def exigir_juez_local(juez: ConfigJuez | None) -> None:
+    """RN-12, ADR-41: ningún juez de fidelidad sale de la lista local cerrada en código, tampoco con datos sintéticos.
+
+    Se llama antes de cargar preguntas y de crear el cliente del juez: con una URL de nube no sale ningún request.
+    """
+    if juez is None:
+        return
+    if juez.base_url is not None and not es_proveedor_local(juez.base_url):
+        raise SuiteAbortada("el juez de fidelidad no es un proveedor local (RN-12, ADR-41)")
+    if es_modelo_de_nube(juez.modelo):  # un host local puede servir un modelo que corre en la nube
+        raise SuiteAbortada("el modelo del juez de fidelidad se ejecuta en la nube (RN-12, ADR-41)")
 
 
 def exigir_marca_final(config: ConfigSuite, prueba_final: bool) -> None:

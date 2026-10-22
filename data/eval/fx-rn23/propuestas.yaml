@@ -1,0 +1,20 @@
+# Salida cruda del generador falso. RN23-01 y RN23-02 reproducen literalmente el vocabulario del corpus citado (lo que un
+# LLM mal instruido haría); RN23-03 lo parafrasea con la fórmula «The source describes that…»; RN23-04 es el control limpio.
+clase: sintetico
+propuestas:
+  RN23-01:
+    - opcion: 'Adding anti-HER2 therapy to adjuvant chemotherapy for HER2-positive early breast cancer.'
+      justificacion: 'The guideline recommends adding anti-HER2 therapy to adjuvant chemotherapy for HER2-positive early breast cancer.'
+      citas: [ch-g1-1]
+  RN23-02:
+    - opcion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor.'
+      justificacion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor is the standard of care and a recommended treatment in metastatic hormone-sensitive prostate cancer.'
+      citas: [ch-g2-1]
+  RN23-03:
+    - opcion: 'Androgen deprivation therapy combined with an androgen receptor inhibitor.'
+      justificacion: 'The source describes that androgen deprivation therapy combined with an androgen receptor inhibitor in metastatic hormone-sensitive prostate cancer.'
+      citas: [ch-g2-1]
+  RN23-04:
+    - opcion: 'Cardiac monitoring with echocardiography.'
+      justificacion: 'The source describes that cardiac monitoring with echocardiography for patients receiving anti-HER2 therapy.'
+      citas: [ch-g3-1]

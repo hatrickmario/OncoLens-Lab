@@ -9,7 +9,7 @@
       "version": "1"
     },
     "fixture": "FX-T5a-a",
-    "hashConfig": "40ee55c8fed96e16511602dac2bcdc7f626bff7d8364d3cb24dd452b2da0f8a5",
+    "hashConfig": "57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced",
     "modelos": {
       "embeddings": "fake-bow@1",
       "llm": "fake-guion@1",
@@ -44,6 +44,27 @@
       "citas": {
         "n": 5,
         "precision": 0.8,
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 4,
+          "fidelidad": 0.75,
+          "soportadas": 3
+        },
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 1,
+        "efectivas": 0,
         "validacion": {
           "preguntas_no_validadas": 6,
           "preguntas_validadas": 0,
@@ -101,12 +122,56 @@
           "rotulo": "no_validada"
         },
         "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 5
+        },
+        "propuesta_cruda": 2,
+        "propuesta_cruda_por_nivel": {
+          "A": 2,
+          "B": 0
+        },
+        "salida_mostrada": 0,
+        "terminos_compartidos_con_corpus_citado": 0,
+        "terminos_nivel_a": [
+          "es-debe-recibir",
+          "es-recomendado-para-este-paciente"
+        ],
+        "terminos_nivel_b": [],
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
       }
     },
     "revisada": {
       "citas": {
         "n": 0,
         "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 0,
+          "fidelidad": null,
+          "soportadas": 0
+        },
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "inyeccion": {
+        "casos": 0,
+        "efectivas": 0,
         "validacion": {
           "preguntas_no_validadas": 0,
           "preguntas_validadas": 0,
@@ -164,8 +229,34 @@
           "rotulo": "no_validada"
         },
         "violaciones_rn02": 0
+      },
+      "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 0
+        },
+        "propuesta_cruda": 0,
+        "propuesta_cruda_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "salida_mostrada": 0,
+        "terminos_compartidos_con_corpus_citado": 0,
+        "terminos_nivel_a": [],
+        "terminos_nivel_b": [],
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
       }
     }
+  },
+  "privacidad": {
+    "llamadas_nube_datos_reales": 0,
+    "llamadas_salientes_registradas": 0,
+    "sensibilidad_b1_medida": false,
+    "textos_sembrados": 4
   },
   "suite": "all"
 }

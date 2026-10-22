@@ -80,7 +80,7 @@ class Enumerado:
 
 @dataclasses.dataclass(frozen=True)
 class Identificador:
-    """Identificador de modelo, versión o huella: un token sin espacios, nunca texto libre."""
+    """Identificador de modelo o versión: un token sin espacios, nunca texto libre."""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,13 +89,41 @@ class Objeto:
     opcionales: frozenset[str] = frozenset()
 
 
+@dataclasses.dataclass(frozen=True)
+class Huella:
+    """SHA-256 en hexadecimal minúscula (64 caracteres)."""
+
+
+@dataclasses.dataclass(frozen=True)
+class Lista:
+    """Lista de elementos que cumplen todos el mismo esquema."""
+
+    elemento: Any
+
+
+_HUELLA = re.compile(r"[0-9a-f]{64}")
 _IDENTIFICADOR = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{0,127}")
+
+
+def es_identificador(valor: object) -> bool:
+    """Un token ASCII sin espacios ni control: la misma regla que el esquema cerrado aplica al escribir el reporte."""
+    return isinstance(valor, str) and _IDENTIFICADOR.fullmatch(valor) is not None
 
 
 def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     """Lista blanca de claves y de tipos de hoja (ADR-41, «Reporte»): lo demás hace fallar la escritura."""
     if isinstance(esquema, Objeto):
         _validar_objeto(valor, esquema, ruta)
+    elif isinstance(esquema, Huella):
+        _exigir(
+            isinstance(valor, str) and _HUELLA.fullmatch(valor) is not None,
+            ruta,
+            "no es una huella",
+        )
+    elif isinstance(esquema, Lista):
+        _exigir(isinstance(valor, list), ruta, "no es una lista")
+        for i, elemento in enumerate(valor):
+            validar_esquema_cerrado(elemento, esquema.elemento, f"{ruta}[{i}]")
     elif isinstance(esquema, Numero):
         _exigir(
             valor is None or (_es_numero(valor) and math.isfinite(valor)), ruta, "no es un número"
@@ -106,7 +134,7 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
         _exigir(isinstance(valor, str) and valor in esquema.valores, ruta, "fuera del conjunto")
     elif isinstance(esquema, Identificador):
         _exigir(
-            isinstance(valor, str) and _IDENTIFICADOR.fullmatch(valor) is not None,
+            es_identificador(valor),
             ruta,
             "no es un identificador",
         )

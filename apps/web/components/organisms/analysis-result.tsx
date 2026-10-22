@@ -8,6 +8,7 @@ import { clasificarResultado } from '../../lib/evidence/clasificar-resultado';
 import { formatearRelevancia } from '../../lib/evidence/formatear-relevancia';
 import { mensajes } from '../../lib/mensajes';
 import { AiDisclaimer } from '../molecules/ai-disclaimer';
+import { ScopeNotice } from '../molecules/scope-notice';
 import { AnalysisBasisPanel } from './analysis-basis-panel';
 import { DiscardedOptions } from './discarded-options';
 import { EvidenceOptionCard } from './evidence-option-card';
@@ -54,6 +55,7 @@ export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps
           </p>
         </>
       )}
+      {clase === 'tipo_no_habilitado' && <ScopeNotice />}
       {descartadasAparte && descartadas.length > 0 && (
         <DiscardedOptions
           descartadas={descartadas}

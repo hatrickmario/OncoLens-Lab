@@ -1,0 +1,12 @@
+# FX-RN23 (ARR-03 / L1D-279 AC-3 y AC-4): fixture sintético de la suite `evaluate` para los casos de RN-23 que el filtro
+# de producción (solo nivel A) no cubre o que el corpus citado trae en sus propias palabras. Ningún dato real ni de paciente.
+clase: sintetico
+nombre: fx-rn23
+version: '1'
+descripcion: 'Corpus mínimo con una guía que «recomienda» (nivel B) y un texto con «standard of care» y «recommended treatment» (nivel A), más un control descriptivo; 4 preguntas con propuestas guionadas que reproducen o parafrasean. Todo es inventado.'
+archivos:
+  corpus: corpus.yaml
+  preguntas: preguntas.yaml
+  propuestas: propuestas.yaml
+  pii: pii.yaml
+  prescriptivas: prescriptivas.yaml
