@@ -4,6 +4,7 @@ import type { Consultador } from '../auth/auth.repository.js';
 import type { TiposDeCancerHabilitados, TraceIdGenerator } from '../evidence-analysis/ports.js';
 import type { IdentityService } from './identity.service.js';
 import { patientsController } from './patients.controller.js';
+import { createFichaRepository } from './ficha.repository.js';
 import { createPatientsRepository } from './patients.repository.js';
 import { crearPatientsService } from './patients.service.js';
 
@@ -25,6 +26,7 @@ export interface DependenciasDelModulo {
 export function componerModuloDePacientes(dependencias: DependenciasDelModulo): Router {
   const service = crearPatientsService({
     repo: createPatientsRepository(dependencias.db),
+    ficha: createFichaRepository(dependencias.db),
     identidad: dependencias.identidad,
     tiposHabilitados: dependencias.tiposHabilitados,
     pageSize: dependencias.config.pageSize,

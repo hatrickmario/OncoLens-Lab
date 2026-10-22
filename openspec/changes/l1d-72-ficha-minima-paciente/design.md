@@ -133,3 +133,25 @@ ARR-02 resto (L1D-278); hasta entonces se registran como pendientes con ese ID.
 
 - Nada. D1 decidido (`[S2 resp. 5]`); D2 resuelto por el contrato.
 - D8 resuelto en el Gate 1: `200 PatientAdminSummary` para el admin, como dicta el contrato.
+
+## Notas de implementación (clinical-platform)
+
+- **Reutilización de L1D-202:** `patients/` ya tenía identidad, máscara, vistas y el catálogo `FUENTES_POR_REVISAR`; la ficha añade `ficha.repository.ts` (lecturas clínicas), `ficha.reglas.ts` (`seleccionarDiagnosticoVigente`, `ultimoValorPorBiomarcador`, mapeos a `Provenance`) y `ficha.service.ts`. `contarPendientesDeRevision()` es el del listado (sin duplicar) y `ESTADOS_PENDIENTES_DE_REVISION` vive en `estados-de-revision.ts` y alimenta su consulta (`= ANY(...)`).
+- **«El repository no lee clinical» (admin):** la vista del admin lee `clinical.patient` (necesita `dataOrigin`, `lifecycleStatus` y `registeredAt`) y nada de las tablas de datos clínicos ni de `care_team_member`; el test lo comprueba sobre el SQL real. De la identidad solo descifra el documento (`conNombre: false`).
+- **2.5:** `ENABLED_CANCER_TYPES` y el puerto `TiposDeCancerHabilitados` ya existen (L1D-173); la ficha usa el mismo adaptador que el listado. No se tocó `.env*`.
+- **404 sin BD:** el borde valida `patientId` con `zGetPatientPath` y responde 404 sin consultar; el log de la ficha no lleva el UUID pedido en un 404.
+- **Referencia vacía:** `reference_range = ''` se entrega como `null` (el contrato lo admite).
+
+## Notas de implementación (frontend)
+
+- **D6 cumplido:** la ficha es un RSC que llama a clinical-api con el SDK generado (`lib/server/pacientes.ts:obtenerFicha`), sin Route Handler nuevo; un `id` que no es UUID es "Paciente no encontrado" sin llamar (D7). El log (`patients.ficha`) lleva evento, status y traceId, nunca el id pedido ni la respuesta.
+- **Cache:** `proxy.ts` (L1D-202) ya añade `Cache-Control: no-store` a `/pacientes/**`; la lectura va con `cache: 'no-store'`. Ambos con test.
+- **Desviaciones del design (nombres/estructura):** `provenance-label` y `data-origin-badge` no existen como componentes: el origen y la revisión salen de la función pura `textoDeOrigen()` (Inline Method, sin segundo uso) y la etiqueta es `EtiquetaDeOrigen` de L1D-202. `contarSinVerificar()`, `describirGradacion()`, `formatearFecha()` y `textoDeAviso()` viven en `lib/ficha/`.
+- **Gradación:** se muestra el texto canónico `grade` y, debajo, cada gradación con espécimen y alcance si difiere de él (en mama, la misma línea no se repite).
+- **Vista admin:** `FichaDeAdministrador` (documento enmascarado, estado, alta y origen); sin nombre, datos clínicos ni "Analizar evidencia".
+- **Barra del paciente S2-00:** solo en la ficha (h1 con el nombre); la ruta `/pacientes/[id]/analisis` conserva su barra "Paciente · ID" del S1. Deuda: reutilizar `PatientHeaderBar` allí cuando el panel consuma la ficha.
+- **Carga:** el `loading.tsx` de `/pacientes` también cubre `/pacientes/[id]` (texto "Cargando pacientes…"); un esqueleto propio de la ficha queda como deuda menor.
+- **Deuda:** `traceIdDe` está duplicado entre `lib/pacientes/respuesta.ts` y `lib/server/pacientes.ts`.
+- **Loop visual (PARCIAL):** `next dev` + clinical-api simulado desde `contracts/examples/` (sin Compose). Estados vistos: doctor con gradación de próstata y avisos, admin, 404; 375 px sin scroll horizontal; consola sin errores salvo `favicon.ico`.
+
+- **Gate 2 (frontend, ronda 2):** `PatientSummaryCard` se acota al doctor (la vista admin conserva su tabla); gradación por catálogo (`CAMPOS_DE_GRADACION` + plantillas en `ficha.gradacion`, sin pintar null ni tratar un sistema desconocido como Gleason); aviso de alcance (`alcance.tipoNoHabilitado`) en el `status` informativo; confianza de extracción en texto en la columna de origen de biomarcadores (el contrato la declara no nula; "No registrado" es defensivo); `obtenerFicha` devuelve el traceId generado ante fallo de transporte y reutiliza `leerJson`/`traceIdDe`. Deuda menor: nombres de archivo en inglés, `CELDA` duplicada, `Contenido` de la página, esqueleto propio de la ficha.

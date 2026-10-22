@@ -12,8 +12,10 @@ import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
-import type { PatientsService, VistaDeListado } from './patients.service.js';
+import { PacienteNoEncontradoError } from './patients.errores.js';
+import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
+import type { PatientsService } from './patients.service.js';
+import type { VistaPorPermiso } from './vistas.js';
 
 export interface DependenciasDelController {
   service: PatientsService;
@@ -23,6 +25,7 @@ export interface DependenciasDelController {
 
 const EVENTO_LISTADO = 'patients.listado';
 const EVENTO_BUSQUEDA = 'patients.busqueda';
+const EVENTO_FICHA = 'patients.ficha';
 
 /** Tipo de criterio que puede viajar al log: nunca el criterio mismo (RN-10). */
 type TipoDeCriterio = 'documento' | 'nombre';
@@ -30,8 +33,8 @@ type TipoDeCriterio = 'documento' | 'nombre';
 const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
 
 /** Elige la vista por PERMISO, nunca por rol; sin sesión, la de menor privilegio. */
-const vistaDe = (request: Request): VistaDeListado =>
-  vistaSegunPermiso<VistaDeListado>(request.sesion ?? { permisos: new Set() }, {
+const vistaDe = (request: Request): VistaPorPermiso =>
+  vistaSegunPermiso<VistaPorPermiso>(request.sesion ?? { permisos: new Set() }, {
     'clinical:read': 'doctor_listado',
     default: 'admin',
   });
@@ -100,6 +103,39 @@ function crearCuerpoIlegible(respuestas: Respuestas): ErrorRequestHandler {
   };
 }
 
+/** `404 NO_ENCONTRADO` sin eco: lo mismo para un UUID inexistente que para un identificador mal formado (D7). */
+function rechazarPacienteNoEncontrado(response: Response, registrar: Registrar): void {
+  registrar({ event: EVENTO_FICHA, resultado: 'no_encontrado', traceId: traceIdDe(response) });
+  enviarError(response, 404, 'NO_ENCONTRADO', traceIdDe(response));
+}
+
+function crearFicha(service: PatientsService, registrar: Registrar): RequestHandler {
+  return async (request, response) => {
+    const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
+    if (!patientId.success) {
+      rechazarPacienteNoEncontrado(response, registrar);
+      return;
+    }
+    try {
+      const ficha = await service.obtenerFicha({
+        patientId: patientId.data,
+        vista: vistaDe(request),
+      });
+      registrar({
+        event: EVENTO_FICHA,
+        resultado: 'ok',
+        traceId: traceIdDe(response),
+        patientId: patientId.data,
+      });
+      response.setHeader('Cache-Control', 'no-store');
+      response.status(200).json(ficha);
+    } catch (error) {
+      if (!(error instanceof PacienteNoEncontradoError)) throw error;
+      rechazarPacienteNoEncontrado(response, registrar);
+    }
+  };
+}
+
 /**
  * `GET /patients` y `POST /patients/search` (se montan bajo `/platform`, detrás del guard de sesión). Solo traducen
  * HTTP ↔ service; el log nunca lleva filtros con identidad, cuerpos ni datos del paciente (RN-10).
@@ -113,6 +149,12 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     crearTraceIdMiddleware(traceIds),
     authorize('patients:lookup'),
     crearListar(service, respuestas),
+  );
+  router.get(
+    '/patients/:patientId',
+    crearTraceIdMiddleware(traceIds),
+    authorize('clinical:read', 'patients:lookup'), // x-permission de getPatient: alguno de los dos
+    crearFicha(service, registrar),
   );
   router.post(
     '/patients/search',
