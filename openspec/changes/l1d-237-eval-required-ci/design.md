@@ -123,3 +123,13 @@ Ninguna propia; depende de P-3 (ADR-41).
     Mover `regresion:` (`tolerancia_maxima`) fuera de `eval-trigger-paths.yaml` entra aquí.
   - Preguntas: disparador para `app/domain/relevance.py` (`supera_umbral`) y para `config/pii-formats.json` /
     desidentificación; `SECCION_DEL_UMBRAL` = `completa` frente a `revisada`; pregunta abierta 3 del ADR-41.
+
+## Métricas de L1D-235b en el comparador
+
+- `terminos_prohibidos.salida_mostrada`, `inyeccion.efectivas` y `privacidad.llamadas_nube_datos_reales` se tratan como
+  `violaciones*`: menos es mejor y cualquier aumento es regresión, sin tolerancia. `terminos_prohibidos.propuesta_cruda`
+  es informativa (se muestra, nunca es regresión). `n`, `casos`, `afirmaciones` y `soportadas` son conteos sin
+  dirección y no entran en la comparación.
+- El comparador lee todo lo que cuelgue de `metricas` del reporte, así que vigila `privacidad.llamadas_nube_datos_reales`
+  solo si 235b lo coloca bajo `metricas`; si lo deja en otro bloque de la raíz, queda fuera (deuda de D1, sin ID; revisar
+  al mergear 235b). La lista sigue siendo por nombre: D1 (catálogo único con la dirección de cada métrica) la sustituye.

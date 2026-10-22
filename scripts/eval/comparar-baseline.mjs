@@ -8,11 +8,16 @@
 const EPSILON = 1e-9;
 const ROTULO_POR_DEFECTO = 'no_validada';
 
-/** Claves que no son métricas comparables: conteos, intervalos de confianza y el bloque de validación. */
-const esClaveIgnorada = (clave) => clave === 'n' || clave === 'validacion' || clave.endsWith('_ic95');
+/** Claves que no son métricas de calidad: conteos sin dirección, intervalos de confianza y el bloque de validación. */
+const CONTEOS_SIN_DIRECCION = ['n', 'casos', 'afirmaciones', 'soportadas'];
+const esClaveIgnorada = (clave) => CONTEOS_SIN_DIRECCION.includes(clave) || clave === 'validacion' || clave.endsWith('_ic95');
 
-/** En estas métricas menos es mejor (p. ej. `violaciones_rn02`); en las demás, más es mejor. */
-const menosEsMejor = (metrica) => /(^|\.)violaciones/.test(metrica);
+/** Menos es mejor y el valor del baseline es 0: cualquier aumento es regresión, sin tolerancia (RN-02, RN-12, RN-23). */
+const CONTADORES_DE_VIOLACIONES = [/(^|\.)violaciones/, /(^|\.)terminos_prohibidos\.salida_mostrada$/, /(^|\.)inyeccion\.efectivas$/, /(^|\.)privacidad\.llamadas_nube_datos_reales$/];
+const menosEsMejor = (metrica) => CONTADORES_DE_VIOLACIONES.some((patron) => patron.test(metrica));
+
+/** Se muestra pero nunca es regresión (p. ej. lo que el modelo propone antes del filtro de lenguaje). */
+const esInformativa = (metrica) => /(^|\.)terminos_prohibidos\.propuesta_cruda$/.test(metrica);
 
 const esObjeto = (valor) => typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 
@@ -31,6 +36,7 @@ const valorEn = (nodo, metrica) => metrica.split('.').reduce((actual, clave) => 
 
 /** `empeora` = cuánto se alejó el valor del baseline hacia lo peor (negativo si mejoró). */
 function estadoDe({ metrica, baseline, actual }, tolerancia) {
+  if (esInformativa(metrica)) return 'informativa';
   if (typeof actual !== 'number') return 'regresion';
   const empeora = menosEsMejor(metrica) ? actual - baseline : baseline - actual;
   // Un conteo de invariante (`violaciones_*`, RN-02) no admite caída tolerada: cualquier aumento es regresión.
@@ -44,7 +50,7 @@ function estadoDe({ metrica, baseline, actual }, tolerancia) {
  * @param {object} reporte salida de `evaluate` (con `metricas`)
  * @param {object} baseline `data/evaluation/baseline.json`
  * @param {{ tolerancia: number }} opciones caída máxima tolerada, en puntos absolutos de la métrica
- * @returns {{ filas: { metrica: string, baseline: number, actual: number | null, rotulo: string, estado: 'igual' | 'mejora' | 'tolerada' | 'regresion' }[],
+ * @returns {{ filas: { metrica: string, baseline: number, actual: number | null, rotulo: string, estado: 'igual' | 'mejora' | 'tolerada' | 'informativa' | 'regresion' }[],
  *             regresiones: { metrica: string, baseline: number, actual: number | null }[] }}
  */
 export function compararConBaseline(reporte, baseline, { tolerancia }) {
@@ -56,7 +62,7 @@ export function compararConBaseline(reporte, baseline, { tolerancia }) {
   return { filas, regresiones: filas.filter((fila) => fila.estado === 'regresion') };
 }
 
-const ETIQUETA_DE_ESTADO = { igual: 'igual', mejora: 'mejora', tolerada: 'caída tolerada', regresion: 'regresión' };
+const ETIQUETA_DE_ESTADO = { igual: 'igual', mejora: 'mejora', tolerada: 'caída tolerada', regresion: 'regresión', informativa: 'informativa' };
 const textoDe = (valor) => (valor === null ? 'sin valor' : String(valor));
 
 /** Un texto con saltos de línea, barras, comillas invertidas o ángulos no puede añadir Markdown ni HTML propio. */
