@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Document } from '../../../../../packages/api-contracts/src/types/clinical-api/types.gen.js';
+import type { Document } from '../../../../../packages/api-contracts/src/client/clinical-api/types.gen.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { Registrar } from '../../infrastructure/logger.js';
