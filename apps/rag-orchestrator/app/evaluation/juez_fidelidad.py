@@ -20,6 +20,7 @@ from app.domain.support import soporta
 from app.evaluation.adaptadores_falsos import tokens
 from app.evaluation.config_suite import ConfigJuez
 from app.evaluation.guardas import exigir_juez_local
+from app.evaluation.llamadas import RegistroDeLlamadas
 
 RUTA_DE_COMPLETIONS = "/chat/completions"
 SISTEMA = (
@@ -66,7 +67,14 @@ class JuezLlmLocal:
     """Juez LLM secundario por una API compatible con OpenAI (Ollama ``/v1``), con ``temperature`` y ``seed`` fijos."""
 
     def __init__(
-        self, cliente: httpx.AsyncClient, *, modelo: str, temperatura: float, semilla: int
+        self,
+        cliente: httpx.AsyncClient,
+        *,
+        modelo: str,
+        temperatura: float,
+        semilla: int,
+        registro: RegistroDeLlamadas | None = None,
+        clase_datos: str = "sintetico",
     ) -> None:
         self._cliente = cliente
         self._modelo = modelo
