@@ -113,7 +113,7 @@ dataset (`data/evaluation/`, sintético). La mecánica del reporte es de US-072.
 
 > Linear: [L1D-234](https://linear.app/l1der-lab-mjbc/issue/L1D-234)
 
-`FEAT-T5a` · Sprint 2 (cierre) · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
+`FEAT-T5a` · Sprint 4 *(desde S2, cierre del S2, `[S2 resp. 20]`: depende de US-233)* · Estimación **1** · — (decisión) · TBD-02 · Dueño: usuario (PO) + Ingeniería · ↪ US-073 (baseline técnico), US-014 · ADR-41 · 🔗 Produce para: US-074 AC-5 (umbrales reales de regresión en `eval/configs/regression.yaml` desde el S2), FEAT-T5b
 
 ## Story
 Como product owner, quiero fijar las metas técnicas definitivas con el baseline del

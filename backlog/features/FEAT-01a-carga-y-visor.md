@@ -213,6 +213,7 @@ avanza cada uno, para saber cuándo sus datos ya están disponibles.
   `DOCUMENTS_PAGE_SIZE = 20`, cuando se pide `GET …/documents?page=1` y `?page=2`,
   entonces la primera página trae 20 y la segunda 5, ordenados por `uploadedAt`
   descendente. `[OL-05]` `[readme §6.1 #11]`
+- **AC-6 (borde · E2E heredados del S2)** · Dado el job de E2E de la CI (L1D-278) y el seed sintético, cuando se ejecutan, entonces cubren de punta a punta US-048 AC-1 (el doctor abre `/pacientes` y ve los cinco pacientes semilla con SINTÉTICO) y US-051 AC-1, AC-2 y AC-5 (ficha con diagnóstico vigente, biomarcadores y aviso de pendientes), además de los de carga de esta historia; incluye la verificación del aviso de alcance de US-043 AC-3 (L1D-173 4.3) y su *visual-check* a 375 y 1280 px (L1D-173 4.4). `[S2 resp. 20]`
 - **AC-5 (borde · accesibilidad)** · Dada la lista de documentos, cuando cambia el estado
   de uno, entonces el cambio se anuncia en una región `aria-live` y el selector de
   archivos es operable con teclado. `[NFR-12]`
