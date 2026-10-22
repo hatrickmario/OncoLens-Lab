@@ -1,9 +1,11 @@
 import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 import type { DependenciasLogin } from '../../lib/server/auth-login';
+import { CABECERA_IP_DEL_SOCKET, firmarIpDelSocket } from '../../lib/server/cabecera-ip-del-socket';
 import type { LineaDeRegistro } from '../../lib/server/registro';
 import { ORIGEN_PERMITIDO, URL_CLINICAL_API } from './clinical-api-simulado';
 
+export const IP_DE_PRUEBA = '198.51.100.7';
 export const URL_LOGIN = `${ORIGEN_PERMITIDO}/api/auth/login`;
 const RUTA_UPSTREAM = `${URL_CLINICAL_API}/platform/auth/login`;
 
@@ -84,7 +86,8 @@ export function peticionDeLogin(
 ): Request {
   return new Request(URL_LOGIN, {
     method: 'POST',
-    headers: cabeceras,
+    // Lo que escribe el wrapper de instrumentation.ts antes de que Next atienda la petición; `cabeceras` puede pisarlo.
+    headers: { [CABECERA_IP_DEL_SOCKET]: firmarIpDelSocket(IP_DE_PRUEBA), ...cabeceras },
     body: typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo),
   });
 }

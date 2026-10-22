@@ -17,6 +17,10 @@ exigir_numero() {
     '' | *[!0-9]*) echo "10-roles.sh: $1 debe ser un entero positivo" >&2; exit 1 ;;
   esac
 }
+export PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS="${PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS:?falta PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS}"
+export PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS="${PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS:?falta PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS}"
+exigir_numero PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS "$PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS"
+exigir_numero PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS "$PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS"
 exigir_numero PG_RAG_CORPUS_CONNECTION_LIMIT "$PG_RAG_CORPUS_CONNECTION_LIMIT"
 exigir_numero PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT "$PG_RAG_CORPUS_MIGRATOR_CONNECTION_LIMIT"
 
@@ -34,6 +38,13 @@ SELECT format('CREATE ROLE clinical_api LOGIN NOSUPERUSER NOCREATEDB NOCREATEROL
 SELECT format('CREATE ROLE research_writer LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD %L', :'research_writer_pwd') \gexec
 SELECT format('CREATE ROLE rag_corpus LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT %s PASSWORD %L', (:'rag_corpus_limit')::int, :'rag_corpus_pwd') \gexec
 SELECT format('CREATE ROLE rag_corpus_migrator LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT %s PASSWORD %L', (:'rag_corpus_migrator_limit')::int, :'rag_corpus_migrator_pwd') \gexec
+
+-- Timeouts de sesión de rag_corpus (US-040, data-model §9): ALTER ROLE ... SET exige superusuario, por eso viven aquí y
+-- no en la migración de Prisma (el rol de migraciones es NOCREATEROLE). Valores en milisegundos, de configuración (RN-22).
+\set rag_corpus_statement_timeout `echo "$PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS"`
+\set rag_corpus_idle_tx_timeout `echo "$PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS"`
+SELECT format('ALTER ROLE rag_corpus SET statement_timeout = %s', (:'rag_corpus_statement_timeout')::int) \gexec
+SELECT format('ALTER ROLE rag_corpus SET idle_in_transaction_session_timeout = %s', (:'rag_corpus_idle_tx_timeout')::int) \gexec
 
 -- clinical_api es dueño de la base clínica (aplica prisma migrate, L1D-168).
 SELECT format('ALTER DATABASE %I OWNER TO clinical_api', :'base') \gexec
