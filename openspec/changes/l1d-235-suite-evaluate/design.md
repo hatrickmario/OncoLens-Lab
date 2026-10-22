@@ -152,14 +152,14 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
 
 - **D21 · ARR-03 / L1D-279 (2026-10-22): RN-23 fuera del filtro y alcance real de la suite.**
   (a) `terminos_prohibidos` suma al reporte, sin cambiar las cifras previas: `propuesta_cruda_por_nivel` (campos
-  generados con un término de nivel A y de nivel B), `reproduccion_literal_del_corpus` (campos que traen un término que
+  generados con un término de nivel A y de nivel B), `terminos_compartidos_con_corpus_citado` (campos que traen un término que
   el corpus citado por la propia propuesta también trae), `terminos_nivel_a` / `terminos_nivel_b` (ids de regla, nunca
   texto) y `atribucion` (opciones cuya justificación abre con «La fuente [cita] describe que…» / «The source …
   describes that…»). Fixture aparte `data/eval/fx-rn23` y `eval/configs/rn23-fake.yaml`: el baseline no depende de él.
   `baseline.json` solo gana claves. (b) **Hallazgo para el dueño del prompt (no se cambió):** `rag-query@0.2.0` pide
   tercera persona, presente y «atribúyelo a la fuente citada», pero **no fuerza** la fórmula «La fuente [cita] describe
   que…»; con el generador real, `atribucion.con_formula / opciones` es la medida de ese cumplimiento. Además, un
-  término de **nivel B** reproducido del corpus («The guideline recommends…») llega a `salida_mostrada` porque el filtro
+  término de **nivel B** reproducido del corpus (`b-recommend`) llega a `salida_mostrada` porque el filtro
   de producción solo aplica el nivel A (RN-23, L1D-193): hoy es 1 en `rn23-fake`. (c) **NO-EJECUTABLE aquí (AC-1, AC-2 y
   AC-5 de ARR-03):** `componer_servicio` rechaza `adaptadores.proveedor: local` («se cablea con US-073»), así que la
   suite no puede ejecutar el NLI ni el generador reales; en esta máquina tampoco hay pesos de NLI ni de reranker en

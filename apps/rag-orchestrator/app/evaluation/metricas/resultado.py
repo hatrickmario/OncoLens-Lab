@@ -16,6 +16,8 @@ class LenguajeCrudo:
 
     campos_nivel_a: int = 0
     campos_nivel_b: int = 0
+    campos_con_termino: int = 0
+    """Campos con algún término de nivel A o B (un campo con ambos cuenta una vez)."""
     reproducen_corpus: int = 0
     """Campos generados con un término de la lista que el corpus citado por la propuesta también trae."""
     ids_nivel_a: frozenset[str] = frozenset()

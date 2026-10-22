@@ -67,7 +67,7 @@ _CAMPOS_DE_FAMILIA = {
             "propuesta_cruda": Numero(),
             "salida_mostrada": Numero(),
             "propuesta_cruda_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
-            "reproduccion_literal_del_corpus": Numero(),
+            "terminos_compartidos_con_corpus_citado": Numero(),
             "terminos_nivel_a": Lista(Identificador()),
             "terminos_nivel_b": Lista(Identificador()),
             "atribucion": Objeto({"opciones": Numero(), "con_formula": Numero()}),

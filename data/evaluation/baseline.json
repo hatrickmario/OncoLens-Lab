@@ -133,8 +133,8 @@
           "A": 2,
           "B": 0
         },
-        "reproduccion_literal_del_corpus": 0,
         "salida_mostrada": 0,
+        "terminos_compartidos_con_corpus_citado": 0,
         "terminos_nivel_a": [
           "es-debe-recibir",
           "es-recomendado-para-este-paciente"
@@ -240,8 +240,8 @@
           "A": 0,
           "B": 0
         },
-        "reproduccion_literal_del_corpus": 0,
         "salida_mostrada": 0,
+        "terminos_compartidos_con_corpus_citado": 0,
         "terminos_nivel_a": [],
         "terminos_nivel_b": [],
         "validacion": {

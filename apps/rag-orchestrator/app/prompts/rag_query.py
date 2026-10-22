@@ -7,11 +7,20 @@ nunca el ``pseudoPatientId`` (RN-11): la función no tiene dónde recibirlo.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from app.domain.relevance import ChunkPuntuado
 
 VERSION_DEL_PROMPT = "rag-query@0.2.0"
+
+# Fórmula de atribución «La fuente [cita] describe que…» (ARR-03 AC-3), en español y en inglés; la cita es opcional.
+# El prompt vigente NO la impone (ver reports/eval/L1D-279-ol06-rn23.md): la suite `evaluate` mide si el generador la usa.
+FORMULA_DE_ATRIBUCION = re.compile(
+    r"^\s*(?:la fuente|the source)\s+(?:\[[^\]]*\]\s+)?"
+    r"(?:describe|describen|reporta|reportan|describes|reports)\s+(?:que|that)\b",
+    re.IGNORECASE,
+)
 
 _NOMBRE_DEL_IDIOMA = {"es": "español", "en": "inglés"}
 

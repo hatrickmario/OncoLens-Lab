@@ -6,6 +6,7 @@ import copy
 import json
 from typing import Any, TypedDict
 
+from app.application.ports import EvidenciaGenerada
 from app.domain.citations import validar_citas
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
@@ -129,25 +130,26 @@ def _lenguaje_de(
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
+    crudo = _lenguaje_crudo_de(
+        suite, propuesta, suite.observaciones.textos_entregados.get(texto_pregunta, {})
+    )
     return {
-        "salidas_prohibidas_crudas": 0
-        if propuesta is None
-        else contar_salidas_con_terminos(textos_de_propuesta(propuesta), verificador),
+        "salidas_prohibidas_crudas": crudo.campos_con_termino,
         "salidas_prohibidas_mostradas": contar_salidas_con_terminos(
             textos_de_respuesta(respuesta), verificador
         ),
-        "lenguaje_crudo": _lenguaje_crudo_de(suite, texto_pregunta),
+        "lenguaje_crudo": crudo,
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
     }
 
 
-def _lenguaje_crudo_de(suite: ServicioDeSuite, texto_pregunta: str) -> LenguajeCrudo:
+def _lenguaje_crudo_de(
+    suite: ServicioDeSuite, propuesta: EvidenciaGenerada | None, entregados: dict[str, str]
+) -> LenguajeCrudo:
     """Términos por nivel en la propuesta cruda y cuáles copia del corpus que ella misma cita (ARR-03 AC-3, AC-4)."""
-    propuesta = suite.observaciones.propuestas.get(texto_pregunta)
     if propuesta is None:
         return LenguajeCrudo()
-    entregados = suite.observaciones.textos_entregados.get(texto_pregunta, {})
     citados = {c for opcion in propuesta.opciones for c in opcion.chunk_ids_citados}
     return medir_propuesta_cruda(
         textos_de_propuesta(propuesta),
