@@ -9,6 +9,7 @@ import re
 import unicodedata
 import zlib
 from collections.abc import Collection, Sequence
+from dataclasses import replace
 from datetime import date
 
 from app.application.ports import (
@@ -101,21 +102,37 @@ class NliLexico:
 
 
 class GeneradorGuionado:
-    """``EvidenceGenerator`` con la salida cruda del dataset por pregunta; sin propuesta, no propone nada."""
+    """``EvidenceGenerator`` con la salida cruda del dataset por pregunta; sin propuesta, no propone nada.
+
+    Las salidas con términos prohibidos del dataset (``prescriptivas.yaml``) se suman a la propuesta de su pregunta:
+    ``rationale`` a la justificación de la primera opción y ``limitations[].text`` como limitación propuesta.
+    """
 
     def __init__(self, dataset: DatasetSuite) -> None:
-        texto_a_id = {p.texto: p.id for p in dataset.preguntas}
-        self._por_texto = {
-            texto: dataset.propuestas.get(pid, ()) for texto, pid in texto_a_id.items()
-        }
+        self._por_texto = {p.texto: self._propuesta_de(p.id, dataset) for p in dataset.preguntas}
+
+    @staticmethod
+    def _propuesta_de(pregunta: str, dataset: DatasetSuite) -> EvidenciaGenerada:
+        opciones = [
+            OpcionGenerada(p.opcion, p.justificacion, p.citas)
+            for p in dataset.propuestas.get(pregunta, ())
+        ]
+        salidas = [s for s in dataset.salidas_prescriptivas if s.pregunta == pregunta]
+        for salida in salidas:
+            if salida.campo == "rationale" and opciones:
+                primera = opciones[0]
+                opciones[0] = replace(primera, rationale=f"{primera.rationale} {salida.texto}")
+        return EvidenciaGenerada(
+            opciones=tuple(opciones),
+            limitaciones_propuestas=tuple(
+                s.texto for s in salidas if s.campo == "limitations[].text"
+            ),
+        )
 
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> EvidenciaGenerada:
-        propuestas = self._por_texto.get(solicitud.query, ())
-        return EvidenciaGenerada(
-            opciones=tuple(OpcionGenerada(p.opcion, p.justificacion, p.citas) for p in propuestas)
-        )
+        return self._por_texto.get(solicitud.query, EvidenciaGenerada(opciones=()))
 
 
 class CatalogoEnMemoria:

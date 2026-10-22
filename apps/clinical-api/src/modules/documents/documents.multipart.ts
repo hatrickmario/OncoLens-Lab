@@ -26,6 +26,115 @@ export class MultipartIlegible extends Error {
   }
 }
 
+interface CargaParcial {
+  documentType?: string;
+  archivo?: ArchivoRecibido;
+}
+
+/** Control de la lectura: cada promesa se decide una sola vez, y se deja de alimentar a busboy al cortar. */
+interface ControlDeLectura {
+  /** Rechaza con `MultipartIlegible` y corta la lectura; sin 'error' sin atender, que tumbaría el proceso. */
+  fallar(): void;
+  /** Resuelve con `carga`; con `cortar` también deja de leer el cuerpo. */
+  terminar(carga: CargaRecibida, cortar: boolean): void;
+}
+
+function crearLector(request: Request, limiteDelArchivoEnBytes: number): busboy.Busboy {
+  return busboy({
+    headers: request.headers,
+    defParamCharset: 'utf8',
+    limits: {
+      files: 1,
+      fields: LIMITES_DEL_MULTIPART.campos,
+      parts: LIMITES_DEL_MULTIPART.partes,
+      fieldSize: LIMITES_DEL_MULTIPART.bytesPorCampo,
+      headerPairs: LIMITES_DEL_MULTIPART.paresDeCabecera,
+      fileSize: limiteDelArchivoEnBytes,
+    },
+  });
+}
+
+function crearControlDeLectura(
+  request: Request,
+  lector: busboy.Busboy,
+  resolve: (carga: CargaRecibida) => void,
+  reject: (error: Error) => void,
+): ControlDeLectura {
+  let terminado = false;
+  /**
+   * Deja de alimentar a busboy y descarta el resto del cuerpo. NUNCA destruye a busboy dentro de uno de sus eventos:
+   * su código sigue usando `_fileStream` al volver del evento y destruirlo en ese momento lanza un TypeError que, según
+   * el transporte, sale como excepción no capturada y tumba el proceso. Se destruye en la siguiente vuelta.
+   */
+  const cortarLectura = (): void => {
+    request.unpipe(lector);
+    request.resume();
+    setImmediate(() => lector.destroy());
+  };
+  return {
+    fallar() {
+      if (terminado) return;
+      terminado = true;
+      cortarLectura();
+      reject(new MultipartIlegible());
+    },
+    terminar(carga, cortar) {
+      if (terminado) return;
+      terminado = true;
+      if (cortar) cortarLectura();
+      resolve(carga);
+    },
+  };
+}
+
+function atenderCampos(
+  lector: busboy.Busboy,
+  carga: CargaParcial,
+  control: ControlDeLectura,
+): void {
+  lector.on('field', (nombre, valor, info) => {
+    if (info.valueTruncated || info.nameTruncated) {
+      control.fallar();
+      return;
+    }
+    if (nombre === 'documentType') carga.documentType = valor;
+  });
+  for (const evento of ['partsLimit', 'filesLimit', 'fieldsLimit'] as const) {
+    lector.on(evento, control.fallar);
+  }
+}
+
+function atenderArchivo(
+  lector: busboy.Busboy,
+  carga: CargaParcial,
+  control: ControlDeLectura,
+): void {
+  lector.on('file', (nombre, flujo, info) => {
+    flujo.on('error', control.fallar);
+    if (nombre !== 'file') {
+      flujo.resume();
+      return;
+    }
+    const trozos: Buffer[] = [];
+    flujo.on('data', (trozo: Buffer) => trozos.push(trozo));
+    // Se deja de leer el cuerpo: el resto del archivo no se descarga ni se guarda.
+    flujo.on('limit', () =>
+      control.terminar(
+        { documentType: carga.documentType, archivo: undefined, excedeElLimite: true },
+        true,
+      ),
+    );
+    flujo.on('end', () => {
+      if (info.filename !== undefined) {
+        carga.archivo = {
+          nombreOriginal: normalizarNombreOriginal(info.filename),
+          contenido: Buffer.concat(trozos),
+        };
+      }
+    });
+  });
+}
+
 /**
  * Lee el `multipart/form-data` de la carga en memoria: un archivo (`file`) y el campo `documentType`. Ignora cualquier
  * otro campo o archivo. El archivo se corta en `limiteDelArchivoEnBytes`: nunca se guarda más que eso en memoria; el
@@ -38,89 +147,25 @@ export function leerCargaMultipart(
   return new Promise((resolve, reject) => {
     let lector: busboy.Busboy;
     try {
-      lector = busboy({
-        headers: request.headers,
-        defParamCharset: 'utf8',
-        limits: {
-          files: 1,
-          fields: LIMITES_DEL_MULTIPART.campos,
-          parts: LIMITES_DEL_MULTIPART.partes,
-          fieldSize: LIMITES_DEL_MULTIPART.bytesPorCampo,
-          headerPairs: LIMITES_DEL_MULTIPART.paresDeCabecera,
-          fileSize: limiteDelArchivoEnBytes,
-        },
-      });
+      lector = crearLector(request, limiteDelArchivoEnBytes);
     } catch {
       reject(new MultipartIlegible());
       return;
     }
-    const carga: { documentType?: string; archivo?: ArchivoRecibido } = {};
-    let terminado = false;
-    // Un error del lector, del archivo o de la petición (abortada) rechaza una sola vez: sin 'error' sin atender, que
-    // tumbaría el proceso, y sin promesa colgada.
-    const fallar = (): void => {
-      if (terminado) return;
-      terminado = true;
-      cortarLectura();
-      reject(new MultipartIlegible());
-    };
-    /**
-     * Deja de alimentar a busboy y descarta el resto del cuerpo. NUNCA destruye a busboy dentro de uno de sus eventos:
-     * su código sigue usando `_fileStream` al volver del evento y destruirlo en ese momento lanza un TypeError que, según
-     * el transporte, sale como excepción no capturada y tumba el proceso. Se destruye en la siguiente vuelta.
-     */
-    const cortarLectura = (): void => {
-      request.unpipe(lector);
-      request.resume();
-      setImmediate(() => lector.destroy());
-    };
-    lector.on('field', (nombre, valor, info) => {
-      if (info.valueTruncated || info.nameTruncated) {
-        fallar();
-        return;
-      }
-      if (nombre === 'documentType') carga.documentType = valor;
-    });
-    for (const evento of ['partsLimit', 'filesLimit', 'fieldsLimit'] as const) {
-      lector.on(evento, fallar);
-    }
-    lector.on('file', (nombre, flujo, info) => {
-      flujo.on('error', fallar);
-      if (nombre !== 'file') {
-        flujo.resume();
-        return;
-      }
-      const trozos: Buffer[] = [];
-      flujo.on('data', (trozo: Buffer) => trozos.push(trozo));
-      flujo.on('limit', () => {
-        // Se deja de leer el cuerpo: el resto del archivo no se descarga ni se guarda.
-        if (terminado) return;
-        terminado = true;
-        cortarLectura();
-        resolve({ documentType: carga.documentType, archivo: undefined, excedeElLimite: true });
-      });
-      flujo.on('end', () => {
-        if (info.filename !== undefined) {
-          carga.archivo = {
-            nombreOriginal: normalizarNombreOriginal(info.filename),
-            contenido: Buffer.concat(trozos),
-          };
-        }
-      });
-    });
-    lector.on('error', fallar);
-    lector.on('close', () => {
-      if (terminado) return;
-      terminado = true;
-      resolve({
-        documentType: carga.documentType,
-        archivo: carga.archivo,
-        excedeElLimite: false,
-      });
-    });
-    request.once('error', fallar);
+    const carga: CargaParcial = {};
+    const control = crearControlDeLectura(request, lector, resolve, reject);
+    atenderCampos(lector, carga, control);
+    atenderArchivo(lector, carga, control);
+    lector.on('error', control.fallar);
+    lector.on('close', () =>
+      control.terminar(
+        { documentType: carga.documentType, archivo: carga.archivo, excedeElLimite: false },
+        false,
+      ),
+    );
+    request.once('error', control.fallar);
     request.once('close', () => {
-      if (!request.complete) fallar();
+      if (!request.complete) control.fallar();
     });
     request.pipe(lector);
   });

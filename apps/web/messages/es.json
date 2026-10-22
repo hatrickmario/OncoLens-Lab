@@ -17,6 +17,9 @@
     "sesionExpirada": "Tu sesión expiró. Vuelve a iniciar sesión.",
     "sesionCerrada": "Cerraste sesión."
   },
+  "alcance": {
+    "tipoNoHabilitado": "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA"
+  },
   "evidence": {
     "titulo": "Análisis de evidencia",
     "paciente": "Paciente · ID",

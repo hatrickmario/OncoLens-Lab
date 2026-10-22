@@ -1,5 +1,6 @@
 import type { AnalysisBasis } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { mensajes, rellenar } from '../mensajes';
+import type { EstadoDelAnalisis } from './estado-del-analisis';
 
 type FuentesConsultadas = AnalysisBasis['sourcesConsulted'];
 
@@ -24,7 +25,7 @@ export function nombrarFuentes(seleccionadas: FuentesConsultadas['selected']): s
 /** "Qué se buscó…" del resumen; con `tipo_no_habilitado` dice que no se consultó el corpus (RN-20). */
 export function describirBusqueda(
   consultadas: FuentesConsultadas,
-  estado: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado',
+  estado: EstadoDelAnalisis,
 ): string | null {
   const { busqueda, sinConsulta } = mensajes().evidence.base;
   if (estado === 'con_evidencia') return null;

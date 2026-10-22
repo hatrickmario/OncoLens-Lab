@@ -44,7 +44,7 @@ def test_el_envoltorio_corre_la_suite_de_la_ci_y_escribe_el_json(tmp_path: Path)
 def test_el_envoltorio_devuelve_el_codigo_de_la_suite_cuando_la_familia_no_esta_disponible(
     tmp_path: Path,
 ) -> None:
-    proceso = correr("--suite", "pii", "--report", "json", salida=tmp_path, nombre="r.json")
+    proceso = correr("--suite", "ocr", "--report", "json", salida=tmp_path, nombre="r.json")
 
     assert proceso.returncode == 2
     assert not (tmp_path / "r.json").exists()
@@ -60,3 +60,25 @@ def test_el_baseline_versionado_es_el_de_la_configuracion_de_la_ci_con_su_huella
         "baseline.json no corresponde a la configuración actual: regenerarlo con "
         "`npm run evaluate -- --suite all --report json --salida data/evaluation --nombre-archivo baseline.json`"
     )
+
+
+def test_el_envoltorio_traduce_eval_judge_a_flags_y_la_guarda_rn12_los_alcanza(
+    tmp_path: Path,
+) -> None:
+    proceso = subprocess.run(
+        ["node", str(ENVOLTORIO), "--suite", "generation", "--salida", str(tmp_path / "s")],
+        capture_output=True,
+        text=True,
+        timeout=TIEMPO_MAXIMO_S,
+        env={
+            "PATH": os.environ["PATH"],
+            "EVAL_PYTHON": sys.executable,
+            "EVAL_JUDGE_MODEL": "m@1",
+            "EVAL_JUDGE_BASE_URL": "https://api.nube-de-prueba.invalid/v1",
+        },
+        check=False,
+    )
+
+    assert proceso.returncode == 1
+    assert "no es un proveedor local" in proceso.stderr
+    assert not (tmp_path / "s").exists()
