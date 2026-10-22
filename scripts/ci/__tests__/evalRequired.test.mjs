@@ -126,6 +126,43 @@ describe('eval-required', { timeout: 90_000 }, () => {
     expect(resultado.reporte).toBeNull();
   });
 
+  it('sale con 2 cuando el YAML de reglas de los disparadores es inválido [US-074 AC-1]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'scripts/ci/eval-trigger-paths.yaml': () => 'rutas: [\n' }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.reporte).toBeNull();
+  });
+
+  it('pasa con el aviso del CLI en la salida y en el comentario cuando regression.yaml no tiene umbrales [US-074 AC-4]', () => {
+    const resultado = correr(pr(CAMBIO_DE_PROMPT));
+
+    expect(resultado.codigo).toBe(0);
+    expect(resultado.salida).toContain('Sin baseline de regresión: umbral no aplicado');
+    expect(resultado.comentario).toContain('> Sin baseline de regresión: umbral no aplicado');
+  });
+
+  it('falla nombrando la métrica cuando regression.yaml exige un mínimo que el reporte no cumple [US-074 AC-5]', () => {
+    // El reporte de la CI (FX-T5a-a) tiene recall 1,0: el mínimo que no cumple es precision_citas (0,8 frente a 0,9).
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'apps/rag-orchestrator/eval/configs/regression.yaml': agregarLinea('precision_citas_min: 0.9') }));
+
+    expect(resultado.codigo).toBe(1);
+    expect(resultado.salida).toContain('regresión en precision_citas');
+    expect(resultado.comentario).toContain('regresión en precision_citas');
+  });
+
+  it('pasa cuando el reporte cumple los mínimos de regression.yaml [US-074 AC-5]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'apps/rag-orchestrator/eval/configs/regression.yaml': agregarLinea('recall_at_10_min: 0.80') }));
+
+    expect(resultado.codigo).toBe(0);
+  });
+
+  it('sale con 2 y no imprime la excepción cuando regression.yaml tiene una métrica desconocida [US-074 AC-5]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'apps/rag-orchestrator/eval/configs/regression.yaml': agregarLinea('inventada_min: 0.5') }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.salida).not.toContain('Traceback');
+  });
+
   it('pasa con el aviso cuando no hay baseline contra el que comparar [US-074 AC-4]', () => {
     const fixture = pr(CAMBIO_DE_PROMPT);
     rmSync(path.join(fixture.clon, 'data/evaluation/baseline.json'));

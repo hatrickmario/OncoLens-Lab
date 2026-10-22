@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import YAML from 'yaml';
-import { detectar, tocaDisparador } from '../eval-trigger.mjs';
+import { detectar, lineasCambiadas, tocaDisparador } from '../eval-trigger.mjs';
 
 const REGLAS = YAML.parse(readFileSync(path.resolve(import.meta.dirname, '../eval-trigger-paths.yaml'), 'utf8'));
 
@@ -72,6 +72,14 @@ describe('claves de las reglas frente a la configuración de rag-orchestrator', 
 
     expect(todas.length).toBeGreaterThan(10);
     expect(todas.filter((c) => !tocaDisparador([cambio('infra/docker/.env.example', `+${c}=x`)], REGLAS).dispara)).toEqual([]);
+  });
+});
+
+describe('lineasCambiadas', () => {
+  it('conserva una línea borrada que empieza por -- y descarta las cabeceras del diff [US-074 AC-3]', () => {
+    const diff = ['diff --git a/x b/x', '--- a/x', '+++ b/x', '@@ -1,2 +1 @@', '--- LLM_MODEL=a', '+LLM_MODEL=b', ''].join('\n');
+
+    expect(lineasCambiadas(diff)).toEqual(['-- LLM_MODEL=a', 'LLM_MODEL=b']);
   });
 });
 

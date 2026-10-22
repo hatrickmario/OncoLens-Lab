@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import YAML from 'yaml';
+import { valorDeArgumento } from './lib/cli.mjs';
 import { casaConGlob } from './lib/glob.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
@@ -49,13 +50,14 @@ export function tocaDisparador(cambios, reglas) {
   return { dispara: motivos.length > 0, motivos };
 }
 
-const git = (raiz, ...parametros) => execFileSync('git', ['-C', raiz, ...parametros], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+const git = (raiz, ...parametros) => execFileSync('git', ['-C', raiz, ...parametros], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
-/** Líneas con contenido de un diff -U0 por archivo: `+texto` y `-texto`, sin las cabeceras `+++` y `---`. */
-function lineasCambiadas(diff) {
-  return diff
-    .split('\n')
-    .filter((linea) => /^[+-]/.test(linea) && !/^(\+\+\+|---)/.test(linea))
+/** Líneas con contenido de un diff -U0 por archivo: `+texto` y `-texto`; la cabecera termina en el primer `@@`. */
+export function lineasCambiadas(diff) {
+  const lineas = diff.split('\n');
+  return lineas
+    .slice(lineas.findIndex((linea) => linea.startsWith('@@')) + 1 || lineas.length)
+    .filter((linea) => /^[+-]/.test(linea))
     .map((linea) => linea.slice(1));
 }
 
@@ -86,8 +88,7 @@ function cambiosDeLaBase(raiz, base) {
 }
 
 function main(argumentos) {
-  const valorDe = (nombre) => (argumentos.includes(nombre) ? argumentos[argumentos.indexOf(nombre) + 1] : undefined);
-  const { dispara, motivos } = detectar({ raiz: path.resolve(valorDe('--root') ?? RAIZ), base: valorDe('--base') });
+  const { dispara, motivos } = detectar({ raiz: path.resolve(valorDeArgumento(argumentos, '--root') ?? RAIZ), base: valorDeArgumento(argumentos, '--base') });
   console.log(`eval-trigger — ${dispara ? 'dispara la suite' : 'ningún disparador en el diff'}`);
   motivos.forEach(({ ruta, motivo }) => console.log(`  ${motivo}: ${ruta}`));
   return 0;
