@@ -645,6 +645,33 @@ a RN-22). Supertest con PostgreSQL real y Testing Library con `visual-check`.
 **Small** ✓ CRUD acotado y una sección de solo lectura.
 **Testable** ✓ cinco AC.
 
+## US-234 — La búsqueda de pacientes limita la tasa por usuario, queda auditada sin datos personales y su índice del nombre es obligatorio
+
+> Linear: pendiente (límite de issues del workspace; registrada por el usuario el 2026-10-22, `[S2 resp. 18]`)
+
+`FEAT-T4a` · Sprint 6 *(requisito de G-Piloto, deuda del S2: L1D-202 / US-048)* · Estimación **3** *(a confirmar en el planning del S6)* · — (técnica y seguridad) · FR-02, FR-18, RN-10, RN-30, SEG-03 · ↪ US-048 (búsqueda), US-102 (auditoría de lectura), US-046 (índice ciego) · 🔗 Origen: el `429` de `POST /platform/patients/search` quedó declarado en el contrato 1.9.0 y sin implementar en el S2
+
+## Story
+Como responsable de seguridad, quiero que `POST /platform/patients/search` aplique un límite de tasa por usuario y deje cada búsqueda auditada sin datos personales, y que el índice ciego del nombre sea obligatorio, para que nadie pueda enumerar identidades por fuerza bruta y el sistema pueda demostrar quién buscó, antes de datos reales (G-Piloto).
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · límite de tasa)** · Dado un usuario autenticado y `SEARCH_RATE_LIMIT_PER_MINUTE` en configuración, cuando supera el límite en una ventana, entonces recibe `429` con `Retry-After` y el cuerpo `ErrorLimiteDeTasa` del contrato, sin consultar la base; y al pasar la ventana vuelve a funcionar. `[RN-30]` `[RN-22]`
+- **AC-2 (borde · auditoría sin PII)** · Dada una búsqueda por documento o por nombre, cuando se completa (con o sin resultados), entonces `audit.audit_log` registra `patient.search` con el usuario, el `traceId`, el tipo de búsqueda (`documento|nombre`) y el número de resultados, y **nunca** el documento, el nombre, el índice ciego ni sus valores normalizados. `[RN-10]` `[FR-18]` `[SEG-03]`
+- **AC-3 (borde · el 429 y la auditoría no filtran)** · Dado un `429`, cuando se inspeccionan los logs, entonces solo aparecen el usuario, el `traceId` y el tipo de búsqueda. `[RN-10]` `[NFR-11]`
+- **AC-4 (invariante · índice del nombre obligatorio)** · Dada la migración, cuando se aplica con todas las filas de `identity.patient_identity` con `full_name_hmac`, entonces la columna pasa a `NOT NULL`; con alguna fila sin valor, la migración falla nombrando el conteo, sin registrar identidades. `[RN-10]` `[ADR-6]`
+
+## Contexto técnico
+Cola de calendario: debe estar antes de habilitar datos reales (gate G-Piloto, US-143). Reutiliza el limitador de RN-30 de los otros endpoints y el módulo de auditoría de US-102. Deuda anotada relacionada en `backlog/sprints/S2-deuda.md`.
+
+## Non-goals
+Auditoría de lectura de la ficha y documentos (US-102). Bloqueo de cuenta por intentos de login (US-044, S2).
+
+## INVEST
+**Small** ✓ un limitador, un evento de auditoría y una migración.
+**Testable** ✓ Supertest con reloj inyectado, lectura de `audit_log` y de logs, y la migración sobre filas de prueba.
+
+---
+
 ---
 
 ## Conflictos de fuentes
