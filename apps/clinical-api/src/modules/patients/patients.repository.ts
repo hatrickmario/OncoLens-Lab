@@ -1,9 +1,8 @@
 import type { Consultador } from '../auth/auth.repository.js';
+import { ESTADOS_PENDIENTES_DE_REVISION } from './estados-de-revision.js';
 
 export type EstadoDelPaciente = 'activo' | 'egresado';
 export type OrigenDelPaciente = 'sintetico' | 'real_anonimizado' | 'real_identificado';
-/** Estado de revisión de un dato clínico extraído (`clinical.review_status`). */
-export type EstadoDeRevision = 'requiere_revision';
 
 export interface FiltroDePacientes {
   readonly lifecycleStatus?: EstadoDelPaciente | undefined;
@@ -62,37 +61,40 @@ export interface FuentePorRevisar {
 export const FUENTES_POR_REVISAR: readonly FuentePorRevisar[] = [
   {
     tabla: 'diagnosis',
-    pacienteSql: 'SELECT patient_id FROM clinical.diagnosis WHERE review_status = $2',
+    pacienteSql:
+      'SELECT patient_id FROM clinical.diagnosis WHERE review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'diagnosis_grading',
     pacienteSql:
-      'SELECT d.patient_id FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE g.review_status = $2',
+      'SELECT d.patient_id FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE g.review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'clinical_note',
-    pacienteSql: 'SELECT patient_id FROM clinical.clinical_note WHERE review_status = $2',
+    pacienteSql:
+      'SELECT patient_id FROM clinical.clinical_note WHERE review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'biomarker',
     pacienteSql:
-      'SELECT e.patient_id FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id WHERE b.review_status = $2',
+      'SELECT e.patient_id FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id WHERE b.review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'prior_treatment',
-    pacienteSql: 'SELECT patient_id FROM clinical.prior_treatment WHERE review_status = $2',
+    pacienteSql:
+      'SELECT patient_id FROM clinical.prior_treatment WHERE review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'clinical_event',
-    pacienteSql: 'SELECT patient_id FROM clinical.clinical_event WHERE review_status = $2',
+    pacienteSql:
+      'SELECT patient_id FROM clinical.clinical_event WHERE review_status = ANY($2::clinical.review_status[])',
   },
   {
     tabla: 'clinical_attribute',
-    pacienteSql: 'SELECT patient_id FROM clinical.clinical_attribute WHERE review_status = $2',
+    pacienteSql:
+      'SELECT patient_id FROM clinical.clinical_attribute WHERE review_status = ANY($2::clinical.review_status[])',
   },
 ];
-
-const REQUIERE_REVISION: EstadoDeRevision = 'requiere_revision';
 
 const SUBCONSULTA_TIPO_DE_CANCER = `(SELECT d.cancer_type FROM clinical.diagnosis d
                   WHERE d.patient_id = p.id AND d.is_active
@@ -154,7 +156,10 @@ export function createPatientsRepository(db: Consultador): PatientsRepository {
     },
     async contarPendientesDeRevision(patientIds) {
       if (patientIds.length === 0) return new Map();
-      const { rows } = await db.query(CONSULTA_DE_PENDIENTES, [patientIds, REQUIERE_REVISION]);
+      const { rows } = await db.query(CONSULTA_DE_PENDIENTES, [
+        patientIds,
+        ESTADOS_PENDIENTES_DE_REVISION,
+      ]);
       return new Map(rows.map((fila) => [String(fila['patient_id']), Number(fila['pendientes'])]));
     },
   };

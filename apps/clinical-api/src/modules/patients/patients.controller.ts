@@ -12,7 +12,8 @@ import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
+import { PacienteNoEncontradoError } from './patients.errores.js';
+import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
 import type { PatientsService, VistaDeListado } from './patients.service.js';
 
 export interface DependenciasDelController {
@@ -23,6 +24,7 @@ export interface DependenciasDelController {
 
 const EVENTO_LISTADO = 'patients.listado';
 const EVENTO_BUSQUEDA = 'patients.busqueda';
+const EVENTO_FICHA = 'patients.ficha';
 
 /** Tipo de criterio que puede viajar al log: nunca el criterio mismo (RN-10). */
 type TipoDeCriterio = 'documento' | 'nombre';
@@ -100,13 +102,36 @@ function crearCuerpoIlegible(respuestas: Respuestas): ErrorRequestHandler {
   };
 }
 
-function crearFicha(service: PatientsService): RequestHandler {
+/** `404 NO_ENCONTRADO` sin eco: lo mismo para un UUID inexistente que para un identificador mal formado (D7). */
+function rechazarPacienteNoEncontrado(response: Response, registrar: Registrar): void {
+  registrar({ event: EVENTO_FICHA, resultado: 'no_encontrado', traceId: traceIdDe(response) });
+  enviarError(response, 404, 'NO_ENCONTRADO', traceIdDe(response));
+}
+
+function crearFicha(service: PatientsService, registrar: Registrar): RequestHandler {
   return async (request, response) => {
-    const ficha = await service.obtenerFicha({
-      patientId: String(request.params['patientId']),
-      vista: vistaDe(request),
-    });
-    response.status(200).json(ficha);
+    const patientId = idDePacienteSchema.safeParse(request.params['patientId']);
+    if (!patientId.success) {
+      rechazarPacienteNoEncontrado(response, registrar);
+      return;
+    }
+    try {
+      const ficha = await service.obtenerFicha({
+        patientId: patientId.data,
+        vista: vistaDe(request),
+      });
+      registrar({
+        event: EVENTO_FICHA,
+        resultado: 'ok',
+        traceId: traceIdDe(response),
+        patientId: patientId.data,
+      });
+      response.setHeader('Cache-Control', 'no-store');
+      response.status(200).json(ficha);
+    } catch (error) {
+      if (!(error instanceof PacienteNoEncontradoError)) throw error;
+      rechazarPacienteNoEncontrado(response, registrar);
+    }
   };
 }
 
@@ -128,7 +153,7 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     '/patients/:patientId',
     crearTraceIdMiddleware(traceIds),
     authorize('clinical:read', 'patients:lookup'), // x-permission de getPatient: alguno de los dos
-    crearFicha(service),
+    crearFicha(service, registrar),
   );
   router.post(
     '/patients/search',

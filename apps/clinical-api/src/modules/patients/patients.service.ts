@@ -12,6 +12,9 @@ import type {
   CriterioDeBusqueda,
   FiltrosDelListado,
 } from './patients.schema.js';
+import { obtenerFicha } from './ficha.service.js';
+import type { FichaRepository } from './ficha.repository.js';
+import type { VistaDeListado } from './vistas.js';
 import { enmascararDocumento, enmascararNombre } from './patients.reglas.js';
 import type {
   FilaDePaciente,
@@ -19,8 +22,7 @@ import type {
   PatientsRepository,
 } from './patients.repository.js';
 
-/** Vista de cada elemento según el permiso de la sesión (`x-view-by-permission`). */
-export type VistaDeListado = 'doctor_listado' | 'admin';
+export type { VistaDeListado } from './vistas.js';
 
 export interface PatientsService {
   listar(entrada: { filtros: FiltrosDelListado; vista: VistaDeListado }): Promise<PatientPage>;
@@ -34,6 +36,7 @@ export interface PatientsService {
 
 export interface DependenciasDelService {
   repo: PatientsRepository;
+  ficha: FichaRepository;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
   /** `PATIENTS_PAGE_SIZE` (RN-22). */
@@ -192,7 +195,7 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
         page: filtros.page,
         vista,
       }),
-    obtenerFicha: () => Promise.reject(new Error('no implementado')),
+    obtenerFicha: (entrada) => obtenerFicha(dependencias, entrada),
     async buscar({ busqueda, vista }) {
       const ids = await pacientesQueCoinciden(dependencias.identidad, busqueda.criterio);
       return paginar(dependencias, { filtro: { ids }, page: busqueda.page, vista });
