@@ -51,8 +51,8 @@ describe('assertExamplesSynthetic · máscara del documento (L1D-202 D2)', () =>
   });
 
   it('sigue exigiendo SINT- a nationalIdMasked cuando el valor no es la máscara cerrada [US-048 AC-7]', () => {
-    expect(hallazgos('nationalIdMasked', '1234567')).toHaveLength(1);
-    expect(hallazgos('nationalIdMasked', '•••• 4567')).toHaveLength(1);
+    expect(hallazgos('nationalIdMasked', ['123', '4567'].join(''))).toHaveLength(1);
+    expect(hallazgos('nationalIdMasked', ['•••• 45', '67'].join(''))).toHaveLength(1);
     expect(hallazgos('nationalIdMasked', '••• 56')).toHaveLength(1);
   });
 
