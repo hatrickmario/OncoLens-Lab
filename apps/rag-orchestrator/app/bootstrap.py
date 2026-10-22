@@ -42,12 +42,14 @@ from app.application.rag_orchestrator_service import (
 )
 from app.config.errores_de_configuracion import (
     MOTIVO_CATALOGO_NO_DISPONIBLE,
+    MOTIVO_TIPO_NO_EN_CATALOGO,
     MOTIVO_VARIABLE_AUSENTE,
     describir_errores,
 )
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
+from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
@@ -115,6 +117,8 @@ def cargar_configuracion_o_salir() -> tuple[Settings, CatalogoClinico]:
         _salir_registrando(describir_errores(error))
     catalogo, eventos_del_catalogo = cargar_catalogo_clinico_o_eventos(settings)
     eventos = [*_eventos_de_recuperacion_ausente(settings), *eventos_del_catalogo]
+    if catalogo is not None:
+        eventos.extend(_eventos_de_tipos_habilitados(settings, catalogo))
     if eventos or catalogo is None:
         _salir_registrando(eventos)
     return settings, catalogo
@@ -138,6 +142,22 @@ def _eventos_de_recuperacion_ausente(settings: Settings) -> list[dict[str, str]]
         }
         for clave in claves_de_recuperacion_ausentes(settings)
     ]
+
+
+def _eventos_de_tipos_habilitados(
+    settings: Settings, catalogo: CatalogoClinico
+) -> list[dict[str, str]]:
+    """``ENABLED_CANCER_TYPES`` (RN-20, US-043) con un tipo que el manifiesto no declara es inválida; que falte con
+    ``LLM_PROVIDER=local`` lo informa ``_eventos_de_recuperacion_ausente``. El evento nombra la variable, nunca el tipo."""
+    if tipos_ausentes_del_catalogo(settings.enabled_cancer_types, catalogo.tipos_de_cancer()):
+        return [
+            {
+                "variable": "ENABLED_CANCER_TYPES",
+                "regla": "tipos declarados en el manifiesto del catálogo",
+                "motivo": MOTIVO_TIPO_NO_EN_CATALOGO,
+            }
+        ]
+    return []
 
 
 def cargar_catalogo_clinico_o_eventos(
@@ -387,6 +407,7 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_provider=_proveedor_de_meta(settings),
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
+        tipos_habilitados=settings.enabled_cancer_types,
         # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )

@@ -92,6 +92,7 @@ def test_arranque_registra_un_evento_por_variable_cuando_faltan_valores_de_recup
         "RERANK_TOP_N": "10",
         "NLI_ENTAILMENT_THRESHOLD": "0.7",
         "LLM_PROVIDER": "local",
+        "ENABLED_CANCER_TYPES": "mama,prostata",
         "CLINICAL_CATALOG_PATH": str(tmp_path),  # sin manifest.json
     }.items():
         monkeypatch.setenv(nombre, valor)

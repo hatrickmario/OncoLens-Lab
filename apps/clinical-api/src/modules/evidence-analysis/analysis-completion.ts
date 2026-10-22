@@ -1,11 +1,17 @@
 import type { RagQueryInternalResponse } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { zRagQueryInternalResponseRefinado } from '../../../../../packages/api-contracts/src/zod/rag-orchestrator/refinamientos.gen.js';
+import type { AlcanceDelCorpus } from '../../config/index.js';
 import type { Clock } from '../../infrastructure/clock.js';
 import type { GeneradorDeIds } from '../../infrastructure/ids.js';
 import type { AnalisisRepository } from './evidence-analysis.repository.js';
-import { armarRegistro, type RegistroDeAnalisis } from './analysis-record.js';
+import { construirBaseTipoNoHabilitado } from './analysis-basis.js';
+import {
+  armarRegistro,
+  armarRegistroTipoNoHabilitado,
+  type RegistroDeAnalisis,
+} from './analysis-record.js';
 import { aEvidenceAnalysis } from './evidence-analysis.mapper.js';
-import type { AnalysisBasisBuilder, AnalysisCompletion } from './ports.js';
+import type { AnalysisBasisBuilder, AnalysisCompletion, ResultadoDelAnalisis } from './ports.js';
 import { RESPUESTA_INTERNA_INVALIDA, mapearFalloRag } from './rag-failure.js';
 
 /** La respuesta de rag-orchestrator no cumple el contrato (o es incoherente): no se persiste ni se muestra. */
@@ -57,6 +63,8 @@ export interface DependenciasDelCierre {
   idsDeAnalisis: GeneradorDeIds;
   /** `AI_DISCLAIMER_TEXT` (literal de US-069). */
   disclaimer: string;
+  /** `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE`: lo que la Base de un `tipo_no_habilitado` dice del corpus. */
+  alcanceDelCorpus: AlcanceDelCorpus;
 }
 
 interface RespuestaInterpretada {
@@ -76,18 +84,22 @@ function interpretarRespuestaInterna(cuerpo: unknown): RespuestaInterpretada | n
 }
 
 /**
- * RN-06: el registro se persiste ANTES de responder. Resuelve solo cuando la escritura terminó y devuelve el registro
- * leído de la fila; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin sus detalles.
+ * RN-06: el registro se persiste ANTES de responder y la respuesta sale de la fila leída, nunca de lo armado en memoria.
+ * Resuelve solo cuando la escritura terminó; cualquier fallo de la base se convierte en `FalloDePersistenciaError`, sin
+ * sus detalles.
  */
-async function persistirAntesDeResponder(
+async function persistirAnalisisAntesDeResponder(
   analisis: AnalisisRepository,
   registro: RegistroDeAnalisis,
-): Promise<RegistroDeAnalisis> {
+  disclaimer: string,
+): Promise<ResultadoDelAnalisis> {
+  let persistido: RegistroDeAnalisis;
   try {
-    return await analisis.persistirAnalisis(registro);
+    persistido = await analisis.persistirAnalisis(registro);
   } catch {
     throw new FalloDePersistenciaError();
   }
+  return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
 }
 
 /**
@@ -95,7 +107,7 @@ async function persistirAntesDeResponder(
  * responde desde lo persistido.
  */
 export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): AnalysisCompletion {
-  const { analisis, base, reloj, idsDeAnalisis, disclaimer } = dependencias;
+  const { analisis, base, reloj, idsDeAnalisis, disclaimer, alcanceDelCorpus } = dependencias;
   return {
     async completar(entrada) {
       if (!entrada.respuesta.ok)
@@ -119,8 +131,34 @@ export function crearAnalysisCompletion(dependencias: DependenciasDelCierre): An
         base: base.construir(entrada.request, respuesta, entrada.continueWithWarning),
         topRelevanceScore,
       });
-      const persistido = await persistirAntesDeResponder(analisis, registro);
-      return { tipo: 'completado', cuerpo: aEvidenceAnalysis(persistido, disclaimer) };
+      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
+    },
+    async completarTipoNoHabilitado(entrada) {
+      if (entrada.episodeId === null) throw new FalloDePersistenciaError();
+      const registro = armarRegistroTipoNoHabilitado({
+        id: idsDeAnalisis(),
+        creadoEn: reloj.now(),
+        traceId: entrada.traceId,
+        patientId: entrada.patientId,
+        episodeId: entrada.episodeId,
+        userId: entrada.userId,
+        questionTemplateId: entrada.questionTemplateId,
+        continueWithWarning: entrada.continueWithWarning,
+        query: entrada.query,
+        sourcesSelected: entrada.sourcesSelected,
+        filtersApplied: entrada.filtersApplied,
+        dataClassification: entrada.dataClassification,
+        catalogVersion: entrada.catalogVersion,
+        contextoVacio: entrada.contextoVacio,
+        base: construirBaseTipoNoHabilitado({
+          sourcesSelected: entrada.sourcesSelected,
+          filters: entrada.filtersApplied,
+          continuedWithWarning: entrada.continueWithWarning,
+          sourcesNotIncluded: alcanceDelCorpus.corpusExcludedSources,
+          corpusCutoffDate: alcanceDelCorpus.corpusCutoffDate,
+        }),
+      });
+      return persistirAnalisisAntesDeResponder(analisis, registro, disclaimer);
     },
   };
 }

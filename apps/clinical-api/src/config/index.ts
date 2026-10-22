@@ -4,6 +4,7 @@ import {
   exigirAppEnv,
   leerBooleano,
   readAuthConfig,
+  readAlcanceDelAnalisisConfig,
   readDatabaseConfig,
   readDeidentificationConfig,
   readEvidenceAnalysisConfig,
@@ -11,6 +12,7 @@ import {
   readPort,
   readPositiveInteger,
   readServiceJwtConfig,
+  type AlcanceDelAnalisisConfig,
   type AuthConfig,
   type DatabaseConfig,
   type DeidentificationConfig,
@@ -161,6 +163,7 @@ export interface ConfiguracionDeServicios {
   database: DatabaseConfig;
   jwt: ServiceJwtConfig;
   analisis: EvidenceAnalysisConfig;
+  alcance: AlcanceDelAnalisisConfig;
   deidentificacion: DeidentificationConfig;
   documentos: DocumentosConfig;
 }
@@ -174,6 +177,7 @@ export function cargarConfiguracionDeServicios(
     database: readDatabaseConfig(env, readFile),
     jwt: readServiceJwtConfig(env),
     analisis: readEvidenceAnalysisConfig(env),
+    alcance: readAlcanceDelAnalisisConfig(env),
     deidentificacion: readDeidentificationConfig(env),
     documentos: readDocumentosConfig(env, readFile),
   };

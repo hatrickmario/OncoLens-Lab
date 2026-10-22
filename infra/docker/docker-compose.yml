@@ -177,6 +177,11 @@ services:
       RAG_TIMEOUT_MS: ${RAG_TIMEOUT_MS:-}
       AI_DISCLAIMER_TEXT: ${AI_DISCLAIMER_TEXT:-}
       ANALYSIS_BASIS_S1_ASSUMPTION_TEXT: ${ANALYSIS_BASIS_S1_ASSUMPTION_TEXT:-}
+      # Alcance del análisis (L1D-173, RN-20/RN-22): tipos habilitados (validados contra manifest.json al arrancar) y lo que
+      # la Base de un tipo_no_habilitado dice del corpus. Valores de demo; vacíos o inválidos, clinical-api no arranca.
+      ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}
+      CORPUS_EXCLUDED_SOURCES: ${CORPUS_EXCLUDED_SOURCES:-NCCN,ESMO}
+      CORPUS_CUTOFF_DATE: ${CORPUS_CUTOFF_DATE:-2026-09-30}
       # Desidentificación (L1D-203, RN-11): formatos de PII de L1D-166 (fuente única, montados de solo lectura) y reglas
       # de reemplazo de la imagen; vacío = por defecto. Archivos ausentes o inválidos: clinical-api no arranca.
       PII_FORMATS_PATH: ${PII_FORMATS_PATH:-/config/pii-formats.json}
@@ -322,6 +327,8 @@ services:
       REAL_IDENTIFIED_ENABLED: ${REAL_IDENTIFIED_ENABLED:-false}
       FAKE_RESPONSES_PATH: ${FAKE_RESPONSES_PATH:-/contracts/examples}
       CLINICAL_CATALOG_PATH: ${CLINICAL_CATALOG_PATH:-/catalogs}
+      # Defensa en profundidad (L1D-173, RN-20): mismo valor de demo que clinical-api; se valida contra manifest.json.
+      ENABLED_CANCER_TYPES: ${ENABLED_CANCER_TYPES:-mama,prostata}
       # Recuperación de /rag/query (RN-22): valores provisionales hasta US-072 (calibración con la suite evaluate).
       # Sin ellos, con LLM_PROVIDER=local el arranque se niega (sin valor por defecto en el código).
       RELEVANCE_THRESHOLD: ${RELEVANCE_THRESHOLD:-0.30}
