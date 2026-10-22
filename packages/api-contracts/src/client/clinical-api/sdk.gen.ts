@@ -70,7 +70,7 @@ export const listPatients = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Busca pacientes por identidad exacta o por nombre
  *
- * La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego); la búsqueda por nombre queda con US-048 como dueña. La forma de cada elemento depende del permiso (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+ * La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego) y no usa el país emisor (issuingCountry no participa); la búsqueda por nombre es exacta sobre el nombre completo normalizado (sin tildes, en minúsculas, espacios colapsados) por índice ciego: un nombre parcial o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento. La forma de cada elemento depende del permiso (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
  */
 export const searchPatients = <ThrowOnError extends boolean = false>(options: Options<SearchPatientsData, ThrowOnError>): RequestResult<SearchPatientsResponses, SearchPatientsErrors, ThrowOnError> => (options.client ?? client).post<SearchPatientsResponses, SearchPatientsErrors, ThrowOnError>({
     security: [{
