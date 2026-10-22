@@ -1,11 +1,13 @@
 import type { Express, Router } from 'express';
 import { createApp } from './app.js';
-import type { AuthConfig } from './config/index.js';
+import type { AuthConfig, SesionConfig } from './config/index.js';
 import type { Clock } from './infrastructure/clock.js';
 import type { GeneradorDeIds } from './infrastructure/ids.js';
 import type { Registrar } from './infrastructure/logger.js';
 import type { InformacionDeSalud } from './routes/health.js';
+import { createRegistroDeIntentosPorIp } from './infrastructure/intentos-por-ip.memoria.js';
 import { createAuthRepository, type Consultador } from './modules/auth/auth.repository.js';
+import { logoutController } from './modules/auth/auth.controller.js';
 import { createAuthService, type GeneradorDeToken } from './modules/auth/auth.service.js';
 import { createPasswordHasher } from './modules/auth/password-hasher.js';
 
@@ -27,6 +29,8 @@ export function componerRutasProtegidas(routers: RoutersProtegidos): readonly Ro
 export interface DependenciasDeComposicion {
   db: Consultador;
   auth: AuthConfig;
+  /** Inactividad, bloqueo del login y saltos de proxy de confianza (RN-22, US-044). */
+  sesion: SesionConfig;
   reloj: Clock;
   tokens: GeneradorDeToken;
   ids: GeneradorDeIds;
@@ -50,8 +54,15 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
     ids: dependencias.ids,
     reloj: dependencias.reloj,
     config: dependencias.auth,
+    sesion: dependencias.sesion,
+    registroDeIntentosPorIp: createRegistroDeIntentosPorIp({
+      reloj: dependencias.reloj,
+      maxIntentos: dependencias.sesion.loginMaxFailedAttempts,
+      ventanaMinutos: dependencias.sesion.loginLockoutMinutes,
+    }),
   });
   return createApp({
+    trustProxyHops: dependencias.sesion.trustProxyHops,
     ...(dependencias.salud !== undefined && { salud: dependencias.salud }),
     plataforma: {
       auth: {
@@ -59,9 +70,15 @@ export function componerAplicacion(dependencias: DependenciasDeComposicion): Exp
         nuevoTraceId: dependencias.nuevoTraceId,
         registrar: dependencias.registrar,
       },
-      ...(dependencias.rutasProtegidas !== undefined && {
-        rutasProtegidas: dependencias.rutasProtegidas,
-      }),
+      // El logout va detrás del guard y antes de los routers de dominio; `app.ts` no conoce ninguna ruta concreta.
+      rutasProtegidas: [
+        logoutController({
+          service,
+          nuevoTraceId: dependencias.nuevoTraceId,
+          registrar: dependencias.registrar,
+        }),
+        ...(dependencias.rutasProtegidas ?? []),
+      ],
     },
   });
 }

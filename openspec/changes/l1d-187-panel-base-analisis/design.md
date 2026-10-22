@@ -78,6 +78,16 @@ queda bajo el `'use client'` existente de `AnalysisResult`; no se añade otro l�
 - La línea de resumen a 375 px puede partir en varias líneas → se acepta con separadores "·" y `flex-wrap`; lo
   comprueba `visual-check`.
 
+## Decisiones pendientes del humano y deuda (ronda del Gate 2)
+
+- **Pendiente del humano:** (a) el auditor de lenguaje pregunta si el detalle debe listar los faltantes
+  (`missingCriticalData`); hoy solo se cuenta; (b) `tipo_no_habilitado` no llega al panel real: `clasificarResultado()`
+  lo clasifica como `no_soportado` y `faseTrasSolicitud()` lo trata como error (fijado por `evidence-reglas.test.ts`);
+  el organismo ya lo soporta y se prueba renderizando `AnalysisResult` con `tipo-no-habilitado.json`.
+- **Pendiente de otro propietario:** un ejemplo contractual `con-evidencia-base-s2.json` (Base real de US-066 AC-1) en
+  `contracts/examples/` para sustituir el overlay del test; está fuera de los paths de este change.
+- **Deuda (Design P3-1, 2, 6, 7):** anotada, sin cambio de código en esta ronda.
+
 ## Open Questions
 
 - Ninguna. Resueltas en el Gate 1 del S2: literal del resumen y aclaración en el detalle (decisión 2), rótulo
