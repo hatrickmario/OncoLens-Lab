@@ -49,7 +49,14 @@ describe('búsqueda por documento', () => {
       ['CO', idDeFx],
     );
 
-    const respuesta = await buscar({ idType: FX_T4A_A.idType, nationalId: '1.234.567' });
+    const respuesta = await buscar({
+      idType: FX_T4A_A.idType,
+      nationalId: [
+        FX_T4A_A.numeroDeDocumento.slice(0, 1),
+        FX_T4A_A.numeroDeDocumento.slice(1, 4),
+        FX_T4A_A.numeroDeDocumento.slice(4),
+      ].join('.'),
+    });
 
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.items.map((elemento: { id: string }) => elemento.id)).toEqual([idDeFx]);

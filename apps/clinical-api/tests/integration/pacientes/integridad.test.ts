@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { crearPacienteFxT4aA } from '../../support/gateway.js';
-import { FX_T4A_A, servicioDeIdentidad } from '../../support/identidad.js';
+import {
+  FX_T4A_A,
+  insertarPacienteSintetico,
+  servicioDeIdentidad,
+} from '../../support/identidad.js';
 import {
   iniciarEscenarioDePacientes,
   montarPacientes,
@@ -50,6 +54,18 @@ describe('identidad alterada en la página', () => {
       .post('/platform/patients/search')
       .set('Cookie', escenario.cookieDoctor)
       .send({ idType: FX_T4A_A.idType, nationalId: FX_T4A_A.numeroDeDocumento });
+
+    expect(respuesta.status).toBe(500);
+    expect(respuesta.body.error).toBe('ERROR_INTERNO');
+  });
+
+  it('responde 500 ErrorInterno cuando un paciente de la página no tiene identidad guardada [US-046 AC-3]', async () => {
+    await insertarPacienteSintetico(escenario.mundo.cliente, escenario.mundo.ids);
+    const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
+
+    const respuesta = await clienteVerificado(app)
+      .get('/platform/patients?dataOrigin=sintetico')
+      .set('Cookie', escenario.cookieAdmin);
 
     expect(respuesta.status).toBe(500);
     expect(respuesta.body.error).toBe('ERROR_INTERNO');

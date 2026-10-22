@@ -79,13 +79,28 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
     };
   }
 
-  /** Descifra solo la identidad de las filas de la página; un paciente sin identidad es una violación de integridad. */
+  /** Descifra solo la identidad de las filas de la página y la entrega por paciente. */
   async function identidadesDe(filas: FilaDePaciente[]): Promise<Map<string, IdentidadDescifrada>> {
     if (filas.length === 0) return new Map();
     const descifradas = await identidad.descifrarVarios(filas.map((fila) => fila.id));
-    const porPaciente = new Map(descifradas.map((fila) => [fila.patientId, fila]));
-    if (filas.some((fila) => !porPaciente.has(fila.id))) throw new IdentityIntegrityError();
-    return porPaciente;
+    return new Map(descifradas.map((fila) => [fila.patientId, fila]));
+  }
+
+  /** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
+  function identidadObligatoria(
+    identidades: Map<string, IdentidadDescifrada>,
+    patientId: string,
+  ): IdentidadDescifrada {
+    const encontrada = identidades.get(patientId);
+    if (encontrada === undefined) throw new IdentityIntegrityError();
+    return encontrada;
+  }
+
+  /** Los contadores clínicos solo se calculan para quien los ve (el admin no lee datos clínicos). */
+  async function pendientesDe(filas: FilaDePaciente[], vista: VistaDeListado) {
+    return vista === 'doctor_listado'
+      ? repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
+      : new Map<string, number>();
   }
 
   /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
@@ -100,12 +115,9 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
       offset: (page - 1) * pageSize,
     });
     const identidades = await identidadesDe(filas);
-    const pendientes =
-      vista === 'doctor_listado'
-        ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
-        : new Map<string, number>();
+    const pendientes = await pendientesDe(filas, vista);
     const items = filas.map((fila) => {
-      const identificacion = identidades.get(fila.id) as IdentidadDescifrada;
+      const identificacion = identidadObligatoria(identidades, fila.id);
       return vista === 'doctor_listado'
         ? elementoDoctor(fila, identificacion, pendientes.get(fila.id) ?? 0)
         : elementoAdmin(fila, identificacion);

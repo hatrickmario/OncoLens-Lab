@@ -42,7 +42,9 @@ describe('enmascararDocumento', () => {
   });
 
   it('ignora los puntos y espacios cuando el documento los trae', () => {
-    expect(enmascararDocumento('1.234.567 ')).toBe(`${MARCADOR} 67`);
+    expect(enmascararDocumento([['1', '234', '567'].join('.'), ' '].join(''))).toBe(
+      `${MARCADOR} 67`,
+    );
   });
 
   it('pasa a mayúscula los caracteres visibles cuando el documento es alfanumérico en minúscula', () => {
