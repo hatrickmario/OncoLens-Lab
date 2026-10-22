@@ -21,6 +21,7 @@
     "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs",
     "eval:pii": "npm run eval:pii -w @oncolens/clinical-api --",
     "evaluate": "node scripts/eval/evaluate.mjs",
+    "eval:required": "node scripts/ci/eval-required.mjs --base origin/main",
     "lint:lenguaje": "tsx packages/clinical-language/bin/lint-lenguaje.ts",
     "test:lenguaje": "vitest run ci/tests/lenguaje",
     "test:quality": "vitest run --config vitest.quality.config.ts",

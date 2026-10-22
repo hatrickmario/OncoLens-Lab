@@ -29,8 +29,14 @@ describe('clasificarResultado', () => {
     expect(clasificarResultado(sinEvidencia as never)).toBe('sin_evidencia');
   });
 
-  it('devuelve no_soportado cuando el estado es otro, como tipo_no_habilitado', () => {
+  it('devuelve tipo_no_habilitado cuando el estado es tipo_no_habilitado', () => {
     expect(clasificarResultado({ ...conEvidencia, status: 'tipo_no_habilitado' } as never)).toBe(
+      'tipo_no_habilitado',
+    );
+  });
+
+  it('devuelve no_soportado cuando el estado no existe en el contrato', () => {
+    expect(clasificarResultado({ ...conEvidencia, status: 'otro_estado' } as never)).toBe(
       'no_soportado',
     );
   });

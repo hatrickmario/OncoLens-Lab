@@ -5,14 +5,13 @@
  * Sin `--config` usa la configuración de la CI (adapters falsos, FX-T5a-a). Las demás opciones pasan tal cual.
  * Variables (RN-22): EVAL_PYTHON (intérprete, por defecto python3) y EVAL_TIMEOUT_S (tope del proceso, por defecto 600).
  */
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { spawnPython } from './python.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const DIRECTORIO = path.join(RAIZ, 'apps', 'rag-orchestrator');
 const CONFIG_DE_LA_CI = path.join('eval', 'configs', 'test-fake.yaml');
-const TIMEOUT_POR_DEFECTO_S = 600;
 
 const OPCIONES_CON_RUTA = ['--config', '--salida'];
 
@@ -23,25 +22,40 @@ function conRutasAbsolutas(argumentos, cwd) {
   );
 }
 
+const FLAGS_DEL_JUEZ = {
+  EVAL_JUDGE_MODEL: '--juez-modelo',
+  EVAL_JUDGE_BASE_URL: '--juez-base-url',
+  EVAL_JUDGE_TEMPERATURE: '--juez-temperatura',
+  EVAL_JUDGE_SEED: '--juez-semilla',
+};
+
+/**
+ * ADR-41: las claves EVAL_JUDGE_* del entorno llegan al runner como flags `--juez-*` (el runner no lee el entorno,
+ * US-037 AC-1). Van antes que los argumentos del usuario: un flag explícito gana.
+ */
+export function flagsDelJuezDesdeEntorno(entorno) {
+  return Object.entries(FLAGS_DEL_JUEZ).flatMap(([variable, flag]) =>
+    entorno[variable] ? [flag, entorno[variable]] : [],
+  );
+}
+
 /** Argumentos para el módulo Python: añade la configuración de la CI si no se pasó `--config`. */
-export function argumentosDePython(argumentos, cwd = process.cwd()) {
+export function argumentosDePython(argumentos, cwd = process.cwd(), entorno = {}) {
   const conConfig = argumentos.includes('--config');
   return [
     '-m',
     'app.evaluation.evaluate',
     ...(conConfig ? [] : ['--config', CONFIG_DE_LA_CI]),
+    ...flagsDelJuezDesdeEntorno(entorno),
     ...conRutasAbsolutas(argumentos, cwd),
   ];
 }
 
 function main(argumentos, entorno) {
-  const python = entorno.EVAL_PYTHON || 'python3';
-  const segundos = Number(entorno.EVAL_TIMEOUT_S) || TIMEOUT_POR_DEFECTO_S;
-  const resultado = spawnSync(python, argumentosDePython(argumentos), {
-    cwd: DIRECTORIO,
-    stdio: 'inherit',
-    timeout: segundos * 1000,
-    env: { ...entorno, PYTHONPATH: DIRECTORIO },
+  const resultado = spawnPython(argumentosDePython(argumentos, process.cwd(), entorno), {
+    directorio: DIRECTORIO,
+    entorno,
+    opciones: { stdio: 'inherit' },
   });
   if (resultado.error?.code === 'ENOENT') {
     console.error('evaluate: no se encontró el intérprete de Python (EVAL_PYTHON)');

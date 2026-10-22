@@ -1,0 +1,52 @@
+# Disparadores del job `eval-required` (US-074, L1D-237; ADR-41 «DoD»): un PR que cambia modelo, prompt, umbral,
+# catálogo o corpus debe ejecutar la suite `evaluate`. Lo lee `scripts/ci/eval-trigger.mjs`. Es configuración (RN-22):
+# añadir un disparador es editar este archivo, no el workflow ni el script.
+#
+# `rutas`: globs (lib/glob.mjs) de archivos cuyo cambio dispara la suite sea cual sea la línea.
+rutas:
+  - apps/rag-orchestrator/app/prompts/**
+  - packages/clinical-catalogs/**/*.json
+  - data/raw/**/manifest.{yaml,json}
+  - apps/rag-orchestrator/eval/configs/*.yaml
+
+# `claves`: solo dispara si una línea añadida o borrada de esos archivos nombra alguna de las claves (sin distinguir
+# mayúsculas: `.env.example` usa LLM_MODEL y la configuración versionada de Python, `llm_model`). Los `.env.example`
+# cambian por muchos motivos ajenos a la IA; las claves evitan que cualquier retoque dispare la suite.
+claves:
+  archivos:
+    - "**/.env.example"
+    - apps/rag-orchestrator/app/config/**
+  nombres:
+    - LLM_MODEL
+    - EMBEDDING_MODEL
+    - EMBEDDING_MODEL_REVISION
+    - EMBEDDING_DIM
+    - SPARSE_VECTOR_SOURCE
+    - NLI_MODEL
+    - NLI_MODEL_REVISION
+    - NLI_QUANTIZATION
+    - NLI_ENTAILMENT_THRESHOLD
+    - RERANKER_MODEL
+    - RERANKER_MODEL_REVISION
+    - RERANKER_MAX_PAIRS
+    - RERANKER_MAX_LENGTH
+    - MODEL_QUANTIZATION
+    - CORPUS_CHUNK_SIZE
+    - CORPUS_CHUNK_OVERLAP
+    - CORPUS_CHUNKING_STRATEGY
+    - VECTOR_INDEX_TYPE
+    - VECTOR_INDEX_PARAMS
+    - CHUNK_SELECTION_MARGIN
+    - INDEX_MIN_RECALL_VS_FLAT
+    - RELEVANCE_THRESHOLD
+    - RERANK_TOP_N
+    - RETRIEVAL_TOP_K
+  prefijos:
+    - PII_
+
+# Comparador de regresión (ADR-41 «EVAL_MAX_REGRESSION»): caída máxima tolerada de una métrica respecto de
+# `data/evaluation/baseline.json`, en puntos absolutos de la métrica. La CI usa adapters falsos y la suite es
+# determinista, así que el valor por defecto es 0. El valor definitivo llega con DEC-07; la variable de entorno
+# EVAL_MAX_REGRESSION lo sustituye sin editar este archivo.
+regresion:
+  tolerancia_maxima: 0

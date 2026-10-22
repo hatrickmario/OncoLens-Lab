@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { leerConfiguracionArnes } from '../support/db.js';
+import { eliminarBaseConReintentos, leerConfiguracionArnes } from '../support/db.js';
 import { generadorDeIds } from '../support/filas-sinteticas.js';
 import {
   ErrorArnes,
@@ -195,5 +195,58 @@ describe('ESPACIO_DE_IDS de los archivos de integración', () => {
 
     expect(espacios.filter(({ espacio }) => espacio === undefined)).toEqual([]);
     expect(new Set(espacios.map(({ espacio }) => espacio)).size).toBe(espacios.length);
+  });
+});
+
+describe('eliminarBaseConReintentos', () => {
+  /** El error de PostgreSQL cuando `DROP DATABASE ... WITH (FORCE)` encuentra un proceso que el administrador de test no puede terminar. */
+  const procesoNoTerminable = (): Error =>
+    Object.assign(new Error('permission denied to terminate process'), { code: '42501' });
+
+  it('reintenta tras una pausa y termina cuando el DROP falla con 42501 mientras un worker de autovacuum sale', async () => {
+    let llamadas = 0;
+    const pausas: number[] = [];
+    const ejecutar = async () => {
+      llamadas += 1;
+      if (llamadas <= 2) throw procesoNoTerminable();
+    };
+
+    await expect(
+      eliminarBaseConReintentos(ejecutar, {
+        pausaMs: 50,
+        pausar: async (ms) => void pausas.push(ms),
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(llamadas).toBe(3);
+    expect(pausas).toEqual([50, 50]);
+  });
+
+  it('relanza el 42501 cuando se agotan los intentos, para no ocultar una conexión ajena que sigue abierta', async () => {
+    let llamadas = 0;
+    const ejecutar = async () => {
+      llamadas += 1;
+      throw procesoNoTerminable();
+    };
+
+    await expect(
+      eliminarBaseConReintentos(ejecutar, { intentos: 3, pausar: async () => undefined }),
+    ).rejects.toMatchObject({ code: '42501' });
+
+    expect(llamadas).toBe(3);
+  });
+
+  it('no reintenta un error que no es 42501', async () => {
+    let llamadas = 0;
+    const ejecutar = async () => {
+      llamadas += 1;
+      throw Object.assign(new Error('otro'), { code: '55006' });
+    };
+
+    await expect(
+      eliminarBaseConReintentos(ejecutar, { pausar: async () => undefined }),
+    ).rejects.toMatchObject({ code: '55006' });
+
+    expect(llamadas).toBe(1);
   });
 });

@@ -19,11 +19,11 @@
 
 ## 4. frontend
 
-- [ ] 4.1 (Test del AC primero) Tests en rojo (Vitest + Testing Library + MSW desde `contracts/examples/`): "la ficha muestra el aviso de alcance y mantiene visibles diagnóstico y biomarcadores cuando cancerTypeEnabled es false [US-043 AC-3]" y "el panel muestra el aviso de alcance y la Base del análisis sin opciones ante tipo_no_habilitado [US-043 AC-2]". Commit `test(L1D-173)`.
-- [ ] 4.2 (Test del AC primero) Implementar `molecules/scope-notice.tsx`, la clave `alcance.tipoNoHabilitado` en `messages/es.json` (si no existe) y la clase `tipo_no_habilitado` en `clasificarResultado()`; montar el aviso en la ficha de L1D-72 y en el panel. Verificación: 4.1 en verde. Commit `feat(L1D-173)`.
-- [ ] 4.3 (Test del AC primero, E2E) Playwright con `ENABLED_CANCER_TYPES=mama`: ficha del paciente (b) con el aviso [US-043 AC-3]. **Diferida a L1D-278 (ARR-02 resto)** si el job de E2E no está en `main`.
-- [ ] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
-- [ ] 4.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
+- [x] 4.1 (Test del AC primero; escenario de ficha AC-3 **DIFERIDO a L1D-72**, no existe la ficha) Tests en rojo (Vitest + Testing Library + MSW desde `contracts/examples/`): "la ficha muestra el aviso de alcance y mantiene visibles diagnóstico y biomarcadores cuando cancerTypeEnabled es false [US-043 AC-3]" y "el panel muestra el aviso de alcance y la Base del análisis sin opciones ante tipo_no_habilitado [US-043 AC-2]". Commit `test(L1D-173)`.
+- [x] 4.2 (Test del AC primero; montaje en la ficha **DIFERIDO a L1D-72**) Implementar `molecules/scope-notice.tsx`, la clave `alcance.tipoNoHabilitado` en `messages/es.json` (si no existe) y la clase `tipo_no_habilitado` en `clasificarResultado()`; montar el aviso en la ficha de L1D-72 y en el panel. Verificación: 4.1 en verde. Commit `feat(L1D-173)`.
+- [ ] 4.3 **DIFERIDA a L1D-278 (ARR-02 resto) y a L1D-72 (la ficha no existe); no verificada, spec sin escribir** (Test del AC primero, E2E) Playwright con `ENABLED_CANCER_TYPES=mama`: ficha del paciente (b) con el aviso [US-043 AC-3]. **Diferida a L1D-278 (ARR-02 resto)** si el job de E2E no está en `main`.
+- [ ] 4.4 **PENDIENTE: sin stack Compose local (colisiona con otros stacks); se repite en CI / con L1D-278.** Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
+- [x] 4.5 (refactor: sin cambios; `analysis-result.tsx` 70 líneas, un solo concepto) Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-173)`.
 
 ## 5. cierre
 

@@ -128,7 +128,7 @@ def test_la_prueba_congelada_se_evalua_con_la_marca_final_solo_sobre_su_subconju
     assert reporte["metricas"]["completa"]["recuperacion"]["total"]["n"] == 2
 
 
-@pytest.mark.parametrize("familia", ["pii", "ocr", "desconocida"])
+@pytest.mark.parametrize("familia", ["ocr", "desconocida"])
 def test_una_familia_no_disponible_termina_con_codigo_2_sin_escribir_resultados(
     tmp_path: Path, familia: str
 ) -> None:

@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import type { AnalysisBasis } from '../../../../packages/api-contracts/src/types/clinical-api';
+import type { EstadoDelAnalisis } from '../../lib/evidence/estado-del-analisis';
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 import { BasisDetail } from '../molecules/basis-detail';
@@ -10,7 +11,7 @@ import { BasisSummary } from '../molecules/basis-summary';
 export interface AnalysisBasisPanelProps {
   base: AnalysisBasis;
   /** Estado del análisis: decide si el resumen dice qué se buscó o que no se consultó el corpus. */
-  estado: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado';
+  estado: EstadoDelAnalisis;
 }
 
 /** Base del análisis (S2-09, US-067): resumen siempre visible y detalle colapsable. Solo informa, no bloquea (RN-26). */
