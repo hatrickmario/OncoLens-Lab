@@ -26,3 +26,12 @@ Con 5.1 cumplida y 4.3 y 4.4 trasladadas por escrito, L1D-173 se da por cerrada 
 | Excepciones de calidad por archivo (16) | `quality-thresholds.json` | **US-232** (S6); caducan el 2026-11-30 |
 | ARR-03 AC-1, AC-2 y AC-5; `proveedor: local`; prompt `rag-query@0.2.0`; filtro solo nivel A | `evaluate` | **US-233** (S4) |
 | Menores de #157 y #163 (`recibirCuerpo`, config inline de ESLint, `generated/`, `lint-imports --config`) | calidad | **US-232** y **US-213b** |
+
+## Deuda del cierre (decisiones del usuario, 2026-10-22, `[S2 resp. 19]`)
+
+| Deuda | Dónde | Destino |
+|---|---|---|
+| `original_filename` en claro en `clinical.document` (DEC-21, opción A) | `clinical-api`, L1D-56 | **US-235** (S6, 2 pts): cifrado o enmascarado y bloqueo en `preflight real-data` |
+| El `202` de `uploadDocument` devuelve `originalFilename`: confirmar que la UI lo necesita | contrato + `web` | **US-235** (AC-2) o **US-079** (S3), lo que llegue antes |
+| **Seguridad, Medio:** `clinical-api` usa credenciales root de `clinical-minio` (`PutObject` con root, HTTP sin TLS ni SSE) | `clinical-api` + Compose | **S3**: usuario de servicio con política limitada a `PutObject`/`DeleteObject` sobre `clinical-documents`, junto a **US-078**; TLS/SSE y red interna en **US-144** (S6) |
+| **Bajo:** `web` comparte `clinical-net` con `postgres` y `clinical-minio` | Compose | **S6** (hardening de G-Piloto) |
