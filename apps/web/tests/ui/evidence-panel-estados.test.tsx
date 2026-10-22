@@ -11,7 +11,7 @@ import {
   errorTipoCancer,
   sinEvidencia,
 } from '../support/msw/evidence-analyses';
-import { analizar, evidence, PREGUNTA_DE_PRUEBA } from '../support/panel-ui';
+import { analizar, evidence, PREGUNTA_DE_PRUEBA, SIN_BASE } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
@@ -25,7 +25,7 @@ function textoDeError(error: { traceId: string }) {
 function esperarSinResultadoParcial() {
   expect(screen.queryByRole('note')).toBeNull();
   expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
-  expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
   expect(screen.queryByTestId('relevance-label')).toBeNull();
   expect(screen.queryByText(evidence.discarded.titulo)).toBeNull();
 }
@@ -93,7 +93,7 @@ describe('EvidencePanel · estados mínimos del S1', () => {
     for (const aviso of screen.getAllByRole('note')) {
       expect(aviso.textContent).toBe(conEvidenciaSoloDescartadas.disclaimer);
     }
-    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
   });
 
   it('redirige a /login?motivo=expirada sin renderizar datos cuando la petición responde 401 [US-044 AC-4]', async () => {

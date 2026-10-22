@@ -10,6 +10,9 @@ export const { evidence } = mensajes();
 export const PREGUNTA_DE_PRUEBA =
   'En pacientes con cáncer de mama HER2 positivo temprano, ¿qué describe la evidencia sobre mortalidad con terapia anti-HER2 adyuvante?';
 
+/** Nombre de los títulos de nivel 3 que no son la Base del análisis (p. ej. las tarjetas de opción). */
+export const SIN_BASE = /^(?!Base del análisis$)/;
+
 export const ID_PACIENTE = peticion.patientId;
 
 export function montarPanel() {

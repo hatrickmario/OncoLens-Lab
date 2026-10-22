@@ -8,6 +8,7 @@ import { clasificarResultado } from '../../lib/evidence/clasificar-resultado';
 import { formatearRelevancia } from '../../lib/evidence/formatear-relevancia';
 import { mensajes } from '../../lib/mensajes';
 import { AiDisclaimer } from '../molecules/ai-disclaimer';
+import { AnalysisBasisPanel } from './analysis-basis-panel';
 import { DiscardedOptions } from './discarded-options';
 import { EvidenceOptionCard } from './evidence-option-card';
 import { OrderingCriterion } from './ordering-criterion';
@@ -60,6 +61,7 @@ export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps
           creadoEn={analisis.createdAt}
         />
       )}
+      <AnalysisBasisPanel base={analisis.analysisBasis} estado={analisis.status} />
       <AiDisclaimer text={analisis.disclaimer} />
     </div>
   );
