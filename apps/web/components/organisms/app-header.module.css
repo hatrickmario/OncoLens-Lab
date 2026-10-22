@@ -18,6 +18,10 @@
   font-weight: 700;
 }
 
+.usuario {
+  margin-left: auto;
+}
+
 .etiqueta {
   font-size: 0.875rem;
 }

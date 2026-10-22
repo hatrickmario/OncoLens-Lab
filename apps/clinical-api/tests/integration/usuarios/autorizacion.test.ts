@@ -19,9 +19,18 @@ import {
   operacionDeLaRuta,
   rutasMontadas,
 } from '../../support/rutas-y-contrato.js';
-import { contrasenaDeTest } from '../../support/usuarios.js';
+import { contrasenaDeTest, traceIdsFijos } from '../../support/usuarios.js';
+import { logoutController } from '../../../src/modules/auth/auth.controller.js';
 
 const ESPACIO_DE_IDS = 305;
+
+/** El router de logout tal como lo monta la composición de producción (`session:logout`). */
+const logoutDeProduccion = () =>
+  logoutController({
+    service: { cerrarSesion: () => Promise.resolve() },
+    nuevoTraceId: traceIdsFijos(),
+    registrar: () => undefined,
+  });
 const PACIENTE_A = idDePaciente('b');
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 const rag = ragSimulado();
@@ -110,9 +119,11 @@ describe('autorización por permiso', () => {
 
   it('usa en authorize() exactamente el x-permission de su operación en toda ruta montada [US-045 AC-3]', async () => {
     const { rutas } = await montarGateway(mundo);
+    const todas = [...rutas, logoutDeProduccion()];
 
-    expect(rutasMontadas(rutas).length).toBeGreaterThan(0);
-    expect(incoherencias(rutas)).toEqual([]);
+    expect(rutasMontadas(todas).map((montada) => montada.ruta)).toContain('/platform/auth/logout');
+    expect(rutasMontadas(todas).length).toBeGreaterThan(1);
+    expect(incoherencias(todas)).toEqual([]);
   });
 
   it('responde 403 en el análisis y en toda operación montada que el admin no puede ejecutar, sin llamar a rag-orchestrator [US-045 AC-6]', async () => {

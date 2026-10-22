@@ -13,6 +13,7 @@ import estilos from '../evidence.module.css';
 import { AnalysisFailure } from '../molecules/analysis-failure';
 import { CitedFragment } from '../molecules/cited-fragment';
 import { mensajes } from '../../lib/mensajes';
+import { RUTA_LOGIN_EXPIRADA } from '../../lib/sesion/motivo-de-sesion';
 import { AnalysisResult } from './analysis-result';
 import { EvidenceQueryForm } from './evidence-query-form';
 
@@ -40,7 +41,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
     setFragmento(null);
     setFase({ tipo: 'enviando' });
     const resultado = await solicitarAnalisis(solicitud);
-    if (resultado.tipo === 'sin_sesion') return router.replace('/login');
+    if (resultado.tipo === 'sin_sesion') return router.replace(RUTA_LOGIN_EXPIRADA);
     setFase(faseTrasSolicitud(resultado));
   }
 

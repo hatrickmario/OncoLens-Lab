@@ -39,6 +39,8 @@ secretos="$(directorio_temporal_propio)"; export ONCOLENS_SECRETS_DIR="$secretos
 # ONCOLENS_UID:ONCOLENS_GID (por defecto 1000:1000) para poder leerlos; sin esto clinical-api no arranca en la CI.
 ONCOLENS_UID="$(id -u)"; ONCOLENS_GID="$(id -g)"; export ONCOLENS_UID ONCOLENS_GID
 export WEB_HOME_PATH="/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis"   # paciente semilla (a)
+# Inactividad corta solo en el E2E de la sesión inactiva (US-044 AC-4): 1 minuto; el toque de last_seen_at debe ser menor.
+export SESSION_IDLE_MINUTES=1 SESSION_TOUCH_SECONDS=10
 export AI_DISCLAIMER_TEXT="Generado por IA; requiere validación clínica independiente por el oncólogo tratante."
 export ANALYSIS_BASIS_S1_ASSUMPTION_TEXT="Supuesto fijo del S1 para pruebas: caso sintético."
 compose=(docker compose -f "$raiz/infra/docker/docker-compose.yml")

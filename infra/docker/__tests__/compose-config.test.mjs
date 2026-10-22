@@ -164,6 +164,17 @@ describe('docker-compose.yml', () => {
     expect(fijadas.ARGON2_TIME_COST).toBe('3');
   });
 
+  it('clinical-api resuelve a vacío las claves de bloqueo del login y de trust proxy cuando el entorno no las fija, y las pasa cuando sí [US-044 AC-2] [US-044 AC-3]', () => {
+    const variables = ['LOGIN_MAX_FAILED_ATTEMPTS', 'LOGIN_LOCKOUT_MINUTES', 'TRUST_PROXY_HOPS'];
+    const sinFijar = resolver().services['clinical-api'].environment;
+    const fijadas = resolver({
+      entorno: { LOGIN_MAX_FAILED_ATTEMPTS: '3', LOGIN_LOCKOUT_MINUTES: '20', TRUST_PROXY_HOPS: '2' },
+    }).services['clinical-api'].environment;
+
+    for (const variable of variables) expect(sinFijar[variable]).toBe('');
+    expect([fijadas.LOGIN_MAX_FAILED_ATTEMPTS, fijadas.LOGIN_LOCKOUT_MINUTES, fijadas.TRUST_PROXY_HOPS]).toEqual(['3', '20', '2']);
+  });
+
   it('web recibe CLINICAL_API_URL, WEB_ALLOWED_ORIGIN y WEB_UPSTREAM_TIMEOUT_MS de servidor y ninguna NEXT_PUBLIC_ [US-060 AC-5]', () => {
     const entorno = resolver().services.web.environment;
     expect(entorno).toMatchObject({
