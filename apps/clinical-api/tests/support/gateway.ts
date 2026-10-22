@@ -8,8 +8,9 @@ import respuestaSinEvidencia from '../../../../contracts/examples/rag-query-sin-
 import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
-import { crearProveedorDeVersionDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
+import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
 import { componerGatewayDeAnalisis } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
+import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
@@ -233,6 +234,12 @@ export interface OpcionesDeGateway {
   ragTimeoutMs?: number;
   /** `AI_DISCLAIMER_TEXT` (por defecto, `DISCLAIMER_DE_TEST`). */
   aiDisclaimerText?: string;
+  /** `ENABLED_CANCER_TYPES` (por defecto, mama y próstata: los dos tipos del manifiesto). */
+  tiposHabilitados?: readonly string[];
+  /** `CORPUS_EXCLUDED_SOURCES` (por defecto, NCCN y ESMO). */
+  corpusExcludedSources?: readonly string[];
+  /** `CORPUS_CUTOFF_DATE` (por defecto, 2026-09-30). */
+  corpusCutoffDate?: string;
   /** Logger a usar (por defecto, en memoria con las líneas crudas; `loggerJsonEnMemoria` pasa por la redacción real). */
   logger?: LoggerEnMemoria;
 }
@@ -266,7 +273,7 @@ export async function montarGateway(
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
-    catalogo: crearProveedorDeVersionDeCatalogo(RUTA_DEL_CATALOGO, (archivo) =>
+    catalogo: crearProveedorDeCatalogo(RUTA_DEL_CATALOGO, (archivo) =>
       readFileSync(archivo, 'utf8'),
     ),
     config: {
@@ -274,6 +281,14 @@ export async function montarGateway(
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
       ragTimeoutMs: opciones.ragTimeoutMs ?? RAG_TIMEOUT_MS_DE_TEST,
       aiDisclaimerText: opciones.aiDisclaimerText ?? DISCLAIMER_DE_TEST,
+    },
+    tiposHabilitados: crearTiposHabilitados(opciones.tiposHabilitados ?? ['mama', 'prostata'], [
+      'mama',
+      'prostata',
+    ]),
+    alcanceDelCorpus: {
+      corpusExcludedSources: opciones.corpusExcludedSources ?? ['NCCN', 'ESMO'],
+      corpusCutoffDate: opciones.corpusCutoffDate ?? '2026-09-30',
     },
     reloj,
     traceIds: opciones.traceIds ?? { traceId: () => TRACE_ID_GENERADO },

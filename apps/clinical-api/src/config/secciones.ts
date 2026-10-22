@@ -107,7 +107,11 @@ export function readServiceJwtConfig(env: NodeJS.ProcessEnv): ServiceJwtConfig {
 
 /** Motivos cerrados del evento `configuracion_invalida`; otros changes añaden los suyos (tipos). */
 export type MotivoDeConfiguracionInvalida =
-  'valor_invalido' | 'variable_ausente' | 'catalogo_no_disponible' | 'version_catalogo_distinta';
+  | 'valor_invalido'
+  | 'variable_ausente'
+  | 'catalogo_no_disponible'
+  | 'version_catalogo_distinta'
+  | 'tipo_no_en_catalogo';
 
 /**
  * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,
@@ -143,8 +147,9 @@ export class ConfiguracionInvalidaError extends Error {
     variable: string,
     regla: string,
     valor: string,
+    opciones: { motivo?: MotivoDeConfiguracionInvalida } = {},
   ): ConfiguracionInvalidaError {
-    const error = new ConfiguracionInvalidaError(variable, regla);
+    const error = new ConfiguracionInvalidaError(variable, regla, opciones);
     if (FORMA_DE_VALOR_REGISTRABLE.test(valor)) error.#valorInvalido = valor;
     return error;
   }
@@ -414,4 +419,92 @@ export function readEvidenceAnalysisConfig(env: NodeJS.ProcessEnv): EvidenceAnal
     ragTimeoutMs: readPositiveInteger(env, 'RAG_TIMEOUT_MS', DEFAULT_RAG_TIMEOUT_MS),
     aiDisclaimerText: leerObligatoria(env, 'AI_DISCLAIMER_TEXT'),
   };
+}
+
+/** Lo que la Base de un `tipo_no_habilitado` dice del corpus sin consultarlo (US-043 D7, RN-22). */
+export interface AlcanceDelCorpus {
+  /** `CORPUS_EXCLUDED_SOURCES`: fuentes que el corpus no incluye (RN-21), para `sourcesNotIncluded`. */
+  corpusExcludedSources: readonly string[];
+  /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`): fecha de corte del corpus, para `corpusCutoffDate`. */
+  corpusCutoffDate: string;
+}
+
+/** Tipos de cáncer habilitados (RN-20, RN-22) más el alcance del corpus. */
+export interface AlcanceDelAnalisisConfig extends AlcanceDelCorpus {
+  /** `ENABLED_CANCER_TYPES`: tipos analizables; se valida contra `cancerTypes` del `manifest.json` (`validarTiposHabilitados`). */
+  enabledCancerTypes: readonly string[];
+}
+
+/** Piso de fuentes excluidas del corpus (RN-21): NCCN y ESMO siempre; la configuración solo puede añadir más. */
+const FUENTES_EXCLUIDAS_MINIMAS = ['nccn', 'esmo'] as const;
+const FORMA_DE_FUENTE = /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$/;
+
+/** Lista separada por comas, sin elementos vacíos ni espacios de borde; ausente o vacía lanza `variable_ausente`. */
+function leerListaObligatoria(env: NodeJS.ProcessEnv, variable: string): string[] {
+  const elementos = leerObligatoria(env, variable)
+    .split(',')
+    .map((elemento) => elemento.trim())
+    .filter((elemento) => elemento !== '');
+  if (elementos.length === 0) {
+    throw new ConfiguracionInvalidaError(variable, 'es obligatoria', {
+      motivo: 'variable_ausente',
+    });
+  }
+  return elementos;
+}
+
+function leerFechaObligatoria(env: NodeJS.ProcessEnv, variable: string): string {
+  const crudo = leerObligatoria(env, variable).trim();
+  // `z.iso.date()` exige AAAA-MM-DD y un día real del calendario (rechaza 2026-02-31).
+  if (!z.iso.date().safeParse(crudo).success) {
+    throw new ConfiguracionInvalidaError(variable, 'debe ser una fecha AAAA-MM-DD');
+  }
+  return crudo;
+}
+
+/**
+ * `ENABLED_CANCER_TYPES`, `CORPUS_EXCLUDED_SOURCES` y `CORPUS_CUTOFF_DATE` (US-043, RN-22): obligatorias, sin valor por
+ * defecto. La coherencia de los tipos con el catálogo la valida `validarTiposHabilitados` al cargar el manifiesto.
+ */
+export function readAlcanceDelAnalisisConfig(env: NodeJS.ProcessEnv): AlcanceDelAnalisisConfig {
+  const corpusExcludedSources = leerListaObligatoria(env, 'CORPUS_EXCLUDED_SOURCES');
+  if (!corpusExcludedSources.every((fuente) => FORMA_DE_FUENTE.test(fuente))) {
+    throw new ConfiguracionInvalidaError(
+      'CORPUS_EXCLUDED_SOURCES',
+      'debe ser una lista de nombres de fuente separados por comas',
+    );
+  }
+  const nombres = corpusExcludedSources.map((fuente) => fuente.toLowerCase());
+  if (!FUENTES_EXCLUIDAS_MINIMAS.every((fuente) => nombres.includes(fuente))) {
+    throw new ConfiguracionInvalidaError(
+      'CORPUS_EXCLUDED_SOURCES',
+      'debe incluir al menos las fuentes excluidas por licencia (NCCN y ESMO)',
+    );
+  }
+  return {
+    enabledCancerTypes: [...new Set(leerListaObligatoria(env, 'ENABLED_CANCER_TYPES'))],
+    corpusExcludedSources,
+    corpusCutoffDate: leerFechaObligatoria(env, 'CORPUS_CUTOFF_DATE'),
+  };
+}
+
+/**
+ * Comprueba los tipos habilitados contra los `cancerTypes` del `manifest.json` montado (RN-20, US-043 AC-5): el primero
+ * ausente del catálogo lanza `tipo_no_en_catalogo`; su nombre viaja solo en el campo cerrado `valorInvalido` (enum no
+ * sensible, design D2/D4). Devuelve la misma lista, ya validada.
+ */
+export function validarTiposHabilitados(
+  habilitados: readonly string[],
+  tiposDelCatalogo: readonly string[],
+): readonly string[] {
+  const desconocido = habilitados.find((tipo) => !tiposDelCatalogo.includes(tipo));
+  if (desconocido !== undefined) {
+    throw ConfiguracionInvalidaError.deEnumNoSensible(
+      'ENABLED_CANCER_TYPES',
+      'solo admite tipos presentes en cancerTypes del manifest.json',
+      desconocido,
+      { motivo: 'tipo_no_en_catalogo' },
+    );
+  }
+  return habilitados;
 }

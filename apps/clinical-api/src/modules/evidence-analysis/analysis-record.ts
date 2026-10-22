@@ -47,7 +47,7 @@ export interface RegistroDeAnalisis {
   patientDataLinks: PatientDataLink[];
   /** Copiado de Backend 2 (RN-02): `null` cuando no hay evidencia, nunca `0`. */
   topRelevanceScore: number | null;
-  status: 'con_evidencia' | 'sin_evidencia';
+  status: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado';
   /** Contexto enviado a Backend 2 en su versión desidentificada y SIN `pseudoPatientId` (RN-11). */
   clinicalContextSnapshot: Omit<ClinicalContext, 'pseudoPatientId'>;
   /** SHA-256 hexadecimal del JSON canónico (claves ordenadas) del snapshot. */
@@ -119,6 +119,57 @@ function snapshotSinSeudonimo(
   return snapshot;
 }
 
+type CamposBase = Pick<
+  RegistroDeAnalisis,
+  | 'id'
+  | 'patientId'
+  | 'episodeId'
+  | 'requestedBy'
+  | 'analysisType'
+  | 'traceId'
+  | 'questionTemplateId'
+  | 'caseSummary'
+  | 'analysisBasis'
+  | 'missingCriticalData'
+  | 'continuedWithWarning'
+  | 'priorAnalysesUsed'
+  | 'rerunOfAnalysisId'
+  | 'createdAt'
+>;
+
+/** Lo que comparten el registro con IA y el de `tipo_no_habilitado`: identidad, trazabilidad y los vacíos del S2. */
+function registroBase(
+  entrada: Pick<
+    EntradaDelRegistro,
+    | 'id'
+    | 'patientId'
+    | 'episodeId'
+    | 'userId'
+    | 'traceId'
+    | 'questionTemplateId'
+    | 'base'
+    | 'continueWithWarning'
+    | 'creadoEn'
+  >,
+): CamposBase {
+  return {
+    id: entrada.id,
+    patientId: entrada.patientId,
+    episodeId: entrada.episodeId,
+    requestedBy: entrada.userId,
+    analysisType: 'analisis_evidencia',
+    traceId: entrada.traceId,
+    questionTemplateId: entrada.questionTemplateId,
+    caseSummary: null,
+    analysisBasis: entrada.base,
+    missingCriticalData: [],
+    continuedWithWarning: entrada.continueWithWarning,
+    priorAnalysesUsed: [],
+    rerunOfAnalysisId: null,
+    createdAt: entrada.creadoEn,
+  };
+}
+
 /**
  * Función pura: arma el `AIAnalysisRecord` (data-model.md §4.3) con lo enviado a Backend 2, lo recibido y la Base del
  * análisis. Reloj e identificador llegan inyectados.
@@ -128,14 +179,8 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
   const snapshot = snapshotSinSeudonimo(request);
   const { meta } = respuesta;
   return {
-    id: entrada.id,
-    patientId: entrada.patientId,
-    episodeId: entrada.episodeId,
-    requestedBy: entrada.userId,
-    analysisType: 'analisis_evidencia',
-    traceId: entrada.traceId,
+    ...registroBase(entrada),
     queryText: request.query,
-    questionTemplateId: entrada.questionTemplateId,
     queryLanguage: meta.queryLanguage,
     responseLanguage: meta.responseLanguage,
     sourcesSelected: request.sourcesSelected,
@@ -144,19 +189,13 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
     applicability: respuesta.applicability,
     evidenceOptions: respuesta.evidenceOptions,
     discardedOptions: respuesta.discardedOptions,
-    caseSummary: null,
-    analysisBasis: entrada.base,
     agentSteps: respuesta.agentSteps,
     omittedClaims: respuesta.omittedClaims,
-    missingCriticalData: [],
-    continuedWithWarning: entrada.continueWithWarning,
-    priorAnalysesUsed: [],
     patientDataLinks: enlacesDeDatos(entrada.dataRefs),
     topRelevanceScore: entrada.topRelevanceScore,
     status: respuesta.status,
     clinicalContextSnapshot: snapshot,
     contextFingerprint: huellaDelContexto(snapshot),
-    rerunOfAnalysisId: null,
     dataClassification: request.dataClassification,
     llmProvider: meta.llmProvider,
     llmModel: meta.llmModel,
@@ -167,6 +206,66 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
     corpusRelease: meta.corpusRelease,
     catalogVersion: meta.catalogVersion,
     retrievalParams: meta.retrievalParams,
-    createdAt: entrada.creadoEn,
+  };
+}
+
+export interface EntradaDelRegistroSinIA {
+  /** UUID del registro (generador inyectado). */
+  id: string;
+  /** Instante de creación (reloj inyectado). */
+  creadoEn: Date;
+  traceId: string;
+  patientId: string;
+  episodeId: string;
+  userId: string;
+  questionTemplateId: string | null;
+  continueWithWarning: boolean;
+  /** Pregunta ya desidentificada (RN-11). */
+  query: string;
+  sourcesSelected: SourcesSelected;
+  filtersApplied: AppliedFilters;
+  dataClassification: DataClassification;
+  catalogVersion: string;
+  /** Contexto sin datos del paciente (nada se envió): lo único que se guarda como snapshot. */
+  contextoVacio: RegistroDeAnalisis['clinicalContextSnapshot'];
+  base: AnalysisBasis;
+}
+
+/**
+ * Registro de un `tipo_no_habilitado` (US-043, RN-06): no hubo llamada a Backend 2, así que no hay modelos, versión de
+ * prompt, release del corpus ni parámetros de recuperación, y el puntaje es `null` (RN-02). Los idiomas son los del
+ * producto (español): sin Backend 2 no hay detección de idioma.
+ */
+export function armarRegistroTipoNoHabilitado(
+  entrada: EntradaDelRegistroSinIA,
+): RegistroDeAnalisis {
+  return {
+    ...registroBase(entrada),
+    queryText: entrada.query,
+    queryLanguage: 'es',
+    responseLanguage: 'es',
+    sourcesSelected: entrada.sourcesSelected,
+    filtersApplied: entrada.filtersApplied,
+    synthesis: { agreements: [], discrepancies: [] },
+    applicability: [],
+    evidenceOptions: [],
+    discardedOptions: [],
+    agentSteps: [],
+    omittedClaims: 0,
+    patientDataLinks: [],
+    topRelevanceScore: null,
+    status: 'tipo_no_habilitado',
+    clinicalContextSnapshot: entrada.contextoVacio,
+    contextFingerprint: huellaDelContexto(entrada.contextoVacio),
+    dataClassification: entrada.dataClassification,
+    llmProvider: null,
+    llmModel: null,
+    embeddingModel: null,
+    rerankerModel: null,
+    nliModel: null,
+    promptVersion: null,
+    corpusRelease: null,
+    catalogVersion: entrada.catalogVersion,
+    retrievalParams: null,
   };
 }
