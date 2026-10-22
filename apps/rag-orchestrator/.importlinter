@@ -1,0 +1,29 @@
+# Contratos de capas de rag-orchestrator (L1D-263, US-213 AC-3). Hexagonal: api -> application -> domain;
+# infrastructure implementa los puertos de application/domain y nunca depende de api.
+[importlinter]
+root_package = app
+include_external_packages = False
+
+[importlinter:contract:dominio-independiente]
+name = dominio-independiente
+type = forbidden
+source_modules =
+    app.domain
+forbidden_modules =
+    app.application
+    app.infrastructure
+    app.api
+    app.schemas
+    app.config
+    app.prompts
+    app.bootstrap
+    app.evaluation
+    app.scripts
+
+[importlinter:contract:capas-hexagonales]
+name = capas-hexagonales
+type = layers
+layers =
+    app.api | app.infrastructure
+    app.application
+    app.domain

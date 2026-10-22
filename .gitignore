@@ -38,3 +38,4 @@ playwright-report/
 
 # Resultados locales de la suite evaluate (L1D-235)
 apps/rag-orchestrator/eval/results/
+reports/quality/
