@@ -35,6 +35,7 @@ from app.evaluation.medidores import (
     Observaciones,
     RerankerObservado,
 )
+from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import LlmProvider
@@ -54,7 +55,9 @@ class ServicioDeSuite:
     juez_llm: JuezFidelidad | None
 
 
-def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
+def parametros_de_recuperacion(
+    config: ConfigSuite, tipos_habilitados: tuple[str, ...]
+) -> ParametrosDeRecuperacion:
     u = config.umbrales
     return ParametrosDeRecuperacion(
         relevance_threshold=u.relevance_threshold,
@@ -64,6 +67,7 @@ def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
         llm_provider=LlmProvider.local,
         llm_model=config.llm_modelo,
         nli_entailment_threshold=u.nli_entailment_threshold,
+        tipos_habilitados=tipos_habilitados,
     )
 
 
@@ -80,6 +84,8 @@ def componer_servicio(
     embedder = EmbedderBolsaDePalabras()
     nli = NliLexico()
     terminos = cargar_verificador_de_terminos(config.ruta_terminos)
+    # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
+    tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(DetectorDeIdiomaLocal("es"), cronometro),
         embedder=EmbedderMedido(embedder, cronometro),
@@ -87,12 +93,12 @@ def componer_servicio(
         reranker=RerankerObservado(RerankerLexico(), cronometro, observaciones),
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
-        catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version),
+        catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
         clasificador_nli=NliMedido(nli, cronometro),
         verificador_terminos=terminos,
         reloj=reloj,
-        parametros=parametros_de_recuperacion(config),
+        parametros=parametros_de_recuperacion(config, tipos_habilitados),
     )
     return ServicioDeSuite(
         servicio,

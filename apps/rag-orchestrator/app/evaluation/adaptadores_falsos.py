@@ -168,11 +168,15 @@ def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:
 class CatalogoClinicoDeConfig:
     """``CatalogoClinico``: la versión efectiva del catálogo es la de la configuración de la suite (no hay montaje)."""
 
-    def __init__(self, version: str) -> None:
+    def __init__(self, version: str, tipos_de_cancer: tuple[str, ...]) -> None:
         self._version = version
+        self._tipos_de_cancer = tipos_de_cancer
 
     def version(self) -> str:
         return self._version
+
+    def tipos_de_cancer(self) -> tuple[str, ...]:
+        return self._tipos_de_cancer
 
 
 class LectorReleaseFijo:
