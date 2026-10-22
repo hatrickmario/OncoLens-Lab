@@ -20,6 +20,8 @@ export interface IdentityRepository {
   completarIndiceDeNombre(patientId: string, indiceDeNombre: string): Promise<boolean>;
   /** Pacientes cuyo documento tiene ese índice ciego (sin país emisor: dos países pueden devolver dos filas). */
   buscarPacientesPorDocumento(idType: IdType, indiceDeDocumento: string): Promise<string[]>;
+  /** Pacientes cuyo nombre normalizado tiene ese índice ciego (varios pacientes pueden compartirlo). */
+  buscarPacientesPorNombre(indiceDeNombre: string): Promise<string[]>;
   /** Las filas de los pacientes pedidos, sin orden; un paciente sin identidad simplemente no aparece. */
   buscarPorPacientes(patientIds: readonly string[]): Promise<FilaDeIdentidad[]>;
 }
@@ -100,6 +102,13 @@ export function createIdentityRepository(db: ConsultadorSql): IdentityRepository
         `SELECT patient_id FROM identity.patient_identity
           WHERE id_type::text = $1 AND national_id_hmac = $2`,
         [idType, indiceDeDocumento],
+      );
+      return (rows as Pick<FilaSql, 'patient_id'>[]).map((fila) => fila.patient_id);
+    },
+    async buscarPacientesPorNombre(indiceDeNombre) {
+      const { rows } = await db.query(
+        'SELECT patient_id FROM identity.patient_identity WHERE full_name_hmac = $1',
+        [indiceDeNombre],
       );
       return (rows as Pick<FilaSql, 'patient_id'>[]).map((fila) => fila.patient_id);
     },

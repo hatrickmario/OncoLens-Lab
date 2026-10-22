@@ -24,6 +24,8 @@ export interface IdentityService {
   /** Cifra y guarda; si el paciente ya tiene identidad no la recifra (`'existente'`). */
   guardar(identidad: IdentidadAGuardar): Promise<'creada' | 'existente'>;
   descifrar(patientId: string): Promise<IdentidadDescifrada | null>;
+  /** Pacientes con ese nombre completo, igual tras normalizar (sin tildes, minúsculas, espacios colapsados): no descifra nada. */
+  buscarPorNombre(nombreCompleto: string): Promise<string[]>;
   /** Completa `full_name_hmac` de una identidad anterior a la columna (el seed); no recifra nada. `true` si lo completó. */
   completarIndiceDeNombre(patientId: string, nombreCompleto: string): Promise<boolean>;
   /** Descifra la identidad de varios pacientes en una consulta (la página de un listado); los que no tienen no aparecen. */
@@ -84,6 +86,8 @@ export function createIdentityService({
       const fila = await repo.buscarPorPaciente(patientId);
       return fila === null ? null : descifrarFila(fila);
     },
+    buscarPorNombre: (nombreCompleto) =>
+      repo.buscarPacientesPorNombre(indice.indiceDeNombre(nombreCompleto)),
     completarIndiceDeNombre: (patientId, nombreCompleto) =>
       repo.completarIndiceDeNombre(patientId, indice.indiceDeNombre(nombreCompleto)),
     async descifrarVarios(patientIds) {

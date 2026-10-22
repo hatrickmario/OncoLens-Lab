@@ -81,6 +81,7 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
 
   /** Descifra solo la identidad de las filas de la página; un paciente sin identidad es una violación de integridad. */
   async function identidadesDe(filas: FilaDePaciente[]): Promise<Map<string, IdentidadDescifrada>> {
+    if (filas.length === 0) return new Map();
     const descifradas = await identidad.descifrarVarios(filas.map((fila) => fila.id));
     const porPaciente = new Map(descifradas.map((fila) => [fila.patientId, fila]));
     if (filas.some((fila) => !porPaciente.has(fila.id))) throw new IdentityIntegrityError();
@@ -117,7 +118,7 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
     if (criterio.tipo === 'documento') {
       return identidad.buscarPorDocumento(criterio.idType, criterio.nationalId);
     }
-    throw new Error('no implementado');
+    return identidad.buscarPorNombre(criterio.name);
   }
 
   return {
