@@ -1,6 +1,8 @@
 """Reglas puras de proveedores de modelos (RN-12, RN-13)."""
 
 import ipaddress
+import re
+import unicodedata
 from urllib.parse import urlsplit
 
 # Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
@@ -65,3 +67,14 @@ def reject_fake_model_provider_with_real_data(
     _rechazar_fake_con_datos_reales(
         "MODEL_PROVIDER", model_provider, real_anonymized_enabled, real_identified_enabled
     )
+
+
+_SUFIJO_DE_NUBE = re.compile(r"(?:^|[:\-])cloud$", re.IGNORECASE)
+
+
+def es_modelo_de_nube(modelo: str) -> bool:
+    """RN-12: un runtime local (Ollama) sirve ``x:cloud`` o ``x:1b-cloud`` ejecutándolos en la nube, aunque el host sea local."""
+    normalizado = (
+        unicodedata.normalize("NFKC", modelo).strip().casefold()
+    )  # Ollama resuelve el nombre con ruido
+    return _SUFIJO_DE_NUBE.search(normalizado) is not None

@@ -25,6 +25,13 @@ const FORMATO_CORREO = formatosCompilados().filter((formato) => formato.tipo ===
 const ABSOLUTE_DATE = /\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2} de [a-záéíóú]+ de \d{4}\b/i;
 const NO_DATES_UNDER = ['clinicalContext', 'analysisMemory', 'query', 'question'];
 
+/**
+ * Máscara cerrada del documento del listado (L1D-202 D2): cuatro `•`, un espacio y los dos últimos caracteres. Solo la
+ * clave `nationalIdMasked` la admite; el documento en claro (`nationalId`, `documentNumber`…) sigue exigiendo SINT-.
+ */
+const MASCARA_DE_DOCUMENTO = /^•{4} [A-Za-z0-9]{2}$/u;
+const esMascaraDeDocumento = (key, value) => key.toLowerCase() === 'nationalidmasked' && MASCARA_DE_DOCUMENTO.test(value);
+
 const underAny = (pointer, keys) => keys.some((key) => pointer.split('/').includes(key));
 const insideExclusion = (pointer) => EXCLUSION_KEYS.some((key) => pointer.includes(`/${key}/`));
 
@@ -33,7 +40,7 @@ function checkNode({ value, pointer, key }, context) {
   const found = [];
   if (key === 'dataClassification' && value !== 'sintetico') found.push(report(file, pointer, 'dataClassification debe ser sintetico'));
   if (key === 'dataOrigin' && REAL_ORIGINS.includes(value)) found.push(report(file, pointer, `${value} no es sintético: los ejemplos solo usan datos sintéticos`));
-  if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_NUMERO_DOCUMENTO) && !value.startsWith(PREFIJO_SINTETICO)) found.push(report(file, pointer, `${key} debe empezar por ${PREFIJO_SINTETICO}`));
+  if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_NUMERO_DOCUMENTO) && !value.startsWith(PREFIJO_SINTETICO) && !esMascaraDeDocumento(key, value)) found.push(report(file, pointer, `${key} debe empezar por ${PREFIJO_SINTETICO}`));
   if (CLAVES_DE_NOMBRE_DE_ARCHIVO.includes(key) && !String(value).startsWith(PREFIJO_SINTETICO)) found.push(report(file, pointer, `${key} debe empezar por ${PREFIJO_SINTETICO}`));
   if (key !== null && typeof value === 'string' && matchesIdentity(key, PATRONES_FECHA_NACIMIENTO) && ABSOLUTE_DATE.test(value)) {
     found.push(report(file, pointer, 'una fecha de nacimiento absoluta no puede aparecer en un ejemplo: solo el año o una edad relativa'));

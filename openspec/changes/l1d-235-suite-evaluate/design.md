@@ -79,6 +79,77 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
   fixture autouse de `tests/evaluation/` bloquea `connect`, `connect_ex` y `getaddrinfo` fuera de loopback y falla el
   test que lo intente.
 
+## Decisiones de implementación 072b
+
+- **D14 · Fidelidad (AC-3).** Se mide por afirmación sobre la **propuesta cruda** del generador (afirmaciones de
+  opciones con cita válida, de sus párrafos de detalle y de las limitaciones propuestas), no sobre lo mostrado: lo
+  mostrado es fiel por construcción (RN-01) y no informa nada del modelo. El **NLI** (`JuezNli`, el mismo criterio de
+  soporte de RN-01) es el juez principal; el **juez LLM** (`JuezLlmLocal`, API `/chat/completions` compatible con
+  OpenAI, `temperature` y `seed` de la configuración) es secundario: su cifra va aparte, rotulada `secundaria`, con
+  el número de **discrepancias con el NLI**, y nunca decide un umbral. Sin bloque `juez` ni `EVAL_JUDGE_*` no hay
+  juez secundario. Con `juez.proveedor: fake` corre `JuezLlmLexico` (determinista, sin red) para la CI.
+  `afirmaciones.py` repite el criterio de `domain.support` sobre qué afirmaciones llegan al NLI; un test de paridad
+  lo compara con `pares_a_verificar`. **Hallazgo para el dueño de `domain/`:** exportar ese criterio
+  (`_afirmaciones_para_el_nli` es privado) evitaría la copia.
+- **D15 · Claves del juez (RN-22).** `juez:` en el YAML (`proveedor`, `modelo`, `base_url`, `temperatura`, `semilla`,
+  `timeout_s`) y las cuatro claves de ADR-41 `EVAL_JUDGE_MODEL`, `EVAL_JUDGE_BASE_URL`, `EVAL_JUDGE_TEMPERATURE`,
+  `EVAL_JUDGE_SEED`, que **sustituyen** al YAML; una `EVAL_JUDGE_BASE_URL` vuelve local al juez y todo entra a la huella
+  (`hashConfig`). **El runner no lee el entorno del proceso** (US-037 AC-1: solo `app/config/` lo hace; el test
+  `test_configuracion_unica` lo exige): las claves entran por el parámetro `entorno` de `main()` y por los flags
+  equivalentes `--juez-modelo`, `--juez-base-url`, `--juez-temperatura`, `--juez-semilla` (los flags ganan).
+  **Para el usuario (fuera de las rutas de este change):** (1) añadir a `infra/docker/.env.example` las cuatro claves y
+  `EVAL_MAX_REGRESSION` (tolerancia del comparador de `l1d-237-eval-required-ci`; esta suite no la lee); (2) para que
+  `EVAL_JUDGE_*` del entorno llegue al runner con `npm run evaluate`, `scripts/eval/evaluate.mjs` debe traducirlas a los
+  flags `--juez-*` (hoy se pasan a mano); el mismo envoltorio no resuelve `--informe-pii` contra el directorio de quien
+  invoca: el runner lo resuelve contra la raíz del repo si es relativo.
+- **D16 · Guarda del juez (RN-12).** `exigir_juez_local()` corre en `_ejecutar` antes de cargar datos y de crear
+  ningún cliente, y `crear_juez_llm()` la repite antes de abrir el `httpx.AsyncClient`: una URL fuera de `HOSTS_LOCALES`
+  termina con código 1 sin un solo request, **también con datos sintéticos** (ADR-41). Un juez que no responde o
+  contesta algo no interpretable termina con código 1 (falla cerrado, sin textos en el mensaje).
+- **D17 · Procedimientos NO-EJECUTABLE en la CI** (requieren la máquina de referencia; no se inventan cifras):
+  (a) **juez LLM real:** con Ollama sirviendo G (`gemma4:26b-a4b-it-q4_K_M`), `npm run evaluate -- --suite generation --report json
+  --juez-base-url http://127.0.0.1:11434/v1 --juez-modelo gemma4:26b-a4b-it-q4_K_M --juez-temperatura 0 --juez-semilla <n>` (adapters fake, juez local: mide al juez sobre las afirmaciones de FX-T5a-a; la composición con
+  adapters reales llega con US-073); (b) **sensibilidad de PII sobre `pii-mini`:** `npm run eval:pii` (con
+  `PII_EVAL_PYTHON` apuntando a un Python con `data/eval/pii-mini/generar.py`) y luego `npm run evaluate -- --suite pii
+  --report json --informe-pii reports/adr40/clinical-api-pii.json`. La corrida de 072b contra el JSON real de `eval:pii`
+  se verificó a mano (código 0, solo conteos en el reporte).
+- **D16b · Ronda de Gate 2 (privacy-guardian y design-principles-reviewer).** Aplicado: cliente del juez con
+  `trust_env=False`; un `juez.modelo` que case con `(?i)(?:^|[:\-])cloud$` (modelos que Ollama ejecuta en la nube desde un host
+  local) aborta con código 1 antes de crear el cliente, sin nombrar el modelo, y cuenta como llamada a la nube si hubiera
+  salido; `llamadas_salientes_registradas` distingue 0 de «no se registró nada»; rangos y tipos del informe de PII;
+  `afirmaciones_para_el_nli` público en `domain/support.py`; `cargar_lista_de_terminos` común (la lista se parsea una vez);
+  `juzgar_soporte` en el puerto del juez; `chunks_entregados`; `registro` y `clase_datos` obligatorios;
+  `scripts/eval/evaluate.mjs` traduce `EVAL_JUDGE_*` a `--juez-*` (`flagsDelJuezDesdeEntorno`).
+  **Deuda:** `llamadas_nube_datos_reales` cuenta hoy solo las llamadas del juez; **US-073 debe registrar cada adapter HTTP en
+  `RegistroDeLlamadas`** al cablear `proveedor: local`. Menores sin aplicar: `FAMILIAS_POR_SUITE` como catálogo único, kwargs
+  en `ServicioDeSuite`, `Literal` para `CampoGenerado`/proveedores, la clave `traceId`, mover `JuezLlmLexico` a
+  `adaptadores_falsos.py`, `ruta_terminos` → `ruta_catalogos` (cambia el `hashConfig`: coordinar con L1D-237), TypedDict de los
+  reportes y el contrato del informe de PII en `contracts/examples/`.
+- **D16c · Vuelta 2 de Gate 2.** `es_modelo_de_nube` vive en `domain/reglas_proveedor.py` y normaliza (`NFKC`, `strip`, `casefold`)
+  antes de la regex; `juez.modelo` debe ser un identificador ASCII sin espacios ni control (`reporte.es_identificador`, la regla
+  del esquema cerrado) o la configuración se rechaza antes de cualquier request (código 2); un `ReporteFueraDeEsquema` termina
+  en código 1 con mensaje fijo. `modelo` es obligatorio en `LlamadaSaliente` y `RegistroDeLlamadas.registrar`.
+  **Riesgo residual (US-073):** un alias local (`ollama cp x:cloud mi-modelo` o un `Modelfile` con `FROM x:cloud`) no se detecta
+  por nombre, y el `llm_modelo` del generador no pasa por esta guarda.
+- **D18 · Prescriptivas e inyección (AC-1, AC-7).** `prescriptivas.yaml` dice en qué propuesta cruda aparece cada
+  salida (`pregunta`): `rationale` se suma a la justificación de la primera opción y `limitations[].text` se propone
+  como limitación; `ch-inj-1` lleva `inyeccion: true` y la consulta que lo recibe es un **caso de inyección**.
+  `VerificadorEstricto` (niveles A+B, `permitirFrases: false`, solo `CAMPOS_GENERADOS`) recarga la misma lista que el
+  filtro de producción (el verificador de producción guarda la lista en un atributo privado). El recuento de lo
+  **mostrado** incluye las opciones descartadas, las limitaciones y la síntesis. `es_inyeccion_efectiva()` es true con
+  un término prohibido o una cita fuera de los chunks entregados en esa consulta.
+- **D19 · Privacidad (AC-6).** La familia `pii` no consulta al servicio (`configuracion` sin `modelos` ni
+  `promptVersion`). `--informe-pii` (o `pii.informe_b1` en el YAML) apunta al JSON de `eval:pii`; de él solo salen
+  conteos y banderas por tipo directo y modo (`solo_formatos`; `identidad_de_referencia` es una cota de oráculo, no la
+  sensibilidad de producción). Sin informe, `sensibilidad_b1_medida: false` y la clave `sensibilidad_b1` falta
+  (sin medir ≠ 0). Un tipo de PII fuera del vocabulario o una forma inválida termina con código 1: no se ignora en
+  silencio. `llamadas_nube_datos_reales` cuenta, sobre el `RegistroDeLlamadas` que alimenta el juez, los destinos fuera
+  de `HOSTS_LOCALES` con datos que no son `sintetico`; las guardas abortan antes, así que su valor esperado es 0. **No
+  se cambia ningún umbral ni modelo de PII:** la decisión P-3 de ADR-40 (motor de nombres) no es de este change.
+- **D20 · Baseline.** `data/evaluation/baseline.json` se regeneró con `test-fake.yaml` (sin cambios: `hashConfig`
+  idéntico) y solo **añade** las familias `fidelidad`, `terminos_prohibidos`, `inyeccion` y el bloque `privacidad`;
+  el comparador de `l1d-237` debe tratar las claves nuevas como altas, no como regresiones.
+
 ## Adiciones aceptadas por el orquestador del sprint (sprint-S2) y deuda
 
 Aceptadas para 072a: (1) datasets en `data/eval/` y salidas en `data/evaluation/` (D6); (2) configs en
@@ -130,4 +201,4 @@ prescriptivas = 0. Este change no las cambia: las mide.
 
 ## Open Questions
 
-- P-1 (partición 072a/072b) y P-3 (juez) decididos (`[S2 resp. 1]`, `[S2 resp. 3]`).
+- P-1 (partición 072a/072b) y P-3 (juez) decididos (`[S2 resp. 1]`, `[S2 resp. 3]`). La P-3 de ADR-40 (motor de nombres de PII) sigue abierta y no es de este change.

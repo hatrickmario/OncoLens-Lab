@@ -71,6 +71,11 @@ La parte de privacidad MUST integrar la sensibilidad del detector de Backend 1 (
 - **WHEN** se ejecuta la parte de privacidad
 - **THEN** el reporte incluye la sensibilidad del detector de Backend 1 sobre identificadores directos y el número de llamadas a proveedores de nube con datos reales, igual a 0
 
+#### Scenario: Sin informe de B1 la sensibilidad queda sin medir [US-072 AC-6] (asumido, ADR-40)
+- **GIVEN** una ejecución de la familia `pii` sin el JSON de `npm run eval:pii`
+- **WHEN** se escribe el reporte
+- **THEN** `sensibilidad_b1_medida` es `false`, la sensibilidad no aparece (no se reporta 0) y las llamadas a la nube con datos reales siguen en 0
+
 ### Requirement: Proveedores locales por lista cerrada en código
 `es_proveedor_local()` MUST decidir con una lista de hosts locales cerrada en código (loopback y `host.docker.internal`), SHALL NOT leerla de configuración y MUST aplicarse antes de crear el cliente de cualquier adapter con URL. Si la clase del dataset no es `sintetico`, todos los adapters MUST ser locales o la suite MUST terminar con código distinto de 0 sin enviar ningún request. Durante la suite en la CI no SHALL haber conexiones salientes fuera de loopback.
 
