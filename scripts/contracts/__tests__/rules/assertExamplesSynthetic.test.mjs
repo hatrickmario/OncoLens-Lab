@@ -36,3 +36,28 @@ describe('assertExamplesSynthetic · correos', () => {
     expect(PREFIJO_SINTETICO).toBe('SINT-');
   });
 });
+
+describe('assertExamplesSynthetic · máscara del documento (L1D-202 D2)', () => {
+  const conClave = (clave, valor) => ({
+    dir: 'contracts/examples',
+    index: { examples: [{ file: 'a.json', spec: 'clinical-api' }] },
+    files: { 'a.json': { [clave]: valor } },
+  });
+  const hallazgos = (clave, valor) => assertExamplesSynthetic({}, conClave(clave, valor)).map((h) => h.message);
+
+  it('acepta la máscara cerrada de nationalIdMasked: cuatro viñetas, un espacio y dos caracteres [US-048 AC-7]', () => {
+    expect(hallazgos('nationalIdMasked', '•••• 56')).toEqual([]);
+    expect(hallazgos('nationalIdMasked', '•••• 01')).toEqual([]);
+  });
+
+  it('sigue exigiendo SINT- a nationalIdMasked cuando el valor no es la máscara cerrada [US-048 AC-7]', () => {
+    expect(hallazgos('nationalIdMasked', '1234567')).toHaveLength(1);
+    expect(hallazgos('nationalIdMasked', '•••• 4567')).toHaveLength(1);
+    expect(hallazgos('nationalIdMasked', '••• 56')).toHaveLength(1);
+  });
+
+  it('no extiende la excepción a los campos con el documento en claro [US-048 AC-7]', () => {
+    expect(hallazgos('nationalId', '•••• 56')).toHaveLength(1);
+    expect(hallazgos('documentNumber', '•••• 56')).toHaveLength(1);
+  });
+});
