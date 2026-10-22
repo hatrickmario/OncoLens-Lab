@@ -45,7 +45,7 @@
 ## 5. cierre
 
 - [x] 5.1 `openspec validate l1d-194-aviso-ia-etiqueta-academica --strict`, tests de `clinical-api`, `web` (componentes) y `scripts/contracts` en verde, y `contracts:verify-provider` (o su equivalente pendiente de US-214) sobre `POST /platform/evidence-analyses`. Los E2E de US-069 cierran en la rama de L1D-140 (tasks 3.4 de ese change).
-- [ ] 5.2 Nota para `/sprint-close`: la prosa de `readme.md` (§1, HU-03, OL-04), `CLAUDE.md` y `openspec/config.yaml` conserva el literal anterior; la sesión principal la corrige junto con la fila E-11 del PRD, RN-19 y US-069 `[S1 resp. 32]`. El literal validado manda. **Diferida a L1D-282 (ARR-06, conciliación) (cierre S1, 2026-10-18).**
+- [x] 5.2 Nota para `/sprint-close`: la prosa de `readme.md` (§1, HU-03, OL-04), `CLAUDE.md` y `openspec/config.yaml` conserva el literal anterior; la sesión principal la corrige junto con la fila E-11 del PRD, RN-19 y US-069 `[S1 resp. 32]`. El literal validado manda. **Conciliada en L1D-282 (ARR-06 AC-1, 2026-10-21):** el literal validado ya consta en `readme.md` (§1, HU-03, OL-04), `CLAUDE.md`, `openspec/config.yaml` (RN-19/RN-23), `docs/PRD.md` (fila E-11, RN-19, AC-T3.1); sin restos del literal anterior (`grep` de «Generado por IA» sobre esos cuatro ficheros). Pendiente de este change: solo 3.3 (L1D-278).
 
 
 > Cierre S1 (2026-10-18): tareas marcadas `[x]` tras `/opsx:verify` sobre `main` con evidencia de commits `test`/`feat` y suites en verde; las diferidas llevan su tarjeta de arrastre (`backlog/sprints/S2-arrastre.md`).
