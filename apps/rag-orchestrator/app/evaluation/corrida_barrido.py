@@ -124,10 +124,10 @@ def _dentro_de(ruta: Path, directorio: Path) -> bool:
     return not ruta.is_symlink() and ruta.resolve().is_relative_to(directorio.resolve())
 
 
-def exigir_fijado_permitido(ruta: Path, proveedor: str, directorio: Path | None) -> None:
+def exigir_fijado_permitido(ruta: Path, proveedor: str, directorio_de_configs: Path | None) -> None:
     """``--fijar`` solo escribe dentro del directorio de configuraciones y nunca con adapters falsos sobre la versionada:
     el umbral que sale de una calibración con falsos no significa nada y no debe quedar en una configuración versionada."""
-    permitido = directorio or directorio_de_configuraciones()
+    permitido = directorio_de_configs or directorio_de_configuraciones()
     if not _dentro_de(ruta, permitido):
         raise ConfigInvalida("--fijar solo escribe dentro del directorio de configuraciones")
     if proveedor == "fake" and _dentro_de(ruta, directorio_de_configuraciones()):
@@ -136,10 +136,14 @@ def exigir_fijado_permitido(ruta: Path, proveedor: str, directorio: Path | None)
         )
 
 
-def fijar_umbral_en_config(ruta: Path, umbral: float, directorio: Path | None = None) -> None:
+def config_con_umbral(texto: str, umbral: float) -> str:
+    raise NotImplementedError("no implementado")
+
+
+def fijar_umbral_en_config(ruta: Path, umbral: float, directorio_de_configs: Path | None = None) -> None:
     """Reescribe solo el valor de ``umbrales.relevance_threshold`` (comentarios y resto del YAML intactos), de forma
     atómica (temporal + ``replace``) y solo dentro del directorio de configuraciones."""
-    if not _dentro_de(ruta, directorio or directorio_de_configuraciones()):
+    if not _dentro_de(ruta, directorio_de_configs or directorio_de_configuraciones()):
         raise ConfigInvalida("--fijar solo escribe dentro del directorio de configuraciones")
     nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", ruta.read_text(encoding="utf-8"))
     if cambios != 1:
@@ -208,13 +212,13 @@ def ejecutar_barrido(
     salida: Path | None,
     fijar: bool,
     p95_e2e_s: float | None,
-    directorio_fijable: Path | None = None,
+    directorio_de_configs: Path | None = None,
 ) -> int:
     if config.barrido is None:
         raise ConfigInvalida("falta la sección barrido en la configuración")
     exigir_dataset_sintetico(dataset.clase)
     if fijar:
-        exigir_fijado_permitido(ruta_config, config.proveedor, directorio_fijable)
+        exigir_fijado_permitido(ruta_config, config.proveedor, directorio_de_configs)
     valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de)
     datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_e2e_s)
     carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
@@ -225,5 +229,5 @@ def ejecutar_barrido(
     )
     (carpeta / f"{NOMBRE_DEL_INFORME}.md").write_text(renderizar_informe(datos), encoding="utf-8")
     if fijar:
-        fijar_umbral_en_config(ruta_config, datos.eleccion.umbral, directorio_fijable)
+        fijar_umbral_en_config(ruta_config, datos.eleccion.umbral, directorio_de_configs)
     return 0

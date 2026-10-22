@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import TypeVar
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -38,6 +41,12 @@ def relevancia_de_opcion(
 def supera_umbral(relevance_score: float, umbral: float) -> bool:
     """Un puntaje pasa el umbral solo si lo supera de forma estricta (RN-02); una única definición para producción y la suite."""
     return relevance_score > umbral
+
+
+def corte_para_el_generador(
+    ordenados: Sequence[T], top_n: int, umbral: float, puntaje: Callable[[T], float]
+) -> list[T]:
+    raise NotImplementedError("no implementado")
 
 
 def filtrar_sobre_umbral(

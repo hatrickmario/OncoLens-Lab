@@ -122,7 +122,7 @@ def _ejecutar(
             salida=args.salida,
             fijar=args.fijar,
             p95_e2e_s=args.p95_e2e_s,
-            directorio_fijable=directorio_de_configs,
+            directorio_de_configs=directorio_de_configs,
         )
     reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)

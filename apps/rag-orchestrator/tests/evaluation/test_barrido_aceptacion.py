@@ -18,8 +18,8 @@ CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
 METAS = RAIZ_APP / "eval" / "configs" / "metas-iniciales.yaml"
 GRILLA = [0.2, 0.5, 0.9, 1.0]
 METRICAS = (
-    "recall@10",
-    "recall@10 es→en",
+    "recall@10 (tras reranker)",
+    "recall@10 es→en (tras reranker)",
     "MRR",
     "fidelidad (proxy)",
     "precisión de citas",

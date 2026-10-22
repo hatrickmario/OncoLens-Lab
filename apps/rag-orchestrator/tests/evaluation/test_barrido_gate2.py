@@ -20,7 +20,6 @@ from tests.evaluation.test_barrido_aceptacion import config_de_barrido
 from tests.support.fakes import RelojFijo
 
 CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
-INFORME = RAIZ_APP / "eval" / "reports" / "S1-baseline.md"
 SALIDA_DE_ARCHIVOS = ("S1-baseline.json", "S1-baseline.md")
 
 
@@ -88,7 +87,7 @@ def test_fijar_se_niega_cuando_la_ruta_esta_fuera_del_directorio_permitido(
     antes = config.read_bytes()
 
     with pytest.raises(ConfigInvalida):
-        fijar_umbral_en_config(config, 0.4, directorio=tmp_path / "otro")
+        fijar_umbral_en_config(config, 0.4, directorio_de_configs=tmp_path / "otro")
 
     assert config.read_bytes() == antes
 
@@ -100,7 +99,7 @@ def test_fijar_se_niega_cuando_la_ruta_es_un_enlace_simbolico(tmp_path: Path) ->
     antes = real.read_bytes()
 
     with pytest.raises(ConfigInvalida):
-        fijar_umbral_en_config(enlace, 0.4, directorio=tmp_path)
+        fijar_umbral_en_config(enlace, 0.4, directorio_de_configs=tmp_path)
 
     assert real.read_bytes() == antes
 
@@ -108,7 +107,7 @@ def test_fijar_se_niega_cuando_la_ruta_es_un_enlace_simbolico(tmp_path: Path) ->
 def test_fijar_escribe_de_forma_atomica_sin_dejar_temporales(tmp_path: Path) -> None:
     config = config_de_barrido(tmp_path)
 
-    fijar_umbral_en_config(config, 0.45, directorio=tmp_path)
+    fijar_umbral_en_config(config, 0.45, directorio_de_configs=tmp_path)
 
     assert sorted(p.name for p in tmp_path.iterdir()) == ["config.yaml"]
     assert (
@@ -117,14 +116,19 @@ def test_fijar_escribe_de_forma_atomica_sin_dejar_temporales(tmp_path: Path) -> 
     )
 
 
-def reporte_versionado() -> dict[str, object]:
-    return json.loads(
-        (RAIZ_APP / "eval" / "reports" / "S1-baseline.json").read_text(encoding="utf-8")
+def generar_informe(tmp_path: Path) -> tuple[str, dict[str, object]]:
+    """El informe y su JSON de una corrida de barrido en ``tmp_path``: nunca el artefacto versionado."""
+    config = config_de_barrido(tmp_path)
+    assert barrer_con(tmp_path, config, directorio_de_configs=tmp_path) == 0
+    salida = tmp_path / "salida"
+    return (
+        (salida / "S1-baseline.md").read_text(encoding="utf-8"),
+        json.loads((salida / "S1-baseline.json").read_text(encoding="utf-8")),
     )
 
 
-def test_esquema_exige_un_nombre_de_dataset_identificador() -> None:
-    reporte = reporte_versionado()
+def test_esquema_exige_un_nombre_de_dataset_identificador(tmp_path: Path) -> None:
+    reporte = generar_informe(tmp_path)[1]
     validar_esquema_cerrado(reporte, ESQUEMA_BASELINE)
 
     with pytest.raises(ReporteFueraDeEsquema):
@@ -134,19 +138,17 @@ def test_esquema_exige_un_nombre_de_dataset_identificador() -> None:
 
 
 @pytest.mark.parametrize("huella", ["abc", "Z" * 64, "A" * 64])
-def test_esquema_exige_una_huella_sha256_en_minusculas(huella: str) -> None:
+def test_esquema_exige_una_huella_sha256_en_minusculas(tmp_path: Path, huella: str) -> None:
     with pytest.raises(ReporteFueraDeEsquema):
-        validar_esquema_cerrado({**reporte_versionado(), "hashConfig": huella}, ESQUEMA_BASELINE)
+        validar_esquema_cerrado({**generar_informe(tmp_path)[1], "hashConfig": huella}, ESQUEMA_BASELINE)
 
 
-def test_informe_aclara_que_la_fila_elegida_no_significa_nada_con_adapters_falsos() -> None:
-    assert "valores de la fila elegida (sin significado con adapters falsos)" in INFORME.read_text(
-        encoding="utf-8"
-    )
+def test_informe_aclara_que_las_cifras_no_significan_nada_con_adapters_falsos(tmp_path: Path) -> None:
+    assert "(sin significado con adapters falsos)" in generar_informe(tmp_path)[0]
 
 
-def test_procedimiento_del_p95_va_por_la_bff_desde_el_host_y_no_desde_un_contenedor() -> None:
-    informe = INFORME.read_text(encoding="utf-8")
+def test_procedimiento_del_p95_va_por_la_bff_desde_el_host_y_no_desde_un_contenedor(tmp_path: Path) -> None:
+    informe = generar_informe(tmp_path)[0]
 
     assert (
         "python -m app.scripts.adr39 e2e --bff --base-url https://localhost --origin https://localhost"
