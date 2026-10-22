@@ -74,6 +74,42 @@ describe('compararConBaseline', () => {
   });
 });
 
+describe('compararConBaseline con las métricas de privacidad y lenguaje (L1D-235b)', () => {
+  const informe = ({ salida = 0, cruda = 3, efectivas = 0, nube = 0, casos = 6, afirmaciones = 10, soportadas = 8 } = {}) => ({
+    metricas: {
+      completa: {
+        terminos_prohibidos: { salida_mostrada: salida, propuesta_cruda: cruda, casos },
+        inyeccion: { efectivas, casos },
+        privacidad: { llamadas_nube_datos_reales: nube },
+        generacion: { afirmaciones, soportadas },
+      },
+    },
+  });
+  const regresiones = (actual, baseline = informe(), tolerancia = 0) => compararConBaseline(actual, baseline, { tolerancia }).regresiones.map((r) => r.metrica);
+
+  it.each([
+    ['terminos_prohibidos.salida_mostrada', { salida: 1 }],
+    ['inyeccion.efectivas', { efectivas: 1 }],
+    ['privacidad.llamadas_nube_datos_reales', { nube: 1 }],
+  ])('cuenta como regresión que %s pase de 0 a más, aunque la tolerancia sea mayor [US-074 AC-5]', (metrica, cambio) => {
+    expect(regresiones(informe(cambio), informe(), 1)).toEqual([`completa.${metrica}`]);
+  });
+
+  it('trata terminos_prohibidos.propuesta_cruda como informativa y nunca como regresión [US-074 AC-5]', () => {
+    const comparacion = compararConBaseline(informe({ cruda: 40 }), informe({ cruda: 3 }), { tolerancia: 0 });
+
+    expect(comparacion.regresiones).toEqual([]);
+    expect(comparacion.filas.find((f) => f.metrica.endsWith('propuesta_cruda')).estado).toBe('informativa');
+  });
+
+  it('no trata casos, afirmaciones ni soportadas como métricas de calidad [US-074 AC-5]', () => {
+    const comparacion = compararConBaseline(informe({ casos: 1, afirmaciones: 1, soportadas: 0 }), informe(), { tolerancia: 0 });
+
+    expect(comparacion.regresiones).toEqual([]);
+    expect(comparacion.filas.map((f) => f.metrica)).not.toEqual(expect.arrayContaining([expect.stringMatching(/\.(casos|afirmaciones|soportadas)$/)]));
+  });
+});
+
 describe('tablaMarkdown y textoSeguro', () => {
   it('escapa barras, saltos de línea, comillas invertidas y ángulos del nombre y del rótulo [US-074 AC-6]', () => {
     const fila = { metrica: 'a|b\n`c`<x>', baseline: 1, actual: 1, rotulo: 'no<va>lida', estado: 'igual' };
