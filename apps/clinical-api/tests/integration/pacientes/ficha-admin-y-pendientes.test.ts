@@ -47,17 +47,6 @@ async function pedirFichaConSql(id: string, cookie: string) {
   return { respuesta, consultas };
 }
 
-const TABLAS_CLINICAS = [
-  'clinical.diagnosis',
-  'clinical.biomarker',
-  'clinical.exam',
-  'clinical.clinical_note',
-  'clinical.prior_treatment',
-  'clinical.clinical_event',
-  'clinical.clinical_attribute',
-  'clinical.care_team_member',
-];
-
 describe('ficha del paciente: admin', () => {
   it('entrega al admin 200 PatientAdminSummary sin datos clínicos ni nombre y sin leer tablas clínicas [US-045 AC-6]', async () => {
     const { respuesta, consultas } = await pedirFichaConSql(
@@ -77,9 +66,14 @@ describe('ficha del paciente: admin', () => {
     }
     expect(JSON.stringify(respuesta.body)).not.toContain('Prueba Sintética');
     expect(consultas.length).toBeGreaterThan(0);
-    for (const sql of consultas) {
-      for (const tabla of TABLAS_CLINICAS) expect(sql).not.toContain(tabla);
-    }
+    // Lista blanca: el SQL del módulo para el admin toca solo estas tablas (ninguna de datos clínicos). La identidad la
+    // lee el `IdentityService` con su propia conexión; su tabla también está permitida.
+    const permitidas = new Set(['clinical.patient', 'identity.patient_identity']);
+    const tablasTocadas = consultas.flatMap(
+      (sql) => sql.match(/\b(?:clinical|identity|audit|research|auth)\.\w+/g) ?? [],
+    );
+    expect(tablasTocadas).toContain('clinical.patient');
+    for (const tabla of tablasTocadas) expect(permitidas.has(tabla)).toBe(true);
   });
 
   it('responde 403 PERMISO_DENEGADO cuando el rol no tiene clinical:read ni patients:lookup [US-045 AC-6]', async () => {
