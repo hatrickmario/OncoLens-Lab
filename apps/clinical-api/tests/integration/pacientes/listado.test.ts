@@ -172,4 +172,24 @@ describe('listado de pacientes', () => {
     expect(rows[0]?.n).toBeGreaterThan(0);
     expect(despues).toBe(rows[0]?.n);
   });
+
+  it('no consulta diagnósticos ni datos clínicos cuando lista el admin [US-048 AC-7]', async () => {
+    const consultas: string[] = [];
+    const db = {
+      query: (sql: string, valores?: unknown[]) => {
+        consultas.push(sql);
+        return escenario.mundo.cliente.query(sql, valores);
+      },
+    };
+    const { app } = montarPacientes(escenario.mundo, { db });
+
+    const respuesta = await clienteVerificado(app)
+      .get('/platform/patients')
+      .set('Cookie', escenario.cookieAdmin);
+
+    expect(respuesta.status).toBe(200);
+    const sqlDelListado = consultas.filter((sql) => sql.includes('clinical.patient'));
+    expect(sqlDelListado.length).toBeGreaterThan(0);
+    for (const sql of consultas) expect(sql).not.toContain('clinical.diagnosis');
+  });
 });

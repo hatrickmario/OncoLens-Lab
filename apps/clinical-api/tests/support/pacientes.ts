@@ -2,6 +2,7 @@ import type { Express, Router } from 'express';
 import type { IdentityService } from '../../src/modules/patients/identity.service.js';
 import { componerModuloDePacientes } from '../../src/modules/patients/patients.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
+import type { Consultador } from '../../src/modules/auth/auth.repository.js';
 import { appConAuth } from './app-auth.js';
 import {
   AHORA,
@@ -33,6 +34,8 @@ export interface OpcionesDePacientes {
   /** `IdentityService` a usar (p. ej. uno que cuenta los descifrados); por defecto el real con las claves de test. */
   identidad?: IdentityService;
   logger?: LoggerEnMemoria;
+  /** Sustituye a la conexión del módulo (p. ej. una que registra el SQL que recibe). */
+  db?: Consultador;
 }
 
 export function montarPacientes(
@@ -42,7 +45,7 @@ export function montarPacientes(
   const reloj = relojFijo(AHORA);
   const logger = opciones.logger ?? loggerEnMemoria();
   const router = componerModuloDePacientes({
-    db: mundo.cliente,
+    db: opciones.db ?? mundo.cliente,
     identidad: opciones.identidad ?? servicioDeIdentidad(mundo.cliente),
     tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
     traceIds: { traceId: () => TRACE_ID_GENERADO },
