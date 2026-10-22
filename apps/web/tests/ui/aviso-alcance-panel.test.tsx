@@ -19,24 +19,38 @@ describe('EvidencePanel · aviso de alcance (tipo_no_habilitado)', () => {
     bff.reiniciar();
   });
 
-  it('muestra el aviso de alcance y la Base del análisis, sin opciones ni estilo de error, ante tipo_no_habilitado [US-043 AC-2]', async () => {
+  it('muestra el aviso de alcance informativo, sin estilo de error, ante tipo_no_habilitado [US-043 AC-2]', async () => {
     bff.responder({ status: 200, cuerpo: tipoNoHabilitado });
     await analizar();
 
     const aviso = await screen.findByText(AVISO);
     expect(aviso.closest('[role="alert"]')).toBeNull();
     expect(aviso.closest('[role="status"]')).toBeTruthy();
+    expect(screen.queryByText(evidence.error.generico)).toBeNull();
+    for (const nota of screen.getAllByRole('note')) {
+      expect(nota.textContent).toBe(tipoNoHabilitado.disclaimer);
+    }
+  });
+
+  it('muestra la Base del análisis diciendo que no se consultó el corpus ante tipo_no_habilitado [US-043 AC-2]', async () => {
+    bff.responder({ status: 200, cuerpo: tipoNoHabilitado });
+    await analizar();
+
+    await screen.findByText(AVISO);
     expect(screen.getByRole('heading', { level: 3, name: 'Base del análisis' })).toBeTruthy();
     expect(screen.getByText('No se consultó el corpus: tipo fuera de alcance')).toBeTruthy();
-    expect(screen.queryByText(evidence.error.generico)).toBeNull();
+  });
+
+  it('no muestra opciones, puntaje ni anuncio de análisis listo ante tipo_no_habilitado [US-043 AC-2]', async () => {
+    bff.responder({ status: 200, cuerpo: tipoNoHabilitado });
+    await analizar();
+
+    await screen.findByText(AVISO);
     expect(screen.queryByRole('heading', { name: evidence.resultado.encabezado })).toBeNull();
     expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
     expect(screen.queryByTestId('relevance-label')).toBeNull();
     expect(screen.queryByText(/Relevancia máxima/)).toBeNull();
     expect(screen.queryByText(/Análisis listo/)).toBeNull();
-    for (const nota of screen.getAllByRole('note')) {
-      expect(nota.textContent).toBe(tipoNoHabilitado.disclaimer);
-    }
   });
 
   it('mantiene el formulario habilitado para seguir consultando cuando el tipo no está habilitado [US-043 AC-2] [RN-26]', async () => {
