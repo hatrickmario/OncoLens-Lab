@@ -17,6 +17,7 @@ const report = reporter('assertConsumersUseGeneratedClients', 'AC-1 · US-214 ·
 export const TRANSPORTES_DECLARADOS = [
   { file: 'apps/clinical-api/src/infrastructure/rag-orchestrator.http.ts', llamada: 'enviar(', motivo: 'fetch inyectado en el SDK generado de rag-orchestrator (JWT de servicio por petición, sin cookie, sin redirecciones)' },
   { file: 'apps/web/lib/server/clinical-api.ts', llamada: 'opciones.fetch(', motivo: 'fetch inyectado en el SDK generado de clinical-api (lista blanca de cabeceras, timeout, sin redirecciones)' },
+  { file: 'apps/web/lib/server/fijar-ip-del-socket.ts', llamada: "from 'node:http'", motivo: 'hook entrante de http.Server que fija X-Forwarded-For; no es un cliente saliente' },
 ];
 
 /** Paquetes de cliente HTTP que se detectan por import, require y mención: una sola lista. */

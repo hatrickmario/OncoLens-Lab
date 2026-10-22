@@ -1,7 +1,9 @@
 {
   "app": {
     "nombre": "OncoLens",
-    "academicUseLabel": "Uso académico/investigación"
+    "academicUseLabel": "Uso académico/investigación",
+    "cerrarSesion": "Cerrar sesión",
+    "errorCerrarSesion": "No se pudo cerrar la sesión. Inténtalo de nuevo."
   },
   "login": {
     "titulo": "Iniciar sesión",
@@ -11,7 +13,9 @@
     "enviar": "Iniciar sesión",
     "enviando": "Entrando…",
     "errorCredenciales": "Correo o contraseña incorrectos.",
-    "errorServicio": "No se pudo iniciar sesión en este momento. Inténtalo de nuevo."
+    "errorServicio": "No se pudo iniciar sesión en este momento. Inténtalo de nuevo.",
+    "sesionExpirada": "Tu sesión expiró. Vuelve a iniciar sesión.",
+    "sesionCerrada": "Cerraste sesión."
   },
   "evidence": {
     "titulo": "Análisis de evidencia",
