@@ -1,6 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 import { detectar, lineasCambiadas, tocaDisparador } from '../eval-trigger.mjs';
 
@@ -84,13 +86,40 @@ describe('lineasCambiadas', () => {
 });
 
 describe('detectar', () => {
+  /** Repositorio temporal con dos commits: no depende del historial ni de la profundidad del checkout. */
+  const carpetas = [];
+  afterAll(() => carpetas.forEach((carpeta) => rmSync(carpeta, { recursive: true, force: true })));
+  const repositorio = () => {
+    const raiz = mkdtempSync(path.join(os.tmpdir(), 'oncolens-detectar-'));
+    carpetas.push(raiz);
+    const git = (...parametros) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', '-C', raiz, ...parametros], { encoding: 'utf8' });
+    git('init', '-q');
+    writeFileSync(path.join(raiz, 'a.txt'), 'uno\n');
+    git('add', '-A');
+    git('commit', '-q', '-m', 'base');
+    const base = git('rev-parse', 'HEAD').trim();
+    writeFileSync(path.join(raiz, 'a.txt'), 'dos\n');
+    git('commit', '-q', '-am', 'cambio');
+    return { raiz, base };
+  };
+
   it('ejecuta la suite con el motivo base-desconocida cuando la base no existe [US-074 AC-1]', () => {
-    const resultado = detectar({ base: '0000000000000000000000000000000000000000' });
+    const { raiz } = repositorio();
+
+    const resultado = detectar({ raiz, base: '0000000000000000000000000000000000000000', reglas: REGLAS });
 
     expect(resultado.motivos).toEqual([{ ruta: '(diff completo)', motivo: 'base-desconocida' }]);
   });
 
+  it('no dispara con una base legible cuando el diff no toca disparadores [US-074 AC-1]', () => {
+    const { raiz, base } = repositorio();
+
+    expect(detectar({ raiz, base, reglas: REGLAS })).toEqual({ dispara: false, motivos: [] });
+  });
+
   it('propaga el error de las reglas en vez de disfrazarlo de base desconocida [US-074 AC-1]', () => {
-    expect(() => detectar({ base: 'HEAD~3', reglas: { rutas: ['{sin-cierre'], claves: { archivos: [] } } })).toThrow();
+    const { raiz, base } = repositorio();
+
+    expect(() => detectar({ raiz, base, reglas: { rutas: ['{sin-cierre'], claves: { archivos: [] } } })).toThrow();
   });
 });
