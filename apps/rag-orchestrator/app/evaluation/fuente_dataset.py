@@ -33,6 +33,18 @@ class ChunkCorpus:
     id: str
     documento: str
     texto: str
+    inyeccion: bool = False
+    """Chunk con instrucciones plantadas (SEG-13): la consulta que lo recibe es un caso de inyección."""
+
+
+@dataclass(frozen=True)
+class SalidaPrescriptiva:
+    """Una salida cruda del generador con términos prohibidos (RN-23) y la propuesta en la que aparece."""
+
+    id: str
+    pregunta: str
+    campo: str
+    texto: str
 
 
 @dataclass(frozen=True)
@@ -55,7 +67,7 @@ class DatasetSuite:
     chunks: tuple[ChunkCorpus, ...]
     propuestas: dict[str, tuple[OpcionPropuesta, ...]]
     textos_pii: tuple[str, ...]
-    salidas_prescriptivas: tuple[str, ...]
+    salidas_prescriptivas: tuple[SalidaPrescriptiva, ...]
 
 
 class FuenteDataset(Protocol):
@@ -126,9 +138,7 @@ class FuenteDatasetEnDirectorio:
             chunks=_chunks(corpus),
             propuestas=_propuestas(partes["propuestas"]),
             textos_pii=tuple(str(t["texto"]) for t in partes["pii"].get("textos", [])),
-            salidas_prescriptivas=tuple(
-                str(s["texto"]) for s in partes["prescriptivas"].get("salidas", [])
-            ),
+            salidas_prescriptivas=_salidas_prescriptivas(partes["prescriptivas"]),
         )
 
     def _exigir_clase_admitida(self, manifiesto: dict[str, Any]) -> str:
@@ -172,9 +182,26 @@ def _documentos(corpus: dict[str, Any]) -> tuple[DocumentoCorpus, ...]:
 
 def _chunks(corpus: dict[str, Any]) -> tuple[ChunkCorpus, ...]:
     return tuple(
-        ChunkCorpus(str(c["id"]), str(c["documento"]), str(c["texto"]))
+        ChunkCorpus(str(c["id"]), str(c["documento"]), str(c["texto"]), bool(c.get("inyeccion")))
         for c in corpus.get("chunks", [])
     )
+
+
+CAMPOS_PRESCRIPTIVOS = ("rationale", "limitations[].text")
+"""Los campos en los que el generador guionado sabe colocar una salida prescriptiva."""
+
+
+def _salidas_prescriptivas(crudo: dict[str, Any]) -> tuple[SalidaPrescriptiva, ...]:
+    """Un campo desconocido falla en voz alta: callado dejaría la métrica RN-23 subcontada.
+
+    La pregunta no se valida contra el dataset: un subconjunto (ADR-45) legítimamente deja fuera sus preguntas."""
+    salidas = tuple(
+        SalidaPrescriptiva(str(s["id"]), str(s["pregunta"]), str(s["campo"]), str(s["texto"]))
+        for s in crudo.get("salidas", [])
+    )
+    if any(s.campo not in CAMPOS_PRESCRIPTIVOS for s in salidas):
+        raise DatasetInvalido("una salida prescriptiva usa un campo desconocido")
+    return salidas
 
 
 def _propuestas(crudo: dict[str, Any]) -> dict[str, tuple[OpcionPropuesta, ...]]:

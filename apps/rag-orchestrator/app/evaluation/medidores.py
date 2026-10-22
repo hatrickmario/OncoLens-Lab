@@ -39,6 +39,8 @@ class Observaciones:
     propuestas: dict[str, EvidenciaGenerada] = field(default_factory=dict)
     entregados: dict[str, frozenset[str]] = field(default_factory=dict)
     """Ids de los chunks sobre el umbral entregados al generador: el conjunto citable de esa consulta."""
+    textos_entregados: dict[str, dict[str, str]] = field(default_factory=dict)
+    """``chunk_id -> texto`` de lo entregado al generador: las premisas con las que se juzga su fidelidad."""
     generaciones: int = 0
 
 
@@ -124,6 +126,9 @@ class GeneradorObservado:
         self._obs.entregados[solicitud.query] = frozenset(
             c.chunk_id for c in recuperacion.chunks_sobre_umbral
         )
+        self._obs.textos_entregados[solicitud.query] = {
+            c.chunk_id: c.chunk_text for c in recuperacion.chunks_sobre_umbral
+        }
         return evidencia
 
 

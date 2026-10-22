@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.application.ports import Clock
+from app.application.ports import Clock, ProhibitedTermsChecker
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -22,6 +22,8 @@ from app.evaluation.adaptadores_falsos import (
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli
+from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.medidores import (
     BuscadorMedido,
     CatalogoMedido,
@@ -35,7 +37,10 @@ from app.evaluation.medidores import (
 )
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
-from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
+from app.infrastructure.lenguaje.terminos_prohibidos import (
+    VerificadorDeTerminosProhibidos,
+    cargar_lista_de_terminos,
+)
 from app.schemas.generated.models import LlmProvider
 
 LONGITUD_MAXIMA_CODIGO_TIPO = 64
@@ -47,6 +52,10 @@ class ServicioDeSuite:
     observaciones: Observaciones
     cronometro: Cronometro
     catalogo_version: str
+    verificador_estricto: VerificadorEstricto
+    verificador_produccion: ProhibitedTermsChecker
+    juez_nli: JuezFidelidad
+    juez_llm: JuezFidelidad | None
 
 
 def parametros_de_recuperacion(
@@ -66,12 +75,19 @@ def parametros_de_recuperacion(
 
 
 def componer_servicio(
-    config: ConfigSuite, dataset: DatasetSuite, cronometro: Cronometro, reloj: Clock
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    cronometro: Cronometro,
+    reloj: Clock,
+    juez_llm: JuezFidelidad | None = None,
 ) -> ServicioDeSuite:
     if config.proveedor != "fake":
         raise ConfigInvalida("adaptadores.proveedor: local se cablea con US-073")
     observaciones = Observaciones()
     embedder = EmbedderBolsaDePalabras()
+    nli = NliLexico()
+    lista = cargar_lista_de_terminos(config.ruta_terminos)  # se lee y valida una sola vez
+    terminos = VerificadorDeTerminosProhibidos(lista)
     # La suite habilita los tipos del catálogo montado (RN-20): el dataset no restringe el tipo y la huella no cambia.
     tipos_habilitados = cargar_catalogo_del_manifiesto(config.ruta_terminos).tipos_de_cancer()
     servicio = RAGOrchestratorService(
@@ -83,9 +99,20 @@ def componer_servicio(
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
         generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
-        clasificador_nli=NliMedido(NliLexico(), cronometro),
-        verificador_terminos=cargar_verificador_de_terminos(config.ruta_terminos),
+        clasificador_nli=NliMedido(nli, cronometro),
+        verificador_terminos=terminos,
         reloj=reloj,
         parametros=parametros_de_recuperacion(config, tipos_habilitados),
     )
-    return ServicioDeSuite(servicio, observaciones, cronometro, config.catalogo_version)
+    return ServicioDeSuite(
+        servicio,
+        observaciones,
+        cronometro,
+        config.catalogo_version,
+        VerificadorEstricto(lista),
+        terminos,
+        JuezNli(
+            nli, config.umbrales.nli_entailment_threshold
+        ),  # sin cronómetro: no es la etapa «nli»
+        juez_llm,
+    )
