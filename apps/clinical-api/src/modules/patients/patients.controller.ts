@@ -100,6 +100,16 @@ function crearCuerpoIlegible(respuestas: Respuestas): ErrorRequestHandler {
   };
 }
 
+function crearFicha(service: PatientsService): RequestHandler {
+  return async (request, response) => {
+    const ficha = await service.obtenerFicha({
+      patientId: String(request.params['patientId']),
+      vista: vistaDe(request),
+    });
+    response.status(200).json(ficha);
+  };
+}
+
 /**
  * `GET /patients` y `POST /patients/search` (se montan bajo `/platform`, detrás del guard de sesión). Solo traducen
  * HTTP ↔ service; el log nunca lleva filtros con identidad, cuerpos ni datos del paciente (RN-10).
@@ -113,6 +123,12 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     crearTraceIdMiddleware(traceIds),
     authorize('patients:lookup'),
     crearListar(service, respuestas),
+  );
+  router.get(
+    '/patients/:patientId',
+    crearTraceIdMiddleware(traceIds),
+    authorize('clinical:read', 'patients:lookup'), // x-permission de getPatient: alguno de los dos
+    crearFicha(service),
   );
   router.post(
     '/patients/search',

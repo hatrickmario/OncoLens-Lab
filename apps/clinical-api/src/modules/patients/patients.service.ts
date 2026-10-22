@@ -2,6 +2,7 @@ import type {
   PatientAdminSummary,
   PatientListItem,
   PatientPage,
+  PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
@@ -24,6 +25,11 @@ export type VistaDeListado = 'doctor_listado' | 'admin';
 export interface PatientsService {
   listar(entrada: { filtros: FiltrosDelListado; vista: VistaDeListado }): Promise<PatientPage>;
   buscar(entrada: { busqueda: BusquedaDePacientes; vista: VistaDeListado }): Promise<PatientPage>;
+  /** Ficha de un paciente: `PatientSummary` para quien lee datos clínicos, `PatientAdminSummary` para el resto. */
+  obtenerFicha(entrada: {
+    patientId: string;
+    vista: VistaDeListado;
+  }): Promise<PatientSummary | PatientAdminSummary>;
 }
 
 export interface DependenciasDelService {
@@ -186,6 +192,7 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
         page: filtros.page,
         vista,
       }),
+    obtenerFicha: () => Promise.reject(new Error('no implementado')),
     async buscar({ busqueda, vista }) {
       const ids = await pacientesQueCoinciden(dependencias.identidad, busqueda.criterio);
       return paginar(dependencias, { filtro: { ids }, page: busqueda.page, vista });
