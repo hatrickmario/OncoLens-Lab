@@ -96,13 +96,6 @@ export function leerUmbrales(ruta = rutaDeUmbrales()) {
   return validarUmbrales(JSON.parse(readFileSync(ruta, 'utf8')));
 }
 
-/** Clasifica el tamaño de un componente: ok, alerta (no falla) o error (falla la CI). */
-export function evaluarTamanoComponente(lineas, web) {
-  if (lineas > web.componentLinesError) return 'error';
-  if (lineas > web.componentLinesWarn) return 'alerta';
-  return 'ok';
-}
-
 /** Excepciones aún vigentes: la fecha `caduca` (AAAA-MM-DD) es el último día incluido. */
 export function excepcionesVigentes(excepciones, hoy) {
   const hoyIso = hoy.toISOString().slice(0, 10);

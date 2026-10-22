@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  evaluarTamanoComponente,
   excepcionesVigentes,
   rutaDeUmbrales,
   validarUmbrales,
@@ -69,23 +68,6 @@ describe('validarUmbrales', () => {
     expect(() => validarUmbrales({ ...BASE, excepciones: [{ regla: 'x' }] })).toThrow(
       /excepciones\[0\]/,
     );
-  });
-});
-
-describe('evaluarTamanoComponente', () => {
-  const web = BASE.web;
-
-  it('devuelve ok cuando el componente no supera la alerta', () => {
-    expect(evaluarTamanoComponente(100, web)).toBe('ok');
-  });
-
-  it('devuelve alerta cuando supera 100 líneas sin pasar de 150 [US-213 AC-7]', () => {
-    expect(evaluarTamanoComponente(120, web)).toBe('alerta');
-    expect(evaluarTamanoComponente(150, web)).toBe('alerta');
-  });
-
-  it('devuelve error cuando supera 150 líneas [US-213 AC-7]', () => {
-    expect(evaluarTamanoComponente(151, web)).toBe('error');
   });
 });
 
