@@ -18,8 +18,8 @@ from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
-from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos
-from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos, medir_propuesta_cruda
+from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
@@ -112,6 +112,7 @@ async def _resultado_de(
 class _LenguajeDeLaConsulta(TypedDict):
     salidas_prohibidas_crudas: int
     salidas_prohibidas_mostradas: int
+    lenguaje_crudo: LenguajeCrudo
     caso_inyeccion: bool
     inyecciones_efectivas: int
 
@@ -135,9 +136,25 @@ def _lenguaje_de(
         "salidas_prohibidas_mostradas": contar_salidas_con_terminos(
             textos_de_respuesta(respuesta), verificador
         ),
+        "lenguaje_crudo": _lenguaje_crudo_de(suite, texto_pregunta),
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
     }
+
+
+def _lenguaje_crudo_de(suite: ServicioDeSuite, texto_pregunta: str) -> LenguajeCrudo:
+    """Términos por nivel en la propuesta cruda y cuáles copia del corpus que ella misma cita (ARR-03 AC-3, AC-4)."""
+    propuesta = suite.observaciones.propuestas.get(texto_pregunta)
+    if propuesta is None:
+        return LenguajeCrudo()
+    entregados = suite.observaciones.textos_entregados.get(texto_pregunta, {})
+    citados = {c for opcion in propuesta.opciones for c in opcion.chunk_ids_citados}
+    return medir_propuesta_cruda(
+        textos_de_propuesta(propuesta),
+        [opcion.rationale for opcion in propuesta.opciones],
+        [texto for chunk, texto in entregados.items() if chunk in citados],
+        suite.verificador_estricto,
+    )
 
 
 def _inyecciones_efectivas(

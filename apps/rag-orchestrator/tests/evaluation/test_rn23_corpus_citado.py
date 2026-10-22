@@ -50,7 +50,9 @@ def test_evaluate_cuenta_la_reproduccion_literal_de_standard_of_care_y_recommend
 def test_evaluate_mide_cuantas_opciones_usan_la_formula_de_atribucion_a_la_fuente(
     tmp_path: Path,
 ) -> None:
-    atribucion = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"].get("atribucion", {})
+    atribucion = correr(tmp_path)["metricas"]["completa"]["terminos_prohibidos"].get(
+        "atribucion", {}
+    )
 
     assert (atribucion.get("opciones"), atribucion.get("con_formula")) == (4, 2)
 

@@ -124,8 +124,22 @@
         "violaciones_rn02": 0
       },
       "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 5
+        },
         "propuesta_cruda": 2,
+        "propuesta_cruda_por_nivel": {
+          "A": 2,
+          "B": 0
+        },
+        "reproduccion_literal_del_corpus": 0,
         "salida_mostrada": 0,
+        "terminos_nivel_a": [
+          "es-debe-recibir",
+          "es-recomendado-para-este-paciente"
+        ],
+        "terminos_nivel_b": [],
         "validacion": {
           "preguntas_no_validadas": 6,
           "preguntas_validadas": 0,
@@ -217,8 +231,19 @@
         "violaciones_rn02": 0
       },
       "terminos_prohibidos": {
+        "atribucion": {
+          "con_formula": 0,
+          "opciones": 0
+        },
         "propuesta_cruda": 0,
+        "propuesta_cruda_por_nivel": {
+          "A": 0,
+          "B": 0
+        },
+        "reproduccion_literal_del_corpus": 0,
         "salida_mostrada": 0,
+        "terminos_nivel_a": [],
+        "terminos_nivel_b": [],
         "validacion": {
           "preguntas_no_validadas": 0,
           "preguntas_validadas": 0,
