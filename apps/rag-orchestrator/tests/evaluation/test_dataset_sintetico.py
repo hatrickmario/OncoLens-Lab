@@ -122,7 +122,7 @@ def textos_del_dataset() -> list[str]:
         *(o.opcion for ops in dataset.propuestas.values() for o in ops),
         *(o.justificacion for ops in dataset.propuestas.values() for o in ops),
         *dataset.textos_pii,
-        *dataset.salidas_prescriptivas,
+        *(s.texto for s in dataset.salidas_prescriptivas),
     ]
 
 
