@@ -12,6 +12,8 @@ updates:
     ignore:
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
@@ -65,7 +67,7 @@ updates:
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
       - dependency-name: "python"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: docker-compose
     directory: /infra/docker
@@ -78,6 +80,6 @@ updates:
       - dependency-name: "postgres"
         update-types: ["version-update:semver-major"]
       - dependency-name: "quay.io/coreos/etcd"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "milvusdb/milvus"
         update-types: ["version-update:semver-major"]
