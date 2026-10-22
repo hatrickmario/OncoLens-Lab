@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.evaluation.comparar_regresion import main
-from app.evaluation.regresion import AVISO_SIN_BASELINE
+from app.evaluation.regresion import AVISO_SIN_MINIMOS
 from tests.evaluation.conftest import RAIZ_APP
 
 REGRESION_VERSIONADA = RAIZ_APP / "eval" / "configs" / "regression.yaml"
@@ -47,7 +47,7 @@ def test_comparar_con_regression_yaml_sin_umbrales_pasa_con_aviso(
     codigo = comparar(reporte_con_recall(tmp_path, 0.5), config)
 
     salida = capsys.readouterr()
-    assert (codigo, AVISO_SIN_BASELINE in salida.out) == (0, True)
+    assert (codigo, AVISO_SIN_MINIMOS in salida.out) == (0, True)
 
 
 @pytest.mark.ac("US-074", 5)
@@ -61,7 +61,7 @@ def test_comparar_con_recall_bajo_el_minimo_falla_nombrando_recall_at_10(
     salida = capsys.readouterr()
     assert codigo == 1
     assert "recall_at_10" in salida.err
-    assert AVISO_SIN_BASELINE not in salida.out
+    assert AVISO_SIN_MINIMOS not in salida.out
 
 
 def test_comparar_con_reporte_ilegible_sale_con_2_sin_filtrar_su_contenido(

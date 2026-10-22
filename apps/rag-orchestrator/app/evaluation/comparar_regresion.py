@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from app.evaluation.regresion import (
-    AVISO_SIN_BASELINE,
-    ResultadoRegresion,
+    AVISO_SIN_MINIMOS,
     EntradaInvalida,
-    cargar_umbrales,
+    ResultadoRegresion,
+    cargar_minimos,
     comparar_con_regresion,
 )
 
@@ -40,7 +40,7 @@ def _leer_reporte(ruta: Path) -> dict[str, Any]:
 
 def _imprimir_y_codigo_de_salida(resultado: ResultadoRegresion) -> int:
     if not resultado.aplicado:
-        print(AVISO_SIN_BASELINE)
+        print(AVISO_SIN_MINIMOS)
         return 0
     for fallo in resultado.incumplimientos:
         actual = "sin valor" if fallo.actual is None else fallo.actual
@@ -54,7 +54,7 @@ def main(argv: Sequence[str]) -> int:
     try:
         args = _parser().parse_args(list(argv))
         reporte = _leer_reporte(args.reporte)
-        resultado = comparar_con_regresion(reporte, cargar_umbrales(args.config))
+        resultado = comparar_con_regresion(reporte, cargar_minimos(args.config))
     except (argparse.ArgumentError, SystemExit, EntradaInvalida) as error:
         print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
         return 2
