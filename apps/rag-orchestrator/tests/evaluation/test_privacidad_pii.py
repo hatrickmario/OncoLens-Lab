@@ -231,3 +231,52 @@ def test_un_tipo_fuera_del_vocabulario_en_tipos_por_debajo_se_rechaza(tmp_path: 
 
     with pytest.raises(InformePiiInvalido):
         ProveedorPiiDeArchivo(informe).leer()
+
+
+def test_un_destino_local_con_un_modelo_de_nube_cuenta_como_llamada_a_la_nube() -> None:
+    llamadas = [
+        LlamadaSaliente("http://127.0.0.1:11434/v1", "real_anonimizado", "x:cloud"),
+        LlamadaSaliente("http://127.0.0.1:11434/v1", "real_anonimizado", "gemma4:26b"),
+    ]
+
+    assert llamadas_a_nube_con_datos_reales(llamadas) == 1
+
+
+def test_el_bloque_de_privacidad_distingue_cero_llamadas_de_ninguna_registrada(
+    tmp_path: Path,
+) -> None:
+    _, reporte = correr(tmp_path / "salida", suite="all")
+
+    assert reporte is not None
+    assert reporte["privacidad"]["llamadas_salientes_registradas"] == 0
+
+
+@pytest.mark.parametrize(
+    "sensibilidad",
+    [
+        {"aciertos": 5, "total": 3, "valor": 1.0},
+        {"aciertos": -1, "total": 3, "valor": 0.0},
+        {"aciertos": 1, "total": 3, "valor": 1.5},
+        {"aciertos": 1, "total": 3, "valor": float("nan")},
+    ],
+)
+def test_una_sensibilidad_fuera_de_rango_se_rechaza(tmp_path: Path, sensibilidad: dict) -> None:
+    roto = modo([])
+    roto["sensibilidadDocumentos"]["correo"] = sensibilidad
+    informe = escribir_informe(
+        tmp_path, modos={"solo_formatos": roto, "identidad_de_referencia": modo([])}
+    )
+
+    with pytest.raises(InformePiiInvalido):
+        ProveedorPiiDeArchivo(informe).leer()
+
+
+def test_tipos_por_debajo_que_no_son_cadenas_se_rechazan(tmp_path: Path) -> None:
+    roto = modo([])
+    roto["tiposDirectosPorDebajo"] = [["nombre"], 3]
+    informe = escribir_informe(
+        tmp_path, modos={"solo_formatos": roto, "identidad_de_referencia": modo([])}
+    )
+
+    with pytest.raises(InformePiiInvalido):
+        ProveedorPiiDeArchivo(informe).leer()

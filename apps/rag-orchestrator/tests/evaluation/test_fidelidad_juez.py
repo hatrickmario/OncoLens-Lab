@@ -342,3 +342,48 @@ def test_el_cliente_del_juez_ignora_los_proxies_del_entorno_para_no_desviar_el_p
             return juez._cliente._mounts
 
     assert asyncio.run(crear()) == {}
+
+
+@pytest.mark.parametrize("modelo", ["x:cloud", "x:1b-cloud", "deepseek-v3.1:671b-cloud", "X:CLOUD"])
+def test_un_modelo_de_nube_en_un_host_local_aborta_sin_requests_y_sin_nombrar_el_modelo(
+    tmp_path: Path, modelo: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = config_con_juez(tmp_path, proveedor="local", base_url=LOCAL, modelo=modelo)
+
+    with respx.mock(assert_all_called=False) as http:
+        http.route().respond(200)
+        codigo, reporte = correr(config, tmp_path / "salida")
+        peticiones = len(http.calls)
+
+    assert (codigo, peticiones, reporte) == (1, 0, None)
+    assert modelo not in capsys.readouterr().err
+
+
+def test_la_guarda_del_juez_rechaza_un_modelo_de_nube_y_acepta_uno_local() -> None:
+    entorno = {"EVAL_JUDGE_BASE_URL": LOCAL}
+    with pytest.raises(SuiteAbortada):
+        exigir_juez_local(
+            cargar_config_suite(CONFIG, {**entorno, "EVAL_JUDGE_MODEL": "x:cloud"}).juez
+        )
+    exigir_juez_local(
+        cargar_config_suite(
+            CONFIG, {**entorno, "EVAL_JUDGE_MODEL": "gemma4:26b-a4b-it-q4_K_M"}
+        ).juez
+    )
+
+
+def test_crear_juez_llm_tambien_rechaza_un_modelo_de_nube_antes_de_crear_el_cliente() -> None:
+    from contextlib import AsyncExitStack
+
+    from app.evaluation.juez_fidelidad import crear_juez_llm
+
+    config = cargar_config_suite(
+        CONFIG, {"EVAL_JUDGE_BASE_URL": LOCAL, "EVAL_JUDGE_MODEL": "x:cloud"}
+    )
+
+    async def crear() -> None:
+        async with AsyncExitStack() as pila:
+            await crear_juez_llm(config.juez, pila)
+
+    with pytest.raises(SuiteAbortada):
+        asyncio.run(crear())

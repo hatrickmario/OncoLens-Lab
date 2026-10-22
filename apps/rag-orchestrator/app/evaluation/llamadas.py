@@ -17,6 +17,7 @@ from app.evaluation.dataset_loader import CLASE_SINTETICA
 class LlamadaSaliente:
     destino: str
     clase_datos: str
+    modelo: str = ""
 
 
 @dataclass
