@@ -391,7 +391,7 @@ export type PatientListItem = {
     id: string;
     idType: IdType;
     /**
-     * Documento enmascarado de longitud fija: "•••• " (cuatro U+2022 y un espacio) seguido de los 2 últimos caracteres del número normalizado ("•••• 56"); no revela la longitud del documento. El completo solo se descifra en la ficha, auditado.
+     * Documento enmascarado de longitud fija: "•••• " (cuatro U+2022 y un espacio) seguido de los 2 últimos caracteres del número normalizado ("•••• 67"); no revela la longitud del documento. El completo solo se descifra en la ficha, auditado.
      */
     nationalIdMasked: string;
     /**

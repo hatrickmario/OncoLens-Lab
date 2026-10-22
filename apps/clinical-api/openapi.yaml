@@ -1321,7 +1321,7 @@ components:
           type: string
           description: >-
             Documento enmascarado de longitud fija: "•••• " (cuatro U+2022 y un espacio) seguido de los 2
-            últimos caracteres del número normalizado ("•••• 56"); no revela la longitud del documento.
+            últimos caracteres del número normalizado ("•••• 67"); no revela la longitud del documento.
             El completo solo se descifra en la ficha, auditado.
           pattern: '^•{4} [A-Za-z0-9]{2}$'
         fullNameMasked:
