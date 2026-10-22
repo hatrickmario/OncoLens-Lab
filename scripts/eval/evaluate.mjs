@@ -5,14 +5,13 @@
  * Sin `--config` usa la configuración de la CI (adapters falsos, FX-T5a-a). Las demás opciones pasan tal cual.
  * Variables (RN-22): EVAL_PYTHON (intérprete, por defecto python3) y EVAL_TIMEOUT_S (tope del proceso, por defecto 600).
  */
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { spawnPython } from './python.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const DIRECTORIO = path.join(RAIZ, 'apps', 'rag-orchestrator');
 const CONFIG_DE_LA_CI = path.join('eval', 'configs', 'test-fake.yaml');
-const TIMEOUT_POR_DEFECTO_S = 600;
 
 const OPCIONES_CON_RUTA = ['--config', '--salida'];
 
@@ -53,13 +52,10 @@ export function argumentosDePython(argumentos, cwd = process.cwd(), entorno = {}
 }
 
 function main(argumentos, entorno) {
-  const python = entorno.EVAL_PYTHON || 'python3';
-  const segundos = Number(entorno.EVAL_TIMEOUT_S) || TIMEOUT_POR_DEFECTO_S;
-  const resultado = spawnSync(python, argumentosDePython(argumentos, process.cwd(), entorno), {
-    cwd: DIRECTORIO,
-    stdio: 'inherit',
-    timeout: segundos * 1000,
-    env: { ...entorno, PYTHONPATH: DIRECTORIO },
+  const resultado = spawnPython(argumentosDePython(argumentos, process.cwd(), entorno), {
+    directorio: DIRECTORIO,
+    entorno,
+    opciones: { stdio: 'inherit' },
   });
   if (resultado.error?.code === 'ENOENT') {
     console.error('evaluate: no se encontró el intérprete de Python (EVAL_PYTHON)');
