@@ -387,8 +387,16 @@ async function sembrarIdentidad(
   pacienteId: string,
   ordinal: number,
 ): Promise<void> {
-  const resultado = await siembra.identidad.guardar(identidadSinteticaDe(pacienteId, ordinal));
-  if (resultado === 'creada') contarFilaEscrita(siembra, 'identity.patient_identity');
+  const identidad = identidadSinteticaDe(pacienteId, ordinal);
+  const resultado = await siembra.identidad.guardar(identidad);
+  if (resultado === 'creada') {
+    contarFilaEscrita(siembra, 'identity.patient_identity');
+    return;
+  }
+  // Las filas de L1D-200 son anteriores a `full_name_hmac`: se completa sin recifrar nada (US-048, idempotente).
+  if (await siembra.identidad.completarIndiceDeNombre(pacienteId, identidad.nombreCompleto)) {
+    contarFilaEscrita(siembra, 'identity.patient_identity');
+  }
 }
 
 async function sembrarPaciente(

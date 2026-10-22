@@ -12,6 +12,7 @@ import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
+import { componerModuloDePacientes } from './modules/patients/patients.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidad } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
@@ -53,6 +54,8 @@ arrancar({
           clock: reloj,
           ttlSeconds: configuracion.jwt.ttlSeconds,
         });
+        // Una sola instancia para el desidentificador y el listado: las mismas claves y la misma conexión.
+        const identidad = crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool });
         const gateway = componerGatewayDeAnalisis({
           db: pool,
           rag: crearRagQueryClient(
@@ -75,9 +78,7 @@ arrancar({
           idsDeAnalisis: randomUUID,
           // Cableado explícito (RN-11): el desidentificador definitivo, no un valor por defecto del módulo.
           desidentificador: crearContextDeidentifier({
-            identidades: crearLectorDeIdentidad(
-              crearServicioDeIdentidad({ claves: clavesDeIdentidad, db: pool }),
-            ),
+            identidades: crearLectorDeIdentidad(identidad),
             detectores: { para: (identidad) => crearDetectorOpcionA(identidad, configuracion.pii) },
             pseudonimos: { nuevo: nuevoSeudonimo },
             appEnv: configuracion.appEnv,
@@ -101,6 +102,14 @@ arrancar({
           registrar,
           config: { maxUploadMb: configuracion.documentos.maxUploadMb },
         });
+        const patients = componerModuloDePacientes({
+          db: pool,
+          identidad,
+          tiposHabilitados: servicios.tiposHabilitados,
+          traceIds: { traceId: nuevoTraceId },
+          registrar,
+          config: { pageSize: configuracion.pacientes.pageSize },
+        });
         const app = componerAplicacion({
           db: pool,
           auth: arranque.auth,
@@ -110,7 +119,7 @@ arrancar({
           ids: randomUUID,
           nuevoTraceId,
           registrar,
-          rutasProtegidas: componerRutasProtegidas({ gateway, documents }),
+          rutasProtegidas: componerRutasProtegidas({ gateway, documents, patients }),
           // Solo nombres de claves y versión: nunca valores (RN-14). Va después de leer toda la configuración.
           salud: componerInformacionDeSalud({
             configKeys: entorno.clavesCargadas(),

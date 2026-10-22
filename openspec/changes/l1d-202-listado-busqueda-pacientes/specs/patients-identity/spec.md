@@ -90,12 +90,12 @@ Cada fila del listado y de la búsqueda MUST devolver `fullNameMasked` como las 
 #### Scenario: FX-T4a-a sale enmascarado con el formato fijado [US-048 AC-7] [Pre-S1 resp. 36] [Pre-S1 resp. 42] [Pre-S1 trazabilidad M-1]
 - **GIVEN** FX-T4a-a registrado
 - **WHEN** aparece en el listado o en la búsqueda
-- **THEN** su fila trae `fullNameMasked = "L. F. R. P."` y `nationalIdMasked = "•••• 56"`, y el cuerpo de la respuesta no contiene `1234567`, `Lucía` ni `Rondón`
+- **THEN** su fila trae `fullNameMasked = "L. F. R. P."` y `nationalIdMasked = "•••• 67"`, y el cuerpo de la respuesta no contiene `1234567`, `Lucía` ni `Rondón`
 
 #### Scenario: La máscara no revela la longitud del documento [US-048 AC-7] (Gate 1)
 - **GIVEN** el paciente semilla con documento `SINT-0000001` y FX-T4a-a con `1234567`
 - **WHEN** aparecen en el listado
-- **THEN** sus máscaras son `"•••• 01"` y `"•••• 56"`, de la misma longitud
+- **THEN** sus máscaras son `"•••• 01"` y `"•••• 67"`, de la misma longitud
 
 #### Scenario: El admin recibe la vista sin datos clínicos en el listado [US-048 AC-7] [Pre-S1 resp. 27]
 - **GIVEN** `admin@test.local` con sesión

@@ -391,11 +391,11 @@ export type PatientListItem = {
     id: string;
     idType: IdType;
     /**
-     * Documento enmascarado; el completo solo se descifra en la ficha, auditado. Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
+     * Documento enmascarado de longitud fija: "•••• " (cuatro U+2022 y un espacio) seguido de los 2 últimos caracteres del número normalizado ("•••• 67"); no revela la longitud del documento. El completo solo se descifra en la ficha, auditado.
      */
     nationalIdMasked: string;
     /**
-     * Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado. Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
+     * Iniciales de cada palabra del nombre en mayúscula seguidas de punto y separadas por espacio ("L. F. R. P."). El completo solo en la ficha, auditado.
      */
     fullNameMasked: string;
     dataOrigin: DataOrigin;
@@ -414,7 +414,7 @@ export type PatientAdminSummary = {
     id: string;
     idType: IdType;
     /**
-     * Documento enmascarado; el descifrado completo solo ocurre por la CLI, auditado.
+     * Documento enmascarado de longitud fija ("•••• 01": cuatro U+2022, un espacio y los 2 últimos caracteres); el descifrado completo solo ocurre por la CLI, auditado.
      */
     nationalIdMasked: string;
     dataOrigin: DataOrigin;
@@ -1001,6 +1001,10 @@ export type ListPatientsErrors = {
      * Parámetros inválidos.
      */
     422: ErrorCuerpoInvalido;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
 };
 
 export type ListPatientsError = ListPatientsErrors[keyof ListPatientsErrors];
@@ -1038,6 +1042,10 @@ export type SearchPatientsErrors = {
      * Límite de solicitudes superado.
      */
     429: ErrorLimiteSolicitudes;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
 };
 
 export type SearchPatientsError = SearchPatientsErrors[keyof SearchPatientsErrors];
@@ -1073,6 +1081,10 @@ export type GetPatientErrors = {
      * Recurso no encontrado.
      */
     404: ErrorNoEncontrado;
+    /**
+     * Fallo interno de clinical-api. Mensaje fijo, sin eco ni detalle interno.
+     */
+    500: ErrorInterno;
 };
 
 export type GetPatientError = GetPatientErrors[keyof GetPatientErrors];
