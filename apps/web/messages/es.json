@@ -154,5 +154,82 @@
         "estructural": "Limitación estructural"
       }
     }
+  },
+  "pacientes": {
+    "titulo": "Pacientes",
+    "tituloDocumento": "Pacientes · OncoLens",
+    "cargando": "Cargando pacientes…",
+    "busqueda": {
+      "etiqueta": "Buscar paciente",
+      "modos": "Modo de búsqueda",
+      "porDocumento": "Por documento",
+      "porNombre": "Por nombre",
+      "tipoDocumento": "Tipo de documento",
+      "numero": "Número de documento",
+      "nombre": "Nombre completo",
+      "ayudaNombre": "Escribe el nombre completo",
+      "buscar": "Buscar",
+      "buscando": "Buscando…",
+      "limpiar": "Limpiar búsqueda",
+      "invalido": "Completa el campo para buscar (el nombre, con al menos 2 caracteres).",
+      "sinResultadosDocumento": "No hay pacientes con ese documento.",
+      "sinResultadosNombre": "No hay pacientes con ese nombre.",
+      "homonimos": "Hay {n} pacientes con ese nombre. Distínguelos por el documento enmascarado y el año de nacimiento.",
+      "error": "No pudimos completar la búsqueda. Intenta de nuevo. Código de traza {traceId}",
+      "errorSinTraza": "No pudimos completar la búsqueda. Intenta de nuevo."
+    },
+    "tiposDeDocumento": {
+      "cedula_ciudadania": "Cédula de ciudadanía",
+      "tarjeta_identidad": "Tarjeta de identidad",
+      "cedula_extranjeria": "Cédula de extranjería",
+      "pasaporte": "Pasaporte",
+      "seudonimo": "Seudónimo",
+      "sintetico": "Sintético"
+    },
+    "filtros": {
+      "etiqueta": "Filtros del listado",
+      "estado": "Estado",
+      "origen": "Origen",
+      "todos": "Todos"
+    },
+    "estados": {
+      "activo": "Activo",
+      "egresado": "Egresado"
+    },
+    "origenes": {
+      "sintetico": "SINTÉTICO",
+      "real_anonimizado": "REAL ANONIMIZADO",
+      "real_identificado": "REAL IDENTIFICADO"
+    },
+    "filtroOrigenes": {
+      "sintetico": "Sintético",
+      "real_anonimizado": "Real anonimizado",
+      "real_identificado": "Real identificado"
+    },
+    "tabla": {
+      "descripcion": "Pacientes con identidad enmascarada",
+      "paciente": "Paciente",
+      "faltantes": "Faltantes críticos",
+      "porRevisar": "Por revisar",
+      "estado": "Estado",
+      "origen": "Origen",
+      "alcance": "Alcance",
+      "anioNacimiento": "Nacimiento: {anio}",
+      "faltantesN": "{n} faltantes",
+      "porRevisarN": "{n} por revisar",
+      "sinDato": "No disponible en esta vista"
+    },
+    "paginacion": {
+      "etiqueta": "Paginación",
+      "pagina": "Página {n} de {m}",
+      "anterior": "Anterior",
+      "siguiente": "Siguiente"
+    },
+    "listado": {
+      "vacio": "Aún no hay pacientes registrados.",
+      "sinCoincidencias": "Ningún paciente coincide con los filtros.",
+      "error": "No pudimos cargar el listado. Intenta de nuevo. Código de traza {traceId}",
+      "errorSinTraza": "No pudimos cargar el listado. Intenta de nuevo."
+    }
   }
 }
