@@ -229,3 +229,5 @@ cuando exista el job de E2E (ARR-02 resto).
 - **Cache-Control:** `proxy.ts` añade `Cache-Control: no-store` a toda página `/pacientes/**` con sesión.
 - **Vista admin:** las filas `view: 'admin'` muestran solo el documento enmascarado, sin enlace ni contadores.
 - **Loop visual:** hecho contra `next dev` + clinical-api simulado desde `contracts/examples/` (sin Compose: hay otros stacks en la máquina).
+
+- **Gate 2 (frontend):** el formulario de búsqueda declara `method="post"` y `action="/api/patients/search"` para que un envío nativo antes de hidratar nunca ponga identidad en la URL. Deuda menor registrada: `mensajeDeError` duplicado entre `listado-de-pacientes` y `busqueda-de-pacientes`, e ids de pestaña/panel fijos.

@@ -45,6 +45,9 @@ export function FormularioDeBusqueda({ textos, buscando, onBuscar }: FormularioD
     <form
       role="search"
       aria-label={busqueda.etiqueta}
+      // Un envío antes de hidratar es un POST nativo (identidad en el cuerpo), nunca un GET con query (RN-10).
+      method="post"
+      action="/api/patients/search"
       onSubmit={enviar}
       noValidate
       className="mb-4"

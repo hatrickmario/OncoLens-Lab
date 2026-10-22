@@ -17,7 +17,9 @@ export interface PestanasDeBusquedaProps {
 }
 
 /** Siguiente pestaña según la tecla del patrón ARIA de pestañas (flechas, Inicio y Fin); otra tecla no mueve. */
-function destinoDeLaTecla(tecla: string, actual: number): number | null {
+function destinoDeLaTecla(evento: KeyboardEvent, actual: number): number | null {
+  const tecla = evento.key;
+  if (evento.altKey || evento.ctrlKey || evento.metaKey) return null;
   const ultima = MODOS.length - 1;
   if (tecla === 'ArrowRight') return actual === ultima ? 0 : actual + 1;
   if (tecla === 'ArrowLeft') return actual === 0 ? ultima : actual - 1;
@@ -31,7 +33,7 @@ export function PestanasDeBusqueda({ modo, onCambiar, textos }: PestanasDeBusque
   const nombres = { documento: textos.porDocumento, nombre: textos.porNombre };
 
   function alPulsar(evento: KeyboardEvent, indice: number) {
-    const destino = destinoDeLaTecla(evento.key, indice);
+    const destino = destinoDeLaTecla(evento, indice);
     if (destino === null) return;
     evento.preventDefault();
     onCambiar(MODOS[destino]!);
