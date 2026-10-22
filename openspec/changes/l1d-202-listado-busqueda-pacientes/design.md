@@ -46,7 +46,7 @@ Detalles de A:
   espacio ("Lucía Fernanda Rondón Peña" → "L. F. R. P."). `enmascararNombre()`.
 - `nationalIdMasked` (Gate 1): **longitud fija**, que no revela la del documento: cuatro `•`
   (U+2022), un espacio y los 2 últimos caracteres del número normalizado, para todo `id_type`:
-  "1234567" → "•••• 56", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
+  "1234567" → "•••• 67", "SINT-0000001" → "•••• 01". Sin prefijo conservado (el origen ya lo muestra
   `dataOrigin`). Cambia `contracts/examples/patient-summary-admin.json` ("SINT-*****01" →
   "•••• 01"). `enmascararDocumento()`.
 - Ambas se calculan en `clinical-api` tras descifrar en memoria solo las filas de la página; nunca se
@@ -123,7 +123,7 @@ Detalles de A:
   -      x-pending-owner: US-048
   +      description: >-
   +        Documento enmascarado de longitud fija: "•••• " seguido de los 2 últimos caracteres
-  +        ("•••• 56"); no revela la longitud. El completo solo en la ficha, auditado.
+  +        ("•••• 67"); no revela la longitud. El completo solo en la ficha, auditado.
        fullNameMasked:
   -      description: Nombre enmascarado (iniciales o primer nombre); ... (US-048).
   -      x-pending-owner: US-048

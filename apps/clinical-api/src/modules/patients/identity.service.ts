@@ -1,7 +1,7 @@
 import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import type { CifradorDeCampos } from '../../infrastructure/crypto/cifrador-aes-gcm.js';
 import type { IndiceCiego } from '../../infrastructure/crypto/indice-ciego.js';
-import type { IdentityRepository } from './identity.repository.js';
+import type { FilaDeIdentidad, IdentityRepository } from './identity.repository.js';
 
 export interface IdentidadAGuardar {
   readonly patientId: string;
@@ -24,6 +24,8 @@ export interface IdentityService {
   /** Cifra y guarda; si el paciente ya tiene identidad no la recifra (`'existente'`). */
   guardar(identidad: IdentidadAGuardar): Promise<'creada' | 'existente'>;
   descifrar(patientId: string): Promise<IdentidadDescifrada | null>;
+  /** Descifra la identidad de varios pacientes en una consulta (la página de un listado); los que no tienen no aparecen. */
+  descifrarVarios(patientIds: readonly string[]): Promise<IdentidadDescifrada[]>;
   indiceCiegoDeDocumento(idType: IdType, numeroDeDocumento: string): string;
 }
 
@@ -38,6 +40,22 @@ export function createIdentityService({
   indice,
   repo,
 }: DependenciasDeIdentidad): IdentityService {
+  const descifrarFila = (fila: FilaDeIdentidad): IdentidadDescifrada => ({
+    patientId: fila.patientId,
+    idType: fila.idType,
+    issuingCountry: fila.issuingCountry,
+    numeroDeDocumento: cifrador.descifrar(
+      fila.nationalIdCiphertext,
+      { patientId: fila.patientId, campo: 'national_id' },
+      fila.keyVersion,
+    ),
+    nombreCompleto: cifrador.descifrar(
+      fila.fullNameCiphertext,
+      { patientId: fila.patientId, campo: 'full_name' },
+      fila.keyVersion,
+    ),
+    keyVersion: fila.keyVersion,
+  });
   return {
     async guardar(identidad) {
       const { patientId } = identidad;
@@ -59,23 +77,10 @@ export function createIdentityService({
     },
     async descifrar(patientId) {
       const fila = await repo.buscarPorPaciente(patientId);
-      if (fila === null) return null;
-      return {
-        patientId,
-        idType: fila.idType,
-        issuingCountry: fila.issuingCountry,
-        numeroDeDocumento: cifrador.descifrar(
-          fila.nationalIdCiphertext,
-          { patientId, campo: 'national_id' },
-          fila.keyVersion,
-        ),
-        nombreCompleto: cifrador.descifrar(
-          fila.fullNameCiphertext,
-          { patientId, campo: 'full_name' },
-          fila.keyVersion,
-        ),
-        keyVersion: fila.keyVersion,
-      };
+      return fila === null ? null : descifrarFila(fila);
+    },
+    async descifrarVarios(patientIds) {
+      return (await repo.buscarPorPacientes(patientIds)).map(descifrarFila);
     },
     indiceCiegoDeDocumento: (idType, numeroDeDocumento) =>
       indice.indiceDeDocumento(idType, numeroDeDocumento),

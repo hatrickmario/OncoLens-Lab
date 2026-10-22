@@ -1,10 +1,10 @@
 import type { Router } from 'express';
-import type { Clock } from '../../infrastructure/clock.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import type { Consultador } from '../auth/auth.repository.js';
 import type { TiposDeCancerHabilitados, TraceIdGenerator } from '../evidence-analysis/ports.js';
-import { patientsController } from './patients.controller.js';
 import type { IdentityService } from './identity.service.js';
+import { patientsController } from './patients.controller.js';
+import { createPatientsRepository } from './patients.repository.js';
 import { crearPatientsService } from './patients.service.js';
 
 export interface ConfiguracionDePacientes {
@@ -16,13 +16,22 @@ export interface DependenciasDelModulo {
   db: Consultador;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
-  reloj: Clock;
   traceIds: TraceIdGenerator;
   registrar: Registrar;
   config: ConfiguracionDePacientes;
 }
 
 /** Composición del módulo `patients`: devuelve el router que se monta detrás del guard de sesión. */
-export function componerModuloDePacientes(_dependencias: DependenciasDelModulo): Router {
-  return patientsController({ service: crearPatientsService() });
+export function componerModuloDePacientes(dependencias: DependenciasDelModulo): Router {
+  const service = crearPatientsService({
+    repo: createPatientsRepository(dependencias.db),
+    identidad: dependencias.identidad,
+    tiposHabilitados: dependencias.tiposHabilitados,
+    pageSize: dependencias.config.pageSize,
+  });
+  return patientsController({
+    service,
+    traceIds: dependencias.traceIds,
+    registrar: dependencias.registrar,
+  });
 }

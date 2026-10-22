@@ -19,6 +19,8 @@ function repositorioEnMemoria(): IdentityRepository & { filas: Map<string, FilaD
       return Promise.resolve(true);
     },
     buscarPorPaciente: (patientId) => Promise.resolve(filas.get(patientId) ?? null),
+    buscarPorPacientes: (patientIds) =>
+      Promise.resolve(patientIds.flatMap((patientId) => filas.get(patientId) ?? [])),
   };
 }
 

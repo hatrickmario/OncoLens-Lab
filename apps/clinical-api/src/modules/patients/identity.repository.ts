@@ -14,6 +14,8 @@ export interface IdentityRepository {
   /** `true` si insertó; `false` si el paciente ya tenía identidad (no se pisa). */
   insertarSiNoExiste(fila: FilaDeIdentidad): Promise<boolean>;
   buscarPorPaciente(patientId: string): Promise<FilaDeIdentidad | null>;
+  /** Las filas de los pacientes pedidos, sin orden; un paciente sin identidad simplemente no aparece. */
+  buscarPorPacientes(patientIds: readonly string[]): Promise<FilaDeIdentidad[]>;
 }
 
 /** Consulta SQL mínima que necesita el repository (la cumplen `pg.Client`, `pg.Pool` y la sesión del seed). */
@@ -29,6 +31,21 @@ interface FilaSql {
   national_id_hmac: string;
   full_name_ciphertext: Buffer;
   key_version: number;
+}
+
+const COLUMNAS = `patient_id, id_type::text AS id_type, issuing_country, national_id_ciphertext,
+                national_id_hmac, full_name_ciphertext, key_version`;
+
+function comoFila(fila: FilaSql): FilaDeIdentidad {
+  return {
+    patientId: fila.patient_id,
+    idType: fila.id_type,
+    issuingCountry: fila.issuing_country,
+    nationalIdCiphertext: fila.national_id_ciphertext,
+    nationalIdHmac: fila.national_id_hmac,
+    fullNameCiphertext: fila.full_name_ciphertext,
+    keyVersion: fila.key_version,
+  };
 }
 
 export function createIdentityRepository(db: ConsultadorSql): IdentityRepository {
@@ -54,22 +71,19 @@ export function createIdentityRepository(db: ConsultadorSql): IdentityRepository
     },
     async buscarPorPaciente(patientId) {
       const { rows } = await db.query(
-        `SELECT patient_id, id_type::text AS id_type, issuing_country, national_id_ciphertext,
-                national_id_hmac, full_name_ciphertext, key_version
-           FROM identity.patient_identity WHERE patient_id = $1`,
+        `SELECT ${COLUMNAS} FROM identity.patient_identity WHERE patient_id = $1`,
         [patientId],
       );
       const fila = rows[0] as FilaSql | undefined;
-      if (fila === undefined) return null;
-      return {
-        patientId: fila.patient_id,
-        idType: fila.id_type,
-        issuingCountry: fila.issuing_country,
-        nationalIdCiphertext: fila.national_id_ciphertext,
-        nationalIdHmac: fila.national_id_hmac,
-        fullNameCiphertext: fila.full_name_ciphertext,
-        keyVersion: fila.key_version,
-      };
+      return fila === undefined ? null : comoFila(fila);
+    },
+    async buscarPorPacientes(patientIds) {
+      if (patientIds.length === 0) return [];
+      const { rows } = await db.query(
+        `SELECT ${COLUMNAS} FROM identity.patient_identity WHERE patient_id = ANY($1::uuid[])`,
+        [patientIds],
+      );
+      return (rows as FilaSql[]).map(comoFila);
     },
   };
 }

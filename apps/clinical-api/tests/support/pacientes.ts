@@ -45,7 +45,6 @@ export function montarPacientes(
     db: mundo.cliente,
     identidad: opciones.identidad ?? servicioDeIdentidad(mundo.cliente),
     tiposHabilitados: crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata']),
-    reloj,
     traceIds: { traceId: () => TRACE_ID_GENERADO },
     registrar: logger.registrar,
     config: { pageSize: opciones.pageSize ?? PAGE_SIZE_DE_TEST },
