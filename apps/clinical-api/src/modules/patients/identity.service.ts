@@ -20,6 +20,11 @@ export interface IdentidadDescifrada {
   readonly keyVersion: number;
 }
 
+/** Qué campos descifrar: por defecto todos; el nombre solo si `conNombre` no es `false` (minimización, RN-10). */
+export interface OpcionesDeDescifrado {
+  readonly conNombre?: boolean;
+}
+
 export interface IdentityService {
   /** Cifra y guarda; si el paciente ya tiene identidad no la recifra (`'existente'`). */
   guardar(identidad: IdentidadAGuardar): Promise<'creada' | 'existente'>;
@@ -29,7 +34,10 @@ export interface IdentityService {
   /** Completa `full_name_hmac` de una identidad anterior a la columna (el seed); no recifra nada. `true` si lo completó. */
   completarIndiceDeNombre(patientId: string, nombreCompleto: string): Promise<boolean>;
   /** Descifra la identidad de varios pacientes en una consulta (la página de un listado); los que no tienen no aparecen. */
-  descifrarVarios(patientIds: readonly string[]): Promise<IdentidadDescifrada[]>;
+  descifrarVarios(
+    patientIds: readonly string[],
+    opciones?: OpcionesDeDescifrado,
+  ): Promise<IdentidadDescifrada[]>;
   /** Pacientes con ese documento exacto, por índice ciego: no descifra nada. */
   buscarPorDocumento(idType: IdType, numeroDeDocumento: string): Promise<string[]>;
 }

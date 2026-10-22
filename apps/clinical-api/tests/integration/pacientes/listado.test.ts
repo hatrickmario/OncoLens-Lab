@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { idDePaciente } from '../../support/gateway.js';
+import { servicioDeIdentidad } from '../../support/identidad.js';
+import type { IdentityService } from '../../../src/modules/patients/identity.service.js';
 import {
   PAGE_SIZE_DE_TEST,
   iniciarEscenarioDePacientes,
@@ -191,5 +193,24 @@ describe('listado de pacientes', () => {
     const sqlDelListado = consultas.filter((sql) => sql.includes('clinical.patient'));
     expect(sqlDelListado.length).toBeGreaterThan(0);
     for (const sql of consultas) expect(sql).not.toContain('clinical.diagnosis');
+  });
+
+  it('descifra solo el documento cuando lista el admin y también el nombre cuando lista el doctor [US-046 AC-3]', async () => {
+    const real = servicioDeIdentidad(escenario.mundo.cliente);
+    const opciones: Array<{ conNombre?: boolean } | undefined> = [];
+    const identidad: IdentityService = {
+      ...real,
+      descifrarVarios: (patientIds, opcionesDeDescifrado) => {
+        opciones.push(opcionesDeDescifrado);
+        return real.descifrarVarios(patientIds, opcionesDeDescifrado);
+      },
+    };
+    const { app } = montarPacientes(escenario.mundo, { identidad });
+
+    await clienteVerificado(app).get('/platform/patients').set('Cookie', escenario.cookieAdmin);
+    await clienteVerificado(app).get('/platform/patients').set('Cookie', escenario.cookieDoctor);
+
+    expect(opciones[0]?.conNombre).toBe(false);
+    expect(opciones[1]?.conNombre).not.toBe(false);
   });
 });

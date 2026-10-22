@@ -88,4 +88,18 @@ describe('búsqueda por nombre', () => {
     expect(respuesta.status).toBe(200);
     expect(pedidos).toEqual([[idDeFx]]);
   });
+
+  it('responde 422 sin consultar el índice cuando el nombre queda vacío tras normalizar [US-048 AC-3]', async () => {
+    const { servicio, pedidos } = servicioQueCuentaDescifrados(
+      servicioDeIdentidad(escenario.mundo.cliente),
+    );
+
+    const soloEspacios = await buscarPorNombre('   ', servicio);
+    const soloMarcas = await buscarPorNombre('\u0301\u0301', servicio);
+
+    expect(soloEspacios.status).toBe(422);
+    expect(soloEspacios.body.error).toBe('CUERPO_INVALIDO');
+    expect(soloMarcas.status).toBe(422);
+    expect(pedidos).toEqual([]);
+  });
 });
