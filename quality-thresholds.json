@@ -1,0 +1,11 @@
+{
+  "maxLinesPerFunction": 40,
+  "complexity": 10,
+  "c901MaxComplexity": 10,
+  "plr0915MaxStatements": 50,
+  "web": {
+    "componentLinesWarn": 100,
+    "componentLinesError": 150
+  },
+  "excepciones": []
+}
