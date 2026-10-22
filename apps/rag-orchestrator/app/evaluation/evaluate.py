@@ -45,13 +45,24 @@ from app.evaluation.guardas import (
     exigir_juez_local,
     exigir_marca_final,
 )
+from app.evaluation.informe_pii import (
+    InformePiiB1,
+    InformePiiInvalido,
+    ProveedorPii,
+    ProveedorPiiDeArchivo,
+    SinInformePii,
+)
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
+from app.evaluation.llamadas import RegistroDeLlamadas
+from app.evaluation.metricas.privacidad import privacidad
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.schemas.generated.models import RagQueryInternalResponse
 
 SALIDA_POR_DEFECTO = Path("eval") / "results"
+SUITE_PII = "pii"
+SUITES_CON_PRIVACIDAD = (SUITE_PII, SUITE_COMPLETA)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -62,6 +73,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--salida", type=Path, default=None)
     parser.add_argument("--nombre-archivo", default=None)
     parser.add_argument("--prueba-final", action="store_true")
+    parser.add_argument("--informe-pii", type=Path, default=None)
     return parser
 
 
@@ -95,6 +107,9 @@ def main(
     except JuezNoDisponible:
         print("evaluate: el juez de fidelidad no está disponible", file=sys.stderr)
         return 1
+    except InformePiiInvalido as error:
+        print(f"evaluate: el informe de PII de B1 no es válido: {error}", file=sys.stderr)
+        return 1
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
         return 1
@@ -117,26 +132,52 @@ def _ejecutar(
     exigir_adapters_locales(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
-    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj)
+    informe_pii = _proveedor_pii(
+        config, args
+    ).leer()  # antes de consultar: un informe roto no cuesta una corrida
+    reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj, informe_pii)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)
     return 0
 
 
+def _proveedor_pii(config: ConfigSuite, args: argparse.Namespace) -> ProveedorPii:
+    ruta = args.informe_pii or config.informe_pii
+    return SinInformePii() if ruta is None else ProveedorPiiDeArchivo(ruta)
+
+
 def _correr_suite(
-    config: ConfigSuite, dataset: DatasetSuite, suite: str, reloj: Clock
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    suite: str,
+    reloj: Clock,
+    informe_pii: InformePiiB1 | None,
 ) -> dict[str, Any]:
     cronometro = Cronometro(_reloj_de_medicion(config))
-    resultados, respuestas = asyncio.run(_evaluar(config, dataset, cronometro, reloj))
+    registro = RegistroDeLlamadas()
+    resultados: list[ResultadoConsulta] = []
+    meta = None
+    if suite != SUITE_PII:  # la familia pii no consulta al servicio: mide solo la privacidad
+        resultados, respuestas = asyncio.run(_evaluar(config, dataset, cronometro, reloj, registro))
+        meta = respuestas[0].meta
+    privacidad_medida = (
+        privacidad(len(dataset.textos_pii), informe_pii, registro.llamadas)
+        if suite in SUITES_CON_PRIVACIDAD
+        else None
+    )
     return armar_reporte(
-        config, dataset, suite, respuestas[0].meta, resultados, cronometro.p95_ms()
+        config, dataset, suite, meta, resultados, cronometro.p95_ms(), privacidad_medida
     )
 
 
 async def _evaluar(
-    config: ConfigSuite, dataset: DatasetSuite, cronometro: Cronometro, reloj: Clock
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    cronometro: Cronometro,
+    reloj: Clock,
+    registro: RegistroDeLlamadas,
 ) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse]]:
     async with AsyncExitStack() as pila:  # cierra el cliente del juez LLM, si lo hay
-        juez_llm = await crear_juez_llm(config.juez, pila)
+        juez_llm = await crear_juez_llm(config.juez, pila, registro, dataset.clase)
         servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm)
         return await evaluar_dataset(servicio, dataset)
 

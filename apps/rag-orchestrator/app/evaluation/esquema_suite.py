@@ -6,7 +6,8 @@ from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
-from app.evaluation.reporte import Enumerado, Identificador, Numero, Objeto
+from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
+from app.evaluation.reporte import Booleano, Enumerado, Identificador, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -108,7 +109,30 @@ _CONFIGURACION = Objeto(
         "corpusRelease": Identificador(),
         "catalogVersion": Identificador(),
     },
-    opcionales=frozenset({"juez"}),
+    opcionales=frozenset({"juez", "modelos", "promptVersion"}),
+)
+
+_SENSIBILIDAD = Objeto({"aciertos": Numero(), "total": Numero(), "valor": Numero()})
+_MODO_PII = Objeto(
+    {
+        "por_tipo": Objeto(
+            {tipo: _SENSIBILIDAD for tipo in TIPOS_DIRECTOS}, opcionales=frozenset(TIPOS_DIRECTOS)
+        ),
+        "total": _SENSIBILIDAD,
+        "tipos_por_debajo": Numero(),
+        "cumple_minimo": Booleano(),
+    }
+)
+_PRIVACIDAD = Objeto(
+    {
+        "textos_sembrados": Numero(),
+        "llamadas_nube_datos_reales": Numero(),
+        "sensibilidad_b1_medida": Booleano(),
+        "sensibilidad_b1": Objeto(
+            {"textos_medidos": Numero(), **{modo: _MODO_PII for modo in MODOS}}
+        ),
+    },
+    opcionales=frozenset({"sensibilidad_b1"}),
 )
 
 ESQUEMA_SUITE = Objeto(
@@ -117,6 +141,8 @@ ESQUEMA_SUITE = Objeto(
         "suite": Enumerado(frozenset(SUITES)),
         "configuracion": _CONFIGURACION,
         "metricas": Objeto({"completa": _FAMILIAS, "revisada": _FAMILIAS}),
+        "privacidad": _PRIVACIDAD,
         "latencia_p95_ms": Objeto({etapa: Numero() for etapa in ETAPAS}),
-    }
+    },
+    opcionales=frozenset({"privacidad"}),
 )

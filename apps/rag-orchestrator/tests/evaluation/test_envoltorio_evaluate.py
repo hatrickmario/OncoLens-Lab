@@ -44,7 +44,7 @@ def test_el_envoltorio_corre_la_suite_de_la_ci_y_escribe_el_json(tmp_path: Path)
 def test_el_envoltorio_devuelve_el_codigo_de_la_suite_cuando_la_familia_no_esta_disponible(
     tmp_path: Path,
 ) -> None:
-    proceso = correr("--suite", "pii", "--report", "json", salida=tmp_path, nombre="r.json")
+    proceso = correr("--suite", "ocr", "--report", "json", salida=tmp_path, nombre="r.json")
 
     assert proceso.returncode == 2
     assert not (tmp_path / "r.json").exists()

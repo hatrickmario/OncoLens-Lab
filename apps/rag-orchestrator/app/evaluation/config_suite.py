@@ -13,7 +13,7 @@ import yaml
 
 from app.evaluation.rutas import raiz_repo
 
-SUITES = ("retrieval", "generation", "all")
+SUITES = ("retrieval", "generation", "pii", "all")
 SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
@@ -70,6 +70,8 @@ class ConfigSuite:
     ruta_terminos: Path
     hash_config: str
     juez: ConfigJuez | None = None
+    informe_pii: Path | None = None
+    """Ruta del JSON de `npm run eval:pii` (B1); ``--informe-pii`` la sustituye."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -173,4 +175,9 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
         hash_config=huella_de_config(crudo),
         juez=_leer_juez(crudo),
+        informe_pii=(
+            _ruta_del_repo(str(crudo["pii"]["informe_b1"]))
+            if (crudo.get("pii") or {}).get("informe_b1")
+            else None
+        ),
     )

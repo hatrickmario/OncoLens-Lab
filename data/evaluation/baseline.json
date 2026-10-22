@@ -227,5 +227,10 @@
       }
     }
   },
+  "privacidad": {
+    "llamadas_nube_datos_reales": 0,
+    "sensibilidad_b1_medida": false,
+    "textos_sembrados": 4
+  },
   "suite": "all"
 }

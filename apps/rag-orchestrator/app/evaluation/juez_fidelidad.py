@@ -80,6 +80,8 @@ class JuezLlmLocal:
         self._modelo = modelo
         self._temperatura = temperatura
         self._semilla = semilla
+        self._registro = registro
+        self._clase_datos = clase_datos
 
     async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
         fragmentos = "\n".join(f"- {p}" for p in premisas)
@@ -96,6 +98,8 @@ class JuezLlmLocal:
                 },
             ],
         }
+        if self._registro is not None:
+            self._registro.registrar(str(self._cliente.base_url), self._clase_datos)
         try:
             respuesta = await self._cliente.post(RUTA_DE_COMPLETIONS, json=cuerpo)
             respuesta.raise_for_status()
@@ -114,7 +118,12 @@ def _interpretar(contenido: str) -> bool:
     return veredicto.group(1).upper() == "SOPORTADA"
 
 
-async def crear_juez_llm(config: ConfigJuez | None, pila: AsyncExitStack) -> JuezFidelidad | None:
+async def crear_juez_llm(
+    config: ConfigJuez | None,
+    pila: AsyncExitStack,
+    registro: RegistroDeLlamadas | None = None,
+    clase_datos: str = "sintetico",
+) -> JuezFidelidad | None:
     """El juez secundario de la configuración, o ``None`` si no hay; el cliente HTTP se cierra con ``pila``."""
     if config is None:
         return None
@@ -125,5 +134,10 @@ async def crear_juez_llm(config: ConfigJuez | None, pila: AsyncExitStack) -> Jue
         httpx.AsyncClient(base_url=config.base_url, timeout=config.timeout_s)
     )
     return JuezLlmLocal(
-        cliente, modelo=config.modelo, temperatura=config.temperatura, semilla=config.semilla
+        cliente,
+        modelo=config.modelo,
+        temperatura=config.temperatura,
+        semilla=config.semilla,
+        registro=registro,
+        clase_datos=clase_datos,
     )
