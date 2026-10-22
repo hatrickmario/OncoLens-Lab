@@ -20,6 +20,11 @@ export interface IdentidadDescifrada {
   readonly keyVersion: number;
 }
 
+/** Identidad de un listado: el nombre solo viene si se pidió (`conNombre`); el resto siempre. */
+export type IdentidadParcial = Omit<IdentidadDescifrada, 'nombreCompleto'> & {
+  readonly nombreCompleto?: string;
+};
+
 /** Qué campos descifrar: por defecto todos; el nombre solo si `conNombre` no es `false` (minimización, RN-10). */
 export interface OpcionesDeDescifrado {
   readonly conNombre?: boolean;
@@ -37,7 +42,7 @@ export interface IdentityService {
   descifrarVarios(
     patientIds: readonly string[],
     opciones?: OpcionesDeDescifrado,
-  ): Promise<IdentidadDescifrada[]>;
+  ): Promise<IdentidadParcial[]>;
   /** Pacientes con ese documento exacto, por índice ciego: no descifra nada. */
   buscarPorDocumento(idType: IdType, numeroDeDocumento: string): Promise<string[]>;
 }
@@ -53,7 +58,14 @@ export function createIdentityService({
   indice,
   repo,
 }: DependenciasDeIdentidad): IdentityService {
-  const descifrarFila = (fila: FilaDeIdentidad): IdentidadDescifrada => ({
+  const descifrarNombre = (fila: FilaDeIdentidad): string =>
+    cifrador.descifrar(
+      fila.fullNameCiphertext,
+      { patientId: fila.patientId, campo: 'full_name' },
+      fila.keyVersion,
+    );
+  /** Documento y metadatos; el nombre solo si se pide (el listado del admin no lo necesita). */
+  const descifrarFila = (fila: FilaDeIdentidad, conNombre: boolean): IdentidadParcial => ({
     patientId: fila.patientId,
     idType: fila.idType,
     issuingCountry: fila.issuingCountry,
@@ -62,12 +74,12 @@ export function createIdentityService({
       { patientId: fila.patientId, campo: 'national_id' },
       fila.keyVersion,
     ),
-    nombreCompleto: cifrador.descifrar(
-      fila.fullNameCiphertext,
-      { patientId: fila.patientId, campo: 'full_name' },
-      fila.keyVersion,
-    ),
+    ...(conNombre && { nombreCompleto: descifrarNombre(fila) }),
     keyVersion: fila.keyVersion,
+  });
+  const descifrarCompleta = (fila: FilaDeIdentidad): IdentidadDescifrada => ({
+    ...descifrarFila(fila, false),
+    nombreCompleto: descifrarNombre(fila),
   });
   return {
     async guardar(identidad) {
@@ -91,14 +103,15 @@ export function createIdentityService({
     },
     async descifrar(patientId) {
       const fila = await repo.buscarPorPaciente(patientId);
-      return fila === null ? null : descifrarFila(fila);
+      return fila === null ? null : descifrarCompleta(fila);
     },
     buscarPorNombre: (nombreCompleto) =>
       repo.buscarPacientesPorNombre(indice.indiceDeNombre(nombreCompleto)),
     completarIndiceDeNombre: (patientId, nombreCompleto) =>
       repo.completarIndiceDeNombre(patientId, indice.indiceDeNombre(nombreCompleto)),
-    async descifrarVarios(patientIds) {
-      return (await repo.buscarPorPacientes(patientIds)).map(descifrarFila);
+    async descifrarVarios(patientIds, opciones = {}) {
+      const filas = await repo.buscarPorPacientes(patientIds);
+      return filas.map((fila) => descifrarFila(fila, opciones.conNombre !== false));
     },
     buscarPorDocumento: (idType, numeroDeDocumento) =>
       repo.buscarPacientesPorDocumento(idType, indice.indiceDeDocumento(idType, numeroDeDocumento)),

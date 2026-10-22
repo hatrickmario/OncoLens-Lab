@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import type { IdType } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { normalizarNombre } from '../../infrastructure/crypto/indice-ciego.js';
 import {
   zListPatientsQuery,
   zSearchPatientsBody,
@@ -61,5 +62,7 @@ export function leerBusqueda(cuerpo: unknown): BusquedaDePacientes | undefined {
   if (idType !== undefined && nationalId !== undefined) {
     return { criterio: { tipo: 'documento', idType, nationalId }, page };
   }
-  return name === undefined ? undefined : { criterio: { tipo: 'nombre', name }, page };
+  // Un nombre que queda vacío tras normalizar (solo espacios o marcas) no identifica a nadie: 422, no una búsqueda.
+  if (name === undefined || normalizarNombre(name) === '') return undefined;
+  return { criterio: { tipo: 'nombre', name }, page };
 }

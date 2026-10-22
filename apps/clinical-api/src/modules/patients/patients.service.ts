@@ -5,7 +5,7 @@ import type {
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
-import type { IdentidadDescifrada, IdentityService } from './identity.service.js';
+import type { IdentidadParcial, IdentityService } from './identity.service.js';
 import type {
   BusquedaDePacientes,
   CriterioDeBusqueda,
@@ -50,7 +50,7 @@ interface ContextoDeElemento {
 
 function elementoDoctor(
   fila: FilaDePaciente,
-  identificacion: IdentidadDescifrada,
+  identificacion: IdentidadParcial,
   contexto: ContextoDeElemento,
 ): PatientListItem {
   return {
@@ -58,7 +58,7 @@ function elementoDoctor(
     id: fila.id,
     idType: identificacion.idType,
     nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
-    fullNameMasked: enmascararNombre(identificacion.nombreCompleto),
+    fullNameMasked: enmascararNombre(nombreObligatorio(identificacion)),
     dataOrigin: fila.dataOrigin,
     lifecycleStatus: fila.lifecycleStatus,
     birthYear: fila.birthYear,
@@ -69,9 +69,15 @@ function elementoDoctor(
   };
 }
 
+/** La vista del doctor siempre pide el nombre: que falte es una violación de integridad, no un dato opcional. */
+function nombreObligatorio(identificacion: IdentidadParcial): string {
+  if (identificacion.nombreCompleto === undefined) throw new IdentityIntegrityError();
+  return identificacion.nombreCompleto;
+}
+
 function elementoAdmin(
   fila: FilaDePaciente,
-  identificacion: IdentidadDescifrada,
+  identificacion: IdentidadParcial,
 ): PatientAdminSummary {
   return {
     view: 'admin',
@@ -94,7 +100,7 @@ const VISTAS: Record<
     readonly conDatosClinicos: boolean;
     elemento(
       fila: FilaDePaciente,
-      identificacion: IdentidadDescifrada,
+      identificacion: IdentidadParcial,
       contexto: ContextoDeElemento,
     ): Elemento;
   }
@@ -108,21 +114,25 @@ const VISTAS: Record<
 
 /** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
 function identidadObligatoria(
-  identidades: Map<string, IdentidadDescifrada>,
+  identidades: Map<string, IdentidadParcial>,
   patientId: string,
-): IdentidadDescifrada {
+): IdentidadParcial {
   const encontrada = identidades.get(patientId);
   if (encontrada === undefined) throw new IdentityIntegrityError();
   return encontrada;
 }
 
-/** Descifra solo la identidad de las filas de la página y la entrega por paciente. */
+/** Descifra solo la identidad de las filas de la página (el nombre solo si la vista lo usa) y la entrega por paciente. */
 async function identidadesDe(
   identidad: IdentityService,
   filas: FilaDePaciente[],
-): Promise<Map<string, IdentidadDescifrada>> {
+  conNombre: boolean,
+): Promise<Map<string, IdentidadParcial>> {
   if (filas.length === 0) return new Map();
-  const descifradas = await identidad.descifrarVarios(filas.map((fila) => fila.id));
+  const descifradas = await identidad.descifrarVarios(
+    filas.map((fila) => fila.id),
+    { conNombre },
+  );
   return new Map(descifradas.map((fila) => [fila.patientId, fila]));
 }
 
@@ -144,7 +154,7 @@ async function paginar(
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const identidades = await identidadesDe(identidad, filas);
+  const identidades = await identidadesDe(identidad, filas, presentador.conDatosClinicos);
   const pendientes = presentador.conDatosClinicos
     ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
     : new Map<string, number>();

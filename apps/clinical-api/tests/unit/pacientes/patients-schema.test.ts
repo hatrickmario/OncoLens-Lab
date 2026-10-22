@@ -41,6 +41,11 @@ describe('leerBusqueda', () => {
     expect(leerBusqueda({ name: 'P' })).toBeUndefined();
   });
 
+  it('rechaza un nombre que queda vacío tras normalizar', () => {
+    expect(leerBusqueda({ name: '   ' })).toBeUndefined();
+    expect(leerBusqueda({ name: '\u0301\u0301' })).toBeUndefined();
+  });
+
   it('rechaza un campo que el contrato no declara', () => {
     expect(leerBusqueda({ name: 'Prueba Sintética 1', apellido: 'Sintética' })).toBeUndefined();
   });
