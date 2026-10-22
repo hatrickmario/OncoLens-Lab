@@ -19,7 +19,8 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { compararConBaseline, tablaMarkdown } from '../eval/comparar-baseline.mjs';
+import { compararConBaseline, tablaMarkdown, textoSeguro } from '../eval/comparar-baseline.mjs';
+import { spawnPython } from '../eval/python.mjs';
 import { cargarReglas, detectar } from './eval-trigger.mjs';
 import { valorDeArgumento } from './lib/cli.mjs';
 
@@ -28,13 +29,18 @@ const BASELINE_POR_DEFECTO = 'data/evaluation/baseline.json';
 const SALIDA_POR_DEFECTO = 'apps/rag-orchestrator/eval/results/ci';
 const DIRECTORIO_RAG = path.join('apps', 'rag-orchestrator');
 const CONFIG_DE_UMBRALES = path.join('eval', 'configs', 'regression.yaml');
-const TIMEOUT_POR_DEFECTO_S = 600;
+const FORMATO_DE_TOLERANCIA = /^\d+(\.\d+)?$/;
+const MENSAJE_ENTRADA_ILEGIBLE = 'eval-required — reporte o baseline ilegible';
 
-/** Tolerancia en puntos de la métrica: la variable EVAL_MAX_REGRESSION manda; un valor inválido es un error, no se ignora. */
+/** Error de configuración con mensaje fijo, seguro de imprimir (los demás se reportan solo por su nombre, RN-14). */
+class ConfiguracionInvalida extends Error {}
+
+/** Tolerancia en puntos de la métrica: EVAL_MAX_REGRESSION manda y debe ser un decimal sin signo ni notación (RN-22); un valor inválido es un error. */
 export function toleranciaDe(entorno, reglas) {
-  const valor = entorno.EVAL_MAX_REGRESSION === undefined || entorno.EVAL_MAX_REGRESSION === '' ? reglas.regresion.tolerancia_maxima : Number(entorno.EVAL_MAX_REGRESSION);
-  if (!Number.isFinite(valor) || valor < 0) throw new Error('EVAL_MAX_REGRESSION debe ser un número mayor o igual que 0');
-  return valor;
+  const crudo = entorno.EVAL_MAX_REGRESSION;
+  if (crudo === undefined || crudo === '') return reglas.regresion.tolerancia_maxima;
+  if (!FORMATO_DE_TOLERANCIA.test(crudo)) throw new ConfiguracionInvalida('EVAL_MAX_REGRESSION debe ser un decimal mayor o igual que 0');
+  return Number(crudo);
 }
 
 const leerJson = (archivo) => JSON.parse(readFileSync(archivo, 'utf8'));
@@ -55,37 +61,30 @@ function ejecutarSuite(raiz, salida, entorno) {
 }
 
 /**
- * Mínimos de `regression.yaml` sobre el reporte (CLI de ai-services). Reenvía stdout y stderr y devuelve sus líneas con el
- * código de salida; si el proceso no arranca o se agota, devuelve 2 sin imprimir el motivo.
+ * Mínimos de `regression.yaml` sobre el reporte (CLI de ai-services). Devuelve el código y las líneas de stdout y stderr tal
+ * cual; si el proceso no arranca o se agota, devuelve 2 sin el motivo.
  */
 function comprobarUmbrales(raiz, reporte, entorno) {
-  const directorio = path.join(raiz, DIRECTORIO_RAG);
-  const resultado = spawnSync(
-    entorno.EVAL_PYTHON || 'python3',
-    ['-m', 'app.evaluation.comparar_regresion', '--reporte', reporte, '--config', CONFIG_DE_UMBRALES],
-    { cwd: directorio, encoding: 'utf8', timeout: (Number(entorno.EVAL_TIMEOUT_S) || TIMEOUT_POR_DEFECTO_S) * 1000, env: { ...entorno, PYTHONPATH: directorio } },
-  );
+  const resultado = spawnPython(['-m', 'app.evaluation.comparar_regresion', '--reporte', reporte, '--config', CONFIG_DE_UMBRALES], {
+    directorio: path.join(raiz, DIRECTORIO_RAG),
+    entorno,
+    opciones: { encoding: 'utf8' },
+  });
   const lineasDe = (texto) => (texto ?? '').split('\n').filter(Boolean);
-  const salida = lineasDe(resultado.stdout);
-  const errores = lineasDe(resultado.stderr);
-  salida.forEach((linea) => console.log(linea));
-  errores.forEach((linea) => console.error(linea));
-  return { codigo: resultado.status ?? 2, lineas: [...salida, ...errores] };
+  return { codigo: resultado.status ?? 2, salida: lineasDe(resultado.stdout), errores: lineasDe(resultado.stderr) };
 }
 
-/** Una cadena con saltos de línea, comillas invertidas o barras no puede añadir Markdown propio al resumen. */
-const textoSeguro = (texto) => texto.replace(/[\r\n`|]/g, '?');
 const lineasDeMotivos = (motivos) => motivos.map(({ ruta, motivo }) => `- ${motivo}: \`${textoSeguro(ruta)}\``).join('\n');
 
 function seccionDeBaseline(comparacion, tolerancia) {
   if (!comparacion) return ['> Sin `data/evaluation/baseline.json`: comparación con el baseline no aplicada.'];
   const { regresiones } = comparacion;
-  const veredicto = regresiones.length === 0 ? `Sin regresión contra el baseline (tolerancia ${tolerancia}).` : `Regresión en ${regresiones.map((r) => `\`${r.metrica}\``).join(', ')} (tolerancia ${tolerancia}).`;
+  const veredicto = regresiones.length === 0 ? `Sin regresión contra el baseline (tolerancia ${tolerancia}).` : `Regresión en ${regresiones.map((r) => `\`${textoSeguro(r.metrica)}\``).join(', ')} (tolerancia ${tolerancia}).`;
   return [veredicto, '', tablaMarkdown(comparacion)];
 }
 
-function seccionDeUmbrales({ lineas }) {
-  return ['', '### Mínimos de `regression.yaml`', '', ...lineas.map((linea) => `> ${textoSeguro(linea)}`)];
+function seccionDeUmbrales({ salida, errores }) {
+  return ['', '### Mínimos de `regression.yaml`', '', ...[...salida, ...errores].map((linea) => `> ${textoSeguro(linea)}`)];
 }
 
 function comentario({ motivos, tolerancia, comparacion, umbrales }) {
@@ -93,11 +92,19 @@ function comentario({ motivos, tolerancia, comparacion, umbrales }) {
   return [...encabezado, ...seccionDeBaseline(comparacion, tolerancia), ...seccionDeUmbrales(umbrales)].join('\n');
 }
 
-/** Imprime cada métrica en regresión contra el baseline (o su ausencia) y devuelve el código de salida. */
+/** Líneas de consola y código de salida del control contra el baseline. */
 function veredictoDeRegresion({ regresiones }, { baseline, tolerancia }) {
-  regresiones.forEach((r) => console.error(`eval-required — regresión en ${r.metrica}: baseline ${r.baseline}, actual ${r.actual ?? 'sin valor'}`));
-  if (regresiones.length === 0) console.log(`eval-required — sin regresión contra ${baseline} (tolerancia ${tolerancia})`);
-  return regresiones.length === 0 ? 0 : 1;
+  if (regresiones.length === 0) return { codigo: 0, salida: [`eval-required — sin regresión contra ${baseline} (tolerancia ${tolerancia})`], errores: [] };
+  const errores = regresiones.map((r) => `eval-required — regresión en ${r.metrica}: baseline ${r.baseline}, actual ${r.actual ?? 'sin valor'}`);
+  return { codigo: 1, salida: [], errores };
+}
+
+/** Único punto que escribe en la consola; el orden es el del comentario: baseline y después mínimos. */
+function imprimir(...resultados) {
+  resultados.forEach(({ salida, errores }) => {
+    salida.forEach((linea) => console.log(linea));
+    errores.forEach((linea) => console.error(linea));
+  });
 }
 
 /** Reglas, tolerancia y disparadores del diff; una configuración inválida lanza. */
@@ -117,7 +124,7 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
   try {
     deteccion = prepararDeteccion({ raiz, base, entorno });
   } catch (error) {
-    console.error(`eval-required — configuración inválida: ${error.message}`);
+    console.error(error instanceof ConfiguracionInvalida ? `eval-required — configuración inválida: ${error.message}` : `eval-required — configuración inválida (${error.name})`);
     return 2;
   }
   const { tolerancia, dispara, motivos } = deteccion;
@@ -133,11 +140,18 @@ export function ejecutar({ raiz = RAIZ, base, baseline = BASELINE_POR_DEFECTO, s
   }
   const reporte = path.join(carpeta, 'reporte.json');
   const archivoBaseline = path.resolve(raiz, baseline);
-  const comparacion = existsSync(archivoBaseline) ? compararConBaseline(leerJson(reporte), leerJson(archivoBaseline), { tolerancia }) : null;
+  let comparacion;
+  try {
+    comparacion = existsSync(archivoBaseline) ? compararConBaseline(leerJson(reporte), leerJson(archivoBaseline), { tolerancia }) : null;
+  } catch {
+    console.error(MENSAJE_ENTRADA_ILEGIBLE);
+    return 2;
+  }
   const umbrales = comprobarUmbrales(raiz, reporte, entorno);
   publicarComentario(comentario({ motivos, tolerancia, comparacion, umbrales }), carpeta, entorno);
-  const contraBaseline = comparacion ? veredictoDeRegresion(comparacion, { baseline, tolerancia }) : 0;
-  if (contraBaseline !== 0) return contraBaseline;
+  const contraBaseline = comparacion ? veredictoDeRegresion(comparacion, { baseline, tolerancia }) : { codigo: 0, salida: [], errores: [] };
+  imprimir(contraBaseline, umbrales);
+  if (contraBaseline.codigo !== 0) return contraBaseline.codigo;
   return umbrales.codigo === 0 ? 0 : Math.min(umbrales.codigo, 2);
 }
 

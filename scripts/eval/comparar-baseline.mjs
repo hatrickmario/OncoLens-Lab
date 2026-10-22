@@ -59,15 +59,15 @@ export function compararConBaseline(reporte, baseline, { tolerancia }) {
 const ETIQUETA_DE_ESTADO = { igual: 'igual', mejora: 'mejora', tolerada: 'caída tolerada', regresion: 'regresión' };
 const textoDe = (valor) => (valor === null ? 'sin valor' : String(valor));
 
-/** Esqueleto: lo implementa el commit feat. */
-export function textoSeguro() {
-  throw new Error('no implementado');
+/** Un texto con saltos de línea, barras, comillas invertidas o ángulos no puede añadir Markdown ni HTML propio. */
+export function textoSeguro(texto) {
+  return texto.replace(/[\r\n`|<>]/g, '?');
 }
 
 /** Tabla Markdown de métricas con la marca «validada / no validada» de cada una (AC-6). */
 export function tablaMarkdown({ filas }) {
   const lineas = filas.map(
-    (f) => `| ${f.metrica} | ${textoDe(f.baseline)} | ${textoDe(f.actual)} | ${f.rotulo.replace('_', ' ')} | ${ETIQUETA_DE_ESTADO[f.estado]} |`,
+    (f) => `| ${textoSeguro(f.metrica)} | ${textoDe(f.baseline)} | ${textoDe(f.actual)} | ${textoSeguro(f.rotulo.replace('_', ' '))} | ${ETIQUETA_DE_ESTADO[f.estado]} |`,
   );
   return ['| Métrica | Baseline | Actual | Validación | Estado |', '|---|---|---|---|---|', ...lineas].join('\n');
 }
