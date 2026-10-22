@@ -219,3 +219,13 @@ cuando exista el job de E2E (ARR-02 resto).
   no llama al servicio.
 - **Orden:** `clinical.patient.created_at` descendente y `id` como desempate (el seed comparte `created_at`).
 - **Tareas web (ronda 2):** 2.8 (parte `web`) y 2.9 hechas en `apps/web/lib/server/patients.ts`, `proxy-json.ts` y `app/api/patients/**`, con tests MSW desde `contracts/examples/`. `CAMPOS_DE_LA_BUSQUEDA` está duplicada en `web` (el Zod generado no los expresa): si el contrato añade un campo hay que tocar los dos sitios.
+
+## Notas de implementación (frontend)
+
+- **Pestañas:** `Tabs` de shadcn exige `@radix-ui/react-tabs` (dependencia nueva); no hay evidencia que la justifique para dos pestañas, así que `PestanasDeBusqueda` implementa a mano el patrón ARIA (roles `tablist`/`tab`/`tabpanel`, foco itinerante, flechas, Inicio y Fin).
+- **Tipos de documento:** el selector ofrece todos los valores de `IdType` del contrato (`web` aún no tiene "valores habilitados en configuración"); no se usa `inputmode="numeric"` porque `sintetico` y `pasaporte` son alfanuméricos.
+- **Búsqueda:** muestra solo la página 1 de resultados (exacta por índice ciego: pocos resultados); sin paginación de búsqueda. Más de un resultado por nombre muestra el aviso de homónimos (máscara y año de nacimiento).
+- **Lectura del listado:** la página (RSC) reutiliza `crearManejadorListadoDePacientes` en proceso (`lib/server/leer-listado-de-pacientes.ts`): una sola ruta hacia clinical-api.
+- **Cache-Control:** `proxy.ts` añade `Cache-Control: no-store` a toda página `/pacientes/**` con sesión.
+- **Vista admin:** las filas `view: 'admin'` muestran solo el documento enmascarado, sin enlace ni contadores.
+- **Loop visual:** hecho contra `next dev` + clinical-api simulado desde `contracts/examples/` (sin Compose: hay otros stacks en la máquina).

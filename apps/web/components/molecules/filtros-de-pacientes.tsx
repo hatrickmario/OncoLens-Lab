@@ -39,46 +39,41 @@ function Grupo({ titulo, opciones }: { titulo: string; opciones: OpcionDeFiltro[
   );
 }
 
-function sinPagina({ status, dataOrigin }: FiltrosDelListado): FiltrosDelListado {
-  return { ...(status && { status }), ...(dataOrigin && { dataOrigin }) };
+type ClaveDeFiltro = 'status' | 'dataOrigin';
+const CLAVES: readonly ClaveDeFiltro[] = ['status', 'dataOrigin'];
+
+/** Opciones de un grupo: "Todos" (quita la clave) y cada valor; elegir cualquiera vuelve a la página 1. */
+function opcionesDelGrupo(
+  clave: ClaveDeFiltro,
+  valores: readonly (readonly [string, string])[],
+  filtros: FiltrosDelListado,
+  etiquetaTodos: string,
+): OpcionDeFiltro[] {
+  const sinClave: FiltrosDelListado = {};
+  for (const otra of CLAVES.filter((c) => c !== clave)) {
+    if (filtros[otra] !== undefined) Object.assign(sinClave, { [otra]: filtros[otra] });
+  }
+  return [
+    { etiqueta: etiquetaTodos, destino: sinClave, vigente: filtros[clave] === undefined },
+    ...valores.map(([valor, etiqueta]) => ({
+      etiqueta,
+      destino: { ...sinClave, [clave]: valor } as FiltrosDelListado,
+      vigente: filtros[clave] === valor,
+    })),
+  ];
 }
 
 /** Estado y origen del listado como enlaces con query (RSC): sin identidad, sí en la URL; la página se reinicia. */
 export function FiltrosDePacientes({ filtros, textos }: FiltrosDePacientesProps) {
-  const base = sinPagina(filtros);
-  const { status, ...sinEstado } = base;
-  const { dataOrigin, ...sinOrigen } = base;
-  const estados = [
-    ['activo', textos.estados.activo],
-    ['egresado', textos.estados.egresado],
-  ] as const;
-  const origenes = Object.entries(textos.filtroOrigenes) as [
-    NonNullable<FiltrosDelListado['dataOrigin']>,
-    string,
-  ][];
+  const { filtros: t } = textos;
+  const estados = Object.entries(textos.estados);
+  const origenes = Object.entries(textos.filtroOrigenes);
   return (
-    <div aria-label={textos.filtros.etiqueta} role="group" className="mb-4 flex flex-wrap gap-6">
+    <div aria-label={t.etiqueta} role="group" className="mb-4 flex flex-wrap gap-6">
+      <Grupo titulo={t.estado} opciones={opcionesDelGrupo('status', estados, filtros, t.todos)} />
       <Grupo
-        titulo={textos.filtros.estado}
-        opciones={[
-          { etiqueta: textos.filtros.todos, destino: sinEstado, vigente: status === undefined },
-          ...estados.map(([valor, etiqueta]) => ({
-            etiqueta,
-            destino: { ...sinEstado, status: valor },
-            vigente: status === valor,
-          })),
-        ]}
-      />
-      <Grupo
-        titulo={textos.filtros.origen}
-        opciones={[
-          { etiqueta: textos.filtros.todos, destino: sinOrigen, vigente: dataOrigin === undefined },
-          ...origenes.map(([valor, etiqueta]) => ({
-            etiqueta,
-            destino: { ...sinOrigen, dataOrigin: valor },
-            vigente: dataOrigin === valor,
-          })),
-        ]}
+        titulo={t.origen}
+        opciones={opcionesDelGrupo('dataOrigin', origenes, filtros, t.todos)}
       />
     </div>
   );
