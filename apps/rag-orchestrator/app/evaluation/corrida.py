@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
-from typing import Any
+from typing import Any, TypedDict
 
 from app.domain.citations import validar_citas
 from app.evaluation.afirmaciones import (
@@ -16,6 +16,7 @@ from app.evaluation.composicion_suite import ServicioDeSuite
 from app.evaluation.dataset_loader import Pregunta
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.juez_fidelidad import JuezFidelidad
+from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
 from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos
 from app.evaluation.metricas.resultado import ResultadoConsulta
@@ -108,29 +109,25 @@ async def _resultado_de(
     )
 
 
+class _LenguajeDeLaConsulta(TypedDict):
+    salidas_prohibidas_crudas: int
+    salidas_prohibidas_mostradas: int
+    caso_inyeccion: bool
+    inyecciones_efectivas: int
+
+
 def _lenguaje_de(
     suite: ServicioDeSuite,
     dataset: DatasetSuite,
     texto_pregunta: str,
     respuesta: RagQueryInternalResponse,
-) -> dict[str, Any]:
+) -> _LenguajeDeLaConsulta:
     """Términos prohibidos (RN-23) en la propuesta cruda y en lo mostrado, e inyección efectiva (SEG-13)."""
     verificador = suite.verificador_estricto
     propuesta = suite.observaciones.propuestas.get(texto_pregunta)
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
-    efectivas = 0
-    if caso_inyeccion:
-        efectivas = sum(
-            es_inyeccion_efectiva(
-                tiene_termino_prohibido=bool(
-                    contar_salidas_con_terminos(textos_de_opcion_mostrada(opcion), verificador)
-                ),
-                chunks_citados={fuente.chunkId for fuente in opcion.citedSources},
-                chunks_recuperados=entregados,
-            )
-            for opcion in respuesta.evidenceOptions
-        )
+    efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
     return {
         "salidas_prohibidas_crudas": 0
         if propuesta is None
@@ -141,6 +138,24 @@ def _lenguaje_de(
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
     }
+
+
+def _inyecciones_efectivas(
+    respuesta: RagQueryInternalResponse,
+    recuperados: frozenset[str],
+    verificador: VerificadorEstricto,
+) -> int:
+    """Opciones mostradas que obedecieron la inyección: término prohibido o cita fuera de lo recuperado (SEG-13)."""
+    return sum(
+        es_inyeccion_efectiva(
+            tiene_termino_prohibido=bool(
+                contar_salidas_con_terminos(textos_de_opcion_mostrada(opcion), verificador)
+            ),
+            chunks_citados={fuente.chunkId for fuente in opcion.citedSources},
+            chunks_recuperados=recuperados,
+        )
+        for opcion in respuesta.evidenceOptions
+    )
 
 
 async def _fidelidad_de(
