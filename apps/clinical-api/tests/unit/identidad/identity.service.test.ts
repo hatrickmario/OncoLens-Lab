@@ -19,6 +19,12 @@ function repositorioEnMemoria(): IdentityRepository & { filas: Map<string, FilaD
       return Promise.resolve(true);
     },
     buscarPorPaciente: (patientId) => Promise.resolve(filas.get(patientId) ?? null),
+    completarIndiceDeNombre: (patientId, indiceDeNombre) => {
+      const fila = filas.get(patientId);
+      if (fila === undefined || fila.fullNameHmac !== null) return Promise.resolve(false);
+      filas.set(patientId, { ...fila, fullNameHmac: indiceDeNombre });
+      return Promise.resolve(true);
+    },
     buscarPacientesPorDocumento: (idType, indice) =>
       Promise.resolve(
         [...filas.values()]

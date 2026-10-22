@@ -8,12 +8,16 @@ export interface FilaDeIdentidad {
   readonly nationalIdHmac: string;
   readonly fullNameCiphertext: Buffer;
   readonly keyVersion: number;
+  /** Índice ciego del nombre normalizado; `null` en filas anteriores a la columna hasta que el seed las complete. */
+  readonly fullNameHmac: string | null;
 }
 
 export interface IdentityRepository {
   /** `true` si insertó; `false` si el paciente ya tenía identidad (no se pisa). */
   insertarSiNoExiste(fila: FilaDeIdentidad): Promise<boolean>;
   buscarPorPaciente(patientId: string): Promise<FilaDeIdentidad | null>;
+  /** Escribe el índice del nombre solo donde aún es nulo (idempotente); `true` si lo completó. */
+  completarIndiceDeNombre(patientId: string, indiceDeNombre: string): Promise<boolean>;
   /** Pacientes cuyo documento tiene ese índice ciego (sin país emisor: dos países pueden devolver dos filas). */
   buscarPacientesPorDocumento(idType: IdType, indiceDeDocumento: string): Promise<string[]>;
   /** Las filas de los pacientes pedidos, sin orden; un paciente sin identidad simplemente no aparece. */
@@ -33,10 +37,11 @@ interface FilaSql {
   national_id_hmac: string;
   full_name_ciphertext: Buffer;
   key_version: number;
+  full_name_hmac: string | null;
 }
 
 const COLUMNAS = `patient_id, id_type::text AS id_type, issuing_country, national_id_ciphertext,
-                national_id_hmac, full_name_ciphertext, key_version`;
+                national_id_hmac, full_name_ciphertext, key_version, full_name_hmac`;
 
 function comoFila(fila: FilaSql): FilaDeIdentidad {
   return {
@@ -47,6 +52,7 @@ function comoFila(fila: FilaSql): FilaDeIdentidad {
     nationalIdHmac: fila.national_id_hmac,
     fullNameCiphertext: fila.full_name_ciphertext,
     keyVersion: fila.key_version,
+    fullNameHmac: fila.full_name_hmac,
   };
 }
 
@@ -55,8 +61,8 @@ export function createIdentityRepository(db: ConsultadorSql): IdentityRepository
     async insertarSiNoExiste(fila) {
       const { rows } = await db.query(
         `INSERT INTO identity.patient_identity
-           (patient_id, id_type, issuing_country, national_id_ciphertext, national_id_hmac, full_name_ciphertext, key_version)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+           (patient_id, id_type, issuing_country, national_id_ciphertext, national_id_hmac, full_name_ciphertext, key_version, full_name_hmac)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (patient_id) DO NOTHING
          RETURNING patient_id`,
         [
@@ -67,6 +73,7 @@ export function createIdentityRepository(db: ConsultadorSql): IdentityRepository
           fila.nationalIdHmac,
           fila.fullNameCiphertext,
           fila.keyVersion,
+          fila.fullNameHmac,
         ],
       );
       return rows.length > 0;
@@ -78,6 +85,15 @@ export function createIdentityRepository(db: ConsultadorSql): IdentityRepository
       );
       const fila = rows[0] as FilaSql | undefined;
       return fila === undefined ? null : comoFila(fila);
+    },
+    async completarIndiceDeNombre(patientId, indiceDeNombre) {
+      const { rows } = await db.query(
+        `UPDATE identity.patient_identity SET full_name_hmac = $2
+          WHERE patient_id = $1 AND full_name_hmac IS NULL
+          RETURNING patient_id`,
+        [patientId, indiceDeNombre],
+      );
+      return rows.length > 0;
     },
     async buscarPacientesPorDocumento(idType, indiceDeDocumento) {
       const { rows } = await db.query(

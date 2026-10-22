@@ -101,9 +101,11 @@ model PatientIdentity {
   nationalIdHmac       String  @map("national_id_hmac")
   fullNameCiphertext   Bytes   @map("full_name_ciphertext")
   keyVersion           Int     @map("key_version")
+  fullNameHmac         String? @map("full_name_hmac")
   patient              Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
 
   @@unique([idType, issuingCountry, nationalIdHmac], map: "patient_identity_blind_index_uq")
+  @@index([fullNameHmac], map: "patient_identity_full_name_hmac_idx")
   @@map("patient_identity")
   @@schema("identity")
 }

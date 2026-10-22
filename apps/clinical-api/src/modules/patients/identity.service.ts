@@ -24,6 +24,8 @@ export interface IdentityService {
   /** Cifra y guarda; si el paciente ya tiene identidad no la recifra (`'existente'`). */
   guardar(identidad: IdentidadAGuardar): Promise<'creada' | 'existente'>;
   descifrar(patientId: string): Promise<IdentidadDescifrada | null>;
+  /** Completa `full_name_hmac` de una identidad anterior a la columna (el seed); no recifra nada. `true` si lo completó. */
+  completarIndiceDeNombre(patientId: string, nombreCompleto: string): Promise<boolean>;
   /** Descifra la identidad de varios pacientes en una consulta (la página de un listado); los que no tienen no aparecen. */
   descifrarVarios(patientIds: readonly string[]): Promise<IdentidadDescifrada[]>;
   indiceCiegoDeDocumento(idType: IdType, numeroDeDocumento: string): string;
@@ -74,6 +76,7 @@ export function createIdentityService({
         nationalIdHmac: indice.indiceDeDocumento(identidad.idType, identidad.numeroDeDocumento),
         fullNameCiphertext: nombre.blob,
         keyVersion: documento.keyVersion,
+        fullNameHmac: indice.indiceDeNombre(identidad.nombreCompleto),
       });
       return insertada ? 'creada' : 'existente';
     },
@@ -81,6 +84,8 @@ export function createIdentityService({
       const fila = await repo.buscarPorPaciente(patientId);
       return fila === null ? null : descifrarFila(fila);
     },
+    completarIndiceDeNombre: (patientId, nombreCompleto) =>
+      repo.completarIndiceDeNombre(patientId, indice.indiceDeNombre(nombreCompleto)),
     async descifrarVarios(patientIds) {
       return (await repo.buscarPorPacientes(patientIds)).map(descifrarFila);
     },
