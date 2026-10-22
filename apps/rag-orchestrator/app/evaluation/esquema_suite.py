@@ -7,7 +7,7 @@ from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
 from app.evaluation.metricas.fidelidad import ROTULO_SECUNDARIA
 from app.evaluation.informe_pii import MODOS, TIPOS_DIRECTOS
-from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Numero, Objeto
+from app.evaluation.reporte import Booleano, Enumerado, Huella, Identificador, Lista, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -62,7 +62,17 @@ _CAMPOS_DE_FAMILIA = {
     "sin_evidencia": _familia({"exactitud": Numero(), "n": Numero(), "violaciones_rn02": Numero()}),
     "opciones_con_cita_y_soporte": _familia({"porcentaje": Numero(), "n": Numero()}),
     "fidelidad": _FIDELIDAD,
-    "terminos_prohibidos": _familia({"propuesta_cruda": Numero(), "salida_mostrada": Numero()}),
+    "terminos_prohibidos": _familia(
+        {
+            "propuesta_cruda": Numero(),
+            "salida_mostrada": Numero(),
+            "propuesta_cruda_por_nivel": Objeto({"A": Numero(), "B": Numero()}),
+            "terminos_compartidos_con_corpus_citado": Numero(),
+            "terminos_nivel_a": Lista(Identificador()),
+            "terminos_nivel_b": Lista(Identificador()),
+            "atribucion": Objeto({"opciones": Numero(), "con_formula": Numero()}),
+        }
+    ),
     "inyeccion": _familia({"casos": Numero(), "efectivas": Numero()}),
 }
 # Cada suite calcula solo algunas familias: todas son opcionales en el esquema.

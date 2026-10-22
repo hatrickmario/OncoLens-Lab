@@ -150,6 +150,28 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
   idéntico) y solo **añade** las familias `fidelidad`, `terminos_prohibidos`, `inyeccion` y el bloque `privacidad`;
   el comparador de `l1d-237` debe tratar las claves nuevas como altas, no como regresiones.
 
+- **D21 · ARR-03 / L1D-279 (2026-10-22): RN-23 fuera del filtro y alcance real de la suite.**
+  (a) `terminos_prohibidos` suma al reporte, sin cambiar las cifras previas: `propuesta_cruda_por_nivel` (campos
+  generados con un término de nivel A y de nivel B), `terminos_compartidos_con_corpus_citado` (campos que traen un término que
+  el corpus citado por la propia propuesta también trae), `terminos_nivel_a` / `terminos_nivel_b` (ids de regla, nunca
+  texto) y `atribucion` (opciones cuya justificación abre con «La fuente [cita] describe que…» / «The source …
+  describes that…»). Fixture aparte `data/eval/fx-rn23` y `eval/configs/rn23-fake.yaml`: el baseline no depende de él.
+  `baseline.json` solo gana claves. (b) **Hallazgo para el dueño del prompt (no se cambió):** `rag-query@0.2.0` pide
+  tercera persona, presente y «atribúyelo a la fuente citada», pero **no fuerza** la fórmula «La fuente [cita] describe
+  que…»; con el generador real, `atribucion.con_formula / opciones` es la medida de ese cumplimiento. Además, un
+  término de **nivel B** reproducido del corpus (`b-recommend`) llega a `salida_mostrada` porque el filtro
+  de producción solo aplica el nivel A (RN-23, L1D-193): hoy es 1 en `rn23-fake`. (c) **NO-EJECUTABLE aquí (AC-1, AC-2 y
+  AC-5 de ARR-03):** `componer_servicio` rechaza `adaptadores.proveedor: local` («se cablea con US-073»), así que la
+  suite no puede ejecutar el NLI ni el generador reales; en esta máquina tampoco hay pesos de NLI ni de reranker en
+  `MODEL_CACHE_DIR` (solo Ollama con G `gemma4:26b-a4b-it-q4_K_M` y `bge-m3`). El juez LLM de D17(a) mide al juez, no al
+  generador, y no sustituye esas cifras. **Procedimiento:** (1) cablear `proveedor: local` en `composicion_suite.py` con
+  los adapters de US-231a/b (LLM `/v1`, embeddings, reranker, NLI) y las guardas de D3; (2) en el MacBook de referencia,
+  Ollama con `OLLAMA_CONTEXT_LENGTH=8192` y G cargado (LLM ≤ 21 GB, stack ≤ ~30 GB, sin swap; `ollama ps`), pesos
+  NLI/reranker en `MODEL_CACHE_DIR`; (3) `npm run evaluate -- --suite all --report json --config <local>.yaml --salida
+  reports/eval --nombre-archivo L1D-279-real.json` sobre `fx-t5a-a`, `fx-rn23` y la partición de ADR-45; (4) barrido de
+  `NLI_ENTAILMENT_THRESHOLD` y `RETRIEVAL_TOP_K` (hoy solo existe el de `relevance_threshold`, US-073) para fijar el valor
+  en configuración (RN-22); mientras tanto siguen 0,7 y 30, provisionales. Sin cifras inventadas.
+
 ## Adiciones aceptadas por el orquestador del sprint (sprint-S2) y deuda
 
 Aceptadas para 072a: (1) datasets en `data/eval/` y salidas en `data/evaluation/` (D6); (2) configs en
