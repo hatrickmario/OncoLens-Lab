@@ -20,7 +20,7 @@ describe('validarUmbrales', () => {
   });
 
   it('falla nombrando la clave cuando falta un umbral [US-213 AC-6]', () => {
-    const { complexity: _omitida, ...sinComplexity } = BASE;
+    const sinComplexity = { ...BASE, complexity: undefined };
     expect(() => validarUmbrales(sinComplexity)).toThrow(/complexity/);
   });
 
@@ -75,8 +75,8 @@ describe('excepcionesVigentes', () => {
   });
 
   it('descarta la excepción caducada para que la violación vuelva a fallar', () => {
-    expect(excepcionesVigentes([excepcion('2026-11-30')], new Date('2026-12-01T00:00:00Z'))).toEqual(
-      [],
-    );
+    expect(
+      excepcionesVigentes([excepcion('2026-11-30')], new Date('2026-12-01T00:00:00Z')),
+    ).toEqual([]);
   });
 });

@@ -40,10 +40,11 @@ export function validarUmbrales(umbrales) {
     );
   }
   (umbrales.excepciones ?? []).forEach(exigirExcepcion);
-  return umbrales;
+  return { ...umbrales, excepciones: umbrales.excepciones ?? [] };
 }
 
-export function leerUmbrales(ruta = RUTA_UMBRALES) {
+/** `QUALITY_THRESHOLDS` apunta a otro archivo (lo fijan `quality --umbrales` y los tests de la CI). */
+export function leerUmbrales(ruta = process.env.QUALITY_THRESHOLDS ?? RUTA_UMBRALES) {
   return validarUmbrales(JSON.parse(readFileSync(ruta, 'utf8')));
 }
 

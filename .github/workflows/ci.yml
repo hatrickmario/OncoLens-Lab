@@ -210,7 +210,17 @@ jobs:
         run: npm run format:check
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
-      - name: Tests de lint y formato (fixtures)
+      - name: Calidad de capas y umbrales (ESLint, dependency-cruiser, Ruff, import-linter; escribe reports/quality/latest.json)
+        run: npm run quality:report
+      - name: Subir el reporte de calidad
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-report
+          path: reports/quality/latest.json
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Tests de lint, formato, capas y umbrales (fixtures)
         run: npm run test:quality
 
   lint-lenguaje:
