@@ -8,12 +8,24 @@ from typing import Literal, get_args
 
 from app.domain.citations import OpcionAceptada, OpcionGenerada
 from app.domain.claims import dividir_en_afirmaciones
+from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
 from app.domain.nli import ParNli, ResultadoNli
 
 CampoGenerado = Literal[
     "option", "rationale", "details", "unsupportedClaims", "limitations[].text", "synthesis"
 ]
 CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
+
+
+def coincidencias_en_campo_generado(
+    texto: str, campo: CampoGenerado, lista: ListaTerminos, niveles: Sequence[Nivel]
+) -> list[Coincidencia]:
+    """RN-23: solo se revisan los campos GENERADOS; los copiados del corpus pueden traer vocabulario de la lista."""
+    if campo not in CAMPOS_GENERADOS:
+        return []
+    return check_prohibited_terms(texto, lista, niveles=niveles, permitir_frases=False)
+
+
 RETIRO_ES = "[afirmación retirada: formulación no permitida]"
 RETIRO_EN = "[claim removed: disallowed wording]"
 

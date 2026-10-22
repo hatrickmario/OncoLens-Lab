@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
-from app.domain.support import CAMPOS_GENERADOS, CampoGenerado
+from app.domain.lenguaje import ListaTerminos
+from app.domain.support import CampoGenerado, coincidencias_en_campo_generado
 
 RUTA_DE_LA_LISTA = Path("lenguaje") / "terminos-prohibidos.json"
 
@@ -30,11 +30,7 @@ class VerificadorDeTerminosProhibidos:
         return self._lista.version
 
     def reglas_coincidentes(self, texto: str, campo: CampoGenerado) -> tuple[str, ...]:
-        if campo not in CAMPOS_GENERADOS:
-            return ()
-        coincidencias = check_prohibited_terms(
-            texto, self._lista, niveles=("A",), permitir_frases=False
-        )
+        coincidencias = coincidencias_en_campo_generado(texto, campo, self._lista, ("A",))
         return tuple(dict.fromkeys(c.id for c in coincidencias))
 
 
