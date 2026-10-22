@@ -362,21 +362,29 @@
       "spec": "rag-orchestrator",
       "target": "#/components/schemas/RagQueryInternalResponse",
       "request": "rag-query-request-sin-opciones.json"
+    },
+    {
+      "file": "document-uploaded.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/Document"
+    },
+    {
+      "file": "error-archivo-no-pdf.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/422"
+    },
+    {
+      "file": "error-archivo-demasiado-grande.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/422"
+    },
+    {
+      "file": "error-almacen-no-disponible.json",
+      "spec": "clinical-api",
+      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/503"
     }
   ],
   "pendingExamples": [
-    {
-      "spec": "clinical-api",
-      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/413",
-      "owner": "FEAT-01b",
-      "note": "Código y cuerpo del error de tamaño de archivo: los fija la historia dueña de la carga de documentos."
-    },
-    {
-      "spec": "clinical-api",
-      "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/415",
-      "owner": "FEAT-01b",
-      "note": "Código y cuerpo del error de tipo de archivo: los fija la historia dueña de la carga de documentos."
-    },
     {
       "spec": "rag-orchestrator",
       "target": "#/paths/~1documents~1extract/post/responses/413",

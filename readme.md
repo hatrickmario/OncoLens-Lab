@@ -814,18 +814,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDocumentoDuplicado"
-        "413":
-          description: "Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
-          x-pending-owner: FEAT-01b
-        "415":
-          description: "Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código."
-          x-pending-owner: FEAT-01b
         "422":
-          description: documentType inválido, o paciente egresado (RN-17).
+          description: documentType inválido, archivo que no es PDF (magic bytes), tamaño mayor que MAX_UPLOAD_MB, o paciente egresado (RN-17).
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorSolicitudNoProcesable"
+                $ref: "#/components/schemas/ErrorDocumentoNoProcesable"
+        "503":
+          description: Almacén de documentos (clinical-minio) no disponible; sin detalles internos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorAlmacenNoDisponible"
   /platform/evidence-analyses:
     post:
       operationId: createEvidenceAnalysis

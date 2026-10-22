@@ -1,0 +1,5 @@
+{
+  "error": "ARCHIVO_DEMASIADO_GRANDE",
+  "message": "El archivo supera el tamaño máximo permitido.",
+  "traceId": "req_b2c3d4e5"
+}

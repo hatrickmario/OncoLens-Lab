@@ -1,0 +1,5 @@
+{
+  "error": "ARCHIVO_NO_PDF",
+  "message": "El archivo no es un PDF.",
+  "traceId": "req_a1b2c3d4"
+}

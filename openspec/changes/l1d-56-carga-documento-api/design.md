@@ -128,7 +128,7 @@ components:
     (regla, operación `POST`, ruta, texto exacto del hallazgo, `change: l1d-56-carga-documento-api`) y con su caso en
     `scripts/ci/__tests__/excepcionesDeContrato.test.mjs` (la lista declarada pasa a `E-1…E-5`; un valor distinto o
     en otra ruta sigue rompiendo). Se hace en la **primera tarea de contratos**, antes de editar el `openapi.yaml`.
-    Justificación: el endpoint no tiene implementación ni consumidor (US-079 llega en el S3) y `error` se trata como
+    Justificación: el endpoint no tiene consumidor (US-079 llega en el S3) y `error` se trata como
     cadena abierta. En la misma tarea se corrige el texto de política de ADR-26: una excepción E-n declarada sube la versión **menor**
     (precedente E-1, E-3), no la mayor (`[S2 resp. 12]`).
   - **Descartada:** `x-extensible-enum` en lugar de `enum`. Su efecto en el Zod generado (`contracts:generate`) no
@@ -153,3 +153,77 @@ components:
   planificación).
 - **`x-pending-owner: FEAT-01b`** apuntaba a la Feature equivocada (la dueña de la carga es FEAT-01a, US-076): se
   corrige al retirar esas respuestas.
+
+## Desviaciones y notas de la implementación
+
+- **`clinical-minio` en la integración:** el adapter real (`@aws-sdk/client-s3` contra el endpoint S3) corre en los tests y
+  el almacén se simula **en su borde HTTP con MSW** (`tests/support/documentos.ts`: `PUT`/`DELETE` de objeto, `HEAD` de
+  bucket). CLAUDE.md lista MinIO como borde mockeable y así la CI de `clinical-api` no necesita MinIO. El adapter se
+  comprobó además **a mano contra un MinIO real** (`pgsty/minio`, la imagen del Compose): `asegurarBucket` idempotente,
+  `PUT`, `DELETE` idempotente y credencial mala → `AlmacenNoDisponible`. No hay override de Compose de test para MinIO.
+- **Cliente S3:** `@aws-sdk/client-s3` 3.1148.0 en lugar de `minio` 8.0.7, que arrastra 4 avisos moderados
+  (`stream-json`, `decode-uri-component`). `busboy` 1.6.0 (+ `@types/busboy` 1.5.5). `npm audit --omit=dev`: 0
+  vulnerabilidades (2.13).
+- **Orden de validación:** el *multipart* se lee primero (el campo `documentType` puede llegar tras el archivo), con el
+  archivo cortado en `MAX_UPLOAD_MB` + 1 byte; después `documentType` (Zod generado) → UUID de la ruta (no UUID = `404`) →
+  paciente → tamaño → *magic bytes* → checksum → `putObject` → `INSERT`. Nada toca el almacén antes del paso `putObject`.
+- **Fixtures:** `tests/fixtures/documents/` (el repo usa `tests/`, no `test/`). `grande.pdf` no se versiona ni se genera en
+  `global-setup`: `pdfSinteticoDe(21)` lo arma en memoria en el test.
+- **Rojos de los AC:** en AC-3 a AC-6 y AC-8 el rojo falla porque el endpoint aún no mapea el caso (devuelve `202` o un `500`
+  que la verificación del proveedor rechaza por no estar declarado), no por un `import`. AC-7 (`401`) y el `403` del
+  administrador pasaron desde el primer día: el guard (L1D-197) y `authorize('documents:upload')` ya existían.
+- **Contrato fuera de `apps/clinical-api`:** E-4/E-5 obligaron a tocar `docs/architecture/adr/ADR-26-…`,
+  `scripts/ci/contracts-breaking-excepciones.json` y su test (tarea 1.1), el fixture de parches
+  `scripts/contracts/__fixtures__/parches/ac-17-errores-identidad-permisos.json` (al quitar los `pendingExamples` de
+  `uploadDocument`, el índice 0 pasa a ser de `rag-orchestrator`) y `readme.md` (extracto generado por
+  `contracts:readme-extract`).
+- **`TraceIdGenerator` y `crearTraceIdMiddleware`** se importan del módulo `evidence-analysis`: son genéricos y
+  convendría moverlos a `src/middleware/` en un refactor propio (fuera del alcance de este change).
+- **Variables nuevas (RN-22), para el humano en `.env.example`** (todas opcionales; vacías = por defecto):
+  `MAX_UPLOAD_MB` (20), `CLINICAL_MINIO_ENDPOINT` (`http://clinical-minio:9000`), `CLINICAL_DOCUMENTS_BUCKET`
+  (`clinical-documents`), `CLINICAL_MINIO_ROOT_USER` (`clinical-minio-admin`, ya la usa el servicio MinIO) y
+  `CLINICAL_MINIO_TIMEOUT_MS` (10000; no se pasa desde el Compose). `CLINICAL_MINIO_PASSWORD_FILE` pasa a ser
+  obligatoria: sin ella `clinical-api` no arranca (fallo cerrado). `docker-compose.yml` ya pasa las cuatro primeras.
+
+## Gate 2: decisiones pendientes y deuda
+
+### Para el usuario: `original_filename` en claro (privacy-guardian, Mayor 2; RN-10)
+
+`docs/architecture/data-model.md` (líneas 220 y 811) pide que `original_filename` "se guarde cifrado o enmascarado". Este
+change lo guarda **en claro** en `clinical.document` (nunca en logs, `audit`, metadatos de MinIO ni Backend 2: lo cubre el
+test parametrizado de no-fuga). Es una desviación del data-model, no un descuido. Dos opciones, sin implementar ninguna
+hasta que el usuario decida:
+
+- **A. Cifrar ahora** con el AES-256-GCM de `identity` (claves y anillo de versiones ya existentes) y descifrar solo al
+  responder el `Document`. Coste: el cifrador de identidad se abre a un segundo módulo, columna `bytea` o nueva migración
+  y el test de integridad de las versiones de clave.
+- **B. DEC + historia de deuda** que cifre el nombre, con **bloqueo en `preflight real-data` antes de G-Piloto**. Con
+  datos sintéticos (RN-13) el riesgo es nulo y evita ampliar el alcance de este change.
+- **Recomendación: B.** Hasta ese momento el nombre se normaliza en el borde (NFC, sin control ni formato, 255).
+- **FEAT-01b no tiene historia dueña** del cifrado del nombre: se propone una historia nueva «cifrar `original_filename`
+  (data-model.md) y bloquearla en el preflight», dependiente de la elegida entre A y B.
+
+### Para el usuario: `500 ErrorInterno` no declarado en `uploadDocument` (contract-keeper)
+
+El endpoint puede responder `500` (fallo del `INSERT`, error no controlado) pero el contrato no lo declara. Declararlo es
+aditivo, exige otra versión menor y reordena `56 → 202` (1.8.0 → 1.9.0 de `l1d-202`). **No se resuelve aquí.**
+Recomendación: añadirlo en L1D-202 junto con los demás `500` de los endpoints de pacientes. Los tests que ejercitan el
+`500` lo declaran con `respuestasAjenasAlContrato` acotado a `status: 500`.
+
+### Aplicado en esta ronda
+
+- Multipart hostil: el lector atiende `error` del archivo y de la petición (abortada o truncada → `422`, sin tumbar el
+  proceso ni dejar la promesa colgada); límites `{ files: 1, fields: 4, parts: 6, fieldSize: 1 KiB, headerPairs: 20 }`
+  (superarlos → `422`), corte de lectura al superar el archivo y rechazo por `Content-Length` > máximo + 64 KiB con
+  `Connection: close` antes de leer el cuerpo.
+- `limiteDeLecturaDeCarga(maxMb)` (el +1 byte se explica en la regla) con PDF de exactamente `MAX_UPLOAD_MB` → `202`.
+- `normalizarNombreOriginal` en el borde. `compensar()` de mejor esfuerzo: el duplicado siempre responde `409` y la
+  compensación fallida se registra por UUID. `esDuplicadoPorChecksum` compara el nombre de la restricción.
+- `documents` es **obligatorio** en `RoutersProtegidos`: olvidarlo en `server.ts` rompe el build. El arnés del gateway
+  pasa un `Router()` vacío; la suite de documents verifica el montaje y la coherencia con el contrato.
+
+### Deuda propuesta (historia «infraestructura compartida de ingesta» antes de US-077)
+
+Mover `crearTraceIdMiddleware` y `TraceIdGenerator` a `src/middleware/`; unificar los errores de dominio repartidos entre
+módulos; usuario raíz de MinIO como credencial de `clinical-api` (crear un usuario de servicio acotado al bucket);
+`ESTADO_INICIAL_DE_COLA` (`pendiente`, `attempts = 0`) como constante compartida con el *worker* de US-078.
