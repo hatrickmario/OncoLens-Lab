@@ -32,6 +32,11 @@ export function describirGradacion(g: DiagnosisGrading): string {
   return contexto.length === 0 ? valor : `${contexto.join(' · ')}: ${valor}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- esqueleto del rojo
+export function textoDeConfianza(_valor: string | null | undefined): string {
+  throw new Error('no implementado');
+}
+
 /** Aviso informativo "[n] datos …" con singular y plural; `claveUno` y `claveN` son de `ficha.avisos`. */
 export function textoDeAviso(n: number, claveUno: 'porRevisarUno' | 'sinVerificarUno'): string {
   const { avisos } = mensajes().ficha;

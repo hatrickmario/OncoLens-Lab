@@ -58,6 +58,7 @@ describe('FichaPage', () => {
     expect(screen.getAllByText('SINTÉTICO').length).toBeGreaterThan(0);
     const identificacion = within(screen.getByRole('region', { name: 'Identificación' }));
     expect(identificacion.getByText('Sintético SINT-0000001')).toBeTruthy();
+    expect(identificacion.getByText('1968')).toBeTruthy();
     expect(metadata.title).toBe('Paciente · OncoLens');
     expect(clinicalApi.peticiones[0]!.cookie).toBe('oncolens_session=sesion-sintetica-1');
   });
@@ -203,12 +204,52 @@ describe('FichaPage', () => {
     expect(screen.getByRole('link', { name: 'Analizar evidencia' })).toBeTruthy();
   });
 
+  it('avisa que el tipo de cáncer está fuera del alcance en un status informativo y mantiene Analizar evidencia cuando cancerTypeEnabled es false [US-043 AC-3]', async () => {
+    clinicalApi.responder({ status: 200, cuerpo: { ...fichaDelDoctor, cancerTypeEnabled: false } });
+
+    await abrirFicha();
+
+    const aviso = screen.getByText(
+      'Tipo de cáncer fuera del alcance del piloto: sin análisis con IA',
+    );
+    expect(aviso.closest('[role="status"]')).not.toBeNull();
+    expect(aviso.closest('[role="alert"]')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Analizar evidencia' })).toBeTruthy();
+  });
+
+  it('no muestra el aviso de alcance cuando el tipo de cáncer está habilitado [US-043 AC-3]', async () => {
+    clinicalApi.responder({ status: 200, cuerpo: fichaDelDoctor });
+
+    await abrirFicha();
+
+    expect(screen.queryByText(/fuera del alcance del piloto/)).toBeNull();
+  });
+
+  it('muestra la confianza de extracción en texto en el origen de cada biomarcador [US-051 AC-5]', async () => {
+    const sinConfianza = {
+      ...biomarcadorManualPorRevisar,
+      provenance: { ...biomarcadorManualPorRevisar.provenance, extractionConfidence: null },
+    };
+    const resumen = {
+      ...fichaDelDoctor,
+      recentBiomarkers: [...fichaDelDoctor.recentBiomarkers, sinConfianza],
+    };
+    clinicalApi.responder({ status: 200, cuerpo: resumen });
+
+    await abrirFicha();
+
+    expect(within(fila('HER2')).getByText('Confianza de extracción: alta')).toBeTruthy();
+    expect(within(fila('^RE ')).getByText('Confianza de extracción: No registrado')).toBeTruthy();
+  });
+
   it('muestra solo el documento enmascarado y ningún dato clínico cuando la vista es la del administrador [US-045 AC-6]', async () => {
     clinicalApi.responder({ status: 200, cuerpo: fichaAdmin });
 
     await abrirFicha();
 
     expect(screen.getByText('•••• 01')).toBeTruthy();
+    expect(screen.getByText('Activo')).toBeTruthy();
+    expect(screen.getByText('01/09/2026')).toBeTruthy();
     expect(screen.getAllByText('SINTÉTICO').length).toBeGreaterThan(0);
     expect(screen.queryByRole('region', { name: 'Diagnóstico vigente' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Biomarcadores recientes' })).toBeNull();
