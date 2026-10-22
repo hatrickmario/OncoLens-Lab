@@ -232,5 +232,77 @@
       "error": "No pudimos cargar el listado. Intenta de nuevo. Código de traza {traceId}",
       "errorSinTraza": "No pudimos cargar el listado. Intenta de nuevo."
     }
+  },
+  "ficha": {
+    "tituloDocumento": "Paciente · OncoLens",
+    "noRegistrado": "No registrado",
+    "identificacion": {
+      "titulo": "Identificación",
+      "documento": "Documento",
+      "anioNacimiento": "Año de nacimiento",
+      "estado": "Estado",
+      "registrado": "Registrado"
+    },
+    "diagnostico": {
+      "titulo": "Diagnóstico vigente",
+      "tipo": "Tipo",
+      "histologia": "Histología",
+      "gradacion": "Gradación",
+      "estadio": "Estadio",
+      "estadoFuncional": "Estado funcional",
+      "diagnosticado": "Diagnosticado",
+      "origen": "Origen y revisión",
+      "gradacionDetalle": "{especimen} · {alcance}: {valor}"
+    },
+    "especimen": {
+      "biopsia": "Biopsia",
+      "prostatectomia": "Prostatectomía"
+    },
+    "alcance": {
+      "nucleo_sitio": "Núcleo o sitio",
+      "peor": "Peor",
+      "global": "Global"
+    },
+    "biomarcadores": {
+      "titulo": "Biomarcadores recientes",
+      "biomarcador": "Biomarcador",
+      "valor": "Valor",
+      "rango": "Rango",
+      "tendencia": "Tendencia",
+      "significancia": "Significancia",
+      "origen": "Origen y revisión",
+      "sinTendencia": "Sin tendencia calculada",
+      "loinc": "LOINC {codigo}"
+    },
+    "significancia": {
+      "normal": "✓ Normal",
+      "alterado": "▲ Alterado",
+      "relevante": "◆ Relevante",
+      "crítico": "⚠ Crítico"
+    },
+    "origen": {
+      "seed": "Carga inicial",
+      "manual": "Registro manual",
+      "ocr": "Extraído de documento",
+      "manual_correction": "Corrección manual"
+    },
+    "avisos": {
+      "porRevisarUno": "1 dato por revisar · no bloquea el análisis",
+      "porRevisarN": "{n} datos por revisar · no bloquean el análisis",
+      "sinVerificarUno": "1 dato sin verificar · no bloquea el análisis",
+      "sinVerificarN": "{n} datos sin verificar · no bloquean el análisis"
+    },
+    "acciones": {
+      "analizar": "Analizar evidencia"
+    },
+    "noEncontrado": {
+      "titulo": "Paciente no encontrado",
+      "volver": "Volver a pacientes"
+    },
+    "error": "No pudimos cargar la ficha. Intenta de nuevo. Código de traza {traceId}",
+    "errorSinTraza": "No pudimos cargar la ficha. Intenta de nuevo.",
+    "admin": {
+      "nota": "Vista de administración: sin datos clínicos ni nombre."
+    }
   }
 }
