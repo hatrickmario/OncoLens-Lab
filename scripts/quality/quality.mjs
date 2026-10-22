@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
 import {
   desdeDependencyCruiser,
   desdeEslint,
-  desdeImportLinter,
+  evaluarImportLinter,
   desdeRuff,
   describir,
   ordenar,
@@ -120,38 +120,32 @@ function verificarUmbralesDeRuff(umbrales) {
   ];
 }
 
-/** import-linter corre solo si rag-orchestrator ya declara sus contratos (.importlinter, tarea 2.1). */
+/** import-linter: los contratos de `.importlinter` son obligatorios; un archivo ausente o roto falla. */
 function ejecutarImportLinter() {
-  if (!existsSync(path.join(RAIZ, RAG, '.importlinter'))) return { hallazgos: [], pendiente: true };
+  if (!existsSync(path.join(RAIZ, RAG, '.importlinter'))) {
+    throw new Error(`${RAG}/.importlinter no existe: los contratos de capas son obligatorios`);
+  }
   const resultado = ejecutarHerramienta('lint-imports', [], path.join(RAIZ, RAG));
-  exigirEjecucion(resultado, 'lint-imports');
-  return { hallazgos: desdeImportLinter(resultado.stdout, RAG), pendiente: false };
+  return evaluarImportLinter(resultado.status, `${resultado.stdout}${resultado.stderr}`, RAG);
 }
 
 async function medir(umbrales) {
-  const importLinter = ejecutarImportLinter();
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
     ...ejecutarDependencyCruiser(),
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
-    ...importLinter.hallazgos,
+    ...ejecutarImportLinter(),
   ];
-  return {
-    hallazgos: ordenar(sinAlertaDondeHayError(hallazgos)),
-    importLinterPendiente: importLinter.pendiente,
-  };
+  return ordenar(sinAlertaDondeHayError(hallazgos));
 }
 
-function armarReporte(umbrales, { hallazgos, importLinterPendiente }) {
+function armarReporte(umbrales, hallazgos) {
   const errores = hallazgos.filter((h) => h.severity === 'error').length;
   return {
     umbrales: { ...umbrales, excepciones: undefined },
     excepcionesVigentes: excepcionesVigentes(umbrales.excepciones, new Date()),
-    herramientasPendientes: importLinterPendiente
-      ? ['import-linter (.importlinter, tarea 2.1)']
-      : [],
     resumen: { errores, alertas: hallazgos.length - errores },
     hallazgos,
   };
@@ -161,7 +155,7 @@ async function principal() {
   const umbrales = leerUmbrales();
   const medicion = await medir(umbrales);
   const reporte = armarReporte(umbrales, medicion);
-  for (const h of medicion.hallazgos) console.log(describir(h));
+  for (const h of medicion) console.log(describir(h));
   if (process.argv.includes('--reporte')) {
     mkdirSync(path.dirname(RUTA_REPORTE), { recursive: true });
     writeFileSync(RUTA_REPORTE, `${JSON.stringify(reporte, null, 2)}\n`);

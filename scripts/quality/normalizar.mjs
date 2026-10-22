@@ -97,7 +97,7 @@ export function desdeImportLinter(texto, directorio) {
       contrato = lineas[indice - 1].trim();
       return;
     }
-    const importacion = /^-\s+(\S+) -> (\S+?)(?: \(l\.(\d+)\))?\s*$/.exec(linea);
+    const importacion = /^-\s+(\S+) -> (\S+?)(?: \(l\.(\d+)(?:, l\.\d+)*\))?\s*$/.exec(linea);
     if (importacion && contrato) {
       hallazgos.push(
         hallazgo({
@@ -121,8 +121,23 @@ export const CONTRATOS_DE_IMPORT_LINTER = ['dominio-independiente', 'capas-hexag
  * estado 1 con contratos rotos = hallazgos; cualquier otra cosa (configuración inválida, contratos ausentes,
  * estado 1 sin contrato roto) es una herramienta rota y lanza, nunca "0 hallazgos".
  */
-export function evaluarImportLinter() {
-  throw new Error('no implementado');
+export function evaluarImportLinter(estado, texto, directorio) {
+  if (estado !== 0 && estado !== 1) {
+    throw new Error(`import-linter terminó con estado ${estado}: ${texto.trim().slice(-300)}`);
+  }
+  const ausentes = CONTRATOS_DE_IMPORT_LINTER.filter(
+    (contrato) => !new RegExp(`${contrato} (KEPT|BROKEN)`).test(texto),
+  );
+  if (ausentes.length > 0) {
+    throw new Error(
+      `import-linter no evaluó los contratos ${ausentes.join(', ')}: ${texto.trim().slice(-300)}`,
+    );
+  }
+  const hallazgos = desdeImportLinter(texto, directorio);
+  if (estado === 1 && hallazgos.length === 0) {
+    throw new Error('import-linter terminó con estado 1 sin ningún contrato roto en su salida');
+  }
+  return hallazgos;
 }
 
 /** Descarta la alerta de tamaño de un archivo que ya falla por el límite duro (evita el doble reporte). */
