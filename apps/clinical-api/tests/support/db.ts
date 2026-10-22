@@ -28,6 +28,23 @@ export interface ConfiguracionArnes {
   readonly baseClinica: string;
 }
 
+export interface OpcionesDeEliminacion {
+  /** Intentos totales del `DROP DATABASE` (por defecto 5). */
+  readonly intentos?: number;
+  /** Pausa entre intentos en milisegundos (por defecto 250). */
+  readonly pausaMs?: number;
+  /** Espera inyectable (los tests no duermen). */
+  readonly pausar?: (ms: number) => Promise<void>;
+}
+
+/** Esqueleto: aún no reintenta. */
+export async function eliminarBaseConReintentos(
+  ejecutar: () => Promise<void>,
+  _opciones: OpcionesDeEliminacion = {},
+): Promise<void> {
+  await ejecutar();
+}
+
 export interface BaseDeTest {
   readonly nombre: string;
   /** URL de la base recién migrada (misma credencial, otra base). Contiene la contraseña: no se imprime. */
