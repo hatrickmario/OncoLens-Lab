@@ -187,11 +187,21 @@ def _chunks(corpus: dict[str, Any]) -> tuple[ChunkCorpus, ...]:
     )
 
 
+CAMPOS_PRESCRIPTIVOS = ("rationale", "limitations[].text")
+"""Los campos en los que el generador guionado sabe colocar una salida prescriptiva."""
+
+
 def _salidas_prescriptivas(crudo: dict[str, Any]) -> tuple[SalidaPrescriptiva, ...]:
-    return tuple(
+    """Un campo desconocido falla en voz alta: callado dejaría la métrica RN-23 subcontada.
+
+    La pregunta no se valida contra el dataset: un subconjunto (ADR-45) legítimamente deja fuera sus preguntas."""
+    salidas = tuple(
         SalidaPrescriptiva(str(s["id"]), str(s["pregunta"]), str(s["campo"]), str(s["texto"]))
         for s in crudo.get("salidas", [])
     )
+    if any(s.campo not in CAMPOS_PRESCRIPTIVOS for s in salidas):
+        raise DatasetInvalido("una salida prescriptiva usa un campo desconocido")
+    return salidas
 
 
 def _propuestas(crudo: dict[str, Any]) -> dict[str, tuple[OpcionPropuesta, ...]]:

@@ -81,6 +81,10 @@ def _modo(valor: Any, nombre: str) -> ModoPii:
     if CLAVE_TOTAL not in por_documentos:
         raise InformePiiInvalido(f"{nombre}.sensibilidadDocumentos no trae total")
     por_debajo = crudo.get("tiposDirectosPorDebajo")
+    if isinstance(por_debajo, list) and not set(por_debajo) <= {*TIPOS_DIRECTOS, CLAVE_TOTAL}:
+        raise InformePiiInvalido(
+            f"{nombre}: tiposDirectosPorDebajo trae tipos fuera del vocabulario"
+        )
     cumple = crudo.get("cumpleSensibilidadMinimaPorTipoDirecto")
     if not isinstance(por_debajo, list) or not isinstance(cumple, bool):
         raise InformePiiInvalido(f"{nombre}: faltan tiposDirectosPorDebajo o el veredicto")

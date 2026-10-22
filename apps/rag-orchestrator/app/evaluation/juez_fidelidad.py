@@ -18,7 +18,7 @@ from app.application.ports import NliClassifier
 from app.domain.nli import ParNli
 from app.domain.support import soporta
 from app.evaluation.adaptadores_falsos import tokens
-from app.evaluation.config_suite import ConfigJuez
+from app.evaluation.config_suite import ConfigInvalida, ConfigJuez
 from app.evaluation.guardas import exigir_juez_local
 from app.evaluation.llamadas import RegistroDeLlamadas
 
@@ -84,6 +84,10 @@ class JuezLlmLocal:
         self._clase_datos = clase_datos
 
     async def soporta(self, afirmacion: str, premisas: Sequence[str]) -> bool:
+        if (
+            not premisas
+        ):  # igual que JuezNli y JuezLlmLexico: sin premisas no hay soporte ni llamada
+            return False
         fragmentos = "\n".join(f"- {p}" for p in premisas)
         cuerpo = {
             "model": self._modelo,
@@ -127,11 +131,15 @@ async def crear_juez_llm(
     """El juez secundario de la configuración, o ``None`` si no hay; el cliente HTTP se cierra con ``pila``."""
     if config is None:
         return None
-    if config.proveedor == "fake" or config.base_url is None:
+    if config.proveedor == "fake":
         return JuezLlmLexico()
+    if config.base_url is None:
+        raise ConfigInvalida("un juez local exige juez.base_url")
     exigir_juez_local(config)  # RN-12: antes de crear el cliente, tampoco con datos sintéticos
     cliente = await pila.enter_async_context(
-        httpx.AsyncClient(base_url=config.base_url, timeout=config.timeout_s)
+        httpx.AsyncClient(  # trust_env=False: ningún HTTP(S)_PROXY del proceso desvía el prompt (RN-12)
+            base_url=config.base_url, timeout=config.timeout_s, trust_env=False
+        )
     )
     return JuezLlmLocal(
         cliente,

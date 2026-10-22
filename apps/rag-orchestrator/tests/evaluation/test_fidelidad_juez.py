@@ -291,3 +291,54 @@ def test_los_flags_juez_sustituyen_a_las_variables_y_al_yaml_y_la_guarda_los_alc
         peticiones = len(http.calls)
 
     assert (codigo != 0, peticiones, (tmp_path / "s").exists()) == (True, 0, False)
+
+
+def test_el_juez_llm_local_no_llama_ni_registra_cuando_la_afirmacion_no_tiene_premisas() -> None:
+    from app.evaluation.llamadas import RegistroDeLlamadas
+
+    registro = RegistroDeLlamadas()
+    with respx.mock(assert_all_called=False) as http:
+        http.route().respond(200)
+        juez = JuezLlmLocal(
+            httpx.AsyncClient(base_url=LOCAL),
+            modelo="m@1",
+            temperatura=0.0,
+            semilla=1,
+            registro=registro,
+        )
+        resultado = asyncio.run(juez.soporta("afirmación", []))
+        peticiones = len(http.calls)
+
+    assert (resultado, peticiones, registro.llamadas) == (False, 0, [])
+
+
+def test_las_afirmaciones_de_una_opcion_cuyo_nombre_incumple_el_lenguaje_no_se_juzgan() -> None:
+    propuesta = EvidenciaGenerada(
+        opciones=(OpcionGenerada("Se recomienda esta opción", "Afirmación limpia.", ("c1",)),)
+    )
+    plan = plan_de_la_propuesta(
+        propuesta, {"c1": "texto"}, cargar_verificador_de_terminos(CATALOGOS).reglas_coincidentes
+    )
+
+    assert afirmaciones_a_juzgar(plan) == []
+    assert pares_a_verificar(plan) == []
+
+
+def test_el_cliente_del_juez_ignora_los_proxies_del_entorno_para_no_desviar_el_prompt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from contextlib import AsyncExitStack
+
+    from app.evaluation.juez_fidelidad import crear_juez_llm
+
+    monkeypatch.setenv("HTTP_PROXY", "http://proxy.nube-de-prueba.invalid:8080")
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy.nube-de-prueba.invalid:8080")
+    config = cargar_config_suite(CONFIG, {"EVAL_JUDGE_MODEL": "m@1", "EVAL_JUDGE_BASE_URL": LOCAL})
+
+    async def crear() -> object:
+        async with AsyncExitStack() as pila:
+            juez = await crear_juez_llm(config.juez, pila)
+            assert isinstance(juez, JuezLlmLocal)
+            return juez._cliente._mounts
+
+    assert asyncio.run(crear()) == {}

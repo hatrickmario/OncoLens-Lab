@@ -57,6 +57,7 @@ from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.metricas.privacidad import privacidad
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
+from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.schemas.generated.models import RagQueryInternalResponse
 
@@ -110,6 +111,9 @@ def main(
         return 1
     except JuezNoDisponible:
         print("evaluate: el juez de fidelidad no está disponible", file=sys.stderr)
+        return 1
+    except ListaDeTerminosNoDisponible:
+        print("evaluate: la lista de términos prohibidos no está disponible", file=sys.stderr)
         return 1
     except InformePiiInvalido as error:
         print(f"evaluate: el informe de PII de B1 no es válido: {error}", file=sys.stderr)

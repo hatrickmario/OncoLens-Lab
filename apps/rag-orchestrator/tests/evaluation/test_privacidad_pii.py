@@ -220,3 +220,14 @@ def test_el_juez_llm_registra_cada_llamada_con_su_destino_y_la_clase_de_datos() 
         asyncio.run(juez.soporta("a", ["p"]))
 
     assert llamadas_a_nube_con_datos_reales(registro.llamadas) == 1
+
+
+def test_un_tipo_fuera_del_vocabulario_en_tipos_por_debajo_se_rechaza(tmp_path: Path) -> None:
+    modo_roto = modo([])
+    modo_roto["tiposDirectosPorDebajo"] = ["pasaporte"]
+    informe = escribir_informe(
+        tmp_path, modos={"solo_formatos": modo_roto, "identidad_de_referencia": modo([])}
+    )
+
+    with pytest.raises(InformePiiInvalido):
+        ProveedorPiiDeArchivo(informe).leer()
