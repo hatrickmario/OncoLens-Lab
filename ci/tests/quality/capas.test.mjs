@@ -78,7 +78,7 @@ describe('reglas de capas de dependency-cruiser', () => {
     const resultado = cruzar('web-contrato-rag');
 
     expect(resultado.estado).not.toBe(0);
-    expect(resultado.salida).toContain('api-contracts-generado');
+    expect(resultado.salida).toContain('web-sin-contrato-rag');
     expect(resultado.salida).toContain('apps/web/lib/rag.ts');
   });
 });

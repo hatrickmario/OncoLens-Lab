@@ -67,6 +67,13 @@ function ejecutarHerramienta(comando, argumentos, cwd = RAIZ) {
   return resultado;
 }
 
+/** Estado 0 = limpio, 1 = hallazgos; cualquier otro es una herramienta rota, no un "sin hallazgos". */
+function exigirEjecucion(resultado, herramienta) {
+  if (resultado.status !== 0 && resultado.status !== 1) {
+    throw new Error(`${herramienta} terminó con estado ${resultado.status}: ${resultado.stderr}`);
+  }
+}
+
 function ejecutarDependencyCruiser() {
   const resultado = ejecutarHerramienta(bin('depcruise'), [
     'apps',
@@ -90,6 +97,7 @@ function ejecutarRuff() {
     '--output-format',
     'json',
   ]);
+  exigirEjecucion(resultado, 'ruff');
   return desdeRuff(JSON.parse(resultado.stdout || '[]'), RAIZ);
 }
 
@@ -97,6 +105,7 @@ function ejecutarRuff() {
 function ejecutarImportLinter() {
   if (!existsSync(path.join(RAIZ, RAG, '.importlinter'))) return { hallazgos: [], pendiente: true };
   const resultado = ejecutarHerramienta('lint-imports', [], path.join(RAIZ, RAG));
+  exigirEjecucion(resultado, 'lint-imports');
   return { hallazgos: desdeImportLinter(resultado.stdout, RAG), pendiente: false };
 }
 

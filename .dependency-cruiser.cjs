@@ -1,17 +1,15 @@
 // Reglas de capas de Node (L1D-263, US-213 AC-2). `npm run quality` las ejecuta sobre apps/ y packages/.
 // Cada violación nombra la regla y el archivo; las excepciones con caducidad viven en quality-thresholds.json.
-const { readFileSync } = require('node:fs');
-const path = require('node:path');
+// Misma regla de caducidad que ESLint y el reporte: un solo módulo (scripts/quality/umbrales.mjs).
+const { excepcionesVigentes, leerUmbrales } = require('./scripts/quality/umbrales.mjs');
 
-const excepciones = (() => {
-  const ruta = process.env.QUALITY_THRESHOLDS ?? path.join(__dirname, 'quality-thresholds.json');
-  const hoy = new Date().toISOString().slice(0, 10);
-  return JSON.parse(readFileSync(ruta, 'utf8')).excepciones.filter((e) => e.caduca >= hoy);
-})();
+const excepciones = excepcionesVigentes(leerUmbrales().excepciones, new Date());
+
+const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Archivos exceptuados de una regla de capas hasta su fecha (D5).
 const exceptuados = (regla) =>
-  excepciones.filter((e) => e.regla === regla).map((e) => `^${e.archivo.replace(/[.]/g, '\\.')}$`);
+  excepciones.filter((e) => e.regla === regla).map((e) => `^${escaparRegex(e.archivo)}$`);
 
 const DATOS_CLINICAL_API = '(^|/)@prisma/|\\.repository\\.ts$|/infrastructure/database\\.ts$';
 
@@ -69,11 +67,11 @@ module.exports = {
       },
     },
     {
-      name: 'api-contracts-generado',
+      name: 'web-sin-contrato-rag',
       comment:
         'El contrato de rag-orchestrator es solo de clinical-api: web no lo importa (la sesión del doctor no llega a Backend 2).',
       severity: 'error',
-      from: { path: '^apps/web/', pathNot: exceptuados('api-contracts-generado') },
+      from: { path: '^apps/web/', pathNot: exceptuados('web-sin-contrato-rag') },
       to: { path: '^packages/api-contracts/src/[^/]+/rag-orchestrator/' },
     },
   ],

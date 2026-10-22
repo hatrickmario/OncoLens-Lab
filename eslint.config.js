@@ -65,7 +65,7 @@ export const bloqueTamanoWeb = (
 /** Excepciones con caducidad (D5): desactivan una regla en un archivo hasta su fecha; después vuelve a fallar. */
 export const bloquesDeExcepciones = (limites, hoy = new Date()) =>
   excepcionesVigentes(limites.excepciones, hoy).map(({ regla, archivo }) => ({
-    files: [archivo],
+    files: [archivo.replace(/[[\](){}!*?]/g, '\\$&')],
     rules: { [regla]: 'off' },
   }));
 

@@ -12,6 +12,15 @@ const CLAVES_NUMERICAS = [
   'plr0915MaxStatements',
 ];
 const CLAVES_WEB = ['componentLinesWarn', 'componentLinesError'];
+// Solo reglas de tamaño, complejidad y capas son exceptuables; nunca las de seguridad (XSS, cliente, supertest).
+const REGLAS_EXCEPTUABLES = [
+  'max-lines-per-function',
+  'complexity',
+  'max-lines',
+  'sin-ciclos',
+  'controller-sin-acceso-a-datos',
+  'componentes-sin-datos',
+];
 const CAMPOS_EXCEPCION = ['regla', 'archivo', 'caduca', 'motivo'];
 
 const esNumero = (valor) => typeof valor === 'number' && Number.isFinite(valor);
@@ -23,6 +32,22 @@ function exigirNumero(objeto, clave, nombre) {
 }
 
 function exigirExcepcion(excepcion, indice) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(excepcion?.caduca ?? '') ||
+    Number.isNaN(Date.parse(excepcion.caduca))
+  ) {
+    throw new Error(`quality-thresholds.json: excepciones[${indice}] "caduca" debe ser AAAA-MM-DD`);
+  }
+  if (!REGLAS_EXCEPTUABLES.includes(excepcion?.regla)) {
+    throw new Error(
+      `quality-thresholds.json: excepciones[${indice}] "regla" no exceptuable: ${excepcion?.regla}`,
+    );
+  }
+  if (/[*?{}]/.test(excepcion.archivo ?? '')) {
+    throw new Error(
+      `quality-thresholds.json: excepciones[${indice}] "archivo" debe ser una ruta literal`,
+    );
+  }
   for (const campo of CAMPOS_EXCEPCION) {
     if (typeof excepcion?.[campo] !== 'string' || excepcion[campo] === '') {
       throw new Error(`quality-thresholds.json: excepciones[${indice}] sin "${campo}"`);

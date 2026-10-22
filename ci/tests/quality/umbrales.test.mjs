@@ -42,6 +42,26 @@ describe('validarUmbrales', () => {
     ).toThrow(/componentLinesWarn/);
   });
 
+  it('falla nombrando caduca cuando la fecha de una excepción no es AAAA-MM-DD [US-213 AC-6]', () => {
+    const excepcion = {
+      regla: 'complexity',
+      archivo: 'a.ts',
+      caduca: '30/11/2026',
+      motivo: 'deuda',
+    };
+    expect(() => validarUmbrales({ ...BASE, excepciones: [excepcion] })).toThrow(/caduca/);
+  });
+
+  it('falla nombrando regla cuando se intenta exceptuar una regla de seguridad [US-213 AC-6]', () => {
+    const excepcion = {
+      regla: 'react/no-danger',
+      archivo: 'apps/web/x.tsx',
+      caduca: '2026-11-30',
+      motivo: 'x',
+    };
+    expect(() => validarUmbrales({ ...BASE, excepciones: [excepcion] })).toThrow(/regla/);
+  });
+
   it('falla cuando una excepción no trae regla, archivo, caducidad o motivo [US-213 AC-1]', () => {
     expect(() => validarUmbrales({ ...BASE, excepciones: [{ regla: 'x' }] })).toThrow(
       /excepciones\[0\]/,
