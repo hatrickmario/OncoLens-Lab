@@ -61,9 +61,18 @@ export function leerCargaMultipart(
     const fallar = (): void => {
       if (terminado) return;
       terminado = true;
-      request.unpipe(lector);
-      lector.destroy();
+      cortarLectura();
       reject(new MultipartIlegible());
+    };
+    /**
+     * Deja de alimentar a busboy y descarta el resto del cuerpo. NUNCA destruye a busboy dentro de uno de sus eventos:
+     * su código sigue usando `_fileStream` al volver del evento y destruirlo en ese momento lanza un TypeError que, según
+     * el transporte, sale como excepción no capturada y tumba el proceso. Se destruye en la siguiente vuelta.
+     */
+    const cortarLectura = (): void => {
+      request.unpipe(lector);
+      request.resume();
+      setImmediate(() => lector.destroy());
     };
     lector.on('field', (nombre, valor, info) => {
       if (info.valueTruncated || info.nameTruncated) {
@@ -87,8 +96,7 @@ export function leerCargaMultipart(
         // Se deja de leer el cuerpo: el resto del archivo no se descarga ni se guarda.
         if (terminado) return;
         terminado = true;
-        request.unpipe(lector);
-        lector.destroy();
+        cortarLectura();
         resolve({ documentType: carga.documentType, archivo: undefined, excedeElLimite: true });
       });
       flujo.on('end', () => {
