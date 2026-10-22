@@ -23,7 +23,7 @@ respx==0.23.1            # BSD-3-Clause
 # Dependencias de la MEDICION de ADR-40 (US-013, deteccion de PII); nunca en requirements.txt (los pesos son GPL-3.0).
 # Versiones y licencias verificadas en la fuente el 2026-10-21.
 regex==2026.9.29         # Apache-2.0 AND CNRI-Python (patrones con \p{L} y grupos (?<valor>) de config/pii-formats.json)
-spacy==3.8.14           # MIT (motor del NER del candidato 2)
+spacy==3.8.16           # MIT (motor del NER del candidato 2)
 # Pesos GPL-3.0 (UD Spanish AnCora v2.8; meta.json "license": "GNU GPL 3.0"): se descargan fuera del repo y NO se redistribuyen (RN-21, MVP academico).
 #   pip install --only-binary=:all: --no-deps 'https://github.com/explosion/spacy-models/releases/download/es_core_news_md-3.8.0/es_core_news_md-3.8.0-py3-none-any.whl#sha256=478b8bb3f3e8eb149192f7d80e7cd64f990b7e9bccbc5329df41a57e86326be2'
 #   (pip verifica el sha256 del fragmento; alternativa: `shasum -a 256 -c` sobre el wheel descargado)
