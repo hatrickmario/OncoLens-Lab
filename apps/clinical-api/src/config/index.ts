@@ -1,3 +1,4 @@
+import { readDocumentosConfig, type DocumentosConfig } from './documentos.js';
 import {
   ConfiguracionInvalidaError,
   exigirAppEnv,
@@ -26,6 +27,7 @@ import {
  * solo la raíz de composición (`server.ts`) le pasa el entorno.
  */
 export * from './secciones.js';
+export * from './documentos.js';
 
 /**
  * Sesión por inactividad y bloqueo del login (RN-22, US-044): lo aplican el guard y el servicio de autenticación.
@@ -155,7 +157,7 @@ export function cargarConfiguracion(env: NodeJS.ProcessEnv): ConfiguracionDeArra
   };
 }
 
-/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII). */
+/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII, almacén de documentos). */
 export interface ConfiguracionDeServicios {
   appEnv: string;
   database: DatabaseConfig;
@@ -163,6 +165,7 @@ export interface ConfiguracionDeServicios {
   analisis: EvidenceAnalysisConfig;
   alcance: AlcanceDelAnalisisConfig;
   deidentificacion: DeidentificationConfig;
+  documentos: DocumentosConfig;
 }
 
 export function cargarConfiguracionDeServicios(
@@ -176,6 +179,7 @@ export function cargarConfiguracionDeServicios(
     analisis: readEvidenceAnalysisConfig(env),
     alcance: readAlcanceDelAnalisisConfig(env),
     deidentificacion: readDeidentificationConfig(env),
+    documentos: readDocumentosConfig(env, readFile),
   };
 }
 

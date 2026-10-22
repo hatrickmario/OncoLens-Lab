@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.7.0
+  version: 1.8.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -310,22 +310,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDocumentoDuplicado'
-        "413":
-          description: >-
-            Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la
-            historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
-          x-pending-owner: FEAT-01b
-        "415":
-          description: >-
-            Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija
-            la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
-          x-pending-owner: FEAT-01b
         "422":
-          description: documentType inválido, o paciente egresado (RN-17).
+          description: >-
+            documentType inválido, archivo que no es PDF (magic bytes), tamaño mayor que
+            MAX_UPLOAD_MB, o paciente egresado (RN-17).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorSolicitudNoProcesable'
+                $ref: '#/components/schemas/ErrorDocumentoNoProcesable'
+        "503":
+          description: Almacén de documentos (clinical-minio) no disponible; sin detalles internos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorAlmacenNoDisponible'
 
   /platform/evidence-analyses:
     post:
@@ -1983,12 +1981,20 @@ components:
         error: { type: string, const: CUERPO_INVALIDO }
         message: { type: string }
         traceId: { type: string }
-    ErrorSolicitudNoProcesable:
+    ErrorDocumentoNoProcesable:
       type: object
       additionalProperties: false
       required: [error, message, traceId]
       properties:
-        error: { type: string, enum: [CUERPO_INVALIDO, PACIENTE_EGRESADO] }
+        error: { type: string, enum: [CUERPO_INVALIDO, ARCHIVO_NO_PDF, ARCHIVO_DEMASIADO_GRANDE, PACIENTE_EGRESADO] }
+        message: { type: string }
+        traceId: { type: string }
+    ErrorAlmacenNoDisponible:
+      type: object
+      additionalProperties: false
+      required: [error, message, traceId]
+      properties:
+        error: { type: string, const: ALMACEN_NO_DISPONIBLE }
         message: { type: string }
         traceId: { type: string }
     ErrorAnalisisNoProcesable:
