@@ -80,7 +80,7 @@ class Enumerado:
 
 @dataclasses.dataclass(frozen=True)
 class Identificador:
-    """Identificador de modelo, versión o huella: un token sin espacios, nunca texto libre."""
+    """Identificador de modelo o versión: un token sin espacios, nunca texto libre."""
 
 
 @dataclasses.dataclass(frozen=True)

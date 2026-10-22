@@ -70,7 +70,9 @@ def test_fijar_umbral_falla_cuando_la_configuracion_no_tiene_el_valor(tmp_path: 
         fijar_umbral_en_config(ruta, 0.4, directorio_de_configs=tmp_path)
 
 
-def test_el_json_del_baseline_cumple_la_lista_blanca_y_rechaza_claves_ajenas(tmp_path: Path) -> None:
+def test_el_json_del_baseline_cumple_la_lista_blanca_y_rechaza_claves_ajenas(
+    tmp_path: Path,
+) -> None:
     from app.evaluation.informe_baseline import ESQUEMA_BASELINE
     from app.evaluation.reporte import ReporteFueraDeEsquema, validar_esquema_cerrado
 

@@ -32,7 +32,8 @@ Solo seed y datasets sintéticos; el p95 entra por la BFF, que desidentifica en 
 
 `--sweep` exige un dataset sintético antes de cargarlo; el JSON del baseline se valida contra una lista blanca
 (`ESQUEMA_BASELINE`) antes de escribir el `.md`; `--fijar` solo escribe (atómicamente) dentro de `eval/configs/` y se
-rechaza con adapters falsos sobre la configuración versionada. Desviación: el directorio permitido es inyectable
+rechaza con adapters falsos sobre la configuración versionada; «fijado» en los informes es el resultado (el nuevo texto de
+la configuración se calcula antes de escribir nada y `config_con_umbral` rechaza estilos que no sabe reescribir). Desviación: el directorio permitido es inyectable
 (`directorio_de_configs`) para que el test de aceptación AC-1 fije el umbral en una copia temporal.
 
 ## Deuda registrada (no bloquea)
@@ -41,6 +42,14 @@ rechaza con adapters falsos sobre la configuración versionada. Desviación: el 
 - Menores de diseño: `or 0.0` en `metas.py`/`barrido.py`; unidad deducida del sufijo `_s`; `--fijar`/`--p95-e2e-s` sin
   `--sweep` se ignoran; las metas se leen de una ruta fija; `fijar_umbral_en_config` debería vivir en `config_suite.py`
   y el `hashConfig` del informe es el previo al fijar.
+- Historia propuesta para S2 («catálogo de métricas y metas derivado del yaml + columnas por cáncer derivadas»): las
+  seis métricas viven hoy en cuatro sitios (`metas-iniciales.yaml`, `metricas_planas`, `ESQUEMA_BASELINE`, etiquetas del
+  informe); una meta nueva en el yaml lanza `ReporteFueraDeEsquema` sin capturar tras barrer toda la grilla, y un tercer
+  tipo de cáncer igual. Incluye `es_candidata` frente a `motivo_de_descarte` en `elegir_umbral`, y los Menores #8 y #11.
+- Preguntas abiertas: `fidelidad_proxy` frente a `opciones_con_cita_y_soporte` como nombre; metas provisionales y límite
+  inferior del IC (ADR-45, enmienda 3).
+- `corte_para_el_generador` (dominio) es la regla del corte top-N + umbral; el servicio aún repite el corte en
+  `_reranquear` (`app/application`, fuera de los paths de este change): enchufarla ahí es un cambio de una línea.
 - Mover el subcomando `e2e` de `app/scripts/adr39/` (cliente con sesión sintética) a una ubicación neutral fuera de
   `apps/rag-orchestrator`.
 

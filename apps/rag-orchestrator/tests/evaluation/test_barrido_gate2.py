@@ -140,14 +140,20 @@ def test_esquema_exige_un_nombre_de_dataset_identificador(tmp_path: Path) -> Non
 @pytest.mark.parametrize("huella", ["abc", "Z" * 64, "A" * 64])
 def test_esquema_exige_una_huella_sha256_en_minusculas(tmp_path: Path, huella: str) -> None:
     with pytest.raises(ReporteFueraDeEsquema):
-        validar_esquema_cerrado({**generar_informe(tmp_path)[1], "hashConfig": huella}, ESQUEMA_BASELINE)
+        validar_esquema_cerrado(
+            {**generar_informe(tmp_path)[1], "hashConfig": huella}, ESQUEMA_BASELINE
+        )
 
 
-def test_informe_aclara_que_las_cifras_no_significan_nada_con_adapters_falsos(tmp_path: Path) -> None:
+def test_informe_aclara_que_las_cifras_no_significan_nada_con_adapters_falsos(
+    tmp_path: Path,
+) -> None:
     assert "(sin significado con adapters falsos)" in generar_informe(tmp_path)[0]
 
 
-def test_procedimiento_del_p95_va_por_la_bff_desde_el_host_y_no_desde_un_contenedor(tmp_path: Path) -> None:
+def test_procedimiento_del_p95_va_por_la_bff_desde_el_host_y_no_desde_un_contenedor(
+    tmp_path: Path,
+) -> None:
     informe = generar_informe(tmp_path)[0]
 
     assert (

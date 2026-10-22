@@ -29,7 +29,11 @@ def test_fijar_con_una_configuracion_que_no_calza_devuelve_2_y_ningun_informe_af
     informes = [tmp_path / "salida" / n for n in ("S1-baseline.md", "S1-baseline.json")]
     assert codigo == 2
     assert config.read_bytes() == antes
-    assert [a for a in informes if a.exists() and "fijado en la configuración" in a.read_text(encoding="utf-8")] == []
+    assert [
+        a
+        for a in informes
+        if a.exists() and "fijado en la configuración" in a.read_text(encoding="utf-8")
+    ] == []
 
 
 def test_config_con_umbral_admite_notacion_cientifica_sin_corromper_el_yaml() -> None:
@@ -37,12 +41,20 @@ def test_config_con_umbral_admite_notacion_cientifica_sin_corromper_el_yaml() ->
 
     nuevo = config_con_umbral(texto, 0.9)
 
-    assert yaml.safe_load(nuevo)["umbrales"] == {"relevance_threshold": 0.9, "nli_entailment_threshold": 0.7}
+    assert yaml.safe_load(nuevo)["umbrales"] == {
+        "relevance_threshold": 0.9,
+        "nli_entailment_threshold": 0.7,
+    }
     assert "# comentario" in nuevo
 
 
 @pytest.mark.parametrize(
-    "texto", ["umbrales: {relevance_threshold: 0.5}\n", "umbrales: {}\n", "a:\n  relevance_threshold: 1\nb:\n  relevance_threshold: 2\n"]
+    "texto",
+    [
+        "umbrales: {relevance_threshold: 0.5}\n",
+        "umbrales: {}\n",
+        "a:\n  relevance_threshold: 1\nb:\n  relevance_threshold: 2\n",
+    ],
 )
 def test_config_con_umbral_rechaza_los_estilos_que_no_puede_reescribir(texto: str) -> None:
     with pytest.raises(ConfigInvalida):
@@ -64,7 +76,10 @@ def test_corte_para_el_generador_recorta_a_top_n_antes_de_aplicar_el_umbral() ->
     entregados = corte_para_el_generador(ordenados, top_n=2, umbral=0.5, puntaje=lambda p: p)
 
     assert entregados == [0.9, 0.8]
-    assert corte_para_el_generador(ordenados, top_n=3, umbral=0.75, puntaje=lambda p: p) == [0.9, 0.8]
+    assert corte_para_el_generador(ordenados, top_n=3, umbral=0.75, puntaje=lambda p: p) == [
+        0.9,
+        0.8,
+    ]
 
 
 def test_fijar_sin_directorio_inyectado_se_niega_para_una_configuracion_fuera_de_eval_configs(

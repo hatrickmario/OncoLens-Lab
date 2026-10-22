@@ -131,9 +131,11 @@ def _seccion_baseline(d: DatosDelInforme) -> list[str]:
             "fidelidad (proxy) = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales)."
         ),
         "",
-        "Total y por tipo de cáncer: valores de la fila elegida (sin significado con adapters falsos)."
-        if d.proveedor == "fake"
-        else "Total y por tipo de cáncer: valores de la fila elegida del barrido.",
+        (
+            "Total y por tipo de cáncer: recall@10 y MRR son del ranking del reranker y no dependen del umbral; "
+            "las demás métricas son de la fila elegida"
+            + (" (sin significado con adapters falsos)." if d.proveedor == "fake" else ".")
+        ),
         "",
         "### Total",
         "",

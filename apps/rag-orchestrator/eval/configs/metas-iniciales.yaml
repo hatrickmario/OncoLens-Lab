@@ -4,8 +4,8 @@
 clase: sintetico
 version: '1'
 metas:
-  recall_at_10: {etiqueta: 'recall@10', minimo: 0.80}
-  recall_at_10_es_a_en: {etiqueta: 'recall@10 es→en', minimo: 0.70}
+  recall_at_10: {etiqueta: 'recall@10 (tras reranker)', minimo: 0.80}
+  recall_at_10_es_a_en: {etiqueta: 'recall@10 es→en (tras reranker)', minimo: 0.70}
   mrr: {etiqueta: 'MRR', minimo: 0.60}
   fidelidad_proxy: {etiqueta: 'fidelidad (proxy)', minimo: 0.90}
   precision_citas: {etiqueta: 'precisión de citas', minimo: 0.90}

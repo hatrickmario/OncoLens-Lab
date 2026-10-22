@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -43,10 +40,12 @@ def supera_umbral(relevance_score: float, umbral: float) -> bool:
     return relevance_score > umbral
 
 
-def corte_para_el_generador(
+def corte_para_el_generador[T](
     ordenados: Sequence[T], top_n: int, umbral: float, puntaje: Callable[[T], float]
 ) -> list[T]:
-    raise NotImplementedError("no implementado")
+    """Lo que el generador recibe de un ranking ya ordenado por relevancia: los ``top_n`` primeros (``RERANK_TOP_N``) y, de
+    ellos, los que superan el umbral (RN-02). El orden es el del ranking; la misma regla que sigue el servicio."""
+    return [c for c in ordenados[:top_n] if supera_umbral(puntaje(c), umbral)]
 
 
 def filtrar_sobre_umbral(

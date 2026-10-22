@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from app.application.ports import Clock
-from app.domain.relevance import supera_umbral
+from app.domain.relevance import corte_para_el_generador
 from app.evaluation.barrido import FilaBarrido, elegir_umbral, sin_nan
 from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite
@@ -38,7 +38,7 @@ from app.evaluation.rutas import raiz_repo
 SALIDA_DEL_BASELINE = Path("eval") / "reports"
 RUTA_DE_METAS = Path("eval") / "configs" / "metas-iniciales.yaml"
 NOMBRE_DEL_INFORME = "S1-baseline"
-_UMBRAL_EN_CONFIG = re.compile(r"^(\s+relevance_threshold:\s*)[0-9.]+", re.MULTILINE)
+_UMBRAL_EN_CONFIG = re.compile(r"^(\s+relevance_threshold:\s*)[-+0-9.eE]+", re.MULTILINE)
 
 
 def _directorio_de_la_app() -> Path:
@@ -59,10 +59,16 @@ def _recall_tras_umbral(
     umbral: float,
     config: ConfigSuite,
 ) -> float | None:
-    """recall@10 de los chunks que superan el umbral (``>``, como ``filtrar_sobre_umbral``): lo que el generador ve."""
+    """recall@10 de lo que ve el generador: los ``RERANK_TOP_N`` primeros del reranker que superan el umbral."""
     entregados = [
         evaluar_pregunta(
-            p, [c for c in rankings.get(p.texto, []) if supera_umbral(c.puntaje, umbral)]
+            p,
+            corte_para_el_generador(
+                rankings.get(p.texto, []),
+                config.umbrales.rerank_top_n,
+                umbral,
+                lambda chunk: chunk.puntaje,
+            ),
         )
         for p in dataset.preguntas
     ]
@@ -137,22 +143,32 @@ def exigir_fijado_permitido(ruta: Path, proveedor: str, directorio_de_configs: P
 
 
 def config_con_umbral(texto: str, umbral: float) -> str:
-    raise NotImplementedError("no implementado")
+    """El texto de la configuración con ``umbrales.relevance_threshold`` reemplazado (comentarios y resto intactos).
+
+    Solo reescribe el estilo de bloque con una única aparición; cualquier otro (flow, ausente, repetido) lanza
+    ``ConfigInvalida`` sin tocar nada, para decidirlo ANTES de escribir ningún informe."""
+    nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", texto)
+    if cambios != 1:
+        raise ConfigInvalida("umbrales.relevance_threshold no se puede fijar en la configuración")
+    return nuevo
 
 
-def fijar_umbral_en_config(ruta: Path, umbral: float, directorio_de_configs: Path | None = None) -> None:
+def _escribir_atomico(ruta: Path, texto: str) -> None:
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=ruta.parent, suffix=".tmp", delete=False
+    ) as temporal:
+        temporal.write(texto)
+    os.replace(temporal.name, ruta)
+
+
+def fijar_umbral_en_config(
+    ruta: Path, umbral: float, directorio_de_configs: Path | None = None
+) -> None:
     """Reescribe solo el valor de ``umbrales.relevance_threshold`` (comentarios y resto del YAML intactos), de forma
     atómica (temporal + ``replace``) y solo dentro del directorio de configuraciones."""
     if not _dentro_de(ruta, directorio_de_configs or directorio_de_configuraciones()):
         raise ConfigInvalida("--fijar solo escribe dentro del directorio de configuraciones")
-    nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", ruta.read_text(encoding="utf-8"))
-    if cambios != 1:
-        raise ConfigInvalida("umbrales.relevance_threshold no se puede fijar en la configuración")
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=ruta.parent, suffix=".tmp", delete=False
-    ) as temporal:
-        temporal.write(nuevo)
-    os.replace(temporal.name, ruta)
+    _escribir_atomico(ruta, config_con_umbral(ruta.read_text(encoding="utf-8"), umbral))
 
 
 def _metricas_de(
@@ -221,6 +237,11 @@ def ejecutar_barrido(
         exigir_fijado_permitido(ruta_config, config.proveedor, directorio_de_configs)
     valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de)
     datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_e2e_s)
+    texto_fijado = (
+        config_con_umbral(ruta_config.read_text(encoding="utf-8"), datos.eleccion.umbral)
+        if fijar
+        else None
+    )  # lanza ConfigInvalida antes de escribir nada: «fijado» en el informe es el resultado, no la intención
     carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
     carpeta.mkdir(parents=True, exist_ok=True)
     # El JSON se valida contra la lista blanca ANTES de escribir nada: un rechazo no deja un informe a medias.
@@ -228,6 +249,6 @@ def ejecutar_barrido(
         carpeta / f"{NOMBRE_DEL_INFORME}.json", agregados_del_informe(datos), ESQUEMA_BASELINE
     )
     (carpeta / f"{NOMBRE_DEL_INFORME}.md").write_text(renderizar_informe(datos), encoding="utf-8")
-    if fijar:
-        fijar_umbral_en_config(ruta_config, datos.eleccion.umbral, directorio_de_configs)
+    if texto_fijado is not None:
+        _escribir_atomico(ruta_config, texto_fijado)
     return 0
