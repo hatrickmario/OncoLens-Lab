@@ -10,7 +10,7 @@ import { claveDelResumen, estadoDeLosAc } from '../verificar-acs-rag.mjs';
 // la ejecución real contra Compose es el propio job `integration-rag`.
 const RAIZ = path.resolve(import.meta.dirname, '../../..');
 const SCRIPT = path.join(RAIZ, 'scripts/ci/integracion-rag-orchestrator.sh');
-const REQUERIDOS = ['US-058:1', 'US-058:3', 'US-058:4', 'US-059:1', 'US-059:3', 'US-059:4', 'US-059:5'];
+const REQUERIDOS = ['US-058:1', 'US-058:3', 'US-058:4', 'US-059:1', 'US-059:3', 'US-059:4', 'US-059:5', 'US-040:1', 'US-040:2', 'US-040:3'];
 const SCRIPT_CLINICAL = path.join(RAIZ, 'scripts/ci/integracion-clinical-api.sh');
 const SECRETOS_PERMITIDOS = ['pg_test_admin_password', 'pg_rag_corpus_password', 'pg_rag_corpus_migrator_password'];
 
@@ -35,7 +35,7 @@ case "$sub" in
       exit 0
     fi
     echo "pytest simulado"
-    resumen='{"US-058 AC-1":["passed"],"US-058 AC-3":["passed"],"US-058 AC-4":["passed"],"US-059 AC-1":["passed"],"US-059 AC-3":["passed"],"US-059 AC-4":["passed"],"US-059 AC-5":["passed"]}'
+    resumen='{"US-058 AC-1":["passed"],"US-058 AC-3":["passed"],"US-058 AC-4":["passed"],"US-059 AC-1":["passed"],"US-059 AC-3":["passed"],"US-059 AC-4":["passed"],"US-059 AC-5":["passed"],"US-040 AC-1":["passed"],"US-040 AC-2":["passed"],"US-040 AC-3":["passed"]}'
     [ "$STUB_MODO" = ac_sin_test ] && resumen='{"US-058 AC-1":["passed"]}'
     [ "$STUB_MODO" = ac_fallido ] && resumen='{"US-058 AC-1":["passed"],"US-058 AC-3":["failed"]}'
     echo "$resumen" > "$RAG_PRUEBAS_RESULTADOS_DIR/resumen-ac.json"
@@ -267,7 +267,7 @@ describe('verificar-acs-rag.mjs', () => {
     expect(estadoDeLosAc(resumen, requeridos).map(({ estado }) => estado)).toEqual(['no_verde', 'sin_test']);
   });
 
-  it('REQUERIDOS del test coincide con los siete AC sin ejecución del script [ARR-01 AC-3]', () => {
+  it('REQUERIDOS del test coincide con los siete AC sin ejecución del script y los tres de permission denied de US-040 [ARR-01 AC-3]', () => {
     const [, lista] = readFileSync(SCRIPT, 'utf8').match(/ACS_REQUERIDOS=\(([^)]*)\)/);
     expect(lista.trim().split(/\s+/)).toEqual(REQUERIDOS);
   });

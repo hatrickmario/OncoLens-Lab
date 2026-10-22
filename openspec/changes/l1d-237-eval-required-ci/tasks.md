@@ -16,7 +16,7 @@
       `eval-reporte`; ver design.md «Desviaciones»; sin ID de destino aún)
 - [x] 1.4 Fixtures de PR (rama de prueba o `act` local) para AC-1…AC-6 con el resultado esperado
       registrado en el PR · **test después** (hecho como Vitest en `scripts/ci/__tests__/evalRequired.test.mjs`,
-      que clona el repo y ejecuta el script; AC-4/AC-5 por `regression.yaml` son de la sección 2)
+      que clona el repo y ejecuta el script; AC-4/AC-5 por `regression.yaml` también, vía el CLI de ai-services)
 - [x] 1.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-237)
 
@@ -31,6 +31,6 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 `openspec validate l1d-237-eval-required-ci --strict` en verde
-- [ ] 3.2 Tests de los contextos en verde; sin `contracts:verify-provider`; `run-ai-eval` no aplica
+- [x] 3.1 `openspec validate l1d-237-eval-required-ci --strict` en verde
+- [x] 3.2 Tests de los contextos en verde; sin `contracts:verify-provider`; `run-ai-eval` no aplica
       (no cambia la IA)

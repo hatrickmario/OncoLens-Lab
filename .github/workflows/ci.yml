@@ -232,8 +232,31 @@ jobs:
       - name: Fixtures de lint:lenguaje (US-068 AC-5)
         run: npm run test:lenguaje
 
+  dependencies:
+    name: dependencies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: scripts/ci/requirements-audit.txt
+      - name: pip-audit (versión fijada en scripts/ci/requirements-audit.txt)
+        run: pip install -r scripts/ci/requirements-audit.txt
+      - name: Auditoría de npm y pip con excepciones vigentes (US-217, security/audit-exceptions.json)
+        run: scripts/ci/auditar-dependencias.sh
+
   # US-074 (L1D-237): siempre corre y decide en su script si el diff toca un disparador (scripts/ci/eval-trigger-paths.yaml);
-  # así su check nunca queda «pendiente». Adapters falsos, sin red ni modelos pesados; compara con data/evaluation/baseline.json.
+  # así su check nunca queda «pendiente». Adapters falsos, sin red ni modelos pesados; compara con data/evaluation/baseline.json
+  # y con los mínimos de apps/rag-orchestrator/eval/configs/regression.yaml.
   eval-required:
     name: eval-required
     runs-on: ubuntu-24.04
@@ -262,11 +285,11 @@ jobs:
         run: npm ci
       - name: Dependencias de la suite evaluate (rag-orchestrator y requirements-eval)
         run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-eval.txt
-      - name: Suite evaluate si el PR cambia modelo, prompt, umbral, catálogo o corpus, y regresión contra el baseline (US-074)
+      - name: Suite evaluate si el PR cambia modelo, prompt, umbral, catálogo o corpus, y regresión contra el baseline y regression.yaml (US-074)
         run: node scripts/ci/eval-required.mjs --base "$BASE_REF"
       - name: Publicar el reporte de evaluate (agregados y configuración, sin datos)
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eval-reporte
           path: apps/rag-orchestrator/eval/results/ci
@@ -277,7 +300,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje, eval-required]
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje, dependencies, eval-required]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

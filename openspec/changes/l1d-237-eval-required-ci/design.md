@@ -83,10 +83,10 @@ Ninguna propia; depende de P-3 (ADR-41).
   (`GITHUB_STEP_SUMMARY`) y al artefacto `eval-reporte` (`reporte.json` + `comentario.md`). Para el comentario hace
   falta una decisión del usuario: permitir un `permissions` acotado a `eval-required` en ese test (D3 de este diseño).
   Sin ID de destino todavía: el orquestador debe crear la historia o decidir.
-- **Pendiente para `ai-services` (sección 2):** AC-4 y AC-5 por umbrales mínimos de `eval/configs/regression.yaml` y
-  `comparar_con_regresion()` (Python). Cuando existan, `eval-required.mjs` debe invocarlos además de la comparación con
-  el baseline; el aviso «Sin baseline de regresión: umbral no aplicado» ya se imprime hoy cuando falta
-  `data/evaluation/baseline.json`.
+- **Umbrales mínimos (AC-4/AC-5):** `eval-required.mjs` invoca además `python -m app.evaluation.comparar_regresion`
+  (ai-services) sobre el reporte con `eval/configs/regression.yaml`; reenvía su stdout/stderr, los incluye en el
+  comentario y falla el job si alguno de los dos controles falla. No imprime excepciones (RN-14). El fixture de AC-5
+  usa `precision_citas_min: 0.9` (el reporte de FX-T5a-a tiene recall 1,0, no 0,5).
 - **Base ilegible → se ejecuta la suite** (push a una rama nueva, historial superficial): nunca se omite por error.
 
 ## Claves nuevas para el usuario (no se tocó `.env.example`)

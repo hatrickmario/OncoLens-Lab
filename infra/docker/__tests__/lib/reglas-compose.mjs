@@ -183,6 +183,21 @@ export function assertStackCompleto(config) {
   }
 }
 
+const VARIABLE_DE_CLINICAL = /CLINICAL_API|CLINICAL_DATABASE|PG_CLINICAL|RESEARCH_WRITER|MINIO/i;
+const VALOR_DE_CLINICAL = /clinical[-_]minio|clinical_api|research_writer/i;
+
+/**
+ * US-040 AC-5 (OL-01, RN-10): el `environment` resuelto de rag-orchestrator no nombra ninguna variable ni lleva ningún
+ * valor (URL con ese usuario o ese host) de clinical_api, research_writer ni clinical-minio. El reparto de los
+ * SECRETOS lo impone assertRepartoDeSecretos (reglas-secretos.mjs): aquí no se duplica.
+ */
+export function assertRagSinVariablesDeClinical(config) {
+  for (const [variable, valor] of Object.entries(entorno(servicio(config, RAG)))) {
+    if (VARIABLE_DE_CLINICAL.test(variable)) throw new Error(`${RAG} declara ${variable}, que es de clinical-api o de clinical-minio`);
+    if (VALOR_DE_CLINICAL.test(String(valor))) throw new Error(`${RAG} declara ${variable} con una credencial o un destino de clinical-api o de clinical-minio`);
+  }
+}
+
 /** US-054: SERVICE_JWT_TTL_SECONDS tiene un único valor para el firmador (clinical-api) y el verificador (rag-orchestrator). */
 export function assertTtlDelJwtCompartido(config) {
   const valores = [CLINICAL_API, RAG].map((nombre) => [nombre, entorno(servicio(config, nombre)).SERVICE_JWT_TTL_SECONDS]);

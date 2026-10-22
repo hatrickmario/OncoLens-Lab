@@ -5,6 +5,6 @@
   "comando": "node scripts/ci/dataset-class-check.mjs",
   "aplicar": "aplicar.sh",
   "mensajes": [
-    "data/evaluation/preguntas.jsonl: dataset sin clase de datos `sintetico`"
+    "data/eval/sin-clase/preguntas.jsonl: dataset sin clase de datos `sintetico`"
   ]
 }
