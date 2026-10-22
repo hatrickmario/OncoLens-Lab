@@ -141,3 +141,15 @@ ARR-02 resto (L1D-278); hasta entonces se registran como pendientes con ese ID.
 - **2.5:** `ENABLED_CANCER_TYPES` y el puerto `TiposDeCancerHabilitados` ya existen (L1D-173); la ficha usa el mismo adaptador que el listado. No se tocó `.env*`.
 - **404 sin BD:** el borde valida `patientId` con `zGetPatientPath` y responde 404 sin consultar; el log de la ficha no lleva el UUID pedido en un 404.
 - **Referencia vacía:** `reference_range = ''` se entrega como `null` (el contrato lo admite).
+
+## Notas de implementación (frontend)
+
+- **D6 cumplido:** la ficha es un RSC que llama a clinical-api con el SDK generado (`lib/server/pacientes.ts:obtenerFicha`), sin Route Handler nuevo; un `id` que no es UUID es "Paciente no encontrado" sin llamar (D7). El log (`patients.ficha`) lleva evento, status y traceId, nunca el id pedido ni la respuesta.
+- **Cache:** `proxy.ts` (L1D-202) ya añade `Cache-Control: no-store` a `/pacientes/**`; la lectura va con `cache: 'no-store'`. Ambos con test.
+- **Desviaciones del design (nombres/estructura):** `provenance-label` y `data-origin-badge` no existen como componentes: el origen y la revisión salen de la función pura `textoDeOrigen()` (Inline Method, sin segundo uso) y la etiqueta es `EtiquetaDeOrigen` de L1D-202. `contarSinVerificar()`, `describirGradacion()`, `formatearFecha()` y `textoDeAviso()` viven en `lib/ficha/`.
+- **Gradación:** se muestra el texto canónico `grade` y, debajo, cada gradación con espécimen y alcance si difiere de él (en mama, la misma línea no se repite).
+- **Vista admin:** `FichaDeAdministrador` (documento enmascarado, estado, alta y origen); sin nombre, datos clínicos ni "Analizar evidencia".
+- **Barra del paciente S2-00:** solo en la ficha (h1 con el nombre); la ruta `/pacientes/[id]/analisis` conserva su barra "Paciente · ID" del S1. Deuda: reutilizar `PatientHeaderBar` allí cuando el panel consuma la ficha.
+- **Carga:** el `loading.tsx` de `/pacientes` también cubre `/pacientes/[id]` (texto "Cargando pacientes…"); un esqueleto propio de la ficha queda como deuda menor.
+- **Deuda:** `traceIdDe` está duplicado entre `lib/pacientes/respuesta.ts` y `lib/server/pacientes.ts`.
+- **Loop visual (PARCIAL):** `next dev` + clinical-api simulado desde `contracts/examples/` (sin Compose). Estados vistos: doctor con gradación de próstata y avisos, admin, 404; 375 px sin scroll horizontal; consola sin errores salvo `favicon.ico`.
