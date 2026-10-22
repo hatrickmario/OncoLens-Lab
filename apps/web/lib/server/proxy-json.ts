@@ -2,6 +2,7 @@ import 'server-only';
 import {
   cabecerasHaciaNavegador,
   clasificarRespuestaDeClinicalApi,
+  type MotivoDeFalloDeTransporte,
   respuestaDeFalloDeTransporte,
   type SdkClinicalApi,
 } from './clinical-api';
@@ -52,7 +53,7 @@ function responderConFallo(
   dependencias: DependenciasDelBff,
   evento: string,
   inicio: number,
-  motivo: Parameters<Registrar>[0]['motivo'],
+  motivo: MotivoDeFalloDeTransporte,
   respuesta: Response | undefined,
 ): Response {
   const traceId = dependencias.nuevoTraceId();
@@ -63,7 +64,7 @@ function responderConFallo(
     traceId,
     ...(traceIdClinicalApi !== null && { traceIdClinicalApi }),
     duracionMs: dependencias.ahora() - inicio,
-    ...(motivo !== undefined && { motivo }),
+    motivo,
   });
   return respuestaDeFalloDeTransporte(traceId);
 }

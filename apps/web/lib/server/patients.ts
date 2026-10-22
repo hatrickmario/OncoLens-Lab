@@ -23,7 +23,7 @@ type Manejador = (request: Request) => Promise<Response>;
 const filtrosDelListadoSchema = zListPatientsQuery.strict();
 
 /** Campos que `PatientSearchRequest` declara; el Zod generado no rechaza los demás (`additionalProperties: false`). */
-const CAMPOS_DE_LA_BUSQUEDA: ReadonlySet<string> = new Set([
+export const CAMPOS_DE_LA_BUSQUEDA: ReadonlySet<string> = new Set([
   'idType',
   'nationalId',
   'name',
@@ -84,7 +84,7 @@ function exigirJson(request: Request, dependencias: DependenciasDelBff): Respons
   );
 }
 
-function analizarCriterio(texto: string): boolean {
+function esCriterioValido(texto: string): boolean {
   let datos: unknown;
   try {
     datos = JSON.parse(texto);
@@ -124,7 +124,7 @@ export function crearManejadorBusquedaDePacientes(dependencias: DependenciasDelB
     if (cuerpo === null) {
       return responderCuerpoExcesivo(dependencias, EVENTO_BUSQUEDA);
     }
-    if (!analizarCriterio(cuerpo)) {
+    if (!esCriterioValido(cuerpo)) {
       return responderCuerpoInvalido(dependencias, EVENTO_BUSQUEDA);
     }
     const inicio = dependencias.ahora();
