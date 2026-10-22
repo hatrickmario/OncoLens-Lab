@@ -1,7 +1,7 @@
 # patients-identity Specification
 
 ## Purpose
-TBD - created by archiving change l1d-200-identidad-cifrada-indice-ciego. Update Purpose after archive.
+Define la identidad del paciente en clinical-api: cifrado AES-256-GCM en el schema identity, índice ciego HMAC para la búsqueda exacta, listado enmascarado y ficha mínima, sin que la identidad salga hacia IA, logs ni auditoría (RN-10, FR-02, FR-04).
 
 ## Requirements
 

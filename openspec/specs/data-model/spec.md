@@ -240,7 +240,7 @@ Las columnas de `data-model.md` con lista cerrada de valores MUST materializarse
 - **THEN** contiene `crítico` (con tilde) y el cliente de Prisma lo expone como `critico`
 
 ### Requirement: Seed sintético de demo con pacientes y usuarios de OL-01
-`npx prisma db seed` SHALL cargar los usuarios de demo `doc1@test.local` (`doctor`) y `admin@test.local` (`admin`), activos, con hash Argon2id, y los pacientes sintéticos (a)–(e) de OL-01, cada uno con `data_origin = sintetico`, `agreement_reference` no nulo y un `care_episode` abierto, y sus datos clínicos con `entry_method = seed` y `review_status = verificado`. Desde el S2 MUST escribir en `identity.patient_identity` las identidades sintéticas de los cinco pacientes, cifradas con `IdentityService` (RN-10) y sin contraseñas ni datos reales en el repo (RN-14).
+`npx prisma db seed` SHALL cargar `doc1@test.local` (`doctor`) y `admin@test.local` (`admin`), activos y con hash Argon2id, y los pacientes sintéticos (a)–(e) de OL-01 con `data_origin = sintetico`, `agreement_reference` y un `care_episode` abierto, con datos clínicos `entry_method = seed` y `review_status = verificado`. Desde el S2 MUST escribir en `identity.patient_identity` sus cinco identidades cifradas con `IdentityService` (RN-10), sin datos reales (RN-14).
 
 #### Scenario: El seed crea los cinco pacientes sintéticos con convenio y episodio abierto [US-039 AC-1] [OL-01] [RN-15]
 - **WHEN** en un entorno `APP_ENV=local` con el esquema migrado se ejecuta `npx prisma db seed`

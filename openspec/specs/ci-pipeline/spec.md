@@ -1,7 +1,7 @@
 # ci-pipeline Specification
 
 ## Purpose
-TBD - created by archiving change l1d-267-auditoria-dependencias. Update Purpose after archive.
+Define el pipeline de CI del repositorio: jobs requeridos y su agregador, escaneos de secretos y de PII, fixtures de PR, auditoría de dependencias y la política de excepciones con caducidad (NFR-13, RN-14).
 
 ## Requirements
 

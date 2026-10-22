@@ -1,7 +1,7 @@
 # corpus-ingestion Specification
 
 ## Purpose
-TBD - created by archiving change l1d-114-corpus-catalog-milvus. Update Purpose after archive.
+Define el catálogo del corpus en PostgreSQL (schema corpus) y su repositorio en Milvus, con versionado sin borrado, licencia aceptada por documento y solo fragmentos vigentes recuperables (RN-05, RN-21).
 
 ## Requirements
 

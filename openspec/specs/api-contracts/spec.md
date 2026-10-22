@@ -175,7 +175,7 @@ Los ocho schemas compartidos de design.md D1 (`EvidenceOption`, `DiscardedOption
 - **THEN** son textualmente idénticos
 
 ### Requirement: Generación reproducible desde los specs
-`npm run contracts:generate` MUST generar desde ambos specs tipos TS, Zod y Pydantic en las rutas de design.md D6 y el extracto no normativo de readme §4, marcados como no editables. `contracts:generate:check` SHALL fallar si queda una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide con el spec `[Pre-S1 resp. 20, 28]`. `npm run contracts:breaking` MUST comparar ambos specs con los de `origin/main` mediante `scripts/ci/contracts-breaking.sh` y `npm run contracts:verify-provider` MUST ejecutar la verificación del proveedor (US-214). El Zod generado MUST ser estricto `[Pre-S1 resp. 33 (D-4)]` y MUST incluir los refinamientos generados de los `if/then`, `anyOf` y `allOf` con `unevaluatedProperties: false` del spec; una construcción que el generador no sepa traducir MUST hacer fallar `contracts:generate`.
+`contracts:generate` MUST generar desde ambos specs los tipos TS, Zod y Pydantic y el extracto del readme §4, no editables; `contracts:generate:check` SHALL fallar ante una diferencia o un archivo sin versionar, y `contracts:check` si el extracto no coincide. `contracts:breaking` MUST comparar con `origin/main` y `contracts:verify-provider` MUST verificar el proveedor. El Zod MUST ser estricto y traducir `if/then`, `anyOf` y `allOf`; lo intraducible MUST hacer fallar `contracts:generate`.
 
 #### Scenario: Generar dos veces no produce diferencias [US-033 AC-16] [Pre-S1 resp. 20]
 - **WHEN** se ejecuta `contracts:generate:check` sobre el repositorio recién generado y versionado
@@ -457,7 +457,7 @@ Los ejemplos de `contracts/examples/` MUST ser no normativos y sintéticos segú
 - **THEN** el request capturado lleva `X-Request-Deadline` igual al valor pasado y `Authorization: Bearer <jwt>` verificable con la clave pública, sin `Cookie`; sin el parámetro la cabecera `X-Request-Deadline` no aparece; y la respuesta se tipa como `RagQueryInternalResponse`
 
 ### Requirement: Health check declarado en ambos specs
-Ambos specs MUST declarar `GET /health` con `security: []`, tag `operacion` y `200 HealthStatus` (cerrado, definido en cada spec, `status` `const ok` obligatorio y `configKeys`, `serviceVersion` (US-037) y `catalogVersion` (US-041) opcionales en el schema); el de `rag-orchestrator` SHALL declarar además `503 LlmLocalNoDisponible`. Es aditivo (ADR-26): `info.version` `clinical-api` 1.7.0 y `rag-orchestrator` 1.5.0. Un **único** ejemplo `health-ok.json` MUST validar contra `HealthStatus` de **ambos** specs, junto a `rag-health-llm-no-disponible.json`.
+Ambos specs MUST declarar `GET /health` con `security: []`, tag `operacion` y `200 HealthStatus` cerrado (`status` `const ok`; `configKeys`, `serviceVersion` y `catalogVersion` opcionales); `rag-orchestrator` SHALL declarar además `503 LlmLocalNoDisponible`. Es aditivo (ADR-26): `clinical-api` 1.7.0 y `rag-orchestrator` 1.5.0. Un único `health-ok.json` MUST validar contra `HealthStatus` de ambos specs.
 
 #### Scenario: Ambos specs declaran el health con sus ejemplos [US-034 AC-1] [US-034 AC-4]
 - **WHEN** `npm run contracts:check` revisa los dos specs y los ejemplos

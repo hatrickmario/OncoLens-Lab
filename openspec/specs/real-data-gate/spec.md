@@ -1,7 +1,7 @@
 # real-data-gate Specification
 
 ## Purpose
-TBD - created by archiving change l1d-167-config-validada-logs-json. Update Purpose after archive.
+Define la guarda de datos reales: clinical-api no arranca con REAL_*_ENABLED=true mientras no exista el gate G-Piloto, y la configuración validada al arrancar no admite datos reales sin él (RN-13, RN-22).
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # clinical-catalogs Specification
 
 ## Purpose
-TBD - created by archiving change l1d-171-catalogo-montaje-version. Update Purpose after archive.
+Define el montaje del catálogo clínico versionado en ambos backends, la comprobación de versión (409 ante una versión distinta) y los tipos de cáncer habilitados, con su respuesta tipo_no_habilitado sin invocar a la IA (RN-20, RN-29).
 
 ## Requirements
 

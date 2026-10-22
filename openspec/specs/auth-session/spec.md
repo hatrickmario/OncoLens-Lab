@@ -1,7 +1,7 @@
 # auth-session Specification
 
 ## Purpose
-TBD - created by archiving change l1d-199-usuarios-cli-rbac. Update Purpose after archive.
+Define la sesión del doctor y del administrador en clinical-api: cookie opaca, expiración por inactividad, cierre de sesión, bloqueo por intentos fallidos y autorización por permisos del rol (RBAC), con usuarios gestionados por CLI (FR-01, RN-30).
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # documents-ingestion Specification
 
 ## Purpose
-TBD - created by archiving change l1d-56-carga-documento-api. Update Purpose after archive.
+Define la carga de documentos PDF a clinical-api: validación del archivo, detección de duplicados por checksum, almacenamiento en clinical-minio sin nombre original en la clave, cola de extracción y logs sin datos del documento (FR-05, RN-10).
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # analysis-basis Specification
 
 ## Purpose
-TBD - created by archiving change l1d-186-base-analisis-builder. Update Purpose after archive.
+Define la Base del análisis: el resumen verificable de los datos del paciente usados, los datos críticos faltantes, los supuestos, las fuentes consultadas y no incluidas, la fecha de corte del corpus y las limitaciones de cada análisis, incluido el análisis sin evidencia (FR-27, RN-25).
 
 ## Requirements
 

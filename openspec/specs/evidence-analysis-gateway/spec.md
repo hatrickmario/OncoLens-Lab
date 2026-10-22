@@ -204,7 +204,7 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **AND** no se persiste ningún registro
 
 ### Requirement: Una sola tabla de mapeo de fallos de rag-orchestrator
-`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` → `503 LOCAL_LLM_UNAVAILABLE`; desde el S2 `409 CATALOG_VERSION_MISMATCH` → `409 CATALOG_VERSION_MISMATCH` (US-041, con el `message` fijo de `error-catalog-version-mismatch.json`); `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `422`, `401`, cualquier otro `409`, en el S2 todavía `429`, cualquier otro `5xx`, error de red o respuesta que no valida → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar el cuerpo, `message` o cabeceras de rag.
+`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` y, desde el S2, `409 CATALOG_VERSION_MISMATCH` conservan su código; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `4xx`/`5xx`, errores de red y respuestas que no validan → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar cuerpo, `message` o cabeceras de rag.
 
 #### Scenario: El LLM local no disponible se responde como 503 sin registro [US-053 AC-4] [S1 resp. 12]
 - **GIVEN** `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-llm-local-no-disponible.json`

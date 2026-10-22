@@ -1,7 +1,7 @@
 # code-quality Specification
 
 ## Purpose
-TBD - created by archiving change l1d-265-lint-format-base. Update Purpose after archive.
+Define las reglas deterministas de calidad del código: dependencias entre capas, umbrales de tamaño y complejidad en un solo archivo, tamaño de componentes de web, lint y formato, y su reporte para la revisión de diseño (NFR-13).
 
 ## Requirements
 

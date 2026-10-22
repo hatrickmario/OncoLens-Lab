@@ -6,7 +6,7 @@ Define lo que el stack local registra y expone para operarlo sin filtrar identid
 ## Requirements
 
 ### Requirement: Health check de clinical-api independiente de la IA
-`clinical-api` MUST exponer `GET /health`, solo en la red interna y sin sesión, que responde `200` con `HealthStatus` cuando el proceso está listo: `status = "ok"`, `configKeys`, `serviceVersion` (US-037) y `catalogVersion` (versión del `manifest.json` montado, US-041), sin otras propiedades y sin valores de configuración. MUST NOT consultar a `rag-orchestrator` ni al LLM, para que la caída de la IA no deje sin servicio a la ficha (readme §2.7). La respuesta SHALL validarse contra el spec de `clinical-api` en el test de integración.
+`clinical-api` MUST exponer `GET /health`, solo en la red interna y sin sesión, que responde `200` con `HealthStatus`: `status = "ok"`, `configKeys`, `serviceVersion` y `catalogVersion`, sin otras propiedades ni valores de configuración. MUST NOT consultar a `rag-orchestrator` ni al LLM, para que la caída de la IA no deje sin servicio a la ficha (readme §2.7). La respuesta SHALL validarse contra el spec de `clinical-api` en el test de integración.
 
 #### Scenario: clinical-api responde 200 en su health [US-034 AC-1]
 - **GIVEN** `clinical-api` arrancado con el catálogo `1.0.0` montado
