@@ -6,7 +6,7 @@ import type {
 import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import type { IdentidadDescifrada, IdentityService } from './identity.service.js';
-import type { FiltrosDelListado } from './patients.schema.js';
+import type { BusquedaDePacientes, FiltrosDelListado } from './patients.schema.js';
 import { enmascararDocumento, enmascararNombre } from './patients.reglas.js';
 import type { FilaDePaciente, PatientsRepository } from './patients.repository.js';
 
@@ -15,6 +15,7 @@ export type VistaDeListado = 'doctor_listado' | 'admin';
 
 export interface PatientsService {
   listar(entrada: { filtros: FiltrosDelListado; vista: VistaDeListado }): Promise<PatientPage>;
+  buscar(entrada: { busqueda: BusquedaDePacientes; vista: VistaDeListado }): Promise<PatientPage>;
 }
 
 export interface DependenciasDelService {
@@ -99,6 +100,9 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
           : elementoAdmin(fila, identificacion);
       });
       return { items, page, pageSize, total };
+    },
+    buscar() {
+      return Promise.reject(new Error('no implementado'));
     },
   };
 }

@@ -1,11 +1,11 @@
-import { Router, type RequestHandler, type Response } from 'express';
+import express, { Router, type RequestHandler, type Response } from 'express';
 import { enviarError } from '../../infrastructure/http-errores.js';
 import type { Registrar } from '../../infrastructure/logger.js';
 import { authorize } from '../../middleware/authorize.js';
 import { vistaSegunPermiso } from '../../middleware/vista-segun-permiso.js';
 import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
-import { leerFiltrosDelListado } from './patients.schema.js';
+import { leerFiltrosDelListado, type BusquedaDePacientes } from './patients.schema.js';
 import type { PatientsService, VistaDeListado } from './patients.service.js';
 
 export interface DependenciasDelController {
@@ -57,6 +57,21 @@ export function patientsController(dependencias: DependenciasDelController): Rou
     response.status(200).json(pagina);
   };
 
+  const buscar: RequestHandler = async (request, response) => {
+    const pagina = await service.buscar({
+      busqueda: request.body as BusquedaDePacientes,
+      vista: 'admin',
+    });
+    response.status(200).json(pagina);
+  };
+
   router.get('/patients', crearTraceIdMiddleware(traceIds), authorize('patients:lookup'), listar);
+  router.post(
+    '/patients/search',
+    crearTraceIdMiddleware(traceIds),
+    authorize('patients:lookup'),
+    express.json(),
+    buscar,
+  );
   return router;
 }
