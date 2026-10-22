@@ -100,3 +100,40 @@ describe('excepcionesVigentes', () => {
     ).toEqual([]);
   });
 });
+
+describe('validación de excepciones con caducidad', () => {
+  const HOY = new Date('2026-10-22T12:00:00Z');
+  const excepcion = (cambios = {}) => ({
+    regla: 'max-lines-per-function',
+    archivo: 'apps/clinical-api/src/x.ts',
+    caduca: '2026-11-30',
+    motivo: 'deuda',
+    historia: 'L1D-263',
+    ...cambios,
+  });
+  const validar = (e) => () => validarUmbrales({ ...BASE, excepciones: [e] }, HOY);
+
+  it('acepta una excepción que caduca dentro del tope de 90 días [US-213 AC-6]', () => {
+    expect(validar(excepcion())).not.toThrow();
+  });
+
+  it('falla nombrando caduca cuando supera el tope de 90 días desde hoy [US-213 AC-6]', () => {
+    expect(validar(excepcion({ caduca: '9999-12-31' }))).toThrow(/caduca.*90/);
+  });
+
+  it('falla nombrando historia cuando la excepción no la trae [US-213 AC-6]', () => {
+    expect(validar(excepcion({ historia: undefined }))).toThrow(/historia/);
+  });
+
+  it('falla nombrando caduca cuando la fecha no existe en el calendario [US-213 AC-6]', () => {
+    expect(validar(excepcion({ caduca: '2026-02-31' }))).toThrow(/caduca/);
+  });
+
+  it('falla nombrando regla cuando se intenta exceptuar una regla de capas [US-213 AC-6]', () => {
+    expect(validar(excepcion({ regla: 'sin-ciclos' }))).toThrow(/regla/);
+  });
+
+  it('falla nombrando archivo cuando la ruta sale del repositorio con .. [US-213 AC-6]', () => {
+    expect(validar(excepcion({ archivo: '../fuera.ts' }))).toThrow(/archivo/);
+  });
+});
