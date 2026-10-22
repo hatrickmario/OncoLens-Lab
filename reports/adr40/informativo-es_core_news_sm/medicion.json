@@ -1,0 +1,487 @@
+{
+  "candidatos": {
+    "1": {
+      "corridas": 3,
+      "falsos_positivos_clinicos": {
+        "controles": 770,
+        "criticos_marcados": {},
+        "marcados": 0,
+        "por_termino": {},
+        "tasa": 0.0
+      },
+      "latencia_p95_ms": 0.10727710177889094,
+      "latencia_p95_ms_por_corrida": [
+        0.10480206110514702,
+        0.10727710177889094,
+        0.1073454914148897
+      ],
+      "memoria_carga_mb": null,
+      "sensibilidad_documentos": {
+        "correo": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "documento": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "fecha_nacimiento": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "nombre": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 120,
+          "valor": 0.0
+        },
+        "telefono": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "total": {
+          "aciertos": 300,
+          "ic95": [
+            0.669047619047619,
+            0.7571428571428571
+          ],
+          "total": 420,
+          "valor": 0.7142857142857143
+        }
+      },
+      "sensibilidad_todos_los_contextos": {
+        "correo": {
+          "aciertos": 120,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 120,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 120,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 120,
+          "valor": 1.0
+        },
+        "documento": {
+          "aciertos": 140,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 140,
+          "valor": 1.0
+        },
+        "fecha_nacimiento": {
+          "aciertos": 100,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 100,
+          "valor": 1.0
+        },
+        "nombre": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 340,
+          "valor": 0.0
+        },
+        "telefono": {
+          "aciertos": 160,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 160,
+          "valor": 1.0
+        },
+        "total": {
+          "aciertos": 640,
+          "ic95": [
+            0.6234693877551021,
+            0.6826530612244898
+          ],
+          "total": 980,
+          "valor": 0.6530612244897959
+        }
+      }
+    },
+    "1-base": {
+      "corridas": 3,
+      "falsos_positivos_clinicos": {
+        "controles": 770,
+        "criticos_marcados": {},
+        "marcados": 0,
+        "por_termino": {},
+        "tasa": 0.0
+      },
+      "latencia_p95_ms": 0.0893854106834624,
+      "latencia_p95_ms_por_corrida": [
+        0.08983718944364227,
+        0.0893854106834624,
+        0.08829199941828847
+      ],
+      "memoria_carga_mb": null,
+      "sensibilidad_documentos": {
+        "correo": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 60,
+          "valor": 0.0
+        },
+        "documento": {
+          "aciertos": 40,
+          "ic95": [
+            0.55,
+            0.7666666666666667
+          ],
+          "total": 60,
+          "valor": 0.6666666666666666
+        },
+        "fecha_nacimiento": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 60,
+          "valor": 0.0
+        },
+        "nombre": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 120,
+          "valor": 0.0
+        },
+        "telefono": {
+          "aciertos": 54,
+          "ic95": [
+            0.8166666666666667,
+            0.9666666666666667
+          ],
+          "total": 60,
+          "valor": 0.9
+        },
+        "total": {
+          "aciertos": 154,
+          "ic95": [
+            0.319047619047619,
+            0.4142857142857143
+          ],
+          "total": 420,
+          "valor": 0.36666666666666664
+        }
+      },
+      "sensibilidad_todos_los_contextos": {
+        "correo": {
+          "aciertos": 120,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 120,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 120,
+          "valor": 0.0
+        },
+        "documento": {
+          "aciertos": 90,
+          "ic95": [
+            0.5642857142857143,
+            0.7214285714285714
+          ],
+          "total": 140,
+          "valor": 0.6428571428571429
+        },
+        "fecha_nacimiento": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 100,
+          "valor": 0.0
+        },
+        "nombre": {
+          "aciertos": 0,
+          "ic95": [
+            0.0,
+            0.0
+          ],
+          "total": 340,
+          "valor": 0.0
+        },
+        "telefono": {
+          "aciertos": 141,
+          "ic95": [
+            0.83125,
+            0.93125
+          ],
+          "total": 160,
+          "valor": 0.88125
+        },
+        "total": {
+          "aciertos": 351,
+          "ic95": [
+            0.32653061224489793,
+            0.38979591836734695
+          ],
+          "total": 980,
+          "valor": 0.35816326530612247
+        }
+      }
+    },
+    "2": {
+      "corridas": 3,
+      "falsos_positivos_clinicos": {
+        "controles": 770,
+        "criticos_marcados": {
+          "Gleason 7": 66
+        },
+        "marcados": 86,
+        "por_termino": {
+          "Gleason 7": 66,
+          "trastuzumab": 20
+        },
+        "tasa": 0.11168831168831168
+      },
+      "latencia_p95_ms": 5.835541690612445,
+      "latencia_p95_ms_por_corrida": [
+        5.835541690612445,
+        5.865121493116021,
+        5.797037504817126
+      ],
+      "memoria_carga_mb": 283.5625,
+      "sensibilidad_documentos": {
+        "correo": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "documento": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "fecha_nacimiento": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "nombre": {
+          "aciertos": 84,
+          "ic95": [
+            0.6166666666666667,
+            0.7833333333333333
+          ],
+          "total": 120,
+          "valor": 0.7
+        },
+        "telefono": {
+          "aciertos": 60,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 60,
+          "valor": 1.0
+        },
+        "total": {
+          "aciertos": 384,
+          "ic95": [
+            0.8857142857142857,
+            0.9404761904761905
+          ],
+          "total": 420,
+          "valor": 0.9142857142857143
+        }
+      },
+      "sensibilidad_todos_los_contextos": {
+        "correo": {
+          "aciertos": 120,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 120,
+          "valor": 1.0
+        },
+        "direccion": {
+          "aciertos": 120,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 120,
+          "valor": 1.0
+        },
+        "documento": {
+          "aciertos": 140,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 140,
+          "valor": 1.0
+        },
+        "fecha_nacimiento": {
+          "aciertos": 100,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 100,
+          "valor": 1.0
+        },
+        "nombre": {
+          "aciertos": 282,
+          "ic95": [
+            0.7852941176470588,
+            0.8735294117647059
+          ],
+          "total": 340,
+          "valor": 0.8294117647058824
+        },
+        "telefono": {
+          "aciertos": 160,
+          "ic95": [
+            1.0,
+            1.0
+          ],
+          "total": 160,
+          "valor": 1.0
+        },
+        "total": {
+          "aciertos": 922,
+          "ic95": [
+            0.9255102040816326,
+            0.9540816326530612
+          ],
+          "total": 980,
+          "valor": 0.9408163265306122
+        }
+      }
+    }
+  },
+  "criterio": {
+    "cobertura": 0.5,
+    "margen_memoria_mb": 727.0,
+    "minimo": 0.95
+  },
+  "dataset": {
+    "clase": "sintetico",
+    "n_textos": 300,
+    "nombre": "pii-mini"
+  },
+  "decision": {
+    "descartes": [
+      {
+        "candidato": "1-base",
+        "motivo": "sensibilidad de direccion 0.000 < 0.95"
+      },
+      {
+        "candidato": "1",
+        "motivo": "sensibilidad de nombre 0.000 < 0.95"
+      },
+      {
+        "candidato": "2",
+        "motivo": "sensibilidad de nombre 0.700 < 0.95"
+      }
+    ],
+    "elegido": null
+  },
+  "equipo": {
+    "python": "3.13.15",
+    "sistema": "macOS-27.0.1-arm64-arm-64bit-Mach-O"
+  },
+  "fecha": "2026-10-21T22:58:23.122848+00:00",
+  "modelo_ner": {
+    "medido": true,
+    "nombre": "es_core_news_sm",
+    "version": "3.8.0"
+  }
+}

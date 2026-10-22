@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "descripcion": "Plantillas del dataset sintético pii-mini (US-013, ADR-40). Los marcadores {nombre}, {representante}, {documento}, {telefono}, {correo}, {direccion} y {nacimiento} se sustituyen en generar.py con valores deterministas generados al azar (nunca se versionan en claro, RN-14). El texto clínico es de control: ningun termino de 'terminos_clinicos' es PII.",
+  "terminos_clinicos": [
+    "HER2", "Gleason 7", "BRCA1", "tamoxifeno", "PSA", "ECOG 1", "pT2 pN0 M0", "Ki-67", "letrozol",
+    "docetaxel", "enzalutamida", "estadio IIA", "CA 15-3", "trastuzumab", "CD20", "receptor de estrógeno",
+    "carcinoma ductal infiltrante", "grupo ISUP 3", "mastectomía", "prostatectomía radical"
+  ],
+  "terminos_criticos": ["HER2", "Gleason 7", "BRCA1", "PSA", "ECOG 1", "pT2 pN0 M0", "Ki-67"],
+  "plantillas": [
+    {"id": "pregunta-1", "contexto": "pregunta", "texto": "Qué opciones describe la evidencia para {nombre}, paciente con carcinoma ductal infiltrante HER2 positivo y estadio IIA?"},
+    {"id": "pregunta-2", "contexto": "pregunta", "texto": "Para el paciente {nombre} con Gleason 7 y PSA en ascenso, qué alternativas hay tras prostatectomía radical? Contacto del familiar: {telefono}."},
+    {"id": "pregunta-3", "contexto": "pregunta", "texto": "Evidencia sobre trastuzumab en la paciente {nombre} ({documento}) con BRCA1 mutado y ECOG 1."},
+    {"id": "nota-1", "contexto": "nota", "texto": "Nota de seguimiento. {nombre} refiere buena tolerancia a tamoxifeno. Vive en {direccion}. Se confirma el teléfono {telefono} y el correo {correo}. ECOG 1, Ki-67 elevado."},
+    {"id": "nota-2", "contexto": "nota", "texto": "La hija y representante, {representante}, acompaña a {nombre} a la consulta; indica {documento} como su documento. Receptor de estrógeno positivo, CA 15-3 sin cambios."},
+    {"id": "nota-3", "contexto": "nota", "texto": "Paciente nacida el {nacimiento}, controla CD20 y completa letrozol. Familiar de contacto {representante}, {telefono}."},
+    {"id": "evento-1", "contexto": "evento", "texto": "Mastectomía programada para {nombre}; avisar al {telefono}. Estadio IIA, pT2 pN0 M0."},
+    {"id": "evento-2", "contexto": "evento", "texto": "Inicio de docetaxel. El paciente {nombre} entrega copia de su documento {documento} en admisión."},
+    {"id": "evento-3", "contexto": "evento", "texto": "Visita domiciliaria en {direccion}. Se actualiza el correo a {correo}. Gleason 7, grupo ISUP 3."},
+    {"id": "atributo-1", "contexto": "atributo", "texto": "contacto_alterno: {representante}; teléfono: {telefono}; observación: tolera enzalutamida"},
+    {"id": "atributo-2", "contexto": "atributo", "texto": "apodo: {nombre}; correo: {correo}; fecha de nacimiento {nacimiento}; HER2 negativo"},
+    {"id": "atributo-3", "contexto": "atributo", "texto": "dirección de residencia: {direccion}; documento {documento}; PSA estable"},
+    {"id": "documento-1", "contexto": "documento", "texto": "INFORME CLÍNICO (SINTÉTICO)\nPaciente: {nombre}\nDocumento: {documento}\nFecha de nacimiento: {nacimiento}\nDirección: {direccion}\nTeléfono: {telefono}\nCorreo: {correo}\nResponsable: {representante}\nDiagnóstico: carcinoma ductal infiltrante, estadio IIA, pT2 pN0 M0. HER2 positivo, Ki-67 elevado. Se indica trastuzumab y seguimiento de CA 15-3."},
+    {"id": "documento-2", "contexto": "documento", "texto": "Resumen de consulta. El paciente {nombre}, nacido el {nacimiento}, con documento {documento}, domiciliado en {direccion}, consulta por PSA en ascenso. Gleason 7, grupo ISUP 3, ECOG 1. Contacto: {telefono}, {correo}. Acompaña {representante}."}
+  ]
+}

@@ -25,16 +25,56 @@ import {
  */
 export * from './secciones.js';
 
-/** Inactividad máxima de la sesión (RN-22). Lo aplica el guard de L1D-198; aquí solo se valida. */
+/**
+ * Sesión por inactividad y bloqueo del login (RN-22, US-044): lo aplican el guard y el servicio de autenticación.
+ * `trustProxyHops` es el número de saltos de proxy en los que confía Express para la IP del cliente (1: solo `web`).
+ */
 export interface SesionConfig {
   idleMinutes: number;
+  touchSeconds: number;
+  loginMaxFailedAttempts: number;
+  loginLockoutMinutes: number;
+  trustProxyHops: number;
 }
 
 const DEFAULT_SESSION_IDLE_MINUTES = 30;
+const DEFAULT_SESSION_TOUCH_SECONDS = 60;
+const DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS = 5;
+const DEFAULT_LOGIN_LOCKOUT_MINUTES = 15;
+const DEFAULT_TRUST_PROXY_HOPS = 1;
+const SEGUNDOS_POR_MINUTO = 60;
 
 export function readSesionConfig(env: NodeJS.ProcessEnv): SesionConfig {
+  const idleMinutes = readPositiveInteger(
+    env,
+    'SESSION_IDLE_MINUTES',
+    DEFAULT_SESSION_IDLE_MINUTES,
+  );
+  const touchSeconds = readPositiveInteger(
+    env,
+    'SESSION_TOUCH_SECONDS',
+    DEFAULT_SESSION_TOUCH_SECONDS,
+  );
+  if (touchSeconds >= idleMinutes * SEGUNDOS_POR_MINUTO) {
+    throw new ConfiguracionInvalidaError(
+      'SESSION_TOUCH_SECONDS',
+      'debe ser menor que SESSION_IDLE_MINUTES expresado en segundos',
+    );
+  }
   return {
-    idleMinutes: readPositiveInteger(env, 'SESSION_IDLE_MINUTES', DEFAULT_SESSION_IDLE_MINUTES),
+    idleMinutes,
+    touchSeconds,
+    loginMaxFailedAttempts: readPositiveInteger(
+      env,
+      'LOGIN_MAX_FAILED_ATTEMPTS',
+      DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS,
+    ),
+    loginLockoutMinutes: readPositiveInteger(
+      env,
+      'LOGIN_LOCKOUT_MINUTES',
+      DEFAULT_LOGIN_LOCKOUT_MINUTES,
+    ),
+    trustProxyHops: readPositiveInteger(env, 'TRUST_PROXY_HOPS', DEFAULT_TRUST_PROXY_HOPS),
   };
 }
 

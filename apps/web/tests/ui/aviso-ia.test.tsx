@@ -1,12 +1,15 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import conEvidencia from '../../../../contracts/examples/con-evidencia-s1.json';
 import sinEvidencia from '../../../../contracts/examples/sin-evidencia.json';
 import DashboardLayout from '../../app/(dashboard)/layout';
 import { AiDisclaimer } from '../../components/molecules/ai-disclaimer';
 import { AppHeader } from '../../components/organisms/app-header';
 import { mensajes } from '../../lib/mensajes';
+
+// La cabecera trae el botón Cerrar sesión, que usa el router de la app (borde del framework).
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
 const ETIQUETA = mensajes().app.academicUseLabel;
 const DISCLAIMER_SINTETICO = 'Aviso sintético de prueba, distinto del valor por defecto.';
