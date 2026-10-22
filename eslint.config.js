@@ -8,7 +8,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
-import { excepcionesVigentes, leerUmbrales } from './scripts/quality/umbrales.mjs';
+import { escaparGlob, excepcionesVigentes, leerUmbrales } from './scripts/quality/umbrales.mjs';
 
 // Umbrales de tamaño y complejidad (L1D-263, RN-22): solo se editan en quality-thresholds.json.
 // Un umbral ausente o no numérico hace fallar la carga de esta configuración nombrando la clave.
@@ -65,7 +65,7 @@ export const bloqueTamanoWeb = (
 /** Excepciones con caducidad (D5): desactivan una regla en un archivo hasta su fecha; después vuelve a fallar. */
 export const bloquesDeExcepciones = (limites, hoy = new Date()) =>
   excepcionesVigentes(limites.excepciones, hoy).map(({ regla, archivo }) => ({
-    files: [archivo.replace(/[[\](){}!*?]/g, '\\$&')],
+    files: [escaparGlob(archivo)],
     rules: { [regla]: 'off' },
   }));
 

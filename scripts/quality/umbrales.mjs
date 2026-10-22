@@ -103,6 +103,6 @@ export function excepcionesVigentes(excepciones, hoy) {
 }
 
 /** Escapa los caracteres con significado de glob (incluida la barra invertida) para usar una ruta literal en `files`. */
-export function escaparGlob() {
-  throw new Error('no implementado');
+export function escaparGlob(ruta) {
+  return ruta.replace(/[\\[\](){}!*?]/g, '\\$&');
 }
