@@ -8,6 +8,8 @@ export interface FiltroDePacientes {
   readonly dataOrigin?: OrigenDelPaciente | undefined;
   /** Solo estos pacientes (resultado de una búsqueda por índice ciego); sin valor, todos. */
   readonly ids?: readonly string[] | undefined;
+  /** Solo quien lee datos clínicos recibe el tipo de cáncer del diagnóstico activo; el admin no (mínimo privilegio). */
+  readonly conDatosClinicos: boolean;
   readonly limit: number;
   readonly offset: number;
 }
@@ -57,6 +59,10 @@ const FUENTES_POR_REVISAR = [
 
 const POR_REVISAR = 'requiere_revision';
 
+const SUBCONSULTA_TIPO_DE_CANCER = `(SELECT d.cancer_type FROM clinical.diagnosis d
+                  WHERE d.patient_id = p.id AND d.is_active
+                  ORDER BY d.diagnosed_at DESC, d.id LIMIT 1)`;
+
 const DONDE = `
   ($1::text IS NULL OR p.lifecycle_status::text = $1)
   AND ($2::text IS NULL OR p.data_origin::text = $2)
@@ -69,9 +75,7 @@ export function createPatientsRepository(db: Consultador): PatientsRepository {
       const { rows } = await db.query(
         `SELECT p.id, p.data_origin::text AS data_origin, p.lifecycle_status::text AS lifecycle_status,
                 p.birth_year, p.created_at,
-                (SELECT d.cancer_type FROM clinical.diagnosis d
-                  WHERE d.patient_id = p.id AND d.is_active
-                  ORDER BY d.diagnosed_at DESC, d.id LIMIT 1) AS cancer_type
+                ${filtro.conDatosClinicos ? SUBCONSULTA_TIPO_DE_CANCER : 'NULL::text'} AS cancer_type
            FROM clinical.patient p
           WHERE ${DONDE}
           ORDER BY p.created_at DESC, p.id

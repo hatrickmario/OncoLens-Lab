@@ -105,12 +105,13 @@ export function crearPatientsService(dependencias: DependenciasDelService): Pati
 
   /** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
   async function paginar(
-    filtro: Omit<FiltroDePacientes, 'limit' | 'offset'>,
+    filtro: Omit<FiltroDePacientes, 'limit' | 'offset' | 'conDatosClinicos'>,
     page: number,
     vista: VistaDeListado,
   ): Promise<PatientPage> {
     const { filas, total } = await repo.listar({
       ...filtro,
+      conDatosClinicos: vista === 'doctor_listado',
       limit: pageSize,
       offset: (page - 1) * pageSize,
     });
