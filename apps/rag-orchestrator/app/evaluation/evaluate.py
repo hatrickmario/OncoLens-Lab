@@ -55,7 +55,7 @@ from app.evaluation.informe_pii import (
 from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
 from app.evaluation.llamadas import RegistroDeLlamadas
 from app.evaluation.metricas.privacidad import privacidad
-from app.evaluation.reporte import escribir_reporte_cerrado
+from app.evaluation.reporte import ReporteFueraDeEsquema, escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.lenguaje.terminos_prohibidos import ListaDeTerminosNoDisponible
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -111,6 +111,9 @@ def main(
         return 1
     except JuezNoDisponible:
         print("evaluate: el juez de fidelidad no está disponible", file=sys.stderr)
+        return 1
+    except ReporteFueraDeEsquema:
+        print("evaluate: el reporte no cumple el esquema cerrado; no se escribió", file=sys.stderr)
         return 1
     except ListaDeTerminosNoDisponible:
         print("evaluate: la lista de términos prohibidos no está disponible", file=sys.stderr)

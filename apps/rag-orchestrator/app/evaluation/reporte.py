@@ -92,6 +92,11 @@ class Objeto:
 _IDENTIFICADOR = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{0,127}")
 
 
+def es_identificador(valor: object) -> bool:
+    """Un token ASCII sin espacios ni control: la misma regla que el esquema cerrado aplica al escribir el reporte."""
+    return isinstance(valor, str) and _IDENTIFICADOR.fullmatch(valor) is not None
+
+
 def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     """Lista blanca de claves y de tipos de hoja (ADR-41, «Reporte»): lo demás hace fallar la escritura."""
     if isinstance(esquema, Objeto):
@@ -106,7 +111,7 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
         _exigir(isinstance(valor, str) and valor in esquema.valores, ruta, "fuera del conjunto")
     elif isinstance(esquema, Identificador):
         _exigir(
-            isinstance(valor, str) and _IDENTIFICADOR.fullmatch(valor) is not None,
+            es_identificador(valor),
             ruta,
             "no es un identificador",
         )

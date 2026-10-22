@@ -2,6 +2,7 @@
 
 import ipaddress
 import re
+import unicodedata
 from urllib.parse import urlsplit
 
 # Piso CERRADO EN CÓDIGO de la suite de evaluación (ADR-41 D4): `es_proveedor_local()` no lee configuración, así que
@@ -73,4 +74,7 @@ _SUFIJO_DE_NUBE = re.compile(r"(?:^|[:\-])cloud$", re.IGNORECASE)
 
 def es_modelo_de_nube(modelo: str) -> bool:
     """RN-12: un runtime local (Ollama) sirve ``x:cloud`` o ``x:1b-cloud`` ejecutándolos en la nube, aunque el host sea local."""
-    return _SUFIJO_DE_NUBE.search(modelo) is not None
+    normalizado = (
+        unicodedata.normalize("NFKC", modelo).strip().casefold()
+    )  # Ollama resuelve el nombre con ruido
+    return _SUFIJO_DE_NUBE.search(normalizado) is not None

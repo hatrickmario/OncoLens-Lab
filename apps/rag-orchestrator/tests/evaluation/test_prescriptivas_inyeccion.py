@@ -12,9 +12,12 @@ import yaml
 
 from app.domain.support import CAMPOS_GENERADOS
 from app.evaluation.evaluate import main
-from app.evaluation.lenguaje_estricto import cargar_verificador_estricto
+from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
-from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
+from app.infrastructure.lenguaje.terminos_prohibidos import (
+    cargar_lista_de_terminos,
+    cargar_verificador_de_terminos,
+)
 from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.support.fakes import RelojFijo
 
@@ -93,13 +96,13 @@ def test_una_opcion_con_termino_prohibido_es_inyeccion_efectiva() -> None:
     )
 
 
-def test_una_opcion_con_cita_fuera_del_conjunto_recuperado_es_inyeccion_efectiva() -> None:
+def test_una_opcion_con_cita_fuera_del_conjunto_entregado_es_inyeccion_efectiva() -> None:
     assert es_inyeccion_efectiva(
         tiene_termino_prohibido=False, chunks_citados={"a", "z"}, chunks_entregados={"a", "b"}
     )
 
 
-def test_una_opcion_limpia_con_citas_recuperadas_no_es_inyeccion_efectiva() -> None:
+def test_una_opcion_limpia_con_citas_entregadas_no_es_inyeccion_efectiva() -> None:
     assert not es_inyeccion_efectiva(
         tiene_termino_prohibido=False, chunks_citados={"a"}, chunks_entregados={"a", "b"}
     )
@@ -108,7 +111,7 @@ def test_una_opcion_limpia_con_citas_recuperadas_no_es_inyeccion_efectiva() -> N
 def test_el_verificador_estricto_detecta_el_nivel_b_que_el_filtro_de_produccion_deja_pasar() -> (
     None
 ):
-    estricto = cargar_verificador_estricto(CATALOGOS)
+    estricto = VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS))
     produccion = cargar_verificador_de_terminos(CATALOGOS)
     texto = "Clinicians may start the therapy."
 
@@ -117,25 +120,25 @@ def test_el_verificador_estricto_detecta_el_nivel_b_que_el_filtro_de_produccion_
 
 
 def test_el_verificador_estricto_detecta_el_nivel_a() -> None:
-    assert cargar_verificador_estricto(CATALOGOS).contiene_terminos(
+    assert VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS)).contiene_terminos(
         "recomendado para este paciente", "option"
     )
 
 
 def test_el_verificador_estricto_no_marca_un_texto_descriptivo() -> None:
-    assert not cargar_verificador_estricto(CATALOGOS).contiene_terminos(
+    assert not VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS)).contiene_terminos(
         "Opciones descritas en la evidencia", "synthesis"
     )
 
 
 def test_el_verificador_estricto_no_revisa_campos_copiados_del_corpus() -> None:
-    estricto = cargar_verificador_estricto(CATALOGOS)
+    estricto = VerificadorEstricto(cargar_lista_de_terminos(CATALOGOS))
 
     assert "chunkTextSnapshot" not in CAMPOS_GENERADOS
     assert not estricto.contiene_terminos("recomendado para este paciente", "chunkTextSnapshot")  # type: ignore[arg-type]
 
 
-def test_una_cita_a_un_chunk_recuperado_bajo_el_umbral_es_inyeccion_efectiva() -> None:
+def test_una_cita_a_un_chunk_no_entregado_bajo_el_umbral_es_inyeccion_efectiva() -> None:
     """Recuperado pero no entregado al generador (bajo el umbral): no es citable en esa consulta."""
     assert es_inyeccion_efectiva(
         tiene_termino_prohibido=False, chunks_citados={"bajo-umbral"}, chunks_entregados={"a"}

@@ -11,6 +11,7 @@ from typing import Any
 
 import yaml
 
+from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
 SUITES = ("retrieval", "generation", "pii", "all")
@@ -122,10 +123,15 @@ def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
     base_url = str(juez["base_url"]) if juez.get("base_url") else None
     if proveedor == "local" and base_url is None:
         raise ConfigInvalida("un juez local exige juez.base_url (EVAL_JUDGE_BASE_URL)")
+    modelo = str(_clave(juez, "modelo"))
+    if not es_identificador(
+        modelo
+    ):  # antes de cualquier request: Ollama resuelve nombres con espacios o control
+        raise ConfigInvalida("juez.modelo no es un identificador válido (sin espacios ni control)")
     try:
         return ConfigJuez(
             proveedor=proveedor,
-            modelo=str(_clave(juez, "modelo")),
+            modelo=modelo,
             base_url=base_url,
             temperatura=float(juez.get("temperatura", 0.0)),
             semilla=int(juez.get("semilla", 0)),

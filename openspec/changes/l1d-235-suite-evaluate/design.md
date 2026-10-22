@@ -125,6 +125,12 @@ fidelidad, prescriptivas e inyección; reporte de agregados; `baseline.json`.
   en `ServicioDeSuite`, `Literal` para `CampoGenerado`/proveedores, la clave `traceId`, mover `JuezLlmLexico` a
   `adaptadores_falsos.py`, `ruta_terminos` → `ruta_catalogos` (cambia el `hashConfig`: coordinar con L1D-237), TypedDict de los
   reportes y el contrato del informe de PII en `contracts/examples/`.
+- **D16c · Vuelta 2 de Gate 2.** `es_modelo_de_nube` vive en `domain/reglas_proveedor.py` y normaliza (`NFKC`, `strip`, `casefold`)
+  antes de la regex; `juez.modelo` debe ser un identificador ASCII sin espacios ni control (`reporte.es_identificador`, la regla
+  del esquema cerrado) o la configuración se rechaza antes de cualquier request (código 2); un `ReporteFueraDeEsquema` termina
+  en código 1 con mensaje fijo. `modelo` es obligatorio en `LlamadaSaliente` y `RegistroDeLlamadas.registrar`.
+  **Riesgo residual (US-073):** un alias local (`ollama cp x:cloud mi-modelo` o un `Modelfile` con `FROM x:cloud`) no se detecta
+  por nombre, y el `llm_modelo` del generador no pasa por esta guarda.
 - **D18 · Prescriptivas e inyección (AC-1, AC-7).** `prescriptivas.yaml` dice en qué propuesta cruda aparece cada
   salida (`pregunta`): `rationale` se suma a la justificación de la primera opción y `limitations[].text` se propone
   como limitación; `ch-inj-1` lleva `inyeccion: true` y la consulta que lo recibe es un **caso de inyección**.

@@ -17,14 +17,14 @@ from app.evaluation.dataset_loader import CLASE_SINTETICA
 class LlamadaSaliente:
     destino: str
     clase_datos: str
-    modelo: str = ""
+    modelo: str
 
 
 @dataclass
 class RegistroDeLlamadas:
     llamadas: list[LlamadaSaliente] = field(default_factory=list)
 
-    def registrar(self, destino: str, clase_datos: str, modelo: str = "") -> None:
+    def registrar(self, destino: str, clase_datos: str, modelo: str) -> None:
         self.llamadas.append(LlamadaSaliente(destino, clase_datos, modelo))
 
 
