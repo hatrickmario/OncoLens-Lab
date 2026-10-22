@@ -20,12 +20,13 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import validar_ventana
 from app.domain.reglas_proveedor import (
+    HOSTS_LOCALES,
     reject_fake_model_provider_with_real_data,
     reject_fake_provider_with_real_data,
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
-HOSTS_LOCALES_DEL_LLM = ("localhost", "127.0.0.1", "host.docker.internal")
+HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
 
 
 class Settings(BaseSettings):

@@ -1,0 +1,23 @@
+# Configuración de la suite `evaluate` con adapters falsos (FX-T5a-a, US-072a, ADR-41). Es la configuración de la CI:
+# no carga modelos, no abre sockets y es reproducible (misma configuración, mismas métricas, misma huella).
+# Cambiar cualquier valor cambia la huella SHA-256 que forma parte del nombre del resultado (AC-2).
+nombre: test-fake
+fixture: FX-T5a-a
+dataset:
+  ruta: data/eval/fx-t5a-a
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado # simulado: 1 ms por lectura (reproducible); real: time.perf_counter
+adaptadores:
+  proveedor: fake # fake | local (los adapters locales con URL llegan con US-073)
+modelos:
+  llm: fake-guion@1
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs

@@ -1,0 +1,9 @@
+# Salidas crudas del generador con términos prohibidos (RN-23); las cuenta el bloque 072b. Texto inventado.
+clase: sintetico
+salidas:
+  - id: PRE-01
+    campo: rationale
+    texto: 'recomendado para este paciente'
+  - id: PRE-02
+    campo: limitations[].text
+    texto: 'El paciente debe recibir la combinación.'

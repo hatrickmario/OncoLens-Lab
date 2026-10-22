@@ -1,0 +1,12 @@
+{
+  "$comment": "Excepciones de la auditoría de dependencias (US-217). Cada una vence en revisarAntesDe y la CI falla al vencer; nunca se desactiva el job.",
+  "excepciones": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "paquete": "braces",
+      "motivo": "Sin versión corregida: braces 3.0.3 es la última publicada y el aviso cubre <=3.0.3. Llega por @next/eslint-plugin-next -> fast-glob -> micromatch; npm solo ofrece bajar a 14.2.35.",
+      "mitigacion": "Solo cadena de desarrollo (lint); no entra a ninguna imagen de runtime ni procesa entrada externa. Los patrones los escribe el repositorio.",
+      "revisarAntesDe": "2026-11-20"
+    }
+  ]
+}
