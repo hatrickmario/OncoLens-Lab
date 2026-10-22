@@ -68,6 +68,59 @@ antes de aplicar la migración (evidencia útil para el Gate 2 aunque no es TDD 
 - El rol que ejecuta `prisma migrate` aún no está fijado en Compose (`clinical-migrate` pendiente): si cambia, los
   `DEFAULT PRIVILEGES` no cubren sus objetos. Mitigación: test de AC-3 creando la tabla con ese mismo rol.
 
+## Desviaciones y notas de la implementación (clinical-platform)
+
+- **D2 · rol de los privilegios por defecto.** La migración usa `ALTER DEFAULT PRIVILEGES IN SCHEMA …` **sin** `FOR ROLE`: aplica
+  al rol que la ejecuta (`clinical_api` en Compose, dueño de la base; `oncolens_test_admin` en los arneses). Así no depende de un
+  nombre fijo ni exige ser miembro de otro rol, y cubre el caso del *one-shot* `clinical-migrate` pendiente sin tocar la migración.
+  Además de tablas y secuencias cubre funciones, y revoca a `PUBLIC` (data-model §9, medida 4, más `REVOKE ALL ON SCHEMA` de los
+  cinco schemas a `PUBLIC`).
+- **D4 · timeouts fuera de la migración.** `ALTER ROLE … SET` exige superusuario o `CREATEROLE` y el rol de migraciones es
+  `NOCREATEROLE`: los *timeouts* de `rag_corpus` viven en `infra/docker/postgres/initdb/10-roles.sh` (corre una vez al inicializar el
+  volumen, como `postgres`). Claves nuevas (RN-22), con valor por defecto en el Compose (30000 y 60000 ms):
+  `PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS` y `PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS`.
+  **Acción del usuario:** añadirlas a `infra/docker/.env.example` (el agente no lo toca) y a `docs/operations/claves.md`. En un
+  volumen ya inicializado solo surten efecto tras recrearlo (`down -v`) o con un `ALTER ROLE` manual.
+- **AC-6 / `research_writer`.** El test se conecta como `research_writer` con la contraseña del archivo `PG_RESEARCH_WRITER_PASSWORD_FILE`
+  (que `scripts/test-integration.sh` apunta a `pg_research_writer_password`); `pg_hba` ya admite al rol desde `clinical-net`.
+- **AC-2 y AC-3 en clinical-api.** `rag_corpus` solo entra por `corpus-db-net`, así que desde Vitest se verifica por catálogo
+  (`has_*_privilege`, con una precondición hostil: un `DEFAULT PRIVILEGES` previo que daría acceso); el *permission denied* en
+  ejecución conectado como el rol lo prueba Pytest (sección ai-services).
+- **AC-4** se amplió en `scripts/smoke/compose-smoke.sh` (fase 2b, job `stack-smoke`); **AC-5** en
+  `infra/docker/__tests__/compose-aislamiento-rag.test.mjs` con la regla `assertRagSinCredencialesClinicas`.
+- **CI (tarea 1.5).** No hace falta un job nuevo: `integration` ya corre el Vitest de `clinical-api` (AC-6, AC-2/3 por catálogo) e
+  `integration-rag` corre `pytest -m servicios_reales` sobre todo `tests/integration`. Para que el aislamiento no pueda quedar sin
+  ejecutarse, `scripts/ci/integracion-rag-orchestrator.sh` exige ahora `US-040:1 US-040:2 US-040:3` en `ACS_REQUERIDOS`, y copia
+  `apps/clinical-api/prisma/migrations` al árbol de pruebas.
+
+### Para ai-services (tarea 2.1)
+
+- El arnés de Pytest (`tests/support/pg.py`) crea la base con solo `corpus`; no tiene los schemas clínicos ni Prisma. Para AC-2 y AC-3:
+  como `oncolens_test_admin` (dueño de la base de test) crear un schema y una tabla sintética en cada uno de `auth`, `identity`,
+  `clinical`, `audit`, `research`, y **después** ejecutar el SQL de
+  `apps/clinical-api/prisma/migrations/20261021120000_privilegios_roles/migration.sql` (es SQL puro e idempotente; un `execute` de
+  psycopg con el archivo completo sirve). Los privilegios por defecto quedan fijados para ese mismo rol, así que la tabla de AC-3 la
+  crea el admin **después** de la migración. La migración tolera la ausencia de `research_writer`.
+- Para que AC-3 no sea vacuo, añadir la precondición hostil (`ALTER DEFAULT PRIVILEGES IN SCHEMA clinical GRANT SELECT ON TABLES TO
+  rag_corpus` antes de aplicar la migración): sin el `REVOKE` por defecto el test debe fallar.
+- `ACS_REQUERIDOS` ya exige `US-040:1`, `US-040:2` y `US-040:3`: el resumen por AC (`@pytest.mark.ac("US-040", n)`) tiene que
+  contenerlos o `integration-rag` falla. El simulacro de Pytest de `scripts/ci/__tests__/integracionRag.test.mjs` ya los incluye.
+- `tests/integration/` solo se ejecuta con `-m servicios_reales`: marcar los tests con ese marker.
+
+### Ronda del Gate 2 (privacy y design-principles)
+
+- Aplicado: defaults globales de `rag_corpus`, `rag_corpus_migrator` y `research_writer` (un `IN SCHEMA` no los quita), `EXECUTE` de
+  PUBLIC sobre funciones (default global), `REVOKE TEMPORARY ON DATABASE FROM PUBLIC` (la suite de integración de clinical-api y
+  el humo siguen en verde; el dueño de la base conserva su `TEMPORARY`; el Pytest de ai-services lo comprobará la CI), pruebas de
+  membresía, secuencias, funciones y enumeración de `pg_namespace`.
+- Fuente única de la lista de schemas dentro de la migración (`schemas_vedados = schemas_clinicos || public`) y en los tests TS
+  (`SCHEMAS_CLINICOS` de `tests/support/catalogo.ts`).
+- **Decisiones pendientes del humano:** (1) los *timeouts* de `ALTER ROLE SET` son protección operativa: el rol puede cambiarlos con
+  `SET` de sesión; (2) `clinical_api` es dueño del schema `corpus`: ¿invariante escrita de que nunca hace DML sobre él, o dueño
+  distinto (ADR-43)?
+- **Deuda:** TD-1 sincronizar la lista de schemas con `schema.prisma` y `assertDataModelDocument.mjs`; los Menores P3-8, P3-9 y
+  P3-10 del Gate 2 quedan sin aplicar.
+
 ## Pendiente de definir
 
 - D1 (AC-1 con el migrator): asumido según `[S1 resp. 14b]`; confirmar en el Gate 1.

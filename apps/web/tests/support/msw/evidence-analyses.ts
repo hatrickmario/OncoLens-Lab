@@ -9,6 +9,7 @@ import errorServicioIa from '../../../../../contracts/examples/error-servicio-ia
 import errorTipoCancer from '../../../../../contracts/examples/error-tipo-cancer-no-registrado.json';
 import peticion from '../../../../../contracts/examples/evidence-analysis-request.json';
 import sinEvidencia from '../../../../../contracts/examples/sin-evidencia.json';
+import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilitado.json';
 
 export {
   conEvidencia,
@@ -20,6 +21,7 @@ export {
   errorTipoCancer,
   peticion,
   sinEvidencia,
+  tipoNoHabilitado,
 };
 
 export interface Respuesta {
