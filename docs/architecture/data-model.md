@@ -85,6 +85,7 @@ erDiagram
         string national_id_hmac "índice ciego; UK con id_type+país"
         bytes full_name_ciphertext
         int key_version
+        string full_name_hmac "índice ciego del nombre normalizado; nullable; índice no único"
     }
     LEGAL_REPRESENTATIVE {
         uuid id PK "schema identity"
@@ -624,6 +625,7 @@ erDiagram
 | `national_id_hmac` | text |  | índice ciego; UK con id_type+país |
 | `full_name_ciphertext` | bytea |  |  |
 | `key_version` | integer |  |  |
+| `full_name_hmac` | text |  | índice ciego del nombre completo normalizado (sin tildes, minúsculas, espacios colapsados); nullable: lo escribe la aplicación (US-048, P-4); índice no único |
 
 #### `identity.legal_representative`
 
@@ -640,7 +642,7 @@ erDiagram
 | `valid_from` | date |  |  |
 | `valid_until` | date |  | nullable |
 
-Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac` es el índice ciego HMAC-SHA256 para la búsqueda exacta. Las claves solo existen en `clinical-api`. Ninguna columna de `identity` contiene el dato en claro.
+Documento y nombres se cifran en la aplicación (AES-256-GCM); `national_id_hmac` es el índice ciego HMAC-SHA256 para la búsqueda exacta del documento y `full_name_hmac` el del nombre completo normalizado (búsqueda exacta por nombre, US-048; un nombre parcial no encuentra nada). Las claves solo existen en `clinical-api`. Ninguna columna de `identity` contiene el dato en claro.
 
 ### 4.3 Schema `clinical`
 
@@ -1160,7 +1162,7 @@ Vacío resuelto (US-033), `[Pre-S1 resp. 3]`: se congela la **estructura** de la
 
 ## 5. Índices y restricciones clave
 
-- `identity.patient_identity (id_type, issuing_country, national_id_hmac)`: único.
+- `identity.patient_identity (id_type, issuing_country, national_id_hmac)`: único; `(full_name_hmac)`: índice no único (dos pacientes pueden compartir nombre normalizado).
 - `care_team_member (patient_id, doctor_id) WHERE is_active`: único; `(patient_id) WHERE is_active AND is_primary`: único.
 - `care_episode (patient_id) WHERE closed_at IS NULL`: único.
 - `document (patient_id, checksum)`: único; `document (ocr_status, uploaded_at)`.

@@ -208,6 +208,16 @@
       "target": "#/paths/~1platform~1auth~1login/post/requestBody"
     },
     {
+      "file": "patient-page-doctor.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientPage"
+    },
+    {
+      "file": "patient-search-name.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/PatientSearchRequest"
+    },
+    {
       "file": "patient-search.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/PatientSearchRequest"

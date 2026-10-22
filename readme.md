@@ -916,6 +916,8 @@ paths:
           $ref: "#/components/responses/PermisoDenegado"
         "404":
           $ref: "#/components/responses/NoEncontrado"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
 ```
 <!-- contracts:readme-extract:end -->
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.8.0
+  version: 1.9.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -114,6 +114,8 @@ paths:
         identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento
         depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento
         ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+        Orden determinista: fecha de alta descendente (el registro más reciente primero) y, a igual
+        fecha, el id ascendente.
       x-permission: patients:lookup
       x-view-by-permission:
         clinical:read: PatientListItem
@@ -155,6 +157,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorCuerpoInvalido'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/search:
     post:
@@ -163,8 +167,11 @@ paths:
       summary: Busca pacientes por identidad exacta o por nombre
       description: >-
         La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las
-        cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego); la búsqueda por
-        nombre queda con US-048 como dueña. La forma de cada elemento depende del permiso
+        cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego) y no usa el país
+        emisor (issuingCountry no participa); la búsqueda por nombre es exacta sobre el nombre completo
+        normalizado (sin tildes, en minúsculas, espacios colapsados) por índice ciego: un nombre parcial
+        o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento.
+        Los resultados se ordenan por fecha de alta descendente y, a igual fecha, por id ascendente. La forma de cada elemento depende del permiso
         (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS;
         completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
       x-permission: patients:lookup
@@ -196,6 +203,8 @@ paths:
                 $ref: '#/components/schemas/ErrorCuerpoInvalido'
         "429":
           $ref: '#/components/responses/LimiteSolicitudes'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/{patientId}:
     get:
@@ -235,6 +244,8 @@ paths:
           $ref: '#/components/responses/PermisoDenegado'
         "404":
           $ref: '#/components/responses/NoEncontrado'
+        "500":
+          $ref: '#/components/responses/ErrorInterno'
 
   /platform/patients/{patientId}/case:
     get:
@@ -1312,15 +1323,15 @@ components:
         nationalIdMasked:
           type: string
           description: >-
-            Documento enmascarado; el completo solo se descifra en la ficha, auditado. Pendiente: el
-            formato de la máscara lo fija la historia dueña (US-048).
-          x-pending-owner: US-048
+            Documento enmascarado de longitud fija: "•••• " (cuatro U+2022 y un espacio) seguido de los 2
+            últimos caracteres del número normalizado ("•••• 67"); no revela la longitud del documento.
+            El completo solo se descifra en la ficha, auditado.
+          pattern: '^•{4} [A-Za-z0-9]{2}$'
         fullNameMasked:
           type: string
           description: >-
-            Nombre enmascarado (iniciales o primer nombre); el completo solo en la ficha, auditado.
-            Pendiente: el formato de la máscara lo fija la historia dueña (US-048).
-          x-pending-owner: US-048
+            Iniciales de cada palabra del nombre en mayúscula seguidas de punto y separadas por espacio
+            ("L. F. R. P."). El completo solo en la ficha, auditado.
         dataOrigin:
           $ref: '#/components/schemas/DataOrigin'
         lifecycleStatus:
@@ -1362,7 +1373,10 @@ components:
           $ref: '#/components/schemas/IdType'
         nationalIdMasked:
           type: string
-          description: Documento enmascarado; el descifrado completo solo ocurre por la CLI, auditado.
+          description: >-
+            Documento enmascarado de longitud fija ("•••• 01": cuatro U+2022, un espacio y los 2 últimos
+            caracteres); el descifrado completo solo ocurre por la CLI, auditado.
+          pattern: '^•{4} [A-Za-z0-9]{2}$'
         dataOrigin:
           $ref: '#/components/schemas/DataOrigin'
         lifecycleStatus:

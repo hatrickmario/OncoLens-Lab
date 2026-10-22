@@ -1,0 +1,194 @@
+import type {
+  PatientAdminSummary,
+  PatientListItem,
+  PatientPage,
+} from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
+import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
+import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
+import type { IdentidadParcial, IdentityService } from './identity.service.js';
+import type {
+  BusquedaDePacientes,
+  CriterioDeBusqueda,
+  FiltrosDelListado,
+} from './patients.schema.js';
+import { enmascararDocumento, enmascararNombre } from './patients.reglas.js';
+import type {
+  FilaDePaciente,
+  FiltroDePacientes,
+  PatientsRepository,
+} from './patients.repository.js';
+
+/** Vista de cada elemento según el permiso de la sesión (`x-view-by-permission`). */
+export type VistaDeListado = 'doctor_listado' | 'admin';
+
+export interface PatientsService {
+  listar(entrada: { filtros: FiltrosDelListado; vista: VistaDeListado }): Promise<PatientPage>;
+  buscar(entrada: { busqueda: BusquedaDePacientes; vista: VistaDeListado }): Promise<PatientPage>;
+}
+
+export interface DependenciasDelService {
+  repo: PatientsRepository;
+  identidad: IdentityService;
+  tiposHabilitados: TiposDeCancerHabilitados;
+  /** `PATIENTS_PAGE_SIZE` (RN-22). */
+  pageSize: number;
+}
+
+/**
+ * Hasta que existan los módulos de datos críticos (S3/S4) no hay faltantes que contar: el contador es 0 y no un
+ * valor inventado (design D3).
+ */
+const FALTANTES_CRITICOS_POR_AHORA = 0;
+
+type Elemento = PatientListItem | PatientAdminSummary;
+
+/** Lo que una vista necesita además de la fila para armar su elemento. */
+interface ContextoDeElemento {
+  readonly tiposHabilitados: TiposDeCancerHabilitados;
+  readonly pendientes: Map<string, number>;
+}
+
+function elementoDoctor(
+  fila: FilaDePaciente,
+  identificacion: IdentidadParcial,
+  contexto: ContextoDeElemento,
+): PatientListItem {
+  return {
+    view: 'doctor_listado',
+    id: fila.id,
+    idType: identificacion.idType,
+    nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
+    fullNameMasked: enmascararNombre(nombreObligatorio(identificacion)),
+    dataOrigin: fila.dataOrigin,
+    lifecycleStatus: fila.lifecycleStatus,
+    birthYear: fila.birthYear,
+    cancerTypeEnabled:
+      fila.cancerType !== null && contexto.tiposHabilitados.estaHabilitado(fila.cancerType),
+    pendingReviewCount: contexto.pendientes.get(fila.id) ?? 0,
+    missingCriticalCount: FALTANTES_CRITICOS_POR_AHORA,
+  };
+}
+
+/** La vista del doctor siempre pide el nombre: que falte es una violación de integridad, no un dato opcional. */
+function nombreObligatorio(identificacion: IdentidadParcial): string {
+  if (identificacion.nombreCompleto === undefined) throw new IdentityIntegrityError();
+  return identificacion.nombreCompleto;
+}
+
+function elementoAdmin(
+  fila: FilaDePaciente,
+  identificacion: IdentidadParcial,
+): PatientAdminSummary {
+  return {
+    view: 'admin',
+    id: fila.id,
+    idType: identificacion.idType,
+    nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
+    dataOrigin: fila.dataOrigin,
+    lifecycleStatus: fila.lifecycleStatus,
+    registeredAt: fila.registeredAt.toISOString(),
+  };
+}
+
+/**
+ * Las dos vistas en un solo lugar: si cada una lee datos clínicos (el admin no, mínimo privilegio) y cómo arma su
+ * elemento. Una tercera vista se añade aquí y el compilador exige el resto.
+ */
+const VISTAS: Record<
+  VistaDeListado,
+  {
+    readonly conDatosClinicos: boolean;
+    elemento(
+      fila: FilaDePaciente,
+      identificacion: IdentidadParcial,
+      contexto: ContextoDeElemento,
+    ): Elemento;
+  }
+> = {
+  doctor_listado: { conDatosClinicos: true, elemento: elementoDoctor },
+  admin: {
+    conDatosClinicos: false,
+    elemento: (fila, identificacion) => elementoAdmin(fila, identificacion),
+  },
+};
+
+/** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
+function identidadObligatoria(
+  identidades: Map<string, IdentidadParcial>,
+  patientId: string,
+): IdentidadParcial {
+  const encontrada = identidades.get(patientId);
+  if (encontrada === undefined) throw new IdentityIntegrityError();
+  return encontrada;
+}
+
+/** Descifra solo la identidad de las filas de la página (el nombre solo si la vista lo usa) y la entrega por paciente. */
+async function identidadesDe(
+  identidad: IdentityService,
+  filas: FilaDePaciente[],
+  conNombre: boolean,
+): Promise<Map<string, IdentidadParcial>> {
+  if (filas.length === 0) return new Map();
+  const descifradas = await identidad.descifrarVarios(
+    filas.map((fila) => fila.id),
+    { conNombre },
+  );
+  return new Map(descifradas.map((fila) => [fila.patientId, fila]));
+}
+
+/** Una página de pacientes (con los filtros o solo los `ids` de una búsqueda) en la vista del permiso. */
+async function paginar(
+  dependencias: DependenciasDelService,
+  entrada: {
+    filtro: Omit<FiltroDePacientes, 'limit' | 'offset' | 'conDatosClinicos'>;
+    page: number;
+    vista: VistaDeListado;
+  },
+): Promise<PatientPage> {
+  const { repo, identidad, tiposHabilitados, pageSize } = dependencias;
+  const { filtro, page, vista } = entrada;
+  const presentador = VISTAS[vista];
+  const { filas, total } = await repo.listar({
+    ...filtro,
+    conDatosClinicos: presentador.conDatosClinicos,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+  const identidades = await identidadesDe(identidad, filas, presentador.conDatosClinicos);
+  const pendientes = presentador.conDatosClinicos
+    ? await repo.contarPendientesDeRevision(filas.map((fila) => fila.id))
+    : new Map<string, number>();
+  const items = filas.map((fila) =>
+    presentador.elemento(fila, identidadObligatoria(identidades, fila.id), {
+      tiposHabilitados,
+      pendientes,
+    }),
+  );
+  return { items, page, pageSize, total };
+}
+
+/** Pacientes que coinciden con el criterio, por índice ciego: la identidad no se descifra para comparar (RN-10). */
+function pacientesQueCoinciden(
+  identidad: IdentityService,
+  criterio: CriterioDeBusqueda,
+): Promise<string[]> {
+  return criterio.tipo === 'documento'
+    ? identidad.buscarPorDocumento(criterio.idType, criterio.nationalId)
+    : identidad.buscarPorNombre(criterio.name);
+}
+
+export function crearPatientsService(dependencias: DependenciasDelService): PatientsService {
+  return {
+    // El `status` del query se queda en el borde: aquí es el ciclo de vida del paciente.
+    listar: ({ filtros, vista }) =>
+      paginar(dependencias, {
+        filtro: { lifecycleStatus: filtros.status, dataOrigin: filtros.dataOrigin },
+        page: filtros.page,
+        vista,
+      }),
+    async buscar({ busqueda, vista }) {
+      const ids = await pacientesQueCoinciden(dependencias.identidad, busqueda.criterio);
+      return paginar(dependencias, { filtro: { ids }, page: busqueda.page, vista });
+    },
+  };
+}
