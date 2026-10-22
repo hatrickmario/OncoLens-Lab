@@ -31,6 +31,7 @@ def _entorno_local(
     secreto.write_text(CONTRASENA)
     base: dict[str, str | None] = {
         "LLM_PROVIDER": "local",
+        "ENABLED_CANCER_TYPES": "mama,prostata",
         "MILVUS_URI": "http://127.0.0.1:1",
         "MILVUS_DENSE_METRIC_TYPE": "COSINE",
         "MILVUS_CONNECT_TIMEOUT_SECONDS": "2",
