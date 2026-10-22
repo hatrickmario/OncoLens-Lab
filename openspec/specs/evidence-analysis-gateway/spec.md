@@ -166,10 +166,10 @@ El `AIAnalysisRecord` MUST incluir `trace_id`, `analysis_type = analisis_evidenc
 - **THEN** `trace_id = req_TestGen0001` y ninguna columna del registro contiene `req_Entrante01`
 
 #### Scenario: La Base del análisis del S1 declara los datos usados y que los faltantes críticos aún no se calculan [US-053 AC-1] [FR-27] (asumido: corrección del Gate 1, 2026-10-14)
-- **GIVEN** `ANALYSIS_BASIS_S1_ASSUMPTION_TEXT` = "Datos del paciente recibidos como contexto. Esta versión no verifica su completitud ni la ausencia de datos clínicamente relevantes." en la configuración de test
-- **WHEN** se completa el análisis del AC-1, y en otro caso el de `Q-SIN` sin evidencia
-- **THEN** en ambos `analysisBasis.patientDataUsed = []`, `analysisBasis.missingCriticalData = []` y `analysisBasis.assumptions` contiene `{ text: <ese literal>, origin: regla_catalogo }`, igual en la respuesta y en `analysis_basis` persistido
-- **AND** el literal no tiene hallazgos de `lint:lenguaje` (L1D-193)
+- **GIVEN** el análisis del AC-1, y en otro caso el de `Q-SIN` sin evidencia, sobre el paciente semilla (a)
+- **WHEN** se completa el análisis
+- **THEN** en ambos `analysisBasis.patientDataUsed` tiene una entrada por dato del contexto enviado, `analysisBasis.missingCriticalData = []` y `analysisBasis.assumptions` contiene `{ text: "Los faltantes críticos aún no se calculan en esta versión", origin: regla_catalogo }`, igual en la respuesta y en `analysis_basis` persistido
+- **AND** el texto del supuesto es un literal del builder, no una clave de configuración
 
 #### Scenario: El snapshot persistido no lleva el seudónimo de la consulta [US-053 AC-1] [RN-11] (asumido: nota de data-model.md §4.3 "sin pseudoPatientId")
 - **GIVEN** el análisis del AC-1
@@ -204,7 +204,7 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **AND** no se persiste ningún registro
 
 ### Requirement: Una sola tabla de mapeo de fallos de rag-orchestrator
-`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` → `503 LOCAL_LLM_UNAVAILABLE`; `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `422`, `401`, en el S1 también `409` y `429`, cualquier otro `5xx`, error de red o respuesta que no valida → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar el cuerpo, `message` o cabeceras de rag.
+`clinical-api` MUST mapear cada fallo de `POST /rag/query` en una única función (`mapearFalloRag()`, `[S1 resp. 12]`): `503 LOCAL_LLM_UNAVAILABLE` → `503 LOCAL_LLM_UNAVAILABLE`; desde el S2 `409 CATALOG_VERSION_MISMATCH` → `409 CATALOG_VERSION_MISMATCH` (US-041, con el `message` fijo de `error-catalog-version-mismatch.json`); `503 RETRIEVAL_UNAVAILABLE`, `503 NLI_UNAVAILABLE`, otros `422`, `401`, cualquier otro `409`, en el S2 todavía `429`, cualquier otro `5xx`, error de red o respuesta que no valida → `502 ERROR_SERVICIO_IA`. Ninguna fila SHALL persistir un `AIAnalysisRecord` ni reenviar el cuerpo, `message` o cabeceras de rag.
 
 #### Scenario: El LLM local no disponible se responde como 503 sin registro [US-053 AC-4] [S1 resp. 12]
 - **GIVEN** `rag-orchestrator` simulado respondiendo `503` desde `contracts/examples/rag-llm-local-no-disponible.json`
@@ -230,7 +230,7 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **AND** no se persiste ningún registro
 
 #### Scenario: Un 401 o un 500 de rag-orchestrator se responde como 502 sin detalles internos [US-053 AC-4] [OL-03]
-- **GIVEN** `rag-orchestrator` simulado respondiendo `401` (desde `rag-token-servicio-invalido.json`) en un caso y `500` con un cuerpo con texto interno sintético en otro
+- **GIVEN** `rag-orchestrator` simulado respondiendo `401` (desde `rag-token-servicio-invalido.json`) en un caso y `500` con un cuerpo con texto interno sintético en otro (desde el S2, el `409` de `CATALOG_VERSION_MISMATCH` tiene su propio escenario)
 - **WHEN** `doc1@test.local` envía `Q-HER2` sobre el paciente semilla (a)
 - **THEN** ambas respuestas son `502` con `error = ERROR_SERVICIO_IA`, el `message` fijo de `error-servicio-ia.json` y `traceId`, válidas contra el spec de `clinical-api`
 - **AND** ninguna contiene el texto del cuerpo ni del `message` de `rag-orchestrator`
@@ -251,13 +251,19 @@ Si la escritura del `AIAnalysisRecord` falla, `clinical-api` MUST responder `500
 - **WHEN** se envía `Q-HER2`
 - **THEN** la respuesta es `502` con `error = ERROR_SERVICIO_IA` y no se persiste ningún registro
 
+#### Scenario: Un 409 de catálogo de rag-orchestrator se responde como 409 sin registro [US-041 AC-2] [NFR-14] [OL-02] [ADR-38]
+- **GIVEN** `rag-orchestrator` simulado respondiendo `409` desde `contracts/examples/rag-catalog-version-mismatch.json`
+- **WHEN** `doc1@test.local` envía `Q-HER2` sobre el paciente semilla (a)
+- **THEN** la respuesta es `409` con `error = CATALOG_VERSION_MISMATCH`, el `message` fijo de `error-catalog-version-mismatch.json` y `traceId`, válida contra el spec de `clinical-api`, sin el cuerpo de `rag-orchestrator`
+- **AND** no existe fila en `clinical.ai_analysis_record` con ese `trace_id`
+
 #### Scenario: Un 409 o un 429 de rag-orchestrator se responde en el S1 como 502 sin registro [US-053 AC-4] [S1 resp. 12] (asumido: corrección del Gate 1, 2ª vuelta, 2026-10-14; sus códigos propios llegan con US-041 y US-056)
-- **GIVEN** `rag-orchestrator` simulado respondiendo `409` con un cuerpo sintético de catálogo en un caso y `429` con `Retry-After: 30` en otro
+- **GIVEN** `rag-orchestrator` simulado respondiendo `429` con `Retry-After: 30` en un caso y `409` con un `error` distinto de `CATALOG_VERSION_MISMATCH` en otro (desde el S2, el `409` de `CATALOG_VERSION_MISMATCH` tiene su propio escenario)
 - **WHEN** `doc1@test.local` envía `Q-HER2` sobre el paciente semilla (a)
 - **THEN** ambas respuestas son `502` con `error = ERROR_SERVICIO_IA`, el `message` fijo de `error-servicio-ia.json` y `traceId`, válidas contra el spec de `clinical-api`, sin `Retry-After` ni el cuerpo de `rag-orchestrator`
 - **AND** no existe fila en `clinical.ai_analysis_record` con esos `trace_id`
 
-Regresión [409 de catálogo → 409] activa desde S2 (US-041). Regresión [RN-30 429 con `Retry-After`] activa desde S4 (US-056). Regresión [RN-12 503 y `llm_provider` local con datos reales] activa desde S6 (US-050).
+Regresión [RN-30 429 con `Retry-After`] activa desde S4 (US-056). Regresión [RN-12 503 y `llm_provider` local con datos reales] activa desde S6 (US-050).
 
 ### Requirement: Sin evidencia persistido con puntaje nulo
 Cuando `rag-orchestrator` responde `status = sin_evidencia`, `clinical-api` MUST persistir el `AIAnalysisRecord` con `status = sin_evidencia`, `evidence_options = []` y `top_relevance_score IS NULL` (nunca `0.0`), y SHALL responder `200` con `topRelevanceScore = null`, `evidenceOptions = []` y `analysisBasis` presente (RN-02, readme §6.1 #1).
