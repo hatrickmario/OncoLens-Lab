@@ -232,10 +232,32 @@ jobs:
       - name: Fixtures de lint:lenguaje (US-068 AC-5)
         run: npm run test:lenguaje
 
+  dependencies:
+    name: dependencies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: scripts/ci/requirements-audit.txt
+      - name: pip-audit (versión fijada en scripts/ci/requirements-audit.txt)
+        run: pip install -r scripts/ci/requirements-audit.txt
+      - name: Auditoría de npm y pip con excepciones vigentes (US-217, security/audit-exceptions.json)
+        run: scripts/ci/auditar-dependencias.sh
+
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje]
+    needs: [build-test, contracts, secret-scan, data-scan, stack-smoke, integration, integration-rag, quality, lint-lenguaje, dependencies]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

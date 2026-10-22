@@ -61,6 +61,15 @@ describe('assertConsumersUseGeneratedClients · clientes generados como única v
     expect(hallazgosDe({ 'apps/web/lib/server/otra.ts': `return ${LLAMADA_DECLARADA}url);\n` })).toHaveLength(1);
   });
 
+  it('acepta el import de node:http del hook entrante que fija X-Forwarded-For solo en su archivo [US-044 AC-3]', () => {
+    const hook = TRANSPORTES_DECLARADOS.find((transporte) => transporte.file === 'apps/web/lib/server/fijar-ip-del-socket.ts');
+    const importDelHook = `import { Server } from ${hook.llamada.replace('from ', '')};\n`;
+
+    expect(hook).toBeDefined();
+    expect(hallazgosDe({ [hook.file]: importDelHook })).toEqual([]);
+    expect(hallazgosDe({ 'apps/web/lib/server/otra.ts': importDelHook }).map((item) => item.message)).toEqual([expect.stringContaining('import de node:http(s)')]);
+  });
+
   it('declara también el transporte de rag-orchestrator de clinical-api y lo encuentra en el código real [US-214 AC-1]', async () => {
     const { docs } = await loadContext(ROOT);
     const transporteRag = TRANSPORTES_DECLARADOS.find((transporte) => transporte.file === 'apps/clinical-api/src/infrastructure/rag-orchestrator.http.ts');

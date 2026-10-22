@@ -1,0 +1,2 @@
+# Herramienta de auditoría de la CI (job dependencies, US-217). Versión exacta; se actualiza con Dependabot/PR.
+pip-audit==2.10.1

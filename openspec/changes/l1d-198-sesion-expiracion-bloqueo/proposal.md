@@ -16,7 +16,7 @@ inactividad además del TTL absoluto y bloqueo por intentos fallidos (por cuenta
 
 - `POST /platform/auth/logout` en `clinical-api` revoca la `Session` (`revoked = true`) y responde
   `204`; Route Handler `apps/web/app/api/auth/logout/route.ts` con `verificarOrigen()` (CSRF).
-- El guard (`resolverSesion`) aplica, además de `expires_at`, la inactividad
+- El guard (`resolverYTocarSesion`) aplica, además de `expires_at`, la inactividad
   `SESSION_IDLE_MINUTES` y actualiza `last_seen_at` en cada request válida.
 - Bloqueo por cuenta (`auth.user.failed_login_count` + `locked_until`) y por IP, ambos con
   `LOGIN_MAX_FAILED_ATTEMPTS` y `LOGIN_LOCKOUT_MINUTES` en configuración; la respuesta es siempre el

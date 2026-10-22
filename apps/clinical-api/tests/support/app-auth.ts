@@ -1,7 +1,7 @@
 import type { Router } from 'express';
 import type { Client } from 'pg';
 import { componerAplicacion } from '../../src/composition.js';
-import type { AuthConfig } from '../../src/config/index.js';
+import type { AuthConfig, SesionConfig } from '../../src/config/index.js';
 import type { Clock } from '../../src/infrastructure/clock.js';
 import type { Registrar } from '../../src/infrastructure/logger.js';
 import type { Consultador } from '../../src/modules/auth/auth.repository.js';
@@ -14,7 +14,17 @@ export const CONFIG_DE_TEST: AuthConfig = {
   argon2: ARGON2_DE_PRUEBA,
 };
 
+export const CONFIG_DE_SESION_DE_TEST: SesionConfig = {
+  idleMinutes: 30,
+  touchSeconds: 60,
+  loginMaxFailedAttempts: 5,
+  loginLockoutMinutes: 15,
+  trustProxyHops: 1,
+};
+
 export interface OpcionesAppDeTest {
+  /** Sobrescribe campos de `CONFIG_DE_SESION_DE_TEST`. */
+  sesion?: Partial<SesionConfig>;
   cliente: Client;
   /** Espacio de ids del archivo de test (los archivos comparten base y corren en paralelo). */
   espacio: number;
@@ -31,6 +41,7 @@ export function appConAuth(opciones: OpcionesAppDeTest) {
   return componerAplicacion({
     db: opciones.db ?? opciones.cliente,
     auth: CONFIG_DE_TEST,
+    sesion: { ...CONFIG_DE_SESION_DE_TEST, ...opciones.sesion },
     reloj: opciones.reloj,
     tokens: opciones.tokens,
     ids: generadorDeIds(opciones.espacio + 1000),
