@@ -17,6 +17,13 @@
     },
     {
       "regla": "complexity",
+      "archivo": "apps/clinical-api/src/modules/documents/documents.controller.ts",
+      "caduca": "2026-11-30",
+      "motivo": "llegó con la carga de documentos (módulo documents) tras la integración de origin/main; refactor en la historia de deuda",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "complexity",
       "archivo": "apps/clinical-api/src/modules/evidence-analysis/rag-query.adapter.ts",
       "caduca": "2026-11-30",
       "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
@@ -38,6 +45,13 @@
     },
     {
       "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/infrastructure/almacen-documentos.minio.ts",
+      "caduca": "2026-11-30",
+      "motivo": "llegó con la carga de documentos (módulo documents) tras la integración de origin/main; refactor en la historia de deuda",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
       "archivo": "apps/clinical-api/src/modules/auth/auth.controller.ts",
       "caduca": "2026-11-30",
       "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
@@ -55,6 +69,27 @@
       "archivo": "apps/clinical-api/src/modules/auth/auth.service.ts",
       "caduca": "2026-11-30",
       "motivo": "Preexistente del S1 al activar US-213a (2026-10-21); se refactoriza o se recalibra en la retro del S2",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/documents/documents.controller.ts",
+      "caduca": "2026-11-30",
+      "motivo": "llegó con la carga de documentos (módulo documents) tras la integración de origin/main; refactor en la historia de deuda",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/documents/documents.multipart.ts",
+      "caduca": "2026-11-30",
+      "motivo": "llegó con la carga de documentos (módulo documents) tras la integración de origin/main; refactor en la historia de deuda",
+      "historia": "L1D-263 (deuda D5: historia por registrar)"
+    },
+    {
+      "regla": "max-lines-per-function",
+      "archivo": "apps/clinical-api/src/modules/documents/documents.service.ts",
+      "caduca": "2026-11-30",
+      "motivo": "llegó con la carga de documentos (módulo documents) tras la integración de origin/main; refactor en la historia de deuda",
       "historia": "L1D-263 (deuda D5: historia por registrar)"
     },
     {
