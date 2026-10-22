@@ -351,30 +351,32 @@ sintéticos (US-036 AC-5).
 **Testable** ✓ cinco verificaciones sobre archivos del repo y un test unitario.
 *(Independent ⚠ depende de la agenda de los oncólogos asesores, SUP-4.)*
 
-## US-233 — La suite `evaluate` corre con los modelos locales y calibra el umbral de entailment y `RETRIEVAL_TOP_K`
+## US-233 — La suite `evaluate` corre con los modelos locales, calibra el umbral de entailment y `RETRIEVAL_TOP_K` y acota y calibra el juez local
 
 > Linear: pendiente (límite de issues del workspace; creada por el usuario el 2026-10-22, `[S2 resp. 16]`)
 
 `FEAT-T5a` · Sprint 4 *(deuda de ARR-03 / L1D-279, AC-1, AC-2 y AC-5)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · TBD-02 · M-07.2, M-10.1 · ↪ US-072 (L1D-235), US-073 (L1D-236), US-117 y US-120 (corpus de ≥ 20 documentos por tipo) · 🔗 Origen: ARR-03 cerró en el S2 solo con adaptadores falsos; el procedimiento está en `openspec/changes/l1d-235-suite-evaluate/design.md` D21
 
 ## Story
-Como responsable de calidad de IA, quiero que la suite `evaluate` acepte `proveedor: local` con el NLI, el reranker, los *embeddings* y el generador reales (Ollama), y calibrar con ellos el umbral de entailment y `RETRIEVAL_TOP_K` sobre el corpus ampliado, para que la fidelidad, la precisión de citas y el lenguaje no prescriptivo se midan con modelos reales antes de G-Demo y no solo con adaptadores falsos.
+Como responsable de calidad de IA, quiero que la suite `evaluate` acepte `proveedor: local` con el NLI, el reranker, los *embeddings* y el generador reales (Ollama), un juez local secundario acotado y medido contra el NLI y el humano, y calibrar con ellos el umbral de entailment y `RETRIEVAL_TOP_K` sobre el corpus ampliado, para que la fidelidad, la precisión de citas y el lenguaje no prescriptivo se midan con modelos reales antes de G-Demo y no solo con adaptadores falsos.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path · reporte con modelos reales)** · Dada la suite de US-072 con `proveedor: local` y los pesos de ADR-39 en el MacBook de referencia, cuando se ejecuta `evaluate`, entonces escribe un reporte en `reports/eval/` con fidelidad, precisión de citas y «sin evidencia» frente a las metas de TBD-02, con la configuración y los modelos usados. `[ARR-03 AC-1]` `[M-07.2]`
 - **AC-2 (borde · lenguaje no prescriptivo con el LLM real)** · Dado el generador real, cuando se evalúa la propuesta cruda y la salida mostrada, entonces las salidas prescriptivas mostradas son 0 y se anota cuántas propuestas crudas el filtro corrigió; incluye los casos de RN-23 fuera del nivel A del S2. `[ARR-03 AC-2]` `[RN-23]`
 - **AC-3 (borde · calibración)** · Dado el corpus del S4 (≥ 20 documentos por tipo, US-120), cuando se barren `NLI_ENTAILMENT_THRESHOLD` y `RETRIEVAL_TOP_K`, entonces los valores definitivos quedan en configuración con su justificación y el reporte del barrido; los provisionales (0,7 y 30) se sustituyen. `[ARR-03 AC-5]` `[RN-22]`
 - **AC-4 (invariante · RN-12 y RN-14)** · Dado `proveedor: local`, cuando se ejecuta, entonces ningún request sale de la máquina (host local cerrado en código), el dataset sigue siendo sintético y el archivo de resultados solo contiene métricas agregadas. `[RN-12]` `[RN-14]`
+- **AC-6 (borde · juez local secundario acotado y calibrado)** · Dado el juez LLM local (G por Ollama `/v1`, `temperature = 0` y semilla en configuración), cuando juzga una afirmación, entonces recibe **una sola afirmación y solo los fragmentos que cita** (sin la respuesta completa ni el modelo que la generó), con una rúbrica binaria y tres ejemplos (soportada, no soportada, parcial = no soportada), y responde JSON `{"veredicto": "soportada|no_soportada", "cita": "<id del fragmento>"}`; un veredicto sin cita existente o JSON inválido cuenta como no soportado y se contabiliza. `[ADR-41]` `[RN-12]`
+- **AC-7 (borde · acuerdo medido, nunca promediado)** · Dados los veredictos del NLI y del juez local sobre el mismo conjunto, y la muestra revisada por el oncólogo cuando exista (DEC-06, S4), cuando se genera el reporte, entonces incluye el acuerdo juez↔NLI y juez↔humano (porcentaje y kappa de Cohen) y lista las discrepancias; el NLI sigue siendo el juez principal y el juez local nunca se promedia con él ni decide solo. Si el acuerdo queda por debajo de `JUEZ_ACUERDO_MINIMO` (configuración, RN-22), el reporte marca la fidelidad del juez como «no concluyente». `[ADR-41]` (asumido el umbral)
 - **AC-5 (borde · NO-EJECUTABLE explícito)** · Dado un entorno sin los pesos, cuando se pide `proveedor: local`, entonces la suite termina con código ≠ 0 nombrando qué falta, y nunca marca PASS ni inventa cifras. `[OL-06]`
 
 ## Contexto técnico
-Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings* BGE-M3 por ONNX, generador por Ollama `/v1`) detrás de `proveedor: local`, reutilizando los de producción y el registro de llamadas que mide `llamadas_nube_datos_reales` (hoy solo cubre al juez). Hallazgos del S2 a incorporar: el prompt `rag-query@0.2.0` no fuerza «La fuente [cita] describe que…»; el filtro de producción solo cubre el nivel A; alias de Ollama (`ollama cp x:cloud`) sin guarda de nube. La ejecución es manual en el MacBook de referencia (modelos en `~/adr39-modelos/`); la CI sigue con adaptadores falsos.
+Cablear en `app/evaluation/` los adaptadores reales (NLI mDeBERTa, reranker y *embeddings* BGE-M3 por ONNX, generador por Ollama `/v1`) detrás de `proveedor: local`, reutilizando los de producción y el registro de llamadas que mide `llamadas_nube_datos_reales` (hoy solo cubre al juez). Juez local (decisión del usuario, 2026-10-22, `[S2 resp. 17]`): se reutiliza G con un prompt especializado y acotado (AC-6) y se mide su acuerdo (AC-7); un juez de nube queda **descartado** por el ADR-41 (una sola ruta de juez, RN-12), aunque los datos sean sintéticos. Hallazgos del S2 a incorporar: el prompt `rag-query@0.2.0` no fuerza «La fuente [cita] describe que…»; el filtro de producción solo cubre el nivel A; alias de Ollama (`ollama cp x:cloud`) sin guarda de nube. La ejecución es manual en el MacBook de referencia (modelos en `~/adr39-modelos/`); la CI sigue con adaptadores falsos.
 
 ## Non-goals
 Nuevas familias de métricas (OCR, eventos, terminología, faltantes: FEAT-T5b). Metas definitivas (DEC-07, US-017).
 
 ## INVEST
-**Small** ✓ cableado de adaptadores existentes y dos ejecuciones.
+**Small** ⚠ cableado de adaptadores existentes, dos ejecuciones y la calibración del juez (el adaptador del juez ya existe, `juez_fidelidad.py`); si pasa de 5, separar la calibración del juez en una historia hermana.
 **Testable** ✓ el reporte y los valores de configuración se comprueban en el repo; el rechazo sin pesos es un test.
 
 ---
