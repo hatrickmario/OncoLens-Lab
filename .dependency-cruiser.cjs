@@ -11,7 +11,8 @@ const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const exceptuados = (regla) =>
   excepciones.filter((e) => e.regla === regla).map((e) => `^${escaparRegex(e.archivo)}$`);
 
-const DATOS_CLINICAL_API = '(^|/)@prisma/|\\.repository\\.ts$|/infrastructure/database\\.ts$';
+const DATOS_CLINICAL_API =
+  '(^|/)@prisma/|(^|/)node_modules/pg/|\\.repository\\.ts$|/infrastructure/database\\.ts$';
 
 module.exports = {
   forbidden: [
@@ -41,7 +42,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^apps/web/components/', pathNot: exceptuados('componentes-sin-datos') },
       to: {
-        path: '(^|/)@prisma/|(node_modules/|\\.\\./)(axios|undici|node-fetch|ky|got|pg)/|^apps/web/lib/server/|^packages/api-contracts/src/client/',
+        path: '(^|/)@prisma/|(^|/)node_modules/(axios|undici|node-fetch|ky|got|pg)/|^apps/web/lib/server/|^packages/api-contracts/src/client/',
       },
     },
     {
@@ -77,7 +78,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: '(^|/)(node_modules|dist|\\.next|coverage)/' },
+    exclude: { path: '(^|/)(dist|\\.next|coverage)/' },
     tsPreCompilationDeps: true,
     enhancedResolveOptions: {
       exportsFields: ['exports'],
