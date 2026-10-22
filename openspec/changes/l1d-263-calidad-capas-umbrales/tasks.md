@@ -14,8 +14,8 @@
 
 ## 2. ai-services
 
-- [ ] 2.1 `import-linter` (versión exacta en `requirements-dev.txt`) y `.importlinter` con `dominio-independiente` y `capas-hexagonales` · fixture [US-213 AC-3]
-- [ ] 2.2 `scripts/quality/sync-ruff-thresholds` genera `[tool.ruff.lint.mccabe]` y `[tool.ruff.lint.pylint]` desde `quality-thresholds.json`; la CI comprueba la sincronía · fixture [US-213 AC-5, AC-6]
+- [x] 2.1 `import-linter` (versión exacta en `requirements-dev.txt`) y `.importlinter` con `dominio-independiente` y `capas-hexagonales` · fixture [US-213 AC-3]
+- [x] 2.2 `scripts/quality/sync-ruff-thresholds` genera `[tool.ruff.lint.mccabe]` y `[tool.ruff.lint.pylint]` desde `quality-thresholds.json`; la CI comprueba la sincronía · fixture [US-213 AC-5, AC-6]
 
 ## 3. Cierre
 
