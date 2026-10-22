@@ -37,7 +37,7 @@ arrancar({
   exit: (codigo) => process.exit(codigo),
   cargarServicios: cargarEtapaDeServicios,
   listen: (puerto, arranque, servicios) => {
-    const { configuracion, catalogo, clavesDeIdentidad } = servicios;
+    const { configuracion, catalogo, clavesDeIdentidad, tiposHabilitados } = servicios;
     // La lista de campos redactados es la base cerrada del logger más los extra de configuración (RN-10, RN-22).
     const registrar = crearRegistrador((linea) => console.info(linea), {
       camposSensiblesExtra: arranque.logs.camposSensiblesExtra,
@@ -66,6 +66,8 @@ arrancar({
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
           },
+          tiposHabilitados,
+          alcanceDelCorpus: configuracion.alcance,
           reloj,
           traceIds: { traceId: nuevoTraceId },
           idsDeAnalisis: randomUUID,

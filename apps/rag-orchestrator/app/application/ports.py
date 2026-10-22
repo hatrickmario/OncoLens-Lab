@@ -198,6 +198,10 @@ class CatalogoClinico(Protocol):
         """Versión efectiva del catálogo montado (la de su ``manifest.json``)."""
         ...
 
+    def tipos_de_cancer(self) -> tuple[str, ...]:
+        """Tipos de cáncer que declara el manifiesto (``cancerTypes``): contra ellos se valida ``ENABLED_CANCER_TYPES``."""
+        ...
+
 
 class CorpusCatalogReader(Protocol):
     """Fichas de fuente del catálogo (schema ``corpus``, rol ``rag_corpus``) para copiar los metadatos de las citas (RN-04)."""

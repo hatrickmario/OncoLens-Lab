@@ -329,13 +329,21 @@ class CatalogoFalso:
 class CatalogoClinicoFalso:
     """``CatalogoClinico`` en memoria: la versión montada y las veces que se consultó (misma forma que el adapter)."""
 
-    def __init__(self, version: str = VERSION_DEL_CATALOGO_MONTADO) -> None:
+    def __init__(
+        self,
+        version: str = VERSION_DEL_CATALOGO_MONTADO,
+        tipos: tuple[str, ...] = ("mama", "prostata"),
+    ) -> None:
         self._version = version
+        self._tipos = tipos
         self.consultas = 0
 
     def version(self) -> str:
         self.consultas += 1
         return self._version
+
+    def tipos_de_cancer(self) -> tuple[str, ...]:
+        return self._tipos
 
 
 class DetectorIdiomaFalso:
@@ -374,6 +382,7 @@ PARAMETROS_DE_PRUEBA = ParametrosDeRecuperacion(
     llm_provider=LlmProvider.local,
     llm_model="llm-test@1",
     nli_entailment_threshold=0.7,
+    tipos_habilitados=("mama", "prostata"),
 )
 
 

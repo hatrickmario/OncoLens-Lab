@@ -273,6 +273,29 @@ describe('docker-compose.yml · clinical-seed (one-shot de L1D-169)', () => {
     expect(entorno.ANALYSIS_BASIS_S1_ASSUMPTION_TEXT).toBe('');
   });
 
+  it('pasa a clinical-api los tipos habilitados y las claves del corpus con valores de demo y respeta lo que define el llamador [L1D-173 US-043]', () => {
+    const porDefecto = resolver().services['clinical-api'].environment;
+    const definido = resolver({
+      entorno: { ENABLED_CANCER_TYPES: 'mama', CORPUS_CUTOFF_DATE: '2026-10-01' },
+    }).services['clinical-api'].environment;
+
+    expect(porDefecto.ENABLED_CANCER_TYPES).toBe('mama,prostata');
+    expect(porDefecto.CORPUS_EXCLUDED_SOURCES).toBe('NCCN,ESMO');
+    expect(porDefecto.CORPUS_CUTOFF_DATE).toBe('2026-09-30');
+    expect(definido.ENABLED_CANCER_TYPES).toBe('mama');
+    expect(definido.CORPUS_CUTOFF_DATE).toBe('2026-10-01');
+  });
+
+  it('pasa a rag-orchestrator los tipos habilitados con el mismo valor de demo que clinical-api y respeta lo que define el llamador [L1D-173 US-043 AC-4]', () => {
+    const porDefecto = resolver().services['rag-orchestrator'].environment;
+    const definido = resolver({ entorno: { ENABLED_CANCER_TYPES: 'mama' } }).services['rag-orchestrator']
+      .environment;
+
+    expect(porDefecto.ENABLED_CANCER_TYPES).toBe('mama,prostata');
+    expect(porDefecto.ENABLED_CANCER_TYPES).toBe(resolver().services['clinical-api'].environment.ENABLED_CANCER_TYPES);
+    expect(definido.ENABLED_CANCER_TYPES).toBe('mama');
+  });
+
   it('monta config/pii-formats.json de solo lectura en clinical-api y le pasa las rutas de desidentificación [L1D-203 RN-11]', () => {
     const servicio = resolver().services['clinical-api'];
     const formatos = (servicio.volumes ?? []).find((volumen) => /config\/pii-formats\.json$/.test(volumen.source ?? ''));
