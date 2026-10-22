@@ -3,3 +3,11 @@ line-length = 100
 target-version = "py313"
 # Pydantic generado desde el openapi.yaml: reformatearlo rompería contracts:generate:check.
 extend-exclude = ["app/schemas/generated"]
+
+# >>> umbrales generados desde quality-thresholds.json (no editar: node scripts/quality/sync-ruff-thresholds.mjs)
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-statements = 50
+# <<< umbrales generados

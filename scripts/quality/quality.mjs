@@ -3,7 +3,7 @@
 // con el peor código. Con `--reporte` escribe reports/quality/latest.json (ignorado por git).
 // `--umbrales <ruta>` apunta a otro quality-thresholds.json (los tests de la CI lo usan).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
@@ -16,6 +16,7 @@ import {
   ordenar,
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
+import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { excepcionesVigentes, leerUmbrales } from './umbrales.mjs';
 
 function leerArgumento(nombre) {
@@ -101,6 +102,24 @@ function ejecutarRuff() {
   return desdeRuff(JSON.parse(resultado.stdout || '[]'), RAIZ);
 }
 
+/** Los umbrales de Ruff viven en quality-thresholds.json; un pyproject desfasado falla (AC-6, tarea 2.2). */
+function verificarUmbralesDeRuff(umbrales) {
+  const archivo = `${RAG}/pyproject.toml`;
+  if (estaSincronizado(readFileSync(path.join(RAIZ, archivo), 'utf8'), umbrales)) return [];
+  return [
+    {
+      tool: 'sync-ruff-thresholds',
+      rule: 'umbrales-ruff-sincronizados',
+      file: archivo,
+      line: null,
+      symbol: 'ejecuta node scripts/quality/sync-ruff-thresholds.mjs',
+      measured: null,
+      threshold: null,
+      severity: 'error',
+    },
+  ];
+}
+
 /** import-linter corre solo si rag-orchestrator ya declara sus contratos (.importlinter, tarea 2.1). */
 function ejecutarImportLinter() {
   if (!existsSync(path.join(RAIZ, RAG, '.importlinter'))) return { hallazgos: [], pendiente: true };
@@ -115,6 +134,7 @@ async function medir(umbrales) {
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
     ...ejecutarDependencyCruiser(),
+    ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...importLinter.hallazgos,
   ];

@@ -14,8 +14,8 @@ const PYPROJECT_BASE = '[tool.ruff]\nline-length = 100\n';
 /** Función con 11 ramas independientes: complejidad ciclomática 11. */
 const FUNCION_COMPLEJIDAD_11 = `def decidir(x):\n${Array.from({ length: 10 }, (_, i) => `    if x == ${i}:\n        return ${i}`).join('\n')}\n    return -1\n`;
 
-/** Función con 51 sentencias simples (más el retorno): supera PLR0915 = 50. */
-const FUNCION_51_SENTENCIAS = `def larga():\n${Array.from({ length: 50 }, (_, i) => `    v${i} = ${i}`).join('\n')}\n    return v0\n`;
+/** Función con 51 asignaciones (Ruff no cuenta el `return`): supera PLR0915 = 50. */
+const FUNCION_51_SENTENCIAS = `def larga():\n${Array.from({ length: 51 }, (_, i) => `    v${i} = ${i}`).join('\n')}\n    return v0\n`;
 
 /** Ejecuta Ruff como lo hace `npm run quality` (solo C901 y PLR0915) sobre un directorio con pyproject y código. */
 function medir(pyproject, codigo) {
