@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.evaluation.config_suite import PROVEEDORES, RELOJES, SUITES
 from app.evaluation.cronometro import ETAPAS
 from app.evaluation.fuente_dataset import CLASES_ADMITIDAS
-from app.evaluation.reporte import Enumerado, Identificador, Numero, Objeto
+from app.evaluation.reporte import Enumerado, Huella, Identificador, Numero, Objeto
 from app.evaluation.rotulo import ROTULOS
 
 VERSION_ESQUEMA = "oncolens.evaluate.v1"
@@ -61,7 +61,7 @@ _UMBRALES = Objeto(
 _CONFIGURACION = Objeto(
     {
         "nombre": Identificador(),
-        "hashConfig": Identificador(),
+        "hashConfig": Huella(),
         "fixture": Identificador(),
         "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
         "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),

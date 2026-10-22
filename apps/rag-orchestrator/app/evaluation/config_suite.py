@@ -32,6 +32,15 @@ class Umbrales:
 
 
 @dataclass(frozen=True)
+class Barrido:
+    """``RELEVANCE_THRESHOLD_GRID`` y la regla D1 del barrido (US-073); el umbral de referencia no cambia al fijar el elegido."""
+
+    grilla: tuple[float, ...]
+    umbral_de_referencia: float
+    tolerancia_recall: float
+
+
+@dataclass(frozen=True)
 class ConfigSuite:
     nombre: str
     fixture: str
@@ -48,6 +57,7 @@ class ConfigSuite:
     catalogo_version: str
     ruta_terminos: Path
     hash_config: str
+    barrido: Barrido | None = None
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -74,6 +84,22 @@ def _en(valor: str, permitidos: tuple[str, ...], clave: str) -> str:
 def _ruta_del_repo(valor: str) -> Path:
     ruta = Path(valor)
     return ruta if ruta.is_absolute() else raiz_repo() / ruta
+
+
+def _barrido_de(crudo: dict[str, Any]) -> Barrido | None:
+    seccion = crudo.get("barrido")
+    if seccion is None:
+        return None
+    grilla = tuple(float(v) for v in _clave(seccion, "relevance_threshold_grid"))
+    referencia = float(_clave(seccion, "umbral_de_referencia"))
+    tolerancia = float(_clave(seccion, "tolerancia_recall"))
+    if not grilla or any(not 0.0 <= v <= 1.0 for v in grilla):
+        raise ConfigInvalida("barrido.relevance_threshold_grid debe tener valores en [0, 1]")
+    if referencia not in grilla:
+        raise ConfigInvalida("barrido.umbral_de_referencia debe estar en la grilla")
+    if not 0.0 <= tolerancia <= 1.0:
+        raise ConfigInvalida("barrido.tolerancia_recall debe estar en [0, 1]")
+    return Barrido(grilla, referencia, tolerancia)
 
 
 def cargar_config_suite(ruta: Path) -> ConfigSuite:
@@ -112,4 +138,5 @@ def cargar_config_suite(ruta: Path) -> ConfigSuite:
         catalogo_version=str(_clave(crudo, "catalogo", "version")),
         ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
         hash_config=huella_de_config(crudo),
+        barrido=_barrido_de(crudo),
     )
