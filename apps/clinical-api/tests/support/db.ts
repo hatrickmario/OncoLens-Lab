@@ -87,6 +87,19 @@ export async function conectar(url: URL | string): Promise<Client> {
   return cliente;
 }
 
+/**
+ * URL de la misma base de test con las credenciales de un rol de aplicación (p. ej. `research_writer`). La contraseña
+ * se lee del archivo que indica `variableDelArchivo` (secreto del perfil test): si falta, el arnés falla nombrando la
+ * variable. La URL contiene la contraseña: no se imprime.
+ */
+export function urlComoRol(urlBase: string, usuario: string, variableDelArchivo: string): string {
+  const archivo = exigirVariable(process.env, variableDelArchivo);
+  const url = new URL(urlBase);
+  url.username = usuario;
+  url.password = readFileSync(archivo, 'utf8').trim();
+  return url.toString();
+}
+
 export interface ResultadoPrisma {
   readonly codigo: number | null;
   readonly salida: string;

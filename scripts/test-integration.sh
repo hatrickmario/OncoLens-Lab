@@ -26,6 +26,10 @@ export CHECKPOINT_DISABLE=1
 export PG_TEST_DB_PREFIX="${PG_TEST_DB_PREFIX:-oltest_}"
 export TEST_DATABASE_URL="postgresql://oncolens_test_admin:${contrasena}@127.0.0.1:${PG_TEST_PORT:-55432}/postgres?sslmode=require"
 
+# Contraseña de research_writer (US-040 AC-6): el test se conecta como ese rol para probar su solo-inserción. Solo la
+# ruta del archivo viaja en el entorno, nunca el valor.
+export PG_RESEARCH_WRITER_PASSWORD_FILE="${PG_RESEARCH_WRITER_PASSWORD_FILE:-$secretos/pg_research_writer_password}"
+
 # Contraseñas SINTÉTICAS de las cuentas de test de sesión (US-211): se generan en cada ejecución, viven solo en el
 # entorno del proceso hijo y nunca se imprimen ni se versionan (RN-13, RN-14). Si ya vienen del entorno, se respetan.
 export TEST_DOC1_PASSWORD="${TEST_DOC1_PASSWORD:-SINT-$(openssl rand -hex 16)}"

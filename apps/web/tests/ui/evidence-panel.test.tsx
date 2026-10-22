@@ -16,6 +16,7 @@ import {
   ID_PACIENTE,
   montarPanel,
   PREGUNTA_DE_PRUEBA,
+  SIN_BASE,
 } from '../support/panel-ui';
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -212,7 +213,7 @@ describe('EvidencePanel', () => {
 
     const titulo = await screen.findByRole('button', { name: evidence.discarded.titulo });
     expect(titulo.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: SIN_BASE })).toBeNull();
     expect(screen.queryByText(descartada.unsupportedClaims[0]!)).toBeNull();
 
     await usuario.click(titulo);

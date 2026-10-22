@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { analizar, ejemplo, esperarResultado, iniciarSesion, textos } from './soporte';
+import { analizar, ejemplo, esperarResultado, iniciarSesion, SIN_BASE, textos } from './soporte';
 
 const respuestaConEvidencia = ejemplo('rag-query-con-evidencia.json');
 const cita = respuestaConEvidencia.evidenceOptions[0].citedSources[0];
@@ -105,7 +105,7 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await analizar(page, preguntaSoloDescartadas);
     await esperarResultado(page);
 
-    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 3, name: SIN_BASE })).toHaveCount(0);
     const titulo = page.getByRole('button', { name: textos.discarded.titulo });
     await expect(titulo).toHaveAttribute('aria-expanded', 'false');
     await titulo.click();

@@ -21,7 +21,9 @@ export interface LineaDeRegistro {
     // Status que el contrato no declara para la operación, o cuerpo que no cumple el schema de su status.
     | 'cuerpo_no_conforme'
     | 'content_type'
-    | 'sin_cookie_de_sesion';
+    | 'sin_cookie_de_sesion'
+    // El login no recibió la IP firmada del socket (petición atendida antes de instalar el wrapper): falla cerrado.
+    | 'sin_ip_del_cliente';
 }
 
 export type Registrar = (linea: LineaDeRegistro) => void;

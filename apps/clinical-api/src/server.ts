@@ -85,6 +85,7 @@ arrancar({
         const app = componerAplicacion({
           db: pool,
           auth: arranque.auth,
+          sesion: arranque.sesion,
           reloj,
           tokens: crearGeneradorDeToken(),
           ids: randomUUID,
