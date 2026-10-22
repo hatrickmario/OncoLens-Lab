@@ -1,5 +1,5 @@
 import type { Biomarker } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { formatearFecha, textoDeOrigen } from '../../lib/ficha/presentacion';
+import { formatearFecha, textoDeConfianza, textoDeOrigen } from '../../lib/ficha/presentacion';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import { SeccionDeFicha } from '../molecules/fila-de-ficha';
 
@@ -24,7 +24,12 @@ function FilaDeBiomarcador({ b }: { b: Biomarker }) {
       <td className={CELDA}>{b.referenceRange ?? noRegistrado}</td>
       <td className={CELDA}>{b.trend ?? biomarcadores.sinTendencia}</td>
       <td className={CELDA}>{significancia[b.clinicalSignificance]}</td>
-      <td className={CELDA}>{textoDeOrigen(b.provenance)}</td>
+      <td className={CELDA}>
+        <span>{textoDeOrigen(b.provenance)}</span>
+        <span className="text-text-muted block text-sm">
+          {textoDeConfianza(b.provenance.extractionConfidence)}
+        </span>
+      </td>
     </tr>
   );
 }

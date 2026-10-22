@@ -13,6 +13,7 @@ import {
   crearSdkClinicalApi,
   type SdkClinicalApi,
 } from './clinical-api';
+import { leerJson, traceIdDe } from '../pacientes/respuesta';
 import { dependenciasDeEntorno, type DependenciasDelBff } from './dependencias';
 
 export type ResultadoDeFicha =
@@ -23,32 +24,20 @@ export type ResultadoDeFicha =
 
 const EVENTO = 'patients.ficha';
 
-function traceIdDe(texto: string, cabecera: string | null): string | undefined {
-  try {
-    const delCuerpo = (JSON.parse(texto) as { traceId?: unknown }).traceId;
-    if (typeof delCuerpo === 'string') return delCuerpo;
-  } catch {
-    // cuerpo no JSON: se usa la cabecera
-  }
-  return cabecera ?? undefined;
-}
-
-function interpretar(status: number, texto: string, cabecera: string | null): ResultadoDeFicha {
+function interpretarRespuestaDeFicha(
+  status: number,
+  texto: string,
+  cabecera: string | null,
+): ResultadoDeFicha {
   if (status === 401) return { tipo: 'no_autenticado' };
   if (status === 404) return { tipo: 'no_encontrada' };
-  const leida = status === 200 ? zGetPatientResponse.safeParse(safeJson(texto)) : null;
-  if (leida?.success)
+  const cuerpo = leerJson(texto);
+  const leida = status === 200 ? zGetPatientResponse.safeParse(cuerpo) : null;
+  if (leida?.success) {
     return { tipo: 'ok', ficha: leida.data as PatientSummary | PatientAdminSummary };
-  const traceId = traceIdDe(texto, cabecera);
-  return { tipo: 'error', ...(traceId !== undefined && { traceId }) };
-}
-
-function safeJson(texto: string): unknown {
-  try {
-    return JSON.parse(texto);
-  } catch {
-    return null;
   }
+  const traceId = traceIdDe(cuerpo, cabecera);
+  return { tipo: 'error', ...(traceId !== undefined && { traceId }) };
 }
 
 async function pedirFicha(sdk: SdkClinicalApi, id: string): Promise<Response | undefined> {
@@ -82,8 +71,9 @@ export async function obtenerFicha(
   const sdk = crearSdkClinicalApi(dependencias.config, { request, fetch: dependencias.fetch });
   const clasificada = clasificarRespuestaDeClinicalApi(sdk, await pedirFicha(sdk, id));
   if ('fallo' in clasificada) {
-    dependencias.registrar({ event: EVENTO, status: 502, traceId: dependencias.nuevoTraceId() });
-    return { tipo: 'error' };
+    const traceId = dependencias.nuevoTraceId();
+    dependencias.registrar({ event: EVENTO, status: 502, traceId });
+    return { tipo: 'error', traceId };
   }
   const { respuesta, cuerpoCrudo } = clasificada;
   const trace = respuesta.headers.get('x-trace-id');
@@ -92,5 +82,5 @@ export async function obtenerFicha(
     status: respuesta.status,
     ...(trace && { traceId: trace }),
   });
-  return interpretar(respuesta.status, cuerpoCrudo, trace);
+  return interpretarRespuestaDeFicha(respuesta.status, cuerpoCrudo, trace);
 }

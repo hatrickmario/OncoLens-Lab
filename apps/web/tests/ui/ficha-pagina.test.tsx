@@ -226,20 +226,23 @@ describe('FichaPage', () => {
   });
 
   it('muestra la confianza de extracción en texto en el origen de cada biomarcador [US-051 AC-5]', async () => {
-    const sinConfianza = {
+    const sinExtraccion = {
       ...biomarcadorManualPorRevisar,
-      provenance: { ...biomarcadorManualPorRevisar.provenance, extractionConfidence: null },
+      provenance: {
+        ...biomarcadorManualPorRevisar.provenance,
+        extractionConfidence: 'n_a' as const,
+      },
     };
     const resumen = {
       ...fichaDelDoctor,
-      recentBiomarkers: [...fichaDelDoctor.recentBiomarkers, sinConfianza],
+      recentBiomarkers: [...fichaDelDoctor.recentBiomarkers, sinExtraccion],
     };
     clinicalApi.responder({ status: 200, cuerpo: resumen });
 
     await abrirFicha();
 
     expect(within(fila('HER2')).getByText('Confianza de extracción: alta')).toBeTruthy();
-    expect(within(fila('^RE ')).getByText('Confianza de extracción: No registrado')).toBeTruthy();
+    expect(within(fila('^RE ')).getByText('Confianza de extracción: no aplica')).toBeTruthy();
   });
 
   it('muestra solo el documento enmascarado y ningún dato clínico cuando la vista es la del administrador [US-045 AC-6]', async () => {

@@ -292,6 +292,19 @@
       "sinVerificarUno": "1 dato sin verificar · no bloquea el análisis",
       "sinVerificarN": "{n} datos sin verificar · no bloquean el análisis"
     },
+    "gradacion": {
+      "gleason_isup": "Gleason {primario}+{secundario}={puntaje} · ISUP {isup}",
+      "nottingham": "Nottingham grado {grado}"
+    },
+    "confianza": {
+      "etiqueta": "Confianza de extracción: {valor}",
+      "valores": {
+        "alta": "alta",
+        "media": "media",
+        "baja": "baja",
+        "n_a": "no aplica"
+      }
+    },
     "acciones": {
       "analizar": "Analizar evidencia"
     },

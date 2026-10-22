@@ -16,9 +16,29 @@ export function textoDeOrigen(procedencia: Provenance): string {
   return `${mensajes().ficha.origen[procedencia.entryMethod]} · ${textoDeRevision(procedencia)}`;
 }
 
+type SistemaDeGradacion = DiagnosisGrading['gradingSystem'];
+
+/** Campos que exige la plantilla de cada sistema; si falta alguno no se pinta el valor (nunca "null"). */
+const CAMPOS_DE_GRADACION: Record<
+  SistemaDeGradacion,
+  (g: DiagnosisGrading) => Record<string, number | null>
+> = {
+  gleason_isup: (g) => ({
+    primario: g.gleasonPrimaryPattern,
+    secundario: g.gleasonSecondaryPattern,
+    puntaje: g.gleasonScore,
+    isup: g.isupGradeGroup,
+  }),
+  nottingham: (g) => ({ grado: g.nottinghamGrade }),
+};
+
 function valorDeGradacion(g: DiagnosisGrading): string {
-  if (g.gradingSystem === 'nottingham') return `Nottingham grado ${g.nottinghamGrade}`;
-  return `Gleason ${g.gleasonPrimaryPattern}+${g.gleasonSecondaryPattern}=${g.gleasonScore} · ISUP ${g.isupGradeGroup}`;
+  const { gradacion, noRegistrado } = mensajes().ficha;
+  if (!Object.hasOwn(CAMPOS_DE_GRADACION, g.gradingSystem)) return noRegistrado;
+  const campos = CAMPOS_DE_GRADACION[g.gradingSystem](g);
+  return Object.values(campos).some((v) => v === null)
+    ? noRegistrado
+    : rellenar(gradacion[g.gradingSystem], campos as Record<string, number>);
 }
 
 /** Una gradación con su espécimen y alcance si los tiene ("Prostatectomía · Global: Gleason 4+3=7 · ISUP 3"). */
@@ -32,9 +52,14 @@ export function describirGradacion(g: DiagnosisGrading): string {
   return contexto.length === 0 ? valor : `${contexto.join(' · ')}: ${valor}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- esqueleto del rojo
-export function textoDeConfianza(_valor: string | null | undefined): string {
-  throw new Error('no implementado');
+/** Confianza de extracción en texto ("Confianza de extracción: alta"); ausente → "No registrado" (dato del paciente). */
+export function textoDeConfianza(valor: string | null | undefined): string {
+  const { confianza, noRegistrado } = mensajes().ficha;
+  const texto =
+    valor && Object.hasOwn(confianza.valores, valor)
+      ? confianza.valores[valor as keyof typeof confianza.valores]
+      : noRegistrado;
+  return rellenar(confianza.etiqueta, { valor: texto });
 }
 
 /** Aviso informativo "[n] datos …" con singular y plural; `claveUno` y `claveN` son de `ficha.avisos`. */

@@ -7,7 +7,7 @@ export type ResultadoDePacientes =
   | { tipo: 'no_autenticado' }
   | { tipo: 'error'; traceId?: string };
 
-function leerJson(texto: string): unknown {
+export function leerJson(texto: string): unknown {
   try {
     return JSON.parse(texto);
   } catch {
@@ -15,7 +15,7 @@ function leerJson(texto: string): unknown {
   }
 }
 
-function traceIdDe(cuerpo: unknown, cabecera: string | null): string | undefined {
+export function traceIdDe(cuerpo: unknown, cabecera: string | null): string | undefined {
   const delCuerpo = (cuerpo as { traceId?: unknown } | null)?.traceId;
   if (typeof delCuerpo === 'string') return delCuerpo;
   return cabecera ?? undefined;

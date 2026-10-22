@@ -16,6 +16,7 @@ export function FichaDelDoctor({ ficha }: { ficha: PatientSummary }) {
       <PendingReviewNotice
         porRevisar={ficha.pendingReviewCount}
         sinVerificar={contarSinVerificar(ficha)}
+        fueraDeAlcance={!ficha.cancerTypeEnabled}
       />
       <PatientSummaryCard ficha={ficha} />
       <ActiveDiagnosisTable diagnostico={ficha.diagnosis} />
