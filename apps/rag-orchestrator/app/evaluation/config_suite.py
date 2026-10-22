@@ -1,0 +1,115 @@
+"""Carga tipada de la configuración de la suite `evaluate` (``eval/configs/<cfg>.yaml``, RN-22) y su huella (AC-2)."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from app.evaluation.rutas import raiz_repo
+
+SUITES = ("retrieval", "generation", "all")
+SUITE_COMPLETA = "all"
+PROVEEDORES = ("fake", "local")
+RELOJES = ("simulado", "real")
+SUBCONJUNTOS = ("desarrollo", "validacion", "prueba")
+
+
+class ConfigInvalida(ValueError):
+    """La configuración no es utilizable; el mensaje nombra la clave, nunca su valor."""
+
+
+@dataclass(frozen=True)
+class Umbrales:
+    relevance_threshold: float
+    nli_entailment_threshold: float
+    retrieval_top_k: int
+    rerank_top_n: int
+
+
+@dataclass(frozen=True)
+class ConfigSuite:
+    nombre: str
+    fixture: str
+    dataset: Path
+    subconjunto: str | None
+    particion: Path | None
+    semilla_bootstrap: int
+    bootstrap_repeticiones: int
+    reloj: str
+    proveedor: str
+    urls: dict[str, str]
+    llm_modelo: str
+    umbrales: Umbrales
+    catalogo_version: str
+    ruta_terminos: Path
+    hash_config: str
+
+
+def huella_de_config(crudo: dict[str, Any]) -> str:
+    """SHA-256 del YAML cargado, serializado de forma canónica (claves ordenadas, sin espacios)."""
+    canonico = json.dumps(crudo, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(canonico.encode("utf-8")).hexdigest()
+
+
+def _clave(crudo: dict[str, Any], *ruta: str) -> Any:
+    valor: Any = crudo
+    for parte in ruta:
+        if not isinstance(valor, dict) or parte not in valor:
+            raise ConfigInvalida(f"falta la clave {'.'.join(ruta)}")
+        valor = valor[parte]
+    return valor
+
+
+def _en(valor: str, permitidos: tuple[str, ...], clave: str) -> str:
+    if valor not in permitidos:
+        raise ConfigInvalida(f"la clave {clave} debe ser una de {', '.join(permitidos)}")
+    return valor
+
+
+def _ruta_del_repo(valor: str) -> Path:
+    ruta = Path(valor)
+    return ruta if ruta.is_absolute() else raiz_repo() / ruta
+
+
+def cargar_config_suite(ruta: Path) -> ConfigSuite:
+    try:
+        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        raise ConfigInvalida("la configuración no se pudo leer") from None
+    if not isinstance(crudo, dict):
+        raise ConfigInvalida("la configuración no es un mapa YAML")
+    umbrales = _clave(crudo, "umbrales")
+    dataset = _clave(crudo, "dataset")
+    sub = dataset.get("subconjunto")
+    particion = dataset.get("particion") if sub else None
+    if sub and not particion:
+        raise ConfigInvalida("dataset.subconjunto exige dataset.particion")
+    return ConfigSuite(
+        nombre=str(_clave(crudo, "nombre")),
+        fixture=str(_clave(crudo, "fixture")),
+        dataset=_ruta_del_repo(str(_clave(dataset, "ruta"))),
+        subconjunto=_en(sub, SUBCONJUNTOS, "dataset.subconjunto") if sub else None,
+        particion=_ruta_del_repo(str(particion)) if particion else None,
+        semilla_bootstrap=int(_clave(crudo, "semilla_bootstrap")),
+        bootstrap_repeticiones=int(_clave(crudo, "bootstrap_repeticiones")),
+        reloj=_en(str(_clave(crudo, "medicion", "reloj")), RELOJES, "medicion.reloj"),
+        proveedor=_en(
+            str(_clave(crudo, "adaptadores", "proveedor")), PROVEEDORES, "adaptadores.proveedor"
+        ),
+        urls={str(k): str(v) for k, v in (crudo["adaptadores"].get("urls") or {}).items()},
+        llm_modelo=str(_clave(crudo, "modelos", "llm")),
+        umbrales=Umbrales(
+            relevance_threshold=float(_clave(umbrales, "relevance_threshold")),
+            nli_entailment_threshold=float(_clave(umbrales, "nli_entailment_threshold")),
+            retrieval_top_k=int(_clave(umbrales, "retrieval_top_k")),
+            rerank_top_n=int(_clave(umbrales, "rerank_top_n")),
+        ),
+        catalogo_version=str(_clave(crudo, "catalogo", "version")),
+        ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
+        hash_config=huella_de_config(crudo),
+    )
