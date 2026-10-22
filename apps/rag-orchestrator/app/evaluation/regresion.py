@@ -44,11 +44,21 @@ class ResultadoRegresion:
     incumplimientos: tuple[Incumplimiento, ...]
 
 
+class _CargadorSinClavesRepetidas(yaml.SafeLoader):
+    """``safe_load`` que rechaza una clave repetida: con la última ganando, un segundo valor bajaría el mínimo en silencio."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        claves = [self.construct_object(clave, deep=deep) for clave, _ in node.value]
+        if len(set(claves)) != len(claves):
+            raise yaml.YAMLError("clave repetida")
+        return super().construct_mapping(node, deep=deep)
+
+
 def cargar_umbrales(ruta: Path) -> dict[str, float]:
     """Mínimos por métrica (sin el sufijo ``_min``); un archivo vacío o solo con comentarios no tiene umbrales."""
     try:
-        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as error:
+        crudo = yaml.load(ruta.read_text(encoding="utf-8"), Loader=_CargadorSinClavesRepetidas)  # noqa: S506
+    except (OSError, ValueError, yaml.YAMLError) as error:
         raise EntradaInvalida("regression.yaml no se puede leer") from error
     if crudo is None:
         return {}

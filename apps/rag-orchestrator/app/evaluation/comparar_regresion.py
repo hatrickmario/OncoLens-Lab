@@ -58,6 +58,9 @@ def main(argv: Sequence[str]) -> int:
     except (argparse.ArgumentError, SystemExit, EntradaInvalida) as error:
         print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
         return 2
+    except Exception as error:  # noqa: BLE001 - toda entrada corrupta sale con 2; solo el tipo, nunca str(error) (RN-14)
+        print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
+        return 2
     return _imprimir_y_codigo_de_salida(resultado)
 
 
