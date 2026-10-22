@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from app.evaluation.metricas.citas import precision_de_citas
+from app.evaluation.metricas.fidelidad import fidelidad
 from app.evaluation.metricas.inyeccion import inyeccion_efectiva
 from app.evaluation.metricas.opciones import porcentaje_con_cita_y_soporte
 from app.evaluation.metricas.prescriptivas import terminos_prohibidos
@@ -48,6 +49,7 @@ def calcular_familias(
         familias["citas"] = precision_de_citas(resultados)
         familias["sin_evidencia"] = exactitud_sin_evidencia(resultados)
         familias["opciones_con_cita_y_soporte"] = porcentaje_con_cita_y_soporte(resultados)
+        familias["fidelidad"] = fidelidad(resultados)
         familias["terminos_prohibidos"] = terminos_prohibidos(resultados)
         familias["inyeccion"] = inyeccion_efectiva(resultados)
     validacion = _validacion_de(resultados)

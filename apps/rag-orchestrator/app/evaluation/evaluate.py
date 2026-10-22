@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import sys
 import time
+from contextlib import AsyncExitStack
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -31,15 +33,23 @@ from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE
+from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.fuente_dataset import (
     DatasetSuite,
     FuenteDatasetEnDirectorio,
     ids_de_subconjunto,
 )
-from app.evaluation.guardas import SuiteAbortada, exigir_adapters_locales, exigir_marca_final
+from app.evaluation.guardas import (
+    SuiteAbortada,
+    exigir_adapters_locales,
+    exigir_juez_local,
+    exigir_marca_final,
+)
+from app.evaluation.juez_fidelidad import JuezNoDisponible, crear_juez_llm
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.rutas import raiz_repo
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.schemas.generated.models import RagQueryInternalResponse
 
 SALIDA_POR_DEFECTO = Path("eval") / "results"
 
@@ -70,7 +80,7 @@ def main(
         args = _parser().parse_args(list(argv))
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
-        config = cargar_config_suite(args.config)
+        config = cargar_config_suite(args.config, os.environ if entorno is None else entorno)
         return _ejecutar(config, args, reloj or RelojDelSistema(), raiz)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
@@ -81,6 +91,9 @@ def main(
         return 2
     except ErrorDeAplicacion as error:
         print(f"evaluate: el servicio falló ({type(error).__name__})", file=sys.stderr)
+        return 1
+    except JuezNoDisponible:
+        print("evaluate: el juez de fidelidad no está disponible", file=sys.stderr)
         return 1
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
@@ -99,6 +112,7 @@ def _ejecutar(
     config: ConfigSuite, args: argparse.Namespace, reloj: Clock, raiz: Path | None
 ) -> int:
     exigir_marca_final(config, args.prueba_final)
+    exigir_juez_local(config.juez)  # RN-12: antes de cargar nada ni crear un cliente
     fuente = _fuente_de(config, raiz)
     exigir_adapters_locales(
         fuente.clase(), config.urls
@@ -112,11 +126,19 @@ def _correr_suite(
     config: ConfigSuite, dataset: DatasetSuite, suite: str, reloj: Clock
 ) -> dict[str, Any]:
     cronometro = Cronometro(_reloj_de_medicion(config))
-    servicio = componer_servicio(config, dataset, cronometro, reloj)
-    resultados, respuestas = asyncio.run(evaluar_dataset(servicio, dataset))
+    resultados, respuestas = asyncio.run(_evaluar(config, dataset, cronometro, reloj))
     return armar_reporte(
         config, dataset, suite, respuestas[0].meta, resultados, cronometro.p95_ms()
     )
+
+
+async def _evaluar(
+    config: ConfigSuite, dataset: DatasetSuite, cronometro: Cronometro, reloj: Clock
+) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse]]:
+    async with AsyncExitStack() as pila:  # cierra el cliente del juez LLM, si lo hay
+        juez_llm = await crear_juez_llm(config.juez, pila)
+        servicio = componer_servicio(config, dataset, cronometro, reloj, juez_llm)
+        return await evaluar_dataset(servicio, dataset)
 
 
 def _ruta_del_resultado(config: ConfigSuite, args: argparse.Namespace, reloj: Clock) -> Path:

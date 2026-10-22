@@ -18,6 +18,14 @@ SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")
 SUBCONJUNTOS = ("desarrollo", "validacion", "prueba")
+ENTORNO_DEL_JUEZ = {
+    "modelo": "EVAL_JUDGE_MODEL",
+    "base_url": "EVAL_JUDGE_BASE_URL",
+    "temperatura": "EVAL_JUDGE_TEMPERATURE",
+    "semilla": "EVAL_JUDGE_SEED",
+}
+"""Claves del juez que ADR-41 deja en variables de entorno (RN-22); lo que digan sustituye al YAML."""
+TIMEOUT_DEL_JUEZ_POR_DEFECTO_S = 120.0
 
 
 class ConfigInvalida(ValueError):
@@ -90,6 +98,43 @@ def _ruta_del_repo(valor: str) -> Path:
     return ruta if ruta.is_absolute() else raiz_repo() / ruta
 
 
+def _con_juez_efectivo(crudo: dict[str, Any], entorno: Mapping[str, str]) -> dict[str, Any]:
+    """El bloque ``juez`` del YAML con ``EVAL_JUDGE_*`` encima; una URL por entorno vuelve local al juez.
+
+    El resultado es lo que se hashea: cambiar el juez por entorno cambia la huella de la configuración (AC-2).
+    """
+    juez = dict(crudo.get("juez") or {})
+    for clave, variable in ENTORNO_DEL_JUEZ.items():
+        if entorno.get(variable):
+            juez[clave] = entorno[variable]
+    if entorno.get(ENTORNO_DEL_JUEZ["base_url"]):
+        juez["proveedor"] = "local"
+    return {**crudo, "juez": juez} if juez else crudo
+
+
+def _leer_juez(crudo: dict[str, Any]) -> ConfigJuez | None:
+    juez = crudo.get("juez")
+    if not juez:
+        return None
+    proveedor = _en(str(juez.get("proveedor", "local")), PROVEEDORES, "juez.proveedor")
+    base_url = str(juez["base_url"]) if juez.get("base_url") else None
+    if proveedor == "local" and base_url is None:
+        raise ConfigInvalida("un juez local exige juez.base_url (EVAL_JUDGE_BASE_URL)")
+    try:
+        return ConfigJuez(
+            proveedor=proveedor,
+            modelo=str(_clave(juez, "modelo")),
+            base_url=base_url,
+            temperatura=float(juez.get("temperatura", 0.0)),
+            semilla=int(juez.get("semilla", 0)),
+            timeout_s=float(juez.get("timeout_s", TIMEOUT_DEL_JUEZ_POR_DEFECTO_S)),
+        )
+    except (TypeError, ValueError):
+        raise ConfigInvalida(
+            "juez.temperatura, juez.semilla y juez.timeout_s deben ser números"
+        ) from None
+
+
 def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) -> ConfigSuite:
     try:
         crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
@@ -97,6 +142,7 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         raise ConfigInvalida("la configuración no se pudo leer") from None
     if not isinstance(crudo, dict):
         raise ConfigInvalida("la configuración no es un mapa YAML")
+    crudo = _con_juez_efectivo(crudo, entorno or {})
     umbrales = _clave(crudo, "umbrales")
     dataset = _clave(crudo, "dataset")
     sub = dataset.get("subconjunto")
@@ -126,4 +172,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
         catalogo_version=str(_clave(crudo, "catalogo", "version")),
         ruta_terminos=_ruta_del_repo(str(_clave(crudo, "catalogo", "ruta_terminos"))),
         hash_config=huella_de_config(crudo),
+        juez=_leer_juez(crudo),
     )

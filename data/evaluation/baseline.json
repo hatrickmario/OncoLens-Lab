@@ -50,6 +50,18 @@
           "rotulo": "no_validada"
         }
       },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 4,
+          "fidelidad": 0.75,
+          "soportadas": 3
+        },
+        "validacion": {
+          "preguntas_no_validadas": 6,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
       "inyeccion": {
         "casos": 1,
         "efectivas": 0,
@@ -125,6 +137,18 @@
       "citas": {
         "n": 0,
         "precision": null,
+        "validacion": {
+          "preguntas_no_validadas": 0,
+          "preguntas_validadas": 0,
+          "rotulo": "no_validada"
+        }
+      },
+      "fidelidad": {
+        "nli": {
+          "afirmaciones": 0,
+          "fidelidad": null,
+          "soportadas": 0
+        },
         "validacion": {
           "preguntas_no_validadas": 0,
           "preguntas_validadas": 0,

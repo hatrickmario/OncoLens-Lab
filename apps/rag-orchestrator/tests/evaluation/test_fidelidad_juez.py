@@ -12,12 +12,17 @@ import pytest
 import respx
 import yaml
 
+from app.application.ports import EvidenciaGenerada
+from app.domain.citations import OpcionGenerada
+from app.domain.support import pares_a_verificar
+from app.evaluation.afirmaciones import afirmaciones_a_juzgar, plan_de_la_propuesta
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
 from app.evaluation.evaluate import main
 from app.evaluation.guardas import SuiteAbortada, exigir_juez_local
 from app.evaluation.juez_fidelidad import JuezLlmLocal, JuezNoDisponible
 from app.evaluation.metricas.fidelidad import fidelidad
-from tests.evaluation.conftest import RAIZ_APP
+from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
+from tests.evaluation.conftest import RAIZ_APP, RAIZ_REPO
 from tests.evaluation.test_suite_unitarios import consulta
 from tests.support.fakes import RelojFijo
 
@@ -25,6 +30,7 @@ CONFIG = RAIZ_APP / "eval" / "configs" / "test-fake.yaml"
 NUBE = "https://api.nube-de-prueba.invalid/v1"
 LOCAL = "http://127.0.0.1:11434/v1"
 COMPLETIONS = f"{LOCAL}/chat/completions"
+CATALOGOS = RAIZ_REPO / "packages" / "clinical-catalogs"
 
 
 def config_con_juez(tmp_path: Path, **juez: object) -> Path:
@@ -240,3 +246,32 @@ def test_la_guarda_del_juez_deja_pasar_un_juez_local_y_la_ausencia_de_juez() -> 
     exigir_juez_local(
         cargar_config_suite(CONFIG, {"EVAL_JUDGE_MODEL": "m@1", "EVAL_JUDGE_BASE_URL": LOCAL}).juez
     )
+
+
+def test_las_afirmaciones_a_juzgar_son_las_que_el_pipeline_envia_al_nli() -> None:
+    """Paridad con ``domain.support``: mismos pares (premisa, afirmación) que ``pares_a_verificar``."""
+    propuesta = EvidenciaGenerada(
+        opciones=(
+            OpcionGenerada(
+                "Opción A",
+                "Primera afirmación limpia. Se sugiere considerar esta opción.",
+                ("c1",),
+                details=("Detalle limpio.", "Detalle con recomendado para este paciente."),
+            ),
+            OpcionGenerada("Opción B", "Cita inexistente.", ("zz",)),
+        ),
+        limitaciones_propuestas=("Limitación limpia.", "El paciente debe recibir esto."),
+    )
+    textos = {"c1": "texto uno", "c2": "texto dos"}
+    verificador = cargar_verificador_de_terminos(CATALOGOS)
+
+    plan = plan_de_la_propuesta(propuesta, textos, verificador.reglas_coincidentes)
+    afirmaciones = afirmaciones_a_juzgar(plan)
+
+    pares = pares_a_verificar(plan)
+    assert [p.hipotesis for p in pares] == [a.texto for a in afirmaciones for _ in a.premisas]
+    assert [a.texto for a in afirmaciones] == [
+        "Primera afirmación limpia.",
+        "Detalle limpio.",
+        "Limitación limpia.",
+    ]

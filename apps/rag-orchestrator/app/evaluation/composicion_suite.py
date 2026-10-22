@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.application.ports import Clock
+from app.application.ports import Clock, ProhibitedTermsChecker
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
@@ -22,6 +22,7 @@ from app.evaluation.adaptadores_falsos import (
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite
 from app.evaluation.cronometro import Cronometro
 from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.juez_fidelidad import JuezFidelidad, JuezNli
 from app.evaluation.lenguaje_estricto import VerificadorEstricto, cargar_verificador_estricto
 from app.evaluation.medidores import (
     BuscadorMedido,
@@ -48,6 +49,9 @@ class ServicioDeSuite:
     cronometro: Cronometro
     catalogo_version: str
     verificador_estricto: VerificadorEstricto
+    verificador_produccion: ProhibitedTermsChecker
+    juez_nli: JuezFidelidad
+    juez_llm: JuezFidelidad | None
 
 
 def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
@@ -64,12 +68,18 @@ def parametros_de_recuperacion(config: ConfigSuite) -> ParametrosDeRecuperacion:
 
 
 def componer_servicio(
-    config: ConfigSuite, dataset: DatasetSuite, cronometro: Cronometro, reloj: Clock
+    config: ConfigSuite,
+    dataset: DatasetSuite,
+    cronometro: Cronometro,
+    reloj: Clock,
+    juez_llm: JuezFidelidad | None = None,
 ) -> ServicioDeSuite:
     if config.proveedor != "fake":
         raise ConfigInvalida("adaptadores.proveedor: local se cablea con US-073")
     observaciones = Observaciones()
     embedder = EmbedderBolsaDePalabras()
+    nli = NliLexico()
+    terminos = cargar_verificador_de_terminos(config.ruta_terminos)
     servicio = RAGOrchestratorService(
         detector_idioma=DetectorMedido(DetectorDeIdiomaLocal("es"), cronometro),
         embedder=EmbedderMedido(embedder, cronometro),
@@ -79,8 +89,8 @@ def componer_servicio(
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version),
         generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
-        clasificador_nli=NliMedido(NliLexico(), cronometro),
-        verificador_terminos=cargar_verificador_de_terminos(config.ruta_terminos),
+        clasificador_nli=NliMedido(nli, cronometro),
+        verificador_terminos=terminos,
         reloj=reloj,
         parametros=parametros_de_recuperacion(config),
     )
@@ -90,4 +100,9 @@ def componer_servicio(
         cronometro,
         config.catalogo_version,
         cargar_verificador_estricto(config.ruta_terminos),
+        terminos,
+        JuezNli(
+            nli, config.umbrales.nli_entailment_threshold
+        ),  # sin cronómetro: no es la etapa «nli»
+        juez_llm,
     )

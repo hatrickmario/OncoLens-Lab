@@ -18,7 +18,20 @@ def configuracion_evaluada(
 ) -> dict[str, Any]:
     """La configuración con los modelos, el prompt y las versiones que respondieron (``meta``), no los deseados."""
     u = config.umbrales
+    juez = config.juez
     return {
+        **(
+            {}
+            if juez is None
+            else {
+                "juez": {
+                    "proveedor": juez.proveedor,
+                    "modelo": juez.modelo,
+                    "temperatura": juez.temperatura,
+                    "semilla": juez.semilla,
+                }
+            }
+        ),
         "nombre": config.nombre,
         "hashConfig": config.hash_config,
         "fixture": config.fixture,
