@@ -25,7 +25,7 @@
     "regla": "assertErrorCodesClosed",
     "escenario": "una respuesta pendiente de su dueño no figura como pendingExample",
     "parches": [{ "destino": "indice", "operaciones": [{ "op": "remove", "path": "/pendingExamples/0" }] }],
-    "esperado": { "archivo": "apps/clinical-api/openapi.yaml", "mensajeContiene": "pendingExample" }
+    "esperado": { "archivo": "apps/rag-orchestrator/openapi.yaml", "mensajeContiene": "pendingExample" }
   },
   {
     "ac": "AC-17",

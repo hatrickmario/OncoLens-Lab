@@ -31,5 +31,27 @@
     "operacion": "POST",
     "ruta": "/rag/query",
     "texto": "added `#/components/schemas/ErrorNliNoDisponible` to the response body `oneOf` list for the response status `503`"
+  },
+  {
+    "id": "E-4",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-56-carga-documento-api",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/patients/{patientId}/documents",
+    "texto": "added the new `ARCHIVO_NO_PDF` enum value to the `error` response property for the response status `422`"
+  },
+  {
+    "id": "E-5",
+    "adr": "ADR-26",
+    "documento": "ADR-26-contrato-congelado-y-excepciones-declaradas.md",
+    "change": "l1d-56-carga-documento-api",
+    "proveedor": "clinical-api",
+    "regla": "response-property-enum-value-added",
+    "operacion": "POST",
+    "ruta": "/platform/patients/{patientId}/documents",
+    "texto": "added the new `ARCHIVO_DEMASIADO_GRANDE` enum value to the `error` response property for the response status `422`"
   }
 ]

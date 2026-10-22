@@ -708,8 +708,14 @@ export type ErrorCuerpoInvalido = {
     traceId: string;
 };
 
-export type ErrorSolicitudNoProcesable = {
-    error: 'CUERPO_INVALIDO' | 'PACIENTE_EGRESADO';
+export type ErrorDocumentoNoProcesable = {
+    error: 'CUERPO_INVALIDO' | 'ARCHIVO_NO_PDF' | 'ARCHIVO_DEMASIADO_GRANDE' | 'PACIENTE_EGRESADO';
+    message: string;
+    traceId: string;
+};
+
+export type ErrorAlmacenNoDisponible = {
+    error: 'ALMACEN_NO_DISPONIBLE';
     message: string;
     traceId: string;
 };
@@ -1149,17 +1155,13 @@ export type UploadDocumentErrors = {
      */
     409: ErrorDocumentoDuplicado;
     /**
-     * Tamaño máximo excedido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
+     * documentType inválido, archivo que no es PDF (magic bytes), tamaño mayor que MAX_UPLOAD_MB, o paciente egresado (RN-17).
      */
-    413: unknown;
+    422: ErrorDocumentoNoProcesable;
     /**
-     * Tipo de archivo no admitido. Pendiente: el código y el cuerpo de este error los fija la historia dueña de la carga de documentos (FEAT-01b); aquí no se inventa ningún código.
+     * Almacén de documentos (clinical-minio) no disponible; sin detalles internos.
      */
-    415: unknown;
-    /**
-     * documentType inválido, o paciente egresado (RN-17).
-     */
-    422: ErrorSolicitudNoProcesable;
+    503: ErrorAlmacenNoDisponible;
 };
 
 export type UploadDocumentError = UploadDocumentErrors[keyof UploadDocumentErrors];

@@ -527,8 +527,19 @@ export const zErrorCuerpoInvalido = z.strictObject({
     traceId: z.string()
 });
 
-export const zErrorSolicitudNoProcesable = z.strictObject({
-    error: z.enum(['CUERPO_INVALIDO', 'PACIENTE_EGRESADO']),
+export const zErrorDocumentoNoProcesable = z.strictObject({
+    error: z.enum([
+        'CUERPO_INVALIDO',
+        'ARCHIVO_NO_PDF',
+        'ARCHIVO_DEMASIADO_GRANDE',
+        'PACIENTE_EGRESADO'
+    ]),
+    message: z.string(),
+    traceId: z.string()
+});
+
+export const zErrorAlmacenNoDisponible = z.strictObject({
+    error: z.literal('ALMACEN_NO_DISPONIBLE'),
     message: z.string(),
     traceId: z.string()
 });
