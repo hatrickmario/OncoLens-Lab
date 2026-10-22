@@ -16,6 +16,12 @@ const SUPUESTO_FALTANTES_NO_CALCULADOS: AnalysisBasis['assumptions'][number] = {
   origin: 'regla_catalogo',
 };
 
+/** Limitación estructural fija de un `tipo_no_habilitado` (como `contracts/examples/tipo-no-habilitado.json`). */
+const LIMITACION_TIPO_NO_HABILITADO: AnalysisBasis['limitations'][number] = {
+  text: 'El tipo de cáncer no está habilitado en este entorno.',
+  origin: 'estructural',
+};
+
 const FUENTES_EN_ORDEN = ['guias', 'ensayos', 'publicaciones'] as const;
 
 /** Fuentes que el médico dejó seleccionadas, en el orden del contrato. */
@@ -86,5 +92,38 @@ export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
         omittedClaims: respuesta.omittedClaims,
       };
     },
+  };
+}
+
+export interface EntradaDeLaBaseSinIA {
+  sourcesSelected: RagQueryInternalRequest['sourcesSelected'];
+  filters: RagQueryInternalRequest['filtersApplied'];
+  /** El médico siguió adelante pese a los avisos (`continueWithWarning` de la petición). */
+  continuedWithWarning: boolean;
+  /** `CORPUS_EXCLUDED_SOURCES` (RN-21). */
+  sourcesNotIncluded: readonly string[];
+  /** `CORPUS_CUTOFF_DATE` (`AAAA-MM-DD`, RN-22). */
+  corpusCutoffDate: string;
+}
+
+/** Base del análisis de un `tipo_no_habilitado` (US-043 D7): no se consultó el corpus ni se envió ningún dato. */
+export function construirBaseTipoNoHabilitado(entrada: EntradaDeLaBaseSinIA): AnalysisBasis {
+  return {
+    patientDataUsed: [],
+    missingCriticalData: [],
+    continuedWithWarning: entrada.continuedWithWarning,
+    assumptions: [],
+    sourcesConsulted: {
+      selected: fuentesSeleccionadas(entrada.sourcesSelected),
+      filters: entrada.filters,
+      retrieved: 0,
+      aboveThreshold: 0,
+    },
+    sourcesNotIncluded: [...entrada.sourcesNotIncluded],
+    corpusCutoffDate: entrada.corpusCutoffDate,
+    limitations: [{ ...LIMITACION_TIPO_NO_HABILITADO }],
+    priorAnalysesUsed: [],
+    agentSteps: [],
+    omittedClaims: 0,
   };
 }

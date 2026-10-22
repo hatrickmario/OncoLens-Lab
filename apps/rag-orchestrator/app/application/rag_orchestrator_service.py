@@ -53,6 +53,7 @@ from app.domain.relevance import (
     top_relevance_score,
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
+from app.domain.tipos_habilitados import exigir_tipo_habilitado
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
     Limitation,
@@ -86,6 +87,8 @@ class ParametrosDeRecuperacion:
     llm_provider: LlmProvider
     llm_model: str
     nli_entailment_threshold: float
+    tipos_habilitados: tuple[str, ...]
+    """``ENABLED_CANCER_TYPES`` ya validada contra el manifiesto (RN-20); vacía = ningún tipo."""
     reranker_max_pairs: int | None = None
     """Tope de pares que admite el reranker (``RERANKER_MAX_PAIRS``); ``None`` = el reranker no limita y no se recorta."""
 
@@ -136,6 +139,9 @@ class RAGOrchestratorService:
         exigir_catalogo_de_la_solicitud(self._catalogo_clinico, trace_id, solicitud.catalogVersion)
         inicio = self._reloj.ahora()
         filtro = self._filtro_de_recuperacion(solicitud)  # antes de cualquier puerto (OL-02)
+        self._exigir_tipo_habilitado(
+            solicitud
+        )  # un tipo inutilizable ya fue 422 propio; aquí, antes de recuperar (RN-20)
         borde = self._invocar_borde_fallando_cerrado
         idioma = await borde(trace_id, "idioma", self._detector_idioma.detectar, solicitud.query)
         release = await borde(trace_id, "catalogo", self._lector_release.release_vigente)
@@ -228,6 +234,13 @@ class RAGOrchestratorService:
             for chunk in chunks
             if chunk.document_id in fichas
         }
+
+    def _exigir_tipo_habilitado(self, solicitud: RagQueryInternalRequest) -> None:
+        """Sin diagnóstico no hay tipo que comprobar: lo rechaza ``_filtro_de_recuperacion`` (`422` propio)."""
+        diagnostico = solicitud.clinicalContext.diagnosis
+        if diagnostico is None:
+            return
+        exigir_tipo_habilitado(diagnostico.cancerType.root, self._parametros.tipos_habilitados)
 
     def _filtro_de_recuperacion(self, solicitud: RagQueryInternalRequest) -> str:
         """Filtro vigente y del tipo de cáncer del caso; sin código de catálogo no hay búsqueda (`422`, OL-02)."""
