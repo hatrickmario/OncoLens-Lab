@@ -40,6 +40,10 @@ function entornoValido(): Record<string, string> {
     PII_FORMATS_PATH: FORMATOS_DE_PII,
     PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
+    CLINICAL_MINIO_PASSWORD_FILE: archivo('minio_password', 'clave-minio-ficticia'),
+    ENABLED_CANCER_TYPES: 'mama,prostata',
+    CORPUS_EXCLUDED_SOURCES: 'NCCN,ESMO',
+    CORPUS_CUTOFF_DATE: '2026-09-30',
   };
 }
 

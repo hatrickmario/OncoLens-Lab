@@ -42,6 +42,10 @@ function entornoValido(): Record<string, string> {
     PII_FORMATS_PATH: FORMATOS_DE_PII,
     PII_MASKS_PATH: MASCARAS_DE_PII,
     AI_DISCLAIMER_TEXT: 'Aviso sintético de test.',
+    CLINICAL_MINIO_PASSWORD_FILE: archivo('minio_password', 'clave-minio-ficticia'),
+    ENABLED_CANCER_TYPES: 'mama,prostata',
+    CORPUS_EXCLUDED_SOURCES: 'NCCN,ESMO',
+    CORPUS_CUTOFF_DATE: '2026-09-30',
   };
 }
 
@@ -135,4 +139,60 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
     expect(resultado.escuchas).toEqual([4998]);
     expect(resultado.log).toBe('');
   });
+
+  it('no escucha y registra configuracion_invalida con ENABLED_CANCER_TYPES y variable_ausente, sin valorInvalido, cuando la lista está vacía [US-043 AC-5]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), ENABLED_CANCER_TYPES: '' });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'ENABLED_CANCER_TYPES',
+      regla: expect.any(String),
+      motivo: 'variable_ausente',
+    });
+  });
+
+  it('no escucha y registra configuracion_invalida con tipo_no_en_catalogo y el tipo en valorInvalido cuando la lista trae un tipo ausente del manifiesto [US-043 AC-5]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), ENABLED_CANCER_TYPES: 'mama,leucemia' });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'ENABLED_CANCER_TYPES',
+      regla: expect.any(String),
+      motivo: 'tipo_no_en_catalogo',
+      valorInvalido: 'leucemia',
+    });
+  });
+
+  it('no registra el valor del tipo cuando no cumple la forma cerrada de un enum no sensible [US-043 AC-5]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), ENABLED_CANCER_TYPES: 'mama,tipo-x9' });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(JSON.parse(resultado.log)).not.toHaveProperty('valorInvalido');
+    expect(resultado.log).not.toContain('tipo-x9');
+  });
+
+  it.each([
+    ['CORPUS_CUTOFF_DATE', '', 'variable_ausente'],
+    ['CORPUS_CUTOFF_DATE', '2026-02-31', 'valor_invalido'],
+    ['CORPUS_EXCLUDED_SOURCES', '', 'variable_ausente'],
+  ])(
+    'no escucha y registra configuracion_invalida con %s (%s) [US-043 D7]',
+    (variable, valor, motivo) => {
+      const resultado = arrancarCon({ ...entornoValido(), [variable]: valor });
+
+      expect(resultado.salidas).toEqual([1]);
+      expect(JSON.parse(resultado.log)).toMatchObject({
+        event: 'configuracion_invalida',
+        variable,
+        motivo,
+      });
+      expect(resultado.log).not.toContain('2026-02-31');
+    },
+  );
 });

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import conEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import sinEvidencia from '../../../../../contracts/examples/rag-query-sin-evidencia.json' with { type: 'json' };
 import peticion from '../../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
-import { crearBaseDelAnalisis } from '../../../src/modules/evidence-analysis/analysis-basis.js';
+import {
+  construirBaseTipoNoHabilitado,
+  crearBaseDelAnalisis,
+} from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
 import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 
@@ -121,5 +124,57 @@ describe('BaseDelAnalisis', () => {
     const etiquetas = resultado.patientDataUsed.map(({ label }) => label).join('|');
     expect(etiquetas).not.toContain(request.clinicalContext.pseudoPatientId);
     expect(etiquetas).not.toMatch(/\br\d+\b/);
+  });
+});
+
+describe('construirBaseTipoNoHabilitado', () => {
+  const entrada = {
+    sourcesSelected: { guias: true, ensayos: false, publicaciones: true },
+    filters: request.filtersApplied,
+    continuedWithWarning: false,
+    sourcesNotIncluded: ['NCCN', 'ESMO'],
+    corpusCutoffDate: '2026-09-30',
+  };
+
+  it('declara las fuentes y los filtros de la petición con 0 recuperados y 0 sobre el umbral', () => {
+    expect(construirBaseTipoNoHabilitado(entrada).sourcesConsulted).toEqual({
+      selected: ['guias', 'publicaciones'],
+      filters: request.filtersApplied,
+      retrieved: 0,
+      aboveThreshold: 0,
+    });
+  });
+
+  it('declara que no se envió ningún dato del paciente, las fuentes excluidas, la fecha de corte y la limitación estructural, con todo lo demás vacío', () => {
+    expect(construirBaseTipoNoHabilitado(entrada)).toMatchObject({
+      patientDataUsed: [],
+      missingCriticalData: [],
+      continuedWithWarning: false,
+      assumptions: [],
+      sourcesNotIncluded: ['NCCN', 'ESMO'],
+      corpusCutoffDate: '2026-09-30',
+      limitations: [
+        { text: 'El tipo de cáncer no está habilitado en este entorno.', origin: 'estructural' },
+      ],
+      priorAnalysesUsed: [],
+      agentSteps: [],
+      omittedClaims: 0,
+    });
+  });
+
+  it('no comparte referencias con la configuración: modificar la Base no altera la lista de fuentes excluidas', () => {
+    const excluidas = ['NCCN'];
+    const base = construirBaseTipoNoHabilitado({ ...entrada, sourcesNotIncluded: excluidas });
+
+    base.sourcesNotIncluded.push('otra');
+
+    expect(excluidas).toEqual(['NCCN']);
+  });
+
+  it('copia continuedWithWarning de la petición', () => {
+    expect(
+      construirBaseTipoNoHabilitado({ ...entrada, continuedWithWarning: true })
+        .continuedWithWarning,
+    ).toBe(true);
   });
 });

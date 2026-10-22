@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { esquemaDeManifest } from '../../src/infrastructure/catalogo/manifiesto.schema.js';
 import type { LeerArchivo } from '../../src/config/secrets.js';
 
 export type EstandarTerminologico = 'cie10' | 'loinc' | 'atc';
@@ -29,10 +30,6 @@ const esquemaDeEntrada = z.object({
   nombreOficial: z.string().min(1),
   etiquetaEs: z.string().min(1),
   versionFuente: z.string().min(1),
-});
-const esquemaDeManifest = z.object({
-  version: z.string().min(1),
-  cancerTypes: z.array(z.string()),
 });
 const esquemaDeCodigos = z.object({ entradas: z.array(esquemaDeEntrada) });
 
