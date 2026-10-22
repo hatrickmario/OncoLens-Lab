@@ -16,7 +16,7 @@ x-service-jwt-ttl: &service-jwt-ttl ${SERVICE_JWT_TTL_SECONDS:-60}
 
 services:
   postgres:
-    image: postgres:17.11-alpine
+    image: postgres:18.4-alpine
     # TLS obligatorio (SEG-08): entrypoint-tls.sh instala la clave con los permisos que exige PostgreSQL y delega
     # en el entrypoint de la imagen. El superusuario solo entra por `local peer` (docker compose exec -u postgres).
     entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint-tls.sh"]
@@ -86,7 +86,7 @@ services:
       test: ["CMD", "mc", "ready", "local"]
 
   milvus-etcd:
-    image: quay.io/coreos/etcd:v3.5.34
+    image: quay.io/coreos/etcd:v3.7.2
     command:
       - etcd
       - --advertise-client-urls=http://milvus-etcd:2379
@@ -118,7 +118,7 @@ services:
       test: ["CMD", "mc", "ready", "local"]
 
   milvus-standalone:
-    image: milvusdb/milvus:v2.6.25
+    image: milvusdb/milvus:v3.0.3
     # Milvus lee la clave de MinIO del entorno: se carga desde el secreto al arrancar, sin escribirla en el Compose.
     command:
       - sh
