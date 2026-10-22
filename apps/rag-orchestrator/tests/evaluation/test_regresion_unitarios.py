@@ -10,7 +10,7 @@ import pytest
 from app.evaluation.regresion import (
     EntradaInvalida,
     Incumplimiento,
-    cargar_umbrales,
+    cargar_minimos,
     comparar_con_regresion,
 )
 from tests.evaluation.conftest import RAIZ_APP
@@ -59,24 +59,24 @@ def test_nombra_solo_las_metricas_por_debajo_de_su_minimo() -> None:
     assert [i.metrica for i in resultado.incumplimientos] == ["recall_at_10"]
 
 
-def test_cargar_umbrales_de_un_archivo_solo_con_comentarios_devuelve_vacio(tmp_path: Path) -> None:
+def test_cargar_minimos_de_un_archivo_solo_con_comentarios_devuelve_vacio(tmp_path: Path) -> None:
     archivo = tmp_path / "regression.yaml"
     archivo.write_text("# sin umbrales\n", encoding="utf-8")
 
-    assert cargar_umbrales(archivo) == {}
+    assert cargar_minimos(archivo) == {}
 
 
 @pytest.mark.parametrize(
     "contenido", ["recall_min: 0.8\n", "mrr: 0.8\n", "mrr_min: 1.5\n", "- mrr_min\n"]
 )
-def test_cargar_umbrales_rechaza_claves_desconocidas_o_valores_fuera_de_rango(
+def test_cargar_minimos_rechaza_claves_desconocidas_o_valores_fuera_de_rango(
     tmp_path: Path, contenido: str
 ) -> None:
     archivo = tmp_path / "regression.yaml"
     archivo.write_text(contenido, encoding="utf-8")
 
     with pytest.raises(EntradaInvalida):
-        cargar_umbrales(archivo)
+        cargar_minimos(archivo)
 
 
 def test_comparar_con_reporte_sin_metricas_completas_lanza_entrada_invalida() -> None:
@@ -84,5 +84,5 @@ def test_comparar_con_reporte_sin_metricas_completas_lanza_entrada_invalida() ->
         comparar_con_regresion({}, {"mrr": 0.5})
 
 
-def test_regression_yaml_versionado_es_valido_para_cargar_umbrales() -> None:
-    assert isinstance(cargar_umbrales(REGRESION_VERSIONADA), dict)
+def test_regression_yaml_versionado_es_valido_para_cargar_minimos() -> None:
+    assert isinstance(cargar_minimos(REGRESION_VERSIONADA), dict)

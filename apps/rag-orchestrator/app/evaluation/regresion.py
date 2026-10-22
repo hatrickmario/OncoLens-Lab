@@ -13,12 +13,12 @@ from typing import Any
 
 import yaml
 
-AVISO_SIN_BASELINE = "Sin baseline de regresión: umbral no aplicado"
+AVISO_SIN_MINIMOS = "Sin baseline de regresión: umbral no aplicado"
 SUFIJO_MINIMO = "_min"
-SECCION_DEL_UMBRAL = "completa"
+SECCION_DEL_MINIMO = "completa"
 
 # Nombre de la métrica en ``regression.yaml`` → ruta dentro de ``metricas.<sección>`` del reporte (esquema_suite).
-METRICAS_CON_UMBRAL: dict[str, tuple[str, ...]] = {
+METRICAS_CON_MINIMO: dict[str, tuple[str, ...]] = {
     "recall_at_10": ("recuperacion", "total", "recall_at_10"),
     "mrr": ("recuperacion", "total", "mrr"),
     "precision_citas": ("citas", "precision"),
@@ -44,11 +44,21 @@ class ResultadoRegresion:
     incumplimientos: tuple[Incumplimiento, ...]
 
 
-def cargar_umbrales(ruta: Path) -> dict[str, float]:
+class _CargadorSinClavesRepetidas(yaml.SafeLoader):
+    """``safe_load`` que rechaza una clave repetida: con la última ganando, un segundo valor bajaría el mínimo en silencio."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        claves = [self.construct_object(clave, deep=deep) for clave, _ in node.value]
+        if len(set(claves)) != len(claves):
+            raise yaml.YAMLError("clave repetida")
+        return super().construct_mapping(node, deep=deep)
+
+
+def cargar_minimos(ruta: Path) -> dict[str, float]:
     """Mínimos por métrica (sin el sufijo ``_min``); un archivo vacío o solo con comentarios no tiene umbrales."""
     try:
-        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as error:
+        crudo = yaml.load(ruta.read_text(encoding="utf-8"), Loader=_CargadorSinClavesRepetidas)
+    except (OSError, ValueError, yaml.YAMLError) as error:
         raise EntradaInvalida("regression.yaml no se puede leer") from error
     if crudo is None:
         return {}
@@ -60,7 +70,7 @@ def cargar_umbrales(ruta: Path) -> dict[str, float]:
 def _metrica_de(clave: object) -> str:
     if isinstance(clave, str) and clave.endswith(SUFIJO_MINIMO):
         metrica = clave.removesuffix(SUFIJO_MINIMO)
-        if metrica in METRICAS_CON_UMBRAL:
+        if metrica in METRICAS_CON_MINIMO:
             return metrica
     raise EntradaInvalida(f"umbral desconocido: {clave}")
 
@@ -76,7 +86,7 @@ def comparar_con_regresion(
 ) -> ResultadoRegresion:
     """Métricas del reporte por debajo de su mínimo, en el orden del archivo de umbrales."""
     seccion = _seccion_del_umbral(reporte)
-    medidas = {metrica: _valor_en(seccion, METRICAS_CON_UMBRAL[metrica]) for metrica in umbrales}
+    medidas = {metrica: _valor_en(seccion, METRICAS_CON_MINIMO[metrica]) for metrica in umbrales}
     incumplimientos = tuple(
         Incumplimiento(metrica, minimo, medidas[metrica])
         for metrica, minimo in umbrales.items()
@@ -87,9 +97,9 @@ def comparar_con_regresion(
 
 def _seccion_del_umbral(reporte: object) -> dict[str, Any]:
     metricas = reporte.get("metricas") if isinstance(reporte, dict) else None
-    seccion = metricas.get(SECCION_DEL_UMBRAL) if isinstance(metricas, dict) else None
+    seccion = metricas.get(SECCION_DEL_MINIMO) if isinstance(metricas, dict) else None
     if not isinstance(seccion, dict):
-        raise EntradaInvalida(f"el reporte no trae metricas.{SECCION_DEL_UMBRAL}")
+        raise EntradaInvalida(f"el reporte no trae metricas.{SECCION_DEL_MINIMO}")
     return seccion
 
 

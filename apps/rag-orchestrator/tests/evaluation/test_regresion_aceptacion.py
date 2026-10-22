@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.evaluation.comparar_regresion import main
-from app.evaluation.regresion import AVISO_SIN_BASELINE
+from app.evaluation.regresion import AVISO_SIN_MINIMOS
 from tests.evaluation.conftest import RAIZ_APP
 
 REGRESION_VERSIONADA = RAIZ_APP / "eval" / "configs" / "regression.yaml"
@@ -47,7 +47,7 @@ def test_comparar_con_regression_yaml_sin_umbrales_pasa_con_aviso(
     codigo = comparar(reporte_con_recall(tmp_path, 0.5), config)
 
     salida = capsys.readouterr()
-    assert (codigo, AVISO_SIN_BASELINE in salida.out) == (0, True)
+    assert (codigo, AVISO_SIN_MINIMOS in salida.out) == (0, True)
 
 
 @pytest.mark.ac("US-074", 5)
@@ -61,7 +61,7 @@ def test_comparar_con_recall_bajo_el_minimo_falla_nombrando_recall_at_10(
     salida = capsys.readouterr()
     assert codigo == 1
     assert "recall_at_10" in salida.err
-    assert AVISO_SIN_BASELINE not in salida.out
+    assert AVISO_SIN_MINIMOS not in salida.out
 
 
 def test_comparar_con_reporte_ilegible_sale_con_2_sin_filtrar_su_contenido(
@@ -80,6 +80,39 @@ def test_comparar_con_umbral_desconocido_sale_con_2(tmp_path: Path) -> None:
     config = umbrales(tmp_path, "inventada_min: 0.5\n")
 
     assert comparar(reporte_con_recall(tmp_path, 0.9), config) == 2
+
+
+@pytest.mark.ac("US-074", 5)
+@pytest.mark.parametrize(
+    ("bytes_config", "bytes_reporte"),
+    [
+        (b"mrr_min: 2024-02-30\n", b"{}"),
+        (b"\xff\xfe mrr_min: 0.5\n", b"{}"),
+        (b"# sin umbrales\n", b"[" * 100_000),
+    ],
+    ids=["fecha_imposible", "config_no_utf8", "reporte_anidado_profundo"],
+)
+def test_comparar_con_entrada_corrupta_sale_con_2_sin_traceback(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    bytes_config: bytes,
+    bytes_reporte: bytes,
+) -> None:
+    config = tmp_path / "regression.yaml"
+    reporte = tmp_path / "reporte.json"
+    config.write_bytes(bytes_config)
+    reporte.write_bytes(bytes_reporte)
+
+    codigo = comparar(reporte, config)
+
+    salida = capsys.readouterr()
+    assert (codigo, "Traceback" in salida.err + salida.out) == (2, False)
+
+
+def test_comparar_con_clave_repetida_en_regression_yaml_sale_con_2(tmp_path: Path) -> None:
+    config = umbrales(tmp_path, "recall_at_10_min: 0.8\nrecall_at_10_min: 0.1\n")
+
+    assert comparar(reporte_con_recall(tmp_path, 0.5), config) == 2
 
 
 def test_comparar_sin_argumentos_sale_con_2() -> None:
