@@ -16,6 +16,8 @@ export interface OpcionesFetchClinicalApi {
   timeoutMs: number;
   /** `oncolens_session=<valor>` ya filtrada; ausente en el login. */
   cookieDeSesion?: string;
+  /** IP del cliente que web fijó (`ipDelCliente`); se reenvía como `X-Forwarded-For`, nunca la del navegador. */
+  ipDelCliente?: string;
 }
 
 /** Extrae solo `oncolens_session=<valor>`: las demás cookies del navegador no salen de web (design D2). */
@@ -30,11 +32,20 @@ export function cabeceraCookieDeSesion(request: Request): string | undefined {
   return undefined;
 }
 
-/** Lista blanca hacia clinical-api: nunca Origin, Authorization, X-Forwarded-*, X-Trace-Id ni Idempotency-Key del navegador. */
-export function cabecerasHaciaClinicalApi(cookieDeSesion: string | undefined): Headers {
+/**
+ * Lista blanca hacia clinical-api: nunca Origin, Authorization, X-Forwarded-*, X-Trace-Id ni Idempotency-Key del
+ * navegador. La única excepción es el `X-Forwarded-For` que escribe web con la IP del socket (US-044 D4b).
+ */
+export function cabecerasHaciaClinicalApi(
+  cookieDeSesion: string | undefined,
+  ipDelCliente?: string,
+): Headers {
   const cabeceras = new Headers({ 'Content-Type': 'application/json' });
   if (cookieDeSesion !== undefined) {
     cabeceras.set('Cookie', cookieDeSesion);
+  }
+  if (ipDelCliente !== undefined) {
+    cabeceras.set('X-Forwarded-For', ipDelCliente);
   }
   return cabeceras;
 }
@@ -67,7 +78,7 @@ export function crearFetchJsonHaciaClinicalApi(
     const cuerpo = await peticion.text();
     return opciones.fetch(peticion.url, {
       method: peticion.method,
-      headers: cabecerasHaciaClinicalApi(opciones.cookieDeSesion),
+      headers: cabecerasHaciaClinicalApi(opciones.cookieDeSesion, opciones.ipDelCliente),
       ...(cuerpo !== '' && { body: cuerpo }),
       redirect: 'manual',
       signal: AbortSignal.timeout(opciones.timeoutMs),
@@ -84,7 +95,7 @@ export interface SdkClinicalApi {
 /** Única forma de llamar a clinical-api desde web: el SDK generado del contrato con el fetch de lista blanca. */
 export function crearSdkClinicalApi(
   config: Pick<ConfigWeb, 'clinicalApiUrl' | 'upstreamTimeoutMs'>,
-  dependencias: { request?: Request; fetch: typeof globalThis.fetch },
+  dependencias: { request?: Request; fetch: typeof globalThis.fetch; ipDelCliente?: string },
 ): SdkClinicalApi {
   const cookieDeSesion =
     dependencias.request === undefined ? undefined : cabeceraCookieDeSesion(dependencias.request);
@@ -94,6 +105,7 @@ export function crearSdkClinicalApi(
       fetch: dependencias.fetch,
       timeoutMs: config.upstreamTimeoutMs,
       ...(cookieDeSesion !== undefined && { cookieDeSesion }),
+      ...(dependencias.ipDelCliente !== undefined && { ipDelCliente: dependencias.ipDelCliente }),
     }),
   });
   const crudos = new WeakMap<Response, string>();

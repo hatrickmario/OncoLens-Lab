@@ -1,0 +1,27 @@
+{
+  "clase": "sintetico",
+  "nombre": "pii-mini",
+  "version": "1.0.0",
+  "generador": "generar.py",
+  "semilla": 13,
+  "identidades": 60,
+  "textos": 300,
+  "licencia": "CC0 1.0 (contenido ficticio generado; sin datos de personas)",
+  "descripcion": "Textos en espanol con PII sembrada y etiquetada por span y tipo (nombre, documento, telefono, correo, direccion, fecha_nacimiento) en pregunta, nota, evento, atributo y texto de documento, formatos de 6 paises, mas terminos clinicos de control para falsos positivos (US-013 AC-1, ADR-40; lo reutiliza US-072 AC-6)",
+  "valores_en_el_repo": false,
+  "nota_valores": "Los valores de PII se generan al azar al materializar el dataset (generar.py) y no se escriben en el repo; telefonos con numeracion de ficcion, correos en example.test.",
+  "tipos_directos": ["nombre", "documento", "telefono", "correo", "direccion", "fecha_nacimiento"],
+  "contextos": ["pregunta", "nota", "evento", "atributo", "documento"],
+  "paises": ["CO", "ES", "AR", "MX", "PE", "CL"],
+  "tipos_etiquetados": {
+    "nombre": 340,
+    "documento": 140,
+    "telefono": 160,
+    "correo": 120,
+    "direccion": 120,
+    "fecha_nacimiento": 100
+  },
+  "controles_clinicos": 770,
+  "sha256_plantillas": "30151b3e97b3895d9cecafb1b0c0b398d11c8d342f2d8e52d3f01eac4aa28741",
+  "sha256_corpus": "9e8d592ba562118d9b875a0363b4bdab740c82f28b0a45bdbaa0d834df2dcd81"
+}

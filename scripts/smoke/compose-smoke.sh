@@ -252,6 +252,9 @@ bien "US-035 AC-4 postgres se rechaza por red y entra por local peer"
 # El schema clinical lo crea la migración de L1D-168; aquí se simula para comprobar el aislamiento del rol de migraciones.
 compose exec -T -u postgres postgres psql -v ON_ERROR_STOP=1 -U postgres -d "$base_clinica" -qc 'CREATE SCHEMA IF NOT EXISTS clinical AUTHORIZATION clinical_api' >/dev/null
 psql_desde clinical-net clinical_api "$secretos/pg_clinical_api_password" require "$base_clinica" 'CREATE TABLE clinical.smoke_t(id int)' >/dev/null
+# US-040: una tabla creada por clinical_api no es legible por los roles del corpus (consulta del catálogo como superusuario).
+[ "$(compose exec -T -u postgres postgres psql -U postgres -d "$base_clinica" -tAc "SELECT has_table_privilege('rag_corpus', 'clinical.smoke_t', 'SELECT') OR has_table_privilege('rag_corpus_migrator', 'clinical.smoke_t', 'SELECT')")" = f ] \
+  || fallo "US-040: una tabla creada por clinical_api es legible por rag_corpus o rag_corpus_migrator"
 migrator="$secretos/pg_rag_corpus_migrator_password"
 psql_desde corpus-db-net rag_corpus_migrator "$migrator" require "$base_clinica" 'CREATE TABLE corpus.smoke_t(id int); DROP TABLE corpus.smoke_t' >/dev/null \
   || fallo "US-035 AC-4: rag_corpus_migrator no pudo crear en corpus"
@@ -261,6 +264,17 @@ debe_fallar_con "pg_hba.conf" psql_desde clinical-net rag_corpus_migrator "$migr
 bien "US-035 AC-4 rag_corpus_migrator crea en corpus, recibe permission denied en clinical y no entra desde clinical-net"
 debe_fallar_con "permission denied" psql_desde corpus-db-net rag_corpus "$secretos/pg_rag_corpus_password" require "$base_clinica" 'CREATE TABLE corpus.smoke_t(id int)'
 bien "US-035 AC-4 rag_corpus no puede crear en corpus"
+
+# US-040 AC-4 (SEG-06): rag_corpus solo entra desde corpus-db-net, con TLS y SCRAM. Desde clinical-net (aun con TLS) y
+# sin TLS lo rechaza pg_hba.conf; el superusuario comprueba que su contraseña está almacenada como SCRAM.
+rag_corpus_clave="$secretos/pg_rag_corpus_password"
+debe_fallar_con "pg_hba.conf" psql_desde clinical-net rag_corpus "$rag_corpus_clave" require "$base_clinica" 'SELECT 1'
+debe_fallar_con "pg_hba.conf" psql_desde corpus-db-net rag_corpus "$rag_corpus_clave" disable "$base_clinica" 'SELECT 1'
+[ "$(psql_desde corpus-db-net rag_corpus "$rag_corpus_clave" require "$base_clinica" 'SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()')" = t ] \
+  || fallo "US-040 AC-4: rag_corpus desde corpus-db-net con sslmode=require no quedó con TLS"
+[ "$(compose exec -T -u postgres postgres psql -U postgres -tAc "SELECT left(rolpassword, 14) FROM pg_authid WHERE rolname = 'rag_corpus'")" = 'SCRAM-SHA-256$' ] \
+  || fallo "US-040 AC-4: la contraseña de rag_corpus no está almacenada como SCRAM-SHA-256"
+bien "US-040 AC-4 rag_corpus se rechaza desde clinical-net y sin TLS y se acepta desde corpus-db-net con TLS y SCRAM"
 
 # ---------- fase 3: LLM nativo caído ----------
 export LLM_PROVIDER=local
@@ -332,22 +346,25 @@ bien "US-035 AC-1 el perfil test crea y borra bases con el prefijo, no entra a l
 compose_test down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres del perfil test"
 # Un límite numérico pero fuera de rango falla dentro de la sentencia que lleva la contraseña; uno no numérico lo
 # rechaza el shell antes de llamar a psql. En ninguno de los dos casos el log de postgres puede contener un secreto.
-for limite in 99999999999 abc; do
-  PG_RAG_CORPUS_CONNECTION_LIMIT="$limite" compose up -d --no-build postgres >"$log" 2>&1 || fallo "no se pudo crear postgres con el límite $limite"
+for ajuste in PG_RAG_CORPUS_CONNECTION_LIMIT=99999999999 PG_RAG_CORPUS_CONNECTION_LIMIT=abc PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS=99999999999 PG_RAG_CORPUS_STATEMENT_TIMEOUT_MS=abc PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS=99999999999 PG_RAG_CORPUS_IDLE_TX_TIMEOUT_MS=abc; do
+  variable="${ajuste%%=*}"
+  export "$ajuste"
+  compose up -d --no-build postgres >"$log" 2>&1 || fallo "no se pudo crear postgres con $ajuste"
+  unset "$variable"
   estado=""
   for _ in $(seq 1 60); do
     estado="$(compose ps -a --format '{{.State}}' postgres)"
     [ "$estado" = running ] || break
     sleep 2
   done
-  [ "$estado" = exited ] || fallo "US-035 AC-1: postgres debía fallar con PG_RAG_CORPUS_CONNECTION_LIMIT=$limite y está: $estado"
+  [ "$estado" = exited ] || fallo "US-035 AC-1: postgres debía fallar con $ajuste y está: $estado"
   registro="$(compose logs --no-log-prefix postgres 2>&1)"
-  case "$registro" in *ERROR*|*PG_RAG_CORPUS_CONNECTION_LIMIT*) ;; *) fallo "US-035 AC-1: el log no muestra el fallo del init con el límite $limite" ;; esac
+  case "$registro" in *ERROR*|*"$variable"*) ;; *) fallo "US-035 AC-1: el log no muestra el fallo del init con $ajuste" ;; esac
   for archivo in "$secretos"/pg_*_password; do
-    case "$registro" in *"$(cat "$archivo")"*) fallo "US-035 AC-1: el log de postgres contiene $(basename "$archivo") tras el fallo con el límite $limite" ;; esac
+    case "$registro" in *"$(cat "$archivo")"*) fallo "US-035 AC-1: el log de postgres contiene $(basename "$archivo") tras el fallo con $ajuste" ;; esac
   done
-  compose down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres tras el límite $limite"
+  compose down -v --remove-orphans >"$log" 2>&1 || fallo "no se pudo bajar postgres tras $ajuste"
 done
-bien "US-035 AC-1 un fallo del init de roles (límite fuera de rango o no numérico) no deja ninguna contraseña en el log de postgres"
+bien "US-035 AC-1 un fallo del init de roles (límite de conexiones o timeouts fuera de rango o no numéricos, US-040) no deja ninguna contraseña en el log de postgres"
 
 echo "smoke:compose en verde"

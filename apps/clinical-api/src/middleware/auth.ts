@@ -15,7 +15,7 @@ declare global {
 }
 
 export interface DependenciasDelGuard {
-  service: Pick<AuthService, 'resolverSesion'>;
+  service: Pick<AuthService, 'resolverYTocarSesion'>;
   nuevoTraceId: () => string;
   registrar: Registrar;
 }
@@ -38,7 +38,7 @@ export function requireSession(dependencias: DependenciasDelGuard): RequestHandl
   const { service, nuevoTraceId, registrar } = dependencias;
   return async (request, response, next) => {
     const token = tokenDeCookie(request.headers.cookie);
-    const sesion = token === undefined ? null : await service.resolverSesion(token);
+    const sesion = token === undefined ? null : await service.resolverYTocarSesion(token);
     if (sesion === null) {
       const traceId = nuevoTraceId();
       registrar({ event: 'auth.guard', resultado: 'no_autenticado', traceId });

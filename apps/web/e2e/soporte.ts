@@ -9,6 +9,9 @@ export function ejemplo<T = Record<string, any>>(nombre: string): T {
   return JSON.parse(readFileSync(ruta, 'utf8')) as T;
 }
 
+/** Títulos de nivel 3 que no son la Base del análisis (p. ej. las tarjetas de opción). */
+export const SIN_BASE = /^(?!Base del análisis$)/;
+
 export const { evidence: textos } = es;
 
 /** Usuario sintético sembrado (L1D-197); la contraseña de la fixture llega por entorno, nunca versionada. */
