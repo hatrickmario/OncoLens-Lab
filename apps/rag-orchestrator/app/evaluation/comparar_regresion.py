@@ -1,0 +1,68 @@
+"""CLI de la comparación de regresión (US-074): ``python -m app.evaluation.comparar_regresion``.
+
+``--reporte <json de evaluate> --config <regression.yaml>``. Códigos de salida: 0 sin umbrales (con el aviso en la salida
+estándar) o todas las métricas sobre su mínimo; 1 alguna métrica por debajo (cada una se nombra en la salida de error);
+2 uso, reporte o umbrales inválidos. Solo nombres y agregados: nunca textos (RN-14).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
+
+from app.evaluation.regresion import (
+    AVISO_SIN_MINIMOS,
+    EntradaInvalida,
+    ResultadoRegresion,
+    cargar_minimos,
+    comparar_con_regresion,
+)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="comparar_regresion", exit_on_error=False)
+    parser.add_argument("--reporte", type=Path, required=True)
+    parser.add_argument("--config", type=Path, required=True)
+    return parser
+
+
+def _leer_reporte(ruta: Path) -> dict[str, Any]:
+    try:
+        reporte = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise EntradaInvalida("el reporte no se puede leer") from error
+    return reporte
+
+
+def _imprimir_y_codigo_de_salida(resultado: ResultadoRegresion) -> int:
+    if not resultado.aplicado:
+        print(AVISO_SIN_MINIMOS)
+        return 0
+    for fallo in resultado.incumplimientos:
+        actual = "sin valor" if fallo.actual is None else fallo.actual
+        print(
+            f"regresión en {fallo.metrica}: mínimo {fallo.minimo}, actual {actual}", file=sys.stderr
+        )
+    return 1 if resultado.incumplimientos else 0
+
+
+def main(argv: Sequence[str]) -> int:
+    try:
+        args = _parser().parse_args(list(argv))
+        reporte = _leer_reporte(args.reporte)
+        resultado = comparar_con_regresion(reporte, cargar_minimos(args.config))
+    except (argparse.ArgumentError, SystemExit, EntradaInvalida) as error:
+        print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
+        return 2
+    except Exception as error:  # noqa: BLE001 - toda entrada corrupta sale con 2; solo el tipo, nunca str(error) (RN-14)
+        print(f"comparar_regresion: entrada inválida ({type(error).__name__})", file=sys.stderr)
+        return 2
+    return _imprimir_y_codigo_de_salida(resultado)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
