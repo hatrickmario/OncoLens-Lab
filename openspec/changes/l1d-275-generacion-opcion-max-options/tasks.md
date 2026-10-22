@@ -33,7 +33,7 @@
 
 ## 3. evaluación
 
-- [ ] 3.1 (evaluate) El change introduce el prompt del S1: hasta que exista la suite (US-072, S2), `ai-eval-runner` evalúa a mano el análisis del paciente semilla con el LLM real de L1D-274 (fidelidad, precisión de citas y **M-10.2**, salidas prescriptivas = 0, y la **tasa de menciones de guía sin población ni escenario** `[S1 resp. 34]`, informativa, registradas en el reporte). Verificación: reporte en `reports/eval/` enlazado en el PR. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
+- [ ] 3.1 (evaluate) El change introduce el prompt del S1: hasta que exista la suite (US-072, S2), `ai-eval-runner` evalúa a mano el análisis del paciente semilla con el LLM real de L1D-274 (fidelidad, precisión de citas y **M-10.2**, salidas prescriptivas = 0, y la **tasa de menciones de guía sin población ni escenario** `[S1 resp. 34]`, informativa, registradas en el reporte). Verificación: reporte en `reports/eval/` enlazado en el PR. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).** **Estado 2026-10-22 (ARR-03):** sigue NO-EJECUTABLE con modelos reales: la suite no cablea `proveedor: local` (`componer_servicio`) y faltan los pesos de NLI/reranker; procedimiento en `l1d-235-suite-evaluate/design.md` D21; ID destino propuesto **L1D-280 (ARR-04)** + cableado de `proveedor: local` (a confirmar por sprint-S2).
 
 ## 4. Verificación
 

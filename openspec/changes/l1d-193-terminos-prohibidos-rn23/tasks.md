@@ -49,7 +49,7 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 (evaluate) Cambio de catálogo (lista 1.4.0, `[S1 resp. 33]`): mientras no exista la suite (US-072, S2), `ai-eval-runner` aplica `check_prohibited_terms()` a la salida del análisis del paciente semilla de la demo y registra M-10.2 (= 0) en `reports/eval/`. Desde US-072: `run-ai-eval`. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).**
+- [ ] 5.1 (evaluate) Cambio de catálogo (lista 1.4.0, `[S1 resp. 33]`): mientras no exista la suite (US-072, S2), `ai-eval-runner` aplica `check_prohibited_terms()` a la salida del análisis del paciente semilla de la demo y registra M-10.2 (= 0) en `reports/eval/`. Desde US-072: `run-ai-eval`. **Diferida a L1D-279 (ARR-03, OL-06) (cierre S1, 2026-10-18).** **Estado 2026-10-22 (ARR-03):** el vocabulario de la lista (niveles A y B) ya se mide en `evaluate` sobre `fx-rn23` (adapters falsos; `l1d-235` D21); M-10.2 sobre el análisis del paciente semilla con el LLM real sigue NO-EJECUTABLE: mismo destino propuesto, **L1D-280 (ARR-04)**.
 
 ## 6. cierre
 
