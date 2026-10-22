@@ -177,3 +177,31 @@ cuando exista el job de E2E (ARR-02 resto).
 
 - **P-4:** D1 decidido (usuario, 2026-10-21, `[S2 resp. 4]`); el AC-3 del backlog ya está corregido (nombre completo encuentra, apellido suelto no).
 - **Formato de máscaras (D2):** lo fija esta historia; se somete al Gate 1.
+
+## Notas de implementación (clinical-platform)
+
+- **Erratum de la máscara:** el ejemplo del documento `1234567` es `"•••• 67"` (la regla es "los 2 últimos caracteres"),
+  no `"•••• 56"` como decían el diseño, la delta y el contrato en su primera versión; corregido en `openapi.yaml` (commit
+  `contract(L1D-202)` aparte), en la delta y en las tareas. `SINT-0000001` sigue siendo `"•••• 01"`.
+- **Contrato:** `nationalIdMasked` declara `pattern: '^•{4} [A-Za-z0-9]{2}$'` (PatientListItem y PatientAdminSummary). La
+  máscara real rellena a la izquierda con `0` si el documento tiene menos de 2 caracteres alfanuméricos y descarta
+  los no alfanuméricos. **Pregunta para `privacy-guardian`:** ¿basta el `pattern` (y el Zod generado lo hace cumplir
+  también en `web`) o prefiere no declarar el formato en el contrato para no fijar cuántos caracteres se revelan?
+- **Ejemplo `patient-page-doctor.json`:** la regla AC-17 vigente (#161) exime solo a `nationalIdMasked`; para
+  `fullNameMasked` sigue exigiendo "Prueba Sintética [n]", así que el ejemplo usa `"Prueba Sintética 1"` y no las
+  iniciales `"P. S. 1."`. Es un ejemplo no normativo; la máscara real (`"L. F. R. P."`) la prueban los tests. Si se quiere
+  que el ejemplo muestre el formato de iniciales, hay que eximir también `fullNameMasked` en la regla (decisión del
+  dueño de la regla, no de este change).
+- **AC-3 del backlog:** el literal `{ name: "Rondón" }` queda superado por P-4: el nombre completo (otras mayúsculas,
+  tildes y espacios) encuentra y un apellido suelto da cero resultados; lo actualiza la sesión principal en `backlog/`.
+- **Configuración:** `PATIENTS_PAGE_SIZE` (entero positivo, por defecto 20; `src/config/pacientes.ts`). **Para el
+  usuario:** añadirla a `infra/docker/.env.example` (este change no lo toca; el valor por defecto de código basta).
+- **Zod generado:** `PatientSearchRequest` se genera como `intersection(unknown, strictObject)`, sin el `anyOf` ni el
+  rechazo de campos extra; `patients.schema.ts` añade (a) el rechazo de campos no declarados, (b) el criterio completo
+  (documento o nombre) y (c) que el listado rechaza todo parámetro que no sea `status`, `dataOrigin` o `page`.
+- **Búsqueda sin descifrar:** `IdentityService.buscarPorDocumento` y `buscarPorNombre` solo comparan índices ciegos; el
+  listado descifra únicamente la identidad de las filas de la página (`descifrarVarios`) y, si la página está vacía,
+  no llama al servicio.
+- **Orden:** `clinical.patient.created_at` descendente y `id` como desempate (el seed comparte `created_at`).
+- **Tareas web diferidas:** 2.8 (parte `web`) y 2.9 (`app/api/patients/**`) quedan fuera de los paths asignados a este
+  agente (`apps/web/**`); la parte `clinical-api` de 2.8 (logs/URLs, no-fuga, `Cache-Control`) está hecha.
