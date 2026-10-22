@@ -8,12 +8,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // La build standalone traza desde la raíz del monorepo: web importa el SDK generado de packages/api-contracts.
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
-  // `refinamientos.gen.ts` (generado) importa './zod.gen.js'; Turbopack no lo resuelve a `.ts` por sí solo.
-  turbopack: {
-    resolveAlias: {
-      './zod.gen.js': '../../packages/api-contracts/src/zod/clinical-api/zod.gen.ts',
-    },
-  },
 };
 
 export default nextConfig;
