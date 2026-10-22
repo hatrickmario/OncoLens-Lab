@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Evaluación obligatoria en PR que cambian la IA
-La CI MUST ejecutar el job `eval-required` en todo PR cuyo diff toque una ruta o clave de `ci/eval-trigger-paths.yaml` (prompts, catálogo, manifiesto del corpus, claves de modelos y umbrales) y SHALL publicar el reporte de `evaluate` con la configuración de CI como artefacto y como comentario del PR.
+La CI MUST ejecutar el job `eval-required` en todo PR cuyo diff toque una ruta o clave de `scripts/ci/eval-trigger-paths.yaml` (prompts, catálogo, manifiesto del corpus, claves de modelos y umbrales) y SHALL publicar el reporte de `evaluate` con la configuración de CI como artefacto y como comentario del PR.
 
 #### Scenario: Un cambio de prompt dispara la suite y publica el reporte [US-074 AC-1] [AC-T5.4] [FR-20]
 - **GIVEN** un PR que modifica un archivo de `apps/rag-orchestrator/app/prompts/`

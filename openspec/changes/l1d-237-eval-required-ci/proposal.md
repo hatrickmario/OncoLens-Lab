@@ -15,7 +15,7 @@ el reporte y fallar ante una regresión configurada.
 
 ## What Changes
 
-- **Nuevo** `ci/eval-trigger-paths.yaml`: rutas y claves que disparan el job (prompts de
+- **Nuevo** `scripts/ci/eval-trigger-paths.yaml`: rutas y claves que disparan el job (prompts de
   `rag-orchestrator`, `packages/clinical-catalogs/**`, manifiesto del corpus en `data/raw/`, claves
   `RELEVANCE_THRESHOLD`, `LLM_MODEL` y demás de modelos y umbrales en `.env.example` y en la
   configuración versionada; las de PII de ADR-40).
@@ -36,7 +36,7 @@ el reporte y fallar ante una regresión configurada.
 
 ## Bounded contexts
 
-- **clinical-platform** (infra/CI): `.github/workflows/ci.yml`, `ci/eval-trigger-paths.yaml`,
+- **clinical-platform** (infra/CI): `.github/workflows/ci.yml`, `scripts/ci/eval-trigger-paths.yaml`,
   `scripts/ci/` (detección de disparadores y comentario).
 - **ai-services:** `eval/configs/regression.yaml` y el comparador en `app/evaluation/`.
 
