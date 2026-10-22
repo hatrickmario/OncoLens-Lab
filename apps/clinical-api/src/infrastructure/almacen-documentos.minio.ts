@@ -30,13 +30,8 @@ function esBucketInexistente(error: unknown): boolean {
   return name === 'NotFound' || name === 'NoSuchBucket' || $metadata?.httpStatusCode === 404;
 }
 
-/**
- * Adapter S3-compatible de `clinical-minio`. Escribe el objeto sin metadatos ni `Content-Disposition` (el nombre
- * original es identidad, RN-10) y traduce cualquier fallo a `AlmacenNoDisponible`, cuyo mensaje es fijo: el error del
- * SDK trae host, bucket y clave y nunca sale de aquí.
- */
-export function crearAlmacenMinio(config: ConfiguracionDelAlmacen): AlmacenMinio {
-  const cliente = new S3Client({
+function crearClienteS3(config: ConfiguracionDelAlmacen): S3Client {
+  return new S3Client({
     region: REGION_DE_FIRMA,
     endpoint: config.endpoint,
     forcePathStyle: true,
@@ -47,41 +42,50 @@ export function crearAlmacenMinio(config: ConfiguracionDelAlmacen): AlmacenMinio
     responseChecksumValidation: 'WHEN_REQUIRED',
     requestHandler: { requestTimeout: config.timeoutMs, connectionTimeout: config.timeoutMs },
   });
-  const Bucket = config.bucket;
+}
 
+/** Ejecuta una operación del SDK y traduce cualquier fallo al error de mensaje fijo (el del SDK trae host y clave). */
+async function comoAlmacenNoDisponible<T>(operacion: () => Promise<T>): Promise<T> {
+  try {
+    return await operacion();
+  } catch {
+    throw new AlmacenNoDisponible();
+  }
+}
+
+/** Crea el bucket solo si `HeadBucket` dice que no existe; cualquier otro fallo es `AlmacenNoDisponible`. */
+async function asegurarBucketExistente(cliente: S3Client, Bucket: string): Promise<void> {
+  try {
+    await cliente.send(new HeadBucketCommand({ Bucket }));
+  } catch (error) {
+    if (!esBucketInexistente(error)) throw new AlmacenNoDisponible();
+    await comoAlmacenNoDisponible(() => cliente.send(new CreateBucketCommand({ Bucket })));
+  }
+}
+
+/**
+ * Adapter S3-compatible de `clinical-minio`. Escribe el objeto sin metadatos ni `Content-Disposition` (el nombre
+ * original es identidad, RN-10) y traduce cualquier fallo a `AlmacenNoDisponible`, cuyo mensaje es fijo: el error del
+ * SDK trae host, bucket y clave y nunca sale de aquí.
+ */
+export function crearAlmacenMinio(config: ConfiguracionDelAlmacen): AlmacenMinio {
+  const cliente = crearClienteS3(config);
+  const Bucket = config.bucket;
   return {
     async guardar(clave, contenido) {
-      try {
-        await cliente.send(
-          new PutObjectCommand({
-            Bucket,
-            Key: clave,
-            Body: contenido,
-            ContentType: TIPO_DE_CONTENIDO,
-          }),
-        );
-      } catch {
-        throw new AlmacenNoDisponible();
-      }
+      const comando = new PutObjectCommand({
+        Bucket,
+        Key: clave,
+        Body: contenido,
+        ContentType: TIPO_DE_CONTENIDO,
+      });
+      await comoAlmacenNoDisponible(() => cliente.send(comando));
     },
     async borrar(clave) {
-      try {
-        await cliente.send(new DeleteObjectCommand({ Bucket, Key: clave }));
-      } catch {
-        throw new AlmacenNoDisponible();
-      }
+      await comoAlmacenNoDisponible(() =>
+        cliente.send(new DeleteObjectCommand({ Bucket, Key: clave })),
+      );
     },
-    async asegurarBucket() {
-      try {
-        await cliente.send(new HeadBucketCommand({ Bucket }));
-      } catch (error) {
-        if (!esBucketInexistente(error)) throw new AlmacenNoDisponible();
-        try {
-          await cliente.send(new CreateBucketCommand({ Bucket }));
-        } catch {
-          throw new AlmacenNoDisponible();
-        }
-      }
-    },
+    asegurarBucket: () => asegurarBucketExistente(cliente, Bucket),
   };
 }
