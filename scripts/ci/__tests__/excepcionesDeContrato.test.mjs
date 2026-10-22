@@ -56,6 +56,30 @@ describe('errNoDeclarados (ADR-26)', () => {
   });
 });
 
+describe('excepciones E-4 y E-5 (422 de la carga de documentos)', () => {
+  const hallazgo = (valor) => ({
+    id: 'response-property-enum-value-added',
+    text: `added the new \`${valor}\` enum value to the \`error\` response property for the response status \`422\``,
+    level: ERR,
+    operation: 'POST',
+    path: '/platform/patients/{patientId}/documents',
+  });
+
+  it.each(['ARCHIVO_NO_PDF', 'ARCHIVO_DEMASIADO_GRANDE'])('no devuelve el ERR del valor %s cuando está declarado', (valor) => {
+    expect(errNoDeclarados('clinical-api', [hallazgo(valor)], EXCEPCIONES)).toEqual([]);
+  });
+
+  it('devuelve el ERR de un valor distinto en la misma ruta', () => {
+    const otro = hallazgo('ARCHIVO_CORRUPTO');
+    expect(errNoDeclarados('clinical-api', [otro], EXCEPCIONES)).toEqual([otro]);
+  });
+
+  it('devuelve el mismo valor en otra ruta', () => {
+    const otro = { ...hallazgo('ARCHIVO_NO_PDF'), path: '/platform/patients/{patientId}/biomarkers' };
+    expect(errNoDeclarados('clinical-api', [otro], EXCEPCIONES)).toEqual([otro]);
+  });
+});
+
 describe('CLI de excepcionesDeContrato (falla cerrado)', () => {
   const directorio = mkdtempSync(path.join(tmpdir(), 'excepciones-'));
   const enlace = path.join(directorio, 'filtro.mjs');
@@ -102,8 +126,8 @@ describe('CLI de excepcionesDeContrato (falla cerrado)', () => {
 });
 
 describe('contracts-breaking-excepciones.json', () => {
-  it('declara solo las excepciones E-1, E-2 y E-3 (422 TIPO_CANCER_NO_REGISTRADO y 503 NLI_UNAVAILABLE), cada una con su ADR-26 y un proveedor válido', () => {
-    expect(EXCEPCIONES.map((excepcion) => excepcion.id)).toEqual(['E-1', 'E-2', 'E-3']);
+  it('declara solo las excepciones E-1…E-5 (422 TIPO_CANCER_NO_REGISTRADO, 503 NLI_UNAVAILABLE y 422 ARCHIVO_NO_PDF / ARCHIVO_DEMASIADO_GRANDE de la carga), cada una con su ADR-26 y un proveedor válido', () => {
+    expect(EXCEPCIONES.map((excepcion) => excepcion.id)).toEqual(['E-1', 'E-2', 'E-3', 'E-4', 'E-5']);
     for (const excepcion of EXCEPCIONES) {
       expect(PROVIDERS).toContain(excepcion.proveedor);
       expect(excepcion.adr).toBe('ADR-26');

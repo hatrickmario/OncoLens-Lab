@@ -1,8 +1,10 @@
+import { readDocumentosConfig, type DocumentosConfig } from './documentos.js';
 import {
   ConfiguracionInvalidaError,
   exigirAppEnv,
   leerBooleano,
   readAuthConfig,
+  readAlcanceDelAnalisisConfig,
   readDatabaseConfig,
   readDeidentificationConfig,
   readEvidenceAnalysisConfig,
@@ -10,6 +12,7 @@ import {
   readPort,
   readPositiveInteger,
   readServiceJwtConfig,
+  type AlcanceDelAnalisisConfig,
   type AuthConfig,
   type DatabaseConfig,
   type DeidentificationConfig,
@@ -24,6 +27,7 @@ import {
  * solo la raíz de composición (`server.ts`) le pasa el entorno.
  */
 export * from './secciones.js';
+export * from './documentos.js';
 
 /**
  * Sesión por inactividad y bloqueo del login (RN-22, US-044): lo aplican el guard y el servicio de autenticación.
@@ -153,13 +157,15 @@ export function cargarConfiguracion(env: NodeJS.ProcessEnv): ConfiguracionDeArra
   };
 }
 
-/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII). */
+/** Etapa 2: secciones que leen archivos (PostgreSQL, JWT de servicio, gateway de análisis, PII, almacén de documentos). */
 export interface ConfiguracionDeServicios {
   appEnv: string;
   database: DatabaseConfig;
   jwt: ServiceJwtConfig;
   analisis: EvidenceAnalysisConfig;
+  alcance: AlcanceDelAnalisisConfig;
   deidentificacion: DeidentificationConfig;
+  documentos: DocumentosConfig;
 }
 
 export function cargarConfiguracionDeServicios(
@@ -171,7 +177,9 @@ export function cargarConfiguracionDeServicios(
     database: readDatabaseConfig(env, readFile),
     jwt: readServiceJwtConfig(env),
     analisis: readEvidenceAnalysisConfig(env),
+    alcance: readAlcanceDelAnalisisConfig(env),
     deidentificacion: readDeidentificationConfig(env),
+    documentos: readDocumentosConfig(env, readFile),
   };
 }
 

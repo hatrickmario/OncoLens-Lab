@@ -99,6 +99,7 @@ def test_arranque_con_llm_local_sale_con_variable_ausente_cuando_falta_un_valor_
         "RERANK_TOP_N": "10",
         "NLI_ENTAILMENT_THRESHOLD": "0.7",
         "LLM_PROVIDER": "local",
+        "ENABLED_CANCER_TYPES": "mama,prostata",
         "CLINICAL_CATALOG_PATH": str(CATALOGOS),  # un solo evento: el del valor que falta
     }
     for nombre, valor in entorno.items():

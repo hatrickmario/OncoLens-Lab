@@ -67,6 +67,7 @@ def settings_de_prueba(**cambios: object) -> Settings:
         "rerank_top_n": 10,
         "nli_entailment_threshold": 0.7,
         "clinical_catalog_path": CATALOGOS,
+        "enabled_cancer_types": ("mama", "prostata"),
         **cambios,
     }
     return Settings(_env_file=None, **valores)  # type: ignore[call-arg, arg-type]

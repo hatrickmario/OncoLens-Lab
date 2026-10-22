@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   TipoCancerNoRegistradoError,
   exigirTipoCancer,
+  alcanceDelTipo,
 } from '../../../src/modules/evidence-analysis/case-guards.js';
+import { crearTiposHabilitados } from '../../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { diagnosticoDeEjemplo } from './casos.js';
 
 describe('exigirTipoCancer', () => {
@@ -14,5 +16,30 @@ describe('exigirTipoCancer', () => {
 
   it('deja pasar el caso cuando tiene un diagnóstico activo', () => {
     expect(() => exigirTipoCancer({ diagnosticoActivo: diagnosticoDeEjemplo() })).not.toThrow();
+  });
+});
+
+describe('alcanceDelTipo', () => {
+  const caso = { diagnosticoActivo: diagnosticoDeEjemplo({ cancerType: 'prostata' }) };
+
+  it('devuelve tipo_no_habilitado, sin lanzar, cuando el tipo del diagnóstico activo no está en la lista', () => {
+    expect(alcanceDelTipo(caso, crearTiposHabilitados(['mama'], ['mama', 'prostata']))).toBe(
+      'tipo_no_habilitado',
+    );
+  });
+
+  it('devuelve habilitado cuando el tipo del diagnóstico activo está en la lista', () => {
+    expect(
+      alcanceDelTipo(caso, crearTiposHabilitados(['mama', 'prostata'], ['mama', 'prostata'])),
+    ).toBe('habilitado');
+  });
+
+  it('devuelve tipo_no_habilitado cuando el caso no tiene diagnóstico activo (sin tipo no hay nada habilitado)', () => {
+    expect(
+      alcanceDelTipo(
+        { diagnosticoActivo: null },
+        crearTiposHabilitados(['mama'], ['mama', 'prostata']),
+      ),
+    ).toBe('tipo_no_habilitado');
   });
 });

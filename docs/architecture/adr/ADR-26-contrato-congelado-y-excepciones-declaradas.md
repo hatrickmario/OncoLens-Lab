@@ -50,17 +50,20 @@ El filtro nunca perdona por omisión. (1) Se identifica a sí mismo comparando r
 | E-1 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorTipoCancerNoRegistrado` añadido al `oneOf` del `422` | l1d-106-retrieval-threshold-sin-evidencia | Alternativa aditiva del `422`; el consumidor no depende de la lista cerrada de alternativas `[S1 resp. 35]` |
 | E-2 | clinical-api | `response-property-enum-value-added` en `POST /platform/evidence-analyses`: valor `TIPO_CANCER_NO_REGISTRADO` en `error` del `422` | l1d-103-gateway-contexto-clinico | Valor aditivo del `422`; los consumidores tratan `error` como cadena abierta y el BFF de L1D-139 lo propaga sin interpretarlo. Decidido (usuario, 2026-10-17), recomendada por el orquestador tras medir que el enum extensible no evita el ERR |
 | E-3 | rag-orchestrator | `response-body-one-of-added` en `POST /rag/query`: `ErrorNliNoDisponible` (`NLI_UNAVAILABLE`) añadido al `oneOf` del `503` | l1d-180-soporte-nli-descartadas | Alternativa aditiva del `503`; clinical-api y web clasifican por código HTTP y código de error y descartan los desconocidos. Reutilizar un código existente perdería el significado que exige US-064 AC-6. Decidido (usuario, 2026-10-18) |
+| E-4 | clinical-api | `response-property-enum-value-added` en `POST /platform/patients/{patientId}/documents`: valor `ARCHIVO_NO_PDF` en `error` del `422` | l1d-56-carga-documento-api | Valor aditivo del `422`; el endpoint no tiene consumidor hasta US-079 (S3) y `error` se trata como cadena abierta. `x-extensible-enum` descartado: su efecto en el Zod generado no está verificado y en E-2 no evitó el ERR. Decidido (usuario, 2026-10-21, `[S2 resp. 9]`) |
+| E-5 | clinical-api | `response-property-enum-value-added` en `POST /platform/patients/{patientId}/documents`: valor `ARCHIVO_DEMASIADO_GRANDE` en `error` del `422` | l1d-56-carga-documento-api | Igual que E-4 (una excepción por valor). Decidido (usuario, 2026-10-21, `[S2 resp. 9]`) |
 
 ### Consecuencias
 
 - **Positivas:** el contrato decidido se publica sin tocar el control del resto de cambios; la excepción es auditable y de una sola línea.
 - **Negativas:** `contracts-breaking.sh` deja de ser "cero ERR" literal; el aviso WARN `response-body-wrapped-in-one-of-original-preserved` sigue apareciendo y se declara en el PR.
+- **Versión del contrato:** una excepción E-n declarada es un cambio aditivo en la práctica y sube la versión **menor** del `openapi.yaml` del proveedor (precedentes E-1 y E-3), nunca la mayor (decidido, usuario, 2026-10-21, `[S2 resp. 12]`).
 - **Reglas para añadir otra excepción:** un ADR (o una nueva fila aquí) con la decisión del humano, la entrada exacta en el JSON y un test; nunca un patrón genérico.
 - **Retirada:** cuando US-214 (`contracts:breaking`) sustituya al script, E-1 se migra a su mecanismo o se retira si el cambio ya es la base de la comparación (tras el merge de L1D-106 a `main`, la comparación contra `main` ya no reporta el hallazgo y la entrada puede borrarse).
 
 ### Confirmación
 
-`scripts/ci/__tests__/excepcionesDeContrato.test.mjs`: la excepción solo perdona el hallazgo exacto (otro proveedor, otro schema, otra regla, otra ruta o un ERR distinto siguen rompiendo) y `contracts-breaking-excepciones.json` declara solo E-1, enlazada a este archivo. Revisión del Gate 2 (`contract-keeper`).
+`scripts/ci/__tests__/excepcionesDeContrato.test.mjs`: la excepción solo perdona el hallazgo exacto (otro proveedor, otro schema, otra regla, otra ruta o un ERR distinto siguen rompiendo) y `contracts-breaking-excepciones.json` declara E-1…E-5, enlazadas a este archivo. Revisión del Gate 2 (`contract-keeper`).
 
 ## Pros y contras de las opciones
 
