@@ -118,3 +118,11 @@ def test_el_informe_rotula_el_recall_del_total_como_tras_reranker_y_el_del_barri
     assert "recall@10 tras umbral" in informe
     assert "| recall@10 (tras reranker) |" in informe
     assert len(filas_de_la_tabla(informe)) == 4
+
+
+def test_el_procedimiento_real_nunca_sobrescribe_el_baseline_de_la_ci() -> None:
+    from app.evaluation.informe_baseline import PROCEDIMIENTO_REAL
+
+    assert "--nombre-archivo baseline.json" not in PROCEDIMIENTO_REAL
+    assert "data/evaluation" not in PROCEDIMIENTO_REAL
+    assert "S1-reporte-real.json" in PROCEDIMIENTO_REAL
