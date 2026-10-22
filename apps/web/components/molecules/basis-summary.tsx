@@ -1,4 +1,5 @@
 import type { AnalysisBasis } from '../../../../packages/api-contracts/src/types/clinical-api';
+import type { EstadoDelAnalisis } from '../../lib/evidence/estado-del-analisis';
 import { describirBusqueda } from '../../lib/evidence/describir-busqueda';
 import { formatearFechaDeCorte, resumirBase } from '../../lib/evidence/resumen-base';
 import { mensajes, rellenar } from '../../lib/mensajes';
@@ -6,7 +7,7 @@ import estilos from '../evidence.module.css';
 
 export interface BasisSummaryProps {
   base: AnalysisBasis;
-  estado: 'con_evidencia' | 'sin_evidencia' | 'tipo_no_habilitado';
+  estado: EstadoDelAnalisis;
 }
 
 /** Resumen siempre visible de la Base (S2-09): cifras, supuestos declarados, fecha de corte y, si aplica, qué se buscó. */
