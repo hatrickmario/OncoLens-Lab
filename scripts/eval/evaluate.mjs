@@ -22,19 +22,41 @@ function conRutasAbsolutas(argumentos, cwd) {
   );
 }
 
+const FLAGS_DEL_JUEZ = {
+  EVAL_JUDGE_MODEL: '--juez-modelo',
+  EVAL_JUDGE_BASE_URL: '--juez-base-url',
+  EVAL_JUDGE_TEMPERATURE: '--juez-temperatura',
+  EVAL_JUDGE_SEED: '--juez-semilla',
+};
+
+/**
+ * ADR-41: las claves EVAL_JUDGE_* del entorno llegan al runner como flags `--juez-*` (el runner no lee el entorno,
+ * US-037 AC-1). Van antes que los argumentos del usuario: un flag explícito gana.
+ */
+export function flagsDelJuezDesdeEntorno(entorno) {
+  return Object.entries(FLAGS_DEL_JUEZ).flatMap(([variable, flag]) =>
+    entorno[variable] ? [flag, entorno[variable]] : [],
+  );
+}
+
 /** Argumentos para el módulo Python: añade la configuración de la CI si no se pasó `--config`. */
-export function argumentosDePython(argumentos, cwd = process.cwd()) {
+export function argumentosDePython(argumentos, cwd = process.cwd(), entorno = {}) {
   const conConfig = argumentos.includes('--config');
   return [
     '-m',
     'app.evaluation.evaluate',
     ...(conConfig ? [] : ['--config', CONFIG_DE_LA_CI]),
+    ...flagsDelJuezDesdeEntorno(entorno),
     ...conRutasAbsolutas(argumentos, cwd),
   ];
 }
 
 function main(argumentos, entorno) {
-  const resultado = spawnPython(argumentosDePython(argumentos), { directorio: DIRECTORIO, entorno, opciones: { stdio: 'inherit' } });
+  const resultado = spawnPython(argumentosDePython(argumentos, process.cwd(), entorno), {
+    directorio: DIRECTORIO,
+    entorno,
+    opciones: { stdio: 'inherit' },
+  });
   if (resultado.error?.code === 'ENOENT') {
     console.error('evaluate: no se encontró el intérprete de Python (EVAL_PYTHON)');
     return 2;

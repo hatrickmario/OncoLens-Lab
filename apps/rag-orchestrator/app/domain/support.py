@@ -130,7 +130,7 @@ def planificar_soporte(
     return PlanDeSoporte(tuple(opciones), limitaciones)
 
 
-def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
+def afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
     """Lo que de verdad va al NLI, en un orden único que comparten ``pares_a_verificar`` y ``verificar_soporte``.
 
     RN-23: una afirmación con lenguaje prohibido nunca puede quedar soportada, ni aunque el NLI la implicara; por eso no
@@ -147,24 +147,24 @@ def _afirmaciones_para_el_nli(plan: PlanDeSoporte) -> Iterator[Afirmacion]:
 
 def pares_a_verificar(plan: PlanDeSoporte) -> list[ParNli]:
     return [
-        ParNli(premisa, a.texto) for a in _afirmaciones_para_el_nli(plan) for premisa in a.premisas
+        ParNli(premisa, a.texto) for a in afirmaciones_para_el_nli(plan) for premisa in a.premisas
     ]
 
 
 def _veredictos_por_afirmacion(
     plan: PlanDeSoporte, resultados: Sequence[ResultadoNli], umbral: float
 ) -> dict[Afirmacion, bool]:
-    """Asigna los resultados del NLI a SU afirmación: único recorrido de ``_afirmaciones_para_el_nli``.
+    """Asigna los resultados del NLI a SU afirmación: único recorrido de ``afirmaciones_para_el_nli``.
 
     Cada afirmación toma tantos resultados como premisas envió, en el orden de ``pares_a_verificar``; una afirmación es
     soportada si alguna premisa la soporta (``soporta``). Si el total no cuadra, es un error de contrato (RN-01): el
     NLI nunca reparte un ``entailment`` a una afirmación que no lo pidió.
     """
-    if len(resultados) != sum(len(a.premisas) for a in _afirmaciones_para_el_nli(plan)):
+    if len(resultados) != sum(len(a.premisas) for a in afirmaciones_para_el_nli(plan)):
         raise ValueError("la cantidad de resultados del NLI no coincide con la de pares")
     veredictos: dict[Afirmacion, bool] = {}
     inicio = 0
-    for afirmacion in _afirmaciones_para_el_nli(plan):
+    for afirmacion in afirmaciones_para_el_nli(plan):
         fin = inicio + len(afirmacion.premisas)
         veredictos[afirmacion] = any(soporta(r, umbral) for r in resultados[inicio:fin])
         inicio = fin
