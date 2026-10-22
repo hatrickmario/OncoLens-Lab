@@ -24,3 +24,7 @@ def terminos_prohibidos(resultados: Sequence[ResultadoConsulta]) -> dict[str, An
         "propuesta_cruda": sum(r.salidas_prohibidas_crudas for r in resultados),
         "salida_mostrada": sum(r.salidas_prohibidas_mostradas for r in resultados),
     }
+
+
+def cumple_formula_de_atribucion(texto: str) -> bool:
+    raise NotImplementedError("no implementado")
