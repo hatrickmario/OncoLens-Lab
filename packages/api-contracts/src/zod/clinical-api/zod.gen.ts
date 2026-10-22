@@ -308,7 +308,7 @@ export const zPatientListItem = z.strictObject({
     view: z.literal('doctor_listado'),
     id: z.uuid(),
     idType: zIdType,
-    nationalIdMasked: z.string(),
+    nationalIdMasked: z.string().regex(/^•{4} [A-Za-z0-9]{2}$/),
     fullNameMasked: z.string(),
     dataOrigin: zDataOrigin,
     lifecycleStatus: zLifecycleStatus,
@@ -325,7 +325,7 @@ export const zPatientAdminSummary = z.strictObject({
     view: z.literal('admin'),
     id: z.uuid(),
     idType: zIdType,
-    nationalIdMasked: z.string(),
+    nationalIdMasked: z.string().regex(/^•{4} [A-Za-z0-9]{2}$/),
     dataOrigin: zDataOrigin,
     lifecycleStatus: zLifecycleStatus,
     registeredAt: z.iso.datetime()
