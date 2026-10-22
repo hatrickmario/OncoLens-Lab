@@ -2,8 +2,10 @@ import type {
   EvidenceAnalysis,
   EvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { zEvidenceAnalysisRefinado } from '../../../../packages/api-contracts/src/zod/clinical-api/refinamientos.gen';
-import { zEvidenceAnalysisRequest } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
+import {
+  zEvidenceAnalysis,
+  zEvidenceAnalysisRequest,
+} from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { esCodigoConEstadoPropio, type CodigoConEstadoPropio } from './clasificar-fallo';
 
 export type ResultadoDeSolicitud =
@@ -60,7 +62,7 @@ export async function solicitarAnalisis(
     });
     if (respuesta.status === 401) return { tipo: 'sin_sesion' };
     if (!respuesta.ok) return await leerError(respuesta);
-    const analisis = zEvidenceAnalysisRefinado.safeParse(await respuesta.json());
+    const analisis = zEvidenceAnalysis.safeParse(await respuesta.json());
     return analisis.success ? { tipo: 'ok', analisis: analisis.data } : FALLO_DE_TRANSPORTE;
   } catch {
     return FALLO_DE_TRANSPORTE;
