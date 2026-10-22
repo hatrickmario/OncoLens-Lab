@@ -4,22 +4,26 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import os
 import re
+import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from app.application.ports import Clock
+from app.domain.relevance import supera_umbral
 from app.evaluation.barrido import FilaBarrido, elegir_umbral, sin_nan
 from app.evaluation.composicion_suite import componer_servicio
 from app.evaluation.config_suite import Barrido, ConfigInvalida, ConfigSuite
 from app.evaluation.corrida import evaluar_dataset
 from app.evaluation.cronometro import Cronometro
-from app.evaluation.fuente_dataset import DatasetSuite
+from app.evaluation.fuente_dataset import CLASE_SINTETICA, DatasetSuite
+from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.informe_baseline import (
-    DatosDelInforme,
     ESQUEMA_BASELINE,
+    DatosDelInforme,
     agregados_del_informe,
     renderizar_informe,
 )
@@ -27,8 +31,6 @@ from app.evaluation.metas import cargar_metas
 from app.evaluation.metricas.familias import calcular_familias
 from app.evaluation.metricas.resultado import ResultadoConsulta
 from app.evaluation.metricas.sin_evidencia import exactitud_sin_evidencia
-from app.evaluation.fuente_dataset import CLASE_SINTETICA
-from app.evaluation.guardas import SuiteAbortada
 from app.evaluation.reporte import escribir_reporte_cerrado
 from app.evaluation.retrieval_metrics import ChunkRecuperado, evaluar_pregunta, metrica
 from app.evaluation.rutas import raiz_repo
@@ -59,7 +61,9 @@ def _recall_tras_umbral(
 ) -> float | None:
     """recall@10 de los chunks que superan el umbral (``>``, como ``filtrar_sobre_umbral``): lo que el generador ve."""
     entregados = [
-        evaluar_pregunta(p, [c for c in rankings.get(p.texto, []) if c.puntaje > umbral])
+        evaluar_pregunta(
+            p, [c for c in rankings.get(p.texto, []) if supera_umbral(c.puntaje, umbral)]
+        )
         for p in dataset.preguntas
     ]
     recall = metrica(
@@ -112,13 +116,39 @@ def metricas_planas(familias: dict[str, Any]) -> dict[str, float | None]:
     return {k: sin_nan(v) for k, v in crudas.items()}
 
 
+def directorio_de_configuraciones() -> Path:
+    return _directorio_de_la_app() / "eval" / "configs"
+
+
+def _dentro_de(ruta: Path, directorio: Path) -> bool:
+    return not ruta.is_symlink() and ruta.resolve().is_relative_to(directorio.resolve())
+
+
+def exigir_fijado_permitido(ruta: Path, proveedor: str, directorio: Path | None) -> None:
+    """``--fijar`` solo escribe dentro del directorio de configuraciones y nunca con adapters falsos sobre la versionada:
+    el umbral que sale de una calibración con falsos no significa nada y no debe quedar en una configuración versionada."""
+    permitido = directorio or directorio_de_configuraciones()
+    if not _dentro_de(ruta, permitido):
+        raise ConfigInvalida("--fijar solo escribe dentro del directorio de configuraciones")
+    if proveedor == "fake" and _dentro_de(ruta, directorio_de_configuraciones()):
+        raise ConfigInvalida(
+            "--fijar no se admite con adapters falsos sobre la configuración versionada"
+        )
+
+
 def fijar_umbral_en_config(ruta: Path, umbral: float, directorio: Path | None = None) -> None:
-    """Reescribe solo el valor de ``umbrales.relevance_threshold``; los comentarios y el resto del YAML quedan como están."""
-    texto = ruta.read_text(encoding="utf-8")
-    nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", texto)
+    """Reescribe solo el valor de ``umbrales.relevance_threshold`` (comentarios y resto del YAML intactos), de forma
+    atómica (temporal + ``replace``) y solo dentro del directorio de configuraciones."""
+    if not _dentro_de(ruta, directorio or directorio_de_configuraciones()):
+        raise ConfigInvalida("--fijar solo escribe dentro del directorio de configuraciones")
+    nuevo, cambios = _UMBRAL_EN_CONFIG.subn(rf"\g<1>{umbral:g}", ruta.read_text(encoding="utf-8"))
     if cambios != 1:
         raise ConfigInvalida("umbrales.relevance_threshold no se puede fijar en la configuración")
-    ruta.write_text(nuevo, encoding="utf-8")
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=ruta.parent, suffix=".tmp", delete=False
+    ) as temporal:
+        temporal.write(nuevo)
+    os.replace(temporal.name, ruta)
 
 
 def _metricas_de(
@@ -178,10 +208,13 @@ def ejecutar_barrido(
     salida: Path | None,
     fijar: bool,
     p95_e2e_s: float | None,
+    directorio_fijable: Path | None = None,
 ) -> int:
     if config.barrido is None:
         raise ConfigInvalida("falta la sección barrido en la configuración")
     exigir_dataset_sintetico(dataset.clase)
+    if fijar:
+        exigir_fijado_permitido(ruta_config, config.proveedor, directorio_fijable)
     valores = barrer(config, dataset, config.barrido.grilla, reloj, cronometro_de)
     datos = _datos_del_informe(config, config.barrido, dataset, valores, fijar, p95_e2e_s)
     carpeta = salida or _directorio_de_la_app() / SALIDA_DEL_BASELINE
@@ -192,5 +225,5 @@ def ejecutar_barrido(
     )
     (carpeta / f"{NOMBRE_DEL_INFORME}.md").write_text(renderizar_informe(datos), encoding="utf-8")
     if fijar:
-        fijar_umbral_en_config(ruta_config, datos.eleccion.umbral)
+        fijar_umbral_en_config(ruta_config, datos.eleccion.umbral, directorio_fijable)
     return 0

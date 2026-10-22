@@ -18,14 +18,31 @@ de meta. **Non-Goals:** metas definitivas (DEC-07), streaming.
   `THRESHOLD_RECALL_TOLERANCE` (configuración); empate → el valor más alto (más conservador frente a
   RN-02). Se calibra sobre desarrollo + validación de `ol06-particion-v1`, nunca sobre prueba.
   Alternativa descartada: maximizar F1 combinado (mezcla dos metas que DEC-07 fija por separado).
-- **D2 · p95 e2e:** script de carga contra `clinical-api` en la red interna (reutiliza el subcomando
-  `e2e` de `app/scripts/adr39/`), 3 corridas de ≥ 30 consultas, mediana.
+- **D2 · p95 e2e:** 3 corridas de ≥ 30 consultas **desde el host, por la BFF** (`python -m app.scripts.adr39 e2e
+  --bff --base-url https://localhost --origin https://localhost`, `ADR39_PASSWORD` en el entorno; reutiliza el
+  subcomando `e2e` de ADR-39); nunca desde un contenedor de clinical-net/ai-net ni desde `rag-orchestrator`. Mediana.
 - **D3 · Metas iniciales** en `eval/configs/metas-iniciales.yaml` (solo lectura para este change).
 
 ## Privacidad y ownership
 
-Solo seed y datasets sintéticos; el p95 entra por `clinical-api`, que desidentifica (RN-11);
+Solo seed y datasets sintéticos; el p95 entra por la BFF, que desidentifica en `clinical-api` (RN-11);
 `rag-orchestrator` no toca datos clínicos. LLM local (RN-12). Reporte solo con agregados.
+
+## Salvaguardas del barrido (Gate 2)
+
+`--sweep` exige un dataset sintético antes de cargarlo; el JSON del baseline se valida contra una lista blanca
+(`ESQUEMA_BASELINE`) antes de escribir el `.md`; `--fijar` solo escribe (atómicamente) dentro de `eval/configs/` y se
+rechaza con adapters falsos sobre la configuración versionada. Desviación: el directorio permitido es inyectable
+(`directorio_de_configs`) para que el test de aceptación AC-1 fije el umbral en una copia temporal.
+
+## Deuda registrada (no bloquea)
+
+- Columnas del informe por tipo de cáncer fijas en código (`ETIQUETAS_CANCER`, sección 4): derivarlas del catálogo.
+- Menores de diseño: `or 0.0` en `metas.py`/`barrido.py`; unidad deducida del sufijo `_s`; `--fijar`/`--p95-e2e-s` sin
+  `--sweep` se ignoran; las metas se leen de una ruta fija; `fijar_umbral_en_config` debería vivir en `config_suite.py`
+  y el `hashConfig` del informe es el previo al fijar.
+- Mover el subcomando `e2e` de `app/scripts/adr39/` (cliente con sesión sintética) a una ubicación neutral fuera de
+  `apps/rag-orchestrator`.
 
 ## Contratos
 

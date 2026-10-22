@@ -90,12 +90,18 @@ class Objeto:
 
 
 @dataclasses.dataclass(frozen=True)
+class Huella:
+    """SHA-256 en hexadecimal minúscula (64 caracteres)."""
+
+
+@dataclasses.dataclass(frozen=True)
 class Lista:
     """Lista de elementos que cumplen todos el mismo esquema."""
 
     elemento: Any
 
 
+_HUELLA = re.compile(r"[0-9a-f]{64}")
 _IDENTIFICADOR = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@#+/-]{0,127}")
 
 
@@ -103,6 +109,12 @@ def validar_esquema_cerrado(valor: Any, esquema: Any, ruta: str = "$") -> None:
     """Lista blanca de claves y de tipos de hoja (ADR-41, «Reporte»): lo demás hace fallar la escritura."""
     if isinstance(esquema, Objeto):
         _validar_objeto(valor, esquema, ruta)
+    elif isinstance(esquema, Huella):
+        _exigir(
+            isinstance(valor, str) and _HUELLA.fullmatch(valor) is not None,
+            ruta,
+            "no es una huella",
+        )
     elif isinstance(esquema, Lista):
         _exigir(isinstance(valor, list), ruta, "no es una lista")
         for i, elemento in enumerate(valor):

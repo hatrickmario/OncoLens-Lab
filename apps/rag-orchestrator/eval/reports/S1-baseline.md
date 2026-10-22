@@ -26,6 +26,8 @@ Justificación: regla D1: mayor exactitud de «sin evidencia» con recall@10 ≥
 
 Dataset fx-t5a-a@1 (clase sintetico) · proveedor `fake` · hashConfig `57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced`. fidelidad (proxy) = porcentaje de opciones con cita y soporte NLI (el juez de fidelidad de ADR-41 solo corre con modelos reales).
 
+Total y por tipo de cáncer: valores de la fila elegida (sin significado con adapters falsos).
+
 ### Total
 
 | Métrica | Valor | Meta inicial | Estado |
@@ -75,6 +77,6 @@ Cifras reales (modelos de ADR-39 + Compose) en la máquina de referencia (MacBoo
 1. Verificar los modelos desde la fuente: `ollama list` (tags y tamaños) y `ollama ps` (residencia y memoria) con el LLM de ADR-39 fase B.
 2. Levantar el stack: `docker compose -f infra/docker/docker-compose.yml up -d` y el LLM nativo (`ollama serve`).
 3. Barrido real: `npm run evaluate -- --config apps/rag-orchestrator/eval/configs/<config-local>.yaml --sweep relevance_threshold --fijar --salida apps/rag-orchestrator/eval/reports` (la regla D1 usa solo desarrollo + validación de `ol06-particion-v1`; la prueba solo con `--prueba-final`).
-4. p95 de punta a punta: 3 corridas de ≥ 30 consultas contra `clinical-api` en la red interna (subcomando `e2e` de `app/scripts/adr39/`); la mediana de los p95 se pasa con `--p95-e2e-s <segundos>`.
+4. p95 de punta a punta: 3 corridas de ≥ 30 consultas desde el host, por la BFF: `python -m app.scripts.adr39 e2e --bff --base-url https://localhost --origin https://localhost` (`ADR39_PASSWORD` en el entorno); nunca desde un contenedor de clinical-net/ai-net ni desde rag-orchestrator. La mediana de los p95 se pasa con `--p95-e2e-s <segundos>`.
 5. Regenerar el baseline: `npm run evaluate -- --suite all --report json --config <config-local> --salida data/evaluation --nombre-archivo baseline.json`.
 6. Aplicar el valor elegido en `RELEVANCE_THRESHOLD` de `.env.example` (lo hace el orquestador) y registrarlo para DEC-07 (US-017) y `regression.yaml` (US-074).

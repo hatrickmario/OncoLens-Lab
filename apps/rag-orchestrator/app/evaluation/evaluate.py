@@ -28,7 +28,7 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
-from app.evaluation.corrida_barrido import ejecutar_barrido
+from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
 from app.evaluation.esquema_suite import ESQUEMA_SUITE
@@ -75,7 +75,7 @@ def main(
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
         config = cargar_config_suite(args.config)
-        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz)
+        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz, directorio_de_configs)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
@@ -100,7 +100,11 @@ def _fuente_de(config: ConfigSuite, raiz: Path | None) -> FuenteDatasetEnDirecto
 
 
 def _ejecutar(
-    config: ConfigSuite, args: argparse.Namespace, reloj: Clock, raiz: Path | None
+    config: ConfigSuite,
+    args: argparse.Namespace,
+    reloj: Clock,
+    raiz: Path | None,
+    directorio_de_configs: Path | None = None,
 ) -> int:
     exigir_marca_final(config, args.prueba_final)
     fuente = _fuente_de(config, raiz)
@@ -108,6 +112,7 @@ def _ejecutar(
         fuente.clase(), config.urls
     )  # RN-12: antes de cargar nada ni crear un cliente
     if args.sweep:
+        exigir_dataset_sintetico(fuente.clase())  # RN-14: antes de cargar nada
         return ejecutar_barrido(
             config,
             args.config,
@@ -117,6 +122,7 @@ def _ejecutar(
             salida=args.salida,
             fijar=args.fijar,
             p95_e2e_s=args.p95_e2e_s,
+            directorio_fijable=directorio_de_configs,
         )
     reporte = _correr_suite(config, fuente.cargar(), args.suite, reloj)
     escribir_reporte_cerrado(_ruta_del_resultado(config, args, reloj), reporte, ESQUEMA_SUITE)

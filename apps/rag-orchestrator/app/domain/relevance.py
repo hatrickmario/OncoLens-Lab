@@ -36,13 +36,14 @@ def relevancia_de_opcion(
 
 
 def supera_umbral(relevance_score: float, umbral: float) -> bool:
-    raise NotImplementedError("no implementado")
+    """Un puntaje pasa el umbral solo si lo supera de forma estricta (RN-02); una única definición para producción y la suite."""
+    return relevance_score > umbral
 
 
 def filtrar_sobre_umbral(
     chunks_puntuados: Sequence[ChunkPuntuado], umbral: float
 ) -> list[ChunkPuntuado]:
-    return [chunk for chunk in chunks_puntuados if chunk.relevance_score > umbral]
+    return [chunk for chunk in chunks_puntuados if supera_umbral(chunk.relevance_score, umbral)]
 
 
 def top_relevance_score(chunks_sobre_umbral: Sequence[ChunkPuntuado]) -> float | None:

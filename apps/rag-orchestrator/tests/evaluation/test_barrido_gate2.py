@@ -111,11 +111,16 @@ def test_fijar_escribe_de_forma_atomica_sin_dejar_temporales(tmp_path: Path) -> 
     fijar_umbral_en_config(config, 0.45, directorio=tmp_path)
 
     assert sorted(p.name for p in tmp_path.iterdir()) == ["config.yaml"]
-    assert yaml.safe_load(config.read_text(encoding="utf-8"))["umbrales"]["relevance_threshold"] == 0.45
+    assert (
+        yaml.safe_load(config.read_text(encoding="utf-8"))["umbrales"]["relevance_threshold"]
+        == 0.45
+    )
 
 
 def reporte_versionado() -> dict[str, object]:
-    return json.loads((RAIZ_APP / "eval" / "reports" / "S1-baseline.json").read_text(encoding="utf-8"))
+    return json.loads(
+        (RAIZ_APP / "eval" / "reports" / "S1-baseline.json").read_text(encoding="utf-8")
+    )
 
 
 def test_esquema_exige_un_nombre_de_dataset_identificador() -> None:
@@ -123,7 +128,9 @@ def test_esquema_exige_un_nombre_de_dataset_identificador() -> None:
     validar_esquema_cerrado(reporte, ESQUEMA_BASELINE)
 
     with pytest.raises(ReporteFueraDeEsquema):
-        validar_esquema_cerrado({**reporte, "dataset": "texto libre con espacios"}, ESQUEMA_BASELINE)
+        validar_esquema_cerrado(
+            {**reporte, "dataset": "texto libre con espacios"}, ESQUEMA_BASELINE
+        )
 
 
 @pytest.mark.parametrize("huella", ["abc", "Z" * 64, "A" * 64])
@@ -141,7 +148,10 @@ def test_informe_aclara_que_la_fila_elegida_no_significa_nada_con_adapters_falso
 def test_procedimiento_del_p95_va_por_la_bff_desde_el_host_y_no_desde_un_contenedor() -> None:
     informe = INFORME.read_text(encoding="utf-8")
 
-    assert "python -m app.scripts.adr39 e2e --bff --base-url https://localhost --origin https://localhost" in informe
+    assert (
+        "python -m app.scripts.adr39 e2e --bff --base-url https://localhost --origin https://localhost"
+        in informe
+    )
     assert "nunca desde un contenedor de clinical-net/ai-net ni desde rag-orchestrator" in informe
     assert "en la red interna" not in informe
 

@@ -23,8 +23,8 @@
 - [x] 1.5 Fijar `RELEVANCE_THRESHOLD` y `RELEVANCE_THRESHOLD_GRID` en la configuración versionada;
       `.env.example` lo aplica el orquestador; test de configuración · **test después** `[RN-22]`
       **PARCIAL**: hecho `RELEVANCE_THRESHOLD_GRID` (`barrido.relevance_threshold_grid`) y la tolerancia en
-      `eval/configs/test-fake.yaml` con `tests/evaluation/test_barrido_configuracion.py`. **Diferido** (mismo ID
-      destino que 1.4): el valor real de `RELEVANCE_THRESHOLD` (sale del barrido con modelos reales; el de los
+      `eval/configs/test-fake.yaml` con `tests/evaluation/test_barrido_configuracion.py`. **Diferido** (ID destino
+      **L1D-279 (ARR-03 AC-5)**): el valor real de `RELEVANCE_THRESHOLD` (sale del barrido con modelos reales; el de los
       adapters falsos no se aplica) y `app/config/settings.py` (fuera de los paths de este change). Vigente: 0.30.
 - [x] 1.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de
       comportamiento, tests en verde antes y después, commit refactor(L1D-236)

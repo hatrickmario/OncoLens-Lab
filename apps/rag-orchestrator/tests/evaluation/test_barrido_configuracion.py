@@ -52,7 +52,7 @@ def test_fijar_umbral_reescribe_solo_el_valor_y_conserva_los_comentarios(tmp_pat
     ruta = tmp_path / "config.yaml"
     ruta.write_text(CONFIG.read_text(encoding="utf-8"), encoding="utf-8")
 
-    fijar_umbral_en_config(ruta, 0.45)
+    fijar_umbral_en_config(ruta, 0.45, directorio=tmp_path)
 
     antes, despues = CONFIG.read_text(encoding="utf-8"), ruta.read_text(encoding="utf-8")
     assert cargar_config_suite(ruta).umbrales.relevance_threshold == 0.45
@@ -66,7 +66,7 @@ def test_fijar_umbral_falla_cuando_la_configuracion_no_tiene_el_valor(tmp_path: 
     ruta.write_text("umbrales: {}\n", encoding="utf-8")
 
     with pytest.raises(ConfigInvalida):
-        fijar_umbral_en_config(ruta, 0.4)
+        fijar_umbral_en_config(ruta, 0.4, directorio=tmp_path)
 
 
 def test_el_json_del_baseline_cumple_la_lista_blanca_y_rechaza_claves_ajenas() -> None:

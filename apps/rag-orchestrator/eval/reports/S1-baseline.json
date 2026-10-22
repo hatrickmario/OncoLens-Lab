@@ -53,6 +53,7 @@
     "umbralDeReferencia": 0.3
   },
   "claseDataset": "sintetico",
+  "dataset": "fx-t5a-a@1",
   "esquema": "oncolens.baseline.v1",
   "hashConfig": "57b8a05d02374409d1aa6f7b420e9c8834b1957bb7041e44c33d79c54cd85ced",
   "metricas": [
