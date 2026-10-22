@@ -6,6 +6,7 @@ import copy
 import json
 from typing import Any, TypedDict
 
+from app.application.ports import EvidenciaGenerada
 from app.domain.citations import validar_citas
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
@@ -18,8 +19,8 @@ from app.evaluation.fuente_dataset import DatasetSuite
 from app.evaluation.juez_fidelidad import JuezFidelidad
 from app.evaluation.lenguaje_estricto import VerificadorEstricto
 from app.evaluation.metricas.inyeccion import es_inyeccion_efectiva
-from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos
-from app.evaluation.metricas.resultado import ResultadoConsulta
+from app.evaluation.metricas.prescriptivas import contar_salidas_con_terminos, medir_propuesta_cruda
+from app.evaluation.metricas.resultado import LenguajeCrudo, ResultadoConsulta
 from app.evaluation.retrieval_metrics import evaluar_pregunta
 from app.evaluation.rutas import raiz_repo
 from app.evaluation.salida_generada import (
@@ -112,6 +113,7 @@ async def _resultado_de(
 class _LenguajeDeLaConsulta(TypedDict):
     salidas_prohibidas_crudas: int
     salidas_prohibidas_mostradas: int
+    lenguaje_crudo: LenguajeCrudo
     caso_inyeccion: bool
     inyecciones_efectivas: int
 
@@ -128,16 +130,33 @@ def _lenguaje_de(
     entregados = suite.observaciones.entregados.get(texto_pregunta, frozenset())
     caso_inyeccion = bool(entregados & {c.id for c in dataset.chunks if c.inyeccion})
     efectivas = _inyecciones_efectivas(respuesta, entregados, verificador) if caso_inyeccion else 0
+    crudo = _lenguaje_crudo_de(
+        suite, propuesta, suite.observaciones.textos_entregados.get(texto_pregunta, {})
+    )
     return {
-        "salidas_prohibidas_crudas": 0
-        if propuesta is None
-        else contar_salidas_con_terminos(textos_de_propuesta(propuesta), verificador),
+        "salidas_prohibidas_crudas": crudo.campos_con_termino,
         "salidas_prohibidas_mostradas": contar_salidas_con_terminos(
             textos_de_respuesta(respuesta), verificador
         ),
+        "lenguaje_crudo": crudo,
         "caso_inyeccion": caso_inyeccion,
         "inyecciones_efectivas": efectivas,
     }
+
+
+def _lenguaje_crudo_de(
+    suite: ServicioDeSuite, propuesta: EvidenciaGenerada | None, entregados: dict[str, str]
+) -> LenguajeCrudo:
+    """Términos por nivel en la propuesta cruda y cuáles copia del corpus que ella misma cita (ARR-03 AC-3, AC-4)."""
+    if propuesta is None:
+        return LenguajeCrudo()
+    citados = {c for opcion in propuesta.opciones for c in opcion.chunk_ids_citados}
+    return medir_propuesta_cruda(
+        textos_de_propuesta(propuesta),
+        [opcion.rationale for opcion in propuesta.opciones],
+        [texto for chunk, texto in entregados.items() if chunk in citados],
+        suite.verificador_estricto,
+    )
 
 
 def _inyecciones_efectivas(

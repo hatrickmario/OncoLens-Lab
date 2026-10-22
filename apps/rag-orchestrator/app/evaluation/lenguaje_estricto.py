@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
-from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
-from app.domain.support import CAMPOS_GENERADOS, CampoGenerado
+from collections.abc import Sequence
+
+from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohibited_terms
+from app.domain.support import CampoGenerado, coincidencias_en_campo_generado
 
 
 class VerificadorEstricto:
     """Más estricto que el filtro de producción (solo nivel A): mide cuánto lenguaje dudoso produce el generador."""
 
-    def __init__(self, lista: ListaTerminos) -> None:
+    def __init__(self, lista: ListaTerminos, niveles: Sequence[Nivel] = ("A", "B")) -> None:
         self._lista = lista
+        self._niveles = tuple(niveles)
 
     def contiene_terminos(self, texto: str, campo: CampoGenerado) -> bool:
-        """Solo revisa los campos GENERADOS: los copiados del corpus pueden traer vocabulario de la lista (RN-04)."""
-        if campo not in CAMPOS_GENERADOS:
-            return False
-        return bool(
-            check_prohibited_terms(texto, self._lista, niveles=("A", "B"), permitir_frases=False)
+        return bool(self.coincidencias_generadas(texto, campo))
+
+    def coincidencias_generadas(self, texto: str, campo: CampoGenerado) -> list[Coincidencia]:
+        return coincidencias_en_campo_generado(texto, campo, self._lista, self._niveles)
+
+    def coincidencias_en(self, texto: str) -> list[Coincidencia]:
+        """El vocabulario de la lista que trae un fragmento del corpus citado (para saber si el generador lo copia)."""
+        return check_prohibited_terms(
+            texto, self._lista, niveles=self._niveles, permitir_frases=False
         )

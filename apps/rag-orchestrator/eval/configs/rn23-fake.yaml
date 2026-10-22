@@ -1,0 +1,26 @@
+# Configuración de la suite `evaluate` para los casos de RN-23 de ARR-03 (L1D-279 AC-3 y AC-4): adapters falsos sobre
+# FX-RN23. Es una configuración de la CI aparte de `test-fake.yaml`: el baseline versionado no depende de este dataset.
+nombre: rn23-fake
+fixture: FX-RN23
+dataset:
+  ruta: data/eval/fx-rn23
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: simulado
+adaptadores:
+  proveedor: fake
+modelos:
+  llm: fake-guion@1
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+barrido:
+  relevance_threshold_grid: [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+  umbral_de_referencia: 0.30
+  tolerancia_recall: 0.05

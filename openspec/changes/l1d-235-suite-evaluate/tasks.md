@@ -60,6 +60,6 @@
 
 ## 5. Verificación
 
-- [ ] 5.1 `openspec validate l1d-235-suite-evaluate --strict` en verde
-- [ ] 5.2 Tests de `rag-orchestrator` en verde; sin `contracts:verify-provider` (sin cambios de API)
-- [ ] 5.3 `run-ai-eval` en cada PR (072a y 072b)
+- [x] 5.1 `openspec validate l1d-235-suite-evaluate --strict` en verde (2026-10-22, rama `feat/l1d-279-ol06-sobre-lo-implementado`: «Change 'l1d-235-suite-evaluate' is valid»)
+- [x] 5.2 Tests de `rag-orchestrator` en verde; sin `contracts:verify-provider` (sin cambios de API) (2026-10-22: `python -m pytest` en `apps/rag-orchestrator` = 2002 passed, 122 deselected `servicios_reales`/`models`)
+- [x] 5.3 `run-ai-eval` en cada PR (072a y 072b) (2026-10-22: `npm run evaluate -- --suite all --report json` dos veces seguidas con `test-fake.yaml` da el mismo SHA-256 `d4e544c7…9466f`, idéntico al de `data/evaluation/baseline.json`; reportes de `ai-eval-runner` de 072a #136 y 072b #159 en sus PR. Las partes **NO-EJECUTABLE** del juez LLM real y de la sensibilidad de PII están en 4.1/D17, con destino en design.md D21)
