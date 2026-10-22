@@ -1,4 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
+import { sqlDatoVigente, type EstadoDeRevisionVisible } from './estados-de-revision.js';
 import type { EstadoDelPaciente, OrigenDelPaciente } from './patients.repository.js';
 
 /** Datos no clínicos del paciente que alimentan la cabecera de la ficha (y la vista del admin). */
@@ -15,7 +16,7 @@ export interface FilaDePacienteDeLaFicha {
 export interface ColumnasDeProcedencia {
   readonly entryMethod: 'ocr' | 'manual' | 'manual_correction' | 'seed';
   readonly extractionConfidence: 'alta' | 'media' | 'baja' | 'n_a';
-  readonly reviewStatus: 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
+  readonly reviewStatus: EstadoDeRevisionVisible;
   readonly conflictsWithId: string | null;
   readonly sourceDocumentId: string | null;
 }
@@ -81,9 +82,6 @@ export interface FichaRepository {
     dataIds: readonly string[],
   ): Promise<FuentesAdicionales>;
 }
-
-/** Estados que nunca se muestran ni cuentan: el dato fue rechazado o sustituido (RN-07). */
-const EXCLUIDOS = "review_status NOT IN ('rechazado', 'reemplazado')";
 
 const PROCEDENCIA = `entry_method::text AS entry_method, extraction_confidence::text AS extraction_confidence,
                 review_status::text AS review_status`;
@@ -161,12 +159,12 @@ function filaDeBiomarcador(f: FilaSql): FilaDeBiomarcador {
 const CONSULTA_DE_DIAGNOSTICOS = `SELECT id, cancer_type, icd10_code, histology, histology_code, grade, staging_system,
        stage_value, performance_scale::text AS performance_scale, performance_value,
        ${comoFecha('diagnosed_at')} AS diagnosed_at, is_active, ${PROCEDENCIA}, conflicts_with_id, source_document_id
-  FROM clinical.diagnosis WHERE patient_id = $1 AND ${EXCLUIDOS}`;
+  FROM clinical.diagnosis WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}`;
 
 const CONSULTA_DE_GRADACIONES = `SELECT id, diagnosis_id, grading_system, specimen_type, grade_scope, gleason_primary_pattern,
        gleason_secondary_pattern, gleason_score, isup_grade_group, nottingham_grade, is_reference, ${PROCEDENCIA},
        source_document_id
-  FROM clinical.diagnosis_grading WHERE diagnosis_id = $1 AND ${EXCLUIDOS}
+  FROM clinical.diagnosis_grading WHERE diagnosis_id = $1 AND ${sqlDatoVigente('review_status')}
  ORDER BY is_reference DESC, created_at, id`;
 
 const CONSULTA_DE_BIOMARCADORES = `SELECT b.id, b.name, b.loinc_code, b.mapping_status::text AS mapping_status, b.value, b.unit,
@@ -177,7 +175,7 @@ const CONSULTA_DE_BIOMARCADORES = `SELECT b.id, b.name, b.loinc_code, b.mapping_
        b.extraction_confidence::text AS extraction_confidence, b.review_status::text AS review_status,
        b.conflicts_with_id, e.source_document_id, b.created_at
   FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
- WHERE e.patient_id = $1 AND b.${EXCLUIDOS}`;
+ WHERE e.patient_id = $1 AND ${sqlDatoVigente('b.review_status')}`;
 
 export function createFichaRepository(db: Consultador): FichaRepository {
   return {

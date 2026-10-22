@@ -2,7 +2,8 @@ import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
 import type { OrigenDeDatos } from './ports.js';
 
-export type EstadoDeRevision = 'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
+export type EstadoDeRevisionMostrable =
+  'auto_aceptado' | 'requiere_revision' | 'verificado' | 'corregido';
 export type MetodoDeIngreso = 'ocr' | 'manual' | 'manual_correction' | 'seed';
 export type ConfianzaDeExtraccion = 'alta' | 'media' | 'baja' | 'n_a';
 
@@ -10,7 +11,7 @@ export type ConfianzaDeExtraccion = 'alta' | 'media' | 'baja' | 'n_a';
 export interface ProcedenciaDeFila {
   entryMethod: MetodoDeIngreso;
   extractionConfidence: ConfianzaDeExtraccion;
-  reviewStatus: EstadoDeRevision;
+  reviewStatus: EstadoDeRevisionMostrable;
   /** `conflicts_with_id` solo existe en diagnóstico y biomarcador; en el resto es `null`. */
   conflictsWithId: string | null;
 }
@@ -102,7 +103,7 @@ function procedenciaDe(fila: Fila): ProcedenciaDeFila {
   return {
     entryMethod: fila['entry_method'] as MetodoDeIngreso,
     extractionConfidence: fila['extraction_confidence'] as ConfianzaDeExtraccion,
-    reviewStatus: fila['review_status'] as EstadoDeRevision,
+    reviewStatus: fila['review_status'] as EstadoDeRevisionMostrable,
     conflictsWithId: (fila['conflicts_with_id'] as string | null | undefined) ?? null,
   };
 }

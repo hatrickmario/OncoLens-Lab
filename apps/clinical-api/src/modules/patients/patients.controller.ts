@@ -14,7 +14,8 @@ import type { TraceIdGenerator } from '../evidence-analysis/ports.js';
 import { crearTraceIdMiddleware } from '../evidence-analysis/trace-id.middleware.js';
 import { PacienteNoEncontradoError } from './patients.errores.js';
 import { idDePacienteSchema, leerBusqueda, leerFiltrosDelListado } from './patients.schema.js';
-import type { PatientsService, VistaDeListado } from './patients.service.js';
+import type { PatientsService } from './patients.service.js';
+import type { VistaPorPermiso } from './vistas.js';
 
 export interface DependenciasDelController {
   service: PatientsService;
@@ -32,8 +33,8 @@ type TipoDeCriterio = 'documento' | 'nombre';
 const traceIdDe = (response: Response): string => response.locals.traceId ?? '';
 
 /** Elige la vista por PERMISO, nunca por rol; sin sesión, la de menor privilegio. */
-const vistaDe = (request: Request): VistaDeListado =>
-  vistaSegunPermiso<VistaDeListado>(request.sesion ?? { permisos: new Set() }, {
+const vistaDe = (request: Request): VistaPorPermiso =>
+  vistaSegunPermiso<VistaPorPermiso>(request.sesion ?? { permisos: new Set() }, {
     'clinical:read': 'doctor_listado',
     default: 'admin',
   });

@@ -4,7 +4,6 @@ import type {
   PatientAdminSummary,
   PatientSummary,
 } from '../../../../../packages/api-contracts/src/client/clinical-api/index.js';
-import { IdentityIntegrityError } from '../../infrastructure/crypto/identity-integrity-error.js';
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import { PacienteNoEncontradoError } from './patients.errores.js';
 import type { FichaRepository, FilaDePacienteDeLaFicha } from './ficha.repository.js';
@@ -15,29 +14,21 @@ import {
   ultimoValorPorBiomarcador,
 } from './ficha.reglas.js';
 import type { IdentityService } from './identity.service.js';
-import { enmascararDocumento } from './patients.reglas.js';
+import {
+  cancerTypeHabilitado,
+  comoResumenAdmin,
+  exigirIdentidad,
+  FALTANTES_CRITICOS_POR_AHORA,
+} from './patients.reglas.js';
 import type { PatientsRepository } from './patients.repository.js';
-import type { VistaDeListado } from './vistas.js';
+import type { VistaPorPermiso } from './vistas.js';
 
 export interface DependenciasDeLaFicha {
   ficha: FichaRepository;
   /** Solo para `contarPendientesDeRevision`: el mismo catálogo de fuentes que usa el listado. */
-  repo: PatientsRepository;
+  repo: Pick<PatientsRepository, 'contarPendientesDeRevision'>;
   identidad: IdentityService;
   tiposHabilitados: TiposDeCancerHabilitados;
-}
-
-/**
- * Hasta que existan los módulos de datos críticos (S3/S4) no hay faltantes que contar: el contador es 0 y no un
- * valor inventado (design D5 de L1D-72).
- */
-const FALTANTES_CRITICOS_POR_AHORA = 0;
-
-/** Un paciente sin identidad guardada es una violación de integridad (L1D-200), no un dato opcional. */
-function identidadObligatoria<T>(identidades: readonly T[]): T {
-  const identidad = identidades[0];
-  if (identidad === undefined) throw new IdentityIntegrityError();
-  return identidad;
 }
 
 async function diagnosticoVigente(
@@ -71,8 +62,7 @@ async function fichaDelDoctor(
   paciente: FilaDePacienteDeLaFicha,
 ): Promise<PatientSummary> {
   const { identidad, repo, tiposHabilitados } = dependencias;
-  const descifrada = await identidad.descifrar(paciente.id);
-  if (descifrada === null) throw new IdentityIntegrityError();
+  const descifrada = exigirIdentidad((await identidad.descifrar(paciente.id)) ?? undefined);
   const diagnostico = await diagnosticoVigente(dependencias, paciente.id);
   const pendientes = await repo.contarPendientesDeRevision([paciente.id]);
   return {
@@ -87,8 +77,7 @@ async function fichaDelDoctor(
     lifecycleStatus: paciente.lifecycleStatus,
     birthYear: paciente.birthYear,
     requiresRatification: paciente.requiresRatification,
-    cancerTypeEnabled:
-      diagnostico !== null && tiposHabilitados.estaHabilitado(diagnostico.cancerType),
+    cancerTypeEnabled: cancerTypeHabilitado(diagnostico?.cancerType ?? null, tiposHabilitados),
     diagnosis: diagnostico,
     recentBiomarkers: await biomarcadoresRecientes(dependencias, paciente.id),
     pendingReviewCount: pendientes.get(paciente.id) ?? 0,
@@ -96,7 +85,7 @@ async function fichaDelDoctor(
   };
 }
 
-/** Vista del admin (mínimo privilegio): ni nombre ni datos clínicos; del documento, solo su máscara. */
+/** Vista del admin: del documento descifra solo lo necesario para la máscara, nunca el nombre. */
 async function fichaDelAdmin(
   dependencias: DependenciasDeLaFicha,
   paciente: FilaDePacienteDeLaFicha,
@@ -104,22 +93,13 @@ async function fichaDelAdmin(
   const descifradas = await dependencias.identidad.descifrarVarios([paciente.id], {
     conNombre: false,
   });
-  const identificacion = identidadObligatoria(descifradas);
-  return {
-    view: 'admin',
-    id: paciente.id,
-    idType: identificacion.idType,
-    nationalIdMasked: enmascararDocumento(identificacion.numeroDeDocumento),
-    dataOrigin: paciente.dataOrigin,
-    lifecycleStatus: paciente.lifecycleStatus,
-    registeredAt: paciente.registeredAt.toISOString(),
-  };
+  return comoResumenAdmin(paciente, exigirIdentidad(descifradas[0]));
 }
 
 /** Ficha del paciente en la vista del permiso; un paciente inexistente es `PacienteNoEncontradoError` (404). */
 export async function obtenerFicha(
   dependencias: DependenciasDeLaFicha,
-  entrada: { patientId: string; vista: VistaDeListado },
+  entrada: { patientId: string; vista: VistaPorPermiso },
 ): Promise<PatientSummary | PatientAdminSummary> {
   const paciente = await dependencias.ficha.paciente(entrada.patientId);
   if (paciente === null) throw new PacienteNoEncontradoError();

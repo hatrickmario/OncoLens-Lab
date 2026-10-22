@@ -11,6 +11,12 @@ import type {
   FilaDeGradacion,
 } from './ficha.repository.js';
 
+/** Orden por unidades de código, igual en toda máquina (fechas ISO, ids y nombres): sin depender del `locale`. */
+function compararTexto(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 /**
  * Diagnóstico vigente (D3): el activo; si el repository devolviera varios, el de fecha más reciente (desempate por
  * `id`). Sin ninguno, `null` y la ficha muestra «No registrado».
@@ -20,7 +26,7 @@ export function seleccionarDiagnosticoVigente(
 ): FilaDeDiagnostico | null {
   const activos = diagnosticos.filter((diagnostico) => diagnostico.isActive);
   const ordenados = [...activos].sort(
-    (a, b) => b.diagnosedAt.localeCompare(a.diagnosedAt) || a.id.localeCompare(b.id),
+    (a, b) => compararTexto(b.diagnosedAt, a.diagnosedAt) || compararTexto(a.id, b.id),
   );
   return ordenados[0] ?? null;
 }
@@ -39,14 +45,14 @@ export function ultimoValorPorBiomarcador(
       masReciente.set(candidato.name, candidato);
     }
   }
-  return [...masReciente.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return [...masReciente.values()].sort((a, b) => compararTexto(a.name, b.name));
 }
 
 function esMasReciente(candidato: FilaDeBiomarcador, actual: FilaDeBiomarcador): boolean {
-  const porFecha = candidato.performedAt.localeCompare(actual.performedAt);
+  const porFecha = compararTexto(candidato.performedAt, actual.performedAt);
   if (porFecha !== 0) return porFecha > 0;
   const porAlta = candidato.createdAt.getTime() - actual.createdAt.getTime();
-  return porAlta !== 0 ? porAlta > 0 : candidato.id.localeCompare(actual.id) > 0;
+  return porAlta !== 0 ? porAlta > 0 : compararTexto(candidato.id, actual.id) > 0;
 }
 
 /** `Provenance` del contrato: el documento principal y los duplicados fusionados, sin repetir el principal. */

@@ -1,5 +1,5 @@
 import type { Consultador } from '../auth/auth.repository.js';
-import { ESTADOS_PENDIENTES_DE_REVISION } from './estados-de-revision.js';
+import { ESTADOS_PENDIENTES_DE_REVISION, sqlDatoVigente } from './estados-de-revision.js';
 
 export type EstadoDelPaciente = 'activo' | 'egresado';
 export type OrigenDelPaciente = 'sintetico' | 'real_anonimizado' | 'real_identificado';
@@ -66,8 +66,7 @@ export const FUENTES_POR_REVISAR: readonly FuentePorRevisar[] = [
   },
   {
     tabla: 'diagnosis_grading',
-    pacienteSql:
-      'SELECT d.patient_id FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE g.review_status = ANY($2::clinical.review_status[])',
+    pacienteSql: `SELECT d.patient_id FROM clinical.diagnosis_grading g JOIN clinical.diagnosis d ON d.id = g.diagnosis_id WHERE g.review_status = ANY($2::clinical.review_status[]) AND ${sqlDatoVigente('d.review_status')}`,
   },
   {
     tabla: 'clinical_note',
@@ -97,7 +96,7 @@ export const FUENTES_POR_REVISAR: readonly FuentePorRevisar[] = [
 ];
 
 const SUBCONSULTA_TIPO_DE_CANCER = `(SELECT d.cancer_type FROM clinical.diagnosis d
-                  WHERE d.patient_id = p.id AND d.is_active
+                  WHERE d.patient_id = p.id AND d.is_active AND ${sqlDatoVigente('d.review_status')}
                   ORDER BY d.diagnosed_at DESC, d.id LIMIT 1)`;
 
 const DONDE = `
