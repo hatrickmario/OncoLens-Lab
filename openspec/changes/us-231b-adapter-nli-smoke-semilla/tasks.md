@@ -15,7 +15,7 @@
 
 - [ ] 1.0 (previa, sin código) Inspeccionar `MODEL_HOST_DIR` (`ls`): ¿los modelos de embeddings y reranker de US-231a traen un `model.onnx.data`
   sin verificar (cuantizados con `use_external_data_format=True`)? Si existe es deuda de US-231a: se corrige en la tarea 1.6 con el mismo
-  mecanismo (D12) y se informa al orquestador. Confirmar con el usuario el origen del ONNX fp32 del NLI (por defecto, reexportar en un solo archivo). **No ejecutada (sin `MODEL_HOST_DIR` en la implementación):** con la sesión desde bytes, un `model.onnx.data` de embeddings o reranker haría fallar cerrado el arranque nombrando `EMBEDDING_MODEL_PATH` / `RERANKER_MODEL_PATH` (no hay par `*_DATA_*` para ellos): si el `ls` lo halla, hay que reexportar en un solo archivo o ampliar el mecanismo; informar al orquestador.
+  mecanismo (D12) y se informa al orquestador. Confirmar con el usuario el origen del ONNX fp32 del NLI (por defecto, reexportar en un solo archivo). **No ejecutada (sin `MODEL_HOST_DIR` en la implementación):** con la sesión desde bytes, un `model.onnx.data` de embeddings o reranker haría fallar cerrado el arranque nombrando `EMBEDDING_MODEL_PATH` / `RERANKER_MODEL_PATH` (no hay par `*_DATA_*` para ellos): si el `ls` lo halla, hay que reexportar en un solo archivo o ampliar el mecanismo; informar al orquestador. **ID destino (L1D-282 ARR-06 AC-5, 2026-10-21): L1D-280 (ARR-04) AC-5** (medición en la VM de Docker ≥ 10 GB con modelos descargados); sin ejecutar. ADR-39 (decisión 2) ya fija el NLI en un solo archivo.
 - [x] 1.1 (test después) Configuración (RN-22): `NLI_MODEL_PATH`, `NLI_MODEL_SHA256`, `NLI_TOKENIZER_PATH`, `NLI_TOKENIZER_SHA256`,
   `NLI_LABEL_INDEX_ENTAILMENT`/`_NEUTRAL`/`_CONTRADICTION` (validados al arrancar) y, si el modelo trae datos externos,
   `NLI_MODEL_DATA_PATH`/`NLI_MODEL_DATA_SHA256`, en `app/config/` y en el `environment` de `rag-orchestrator` en
@@ -80,31 +80,31 @@
 - [ ] 1.11 (test después) Mediciones `@pytest.mark.models` en la VM de Docker ≥ 10 GB, reloj inyectado: (a) etapa NLI con FX-06a-c en un
   lote, 3 corridas, mediana ≤ 1500 ms [US-231b AC-6]; (b) RSS máximo del proceso con los tres modelos cargados e inferidos una vez,
   ≤ 4489 MiB [US-231b AC-7] (`resource.getrusage`, sin dependencia nueva), documentando también el pico durante la carga (D12). Verificación: informe con medianas, RSS y veredicto; un exceso
-  se **reporta** al refinamiento, no se oculta ni se ajusta el presupuesto. No es compuerta de CI. **Escrita, no ejecutada** (`tests/integration/test_nli_mediciones.py`, `-m models`; sin pesos ni VM de 10 GB en la implementación).
+  se **reporta** al refinamiento, no se oculta ni se ajusta el presupuesto. No es compuerta de CI. **Escrita, no ejecutada** (`tests/integration/test_nli_mediciones.py`, `-m models`; sin pesos ni VM de 10 GB en la implementación). **ID destino (L1D-282 ARR-06 AC-5, 2026-10-21): L1D-280 (ARR-04) AC-5** (medición en la VM de Docker ≥ 10 GB con modelos descargados); sin ejecutar.
 - [ ] 1.12 (test después, *smoke* de L1D-115) Con el Compose de L1D-164, los pesos de `MODEL_HOST_DIR` y el manifiesto real:
   `python -m app.scripts.load_seed_corpus` → todos los documentos `embebido` + `is_current`, chunks con `source_type`, `language` y
   `cancer_type_tags` copiados del catálogo, `CorpusRelease` con `excluded_sources = ["NCCN","ESMO"]`
   (`@pytest.mark.ac("US-059", 1)`) [US-231b AC-9] [US-059 AC-1] [AC-06.1] [RN-05]; después `Q-HER2` a `/rag/query` con
   `LLM_PROVIDER=local` y `MODEL_PROVIDER=local` (opción (a)): se acepta `200 sin_evidencia` o `503 LOCAL_LLM_UNAVAILABLE`, nunca
   `503 RETRIEVAL_UNAVAILABLE`; el tope de ≤ 12 pares se verifica con el log de recuentos y la integración de 1.9, no en Compose. Salida adjunta al PR. **Al terminar, cerrar las tareas 1.13 y 2.13b de L1D-115 (nota en su
-  `tasks.md`).** Solo corpus público con licencia registrada (RN-21); sin datos de pacientes (RN-13). **Escrita, no ejecutada** (`tests/integration/test_smoke_semilla_con_modelos_reales.py`, `-m "models and servicios_reales"`; sin Compose ni pesos). Las tareas 1.13 y 2.13b de L1D-115/L1D-106 llevan una nota y se cierran cuando corra.
+  `tasks.md`).** Solo corpus público con licencia registrada (RN-21); sin datos de pacientes (RN-13). **Escrita, no ejecutada** (`tests/integration/test_smoke_semilla_con_modelos_reales.py`, `-m "models and servicios_reales"`; sin Compose ni pesos). Las tareas 1.13 y 2.13b de L1D-115/L1D-106 llevan una nota y se cierran cuando corra. **ID destino (L1D-282 ARR-06 AC-5, 2026-10-21): L1D-280 (ARR-04) AC-5** (medición en la VM de Docker ≥ 10 GB con modelos descargados); sin ejecutar. Evidencia parcial no equivalente: el demo con LLM real cargó los 10 documentos con 310 chunks (`docs/demo/runbook-demo-S1.md`).
 - [x] 1.13 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(US-231b)`. No inlinear adapters ni puertos; candidatos: contenedor de modelos (D4), etapa de corte (D9).
 
 ## 2. evaluación
 
-- [ ] 2.1 Constancia en el PR: el change no cambia modelo, umbral de calidad, prompt, catálogo ni corpus (ejecuta ADR-39 y carga la
+- [ ] 2.1 Constancia en el PR: el change no cambia modelo, umbral de calidad, prompt, catálogo ni corpus (ejecuta ADR-39 y carga la **ID destino (L1D-282, 2026-10-21): L1D-280 (ARR-04) AC-5**, junto con el informe de 1.11 que esta constancia adjunta.
   semilla ya existente), así que no requiere `run-ai-eval`; se adjunta el informe de 1.11 y se anota el riesgo del corte previo a 12
   pares y del *chunking* en tokens sobre recall@10 para US-072/US-073 y L1D-274.
 
 ## 3. Coordinación
 
-- [ ] 3.1 Notificar a L1D-180 que `NliClassifier`, `ParNli`, `ResultadoNli` y el adapter real están en `main` (sus tareas 2.11 parte
-  `NliClassifier` y 2.14 pasan a consumirlos) y a L1D-274 que puede medir el p95 con los tres adapters reales.
+- [x] 3.1 Notificar a L1D-180 que `NliClassifier`, `ParNli`, `ResultadoNli` y el adapter real están en `main` (sus tareas 2.11 parte
+  `NliClassifier` y 2.14 pasan a consumirlos) y a L1D-274 que puede medir el p95 con los tres adapters reales. **Conciliada en L1D-282 (2026-10-21):** L1D-180 2.11 y 2.14 están [x] sobre esos puertos y L1D-274 se midió y archivó (#107, #109).
 
 ## 4. Verificación
 
 - [x] 4.1 `openspec validate us-231b-adapter-nli-smoke-semilla --strict` en verde.
-- [ ] 4.2 `pytest -m "not models"` en verde (ruta rápida de la CI, sin pesos reales) y los tests `models` en verde en la VM local, salida adjunta al PR.
-- [x] 4.3 `npm run quality` (Ruff + import-linter): `application/` y `domain/` sin importar `onnxruntime` ni `tokenizers`; `mypy` si está configurado.
-- [ ] 4.4 `pip-audit` sin hallazgos críticos ni altos (sin dependencias nuevas) y escaneo de secretos y PII (`pii-scan`) en verde; ningún peso, ruta de máquina ni hash real versionado.
+- [ ] 4.2 `pytest -m "not models"` en verde (ruta rápida de la CI, sin pesos reales) y los tests `models` en verde en la VM local, salida adjunta al PR. **Conciliada en L1D-282 (2026-10-21):** ruta rápida en verde (`pytest` de `rag-orchestrator` sobre `main` 806dfa78: 1806 passed, 122 deselected); la parte `-m models`: **ID destino L1D-280 (ARR-04) AC-5**.
+- [ ] 4.3 `npm run quality` (Ruff + import-linter): `application/` y `domain/` sin importar `onnxruntime` ni `tokenizers`; `mypy` si está configurado. **Reabierta en L1D-282 (2026-10-21):** estaba marcada [x] pero `npm run quality` e `import-linter` no existen en `main`; **ID destino L1D-263 (US-213a) 1.5 y 2.1**. `tests/unit/test_dependencias_de_inferencia.py` verifica hoy que `application/` y `domain/` no importen `onnxruntime` ni `tokenizers`.
+- [x] 4.4 `pip-audit` sin hallazgos críticos ni altos (sin dependencias nuevas) y escaneo de secretos y PII (`pii-scan`) en verde; ningún peso, ruta de máquina ni hash real versionado. **Conciliada en L1D-282 (2026-10-21):** `pip-audit -r requirements.txt` → «No known vulnerabilities found»; `node scripts/ci/pii-scan.mjs` y `dataset-class-check.mjs` en verde sobre `main` 806dfa78; job `dependencies` en success en la CI de `main`.
