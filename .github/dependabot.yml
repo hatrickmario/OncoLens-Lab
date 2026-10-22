@@ -9,6 +9,13 @@ updates:
     groups:
       npm:
         patterns: ['*']
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /apps/rag-orchestrator
@@ -54,6 +61,11 @@ updates:
     groups:
       docker:
         patterns: ['*']
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker-compose
     directory: /infra/docker
@@ -62,3 +74,10 @@ updates:
     groups:
       docker-compose:
         patterns: ['*']
+    ignore:
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "quay.io/coreos/etcd"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "milvusdb/milvus"
+        update-types: ["version-update:semver-major"]
