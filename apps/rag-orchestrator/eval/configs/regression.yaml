@@ -1,0 +1,5 @@
+# Umbrales de regresión de la CI (US-074, RN-22). Sin umbrales en el S1: el job `eval-required` pasa con el aviso
+# "Sin baseline de regresión: umbral no aplicado". El S2 versiona los reales tras DEC-07 como cambio de configuración.
+# Los mínimos aplican al reporte con adapters falsos (data/evaluation/baseline.json), no a metas-iniciales.yaml
+# (modelos reales): un mínimo por encima del valor de la CI haría fallar siempre el job.
+# Forma: `<metrica>_min: <valor en [0,1]>` (p. ej. `recall_at_10_min: 0.80`).
