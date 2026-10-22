@@ -1,5 +1,3 @@
-import { normalizarNumeroDeDocumento } from '../../infrastructure/crypto/indice-ciego.js';
-
 /** Marcador de la máscara del documento: cuatro U+2022 (el formato lo fija el contrato, `nationalIdMasked`). */
 const MARCADOR_DE_DOCUMENTO = '••••';
 const CARACTERES_VISIBLES = 2;
@@ -23,8 +21,10 @@ export function enmascararNombre(nombreCompleto: string): string {
  * documento; si tuviera menos de 2 caracteres se rellena a la izquierda (RN-10, US-048 AC-7).
  */
 export function enmascararDocumento(numeroDeDocumento: string): string {
-  const visibles = normalizarNumeroDeDocumento(numeroDeDocumento)
-    .replace(/[^A-Za-z0-9]/g, '')
+  // Normalización PROPIA de la máscara: `normalizarNumeroDeDocumento` define el índice ciego y está congelado.
+  const visibles = numeroDeDocumento
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
     .slice(-CARACTERES_VISIBLES)
     .padStart(CARACTERES_VISIBLES, RELLENO);
   return `${MARCADOR_DE_DOCUMENTO} ${visibles}`;
