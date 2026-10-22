@@ -21,3 +21,7 @@
 
 - [x] 3.1 `openspec validate l1d-263-calidad-capas-umbrales --strict`
 - [x] 3.2 `npm run quality` y `npm run test:quality` en verde (Pytest de `rag-orchestrator` queda para el cierre de `## ai-services`, 2.1–2.2: ese change no toca Python en esta sección)
+
+## 4. Diferido
+
+- DIFERIDO a US-213b (L1D-285, S3): AC-8 (tests desactivados o enfocados, incluido `check-pytest-hygiene.py`), AC-9 (AC sin test de aceptación), AC-10 (mocks fuera del borde) y AC-11/AC-12 (cobertura de líneas cambiadas, ejemplo `SINT-` de `PatientListItem`). Confirmado por `proposal.md` (Fuera de alcance) y por la historia en `backlog/features/FEAT-PL1-plataforma-base.md` §US-213.

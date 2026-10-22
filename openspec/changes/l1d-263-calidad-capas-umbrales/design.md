@@ -40,3 +40,8 @@ Ninguno.
 ## Riesgos
 
 - Conflictos en `ci.yml` con `l1d-267`, `l1d-277` y `l1d-237`: este change va el último de O6 o se rebasa sobre ellos.
+
+## Excepciones decididas durante la ejecución
+
+- Las 16 excepciones por archivo de `quality-thresholds.json` (14 de `max-lines-per-function`, 2 de `complexity`) son preexistentes del S1 (D5) y caducan el 2026-11-30.
+- `analysis-completion.ts` (`crearAnalysisCompletion`, 56 líneas, llegó con #142 / L1D-173) no se registró como excepción: se corrigió con un Extract Method sin cambio de comportamiento (`refactor(L1D-263)`). Si el orquestador prefiere una excepción nueva, requiere su decisión explícita y visibilidad para el usuario.
