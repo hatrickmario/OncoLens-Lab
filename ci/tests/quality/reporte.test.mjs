@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  armarReporte,
   buscarDesactivacionesDeTamano,
   desdeDependencyCruiser,
   desdeImportLinter,
@@ -10,7 +11,8 @@ import {
   ordenar,
   sinAlertaDondeHayError,
 } from '../../../scripts/quality/normalizar.mjs';
-import { RAIZ, npmRun } from './soporte.mjs';
+import { leerUmbrales } from '../../../scripts/quality/umbrales.mjs';
+import { RAIZ, ejecutar, npmRun } from './soporte.mjs';
 
 const RAIZ_FALSA = '/repo';
 
@@ -174,6 +176,40 @@ describe('desactivaciones de reglas de tamaño', () => {
   });
 });
 
+describe('armado del reporte', () => {
+  it('registra generadoEn y commit inyectados y cuenta errores y alertas [US-213 AC-1]', () => {
+    const hallazgos = [{ severity: 'error' }, { severity: 'warn' }, { severity: 'warn' }];
+    const umbrales = { maxLinesPerFunction: 40, excepciones: [] };
+
+    const reporte = armarReporte(umbrales, hallazgos, {
+      ahora: new Date('2026-10-22T10:00:00Z'),
+      commit: 'abc123',
+    });
+
+    expect(reporte).toMatchObject({
+      generadoEn: '2026-10-22T10:00:00.000Z',
+      commit: 'abc123',
+      resumen: { errores: 1, alertas: 2 },
+    });
+  });
+});
+
+describe('npm run quality con una herramienta ausente', () => {
+  it('termina en 1 y no deja un latest.json viejo cuando ruff no está en el PATH [US-213 AC-1]', () => {
+    const reporte = path.join(RAIZ, 'reports/quality/latest.json');
+    mkdirSync(path.dirname(reporte), { recursive: true });
+    writeFileSync(reporte, '{"viejo":true}');
+
+    const resultado = ejecutar(process.execPath, ['scripts/quality/quality.mjs', '--reporte'], {
+      env: { ...process.env, PATH: path.dirname(process.execPath) },
+    });
+
+    expect(resultado.estado, resultado.salida).toBe(1);
+    expect(resultado.salida).toContain('ruff');
+    expect(existsSync(reporte)).toBe(false);
+  }, 180_000);
+});
+
 describe('npm run quality:report sobre el monorepo', () => {
   it('termina con 0 y escribe reports/quality/latest.json con el resumen y los umbrales [US-213 AC-1]', () => {
     const resultado = npmRun('quality:report');
@@ -183,7 +219,7 @@ describe('npm run quality:report sobre el monorepo', () => {
       readFileSync(path.join(RAIZ, 'reports/quality/latest.json'), 'utf8'),
     );
     expect(reporte.resumen.errores).toBe(0);
-    expect(reporte.umbrales.maxLinesPerFunction).toBe(40);
+    expect(reporte.umbrales.maxLinesPerFunction).toBe(leerUmbrales().maxLinesPerFunction);
     expect(Array.isArray(reporte.hallazgos)).toBe(true);
     expect(Array.isArray(reporte.excepcionesVigentes)).toBe(true);
   }, 180_000);

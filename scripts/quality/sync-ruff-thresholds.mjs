@@ -2,6 +2,7 @@
 // Sin argumentos reescribe apps/rag-orchestrator/pyproject.toml; con `--check` solo verifica (lo usa la CI).
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { leerUmbrales } from './umbrales.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
@@ -56,7 +57,7 @@ function principal() {
   console.log('pyproject.toml de rag-orchestrator sincronizado con quality-thresholds.json');
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     principal();
   } catch (error) {

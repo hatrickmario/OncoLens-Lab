@@ -45,3 +45,12 @@ Ninguno.
 
 - Las 16 excepciones por archivo de `quality-thresholds.json` (14 de `max-lines-per-function`, 2 de `complexity`) son preexistentes del S1 (D5) y caducan el 2026-11-30.
 - `analysis-completion.ts` (`crearAnalysisCompletion`, 56 líneas, llegó con #142 / L1D-173) no se registró como excepción: se corrigió con un Extract Method sin cambio de comportamiento (`refactor(L1D-263)`). Si el orquestador prefiere una excepción nueva, requiere su decisión explícita y visibilidad para el usuario.
+
+## Endurecimiento tras el Gate 2 (decisiones y preguntas abiertas)
+
+- **Excepciones:** solo `max-lines-per-function`, `complexity` y `max-lines` (nunca capas ni seguridad), con `historia`, `caduca` real (AAAA-MM-DD) y tope de 90 días desde hoy; `archivo` literal dentro del repo. `eslint-disable` de tamaño o genérico falla (`sin-eslint-disable-de-tamano`). `QUALITY_THRESHOLDS` se rechaza con `CI=true` fuera de Vitest.
+- **import-linter:** `.importlinter` ausente, configuración inválida, contratos no nombrados o estado 1 sin contrato roto fallan; ya no existe la rama "pendiente". `dominio-independiente` prohíbe además `app.schemas`, `app.config`, `app.prompts`, `app.bootstrap`, `app.evaluation` y `app.scripts` (el dominio actual sigue en KEPT).
+- **Reporte:** `latest.json` incluye `generadoEn` y `commit` y se borra al empezar, para que una herramienta rota no deje uno viejo.
+- **Pregunta para el usuario (¿puede un componente importar el SDK `client-web` de clinical-api?):** hoy la regla `componentes-sin-datos` excluye `packages/api-contracts/src/client-web/`, o sea lo permite. Opción A: mantenerlo (los componentes usan el cliente generado del BFF). Opción B: prohibirlo y exigir que los datos lleguen por props o `lib/`. No se cambió.
+- **Preguntas del revisor sin cambio:** (1) las excepciones por archivo no tienen un tope medido por función (una excepción apaga la regla en todo el archivo; opción: excepciones por símbolo); (2) Ruff mide también `tests/` de rag-orchestrator (opción: excluirlos como en clinical-api); (3) el dominio puede importar paquetes externos (opción: contrato `forbidden` de externos en `app.domain`).
+- **Deuda sin resolver:** avisar de excepciones que no suprimen ningún hallazgo (hoy solo se validan estructura y vigencia).

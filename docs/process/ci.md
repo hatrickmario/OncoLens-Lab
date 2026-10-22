@@ -37,11 +37,15 @@ herramientas sin detenerse en la primera y termina con el peor código. Cada hal
   ausente o no numérica falla nombrándola. `web.componentLinesWarn` (100) es alerta, `web.componentLinesError` (150) falla.
 - **Capas de Node:** `.dependency-cruiser.cjs` (`controller-sin-acceso-a-datos`, `web-solo-por-bff`, `componentes-sin-datos`,
   `sin-ciclos`, `api-contracts-generado`). Lo generado (`packages/api-contracts/src`) no se mide en `sin-ciclos`.
-- **Violaciones preexistentes (D5):** se registran en `excepciones` de `quality-thresholds.json` con `regla`, `archivo`,
-  `caduca` (AAAA-MM-DD, último día vigente) y `motivo`. Mientras estén vigentes desactivan esa regla en ese archivo y el
-  reporte las lista en `excepcionesVigentes`; al caducar, la violación vuelve a fallar. Nunca se relaja un umbral para pasar.
-- **Python:** Ruff (`C901`, `PLR0915`) corre siempre; `import-linter` corre cuando `apps/rag-orchestrator/.importlinter`
-  existe (el reporte lo lista en `herramientasPendientes` hasta entonces).
+- **Violaciones preexistentes (D5):** se registran en `excepciones` de `quality-thresholds.json` con `regla`, `archivo`
+  (ruta literal), `caduca` (AAAA-MM-DD real, último día vigente, tope 90 días desde hoy), `motivo` e `historia`. Solo son
+  exceptuables `max-lines-per-function`, `complexity` y `max-lines`; las reglas de capas y de seguridad no. Mientras estén
+  vigentes desactivan esa regla en ese archivo y el reporte las lista en `excepcionesVigentes`; al caducar, la violación
+  vuelve a fallar. Un `eslint-disable` de tamaño o genérico falla (`sin-eslint-disable-de-tamano`). Nunca se relaja un
+  umbral para pasar.
+- **Python:** Ruff (`C901`, `PLR0915`) e `import-linter` corren siempre; un `.importlinter` ausente, una configuración
+  inválida o un contrato sin evaluar (`dominio-independiente`, `capas-hexagonales`) hacen fallar el job.
+- **Reporte:** `latest.json` lleva `generadoEn` y `commit`, y se borra al empezar para que una herramienta rota no deje uno viejo.
 
 ### Verificación del proveedor y cambios incompatibles (US-214, `l1d-264`)
 

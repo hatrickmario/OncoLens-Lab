@@ -1,6 +1,7 @@
 // Normaliza la salida de cada herramienta de calidad al hallazgo común (L1D-263, design D2):
 // { tool, rule, file, line, symbol, measured, threshold, severity }. Funciones puras, sin E/S.
 import path from 'node:path';
+import { excepcionesVigentes } from './umbrales.mjs';
 
 const hallazgo = (campos) => ({
   tool: null,
@@ -192,4 +193,17 @@ export function describir(h) {
   const simbolo = h.symbol ? ` ${h.symbol}` : '';
   const medida = h.measured === null ? '' : ` medido ${h.measured}, umbral ${h.threshold}`;
   return `[${h.tool}] ${h.severity === 'error' ? 'ERROR' : 'ALERTA'} ${h.rule} ${lugar}${simbolo}${medida}`;
+}
+
+/** Reporte de `reports/quality/latest.json`; `ahora` y `commit` se inyectan para que sea reproducible en tests. */
+export function armarReporte(umbrales, hallazgos, { ahora, commit }) {
+  const errores = hallazgos.filter((h) => h.severity === 'error').length;
+  return {
+    generadoEn: ahora.toISOString(),
+    commit,
+    umbrales: { ...umbrales, excepciones: undefined },
+    excepcionesVigentes: excepcionesVigentes(umbrales.excepciones, ahora),
+    resumen: { errores, alertas: hallazgos.length - errores },
+    hallazgos,
+  };
 }

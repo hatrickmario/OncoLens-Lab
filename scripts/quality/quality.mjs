@@ -3,7 +3,7 @@
 // con el peor código. Con `--reporte` escribe reports/quality/latest.json (ignorado por git).
 // `QUALITY_THRESHOLDS=<ruta>` apunta a otro quality-thresholds.json (solo los tests; rechazado con CI=true).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
@@ -13,12 +13,13 @@ import {
   desdeEslint,
   evaluarImportLinter,
   desdeRuff,
+  armarReporte,
   describir,
   ordenar,
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
-import { excepcionesVigentes, leerUmbrales } from './umbrales.mjs';
+import { leerUmbrales } from './umbrales.mjs';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const RAG = 'apps/rag-orchestrator';
@@ -158,20 +159,19 @@ async function medir(umbrales) {
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }
 
-function armarReporte(umbrales, hallazgos) {
-  const errores = hallazgos.filter((h) => h.severity === 'error').length;
-  return {
-    umbrales: { ...umbrales, excepciones: undefined },
-    excepcionesVigentes: excepcionesVigentes(umbrales.excepciones, new Date()),
-    resumen: { errores, alertas: hallazgos.length - errores },
-    hallazgos,
-  };
+/** Commit medido: el de la CI (GITHUB_SHA) o el HEAD local; null si no hay repositorio. */
+function commitActual() {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+  const resultado = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: RAIZ, encoding: 'utf8' });
+  return resultado.status === 0 ? resultado.stdout.trim() : null;
 }
 
 async function principal() {
+  // Un reporte viejo no puede sobrevivir a una herramienta rota: se borra antes de medir.
+  rmSync(RUTA_REPORTE, { force: true });
   const umbrales = leerUmbrales();
   const medicion = await medir(umbrales);
-  const reporte = armarReporte(umbrales, medicion);
+  const reporte = armarReporte(umbrales, medicion, { ahora: new Date(), commit: commitActual() });
   for (const h of medicion) console.log(describir(h));
   if (process.argv.includes('--reporte')) {
     mkdirSync(path.dirname(RUTA_REPORTE), { recursive: true });

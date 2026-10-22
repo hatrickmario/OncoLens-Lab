@@ -93,14 +93,27 @@ describe('umbrales de clinical-api en ESLint', () => {
 });
 
 describe('umbral único en quality-thresholds.json', () => {
-  it('pasa la misma función de 41 líneas cuando solo se sube maxLinesPerFunction a 45 [US-213 AC-6]', async () => {
-    const umbralesNuevos = validarUmbrales({ ...UMBRALES, maxLinesPerFunction: 45 });
+  /** ESLint real con la configuración de la raíz en un proceso nuevo, leyendo los umbrales de `rutaUmbrales`. */
+  function lintearConConfiguracionReal(rutaUmbrales) {
+    const guion = `
+      import { ESLint } from 'eslint';
+      const eslint = new ESLint({ cwd: process.cwd() });
+      const [r] = await eslint.lintText(${JSON.stringify(funcionDeLineas(41))}, { filePath: 'apps/clinical-api/src/modules/x/x.service.ts' });
+      console.log(JSON.stringify(r.messages.map((m) => m.ruleId)));`;
+    const env = { ...process.env, QUALITY_THRESHOLDS: rutaUmbrales };
+    const resultado = ejecutar('node', ['--input-type=module', '-e', guion], { env });
+    return JSON.parse(resultado.salida.trim().split('\n').pop());
+  }
 
-    const hallazgos = await lintear(funcionDeLineas(41), RUTA_SERVICE, [
-      bloqueTamanoClinicalApi(umbralesNuevos),
-    ]);
+  it('pasa la misma función de 41 líneas cuando solo se sube maxLinesPerFunction a 45 en el JSON [US-213 AC-6]', () => {
+    const directorio = directorioTemporal();
+    const con40 = path.join(directorio, 'u40.json');
+    const con45 = path.join(directorio, 'u45.json');
+    writeFileSync(con40, JSON.stringify(UMBRALES));
+    writeFileSync(con45, JSON.stringify({ ...UMBRALES, maxLinesPerFunction: 45 }));
 
-    expect(hallazgos).toEqual([]);
+    expect(lintearConConfiguracionReal(con40)).toContain('max-lines-per-function');
+    expect(lintearConConfiguracionReal(con45)).not.toContain('max-lines-per-function');
   });
 
   it('falla nombrando la clave complexity cuando el archivo de umbrales no la trae [US-213 AC-6]', () => {
