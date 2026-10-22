@@ -114,12 +114,14 @@ describe('PacientesPage', () => {
     );
   });
 
-  it('muestra el error sin código de traza cuando clinical-api no responde [US-048 AC-6]', async () => {
+  it('muestra el error con el código de traza propio de web cuando clinical-api no responde [US-048 AC-6]', async () => {
     clinicalApi.listadoInalcanzable();
 
     await abrirPagina();
 
-    expect(screen.getByRole('alert').textContent).toContain(pacientes.listado.errorSinTraza);
+    expect(screen.getByRole('alert').textContent).toMatch(
+      /^No pudimos cargar el listado\. Intenta de nuevo\. Código de traza req_\w+$/,
+    );
   });
 
   it('redirige a /login?motivo=expirada cuando clinical-api responde 401 [US-048 AC-6]', async () => {
@@ -135,6 +137,7 @@ describe('PacientesPage', () => {
 
     await abrirPagina({ nationalId: 'SINT-0000001', name: 'Prueba', status: 'activo' });
 
-    expect(new URL(clinicalApi.peticiones[0]!.url).search).toBe('?status=activo');
+    const enviada = new URL(clinicalApi.peticiones[0]!.url).searchParams;
+    expect(Object.fromEntries(enviada)).toEqual({ status: 'activo', page: '1' });
   });
 });

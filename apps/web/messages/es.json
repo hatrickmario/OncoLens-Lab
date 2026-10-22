@@ -215,6 +215,7 @@
       "origen": "Origen",
       "alcance": "Alcance",
       "anioNacimiento": "Nacimiento: {anio}",
+      "faltanteUno": "1 faltante",
       "faltantesN": "{n} faltantes",
       "porRevisarN": "{n} por revisar",
       "sinDato": "No disponible en esta vista"
