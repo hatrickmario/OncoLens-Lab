@@ -114,6 +114,8 @@ paths:
         identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento
         depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento
         ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+        Orden determinista: fecha de alta descendente (el registro más reciente primero) y, a igual
+        fecha, el id ascendente.
       x-permission: patients:lookup
       x-view-by-permission:
         clinical:read: PatientListItem
@@ -168,7 +170,8 @@ paths:
         cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego) y no usa el país
         emisor (issuingCountry no participa); la búsqueda por nombre es exacta sobre el nombre completo
         normalizado (sin tildes, en minúsculas, espacios colapsados) por índice ciego: un nombre parcial
-        o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento. La forma de cada elemento depende del permiso
+        o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento.
+        Los resultados se ordenan por fecha de alta descendente y, a igual fecha, por id ascendente. La forma de cada elemento depende del permiso
         (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS;
         completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
       x-permission: patients:lookup

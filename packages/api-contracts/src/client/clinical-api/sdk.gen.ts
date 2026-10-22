@@ -55,7 +55,7 @@ export const logout = <ThrowOnError extends boolean = false>(options?: Options<L
 /**
  * Lista pacientes con filtros que no contienen identidad
  *
- * Listado paginado. Solo admite filtros sin identidad (status, dataOrigin, page): la búsqueda por documento o por nombre es POST /platform/patients/search, porque la identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+ * Listado paginado. Solo admite filtros sin identidad (status, dataOrigin, page): la búsqueda por documento o por nombre es POST /platform/patients/search, porque la identidad nunca viaja en la URL ni en las cabeceras (RN-10). La forma de cada elemento depende del permiso (x-view-by-permission). El listado devuelve el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría. Orden determinista: fecha de alta descendente (el registro más reciente primero) y, a igual fecha, el id ascendente.
  */
 export const listPatients = <ThrowOnError extends boolean = false>(options?: Options<ListPatientsData, ThrowOnError>): RequestResult<ListPatientsResponses, ListPatientsErrors, ThrowOnError> => (options?.client ?? client).get<ListPatientsResponses, ListPatientsErrors, ThrowOnError>({
     security: [{
@@ -70,7 +70,7 @@ export const listPatients = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Busca pacientes por identidad exacta o por nombre
  *
- * La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego) y no usa el país emisor (issuingCountry no participa); la búsqueda por nombre es exacta sobre el nombre completo normalizado (sin tildes, en minúsculas, espacios colapsados) por índice ciego: un nombre parcial o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento. La forma de cada elemento depende del permiso (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
+ * La identidad (idType + nationalId, o name) viaja en el cuerpo, nunca en la URL ni en las cabeceras (RN-10). La búsqueda por documento es exacta (índice ciego) y no usa el país emisor (issuingCountry no participa); la búsqueda por nombre es exacta sobre el nombre completo normalizado (sin tildes, en minúsculas, espacios colapsados) por índice ciego: un nombre parcial o un apellido suelto no encuentra nada. Si el cuerpo trae documento y nombre, gana el documento. Los resultados se ordenan por fecha de alta descendente y, a igual fecha, por id ascendente. La forma de cada elemento depende del permiso (x-view-by-permission). Los resultados traen el nombre y el documento ENMASCARADOS; completos solo en la ficha GET /platform/patients/{patientId}, con auditoría.
  */
 export const searchPatients = <ThrowOnError extends boolean = false>(options: Options<SearchPatientsData, ThrowOnError>): RequestResult<SearchPatientsResponses, SearchPatientsErrors, ThrowOnError> => (options.client ?? client).post<SearchPatientsResponses, SearchPatientsErrors, ThrowOnError>({
     security: [{
