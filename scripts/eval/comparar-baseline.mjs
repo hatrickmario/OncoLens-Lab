@@ -59,6 +59,11 @@ export function compararConBaseline(reporte, baseline, { tolerancia }) {
 const ETIQUETA_DE_ESTADO = { igual: 'igual', mejora: 'mejora', tolerada: 'caída tolerada', regresion: 'regresión' };
 const textoDe = (valor) => (valor === null ? 'sin valor' : String(valor));
 
+/** Esqueleto: lo implementa el commit feat. */
+export function textoSeguro() {
+  throw new Error('no implementado');
+}
+
 /** Tabla Markdown de métricas con la marca «validada / no validada» de cada una (AC-6). */
 export function tablaMarkdown({ filas }) {
   const lineas = filas.map(

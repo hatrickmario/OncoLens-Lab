@@ -163,13 +163,51 @@ describe('eval-required', { timeout: 90_000 }, () => {
     expect(resultado.salida).not.toContain('Traceback');
   });
 
-  it('pasa con el aviso cuando no hay baseline contra el que comparar [US-074 AC-4]', () => {
+  it('pasa con el aviso propio de JS cuando no hay baseline.json contra el que comparar [US-074 AC-4]', () => {
     const fixture = pr(CAMBIO_DE_PROMPT);
     rmSync(path.join(fixture.clon, 'data/evaluation/baseline.json'));
 
     const resultado = correr(fixture);
 
     expect(resultado.codigo).toBe(0);
+    expect(resultado.comentario).toContain('Sin `data/evaluation/baseline.json`: comparación con el baseline no aplicada.');
+  });
+
+  it.each([' ', '0x10', '1e3', '-1'])('sale con 2 cuando EVAL_MAX_REGRESSION es %j, que Number() aceptaría o redondearía [US-074 AC-5]', (valor) => {
+    const resultado = correr(pr(CAMBIO_DE_PROMPT), { EVAL_MAX_REGRESSION: valor });
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.reporte).toBeNull();
+  });
+
+  it('sale con 2 sin repetir su contenido cuando el baseline está mal formado [US-074 AC-5]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'data/evaluation/baseline.json': () => '{"metricas": SECRETO-DE-PRUEBA-123' }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.salida).toContain('eval-required — reporte o baseline ilegible');
+    expect(resultado.salida).not.toContain('SECRETO-DE-PRUEBA-123');
+    expect(resultado.salida).not.toContain('SyntaxError');
+  });
+
+  it('sale con 2 y mensaje fijo cuando el baseline no tiene metricas [US-074 AC-5]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'data/evaluation/baseline.json': () => '{"esquema": "x"}' }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.salida).toContain('eval-required — reporte o baseline ilegible');
+    expect(resultado.salida).not.toContain('TypeError');
+  });
+
+  it('no repite el contenido del YAML de reglas cuando es inválido [US-074 AC-1]', () => {
+    const resultado = correr(pr({ ...CAMBIO_DE_PROMPT, 'scripts/ci/eval-trigger-paths.yaml': () => 'rutas: [SECRETO-DE-PRUEBA-456\n' }));
+
+    expect(resultado.codigo).toBe(2);
+    expect(resultado.salida).not.toContain('SECRETO-DE-PRUEBA-456');
+  });
+
+  it('muestra el aviso del CLI de Python cuando regression.yaml no tiene mínimos, aparte de la rama de JS [US-074 AC-4]', () => {
+    const resultado = correr(pr(CAMBIO_DE_PROMPT));
+
     expect(resultado.comentario).toContain('Sin baseline de regresión: umbral no aplicado');
+    expect(resultado.comentario).not.toContain('Sin `data/evaluation/baseline.json`');
   });
 });

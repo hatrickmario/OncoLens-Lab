@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compararConBaseline, tablaMarkdown } from '../comparar-baseline.mjs';
+import { compararConBaseline, tablaMarkdown, textoSeguro } from '../comparar-baseline.mjs';
 
 const validacion = (rotulo) => ({ rotulo, preguntas_validadas: 0, preguntas_no_validadas: 6 });
 
@@ -71,6 +71,22 @@ describe('compararConBaseline', () => {
     const filas = compararConBaseline(reporteCon(), reporteCon(), { tolerancia: 0 }).filas;
 
     expect(filas.map((f) => f.rotulo)).toEqual(['no_validada', 'validada', 'validada']);
+  });
+});
+
+describe('tablaMarkdown y textoSeguro', () => {
+  it('escapa barras, saltos de línea, comillas invertidas y ángulos del nombre y del rótulo [US-074 AC-6]', () => {
+    const fila = { metrica: 'a|b\n`c`<x>', baseline: 1, actual: 1, rotulo: 'no<va>lida', estado: 'igual' };
+
+    const tabla = tablaMarkdown({ filas: [fila] });
+
+    expect(tabla.split('\n')).toHaveLength(3);
+    expect(tabla).not.toMatch(/[`<>]/);
+    expect(tabla.split('\n')[2].split('|')).toHaveLength(7);
+  });
+
+  it('textoSeguro reemplaza cada carácter especial por ? [US-074 AC-6]', () => {
+    expect(textoSeguro('a|b\r\n`c`<d>')).toBe('a?b???c??d?');
   });
 });
 
