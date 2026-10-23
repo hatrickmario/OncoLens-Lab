@@ -15,7 +15,7 @@ onnx==1.23.2             # Apache-2.0
 onnxscript==0.7.2        # MIT
 onnxruntime==1.31.0      # MIT
 torch==2.14.1            # BSD-3-Clause (solo para exportar)
-transformers==5.20.1     # Apache-2.0 (solo para exportar; gte exporta con transformers 4.57.6 en /opt/tf4)
+transformers==5.20.2     # Apache-2.0 (solo para exportar; gte exporta con transformers 4.57.6 en /opt/tf4)
 pymilvus==3.0.2          # Apache-2.0 (solo T5)
 pytest==9.1.1            # MIT
 respx==0.23.1            # BSD-3-Clause
