@@ -1,0 +1,2 @@
+- [Trampas del entorno de worktree](feedback_entorno_worktree.md) — Bash rechaza "eval" en rutas, heredocs y variables; venv en /tmp
+- [ONNX desde bytes y entorno de trabajo](onnx_bytes_y_entorno_de_trabajo.md) — trampas de ORT con datos externos y cómo correr pytest/vitest/ruff en el worktree
