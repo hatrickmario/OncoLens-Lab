@@ -102,9 +102,42 @@
 | US-184 | L1D-176 | El 100 % de las requests lleva un `traceId` que se correlaciona de `web` a `rag-orchestrator` | FEAT-PL5 | 6 `si-hay-capacidad` | 3 |
 | US-185 | L1D-177 | StrykerJS alcanza un *mutation score* ≥ 70 % sobre auth, autorización y cifrado, y la CI lo exige | FEAT-PL5 | 6 `si-hay-capacidad` | 5 |
 
+## Features y «si hay capacidad» sin milestone: retirar de Linear (revisión del 2026-10-23)
+
+Al 2026-10-23 el proyecto tenía 251 issues activas (límite del plan gratuito: 250). Las 29 historias Post-MVP de arriba ya están fuera de Linear; **las 51 de «si hay capacidad» no** (49 siguen activas y sin milestone, más L1D-118 y L1D-172 con milestone). Faltaban además estas Features, que no estaban registradas aquí. La interfaz de Linear solo ofrece **Delete** (el archivado es automático y solo para issues cerradas), así que se retiran borrándolas: queda en «Recently deleted» 30 días y después es **irreversible**.
+
+**Revisión previa al borrado (2026-10-23), sobre los 64 issues sin milestone (15 Features + 49 historias):**
+- Sin comentarios, sin adjuntos, sin asignado, sin ciclo ni prioridad en ninguno. Los 8 revisados con relaciones (`blocks`/`blockedBy`/`relatedTo`) no tienen ninguna: las dependencias solo existen en el Markdown.
+- Todos se crearon el 2026-10-07 y su única edición es el cambio en bloque del 2026-10-18 19:38 (etiqueta `si-hay-capacidad`, milestone retirado). Ninguna edición individual posterior: lo que hay en Linear es lo publicado desde el Markdown.
+- Las 49 historias están completas en su `FEAT-*.md` (`## Story`, entre 4 y 7 AC, estimación y contexto técnico) y figuran en la tabla de arriba con US, `L1D-nn`, título, Feature, sprint y estimación. Las 15 Features conservan su cabecera con `> Linear: [L1D-nn]` en su `FEAT-*.md` y figuran en la tabla de abajo.
+- Efectos del borrado: los enlaces `> Linear: [L1D-nn](https://linear.app/...)` de esos `FEAT-*.md` quedan rotos (el `L1D-nn` sigue siendo el identificador) y `backlog/03-trazabilidad.md` conserva los IDs como referencia histórica. Ningún otro archivo del repo los cita.
+- Para recuperar una, dentro de los 30 días: Linear → archivo del equipo → *Recently deleted* → restaurar. Pasado ese plazo: crearla de nuevo con el texto del `FEAT-*.md` y anotar el ID nuevo junto al `L1D-nn` original, que no se reutiliza.
+
+| Linear | Feature | Hijas activas en Linear | Estado |
+|---|---|---|---|
+| L1D-8 | FEAT-01c — Registro de paciente asistido por OCR | L1D-69, 70, 71 | retirar con sus hijas |
+| L1D-11 | FEAT-02c — Resumen del caso verificable | L1D-81, 82, 83 | retirar con sus hijas |
+| L1D-15 | FEAT-05 — Plantillas de preguntas clínicas | L1D-99, 100, 101 | retirar con sus hijas |
+| L1D-19 | FEAT-07 — Síntesis de evidencia | L1D-120…124 | retirar con sus hijas |
+| L1D-22 | FEAT-09 — Vigencia visible de la evidencia | L1D-135…138 | retirar con sus hijas |
+| L1D-26 | FEAT-11a — Historial, re-ejecución y comparación | L1D-147…152 | retirar con sus hijas |
+| L1D-33 | FEAT-PL5 — Hardening mínimo y observabilidad | L1D-175, 176, 177 | retirar con sus hijas |
+| L1D-21 | FEAT-08c — Agente acotado | ninguna (ya archivadas) | cascarón vacío: retirar |
+| L1D-27 | FEAT-11b — Decisión de tratamiento y evolución | ninguna | cascarón vacío: retirar |
+| L1D-28 | FEAT-11c — Memoria de análisis previos | ninguna | cascarón vacío: retirar |
+| L1D-29 | FEAT-AP1 — Preparación Post-MVP | ninguna | cascarón vacío: retirar |
+| L1D-38 | FEAT-T2c — Base del análisis: memoria y agente | ninguna | cascarón vacío: retirar |
+| L1D-41 | FEAT-T4b — Ciclo de vida del paciente y opt-out | ninguna | cascarón vacío: retirar |
+| L1D-44 | FEAT-T4e — Equipo tratante | ninguna | cascarón vacío: retirar |
+| L1D-45 | FEAT-T4f — Job de retención | ninguna | cascarón vacío: retirar |
+
+Pre-S1 (cerrado el 2026-10-13, todo en Done): **L1D-5** (FEAT-00) y sus hijas **L1D-50…55**. No se usan para ejecutar nada; su contenido está en `FEAT-00-decisiones-previas.md`, `docs/decisions/` y `openspec/specs/`. **Decisión pendiente, no incluida en este borrado:** son historia cerrada y citada desde 4 a 16 archivos del repo.
+
+Total a retirar ahora: 15 Features + 49 historias = **64 issues** (251 → 187). Con los 7 del Pre-S1 serían 71 (251 → 180). Las Features de las que dependen historias que podrían promoverse pronto (FEAT-06b, FEAT-10c, FEAT-T5b, FEAT-03b) **no** se tocan: siguen con milestone.
+
 ## Cómo liberar el cupo en Linear
 
 Las herramientas del agente no pueden archivar ni borrar issues; lo hace el humano:
-1. Linear → proyecto OncoLens-1 → issues → filtro **Milestone = Post-MVP** (las historias de «si hay capacidad» pueden tener otro milestone o el de S6: selecciónalas por los `L1D-nn` de la columna *Linear*).
-2. Seleccionar → clic derecho → **Archive** (reversible; no uses «Delete»).
+1. Linear → proyecto OncoLens-1 → issues → vista con **Milestone = sin milestone** (64 issues: las 49 historias de la tabla de arriba con etiqueta `si-hay-capacidad` y las 15 Features de la sección anterior).
+2. Seleccionar → clic derecho → **Delete** (la interfaz no ofrece Archive; se restaura 30 días desde *Recently deleted*). Revisa antes que el recuento sea 64 y que ninguna sea FEAT-06b, 10c, T5b ni 03b.
 3. Avisar al agente para que cree las issues de `backlog/sprints/S2-arrastre.md`.

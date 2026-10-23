@@ -2,12 +2,12 @@
 
 > Linear: [L1D-34](https://linear.app/l1der-lab-mjbc/issue/L1D-34)
 
-**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto) · 5 (US-127: RN-25) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto; US-236: alias de chunks en la cita) · 5 (US-127: RN-25) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
 **Requisitos:** RN-01 (dueña: validador de citas y soporte para todo tipo de afirmación; en el S1, opciones y afirmaciones sueltas) · FR-10 (dueña, vía HU-03 escenario 3) · RN-04 (dueña) · RN-07 (dueña: etiquetas en el contexto y exclusión de rechazados) · RN-25 (dueña, S3: US-127) · IA-04
 **Evidencia:** [→ PRD §6 RN-01, RN-04, RN-07, RN-24], [→ PRD §5 FR-10], [→ PRD §12 Grounding], [→ PRD §18.4 AC-T1.2, AC-T1.3], [→ PRD §18.3.10 AC-10.4, M-10.1], [→ PRD §18.3.2 AC-02.6], [→ readme §5 HU-03 escenario 3], [→ readme §6 OL-02 (tareas 5, 8; tests adicionales NLI)], [→ readme §6 OL-03 (tarea 2.3)], [→ readme §4.1 `CitedSource`, `DiscardedOption`, `Provenance`], [→ readme §3.3 #34], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-055 (pipeline), US-052 (constructor de contexto) · ⛔ ADR-39 (modelo NLI real; los AC se verifican con el adapter falso) · 🔗 Medido en: US-072 (M-10.1 = 100 %, fidelidad y precisión de citas M-07.2, G-2) · 🔗 Consumida por: US-057 (última defensa ante inyección), US-061 (descartadas en la UI)
 **Valor:** el oncólogo no puede verificar cada frase de la IA contra cada fuente; necesita que el sistema lo haga por él y que lo que no se pueda respaldar nunca se muestre como válido (P12, JTBD 8). Esta Feature es la garantía G-2: cero opciones sin cita a un chunk recuperado y sin soporte, y cada dato del paciente que viaja a la IA lleva su procedencia.
-**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-127 (3 puntos, S5)
+**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-236 (3 puntos, S3) · US-127 (3 puntos, S5)
 
 ## Fixtures
 
@@ -218,6 +218,63 @@ Tests: Pytest unitarios del dominio con FX-06a-a y FX-08b-a, y Playwright para e
 ## INVEST
 **Small** ✓ una ampliación de la copia de metadatos que ya existe.
 **Testable** ✓ cuatro tests deterministas.
+
+---
+
+## US-236 — El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita
+
+> Linear: pendiente (límite de issues del workspace)
+
+`FEAT-T1a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **3** · HU-03 · RN-01 (regresión), RN-04 (dueña: la cita sale del corpus, no del texto generado) · AC-T1.2, AC-T1.3, AC-10.4 · ↪ US-063, US-055 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063 · 🔗 Medido en: US-072 (precisión de citas, M-07.2) · **Recorrido principal:** sí
+
+> **Origen (demo del 2026-10-23, paciente de mama (a), LLM real `gemma4:26b-a4b-it-q4_K_M`):** con la pregunta «¿Cuándo se considera un inhibidor de CDK4/6 adyutante?» solo un chunk superó el umbral y el único `chunkId` citable era `pmc-mama-cdk46-guia@a3bb26468a32#0000`. El LLM lo copió mal en dos corridas seguidas: una con letras inventadas dentro del id y otra con LaTeX metido en medio. `validar_citas` (coincidencia exacta, RN-04) descartó la opción con `cita_invalida`. La misma pregunta bien escrita citó el id correcto. Es un fallo mecánico de copia, no de significado ni de evidencia; lo que el usuario ve es «No hay opciones descritas con soporte verificable…».
+
+## Story
+Como oncólogo, quiero que una opción respaldada por la evidencia recuperada no se descarte
+porque el modelo copió mal un identificador largo, para que "sin soporte verificable"
+signifique que de verdad no hay soporte y no que falló una transcripción.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · alias en el prompt)** · Dada una recuperación con cuatro chunks sobre el
+  umbral (FX-06a-a) y `LLM-OK`, cuando se arma el prompt de generación, entonces cada chunk
+  lleva un alias `C1…C4` asignado por orden de `relevance_score` descendente (desempate por
+  `chunkId`) y el prompt no contiene ningún `chunkId` real. `[RN-04]`
+- **AC-2 (happy path · traducción)** · Dado un LLM falso que cita `C2`, cuando se valida la
+  respuesta, entonces la opción queda en `evidenceOptions` y su cita apunta al chunk real de
+  `C2`, con `chunkTextSnapshot` igual al texto de ese chunk en el corpus. `[RN-04]` `[AC-T1.3]`
+- **AC-3 (borde · alias inexistente)** · Dado un LLM falso que cita `C9` con solo cuatro
+  chunks, cuando se valida, entonces la opción va a `discardedOptions` con
+  `discardReason = cita_invalida`. `[RN-01]` `[AC-T1.2]`
+- **AC-4 (borde · el LLM devuelve el id real)** · Dado un LLM falso que cita el `chunkId` real
+  en vez del alias, cuando se valida, entonces la opción va a `discardedOptions` con
+  `discardReason = cita_invalida`: el alias es el único formato aceptado y no se repara ningún
+  id "parecido". `[RN-04]` (asumido: evita reintroducir una vía que acepte texto generado)
+- **AC-5 (invariante · alias efímeros)** · Dados los mismos chunks en el mismo orden, cuando se
+  arma el prompt dos veces, entonces los alias son idénticos; y en ningún lugar de la
+  respuesta, de la persistencia (`AIAnalysisRecord`) ni de los logs aparece un alias como
+  identificador: solo el `chunkId` real. `[RN-06]`
+- **AC-6 (invariante · sin chunks nuevos)** · Dado un alias que corresponde a un chunk que no
+  superó el umbral en esta consulta, cuando se valida, entonces no existe (los alias solo se
+  asignan a los chunks entregados a la generación). `[RN-01]` `[RN-24]`
+- **AC-7 (medición · OL-06)** · Dada la suite `evaluate` con el LLM real sobre la partición de
+  desarrollo (US-226) y la pregunta del origen con el paciente de mama (a), cuando se compara
+  contra la referencia, entonces la precisión de citas no baja de 0,90 (M-07.2), el recuento de
+  `cita_invalida` no sube y la pregunta del origen produce `cita_invalida = 0` en 10 corridas
+  (asumido: tamaño de la muestra; se recalibra en el refinamiento). El reporte de
+  `ai-eval-runner` se adjunta al PR (cambia el prompt). `[OL-06]` `[M-07.2]`
+
+## Contexto técnico
+Función pura nueva en `rag-orchestrator/app/domain/` (`alias_de_chunks`: asigna alias y los
+traduce de vuelta); `LlmEvidenceGenerator` (`app/application/generation.py`) arma el prompt con
+alias y traduce las citas antes de construir `OpcionGenerada`, de modo que `validar_citas`
+(`domain/citations.py`) sigue comparando contra `chunkId` reales sin cambios. El prompt y su
+`VERSION_DEL_PROMPT` (`app/prompts/rag_query.py`) cambian: la suite `evaluate` es obligatoria.
+`FX-06a-b` (LLM falso) se actualiza para citar alias; el contrato OpenAPI no cambia. TDD
+estricto (regla de dominio): commit `test(L1D-nn)` con el AC-2 en rojo antes del `feat`.
+
+## INVEST
+**Small** ✓ una función pura de alias y un cambio de prompt.
+**Testable** ✓ seis tests deterministas con adapters falsos más una medición en `evaluate`.
 
 ---
 

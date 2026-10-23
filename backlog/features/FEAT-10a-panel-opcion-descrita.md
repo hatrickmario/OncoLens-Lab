@@ -2,12 +2,12 @@
 
 > Linear: [L1D-23](https://linear.app/l1der-lab-mjbc/issue/L1D-23)
 
-**Talla:** M · **Sprint:** 1 (US-060, US-061) · 3 (US-062) · **Capacidad:** CAP-10 (S1), CAP-05 (AC-05.1 y AC-05.3 en la UI) · consume T-2 y T-3 · **Recorrido principal:** sí
+**Talla:** M · **Sprint:** 1 (US-060, US-061) · 3 (US-062, US-237) · **Capacidad:** CAP-10 (S1), CAP-05 (AC-05.1 y AC-05.3 en la UI) · consume T-2 y T-3 · **Recorrido principal:** sí
 **Requisitos:** FR-09 (UI del S1, vía HU-03) · FR-10 (sección de descartadas en la UI) · RN-03 (dueña) · RN-28 (texto del criterio de orden visible desde el S1: neutro en el S1–S2; el de aplicabilidad es de US-126 desde el S3; la selección por aplicabilidad es de US-125 y el orden de hasta 3, de US-134) · NFR-12 (panel) · SEG-01 (Route Handler)
 **Evidencia:** [→ PRD §5 FR-09, FR-10], [→ PRD §6 RN-03, RN-28], [→ PRD §7 NFR (accesibilidad)], [→ PRD §18.3.10 AC-10.1, AC-10.2, AC-10.4], [→ PRD §18.3.5 AC-05.3], [→ readme §5 HU-03], [→ readme §6 OL-04], [→ readme §2.1 Route Handler, no Server Action], [→ readme §3.3 #8], [→ readme §6.1 #4, #8, #15], [→ CLAUDE.md "El navegador solo habla con `web`"]
 **Dependencias:** ↪ US-053 (respuesta del gateway), US-211 (sesión mínima, S1), US-051 (`PatientContextCard`) · 🔗 Consume: US-064 (descartadas), US-067 (Base del análisis en la UI), US-069 (avisos de IA), US-068 (lista de términos prohibidos) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · 🔗 Medido en: US-072 (M-10.1, M-10.2 sobre salidas)
 **Valor:** es lo que el oncólogo ve y usa: una pregunta y un análisis legible en el que la opción descrita viene con sus fuentes verificables, la relevancia no se confunde con eficacia y lo que no se pudo respaldar queda aparte, solo para revisión (P5, P6, P12). Sin esta Feature el walking skeleton no es demostrable.
-**Stories:** US-060, US-061 (8 puntos, S1) · US-062 (3 puntos, S3)
+**Stories:** US-060, US-061 (8 puntos, S1) · US-062 (3 puntos, S3) · US-237 (2 puntos, S3)
 
 ---
 
@@ -182,6 +182,57 @@ Pasos de progreso visibles (ADR-42, S4; workaround: indicador indeterminado).
 ## INVEST
 **Small** ✓ estados de un componente existente.
 **Testable** ✓ seis tests de componente y E2E.
+
+---
+
+## US-237 — Cuando todas las opciones se descartan, el panel y el log dicen por qué
+
+> Linear: pendiente (límite de issues del workspace)
+
+`FEAT-10a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **2** · HU-03 · FR-10 (descartadas en la UI), RN-01 (regresión), RN-19, RN-23 · AC-10.4 · ↪ US-061, US-062, US-064 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · **Recorrido principal:** sí
+
+> **Origen (demo del 2026-10-23):** cuando las opciones se descartan por citas mal copiadas (US-236), el titular dice «No hay opciones descritas con soporte verificable en la evidencia recuperada.» sin distinguir ese caso de una falta real de soporte. La UI **ya** muestra el motivo de cada opción dentro de la sección «Descartadas» (`discardReason.*` en `apps/web/messages/es.json`, US-061); lo que falta es resumirlo en el titular y contarlo en el log, que hoy solo registra `opcionesDescartadas=N`.
+
+## Story
+Como oncólogo, quiero que, cuando el análisis descarta todo lo que generó, el panel me diga
+en una línea por qué, para saber si no hay evidencia que respalde la pregunta o si falló un
+paso mecánico, y para no repetir la consulta a ciegas.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · un solo motivo)** · Dada una respuesta con solo descartadas y todas con
+  `discardReason = cita_invalida` (`con-evidencia-solo-descartadas` ajustada), cuando el panel la
+  renderiza, entonces bajo el titular aparece una vez el motivo «La cita no corresponde a un
+  fragmento recuperado», sin identificadores de chunk. `[FR-10]` `[AC-10.4]`
+- **AC-2 (borde · motivos mixtos)** · Dada una respuesta con una descartada `sin_citas` y dos
+  `cita_invalida`, cuando se renderiza, entonces aparece cada motivo distinto con su recuento
+  («2 × …», «1 × …»), en el orden de `discardReason` del contrato. `[FR-10]`
+- **AC-3 (borde · otros motivos)** · Dadas descartadas con `afirmacion_sin_soporte` y
+  `solo_soportada_por_analisis_previo`, cuando se renderizan, entonces el resumen usa las
+  etiquetas ya existentes de `discardReason` (fuente única de mensajes) y no inventa texto
+  nuevo por motivo. `[RN-24]`
+- **AC-4 (invariante · lenguaje y aviso)** · Dado el titular nuevo, cuando se recorre la lista
+  de términos prohibidos (US-068), entonces no contiene ninguno, y el aviso «Generado por IA;
+  requiere validación clínica independiente por el oncólogo tratante» sigue visible. `[RN-23]` `[RN-19]`
+- **AC-5 (log · recuento por motivo)** · Dado un análisis con una opción `cita_invalida` y otra
+  `sin_citas`, cuando `rag-orchestrator` valida las citas, entonces el log
+  `event=rag_query_citas` registra `sinCitas=1 citaInvalida=1` (además de los recuentos
+  actuales) y no registra ningún `chunkId`, texto de opción ni de pregunta. `[RN-14]`
+- **AC-6 (invariante · sin cambio de contrato)** · Dado el `openapi.yaml` de ambos backends,
+  cuando se ejecuta `contracts:check`, entonces no hay cambios: el motivo ya viaja en
+  `discardedOptions[].discardReason`. `[ADR-26]`
+
+## Contexto técnico
+Texto del titular y del resumen en `apps/web/messages/es.json` (`analysis.soloDescartadas`,
+fuente única recorrida por US-068); agrupación por motivo en el componente de descartadas
+(Testing Library + MSW con ejemplos de `contracts/examples/`). El recuento por motivo sale de
+`ResultadoCitas.descartadas[].motivo` (`domain/citations.py`) en
+`RAGOrchestratorService._validar_citas_y_ensamblar`. Los recuentos por motivo del soporte NLI
+(`afirmacion_sin_soporte`) ya tienen su evento (`rag_query_soporte`). `visual-check` a 375 y
+1280 px.
+
+## INVEST
+**Small** ✓ un mensaje agrupado y un campo de log.
+**Testable** ✓ seis tests de componente y de integración.
 
 ---
 

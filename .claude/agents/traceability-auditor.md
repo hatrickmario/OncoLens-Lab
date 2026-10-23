@@ -36,7 +36,10 @@ citados → PR mergeado `[L1D-nn]`.
 ## Salidas
 
 1. **`backlog/03-trazabilidad.md`** regenerado (manteniendo su estructura), con una columna
-   nueva `Spec (openspec)` y `Test` por requisito, y la fecha y sprint de generación.
+   nueva `Spec (openspec)` y `Test` por requisito, y la fecha y sprint de generación. Conserva
+   las dos notas que remiten a `backlog/sprints/V2-Post-MVP.md` (tras la cabecera y en
+   "Historias → Feature"): las historias Post-MVP y de «si hay capacidad» ya no están en Linear,
+   y si encuentras una que sí lo está o una nueva, contrástala con ese archivo.
 2. **`backlog/sprints/S<n>-trazabilidad.md`**: resumen del sprint, cobertura por familia, huecos
    con dueño y propuesta (historia nueva, AC a añadir, test a escribir).
 3. **Linear:** el orquestador pudo haber pasado ya historias a `Done` al completarse. Tú haces la revisión profunda de cada

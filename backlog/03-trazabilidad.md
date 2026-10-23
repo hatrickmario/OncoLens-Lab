@@ -6,6 +6,8 @@
 > **Test:** tests con el tag `[US-xxx AC-n]` (o `@pytest.mark.ac`, `"ac"` de los casos de `ci/tests/cases`, o la etiqueta `US-xxx AC-n` de los chequeos `bien` de `scripts/smoke`) de esos AC, o que nombran el ID. Desde este sprint la CI de `main` ejecuta también la integración de `clinical-api` (job `integration`), los Pytest `servicios_reales` (job `integration-rag`) y los E2E de Playwright (flujo `E2E`): en 11dc5cc8 todos los jobs están en verde, así que cuentan como ejecutados. "(+n sin ejecutar)" = solo los Pytest `models`, que necesitan pesos reales. Cada `it`/`test` o función de Pytest cuenta una vez (sin expandir `each`/`parametrize`). "—" = sin spec o sin test todavía.
 > Fuente: el Markdown de las Features; regenerar al cierre de cada sprint. El reporte del sprint está en [`sprints/S2-trazabilidad.md`](sprints/S2-trazabilidad.md); los anteriores, en [`sprints/S1-trazabilidad.md`](sprints/S1-trazabilidad.md) y [`sprints/Pre-S1-trazabilidad.md`](sprints/Pre-S1-trazabilidad.md).
 
+> **Post-MVP y «si hay capacidad»:** esas historias y sus Features ya no están en Linear (se retiraron para liberar cupo). Cuando una fila de esta matriz apunte a una historia Post-MVP o de «si hay capacidad», o a un `L1D-nn` que ya no resuelve en Linear, **consulta [`sprints/V2-Post-MVP.md`](sprints/V2-Post-MVP.md)**: ahí están su US, su `L1D-nn`, la Feature, el sprint propuesto, la estimación y cómo recuperarla. El texto completo sigue en `backlog/features/FEAT-*.md`.
+
 ## Resumen de cobertura
 
 | Familia | Universo | Con historia | Sin historia | Con spec (openspec) | Solo en changes sin archivar | Con test |
@@ -414,6 +416,8 @@
 
 ## Historias → Feature · sprint · estimación
 
+> Las filas con sprint `Post-MVP` o `si-hay-capacidad` (o `6 si-hay-capacidad`) tienen su `L1D-nn` retirado de Linear: ver [`sprints/V2-Post-MVP.md`](sprints/V2-Post-MVP.md).
+
 | Historia | Linear | Feature | Sprint | Est. | Change archivado | Título |
 |---|---|---|---|---|---|---|
 | US-007 | L1D-50 | FEAT-00 | Pre-S1 | 3 | — | ADR-36 — [Pre-S1] Fuentes y licencias del corpus científico |
@@ -654,3 +658,6 @@
 | US-233 | pendiente | FEAT-T5a | 4 | 3 | — | La suite `evaluate` corre con los modelos locales, calibra el umbral de entailment y `RETRIEVAL_TOP_K` y acota y calibra el juez local |
 | US-234 | pendiente | FEAT-T4a | 6 | 3 | — | La búsqueda de pacientes limita la tasa por usuario, queda auditada sin datos personales y su índice del nombre es obligatorio |
 | US-235 | pendiente | FEAT-01a | 6 | 2 | — | El nombre original del PDF se guarda cifrado o enmascarado y bloquea preflight real-data hasta entonces |
+| US-236 | pendiente | FEAT-T1a | 3 | 3 | — | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita |
+| US-237 | pendiente | FEAT-10a | 3 | 2 | — | Cuando todas las opciones se descartan, el panel y el log dicen por qué |
+| US-238 | pendiente | FEAT-06b | 4 | 5 | — | Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar |
