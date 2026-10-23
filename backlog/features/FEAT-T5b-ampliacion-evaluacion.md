@@ -2,7 +2,7 @@
 
 > Linear: [L1D-47](https://linear.app/l1der-lab-mjbc/issue/L1D-47)
 
-**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-103, US-105) · 4 (US-131) · 5 (US-132, US-140, US-142, → G-Demo) · `si-hay-capacidad` (US-104, US-106, US-133, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
+**Talla:** XL (Feature completa, propone división por sprint) · **Sprint:** 3 (US-132) · 4 (US-131, US-140) · 5 (US-103, US-105, US-142, → G-Demo; reordenamiento del 2026-10-23) · `si-hay-capacidad` (US-104, US-106, US-133, US-141) · **Capacidad:** T-5 (AC-T5.1, AC-T5.3, AC-T5.4 por regresión) · **Recorrido principal:** sí (mide las hipótesis 1, 2 y 3) · no (US-104, US-106, US-133, US-141)
 **Requisitos:** FR-20 (ampliación de datasets y métricas, OL-06) · TBD-03 (umbrales de confianza OCR, CAL) · medibles técnicos: M-01.1, M-01.2, M-01.3, M-02.1, M-02.2, M-02.3, M-02.4, M-03.1–M-03.5 (S2) · M-04.1, M-04.2, M-08.2, M-08.3, M-08.4, M-08.6, M-06.1 sin retroceso (S3) · M-10.1 y M-10.2 con hasta 3 opciones, M-07.2 con hasta 3 opciones, orden por aplicabilidad (RN-28), M-06.2 recalibrado (S5, en US-142) · verificación de G-Demo redefinido (S5) · G-6, G-7, G-8 (documentos), G-11, G-12, G-13
 **Evidencia:** [→ PRD §5 FR-20], [→ PRD §2.1 G-6, G-7, G-8, G-11, G-12, G-13], [→ PRD §7 NFR (extracción ≤ 60 s; vista de caso ≤ 2 s)], [→ PRD §12 Evaluación], [→ PRD §16 TBD-02, TBD-03, TBD-20], [→ PRD §18.3.1 M-01.1–M-01.3], [→ PRD §18.3.2 M-02.1–M-02.4], [→ PRD §18.3.3 M-03.1–M-03.5], [→ PRD §18.3.4 M-04.1, M-04.2], [→ PRD §18.3.6 M-06.1], [→ PRD §18.3.8 M-08.2–M-08.4, M-08.6], [→ PRD §18.4 AC-T5.1, AC-T5.3, AC-T5.4], [→ readme §6 OL-05 (tests de exactitud), OL-06 (datasets v1.1 y v1.2)], [→ readme §5.0 S2 KR1–KR4, S3 KR1, KR3, KR4], [→ backlog/02-adrs.md §4.1 TBD-03, TBD-20], [→ PRD §18.3.10 M-10.1, M-10.2], [→ PRD §2.1 G-2, G-5, G-14], [→ PRD §14 G-Demo], [→ readme §5.0 S4 KR1], [→ backlog/01-requisitos.md §15 (slicing por hipótesis: G-Demo redefinido)]
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-074 (suite en la DoD), US-014 · ADR-41 · ⛔ ADR-39 (motores de OCR, LLM y NLI fijados para las mediciones reales) · ⛔ DEC-07 · escenario más probable (metas y umbrales de regresión) · 🔗 Mide a: FEAT-01b, FEAT-02b, FEAT-03a (S3) · FEAT-04, FEAT-06c (S4) · FEAT-08b (S5) · FEAT-10c, FEAT-10b (S5) · 🔗 Consume: US-139 (reporte de feedback), US-024 · DEC-14 (VM-3) para G-Demo
@@ -31,7 +31,9 @@
 
 > Linear: [L1D-239](https://linear.app/l1der-lab-mjbc/issue/L1D-239)
 
-`FEAT-T5b` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (parte), AC-T5.3 · M-01.1, M-01.2, M-01.3, G-6, G-7, G-8 (documentos) · ↪ US-072, US-082, US-083, US-084 · ⛔ ADR-39 (mediciones reales) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Mide a: FEAT-01b
+`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (parte), AC-T5.3 · M-01.1, M-01.2, M-01.3, G-6, G-7, G-8 (documentos) · ↪ US-072, US-082, US-083, US-084 · ⛔ ADR-39 (mediciones reales) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Mide a: FEAT-01b
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como responsable técnico, quiero medir sobre un set de referencia cuántos campos lee
@@ -112,7 +114,9 @@ calibrador con un set falso de resultados conocidos.
 
 > Linear: [L1D-241](https://linear.app/l1der-lab-mjbc/issue/L1D-241)
 
-`FEAT-T5b` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (eventos y timeline) · M-02.1, M-02.2, M-02.3, M-02.4, G-11 · ↪ US-072, US-085, US-088 · 🔗 Relacionada: US-095 (resumen, `si-hay-capacidad`: AC-3 condicional) · 🔗 Mide a: FEAT-01b (eventos), FEAT-02b, FEAT-02c
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como responsable técnico, quiero medir si los eventos extraídos tienen el tipo y la
@@ -234,7 +238,9 @@ integración en el reporte.
 
 > Linear: [L1D-244](https://linear.app/l1der-lab-mjbc/issue/L1D-244)
 
-`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (aplicabilidad con verdad conocida) · M-08.2, M-08.3, M-08.4, M-08.6 · ↪ US-072, US-122, US-123, US-124, US-118 · ⛔ ADR-39 (NLI y LLM reales para la medición final) · 🔗 Mide a: FEAT-08b, FEAT-06c
+`FEAT-T5b` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (aplicabilidad con verdad conocida) · M-08.2, M-08.3, M-08.4, M-08.6 · ↪ US-072, US-122, US-123, US-124, US-118 · ⛔ ADR-39 (NLI y LLM reales para la medición final) · 🔗 Mide a: FEAT-08b, FEAT-06c
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como responsable técnico, quiero medir sobre pares paciente-fuente con verdad conocida
@@ -314,7 +320,9 @@ recuperación dense y sparse.
 
 > Linear: [L1D-246](https://linear.app/l1der-lab-mjbc/issue/L1D-246)
 
-`FEAT-T5b` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
+`FEAT-T5b` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; OL-06) · FR-20 · AC-T5.1 (opciones), AC-T5.3 · M-10.1, M-10.2, M-07.2 (con hasta 3 opciones), G-2, G-14 · ↪ US-072, US-074, US-134, US-136 · ⛔ ADR-39 (LLM y NLI reales para la medición final) · ⛔ DEC-07 · escenario más probable (metas y tolerancias) · 🔗 Mide a: FEAT-10c, FEAT-10b (S4)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como responsable técnico, quiero medir sobre casos sintéticos con verdad conocida que

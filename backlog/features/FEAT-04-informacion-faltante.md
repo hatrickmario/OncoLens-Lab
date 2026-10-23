@@ -2,7 +2,7 @@
 
 > Linear: [L1D-14](https://linear.app/l1der-lab-mjbc/issue/L1D-14)
 
-**Talla:** L · **Sprint:** 4 · **Capacidad:** CAP-04 · T-1 (AC-T1.1 en el checklist, AC-T1.4 en faltantes) · T-2 (produce el inciso b) · **Recorrido principal:** sí (hipótesis 2: identificar los faltantes)
+**Talla:** L · **Sprint:** 3 (DEC-01, US-001, US-002, US-006: consumidas por la aplicabilidad; reordenamiento del 2026-10-23) · 4 (US-003, US-004, US-005) · **Capacidad:** CAP-04 · T-1 (AC-T1.1 en el checklist, AC-T1.4 en faltantes) · T-2 (produce el inciso b) · **Recorrido principal:** sí (hipótesis 2: identificar los faltantes)
 **Requisitos:** FR-23 (dueña, vía HU-18); FR-09 (contexto con faltantes), FR-27 inciso (b) (produce el dato); RN-29 (dueña), RN-26, RN-11, RN-07, RN-22
 **Evidencia:** [→ PRD §5 FR-23], [→ PRD §18 AC-04.1…AC-04.5], [→ PRD §18 M-04.1, M-04.2, M-04.3], [→ PRD §6 RN-26], [→ PRD §6 RN-29], [→ PRD §6 RN-11], [→ PRD §16 TBD-12], [→ PRD §17 FR-23 → HU-18], [→ PRD §2 G-12], [→ PRD §18 AC-T1.1, AC-T1.4, AC-T4.3], [→ readme §5.6 HU-18], [→ readme §4.1 `CaseView.completeness`, `continueWithWarning`, `missingCriticalCount`, `Provenance`], [→ readme §4.2 `ClinicalContext.missingCriticalData`], [→ readme §3.1 `AIAnalysisRecord.missing_critical_data`], [→ readme §3.3 #29], [→ readme §3.3 #38], [→ readme §6 OL-01 (paciente e)], [→ readme §6 OL-03], [→ backlog/01-requisitos.md §14 Q-03, Q-04; §15 P-03], [→ backlog/02-adrs.md DEC-05, Resoluciones P-03], [→ backlog/04-auditoria.md (hallazgos del piloto)], [→ docs/AS-IS.md P4, JTBD 2], [→ CLAUDE.md]
 **Dependencias:** ⛔ DEC-01 (catálogo `propuesta` revisado por el oncólogo, P-03; no bloquea las historias técnicas) · ⛔ DEC-05 (cerrada en el Pre-S1: Gleason/ISUP en `Diagnosis.grade`) · ↪ US-041, US-042 (catálogo v1 y validador mínimo, `si-hay-capacidad`) · ↪ US-052, US-053 (gateway, S1) · ↪ US-061 (panel, S1) · ↪ US-088, US-090 (vista de caso, S3) · ↪ US-079 (carga, S2) · ↪ US-094 (registro manual de atributos y tratamientos previos, `si-hay-capacidad`) · ↪ US-110, US-111 (registro manual de biomarcadores y diagnóstico, S4) · 🔗 Produce para: US-128 (inciso b), US-124 (Desconocido: falta en el paciente), US-116 (faltantes como "desconocido" en Backend 2), US-177 (re-ejecución) · 🔗 Medido en: US-131 (M-04.1, M-04.2) · 🔗 Regresión [FR-18] → US-102
@@ -23,7 +23,9 @@
 
 > Linear: [L1D-92](https://linear.app/l1der-lab-mjbc/issue/L1D-92)
 
-`FEAT-04` · Sprint 4 (antes del cierre) · Estimación **1** · — (decisión) · TBD-12 · M-04.3 (gobierno; P-03) · RN-29 · Dueño: **oncólogo asesor** (prepara Ingeniería) · ⛔ DEC-05 (Q5, cerrada en el Pre-S1) · ↪ US-001 · 🔗 Bloquea: DEC-19 (US-031, criterio de "listo", S6)
+`FEAT-04` · Sprint 3 (antes del cierre) · Estimación **1** · — (decisión) · TBD-12 · M-04.3 (gobierno; P-03) · RN-29 · Dueño: **oncólogo asesor** (prepara Ingeniería) · ⛔ DEC-05 (Q5, cerrada en el Pre-S1) · ↪ US-001 · 🔗 Bloquea: DEC-19 (US-031, criterio de "listo", S6)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo asesor, quiero revisar la versión del catálogo de datos críticos de mama
@@ -86,7 +88,9 @@ No revisa los criterios de aplicabilidad (DEC-11, FEAT-08b), los mapeos terminol
 
 > Linear: [L1D-93](https://linear.app/l1der-lab-mjbc/issue/L1D-93)
 
-`FEAT-04` · Sprint 4 · Estimación **5** · FR-23, RN-29 (dueña), RN-22 · AC-04.4, AC-04.5 · ⛔ DEC-05 (cerrada: AC-7) · ↪ US-041 · 🔗 Relacionada: US-042 (`si-hay-capacidad`; su regla la cubre el AC-4) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Consumida por: US-121 (criterios de aplicabilidad), US-129 (reglas de supuestos)
+`FEAT-04` · Sprint 3 · Estimación **5** · FR-23, RN-29 (dueña), RN-22 · AC-04.4, AC-04.5 · ⛔ DEC-05 (cerrada: AC-7) · ↪ US-041 · 🔗 Relacionada: US-042 (`si-hay-capacidad`; su regla la cubre el AC-4) · 🔗 Regresión [AC-T5.4] → US-074 · 🔗 Consumida por: US-121 (criterios de aplicabilidad), US-129 (reglas de supuestos)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que las reglas del checklist vivan en un catálogo versionado
@@ -174,7 +178,9 @@ clínica es de DEC-01.
 
 > Linear: [L1D-94](https://linear.app/l1der-lab-mjbc/issue/L1D-94)
 
-`FEAT-04` · Sprint 4 · Estimación **5** · HU-18 · FR-23, RN-07, RN-22, RN-27 · AC-04.1, AC-04.4 · ↪ US-001 · 🔗 Medido en: US-131 (M-04.1, M-04.2)
+`FEAT-04` · Sprint 3 · Estimación **5** · HU-18 · FR-23, RN-07, RN-22, RN-27 · AC-04.1, AC-04.4 · ↪ US-001 · 🔗 Medido en: US-131 (M-04.1, M-04.2)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el sistema clasifique cada dato crítico de mi paciente
@@ -475,7 +481,9 @@ y `patientDataWarning` en la aplicabilidad (US-124). Calificar si el aviso fue c
 
 > Linear: [L1D-98](https://linear.app/l1der-lab-mjbc/issue/L1D-98)
 
-`FEAT-04` · Sprint 4 · Estimación **3** · HU-18 · FR-23, FR-09, FR-27 (b, produce), RN-11, RN-26 · AC-04.2, AC-04.3, AC-T1.4, AC-T4.3 · ↪ US-002, US-052, US-053 · 🔗 Produce: US-128 (inciso b), US-116 (Backend 2), US-124 (aplicabilidad), US-177 (re-ejecución recalcula los faltantes, S6 si hay capacidad) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+`FEAT-04` · Sprint 3 · Estimación **3** · HU-18 · FR-23, FR-09, FR-27 (b, produce), RN-11, RN-26 · AC-04.2, AC-04.3, AC-T1.4, AC-T4.3 · ↪ US-002, US-052, US-053 · 🔗 Produce: US-128 (inciso b), US-116 (Backend 2), US-124 (aplicabilidad), US-177 (re-ejecución recalcula los faltantes, S6 si hay capacidad) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el análisis de evidencia reciba los datos críticos que

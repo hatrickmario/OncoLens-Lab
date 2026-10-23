@@ -2,7 +2,7 @@
 
 > Linear: [L1D-16](https://linear.app/l1der-lab-mjbc/issue/L1D-16)
 
-**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225, US-231a, US-231b) · 4 (US-056, US-057) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
+**Talla:** XL · **Sprint:** 1 (US-012 · ADR-39 fase A, US-224 · ADR-39 fase B, US-052…US-055, US-225, US-231a, US-231b) · 4 (US-056, US-057, US-239) · **Capacidad:** CAP-06 (S1), CAP-10 (S1), CAP-05 (AC-05.1, AC-05.3 parte S1) · T-1 (AC-T1.4) · T-4 (SEG-07, SEG-13) · **Recorrido principal:** sí
 **Requisitos:** FR-09 (S1: dense, 1 opción, contrato `EvidenceAnalysis` final; dueña vía HU-03) · FR-25 (contrato vacío en el S1) · RN-02 (dueña) · RN-05 (dueña de la recuperación) · RN-06 (dueña) · RN-30 (dueña, Q-06 a) · SEG-07 · SEG-13 (V-17) · NFR-01 (medido), NFR-04, NFR-08 · IA-01…IA-04, IA-07, IA-11 · ADR-39
 **Evidencia:** [→ PRD §5 FR-09, FR-25], [→ PRD §6 RN-02, RN-03, RN-05, RN-06, RN-28, RN-30], [→ PRD §7 NFR (rendimiento, capacidad, fiabilidad)], [→ PRD §10], [→ PRD §11 #7, #13], [→ PRD §12], [→ PRD §18.3.5 AC-05.1, AC-05.3], [→ PRD §18.3.6 AC-06.1, AC-06.2, M-06.1, M-06.2], [→ PRD §18.3.10 AC-10.1, AC-10.4, M-10.1], [→ PRD §18.4 AC-T1.4], [→ readme §5 HU-03], [→ readme §6 OL-02, OL-03], [→ readme §4.1 `POST /platform/evidence-analyses`], [→ readme §4.2 `/rag/query`, `ClinicalContext`, `RagQueryInternalRequest/Response`], [→ readme §2.5 Rate limiting, credencial de servicio], [→ readme §3.3 #5, #8, #26], [→ readme §6.1 #1, #4, #6, #7, #8], [→ backlog/02-adrs.md ADR-39], [→ backlog/01-requisitos.md §14 Q-06]
 **Dependencias:** ↪ US-033 (contrato), US-038 (esquema), US-041 (catálogo), US-211 (sesión mínima, S1), US-049 (desidentificación), US-058/US-059 (corpus), US-063/US-064 (citas y soporte), US-065 (etiquetas), US-066 (Base del análisis) · ⛔ ADR-39 (adapters reales: `llm/`, `embeddings/`, `reranker/`, `nli/`; los de recuperación y NLI los construyen US-231a y US-231b) · 🔗 Medido en: US-072 (M-10.1, fidelidad y precisión de citas M-07.2), US-073 (M-06.1, M-06.2) · 🔗 Regresión [RN-15] → US-148 (activa desde S6) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
@@ -674,6 +674,45 @@ integración con LLM falso (AC-5).
 ## INVEST
 **Small** ✓ un constructor de prompt y su escape.
 **Testable** ✓ cinco tests deterministas sobre el prompt armado y la salida validada.
+
+
+## US-239 — Cuatro oncólogos pueden analizar a la vez sin que `rag-orchestrator` se caiga: las etapas pesadas se serializan, el resto espera en cola o falla limpio
+
+> Linear: [L1D-289](https://linear.app/l1der-lab-mjbc/issue/L1D-289)
+
+`FEAT-06a` · Sprint 4 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **5** · HU-03 · NFR-04 (enmienda: de 2–3 a **4 concurrentes**), NFR-08, RN-30, RN-22, IA-11 · AC-06.1 (`429/504`) · ↪ US-056 (semáforo del LLM y *rate limit*), US-055, US-225, US-231a, US-231b · ⛔ ADR-39 (la memoria se mide con los modelos reales) · 🔗 Regresión [RN-30] → US-056 · 🔗 Medido en: US-233 (suite `evaluate` con modelos locales)
+
+> **Origen (demo del 2026-10-23):** tres análisis lanzados con ~12 s de diferencia (22:58:30, 22:58:44 y 22:58:56) se solaparon en `rag-orchestrator`, que el kernel mató por memoria (`exit 137`, `OOMKilled = true`, a las 22:59:43; el servicio ya usa ~8,3 GB de 12,6 GB con una sola consulta). Milvus cayó en el mismo segundo. Las consultas siguientes devolvieron «No se pudo completar el análisis» (`sin_conexion_con_rag`) hasta reiniciar los contenedores. US-056 protege **solo la generación del LLM** (`INFERENCE_CONCURRENCY`); la recuperación, el *reranker* y el NLI corren sin límite y son los que consumen la memoria.
+
+> **Decidido (usuario, 2026-10-23):** el sistema debe soportar **al menos 4 oncólogos a la vez** sin caerse. NFR-04 supone 2–3 concurrentes y 1–2 inferencias simultáneas: esta historia lo eleva a 4 concurrentes con cola. La enmienda al PRD se aplica en el refinamiento del S4.
+
+### Story
+Como oncólogo del piloto, quiero que mi análisis se complete o falle con un mensaje claro aunque otros tres colegas analicen al mismo tiempo, para que una ráfaga de consultas nunca deje el servicio caído para todos.
+
+### AC (Given/When/Then)
+- **AC-1 (happy path · cuatro a la vez)** · Dados 4 `POST /rag/query` simultáneos con adapters falsos que registran cuántas etapas pesadas (recuperación densa + *reranker* + NLI + generación) corren a la vez, y `RAG_MAX_IN_FLIGHT = 1`, cuando terminan, entonces las 4 responden `200`, el máximo observado de ejecuciones simultáneas es 1 y ninguna se pierde ni se repite. `[NFR-04]` `[NFR-08]`
+- **AC-2 (borde · cola acotada)** · Dados `RAG_MAX_IN_FLIGHT = 1` y `RAG_QUEUE_MAX = 3`, cuando llegan 5 solicitudes a la vez, entonces 1 se ejecuta, 3 esperan y la quinta responde `429` con `Retry-After` sin invocar ningún adapter; `clinical-api` propaga el `429` y no persiste nada. `[RN-30]` `[NFR-04]`
+- **AC-3 (borde · *deadline* en la cola)** · Dada una solicitud en cola cuyo `X-Request-Deadline` vence antes de que le toque, cuando le llega el turno, entonces `rag-orchestrator` la descarta con `504` sin ejecutar ninguna etapa y su lugar pasa a la siguiente. `[FR-09]` `[readme §4.2]`
+- **AC-4 (invariante · el lugar se libera siempre)** · Dadas una solicitud que falla a mitad (adapter lanza un error) y otra cuyo cliente se desconecta mientras espera, cuando ocurren, entonces ambas liberan su lugar y las solicitudes siguientes se ejecutan; el contador de en curso vuelve a 0. `[NFR-08]`
+- **AC-5 (invariante · memoria con modelos reales)** · Dado el *stack* de la demo con los adapters reales de ADR-39 y el límite de memoria del contenedor, cuando se lanzan 4 análisis simultáneos de preguntas distintas, entonces el servicio sigue `healthy`, `OOMKilled = false`, Milvus no se reinicia, el pico de memoria queda registrado en el reporte y es menor que el 85 % del límite. (verificación con `scripts/demo/concurrencia.sh` y la suite `evaluate`, no en la CI) `[NFR-04]` `[ADR-39]`
+- **AC-6 (borde · el límite sigue siendo configuración)** · Dado `RAG_MAX_IN_FLIGHT = 2` en la misma *build*, cuando llegan 4 solicitudes, entonces el máximo observado de ejecuciones simultáneas es 2. `[RN-22]`
+- **AC-7 (log · espera medida, sin datos)** · Dada una solicitud que esperó, cuando termina, entonces el log `event=rag_query_cola` registra `posicion`, `esperaMs` y `enCurso` y no registra pregunta, texto de opción, `chunkId` ni identidad. `[RN-14]` `[CLAUDE.md]`
+
+### Contexto técnico
+Compuerta de admisión de todo el *pipeline* en `RAGOrchestratorService` (un `asyncio.Semaphore` más una cola acotada; las etapas síncronas pesadas ya corren en el pool de hilos): `RAG_MAX_IN_FLIGHT` (por defecto 1), `RAG_QUEUE_MAX` (por defecto 3, de modo que 4 concurrentes caben: 1 en curso + 3 en cola) y la espera máxima derivada del `X-Request-Deadline`. Sustituye al semáforo solo de generación de US-056 (AC-4): el `INFERENCE_QUEUE_MAX = 0` de esa historia pasa a `RAG_QUEUE_MAX` y su `429` se mantiene para el exceso. Tests: Pytest + `TestClient` con adapters falsos y `asyncio.gather` (AC-1…AC-4, AC-6, AC-7); medición de memoria con modelos reales en `scripts/demo/concurrencia.sh`.
+
+> Pendiente de definir en refinamiento (dueño: usuario · afecta: NFR-01, AC-1): el p95 de 15 s vale para una solicitud que no espera. Con 4 a la vez en serie, la cuarta tardaría ~4 × 14,6 s ≈ 58 s. ¿Se acepta, con un *deadline* en cola de ~90 s y la UI mostrando «En cola» (US-062), o se busca más paralelismo? Hasta decidirlo, se asume el serial y el *deadline* de 90 s en configuración.
+
+> Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: `RAG_MAX_IN_FLIGHT`): la generación corre en Ollama, fuera de Docker; solo el *reranker* y el NLI consumen la memoria del contenedor. Medir si basta serializar esas dos etapas y dejar que la generación de una consulta se solape con la recuperación de otra (más rendimiento con la misma memoria) antes de fijar el valor por defecto.
+
+### Non-goals
+Autoescalado o varias réplicas de `rag-orchestrator`. Cola persistente entre reinicios. Mostrar la posición en la cola en la UI (solo el estado «En cola» de US-062). Mejorar la latencia de una consulta aislada (ADR-39, US-072).
+
+### INVEST
+**Small** ✓ una compuerta con cola acotada sobre el servicio existente y una medición de memoria.
+**Testable** ✓ siete tests: seis con adapters falsos y la medición real con script.
+*(Estimable ⚠ el 5 asume que serializar el *pipeline* completo basta; si no, se divide en US-239a, compuerta, y US-239b, optimización de memoria o solape de etapas.)*
+
 
 ---
 

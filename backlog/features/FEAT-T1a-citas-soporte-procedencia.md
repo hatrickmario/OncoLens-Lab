@@ -2,7 +2,7 @@
 
 > Linear: [L1D-34](https://linear.app/l1der-lab-mjbc/issue/L1D-34)
 
-**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto; US-236: alias de chunks en la cita) · 5 (US-127: RN-25) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-063, US-064: citas y soporte) · 3 (US-065: procedencia del contexto; US-236: alias de chunks en la cita) · 3 (US-127: RN-25; antes S5, reordenamiento del 2026-10-23) · las etapas siguientes de RN-01 las amplían sus Features con `🔗 Regresión [RN-01] → US-064`: aplicabilidad S5 (US-123); resumen (US-095), supuestos y limitaciones (US-129, US-130) y síntesis (FEAT-07), si hay capacidad · **Capacidad:** T-1 (AC-T1.2 parte S1, AC-T1.3), CAP-10 (AC-10.4) · **Recorrido principal:** sí
 **Requisitos:** RN-01 (dueña: validador de citas y soporte para todo tipo de afirmación; en el S1, opciones y afirmaciones sueltas) · FR-10 (dueña, vía HU-03 escenario 3) · RN-04 (dueña) · RN-07 (dueña: etiquetas en el contexto y exclusión de rechazados) · RN-25 (dueña, S3: US-127) · IA-04
 **Evidencia:** [→ PRD §6 RN-01, RN-04, RN-07, RN-24], [→ PRD §5 FR-10], [→ PRD §12 Grounding], [→ PRD §18.4 AC-T1.2, AC-T1.3], [→ PRD §18.3.10 AC-10.4, M-10.1], [→ PRD §18.3.2 AC-02.6], [→ readme §5 HU-03 escenario 3], [→ readme §6 OL-02 (tareas 5, 8; tests adicionales NLI)], [→ readme §6 OL-03 (tarea 2.3)], [→ readme §4.1 `CitedSource`, `DiscardedOption`, `Provenance`], [→ readme §3.3 #34], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-055 (pipeline), US-052 (constructor de contexto) · ⛔ ADR-39 (modelo NLI real; los AC se verifican con el adapter falso) · 🔗 Medido en: US-072 (M-10.1 = 100 %, fidelidad y precisión de citas M-07.2, G-2) · 🔗 Consumida por: US-057 (última defensa ante inyección), US-061 (descartadas en la UI)
@@ -186,7 +186,9 @@ simulado (AC-1 a AC-4) y Pytest del constructor de prompt (AC-5).
 
 > Linear: [L1D-182](https://linear.app/l1der-lab-mjbc/issue/L1D-182)
 
-`FEAT-T1a` · Sprint 5 · Estimación **3** · HU-22, HU-20 · RN-25 (dueña) · AC-T1.3 (metadatos), AC-08.9 (valor del estudio) · ↪ US-063, US-118, US-122 · 🔗 Consumida por: FEAT-07 (etiquetas factuales, S6 si hay capacidad), FEAT-09 (vigencia, S6 si hay capacidad) · 🔗 Medido en: US-132 (metadatos del corpus)
+`FEAT-T1a` · Sprint 3 · Estimación **3** · HU-22, HU-20 · RN-25 (dueña) · AC-T1.3 (metadatos), AC-08.9 (valor del estudio) · ↪ US-063, US-118, US-122 · 🔗 Consumida por: FEAT-07 (etiquetas factuales, S6 si hay capacidad), FEAT-09 (vigencia, S6 si hay capacidad) · 🔗 Medido en: US-132 (metadatos del corpus)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el diseño, la fase, el endpoint, el tamaño de muestra, las
