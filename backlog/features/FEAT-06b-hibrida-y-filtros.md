@@ -2,13 +2,13 @@
 
 > Linear: [L1D-17](https://linear.app/l1der-lab-mjbc/issue/L1D-17)
 
-**Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115)
-**Requisitos:** FR-09 (parte S3: *sparse*, filtros, expansión bilingüe; técnica sin HU, Q-08) · IA-02, IA-03 · RN-03, RN-05, RN-02 (regresiones) · RN-11 (regresión: notas enmascaradas)
+**Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 4 (US-238: reescritura condicional de la consulta) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
+**Requisitos:** FR-09 (parte S3: *sparse*, filtros, expansión bilingüe; técnica sin HU, Q-08) · IA-02, IA-03 · RN-03, RN-05 (regresiones) · RN-02 (regresión; **enmienda decidida el 2026-10-23 en US-238**) · RN-11 (regresión: notas enmascaradas)
 **Evidencia:** [→ PRD §5 FR-09], [→ PRD §6 RN-02, RN-03, RN-05, RN-11], [→ PRD §12 Idioma, Recuperación], [→ PRD §18.3.4 AC-04.3], [→ PRD §18.3.5 AC-05.1], [→ PRD §18.3.6 AC-06.1, M-06.1], [→ readme §5.0 S3 KR1, KR2 ("enmascaramiento de las notas enviadas al LLM")], [→ readme §4.1 `sourcesSelected`, `filtersApplied`], [→ readme §4.2 `ClinicalContext.missingCriticalData`, `/rag/query`], [→ readme §6 OL-02 (no incluye: *sparse*, filtros), OL-04 (no incluye: selectores)], [→ readme §3.3 #10], [→ backlog/01-requisitos.md §10 V-04, §14 Q-08], [→ docs/AS-IS.md P5, JTBD 3]
 **Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117 (*sparse* poblado), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
 **Valor:** el oncólogo busca con términos exactos (un fármaco, un gen) que la búsqueda semántica sola pierde, en español sobre evidencia mayoritariamente en inglés, y necesita acotar a guías o ensayos (P5, JTBD 3). Con esta Feature la búsqueda combina ambas señales, se expande al otro idioma, respeta los filtros que el oncólogo ve en el panel y sabe qué datos del paciente faltan.
 **Workaround en el MVP (US-112…US-115, y US-133 en FEAT-T5b):** ADR-39 elige *embeddings* multilingües; la recuperación sigue siendo *dense* + *reranker* (US-055) y la suite mide recall es→en ≥ 0,70 (US-072).
-**Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-116, US-220 (6 puntos, S5)
+**Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-238 (5 puntos, S4) · US-116, US-220 (6 puntos, S5)
 
 ## Fixtures
 
@@ -17,6 +17,7 @@
   - `doc-es-1` — mama, `language = es`, `source_type = literature`, chunk `ch-es-1` sobre terapia anti-HER2 en español.
   - `doc-g1` — mama, `source_type = guideline`, `population = adulto`; `doc-ped-1` — mama, `population = pediatrico`.
 - Paciente **FX-T4a-a** (nota con PII) para el filtro `historiaCompleta`; **F-M2** (FEAT-04) para los faltantes.
+- **FX-06b-a · Reescritura de la consulta (US-238).** `Q-TYPO-SIN-EVIDENCIA`: pregunta con ortografía degradada para la que el *reranker* falso da `ch-m1-1` = 0,12 (bajo el umbral 0,30); su reescritura `Q-TYPO-REESCRITA` (LLM falso de reescritura, con contador de llamadas) da `ch-m1-1` = 0,74. Catálogo de prueba con `ribociclib` y sin `farmaco-inventado-x`. `Q-SIN-RESPUESTA`: ninguna de las dos formas supera 0,30.
 
 ---
 
@@ -69,7 +70,7 @@ recuperadores falsos y un test contra Milvus de test en la CI.
 
 > Linear: [L1D-110](https://linear.app/l1der-lab-mjbc/issue/L1D-110)
 
-`FEAT-06b` · Sprint si-hay-capacidad · Estimación **3** · — (técnica, PRD §17; V-04) · FR-09 (expansión bilingüe), IA-02 · AC-06.1 (expansión) · ⛔ ADR-39 · ↪ US-112 · 🔗 Regresión [RN-04] → US-063 (citas en su idioma original) · 🔗 Medido en: US-133 (recall@10 de español a inglés) · **Recorrido principal:** no · **Workaround en el MVP:** ADR-39 elige *embeddings* multilingües (sin expansión bilingüe); la suite mide recall es→en ≥ 0,70 (US-072)
+`FEAT-06b` · Sprint si-hay-capacidad · Estimación **3** · — (técnica, PRD §17; V-04) · FR-09 (expansión bilingüe), IA-02 · AC-06.1 (expansión) · ⛔ ADR-39 · ↪ US-112 · 🔗 Ver también: US-238 (reescritura con LLM solo tras un primer loop sin chunks sobre el umbral) · 🔗 Regresión [RN-04] → US-063 (citas en su idioma original) · 🔗 Medido en: US-133 (recall@10 de español a inglés) · **Recorrido principal:** no · **Workaround en el MVP:** ADR-39 elige *embeddings* multilingües (sin expansión bilingüe); la suite mide recall es→en ≥ 0,70 (US-072)
 
 ## Story
 Como oncólogo que pregunta en español, quiero que la búsqueda incluya la evidencia
@@ -262,6 +263,87 @@ Supertest para el registro en `analysis_basis`, Testing Library para el control.
 ## INVEST
 **Small** ✓ un filtro de extremo a extremo.
 **Testable** ✓ cinco AC.
+
+---
+
+## US-238 — Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar
+
+> Linear: pendiente (límite de issues del workspace)
+
+`FEAT-06b` · Sprint 4 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **5** · — (técnica, PRD §17; V-04) · FR-09 (recuperación), IA-02, RN-02 (**enmienda decidida**), RN-03, RN-12, RN-22 · AC-06.1 · ⛔ Enmienda a RN-02 aplicada en el PRD (ver abajo) · ⛔ ADR-39 (LLM local) · ↪ US-055, US-113 (no usa LLM; coexiste), US-226 (runner de variantes) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-03] → US-055 · 🔗 Regresión [RN-10, RN-11, RN-12] → US-049 · 🔗 Medido en: US-133 · **Recorrido principal:** no · **Workaround en el MVP:** la recuperación sigue sin reescritura (US-055); si no hay chunks sobre el umbral el análisis responde "sin evidencia" y el oncólogo reformula a mano
+
+> **Enmienda decidida (usuario, 2026-10-23), a aplicar al PRD en el refinamiento del S4:** RN-02 pasa de "sin chunks sobre el umbral → 'sin evidencia' sin invocar al LLM ni al agente" a **"sin chunks sobre el umbral tras el primer loop → un único segundo loop de reescritura de la consulta con el LLM local; si el segundo loop tampoco supera el umbral → 'sin evidencia' sin invocar al LLM de generación ni al agente"**. Es el único uso del LLM permitido antes de declarar "sin evidencia". Contradice la decisión de US-113 / ADR-45 (2026-10-20: la expansión bilingüe no usa el LLM); no la reemplaza: US-113 sigue resolviéndose con sinónimos del catálogo y/o un modelo de traducción dedicado, y esta historia solo actúa cuando el primer loop ya falló. **Linear: pendiente de sincronizar.**
+
+> **Alcance honesto:** el caso del demo del 2026-10-23 («¿Cuándo se considera un inhibidor de CDK4/6 adyutante?») **no dispara este loop**: un chunk superó el umbral y lo que falló fue la copia del `chunkId` (US-236). Esta historia cubre las consultas con **cero** chunks sobre el umbral (ortografía muy degradada, siglas, nombres de fármacos fuera del vocabulario de la pregunta).
+
+## Story
+Como oncólogo, quiero que, si mi pregunta no encuentra ninguna evidencia por cómo está
+escrita, el sistema la reformule una vez para la búsqueda y lo intente de nuevo, para que
+un error de ortografía o una sigla no me deje con un "sin evidencia" que en realidad sí tenía
+respuesta en el corpus.
+
+## AC (Given/When/Then)
+- **AC-1 (happy path · el segundo loop rescata)** · Dada la pregunta `Q-TYPO-SIN-EVIDENCIA`
+  (FX-06b-a: reranker falso con puntaje por debajo del umbral para la pregunta
+  original y por encima para su reescritura) y `QUERY_REWRITE_ENABLED = true`, cuando se
+  procesa, entonces el primer loop no supera el umbral, se invoca la reescritura una vez, el
+  segundo loop recupera al menos un chunk sobre el umbral y el pipeline continúa con la
+  generación. `[RN-02 enmendado]` `[FR-09]`
+- **AC-2 (invariante · solo tras un primer loop vacío)** · Dado un primer loop con al menos un
+  chunk sobre el umbral, cuando se procesa, entonces el LLM de reescritura no se invoca
+  (contador de llamadas del LLM falso = 0). `[RN-02 enmendado]`
+- **AC-3 (borde · el segundo loop tampoco supera el umbral)** · Dada una pregunta sin respuesta
+  en el corpus, cuando el segundo loop tampoco supera el umbral, entonces la respuesta es
+  `status = sin_evidencia` con `topRelevanceScore = null`, el LLM de generación y el agente no
+  se invocan y el LLM de reescritura se invocó exactamente una vez. `[RN-02 enmendado]`
+- **AC-4 (invariante · acotado)** · Dado `QUERY_REWRITE_MAX_ITERATIONS = 1` y un LLM falso que
+  siempre propone otra reformulación, cuando se procesa, entonces hay un solo segundo loop y
+  no hay un tercero. Los valores `QUERY_REWRITE_ENABLED`, `QUERY_REWRITE_MAX_ITERATIONS` y
+  `QUERY_REWRITE_DEADLINE_MS` viven en configuración (RN-22). `[RN-22]`
+- **AC-5 (borde · reescritura no disponible o vencida)** · Dado el LLM local caído o vencido el
+  `QUERY_REWRITE_DEADLINE_MS`, cuando se procesa una pregunta con el primer loop vacío,
+  entonces la respuesta es `sin_evidencia` con la pregunta original (nunca un `5xx` por esto) y
+  `meta.retrievalParams.queryRewrite = { applied: false, reason: "no_disponible" }`; sin
+  fallback a la nube. `[RN-12]` (asumido: cae a "sin evidencia", no a error)
+- **AC-6 (invariante · términos solo del catálogo)** · Dado un LLM falso que propone expandir
+  `CDK4/6` con `ribociclib` (presente en el catálogo) y con `farmaco-inventado-x` (ausente),
+  cuando se arma la consulta del segundo loop, entonces solo `ribociclib` se usa para recuperar
+  y el término ausente se descarta. `[RN-27]`
+- **AC-7 (invariante · la pregunta original manda)** · Dado el AC-1, cuando se completa la
+  respuesta, entonces la pregunta mostrada y guardada en el `AIAnalysisRecord` es la original,
+  el *reranker* puntúa los chunks del segundo loop contra la **pregunta original** (el umbral
+  se compara con ese puntaje), y la reescritura solo cambió el vector que se envía a Milvus.
+  `[RN-03]` `[RN-06]`
+- **AC-8 (invariante · privacidad y proveedor local)** · Dada una pregunta con texto
+  sembrado como PII, cuando se invoca la reescritura, entonces el prompt contiene solo la
+  pregunta ya enmascarada (sin contexto clínico ni `pseudoPatientId`), el proveedor es local y
+  los logs registran recuentos (`rewriteApplied`, `latencyMs`), nunca el texto de la pregunta
+  ni de la reescritura. `[RN-10]` `[RN-11]` `[RN-12]`
+- **AC-9 (medición · latencia y calidad, OL-06)** · Dada la suite `evaluate` con el runner de
+  variantes (US-226) y el LLM local real, cuando se compara el brazo "reescritura" contra la
+  referencia, entonces el reporte incluye (a) la latencia añadida por el segundo loop,
+  mediana y p95, **solo en las consultas que lo disparan**, (b) el recall@10 y el MRR de esas
+  consultas con y sin reescritura, y (c) que "sin evidencia" sobre las preguntas sin respuesta
+  se mantiene ≥ 0,90 (el segundo loop no fabrica evidencia). Criterio de adopción: (b) mejora
+  con IC pareado que excluye 0, (c) no baja y la latencia añadida p95 ≤ 3 s (asumido; se
+  recalibra con la medición); si no se cumple, `QUERY_REWRITE_ENABLED` queda en `false` por
+  defecto y la historia se cierra con la medición como entregable. `[OL-06]` `[TBD-02]`
+
+## Contexto técnico
+Paso `QueryRewriteStep` dentro de `RAGOrchestratorService` (Hexagonal; puerto `QueryRewriter`
+con un Adapter sobre el LLM local en `infrastructure/llm/`), invocado entre el umbral del primer
+loop y `_responder_sin_evidencia`. Es un bucle acotado de una iteración (razonar: no hubo
+chunks sobre el umbral → actuar: reformular → observar: recuperar de nuevo), no el agente
+acotado de FR-30 (Post-MVP), que sigue siendo independiente. La validación de términos contra el
+catálogo versionado (`CLINICAL_CATALOG_PATH`) es regla pura de `domain/`. El prompt de
+reescritura es un prompt nuevo con su propia versión: la suite `evaluate` es obligatoria. TDD
+estricto en la regla de disparo, el límite de iteraciones y la validación de términos;
+Pytest con adapters falsos (`LLM_PROVIDER=fake` con contador de llamadas) y FX-06a-a/FX-06a-b
+ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams.queryRewrite`).
+
+## INVEST
+**Small** ✓ un paso condicional sobre un pipeline existente, con un límite fijo.
+**Testable** ✓ nueve AC: siete con adapters falsos y una medición en `evaluate`.
 
 ---
 
