@@ -126,8 +126,8 @@
 | US-233 | La suite `evaluate` corre con los modelos locales y calibra el umbral de entailment y `RETRIEVAL_TOP_K` — Linear pendiente (límite de issues del workspace) | FEAT-T5a | 4 | 3 | sí |
 | US-234 | La búsqueda de pacientes limita la tasa por usuario, queda auditada sin datos personales y su índice del nombre es obligatorio — Linear pendiente (límite de issues del workspace) | FEAT-T4a | 6 | 3 | sí |
 | US-235 | El nombre original del PDF se guarda cifrado o enmascarado y bloquea preflight real-data hasta entonces — Linear pendiente (límite de issues del workspace) | FEAT-01a | 6 | 2 | sí |
-| US-236 | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita — Linear pendiente (límite de issues del workspace) | FEAT-T1a | 3 | 3 | sí |
-| US-237 | Cuando todas las opciones se descartan, el panel y el log dicen por qué — Linear pendiente (límite de issues del workspace) | FEAT-10a | 3 | 2 | sí |
+| US-236 | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita | FEAT-T1a | 3 | 3 | sí |
+| US-237 | Cuando todas las opciones se descartan, el panel y el log dicen por qué | FEAT-10a | 3 | 2 | sí |
 | US-238 | Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar — Linear pendiente (límite de issues del workspace) | FEAT-06b | 4 | 5 | no |
 | US-072 | La suite `evaluate` mide recuperación, fidelidad, "sin evidencia", privacidad y lenguaje de forma reproducible | FEAT-T5a | 2 | 8 (072a 5 + 072b 3) | sí |
 | US-073 | El umbral de relevancia se calibra y el baseline técnico del S1 queda registrado | FEAT-T5a | 2 | 3 | sí |

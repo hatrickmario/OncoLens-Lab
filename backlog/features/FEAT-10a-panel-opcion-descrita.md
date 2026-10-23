@@ -187,7 +187,7 @@ Pasos de progreso visibles (ADR-42, S4; workaround: indicador indeterminado).
 
 ## US-237 — Cuando todas las opciones se descartan, el panel y el log dicen por qué
 
-> Linear: pendiente (límite de issues del workspace)
+> Linear: [L1D-288](https://linear.app/l1der-lab-mjbc/issue/L1D-288)
 
 `FEAT-10a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **2** · HU-03 · FR-10 (descartadas en la UI), RN-01 (regresión), RN-19, RN-23 · AC-10.4 · ↪ US-061, US-062, US-064 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · **Recorrido principal:** sí
 

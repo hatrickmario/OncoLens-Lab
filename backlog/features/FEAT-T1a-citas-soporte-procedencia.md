@@ -223,7 +223,7 @@ Tests: Pytest unitarios del dominio con FX-06a-a y FX-08b-a, y Playwright para e
 
 ## US-236 — El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita
 
-> Linear: pendiente (límite de issues del workspace)
+> Linear: [L1D-287](https://linear.app/l1der-lab-mjbc/issue/L1D-287)
 
 `FEAT-T1a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **3** · HU-03 · RN-01 (regresión), RN-04 (dueña: la cita sale del corpus, no del texto generado) · AC-T1.2, AC-T1.3, AC-10.4 · ↪ US-063, US-055 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063 · 🔗 Medido en: US-072 (precisión de citas, M-07.2) · **Recorrido principal:** sí
 
