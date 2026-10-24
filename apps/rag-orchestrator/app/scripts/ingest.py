@@ -7,6 +7,11 @@ trocea, embebe *dense* y *sparse*, inserta en ``corpus.corpus_document`` (rol ``
 (Milvus) y publica un ``CorpusRelease`` si cambió el conjunto vigente. Es reanudable: el avance de cada documento queda
 en el catálogo (``status`` y ``checksum``), así que relanzarla solo procesa lo que no llegó a ``embebido``.
 
+Paso de metadatos (US-118): un documento sin metadatos estructurados pasa por el LLM LOCAL (``LLM_BASE_URL``, RN-12) y se
+verifica con el NLI (``NLI_ENTAILMENT_THRESHOLD``); si cualquiera cae, el documento se indexa igual con
+``metadata_source = pendiente``. Al publicar una release se escribe la muestra para revisión humana en
+``CORPUS_METADATA_SAMPLE_DIR`` (``CORPUS_METADATA_SAMPLE_PCT``, ``CORPUS_METADATA_SAMPLE_SEED``).
+
 Imprime un resumen JSON en la salida estándar: solo identificadores, estados, motivos (etapa y clase) y contadores;
 nunca contenido, URLs, credenciales ni mensajes de excepción.
 
@@ -21,6 +26,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -29,19 +35,28 @@ from pymilvus import MilvusClient
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
-from app.application.ports import Clock
+from app.application.corpus_metadata.esquema import PROMPT_VERSION
+from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
+from app.application.corpus_metadata.muestra_de_metadatos import (
+    GeneradorDeMuestraDeMetadatos,
+    ResultadoDeMuestra,
+)
+from app.application.ports import Clock, LlmClient, NliClassifier
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import (
     CorpusDatabaseSettings,
     CorpusIngestSettings,
     MilvusSettings,
+    Settings,
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
+from app.infrastructure.corpus_metadata.escritor_muestra import EscritorDeMuestraYaml
 from app.infrastructure.ids.uuid_id_generator import UuidIdGenerator
+from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 from app.infrastructure.seed_manifest.lector import ManifiestoInvalido, leer_manifiesto
@@ -76,6 +91,49 @@ def fabricar_codificadores_reales(
     return embedder, sparse, fabricar_tokenizador_de_chunks(modelos)
 
 
+@dataclass(frozen=True)
+class ModelosDeMetadatos:
+    """LLM local y NLI del paso de metadatos, con el umbral de soporte (``NLI_ENTAILMENT_THRESHOLD``, RN-22)."""
+
+    llm: LlmClient
+    nli: NliClassifier
+    umbral_nli: float
+    nombre_del_llm: str
+
+
+def _modelos_de_metadatos(llm: LlmClient | None, nli: NliClassifier | None) -> ModelosDeMetadatos:
+    """Inyectados (solo en los tests) o, en producción, el LLM local (RN-12) y el NLI real verificado.
+
+    Sin ``NLI_ENTAILMENT_THRESHOLD`` no hay umbral que aplicar: falla nombrando la variable (RN-22).
+    """
+    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    if ambiente.nli_entailment_threshold is None:
+        raise ModeloNoVerificadoError("NLI_ENTAILMENT_THRESHOLD")
+    return ModelosDeMetadatos(
+        llm=llm or _llm_local(ambiente),
+        nli=nli or _nli_real(),
+        umbral_nli=ambiente.nli_entailment_threshold,
+        nombre_del_llm=ambiente.llm_model or "no_declarado",
+    )
+
+
+def _llm_local(ambiente: Settings) -> LlmClient:
+    return OpenAICompatibleLlmClient(
+        ambiente.llm_base_url,
+        ambiente.llm_model,
+        ambiente.llm_request_timeout_ms,
+        ambiente.llm_max_output_tokens,
+        ambiente.llm_temperature,
+    )
+
+
+def _nli_real() -> NliClassifier:
+    """El ``onnxruntime`` se difiere hasta aquí, como los codificadores: la validación de configuración no lo importa."""
+    from app.infrastructure.models.local import cargar_clasificador_nli
+
+    return cargar_clasificador_nli(ajustes_de_modelos_del_entorno())
+
+
 def _ejecutar_ingesta(
     manifiesto: Path,
     ajustes: CorpusIngestSettings,
@@ -85,8 +143,9 @@ def _ejecutar_ingesta(
     embedder: PassageEmbedder,
     sparse: SparsePassageEncoder,
     tokenizador: Tokenizador,
+    metadatos: ModelosDeMetadatos,
     reloj: Clock,
-) -> ReporteDeIngesta:
+) -> tuple[ReporteDeIngesta, ResultadoDeMuestra]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar."""
     documentos = leer_manifiesto(manifiesto)
     motor = crear_motor(
@@ -104,6 +163,9 @@ def _ejecutar_ingesta(
             almacen_de_chunks=almacen,
             embedder=embedder,
             codificador_sparse=sparse,
+            resolutor_de_metadatos=MetadataExtractionService(
+                llm=metadatos.llm, nli=metadatos.nli, umbral_nli=metadatos.umbral_nli
+            ),
             fuente=fuente_de_texto(ajustes, manifiesto.resolve().parent),
             reloj=reloj,
             ids=UuidIdGenerator("release"),
@@ -113,7 +175,17 @@ def _ejecutar_ingesta(
             solape_de_chunk=ajustes.corpus_chunk_overlap,
             fecha_de_corte=ajustes.corpus_cutoff_date,
         )
-        return servicio.ingerir(documentos)
+        reporte = servicio.ingerir(documentos)
+        muestra = GeneradorDeMuestraDeMetadatos(
+            pct=ajustes.corpus_metadata_sample_pct,
+            semilla=ajustes.corpus_metadata_sample_seed,
+            escritor=EscritorDeMuestraYaml(ajustes.corpus_metadata_sample_dir),
+            reloj=reloj,
+            prompt_version=PROMPT_VERSION,
+            llm_model=metadatos.nombre_del_llm,
+            nli_model=metadatos.nli.version,
+        ).generar(reporte, documentos)
+        return reporte, muestra
     finally:
         motor.dispose()
 
@@ -142,9 +214,11 @@ def main(
     sparse: SparsePassageEncoder | None = None,
     reloj: Clock | None = None,
     tokenizador: Tokenizador | None = None,
+    llm: LlmClient | None = None,
+    nli: NliClassifier | None = None,
 ) -> int:
-    """``embedder``, ``sparse``, ``reloj`` y ``tokenizador`` se inyectan solo en los tests; en producción salen de los
-    adapters reales (``MODEL_PROVIDER=local``)."""
+    """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm`` y ``nli`` se inyectan solo en los tests; en
+    producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     try:
         ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
@@ -156,13 +230,14 @@ def main(
         return 1
     try:
         modelos = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
-        reporte = _ejecutar_ingesta(
+        reporte, muestra = _ejecutar_ingesta(
             argumentos.manifest,
             ajustes,
             milvus,
             base,
             politica,
             *modelos,
+            _modelos_de_metadatos(llm, nli),
             reloj or RelojDelSistema(),
         )
     except (ModeloNoVerificadoError, ManifiestoInvalido) as error:
@@ -171,7 +246,8 @@ def main(
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
         print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
         return 1
-    print(json.dumps(reporte.como_diccionario(), ensure_ascii=False))
+    resumen = {**reporte.como_diccionario(), "muestra_de_metadatos": {"tamano": muestra.tamano}}
+    print(json.dumps(resumen, ensure_ascii=False))
     return 1 if reporte.hubo_errores else 0
 
 

@@ -467,6 +467,10 @@ class CorpusIngestSettings(AjustesDeCorpus):
     # Pesos de ``sparse_linear`` de BGE-M3 (ADR-39): no se versionan en el repo; solo la ruta y el SHA-256 (US-117a, 1.10).
     embedding_sparse_weights_path: Path
     embedding_sparse_weights_sha256: str
+    # Muestra de metadatos extraídos para revisión humana (US-118, TBD-20, RN-22): porcentaje, semilla y directorio.
+    corpus_metadata_sample_pct: float = Field(default=10.0, ge=0.0, le=100.0)
+    corpus_metadata_sample_seed: str = Field(default="oncolens-metadatos", min_length=1)
+    corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
 
     @field_validator("sparse_vector_source")
     @classmethod
