@@ -94,3 +94,5 @@ Pide confirmación y entonces: rama `sprint/S<n>-planning`, commit de `openspec/
 `backlog/sprints/S<n>-plan.md` (`[S<n>] Planificación: <k> changes`, con atribución), push y PR.
 Los worktrees de los implementadores salen de `main`: **el humano debe mergear este PR antes de
 `/sprint-run S<n>`**. Termina diciéndolo así.
+
+**Verificación de CI antes de pedir un merge (usuario, 2026-10-24):** tras subir cambios a una rama con PR, espera a que la CI termine y no le pidas al humano el merge hasta tener 0 checks en fallo, 0 pendientes y 0 alertas abiertas. Si algo falla, lee el log, corrige o pregunta, y vuelve a verificar. Lo recuerda el *hook* `pr-checks-reminder` (PostToolUse en `git push` y `gh pr create`).
