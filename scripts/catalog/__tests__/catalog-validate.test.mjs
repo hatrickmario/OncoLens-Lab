@@ -185,6 +185,35 @@ describe('catalog:validate · integridad de una versión revisada', () => {
   );
 });
 
+describe('catalog:validate · claves únicas', () => {
+  it(
+    'rechaza con clave_duplicada y nombra ki67 cuando dos ítems del mismo tipo y archivo comparten clave [US-001 AC-2]',
+    () => {
+      const catalogo = copiarFixture('test-1.0.0');
+      modificarJson(catalogo, 'mama/datos-criticos.json', (c) => c.items.push({ ...itemDe(c, 'ki67') }));
+
+      const resultado = ejecutarValidador(catalogo);
+
+      expect(resultado.codigo).not.toBe(0);
+      expect(resultado.salida).toContain('clave_duplicada mama/ki67');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'acepta la misma clave en tipos de cáncer distintos (tnm en mama y en próstata) [US-001 AC-7]',
+    () => {
+      const catalogo = copiarFixture('test-1.0.0');
+      modificarJson(catalogo, 'prostata/datos-criticos.json', (c) =>
+        c.items.push({ ...itemDe(c, 'gleason_isup'), key: 'tnm', cancerType: 'prostata' }),
+      );
+
+      expect(ejecutarValidador(catalogo).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
 describe('catalog:validate · cuerpo del mensaje', () => {
   it('no incluye la raíz del repositorio en la salida de un rechazo [US-001 AC-2]', () => {
     const catalogo = copiarFixture('test-1.0.0');
