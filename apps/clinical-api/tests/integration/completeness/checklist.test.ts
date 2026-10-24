@@ -112,7 +112,7 @@ describe('checklist determinista de datos críticos', () => {
       name: 'Receptor de estrógeno',
       value: 'Positivo',
       reviewStatus: 'requiere_revision',
-      performedAt: '2026-10-01',
+      performedAt: '2026-10-20', // posterior al examen sembrado de F-M1 (2026-10-16)
     });
 
     const checklist = await servicioCon(RUTA_CATALOGO_TEST_1_0_0).calcular(fm1.patientId);

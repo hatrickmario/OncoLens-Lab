@@ -18,6 +18,7 @@ export default defineConfig({
       'tests/integration/usuarios/**',
       'tests/integration/documents/**',
       'tests/integration/pacientes/**',
+      'tests/integration/completeness/**',
     ],
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).
     retry: 0,
