@@ -3,6 +3,8 @@
 // Misma regla de caducidad que ESLint y el reporte: un solo módulo (scripts/quality/umbrales.mjs).
 const { excepcionesVigentes, leerUmbrales } = require('./scripts/quality/umbrales.mjs');
 
+const { PATRON_DE_TEST } = require('./scripts/quality/archivos-de-test.mjs');
+
 const excepciones = excepcionesVigentes(leerUmbrales().excepciones, new Date());
 
 const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -76,8 +78,7 @@ module.exports = {
         path: '^(apps|packages)/',
         pathNot: [
           '^packages/test-support/',
-          '(^|/)(tests?|e2e)/',
-          '\\.(test|spec)\\.[cm]?[jt]sx?$',
+          PATRON_DE_TEST.source,
           '(^|/)vitest[^/]*\\.config\\.[cm]?[jt]s$',
         ].concat(exceptuados('test-support-solo-en-tests')),
       },

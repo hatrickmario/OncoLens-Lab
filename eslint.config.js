@@ -8,6 +8,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import vitest from '@vitest/eslint-plugin';
+import { GLOBS_DE_TESTS } from './scripts/quality/archivos-de-test.mjs';
 import mockSoloEnBordes from './scripts/quality/eslint-rules/mock-solo-en-bordes.mjs';
 import testsSinDesactivar from './scripts/quality/eslint-rules/tests-sin-desactivar.mjs';
 import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
@@ -116,13 +117,13 @@ export const bloqueWeb = (files) => ({
   },
 });
 
-/** Tests de `web` y `clinical-api` (Vitest, Testing Library, Supertest y Playwright). */
-export const ARCHIVOS_DE_TESTS = [
-  'apps/web/**/*.{test,spec}.{ts,tsx}',
-  'apps/web/{tests,e2e}/**/*.{ts,tsx}',
-  'apps/clinical-api/**/*.{test,spec}.ts',
-  'apps/clinical-api/tests/**/*.ts',
-];
+/** Tests de todo el monorepo; la definición vive en `scripts/quality/archivos-de-test.mjs` (Gate 2 #1). */
+export const ARCHIVOS_DE_TESTS = GLOBS_DE_TESTS;
+
+// Los fixtures de calidad contienen tests rotos a propósito: con los globs por defecto quedan fuera (los tests de las reglas
+// aplican el bloque a sus fixtures con `files` explícito y sin `ignores`).
+const FIXTURES_DE_CALIDAD = ['ci/tests/quality/fixtures/**'];
+const fixturesFuera = (files) => (files === ARCHIVOS_DE_TESTS ? FIXTURES_DE_CALIDAD : []);
 
 /**
  * Higiene de tests (US-213 AC-8, design D1): ningún test enfocado ni desactivado. Va DESPUÉS de las excepciones con
@@ -130,6 +131,7 @@ export const ARCHIVOS_DE_TESTS = [
  */
 export const bloqueHigieneDeTests = (files = ARCHIVOS_DE_TESTS) => ({
   files,
+  ignores: fixturesFuera(files),
   plugins: { vitest, oncolens: pluginOncolens },
   rules: {
     // `it.todo` y `fit` no los ven las reglas del plugin de Vitest: los cubre la regla propia.
@@ -143,6 +145,7 @@ export const bloqueHigieneDeTests = (files = ARCHIVOS_DE_TESTS) => ({
 /** `vi.mock` solo sobre bordes (US-213 AC-10, design D4); admite excepciones con caducidad e ID de deuda. */
 export const bloqueMockSoloEnBordes = (files = ARCHIVOS_DE_TESTS) => ({
   files,
+  ignores: fixturesFuera(files),
   plugins: { oncolens: pluginOncolens },
   rules: { 'oncolens/mock-solo-en-bordes': 'error' },
 });

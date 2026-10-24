@@ -7,11 +7,11 @@
 //   test de aceptación ← título que contiene `[US-nnn AC-n]` (Vitest, Playwright) o `@pytest.mark.ac("US-nnn", n)`
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { esArchivoDeTest } from './archivos-de-test.mjs';
 import { hallazgo } from './normalizar.mjs';
 
 const REGLA = 'ac-sin-test-de-aceptacion';
 const CARPETAS_IGNORADAS = /^(node_modules|\.next|dist|coverage|\.venv|\.git|archive|generated|reports)$/;
-const ES_DE_TEST = /(^|\/)(tests?|__tests__|e2e)\/|\.(test|spec)\.[cm]?[jt]sx?$/;
 const EXTENSIONES = /\.(ts|tsx|js|jsx|mjs|cjs|py)$/;
 const SEPARADOR_DE_RANGO = '(?:…|\\.\\.\\.|-)';
 
@@ -55,8 +55,8 @@ export function acsDeLaHistoria(raiz, historia) {
 /** Conjunto de `US-nnn AC-n` con test de aceptación tagueado en los tests del repositorio. */
 export function acsConTest(raiz) {
   const cubiertos = new Set();
-  const archivos = ['apps', 'packages', 'ci', 'scripts', 'e2e'].flatMap((carpeta) =>
-    listar(raiz, carpeta, (ruta) => EXTENSIONES.test(ruta) && ES_DE_TEST.test(ruta)),
+  const archivos = ['apps', 'packages', 'ci', 'scripts', 'infra', 'e2e'].flatMap((carpeta) =>
+    listar(raiz, carpeta, (ruta) => EXTENSIONES.test(ruta) && esArchivoDeTest(ruta)),
   );
   for (const archivo of archivos) {
     const texto = readFileSync(path.join(raiz, archivo), 'utf8');

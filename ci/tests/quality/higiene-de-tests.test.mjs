@@ -69,6 +69,19 @@ describe('higiene de tests: desactivados y enfocados', () => {
     }
   }, TIEMPO_MAXIMO_MS);
 
+  it.each([
+    'packages/test-support/tests/x.test.ts',
+    'scripts/ci/__tests__/x.test.mjs',
+    'ci/tests/x.test.mjs',
+    'infra/docker/__tests__/x.test.mjs',
+  ])('falla con vitest/no-disabled-tests cuando un it.skip vive en %s, no solo en web y clinical-api [US-213 AC-8]', async (ruta) => {
+    const eslint = new ESLint({ cwd: RAIZ });
+
+    const [resultado] = await eslint.lintText("it.skip('x', () => {});\n", { filePath: path.join(RAIZ, ruta) });
+
+    expect(resultado.messages.map((mensaje) => mensaje.ruleId)).toContain('vitest/no-disabled-tests');
+  }, TIEMPO_MAXIMO_MS);
+
   it('va después de las excepciones con caducidad para que ninguna pueda apagarla [US-213 AC-8]', () => {
     const bloques = config;
     const posicionDeHigiene = bloques.findLastIndex((bloque) => bloque.rules?.['vitest/no-focused-tests']);

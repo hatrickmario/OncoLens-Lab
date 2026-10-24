@@ -35,6 +35,10 @@ describe('check-ac-coverage', () => {
     expect(simbolos('pytest')).toEqual(['US-900 AC-2 (change us-900-fixture)']);
   });
 
+  it('cuenta un test de aceptación que vive en infra/**/__tests__ [US-213 AC-9]', () => {
+    expect(simbolos('infra')).toEqual([]);
+  });
+
   it('respeta el rango de AC de una historia partida y no alerta por los AC fuera de él [US-213 AC-9]', () => {
     expect(simbolos('partida')).toEqual(['US-900 AC-2 (change us-900-fixture)']);
   });
