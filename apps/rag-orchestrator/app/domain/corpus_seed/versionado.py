@@ -71,37 +71,18 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
     return DecisionDeVersion(Accion.INSERTAR, a_apagar=huerfanas)
 
 
-class Reanudacion(StrEnum):
-    NUEVO = "nuevo"
-    REANUDAR = "reanudar"
-    YA_EMBEBIDO = "ya_embebido"
+def es_reanudacion(checksum: str, existentes: Sequence[VersionExistente]) -> bool:
+    """``True`` si el grupo ya tiene una fila a medias (``pendiente``/``normalizado``/``error``) del MISMO contenido.
 
-
-@dataclass(frozen=True)
-class DecisionDeReanudacion:
-    estado: Reanudacion
-    # La fila del mismo contenido que se retoma o que ya está embebida; ``None`` si el contenido es nuevo.
-    document_id: str | None = None
-
-
-def decidir_reanudacion(
-    checksum: str, existentes: Sequence[VersionExistente]
-) -> DecisionDeReanudacion:
-    """Qué hay en el catálogo del MISMO contenido (``checksum``) que la ingesta va a procesar (US-117a D2).
-
-    ``embebido`` -> ya está hecho. ``pendiente``/``normalizado``/``error`` con ese checksum -> fila a medias: se reprocesa
-    con su mismo ``document_id`` (los chunks se reescriben por ``chunk_id``, no se duplican). Una fila en ``error`` sin
-    checksum (falló antes de leer el texto) o ``rechazado_licencia`` no es avance de este contenido. No decide versiones:
-    eso es de ``decidir_version``.
+    Solo informa que la ingesta retoma un documento: el ``document_id`` no se busca, es el mismo porque deriva del
+    ``checksum`` (los chunks se reescriben por ``chunk_id``, no se duplican). Un contenido ya ``embebido`` no es una
+    reanudación (se omite); una fila en ``error`` sin checksum (falló antes de leer el texto) o ``rechazado_licencia``
+    tampoco es avance de este contenido. No decide versiones: eso es de ``decidir_version``.
     """
     del_contenido = [v for v in existentes if v.checksum == checksum]
-    embebida = next((v for v in del_contenido if v.status == STATUS_EMBEBIDO), None)
-    if embebida is not None:
-        return DecisionDeReanudacion(Reanudacion.YA_EMBEBIDO, embebida.document_id)
-    a_medias = next((v for v in del_contenido if v.status in STATUS_A_MEDIAS), None)
-    if a_medias is not None:
-        return DecisionDeReanudacion(Reanudacion.REANUDAR, a_medias.document_id)
-    return DecisionDeReanudacion(Reanudacion.NUEVO)
+    if any(v.status == STATUS_EMBEBIDO for v in del_contenido):
+        return False
+    return any(v.status in STATUS_A_MEDIAS for v in del_contenido)
 
 
 @dataclass(frozen=True)

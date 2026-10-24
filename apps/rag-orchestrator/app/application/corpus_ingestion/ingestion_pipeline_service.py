@@ -50,11 +50,10 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeVersion,
-    Reanudacion,
     calcular_checksum,
-    decidir_reanudacion,
     decidir_retiro,
     decidir_version,
+    es_reanudacion,
 )
 
 
@@ -181,7 +180,7 @@ class IngestionPipelineService:
         decision = decidir_version(checksum, versiones)
         if decision.accion is Accion.OMITIR:
             return self._omitir(documento, decision)
-        reanudado = decidir_reanudacion(checksum, versiones).estado is Reanudacion.REANUDAR
+        reanudado = es_reanudacion(checksum, versiones)
         fragmentos = self._fragmentar(texto)
         self._catalogo.guardar_documento(
             registro_normalizado(documento, admision, checksum, self._reloj.ahora())
