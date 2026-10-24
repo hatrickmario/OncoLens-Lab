@@ -242,6 +242,309 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ---
 
-## 7. Pull Requests
+# Prompts relevantes del Sprint 1 y Sprint 2
 
-🚧 Pendiente — esta sección del `readme.md` aún no se ha desarrollado.
+## 1. Refinamiento de sprint con Definition of Ready
+
+**Ejemplo en OncoLens (S1)**
+
+```text
+Actúa como refinador del sprint S1 de OncoLens. Fuente de verdad: los ficheros
+de backlog/features/FEAT-*.md,; el tablero Linear (proyecto OncoLens-1) es solo
+un espejo.
+DoR: ≤ 5 pts, AC Given/When/Then verificables, dependencias resueltas y datos
+de prueba definidos.
+
+1. Lee las historias del sprint y cruza el tablero con el Markdown. Lista
+   cualquier diferencia antes de seguir.
+2. Evalúa cada historia contra la Definition of Ready (<DoR: estimación
+   máxima de 5 pts, AC verificables, dependencias resueltas, datos de
+   prueba definidos>). Devuelve una tabla: historia · criterio que falla ·
+   evidencia · propuesta.
+3. Para cada historia que exceda el tamaño, propón la división por
+   superficie (no por capa técnica) sin cambiar puntos totales ni la demo.
+4. Reúne todas las dudas que bloquean y hazme la entrevista en bloques de
+   <4> preguntas, cada una con opciones, una recomendación y su costo.
+5. Registra mi respuesta dentro de la propia historia como `[<sprint> resp. n]`
+   y cita ese marcador en el AC que cambia. No reabras una decisión ya
+   registrada.
+6. No modifiques nada fuera del Markdown hasta que apruebe el ajuste del
+   slicing; después, actualiza el tablero.
+
+Salida: tabla de hallazgos, divisiones propuestas, preguntas abiertas y el
+total de puntos antes y después. Sin código.
+
+Hallazgos que salieron:
+- US-012 · ADR-39 (L1D-102), 8 pts: partirla en fase A (embeddings, reranker,
+  NLI; 5 pts) y US-224 (LLM local; 3 pts). [S1 resp. 6]
+- US-055 (L1D-106), 8 pts y ⛔ por ADR-39: partirla en recuperación (5 pts) y
+  US-225 (generación; 3 pts). [S1 resp. 6]
+- 13 historias con supuestos «(asumido)» sin aceptar: aceptación escrita. [S1 resp. 3]
+
+```
+
+## 2. Decidir un modelo o runtime con reglas fijadas antes de medir
+
+**Ejemplo en OncoLens (ADR-39, US-224 / L1D-274)**
+
+```text
+Necesito elegir el modelo de Embeddings local de OncoLens. Restricciones duras: 
+LLM gemma4:26b-a4b-it-q4_K_M, ≤ 21 GB vram y stack technologico del proyect ≤ ~30 GB sin swap,
+ /platform/evidence-analyses p95 por etapa de ~3s para embeddings, licencia académica de fuente de datos, 
+idioma oficial del proyecto es español. 
+
+Input
+- Canidatos a evaluar: BGE-M3, Qwen3-Embedding-0.6B, multilingual-e5-large-instruct
+- Entorno: contenedor Linux arm64 con 8 vCPU, sin GPU y 7 GB de RAM, 
+  sobre un host Apple M5 Pro.
+- Protocolo: 3 corridas, cada una en un proceso nuevo. Se descartan 3 llamadas de 
+  calentamiento y la carga del modelo queda fuera del cronómetro. La memoria (RSS) 
+  se muestrea cada 20 ms y se reporta la mediana de las 3 corridas.
+- Datos: data/eval/adr39-mini con 75 preguntas, 27 fuentes con SHA-256 y 94 citas del 
+  golden verificadas contra su documento.
+- Intervalos de confianza: 95 %, por bootstrap.
+
+Antes de medir nada, escribe y congela en el ADR:
+- Los candidatos con tag exacto, tamaño y licencia, verificados
+  en la fuente oficial. No cites de memoria.
+- Las métricas y cómo se miden (<comando o herramienta>), con el mismo
+  conjunto de preguntas para todos.
+- Las reglas de decisión: qué se descarta de plano, cómo se desempata y qué
+  evidencia haría cambiar la elección. Incluye el umbral de memoria con el
+  margen para el sistema operativo.
+
+Luego mide cada candidato en la máquina de referencia y rellena una tabla
+con memoria pico, latencia p50/p95, calidad y fallos. Si un resultado no se
+puede reproducir, dilo; no lo promedies ni lo omitas.
+
+Salida: el ADR con la decisión, las alternativas descartadas y por qué, los
+números, el comando para reproducirlos y lo que queda sin medir. Si dos
+candidatos empatan, presenta ambos y pídeme la decisión. Realiza todas las preguntas
+necesarias para obtener la mejor decisión posible. Finalmente debes recibir aprobación del ADR.
+
+
+```
+
+## 3. Auditoría de cierre contra la evidencia
+
+**Ejemplo en OncoLens (cierre del S1, `backlog/sprints/S1-cierre.md`)**
+
+```text
+Eres un auditor especialista en Product Management independiente de productos
+de software, para cada historia marcada como terminada, verifica que
+existe evidencia ejecutable, no solo que el código existe.Audita el 
+sprint S1 de OncoLens: 26 historias, 69 PR mergeados (#23–#91). 
+
+Para cada historia:
+1. Lista sus AC y, para cada uno, el test que lo cubre (fichero y nombre).
+2. Confirma que ese test se ejecuta en la CI, o ejecútalo y adjunta la
+   salida. Un test que solo corre en una máquina local cuenta como evidencia
+   débil; márcalo.
+3. Revisa los PR: tareas diferidas sin ID de destino, tareas sin marcar y
+   excepciones a reglas de arquitectura sin test que las declare.
+4. Clasifica: Done confirmado · Done sin evidencia (devolver a In Review) ·
+   Bug real (devolver a In Progress). Nunca asumas que un AC pasa.
+
+Después revisa el proceso de desarrollo de software : 
+¿qué controles del supply chain no vio el implementador
+antes de integrar?, ¿qué gates se repitieron más de dos veces y por qué?,
+¿qué decisión del humano se aplicó sin quedar documentada? etc
+
+Salida: tabla por historia, lista de Bloqueantes y Mayores, y un máximo de
+<10> mejoras de proceso, cada una con un cambio concreto (fichero y regla).
+Solo propuestas; no apliques nada ni crees issues sin mi aprobación.
+
+```
+
+## 4. Definition of Done por tipo de trabajo
+**Prompt base inicial:**
+
+```text
+Actúa como responsable de calidad de OncoLens. Redacta la Definition of
+Done en <ruta, p. ej. docs/process/definition-of-done.md>. Es la contraparte
+de la Definition of Ready: la DoR dice cuándo se puede empezar; la DoD, cuándo
+se puede dar por terminado.
+
+Insumos: <retrospectiva o incidentes que muestran qué se dio por hecho sin
+estarlo>, las reglas del repo (<CLAUDE.md, matriz de pruebas, CI>), la
+plantilla de PR y el historial de PR del último sprint.
+
+Paso 1 — Inventario de tipos. Antes de escribir, clasifica los PR del último
+sprint por tipo y cuenta cuántos hay de cada uno. Tipos base: historia nueva,
+bug, refactor, ADR o decisión, spike, épica. Si más de un <10 %> de los PR no
+encaja en ninguno, añade un tipo. Casi siempre falta uno para el trabajo sin
+comportamiento de producto: chore / configuración (CI, Compose, migraciones,
+scripts, dependencias, documentación). Muéstrame la tabla tipo · nº de PR ·
+ejemplo y espera mi confirmación de los tipos antes de seguir.
+
+Paso 2 — Estructura del documento:
+- Sección «Común a todo PR» con 6–8 casillas.
+- Una sección corta por tipo, solo con lo que ese tipo añade al común.
+- Una línea «Cómo elegir el tipo» con la regla para PR mixtos (p. ej. el
+  tipo del cambio de mayor riesgo; nunca un PR que mezcle refactor y feature).
+
+Paso 3 — Reglas de redacción:
+- Cada casilla se puede comprobar con un comando, un fichero o un estado de
+  la CI. Si no se puede comprobar, reescríbela o descártala.
+- Nada que ya imponga la CI de forma automática, salvo para enlazarlo.
+- Bug: test en rojo en su propio commit antes del fix y análisis de por qué
+  ningún control lo detectó.
+- Refactor: la cobertura del módulo no baja y el comportamiento observable no
+  cambia (contratos y tests de aceptación intactos).
+- Spike: el código no se integra; queda un informe enlazado.
+- ADR o decisión: opciones descartadas con su motivo; las decisiones que
+  requieren firma externa no pasan a Done sin ella.
+- Chore / configuración: la prueba va en el mismo PR (humo, integración o
+  fixture; no TDD estricto); un cambio de CI se ejecuta al menos una vez antes
+  de mergear; no cambia comportamiento de producto; una dependencia nueva
+  indica licencia y resultado de la auditoría; la documentación que toca queda
+  enlazada o regenerada.
+
+Paso 4 — Salida: el documento y una lista aparte de las casillas que hoy
+ningún control comprueba, para que yo decida cuáles se automatizan. Después
+copia el checklist por tipo a la plantilla de PR, con un campo «Tipo» que
+incluya el nuevo; no toques nada más.
+```
+
+**Ejemplo en OncoLens DoD por tipo de tarea**
+
+```text
+Contexto: la DoD se redactó como contraparte de la DoR de /sprint-refine. El
+checklist del tipo se copia en .github/pull_request_template.md (campo Tipo:
+feature | bug | refactor | ADR/DEC | spike) y lo comprueba el Gate 2 (gate-review).
+
+COMÚN A TODO PR
+- Título «[L1D-nn] <título>» y la historia en backlog/features/ (el Markdown es
+  la fuente; Linear, el espejo).
+- Gate 2 en verde con los guardianes que tocan según los paths; Menores en el PR.
+- `openspec validate <change> --strict` y /opsx:verify en verde.
+- Sin datos reales, secretos ni identificadores de paciente (RN-13, RN-14);
+  fixtures solo sintéticos (`SINT-`).
+- Suite `evaluate` con reporte si toca modelo, prompt, umbral, catálogo o corpus.
+- `visual-check` en PASS si toca la UI de apps/web.
+- Sin .skip, .only, xit, xfail ni tests borrados sin el trailer `Test-Removal:`.
+- `ci-ok` en verde (build y tests, contratos, secretos, PII, smoke del stack).
+
+HISTORIA DE USUARIO (feature nueva)
+- Contract-first: el openapi.yaml cambia antes que el código (primer commit
+  `contract(L1D-nn)`); `contracts:check` y `contracts:generate:check` en verde.
+- Patrón de su capa (Controller → Service → Repository con Zod; hexagonal con
+  Pydantic en rag-orchestrator).
+- Validación de entradas y salidas con tests unitarios e integración (BD real).
+- Un test de aceptación por AC Given/When/Then, tag `[US-xxx AC-n]`, en rojo
+  antes del `feat`.
+- Change de OpenSpec listo para archivar tras el merge (tareas [x]).
+
+BUG
+- Test que reproduce el bug, en rojo y en su commit `test(L1D-nn)`, antes del fix.
+- Fix `fix(L1D-nn)`; el mismo test pasa a verde sin tocar sus aserciones.
+- Análisis 5-whys en el issue: clase de bug y por qué no lo detectó ningún gate.
+
+REFACTOR
+- La cobertura del módulo no baja respecto de main (aquí sí bloquea).
+- Comportamiento inalterado: mismos contratos y ningún test de aceptación cambiado.
+- El PR explica qué principio SOLID/CUPID o hallazgo de design-principles-reviewer resuelve.
+
+ADR O DEC
+- MADR (_plantilla-madr.md) con fila en el índice; DEC con _plantilla-dec.md.
+- Decisión del humano en la historia («Decidido (usuario, fecha)») y en 02-adrs.md.
+- Opciones descartadas con su motivo; tres propuestas si revertir es caro.
+- Firma externa que exija la historia (p. ej. el oncólogo); sin ella no pasa a Done.
+
+SPIKE
+- Informe: pregunta, método, resultado y recomendación, enlazado desde la historia.
+- El código del spike no se mergea; si sirve, se reescribe dentro de una historia.
+
+FEATURE (épica)
+- Todas sus historias mergeadas o movidas con motivo.
+- Demo del recorrido con datos sintéticos en el cierre del sprint.
+- backlog/03-trazabilidad.md regenerado sin huecos Bloqueantes.
+```
+
+## 5. Skill que delega la ejecución del sprint a un orquestador
+
+```text
+Crea la skill `<nombre, p. ej. sprint-run>` en <.claude/skills/>. Solo se
+invoca a mano (`disable-model-invocation: true`) con `/<nombre> <sprint>`,
+después de mergear el PR de planificación.
+
+Objetivo: delegar la fase de ejecución del sprint en el agente
+`<orquestador>` en segundo plano y explicar cómo reanudarlo tras cada merge.
+
+Pasos que debe describir la skill:
+1. Precondiciones, y detenerse si falta alguna: el plan aprobado existe en
+   `origin/main`, los changes del plan están activos y la profundidad de
+   subagentes permitida alcanza. Si el sprint tiene una sola historia, no
+   lances orquestador: propón ejecutar esa historia directamente.
+2. Lanzar el orquestador en segundo plano con nombre `sprint-<n>`. Su prompt:
+   ejecutar según el plan, llevar el estado en `<sprint>-status.md` (crearlo
+   o reanudar), y mantener <tablero> sincronizado: En curso al empezar, En
+   revisión en pruebas/gate/PR, de vuelta si falla, Hecho solo con todos sus
+   PR integrados. Antes de reanudar, reconciliar el tablero con el estado.
+3. Decir al humano cómo seguir: recibirá los PR a medida que pasen el gate;
+   el orquestador vuelve a la sesión principal solo para pedir merges por
+   oleada o ante una situación crítica (<lista: gate fallido dos veces,
+   invariante de negocio, ambigüedad, cambio de alcance, seguridad, bloqueo
+   externo>). Entonces se entrevista al humano, se registra la respuesta en
+   la historia y se reanuda. Si el orquestador ya no existe, volver a lanzar
+   la skill: reanuda desde el archivo de estado.
+4. Al terminar, proponer la skill de cierre.
+
+Regla dura: la skill nunca hace merge ni pide que se haga (`<comando>` está
+denegado en los permisos). Salida: solo el SKILL.md, con frontmatter
+(name, description, argument-hint, arguments).
+```
+
+**Ejemplo en OncoLens skill sprint-run S1 y agent sprint-orchestrator**
+
+```text
+Ciclo: /sprint-refine → /sprint-start (plan aprobado, PR que mergea el humano)
+→ /sprint-run S<n> → /sprint-close. La skill solo delega; el trabajo lo hace el
+agente sprint-orchestrator (model sonnet, effort medium, background, memory:
+project, skills implement-story y gate-review).
+
+SKILL /sprint-run (disable-model-invocation, argumento S<n> | Pre-S1)
+- Precondiciones: `git fetch`; backlog/sprints/S<n>-plan.md en origin/main con
+  la aprobación; `openspec list --json` con los changes activos; profundidad
+  de subagentes ≥ 3 (.claude/settings.json: MAX_SUBAGENT_SPAWN_DEPTH=3,
+  MAX_CONCURRENT_SUBAGENTS=8). Una sola historia: /implement-story L1D-<nn>.
+- Lanza Agent(subagent_type sprint-orchestrator, name sprint-S<n>, segundo plano)
+  con estado en backlog/sprints/S<n>-status.md (crear o reanudar) y Linear
+  sincronizado. Antes de reanudar, reconcilia: el status manda sobre Linear.
+- Al humano: PR [L1D-nn] por oleada; "mergeados L1D-93 y L1D-95" reanuda con
+  SendMessage; si el orquestador murió, repetir /sprint-run (lee el status).
+- Cierre: «Sprint listo para /sprint-close». Nunca hace merge.
+
+AGENTE sprint-orchestrator (no escribe código ni decide por el humano)
+- Jerarquía: sesión principal (0) → orquestador (1) → clinical-platform-dev,
+  ai-services-dev, frontend-dev y los guardianes (2) → Explore (3).
+- Bucle por oleada: elegibles = dependencias en `mergeado` (git branch -r
+  --merged origin/main); despacho en paralelo (≤ 3 por defecto) con los deltas
+  de los changes previos, los paths propios y los checklists de los guardianes;
+  push tras cada commit y rama wip/l1d-<nn> si se corta; Gate 2 por historia
+  y en modo `lote` para la última del lote; máximo 2 vueltas (la 2.ª acotada
+  a los guardianes que fallaron); PR con `gh pr create`, nunca `gh pr merge`.
+- «pr-listo» solo con `gh pr checks --watch` en 0 fallos, 0 pendientes y 0
+  alertas de code scanning; jamás desactivar controles ni descartar alertas.
+- Estados del status: pendiente → en-curso → gate2 → pr-listo → mergeado;
+  desvíos bloqueado-gate, bloqueado-humano, movido-S<n+1>. Fila: L1D · change
+  · contexto · estado · linear · rama · PR · gate2 · nota.
+- Linear (equipo L1D): In Progress al despachar o si falla algo; In Review en
+  gate2 y pr-listo; Done solo con todos los PR mergeados y (a) Gate 2 sin
+  Bloqueante/Mayor, (b) tareas [x] o diferidas con ID destino, (c) sin
+  decisión abierta, (d) CI de main no roja. Solo /sprint-close devuelve un Done.
+- Situación crítica (para y devuelve preguntas con opciones y recomendación):
+  gate fallido 2 veces, invariante RN, ambigüedad de la spec, cambio de alcance,
+  seguridad o datos reales, bloqueo externo. Los Menores no escalan.
+- Reglas duras: solo edita S<n>-status.md; sin datos reales ni PHI en PR, ramas
+  ni Linear; no reordena el plan; no archiva changes; tasks.md al día en el
+  mismo PR (lección del S1); `openspec validate --strict` falla en main → no
+  despacha. Guarda en memoria tiempos y fallos recurrentes de gates.
+
+PERMISOS (.claude/settings.json): deny `gh pr merge`, `git push --force/-f`,
+`git push origin main`; allow lecturas (git, gh pr view/list/checks, openspec).
+```
+
+
+
+
