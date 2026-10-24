@@ -57,9 +57,9 @@ class _Cerrado(BaseModel):
 _Valor = Annotated[str, Field(max_length=LONGITUD_MAXIMA_DE_VALOR)]
 
 
-def _modelo_cerrado(nombre: str, campos: dict[str, Any]) -> type[_Cerrado]:
-    """Modelo Pydantic cerrado cuyos campos de texto salen de ``campos.py`` (fuente única de las claves, D7)."""
-    textos = [c for c, (tipo, _) in campos.items() if tipo == _Valor | None]
+def _modelo_cerrado(nombre: str, textos: Sequence[str], campos: dict[str, Any]) -> type[_Cerrado]:
+    """Modelo Pydantic cerrado cuyos campos salen de ``campos.py`` (fuente única de las claves, D7). ``textos`` son los
+    campos que se recortan (``strip``; en blanco = no declarado)."""
     return create_model(  # type: ignore[call-overload,no-any-return]
         nombre,
         __base__=_Cerrado,
@@ -69,10 +69,13 @@ def _modelo_cerrado(nombre: str, campos: dict[str, Any]) -> type[_Cerrado]:
 
 
 _Biomarcadores = _modelo_cerrado(
-    "_Biomarcadores", {s: (_Valor | None, None) for s in SUBCLAVES_DE_BIOMARCADORES}
+    "_Biomarcadores",
+    SUBCLAVES_DE_BIOMARCADORES,
+    {s: (_Valor | None, None) for s in SUBCLAVES_DE_BIOMARCADORES},
 )
 _Poblacion = _modelo_cerrado(
     "_Poblacion",
+    CRITERIOS_PLANOS,
     {
         **{c: (_Valor | None, None) for c in CRITERIOS_PLANOS},
         "biomarcadores": (_Biomarcadores | None, None),

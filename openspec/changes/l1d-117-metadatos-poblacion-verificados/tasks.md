@@ -57,6 +57,8 @@
 
 - [ ] 1.13 Reconciliar las claves de `population_criteria` con `packages/clinical-catalogs/poblacion.json` (11 claves; faltan `grado`, `estado_menopausico`, `estado_castracion`) · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197); pregunta al usuario en `design.md`, Pendientes
 
+> Notas para el cuerpo del PR (Gate 2, M1 y M2): en `c85845bc` se eliminó el test «umbral ignorado» sin `Test-Removal:` (lo sustituyen tests que sí miden el umbral con p entre umbrales); el commit `3ba468eb` se llama refactor pero añade comportamiento nuevo (tope `maxLength` de 200). No se reescriben.
+
 ## evaluación
 
 - [x] 2.1 `run-ai-eval` sobre la rama: confirmar que recuperación y fidelidad no cambian frente al baseline (prompt
