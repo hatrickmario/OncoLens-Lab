@@ -54,39 +54,49 @@ function violacionDeEsquema(validar, contenido, tipo, clave) {
   return validar(contenido) ? [] : [{ codigo: 'esquema_invalido', tipo, clave }];
 }
 
+function compilarEsquemas(esquemas) {
+  const ajv = new Ajv2020({ strict: true });
+  return {
+    manifest: ajv.compile(esquemas.manifest),
+    atributos: ajv.compile(esquemas.atributos),
+    datosCriticos: ajv.compile(esquemas.datosCriticos),
+    aplicabilidad: ajv.compile(esquemas.aplicabilidad),
+  };
+}
+
+/** Las reglas con nombre explican mejor un fallo que el esquema genérico: este solo entra si ellas callan. */
+function violacionesDeReglasOEsquema(archivo, nombre, validarEsquema, contexto) {
+  const delArchivo = violacionesDelArchivo(archivo, nombre, contexto);
+  return delArchivo.length > 0 ? delArchivo : violacionDeEsquema(validarEsquema, archivo, contexto.tipo, nombre);
+}
+
+function violacionesDelTipo(tipo, { datosCriticos, aplicabilidad }, contexto, esquemasCompilados) {
+  const clavesDelTipo = itemsDe(datosCriticos).map((item) => item.key);
+  const delTipo = { ...contexto, tipo, clavesDelTipo };
+  return [
+    ...violacionesDeReglasOEsquema(datosCriticos, 'datos-criticos', esquemasCompilados.datosCriticos, delTipo),
+    ...violacionesDeReglasOEsquema(aplicabilidad, 'aplicabilidad', esquemasCompilados.aplicabilidad, delTipo),
+  ];
+}
+
 /**
  * @param {{ archivos: object, allowlist: object, esquemas: object }} entrada
  *   `archivos` = `{ manifest, atributos, tipos: { <tipo>: { datosCriticos, aplicabilidad } } }`
  * @returns {{ valido: boolean, catalogVersion: string | null, violaciones: Violacion[] }}
  */
 export function validarCatalogo({ archivos, allowlist, esquemas }) {
-  const ajv = new Ajv2020({ strict: true });
-  const compilar = (esquema) => ajv.compile(esquema);
-  const vocabulario = vocabularioDe(esquemas.datosCriticos);
-  const validarEsquema = {
-    manifest: compilar(esquemas.manifest),
-    atributos: compilar(esquemas.atributos),
-    datosCriticos: compilar(esquemas.datosCriticos),
-    aplicabilidad: compilar(esquemas.aplicabilidad),
+  const esquemasCompilados = compilarEsquemas(esquemas);
+  const contexto = {
+    allowlist,
+    vocabulario: vocabularioDe(esquemas.datosCriticos),
+    atributos: Array.isArray(archivos.atributos?.keys) ? archivos.atributos : { keys: [] },
   };
-  const atributos = Array.isArray(archivos.atributos?.keys) ? archivos.atributos : { keys: [] };
-
   const violaciones = [
-    ...violacionDeEsquema(validarEsquema.manifest, archivos.manifest, 'catalogo', 'manifest'),
-    ...violacionDeEsquema(validarEsquema.atributos, archivos.atributos, 'catalogo', 'atributos'),
+    ...violacionDeEsquema(esquemasCompilados.manifest, archivos.manifest, 'catalogo', 'manifest'),
+    ...violacionDeEsquema(esquemasCompilados.atributos, archivos.atributos, 'catalogo', 'atributos'),
+    ...Object.entries(archivos.tipos).flatMap(([tipo, delTipo]) =>
+      violacionesDelTipo(tipo, delTipo, contexto, esquemasCompilados),
+    ),
   ];
-  for (const [tipo, { datosCriticos, aplicabilidad }] of Object.entries(archivos.tipos)) {
-    const clavesDelTipo = itemsDe(datosCriticos).map((item) => item.key);
-    const contexto = { tipo, allowlist, atributos, vocabulario, clavesDelTipo };
-    const porArchivo = [
-      ['datos-criticos', datosCriticos, validarEsquema.datosCriticos],
-      ['aplicabilidad', aplicabilidad, validarEsquema.aplicabilidad],
-    ];
-    for (const [nombre, archivo, validar] of porArchivo) {
-      const delArchivo = violacionesDelArchivo(archivo, nombre, contexto);
-      // Las reglas con nombre explican mejor un fallo que el esquema genérico: este solo entra si ellas callan.
-      violaciones.push(...(delArchivo.length > 0 ? delArchivo : violacionDeEsquema(validar, archivo, tipo, nombre)));
-    }
-  }
   return { valido: violaciones.length === 0, catalogVersion: archivos.manifest?.version ?? null, violaciones };
 }
