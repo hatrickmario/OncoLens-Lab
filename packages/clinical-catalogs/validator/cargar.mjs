@@ -40,10 +40,11 @@ function leerJson(directorio, archivo, leerArchivo) {
   }
 }
 
-/** Archivos del catálogo que recorre el validador: manifiesto, claves de atributos y, por tipo, datos críticos y aplicabilidad. */
+/** Archivos del catálogo que recorre el validador: manifiesto, claves de atributos y de población y, por tipo, datos críticos y aplicabilidad. */
 export function leerCatalogo(directorio, leerArchivo) {
   const manifest = leerJson(directorio, 'manifest.json', leerArchivo);
   const atributos = leerJson(directorio, 'atributos.json', leerArchivo);
+  const poblacion = leerJson(directorio, 'poblacion.json', leerArchivo);
   const tipos = {};
   // Solo se lee por tipos con la forma del manifiesto (`^[a-z]+$`): `../x` no construye una ruta de lectura. El
   // esquema del manifiesto rechaza luego el tipo deformado.
@@ -58,12 +59,19 @@ export function leerCatalogo(directorio, leerArchivo) {
       ]),
     );
   }
-  return { manifest, atributos, tipos };
+  return { manifest, atributos, poblacion, tipos };
 }
 
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
-  const nombres = ['manifest', 'atributos', 'validation', ...ESQUEMAS_DE_ARCHIVOS];
+  const nombres = [
+    'manifest',
+    'atributos',
+    'poblacion',
+    'comun',
+    'validation',
+    ...ESQUEMAS_DE_ARCHIVOS,
+  ];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }

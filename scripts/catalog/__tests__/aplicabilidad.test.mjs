@@ -1,3 +1,5 @@
+import { rmSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   PLAZO_PROCESO_MS,
@@ -60,6 +62,36 @@ describe('catalog:validate · sin puntaje en criterios de aplicabilidad (RN-28)'
 
       expect(resultado.codigo).not.toBe(0);
       expect(resultado.salida).toContain('campo_de_puntaje mama/ecog campo=weight');
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
+describe('catalog:validate · resto de reglas de los criterios de aplicabilidad', () => {
+  it(
+    'termina con código distinto de 0 y nombra ecog cuando su estado no es del vocabulario [US-121 AC-1]',
+    () => {
+      const catalogo = copiaRota((c) => (criterioDe(c, 'ecog').estado = 'aprobado'));
+
+      const resultado = ejecutarValidador(catalogo);
+
+      expect(resultado.codigo).not.toBe(0);
+      expect(resultado.salida).toContain('estado_invalido mama/ecog');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'termina con código distinto de 0 y nombra archivo_ilegible poblacion cuando falta poblacion.json [US-121 AC-1]',
+    () => {
+      const catalogo = copiarFixture(VERSION);
+      rmSync(path.join(catalogo, 'poblacion.json'));
+
+      const resultado = ejecutarValidador(catalogo);
+
+      expect(resultado.codigo).not.toBe(0);
+      expect(resultado.salida).toContain('archivo_ilegible poblacion');
+      expect(resultado.salida).not.toContain(catalogo);
     },
     PLAZO_PROCESO_MS,
   );

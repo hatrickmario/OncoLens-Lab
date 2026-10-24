@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "comun.schema.json",
+  "title": "Definiciones compartidas por los archivos por tipo del catálogo (L1D-93, L1D-126): una sola fuente para etiqueta, destino y estado",
+  "$defs": {
+    "etiqueta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["es"],
+      "properties": { "es": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+    },
+    "destino": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity"],
+      "properties": {
+        "entity": { "type": "string", "pattern": "^[A-Z][A-Za-z]+$" },
+        "field": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "match": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "estado": { "enum": ["propuesta", "pendiente", "revisado"] }
+  }
+}

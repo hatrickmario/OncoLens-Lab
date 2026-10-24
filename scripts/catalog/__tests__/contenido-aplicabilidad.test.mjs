@@ -28,7 +28,10 @@ const EXCLUYENTES = ['estado_her2', 'estado_castracion'];
 
 describe('contenido de aplicabilidad del catálogo del S3', () => {
   it('lista exactamente los criterios de mama y próstata con destination, studyKey, isExclusionary y rule [US-121 AC-1]', () => {
-    const clavesDe = (tipo) => criteriosDe(tipo).map((criterio) => criterio.key).sort();
+    const clavesDe = (tipo) =>
+      criteriosDe(tipo)
+        .map((criterio) => criterio.key)
+        .sort();
 
     expect(clavesDe('mama')).toEqual([...CLAVES_DE_MAMA].sort());
     expect(clavesDe('prostata')).toEqual([...CLAVES_DE_PROSTATA].sort());
@@ -60,7 +63,10 @@ describe('contenido de aplicabilidad del catálogo del S3', () => {
   it(
     'valida con código 0 y sin campos de puntaje en ningún criterio [US-121 AC-3]',
     () => {
-      const texto = JSON.stringify([...criteriosDe('mama'), ...criteriosDe('prostata')]).toLowerCase();
+      const texto = JSON.stringify([
+        ...criteriosDe('mama'),
+        ...criteriosDe('prostata'),
+      ]).toLowerCase();
 
       expect(texto).not.toMatch(/"(peso|score|weight)"/);
       expect(ejecutarValidador(CATALOGO).codigo).toBe(0);

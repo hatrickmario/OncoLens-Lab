@@ -5,6 +5,8 @@ import {
   exigirDestinoExistente,
   exigirClaveUnica,
   exigirEstadoValido,
+  exigirStudyKey,
+  rechazarCamposDePuntaje,
 } from './reglas.mjs';
 
 /**
@@ -13,8 +15,8 @@ import {
  * compilador de esquemas y el recorrido del validador salen de aquí: un archivo nuevo (reglas de supuestos, US-129) o
  * una regla nueva (`rechazarCamposDePuntaje`, l1d-126) se añaden en este único sitio.
  *
- * Una regla es `(item, contexto) => codigo | null`; `contexto` trae `tipoDeCancer`, `allowlist`, `atributos`, `vocabulario` y
- * `clavesDelTipo`. Todas toleran un ítem sin `destination` (lo señala `exigirDestino`).
+ * Una regla es `(item, contexto) => codigo | { codigo, campo } | null`; `contexto` trae `tipoDeCancer`, `allowlist`,
+ * `atributos`, `poblacion`, `vocabulario`, `clavesDelTipo`, `clavesRepetidas` y `studyKeysRepetidas`. Todas toleran un ítem sin `destination` (lo señala `exigirDestino`).
  */
 const REGLAS_DE_DESTINO = [
   (item) => exigirDestino(item),
@@ -35,7 +37,13 @@ export const ARCHIVOS_DEL_CATALOGO = {
   },
   aplicabilidad: {
     esquema: 'aplicabilidad',
-    reglas: [...REGLAS_DE_DESTINO],
+    reglas: [
+      ...REGLAS_DE_DESTINO,
+      (item) => rechazarCamposDePuntaje(item),
+      (item, { tipoDeCancer, poblacion, studyKeysRepetidas }) =>
+        exigirStudyKey(item, tipoDeCancer, poblacion, studyKeysRepetidas),
+      (item, { vocabulario }) => exigirEstadoValido(item, vocabulario),
+    ],
   },
 };
 

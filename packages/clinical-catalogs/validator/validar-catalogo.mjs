@@ -11,24 +11,39 @@ import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas
  */
 
 /** Mensaje de una violación: código y ítem, sin ruta ni valores. */
-export const mensajeDe = ({ codigo, tipoDeCancer = 'catalogo', elemento, archivo }) =>
-  `${codigo} ${nombrable(tipoDeCancer)}/${nombrable(elemento ?? archivo)}`;
+export const mensajeDe = ({ codigo, tipoDeCancer = 'catalogo', elemento, archivo, campo }) =>
+  `${codigo} ${nombrable(tipoDeCancer)}/${nombrable(elemento ?? archivo)}` +
+  (campo === undefined ? '' : ` campo=${nombrable(campo)}`);
 
 const itemsDe = (archivo) =>
   Array.isArray(archivo?.items)
     ? archivo.items.filter((item) => item !== null && typeof item === 'object')
     : [];
 
+/** Archivo de claves (`atributos`, `poblacion`) con la forma que las reglas recorren; uno deformado lo rechaza su esquema. */
+const conClaves = (archivo) => (Array.isArray(archivo?.keys) ? archivo : { keys: [] });
+
 /** Reglas de cada ítem según el registro de archivos (`ARCHIVOS_DEL_CATALOGO`). */
 function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
   const { reglas } = ARCHIVOS_DEL_CATALOGO[nombreDelArchivo];
   const items = itemsDe(archivo);
-  const delArchivo = { ...contexto, clavesRepetidas: clavesRepetidasEn(items) };
+  const delArchivo = {
+    ...contexto,
+    clavesRepetidas: clavesRepetidasEn(items),
+    studyKeysRepetidas: clavesRepetidasEn(
+      items.filter((item) => typeof item.studyKey === 'string'),
+      'studyKey',
+    ),
+  };
   return items.flatMap((item) =>
     reglas
       .map((regla) => regla(item, delArchivo))
       .filter(Boolean)
-      .map((codigo) => ({ codigo, tipoDeCancer: contexto.tipoDeCancer, elemento: item.key })),
+      .map((resultado) => ({
+        ...(typeof resultado === 'string' ? { codigo: resultado } : resultado),
+        tipoDeCancer: contexto.tipoDeCancer,
+        elemento: item.key,
+      })),
   );
 }
 
@@ -46,10 +61,11 @@ function violacionDeEsquema(validar, contenido, archivo, tipoDeCancer) {
     : [{ codigo: 'esquema_invalido', ...(tipoDeCancer && { tipoDeCancer }), archivo }];
 }
 
-/** Esquemas compilados por nombre: `manifest`, `atributos` y cada archivo del registro. */
+/** Esquemas compilados por nombre: `manifest`, `atributos`, `poblacion` y cada archivo del registro. */
 function compilarEsquemas(esquemas) {
   const ajv = new Ajv2020({ strict: true });
   ajv.addSchema(esquemas.validation);
+  ajv.addSchema(esquemas.comun);
   const delRegistro = NOMBRES_DE_ARCHIVO.map((nombre) => [
     nombre,
     ajv.compile(esquemas[ARCHIVOS_DEL_CATALOGO[nombre].esquema]),
@@ -57,6 +73,7 @@ function compilarEsquemas(esquemas) {
   return {
     manifest: ajv.compile(esquemas.manifest),
     atributos: ajv.compile(esquemas.atributos),
+    poblacion: ajv.compile(esquemas.poblacion),
     ...Object.fromEntries(delRegistro),
   };
 }
@@ -96,20 +113,22 @@ function violacionesDelTipoSinLanzar(tipoDeCancer, archivosDelTipo, contexto, es
 
 /**
  * @param {{ archivos: object, allowlist: object, esquemas: object }} entrada
- *   `archivos` = `{ manifest, atributos, tipos: { <tipo>: { <archivo del registro>: contenido } } }`;
- *   `esquemas` = `{ manifest, atributos, <archivo del registro>: esquema }`
+ *   `archivos` = `{ manifest, atributos, poblacion, tipos: { <tipo>: { <archivo del registro>: contenido } } }`;
+ *   `esquemas` = `{ manifest, comun, validation, atributos, poblacion, <archivo del registro>: esquema }`
  * @returns {{ valido: boolean, catalogVersion: string | null, violaciones: Violacion[] }}
  */
 export function validarCatalogo({ archivos, allowlist, esquemas }) {
   const esquemasCompilados = compilarEsquemas(esquemas);
   const contexto = {
     allowlist,
-    vocabulario: vocabularioDe(esquemas['datos-criticos']),
-    atributos: Array.isArray(archivos.atributos?.keys) ? archivos.atributos : { keys: [] },
+    vocabulario: vocabularioDe(esquemas),
+    atributos: conClaves(archivos.atributos),
+    poblacion: conClaves(archivos.poblacion),
   };
   const violaciones = [
     ...violacionDeEsquema(esquemasCompilados.manifest, archivos.manifest, 'manifest'),
     ...violacionDeEsquema(esquemasCompilados.atributos, archivos.atributos, 'atributos'),
+    ...violacionDeEsquema(esquemasCompilados.poblacion, archivos.poblacion, 'poblacion'),
     ...Object.entries(archivos.tipos).flatMap(([tipoDeCancer, delTipo]) =>
       violacionesDelTipoSinLanzar(tipoDeCancer, delTipo, contexto, esquemasCompilados),
     ),
