@@ -5,6 +5,9 @@ set -uo pipefail
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 INPUT="$(cat)"
 CWD="$(printf '%s' "$INPUT" | python3 -I "$HOOK_DIR/_input.py" cwd)"
+CMD="$(printf '%s' "$INPUT" | python3 -I "$HOOK_DIR/_input.py" tool_input.command)"
+# El filtro `if` de settings.json no basta en PostToolUse: el propio script exige un push o la creación de un PR.
+printf '%s' "$CMD" | grep -Eq '(^|[;&|[:space:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+create)([[:space:]]|$)' || exit 0
 [ -n "$CWD" ] && cd "$CWD" 2>/dev/null || true
 git rev-parse --show-toplevel >/dev/null 2>&1 || exit 0
 
