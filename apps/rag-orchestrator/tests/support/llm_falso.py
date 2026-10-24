@@ -61,6 +61,12 @@ ESCENARIOS_LLM: dict[str, str] = {
     ),
     "LLM-FUERA-DE-ESQUEMA": json.dumps({"synthesis": {"agreements": [], "discrepancies": []}}),
     "LLM-JSON-ROTO": '{"options": [',
+    # US-236 (alias efímeros por consulta): la opción cita por alias; ``ch-m1-1`` es el chunk real de C2 en FX-06a-c.
+    "LLM-ALIAS-C2": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C2")),
+    "LLM-ALIAS-C1-C2": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1", "C2")),
+    "LLM-ALIAS-INEXISTENTE": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C9")),
+    "LLM-ALIAS-C4": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C4")),
+    "LLM-ID-REAL": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1")),
 }
 
 
