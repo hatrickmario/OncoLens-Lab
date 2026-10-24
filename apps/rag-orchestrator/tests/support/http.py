@@ -17,10 +17,28 @@ import respx
 CARPETA_DE_EJEMPLOS = Path(__file__).resolve().parents[4] / "contracts" / "examples"
 
 
-def cargar_ejemplo(archivo_de_ejemplo: str) -> Any:
-    """Carga el ejemplo por su nombre de archivo; un nombre inexistente falla nombrándolo."""
+def _ruta_del_ejemplo(archivo_de_ejemplo: str, carpeta: Path) -> Path:
+    """Ruta del ejemplo dentro de `carpeta`; un nombre con separadores, `..` o absoluto se rechaza (solo contracts/examples/)."""
+    ruta = carpeta / archivo_de_ejemplo
+    es_nombre_simple = (
+        archivo_de_ejemplo not in {"", ".", ".."}
+        and "/" not in archivo_de_ejemplo
+        and "\\" not in archivo_de_ejemplo
+        and ".." not in archivo_de_ejemplo
+        and not Path(archivo_de_ejemplo).is_absolute()
+    )
+    if not es_nombre_simple or ruta.resolve().parent != carpeta.resolve():
+        raise AssertionError(
+            f"handler_desde_ejemplo: {archivo_de_ejemplo!r} no es un nombre de archivo de contracts/examples/"
+        )
+    return ruta
+
+
+def cargar_ejemplo(archivo_de_ejemplo: str, carpeta: Path = CARPETA_DE_EJEMPLOS) -> Any:
+    """Carga el ejemplo por su nombre de archivo; un nombre inexistente o fuera de la carpeta falla nombrándolo."""
+    ruta = _ruta_del_ejemplo(archivo_de_ejemplo, carpeta)
     try:
-        return json.loads((CARPETA_DE_EJEMPLOS / archivo_de_ejemplo).read_text(encoding="utf-8"))
+        return json.loads(ruta.read_text(encoding="utf-8"))
     except (OSError, ValueError) as causa:
         raise AssertionError(
             f"handler_desde_ejemplo: no se pudo leer el ejemplo {archivo_de_ejemplo} "
@@ -59,15 +77,17 @@ def handler_desde_ejemplo(
     sobrescribir: Mapping[str, Any] | None = None,
     status: int = 200,
     al_recibir: Callable[[httpx.Request], None] | None = None,
+    carpeta: Path = CARPETA_DE_EJEMPLOS,
 ) -> respx.Route:
     """Ruta de `router` que responde el ejemplo (con `sobrescribir`); `al_recibir` observa cada petición.
 
     Se valida al construir la ruta, no al atender: el test falla en su arranque y no depende de que la petición ocurra.
     """
-    ejemplo = cargar_ejemplo(archivo_de_ejemplo)
+    ejemplo = cargar_ejemplo(archivo_de_ejemplo, carpeta)
+    # `is not None` (no truthiness): un `{}` también valida que el ejemplo sea un objeto, igual que el handler de TS.
     cuerpo = (
         aplicar_sobrescritura(ejemplo, sobrescribir, archivo_de_ejemplo)
-        if sobrescribir
+        if sobrescribir is not None
         else ejemplo
     )
 

@@ -77,3 +77,53 @@ def test_handler_desde_ejemplo_entrega_cada_peticion_a_al_recibir():
         _responder(router, al_recibir=lambda peticion: recibidas.append(peticion.method))
 
     assert recibidas == ["POST"]
+
+
+@pytest.mark.parametrize(
+    "nombre",
+    ["../README.md", "/etc/hosts", "sub/ejemplo.json", "sub\\ejemplo.json", "..", "", "a..b.json"],
+)
+def test_handler_desde_ejemplo_rechaza_nombres_que_salen_de_contracts_examples(nombre):
+    with respx.mock() as router:
+        with pytest.raises(AssertionError) as fallo:
+            handler_desde_ejemplo(router, "get", URL, nombre)
+
+    assert "no es un nombre de archivo de contracts/examples/" in str(fallo.value)
+
+
+def test_handler_desde_ejemplo_rechaza_un_enlace_que_apunta_fuera_de_la_carpeta(tmp_path):
+    fuera = tmp_path / "fuera.json"
+    fuera.write_text("{}", encoding="utf-8")
+    carpeta = tmp_path / "ejemplos"
+    carpeta.mkdir()
+    (carpeta / "enlace.json").symlink_to(fuera)
+
+    with respx.mock() as router:
+        with pytest.raises(AssertionError) as fallo:
+            handler_desde_ejemplo(router, "get", URL, "enlace.json", carpeta=carpeta)
+
+    assert "no es un nombre de archivo de contracts/examples/" in str(fallo.value)
+
+
+def test_handler_desde_ejemplo_falla_con_sobrescribir_vacio_cuando_el_ejemplo_no_es_un_objeto(
+    tmp_path,
+):
+    (tmp_path / "lista.json").write_text("[1, 2]", encoding="utf-8")
+
+    with respx.mock() as router:
+        with pytest.raises(AssertionError) as fallo:
+            handler_desde_ejemplo(
+                router, "get", URL, "lista.json", sobrescribir={}, carpeta=tmp_path
+            )
+
+    assert "no es un objeto en el ejemplo lista.json" in str(fallo.value)
+
+
+def test_handler_desde_ejemplo_responde_el_ejemplo_no_objeto_cuando_no_se_sobrescribe(tmp_path):
+    (tmp_path / "lista.json").write_text("[1, 2]", encoding="utf-8")
+
+    with respx.mock() as router:
+        handler_desde_ejemplo(router, "get", URL, "lista.json", carpeta=tmp_path)
+        respuesta = httpx.get(URL)
+
+    assert respuesta.json() == [1, 2]
