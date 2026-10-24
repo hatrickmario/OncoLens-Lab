@@ -2,7 +2,7 @@
 
 > Linear: [L1D-12](https://linear.app/l1der-lab-mjbc/issue/L1D-12)
 
-**Talla:** L · **Sprint:** 3 · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
+**Talla:** L · **Sprint:** 3 (US-098) · 5 (US-099, US-100; reordenamiento del 2026-10-23, necesitan documentos extraídos) · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
 **Requisitos:** FR-22 (parte S2: normalización final y duplicados; detección de conflictos en la extracción; dueña vía HU-17) · RN-27 (dueña) · RN-08 (dueña) · ADR-33 · FR-08 (regla de diagnóstico, parte automática)
 **Evidencia:** [→ PRD §5 FR-08, FR-22], [→ PRD §6 RN-08, RN-27], [→ PRD §18.3.3 AC-03.1–AC-03.5, M-03.1–M-03.5], [→ PRD §18.4 AC-T3.2], [→ readme §5.6 HU-17], [→ readme §6 OL-05 (tareas 6, 7; tests)], [→ readme §3.3 #12, #23, #25, #33], [→ readme §6.1 #10], [→ backlog/02-adrs.md DEC-04, DEC-09], [→ docs/AS-IS.md P3]
 **Dependencias:** ↪ US-041 (catálogo montado), US-086 (propuesta de Backend 2) · ⛔ DEC-09 · escenario más probable (US-100) · ⛔ DEC-04 · *workaround* Q-07 (US-098: solo CIE-10 en el catálogo real hasta cerrar) · 🔗 Consumida por: US-087 (persistencia), US-094, US-110 (datos manuales) · 🔗 Medido en: US-106 (M-03.1–M-03.5) · 🔗 Regresión [AC-T3.2] → US-070
@@ -74,7 +74,9 @@ persistencia.
 
 > Linear: [L1D-85](https://linear.app/l1der-lab-mjbc/issue/L1D-85)
 
-`FEAT-03a` · Sprint 3 · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`, S5) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
+`FEAT-03a` · Sprint 5 · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`, S5) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero saber si dos resultados son el mismo dato repetido o datos
@@ -121,7 +123,9 @@ Vitest + Supertest con FX-03a-a.
 
 > Linear: [L1D-86](https://linear.app/l1der-lab-mjbc/issue/L1D-86)
 
-`FEAT-03a` · Sprint 3 · Estimación **5** · HU-09 (parte automática), HU-17 · RN-08 (dueña), FR-08 (regla de diagnóstico), ADR-12 · AC-03.4, AC-T3.2 · ⛔ DEC-09 · escenario más probable · ↪ US-087 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: US-107 (confirmar o descartar, S4)
+`FEAT-03a` · Sprint 5 · Estimación **5** · HU-09 (parte automática), HU-17 · RN-08 (dueña), FR-08 (regla de diagnóstico), ADR-12 · AC-03.4, AC-T3.2 · ⛔ DEC-09 · escenario más probable · ↪ US-087 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: US-107 (confirmar o descartar, S4)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que un diagnóstico o un valor leído de un documento nuevo nunca

@@ -2,7 +2,7 @@
 
 > Linear: [L1D-18](https://linear.app/l1der-lab-mjbc/issue/L1D-18)
 
-**Talla:** XL (Feature completa; propone división por sprint) · parte S1: **M** · parte S3: **L** · **Sprint:** 1 (semilla y esquema) · 4 (ingesta, metadatos y corpus mínimo) · `si-hay-capacidad` (US-119, `CorpusRelease`) · **Capacidad:** CAP-06 (prerrequisito de CAP-07, CAP-08 y CAP-09) · **Recorrido principal:** sí
+**Talla:** XL (Feature completa; propone división por sprint) · parte S1: **M** · parte S3: **L** · **Sprint:** 1 (semilla y esquema) · 3 (US-117, US-118: la aplicabilidad los consume; reordenamiento del 2026-10-23) · 4 (US-120) · `si-hay-capacidad` (US-119, `CorpusRelease`) · **Capacidad:** CAP-06 (prerrequisito de CAP-07, CAP-08 y CAP-09) · **Recorrido principal:** sí
 **Requisitos:** FR-19 (S1: semilla y esquema de metadatos; S3: ingesta como entregable) · RN-21 (dueña) · RN-05 (parte de versionado: el histórico nunca se borra; la recuperación de chunks vigentes es de US-055) · M-08.3, M-08.4 (S3, medidos en US-132) · TBD-20 (CAL, US-118) · ADR-36 (S3)
 **Evidencia:** [→ PRD §5 FR-19], [→ PRD §6 RN-05, RN-21, RN-25], [→ PRD §17 FR-19 → OL-02], [→ PRD §18.3.6 AC-06.1], [→ PRD §18.3.8 M-08.3, M-08.4], [→ readme §6 OL-02 (tareas 2, 7; alcance complementario: catálogo)], [→ readme §3.1 modelo del corpus], [→ readme §3.3 #5, #10, #17, #30, #36], [→ readme §1.4 paso 7], [→ backlog/02-adrs.md ADR-36, ADR-39]
 **Dependencias:** ↪ US-033 (esquema congelado), US-034 (Milvus), US-040 (rol `rag_corpus`) · ⛔ ADR-39 (dimensión del vector dense y origen del sparse: US-058 AC-2; *embeddings* reales para indexar: US-059 AC-1) · ADR-36 no bloquea el S1 (licencia verificada documento a documento) · 🔗 Consumida por: US-055 · ⛔ ADR-36 (S4: US-117, US-120) · 🔗 Medido en (S5): US-132 (M-08.3, M-08.4)
@@ -163,7 +163,9 @@ documentos por tipo (S3). Traducción de citas (V-10).
 
 > Linear: [L1D-116](https://linear.app/l1der-lab-mjbc/issue/L1D-116)
 
-`FEAT-06c` · Sprint 4 · Estimación **8** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-05, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 (lista final de fuentes y regla de PubMed sin licencia) · ⛔ ADR-39 (modelos *dense* y *sparse*) · ↪ US-058, US-059, US-082 (`TextExtractionService`) · 🔗 Regresión [RN-21] → US-059 · 🔗 Regresión [RN-05] → US-059 · 🔗 Consumida por: US-112 (*sparse* poblado)
+`FEAT-06c` · Sprint 3 · Estimación **8** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-05, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 (lista final de fuentes y regla de PubMed sin licencia) · ⛔ ADR-39 (modelos *dense* y *sparse*) · ↪ US-058, US-059, US-082 (`TextExtractionService`) · 🔗 Regresión [RN-21] → US-059 · 🔗 Regresión [RN-05] → US-059 · 🔗 Consumida por: US-112 (*sparse* poblado)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como responsable del corpus, quiero ingerir lotes de documentos públicos de forma
@@ -215,7 +217,9 @@ excluidas con las listas en configuración (ADR-36) `[RN-22]`. Corre con el rol
 
 > Linear: [L1D-117](https://linear.app/l1der-lab-mjbc/issue/L1D-117)
 
-`FEAT-06c` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (metadatos estructurados, `extraido_verificado`), RN-25 · TBD-20 (CAL) · ⛔ ADR-39 (LLM y NLI) · ↪ US-117 · 🔗 Regresión [RN-25] → US-127 · 🔗 Consumida por: US-122 (valor del estudio) · 🔗 Medido en: US-132 (M-08.3, M-08.4)
+`FEAT-06c` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (metadatos estructurados, `extraido_verificado`), RN-25 · TBD-20 (CAL) · ⛔ ADR-39 (LLM y NLI) · ↪ US-117 · 🔗 Regresión [RN-25] → US-127 · 🔗 Consumida por: US-122 (valor del estudio) · 🔗 Medido en: US-132 (M-08.3, M-08.4)
+
+> **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que la población, el diseño y el endpoint de cada estudio salgan

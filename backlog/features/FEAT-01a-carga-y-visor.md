@@ -2,7 +2,7 @@
 
 > Linear: [L1D-6](https://linear.app/l1der-lab-mjbc/issue/L1D-6)
 
-**Talla:** L · **Sprint:** 2 (US-076, US-078, US-079) · 3 (US-212) · `si-hay-capacidad` (US-077, US-080, US-081) · **Capacidad:** CAP-01 (AC-01.1 parte de carga, cola y visor; AC-01.2) · T-1 (AC-T1.1: abrir la fuente de un dato) · **Recorrido principal:** sí (US-076, US-078, US-079, US-212) · no (US-077, US-080, US-081)
+**Talla:** L · **Sprint:** 2 (US-076, US-078, US-079) · 5 (US-078, US-079, US-212; reordenamiento del 2026-10-23, antes S3) · `si-hay-capacidad` (US-077, US-080, US-081) · **Capacidad:** CAP-01 (AC-01.1 parte de carga, cola y visor; AC-01.2) · T-1 (AC-T1.1: abrir la fuente de un dato) · **Recorrido principal:** sí (US-076, US-078, US-079, US-212) · no (US-077, US-080, US-081)
 **Requisitos:** FR-05 (dueña, vía HU-04) · FR-07 (dueña, vía HU-05 escenario 1: US-212 sirve y audita el archivo; US-080 el visor con página y resaltado) · NFR-07 (cola durable, 3 intentos, 0 documentos colgados) · NFR-02 (p95 ≤ 60 s, medido) · AC-03.4 (checksum) · V-13 (resolución de `cuarentena_pii` / `requiere_revision_identidad`, *workaround*)
 **Evidencia:** [→ PRD §5 FR-05, FR-07], [→ PRD §7 NFR (fiabilidad de la cola, extracción p95)], [→ PRD §10 (`…/documents`, `…/documents/batch`, `…/documents/{docId}/file`)], [→ PRD §18.3.1 AC-01.1, AC-01.2], [→ PRD §18.3.3 AC-03.4], [→ PRD §18.4 AC-T1.1], [→ readme §5 HU-04, HU-05], [→ readme §6 OL-05 (tareas 1–5, 9; criterios de aceptación)], [→ readme §6.1 #9, #11], [→ readme §4.1 `Document`, `POST …/documents`, endpoints adicionales], [→ readme §3.1 `DOCUMENT`], [→ readme §2.5 (gate de PII)], [→ backlog/01-requisitos.md §10 V-13], [→ docs/AS-IS.md P1, etapa 1]
 **Dependencias:** ↪ US-034 (`clinical-minio` en Compose), US-038 (tabla `document`), US-044 (sesión), US-054 (JWT de servicio) · 🔗 Consume: US-082…US-087 (extracción y persistencia, FEAT-01b) · 🔗 Produce para: US-102 (US-212 escribe el registro `document.file.read`; US-102 lo verifica en el S6) · 🔗 Medido en: US-103 (M-01.2, p95 de extracción) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [RN-15] → US-148 (activa desde S6: la carga **no** responde `403` por opt-out, FR-16)
@@ -130,7 +130,9 @@ FX-01a-a y MinIO de test con inyección de fallos.
 
 > Linear: [L1D-58](https://linear.app/l1der-lab-mjbc/issue/L1D-58)
 
-`FEAT-01a` · Sprint 3 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
+`FEAT-01a` · Sprint 5 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **5** · HU-04 · FR-06 (orquestación), NFR-07 (dueña) · AC-01.1 (3 reintentos, sin colgados) · ↪ US-076, US-054 · 🔗 Consume: US-082 (`/documents/extract`), US-087 (persistencia) · 🔗 Medido en: US-103 (M-01.2)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** la extracción (US-082, US-087) llega en el S3. En el S2 la cola se verifica con `rag-orchestrator` simulado (respuestas controladas de FX-01a-a); la extracción real se integra en el S3.
 
@@ -191,7 +193,9 @@ Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extr
 
 > Linear: [L1D-59](https://linear.app/l1der-lab-mjbc/issue/L1D-59)
 
-`FEAT-01a` · Sprint 3 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
+`FEAT-01a` · Sprint 5 *(desde S2, con US-082, `[S2 resp. 1]`)* · Estimación **3** · HU-04, HU-05 (escenario 2) · FR-05 (UI), NFR-12 · AC-01.2 (parte de estados) · ↪ US-076, US-078 · 🔗 Relacionada: US-090 (vista de caso), US-077 (carga múltiple, `si-hay-capacidad`), US-081 (estados de cuarentena, `si-hay-capacidad`)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero subir documentos desde la ficha o la vista de caso y ver cómo
@@ -328,7 +332,9 @@ total o retención, Post-MVP).
 
 > Linear: [L1D-62](https://linear.app/l1der-lab-mjbc/issue/L1D-62)
 
-`FEAT-01a` · Sprint 3 · Estimación **2** · HU-05 (escenario 1, parte del archivo) · FR-07 (archivo servido sin caché y auditado), FR-18 (registro de la apertura), SEG-02 (RBAC), RN-10 · AC-T1.1 (abrir la fuente de un dato) · ↪ US-076 (`Document` y objeto en `clinical-minio`), US-034, US-211 (guard de sesión) · 🔗 Consumida por: US-090 (AC-2), US-092 (AC-1), US-004 (AC-4), US-080 (visor, `si-hay-capacidad`) · 🔗 Produce para: US-102 (AC-2, verificación de `document.file.read` en el S6) · 🔗 Regresión [RN-10] → US-046 · 🔗 Regresión [RN-15] → US-148 (activa desde S6: descargar no es generación con IA y no responde `403` por opt-out) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+`FEAT-01a` · Sprint 5 · Estimación **2** · HU-05 (escenario 1, parte del archivo) · FR-07 (archivo servido sin caché y auditado), FR-18 (registro de la apertura), SEG-02 (RBAC), RN-10 · AC-T1.1 (abrir la fuente de un dato) · ↪ US-076 (`Document` y objeto en `clinical-minio`), US-034, US-211 (guard de sesión) · 🔗 Consumida por: US-090 (AC-2), US-092 (AC-1), US-004 (AC-4), US-080 (visor, `si-hay-capacidad`) · 🔗 Produce para: US-102 (AC-2, verificación de `document.file.read` en el S6) · 🔗 Regresión [RN-10] → US-046 · 🔗 Regresión [RN-15] → US-148 (activa desde S6: descargar no es generación con IA y no responde `403` por opt-out) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 > **Origen (usuario, 2026-10-07, `01-requisitos.md` §15 "Ajustes al slicing v2"):** se separa de US-080 (visor, `si-hay-capacidad`) para sostener el *workaround* "documento y página con enlace" del recorrido principal.
 

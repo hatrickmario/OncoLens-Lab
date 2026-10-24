@@ -2,7 +2,7 @@
 
 > Linear: [L1D-10](https://linear.app/l1der-lab-mjbc/issue/L1D-10)
 
-**Talla:** XL (propone división) · **Sprint:** 3 (US-088, US-089, US-090, US-092, US-093) · `si-hay-capacidad` (US-091, US-094) · **Capacidad:** CAP-02 (AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-02.6, AC-02.7 en la vista) · CAP-06 (AC-06.2 completo) · CAP-11 (AC-11.4, parte de la vista) · T-1 (AC-T1.1) · T-4 (AC-T4.2, AC-T4.3 parte S2) · **Recorrido principal:** sí (hipótesis 1: reconstruir el caso) · no (US-091, US-094)
+**Talla:** XL (propone división) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S3; en el S4 lee del paciente sintético sembrado y en el S5 se reconecta a la extracción) (US-088, US-089, US-090, US-092, US-093) · `si-hay-capacidad` (US-091, US-094) · **Capacidad:** CAP-02 (AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-02.6, AC-02.7 en la vista) · CAP-06 (AC-06.2 completo) · CAP-11 (AC-11.4, parte de la vista) · T-1 (AC-T1.1) · T-4 (AC-T4.2, AC-T4.3 parte S2) · **Recorrido principal:** sí (hipótesis 1: reconstruir el caso) · no (US-091, US-094)
 **Requisitos:** FR-21 (vista, dueña vía HU-15) · FR-04 (parte S2: tendencia y datos extraídos en la ficha, vía HU-02/HU-05) · NFR-03 (p95 de la vista ≤ 2 s, medido) · NFR-12 · registro manual de `PriorTreatment` y `ClinicalAttribute` (readme §4.1) · RN-07 (regresión) · RN-11 (regresión)
 **Evidencia:** [→ PRD §5 FR-04, FR-21], [→ PRD §6 RN-07, RN-11], [→ PRD §7 NFR (vista de caso ≤ 2 s; accesibilidad)], [→ PRD §10 (`GET …/case`, `…/clinical-attributes`, `…/prior-treatments`)], [→ PRD §18.2 Evento derivado], [→ PRD §18.3.2 AC-02.1–AC-02.4, AC-02.6, AC-02.7, M-02.2, M-02.4], [→ PRD §18.3.6 AC-06.2], [→ PRD §18.3.11 AC-11.4], [→ PRD §18.4 AC-T1.1, AC-T4.2, AC-T4.3], [→ readme §5 HU-05, HU-15], [→ readme §4.1 `CaseView`, `Biomarker.trend`, endpoints adicionales], [→ readme §4.2 `ClinicalContext`], [→ readme §3.3 #24, #32, #33], [→ readme §6 OL-03 (contexto)], [→ backlog/02-adrs.md DEC-08], [→ docs/AS-IS.md P1, P10, JTBD 1 y 7]
 **Dependencias:** ↪ US-087 (datos extraídos), US-051 (ficha), US-052 (constructor de contexto), US-053 (análisis como evento derivado) · ⛔ DEC-08 · escenario más probable (US-091) · 🔗 Consume: US-212 (descarga del PDF de origen, S3), US-080 (visor, `si-hay-capacidad`), US-098 (normalización final de lo manual) · 🔗 Consumida por: FEAT-04 US-003, US-004 (checklist en la vista) · 🔗 Regresión [FR-18] → US-102 (lectura de la vista de caso auditada) · 🔗 Regresión [RN-11] → US-049 · 🔗 Medido en: US-105 (M-02.1, M-02.2, M-02.4) · 🔗 Regresión [RN-17] → US-198 (Post-MVP, registro manual)
@@ -32,7 +32,9 @@
 
 > Linear: [L1D-74](https://linear.app/l1der-lab-mjbc/issue/L1D-74)
 
-`FEAT-02b` · Sprint 3 · Estimación **5** · HU-15 · FR-21 (timeline, dueña) · AC-02.1, AC-02.2, AC-02.6, AC-11.4 (vista) · ↪ US-087, US-053 · 🔗 Regresión [FR-18] → US-102 · 🔗 Medido en: US-105 (M-02.2, M-02.4)
+`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (timeline, dueña) · AC-02.1, AC-02.2, AC-02.6, AC-11.4 (vista) · ↪ US-087, US-053 · 🔗 Regresión [FR-18] → US-102 · 🔗 Medido en: US-105 (M-02.2, M-02.4)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo que recibe un caso complejo, quiero ver en orden cronológico todo lo que
@@ -86,7 +88,9 @@ sin N+1 (M-02.4). Tests: Vitest + Supertest con FX-02b-a.
 
 > Linear: [L1D-75](https://linear.app/l1der-lab-mjbc/issue/L1D-75)
 
-`FEAT-02b` · Sprint 3 · Estimación **5** · HU-15 · FR-21 (tratamientos, series, atributos) · AC-02.3, AC-02.4 (series), AC-02.6, AC-02.7 (vista) · ↪ US-088 · 🔗 Consume: US-099 (fuentes adicionales) · 🔗 Medido en: US-105 (M-02.2)
+`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (tratamientos, series, atributos) · AC-02.3, AC-02.4 (series), AC-02.6, AC-02.7 (vista) · ↪ US-088 · 🔗 Consume: US-099 (fuentes adicionales) · 🔗 Medido en: US-105 (M-02.2)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero ver las líneas de tratamiento previas agrupadas, la evolución de
@@ -131,7 +135,9 @@ FX-02b-a.
 
 > Linear: [L1D-76](https://linear.app/l1der-lab-mjbc/issue/L1D-76)
 
-`FEAT-02b` · Sprint 3 · Estimación **5** · HU-15 · FR-21 (UI), NFR-12 · AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-T1.1 · ↪ US-088, US-089, US-212 (descarga del PDF de origen) · 🔗 Relacionada: US-080 (visor, `si-hay-capacidad`) · 🔗 Regresión [RN-23] → US-068 (textos nuevos) · 🔗 Consumida por: FEAT-04 US-004, US-079 (carga desde la vista)
+`FEAT-02b` · Sprint 4 · Estimación **5** · HU-15 · FR-21 (UI), NFR-12 · AC-02.1, AC-02.2, AC-02.3, AC-02.4, AC-T1.1 · ↪ US-088, US-089, US-212 (descarga del PDF de origen) · 🔗 Relacionada: US-080 (visor, `si-hay-capacidad`) · 🔗 Regresión [RN-23] → US-068 (textos nuevos) · 🔗 Consumida por: FEAT-04 US-004, US-079 (carga desde la vista)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero una página de vista de caso a la que llego desde la ficha, con
@@ -225,7 +231,9 @@ con la unidad normalizada. El umbral vive en `packages/clinical-catalogs` `[FR-0
 
 > Linear: [L1D-78](https://linear.app/l1der-lab-mjbc/issue/L1D-78)
 
-`FEAT-02b` · Sprint 3 · Estimación **3** · HU-05 · FR-04 (parte S2: procedencia OCR y pendientes), FR-06 (origen del semáforo) · AC-T1.1 (ficha) · ↪ US-087, US-051, US-212 ("Ver documento" descarga el PDF de origen) · ⛔ DEC-09 · escenario más probable (AC-3)
+`FEAT-02b` · Sprint 4 · Estimación **3** · HU-05 · FR-04 (parte S2: procedencia OCR y pendientes), FR-06 (origen del semáforo) · AC-T1.1 (ficha) · ↪ US-087, US-051, US-212 ("Ver documento" descarga el PDF de origen) · ⛔ DEC-09 · escenario más probable (AC-3)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero ver en la ficha los biomarcadores extraídos de los documentos
@@ -264,7 +272,9 @@ de test.
 
 > Linear: [L1D-79](https://linear.app/l1der-lab-mjbc/issue/L1D-79)
 
-`FEAT-02b` · Sprint 3 · Estimación **3** · HU-03, HU-15 · FR-09 (contexto con tendencias y eventos), RN-11, RN-07 · AC-06.2 (completo), AC-T4.2, AC-T4.3 (parte S2) · ↪ US-052, US-087 · 🔗 Relacionada: US-091 (tendencias, `si-hay-capacidad`) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-07] → US-065
+`FEAT-02b` · Sprint 4 · Estimación **3** · HU-03, HU-15 · FR-09 (contexto con tendencias y eventos), RN-11, RN-07 · AC-06.2 (completo), AC-T4.2, AC-T4.3 (parte S2) · ↪ US-052, US-087 · 🔗 Relacionada: US-091 (tendencias, `si-hay-capacidad`) · 🔗 Regresión [RN-11] → US-049 · 🔗 Regresión [RN-07] → US-065
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el análisis de evidencia reciba la trayectoria de mi paciente

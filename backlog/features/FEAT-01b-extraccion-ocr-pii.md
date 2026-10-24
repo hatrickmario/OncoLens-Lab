@@ -2,7 +2,7 @@
 
 > Linear: [L1D-7](https://linear.app/l1der-lab-mjbc/issue/L1D-7)
 
-**Talla:** XL (propone división) · **Sprint:** 3 · **Capacidad:** CAP-01 (AC-01.1 parte de extracción, AC-01.3) · CAP-02 (AC-02.7, extracción) · CAP-03 (AC-03.3, propuesta de Backend 2) · T-4 (SEG-04 en documentos, SEG-05) · **Recorrido principal:** sí
+**Talla:** XL (propone división) · **Sprint:** 5 (reordenamiento del 2026-10-23, antes S3: en S3 y S4 los pacientes de prueba son sintéticos sembrados) · **Capacidad:** CAP-01 (AC-01.1 parte de extracción, AC-01.3) · CAP-02 (AC-02.7, extracción) · CAP-03 (AC-03.3, propuesta de Backend 2) · T-4 (SEG-04 en documentos, SEG-05) · **Recorrido principal:** sí
 **Requisitos:** FR-06 (dueña, vía HU-04/HU-05; OL-05) · IA-08 · SEG-04 (gate de PII en documentos, dueña) · TBD-03 (umbrales de confianza OCR: se calibran en US-104) · RN-07 (regresión → US-065) · RN-12 (regresión → US-050) · RN-27 (parte de propuesta; dueña US-098)
 **Evidencia:** [→ PRD §5 FR-06], [→ PRD §6 RN-07, RN-10, RN-12, RN-27], [→ PRD §11 #4, #5], [→ PRD §12 Extracción], [→ PRD §18.3.1 AC-01.1, AC-01.3, M-01.1–M-01.3], [→ PRD §18.3.2 AC-02.7], [→ PRD §18.3.3 AC-03.3], [→ readme §5 HU-04, HU-05], [→ readme §6 OL-05 (tareas 6, 10–12; tests)], [→ readme §4.2 `/documents/extract`, `DocumentExtractResponse`, `ExtractedField`], [→ readme §2.5 Gate de PII], [→ readme §3.3 #14, #15, #23, #32, #33], [→ backlog/02-adrs.md ADR-39, ADR-40, §4.1 TBD-03], [→ CLAUDE.md "señales deterministas, nunca la confianza autorreportada por el LLM"]
 **Dependencias:** ↪ US-078 (cola), US-054 (JWT), US-041 (catálogo montado en ambos backends) · ⛔ ADR-39 (motor OCR y LLM de estructuración; los AC se verifican con adapters falsos) · ⛔ ADR-40 (motor de PII; US-083) · ⛔ DEC-09 · escenario más probable (origen del semáforo, US-082 AC-7) · ⛔ DEC-04 · *workaround* Q-07 (códigos distintos de CIE-10, US-086) · 🔗 Medido en: US-103 (M-01.1, M-01.2, M-01.3, PII en documentos), US-104 (calibración TBD-03), US-105 (M-02.1), US-106 (M-03.4, M-03.5)
@@ -32,7 +32,9 @@
 
 > Linear: [L1D-63](https://linear.app/l1der-lab-mjbc/issue/L1D-63)
 
-`FEAT-01b` · Sprint 3 · Estimación **8** · HU-04, HU-05 · FR-06 (dueña), IA-08 · AC-01.1 (ilegible) · ⛔ ADR-39 (adapters reales) · ⛔ DEC-09 · escenario más probable (AC-7) · ↪ US-054, US-041 · 🔗 Regresión [RN-12] → US-050 · 🔗 Regresión [SEG-07] → US-054 · Ticket: OL-05
+`FEAT-01b` · Sprint 5 · Estimación **8** · HU-04, HU-05 · FR-06 (dueña), IA-08 · AC-01.1 (ilegible) · ⛔ ADR-39 (adapters reales) · ⛔ DEC-09 · escenario más probable (AC-7) · ↪ US-054, US-041 · 🔗 Regresión [RN-12] → US-050 · 🔗 Regresión [SEG-07] → US-054 · Ticket: OL-05
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el sistema lea localmente el PDF que subo y devuelva sus
@@ -90,7 +92,9 @@ Persistencia (US-087). Plantillas por laboratorio (excluidas, PRD §12). Registr
 
 > Linear: [L1D-64](https://linear.app/l1der-lab-mjbc/issue/L1D-64)
 
-`FEAT-01b` · Sprint 3 · Estimación **5** · HU-04 (escenario 3) · FR-06 (gate de PII), SEG-04 (documentos, dueña), RN-10 · AC-01.1 (`cuarentena_pii`, `requiere_revision_identidad`) · ⛔ ADR-40 (motor de PII) · ↪ US-082, US-078, US-046 · 🔗 Regresión [RN-10] → US-046 · 🔗 Medido en: US-103 (sensibilidad de PII en documentos, G-8)
+`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04 (escenario 3) · FR-06 (gate de PII), SEG-04 (documentos, dueña), RN-10 · AC-01.1 (`cuarentena_pii`, `requiere_revision_identidad`) · ⛔ ADR-40 (motor de PII) · ↪ US-082, US-078, US-046 · 🔗 Regresión [RN-10] → US-046 · 🔗 Medido en: US-103 (sensibilidad de PII en documentos, G-8)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que un documento con datos personales que no deberían estar ahí
@@ -142,7 +146,9 @@ Supertest con `rag-orchestrator` simulado (AC-1, AC-4 a AC-6).
 
 > Linear: [L1D-65](https://linear.app/l1der-lab-mjbc/issue/L1D-65)
 
-`FEAT-01b` · Sprint 3 · Estimación **5** · HU-05 · FR-06 (confianza por campo), IA-08, RN-07 · AC-01.3 · ⛔ ADR-39 (motor OCR) · ↪ US-082 · 🔗 Regresión [RN-07] → US-065 · 🔗 Medido en: US-103 (M-01.3), US-104 (calibración TBD-03)
+`FEAT-01b` · Sprint 5 · Estimación **5** · HU-05 · FR-06 (confianza por campo), IA-08, RN-07 · AC-01.3 · ⛔ ADR-39 (motor OCR) · ↪ US-082 · 🔗 Regresión [RN-07] → US-065 · 🔗 Medido en: US-103 (M-01.3), US-104 (calibración TBD-03)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que la confianza que veo en cada dato extraído dependa de cómo
@@ -190,7 +196,9 @@ Vitest de la regla de revisión (AC-5).
 
 > Linear: [L1D-66](https://linear.app/l1der-lab-mjbc/issue/L1D-66)
 
-`FEAT-01b` · Sprint 3 · Estimación **5** · HU-04, HU-15 · FR-06 (eventos, tratamientos, atributos), FR-21 (extracción) · AC-01.3, AC-02.7 (extracción), AC-02.2 (fecha incierta) · ⛔ ADR-39 · ↪ US-082 · 🔗 Consumida por: US-087, US-088, US-089 · 🔗 Medido en: US-105 (M-02.1)
+`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04, HU-15 · FR-06 (eventos, tratamientos, atributos), FR-21 (extracción) · AC-01.3, AC-02.7 (extracción), AC-02.2 (fecha incierta) · ⛔ ADR-39 · ↪ US-082 · 🔗 Consumida por: US-087, US-088, US-089 · 🔗 Medido en: US-105 (M-02.1)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que de los documentos salgan también los eventos de la
@@ -233,7 +241,9 @@ US-084. Tests: Pytest con FX-01a-a, FX-01b-a y FX-01b-b.
 
 > Linear: [L1D-67](https://linear.app/l1der-lab-mjbc/issue/L1D-67)
 
-`FEAT-01b` · Sprint 3 · Estimación **3** · HU-04, HU-17 · FR-06 (propuesta de códigos), FR-22 (B2 propone) · AC-03.3 (parte de propuesta) · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-082 · 🔗 Consumida por: US-098 (Backend 1 decide) · 🔗 Regresión [RN-27] → US-098 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+`FEAT-01b` · Sprint 5 · Estimación **3** · HU-04, HU-17 · FR-06 (propuesta de códigos), FR-22 (B2 propone) · AC-03.3 (parte de propuesta) · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-082 · 🔗 Consumida por: US-098 (Backend 1 decide) · 🔗 Regresión [RN-27] → US-098 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que cada término extraído llegue con el código estándar que le
@@ -276,7 +286,9 @@ Backend 1 (US-098) `[ADR-33]`. Tests: Pytest unitarios.
 
 > Linear: [L1D-68](https://linear.app/l1der-lab-mjbc/issue/L1D-68)
 
-`FEAT-01b` · Sprint 3 · Estimación **5** · HU-04, HU-05 · FR-06 (persistencia), RN-07 · AC-01.1 (reproceso idempotente), AC-01.3 · ↪ US-078, US-082…US-086, US-098, US-099, US-100 · 🔗 Regresión [RN-06] → US-053 (ningún dato a medias) · 🔗 Consumida por: US-088, US-089, US-092 · Ticket: OL-05
+`FEAT-01b` · Sprint 5 · Estimación **5** · HU-04, HU-05 · FR-06 (persistencia), RN-07 · AC-01.1 (reproceso idempotente), AC-01.3 · ↪ US-078, US-082…US-086, US-098, US-099, US-100 · 🔗 Regresión [RN-06] → US-053 (ningún dato a medias) · 🔗 Consumida por: US-088, US-089, US-092 · Ticket: OL-05
+
+> **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que un documento procesado aporte todos sus datos o ninguno, y

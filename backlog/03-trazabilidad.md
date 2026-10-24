@@ -661,3 +661,4 @@
 | US-236 | L1D-287 | FEAT-T1a | 3 | 3 | — | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita |
 | US-237 | L1D-288 | FEAT-10a | 3 | 2 | — | Cuando todas las opciones se descartan, el panel y el log dicen por qué |
 | US-238 | pendiente | FEAT-06b | 4 | 5 | — | Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar |
+| US-239 | L1D-289 | FEAT-06a | 4 | 5 | — | Cuatro oncólogos pueden analizar a la vez sin que `rag-orchestrator` se caiga: las etapas pesadas se serializan y el resto espera en cola o falla limpio |
