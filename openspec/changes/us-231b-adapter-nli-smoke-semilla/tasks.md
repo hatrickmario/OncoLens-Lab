@@ -93,7 +93,7 @@
 
 ## 2. evaluación
 
-- [ ] 2.1 Constancia en el PR: el change no cambia modelo, umbral de calidad, prompt, catálogo ni corpus (ejecuta ADR-39 y carga la
+- [ ] 2.1 Constancia en el PR: el change no cambia modelo, umbral de calidad, prompt, catálogo ni corpus (ejecuta ADR-39 y carga la **Absorbida por US-233 (S4): AC-1 (reporte con modelos locales) y AC-8 (baseline técnico con el stack de Compose); la medición de RSS y latencia del NLI (1.11) no figura en sus AC: el orquestador debe añadirla.**
   semilla ya existente), así que no requiere `run-ai-eval`; se adjunta el informe de 1.11 y se anota el riesgo del corte previo a 12
   pares y del *chunking* en tokens sobre recall@10 para US-072/US-073 y L1D-274. **ID destino (L1D-282, 2026-10-21): L1D-280 (ARR-04) AC-5** — **TRASLADADA a US-233 (S4)** `[S3 resp. 7]`, 2026-10-24 (ARR-09 AC-5: no se ejecutó en el S2; corre con los pesos reales en el MacBook de referencia junto con la suite `evaluate` local).
 
@@ -105,6 +105,6 @@
 ## 4. Verificación
 
 - [x] 4.1 `openspec validate us-231b-adapter-nli-smoke-semilla --strict` en verde.
-- [ ] 4.2 `pytest -m "not models"` en verde (ruta rápida de la CI, sin pesos reales) y los tests `models` en verde en la VM local, salida adjunta al PR. **Conciliada en L1D-282 (2026-10-21):** ruta rápida en verde (`pytest` de `rag-orchestrator` sobre `main` 806dfa78: 1806 passed, 122 deselected); la parte `-m models`: **ID destino L1D-280 (ARR-04) AC-5** — **TRASLADADA a US-233 (S4)** `[S3 resp. 7]`, 2026-10-24 (ARR-09 AC-5).
+- [ ] 4.2 `pytest -m "not models"` en verde (ruta rápida de la CI, sin pesos reales) y los tests `models` en verde en la VM local, salida adjunta al PR. **Conciliada en L1D-282 (2026-10-21):** ruta rápida en verde (`pytest` de `rag-orchestrator` sobre `main` 806dfa78: 1806 passed, 122 deselected); la parte `-m models`: **ID destino L1D-280 (ARR-04) AC-5** — **TRASLADADA a US-233 (S4)** `[S3 resp. 7]`, 2026-10-24 (ARR-09 AC-5). **Parte `-m models` absorbida por US-233 AC-1 y AC-8 (S4).**
 - [ ] 4.3 `npm run quality` (Ruff + import-linter): `application/` y `domain/` sin importar `onnxruntime` ni `tokenizers`; `mypy` si está configurado. **Reabierta en L1D-282 (2026-10-21):** estaba marcada [x] pero `npm run quality` e `import-linter` no existen en `main`; **ID destino L1D-263 (US-213a) 1.5 y 2.1**. `tests/unit/test_dependencias_de_inferencia.py` verifica hoy que `application/` y `domain/` no importen `onnxruntime` ni `tokenizers`.
 - [x] 4.4 `pip-audit` sin hallazgos críticos ni altos (sin dependencias nuevas) y escaneo de secretos y PII (`pii-scan`) en verde; ningún peso, ruta de máquina ni hash real versionado. **Conciliada en L1D-282 (2026-10-21):** `pip-audit -r requirements.txt` → «No known vulnerabilities found»; `node scripts/ci/pii-scan.mjs` y `dataset-class-check.mjs` en verde sobre `main` 806dfa78; job `dependencies` en success en la CI de `main`.
