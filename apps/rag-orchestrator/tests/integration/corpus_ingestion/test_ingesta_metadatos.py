@@ -243,3 +243,25 @@ def test_ingesta_con_un_documento_en_error_no_rotula_su_fila_fuente_estructurada
 
     assert _origen_de_las_filas(montaje, "i-lit-1") == [("error", "pendiente")]
     assert _origen_de_las_filas(montaje, "i-ct-1") == [("error", "fuente_estructurada")]
+
+
+def test_ingesta_un_defecto_en_el_paso_de_metadatos_deja_ese_documento_en_error_y_el_lote_sigue(
+    montaje: Montaje,
+) -> None:
+    """Un error que no es del LLM ni del NLI no aborta el lote ni deja el documento ``normalizado`` para siempre."""
+    original = montaje.llm_metadatos.completar_json
+
+    async def con_defecto(prompt, esquema):  # type: ignore[no-untyped-def]
+        if MARCADOR_I_LIT_1 in prompt:
+            raise ZeroDivisionError
+        return await original(prompt, esquema)
+
+    montaje.llm_metadatos.completar_json = con_defecto  # type: ignore[method-assign]
+
+    reporte = montaje.ingerir()
+
+    assert reporte.resultado_de("i-lit-1").estado.value == "error"
+    assert reporte.resultado_de("i-lit-1").motivo == "metadatos: ZeroDivisionError"
+    assert [s for s, _ in montaje.filas_de("i-lit-1")] == ["error"]
+    assert reporte.resultado_de("i-lit-2").estado.value == "embebido"
+    assert reporte.resultado_de("i-gl-1").estado.value == "embebido"
