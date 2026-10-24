@@ -27,9 +27,17 @@ describe('enmascararNombre frente al pattern de fullNameMasked', () => {
     expect(mascara).toMatch(patronDeFullNameMasked());
   });
 
+  it('conserva la inicial original cuando su mayúscula ocupa más de un carácter (ß → SS)', () => {
+    const mascara = enmascararNombre('ßeta Gamma');
+
+    expect(mascara).toBe('ß. G.');
+    expect(mascara).toMatch(patronDeFullNameMasked());
+  });
+
   // Resultado observado (se reporta al orquestador, [S3 resp. 16]): sin palabras no hay iniciales y '' no cumple el
-  // pattern. No es alcanzable por la API: la vista del doctor rechaza una identidad sin nombre (nombreObligatorio).
-  it('no cumple el pattern cuando el nombre está vacío, y por eso el listado nunca lo enmascara', () => {
+  // pattern. Latente: `exigirIdentidad` solo rechaza un nombre `undefined`, no uno vacío; hoy el alta no lo impide.
+  // Deuda para la historia de altas (S6): `minLength` y `pattern` de `fullName` en el contrato.
+  it('no cumple el pattern cuando el nombre está vacío, y es un caso latente del listado', () => {
     expect(enmascararNombre('   ')).toBe('');
     expect(enmascararNombre('   ')).not.toMatch(patronDeFullNameMasked());
   });
