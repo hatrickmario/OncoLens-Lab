@@ -11,9 +11,17 @@ import hashlib
 import re
 from collections.abc import Sequence
 
+from app.domain.corpus_seed.chunking import fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.seed_manifest.lector import leer_manifiesto
-from tests.support.semilla import DIRECTORIO_DE_FIXTURES, EmbedderFalso
+from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
+from tests.support.semilla import (
+    DIRECTORIO_DE_FIXTURES,
+    SOLAPE_DE_CHUNK_DE_TEST,
+    TAMANO_DE_CHUNK_DE_TEST,
+    EmbedderFalso,
+)
 
 MANIFIESTO_FX_06C_B = DIRECTORIO_DE_FIXTURES / "ingest-manifest.yaml"
 MANIFIESTO_FX_06C_B_CON_FALLO = DIRECTORIO_DE_FIXTURES / "ingest-manifest-falla.yaml"
@@ -25,6 +33,34 @@ _PALABRA = re.compile(r"\w+")
 def documentos_fx_06c_b(*claves: str) -> tuple[DocumentoDeSemilla, ...]:
     todos = {d.document_key: d for d in leer_manifiesto(MANIFIESTO_FX_06C_B)}
     return tuple(todos[c] for c in claves) if claves else tuple(todos.values())
+
+
+# Filas de ``corpus_document`` tras ingerir FX-06c-b completo: 4 embebidos y 2 rechazados por licencia o fuente.
+FILAS_DEL_CATALOGO_FX_06C_B = 6
+
+
+def fragmentos_esperados_fx_06c_b(*claves: str) -> dict[str, list[str]]:
+    """Los fragmentos que la ingesta debe producir por documento admisible, calculados con las reglas puras de chunking
+    (no con una segunda ingesta): sirve de referencia tanto en memoria como contra PostgreSQL y Milvus reales."""
+    fuente = FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None)
+    pedidas = claves or DOCUMENTOS_ADMISIBLES_FX_06C_B
+    return {
+        d.document_key: fragmentar(
+            normalizar_texto(fuente.obtener_texto(d)),
+            TokenizadorPorPalabras(),
+            tamano=TAMANO_DE_CHUNK_DE_TEST,
+            solape=SOLAPE_DE_CHUNK_DE_TEST,
+        )
+        for d in documentos_fx_06c_b(*pedidas)
+    }
+
+
+def chunks_esperados_fx_06c_b() -> dict[str, int]:
+    return {k: len(v) for k, v in fragmentos_esperados_fx_06c_b().items()}
+
+
+def textos_esperados_fx_06c_b(*claves: str) -> set[str]:
+    return {t for fragmentos in fragmentos_esperados_fx_06c_b(*claves).values() for t in fragmentos}
 
 
 class CodificadorSparseFalso:
