@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useSyncExternalStore, type FormEvent } from 'react';
 import { zSearchPatientsBody } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import type { CriterioDeBusqueda } from '../../lib/pacientes/buscar-pacientes';
 import type { TextosDePacientes } from '../../lib/pacientes/consulta';
@@ -22,10 +22,22 @@ function criterioDe(datos: FormData, modo: ModoDeBusqueda): unknown {
     : { name: texto('name') };
 }
 
+const sinSuscripcion = () => () => {};
+
+/** `false` en el HTML del servidor y durante la hidratación; `true` ya en el navegador. */
+function useHidratado(): boolean {
+  return useSyncExternalStore(
+    sinSuscripcion,
+    () => true,
+    () => false,
+  );
+}
+
 /** Búsqueda por documento o por nombre completo; valida con el Zod del contrato antes de enviar (UX; el servidor revalida). */
 export function FormularioDeBusqueda({ textos, buscando, onBuscar }: FormularioDeBusquedaProps) {
   const [modo, setModo] = useState<ModoDeBusqueda>('documento');
   const [invalido, setInvalido] = useState(false);
+  const hidratado = useHidratado();
   const { busqueda } = textos;
 
   function cambiarModo(nuevo: ModoDeBusqueda) {
@@ -55,8 +67,9 @@ export function FormularioDeBusqueda({ textos, buscando, onBuscar }: FormularioD
       <PestanasDeBusqueda modo={modo} onCambiar={cambiarModo} textos={busqueda} />
       <CamposDeBusqueda modo={modo} textos={textos} invalido={invalido} />
       {invalido && <Alert id="busqueda-invalida">{busqueda.invalido}</Alert>}
-      <Button type="submit" disabled={buscando} className="mt-3">
-        {buscando ? busqueda.buscando : busqueda.buscar}
+      {/* Deshabilitado hasta hidratar: ni clic ni Enter envían el POST nativo, que respondería JSON crudo (ARR-09 AC-3). */}
+      <Button type="submit" disabled={buscando || !hidratado} className="mt-3">
+        {!hidratado ? busqueda.cargando : buscando ? busqueda.buscando : busqueda.buscar}
       </Button>
     </form>
   );

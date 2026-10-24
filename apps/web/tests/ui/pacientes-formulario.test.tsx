@@ -27,6 +27,25 @@ describe('FormularioDeBusqueda: envío nativo', () => {
   });
 });
 
+describe('FormularioDeBusqueda: antes de hidratar', () => {
+  afterEach(cleanup);
+
+  it('sirve el botón deshabilitado con "Cargando la búsqueda…" para que ningún envío temprano muestre JSON crudo [ARR-09 AC-3]', () => {
+    const html = renderToString(
+      <FormularioDeBusqueda textos={pacientes} buscando={false} onBuscar={vi.fn()} />,
+    );
+
+    expect(html).toMatch(/<button[^>]*disabled[^>]*>Cargando la búsqueda…<\/button>/);
+  });
+
+  it('habilita el botón "Buscar" una vez montado en el navegador', () => {
+    montar();
+
+    const boton = screen.getByRole('button', { name: pacientes.busqueda.buscar });
+    expect((boton as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
 describe('PestanasDeBusqueda: teclado', () => {
   afterEach(cleanup);
 

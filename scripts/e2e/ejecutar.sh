@@ -41,6 +41,8 @@ ONCOLENS_UID="$(id -u)"; ONCOLENS_GID="$(id -g)"; export ONCOLENS_UID ONCOLENS_G
 export WEB_HOME_PATH="/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis"   # paciente semilla (a)
 # Inactividad corta solo en el E2E de la sesión inactiva (US-044 AC-4): 1 minuto; el toque de last_seen_at debe ser menor.
 export SESSION_IDLE_MINUTES=1 SESSION_TOUCH_SECONDS=10
+# Solo mama habilitada: el paciente semilla (b), de próstata, queda fuera del alcance (US-043 AC-3).
+export ENABLED_CANCER_TYPES=mama
 export AI_DISCLAIMER_TEXT="Generado por IA; requiere validación clínica independiente por el oncólogo tratante."
 export ANALYSIS_BASIS_S1_ASSUMPTION_TEXT="Supuesto fijo del S1 para pruebas: caso sintético."
 compose=(docker compose -f "$raiz/infra/docker/docker-compose.yml")
@@ -91,7 +93,8 @@ docker run --rm --network "$red" \
   -v "$raiz/apps/clinical-api/prisma:/w/prisma:ro" -v "$raiz/apps/clinical-api/prisma.config.ts:/w/prisma.config.ts:ro" -w /w \
   -e DATABASE_URL="postgresql://clinical_api:$(cat "$secretos/pg_clinical_api_password")@postgres:5432/${POSTGRES_DB:-oncolens}?sslmode=require" \
   "$imagen_node" sh -c "npm init -y >/dev/null && npm i --silent prisma@${version_prisma} dotenv >/dev/null 2>&1; npx prisma migrate deploy" 2>&1 | tail -1
-"${compose[@]}" --profile seed run --rm clinical-seed 2>&1 | tail -1 | cut -c1-80
+# --build: `up --build` no reconstruye los servicios del perfil `seed`; una imagen vieja siembra sin la identidad cifrada.
+"${compose[@]}" --profile seed run --rm --build clinical-seed 2>&1 | tail -1 | cut -c1-80
 "${compose[@]}" up -d 2>&1 | tail -1
 espera="${E2E_ESPERA_STACK_SEGUNDOS:-180}"; intervalo="${E2E_ESPERA_INTERVALO_SEGUNDOS:-2}"
 url_web="${E2E_BASE_URL:-http://127.0.0.1:3000}"   # la misma que usa playwright.config.ts
