@@ -170,6 +170,7 @@
       "ayudaNombre": "Escribe el nombre completo",
       "buscar": "Buscar",
       "buscando": "Buscando…",
+      "cargando": "Cargando la búsqueda…",
       "limpiar": "Limpiar búsqueda",
       "invalido": "Completa el campo para buscar (el nombre, con al menos 2 caracteres).",
       "sinResultadosDocumento": "No hay pacientes con ese documento.",

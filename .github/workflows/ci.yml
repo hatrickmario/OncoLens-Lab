@@ -50,6 +50,10 @@ jobs:
         run: npm run test:build --workspace apps/web
       - name: Tests de los workspaces
         run: npm test --workspaces --if-present
+      - name: Validación del catálogo clínico (catalog:validate, RN-29, US-001)
+        run: npm run catalog:validate
+      - name: La allowlist del modelo commiteada coincide con el esquema de Prisma (US-001 AC-4)
+        run: npm run catalog:allowlist:check
       - name: Dependencias de rag-orchestrator (dev, ruff para ci/tests/quality, y eval, que importan tests/evaluation y test_settings_modelos)
         run: pip install -r apps/rag-orchestrator/requirements.txt -r apps/rag-orchestrator/requirements-dev.txt -r apps/rag-orchestrator/requirements-eval.txt
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
@@ -92,6 +96,10 @@ jobs:
         run: npm run contracts:check
       - name: contracts:generate:check
         run: npm run contracts:generate:check
+        env:
+          CODEGEN_PYTHON: .venv-codegen/bin/python
+      - name: Los tipos de web compilan con lo generado (consumidor de citedSources; caso ac2-cited-sources-build, ARR-09 AC-4)
+        run: npm run contracts:generate && npm run typecheck -w apps/web
         env:
           CODEGEN_PYTHON: .venv-codegen/bin/python
       - name: Cambios incompatibles contra la base (oasdiff, nivel ERR)

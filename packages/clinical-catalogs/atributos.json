@@ -1,0 +1,35 @@
+{
+  "version": "1.1.0",
+  "keys": [
+    {
+      "key": "estado_menopausico",
+      "cancerTypes": [
+        "mama"
+      ],
+      "label": {
+        "es": "Estado menopáusico",
+        "en": "Menopausal status"
+      }
+    },
+    {
+      "key": "sitios_metastasicos",
+      "cancerTypes": [
+        "prostata"
+      ],
+      "label": {
+        "es": "Sitios metastásicos",
+        "en": "Metastatic sites"
+      }
+    },
+    {
+      "key": "estado_castracion",
+      "cancerTypes": [
+        "prostata"
+      ],
+      "label": {
+        "es": "Estado de castración",
+        "en": "Castration status"
+      }
+    }
+  ]
+}

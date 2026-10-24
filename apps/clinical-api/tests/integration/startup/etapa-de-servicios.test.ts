@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -126,7 +126,7 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
   });
 
   it('escucha una vez cuando CLINICAL_CATALOG_VERSION coincide con el manifiesto [US-041 D1]', () => {
-    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '1.0.0' });
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '1.1.0' });
 
     expect(resultado.salidas).toEqual([]);
     expect(resultado.escuchas).toEqual([4998]);
@@ -195,4 +195,69 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
       expect(resultado.log).not.toContain('2026-02-31');
     },
   );
+});
+
+describe('arranque: validación del catálogo (catalog:validate al arrancar)', () => {
+  const FIXTURE_VALIDO = path.join(CATALOGO_DEL_MONOREPO, 'test/fixtures/test-1.0.0');
+
+  /** Copia del catálogo de fixture `test-1.0.0` en el directorio temporal, con `ki67` sin `destination`. */
+  function catalogoSinDestinoEnKi67(): string {
+    const copia = path.join(directorio, 'catalogo-copia');
+    cpSync(FIXTURE_VALIDO, copia, { recursive: true });
+    const archivo = path.join(copia, 'mama/datos-criticos.json');
+    const contenido = JSON.parse(readFileSync(archivo, 'utf8')) as { items: { key: string }[] };
+    const ki67 = contenido.items.find((item) => item.key === 'ki67') as Record<string, unknown>;
+    delete ki67['destination'];
+    writeFileSync(archivo, JSON.stringify(contenido));
+    return copia;
+  }
+
+  it('no escucha y registra configuracion_invalida con catalogo_invalido y el código de la regla, sin ruta ni contenido, cuando el catálogo no valida [US-001 AC-6]', () => {
+    const copia = catalogoSinDestinoEnKi67();
+
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: copia });
+
+    expect(resultado.salidas).toEqual([1]);
+    expect(resultado.escuchas).toEqual([]);
+    expect(JSON.parse(resultado.log)).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_PATH',
+      regla: 'destino_ausente',
+      motivo: 'catalogo_invalido',
+    });
+    expect(resultado.log).not.toContain(copia);
+    expect(resultado.log).not.toContain('ki67');
+  });
+
+  it('registra el evento único configuracion_invalida con esquema_invalido cuando el catálogo trae validation nulo [US-001 AC-6]', () => {
+    const copia = path.join(directorio, 'catalogo-deformado');
+    cpSync(FIXTURE_VALIDO, copia, { recursive: true });
+    const archivo = path.join(copia, 'mama/datos-criticos.json');
+    const contenido = JSON.parse(readFileSync(archivo, 'utf8')) as Record<string, unknown>;
+    contenido['validation'] = null;
+    writeFileSync(archivo, JSON.stringify(contenido));
+    let resultado: ReturnType<typeof arrancarCon> | undefined;
+
+    expect(() => {
+      resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: copia });
+    }).not.toThrow();
+
+    expect(resultado?.salidas).toEqual([1]);
+    expect(JSON.parse(resultado?.log ?? '{}')).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_PATH',
+      regla: 'esquema_invalido',
+      motivo: 'catalogo_invalido',
+    });
+  });
+
+  it('escucha una vez y no registra nada cuando el catálogo de fixture es válido [US-001 AC-6]', () => {
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: FIXTURE_VALIDO });
+
+    expect(resultado.salidas).toEqual([]);
+    expect(resultado.escuchas).toEqual([4998]);
+    expect(resultado.log).toBe('');
+  });
 });
