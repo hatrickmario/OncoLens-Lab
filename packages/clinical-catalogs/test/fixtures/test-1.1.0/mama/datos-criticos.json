@@ -12,7 +12,7 @@
     "status": "propuesta_revisada",
     "reviewerRole": "oncologo_asesor",
     "date": "2026-10-24",
-    "catalogHash": "56d1300ae58375b67decd52dd84d82a7c462c5b666124fe0692eb59bbbb5b28b"
+    "catalogHash": "4f15cc21a0b7284e0f80f11cb4c6c483e1e92757640f4c350164f6739cc24180"
   },
   "items": [
     {
@@ -80,7 +80,7 @@
       "estado": "propuesta",
       "condition": {
         "item": "her2_ihq",
-        "operator": "pertenencia",
+        "operator": "prefijo",
         "values": [
           "2+"
         ]

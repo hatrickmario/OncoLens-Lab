@@ -118,7 +118,7 @@
       "estado": "propuesta",
       "condition": {
         "item": "her2_ihq",
-        "operator": "pertenencia",
+        "operator": "prefijo",
         "values": [
           "2+"
         ]

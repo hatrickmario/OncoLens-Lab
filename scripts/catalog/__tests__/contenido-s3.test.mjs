@@ -61,6 +61,15 @@ describe('contenido de datos críticos del catálogo del S3', () => {
     expect(ejecutarValidador(CATALOGO).codigo).toBe(0);
   }, PLAZO_PROCESO_MS);
 
+  it('condiciona her2_ish por prefijo "2+" de her2_ihq, porque el resultado viene como "2+ (IHQ)" [US-001 AC-7]', () => {
+    expect(itemDe('mama', 'her2_ish')?.condition).toEqual({
+      item: 'her2_ihq',
+      operator: 'prefijo',
+      values: ['2+'],
+    });
+    expect(itemDe('mama', 'her2_ish')?.whenConditionUnknown).toBe('faltante');
+  });
+
   it('declara en atributos.json las claves de ClinicalAttribute que usan los ítems [US-001 AC-7]', () => {
     const declaradas = (existsSync(path.join(CATALOGO, 'atributos.json')) ? leerJson('atributos.json').keys : []).map(
       (atributo) => atributo.key,
