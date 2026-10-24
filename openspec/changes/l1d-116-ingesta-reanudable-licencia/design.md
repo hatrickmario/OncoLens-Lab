@@ -125,3 +125,9 @@ este PR; aplicará cuando se ingiera el corpus real (US-120) o se active la híb
   que usa sus criterios estructurados).
 
   > **Decidido (usuario, 2026-10-24, `[S3 resp. 19]`):** se admite ClinicalTrials.gov (ADR-36, Enmienda 1). `i-ct-1` sigue `embebido` en el AC-1. Si este change introduce `CORPUS_ALLOWED_SOURCES`, la lista incluye ClinicalTrials.gov; si no, queda como está.
+
+## Desviaciones registradas en la implementación
+
+- **D3 (pesos del sparse):** el adapter real necesita los pesos de `sparse_linear`, que no estaban en la configuración
+  verificada de producción. `CorpusIngestSettings` añade `EMBEDDING_SPARSE_WEIGHTS_PATH` y
+  `EMBEDDING_SPARSE_WEIGHTS_SHA256` (RN-22; los pesos no se versionan). Aprobado por el coordinador. Detalle en `tasks.md`.
