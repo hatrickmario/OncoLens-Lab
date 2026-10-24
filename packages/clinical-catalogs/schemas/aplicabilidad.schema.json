@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["version", "items"],
   "properties": {
-    "version": { "type": "string", "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$" },
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
     "validation": { "$ref": "validation.schema.json" },
     "items": { "type": "array", "items": { "$ref": "#/$defs/criterio" } }
   },

@@ -3,6 +3,7 @@
   "$id": "comun.schema.json",
   "title": "Definiciones compartidas por los archivos por tipo del catálogo (L1D-93, L1D-126): una sola fuente para etiqueta, destino y estado",
   "$defs": {
+    "version": { "type": "string", "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$" },
     "etiqueta": {
       "type": "object",
       "additionalProperties": false,

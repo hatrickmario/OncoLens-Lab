@@ -9,10 +9,7 @@
     "standards"
   ],
   "properties": {
-    "version": {
-      "type": "string",
-      "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$"
-    },
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
     "cancerTypes": {
       "type": "array",
       "minItems": 1,
