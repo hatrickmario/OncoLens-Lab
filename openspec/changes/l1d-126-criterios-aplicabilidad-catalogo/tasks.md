@@ -6,38 +6,47 @@
 
 ## clinical-platform
 
-- [ ] 1.1 Fixtures FX-08b-a en `packages/clinical-catalogs/__fixtures__/`: `test-apl-1.0.0` (mama, cinco criterios
+- [x] 1.1 Fixtures FX-08b-a en `packages/clinical-catalogs/__fixtures__/`: `test-apl-1.0.0` (mama, cinco criterios
       de FX-08b-a con `studyKey`, y su `poblacion.json`), `test-apl-1.0.1` (igual salvo `ecog.rule.limits.max = 0`)
       y copias inválidas (sin `destination` en `estado_menopausico`; `ecog` con `peso`, `score`, `weight`; `ecog`
       sin `studyKey`; `ecog.studyKey = "ecog_x"`; `estadio` y `ecog` con `studyKey = "estadio"`) · test después
       (fixture)
-- [ ] 1.2 Test de aceptación en rojo: "termina con código ≠ 0 y nombra estado_menopausico cuando un criterio de
+      > Evidencia: commit 1a27420a; `catalog:validate` OK sobre `test-apl-1.0.0` y `1.0.1`; las copias inválidas se arman en los tests (`aplicabilidad.test.mjs`), no como carpetas.
+- [x] 1.2 Test de aceptación en rojo: "termina con código ≠ 0 y nombra estado_menopausico cuando un criterio de
       aplicabilidad no tiene destination [US-121 AC-2]" · integración (proceso real `catalog:validate`, timeout
       explícito de 30 s) · TDD estricto · commit `test(L1D-126)`
-- [ ] 1.3 Test de aceptación en rojo: "termina con código ≠ 0 y nombra ecog y el campo cuando un criterio declara
+      > Evidencia: `aplicabilidad.test.mjs` (AC-2); pasa en verde desde el primer commit porque la regla de destino es de L1D-93 (regresión; la copia sin alterar valida antes de romperla).
+- [x] 1.3 Test de aceptación en rojo: "termina con código ≠ 0 y nombra ecog y el campo cuando un criterio declara
       peso, score o weight [US-121 AC-3]" · integración (timeout 30 s) · TDD estricto · commit `test(L1D-126)`
-- [ ] 1.3b Test de aceptación en rojo: "termina con código ≠ 0 con study_key_ausente, study_key_inexistente o
+      > Evidencia: rojo 14acd10d (4 fallos "expected +0 not to be +0"), verde b1a82130; mutación sin `rechazarCamposDePuntaje` = 4 fallos.
+- [x] 1.3b Test de aceptación en rojo: "termina con código ≠ 0 con study_key_ausente, study_key_inexistente o
       study_key_duplicada y nombra el criterio [US-121 AC-1]" · integración (timeout 30 s) · TDD estricto · commit
       `test(L1D-126)`
-- [ ] 1.4 Esquema estricto del criterio en `schemas/aplicabilidad.schema.json` (D1, con `studyKey`),
+      > Evidencia: rojo 14acd10d (4 fallos), verde b1a82130; mutación sin `exigirStudyKey` = 7 fallos.
+- [x] 1.4 Esquema estricto del criterio en `schemas/aplicabilidad.schema.json` (D1, con `studyKey`),
       `poblacion.json` y su esquema (D3b), y extraer `rechazarCamposDePuntaje()` (RN-28) y `exigirStudyKey()` en el
       validador de US-001, con sus unitarios uno a uno; AC-2, AC-3 y los escenarios de `studyKey` en verde · TDD
       estricto · commit `feat(L1D-126)`
-- [ ] 1.5 Test de aceptación en rojo: "lista exactamente los criterios de mama y próstata con destination,
+      > Evidencia: commit b1a82130; unitarios en `reglas-aplicabilidad.test.mjs`; añade `comun.schema.json` (etiqueta, destino y estado compartidos; `match` admite listas) y `estado_invalido` en aplicabilidad.
+- [x] 1.5 Test de aceptación en rojo: "lista exactamente los criterios de mama y próstata con destination,
       isExclusionary y rule, y HER2 y castración excluyentes [US-121 AC-1]" (también bloque `validation`
       `propuesta_revisada`, [US-021 AC-1]) · test del catálogo · commit `test(L1D-126)`
-- [ ] 1.6 Contenido de `mama/aplicabilidad.json`, `prostata/aplicabilidad.json` (según D2, con `studyKey` y
+      > Evidencia: `contenido-aplicabilidad.test.mjs`, rojo 14acd10d (`expected [] to deeply equal [...]`).
+- [x] 1.6 Contenido de `mama/aplicabilidad.json`, `prostata/aplicabilidad.json` (según D2, con `studyKey` y
       `estado = "propuesta"`) y `poblacion.json`; bloque `validation` con `scope = ["aplicabilidad"]` y `catalogHash`
       calculado con `catalog:hash` (D3c); `catalog:validate` termina con 0 sobre el catálogo del S3 [US-121 AC-1,
       AC-3] · commit `feat(L1D-126)`
-- [ ] 1.7 Test de aceptación en rojo: "responde 409 CATALOG_VERSION_MISMATCH y no persiste AIAnalysisRecord cuando
+      > Evidencia: `npm run catalog:validate` = OK catalogVersion=1.1.0 (sin subir la versión, D5).
+- [x] 1.7 Test de aceptación en rojo: "responde 409 CATALOG_VERSION_MISMATCH y no persiste AIAnalysisRecord cuando
       rag-orchestrator tiene test-apl-1.0.1 y clinical-api test-apl-1.0.0 [US-121 AC-4]" · integración (Supertest +
       PostgreSQL real; MSW hacia `rag-orchestrator` desde `contracts/examples/rag-catalog-version-mismatch.json`;
       respuesta validada contra el spec del proveedor) · regresión de US-041; si pasa en verde desde el primer
       commit se documenta así en el PR · commit `test(L1D-126)`
-- [ ] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+      > Evidencia: `catalogo-version.test.ts` [US-121 AC-4], integración con PostgreSQL real, verde desde el primer commit (regresión de US-041); opción `rutaDelCatalogo` en el gateway de test.
+- [x] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
       verde antes y después, commit `refactor(L1D-126)`
 
+      > Refactor: sin cambios (nada que extraer o integrar en los archivos tocados; la extracción de `comun.schema.json` entró en el `feat`).
 ## ai-services
 
 - [ ] 2.1 Copiar los fixtures `test-apl-1.0.0` y `test-apl-1.0.1` al árbol de tests de `rag-orchestrator`
@@ -66,6 +75,7 @@
 
 ## cierre
 
-- [ ] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict`
+- [x] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict` · válido; el único INFO es el esperado
+      (el archivo rechaza el delta `MODIFIED` hasta archivar L1D-93)
 - [ ] 4.2 Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
       sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
