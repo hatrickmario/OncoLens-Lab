@@ -32,6 +32,8 @@ templates), con shadcn/ui como base. Páginas en `apps/web/app/(dashboard)/`.
 
 ## Flujo (consumidor del contrato → TDD → refactor)
 
+> **Superpowers (uso selectivo, `[S3 resp. 4]`):** ante un test rojo inesperado o un fallo de CI, usa `superpowers:systematic-debugging`; antes de marcar una tarea `[x]` o reportar el PR listo, `superpowers:verification-before-completion` (nada `[x]` sin la evidencia ejecutada; lo diferido se marca `TRASLADADA a <ID>`, nunca `[x]`); al responder a hallazgos de Gate 2, `superpowers:receiving-code-review`. Ninguna otra skill de Superpowers: el flujo de abajo y `CLAUDE.md` mandan.
+
 1. Lee el change, la historia en `backlog/features/` y los deltas de dependencias, en especial el
    contrato que consumes, y el **diseño de referencia** en `docs/ux/` (`sistema-de-diseno.md`,
    `flujo-e2e.md` y la pantalla del sprint en `docs/ux/S<n>/`): tokens, componentes, estados y

@@ -15,10 +15,11 @@
 | ARR-06 | L1D-282 | Conciliación y deuda del cierre del S1 | 3 | Media | L1D-166, 194, 275, 265 |
 | ARR-07 | L1D-283 | URL de la fuente original en «Fragmento citado» (manifiesto, catálogo, UI) | 5 | **Alta** | ARR-02 (E2E) |
 | ARR-08 | L1D-284 | Detalle expandible en «Opciones descritas en la evidencia» (resumen + 1–2 párrafos generados y validados) | 8 | **Alta** | ARR-07, US-072 (OL-06) |
+| ARR-09 | — (sin issue: workspace en el límite) | Arrastre del S2 al S3: *visual-checks* y E2E huérfanos, aviso de hidratación en `/pacientes` y conciliación de changes (S3, `[S3 resp. 7]`) | 8 | **Alta** | L1D-140, 187, 194, 197, 173, 202, 72, 166, 277; re-anotación de 115, 180, 193, 275, US-231b |
 
 **Estado al 2026-10-21:** ARR-04 (L1D-280) hecha; ARR-02 (L1D-278) parcial (E2E ejecutables; faltan el job de CI y la migración de `/login`); ARR-07 (L1D-283) y ARR-08 (L1D-284) hechas; ARR-01, 03, 05 y 06 sin empezar (ARR-05 se propone mover a Sprint 4, decisión 88).
 
-Total: 25 puntos de arrastre.
+Total: 25 puntos de arrastre del S1 (ARR-01…ARR-06); ARR-07 y ARR-08 (13) se añadieron en el S2 y ARR-09 (8, Sprint 3) en el refinamiento del S3 (2026-10-23, `[S3 resp. 7]`).
 
 ---
 
@@ -153,3 +154,21 @@ Total: 25 puntos de arrastre.
 6. *Given* el cambio de prompt y de salida, *when* se mide, *then* hay reporte de `ai-eval-runner` (OL-06): fidelidad, 0 salidas prescriptivas, JSON válido y latencia/tokens con detalle (sin agotar el tope de tokens de salida).
 
 **Riesgos:** más tokens y segundos en una consulta que ya tarda ~30 s; más afirmaciones para el NLI. **Dependencias:** ARR-07 (mismo panel), US-072 (OL-06 en la DoD).
+
+## ARR-09 · Arrastre del S2: *visual-checks* y E2E huérfanos, aviso de hidratación y conciliación
+
+> Linear: pendiente (workspace en el límite de issues; se publica cuando haya cupo) · Prioridad Alta
+
+> **Decidido (usuario, 2026-10-24, `[S3 resp. 12]`):** L1D-202, L1D-72 y L1D-187 recibieron feedback positivo de los oncólogos y del equipo técnico; quedan In Review y se revisan en la Demo 3 (cierre del S3) junto con estas tareas. · Est. 8 · **Sprint 3** · Origen: `S2-cierre.md`, `S2-trazabilidad.md` (changes sin archivar, M-4) y `S2-deuda.md`. **Decidido (usuario, 2026-10-23, `[S3 resp. 7]`).**
+
+**Como** equipo, **quiero** cerrar las verificaciones de UI y los E2E que el S2 dejó sin ejecutar y conciliar los changes abiertos, **para** archivar esas historias y que la spec principal recoja sus escenarios antes de construir encima en el S3.
+
+**AC**
+1. *Given* el stack fingido (`LLM_PROVIDER=fake`, `MODEL_PROVIDER=fake`) y el seed sintético, *when* `frontend-dev` corre `visual-check` a 375 y 1280 px (consola, CSP, red solo `/api/*` sin PII en URLs, accesibilidad, teclado), *then* quedan con evidencia y marcadas `[x]` las tareas pendientes de *visual-check*: L1D-140 2.7 y 3.5, L1D-187 2.8, L1D-194 3.3, L1D-197 3.5 y L1D-173 4.4 (pantalla de alcance); cada fallo se convierte primero en un test en rojo.
+2. *Given* el job de E2E de la CI (L1D-278) y el seed sintético, *when* se ejecuta, *then* existen y pasan sin `.skip` los E2E huérfanos: aviso de alcance de US-043 AC-3 con `ENABLED_CANCER_TYPES=mama` (L1D-173 4.3), listado `/pacientes` con los pacientes semilla y SINTÉTICO de US-048 AC-1 (L1D-202 3.3) y ficha con diagnóstico vigente, biomarcadores y aviso de pendientes de US-051 AC-1, AC-2 y AC-5 (L1D-72 3.3). Se retiran de US-079 AC-6 (S5), donde pueden quedar como regresión.
+3. *Given* el formulario de búsqueda de `/pacientes` enviado antes de que la página hidrate (hoy muestra JSON), *when* se envía, *then* el usuario ve un aviso de UX legible en la misma página (o la búsqueda funciona sin JavaScript) y nunca la respuesta JSON cruda; lo cubre un E2E. (deuda de `S2-deuda.md`)
+4. *Given* L1D-166 5.2 y L1D-277 1.5, *when* se archive L1D-140, *then* se activa el caso `ac2-cited-sources-build` con el build de `web` verificado en la CI y ambas tareas quedan `[x]`.
+5. *Given* las tareas con destino L1D-280 (ARR-04, ya hecha) en `l1d-115`, `l1d-180`, `l1d-193`, `l1d-275` y `us-231b`, *when* se concilian, *then* las que siguen pendientes se re-anotan con destino **US-233** (FEAT-T5a, S4) y las ya cumplidas quedan `[x]` con su evidencia.
+6. *Given* los changes del S2 sin archivar cuyas tareas queden todas cumplidas o con destino escrito tras los AC 1–5, *when* se corre `/opsx:verify`, *then* se archivan (bulk-archive) y la spec principal recoge sus escenarios.
+
+**Notas:** sin código de producto nuevo salvo el aviso del AC-3. La medición de ADR-40 (`l1d-205` 1.4, 1.6, 3.1, 4.2, 4.3) **no** es de esta tarjeta: pasa al S5 como prerrequisito de US-083; el usuario de servicio de `clinical-minio` es US-078 AC-8 (S5). **Dependencias:** ARR-02 (E2E ejecutables y job de CI). **Desbloquea:** L1D-140, 187, 194, 197, 173, 202, 72, 166, 277.

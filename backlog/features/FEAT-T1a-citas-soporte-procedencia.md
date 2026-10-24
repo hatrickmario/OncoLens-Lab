@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §6 RN-01, RN-04, RN-07, RN-24], [→ PRD §5 FR-10], [→ PRD §12 Grounding], [→ PRD §18.4 AC-T1.2, AC-T1.3], [→ PRD §18.3.10 AC-10.4, M-10.1], [→ PRD §18.3.2 AC-02.6], [→ readme §5 HU-03 escenario 3], [→ readme §6 OL-02 (tareas 5, 8; tests adicionales NLI)], [→ readme §6 OL-03 (tarea 2.3)], [→ readme §4.1 `CitedSource`, `DiscardedOption`, `Provenance`], [→ readme §3.3 #34], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-055 (pipeline), US-052 (constructor de contexto) · ⛔ ADR-39 (modelo NLI real; los AC se verifican con el adapter falso) · 🔗 Medido en: US-072 (M-10.1 = 100 %, fidelidad y precisión de citas M-07.2, G-2) · 🔗 Consumida por: US-057 (última defensa ante inyección), US-061 (descartadas en la UI)
 **Valor:** el oncólogo no puede verificar cada frase de la IA contra cada fuente; necesita que el sistema lo haga por él y que lo que no se pueda respaldar nunca se muestre como válido (P12, JTBD 8). Esta Feature es la garantía G-2: cero opciones sin cita a un chunk recuperado y sin soporte, y cada dato del paciente que viaja a la IA lleva su procedencia.
-**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-236 (3 puntos, S3) · US-127 (3 puntos, S5)
+**Stories:** US-063, US-064 (10 puntos, S1) · US-065 (3 puntos, S3) · US-236 (3 puntos, S3) · US-127 (3 puntos, S3; reordenamiento del 2026-10-23)
 
 ## Fixtures
 
@@ -158,8 +158,11 @@ análisis no se apoye en un dato dudoso como si fuera firme.
   contexto, entonces ninguno de los dos receptores de progesterona (`rechazado` y
   `reemplazado`) aparece en `clinicalContext` ni en `clinical_context_snapshot`.
   `[RN-07]` `[AC-02.6]`
-- **AC-4 (borde · conflicto)** · Dado FX-T1a-a, cuando se arma el contexto, entonces el
-  receptor de estrógeno `90 %` lleva `provenance.conflict = true`. `[readme §4.1]` `[RN-07]`
+- **AC-4 (borde · conflicto sembrado)** · Dado FX-T1a-a, cuyo receptor de estrógeno `90 %`
+  se siembra ya en conflicto (`requiere_revision` y `conflicts_with_id` hacia el del seed,
+  insertados por el test, sin detección automática), cuando se arma el contexto, entonces
+  ese receptor lleva `provenance.conflict = true`. `[readme §4.1]` `[RN-07]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 8]`):** el AC-4 se verifica sobre un conflicto sembrado, porque la detección real (US-099) pasó al S5. El AC original, con el conflicto detectado por la reconciliación al persistir una extracción, se traslada a US-099 AC-8 (FEAT-03a, S5).
 - **AC-5 (borde · etiqueta en el prompt)** · Dado un `clinicalContext` con el Ki-67 en
   `requiere_revision`, cuando `rag-orchestrator` arma el prompt, entonces ese dato
   aparece acompañado de la etiqueta "(sin verificar)" dentro del bloque de datos del
@@ -170,8 +173,9 @@ análisis no se apoye en un dato dudoso como si fuera firme.
 `Provenance` de readme §4.1 a cada elemento del contexto y filtra
 `rechazado`/`reemplazado`); en `rag-orchestrator`, `PromptBuilder` (US-057) traduce la
 procedencia a etiquetas legibles dentro del bloque de datos. Los estados existen en el
-esquema desde el S1 (US-038 AC-7), así que el test los inserta directamente; el flujo
-real de revisión llega en el S3 (FEAT-03b). Tests: Supertest con `rag-orchestrator`
+esquema desde el S1 (US-038 AC-7), así que el test los inserta directamente (también el
+conflicto, `[S3 resp. 8]`); el flujo real de revisión llega en el S4 (FEAT-03b) y la
+detección de conflictos al extraer, en el S5 (US-099). Tests: Supertest con `rag-orchestrator`
 simulado (AC-1 a AC-4) y Pytest del constructor de prompt (AC-5).
 
 ## INVEST
@@ -227,7 +231,7 @@ Tests: Pytest unitarios del dominio con FX-06a-a y FX-08b-a, y Playwright para e
 
 > Linear: [L1D-287](https://linear.app/l1der-lab-mjbc/issue/L1D-287)
 
-`FEAT-T1a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **3** · HU-03 · RN-01 (regresión), RN-04 (dueña: la cita sale del corpus, no del texto generado) · AC-T1.2, AC-T1.3, AC-10.4 · ↪ US-063, US-055 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063 · 🔗 Medido en: US-072 (precisión de citas, M-07.2) · **Recorrido principal:** sí
+`FEAT-T1a` · Sprint 3 · Estimación **3** · HU-03 · RN-01 (regresión), RN-04 (dueña: la cita sale del corpus, no del texto generado) · AC-T1.2, AC-T1.3, AC-10.4 · ↪ US-063, US-055 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063 · 🔗 Medido en: US-072 (precisión de citas, M-07.2) · **Recorrido principal:** sí
 
 > **Origen (demo del 2026-10-23, paciente de mama (a), LLM real `gemma4:26b-a4b-it-q4_K_M`):** con la pregunta «¿Cuándo se considera un inhibidor de CDK4/6 adyutante?» solo un chunk superó el umbral y el único `chunkId` citable era `pmc-mama-cdk46-guia@a3bb26468a32#0000`. El LLM lo copió mal en dos corridas seguidas: una con letras inventadas dentro del id y otra con LaTeX metido en medio. `validar_citas` (coincidencia exacta, RN-04) descartó la opción con `cita_invalida`. La misma pregunta bien escrita citó el id correcto. Es un fallo mecánico de copia, no de significado ni de evidencia; lo que el usuario ve es «No hay opciones descritas con soporte verificable…».
 
@@ -258,12 +262,14 @@ signifique que de verdad no hay soporte y no que falló una transcripción.
 - **AC-6 (invariante · sin chunks nuevos)** · Dado un alias que corresponde a un chunk que no
   superó el umbral en esta consulta, cuando se valida, entonces no existe (los alias solo se
   asignan a los chunks entregados a la generación). `[RN-01]` `[RN-24]`
-- **AC-7 (medición · OL-06)** · Dada la suite `evaluate` con el LLM real sobre la partición de
-  desarrollo (US-226) y la pregunta del origen con el paciente de mama (a), cuando se compara
+- **AC-7 (medición · OL-06)** · Dada la suite `evaluate` con el LLM real sobre el dataset de
+  evaluación actual (`data/evaluation/`, US-072) y la pregunta del origen con el paciente de
+  mama (a), cuando se compara
   contra la referencia, entonces la precisión de citas no baja de 0,90 (M-07.2), el recuento de
   `cita_invalida` no sube y la pregunta del origen produce `cita_invalida = 0` en 10 corridas
   (asumido: tamaño de la muestra; se recalibra en el refinamiento). El reporte de
   `ai-eval-runner` se adjunta al PR (cambia el prompt). `[OL-06]` `[M-07.2]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 8]`):** el AC-7 mide sobre el dataset de evaluación actual y no sobre la partición congelada de US-226 (FEAT-T5e, sin sprint comprometido). US-236 queda confirmada en el S3 (3 pts).
 
 ## Contexto técnico
 Función pura nueva en `rag-orchestrator/app/domain/` (`alias_de_chunks`: asigna alias y los
@@ -286,3 +292,4 @@ estricto (regla de dominio): commit `test(L1D-nn)` con el AC-2 en rojo antes del
 |---|---|---|---|
 | — | backlog/01-requisitos.md §3: RN-06 con dueña en FEAT-T1a | Encargo del lote 1: RN-06 con dueña en FEAT-06a | No es un conflicto de fuentes: la dueña de RN-06 es US-053 (FEAT-06a). Registrado para trazabilidad |
 | Slicing v2 | readme OL-03 (S1): contexto etiquetado con procedencia en el S1; PRD §14 S3: metadatos de fuente (RN-25) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-065 en el S3 y US-127 en el S5 | En el S1–S2 el contexto solo lleva datos `seed` verificados; las etiquetas son necesarias desde que entran datos extraídos (S3) |
+| S3-2026-10-23 | US-065 contexto técnico: revisión real en el S3 (FEAT-03b); US-065 AC-4 y US-236 AC-7 apoyados en historias que el reordenamiento movió (US-099 al S5, US-226 sin sprint) | Reordenamiento y refinamiento del S3 (2026-10-23): FEAT-03b en el S4, US-099 en el S5 | US-065 AC-4 sobre conflicto sembrado (original → US-099 AC-8); US-236 AC-7 sobre el dataset actual y confirmada en el S3 `[S3 resp. 8]` |

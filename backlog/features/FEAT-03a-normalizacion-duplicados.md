@@ -2,12 +2,12 @@
 
 > Linear: [L1D-12](https://linear.app/l1der-lab-mjbc/issue/L1D-12)
 
-**Talla:** L · **Sprint:** 3 (US-098) · 5 (US-099, US-100; reordenamiento del 2026-10-23, necesitan documentos extraídos) · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
+**Talla:** L · **Sprint:** 4 (US-098; refinamiento del S3, 2026-10-23, `[S3 resp. 3]`) · 5 (US-099, US-100; reordenamiento del 2026-10-23, necesitan documentos extraídos) · **Capacidad:** CAP-03 (AC-03.1, AC-03.2 parte de detección, AC-03.3, AC-03.4, AC-03.5) · T-3 (AC-T3.2: no reemplazo silencioso) · **Recorrido principal:** sí (lo mínimo para no mezclar datos al reconstruir el caso)
 **Requisitos:** FR-22 (parte S2: normalización final y duplicados; detección de conflictos en la extracción; dueña vía HU-17) · RN-27 (dueña) · RN-08 (dueña) · ADR-33 · FR-08 (regla de diagnóstico, parte automática)
 **Evidencia:** [→ PRD §5 FR-08, FR-22], [→ PRD §6 RN-08, RN-27], [→ PRD §18.3.3 AC-03.1–AC-03.5, M-03.1–M-03.5], [→ PRD §18.4 AC-T3.2], [→ readme §5.6 HU-17], [→ readme §6 OL-05 (tareas 6, 7; tests)], [→ readme §3.3 #12, #23, #25, #33], [→ readme §6.1 #10], [→ backlog/02-adrs.md DEC-04, DEC-09], [→ docs/AS-IS.md P3]
 **Dependencias:** ↪ US-041 (catálogo montado), US-086 (propuesta de Backend 2) · ⛔ DEC-09 · escenario más probable (US-100) · ⛔ DEC-04 · *workaround* Q-07 (US-098: solo CIE-10 en el catálogo real hasta cerrar) · 🔗 Consumida por: US-087 (persistencia), US-094, US-110 (datos manuales) · 🔗 Medido en: US-106 (M-03.1–M-03.5) · 🔗 Regresión [AC-T3.2] → US-070
 **Valor:** hoy el oncólogo compara a mano si dos informes dicen lo mismo o se contradicen (P3). Con esta Feature el mismo dato repetido en dos documentos queda como un solo dato con sus dos fuentes, dos valores distintos del mismo día quedan marcados en conflicto y nada verificado se reemplaza sin que él lo decida.
-**Stories:** US-098, US-099, US-100 (15 puntos, S3)
+**Stories:** US-098, US-099, US-100 (15 puntos: 5 en el S4 —US-098— y 10 en el S5 —US-099, US-100—)
 
 ## Fixtures
 
@@ -20,7 +20,7 @@
 
 > Linear: [L1D-84](https://linear.app/l1der-lab-mjbc/issue/L1D-84)
 
-`FEAT-03a` · Sprint 3 · Estimación **5** · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
+`FEAT-03a` · Sprint 4 · Estimación **5** · HU-17 · FR-22 (normalización final), RN-27 (dueña), ADR-33 · AC-03.3, AC-03.5 · ⛔ DEC-04 · *workaround* Q-07 · ↪ US-041, US-086 · 🔗 Consumida por: US-087, US-094, US-110 · 🔗 Medido en: US-106 (M-03.4, M-03.5)
 
 ## Story
 Como oncólogo, quiero que todo dato de mi paciente, venga de un documento o lo escriba
@@ -56,6 +56,8 @@ mismo concepto se reconozca siempre igual y ningún código sea inventado.
   de comandos de CLI, cuando un test los recorre, entonces no existe ninguna ruta ni
   comando que genere, exporte o envíe un reporte a la Cuenta de Alto Costo. `[AC-03.5]`
 
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 3]`):** US-098 pasa del S3 al **S4** (5 pts): sus AC-4…AC-6 dependen de la extracción (S5) o de US-094. En el refinamiento del S4 se revisa qué AC se reescriben (p. ej., sobre propuestas simuladas de Backend 2) y cuáles se trasladan a la historia de extracción del S5.
+
 ## Contexto técnico
 `ReconciliationService` (módulo `reconciliation` de `clinical-api`), dueño de la
 normalización final `[PRD §8]` `[ADR-33]`: verifica cada código contra el catálogo montado
@@ -74,7 +76,7 @@ persistencia.
 
 > Linear: [L1D-85](https://linear.app/l1der-lab-mjbc/issue/L1D-85)
 
-`FEAT-03a` · Sprint 5 · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`, S5) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
+`FEAT-03a` · Sprint 5 · Estimación **5** · HU-17 · FR-22 (duplicados; detección de conflictos) · AC-03.1, AC-03.2 (detección), AC-01.1 (reproceso) · ↪ US-098 · 🔗 Consumida por: US-087, US-089, US-080 · 🔗 Produce para: US-109 (resolución de conflictos, `si-hay-capacidad`), US-124 (aviso `en_conflicto`: en el S3 sobre un conflicto sembrado; con detección real desde el S5, AC-7) · 🔗 Medido en: US-106 (M-03.1–M-03.3)
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -105,6 +107,15 @@ una contradicción.
   (esquema e inicio iguales) en dos documentos, cuando se persiste el segundo, entonces
   queda un solo `PriorTreatment` con una fila `clinical_data_source` de
   `data_type = prior_treatment`. (asumido)
+- **AC-7 (borde · aviso de aplicabilidad con conflicto detectado)** · Dado un A-M1 con dos
+  HER2 en conflicto detectados por esta historia al persistir dos extracciones, cuando
+  `rag-orchestrator` evalúa la aplicabilidad, entonces `estado_her2` trae
+  `patientDataWarning = en_conflicto`. `[AC-08.4]` `[AC-03.2]` (trasladado de US-124 AC-3
+  `[S3 resp. 8]`)
+- **AC-8 (borde · conflicto detectado en el contexto de la IA)** · Dado F-REC tras persistir
+  la extracción (ii) (conflicto detectado por el AC-3), cuando se arma el `clinicalContext`
+  de un análisis, entonces los dos Ki-67 del 2026-03-01 llevan `provenance.conflict = true`.
+  `[readme §4.1]` `[RN-07]` (trasladado de US-065 AC-4 `[S3 resp. 8]`)
   > Pendiente de definir en refinamiento (dueño: oncólogo + Ingeniería · afecta: AC-6): ¿qué hace que dos tratamientos previos, eventos o atributos sean "el mismo dato" (p. ej., esquema + fecha de inicio; tipo + fecha; clave + fecha de observación)? FR-22 solo lo define para biomarcadores (concepto, fecha del examen y valor con unidad normalizada).
 
 ## Contexto técnico
@@ -115,7 +126,7 @@ Vitest + Supertest con FX-03a-a.
 
 ## INVEST
 **Small** ✓ una regla de comparación con tres salidas (duplicado, conflicto, nuevo).
-**Testable** ✓ seis tests sobre filas y enlaces en BD.
+**Testable** ✓ seis tests sobre filas y enlaces en BD, más dos de integración: el aviso de aplicabilidad (AC-7) y el contexto de la IA (AC-8).
 
 ---
 
@@ -174,3 +185,4 @@ Supertest con FX-03a-a.
 | — | PRD FR-22: conflicto → **ambos** en `requiere_revision` | PRD RN-08: un dato extraído nunca reemplaza en silencio a uno verificado | Se siguen los dos: el dato verificado pasa a revisión visible (no se reemplaza ni se pierde); ver US-099 AC-3 y US-100 AC-6 |
 | — | readme §3.3 #12: reglas "a validar con el oncólogo" | — | DEC-09 (US-019, S1) · escenario más probable |
 | Slicing v2 | PRD §14 S2 y readme §5.0 S2 (OL-05): normalización y duplicados en el S2 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): normalización en el S3, junto con la extracción | Se siguió el slicing v2 |
+| S3-2026-10-23 | Reordenamiento del 2026-10-23: US-098 en el S3 | Refinamiento del S3 (2026-10-23): US-098 pasa al S4 porque sus AC-4…AC-6 dependen de la extracción (S5) o de US-094 `[S3 resp. 3]`; US-099 recibe como AC-7 el aviso `en_conflicto` con detección real que US-124 AC-3 ya no cubre en el S3, y como AC-8 el conflicto detectado en el contexto que US-065 AC-4 ya no cubre `[S3 resp. 8]` | Decisión del usuario (refinamiento del S3) |

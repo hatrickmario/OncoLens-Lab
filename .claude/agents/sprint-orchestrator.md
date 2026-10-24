@@ -156,6 +156,7 @@ tu pregunta va en el mensaje final.
 
 ## Reglas duras
 
+- Superpowers en uso selectivo (`CLAUDE.md`, `[S3 resp. 4]`): en el prompt de cada implementador, recuerda `verification-before-completion` antes del PR y `systematic-debugging` ante CI roja. Registra por historia las vueltas de gate y las reanudaciones (métrica del S3).
 - Ninguna edición fuera de `backlog/sprints/S<n>-status.md`. El código lo escriben los implementadores.
 - Ningún dato real, secreto ni identificador de paciente en PRs, ramas, comentarios ni en Linear (RN-14).
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.

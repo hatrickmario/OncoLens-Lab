@@ -128,6 +128,8 @@ paciente nunca termine donde no corresponde.
   para reintento y ningún dato se persiste sin haber pasado el gate. (asumido: falla
   cerrada, igual que US-049 AC-7)
 
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 7]`):** **prerrequisito de US-083 en el S5:** la medición pendiente de ADR-40 (change `l1d-205-adr40-deteccion-pii`, tareas 1.4 RSS con el stack y G cargado en la máquina de referencia, 1.6 marca en `backlog/02-adrs.md`, 3.1 revisión del reporte `reports/adr40/` por `ai-eval-runner`, 4.2 tests en verde y 4.3 `run-ai-eval` familia `pii`) se hace al inicio del S5, antes de implementar esta historia, y fija el motor de PII. Registrado en `backlog/sprints/S2-deuda.md`.
+
 ## Contexto técnico
 Detección en `rag-orchestrator` (`infrastructure/pii/`, motor según ADR-40) y decisión
 en `clinical-api` (`documents` + `IdentityService` para el HMAC). Las clases
@@ -343,3 +345,4 @@ inserciones → `ocr_status = completado`. La idempotencia se apoya en
 | — | readme OL-05 tarea 12: el motor de PII lo fija el ADR de modelos locales | backlog/02-adrs.md H-02: ADR-40 separado | ADR-40 (02-adrs.md, cerrado en el S1) |
 | — | readme OL-01 seed: códigos LOINC y ATC desde el catálogo | Q-07 / DEC-04: solo CIE-10 hasta confirmar términos de uso | Q-07: los tests usan códigos ficticios; el catálogo real solo CIE-10 hasta DEC-04 |
 | Slicing v2 | PRD §14 S2 y readme §5.0 S2: extracción OCR y gate de PII en el S2 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): extracción en el S3 | En el S2 la cola (US-078) se prueba con el extractor simulado; la extracción real llega en el S3 |
+| S3-2026-10-23 | `S2-cierre.md`: ADR-40 se mide al inicio del S3 como primera tarea de `l1d-205` | Reordenamiento del 2026-10-23: US-083 en el S5 | La medición de ADR-40 (l1d-205 1.4, 1.6, 3.1, 4.2, 4.3) pasa al S5 como prerrequisito de US-083 `[S3 resp. 7]` |

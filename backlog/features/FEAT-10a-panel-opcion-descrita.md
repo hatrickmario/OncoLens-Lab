@@ -139,7 +139,7 @@ fuentes y filtros (S3).
 
 > Linear: [L1D-141](https://linear.app/l1der-lab-mjbc/issue/L1D-141)
 
-`FEAT-10a` · Sprint 3 · Estimación **3** · HU-03 · FR-09 (bordes en la UI), RN-30 (UI del `429`), RN-20 (UI de `tipo_no_habilitado`) · AC-10.4 ("sin evidencia"), AC-06.1 (códigos en la UI) · ↪ US-060, US-061
+`FEAT-10a` · Sprint 3 · Estimación **4** · HU-03 · FR-09 (bordes en la UI), RN-30 (UI del `429`), RN-20 (UI de `tipo_no_habilitado`), RN-28 (criterio visible) · AC-10.4 ("sin evidencia"), AC-06.1 (códigos en la UI) · ↪ US-060, US-061, US-125 (AC-7)
 
 ## Story
 Como oncólogo, quiero que el panel me diga con claridad si el análisis está en curso,
@@ -152,9 +152,13 @@ ausencia de evidencia con una respuesta.
   deshabilitado y `clinical-api` recibe una sola request (un solo `AIAnalysisRecord`).
   `[OL-04]`
 - **AC-2 (borde · sin evidencia)** · Dada una respuesta `status = sin_evidencia`
-  (`Q-SIN`), cuando se renderiza, entonces se lee "No se encontró evidencia suficiente en
-  las fuentes consultadas", no aparece ninguna tarjeta ni texto con forma de opción, y se
-  muestra la Base del análisis. `[HU-03]` `[AC-10.4]` `[OL-04]`
+  (`Q-SIN`, `topRelevanceScore = null`), cuando se renderiza, entonces se lee "Ningún
+  fragmento del corpus superó el umbral de relevancia. No se generaron opciones.", "La búsqueda se limita a las fuentes consultadas; no implica que no exista evidencia." y
+  "Relevancia máxima: no aplica" (nunca 0, RN-02), se muestra el "qué se buscó" (la
+  pregunta y las fuentes consultadas, según `docs/ux/S1/pantallas-s1.md`), no aparece
+  ninguna tarjeta ni texto con forma de opción, y se muestra la Base del análisis.
+  `[HU-03]` `[AC-10.4]` `[OL-04]` `[RN-02]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 6]`):** el texto canónico es el de `docs/ux/S1/pantallas-s1.md` (estado "Sin evidencia"), que ya usa la UI desde el S1; reemplaza al "No se encontró evidencia suficiente en las fuentes consultadas" de la versión anterior del AC.
 - **AC-3 (borde · sesión expirada)** · Dada una sesión expirada, cuando el doctor envía
   la pregunta, entonces es redirigido al login sin que se muestre ningún dato del
   paciente. `[OL-04]` `[FR-01]`
@@ -164,11 +168,22 @@ ausencia de evidencia con una respuesta.
 - **AC-5 (borde · límite y fallos)** · Dada una respuesta `429` con `Retry-After: 30`,
   cuando se renderiza, entonces el mensaje indica que puede reintentar en 30 segundos; y
   dada una `502`, `503`, `504` o un fallo de red, el mensaje es genérico con un botón
-  "Reintentar" y no contiene nombres de servicios, trazas ni el `traceId` completo.
+  "Reintentar", muestra "Código de traza: [traceId]" (`[S1 resp. 31]`) y no contiene nombres de
+  servicios ni trazas de pila.
   `[OL-04]` `[RN-30]` `[PRD §10]`
 - **AC-6 (borde · tipo no habilitado)** · Dada una respuesta
   `status = tipo_no_habilitado`, cuando se renderiza, entonces se lee "Tipo de cáncer
   fuera del alcance del piloto" y no aparece ninguna tarjeta de opción. `[RN-20]` `[OL-04]`
+  > **Alineación con `[S1 resp. 31]`:** el mensaje de error muestra "Código de traza: [traceId]" (decisión del S1, validada por los oncólogos asesores); lo que AC-5 prohíbe son nombres de servicios, trazas de pila y detalles internos.
+- **AC-7 (invariante · criterio de elección visible)** · Dada una respuesta `con_evidencia`
+  cuya opción se eligió por aplicabilidad (US-125, `maxOptions = 1`), cuando se renderiza,
+  entonces el rótulo del criterio dice "Se muestra primero la opción cuyo estudio coincide en más criterios con los datos registrados de este paciente (menos criterios excluyentes en No coincide); la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica." (reemplaza
+  `orderCriterion.relevance`; `relevance.basis` pasa a "Metadato de recuperación; solo desempata el orden por aplicabilidad."), bajo la opción aparece en texto la línea de
+  `applicabilitySummary` con el prefijo "Criterios del estudio frente a datos registrados:" ("Coincide [n] · Parcial [n] · No coincide [n] · Desconocido [n]",
+  sin puntaje ni porcentaje) y, si `populationNotComparable = true`, el aviso
+  "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.", que no bloquea. La tabla por
+  criterio llega en US-126 (S4). `[RN-28]` `[RN-03]` `[RN-26]` `[AC-08.8]`
+  > **Decidido (usuario, 2026-10-24, `[S3 resp. 9]`):** con US-125 en el S3 el rótulo "Ordenado por relevancia" dejaría de ser cierto; el panel muestra el criterio nuevo y la línea de conteos (ya en el contrato: `applicabilitySummary`, `populationNotComparable`). +1 pt (3 → 4). Diseño: `docs/ux/S3/pantallas-s3.md` (S3-02).
 
 ## Contexto técnico
 Estados de `AnalysisResult` (OL-04 tarea 4). Textos en un archivo de mensajes de UI
@@ -181,7 +196,7 @@ Pasos de progreso visibles (ADR-42, S4; workaround: indicador indeterminado).
 
 ## INVEST
 **Small** ✓ estados de un componente existente.
-**Testable** ✓ seis tests de componente y E2E.
+**Testable** ✓ siete tests de componente y E2E.
 
 ---
 
@@ -189,7 +204,7 @@ Pasos de progreso visibles (ADR-42, S4; workaround: indicador indeterminado).
 
 > Linear: [L1D-288](https://linear.app/l1der-lab-mjbc/issue/L1D-288)
 
-`FEAT-10a` · Sprint 3 (propuesto el 2026-10-23; capacidad por confirmar en `/sprint-refine`) · Estimación **2** · HU-03 · FR-10 (descartadas en la UI), RN-01 (regresión), RN-19, RN-23 · AC-10.4 · ↪ US-061, US-062, US-064 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · **Recorrido principal:** sí
+`FEAT-10a` · Sprint 3 · Estimación **2** · HU-03 · FR-10 (descartadas en la UI), RN-01 (regresión), RN-19, RN-23 · AC-10.4 · ↪ US-061, US-062, US-064 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069 · **Recorrido principal:** sí
 
 > **Origen (demo del 2026-10-23):** cuando las opciones se descartan por citas mal copiadas (US-236), el titular dice «No hay opciones descritas con soporte verificable en la evidencia recuperada.» sin distinguir ese caso de una falta real de soporte. La UI **ya** muestra el motivo de cada opción dentro de la sección «Descartadas» (`discardReason.*` en `apps/web/messages/es.json`, US-061); lo que falta es resumirlo en el titular y contarlo en el log, que hoy solo registra `opcionesDescartadas=N`.
 
@@ -221,6 +236,8 @@ paso mecánico, y para no repetir la consulta a ciegas.
   cuando se ejecuta `contracts:check`, entonces no hay cambios: el motivo ya viaja en
   `discardedOptions[].discardReason`. `[ADR-26]`
 
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 8]`):** US-237 queda confirmada en el S3 (2 pts). La UI de referencia está en `docs/ux/S3/pantallas-s3.md`.
+
 ## Contexto técnico
 Texto del titular y del resumen en `apps/web/messages/es.json` (`analysis.soloDescartadas`,
 fuente única recorrida por US-068); agrupación por motivo en el componente de descartadas
@@ -228,7 +245,7 @@ fuente única recorrida por US-068); agrupación por motivo en el componente de 
 `ResultadoCitas.descartadas[].motivo` (`domain/citations.py`) en
 `RAGOrchestratorService._validar_citas_y_ensamblar`. Los recuentos por motivo del soporte NLI
 (`afirmacion_sin_soporte`) ya tienen su evento (`rag_query_soporte`). `visual-check` a 375 y
-1280 px.
+1280 px, contra `docs/ux/S3/pantallas-s3.md`.
 
 ## INVEST
 **Small** ✓ un mensaje agrupado y un campo de log.
@@ -246,3 +263,4 @@ fuente única recorrida por US-068); agrupación por motivo en el componente de 
 | Slicing v2 | readme OL-04 (S1): estados de espera, sin evidencia y error del panel en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-062 en el S3 | El S1 muestra la opción y las descartadas (US-061); los estados del panel llegan en el S3 |
 | Refinamiento del S1 · V-10 | PRD §12 Idioma y readme OL-04: "traducción opcional etiquetada" de las citas | Sin FR, AC ni sprint en el backlog | **Fuera del MVP comprometido** (Post-MVP, sin historia) — decisión del usuario del 2026-10-13 `[S1 resp. 8]`; la cita se muestra en su idioma original (US-063 AC-6) |
 | Refinamiento del S1 · rutas | US-061 y US-211: `/patients/{id}/evidence` | `docs/ux/flujo-e2e.md` (aprobado el 2026-10-11): `/pacientes/[id]/analisis` | Rutas en español del diseño `[S1 resp. 4]` |
+| S3-2026-10-23 | US-062 AC-2: "No se encontró evidencia suficiente en las fuentes consultadas"; US-237 con capacidad por confirmar | `docs/ux/S1/pantallas-s1.md` (estado "Sin evidencia") y refinamiento del S3 (2026-10-23) | Texto canónico del diseño `[S3 resp. 6]`; US-237 confirmada en el S3 con UI en `docs/ux/S3/pantallas-s3.md` `[S3 resp. 8]` |

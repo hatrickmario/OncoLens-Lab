@@ -414,6 +414,8 @@ Son **investigación, no desarrollo**: estimación **siempre 1**; se refinan en 
 
 ### Referencia · DEC-01 (existe, no se reescribe)
 
+> **Estado (usuario, 2026-10-23):** escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`. Se implementa sobre la versión `propuesta_revisada` (Q1 = `verificado` y `corregido`; Q4 = `faltante`); un cambio de la sesión solo toca el catálogo JSON.
+
 | ID | Tema | Feature | Sprint | Dueño | Est. | Nota para F3 |
 |---|---|---|---|---|---|---|
 | DEC-01 | Catálogo de datos críticos de mama y próstata validado y firmado · **Recorrido principal: sí — crítica** (hipótesis 2: faltantes; sin catálogo firmado el checklist no tiene vara clínica) | FEAT-04 (`backlog/features/FEAT-04-informacion-faltante.md`) | S3 (antes del cierre; ver P-03) | Oncólogo asesor | 2 | **Corrección pendiente:** la convención fija **1 punto** para toda DEC; FEAT-04 pasa de 24 a 23 puntos. Además, su pregunta Q5 (Gleason/ISUP → `Diagnosis.grade`) queda **resuelta por DEC-05** (Q-04): actualizar la nota "Pendiente de definir en refinamiento" de US-001 AC-7 para que cite DEC-05. |
@@ -609,6 +611,7 @@ Como oncólogo asesor, quiero validar las plantillas de preguntas por tipo de c�
 ### US-021 · DEC-11 — Criterios de aplicabilidad, excluyentes y definición de "Parcial"
 
 **Tipo:** Decisión · **Feature:** FEAT-08b · **Sprint:** 3 (antes de la Feature de aplicabilidad; ver P-03) · **Estimación:** 1
+> **Estado (usuario, 2026-10-23):** escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`. Se implementa sobre la versión `propuesta_revisada` (criterios de FR-25; HER2 en mama y estado de castración en próstata como excluyentes; "Parcial" según los ejemplos de FR-25); un cambio de la sesión solo toca el catálogo JSON.
 **Origen:** TBD-13 (parte: aplicabilidad) · R-24 · **Dueño:** oncólogo asesor
 **Recorrido principal:** sí — **crítica**: sin criterios, excluyentes y "Parcial" validados no hay orden de las opciones por aplicabilidad (hipótesis 3)
 **Evidencia:** [→ PRD §16 TBD-13], [→ PRD §5 FR-25], [→ PRD §6 RN-28], [→ PRD §18.3.8 AC-08.6], [→ PRD §14 G-Piloto]
@@ -875,8 +878,8 @@ Las historias de la columna "Bloquea" se estiman **`?`** hasta que cierre la his
 | 14 | DEC-09 | sí | FEAT-01b · regla de diagnóstico y semáforo; FEAT-03a; FEAT-03b | S2 |
 | 15 | DEC-08 | sí | FEAT-02b · tendencia | S2 |
 | 16 | CAL TBD-03 (OCR) | sí · crítica | FEAT-01b · `extraction_confidence` | S2 |
-| 17 | DEC-01 (existe) | sí · crítica | FEAT-04 · US-001…US-006 (solo el catálogo firmado); DEC-19 | S3 (antes si P-03) |
-| 18 | DEC-11 | sí · crítica | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b; DEC-19 | Feature de aplicabilidad (hoy S4) |
+| 17 | DEC-01 (existe) | sí · crítica | FEAT-04 · US-001…US-006 (solo el catálogo firmado); DEC-19 | S3: escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` |
+| 18 | DEC-11 | sí · crítica | FEAT-08b, FEAT-10c, FEAT-08c, FEAT-T5b; DEC-19 | S3: escenario aceptado para el S3; cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` |
 | 19 | DEC-14 | sí | G-Demo (VM-3); FEAT-T5d | Cierre de aplicabilidad (hoy S4) |
 | 20 | DEC-12, DEC-16 | sí (gate) | FEAT-T4c · `403` por opt-out en la lista cerrada de endpoints; FEAT-T4b/T4d · registro de la marca | S5 (antes de G-Piloto; el canal se negocia desde el S3 con la entidad médica) |
 | 21 | P-02 (autorización por paciente) → FEAT-T4c | sí (gate) | FEAT-T4c · pertenencia en todos los endpoints | S5 |
