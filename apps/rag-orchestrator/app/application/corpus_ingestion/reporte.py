@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 
 class Estado(StrEnum):
@@ -33,6 +34,16 @@ class ResultadoDeIngesta:
 class ReporteDeIngesta:
     resultados: tuple[ResultadoDeIngesta, ...]
     release_id: str | None
+
+    @property
+    def hubo_errores(self) -> bool:
+        raise NotImplementedError("no implementado")
+
+    def contadores(self) -> dict[str, int]:
+        raise NotImplementedError("no implementado")
+
+    def como_diccionario(self) -> dict[str, Any]:
+        raise NotImplementedError("no implementado")
 
     def resultado_de(self, document_key: str) -> ResultadoDeIngesta:
         return next(r for r in self.resultados if r.document_key == document_key)
