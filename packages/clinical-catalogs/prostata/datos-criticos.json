@@ -1,4 +1,132 @@
 {
-  "version": "1.0.0",
-  "items": []
+  "version": "1.1.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "items": [
+    {
+      "key": "psa_serie",
+      "cancerType": "prostata",
+      "label": {
+        "es": "PSA seriado",
+        "en": "PSA series"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "PSA"
+        }
+      },
+      "minValues": 2,
+      "estado": "propuesta"
+    },
+    {
+      "key": "gleason_isup",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Gleason / grupo ISUP",
+        "en": "Gleason / ISUP grade group"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tnm",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Estadificación TNM",
+        "en": "TNM staging"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "sitios_metastasicos",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Sitios metastásicos",
+        "en": "Metastatic sites"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "sitios_metastasicos"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "estado_castracion",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Estado de castración",
+        "en": "Castration status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_castracion"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tratamientos_previos",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Tratamientos previos",
+        "en": "Prior treatments"
+      },
+      "destination": {
+        "entity": "PriorTreatment"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Estado funcional (ECOG)",
+        "en": "Performance status (ECOG)"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "hrr_brca",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Genes HRR / BRCA",
+        "en": "HRR / BRCA genes"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HRR"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
 }
