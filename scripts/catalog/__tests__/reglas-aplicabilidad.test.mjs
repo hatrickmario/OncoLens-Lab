@@ -58,6 +58,26 @@ describe('rechazarCamposDePuntaje', () => {
     });
   });
 
+  it.each(['puntaje', 'ponderacion', 'puntos'])(
+    'devuelve el campo %s cuando el criterio lo declara',
+    (campo) => {
+      expect(rechazarCamposDePuntaje({ key: 'ecog', [campo]: 1 })).toEqual({
+        codigo: 'campo_de_puntaje',
+        campo,
+      });
+    },
+  );
+
+  it('no confunde un valor de equivalences ni una clave de match con un campo del criterio', () => {
+    const criterio = {
+      key: 'estado_her2',
+      rule: { equivalences: { score: ['3+'] } },
+      destination: { entity: 'Biomarker', match: { weight: 'x' } },
+    };
+
+    expect(rechazarCamposDePuntaje(criterio)).toBeNull();
+  });
+
   it('no confunde un valor llamado peso con un campo de puntaje', () => {
     expect(rechazarCamposDePuntaje({ label: { es: 'peso' }, destination: {} })).toBeNull();
   });
