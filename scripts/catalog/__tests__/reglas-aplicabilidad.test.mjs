@@ -9,6 +9,7 @@ import {
 } from '../../../packages/clinical-catalogs/validator/index.mjs';
 import {
   clavesRepetidasEn,
+  exigirAtributoDeclarado,
   exigirDestinoExistente,
   exigirStudyKey,
   rechazarCamposDePuntaje,
@@ -172,6 +173,48 @@ describe('destination.match con listas', () => {
       expect(validarCatalogo({ archivos, allowlist, esquemas }).violaciones).toEqual([]);
     },
   );
+});
+
+describe('match con lista solo en aplicabilidad (Gate 2 vuelta 1, punto 1)', () => {
+  const cargar = () => leerCatalogo(path.join(FIXTURES, 'test-apl-1.0.0'), leerTexto);
+  const declaradas = { keys: [{ key: 'estado_menopausico', cancerTypes: ['mama'] }] };
+  const atributo = (clave) => ({
+    destination: { entity: 'ClinicalAttribute', field: 'value', match: { attribute_key: clave } },
+  });
+
+  it('rechaza con esquema_invalido un ítem de datos críticos cuyo match trae una lista', () => {
+    const archivos = cargar();
+    archivos.tipos.mama['datos-criticos'].items[0].destination = {
+      entity: 'Biomarker',
+      field: 'value',
+      match: { name: ['RE', 'RP'] },
+    };
+
+    const { violaciones } = validarCatalogo({ archivos, allowlist, esquemas });
+
+    expect(violaciones).toEqual([
+      { codigo: 'esquema_invalido', tipoDeCancer: 'mama', archivo: 'datos-criticos' },
+    ]);
+  });
+
+  it('acepta un criterio de aplicabilidad cuyo match trae una lista', () => {
+    const archivos = cargar();
+    archivos.tipos.mama.aplicabilidad.items[0].destination.match = { name: ['RE', 'RP'] };
+
+    expect(validarCatalogo({ archivos, allowlist, esquemas }).violaciones).toEqual([]);
+  });
+
+  it('devuelve null cuando todas las attribute_key de la lista están declaradas', () => {
+    expect(
+      exigirAtributoDeclarado(atributo(['estado_menopausico']), 'mama', declaradas),
+    ).toBeNull();
+  });
+
+  it('devuelve atributo_no_declarado cuando alguna attribute_key de la lista no está declarada', () => {
+    expect(
+      exigirAtributoDeclarado(atributo(['estado_menopausico', 'menopausia_x']), 'mama', declaradas),
+    ).toBe('atributo_no_declarado');
+  });
 });
 
 describe('poblacion.json deformado', () => {
