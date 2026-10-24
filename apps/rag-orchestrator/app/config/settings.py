@@ -371,7 +371,7 @@ def _lista_separada_por_comas(valor: Any) -> Any:
     return valor
 
 
-class _AjustesDeCorpus(BaseSettings):
+class AjustesDeCorpus(BaseSettings):
     """Claves comunes del cargador de la semilla y de la ingesta en lote (licencias, fuentes excluidas, chunking, descargas)."""
 
     model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
@@ -453,13 +453,13 @@ class _AjustesDeCorpus(BaseSettings):
         return self
 
 
-class CorpusSeedSettings(_AjustesDeCorpus):
+class CorpusSeedSettings(AjustesDeCorpus):
     """Configuración del cargador ``python -m app.scripts.load_seed_corpus``; una clave obligatoria ausente falla al arrancar."""
 
     corpus_seed_manifest_path: Path
 
 
-class CorpusIngestSettings(_AjustesDeCorpus):
+class CorpusIngestSettings(AjustesDeCorpus):
     """Configuración de ``python -m app.scripts.ingest`` (US-117a, RN-22): las claves de la semilla sin el manifiesto
     (llega por ``--manifest``) más el origen del *sparse* y los pesos de su cabeza lineal, verificados por SHA-256."""
 
