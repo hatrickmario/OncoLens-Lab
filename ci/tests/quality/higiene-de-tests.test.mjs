@@ -31,6 +31,12 @@ describe('higiene de tests: desactivados y enfocados', () => {
     ['describe-skip.fixture.ts', 2, 'vitest/no-disabled-tests'],
     ['xit.fixture.ts', 3, 'vitest/no-disabled-tests'],
     ['it-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['it-skipif.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['it-runif.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['it-each-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['it-bracket-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['test-concurrent-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['contexto-skip.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
   ])(
     'falla nombrando archivo, línea y regla cuando %s desactiva o enfoca un test [US-213 AC-8]',
     async (nombre, linea, regla) => {
@@ -48,6 +54,13 @@ describe('higiene de tests: desactivados y enfocados', () => {
     },
     TIEMPO_MAXIMO_MS,
   );
+
+  it('falla también con la regla propia cuando el salto viene de ctx.skip() [US-213 AC-8]', async () => {
+    const hallazgos = await hallazgosDe('contexto-skip-miembro.fixture.ts', higiene());
+
+    expect(hallazgos.map((hallazgo) => hallazgo.rule)).toContain('oncolens/tests-sin-desactivar');
+    expect(hallazgos.every((hallazgo) => hallazgo.line === 3)).toBe(true);
+  }, TIEMPO_MAXIMO_MS);
 
   it('no reporta nada cuando el test no se desactiva ni se enfoca [US-213 AC-8]', async () => {
     expect(await hallazgosDe('limpio.fixture.ts', higiene())).toEqual([]);
@@ -99,6 +112,12 @@ describe('vi.mock solo sobre bordes', () => {
     ['mock-alias-web.fixture.ts', '@/lib/server/patients'],
     ['mock-alias-oncolens.fixture.ts', '@oncolens/api-contracts'],
     ['mock-prisma.fixture.ts', '@prisma/client'],
+    ['mock-import-expr.fixture.ts', '../src/x.js'],
+    ['mock-template.fixture.ts', '../x'],
+    ['mock-corchetes.fixture.ts', './x'],
+    ['mock-alias-vi.fixture.ts', './x'],
+    ['mock-src.fixture.ts', 'src/modules/x'],
+    ['mock-tilde.fixture.ts', '~/lib/x'],
   ])(
     'falla con mock-solo-en-bordes nombrando el módulo, el archivo y la línea cuando %s mockea código propio [US-213 AC-10]',
     async (nombre, modulo) => {
@@ -116,6 +135,22 @@ describe('vi.mock solo sobre bordes', () => {
     },
     TIEMPO_MAXIMO_MS,
   );
+
+  it('falla por pg y por @prisma/adapter-pg, que son la base de datos [US-213 AC-10]', async () => {
+    const hallazgos = await hallazgosDe('mock-pg.fixture.ts', mocks());
+
+    expect(hallazgos.map((hallazgo) => hallazgo.line)).toEqual([2, 3]);
+    expect(hallazgos.every((hallazgo) => hallazgo.rule === 'oncolens/mock-solo-en-bordes')).toBe(true);
+  }, TIEMPO_MAXIMO_MS);
+
+  it('reporta lo que no puede verificar cuando el módulo mockeado no es un texto literal [US-213 AC-10]', async () => {
+    const eslint = new ESLint({ cwd: RAIZ, ignore: false, overrideConfig: mocks() });
+    const [resultado] = await eslint.lintFiles([path.join(FIXTURES, 'mock-dinamico.fixture.ts')]);
+
+    expect(resultado.messages).toHaveLength(1);
+    expect(resultado.messages[0]).toMatchObject({ ruleId: 'oncolens/mock-solo-en-bordes', line: 3 });
+    expect(resultado.messages[0].message).toContain('no es un texto literal');
+  }, TIEMPO_MAXIMO_MS);
 
   it('permite vi.mock de un cliente de terceros que es borde y de next/* [US-213 AC-10]', async () => {
     expect(await hallazgosDe('mock-de-bordes.fixture.ts', mocks())).toEqual([]);
