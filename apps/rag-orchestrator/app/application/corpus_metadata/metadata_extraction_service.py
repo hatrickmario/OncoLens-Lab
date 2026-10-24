@@ -40,7 +40,6 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
 from app.domain.nli import ParNli
 
-
 # Los únicos fallos que no impiden indexar (D4): el LLM, el NLI o una salida fuera del esquema. Cualquier otro error es
 # un defecto y sube; ``KeyboardInterrupt`` nunca se captura.
 FALLOS_QUE_DEJAN_PENDIENTE = (FalloDelLlm, FalloDeInferencia, SalidaInvalida)

@@ -37,9 +37,8 @@ def test_corpus_catalog_acepta_metadata_source_pendiente_y_rechaza_un_valor_fuer
         ).scalar_one()
     assert guardado == "pendiente"
 
-    with transaccion_revertida(base_migrada) as conexion:
-        with pytest.raises(IntegrityError) as error:
-            insertar_documento(conexion, fila_sintetica(metadata_source="inferido"))
+    with transaccion_revertida(base_migrada) as conexion, pytest.raises(IntegrityError) as error:
+        insertar_documento(conexion, fila_sintetica(metadata_source="inferido"))
     assert error.value.orig.diag.constraint_name == "ck_corpus_document_metadata_source"
 
 
@@ -73,9 +72,11 @@ def test_corpus_catalog_downgrade_restaura_el_check_anterior_cuando_no_hay_filas
 ) -> None:
     try:
         command.downgrade(configuracion_de_alembic(base_migrada.url_migrador), REVISION_ANTERIOR)
-        with transaccion_revertida(base_migrada) as conexion:
-            with pytest.raises(IntegrityError) as error:
-                insertar_documento(conexion, fila_sintetica(metadata_source="pendiente"))
+        with (
+            transaccion_revertida(base_migrada) as conexion,
+            pytest.raises(IntegrityError) as error,
+        ):
+            insertar_documento(conexion, fila_sintetica(metadata_source="pendiente"))
         assert error.value.orig.diag.constraint_name == "ck_corpus_document_metadata_source"
     finally:
         migrar(base_migrada.url_migrador)

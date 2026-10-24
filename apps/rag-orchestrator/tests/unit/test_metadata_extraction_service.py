@@ -12,6 +12,7 @@ from app.application.corpus_metadata.metadata_extraction_service import Metadata
 from app.application.ports import FalloDeInferencia
 from app.domain.corpus_metadata.resultado import FalloDeMetadatos
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.nli import ParNli, ResultadoNli
 from tests.support.metadatos import (
     ENDPOINT_INVENTADO,
     MARCADOR_I_LIT_1,
@@ -19,7 +20,6 @@ from tests.support.metadatos import (
     FakeMetadataLlm,
     nli_de_metadatos,
 )
-from app.domain.nli import ParNli, ResultadoNli
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 
 TEXTO = f"{MARCADOR_I_LIT_1} and a trial."

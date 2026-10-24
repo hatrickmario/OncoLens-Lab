@@ -12,15 +12,14 @@ import yaml
 
 from app.application.corpus_ingestion.reporte import Estado, ReporteDeIngesta, ResultadoDeIngesta
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
 from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from tests.support.fakes import RelojFijo
-
-from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
 from app.infrastructure.corpus_metadata.escritor_muestra import (
     EscritorDeMuestraYaml,
     ReleaseNoSeguraComoNombreDeArchivo,
 )
+from tests.support.fakes import RelojFijo
 
 IDS = tuple(f"doc-{i:02d}@abc" for i in range(1, 21))
 

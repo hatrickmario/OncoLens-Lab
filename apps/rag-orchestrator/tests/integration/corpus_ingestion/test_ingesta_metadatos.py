@@ -17,17 +17,16 @@ import yaml
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
 from app.application.ports import FalloDeInferencia
 from app.domain.corpus_metadata.muestra import seleccionar_muestra
-from app.infrastructure.corpus_metadata.escritor_muestra import EscritorDeMuestraYaml
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
+from app.infrastructure.corpus_metadata.escritor_muestra import EscritorDeMuestraYaml
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.fakes import RelojFijo
 from tests.support.metadatos import (
-    lote_sintetico,
-    nli_de_metadatos,
     ENDPOINT_INVENTADO,
     MARCADOR_I_CT_1,
     MARCADOR_I_LIT_1,
     MARCADOR_I_LIT_2,
+    lote_sintetico,
 )
 
 
