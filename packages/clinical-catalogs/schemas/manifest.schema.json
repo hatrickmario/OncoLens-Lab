@@ -11,7 +11,7 @@
   "properties": {
     "version": {
       "type": "string",
-      "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$"
+      "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$"
     },
     "cancerTypes": {
       "type": "array",

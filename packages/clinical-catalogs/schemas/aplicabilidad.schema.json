@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["version", "items"],
   "properties": {
-    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "version": { "type": "string", "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$" },
     "validation": { "$ref": "validation.schema.json" },
     "items": { "type": "array", "items": { "type": "object" } }
   }

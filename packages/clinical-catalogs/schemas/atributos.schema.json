@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["version", "keys"],
   "properties": {
-    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "version": { "type": "string", "pattern": "^(test-([a-z]+-)?)?\\d+\\.\\d+\\.\\d+$" },
     "keys": {
       "type": "array",
       "items": {
