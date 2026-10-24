@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -47,6 +47,7 @@ esac
 `;
 
 let temporal;
+const enlaces = [];
 
 beforeAll(() => {
   temporal = mkdtempSync(path.join(os.tmpdir(), 'integracion-rag-test-'));
@@ -59,7 +60,11 @@ beforeAll(() => {
   writeFileSync(path.join(temporal, 'npm'), '#!/usr/bin/env bash\nexit 0\n');
   chmodSync(path.join(temporal, 'npm'), 0o755);
 });
-afterAll(() => rmSync(temporal, { recursive: true, force: true }));
+// Los enlaces a node_modules se quitan con unlink ANTES del borrado recursivo: nunca se borra a través de un enlace.
+afterAll(() => {
+  for (const enlace of enlaces) unlinkSync(enlace);
+  rmSync(temporal, { recursive: true, force: true });
+});
 
 const leerLineas = (archivo) => (existsSync(archivo) ? readFileSync(archivo, 'utf8').split('\n').filter(Boolean) : []);
 
@@ -101,6 +106,7 @@ function repositorioTemporalConArchivoSinVersionar(rutaSinVersionar) {
   escribir('apps/rag-orchestrator/tests/versionado.txt', 'dato versionado');
   escribir(rutaSinVersionar, 'dato local no versionado');
   symlinkSync(path.join(RAIZ, 'node_modules'), path.join(repositorio, 'node_modules'));
+  enlaces.push(path.join(repositorio, 'node_modules'));
   const git = (...parametros) => spawnSync('git', ['-C', repositorio, ...parametros], { encoding: 'utf8', timeout: 30_000 });
   git('init', '--quiet');
   git('add', 'scripts', 'apps/rag-orchestrator/tests/versionado.txt');
