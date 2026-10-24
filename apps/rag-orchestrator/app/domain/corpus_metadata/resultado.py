@@ -13,11 +13,11 @@ ETAPA_DE_METADATOS: Final = "metadatos"
 
 
 @dataclass(frozen=True)
-class CampoVerificado:
-    """Un metadato que el NLI confirmó contra el texto de la fuente: nombre del campo y valor legible."""
+class CampoDeMetadato:
+    """Un metadato propuesto por el LLM o ya verificado por el NLI: nombre del campo (el de ``studyKey``) y su valor."""
 
     campo: str
-    valor: str
+    valor: str | int
 
 
 @dataclass(frozen=True)
@@ -42,5 +42,5 @@ class MetadatosResueltos:
     primary_endpoint: str | None
     population_criteria: Mapping[str, Any]
     metadata_source: str
-    campos_verificados: tuple[CampoVerificado, ...] = ()
+    campos_verificados: tuple[CampoDeMetadato, ...] = ()
     fallo: FalloDeMetadatos | None = None

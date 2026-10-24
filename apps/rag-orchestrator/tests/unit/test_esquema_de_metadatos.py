@@ -1,0 +1,115 @@
+"""Esquema JSON, validación de la salida del LLM y prompt de metadatos (US-118, D3, D7)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from app.application.corpus_metadata.esquema import (
+    PROMPT_VERSION,
+    SalidaInvalida,
+    construir_prompt,
+    esquema_de_metadatos,
+    parsear_propuesta,
+)
+from app.domain.corpus_metadata.campos import claves_de_poblacion_admitidas
+from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
+from tests.support.metadatos import PROPUESTA_I_LIT_1
+
+RAIZ = Path(__file__).resolve().parents[4]
+LISTA = RAIZ / "packages" / "clinical-catalogs" / "lenguaje" / "terminos-prohibidos.json"
+STUDY_KEYS = Path(__file__).resolve().parents[1] / "fixtures" / "test-apl-studykeys.json"
+
+
+def _claves_del_esquema() -> set[str]:
+    poblacion = esquema_de_metadatos()["properties"]["population_criteria"]["properties"]
+    claves = {k for k in poblacion if k != "biomarcadores"}
+    claves |= {f"biomarcadores.{k}" for k in poblacion["biomarcadores"]["properties"]}
+    return claves
+
+
+def test_todo_study_key_del_catalogo_de_test_es_una_clave_que_la_extraccion_admite() -> None:
+    study_keys = set(json.loads(STUDY_KEYS.read_text(encoding="utf-8"))["studyKeys"])
+
+    assert study_keys <= _claves_del_esquema()
+
+
+def test_el_esquema_de_extraccion_no_admite_claves_fuera_de_las_de_poblacion() -> None:
+    assert _claves_del_esquema() == claves_de_poblacion_admitidas()
+
+
+def test_el_esquema_es_cerrado_en_todos_los_niveles() -> None:
+    esquema = esquema_de_metadatos()
+    poblacion = esquema["properties"]["population_criteria"]
+
+    assert esquema["additionalProperties"] is False and poblacion["additionalProperties"] is False
+    assert poblacion["properties"]["biomarcadores"]["additionalProperties"] is False
+    assert set(esquema["required"]) == set(esquema["properties"])
+
+
+def test_la_propuesta_valida_expone_sus_campos_con_el_nombre_de_study_key() -> None:
+    propuesta = parsear_propuesta(json.dumps(PROPUESTA_I_LIT_1))
+
+    campos = {c.campo: c.valor for c in propuesta.campos()}
+
+    assert campos["biomarcadores.her2"] == "positivo"
+    assert campos["sample_size"] == 500 and campos["estadio"] == "I–III"
+
+
+def test_una_propuesta_vacia_no_propone_ningun_campo() -> None:
+    assert parsear_propuesta("{}").campos() == ()
+
+
+def test_un_valor_en_blanco_cuenta_como_no_declarado() -> None:
+    propuesta = parsear_propuesta(
+        json.dumps({"primary_endpoint": "  ", "population_criteria": None})
+    )
+
+    assert propuesta.campos() == ()
+
+
+@pytest.mark.parametrize(
+    "crudo",
+    [
+        '{"trial_phase": ',
+        "[]",
+        '{"fase": 3}',
+        '{"trial_phase": "V"}',
+        '{"sample_size": "500"}',
+        '{"sample_size": 0}',
+        '{"study_design": "otro"}',
+        '{"population_criteria": {"grupo_sanguineo": "A"}}',
+        '{"population_criteria": {"biomarcadores": {"ki67": "alto"}}}',
+    ],
+)
+def test_una_salida_que_no_cumple_el_esquema_es_invalida_sin_eco_de_la_salida(crudo: str) -> None:
+    with pytest.raises(SalidaInvalida) as error:
+        parsear_propuesta(crudo)
+
+    assert crudo not in str(error.value)
+
+
+def test_el_prompt_incluye_el_texto_del_documento_y_conserva_sus_llaves() -> None:
+    prompt = construir_prompt(
+        "Título {x}", "texto con {llaves} y {campos}", ("trial_phase", "ecog")
+    )
+
+    assert "texto con {llaves} y {campos}" in prompt
+    assert "Título {x}" in prompt
+    assert "trial_phase, ecog" in prompt
+
+
+def test_el_prompt_no_pide_la_confianza_del_llm() -> None:
+    prompt = construir_prompt("t", "x", ("ecog",)).lower()
+
+    assert "confianza" not in prompt and "confidence" not in prompt
+    assert PROMPT_VERSION == "metadatos_v1"
+
+
+def test_el_prompt_no_contiene_terminos_prohibidos_de_nivel_a_ni_b() -> None:
+    lista = ListaTerminos.model_validate_json(LISTA.read_text(encoding="utf-8"))
+    prompt = construir_prompt("título", "", ("trial_phase",))
+
+    assert check_prohibited_terms(prompt, lista, niveles=("A", "B"), permitir_frases=False) == []
