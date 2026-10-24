@@ -1,14 +1,8 @@
 {
   "ac": "US-036 AC-2",
-  "descripcion": "Mitad de build de AC-2: con citedSources eliminado y lo generado regenerado, el build debe fallar porque un consumidor lo tipa. Cierre del S1 (2026-10-18): clinical-api (L1D-103/L1D-104) solo reenvía el campo sin tiparlo y su build sigue verde; el consumidor real es el panel de web (EvidenceOptionCard, L1D-140). Pendiente hasta que L1D-140 se archive: entonces el caso pasa a `npm run build -w apps/web` (el build de web necesita el entorno de la CI para resolver la raíz de Turbopack).",
-  "pendiente": {
-    "motivo": "el consumidor de EvidenceOption.citedSources es web (L1D-140, E2E y build de web pendientes de D-3), no el gateway de clinical-api: con citedSources eliminado el build de clinical-api sigue verde (tarea 5.2 de L1D-166 abierta)",
-    "hastaQueSeArchive": [
-      "l1d-140-panel-opcion-citas"
-    ]
-  },
+  "descripcion": "Mitad de build de AC-2: con citedSources eliminado y lo generado regenerado, la compilación de tipos de web (la misma que hace `next build`) debe fallar porque el panel de opciones (EvidenceOptionCard, L1D-140) tipa el campo. clinical-api solo reenvía el campo sin tiparlo, por eso el consumidor que cierra el caso es web (ARR-09 AC-4). Se corre `typecheck` y no `next build`: el clon del caso enlaza node_modules desde fuera de su raíz y Turbopack no compila archivos fuera de la raíz del workspace; el build completo de web ya lo ejecuta el job build-test de ci.yml.",
   "esperado": "falla",
-  "comando": "npm run contracts:generate && npm run build -w apps/clinical-api",
+  "comando": "npm run contracts:generate && npm run typecheck -w apps/web",
   "aplicar": "../ac2-cited-sources/aplicar.mjs",
   "mensajes": [
     "citedSources"

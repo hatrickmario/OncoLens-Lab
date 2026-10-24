@@ -31,6 +31,13 @@ describe('ci.yml', () => {
     expect(ci.on.push.branches).toEqual(['main']);
   });
 
+  it('build-test valida el catálogo clínico y comprueba la allowlist del modelo [US-001 AC-4]', () => {
+    const ordenes = pasosDe(ci.jobs['build-test']).map((paso) => paso.run ?? '');
+
+    expect(ordenes).toContain('npm run catalog:validate');
+    expect(ordenes).toContain('npm run catalog:allowlist:check');
+  });
+
   it('build-test lanza el test de build de web tras el build de los workspaces [US-060 AC-5]', () => {
     const pasos = pasosDe(ci.jobs['build-test']);
     const indiceBuild = pasos.findIndex((paso) => /npm run build --workspaces/.test(paso.run ?? ''));

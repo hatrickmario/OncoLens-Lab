@@ -1,19 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "aplicabilidad.json (lo llena FEAT-08b)",
+  "title": "aplicabilidad.json (lo llena FEAT-08b; L1D-93 fija el bloque validation y el destino de cada ítem)",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "items"
-  ],
+  "required": ["version", "items"],
   "properties": {
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
-    "items": {
-      "type": "array"
-    }
+    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "validation": { "$ref": "validation.schema.json" },
+    "items": { "type": "array", "items": { "type": "object" } }
   }
 }

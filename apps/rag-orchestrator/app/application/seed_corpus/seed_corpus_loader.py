@@ -17,7 +17,6 @@ from app.application.seed_corpus.ports import (
     IdGenerator,
     PassageEmbedder,
     RegistroDeDocumento,
-    RegistroDeRelease,
     SourceFetcher,
 )
 from app.application.seed_corpus.registros import (
@@ -26,6 +25,7 @@ from app.application.seed_corpus.registros import (
     registro_embebido,
     registro_rechazado,
 )
+from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
@@ -34,23 +34,15 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeRetiro,
     DecisionDeVersion,
     calcular_checksum,
-    debe_publicar_release,
     decidir_retiro,
     decidir_version,
 )
-
-
-class ChecksumDelManifiestoNoCoincide(Exception):
-    """El texto leído no es el que el manifiesto declaró (``checksum``): se alteró o es otra versión."""
-
-
-class TextoVacio(Exception):
-    """El documento no tiene texto que indexar tras normalizarlo."""
 
 
 @dataclass(frozen=True)
@@ -255,17 +247,6 @@ class SeedCorpusLoader:
         )
 
     def _publicar_release(self) -> str | None:
-        vigentes = self._catalogo.ids_de_documentos_vigentes()
-        if not debe_publicar_release(vigentes, self._catalogo.ids_de_la_ultima_release()):
-            return None
-        release_id = self._ids.nuevo()
-        self._catalogo.publicar_release(
-            RegistroDeRelease(
-                release_id=release_id,
-                cutoff_date=self._fecha_de_corte,
-                excluded_sources=self._politica.fuentes_excluidas(),
-                published_at=self._reloj.ahora(),
-                document_ids=tuple(sorted(vigentes)),
-            )
+        return publicar_release_si_cambio_el_conjunto_vigente(
+            self._catalogo, self._ids, self._reloj, self._politica, self._fecha_de_corte
         )
-        return release_id

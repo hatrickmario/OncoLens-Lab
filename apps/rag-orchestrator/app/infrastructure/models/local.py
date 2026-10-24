@@ -7,14 +7,18 @@ bytes que se acaban de verificar.
 
 from __future__ import annotations
 
+import io
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
+
+from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.ports import LanguageDetector, NliClassifier, QueryEmbedder, Reranker
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.modelos import ConfigModelos
-from app.config.settings import Settings
+from app.config.settings import CorpusIngestSettings, Settings
 from app.domain.modelos import describir_modelo
 from app.domain.nli import (
     ETIQUETAS_NLI,
@@ -27,6 +31,7 @@ from app.infrastructure.embeddings.bge_m3 import (
     EmbedderDePasajesBgeM3,
     NucleoBgeM3,
 )
+from app.infrastructure.embeddings.bge_m3_sparse import CodificadorSparseBgeM3
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.models.onnx import (
     DatosExternosNoResueltos,
@@ -111,12 +116,70 @@ def cargar_embedder_de_pasajes(
 ) -> PassageEmbedder:
     """El ``PassageEmbedder`` real para el cargador de la semilla: verifica SOLO los archivos que ese proceso abre
     (modelo y tokenizer de embeddings) y construye el mismo adapter de US-231a."""
+    return EmbedderDePasajesBgeM3(
+        _nucleo_de_pasajes(settings, fabricar_sesion, fabricar_tokenizador)[0]
+    )
+
+
+def cargar_embeddings_y_sparse_de_pasajes(
+    settings: Settings,
+    ajustes_sparse: CorpusIngestSettings,
+    *,
+    fabricar_sesion: Callable[..., SesionDeInferencia] = SesionOnnx.desde_bytes,
+    fabricar_tokenizador: Callable[[Path], Tokenizador] = TokenizadorDeArchivo,
+) -> tuple[PassageEmbedder, SparsePassageEncoder]:
+    """El ``PassageEmbedder`` y el ``SparsePassageEncoder`` reales de la ingesta (US-117a D3) sobre UNA sola sesión.
+
+    Verifica los archivos de embeddings y los pesos de ``sparse_linear`` (ruta y SHA-256 de ``CorpusIngestSettings``,
+    RN-22) antes de construir nada. Un fallo nombra solo la variable.
+    """
+    pesos, sesgo = _pesos_sparse_verificados(ajustes_sparse)
+    if pesos.size != _exigir_configuracion_de_modelos(settings).embedding_dim:
+        # Falla al cargar, no por documento: los pesos no son los de la cabeza del modelo configurado.
+        raise ModeloNoVerificadoError("EMBEDDING_SPARSE_WEIGHTS_PATH")
+    nucleo, sesion, tokenizador = _nucleo_de_pasajes(
+        settings, fabricar_sesion, fabricar_tokenizador
+    )
+    codificador = CodificadorSparseBgeM3(
+        sesion,
+        tokenizador,
+        pesos=pesos,
+        sesgo=sesgo,
+        max_length=settings.embedding_max_length,
+        max_tokens_por_lote=settings.model_batch_max_tokens,
+    )
+    return EmbedderDePasajesBgeM3(nucleo), codificador
+
+
+def _nucleo_de_pasajes(
+    settings: Settings,
+    fabricar_sesion: Callable[..., SesionDeInferencia],
+    fabricar_tokenizador: Callable[[Path], Tokenizador],
+) -> tuple[NucleoBgeM3, SesionDeInferencia, Tokenizador]:
     config = _exigir_configuracion_de_modelos(settings)
     rutas = verificar_modelos_locales(settings, PARES_DE_EMBEDDINGS)
     sesion, tokenizador = _cargar_modelo(
         settings, rutas, "EMBEDDING", fabricar_sesion, fabricar_tokenizador
     )
-    return EmbedderDePasajesBgeM3(_nucleo_de_embeddings(settings, config, sesion, tokenizador))
+    return _nucleo_de_embeddings(settings, config, sesion, tokenizador), sesion, tokenizador
+
+
+def _pesos_sparse_verificados(ajustes: CorpusIngestSettings) -> tuple[np.ndarray, float]:
+    """Pesos y sesgo de la cabeza lineal del *sparse*, leídos una vez y con el SHA-256 de esos mismos bytes."""
+    variable_ruta, variable_sha = "EMBEDDING_SPARSE_WEIGHTS_PATH", "EMBEDDING_SPARSE_WEIGHTS_SHA256"
+    contenido = leer_modelo_verificado(
+        variable_ruta,
+        variable_sha,
+        ajustes.embedding_sparse_weights_path,
+        ajustes.embedding_sparse_weights_sha256,
+    )
+    try:
+        datos = np.load(io.BytesIO(contenido), allow_pickle=False)
+        return np.asarray(datos["weight"], dtype=np.float32).reshape(-1), float(
+            np.asarray(datos["bias"]).reshape(-1)[0]
+        )
+    except Exception:  # noqa: BLE001 - un npz ilegible o sin weight/bias: se nombra la ruta, no el motivo
+        raise ModeloNoVerificadoError(variable_ruta) from None
 
 
 def _nucleo_de_embeddings(

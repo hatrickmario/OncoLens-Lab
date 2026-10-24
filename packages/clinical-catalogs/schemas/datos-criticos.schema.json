@@ -1,19 +1,67 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "datos-criticos.json (lo llena FEAT-04)",
+  "title": "datos-criticos.json (FEAT-04, L1D-93)",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "items"
-  ],
+  "required": ["version", "items"],
   "properties": {
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "verifiedReviewStatuses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z_]+$" }
     },
-    "items": {
-      "type": "array"
+    "validation": { "$ref": "validation.schema.json" },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
+  },
+  "$defs": {
+    "etiqueta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["es"],
+      "properties": { "es": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+    },
+    "destino": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity"],
+      "properties": {
+        "entity": { "type": "string", "pattern": "^[A-Z][A-Za-z]+$" },
+        "field": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "match": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "condicion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "operator", "values"],
+      "properties": {
+        "item": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "operator": { "enum": ["igualdad", "pertenencia", "prefijo"] },
+        "values": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "cancerType", "label", "destination", "minValues", "estado"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "cancerType": { "type": "string", "pattern": "^[a-z]+$" },
+        "label": { "$ref": "#/$defs/etiqueta" },
+        "destination": { "$ref": "#/$defs/destino" },
+        "condition": { "$ref": "#/$defs/condicion" },
+        "whenConditionUnknown": { "enum": ["faltante", "no_aplica"] },
+        "minValues": { "type": "integer", "minimum": 1 },
+        "estado": { "enum": ["propuesta", "pendiente", "revisado"] }
+      },
+      "if": { "properties": { "condition": true }, "required": ["condition"] },
+      "then": { "properties": { "whenConditionUnknown": true }, "required": ["whenConditionUnknown"] }
     }
   }
 }

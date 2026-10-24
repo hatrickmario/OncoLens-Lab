@@ -50,6 +50,8 @@ CLAVES_ADR39 = CLAVES_MODELOS + CLAVES_CHUNKING_E_INDICE + CLAVES_RESTRICCIONES
 ESTRATEGIAS_CHUNKING = ("tamano_fijo", "estructura")
 TIPOS_INDICE = ("FLAT", "HNSW")
 CUANTIZACIONES = ("int8", "fp32")
+# Origen del vector sparse (ADR-39): única lista, la usan ConfigModelos y CorpusIngestSettings.
+SPARSE_VECTOR_SOURCES_ADMITIDAS = ("modelo_embeddings",)
 
 
 class ConfigInvalida(ValueError):
@@ -143,7 +145,7 @@ _VALIDADORES = {
     "EMBEDDING_MODEL": _texto_no_vacio,
     "EMBEDDING_MODEL_REVISION": _texto_no_vacio,
     "EMBEDDING_DIM": entero_positivo,
-    "SPARSE_VECTOR_SOURCE": _texto_no_vacio,
+    "SPARSE_VECTOR_SOURCE": opcion(*SPARSE_VECTOR_SOURCES_ADMITIDAS),
     "RERANKER_MODEL": _texto_no_vacio,
     "RERANKER_MODEL_REVISION": _texto_no_vacio,
     "RERANKER_MAX_PAIRS": entero_positivo,

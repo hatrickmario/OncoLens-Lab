@@ -1,0 +1,121 @@
+{
+  "entidades": {
+    "Biomarker": {
+      "campos": [
+        "clinical_significance",
+        "created_at",
+        "extraction_confidence",
+        "extraction_score",
+        "id",
+        "loinc_code",
+        "mapping_status",
+        "name",
+        "normalized_unit",
+        "original_name",
+        "reference_range",
+        "result_type",
+        "review_status",
+        "reviewed_at",
+        "significance_source",
+        "unit",
+        "value"
+      ],
+      "relaciones": {
+        "exam": "Exam"
+      }
+    },
+    "ClinicalAttribute": {
+      "campos": [
+        "attribute_key",
+        "created_at",
+        "date_precision",
+        "entry_method",
+        "extraction_confidence",
+        "id",
+        "observed_at",
+        "review_status",
+        "value"
+      ],
+      "relaciones": {}
+    },
+    "ClinicalEvent": {
+      "campos": [
+        "created_at",
+        "cups_code",
+        "date_precision",
+        "entry_method",
+        "event_date",
+        "event_type",
+        "extraction_confidence",
+        "icd10_code",
+        "id",
+        "mapping_status",
+        "review_status",
+        "toxicity_grade"
+      ],
+      "relaciones": {
+        "priorTreatment": "PriorTreatment"
+      }
+    },
+    "Diagnosis": {
+      "campos": [
+        "cancer_type",
+        "created_at",
+        "diagnosed_at",
+        "entry_method",
+        "extraction_confidence",
+        "extraction_score",
+        "grade",
+        "histology",
+        "histology_code",
+        "icd10_code",
+        "id",
+        "is_active",
+        "mapping_status",
+        "performance_scale",
+        "performance_value",
+        "review_status",
+        "reviewed_at",
+        "stage_value",
+        "staging_system"
+      ],
+      "relaciones": {}
+    },
+    "Exam": {
+      "campos": [
+        "created_at",
+        "entry_method",
+        "exam_type",
+        "id",
+        "performed_at",
+        "source_lab"
+      ],
+      "relaciones": {
+        "biomarkers": "Biomarker"
+      }
+    },
+    "PriorTreatment": {
+      "campos": [
+        "atc_codes",
+        "best_response",
+        "created_at",
+        "cups_code",
+        "end_reason",
+        "ended_at",
+        "entry_method",
+        "extraction_confidence",
+        "id",
+        "line_number",
+        "mapping_status",
+        "ongoing",
+        "regimen_name",
+        "review_status",
+        "setting",
+        "started_at"
+      ],
+      "relaciones": {
+        "clinicalEvents": "ClinicalEvent"
+      }
+    }
+  }
+}

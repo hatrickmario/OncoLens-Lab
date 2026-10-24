@@ -7,7 +7,14 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+# Valores de ``corpus_document.status`` (dominio cerrado del catálogo). Única fuente: los demás módulos los importan.
+STATUS_PENDIENTE = "pendiente"
+STATUS_NORMALIZADO = "normalizado"
 STATUS_EMBEBIDO = "embebido"
+STATUS_ERROR = "error"
+STATUS_RECHAZADO = "rechazado_licencia"
+# Avance parcial de un documento: se reprocesa al relanzar la ingesta (no es versión ni rechazo).
+STATUS_A_MEDIAS = frozenset({STATUS_PENDIENTE, STATUS_NORMALIZADO, STATUS_ERROR})
 
 
 def calcular_checksum(texto_normalizado: str) -> str:
@@ -68,6 +75,20 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
             Accion.REEMPLAZAR, vigente.document_id, a_apagar=(vigente.document_id, *huerfanas)
         )
     return DecisionDeVersion(Accion.INSERTAR, a_apagar=huerfanas)
+
+
+def es_reanudacion(checksum: str, existentes: Sequence[VersionExistente]) -> bool:
+    """``True`` si el grupo ya tiene una fila a medias (``pendiente``/``normalizado``/``error``) del MISMO contenido.
+
+    Solo informa que la ingesta retoma un documento: el ``document_id`` no se busca, es el mismo porque deriva del
+    ``checksum`` (los chunks se reescriben por ``chunk_id``, no se duplican). Un contenido ya ``embebido`` no es una
+    reanudación (se omite); una fila en ``error`` sin checksum (falló antes de leer el texto) o ``rechazado_licencia``
+    tampoco es avance de este contenido. No decide versiones: eso es de ``decidir_version``.
+    """
+    del_contenido = [v for v in existentes if v.checksum == checksum]
+    if any(v.status == STATUS_EMBEBIDO for v in del_contenido):
+        return False
+    return any(v.status in STATUS_A_MEDIAS for v in del_contenido)
 
 
 @dataclass(frozen=True)

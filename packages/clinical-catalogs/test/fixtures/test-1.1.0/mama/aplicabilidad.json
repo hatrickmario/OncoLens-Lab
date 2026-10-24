@@ -1,0 +1,29 @@
+{
+  "version": "test-1.1.0",
+  "validation": {
+    "scope": [
+      "aplicabilidad"
+    ],
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "cd1a097643e885817a2c2bfa16db2929914a96372249b42c446885a0faed72d0"
+  },
+  "items": [
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "label": {
+        "es": "Estado menopausico",
+        "en": "Menopausal status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      }
+    }
+  ]
+}

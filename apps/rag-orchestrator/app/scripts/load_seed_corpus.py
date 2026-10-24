@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -31,6 +32,7 @@ from app.application.seed_corpus.ports import PassageEmbedder
 from app.application.seed_corpus.reporte import ReporteDeCarga
 from app.application.seed_corpus.seed_corpus_loader import SeedCorpusLoader
 from app.config.settings import (
+    AjustesDeCorpus,
     CorpusDatabaseSettings,
     CorpusSeedSettings,
     MilvusSettings,
@@ -92,9 +94,7 @@ def allow_cc_by_nc_del_entorno() -> bool:
     return Settings(_env_file=None, modelos=None).allow_cc_by_nc  # type: ignore[call-arg]
 
 
-def politica_de_licencias(
-    ajustes: CorpusSeedSettings, permitir_cc_by_nc: bool
-) -> PoliticaDeLicencias:
+def politica_de_licencias(ajustes: AjustesDeCorpus, permitir_cc_by_nc: bool) -> PoliticaDeLicencias:
     return PoliticaDeLicencias(
         aceptadas=frozenset(ajustes.corpus_accepted_licenses),
         excluidas=ajustes.corpus_excluded_sources,
@@ -104,6 +104,10 @@ def politica_de_licencias(
 
 
 def _fuente_de_texto(ajustes: CorpusSeedSettings) -> FuenteDeTextoDelManifiesto:
+    return fuente_de_texto(ajustes, ajustes.corpus_seed_manifest_path.parent)
+
+
+def fuente_de_texto(ajustes: AjustesDeCorpus, directorio_base: Path) -> FuenteDeTextoDelManifiesto:
     descargador = (
         DescargadorHttps(
             httpx.Client(timeout=ajustes.corpus_fetch_timeout_seconds, trust_env=False),
@@ -114,7 +118,7 @@ def _fuente_de_texto(ajustes: CorpusSeedSettings) -> FuenteDeTextoDelManifiesto:
         if ajustes.corpus_fetch_allowed_hosts
         else None
     )
-    return FuenteDeTextoDelManifiesto(ajustes.corpus_seed_manifest_path.parent, descargador)
+    return FuenteDeTextoDelManifiesto(directorio_base, descargador)
 
 
 def _claves_invalidas(error: ValidationError) -> str:
