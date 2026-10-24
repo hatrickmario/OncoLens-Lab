@@ -1,6 +1,10 @@
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { handlerDesdeEjemplo } from '../msw/index.js';
+import { cargarEjemplo, handlerDesdeEjemplo } from '../msw/index.js';
 
 // US-213 AC-10 (test después, ADR-26): los handlers de MSW salen de contracts/examples/ y no pueden declarar campos ajenos.
 const URL_RAG = 'http://rag-orchestrator.test/rag/query';
@@ -95,5 +99,33 @@ describe('handlerDesdeEjemplo', () => {
 
     expect(status).toBe(200);
     expect(recibidas).toEqual(['{}']);
+  });
+});
+
+describe('cargarEjemplo y los enlaces simbólicos', () => {
+  const temporales: string[] = [];
+  afterAll(() =>
+    temporales.forEach((carpeta) => rmSync(carpeta, { recursive: true, force: true })),
+  );
+
+  function carpetaConEnlaceFuera(): URL {
+    const raiz = mkdtempSync(path.join(os.tmpdir(), 'oncolens-ejemplos-'));
+    temporales.push(raiz);
+    const carpeta = path.join(raiz, 'examples');
+    mkdirSync(carpeta);
+    writeFileSync(path.join(raiz, 'secreto.json'), '{"dato":"fuera"}');
+    writeFileSync(path.join(carpeta, 'propio.json'), '{"dato":"dentro"}');
+    symlinkSync(path.join(raiz, 'secreto.json'), path.join(carpeta, 'enlace.json'));
+    return pathToFileURL(`${carpeta}/`);
+  }
+
+  it('rechaza un .json que es un enlace simbólico a un archivo fuera de la carpeta de ejemplos', () => {
+    expect(() => cargarEjemplo('enlace.json', carpetaConEnlaceFuera())).toThrowError(
+      /resuelve fuera de contracts\/examples\//,
+    );
+  });
+
+  it('lee un .json real de la carpeta de ejemplos', () => {
+    expect(cargarEjemplo('propio.json', carpetaConEnlaceFuera())).toEqual({ dato: 'dentro' });
   });
 });

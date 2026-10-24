@@ -1,4 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { http, HttpResponse, type HttpHandler } from 'msw';
 
 /**
@@ -32,15 +34,34 @@ const esObjeto = (valor: unknown): valor is Objeto =>
 // Solo un nombre de archivo `.json` simple: sin `/`, `\\`, `..`, `%`, `?`, `#` ni rutas absolutas (nada fuera de contracts/examples/).
 const NOMBRE_DE_EJEMPLO = /^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/;
 
+/** El archivo resuelto (siguiendo enlaces simbólicos) debe vivir directamente en la carpeta de ejemplos. */
+function exigirDentroDeLaCarpeta(archivoDeEjemplo: string, carpeta: URL): URL {
+  const ruta = new URL(archivoDeEjemplo, carpeta);
+  try {
+    const real = realpathSync(fileURLToPath(ruta));
+    if (path.dirname(real) === realpathSync(fileURLToPath(carpeta))) return ruta;
+  } catch {
+    // Un archivo inexistente se informa abajo, al leerlo, con su causa.
+    return ruta;
+  }
+  throw new Error(
+    `handlerDesdeEjemplo: ${JSON.stringify(archivoDeEjemplo)} resuelve fuera de contracts/examples/ (enlace simbólico): solo archivos de esa carpeta`,
+  );
+}
+
 /** Carga el ejemplo por su nombre de archivo; un nombre fuera de contracts/examples/ o inexistente falla nombrándolo. */
-export function cargarEjemplo(archivoDeEjemplo: string): unknown {
+export function cargarEjemplo(
+  archivoDeEjemplo: string,
+  carpeta: URL = CARPETA_DE_EJEMPLOS,
+): unknown {
   if (!NOMBRE_DE_EJEMPLO.test(archivoDeEjemplo) || archivoDeEjemplo.includes('..')) {
     throw new Error(
       `handlerDesdeEjemplo: ${JSON.stringify(archivoDeEjemplo)} no es un nombre de ejemplo válido: solo un archivo .json de contracts/examples/, sin rutas`,
     );
   }
+  const ruta = exigirDentroDeLaCarpeta(archivoDeEjemplo, carpeta);
   try {
-    return JSON.parse(readFileSync(new URL(archivoDeEjemplo, CARPETA_DE_EJEMPLOS), 'utf8'));
+    return JSON.parse(readFileSync(ruta, 'utf8'));
   } catch (error) {
     throw new Error(
       `handlerDesdeEjemplo: no se pudo leer el ejemplo ${archivoDeEjemplo} de contracts/examples/ (${(error as Error).message})`,
