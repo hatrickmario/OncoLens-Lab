@@ -2,7 +2,7 @@
 
 > Linear: [L1D-20](https://linear.app/l1der-lab-mjbc/issue/L1D-20)
 
-**Talla:** XL (propone división) · **Sprint:** 5 · **Capacidad:** CAP-08 (AC-08.1–AC-08.6, AC-08.8, AC-08.9) · CAP-04 (AC-04.3: "Desconocido: falta en el paciente") · CAP-10 (AC-10.2: resumen de aplicabilidad en la tarjeta) · T-1 (AC-T1.2 para afirmaciones sobre población) · **Recorrido principal:** sí (hipótesis 3: opciones más aplicables a las condiciones del paciente)
+**Talla:** XL (propone división) · **Sprint:** 3 (US-021, US-121…US-125) · 4 (US-126; reordenamiento del 2026-10-23, antes todo en el S5) · **Capacidad:** CAP-08 (AC-08.1–AC-08.6, AC-08.8, AC-08.9) · CAP-04 (AC-04.3: "Desconocido: falta en el paciente") · CAP-10 (AC-10.2: resumen de aplicabilidad en la tarjeta) · T-1 (AC-T1.2 para afirmaciones sobre población) · **Recorrido principal:** sí (hipótesis 3: opciones más aplicables a las condiciones del paciente)
 **Requisitos:** FR-25 (dueña, vía HU-22; funcionalidad completa salvo el agente) · RN-28 (dueña de la **agregación** por opción, del comparador y, desde el S3, de la selección por aplicabilidad antes del recorte a `maxOptions`, también con una sola opción; el orden visible de hasta 3 opciones es de US-134, S4) · IA-06 · TBD-13 (aplicabilidad: DEC-11) · RN-01, RN-02, RN-06, RN-25, RN-29 (regresiones)
 **Evidencia:** [→ PRD §5 FR-25], [→ PRD §6 RN-01, RN-02, RN-25, RN-26, RN-28, RN-29], [→ PRD §7 NFR (estados de aplicabilidad por texto)], [→ PRD §12 Síntesis y aplicabilidad], [→ PRD §16 TBD-13], [→ PRD §18.2 Estado de aplicabilidad], [→ PRD §18.3.8 AC-08.1–AC-08.6, AC-08.8, AC-08.9, M-08.1–M-08.6], [→ PRD §18.3.10 AC-10.1 ("1 en los Sprints 1–3", ordenada por aplicabilidad)], [→ PRD §5 FR-09 (máximo 1 opción en los Sprints 1–3)], [→ PRD §18.3.4 AC-04.3], [→ readme §5 HU-22], [→ readme §4.1 `ApplicabilityCriterion`, `SourceApplicability`, `ApplicabilitySummary`, `EvidenceOption.perSource`], [→ readme §3.3 #27, #31, #34], [→ backlog/02-adrs.md DEC-11, P-03], [→ backlog/01-requisitos.md §15 (slicing por hipótesis)], [→ docs/AS-IS.md P6, JTBD 4]
 **Dependencias:** ↪ US-055 (pipeline), US-063, US-064 (citas y soporte), US-118 (metadatos de población), FEAT-04 US-006 (faltantes en el contexto), US-099 (conflictos) · ⛔ DEC-11 (US-021) · escenario más probable · ⛔ ADR-39 (NLI y LLM reales; los AC usan adapters falsos) · 🔗 Produce para: US-134 (orden de hasta 3 opciones, S5), US-130 (limitación "población no comparable"), US-071 (avisos que no bloquean) · 🔗 Medido en: US-132 (M-08.2, M-08.3, M-08.4, M-08.6) · M-08.1 (VM-3, mixto) → US-024 · DEC-14 (FEAT-T5c, S5) / FEAT-T5d (piloto) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053
@@ -31,7 +31,9 @@
 
 > Linear: [L1D-125](https://linear.app/l1der-lab-mjbc/issue/L1D-125)
 
-`FEAT-08b` · Sprint 5 (antes de US-121…US-126) · Estimación **1** · — (decisión) · TBD-13 (aplicabilidad), R-24 · RN-28, RN-29 · Dueño: oncólogo asesor · ⛔ DEC-05 (cerrada en el Pre-S1) · 🔗 Bloquea: US-121 (contenido real), US-122 (reglas), US-134, US-132, DEC-19 (US-031)
+`FEAT-08b` · Sprint 3 (antes de US-121…US-126) · Estimación **1** · — (decisión) · TBD-13 (aplicabilidad), R-24 · RN-28, RN-29 · Dueño: oncólogo asesor · ⛔ DEC-05 (cerrada en el Pre-S1) · 🔗 Bloquea: US-121 (contenido real), US-122 (reglas), US-134, US-132, DEC-19 (US-031)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo asesor, quiero revisar los criterios de aplicabilidad de cada tipo de
@@ -69,7 +71,9 @@ FEAT-04 US-001; esta historia solo registra la decisión.
 
 > Linear: [L1D-126](https://linear.app/l1der-lab-mjbc/issue/L1D-126)
 
-`FEAT-08b` · Sprint 5 · Estimación **3** · HU-22 · FR-25 (criterios en el catálogo), RN-29, RN-28 · AC-08.1 (criterios del catálogo), AC-04.5 (aplicabilidad) · ⛔ DEC-11 · escenario más probable · ↪ US-041, FEAT-04 US-001 (validador del catálogo; US-042 es `si-hay-capacidad`) · 🔗 Regresión [RN-29] → US-001 · 🔗 Regresión [NFR-14] → US-041
+`FEAT-08b` · Sprint 3 · Estimación **3** · HU-22 · FR-25 (criterios en el catálogo), RN-29, RN-28 · AC-08.1 (criterios del catálogo), AC-04.5 (aplicabilidad) · ⛔ DEC-11 · escenario más probable · ↪ US-041, FEAT-04 US-001 (validador del catálogo; US-042 es `si-hay-capacidad`) · 🔗 Regresión [RN-29] → US-001 · 🔗 Regresión [NFR-14] → US-041
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que los criterios con los que se compara a mi paciente con cada
@@ -114,7 +118,9 @@ del catálogo en `rag-orchestrator`.
 
 > Linear: [L1D-127](https://linear.app/l1der-lab-mjbc/issue/L1D-127)
 
-`FEAT-08b` · Sprint 5 · Estimación **5** · HU-22 · FR-25 (estado determinista), ADR-34 (b), RN-25 · AC-08.1, AC-08.9, AC-T4.4 · ⛔ DEC-11 · escenario más probable · ↪ US-121, US-118, US-055 · 🔗 Regresión [RN-25] → US-127 · 🔗 Medido en: US-132 (M-08.2, M-08.6)
+`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (estado determinista), ADR-34 (b), RN-25 · AC-08.1, AC-08.9, AC-T4.4 · ⛔ DEC-11 · escenario más probable · ↪ US-121, US-118, US-055 · 🔗 Regresión [RN-25] → US-127 · 🔗 Medido en: US-132 (M-08.2, M-08.6)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que cuando el estudio publica su población de forma estructurada
@@ -160,7 +166,9 @@ no la relevancia, que solo desempata. Tests: Pytest con FX-08b-a.
 
 > Linear: [L1D-128](https://linear.app/l1der-lab-mjbc/issue/L1D-128)
 
-`FEAT-08b` · Sprint 5 · Estimación **5** · HU-22 · FR-25 (valor textual), RN-01, ADR-34 · AC-08.3, AC-T1.2 (aplicabilidad) · ⛔ ADR-39 (NLI) · ↪ US-122, US-063, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063
+`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (valor textual), RN-01, ADR-34 · AC-08.3, AC-T1.2 (aplicabilidad) · ⛔ ADR-39 (NLI) · ↪ US-122, US-063, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-04] → US-063
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que lo que el sistema afirma sobre la población de un estudio
@@ -202,7 +210,9 @@ regla, el LLM, y esa asignación se valida con NLI `[ADR-34]`. Reutiliza
 
 > Linear: [L1D-129](https://linear.app/l1der-lab-mjbc/issue/L1D-129)
 
-`FEAT-08b` · Sprint 5 · Estimación **5** · HU-22 · FR-25 (causa, avisos, no comparable, conteo), FR-11 (avisos por criterio), RN-28 (conteo), RN-26 · AC-08.2, AC-08.4, AC-08.5, AC-08.6, AC-04.3 (aplicabilidad) · ↪ US-122, US-123, FEAT-04 US-006, US-099 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-26] → US-071
+`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (causa, avisos, no comparable, conteo), FR-11 (avisos por criterio), RN-28 (conteo), RN-26 · AC-08.2, AC-08.4, AC-08.5, AC-08.6, AC-04.3 (aplicabilidad) · ↪ US-122, US-123, FEAT-04 US-006, US-099 · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-26] → US-071
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero saber por qué un criterio quedó sin evaluar, si el dato de mi
@@ -248,7 +258,9 @@ bloquea (RN-26). Tests: Pytest con FX-08b-a (AC-1 a AC-6) y Supertest de persist
 
 > Linear: [L1D-130](https://linear.app/l1der-lab-mjbc/issue/L1D-130)
 
-`FEAT-08b` · Sprint 5 · Estimación **5** · HU-22 · FR-25 (aplicabilidad de una opción), FR-09 (S3: 1 opción), RN-28 (dueña de la agregación, del comparador y de la selección antes del recorte), RN-03, RN-22 · AC-08.8, AC-10.1 (opción única del S3) · ↪ US-124, US-055, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Produce para: US-134 (orden de hasta 3 opciones con el mismo comparador, S5), US-101 (`poblacion_no_comparable` en la tarjeta)
+`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (aplicabilidad de una opción), FR-09 (S3: 1 opción), RN-28 (dueña de la agregación, del comparador y de la selección antes del recorte), RN-03, RN-22 · AC-08.8, AC-10.1 (opción única del S3) · ↪ US-124, US-055, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Produce para: US-134 (orden de hasta 3 opciones con el mismo comparador, S5), US-101 (`poblacion_no_comparable` en la tarjeta)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que una opción respaldada por varias fuentes muestre la
@@ -312,7 +324,9 @@ existente (+2 puntos respecto del 3 original por la integración en el pipeline)
 
 > Linear: [L1D-131](https://linear.app/l1der-lab-mjbc/issue/L1D-131)
 
-`FEAT-08b` · Sprint 5 · Estimación **5** · HU-22 · FR-25 (UI), NFR-12 (estados por texto), RN-28 (texto del criterio desde el S3) · AC-08.1, AC-08.2, AC-08.4, AC-08.5, AC-08.6, AC-08.8 (UI), AC-10.2 (aplicabilidad en la tarjeta), AC-10.1 (texto del criterio, S3) · ↪ US-124, US-125, US-061 · 🔗 Consume: FEAT-04 US-004 (enlace al checklist) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+`FEAT-08b` · Sprint 4 · Estimación **5** · HU-22 · FR-25 (UI), NFR-12 (estados por texto), RN-28 (texto del criterio desde el S3) · AC-08.1, AC-08.2, AC-08.4, AC-08.5, AC-08.6, AC-08.8 (UI), AC-10.2 (aplicabilidad en la tarjeta), AC-10.1 (texto del criterio, S3) · ↪ US-124, US-125, US-061 · 🔗 Consume: FEAT-04 US-004 (enlace al checklist) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero ver criterio a criterio cuánto se parece la población de cada

@@ -14,7 +14,7 @@
 | [FEAT-PL3 — Catálogos clínicos v1](FEAT-PL3-catalogos-clinicos.md) | L | — (consumida por CAP-02/03/04/05/08) | 2 · `si-hay-capacidad` | sí (US-042: no) | NFR-14; RN-20 (configuración); RN-29 (mínimo S1) | US-041, US-042, US-043, US-018 · DEC-08 | 9 (S2) · 3 (shc) | ↪ US-033, US-037 · ⛔ DEC-04 (workaround Q-07) |
 | [FEAT-T4a — Acceso, identidad, pacientes y desidentificación](FEAT-T4a-acceso-identidad-pacientes.md) | XL (propone división) | T-4 | 1 · 2 · 4 · 6 | sí | FR-01, FR-02, FR-03 (manual), FR-17; RN-10, RN-11, RN-12, RN-16, RN-18 (campos) | US-211 (S1), US-044 … US-050, US-013 · ADR-40 | 8 (S1) · 21 (S2) · 5 (S4) · 3 (S6) | ↪ PL1, PL2 · ⛔ ADR-40 (US-049) |
 | [FEAT-02a — Ficha mínima](FEAT-02a-ficha-minima.md) | M | CAP-02 (S1), T-1 | 2 | sí | FR-04 (S1) | US-051, US-019 · DEC-09 | 6 | ↪ US-039, US-044, US-046 |
-| [FEAT-06a — Análisis de evidencia: walking skeleton](FEAT-06a-analisis-walking-skeleton.md) | XL (propone división) | CAP-06, CAP-10 (S1), CAP-05; T-1, T-4 | 1 · 4 | sí | FR-09 (S1), FR-25 (contrato); RN-02, RN-05 (recuperación), RN-06, RN-30; SEG-07, SEG-13 | US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052 … US-055, US-225, US-231a, US-231b, US-056, US-057 | 39 (S1; incluye US-231a 5 + US-231b 3) · 6 (S4) | ⛔ ADR-39 (adapters reales) · ↪ T4a (US-211, US-049), T1a, T2a, 06c |
+| [FEAT-06a — Análisis de evidencia: walking skeleton](FEAT-06a-analisis-walking-skeleton.md) | XL (propone división) | CAP-06, CAP-10 (S1), CAP-05; T-1, T-4 | 1 · 4 | sí | FR-09 (S1), FR-25 (contrato); RN-02, RN-05 (recuperación), RN-06, RN-30; SEG-07, SEG-13 | US-012 · ADR-39 (fase A), US-224 · ADR-39 (fase B), US-052 … US-055, US-225, US-231a, US-231b, US-056, US-057, US-239 | 39 (S1; incluye US-231a 5 + US-231b 3) · 11 (S4; incluye US-239) | ⛔ ADR-39 (adapters reales) · ↪ T4a (US-211, US-049), T1a, T2a, 06c |
 | [FEAT-06c — Corpus científico](FEAT-06c-corpus-cientifico.md) | XL (propone división por sprint) | CAP-06 | 1 · 4 · `si-hay-capacidad` | sí (US-119: no) | FR-19; RN-21; RN-05 (versionado); TBD-20 (CAL) | US-058, US-059 (S1) · US-117, US-118, US-120 (S4) · US-119 (shc) | 10 (S1) · 16 (S4) · 3 (shc) | ⛔ ADR-39 · ⛔ ADR-36 (S3) · 🔗 Medido en: US-132 |
 | [FEAT-10a — Panel y opción descrita](FEAT-10a-panel-opcion-descrita.md) | M | CAP-10 (S1), CAP-05 | 1 · 3 | sí | FR-09 (UI S1), FR-10 (UI); RN-03; NFR-12 | US-060, US-061, US-062, US-237 | 8 (S1) · 5 (S3) | ↪ US-053, US-211, US-051 |
 | [FEAT-T1a — Citas, soporte y procedencia](FEAT-T1a-citas-soporte-procedencia.md) | L | T-1, CAP-10 | 1 · 3 · 5 | sí | RN-01, FR-10, RN-04, RN-07, RN-25 | US-063, US-064 (S1) · US-065, US-236 (S3) · US-127 (S5) | 10 (S1) · 6 (S3) · 3 (S5) | ⛔ ADR-39 (NLI real) |
@@ -129,6 +129,7 @@
 | US-236 | El LLM cita los chunks por un alias corto y el sistema lo traduce al `chunkId` real antes de validar la cita | FEAT-T1a | 3 | 3 | sí |
 | US-237 | Cuando todas las opciones se descartan, el panel y el log dicen por qué | FEAT-10a | 3 | 2 | sí |
 | US-238 | Si el primer loop de recuperación no supera el umbral, un segundo loop con el LLM local reescribe la consulta solo para recuperar — Linear pendiente (límite de issues del workspace) | FEAT-06b | 4 | 5 | no |
+| US-239 | Cuatro oncólogos pueden analizar a la vez sin que `rag-orchestrator` se caiga: las etapas pesadas se serializan y el resto espera en cola o falla limpio — L1D-289 | FEAT-06a | 4 | 5 | no |
 | US-072 | La suite `evaluate` mide recuperación, fidelidad, "sin evidencia", privacidad y lenguaje de forma reproducible | FEAT-T5a | 2 | 8 (072a 5 + 072b 3) | sí |
 | US-073 | El umbral de relevancia se calibra y el baseline técnico del S1 queda registrado | FEAT-T5a | 2 | 3 | sí |
 | US-074 | Todo PR que cambie modelo, prompt, umbral, catálogo o corpus ejecuta la suite y adjunta el reporte | FEAT-T5a | 2 | 3 | sí |
@@ -136,22 +137,22 @@
 | US-076 | El oncólogo sube un PDF y el sistema lo valida, lo guarda y encola su extracción | FEAT-01a | 2 | 5 | sí |
 | US-077 | El oncólogo sube varios PDFs en una sola acción y cada uno avanza por su cuenta | FEAT-01a | `si-hay-capacidad` | 3 | no |
 | US-078 | La cola de extracción procesa cada documento una sola vez, reintenta y nunca deja documentos colgados | FEAT-01a | 3 | 5 | sí |
-| US-079 | Desde la ficha y la vista de caso subo documentos y veo el estado de cada uno | FEAT-01a | 3 | 3 | sí |
+| US-079 | Desde la ficha y la vista de caso subo documentos y veo el estado de cada uno | FEAT-01a | 3 | 5 | sí |
 | US-080 | Desde un dato extraído abro el documento de origen en la página del valor | FEAT-01a | `si-hay-capacidad` | 3 | no |
 | US-081 | Un documento en cuarentena o con identidad distinta se muestra con su motivo y no aporta datos | FEAT-01a | `si-hay-capacidad` | 3 | no |
-| US-212 | Descargo el PDF de origen de un dato desde la ficha o la vista de caso | FEAT-01a | 3 | 2 | sí |
-| US-082 | `/documents/extract` lee el PDF en memoria, aplica OCR solo donde hace falta y estructura los datos clínicos | FEAT-01b | 3 | 8 | sí |
+| US-212 | Descargo el PDF de origen de un dato desde la ficha o la vista de caso | FEAT-01a | 3 | 5 | sí |
+| US-082 | `/documents/extract` lee el PDF en memoria, aplica OCR solo donde hace falta y estructura los datos clínicos | FEAT-01b | 3 | 5 | sí |
 | US-083 | Un documento con datos personales inesperados queda en cuarentena sin persistir nada | FEAT-01b | 3 | 5 | sí |
 | US-084 | La confianza de cada dato extraído se calcula con señales deterministas, nunca con la que declara el LLM | FEAT-01b | 3 | 5 | sí |
 | US-085 | La extracción incluye eventos fechados, tratamientos previos y atributos clínicos con su procedencia | FEAT-01b | 3 | 5 | sí |
-| US-086 | Backend 2 propone códigos del catálogo con su confianza, o `no_mapeado`, y nunca inventa uno | FEAT-01b | 3 | 3 | sí |
+| US-086 | Backend 2 propone códigos del catálogo con su confianza, o `no_mapeado`, y nunca inventa uno | FEAT-01b | 3 | 5 | sí |
 | US-087 | Lo extraído se persiste en una sola transacción, sin datos parciales y sin duplicar al reprocesar | FEAT-01b | 3 | 5 | sí |
-| US-088 | `GET …/case` arma el timeline con eventos derivados, sin duplicados y sin datos rechazados | FEAT-02b | 3 | 5 | sí |
-| US-089 | La vista de caso agrupa los tratamientos previos por línea y muestra series de biomarcadores y atributos | FEAT-02b | 3 | 5 | sí |
-| US-090 | Veo la vista de caso con el timeline, la sección sin fecha confiable, los tratamientos y las series | FEAT-02b | 3 | 5 | sí |
+| US-088 | `GET …/case` arma el timeline con eventos derivados, sin duplicados y sin datos rechazados | FEAT-02b | 3 | 4 | sí |
+| US-089 | La vista de caso agrupa los tratamientos previos por línea y muestra series de biomarcadores y atributos | FEAT-02b | 3 | 4 | sí |
+| US-090 | Veo la vista de caso con el timeline, la sección sin fecha confiable, los tratamientos y las series | FEAT-02b | 3 | 4 | sí |
 | US-091 | La tendencia de cada biomarcador se calcula con el umbral del catálogo y se muestra en la ficha, la vista de caso y el contexto | FEAT-02b | `si-hay-capacidad` | 3 | no |
-| US-092 | La ficha muestra los datos extraídos con su origen, confianza, revisión y semáforo | FEAT-02b | 3 | 3 | sí |
-| US-093 | El contexto del análisis incluye las tendencias y los eventos extraídos, desidentificados | FEAT-02b | 3 | 3 | sí |
+| US-092 | La ficha muestra los datos extraídos con su origen, confianza, revisión y semáforo | FEAT-02b | 3 | 4 | sí |
+| US-093 | El contexto del análisis incluye las tendencias y los eventos extraídos, desidentificados | FEAT-02b | 3 | 4 | sí |
 | US-094 | Registro a mano tratamientos previos y atributos clínicos que no están en los documentos | FEAT-02b | `si-hay-capacidad` | 5 | no |
 | US-095 | Backend 2 genera el resumen y solo devuelve afirmaciones respaldadas por los datos que referencian | FEAT-02c | `si-hay-capacidad` | 5 | no |
 | US-096 | `clinical-api` pide el resumen con referencias opacas, lo persiste antes de responder y lo enlaza a los datos | FEAT-02c | `si-hay-capacidad` | 5 | no |
@@ -165,9 +166,9 @@
 | US-104 | Los umbrales de confianza del OCR se calibran con el set de referencia y quedan en configuración | FEAT-T5b | `si-hay-capacidad` | 3 | no |
 | US-105 | La suite mide la fidelidad del caso reconstruido, el origen de cada dato, el soporte del resumen y el p95 de la vista de caso | FEAT-T5b | 3 | 5 | sí |
 | US-106 | La suite mide duplicados fusionados, conflictos detectados, fusiones incorrectas y mapeo terminológico | FEAT-T5b | `si-hay-capacidad` | 5 | no |
-| DEC-01 | Catálogo de datos críticos de mama y próstata revisado por el oncólogo (sin firma formal, P-03) | FEAT-04 | 4 | 1 | sí |
-| US-001 | El catálogo de datos críticos se publica versionado y solo si cada ítem tiene campo de destino | FEAT-04 | 4 | 5 | sí |
-| US-002 | El checklist calcula de forma determinista el estado de cada dato crítico | FEAT-04 | 4 | 5 | sí |
+| DEC-01 | Catálogo de datos críticos de mama y próstata revisado por el oncólogo (sin firma formal, P-03) | FEAT-04 | 4 | 3 | sí |
+| US-001 | El catálogo de datos críticos se publica versionado y solo si cada ítem tiene campo de destino | FEAT-04 | 4 | 3 | sí |
+| US-002 | El checklist calcula de forma determinista el estado de cada dato crítico | FEAT-04 | 4 | 3 | sí |
 | US-003 | El checklist se expone por API en `/completeness`, en la vista de caso y en la ficha | FEAT-04 | 4 | 3 | sí |
 | US-004 | En la vista de caso veo el checklist y desde un faltante puedo cargarlo o registrarlo | FEAT-04 | 4 | 3 | sí |
 | US-005 | Antes de analizar, el panel lista los faltantes y me deja cargar información o continuar con aviso | FEAT-04 | 4 | 3 | sí |
@@ -183,35 +184,35 @@
 | US-115 | El panel ofrece los selectores de fuentes y filtros que el backend ya aplica | FEAT-06b | `si-hay-capacidad` | 3 | no |
 | US-116 | Los datos críticos faltantes viajan como "desconocido" al prompt y enriquecen la consulta | FEAT-06b | 5 | 3 | sí |
 | US-220 | El oncólogo filtra la evidencia por antigüedad y el filtro queda registrado en la Base del análisis | FEAT-06b | 5 | 3 | sí |
-| US-117 | La ingesta del corpus es reanudable, indexa *dense* y *sparse*, versiona sin borrar y rechaza lo que no tiene licencia | FEAT-06c | 4 | 8 | sí |
-| US-118 | Los metadatos de población, diseño y endpoint se toman de la fuente o se extraen y verifican, y una muestra se revisa a mano | FEAT-06c | 4 | 5 | sí |
+| US-117 | La ingesta del corpus es reanudable, indexa *dense* y *sparse*, versiona sin borrar y rechaza lo que no tiene licencia | FEAT-06c | 4 | 3 | sí |
+| US-118 | Los metadatos de población, diseño y endpoint se toman de la fuente o se extraen y verifican, y una muestra se revisa a mano | FEAT-06c | 4 | 3 | sí |
 | US-119 | Cada ingesta publica una `CorpusRelease` con su fecha de corte y la Base del análisis la usa | FEAT-06c | `si-hay-capacidad` | 3 | no |
 | US-120 | El corpus del S3 alcanza al menos 20 documentos por tipo de cáncer de al menos 3 fuentes abiertas | FEAT-06c | 4 | 3 | sí |
-| US-021 · DEC-11 | Criterios de aplicabilidad, excluyentes y definición de "Parcial" (sin firma formal, P-03) | FEAT-08b | 5 | 1 | sí |
+| US-021 · DEC-11 | Criterios de aplicabilidad, excluyentes y definición de "Parcial" (sin firma formal, P-03) | FEAT-08b | 5 | 3 | sí |
 | US-121 | Los criterios de aplicabilidad de mama y próstata viven en el catálogo con destino, excluyentes y regla de "Parcial" | FEAT-08b | 5 | 3 | sí |
-| US-122 | Con valores estructurados, el estado de cada criterio se calcula con la regla del catálogo y el valor del paciente se copia del contexto | FEAT-08b | 5 | 5 | sí |
-| US-123 | Si la población del estudio solo está en el texto, el valor se acepta solo con cita y soporte; si no, queda "Desconocido" | FEAT-08b | 5 | 5 | sí |
-| US-124 | Cada criterio desconocido dice su causa, avisa si el dato del paciente no está verificado, y un excluyente en "No coincide" marca la población como no comparable | FEAT-08b | 5 | 5 | sí |
-| US-125 | Una opción con varias fuentes hereda la aplicabilidad de la más comparable, y con una sola opción se elige la más aplicable | FEAT-08b | 5 | 5 | sí |
-| US-126 | Veo la tabla de aplicabilidad de cada fuente y el resumen de la opción, con estados en texto y los avisos visibles | FEAT-08b | 5 | 5 | sí |
+| US-122 | Con valores estructurados, el estado de cada criterio se calcula con la regla del catálogo y el valor del paciente se copia del contexto | FEAT-08b | 5 | 3 | sí |
+| US-123 | Si la población del estudio solo está en el texto, el valor se acepta solo con cita y soporte; si no, queda "Desconocido" | FEAT-08b | 5 | 3 | sí |
+| US-124 | Cada criterio desconocido dice su causa, avisa si el dato del paciente no está verificado, y un excluyente en "No coincide" marca la población como no comparable | FEAT-08b | 5 | 3 | sí |
+| US-125 | Una opción con varias fuentes hereda la aplicabilidad de la más comparable, y con una sola opción se elige la más aplicable | FEAT-08b | 5 | 3 | sí |
+| US-126 | Veo la tabla de aplicabilidad de cada fuente y el resumen de la opción, con estados en texto y los avisos visibles | FEAT-08b | 5 | 4 | sí |
 | US-127 | Los metadatos factuales de cada fuente se copian del catálogo del corpus y lo ausente se muestra "No disponible" | FEAT-T1a | 5 | 3 | sí |
 | US-128 | La Base del análisis declara los datos críticos faltantes y si el oncólogo continuó con aviso | FEAT-T2b | 4 | 3 | sí |
 | US-129 | Los supuestos del análisis salen de reglas del catálogo o, si los propone la IA, solo se aceptan si están anclados a un faltante y nada los contradice | FEAT-T2b | `si-hay-capacidad` | 5 | no |
 | US-130 | La Base del análisis declara las limitaciones estructurales y solo las redactadas por la IA que tienen soporte | FEAT-T2b | `si-hay-capacidad` | 3 | no |
 | US-131 | La suite mide la sensibilidad y la especificidad del checklist de faltantes con faltantes sembrados | FEAT-T5b | 4 | 3 | sí |
-| US-132 | La suite verifica que la aplicabilidad no inventa valores ni coincidencias y mide los metadatos del corpus | FEAT-T5b | 5 | 5 | sí |
+| US-132 | La suite verifica que la aplicabilidad no inventa valores ni coincidencias y mide los metadatos del corpus | FEAT-T5b | 5 | 3 | sí |
 | US-133 | La recuperación híbrida no retrocede respecto del baseline del S1 | FEAT-T5b | `si-hay-capacidad` | 3 | no |
-| US-134 | `/rag/query` devuelve hasta 3 opciones en orden determinista por aplicabilidad y `clinical-api` las persiste en ese orden | FEAT-10c | 5 | 5 | sí |
-| US-135 | El panel muestra hasta 3 tarjetas en el orden recibido, con el criterio de orden visible y sin rótulos de jerarquía clínica | FEAT-10c | 5 | 3 | sí |
-| US-218 | El oncólogo hace hasta 10 preguntas de seguimiento sobre un análisis y cada respuesta llega citada, validada y anclada a ese análisis | FEAT-10c | 5 | 5 | sí |
-| US-219 | El panel muestra la conversación de seguimiento bajo el análisis, con su contexto fijo y el contador de preguntas | FEAT-10c | 5 | 3 | sí |
+| US-134 | `/rag/query` devuelve hasta 3 opciones en orden determinista por aplicabilidad y `clinical-api` las persiste en ese orden | FEAT-10c | 5 | 4 | sí |
+| US-135 | El panel muestra hasta 3 tarjetas en el orden recibido, con el criterio de orden visible y sin rótulos de jerarquía clínica | FEAT-10c | 5 | 4 | sí |
+| US-218 | El oncólogo hace hasta 10 preguntas de seguimiento sobre un análisis y cada respuesta llega citada, validada y anclada a ese análisis | FEAT-10c | 5 | 4 | sí |
+| US-219 | El panel muestra la conversación de seguimiento bajo el análisis, con su contexto fijo y el contador de preguntas | FEAT-10c | 5 | 4 | sí |
 | US-015 · ADR-42 | Streaming de eventos de progreso del análisis | FEAT-10c | `si-hay-capacidad` | 3 | no |
 | US-136 | La tarjeta avisa cuando la opción depende de datos en conflicto o de datos críticos faltantes, calculado por criterio y sin bloquear | FEAT-10b | 5 | 5 | sí |
 | US-137 | `POST /platform/evidence-analyses/{id}/feedback` guarda la calificación 1–5 y los dos checkboxes de faltantes, sin texto libre | FEAT-T5c | 5 | 5 | sí |
 | US-138 | Al cerrar cada análisis el panel ofrece la calificación 1–5 y, si hubo aviso de faltantes, los dos checkboxes, sin bloquear nada | FEAT-T5c | 5 | 3 | sí |
 | US-139 | El reporte de feedback agrega VM-4 y VM-5 por cohorte y por versión de catálogo y dice si el catálogo queda validado | FEAT-T5c | 5 | 3 | sí |
 | US-024 · DEC-14 | Revisión clínica de la muestra de aplicabilidad (VM-3) | FEAT-T5c | 5 | 1 | sí |
-| US-140 | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 | FEAT-T5b | 5 | 5 | sí |
+| US-140 | La suite mide que hasta 3 opciones siguen citadas, con soporte, no prescriptivas y en el orden de RN-28 | FEAT-T5b | 5 | 4 | sí |
 | US-141 | El p95 del análisis se mide con aplicabilidad y hasta 3 opciones y la meta de G-5 se recalibra con ese dato | FEAT-T5b | `si-hay-capacidad` | 3 | no |
 | US-142 | G-Demo se verifica con el recorrido de la hipótesis sobre casos sintéticos y queda registrado | FEAT-T5b | 5 (cierre) | 5 | sí |
 | US-143 | `oncolens preflight real-data` verifica los prerrequisitos del gate y `clinical-api` no arranca con datos reales si alguno falla | FEAT-T4d | 6 | 8 | sí |
@@ -321,15 +322,18 @@ Recalculado con un script sobre la línea de metadatos de cada historia (`Sprint
 | Pre-S1 | **17** | FEAT-00: ADR-36 (3) + DEC-02…DEC-05 (4) + US-033 (10, re-estimada el 2026-10-11) | Contrato y esquema congelados |
 | S1 | **111** | 06a 44 (incluye ADR-39 fases A y B: US-012 y US-224; US-055 y US-225; US-231a y US-231b, adapters reales) · PL1 15 (US-034, US-035, US-036, US-215) · 06c 10 · T1a 10 · PL2 8 · 10a 8 · T4a 8 (US-049, US-211) · T3 5 · T5a 3 (US-075) | Demo: login → análisis *dense* con una opción citada sobre el paciente semilla, por ruta directa; `ai-eval-runner` evalúa la demo a mano (la suite automatizada llega en el S2, `[Pre-S1 resp. 9]`) |
 | S2 | **84** (+14 del arrastre abierto = **98**; ajuste del 2026-10-21; DEC-07 → S4 el 2026-10-22) | T4a 21 (incluye ADR-40) · T5a 15 (ADR-41, DEC-06, US-072, US-074; desde S1) · 01a 13 · PL1 15 (US-213, US-214, US-217 desde S1; US-223, deuda del Pre-S1) · PL3 9 (incluye DEC-08) · T2a 8 · 02a 6 (incluye DEC-09) · PL2 5 + US-073 (`?`, rango 3–5) | Demo: login → listado → ficha → análisis con Base del análisis; suite `evaluate` en la DoD de cada PR que cambia la IA; baseline técnico calibrado y umbral de regresión activo |
-| S3 | **101** (85 + US-078, US-079, US-213b + US-236, US-237; propuesto el 2026-10-23, capacidad por confirmar en `/sprint-refine`) | 01b 31 · 02b 21 · 03a 15 · T5b 10 · 10a 5 (US-062, US-237) · T1a 6 (US-065, US-236) · 01a 2 (US-212) | Demo: carga de PDF → extracción → vista de caso con enlace al PDF de origen (hipótesis 1) |
-| S4 | **91** (79 + DEC-06, DEC-08, DEC-09 + US-233 + DEC-07 + US-238; propuesto el 2026-10-23, capacidad por confirmar en `/sprint-refine`) | 04 23 (incluye DEC-01) · 03b 16 · 06c 16 · 06a 6 · 06b 5 (US-238) · 10b 5 · T4a 5 (US-047) · T2b 3 · T5b 3 · T5a 4 (US-233, deuda de ARR-03; DEC-07) · T3 2 | Demo: revisión, registro manual y checklist de faltantes (hipótesis 2) |
-| S5 | **89** | 08b 29 (incluye DEC-11) · 10c 16 (incluye US-218, US-219) · T5b 15 · T5c 12 (incluye DEC-14) · 06b 6 (incluye US-220) · 10b 5 · T1a 3 · T3 3 | **G-Demo al cierre del S5** (sintético, hipótesis 3) |
+| S3 | **78** (reordenamiento del 2026-10-23; antes 101) | 08b 24 (incluye DEC-11; criterios, cálculo y herencia) · 04 14 (incluye DEC-01; catálogo, checklist y faltantes al análisis) · 06c 13 (US-117, US-118) · T1a 9 (US-065, US-236, US-127) · 10a 5 (US-062, US-237) · T5b 5 (US-132) · 03a 5 (US-098) · PL1 3 (US-213b) | Demo: aplicabilidad por criterio sobre el paciente semilla (hipótesis 3, sin orden ni UI de 3 opciones) |
+| S4 | **116** (reordenamiento del 2026-10-23; antes 91; +5 de US-239) | 02b 21 (vista de caso sobre el seed) · 10c 16 (US-134, US-135, US-218, US-219) · 03b 16 · 06a 11 (incluye US-239) · 06b 5 (US-238) · 10b 5 · T4a 5 (US-047) · 04 9 · 06c 3 (US-120) · 08b 5 (US-126) · T5b 8 (US-131, US-140) · T2b 3 · T5a 4 (US-233; DEC-07) · T3 2 · DEC-06, DEC-08, DEC-09 | Demo: hasta 3 opciones ordenadas por aplicabilidad, seguimiento, revisión, registro manual y checklist (hipótesis 2 y 3) |
+| S5 | **92** (reordenamiento del 2026-10-23; antes 89) | 01b 31 · 01a 10 (US-078, US-079, US-212) · 03a 10 (US-099, US-100) · T5b 15 (US-103, US-105, US-142) · T5c 12 (incluye DEC-14) · 06b 6 (incluye US-220) · 10b 5 · T3 3 | **G-Demo al cierre del S5** (sintético); demo del OCR: carga de PDF → extracción → vista de caso con enlace al PDF de origen (hipótesis 1) |
 | S6 | **86** | T4d 28 (incluye ADR-43 condicional y DEC-10, 15, 17, 18, 19) · T5d 16 (núcleo) · T4c 10 (incluye DEC-12, 16) · T1b 8 · T4a 14 (US-050, US-221, US-222, US-234 deuda del S2) · 01a 2 (US-235, deuda del S2) · PL1 8 (US-216, desde S1; US-232, deuda del S2) | **G-Piloto** → piloto mixto con casos reales → **G-Éxito al cierre del S6** |
-| **MVP comprometido (Pre-S1…S6)** | **564** (US-073 = 3; US-213 re-estimada a 8; US-232 = 5 en el S6; US-233 = 3 en el S4; US-234 = 3 en el S6; US-235 = 2 en el S6; US-236 = 3 y US-237 = 2 en el S3; US-238 = 5 en el S4) | | |
+| **MVP comprometido (Pre-S1…S6)** | **569** (US-073 = 3; US-213 re-estimada a 8; US-232 = 5 en el S6; US-233 = 3 en el S4; US-234 = 3 en el S6; US-235 = 2 en el S6; US-236 = 3 y US-237 = 2 en el S3; US-238 = 5 y US-239 = 5 en el S4) | | |
 | `si-hay-capacidad` | **186** | 96 que ya estaban en el S6 `si-hay-capacidad` (11a 26 · 07 19 · 09 12 · 01c 11 · PL5 11 · 05 9 · T5d anexos 8) + **90 que salen del MVP comprometido con el slicing v2**: 06b 16 (US-112…US-115) · T5b 14 (US-104, US-106, US-133, US-141) · 02c 13 · 01a 9 (US-077, US-080 = 3, US-081) · 02b 8 (US-091, US-094) · T2b 8 (US-129, US-130) · 03b 5 (US-109) · T4d 5 (US-146) · 06c 3 (US-119) · 10c 3 (US-015 · ADR-42) · PL3 3 (US-042) · T1b 3 (US-151) | Se priorizan en el *planning* de cada sprint si sobra capacidad |
+
+> **Reordenamiento del 2026-10-23 (usuario).** (1) La ingesta OCR (FEAT-01b, cola y subida US-078/US-079/US-212, US-099/US-100 y la evaluación del OCR US-103/US-105) pasa del S3 al **S5**; en S3 y S4 los pacientes de prueba son sintéticos sembrados. (2) La vista de caso (FEAT-02b) pasa al **S4** y lee del seed; sus AC que exigen extracción real se revisan en el refinamiento del S4 y se reconectan en el S5. (3) La aplicabilidad (FEAT-08b), las hasta 3 opciones (FEAT-10c) y el seguimiento (US-218, US-219) se adelantan del S5: **S3** criterios, cálculo y herencia (US-021, US-121…US-125, US-132, con sus dependencias US-117, US-118, US-127 y FEAT-04: DEC-01, US-001, US-002, US-006); **S4** tabla y UI (US-126), hasta 3 opciones, seguimiento y su evaluación (US-134, US-135, US-218, US-219, US-140). Reparto: S3 101 → **78**, S4 91 → **111**, S5 89 → **92**; el MVP no cambia (564). **G-Demo** sigue al cierre del S5. Riesgos: S4 supera los 80–90 pts de DEC-03; US-099 (conflictos) y US-136 llegan en el S5, así que en S3 y S4 US-124 no marca conflictos entre documentos. Aplicado el 2026-10-23 en `CLAUDE.md`, PRD §14 (E-13) y Linear (38 issues y las descripciones de los hitos Sprint 3 a 5). Pendiente: los planes `backlog/sprints/` (se regeneran en `/sprint-refine` de S3 y S4) y el refinamiento de ambos sprints.
+
 | Post-MVP | **109** | T4b 27 (incluye DEC-13) · 11b 16 · 11c 16 · 08c 13 · T4e 8 · T4f 8 · T2c 6 · AP1 6 (incluye DEC-20) · T5d anexos 6 (US-160, US-161) · PL5 3 (ADR-44) | |
 | Futuro (sin planificar) | `?` | US-032 · ADR-7 (FEAT-AP1), no suma | |
-| **Total del backlog** | **849 + 1 `?`** | US-032 · ADR-7 (Futuro) | |
+| **Total del backlog** | **854 + 1 `?`** | US-032 · ADR-7 (Futuro) | |
 
 > **Ajuste del S2 (usuario, 2026-10-21, `[S2 resp. 1]`, `backlog/sprints/S2-refinamiento.md` §4).** US-078 y US-079 → S3 (consumen `/documents/extract`, US-082); US-213 re-estimada a 8 y partida en **US-213a** (5, S2) y **US-213b** (3, S3); US-072 partida en **US-072a** (5) y **US-072b** (3), ambas en el S2; US-073 = 3; DEC-06, DEC-08, DEC-09 → S4, en la misma sesión con los oncólogos que ARR-05 (decisión 88). Nada sale del camino crítico de G-Piloto. Las filas S2–S4 de arriba ya lo reflejan; el detalle por Feature sigue siendo el del slicing v2.
 

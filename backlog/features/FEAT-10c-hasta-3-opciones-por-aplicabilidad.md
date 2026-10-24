@@ -2,7 +2,7 @@
 
 > Linear: [L1D-25](https://linear.app/l1der-lab-mjbc/issue/L1D-25)
 
-**Talla:** L (2 historias de desarrollo + un ADR condicional) · **Sprint:** 5 (→ G-Demo, datos sintéticos) · `si-hay-capacidad` (US-015 · ADR-42) · **Capacidad:** CAP-10 (AC-10.1 completo, AC-10.2 tarjeta con varias opciones) · CAP-08 (AC-08.8: la opción usa su fuente más aplicable, consumido) · **Recorrido principal:** sí (hipótesis 3: encontrar las opciones descritas en la evidencia **más aplicables** a las condiciones del paciente)
+**Talla:** L (2 historias de desarrollo + un ADR condicional) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S5; US-134, US-135, US-218, US-219) · el G-Demo sigue al cierre del S5 · `si-hay-capacidad` (US-015 · ADR-42) · **Capacidad:** CAP-10 (AC-10.1 completo, AC-10.2 tarjeta con varias opciones) · CAP-08 (AC-08.8: la opción usa su fuente más aplicable, consumido) · **Recorrido principal:** sí (hipótesis 3: encontrar las opciones descritas en la evidencia **más aplicables** a las condiciones del paciente)
 **Requisitos:** FR-09 (S4: "hasta 3 desde el Sprint 4" y "orden de las opciones por aplicabilidad", vía HU-10) · RN-28 (dueña del **orden visible** de hasta 3 opciones; el comparador, la agregación por opción y la selección por aplicabilidad antes del recorte, ya activa en el S3 con una opción, son de US-125) · RN-03 (regresión: la relevancia solo desempata) · RN-22 (`EVIDENCE_MAX_OPTIONS` en configuración) · TBD-08 (ADR-42, condicional)
 **Evidencia:** [→ PRD §5 FR-09 ("Máximo 1 opción en los Sprints 1–3 y hasta 3 desde el Sprint 4"; "Orden de las opciones por aplicabilidad (RN-28)")], [→ PRD §6 RN-03, RN-22, RN-26, RN-28], [→ PRD §18.3.10 AC-10.1, AC-10.2, M-10.1], [→ PRD §18.3.8 AC-08.8], [→ PRD §2.1 G-5], [→ PRD §16 TBD-08], [→ readme §5 HU-10 ("comparar hasta 3 opciones descritas en la evidencia, ordenadas por aplicabilidad")], [→ readme §4.1 `EvidenceOption`, `AnalysisBasis.maxOptions`], [→ readme §3.3 #27, #31], [→ readme §6.1 #8], [→ readme §5.0 S4 KR1], [→ backlog/02-adrs.md US-015 · ADR-42], [→ docs/AS-IS.md P6, JTBD 4]
 **Dependencias:** ↪ US-055 (pipeline), US-061 (tarjeta), US-064 (soporte de cada opción), US-125 (comparador `applicability_order`, agregación por opción y orden antes del recorte a `maxOptions`, AC-5…AC-7), US-126 (tabla y resumen de aplicabilidad en la tarjeta y texto del criterio de orden, AC-7) · ⛔ DEC-11 (US-021) · escenario más probable (excluyentes y "Parcial", que alimentan los conteos) · ⛔ ADR-39 (LLM y NLI reales; los AC usan adapters falsos) · 🔗 Medido en: US-140 (M-10.1 y orden con verdad conocida), US-141 (G-5 / M-06.2 con hasta 3 opciones) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
@@ -31,7 +31,9 @@
 
 > Linear: [L1D-144](https://linear.app/l1der-lab-mjbc/issue/L1D-144)
 
-`FEAT-10c` · Sprint 5 · Estimación **5** · HU-10 · FR-09 (S4: hasta 3 y orden), RN-28 (dueña del orden visible), RN-03, RN-22 · AC-10.1, AC-08.8 (consumo) · ↪ US-055, US-064, US-125 · ⛔ DEC-11 (US-021) · escenario más probable · ⛔ ADR-39 (solo para la medición real; los AC usan adapters falsos) · 🔗 Consume: US-125 (`applicability_order`) · 🔗 Medido en: US-140 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
+`FEAT-10c` · Sprint 4 · Estimación **5** · HU-10 · FR-09 (S4: hasta 3 y orden), RN-28 (dueña del orden visible), RN-03, RN-22 · AC-10.1, AC-08.8 (consumo) · ↪ US-055, US-064, US-125 · ⛔ DEC-11 (US-021) · escenario más probable · ⛔ ADR-39 (solo para la medición real; los AC usan adapters falsos) · 🔗 Consume: US-125 (`applicability_order`) · 🔗 Medido en: US-140 · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero que el análisis me devuelva hasta tres opciones descritas en la
@@ -101,7 +103,9 @@ FEAT-11a). Cualquier puntaje combinado o "nivel de evidencia" (RN-28, AC-07.5).
 
 > Linear: [L1D-145](https://linear.app/l1der-lab-mjbc/issue/L1D-145)
 
-`FEAT-10c` · Sprint 5 · Estimación **3** · HU-10 · FR-09 (UI S4), RN-28 (texto del criterio), RN-03, RN-23, NFR-12 · AC-10.1 (UI), AC-10.2 (varias tarjetas) · ↪ US-134, US-061, US-126 · 🔗 Consume: US-136 (avisos de conflicto y faltantes), US-101 (avisos sin verificar) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069
+`FEAT-10c` · Sprint 4 · Estimación **3** · HU-10 · FR-09 (UI S4), RN-28 (texto del criterio), RN-03, RN-23, NFR-12 · AC-10.1 (UI), AC-10.2 (varias tarjetas) · ↪ US-134, US-061, US-126 · 🔗 Consume: US-136 (avisos de conflicto y faltantes), US-101 (avisos sin verificar) · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-19] → US-069
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero ver lado a lado hasta tres opciones con su aplicabilidad, sus citas
@@ -204,7 +208,9 @@ No implementar SSE. No emitir contenido parcial. No cambiar el contrato
 
 > Linear: [L1D-268](https://linear.app/l1der-lab-mjbc/issue/L1D-268)
 
-`FEAT-10c` · Sprint 5 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-31, FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+`FEAT-10c` · Sprint 4 · Estimación **5** · — (técnica, PRD §17; cambio frente a PRD §3/§17 "conversación de varios turnos: Post-MVP", `[Pre-S1 resp. 14]`) · FR-31, FR-09, RN-01, RN-04, RN-06, RN-11, RN-23, RN-24, RN-15 · ↪ US-033 (AC-13, contrato congelado), US-055, US-063, US-064, US-053, US-134 · 🔗 Consumida por: US-219
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero hacer preguntas de seguimiento puntuales sobre los hallazgos de un
@@ -273,7 +279,9 @@ Respuestas en streaming de contenido (TBD-08). Seguimiento sobre análisis `sin_
 
 > Linear: [L1D-269](https://linear.app/l1der-lab-mjbc/issue/L1D-269)
 
-`FEAT-10c` · Sprint 5 · Estimación **3** · — (técnica, PRD §17) · FR-31, RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+`FEAT-10c` · Sprint 4 · Estimación **3** · — (técnica, PRD §17) · FR-31, RN-01, RN-19, RN-23, RN-26 · ↪ US-218, US-135 · Diseño: `docs/ux/flujo-e2e.md` pantalla 09 · `[Pre-S1 resp. 14]`
+
+> **Reordenamiento (usuario, 2026-10-23):** S5 → S4. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
 ## Story
 Como oncólogo, quiero ver y escribir las preguntas de seguimiento debajo del análisis, con
