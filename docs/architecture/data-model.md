@@ -493,7 +493,7 @@ erDiagram
         string primary_endpoint "nullable"
         int sample_size "nullable"
         jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
-        string metadata_source "fuente_estructurada|extraido_verificado"
+        string metadata_source "fuente_estructurada|extraido_verificado|pendiente"
         string guideline_version "nullable"
         string source_url "nullable; URL https del documento original (ARR-07)"
         date last_updated_at "nullable"
@@ -1100,7 +1100,7 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `primary_endpoint` | text |  | nullable |
 | `sample_size` | integer |  | nullable |
 | `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible |
-| `metadata_source` | text |  | fuente_estructurada\|extraido_verificado |
+| `metadata_source` | text |  | fuente_estructurada\|extraido_verificado\|pendiente; `pendiente` = la extracción no corrió (LLM o NLI caídos, o salida inválida): nunca `fuente_estructurada`, la fuente no publicó nada (RN-25) |
 | `guideline_version` | text |  | nullable |
 | `source_url` | text |  | nullable; URL pública (https) del documento original de donde se extrajo el texto; la UI la enlaza en «Fragmento citado» (ARR-07) |
 | `last_updated_at` | date |  | nullable |
