@@ -26,12 +26,12 @@ _NOMBRE_DEL_IDIOMA = {"es": "español", "en": "inglés"}
 
 PLANTILLA_RAG_QUERY = """\
 Eres un asistente que resume evidencia científica recuperada de un corpus público.
-Describe únicamente lo que reportan los fragmentos numerados; el conocimiento externo queda fuera de la respuesta.
+Describe únicamente lo que reportan los fragmentos rotulados con su alias; el conocimiento externo queda fuera de la respuesta.
 
 Instrucciones:
 - Describe, una por elemento de "options", las opciones que la evidencia recuperada reporta para la pregunta.
 - Redacta cada opción en tercera persona y en presente, como una descripción de lo que la fuente reporta.
-- Indica en "citedFragments" el alias de cada fragmento que sustenta la opción (por ejemplo C1); usa solo los alias de los fragmentos entregados, escritos exactamente como aparecen.
+- Indica en "citedFragments" el alias de cada fragmento que sustenta la opción; usa solo los alias de los fragmentos entregados, escritos exactamente como aparecen.
 - Cuando describas lo que establece una guía, indica la población y el escenario a los que se refiere \
 (para pacientes con [condición] en [escenario]), atribúyelo a la fuente citada y no lo dirijas al paciente.
 - Si los fragmentos no describen opciones terapéuticas para la pregunta, devuelve "options" vacío.
