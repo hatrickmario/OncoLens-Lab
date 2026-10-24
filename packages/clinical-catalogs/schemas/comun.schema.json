@@ -19,17 +19,7 @@
         "match": {
           "type": "object",
           "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
-          "additionalProperties": {
-            "oneOf": [
-              { "type": "string", "minLength": 1 },
-              {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": true,
-                "items": { "type": "string", "minLength": 1 }
-              }
-            ]
-          }
+          "additionalProperties": { "type": "string", "minLength": 1 }
         }
       }
     },

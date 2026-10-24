@@ -54,15 +54,18 @@ export function exigirDestinoExistente(item, allowlist) {
 /** RN-29: un destino en `ClinicalAttribute` usa una `attribute_key` declarada en `atributos.json` para el tipo. */
 export function exigirAtributoDeclarado(item, tipo, atributos) {
   if (!esObjeto(item.destination) || item.destination.entity !== 'ClinicalAttribute') return null;
-  const clave = item.destination.match?.attribute_key;
-  const declarado = atributos.keys.some(
-    (atributo) =>
-      esObjeto(atributo) &&
-      atributo.key === clave &&
-      Array.isArray(atributo.cancerTypes) &&
-      atributo.cancerTypes.includes(tipo),
-  );
-  return declarado ? null : 'atributo_no_declarado';
+  // En aplicabilidad `attribute_key` puede ser una lista: todas deben estar declaradas. En datos críticos el
+  // esquema solo admite una cadena y rechaza la lista después.
+  const claves = [item.destination.match?.attribute_key].flat();
+  const declarada = (clave) =>
+    atributos.keys.some(
+      (atributo) =>
+        esObjeto(atributo) &&
+        atributo.key === clave &&
+        Array.isArray(atributo.cancerTypes) &&
+        atributo.cancerTypes.includes(tipo),
+    );
+  return claves.every(declarada) ? null : 'atributo_no_declarado';
 }
 
 /** AC-04.4: la condición es declarativa, apunta a un ítem del mismo tipo y declara qué pasa si su valor se desconoce. */
