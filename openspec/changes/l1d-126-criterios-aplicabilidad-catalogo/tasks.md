@@ -49,33 +49,37 @@
       > Refactor: sin cambios (nada que extraer o integrar en los archivos tocados; la extracción de `comun.schema.json` entró en el `feat`).
 ## ai-services
 
-- [ ] 2.1 Copiar los fixtures `test-apl-1.0.0` y `test-apl-1.0.1` al árbol de tests de `rag-orchestrator`
+- [x] 2.1 Copiar los fixtures `test-apl-1.0.0` y `test-apl-1.0.1` al árbol de tests de `rag-orchestrator`
       (mismo contenido, comprobado por checksum en un test) · test después (fixture)
-- [ ] 2.2 Test de integración en rojo: "carga los criterios de mama de test-apl-1.0.0 con su destino, excluyente y
+      · `tests/fixtures/catalogo/test-apl-1.0.{0,1}` + `tests/unit/test_fixtures_de_aplicabilidad.py` (sha256 por archivo contra
+      `packages/clinical-catalogs/test/fixtures/`; alterar una copia lo pone en rojo)
+- [x] 2.2 Test de integración en rojo: "carga los criterios de mama de test-apl-1.0.0 con su destino, excluyente y
       regla desde CLINICAL_CATALOG_PATH" y "no queda listo con configuracion_invalida cuando aplicabilidad.json no
       cumple su esquema" (soporte del AC-5; Pytest + adapters falsos, sin ruta ni contenido en el log) · TDD
       estricto · commit `test(L1D-126)`
-- [ ] 2.3 Puerto `CriteriosDeAplicabilidad` en `app/domain/criterios_aplicabilidad.py`, adapter
+- [x] 2.3 Puerto `CriteriosDeAplicabilidad` en `app/domain/criterios_aplicabilidad.py`, adapter
       `app/infrastructure/catalogo_clinico/aplicabilidad.py` (Pydantic escrito a mano, lectura única al arrancar) y
       *wiring* en `app/bootstrap.py` (D4) · commit `feat(L1D-126)`
-- [ ] 2.4 Test de soporte del AC-5: `test_criterios_aplicabilidad_regla_ecog_se_lee_del_catalogo_montado`: misma
+- [x] 2.4 Test de soporte del AC-5: `test_criterios_aplicabilidad_regla_ecog_se_lee_del_catalogo_montado`: misma
       build, arranque con `test-apl-1.0.0` y `test-apl-1.0.1`; solo `ecog.rule.limits` difiere entre las dos cargas
       del puerto · integración (adapters falsos) · TDD estricto · commit `test(L1D-126)` → verde con 2.3
       > **Diferido a L1D-127** (`[S3 resp. 16]`): el test de aceptación
       > `test_aplicabilidad_rango_ecog_cambia_con_la_version_del_catalogo` con `@pytest.mark.ac("US-121", 5)`
       > (`coincide` → `no_coincide`) se escribe y se pone en verde en L1D-127, con estos fixtures. No es tarea de
       > este change.
-- [ ] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
-      verde antes y después, commit `refactor(L1D-126)`
+- [x] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+      verde antes y después, commit `refactor(L1D-126)` · sin cambios: revisados `aplicabilidad.py`, `criterios_aplicabilidad.py` y el wiring de
+      `bootstrap.py`; cada función hace una cosa y no hay middle man ni lógica duplicada
 
 ## evaluación
 
-- [ ] 3.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4); adjuntar el reporte de
-      `reports/eval/` al PR · evaluate
+- [x] 3.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4); adjuntar el reporte de
+      `reports/eval/` al PR · evaluate · hecho con adapters falsos: sin regresión (Δ = 0 contra el baseline); fidelidad 0,75 y
+      citas 0,80 ya estaban bajo meta en el baseline; no mide los criterios (aún sin uso) ni modelos reales
 
 ## cierre
 
 - [x] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict` · válido; el único INFO es el esperado
       (el archivo rechaza el delta `MODIFIED` hasta archivar L1D-93)
-- [ ] 4.2 Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
+- [ ] 4.2 (parte rag-orchestrator: Pytest 2146 passed, 129 deselected; pendiente la de clinical-api) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
       sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
