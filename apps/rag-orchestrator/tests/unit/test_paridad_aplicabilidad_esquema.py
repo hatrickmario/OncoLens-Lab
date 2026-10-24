@@ -130,6 +130,23 @@ VARIANTES: dict[str, Variante] = {
     "validation_fecha_invalida": lambda a: a["validation"].__setitem__("date", "24/10/2026"),
     "validation_sin_status": lambda a: a["validation"].pop("status"),
     "validation_con_extra": lambda a: a["validation"].__setitem__("peso", 1),
+    # null explícito: el esquema exige ausente, no null
+    "label_en_null": _poner(("label", "en"), None),
+    "field_null": _poner(("destination", "field"), None),
+    "match_null": _poner(("destination", "match"), None),
+    "limits_min_null": _poner(("rule", "limits"), {"min": None, "max": 0}),
+    "limits_max_null": _poner(("rule", "limits"), {"min": 0, "max": None}),
+    "limits_null": _poner(("rule", "limits"), None),
+    "equivalences_null": _poner(("rule", "equivalences"), None),
+    "validation_null": _raiz("validation", None),
+    # otras restricciones del esquema
+    "destino_sin_entity": _sin(("destination", "entity")),
+    "label_en_vacio": _poner(("label", "en"), ""),
+    "validation_status_mayusculas": lambda a: a["validation"].__setitem__("status", "Propuesta"),
+    "validation_reviewer_invalido": lambda a: a["validation"].__setitem__("reviewerRole", "Onco 1"),
+    "validation_hash_mayusculas": lambda a: a["validation"].__setitem__("catalogHash", "A" * 64),
+    "equivalencia_item_vacio": _poner(("rule", "equivalences"), {"x": [""]}),
+    "match_item_vacio": _poner(("destination", "match"), {"name": ["RE", ""]}),
 }
 
 
@@ -208,3 +225,125 @@ def test_el_modelo_declara_los_mismos_enumerados_que_el_esquema() -> None:
     assert set(modelo["$defs"]["_Parcial"]["properties"]["when"]["enum"]) == set(
         esquema["$defs"]["regla"]["properties"]["partial"]["properties"]["when"]["enum"]
     )
+
+
+def _ref_de_comun(nombre: str) -> dict[str, Any]:
+    return _leer("comun.schema.json")["$defs"][nombre]
+
+
+def _def_del_modelo(nombre: str) -> dict[str, Any]:
+    return _Criterio.model_json_schema()["$defs"][nombre]
+
+
+def _patron(propiedad: dict[str, Any]) -> str | None:
+    return propiedad.get("pattern")
+
+
+# (nombre, restricción en el esquema JSON, restricción en el modelo): la lista de restricciones es el parámetro.
+RESTRICCIONES: list[tuple[str, Any, Any]] = [
+    (
+        "key",
+        _criterio_del_esquema()["properties"]["key"]["pattern"],
+        _Criterio.model_json_schema()["properties"]["key"]["pattern"],
+    ),
+    (
+        "cancerType",
+        _criterio_del_esquema()["properties"]["cancerType"]["pattern"],
+        _Criterio.model_json_schema()["properties"]["cancerType"]["pattern"],
+    ),
+    (
+        "studyKey",
+        _criterio_del_esquema()["properties"]["studyKey"]["pattern"],
+        _Criterio.model_json_schema()["properties"]["studyKey"]["pattern"],
+    ),
+    (
+        "destination.entity",
+        _ref_de_comun("destino")["properties"]["entity"]["pattern"],
+        _def_del_modelo("_Destino")["properties"]["entity"]["pattern"],
+    ),
+    (
+        "destination.field",
+        _ref_de_comun("destino")["properties"]["field"]["pattern"],
+        _def_del_modelo("_Destino")["properties"]["field"]["anyOf"][0]["pattern"],
+    ),
+    (
+        "destination.match (claves)",
+        _ref_de_comun("destino")["properties"]["match"]["propertyNames"]["pattern"],
+        next(iter(_def_del_modelo("_Destino")["properties"]["match"]["patternProperties"])),
+    ),
+    (
+        "label.es minLength",
+        _ref_de_comun("etiqueta")["properties"]["es"]["minLength"],
+        _def_del_modelo("_Etiqueta")["properties"]["es"]["minLength"],
+    ),
+    (
+        "rule.equivalences (claves)",
+        _leer("aplicabilidad.schema.json")["$defs"]["regla"]["properties"]["equivalences"][
+            "propertyNames"
+        ]["pattern"],
+        next(
+            iter(
+                _def_del_modelo("_Regla")["properties"]["equivalences"]["anyOf"][0][
+                    "patternProperties"
+                ]
+            )
+        ),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("esquema", "modelo"),
+    [(e, m) for _, e, m in RESTRICCIONES],
+    ids=[n for n, _, _ in RESTRICCIONES],
+)
+def test_el_modelo_repite_pattern_y_min_length_del_esquema_cuando_se_comparan_campo_a_campo(
+    esquema: object, modelo: object
+) -> None:
+    assert modelo == esquema
+
+
+def _lo_acepta_el_adapter_texto(tmp_path: Path, texto: str) -> bool:
+    (tmp_path / "mama").mkdir()
+    (tmp_path / "mama" / "aplicabilidad.json").write_text(texto, encoding="utf-8")
+    try:
+        cargar_criterios_de_aplicabilidad(tmp_path, ("mama",))
+    except CatalogoNoDisponible:
+        return False
+    return True
+
+
+def _texto_con(antes: str, despues: str) -> str:
+    texto = json.dumps(_base())
+    assert antes in texto
+    return texto.replace(antes, despues, 1)
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        _texto_con('"key": "estado_her2"', '"key": "estado_her2", "key": "otra"'),
+        _texto_con('"label": {', '"label": {"es": "a", "es": "b", '),
+        _texto_con('"estado": "propuesta"', '"estado": "propuesta", "estado": "revisado"'),
+    ],
+    ids=["clave_repetida", "etiqueta_repetida", "estado_repetido"],
+)
+def test_rechaza_el_catalogo_cuando_un_objeto_json_repite_una_clave(
+    tmp_path: Path, texto: str
+) -> None:
+    assert _lo_acepta_el_adapter_texto(tmp_path, texto) is False
+
+
+@pytest.mark.parametrize("constante", ["NaN", "Infinity", "-Infinity"])
+def test_rechaza_el_catalogo_cuando_un_limite_es_no_finito(tmp_path: Path, constante: str) -> None:
+    texto = _texto_con(
+        '"operator": "igualdad"', '"operator": "igualdad", "limits": {"max": ' + constante + "}"
+    )
+
+    assert _lo_acepta_el_adapter_texto(tmp_path, texto) is False
+
+
+def test_acepta_el_catalogo_base_cuando_no_repite_claves_ni_trae_constantes_no_finitas(
+    tmp_path: Path,
+) -> None:
+    assert _lo_acepta_el_adapter_texto(tmp_path, json.dumps(_base())) is True
