@@ -7,13 +7,22 @@ Integración: el ``IngestionPipelineService`` real con el ``MetadataExtractionSe
 from __future__ import annotations
 
 import json
+import random
+from dataclasses import replace
+from pathlib import Path
 
 import pytest
+import yaml
 
+from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
 from app.application.ports import FalloDeInferencia
+from app.domain.corpus_metadata.muestra import seleccionar_muestra
+from app.infrastructure.corpus_metadata.escritor_muestra import EscritorDeMuestraYaml
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
 from tests.integration.corpus_ingestion.conftest import Montaje
+from tests.support.fakes import RelojFijo
 from tests.support.metadatos import (
+    lote_sintetico,
     nli_de_metadatos,
     ENDPOINT_INVENTADO,
     MARCADOR_I_CT_1,
@@ -149,3 +158,57 @@ def test_ingesta_con_los_modelos_caidos_nunca_rotula_fuente_estructurada_lo_que_
     rotulos = {r.document_key: r.metadata_source for r in reporte.resultados if r.metadatos}
     assert rotulos["i-lit-1"] == "pendiente" and rotulos["i-lit-2"] == "pendiente"
     assert rotulos["i-ct-1"] == "fuente_estructurada"
+
+
+SEMILLA_DE_TEST = "semilla-de-test"
+
+
+def _generador(directorio: Path, montaje: Montaje) -> GeneradorDeMuestraDeMetadatos:
+    return GeneradorDeMuestraDeMetadatos(
+        pct=10,
+        semilla=SEMILLA_DE_TEST,
+        escritor=EscritorDeMuestraYaml(directorio),
+        reloj=RelojFijo(),
+        prompt_version="metadatos_v1",
+        llm_model="llm-de-test",
+        nli_model=montaje.nli_metadatos.version,
+    )
+
+
+@pytest.mark.ac("US-118", 5)
+def test_muestra_lote_20_al_10_por_ciento_elige_2_reproducibles(
+    montaje: Montaje, tmp_path: Path
+) -> None:
+    """[US-118 AC-5] De un lote de 20 documentos extraídos al 10 % se seleccionan 2, siempre los mismos."""
+    montaje.llm_metadatos.por_defecto = {"trial_phase": "II", "sample_size": 120}
+    lote = lote_sintetico(20)
+    reporte = montaje.servicio.ingerir(lote)
+
+    resultado = _generador(tmp_path, montaje).generar(reporte, lote)
+
+    assert resultado.tamano == 2 and resultado.archivo == tmp_path / f"{reporte.release_id}.yaml"
+    muestra = yaml.safe_load(resultado.archivo.read_text(encoding="utf-8"))
+    assert len(muestra["documentos"]) == 2
+    revisiones = {c["revision"] for d in muestra["documentos"] for c in d["campos"]}
+    assert revisiones == {"pendiente"}
+    elegidos = [d["document_id"] for d in muestra["documentos"]]
+    ids = [r.document_id for r in reporte.resultados]
+    random.Random(7).shuffle(ids)
+    assert list(seleccionar_muestra(ids, 10, SEMILLA_DE_TEST)) == elegidos
+    assert muestra["release"] == reporte.release_id and muestra["seed"] == SEMILLA_DE_TEST
+
+
+@pytest.mark.ac("US-118", 5)
+def test_muestra_sin_documentos_extraidos_no_escribe_archivo(
+    montaje: Montaje, tmp_path: Path
+) -> None:
+    """[US-118 AC-5] Sin documentos extraídos no se escribe muestra."""
+    estructurados = tuple(
+        replace(d, population_criteria={"ecog": "0-1"}) for d in lote_sintetico(20)
+    )
+    reporte = montaje.servicio.ingerir(estructurados)
+
+    resultado = _generador(tmp_path, montaje).generar(reporte, estructurados)
+
+    assert (resultado.tamano, resultado.archivo) == (0, None)
+    assert list(tmp_path.iterdir()) == []

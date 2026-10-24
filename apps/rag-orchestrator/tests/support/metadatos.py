@@ -53,7 +53,7 @@ class FakeMetadataLlm:
         modo: Modo = "ok",
     ) -> None:
         self._propuestas = dict(PROPUESTAS_FX_06C_B if propuestas is None else propuestas)
-        self._por_defecto = dict(por_defecto or {})
+        self.por_defecto = dict(por_defecto or {})
         self.modo = modo
         self.prompts: list[str] = []
         self.esquemas: list[Mapping[str, Any]] = []
@@ -80,7 +80,7 @@ class FakeMetadataLlm:
         for marcador, propuesta in self._propuestas.items():
             if marcador in prompt:
                 return propuesta
-        return self._por_defecto
+        return self.por_defecto
 
 
 def nli_de_metadatos(error: Exception | None = None) -> NliFalso:
