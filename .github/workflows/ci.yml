@@ -199,6 +199,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # origin/main completo: la cobertura de líneas cambiadas compara contra el ancestro común (US-213 AC-11).
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -218,7 +220,13 @@ jobs:
         run: npm run format:check
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
-      - name: Calidad de capas y umbrales (ESLint, dependency-cruiser, Ruff, import-linter; escribe reports/quality/latest.json)
+      - name: Compilar clinical-language (lo importan los tests de web y clinical-api)
+        run: npm run build -w @oncolens/clinical-language
+      - name: Cobertura LCOV de clinical-api (insumo de la cobertura de líneas cambiadas)
+        run: npm run test:coverage -w apps/clinical-api
+      - name: Cobertura LCOV de web (insumo de la cobertura de líneas cambiadas)
+        run: npm run test:coverage -w apps/web
+      - name: Calidad de capas, umbrales, higiene de tests, AC y cobertura de líneas cambiadas (escribe reports/quality/latest.json)
         run: npm run quality:report
       - name: Subir el reporte de calidad
         if: always()

@@ -171,6 +171,26 @@ describe('vitest raíz y job quality', () => {
     expect(corridas(ci.jobs['build-test']).some((run) => /test:quality|ci\/tests\/quality/.test(run))).toBe(false);
   });
 
+  it('el job quality genera los LCOV de web y clinical-api antes del reporte, con historial completo para comparar con origin/main [US-213 AC-11]', () => {
+    const corridasDeQuality = corridas(ci.jobs.quality);
+    const reporte = corridasDeQuality.indexOf('npm run quality:report');
+    const checkout = pasosDe(ci.jobs.quality).find((paso) => (paso.uses ?? '').startsWith('actions/checkout'));
+
+    expect(checkout.with['fetch-depth']).toBe(0);
+    for (const workspace of ['apps/clinical-api', 'apps/web']) {
+      const cobertura = corridasDeQuality.indexOf(`npm run test:coverage -w ${workspace}`);
+      expect(cobertura, workspace).toBeGreaterThanOrEqual(0);
+      expect(cobertura, workspace).toBeLessThan(reporte);
+    }
+  });
+
+  it('el job quality publica reports/quality/latest.json como artefacto aunque la calidad falle [US-213 AC-11]', () => {
+    const subida = pasosDe(ci.jobs.quality).find((paso) => paso.with?.path === 'reports/quality/latest.json');
+
+    expect(subida.if).toBe('always()');
+    expect(subida.uses).toMatch(/^actions\/upload-artifact@/);
+  });
+
   it('build-test conserva el vitest raíz y el test de build de web (US-060 AC-5) [US-060 AC-5]', () => {
     const run = corridas(ci.jobs['build-test']);
 
