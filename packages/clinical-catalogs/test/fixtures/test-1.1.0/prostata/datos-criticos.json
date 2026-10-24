@@ -1,0 +1,50 @@
+{
+  "version": "test-1.1.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "validation": {
+    "scope": [
+      "datos_criticos",
+      "matriz_item_campo"
+    ],
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "7e9b2d13d942fffbfc25bd8ff802a1c65000e03bcbbde16bd39a04f8f9db7fb4"
+  },
+  "items": [
+    {
+      "key": "psa_serie",
+      "cancerType": "prostata",
+      "label": {
+        "es": "PSA seriado",
+        "en": "PSA seriado"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "PSA"
+        }
+      },
+      "minValues": 3,
+      "estado": "propuesta"
+    },
+    {
+      "key": "gleason_isup",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Gleason / ISUP",
+        "en": "Gleason / ISUP"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
+}

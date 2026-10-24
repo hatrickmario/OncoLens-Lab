@@ -1,0 +1,139 @@
+{
+  "version": "test-1.1.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "validation": {
+    "scope": [
+      "datos_criticos",
+      "matriz_item_campo"
+    ],
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "56d1300ae58375b67decd52dd84d82a7c462c5b666124fe0692eb59bbbb5b28b"
+  },
+  "items": [
+    {
+      "key": "histologia",
+      "cancerType": "mama",
+      "label": {
+        "es": "Histologia",
+        "en": "Histologia"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tnm",
+      "cancerType": "mama",
+      "label": {
+        "es": "TNM",
+        "en": "TNM"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ihq",
+      "cancerType": "mama",
+      "label": {
+        "es": "HER2 por IHQ",
+        "en": "HER2 por IHQ"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2",
+          "exam.exam_type": "IHQ"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ish",
+      "cancerType": "mama",
+      "label": {
+        "es": "HER2 por ISH",
+        "en": "HER2 por ISH"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2",
+          "exam.exam_type": "ISH"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta",
+      "condition": {
+        "item": "her2_ihq",
+        "operator": "pertenencia",
+        "values": [
+          "2+"
+        ]
+      },
+      "whenConditionUnknown": "faltante"
+    },
+    {
+      "key": "ki67",
+      "cancerType": "mama",
+      "label": {
+        "es": "Ki-67",
+        "en": "Ki-67"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "Ki-67"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "mama",
+      "label": {
+        "es": "ECOG",
+        "en": "ECOG"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "label": {
+        "es": "Estado menopausico",
+        "en": "Estado menopausico"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
+}

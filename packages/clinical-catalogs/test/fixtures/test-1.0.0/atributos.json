@@ -1,0 +1,15 @@
+{
+  "version": "test-1.0.0",
+  "keys": [
+    {
+      "key": "estado_menopausico",
+      "cancerTypes": [
+        "mama"
+      ],
+      "label": {
+        "es": "Estado menopausico",
+        "en": "Menopausal status"
+      }
+    }
+  ]
+}
