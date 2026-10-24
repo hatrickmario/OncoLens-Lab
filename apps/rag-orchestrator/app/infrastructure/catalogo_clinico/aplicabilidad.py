@@ -190,7 +190,7 @@ def _a_criterio_del_dominio(item: _Criterio) -> CriterioDeAplicabilidad:
             ),
             limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
         ),
-        estado=item.estado,
+        estado_de_revision=item.estado,
     )
 
 

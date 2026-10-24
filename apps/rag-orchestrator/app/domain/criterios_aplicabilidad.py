@@ -50,7 +50,7 @@ class CriterioDeAplicabilidad:
     destino: DestinoDelCriterio
     es_excluyente: bool
     regla: ReglaDeAplicabilidad
-    estado: str
+    estado_de_revision: EstadoDeRevision
 
 
 class CriteriosDeAplicabilidad(Protocol):
