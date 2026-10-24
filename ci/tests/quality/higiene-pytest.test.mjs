@@ -1,9 +1,9 @@
-import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { verificarHigieneDePytest } from '../../../scripts/quality/higiene-pytest.mjs';
+import { verificarEstiloDePytest } from '../../../scripts/quality/ruff-pt.mjs';
 import { RAIZ, exigirRuff } from './soporte.mjs';
 
 // L1D-285 (test después): PR de fixture con tests de Pytest desactivados. Los fixtures se escriben en un directorio temporal
@@ -91,17 +91,29 @@ describe('higiene de tests de Pytest', () => {
     expect(verificarHigieneDePytest(RAIZ, 'apps/rag-orchestrator/tests')).toEqual([]);
   }, TIEMPO_MAXIMO_MS);
 
-  it('mantiene activas las reglas PT que no son de estilo e ignora solo las cuatro con deuda vigente [US-213 AC-8]', () => {
+  it('falla con el código PT y archivo y línea cuando un módulo fuera de tests/ rompe el estilo de pytest, y no cuenta la deuda de tests/** [US-213 AC-8]', () => {
     exigirRuff();
-    const resultado = spawnSync(
-      'ruff',
-      ['check', '--config', 'apps/rag-orchestrator/pyproject.toml', '--output-format', 'json', FIXTURES_RUFF],
-      { cwd: RAIZ, encoding: 'utf8', timeout: TIEMPO_MAXIMO_MS },
-    );
 
-    // PT003 (scope redundante) falla; PT018 (aserción compuesta) está ignorada por deuda.
-    expect(JSON.parse(resultado.stdout).map((h) => h.code)).toEqual(['PT003']);
+    const hallazgos = verificarEstiloDePytest(RAIZ, FIXTURES_RUFF, 'apps/rag-orchestrator/pyproject.toml');
+
+    expect(hallazgos.map(({ rule, file, line, severity, tool }) => ({ rule, file, line, severity, tool }))).toEqual(
+      ['PT003', 'PT018'].map((rule, i) => ({
+        rule,
+        file: `${FIXTURES_RUFF}/test_estilo.py`,
+        line: [4, 10][i],
+        severity: 'error',
+        tool: 'ruff',
+      })),
+    );
+    // La deuda vigente de tests/** (PT018 268, PT011 22, PT001 5, PT006 3) está ignorada solo allí.
+    expect(verificarEstiloDePytest(RAIZ, 'apps/rag-orchestrator', 'apps/rag-orchestrator/pyproject.toml')).toEqual([]);
   }, TIEMPO_MAXIMO_MS);
+
+  it('quality.mjs ejecuta el estilo de pytest sobre rag-orchestrator con su pyproject [US-213 AC-8]', () => {
+    const fuente = readFileSync(path.join(RAIZ, 'scripts/quality/quality.mjs'), 'utf8');
+
+    expect(fuente).toContain('verificarEstiloDePytest(RAIZ, RAG, `${RAG}/pyproject.toml`)');
+  });
 
   it('está invocada desde quality.mjs sobre los tests de rag-orchestrator [US-213 AC-8]', () => {
     const fuente = readFileSync(path.join(RAIZ, 'scripts/quality/quality.mjs'), 'utf8');

@@ -12,7 +12,10 @@ data_file = "coverage/.coverage"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "PT"]
-ignore = ["PT001", "PT006", "PT011", "PT018"]
+
+# Deuda de estilo solo en tests/ (298 hallazgos vigentes): PT018 268, PT011 22, PT001 5, PT006 3. Ver tasks.md de l1d-285.
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PT001", "PT006", "PT011", "PT018"]
 
 # >>> umbrales generados desde quality-thresholds.json (no editar: node scripts/quality/sync-ruff-thresholds.mjs)
 [tool.ruff.lint.mccabe]

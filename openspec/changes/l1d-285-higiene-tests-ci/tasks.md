@@ -66,7 +66,7 @@
 
 ## 3. ai-services
 
-- [x] 3.1 (hecha: `ci/tests/quality/higiene-pytest.test.mjs`, 5 casos en verde; los fixtures se escriben en un directorio temporal porque el hook `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`; Ruff `PT` con 4 ignores de estilo, ver design D2) (test después) Fixtures en `ci/tests/quality/` con `@pytest.mark.skip`, `skipif`, `xfail`, `pytest.skip(` y `pytest.xfail(`
+- [x] 3.1 (hecha: `ci/tests/quality/higiene-pytest.test.mjs`, 5 casos en verde; los fixtures se escriben en un directorio temporal porque el hook `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`; Ruff `PT` ejecutado por `quality` (`ruff-pt.mjs`) con `per-file-ignores` de `tests/**`; **deuda: historia nueva de deuda por crear para los 298 hallazgos (PT018 268, PT011 22, PT001 5, PT006 3); no es US-232, que es funciones de clinical-api > umbrales**, ver design D2) (test después) Fixtures en `ci/tests/quality/` con `@pytest.mark.skip`, `skipif`, `xfail`, `pytest.skip(` y `pytest.xfail(`
   en tests de `rag-orchestrator`, y un módulo no-test con el texto `pytest.skip(` que no alerta `[US-213 AC-8]`. Luego Ruff `PT`
   en `apps/rag-orchestrator/pyproject.toml` y `scripts/quality/check-pytest-hygiene.py` (AST, regla `tests-sin-desactivar`,
   D2) invocado desde `quality.mjs`. Verifica: casos en verde.

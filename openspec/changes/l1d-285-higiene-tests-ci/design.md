@@ -32,8 +32,8 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   llamadas `pytest.skip`/`pytest.xfail`) y emite hallazgos `tests-sin-desactivar` con el formato del reporte. Se invoca desde
   `scripts/quality/quality.mjs` (`higiene-pytest.mjs`). El `pre-commit-gate.sh` se mantiene como primera línea; la CI es la garantía.
   **Adición de implementación (aprobada por sprint-S3, 2026-10-24):** Ruff queda con `select = E4,E7,E9,F,PT` en
-  `apps/rag-orchestrator/pyproject.toml` e `ignore = PT001, PT006, PT011, PT018`: son solo de estilo y los tests vigentes
-  acumulan **298 hallazgos** en ellas (PT018 268, PT011 22, PT001 5, PT006 3). Deuda con destino: US-232 (calidad, S6); las
+  `apps/rag-orchestrator/pyproject.toml` y `per-file-ignores` de `tests/**` = PT001, PT006, PT011, PT018 (solo allí; `quality` ejecuta `ruff check --select PT` como error vía `ruff-pt.mjs`): son solo de estilo y los tests vigentes
+  acumulan **298 hallazgos** en ellas (PT018 268, PT011 22, PT001 5, PT006 3). Deuda: **historia nueva de deuda de estilo de pytest por crear** (no US-232, que es funciones de `clinical-api` > umbrales); las
   reglas PT restantes (p. ej. PT003) siguen activas y un test lo demuestra. Los fixtures de la higiene de Pytest se escriben en
   un directorio temporal al ejecutar el test, porque `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`.
 - **D3 · `check-ac-coverage` como alerta.** Lee `openspec/changes/*/proposal.md` (no `archive/`), extrae `US-xxx` del bloque
