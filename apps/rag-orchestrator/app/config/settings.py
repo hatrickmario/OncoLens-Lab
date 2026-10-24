@@ -471,9 +471,7 @@ class CorpusIngestSettings(AjustesDeCorpus):
     @field_validator("sparse_vector_source")
     @classmethod
     def _origen_admitido(cls, valor: str) -> str:
-        if valor != "modelo_embeddings":
-            raise ValueError("solo se admite modelo_embeddings (ADR-39)")
-        return valor
+        return modelos.opcion(*modelos.SPARSE_VECTOR_SOURCES_ADMITIDAS)(valor)
 
     @field_validator("embedding_sparse_weights_sha256")
     @classmethod
