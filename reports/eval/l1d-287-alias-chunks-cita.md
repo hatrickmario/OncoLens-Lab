@@ -1,4 +1,4 @@
-## ai-eval-runner · feat/l1d-287-alias-chunks-cita (9ad2992b) · suite all (eval-required, CI)
+## ai-eval-runner · feat/l1d-287-alias-chunks-cita (9ad2992b; tabla main vs rama de 9ad2992b, repetida en 189a06ab con el prompt final) · suite all (eval-required, CI)
 Veredicto: PASS
 
 Cambio: prompt rag-query 0.2.0 -> 0.3.0 (alias de chunks en la cita). Base de comparación: merge-base abfdc0c6 (main).
@@ -26,7 +26,7 @@ mejora; solo que no hay regresión en pipeline, umbrales ni validación. Precisi
 meta en el baseline de main (TBD-02/DEC-07 sin validar la fixture); no es atribuible a este change.
 
 ### 2. Medición con LLM real (gemma4:26b-a4b-it-q4_K_M, Ollama local, temperatura 0)
-Script `eval/medicion_us236.py` de la rama, apuntado a cada árbol (worktree de la rama y de origin/main). 10 corridas por conjunto, sin errores.
+Script de la rama (`python -m app.evaluation.medicion_alias --config eval/configs/us236-alias.yaml --salida RUTA --max-preguntas N`; `eval/medicion_us236.py` es un atajo), medido al inicio contra cada árbol (worktree de la rama y de origin/main) con la versión inicial del script (commit 306a58f7). 10 corridas por conjunto, sin errores.
 
 | Conjunto | main (rag-query@0.2.0) | rama (rag-query@0.3.0) |
 |---|---|---|
@@ -35,6 +35,7 @@ Script `eval/medicion_us236.py` de la rama, apuntado a cada árbol (worktree de 
 
 La variante origen_ruido reproduce el fallo original en main (cita_invalida 10/10) y la rama lo elimina (0/10). Esto evidencia la
 mejora de AC-7 en la variante sintética. Datos crudos: `.llm-main.json` y `.llm-rama.json`.
+Repetido en 189a06ab con el prompt final: origen 10/10, origen_ruido 10/10, cita_invalida 0, 9/9 citas válidas en 5 preguntas (datos: `.llm-rama-final.json`, re-medido con la factory de producción tras 243d2e41).
 El dataset adr39-mini (69 preguntas, 102/102 citas válidas en rama y main) lo midió el implementador; no se repitió aquí.
 
 ### Hallazgos
