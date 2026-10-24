@@ -184,6 +184,22 @@ describe('vitest raíz y job quality', () => {
     }
   });
 
+  it('build-test publica la Cobertura XML de Pytest y quality la descarga antes del reporte [US-213 AC-11]', () => {
+    const pytest = pasosDe(ci.jobs['build-test']).find((paso) => /python -m pytest/.test(paso.run ?? ''));
+    const subida = pasosDe(ci.jobs['build-test']).find((paso) => paso.with?.name === 'cobertura-rag-orchestrator');
+    const pasosDeQuality = pasosDe(ci.jobs.quality);
+    const descarga = pasosDeQuality.findIndex((paso) => paso.with?.name === 'cobertura-rag-orchestrator');
+    const reporte = pasosDeQuality.findIndex((paso) => paso.run === 'npm run quality:report');
+
+    expect(pytest.run).toContain('--cov=app --cov-report=xml:coverage/coverage.xml');
+    expect(subida.if).toBe('always()');
+    expect(subida.with.path).toBe('apps/rag-orchestrator/coverage/coverage.xml');
+    expect(ci.jobs.quality.needs).toContain('build-test');
+    expect(descarga).toBeGreaterThanOrEqual(0);
+    expect(descarga).toBeLessThan(reporte);
+    expect(pasosDeQuality[descarga].uses).toMatch(/^actions\/download-artifact@[0-9a-f]{40}/);
+  });
+
   it('el job quality publica reports/quality/latest.json como artefacto aunque la calidad falle [US-213 AC-11]', () => {
     const subida = pasosDe(ci.jobs.quality).find((paso) => paso.with?.path === 'reports/quality/latest.json');
 

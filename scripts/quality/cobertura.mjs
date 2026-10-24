@@ -13,6 +13,9 @@ export const INFORMES_LCOV = [
   { lcov: 'apps/clinical-api/coverage/lcov.info', base: 'apps/clinical-api' },
 ];
 
+/** Cobertura XML de `pytest-cov` (`--cov-report=xml:coverage/coverage.xml`, L1D-285 tarea 3.4); `coverage/` está ignorado por git. */
+export const INFORMES_COBERTURA_XML = ['apps/rag-orchestrator/coverage/coverage.xml'];
+
 /** Diff unificado sin contexto (`-U0`) → archivo → conjunto de líneas añadidas o modificadas. */
 export function lineasCambiadas(diff) {
   const cambios = new Map();
@@ -54,8 +57,27 @@ export function lineasInstrumentadas(lcov, base) {
   return archivos;
 }
 
-const aRelativo = (archivo, raiz) =>
-  path.isAbsolute(archivo) ? path.relative(raiz, archivo).split(path.sep).join('/') : archivo;
+/**
+ * Cobertura XML de `pytest-cov` (coverage.py) → archivo (relativo a la raíz del repositorio) → línea → veces ejecutada.
+ * Los `filename` son relativos al `<source>` (p. ej. `domain/x.py` bajo `…/apps/rag-orchestrator/app`), por eso se resuelven
+ * contra él; no hay dependencia de XML porque el formato es plano y estable.
+ */
+export function lineasInstrumentadasCobertura(xml, raiz) {
+  const fuente = /<source>([^<]+)<\/source>/.exec(xml)?.[1]?.trim() ?? raiz;
+  const archivos = new Map();
+  for (const [, filename, cuerpo] of xml.matchAll(/<class\b[^>]*\bfilename="([^"]+)"[^>]*>([\s\S]*?)<\/class>/g)) {
+    const lineas = new Map();
+    for (const [, numero, veces] of cuerpo.matchAll(/<line\b[^>]*\bnumber="(\d+)"[^>]*\bhits="(\d+)"/g)) {
+      lineas.set(Number(numero), Number(veces));
+    }
+    archivos.set(aRelativo(path.resolve(fuente, filename), raiz), lineas);
+  }
+  return archivos;
+}
+
+function aRelativo(archivo, raiz) {
+  return path.isAbsolute(archivo) ? path.relative(raiz, archivo).split(path.sep).join('/') : archivo;
+}
 
 /**
  * Porcentaje de líneas cambiadas e instrumentadas que ejecutaron los tests, por archivo cambiado. Las líneas que v8 no
@@ -64,8 +86,11 @@ const aRelativo = (archivo, raiz) =>
 export function medirLineasCambiadas(diff, informes, raiz) {
   const cambiadas = lineasCambiadas(diff);
   const instrumentadas = new Map();
-  for (const { lcov, base } of informes) {
-    for (const [archivo, lineas] of lineasInstrumentadas(lcov, base)) instrumentadas.set(aRelativo(archivo, raiz), lineas);
+  for (const informe of informes) {
+    const archivos = informe.coberturaXml
+      ? lineasInstrumentadasCobertura(informe.coberturaXml, raiz)
+      : lineasInstrumentadas(informe.lcov, informe.base);
+    for (const [archivo, lineas] of archivos) instrumentadas.set(aRelativo(archivo, raiz), lineas);
   }
   const medidas = [];
   for (const [archivo, lineas] of cambiadas) {
@@ -107,10 +132,15 @@ export function alertasDeCobertura(medidas, { changedLinesWarn, alertPaths }) {
  * la rama base no hay nada que medir y devuelve `null` (el reporte lo dice); nunca inventa un 100 %.
  */
 export function medirCoberturaDelPr(raiz, { baseGit = process.env.COBERTURA_BASE ?? 'origin/main' } = {}) {
-  const informes = INFORMES_LCOV.filter(({ lcov }) => existsSync(path.join(raiz, lcov))).map(({ lcov, base }) => ({
-    lcov: readFileSync(path.join(raiz, lcov), 'utf8'),
-    base,
-  }));
+  const informes = [
+    ...INFORMES_LCOV.filter(({ lcov }) => existsSync(path.join(raiz, lcov))).map(({ lcov, base }) => ({
+      lcov: readFileSync(path.join(raiz, lcov), 'utf8'),
+      base,
+    })),
+    ...INFORMES_COBERTURA_XML.filter((ruta) => existsSync(path.join(raiz, ruta))).map((ruta) => ({
+      coberturaXml: readFileSync(path.join(raiz, ruta), 'utf8'),
+    })),
+  ];
   if (informes.length === 0) return null;
   const ancestro = spawnSync('git', ['merge-base', baseGit, 'HEAD'], { cwd: raiz, encoding: 'utf8' });
   if (ancestro.status !== 0) return null;
