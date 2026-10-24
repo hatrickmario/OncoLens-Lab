@@ -44,6 +44,7 @@ from tests.support.ingesta import (
     CodificadorSparseFalso,
     EmbedderInterrumpible,
 )
+from tests.support.metadatos import FakeMetadataLlm
 from tests.support.semilla import (
     DIRECTORIO_DE_FIXTURES,
     FECHA_DE_CORTE_DE_TEST,
@@ -149,6 +150,7 @@ class Montaje:
     servicio: IngestionPipelineService
     directorio: Path
     observador: Observador
+    llm_metadatos: FakeMetadataLlm
 
     def ingerir(self, manifiesto: Path | None = None) -> ReporteDeIngesta:
         return self.servicio.ingerir(self.documentos(manifiesto))
@@ -194,7 +196,16 @@ def montar(directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
     embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
     servicio = _servicio(catalogo, almacen, directorio_de_textos, embedder, sparse)
     observador = ObservadorEnMemoria(catalogo, almacen)
-    return Montaje(catalogo, almacen, embedder, sparse, servicio, directorio_de_textos, observador)
+    return Montaje(
+        catalogo,
+        almacen,
+        embedder,
+        sparse,
+        servicio,
+        directorio_de_textos,
+        observador,
+        FakeMetadataLlm(),
+    )
 
 
 @pytest.fixture
@@ -223,7 +234,16 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Pat
         embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
         servicio = _servicio(catalogo, almacen, directorio, embedder, sparse)
         observador = ObservadorReal(motor, cliente, ajustes.milvus_collection_name)
-        return Montaje(catalogo, almacen, embedder, sparse, servicio, directorio, observador)
+        return Montaje(
+            catalogo,
+            almacen,
+            embedder,
+            sparse,
+            servicio,
+            directorio,
+            observador,
+            FakeMetadataLlm(),
+        )
 
     yield montar_real
     with motor.begin() as conexion:

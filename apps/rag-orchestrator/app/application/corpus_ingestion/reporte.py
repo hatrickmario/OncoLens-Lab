@@ -6,9 +6,11 @@ Nunca lleva contenido de los documentos, URLs ni mensajes de excepción: se impr
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
+
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
 
 
 class Estado(StrEnum):
@@ -36,6 +38,14 @@ class ResultadoDeIngesta:
     reanudado: bool = False
     # Un rechazo por licencia o fuente retiró la versión vigente del grupo (RN-21, RN-05).
     retirada_de_vigente: bool = False
+    # Paso de metadatos (US-118): qué se escribió y de dónde salió. Solo el origen y el motivo se serializan; los valores
+    # se quedan en memoria para la muestra humana (``compare=False``: no cambian la identidad del resultado).
+    metadatos: MetadatosResueltos | None = field(default=None, repr=False, compare=False)
+    document_id: str | None = field(default=None, repr=False, compare=False)
+
+    @property
+    def metadata_source(self) -> str | None:
+        return self.metadatos.metadata_source if self.metadatos else None
 
 
 @dataclass(frozen=True)
