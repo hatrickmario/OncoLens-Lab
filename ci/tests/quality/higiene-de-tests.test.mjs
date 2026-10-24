@@ -26,17 +26,17 @@ const mocks = () => [bloqueMockSoloEnBordes([`${FIXTURES}/**`])];
 describe('higiene de tests: desactivados y enfocados', () => {
   it.each([
     ['it-only.fixture.ts', 3, 'vitest/no-focused-tests'],
-    ['fit.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['fit.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
     ['it-skip.fixture.ts', 3, 'vitest/no-disabled-tests'],
     ['describe-skip.fixture.ts', 2, 'vitest/no-disabled-tests'],
     ['xit.fixture.ts', 3, 'vitest/no-disabled-tests'],
-    ['it-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['it-skipif.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['it-runif.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['it-each-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['it-bracket-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['test-concurrent-todo.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
-    ['contexto-skip.fixture.ts', 3, 'oncolens/tests-sin-desactivar'],
+    ['it-todo.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['it-skipif.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['it-runif.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['it-each-todo.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['it-bracket-todo.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['test-concurrent-todo.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
+    ['contexto-skip.fixture.ts', 3, 'oncolens/tests-sin-pendientes-ni-foco-jest'],
   ])(
     'falla nombrando archivo, línea y regla cuando %s desactiva o enfoca un test [US-213 AC-8]',
     async (nombre, linea, regla) => {
@@ -58,7 +58,7 @@ describe('higiene de tests: desactivados y enfocados', () => {
   it('falla también con la regla propia cuando el salto viene de ctx.skip() [US-213 AC-8]', async () => {
     const hallazgos = await hallazgosDe('contexto-skip-miembro.fixture.ts', higiene());
 
-    expect(hallazgos.map((hallazgo) => hallazgo.rule)).toContain('oncolens/tests-sin-desactivar');
+    expect(hallazgos.map((hallazgo) => hallazgo.rule)).toContain('oncolens/tests-sin-pendientes-ni-foco-jest');
     expect(hallazgos.every((hallazgo) => hallazgo.line === 3)).toBe(true);
   }, TIEMPO_MAXIMO_MS);
 
@@ -77,7 +77,7 @@ describe('higiene de tests: desactivados y enfocados', () => {
       const reglas = (await eslint.calculateConfigForFile(ruta)).rules;
       expect(reglas['vitest/no-focused-tests'][0]).toBe(2);
       expect(reglas['vitest/no-disabled-tests'][0]).toBe(2);
-      expect(reglas['oncolens/tests-sin-desactivar'][0]).toBe(2);
+      expect(reglas['oncolens/tests-sin-pendientes-ni-foco-jest'][0]).toBe(2);
       expect(reglas['oncolens/mock-solo-en-bordes'][0]).toBe(2);
     }
   }, TIEMPO_MAXIMO_MS);

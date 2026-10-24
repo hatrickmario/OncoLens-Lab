@@ -25,8 +25,8 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   `no-disabled-tests` —incluye `it.todo`—, `valid-title`) en el bloque de tests de `eslint.config.js`, nivel `error`, fuera
   del mecanismo de `excepciones` de `quality-thresholds.json`. Descartado: reutilizar la regex del *hook* (no entiende AST;
   falsos positivos en strings). **Corrección de diseño (implementación, aprobada por sprint-S3, 2026-10-24):** el plugin
-  (1.6.27) no ve `it.todo` ni `fit`; los cubre la regla propia `oncolens/tests-sin-desactivar`
-  (`scripts/quality/eslint-rules/tests-sin-desactivar.mjs`), con fixtures y tests.
+  (1.6.27) no ve `it.todo` ni `fit`; los cubre la regla propia `oncolens/tests-sin-pendientes-ni-foco-jest`
+  (`scripts/quality/eslint-rules/tests-sin-pendientes-ni-foco-jest.mjs`), con fixtures y tests.
 - **D2 · Higiene en Python con Ruff `PT` + script propio.** Ruff `PT` cubre estilo, no prohíbe `skip`/`xfail`;
   `scripts/quality/check-pytest-hygiene.py` recorre el AST de `tests/**/*.py` (marcadores `skip`, `skipif`, `xfail` y
   llamadas `pytest.skip`/`pytest.xfail`) y emite hallazgos `tests-sin-desactivar` con el formato del reporte. Se invoca desde

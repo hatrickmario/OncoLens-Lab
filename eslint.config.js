@@ -10,7 +10,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import vitest from '@vitest/eslint-plugin';
 import { GLOBS_DE_TESTS } from './scripts/quality/archivos-de-test.mjs';
 import mockSoloEnBordes from './scripts/quality/eslint-rules/mock-solo-en-bordes.mjs';
-import testsSinDesactivar from './scripts/quality/eslint-rules/tests-sin-desactivar.mjs';
+import testsSinPendientesNiFocoJest from './scripts/quality/eslint-rules/tests-sin-pendientes-ni-foco-jest.mjs';
 import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
 import { escaparGlob, excepcionesVigentes, leerUmbrales } from './scripts/quality/umbrales.mjs';
 
@@ -23,7 +23,7 @@ const pluginOncolens = {
   rules: {
     'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente,
     'mock-solo-en-bordes': mockSoloEnBordes,
-    'tests-sin-desactivar': testsSinDesactivar,
+    'tests-sin-pendientes-ni-foco-jest': testsSinPendientesNiFocoJest,
   },
 };
 
@@ -135,7 +135,7 @@ export const bloqueHigieneDeTests = (files = ARCHIVOS_DE_TESTS) => ({
   plugins: { vitest, oncolens: pluginOncolens },
   rules: {
     // `it.todo` y `fit` no los ven las reglas del plugin de Vitest: los cubre la regla propia.
-    'oncolens/tests-sin-desactivar': 'error',
+    'oncolens/tests-sin-pendientes-ni-foco-jest': 'error',
     'vitest/no-focused-tests': 'error',
     'vitest/no-disabled-tests': 'error',
     'vitest/valid-title': 'error',

@@ -30,7 +30,7 @@
 
 ## 2. clinical-platform
 
-- [x] 2.1 (hecha con la regla propia `oncolens/tests-sin-desactivar` para `it.todo` y `fit`, corrección de D1) (test después) Fixtures de PR en `ci/tests/quality/` con `it.only`, `it.skip`, `describe.skip`, `xit`, `fit`, `it.todo`
+- [x] 2.1 (hecha con la regla propia `oncolens/tests-sin-pendientes-ni-foco-jest` para `it.todo` y `fit`, corrección de D1) (test después) Fixtures de PR en `ci/tests/quality/` con `it.only`, `it.skip`, `describe.skip`, `xit`, `fit`, `it.todo`
   en tests de `web` y `clinical-api`, y casos de `npm run quality` que esperan fallo con archivo, línea y regla `[US-213 AC-8]`.
   Luego `@vitest/eslint-plugin` (versión exacta) en el bloque de tests de `eslint.config.js` (D1), fuera de `excepciones`.
   Verifica: casos en verde (el job falla donde debe) y `npm run quality` en verde en `main`.

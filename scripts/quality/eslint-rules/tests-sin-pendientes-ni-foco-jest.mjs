@@ -1,4 +1,4 @@
-// Regla `oncolens/tests-sin-desactivar` (L1D-285, US-213 AC-8): completa a `vitest/no-focused-tests` y
+// Regla `oncolens/tests-sin-pendientes-ni-foco-jest` (L1D-285, US-213 AC-8): completa a `vitest/no-focused-tests` y
 // `vitest/no-disabled-tests`, que no ven `it.todo(...)` (un test sin cuerpo que nunca falla), los saltos condicionales
 // (`skipIf`, `runIf`), las cadenas (`it.each([...]).todo`, `test.concurrent.todo`, `it['todo']`), el salto desde el contexto del
 // test (`({ skip }) => skip()`, `ctx.skip()`) ni `fit` / `fdescribe` (el foco de Jest). Mismo id que la regla de Python
@@ -51,12 +51,12 @@ export default {
     schema: [],
     messages: {
       pendiente:
-        "tests-sin-desactivar: '{{llamada}}' (todo) deja un test sin cuerpo que nunca falla; escribe el test (en rojo) o quítalo con el trailer Test-Removal.",
+        "tests-sin-pendientes-ni-foco-jest: '{{llamada}}' (todo) deja un test sin cuerpo que nunca falla; escribe el test (en rojo) o quítalo con el trailer Test-Removal.",
       condicional:
-        "tests-sin-desactivar: '{{llamada}}' (skipIf/runIf) desactiva el test según una condición; un test se ejecuta siempre o se arregla.",
-      foco: "tests-sin-desactivar: '{{llamada}}' enfoca el test y el resto de la suite deja de correr.",
+        "tests-sin-pendientes-ni-foco-jest: '{{llamada}}' (skipIf/runIf) desactiva el test según una condición; un test se ejecuta siempre o se arregla.",
+      foco: "tests-sin-pendientes-ni-foco-jest: '{{llamada}}' enfoca el test y el resto de la suite deja de correr.",
       saltoDeContexto:
-        "tests-sin-desactivar: '{{llamada}}' salta el test desde su cuerpo; un test se ejecuta siempre o se arregla.",
+        "tests-sin-pendientes-ni-foco-jest: '{{llamada}}' salta el test desde su cuerpo; un test se ejecuta siempre o se arregla.",
     },
   },
   create(contexto) {

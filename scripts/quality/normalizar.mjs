@@ -142,27 +142,31 @@ export function evaluarImportLinter(estado, texto, directorio) {
 }
 
 const REGLAS_DE_TAMANO = 'max-lines-per-function|complexity|max-lines';
-// `eslint-disable` que nombra una regla de tamaño, o que desactiva todo (sin lista de reglas).
-const DESACTIVA_TAMANO = new RegExp(
-  `eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${REGLAS_DE_TAMANO})\\b|\\s*(?:\\*/|--|$))`,
-);
+// Reglas de higiene de tests (US-213 AC-8, AC-10): una directiva tampoco puede apagarlas (Gate 2 #3).
+const REGLAS_DE_HIGIENE =
+  'vitest/no-focused-tests|vitest/no-disabled-tests|vitest/valid-title|oncolens/tests-sin-pendientes-ni-foco-jest|oncolens/mock-solo-en-bordes';
+// `eslint-disable` que nombra alguna de las reglas, o que desactiva todo (sin lista de reglas).
+const desactiva = (reglas) =>
+  new RegExp(`eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${reglas})\\b|\\s*(?:\\*/|--|$))`);
+const DESACTIVA_TAMANO = desactiva(REGLAS_DE_TAMANO);
+const DESACTIVA_HIGIENE = desactiva(REGLAS_DE_HIGIENE);
 
-/** Hallazgo por cada comentario `eslint-disable` que silencia tamaño o complejidad (o todo). */
+/**
+ * Hallazgo por cada comentario `eslint-disable` que silencia tamaño o complejidad (o todo), y por cada uno que silencia una
+ * regla de higiene de tests. Un comentario que apaga todo cuenta como tamaño (una sola vez).
+ */
 export function buscarDesactivacionesDeTamano(archivos) {
   return archivos.flatMap(({ file, texto }) =>
-    texto.split('\n').flatMap((linea, indice) =>
-      DESACTIVA_TAMANO.test(linea)
-        ? [
-            hallazgo({
-              tool: 'quality',
-              rule: 'sin-eslint-disable-de-tamano',
-              file,
-              line: indice + 1,
-              symbol: linea.trim(),
-            }),
-          ]
-        : [],
-    ),
+    texto.split('\n').flatMap((linea, indice) => {
+      const regla = DESACTIVA_TAMANO.test(linea)
+        ? 'sin-eslint-disable-de-tamano'
+        : DESACTIVA_HIGIENE.test(linea)
+          ? 'sin-eslint-disable-de-higiene-de-tests'
+          : null;
+      return regla
+        ? [hallazgo({ tool: 'quality', rule: regla, file, line: indice + 1, symbol: linea.trim() })]
+        : [];
+    }),
   );
 }
 

@@ -1,9 +1,12 @@
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { verificarHigieneDePytest } from '../../../scripts/quality/higiene-pytest.mjs';
 import { verificarEstiloDePytest } from '../../../scripts/quality/ruff-pt.mjs';
+import { hallazgosPropios } from '../../../scripts/quality/quality.mjs';
+import { leerUmbrales } from '../../../scripts/quality/umbrales.mjs';
 import { RAIZ, exigirRuff } from './soporte.mjs';
 
 // L1D-285 (test después): PR de fixture con tests de Pytest desactivados. Los fixtures se escriben en un directorio temporal
@@ -112,12 +115,21 @@ describe('higiene de tests de Pytest', () => {
   it('quality.mjs ejecuta el estilo de pytest sobre rag-orchestrator con su pyproject [US-213 AC-8]', () => {
     const fuente = readFileSync(path.join(RAIZ, 'scripts/quality/quality.mjs'), 'utf8');
 
-    expect(fuente).toContain('verificarEstiloDePytest(RAIZ, RAG, `${RAG}/pyproject.toml`)');
+    expect(fuente).toContain('verificarEstiloDePytest(raiz, RAG, `${RAG}/pyproject.toml`)');
   });
 
-  it('está invocada desde quality.mjs sobre los tests de rag-orchestrator [US-213 AC-8]', () => {
-    const fuente = readFileSync(path.join(RAIZ, 'scripts/quality/quality.mjs'), 'utf8');
+  it('quality la invoca sobre los tests de rag-orchestrator de su raíz y el hallazgo llega como error [US-213 AC-8]', () => {
+    const raiz = mkdtempSync(path.join(os.tmpdir(), 'oncolens-cableado-pytest-'));
+    mkdirSync(path.join(raiz, 'apps/rag-orchestrator/tests'), { recursive: true });
+    writeFileSync(path.join(raiz, 'apps/rag-orchestrator/tests/test_x.py'), modulo(`${MARCA('skip')}(reason="x")`, 'def test_algo_cuando_pasa_algo():', CUERPO.trimEnd()));
+    try {
+      const propios = hallazgosPropios(raiz, leerUmbrales(), null);
 
-    expect(fuente).toContain('verificarHigieneDePytest(RAIZ, `${RAG}/tests`)');
-  });
+      expect(propios).toEqual([
+        expect.objectContaining({ rule: 'tests-sin-desactivar', file: 'apps/rag-orchestrator/tests/test_x.py', severity: 'error' }),
+      ]);
+    } finally {
+      rmSync(raiz, { recursive: true, force: true });
+    }
+  }, TIEMPO_MAXIMO_MS);
 });
