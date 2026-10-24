@@ -11,6 +11,8 @@ const VITEST = path.join(RAIZ, 'node_modules/.bin/vitest');
 const CARPETAS_VIGILADAS = ['apps/rag-orchestrator/tests', 'apps/rag-orchestrator', 'scripts/ci', 'packages'];
 const INTERVALO_DE_SONDEO_MS = 2;
 const RONDAS = 3;
+// Plazo de cada proceso hijo: si vitest se cuelga, la señal lo aborta y la ronda falla (nunca espera indefinidamente).
+const PLAZO_DEL_HIJO_MS = 40_000;
 const TIEMPO_MAXIMO_MS = 120_000;
 
 const listar = () => Object.fromEntries(CARPETAS_VIGILADAS.map((carpeta) => [carpeta, new Set(readdirSync(path.join(RAIZ, carpeta)))]));
@@ -19,7 +21,7 @@ const listar = () => Object.fromEntries(CARPETAS_VIGILADAS.map((carpeta) => [car
 function correrVigilandoElArbol(archivo, nombre, base) {
   return new Promise((resolver, rechazar) => {
     const intento = { visto: [] };
-    const hijo = spawn(VITEST, ['run', archivo, '-t', nombre], { cwd: RAIZ, stdio: 'ignore' });
+    const hijo = spawn(VITEST, ['run', archivo, '-t', nombre], { cwd: RAIZ, stdio: 'ignore', signal: AbortSignal.timeout(PLAZO_DEL_HIJO_MS), killSignal: 'SIGKILL' });
     const sondeo = setInterval(() => {
       const ahora = listar();
       for (const carpeta of CARPETAS_VIGILADAS) {
@@ -28,7 +30,10 @@ function correrVigilandoElArbol(archivo, nombre, base) {
         }
       }
     }, INTERVALO_DE_SONDEO_MS);
-    hijo.on('error', rechazar);
+    hijo.on('error', (error) => {
+      clearInterval(sondeo);
+      rechazar(error);
+    });
     hijo.on('close', (codigo) => {
       clearInterval(sondeo);
       resolver({ codigo, nuevos: [...new Set(intento.visto)] });

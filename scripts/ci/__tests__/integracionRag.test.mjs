@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -17,6 +17,8 @@ const SECRETOS_PERMITIDOS = ['pg_test_admin_password', 'pg_rag_corpus_password',
 const DOCKER_FALSO = `#!/usr/bin/env bash
 echo "$*" >> "$STUB_LOG"
 echo "$COMPOSE_PROJECT_NAME" >> "$STUB_LOG.proyecto"
+# Un docker que no responde (un registro colgado): el plazo del test debe cortar la ejecución.
+[ "$STUB_MODO" = cuelga ] && exec /bin/sleep 3
 sub=""
 for a in "$@"; do case "$a" in config|pull|up|ps|run|build|down) sub="$a"; break ;; esac; done
 case "$sub" in
@@ -70,15 +72,18 @@ beforeAll(() => {
   writeFileSync(path.join(temporal, 'npm'), '#!/usr/bin/env bash\nexit 0\n');
   chmodSync(path.join(temporal, 'npm'), 0o755);
 });
-// Los enlaces a node_modules se quitan con unlink ANTES del borrado recursivo: nunca se borra a través de un enlace.
+// Los enlaces a node_modules se quitan ANTES (sin `recursive`, así rmSync borra el enlace y no su destino) del borrado recursivo.
 afterAll(() => {
-  for (const enlace of enlaces) unlinkSync(enlace);
+  for (const enlace of enlaces) rmSync(enlace, { force: true });
   rmSync(temporal, { recursive: true, force: true });
 });
 
 const leerLineas = (archivo) => (existsSync(archivo) ? readFileSync(archivo, 'utf8').split('\n').filter(Boolean) : []);
 
-function correr(modo, entorno = {}, script = SCRIPT) {
+// Plazo por defecto de una ejecución del script con docker falso: `spawnSync` es síncrono y el timeout del describe no lo interrumpe.
+const PLAZO_DEL_SCRIPT_MS = 25_000;
+
+function correr(modo, entorno = {}, script = SCRIPT, { plazoMs = PLAZO_DEL_SCRIPT_MS } = {}) {
   const registro = path.join(temporal, `registro-${modo}-${Object.keys(entorno).join('')}.log`);
   rmSync(registro, { force: true });
   rmSync(`${registro}.proyecto`, { force: true });
@@ -88,6 +93,8 @@ function correr(modo, entorno = {}, script = SCRIPT) {
   const resultado = spawnSync('bash', [script], {
     cwd: RAIZ,
     encoding: 'utf8',
+    timeout: plazoMs,
+    killSignal: 'SIGKILL',
     env: {
       ...process.env,
       PATH: `${temporal}:${process.env.PATH}`,
@@ -96,6 +103,7 @@ function correr(modo, entorno = {}, script = SCRIPT) {
       ...entorno,
     },
   });
+  if (resultado.error?.code === 'ETIMEDOUT') throw new Error(`el script no terminó en ${plazoMs} ms (modo ${modo})`);
   const proyectos = leerLineas(`${registro}.proyecto`);
   const copiado = leerLineas(`${registro}.copiado`);
   const llamadas = existsSync(registro) ? readFileSync(registro, 'utf8').split('\n').filter(Boolean) : [];
@@ -314,6 +322,12 @@ describe('descarga de imágenes de integracion-rag-orchestrator.sh [US-213 AC-13
     expect(salida).toMatch(/no quedaron sanos/);
     expect(salida).not.toMatch(/no se pudo descargar/);
     expect(llamadas.filter((llamada) => /\bup\b/.test(llamada))).toHaveLength(1);
+  });
+});
+
+describe('plazo de las ejecuciones del script', { timeout: 30_000 }, () => {
+  it('falla por plazo, y no se queda colgado, cuando docker no responde [US-213 AC-13]', () => {
+    expect(() => correr('cuelga', {}, SCRIPT, { plazoMs: 1_500 })).toThrowError(/el script no terminó en 1500 ms/);
   });
 });
 
