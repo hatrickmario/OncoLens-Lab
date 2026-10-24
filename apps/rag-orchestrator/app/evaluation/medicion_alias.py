@@ -23,13 +23,14 @@ from types import SimpleNamespace
 from typing import Any
 
 from app.application.generation import LlmEvidenceGenerator
+from app.bootstrap import crear_generador_local
+from app.config.settings import Settings
 from app.domain.citations import validar_citas
 from app.domain.relevance import ChunkPuntuado
 from app.evaluation.config_suite import ConfigInvalida, ConfigSuite, cargar_config_suite
-from app.evaluation.corrida import _solicitud_base
+from app.evaluation.corrida import citas_propuestas_de, solicitud_base
 from app.evaluation.dataset_loader import cargar_dataset_configurado
 from app.evaluation.rutas import raiz_repo
-from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -39,8 +40,6 @@ ID_DEL_ORIGEN = (
     f"{DOCUMENTO_DEL_ORIGEN}@a3bb26468a32#0000"  # largo y con hash, como en la demo del 2026-10-23
 )
 CARACTERES_DEL_ORIGEN = 1800
-TIMEOUT_MS = 180000
-MAX_TOKENS_DE_SALIDA = 2048
 RUIDO = [r"$\mathrm{CDK4/6i}$", r"\(\geq\)", r"$\textit{n}=5101$", r"\%", r"$^{\dagger}$"]
 
 
@@ -79,7 +78,7 @@ def con_ruido(texto: str) -> str:
 
 
 def _solicitud_de(pregunta: str) -> RagQueryInternalRequest:
-    cruda: dict[str, Any] = _solicitud_base()
+    cruda: dict[str, Any] = solicitud_base()
     cruda["query"] = pregunta
     return RagQueryInternalRequest.model_validate(cruda)
 
@@ -97,23 +96,25 @@ async def medir(
         return {"error": type(error).__name__, "s": round(time.perf_counter() - inicio, 1)}
     ids = {c.chunk_id for c in chunks}
     resultado = validar_citas(evidencia.opciones, ids)
-    citas = [c for o in evidencia.opciones for c in o.chunk_ids_citados]
     return {
         "opciones": len(evidencia.opciones),
         "aceptadas": len(resultado.aceptadas),
         "cita_invalida": sum(d.motivo.value == "cita_invalida" for d in resultado.descartadas),
         "sin_citas": sum(d.motivo.value == "sin_citas" for d in resultado.descartadas),
-        "citas": len(citas),
-        "citas_validas": sum(c in ids for c in citas),
+        "citas": citas_propuestas_de(evidencia.opciones),
+        "citas_validas": sum(len(a.chunk_ids_validos) for a in resultado.aceptadas),
         "s": round(time.perf_counter() - inicio, 1),
     }
 
 
-async def correr(params: ParametrosDeMedicion, salida: Path, max_preguntas: int) -> None:
-    cliente = OpenAICompatibleLlmClient(
-        params.url_llm, params.modelo, TIMEOUT_MS, MAX_TOKENS_DE_SALIDA, 0.0
-    )
-    generador = LlmEvidenceGenerator(cliente, 2, 12000)
+def generador_de(params: ParametrosDeMedicion) -> LlmEvidenceGenerator:
+    """El generador de producción (``crear_generador_local``): hereda de ``Settings`` todo salvo URL y modelo."""
+    return crear_generador_local(Settings(llm_base_url=params.url_llm, llm_model=params.modelo))
+
+
+async def correr(
+    generador: LlmEvidenceGenerator, params: ParametrosDeMedicion, salida: Path, max_preguntas: int
+) -> None:
     raiz = raiz_repo()
     ruta_texto = raiz / "data/raw/seed/docs" / f"{DOCUMENTO_DEL_ORIGEN}.txt"
     texto = ruta_texto.read_text(encoding="utf-8")[:CARACTERES_DEL_ORIGEN]
@@ -153,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     args = analizador.parse_args(argv)
     params = parametros_de(cargar_config_suite(args.config))
     salida = args.salida or Path("eval/results") / f"us236-{VERSION_DEL_PROMPT}.json"
-    asyncio.run(correr(params, salida, args.max_preguntas))
+    asyncio.run(correr(generador_de(params), params, salida, args.max_preguntas))
     return 0
 
 

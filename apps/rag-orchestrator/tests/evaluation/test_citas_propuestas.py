@@ -23,6 +23,12 @@ def test_citas_propuestas_cuenta_cada_alias_inexistente_aparte_y_la_precision_no
     assert sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas) == 1
 
 
+def test_citas_propuestas_cuenta_dos_veces_el_mismo_alias_inexistente_repetido():
+    tabla = asignar_alias([ChunkPuntuado("ch-a", "doc", "texto", 0.9)])
+
+    assert citas_propuestas_de([_opcion(*traducir_citas(tabla, ["C9", "C9"]))]) == 2
+
+
 def test_citas_propuestas_deduplica_solo_los_chunk_id_reales_repetidos():
     assert citas_propuestas_de([_opcion("ch-a", "ch-a", "ch-b")]) == 2
 

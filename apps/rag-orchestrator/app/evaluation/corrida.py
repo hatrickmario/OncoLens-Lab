@@ -52,7 +52,7 @@ def citas_propuestas_de(opciones: Sequence[OpcionGenerada]) -> int:
     return total
 
 
-def _solicitud_base() -> dict[str, Any]:
+def solicitud_base() -> dict[str, Any]:
     return json.loads((raiz_repo() / SOLICITUD_BASE).read_text(encoding="utf-8"))
 
 
@@ -75,7 +75,7 @@ def solicitud_de(
 async def evaluar_dataset(
     suite: ServicioDeSuite, dataset: DatasetSuite
 ) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse]]:
-    base = _solicitud_base()
+    base = solicitud_base()
     resultados: list[ResultadoConsulta] = []
     respuestas: list[RagQueryInternalResponse] = []
     for indice, pregunta in enumerate(dataset.preguntas):

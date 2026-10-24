@@ -6,9 +6,16 @@ La configuración cargada es la que consume la medición: ``parametros_de`` no a
 from pathlib import Path
 
 import pytest
+import yaml
 
+from app.config.settings import Settings
 from app.evaluation.config_suite import ConfigInvalida, cargar_config_suite
-from app.evaluation.medicion_alias import CONFIG_POR_DEFECTO, con_ruido, parametros_de
+from app.evaluation.medicion_alias import (
+    CONFIG_POR_DEFECTO,
+    con_ruido,
+    generador_de,
+    parametros_de,
+)
 
 CONFIG = Path(__file__).resolve().parents[2] / "eval" / "configs" / "us236-alias.yaml"
 
@@ -34,11 +41,26 @@ def test_la_medicion_usa_por_defecto_la_configuracion_us236():
     assert CONFIG_POR_DEFECTO == Path("eval/configs/us236-alias.yaml")
 
 
-def test_parametros_de_falla_sin_el_bloque_origen_cuando_la_configuracion_es_otra():
-    otra = CONFIG.with_name("test-fake.yaml")
+def test_parametros_de_falla_sin_el_bloque_origen_cuando_la_url_del_llm_si_esta(tmp_path):
+    crudo = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    del crudo["origen"]
+    sin_origen = tmp_path / "sin-origen.yaml"
+    sin_origen.write_text(yaml.safe_dump(crudo, allow_unicode=True), encoding="utf-8")
+    config = cargar_config_suite(sin_origen)
+    assert config.urls["llm"]  # lo único que falta es el bloque origen
 
     with pytest.raises(ConfigInvalida):
-        parametros_de(cargar_config_suite(otra))
+        parametros_de(config)
+
+
+def test_el_generador_de_la_medicion_hereda_los_valores_de_settings_salvo_url_y_modelo():
+    params = parametros_de(cargar_config_suite(CONFIG))
+    ajustes = Settings()
+
+    generador = generador_de(params)
+
+    assert generador._max_chars_fragmentos == ajustes.llm_fragments_max_chars
+    assert generador._max_parrafos_detalle == ajustes.details_max_paragraphs
 
 
 def test_el_chunk_con_ruido_conserva_las_palabras_originales_y_agrega_latex():
