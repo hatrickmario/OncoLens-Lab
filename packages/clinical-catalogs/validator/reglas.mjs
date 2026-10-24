@@ -103,16 +103,25 @@ export function exigirEstadoValido(item, vocabulario) {
 }
 
 /** Campos que un criterio de aplicabilidad no puede declarar (RN-28: la aplicabilidad no lleva puntaje ni ponderación). */
-const CAMPOS_DE_PUNTAJE = ['peso', 'score', 'weight'];
+const CAMPOS_DE_PUNTAJE = ['peso', 'puntaje', 'ponderacion', 'puntos', 'score', 'weight'];
 
-/** Primer campo de puntaje (en minúsculas, a cualquier profundidad) dentro de `valor`, o `undefined`. */
+/** Subárboles cuyas claves son datos del catálogo, no campos del criterio: valores canónicos y columnas del modelo. */
+const SUBARBOLES_DE_DATOS = ['equivalences', 'match'];
+
+/** Primer campo de puntaje (en minúsculas) entre las claves propias del criterio, a cualquier profundidad, o `undefined`. */
 function campoDePuntajeEn(valor) {
   if (Array.isArray(valor)) return valor.map(campoDePuntajeEn).find(Boolean);
   if (!esObjeto(valor)) return undefined;
   const propio = Object.keys(valor)
     .map((clave) => clave.toLowerCase())
     .find((clave) => CAMPOS_DE_PUNTAJE.includes(clave));
-  return propio ?? Object.values(valor).map(campoDePuntajeEn).find(Boolean);
+  return (
+    propio ??
+    Object.entries(valor)
+      .filter(([clave]) => !SUBARBOLES_DE_DATOS.includes(clave))
+      .map(([, interior]) => campoDePuntajeEn(interior))
+      .find(Boolean)
+  );
 }
 
 /** RN-28: ningún campo de puntaje o ponderación en un criterio. Nombra el campo canónico, nunca la clave tal como venga. */
