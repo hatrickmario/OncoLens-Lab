@@ -12,7 +12,10 @@ export function ejemplo<T = Record<string, any>>(nombre: string): T {
 /** Títulos de nivel 3 que no son la Base del análisis (p. ej. las tarjetas de opción). */
 export const SIN_BASE = /^(?!Base del análisis$)/;
 
-export const { evidence: textos } = es;
+export const { evidence: textos, pacientes, ficha, alcance } = es;
+
+/** Paciente semilla (a), de mama (L1D-169): el mismo UUID determinista que `WEB_HOME_PATH` en `scripts/e2e/ejecutar.sh`. */
+export const ID_SEMILLA_A = '0fd028e2-f8b0-56c7-a748-2a4e473d879d';
 
 /** Usuario sintético sembrado (L1D-197); la contraseña de la fixture llega por entorno, nunca versionada. */
 export const CORREO_DOC1 = process.env.E2E_DOC_CORREO ?? 'doc1@test.local';
