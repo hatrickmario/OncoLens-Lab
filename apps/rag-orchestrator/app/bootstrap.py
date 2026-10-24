@@ -49,7 +49,9 @@ from app.config.errores_de_configuracion import (
 from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
+from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
+from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
@@ -167,11 +169,20 @@ def cargar_catalogo_clinico_o_eventos(
 
     Variable sin definir = ``variable_ausente``; manifiesto ausente o ilegible = ``catalogo_no_disponible``."""
     try:
-        return _montar_catalogo_clinico(settings), []
+        catalogo = _montar_catalogo_clinico(settings)
     except CatalogoNoConfigurado:
         regla, motivo = "obligatoria", MOTIVO_VARIABLE_AUSENTE
     except CatalogoNoDisponible:
         regla, motivo = "manifest.json legible", MOTIVO_CATALOGO_NO_DISPONIBLE
+    else:
+        try:
+            _montar_criterios_de_aplicabilidad(
+                settings, catalogo
+            )  # falla pronto; crear_app los vuelve a montar
+        except CatalogoNoDisponible:
+            regla, motivo = "aplicabilidad.json válido por tipo", MOTIVO_CATALOGO_NO_DISPONIBLE
+        else:
+            return catalogo, []
     return None, [{"variable": "CLINICAL_CATALOG_PATH", "regla": regla, "motivo": motivo}]
 
 
@@ -187,6 +198,7 @@ def crear_app(
     cargador_de_modelos: CargadorDeModelos | None = None,
     generador: EvidenceGenerator | None = None,
     catalogo_clinico: CatalogoClinico | None = None,
+    criterios_de_aplicabilidad: CriteriosDeAplicabilidad | None = None,
 ) -> FastAPI:
     silenciar_urls_de_httpx_en_logs()
     modelos = _cargar_modelos_segun(settings, cargador_de_modelos)
@@ -197,6 +209,10 @@ def crear_app(
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    # Lo consume el motor de aplicabilidad (US-122); aquí solo se monta, una vez, desde el catálogo (L1D-126, D4).
+    app.state.criterios_de_aplicabilidad = (
+        criterios_de_aplicabilidad or _montar_criterios_de_aplicabilidad(settings, catalogo_clinico)
+    )
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
     app.add_middleware(
@@ -268,6 +284,19 @@ def _montar_catalogo_clinico(settings: Settings) -> CatalogoClinico:
     if settings.clinical_catalog_path is None:
         raise CatalogoNoConfigurado("CLINICAL_CATALOG_PATH no está configurada")
     return cargar_catalogo_del_manifiesto(settings.clinical_catalog_path)
+
+
+def _montar_criterios_de_aplicabilidad(
+    settings: Settings, catalogo: CatalogoClinico
+) -> CriteriosDeAplicabilidad | None:
+    """Los criterios de ``<tipo>/aplicabilidad.json`` de cada tipo del manifiesto; ``None`` sin ruta de catálogo
+    (solo alcanzable con un ``CatalogoClinico`` inyectado). Un archivo ilegible o fuera de esquema lanza
+    ``CatalogoNoDisponible``."""
+    if settings.clinical_catalog_path is None:
+        return None
+    return cargar_criterios_de_aplicabilidad(
+        settings.clinical_catalog_path, catalogo.tipos_de_cancer()
+    )
 
 
 def _cargar_lista_de_terminos(settings: Settings) -> ProhibitedTermsChecker:
