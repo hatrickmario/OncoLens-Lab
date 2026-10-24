@@ -44,7 +44,7 @@
 - [x] 1.8 Test de aceptación en rojo: `test_muestra_lote_20_al_10_por_ciento_elige_2_reproducibles`
       (`ac("US-118", 5)`, salida en `tmp_path`) y el caso sin documentos extraídos · integración · TDD estricto · commit
       `test(L1D-117)`
-- [x] 1.9 Extraer `seleccionar_muestra()` (TBD-20) en `app/domain/corpus_metadata/muestra.py` con unitarios (N = 0,
+- [ ] 1.9 PARCIAL: pendiente: persona con permiso (sesión principal) para `apps/rag-orchestrator/.env.example`: `CORPUS_METADATA_SAMPLE_PCT=10`, `CORPUS_METADATA_SAMPLE_SEED=oncolens-metadatos`, `CORPUS_METADATA_SAMPLE_DIR=data/evaluation/corpus-metadatos` (el resto de 1.9 está hecho). Extraer `seleccionar_muestra()` (TBD-20) en `app/domain/corpus_metadata/muestra.py` con unitarios (N = 0,
       redondeo hacia arriba, independiente del orden de entrada); escritor YAML en `infrastructure/`; claves
       `CORPUS_METADATA_SAMPLE_PCT`, `CORPUS_METADATA_SAMPLE_SEED` y `CORPUS_METADATA_SAMPLE_DIR` en
       `CorpusIngestSettings` y `.env.example`; AC-5 en verde · TDD estricto · commit `feat(L1D-117)`
@@ -54,6 +54,8 @@
       verificación: Pytest de `tests/integration` y `tests/evaluation`
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-117)`
+
+- [ ] 1.13 Reconciliar las claves de `population_criteria` con `packages/clinical-catalogs/poblacion.json` (11 claves; faltan `grado`, `estado_menopausico`, `estado_castracion`) · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197); pregunta al usuario en `design.md`, Pendientes
 
 ## evaluación
 

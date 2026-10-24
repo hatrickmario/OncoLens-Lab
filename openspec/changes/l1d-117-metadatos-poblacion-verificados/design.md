@@ -40,7 +40,9 @@ catálogo (obliga a releer texto que la ingesta ya tiene en memoria y abre una v
 **D2 · Fuente estructurada primero (AC-1).** Regla con nombre propio `origen_de_metadatos(documento)` en
 `app/domain/corpus_metadata/`: si el manifiesto trae `population_criteria` estructurados → `fuente_estructurada`, se
 copian con `resolver_criterios_poblacion()` y el LLM no se invoca; si no → extracción. Los escalares que el manifiesto
-declare (p. ej. `study_design`) se respetan siempre y no se piden al LLM.
+declare (p. ej. `study_design`) se respetan siempre y no se piden al LLM. **Excepción acordada en la implementación:**
+`study_design = otro` en el manifiesto significa «la fuente no lo declara» y SÍ se pide al LLM; el dominio no distingue un
+«otro» declarado de uno no declarado (alternativa: `study_design` opcional en `DocumentoDeSemilla`, deuda de US-117b).
 
 **D3 · Extracción + verificación por campo (AC-2, AC-3, AC-4).** Prompt versionado
 `app/application/corpus_metadata/prompts/metadatos_v1.txt` con el texto normalizado del documento (corpus público, sin
@@ -159,3 +161,20 @@ US-233 (S4) y la revisión humana de la muestra, tarea `[HUMANO]` `[S3 resp. 13]
 - **P4 · Reintento de `metadatos_pendientes`** sin reingerir (el `checksum` igual lo omite). Propuesta: deuda con ID
   nuevo para el S4 (`ingest --reextract-metadata`).
 - **Coordinación:** el Pendiente de L1D-116 sobre ClinicalTrials.gov en `i-ct-1` afecta también al AC-1 de este change.
+
+- **Decisiones pendientes del usuario (Gate 2, vuelta 1):**
+  - **Q1 · La muestra es de la corrida, no de la release.** `GeneradorDeMuestraDeMetadatos` elige entre los documentos
+    `extraido_verificado` que esta corrida embebió; los omitidos de corridas previas no entran y no se escribe archivo si la
+    corrida no publicó release. Alternativa: construirla desde el catálogo (todos los `extraido_verificado` vigentes de la
+    release), lo que exige un puerto de lectura nuevo en `CorpusCatalog`. No implementada.
+  - **Q2 · Temperatura del LLM de metadatos.** `_llm_local` usa `llm_temperature` de la generación de `/rag/query`. ¿Debe haber
+    una clave propia (extracción determinista, p. ej. 0)? Sin cambio de comportamiento.
+  - **Privacidad 5 · LLM no local.** La CLI no se niega si `LLM_CLOUD_ENABLED=true` o `LLM_PROVIDER != local`; solo usa
+    `LLM_BASE_URL` (validada contra `LLM_ALLOWED_HOSTS`). ¿Debe negarse explícitamente? El corpus es público, pero RN-12 se
+    aplica por código. Sin cambio de comportamiento.
+  - **Q4 · Ruta relativa.** `CORPUS_METADATA_SAMPLE_DIR` por defecto es relativa al directorio de trabajo; la CLI debe
+    lanzarse desde la raíz del repo para escribir en `data/evaluation/corpus-metadatos/`.
+  - **Claves tras L1D-126 (destino «L1D-117 tras merge de L1D-126»).** `poblacion.json` declara 11 claves; el esquema de la
+    extracción escribe 8 (faltan `grado`, `estado_menopausico`, `estado_castracion`). Pregunta: ¿esas tres se extraen o
+    quedan `Desconocido` explícito (`no_reportado_por_fuente`)? La reconciliación con `poblacion.json` es posterior a los
+    merges de #197 y de L1D-126.
