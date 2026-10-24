@@ -8,7 +8,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 **[SESIÓN PRINCIPAL / HUMANO — control de seguridad RN-14, no delegar a un agente]** En
+- [x] 1.1 **(ejecutada por la sesión principal, revisada por privacy-guardian; commits 93a259bd, 164aea13 y 3e6923ea)** **[SESIÓN PRINCIPAL / HUMANO — control de seguridad RN-14, no delegar a un agente]** En
   `scripts/contracts/rules/assertExamplesSynthetic.mjs`, añadir `esMascaraDeNombre(key, value)` (solo clave `fullNameMasked`
   y valor `^P\. S\.( \d\.)?$`, solo la máscara sintética, design D7, `[S3 resp. 16]`) y usarla en la comprobación de nombre
   de persona, junto a `esMascaraDeDocumento`. Primero los tests en `scripts/contracts/__tests__/rules/assertExamplesSynthetic.test.mjs`
@@ -92,3 +92,13 @@
   integración deja de escribir en el árbol real (directorio temporal) o, si no es posible, se serializa. Un test/fixture
   demuestra la carrera resuelta (p. ej., repetir N veces en paralelo ambos tests) con tiempo máximo explícito
   `[US-213 AC-13]`. Verifica: los dos archivos juntos, N veces, en verde.
+
+## 5. deuda: higiene de tests, post-S3
+
+Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloquean el PR y se tratan después del S3:
+
+- [ ] 5.1 (deuda: higiene de tests, post-S3) Menores #13–#20 del design-principles-reviewer, registrados sin cambiar
+  comportamiento en este change; el detalle vive en el informe del Gate 2 y se asigna a la historia de deuda del S4.
+- [ ] 5.2 (deuda) `docs/process/ci.md`, fila del job `quality` (cobertura, higiene y AC): fuera de los paths de este
+  implementador; la actualiza quien tenga `docs/process/`.
+- [ ] 5.3 (deuda, historia de altas del S6) `minLength` y `pattern` de `fullName` en el contrato de altas de pacientes.

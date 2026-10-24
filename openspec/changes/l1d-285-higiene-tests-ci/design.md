@@ -145,3 +145,23 @@ tipos se regeneran con `contracts:generate`; nunca a mano.
 
 - **P-1 · cerrada (usuario, 2026-10-24, `[S3 resp. 16]`):** añadir el `pattern` es *patch* (`info.version` `1.9.0` → `1.9.1`).
 - **P-2 (dueño: Ingeniería · afecta: AC-11):** `coverage.changedLinesWarn = 80` es propuesta a calibrar en la retro del S3.
+
+## Notas de la implementación y preguntas para el usuario (Gate 2, vuelta 1; sin cambiar comportamiento)
+
+- **D6 · antigüedad de dependencias:** `@vitest/coverage-v8` 5.0.5 va en *lockstep* con `vitest` 5.0.5; excepción de antigüedad
+  (publicada 2026-10-15, menos de dos semanas).
+- **Contrato · Zod generado sin la bandera `u`:** el `pattern` `^\S\.( \S\.)*$` de `fullNameMasked` se valida en Ajv2020 (con
+  `unicodeRegExp`) pero el Zod generado compila `new RegExp(pattern)` sin `u`: un carácter fuera del plano básico (par
+  sustituto) se evalúa como dos unidades en Zod y no cumpliría el `pattern`. Hoy `web` no valida esa respuesta con Zod; si lo
+  hiciera, habría que generar la bandera o limitar el `pattern`.
+- **Contrato · `enmascararNombre`:** conserva la inicial original si su mayúscula ocupa más de un carácter (`ß` → `SS`); con
+  nombre vacío devuelve `''` (latente: `exigirIdentidad` solo rechaza `undefined`). **Deuda para la historia de altas (S6):**
+  `minLength` y `pattern` de `fullName` en el contrato.
+- **Pregunta (usuario) · `handlerDesdeEjemplo`:** `sobrescribir` no valida el tipo ni el *enum* del valor (p. ej., acepta
+  `status: 42`) ni limita `status` a los valores del contrato. ¿Se valida contra el schema del ejemplo? No se implementa sin respuesta.
+- **Pregunta (usuario) · cobertura de `*.service.ts`:** hoy solo cuenta el unitario de `clinical-api` (la integración, que es el
+  nivel principal, está excluida del LCOV). ¿Se mide también la integración o se quita `*.service.ts` de `coverage.alertPaths`?
+- **Pregunta (usuario) · ruido de `check-ac-coverage`:** emite alertas de **todos** los changes activos (90 en el S3). ¿Se
+  filtra a los changes que toca el diff del PR?
+- **Pregunta (usuario) · plazo del job `quality`:** `timeout-minutes: 15` con `needs: build-test` y la cobertura añadida; ¿se
+  amplía o se separa la cobertura en otro job?
