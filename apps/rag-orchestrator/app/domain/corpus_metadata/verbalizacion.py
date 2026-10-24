@@ -15,50 +15,45 @@ from app.domain.corpus_metadata.campos import (
     SUBCLAVES_DE_BIOMARCADORES,
 )
 
-# Cada tabla se indexa desde ``campos.py`` con ``zip(strict=True)``: añadir un diseño, un criterio o una subclave sin su
-# plantilla falla al importar, no en producción.
-_DISENOS: Final = dict(
-    zip(
-        DISENOS_EXTRAIBLES,
-        (
-            "El documento es una guía de práctica clínica",
-            "El estudio es un ensayo controlado aleatorizado",
-            "El estudio es un estudio observacional",
-            "El documento es una revisión sistemática",
-        ),
-        strict=True,
-    )
-)
-_BIOMARCADORES: Final = dict(
-    zip(SUBCLAVES_DE_BIOMARCADORES, ("HER2", "los receptores hormonales", "HRR/BRCA"), strict=True)
-)
-_ESCALARES_CON_PLANTILLA: Final = tuple(c for c in CAMPOS_ESCALARES if c != "study_design")
-_PLANTILLAS: Final = {
-    **dict(
-        zip(
-            _ESCALARES_CON_PLANTILLA,
-            (
-                "El estudio es un ensayo de fase {valor}",
-                "El estudio incluyó {valor} participantes",
-                "El criterio de valoración principal del estudio es {valor}",
-            ),
-            strict=True,
-        )
-    ),
-    **dict(
-        zip(
-            CRITERIOS_PLANOS,
-            (
-                "La población del estudio tiene el subtipo {valor}",
-                "La población del estudio está en el estadio {valor}",
-                "El estudio evalúa el tratamiento en la línea {valor}",
-                "La edad de la población del estudio es {valor}",
-                "El estado funcional ECOG de la población del estudio es {valor}",
-            ),
-            strict=True,
-        )
-    ),
+# Diccionarios LITERALES clave -> frase: un desplazamiento de posiciones no puede emparejar mal una clave con su frase (el NLI
+# verificaría contra la hipótesis equivocada). Al importar se exige que las claves sean EXACTAMENTE las de ``campos.py``:
+# añadir una clave sin su plantilla (o dejar una de más) falla al importar, no en producción.
+_DISENOS: Final = {
+    "guia": "El documento es una guía de práctica clínica",
+    "eca": "El estudio es un ensayo controlado aleatorizado",
+    "observacional": "El estudio es un estudio observacional",
+    "revision_sistematica": "El documento es una revisión sistemática",
 }
+_BIOMARCADORES: Final = {
+    "her2": "HER2",
+    "receptores_hormonales": "los receptores hormonales",
+    "hrr_brca": "HRR/BRCA",
+}
+_PLANTILLAS: Final = {
+    "trial_phase": "El estudio es un ensayo de fase {valor}",
+    "sample_size": "El estudio incluyó {valor} participantes",
+    "primary_endpoint": "El criterio de valoración principal del estudio es {valor}",
+    "subtipo": "La población del estudio tiene el subtipo {valor}",
+    "estadio": "La población del estudio está en el estadio {valor}",
+    "linea": "El estudio evalúa el tratamiento en la línea {valor}",
+    "edad": "La edad de la población del estudio es {valor}",
+    "ecog": "El estado funcional ECOG de la población del estudio es {valor}",
+}
+_ESCALARES_CON_PLANTILLA: Final = tuple(c for c in CAMPOS_ESCALARES if c != "study_design")
+
+
+def _exigir_las_claves_de_campos() -> None:
+    esperado = {
+        "_DISENOS": (set(_DISENOS), set(DISENOS_EXTRAIBLES)),
+        "_BIOMARCADORES": (set(_BIOMARCADORES), set(SUBCLAVES_DE_BIOMARCADORES)),
+        "_PLANTILLAS": (set(_PLANTILLAS), {*_ESCALARES_CON_PLANTILLA, *CRITERIOS_PLANOS}),
+    }
+    for tabla, (claves, de_campos) in esperado.items():
+        if claves != de_campos:
+            raise RuntimeError(f"{tabla} no coincide con campos.py: {sorted(claves ^ de_campos)}")
+
+
+_exigir_las_claves_de_campos()
 _PREFIJO_DE_BIOMARCADOR: Final = "biomarcadores."
 
 
