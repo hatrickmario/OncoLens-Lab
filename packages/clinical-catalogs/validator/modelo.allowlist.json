@@ -3,9 +3,7 @@
     "Biomarker": {
       "campos": [
         "clinical_significance",
-        "conflicts_with_id",
         "created_at",
-        "exam_id",
         "extraction_confidence",
         "extraction_score",
         "id",
@@ -18,9 +16,7 @@
         "result_type",
         "review_status",
         "reviewed_at",
-        "reviewed_by",
         "significance_source",
-        "source_span",
         "unit",
         "value"
       ],
@@ -34,41 +30,28 @@
         "created_at",
         "date_precision",
         "entry_method",
-        "episode_id",
         "extraction_confidence",
         "id",
         "observed_at",
-        "patient_id",
         "review_status",
-        "source_document_id",
-        "source_span",
         "value"
       ],
       "relaciones": {}
     },
     "ClinicalEvent": {
       "campos": [
-        "analysis_id",
         "created_at",
         "cups_code",
         "date_precision",
-        "description",
         "entry_method",
-        "episode_id",
         "event_date",
         "event_type",
         "extraction_confidence",
         "icd10_code",
         "id",
         "mapping_status",
-        "patient_id",
-        "prior_treatment_id",
-        "recorded_by",
         "review_status",
-        "source_document_id",
-        "source_span",
-        "toxicity_grade",
-        "treatment_id"
+        "toxicity_grade"
       ],
       "relaciones": {
         "priorTreatment": "PriorTreatment"
@@ -77,11 +60,9 @@
     "Diagnosis": {
       "campos": [
         "cancer_type",
-        "conflicts_with_id",
         "created_at",
         "diagnosed_at",
         "entry_method",
-        "episode_id",
         "extraction_confidence",
         "extraction_score",
         "grade",
@@ -91,13 +72,10 @@
         "id",
         "is_active",
         "mapping_status",
-        "patient_id",
         "performance_scale",
         "performance_value",
         "review_status",
         "reviewed_at",
-        "reviewed_by",
-        "source_document_id",
         "stage_value",
         "staging_system"
       ],
@@ -107,12 +85,9 @@
       "campos": [
         "created_at",
         "entry_method",
-        "episode_id",
         "exam_type",
         "id",
-        "patient_id",
         "performed_at",
-        "source_document_id",
         "source_lab"
       ],
       "relaciones": {
@@ -128,18 +103,14 @@
         "end_reason",
         "ended_at",
         "entry_method",
-        "episode_id",
         "extraction_confidence",
         "id",
         "line_number",
         "mapping_status",
         "ongoing",
-        "patient_id",
         "regimen_name",
         "review_status",
         "setting",
-        "source_document_id",
-        "source_span",
         "started_at"
       ],
       "relaciones": {

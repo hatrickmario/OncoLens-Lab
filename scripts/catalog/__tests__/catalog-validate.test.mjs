@@ -30,7 +30,11 @@ describe('catalog:validate · RN-29 destino obligatorio y existente', () => {
     'rechaza y nombra ki67 cuando un dato crítico no tiene destino [US-001 AC-2]',
     () => {
       const catalogo = copiarFixture('test-1.0.0');
-      modificarJson(catalogo, 'mama/datos-criticos.json', (c) => delete itemDe(c, 'ki67').destination);
+      modificarJson(
+        catalogo,
+        'mama/datos-criticos.json',
+        (c) => delete itemDe(c, 'ki67').destination,
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -45,7 +49,11 @@ describe('catalog:validate · RN-29 destino obligatorio y existente', () => {
     'rechaza y nombra estado_menopausico cuando un criterio de aplicabilidad no tiene destino [US-001 AC-3]',
     () => {
       const catalogo = copiarFixture('test-1.0.0');
-      modificarJson(catalogo, 'mama/aplicabilidad.json', (c) => delete itemDe(c, 'estado_menopausico').destination);
+      modificarJson(
+        catalogo,
+        'mama/aplicabilidad.json',
+        (c) => delete itemDe(c, 'estado_menopausico').destination,
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -76,7 +84,10 @@ describe('catalog:validate · RN-29 destino obligatorio y existente', () => {
     () => {
       const catalogo = copiarFixture('test-1.0.0');
       modificarJson(catalogo, 'mama/datos-criticos.json', (c) => {
-        itemDe(c, 'estado_menopausico').destination = { entity: 'PatientIdentity', field: 'id_type' };
+        itemDe(c, 'estado_menopausico').destination = {
+          entity: 'PatientIdentity',
+          field: 'id_type',
+        };
       });
 
       const resultado = ejecutarValidador(catalogo);
@@ -127,7 +138,11 @@ describe('catalog:validate · condiciones declarativas', () => {
     'rechaza y nombra her2_ish cuando tiene condición y no declara whenConditionUnknown [US-001 AC-5]',
     () => {
       const catalogo = copiarFixture('test-1.0.0');
-      modificarJson(catalogo, 'mama/datos-criticos.json', (c) => delete itemDe(c, 'her2_ish').whenConditionUnknown);
+      modificarJson(
+        catalogo,
+        'mama/datos-criticos.json',
+        (c) => delete itemDe(c, 'her2_ish').whenConditionUnknown,
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -144,7 +159,11 @@ describe('catalog:validate · integridad de una versión revisada', () => {
     () => {
       const catalogo = copiarFixture('test-1.1.0');
       expect(ejecutarValidador(catalogo).codigo).toBe(0);
-      modificarJson(catalogo, 'prostata/datos-criticos.json', (c) => (itemDe(c, 'psa_serie').minValues = 4));
+      modificarJson(
+        catalogo,
+        'prostata/datos-criticos.json',
+        (c) => (itemDe(c, 'psa_serie').minValues = 4),
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -174,7 +193,11 @@ describe('catalog:validate · integridad de una versión revisada', () => {
     'rechaza y nombra ki67 cuando su estado es aprobado [US-001 AC-8]',
     () => {
       const catalogo = copiarFixture('test-1.0.0');
-      modificarJson(catalogo, 'mama/datos-criticos.json', (c) => (itemDe(c, 'ki67').estado = 'aprobado'));
+      modificarJson(
+        catalogo,
+        'mama/datos-criticos.json',
+        (c) => (itemDe(c, 'ki67').estado = 'aprobado'),
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -190,7 +213,9 @@ describe('catalog:validate · claves únicas', () => {
     'rechaza con clave_duplicada y nombra ki67 cuando dos ítems del mismo tipo y archivo comparten clave [US-001 AC-2]',
     () => {
       const catalogo = copiarFixture('test-1.0.0');
-      modificarJson(catalogo, 'mama/datos-criticos.json', (c) => c.items.push({ ...itemDe(c, 'ki67') }));
+      modificarJson(catalogo, 'mama/datos-criticos.json', (c) =>
+        c.items.push({ ...itemDe(c, 'ki67') }),
+      );
 
       const resultado = ejecutarValidador(catalogo);
 
@@ -217,7 +242,11 @@ describe('catalog:validate · claves únicas', () => {
 describe('catalog:validate · cuerpo del mensaje', () => {
   it('no incluye la raíz del repositorio en la salida de un rechazo [US-001 AC-2]', () => {
     const catalogo = copiarFixture('test-1.0.0');
-    modificarJson(catalogo, 'mama/datos-criticos.json', (c) => delete itemDe(c, 'ki67').destination);
+    modificarJson(
+      catalogo,
+      'mama/datos-criticos.json',
+      (c) => delete itemDe(c, 'ki67').destination,
+    );
 
     expect(ejecutarValidador(catalogo).salida).not.toContain(RAIZ);
   });

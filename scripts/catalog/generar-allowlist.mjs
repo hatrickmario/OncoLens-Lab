@@ -14,7 +14,10 @@ import internals from '@prisma/internals';
 
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 export const RUTA_MODELO = path.join(RAIZ, 'apps/clinical-api/prisma/schema.prisma');
-export const RUTA_ALLOWLIST = path.join(RAIZ, 'packages/clinical-catalogs/validator/modelo.allowlist.json');
+export const RUTA_ALLOWLIST = path.join(
+  RAIZ,
+  'packages/clinical-catalogs/validator/modelo.allowlist.json',
+);
 
 /**
  * Entidades clínicas a las que un catálogo puede apuntar (`[S3 resp. 16]`). Lista cerrada: identidad, cuentas,
@@ -29,11 +32,30 @@ export const ENTIDADES_CLINICAS = [
   'ClinicalEvent',
 ];
 
+/**
+ * Columnas que nunca son destino de un dato crítico (decisión conservadora de privacidad, `[S3 resp. 16]`): claves
+ * foráneas (`*_id`), trazas de origen y de revisión, y texto libre que puede contener identidad. Lista cerrada.
+ */
+const COLUMNAS_DE_CONTROL = ['source_span', 'reviewed_by', 'recorded_by'];
+const COLUMNAS_DE_TEXTO_LIBRE = { ClinicalEvent: ['description'] };
+const esClaveForanea = (columna) => columna.endsWith('_id');
+
+function esDestinoPermitido(entidad, columna) {
+  return (
+    !esClaveForanea(columna) &&
+    !COLUMNAS_DE_CONTROL.includes(columna) &&
+    !(COLUMNAS_DE_TEXTO_LIBRE[entidad] ?? []).includes(columna)
+  );
+}
+
 const porNombre = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** Entidad permitida del DMMF: sus campos de columna (`dbName ?? name`) y sus relaciones hacia otra entidad permitida. */
 function describirEntidad(modelo) {
-  const campos = modelo.fields.filter((campo) => campo.kind !== 'object').map((campo) => campo.dbName ?? campo.name);
+  const campos = modelo.fields
+    .filter((campo) => campo.kind !== 'object')
+    .map((campo) => campo.dbName ?? campo.name)
+    .filter((columna) => esDestinoPermitido(modelo.name, columna));
   const relaciones = modelo.fields
     .filter((campo) => campo.kind === 'object' && ENTIDADES_CLINICAS.includes(campo.type))
     .map((campo) => [campo.name, campo.type]);
@@ -64,7 +86,9 @@ async function main(argumentos) {
       console.log('catalog:allowlist:check — la allowlist commiteada coincide con el modelo');
       return 0;
     }
-    console.error('catalog:allowlist:check — la allowlist difiere del modelo: ejecuta node scripts/catalog/generar-allowlist.mjs');
+    console.error(
+      'catalog:allowlist:check — la allowlist difiere del modelo: ejecuta node scripts/catalog/generar-allowlist.mjs',
+    );
     return 1;
   }
   writeFileSync(RUTA_ALLOWLIST, regenerada);

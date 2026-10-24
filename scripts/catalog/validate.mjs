@@ -29,10 +29,16 @@ export function validarDirectorio(directorio) {
   try {
     const resultado = validarCatalogo({
       archivos: leerCatalogo(directorio, leerTexto),
-      allowlist: JSON.parse(leerTexto(path.join(CATALOGO_POR_DEFECTO, 'validator/modelo.allowlist.json'))),
+      allowlist: JSON.parse(
+        leerTexto(path.join(CATALOGO_POR_DEFECTO, 'validator/modelo.allowlist.json')),
+      ),
       esquemas: leerEsquemas(path.join(CATALOGO_POR_DEFECTO, 'schemas'), leerTexto),
     });
-    if (resultado.valido) return { codigo: 0, lineas: [`catalog:validate OK catalogVersion=${resultado.catalogVersion}`] };
+    if (resultado.valido)
+      return {
+        codigo: 0,
+        lineas: [`catalog:validate OK catalogVersion=${resultado.catalogVersion}`],
+      };
     return { codigo: 1, lineas: resultado.violaciones.map(mensajeDe) };
   } catch (error) {
     if (error instanceof ArchivoIlegibleError) return { codigo: 1, lineas: [error.message] };

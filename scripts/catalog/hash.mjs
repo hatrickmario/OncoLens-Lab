@@ -27,10 +27,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const archivo = opcion(argumentos, '--file');
   const alcances = opcion(argumentos, '--scope')?.split(',');
   if (archivo === undefined || alcances === undefined) {
-    console.error('uso: catalog:hash -- --file <tipo>/<archivo>.json --scope <alcance>[,<alcance>] [--dir <ruta>]');
+    console.error(
+      'uso: catalog:hash -- --file <tipo>/<archivo>.json --scope <alcance>[,<alcance>] [--dir <ruta>]',
+    );
     process.exitCode = 2;
   } else {
-    const directorio = path.resolve(opcion(argumentos, '--dir') ?? path.join(RAIZ, 'packages/clinical-catalogs'));
+    const directorio = path.resolve(
+      opcion(argumentos, '--dir') ?? path.join(RAIZ, 'packages/clinical-catalogs'),
+    );
     console.log(hashDelArchivo(directorio, archivo, alcances));
   }
 }

@@ -49,7 +49,9 @@ describe('exigirDestinoExistente', () => {
   });
 
   it('devuelve destino_inexistente cuando el campo no existe en la entidad', () => {
-    expect(exigirDestinoExistente(destino('Diagnosis', 'menopause'), allowlist)).toBe('destino_inexistente');
+    expect(exigirDestinoExistente(destino('Diagnosis', 'menopause'), allowlist)).toBe(
+      'destino_inexistente',
+    );
   });
 
   it('devuelve destino_inexistente cuando la relación del match no existe', () => {
@@ -66,29 +68,38 @@ describe('exigirDestinoExistente', () => {
   );
 
   it('acepta la entidad entera cuando no declara campo ni match', () => {
-    expect(exigirDestinoExistente({ destination: { entity: 'PriorTreatment' } }, allowlist)).toBeNull();
+    expect(
+      exigirDestinoExistente({ destination: { entity: 'PriorTreatment' } }, allowlist),
+    ).toBeNull();
   });
 });
 
 describe('exigirAtributoDeclarado', () => {
-  const clinicalAttribute = (clave) => destino('ClinicalAttribute', 'value', { attribute_key: clave });
+  const clinicalAttribute = (clave) =>
+    destino('ClinicalAttribute', 'value', { attribute_key: clave });
 
   it('devuelve null cuando la clave está declarada para el tipo de cáncer', () => {
-    expect(exigirAtributoDeclarado(clinicalAttribute('estado_menopausico'), 'mama', atributos)).toBeNull();
+    expect(
+      exigirAtributoDeclarado(clinicalAttribute('estado_menopausico'), 'mama', atributos),
+    ).toBeNull();
   });
 
   it('devuelve atributo_no_declarado cuando la clave no está declarada', () => {
-    expect(exigirAtributoDeclarado(clinicalAttribute('menopausia_x'), 'mama', atributos)).toBe('atributo_no_declarado');
-  });
-
-  it('devuelve atributo_no_declarado cuando la clave es de otro tipo de cáncer', () => {
-    expect(exigirAtributoDeclarado(clinicalAttribute('estado_menopausico'), 'prostata', atributos)).toBe(
+    expect(exigirAtributoDeclarado(clinicalAttribute('menopausia_x'), 'mama', atributos)).toBe(
       'atributo_no_declarado',
     );
   });
 
+  it('devuelve atributo_no_declarado cuando la clave es de otro tipo de cáncer', () => {
+    expect(
+      exigirAtributoDeclarado(clinicalAttribute('estado_menopausico'), 'prostata', atributos),
+    ).toBe('atributo_no_declarado');
+  });
+
   it('devuelve atributo_no_declarado cuando el destino no trae attribute_key', () => {
-    expect(exigirAtributoDeclarado(destino('ClinicalAttribute', 'value'), 'mama', atributos)).toBe('atributo_no_declarado');
+    expect(exigirAtributoDeclarado(destino('ClinicalAttribute', 'value'), 'mama', atributos)).toBe(
+      'atributo_no_declarado',
+    );
   });
 
   it('devuelve null cuando la entidad no es ClinicalAttribute', () => {
@@ -113,15 +124,21 @@ describe('exigirCondicionBienFormada', () => {
   });
 
   it('devuelve condicion_invalida cuando la condición referencia una clave inexistente', () => {
-    const item = condicional({ condition: { item: 'her2_ihc_x', operator: 'igualdad', values: ['2+'] } });
+    const item = condicional({
+      condition: { item: 'her2_ihc_x', operator: 'igualdad', values: ['2+'] },
+    });
 
     expect(exigirCondicionBienFormada(item, claves, vocabulario)).toBe('condicion_invalida');
   });
 
   it('devuelve condicion_invalida cuando falta whenConditionUnknown', () => {
-    expect(exigirCondicionBienFormada(condicional({ whenConditionUnknown: undefined }), claves, vocabulario)).toBe(
-      'condicion_invalida',
-    );
+    expect(
+      exigirCondicionBienFormada(
+        condicional({ whenConditionUnknown: undefined }),
+        claves,
+        vocabulario,
+      ),
+    ).toBe('condicion_invalida');
   });
 
   it('devuelve condicion_invalida cuando el operador no es declarativo', () => {
@@ -138,9 +155,12 @@ describe('exigirCondicionBienFormada', () => {
 });
 
 describe('exigirEstadoValido', () => {
-  it.each(['propuesta', 'pendiente', 'revisado'])('devuelve null cuando el estado es %s', (estado) => {
-    expect(exigirEstadoValido({ estado }, vocabulario)).toBeNull();
-  });
+  it.each(['propuesta', 'pendiente', 'revisado'])(
+    'devuelve null cuando el estado es %s',
+    (estado) => {
+      expect(exigirEstadoValido({ estado }, vocabulario)).toBeNull();
+    },
+  );
 
   it('devuelve estado_invalido cuando el estado es aprobado o falta', () => {
     expect(exigirEstadoValido({ estado: 'aprobado' }, vocabulario)).toBe('estado_invalido');
@@ -161,8 +181,14 @@ describe('catalogHash', () => {
   });
 
   it('ignora lo que no cubre matriz_item_campo (solo clave y destino)', () => {
-    const antes = catalogHashDe(['matriz_item_campo'], [{ key: 'a', destination: { entity: 'Exam' }, minValues: 1 }]);
-    const despues = catalogHashDe(['matriz_item_campo'], [{ key: 'a', destination: { entity: 'Exam' }, minValues: 2 }]);
+    const antes = catalogHashDe(
+      ['matriz_item_campo'],
+      [{ key: 'a', destination: { entity: 'Exam' }, minValues: 1 }],
+    );
+    const despues = catalogHashDe(
+      ['matriz_item_campo'],
+      [{ key: 'a', destination: { entity: 'Exam' }, minValues: 2 }],
+    );
 
     expect(despues).toBe(antes);
   });
@@ -181,10 +207,15 @@ describe('catalogHash', () => {
     const catalogHash = catalogHashDe(['datos_criticos'], items);
 
     expect(verificarCatalogHash({ items })).toBeNull();
-    expect(verificarCatalogHash({ items, validation: { scope: ['datos_criticos'], catalogHash } })).toBeNull();
-    expect(verificarCatalogHash({ items, validation: { scope: ['datos_criticos'], catalogHash: '0'.repeat(64) } })).toBe(
-      'hash_distinto',
-    );
+    expect(
+      verificarCatalogHash({ items, validation: { scope: ['datos_criticos'], catalogHash } }),
+    ).toBeNull();
+    expect(
+      verificarCatalogHash({
+        items,
+        validation: { scope: ['datos_criticos'], catalogHash: '0'.repeat(64) },
+      }),
+    ).toBe('hash_distinto');
   });
 });
 
@@ -213,10 +244,16 @@ describe('validarCatalogo', () => {
     );
     const archivos = leerCatalogo(path.join(FIXTURES, 'test-1.0.0'), leerTexto);
 
-    const resultado = validarCatalogo({ archivos, allowlist: await generarAllowlist(sinCampo), esquemas });
+    const resultado = validarCatalogo({
+      archivos,
+      allowlist: await generarAllowlist(sinCampo),
+      esquemas,
+    });
 
     expect(resultado.valido).toBe(false);
-    expect(resultado.violaciones).toEqual([{ codigo: 'destino_inexistente', tipoDeCancer: 'mama', elemento: 'ecog' }]);
+    expect(resultado.violaciones).toEqual([
+      { codigo: 'destino_inexistente', tipoDeCancer: 'mama', elemento: 'ecog' },
+    ]);
   });
 
   it('informa esquema_invalido sin valores cuando el ítem tiene una propiedad que el esquema no admite', () => {
@@ -225,7 +262,9 @@ describe('validarCatalogo', () => {
 
     const resultado = validarCatalogo({ archivos, allowlist, esquemas });
 
-    expect(resultado.violaciones).toEqual([{ codigo: 'esquema_invalido', tipoDeCancer: 'mama', archivo: 'datos-criticos' }]);
+    expect(resultado.violaciones).toEqual([
+      { codigo: 'esquema_invalido', tipoDeCancer: 'mama', archivo: 'datos-criticos' },
+    ]);
   });
 
   it('no lanza cuando un archivo trae ítems que no son objetos', () => {
@@ -310,7 +349,9 @@ describe('validarCatalogo', () => {
         }).not.toThrow();
 
         expect(resultado.valido).toBe(false);
-        expect(resultado.violaciones.map((violacion) => violacion.codigo)).toContain(codigoEsperado);
+        expect(resultado.violaciones.map((violacion) => violacion.codigo)).toContain(
+          codigoEsperado,
+        );
       },
     );
   });
@@ -319,7 +360,8 @@ describe('validarCatalogo', () => {
     const leidas = [];
     const leer = (ruta) => {
       leidas.push(ruta);
-      if (ruta.endsWith('manifest.json')) return JSON.stringify({ version: '1.0.0', cancerTypes: ['../x'], standards: [] });
+      if (ruta.endsWith('manifest.json'))
+        return JSON.stringify({ version: '1.0.0', cancerTypes: ['../x'], standards: [] });
       return JSON.stringify({ version: '1.0.0', keys: [] });
     };
 

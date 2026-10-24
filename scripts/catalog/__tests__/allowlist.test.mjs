@@ -42,7 +42,10 @@ describe('allowlist del modelo generada desde Prisma', () => {
     );
 
     for (const excluida of ['source_span', 'reviewed_by', 'recorded_by']) {
-      expect(todas.filter((campo) => campo.endsWith(`.${excluida}`)), excluida).toEqual([]);
+      expect(
+        todas.filter((campo) => campo.endsWith(`.${excluida}`)),
+        excluida,
+      ).toEqual([]);
     }
     expect(todas.filter((campo) => campo.endsWith('_id'))).toEqual([]);
     expect(entidades['ClinicalEvent'].campos).not.toContain('description');
