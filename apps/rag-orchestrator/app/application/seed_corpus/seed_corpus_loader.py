@@ -34,6 +34,7 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeRetiro,
@@ -42,14 +43,6 @@ from app.domain.corpus_seed.versionado import (
     decidir_retiro,
     decidir_version,
 )
-
-
-class ChecksumDelManifiestoNoCoincide(Exception):
-    """El texto leído no es el que el manifiesto declaró (``checksum``): se alteró o es otra versión."""
-
-
-class TextoVacio(Exception):
-    """El documento no tiene texto que indexar tras normalizarlo."""
 
 
 @dataclass(frozen=True)

@@ -36,10 +36,6 @@ from app.application.seed_corpus.registros import (
     registro_rechazado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
-from app.application.seed_corpus.seed_corpus_loader import (
-    ChecksumDelManifiestoNoCoincide,
-    TextoVacio,
-)
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -47,6 +43,7 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeVersion,
