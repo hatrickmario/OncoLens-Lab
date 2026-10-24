@@ -127,28 +127,38 @@ export function alertasDeCobertura(medidas, { changedLinesWarn, alertPaths }) {
     );
 }
 
+/** Ejecuta Git en `raiz`; una salida distinta de 0 es un repositorio roto o una rama base inexistente, no «nada que medir». */
+function ejecutarGit(raiz, argumentos) {
+  const resultado = spawnSync('git', argumentos, { cwd: raiz, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  if (resultado.status !== 0) {
+    throw new Error(`cobertura de líneas cambiadas: git ${argumentos.join(' ')} terminó con estado ${resultado.status}: ${resultado.stderr.trim()}`);
+  }
+  return resultado.stdout;
+}
+
 /**
- * Mide el PR: diff contra la rama base (`COBERTURA_BASE`, por defecto `origin/main`) y los LCOV que haya. Sin informes o sin
- * la rama base no hay nada que medir y devuelve `null` (el reporte lo dice); nunca inventa un 100 %.
+ * Mide el PR: diff contra la rama base (`COBERTURA_BASE`, por defecto `origin/main`) y los informes de cobertura que haya.
+ * Sin informes devuelve `null` (el reporte lo dice; nunca inventa un 100 %), salvo con `CI=true`, donde faltar cualquiera de
+ * los informes esperados LANZA: en la CI una medición ausente es un paso roto, no una cobertura vacía. Git roto (la rama base
+ * no existe, el diff falla) lanza siempre.
  */
-export function medirCoberturaDelPr(raiz, { baseGit = process.env.COBERTURA_BASE ?? 'origin/main' } = {}) {
+export function medirCoberturaDelPr(raiz, { baseGit, env = process.env } = {}) {
+  const rutas = [...INFORMES_LCOV.map(({ lcov }) => lcov), ...INFORMES_COBERTURA_XML];
+  const ausentes = rutas.filter((ruta) => !existsSync(path.join(raiz, ruta)));
+  if (env.CI === 'true' && ausentes.length > 0) {
+    throw new Error(`cobertura de líneas cambiadas: faltan los informes esperados en la CI: ${ausentes.join(', ')}`);
+  }
   const informes = [
-    ...INFORMES_LCOV.filter(({ lcov }) => existsSync(path.join(raiz, lcov))).map(({ lcov, base }) => ({
+    ...INFORMES_LCOV.filter(({ lcov }) => !ausentes.includes(lcov)).map(({ lcov, base }) => ({
       lcov: readFileSync(path.join(raiz, lcov), 'utf8'),
       base,
     })),
-    ...INFORMES_COBERTURA_XML.filter((ruta) => existsSync(path.join(raiz, ruta))).map((ruta) => ({
+    ...INFORMES_COBERTURA_XML.filter((ruta) => !ausentes.includes(ruta)).map((ruta) => ({
       coberturaXml: readFileSync(path.join(raiz, ruta), 'utf8'),
     })),
   ];
   if (informes.length === 0) return null;
-  const ancestro = spawnSync('git', ['merge-base', baseGit, 'HEAD'], { cwd: raiz, encoding: 'utf8' });
-  if (ancestro.status !== 0) return null;
-  const diff = spawnSync('git', ['diff', '-U0', '--no-color', ancestro.stdout.trim()], {
-    cwd: raiz,
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-  });
-  if (diff.status !== 0) return null;
-  return medirLineasCambiadas(diff.stdout, informes, raiz);
+  const rama = baseGit ?? env.COBERTURA_BASE ?? 'origin/main';
+  const ancestro = ejecutarGit(raiz, ['merge-base', rama, 'HEAD']).trim();
+  return medirLineasCambiadas(ejecutarGit(raiz, ['diff', '-U0', '--no-color', ancestro]), informes, raiz);
 }
