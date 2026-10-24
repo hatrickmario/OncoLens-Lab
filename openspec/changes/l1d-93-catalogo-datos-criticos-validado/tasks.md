@@ -42,7 +42,7 @@
 - [x] 1.10 Contenido `mama/datos-criticos.json`, `prostata/datos-criticos.json` y `atributos.json` del S3 (D1, Q1 y
       Q4 de `propuesta_revisada`), `catalog:validate` con código 0 sobre `packages/clinical-catalogs` · commit
       `feat(L1D-93)`
-- [ ] 1.11 Subir `manifest.json` y archivos por tipo a `1.1.0` (D6) y actualizar `CLINICAL_CATALOG_VERSION` en
+- [x] 1.11 Subir `manifest.json` y archivos por tipo a `1.1.0` (D6) y actualizar `CLINICAL_CATALOG_VERSION` en
       Compose, CI y fixtures de test de ambos backends; regresión del `409` y del test de esquemas de US-041 en verde ·
       test después · commit `feat(L1D-93)`
 - [x] 1.12 Job de CI: `catalog:validate` y chequeo de allowlist en `.github/workflows/ci.yml`, verificado con un
@@ -66,10 +66,9 @@
 - 1.1: las copias inválidas por AC no se versionan: los tests las derivan en un directorio temporal de `test-1.0.0` /
   `test-1.1.0` (`scripts/catalog/__tests__/apoyo.mjs`), y el `schema.prisma` sin `performance_value` se deriva en el
   test del `schema.prisma` real. Los fixtures versionados son solo los dos catálogos válidos.
-- 1.11 **no cerrada**: manifest y archivos por tipo en `1.1.0`, y los tests de `clinical-api` actualizados
-  (`etapa-de-servicios`, `estructura-v1`, `catalogo-version`); Compose y la CI no fijan `CLINICAL_CATALOG_VERSION`.
-  Falta `apps/rag-orchestrator/tests/unit/test_catalogo_clinico.py:32` (`== "1.0.0"` → `"1.1.0"`), fuera de los paths
-  de clinical-platform: TRASLADADA a ai-services-dev (el orquestador asigna el ID). Hasta entonces el Pytest de
-  rag-orchestrator falla en ese único test (2006 pasan).
+- 1.11 cerrada: manifest y archivos por tipo en `1.1.0`; tests de `clinical-api` actualizados; Compose y la CI no fijan
+  `CLINICAL_CATALOG_VERSION`; `test_catalogo_clinico.py:32` corregido a `"1.1.0"` (`fix(L1D-93)`). Pytest de
+  rag-orchestrator: 2007 passed, 122 deselected; `ruff format --check` en verde. Los demás `1.0.0` de los tests son
+  manifiestos temporales (`tmp_path`), no el catálogo real.
 - 2.1 TRASLADADA a ai-eval-runner (Gate 2): `npm run evaluate` no produjo salida en el entorno del implementador.
-- 3.2 `clinical-api` (861 tests) y `catalog:validate` en verde; Pytest de rag-orchestrator pendiente de 1.11.
+- 3.2 `clinical-api` (861 tests) y `catalog:validate` en verde; Pytest de rag-orchestrator en verde (2007 passed) tras 1.11.
