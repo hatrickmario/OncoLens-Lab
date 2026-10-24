@@ -36,3 +36,13 @@
 
 - [x] 3.1 `openspec validate l1d-94-checklist-determinista --strict` en verde. Evidencia: `Change 'l1d-94-checklist-determinista' is valid`.
 - [x] 3.2 Suite de `apps/clinical-api` en verde (Vitest, unitarios e integración); sin cambios de API, no aplican `contracts:verify-provider` ni `contracts:breaking`. Evidencia: unitarios 892/892, integración 396/396, `tsc --noEmit`, `eslint apps/clinical-api`, `npm run quality` (0 errores), `lint:lenguaje` y `pii-scan` limpios.
+
+## 4. Gate 2, vuelta 1 y deuda
+
+- [x] 4.1 F-1: el SQL proyecta solo las columnas de la allowlist (`jsonb_build_object`); test en `no-fuga.test.ts` (rojo `test(L1D-94)` y fix).
+- [x] 4.2 F-2: `registrosDe` -> `registrosSinFiltrarPorRevision`, documentado en el puerto; test del repositorio que fija el RP rechazado de F-M2.
+- [x] 4.3 F-4: tres tests fijan D8 (sin diagnóstico activo / tipo fuera del catálogo, política `whenConditionUnknown` ausente, condicionante sin campo).
+- [x] 4.4 F-6: `excluirNoMapeados()` junto a `registrosVigentes()`; decisión de D5 (solo `Biomarker`; un `PriorTreatment` `no_mapeado` cuenta) fijada por unitario.
+- [x] 4.5 F-5: `tests/unit/completeness/catalogos-fx-04-a.test.ts` corre el validador de L1D-93 sobre los dos catálogos FX-04-a propios. F-7: unitario fija que `igualdad` compara solo con `values[0]`.
+- [ ] 4.6 **deuda: contrato del catálogo y repositorio de completitud, tras US-003** (destino: US-003 / L1D-95): F-3 (vocabulario de operadores en 5 sitios), mover los fixtures FX-04-a a `packages/clinical-catalogs` (F-5), F-8, F-9, F-11. Nota para US-003: validar `patientId` como UUID con Zod en el borde y no registrar el error de `pg`.
+- Nota F-10 (descripción del PR): el test de la variante de AC-2 se corrigió de fecha sembrada (el RE "posterior" era anterior al verificado); no cambia la aserción.
