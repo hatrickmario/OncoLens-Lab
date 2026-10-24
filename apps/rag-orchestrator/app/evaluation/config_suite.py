@@ -83,6 +83,8 @@ class ConfigSuite:
     informe_pii: Path | None = None
     """Ruta del JSON de `npm run eval:pii` (B1); ``--informe-pii`` la sustituye."""
     barrido: Barrido | None = None
+    origen: Mapping[str, Any] | None = None
+    """Bloque ``origen`` de la medición de US-236 (pregunta de la demo y ``EVAL_ORIGIN_RUNS``); ``None`` en el resto."""
 
 
 def huella_de_config(crudo: dict[str, Any]) -> str:
@@ -213,4 +215,5 @@ def cargar_config_suite(ruta: Path, entorno: Mapping[str, str] | None = None) ->
             else None
         ),
         barrido=_barrido_de(crudo),
+        origen=crudo.get("origen"),
     )
