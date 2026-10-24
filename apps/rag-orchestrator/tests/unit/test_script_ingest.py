@@ -166,3 +166,46 @@ def test_un_porcentaje_de_muestra_fuera_de_rango_sale_con_1_nombrando_la_clave(
 
     capturado = capsys.readouterr()
     assert codigo == 1 and "CORPUS_METADATA_SAMPLE_PCT" in capturado.err
+
+
+class _EscritorQueFalla:
+    def escribir(self, release_id, contenido):  # type: ignore[no-untyped-def]
+        raise OSError("disco lleno: /ruta/secreta")
+
+
+def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_la_ingesta() -> None:
+    from app.application.corpus_ingestion.reporte import (
+        Estado,
+        ReporteDeIngesta,
+        ResultadoDeIngesta,
+    )
+    from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+    from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+    from tests.support.fakes import RelojFijo
+    from tests.support.metadatos import lote_sintetico
+
+    metadatos = MetadatosResueltos(
+        "otro", None, None, None, {}, "extraido_verificado", (CampoDeMetadato("trial_phase", "II"),)
+    )
+    reporte = ReporteDeIngesta(
+        (
+            ResultadoDeIngesta(
+                "lote-01", Estado.EMBEBIDO, metadatos=metadatos, document_id="lote-01@x"
+            ),
+        ),
+        "release-1",
+    )
+    generador = GeneradorDeMuestraDeMetadatos(
+        pct=100,
+        semilla="s",
+        escritor=_EscritorQueFalla(),
+        reloj=RelojFijo(),
+        prompt_version="p",
+        llm_model="l",
+        nli_model="n",
+    )
+
+    resumen = ingest.escribir_muestra(generador, reporte, lote_sintetico(1))
+
+    assert resumen == {"tamano": 0, "fallo": "OSError"}
+    assert "secreta" not in str(resumen)

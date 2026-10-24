@@ -16,6 +16,7 @@ from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, sele
 from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.corpus_metadata.escritor_muestra import (
+    ArchivoDeMuestraEsUnEnlace,
     EscritorDeMuestraYaml,
     ReleaseNoSeguraComoNombreDeArchivo,
 )
@@ -193,3 +194,18 @@ def test_cada_campo_de_la_muestra_nace_pendiente_de_revision_y_sin_nota() -> Non
     ]
     assert entrada["source_url"] == "no_disponible"
     assert cabecera["generated_at"] == RelojFijo().ahora().isoformat()
+
+
+def test_el_escritor_no_sigue_un_enlace_simbolico_existente_y_no_toca_su_destino(
+    tmp_path: Path,
+) -> None:
+    ajeno = tmp_path / "ajeno.txt"
+    ajeno.write_text("intacto", encoding="utf-8")
+    destino = tmp_path / "muestra"
+    destino.mkdir()
+    (destino / "release-1.yaml").symlink_to(ajeno)
+
+    with pytest.raises(ArchivoDeMuestraEsUnEnlace):
+        EscritorDeMuestraYaml(destino).escribir("release-1", {"a": 1})
+
+    assert ajeno.read_text(encoding="utf-8") == "intacto"
