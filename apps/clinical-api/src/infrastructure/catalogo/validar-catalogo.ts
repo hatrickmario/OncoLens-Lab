@@ -3,6 +3,7 @@ import allowlistDelModelo from '../../../../../packages/clinical-catalogs/valida
 import esquemaDeAplicabilidad from '../../../../../packages/clinical-catalogs/schemas/aplicabilidad.schema.json' with { type: 'json' };
 import esquemaDeAtributos from '../../../../../packages/clinical-catalogs/schemas/atributos.schema.json' with { type: 'json' };
 import esquemaDeDatosCriticos from '../../../../../packages/clinical-catalogs/schemas/datos-criticos.schema.json' with { type: 'json' };
+import esquemaDeValidation from '../../../../../packages/clinical-catalogs/schemas/validation.schema.json' with { type: 'json' };
 import esquemaDeManifiesto from '../../../../../packages/clinical-catalogs/schemas/manifest.schema.json' with { type: 'json' };
 import {
   ArchivoIlegibleError,
@@ -12,6 +13,7 @@ import {
 
 const ESQUEMAS = {
   manifest: esquemaDeManifiesto,
+  validation: esquemaDeValidation,
   atributos: esquemaDeAtributos,
   'datos-criticos': esquemaDeDatosCriticos,
   aplicabilidad: esquemaDeAplicabilidad,

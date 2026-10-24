@@ -166,10 +166,13 @@ describe('catalogHash', () => {
     expect(despues).toBe(antes);
   });
 
-  it('declara los mismos alcances que el esquema del bloque validation', () => {
-    const delEsquema = esquemas['datos-criticos'].$defs.validation.properties.scope.items.enum;
+  it('declara los mismos alcances que el esquema único del bloque validation, al que remiten ambos archivos', () => {
+    const delEsquema = esquemas.validation.properties.scope.items.enum;
 
     expect([...ALCANCES_CUBIERTOS].sort()).toEqual([...delEsquema].sort());
+    for (const archivo of Object.values(ARCHIVOS_DEL_CATALOGO)) {
+      expect(esquemas[archivo.esquema].properties.validation.$ref).toBe(esquemas.validation.$id);
+    }
   });
 
   it('devuelve hash_distinto cuando el hash declarado no coincide y null cuando no hay bloque validation', () => {

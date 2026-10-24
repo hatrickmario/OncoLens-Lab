@@ -45,6 +45,7 @@ function violacionDeEsquema(validar, contenido, tipo, clave) {
 /** Esquemas compilados por nombre: `manifest`, `atributos` y cada archivo del registro. */
 function compilarEsquemas(esquemas) {
   const ajv = new Ajv2020({ strict: true });
+  ajv.addSchema(esquemas.validation);
   const delRegistro = NOMBRES_DE_ARCHIVO.map((nombre) => [
     nombre,
     ajv.compile(esquemas[ARCHIVOS_DEL_CATALOGO[nombre].esquema]),

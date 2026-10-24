@@ -64,6 +64,6 @@ export function leerCatalogo(directorio, leerArchivo) {
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
-  const nombres = ['manifest', 'atributos', ...ESQUEMAS_DE_ARCHIVOS];
+  const nombres = ['manifest', 'atributos', 'validation', ...ESQUEMAS_DE_ARCHIVOS];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }

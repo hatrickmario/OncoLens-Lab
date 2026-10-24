@@ -12,7 +12,7 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^[a-z_]+$" }
     },
-    "validation": { "$ref": "#/$defs/validation" },
+    "validation": { "$ref": "validation.schema.json" },
     "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
   },
   "$defs": {
@@ -62,23 +62,6 @@
       },
       "if": { "properties": { "condition": true }, "required": ["condition"] },
       "then": { "properties": { "whenConditionUnknown": true }, "required": ["whenConditionUnknown"] }
-    },
-    "validation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["scope", "status", "reviewerRole", "date", "catalogHash"],
-      "properties": {
-        "scope": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "enum": ["datos_criticos", "matriz_item_campo", "aplicabilidad"] }
-        },
-        "status": { "type": "string", "pattern": "^[a-z_]+$" },
-        "reviewerRole": { "type": "string", "pattern": "^[a-z_]+$" },
-        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-        "catalogHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
-      }
     }
   }
 }
