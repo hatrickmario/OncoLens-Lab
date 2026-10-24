@@ -57,7 +57,9 @@ regla 4 del backlog).
 
 **D5. Coincidencia de destino** por `destination.entity` + `match` del catálogo: `Biomarker` por `name` canónico
 (y `Exam.exam_type` cuando el `match` lo declara, `[S3 resp. 5]` de US-001), excluyendo `mapping_status =
-no_mapeado` (RN-27); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por campo no nulo (y
+no_mapeado` (RN-27, `excluirNoMapeados()`; **decisión: la exclusión aplica solo al `Biomarker`**, porque en
+`PriorTreatment`/`Diagnosis` el `mapping_status` habla de códigos ATC/CIE-10 y el registro sigue siendo un dato presente;
+un `PriorTreatment` `no_mapeado` SÍ cuenta); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por campo no nulo (y
 `staging_system`/`performance_scale` cuando el `match` lo declara); `PriorTreatment` sin filtro adicional.
 `minValues` por defecto `1` si el ítem no lo declara (lo fija el schema de US-001).
 
