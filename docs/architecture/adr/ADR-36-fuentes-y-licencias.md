@@ -59,7 +59,7 @@ Dos hechos de la investigación del 2026-10-09 condicionan la decisión:
 3. **PubMed sin licencia: opción A.** La ingesta **rechaza** todo documento sin licencia registrada o con una licencia no aceptada. No hay registros de solo metadatos.
 4. **La licencia se evalúa por documento** (`license_class` por documento). En PMC se lee del JSON de metadatos de la versión, en S3, o de `<dc:rights>` en OAI-PMH. Nunca se infiere de la revista ni del grupo del subconjunto.
 5. **Metadatos de población (M-08.3):** cada documento del catálogo lleva sus campos de población **curados** y con origen (`nativo | parseado | curado`; en esta composición, `curado`). Un documento sin esos campos se marca y no cuenta para la meta. Meta: ≥ 90 % de los documentos con población curada.
-6. **Fuera del MVP:** NCCN y ESMO (`excluded_sources`), ClinicalTrials.gov, CC BY-NC, NICE, GPC sin licencia aceptada, cBioPortal y TCIA.
+6. **Fuera del MVP:** NCCN y ESMO (`excluded_sources`), ~~ClinicalTrials.gov~~ (admitida por la **Enmienda 1**, 2026-10-24), CC BY-NC, NICE, GPC sin licencia aceptada, cBioPortal y TCIA.
 7. **Configuración (RN-22):** la lista de fuentes admitidas, las `license_class` aceptadas y la regla de PubMed viven en el catálogo del corpus o en la configuración (`CORPUS_ALLOWED_SOURCES`, `CORPUS_ACCEPTED_LICENSES`), no en el código de la ingesta.
 8. **Atribución:** PDQ se atribuye a NCI y enlaza al original. Un artículo de PMC lleva su licencia y su autoría desde el catálogo (RN-25); si falta un dato, se muestra "No disponible".
 
@@ -81,3 +81,16 @@ Dos hechos de la investigación del 2026-10-09 condicionan la decisión:
 - Los nombres exactos de los campos de licencia en el JSON de metadatos de PMC (`README.txt` del bucket `pmc-oa-opendata`).
 - El número exacto de resúmenes PDQ de mama y próstata, en EN y ES.
 - La firma es del PO en calidad académica. Antes de G-Piloto se revisa si hace falta un aval legal externo.
+
+## Enmienda 1 · ClinicalTrials.gov admitida en el MVP (2026-10-24)
+
+> **Decidido (usuario, 2026-10-24, `[S3 resp. 19]`, `/sprint-start S3`).** Surgió de un conflicto entre el AC-1 de US-117a (L1D-116), que ingiere `i-ct-1`, y la Decisión 6.
+
+- **Qué cambia:** ClinicalTrials.gov (API v2) pasa a ser una **fuente admitida** del MVP. Su `license_class` es `dominio_publico` (obra del gobierno de EE. UU.), que RN-21 acepta. La Decisión 6 solo la excluía por la composición elegida, no por licencia.
+- **Condiciones:**
+  1. Un registro de ensayo **no es evidencia de eficacia**. Se ingiere con su `source_type` de registro de ensayo, y el análisis y la UI lo muestran como tal, nunca como resultado de un estudio. Su uso principal en el MVP son los **metadatos de población nativos** (`sex`, `minimumAge`, `maximumAge`, `stdAges`), que suman a M-08.3.
+  2. Atribución "Courtesy of the U.S. National Library of Medicine". El texto literal y los términos de uso de la API se verifican antes de la ingesta real del corpus (US-120, S4), igual que los pendientes de verificar de arriba.
+  3. La lista de fuentes admitidas sigue en configuración (`CORPUS_ALLOWED_SOURCES`, Decisión 7) e **incluye** ClinicalTrials.gov.
+- **Lo que no cambia:** composición A para PDQ y PMC OA; NCCN, ESMO, CC BY-NC, NICE, cBioPortal y TCIA siguen fuera.
+- **Consecuencias:** sin cambio de esquema (`source_type`, `license_class` y población ya existen). El fixture de US-117a mantiene `i-ct-1` como `embebido`. Que el registro no se presente como evidencia de eficacia lo revisa `clinical-language-auditor` en el Gate 2 de las historias que muestran la fuente (US-127, US-123).
+

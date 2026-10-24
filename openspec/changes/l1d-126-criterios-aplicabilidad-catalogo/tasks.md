@@ -1,0 +1,71 @@
+# Tasks — l1d-126-criterios-aplicabilidad-catalogo
+
+> Sin cambio de API: no hay sección `## contratos` con tareas (ver `design.md`, Contratos).
+> Requiere en `main` el change de L1D-93 (US-001: `catalog:validate`, regla de destino, versión del S3) y se archiva
+> después de él (delta `MODIFIED`, `[S3 resp. 16]`). El test del AC-5 con estado calculado vive en L1D-127.
+
+## clinical-platform
+
+- [ ] 1.1 Fixtures FX-08b-a en `packages/clinical-catalogs/__fixtures__/`: `test-apl-1.0.0` (mama, cinco criterios
+      de FX-08b-a con `studyKey`, y su `poblacion.json`), `test-apl-1.0.1` (igual salvo `ecog.rule.limits.max = 0`)
+      y copias inválidas (sin `destination` en `estado_menopausico`; `ecog` con `peso`, `score`, `weight`; `ecog`
+      sin `studyKey`; `ecog.studyKey = "ecog_x"`; `estadio` y `ecog` con `studyKey = "estadio"`) · test después
+      (fixture)
+- [ ] 1.2 Test de aceptación en rojo: "termina con código ≠ 0 y nombra estado_menopausico cuando un criterio de
+      aplicabilidad no tiene destination [US-121 AC-2]" · integración (proceso real `catalog:validate`, timeout
+      explícito de 30 s) · TDD estricto · commit `test(L1D-126)`
+- [ ] 1.3 Test de aceptación en rojo: "termina con código ≠ 0 y nombra ecog y el campo cuando un criterio declara
+      peso, score o weight [US-121 AC-3]" · integración (timeout 30 s) · TDD estricto · commit `test(L1D-126)`
+- [ ] 1.3b Test de aceptación en rojo: "termina con código ≠ 0 con study_key_ausente, study_key_inexistente o
+      study_key_duplicada y nombra el criterio [US-121 AC-1]" · integración (timeout 30 s) · TDD estricto · commit
+      `test(L1D-126)`
+- [ ] 1.4 Esquema estricto del criterio en `schemas/aplicabilidad.schema.json` (D1, con `studyKey`),
+      `poblacion.json` y su esquema (D3b), y extraer `rechazarCamposDePuntaje()` (RN-28) y `exigirStudyKey()` en el
+      validador de US-001, con sus unitarios uno a uno; AC-2, AC-3 y los escenarios de `studyKey` en verde · TDD
+      estricto · commit `feat(L1D-126)`
+- [ ] 1.5 Test de aceptación en rojo: "lista exactamente los criterios de mama y próstata con destination,
+      isExclusionary y rule, y HER2 y castración excluyentes [US-121 AC-1]" (también bloque `validation`
+      `propuesta_revisada`, [US-021 AC-1]) · test del catálogo · commit `test(L1D-126)`
+- [ ] 1.6 Contenido de `mama/aplicabilidad.json`, `prostata/aplicabilidad.json` (según D2, con `studyKey` y
+      `estado = "propuesta"`) y `poblacion.json`; bloque `validation` con `scope = ["aplicabilidad"]` y `catalogHash`
+      calculado con `catalog:hash` (D3c); `catalog:validate` termina con 0 sobre el catálogo del S3 [US-121 AC-1,
+      AC-3] · commit `feat(L1D-126)`
+- [ ] 1.7 Test de aceptación en rojo: "responde 409 CATALOG_VERSION_MISMATCH y no persiste AIAnalysisRecord cuando
+      rag-orchestrator tiene test-apl-1.0.1 y clinical-api test-apl-1.0.0 [US-121 AC-4]" · integración (Supertest +
+      PostgreSQL real; MSW hacia `rag-orchestrator` desde `contracts/examples/rag-catalog-version-mismatch.json`;
+      respuesta validada contra el spec del proveedor) · regresión de US-041; si pasa en verde desde el primer
+      commit se documenta así en el PR · commit `test(L1D-126)`
+- [ ] 1.8 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+      verde antes y después, commit `refactor(L1D-126)`
+
+## ai-services
+
+- [ ] 2.1 Copiar los fixtures `test-apl-1.0.0` y `test-apl-1.0.1` al árbol de tests de `rag-orchestrator`
+      (mismo contenido, comprobado por checksum en un test) · test después (fixture)
+- [ ] 2.2 Test de integración en rojo: "carga los criterios de mama de test-apl-1.0.0 con su destino, excluyente y
+      regla desde CLINICAL_CATALOG_PATH" y "no queda listo con configuracion_invalida cuando aplicabilidad.json no
+      cumple su esquema" (soporte del AC-5; Pytest + adapters falsos, sin ruta ni contenido en el log) · TDD
+      estricto · commit `test(L1D-126)`
+- [ ] 2.3 Puerto `CriteriosDeAplicabilidad` en `app/domain/criterios_aplicabilidad.py`, adapter
+      `app/infrastructure/catalogo_clinico/aplicabilidad.py` (Pydantic escrito a mano, lectura única al arrancar) y
+      *wiring* en `app/bootstrap.py` (D4) · commit `feat(L1D-126)`
+- [ ] 2.4 Test de soporte del AC-5: `test_criterios_aplicabilidad_regla_ecog_se_lee_del_catalogo_montado`: misma
+      build, arranque con `test-apl-1.0.0` y `test-apl-1.0.1`; solo `ecog.rule.limits` difiere entre las dos cargas
+      del puerto · integración (adapters falsos) · TDD estricto · commit `test(L1D-126)` → verde con 2.3
+      > **Diferido a L1D-127** (`[S3 resp. 16]`): el test de aceptación
+      > `test_aplicabilidad_rango_ecog_cambia_con_la_version_del_catalogo` con `@pytest.mark.ac("US-121", 5)`
+      > (`coincide` → `no_coincide`) se escribe y se pone en verde en L1D-127, con estos fixtures. No es tarea de
+      > este change.
+- [ ] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
+      verde antes y después, commit `refactor(L1D-126)`
+
+## evaluación
+
+- [ ] 3.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4); adjuntar el reporte de
+      `reports/eval/` al PR · evaluate
+
+## cierre
+
+- [ ] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict`
+- [ ] 4.2 Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
+      sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)

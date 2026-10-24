@@ -1,0 +1,26 @@
+# Tasks — l1d-278-e2e-ci-login-tailwind
+
+## 1. clinical-platform
+
+- [x] 1.1 [Test después · CI] Test de `playwright.config.ts`: `retries: 1` y `trace: 'on-first-retry'` solo con `CI=true` [ARR-02 AC-1]
+- [x] 1.2 [Test después] Check que rechaza `test.skip`/`test.only`/`test.fixme` en `apps/web/e2e/` (paso previo del job) con su test [ARR-02 AC-1]
+- [x] 1.3 Modo CI de `scripts/e2e/ejecutar.sh` (reporter `github` + `html`, sin `--mantener`, tiempo máximo explícito de espera del stack)
+- [x] 1.4 `.github/workflows/e2e.yml` (design.md D1): Docker en el *runner*, `npm ci`, `playwright install --with-deps chromium`, `npm run test:e2e`, artefactos de informe y trazas con `retention-days: 3`; fuera de `ci-ok` [ARR-02 AC-1]
+- [x] 1.4b [Test después] Trazas sin cuerpos de request: reporters de Playwright (`depurador-de-adjuntos.ts` antes de `html` y `verificador-de-informe.ts` después, que falla cerrado) quitan `postData`/cuerpos de `POST /api/*` y las contraseñas de títulos de paso, trazas, `error-context.md` e informe HTML, con prueba con Playwright real y sonda de control (`scripts/e2e/integracion/`) de que ni `playwright-report/` ni `test-results/` contienen la contraseña de prueba; usuarios de E2E sintéticos (dominios de prueba del hook, p. ej. `@oncolens.test`; el seed usa `doc1@test.local`; contraseñas generadas en `ejecutar.sh`, no versionadas) (design.md D1)
+- [x] 1.5 Verificar en el PR que el job ejecuta los 15 E2E en verde; documentar en `docs/process/ci.md` el criterio de estabilidad (design.md D2) y diferir el paso a requerido a ARR-06 (L1D-282) — PARCIAL: criterio documentado en `docs/process/ci.md` y 17 E2E en verde en local con `CI=true`; pendiente verificar el job en el PR (runner real) — Evidencia (2026-10-24): CI de `main` en verde tras el merge del PR #189 (`d3602100`), jobs `integration`, `integration-rag`, `e2e` y `quality` en verde en el run 40066137860. El paso a requerido: **TRASLADADO a ARR-09 (S3)**.
+- [x] 1.6 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-278)`
+
+## 2. frontend
+
+- [x] 2.1 Test del AC primero: test de UI de `/login` que exige `Alert` con `role="alert"` y ausencia de `.module.css` en `app/login/` en rojo [ARR-02 AC-3] · Testing Library, commit `test(L1D-278)`
+- [x] 2.2 [Test del AC primero] Instalar Tailwind v4 (`tailwindcss`, `@tailwindcss/postcss`, `postcss.config.mjs`) y `@theme` en `globals.css` con los tokens de `docs/ux/sistema-de-diseno.md` §1 (design.md D3); `npm audit` del cambio adjunto
+- [x] 2.3 Átomos `components/ui/{card,input,label,button,alert}.tsx`, `lib/utils.ts` (`cn`) y `components.json`
+- [x] 2.4 Migrar `app/login/page.tsx` y `organisms/login-form.tsx`; borrar `login.module.css`, `login-form.module.css` y `molecules/campo-con-etiqueta*`; tests de UI y E2E de login en verde sin cambiar aserciones [ARR-02 AC-3] · commit `feat(L1D-278)`
+- [x] 2.5 Tipografía: token `--font-sans` con `system-ui` (Public Sans autoalojada queda para otra historia; design.md D3)
+- [x] 2.6 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo. Incluir la pantalla de análisis a 1280 px para descartar efectos del *preflight* de Tailwind [ARR-02 AC-3]
+- [x] 2.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-278)`
+
+## 3. Cierre
+
+- [x] 3.1 `openspec validate l1d-278-e2e-ci-login-tailwind --strict`
+- [x] 3.2 `npm test --workspace apps/web`, `npm run build --workspace apps/web` y `npm run test:e2e` en verde; job `e2e` verde en el PR — Evidencia (2026-10-24): CI de `main` en verde tras el merge del PR #189 (`d3602100`), jobs `integration`, `integration-rag`, `e2e` y `quality` en verde en el run 40066137860.

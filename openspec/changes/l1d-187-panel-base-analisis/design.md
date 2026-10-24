@@ -29,7 +29,9 @@ solo como número, nombres de campo del contrato.
    estructural", aceptado en el Gate 1 del S2).
 6. **Supuesto declarado en el resumen (Gate 1 del S2).** `resumirBase()` devuelve, además del número, el texto de los
    supuestos `regla_catalogo`; el resumen muestra el supuesto de L1D-186 ("Los faltantes críticos aún no se calculan
-   en esta versión") para que "Faltantes: 0" no se lea como "no falta nada".
+   en esta versión") para que "Faltantes: 0" no se lea como "no falta nada". **Reemplazado por `l1d-188`** (US-128,
+   `[S3 resp. 18]`): su MODIFIED del resumen y su REMOVED del supuesto lo sustituyen al archivarse después de este
+   change; las tareas de este change no cambian.
 7. **`tipo_no_habilitado`:** `describirBusqueda()` devuelve "No se consultó el corpus: tipo fuera de alcance" en
    lugar de "Qué se buscó…" (la Base la arma L1D-173 con 0 recuperados).
 4. **`reviewStatus` en texto:** `verificado` → "Verificado", `corregido` → "Corregido", `requiere_revision` → "Por

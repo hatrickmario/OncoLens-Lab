@@ -17,7 +17,7 @@
 
 ## S3-01 · Estados del panel · `/pacientes/[id]/analisis` (US-062)
 
-Llevan `AiDisclaimer` (RN-19) los estados con salida del análisis: con opción, solo descartadas, sin opciones y **sin evidencia** (también es una salida del sistema); no lo llevan los errores, la validación, el `401` ni el tipo no habilitado, porque no hay análisis. Todos llevan y la etiqueta "Uso académico/investigación" de la cabecera. Ningún estado deshabilita la navegación ni el formulario salvo la espera (RN-26).
+Llevan `AiDisclaimer` (RN-19) todos los estados con respuesta del análisis: con opción, solo descartadas, sin opciones, **sin evidencia** (también es una salida del sistema) y **tipo no habilitado** (spec vigente de `l1d-194-aviso-ia-etiqueta-academica`: el aviso se muestra con cualquier `status`; decidido, usuario, 2026-10-24, `[S3 resp. 17]`); no lo llevan los errores, la validación ni el `401`, porque no hay respuesta del análisis. Todos llevan y la etiqueta "Uso académico/investigación" de la cabecera. Ningún estado deshabilita la navegación ni el formulario salvo la espera (RN-26).
 
 | Estado | Disparador | Qué se ve | Clave de mensaje |
 |---|---|---|---|
@@ -27,15 +27,16 @@ Llevan `AiDisclaimer` (RN-19) los estados con salida del análisis: con opción,
 | Límite | `429` con `Retry-After: 30` | `NonBlockingNotice`: "Se alcanzó el límite de análisis. Puedes reintentar en {s} segundos." Botón "Reintentar" activo al cumplirse el plazo | nueva `evidence.error.limite` |
 | Error | `502`, `503`, `504`, fallo de red | Mensajes del S1 por código y "Código de traza: [traceId]" (`[S1 resp. 31]`); sin nombres de servicios ni trazas de pila; botón "Reintentar" y pregunta conservada | `evidence.error.*` (existentes); nueva `evidence.error.red` = "No hay conexión con el servidor. No se muestra ningún resultado parcial." |
 | Sesión expirada | `401` | Redirección a `/login?motivo=expirada`, sin datos del paciente | `login.sesionExpirada` |
-| Tipo no habilitado | `status = tipo_no_habilitado` | "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA". Sin tarjeta ni aviso IA, porque no hay salida generada | `alcance.tipoNoHabilitado` |
+| Tipo no habilitado | `status = tipo_no_habilitado` | "Tipo de cáncer fuera del alcance del piloto: sin análisis con IA". Sin tarjeta de opción; **con** `AiDisclaimer` (RN-19, `[S3 resp. 17]`) | `alcance.tipoNoHabilitado` |
 
 ## S3-02 · Opción con el criterio de elección (US-062 AC-7 + US-125)
 
 ```
 ┌ Opciones descritas en la evidencia ──────────────────────────────────┐
-│ Criterio: Se muestra primero la opción cuyo estudio coincide en más  │
-│ criterios con los datos registrados de este paciente (…). Es un      │
-│ criterio de orden, no una valoración clínica.                        │
+│ Criterio: Orden por aplicabilidad: primero la opción con menos       │
+│ criterios excluyentes en No coincide; luego, la que coincide en más  │
+│ criterios con los datos registrados; la relevancia de recuperación   │
+│ solo desempata. Es un criterio de orden, no una valoración clínica.  │
 │ ┌ 1 · [option] ──────────────────────────────────────────────────┐   │
 │ │ [rationale]                                                     │   │
 │ │ Criterios del estudio frente a datos registrados:               │   │
@@ -50,7 +51,7 @@ Llevan `AiDisclaimer` (RN-19) los estados con salida del análisis: con opción,
 
 | Elemento | Texto | Dato del contrato |
 |---|---|---|
-| `OrderingCriterion` | "Se muestra primero la opción cuyo estudio coincide en más criterios con los datos registrados de este paciente (menos criterios excluyentes en No coincide); la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica." Reemplaza a `orderCriterion.relevance` | — (regla RN-28; clave nueva `evidence.orderCriterion.applicability`) |
+| `OrderingCriterion` | "Orden por aplicabilidad: primero la opción con menos criterios excluyentes en No coincide; luego, la que coincide en más criterios con los datos registrados; la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica." Reemplaza a `orderCriterion.relevance` | — (regla RN-28; clave nueva `evidence.orderCriterion.applicability`) |
 | Línea de aplicabilidad | "Criterios del estudio frente a datos registrados:" (fuente más comparable) + cuatro `StatusChip` **con símbolo y palabra**, nunca solo color; sin puntaje ni porcentaje; «Desconocido» = dato ausente o no evaluable, con enlace a la Base del análisis | `evidenceOptions[].applicabilitySummary` (conteos por estado) |
 | Aviso de población | `NonBlockingNotice`: "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente." No oculta la opción ni deshabilita nada (RN-26) | `evidenceOptions[].populationNotComparable` · `warnings[] = poblacion_no_comparable` |
 | Relevancia | Al final, como metadato secundario (RN-03). **Cambia** `evidence.relevance.basis` («Orden basado en la cita recuperada más relevante…», que contradice el criterio nuevo) por «Metadato de recuperación; solo desempata el orden por aplicabilidad.» | `relevanceScore` |
