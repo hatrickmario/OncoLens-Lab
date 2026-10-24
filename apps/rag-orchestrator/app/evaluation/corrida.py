@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Sequence
 from typing import Any, TypedDict
 
 from app.application.ports import EvidenciaGenerada
-from app.domain.citations import validar_citas
+from app.domain.citations import OpcionGenerada, validar_citas
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
     afirmaciones_a_juzgar,
@@ -37,6 +38,11 @@ from app.schemas.generated.models import (
 
 SOLICITUD_BASE = "contracts/examples/rag-query-request.json"
 MAX_OPCIONES = 3
+
+
+def citas_propuestas_de(opciones: Sequence[OpcionGenerada]) -> int:
+    """Citas que propuso el generador (M-07.2)."""
+    raise NotImplementedError("no implementado")
 
 
 def _solicitud_base() -> dict[str, Any]:
@@ -90,7 +96,7 @@ async def _resultado_de(
     if generador_invocado and propuesta is not None:
         revisadas = validar_citas(propuesta.opciones, obs.entregados[pregunta.texto])
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
-        citas_propuestas = sum(len(set(o.chunk_ids_citados)) for o in propuesta.opciones)
+        citas_propuestas = citas_propuestas_de(propuesta.opciones)
     top = respuesta.topRelevanceScore
     en_nli, en_juez = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
     return ResultadoConsulta(
