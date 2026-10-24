@@ -52,13 +52,14 @@
 
 ## evaluación
 
-- [ ] 2.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4 → US-074); adjuntar el reporte de
-      `reports/eval/` al PR · evaluate
+- [x] 2.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4 → US-074); adjuntar el reporte de
+      `reports/eval/` al PR · evaluate · veredicto PASS en `reports/eval/l1d-93-catalogo-datos-criticos-validado.md`
+      y `.json` (Gate 2, vuelta 1, ai-eval-runner)
 
 ## cierre
 
 - [x] 3.1 `openspec validate l1d-93-catalogo-datos-criticos-validado --strict`
-- [ ] 3.2 Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest, por la subida de versión) en verde;
+- [x] 3.2 Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest, por la subida de versión) en verde;
       `catalog:validate` en verde sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
 
 ## Notas de la implementación (L1D-93)
@@ -70,5 +71,16 @@
   `CLINICAL_CATALOG_VERSION`; `test_catalogo_clinico.py:32` corregido a `"1.1.0"` (`fix(L1D-93)`). Pytest de
   rag-orchestrator: 2007 passed, 122 deselected; `ruff format --check` en verde. Los demás `1.0.0` de los tests son
   manifiestos temporales (`tmp_path`), no el catálogo real.
-- 2.1 TRASLADADA a ai-eval-runner (Gate 2): `npm run evaluate` no produjo salida en el entorno del implementador.
+- 2.1 cerrada con el reporte del Gate 2 (ai-eval-runner), copiado a `reports/eval/`. Nota del reporte: la config de la
+  CI (`eval/configs/test-fake.yaml`) declara `catalogo.version` `2026.10.0`, distinto del manifest real (`1.1.0`);
+  se documenta aquí y no se cambia (fuera de este change).
+- Gate 2, vuelta 1: `her2_ish` condiciona por `prefijo "2+"` (el esquema ya admitía `prefijo`); guardas en el borde
+  del validador; registro único `ARCHIVOS_DEL_CATALOGO`; `schemas/validation.schema.json` compartido; `Violacion`
+  con `tipoDeCancer` y `elemento`/`archivo`; regla `clave_duplicada`; la allowlist excluye `*_id`, `source_span`,
+  `reviewed_by`, `recorded_by` y `ClinicalEvent.description` (adición de privacidad para revisión humana).
+- Reglas solo reportadas, no añadidas: `exigirHashSiRevisado` (un archivo con ítems en `revisado` sin bloque
+  `validation`) y otras que salgan de la sesión de oncólogos.
+- Deuda (destino l1d-126 / cierre del S3): ampliar `match` a arrays (lo decide l1d-126; ampliar es compatible),
+  quitar `allowJs` de `apps/clinical-api/tsconfig.json` (hoy compila el núcleo `.mjs`) y quitar el prefijo `test-` de
+  los patrones de versión de los esquemas.
 - 3.2 `clinical-api` (861 tests) y `catalog:validate` en verde; Pytest de rag-orchestrator en verde (2007 passed) tras 1.11.
