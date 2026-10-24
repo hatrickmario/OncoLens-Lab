@@ -1,0 +1,59 @@
+{
+  "version": "test-apl-1.0.0",
+  "keys": [
+    {
+      "key": "subtipo",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "estadio",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "linea",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "edad",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "ecog",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "grado",
+      "cancerTypes": [
+        "mama",
+        "prostata"
+      ]
+    },
+    {
+      "key": "biomarcadores.her2",
+      "cancerTypes": [
+        "mama"
+      ]
+    },
+    {
+      "key": "estado_menopausico",
+      "cancerTypes": [
+        "mama"
+      ]
+    }
+  ]
+}
