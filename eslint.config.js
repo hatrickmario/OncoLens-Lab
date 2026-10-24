@@ -7,12 +7,24 @@ import nextPlugin from '@next/eslint-plugin-next';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import vitest from '@vitest/eslint-plugin';
+import mockSoloEnBordes from './scripts/quality/eslint-rules/mock-solo-en-bordes.mjs';
+import testsSinDesactivar from './scripts/quality/eslint-rules/tests-sin-desactivar.mjs';
 import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
 import { escaparGlob, excepcionesVigentes, leerUmbrales } from './scripts/quality/umbrales.mjs';
 
 // Umbrales de tamaño y complejidad (L1D-263, RN-22): solo se editan en quality-thresholds.json.
 // Un umbral ausente o no numérico hace fallar la carga de esta configuración nombrando la clave.
 const umbrales = leerUmbrales();
+
+/** Reglas propias del repositorio: un solo objeto, porque ESLint no admite dos plugins distintos con el mismo nombre. */
+const pluginOncolens = {
+  rules: {
+    'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente,
+    'mock-solo-en-bordes': mockSoloEnBordes,
+    'tests-sin-desactivar': testsSinDesactivar,
+  },
+};
 
 const SIN_TESTS_DE_CLINICAL_API = ['apps/clinical-api/tests/**', '**/*.test.ts', '**/*.spec.ts'];
 const SIN_PRIMITIVAS_NI_TESTS_DE_WEB = [
@@ -80,7 +92,7 @@ export const bloqueWeb = (files) => ({
     'jsx-a11y': jsxA11y,
     '@next/next': nextPlugin,
     react,
-    oncolens: { rules: { 'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente } },
+    oncolens: pluginOncolens,
   },
   settings: { next: { rootDir: 'apps/web' } },
   rules: {
@@ -102,6 +114,37 @@ export const bloqueWeb = (files) => ({
     ],
     'oncolens/no-restricted-imports-en-cliente': 'error',
   },
+});
+
+/** Tests de `web` y `clinical-api` (Vitest, Testing Library, Supertest y Playwright). */
+export const ARCHIVOS_DE_TESTS = [
+  'apps/web/**/*.{test,spec}.{ts,tsx}',
+  'apps/web/{tests,e2e}/**/*.{ts,tsx}',
+  'apps/clinical-api/**/*.{test,spec}.ts',
+  'apps/clinical-api/tests/**/*.ts',
+];
+
+/**
+ * Higiene de tests (US-213 AC-8, design D1): ningún test enfocado ni desactivado. Va DESPUÉS de las excepciones con
+ * caducidad: una excepción de `quality-thresholds.json` no puede apagar estas reglas.
+ */
+export const bloqueHigieneDeTests = (files = ARCHIVOS_DE_TESTS) => ({
+  files,
+  plugins: { vitest, oncolens: pluginOncolens },
+  rules: {
+    // `it.todo` y `fit` no los ven las reglas del plugin de Vitest: los cubre la regla propia.
+    'oncolens/tests-sin-desactivar': 'error',
+    'vitest/no-focused-tests': 'error',
+    'vitest/no-disabled-tests': 'error',
+    'vitest/valid-title': 'error',
+  },
+});
+
+/** `vi.mock` solo sobre bordes (US-213 AC-10, design D4); admite excepciones con caducidad e ID de deuda. */
+export const bloqueMockSoloEnBordes = (files = ARCHIVOS_DE_TESTS) => ({
+  files,
+  plugins: { oncolens: pluginOncolens },
+  rules: { 'oncolens/mock-solo-en-bordes': 'error' },
 });
 
 const AVISO_DE_SUPERTEST =
@@ -168,7 +211,9 @@ export default defineConfig(
   },
   bloqueTamanoClinicalApi(umbrales),
   bloqueTamanoWeb(umbrales, 'error'),
+  bloqueMockSoloEnBordes(),
   ...bloquesDeExcepciones(umbrales),
+  bloqueHigieneDeTests(),
   // SIEMPRE el último: desactiva toda regla de estilo que choque con Prettier [US-215 AC-5].
   prettier,
 );
