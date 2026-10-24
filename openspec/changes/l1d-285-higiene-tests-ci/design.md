@@ -24,7 +24,9 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
 - **D1 · Higiene en Node con el plugin oficial, no con regex.** `@vitest/eslint-plugin` (`no-focused-tests`,
   `no-disabled-tests` —incluye `it.todo`—, `valid-title`) en el bloque de tests de `eslint.config.js`, nivel `error`, fuera
   del mecanismo de `excepciones` de `quality-thresholds.json`. Descartado: reutilizar la regex del *hook* (no entiende AST;
-  falsos positivos en strings).
+  falsos positivos en strings). **Corrección de diseño (implementación, aprobada por sprint-S3, 2026-10-24):** el plugin
+  (1.6.27) no ve `it.todo` ni `fit`; los cubre la regla propia `oncolens/tests-sin-desactivar`
+  (`scripts/quality/eslint-rules/tests-sin-desactivar.mjs`), con fixtures y tests.
 - **D2 · Higiene en Python con Ruff `PT` + script propio.** Ruff `PT` cubre estilo, no prohíbe `skip`/`xfail`;
   `scripts/quality/check-pytest-hygiene.py` recorre el AST de `tests/**/*.py` (marcadores `skip`, `skipif`, `xfail` y
   llamadas `pytest.skip`/`pytest.xfail`) y emite hallazgos `tests-sin-desactivar` con el formato del reporte. Se invoca desde
@@ -33,7 +35,9 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   Trazabilidad, toma los AC de la sección `## US-xxx` de `backlog/features/FEAT-*.md` (respetando partes `a`/`b`: para
   US-213b solo AC-8…AC-13 si el proposal lo declara con rango) y busca tags `[US-xxx AC-n]` en tests de Vitest/Playwright y
   `@pytest.mark.ac("US-xxx", n)` en Pytest. Severidad `warn`: el job no falla; el Gate 2 lo trata como Mayor.
-- **D4 · `mock-solo-en-bordes` con `no-restricted-syntax`.** Selector sobre `CallExpression[callee.object.name='vi'][callee.property.name='mock']`
+- **D4 · `mock-solo-en-bordes` con `no-restricted-syntax`.** **Corrección de diseño (aprobada por sprint-S3, 2026-10-24):** regla propia `oncolens/mock-solo-en-bordes`
+  (`scripts/quality/eslint-rules/mock-solo-en-bordes.mjs`) en lugar de `no-restricted-syntax`, que otros bloques ya usan y se
+  pisarían; mismo criterio y el mensaje nombra el módulo. Criterio original: selector sobre `CallExpression[callee.object.name='vi'][callee.property.name='mock']`
   cuyo primer argumento literal empieza por `./`, `../`, `@/`, `@oncolens/` o es `@prisma/client`. Si el código vigente lo
   viola en más de dos operaciones de corrección, excepción con caducidad y deuda, como D5 de `l1d-263`.
 - **D5 · Arnés de handlers desde los ejemplos.** `packages/test-support/msw/` (workspace npm, solo `devDependency`) exporta
@@ -42,7 +46,9 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   `apps/rag-orchestrator/tests/support/http.py` sobre `respx`. No se generan handlers del spec en este change: se construyen
   del ejemplo (fuente de los mocks según `CLAUDE.md`).
 - **D6 · Cobertura de líneas cambiadas.** `vitest --coverage` (`@vitest/coverage-v8`, LCOV) en `web` y `clinical-api`,
-  `pytest-cov` (Cobertura XML) en `rag-orchestrator`, y `diff-cover --compare-branch origin/main --json-report`; un
+  `pytest-cov` (Cobertura XML) en `rag-orchestrator`, y `diff-cover --compare-branch origin/main --json-report` **(corrección de diseño, aprobada por sprint-S3, 2026-10-24: las
+  líneas cambiadas se calculan en Node con `git diff -U0` y LCOV, sin `diff-cover` ni paquete pip nuevo, porque
+  `requirements-dev.txt` es de ai-services; `scripts/quality/cobertura.mjs`)**; un
   normalizador en `scripts/quality/` lo vuelca a `latest.json` (`tool: diff-cover`, `measured`, `threshold`). Clave nueva
   `coverage.changedLinesWarn` (propuesta 80) en `quality-thresholds.json`, validada por `umbrales.mjs`. Rutas de alerta como
   lista en la misma clave `coverage.alertPaths` (no literales en el script).
