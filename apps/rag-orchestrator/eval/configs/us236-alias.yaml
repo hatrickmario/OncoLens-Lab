@@ -1,0 +1,29 @@
+# Medición de US-236 (L1D-287, AC-7): citas por alias con el LLM real local, sobre el dataset de evaluación vigente y la
+# pregunta del origen (demo del 2026-10-23). Solo datos sintéticos y corpus público; el LLM es el local (RN-12).
+# Las metas siguen en `metas-iniciales.yaml`; aquí solo vive lo que esta medición fija (RN-22).
+nombre: us236-alias
+fixture: ADR39-mini
+dataset:
+  ruta: data/eval/adr39-mini
+semilla_bootstrap: 20261021
+bootstrap_repeticiones: 200
+medicion:
+  reloj: real
+adaptadores:
+  proveedor: local
+  urls:
+    llm: http://localhost:11434/v1 # Ollama nativo; ninguna ruta hacia la nube
+modelos:
+  llm: gemma4:26b-a4b-it-q4_K_M
+umbrales:
+  relevance_threshold: 0.30
+  nli_entailment_threshold: 0.7
+  retrieval_top_k: 40
+  rerank_top_n: 10
+catalogo:
+  version: '2026.10.0'
+  ruta_terminos: packages/clinical-catalogs
+origen: # US-236 AC-7: la pregunta de la demo; cita_invalida debe ser 0 en cada una de las corridas
+  pregunta: '¿Cuándo se considera un inhibidor de CDK4/6 adyuvante?'
+  paciente: mama-a
+  EVAL_ORIGIN_RUNS: 10 # se recalibra en el refinamiento si la varianza lo exige
