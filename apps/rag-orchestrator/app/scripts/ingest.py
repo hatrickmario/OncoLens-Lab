@@ -117,6 +117,13 @@ def _modelos_de_metadatos(llm: LlmClient | None, nli: NliClassifier | None) -> M
     )
 
 
+def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
+    """Fábrica de producción del paso de metadatos: la usan la CLI y la evaluación (adapters falsos en la CI)."""
+    return MetadataExtractionService(
+        llm=modelos.llm, nli=modelos.nli, umbral_nli=modelos.umbral_nli
+    )
+
+
 def _llm_local(ambiente: Settings) -> LlmClient:
     return OpenAICompatibleLlmClient(
         ambiente.llm_base_url,
@@ -163,9 +170,7 @@ def _ejecutar_ingesta(
             almacen_de_chunks=almacen,
             embedder=embedder,
             codificador_sparse=sparse,
-            resolutor_de_metadatos=MetadataExtractionService(
-                llm=metadatos.llm, nli=metadatos.nli, umbral_nli=metadatos.umbral_nli
-            ),
+            resolutor_de_metadatos=servicio_de_metadatos(metadatos),
             fuente=fuente_de_texto(ajustes, manifiesto.resolve().parent),
             reloj=reloj,
             ids=UuidIdGenerator("release"),
