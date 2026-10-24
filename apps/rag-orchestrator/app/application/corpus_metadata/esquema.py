@@ -8,6 +8,7 @@ pide ni se usa (RN-25).
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Annotated, Any, Final, Literal
@@ -32,6 +33,7 @@ from app.domain.corpus_metadata.campos import (
 )
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
 
+_MARCADOR: Final = re.compile(r"\{(campos|titulo|texto)\}")
 PROMPT_VERSION: Final = "metadatos_v1"
 _PLANTILLA: Final = (Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.txt").read_text(
     encoding="utf-8"
@@ -164,12 +166,9 @@ def esquema_de_metadatos() -> dict[str, Any]:
 
 
 def construir_prompt(titulo: str, texto: str, campos_solicitados: Sequence[str]) -> str:
-    """Prompt versionado con el texto del corpus (público). Las llaves del texto no se interpretan."""
-    return (
-        _PLANTILLA.replace("{campos}", ", ".join(campos_solicitados))
-        .replace("{titulo}", titulo)
-        .replace("{texto}", texto)
-    )
+    """Prompt versionado con el texto del corpus (público) entre delimitadores. Una sola pasada: lo que sustituye a un marcador no se vuelve a interpretar."""
+    valores = {"campos": ", ".join(campos_solicitados), "titulo": titulo, "texto": texto}
+    return _MARCADOR.sub(lambda m: valores[m.group(1)], _PLANTILLA)
 
 
 def parsear_propuesta(crudo: str) -> PropuestaDeMetadatos:
