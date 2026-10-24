@@ -13,7 +13,9 @@ data_file = "coverage/.coverage"
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "PT"]
 
-# Deuda de estilo solo en tests/ (298 hallazgos vigentes): PT018 268, PT011 22, PT001 5, PT006 3. Ver tasks.md de l1d-285.
+# Deuda de estilo solo en tests/ (298 hallazgos vigentes): PT018 268, PT011 22, PT001 5, PT006 3.
+# Ver backlog/sprints/S3-deuda.md, fila 'estilo pytest PT' (la añade la sesión principal; el ID lo asigna al crear el issue)
+# y tasks.md 5.1 de l1d-285-higiene-tests-ci. No ampliar este per-file-ignores.
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PT001", "PT006", "PT011", "PT018"]
 

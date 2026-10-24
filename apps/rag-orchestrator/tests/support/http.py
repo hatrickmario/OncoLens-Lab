@@ -7,6 +7,8 @@ en el ejemplo es un campo que el contrato no describe y hace fallar el test que 
 
 import copy
 import json
+import os
+import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
@@ -17,19 +19,21 @@ import respx
 CARPETA_DE_EJEMPLOS = Path(__file__).resolve().parents[4] / "contracts" / "examples"
 
 
+# Mismo criterio que NOMBRE_DE_EJEMPLO de handlerDesdeEjemplo.ts: un `.json` simple, sin `/`, `\\`, `..`, `%`, `?`, `#` ni `\0`.
+_NOMBRE_DE_EJEMPLO = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\.json")
+
+
 def _ruta_del_ejemplo(archivo_de_ejemplo: str, carpeta: Path) -> Path:
-    """Ruta del ejemplo dentro de `carpeta`; un nombre con separadores, `..` o absoluto se rechaza (solo contracts/examples/)."""
+    """Ruta del ejemplo dentro de `carpeta`; cualquier nombre que no sea un `.json` simple, o que resuelva fuera, se rechaza."""
     ruta = carpeta / archivo_de_ejemplo
-    es_nombre_simple = (
-        archivo_de_ejemplo not in {"", ".", ".."}
-        and "/" not in archivo_de_ejemplo
-        and "\\" not in archivo_de_ejemplo
+    es_valido = (
+        _NOMBRE_DE_EJEMPLO.fullmatch(archivo_de_ejemplo) is not None
         and ".." not in archivo_de_ejemplo
-        and not Path(archivo_de_ejemplo).is_absolute()
+        and Path(os.path.realpath(ruta)).parent == Path(os.path.realpath(carpeta))
     )
-    if not es_nombre_simple or ruta.resolve().parent != carpeta.resolve():
+    if not es_valido:
         raise AssertionError(
-            f"handler_desde_ejemplo: {archivo_de_ejemplo!r} no es un nombre de archivo de contracts/examples/"
+            f"handler_desde_ejemplo: {archivo_de_ejemplo!r} no es un nombre de archivo .json de contracts/examples/"
         )
     return ruta
 

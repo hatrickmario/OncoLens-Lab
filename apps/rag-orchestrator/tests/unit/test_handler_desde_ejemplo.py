@@ -81,14 +81,28 @@ def test_handler_desde_ejemplo_entrega_cada_peticion_a_al_recibir():
 
 @pytest.mark.parametrize(
     "nombre",
-    ["../README.md", "/etc/hosts", "sub/ejemplo.json", "sub\\ejemplo.json", "..", "", "a..b.json"],
+    [
+        "../README.md",
+        "/etc/hosts",
+        "sub/ejemplo.json",
+        "sub\\ejemplo.json",
+        "..",
+        "",
+        "a..b.json",
+        "x.md",
+        "x",
+        "a%2e.json",
+        "a?.json",
+        "a#.json",
+        "a\0.json",
+    ],
 )
 def test_handler_desde_ejemplo_rechaza_nombres_que_salen_de_contracts_examples(nombre):
     with respx.mock() as router:
         with pytest.raises(AssertionError) as fallo:
             handler_desde_ejemplo(router, "get", URL, nombre)
 
-    assert "no es un nombre de archivo de contracts/examples/" in str(fallo.value)
+    assert "no es un nombre de archivo .json de contracts/examples/" in str(fallo.value)
 
 
 def test_handler_desde_ejemplo_rechaza_un_enlace_que_apunta_fuera_de_la_carpeta(tmp_path):
@@ -102,7 +116,7 @@ def test_handler_desde_ejemplo_rechaza_un_enlace_que_apunta_fuera_de_la_carpeta(
         with pytest.raises(AssertionError) as fallo:
             handler_desde_ejemplo(router, "get", URL, "enlace.json", carpeta=carpeta)
 
-    assert "no es un nombre de archivo de contracts/examples/" in str(fallo.value)
+    assert "no es un nombre de archivo .json de contracts/examples/" in str(fallo.value)
 
 
 def test_handler_desde_ejemplo_falla_con_sobrescribir_vacio_cuando_el_ejemplo_no_es_un_objeto(
@@ -127,3 +141,9 @@ def test_handler_desde_ejemplo_responde_el_ejemplo_no_objeto_cuando_no_se_sobres
         respuesta = httpx.get(URL)
 
     assert respuesta.json() == [1, 2]
+
+
+@pytest.mark.parametrize("nombre", ["x.md", "a\0.json"])
+def test_cargar_ejemplo_lanza_assertion_error_cuando_el_nombre_no_es_json_simple(nombre):
+    with pytest.raises(AssertionError):
+        cargar_ejemplo(nombre)
