@@ -126,7 +126,7 @@ describe('arranque: etapa de servicios dentro de arrancar', () => {
   });
 
   it('escucha una vez cuando CLINICAL_CATALOG_VERSION coincide con el manifiesto [US-041 D1]', () => {
-    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '1.0.0' });
+    const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_VERSION: '1.1.0' });
 
     expect(resultado.salidas).toEqual([]);
     expect(resultado.escuchas).toEqual([4998]);

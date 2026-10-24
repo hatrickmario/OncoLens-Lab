@@ -50,7 +50,7 @@ describe('catálogo clínico v1', () => {
   it('deja tendencias.json en estado propuesta y sin umbrales hasta DEC-08 [US-041 AC-1]', () => {
     for (const tipo of manifiesto.cancerTypes) {
       expect(leerJson(`${tipo}/tendencias.json`)).toEqual({
-        version: '1.0.0',
+        version: '1.1.0',
         estado: 'propuesta',
         items: [],
       });
