@@ -69,6 +69,12 @@ Ninguna historia supera 5 pts ni 8 AC.
 | 12 | Estado de L1D-202, L1D-72 y L1D-187 | Feedback positivo de los oncólogos y del equipo técnico; quedan **In Review** (ya lo estaban en Linear) y se revisan de nuevo en la **Demo 3**, al cerrar el S3. Sus E2E y *visual-check* pendientes van en ARR-09 |
 | 13 | Revisor de la muestra de US-118 AC-5 (consumida por US-132 AC-4) | El usuario, con una plantilla preparada por el agente (tarea `[HUMANO]`) |
 | 14 | Fallo de `integration-rag` en el PR #189 (`quay.io` respondió `503` en etcd) | Nueva tarea en US-213b (AC-13): etcd desde `gcr.io`, `compose pull` con hasta 3 intentos y un mensaje de fallo de descarga distinto del de salud; sin cambio de puntos |
+| 15 | Orden del prompt entre l1d-287 y l1d-181 (Gate 1 de `/sprint-start`) | 287 primero (`rag-query@0.3.0`), luego 181 (`0.4.0`) |
+| 16 | Paquete técnico de los guardianes (Gate 1) | Aceptado entero: `studyKey`, destinos solo clínicos, exención AC-17 solo «P. S. n.», `validation` única, precedencia `falta_en_paciente`, `metadata_source = pendiente`, versión del prompt de aplicabilidad en log y `AIAnalysisRecord`, `ANALYSIS_MAX_OPTIONS`, avisos de datos del paciente al S4 |
+| 17 | AiDisclaimer en «tipo no habilitado» | Se muestra (spec de l1d-194); S3-01 corregido |
+| 18 | Texto de la Base sobre faltantes | Se adelanta **US-128 (L1D-188)** al S3: +3 pts, S3 = 85, S4 = 118 |
+| 19 | ClinicalTrials.gov en US-117a frente a ADR-36 | Se admite: **ADR-36 Enmienda 1** (dominio público; un registro de ensayo no es evidencia de eficacia; atribución NLM por verificar antes de US-120) |
+| 20 | Aprobación del plan del S3 | Oleadas aprobadas: 4 en paralelo en O1 y 3 después; merges por oleada; L1D-233 y L1D-234 → Sprint 4 en Linear |
 
 ## 5. Stack técnico (fase 2)
 

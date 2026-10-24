@@ -101,7 +101,7 @@ Ningún spec MUST declarar la ruta `/platform/rag/query` ni una propiedad `recom
 - **THEN** el comando termina con código distinto de 0 y nombra el archivo y la ruta del hallazgo
 
 ### Requirement: Lenguaje no prescriptivo en specs y ejemplos
-Ningún texto, clave ni valor de `enum`/`const` de los specs, de `evidence.yaml` ni de `contracts/examples/` MUST contener términos de la lista de RN-23 ni palabras con prefijo `recomend`/`recommend`, comparando sin mayúsculas ni acentos; solo SHALL admitirse las frases negativas de la lista blanca de la regla. La lista SHALL leerse del catálogo de US-068 cuando exista y, hasta entonces, de la provisional con los literales de RN-23.
+Ningún texto, clave ni valor de `enum`/`const` de los specs, de `evidence.yaml` ni de `contracts/examples/` MUST contener términos del Nivel A, términos del Nivel B ni palabras con los prefijos del Nivel B (`recomend`/`recomiend`/`recommend`) de la lista de RN-23, comparando con la normalización común de `@oncolens/clinical-language` (sin mayúsculas ni acentos, con plural y género, formas verbales y excepciones, `[S1 resp. 33]`).
 
 #### Scenario: Specs y ejemplos sin términos prescriptivos [US-033 AC-17] [RN-23]
 - **WHEN** `contracts:check` recorre todo el texto, las claves y los enums de specs y ejemplos, incluido `con-evidencia-s4.json`
@@ -111,9 +111,26 @@ Ningún texto, clave ni valor de `enum`/`const` de los specs, de `evidence.yaml`
 - **WHEN** un parche pone "Debe recibir" (con mayúscula) en el `rationale` de una opción del ejemplo del S4, "recommended for this patient" en una descripción, o un valor de `enum` `recomendada`
 - **THEN** el comando termina con código distinto de 0 y nombra el archivo, la ruta y el término
 
+### Requirement: Frases permitidas solo en textos propios
+La regla de lenguaje de `contracts:check` SHALL admitir las `frasesPermitidas` de la propia lista, y solo en textos propios: los valores de los campos de `CAMPOS_GENERADOS` de `@oncolens/clinical-language` dentro de los ejemplos MUST verificarse sin `frasesPermitidas`.
+
 #### Scenario: Una frase negativa normativa no es hallazgo [US-033 AC-17] [RN-23]
 - **WHEN** una descripción contiene "no constituye una recomendación"
-- **THEN** la regla no reporta hallazgo porque la frase está en su lista blanca
+- **THEN** la regla no reporta hallazgo porque la frase está en `frasesPermitidas` de la lista
+
+#### Scenario: Una frase permitida en un campo generado de un ejemplo sí es hallazgo [US-068 AC-5] [US-033 AC-17] [RN-23]
+- **WHEN** un parche pone "no constituye una recomendación" en el `rationale` de una opción de `con-evidencia-s4.json`
+- **THEN** el comando termina con código distinto de 0 y nombra el archivo, la ruta `rationale` y el término de nivel B
+
+### Requirement: La regla de lenguaje lee el catálogo versionado
+La lista SHALL leerse del catálogo de US-068 (`packages/clinical-catalogs/lenguaje/terminos-prohibidos.json`, 1.2.0, `[S1 resp. 15]`, `[S1 resp. 33]`) y la lista provisional `scripts/contracts/terminos-prohibidos-rn23.json` MUST NOT existir; si el catálogo falta, la regla MUST reportar un hallazgo que nombra la ruta.
+
+#### Scenario: La regla lee el catálogo y no la lista provisional [US-068 AC-1] [US-033 AC-17] [RN-23] [S1 resp. 15] [S1 resp. 33]
+- **WHEN** `contracts:check` corre sobre `main` tras este change
+- **THEN** `assertNoPrescriptiveLanguage()` usa `packages/clinical-catalogs/lenguaje/terminos-prohibidos.json` y `scripts/contracts/terminos-prohibidos-rn23.json` no existe
+- **AND** un parche que pone "deben recibir" en una descripción hace terminar el comando con código distinto de 0
+- **AND** un parche que pone "administre" (Nivel A, `[S1 resp. 33]`) o "standard of care" (Nivel B, `[S1 resp. 33]`) en una descripción hace terminar el comando con código distinto de 0 nombrando el término
+- **AND** un parche que retira el catálogo hace terminar el comando con código distinto de 0 nombrando su ruta
 
 ### Requirement: Aviso de IA obligatorio
 `disclaimer` MUST ser obligatorio (`string`, `minLength: 1`) en `EvidenceAnalysis` y en `FollowUpTurn`, descrito como un solo texto configurable (`AI_DISCLAIMER_TEXT`, que manda sobre la redacción) con las dos frases de RN-19. En los ejemplos SHALL contener las subcadenas "requiere validación clínica del oncólogo tratante" y "Uso académico/investigación", con raya o dos puntos indistintamente `[Pre-S1 resp. 25]`.

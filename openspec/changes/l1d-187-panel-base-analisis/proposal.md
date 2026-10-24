@@ -23,6 +23,9 @@ de corte del corpus y, cuando no hay evidencia, **qué se buscó**, sin leerlo t
     `analysisBasis.missingCriticalData.length`, `assumptions.length`, `sourcesNotIncluded[]`, `omittedClaims` y
     `corpusCutoffDate`. El literal del resumen es exactamente "Fuentes no incluidas: NCCN, ESMO" (sin aclaración).
     El resumen muestra además el texto del supuesto declarado de L1D-186 ("Los faltantes críticos aún no se calculan en esta versión").
+    > **Nota (Gate 1 del S3, `[S3 resp. 18]`):** este supuesto lo reemplaza `l1d-188-base-faltantes-declarados`
+    > (US-128, MODIFIED de "Resumen de la Base visible sin expandir" y REMOVED del supuesto declarado), que se archiva
+    > después de este change. Las tareas de este change no cambian.
   - **`tipo_no_habilitado`:** en lugar de "Qué se buscó", "No se consultó el corpus: tipo fuera de alcance".
   - **Control** `<button aria-expanded aria-controls="base-detalle">` "Ver detalle de la Base" ↔ "Ocultar detalle".
   - **Detalle:** "Datos del paciente usados" (`patientDataUsed[]` con `reviewStatus` en texto y el conflicto en

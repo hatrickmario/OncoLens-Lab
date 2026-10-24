@@ -3,7 +3,7 @@
 > Linear: [L1D-25](https://linear.app/l1der-lab-mjbc/issue/L1D-25)
 
 **Talla:** L (2 historias de desarrollo + un ADR condicional) · **Sprint:** 4 (reordenamiento del 2026-10-23, antes S5; US-134, US-135, US-218, US-219) · el G-Demo sigue al cierre del S5 · `si-hay-capacidad` (US-015 · ADR-42) · **Capacidad:** CAP-10 (AC-10.1 completo, AC-10.2 tarjeta con varias opciones) · CAP-08 (AC-08.8: la opción usa su fuente más aplicable, consumido) · **Recorrido principal:** sí (hipótesis 3: encontrar las opciones descritas en la evidencia **más aplicables** a las condiciones del paciente)
-**Requisitos:** FR-09 (S4: "hasta 3 desde el Sprint 4" y "orden de las opciones por aplicabilidad", vía HU-10) · RN-28 (dueña del **orden visible** de hasta 3 opciones; el comparador, la agregación por opción y la selección por aplicabilidad antes del recorte, ya activa en el S3 con una opción, son de US-125) · RN-03 (regresión: la relevancia solo desempata) · RN-22 (`EVIDENCE_MAX_OPTIONS` en configuración) · TBD-08 (ADR-42, condicional)
+**Requisitos:** FR-09 (S4: "hasta 3 desde el Sprint 4" y "orden de las opciones por aplicabilidad", vía HU-10) · RN-28 (dueña del **orden visible** de hasta 3 opciones; el comparador, la agregación por opción y la selección por aplicabilidad antes del recorte, ya activa en el S3 con una opción, son de US-125) · RN-03 (regresión: la relevancia solo desempata) · RN-22 (`ANALYSIS_MAX_OPTIONS` en configuración) · TBD-08 (ADR-42, condicional)
 **Evidencia:** [→ PRD §5 FR-09 ("Máximo 1 opción en los Sprints 1–3 y hasta 3 desde el Sprint 4"; "Orden de las opciones por aplicabilidad (RN-28)")], [→ PRD §6 RN-03, RN-22, RN-26, RN-28], [→ PRD §18.3.10 AC-10.1, AC-10.2, M-10.1], [→ PRD §18.3.8 AC-08.8], [→ PRD §2.1 G-5], [→ PRD §16 TBD-08], [→ readme §5 HU-10 ("comparar hasta 3 opciones descritas en la evidencia, ordenadas por aplicabilidad")], [→ readme §4.1 `EvidenceOption`, `AnalysisBasis.maxOptions`], [→ readme §3.3 #27, #31], [→ readme §6.1 #8], [→ readme §5.0 S4 KR1], [→ backlog/02-adrs.md US-015 · ADR-42], [→ docs/AS-IS.md P6, JTBD 4]
 **Dependencias:** ↪ US-055 (pipeline), US-061 (tarjeta), US-064 (soporte de cada opción), US-125 (comparador `applicability_order`, agregación por opción y orden antes del recorte a `maxOptions`, AC-5…AC-7), US-126 (tabla y resumen de aplicabilidad en la tarjeta y texto del criterio de orden, AC-7) · ⛔ DEC-11 (US-021) · escenario más probable (excluyentes y "Parcial", que alimentan los conteos) · ⛔ ADR-39 (LLM y NLI reales; los AC usan adapters falsos) · 🔗 Medido en: US-140 (M-10.1 y orden con verdad conocida), US-141 (G-5 / M-06.2 con hasta 3 opciones) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053 · 🔗 Regresión [RN-23] → US-068 · 🔗 Regresión [RN-26] → US-071
 **Valor:** el oncólogo no busca "la" opción, compara (P6, JTBD 4). Hasta el S3 el análisis devuelve una sola opción: en el S1–S2, sin aplicabilidad, se elige por relevancia y el panel lo dice; desde el S3 esa opción única ya se elige con el comparador de aplicabilidad de US-125, con la relevancia solo como desempate. Con esta Feature ve hasta tres opciones que describe la evidencia, ordenadas por cuánto se parece la población estudiada a su paciente y no por eficacia ni por relevancia, con el criterio de orden siempre a la vista.
@@ -22,7 +22,7 @@
   - LLM falso `LLM-CUATRO` (en este orden de salida): **O-A** "Opción A (test)" cita `ch-a4-1` · **O-B** "Opción B (test)" cita `ch-a1-1` · **O-C** "Opción C (test)" cita `ch-a5-1` · **O-D** "Opción D (test)" cita `ch-a6-1` · **O-E** "Opción E (test)" cita `ch-a1-1` con la afirmación "duplica la supervivencia". NLI falso: `entailment` para O-A…O-D, `neutral` para O-E.
   - LLM falso `LLM-TRES`: O-A, O-B y O-C de `LLM-CUATRO`.
   - LLM falso `LLM-MULTIFUENTE`: **O-F** cita `ch-a4-1` y `ch-a1-1`.
-- **Orden esperado con `LLM-CUATRO` y `EVIDENCE_MAX_OPTIONS = 3`:** O-B (0 excl., 3 coincide, 0,70) → O-D (0 excl., 3 coincide, 0,60) → O-C (0 excl., 2 coincide, 0,85). O-A (1 excluyente) queda fuera del tope; O-E va a `discardedOptions`.
+- **Orden esperado con `LLM-CUATRO` y `ANALYSIS_MAX_OPTIONS = 3`:** O-B (0 excl., 3 coincide, 0,70) → O-D (0 excl., 3 coincide, 0,60) → O-C (0 excl., 2 coincide, 0,85). O-A (1 excluyente) queda fuera del tope; O-E va a `discardedOptions`.
 - **Orden esperado con `LLM-TRES`:** O-B → O-C → O-A (la no comparable queda última, visible).
 
 ---
@@ -43,7 +43,7 @@ que las redactó la IA decidan cuál veo arriba.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado FX-10c-a con `LLM-CUATRO` y
-  `EVIDENCE_MAX_OPTIONS = 3`, cuando `doc1@test.local` envía `Q-HER2` sobre A-M1 a
+  `ANALYSIS_MAX_OPTIONS = 3`, cuando `doc1@test.local` envía `Q-HER2` sobre A-M1 a
   `POST /platform/evidence-analyses`, entonces la respuesta es `200` con
   `evidenceOptions` = [O-B, O-D, O-C] en ese orden y
   `analysisBasis.maxOptions = 3`. `[AC-10.1]` `[RN-28]` `[HU-10]` `[FR-09]`
@@ -79,7 +79,7 @@ El orden se calcula en `rag-orchestrator/app/domain/` reutilizando la función p
 `applicability_order` de US-125 sobre el `applicabilitySummary` de cada opción (su fuente
 más aplicable) y después recorta a `maxOptions`; el orden del arreglo **es** el orden
 (el contrato `EvidenceAnalysis` no cambia, ADR-26: no hay campo `rank`). `clinical-api`
-envía `maxOptions` desde la variable `EVIDENCE_MAX_OPTIONS` (valor 3 desde el S4;
+envía `maxOptions` desde la variable `ANALYSIS_MAX_OPTIONS` (valor 3 desde el S4;
 con valor 1 se aplica el mismo comparador antes del recorte, como en el S3, US-125 AC-5) `[RN-22]`;
 la validación de arranque rechaza valores fuera de 1–3 (asumido, tope de FR-09). La
 secuencia validación → orden → recorte es la de US-125 (AC-7): una descartada nunca

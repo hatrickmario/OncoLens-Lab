@@ -22,7 +22,7 @@
   - Chunks de test (`is_current = true`, mama): `ch-a4-1` (`doc-a4`), `ch-a1-1` (`doc-a1`), `ch-a6-1` (`doc-a6`, ECA estructurado con la misma población que `doc-a1`). Puntajes del *reranker* falso: `ch-a4-1` 0,92 · `ch-a1-1` 0,70 · `ch-a6-1` 0,60.
   - Resúmenes de aplicabilidad con A-M1: `doc-a4` → 1 excluyente (`estado_her2`) en No coincide, `{ coincide: 2, parcial: 0, noCoincide: 1, desconocido: 2 }`; `doc-a1` y `doc-a6` → 0 excluyentes, `{ 3, 0, 0, 2 }`.
   - LLM falso `LLM-DOS-APL` (en este orden de salida): **O-A** cita `ch-a4-1` · **O-B** cita `ch-a1-1`. `LLM-EMPATE-APL`: **O-B** cita `ch-a1-1` · **O-D** cita `ch-a6-1`. `LLM-SIN-SOPORTE-APL`: **O-B'** cita `ch-a1-1` con una afirmación que el NLI falso marca `neutral` · **O-A** cita `ch-a4-1` (`entailment`).
-  - Configuración: `EVIDENCE_MAX_OPTIONS = 1`, `RELEVANCE_THRESHOLD = 0.30`.
+  - Configuración: `ANALYSIS_MAX_OPTIONS = 1`, `RELEVANCE_THRESHOLD = 0.30`.
 - **Resultado esperado de A-M1 con `doc-a1`:** `estado_her2` coincide · `estadio` coincide · `ecog` coincide con aviso `sin_verificar` · `estado_menopausico` desconocido (`falta_en_paciente`) · `linea_tratamiento` desconocido (`no_reportado_por_fuente`) → resumen `{ coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }`, `populationNotComparable = false`.
 
 ---
@@ -154,7 +154,7 @@ paciente, para que la comparación no dependa de lo que interprete el modelo.
 `ApplicabilityService` en `rag-orchestrator/application/` con la regla pura en
 `domain/applicability_rules.py`; trabaja solo con el `clinicalContext` desidentificado y
 con el catálogo del corpus `[AC-T4.4]` `[SEG-06]`. El valor del estudio se copia de
-`population_criteria` (RN-25). `maxOptions` (`EVIDENCE_MAX_OPTIONS`) vale 1 hasta el S4;
+`population_criteria` (RN-25). `maxOptions` (`ANALYSIS_MAX_OPTIONS`) vale 1 hasta el S4;
 desde el S3 esa opción única la elige el comparador de aplicabilidad de US-125 (AC-5),
 no la relevancia, que solo desempata. Tests: Pytest con FX-08b-a.
 
@@ -289,7 +289,7 @@ relevancia de la búsqueda.
   descendente), cuando se evalúa la función pura, entonces devuelve el orden esperado en
   todos los casos y nunca usa un puntaje combinado. `[RN-28]` `[ADR-27]`
 - **AC-5 (invariante · recorte a una opción por aplicabilidad)** · Dado `maxOptions = 1`
-  (configurable, `EVIDENCE_MAX_OPTIONS`) y `LLM-DOS-APL` de FX-08b-b con dos opciones
+  (configurable, `ANALYSIS_MAX_OPTIONS`) y `LLM-DOS-APL` de FX-08b-b con dos opciones
   válidas, O-A con 1 excluyente en No coincide y relevancia 0,92 y O-B con 0 excluyentes
   y relevancia 0,70, cuando se recorta, entonces la opción devuelta en `evidenceOptions`
   es O-B; la relevancia solo desempata a igualdad de conteos. `[RN-28]` `[AC-10.1]`
@@ -311,7 +311,7 @@ opciones antes del recorte; en el S4 US-134 reutiliza el mismo paso con
 soporte (US-064) → agregación por opción → orden con `applicability_order` → recorte a
 `maxOptions`. El orden se aplica **antes** del recorte y **después** de la validación de
 citas y soporte, para que una descartada nunca ocupe posición. `maxOptions` llega de
-`clinical-api` desde `EVIDENCE_MAX_OPTIONS` (1 en el S3) `[RN-22]`; con aplicabilidad
+`clinical-api` desde `ANALYSIS_MAX_OPTIONS` (1 en el S3) `[RN-22]`; con aplicabilidad
 presente la relevancia nunca es criterio principal (S1–S2: US-225 AC-3, ex US-055 AC-8). Tests: Pytest
 unitarios del comparador y de la agregación (AC-1…AC-4) y Pytest + TestClient de
 `/rag/query` con adapters falsos de FX-08b-b (AC-5…AC-7).

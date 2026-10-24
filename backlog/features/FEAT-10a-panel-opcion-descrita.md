@@ -177,7 +177,7 @@ ausencia de evidencia con una respuesta.
   > **Alineación con `[S1 resp. 31]`:** el mensaje de error muestra "Código de traza: [traceId]" (decisión del S1, validada por los oncólogos asesores); lo que AC-5 prohíbe son nombres de servicios, trazas de pila y detalles internos.
 - **AC-7 (invariante · criterio de elección visible)** · Dada una respuesta `con_evidencia`
   cuya opción se eligió por aplicabilidad (US-125, `maxOptions = 1`), cuando se renderiza,
-  entonces el rótulo del criterio dice "Se muestra primero la opción cuyo estudio coincide en más criterios con los datos registrados de este paciente (menos criterios excluyentes en No coincide); la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica." (reemplaza
+  entonces el rótulo del criterio dice "Orden por aplicabilidad: primero la opción con menos criterios excluyentes en No coincide; luego, la que coincide en más criterios con los datos registrados; la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica." (reemplaza
   `orderCriterion.relevance`; `relevance.basis` pasa a "Metadato de recuperación; solo desempata el orden por aplicabilidad."), bajo la opción aparece en texto la línea de
   `applicabilitySummary` con el prefijo "Criterios del estudio frente a datos registrados:" ("Coincide [n] · Parcial [n] · No coincide [n] · Desconocido [n]",
   sin puntaje ni porcentaje) y, si `populationNotComparable = true`, el aviso
