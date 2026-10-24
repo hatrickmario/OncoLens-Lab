@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  ARCHIVOS_DEL_CATALOGO,
   leerCatalogo,
   leerEsquemas,
   mensajeDe,
@@ -214,6 +215,29 @@ describe('match con lista solo en aplicabilidad (Gate 2 vuelta 1, punto 1)', () 
     expect(
       exigirAtributoDeclarado(atributo(['estado_menopausico', 'menopausia_x']), 'mama', declaradas),
     ).toBe('atributo_no_declarado');
+  });
+});
+
+describe('contexto propio de cada archivo del registro (Gate 2 vuelta 1, punto 3)', () => {
+  it('entrega a las reglas el contexto que declara su entrada del registro, derivado de los ítems', () => {
+    const entrada = ARCHIVOS_DEL_CATALOGO.aplicabilidad;
+    const original = { reglas: entrada.reglas, contexto: entrada.contexto };
+    entrada.contexto = (items) => ({ sonda: items.length });
+    entrada.reglas = [(_item, contexto) => (contexto.sonda === 6 ? 'sonda_recibida' : null)];
+    try {
+      const archivos = leerCatalogo(path.join(FIXTURES, 'test-apl-1.0.0'), leerTexto);
+      archivos.tipos.mama.aplicabilidad.items = archivos.tipos.mama.aplicabilidad.items.slice(0, 5);
+      archivos.tipos.mama.aplicabilidad.items.push({
+        ...archivos.tipos.mama.aplicabilidad.items[0],
+        key: 'otro',
+      });
+
+      const { violaciones } = validarCatalogo({ archivos, allowlist, esquemas });
+
+      expect(violaciones.map((violacion) => violacion.codigo)).toContain('sonda_recibida');
+    } finally {
+      Object.assign(entrada, original);
+    }
   });
 });
 
