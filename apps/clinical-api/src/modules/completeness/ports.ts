@@ -56,7 +56,15 @@ export type RegistrosPorEntidad = Readonly<Record<string, readonly RegistroDeDat
 
 export interface RegistrosDeCompletitud {
   /** Registros del paciente de cada entidad pedida; del `Diagnosis`, solo el activo. */
-  registrosDe(patientId: string, entidades: readonly string[]): Promise<RegistrosPorEntidad>;
+  /**
+   * Registros del paciente de cada entidad pedida SIN filtrar por estado de revisión: incluye `rechazado` y
+   * `reemplazado`. Quien los use debe aplicar `registrosVigentes()` (RN-07) antes de contarlos. Del `Diagnosis`,
+   * solo el activo.
+   */
+  registrosSinFiltrarPorRevision(
+    patientId: string,
+    entidades: readonly string[],
+  ): Promise<RegistrosPorEntidad>;
 }
 
 export interface ItemDelChecklist {

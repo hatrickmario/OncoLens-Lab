@@ -137,7 +137,7 @@ function aRegistro(
 
 export function createCompletenessRepository(db: Consultador): RegistrosDeCompletitud {
   return {
-    async registrosDe(patientId, entidades): Promise<RegistrosPorEntidad> {
+    async registrosSinFiltrarPorRevision(patientId, entidades): Promise<RegistrosPorEntidad> {
       const resultado: Record<string, RegistroDeDato[]> = {};
       for (const entidad of new Set(entidades)) {
         const consulta = CONSULTAS[entidad];

@@ -22,9 +22,10 @@ export function createCompletenessService(
   return {
     async calcular(patientId): Promise<ChecklistDelPaciente> {
       const catalogVersion = catalogo.version();
-      const { Diagnosis: diagnosticos = [] } = await registros.registrosDe(patientId, [
-        'Diagnosis',
-      ]);
+      const { Diagnosis: diagnosticos = [] } = await registros.registrosSinFiltrarPorRevision(
+        patientId,
+        ['Diagnosis'],
+      );
       const cancerType = tipoDeCancerActivo(diagnosticos);
       const datos = cancerType === null ? undefined : catalogo.deTipo(cancerType);
       if (cancerType === null || datos === undefined) return { catalogVersion, items: [] };
@@ -32,7 +33,7 @@ export function createCompletenessService(
       const entidades = datos.items
         .map((item) => item.destination.entity)
         .filter((entidad) => entidad !== 'Diagnosis');
-      const delPaciente = await registros.registrosDe(patientId, entidades);
+      const delPaciente = await registros.registrosSinFiltrarPorRevision(patientId, entidades);
       return {
         catalogVersion,
         items: calcularChecklist({
