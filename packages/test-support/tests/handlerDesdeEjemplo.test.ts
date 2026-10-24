@@ -62,6 +62,25 @@ describe('handlerDesdeEjemplo', () => {
     ).toThrowError('no-existe.json');
   });
 
+  it.each([
+    '../package.json',
+    '/etc/hosts',
+    'sub/ejemplo.json',
+    'a\\b.json',
+    '..%2Fx.json',
+    'x.json?y',
+    'x..json',
+    'ejemplo.txt',
+    '',
+  ])(
+    'rechaza el nombre %j porque no es un archivo .json simple de contracts/examples/',
+    (nombre) => {
+      expect(() => handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, nombre)).toThrowError(
+        /no es un nombre de ejemplo válido/,
+      );
+    },
+  );
+
   it('entrega la petición recibida a alRecibir sin alterar la respuesta', async () => {
     const recibidas: string[] = [];
     servidor.use(

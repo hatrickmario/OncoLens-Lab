@@ -29,8 +29,16 @@ export interface OpcionesDelHandler {
 const esObjeto = (valor: unknown): valor is Objeto =>
   typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 
-/** Carga el ejemplo por su nombre de archivo; un nombre inexistente falla nombrándolo. */
+// Solo un nombre de archivo `.json` simple: sin `/`, `\\`, `..`, `%`, `?`, `#` ni rutas absolutas (nada fuera de contracts/examples/).
+const NOMBRE_DE_EJEMPLO = /^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/;
+
+/** Carga el ejemplo por su nombre de archivo; un nombre fuera de contracts/examples/ o inexistente falla nombrándolo. */
 export function cargarEjemplo(archivoDeEjemplo: string): unknown {
+  if (!NOMBRE_DE_EJEMPLO.test(archivoDeEjemplo) || archivoDeEjemplo.includes('..')) {
+    throw new Error(
+      `handlerDesdeEjemplo: ${JSON.stringify(archivoDeEjemplo)} no es un nombre de ejemplo válido: solo un archivo .json de contracts/examples/, sin rutas`,
+    );
+  }
   try {
     return JSON.parse(readFileSync(new URL(archivoDeEjemplo, CARPETA_DE_EJEMPLOS), 'utf8'));
   } catch (error) {

@@ -13,6 +13,9 @@
   "scripts": {
     "test": "vitest run"
   },
+  "devDependencies": {
+    "msw": "3.0.3"
+  },
   "peerDependencies": {
     "msw": "3.0.3"
   }
