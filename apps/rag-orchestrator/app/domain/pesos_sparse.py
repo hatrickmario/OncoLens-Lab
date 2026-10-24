@@ -4,6 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+import numpy as np
+
+
+def pesos_lexicos(oculto: np.ndarray, pesos: np.ndarray, sesgo: float) -> np.ndarray:
+    """``relu(oculto @ pesos + sesgo)``: un peso léxico por token a partir de los estados ocultos ``[tokens, dim]``.
+
+    ``pesos`` es el vector ``[dim]`` de la cabeza lineal ``sparse_linear`` de BGE-M3. Única definición del cálculo: la usan
+    el adapter de la ingesta y el envoltorio de la medición de ADR-39.
+    """
+    return np.maximum(oculto @ np.asarray(pesos).reshape(-1) + sesgo, 0.0)
+
 
 def agrupar_pesos_por_token(ids: Sequence[int], pesos: Sequence[float]) -> dict[int, float]:
     """``{id_de_token: peso}`` con el máximo por token, sin los tokens especiales (primero y último) ni los pesos <= 0.

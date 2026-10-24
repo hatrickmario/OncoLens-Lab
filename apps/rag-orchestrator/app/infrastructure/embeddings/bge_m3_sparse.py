@@ -13,7 +13,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from app.application.ports import FalloDeInferencia
-from app.domain.pesos_sparse import agrupar_pesos_por_token
+from app.domain.pesos_sparse import agrupar_pesos_por_token, pesos_lexicos
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
     agrupar_por_presupuesto_de_tokens,
@@ -66,5 +66,5 @@ class CodificadorSparseBgeM3:
     def _terminos(self, ids: list[int], oculto: np.ndarray) -> dict[int, float]:
         if oculto.ndim != 2 or oculto.shape[0] < len(ids) or oculto.shape[1] != self._pesos.size:
             raise FalloDeInferencia(_FALLO)
-        pesos = np.maximum(oculto[: len(ids)] @ self._pesos + self._sesgo, 0.0)
+        pesos = pesos_lexicos(oculto[: len(ids)], self._pesos, self._sesgo)
         return agrupar_pesos_por_token(ids, pesos.tolist())

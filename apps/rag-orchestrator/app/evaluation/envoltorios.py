@@ -15,7 +15,7 @@ from typing import Protocol
 
 import numpy as np
 
-from app.domain.pesos_sparse import agrupar_pesos_por_token
+from app.domain.pesos_sparse import agrupar_pesos_por_token, pesos_lexicos
 from app.evaluation.config_medicion import ModeloSpec
 
 TAMANO_LOTE_TOKENS = 4096  # presupuesto de tokens por llamada a ONNX Runtime al codificar el corpus
@@ -182,7 +182,8 @@ class EmbedderOnnx(_ModeloOnnx):
             raise RuntimeError("el modelo no trae sparse nativo")
         ids = self._ids(texto)
         oculto = self._correr([ids])[0]
-        pesos = np.maximum(oculto @ self._pesos_sparse[0].T + self._pesos_sparse[1], 0).reshape(-1)
+        pesos_head, sesgo = self._pesos_sparse
+        pesos = pesos_lexicos(oculto, pesos_head, float(np.asarray(sesgo).reshape(-1)[0]))
         return agrupar_pesos_por_token(ids, pesos.tolist())
 
 
