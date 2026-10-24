@@ -39,7 +39,8 @@
 - [ ] 1.10 Adapter real `infrastructure/embeddings/bge_m3_sparse.py` (D3) sobre el núcleo de BGE-M3, reutilizando el
       cálculo de `app/evaluation/envoltorios.py` sin duplicarlo; smoke con los modelos verificados de ADR-39 en el
       mismo job que el smoke de US-231b (`integration-rag`), que comprueba ≥ 1 término por pasaje · test después ·
-      commit `feat(L1D-116)`
+      commit `feat(L1D-116)` · **adapter y unitarios hechos; smoke con pesos reales TRASLADADA a L1D-117 AC-5 / US-117b**
+      (ahí se reindexa con pesos reales); por eso sigue `[ ]`
 - [x] 1.11 Regresión: suite de la semilla (US-059, `load_seed_corpus`) y de ADR-39 (`app/evaluation`) en verde sin
       cambios en sus tests · verificación: Pytest de `tests/integration` y `tests/evaluation`
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
@@ -48,28 +49,37 @@
 ## evaluación
 
 - [ ] 2.1 Confirmar en el PR que `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral ni corpus versionado;
-      ver `design.md`, Evaluación) · exento · **PENDIENTE de decisión del orquestador (sprint-S3)**: el encargo de
-      implementación pide `run-ai-eval` obligatorio y `eval-required` se dispara por `app/config/**` con
-      `SPARSE_VECTOR_SOURCE` (`CorpusIngestSettings`); lo decide el orquestador en el Gate 2.
+      ver `design.md`, Evaluación) · **corregida:** `eval-required` SÍ se dispara (`SPARSE_VECTOR_SOURCE` en
+      `app/config/**`); resultado neutro en el Gate 2 (baseline igual, `ai-eval-runner` PASS). Sin medición con modelos
+      reales hasta US-112 / US-120.
 
 ## cierre
 
 - [x] 3.1 `openspec validate l1d-116-ingesta-reanudable-licencia --strict`
 - [ ] 3.2 Suite Pytest de `rag-orchestrator` en verde (unit, integration con PostgreSQL y Milvus de test) · local:
-      2074 passed (sin `servicios_reales`); `tests/integration/corpus_store/test_script_ingest.py` (`servicios_reales`)
-      no se pudo ejecutar localmente (sin Compose de test): lo ejecuta el job `integration-rag`.
+      suite completa sin `servicios_reales` en verde; los `servicios_reales` (`tests/integration/corpus_store/test_script_ingest.py`
+      y las variantes `[real]` de AC-2 y AC-4) NO se pudieron ejecutar localmente (sin Compose de test): `[ ]` hasta ver
+      el job `integration-rag`.
 
 ## Estado y desviaciones de la implementación
 
 - **1.10 sin cerrar `[x]`:** el adapter (`CodificadorSparseBgeM3`), su cargador y sus unitarios están hechos; falta el
-  *smoke* con los pesos reales de ADR-39 (no hay pesos en este entorno), que corre en `integration-rag` / VM local.
-  Sin ID destino asignado: lo asigna el orquestador.
-- **Desviación (decidida por el coordinador):** `CorpusIngestSettings` añade `EMBEDDING_SPARSE_WEIGHTS_PATH` y
+  *smoke* con los pesos reales de ADR-39 (no hay pesos en este entorno): TRASLADADA a L1D-117 AC-5 / US-117b.
+- **Deuda: núcleo común de ingesta, antes de US-117b.** `SeedCorpusLoader` y `IngestionPipelineService` comparten
+  admisibilidad, rechazo/retiro, omisión y confirmación con código casi paralelo; extraer un núcleo común antes de que
+  US-117b añada versionado (la historia la crea el orquestador). Aquí solo se movieron los errores compartidos a
+  `domain/corpus_seed/errores.py`.
+- **Gate 2, vuelta 1:** `decidir_reanudacion` pasó a `es_reanudacion` (bool); los `STATUS_*` viven en
+  `domain/corpus_seed/versionado.py`; `pesos_lexicos` y `SPARSE_VECTOR_SOURCES_ADMITIDAS` tienen una sola definición
+  (esta última endurece la validación de `ConfigModelos` en el bloque ADR-39: solo rechaza orígenes no admitidos).
+  `Estado` (resultado de la corrida; clave `estado` del JSON) se distingue de `status` (catálogo) por docstring: el
+  JSON no cambia.
+- **Desviación (pendiente de revisión humana):** `CorpusIngestSettings` añade `EMBEDDING_SPARSE_WEIGHTS_PATH` y
   `EMBEDDING_SPARSE_WEIGHTS_SHA256` (pesos de `sparse_linear`, verificados como el resto de modelos; no se versionan).
   **No se documentaron en `apps/rag-orchestrator/.env.example`** porque la ruta está denegada por la configuración de
   permisos del agente: falta ese cambio (lo hace quien tenga permiso). Tampoco se tocó `Settings` ni el bloque ADR-39.
 - Se conserva el `chunk_id` de la semilla (`<document_id>#NNNN`, determinista) en vez de `:`.
-- `decidir_reanudacion()` informa el campo `reanudado` del resumen; `decidir_version()` sigue decidiendo omitir/reemplazar.
+- `es_reanudacion()` solo informa el campo `reanudado` del resumen; `decidir_version()` sigue decidiendo omitir/reemplazar.
 - La ingesta ya sabe reemplazar una versión nueva (misma regla que la semilla, protegida por un test de regresión
   RN-05); el entregable de versionado y `--reindex-sparse` siguen siendo de US-117b.
 - Un `UnicodeDecodeError` del lector de texto se informa como etapa `normalizacion` (el fetcher decodifica UTF-8).
@@ -78,6 +88,6 @@
   de `chunks_del_documento` son adiciones mínimas a `seed_corpus/registros.py`.
 - Un documento en `error` por fallo previo al `checksum` deja una fila `<clave>@error`; si luego se ingiere bien, esa
   fila histórica permanece (nada se borra, RN-05).
-- Los AC de integración corren con catálogo y almacén **en memoria** (`tests/integration/corpus_ingestion/`); el
-  mismo servicio contra PostgreSQL y Milvus reales lo cubre `test_script_ingest.py` (`servicios_reales`, no ejecutado
-  localmente).
+- Los AC de integración corren con catálogo y almacén **en memoria** (`tests/integration/corpus_ingestion/`); AC-2 y AC-4
+  tienen además la variante `[real]` (PostgreSQL y Milvus de test, `servicios_reales`) y la CLI se cubre con
+  `test_script_ingest.py`: ninguno ejecutado localmente, se verán en `integration-rag`.
