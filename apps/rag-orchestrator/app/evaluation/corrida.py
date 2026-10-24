@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Sequence
 from typing import Any, TypedDict
 
 from app.application.ports import EvidenciaGenerada
-from app.domain.citations import validar_citas
+from app.domain.alias_de_chunks import CITA_NO_TRADUCIBLE
+from app.domain.citations import OpcionGenerada, validar_citas
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
     afirmaciones_a_juzgar,
@@ -39,7 +41,18 @@ SOLICITUD_BASE = "contracts/examples/rag-query-request.json"
 MAX_OPCIONES = 3
 
 
-def _solicitud_base() -> dict[str, Any]:
+def citas_propuestas_de(opciones: Sequence[OpcionGenerada]) -> int:
+    """Citas que propuso el generador (M-07.2): los ``chunkId`` reales repetidos en una opción cuentan una vez y cada
+    ``CITA_NO_TRADUCIBLE`` cuenta aparte (dos alias inexistentes distintos son dos citas inválidas, no una)."""
+    total = 0
+    for opcion in opciones:
+        no_traducibles = opcion.chunk_ids_citados.count(CITA_NO_TRADUCIBLE)
+        reales = set(opcion.chunk_ids_citados) - {CITA_NO_TRADUCIBLE}
+        total += len(reales) + no_traducibles
+    return total
+
+
+def solicitud_base() -> dict[str, Any]:
     return json.loads((raiz_repo() / SOLICITUD_BASE).read_text(encoding="utf-8"))
 
 
@@ -62,7 +75,7 @@ def solicitud_de(
 async def evaluar_dataset(
     suite: ServicioDeSuite, dataset: DatasetSuite
 ) -> tuple[list[ResultadoConsulta], list[RagQueryInternalResponse]]:
-    base = _solicitud_base()
+    base = solicitud_base()
     resultados: list[ResultadoConsulta] = []
     respuestas: list[RagQueryInternalResponse] = []
     for indice, pregunta in enumerate(dataset.preguntas):
@@ -90,7 +103,7 @@ async def _resultado_de(
     if generador_invocado and propuesta is not None:
         revisadas = validar_citas(propuesta.opciones, obs.entregados[pregunta.texto])
         citas_validas = sum(len(a.chunk_ids_validos) for a in revisadas.aceptadas)
-        citas_propuestas = sum(len(set(o.chunk_ids_citados)) for o in propuesta.opciones)
+        citas_propuestas = citas_propuestas_de(propuesta.opciones)
     top = respuesta.topRelevanceScore
     en_nli, en_juez = await _fidelidad_de(suite, pregunta.texto, generador_invocado)
     return ResultadoConsulta(

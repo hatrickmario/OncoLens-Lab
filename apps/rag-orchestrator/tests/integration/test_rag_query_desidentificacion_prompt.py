@@ -4,6 +4,7 @@ import pytest
 
 from app.application.generation import LlmEvidenceGenerator
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.domain.alias_de_chunks import asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
@@ -27,7 +28,10 @@ def test_prompt_rag_query_con_pseudo_patient_id_no_lo_incluye():
     assert modelo.clinicalContext.pseudoPatientId == PSEUDONIMO
     fragmentos = [ChunkPuntuado("ch-1", "doc-1", "texto del fragmento", 0.9)]
     prompt_directo = construir_prompt_rag_query(
-        modelo.query, resumen_del_contexto_clinico(modelo.clinicalContext), fragmentos, "es"
+        modelo.query,
+        resumen_del_contexto_clinico(modelo.clinicalContext),
+        asignar_alias(fragmentos).fragmentos,
+        "es",
     )
     llm = FakeLlmClient("LLM-OK")
 

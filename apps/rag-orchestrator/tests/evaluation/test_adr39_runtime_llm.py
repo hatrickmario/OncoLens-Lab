@@ -20,7 +20,7 @@ BASE = "http://runtime-local.test:11434"
 TAG = "modelo-de-prueba:1b"
 PARAMS = {"num_ctx": 8192, "temperature": 0.0, "max_output_tokens": 256, "thinking": False}
 SALIDA_VALIDA = json.dumps(
-    {"options": [{"option": "o", "rationale": "r", "citedChunkIds": ["M01-1"]}]}
+    {"options": [{"option": "o", "rationale": "r", "citedFragments": ["C1"]}]}
 )
 
 
@@ -72,7 +72,7 @@ def test_prompts_del_dataset_repite_las_preguntas_con_evidencia_hasta_completar_
     prompts = runtime_llm.prompts_del_dataset(dataset, 200)
 
     assert len(prompts) == 200
-    assert all("[chunkId:" in p and "Pregunta:" in p for p in prompts)
+    assert all("[fragmento C" in p and "Pregunta:" in p for p in prompts)
     sin_evidencia = [p for p in dataset.preguntas if p.modo_acierto == "sin_evidencia"]
     assert sin_evidencia and all(q.texto not in "".join(prompts) for q in sin_evidencia)  # RN-02
 

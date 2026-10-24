@@ -203,7 +203,7 @@ def test_elegir_candidato_declara_riesgo_y_respaldo_cuando_el_margen_es_menor_de
 def test_validar_contra_esquema_acepta_la_salida_del_s1_y_rechaza_json_invalido_o_fuera_de_esquema() -> (
     None
 ):
-    valida = '{"options": [{"option": "o", "rationale": "r", "citedChunkIds": ["c1"]}]}'
+    valida = '{"options": [{"option": "o", "rationale": "r", "citedFragments": ["C1"]}]}'
 
     assert validar_contra_esquema(valida, ESQUEMA_DE_GENERACION) is True
     assert validar_contra_esquema('{"options": "no"}', ESQUEMA_DE_GENERACION) is False

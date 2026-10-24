@@ -1,0 +1,240 @@
+{
+ "prompt": "rag-query@0.3.0",
+ "modelo": "gemma4:26b-a4b-it-q4_K_M",
+ "origen": [
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.8
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  }
+ ],
+ "origen_ruido": [
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.4
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.4
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.7
+  }
+ ],
+ "dataset": [
+  {
+   "id": "Q-M01",
+   "opciones": 2,
+   "aceptadas": 2,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 2,
+   "citas_validas": 2,
+   "s": 3.5
+  },
+  {
+   "id": "Q-M02",
+   "opciones": 2,
+   "aceptadas": 2,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 2,
+   "citas_validas": 2,
+   "s": 3.3
+  },
+  {
+   "id": "Q-M03",
+   "opciones": 3,
+   "aceptadas": 3,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 3,
+   "citas_validas": 3,
+   "s": 4.2
+  },
+  {
+   "id": "Q-M04",
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 1.8
+  },
+  {
+   "id": "Q-M05",
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 2.1
+  }
+ ]
+}
