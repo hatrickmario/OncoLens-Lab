@@ -94,6 +94,10 @@ jobs:
         run: npm run contracts:generate:check
         env:
           CODEGEN_PYTHON: .venv-codegen/bin/python
+      - name: Los tipos de web compilan con lo generado (consumidor de citedSources; caso ac2-cited-sources-build, ARR-09 AC-4)
+        run: npm run contracts:generate && npm run typecheck -w apps/web
+        env:
+          CODEGEN_PYTHON: .venv-codegen/bin/python
       - name: Cambios incompatibles contra la base (oasdiff, nivel ERR)
         run: scripts/ci/contracts-breaking.sh "$BASE_REF"
 
