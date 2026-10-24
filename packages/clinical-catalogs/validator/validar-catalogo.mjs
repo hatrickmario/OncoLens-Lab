@@ -25,15 +25,12 @@ const conClaves = (archivo) => (Array.isArray(archivo?.keys) ? archivo : { keys:
 
 /** Reglas de cada ítem según el registro de archivos (`ARCHIVOS_DEL_CATALOGO`). */
 function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
-  const { reglas } = ARCHIVOS_DEL_CATALOGO[nombreDelArchivo];
+  const { reglas, contexto: contextoDeLosItems } = ARCHIVOS_DEL_CATALOGO[nombreDelArchivo];
   const items = itemsDe(archivo);
   const delArchivo = {
     ...contexto,
     clavesRepetidas: clavesRepetidasEn(items),
-    studyKeysRepetidas: clavesRepetidasEn(
-      items.filter((item) => typeof item.studyKey === 'string'),
-      'studyKey',
-    ),
+    ...contextoDeLosItems?.(items),
   };
   return items.flatMap((item) =>
     reglas
