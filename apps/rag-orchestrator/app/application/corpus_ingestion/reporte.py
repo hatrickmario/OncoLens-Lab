@@ -79,5 +79,10 @@ class ReporteDeIngesta:
             "release_id": self.release_id,
         }
 
+    @property
+    def metadatos_pendientes(self) -> tuple[ResultadoDeIngesta, ...]:
+        """Documentos indexados cuya extracción de metadatos no corrió (LLM o NLI caídos, o salida inválida)."""
+        raise NotImplementedError("no implementado")
+
     def resultado_de(self, document_key: str) -> ResultadoDeIngesta:
         return next(r for r in self.resultados if r.document_key == document_key)

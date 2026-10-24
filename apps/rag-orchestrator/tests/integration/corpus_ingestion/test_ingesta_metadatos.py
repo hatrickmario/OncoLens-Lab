@@ -6,11 +6,15 @@ Integración: el ``IngestionPipelineService`` real con el ``MetadataExtractionSe
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
+from app.application.ports import FalloDeInferencia
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.support.metadatos import (
+    nli_de_metadatos,
     ENDPOINT_INVENTADO,
     MARCADOR_I_CT_1,
     MARCADOR_I_LIT_1,
@@ -79,3 +83,69 @@ def test_ingesta_ilit2_sin_poblacion_queda_no_disponible(montaje: Montaje) -> No
     assert {articulo.population_criteria[c] for c in CRITERIOS_DE_POBLACION} == {"no_disponible"}
     assert montaje.llm_metadatos.invocaciones_de(MARCADOR_I_LIT_2) == 1
     assert articulo.metadata_source == "extraido_verificado"
+
+
+def _ingerir_ilit1_con_el_llm_caido_o_roto(montaje: Montaje, modo: str):
+    montaje.llm_metadatos.modo = modo
+    return montaje.ingerir()
+
+
+def _afirmar_pendiente_y_embebido(montaje: Montaje, reporte) -> None:
+    articulo = _registro(montaje, "i-lit-1")
+    assert (articulo.status, articulo.is_current) == ("embebido", True)
+    assert articulo.metadata_source == "pendiente"
+    assert {articulo.population_criteria[c] for c in CRITERIOS_DE_POBLACION} == {"no_disponible"}
+    assert montaje.chunks_por_clave()["i-lit-1"] > 0
+    assert "i-lit-1" in {r.document_key for r in reporte.metadatos_pendientes}
+    assert reporte.resultado_de("i-lit-1").estado.value == "embebido"
+
+
+@pytest.mark.ac("US-118", 6)
+def test_ingesta_llm_caido_documento_embebido_y_metadatos_pendientes(montaje: Montaje) -> None:
+    """[US-118 AC-6] Con el LLM de metadatos caído el documento queda embebido y cuenta como metadatos pendientes."""
+    reporte = _ingerir_ilit1_con_el_llm_caido_o_roto(montaje, "error")
+
+    _afirmar_pendiente_y_embebido(montaje, reporte)
+    salida = json.dumps(reporte.como_diccionario(), ensure_ascii=False)
+    assert "Synthetic review" not in salida and "llm falso" not in salida
+    assert "FalloDelLlm" in salida
+    assert reporte.como_diccionario()["metadatos_pendientes"]["cantidad"] >= 1
+
+
+@pytest.mark.ac("US-118", 6)
+def test_ingesta_json_invalido_deja_pendiente_y_el_nli_no_recibe_pares(montaje: Montaje) -> None:
+    """[US-118 AC-6] Una propuesta que no cumple el esquema no aporta ningún metadato."""
+    reporte = _ingerir_ilit1_con_el_llm_caido_o_roto(montaje, "json_invalido")
+
+    _afirmar_pendiente_y_embebido(montaje, reporte)
+    assert montaje.nli_metadatos.pares_recibidos == []
+    assert "SalidaInvalida" in json.dumps(reporte.como_diccionario())
+
+
+@pytest.mark.ac("US-118", 6)
+def test_ingesta_nli_caido_no_conserva_ningun_metadato_extraido(montaje: Montaje) -> None:
+    """[US-118 AC-6] Con el NLI caído no se conserva ningún metadato extraído."""
+    montaje.nli_metadatos.error = FalloDeInferencia("nli falso")
+
+    reporte = montaje.ingerir()
+
+    _afirmar_pendiente_y_embebido(montaje, reporte)
+    articulo = _registro(montaje, "i-lit-1")
+    assert (articulo.trial_phase, articulo.sample_size, articulo.primary_endpoint) == (
+        None,
+        None,
+        None,
+    )
+    assert "FalloDeInferencia" in json.dumps(reporte.como_diccionario())
+
+
+@pytest.mark.ac("US-118", 6)
+def test_ingesta_con_los_modelos_caidos_nunca_rotula_fuente_estructurada_lo_que_no_se_publico(
+    montaje: Montaje,
+) -> None:
+    """[US-118 AC-6] pendiente nunca es fuente_estructurada; los documentos con criterios estructurados no cambian."""
+    reporte = _ingerir_ilit1_con_el_llm_caido_o_roto(montaje, "error")
+
+    rotulos = {r.document_key: r.metadata_source for r in reporte.resultados if r.metadatos}
+    assert rotulos["i-lit-1"] == "pendiente" and rotulos["i-lit-2"] == "pendiente"
+    assert rotulos["i-ct-1"] == "fuente_estructurada"
