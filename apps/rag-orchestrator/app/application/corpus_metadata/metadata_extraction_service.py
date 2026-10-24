@@ -22,7 +22,7 @@ from app.domain.corpus_metadata.campos import CAMPOS_ESCALARES
 from app.domain.corpus_metadata.extraccion import (
     escalares_a_extraer,
     integrar_metadatos_verificados,
-    metadatos_pendientes,
+    resolver_como_pendiente,
 )
 from app.domain.corpus_metadata.origen import (
     OrigenDeMetadatos,
@@ -60,7 +60,7 @@ class MetadataExtractionService:
             return self._extraer_y_verificar(documento, texto, fragmentos)
         except FALLOS_QUE_DEJAN_PENDIENTE as fallo:
             # Solo la clase del error: su mensaje podría llevar texto del documento (RN-10).
-            return metadatos_pendientes(documento, FalloDeMetadatos(type(fallo).__name__))
+            return resolver_como_pendiente(documento, FalloDeMetadatos(type(fallo).__name__))
 
     def _extraer_y_verificar(
         self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]

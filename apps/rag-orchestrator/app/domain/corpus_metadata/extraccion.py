@@ -19,7 +19,7 @@ from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 _PREFIJO_DE_BIOMARCADOR = "biomarcadores."
 
 
-def metadatos_pendientes(
+def resolver_como_pendiente(
     documento: DocumentoDeSemilla, fallo: FalloDeMetadatos
 ) -> MetadatosResueltos:
     """La extracción no corrió (LLM o NLI caídos, o salida inválida): nada extraído y ``pendiente``, nunca
@@ -62,9 +62,9 @@ def integrar_metadatos_verificados(
     escalares = {c.campo: c.valor for c in verificados if c.campo in CAMPOS_ESCALARES}
     return MetadatosResueltos(
         study_design=str(escalares.get("study_design", documento.study_design)),
-        trial_phase=_texto_o_nulo(escalares.get("trial_phase", documento.trial_phase)),
+        trial_phase=_a_texto_o_nulo(escalares.get("trial_phase", documento.trial_phase)),
         sample_size=_entero_o_nulo(escalares.get("sample_size", documento.sample_size)),
-        primary_endpoint=_texto_o_nulo(
+        primary_endpoint=_a_texto_o_nulo(
             escalares.get("primary_endpoint", documento.primary_endpoint)
         ),
         population_criteria=_criterios_de_poblacion(verificados),
@@ -88,7 +88,7 @@ def _criterios_de_poblacion(verificados: Sequence[CampoDeMetadato]) -> dict[str,
     return criterios
 
 
-def _texto_o_nulo(valor: object) -> str | None:
+def _a_texto_o_nulo(valor: object) -> str | None:
     return None if valor is None else str(valor)
 
 
