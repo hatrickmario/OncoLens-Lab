@@ -1,2 +1,3 @@
 - [Entorno de integracion en worktree](reference_entorno_integracion_worktree.md) — receta para PostgreSQL de test, secretos, redes y codegen sin chocar con otros agentes
 - [Entorno de tests y trampas](entorno-de-tests.md) — correr integración/codegen en un worktree; pii-scan y oasdiff
+- [Validador del catálogo y entorno](reference_validador_catalogo_y_entorno.md) — dónde vive catalog:validate; trampas de Ajv strict, hook y venv
