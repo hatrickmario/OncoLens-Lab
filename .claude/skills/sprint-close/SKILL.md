@@ -75,3 +75,5 @@ Pide con `AskUserQuestion` la aprobación de: changes archivados y movidos, fusi
 conflictos, cambios propuestos por la retro. Con el sí: commit en `sprint/$sprint-close`
 (`[$sprint] Cierre: archivo, trazabilidad y retro`, con atribución), push y PR. El sprint queda
 cerrado cuando el humano mergea ese PR; el milestone de Linear lo cierra el humano.
+
+**Verificación de CI antes de pedir un merge (usuario, 2026-10-24):** tras subir cambios a una rama con PR, espera a que la CI termine y no le pidas al humano el merge hasta tener 0 checks en fallo, 0 pendientes y 0 alertas abiertas. Si algo falla, lee el log, corrige o pregunta, y vuelve a verificar. Lo recuerda el *hook* `pr-checks-reminder` (PostToolUse en `git push` y `gh pr create`).
