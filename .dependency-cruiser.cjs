@@ -68,6 +68,22 @@ module.exports = {
       },
     },
     {
+      name: 'test-support-solo-en-tests',
+      comment:
+        'packages/test-support (handlers de MSW desde contracts/examples/) es solo para tests: ningún módulo de producción lo importa (US-213 AC-10, design D5).',
+      severity: 'error',
+      from: {
+        path: '^(apps|packages)/',
+        pathNot: [
+          '^packages/test-support/',
+          '(^|/)(tests?|e2e)/',
+          '\\.(test|spec)\\.[cm]?[jt]sx?$',
+          '(^|/)vitest[^/]*\\.config\\.[cm]?[jt]s$',
+        ].concat(exceptuados('test-support-solo-en-tests')),
+      },
+      to: { path: '^packages/test-support/' },
+    },
+    {
       name: 'web-sin-contrato-rag',
       comment:
         'El contrato de rag-orchestrator es solo de clinical-api: web no lo importa (la sesión del doctor no llega a Backend 2).',
