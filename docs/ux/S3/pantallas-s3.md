@@ -81,6 +81,8 @@ Motivos:
 
 Hoy, si se envía el formulario antes de que React hidrate, el navegador muestra el JSON del Route Handler. Diseño: el formulario funciona sin JavaScript como **envío progresivo** (POST del formulario a una ruta que redirige a `/pacientes?…` con el resultado renderizado en el servidor) o, como mínimo, el botón "Buscar" queda deshabilitado con "Cargando…" hasta la hidratación. Recomendado: el envío progresivo, que nunca muestra JSON y no pone la identidad en la URL (la búsqueda va en el cuerpo del POST, nunca en la *query string*). La decisión técnica es de `frontend-dev` dentro de ARR-09; el criterio visible es "nunca se muestra JSON ni la identidad en la URL".
 
+> **Implementado (ARR-09, 2026-10-24):** se eligió el **mínimo**: el botón «Buscar» se sirve deshabilitado con el texto «Cargando la búsqueda…» (clave `pacientes.busqueda.cargando`) y se habilita al hidratar, de modo que ni clic ni Enter envían el POST nativo. Consecuencia: si los *chunks* de JavaScript no cargan (JS desactivado o bloqueado), el formulario queda deshabilitado y la búsqueda no funciona; el listado sigue visible. El envío progresivo recomendado queda como mejora futura.
+
 ## Accesibilidad (además de la lista del sistema de diseño §4)
 
 - La línea de conteos es texto leído por lectores de pantalla como "Coincide 3, Parcial 1, No coincide 0, Desconocido 2"; los símbolos llevan `aria-hidden` y la palabra es visible.
