@@ -13,7 +13,7 @@ import {
 const ESQUEMAS = {
   manifest: esquemaDeManifiesto,
   atributos: esquemaDeAtributos,
-  datosCriticos: esquemaDeDatosCriticos,
+  'datos-criticos': esquemaDeDatosCriticos,
   aplicabilidad: esquemaDeAplicabilidad,
 };
 

@@ -39,6 +39,7 @@ function existeElCampo(clave, entidad, allowlist) {
 
 /** RN-29, FR-23, RN-10: entidad, campo y claves de `match` existen en la allowlist del modelo (solo entidades clínicas). */
 export function exigirDestinoExistente(item, allowlist) {
+  if (!esObjeto(item.destination)) return null; // lo señala exigirDestino
   const { entity, field, match } = item.destination;
   if (!Object.hasOwn(allowlist.entidades, entity)) return 'destino_inexistente';
   const claves = [field, ...Object.keys(esObjeto(match) ? match : {})].filter(
@@ -52,7 +53,7 @@ export function exigirDestinoExistente(item, allowlist) {
 
 /** RN-29: un destino en `ClinicalAttribute` usa una `attribute_key` declarada en `atributos.json` para el tipo. */
 export function exigirAtributoDeclarado(item, tipo, atributos) {
-  if (item.destination.entity !== 'ClinicalAttribute') return null;
+  if (!esObjeto(item.destination) || item.destination.entity !== 'ClinicalAttribute') return null;
   const clave = item.destination.match?.attribute_key;
   const declarado = atributos.keys.some(
     (atributo) =>

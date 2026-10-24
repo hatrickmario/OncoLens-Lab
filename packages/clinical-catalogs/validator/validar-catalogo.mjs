@@ -1,14 +1,7 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
-import {
-  exigirAtributoDeclarado,
-  exigirCondicionBienFormada,
-  exigirDestino,
-  exigirDestinoExistente,
-  exigirEstadoValido,
-  verificarCatalogHash,
-  vocabularioDe,
-} from './reglas.mjs';
+import { verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
 /**
  * Núcleo puro del validador del catálogo (L1D-93 D2): recibe los archivos ya leídos, la allowlist del modelo y los
@@ -26,31 +19,19 @@ const itemsDe = (archivo) =>
     ? archivo.items.filter((item) => item !== null && typeof item === 'object')
     : [];
 
-/** Reglas por ítem con destino; `datos-criticos.json` añade las propias de los datos críticos. */
-function reglasDelItem(item, contexto) {
-  const { tipo, allowlist, atributos, vocabulario, clavesDelTipo, esDatoCritico } = contexto;
-  const sinDestino = exigirDestino(item);
-  const delDestino = sinDestino
-    ? [sinDestino]
-    : [exigirDestinoExistente(item, allowlist), exigirAtributoDeclarado(item, tipo, atributos)];
-  const delDato = esDatoCritico
-    ? [
-        exigirCondicionBienFormada(item, clavesDelTipo, vocabulario),
-        exigirEstadoValido(item, vocabulario),
-      ]
-    : [];
-  return [...delDestino, ...delDato].filter(Boolean);
+/** Reglas de cada ítem según el registro de archivos (`ARCHIVOS_DEL_CATALOGO`). */
+function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
+  const { reglas } = ARCHIVOS_DEL_CATALOGO[nombreDelArchivo];
+  return itemsDe(archivo).flatMap((item) =>
+    reglas
+      .map((regla) => regla(item, contexto))
+      .filter(Boolean)
+      .map((codigo) => ({ codigo, tipo: contexto.tipo, clave: item.key })),
+  );
 }
 
 function violacionesDelArchivo(archivo, nombreDelArchivo, contexto) {
-  const delContexto = { ...contexto, esDatoCritico: nombreDelArchivo === 'datos-criticos' };
-  const delItem = itemsDe(archivo).flatMap((item) =>
-    reglasDelItem(item, delContexto).map((codigo) => ({
-      codigo,
-      tipo: contexto.tipo,
-      clave: item.key,
-    })),
-  );
+  const delItem = violacionesDeLosItems(archivo, nombreDelArchivo, contexto);
   const delHash = verificarCatalogHash(archivo);
   return delItem.length > 0 || delHash === null
     ? delItem
@@ -61,13 +42,17 @@ function violacionDeEsquema(validar, contenido, tipo, clave) {
   return validar(contenido) ? [] : [{ codigo: 'esquema_invalido', tipo, clave }];
 }
 
+/** Esquemas compilados por nombre: `manifest`, `atributos` y cada archivo del registro. */
 function compilarEsquemas(esquemas) {
   const ajv = new Ajv2020({ strict: true });
+  const delRegistro = NOMBRES_DE_ARCHIVO.map((nombre) => [
+    nombre,
+    ajv.compile(esquemas[ARCHIVOS_DEL_CATALOGO[nombre].esquema]),
+  ]);
   return {
     manifest: ajv.compile(esquemas.manifest),
     atributos: ajv.compile(esquemas.atributos),
-    datosCriticos: ajv.compile(esquemas.datosCriticos),
-    aplicabilidad: ajv.compile(esquemas.aplicabilidad),
+    ...Object.fromEntries(delRegistro),
   };
 }
 
@@ -79,32 +64,26 @@ function violacionesDeReglasOEsquema(archivo, nombre, validarEsquema, contexto) 
     : violacionDeEsquema(validarEsquema, archivo, contexto.tipo, nombre);
 }
 
-function violacionesDelTipo(tipo, { datosCriticos, aplicabilidad }, contexto, esquemasCompilados) {
-  const clavesDelTipo = itemsDe(datosCriticos).map((item) => item.key);
+function violacionesDelTipo(tipo, archivosDelTipo, contexto, esquemasCompilados) {
+  const clavesDelTipo = itemsDe(archivosDelTipo['datos-criticos']).map((item) => item.key);
   const delTipo = { ...contexto, tipo, clavesDelTipo };
-  return [
-    ...violacionesDeReglasOEsquema(
-      datosCriticos,
-      'datos-criticos',
-      esquemasCompilados.datosCriticos,
+  return NOMBRES_DE_ARCHIVO.flatMap((nombre) =>
+    violacionesDeReglasOEsquema(
+      archivosDelTipo[nombre],
+      nombre,
+      esquemasCompilados[nombre],
       delTipo,
     ),
-    ...violacionesDeReglasOEsquema(
-      aplicabilidad,
-      'aplicabilidad',
-      esquemasCompilados.aplicabilidad,
-      delTipo,
-    ),
-  ];
+  );
 }
 
 /**
  * Red de seguridad: una forma que las reglas no previeron es un catálogo inválido, no una excepción que escape del
  * arranque o de la CI. El error original se descarta (puede citar contenido del catálogo).
  */
-function violacionesDelTipoSinLanzar(tipo, delTipo, contexto, esquemasCompilados) {
+function violacionesDelTipoSinLanzar(tipo, archivosDelTipo, contexto, esquemasCompilados) {
   try {
-    return violacionesDelTipo(tipo, delTipo, contexto, esquemasCompilados);
+    return violacionesDelTipo(tipo, archivosDelTipo, contexto, esquemasCompilados);
   } catch {
     return [{ codigo: 'esquema_invalido', tipo, clave: '?' }];
   }
@@ -112,14 +91,15 @@ function violacionesDelTipoSinLanzar(tipo, delTipo, contexto, esquemasCompilados
 
 /**
  * @param {{ archivos: object, allowlist: object, esquemas: object }} entrada
- *   `archivos` = `{ manifest, atributos, tipos: { <tipo>: { datosCriticos, aplicabilidad } } }`
+ *   `archivos` = `{ manifest, atributos, tipos: { <tipo>: { <archivo del registro>: contenido } } }`;
+ *   `esquemas` = `{ manifest, atributos, <archivo del registro>: esquema }`
  * @returns {{ valido: boolean, catalogVersion: string | null, violaciones: Violacion[] }}
  */
 export function validarCatalogo({ archivos, allowlist, esquemas }) {
   const esquemasCompilados = compilarEsquemas(esquemas);
   const contexto = {
     allowlist,
-    vocabulario: vocabularioDe(esquemas.datosCriticos),
+    vocabulario: vocabularioDe(esquemas['datos-criticos']),
     atributos: Array.isArray(archivos.atributos?.keys) ? archivos.atributos : { keys: [] },
   };
   const violaciones = [

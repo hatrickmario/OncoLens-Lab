@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   ALCANCES_CUBIERTOS,
+  ARCHIVOS_DEL_CATALOGO,
   catalogHashDe,
   jsonCanonico,
   leerCatalogo,
@@ -24,7 +25,7 @@ import { CATALOGO, FIXTURES, RAIZ } from './apoyo.mjs';
 const leerTexto = (ruta) => readFileSync(ruta, 'utf8');
 const esquemas = leerEsquemas(path.join(CATALOGO, 'schemas'), leerTexto);
 const allowlist = JSON.parse(leerTexto(path.join(CATALOGO, 'validator/modelo.allowlist.json')));
-const vocabulario = vocabularioDe(esquemas.datosCriticos);
+const vocabulario = vocabularioDe(esquemas['datos-criticos']);
 const atributos = { keys: [{ key: 'estado_menopausico', cancerTypes: ['mama'] }] };
 
 const destino = (entity, field, match) => ({ destination: { entity, field, match } });
@@ -166,7 +167,7 @@ describe('catalogHash', () => {
   });
 
   it('declara los mismos alcances que el esquema del bloque validation', () => {
-    const delEsquema = esquemas.datosCriticos.$defs.validation.properties.scope.items.enum;
+    const delEsquema = esquemas['datos-criticos'].$defs.validation.properties.scope.items.enum;
 
     expect([...ALCANCES_CUBIERTOS].sort()).toEqual([...delEsquema].sort());
   });
@@ -180,6 +181,23 @@ describe('catalogHash', () => {
     expect(verificarCatalogHash({ items, validation: { scope: ['datos_criticos'], catalogHash: '0'.repeat(64) } })).toBe(
       'hash_distinto',
     );
+  });
+});
+
+describe('registro de archivos del catálogo', () => {
+  it.each(Object.entries(ARCHIVOS_DEL_CATALOGO))(
+    'declara para %s un esquema que existe y reglas ejecutables',
+    (nombre, { esquema, reglas }) => {
+      expect(esquemas[esquema], nombre).toBeDefined();
+      expect(reglas.length).toBeGreaterThan(0);
+      expect(reglas.every((regla) => typeof regla === 'function')).toBe(true);
+    },
+  );
+
+  it('lee un archivo por tipo por cada entrada del registro', () => {
+    const { tipos } = leerCatalogo(path.join(FIXTURES, 'test-1.0.0'), leerTexto);
+
+    expect(Object.keys(tipos['mama']).sort()).toEqual(Object.keys(ARCHIVOS_DEL_CATALOGO).sort());
   });
 });
 
@@ -199,7 +217,7 @@ describe('validarCatalogo', () => {
 
   it('informa esquema_invalido sin valores cuando el ítem tiene una propiedad que el esquema no admite', () => {
     const archivos = leerCatalogo(path.join(FIXTURES, 'test-1.0.0'), leerTexto);
-    archivos.tipos['mama'].datosCriticos.items[0].script = 'alert(1)';
+    archivos.tipos['mama']['datos-criticos'].items[0].script = 'alert(1)';
 
     const resultado = validarCatalogo({ archivos, allowlist, esquemas });
 
@@ -208,7 +226,7 @@ describe('validarCatalogo', () => {
 
   it('no lanza cuando un archivo trae ítems que no son objetos', () => {
     const archivos = leerCatalogo(path.join(FIXTURES, 'test-1.0.0'), leerTexto);
-    archivos.tipos['mama'].datosCriticos.items = [null, 'x'];
+    archivos.tipos['mama']['datos-criticos'].items = [null, 'x'];
 
     expect(() => validarCatalogo({ archivos, allowlist, esquemas })).not.toThrow();
   });
@@ -218,36 +236,36 @@ describe('validarCatalogo', () => {
       [
         'un match con clave que recorre el prototipo (constructor.x)',
         (mama) => {
-          mama.datosCriticos.items[0].destination.match = { 'constructor.x': 'v' };
+          mama['datos-criticos'].items[0].destination.match = { 'constructor.x': 'v' };
         },
         'destino_inexistente',
       ],
       [
         'un bloque validation vacío',
         (mama) => {
-          mama.datosCriticos.validation = {};
+          mama['datos-criticos'].validation = {};
         },
         'esquema_invalido',
       ],
       [
         'un bloque validation nulo',
         (mama) => {
-          mama.datosCriticos.validation = null;
+          mama['datos-criticos'].validation = null;
         },
         'esquema_invalido',
       ],
       [
         'un archivo nulo',
         (mama) => {
-          mama.datosCriticos = null;
+          mama['datos-criticos'] = null;
         },
         'esquema_invalido',
       ],
       [
         'ítems nulos junto a un bloque validation',
         (mama) => {
-          mama.datosCriticos.items = [null];
-          mama.datosCriticos.validation = {
+          mama['datos-criticos'].items = [null];
+          mama['datos-criticos'].validation = {
             scope: ['matriz_item_campo'],
             status: 'x',
             reviewerRole: 'x',

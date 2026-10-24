@@ -1,4 +1,9 @@
+import { ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
+
+const ESQUEMAS_DE_ARCHIVOS = NOMBRES_DE_ARCHIVO.map(
+  (nombre) => ARCHIVOS_DEL_CATALOGO[nombre].esquema,
+);
 
 /**
  * Lectura del catálogo a la forma que consume `validarCatalogo` (L1D-93 D2). La E/S se inyecta (`leerArchivo`): el
@@ -46,10 +51,12 @@ export function leerCatalogo(directorio, leerArchivo) {
     ? manifest.cancerTypes.filter((tipo) => typeof tipo === 'string' && FORMA_DE_TIPO.test(tipo))
     : [];
   for (const tipo of tiposLeibles) {
-    tipos[tipo] = {
-      datosCriticos: leerJson(directorio, `${tipo}/datos-criticos.json`, leerArchivo),
-      aplicabilidad: leerJson(directorio, `${tipo}/aplicabilidad.json`, leerArchivo),
-    };
+    tipos[tipo] = Object.fromEntries(
+      NOMBRES_DE_ARCHIVO.map((nombre) => [
+        nombre,
+        leerJson(directorio, `${tipo}/${nombre}.json`, leerArchivo),
+      ]),
+    );
   }
   return { manifest, atributos, tipos };
 }
@@ -57,10 +64,6 @@ export function leerCatalogo(directorio, leerArchivo) {
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
-  return {
-    manifest: leer('manifest'),
-    atributos: leer('atributos'),
-    datosCriticos: leer('datos-criticos'),
-    aplicabilidad: leer('aplicabilidad'),
-  };
+  const nombres = ['manifest', 'atributos', ...ESQUEMAS_DE_ARCHIVOS];
+  return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }
