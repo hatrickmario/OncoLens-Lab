@@ -53,15 +53,20 @@ async function ejecutarAlertaDeComponentes(umbrales) {
 }
 
 const DIRECTORIOS_SIN_FUENTES = /^(node_modules|\.next|dist|coverage|\.venv|generated)$/;
-// ci/tests/quality prueba este mismo escáner: sus tests y fixtures contienen directivas y tests rotos a propósito.
-const RUTAS_SIN_MEDIR = ['ci/tests/quality'];
+// Los fixtures de calidad y los dos tests que escriben una directiva como TEXTO (para probar este escáner) no se miden.
+const RUTAS_SIN_MEDIR = [
+  'ci/tests/quality/fixtures',
+  'ci/tests/quality/reporte.test.mjs',
+  'ci/tests/quality/cableado-quality.test.mjs',
+];
 
 /** Fuentes JS y TS bajo `directorio` (sin dependencias, build, generado ni fixtures de calidad). */
 function fuentes(raiz, relativo) {
   return readdirSync(path.join(raiz, relativo), { withFileTypes: true }).flatMap((entrada) => {
     const ruta = path.posix.join(relativo, entrada.name);
+    if (RUTAS_SIN_MEDIR.includes(ruta)) return [];
     if (entrada.isDirectory()) {
-      return DIRECTORIOS_SIN_FUENTES.test(entrada.name) || RUTAS_SIN_MEDIR.includes(ruta) ? [] : fuentes(raiz, ruta);
+      return DIRECTORIOS_SIN_FUENTES.test(entrada.name) ? [] : fuentes(raiz, ruta);
     }
     return /\.(ts|tsx|mjs|js)$/.test(entrada.name) ? [ruta] : [];
   });
@@ -159,12 +164,13 @@ export function hallazgosPropios(raiz, umbrales, medidasDeLineas) {
   return [
     ...ejecutarBusquedaDeDesactivaciones(raiz),
     ...verificarHigieneDePytest(raiz, `${RAG}/tests`),
+    ...verificarEstiloDePytest(raiz, RAG, `${RAG}/pyproject.toml`),
     ...verificarCoberturaDeAc(raiz),
     ...(medidasDeLineas ? alertasDeCobertura(medidasDeLineas, umbrales.coverage) : []),
   ];
 }
 
-export async function medir(umbrales, medidasDeLineas, raiz = RAIZ) {
+async function medir(umbrales, medidasDeLineas) {
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
@@ -172,8 +178,7 @@ export async function medir(umbrales, medidasDeLineas, raiz = RAIZ) {
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
-    ...hallazgosPropios(raiz, umbrales, medidasDeLineas),
-    ...verificarEstiloDePytest(raiz, RAG, `${RAG}/pyproject.toml`),
+    ...hallazgosPropios(RAIZ, umbrales, medidasDeLineas),
   ];
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }

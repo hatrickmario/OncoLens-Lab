@@ -38,6 +38,17 @@ describe('hallazgosPropios de quality', () => {
     expect(por('ac-sin-test-de-aceptacion').map((h) => h.symbol)).toEqual(['US-900 AC-1 (change us-900-fixture)']);
   }, TIEMPO_MAXIMO_MS);
 
+  it('invoca el estilo de Pytest (Ruff PT) con el pyproject de la raíz y el hallazgo llega como error [US-213 AC-8]', () => {
+    expect(por('PT003')).toEqual([
+      expect.objectContaining({
+        file: 'apps/rag-orchestrator/tests/test_estilo.py',
+        line: 4,
+        severity: 'error',
+        tool: 'ruff',
+      }),
+    ]);
+  }, TIEMPO_MAXIMO_MS);
+
   it('invoca alertasDeCobertura con el umbral de la configuración cuando hay medidas [US-213 AC-11]', () => {
     expect(por('cobertura-de-lineas-cambiadas')).toEqual([
       expect.objectContaining({ measured: 50, threshold: UMBRALES.coverage.changedLinesWarn, severity: 'warn' }),
