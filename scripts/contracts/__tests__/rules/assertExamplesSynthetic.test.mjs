@@ -76,8 +76,8 @@ describe('assertExamplesSynthetic · máscara del nombre (L1D-285)', () => {
   });
 
   it('rechaza en fullNameMasked todo valor que no sea la máscara sintética [US-213 AC-12]', () => {
-    for (const valor of ['María Pérez', 'M. Pérez', 'Ma. P.', 'M. P.', 'P. S. 12.']) {
-      expect(hallazgos('fullNameMasked', valor), valor).toHaveLength(1);
+    for (const valor of ['María Pérez', 'M. Pérez', 'Ma. P.', 'M. P.', 'P. S. 12.', 'P. S.\n', ' P. S.', 'p. s.', 'P. S. 1', ['P. S.']]) {
+      expect(hallazgos('fullNameMasked', valor), JSON.stringify(valor)).toHaveLength(1);
     }
   });
 
