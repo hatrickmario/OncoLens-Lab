@@ -164,3 +164,22 @@ M-08.2/M-08.6, que mide US-132.
   `ClinicalAttribute.sitios_metastasicos`. Se revisa en la sesión de oncólogos del S4.
 - **Discrepancia Linear ↔ Markdown:** L1D-126 no tiene relaciones en Linear (Markdown: ⛔ DEC-11, ↪ US-041, US-001).
   Manda el Markdown.
+
+## Decisiones del Gate 2, vuelta 1 (orquestador, 2026-10-24)
+
+- **`destination.match` con lista solo en aplicabilidad.** `comun.schema.json#/$defs/destino` queda escalar (el Zod de
+  completitud de L1D-94 solo admite cadenas); `aplicabilidad.schema.json` define `destinoConLista`. `attribute_key`
+  lista se normaliza con `[clave].flat()` en `exigirAtributoDeclarado` (todas declaradas); en datos críticos la lista
+  la rechaza el esquema.
+- **Allowlist (adición de seguridad, decisión del usuario 2026-10-24 b).** Excluye `id`, `Biomarker.original_name`,
+  `Biomarker.reference_range` y `Exam.source_lab`; ningún destino real ni de fixture las usa.
+- **Contexto por entrada del registro.** Cada entrada de `ARCHIVOS_DEL_CATALOGO` puede declarar `contexto(items)`; el
+  recorrido solo lo mezcla. `ARCHIVOS_DE_RAIZ` (`atributos`, `poblacion`) deriva lectura, compilación y validación.
+- **Versión de los esquemas** en `comun.schema.json#/$defs/version`.
+- **Puntaje (RN-28):** `peso`, `puntaje`, `ponderacion`, `puntos`, `score`, `weight`, solo en claves propias del
+  criterio (no en `equivalences` ni `match`).
+- **`poblacion.json` obligatorio desde 1.1.0.** `clinical-api` no arranca sin él; `rag-orchestrator` no lo lee (lee
+  `aplicabilidad.json`). Asimetría intencional. **Pregunta para el usuario:** confirmarla.
+- **La versión del catálogo NO sube pese al contenido nuevo (D5).** Regla: cualquier cambio posterior a
+  `aplicabilidad.json` (o `poblacion.json`) exige 1.2.0 o superior. **Pregunta para el usuario:** ¿se añade un control
+  en CI que falle si cambia el contenido de una versión ya publicada?

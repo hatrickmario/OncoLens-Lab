@@ -83,3 +83,20 @@
       (el archivo rechaza el delta `MODIFIED` hasta archivar L1D-93)
 - [ ] 4.2 (parte rag-orchestrator: Pytest 2146 passed, 129 deselected; pendiente la de clinical-api) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
       sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
+
+## Gate 2, vuelta 1 (clinical-platform)
+
+- [x] G1.1 Punto 1: destino escalar en `comun` y `destinoConLista` en aplicabilidad; `attribute_key` lista.
+- [x] G1.2 Punto 2: la allowlist excluye `id`, `original_name`, `reference_range`, `source_lab` (adición de seguridad).
+- [x] G1.3 Punto 3: `contexto(items)` por entrada del registro. Punto 4 (lado JS): `ARCHIVOS_DE_RAIZ`.
+- [x] G1.4 Punto 5: `$defs/version` única. Los esquemas `plantillas`, `tendencias` y `sinonimos` conservan el patrón
+      estricto `^\d+\.\d+\.\d+$` (no los recorre el validador; no admiten fixtures `test-*`).
+- [x] G1.5 Punto 6: puntaje solo en claves propias del criterio; nuevos nombres.
+- [ ] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
+      `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts` sigue listando a mano `atributos` y
+      `poblacion`; debe derivar de `ARCHIVOS_DE_RAIZ` (imports JSON estáticos en TS). Destino: deuda: registro de
+      archivos de raíz del catálogo.
+- [ ] G1.7 **Pendiente de modelo:** las claves `grado`, `estado_menopausico` y `estado_castracion` de `poblacion.json`
+      están fuera del modelo v1.1; anotarlo en `docs/architecture/data-model.md` (fuera de mis paths). Destino:
+      orquestador / L1D-117.
+
