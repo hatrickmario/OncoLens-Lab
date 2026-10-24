@@ -7,7 +7,7 @@ import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas
  * Núcleo puro del validador del catálogo (L1D-93 D2): recibe los archivos ya leídos, la allowlist del modelo y los
  * esquemas; no hace E/S. Lo usan `catalog:validate` (CI) y el arranque de `clinical-api`: una sola implementación.
  *
- * @typedef {{ codigo: string, tipoDeCancer?: string, elemento?: string, archivo?: string }} Violacion  (ítem: tipoDeCancer + elemento; archivo: tipoDeCancer opcional + archivo)
+ * @typedef {{ codigo: string, tipoDeCancer?: string, elemento?: string, archivo?: string, campo?: string }} Violacion  (ítem: tipoDeCancer + elemento, y campo si la regla lo nombra; archivo: tipoDeCancer opcional + archivo)
  */
 
 /** Mensaje de una violación: código y ítem, sin ruta ni valores. */
