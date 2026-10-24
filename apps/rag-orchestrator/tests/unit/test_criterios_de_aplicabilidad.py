@@ -125,3 +125,9 @@ def test_carga_los_criterios_de_mama_y_prostata_del_catalogo_del_repositorio() -
         declarados = criterios.criterios(tipo)
         assert declarados, tipo
         assert all(c.tipo_de_cancer == tipo and c.clave_de_estudio for c in declarados)
+
+
+def test_expone_el_estado_de_revision_del_criterio_con_el_vocabulario_del_catalogo() -> None:
+    criterios = cargar_criterios_de_aplicabilidad(APL_1_0_0, ("mama", "prostata"))
+
+    assert {c.estado_de_revision for c in criterios.criterios("mama")} == {"propuesta"}
