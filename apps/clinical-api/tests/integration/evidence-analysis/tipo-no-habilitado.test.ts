@@ -15,6 +15,7 @@ import {
   prepararMundoConSeed,
   ragSimulado,
   type MundoDeGateway,
+  versionDelCatalogo,
 } from '../../support/gateway.js';
 import { traceIdsFijos } from '../../support/usuarios.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -140,7 +141,7 @@ describe('gateway de análisis: tipo de cáncer no habilitado', () => {
       corpus_release: null,
       retrieval_params: null,
       patient_data_links: [],
-      catalog_version: '1.0.0',
+      catalog_version: versionDelCatalogo(),
     });
     expect(JSON.stringify(registro?.clinical_context_snapshot)).not.toMatch(/prostata|mama/);
   });
