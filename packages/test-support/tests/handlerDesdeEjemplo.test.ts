@@ -7,7 +7,7 @@ const URL_RAG = 'http://rag-orchestrator.test/rag/query';
 const EJEMPLO = 'rag-query-con-evidencia.json';
 
 const servidor = setupServer();
-beforeAll(() => servidor.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => servidor.listen({ onUnhandledFrame: ({ defaults }) => defaults.error() }));
 afterEach(() => servidor.resetHandlers());
 afterAll(() => servidor.close());
 

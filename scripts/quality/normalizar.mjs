@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { excepcionesVigentes } from './umbrales.mjs';
 
-const hallazgo = (campos) => ({
+export const hallazgo = (campos) => ({
   tool: null,
   rule: null,
   file: null,

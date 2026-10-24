@@ -18,6 +18,7 @@ import {
   ordenar,
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
+import { verificarCoberturaDeAc } from './check-ac-coverage.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { leerUmbrales } from './umbrales.mjs';
 
@@ -155,6 +156,7 @@ async function medir(umbrales) {
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
+    ...verificarCoberturaDeAc(RAIZ),
   ];
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }
