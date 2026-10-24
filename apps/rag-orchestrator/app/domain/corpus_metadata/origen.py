@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from enum import StrEnum
 
-from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
+from app.domain.corpus_metadata.resultado import (
+    FUENTE_ESTRUCTURADA,
+    PENDIENTE,
+    MetadatosResueltos,
+)
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 
@@ -31,3 +36,11 @@ def metadatos_de_la_fuente(documento: DocumentoDeSemilla) -> MetadatosResueltos:
         population_criteria=resolver_criterios_poblacion(documento.population_criteria),
         metadata_source=FUENTE_ESTRUCTURADA,
     )
+
+
+def metadatos_sin_extraer(documento: DocumentoDeSemilla) -> MetadatosResueltos:
+    """Metadatos de una fila que aún no pasó por la extracción (``normalizado``, ``error``, rechazado): lo estructurado
+    se copia; si la fuente no publicó criterios queda ``pendiente``, nunca ``fuente_estructurada`` (D4, RN-25)."""
+    if origen_de_metadatos(documento) is OrigenDeMetadatos.FUENTE_ESTRUCTURADA:
+        return metadatos_de_la_fuente(documento)
+    return replace(metadatos_de_la_fuente(documento), metadata_source=PENDIENTE)

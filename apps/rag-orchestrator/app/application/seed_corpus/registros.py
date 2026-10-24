@@ -13,7 +13,7 @@ from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
-from app.domain.corpus_metadata.origen import metadatos_de_la_fuente
+from app.domain.corpus_metadata.origen import metadatos_de_la_fuente, metadatos_sin_extraer
 from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -63,7 +63,7 @@ def registro_embebido(
         status=STATUS_EMBEBIDO,
         is_current=True,
         open_access=True,
-        metadatos=metadatos,
+        metadatos=metadatos or metadatos_de_la_fuente(documento),
     )
 
 
@@ -78,6 +78,7 @@ def registro_rechazado(documento: DocumentoDeSemilla, ahora: datetime) -> Regist
         status=STATUS_RECHAZADO,
         is_current=False,
         open_access=False,
+        metadatos=metadatos_sin_extraer(documento),
     )
 
 
@@ -99,6 +100,7 @@ def registro_con_error(
         status=STATUS_ERROR,
         is_current=False,
         open_access=True,
+        metadatos=metadatos_sin_extraer(documento),
     )
 
 
@@ -115,6 +117,7 @@ def registro_normalizado(
         status=STATUS_NORMALIZADO,
         is_current=False,
         open_access=True,
+        metadatos=metadatos_sin_extraer(documento),
     )
 
 
@@ -134,9 +137,8 @@ def _registro(
     status: str,
     is_current: bool,
     open_access: bool,
-    metadatos: MetadatosResueltos | None = None,
+    metadatos: MetadatosResueltos,
 ) -> RegistroDeDocumento:
-    metadatos = metadatos or metadatos_de_la_fuente(documento)
     return RegistroDeDocumento(
         document_id=document_id,
         source_type=documento.source_type,
