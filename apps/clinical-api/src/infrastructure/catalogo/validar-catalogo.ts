@@ -18,7 +18,10 @@ const ESQUEMAS = {
 };
 
 /** Código de la primera regla incumplida (cerrado: `destino_ausente`, `hash_distinto`...), o `null` si el catálogo valida. */
-function codigoDeLaPrimeraViolacion(directorio: string, leerArchivo: (ruta: string) => string): string | null {
+function codigoDeLaPrimeraViolacion(
+  directorio: string,
+  leerArchivo: (ruta: string) => string,
+): string | null {
   try {
     const resultado = validarCatalogo({
       archivos: leerCatalogo(directorio, leerArchivo),
@@ -36,9 +39,14 @@ function codigoDeLaPrimeraViolacion(directorio: string, leerArchivo: (ruta: stri
  * `catalog:validate` al arrancar (L1D-93 D5, RN-29): un catálogo que no valida deja el servicio no listo. El error
  * lleva el código de la regla incumplida y nunca la ruta, el ítem ni el contenido del catálogo (RN-10, RN-14).
  */
-export function exigirCatalogoValido(directorio: string, leerArchivo: (ruta: string) => string): void {
+export function exigirCatalogoValido(
+  directorio: string,
+  leerArchivo: (ruta: string) => string,
+): void {
   const codigo = codigoDeLaPrimeraViolacion(directorio, leerArchivo);
   if (codigo !== null) {
-    throw new ConfiguracionInvalidaError('CLINICAL_CATALOG_PATH', codigo, { motivo: 'catalogo_invalido' });
+    throw new ConfiguracionInvalidaError('CLINICAL_CATALOG_PATH', codigo, {
+      motivo: 'catalogo_invalido',
+    });
   }
 }

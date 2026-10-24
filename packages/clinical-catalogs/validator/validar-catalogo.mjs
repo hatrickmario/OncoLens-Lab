@@ -19,12 +19,17 @@ import {
 const FORMA_REGISTRABLE = /^[a-z0-9_-]{1,64}$/;
 
 /** Nombre de un ítem o archivo para el mensaje: solo si tiene forma de clave del catálogo, nunca contenido arbitrario. */
-const nombrable = (valor) => (typeof valor === 'string' && FORMA_REGISTRABLE.test(valor) ? valor : '?');
+const nombrable = (valor) =>
+  typeof valor === 'string' && FORMA_REGISTRABLE.test(valor) ? valor : '?';
 
 /** Mensaje de una violación: código y ítem, sin ruta ni valores. */
-export const mensajeDe = ({ codigo, tipo, clave }) => `${codigo} ${nombrable(tipo)}/${nombrable(clave)}`;
+export const mensajeDe = ({ codigo, tipo, clave }) =>
+  `${codigo} ${nombrable(tipo)}/${nombrable(clave)}`;
 
-const itemsDe = (archivo) => (Array.isArray(archivo?.items) ? archivo.items.filter((item) => item !== null && typeof item === 'object') : []);
+const itemsDe = (archivo) =>
+  Array.isArray(archivo?.items)
+    ? archivo.items.filter((item) => item !== null && typeof item === 'object')
+    : [];
 
 /** Reglas por ítem con destino; `datos-criticos.json` añade las propias de los datos críticos. */
 function reglasDelItem(item, contexto) {
@@ -34,7 +39,10 @@ function reglasDelItem(item, contexto) {
     ? [sinDestino]
     : [exigirDestinoExistente(item, allowlist), exigirAtributoDeclarado(item, tipo, atributos)];
   const delDato = esDatoCritico
-    ? [exigirCondicionBienFormada(item, clavesDelTipo, vocabulario), exigirEstadoValido(item, vocabulario)]
+    ? [
+        exigirCondicionBienFormada(item, clavesDelTipo, vocabulario),
+        exigirEstadoValido(item, vocabulario),
+      ]
     : [];
   return [...delDestino, ...delDato].filter(Boolean);
 }
@@ -42,7 +50,11 @@ function reglasDelItem(item, contexto) {
 function violacionesDelArchivo(archivo, nombreDelArchivo, contexto) {
   const delContexto = { ...contexto, esDatoCritico: nombreDelArchivo === 'datos-criticos' };
   const delItem = itemsDe(archivo).flatMap((item) =>
-    reglasDelItem(item, delContexto).map((codigo) => ({ codigo, tipo: contexto.tipo, clave: item.key })),
+    reglasDelItem(item, delContexto).map((codigo) => ({
+      codigo,
+      tipo: contexto.tipo,
+      clave: item.key,
+    })),
   );
   const delHash = verificarCatalogHash(archivo);
   return delItem.length > 0 || delHash === null
@@ -67,15 +79,27 @@ function compilarEsquemas(esquemas) {
 /** Las reglas con nombre explican mejor un fallo que el esquema genérico: este solo entra si ellas callan. */
 function violacionesDeReglasOEsquema(archivo, nombre, validarEsquema, contexto) {
   const delArchivo = violacionesDelArchivo(archivo, nombre, contexto);
-  return delArchivo.length > 0 ? delArchivo : violacionDeEsquema(validarEsquema, archivo, contexto.tipo, nombre);
+  return delArchivo.length > 0
+    ? delArchivo
+    : violacionDeEsquema(validarEsquema, archivo, contexto.tipo, nombre);
 }
 
 function violacionesDelTipo(tipo, { datosCriticos, aplicabilidad }, contexto, esquemasCompilados) {
   const clavesDelTipo = itemsDe(datosCriticos).map((item) => item.key);
   const delTipo = { ...contexto, tipo, clavesDelTipo };
   return [
-    ...violacionesDeReglasOEsquema(datosCriticos, 'datos-criticos', esquemasCompilados.datosCriticos, delTipo),
-    ...violacionesDeReglasOEsquema(aplicabilidad, 'aplicabilidad', esquemasCompilados.aplicabilidad, delTipo),
+    ...violacionesDeReglasOEsquema(
+      datosCriticos,
+      'datos-criticos',
+      esquemasCompilados.datosCriticos,
+      delTipo,
+    ),
+    ...violacionesDeReglasOEsquema(
+      aplicabilidad,
+      'aplicabilidad',
+      esquemasCompilados.aplicabilidad,
+      delTipo,
+    ),
   ];
 }
 
@@ -93,10 +117,19 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
   };
   const violaciones = [
     ...violacionDeEsquema(esquemasCompilados.manifest, archivos.manifest, 'catalogo', 'manifest'),
-    ...violacionDeEsquema(esquemasCompilados.atributos, archivos.atributos, 'catalogo', 'atributos'),
+    ...violacionDeEsquema(
+      esquemasCompilados.atributos,
+      archivos.atributos,
+      'catalogo',
+      'atributos',
+    ),
     ...Object.entries(archivos.tipos).flatMap(([tipo, delTipo]) =>
       violacionesDelTipo(tipo, delTipo, contexto, esquemasCompilados),
     ),
   ];
-  return { valido: violaciones.length === 0, catalogVersion: archivos.manifest?.version ?? null, violaciones };
+  return {
+    valido: violaciones.length === 0,
+    catalogVersion: archivos.manifest?.version ?? null,
+    violaciones,
+  };
 }

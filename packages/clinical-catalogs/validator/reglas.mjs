@@ -35,8 +35,12 @@ function existeElCampo(clave, entidad, allowlist) {
 export function exigirDestinoExistente(item, allowlist) {
   const { entity, field, match } = item.destination;
   if (!Object.hasOwn(allowlist.entidades, entity)) return 'destino_inexistente';
-  const claves = [field, ...Object.keys(esObjeto(match) ? match : {})].filter((clave) => clave !== undefined);
-  const existen = claves.every((clave) => typeof clave === 'string' && existeElCampo(clave, entity, allowlist));
+  const claves = [field, ...Object.keys(esObjeto(match) ? match : {})].filter(
+    (clave) => clave !== undefined,
+  );
+  const existen = claves.every(
+    (clave) => typeof clave === 'string' && existeElCampo(clave, entity, allowlist),
+  );
   return existen ? null : 'destino_inexistente';
 }
 
@@ -44,7 +48,9 @@ export function exigirDestinoExistente(item, allowlist) {
 export function exigirAtributoDeclarado(item, tipo, atributos) {
   if (item.destination.entity !== 'ClinicalAttribute') return null;
   const clave = item.destination.match?.attribute_key;
-  const declarado = atributos.keys.some((atributo) => atributo.key === clave && atributo.cancerTypes.includes(tipo));
+  const declarado = atributos.keys.some(
+    (atributo) => atributo.key === clave && atributo.cancerTypes.includes(tipo),
+  );
   return declarado ? null : 'atributo_no_declarado';
 }
 
@@ -56,7 +62,9 @@ export function exigirCondicionBienFormada(item, clavesDelTipo, vocabulario) {
   const operadorValido = vocabulario.operadores.includes(condition?.operator);
   const valoresValidos = Array.isArray(condition?.values) && condition.values.length > 0;
   const respuestaValida = vocabulario.respuestasSiDesconocida.includes(item.whenConditionUnknown);
-  return referenciaValida && operadorValido && valoresValidos && respuestaValida ? null : 'condicion_invalida';
+  return referenciaValida && operadorValido && valoresValidos && respuestaValida
+    ? null
+    : 'condicion_invalida';
 }
 
 /** AC-04.4, P-03: `estado` dentro del vocabulario cerrado. */
