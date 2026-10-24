@@ -212,4 +212,83 @@ describe('validarCatalogo', () => {
 
     expect(() => validarCatalogo({ archivos, allowlist, esquemas })).not.toThrow();
   });
+
+  describe('entradas deformadas', () => {
+    const casos = [
+      [
+        'un match con clave que recorre el prototipo (constructor.x)',
+        (mama) => {
+          mama.datosCriticos.items[0].destination.match = { 'constructor.x': 'v' };
+        },
+        'destino_inexistente',
+      ],
+      [
+        'un bloque validation vacío',
+        (mama) => {
+          mama.datosCriticos.validation = {};
+        },
+        'esquema_invalido',
+      ],
+      [
+        'un bloque validation nulo',
+        (mama) => {
+          mama.datosCriticos.validation = null;
+        },
+        'esquema_invalido',
+      ],
+      [
+        'un archivo nulo',
+        (mama) => {
+          mama.datosCriticos = null;
+        },
+        'esquema_invalido',
+      ],
+      [
+        'ítems nulos junto a un bloque validation',
+        (mama) => {
+          mama.datosCriticos.items = [null];
+          mama.datosCriticos.validation = {
+            scope: ['matriz_item_campo'],
+            status: 'x',
+            reviewerRole: 'x',
+            date: '2026-10-24',
+            catalogHash: '0'.repeat(64),
+          };
+        },
+        'esquema_invalido',
+      ],
+    ];
+
+    it.each(casos)(
+      'devuelve una violación en lugar de lanzar cuando hay %s',
+      (_nombre, deformar, codigoEsperado) => {
+        const archivos = leerCatalogo(path.join(FIXTURES, 'test-1.0.0'), leerTexto);
+        deformar(archivos.tipos['mama']);
+        let resultado;
+
+        expect(() => {
+          resultado = validarCatalogo({ archivos, allowlist, esquemas });
+        }).not.toThrow();
+
+        expect(resultado.valido).toBe(false);
+        expect(resultado.violaciones.map((violacion) => violacion.codigo)).toContain(codigoEsperado);
+      },
+    );
+  });
+
+  it('no construye rutas de lectura con un tipo que no cumple la forma del manifiesto', () => {
+    const leidas = [];
+    const leer = (ruta) => {
+      leidas.push(ruta);
+      if (ruta.endsWith('manifest.json')) return JSON.stringify({ version: '1.0.0', cancerTypes: ['../x'], standards: [] });
+      return JSON.stringify({ version: '1.0.0', keys: [] });
+    };
+
+    const archivos = leerCatalogo('/catalogo', leer);
+
+    expect(leidas.some((ruta) => ruta.includes('..'))).toBe(false);
+    expect(validarCatalogo({ archivos, allowlist, esquemas }).violaciones).toContainEqual(
+      expect.objectContaining({ codigo: 'esquema_invalido' }),
+    );
+  });
 });

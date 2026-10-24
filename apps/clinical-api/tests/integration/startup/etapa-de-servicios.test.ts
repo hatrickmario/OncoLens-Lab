@@ -230,6 +230,29 @@ describe('arranque: validación del catálogo (catalog:validate al arrancar)', (
     expect(resultado.log).not.toContain('ki67');
   });
 
+  it('registra el evento único configuracion_invalida con esquema_invalido cuando el catálogo trae validation nulo [US-001 AC-6]', () => {
+    const copia = path.join(directorio, 'catalogo-deformado');
+    cpSync(FIXTURE_VALIDO, copia, { recursive: true });
+    const archivo = path.join(copia, 'mama/datos-criticos.json');
+    const contenido = JSON.parse(readFileSync(archivo, 'utf8')) as Record<string, unknown>;
+    contenido['validation'] = null;
+    writeFileSync(archivo, JSON.stringify(contenido));
+    let resultado: ReturnType<typeof arrancarCon> | undefined;
+
+    expect(() => {
+      resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: copia });
+    }).not.toThrow();
+
+    expect(resultado?.salidas).toEqual([1]);
+    expect(JSON.parse(resultado?.log ?? '{}')).toEqual({
+      level: 'error',
+      event: 'configuracion_invalida',
+      variable: 'CLINICAL_CATALOG_PATH',
+      regla: 'esquema_invalido',
+      motivo: 'catalogo_invalido',
+    });
+  });
+
   it('escucha una vez y no registra nada cuando el catálogo de fixture es válido [US-001 AC-6]', () => {
     const resultado = arrancarCon({ ...entornoValido(), CLINICAL_CATALOG_PATH: FIXTURE_VALIDO });
 
