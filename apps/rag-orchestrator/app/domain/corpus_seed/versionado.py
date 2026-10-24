@@ -7,8 +7,14 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+# Valores de ``corpus_document.status`` (dominio cerrado del catálogo). Única fuente: los demás módulos los importan.
+STATUS_PENDIENTE = "pendiente"
+STATUS_NORMALIZADO = "normalizado"
 STATUS_EMBEBIDO = "embebido"
-STATUS_A_MEDIAS = frozenset({"pendiente", "normalizado", "error"})
+STATUS_ERROR = "error"
+STATUS_RECHAZADO = "rechazado_licencia"
+# Avance parcial de un documento: se reprocesa al relanzar la ingesta (no es versión ni rechazo).
+STATUS_A_MEDIAS = frozenset({STATUS_PENDIENTE, STATUS_NORMALIZADO, STATUS_ERROR})
 
 
 def calcular_checksum(texto_normalizado: str) -> str:

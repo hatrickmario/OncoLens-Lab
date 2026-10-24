@@ -16,11 +16,13 @@ from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
-from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO
+from app.domain.corpus_seed.versionado import (
+    STATUS_EMBEBIDO,
+    STATUS_ERROR,
+    STATUS_NORMALIZADO,
+    STATUS_RECHAZADO,
+)
 
-STATUS_RECHAZADO = "rechazado_licencia"
-STATUS_ERROR = "error"
-STATUS_NORMALIZADO = "normalizado"
 ORIGEN_DE_LA_SEMILLA = "fuente_estructurada"
 SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia

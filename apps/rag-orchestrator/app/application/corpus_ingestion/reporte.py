@@ -12,6 +12,13 @@ from typing import Any
 
 
 class Estado(StrEnum):
+    """Resultado de un documento en ESTA corrida (clave ``estado`` del resumen JSON).
+
+    No es el ``status`` del catálogo (``corpus_document.status``, ``STATUS_*`` de ``domain/corpus_seed/versionado``):
+    ``omitido`` no existe en el catálogo (el documento sigue ``embebido``) y ``pendiente``/``normalizado`` no existen
+    aquí. Los nombres del JSON se conservan porque la spec y los contadores los fijan.
+    """
+
     EMBEBIDO = "embebido"
     OMITIDO = "omitido"
     RECHAZADO_LICENCIA = "rechazado_licencia"
