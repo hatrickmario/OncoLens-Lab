@@ -30,7 +30,12 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
 - **D2 · Higiene en Python con Ruff `PT` + script propio.** Ruff `PT` cubre estilo, no prohíbe `skip`/`xfail`;
   `scripts/quality/check-pytest-hygiene.py` recorre el AST de `tests/**/*.py` (marcadores `skip`, `skipif`, `xfail` y
   llamadas `pytest.skip`/`pytest.xfail`) y emite hallazgos `tests-sin-desactivar` con el formato del reporte. Se invoca desde
-  `scripts/quality/quality.mjs`. El `pre-commit-gate.sh` se mantiene como primera línea; la CI es la garantía.
+  `scripts/quality/quality.mjs` (`higiene-pytest.mjs`). El `pre-commit-gate.sh` se mantiene como primera línea; la CI es la garantía.
+  **Adición de implementación (aprobada por sprint-S3, 2026-10-24):** Ruff queda con `select = E4,E7,E9,F,PT` en
+  `apps/rag-orchestrator/pyproject.toml` e `ignore = PT001, PT006, PT011, PT018`: son solo de estilo y los tests vigentes
+  acumulan **298 hallazgos** en ellas (PT018 268, PT011 22, PT001 5, PT006 3). Deuda con destino: US-232 (calidad, S6); las
+  reglas PT restantes (p. ej. PT003) siguen activas y un test lo demuestra. Los fixtures de la higiene de Pytest se escriben en
+  un directorio temporal al ejecutar el test, porque `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`.
 - **D3 · `check-ac-coverage` como alerta.** Lee `openspec/changes/*/proposal.md` (no `archive/`), extrae `US-xxx` del bloque
   Trazabilidad, toma los AC de la sección `## US-xxx` de `backlog/features/FEAT-*.md` (respetando partes `a`/`b`: para
   US-213b solo AC-8…AC-13 si el proposal lo declara con rango) y busca tags `[US-xxx AC-n]` en tests de Vitest/Playwright y

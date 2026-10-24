@@ -20,6 +20,7 @@ import {
 } from './normalizar.mjs';
 import { verificarCoberturaDeAc } from './check-ac-coverage.mjs';
 import { alertasDeCobertura, medirCoberturaDelPr } from './cobertura.mjs';
+import { verificarHigieneDePytest } from './higiene-pytest.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { leerUmbrales } from './umbrales.mjs';
 
@@ -157,6 +158,7 @@ async function medir(umbrales, cobertura) {
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
+    ...verificarHigieneDePytest(RAIZ, `${RAG}/tests`),
     ...verificarCoberturaDeAc(RAIZ),
     ...(cobertura ? alertasDeCobertura(cobertura, umbrales.coverage) : []),
   ];
