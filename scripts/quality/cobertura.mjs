@@ -130,6 +130,9 @@ export function alertasDeCobertura(medidas, { changedLinesWarn, alertPaths }) {
 /** Ejecuta Git en `raiz`; una salida distinta de 0 es un repositorio roto o una rama base inexistente, no «nada que medir». */
 function ejecutarGit(raiz, argumentos) {
   const resultado = spawnSync('git', argumentos, { cwd: raiz, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  if (resultado.error) {
+    throw new Error(`cobertura de líneas cambiadas: no se pudo ejecutar git (${resultado.error.code ?? resultado.error.message})`);
+  }
   if (resultado.status !== 0) {
     throw new Error(`cobertura de líneas cambiadas: git ${argumentos.join(' ')} terminó con estado ${resultado.status}: ${resultado.stderr.trim()}`);
   }

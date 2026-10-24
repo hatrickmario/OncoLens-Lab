@@ -194,6 +194,8 @@ describe('armado del reporte', () => {
   });
 });
 
+const rutaDe = (programa) => ejecutar('which', [programa]).salida.trim();
+
 describe('npm run quality con una herramienta ausente', () => {
   it('termina en 1 y no deja un latest.json viejo cuando ruff no está en el PATH [US-213 AC-1]', () => {
     const reporte = path.join(RAIZ, 'reports/quality/latest.json');
@@ -201,7 +203,8 @@ describe('npm run quality con una herramienta ausente', () => {
     writeFileSync(reporte, '{"viejo":true}');
 
     const resultado = ejecutar(process.execPath, ['scripts/quality/quality.mjs', '--reporte'], {
-      env: { ...process.env, PATH: path.dirname(process.execPath) },
+      // Node y Git (la cobertura de líneas cambiadas lo necesita y lanza si falta), sin Ruff.
+      env: { ...process.env, PATH: [path.dirname(process.execPath), path.dirname(rutaDe('git'))].join(path.delimiter) },
     });
 
     expect(resultado.estado, resultado.salida).toBe(1);
