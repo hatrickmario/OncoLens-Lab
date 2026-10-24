@@ -98,27 +98,29 @@ export function registrosDelDestino(
 }
 
 /**
- * Paso 2, evaluación declarativa. `prefijo` es `startsWith` exacto: distingue mayúsculas y espacios, sin normalizar
- * (`"2+ (IHQ)"` activa `"2+"`; `" 2+"` y `"iv"` contra `"IV"` no).
+ * `prefijo` es `startsWith` exacto: distingue mayúsculas y espacios, sin normalizar (`"2+ (IHQ)"` activa `"2+"`;
+ * `" 2+"` y `"iv"` contra `"IV"` no).
  */
+function elValorCumpleElOperador(condicion: CondicionDeItem, valor: string): boolean {
+  switch (condicion.operator) {
+    case 'igualdad':
+      return valor === condicion.values[0];
+    case 'pertenencia':
+      return condicion.values.includes(valor);
+    case 'prefijo':
+      return condicion.values.some((prefijo) => valor.startsWith(prefijo));
+    default:
+      throw new CatalogoInconsistenteError('operador_desconocido');
+  }
+}
+
+/** Paso 2, evaluación declarativa de la condición sobre el valor del dato referenciado (`null` = no evaluable). */
 export function evaluarCondicion(
   condicion: CondicionDeItem,
   valor: string | null,
 ): ResultadoDeCondicion {
   if (valor === null) return 'no_evaluable';
-  const cumple = (() => {
-    switch (condicion.operator) {
-      case 'igualdad':
-        return valor === condicion.values[0];
-      case 'pertenencia':
-        return condicion.values.includes(valor);
-      case 'prefijo':
-        return condicion.values.some((prefijo) => valor.startsWith(prefijo));
-      default:
-        throw new CatalogoInconsistenteError('operador_desconocido');
-    }
-  })();
-  return cumple ? 'cumple' : 'no_cumple';
+  return elValorCumpleElOperador(condicion, valor) ? 'cumple' : 'no_cumple';
 }
 
 function registrosQueCuentanDelItem(
