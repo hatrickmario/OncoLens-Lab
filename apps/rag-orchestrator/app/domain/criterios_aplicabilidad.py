@@ -57,5 +57,6 @@ class CriteriosDeAplicabilidad(Protocol):
     """Criterios del catálogo montado, leídos una vez al arrancar."""
 
     def criterios(self, tipo_de_cancer: str) -> tuple[CriterioDeAplicabilidad, ...]:
-        """Criterios del tipo en el orden del archivo; ``()`` si el catálogo no declara ese tipo."""
+        """Criterios del tipo en el orden del archivo. ``()`` significa que el tipo no está declarado o que su archivo
+        tiene ``items`` vacío: el consumidor no distingue ambos casos."""
         ...

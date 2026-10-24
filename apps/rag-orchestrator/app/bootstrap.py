@@ -51,7 +51,10 @@ from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombr
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
-from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
+from app.infrastructure.catalogo_clinico.aplicabilidad import (
+    CriteriosDelCatalogo,
+    cargar_criterios_de_aplicabilidad,
+)
 from app.infrastructure.catalogo_clinico.manifiesto import (
     CatalogoNoConfigurado,
     CatalogoNoDisponible,
@@ -102,12 +105,20 @@ class PuertosDeRecuperacion:
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
 
 
+@dataclass(frozen=True)
+class CatalogoMontado:
+    """El catálogo clínico y sus criterios de aplicabilidad, leídos una sola vez al arrancar (sin doble lectura)."""
+
+    catalogo: CatalogoClinico
+    criterios: CriteriosDeAplicabilidad
+
+
 def cargar_settings_o_salir() -> Settings:
     """Solo los ``Settings`` de ``cargar_configuracion_o_salir`` (los tests de arranque no necesitan el catálogo)."""
     return cargar_configuracion_o_salir()[0]
 
 
-def cargar_configuracion_o_salir() -> tuple[Settings, CatalogoClinico]:
+def cargar_configuracion_o_salir() -> tuple[Settings, CatalogoMontado]:
     """Carga ``Settings`` y el catálogo clínico montado una sola vez (el manifiesto se lee una vez, sin TOCTOU).
 
     Si el entorno es inválido registra un ``configuracion_invalida`` por variable (nombre y regla, nunca el valor) y
@@ -117,13 +128,13 @@ def cargar_configuracion_o_salir() -> tuple[Settings, CatalogoClinico]:
         settings = Settings()
     except ValidationError as error:
         _salir_registrando(describir_errores(error))
-    catalogo, eventos_del_catalogo = cargar_catalogo_clinico_o_eventos(settings)
+    montado, eventos_del_catalogo = cargar_catalogo_clinico_o_eventos(settings)
     eventos = [*_eventos_de_recuperacion_ausente(settings), *eventos_del_catalogo]
-    if catalogo is not None:
-        eventos.extend(_eventos_de_tipos_habilitados(settings, catalogo))
-    if eventos or catalogo is None:
+    if montado is not None:
+        eventos.extend(_eventos_de_tipos_habilitados(settings, montado.catalogo))
+    if eventos or montado is None:
         _salir_registrando(eventos)
-    return settings, catalogo
+    return settings, montado
 
 
 def _salir_registrando(eventos: list[dict[str, str]]) -> NoReturn:
@@ -164,8 +175,8 @@ def _eventos_de_tipos_habilitados(
 
 def cargar_catalogo_clinico_o_eventos(
     settings: Settings,
-) -> tuple[CatalogoClinico | None, list[dict[str, str]]]:
-    """El catálogo montado o el evento que explica por qué no (US-041 AC-5, D4); nunca la ruta ni el contenido.
+) -> tuple[CatalogoMontado | None, list[dict[str, str]]]:
+    """El catálogo montado con sus criterios o el evento que explica por qué no (US-041 AC-5, D4); nunca la ruta ni el contenido.
 
     Variable sin definir = ``variable_ausente``; manifiesto ausente o ilegible = ``catalogo_no_disponible``."""
     try:
@@ -176,13 +187,11 @@ def cargar_catalogo_clinico_o_eventos(
         regla, motivo = "manifest.json legible", MOTIVO_CATALOGO_NO_DISPONIBLE
     else:
         try:
-            _montar_criterios_de_aplicabilidad(
-                settings, catalogo
-            )  # falla pronto; crear_app los vuelve a montar
+            criterios = _montar_criterios_de_aplicabilidad(settings, catalogo)
         except CatalogoNoDisponible:
             regla, motivo = "aplicabilidad.json válido por tipo", MOTIVO_CATALOGO_NO_DISPONIBLE
         else:
-            return catalogo, []
+            return CatalogoMontado(catalogo, criterios), []
     return None, [{"variable": "CLINICAL_CATALOG_PATH", "regla": regla, "motivo": motivo}]
 
 
@@ -211,7 +220,9 @@ def crear_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     # Lo consume el motor de aplicabilidad (US-122); aquí solo se monta, una vez, desde el catálogo (L1D-126, D4).
     app.state.criterios_de_aplicabilidad = (
-        criterios_de_aplicabilidad or _montar_criterios_de_aplicabilidad(settings, catalogo_clinico)
+        criterios_de_aplicabilidad
+        if criterios_de_aplicabilidad is not None
+        else _montar_criterios_de_aplicabilidad(settings, catalogo_clinico)
     )
     registrar_manejadores_de_error(app, trace_ids)
     app.add_middleware(ContencionDeErroresInesperados, trace_ids=trace_ids)
@@ -288,12 +299,12 @@ def _montar_catalogo_clinico(settings: Settings) -> CatalogoClinico:
 
 def _montar_criterios_de_aplicabilidad(
     settings: Settings, catalogo: CatalogoClinico
-) -> CriteriosDeAplicabilidad | None:
-    """Los criterios de ``<tipo>/aplicabilidad.json`` de cada tipo del manifiesto; ``None`` sin ruta de catálogo
-    (solo alcanzable con un ``CatalogoClinico`` inyectado). Un archivo ilegible o fuera de esquema lanza
-    ``CatalogoNoDisponible``."""
+) -> CriteriosDeAplicabilidad:
+    """Los criterios de ``<tipo>/aplicabilidad.json`` de cada tipo del manifiesto; sin ruta de catálogo (solo
+    alcanzable con un ``CatalogoClinico`` inyectado) no hay criterios que leer. Un archivo ilegible o fuera de esquema
+    lanza ``CatalogoNoDisponible``."""
     if settings.clinical_catalog_path is None:
-        return None
+        return CriteriosDelCatalogo({})
     return cargar_criterios_de_aplicabilidad(
         settings.clinical_catalog_path, catalogo.tipos_de_cancer()
     )
