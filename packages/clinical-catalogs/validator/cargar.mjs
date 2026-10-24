@@ -1,18 +1,30 @@
+import { nombrable } from './nombrable.mjs';
+
 /**
  * Lectura del catálogo a la forma que consume `validarCatalogo` (L1D-93 D2). La E/S se inyecta (`leerArchivo`): el
  * script de CI pasa `fs.readFileSync` y el arranque de `clinical-api` el suyo. Un archivo ilegible o con JSON roto
  * lanza `ArchivoIlegibleError`, que nombra el archivo del catálogo y nunca la ruta ni el contenido (RN-10, RN-14).
  */
 
+/** Nombre del archivo para el mensaje: cada segmento (sin `.json`) pasa por `nombrable`, nunca contenido del catálogo. */
+const nombreSeguroDe = (archivo) =>
+  archivo
+    .split('/')
+    .map((segmento) => nombrable(segmento.replace(/\.json$/, '')))
+    .join('/');
+
 export class ArchivoIlegibleError extends Error {
   /** @param {string} archivo nombre relativo al catálogo (p. ej. `mama/datos-criticos.json`), sin la ruta del montaje */
   constructor(archivo) {
-    super(`archivo_ilegible ${archivo}`);
+    const seguro = nombreSeguroDe(archivo);
+    super(`archivo_ilegible ${seguro}`);
     this.name = 'ArchivoIlegibleError';
     this.codigo = 'archivo_ilegible';
-    this.archivo = archivo;
+    this.archivo = seguro;
   }
 }
+
+const FORMA_DE_TIPO = /^[a-z]+$/;
 
 function leerJson(directorio, archivo, leerArchivo) {
   try {
@@ -28,7 +40,12 @@ export function leerCatalogo(directorio, leerArchivo) {
   const manifest = leerJson(directorio, 'manifest.json', leerArchivo);
   const atributos = leerJson(directorio, 'atributos.json', leerArchivo);
   const tipos = {};
-  for (const tipo of manifest.cancerTypes ?? []) {
+  // Solo se lee por tipos con la forma del manifiesto (`^[a-z]+$`): `../x` no construye una ruta de lectura. El
+  // esquema del manifiesto rechaza luego el tipo deformado.
+  const tiposLeibles = Array.isArray(manifest?.cancerTypes)
+    ? manifest.cancerTypes.filter((tipo) => typeof tipo === 'string' && FORMA_DE_TIPO.test(tipo))
+    : [];
+  for (const tipo of tiposLeibles) {
     tipos[tipo] = {
       datosCriticos: leerJson(directorio, `${tipo}/datos-criticos.json`, leerArchivo),
       aplicabilidad: leerJson(directorio, `${tipo}/aplicabilidad.json`, leerArchivo),

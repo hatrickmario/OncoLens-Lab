@@ -1,4 +1,5 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { nombrable } from './nombrable.mjs';
 import {
   exigirAtributoDeclarado,
   exigirCondicionBienFormada,
@@ -15,12 +16,6 @@ import {
  *
  * @typedef {{ codigo: string, tipo: string, clave: string }} Violacion
  */
-
-const FORMA_REGISTRABLE = /^[a-z0-9_-]{1,64}$/;
-
-/** Nombre de un ítem o archivo para el mensaje: solo si tiene forma de clave del catálogo, nunca contenido arbitrario. */
-const nombrable = (valor) =>
-  typeof valor === 'string' && FORMA_REGISTRABLE.test(valor) ? valor : '?';
 
 /** Mensaje de una violación: código y ítem, sin ruta ni valores. */
 export const mensajeDe = ({ codigo, tipo, clave }) =>
@@ -104,6 +99,18 @@ function violacionesDelTipo(tipo, { datosCriticos, aplicabilidad }, contexto, es
 }
 
 /**
+ * Red de seguridad: una forma que las reglas no previeron es un catálogo inválido, no una excepción que escape del
+ * arranque o de la CI. El error original se descarta (puede citar contenido del catálogo).
+ */
+function violacionesDelTipoSinLanzar(tipo, delTipo, contexto, esquemasCompilados) {
+  try {
+    return violacionesDelTipo(tipo, delTipo, contexto, esquemasCompilados);
+  } catch {
+    return [{ codigo: 'esquema_invalido', tipo, clave: '?' }];
+  }
+}
+
+/**
  * @param {{ archivos: object, allowlist: object, esquemas: object }} entrada
  *   `archivos` = `{ manifest, atributos, tipos: { <tipo>: { datosCriticos, aplicabilidad } } }`
  * @returns {{ valido: boolean, catalogVersion: string | null, violaciones: Violacion[] }}
@@ -124,7 +131,7 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
       'atributos',
     ),
     ...Object.entries(archivos.tipos).flatMap(([tipo, delTipo]) =>
-      violacionesDelTipo(tipo, delTipo, contexto, esquemasCompilados),
+      violacionesDelTipoSinLanzar(tipo, delTipo, contexto, esquemasCompilados),
     ),
   ];
   return {

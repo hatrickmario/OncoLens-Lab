@@ -26,9 +26,15 @@ export function exigirDestino(item) {
 /** Campo de columna de `entidad` o, con `relacion.campo`, de la entidad que enlaza una relación directa. */
 function existeElCampo(clave, entidad, allowlist) {
   const [primero, segundo] = clave.split('.');
-  if (segundo === undefined) return allowlist.entidades[entidad].campos.includes(primero);
-  const destino = allowlist.entidades[entidad].relaciones[primero];
-  return destino !== undefined && allowlist.entidades[destino].campos.includes(segundo);
+  const delaEntidad = allowlist.entidades[entidad];
+  if (segundo === undefined) return delaEntidad.campos.includes(primero);
+  // `hasOwn`: una clave como `constructor` no debe resolverse por el prototipo.
+  if (!Object.hasOwn(delaEntidad.relaciones, primero)) return false;
+  const destino = delaEntidad.relaciones[primero];
+  return (
+    Object.hasOwn(allowlist.entidades, destino) &&
+    allowlist.entidades[destino].campos.includes(segundo)
+  );
 }
 
 /** RN-29, FR-23, RN-10: entidad, campo y claves de `match` existen en la allowlist del modelo (solo entidades clínicas). */
@@ -49,7 +55,11 @@ export function exigirAtributoDeclarado(item, tipo, atributos) {
   if (item.destination.entity !== 'ClinicalAttribute') return null;
   const clave = item.destination.match?.attribute_key;
   const declarado = atributos.keys.some(
-    (atributo) => atributo.key === clave && atributo.cancerTypes.includes(tipo),
+    (atributo) =>
+      esObjeto(atributo) &&
+      atributo.key === clave &&
+      Array.isArray(atributo.cancerTypes) &&
+      atributo.cancerTypes.includes(tipo),
   );
   return declarado ? null : 'atributo_no_declarado';
 }
@@ -74,7 +84,11 @@ export function exigirEstadoValido(item, vocabulario) {
 
 /** AC-04.4: el hash del contenido cubierto por `validation.scope` coincide con `validation.catalogHash`. */
 export function verificarCatalogHash(archivo) {
-  if (archivo.validation === undefined) return null;
+  if (!esObjeto(archivo) || !esObjeto(archivo.validation)) return null;
   const { scope, catalogHash } = archivo.validation;
+  const formaEsperada =
+    Array.isArray(scope) && Array.isArray(archivo.items) && archivo.items.every(esObjeto);
+  // Una forma inesperada no es un hash distinto: la rechaza el esquema, que es quien garantiza la forma.
+  if (!formaEsperada) return null;
   return catalogHashDe(scope, archivo.items) === catalogHash ? null : 'hash_distinto';
 }

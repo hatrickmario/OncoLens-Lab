@@ -31,7 +31,8 @@ function codigoDeLaPrimeraViolacion(
     return resultado.valido ? null : (resultado.violaciones[0]?.codigo ?? 'esquema_invalido');
   } catch (error) {
     if (error instanceof ArchivoIlegibleError) return error.codigo as string;
-    throw error;
+    // Un error inesperado de forma también es un catálogo inválido: el arranque emite el evento único y no relanza.
+    return 'esquema_invalido';
   }
 }
 
