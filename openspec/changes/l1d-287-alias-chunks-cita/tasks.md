@@ -28,8 +28,8 @@
 
 ## 3. clinical-platform
 
-- [ ] 3.1 (de clinical-platform-dev; no hecha por ai-services) (test después) Regresión [US-236 AC-5] en `apps/clinical-api`: con `rag-orchestrator` simulado por MSW desde `contracts/examples/` (respuesta con `chunkId` reales), el `AIAnalysisRecord` persistido conserva solo los `chunkId` reales y ningún log de `clinical-api` contiene un alias `C<n>` como identificador. Supertest + PostgreSQL real de test. Si el implementador de ai-services no tiene este contexto, el orquestador lo despacha a `clinical-platform-dev`.
-- [ ] 3.2 (de clinical-platform-dev; no hecha por ai-services) Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-287)` (si no hubo código de producción, se marca sin cambios).
+- [ ] 3.1 (de clinical-platform-dev; no hecha por ai-services) (test después) Regresión [US-236 AC-5] en `apps/clinical-api`: con `rag-orchestrator` simulado por MSW desde `contracts/examples/` (respuesta con `chunkId` reales), el `AIAnalysisRecord` persistido conserva solo los `chunkId` reales y ningún log de `clinical-api` contiene un alias `C<n>` como identificador. Supertest + PostgreSQL real de test. Si el implementador de ai-services no tiene este contexto, el orquestador lo despacha a `clinical-platform-dev`. _Hecho: `tests/integration/evidence-analysis/persistencia-sin-alias.test.ts`; regresión que pasa desde el primer run (sin código de producto)._
+- [ ] 3.2 (de clinical-platform-dev; no hecha por ai-services) Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-287)` (si no hubo código de producción, se marca sin cambios). _Sin cambios: no hubo código de producción._
 
 ## 4. evaluación
 
