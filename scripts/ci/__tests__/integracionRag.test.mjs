@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -84,6 +84,29 @@ function correr(modo, entorno = {}, script = SCRIPT) {
   const llamadas = existsSync(registro) ? readFileSync(registro, 'utf8').split('\n').filter(Boolean) : [];
   return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado };
 }
+/**
+ * Repositorio git temporal con una copia del script (`raiz` se calcula desde la ubicación del script), un archivo versionado
+ * y otro sin versionar en una de las rutas que leen los tests. `setup-secrets.sh` es un doble: no es lo que se prueba.
+ */
+function repositorioTemporalConArchivoSinVersionar(rutaSinVersionar) {
+  const repositorio = mkdtempSync(path.join(temporal, 'repositorio-'));
+  const escribir = (ruta, contenido) => {
+    mkdirSync(path.dirname(path.join(repositorio, ruta)), { recursive: true });
+    writeFileSync(path.join(repositorio, ruta), contenido);
+  };
+  escribir('scripts/ci/integracion-rag-orchestrator.sh', readFileSync(SCRIPT));
+  escribir('scripts/ci/verificar-acs-rag.mjs', readFileSync(path.join(RAIZ, 'scripts/ci/verificar-acs-rag.mjs')));
+  escribir('scripts/setup-secrets.sh', '#!/usr/bin/env bash\nexit 0\n');
+  chmodSync(path.join(repositorio, 'scripts/setup-secrets.sh'), 0o755);
+  escribir('apps/rag-orchestrator/tests/versionado.txt', 'dato versionado');
+  escribir(rutaSinVersionar, 'dato local no versionado');
+  symlinkSync(path.join(RAIZ, 'node_modules'), path.join(repositorio, 'node_modules'));
+  const git = (...parametros) => spawnSync('git', ['-C', repositorio, ...parametros], { encoding: 'utf8', timeout: 30_000 });
+  git('init', '--quiet');
+  git('add', 'scripts', 'apps/rag-orchestrator/tests/versionado.txt');
+  return { script: path.join(repositorio, 'scripts/ci/integracion-rag-orchestrator.sh') };
+}
+
 const ejecutoPytest = (llamadas) => llamadas.some((llamada) => /\brun\b/.test(llamada) && !llamada.includes('--entrypoint'));
 
 describe('integracion-rag-orchestrator.sh', () => {
@@ -183,18 +206,16 @@ describe('integracion-rag-orchestrator.sh', () => {
   });
 
   it('no copia un archivo sin versionar de las rutas que leen los tests y lo nombra en el aviso [ARR-01 AC-2, RN-14]', () => {
+    // El archivo sin versionar vive en un repositorio git temporal con una copia del script, nunca en el árbol real: otros
+    // tests (evalRequired) copian ese árbol en paralelo y un archivo transitorio los rompía (L1D-285 4.3).
     const ruta = 'apps/rag-orchestrator/tests/zz_sin_versionar_prueba.txt';
-    const absoluta = path.join(RAIZ, ruta);
-    writeFileSync(absoluta, 'dato local no versionado');
-    try {
-      const { codigo, salida, copiado } = correr('ok', { STUB_RUTA: ruta });
+    const { script } = repositorioTemporalConArchivoSinVersionar(ruta);
 
-      expect(codigo).toBe(0);
-      expect(copiado).toEqual(['no']);
-      expect(salida).toContain(`NO se copian al contenedor: ${ruta}`);
-    } finally {
-      rmSync(absoluta, { force: true });
-    }
+    const { codigo, salida, copiado } = correr('ok', { STUB_RUTA: ruta }, script);
+
+    expect(codigo).toBe(0);
+    expect(copiado).toEqual(['no']);
+    expect(salida).toContain(`NO se copian al contenedor: ${ruta}`);
   });
 
   it('tolera .env.example en el árbol del contenedor [ARR-01 AC-2]', () => {
