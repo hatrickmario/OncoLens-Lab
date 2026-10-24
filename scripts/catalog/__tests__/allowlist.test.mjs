@@ -35,6 +35,33 @@ describe('allowlist del modelo generada desde Prisma', () => {
     expect(entidades['Biomarker'].relaciones).toEqual({ exam: 'Exam' });
   });
 
+  it('excluye como destino las columnas de control y de texto libre [US-001 AC-4]', async () => {
+    const { entidades } = await generarAllowlist(modelo);
+    const todas = Object.entries(entidades).flatMap(([entidad, { campos }]) =>
+      campos.map((campo) => `${entidad}.${campo}`),
+    );
+
+    for (const excluida of ['source_span', 'reviewed_by', 'recorded_by']) {
+      expect(todas.filter((campo) => campo.endsWith(`.${excluida}`)), excluida).toEqual([]);
+    }
+    expect(todas.filter((campo) => campo.endsWith('_id'))).toEqual([]);
+    expect(entidades['ClinicalEvent'].campos).not.toContain('description');
+    expect(todas).not.toContain('Exam.patient_id');
+  });
+
+  it('conserva los campos que usa el contenido del S3 como destino [US-001 AC-7]', async () => {
+    const { entidades } = await generarAllowlist(modelo);
+
+    expect(entidades['Diagnosis'].campos).toEqual(
+      expect.arrayContaining(['histology', 'grade', 'stage_value', 'performance_value']),
+    );
+    expect(entidades['Biomarker'].campos).toEqual(expect.arrayContaining(['name', 'value']));
+    expect(entidades['Exam'].campos).toContain('exam_type');
+    expect(entidades['ClinicalAttribute'].campos).toEqual(
+      expect.arrayContaining(['attribute_key', 'value']),
+    );
+  });
+
   it('pierde performance_value cuando el modelo de test elimina el campo [US-001 AC-4]', async () => {
     const sinCampo = modelo.replace(/^\s*performanceValue\s.*$/m, '');
 
