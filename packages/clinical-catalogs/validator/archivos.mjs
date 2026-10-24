@@ -54,3 +54,9 @@ export const ARCHIVOS_DEL_CATALOGO = {
 
 /** Nombres de los archivos por tipo, en el orden del registro. */
 export const NOMBRES_DE_ARCHIVO = Object.keys(ARCHIVOS_DEL_CATALOGO);
+
+/** Archivos de la raíz del catálogo (no por tipo): cada entrada nombra su esquema. */
+export const ARCHIVOS_DE_RAIZ = {
+  atributos: { esquema: 'atributos' },
+  poblacion: { esquema: 'poblacion' },
+};

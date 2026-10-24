@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  ARCHIVOS_DE_RAIZ,
   ARCHIVOS_DEL_CATALOGO,
   leerCatalogo,
   leerEsquemas,
@@ -237,6 +238,42 @@ describe('contexto propio de cada archivo del registro (Gate 2 vuelta 1, punto 3
       expect(violaciones.map((violacion) => violacion.codigo)).toContain('sonda_recibida');
     } finally {
       Object.assign(entrada, original);
+    }
+  });
+});
+
+describe('registro de archivos de raíz (Gate 2 vuelta 1, punto 4)', () => {
+  const esquemaFicticio = {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    type: 'object',
+    additionalProperties: false,
+    required: ['version'],
+    properties: { version: { type: 'string' } },
+  };
+  const lector = (ruta) =>
+    ruta.endsWith('ficticio.schema.json')
+      ? JSON.stringify(esquemaFicticio)
+      : ruta.endsWith('/ficticio.json')
+        ? JSON.stringify({ version: '1', extra: true })
+        : leerTexto(ruta);
+
+  it('lee, compila y valida un archivo de raíz añadido al registro', () => {
+    ARCHIVOS_DE_RAIZ.ficticio = { esquema: 'ficticio' };
+    try {
+      const directorio = path.join(FIXTURES, 'test-apl-1.0.0');
+      const archivos = leerCatalogo(directorio, lector);
+      const esquemasConFicticio = leerEsquemas(path.join(CATALOGO, 'schemas'), lector);
+
+      const { violaciones } = validarCatalogo({
+        archivos,
+        allowlist,
+        esquemas: esquemasConFicticio,
+      });
+
+      expect(archivos.ficticio).toEqual({ version: '1', extra: true });
+      expect(violaciones).toEqual([{ codigo: 'esquema_invalido', archivo: 'ficticio' }]);
+    } finally {
+      delete ARCHIVOS_DE_RAIZ.ficticio;
     }
   });
 });
