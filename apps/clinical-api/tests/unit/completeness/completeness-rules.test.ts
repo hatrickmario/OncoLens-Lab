@@ -365,4 +365,37 @@ describe('calcularChecklist', () => {
       }),
     ).toThrow(CatalogoInconsistenteError);
   });
+
+  it('lanza CatalogoInconsistenteError cuando la condición no es evaluable y el ítem no declara whenConditionUnknown', () => {
+    const sinPolitica = item('dependiente', {
+      condition: { item: 'tnm', operator: 'prefijo', values: ['IV'] },
+    });
+
+    expect(() =>
+      calcularChecklist({
+        cancerType: 'mama',
+        items: [itemTnm, sinPolitica],
+        verifiedReviewStatuses: VERIFICADOS,
+        registros: { Diagnosis: [diagnosticoConTnm(null)] },
+      }),
+    ).toThrow(CatalogoInconsistenteError);
+  });
+
+  it('aplica el whenConditionUnknown cuando el ítem condicionante no declara campo de destino', () => {
+    const sinCampo = item('referenciado', { destination: { entity: 'PriorTreatment' } });
+    const dependiente = item('dependiente', {
+      destination: { entity: 'ClinicalAttribute' },
+      condition: { item: 'referenciado', operator: 'prefijo', values: ['x'] },
+      whenConditionUnknown: 'no_aplica',
+    });
+
+    const checklist = calcularChecklist({
+      cancerType: 'mama',
+      items: [sinCampo, dependiente],
+      verifiedReviewStatuses: VERIFICADOS,
+      registros: { PriorTreatment: [tratamiento()], ClinicalAttribute: [registro({})] },
+    });
+
+    expect(checklist[1]).toEqual({ key: 'dependiente', status: 'no_aplica' });
+  });
 });
