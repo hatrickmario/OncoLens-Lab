@@ -1,6 +1,8 @@
 # FX-06c-b · Manifiesto de ingesta de test (US-117a). TEXTOS SINTÉTICOS BREVES en ingest-textos/: ningún contenido de
 # NCCN, ESMO ni de otra fuente. i-gl-1-v2 vive aparte (ingest-manifest-v2.yaml, US-117b). Con CORPUS_CHUNK_SIZE=12
 # palabras cada texto da 3 o 4 chunks.
+# US-118 (L1D-117): i-ct-1 declara criterios de elegibilidad estructurados (claves de population_criteria que nombra
+# studyKey, S3 resp. 16); i-lit-1 declara study_design: otro (= la fuente no lo declara) y se extrae del texto.
 documentos:
   - document_key: i-ct-1
     source_type: clinical_trial
@@ -16,8 +18,10 @@ documentos:
     population: adulto
     original_format: xml
     population_criteria:
+      subtipo: castracion_resistente
       estadio: metastasico
       linea: primera
+      ecog: 0-1
     text_path: ingest-textos/i-ct-1.txt
   - document_key: i-lit-1
     source_type: literature
@@ -29,7 +33,7 @@ documentos:
     license: CC BY 4.0
     license_url: https://creativecommons.org/licenses/by/4.0/
     published_at: 2023-11-20
-    study_design: revision_sistematica
+    study_design: otro
     population: adulto
     original_format: jats_xml
     text_path: ingest-textos/i-lit-1.txt
