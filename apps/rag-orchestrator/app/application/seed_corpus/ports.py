@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 from app.application.ports import ChunkDelCorpus
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -79,7 +79,7 @@ class RegistroDeDocumento:
     trial_phase: str | None
     primary_endpoint: str | None
     sample_size: int | None
-    population_criteria: Mapping[str, str]
+    population_criteria: Mapping[str, Any]
     metadata_source: str
     guideline_version: str | None
     last_updated_at: date | None

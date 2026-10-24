@@ -51,11 +51,15 @@ def test_corpus_catalog_downgrade_falla_sin_reescribir_datos_si_quedan_filas_pen
         with motor.begin() as conexion:
             insertar_documento(conexion, fila_sintetica(metadata_source="pendiente"))
         with pytest.raises(Exception, match="metadata_source = 'pendiente'"):
-            command.downgrade(configuracion_de_alembic(base_migrada.url_migrador), REVISION_ANTERIOR)
+            command.downgrade(
+                configuracion_de_alembic(base_migrada.url_migrador), REVISION_ANTERIOR
+            )
         with motor.connect() as conexion:
-            restantes = conexion.execute(
-                text("SELECT metadata_source FROM corpus.corpus_document")
-            ).scalars().all()
+            restantes = (
+                conexion.execute(text("SELECT metadata_source FROM corpus.corpus_document"))
+                .scalars()
+                .all()
+            )
         assert restantes == ["pendiente"]
     finally:
         with motor.begin() as conexion:

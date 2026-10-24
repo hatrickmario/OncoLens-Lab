@@ -13,9 +13,10 @@ from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
+from app.domain.corpus_metadata.origen import metadatos_de_la_fuente
+from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 from app.domain.corpus_seed.versionado import (
     STATUS_EMBEBIDO,
     STATUS_ERROR,
@@ -23,7 +24,7 @@ from app.domain.corpus_seed.versionado import (
     STATUS_RECHAZADO,
 )
 
-ORIGEN_DE_LA_SEMILLA = "fuente_estructurada"
+ORIGEN_DE_LA_SEMILLA = FUENTE_ESTRUCTURADA
 SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia
 # (el catálogo no cambia en este change): un rechazado lleva la más restrictiva. La verdad de su licencia es el texto
@@ -45,8 +46,13 @@ def identificador_de_error(document_key: str) -> str:
 
 
 def registro_embebido(
-    documento: DocumentoDeSemilla, admision: Admision, checksum: str, ahora: datetime
+    documento: DocumentoDeSemilla,
+    admision: Admision,
+    checksum: str,
+    ahora: datetime,
+    metadatos: MetadatosResueltos | None = None,
 ) -> RegistroDeDocumento:
+    """``metadatos`` (US-118) los entrega el paso de metadatos de la ingesta; sin él, lo que publica el manifiesto."""
     clase = _clase_de_un_admitido(admision)
     return _registro(
         documento,
@@ -57,6 +63,7 @@ def registro_embebido(
         status=STATUS_EMBEBIDO,
         is_current=True,
         open_access=True,
+        metadatos=metadatos,
     )
 
 
@@ -127,7 +134,9 @@ def _registro(
     status: str,
     is_current: bool,
     open_access: bool,
+    metadatos: MetadatosResueltos | None = None,
 ) -> RegistroDeDocumento:
+    metadatos = metadatos or metadatos_de_la_fuente(documento)
     return RegistroDeDocumento(
         document_id=document_id,
         source_type=documento.source_type,
@@ -141,12 +150,12 @@ def _registro(
         open_access=open_access,
         cancer_type_tags=etiquetas_de_cancer(documento),
         population=documento.population,
-        study_design=documento.study_design,
-        trial_phase=documento.trial_phase,
-        primary_endpoint=documento.primary_endpoint,
-        sample_size=documento.sample_size,
-        population_criteria=resolver_criterios_poblacion(documento.population_criteria),
-        metadata_source=ORIGEN_DE_LA_SEMILLA,
+        study_design=metadatos.study_design,
+        trial_phase=metadatos.trial_phase,
+        primary_endpoint=metadatos.primary_endpoint,
+        sample_size=metadatos.sample_size,
+        population_criteria=metadatos.population_criteria,
+        metadata_source=metadatos.metadata_source,
         guideline_version=documento.guideline_version,
         last_updated_at=documento.last_updated_at,
         original_format=documento.original_format,

@@ -22,6 +22,7 @@ from sqlalchemy import text
 
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
+from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.catalog.conexion import crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
@@ -44,7 +45,8 @@ from tests.support.ingesta import (
     CodificadorSparseFalso,
     EmbedderInterrumpible,
 )
-from tests.support.metadatos import FakeMetadataLlm
+from tests.support.metadatos import UMBRAL_NLI_DE_TEST, FakeMetadataLlm, nli_de_metadatos
+from tests.support.nli_falso import NliFalso
 from tests.support.semilla import (
     DIRECTORIO_DE_FIXTURES,
     FECHA_DE_CORTE_DE_TEST,
@@ -151,6 +153,7 @@ class Montaje:
     directorio: Path
     observador: Observador
     llm_metadatos: FakeMetadataLlm
+    nli_metadatos: NliFalso
 
     def ingerir(self, manifiesto: Path | None = None) -> ReporteDeIngesta:
         return self.servicio.ingerir(self.documentos(manifiesto))
@@ -173,13 +176,22 @@ class Montaje:
 
 
 def _servicio(
-    catalogo: Any, almacen: Any, directorio: Path, embedder: Any, sparse: Any
+    catalogo: Any,
+    almacen: Any,
+    directorio: Path,
+    embedder: Any,
+    sparse: Any,
+    llm: FakeMetadataLlm,
+    nli: NliFalso,
 ) -> IngestionPipelineService:
     return IngestionPipelineService(
         catalogo=catalogo,
         almacen_de_chunks=almacen,
         embedder=embedder,
         codificador_sparse=sparse,
+        resolutor_de_metadatos=MetadataExtractionService(
+            llm=llm, nli=nli, umbral_nli=UMBRAL_NLI_DE_TEST
+        ),
         fuente=FuenteDeTextoDelManifiesto(directorio, None),
         reloj=RelojFijo(),
         ids=GeneradorDeIdsFijo(),
@@ -194,7 +206,8 @@ def _servicio(
 def montar(directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
     catalogo, almacen = CatalogoEnMemoria(), AlmacenDeChunksEnMemoria()
     embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
-    servicio = _servicio(catalogo, almacen, directorio_de_textos, embedder, sparse)
+    llm, nli = FakeMetadataLlm(), nli_de_metadatos()
+    servicio = _servicio(catalogo, almacen, directorio_de_textos, embedder, sparse, llm, nli)
     observador = ObservadorEnMemoria(catalogo, almacen)
     return Montaje(
         catalogo,
@@ -204,7 +217,8 @@ def montar(directorio_de_textos: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
         servicio,
         directorio_de_textos,
         observador,
-        FakeMetadataLlm(),
+        llm,
+        nli,
     )
 
 
@@ -232,7 +246,8 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Pat
 
     def montar_real(directorio: Path = DIRECTORIO_DE_FIXTURES) -> Montaje:
         embedder, sparse = EmbedderInterrumpible(), CodificadorSparseFalso()
-        servicio = _servicio(catalogo, almacen, directorio, embedder, sparse)
+        llm, nli = FakeMetadataLlm(), nli_de_metadatos()
+        servicio = _servicio(catalogo, almacen, directorio, embedder, sparse, llm, nli)
         observador = ObservadorReal(motor, cliente, ajustes.milvus_collection_name)
         return Montaje(
             catalogo,
@@ -242,7 +257,8 @@ def fabrica_de_montaje(request: pytest.FixtureRequest) -> Iterator[Callable[[Pat
             servicio,
             directorio,
             observador,
-            FakeMetadataLlm(),
+            llm,
+            nli,
         )
 
     yield montar_real
