@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "atributos.json: claves declaradas de ClinicalAttribute (L1D-93)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "keys"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "cancerTypes", "label"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "cancerTypes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z]+$" }
+          },
+          "label": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["es"],
+            "properties": { "es": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    }
+  }
+}
