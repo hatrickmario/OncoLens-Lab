@@ -100,8 +100,9 @@ ingesta es una CLI interna. Proveedor: ninguno nuevo; oasdiff sin diferencias; c
 No cambia modelo, prompt, umbral ni el contenido del corpus versionado (solo *fixtures* de test): la recuperación
 *dense* que mide OL-06 no cambia y el *sparse* no se usa en la recuperación hasta US-112. Sin embargo, `eval-required`
 **sí se dispara** (`scripts/ci/eval-trigger-paths.yaml`: `SPARSE_VECTOR_SOURCE` en `app/config/**`, por
-`CorpusIngestSettings` y `SPARSE_VECTOR_SOURCES_ADMITIDAS`). Resultado del Gate 2: neutro (baseline igual,
-`ai-eval-runner` PASS). No hay medición con modelos reales hasta que se ingiera el corpus real (US-120) o se active la
+`CorpusIngestSettings` y `SPARSE_VECTOR_SOURCES_ADMITIDAS`). Resultado neutro verificado por `ai-eval-runner` en el
+Gate 2 (`eval-required` exit 0, 26 métricas iguales al baseline; no hay reporte en el repo); el job `eval-required` de la
+CI del PR lo confirma. No hay medición con modelos reales hasta que se ingiera el corpus real (US-120) o se active la
 híbrida (US-112).
 
 ## Risks / Trade-offs

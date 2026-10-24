@@ -50,8 +50,9 @@
 
 - [ ] 2.1 Confirmar en el PR que `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral ni corpus versionado;
       ver `design.md`, Evaluación) · **corregida:** `eval-required` SÍ se dispara (`SPARSE_VECTOR_SOURCE` en
-      `app/config/**`); resultado neutro en el Gate 2 (baseline igual, `ai-eval-runner` PASS). Sin medición con modelos
-      reales hasta US-112 / US-120.
+      `app/config/**`); resultado neutro verificado por `ai-eval-runner` en el Gate 2 (`eval-required` exit 0, 26 métricas
+      iguales al baseline); el job `eval-required` de la CI del PR lo confirma: `[ ]` hasta verlo verde. Sin medición con
+      modelos reales hasta US-112 / US-120.
 
 ## cierre
 
@@ -68,7 +69,11 @@
 - **Deuda: núcleo común de ingesta, antes de US-117b.** `SeedCorpusLoader` y `IngestionPipelineService` comparten
   admisibilidad, rechazo/retiro, omisión y confirmación con código casi paralelo; extraer un núcleo común antes de que
   US-117b añada versionado (la historia la crea el orquestador). Aquí solo se movieron los errores compartidos a
-  `domain/corpus_seed/errores.py`.
+  `domain/corpus_seed/errores.py`. **Su primera tarea es el test `test_omitir_apaga_los_chunks_de_la_version_huerfana_de_otro_contenido`
+  (ya añadido en 9ee3e1f5) como red de seguridad del núcleo;** el ID de la historia lo asigna el orquestador. Menores
+  de Gate 2 diferidos a esa deuda ("deuda núcleo común de ingesta"): m2, m3 y m4.
+- **Cambio de comportamiento (4aaf8709):** `ConfigModelos` endurece `SPARSE_VECTOR_SOURCE`: antes aceptaba cualquier
+  texto no vacío (con `strip()`), ahora solo `modelo_embeddings` y ya no hace `strip()` del valor.
 - **Gate 2, vuelta 1:** `decidir_reanudacion` pasó a `es_reanudacion` (bool); los `STATUS_*` viven en
   `domain/corpus_seed/versionado.py`; `pesos_lexicos` y `SPARSE_VECTOR_SOURCES_ADMITIDAS` tienen una sola definición
   (esta última endurece la validación de `ConfigModelos` en el bloque ADR-39: solo rechaza orígenes no admitidos).
