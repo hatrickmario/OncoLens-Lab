@@ -8,26 +8,56 @@ from __future__ import annotations
 
 from typing import Final
 
-_DISENOS: Final = {
-    "guia": "El documento es una guía de práctica clínica",
-    "eca": "El estudio es un ensayo controlado aleatorizado",
-    "observacional": "El estudio es un estudio observacional",
-    "revision_sistematica": "El documento es una revisión sistemática",
-}
-_BIOMARCADORES: Final = {
-    "her2": "HER2",
-    "receptores_hormonales": "los receptores hormonales",
-    "hrr_brca": "HRR/BRCA",
-}
+from app.domain.corpus_metadata.campos import (
+    CAMPOS_ESCALARES,
+    CRITERIOS_PLANOS,
+    DISENOS_EXTRAIBLES,
+    SUBCLAVES_DE_BIOMARCADORES,
+)
+
+# Cada tabla se indexa desde ``campos.py`` con ``zip(strict=True)``: añadir un diseño, un criterio o una subclave sin su
+# plantilla falla al importar, no en producción.
+_DISENOS: Final = dict(
+    zip(
+        DISENOS_EXTRAIBLES,
+        (
+            "El documento es una guía de práctica clínica",
+            "El estudio es un ensayo controlado aleatorizado",
+            "El estudio es un estudio observacional",
+            "El documento es una revisión sistemática",
+        ),
+        strict=True,
+    )
+)
+_BIOMARCADORES: Final = dict(
+    zip(SUBCLAVES_DE_BIOMARCADORES, ("HER2", "los receptores hormonales", "HRR/BRCA"), strict=True)
+)
+_ESCALARES_CON_PLANTILLA: Final = tuple(c for c in CAMPOS_ESCALARES if c != "study_design")
 _PLANTILLAS: Final = {
-    "trial_phase": "El estudio es un ensayo de fase {valor}",
-    "sample_size": "El estudio incluyó {valor} participantes",
-    "primary_endpoint": "El criterio de valoración principal del estudio es {valor}",
-    "subtipo": "La población del estudio tiene el subtipo {valor}",
-    "estadio": "La población del estudio está en el estadio {valor}",
-    "linea": "El estudio evalúa el tratamiento en la línea {valor}",
-    "edad": "La edad de la población del estudio es {valor}",
-    "ecog": "El estado funcional ECOG de la población del estudio es {valor}",
+    **dict(
+        zip(
+            _ESCALARES_CON_PLANTILLA,
+            (
+                "El estudio es un ensayo de fase {valor}",
+                "El estudio incluyó {valor} participantes",
+                "El criterio de valoración principal del estudio es {valor}",
+            ),
+            strict=True,
+        )
+    ),
+    **dict(
+        zip(
+            CRITERIOS_PLANOS,
+            (
+                "La población del estudio tiene el subtipo {valor}",
+                "La población del estudio está en el estadio {valor}",
+                "El estudio evalúa el tratamiento en la línea {valor}",
+                "La edad de la población del estudio es {valor}",
+                "El estado funcional ECOG de la población del estudio es {valor}",
+            ),
+            strict=True,
+        )
+    ),
 }
 _PREFIJO_DE_BIOMARCADOR: Final = "biomarcadores."
 

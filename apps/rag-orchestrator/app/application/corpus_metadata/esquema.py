@@ -10,15 +10,24 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Annotated, Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, StrictInt, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictInt,
+    ValidationError,
+    create_model,
+    field_validator,
+)
 
 from app.domain.corpus_metadata.campos import (
     CAMPOS_ESCALARES,
     CRITERIOS_PLANOS,
     DISENOS_EXTRAIBLES,
     FASES_DE_ENSAYO,
+    LONGITUD_MAXIMA_DE_VALOR,
     SUBCLAVES_DE_BIOMARCADORES,
 )
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
@@ -43,33 +52,38 @@ class _Cerrado(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class _Biomarcadores(_Cerrado):
-    her2: str | None = None
-    receptores_hormonales: str | None = None
-    hrr_brca: str | None = None
-
-    _limpiar = field_validator("*", mode="before")(_texto_o_nulo)
+_Valor = Annotated[str, Field(max_length=LONGITUD_MAXIMA_DE_VALOR)]
 
 
-class _Poblacion(_Cerrado):
-    subtipo: str | None = None
-    estadio: str | None = None
-    linea: str | None = None
-    biomarcadores: _Biomarcadores | None = None
-    edad: str | None = None
-    ecog: str | None = None
-
-    _limpiar = field_validator("subtipo", "estadio", "linea", "edad", "ecog", mode="before")(
-        _texto_o_nulo
+def _modelo_cerrado(nombre: str, campos: dict[str, Any]) -> type[_Cerrado]:
+    """Modelo Pydantic cerrado cuyos campos de texto salen de ``campos.py`` (fuente única de las claves, D7)."""
+    textos = [c for c, (tipo, _) in campos.items() if tipo == _Valor | None]
+    return create_model(  # type: ignore[call-overload,no-any-return]
+        nombre,
+        __base__=_Cerrado,
+        __validators__={"limpiar": field_validator(*textos, mode="before")(_texto_o_nulo)},
+        **campos,
     )
 
 
+_Biomarcadores = _modelo_cerrado(
+    "_Biomarcadores", {s: (_Valor | None, None) for s in SUBCLAVES_DE_BIOMARCADORES}
+)
+_Poblacion = _modelo_cerrado(
+    "_Poblacion",
+    {
+        **{c: (_Valor | None, None) for c in CRITERIOS_PLANOS},
+        "biomarcadores": (_Biomarcadores | None, None),
+    },
+)
+
+
 class PropuestaDeMetadatos(_Cerrado):
-    study_design: Literal["guia", "eca", "observacional", "revision_sistematica"] | None = None
-    trial_phase: Literal["I", "II", "III", "IV"] | None = None
+    study_design: Literal[DISENOS_EXTRAIBLES] | None = None  # type: ignore[valid-type]
+    trial_phase: Literal[FASES_DE_ENSAYO] | None = None  # type: ignore[valid-type]
     sample_size: StrictInt | None = None
-    primary_endpoint: str | None = None
-    population_criteria: _Poblacion | None = None
+    primary_endpoint: _Valor | None = None
+    population_criteria: _Poblacion | None = None  # type: ignore[valid-type]
 
     _limpiar = field_validator("primary_endpoint", mode="before")(_texto_o_nulo)
 
@@ -113,6 +127,10 @@ def _nulable(tipo: str, **extra: Any) -> dict[str, Any]:
     return {"type": [tipo, "null"], **extra}
 
 
+def _texto_nulable() -> dict[str, Any]:
+    return _nulable("string", maxLength=LONGITUD_MAXIMA_DE_VALOR)
+
+
 def _objeto(propiedades: dict[str, Any], *, nulable: bool = False) -> dict[str, Any]:
     return {
         "type": ["object", "null"] if nulable else "object",
@@ -125,11 +143,11 @@ def _objeto(propiedades: dict[str, Any], *, nulable: bool = False) -> dict[str, 
 def esquema_de_metadatos() -> dict[str, Any]:
     """Esquema JSON cerrado: todas las claves obligatorias y anulables (``null`` = el texto no lo declara)."""
     biomarcadores = _objeto(
-        {subclave: _nulable("string") for subclave in SUBCLAVES_DE_BIOMARCADORES}, nulable=True
+        {subclave: _texto_nulable() for subclave in SUBCLAVES_DE_BIOMARCADORES}, nulable=True
     )
     poblacion = _objeto(
         {
-            **{criterio: _nulable("string") for criterio in CRITERIOS_PLANOS},
+            **{criterio: _texto_nulable() for criterio in CRITERIOS_PLANOS},
             "biomarcadores": biomarcadores,
         },
         nulable=True,
@@ -139,7 +157,7 @@ def esquema_de_metadatos() -> dict[str, Any]:
             "study_design": _nulable("string", enum=[*DISENOS_EXTRAIBLES, None]),
             "trial_phase": _nulable("string", enum=[*FASES_DE_ENSAYO, None]),
             "sample_size": _nulable("integer", minimum=1),
-            "primary_endpoint": _nulable("string"),
+            "primary_endpoint": _texto_nulable(),
             "population_criteria": poblacion,
         }
     )

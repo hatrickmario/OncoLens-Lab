@@ -18,6 +18,8 @@ DISENO_NO_DECLARADO: Final = "otro"
 
 CRITERIOS_PLANOS: Final = tuple(c for c in CRITERIOS_DE_POBLACION if c != "biomarcadores")
 SUBCLAVES_DE_BIOMARCADORES: Final = ("her2", "receptores_hormonales", "hrr_brca")
+# Tope de caracteres de un valor propuesto por el LLM (esquema JSON y Pydantic): un valor largo no entra al catálogo.
+LONGITUD_MAXIMA_DE_VALOR: Final = 200
 
 
 def claves_de_poblacion_admitidas() -> frozenset[str]:

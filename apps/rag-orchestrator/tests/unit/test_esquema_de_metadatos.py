@@ -9,13 +9,25 @@ import pytest
 
 from app.application.corpus_metadata.esquema import (
     PROMPT_VERSION,
+    PropuestaDeMetadatos,
     SalidaInvalida,
+    _Biomarcadores,
+    _Poblacion,
     construir_prompt,
     esquema_de_metadatos,
     parsear_propuesta,
 )
-from app.domain.corpus_metadata.campos import claves_de_poblacion_admitidas
+from app.domain.corpus_metadata.campos import (
+    CRITERIOS_PLANOS,
+    DISENO_NO_DECLARADO,
+    DISENOS_EXTRAIBLES,
+    FASES_DE_ENSAYO,
+    LONGITUD_MAXIMA_DE_VALOR,
+    SUBCLAVES_DE_BIOMARCADORES,
+    claves_de_poblacion_admitidas,
+)
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
+from app.infrastructure.catalog.tables import DOMINIOS_CERRADOS
 from tests.support.metadatos import PROPUESTA_I_LIT_1
 
 RAIZ = Path(__file__).resolve().parents[4]
@@ -113,3 +125,54 @@ def test_el_prompt_no_contiene_terminos_prohibidos_de_nivel_a_ni_b() -> None:
     prompt = construir_prompt("título", "", ("trial_phase",))
 
     assert check_prohibited_terms(prompt, lista, niveles=("A", "B"), permitir_frases=False) == []
+
+
+def test_el_modelo_de_poblacion_tiene_exactamente_los_campos_de_campos_py() -> None:
+    assert set(_Poblacion.model_fields) == {*CRITERIOS_PLANOS, "biomarcadores"}
+    assert set(_Biomarcadores.model_fields) == set(SUBCLAVES_DE_BIOMARCADORES)
+
+
+def test_los_dominios_de_extraccion_son_los_del_catalogo() -> None:
+    assert set(DISENOS_EXTRAIBLES) | {DISENO_NO_DECLARADO} == set(DOMINIOS_CERRADOS["study_design"])
+    assert set(FASES_DE_ENSAYO) == set(DOMINIOS_CERRADOS["trial_phase"])
+
+
+def test_el_esquema_json_y_el_modelo_comparten_los_valores_de_diseno_y_fase() -> None:
+    propiedades = esquema_de_metadatos()["properties"]
+
+    assert set(propiedades["study_design"]["enum"]) == {*DISENOS_EXTRAIBLES, None}
+    assert set(propiedades["trial_phase"]["enum"]) == {*FASES_DE_ENSAYO, None}
+
+
+def test_el_esquema_json_limita_la_longitud_de_todo_valor_de_texto() -> None:
+    esquema = esquema_de_metadatos()["properties"]
+    poblacion = esquema["population_criteria"]["properties"]
+    textos = [
+        esquema["primary_endpoint"],
+        *(poblacion[c] for c in CRITERIOS_PLANOS),
+        *poblacion["biomarcadores"]["properties"].values(),
+    ]
+
+    assert {t["maxLength"] for t in textos} == {LONGITUD_MAXIMA_DE_VALOR}
+
+
+@pytest.mark.parametrize(
+    "propuesta",
+    [
+        {"primary_endpoint": "x" * (LONGITUD_MAXIMA_DE_VALOR + 1)},
+        {"population_criteria": {"estadio": "x" * (LONGITUD_MAXIMA_DE_VALOR + 1)}},
+        {"population_criteria": {"biomarcadores": {"her2": "x" * (LONGITUD_MAXIMA_DE_VALOR + 1)}}},
+    ],
+)
+def test_un_valor_mas_largo_que_el_tope_es_una_salida_invalida(propuesta: dict) -> None:
+    with pytest.raises(SalidaInvalida):
+        parsear_propuesta(json.dumps(propuesta))
+
+
+def test_un_valor_justo_en_el_tope_se_acepta() -> None:
+    valor = "x" * LONGITUD_MAXIMA_DE_VALOR
+
+    propuesta = parsear_propuesta(json.dumps({"primary_endpoint": valor}))
+
+    assert isinstance(propuesta, PropuestaDeMetadatos)
+    assert propuesta.primary_endpoint == valor
