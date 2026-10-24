@@ -18,7 +18,21 @@ const LLAMADA = (nombre) => `pytest.${nombre}(`;
 const CUERPO = '    assert 1 == 1\n';
 const modulo = (...lineas) => `import pytest\n\n\n${lineas.join('\n')}\n`;
 
+// Importaciones con alias: la higiene resuelve los nombres contra los `import` del módulo (L1D-285, Gate 2 #6).
+const conImportacion = (importacion, ...lineas) => `${importacion}\n\n\n${lineas.join('\n')}\n`;
+const ALIAS = {
+  'test_alias_modulo.py': { texto: conImportacion('import pytest as pt', `@pt.mark.${'skip'}`, 'def test_a():', CUERPO), linea: 4, simbolo: 'pytest.mark.skip' },
+  'test_alias_marca.py': { texto: conImportacion('from pytest import mark', `@mark.${'xfail'}`, 'def test_a():', CUERPO), linea: 4, simbolo: 'pytest.mark.xfail' },
+  'test_alias_funcion.py': { texto: conImportacion('from pytest import skip', 'def test_a():', '    skip("x")'), linea: 5, simbolo: LLAMADA('skip') },
+  'test_alias_funcion_con_nombre.py': { texto: conImportacion('from pytest import xfail as fallar', 'def test_a():', '    fallar("x")'), linea: 5, simbolo: LLAMADA('xfail') },
+  'test_alias_importorskip.py': { texto: conImportacion('import pytest as pt', 'def test_a():', '    pt.importorskip("modulo")'), linea: 5, simbolo: 'pytest.importorskip(' },
+  'test_alias_excepcion.py': { texto: conImportacion('import pytest as pt', 'def test_a():', `    raise pt.${'skip'}.Exception("x")`), linea: 5, simbolo: 'pytest.skip.Exception' },
+  'test_unittest.py': { texto: conImportacion('import unittest', `@unittest.${'skip'}("x")`, 'def test_a():', CUERPO), linea: 4, simbolo: 'unittest.skip' },
+  'test_unittest_alias.py': { texto: conImportacion('import unittest as ut', `@ut.${'skipIf'}(True, "x")`, 'def test_a():', CUERPO), linea: 4, simbolo: 'unittest.skipIf' },
+};
+
 const DESACTIVADOS = {
+  ...ALIAS,
   'test_marca_skip.py': { texto: modulo(`${MARCA('skip')}(reason="x")`, 'def test_a():', CUERPO), linea: 4, simbolo: 'pytest.mark.skip' },
   'test_marca_skipif.py': { texto: modulo(`${MARCA('skipif')}(True, reason="x")`, 'def test_a():', CUERPO), linea: 4, simbolo: 'pytest.mark.skipif' },
   'test_marca_xfail.py': { texto: modulo(MARCA('xfail'), 'def test_a():', CUERPO), linea: 4, simbolo: 'pytest.mark.xfail' },
@@ -62,7 +76,7 @@ describe('higiene de tests de Pytest', () => {
           symbol: simbolo,
           severity: 'error',
         }))
-        .sort((a, b) => a.file.localeCompare(b.file)),
+        .sort((a, b) => (a.file < b.file ? -1 : 1)),
     );
   }, TIEMPO_MAXIMO_MS);
 
