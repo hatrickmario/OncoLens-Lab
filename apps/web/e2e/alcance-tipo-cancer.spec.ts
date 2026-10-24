@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { iniciarSesion } from './soporte';
+import { alcance, ficha, iniciarSesion } from './soporte';
 
 // El stack del E2E corre con ENABLED_CANCER_TYPES=mama (scripts/e2e/ejecutar.sh): el paciente semilla (b) es de próstata.
 test.describe('Tipos de cáncer habilitados (L1D-173)', () => {
@@ -12,12 +12,12 @@ test.describe('Tipos de cáncer habilitados (L1D-173)', () => {
 
     await expect(page.getByRole('heading', { level: 1, name: 'Prueba Sintética 2' })).toBeVisible();
     await expect(
-      page.getByRole('status').filter({ hasText: 'Tipo de cáncer fuera del alcance del piloto' }),
+      page.getByRole('status').filter({ hasText: alcance.tipoNoHabilitado }),
     ).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Diagnóstico vigente' })).toContainText(
+    await expect(page.getByRole('region', { name: ficha.diagnostico.titulo })).toContainText(
       'prostata',
     );
     // El aviso no bloquea (RN-26): la acción sigue disponible.
-    await expect(page.getByRole('link', { name: 'Analizar evidencia' })).toBeVisible();
+    await expect(page.getByRole('link', { name: ficha.acciones.analizar })).toBeVisible();
   });
 });
