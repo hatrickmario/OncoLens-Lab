@@ -19,6 +19,15 @@ from app.domain.relevance import ChunkPuntuado, ordenar_por_relevancia
 CITA_NO_TRADUCIBLE = "«cita-no-traducible»"
 
 
+PREFIJO_DE_ALIAS = "C"
+# Fuente única del formato: ``asignar_alias`` lo produce y el esquema entregado al runtime (gramática) lo exige.
+PATRON_DE_ALIAS = rf"^{PREFIJO_DE_ALIAS}[1-9][0-9]*$"
+
+
+def alias_numero(n: int) -> str:
+    return f"{PREFIJO_DE_ALIAS}{n}"
+
+
 class FragmentoConAlias(NamedTuple):
     alias: str
     chunk: ChunkPuntuado
@@ -38,7 +47,9 @@ def asignar_alias(chunks: Sequence[ChunkPuntuado]) -> TablaDeAlias:
     """``C1``… por ``relevance_score`` descendente y ``chunk_id`` ascendente: determinista para la misma entrada."""
     ordenados = ordenar_por_relevancia(chunks)
     return TablaDeAlias(
-        tuple(FragmentoConAlias(f"C{n}", chunk) for n, chunk in enumerate(ordenados, start=1))
+        tuple(
+            FragmentoConAlias(alias_numero(n), chunk) for n, chunk in enumerate(ordenados, start=1)
+        )
     )
 
 

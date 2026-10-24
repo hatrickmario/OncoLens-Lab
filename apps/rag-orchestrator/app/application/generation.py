@@ -24,6 +24,7 @@ from app.application.ports import (
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.alias_de_chunks import (
     CITA_NO_TRADUCIBLE,
+    PATRON_DE_ALIAS,
     TablaDeAlias,
     asignar_alias,
     traducir_citas,
@@ -42,7 +43,7 @@ class _OpcionCruda(BaseModel):
 
     option: str = Field(min_length=1)
     rationale: str = Field(min_length=1)
-    alias_citados: list[str] = Field(alias="citedFragments")
+    fragmentos_citados: list[str] = Field(alias="citedFragments")
     details: list[str] = Field(default_factory=list)
 
 
@@ -54,10 +55,6 @@ class GenerationOutput(BaseModel):
     options: list[_OpcionCruda]
 
 
-# Solo en el esquema entregado al runtime (gramática): el parseo no lo valida, un token fuera de patrón es
-# ``cita_invalida`` y no un 503 (US-236, design D4).
-PATRON_DE_ALIAS = "^C[1-9][0-9]*$"
-
 ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
 
 
@@ -67,6 +64,8 @@ def esquema_de_generacion(max_parrafos_detalle: int) -> dict[str, Any]:
     párrafos el campo ni se ofrece."""
     esquema = copy.deepcopy(ESQUEMA_DE_GENERACION)
     opcion = esquema["$defs"]["_OpcionCruda"]
+    # Solo en el esquema entregado al runtime (gramática): el parseo no lo valida, un token fuera de patrón es
+    # ``cita_invalida`` y no un 503 (US-236, design D4).
     opcion["properties"]["citedFragments"]["items"]["pattern"] = PATRON_DE_ALIAS
     if max_parrafos_detalle > 0:
         opcion["required"] = [*opcion["required"], "details"]
@@ -132,7 +131,7 @@ class LlmEvidenceGenerator:
         return OpcionGenerada(
             cruda.option,
             cruda.rationale,
-            traducir_citas(tabla, cruda.alias_citados),
+            traducir_citas(tabla, cruda.fragmentos_citados),
             self._parrafos_de_detalle(cruda.details),
         )
 

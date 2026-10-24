@@ -30,6 +30,9 @@ def _salida(*opciones: dict[str, Any]) -> str:
     return json.dumps({"options": list(opciones)}, ensure_ascii=False)
 
 
+# Los escenarios citan por ALIAS (US-236), que depende del orden por ``relevance_score`` del fixture de recuperación:
+# con el corpus FX-06a-a (Q-HER2) C1 = ``ch-m1-1`` (0.87) y C2 = ``ch-inj-1`` (0.40); con FX-06a-c
+# (``recuperacion_alias.py``) C1 = ``ch-m2-1``, C2 = ``ch-m1-1``, C3 = ``ch-m3-1`` y C4 = ``ch-m3-2``.
 ESCENARIOS_LLM: dict[str, str] = {
     "LLM-OK": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1")),
     "LLM-CON-DETALLE": _salida(
@@ -77,6 +80,7 @@ class FakeLlmClient:
         self._crudo = ESCENARIOS_LLM[escenario]
         self.error = error
         self.prompts: list[str] = []
+        self.esquemas: list[Mapping[str, Any]] = []
 
     @property
     def invocaciones(self) -> int:
@@ -84,6 +88,7 @@ class FakeLlmClient:
 
     async def completar_json(self, prompt: str, esquema: Mapping[str, Any]) -> str:
         self.prompts.append(prompt)
+        self.esquemas.append(esquema)
         if self.error is not None:
             raise self.error
         return self._crudo

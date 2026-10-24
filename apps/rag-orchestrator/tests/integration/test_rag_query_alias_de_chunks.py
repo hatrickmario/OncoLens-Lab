@@ -10,6 +10,7 @@ import re
 
 import pytest
 
+from app.domain.alias_de_chunks import PATRON_DE_ALIAS
 from tests.support.llm_falso import FakeLlmClient
 from tests.support.recuperacion import Q_HER2, solicitud_de
 from tests.support.recuperacion_alias import (
@@ -43,6 +44,14 @@ def test_rag_query_asigna_c1_a_c4_por_relevancia_y_el_prompt_no_contiene_ningun_
         assert (
             chunk_id not in prompt
         )  # el empate ch-m3-1 / ch-m3-2 se resuelve por chunkId ascendente
+
+
+def test_rag_query_entrega_al_runtime_el_esquema_con_el_patron_de_alias():
+    _, llm, _ = _consultar("LLM-OK")
+
+    (esquema,) = llm.esquemas
+    campo = esquema["$defs"]["_OpcionCruda"]["properties"]["citedFragments"]
+    assert campo["items"]["pattern"] == PATRON_DE_ALIAS
 
 
 @pytest.mark.ac("US-236", 2)
