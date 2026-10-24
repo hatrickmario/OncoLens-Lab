@@ -211,3 +211,35 @@ def test_muestra_sin_documentos_extraidos_no_escribe_archivo(
 
     assert (resultado.tamano, resultado.archivo) == (0, None)
     assert list(tmp_path.iterdir()) == []
+
+
+def _origen_de_las_filas(montaje: Montaje, clave: str) -> list[tuple[str, str]]:
+    return [
+        (r.status, r.metadata_source)
+        for i, r in montaje.catalogo.documentos.items()
+        if i.split("@")[0] == clave
+    ]
+
+
+def test_ingesta_interrumpida_deja_el_checkpoint_sin_rotular_fuente_estructurada_lo_que_no_se_publico(
+    montaje: Montaje,
+) -> None:
+    """D4: la fila ``normalizado`` de un documento sin criterios estructurados no miente sobre su origen."""
+    montaje.embedder.interrumpir_en = 3  # i-lit-2: tercer documento admisible
+    with pytest.raises(KeyboardInterrupt):
+        montaje.ingerir()
+
+    assert _origen_de_las_filas(montaje, "i-lit-2") == [("normalizado", "pendiente")]
+    assert _origen_de_las_filas(montaje, "i-ct-1") == [("embebido", "fuente_estructurada")]
+
+
+def test_ingesta_con_un_documento_en_error_no_rotula_su_fila_fuente_estructurada(
+    montaje: Montaje,
+) -> None:
+    """D4: la fila ``error`` de un documento sin criterios estructurados tampoco."""
+    montaje.sparse.error = RuntimeError("sparse caído")
+
+    montaje.ingerir()
+
+    assert _origen_de_las_filas(montaje, "i-lit-1") == [("error", "pendiente")]
+    assert _origen_de_las_filas(montaje, "i-ct-1") == [("error", "fuente_estructurada")]
