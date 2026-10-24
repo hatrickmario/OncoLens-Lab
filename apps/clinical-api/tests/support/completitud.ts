@@ -111,6 +111,8 @@ export interface BiomarcadorDeSiembra {
   examType?: string;
   entryMethod?: string;
   extractionConfidence?: string;
+  /** JSON serializado de `source_span` (texto del documento: debe quedar fuera de la lectura del checklist). */
+  sourceSpan?: string;
 }
 
 export async function sembrarBiomarcador(
@@ -141,7 +143,7 @@ export async function sembrarBiomarcador(
     significance_source: 'documento',
     extraction_confidence: b.extractionConfidence ?? 'n_a',
     review_status: b.reviewStatus,
-    source_span: '{}',
+    source_span: b.sourceSpan ?? '{}',
     created_at: INSTANTE_FIJO,
   };
   const insertada = await insertar(p.cliente, 'clinical.biomarker', fila);
