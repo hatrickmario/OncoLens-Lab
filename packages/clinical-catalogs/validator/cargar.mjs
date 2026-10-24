@@ -1,4 +1,4 @@
-import { ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
+import { ARCHIVOS_DE_RAIZ, ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
 
 const ESQUEMAS_DE_ARCHIVOS = NOMBRES_DE_ARCHIVO.map(
@@ -40,11 +40,15 @@ function leerJson(directorio, archivo, leerArchivo) {
   }
 }
 
-/** Archivos del catálogo que recorre el validador: manifiesto, claves de atributos y de población y, por tipo, datos críticos y aplicabilidad. */
+/** Archivos del catálogo que recorre el validador: manifiesto, archivos de raíz (`ARCHIVOS_DE_RAIZ`) y, por tipo, datos críticos y aplicabilidad. */
 export function leerCatalogo(directorio, leerArchivo) {
   const manifest = leerJson(directorio, 'manifest.json', leerArchivo);
-  const atributos = leerJson(directorio, 'atributos.json', leerArchivo);
-  const poblacion = leerJson(directorio, 'poblacion.json', leerArchivo);
+  const deLaRaiz = Object.fromEntries(
+    Object.keys(ARCHIVOS_DE_RAIZ).map((nombre) => [
+      nombre,
+      leerJson(directorio, `${nombre}.json`, leerArchivo),
+    ]),
+  );
   const tipos = {};
   // Solo se lee por tipos con la forma del manifiesto (`^[a-z]+$`): `../x` no construye una ruta de lectura. El
   // esquema del manifiesto rechaza luego el tipo deformado.
@@ -59,19 +63,13 @@ export function leerCatalogo(directorio, leerArchivo) {
       ]),
     );
   }
-  return { manifest, atributos, poblacion, tipos };
+  return { manifest, ...deLaRaiz, tipos };
 }
 
 /** Esquemas del paquete que `validarCatalogo` necesita, leídos de `schemas/` (uso del script de CI). */
 export function leerEsquemas(directorioDeEsquemas, leerArchivo) {
   const leer = (nombre) => leerJson(directorioDeEsquemas, `${nombre}.schema.json`, leerArchivo);
-  const nombres = [
-    'manifest',
-    'atributos',
-    'poblacion',
-    'comun',
-    'validation',
-    ...ESQUEMAS_DE_ARCHIVOS,
-  ];
+  const esquemasDeLaRaiz = Object.values(ARCHIVOS_DE_RAIZ).map(({ esquema }) => esquema);
+  const nombres = ['manifest', 'comun', 'validation', ...esquemasDeLaRaiz, ...ESQUEMAS_DE_ARCHIVOS];
   return Object.fromEntries(nombres.map((nombre) => [nombre, leer(nombre)]));
 }

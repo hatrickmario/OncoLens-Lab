@@ -1,5 +1,5 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
+import { ARCHIVOS_DE_RAIZ, ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
 import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
@@ -58,7 +58,7 @@ function violacionDeEsquema(validar, contenido, archivo, tipoDeCancer) {
     : [{ codigo: 'esquema_invalido', ...(tipoDeCancer && { tipoDeCancer }), archivo }];
 }
 
-/** Esquemas compilados por nombre: `manifest`, `atributos`, `poblacion` y cada archivo del registro. */
+/** Esquemas compilados por nombre: `manifest`, cada archivo de raíz y cada archivo del registro. */
 function compilarEsquemas(esquemas) {
   const ajv = new Ajv2020({ strict: true });
   ajv.addSchema(esquemas.validation);
@@ -67,10 +67,13 @@ function compilarEsquemas(esquemas) {
     nombre,
     ajv.compile(esquemas[ARCHIVOS_DEL_CATALOGO[nombre].esquema]),
   ]);
+  const deLaRaiz = Object.entries(ARCHIVOS_DE_RAIZ).map(([nombre, { esquema }]) => [
+    nombre,
+    ajv.compile(esquemas[esquema]),
+  ]);
   return {
     manifest: ajv.compile(esquemas.manifest),
-    atributos: ajv.compile(esquemas.atributos),
-    poblacion: ajv.compile(esquemas.poblacion),
+    ...Object.fromEntries(deLaRaiz),
     ...Object.fromEntries(delRegistro),
   };
 }
@@ -110,8 +113,8 @@ function violacionesDelTipoSinLanzar(tipoDeCancer, archivosDelTipo, contexto, es
 
 /**
  * @param {{ archivos: object, allowlist: object, esquemas: object }} entrada
- *   `archivos` = `{ manifest, atributos, poblacion, tipos: { <tipo>: { <archivo del registro>: contenido } } }`;
- *   `esquemas` = `{ manifest, comun, validation, atributos, poblacion, <archivo del registro>: esquema }`
+ *   `archivos` = `{ manifest, <archivo de raíz>, tipos: { <tipo>: { <archivo del registro>: contenido } } }`;
+ *   `esquemas` = `{ manifest, comun, validation, <archivo de raíz>, <archivo del registro>: esquema }`
  * @returns {{ valido: boolean, catalogVersion: string | null, violaciones: Violacion[] }}
  */
 export function validarCatalogo({ archivos, allowlist, esquemas }) {
@@ -119,13 +122,15 @@ export function validarCatalogo({ archivos, allowlist, esquemas }) {
   const contexto = {
     allowlist,
     vocabulario: vocabularioDe(esquemas),
-    atributos: conClaves(archivos.atributos),
-    poblacion: conClaves(archivos.poblacion),
+    ...Object.fromEntries(
+      Object.keys(ARCHIVOS_DE_RAIZ).map((nombre) => [nombre, conClaves(archivos[nombre])]),
+    ),
   };
   const violaciones = [
     ...violacionDeEsquema(esquemasCompilados.manifest, archivos.manifest, 'manifest'),
-    ...violacionDeEsquema(esquemasCompilados.atributos, archivos.atributos, 'atributos'),
-    ...violacionDeEsquema(esquemasCompilados.poblacion, archivos.poblacion, 'poblacion'),
+    ...Object.keys(ARCHIVOS_DE_RAIZ).flatMap((nombre) =>
+      violacionDeEsquema(esquemasCompilados[nombre], archivos[nombre], nombre),
+    ),
     ...Object.entries(archivos.tipos).flatMap(([tipoDeCancer, delTipo]) =>
       violacionesDelTipoSinLanzar(tipoDeCancer, delTipo, contexto, esquemasCompilados),
     ),
