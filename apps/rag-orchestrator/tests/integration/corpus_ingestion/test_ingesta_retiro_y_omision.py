@@ -92,3 +92,29 @@ def test_omitir_con_milvus_caido_al_encender_deja_error_sin_tocar_el_catalogo(
     resultado = reporte.resultado_de(CLAVE)
     assert (resultado.estado, resultado.motivo) == (Estado.ERROR, "milvus: ConnectionError")
     assert _filas(montaje) == filas_antes
+
+
+def test_omitir_apaga_los_chunks_de_la_version_huerfana_de_otro_contenido(
+    montaje: Montaje,
+) -> None:
+    montaje.ingerir()
+    id_vigente, fila_vigente = next(iter(_filas(montaje).items()))
+    id_huerfano = f"{CLAVE}@huerfano00000"
+    montaje.catalogo.documentos[id_huerfano] = replace(
+        fila_vigente,
+        document_id=id_huerfano,
+        checksum="ff" * 32,
+        status="normalizado",
+        is_current=False,
+    )
+    chunk_vigente = next(c for c in montaje.almacen.chunks.values() if c.document_id == id_vigente)
+    chunk_huerfano = replace(
+        chunk_vigente, chunk_id=f"{id_huerfano}#0000", document_id=id_huerfano, is_current=True
+    )
+    montaje.almacen.chunks[chunk_huerfano.chunk_id] = chunk_huerfano
+
+    reporte = montaje.ingerir()
+
+    assert reporte.resultado_de(CLAVE).estado is Estado.OMITIDO
+    assert montaje.almacen.chunks[chunk_huerfano.chunk_id].is_current is False
+    assert _chunks_vigentes(montaje) > 0  # los de la versión vigente siguen encendidos
