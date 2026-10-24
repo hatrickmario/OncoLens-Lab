@@ -118,6 +118,7 @@ stack hecha o pendiente, y diseños elegidos con su ruta en `docs/ux/`.
 Pide confirmación y entonces: rama `sprint/$sprint-refinement`, commit (`[$sprint] Refinamiento:
 DoR, decisiones y diseño`, con atribución), push y PR. **El humano lo mergea** y después ejecuta
 `/sprint-start $sprint`, que exige este archivo en `main`.
+**Verificación de CI antes de pedir un merge (usuario, 2026-10-24):** tras subir cambios a una rama con PR, espera a que la CI termine y no le pidas al humano el merge hasta tener 0 checks en fallo, 0 pendientes y 0 alertas abiertas. Si algo falla, lee el log, corrige o pregunta, y vuelve a verificar. Lo recuerda el *hook* `pr-checks-reminder` (PostToolUse en `git push` y `gh pr create`).
 
 ## Reglas
 
