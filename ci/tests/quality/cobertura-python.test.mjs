@@ -62,6 +62,25 @@ describe('cobertura de líneas cambiadas de rag-orchestrator', () => {
     expect(archivos.get('apps/rag-orchestrator/app/domain/umbral.py').get(3)).toBe(0);
   });
 
+  it('resuelve los filename contra la raíz del repositorio cuando el XML no trae <source> [US-213 AC-11]', () => {
+    const sinFuente = `<coverage><packages><package><classes>
+      <class name="u.py" filename="apps/rag-orchestrator/app/domain/umbral.py"><lines><line number="7" hits="3"/></lines></class>
+    </classes></package></packages></coverage>`;
+
+    const archivos = lineasInstrumentadasCobertura(sinFuente, RAIZ);
+
+    expect(archivos.get('apps/rag-orchestrator/app/domain/umbral.py').get(7)).toBe(3);
+  });
+
+  it('respeta un filename absoluto del XML [US-213 AC-11]', () => {
+    const absoluto = path.join(FUENTE, 'domain/umbral.py');
+    const xml = `<coverage><sources><source>/otra/ruta</source></sources><packages><package><classes>
+      <class name="u.py" filename="${absoluto}"><lines><line number="2" hits="0"/></lines></class>
+    </classes></package></packages></coverage>`;
+
+    expect(lineasInstrumentadasCobertura(xml, RAIZ).get('apps/rag-orchestrator/app/domain/umbral.py').get(2)).toBe(0);
+  });
+
   it('mide 2 de 4 líneas cambiadas cubiertas y 50 % sin contar la línea no instrumentada [US-213 AC-11]', () => {
     expect(medirLineasCambiadas(DIFF, INFORMES, RAIZ)).toEqual([
       {
