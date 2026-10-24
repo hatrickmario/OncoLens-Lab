@@ -15,6 +15,7 @@ from typing import Protocol
 
 import numpy as np
 
+from app.domain.pesos_sparse import agrupar_pesos_por_token
 from app.evaluation.config_medicion import ModeloSpec
 
 TAMANO_LOTE_TOKENS = 4096  # presupuesto de tokens por llamada a ONNX Runtime al codificar el corpus
@@ -182,12 +183,7 @@ class EmbedderOnnx(_ModeloOnnx):
         ids = self._ids(texto)
         oculto = self._correr([ids])[0]
         pesos = np.maximum(oculto @ self._pesos_sparse[0].T + self._pesos_sparse[1], 0).reshape(-1)
-        especiales = {ids[0], ids[-1]}
-        resultado: dict[int, float] = {}
-        for token, peso in zip(ids, pesos):
-            if token not in especiales and peso > 0:
-                resultado[token] = max(resultado.get(token, 0.0), float(peso))
-        return resultado
+        return agrupar_pesos_por_token(ids, pesos.tolist())
 
 
 class RerankerOnnx(_ModeloOnnx):

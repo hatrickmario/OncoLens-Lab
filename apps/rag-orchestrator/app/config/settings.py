@@ -371,12 +371,11 @@ def _lista_separada_por_comas(valor: Any) -> Any:
     return valor
 
 
-class CorpusSeedSettings(BaseSettings):
-    """Configuración del cargador ``python -m app.scripts.load_seed_corpus``; una clave obligatoria ausente falla al arrancar."""
+class _AjustesDeCorpus(BaseSettings):
+    """Claves comunes del cargador de la semilla y de la ingesta en lote (licencias, fuentes excluidas, chunking, descargas)."""
 
     model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
 
-    corpus_seed_manifest_path: Path
     corpus_accepted_licenses: Annotated[tuple[str, ...], NoDecode]
     corpus_excluded_sources: Annotated[tuple[str, ...], NoDecode]
     corpus_cutoff_date: date
@@ -452,3 +451,33 @@ class CorpusSeedSettings(BaseSettings):
         except ValueError as exc:
             raise ValueError(f"CORPUS_CHUNK_OVERLAP / CORPUS_CHUNK_SIZE: {exc}") from None
         return self
+
+
+class CorpusSeedSettings(_AjustesDeCorpus):
+    """Configuración del cargador ``python -m app.scripts.load_seed_corpus``; una clave obligatoria ausente falla al arrancar."""
+
+    corpus_seed_manifest_path: Path
+
+
+class CorpusIngestSettings(_AjustesDeCorpus):
+    """Configuración de ``python -m app.scripts.ingest`` (US-117a, RN-22): las claves de la semilla sin el manifiesto
+    (llega por ``--manifest``) más el origen del *sparse* y los pesos de su cabeza lineal, verificados por SHA-256."""
+
+    sparse_vector_source: str
+    # Pesos de ``sparse_linear`` de BGE-M3 (ADR-39): no se versionan en el repo; solo la ruta y el SHA-256 (US-117a, 1.10).
+    embedding_sparse_weights_path: Path
+    embedding_sparse_weights_sha256: str
+
+    @field_validator("sparse_vector_source")
+    @classmethod
+    def _origen_admitido(cls, valor: str) -> str:
+        if valor != "modelo_embeddings":
+            raise ValueError("solo se admite modelo_embeddings (ADR-39)")
+        return valor
+
+    @field_validator("embedding_sparse_weights_sha256")
+    @classmethod
+    def _sha256_hexadecimal(cls, valor: str) -> str:
+        if not re.fullmatch(r"[0-9a-f]{64}", valor):
+            raise ValueError("debe ser un SHA-256 hexadecimal en minúsculas")
+        return valor
