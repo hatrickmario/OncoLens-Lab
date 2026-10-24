@@ -37,6 +37,7 @@ from app.application.seed_corpus.registros import (
     registro_rechazado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -187,7 +188,7 @@ class IngestionPipelineService:
         )
         vectores = self._embeber(fragmentos)
         vectores_sparse = self._codificar_sparse(fragmentos)
-        metadatos = self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
+        metadatos = self._resolver_metadatos(documento, texto, fragmentos)
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora(), metadatos)
         with _etapa("milvus"):
             self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
@@ -209,6 +210,14 @@ class IngestionPipelineService:
             with _etapa("texto"):
                 raise TextoVacio()
         return fragmentos
+
+    def _resolver_metadatos(
+        self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]
+    ) -> MetadatosResueltos:
+        """Los fallos del LLM y del NLI ya vuelven como ``pendiente``; un defecto del resolutor deja SOLO este documento en
+        ``error`` (etapa ``metadatos``) y el lote sigue."""
+        with _etapa("metadatos"):
+            return self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
 
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):
