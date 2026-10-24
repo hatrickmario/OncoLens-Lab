@@ -1,7 +1,7 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { ARCHIVOS_DEL_CATALOGO, NOMBRES_DE_ARCHIVO } from './archivos.mjs';
 import { nombrable } from './nombrable.mjs';
-import { verificarCatalogHash, vocabularioDe } from './reglas.mjs';
+import { clavesRepetidasEn, verificarCatalogHash, vocabularioDe } from './reglas.mjs';
 
 /**
  * Núcleo puro del validador del catálogo (L1D-93 D2): recibe los archivos ya leídos, la allowlist del modelo y los
@@ -22,9 +22,11 @@ const itemsDe = (archivo) =>
 /** Reglas de cada ítem según el registro de archivos (`ARCHIVOS_DEL_CATALOGO`). */
 function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
   const { reglas } = ARCHIVOS_DEL_CATALOGO[nombreDelArchivo];
-  return itemsDe(archivo).flatMap((item) =>
+  const items = itemsDe(archivo);
+  const delArchivo = { ...contexto, clavesRepetidas: clavesRepetidasEn(items) };
+  return items.flatMap((item) =>
     reglas
-      .map((regla) => regla(item, contexto))
+      .map((regla) => regla(item, delArchivo))
       .filter(Boolean)
       .map((codigo) => ({ codigo, tipoDeCancer: contexto.tipoDeCancer, elemento: item.key })),
   );

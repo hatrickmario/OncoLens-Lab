@@ -78,6 +78,22 @@ export function exigirCondicionBienFormada(item, clavesDelTipo, vocabulario) {
     : 'condicion_invalida';
 }
 
+/** Claves que aparecen más de una vez entre los ítems de un archivo de un tipo de cáncer. */
+export function clavesRepetidasEn(items) {
+  const vistas = new Set();
+  const repetidas = new Set();
+  for (const item of items) {
+    if (vistas.has(item.key)) repetidas.add(item.key);
+    vistas.add(item.key);
+  }
+  return repetidas;
+}
+
+/** RN-29: la clave de un ítem es única por tipo de cáncer y archivo (una clave repetida haría ambigua una referencia). */
+export function exigirClaveUnica(item, clavesRepetidas) {
+  return clavesRepetidas.has(item.key) ? 'clave_duplicada' : null;
+}
+
 /** AC-04.4, P-03: `estado` dentro del vocabulario cerrado. */
 export function exigirEstadoValido(item, vocabulario) {
   return vocabulario.estados.includes(item.estado) ? null : 'estado_invalido';

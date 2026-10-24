@@ -3,6 +3,7 @@ import {
   exigirCondicionBienFormada,
   exigirDestino,
   exigirDestinoExistente,
+  exigirClaveUnica,
   exigirEstadoValido,
 } from './reglas.mjs';
 
@@ -17,6 +18,7 @@ import {
  */
 const REGLAS_DE_DESTINO = [
   (item) => exigirDestino(item),
+  (item, { clavesRepetidas }) => exigirClaveUnica(item, clavesRepetidas),
   (item, { allowlist }) => exigirDestinoExistente(item, allowlist),
   (item, { tipoDeCancer, atributos }) => exigirAtributoDeclarado(item, tipoDeCancer, atributos),
 ];
