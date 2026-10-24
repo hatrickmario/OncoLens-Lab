@@ -143,6 +143,12 @@ describe('vi.mock solo sobre bordes', () => {
     expect(hallazgos.every((hallazgo) => hallazgo.rule === 'oncolens/mock-solo-en-bordes')).toBe(true);
   }, TIEMPO_MAXIMO_MS);
 
+  it('falla por prisma y .prisma/client, que son el cliente de la base de datos [US-213 AC-10]', async () => {
+    const hallazgos = await hallazgosDe('mock-prisma-paquete.fixture.ts', mocks());
+
+    expect(hallazgos.map((hallazgo) => hallazgo.line)).toEqual([2, 3]);
+  }, TIEMPO_MAXIMO_MS);
+
   it('reporta lo que no puede verificar cuando el módulo mockeado no es un texto literal [US-213 AC-10]', async () => {
     const eslint = new ESLint({ cwd: RAIZ, ignore: false, overrideConfig: mocks() });
     const [resultado] = await eslint.lintFiles([path.join(FIXTURES, 'mock-dinamico.fixture.ts')]);

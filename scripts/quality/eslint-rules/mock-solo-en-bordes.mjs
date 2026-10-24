@@ -5,7 +5,7 @@
 
 const LLAMADAS_PROHIBIDAS = new Set(['mock', 'doMock']);
 const PREFIJOS_PROPIOS = ['./', '../', '/', '@/', '@oncolens/', '~/', 'src/'];
-const PAQUETES_PROHIBIDOS = ['@prisma/client', '@prisma/adapter-pg', 'pg'];
+const PAQUETES_PROHIBIDOS = ['@prisma/client', '@prisma/adapter-pg', '.prisma/client', 'prisma', 'pg'];
 
 const textoLiteral = (nodo) => {
   if (nodo?.type === 'Literal' && typeof nodo.value === 'string') return nodo.value;
