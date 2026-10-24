@@ -164,3 +164,22 @@ def test_el_reporte_resume_los_pendientes_con_etapa_y_clase_sin_mensaje() -> Non
         "documentos": [{"document_key": "i-lit-1", "motivo": "metadatos: FalloDelLlm"}],
     }
     assert reporte.contadores()["embebido"] == 1
+
+
+def _nli_con_p(p_entailment: float) -> NliFalso:
+    return NliFalso(por_defecto=ResultadoNli(label="entailment", p_entailment=p_entailment))
+
+
+def _fases_conservadas(umbral: float, p_entailment: float) -> str | None:
+    servicio = MetadataExtractionService(
+        llm=FakeMetadataLlm(), nli=_nli_con_p(p_entailment), umbral_nli=umbral
+    )
+    return servicio.resolver(DOCUMENTO, TEXTO, FRAGMENTOS).trial_phase
+
+
+def test_el_servicio_descarta_un_campo_cuando_p_de_entailment_no_alcanza_el_umbral() -> None:
+    assert _fases_conservadas(umbral=0.8, p_entailment=0.75) is None
+
+
+def test_el_servicio_conserva_un_campo_cuando_p_de_entailment_alcanza_el_umbral() -> None:
+    assert _fases_conservadas(umbral=0.7, p_entailment=0.75) == "III"

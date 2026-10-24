@@ -18,11 +18,14 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
+import pytest
+
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
 from app.domain.corpus_metadata.verbalizacion import verbalizar_metadato
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.scripts.ingest import ModelosDeMetadatos, servicio_de_metadatos
+from app.domain.nli import ResultadoNli
+from app.scripts.ingest import ModelosDeMetadatos, _modelos_de_metadatos, servicio_de_metadatos
 from tests.support.metadatos import FakeMetadataLlm
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
 
@@ -163,14 +166,33 @@ def test_la_evaluacion_detecta_un_paso_que_no_verifica_con_el_nli_variante_que_f
     assert medida["inventados_conservados"] == 3  # c-2 endpoint, c-3 estadio, c-5 sample_size
 
 
-def test_la_evaluacion_detecta_un_umbral_de_produccion_que_se_ignora() -> None:
-    propuestas = {_texto(c): c.propuesta for c in CASOS}
-    umbral_cero = MetadataExtractionService(
-        llm=FakeMetadataLlm(propuestas=propuestas),
-        nli=NliFalso(por_defecto=IMPLICA),
-        umbral_nli=0.0,
+def _conservados_con_umbral_del_entorno(
+    monkeypatch: pytest.MonkeyPatch, umbral: str, p_entailment: float
+) -> int:
+    """Umbral por la ruta de producción (``NLI_ENTAILMENT_THRESHOLD`` -> ``_modelos_de_metadatos`` -> servicio) con un NLI
+    cuya probabilidad de ``entailment`` queda ENTRE los dos umbrales de los tests."""
+    monkeypatch.setenv("NLI_ENTAILMENT_THRESHOLD", umbral)
+    caso = CASOS[0]
+    modelos = _modelos_de_metadatos(
+        FakeMetadataLlm(propuestas={_texto(caso): caso.propuesta}),
+        NliFalso(por_defecto=ResultadoNli(label="entailment", p_entailment=p_entailment)),
+    )
+    return len(_conservados(servicio_de_metadatos(modelos), caso))
+
+
+def test_el_umbral_de_entorno_descarta_un_campo_con_p_de_entailment_bajo_el_umbral(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert _conservados_con_umbral_del_entorno(monkeypatch, "0.8", 0.75) == 0
+
+
+def test_el_umbral_de_entorno_conserva_un_campo_con_p_de_entailment_sobre_el_umbral(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert _conservados_con_umbral_del_entorno(monkeypatch, "0.7", 0.75) == len(
+        CASOS[0].respaldados
     )
 
-    medida = _medir(umbral_cero)
 
-    assert medida["inventados_conservados"] > 0
+def test_la_variante_sin_verificacion_sobrescribe_un_metodo_que_existe_en_el_servicio() -> None:
+    assert hasattr(MetadataExtractionService, "_verificar")
