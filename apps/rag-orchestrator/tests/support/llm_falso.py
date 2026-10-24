@@ -23,7 +23,7 @@ DETALLE_TRES = "Un tercer párrafo que excede el máximo configurado."
 
 
 def _opcion(opcion: str, razon: str, *chunk_ids: str, **extra: str) -> dict[str, Any]:
-    return {"option": opcion, "rationale": razon, "citedChunkIds": list(chunk_ids), **extra}
+    return {"option": opcion, "rationale": razon, "citedFragments": list(chunk_ids), **extra}
 
 
 def _salida(*opciones: dict[str, Any]) -> str:
@@ -31,30 +31,30 @@ def _salida(*opciones: dict[str, Any]) -> str:
 
 
 ESCENARIOS_LLM: dict[str, str] = {
-    "LLM-OK": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1")),
+    "LLM-OK": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1")),
     "LLM-CON-DETALLE": _salida(
         {
-            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1"),
+            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
             "details": [DETALLE_UNO, DETALLE_DOS, DETALLE_TRES],
         }
     ),
     "LLM-DETALLE-CON-ARTEFACTO": _salida(
         {
-            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1"),
+            **_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
             "details": [DETALLE_UNO, "El ensayo NSABP-B-3隀 reportó el mismo beneficio."],
         }
     ),
     "LLM-DOS": _salida(
-        _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-m1-1"),
-        _opcion(OPCION_SOLA, RAZON_SOLA, "ch-inj-1"),
+        _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1"),
+        _opcion(OPCION_SOLA, RAZON_SOLA, "C2"),
     ),
     "LLM-SIN-OPCIONES": _salida(),
-    "LLM-CITA-DOBLE": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "ch-inj-1", "ch-m1-1")),
+    "LLM-CITA-DOBLE": _salida(_opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C2", "C1")),
     "LLM-TITULO-FALSO": _salida(
         _opcion(
             OPCION_ANTI_HER2,
             RAZON_ANTI_HER2,
-            "ch-m1-1",
+            "C1",
             title=TITULO_INVENTADO,
             sourceName="NCCN",
         )

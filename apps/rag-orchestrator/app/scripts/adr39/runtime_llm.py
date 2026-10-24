@@ -16,6 +16,7 @@ from typing import Any
 import httpx
 
 from app.application.generation import ESQUEMA_DE_GENERACION
+from app.domain.alias_de_chunks import asignar_alias
 from app.domain.relevance import ChunkPuntuado
 from app.infrastructure.llm.openai_compatible import cuerpo_de_peticion
 from app.evaluation.dataset_loader import Dataset, Pregunta, cargar_dataset_configurado
@@ -73,7 +74,8 @@ def _prompt_de(pregunta: Pregunta) -> str:
         ChunkPuntuado(f"{e.documento}-{n}", e.documento, e.cita, 1.0)
         for n, e in enumerate(pregunta.evidencia, start=1)
     ]
-    return construir_prompt_rag_query(pregunta.texto, "", fragmentos, pregunta.idioma)
+    tabla = asignar_alias(fragmentos)
+    return construir_prompt_rag_query(pregunta.texto, "", tabla.fragmentos, pregunta.idioma)
 
 
 class ClienteRuntime:

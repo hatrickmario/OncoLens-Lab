@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from app.domain.alias_de_chunks import asignar_alias
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import (
@@ -34,24 +35,29 @@ def test_plantilla_contiene_la_instruccion_de_poblacion_y_escenario_atribuida_a_
     assert "no lo dirijas al paciente" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_2_0_porque_pide_el_detalle_de_cada_opcion():
-    assert VERSION_DEL_PROMPT == "rag-query@0.2.0"
+def test_version_del_prompt_es_rag_query_0_3_0_porque_pide_citar_por_alias():
+    assert VERSION_DEL_PROMPT == "rag-query@0.3.0"
 
 
-def test_prompt_incluye_pregunta_contexto_y_chunk_id_de_cada_fragmento():
-    fragmentos = [ChunkPuntuado("ch-1", "doc-1", "texto del fragmento", 0.9)]
+def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
+    fragmentos = asignar_alias(
+        [ChunkPuntuado("ch-1", "doc-1", "texto del fragmento", 0.9)]
+    ).fragmentos
 
     prompt = construir_prompt_rag_query("¿pregunta?", "mama; HER2 positivo", fragmentos, "es")
 
     assert "¿pregunta?" in prompt
     assert "mama; HER2 positivo" in prompt
-    assert "[chunkId: ch-1]" in prompt
+    assert "[fragmento C1]" in prompt
+    assert "ch-1" not in prompt
     assert "texto del fragmento" in prompt
     assert "español" in prompt
 
 
 def test_prompt_conserva_las_llaves_del_texto_de_un_fragmento_sin_interpretarlas():
-    fragmentos = [ChunkPuntuado("ch-1", "doc-1", "valor {idioma} y {0}", 0.9)]
+    fragmentos = asignar_alias(
+        [ChunkPuntuado("ch-1", "doc-1", "valor {idioma} y {0}", 0.9)]
+    ).fragmentos
 
     prompt = construir_prompt_rag_query("p", "", fragmentos, "en")
 

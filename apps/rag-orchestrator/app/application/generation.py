@@ -1,6 +1,6 @@
 """Generación de la rama con evidencia de `/rag/query` (US-225): prompt → LLM local → opciones crudas.
 
-El LLM solo aporta el texto de cada opción y los ``chunkId`` que cita (RN-04): todo campo de más (títulos, fuentes,
+El LLM solo aporta el texto de cada opción y los alias de chunk que cita, traducidos a ``chunkId`` reales (RN-04): todo campo de más (títulos, fuentes,
 puntajes) se descarta al parsear. Una salida que no es JSON o no valida contra el esquema interno es
 ``LlmLocalNoDisponibleError`` (`503`), sin reintento silencioso ni respuesta parcial (`[S1 resp. 12]`).
 """
@@ -22,6 +22,12 @@ from app.application.ports import (
     ResultadoDeRecuperacion,
 )
 from app.application.resumen_contexto import resumen_del_contexto_clinico
+from app.domain.alias_de_chunks import (
+    CITA_NO_TRADUCIBLE,
+    TablaDeAlias,
+    asignar_alias,
+    traducir_citas,
+)
 from app.domain.calidad_de_texto import tiene_artefactos
 from app.domain.citations import OpcionGenerada
 from app.domain.relevance import ChunkPuntuado
@@ -36,7 +42,7 @@ class _OpcionCruda(BaseModel):
 
     option: str = Field(min_length=1)
     rationale: str = Field(min_length=1)
-    chunk_ids_citados: list[str] = Field(alias="citedChunkIds")
+    alias_citados: list[str] = Field(alias="citedFragments")
     details: list[str] = Field(default_factory=list)
 
 
@@ -48,6 +54,10 @@ class GenerationOutput(BaseModel):
     options: list[_OpcionCruda]
 
 
+# Solo en el esquema entregado al runtime (gramática): el parseo no lo valida, un token fuera de patrón es
+# ``cita_invalida`` y no un 503 (US-236, design D4).
+PATRON_DE_ALIAS = "^C[1-9][0-9]*$"
+
 ESQUEMA_DE_GENERACION: dict[str, Any] = GenerationOutput.model_json_schema()
 
 
@@ -57,6 +67,7 @@ def esquema_de_generacion(max_parrafos_detalle: int) -> dict[str, Any]:
     párrafos el campo ni se ofrece."""
     esquema = copy.deepcopy(ESQUEMA_DE_GENERACION)
     opcion = esquema["$defs"]["_OpcionCruda"]
+    opcion["properties"]["citedFragments"]["items"]["pattern"] = PATRON_DE_ALIAS
     if max_parrafos_detalle > 0:
         opcion["required"] = [*opcion["required"], "details"]
         opcion["properties"]["details"]["maxItems"] = max_parrafos_detalle
@@ -83,10 +94,13 @@ class LlmEvidenceGenerator:
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> EvidenciaGenerada:
         trace_id = solicitud.traceId.root
+        tabla = asignar_alias(
+            self._fragmentos_dentro_del_presupuesto(recuperacion.chunks_sobre_umbral)
+        )
         prompt = construir_prompt_rag_query(
             solicitud.query,
             resumen_del_contexto_clinico(solicitud.clinicalContext),
-            self._fragmentos_dentro_del_presupuesto(recuperacion.chunks_sobre_umbral),
+            tabla.fragmentos,
             recuperacion.meta.responseLanguage,
             self._max_parrafos_detalle,
         )
@@ -96,23 +110,30 @@ class LlmEvidenceGenerator:
             logger.warning("event=generacion_llm_fallo traceId=%s", trace_id)
             raise LlmLocalNoDisponibleError() from None
         salida = self._parsear(crudo, trace_id)
+        opciones = tuple(self._opcion_generada(o, tabla) for o in salida.options)
+        no_traducibles = sum(c == CITA_NO_TRADUCIBLE for o in opciones for c in o.chunk_ids_citados)
+        # Solo conteos: nunca un alias, un chunkId ni texto de un chunk (RN-14, RN-06).
         logger.info(
-            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d parrafosDeDetalle=%d",
+            "event=rag_query_generacion traceId=%s opcionesGeneradas=%d parrafosDeDetalle=%d "
+            "citasTraducidas=%d citasNoTraducibles=%d",
             trace_id,
-            len(salida.options),
-            sum(len(self._parrafos_de_detalle(o.details)) for o in salida.options),
+            len(opciones),
+            sum(len(o.details) for o in opciones),
+            sum(len(o.chunk_ids_citados) for o in opciones) - no_traducibles,
+            no_traducibles,
         )
         return EvidenciaGenerada(
-            opciones=tuple(
-                OpcionGenerada(
-                    o.option,
-                    o.rationale,
-                    tuple(o.chunk_ids_citados),
-                    self._parrafos_de_detalle(o.details),
-                )
-                for o in salida.options
-            ),
+            opciones=opciones,
             limitaciones_propuestas=(),  # el LLM no genera limitaciones en el S1 [S1 resp. 11]
+        )
+
+    def _opcion_generada(self, cruda: _OpcionCruda, tabla: TablaDeAlias) -> OpcionGenerada:
+        """La opción con sus alias ya traducidos a ``chunkId`` reales: ``validar_citas`` nunca ve un alias (RN-04)."""
+        return OpcionGenerada(
+            cruda.option,
+            cruda.rationale,
+            traducir_citas(tabla, cruda.alias_citados),
+            self._parrafos_de_detalle(cruda.details),
         )
 
     def _fragmentos_dentro_del_presupuesto(
