@@ -9,8 +9,10 @@ import type {
 
 /**
  * Lectura de los datos críticos del paciente (US-002, design D7): una consulta por entidad de destino, siempre por
- * `patient_id` (UUID) y solo con las columnas de la allowlist del modelo. Nunca lee `identity`, `ClinicalNote` ni texto
- * libre. NO filtra por estado de revisión: el filtro de RN-07 vive en un solo lugar, `registrosVigentes()`.
+ * `patient_id` (UUID). El SQL proyecta SOLO las columnas de la allowlist del modelo (`jsonb_build_object` generado del
+ * JSON versionado): `source_span`, `description`, `patient_id`, `reviewed_by`... nunca salen de la base. Nunca lee
+ * `identity`, `ClinicalNote` ni texto libre. NO filtra por estado de revisión: el filtro de RN-07 vive en un solo
+ * lugar, `registrosVigentes()`.
  */
 
 interface ConsultaDeEntidad {
@@ -65,11 +67,25 @@ const ENTIDADES_PERMITIDAS = (allowlistDelModelo as { entidades: Allowlist }).en
 
 const INSTANTE_ISO = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
 
-function sqlDeLaEntidad(consulta: ConsultaDeEntidad): string {
+const NOMBRE_DE_COLUMNA = /^[a-z][a-z0-9_]*$/;
+
+/** `jsonb_build_object('campo', alias.campo, ...)` de las columnas permitidas; los nombres salen del JSON versionado. */
+function proyeccionPermitida(alias: string, entidad: string): string {
+  const campos = ENTIDADES_PERMITIDAS[entidad]?.campos ?? [];
+  for (const campo of campos) {
+    if (!NOMBRE_DE_COLUMNA.test(campo)) throw new Error(`columna_no_permitida ${entidad}`);
+  }
+  const pares = campos.map((campo) => `'${campo}', ${alias}.${campo}`);
+  return `jsonb_build_object(${pares.join(', ')})`;
+}
+
+function sqlDeLaEntidad(entidad: string, consulta: ConsultaDeEntidad): string {
   const relacion =
-    consulta.relacion === undefined ? '' : `, to_jsonb(${consulta.relacion.alias}) AS relacion`;
+    consulta.relacion === undefined
+      ? ''
+      : `, ${proyeccionPermitida(consulta.relacion.alias, consulta.relacion.entidad)} AS relacion`;
   return `SELECT t.id, t.review_status, ${consulta.fecha} AS fecha, ${INSTANTE_ISO} AS creado_en,
-                 to_jsonb(t) AS fila${relacion}
+                 ${proyeccionPermitida('t', entidad)} AS fila${relacion}
             FROM ${consulta.desde}
            WHERE ${consulta.filtro}`;
 }
@@ -126,7 +142,7 @@ export function createCompletenessRepository(db: Consultador): RegistrosDeComple
       for (const entidad of new Set(entidades)) {
         const consulta = CONSULTAS[entidad];
         if (consulta === undefined) throw new Error(`entidad_de_destino_no_soportada ${entidad}`);
-        const { rows } = await db.query(sqlDeLaEntidad(consulta), [patientId]);
+        const { rows } = await db.query(sqlDeLaEntidad(entidad, consulta), [patientId]);
         resultado[entidad] = rows.map((fila) => aRegistro(fila, entidad, consulta));
       }
       return resultado;

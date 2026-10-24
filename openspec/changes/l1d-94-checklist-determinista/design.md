@@ -65,8 +65,9 @@ no_mapeado` (RN-27); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por ca
 serializaciones sean iguales byte a byte (AC-5). US-003 la amplía con la procedencia.
 
 **D7. Lectura acotada**: el repositorio hace una consulta por entidad de destino presente en los ítems del tipo,
-filtrando por `patient_id`, y solo expone las columnas de la allowlist del modelo (`modelo.allowlist.json`, L1D-93
-D3); nunca lee `ClinicalNote`, `identity` ni texto libre. **Ajuste en la implementación:** el repositorio *no* filtra
+filtrando por `patient_id`, y el SQL proyecta solo las columnas de la allowlist del modelo (`modelo.allowlist.json`, L1D-93 D3) con
+`jsonb_build_object` generado de ese JSON (`source_span`, `description`, `patient_id`, `reviewed_by`… no salen de la
+base); nunca lee `ClinicalNote`, `identity` ni texto libre. **Ajuste en la implementación:** el repositorio *no* filtra
 por estado de revisión (no usa `sqlDatoVigente()`): el filtro de RN-07 vive en un solo lugar,
 `registrosVigentes()`, para que haya una única guarda auditable. Del `Diagnosis` solo lee el activo (`is_active`).
 
