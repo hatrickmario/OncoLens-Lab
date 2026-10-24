@@ -145,9 +145,12 @@ const REGLAS_DE_TAMANO = 'max-lines-per-function|complexity|max-lines';
 // Reglas de higiene de tests (US-213 AC-8, AC-10): una directiva tampoco puede apagarlas (Gate 2 #3).
 const REGLAS_DE_HIGIENE =
   'vitest/no-focused-tests|vitest/no-disabled-tests|vitest/valid-title|oncolens/tests-sin-pendientes-ni-foco-jest|oncolens/mock-solo-en-bordes';
-// `eslint-disable` que nombra alguna de las reglas, o que desactiva todo (sin lista de reglas).
+// `eslint-disable` que nombra alguna de las reglas (o que apaga todo), o el comentario de configuración
+// `/* eslint regla: off */` (también `0`): ambas formas dejan pasar un test desactivado.
 const desactiva = (reglas) =>
-  new RegExp(`eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${reglas})\\b|\\s*(?:\\*/|--|$))`);
+  new RegExp(
+    `eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${reglas})\\b|\\s*(?:\\*/|--|$))|\\beslint\\s+[^\\n]*\\b(?:${reglas})\\b\\s*:\\s*(?:off|0|"off")`,
+  );
 const DESACTIVA_TAMANO = desactiva(REGLAS_DE_TAMANO);
 const DESACTIVA_HIGIENE = desactiva(REGLAS_DE_HIGIENE);
 

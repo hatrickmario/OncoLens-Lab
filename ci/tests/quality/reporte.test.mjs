@@ -171,6 +171,23 @@ describe('desactivaciones de reglas de tamaño', () => {
     expect(buscar('/* eslint-disable */\nconst a = 1;')).toHaveLength(1);
   });
 
+  it('marca el comentario de configuración que apaga una regla de higiene de tests [US-213 AC-8]', () => {
+    expect(buscar('/* eslint vitest/no-disabled-tests: off */\nit.skip("x", () => {});')).toEqual([
+      expect.objectContaining({ rule: 'sin-eslint-disable-de-higiene-de-tests', line: 1 }),
+    ]);
+    expect(buscar('/* eslint oncolens/mock-solo-en-bordes: 0 */')).toHaveLength(1);
+  });
+
+  it('marca el comentario de configuración que apaga una regla de tamaño [US-213 AC-4]', () => {
+    expect(buscar('/* eslint max-lines-per-function: off */')).toEqual([
+      expect.objectContaining({ rule: 'sin-eslint-disable-de-tamano' }),
+    ]);
+  });
+
+  it('no marca un comentario de configuración que activa la regla [US-213 AC-8]', () => {
+    expect(buscar('/* eslint vitest/no-disabled-tests: error */')).toEqual([]);
+  });
+
   it('no marca un eslint-disable de otra regla [US-213 AC-4]', () => {
     expect(buscar('// eslint-disable-next-line no-console -- registro de arranque')).toEqual([]);
   });
