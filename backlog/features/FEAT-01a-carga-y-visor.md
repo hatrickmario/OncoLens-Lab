@@ -2,13 +2,13 @@
 
 > Linear: [L1D-6](https://linear.app/l1der-lab-mjbc/issue/L1D-6)
 
-**Talla:** L · **Sprint:** 2 (US-076, US-078, US-079) · 5 (US-078, US-079, US-212; reordenamiento del 2026-10-23, antes S3) · `si-hay-capacidad` (US-077, US-080, US-081) · **Capacidad:** CAP-01 (AC-01.1 parte de carga, cola y visor; AC-01.2) · T-1 (AC-T1.1: abrir la fuente de un dato) · **Recorrido principal:** sí (US-076, US-078, US-079, US-212) · no (US-077, US-080, US-081)
+**Talla:** L · **Sprint:** 2 (US-076) · 5 (US-078, US-079, US-212; reordenamiento del 2026-10-23, antes S3) · `si-hay-capacidad` (US-077, US-080, US-081) · **Capacidad:** CAP-01 (AC-01.1 parte de carga, cola y visor; AC-01.2) · T-1 (AC-T1.1: abrir la fuente de un dato) · **Recorrido principal:** sí (US-076, US-078, US-079, US-212) · no (US-077, US-080, US-081)
 **Requisitos:** FR-05 (dueña, vía HU-04) · FR-07 (dueña, vía HU-05 escenario 1: US-212 sirve y audita el archivo; US-080 el visor con página y resaltado) · NFR-07 (cola durable, 3 intentos, 0 documentos colgados) · NFR-02 (p95 ≤ 60 s, medido) · AC-03.4 (checksum) · V-13 (resolución de `cuarentena_pii` / `requiere_revision_identidad`, *workaround*)
 **Evidencia:** [→ PRD §5 FR-05, FR-07], [→ PRD §7 NFR (fiabilidad de la cola, extracción p95)], [→ PRD §10 (`…/documents`, `…/documents/batch`, `…/documents/{docId}/file`)], [→ PRD §18.3.1 AC-01.1, AC-01.2], [→ PRD §18.3.3 AC-03.4], [→ PRD §18.4 AC-T1.1], [→ readme §5 HU-04, HU-05], [→ readme §6 OL-05 (tareas 1–5, 9; criterios de aceptación)], [→ readme §6.1 #9, #11], [→ readme §4.1 `Document`, `POST …/documents`, endpoints adicionales], [→ readme §3.1 `DOCUMENT`], [→ readme §2.5 (gate de PII)], [→ backlog/01-requisitos.md §10 V-13], [→ docs/AS-IS.md P1, etapa 1]
 **Dependencias:** ↪ US-034 (`clinical-minio` en Compose), US-038 (tabla `document`), US-044 (sesión), US-054 (JWT de servicio) · 🔗 Consume: US-082…US-087 (extracción y persistencia, FEAT-01b) · 🔗 Produce para: US-102 (US-212 escribe el registro `document.file.read`; US-102 lo verifica en el S6) · 🔗 Medido en: US-103 (M-01.2, p95 de extracción) · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Regresión [RN-15] → US-148 (activa desde S6: la carga **no** responde `403` por opt-out, FR-16)
 **Valor:** hoy el oncólogo recibe PDFs sueltos y transcribe a mano lo que necesita (AS-IS, etapa 1; P1). Con esta Feature sube uno o varios PDFs en una sola acción, ve en todo momento en qué estado está cada uno y, desde cualquier dato extraído, abre la página exacta del documento de donde salió.
-**Workaround en el MVP:** carga múltiple (US-077) → un PDF por acción; visor (US-080) → la procedencia muestra documento y página con un enlace que descarga el PDF completo por US-212 (S3); UI de cuarentena (US-081) → el documento retenido no aporta datos y la lista muestra su estado.
-**Stories:** US-076, US-078, US-079 (13 puntos, S2) · US-212 (2 puntos, S3) · US-077, US-080, US-081 (9 puntos, `si-hay-capacidad`)
+**Workaround en el MVP:** carga múltiple (US-077) → un PDF por acción; visor (US-080) → la procedencia muestra documento y página con un enlace que descarga el PDF completo por US-212 (S5); UI de cuarentena (US-081) → el documento retenido no aporta datos y la lista muestra su estado.
+**Stories:** US-076 (5 puntos, S2) · US-078, US-079, US-212 (10 puntos, S5) · US-077, US-080, US-081 (9 puntos, `si-hay-capacidad`)
 
 ## Fixtures
 
@@ -134,7 +134,7 @@ FX-01a-a y MinIO de test con inyección de fallos.
 
 > **Reordenamiento (usuario, 2026-10-23):** S3 → S5. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
-> **Dependencia hacia adelante (slicing v2, 2026-10-07):** la extracción (US-082, US-087) llega en el S3. En el S2 la cola se verifica con `rag-orchestrator` simulado (respuestas controladas de FX-01a-a); la extracción real se integra en el S3.
+> **Dependencia hacia adelante (slicing v2, 2026-10-07):** la extracción (US-082, US-087) llega en el S3. En el S2 la cola se verifica con `rag-orchestrator` simulado (respuestas controladas de FX-01a-a); la extracción real se integra en el S5 (reordenamiento del 2026-10-23).
 
 ## Story
 Como oncólogo, quiero que cada documento que subo termine siempre en un estado
@@ -170,6 +170,13 @@ un resultado que nunca llega.
 - **AC-7 (borde · *logs*)** · Dado el procesamiento del AC-1, cuando se inspeccionan los
   *logs* de ambos servicios, entonces solo aparecen el UUID del documento y el `traceId`,
   sin nombre de archivo, texto ni URL. `[CLAUDE.md]` `[NFR-11]`
+- **AC-8 (invariante · usuario de servicio con política mínima en `clinical-minio`)** ·
+  Dado `clinical-api` arrancado con el usuario de servicio de `clinical-minio` (no root),
+  cuando sube, lee y borra un objeto en `clinical-documents`, entonces esas operaciones
+  funcionan; y cuando intenta listar buckets, crear uno, escribir en otro bucket o cambiar
+  políticas, recibe *access denied*; las credenciales root no están en el entorno de
+  `clinical-api`. `[SEG-06]` `[S2 resp. 19]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 7]`):** la deuda de seguridad del S2 (credenciales root de `clinical-minio`, `S2-deuda.md`) pasa a ser este AC de US-078 en el S5; TLS/SSE y red interna siguen en US-144 (S6).
 
 ## Contexto técnico
 `workers/extraction.worker.ts` en `clinical-api`: sondeo con
@@ -177,7 +184,7 @@ un resultado que nunca llega.
 reintentos según configuración `[RN-22]` `[readme §6.1 #9]`. No hay broker
 `[readme §3.3 #11]`. `dataClassification` sale de `Patient.data_origin`. Tests: Vitest
 con PostgreSQL de test y `rag-orchestrator` simulado; AC-6 además con MinIO de test.
-`[S2 resp. 19]` Deuda de seguridad (Medio): `clinical-api` usa las credenciales root de `clinical-minio` (`PutObject` con root, HTTP sin TLS ni SSE). Se resuelve aquí (S3) con un usuario de servicio con política limitada a `PutObject`/`DeleteObject` sobre `clinical-documents`; TLS/SSE y red interna, en US-144 (S6).
+`[S2 resp. 19]` Deuda de seguridad (Medio): `clinical-api` usa las credenciales root de `clinical-minio` (`PutObject` con root, HTTP sin TLS ni SSE). Se resuelve aquí (S5, AC-8, `[S3 resp. 7]`) con un usuario de servicio con política limitada a las operaciones de objeto que usa `clinical-api` (`PutObject`/`GetObject`/`DeleteObject`) sobre `clinical-documents`; TLS/SSE y red interna, en US-144 (S6).
 
 ## Non-goals
 Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extraído
@@ -185,7 +192,7 @@ Lo que hace `rag-orchestrator` con el PDF (FEAT-01b) y cómo se persiste lo extr
 
 ## INVEST
 **Small** ✓ un *worker* con tres caminos (éxito, reintento, error).
-**Testable** ✓ siete tests con contadores de llamadas y estados en BD.
+**Testable** ✓ ocho tests con contadores de llamadas, estados en BD y permisos de MinIO.
 
 ---
 
@@ -217,7 +224,8 @@ avanza cada uno, para saber cuándo sus datos ya están disponibles.
   `DOCUMENTS_PAGE_SIZE = 20`, cuando se pide `GET …/documents?page=1` y `?page=2`,
   entonces la primera página trae 20 y la segunda 5, ordenados por `uploadedAt`
   descendente. `[OL-05]` `[readme §6.1 #11]`
-- **AC-6 (borde · E2E heredados del S2)** · Dado el job de E2E de la CI (L1D-278) y el seed sintético, cuando se ejecutan, entonces cubren de punta a punta US-048 AC-1 (el doctor abre `/pacientes` y ve los cinco pacientes semilla con SINTÉTICO) y US-051 AC-1, AC-2 y AC-5 (ficha con diagnóstico vigente, biomarcadores y aviso de pendientes), además de los de carga de esta historia; incluye la verificación del aviso de alcance de US-043 AC-3 (L1D-173 4.3) y su *visual-check* a 375 y 1280 px (L1D-173 4.4). `[S2 resp. 20]`
+- **AC-6 (borde · E2E de carga en la CI)** · Dado el job de E2E de la CI (L1D-278) y el seed sintético, cuando se ejecutan, entonces cubren de punta a punta los recorridos de carga de esta historia (AC-1 a AC-3 y AC-5). `[S2 resp. 20]`
+  > **Trasladado a ARR-09 (S3) `[S3 resp. 7]`:** los E2E heredados del S2 —US-048 AC-1 (L1D-202 3.3), US-051 AC-1, AC-2 y AC-5 (L1D-72 3.3) y el aviso de alcance de US-043 AC-3 (L1D-173 4.3)— y el *visual-check* de L1D-173 4.4 salen de este AC y se cumplen en ARR-09 (`backlog/sprints/S2-arrastre.md`). En el S5 pueden quedar como regresión dentro de la suite E2E de esta historia.
 - **AC-5 (borde · accesibilidad)** · Dada la lista de documentos, cuando cambia el estado
   de uno, entonces el cambio se anuncia en una región `aria-live` y el selector de
   archivos es operable con teclado. `[NFR-12]`
@@ -436,3 +444,4 @@ Cifrado del contenido del PDF en reposo (US-144). Cualquier cambio en la clave d
 | Slicing v2 | PRD FR-05, FR-07 y §14 S2; AC-01.1 (visor) y AC-01.2 (carga múltiple); readme §5.0 S2 (HU-04, HU-05) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): carga múltiple, visor y UI de cuarentena `si-hay-capacidad` | AC-01.2 (lote) y la parte de visor de AC-01.1 quedan en historias `si-hay-capacidad`; la cola y la carga individual siguen en el S2 |
 | Ajuste del 2026-10-07 | PRD FR-07 (Sprint 2) y readme §4.1: el archivo y el visor como una sola capacidad | Decisión del usuario (`01-requisitos.md` §15, "Ajustes al slicing v2"): descarga del PDF de origen en US-212 (S3, recorrido principal), visor en US-080 (`si-hay-capacidad`) | Decisión del usuario: US-212 sirve y audita el archivo en el S3; el visor con resaltado sigue diferido |
 | Ajuste del S2 | Slicing v2: US-078 y US-079 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S3 con US-082 (`/documents/extract` no existe aún) | Se siguió el ajuste del S2 |
+| S3-2026-10-23 | US-079 AC-6: E2E heredados del S2 (US-048, US-051, US-043) en el S5; deuda de credenciales root de `clinical-minio` «S3, junto a US-078» | Reordenamiento (US-078/US-079 al S5) y refinamiento del S3 (2026-10-23) | Los E2E heredados y el *visual-check* de L1D-173 4.4 pasan a ARR-09 (S3); el usuario de servicio con política mínima es US-078 AC-8 (S5) `[S3 resp. 7]` |

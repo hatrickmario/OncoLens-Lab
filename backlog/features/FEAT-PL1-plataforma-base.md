@@ -192,7 +192,7 @@ corpus es de US-074. *Mutation testing* (S6).
 
 > Linear: [L1D-263](https://linear.app/l1der-lab-mjbc/issue/L1D-263) (US-213a) · [L1D-285](https://linear.app/l1der-lab-mjbc/issue/L1D-285) (US-213b)
 
-`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* **US-213a** · Sprint 3 **US-213b** · Estimación **8** = **US-213a** 5 (AC-1…AC-7, capas y umbrales, S2) + **US-213b** 3 (AC-8…AC-12, higiene de tests, mocks, cobertura y ejemplos, S3) `[S2 resp. 1]` · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
+`FEAT-PL1` · Sprint 2 *(desde S1, `[Pre-S1 resp. 9]`)* **US-213a** · Sprint 3 **US-213b** · Estimación **8** = **US-213a** 5 (AC-1…AC-7, capas y umbrales, S2) + **US-213b** 3 (AC-8…AC-13, higiene de tests, mocks, cobertura, ejemplos y descarga de imágenes en la CI, S3) `[S2 resp. 1]` · — (técnica, PRD §17) · NFR-13, RN-22 · ↪ US-036 (workflow de CI), US-033 (`contracts/examples/` para los handlers de MSW) · 🔗 Relacionada: US-038 (PostgreSQL de test para la integración) · 🔗 Consumida por: `design-principles-reviewer` y `gate-review` (Gate 2), el paso de refactor de los implementadores y la Política TDD de `CLAUDE.md` (`.claude/`)
 
 ## Story
 Como equipo de desarrollo (personas y agentes de IA), quiero que la CI y un comando local
@@ -274,6 +274,24 @@ agente copie un acoplamiento indebido ni un test que no prueba nada.
   ejecuta `contracts:check`, entonces existe un ejemplo `SINT-` de `PatientListItem` con
   `fullNameMasked` y `nationalIdMasked` en el formato que fije US-048, y valida contra el schema.
   `[Pre-S1 resp. 42]` `[Pre-S1 trazabilidad M-1]`
+- **AC-13 (borde · descarga de imágenes en la CI, US-213b)** · Dado el job `integration-rag`
+  (`scripts/ci/integracion-rag-orchestrator.sh`) y un registro que responde `503` de forma
+  transitoria, cuando se levantan los servicios reales, entonces (a) `milvus-etcd` usa la imagen
+  oficial de etcd fuera de quay.io (`gcr.io/etcd-development/etcd:v3.5.34`, misma versión; el
+  cambio de registro se aplica en `infra/docker/docker-compose.yml` y lo revisa
+  `privacy-guardian` por tocar Compose); (b) las imágenes se descargan con un paso `compose pull`
+  previo a `up --no-build`, con hasta 3 intentos y espera creciente, solo para la descarga (los
+  tests siguen sin reintentos); y (c) si la descarga falla, el job termina con
+  "integracion-rag: no se pudo descargar la imagen de <servicio>", distinto del mensaje de salud
+  "no quedaron sanos en <n>s", que solo aparece tras esperar de verdad. El fixture de CI
+  (`ci/tests/cases/`, hermético) simula el fallo de descarga y comprueba el mensaje. `[NFR-13]`
+  > **Decidido (usuario, 2026-10-24, `[S3 resp. 14]`):** tarea añadida tras el fallo de la CI del
+  > PR #189: `quay.io/coreos/etcd:v3.5.34` respondió `503 Service Unavailable` dos veces seguidas
+  > (05:12 y 05:21 UTC) desde los *runners* de GitHub. El `compose up` abortó antes de crear
+  > contenedores y el script lo reportó como timeout de salud de 420 s sin haber esperado. Las
+  > otras tres imágenes (Docker Hub) se descargaron sin error. Sin cambio de estimación: cabe en
+  > los 3 puntos de US-213b (script de CI y una línea de Compose). Tipo de test según
+  > `CLAUDE.md`: *test después* (fixture de PR).
 
 ## Contexto técnico
 - **Umbrales:** `quality-thresholds.json` en la raíz es la única fuente; `eslint.config.js`

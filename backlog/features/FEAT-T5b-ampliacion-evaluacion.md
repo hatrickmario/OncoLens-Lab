@@ -8,7 +8,7 @@
 **Dependencias:** ↪ US-072 (*runner* y reporte), US-074 (suite en la DoD), US-014 · ADR-41 · ⛔ ADR-39 (motores de OCR, LLM y NLI fijados para las mediciones reales) · ⛔ DEC-07 · escenario más probable (metas y umbrales de regresión) · 🔗 Mide a: FEAT-01b, FEAT-02b, FEAT-03a (S3) · FEAT-04, FEAT-06c (S4) · FEAT-08b (S5) · FEAT-10c, FEAT-10b (S5) · 🔗 Consume: US-139 (reporte de feedback), US-024 · DEC-14 (VM-3) para G-Demo
 **Valor:** la hipótesis solo se valida con números: cuántos datos del documento se leen bien, si el caso reconstruido es fiel, si los faltantes se detectan y si la aplicabilidad no inventa nada. Esta Feature amplía la suite del S1 con los datasets sintéticos de cada capacidad nueva, para que todo cambio de modelo, prompt, umbral, catálogo o corpus se mida contra ellos.
 **Workaround en el MVP:** US-104 → umbrales del OCR con valores iniciales en configuración; US-106 → invariantes en los tests de US-086, US-098 y US-099; US-133 → sin híbrida no hay retroceso que medir; US-141 → se integra en US-142 (AC-7).
-**Stories:** S3: US-103, US-105 (10 puntos) · S4: US-131 (3 puntos) · S5: US-132, US-140, US-142 (15 puntos) · `si-hay-capacidad`: US-104, US-106, US-133, US-141 (14 puntos)
+**Stories:** S3: US-132 (5 puntos) · S4: US-131, US-140 (8 puntos) · S5: US-103, US-105, US-142 (15 puntos; reordenamiento del 2026-10-23) · `si-hay-capacidad`: US-104, US-106, US-133, US-141 (14 puntos)
 
 > **Propuesta de división (talla XL).** Publicar como una Feature por sprint sin cambiar IDs: **T5b-S3 Ingesta y caso** (US-103, US-105), **T5b-S4 Faltantes** (US-131) y **T5b-S5 Aplicabilidad, opciones y G-Demo** (US-132, US-140, US-142); US-104, US-106, US-133 y US-141 quedan `si-hay-capacidad` (slicing v2). Las discrepancias sembradas (M-07.1) y la búsqueda complementaria (M-08.5) quedan con sus Features diferidas (FEAT-07, S6; FEAT-08c, Post-MVP; lote 4).
 
@@ -255,10 +255,13 @@ sostener la hipótesis de aplicabilidad.
   valores del paciente que no coinciden con el contexto enviado. `[AC-T5.1]` `[M-08.2]` `[M-08.6]`
 - **AC-2 (invariante · bloqueo)** · Dado un resultado con M-08.2 > 0 o M-08.6 > 0, cuando
   termina la suite, entonces sale con código ≠ 0. `[M-08.2]` `[M-08.6]`
-- **AC-3 (borde · metadatos de población)** · Dada la `CorpusRelease` vigente, cuando se
-  evalúa, entonces el reporte trae el porcentaje de documentos con `population_criteria`
+- **AC-3 (borde · metadatos de población)** · Dada la versión del corpus fijada en
+  configuración (`CORPUS_CUTOFF_DATE`, *workaround* de US-119, la misma que reporta
+  `meta.corpusRelease`), cuando se evalúa, entonces el reporte trae esa versión y el
+  porcentaje de documentos vigentes (`is_current = true`) con `population_criteria`
   distintos de `no_disponible` frente a la meta en configuración (0,90, propuesta).
-  `[M-08.3]`
+  `[M-08.3]` `[RN-22]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 8]`):** el AC-3 usa la versión del corpus por configuración en lugar de la `CorpusRelease`, porque US-119 sigue `si-hay-capacidad`. El AC original (medición sobre la `CorpusRelease` vigente) se traslada a US-119 AC-5 (FEAT-06c).
 - **AC-4 (borde · exactitud de `extraido_verificado`)** · Dado el archivo de revisión
   humana de la muestra de metadatos (US-118), cuando se evalúa, entonces el reporte trae
   la exactitud de los metadatos `extraido_verificado` frente a la meta (0,95, propuesta) y
@@ -487,3 +490,4 @@ Medir VM-1…VM-6 con casos reales (FEAT-T5d, S6). Bloqueos por opt-out (US-148,
 | — | PRD §14 G-Demo: todos los criterios de CAP-01 a CAP-11, T-1, T-2, T-3 y T-5 en verde (salvo AC-T1.5 y AC-T3.3); VM-1 a VM-3 medidas con el oncólogo asesor | Slicing adoptado (`01-requisitos.md` §15): G-Demo = caso + faltantes + aplicabilidad + opciones ordenadas + feedback, solo sintético; CAP-05 (plantillas), CAP-07, CAP-09 y CAP-11 pasan a S6 (si hay capacidad) y el agente a Post-MVP | Slicing (decisión del usuario): US-142 verifica el G-Demo redefinido y declara las capacidades diferidas; VM-3 con DEC-14 y VM-4/VM-5 con el feedback; VM-1/VM-2 con el sistema se miden en el piloto. Se registra para enmendar PRD §14 |
 | — | `01-requisitos.md` §5.5: M-07.1 (discrepancias) en FEAT-T5b y M-08.5 (agente) en FEAT-T5b/FEAT-08c | Slicing adoptado: FEAT-07 en el S6 (si hay capacidad) y FEAT-08c Post-MVP | M-07.1 y M-08.5 se miden con sus Features diferidas en US-157 y US-161 (FEAT-T5d), no en el S4 |
 | Slicing v2 | PRD §14 S2–S4: suites por sprint y G-Demo al cierre del S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): suites en S3–S5 y G-Demo al cierre del S5; calibración del OCR, M-03.x agregadas, no retroceso de la híbrida y p95 separado `si-hay-capacidad` | M-01 (calibración), M-03.1…M-03.5 y M-06.1 (sin retroceso) quedan en historias `si-hay-capacidad`; M-06.2 con hasta 3 opciones lo registra US-142 |
+| S3-2026-10-23 | US-132 AC-3 sobre la `CorpusRelease` vigente (US-119, `si-hay-capacidad`); US-103 y US-105 en el S3 | Reordenamiento y refinamiento del S3 (2026-10-23): US-132 en el S3 mide sobre la versión del corpus por configuración; la medición sobre la `CorpusRelease` pasa a US-119 AC-5; US-103 y US-105 en el S5 | Decisión del usuario `[S3 resp. 8]` |

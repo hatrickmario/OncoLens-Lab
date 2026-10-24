@@ -5,9 +5,9 @@
 **Talla:** XL (propone división) · **Sprint:** 3 (US-021, US-121…US-125) · 4 (US-126; reordenamiento del 2026-10-23, antes todo en el S5) · **Capacidad:** CAP-08 (AC-08.1–AC-08.6, AC-08.8, AC-08.9) · CAP-04 (AC-04.3: "Desconocido: falta en el paciente") · CAP-10 (AC-10.2: resumen de aplicabilidad en la tarjeta) · T-1 (AC-T1.2 para afirmaciones sobre población) · **Recorrido principal:** sí (hipótesis 3: opciones más aplicables a las condiciones del paciente)
 **Requisitos:** FR-25 (dueña, vía HU-22; funcionalidad completa salvo el agente) · RN-28 (dueña de la **agregación** por opción, del comparador y, desde el S3, de la selección por aplicabilidad antes del recorte a `maxOptions`, también con una sola opción; el orden visible de hasta 3 opciones es de US-134, S4) · IA-06 · TBD-13 (aplicabilidad: DEC-11) · RN-01, RN-02, RN-06, RN-25, RN-29 (regresiones)
 **Evidencia:** [→ PRD §5 FR-25], [→ PRD §6 RN-01, RN-02, RN-25, RN-26, RN-28, RN-29], [→ PRD §7 NFR (estados de aplicabilidad por texto)], [→ PRD §12 Síntesis y aplicabilidad], [→ PRD §16 TBD-13], [→ PRD §18.2 Estado de aplicabilidad], [→ PRD §18.3.8 AC-08.1–AC-08.6, AC-08.8, AC-08.9, M-08.1–M-08.6], [→ PRD §18.3.10 AC-10.1 ("1 en los Sprints 1–3", ordenada por aplicabilidad)], [→ PRD §5 FR-09 (máximo 1 opción en los Sprints 1–3)], [→ PRD §18.3.4 AC-04.3], [→ readme §5 HU-22], [→ readme §4.1 `ApplicabilityCriterion`, `SourceApplicability`, `ApplicabilitySummary`, `EvidenceOption.perSource`], [→ readme §3.3 #27, #31, #34], [→ backlog/02-adrs.md DEC-11, P-03], [→ backlog/01-requisitos.md §15 (slicing por hipótesis)], [→ docs/AS-IS.md P6, JTBD 4]
-**Dependencias:** ↪ US-055 (pipeline), US-063, US-064 (citas y soporte), US-118 (metadatos de población), FEAT-04 US-006 (faltantes en el contexto), US-099 (conflictos) · ⛔ DEC-11 (US-021) · escenario más probable · ⛔ ADR-39 (NLI y LLM reales; los AC usan adapters falsos) · 🔗 Produce para: US-134 (orden de hasta 3 opciones, S5), US-130 (limitación "población no comparable"), US-071 (avisos que no bloquean) · 🔗 Medido en: US-132 (M-08.2, M-08.3, M-08.4, M-08.6) · M-08.1 (VM-3, mixto) → US-024 · DEC-14 (FEAT-T5c, S5) / FEAT-T5d (piloto) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053
+**Dependencias:** ↪ US-055 (pipeline), US-063, US-064 (citas y soporte), US-118 (metadatos de población), FEAT-04 US-006 (faltantes en el contexto), US-099 (conflictos: detección real en el S5; en el S3, conflicto sembrado) · ⛔ DEC-11 (US-021) · escenario `propuesta_revisada` aceptado para el S3, cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` · ⛔ ADR-39 (NLI y LLM reales; los AC usan adapters falsos) · 🔗 Produce para: US-134 (orden de hasta 3 opciones, S4), US-130 (limitación "población no comparable"), US-071 (avisos que no bloquean) · 🔗 Medido en: US-132 (M-08.2, M-08.3, M-08.4, M-08.6) · M-08.1 (VM-3, mixto) → US-024 · DEC-14 (FEAT-T5c, S5) / FEAT-T5d (piloto) · 🔗 Regresión [RN-01] → US-064 · 🔗 Regresión [RN-06] → US-053
 **Valor:** el oncólogo encuentra evidencia, pero juzgar si la población del estudio se parece a su paciente le lleva tiempo y es fácil pasar por alto un criterio excluyente (P6, JTBD 4). Con esta Feature cada fuente trae, criterio a criterio, el valor del paciente, el del estudio y si coinciden, sin ningún puntaje clínico, y la opción hereda la aplicabilidad de su fuente más comparable.
-**Stories:** US-021 · DEC-11, US-121, US-122, US-123, US-124, US-125, US-126 (29 puntos, S5)
+**Stories:** US-021 · DEC-11, US-121, US-122, US-123, US-124, US-125, US-126 (29 puntos: 24 en el S3 —criterios, cálculo y herencia: DEC-11, US-121…US-125— y 5 en el S4 —tabla y UI: US-126, junto con las hasta 3 opciones de US-134—; reordenamiento del 2026-10-23)
 
 > **Propuesta de división (talla XL: 7 historias, atraviesa los tres servicios).** Publicar sin cambiar IDs como **08b-B2 Motor de aplicabilidad** (US-122, US-123, US-124, US-125) y **08b-catálogo y UI** (US-021 · DEC-11, US-121, US-126).
 
@@ -55,6 +55,8 @@ por criterio sea reproducible y el orden de las opciones no oculte un juicio cl�
   VM-3. `[P-03]` `[§15 resp. 5]`
 - **AC-4** · Dado un criterio que el oncólogo rechace, cuando se publique la versión,
   entonces ese criterio no está en ella. (asumido)
+
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 1]`):** no se espera a los oncólogos. Se implementa sobre la versión `propuesta_revisada` del escenario más probable (criterios de FR-25; HER2 en mama y estado de castración en próstata como excluyentes; "Parcial" según los ejemplos de FR-25), publicada en el catálogo versionado. Se valida en la sesión con oncólogos del S4 (junto a DEC-06, DEC-08, DEC-09 y ARR-05); un cambio que salga de ella solo toca el catálogo JSON. DEC-11 queda en DoR con el escenario aceptado y su cierre formal es en el S4.
 
 ## Contexto técnico
 Ubicada en FEAT-08b, adelantada al S3 con la aplicabilidad (slicing adoptado). La
@@ -227,9 +229,11 @@ por un criterio excluyente, para pesar cada fuente con esa información a la vis
 - **AC-2 (borde · sin verificar)** · Dado el ECOG de A-M1 en `requiere_revision`, cuando
   se evalúa, entonces `ecog` trae su estado calculado y
   `patientDataWarning = sin_verificar`. `[AC-08.4]` `[HU-22]`
-- **AC-3 (borde · en conflicto)** · Dado un A-M1 con dos HER2 en conflicto (US-099),
+- **AC-3 (borde · en conflicto)** · Dado un A-M1 cuyo seed sintético siembra dos HER2 en
+  conflicto (`requiere_revision`, `conflicts_with_id` cruzados y `provenance.conflict = true`),
   cuando se evalúa, entonces `estado_her2` trae `patientDataWarning = en_conflicto`.
   `[AC-08.4]` `[AC-03.2]`
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 8]`):** el AC-3 se reescribe sobre un conflicto HER2 sembrado en el seed, porque la detección real (US-099) pasó al S5 con el reordenamiento. El AC original, con el conflicto detectado por US-099, se traslada a US-099 AC-7 (FEAT-03a, S5).
 - **AC-4 (borde · población no comparable)** · Dados A-M1, `doc-a2` y `APL-OK`, cuando se
   evalúa, entonces `applicability[doc-a2].populationNotComparable = true`. `[AC-08.6]` `[HU-22]`
 - **AC-5 (invariante · conteo, nunca puntaje)** · Dados A-M1 y `doc-a1`, cuando se
@@ -258,7 +262,7 @@ bloquea (RN-26). Tests: Pytest con FX-08b-a (AC-1 a AC-6) y Supertest de persist
 
 > Linear: [L1D-130](https://linear.app/l1der-lab-mjbc/issue/L1D-130)
 
-`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (aplicabilidad de una opción), FR-09 (S3: 1 opción), RN-28 (dueña de la agregación, del comparador y de la selección antes del recorte), RN-03, RN-22 · AC-08.8, AC-10.1 (opción única del S3) · ↪ US-124, US-055, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Produce para: US-134 (orden de hasta 3 opciones con el mismo comparador, S5), US-101 (`poblacion_no_comparable` en la tarjeta)
+`FEAT-08b` · Sprint 3 · Estimación **5** · HU-22 · FR-25 (aplicabilidad de una opción), FR-09 (S3: 1 opción), RN-28 (dueña de la agregación, del comparador y de la selección antes del recorte), RN-03, RN-22 · AC-08.8, AC-10.1 (opción única del S3) · ↪ US-124, US-055, US-064 · 🔗 Regresión [RN-01] → US-064 · 🔗 Produce para: US-134 (orden de hasta 3 opciones con el mismo comparador, S4), US-101 (`poblacion_no_comparable` en la tarjeta)
 
 > **Reordenamiento (usuario, 2026-10-23):** S5 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -382,4 +386,5 @@ Playwright contra Compose en perfil de test con `rag-orchestrator` en modo falso
 | P-03 | PRD §14 G-Piloto y RN-20: criterios de aplicabilidad firmados por el oncólogo | Decisión P-03: sin firma formal; catálogo `propuesta` revisado y validación por feedback agregado | P-03 (US-021 AC-1, AC-3); se registra para enmendar el PRD |
 | — | backlog/01-requisitos.md §3: dueña de RN-28 = FEAT-10c (orden), regresión en FEAT-08b (agregación) | — | FEAT-08b es dueña de la agregación y del comparador (US-125); US-134 (S4) es dueña del orden visible de hasta 3 opciones |
 | — | readme HU-22 escenario 4: "las opciones que se basan en ella quedan después" | PRD FR-09: 1 opción en los Sprints 1–3 | PRD: con una sola opción no hay orden visible en el S3; se verifica en el S4 (US-134) |
-| Slicing v2 | PRD FR-25 y §14 S4; slicing "por hipótesis" (2026-10-06): S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): aplicabilidad en el S5 (G-Demo al cierre del S5), sobre la ingesta del corpus del S4 | Se siguió el slicing v2 |
+| Slicing v2 | PRD FR-25 y §14 S4; slicing "por hipótesis" (2026-10-06): S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): aplicabilidad en el S5 (G-Demo al cierre del S5), sobre la ingesta del corpus del S4 | Reemplazado por el reordenamiento del 2026-10-23 (fila siguiente) |
+| S3-2026-10-23 | Slicing v2: aplicabilidad en el S5; DEC-11 cerrada por el oncólogo antes de implementar | Reordenamiento y refinamiento del S3 (2026-10-23): criterios, cálculo y herencia (DEC-11, US-121…US-125) en el S3; tabla y UI (US-126) en el S4 con las hasta 3 opciones (US-134); DEC-11 en DoR con escenario `propuesta_revisada` aceptado y cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`; US-124 AC-3 sobre un conflicto sembrado `[S3 resp. 8]` | Decisión del usuario (refinamiento del S3) |

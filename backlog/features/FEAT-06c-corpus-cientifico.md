@@ -2,13 +2,13 @@
 
 > Linear: [L1D-18](https://linear.app/l1der-lab-mjbc/issue/L1D-18)
 
-**Talla:** XL (Feature completa; propone división por sprint) · parte S1: **M** · parte S3: **L** · **Sprint:** 1 (semilla y esquema) · 3 (US-117, US-118: la aplicabilidad los consume; reordenamiento del 2026-10-23) · 4 (US-120) · `si-hay-capacidad` (US-119, `CorpusRelease`) · **Capacidad:** CAP-06 (prerrequisito de CAP-07, CAP-08 y CAP-09) · **Recorrido principal:** sí
+**Talla:** XL (Feature completa; propone división por sprint) · parte S1: **M** · parte S3: **L** · **Sprint:** 1 (semilla y esquema) · 3 (US-117a, US-117b, US-118: la aplicabilidad los consume; reordenamiento del 2026-10-23; US-117 partida `[S3 resp. 2]`) · 4 (US-120) · `si-hay-capacidad` (US-119, `CorpusRelease`) · **Capacidad:** CAP-06 (prerrequisito de CAP-07, CAP-08 y CAP-09) · **Recorrido principal:** sí
 **Requisitos:** FR-19 (S1: semilla y esquema de metadatos; S3: ingesta como entregable) · RN-21 (dueña) · RN-05 (parte de versionado: el histórico nunca se borra; la recuperación de chunks vigentes es de US-055) · M-08.3, M-08.4 (S3, medidos en US-132) · TBD-20 (CAL, US-118) · ADR-36 (S3)
 **Evidencia:** [→ PRD §5 FR-19], [→ PRD §6 RN-05, RN-21, RN-25], [→ PRD §17 FR-19 → OL-02], [→ PRD §18.3.6 AC-06.1], [→ PRD §18.3.8 M-08.3, M-08.4], [→ readme §6 OL-02 (tareas 2, 7; alcance complementario: catálogo)], [→ readme §3.1 modelo del corpus], [→ readme §3.3 #5, #10, #17, #30, #36], [→ readme §1.4 paso 7], [→ backlog/02-adrs.md ADR-36, ADR-39]
-**Dependencias:** ↪ US-033 (esquema congelado), US-034 (Milvus), US-040 (rol `rag_corpus`) · ⛔ ADR-39 (dimensión del vector dense y origen del sparse: US-058 AC-2; *embeddings* reales para indexar: US-059 AC-1) · ADR-36 no bloquea el S1 (licencia verificada documento a documento) · 🔗 Consumida por: US-055 · ⛔ ADR-36 (S4: US-117, US-120) · 🔗 Medido en (S5): US-132 (M-08.3, M-08.4)
+**Dependencias:** ↪ US-033 (esquema congelado), US-034 (Milvus), US-040 (rol `rag_corpus`) · ⛔ ADR-39 (dimensión del vector dense y origen del sparse: US-058 AC-2; *embeddings* reales para indexar: US-059 AC-1) · ADR-36 no bloquea el S1 (licencia verificada documento a documento) · 🔗 Consumida por: US-055 · ⛔ ADR-36 (S3: US-117a; S4: US-120) · 🔗 Medido en (S5): US-132 (M-08.3, M-08.4)
 **Valor:** el oncólogo solo puede confiar en una opción si la fuente es pública, con licencia que permite usarla, vigente y verificable (P5, P8, P12). La semilla del S1 permite demostrar el recorrido con evidencia real de acceso abierto de mama y próstata, sin NCCN ni ESMO, y deja el esquema de metadatos listo para la aplicabilidad.
 **Workaround en el MVP (US-119):** la fecha de corte del corpus vive en configuración `[RN-22]` y la Base del análisis la toma de ahí.
-**Stories:** parte S1: US-058, US-059 (10 puntos) · parte S4: US-117, US-118, US-120 (16 puntos) · US-119 (3 puntos, `si-hay-capacidad`) · total 29 puntos
+**Stories:** parte S1: US-058, US-059 (10 puntos) · parte S3: US-117a (5), US-117b (3), US-118 (5) (13 puntos) · parte S4: US-120 (3 puntos) · US-119 (3 puntos, `si-hay-capacidad`) · total 29 puntos
 
 > **Propuesta de división (talla XL).** Publicar como **06c-S1 Semilla y esquema** (US-058, US-059) y **06c-S3 Ingesta** (US-117…US-120), sin cambiar IDs, para que cada una cierre en su milestone.
 
@@ -159,18 +159,20 @@ documentos por tipo (S3). Traducción de citas (V-10).
 
 ---
 
-## US-117 — La ingesta del corpus es reanudable, indexa *dense* y *sparse*, versiona sin borrar y rechaza lo que no tiene licencia
+## US-117a — La ingesta del corpus es reanudable, indexa *dense* y *sparse* y rechaza lo que no tiene licencia
 
 > Linear: [L1D-116](https://linear.app/l1der-lab-mjbc/issue/L1D-116)
 
-`FEAT-06c` · Sprint 3 · Estimación **8** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-05, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 (lista final de fuentes y regla de PubMed sin licencia) · ⛔ ADR-39 (modelos *dense* y *sparse*) · ↪ US-058, US-059, US-082 (`TextExtractionService`) · 🔗 Regresión [RN-21] → US-059 · 🔗 Regresión [RN-05] → US-059 · 🔗 Consumida por: US-112 (*sparse* poblado)
+`FEAT-06c` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 (lista final de fuentes y regla de PubMed sin licencia) · ⛔ ADR-39 (modelos *dense* y *sparse*) · ↪ US-058, US-059 · ↪ US-082 (`TextExtractionService`, S5: solo para PDF reales) · 🔗 Regresión [RN-21] → US-059 · 🔗 Produce para: US-117b, US-118
 
 > **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 2]`):** US-117 (8 pts) se parte por superficie, como proponía su INVEST: **US-117a** (5 pts: pipeline de ingesta y reanudación) y **US-117b** (3 pts: versionado sin borrado y *sparse* de la semilla), ambas en el S3. Esta historia conserva el issue L1D-116.
+
 ## Story
 Como responsable del corpus, quiero ingerir lotes de documentos públicos de forma
-automática y reanudable, con versionado y control de licencia, para ampliar la evidencia
-disponible sin borrar la historia ni dejar entrar una fuente que no podemos usar.
+automática y reanudable, con control de licencia, para ampliar la evidencia disponible
+sin dejar entrar una fuente que no podemos usar.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dado FX-06c-b, cuando se ejecuta
@@ -185,31 +187,62 @@ disponible sin borrar la historia ni dejar entrar una fuente que no podemos usar
 - **AC-3 (borde · licencia y fuente excluida)** · Dados `i-nd` e `i-esmo`, cuando se
   ingieren, entonces quedan `rechazado_licencia` y con motivo `fuente_excluida`
   respectivamente, sin chunks, y la ingesta continúa. `[RN-21]` `[FR-19]`
-- **AC-4 (invariante · versionado sin borrado)** · Dado `i-gl-1` ingerido, cuando se
-  ingiere `i-gl-1-v2`, entonces `i-gl-1` queda `is_current = false` con `superseded_at`,
-  sus chunks `is_current = false`, y el total de filas de `corpus_document` crece en 1.
-  `[RN-05]` `[ADR-5]`
-- **AC-5 (borde · *sparse* de la semilla)** · Dada la semilla del S1 con chunks sin
-  `sparse_vector`, cuando se ejecuta `ingest --reindex-sparse`, entonces todos los chunks
-  vigentes tienen `sparse_vector` y sus `chunk_id` y `dense_vector` no cambian.
-  `[OL-02]` `[FR-19]`
-- **AC-6 (borde · fallo aislado)** · Dado un documento cuya normalización falla, cuando se
+- **AC-4 (borde · fallo aislado)** · Dado un documento cuya normalización falla, cuando se
   ingiere el lote, entonces ese queda `error`, los demás terminan y el resumen final lista
-  los contadores por estado. (asumido)
+  los contadores por estado. (asumido; antes US-117 AC-6)
+
+> **Nota `[S3 resp. 2]`:** con PDF reales, la ingesta necesita `TextExtractionService` (US-082, S5). En el S3 se prueba con el *fixture* de texto FX-06c-b (textos sintéticos breves); la entrada PDF queda para cuando exista US-082.
 
 ## Contexto técnico
 `IngestionPipelineService` en `rag-orchestrator/application/` (normalización →
 *chunking* → *embedding* dense y sparse → inserción → estado), con *checkpoint* por
-documento en `corpus_document.status` y `checksum`. Reutiliza `TextExtractionService`
-(US-082) en proceso para los PDF `[readme §4.2]`. Validación de licencia y fuentes
-excluidas con las listas en configuración (ADR-36) `[RN-22]`. Corre con el rol
-`rag_corpus` y nunca toca schemas clínicos `[SEG-06]`. Tests: Pytest con FX-06c-b,
-*embeddings* falsos y Milvus de test en la CI.
+documento en `corpus_document.status` y `checksum`. Para los PDF reutilizará
+`TextExtractionService` (US-082, S5) en proceso `[readme §4.2]`; en el S3 la entrada es
+texto. Validación de licencia y fuentes excluidas con las listas en configuración
+(ADR-36) `[RN-22]`. Corre con el rol `rag_corpus` y nunca toca schemas clínicos
+`[SEG-06]`. Tests: Pytest con FX-06c-b, *embeddings* falsos y Milvus de test en la CI.
 
 ## INVEST
-**Small** ✓ 8 es el techo; si se complica, dividir en US-117a (pipeline y reanudación) y US-117b (versionado y *sparse* de la semilla).
-**Testable** ✓ seis tests sobre estados, chunks y filas.
-*(Estimable ⚠ el 8 asume ADR-36 cerrado ≤ S1 y ADR-39 con el modelo *sparse* fijado.)*
+**Small** ✓ 5 puntos: el pipeline, su *checkpoint* y el control de licencia.
+**Testable** ✓ cuatro tests sobre estados, chunks y contadores.
+*(Estimable ⚠ el 5 asume ADR-36 cerrado ≤ S1 y ADR-39 con el modelo *sparse* fijado.)*
+
+---
+
+## US-117b — La ingesta versiona sin borrar y puebla el *sparse* de la semilla
+
+> Linear: pendiente (workspace en el límite de issues; se publica cuando haya cupo)
+
+`FEAT-06c` · Sprint 3 · Estimación **3** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-05 · AC-06.1 (corpus abierto) · ⛔ ADR-39 (modelo *sparse*) · ↪ US-117a · 🔗 Regresión [RN-05] → US-059 · 🔗 Consumida por: US-112 (*sparse* poblado)
+
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 2]`):** segunda mitad de la partición de US-117 (versionado sin borrado y *sparse* de la semilla), 3 pts, en el S3. Se crea en Linear cuando el workspace tenga cupo.
+
+## Story
+Como responsable del corpus, quiero que una versión nueva de un documento reemplace a la
+anterior sin borrarla y que la semilla del S1 tenga también su índice *sparse*, para
+conservar la historia de la evidencia y poder usar la búsqueda híbrida sobre todo el
+corpus.
+
+## AC (Given/When/Then)
+- **AC-1 (invariante · versionado sin borrado)** · Dado `i-gl-1` ingerido, cuando se
+  ingiere `i-gl-1-v2`, entonces `i-gl-1` queda `is_current = false` con `superseded_at`,
+  sus chunks `is_current = false`, y el total de filas de `corpus_document` crece en 1.
+  `[RN-05]` `[ADR-5]` (antes US-117 AC-4)
+- **AC-2 (borde · *sparse* de la semilla)** · Dada la semilla del S1 con chunks sin
+  `sparse_vector`, cuando se ejecuta `ingest --reindex-sparse`, entonces todos los chunks
+  vigentes tienen `sparse_vector` y sus `chunk_id` y `dense_vector` no cambian.
+  `[OL-02]` `[FR-19]` (antes US-117 AC-5)
+
+## Contexto técnico
+Extiende `IngestionPipelineService` (US-117a): detecta la versión nueva por identificador
+de fuente y `checksum`, marca la anterior `superseded_at` y sus chunks `is_current = false`
+en la misma operación, sin borrar filas `[RN-05]`. `--reindex-sparse` recorre los chunks
+vigentes y solo escribe `sparse_vector`. Corre con el rol `rag_corpus` `[SEG-06]`. Tests:
+Pytest con FX-06c-b, *embeddings* falsos y Milvus de test en la CI.
+
+## INVEST
+**Small** ✓ dos operaciones acotadas sobre el pipeline de US-117a.
+**Testable** ✓ dos tests sobre filas y vectores.
 
 ---
 
@@ -217,7 +250,7 @@ excluidas con las listas en configuración (ADR-36) `[RN-22]`. Corre con el rol
 
 > Linear: [L1D-117](https://linear.app/l1der-lab-mjbc/issue/L1D-117)
 
-`FEAT-06c` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (metadatos estructurados, `extraido_verificado`), RN-25 · TBD-20 (CAL) · ⛔ ADR-39 (LLM y NLI) · ↪ US-117 · 🔗 Regresión [RN-25] → US-127 · 🔗 Consumida por: US-122 (valor del estudio) · 🔗 Medido en: US-132 (M-08.3, M-08.4)
+`FEAT-06c` · Sprint 3 · Estimación **5** · — (técnica, PRD §17; OL-02) · FR-19 (metadatos estructurados, `extraido_verificado`), RN-25 · TBD-20 (CAL) · ⛔ ADR-39 (LLM y NLI) · ↪ US-117a · 🔗 Regresión [RN-25] → US-127 · 🔗 Consumida por: US-122 (valor del estudio) · 🔗 Medido en: US-132 (M-08.3, M-08.4)
 
 > **Reordenamiento (usuario, 2026-10-23):** S4 → S3. Ver `README.md`, «Reordenamiento del 2026-10-23».
 
@@ -245,6 +278,7 @@ mi paciente no se apoye en datos inventados.
   entonces se seleccionan 2 de forma reproducible (mismo *seed*, mismos documentos) y se
   escribe `data/evaluation/corpus-metadatos/<release>.yaml` con sus metadatos para que un
   revisor marque cada campo `correcto | incorrecto`. `[TBD-20]` `[FR-19]` `[M-08.4]`
+  > **Decidido (usuario, 2026-10-24, `[S3 resp. 13]`):** en el S3 el revisor es el usuario (tarea `[HUMANO]`, unos 20 min): el agente prepara la muestra y una plantilla de verificación por campo. La validación clínica de los criterios la hace después la sesión de oncólogos del S4. US-132 AC-4 consume esa revisión.
 - **AC-6 (borde · LLM no disponible)** · Dado el LLM de metadatos caído, cuando se
   ingiere `i-lit-1`, entonces el documento queda `embebido` con sus criterios en
   `no_disponible` y el resumen de la ingesta lo cuenta como "metadatos pendientes".
@@ -267,7 +301,7 @@ el oncólogo asesor); sus resultados viven en un archivo versionado sin datos de
 
 > Linear: [L1D-118](https://linear.app/l1der-lab-mjbc/issue/L1D-118)
 
-`FEAT-06c` · Sprint si-hay-capacidad · Estimación **3** · — (técnica, PRD §17) · FR-19 (`CorpusRelease`), FR-27 (e, f) · AC-T1.4 (versión del corpus) · ↪ US-117 · 🔗 Regresión [FR-27] → US-066 · 🔗 Produce para: FEAT-09 (vigencia, S6 si hay capacidad), FEAT-11a (marca "Evidencia o catálogo más reciente") · **Recorrido principal:** no · **Workaround en el MVP:** la fecha de corte del corpus vive en configuración `[RN-22]` y la Base del análisis la toma de ahí, sin entidad `CorpusRelease` publicada por ingesta
+`FEAT-06c` · Sprint si-hay-capacidad · Estimación **3** · — (técnica, PRD §17) · FR-19 (`CorpusRelease`), FR-27 (e, f) · AC-T1.4 (versión del corpus) · ↪ US-117a · 🔗 Regresión [FR-27] → US-066 · 🔗 Produce para: FEAT-09 (vigencia, S6 si hay capacidad), FEAT-11a (marca "Evidencia o catálogo más reciente") · **Recorrido principal:** no · **Workaround en el MVP:** la fecha de corte del corpus vive en configuración `[RN-22]` y la Base del análisis la toma de ahí, sin entidad `CorpusRelease` publicada por ingesta
 
 ## Story
 Como oncólogo, quiero saber hasta qué fecha está actualizada la evidencia de cada
@@ -290,6 +324,12 @@ análisis y qué fuentes no incluye, para juzgar si algo reciente podría faltar
 - **AC-4 (borde · ingesta abortada)** · Dada una ingesta que termina con error global,
   cuando se revisa el catálogo, entonces no se publicó ninguna release nueva y los
   análisis siguen usando la anterior. (asumido)
+- **AC-5 (borde · la suite mide sobre la release)** · Dada la `CorpusRelease` vigente,
+  cuando se ejecuta `evaluate --suite aplicabilidad` (US-132), entonces el reporte trae el
+  porcentaje de documentos de esa release con `population_criteria` distintos de
+  `no_disponible` frente a la meta en configuración (0,90, propuesta). `[M-08.3]`
+  (trasladado de US-132 AC-3 `[S3 resp. 8]`: en el S3, US-132 mide sobre la versión del
+  corpus por configuración)
 
 ## Contexto técnico
 La publicación de la release es el último paso del `IngestionPipelineService`, en una
@@ -298,7 +338,7 @@ Tests: Pytest con PostgreSQL de test y Supertest de `clinical-api` para el AC-2.
 
 ## INVEST
 **Small** ✓ una escritura transaccional al final de la ingesta.
-**Testable** ✓ cuatro tests sobre filas y respuesta.
+**Testable** ✓ cinco tests sobre filas, respuesta y reporte de la suite.
 
 ---
 
@@ -306,7 +346,7 @@ Tests: Pytest con PostgreSQL de test y Supertest de `clinical-api` para el AC-2.
 
 > Linear: [L1D-119](https://linear.app/l1der-lab-mjbc/issue/L1D-119)
 
-`FEAT-06c` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-02) · FR-19, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 · ↪ US-117, US-118 · 🔗 Relacionada: US-119 (`si-hay-capacidad`) · 🔗 Medido en: US-132 (M-08.3)
+`FEAT-06c` · Sprint 4 · Estimación **3** · — (técnica, PRD §17; OL-02) · FR-19, RN-21 · AC-06.1 (corpus abierto) · ⛔ ADR-36 · ↪ US-117a, US-117b, US-118 · 🔗 Relacionada: US-119 (`si-hay-capacidad`) · 🔗 Medido en: US-132 (M-08.3)
 
 > **Dependencia hacia adelante (slicing v2, 2026-10-07):** US-119 (`CorpusRelease` por ingesta) es `si-hay-capacidad`; la fecha de corte del corpus sale de configuración `[RN-22]` y esta historia no depende de la release.
 
@@ -329,7 +369,7 @@ demasiado pequeño.
   cada `source_name` está en la lista de fuentes de ADR-36. `[ADR-36]`
 
 ## Contexto técnico
-Trabajo de curaduría más ejecución de la ingesta (US-117) sobre el manifiesto real. Las
+Trabajo de curaduría más ejecución de la ingesta (US-117a, US-117b) sobre el manifiesto real. Las
 fuentes del MVP son las de FR-19 (NCI PDQ, ClinicalTrials.gov, PubMed/PMC OA, guías
 públicas, publicaciones de TCGA/GDC, cBioPortal y TCIA), acotadas por ADR-36. Tests: un
 *smoke test* de conteo por tipo y fuente en la CI y el escaneo de US-036.
@@ -344,8 +384,9 @@ públicas, publicaciones de TCGA/GDC, cBioPortal y TCIA), acotadas por ADR-36. T
 
 | # | Fuente A | Fuente B | Se siguió |
 |---|---|---|---|
-| — | backlog/01-requisitos.md §3: dueña de RN-05 = FEAT-06c | Encargo del lote 1: FEAT-06a dueña de RN-05 (recuperación) | Reparto: la recuperación solo de chunks vigentes la verifica US-055 AC-3 (dueña); el versionado sin borrado, US-059 AC-6; la ingesta del S3 lleva regresión (US-117 AC-4). No es un conflicto de fuentes, se registra para trazabilidad |
+| — | backlog/01-requisitos.md §3: dueña de RN-05 = FEAT-06c | Encargo del lote 1: FEAT-06a dueña de RN-05 (recuperación) | Reparto: la recuperación solo de chunks vigentes la verifica US-055 AC-3 (dueña); el versionado sin borrado, US-059 AC-6; la ingesta del S3 lleva regresión (US-117b AC-1). No es un conflicto de fuentes, se registra para trazabilidad |
 | S-01 | PRD §14 / readme §5.0: ingesta en el S3 | Slicing adoptado: ingesta en el S3 | Sin cambio |
-| C-16 | CLAUDE.md: ADR-36 pendiente | readme §3.3 #36 (licencias decididas; PubMed sin licencia pendiente, TBD-04) | La ingesta del S3 (US-117, US-120) queda `⛔ ADR-36` solo por la lista final de fuentes y la regla de PubMed; las licencias ya decididas se aplican desde el S1 |
+| C-16 | CLAUDE.md: ADR-36 pendiente | readme §3.3 #36 (licencias decididas; PubMed sin licencia pendiente, TBD-04) | La ingesta (US-117a, S3; US-120, S4) queda `⛔ ADR-36` solo por la lista final de fuentes y la regla de PubMed; las licencias ya decididas se aplican desde el S1 |
 | — | backlog/02-adrs.md §4.5: muestra humana de metadatos como CAL (TBD-20) | backlog/01-requisitos.md §8: DEC-14 para la muestra | 02-adrs.md: es configuración (`CORPUS_METADATA_SAMPLE_PCT`, US-118); DEC-14 quedó para la muestra de aplicabilidad (VM-3) |
 | Slicing v2 | PRD §14 S3 y readme §5.0 S3: ingesta del corpus con metadatos en el S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): ingesta del corpus en el S4 (antes de la aplicabilidad del S5); `CorpusRelease` `si-hay-capacidad` | Se siguió el slicing v2; la aplicabilidad (S5) consume la ingesta del S4 (US-117, US-118, US-120) |
+| S3-2026-10-23 | Slicing v2: ingesta (US-117, US-118) en el S4 | Reordenamiento del 2026-10-23: ingesta en el S3 porque la aplicabilidad la consume; en el refinamiento del S3, US-117 (8 pts) se parte en US-117a (5, L1D-116) y US-117b (3, sin issue en Linear hasta que haya cupo), y en el S3 se prueba con *fixture* de texto porque `TextExtractionService` (US-082) está en el S5 `[S3 resp. 2]` | Decisión del usuario (refinamiento del S3) |

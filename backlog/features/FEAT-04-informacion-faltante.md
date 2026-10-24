@@ -5,9 +5,9 @@
 **Talla:** L · **Sprint:** 3 (DEC-01, US-001, US-002, US-006: consumidas por la aplicabilidad; reordenamiento del 2026-10-23) · 4 (US-003, US-004, US-005) · **Capacidad:** CAP-04 · T-1 (AC-T1.1 en el checklist, AC-T1.4 en faltantes) · T-2 (produce el inciso b) · **Recorrido principal:** sí (hipótesis 2: identificar los faltantes)
 **Requisitos:** FR-23 (dueña, vía HU-18); FR-09 (contexto con faltantes), FR-27 inciso (b) (produce el dato); RN-29 (dueña), RN-26, RN-11, RN-07, RN-22
 **Evidencia:** [→ PRD §5 FR-23], [→ PRD §18 AC-04.1…AC-04.5], [→ PRD §18 M-04.1, M-04.2, M-04.3], [→ PRD §6 RN-26], [→ PRD §6 RN-29], [→ PRD §6 RN-11], [→ PRD §16 TBD-12], [→ PRD §17 FR-23 → HU-18], [→ PRD §2 G-12], [→ PRD §18 AC-T1.1, AC-T1.4, AC-T4.3], [→ readme §5.6 HU-18], [→ readme §4.1 `CaseView.completeness`, `continueWithWarning`, `missingCriticalCount`, `Provenance`], [→ readme §4.2 `ClinicalContext.missingCriticalData`], [→ readme §3.1 `AIAnalysisRecord.missing_critical_data`], [→ readme §3.3 #29], [→ readme §3.3 #38], [→ readme §6 OL-01 (paciente e)], [→ readme §6 OL-03], [→ backlog/01-requisitos.md §14 Q-03, Q-04; §15 P-03], [→ backlog/02-adrs.md DEC-05, Resoluciones P-03], [→ backlog/04-auditoria.md (hallazgos del piloto)], [→ docs/AS-IS.md P4, JTBD 2], [→ CLAUDE.md]
-**Dependencias:** ⛔ DEC-01 (catálogo `propuesta` revisado por el oncólogo, P-03; no bloquea las historias técnicas) · ⛔ DEC-05 (cerrada en el Pre-S1: Gleason/ISUP en `Diagnosis.grade`) · ↪ US-041, US-042 (catálogo v1 y validador mínimo, `si-hay-capacidad`) · ↪ US-052, US-053 (gateway, S1) · ↪ US-061 (panel, S1) · ↪ US-088, US-090 (vista de caso, S3) · ↪ US-079 (carga, S2) · ↪ US-094 (registro manual de atributos y tratamientos previos, `si-hay-capacidad`) · ↪ US-110, US-111 (registro manual de biomarcadores y diagnóstico, S4) · 🔗 Produce para: US-128 (inciso b), US-124 (Desconocido: falta en el paciente), US-116 (faltantes como "desconocido" en Backend 2), US-177 (re-ejecución) · 🔗 Medido en: US-131 (M-04.1, M-04.2) · 🔗 Regresión [FR-18] → US-102
+**Dependencias:** ⛔ DEC-01 (catálogo `propuesta` revisado por el oncólogo, P-03; no bloquea las historias técnicas; escenario `propuesta_revisada` aceptado para el S3, cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`) · ⛔ DEC-05 (cerrada en el Pre-S1: Gleason/ISUP en `Diagnosis.grade`) · ↪ US-041, US-042 (catálogo v1 y validador mínimo, `si-hay-capacidad`) · ↪ US-052, US-053 (gateway, S1) · ↪ US-061 (panel, S1) · ↪ US-088, US-090 (vista de caso, S3) · ↪ US-079 (carga, S2) · ↪ US-094 (registro manual de atributos y tratamientos previos, `si-hay-capacidad`) · ↪ US-110, US-111 (registro manual de biomarcadores y diagnóstico, S4) · 🔗 Produce para: US-128 (inciso b), US-124 (Desconocido: falta en el paciente), US-116 (faltantes como "desconocido" en Backend 2), US-177 (re-ejecución) · 🔗 Medido en: US-131 (M-04.1, M-04.2) · 🔗 Regresión [FR-18] → US-102
 **Valor:** hoy el oncólogo descubre el faltante *después* de analizar: caso incompleto → análisis → descubre el faltante → vuelve atrás → pide el examen → espera → reanaliza. Es "el loop más costoso" del Discovery (AS-IS, P4: "¿Qué me falta para poder analizar bien este caso?", JTBD 2). Con esta Feature, el oncólogo ve qué datos críticos faltan antes de preguntar, puede cargarlos o registrarlos desde el mismo checklist o continuar con un aviso, y el análisis declara lo que no sabía. El sistema nunca le impide continuar (PP-6).
-**Stories:** DEC-01, US-001 … US-006 (23 puntos, S4)
+**Stories:** DEC-01, US-001 … US-006 (23 puntos: 14 en el S3 —DEC-01, US-001, US-002, US-006— y 9 en el S4 —US-003, US-004, US-005—; reordenamiento del 2026-10-23)
 
 > **Talla L, no XL:** son 6 historias técnicas más 1 de decisión, todas en `clinical-api` + `web` + `packages/clinical-catalogs`. `rag-orchestrator` solo valida la versión del catálogo: el uso de los faltantes en el prompt es de US-116 y en la aplicabilidad, de US-124.
 
@@ -55,6 +55,8 @@ checklist marque como faltante solo lo que de verdad hace falta para analizar un
   publica la versión revisada, entonces ese ítem no está en ella y el documento registra
   el motivo. (asumido)
 
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 1]`):** no se espera a los oncólogos. Se implementa sobre la versión `propuesta_revisada` del escenario más probable (Q1 = cuentan `verificado` y `corregido`; Q4 = `whenConditionUnknown = faltante`), publicada en el catálogo versionado. Se valida en la sesión con oncólogos del S4 (junto a DEC-06, DEC-08, DEC-09 y ARR-05); un cambio que salga de ella solo toca el catálogo JSON. DEC-01 queda en DoR con el escenario aceptado y su cierre formal es en el S4.
+
 ## Contexto técnico
 Ingeniería prepara el paquete de revisión desde la versión `propuesta` de US-001 (un JSON
 por tipo de cáncer, más una tabla legible ítem → campo → condición). El bloque
@@ -80,7 +82,7 @@ No revisa los criterios de aplicabilidad (DEC-11, FEAT-08b), los mapeos terminol
 ## INVEST
 **Small** ✓ es una revisión y una publicación; el esfuerzo de Ingeniería es preparar el paquete y versionar.
 **Testable** ✓ el bloque `validation` se comprueba con `catalog:validate` (US-001 AC-8) y el documento de la decisión contiene revisor, fecha y respuestas.
-*(Independent ⚠ depende de la disponibilidad del oncólogo asesor, SUP-4. Si no revisa antes del cierre del S4, la demo sintética sigue con la versión `propuesta` y M-04.3 queda en rojo según la definición del PRD; ver Conflictos de fuentes.)*
+*(Independent ⚠ depende de la disponibilidad del oncólogo asesor, SUP-4. Mitigado `[S3 resp. 1]`: el S3 implementa sobre el escenario `propuesta_revisada` aceptado y la revisión clínica se hace en la sesión de oncólogos del S4; si no ocurre, M-04.3 queda en rojo según la definición del PRD; ver Conflictos de fuentes.)*
 
 ---
 
@@ -124,7 +126,7 @@ sin desplegar código.
   directorio inexistente o a una versión que no pasa la validación, cuando arranca
   `clinical-api`, entonces el proceso no queda listo (`/health` distinto de `200`) y el
   log registra el código de error sin el contenido del catálogo. `(asumido)`
-  > Pendiente de definir en refinamiento (dueño: Ingeniería · afecta: AC-6): ¿un catálogo inválido deja fuera de servicio todo `clinical-api` (login, ficha, vista de caso) o solo deshabilita el checklist y el análisis? Hasta decidirlo, se sigue el comportamiento de US-042 AC-5 (el servicio no queda listo).
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** un catálogo inválido deja el servicio no listo (todo `clinical-api`), como US-042 AC-5.
 - **AC-7 (contenido inicial)** · Dada la versión de catálogo del S3, cuando se listan
   sus ítems de datos críticos, entonces las claves son exactamente: mama = {`histologia`,
   `grado`, `tnm`, `re`, `rp`, `her2_ihq`, `her2_ish`, `ki67`, `estado_menopausico`,
@@ -133,7 +135,7 @@ sin desplegar código.
   `tratamientos_previos`, `ecog`, `hrr_brca`}; con `gleason_isup` →
   `Diagnosis.grade` y `tnm` → `Diagnosis.stage_value`, y cada ítem con `destination` y
   `estado = "propuesta"` hasta DEC-01. `[FR-23]` `[TBD-12]` `[DEC-05]`
-  > Pendiente de definir en refinamiento (dueño: Ingeniería + oncólogo · afecta: `destination` de `her2_ihq` y `her2_ish`): la convención del readme guarda el método en el valor (`name = "HER2"`, `value = "3+ (IHQ)"`) y ninguna fuente define cómo distinguir IHQ de ISH en `Biomarker`. Propuesta: `match` por LOINC distinto para cada método (cuando DEC-04 lo permita) o por `Exam.exam_type`. ¿Cuál se adopta?
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** HER2 IHQ e ISH se distinguen por `Exam.exam_type` en el `match` de `destination`; si DEC-04 trae un LOINC distinto por método, se usa ese LOINC.
 - **AC-8 (borde · bloque de revisión e integridad)** · Dada una versión con
   `validation.status = "propuesta_revisada"` (DEC-01), cuando se modifica cualquier ítem
   sin crear una versión nueva, entonces `catalog:validate` termina con código ≠ 0 por
@@ -205,7 +207,7 @@ con la misma regla, para saber qué me falta sin revisar el caso a mano.
   HER2), cuando se calcula el checklist, entonces `her2_ish` y `brca_germinal` quedan en
   `no_aplica` y `tratamientos_previos` en `faltante`, según el `whenConditionUnknown` de
   cada ítem, mientras que `tnm` y `her2_ihq` quedan en `faltante`. `(asumido)`
-  > Pendiente de definir en refinamiento (dueño: DEC-01 · afecta: AC-4, M-04.1): el valor de `whenConditionUnknown` de cada ítem condicional real (DEC-01 Q4). El motor solo aplica lo que declara el catálogo.
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** en el catálogo real, `whenConditionUnknown = faltante` en los ítems condicionales (DEC-01 Q4, escenario `propuesta_revisada`, `[S3 resp. 1]`). El motor solo aplica lo que declara el catálogo, así que el AC-4 sobre `test-1.0.0` no cambia.
 - **AC-5 (borde · determinismo sin IA)** · Dados F-M2 y `test-1.0.0`, cuando el
   checklist se calcula dos veces seguidas, entonces ambos resultados son idénticos (misma
   serialización JSON y mismo `catalogVersion`), y el cliente de `rag-orchestrator`
@@ -221,7 +223,7 @@ con la misma regla, para saber qué me falta sin revisar el caso a mano.
   `original_name = "Ki67 índice"` en `no_mapeado`, cuando se calcula el checklist,
   entonces `ki67` sigue en `faltante` (nunca se asigna un concepto a un término no
   mapeado). `[RN-27]` `(asumido)`
-  > Pendiente de definir en refinamiento (dueño: Ingeniería + oncólogo · afecta: AC-8, M-04.2): un término `no_mapeado` que en realidad corresponde a un ítem crítico genera un falso faltante. ¿Se marca aparte como "posible dato sin mapear" con enlace a la revisión de mapeos (US-109), o basta con que US-131 lo cuente como falso positivo?
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** un `no_mapeado` crítico no se marca aparte; US-131 lo cuenta como falso positivo.
 
 ## Contexto técnico
 Módulo `apps/clinical-api/src/modules/completeness/` (`completeness.service.ts` y
@@ -236,9 +238,9 @@ interviene `[ADR-29]` `[CLAUDE.md]`.
 4. Si el registro que cuenta (el más reciente por fecha de observación o examen; en empate, el creado más tarde) tiene un `review_status` incluido en `verifiedReviewStatuses` → `presente_verificado`; si no (incluido `requiere_revision`, que cubre "en conflicto") → `presente_sin_verificar`.
 5. El orden de salida es el del catálogo. No hay LLM ni aleatoriedad.
 
-> Pendiente de definir en refinamiento (dueño: oncólogo · afecta: regla 4, M-04.2): si un mismo ítem tiene un registro verificado antiguo y uno más reciente sin verificar, ¿cuenta el más reciente (regla 4) o basta con que exista uno verificado?
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** cuenta el registro más reciente aunque no esté verificado (regla 4, conservador): un verificado antiguo con uno más reciente sin verificar da `presente_sin_verificar`.
 
-> Pendiente de definir en refinamiento (dueño: DEC-01 Q8 + Ingeniería · afecta: M-04.2 y posiblemente el esquema de datos): el modelo no tiene marca de "ausencia confirmada" (p. ej., "sin tratamientos previos"); hasta decidirlo, un paciente sin `PriorTreatment` con la condición cumplida queda en `faltante`, lo que puede bajar la especificidad.
+> **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** sin cambio de esquema en el S3 para la "ausencia confirmada" (DEC-01 Q8): un paciente sin `PriorTreatment` con la condición cumplida queda en `faltante`. La pregunta se lleva a la sesión de oncólogos del S4.
 
 **Fixtures sintéticos** (FX-04-a y FX-04-b; todos `data_origin = sintetico`, activos, con episodio abierto, convenio registrado y sin opt-out; los usan US-002 a US-006 y US-131):
 
@@ -526,7 +528,7 @@ qué información se hizo.
   un error durante el análisis, cuando se envía el `POST`, entonces la respuesta es `500`
   con `{ error, message }`, el cliente de `rag-orchestrator` registra cero llamadas y no
   se persiste ningún registro. `(asumido: hallazgo M-08 del piloto)`
-  > Pendiente de definir en refinamiento (dueño: usuario + Ingeniería · afecta: AC-8): si el checklist falla en el servidor, ¿se responde con error (reproducibilidad, AC-T1.4) o se analiza sin faltantes declarando "checklist no disponible" en la Base (RN-26, no bloquear)? Hasta decidirlo, se implementa el error.
+  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** si el checklist falla en el servidor, el análisis responde error (reproducibilidad, AC-T1.4); no se analiza sin faltantes.
 
 ## Contexto técnico
 Módulo único `evidence-analysis` de `clinical-api` `[OL-03]`: el servicio llama a
@@ -568,6 +570,7 @@ FR-12 (FEAT-11a).
 | P-02 | PRD FR-15: `403` sin pertenencia al equipo tratante (S5) en `/completeness` y en el análisis | Decisión P-02: autorización por paciente fuera del MVP | P-02: regresión hacia US-204 (Post-MVP) |
 | — | readme §5.0 / PRD §14: egreso en el S4 (`422` por egresado) | Slicing adoptado: ciclo de vida Post-MVP | Regresión hacia US-198 (Post-MVP) |
 | Slicing v2 | PRD §14 S3 y readme §5.0 S3: faltantes en el S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): faltantes en el S4, junto con el registro manual (US-110, US-111) | Se siguió el slicing v2 |
+| S3-2026-10-23 | DEC-01 cerrada por el oncólogo antes de implementar (S4) | Reordenamiento y refinamiento del S3 (2026-10-23): DEC-01, US-001, US-002 y US-006 pasan al S3; DEC-01 en DoR con escenario `propuesta_revisada` aceptado y cierre en la sesión de oncólogos del S4 `[S3 resp. 1]`; paquete de decisiones de US-001/US-002/US-006 aceptado `[S3 resp. 5]` | Decisión del usuario (refinamiento del S3) |
 
 *(El antiguo C4 —ejemplo de readme §4.2 con `missingCriticalData` del paciente semilla— se retiró: el ejemplo encaja con el paciente semilla (e) de OL-01 y no es un conflicto; hallazgo B-02 del piloto.)*
 

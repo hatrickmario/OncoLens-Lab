@@ -5,7 +5,7 @@
 **Talla:** L · **Sprint:** `si-hay-capacidad` (US-112…US-115) · 4 (US-238: reescritura condicional de la consulta) · 5 (US-116) · **Capacidad:** CAP-06 (AC-06.1 parte S3: híbrida, expansión, filtros) · CAP-05 (AC-05.1: fuentes y filtros reales) · CAP-04 (AC-04.3: faltantes como "desconocido" en Backend 2) · **Recorrido principal:** sí (US-116) · no (US-112…US-115, US-238)
 **Requisitos:** FR-09 (parte S3: *sparse*, filtros, expansión bilingüe; técnica sin HU, Q-08) · IA-02, IA-03 · RN-03, RN-05 (regresiones) · RN-02 (regresión; **enmienda decidida el 2026-10-23 en US-238**) · RN-11 (regresión: notas enmascaradas)
 **Evidencia:** [→ PRD §5 FR-09], [→ PRD §6 RN-02, RN-03, RN-05, RN-11], [→ PRD §12 Idioma, Recuperación], [→ PRD §18.3.4 AC-04.3], [→ PRD §18.3.5 AC-05.1], [→ PRD §18.3.6 AC-06.1, M-06.1], [→ readme §5.0 S3 KR1, KR2 ("enmascaramiento de las notas enviadas al LLM")], [→ readme §4.1 `sourcesSelected`, `filtersApplied`], [→ readme §4.2 `ClinicalContext.missingCriticalData`, `/rag/query`], [→ readme §6 OL-02 (no incluye: *sparse*, filtros), OL-04 (no incluye: selectores)], [→ readme §3.3 #10], [→ backlog/01-requisitos.md §10 V-04, §14 Q-08], [→ docs/AS-IS.md P5, JTBD 3]
-**Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117 (*sparse* poblado), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
+**Dependencias:** ↪ US-055 (pipeline dense), US-052 (contexto), US-117b (*sparse* poblado; antes US-117), FEAT-04 US-006 (faltantes en el contexto) · ⛔ ADR-39 (modelo *sparse* y fusión; los AC usan adapters falsos) · 🔗 Medido en: US-133 (M-06.1 sin retroceso) · 🔗 Regresión [RN-02] → US-055 · 🔗 Regresión [RN-05] → US-055 · 🔗 Regresión [RN-11] → US-049
 **Valor:** el oncólogo busca con términos exactos (un fármaco, un gen) que la búsqueda semántica sola pierde, en español sobre evidencia mayoritariamente en inglés, y necesita acotar a guías o ensayos (P5, JTBD 3). Con esta Feature la búsqueda combina ambas señales, se expande al otro idioma, respeta los filtros que el oncólogo ve en el panel y sabe qué datos del paciente faltan.
 **Workaround en el MVP (US-112…US-115, y US-133 en FEAT-T5b):** ADR-39 elige *embeddings* multilingües; la recuperación sigue siendo *dense* + *reranker* (US-055) y la suite mide recall es→en ≥ 0,70 (US-072).
 **Stories:** US-112, US-113, US-114, US-115 (16 puntos, `si-hay-capacidad`) · US-238 (5 puntos, S4) · US-116, US-220 (6 puntos, S5)
@@ -57,7 +57,7 @@ porque la búsqueda semántica no lo ubicó.
 `MilvusRepository.hybrid_search()` con el mismo filtro escalar (`is_current`,
 `cancer_type_tags`, `population`, `source_type`) en ambas ramas y fusión de candidatos
 antes del *reranker*; `relevance_score` sigue saliendo solo del *reranker*
-`[readme §6.1 #4]`. Depende de que el *sparse* esté poblado (US-117). Tests: Pytest con
+`[readme §6.1 #4]`. Depende de que el *sparse* esté poblado (US-117b). Tests: Pytest con
 recuperadores falsos y un test contra Milvus de test en la CI.
 
 ## INVEST
@@ -355,3 +355,4 @@ ampliados. El contrato OpenAPI cambia de forma compatible (`meta.retrievalParams
 | — | readme OL-03 (S1): `filtersApplied` se valida y persiste, sin aplicarse | readme §5.0 S3 KR2: filtros conectados a datos reales | S3 (US-114), sin cambio de contrato |
 | Slicing v2 | PRD FR-09 y §14 S3: búsqueda híbrida, expansión bilingüe y filtros en el S3; AC-05.1 y AC-06.1 (parte S3) | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): híbrida, bilingüe y filtros `si-hay-capacidad`; faltantes en la consulta en el S5 | AC-05.1 (filtros reales) y la parte S3 de AC-06.1 quedan en historias `si-hay-capacidad` |
 | C-Pre5 | Contrato de readme §4.1: `filtersApplied` sin filtro de antigüedad | Usuario, 2026-10-11: filtro por año de publicación | Usuario (`[Pre-S1 resp. 15]`): `publishedFromYear` en US-033 (AC-14) y US-220 en el S5 |
+| S3-2026-10-23 | Dependencia del *sparse* poblado en US-117 | Refinamiento del S3 (2026-10-23): US-117 partida en US-117a y US-117b | El *sparse* de la semilla y el versionado son de US-117b (S3) `[S3 resp. 2]` |
