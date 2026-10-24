@@ -8,16 +8,20 @@ contenido del archivo.
 """
 
 import json
+import re
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.criterios_aplicabilidad import (
+    CondicionDeParcial,
     CriterioDeAplicabilidad,
     DestinoDelCriterio,
+    EstadoDeRevision,
     LimitesDeRegla,
+    OperadorDeRegla,
     ReglaDeAplicabilidad,
 )
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
@@ -25,51 +29,97 @@ from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 NOMBRE_DEL_ARCHIVO = "aplicabilidad.json"
 
 
+# Patrones y cotas idénticos a ``comun.schema.json`` y ``aplicabilidad.schema.json``; el test de paridad
+# (tests/unit/test_paridad_aplicabilidad_esquema.py) falla si el espejo se vuelve más laxo que el esquema.
+_CLAVE = r"^[a-z0-9_]+$"
+_TIPO_DE_CANCER = r"^[a-z]+$"
+_CLAVE_DE_ESTUDIO = r"^[a-z0-9_]+(\.[a-z0-9_]+)?$"
+_ENTIDAD = r"^[A-Z][A-Za-z]+$"
+_CAMPO = r"^[a-z][a-z0-9_]*$"
+_CLAVE_DE_COINCIDENCIA = r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)?$"
+_VERSION = r"^(test-([a-z]+-)?)?\d+\.\d+\.\d+$"
+_MINUSCULAS_Y_GUION_BAJO = r"^[a-z_]+$"
+
+
+def _sin_repetidos(valores: list[str]) -> list[str]:
+    if len(set(valores)) != len(valores):
+        raise ValueError("valores repetidos")
+    return valores
+
+
+_Texto = Annotated[str, Field(min_length=1)]
+_ListaUnica = Annotated[list[_Texto], Field(min_length=1), AfterValidator(_sin_repetidos)]
+
+
 class _Estricto(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    # strict: ``"true"`` o ``1`` no son booleanos, ``"0"`` no es número (el esquema JSON también los rechaza).
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
 class _Etiqueta(_Estricto):
-    es: str = Field(min_length=1)
-    en: str | None = Field(default=None, min_length=1)
+    es: _Texto
+    en: _Texto | None = None
 
 
 class _Destino(_Estricto):
-    entity: str
-    field: str | None = None
-    match: dict[str, str | list[str]] = Field(default_factory=dict)
+    entity: str = Field(pattern=_ENTIDAD)
+    field: str | None = Field(default=None, pattern=_CAMPO)
+    match: dict[Annotated[str, Field(pattern=_CLAVE_DE_COINCIDENCIA)], _Texto | _ListaUnica] = (
+        Field(default_factory=dict)
+    )
 
 
 class _Parcial(_Estricto):
-    when: Literal["solo_subgrupo", "rango_solapado"]
+    when: CondicionDeParcial
 
 
 class _Limites(_Estricto):
     min: float | None = None
     max: float | None = None
 
+    @model_validator(mode="after")
+    def _exigir_algun_extremo(self) -> "_Limites":
+        if self.min is None and self.max is None:
+            raise ValueError("limits sin ningún extremo")
+        return self
+
 
 class _Regla(_Estricto):
-    operator: Literal["igualdad", "pertenencia", "rango"]
-    equivalences: dict[str, list[str]] = Field(default_factory=dict)
+    operator: OperadorDeRegla
+    equivalences: (
+        Annotated[dict[Annotated[str, Field(pattern=_CLAVE)], _ListaUnica], Field(min_length=1)]
+        | None
+    ) = None
     partial: _Parcial
     limits: _Limites | None = None
 
 
 class _Criterio(_Estricto):
-    key: str
-    cancerType: str
-    studyKey: str
+    key: str = Field(pattern=_CLAVE)
+    cancerType: str = Field(pattern=_TIPO_DE_CANCER)
+    studyKey: str = Field(pattern=_CLAVE_DE_ESTUDIO)
     label: _Etiqueta
     destination: _Destino
     isExclusionary: bool
     rule: _Regla
-    estado: Literal["propuesta", "pendiente", "revisado"]
+    estado: EstadoDeRevision
+
+
+class _Validacion(_Estricto):
+    scope: Annotated[
+        list[Literal["datos_criticos", "matriz_item_campo", "aplicabilidad"]],
+        Field(min_length=1),
+        AfterValidator(_sin_repetidos),
+    ]
+    status: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    reviewerRole: str = Field(pattern=_MINUSCULAS_Y_GUION_BAJO)
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    catalogHash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class _Archivo(_Estricto):
-    version: str
-    validation: dict[str, object] | None = None
+    version: str = Field(pattern=_VERSION)
+    validation: _Validacion | None = None
     items: list[_Criterio]
 
 
@@ -86,7 +136,11 @@ class CriteriosDelCatalogo:
 def cargar_criterios_de_aplicabilidad(
     catalogos: Path, tipos_de_cancer: tuple[str, ...]
 ) -> CriteriosDelCatalogo:
-    """Lee una vez ``<catálogos>/<tipo>/aplicabilidad.json`` de cada tipo del manifiesto (solo lectura)."""
+    """Lee una vez ``<catálogos>/<tipo>/aplicabilidad.json`` de cada tipo del manifiesto (solo lectura).
+
+    Un tipo que no sea ``^[a-z]+$`` (p. ej. ``..``) no es un directorio del catálogo: ``CatalogoNoDisponible``."""
+    if not all(re.fullmatch(_TIPO_DE_CANCER, tipo) for tipo in tipos_de_cancer):
+        raise CatalogoNoDisponible("el manifiesto declara un tipo de cáncer inválido")
     return CriteriosDelCatalogo(
         {
             tipo: _leer_criterios_del_tipo(catalogos / tipo / NOMBRE_DEL_ARCHIVO)
@@ -129,7 +183,10 @@ def _a_criterio_del_dominio(item: _Criterio) -> CriterioDeAplicabilidad:
             operador=regla.operator,
             parcial_cuando=regla.partial.when,
             equivalencias=MappingProxyType(
-                {canonico: tuple(valores) for canonico, valores in regla.equivalences.items()}
+                {
+                    canonico: tuple(valores)
+                    for canonico, valores in (regla.equivalences or {}).items()
+                }
             ),
             limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
         ),

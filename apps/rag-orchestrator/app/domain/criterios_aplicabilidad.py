@@ -6,7 +6,13 @@ operativo de cada operador lo implementa el motor de aplicabilidad (US-122) sobr
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
+
+
+# Vocabularios cerrados del catálogo (una sola fuente; el adapter los importa).
+OperadorDeRegla = Literal["igualdad", "pertenencia", "rango"]
+CondicionDeParcial = Literal["solo_subgrupo", "rango_solapado"]
+EstadoDeRevision = Literal["propuesta", "pendiente", "revisado"]
 
 
 @dataclass(frozen=True)
@@ -28,8 +34,8 @@ class LimitesDeRegla:
 
 @dataclass(frozen=True)
 class ReglaDeAplicabilidad:
-    operador: str
-    parcial_cuando: str
+    operador: OperadorDeRegla
+    parcial_cuando: CondicionDeParcial
     equivalencias: Mapping[str, tuple[str, ...]]
     limites: LimitesDeRegla | None
 
