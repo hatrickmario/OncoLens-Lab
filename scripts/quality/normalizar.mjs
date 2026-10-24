@@ -196,7 +196,7 @@ export function describir(h) {
 }
 
 /** Reporte de `reports/quality/latest.json`; `ahora` y `commit` se inyectan para que sea reproducible en tests. */
-export function armarReporte(umbrales, hallazgos, { ahora, commit }) {
+export function armarReporte(umbrales, hallazgos, { ahora, commit, cobertura = null }) {
   const errores = hallazgos.filter((h) => h.severity === 'error').length;
   return {
     generadoEn: ahora.toISOString(),
@@ -204,6 +204,8 @@ export function armarReporte(umbrales, hallazgos, { ahora, commit }) {
     umbrales: { ...umbrales, excepciones: undefined },
     excepcionesVigentes: excepcionesVigentes(umbrales.excepciones, ahora),
     resumen: { errores, alertas: hallazgos.length - errores },
+    // Porcentaje de líneas cambiadas cubiertas por archivo (US-213 AC-11); null = sin informes de cobertura o sin rama base.
+    cobertura,
     hallazgos,
   };
 }

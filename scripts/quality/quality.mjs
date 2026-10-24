@@ -19,6 +19,7 @@ import {
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
 import { verificarCoberturaDeAc } from './check-ac-coverage.mjs';
+import { alertasDeCobertura, medirCoberturaDelPr } from './cobertura.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { leerUmbrales } from './umbrales.mjs';
 
@@ -147,7 +148,7 @@ function ejecutarImportLinter() {
   return evaluarImportLinter(resultado.status, `${resultado.stdout}${resultado.stderr}`, RAG);
 }
 
-async function medir(umbrales) {
+async function medir(umbrales, cobertura) {
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
@@ -157,6 +158,7 @@ async function medir(umbrales) {
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
     ...verificarCoberturaDeAc(RAIZ),
+    ...(cobertura ? alertasDeCobertura(cobertura, umbrales.coverage) : []),
   ];
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }
@@ -172,8 +174,13 @@ async function principal() {
   // Un reporte viejo no puede sobrevivir a una herramienta rota: se borra antes de medir.
   rmSync(RUTA_REPORTE, { force: true });
   const umbrales = leerUmbrales();
-  const medicion = await medir(umbrales);
-  const reporte = armarReporte(umbrales, medicion, { ahora: new Date(), commit: commitActual() });
+  const cobertura = medirCoberturaDelPr(RAIZ);
+  const medicion = await medir(umbrales, cobertura);
+  const reporte = armarReporte(umbrales, medicion, {
+    ahora: new Date(),
+    commit: commitActual(),
+    cobertura,
+  });
   for (const h of medicion) console.log(describir(h));
   if (process.argv.includes('--reporte')) {
     mkdirSync(path.dirname(RUTA_REPORTE), { recursive: true });

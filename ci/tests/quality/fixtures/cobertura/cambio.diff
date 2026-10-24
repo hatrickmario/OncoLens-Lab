@@ -1,0 +1,22 @@
+diff --git a/apps/clinical-api/src/modules/x/x.service.ts b/apps/clinical-api/src/modules/x/x.service.ts
+index 1111111..2222222 100644
+--- a/apps/clinical-api/src/modules/x/x.service.ts
++++ b/apps/clinical-api/src/modules/x/x.service.ts
+@@ -0,0 +1,10 @@
++linea 1
++linea 2
++linea 3
++linea 4
++linea 5
++linea 6
++linea 7
++linea 8
++linea 9
++linea 10
+diff --git a/scripts/herramienta.mjs b/scripts/herramienta.mjs
+index 3333333..4444444 100644
+--- a/scripts/herramienta.mjs
++++ b/scripts/herramienta.mjs
+@@ -5,0 +6,2 @@
++a
++b

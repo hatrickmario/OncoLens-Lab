@@ -21,5 +21,12 @@ export default defineConfig({
     ],
     // Sin reintentos: un test inestable es un bug (CLAUDE.md, Política TDD).
     retry: 0,
+    // Solo con `--coverage` (npm run test:coverage): LCOV para la cobertura de líneas cambiadas (US-213 AC-11).
+    coverage: {
+      provider: 'v8',
+      reporter: ['lcov'],
+      include: ['src/**/*.ts'],
+      reportsDirectory: 'coverage',
+    },
   },
 });
