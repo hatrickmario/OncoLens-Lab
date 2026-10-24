@@ -12,9 +12,7 @@ test.describe('Listado y búsqueda de pacientes (L1D-202, ARR-09)', () => {
     const filas = page.getByRole('row').filter({ has: page.getByRole('rowheader') });
     await expect(filas).toHaveCount(5);
     for (let n = 1; n <= 5; n += 1) {
-      await expect(
-        page.getByRole('link', { name: new RegExp(`P\\. S\\. ${n}\\.`) }),
-      ).toBeVisible();
+      await expect(page.getByRole('link', { name: new RegExp(`P\\. S\\. ${n}\\.`) })).toBeVisible();
     }
     await expect(filas.filter({ hasText: 'SINTÉTICO' })).toHaveCount(5);
   });

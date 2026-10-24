@@ -26,7 +26,11 @@ const sinSuscripcion = () => () => {};
 
 /** `false` en el HTML del servidor y durante la hidratación; `true` ya en el navegador. */
 function useHidratado(): boolean {
-  return useSyncExternalStore(sinSuscripcion, () => true, () => false);
+  return useSyncExternalStore(
+    sinSuscripcion,
+    () => true,
+    () => false,
+  );
 }
 
 /** Búsqueda por documento o por nombre completo; valida con el Zod del contrato antes de enviar (UX; el servidor revalida). */
