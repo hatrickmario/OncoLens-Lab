@@ -111,7 +111,8 @@ export type MotivoDeConfiguracionInvalida =
   | 'variable_ausente'
   | 'catalogo_no_disponible'
   | 'version_catalogo_distinta'
-  | 'tipo_no_en_catalogo';
+  | 'tipo_no_en_catalogo'
+  | 'catalogo_invalido';
 
 /**
  * Un elemento inválido de un enum no sensible se registra solo si son letras minúsculas (hasta 24): descarta números,

@@ -1,4 +1,207 @@
 {
-  "version": "1.0.0",
-  "items": []
+  "version": "1.1.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "items": [
+    {
+      "key": "histologia",
+      "cancerType": "mama",
+      "label": {
+        "es": "Histología",
+        "en": "Histology"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "grado",
+      "cancerType": "mama",
+      "label": {
+        "es": "Grado histológico",
+        "en": "Histologic grade"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tnm",
+      "cancerType": "mama",
+      "label": {
+        "es": "Estadificación TNM",
+        "en": "TNM staging"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "re",
+      "cancerType": "mama",
+      "label": {
+        "es": "Receptor de estrógeno",
+        "en": "Estrogen receptor"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "RE"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "rp",
+      "cancerType": "mama",
+      "label": {
+        "es": "Receptor de progesterona",
+        "en": "Progesterone receptor"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "RP"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ihq",
+      "cancerType": "mama",
+      "label": {
+        "es": "HER2 por IHQ",
+        "en": "HER2 by IHC"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2",
+          "exam.exam_type": "IHQ"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ish",
+      "cancerType": "mama",
+      "label": {
+        "es": "HER2 por ISH",
+        "en": "HER2 by ISH"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2",
+          "exam.exam_type": "ISH"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta",
+      "condition": {
+        "item": "her2_ihq",
+        "operator": "prefijo",
+        "values": [
+          "2+"
+        ]
+      },
+      "whenConditionUnknown": "faltante"
+    },
+    {
+      "key": "ki67",
+      "cancerType": "mama",
+      "label": {
+        "es": "Ki-67",
+        "en": "Ki-67"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "Ki-67"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "label": {
+        "es": "Estado menopáusico",
+        "en": "Menopausal status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "mama",
+      "label": {
+        "es": "Estado funcional (ECOG)",
+        "en": "Performance status (ECOG)"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tratamientos_previos",
+      "cancerType": "mama",
+      "label": {
+        "es": "Tratamientos previos",
+        "en": "Prior treatments"
+      },
+      "destination": {
+        "entity": "PriorTreatment"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "brca_germinal",
+      "cancerType": "mama",
+      "label": {
+        "es": "BRCA germinal",
+        "en": "Germline BRCA"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "BRCA"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
 }

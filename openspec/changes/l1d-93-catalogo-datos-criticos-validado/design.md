@@ -86,8 +86,18 @@ cerrado de D2), y el proceso no queda listo (`[S3 resp. 5]`, como US-042 AC-5). 
 (solo lee `manifest.json`; l1d-126 añade su lector de aplicabilidad).
 
 **D6 · Versión**: `manifest.json.version` y la `version` de cada archivo por tipo suben a **`1.1.0`** (contenido
-nuevo; una sola subida para FEAT-04 y FEAT-08b del S3, l1d-126 D5). Se actualizan los valores
-`CLINICAL_CATALOG_VERSION` del Compose, la CI y los fixtures de test de ambos backends que hoy esperan `1.0.0`.
+nuevo; una sola subida para FEAT-04 y FEAT-08b del S3, l1d-126 D5). Se actualizan los tests de ambos backends que leen
+el manifest real y esperaban `1.0.0` (`etapa-de-servicios`, `estructura-v1`, `catalogo-version` y
+`test_catalogo_clinico.py`). El Compose y la CI **no** fijan `CLINICAL_CATALOG_VERSION` (la versión sale del
+`manifest.json` montado), así que `infra/` no cambia.
+
+**D7 · Implementación (Gate 2)**:
+- `ajv` pasa a ser **dependencia de runtime** de `clinical-api` (el validador corre al arrancar) y se compila el núcleo
+  `.mjs` con `allowJs`; el Dockerfile copia `validator/` y `schemas/` (deuda: quitar `allowJs`, ver `tasks.md`).
+- La allowlist es **cerrada**: solo las seis entidades clínicas y, de ellas, sin claves foráneas (`*_id`),
+  `source_span`, `reviewed_by`, `recorded_by` ni `ClinicalEvent.description` (control y texto libre no son destino).
+- Un registro único `ARCHIVOS_DEL_CATALOGO` (esquema + reglas por archivo) y un esquema compartido
+  `validation.schema.json` concentran lo que l1d-126 y US-129 amplían. Regla adicional `clave_duplicada`.
 
 ## Dependencias y colaboradores
 

@@ -48,21 +48,24 @@ async function solicitar(app: Awaited<ReturnType<typeof gateway>>['app']) {
 }
 
 describe('versión del catálogo clínico entre backends', () => {
-  it('responde 200 y persiste catalog_version 1.0.0 cuando ambos backends montan 1.0.0 [US-041 AC-1]', async () => {
+  it('responde 200 y persiste la catalog_version del manifest cuando ambos backends montan el mismo catálogo [US-041 AC-1]', async () => {
     rag.responder({
       tipo: 'json',
       status: 200,
-      cuerpo: { ...ragConEvidencia, meta: { ...ragConEvidencia.meta, catalogVersion: '1.0.0' } },
+      cuerpo: {
+        ...ragConEvidencia,
+        meta: { ...ragConEvidencia.meta, catalogVersion: versionDelCatalogo() },
+      },
     });
     const { app } = await gateway('req_Catalogo0001');
 
     const respuesta = await solicitar(app);
 
     expect(respuesta.status).toBe(200);
-    expect(versionDelCatalogo()).toBe('1.0.0');
-    expect(rag.capturadas[0]!.cuerpo['catalogVersion']).toBe('1.0.0');
+    expect(versionDelCatalogo()).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(rag.capturadas[0]!.cuerpo['catalogVersion']).toBe(versionDelCatalogo());
     const fila = await leerRegistroPorTrace(mundo.cliente, 'req_Catalogo0001');
-    expect(fila?.catalog_version).toBe('1.0.0');
+    expect(fila?.catalog_version).toBe(versionDelCatalogo());
   });
 
   it('responde 409 CATALOG_VERSION_MISMATCH sin persistir registro cuando rag-orchestrator responde 409 de catálogo [US-041 AC-2]', async () => {
