@@ -8,7 +8,7 @@ extrae nada con LLM.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus
@@ -20,6 +20,7 @@ from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO
 
 STATUS_RECHAZADO = "rechazado_licencia"
 STATUS_ERROR = "error"
+STATUS_NORMALIZADO = "normalizado"
 ORIGEN_DE_LA_SEMILLA = "fuente_estructurada"
 SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia
@@ -92,6 +93,22 @@ def registro_con_error(
     )
 
 
+def registro_normalizado(
+    documento: DocumentoDeSemilla, admision: Admision, checksum: str, ahora: datetime
+) -> RegistroDeDocumento:
+    """*Checkpoint* de la ingesta en lote (US-117a D2): texto leído y normalizado, aún sin chunks confirmados."""
+    return _registro(
+        documento,
+        identificador_de_documento(documento.document_key, checksum),
+        ahora,
+        license_class=_clase_de_un_admitido(admision),
+        checksum=checksum,
+        status=STATUS_NORMALIZADO,
+        is_current=False,
+        open_access=True,
+    )
+
+
 def _clase_de_un_admitido(admision: Admision) -> str:
     if admision.license_class is None:
         raise ValueError("un documento admitido siempre tiene license_class")
@@ -156,8 +173,13 @@ def chunks_del_documento(
     fragmentos: Sequence[str],
     vectores: Sequence[Sequence[float]],
     ahora: datetime,
+    vectores_sparse: Sequence[Mapping[int, float]] | None = None,
 ) -> list[ChunkDelCorpus]:
-    """Chunks listos para Milvus con los metadatos denormalizados COPIADOS del registro del documento (RN-04, RN-25)."""
+    """Chunks listos para Milvus con los metadatos denormalizados COPIADOS del registro del documento (RN-04, RN-25).
+
+    ``vectores_sparse`` (uno por fragmento, mismo orden) lo entrega la ingesta en lote (US-117a); la semilla no lo pasa.
+    """
+    sparse = vectores_sparse if vectores_sparse is not None else [None] * len(fragmentos)
     return [
         ChunkDelCorpus(
             chunk_id=f"{registro.document_id}#{indice:04d}",
@@ -174,6 +196,9 @@ def chunks_del_documento(
             published_year=registro.published_at.year,
             is_current=registro.is_current,
             created_at_ms=int(ahora.timestamp() * 1000),
+            sparse_vector=vector_sparse,
         )
-        for indice, (fragmento, vector) in enumerate(zip(fragmentos, vectores, strict=True))
+        for indice, (fragmento, vector, vector_sparse) in enumerate(
+            zip(fragmentos, vectores, sparse, strict=True)
+        )
     ]

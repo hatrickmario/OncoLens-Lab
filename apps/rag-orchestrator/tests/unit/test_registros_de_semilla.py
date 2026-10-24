@@ -8,10 +8,12 @@ from app.application.seed_corpus.registros import (
     CLASE_DE_LICENCIA_DE_RECHAZADOS,
     ORIGEN_DE_LA_SEMILLA,
     STATUS_ERROR,
+    STATUS_NORMALIZADO,
     STATUS_RECHAZADO,
     chunks_del_documento,
     registro_con_error,
     registro_embebido,
+    registro_normalizado,
     registro_rechazado,
 )
 from app.config.settings import CLASES_DE_LICENCIA
@@ -27,7 +29,9 @@ CHECKSUM = "ab" * 32
 
 def test_los_valores_fijos_de_las_filas_pertenecen_a_los_dominios_cerrados_del_catalogo() -> None:
     """Si el catálogo cambia un dominio, la semilla falla aquí y no en el ``CHECK`` de PostgreSQL en plena carga."""
-    assert {STATUS_EMBEBIDO, STATUS_RECHAZADO, STATUS_ERROR} <= set(DOMINIOS_CERRADOS["status"])
+    assert {STATUS_EMBEBIDO, STATUS_RECHAZADO, STATUS_ERROR, STATUS_NORMALIZADO} <= set(
+        DOMINIOS_CERRADOS["status"]
+    )
     assert CLASE_DE_LICENCIA_DE_RECHAZADOS in DOMINIOS_CERRADOS["license_class"]
     assert ORIGEN_DE_LA_SEMILLA in DOMINIOS_CERRADOS["metadata_source"]
     assert set(CLASES_DE_LICENCIA) == set(DOMINIOS_CERRADOS["license_class"])
@@ -141,3 +145,37 @@ def test_el_registro_embebido_copia_la_url_original_del_documento_en_source_url(
     registro = registro_embebido(documento, ADMITIDO, CHECKSUM, AHORA)
 
     assert registro.source_url == "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
+
+
+def test_el_registro_normalizado_es_el_checkpoint_no_vigente_con_el_identificador_del_contenido() -> (
+    None
+):
+    registro = registro_normalizado(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+
+    assert (
+        registro.document_id
+        == registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA).document_id
+    )
+    assert (registro.status, registro.is_current, registro.checksum) == (
+        "normalizado",
+        False,
+        CHECKSUM,
+    )
+
+
+def test_cada_chunk_lleva_el_vector_sparse_de_su_fragmento_cuando_se_entrega() -> None:
+    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+
+    chunks = chunks_del_documento(
+        registro, ["uno", "dos"], [[1.0] * 8, [2.0] * 8], AHORA, [{7: 0.5}, {9: 0.25}]
+    )
+
+    assert [c.sparse_vector for c in chunks] == [{7: 0.5}, {9: 0.25}]
+
+
+def test_los_chunks_de_la_semilla_siguen_sin_vector_sparse() -> None:
+    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+
+    chunks = chunks_del_documento(registro, ["uno"], [[1.0] * 8], AHORA)
+
+    assert chunks[0].sparse_vector is None
