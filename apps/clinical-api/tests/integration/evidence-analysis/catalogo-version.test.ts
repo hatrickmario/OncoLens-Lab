@@ -15,6 +15,7 @@ import {
   versionDelCatalogo,
   type MundoDeGateway,
 } from '../../support/gateway.js';
+import { RUTA_DEL_CATALOGO } from '../../support/seed.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 171;
@@ -34,7 +35,13 @@ afterAll(async () => {
   await mundo.cerrar();
 });
 
-const gateway = (traceId: string) => montarGateway(mundo, { traceIds: { traceId: () => traceId } });
+const gateway = (traceId: string, rutaDelCatalogo?: string) =>
+  montarGateway(mundo, {
+    traceIds: { traceId: () => traceId },
+    ...(rutaDelCatalogo === undefined ? {} : { rutaDelCatalogo }),
+  });
+
+const CATALOGO_DE_APLICABILIDAD = `${RUTA_DEL_CATALOGO}/test/fixtures/test-apl-1.0.0`;
 
 async function solicitar(app: Awaited<ReturnType<typeof gateway>>['app']) {
   return clienteVerificado(app)
@@ -96,5 +103,23 @@ describe('versión del catálogo clínico entre backends', () => {
     expect(respuesta.status).toBe(502);
     expect(respuesta.body.error).toBe('ERROR_SERVICIO_IA');
     expect(await contarRegistrosPorTrace(mundo.cliente, 'req_Catalogo0003')).toBe(0);
+  });
+
+  it('responde 409 CATALOG_VERSION_MISMATCH sin persistir registro cuando clinical-api monta test-apl-1.0.0 y rag-orchestrator tiene otra versión con criterios de aplicabilidad [US-121 AC-4]', async () => {
+    rag.responder({ tipo: 'json', status: 409, cuerpo: ragCatalogo });
+    const { app } = await gateway('req_Catalogo0004', CATALOGO_DE_APLICABILIDAD);
+
+    const respuesta = await solicitar(app);
+
+    expect(respuesta.status).toBe(409);
+    expect(respuesta.body).toEqual({
+      error: 'CATALOG_VERSION_MISMATCH',
+      message: errorCatalogo.message,
+      traceId: 'req_Catalogo0004',
+    });
+    expect(rag.capturadas[0]!.cuerpo['catalogVersion']).toBe(
+      versionDelCatalogo(CATALOGO_DE_APLICABILIDAD),
+    );
+    expect(await contarRegistrosPorTrace(mundo.cliente, 'req_Catalogo0004')).toBe(0);
   });
 });
