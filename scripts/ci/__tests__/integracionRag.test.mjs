@@ -18,8 +18,15 @@ const DOCKER_FALSO = `#!/usr/bin/env bash
 echo "$*" >> "$STUB_LOG"
 echo "$COMPOSE_PROJECT_NAME" >> "$STUB_LOG.proyecto"
 sub=""
-for a in "$@"; do case "$a" in config|up|ps|run|build|down) sub="$a"; break ;; esac; done
+for a in "$@"; do case "$a" in config|pull|up|ps|run|build|down) sub="$a"; break ;; esac; done
 case "$sub" in
+  pull)
+    # El 503 del registro de imágenes (PR #189, quay.io): una vez o siempre, solo para milvus-etcd.
+    if [[ "$*" == *milvus-etcd* ]]; then
+      [ "$STUB_MODO" = pull_503_siempre ] && { echo "503 Service Unavailable" >&2; exit 1; }
+      if [ "$STUB_MODO" = pull_503_una_vez ] && [ ! -e "$STUB_LOG.pull503" ]; then touch "$STUB_LOG.pull503"; echo "503 Service Unavailable" >&2; exit 1; fi
+    fi
+    exit 0 ;;
   config) echo '{"services":{"rag-pruebas":{"depends_on":{"milvus-standalone":{},"postgres":{}}}}}' ;;
   up) [ "$STUB_MODO" = milvus_no_sano ] && { echo "container milvus-standalone is unhealthy" >&2; exit 1; }; exit 0 ;;
   ps) if [ "$STUB_MODO" = milvus_no_sano ] && [[ "$*" == *milvus-standalone* ]]; then echo "milvus-standalone unhealthy running"; else echo "x healthy running"; fi ;;
@@ -56,6 +63,9 @@ beforeAll(() => {
   // `mktemp` falso: con STUB_MKTEMP_VACIO termina bien pero sin crear nada (el script debe fallar, no seguir con una ruta vacía).
   writeFileSync(path.join(temporal, 'mktemp'), '#!/usr/bin/env bash\n[ -n "$STUB_MKTEMP_VACIO" ] && exit 0\nexec /usr/bin/mktemp "$@"\n');
   chmodSync(path.join(temporal, 'mktemp'), 0o755);
+  // `sleep` falso: registra la espera pedida en vez de dormir (la espera creciente de la descarga, AC-13).
+  writeFileSync(path.join(temporal, 'sleep'), '#!/usr/bin/env bash\necho "$1" >> "$STUB_LOG.sleep"\n');
+  chmodSync(path.join(temporal, 'sleep'), 0o755);
   // `npm` falso: el script de clinical-api termina con scripts/test-integration.sh, que correría la suite real.
   writeFileSync(path.join(temporal, 'npm'), '#!/usr/bin/env bash\nexit 0\n');
   chmodSync(path.join(temporal, 'npm'), 0o755);
@@ -73,6 +83,8 @@ function correr(modo, entorno = {}, script = SCRIPT) {
   rmSync(registro, { force: true });
   rmSync(`${registro}.proyecto`, { force: true });
   rmSync(`${registro}.copiado`, { force: true });
+  rmSync(`${registro}.pull503`, { force: true });
+  rmSync(`${registro}.sleep`, { force: true });
   const resultado = spawnSync('bash', [script], {
     cwd: RAIZ,
     encoding: 'utf8',
@@ -87,7 +99,8 @@ function correr(modo, entorno = {}, script = SCRIPT) {
   const proyectos = leerLineas(`${registro}.proyecto`);
   const copiado = leerLineas(`${registro}.copiado`);
   const llamadas = existsSync(registro) ? readFileSync(registro, 'utf8').split('\n').filter(Boolean) : [];
-  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado };
+  const esperas = leerLineas(`${registro}.sleep`);
+  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado, esperas };
 }
 /**
  * Repositorio git temporal con una copia del script (`raiz` se calcula desde la ubicación del script), un archivo versionado
@@ -245,6 +258,62 @@ describe('integracion-rag-orchestrator.sh', () => {
   it('declara como permitidos exactamente los tres secretos del arnés de corpus [ARR-01 AC-2, RN-10]', () => {
     const [, lista] = readFileSync(SCRIPT, 'utf8').match(/SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS=\(([^)]*)\)/);
     expect(lista.trim().split(/\s+/).sort()).toEqual([...SECRETOS_PERMITIDOS].sort());
+  });
+});
+
+// Cada caso lanza el script real (bash) con docker falso: tiempo máximo explícito, no el de Vitest por defecto.
+describe('descarga de imágenes de integracion-rag-orchestrator.sh [US-213 AC-13]', { timeout: 30_000 }, () => {
+  const pulls = (llamadas) => llamadas.filter((llamada) => /\bpull\b/.test(llamada));
+  const pytestsEjecutados = (llamadas) => llamadas.filter((llamada) => /\brun\b/.test(llamada) && !llamada.includes('--entrypoint'));
+
+  it('descarga milvus-etcd y milvus-minio antes de levantar los servicios, con --ignore-buildable [US-213 AC-13]', () => {
+    const { codigo, llamadas } = correr('ok');
+
+    expect(codigo).toBe(0);
+    const ultimoPull = llamadas.findLastIndex((llamada) => /\bpull\b/.test(llamada));
+    const primerUp = llamadas.findIndex((llamada) => /\bup\b/.test(llamada));
+    expect(ultimoPull).toBeGreaterThanOrEqual(0);
+    expect(primerUp).toBeGreaterThan(ultimoPull);
+    expect(pulls(llamadas).some((llamada) => llamada.includes('milvus-etcd'))).toBe(true);
+    expect(pulls(llamadas).some((llamada) => llamada.includes('milvus-minio'))).toBe(true);
+    expect(pulls(llamadas).every((llamada) => llamada.includes('--ignore-buildable'))).toBe(true);
+  });
+
+  it('recupera al segundo intento con la espera configurada cuando el registro responde 503 una vez [US-213 AC-13] [S3 resp. 14]', () => {
+    const { codigo, salida, llamadas, esperas } = correr('pull_503_una_vez', {
+      INTEGRACION_RAG_PULL_ESPERA_BASE_S: '7',
+    });
+
+    expect(codigo).toBe(0);
+    expect(salida).toContain('integracion-rag: OK');
+    expect(esperas).toEqual(['7']);
+    expect(pulls(llamadas).filter((llamada) => llamada.includes('milvus-etcd'))).toHaveLength(2);
+    expect(pytestsEjecutados(llamadas)).toHaveLength(1);
+  });
+
+  it('falla nombrando la imagen de milvus-etcd, sin hablar de salud ni ejecutar up, cuando el 503 persiste [US-213 AC-13] [S3 resp. 14]', () => {
+    const { codigo, salida, llamadas, esperas } = correr('pull_503_siempre', {
+      INTEGRACION_RAG_PULL_INTENTOS: '3',
+      INTEGRACION_RAG_PULL_ESPERA_BASE_S: '2',
+    });
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toContain('integracion-rag: no se pudo descargar la imagen de milvus-etcd');
+    expect(salida).not.toMatch(/no quedaron sanos/);
+    expect(llamadas.some((llamada) => /\bup\b/.test(llamada))).toBe(false);
+    expect(pulls(llamadas).filter((llamada) => llamada.includes('milvus-etcd'))).toHaveLength(3);
+    expect(esperas).toEqual(['2', '4']);
+    expect(ejecutoPytest(llamadas)).toBe(false);
+    expect(llamadas.at(-1)).toMatch(/\bdown -v\b/);
+  });
+
+  it('conserva el mensaje de salud y no reintenta el up cuando la descarga fue correcta y Milvus no queda sano [US-213 AC-13]', () => {
+    const { codigo, salida, llamadas } = correr('milvus_no_sano');
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toMatch(/no quedaron sanos/);
+    expect(salida).not.toMatch(/no se pudo descargar/);
+    expect(llamadas.filter((llamada) => /\bup\b/.test(llamada))).toHaveLength(1);
   });
 });
 
