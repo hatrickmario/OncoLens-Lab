@@ -11,15 +11,16 @@ import { esArchivoDeTest } from './archivos-de-test.mjs';
 import { hallazgo } from './normalizar.mjs';
 
 const REGLA = 'ac-sin-test-de-aceptacion';
+const REGLA_SIN_HISTORIA = 'ac-historia-no-encontrada';
 const CARPETAS_IGNORADAS = /^(node_modules|\.next|dist|coverage|\.venv|\.git|archive|generated|reports)$/;
 const EXTENSIONES = /\.(ts|tsx|js|jsx|mjs|cjs|py)$/;
 const SEPARADOR_DE_RANGO = '(?:…|\\.\\.\\.|-)';
 
 const LINEA_DE_HISTORIA = new RegExp(
-  `^(?:L1D-\\d+\\s*·\\s*)?\\**US-(\\d+)([a-z])?\\**(?:\\s*\\(AC-(\\d+)\\s*${SEPARADOR_DE_RANGO}\\s*AC-(\\d+)\\))?`,
+  `^(?:L1D-\\d+\\s*·\\s*)?\\**US-(\\d+[a-z]?)\\**(?:\\s*\\(AC-(\\d+)\\s*${SEPARADOR_DE_RANGO}\\s*AC-(\\d+)\\))?`,
 );
-const TAG_DE_VITEST = /\[US-(\d+)\s+AC-(\d+)((?:\s*,\s*(?:AC-)?\d+)*)/g;
-const MARCADOR_DE_PYTEST = /pytest\.mark\.ac\(\s*["']US-(\d+)["']\s*,\s*(\d+)/g;
+const TAG_DE_VITEST = /\[US-(\d+[a-z]?)\s+AC-(\d+)((?:\s*,\s*(?:AC-)?\d+)*)/g;
+const MARCADOR_DE_PYTEST = /pytest\.mark\.ac\(\s*["']US-(\d+[a-z]?)["']\s*,\s*(\d+)/g;
 
 /** Archivos de `directorio` que cumplen `aceptar`, sin recorrer dependencias ni salidas de build. */
 function listar(raiz, directorio, aceptar) {
@@ -32,24 +33,44 @@ function listar(raiz, directorio, aceptar) {
   });
 }
 
-/** Historia y rango de AC que declara un `proposal.md`, o null si su Trazabilidad no abre con una historia. */
+/**
+ * Historia y rango de AC que declara un `proposal.md`, o null si su Trazabilidad no abre con una historia. `historia`
+ * conserva la letra de las historias partidas (`US-117b`); `numero` es la historia entera (`US-117`), por si el backlog
+ * mantiene una sola sección con todos los AC (`US-213` con el rango AC-8…AC-13).
+ */
 export function historiaDelChange(textoDelProposal) {
   const linea = textoDelProposal.split(/^## Trazabilidad\s*$/m)[1]?.split('\n').find((texto) => texto.trim() !== '');
   const coincidencia = linea ? LINEA_DE_HISTORIA.exec(linea.trim()) : null;
   if (!coincidencia) return null;
-  const [, numero, , desde, hasta] = coincidencia;
-  return { historia: `US-${numero}`, rango: desde ? [Number(desde), Number(hasta)] : null };
+  const [, identificador, desde, hasta] = coincidencia;
+  return {
+    historia: `US-${identificador}`,
+    numero: `US-${identificador.replace(/[a-z]$/, '')}`,
+    rango: desde ? [Number(desde), Number(hasta)] : null,
+  };
 }
 
-/** Números de AC de la sección `## US-nnn —` de las Features del backlog. */
-export function acsDeLaHistoria(raiz, historia) {
+/** AC de la sección `## US-nnn[a-z] —` de las Features del backlog, o null si ninguna sección lleva ese identificador. */
+function seccionDeLaHistoria(raiz, identificador) {
   for (const archivo of listar(raiz, 'backlog/features', (ruta) => /FEAT-[^/]*\.md$/.test(ruta))) {
-    const cuerpo = readFileSync(path.join(raiz, archivo), 'utf8').split(new RegExp(`^## ${historia}\\b.*$`, 'm'))[1];
+    const cuerpo = readFileSync(path.join(raiz, archivo), 'utf8').split(new RegExp(`^## ${identificador}\\b.*$`, 'm'))[1];
     if (cuerpo === undefined) continue;
     const seccion = cuerpo.split(/^## US-\d+/m)[0];
     return [...seccion.matchAll(/^- \*\*AC-(\d+)\b/gm)].map((coincidencia) => Number(coincidencia[1]));
   }
-  return [];
+  return null;
+}
+
+/**
+ * Números de AC de la historia y el identificador de la sección que los contiene: primero la sección con la letra (`US-117b`),
+ * y si el backlog no la tiene, la historia entera (`US-213`). Null si ninguna existe.
+ */
+export function acsDeLaHistoria(raiz, historia) {
+  for (const identificador of new Set([historia.historia, historia.numero])) {
+    const acs = seccionDeLaHistoria(raiz, identificador);
+    if (acs !== null) return { identificador, acs };
+  }
+  return null;
 }
 
 /** Conjunto de `US-nnn AC-n` con test de aceptación tagueado en los tests del repositorio. */
@@ -80,15 +101,28 @@ export function verificarCoberturaDeAc(raiz) {
       const proposal = path.join(carpeta, change, 'proposal.md');
       const historia = existsSync(proposal) ? historiaDelChange(readFileSync(proposal, 'utf8')) : null;
       if (!historia) return [];
-      return acsDeLaHistoria(raiz, historia.historia)
+      const seccion = acsDeLaHistoria(raiz, historia);
+      const archivo = `openspec/changes/${change}/proposal.md`;
+      if (seccion === null) {
+        return [
+          hallazgo({
+            tool: 'check-ac-coverage',
+            rule: REGLA_SIN_HISTORIA,
+            file: archivo,
+            symbol: `${historia.historia}: ninguna sección de backlog/features la contiene (change ${change})`,
+            severity: 'warn',
+          }),
+        ];
+      }
+      return seccion.acs
         .filter((n) => !historia.rango || (n >= historia.rango[0] && n <= historia.rango[1]))
-        .filter((n) => !cubiertos.has(`${historia.historia} AC-${n}`))
+        .filter((n) => !cubiertos.has(`${seccion.identificador} AC-${n}`))
         .map((n) =>
           hallazgo({
             tool: 'check-ac-coverage',
             rule: REGLA,
-            file: `openspec/changes/${change}/proposal.md`,
-            symbol: `${historia.historia} AC-${n} (change ${change})`,
+            file: archivo,
+            symbol: `${seccion.identificador} AC-${n} (change ${change})`,
             severity: 'warn',
           }),
         );

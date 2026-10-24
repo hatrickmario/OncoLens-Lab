@@ -39,6 +39,23 @@ describe('check-ac-coverage', () => {
     expect(simbolos('infra')).toEqual([]);
   });
 
+  it('distingue la parte a de la parte b de una historia partida: los tags de US-900a no cubren US-900b [US-213 AC-9]', () => {
+    expect(simbolos('letra')).toEqual(['US-900b AC-2 (change us-900b-fixture)']);
+  });
+
+  it('emite ac-historia-no-encontrada cuando ninguna sección del backlog contiene la historia del change [US-213 AC-9]', () => {
+    const hallazgos = verificarCoberturaDeAc(path.join(FIXTURES, 'sin-seccion'));
+
+    expect(hallazgos).toEqual([
+      expect.objectContaining({
+        rule: 'ac-historia-no-encontrada',
+        file: 'openspec/changes/us-999-fixture/proposal.md',
+        severity: 'warn',
+      }),
+    ]);
+    expect(hallazgos[0].symbol).toContain('US-999');
+  });
+
   it('respeta el rango de AC de una historia partida y no alerta por los AC fuera de él [US-213 AC-9]', () => {
     expect(simbolos('partida')).toEqual(['US-900 AC-2 (change us-900-fixture)']);
   });
@@ -60,9 +77,9 @@ describe('check-ac-coverage', () => {
 
 describe('historiaDelChange', () => {
   it.each([
-    ['L1D-285 · **US-213b** (AC-8…AC-13) · FEAT-PL1', { historia: 'US-213', rango: [8, 13] }],
-    ['L1D-202 · US-048 · FEAT-T4a (L1D-40)', { historia: 'US-048', rango: null }],
-    ['US-117b · FEAT-06c', { historia: 'US-117', rango: null }],
+    ['L1D-285 · **US-213b** (AC-8…AC-13) · FEAT-PL1', { historia: 'US-213b', numero: 'US-213', rango: [8, 13] }],
+    ['L1D-202 · US-048 · FEAT-T4a (L1D-40)', { historia: 'US-048', numero: 'US-048', rango: null }],
+    ['US-117b · FEAT-06c', { historia: 'US-117b', numero: 'US-117', rango: null }],
   ])('lee la historia y el rango de «%s»', (linea, esperado) => {
     expect(historiaDelChange(`# P\n\n## Trazabilidad\n\n${linea}\n`)).toEqual(esperado);
   });
