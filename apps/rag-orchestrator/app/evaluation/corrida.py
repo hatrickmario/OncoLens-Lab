@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from typing import Any, TypedDict
 
 from app.application.ports import EvidenciaGenerada
+from app.domain.alias_de_chunks import CITA_NO_TRADUCIBLE
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.evaluation.afirmaciones import (
     AfirmacionAJuzgar,
@@ -41,8 +42,14 @@ MAX_OPCIONES = 3
 
 
 def citas_propuestas_de(opciones: Sequence[OpcionGenerada]) -> int:
-    """Citas que propuso el generador (M-07.2)."""
-    raise NotImplementedError("no implementado")
+    """Citas que propuso el generador (M-07.2): los ``chunkId`` reales repetidos en una opción cuentan una vez y cada
+    ``CITA_NO_TRADUCIBLE`` cuenta aparte (dos alias inexistentes distintos son dos citas inválidas, no una)."""
+    total = 0
+    for opcion in opciones:
+        no_traducibles = opcion.chunk_ids_citados.count(CITA_NO_TRADUCIBLE)
+        reales = set(opcion.chunk_ids_citados) - {CITA_NO_TRADUCIBLE}
+        total += len(reales) + no_traducibles
+    return total
 
 
 def _solicitud_base() -> dict[str, Any]:

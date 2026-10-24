@@ -20,6 +20,8 @@ class OpcionGenerada:
 
     option: str
     rationale: str
+    # Pueden incluir ``CITA_NO_TRADUCIBLE`` (alias_de_chunks): el centinela de una cita que no era un alias de esta consulta.
+    # Nunca coincide con un chunk recuperado (``cita_invalida``), se cuenta aparte en la evaluación y no sale de la generación.
     chunk_ids_citados: tuple[str, ...]
     # Párrafos opcionales que amplían la justificación (ARR-08): se validan como el resto de lo generado (RN-01, RN-23).
     details: tuple[str, ...] = ()
