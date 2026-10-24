@@ -12,27 +12,38 @@ import asyncio
 from collections.abc import Sequence
 
 from app.application.corpus_metadata.esquema import (
+    SalidaInvalida,
     construir_prompt,
     esquema_de_metadatos,
     parsear_propuesta,
 )
-from app.application.ports import LlmClient, NliClassifier
+from app.application.ports import FalloDeInferencia, FalloDelLlm, LlmClient, NliClassifier
 from app.domain.corpus_metadata.campos import CAMPOS_ESCALARES
 from app.domain.corpus_metadata.extraccion import (
     escalares_a_extraer,
     integrar_metadatos_verificados,
+    metadatos_pendientes,
 )
 from app.domain.corpus_metadata.origen import (
     OrigenDeMetadatos,
     metadatos_de_la_fuente,
     origen_de_metadatos,
 )
-from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+from app.domain.corpus_metadata.resultado import (
+    CampoDeMetadato,
+    FalloDeMetadatos,
+    MetadatosResueltos,
+)
 from app.domain.corpus_metadata.verbalizacion import verbalizar_metadato
 from app.domain.corpus_metadata.verificacion import metadato_verificado
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
 from app.domain.nli import ParNli
+
+
+# Los únicos fallos que no impiden indexar (D4): el LLM, el NLI o una salida fuera del esquema. Cualquier otro error es
+# un defecto y sube; ``KeyboardInterrupt`` nunca se captura.
+FALLOS_QUE_DEJAN_PENDIENTE = (FalloDelLlm, FalloDeInferencia, SalidaInvalida)
 
 
 class MetadataExtractionService:
@@ -46,7 +57,11 @@ class MetadataExtractionService:
     ) -> MetadatosResueltos:
         if origen_de_metadatos(documento) is OrigenDeMetadatos.FUENTE_ESTRUCTURADA:
             return metadatos_de_la_fuente(documento)
-        return self._extraer_y_verificar(documento, texto, fragmentos)
+        try:
+            return self._extraer_y_verificar(documento, texto, fragmentos)
+        except FALLOS_QUE_DEJAN_PENDIENTE as fallo:
+            # Solo la clase del error: su mensaje podría llevar texto del documento (RN-10).
+            return metadatos_pendientes(documento, FalloDeMetadatos(type(fallo).__name__))
 
     def _extraer_y_verificar(
         self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]

@@ -8,13 +8,31 @@ from typing import Any
 from app.domain.corpus_metadata.campos import CAMPOS_ESCALARES, DISENO_NO_DECLARADO
 from app.domain.corpus_metadata.resultado import (
     EXTRAIDO_VERIFICADO,
+    PENDIENTE,
     CampoDeMetadato,
+    FalloDeMetadatos,
     MetadatosResueltos,
 )
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 
 _PREFIJO_DE_BIOMARCADOR = "biomarcadores."
+
+
+def metadatos_pendientes(
+    documento: DocumentoDeSemilla, fallo: FalloDeMetadatos
+) -> MetadatosResueltos:
+    """La extracción no corrió (LLM o NLI caídos, o salida inválida): nada extraído y ``pendiente``, nunca
+    ``fuente_estructurada`` (la fuente no publicó nada, RN-25). Lo que el manifiesto declara se conserva (D2)."""
+    return MetadatosResueltos(
+        study_design=documento.study_design,
+        trial_phase=documento.trial_phase,
+        sample_size=documento.sample_size,
+        primary_endpoint=documento.primary_endpoint,
+        population_criteria=resolver_criterios_poblacion(None),
+        metadata_source=PENDIENTE,
+        fallo=fallo,
+    )
 
 
 def escalares_a_extraer(documento: DocumentoDeSemilla) -> tuple[str, ...]:

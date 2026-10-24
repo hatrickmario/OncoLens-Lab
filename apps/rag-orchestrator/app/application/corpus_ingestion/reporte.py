@@ -72,17 +72,31 @@ class ReporteDeIngesta:
                     "chunks": r.chunks,
                     "reanudado": r.reanudado,
                     "retirada_de_vigente": r.retirada_de_vigente,
+                    "metadata_source": r.metadata_source,
                 }
                 for r in self.resultados
             ],
             "resumen": self.contadores(),
+            "metadatos_pendientes": self._resumen_de_metadatos_pendientes(),
             "release_id": self.release_id,
         }
 
     @property
     def metadatos_pendientes(self) -> tuple[ResultadoDeIngesta, ...]:
         """Documentos indexados cuya extracción de metadatos no corrió (LLM o NLI caídos, o salida inválida)."""
-        raise NotImplementedError("no implementado")
+        return tuple(r for r in self.resultados if r.metadatos is not None and r.metadatos.fallo)
+
+    def _resumen_de_metadatos_pendientes(self) -> dict[str, Any]:
+        """Aparte de los contadores de estado: el documento está ``embebido``. Solo clase y etapa, nunca el mensaje."""
+        pendientes = self.metadatos_pendientes
+        return {
+            "cantidad": len(pendientes),
+            "documentos": [
+                {"document_key": r.document_key, "motivo": r.metadatos.fallo.motivo}
+                for r in pendientes
+                if r.metadatos and r.metadatos.fallo
+            ],
+        }
 
     def resultado_de(self, document_key: str) -> ResultadoDeIngesta:
         return next(r for r in self.resultados if r.document_key == document_key)
