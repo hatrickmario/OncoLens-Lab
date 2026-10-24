@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 STATUS_EMBEBIDO = "embebido"
+STATUS_A_MEDIAS = frozenset({"pendiente", "normalizado", "error"})
 
 
 def calcular_checksum(texto_normalizado: str) -> str:
@@ -68,6 +69,39 @@ def decidir_version(checksum: str, existentes: Sequence[VersionExistente]) -> De
             Accion.REEMPLAZAR, vigente.document_id, a_apagar=(vigente.document_id, *huerfanas)
         )
     return DecisionDeVersion(Accion.INSERTAR, a_apagar=huerfanas)
+
+
+class Reanudacion(StrEnum):
+    NUEVO = "nuevo"
+    REANUDAR = "reanudar"
+    YA_EMBEBIDO = "ya_embebido"
+
+
+@dataclass(frozen=True)
+class DecisionDeReanudacion:
+    estado: Reanudacion
+    # La fila del mismo contenido que se retoma o que ya está embebida; ``None`` si el contenido es nuevo.
+    document_id: str | None = None
+
+
+def decidir_reanudacion(
+    checksum: str, existentes: Sequence[VersionExistente]
+) -> DecisionDeReanudacion:
+    """Qué hay en el catálogo del MISMO contenido (``checksum``) que la ingesta va a procesar (US-117a D2).
+
+    ``embebido`` -> ya está hecho. ``pendiente``/``normalizado``/``error`` con ese checksum -> fila a medias: se reprocesa
+    con su mismo ``document_id`` (los chunks se reescriben por ``chunk_id``, no se duplican). Una fila en ``error`` sin
+    checksum (falló antes de leer el texto) o ``rechazado_licencia`` no es avance de este contenido. No decide versiones:
+    eso es de ``decidir_version``.
+    """
+    del_contenido = [v for v in existentes if v.checksum == checksum]
+    embebida = next((v for v in del_contenido if v.status == STATUS_EMBEBIDO), None)
+    if embebida is not None:
+        return DecisionDeReanudacion(Reanudacion.YA_EMBEBIDO, embebida.document_id)
+    a_medias = next((v for v in del_contenido if v.status in STATUS_A_MEDIAS), None)
+    if a_medias is not None:
+        return DecisionDeReanudacion(Reanudacion.REANUDAR, a_medias.document_id)
+    return DecisionDeReanudacion(Reanudacion.NUEVO)
 
 
 @dataclass(frozen=True)

@@ -38,7 +38,15 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.versionado import calcular_checksum, decidir_version, decidir_retiro
+from app.domain.corpus_seed.versionado import (
+    Accion,
+    DecisionDeVersion,
+    Reanudacion,
+    calcular_checksum,
+    decidir_reanudacion,
+    decidir_retiro,
+    decidir_version,
+)
 
 
 class IngestionPipelineService:
@@ -87,8 +95,7 @@ class IngestionPipelineService:
     def _rechazar(self, documento: DocumentoDeSemilla, admision: Admision) -> ResultadoDeIngesta:
         """Rechazo por licencia o fuente (RN-21): retira la vigente del grupo sin borrar nada (RN-05) y registra el rechazo."""
         retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
-        for document_id in retiro.a_apagar:
-            self._almacen_de_chunks.marcar_no_vigentes(document_id)
+        self._apagar(retiro.a_apagar)
         if retiro.vigente_id is not None:
             self._catalogo.retirar_version(retiro.vigente_id, self._reloj.ahora())
         self._catalogo.guardar_documento(registro_rechazado(documento, self._reloj.ahora()))
@@ -105,9 +112,11 @@ class IngestionPipelineService:
     ) -> ResultadoDeIngesta:
         texto = normalizar_texto(self._fuente.obtener_texto(documento))
         checksum = calcular_checksum(texto)
-        decision = decidir_version(
-            checksum, self._catalogo.versiones_del_grupo(documento.version_group_id)
-        )
+        versiones = self._catalogo.versiones_del_grupo(documento.version_group_id)
+        decision = decidir_version(checksum, versiones)
+        if decision.accion is Accion.OMITIR:
+            return self._omitir(documento, decision)
+        reanudado = decidir_reanudacion(checksum, versiones).estado is Reanudacion.REANUDAR
         fragmentos = fragmentar(
             texto, self._tokenizador, tamano=self._tamano_de_chunk, solape=self._solape_de_chunk
         )
@@ -117,9 +126,20 @@ class IngestionPipelineService:
         vectores = self._embedder.embeber(fragmentos)
         vectores_sparse = self._codificador_sparse.codificar(fragmentos)
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora())
-        self._indexar(registro, fragmentos, vectores, vectores_sparse)
-        self._catalogo.guardar_documento(registro)
-        return ResultadoDeIngesta(documento.document_key, Estado.EMBEBIDO, chunks=len(fragmentos))
+        self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
+        self._confirmar(registro, decision)
+        return ResultadoDeIngesta(
+            documento.document_key, Estado.EMBEBIDO, chunks=len(fragmentos), reanudado=reanudado
+        )
+
+    def _omitir(
+        self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
+    ) -> ResultadoDeIngesta:
+        """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
+        self._apagar(decision.a_apagar)
+        if decision.a_encender is not None:
+            self._almacen_de_chunks.marcar_vigentes(decision.a_encender)
+        return ResultadoDeIngesta(documento.document_key, Estado.OMITIDO)
 
     def _indexar(
         self,
@@ -127,9 +147,22 @@ class IngestionPipelineService:
         fragmentos: Sequence[str],
         vectores: Sequence[Sequence[float]],
         vectores_sparse: Sequence[dict[int, float]],
+        decision: DecisionDeVersion,
     ) -> None:
-        """Escribe por ``chunk_id`` determinista: reprocesar un documento reescribe sus chunks, nunca los duplica."""
+        """Escribe por ``chunk_id`` determinista (reprocesar reescribe, nunca duplica) y apaga lo que reemplaza."""
         chunks = chunks_del_documento(
             registro, fragmentos, vectores, self._reloj.ahora(), vectores_sparse
         )
         self._almacen_de_chunks.upsert_chunks(chunks)
+        self._apagar(decision.a_apagar)
+
+    def _apagar(self, document_ids: Sequence[str]) -> None:
+        for document_id in document_ids:
+            self._almacen_de_chunks.marcar_no_vigentes(document_id)
+
+    def _confirmar(self, registro: RegistroDeDocumento, decision: DecisionDeVersion) -> None:
+        """Último paso: el catálogo es la verdad (``embebido`` + ``is_current``). Un reemplazo marca la anterior no vigente."""
+        if decision.anterior_id is None:
+            self._catalogo.guardar_documento(registro)
+        else:
+            self._catalogo.reemplazar_version(registro, decision.anterior_id, self._reloj.ahora())

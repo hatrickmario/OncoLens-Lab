@@ -39,8 +39,11 @@ def test_ingesta_interrumpida_tras_segundo_documento_solo_procesa_los_restantes(
     assert estados_tras_la_interrupcion["i-lit-1"] == "embebido"
     _reiniciar_contadores(montaje)
 
-    montaje.ingerir()
+    reporte = montaje.ingerir()
 
+    assert (
+        reporte.resultado_de("i-lit-2").reanudado and not reporte.resultado_de("i-gl-1").reanudado
+    )
     textos_de_los_restantes = {
         c.chunk_text
         for c in sin_interrupcion.almacen.chunks.values()
