@@ -1,0 +1,189 @@
+{
+ "prompt": "rag-query@0.3.0",
+ "modelo": "gemma4:26b-a4b-it-q4_K_M",
+ "origen": [
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 10.2
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  }
+ ],
+ "origen_ruido": [
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 5.3
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.5
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.6
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.7
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.7
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.8
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 4.8
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 5.2
+  },
+  {
+   "opciones": 1,
+   "aceptadas": 1,
+   "cita_invalida": 0,
+   "sin_citas": 0,
+   "citas": 1,
+   "citas_validas": 1,
+   "s": 5.0
+  }
+ ],
+ "dataset": []
+}
