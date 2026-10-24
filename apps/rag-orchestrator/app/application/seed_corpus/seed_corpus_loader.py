@@ -27,6 +27,7 @@ from app.application.seed_corpus.registros import (
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
+from app.domain.corpus_metadata.origen import metadatos_sin_extraer
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -135,7 +136,13 @@ class SeedCorpusLoader:
             return self._registrar_error(
                 documento, admision, preparado.checksum, "texto", TextoVacio()
             )
-        registro = registro_embebido(documento, admision, preparado.checksum, self._reloj.ahora())
+        registro = registro_embebido(
+            documento,
+            admision,
+            preparado.checksum,
+            self._reloj.ahora(),
+            metadatos_sin_extraer(documento),
+        )
         try:
             vectores = self._embedder.embeber(fragmentos)
         except Exception as error:  # noqa: BLE001 - borde del puerto PassageEmbedder

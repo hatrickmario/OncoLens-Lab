@@ -13,7 +13,7 @@ from datetime import datetime
 
 from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
-from app.domain.corpus_metadata.origen import metadatos_de_la_fuente, metadatos_sin_extraer
+from app.domain.corpus_metadata.origen import metadatos_sin_extraer
 from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -50,9 +50,10 @@ def registro_embebido(
     admision: Admision,
     checksum: str,
     ahora: datetime,
-    metadatos: MetadatosResueltos | None = None,
+    metadatos: MetadatosResueltos,
 ) -> RegistroDeDocumento:
-    """``metadatos`` (US-118) los entrega el paso de metadatos de la ingesta; sin él, lo que publica el manifiesto."""
+    """``metadatos`` los resuelve quien carga: el paso de metadatos de la ingesta o, en la semilla (sin extracción),
+    ``metadatos_sin_extraer``. Sin valor por defecto: nunca se asume ``fuente_estructurada``."""
     clase = _clase_de_un_admitido(admision)
     return _registro(
         documento,
@@ -63,7 +64,7 @@ def registro_embebido(
         status=STATUS_EMBEBIDO,
         is_current=True,
         open_access=True,
-        metadatos=metadatos or metadatos_de_la_fuente(documento),
+        metadatos=metadatos,
     )
 
 
