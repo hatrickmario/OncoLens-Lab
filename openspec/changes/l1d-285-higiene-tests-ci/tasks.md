@@ -66,22 +66,22 @@
 
 ## 3. ai-services
 
-- [ ] 3.1 (test después) Fixtures en `ci/tests/quality/` con `@pytest.mark.skip`, `skipif`, `xfail`, `pytest.skip(` y `pytest.xfail(`
+- [x] 3.1 (hecha: `ci/tests/quality/higiene-pytest.test.mjs`, 5 casos en verde; los fixtures se escriben en un directorio temporal porque el hook `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`; Ruff `PT` con 4 ignores de estilo, ver design D2) (test después) Fixtures en `ci/tests/quality/` con `@pytest.mark.skip`, `skipif`, `xfail`, `pytest.skip(` y `pytest.xfail(`
   en tests de `rag-orchestrator`, y un módulo no-test con el texto `pytest.skip(` que no alerta `[US-213 AC-8]`. Luego Ruff `PT`
   en `apps/rag-orchestrator/pyproject.toml` y `scripts/quality/check-pytest-hygiene.py` (AST, regla `tests-sin-desactivar`,
   D2) invocado desde `quality.mjs`. Verifica: casos en verde.
-- [ ] 3.2 (test después) Marcador `ac` registrado con `--strict-markers` en `pyproject.toml`; test de que un marcador mal escrito
+- [x] 3.2 (hecha: `tests/unit/test_marcadores_estrictos.py`; sin `--strict-markers` el caso falla, demostrado) (test después) Marcador `ac` registrado con `--strict-markers` en `pyproject.toml`; test de que un marcador mal escrito
   falla en la recolección `[US-213 AC-9]`. Verifica: suite de Pytest en verde.
-- [ ] 3.3 (test después) `tests/support/http.py`: `handler_desde_ejemplo()` sobre `respx` desde `contracts/examples/` (D5); test de
+- [x] 3.3 (hecha: `tests/unit/test_handler_desde_ejemplo.py`, 7 casos; sin la comprobación de clave ausente 2 fallan, demostrado) (test después) `tests/support/http.py`: `handler_desde_ejemplo()` sobre `respx` desde `contracts/examples/` (D5); test de
   que un campo añadido ausente en el ejemplo hace fallar con el campo y el ejemplo `[US-213 AC-10]` [ADR-26]. Verifica: en verde.
-- [ ] 3.4 (test después) `pytest-cov` y `diff-cover` (versión exacta, `requirements-dev.txt`) con salida Cobertura XML para D6
+- [x] 3.4 (hecha SIN `diff-cover` por la corrección de D6: solo `pytest-cov==7.1.0` (MIT, 2026-03-21; adición aprobada por sprint-S3); `cobertura.mjs` lee la Cobertura XML; build-test publica `coverage.xml` y quality lo descarga; con un cambio de `app/domain/` `latest.json` trae `{lineasCambiadas: 2, lineasCubiertas: 1, porcentaje: 50}` y la alerta) (test después) `pytest-cov` y `diff-cover` (versión exacta, `requirements-dev.txt`) con salida Cobertura XML para D6
   `[US-213 AC-11]`. Verifica: `npm run quality` en verde con el porcentaje de `rag-orchestrator` en `latest.json`.
-- [ ] 3.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
+- [x] 3.5 (sin cambios: nada que extraer ni inlinear en los archivos tocados) Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(L1D-285)`.
 
 ## 4. cierre
 
-- [ ] 4.1 `openspec validate l1d-285-higiene-tests-ci --strict` en verde; `npm run quality`, `ci/tests/run-cases.sh`, suites de
+- [ ] 4.1 (parte ai-services verificada: pytest de rag-orchestrator 2134 passed, `npm run quality` 0 errores, `test:quality` 145 passed, `contracts:verify-provider` 193 respuestas, `openspec validate --strict` válido; faltan suites de `clinical-api`/`web` y `run-cases.sh`, que en este entorno falla 5 casos por falta de `gitleaks`) `openspec validate l1d-285-higiene-tests-ci --strict` en verde; `npm run quality`, `ci/tests/run-cases.sh`, suites de
   `clinical-api`, `web` y `rag-orchestrator` en verde; `contracts:verify-provider` en verde (hubo cambio de contrato). Sin
   `run-ai-eval` (no toca modelo, prompt, umbral de IA, catálogo ni corpus).
 - [ ] 4.2 `.env.example`: sin variables nuevas de aplicación (las de `integracion-rag` viven en el script y en `ci.yml`); si

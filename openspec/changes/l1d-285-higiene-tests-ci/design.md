@@ -57,6 +57,11 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   normalizador en `scripts/quality/` lo vuelca a `latest.json` (`tool: diff-cover`, `measured`, `threshold`). Clave nueva
   `coverage.changedLinesWarn` (propuesta 80) en `quality-thresholds.json`, validada por `umbrales.mjs`. Rutas de alerta como
   lista en la misma clave `coverage.alertPaths` (no literales en el script).
+  **Adición fuera de lo previsto (aprobada por sprint-S3, 2026-10-24):** `pytest-cov==7.1.0` (MIT, publicada el 2026-03-21;
+  `coverage` 7.17 Apache-2.0 como transitiva) en `apps/rag-orchestrator/requirements-dev.txt`, sin `diff-cover`. El Pytest completo
+  de `build-test` escribe `coverage/coverage.xml`, lo publica como artefacto y `quality` (ahora con `needs: build-test`) lo
+  descarga; `cobertura.mjs` lo lee como un informe más (`<source>` + `filename` relativo). `[tool.coverage.run] data_file` apunta a
+  `coverage/` (ignorado por git).
 - **D7 · Q-1: exención mínima, solo para la máscara sintética.** En `assertExamplesSynthetic.mjs`, `esMascaraDeNombre(key, value)`:
   solo la clave `fullNameMasked` y solo si el valor cumple `^P\. S\.( \d\.)?$`, es decir, la máscara que `enmascararNombre()`
   produce para «Prueba Sintética [n]» (`"P. S."`, `"P. S. 1."`) **(decidido, usuario, 2026-10-24, `[S3 resp. 16]`)**; cualquier

@@ -6,6 +6,10 @@ extend-exclude = ["app/schemas/generated"]
 
 # L1D-285 (US-213 AC-8): reglas por defecto de Ruff + PT (estilo de pytest). Los desactivados de tests (skip, skipif, xfail)
 # los prohíbe scripts/quality/check-pytest-hygiene.py. Se ignoran las reglas de estilo con deuda vigente en los tests.
+# Cobertura de Pytest (L1D-285 tarea 3.4): los datos y el XML quedan en coverage/, ignorado por git.
+[tool.coverage.run]
+data_file = "coverage/.coverage"
+
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "PT"]
 ignore = ["PT001", "PT006", "PT011", "PT018"]
