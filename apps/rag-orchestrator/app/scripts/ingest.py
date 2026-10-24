@@ -37,10 +37,7 @@ from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
-from app.application.corpus_metadata.muestra_de_metadatos import (
-    GeneradorDeMuestraDeMetadatos,
-    ResultadoDeMuestra,
-)
+from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
 from app.application.ports import Clock, LlmClient, NliClassifier
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import (
@@ -51,6 +48,7 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
+from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -141,6 +139,19 @@ def _nli_real() -> NliClassifier:
     return cargar_clasificador_nli(ajustes_de_modelos_del_entorno())
 
 
+def escribir_muestra(
+    generador: GeneradorDeMuestraDeMetadatos,
+    reporte: ReporteDeIngesta,
+    documentos: Sequence[DocumentoDeSemilla],
+) -> dict[str, object]:
+    """La muestra se escribe DESPUÉS de confirmar la ingesta: su fallo (solo la clase, nunca el mensaje) va al resumen y no
+    tumba un reporte que ya describe documentos indexados."""
+    try:
+        return {"tamano": generador.generar(reporte, documentos).tamano}
+    except Exception as error:  # noqa: BLE001 - E/S del archivo: se informa la clase
+        return {"tamano": 0, "fallo": type(error).__name__}
+
+
 def _ejecutar_ingesta(
     manifiesto: Path,
     ajustes: CorpusIngestSettings,
@@ -152,7 +163,7 @@ def _ejecutar_ingesta(
     tokenizador: Tokenizador,
     metadatos: ModelosDeMetadatos,
     reloj: Clock,
-) -> tuple[ReporteDeIngesta, ResultadoDeMuestra]:
+) -> tuple[ReporteDeIngesta, dict[str, object]]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar."""
     documentos = leer_manifiesto(manifiesto)
     motor = crear_motor(
@@ -181,7 +192,7 @@ def _ejecutar_ingesta(
             fecha_de_corte=ajustes.corpus_cutoff_date,
         )
         reporte = servicio.ingerir(documentos)
-        muestra = GeneradorDeMuestraDeMetadatos(
+        generador = GeneradorDeMuestraDeMetadatos(
             pct=ajustes.corpus_metadata_sample_pct,
             semilla=ajustes.corpus_metadata_sample_seed,
             escritor=EscritorDeMuestraYaml(ajustes.corpus_metadata_sample_dir),
@@ -189,8 +200,8 @@ def _ejecutar_ingesta(
             prompt_version=PROMPT_VERSION,
             llm_model=metadatos.nombre_del_llm,
             nli_model=metadatos.nli.version,
-        ).generar(reporte, documentos)
-        return reporte, muestra
+        )
+        return reporte, escribir_muestra(generador, reporte, documentos)
     finally:
         motor.dispose()
 
@@ -251,7 +262,7 @@ def main(
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
         print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
         return 1
-    resumen = {**reporte.como_diccionario(), "muestra_de_metadatos": {"tamano": muestra.tamano}}
+    resumen = {**reporte.como_diccionario(), "muestra_de_metadatos": muestra}
     print(json.dumps(resumen, ensure_ascii=False))
     return 1 if reporte.hubo_errores else 0
 
