@@ -14,6 +14,9 @@ COPY packages/api-contracts/src/zod/clinical-api packages/api-contracts/src/zod/
 # El cierre del análisis importa los tipos del cliente de clinical-api y el Zod de la respuesta interna de rag-orchestrator.
 COPY packages/api-contracts/src/client/clinical-api packages/api-contracts/src/client/clinical-api
 COPY packages/api-contracts/src/zod/rag-orchestrator packages/api-contracts/src/zod/rag-orchestrator
+# `catalog:validate` al arrancar (L1D-93): el núcleo del validador, su allowlist y los esquemas del catálogo se compilan con la app.
+COPY packages/clinical-catalogs/validator packages/clinical-catalogs/validator
+COPY packages/clinical-catalogs/schemas packages/clinical-catalogs/schemas
 RUN npm run build --workspace apps/clinical-api
 
 FROM node:24.22.0-alpine3.24 AS runtime

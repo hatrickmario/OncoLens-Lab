@@ -1,7 +1,7 @@
 import type { Client } from 'pg';
 import { formatWithOptions } from 'node:util';
 import { vi } from 'vitest';
-// @ts-expect-error TS7016: scripts/contracts/lib/identity.mjs no trae declaración de tipos (lista única de campos de identidad, no se duplica).
+// scripts/contracts/lib/identity.mjs se tipa por inferencia (`allowJs`): lista única de campos de identidad, no se duplica.
 import { IDENTIDAD_PII, matchesIdentity } from '../../../../scripts/contracts/lib/identity.mjs';
 
 /**

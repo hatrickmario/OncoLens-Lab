@@ -8,6 +8,7 @@ import {
   type ConfiguracionDeServicios,
 } from './config/index.js';
 import { SecretoAusenteError, loadRequiredSecrets, type LeerArchivo } from './config/secrets.js';
+import { exigirCatalogoValido } from './infrastructure/catalogo/validar-catalogo.js';
 import {
   cargarClavesDeIdentidad,
   type ClavesDeIdentidad,
@@ -108,6 +109,7 @@ export function cargarEtapaDeServicios(
     readFile,
     servicios.analisis.catalogExpectedVersion,
   );
+  exigirCatalogoValido(servicios.analisis.catalogPath, readFile);
   return {
     configuracion: { ...servicios, pii },
     catalogo,
