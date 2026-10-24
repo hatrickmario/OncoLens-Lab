@@ -186,8 +186,7 @@ class IngestionPipelineService:
         self._catalogo.guardar_documento(
             registro_normalizado(documento, admision, checksum, self._reloj.ahora())
         )
-        with _etapa("embeddings"):
-            vectores = self._embedder.embeber(fragmentos)
+        vectores = self._embeber(fragmentos)
         vectores_sparse = self._codificar_sparse(fragmentos)
         registro = registro_embebido(documento, admision, checksum, self._reloj.ahora())
         with _etapa("milvus"):
@@ -205,6 +204,10 @@ class IngestionPipelineService:
             with _etapa("texto"):
                 raise TextoVacio()
         return fragmentos
+
+    def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
+        with _etapa("embeddings"):
+            return self._embedder.embeber(fragmentos)
 
     def _codificar_sparse(self, fragmentos: Sequence[str]) -> list[dict[int, float]]:
         """Un vector *sparse* no vacío por fragmento: sin él el documento queda en error, nunca se inserta sin *sparse*."""

@@ -55,8 +55,8 @@ def test_falla_nombrando_la_clave_cuando_el_origen_del_sparse_no_es_modelo_embed
 def test_falla_cuando_falta_una_clave_obligatoria_del_sparse(
     monkeypatch: pytest.MonkeyPatch, clave: str
 ) -> None:
-    for k in CLAVES:
-        monkeypatch.setenv(k, CLAVES[k])
+    for k, valor in CLAVES.items():
+        monkeypatch.setenv(k, valor)
     monkeypatch.delenv(clave)
 
     with pytest.raises(ValidationError):
