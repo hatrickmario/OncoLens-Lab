@@ -150,6 +150,10 @@ tipos se regeneran con `contracts:generate`; nunca a mano.
 
 - **D6 · antigüedad de dependencias:** `@vitest/coverage-v8` 5.0.5 va en *lockstep* con `vitest` 5.0.5; excepción de antigüedad
   (publicada 2026-10-15, menos de dos semanas).
+- **Dependencias de producción por un peer opcional (privacy, Menor 3):** `@vitest/coverage-v8` trae `magicast`, y
+  `@babel/parser` y `@babel/types` quedan sin la marca `dev` en `package-lock.json` porque `c12` (de `prisma`, dependencia de
+  producción de `clinical-api`) los declara como peer opcional y npm los resuelve. `npm ls --omit=dev -w apps/clinical-api
+  magicast` lo muestra bajo `c12`. Se acepta: no se importan en tiempo de ejecución; revisar al actualizar `prisma`.
 - **Contrato · Zod generado sin la bandera `u`:** el `pattern` `^\S\.( \S\.)*$` de `fullNameMasked` se valida en Ajv2020 (con
   `unicodeRegExp`) pero el Zod generado compila `new RegExp(pattern)` sin `u`: un carácter fuera del plano básico (par
   sustituto) se evalúa como dos unidades en Zod y no cumpliría el `pattern`. Hoy `web` no valida esa respuesta con Zod; si lo

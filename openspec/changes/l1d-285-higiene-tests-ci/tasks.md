@@ -97,8 +97,37 @@
 
 Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloquean el PR y se tratan después del S3:
 
-- [ ] 5.1 (deuda: higiene de tests, post-S3) Menores #13–#20 del design-principles-reviewer, registrados sin cambiar
-  comportamiento en este change; el detalle vive en el informe del Gate 2 y se asigna a la historia de deuda del S4.
+- [ ] 5.1 (deuda: higiene de tests, post-S3) Menores del design-principles-reviewer (Gate 2, vuelta 1 y re-gate), uno por línea,
+  con ubicación y refactor mínimo; se asignan a la historia de deuda del S4 y no cambian comportamiento en este change:
+  - #13 `scripts/quality/cobertura.mjs:89-93`, `medirLineasCambiadas` con dos formatos (LCOV y Cobertura XML) detrás de un `if`:
+    recibir mapas ya parseados (`archivo → línea → veces`) y que cada formato se parsee en su propio módulo.
+  - #14 `eslint.config.js` (comentario de `bloqueMockSoloEnBordes`): dice que admite excepciones con caducidad, pero
+    `REGLAS_EXCEPTUABLES` (`umbrales.mjs`) solo admite reglas de tamaño; corregir el comentario o ampliar la lista con decisión.
+  - #15 `ci/tests/quality/higiene-de-tests.test.mjs:72-80` pasa en vacío cuando no hay excepciones vigentes (sin caso que
+    fabrique una); `packages/test-support/tests/handlerDesdeEjemplo.test.ts:29-35` usa el `status` 200 por defecto sin
+    comprobarlo: añadir una excepción de fixture y un caso con `status` distinto de 200.
+  - #16 `scripts/quality/cobertura.mjs`: faltan tests de la guarda `enHunk`, del `SF` absoluto de LCOV y de varios *hunks*
+    en un mismo archivo.
+  - #17 diferencias entre `handlerDesdeEjemplo` (TS) y `handler_desde_ejemplo` (Python): `sobrescribir` vacío, patrones
+    `:id` en la URL y validación del cuerpo contra el esquema; alinear ambos o documentar la diferencia.
+  - #18 hecho: `rmSync(enlace, { force: true })` en `integracionRag.test.mjs` (commit `d385f571`).
+  - #19 `docs/process/ci.md`, fila del job `quality` (ver 5.2).
+  - #20 unos 16 archivos de handlers MSW manuales (`web`, `clinical-api`) y unos 10 de `respx` sin migrar al arnés
+    `handlerDesdeEjemplo`; y una regla `no-restricted-imports` que impida `msw` directo fuera de `packages/test-support`.
+  - m-4 `scripts/quality/eslint-rules/tests-sin-pendientes-ni-foco-jest.mjs`: `cursor.skip(1)` (cualquier objeto con
+    `.skip(`) da falso positivo y no se cubren `it.each([...]).skip` / `.only`; acotar el objeto al contexto del test.
+  - m-5 `scripts/quality/check-ac-coverage.mjs`: un tag con letra (`[US-213b AC-8]`) no cubre la sección sin letra
+    (`US-213`); aceptar el tag con letra contra la sección de la historia entera.
+  - m-7 test de coherencia entre `GLOBS_DE_TESTS` y `PATRON_DE_TEST` (`scripts/quality/archivos-de-test.mjs`): que ambas
+    definiciones clasifiquen igual un conjunto de rutas de ejemplo.
+  - m-8 `cargar_ejemplo` de Python (`apps/rag-orchestrator/tests/support/http.py`): alinear su validación con la regex
+    `.json` simple y la comprobación con `realpath` de TS (la hace ai-services).
+  - m-9 evidencia del rojo del commit de `enmascararNombre` (`ß`, `f1ea5c8a` antes del último rebase): en el cuerpo del PR, revirtiendo
+    `inicialEnMayuscula` y mostrando `Received "SS. G."`.
+  - **Deuda de estilo de Pytest (Ruff `PT`): 298 hallazgos** (PT018 268, PT011 22, PT001 5, PT006 3) ignorados solo en
+    `tests/**` por `per-file-ignores`; destino: `backlog/sprints/S3-deuda.md`, fila «estilo pytest PT» (la añade la sesión
+    principal; el ID lo asigna al crear el issue). No se amplía el `per-file-ignores`. El comentario equivalente en
+    `apps/rag-orchestrator/pyproject.toml` es de ai-services.
 - [ ] 5.2 (deuda) `docs/process/ci.md`, fila del job `quality` (cobertura, higiene y AC): fuera de los paths de este
   implementador; la actualiza quien tenga `docs/process/`.
 - [ ] 5.3 (deuda, historia de altas del S6) `minLength` y `pattern` de `fullName` en el contrato de altas de pacientes.
