@@ -103,6 +103,36 @@ def test_nombra_la_ruta_cuando_los_pesos_sparse_no_son_un_npz_valido(
     assert error.value.variable == "EMBEDDING_SPARSE_WEIGHTS_PATH"
 
 
+def test_no_deserializa_objetos_python_aunque_el_sha_coincida(
+    modelos: EntornoDeModelos, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``allow_pickle=False``: un npz con arreglos de objetos (pickle) con el SHA correcto no se carga."""
+    buffer = io.BytesIO()
+    # Contenido válido (1024 pesos) pero guardado como objetos: solo se podría leer deserializando pickle.
+    np.savez(buffer, weight=np.zeros((1, 1024), dtype=object), bias=np.array([1.0]))
+    ajustes = _ajustes(tmp_path, monkeypatch, buffer.getvalue())
+
+    with pytest.raises(ModeloNoVerificadoError) as error:
+        _cargar(modelos, ajustes, [])
+
+    assert error.value.variable == "EMBEDDING_SPARSE_WEIGHTS_PATH"
+
+
+def test_falla_al_cargar_cuando_el_tamano_de_los_pesos_no_es_el_del_estado_oculto(
+    modelos: EntornoDeModelos, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    buffer = io.BytesIO()
+    np.savez(buffer, weight=np.zeros((1, 8), dtype=np.float32), bias=np.array([1.0], np.float32))
+    ajustes = _ajustes(tmp_path, monkeypatch, buffer.getvalue())
+    sesiones: list[bytes] = []
+
+    with pytest.raises(ModeloNoVerificadoError) as error:
+        _cargar(modelos, ajustes, sesiones)
+
+    assert error.value.variable == "EMBEDDING_SPARSE_WEIGHTS_PATH"
+    assert sesiones == []  # falla antes de crear la sesión: no es un fallo por documento
+
+
 def test_nombra_la_ruta_cuando_el_archivo_de_pesos_sparse_no_existe(
     modelos: EntornoDeModelos, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

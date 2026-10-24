@@ -134,6 +134,9 @@ def cargar_embeddings_y_sparse_de_pasajes(
     RN-22) antes de construir nada. Un fallo nombra solo la variable.
     """
     pesos, sesgo = _pesos_sparse_verificados(ajustes_sparse)
+    if pesos.size != _exigir_configuracion_de_modelos(settings).embedding_dim:
+        # Falla al cargar, no por documento: los pesos no son los de la cabeza del modelo configurado.
+        raise ModeloNoVerificadoError("EMBEDDING_SPARSE_WEIGHTS_PATH")
     nucleo, sesion, tokenizador = _nucleo_de_pasajes(
         settings, fabricar_sesion, fabricar_tokenizador
     )
