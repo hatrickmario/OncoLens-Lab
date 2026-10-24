@@ -86,3 +86,9 @@
   `run-ai-eval` (no toca modelo, prompt, umbral de IA, catálogo ni corpus).
 - [ ] 4.2 `.env.example`: sin variables nuevas de aplicación (las de `integracion-rag` viven en el script y en `ci.yml`); si
   aparece alguna, el agente la reporta y la aplica el humano.
+- [ ] 4.3 (test después; decisión del usuario, 2026-10-24, carrera de CI detectada en el PR #195) **Carrera de tests en
+  `scripts/ci/__tests__`:** `integracionRag.test.mjs` escribe `zz_sin_versionar_prueba.txt` en el árbol real mientras
+  `evalRequired.test.mjs` copia el árbol (ENOENT, *flaky*). Corregir sin `.skip` ni reintentos silenciosos: el test de
+  integración deja de escribir en el árbol real (directorio temporal) o, si no es posible, se serializa. Un test/fixture
+  demuestra la carrera resuelta (p. ej., repetir N veces en paralelo ambos tests) con tiempo máximo explícito
+  `[US-213 AC-13]`. Verifica: los dos archivos juntos, N veces, en verde.
