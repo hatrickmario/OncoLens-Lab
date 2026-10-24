@@ -70,7 +70,12 @@ def revisar(raiz: Path) -> list[dict[str, Any]]:
         arbol = ast.parse(archivo.read_text(encoding="utf-8"), filename=str(archivo))
         for linea, simbolo in hallazgos_de_modulo(arbol):
             hallazgos.append(
-                {"file": archivo.as_posix(), "line": linea, "rule": REGLA, "symbol": simbolo}
+                {
+                    "file": archivo.as_posix(),
+                    "line": linea,
+                    "rule": REGLA,
+                    "symbol": simbolo,
+                }
             )
     return hallazgos
 
