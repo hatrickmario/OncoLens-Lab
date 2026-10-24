@@ -12,13 +12,13 @@ import {
  * compilador de esquemas y el recorrido del validador salen de aquí: un archivo nuevo (reglas de supuestos, US-129) o
  * una regla nueva (`rechazarCamposDePuntaje`, l1d-126) se añaden en este único sitio.
  *
- * Una regla es `(item, contexto) => codigo | null`; `contexto` trae `tipo`, `allowlist`, `atributos`, `vocabulario` y
+ * Una regla es `(item, contexto) => codigo | null`; `contexto` trae `tipoDeCancer`, `allowlist`, `atributos`, `vocabulario` y
  * `clavesDelTipo`. Todas toleran un ítem sin `destination` (lo señala `exigirDestino`).
  */
 const REGLAS_DE_DESTINO = [
   (item) => exigirDestino(item),
   (item, { allowlist }) => exigirDestinoExistente(item, allowlist),
-  (item, { tipo, atributos }) => exigirAtributoDeclarado(item, tipo, atributos),
+  (item, { tipoDeCancer, atributos }) => exigirAtributoDeclarado(item, tipoDeCancer, atributos),
 ];
 
 export const ARCHIVOS_DEL_CATALOGO = {

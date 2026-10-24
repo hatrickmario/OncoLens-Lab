@@ -8,6 +8,7 @@ import {
   jsonCanonico,
   leerCatalogo,
   leerEsquemas,
+  mensajeDe,
   validarCatalogo,
 } from '../../../packages/clinical-catalogs/validator/index.mjs';
 import {
@@ -215,7 +216,7 @@ describe('validarCatalogo', () => {
     const resultado = validarCatalogo({ archivos, allowlist: await generarAllowlist(sinCampo), esquemas });
 
     expect(resultado.valido).toBe(false);
-    expect(resultado.violaciones).toEqual([{ codigo: 'destino_inexistente', tipo: 'mama', clave: 'ecog' }]);
+    expect(resultado.violaciones).toEqual([{ codigo: 'destino_inexistente', tipoDeCancer: 'mama', elemento: 'ecog' }]);
   });
 
   it('informa esquema_invalido sin valores cuando el ítem tiene una propiedad que el esquema no admite', () => {
@@ -224,7 +225,7 @@ describe('validarCatalogo', () => {
 
     const resultado = validarCatalogo({ archivos, allowlist, esquemas });
 
-    expect(resultado.violaciones).toEqual([{ codigo: 'esquema_invalido', tipo: 'mama', clave: 'datos-criticos' }]);
+    expect(resultado.violaciones).toEqual([{ codigo: 'esquema_invalido', tipoDeCancer: 'mama', archivo: 'datos-criticos' }]);
   });
 
   it('no lanza cuando un archivo trae ítems que no son objetos', () => {
@@ -232,6 +233,23 @@ describe('validarCatalogo', () => {
     archivos.tipos['mama']['datos-criticos'].items = [null, 'x'];
 
     expect(() => validarCatalogo({ archivos, allowlist, esquemas })).not.toThrow();
+  });
+
+  it('nombra la violación de un ítem con tipoDeCancer y elemento, y la de un archivo con archivo [US-001 AC-2]', () => {
+    const archivos = leerCatalogo(path.join(FIXTURES, 'test-1.1.0'), leerTexto);
+    delete archivos.tipos['mama']['datos-criticos'].items[4].destination;
+    archivos.tipos['prostata']['datos-criticos'].items[0].minValues = 9;
+
+    const { violaciones } = validarCatalogo({ archivos, allowlist, esquemas });
+
+    expect(violaciones).toEqual([
+      { codigo: 'destino_ausente', tipoDeCancer: 'mama', elemento: 'ki67' },
+      { codigo: 'hash_distinto', tipoDeCancer: 'prostata', archivo: 'datos-criticos' },
+    ]);
+    expect(violaciones.map(mensajeDe)).toEqual([
+      'destino_ausente mama/ki67',
+      'hash_distinto prostata/datos-criticos',
+    ]);
   });
 
   describe('entradas deformadas', () => {
