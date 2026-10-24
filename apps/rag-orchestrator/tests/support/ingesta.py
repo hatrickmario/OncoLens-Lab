@@ -37,14 +37,15 @@ class CodificadorSparseFalso:
         self.invocaciones = 0
         self.textos_codificados = 0
         self.error: Exception | None = None
-        self.vacio_para: set[str] = set()
+        # Rompe el contrato a propósito (mapas vacíos) para probar que la ingesta no inserta un pasaje sin sparse.
+        self.devolver_vacios = False
 
     def codificar(self, textos: Sequence[str]) -> list[dict[int, float]]:
         self.invocaciones += 1
         if self.error is not None:
             raise self.error
         self.textos_codificados += len(textos)
-        return [{} if t in self.vacio_para else self._terminos(t) for t in textos]
+        return [{} if self.devolver_vacios else self._terminos(t) for t in textos]
 
     @staticmethod
     def _terminos(texto: str) -> dict[int, float]:

@@ -5,6 +5,7 @@ Nunca lleva contenido de los documentos, URLs ni mensajes de excepción: se impr
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -37,13 +38,29 @@ class ReporteDeIngesta:
 
     @property
     def hubo_errores(self) -> bool:
-        raise NotImplementedError("no implementado")
+        return any(r.estado is Estado.ERROR for r in self.resultados)
 
     def contadores(self) -> dict[str, int]:
-        raise NotImplementedError("no implementado")
+        """Un contador por estado, todos presentes aunque valgan 0."""
+        recuento = Counter(r.estado for r in self.resultados)
+        return {estado.value: recuento.get(estado, 0) for estado in Estado}
 
     def como_diccionario(self) -> dict[str, Any]:
-        raise NotImplementedError("no implementado")
+        return {
+            "documentos": [
+                {
+                    "document_key": r.document_key,
+                    "estado": r.estado.value,
+                    "motivo": r.motivo,
+                    "chunks": r.chunks,
+                    "reanudado": r.reanudado,
+                    "retirada_de_vigente": r.retirada_de_vigente,
+                }
+                for r in self.resultados
+            ],
+            "resumen": self.contadores(),
+            "release_id": self.release_id,
+        }
 
     def resultado_de(self, document_key: str) -> ResultadoDeIngesta:
         return next(r for r in self.resultados if r.document_key == document_key)
