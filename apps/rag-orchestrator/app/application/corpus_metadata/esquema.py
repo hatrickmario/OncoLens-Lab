@@ -15,6 +15,7 @@ from typing import Any, Final, Literal
 from pydantic import BaseModel, ConfigDict, StrictInt, ValidationError, field_validator
 
 from app.domain.corpus_metadata.campos import (
+    CAMPOS_ESCALARES,
     CRITERIOS_PLANOS,
     DISENOS_EXTRAIBLES,
     FASES_DE_ENSAYO,
@@ -81,24 +82,31 @@ class PropuestaDeMetadatos(_Cerrado):
 
     def campos(self) -> tuple[CampoDeMetadato, ...]:
         """Los valores propuestos (no nulos), en orden canónico y con el nombre de campo de ``studyKey``."""
-        propuestos: list[CampoDeMetadato] = []
-        for nombre in ("study_design", "trial_phase", "sample_size", "primary_endpoint"):
-            valor = getattr(self, nombre)
-            if valor is not None:
-                propuestos.append(CampoDeMetadato(nombre, valor))
+        return (*self._escalares_propuestos(), *self._criterios_propuestos())
+
+    def _escalares_propuestos(self) -> tuple[CampoDeMetadato, ...]:
+        return tuple(
+            CampoDeMetadato(nombre, valor)
+            for nombre in CAMPOS_ESCALARES
+            if (valor := getattr(self, nombre)) is not None
+        )
+
+    def _criterios_propuestos(self) -> tuple[CampoDeMetadato, ...]:
         poblacion = self.population_criteria
         if poblacion is None:
-            return tuple(propuestos)
-        for nombre in CRITERIOS_PLANOS:
-            valor = getattr(poblacion, nombre)
-            if valor is not None:
-                propuestos.append(CampoDeMetadato(nombre, valor))
-        if poblacion.biomarcadores is not None:
-            for subclave in SUBCLAVES_DE_BIOMARCADORES:
-                valor = getattr(poblacion.biomarcadores, subclave)
-                if valor is not None:
-                    propuestos.append(CampoDeMetadato(f"biomarcadores.{subclave}", valor))
-        return tuple(propuestos)
+            return ()
+        planos = (
+            CampoDeMetadato(nombre, valor)
+            for nombre in CRITERIOS_PLANOS
+            if (valor := getattr(poblacion, nombre)) is not None
+        )
+        biomarcadores = poblacion.biomarcadores
+        de_biomarcadores = (
+            CampoDeMetadato(f"biomarcadores.{subclave}", valor)
+            for subclave in SUBCLAVES_DE_BIOMARCADORES
+            if biomarcadores is not None and (valor := getattr(biomarcadores, subclave)) is not None
+        )
+        return (*planos, *de_biomarcadores)
 
 
 def _nulable(tipo: str, **extra: Any) -> dict[str, Any]:
