@@ -39,7 +39,7 @@ La descripción de L1D-116 en Linear todavía es la de US-117 entera; el Markdow
 | L1D-141 | US-062 | 4 | ✓ | AC-2 texto canónico `[S3 resp. 6]`; AC-7 criterio visible `[S3 resp. 9]`; diseño `docs/ux/S3/` |
 | L1D-288 | US-237 | 2 | ✓ | Confirmada; diseño `docs/ux/S3/` S3-03 `[S3 resp. 8]` |
 | L1D-244 | US-132 | 5 | ✓ | AC-3 con versión del corpus por configuración; original → US-119 AC-5 (`si-hay-capacidad`) `[S3 resp. 8]` |
-| L1D-285 | US-213b | 3 | ✓ | Incluye Q-1 (`pattern` de `fullNameMasked`) |
+| L1D-285 | US-213b | 3 | ✓ | Incluye Q-1 (`pattern` de `fullNameMasked`) y AC-13 (descarga de imágenes en la CI) `[S3 resp. 14]` |
 | — | ARR-09 | 8 | ✓ (sin Linear) | Lote de *visual-check* y E2E heredados, aviso de hidratación y conciliación `[S3 resp. 7]` |
 
 Ninguna historia supera 5 pts ni 8 AC.
@@ -68,6 +68,7 @@ Ninguna historia supera 5 pts ni 8 AC.
 | 11 | Stacks Docker huérfanos | Borrados (`ol173`, `ol198`, `ol202` y `oncolens-ci-rag-ai`, con sus volúmenes); `adr39-*` se conserva |
 | 12 | Estado de L1D-202, L1D-72 y L1D-187 | Feedback positivo de los oncólogos y del equipo técnico; quedan **In Review** (ya lo estaban en Linear) y se revisan de nuevo en la **Demo 3**, al cerrar el S3. Sus E2E y *visual-check* pendientes van en ARR-09 |
 | 13 | Revisor de la muestra de US-118 AC-5 (consumida por US-132 AC-4) | El usuario, con una plantilla preparada por el agente (tarea `[HUMANO]`) |
+| 14 | Fallo de `integration-rag` en el PR #189 (`quay.io` respondió `503` en etcd) | Nueva tarea en US-213b (AC-13): etcd desde `gcr.io`, `compose pull` con hasta 3 intentos y un mensaje de fallo de descarga distinto del de salud; sin cambio de puntos |
 
 ## 5. Stack técnico (fase 2)
 
