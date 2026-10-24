@@ -37,7 +37,7 @@ def relevancia_de_opcion(
 
 def ordenar_por_relevancia(chunks: Sequence[ChunkPuntuado]) -> list[ChunkPuntuado]:
     """Orden determinista: ``relevance_score`` descendente y ``chunk_id`` ascendente como desempate."""
-    raise NotImplementedError("no implementado")
+    return sorted(chunks, key=lambda c: (-c.relevance_score, c.chunk_id))
 
 
 def supera_umbral(relevance_score: float, umbral: float) -> bool:

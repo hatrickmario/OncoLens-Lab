@@ -12,7 +12,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import NamedTuple
 
-from app.domain.relevance import ChunkPuntuado
+from app.domain.relevance import ChunkPuntuado, ordenar_por_relevancia
 
 # Contiene un carácter que no puede aparecer en un ``chunkId`` del corpus: nunca coincide con un chunk recuperado,
 # así que ``validar_citas`` clasifica la opción como ``cita_invalida`` (y no como ``sin_citas``).
@@ -36,7 +36,7 @@ class TablaDeAlias:
 
 def asignar_alias(chunks: Sequence[ChunkPuntuado]) -> TablaDeAlias:
     """``C1``… por ``relevance_score`` descendente y ``chunk_id`` ascendente: determinista para la misma entrada."""
-    ordenados = sorted(chunks, key=lambda c: (-c.relevance_score, c.chunk_id))
+    ordenados = ordenar_por_relevancia(chunks)
     return TablaDeAlias(
         tuple(FragmentoConAlias(f"C{n}", chunk) for n, chunk in enumerate(ordenados, start=1))
     )

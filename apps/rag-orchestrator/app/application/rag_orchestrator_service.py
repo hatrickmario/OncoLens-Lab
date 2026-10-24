@@ -49,6 +49,7 @@ from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
 from app.domain.relevance import (
     ChunkPuntuado,
     filtrar_sobre_umbral,
+    ordenar_por_relevancia,
     relevancia_de_opcion,
     top_relevance_score,
 )
@@ -317,8 +318,7 @@ class RAGOrchestratorService:
             ChunkPuntuado(c.chunk_id, c.document_id, c.chunk_text, p)
             for c, p in zip(candidatos, puntajes)
         ]
-        puntuados.sort(key=lambda c: (-c.relevance_score, c.chunk_id))
-        return puntuados[: self._parametros.rerank_top_n]
+        return ordenar_por_relevancia(puntuados)[: self._parametros.rerank_top_n]
 
     @staticmethod
     def _exigir_un_puntaje_normalizado_por_candidato(
