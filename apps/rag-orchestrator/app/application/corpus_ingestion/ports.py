@@ -9,6 +9,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
+from app.domain.corpus_seed.documento import DocumentoDeSemilla
+
 
 class SparsePassageEncoder(Protocol):
     """Vector *sparse* léxico de PASAJES (ADR-39, ``SPARSE_VECTOR_SOURCE``): ``{id_de_token: peso}`` por texto.
@@ -19,3 +22,16 @@ class SparsePassageEncoder(Protocol):
     """
 
     def codificar(self, textos: Sequence[str]) -> list[dict[int, float]]: ...
+
+
+class ResolutorDeMetadatos(Protocol):
+    """Paso de metadatos de la ingesta (US-118, D1): decide qué metadatos y qué ``metadata_source`` lleva un documento.
+
+    Recibe el documento del manifiesto, su texto normalizado y sus fragmentos. NUNCA lanza por un fallo del LLM o del NLI:
+    devuelve el documento ``pendiente`` con el motivo (la indexación no se bloquea, RN-25). Es SÍNCRONO y solo para la CLI
+    de ingesta: no se invoca desde un bucle de eventos (el LLM es asíncrono y el servicio lo ejecuta con ``asyncio.run``).
+    """
+
+    def resolver(
+        self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]
+    ) -> MetadatosResueltos: ...
