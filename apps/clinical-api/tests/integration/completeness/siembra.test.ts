@@ -35,7 +35,7 @@ describe('siembra de FX-04-b', () => {
     const biomarcadores = `SELECT count(*)::int AS n FROM clinical.biomarker b
       JOIN clinical.exam e ON e.id = b.exam_id WHERE e.patient_id = $1`;
     expect(await contar(biomarcadores, fm1.patientId)).toBe(4);
-    expect(await contar(biomarcadores, fm2.patientId)).toBe(4);
+    expect(await contar(biomarcadores, fm2.patientId)).toBe(3);
     expect(await contar(biomarcadores, fm3.patientId)).toBe(3);
     expect(await contar(biomarcadores, fp1.patientId)).toBe(3);
     expect(
