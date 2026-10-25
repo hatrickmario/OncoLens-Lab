@@ -266,7 +266,7 @@ describe('el contexto de una entrada no anula el común (Gate 2 N4)', () => {
   it('conserva clave_duplicada cuando el contexto de la entrada devuelve clavesRepetidas vacío', () => {
     const entrada = ARCHIVOS_DEL_CATALOGO.aplicabilidad;
     const original = entrada.contexto;
-    entrada.contexto = () => ({ clavesRepetidas: new Set() });
+    entrada.contexto = (items) => ({ ...original(items), clavesRepetidas: new Set() });
     try {
       const archivos = leerCatalogo(path.join(FIXTURES, 'test-apl-1.0.0'), leerTexto);
       const items = archivos.tipos.mama.aplicabilidad.items;

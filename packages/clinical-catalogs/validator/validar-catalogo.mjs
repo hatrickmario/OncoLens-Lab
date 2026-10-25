@@ -29,8 +29,9 @@ function violacionesDeLosItems(archivo, nombreDelArchivo, contexto) {
   const items = itemsDe(archivo);
   const delArchivo = {
     ...contexto,
-    clavesRepetidas: clavesRepetidasEn(items),
     ...contextoDeLosItems?.(items),
+    // El contexto común va al final: el de una entrada no puede anular una invariante compartida.
+    clavesRepetidas: clavesRepetidasEn(items),
   };
   return items.flatMap((item) =>
     reglas

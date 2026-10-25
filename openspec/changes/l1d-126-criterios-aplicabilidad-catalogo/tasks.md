@@ -81,7 +81,7 @@
 
 - [x] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict` · válido; el único INFO es el esperado
       (el archivo rechaza el delta `MODIFIED` hasta archivar L1D-93)
-- [ ] 4.2 (parte rag-orchestrator: Pytest 2146 passed, 129 deselected; pendiente la de clinical-api) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
+- [x] 4.2 (rag-orchestrator: Pytest 2146 passed, 129 deselected; clinical-api: unit 902/902 e integración 399/399 con PostgreSQL de test tras integrar main) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
       sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
 
 ## Gate 2, vuelta 1 (clinical-platform)
