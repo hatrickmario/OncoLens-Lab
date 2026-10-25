@@ -89,10 +89,15 @@ Los ítems, sus destinos, condiciones, `minValues` y `verifiedReviewStatuses` MU
 - **AND** hay 5 ítems en `faltante`
 - **AND** `catalogVersion = "test-1.1.0"`
 
-### Requirement: Un biomarcador no mapeado nunca satisface un dato crítico
-Un registro con `mapping_status = no_mapeado` MUST quedar fuera del cálculo: nunca SHALL asignarse a un concepto del catálogo por su `original_name` ni por similitud (RN-27). El checklist no marca aparte un `no_mapeado` crítico; su conteo es de la medición del checklist `[S3 resp. 5]`.
+### Requirement: Un biomarcador no mapeado cuenta como presente sin verificar solo si su nombre coincide con el catálogo
+Decidido (usuario, 2026-10-24): un registro `no_mapeado` MUST contarse como cualquier dato vigente y dar `presente_sin_verificar` si su `name` coincide con el del destino. El emparejamiento SHALL ser solo por `name`, nunca por `original_name` ni por similitud (RN-27); sin coincidencia, el ítem sigue `faltante`.
 
-#### Scenario: Un Ki-67 no mapeado deja ki67 en faltante [US-002 AC-8] [RN-27] (asumido)
-- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `original_name = "Ki67 índice"` en `no_mapeado`
+#### Scenario: Un Ki-67 no mapeado con name del catálogo deja ki67 en presente sin verificar [US-002 AC-8] [RN-27]
+- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `name = "Ki-67"`, `original_name = "Ki67 índice"` en `no_mapeado`
+- **WHEN** se calcula el checklist de F-M2
+- **THEN** `ki67` está en `presente_sin_verificar`
+
+#### Scenario: Un Ki-67 no mapeado cuyo name no coincide deja ki67 en faltante [US-002 AC-8] [RN-27]
+- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `name = "Ki67 índice"` en `no_mapeado`
 - **WHEN** se calcula el checklist de F-M2
 - **THEN** `ki67` está en `faltante`
