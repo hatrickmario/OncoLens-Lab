@@ -165,3 +165,16 @@ export function medirCoberturaDelPr(raiz, { baseGit, env = process.env } = {}) {
   const ancestro = ejecutarGit(raiz, ['merge-base', rama, 'HEAD']).trim();
   return medirLineasCambiadas(ejecutarGit(raiz, ['diff', '-U0', '--no-color', ancestro]), informes, raiz);
 }
+
+/**
+ * Archivos que cambia el PR respecto de la rama base (`COBERTURA_BASE`, por defecto `origin/main`), o `null` si esa rama no
+ * existe en este clon (un clon local sin `origin/main`: el llamador mide todo). Git ausente o roto lanza.
+ */
+export function archivosDelPr(raiz, { baseGit, env = process.env } = {}) {
+  const rama = baseGit ?? env.COBERTURA_BASE ?? 'origin/main';
+  const existe = spawnSync('git', ['rev-parse', '--verify', '--quiet', rama], { cwd: raiz, encoding: 'utf8' });
+  if (existe.error) throw new Error(`no se pudo ejecutar git (${existe.error.code ?? existe.error.message})`);
+  if (existe.status !== 0) return null;
+  const ancestro = ejecutarGit(raiz, ['merge-base', rama, 'HEAD']).trim();
+  return ejecutarGit(raiz, ['diff', '--name-only', ancestro]).split('\n').filter(Boolean);
+}

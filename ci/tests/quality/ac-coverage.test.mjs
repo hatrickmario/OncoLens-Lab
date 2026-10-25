@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { armarReporte } from '../../../scripts/quality/normalizar.mjs';
-import { historiaDelChange, verificarCoberturaDeAc } from '../../../scripts/quality/check-ac-coverage.mjs';
+import { changesTocados, historiaDelChange, verificarCoberturaDeAc } from '../../../scripts/quality/check-ac-coverage.mjs';
 import { validarUmbrales } from '../../../scripts/quality/umbrales.mjs';
 
 // L1D-285 (test después): fixtures con un change activo US-900 (AC-1 y AC-2) bajo ci/tests/quality/fixtures/ac-coverage/.
@@ -86,5 +86,34 @@ describe('historiaDelChange', () => {
 
   it('devuelve null cuando la Trazabilidad no abre con una historia', () => {
     expect(historiaDelChange('# P\n\n## Trazabilidad\n\nADR-39 · FEAT-06a\n')).toBeNull();
+  });
+});
+
+describe('alertas filtradas a los changes que toca el diff', () => {
+  const DOS = path.join(FIXTURES, 'dos-changes');
+
+  it('reporta los AC de todos los changes activos cuando no se filtra (barrido completo) [US-213 AC-9]', () => {
+    expect(verificarCoberturaDeAc(DOS).map((h) => h.symbol)).toEqual([
+      'US-900 AC-1 (change us-900-uno)',
+      'US-901 AC-1 (change us-901-dos)',
+      'US-901 AC-2 (change us-901-dos)',
+    ]);
+  });
+
+  it('reporta solo los AC del change que toca el diff y ninguno de los otros [US-213 AC-9]', () => {
+    const tocados = changesTocados(['openspec/changes/us-901-dos/tasks.md', 'scripts/x.mjs']);
+
+    expect(verificarCoberturaDeAc(DOS, { soloChanges: tocados }).map((h) => h.symbol)).toEqual([
+      'US-901 AC-1 (change us-901-dos)',
+      'US-901 AC-2 (change us-901-dos)',
+    ]);
+  });
+
+  it('no reporta nada cuando el diff no toca ningún change [US-213 AC-9]', () => {
+    expect(verificarCoberturaDeAc(DOS, { soloChanges: changesTocados(['scripts/x.mjs']) })).toEqual([]);
+  });
+
+  it('ignora los changes archivados al leer los archivos del diff [US-213 AC-9]', () => {
+    expect([...changesTocados(['openspec/changes/archive/2026-01-01-x/proposal.md', 'openspec/changes/y/design.md'])]).toEqual(['y']);
   });
 });

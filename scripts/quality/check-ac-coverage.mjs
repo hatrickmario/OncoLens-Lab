@@ -90,13 +90,27 @@ export function acsConTest(raiz) {
   return cubiertos;
 }
 
-/** Una alerta por AC sin test de aceptación, en los changes activos de `openspec/changes/` (sin `archive/`). */
-export function verificarCoberturaDeAc(raiz) {
+/** Nombres de los changes activos que toca una lista de archivos (`openspec/changes/<change>/…`, sin `archive/`). */
+export function changesTocados(archivos) {
+  const tocados = new Set();
+  for (const archivo of archivos) {
+    const coincidencia = /^openspec\/changes\/(?!archive\/)([^/]+)\//.exec(archivo);
+    if (coincidencia) tocados.add(coincidencia[1]);
+  }
+  return tocados;
+}
+
+/**
+ * Una alerta por AC sin test de aceptación, en los changes activos de `openspec/changes/` (sin `archive/`). Con `soloChanges`
+ * (un conjunto de nombres) solo se revisan esos changes: el PR responde por los AC de lo que toca, no por los de otros changes.
+ */
+export function verificarCoberturaDeAc(raiz, { soloChanges = null } = {}) {
   const carpeta = path.join(raiz, 'openspec/changes');
   if (!existsSync(carpeta)) return [];
   const cubiertos = acsConTest(raiz);
   return readdirSync(carpeta, { withFileTypes: true })
     .filter((entrada) => entrada.isDirectory() && entrada.name !== 'archive')
+    .filter((entrada) => soloChanges === null || soloChanges.has(entrada.name))
     .flatMap(({ name: change }) => {
       const proposal = path.join(carpeta, change, 'proposal.md');
       const historia = existsSync(proposal) ? historiaDelChange(readFileSync(proposal, 'utf8')) : null;
