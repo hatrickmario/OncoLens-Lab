@@ -244,25 +244,41 @@ def test_la_cli_se_niega_sin_llm_local_nombrando_solo_la_variable_y_sin_conectar
     assert valor not in capturado.err and "postgres.invalid" not in capturado.err
 
 
-def _temperatura_del_cliente(entorno: pytest.MonkeyPatch, **variables: str) -> float:
-    from app.config.settings import Settings
+def _temperatura_enviada_al_llm(entorno: pytest.MonkeyPatch, **variables: str) -> float:
+    """Temperatura del request HTTP real (borde fingido con respx) del cliente que compone la CLI."""
+    import asyncio
+    import json
+
+    import httpx
+    import respx
+
+    from app.config.settings import CorpusIngestSettings
 
     for clave, valor in variables.items():
         entorno.setenv(clave, valor)
-    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
-    return ingest._llm_local(ambiente)._temperature
+    ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
+    modelos = ingest._modelos_de_metadatos(
+        None, nli_de_metadatos(), ajustes.corpus_metadata_llm_temperature
+    )
+    url = "http://host.docker.internal:11434/v1/chat/completions"
+    with respx.mock() as llm:
+        ruta = llm.post(url).mock(
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+        )
+        asyncio.run(modelos.llm.completar_json("p", {}))
+    return json.loads(ruta.calls[0].request.content)["temperature"]
 
 
 def test_la_extraccion_de_metadatos_usa_su_propia_temperatura_y_no_la_de_generacion(
     entorno: pytest.MonkeyPatch,
 ) -> None:
-    assert _temperatura_del_cliente(entorno, LLM_TEMPERATURE="0.7") == 0.0
+    assert _temperatura_enviada_al_llm(entorno, LLM_TEMPERATURE="0.7") == 0.0
 
 
 def test_la_temperatura_de_extraccion_se_configura_con_corpus_metadata_llm_temperature(
     entorno: pytest.MonkeyPatch,
 ) -> None:
-    temperatura = _temperatura_del_cliente(
+    temperatura = _temperatura_enviada_al_llm(
         entorno, LLM_TEMPERATURE="0.7", CORPUS_METADATA_LLM_TEMPERATURE="0.3"
     )
 
@@ -271,9 +287,24 @@ def test_la_temperatura_de_extraccion_se_configura_con_corpus_metadata_llm_tempe
 
 @pytest.mark.parametrize("valor", ["-0.1", "2.5"])
 def test_una_temperatura_de_extraccion_fuera_de_rango_se_rechaza_en_la_configuracion(
-    entorno: pytest.MonkeyPatch, valor: str
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], valor: str
 ) -> None:
-    from pydantic import ValidationError
+    entorno.setenv("CORPUS_METADATA_LLM_TEMPERATURE", valor)
 
-    with pytest.raises(ValidationError):
-        _temperatura_del_cliente(entorno, CORPUS_METADATA_LLM_TEMPERATURE=valor)
+    codigo = ingest.main(ARGUMENTOS, embedder=EmbedderFalso(), sparse=CodificadorSparseFalso())
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "CORPUS_METADATA_LLM_TEMPERATURE" in capturado.err
+
+
+def test_la_cli_se_niega_sin_llm_local_antes_de_cargar_los_modelos_de_embeddings(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Sin ``MODEL_PROVIDER=local`` la carga de embeddings fallaría nombrando ``MODEL_PROVIDER``: la negativa va PRIMERO."""
+    entorno.setenv("LLM_CLOUD_ENABLED", "true")
+
+    codigo = ingest.main(ARGUMENTOS)
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "LLM_CLOUD_ENABLED" in capturado.err
+    assert "MODEL_PROVIDER" not in capturado.err
