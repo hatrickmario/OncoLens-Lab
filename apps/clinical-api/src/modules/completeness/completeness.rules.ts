@@ -24,8 +24,6 @@ export class CatalogoInconsistenteError extends Error {
 
 type ResultadoDeCondicion = 'cumple' | 'no_cumple' | 'no_evaluable';
 
-const MAPEO_AUSENTE = 'no_mapeado';
-
 /** Paso 3 (RN-07): un registro rechazado o reemplazado nunca cuenta. */
 export function registrosVigentes(registros: readonly RegistroDeDato[]): RegistroDeDato[] {
   return registros.filter(
@@ -79,19 +77,10 @@ export function itemsDelTipoActivo(
 }
 
 /**
- * RN-27 (design D5): un `Biomarker` `no_mapeado` nunca satisface un dato crítico, aunque su nombre coincida. Solo
- * aplica al `Biomarker`: en `PriorTreatment` o `Diagnosis` el `mapping_status` habla de códigos ATC/CIE-10 y el
- * registro sigue siendo un dato presente.
+ * Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor. El
+ * `name` es el término canónico: un `no_mapeado` solo coincide si su `name` ya es el del catálogo (RN-27: nunca se
+ * empareja por `original_name` ni por similitud, eso sería asignar un concepto sin mapeo).
  */
-export function excluirNoMapeados(
-  destino: DestinoDeItem,
-  registros: readonly RegistroDeDato[],
-): RegistroDeDato[] {
-  if (destino.entity !== 'Biomarker') return [...registros];
-  return registros.filter((registro) => registro.columnas['mapping_status'] !== MAPEO_AUSENTE);
-}
-
-/** Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor. */
 export function registrosDelDestino(
   destino: DestinoDeItem,
   registros: readonly RegistroDeDato[],
@@ -136,9 +125,8 @@ function registrosQueCuentanDelItem(
   registros: RegistrosPorEntidad,
 ): RegistroDeDato[] {
   const destino = item.destination;
-  // RN-07 y RN-27 juntas: lo que no cuenta se descarta antes de buscar la coincidencia de destino.
   const vigentes = registrosVigentes(registros[destino.entity] ?? []);
-  return registrosDelDestino(destino, excluirNoMapeados(destino, vigentes));
+  return registrosDelDestino(destino, vigentes);
 }
 
 function valorDelRegistro(item: ItemDeDatoCritico, registro: RegistroDeDato): string | null {

@@ -4,7 +4,6 @@ import {
   calcularChecklist,
   estadoDeVerificacion,
   evaluarCondicion,
-  excluirNoMapeados,
   itemsDelTipoActivo,
   registroQueCuenta,
   registrosDelDestino,
@@ -116,30 +115,6 @@ describe('registrosDelDestino', () => {
     const coinciden = registrosDelDestino({ entity: 'Diagnosis', field: 'grade' }, registros);
 
     expect(coinciden.map((r) => r.id)).toEqual(['con']);
-  });
-});
-
-describe('excluirNoMapeados (RN-27)', () => {
-  const sinMapear = registro({
-    id: 'sin-mapear',
-    columnas: { name: 'Ki-67', value: '30%', mapping_status: 'no_mapeado' },
-  });
-
-  it('excluye los biomarcadores no_mapeado aunque su nombre coincida cuando el destino es un Biomarker', () => {
-    const conservados = excluirNoMapeados({ entity: 'Biomarker', field: 'value' }, [sinMapear]);
-
-    expect(conservados).toEqual([]);
-  });
-
-  it('conserva un PriorTreatment no_mapeado cuando el destino no es un Biomarker', () => {
-    const tratamientoSinMapear = registro({
-      id: 'tratamiento',
-      columnas: { regimen_name: 'letrozol', mapping_status: 'no_mapeado' },
-    });
-
-    const conservados = excluirNoMapeados({ entity: 'PriorTreatment' }, [tratamientoSinMapear]);
-
-    expect(conservados.map((r) => r.id)).toEqual(['tratamiento']);
   });
 });
 
@@ -280,26 +255,31 @@ describe('calcularChecklist', () => {
     expect(checklist).toEqual([{ key: 't', status: 'faltante' }]);
   });
 
-  it('deja el biomarcador no_mapeado en faltante y cuenta el PriorTreatment no_mapeado cuando calcula el checklist [RN-27]', () => {
+  it('cuenta un no_mapeado como presente sin verificar solo si su name coincide con el catálogo [RN-27]', () => {
     const ki67 = item('ki67', {
       destination: { entity: 'Biomarker', field: 'value', match: { name: 'Ki-67' } },
     });
-    const columnasSinMapear = { name: 'Ki-67', value: '30%', mapping_status: 'no_mapeado' };
+    const sinMapear = (name: string) =>
+      registro({
+        reviewStatus: 'requiere_revision',
+        columnas: { name, value: '30%', mapping_status: 'no_mapeado' },
+      });
+    const conNombre = (name: string) =>
+      calcularChecklist({
+        cancerType: 'mama',
+        items: [ki67, item('t')],
+        verifiedReviewStatuses: VERIFICADOS,
+        registros: {
+          Biomarker: [sinMapear(name)],
+          PriorTreatment: [registro({ columnas: { mapping_status: 'no_mapeado' } })],
+        },
+      });
 
-    const checklist = calcularChecklist({
-      cancerType: 'mama',
-      items: [ki67, item('t')],
-      verifiedReviewStatuses: VERIFICADOS,
-      registros: {
-        Biomarker: [registro({ columnas: columnasSinMapear })],
-        PriorTreatment: [registro({ columnas: { mapping_status: 'no_mapeado' } })],
-      },
-    });
-
-    expect(checklist).toEqual([
-      { key: 'ki67', status: 'faltante' },
+    expect(conNombre('Ki-67')).toEqual([
+      { key: 'ki67', status: 'presente_sin_verificar' },
       { key: 't', status: 'presente_verificado' },
     ]);
+    expect(conNombre('Ki67 índice')[0]).toEqual({ key: 'ki67', status: 'faltante' });
   });
 
   it('devuelve faltante cuando la entidad del destino no aparece en los registros', () => {
