@@ -21,11 +21,12 @@ const git = (cwd, ...args) =>
   );
 
 /** Repo temporal con `catalogo/` (copia de test-apl-1.0.0) confirmado en `main` y una rama `cambio` encima. */
-function repoConCatalogo() {
+function repoConCatalogo(preparar = () => {}) {
   const raiz = mkdtempSync(path.join(os.tmpdir(), 'guard-'));
   repos.push(raiz);
   git(raiz, 'init', '-q', '-b', 'main');
   cpSync(path.join(FIXTURES, 'test-apl-1.0.0'), path.join(raiz, 'catalogo'), { recursive: true });
+  preparar(raiz);
   git(raiz, 'add', '-A');
   git(raiz, 'commit', '-q', '-m', 'base');
   git(raiz, 'checkout', '-q', '-b', 'cambio');
@@ -128,6 +129,24 @@ describe('catalog:version-guard · contenido cambiado sin subir versión', () =>
 
       expect(resultado.codigo).toBe(0);
       expect(resultado.salida).toContain('catalog:version-guard OK');
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
+describe('catalog:version-guard · el archivo entero cuenta, no solo sus ítems (Gate 2 M-1)', () => {
+  it(
+    'falla y nombra mama/datos-criticos cuando cambia verifiedReviewStatuses con la misma versión',
+    () => {
+      const raiz = repoConCatalogo();
+      modificar(raiz, 'mama/datos-criticos.json', (c) => c.verifiedReviewStatuses.push('otro'));
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain(
+        'contenido_cambiado_sin_subir_version mama/datos-criticos',
+      );
     },
     PLAZO_PROCESO_MS,
   );
