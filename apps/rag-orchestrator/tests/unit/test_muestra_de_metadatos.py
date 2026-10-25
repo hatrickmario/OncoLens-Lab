@@ -10,7 +10,6 @@ from typing import Any
 import pytest
 import yaml
 
-from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
 from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
 from app.application.seed_corpus.registros import registro_embebido
@@ -172,10 +171,6 @@ def _generador(
     )
 
 
-def _reporte(release: str | None = "release-1") -> ReporteDeIngesta:
-    return ReporteDeIngesta((), release)
-
-
 def test_la_muestra_solo_incluye_documentos_extraidos_con_al_menos_un_campo_conservado() -> None:
     escritor = _EscritorEnMemoria()
     catalogo = _catalogo(
@@ -185,7 +180,7 @@ def test_la_muestra_solo_incluye_documentos_extraidos_con_al_menos_un_campo_cons
         _fila("d", "pendiente"),
     )
 
-    muestra = _generador(escritor, catalogo).generar(_reporte())
+    muestra = _generador(escritor, catalogo).generar("release-1")
 
     assert muestra.tamano == 1
     assert [d["document_id"] for d in escritor.escritos[0][1]["documentos"]] == ["a@" + "ab" * 6]
@@ -195,7 +190,7 @@ def test_la_muestra_no_se_escribe_cuando_la_ingesta_no_publico_release() -> None
     escritor = _EscritorEnMemoria()
     catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"), release=None)
 
-    muestra = _generador(escritor, catalogo).generar(_reporte(None))
+    muestra = _generador(escritor, catalogo).generar(None)
 
     assert (muestra.tamano, muestra.archivo, escritor.escritos) == (0, None, [])
 
@@ -204,7 +199,7 @@ def test_la_muestra_al_0_por_ciento_no_escribe_archivo() -> None:
     escritor = _EscritorEnMemoria()
     catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"))
 
-    muestra = _generador(escritor, catalogo, pct=0).generar(_reporte())
+    muestra = _generador(escritor, catalogo, pct=0).generar("release-1")
 
     assert (muestra.tamano, escritor.escritos) == (0, [])
 
@@ -214,7 +209,7 @@ def test_la_muestra_solo_considera_los_documentos_de_la_release_publicada() -> N
     catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"))
     catalogo.guardar_documento(_fila("fuera", "extraido_verificado", trial_phase="III"))
 
-    muestra = _generador(escritor, catalogo).generar(_reporte())
+    muestra = _generador(escritor, catalogo).generar("release-1")
 
     assert muestra.tamano == 1
 
@@ -234,14 +229,14 @@ def test_cada_campo_de_la_muestra_nace_pendiente_de_revision_y_sin_nota() -> Non
         )
     )
 
-    _generador(escritor, catalogo).generar(_reporte())
+    _generador(escritor, catalogo).generar("release-1")
 
     cabecera = escritor.escritos[0][1]
     entrada = cabecera["documentos"][0]
     assert entrada["campos"] == [
         {"campo": "trial_phase", "valor": "II", "revision": "pendiente", "nota": ""},
-        {"campo": "estadio", "valor": "I–III", "revision": "pendiente", "nota": ""},
         {"campo": "biomarcadores.her2", "valor": "positivo", "revision": "pendiente", "nota": ""},
+        {"campo": "estadio", "valor": "I–III", "revision": "pendiente", "nota": ""},
     ]
     assert entrada["source_url"] == "no_disponible"
     assert cabecera["generated_at"] == RelojFijo().ahora().isoformat()

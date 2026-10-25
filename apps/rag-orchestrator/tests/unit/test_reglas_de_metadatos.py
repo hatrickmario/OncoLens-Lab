@@ -11,6 +11,7 @@ from datetime import date
 import pytest
 
 from app.domain.corpus_metadata.extraccion import (
+    campos_conservados,
     escalares_a_extraer,
     integrar_metadatos_verificados,
 )
@@ -115,8 +116,6 @@ def test_cada_criterio_plano_verificado_se_guarda_bajo_su_clave(campo: str) -> N
 
 
 def test_los_campos_conservados_de_una_fila_son_los_escalares_y_criterios_no_vacios() -> None:
-    from app.domain.corpus_metadata.extraccion import campos_conservados
-
     campos = campos_conservados(
         "eca",
         "III",
@@ -134,12 +133,54 @@ def test_los_campos_conservados_de_una_fila_son_los_escalares_y_criterios_no_vac
         ("study_design", "eca"),
         ("trial_phase", "III"),
         ("sample_size", 500),
-        ("estadio", "I–III"),
         ("biomarcadores.her2", "positivo"),
+        ("estadio", "I–III"),
     ]
 
 
 def test_una_fila_sin_nada_conservado_no_tiene_campos_y_otro_es_no_declarado() -> None:
-    from app.domain.corpus_metadata.extraccion import campos_conservados
-
     assert campos_conservados("otro", None, None, None, {"biomarcadores": NO_DISPONIBLE}) == ()
+
+
+def test_caracterizacion_una_fila_extraido_verificado_sin_ningun_campo_extraido_entra_en_la_muestra_si_el_manifiesto_declaro_un_escalar() -> (
+    None
+):
+    """LÍMITE CONOCIDO (design.md, PLANTILLA.md): la fila no distingue lo extraído de lo declarado por el manifiesto.
+
+    ``integrar_metadatos_verificados`` rotula ``extraido_verificado`` aunque el NLI no verifique nada; si el manifiesto
+    declaró ``study_design = eca``, ``campos_conservados`` lo devuelve como si se hubiera extraído y el documento entra en
+    la muestra. M-08.4 saldría inflado hasta que exista ``extracted_fields`` (deuda en tasks.md).
+    """
+    declarado = replace(DOCUMENTO, study_design="eca")
+
+    fila = integrar_metadatos_verificados(declarado, ())
+
+    assert fila.metadata_source == "extraido_verificado" and fila.campos_verificados == ()
+    assert campos_conservados(
+        fila.study_design,
+        fila.trial_phase,
+        fila.sample_size,
+        fila.primary_endpoint,
+        fila.population_criteria,
+    ) == (CampoDeMetadato("study_design", "eca"),)
+
+
+def test_ida_y_vuelta_de_los_campos_verificados_por_integrar_y_campos_conservados() -> None:
+    verificados = (
+        CampoDeMetadato("study_design", "eca"),
+        CampoDeMetadato("trial_phase", "III"),
+        CampoDeMetadato("sample_size", 500),
+        CampoDeMetadato("biomarcadores.her2", "positivo"),
+        CampoDeMetadato("estadio", "I–III"),
+    )
+
+    fila = integrar_metadatos_verificados(DOCUMENTO, verificados)
+    de_vuelta = campos_conservados(
+        fila.study_design,
+        fila.trial_phase,
+        fila.sample_size,
+        fila.primary_endpoint,
+        fila.population_criteria,
+    )
+
+    assert set(de_vuelta) == set(verificados)

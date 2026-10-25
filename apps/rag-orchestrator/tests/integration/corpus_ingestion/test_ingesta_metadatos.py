@@ -162,9 +162,11 @@ def test_ingesta_con_los_modelos_caidos_nunca_rotula_fuente_estructurada_lo_que_
 SEMILLA_DE_TEST = "semilla-de-test"
 
 
-def _generador(directorio: Path, montaje: Montaje) -> GeneradorDeMuestraDeMetadatos:
+def _generador(
+    directorio: Path, montaje: Montaje, pct: float = 10
+) -> GeneradorDeMuestraDeMetadatos:
     return GeneradorDeMuestraDeMetadatos(
-        pct=10,
+        pct=pct,
         semilla=SEMILLA_DE_TEST,
         escritor=EscritorDeMuestraYaml(directorio),
         catalogo=montaje.catalogo,
@@ -184,7 +186,7 @@ def test_muestra_lote_20_al_10_por_ciento_elige_2_reproducibles(
     lote = lote_sintetico(20)
     reporte = montaje.servicio.ingerir(lote)
 
-    resultado = _generador(tmp_path, montaje).generar(reporte)
+    resultado = _generador(tmp_path, montaje).generar(reporte.release_id)
 
     assert resultado.tamano == 2 and resultado.archivo == tmp_path / f"{reporte.release_id}.yaml"
     muestra = yaml.safe_load(resultado.archivo.read_text(encoding="utf-8"))
@@ -208,7 +210,7 @@ def test_muestra_sin_documentos_extraidos_no_escribe_archivo(
     )
     reporte = montaje.servicio.ingerir(estructurados)
 
-    resultado = _generador(tmp_path, montaje).generar(reporte)
+    resultado = _generador(tmp_path, montaje).generar(reporte.release_id)
 
     assert (resultado.tamano, resultado.archivo) == (0, None)
     assert list(tmp_path.iterdir()) == []
@@ -269,7 +271,7 @@ def test_ingesta_un_defecto_en_el_paso_de_metadatos_deja_ese_documento_en_error_
 
 
 @pytest.mark.ac("US-118", 5)
-def test_muestra_incluye_documentos_omitidos_de_corridas_previas_y_es_reproducible(
+def test_muestra_de_la_release_es_reproducible_cuando_la_ultima_corrida_omitio_tres_de_cinco(
     montaje: Montaje, tmp_path: Path
 ) -> None:
     """[US-118 AC-5] Decidido (usuario, 2026-10-24): la fuente de la muestra es la release, no la corrida."""
@@ -279,8 +281,8 @@ def test_muestra_incluye_documentos_omitidos_de_corridas_previas_y_es_reproducib
     reporte = montaje.servicio.ingerir(lote)  # omite 3 de 5 ya embebidos
     assert sum(r.estado.value == "omitido" for r in reporte.resultados) == 3
 
-    primera = _generador(tmp_path / "a", montaje).generar(reporte)
-    segunda = _generador(tmp_path / "b", montaje).generar(reporte)
+    primera = _generador(tmp_path / "a", montaje).generar(reporte.release_id)
+    segunda = _generador(tmp_path / "b", montaje).generar(reporte.release_id)
 
     ids = [
         d["document_id"] for d in yaml.safe_load(primera.archivo.read_text("utf-8"))["documentos"]
@@ -292,17 +294,16 @@ def test_muestra_incluye_documentos_omitidos_de_corridas_previas_y_es_reproducib
 
 
 @pytest.mark.ac("US-118", 5)
-def test_muestra_al_100_por_ciento_contiene_los_cinco_documentos_de_la_release(
+def test_muestra_al_100_por_ciento_incluye_los_tres_documentos_omitidos_por_la_ultima_corrida(
     montaje: Montaje, tmp_path: Path
 ) -> None:
     montaje.llm_metadatos.por_defecto = {"trial_phase": "II"}
     lote = lote_sintetico(5)
     montaje.servicio.ingerir(lote[:3])
     reporte = montaje.servicio.ingerir(lote)
-    generador = _generador(tmp_path, montaje)
-    generador._pct = 100
+    generador = _generador(tmp_path, montaje, pct=100)
 
-    resultado = generador.generar(reporte)
+    resultado = generador.generar(reporte.release_id)
 
     omitidos = {r.document_key for r in reporte.resultados if r.estado.value == "omitido"}
     muestreados = {

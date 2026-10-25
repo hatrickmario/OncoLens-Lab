@@ -7,6 +7,8 @@ cambia un ``studyKey``, el ajuste es de datos (esta tupla y el fixture), no de l
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Final
 
 from app.domain.corpus_seed.poblacion import CRITERIOS_DE_POBLACION
@@ -32,8 +34,10 @@ def claves_de_poblacion_admitidas() -> frozenset[str]:
 # Claves que ``poblacion.json`` (l1d-126) declara y la ingesta NO extrae en el S3: quedan «Desconocido» explícito
 # (``no_reportado_por_fuente``) en la aplicabilidad. Decidido (usuario, 2026-10-24). La tarea 1.13 compara
 # ``poblacion.json`` menos estas claves contra ``claves_de_poblacion_admitidas()``.
-CLAVES_NO_EXTRAIDAS_EN_EL_S3: Final = {
-    "grado": "asumida en l1d-126 (Diagnosis.grade, PRD B-08); no es del modelo v1.1 de population_criteria",
-    "estado_menopausico": "asumida en l1d-126 (ClinicalAttribute); fuera del modelo v1.1 de population_criteria",
-    "estado_castracion": "asumida en l1d-126 (ClinicalAttribute); fuera del modelo v1.1 de population_criteria",
-}
+CLAVES_NO_EXTRAIDAS_EN_EL_S3: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "grado": "asumida en l1d-126 (Diagnosis.grade, PRD B-08); no es del modelo v1.1 de population_criteria",
+        "estado_menopausico": "asumida en l1d-126 (ClinicalAttribute); fuera del modelo v1.1 de population_criteria",
+        "estado_castracion": "asumida en l1d-126 (ClinicalAttribute); fuera del modelo v1.1 de population_criteria",
+    }
+)

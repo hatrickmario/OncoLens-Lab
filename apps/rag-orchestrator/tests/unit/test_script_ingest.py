@@ -176,7 +176,6 @@ class _EscritorQueFalla:
 def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_la_ingesta() -> None:
     from datetime import date
 
-    from app.application.corpus_ingestion.reporte import ReporteDeIngesta
     from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
     from app.application.seed_corpus.ports import RegistroDeRelease
     from app.application.seed_corpus.registros import registro_embebido
@@ -204,7 +203,6 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
             "release-1", date(2026, 10, 16), (), RelojFijo().ahora(), (fila.document_id,)
         )
     )
-    reporte = ReporteDeIngesta((), "release-1")
     generador = GeneradorDeMuestraDeMetadatos(
         pct=100,
         semilla="s",
@@ -216,7 +214,7 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
         nli_model="n",
     )
 
-    resumen = ingest.escribir_muestra(generador, reporte)
+    resumen = ingest.escribir_muestra(generador, "release-1")
 
     assert resumen == {"tamano": 0, "fallo": "OSError"}
     assert "secreta" not in str(resumen)

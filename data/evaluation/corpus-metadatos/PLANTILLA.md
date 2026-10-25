@@ -34,6 +34,14 @@ marca un campo como correcto o incorrecto. La lee US-132 (AC-4) para calcular la
 Regla general: se revisa **lo que el documento declara**, no si el dato es clínicamente deseable. Un valor correcto pero
 de un subgrupo (no de toda la población) es `incorrecto`: la representación de subgrupos queda fuera del S3.
 
+## Límite conocido: lo declarado por el manifiesto también aparece
+
+La muestra se construye desde las filas `extraido_verificado` del catálogo, y la fila no distingue un valor que el LLM
+extrajo (y el NLI verificó) de uno que el manifiesto ya declaraba (p. ej. un `study_design` publicado por la fuente).
+Si revisas un campo cuyo valor viene claramente del encabezado o de los metadatos de la fuente y no del texto, márcalo igual
+(`correcto`/`incorrecto`) y escribe en `nota`: `declarado por la fuente`. Mientras no exista la columna `extracted_fields`
+(deuda en `tasks.md`), M-08.4 puede salir inflado por esos campos.
+
 ## Formato del archivo
 
 ```yaml

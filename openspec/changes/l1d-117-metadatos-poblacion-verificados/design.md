@@ -186,3 +186,16 @@ US-233 (S4) y la revisión humana de la muestra, tarea `[HUMANO]` `[S3 resp. 13]
     test. Alternativa: derivar un delimitador que no aparezca en el texto.
   - **M4 · Tipo de `metadatos` en el resolutor.** `MetadatosResueltos` conserva `Mapping[str, Any]` en `population_criteria`
     (el valor de `biomarcadores` es un objeto); no se tipa más hasta que `poblacion.json` fije la forma (tarea 1.13).
+  - **Límite conocido de la decisión 5 (extraído vs declarado).** La fila `extraido_verificado` no distingue lo extraído de lo
+    declarado por el manifiesto: `integrar_metadatos_verificados` rotula `extraido_verificado` aunque no se verifique nada y
+    `campos_conservados` devuelve también los escalares declarados, así que un documento sin ningún campo extraído entra en la
+    muestra si el manifiesto declaró alguno. M-08.4 saldría inflado. Fijado con tests de caracterización y documentado en
+    `PLANTILLA.md`. Corrección real (columna `extracted_fields` en `corpus_document` + migración): deuda en tasks.md,
+    «antes de la primera revisión humana de la muestra». **Pregunta para el usuario:** ¿la decisión 5 contemplaba este efecto
+    sobre M-08.4?
+  - **RN-12, piso cerrado aplicado a la CLI (ADR-41 D4).** La regla pura `variable_que_incumple_llm_local` (dominio) niega con
+    `LLM_CLOUD_ENABLED`, `LLM_PROVIDER`, `LLM_BASE_URL` (`es_proveedor_local`, que `LLM_ALLOWED_HOSTS` no amplía) o `LLM_MODEL`
+    (`es_modelo_de_nube`: `x:cloud` servido por un Ollama local se ejecuta en la nube). No es una política nueva: es el piso
+    que ya aplica la suite de evaluación. La CLI la evalúa al inicio, antes de cargar pesos, abrir conexiones o leer el
+    manifiesto. **Pregunta para el usuario:** el servicio `/rag/query` tampoco rechaza un modelo `:cloud` (ningún código
+    fuera de `app/evaluation/` llama a `es_modelo_de_nube`); es previo a este PR y queda como deuda.

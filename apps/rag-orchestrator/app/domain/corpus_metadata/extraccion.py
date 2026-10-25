@@ -112,7 +112,7 @@ def campos_conservados(
         ("primary_endpoint", primary_endpoint),
     )
     campos = [CampoDeMetadato(n, v) for n, v in escalares if v is not None]
-    for nombre, valor in population_criteria.items():
+    for nombre, valor in sorted(population_criteria.items()):
         if nombre == "biomarcadores" and isinstance(valor, Mapping):
             campos += [
                 CampoDeMetadato(f"{_PREFIJO_DE_BIOMARCADOR}{k}", str(v)) for k, v in valor.items()

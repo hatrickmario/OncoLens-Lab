@@ -65,6 +65,14 @@
 - [x] 4.2 **Decidido (usuario, 2026-10-24):** la muestra se construye desde la release/catálogo (`CorpusCatalog.documentos_extraidos_de_la_release`) · test: omitidos de corridas previas entran, reproducible, sin extraídos no se escribe
 - [x] 4.3 **Decidido (usuario, 2026-10-24):** la CLI `ingest` se niega con `LLM_CLOUD_ENABLED=true` o `LLM_PROVIDER != local`; `CORPUS_METADATA_LLM_TEMPERATURE` (default 0) · variables nuevas para `.env.example` (sesión principal): `CORPUS_METADATA_LLM_TEMPERATURE=0`
 
+### Deuda explícita (revisión de diseño y privacidad del seguimiento)
+
+- [ ] 5.1 Columna `extracted_fields` en `corpus_document` (+ migración 0004) para distinguir lo extraído de lo declarado por el manifiesto; la muestra y M-08.4 la usarán · TRASLADADA a «antes de la primera revisión humana de la muestra» (límite fijado por tests de caracterización)
+- [ ] 5.2 `/rag/query` no rechaza un modelo `:cloud` (`es_modelo_de_nube` solo lo usa `app/evaluation/`) · deuda previa a este PR, pregunta al usuario en design.md
+- [ ] 5.3 (Menor #7) El filtro `extraido_verificado` está duplicado en el adapter SQL y en el fake de `CatalogoEnMemoria`
+- [ ] 5.4 (Menor #9) El método `documentos_extraidos_de_la_release` engorda `CorpusCatalog` (ISP): separar un puerto de lectura de la muestra
+- [ ] 5.5 (Menor #13) Orden TDD: algunos commits del seguimiento llevan el test y el código juntos o el rojo por excepción en vez de aserción
+
 ## evaluación
 
 - [x] 2.1 `run-ai-eval` sobre la rama: confirmar que recuperación y fidelidad no cambian frente al baseline (prompt

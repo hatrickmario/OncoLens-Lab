@@ -165,12 +165,12 @@ def _nli_real() -> NliClassifier:
 
 def escribir_muestra(
     generador: GeneradorDeMuestraDeMetadatos,
-    reporte: ReporteDeIngesta,
+    release_id: str | None,
 ) -> dict[str, object]:
     """La muestra se escribe DESPUÉS de confirmar la ingesta: su fallo (solo la clase, nunca el mensaje) va al resumen y no
     tumba un reporte que ya describe documentos indexados."""
     try:
-        return {"tamano": generador.generar(reporte).tamano}
+        return {"tamano": generador.generar(release_id).tamano}
     except Exception as error:  # noqa: BLE001 - E/S del archivo: se informa la clase
         return {"tamano": 0, "fallo": type(error).__name__}
 
@@ -226,7 +226,7 @@ def _ejecutar_ingesta(
             llm_model=metadatos.nombre_del_llm,
             nli_model=metadatos.nli.version,
         )
-        return reporte, escribir_muestra(generador, reporte)
+        return reporte, escribir_muestra(generador, reporte.release_id)
     finally:
         motor.dispose()
 

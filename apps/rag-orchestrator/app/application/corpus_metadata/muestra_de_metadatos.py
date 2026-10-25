@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.ports import Clock
 from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_metadata.muestra import seleccionar_muestra
@@ -68,12 +67,13 @@ class GeneradorDeMuestraDeMetadatos:
         self._llm_model = llm_model
         self._nli_model = nli_model
 
-    def generar(self, reporte: ReporteDeIngesta) -> ResultadoDeMuestra:
-        if reporte.release_id is None:
+    def generar(self, release_id: str | None) -> ResultadoDeMuestra:
+        """``release_id``: la release que publicó la ingesta (``None`` si no publicó ninguna: no hay muestra)."""
+        if release_id is None:
             return ResultadoDeMuestra(0, None)
         elegibles = {
             r.document_id: (r, campos)
-            for r in self._catalogo.documentos_extraidos_de_la_release(reporte.release_id)
+            for r in self._catalogo.documentos_extraidos_de_la_release(release_id)
             if (campos := _campos_de(r))
         }
         elegidos = seleccionar_muestra(list(elegibles), self._pct, self._semilla)
@@ -81,7 +81,7 @@ class GeneradorDeMuestraDeMetadatos:
             return ResultadoDeMuestra(0, None)
         entradas = [_entrada(*elegibles[i]) for i in elegidos]
         archivo = self._escritor.escribir(
-            reporte.release_id, {**self._cabecera(reporte.release_id), "documentos": entradas}
+            release_id, {**self._cabecera(release_id), "documentos": entradas}
         )
         return ResultadoDeMuestra(len(entradas), archivo)
 
