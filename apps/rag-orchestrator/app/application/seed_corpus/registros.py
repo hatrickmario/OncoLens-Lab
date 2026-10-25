@@ -14,7 +14,7 @@ from datetime import datetime
 from app.application.ports import ChunkDelCorpus
 from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_metadata.origen import metadatos_sin_extraer
-from app.domain.corpus_metadata.resultado import FUENTE_ESTRUCTURADA, MetadatosResueltos
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision, ClaseDeLicencia
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.versionado import (
@@ -24,7 +24,6 @@ from app.domain.corpus_seed.versionado import (
     STATUS_RECHAZADO,
 )
 
-ORIGEN_DE_LA_SEMILLA = FUENTE_ESTRUCTURADA
 SECCION_UNICA = "texto_completo"
 # La columna ``license_class`` es NOT NULL con CHECK sobre cuatro valores y ``rechazado_licencia`` no tiene clase propia
 # (el catálogo no cambia en este change): un rechazado lleva la más restrictiva. La verdad de su licencia es el texto
