@@ -195,4 +195,13 @@ describe('checklist determinista de datos críticos', () => {
 
     expect(checklist.items.find((item) => item.key === 'ki67')?.status).toBe('faltante');
   });
+
+  it('deja ki67 en faltante cuando solo el original_name del no_mapeado coincide con el catálogo [US-002 AC-8]', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    await sembrarKi67NoMapeado(fm2, 'Ki67 índice', 'Ki-67');
+
+    const checklist = await servicioCon(RUTA_CATALOGO_TEST_1_0_0).calcular(fm2.patientId);
+
+    expect(checklist.items.find((item) => item.key === 'ki67')?.status).toBe('faltante');
+  });
 });

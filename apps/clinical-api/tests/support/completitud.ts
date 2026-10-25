@@ -58,11 +58,18 @@ export async function prepararSiembra(
   return { cliente, ids, userId: base.userId };
 }
 
-/** Ki-67 `no_mapeado` (AC-8): `name` es lo que el extractor dejó; `original_name`, el texto del documento. */
-export async function sembrarKi67NoMapeado(p: PacienteSembrado, name: string): Promise<void> {
+/**
+ * Ki-67 `no_mapeado` en `requiere_revision` (AC-8): `name` es el texto propuesto por el extractor y `originalName` el del
+ * documento; el emparejamiento solo mira `name`.
+ */
+export async function sembrarKi67NoMapeado(
+  p: PacienteSembrado,
+  name: string,
+  originalName = 'Ki67 índice',
+): Promise<void> {
   await sembrarBiomarcador(p, {
     name,
-    originalName: 'Ki67 índice',
+    originalName,
     value: '30%',
     reviewStatus: 'requiere_revision',
     mappingStatus: 'no_mapeado',

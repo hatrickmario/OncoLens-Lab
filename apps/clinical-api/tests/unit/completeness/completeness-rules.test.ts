@@ -282,6 +282,55 @@ describe('calcularChecklist', () => {
     expect(conNombre('Ki67 índice')[0]).toEqual({ key: 'ki67', status: 'faltante' });
   });
 
+  it('da presente_verificado a un no_mapeado verificado con name coincidente porque el estado sale de review_status [RN-27]', () => {
+    const ki67 = item('ki67', {
+      destination: { entity: 'Biomarker', field: 'value', match: { name: 'Ki-67' } },
+    });
+
+    const checklist = calcularChecklist({
+      cancerType: 'mama',
+      items: [ki67],
+      verifiedReviewStatuses: VERIFICADOS,
+      registros: {
+        Biomarker: [
+          registro({
+            reviewStatus: 'verificado',
+            columnas: { name: 'Ki-67', value: '30%', mapping_status: 'no_mapeado' },
+          }),
+        ],
+      },
+    });
+
+    expect(checklist).toEqual([{ key: 'ki67', status: 'presente_verificado' }]);
+  });
+
+  it('activa her2_ish cuando el her2_ihq no_mapeado con name del catálogo vale 2+ [RN-27]', () => {
+    const her2Ihq = item('her2_ihq', {
+      destination: { entity: 'Biomarker', field: 'value', match: { name: 'HER2' } },
+    });
+    const her2Ish = item('her2_ish', {
+      destination: { entity: 'Biomarker', field: 'value', match: { name: 'HER2 ISH' } },
+      condition: { item: 'her2_ihq', operator: 'prefijo', values: ['2+'] },
+      whenConditionUnknown: 'no_aplica',
+    });
+
+    const checklist = calcularChecklist({
+      cancerType: 'mama',
+      items: [her2Ihq, her2Ish],
+      verifiedReviewStatuses: VERIFICADOS,
+      registros: {
+        Biomarker: [
+          registro({
+            reviewStatus: 'requiere_revision',
+            columnas: { name: 'HER2', value: '2+ (IHQ)', mapping_status: 'no_mapeado' },
+          }),
+        ],
+      },
+    });
+
+    expect(checklist[1]).toEqual({ key: 'her2_ish', status: 'faltante' });
+  });
+
   it('devuelve faltante cuando la entidad del destino no aparece en los registros', () => {
     const checklist = calcularChecklist({
       cancerType: 'mama',
