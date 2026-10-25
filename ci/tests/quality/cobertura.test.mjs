@@ -16,7 +16,9 @@ const FIXTURES = path.join(import.meta.dirname, 'fixtures/cobertura');
 const DIFF = readFileSync(path.join(FIXTURES, 'cambio.diff'), 'utf8');
 const LCOV = readFileSync(path.join(FIXTURES, 'clinical-api.lcov'), 'utf8');
 const INFORMES = [{ lcov: LCOV, base: 'apps/clinical-api' }];
-const COBERTURA = leerUmbrales().coverage;
+// El umbral sale de la configuración; las rutas de alerta se fijan a un service para probar el filtro (la configuración real
+// ya no incluye `*.service.ts`: decidido, usuario, 2026-10-24).
+const COBERTURA = { ...leerUmbrales().coverage, alertPaths: ['apps/clinical-api/src/**/*.service.ts'] };
 
 describe('cobertura de líneas cambiadas', () => {
   it('lee las líneas añadidas por archivo del diff sin contexto', () => {
@@ -71,5 +73,14 @@ describe('cobertura de líneas cambiadas', () => {
     const medidas = [{ archivo: 'scripts/herramienta.mjs', lineasCambiadas: 2, lineasCubiertas: 0, porcentaje: 0 }];
 
     expect(alertasDeCobertura(medidas, COBERTURA)).toEqual([]);
+  });
+});
+
+describe('rutas de alerta de la configuración real', () => {
+  it('no incluye *.service.ts porque el LCOV del unitario no mide la integración [US-213 AC-11]', () => {
+    const { alertPaths } = leerUmbrales().coverage;
+
+    expect(alertPaths.some((ruta) => ruta.endsWith('.service.ts'))).toBe(false);
+    expect(alertPaths).toContain('apps/web/lib/**');
   });
 });
