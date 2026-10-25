@@ -325,6 +325,8 @@ debo cargar lo que falta.
   entonces existe una fila `completeness.read` en `audit_log` con el UUID del paciente y
   sin PHI. `[FR-18]` `(asumido: hallazgo M-18 del piloto)`
 
+> **Decidido (usuario, 2026-10-24):** el seed usa los códigos del catálogo (`RE`/`RP`/`BRCA`/`HRR`), sin alias en el catálogo ni mapeo en código; el arreglo del seed (hoy "Receptor de estrógeno"/"Receptor de progesterona") es una tarea de esta historia (L1D-95), pendiente de hacer.
+
 ## Contexto técnico
 `completeness.controller.ts` + `completeness.schema.ts` (Zod en el borde) en el módulo
 `completeness`. `CaseTimelineService` (US-088) llama a `CompletenessService` para llenar
