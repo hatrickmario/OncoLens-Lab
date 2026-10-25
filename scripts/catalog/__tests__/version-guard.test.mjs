@@ -3,6 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { violacionesDeVersion } from '../version-guard.mjs';
 import { FIXTURES, PLAZO_PROCESO_MS, RAIZ } from './apoyo.mjs';
 
 /** Pruebas de aceptación de `catalog:version-guard` (L1D-126, decisión del usuario 2026-10-24): repos Git temporales. */
@@ -267,6 +268,55 @@ describe('catalog:version-guard · tipos quitados, base ilegible, versión que n
     },
     PLAZO_PROCESO_MS,
   );
+});
+
+describe('catalog:version-guard · la excepción de base vacía solo cubre las listas (privacy-guardian Menor 1)', () => {
+  const base = { version: 'test-apl-1.0.0', estado: 'propuesta', items: [] };
+  const preparar = (raiz) => {
+    mkdirSync(path.join(raiz, 'catalogo/mama'), { recursive: true });
+    writeFileSync(path.join(raiz, 'catalogo/mama/tendencias.json'), JSON.stringify(base));
+  };
+
+  it(
+    'falla cuando con la lista vacía en la base cambia estado y se añade un campo con la misma versión',
+    () => {
+      const raiz = repoConCatalogo(preparar);
+      modificar(raiz, 'mama/tendencias.json', (c) => {
+        c.estado = 'revisada';
+        c.extra = true;
+      });
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('contenido_cambiado_sin_subir_version mama/tendencias');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'pasa cuando con la lista vacía en la base solo se llena la lista',
+    () => {
+      const raiz = repoConCatalogo(preparar);
+      modificar(raiz, 'mama/tendencias.json', (c) => c.items.push({ k: 1 }));
+
+      expect(ejecutar(raiz).codigo).toBe(0);
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
+describe('violacionesDeVersion · base ilegible (privacy-guardian Menor 3)', () => {
+  it('devuelve base_ilegible con el archivo cuando el archivo de la base tiene estado error', () => {
+    const lectura = (estado) => ({
+      version: '1.1.0',
+      archivos: { atributos: { estado, contenido: null } },
+    });
+
+    expect(violacionesDeVersion({ actual: lectura('ok'), base: lectura('error') })).toEqual([
+      { codigo: 'base_ilegible', archivo: 'atributos' },
+    ]);
+  });
 });
 
 describe('catalog:version-guard · sin base disponible', () => {
