@@ -15,6 +15,7 @@ import {
   sembrarFM2,
   sembrarFM3,
   sembrarFP1,
+  sembrarKi67NoMapeado,
   type ContextoDeSiembra,
 } from '../../support/completitud.js';
 import { conectar } from '../../support/db.js';
@@ -175,14 +176,20 @@ describe('checklist determinista de datos críticos', () => {
     ]);
   });
 
-  it('deja ki67 en faltante cuando el único Ki-67 de F-M2 está no_mapeado [US-002 AC-8]', async () => {
+  it('deja ki67 en presente_sin_verificar cuando el único Ki-67 de F-M2 está no_mapeado con name del catálogo [US-002 AC-8]', async () => {
     const fm2 = await sembrarFM2(siembra);
-    const { rows } = await cliente.query<{ n: number }>(
-      `SELECT count(*)::int AS n FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-        WHERE e.patient_id = $1 AND b.name = 'Ki-67' AND b.mapping_status = 'no_mapeado'`,
-      [fm2.patientId],
+    await sembrarKi67NoMapeado(fm2, 'Ki-67');
+
+    const checklist = await servicioCon(RUTA_CATALOGO_TEST_1_0_0).calcular(fm2.patientId);
+
+    expect(checklist.items.find((item) => item.key === 'ki67')?.status).toBe(
+      'presente_sin_verificar',
     );
-    expect(rows[0]?.n).toBe(1);
+  });
+
+  it('deja ki67 en faltante cuando el Ki-67 no_mapeado de F-M2 tiene un name que no coincide con el catálogo [US-002 AC-8]', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    await sembrarKi67NoMapeado(fm2, 'Ki67 índice');
 
     const checklist = await servicioCon(RUTA_CATALOGO_TEST_1_0_0).calcular(fm2.patientId);
 
