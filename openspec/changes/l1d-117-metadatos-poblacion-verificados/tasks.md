@@ -55,9 +55,15 @@
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-117)`
 
-- [ ] 1.13 Reconciliar las claves de `population_criteria` con `packages/clinical-catalogs/poblacion.json` (11 claves; faltan `grado`, `estado_menopausico`, `estado_castracion`) · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197); pregunta al usuario en `design.md`, Pendientes
+- [ ] 1.13 Reconciliar `packages/clinical-catalogs/poblacion.json` MENOS `grado`, `estado_menopausico` y `estado_castracion` (quedan «Desconocido» explícito en el S3, **Decidido (usuario, 2026-10-24)**, `CLAVES_NO_EXTRAIDAS_EN_EL_S3`) contra `campos.py`: las claves restantes deben coincidir exactamente · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197)
 
 > Notas para el cuerpo del PR (Gate 2, M1 y M2): en `c85845bc` se eliminó el test «umbral ignorado» sin `Test-Removal:` (lo sustituyen tests que sí miden el umbral con p entre umbrales); el commit `3ba468eb` se llama refactor pero añade comportamiento nuevo (tope `maxLength` de 200). No se reescriben.
+
+## decisiones del usuario (2026-10-24, PR `feat/l1d-117-decisiones-usuario`)
+
+- [x] 4.1 **Decidido (usuario, 2026-10-24):** `grado`, `estado_menopausico` y `estado_castracion` no se extraen en el S3 (`CLAVES_NO_EXTRAIDAS_EN_EL_S3` con motivo y su test); `ORIGEN_DE_LA_SEMILLA` eliminado (ya no era veraz) · commit `feat(L1D-117)`
+- [x] 4.2 **Decidido (usuario, 2026-10-24):** la muestra se construye desde la release/catálogo (`CorpusCatalog.documentos_extraidos_de_la_release`) · test: omitidos de corridas previas entran, reproducible, sin extraídos no se escribe
+- [x] 4.3 **Decidido (usuario, 2026-10-24):** la CLI `ingest` se niega con `LLM_CLOUD_ENABLED=true` o `LLM_PROVIDER != local`; `CORPUS_METADATA_LLM_TEMPERATURE` (default 0) · variables nuevas para `.env.example` (sesión principal): `CORPUS_METADATA_LLM_TEMPERATURE=0`
 
 ## evaluación
 
