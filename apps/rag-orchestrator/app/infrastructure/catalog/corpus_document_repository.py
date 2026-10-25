@@ -19,6 +19,7 @@ from app.application.seed_corpus.ports import (
     RegistroDeRelease,
     VersionInexistente,
 )
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
     corpus_document,
@@ -113,6 +114,22 @@ class CorpusDocumentRepository:
                         for identificador in release.document_ids
                     ],
                 )
+
+    def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]:
+        consulta = (
+            sa.select(corpus_document)
+            .join(
+                corpus_release_document,
+                corpus_release_document.c.document_id == corpus_document.c.document_id,
+            )
+            .where(
+                corpus_release_document.c.release_id == release_id,
+                corpus_document.c.metadata_source == EXTRAIDO_VERIFICADO,
+            )
+            .order_by(corpus_document.c.document_id)
+        )
+        with self._motor.connect() as conexion:
+            return [RegistroDeDocumento(**fila) for fila in conexion.execute(consulta).mappings()]
 
     @staticmethod
     def _guardar(conexion: sa.Connection, registro: RegistroDeDocumento) -> None:

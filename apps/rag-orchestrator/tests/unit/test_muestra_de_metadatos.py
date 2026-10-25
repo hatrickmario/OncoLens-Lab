@@ -12,19 +12,19 @@ import yaml
 
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
-from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
 from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
 from app.application.seed_corpus.registros import registro_embebido
+from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
 from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision
-from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
-from tests.support.almacenes_falsos import CatalogoEnMemoria
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 from app.infrastructure.corpus_metadata.escritor_muestra import (
     ArchivoDeMuestraEsUnEnlace,
     EscritorDeMuestraYaml,
     ReleaseNoSeguraComoNombreDeArchivo,
 )
+from tests.support.almacenes_falsos import CatalogoEnMemoria
 from tests.support.fakes import RelojFijo
 
 IDS = tuple(f"doc-{i:02d}@abc" for i in range(1, 21))

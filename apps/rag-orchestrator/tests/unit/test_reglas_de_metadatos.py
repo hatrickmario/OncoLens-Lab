@@ -112,3 +112,34 @@ def test_cada_criterio_plano_verificado_se_guarda_bajo_su_clave(campo: str) -> N
     metadatos = integrar_metadatos_verificados(DOCUMENTO, (CampoDeMetadato(campo, "valor"),))
 
     assert metadatos.population_criteria[campo] == "valor"
+
+
+def test_los_campos_conservados_de_una_fila_son_los_escalares_y_criterios_no_vacios() -> None:
+    from app.domain.corpus_metadata.extraccion import campos_conservados
+
+    campos = campos_conservados(
+        "eca",
+        "III",
+        500,
+        None,
+        {
+            "subtipo": NO_DISPONIBLE,
+            "estadio": "I–III",
+            "biomarcadores": {"her2": "positivo"},
+            "ecog": NO_DISPONIBLE,
+        },
+    )
+
+    assert [(c.campo, c.valor) for c in campos] == [
+        ("study_design", "eca"),
+        ("trial_phase", "III"),
+        ("sample_size", 500),
+        ("estadio", "I–III"),
+        ("biomarcadores.her2", "positivo"),
+    ]
+
+
+def test_una_fila_sin_nada_conservado_no_tiene_campos_y_otro_es_no_declarado() -> None:
+    from app.domain.corpus_metadata.extraccion import campos_conservados
+
+    assert campos_conservados("otro", None, None, None, {"biomarcadores": NO_DISPONIBLE}) == ()

@@ -154,6 +154,31 @@ def test_la_ultima_release_es_la_mas_reciente_y_sin_releases_es_none(
     assert repositorio.ids_de_la_ultima_release() == frozenset({"a@1", "b@1"})
 
 
+def test_los_documentos_extraidos_de_la_release_son_solo_los_extraidos_verificados_de_esa_release(
+    repositorio: CorpusDocumentRepository,
+) -> None:
+    """US-118 AC-5 (fuente de la muestra): filas completas, ordenadas, de la release pedida."""
+    repositorio.guardar_documento(
+        registro_de_prueba("b@1", metadata_source="extraido_verificado", trial_phase="II")
+    )
+    repositorio.guardar_documento(
+        registro_de_prueba("a@1", metadata_source="extraido_verificado", version_group_id="a")
+    )
+    repositorio.guardar_documento(registro_de_prueba("c@1", version_group_id="c"))
+    repositorio.guardar_documento(
+        registro_de_prueba("d@1", metadata_source="extraido_verificado", version_group_id="d")
+    )
+    repositorio.publicar_release(
+        RegistroDeRelease("r-1", date(2026, 10, 15), (), AHORA, ("a@1", "b@1", "c@1"))
+    )
+
+    filas = repositorio.documentos_extraidos_de_la_release("r-1")
+
+    assert [f.document_id for f in filas] == ["a@1", "b@1"]
+    assert filas[1].trial_phase == "II"
+    assert repositorio.documentos_extraidos_de_la_release("no-existe") == []
+
+
 def test_reemplazar_con_un_anterior_inexistente_lanza_y_revierte_sin_guardar_la_nueva(
     repositorio: CorpusDocumentRepository, motor: Engine
 ) -> None:

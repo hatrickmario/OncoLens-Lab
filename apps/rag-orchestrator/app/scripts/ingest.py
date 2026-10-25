@@ -48,7 +48,6 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
-from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -152,12 +151,11 @@ def _nli_real() -> NliClassifier:
 def escribir_muestra(
     generador: GeneradorDeMuestraDeMetadatos,
     reporte: ReporteDeIngesta,
-    documentos: Sequence[DocumentoDeSemilla],
 ) -> dict[str, object]:
     """La muestra se escribe DESPUÉS de confirmar la ingesta: su fallo (solo la clase, nunca el mensaje) va al resumen y no
     tumba un reporte que ya describe documentos indexados."""
     try:
-        return {"tamano": generador.generar(reporte, documentos).tamano}
+        return {"tamano": generador.generar(reporte).tamano}
     except Exception as error:  # noqa: BLE001 - E/S del archivo: se informa la clase
         return {"tamano": 0, "fallo": type(error).__name__}
 
@@ -186,8 +184,9 @@ def _ejecutar_ingesta(
     try:
         almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
         almacen.ensure_collection()
+        catalogo = CorpusDocumentRepository(motor)
         servicio = IngestionPipelineService(
-            catalogo=CorpusDocumentRepository(motor),
+            catalogo=catalogo,
             almacen_de_chunks=almacen,
             embedder=embedder,
             codificador_sparse=sparse,
@@ -206,12 +205,13 @@ def _ejecutar_ingesta(
             pct=ajustes.corpus_metadata_sample_pct,
             semilla=ajustes.corpus_metadata_sample_seed,
             escritor=EscritorDeMuestraYaml(ajustes.corpus_metadata_sample_dir),
+            catalogo=catalogo,
             reloj=reloj,
             prompt_version=PROMPT_VERSION,
             llm_model=metadatos.nombre_del_llm,
             nli_model=metadatos.nli.version,
         )
-        return reporte, escribir_muestra(generador, reporte, documentos)
+        return reporte, escribir_muestra(generador, reporte)
     finally:
         motor.dispose()
 
