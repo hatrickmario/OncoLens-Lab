@@ -3,7 +3,7 @@
 Distingue lo extraído de lo declarado por el manifiesto: la muestra de revisión humana solo toma los campos listados
 aquí. Las filas existentes quedan con ``[]`` (nada se infiere hacia atrás). El ``downgrade`` elimina la columna.
 
-Revision ID: 0004_corpus_document_extracted_fields
+Revision ID: 0004_extracted_fields
 Revises: 0003_metadata_source_pendiente
 """
 
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "0004_corpus_document_extracted_fields"
+revision = "0004_extracted_fields"
 down_revision = "0003_metadata_source_pendiente"
 branch_labels = None
 depends_on = None
