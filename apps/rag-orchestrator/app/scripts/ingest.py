@@ -105,6 +105,7 @@ def _modelos_de_metadatos(llm: LlmClient | None, nli: NliClassifier | None) -> M
     Sin ``NLI_ENTAILMENT_THRESHOLD`` no hay umbral que aplicar: falla nombrando la variable (RN-22).
     """
     ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    _exigir_llm_local(ambiente)
     if ambiente.nli_entailment_threshold is None:
         raise ModeloNoVerificadoError("NLI_ENTAILMENT_THRESHOLD")
     return ModelosDeMetadatos(
@@ -113,6 +114,15 @@ def _modelos_de_metadatos(llm: LlmClient | None, nli: NliClassifier | None) -> M
         umbral_nli=ambiente.nli_entailment_threshold,
         nombre_del_llm=ambiente.llm_model or "no_declarado",
     )
+
+
+def _exigir_llm_local(ambiente: Settings) -> None:
+    """RN-12 por código: la CLI falla en cerrado (nombrando solo la variable, nunca su valor) si la configuración admite un
+    LLM que no es el local. Decidido (usuario, 2026-10-24)."""
+    if ambiente.llm_cloud_enabled:
+        raise ModeloNoVerificadoError("LLM_CLOUD_ENABLED")
+    if ambiente.llm_provider != "local":
+        raise ModeloNoVerificadoError("LLM_PROVIDER")
 
 
 def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
@@ -128,7 +138,7 @@ def _llm_local(ambiente: Settings) -> LlmClient:
         ambiente.llm_model,
         ambiente.llm_request_timeout_ms,
         ambiente.llm_max_output_tokens,
-        ambiente.llm_temperature,
+        ambiente.corpus_metadata_llm_temperature,
     )
 
 

@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     # compatible con OpenAI no lo recibe por petición. El modelo elegido (`LLM_MODEL`) lo fija el ADR al aprobarse.
     llm_num_ctx: int = Field(default=8192, gt=0)
     llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    # Temperatura del LLM en la extracción de metadatos del corpus (US-118, RN-22): propia, no la de la generación de /rag/query.
+    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     # Párrafos de detalle por opción que se piden al LLM (ARR-08, RN-22); 0 desactiva el detalle. El contrato admite hasta 2.
     details_max_paragraphs: int = Field(default=2, ge=0, le=2)
     # Presupuesto de caracteres de fragmentos que entran al prompt (RN-22): la ventana de LLM_NUM_CTX se reparte con la salida.
