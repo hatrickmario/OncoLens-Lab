@@ -86,7 +86,7 @@ services:
       test: ["CMD", "mc", "ready", "local"]
 
   milvus-etcd:
-    image: gcr.io/etcd-development/etcd:v3.5.34
+    image: gcr.io/etcd-development/etcd:v3.7.3
     command:
       - etcd
       - --advertise-client-urls=http://milvus-etcd:2379
