@@ -5,6 +5,7 @@
 # `rutas`: globs (lib/glob.mjs) de archivos cuyo cambio dispara la suite sea cual sea la línea.
 rutas:
   - apps/rag-orchestrator/app/prompts/**
+  - apps/rag-orchestrator/app/**/prompts/**
   - packages/clinical-catalogs/**/*.json
   - data/raw/**/manifest.{yaml,json}
   - apps/rag-orchestrator/eval/configs/*.yaml
