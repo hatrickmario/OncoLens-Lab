@@ -354,6 +354,7 @@ sintéticos (US-036 AC-5).
 ## US-233 — La suite `evaluate` corre con los modelos locales, calibra el umbral de entailment y `RETRIEVAL_TOP_K` y acota y calibra el juez local
 
 > Linear: pendiente (límite de issues del workspace; creada por el usuario el 2026-10-22, `[S2 resp. 16]`)
+> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** se añade un AC en el refinamiento del S4 para medir RSS y latencia del NLI (tarea 1.11 de `us-231b`, abierta); hasta entonces sigue abierta en ese change.
 
 `FEAT-T5a` · Sprint 4 *(deuda de ARR-03 / L1D-279, AC-1, AC-2 y AC-5)* · Estimación **3** · — (técnica, PRD §17; OL-06) · FR-20 · TBD-02 · M-07.2, M-10.1 · ↪ US-072 (L1D-235), US-073 (L1D-236), US-117 y US-120 (corpus de ≥ 20 documentos por tipo) · 🔗 Origen: ARR-03 cerró en el S2 solo con adaptadores falsos; el procedimiento está en `openspec/changes/l1d-235-suite-evaluate/design.md` D21
 

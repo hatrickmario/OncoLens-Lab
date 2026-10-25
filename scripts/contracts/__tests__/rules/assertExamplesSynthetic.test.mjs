@@ -61,3 +61,27 @@ describe('assertExamplesSynthetic · máscara del documento (L1D-202 D2)', () =>
     expect(hallazgos('documentNumber', '•••• 56')).toHaveLength(1);
   });
 });
+
+describe('assertExamplesSynthetic · máscara del nombre (L1D-285)', () => {
+  const conClave = (clave, valor) => ({
+    dir: 'contracts/examples',
+    index: { examples: [{ file: 'a.json', spec: 'clinical-api' }] },
+    files: { 'a.json': { [clave]: valor } },
+  });
+  const hallazgos = (clave, valor) => assertExamplesSynthetic({}, conClave(clave, valor)).map((h) => h.message);
+
+  it('acepta la máscara sintética de fullNameMasked: iniciales "P. S." con un dígito opcional [US-213 AC-12]', () => {
+    expect(hallazgos('fullNameMasked', 'P. S. 1.')).toEqual([]);
+    expect(hallazgos('fullNameMasked', 'P. S.')).toEqual([]);
+  });
+
+  it('rechaza en fullNameMasked todo valor que no sea la máscara sintética [US-213 AC-12]', () => {
+    for (const valor of ['María Pérez', 'M. Pérez', 'Ma. P.', 'M. P.', 'P. S. 12.', 'P. S.\n', ' P. S.', 'p. s.', 'P. S. 1', ['P. S.']]) {
+      expect(hallazgos('fullNameMasked', valor), JSON.stringify(valor)).toHaveLength(1);
+    }
+  });
+
+  it('no extiende la excepción al nombre en claro [US-213 AC-12]', () => {
+    expect(hallazgos('fullName', 'P. S.')).toHaveLength(1);
+  });
+});

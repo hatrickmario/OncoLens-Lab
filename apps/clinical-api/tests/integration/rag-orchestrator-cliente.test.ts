@@ -1,5 +1,4 @@
 import { jwtVerify, type CryptoKey } from 'jose';
-import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -8,6 +7,7 @@ import {
 } from '../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import requestEjemplo from '../../../../contracts/examples/rag-query-request.json' with { type: 'json' };
 import respuestaEjemplo from '../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
+import { handlerDesdeEjemplo } from '../../../../packages/test-support/msw/index.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
 import { generarParEfimero, INSTANTE_CONGELADO, relojCongelado } from '../support/service-jwt.js';
@@ -18,11 +18,17 @@ const DEADLINE = '2026-10-16T12:00:15.000Z';
 
 type Capturada = { headers: Headers; body: unknown };
 const capturadas: Capturada[] = [];
+// El handler sale de contracts/examples/ (ADR-26, US-213 AC-10): el mock no puede divergir del contrato.
 const servidor = setupServer(
-  http.post(`${BASE_URL}/rag/query`, async ({ request }) => {
-    capturadas.push({ headers: request.headers, body: await request.json() });
-    return HttpResponse.json(respuestaEjemplo);
-  }),
+  handlerDesdeEjemplo(
+    { metodo: 'post', url: `${BASE_URL}/rag/query` },
+    'rag-query-con-evidencia.json',
+    {
+      alRecibir: async (peticion) => {
+        capturadas.push({ headers: peticion.headers, body: await peticion.json() });
+      },
+    },
+  ),
 );
 
 let publicKey: CryptoKey;

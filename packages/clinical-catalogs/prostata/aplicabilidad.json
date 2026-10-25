@@ -1,4 +1,152 @@
 {
   "version": "1.1.0",
-  "items": []
+  "validation": {
+    "scope": [
+      "aplicabilidad"
+    ],
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "c5e248cd58e9a8ad920472ffeba4389a4ab0a77308b6aaf2950e089f0bc638ed"
+  },
+  "items": [
+    {
+      "key": "estado_castracion",
+      "cancerType": "prostata",
+      "studyKey": "estado_castracion",
+      "label": {
+        "es": "Estado de castración",
+        "en": "Castration status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_castracion"
+        }
+      },
+      "isExclusionary": true,
+      "rule": {
+        "operator": "igualdad",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "extension",
+      "cancerType": "prostata",
+      "studyKey": "estadio",
+      "label": {
+        "es": "Extensión de la enfermedad",
+        "en": "Disease extension"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "rango_solapado"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "isup",
+      "cancerType": "prostata",
+      "studyKey": "grado",
+      "label": {
+        "es": "Grado ISUP / Gleason",
+        "en": "ISUP / Gleason grade"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "rango",
+        "partial": {
+          "when": "rango_solapado"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "linea_tratamiento",
+      "cancerType": "prostata",
+      "studyKey": "linea",
+      "label": {
+        "es": "Línea de tratamiento",
+        "en": "Treatment line"
+      },
+      "destination": {
+        "entity": "PriorTreatment",
+        "field": "line_number"
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "prostata",
+      "studyKey": "ecog",
+      "label": {
+        "es": "Estado funcional (ECOG)",
+        "en": "Performance status (ECOG)"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value",
+        "match": {
+          "performance_scale": "ECOG"
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "rango",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "hrr_brca",
+      "cancerType": "prostata",
+      "studyKey": "biomarcadores.hrr_brca",
+      "label": {
+        "es": "Genes HRR / BRCA",
+        "en": "HRR / BRCA genes"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": [
+            "HRR",
+            "BRCA"
+          ]
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "igualdad",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    }
+  ]
 }

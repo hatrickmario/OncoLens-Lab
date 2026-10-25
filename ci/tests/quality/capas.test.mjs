@@ -42,6 +42,18 @@ describe('reglas de capas de dependency-cruiser', () => {
     expect(resultado.salida).toContain('x.repository.ts');
   });
 
+  it('falla con test-support-solo-en-tests y nombra el archivo cuando un service de producción importa packages/test-support [US-213 AC-10]', () => {
+    const resultado = cruzar('test-support-en-produccion');
+
+    expect(resultado.estado).not.toBe(0);
+    expect(resultado.salida).toContain('test-support-solo-en-tests');
+    expect(resultado.salida).toContain('apps/clinical-api/src/modules/x/x.service.ts');
+  });
+
+  it('pasa cuando un test importa packages/test-support [US-213 AC-10]', () => {
+    expect(cruzar('test-support-en-tests').estado).toBe(0);
+  });
+
   it('falla con web-solo-por-bff y nombra el archivo cuando web importa código de clinical-api [US-213 AC-2]', () => {
     const resultado = cruzar('web-clinical-api');
 

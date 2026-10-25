@@ -83,7 +83,7 @@ updates:
     ignore:
       - dependency-name: "postgres"
         update-types: ["version-update:semver-major"]
-      - dependency-name: "quay.io/coreos/etcd"
+      - dependency-name: "gcr.io/etcd-development/etcd"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "milvusdb/milvus"
         update-types: ["version-update:semver-major"]

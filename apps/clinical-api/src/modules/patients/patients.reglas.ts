@@ -21,8 +21,18 @@ export function enmascararNombre(nombreCompleto: string): string {
   return nombreCompleto
     .split(/\s+/)
     .filter((palabra) => palabra !== '')
-    .map((palabra) => `${(Array.from(palabra)[0] ?? '').toLocaleUpperCase('es')}.`)
+    .map((palabra) => `${inicialEnMayuscula(palabra)}.`)
     .join(' ');
+}
+
+/**
+ * Primer carácter (code point) de la palabra en mayúscula. Si la mayúscula ocupa más de un carácter ("ß" → "SS") se conserva
+ * la inicial original: la máscara es siempre un carácter más el punto, como exige el contrato (`pattern` de `fullNameMasked`).
+ */
+function inicialEnMayuscula(palabra: string): string {
+  const inicial = Array.from(palabra)[0] ?? '';
+  const mayuscula = inicial.toLocaleUpperCase('es');
+  return Array.from(mayuscula).length === 1 ? mayuscula : inicial;
 }
 
 /**

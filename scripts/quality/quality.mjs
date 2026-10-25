@@ -5,6 +5,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
 import {
@@ -18,6 +19,10 @@ import {
   ordenar,
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
+import { changesTocados, verificarCoberturaDeAc } from './check-ac-coverage.mjs';
+import { alertasDeCobertura, archivosDelPr, medirCoberturaDelPr } from './cobertura.mjs';
+import { verificarHigieneDePytest } from './higiene-pytest.mjs';
+import { verificarEstiloDePytest } from './ruff-pt.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
 import { leerUmbrales } from './umbrales.mjs';
 
@@ -47,27 +52,32 @@ async function ejecutarAlertaDeComponentes(umbrales) {
   return desdeEslint(await eslint.lintFiles(['apps/web']), RAIZ);
 }
 
-/** Fuentes TypeScript de apps/ y packages/ (sin dependencias, build ni generado). */
-function fuentesTypeScript(directorio = RAIZ, relativo = '') {
-  return readdirSync(path.join(directorio, relativo), { withFileTypes: true }).flatMap(
-    (entrada) => {
-      const ruta = path.posix.join(relativo, entrada.name);
-      if (entrada.isDirectory()) {
-        return /^(node_modules|\.next|dist|coverage|\.venv|generated)$/.test(entrada.name)
-          ? []
-          : fuentesTypeScript(directorio, ruta);
-      }
-      return /\.(ts|tsx)$/.test(entrada.name) ? [ruta] : [];
-    },
-  );
+const DIRECTORIOS_SIN_FUENTES = /^(node_modules|\.next|dist|coverage|\.venv|generated)$/;
+// Los fixtures de calidad y los dos tests que escriben una directiva como TEXTO (para probar este escáner) no se miden.
+const RUTAS_SIN_MEDIR = [
+  'ci/tests/quality/fixtures',
+  'ci/tests/quality/reporte.test.mjs',
+  'ci/tests/quality/cableado-quality.test.mjs',
+];
+
+/** Fuentes JS y TS bajo `directorio` (sin dependencias, build, generado ni fixtures de calidad). */
+function fuentes(raiz, relativo) {
+  return readdirSync(path.join(raiz, relativo), { withFileTypes: true }).flatMap((entrada) => {
+    const ruta = path.posix.join(relativo, entrada.name);
+    if (RUTAS_SIN_MEDIR.includes(ruta)) return [];
+    if (entrada.isDirectory()) {
+      return DIRECTORIOS_SIN_FUENTES.test(entrada.name) ? [] : fuentes(raiz, ruta);
+    }
+    return /\.(ts|tsx|mjs|js)$/.test(entrada.name) ? [ruta] : [];
+  });
 }
 
-/** Un `eslint-disable` no puede silenciar tamaño ni complejidad: solo las excepciones con caducidad del JSON. */
-function ejecutarBusquedaDeDesactivaciones() {
-  const archivos = ['apps', 'packages']
-    .filter((raiz) => existsSync(path.join(RAIZ, raiz)))
-    .flatMap((raiz) => fuentesTypeScript(RAIZ, raiz))
-    .map((file) => ({ file, texto: readFileSync(path.join(RAIZ, file), 'utf8') }));
+/** Un `eslint-disable` no puede silenciar tamaño, complejidad ni la higiene de tests: solo las excepciones con caducidad del JSON. */
+function ejecutarBusquedaDeDesactivaciones(raiz) {
+  const archivos = ['apps', 'packages', 'scripts', 'ci', 'infra']
+    .filter((carpeta) => existsSync(path.join(raiz, carpeta)))
+    .flatMap((carpeta) => fuentes(raiz, carpeta))
+    .map((file) => ({ file, texto: readFileSync(path.join(raiz, file), 'utf8') }));
   return buscarDesactivacionesDeTamano(archivos);
 }
 
@@ -146,15 +156,29 @@ function ejecutarImportLinter() {
   return evaluarImportLinter(resultado.status, `${resultado.stdout}${resultado.stderr}`, RAG);
 }
 
-async function medir(umbrales) {
+/**
+ * Lo que `quality` mide por sí mismo sobre `raiz` (sin herramientas externas): directivas que apagan reglas, higiene de los
+ * tests de Python, AC sin test de aceptación y cobertura de líneas cambiadas. Exportada para probar el cableado con una raíz de fixture.
+ */
+export function hallazgosPropios(raiz, umbrales, medidasDeLineas, { soloChanges = null } = {}) {
+  return [
+    ...ejecutarBusquedaDeDesactivaciones(raiz),
+    ...verificarHigieneDePytest(raiz, `${RAG}/tests`),
+    ...verificarEstiloDePytest(raiz, RAG, `${RAG}/pyproject.toml`),
+    ...verificarCoberturaDeAc(raiz, { soloChanges }),
+    ...(medidasDeLineas ? alertasDeCobertura(medidasDeLineas, umbrales.coverage) : []),
+  ];
+}
+
+async function medir(umbrales, medidasDeLineas, soloChanges) {
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
-    ...ejecutarBusquedaDeDesactivaciones(),
     ...ejecutarDependencyCruiser(),
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
+    ...hallazgosPropios(RAIZ, umbrales, medidasDeLineas, { soloChanges }),
   ];
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }
@@ -166,12 +190,27 @@ function commitActual() {
   return resultado.status === 0 ? resultado.stdout.trim() : null;
 }
 
+/**
+ * Changes cuyos AC se revisan: los que toca el diff del PR contra la base. `--todos` o `QUALITY_AC_TODOS=1` revisan todos los
+ * activos (barrido completo); sin `origin/main` en el clon también se revisan todos.
+ */
+function changesDelPr() {
+  if (process.argv.includes('--todos') || process.env.QUALITY_AC_TODOS === '1') return null;
+  const archivos = archivosDelPr(RAIZ);
+  return archivos === null ? null : changesTocados(archivos);
+}
+
 async function principal() {
   // Un reporte viejo no puede sobrevivir a una herramienta rota: se borra antes de medir.
   rmSync(RUTA_REPORTE, { force: true });
   const umbrales = leerUmbrales();
-  const medicion = await medir(umbrales);
-  const reporte = armarReporte(umbrales, medicion, { ahora: new Date(), commit: commitActual() });
+  const medidasDeLineas = medirCoberturaDelPr(RAIZ);
+  const medicion = await medir(umbrales, medidasDeLineas, changesDelPr());
+  const reporte = armarReporte(umbrales, medicion, {
+    ahora: new Date(),
+    commit: commitActual(),
+    cobertura: medidasDeLineas,
+  });
   for (const h of medicion) console.log(describir(h));
   if (process.argv.includes('--reporte')) {
     mkdirSync(path.dirname(RUTA_REPORTE), { recursive: true });
@@ -182,7 +221,10 @@ async function principal() {
   process.exit(reporte.resumen.errores > 0 ? 1 : 0);
 }
 
-principal().catch((error) => {
-  console.error(`quality: ${error.message}`);
-  process.exit(1);
-});
+// Importable desde los tests sin ejecutar la medición: solo corre cuando es el programa principal.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  principal().catch((error) => {
+    console.error(`quality: ${error.message}`);
+    process.exit(1);
+  });
+}

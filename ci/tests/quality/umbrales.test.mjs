@@ -12,6 +12,7 @@ const BASE = {
   c901MaxComplexity: 10,
   plr0915MaxStatements: 50,
   web: { componentLinesWarn: 100, componentLinesError: 150 },
+  coverage: { changedLinesWarn: 80, alertPaths: ['apps/clinical-api/src/**/*.service.ts'] },
   excepciones: [],
 };
 
@@ -35,6 +36,24 @@ describe('validarUmbrales', () => {
     expect(() => validarUmbrales({ ...BASE, web: { componentLinesWarn: 100 } })).toThrow(
       /web\.componentLinesError/,
     );
+  });
+
+  it('falla nombrando coverage.changedLinesWarn cuando falta el umbral de cobertura [US-213 AC-11] [RN-22]', () => {
+    expect(() =>
+      validarUmbrales({ ...BASE, coverage: { alertPaths: BASE.coverage.alertPaths } }),
+    ).toThrow(/coverage\.changedLinesWarn/);
+  });
+
+  it('falla nombrando coverage.changedLinesWarn cuando el umbral de cobertura no es numérico [US-213 AC-11] [RN-22]', () => {
+    expect(() =>
+      validarUmbrales({ ...BASE, coverage: { ...BASE.coverage, changedLinesWarn: '80' } }),
+    ).toThrow(/coverage\.changedLinesWarn/);
+  });
+
+  it('falla nombrando coverage.alertPaths cuando las rutas de alerta no son una lista [US-213 AC-11] [RN-22]', () => {
+    expect(() =>
+      validarUmbrales({ ...BASE, coverage: { changedLinesWarn: 80, alertPaths: 'apps/**' } }),
+    ).toThrow(/coverage\.alertPaths/);
   });
 
   it('falla cuando el límite de alerta de web supera al de error [US-213 AC-7]', () => {

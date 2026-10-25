@@ -19,8 +19,9 @@ const leerJson = (ruta: string): unknown =>
 
 function validador(nombreDelEsquema: string) {
   const ajv = new Ajv2020({ strict: true, allErrors: true });
-  // Los esquemas de archivo referencian el bloque `validation` compartido (L1D-93).
+  // Los esquemas de archivo referencian el bloque `validation` (L1D-93) y las definiciones comunes (L1D-126).
   ajv.addSchema(leerJson('schemas/validation.schema.json') as object);
+  ajv.addSchema(leerJson('schemas/comun.schema.json') as object);
   return ajv.compile(leerJson(`schemas/${nombreDelEsquema}.schema.json`) as object);
 }
 

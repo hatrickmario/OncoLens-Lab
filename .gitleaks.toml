@@ -31,6 +31,19 @@ targetRules = ["generic-api-key"]
 paths = ['''apps/rag-orchestrator/tests/unit/test_bge_m3\.py''']
 regexes = ['''^prefijo_consulta=?$''']
 
+[[allowlists]]
+description = "Falso positivo: clave de estudio del catálogo clínico (`\"key\"`/`studyKey` = `biomarcadores.her2`, un identificador de campo de la ficha del paciente, no una credencial) en el catálogo de aplicabilidad de mama (L1D-126), el catálogo de población, sus fixtures de prueba versionadas `test-apl-<versión>` y el test de las reglas. Lista cerrada de valores: un valor con forma de secreto no casa"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = [
+  '''(^|/)packages/clinical-catalogs/(mama/aplicabilidad|poblacion)\.json$''',
+  '''(^|/)packages/clinical-catalogs/test/fixtures/test-apl-[0-9]+\.[0-9]+\.[0-9]+/(mama/aplicabilidad|poblacion)\.json$''',
+  '''(^|/)apps/rag-orchestrator/tests/fixtures/catalogo/test-apl-[0-9]+\.[0-9]+\.[0-9]+/(mama/aplicabilidad|poblacion)\.json$''',
+  '''(^|/)scripts/catalog/__tests__/reglas-aplicabilidad\.test\.mjs$''',
+]
+regexes = ['''^biomarcadores\.her2$''']
+
+# Nota: patrón acotado + `(^|/)` al inicio de cada ruta: en `gitleaks dir` con ruta absoluta (scripts/ci/secret-scan.sh) las rutas son absolutas.
 # Plantilla para nuevas entradas (ruta exacta + regla + forma del valor, todo con condition = "AND"):
 # [[allowlists]]
 # description = "Justificación obligatoria"
