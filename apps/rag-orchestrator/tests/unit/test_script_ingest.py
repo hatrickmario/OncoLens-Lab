@@ -209,3 +209,60 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
 
     assert resumen == {"tamano": 0, "fallo": "OSError"}
     assert "secreta" not in str(resumen)
+
+
+@pytest.mark.parametrize(
+    ("variable", "valor"), [("LLM_CLOUD_ENABLED", "true"), ("LLM_PROVIDER", "fake")]
+)
+def test_la_cli_se_niega_sin_llm_local_nombrando_solo_la_variable_y_sin_conectar(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], variable: str, valor: str
+) -> None:
+    """Decidido (usuario, 2026-10-24), RN-12: la extracción de metadatos solo usa el LLM local."""
+    entorno.setenv(variable, valor)
+
+    codigo = ingest.main(
+        ARGUMENTOS,
+        embedder=EmbedderFalso(),
+        sparse=CodificadorSparseFalso(),
+        llm=FakeMetadataLlm(),
+        nli=nli_de_metadatos(),
+    )
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and variable in capturado.err and capturado.out == ""
+    assert valor not in capturado.err and "postgres.invalid" not in capturado.err
+
+
+def _temperatura_del_cliente(entorno: pytest.MonkeyPatch, **variables: str) -> float:
+    from app.config.settings import Settings
+
+    for clave, valor in variables.items():
+        entorno.setenv(clave, valor)
+    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    return ingest._llm_local(ambiente)._temperature
+
+
+def test_la_extraccion_de_metadatos_usa_su_propia_temperatura_y_no_la_de_generacion(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    assert _temperatura_del_cliente(entorno, LLM_TEMPERATURE="0.7") == 0.0
+
+
+def test_la_temperatura_de_extraccion_se_configura_con_corpus_metadata_llm_temperature(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    temperatura = _temperatura_del_cliente(
+        entorno, LLM_TEMPERATURE="0.7", CORPUS_METADATA_LLM_TEMPERATURE="0.3"
+    )
+
+    assert temperatura == 0.3
+
+
+@pytest.mark.parametrize("valor", ["-0.1", "2.5"])
+def test_una_temperatura_de_extraccion_fuera_de_rango_se_rechaza_en_la_configuracion(
+    entorno: pytest.MonkeyPatch, valor: str
+) -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        _temperatura_del_cliente(entorno, CORPUS_METADATA_LLM_TEMPERATURE=valor)
