@@ -46,12 +46,23 @@ const LISTAS_DE_CONTENIDO = ['items', 'keys', 'entradas'];
 
 const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
+/** Copia del archivo sin las claves de primer nivel indicadas (sin desestructurar: no deja variables sin uso). */
+const sinClaves = (archivo, claves) =>
+  Object.fromEntries(Object.entries(archivo).filter(([clave]) => !claves.includes(clave)));
+
+const huellaDeLasClaves = (archivo, omitidas) =>
+  esObjeto(archivo)
+    ? createHash('sha256')
+        .update(jsonCanonico(sinClaves(archivo, omitidas)))
+        .digest('hex')
+    : 'ausente';
+
 /** Huella del archivo entero sin `version` ni `validation`: entra cualquier campo de primer nivel, hoy o futuro. */
-function huellaDe(archivo) {
-  if (!esObjeto(archivo)) return 'ausente';
-  const { version: _version, validation: _validation, ...resto } = archivo;
-  return createHash('sha256').update(jsonCanonico(resto)).digest('hex');
-}
+const huellaDe = (archivo) => huellaDeLasClaves(archivo, ['version', 'validation']);
+
+/** Huella de todo salvo las listas de contenido: lo único que la primera publicación puede cambiar. */
+const huellaSinListas = (archivo) =>
+  huellaDeLasClaves(archivo, ['version', 'validation', ...LISTAS_DE_CONTENIDO]);
 
 function sinPublicar(archivo) {
   if (!esObjeto(archivo)) return true;
@@ -87,9 +98,12 @@ export function violacionesDeVersion({ actual, base }) {
   return Object.keys({ ...actual.archivos, ...base.archivos }).flatMap((nombre) => {
     const delActual = actual.archivos[nombre]?.contenido ?? null;
     const delaBase = base.archivos[nombre];
+    if (delaBase?.estado === 'error') return [{ codigo: 'base_ilegible', archivo: nombre }];
     if (delaBase === undefined || delaBase.estado !== 'ok') return [];
-    if (sinPublicar(delaBase.contenido) || huellaDe(delActual) === huellaDe(delaBase.contenido))
-      return [];
+    const previo = delaBase.contenido;
+    const primeraPublicacion =
+      sinPublicar(previo) && huellaSinListas(delActual) === huellaSinListas(previo);
+    if (primeraPublicacion || huellaDe(delActual) === huellaDe(previo)) return [];
     const orden = compararVersiones(
       versionQueGobierna(nombre, actual),
       versionQueGobierna(nombre, base),

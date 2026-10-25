@@ -121,4 +121,11 @@
       rama `git ls-tree`/`maxBuffer` del error de git no tiene test propio (solo el JSON ilegible).
 - [ ] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
       `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: deuda: base del guardián de versión.
+- [x] G2.5 Menor 1 (base vacía solo cubre listas) y Menor 3 (`violacionesDeVersion` devuelve `base_ilegible`): tests en
+      rojo y verde; el Lint (`no-unused-vars` de la desestructuración) se resuelve con `sinClaves`.
+- [ ] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
+      una lista publicada exige revisión humana explícita. Destino: deuda: guardián de versión, evasión en dos pasos.
+- [ ] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
+      `catalog:validate` no exige que coincida con `manifest.version`. Destino: deuda: guardián de versión, versión por
+      archivo.
 

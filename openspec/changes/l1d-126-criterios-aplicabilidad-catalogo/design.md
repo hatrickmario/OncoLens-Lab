@@ -211,3 +211,10 @@ ENTERO (sha256 del JSON canónico sin `version` ni `validation`: entra cualquier
 - **CI:** paso del job `build-test` junto a `catalog:validate`, precedido de un fetch superficial del commit base
   (`--no-tags --depth=1 origin "$BASE_REF"`), sin `fetch-depth: 0` en todo el job. Deuda m-4 en tasks.md.
 - La salida nombra tipo y archivo, nunca la ruta ni valores del catálogo.
+- **Primera publicación solo de listas:** la excepción de «base vacía» solo permite cambios en las listas (`items`,
+  `keys`, `entradas`); si difiere cualquier otro campo (p. ej. `estado`) se aplica la regla normal.
+- **Riesgo aceptado: vaciar una lista publicada exige revisión humana explícita.** El guardián no distingue una lista
+  vaciada y rellenada en dos PR (tasks.md G2.4).
+- **Pregunta para el usuario (Gate 2, privacy-guardian P5):** `validation.status` queda fuera de la huella. ¿Cambiar el
+  estado de revisión de DEC-11 (`propuesta_revisada` → revisado) exige subir la versión del catálogo? Hoy no la exige.
+
