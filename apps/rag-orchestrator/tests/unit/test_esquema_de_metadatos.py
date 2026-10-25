@@ -228,3 +228,18 @@ def test_las_tres_claves_de_l1d_126_que_no_se_extraen_en_el_s3_estan_fuera_del_e
 def test_la_lista_de_claves_no_extraidas_en_el_s3_es_inmutable() -> None:
     with pytest.raises(TypeError):
         CLAVES_NO_EXTRAIDAS_EN_EL_S3["otra"] = "motivo"  # type: ignore[index]
+
+
+def test_las_claves_de_poblacion_del_catalogo_son_las_admitidas_mas_las_no_extraidas_en_el_s3() -> (
+    None
+):
+    """Tarea 1.13: ``poblacion.json`` (l1d-126) y ``campos.py`` no pueden divergir sin que este test lo note."""
+    catalogo = json.loads(
+        (RAIZ / "packages" / "clinical-catalogs" / "poblacion.json").read_text(encoding="utf-8")
+    )
+    claves_del_catalogo = {entrada["key"] for entrada in catalogo["keys"]}
+
+    assert (
+        claves_del_catalogo - set(CLAVES_NO_EXTRAIDAS_EN_EL_S3) == claves_de_poblacion_admitidas()
+    )
+    assert set(CLAVES_NO_EXTRAIDAS_EN_EL_S3) <= claves_del_catalogo

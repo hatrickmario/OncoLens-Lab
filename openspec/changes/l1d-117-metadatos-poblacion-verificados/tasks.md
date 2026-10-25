@@ -55,7 +55,7 @@
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-117)`
 
-- [ ] 1.13 Reconciliar `packages/clinical-catalogs/poblacion.json` MENOS `grado`, `estado_menopausico` y `estado_castracion` (quedan «Desconocido» explícito en el S3, **Decidido (usuario, 2026-10-24)**, `CLAVES_NO_EXTRAIDAS_EN_EL_S3`) contra `campos.py`: las claves restantes deben coincidir exactamente · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197)
+- [x] 1.13 Reconciliar `packages/clinical-catalogs/poblacion.json` MENOS `grado`, `estado_menopausico` y `estado_castracion` (quedan «Desconocido» explícito en el S3, **Decidido (usuario, 2026-10-24)**, `CLAVES_NO_EXTRAIDAS_EN_EL_S3`) contra `campos.py`: las claves restantes deben coincidir exactamente · test `test_las_claves_de_poblacion_del_catalogo_son_las_admitidas_mas_las_no_extraidas_en_el_s3` (poblacion.json v1.1.0 de main; 1452 unitarios en verde)
 
 > Notas para el cuerpo del PR (Gate 2, M1 y M2): en `c85845bc` se eliminó el test «umbral ignorado» sin `Test-Removal:` (lo sustituyen tests que sí miden el umbral con p entre umbrales); el commit `3ba468eb` se llama refactor pero añade comportamiento nuevo (tope `maxLength` de 200). No se reescriben.
 
