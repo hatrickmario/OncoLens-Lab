@@ -68,20 +68,25 @@
       > (`coincide` → `no_coincide`) se escribe y se pone en verde en L1D-127, con estos fixtures. No es tarea de
       > este change.
 - [x] 2.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
-      verde antes y después, commit `refactor(L1D-126)` · sin cambios: revisados `aplicabilidad.py`, `criterios_aplicabilidad.py` y el wiring de
-      `bootstrap.py`; cada función hace una cosa y no hay middle man ni lógica duplicada
+      verde antes y después, commit `refactor(L1D-126)` · Rename `CriterioDeAplicabilidad.estado` → `estado_de_revision` (Gate 2 P1); el
+      resto revisado sin cambios (`aplicabilidad.py`, `criterios_aplicabilidad.py`, wiring de `bootstrap.py`)
+      > Deuda (Gate 2 m3): el puerto `CriteriosDeAplicabilidad` vive en `app/domain/` y no en `app/application/ports.py`
+      > con los demás; se deja donde está.
+      > **Pregunta para el usuario:** hoy `rag-orchestrator` no arranca si `aplicabilidad.json` es inválido aunque
+      > nada lo consuma hasta US-122 (L1D-127). ¿Se mantiene el arranque estricto o se difiere hasta que haya consumidor?
+      > `criterios(tipo) == ()` significa «tipo no declarado» o `items` vacío; el consumidor no los distingue.
 
 ## evaluación
 
 - [x] 3.1 `run-ai-eval` sobre la rama (el PR cambia el catálogo, AC-T5.4); adjuntar el reporte de
-      `reports/eval/` al PR · evaluate · hecho con adapters falsos: sin regresión (Δ = 0 contra el baseline); fidelidad 0,75 y
+      `reports/eval/` al PR · evaluate · reporte en `reports/eval/l1d-126-criterios-aplicabilidad-catalogo.{json,md}`; hecho con adapters falsos: sin regresión (Δ = 0 contra el baseline); fidelidad 0,75 y
       citas 0,80 ya estaban bajo meta en el baseline; no mide los criterios (aún sin uso) ni modelos reales
 
 ## cierre
 
 - [x] 4.1 `openspec validate l1d-126-criterios-aplicabilidad-catalogo --strict` · válido; el único INFO es el esperado
       (el archivo rechaza el delta `MODIFIED` hasta archivar L1D-93)
-- [x] 4.2 (rag-orchestrator: Pytest 2146 passed, 129 deselected; clinical-api: unit 902/902 e integración 399/399 con PostgreSQL de test tras integrar main) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
+- [x] 4.2 (rag-orchestrator: Pytest 2208 passed, 129 deselected; clinical-api: unit 902/902 e integración 399/399 con PostgreSQL de test tras integrar main) Suites de `clinical-api` (Vitest) y `rag-orchestrator` (Pytest) en verde; `catalog:validate` en verde
       sobre el catálogo del S3; sin `contracts:verify-provider` (no hay cambios de API)
 
 ## Gate 2, vuelta 1 (clinical-platform)

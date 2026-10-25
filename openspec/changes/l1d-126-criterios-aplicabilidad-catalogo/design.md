@@ -44,6 +44,8 @@ todos los niveles):
   ∈ {`solo_subgrupo`, `rango_solapado`} declara cuándo el estado es "Parcial"; `rule.limits` (opcional, `min`/`max`)
   acota el criterio en el catálogo (lo usa la variante del AC-5). Todo declarativo, sin código ejecutable (ADR-29,
   RN-22). El significado operativo de cada operador lo implementa US-122 en `domain/applicability_rules.py`.
+- `estado` del JSON (`propuesta` | `pendiente` | `revisado`) es el estado de revisión del criterio (`estado_de_revision` en
+  `rag-orchestrator`); no es el `review_status` de un dato extraído (RN-07) ni el estado calculado de L1D-127.
 - `studyKey` (obligatorio) = clave de `population_criteria` del estudio con la que se compara el criterio
   (decisión del usuario, 2026-10-24, `[S3 resp. 16]`; cierra Q1 de L1D-127). Admite subclave con punto
   (`biomarcadores.her2`). La consumen L1D-127 (valor del estudio) y L1D-117 (claves que la ingesta escribe).

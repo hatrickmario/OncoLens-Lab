@@ -55,6 +55,14 @@ class _Estricto(BaseModel):
     # strict: ``"true"`` o ``1`` no son booleanos, ``"0"`` no es número (el esquema JSON también los rechaza).
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _rechazar_null_explicito(cls, datos: object) -> object:
+        """El esquema JSON pide el campo opcional ausente, no ``null``: ``{"en": null}`` es inválido."""
+        if isinstance(datos, dict) and any(valor is None for valor in datos.values()):
+            raise ValueError("null explícito")
+        return datos
+
 
 class _Etiqueta(_Estricto):
     es: _Texto
@@ -149,9 +157,31 @@ def cargar_criterios_de_aplicabilidad(
     )
 
 
+def _sin_claves_repetidas(pares: list[tuple[str, object]]) -> dict[str, object]:
+    claves = [clave for clave, _ in pares]
+    if len(set(claves)) != len(claves):
+        raise ValueError("clave repetida")
+    return dict(pares)
+
+
+def _rechazar_constante_no_finita(constante: str) -> object:
+    raise ValueError("constante no finita")
+
+
+def _leer_json_estricto(texto: str) -> object:
+    """JSON sin claves repetidas ni ``NaN``/``Infinity`` (``json.loads`` los acepta; el esquema JSON no)."""
+    return json.loads(
+        texto,
+        object_pairs_hook=_sin_claves_repetidas,
+        parse_constant=_rechazar_constante_no_finita,
+    )
+
+
 def _leer_criterios_del_tipo(archivo: Path) -> tuple[CriterioDeAplicabilidad, ...]:
     try:
-        contenido = _Archivo.model_validate(json.loads(archivo.read_text(encoding="utf-8")))
+        contenido = _Archivo.model_validate(
+            _leer_json_estricto(archivo.read_text(encoding="utf-8"))
+        )
     except (
         OSError,
         ValueError,
