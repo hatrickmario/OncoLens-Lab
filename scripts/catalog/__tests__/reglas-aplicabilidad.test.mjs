@@ -262,6 +262,25 @@ describe('contexto propio de cada archivo del registro (Gate 2 vuelta 1, punto 3
   });
 });
 
+describe('el contexto de una entrada no anula el común (Gate 2 N4)', () => {
+  it('conserva clave_duplicada cuando el contexto de la entrada devuelve clavesRepetidas vacío', () => {
+    const entrada = ARCHIVOS_DEL_CATALOGO.aplicabilidad;
+    const original = entrada.contexto;
+    entrada.contexto = () => ({ clavesRepetidas: new Set() });
+    try {
+      const archivos = leerCatalogo(path.join(FIXTURES, 'test-apl-1.0.0'), leerTexto);
+      const items = archivos.tipos.mama.aplicabilidad.items;
+      items.push({ ...items[0] });
+
+      const { violaciones } = validarCatalogo({ archivos, allowlist, esquemas });
+
+      expect(violaciones.map((violacion) => violacion.codigo)).toContain('clave_duplicada');
+    } finally {
+      entrada.contexto = original;
+    }
+  });
+});
+
 describe('registro de archivos de raíz (Gate 2 vuelta 1, punto 4)', () => {
   const esquemaFicticio = {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
