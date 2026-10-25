@@ -28,9 +28,18 @@ def es_proveedor_local(url: str) -> bool:
         return False
 
 
-def variable_que_incumple_llm_local(*, llm_cloud_enabled: bool, llm_provider: str) -> str | None:
-    """RN-12: nombre de la variable de configuración que impide usar solo el LLM local, o ``None`` si cumple."""
-    raise NotImplementedError("no implementado")
+def variable_que_incumple_llm_local(
+    *, llm_cloud_enabled: bool, llm_provider: str, llm_base_url: str, llm_model: str
+) -> str | None:
+    """RN-12: nombre de la variable de configuración que impide usar solo el LLM local, o ``None`` si cumple.
+
+    Solo mira las dos variables que decidió el usuario (2026-10-24); no inspecciona ``LLM_MODEL``.
+    """
+    if llm_cloud_enabled:
+        return "LLM_CLOUD_ENABLED"
+    if llm_provider != "local":
+        return "LLM_PROVIDER"
+    return None
 
 
 def _banderas_de_datos_reales_activas(

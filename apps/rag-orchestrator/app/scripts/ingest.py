@@ -48,6 +48,7 @@ from app.config.settings import (
 )
 from app.domain.corpus_seed.admisibilidad import PoliticaDeLicencias
 from app.domain.corpus_seed.chunking import Tokenizador
+from app.domain.reglas_proveedor import variable_que_incumple_llm_local
 from app.infrastructure.catalog.conexion import componer_url, crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from app.infrastructure.clock.system_clock import RelojDelSistema
@@ -98,30 +99,41 @@ class ModelosDeMetadatos:
     nombre_del_llm: str
 
 
-def _modelos_de_metadatos(llm: LlmClient | None, nli: NliClassifier | None) -> ModelosDeMetadatos:
+def _modelos_de_metadatos(
+    llm: LlmClient | None, nli: NliClassifier | None, temperatura: float
+) -> ModelosDeMetadatos:
     """Inyectados (solo en los tests) o, en producción, el LLM local (RN-12) y el NLI real verificado.
 
     Sin ``NLI_ENTAILMENT_THRESHOLD`` no hay umbral que aplicar: falla nombrando la variable (RN-22).
     """
     ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
-    _exigir_llm_local(ambiente)
     if ambiente.nli_entailment_threshold is None:
         raise ModeloNoVerificadoError("NLI_ENTAILMENT_THRESHOLD")
     return ModelosDeMetadatos(
-        llm=llm or _llm_local(ambiente),
+        llm=llm or _llm_local(ambiente, temperatura),
         nli=nli or _nli_real(),
         umbral_nli=ambiente.nli_entailment_threshold,
         nombre_del_llm=ambiente.llm_model or "no_declarado",
     )
 
 
-def _exigir_llm_local(ambiente: Settings) -> None:
+class ConfiguracionDeLlmNoLocalError(RuntimeError):
+    """La configuración admite un LLM que no es el local (RN-12). El mensaje es solo el NOMBRE de la variable."""
+
+    def __init__(self, variable: str) -> None:
+        super().__init__(variable)
+        self.variable = variable
+
+
+def _exigir_llm_local() -> None:
     """RN-12 por código: la CLI falla en cerrado (nombrando solo la variable, nunca su valor) si la configuración admite un
-    LLM que no es el local. Decidido (usuario, 2026-10-24)."""
-    if ambiente.llm_cloud_enabled:
-        raise ModeloNoVerificadoError("LLM_CLOUD_ENABLED")
-    if ambiente.llm_provider != "local":
-        raise ModeloNoVerificadoError("LLM_PROVIDER")
+    LLM que no es el local. Decidido (usuario, 2026-10-24); la regla vive en el dominio."""
+    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    incumplida = variable_que_incumple_llm_local(
+        llm_cloud_enabled=ambiente.llm_cloud_enabled, llm_provider=ambiente.llm_provider
+    )
+    if incumplida is not None:
+        raise ConfiguracionDeLlmNoLocalError(incumplida)
 
 
 def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
@@ -131,13 +143,13 @@ def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionServ
     )
 
 
-def _llm_local(ambiente: Settings) -> LlmClient:
+def _llm_local(ambiente: Settings, temperatura: float) -> LlmClient:
     return OpenAICompatibleLlmClient(
         ambiente.llm_base_url,
         ambiente.llm_model,
         ambiente.llm_request_timeout_ms,
         ambiente.llm_max_output_tokens,
-        ambiente.corpus_metadata_llm_temperature,
+        temperatura,
     )
 
 
@@ -255,6 +267,7 @@ def main(
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
     try:
+        _exigir_llm_local()  # RN-12: antes de cargar embeddings o abrir conexiones
         modelos = _modelos_de_la_ingesta(ajustes, embedder, sparse, tokenizador)
         reporte, muestra = _ejecutar_ingesta(
             argumentos.manifest,
@@ -263,10 +276,10 @@ def main(
             base,
             politica,
             *modelos,
-            _modelos_de_metadatos(llm, nli),
+            _modelos_de_metadatos(llm, nli, ajustes.corpus_metadata_llm_temperature),
             reloj or RelojDelSistema(),
         )
-    except (ModeloNoVerificadoError, ManifiestoInvalido) as error:
+    except (ModeloNoVerificadoError, ManifiestoInvalido, ConfiguracionDeLlmNoLocalError) as error:
         print(f"{NOMBRE}: {error}", file=sys.stderr)
         return 1
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI

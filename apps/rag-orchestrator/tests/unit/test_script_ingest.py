@@ -222,14 +222,29 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
     assert "secreta" not in str(resumen)
 
 
-@pytest.mark.parametrize(
-    ("variable", "valor"), [("LLM_CLOUD_ENABLED", "true"), ("LLM_PROVIDER", "fake")]
-)
+NO_LOCAL = [
+    ("LLM_CLOUD_ENABLED", {"LLM_CLOUD_ENABLED": "true"}, "true"),
+    ("LLM_PROVIDER", {"LLM_PROVIDER": "fake"}, "fake"),
+    (
+        "LLM_BASE_URL",
+        {"LLM_ALLOWED_HOSTS": "api.example.com", "LLM_BASE_URL": "https://api.example.com/v1"},
+        "api.example.com",
+    ),
+    ("LLM_MODEL", {"LLM_MODEL": "gpt-oss:120b-cloud"}, "gpt-oss"),
+]
+
+
+@pytest.mark.parametrize(("variable", "ajustes", "valor"), NO_LOCAL)
 def test_la_cli_se_niega_sin_llm_local_nombrando_solo_la_variable_y_sin_conectar(
-    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], variable: str, valor: str
+    entorno: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    variable: str,
+    ajustes: dict[str, str],
+    valor: str,
 ) -> None:
-    """Decidido (usuario, 2026-10-24), RN-12: la extracción de metadatos solo usa el LLM local."""
-    entorno.setenv(variable, valor)
+    """Decidido (usuario, 2026-10-24), RN-12 (piso cerrado, ADR-41 D4): la extracción de metadatos solo usa el LLM local."""
+    for clave, v in ajustes.items():
+        entorno.setenv(clave, v)
 
     codigo = ingest.main(
         ARGUMENTOS,
@@ -308,3 +323,31 @@ def test_la_cli_se_niega_sin_llm_local_antes_de_cargar_los_modelos_de_embeddings
     capturado = capsys.readouterr()
     assert codigo == 1 and "LLM_CLOUD_ENABLED" in capturado.err
     assert "MODEL_PROVIDER" not in capturado.err
+
+
+@pytest.mark.parametrize(("variable", "ajustes", "valor"), NO_LOCAL)
+def test_al_negarse_la_cli_no_carga_modelos_ni_abre_conexiones_ni_lee_el_manifiesto(
+    entorno: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    variable: str,
+    ajustes: dict[str, str],
+    valor: str,
+) -> None:
+    llamadas: list[str] = []
+
+    def espia(nombre: str):  # type: ignore[no-untyped-def]
+        def _(*args, **kwargs):  # type: ignore[no-untyped-def]
+            llamadas.append(nombre)
+            raise AssertionError(nombre)
+
+        return _
+
+    for nombre in ("fabricar_codificadores_reales", "crear_motor", "leer_manifiesto"):
+        entorno.setattr(ingest, nombre, espia(nombre))
+    for clave, v in ajustes.items():
+        entorno.setenv(clave, v)
+
+    codigo = ingest.main(ARGUMENTOS)
+
+    assert codigo == 1 and variable in capsys.readouterr().err
+    assert llamadas == []
