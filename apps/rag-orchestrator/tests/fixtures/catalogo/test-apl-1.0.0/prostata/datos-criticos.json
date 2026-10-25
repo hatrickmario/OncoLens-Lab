@@ -1,0 +1,40 @@
+{
+  "version": "test-apl-1.0.0",
+  "verifiedReviewStatuses": [
+    "verificado",
+    "corregido"
+  ],
+  "items": [
+    {
+      "key": "psa_serie",
+      "cancerType": "prostata",
+      "label": {
+        "es": "PSA seriado",
+        "en": "PSA seriado"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "PSA"
+        }
+      },
+      "minValues": 3,
+      "estado": "propuesta"
+    },
+    {
+      "key": "gleason_isup",
+      "cancerType": "prostata",
+      "label": {
+        "es": "Gleason / ISUP",
+        "en": "Gleason / ISUP"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    }
+  ]
+}

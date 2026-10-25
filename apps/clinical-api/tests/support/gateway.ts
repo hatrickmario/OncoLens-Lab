@@ -87,9 +87,9 @@ const RESPUESTA_TARDIA_MS = 2000;
 export const idDePaciente = (letra: 'a' | 'b' | 'c' | 'd' | 'e'): string =>
   idSembrado(`paciente-${letra}`);
 
-export const versionDelCatalogo = (): string =>
-  (JSON.parse(readFileSync(`${RUTA_DEL_CATALOGO}/manifest.json`, 'utf8')) as { version: string })
-    .version;
+/** Versión del `manifest.json` del catálogo montado (por defecto el del monorepo): los tests no repiten el literal. */
+export const versionDelCatalogo = (ruta: string = RUTA_DEL_CATALOGO): string =>
+  (JSON.parse(readFileSync(`${ruta}/manifest.json`, 'utf8')) as { version: string }).version;
 
 const hashDe = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -240,6 +240,8 @@ export interface OpcionesDeGateway {
   corpusExcludedSources?: readonly string[];
   /** `CORPUS_CUTOFF_DATE` (por defecto, 2026-09-30). */
   corpusCutoffDate?: string;
+  /** Directorio del catálogo montado (`CLINICAL_CATALOG_PATH`; por defecto, el del monorepo). */
+  rutaDelCatalogo?: string;
   /** Logger a usar (por defecto, en memoria con las líneas crudas; `loggerJsonEnMemoria` pasa por la redacción real). */
   logger?: LoggerEnMemoria;
 }
@@ -273,7 +275,7 @@ export async function montarGateway(
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
-    catalogo: crearProveedorDeCatalogo(RUTA_DEL_CATALOGO, (archivo) =>
+    catalogo: crearProveedorDeCatalogo(opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO, (archivo) =>
       readFileSync(archivo, 'utf8'),
     ),
     config: {

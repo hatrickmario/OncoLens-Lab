@@ -1,12 +1,85 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "aplicabilidad.json (lo llena FEAT-08b; L1D-93 fija el bloque validation y el destino de cada ítem)",
+  "title": "aplicabilidad.json: criterios de aplicabilidad por tipo de cáncer (L1D-126, ADR-29; declarativo, sin puntaje: RN-28)",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "items"],
   "properties": {
-    "version": { "type": "string", "pattern": "^(test-)?\\d+\\.\\d+\\.\\d+$" },
+    "version": { "$ref": "comun.schema.json#/$defs/version" },
     "validation": { "$ref": "validation.schema.json" },
-    "items": { "type": "array", "items": { "type": "object" } }
+    "items": { "type": "array", "items": { "$ref": "#/$defs/criterio" } }
+  },
+  "$defs": {
+    "destinoConLista": {
+      "description": "Como comun#/$defs/destino, pero cada valor de match admite una lista (solo aplicabilidad; el Zod de completitud de datos críticos solo admite cadenas)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity"],
+      "properties": {
+        "entity": { "$ref": "comun.schema.json#/$defs/destino/properties/entity" },
+        "field": { "$ref": "comun.schema.json#/$defs/destino/properties/field" },
+        "match": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "regla": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "partial"],
+      "properties": {
+        "operator": { "enum": ["igualdad", "pertenencia", "rango"] },
+        "equivalences": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "partial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["when"],
+          "properties": { "when": { "enum": ["solo_subgrupo", "rango_solapado"] } }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": { "min": { "type": "number" }, "max": { "type": "number" } }
+        }
+      }
+    },
+    "criterio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "cancerType", "studyKey", "label", "destination", "isExclusionary", "rule", "estado"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "cancerType": { "type": "string", "pattern": "^[a-z]+$" },
+        "studyKey": { "type": "string", "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)?$" },
+        "label": { "$ref": "comun.schema.json#/$defs/etiqueta" },
+        "destination": { "$ref": "#/$defs/destinoConLista" },
+        "isExclusionary": { "type": "boolean" },
+        "rule": { "$ref": "#/$defs/regla" },
+        "estado": { "$ref": "comun.schema.json#/$defs/estado" }
+      }
+    }
   }
 }

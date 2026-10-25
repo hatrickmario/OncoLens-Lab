@@ -26,7 +26,7 @@ import { CATALOGO, FIXTURES, RAIZ } from './apoyo.mjs';
 const leerTexto = (ruta) => readFileSync(ruta, 'utf8');
 const esquemas = leerEsquemas(path.join(CATALOGO, 'schemas'), leerTexto);
 const allowlist = JSON.parse(leerTexto(path.join(CATALOGO, 'validator/modelo.allowlist.json')));
-const vocabulario = vocabularioDe(esquemas['datos-criticos']);
+const vocabulario = vocabularioDe(esquemas);
 const atributos = { keys: [{ key: 'estado_menopausico', cancerTypes: ['mama'] }] };
 
 const destino = (entity, field, match) => ({ destination: { entity, field, match } });

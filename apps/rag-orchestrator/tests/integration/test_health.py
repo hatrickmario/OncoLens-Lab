@@ -104,6 +104,10 @@ def test_health_informa_la_catalog_version_del_manifiesto_montado_cuando_el_cata
     (tmp_path / "manifest.json").write_text(
         '{"version": "1.0.1", "cancerTypes": ["mama"]}', encoding="utf-8"
     )
+    (tmp_path / "mama").mkdir()  # el catálogo montado declara aplicabilidad.json por tipo (L1D-126)
+    (tmp_path / "mama" / "aplicabilidad.json").write_text(
+        '{"version": "1.0.1", "items": []}', encoding="utf-8"
+    )
     settings = settings_de_prueba(
         llm_provider="fake", fake_responses_path=EJEMPLOS, clinical_catalog_path=tmp_path
     )
