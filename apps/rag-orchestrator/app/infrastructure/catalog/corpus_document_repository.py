@@ -7,8 +7,10 @@ propagan sin traducir: el cargador los trata como fallo del catálogo y aborta.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy import Engine
@@ -19,12 +21,18 @@ from app.application.seed_corpus.ports import (
     RegistroDeRelease,
     VersionInexistente,
 )
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from app.infrastructure.catalog.tables import (
     corpus_document,
     corpus_release,
     corpus_release_document,
 )
+
+
+def _registro_de(fila: Mapping[str, Any]) -> RegistroDeDocumento:
+    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable."""
+    return RegistroDeDocumento(**{**fila, "extracted_fields": tuple(fila["extracted_fields"])})
 
 
 class CorpusDocumentRepository:
@@ -113,6 +121,22 @@ class CorpusDocumentRepository:
                         for identificador in release.document_ids
                     ],
                 )
+
+    def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]:
+        consulta = (
+            sa.select(corpus_document)
+            .join(
+                corpus_release_document,
+                corpus_release_document.c.document_id == corpus_document.c.document_id,
+            )
+            .where(
+                corpus_release_document.c.release_id == release_id,
+                corpus_document.c.metadata_source == EXTRAIDO_VERIFICADO,
+            )
+            .order_by(corpus_document.c.document_id)
+        )
+        with self._motor.connect() as conexion:
+            return [_registro_de(fila) for fila in conexion.execute(consulta).mappings()]
 
     @staticmethod
     def _guardar(conexion: sa.Connection, registro: RegistroDeDocumento) -> None:

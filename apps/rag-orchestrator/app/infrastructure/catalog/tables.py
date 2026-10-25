@@ -63,6 +63,7 @@ corpus_document = sa.Table(
     sa.Column("sample_size", sa.Integer, nullable=True),
     sa.Column("population_criteria", postgresql.JSONB, nullable=False),
     _texto("metadata_source"),
+    sa.Column("extracted_fields", postgresql.JSONB, nullable=False, server_default="[]"),
     _texto("guideline_version", nullable=True),
     _texto("source_url", nullable=True),
     sa.Column("last_updated_at", sa.Date, nullable=True),

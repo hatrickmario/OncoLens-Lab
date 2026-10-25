@@ -71,7 +71,7 @@ Las claves y subclaves que la ingesta escribe en `population_criteria` (copia es
 - **AND** HER2 "positivo" de `i-lit-1` en FX-06c-b se guarda bajo `population_criteria.biomarcadores.her2`
 
 ### Requirement: Muestra reproducible de metadatos extraídos para revisión humana
-Al publicar una `CorpusRelease`, la ingesta MUST seleccionar `ceil(N × CORPUS_METADATA_SAMPLE_PCT / 100)` de sus N documentos `extraido_verificado`, de forma determinista con `CORPUS_METADATA_SAMPLE_SEED`, y SHALL escribir `data/evaluation/corpus-metadatos/<release>.yaml` con cada metadato en `revision = pendiente` para que un revisor lo marque `correcto | incorrecto`. Solo metadatos de corpus público, nunca datos de pacientes (TBD-20, RN-14, RN-22).
+Al publicar una `CorpusRelease`, la ingesta MUST seleccionar `ceil(N × CORPUS_METADATA_SAMPLE_PCT / 100)` de los N documentos `extraido_verificado` de esa release (leídos del catálogo, incluidos los omitidos de corridas previas), de forma determinista con `CORPUS_METADATA_SAMPLE_SEED`, y SHALL escribir `data/evaluation/corpus-metadatos/<release>.yaml` con cada metadato en `revision = pendiente`. Solo corpus público (TBD-20, RN-14, RN-22).
 
 #### Scenario: De un lote de 20 documentos extraídos al 10 % se seleccionan 2 siempre los mismos [US-118 AC-5] [TBD-20] [FR-19] [M-08.4]
 - **GIVEN** un lote sintético de 20 documentos con metadatos `extraido_verificado`, `CORPUS_METADATA_SAMPLE_PCT = 10` y `CORPUS_METADATA_SAMPLE_SEED` fijo

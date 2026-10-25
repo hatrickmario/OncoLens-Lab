@@ -176,6 +176,7 @@ def _conservados_con_umbral_del_entorno(
     modelos = _modelos_de_metadatos(
         FakeMetadataLlm(propuestas={_texto(caso): caso.propuesta}),
         NliFalso(por_defecto=ResultadoNli(label="entailment", p_entailment=p_entailment)),
+        0.0,
     )
     return len(_conservados(servicio_de_metadatos(modelos), caso))
 
