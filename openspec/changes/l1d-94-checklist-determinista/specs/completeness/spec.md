@@ -64,6 +64,12 @@ Para un ítem con `condition`, la condición MUST evaluarse de forma declarativa
 - **AND** `tratamientos_previos` está en `faltante` (su `whenConditionUnknown` es `faltante`)
 - **AND** `tnm` y `her2_ihq` están en `faltante`
 
+#### Scenario: El operador prefijo es startsWith exacto, sensible a mayúsculas y espacios [US-002 AC-2] (asumido)
+- **GIVEN** un ítem con `condition.operator = "prefijo"` y `values = ["2+"]` sobre `her2_ihq`, y F-M2 con HER2 `"2+ (IHQ)"`
+- **WHEN** se calcula el checklist de F-M2
+- **THEN** la condición se cumple (`her2_ish` sigue su estado propio: `faltante`)
+- **AND** un valor `" 2+ (IHQ)"` (espacio inicial) o `"iv"` frente al prefijo `"IV"` NO cumple la condición: no se normaliza ni se recorta
+
 ### Requirement: Cálculo determinista sin IA
 Para los mismos datos y la misma versión del catálogo, el checklist MUST ser idéntico en cada cálculo (misma serialización y misma `catalogVersion`). El cálculo SHALL ejecutarse íntegramente en `clinical-api`, sin invocar a `rag-orchestrator`, a ningún LLM ni a fuente de aleatoriedad.
 
