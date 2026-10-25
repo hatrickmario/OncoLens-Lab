@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.9.0
+  version: 1.9.1
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1332,6 +1332,7 @@ components:
           description: >-
             Iniciales de cada palabra del nombre en mayúscula seguidas de punto y separadas por espacio
             ("L. F. R. P."). El completo solo en la ficha, auditado.
+          pattern: '^\S\.( \S\.)*$'
         dataOrigin:
           $ref: '#/components/schemas/DataOrigin'
         lifecycleStatus:

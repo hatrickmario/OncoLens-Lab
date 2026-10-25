@@ -14,6 +14,7 @@ const UMBRALES = validarUmbrales({
   c901MaxComplexity: 10,
   plr0915MaxStatements: 50,
   web: { componentLinesWarn: 100, componentLinesError: 150 },
+  coverage: { changedLinesWarn: 80, alertPaths: ['apps/clinical-api/src/**/*.service.ts'] },
 });
 
 const directorioTemporal = () => {

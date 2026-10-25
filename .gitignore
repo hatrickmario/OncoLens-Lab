@@ -19,6 +19,7 @@ __pycache__/
 
 # Build y entorno local (US-034)
 dist/
+coverage/
 .next/
 next-env.d.ts
 *.tsbuildinfo

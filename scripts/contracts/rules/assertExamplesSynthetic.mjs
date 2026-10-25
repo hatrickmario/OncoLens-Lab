@@ -32,6 +32,13 @@ const NO_DATES_UNDER = ['clinicalContext', 'analysisMemory', 'query', 'question'
 const MASCARA_DE_DOCUMENTO = /^•{4} [A-Za-z0-9]{2}$/u;
 const esMascaraDeDocumento = (key, value) => key.toLowerCase() === 'nationalidmasked' && MASCARA_DE_DOCUMENTO.test(value);
 
+/**
+ * Máscara cerrada del nombre del listado (L1D-285, design D7): iniciales "P. S." y un dígito opcional. Solo la clave
+ * `fullNameMasked` la admite; el nombre en claro (`fullName`…) sigue exigiendo "Prueba Sintética".
+ */
+const MASCARA_DE_NOMBRE = /^P\. S\.( \d\.)?$/u;
+const esMascaraDeNombre = (key, value) => key === 'fullNameMasked' && typeof value === 'string' && MASCARA_DE_NOMBRE.test(value);
+
 const underAny = (pointer, keys) => keys.some((key) => pointer.split('/').includes(key));
 const insideExclusion = (pointer) => EXCLUSION_KEYS.some((key) => pointer.includes(`/${key}/`));
 
@@ -46,7 +53,7 @@ function checkNode({ value, pointer, key }, context) {
     found.push(report(file, pointer, 'una fecha de nacimiento absoluta no puede aparecer en un ejemplo: solo el año o una edad relativa'));
   }
   const isPerson = (key !== 'name' && key !== null && !CLAVES_DE_NOMBRE_DE_ARCHIVO.includes(key) && matchesIdentity(key, PATRONES_NOMBRE_PERSONA)) || (key === 'name' && entry.target === SEARCH_REQUEST_TARGET);
-  if (isPerson && !SYNTHETIC_NAME.test(String(value))) found.push(report(file, pointer, 'todo nombre de persona debe ser "Prueba Sintética"'));
+  if (isPerson && !SYNTHETIC_NAME.test(String(value)) && !esMascaraDeNombre(key, value)) found.push(report(file, pointer, 'todo nombre de persona debe ser "Prueba Sintética"'));
   return found;
 }
 

@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { excepcionesVigentes } from './umbrales.mjs';
 
-const hallazgo = (campos) => ({
+export const hallazgo = (campos) => ({
   tool: null,
   rule: null,
   file: null,
@@ -142,27 +142,34 @@ export function evaluarImportLinter(estado, texto, directorio) {
 }
 
 const REGLAS_DE_TAMANO = 'max-lines-per-function|complexity|max-lines';
-// `eslint-disable` que nombra una regla de tamaño, o que desactiva todo (sin lista de reglas).
-const DESACTIVA_TAMANO = new RegExp(
-  `eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${REGLAS_DE_TAMANO})\\b|\\s*(?:\\*/|--|$))`,
-);
+// Reglas de higiene de tests (US-213 AC-8, AC-10): una directiva tampoco puede apagarlas (Gate 2 #3).
+const REGLAS_DE_HIGIENE =
+  'vitest/no-focused-tests|vitest/no-disabled-tests|vitest/valid-title|oncolens/tests-sin-pendientes-ni-foco-jest|oncolens/mock-solo-en-bordes';
+// `eslint-disable` que nombra alguna de las reglas (o que apaga todo), o el comentario de configuración
+// `/* eslint regla: off */` (también `0`): ambas formas dejan pasar un test desactivado.
+const desactiva = (reglas) =>
+  new RegExp(
+    `eslint-disable(?:-next-line|-line)?(?:\\s+[^\\n]*\\b(?:${reglas})\\b|\\s*(?:\\*/|--|$))|\\beslint\\s+[^\\n]*\\b(?:${reglas})\\b\\s*:\\s*(?:off|0|"off")`,
+  );
+const DESACTIVA_TAMANO = desactiva(REGLAS_DE_TAMANO);
+const DESACTIVA_HIGIENE = desactiva(REGLAS_DE_HIGIENE);
 
-/** Hallazgo por cada comentario `eslint-disable` que silencia tamaño o complejidad (o todo). */
+/**
+ * Hallazgo por cada comentario `eslint-disable` que silencia tamaño o complejidad (o todo), y por cada uno que silencia una
+ * regla de higiene de tests. Un comentario que apaga todo cuenta como tamaño (una sola vez).
+ */
 export function buscarDesactivacionesDeTamano(archivos) {
   return archivos.flatMap(({ file, texto }) =>
-    texto.split('\n').flatMap((linea, indice) =>
-      DESACTIVA_TAMANO.test(linea)
-        ? [
-            hallazgo({
-              tool: 'quality',
-              rule: 'sin-eslint-disable-de-tamano',
-              file,
-              line: indice + 1,
-              symbol: linea.trim(),
-            }),
-          ]
-        : [],
-    ),
+    texto.split('\n').flatMap((linea, indice) => {
+      const regla = DESACTIVA_TAMANO.test(linea)
+        ? 'sin-eslint-disable-de-tamano'
+        : DESACTIVA_HIGIENE.test(linea)
+          ? 'sin-eslint-disable-de-higiene-de-tests'
+          : null;
+      return regla
+        ? [hallazgo({ tool: 'quality', rule: regla, file, line: indice + 1, symbol: linea.trim() })]
+        : [];
+    }),
   );
 }
 
@@ -196,7 +203,7 @@ export function describir(h) {
 }
 
 /** Reporte de `reports/quality/latest.json`; `ahora` y `commit` se inyectan para que sea reproducible en tests. */
-export function armarReporte(umbrales, hallazgos, { ahora, commit }) {
+export function armarReporte(umbrales, hallazgos, { ahora, commit, cobertura = null }) {
   const errores = hallazgos.filter((h) => h.severity === 'error').length;
   return {
     generadoEn: ahora.toISOString(),
@@ -204,6 +211,8 @@ export function armarReporte(umbrales, hallazgos, { ahora, commit }) {
     umbrales: { ...umbrales, excepciones: undefined },
     excepcionesVigentes: excepcionesVigentes(umbrales.excepciones, ahora),
     resumen: { errores, alertas: hallazgos.length - errores },
+    // Porcentaje de líneas cambiadas cubiertas por archivo (US-213 AC-11); null = sin informes de cobertura o sin rama base.
+    cobertura,
     hallazgos,
   };
 }

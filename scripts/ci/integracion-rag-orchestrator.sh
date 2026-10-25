@@ -10,7 +10,8 @@
 # de Pytest recibe solo los secretos de SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS y nada de clinical (design D1b, RN-10): el
 # script lo comprueba dentro del contenedor antes de correr Pytest. Sin reintentos: un test que falla deja el job en rojo.
 # Variables (RN-22): INTEGRACION_RAG_ESPERA_SEGUNDOS (espera de salud de postgres y Milvus), INTEGRACION_RAG_PYTEST_SEGUNDOS
-# (tope de Pytest, si el sistema tiene `timeout`), PG_TEST_DB_PREFIX. El proyecto de Compose (oncolens-ci-rag) y el directorio de
+# (tope de Pytest, si el sistema tiene `timeout`), PG_TEST_DB_PREFIX, INTEGRACION_RAG_PULL_INTENTOS (3: intentos de descarga de
+# cada imagen) e INTEGRACION_RAG_PULL_ESPERA_BASE_S (10: espera base en segundos, creciente: base × intento). El proyecto de Compose (oncolens-ci-rag) y el directorio de
 # secretos (mktemp -d) son fijos y propios: ONCOLENS_SECRETS_DIR y COMPOSE_PROJECT_NAME del entorno se ignoran, de modo que el
 # `down -v` y el `rm -rf` del final nunca alcanzan un directorio ni un stack ajenos.
 set -euo pipefail
@@ -36,6 +37,8 @@ readonly ACS_REQUERIDOS=(US-058:1 US-058:3 US-058:4 US-059:1 US-059:3 US-059:4 U
 
 espera_segundos="${INTEGRACION_RAG_ESPERA_SEGUNDOS:-420}"
 pytest_segundos="${INTEGRACION_RAG_PYTEST_SEGUNDOS:-1500}"
+pull_intentos="${INTEGRACION_RAG_PULL_INTENTOS:-3}"
+pull_espera_base_s="${INTEGRACION_RAG_PULL_ESPERA_BASE_S:-10}"
 
 fallar() { echo "integracion-rag: $*" >&2; exit 1; }
 
@@ -99,11 +102,28 @@ servicios_de_los_que_depende_pytest() {
   ' "$SERVICIO_DE_PRUEBAS"
 }
 
+# Descarga las imágenes ANTES del `up` (L1D-285, AC-13): un 503 del registro (PR #189, quay.io) es un fallo de infraestructura y
+# se reintenta SOLO aquí, con espera creciente (base × intento); nunca se reintenta el `up` ni los tests. Al agotar los
+# intentos falla nombrando la imagen, sin hablar de salud. `--ignore-buildable`: lo que se construye en local no se descarga.
+descargar_imagenes() {
+  local servicio intento
+  for servicio in "$@"; do
+    intento=1
+    until compose pull --quiet --ignore-buildable "$servicio" > /dev/null; do
+      [ "$intento" -lt "$pull_intentos" ] || fallar "no se pudo descargar la imagen de $servicio"
+      echo "integracion-rag: la descarga de $servicio falló (intento $intento de $pull_intentos); se reintenta en $((pull_espera_base_s * intento))s" >&2
+      sleep "$((pull_espera_base_s * intento))"
+      intento=$((intento + 1))
+    done
+  done
+}
+
 # Si algo no queda sano en el tiempo máximo, el job falla nombrando el servicio (nunca se ejecuta Pytest con tests omitidos).
 levantar_servicios_reales() {
   local servicios=() servicio estado
   while IFS= read -r servicio; do servicios+=("$servicio"); done < <(servicios_de_los_que_depende_pytest)
   [ "${#servicios[@]}" -gt 0 ] || fallar "$SERVICIO_DE_PRUEBAS no declara servicios de los que depende"
+  descargar_imagenes "${servicios[@]}" milvus-etcd milvus-minio
   if ! compose up -d --wait --wait-timeout "$espera_segundos" --no-build "${servicios[@]}" > /dev/null; then
     for servicio in "${servicios[@]}" milvus-etcd milvus-minio; do
       estado="$(compose ps --all --format '{{.Service}} {{.Health}} {{.State}}' "$servicio" 2> /dev/null || true)"
