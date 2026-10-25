@@ -58,8 +58,10 @@ regla 4 del backlog).
 **D5. Coincidencia de destino** por `destination.entity` + `match` del catálogo: `Biomarker` por `name` canónico
 (y `Exam.exam_type` cuando el `match` lo declara, `[S3 resp. 5]` de US-001); `ClinicalAttribute` por `attribute_key`;
 `Diagnosis` por campo no nulo (y `staging_system`/`performance_scale` cuando el `match` lo declara); `PriorTreatment`
-sin filtro adicional. **Decidido (usuario, 2026-10-24): un dato `no_mapeado` cuenta como presente sin verificar si su
-`name` coincide con el catálogo** (no hay regla especial por `mapping_status`; US-131 lo mide). Se empareja *solo* por
+sin filtro adicional. **Decidido (usuario, 2026-10-24): un dato `no_mapeado` cuenta como cualquier dato vigente con ese
+`name`; su estado sale de `review_status`** (no hay regla por `mapping_status`: un `no_mapeado` en `requiere_revision`
+da `presente_sin_verificar`, y uno ya `verificado`/`corregido` da `presente_verificado`; US-131 lo mide). En un
+`no_mapeado`, `name` es el texto propuesto, sin validar contra el catálogo. Se empareja *solo* por
 `name` (el término canónico): nunca por `original_name` ni por similitud, porque sin mapeo no se inventa ningún
 concepto (RN-27). Un `no_mapeado` cuyo `name` no coincide con el catálogo sigue `faltante`. Esto sustituye a la
 exclusión por entidad de `excluirNoMapeados()` (eliminada). `minValues` por defecto `1` si el ítem no lo declara (lo
