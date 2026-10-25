@@ -190,17 +190,24 @@ M-08.2/M-08.6, que mide US-132.
 
 ## D8 · Guardián de versión del catálogo (`catalog:version-guard`)
 
-**Decidido (usuario, 2026-10-24), asignado a L1D-126.** `scripts/catalog/version-guard.mjs` (`npm run
-catalog:version-guard -- --base <ref>`): para cada archivo con contenido (por tipo `datos-criticos` y `aplicabilidad`,
-y de raíz `atributos` y `poblacion`, derivados de los registros) compara `hashDeContenido` (el hash canónico de
-`catalog:hash` sobre ítems o claves, sin `version` ni `validation`) del árbol actual con el de la base
-(`git show <base>:./archivo`). Si el hash cambia y `manifest.version` es igual a la de la base, falla con
-`contenido_cambiado_sin_subir_version <tipo>/<archivo>`.
+**Decidido (usuario, 2026-10-24), asignado a L1D-126; alcance y endurecimiento tras el privacy-guardian (Gate 2).**
+`scripts/catalog/version-guard.mjs` (`npm run catalog:version-guard -- --base <ref>`) compara la huella del ARCHIVO
+ENTERO (sha256 del JSON canónico sin `version` ni `validation`: entra cualquier campo de primer nivel, como
+`verifiedReviewStatuses`) del árbol actual con la de la base (`git show <base>:./archivo`).
 
-- **Excepción documentada:** contenido de la base vacío (`items: []`) o archivo ausente en la base = primera
-  publicación de ese contenido; es lo que deja pasar a este PR (aplicabilidad vacía en `main`, versión 1.1.0 por D5).
-- **Sin base** (primera vez, rama sin `origin/main`): `base_no_disponible`; con `CI=true` falla cerrado, en local avisa
-  y sale con 0.
+- **Registro explícito de archivos vigilados** (no derivado del validador): `manifest`, `atributos`, `poblacion` y,
+  por tipo (unión de los tipos del manifiesto actual y del de la base), `datos-criticos`, `aplicabilidad`, `codigos`,
+  `tendencias`, `plantillas` y `sinonimos`. `lenguaje/terminos-prohibidos` lleva su versión propia (1.5.0) y se compara
+  con ella, no con `manifest.version`.
+- **Cambió y la versión es igual:** `contenido_cambiado_sin_subir_version <tipo>/<archivo>`. **Cambió y la versión no
+  es estrictamente mayor** (semver, ignorando el prefijo `test-…`): `version_no_sube`. Quitar un tipo y su carpeta
+  cuenta como cambio.
+- **Excepción documentada:** archivo ausente en la base, o con todas sus listas de contenido (`items`, `keys`,
+  `entradas`) vacías = primera publicación; es lo que deja pasar a este PR (aplicabilidad vacía en `main`, versión
+  1.1.0 por D5).
+- **Base ilegible:** «la ruta no existe en la base» (`git ls-tree`) se distingue de cualquier otro fallo (error de git,
+  JSON ilegible, lectura mayor de 16 MiB): `base_ilegible <archivo>`; con `CI=true` falla cerrado, en local avisa.
+- **Sin base** (primera vez, rama sin `origin/main`): `base_no_disponible`, con el mismo criterio CI/local.
 - **CI:** paso del job `build-test` junto a `catalog:validate`, precedido de un fetch superficial del commit base
-  (`--no-tags --depth=1 origin "$BASE_REF"`), sin `fetch-depth: 0` en todo el job.
+  (`--no-tags --depth=1 origin "$BASE_REF"`), sin `fetch-depth: 0` en todo el job. Deuda m-4 en tasks.md.
 - La salida nombra tipo y archivo, nunca la ruta ni valores del catálogo.

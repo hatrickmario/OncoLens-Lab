@@ -34,9 +34,3 @@ export function catalogHashDe(alcances, items) {
   }
   return createHash('sha256').update(jsonCanonico(cubierto)).digest('hex');
 }
-
-/**
- * Hash del contenido completo de un archivo del catálogo (ítems o claves, sin `version` ni `validation`): el mismo
- * `catalogHashDe` con el alcance que cubre los ítems enteros. Lo usa `catalog:version-guard`.
- */
-export const hashDeContenido = (lista) => catalogHashDe(['aplicabilidad'], lista);

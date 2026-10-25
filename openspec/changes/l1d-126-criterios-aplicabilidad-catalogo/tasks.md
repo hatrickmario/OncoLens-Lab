@@ -116,4 +116,9 @@
       (`.github/workflows/ci.yml`, con fetch superficial del commit base). Tests de aceptación con repos temporales en
       `version-guard.test.mjs`: rojo (7 fallos por aserción), verde 10/10; mutación: sin la comparación de versión
       falla «pasa cuando el contenido cambia y manifest.version es nueva».
+- [x] G2.2 Endurecimiento del guardián (privacy-guardian M-1, m-1, m-2, m-3, m-5, P-1): huella del archivo entero,
+      unión de tipos y `manifest`, `base_ilegible`, `version_no_sube`, registro explícito ampliado (design D8). La
+      rama `git ls-tree`/`maxBuffer` del error de git no tiene test propio (solo el JSON ilegible).
+- [ ] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
+      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: deuda: base del guardián de versión.
 
