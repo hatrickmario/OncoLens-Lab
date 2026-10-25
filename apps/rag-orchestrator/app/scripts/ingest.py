@@ -130,7 +130,10 @@ def _exigir_llm_local() -> None:
     LLM que no es el local. Decidido (usuario, 2026-10-24); la regla vive en el dominio."""
     ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
     incumplida = variable_que_incumple_llm_local(
-        llm_cloud_enabled=ambiente.llm_cloud_enabled, llm_provider=ambiente.llm_provider
+        llm_cloud_enabled=ambiente.llm_cloud_enabled,
+        llm_provider=ambiente.llm_provider,
+        llm_base_url=ambiente.llm_base_url,
+        llm_model=ambiente.llm_model,
     )
     if incumplida is not None:
         raise ConfiguracionDeLlmNoLocalError(incumplida)
