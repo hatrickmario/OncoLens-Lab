@@ -28,7 +28,7 @@ La descripción de L1D-116 en Linear todavía es la de US-117 entera; el Markdow
 | L1D-130 | US-125 | 5 | ✓ | — |
 | L1D-92 | DEC-01 | 1 | ✓ escenario aceptado | Q1 verificado+corregido, Q4 faltante; cierre en el S4 `[S3 resp. 1]` |
 | L1D-93 | US-001 | 5 | ✓ | AC-6 servicio no listo; AC-7 HER2 por `Exam.exam_type` `[S3 resp. 5]` |
-| L1D-94 | US-002 | 5 | ✓ | `whenConditionUnknown = faltante`; cuenta el más reciente; `no_mapeado` crítico → US-131; ausencia confirmada al S4 `[S3 resp. 5]` |
+| L1D-94 | US-002 | 5 | ✓ | `whenConditionUnknown = faltante`; cuenta el más reciente; `no_mapeado` crítico → US-131 (Decidido (usuario, 2026-10-24): con `name` coincidente cuenta como presente; sin coincidencia es falso faltante listado por clave); ausencia confirmada al S4 `[S3 resp. 5]` |
 | L1D-98 | US-006 | 3 | ✓ | AC-8: error `[S3 resp. 5]` |
 | L1D-116 | US-117a | 5 | ✓ | Partida `[S3 resp. 2]`; PDFs reales necesitan US-082 (S5): en el S3 fixture de texto |
 | — | US-117b | 3 | ✓ (sin Linear) | Partida `[S3 resp. 2]` |
