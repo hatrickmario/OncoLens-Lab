@@ -1,0 +1,201 @@
+{
+  "version": "test-1.1.0",
+  "verifiedReviewStatuses": ["verificado", "corregido"],
+  "items": [
+    {
+      "key": "histologia",
+      "cancerType": "mama",
+      "label": {
+        "es": "histologia",
+        "en": "histologia"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "histology"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "grado",
+      "cancerType": "mama",
+      "label": {
+        "es": "grado",
+        "en": "grado"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "grade"
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tnm",
+      "cancerType": "mama",
+      "label": {
+        "es": "tnm",
+        "en": "tnm"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value",
+        "match": {
+          "staging_system": "TNM_8"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "mama",
+      "label": {
+        "es": "ecog",
+        "en": "ecog"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value",
+        "match": {
+          "performance_scale": "ECOG"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "re",
+      "cancerType": "mama",
+      "label": {
+        "es": "re",
+        "en": "re"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "Receptor de estrógeno"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "rp",
+      "cancerType": "mama",
+      "label": {
+        "es": "rp",
+        "en": "rp"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "Receptor de progesterona"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ihq",
+      "cancerType": "mama",
+      "label": {
+        "es": "her2_ihq",
+        "en": "her2_ihq"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "her2_ish",
+      "cancerType": "mama",
+      "label": {
+        "es": "her2_ish",
+        "en": "her2_ish"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2 ISH"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta",
+      "condition": {
+        "item": "her2_ihq",
+        "operator": "prefijo",
+        "values": ["2+"]
+      },
+      "whenConditionUnknown": "no_aplica"
+    },
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "label": {
+        "es": "estado_menopausico",
+        "en": "estado_menopausico"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta"
+    },
+    {
+      "key": "tratamientos_previos",
+      "cancerType": "mama",
+      "label": {
+        "es": "tratamientos_previos",
+        "en": "tratamientos_previos"
+      },
+      "destination": {
+        "entity": "PriorTreatment"
+      },
+      "minValues": 1,
+      "estado": "propuesta",
+      "condition": {
+        "item": "tnm",
+        "operator": "prefijo",
+        "values": ["IV"]
+      },
+      "whenConditionUnknown": "faltante"
+    },
+    {
+      "key": "brca_germinal",
+      "cancerType": "mama",
+      "label": {
+        "es": "brca_germinal",
+        "en": "brca_germinal"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "BRCA germinal"
+        }
+      },
+      "minValues": 1,
+      "estado": "propuesta",
+      "condition": {
+        "item": "tnm",
+        "operator": "prefijo",
+        "values": ["IV"]
+      },
+      "whenConditionUnknown": "no_aplica"
+    }
+  ]
+}

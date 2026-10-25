@@ -1,0 +1,5 @@
+{
+  "version": "test-1.1.0",
+  "cancerTypes": ["mama", "prostata"],
+  "standards": ["cie10", "loinc", "atc"]
+}
