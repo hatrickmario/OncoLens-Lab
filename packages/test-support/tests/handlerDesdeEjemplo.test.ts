@@ -1,0 +1,131 @@
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { cargarEjemplo, handlerDesdeEjemplo } from '../msw/index.js';
+
+// US-213 AC-10 (test después, ADR-26): los handlers de MSW salen de contracts/examples/ y no pueden declarar campos ajenos.
+const URL_RAG = 'http://rag-orchestrator.test/rag/query';
+const EJEMPLO = 'rag-query-con-evidencia.json';
+
+const servidor = setupServer();
+beforeAll(() => servidor.listen({ onUnhandledFrame: ({ defaults }) => defaults.error() }));
+afterEach(() => servidor.resetHandlers());
+afterAll(() => servidor.close());
+
+async function consultar(): Promise<{ status: number; cuerpo: Record<string, unknown> }> {
+  const respuesta = await fetch(URL_RAG, { method: 'POST', body: '{}' });
+  return { status: respuesta.status, cuerpo: (await respuesta.json()) as Record<string, unknown> };
+}
+
+describe('handlerDesdeEjemplo', () => {
+  it('responde con el cuerpo del ejemplo del contrato cuando no se sobrescribe nada', async () => {
+    servidor.use(handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, EJEMPLO));
+
+    const { status, cuerpo } = await consultar();
+
+    expect(status).toBe(200);
+    expect(cuerpo.status).toBe('con_evidencia');
+  });
+
+  it('aplica el valor sobrescrito y conserva el resto del ejemplo cuando la clave existe en él', async () => {
+    servidor.use(
+      handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, EJEMPLO, {
+        sobrescribir: { status: 'sin_evidencia' },
+        status: 200,
+      }),
+    );
+
+    const { cuerpo } = await consultar();
+
+    expect(cuerpo.status).toBe('sin_evidencia');
+    expect(cuerpo).toHaveProperty('synthesis');
+  });
+
+  it('falla nombrando el campo y el ejemplo cuando sobrescribir añade una clave ausente en el ejemplo [US-213 AC-10] [ADR-26]', () => {
+    expect(() =>
+      handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, EJEMPLO, {
+        sobrescribir: { campoInventado: 1 },
+      }),
+    ).toThrowError(`el campo "campoInventado" no existe en el ejemplo ${EJEMPLO}`);
+  });
+
+  it('falla nombrando la ruta completa cuando la clave ajena está anidada', () => {
+    expect(() =>
+      handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, EJEMPLO, {
+        sobrescribir: { synthesis: { inventado: [] } },
+      }),
+    ).toThrowError(`el campo "synthesis.inventado" no existe en el ejemplo ${EJEMPLO}`);
+  });
+
+  it('falla nombrando el ejemplo cuando el archivo no existe en contracts/examples/', () => {
+    expect(() =>
+      handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, 'no-existe.json'),
+    ).toThrowError('no-existe.json');
+  });
+
+  it.each([
+    '../package.json',
+    '/etc/hosts',
+    'sub/ejemplo.json',
+    'a\\b.json',
+    '..%2Fx.json',
+    'x.json?y',
+    'x..json',
+    'ejemplo.txt',
+    '',
+  ])(
+    'rechaza el nombre %j porque no es un archivo .json simple de contracts/examples/',
+    (nombre) => {
+      expect(() => handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, nombre)).toThrowError(
+        /no es un nombre de ejemplo válido/,
+      );
+    },
+  );
+
+  it('entrega la petición recibida a alRecibir sin alterar la respuesta', async () => {
+    const recibidas: string[] = [];
+    servidor.use(
+      handlerDesdeEjemplo({ metodo: 'post', url: URL_RAG }, EJEMPLO, {
+        alRecibir: async (peticion) => {
+          recibidas.push(await peticion.text());
+        },
+      }),
+    );
+
+    const { status } = await consultar();
+
+    expect(status).toBe(200);
+    expect(recibidas).toEqual(['{}']);
+  });
+});
+
+describe('cargarEjemplo y los enlaces simbólicos', () => {
+  const temporales: string[] = [];
+  afterAll(() =>
+    temporales.forEach((carpeta) => rmSync(carpeta, { recursive: true, force: true })),
+  );
+
+  function carpetaConEnlaceFuera(): URL {
+    const raiz = mkdtempSync(path.join(os.tmpdir(), 'oncolens-ejemplos-'));
+    temporales.push(raiz);
+    const carpeta = path.join(raiz, 'examples');
+    mkdirSync(carpeta);
+    writeFileSync(path.join(raiz, 'secreto.json'), '{"dato":"fuera"}');
+    writeFileSync(path.join(carpeta, 'propio.json'), '{"dato":"dentro"}');
+    symlinkSync(path.join(raiz, 'secreto.json'), path.join(carpeta, 'enlace.json'));
+    return pathToFileURL(`${carpeta}/`);
+  }
+
+  it('rechaza un .json que es un enlace simbólico a un archivo fuera de la carpeta de ejemplos', () => {
+    expect(() => cargarEjemplo('enlace.json', carpetaConEnlaceFuera())).toThrowError(
+      /resuelve fuera de contracts\/examples\//,
+    );
+  });
+
+  it('lee un .json real de la carpeta de ejemplos', () => {
+    expect(cargarEjemplo('propio.json', carpetaConEnlaceFuera())).toEqual({ dato: 'dentro' });
+  });
+});

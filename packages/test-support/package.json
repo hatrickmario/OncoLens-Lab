@@ -1,0 +1,22 @@
+{
+  "name": "@oncolens/test-support",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Ayudas de test compartidas (solo devDependency): handlers de MSW construidos desde contracts/examples/ (ADR-26). Ningún módulo de producción lo importa (dependency-cruiser: test-support-solo-en-tests).",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "exports": {
+    "./msw": "./msw/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "msw": "3.0.3"
+  },
+  "peerDependencies": {
+    "msw": "3.0.3"
+  }
+}

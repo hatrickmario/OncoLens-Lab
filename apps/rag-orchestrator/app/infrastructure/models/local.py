@@ -151,6 +151,28 @@ def cargar_embeddings_y_sparse_de_pasajes(
     return EmbedderDePasajesBgeM3(nucleo), codificador
 
 
+def cargar_clasificador_nli(
+    settings: Settings,
+    *,
+    fabricar_sesion: Callable[..., SesionDeInferencia] = SesionOnnx.desde_bytes,
+    fabricar_tokenizador: Callable[[Path], Tokenizador] = TokenizadorDeArchivo,
+) -> ClasificadorNliMdeberta:
+    """El NLI real para la ingesta (US-118): verifica SOLO los archivos que ese proceso abre (modelo, tokenizer y, si se
+    declaran, los datos externos del NLI) y construye el mismo adapter de US-231b que usa ``/rag/query``."""
+    config = _exigir_configuracion_de_modelos(settings)
+    indices = _indices_de_clase_del_nli(settings)
+    pares = ARCHIVOS_A_VERIFICAR[4:6]
+    if settings.nli_model_data_path or settings.nli_model_data_sha256:
+        pares += (PAR_DE_DATOS_EXTERNOS_DEL_NLI,)
+    rutas = verificar_modelos_locales(settings, pares)
+    sesion, tokenizador = _cargar_modelo(
+        settings, rutas, "NLI", fabricar_sesion, fabricar_tokenizador
+    )
+    clasificador = _clasificador_nli(settings, config, indices, sesion, tokenizador)
+    _comprobar_las_tres_clases_del_nli(clasificador)
+    return clasificador
+
+
 def _nucleo_de_pasajes(
     settings: Settings,
     fabricar_sesion: Callable[..., SesionDeInferencia],

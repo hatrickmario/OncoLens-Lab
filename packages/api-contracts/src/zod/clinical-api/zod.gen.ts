@@ -309,7 +309,7 @@ export const zPatientListItem = z.strictObject({
     id: z.uuid(),
     idType: zIdType,
     nationalIdMasked: z.string().regex(/^•{4} [A-Za-z0-9]{2}$/),
-    fullNameMasked: z.string(),
+    fullNameMasked: z.string().regex(/^\S\.( \S\.)*$/),
     dataOrigin: zDataOrigin,
     lifecycleStatus: zLifecycleStatus,
     birthYear: z.int(),

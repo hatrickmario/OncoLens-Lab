@@ -1,0 +1,12 @@
+{
+  "catalogo": "test-apl-1.0.0",
+  "origen": "studyKey de los criterios de test-apl-1.0.0 (openspec/changes/l1d-126-criterios-aplicabilidad-catalogo, D2), solo los del modelo v1.1 de population_criteria. Cuando l1d-126 mergee, este fixture se sustituye por la lectura de packages/clinical-catalogs/poblacion.json.",
+  "studyKeys": [
+    "biomarcadores.her2",
+    "biomarcadores.receptores_hormonales",
+    "biomarcadores.hrr_brca",
+    "estadio",
+    "linea",
+    "ecog"
+  ]
+}

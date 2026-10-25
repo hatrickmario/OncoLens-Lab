@@ -7,12 +7,25 @@ import nextPlugin from '@next/eslint-plugin-next';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import vitest from '@vitest/eslint-plugin';
+import { GLOBS_DE_TESTS } from './scripts/quality/archivos-de-test.mjs';
+import mockSoloEnBordes from './scripts/quality/eslint-rules/mock-solo-en-bordes.mjs';
+import testsSinPendientesNiFocoJest from './scripts/quality/eslint-rules/tests-sin-pendientes-ni-foco-jest.mjs';
 import noRestrictedImportsEnCliente from './scripts/quality/eslint-rules/no-restricted-imports-en-cliente.mjs';
 import { escaparGlob, excepcionesVigentes, leerUmbrales } from './scripts/quality/umbrales.mjs';
 
 // Umbrales de tamaño y complejidad (L1D-263, RN-22): solo se editan en quality-thresholds.json.
 // Un umbral ausente o no numérico hace fallar la carga de esta configuración nombrando la clave.
 const umbrales = leerUmbrales();
+
+/** Reglas propias del repositorio: un solo objeto, porque ESLint no admite dos plugins distintos con el mismo nombre. */
+const pluginOncolens = {
+  rules: {
+    'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente,
+    'mock-solo-en-bordes': mockSoloEnBordes,
+    'tests-sin-pendientes-ni-foco-jest': testsSinPendientesNiFocoJest,
+  },
+};
 
 const SIN_TESTS_DE_CLINICAL_API = ['apps/clinical-api/tests/**', '**/*.test.ts', '**/*.spec.ts'];
 const SIN_PRIMITIVAS_NI_TESTS_DE_WEB = [
@@ -80,7 +93,7 @@ export const bloqueWeb = (files) => ({
     'jsx-a11y': jsxA11y,
     '@next/next': nextPlugin,
     react,
-    oncolens: { rules: { 'no-restricted-imports-en-cliente': noRestrictedImportsEnCliente } },
+    oncolens: pluginOncolens,
   },
   settings: { next: { rootDir: 'apps/web' } },
   rules: {
@@ -102,6 +115,39 @@ export const bloqueWeb = (files) => ({
     ],
     'oncolens/no-restricted-imports-en-cliente': 'error',
   },
+});
+
+/** Tests de todo el monorepo; la definición vive en `scripts/quality/archivos-de-test.mjs` (Gate 2 #1). */
+export const ARCHIVOS_DE_TESTS = GLOBS_DE_TESTS;
+
+// Los fixtures de calidad contienen tests rotos a propósito: con los globs por defecto quedan fuera (los tests de las reglas
+// aplican el bloque a sus fixtures con `files` explícito y sin `ignores`).
+const FIXTURES_DE_CALIDAD = ['ci/tests/quality/fixtures/**'];
+const fixturesFuera = (files) => (files === ARCHIVOS_DE_TESTS ? FIXTURES_DE_CALIDAD : []);
+
+/**
+ * Higiene de tests (US-213 AC-8, design D1): ningún test enfocado ni desactivado. Va DESPUÉS de las excepciones con
+ * caducidad: una excepción de `quality-thresholds.json` no puede apagar estas reglas.
+ */
+export const bloqueHigieneDeTests = (files = ARCHIVOS_DE_TESTS) => ({
+  files,
+  ignores: fixturesFuera(files),
+  plugins: { vitest, oncolens: pluginOncolens },
+  rules: {
+    // `it.todo` y `fit` no los ven las reglas del plugin de Vitest: los cubre la regla propia.
+    'oncolens/tests-sin-pendientes-ni-foco-jest': 'error',
+    'vitest/no-focused-tests': 'error',
+    'vitest/no-disabled-tests': 'error',
+    'vitest/valid-title': 'error',
+  },
+});
+
+/** `vi.mock` solo sobre bordes (US-213 AC-10, design D4); admite excepciones con caducidad e ID de deuda. */
+export const bloqueMockSoloEnBordes = (files = ARCHIVOS_DE_TESTS) => ({
+  files,
+  ignores: fixturesFuera(files),
+  plugins: { oncolens: pluginOncolens },
+  rules: { 'oncolens/mock-solo-en-bordes': 'error' },
 });
 
 const AVISO_DE_SUPERTEST =
@@ -168,7 +214,9 @@ export default defineConfig(
   },
   bloqueTamanoClinicalApi(umbrales),
   bloqueTamanoWeb(umbrales, 'error'),
+  bloqueMockSoloEnBordes(),
   ...bloquesDeExcepciones(umbrales),
+  bloqueHigieneDeTests(),
   // SIEMPRE el último: desactiva toda regla de estilo que choque con Prettier [US-215 AC-5].
   prettier,
 );

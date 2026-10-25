@@ -1,7 +1,8 @@
 """Caso de uso de la ingesta en lote reanudable del corpus (US-117a, L1D-116).
 
-Admisibilidad -> texto -> checkpoint ``normalizado`` -> chunks -> dense + sparse -> Milvus -> ``embebido``. Cada etapa es
-un método; las reglas viven en ``app/domain/corpus_seed`` y las E/S llegan por los puertos.
+Admisibilidad -> texto -> checkpoint ``normalizado`` -> chunks -> dense + sparse -> metadatos (US-118) -> Milvus ->
+``embebido``. Cada etapa es un método; las reglas viven en ``app/domain/corpus_seed`` y ``corpus_metadata`` y las E/S
+llegan por los puertos.
 
 Un fallo de una etapa (``Exception`` en el borde de su puerto) deja ese documento en ``error`` y el lote sigue. Lo que NO
 se captura: ``BaseException`` (``KeyboardInterrupt``, ``SystemExit``) y los fallos del catálogo, que abortan la ingesta.
@@ -13,7 +14,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import date
 
-from app.application.corpus_ingestion.ports import SparsePassageEncoder
+from app.application.corpus_ingestion.ports import ResolutorDeMetadatos, SparsePassageEncoder
 from app.application.corpus_ingestion.reporte import (
     Estado,
     ReporteDeIngesta,
@@ -36,6 +37,7 @@ from app.application.seed_corpus.registros import (
     registro_rechazado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import (
     Admision,
     PoliticaDeLicencias,
@@ -85,6 +87,7 @@ class IngestionPipelineService:
         almacen_de_chunks: ChunkStoreDeIngesta,
         embedder: PassageEmbedder,
         codificador_sparse: SparsePassageEncoder,
+        resolutor_de_metadatos: ResolutorDeMetadatos,
         fuente: SourceFetcher,
         reloj: Clock,
         ids: IdGenerator,
@@ -98,6 +101,7 @@ class IngestionPipelineService:
         self._almacen_de_chunks = almacen_de_chunks
         self._embedder = embedder
         self._codificador_sparse = codificador_sparse
+        self._resolutor_de_metadatos = resolutor_de_metadatos
         self._fuente = fuente
         self._reloj = reloj
         self._ids = ids
@@ -184,12 +188,18 @@ class IngestionPipelineService:
         )
         vectores = self._embeber(fragmentos)
         vectores_sparse = self._codificar_sparse(fragmentos)
-        registro = registro_embebido(documento, admision, checksum, self._reloj.ahora())
+        metadatos = self._resolver_metadatos(documento, texto, fragmentos)
+        registro = registro_embebido(documento, admision, checksum, self._reloj.ahora(), metadatos)
         with _etapa("milvus"):
             self._indexar(registro, fragmentos, vectores, vectores_sparse, decision)
         self._confirmar(registro, decision)
         return ResultadoDeIngesta(
-            documento.document_key, Estado.EMBEBIDO, chunks=len(fragmentos), reanudado=reanudado
+            documento.document_key,
+            Estado.EMBEBIDO,
+            chunks=len(fragmentos),
+            reanudado=reanudado,
+            metadatos=metadatos,
+            document_id=registro.document_id,
         )
 
     def _fragmentar(self, texto: str) -> list[str]:
@@ -200,6 +210,14 @@ class IngestionPipelineService:
             with _etapa("texto"):
                 raise TextoVacio()
         return fragmentos
+
+    def _resolver_metadatos(
+        self, documento: DocumentoDeSemilla, texto: str, fragmentos: Sequence[str]
+    ) -> MetadatosResueltos:
+        """Los fallos del LLM y del NLI ya vuelven como ``pendiente``; un defecto del resolutor deja SOLO este documento en
+        ``error`` (etapa ``metadatos``) y el lote sigue."""
+        with _etapa("metadatos"):
+            return self._resolutor_de_metadatos.resolver(documento, texto, fragmentos)
 
     def _embeber(self, fragmentos: Sequence[str]) -> list[list[float]]:
         with _etapa("embeddings"):

@@ -63,8 +63,16 @@ jobs:
       - name: Vitest raíz (scripts, infra y fixtures de la CI)
         run: npx vitest run
       - name: Pytest de rag-orchestrator (con Node, el helper empaqueta el spec con bundle-json.mjs)
-        run: python -m pytest
+        run: python -m pytest --cov=app --cov-report=xml:coverage/coverage.xml
         working-directory: apps/rag-orchestrator
+      - name: Publicar la Cobertura XML de rag-orchestrator (insumo del job quality, US-213 AC-11)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cobertura-rag-orchestrator
+          path: apps/rag-orchestrator/coverage/coverage.xml
+          if-no-files-found: ignore
+          retention-days: 1
       - name: Verificación del proveedor de rag-orchestrator, estricta (contracts:verify-provider, US-214)
         run: npm run contracts:verify-provider -- --proveedor rag-orchestrator
       - name: Tests de secretos (L1D-165)
@@ -197,12 +205,16 @@ jobs:
 
   quality:
     name: quality
+    # La cobertura de rag-orchestrator la produce el Pytest completo de build-test (US-213 AC-11); sin ella no hay medición de Python.
+    needs: build-test
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # origin/main completo: la cobertura de líneas cambiadas compara contra el ancestro común (US-213 AC-11).
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
@@ -222,7 +234,18 @@ jobs:
         run: npm run format:check
       - name: format no modifica lo generado ni los openapi.yaml
         run: node scripts/quality/format-no-toca-generados.mjs
-      - name: Calidad de capas y umbrales (ESLint, dependency-cruiser, Ruff, import-linter; escribe reports/quality/latest.json)
+      - name: Compilar clinical-language (lo importan los tests de web y clinical-api)
+        run: npm run build -w @oncolens/clinical-language
+      - name: Cobertura XML de rag-orchestrator (la publicó build-test)
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cobertura-rag-orchestrator
+          path: apps/rag-orchestrator/coverage
+      - name: Cobertura LCOV de clinical-api (insumo de la cobertura de líneas cambiadas)
+        run: npm run test:coverage -w apps/clinical-api
+      - name: Cobertura LCOV de web (insumo de la cobertura de líneas cambiadas)
+        run: npm run test:coverage -w apps/web
+      - name: Calidad de capas, umbrales, higiene de tests, AC y cobertura de líneas cambiadas (escribe reports/quality/latest.json)
         run: npm run quality:report
       - name: Subir el reporte de calidad
         if: always()
