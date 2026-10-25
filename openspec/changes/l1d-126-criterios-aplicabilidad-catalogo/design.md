@@ -180,8 +180,27 @@ M-08.2/M-08.6, que mide US-132.
 - **Versión de los esquemas** en `comun.schema.json#/$defs/version`.
 - **Puntaje (RN-28):** `peso`, `puntaje`, `ponderacion`, `puntos`, `score`, `weight`, solo en claves propias del
   criterio (no en `equivalences` ni `match`).
-- **`poblacion.json` obligatorio desde 1.1.0.** `clinical-api` no arranca sin él; `rag-orchestrator` no lo lee (lee
-  `aplicabilidad.json`). Asimetría intencional. **Pregunta para el usuario:** confirmarla.
-- **La versión del catálogo NO sube pese al contenido nuevo (D5).** Regla: cualquier cambio posterior a
-  `aplicabilidad.json` (o `poblacion.json`) exige 1.2.0 o superior. **Pregunta para el usuario:** ¿se añade un control
-  en CI que falle si cambia el contenido de una versión ya publicada?
+- **Decidido (usuario, 2026-10-24): `poblacion.json` obligatorio desde 1.1.0.** `clinical-api` no arranca sin él;
+  `rag-orchestrator` no lo lee hasta US-122 (lee `aplicabilidad.json`). Asimetría intencional y confirmada.
+- **Decidido (usuario, 2026-10-24): `rag-orchestrator` mantiene el arranque estricto** con un `aplicabilidad.json`
+  inválido (`configuracion_invalida`, `motivo = catalogo_no_disponible`).
+- **La versión del catálogo NO sube pese al contenido nuevo (D5).** Regla de versionado: cualquier cambio posterior de
+  contenido (`datos-criticos`, `aplicabilidad`, `poblacion`, `atributos`) exige subir `manifest.version` (1.2.0 o
+  superior).
+
+## D8 · Guardián de versión del catálogo (`catalog:version-guard`)
+
+**Decidido (usuario, 2026-10-24), asignado a L1D-126.** `scripts/catalog/version-guard.mjs` (`npm run
+catalog:version-guard -- --base <ref>`): para cada archivo con contenido (por tipo `datos-criticos` y `aplicabilidad`,
+y de raíz `atributos` y `poblacion`, derivados de los registros) compara `hashDeContenido` (el hash canónico de
+`catalog:hash` sobre ítems o claves, sin `version` ni `validation`) del árbol actual con el de la base
+(`git show <base>:./archivo`). Si el hash cambia y `manifest.version` es igual a la de la base, falla con
+`contenido_cambiado_sin_subir_version <tipo>/<archivo>`.
+
+- **Excepción documentada:** contenido de la base vacío (`items: []`) o archivo ausente en la base = primera
+  publicación de ese contenido; es lo que deja pasar a este PR (aplicabilidad vacía en `main`, versión 1.1.0 por D5).
+- **Sin base** (primera vez, rama sin `origin/main`): `base_no_disponible`; con `CI=true` falla cerrado, en local avisa
+  y sale con 0.
+- **CI:** paso del job `build-test` junto a `catalog:validate`, precedido de un fetch superficial del commit base
+  (`--no-tags --depth=1 origin "$BASE_REF"`), sin `fetch-depth: 0` en todo el job.
+- La salida nombra tipo y archivo, nunca la ruta ni valores del catálogo.

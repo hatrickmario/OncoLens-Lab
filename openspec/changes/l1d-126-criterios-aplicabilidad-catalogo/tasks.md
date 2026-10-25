@@ -105,3 +105,15 @@
       están fuera del modelo v1.1; anotarlo en `docs/architecture/data-model.md` (fuera de mis paths). Destino:
       orquestador / L1D-117.
 
+## Decisiones del usuario (2026-10-24) tras el Gate 2
+
+- **Decidido (usuario, 2026-10-24):** se confirma la asimetría de `poblacion.json` (clinical-api lo exige;
+  rag-orchestrator no lo lee hasta US-122) y `rag-orchestrator` mantiene el arranque estricto con `aplicabilidad.json`
+  inválido (design.md).
+- **Decidido (usuario, 2026-10-24):** control de CI contra cambios de contenido sin subir versión, asignado a L1D-126
+  (design.md D8).
+- [x] G2.1 `scripts/catalog/version-guard.mjs` + `npm run catalog:version-guard` + paso en el job `build-test`
+      (`.github/workflows/ci.yml`, con fetch superficial del commit base). Tests de aceptación con repos temporales en
+      `version-guard.test.mjs`: rojo (7 fallos por aserción), verde 10/10; mutación: sin la comparación de versión
+      falla «pasa cuando el contenido cambia y manifest.version es nueva».
+
