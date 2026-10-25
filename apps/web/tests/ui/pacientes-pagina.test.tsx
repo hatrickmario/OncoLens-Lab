@@ -55,7 +55,7 @@ describe('PacientesPage', () => {
     for (const fila of filas) {
       expect(within(fila).getByText('SINTÉTICO')).toBeTruthy();
     }
-    expect(screen.getByText('Prueba Sintética 1')).toBeTruthy();
+    expect(screen.getByText('P. S. 1.')).toBeTruthy();
     expect(screen.getByText('•••• 01')).toBeTruthy();
     expect(screen.getByText('Página 1 de 2')).toBeTruthy();
     expect(screen.getByRole('link', { name: pacientes.paginacion.siguiente })).toBeTruthy();
@@ -72,7 +72,7 @@ describe('PacientesPage', () => {
     for (const columna of screen.getAllByRole('columnheader')) {
       expect(columna.getAttribute('scope')).toBe('col');
     }
-    const enlace = screen.getByRole('link', { name: /Prueba Sintética 1/ });
+    const enlace = screen.getByRole('link', { name: /P\. S\. 1\./ });
     expect(enlace.getAttribute('href')).toBe('/pacientes/8f2b3c4d-9a1e-4b5c-8d6e-7f8091a2b3c4');
   });
 

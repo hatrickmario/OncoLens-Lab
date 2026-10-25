@@ -3,6 +3,8 @@
 // Misma regla de caducidad que ESLint y el reporte: un solo módulo (scripts/quality/umbrales.mjs).
 const { excepcionesVigentes, leerUmbrales } = require('./scripts/quality/umbrales.mjs');
 
+const { PATRON_DE_TEST } = require('./scripts/quality/archivos-de-test.mjs');
+
 const excepciones = excepcionesVigentes(leerUmbrales().excepciones, new Date());
 
 const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -66,6 +68,21 @@ module.exports = {
         path: '^packages/api-contracts/src/',
         pathNot: '^packages/api-contracts/src/(client|client-web|types|zod)/',
       },
+    },
+    {
+      name: 'test-support-solo-en-tests',
+      comment:
+        'packages/test-support (handlers de MSW desde contracts/examples/) es solo para tests: ningún módulo de producción lo importa (US-213 AC-10, design D5).',
+      severity: 'error',
+      from: {
+        path: '^(apps|packages)/',
+        pathNot: [
+          '^packages/test-support/',
+          PATRON_DE_TEST.source,
+          '(^|/)vitest[^/]*\\.config\\.[cm]?[jt]s$',
+        ].concat(exceptuados('test-support-solo-en-tests')),
+      },
+      to: { path: '^packages/test-support/' },
     },
     {
       name: 'web-sin-contrato-rag',

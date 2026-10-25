@@ -68,4 +68,15 @@ describe('contracts:check', () => {
     expect(result.code).not.toBe(0);
     expect(result.stderr).toMatch(/apps\/clinical-api\/openapi\.yaml:.* — redocly:no-unresolved-refs — AC-1 — /);
   }, TIEMPO_MAXIMO_MS);
+
+  it('termina con código distinto de 0 nombrando el ejemplo y el pattern cuando fullNameMasked no es una máscara de iniciales [US-213 AC-12]', async () => {
+    const root = await copyOfRepository();
+    const ejemplo = path.join(root, 'contracts/examples/patient-page-doctor.json');
+    await writeFile(ejemplo, (await readFile(ejemplo, 'utf8')).replace('"P. S. 1."', '"PS1"'));
+    const result = await check(root);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain('patient-page-doctor.json');
+    expect(result.stderr).toContain('fullNameMasked');
+    expect(result.stderr).toContain('pattern');
+  }, TIEMPO_MAXIMO_MS);
 });

@@ -7,6 +7,14 @@
     "componentLinesWarn": 100,
     "componentLinesError": 150
   },
+  "coverage": {
+    "changedLinesWarn": 80,
+    "alertPaths": [
+      "apps/rag-orchestrator/app/domain/**",
+      "apps/clinical-api/src/**/*.service.ts",
+      "apps/web/lib/**"
+    ]
+  },
   "excepciones": [
     {
       "regla": "complexity",

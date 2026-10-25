@@ -63,10 +63,26 @@ function exigirExcepcion(excepcion, indice, hoy) {
   }
 }
 
+/** Cobertura de líneas cambiadas (US-213 AC-11, RN-22): el umbral y las rutas de alerta viven aquí, no en el script. */
+function exigirCobertura(cobertura) {
+  exigirNumero(cobertura, 'changedLinesWarn', 'coverage.changedLinesWarn');
+  const rutas = cobertura.alertPaths;
+  if (
+    !Array.isArray(rutas) ||
+    rutas.length === 0 ||
+    rutas.some((ruta) => typeof ruta !== 'string' || ruta === '')
+  ) {
+    throw new Error(
+      'quality-thresholds.json: la clave "coverage.alertPaths" falta o no es una lista de rutas',
+    );
+  }
+}
+
 /** Valida la estructura y devuelve los umbrales; el error nombra la clave ausente o no numérica. */
 export function validarUmbrales(umbrales, hoy = new Date()) {
   for (const clave of CLAVES_NUMERICAS) exigirNumero(umbrales, clave, clave);
   for (const clave of CLAVES_WEB) exigirNumero(umbrales?.web, clave, `web.${clave}`);
+  exigirCobertura(umbrales.coverage);
   if (umbrales.web.componentLinesWarn > umbrales.web.componentLinesError) {
     throw new Error(
       'quality-thresholds.json: web.componentLinesWarn no puede superar a web.componentLinesError',
