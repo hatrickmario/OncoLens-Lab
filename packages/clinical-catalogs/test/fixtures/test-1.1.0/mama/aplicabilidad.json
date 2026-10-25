@@ -7,12 +7,13 @@
     "status": "propuesta_revisada",
     "reviewerRole": "oncologo_asesor",
     "date": "2026-10-24",
-    "catalogHash": "cd1a097643e885817a2c2bfa16db2929914a96372249b42c446885a0faed72d0"
+    "catalogHash": "f2c824ff98e5885b10f36ce237770020c41f3c9c39fcee7f4fc1e8ba0050941c"
   },
   "items": [
     {
       "key": "estado_menopausico",
       "cancerType": "mama",
+      "studyKey": "estado_menopausico",
       "label": {
         "es": "Estado menopausico",
         "en": "Menopausal status"
@@ -23,7 +24,15 @@
         "match": {
           "attribute_key": "estado_menopausico"
         }
-      }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
     }
   ]
 }

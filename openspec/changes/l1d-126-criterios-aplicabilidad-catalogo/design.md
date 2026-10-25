@@ -44,6 +44,8 @@ todos los niveles):
   ∈ {`solo_subgrupo`, `rango_solapado`} declara cuándo el estado es "Parcial"; `rule.limits` (opcional, `min`/`max`)
   acota el criterio en el catálogo (lo usa la variante del AC-5). Todo declarativo, sin código ejecutable (ADR-29,
   RN-22). El significado operativo de cada operador lo implementa US-122 en `domain/applicability_rules.py`.
+- `estado` del JSON (`propuesta` | `pendiente` | `revisado`) es el estado de revisión del criterio (`estado_de_revision` en
+  `rag-orchestrator`); no es el `review_status` de un dato extraído (RN-07) ni el estado calculado de L1D-127.
 - `studyKey` (obligatorio) = clave de `population_criteria` del estudio con la que se compara el criterio
   (decisión del usuario, 2026-10-24, `[S3 resp. 16]`; cierra Q1 de L1D-127). Admite subclave con punto
   (`biomarcadores.her2`). La consumen L1D-127 (valor del estudio) y L1D-117 (claves que la ingesta escribe).
@@ -164,3 +166,55 @@ M-08.2/M-08.6, que mide US-132.
   `ClinicalAttribute.sitios_metastasicos`. Se revisa en la sesión de oncólogos del S4.
 - **Discrepancia Linear ↔ Markdown:** L1D-126 no tiene relaciones en Linear (Markdown: ⛔ DEC-11, ↪ US-041, US-001).
   Manda el Markdown.
+
+## Decisiones del Gate 2, vuelta 1 (orquestador, 2026-10-24)
+
+- **`destination.match` con lista solo en aplicabilidad.** `comun.schema.json#/$defs/destino` queda escalar (el Zod de
+  completitud de L1D-94 solo admite cadenas); `aplicabilidad.schema.json` define `destinoConLista`. `attribute_key`
+  lista se normaliza con `[clave].flat()` en `exigirAtributoDeclarado` (todas declaradas); en datos críticos la lista
+  la rechaza el esquema.
+- **Allowlist (adición de seguridad, decisión del usuario 2026-10-24 b).** Excluye `id`, `Biomarker.original_name`,
+  `Biomarker.reference_range` y `Exam.source_lab`; ningún destino real ni de fixture las usa.
+- **Contexto por entrada del registro.** Cada entrada de `ARCHIVOS_DEL_CATALOGO` puede declarar `contexto(items)`; el
+  recorrido solo lo mezcla. `ARCHIVOS_DE_RAIZ` (`atributos`, `poblacion`) deriva lectura, compilación y validación.
+- **Versión de los esquemas** en `comun.schema.json#/$defs/version`.
+- **Puntaje (RN-28):** `peso`, `puntaje`, `ponderacion`, `puntos`, `score`, `weight`, solo en claves propias del
+  criterio (no en `equivalences` ni `match`).
+- **Decidido (usuario, 2026-10-24): `poblacion.json` obligatorio desde 1.1.0.** `clinical-api` no arranca sin él;
+  `rag-orchestrator` no lo lee hasta US-122 (lee `aplicabilidad.json`). Asimetría intencional y confirmada.
+- **Decidido (usuario, 2026-10-24): `rag-orchestrator` mantiene el arranque estricto** con un `aplicabilidad.json`
+  inválido (`configuracion_invalida`, `motivo = catalogo_no_disponible`).
+- **La versión del catálogo NO sube pese al contenido nuevo (D5).** Regla de versionado: cualquier cambio posterior de
+  contenido (`datos-criticos`, `aplicabilidad`, `poblacion`, `atributos`) exige subir `manifest.version` (1.2.0 o
+  superior).
+
+## D8 · Guardián de versión del catálogo (`catalog:version-guard`)
+
+**Decidido (usuario, 2026-10-24), asignado a L1D-126; alcance y endurecimiento tras el privacy-guardian (Gate 2).**
+`scripts/catalog/version-guard.mjs` (`npm run catalog:version-guard -- --base <ref>`) compara la huella del ARCHIVO
+ENTERO (sha256 del JSON canónico sin `version` ni `validation`: entra cualquier campo de primer nivel, como
+`verifiedReviewStatuses`) del árbol actual con la de la base (`git show <base>:./archivo`).
+
+- **Registro explícito de archivos vigilados** (no derivado del validador): `manifest`, `atributos`, `poblacion` y,
+  por tipo (unión de los tipos del manifiesto actual y del de la base), `datos-criticos`, `aplicabilidad`, `codigos`,
+  `tendencias`, `plantillas` y `sinonimos`. `lenguaje/terminos-prohibidos` lleva su versión propia (1.5.0) y se compara
+  con ella, no con `manifest.version`.
+- **Cambió y la versión es igual:** `contenido_cambiado_sin_subir_version <tipo>/<archivo>`. **Cambió y la versión no
+  es estrictamente mayor** (semver, ignorando el prefijo `test-…`): `version_no_sube`. Quitar un tipo y su carpeta
+  cuenta como cambio.
+- **Excepción documentada:** archivo ausente en la base, o con todas sus listas de contenido (`items`, `keys`,
+  `entradas`) vacías = primera publicación; es lo que deja pasar a este PR (aplicabilidad vacía en `main`, versión
+  1.1.0 por D5).
+- **Base ilegible:** «la ruta no existe en la base» (`git ls-tree`) se distingue de cualquier otro fallo (error de git,
+  JSON ilegible, lectura mayor de 16 MiB): `base_ilegible <archivo>`; con `CI=true` falla cerrado, en local avisa.
+- **Sin base** (primera vez, rama sin `origin/main`): `base_no_disponible`, con el mismo criterio CI/local.
+- **CI:** paso del job `build-test` junto a `catalog:validate`, precedido de un fetch superficial del commit base
+  (`--no-tags --depth=1 origin "$BASE_REF"`), sin `fetch-depth: 0` en todo el job. Deuda m-4 en tasks.md.
+- La salida nombra tipo y archivo, nunca la ruta ni valores del catálogo.
+- **Primera publicación solo de listas:** la excepción de «base vacía» solo permite cambios en las listas (`items`,
+  `keys`, `entradas`); si difiere cualquier otro campo (p. ej. `estado`) se aplica la regla normal.
+- **Riesgo aceptado: vaciar una lista publicada exige revisión humana explícita.** El guardián no distingue una lista
+  vaciada y rellenada en dos PR (tasks.md G2.4).
+- **Pregunta para el usuario (Gate 2, privacy-guardian P5):** `validation.status` queda fuera de la huella. ¿Cambiar el
+  estado de revisión de DEC-11 (`propuesta_revisada` → revisado) exige subir la versión del catálogo? Hoy no la exige.
+

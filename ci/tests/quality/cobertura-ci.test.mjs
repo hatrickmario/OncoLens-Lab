@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { medirCoberturaDelPr } from '../../../scripts/quality/cobertura.mjs';
+import { archivosDelPr, medirCoberturaDelPr } from '../../../scripts/quality/cobertura.mjs';
 
 // L1D-285, Gate 2 #10: «sin informes» (null) no se confunde con «Git roto» (lanza), y en la CI los informes son obligatorios.
 const TIEMPO_MAXIMO_MS = 60_000;
@@ -58,5 +58,20 @@ describe('medirCoberturaDelPr', () => {
     const raiz = repositorio({ conLcov: true });
 
     expect(medirCoberturaDelPr(raiz, { env: {}, baseGit: 'HEAD' })).toEqual([]);
+  }, TIEMPO_MAXIMO_MS);
+});
+
+describe('archivosDelPr', () => {
+  it('devuelve null cuando la rama base no existe en el clon, para medir todo [US-213 AC-9]', () => {
+    expect(archivosDelPr(repositorio({ conLcov: false }), { env: {}, baseGit: 'origin/no-existe' })).toBeNull();
+  }, TIEMPO_MAXIMO_MS);
+
+  it('devuelve los archivos que cambia la rama respecto de la base [US-213 AC-9]', () => {
+    const raiz = repositorio({ conLcov: false });
+    writeFileSync(path.join(raiz, 'b.txt'), 'b\n');
+    git(raiz, 'add', 'b.txt');
+    git(raiz, 'commit', '--quiet', '-m', 'cambio');
+
+    expect(archivosDelPr(raiz, { env: {}, baseGit: 'HEAD~1' })).toEqual(['b.txt']);
   }, TIEMPO_MAXIMO_MS);
 });

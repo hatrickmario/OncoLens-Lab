@@ -36,8 +36,12 @@ export const ENTIDADES_CLINICAS = [
  * Columnas que nunca son destino de un dato crítico (decisión conservadora de privacidad, `[S3 resp. 16]`): claves
  * foráneas (`*_id`), trazas de origen y de revisión, y texto libre que puede contener identidad. Lista cerrada.
  */
-const COLUMNAS_DE_CONTROL = ['source_span', 'reviewed_by', 'recorded_by'];
-const COLUMNAS_DE_TEXTO_LIBRE = { ClinicalEvent: ['description'] };
+const COLUMNAS_DE_CONTROL = ['id', 'source_span', 'reviewed_by', 'recorded_by'];
+const COLUMNAS_DE_TEXTO_LIBRE = {
+  ClinicalEvent: ['description'],
+  Biomarker: ['original_name', 'reference_range'],
+  Exam: ['source_lab'],
+};
 const esClaveForanea = (columna) => columna.endsWith('_id');
 
 function esDestinoPermitido(entidad, columna) {

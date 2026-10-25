@@ -7,12 +7,12 @@ import { catalogHashDe } from './canonico.mjs';
 
 const esObjeto = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 
-/** Vocabulario cerrado que declara el esquema de datos críticos: una sola fuente para esquema y reglas. */
-export function vocabularioDe(esquemaDeDatosCriticos) {
-  const item = esquemaDeDatosCriticos.$defs.item.properties;
-  const condicion = esquemaDeDatosCriticos.$defs.condicion.properties;
+/** Vocabulario cerrado que declaran los esquemas (`comun`, `datos-criticos`): una sola fuente para esquema y reglas. */
+export function vocabularioDe(esquemas) {
+  const item = esquemas['datos-criticos'].$defs.item.properties;
+  const condicion = esquemas['datos-criticos'].$defs.condicion.properties;
   return {
-    estados: item.estado.enum,
+    estados: esquemas.comun.$defs.estado.enum,
     operadores: condicion.operator.enum,
     respuestasSiDesconocida: item.whenConditionUnknown.enum,
   };
@@ -54,15 +54,18 @@ export function exigirDestinoExistente(item, allowlist) {
 /** RN-29: un destino en `ClinicalAttribute` usa una `attribute_key` declarada en `atributos.json` para el tipo. */
 export function exigirAtributoDeclarado(item, tipo, atributos) {
   if (!esObjeto(item.destination) || item.destination.entity !== 'ClinicalAttribute') return null;
-  const clave = item.destination.match?.attribute_key;
-  const declarado = atributos.keys.some(
-    (atributo) =>
-      esObjeto(atributo) &&
-      atributo.key === clave &&
-      Array.isArray(atributo.cancerTypes) &&
-      atributo.cancerTypes.includes(tipo),
-  );
-  return declarado ? null : 'atributo_no_declarado';
+  // En aplicabilidad `attribute_key` puede ser una lista: todas deben estar declaradas. En datos críticos el
+  // esquema solo admite una cadena y rechaza la lista después.
+  const claves = [item.destination.match?.attribute_key].flat();
+  const declarada = (clave) =>
+    atributos.keys.some(
+      (atributo) =>
+        esObjeto(atributo) &&
+        atributo.key === clave &&
+        Array.isArray(atributo.cancerTypes) &&
+        atributo.cancerTypes.includes(tipo),
+    );
+  return claves.every(declarada) ? null : 'atributo_no_declarado';
 }
 
 /** AC-04.4: la condición es declarativa, apunta a un ítem del mismo tipo y declara qué pasa si su valor se desconoce. */
@@ -78,13 +81,13 @@ export function exigirCondicionBienFormada(item, clavesDelTipo, vocabulario) {
     : 'condicion_invalida';
 }
 
-/** Claves que aparecen más de una vez entre los ítems de un archivo de un tipo de cáncer. */
-export function clavesRepetidasEn(items) {
+/** Valores de `campo` (por defecto `key`) que aparecen más de una vez entre los ítems de un archivo de un tipo de cáncer. */
+export function clavesRepetidasEn(items, campo = 'key') {
   const vistas = new Set();
   const repetidas = new Set();
   for (const item of items) {
-    if (vistas.has(item.key)) repetidas.add(item.key);
-    vistas.add(item.key);
+    if (vistas.has(item[campo])) repetidas.add(item[campo]);
+    vistas.add(item[campo]);
   }
   return repetidas;
 }
@@ -97,6 +100,51 @@ export function exigirClaveUnica(item, clavesRepetidas) {
 /** AC-04.4, P-03: `estado` dentro del vocabulario cerrado. */
 export function exigirEstadoValido(item, vocabulario) {
   return vocabulario.estados.includes(item.estado) ? null : 'estado_invalido';
+}
+
+/** Campos que un criterio de aplicabilidad no puede declarar (RN-28: la aplicabilidad no lleva puntaje ni ponderación). */
+const CAMPOS_DE_PUNTAJE = ['peso', 'puntaje', 'ponderacion', 'puntos', 'score', 'weight'];
+
+/** Subárboles cuyas claves son datos del catálogo, no campos del criterio: valores canónicos y columnas del modelo. */
+const SUBARBOLES_DE_DATOS = ['equivalences', 'match'];
+
+/** Primer campo de puntaje (en minúsculas) entre las claves propias del criterio, a cualquier profundidad, o `undefined`. */
+function campoDePuntajeEn(valor) {
+  if (Array.isArray(valor)) return valor.map(campoDePuntajeEn).find(Boolean);
+  if (!esObjeto(valor)) return undefined;
+  const propio = Object.keys(valor)
+    .map((clave) => clave.toLowerCase())
+    .find((clave) => CAMPOS_DE_PUNTAJE.includes(clave));
+  return (
+    propio ??
+    Object.entries(valor)
+      .filter(([clave]) => !SUBARBOLES_DE_DATOS.includes(clave))
+      .map(([, interior]) => campoDePuntajeEn(interior))
+      .find(Boolean)
+  );
+}
+
+/** RN-28: ningún campo de puntaje o ponderación en un criterio. Nombra el campo canónico, nunca la clave tal como venga. */
+export function rechazarCamposDePuntaje(criterio) {
+  const campo = campoDePuntajeEn(criterio);
+  return campo === undefined ? null : { codigo: 'campo_de_puntaje', campo };
+}
+
+/** Claves de población declaradas para un tipo de cáncer en `poblacion.json`. */
+const clavesDePoblacionDe = (poblacion, tipo) =>
+  poblacion.keys
+    .filter(
+      (clave) =>
+        esObjeto(clave) && Array.isArray(clave.cancerTypes) && clave.cancerTypes.includes(tipo),
+    )
+    .map((clave) => clave.key);
+
+/** FR-25: `studyKey` presente, declarada en `poblacion.json` para el tipo de cáncer y única entre los criterios del archivo. */
+export function exigirStudyKey(item, tipo, poblacion, studyKeysRepetidas) {
+  const { studyKey } = item;
+  if (typeof studyKey !== 'string' || studyKey === '') return 'study_key_ausente';
+  if (!clavesDePoblacionDe(poblacion, tipo).includes(studyKey)) return 'study_key_inexistente';
+  return studyKeysRepetidas.has(studyKey) ? 'study_key_duplicada' : null;
 }
 
 /** AC-04.4: el hash del contenido cubierto por `validation.scope` coincide con `validation.catalogHash`. */

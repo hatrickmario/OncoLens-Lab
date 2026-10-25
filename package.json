@@ -21,6 +21,7 @@
     "contracts:readme-extract": "node scripts/contracts/readme-extract.mjs",
     "catalog:validate": "node scripts/catalog/validate.mjs",
     "catalog:hash": "node scripts/catalog/hash.mjs",
+    "catalog:version-guard": "node scripts/catalog/version-guard.mjs",
     "catalog:allowlist": "node scripts/catalog/generar-allowlist.mjs",
     "catalog:allowlist:check": "node scripts/catalog/generar-allowlist.mjs --check",
     "eval:pii": "npm run eval:pii -w @oncolens/clinical-api --",

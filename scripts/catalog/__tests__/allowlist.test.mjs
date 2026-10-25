@@ -52,6 +52,18 @@ describe('allowlist del modelo generada desde Prisma', () => {
     expect(todas).not.toContain('Exam.patient_id');
   });
 
+  it('excluye id, Biomarker.original_name, Biomarker.reference_range y Exam.source_lab (decisión del usuario, 2026-10-24) [US-001 AC-4]', async () => {
+    const { entidades } = await generarAllowlist(modelo);
+    const todas = Object.entries(entidades).flatMap(([entidad, { campos }]) =>
+      campos.map((campo) => `${entidad}.${campo}`),
+    );
+
+    expect(todas.filter((campo) => campo.endsWith('.id'))).toEqual([]);
+    expect(entidades['Biomarker'].campos).not.toContain('original_name');
+    expect(entidades['Biomarker'].campos).not.toContain('reference_range');
+    expect(entidades['Exam'].campos).not.toContain('source_lab');
+  });
+
   it('conserva los campos que usa el contenido del S3 como destino [US-001 AC-7]', async () => {
     const { entidades } = await generarAllowlist(modelo);
 
