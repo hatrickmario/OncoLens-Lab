@@ -9,7 +9,7 @@ const RAIZ_FIXTURE = path.join(import.meta.dirname, 'fixtures/cableado');
 const UMBRALES = leerUmbrales();
 const TIEMPO_MAXIMO_MS = 60_000;
 const MEDIDAS = [
-  { archivo: 'apps/clinical-api/src/modules/x/x.service.ts', lineasCambiadas: 10, lineasCubiertas: 5, porcentaje: 50 },
+  { archivo: 'apps/web/lib/x.ts', lineasCambiadas: 10, lineasCubiertas: 5, porcentaje: 50 },
 ];
 
 const hallazgos = () => hallazgosPropios(RAIZ_FIXTURE, UMBRALES, MEDIDAS);
