@@ -167,6 +167,7 @@ def _generador(directorio: Path, montaje: Montaje) -> GeneradorDeMuestraDeMetada
         pct=10,
         semilla=SEMILLA_DE_TEST,
         escritor=EscritorDeMuestraYaml(directorio),
+        catalogo=montaje.catalogo,
         reloj=RelojFijo(),
         prompt_version="metadatos_v1",
         llm_model="llm-de-test",
@@ -183,7 +184,7 @@ def test_muestra_lote_20_al_10_por_ciento_elige_2_reproducibles(
     lote = lote_sintetico(20)
     reporte = montaje.servicio.ingerir(lote)
 
-    resultado = _generador(tmp_path, montaje).generar(reporte, lote)
+    resultado = _generador(tmp_path, montaje).generar(reporte)
 
     assert resultado.tamano == 2 and resultado.archivo == tmp_path / f"{reporte.release_id}.yaml"
     muestra = yaml.safe_load(resultado.archivo.read_text(encoding="utf-8"))
@@ -207,7 +208,7 @@ def test_muestra_sin_documentos_extraidos_no_escribe_archivo(
     )
     reporte = montaje.servicio.ingerir(estructurados)
 
-    resultado = _generador(tmp_path, montaje).generar(reporte, estructurados)
+    resultado = _generador(tmp_path, montaje).generar(reporte)
 
     assert (resultado.tamano, resultado.archivo) == (0, None)
     assert list(tmp_path.iterdir()) == []
@@ -265,3 +266,47 @@ def test_ingesta_un_defecto_en_el_paso_de_metadatos_deja_ese_documento_en_error_
     assert [s for s, _ in montaje.filas_de("i-lit-1")] == ["error"]
     assert reporte.resultado_de("i-lit-2").estado.value == "embebido"
     assert reporte.resultado_de("i-gl-1").estado.value == "embebido"
+
+
+@pytest.mark.ac("US-118", 5)
+def test_muestra_incluye_documentos_omitidos_de_corridas_previas_y_es_reproducible(
+    montaje: Montaje, tmp_path: Path
+) -> None:
+    """[US-118 AC-5] Decidido (usuario, 2026-10-24): la fuente de la muestra es la release, no la corrida."""
+    montaje.llm_metadatos.por_defecto = {"trial_phase": "II"}
+    lote = lote_sintetico(5)
+    montaje.servicio.ingerir(lote[:3])
+    reporte = montaje.servicio.ingerir(lote)  # omite 3 de 5 ya embebidos
+    assert sum(r.estado.value == "omitido" for r in reporte.resultados) == 3
+
+    primera = _generador(tmp_path / "a", montaje).generar(reporte)
+    segunda = _generador(tmp_path / "b", montaje).generar(reporte)
+
+    ids = [
+        d["document_id"] for d in yaml.safe_load(primera.archivo.read_text("utf-8"))["documentos"]
+    ]
+    assert primera.tamano == 1 and len(ids) == 1  # ceil(5 * 10 / 100)
+    assert ids == [
+        d["document_id"] for d in yaml.safe_load(segunda.archivo.read_text("utf-8"))["documentos"]
+    ]
+
+
+@pytest.mark.ac("US-118", 5)
+def test_muestra_al_100_por_ciento_contiene_los_cinco_documentos_de_la_release(
+    montaje: Montaje, tmp_path: Path
+) -> None:
+    montaje.llm_metadatos.por_defecto = {"trial_phase": "II"}
+    lote = lote_sintetico(5)
+    montaje.servicio.ingerir(lote[:3])
+    reporte = montaje.servicio.ingerir(lote)
+    generador = _generador(tmp_path, montaje)
+    generador._pct = 100
+
+    resultado = generador.generar(reporte)
+
+    omitidos = {r.document_key for r in reporte.resultados if r.estado.value == "omitido"}
+    muestreados = {
+        d["document_id"].split("@")[0]
+        for d in yaml.safe_load(resultado.archivo.read_text("utf-8"))["documentos"]
+    }
+    assert resultado.tamano == 5 and omitidos <= muestreados

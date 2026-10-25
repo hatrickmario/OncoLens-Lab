@@ -174,38 +174,49 @@ class _EscritorQueFalla:
 
 
 def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_la_ingesta() -> None:
-    from app.application.corpus_ingestion.reporte import (
-        Estado,
-        ReporteDeIngesta,
-        ResultadoDeIngesta,
-    )
+    from datetime import date
+
+    from app.application.corpus_ingestion.reporte import ReporteDeIngesta
     from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
-    from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+    from app.application.seed_corpus.ports import RegistroDeRelease
+    from app.application.seed_corpus.registros import registro_embebido
+    from app.domain.corpus_metadata.resultado import MetadatosResueltos
+    from app.domain.corpus_seed.admisibilidad import Admision
+    from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
+    from tests.support.almacenes_falsos import CatalogoEnMemoria
     from tests.support.fakes import RelojFijo
     from tests.support.metadatos import lote_sintetico
 
     metadatos = MetadatosResueltos(
-        "otro", None, None, None, {}, "extraido_verificado", (CampoDeMetadato("trial_phase", "II"),)
+        "otro", "II", None, None, resolver_criterios_poblacion(None), "extraido_verificado"
     )
-    reporte = ReporteDeIngesta(
-        (
-            ResultadoDeIngesta(
-                "lote-01", Estado.EMBEBIDO, metadatos=metadatos, document_id="lote-01@x"
-            ),
-        ),
-        "release-1",
+    fila = registro_embebido(
+        lote_sintetico(1)[0],
+        Admision(None, "dominio_publico"),
+        "ab" * 32,
+        RelojFijo().ahora(),
+        metadatos,
     )
+    catalogo = CatalogoEnMemoria()
+    catalogo.guardar_documento(fila)
+    catalogo.publicar_release(
+        RegistroDeRelease(
+            "release-1", date(2026, 10, 16), (), RelojFijo().ahora(), (fila.document_id,)
+        )
+    )
+    reporte = ReporteDeIngesta((), "release-1")
     generador = GeneradorDeMuestraDeMetadatos(
         pct=100,
         semilla="s",
         escritor=_EscritorQueFalla(),
+        catalogo=catalogo,
         reloj=RelojFijo(),
         prompt_version="p",
         llm_model="l",
         nli_model="n",
     )
 
-    resumen = ingest.escribir_muestra(generador, reporte, lote_sintetico(1))
+    resumen = ingest.escribir_muestra(generador, reporte)
 
     assert resumen == {"tamano": 0, "fallo": "OSError"}
     assert "secreta" not in str(resumen)
