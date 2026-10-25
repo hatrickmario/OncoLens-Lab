@@ -24,16 +24,25 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
 - **D1 · Higiene en Node con el plugin oficial, no con regex.** `@vitest/eslint-plugin` (`no-focused-tests`,
   `no-disabled-tests` —incluye `it.todo`—, `valid-title`) en el bloque de tests de `eslint.config.js`, nivel `error`, fuera
   del mecanismo de `excepciones` de `quality-thresholds.json`. Descartado: reutilizar la regex del *hook* (no entiende AST;
-  falsos positivos en strings).
+  falsos positivos en strings). **Corrección de diseño (implementación, aprobada por sprint-S3, 2026-10-24):** el plugin
+  (1.6.27) no ve `it.todo` ni `fit`; los cubre la regla propia `oncolens/tests-sin-pendientes-ni-foco-jest`
+  (`scripts/quality/eslint-rules/tests-sin-pendientes-ni-foco-jest.mjs`), con fixtures y tests.
 - **D2 · Higiene en Python con Ruff `PT` + script propio.** Ruff `PT` cubre estilo, no prohíbe `skip`/`xfail`;
   `scripts/quality/check-pytest-hygiene.py` recorre el AST de `tests/**/*.py` (marcadores `skip`, `skipif`, `xfail` y
   llamadas `pytest.skip`/`pytest.xfail`) y emite hallazgos `tests-sin-desactivar` con el formato del reporte. Se invoca desde
-  `scripts/quality/quality.mjs`. El `pre-commit-gate.sh` se mantiene como primera línea; la CI es la garantía.
+  `scripts/quality/quality.mjs` (`higiene-pytest.mjs`). El `pre-commit-gate.sh` se mantiene como primera línea; la CI es la garantía.
+  **Adición de implementación (aprobada por sprint-S3, 2026-10-24):** Ruff queda con `select = E4,E7,E9,F,PT` en
+  `apps/rag-orchestrator/pyproject.toml` y `per-file-ignores` de `tests/**` = PT001, PT006, PT011, PT018 (solo allí; `quality` ejecuta `ruff check --select PT` como error vía `ruff-pt.mjs`): son solo de estilo y los tests vigentes
+  acumulan **298 hallazgos** en ellas (PT018 268, PT011 22, PT001 5, PT006 3). Deuda: **historia nueva de deuda de estilo de pytest por crear** (no US-232, que es funciones de `clinical-api` > umbrales); las
+  reglas PT restantes (p. ej. PT003) siguen activas y un test lo demuestra. Los fixtures de la higiene de Pytest se escriben en
+  un directorio temporal al ejecutar el test, porque `pre-commit-gate.sh` prohíbe commitear `skip`/`xfail` bajo `tests/`.
 - **D3 · `check-ac-coverage` como alerta.** Lee `openspec/changes/*/proposal.md` (no `archive/`), extrae `US-xxx` del bloque
   Trazabilidad, toma los AC de la sección `## US-xxx` de `backlog/features/FEAT-*.md` (respetando partes `a`/`b`: para
   US-213b solo AC-8…AC-13 si el proposal lo declara con rango) y busca tags `[US-xxx AC-n]` en tests de Vitest/Playwright y
   `@pytest.mark.ac("US-xxx", n)` en Pytest. Severidad `warn`: el job no falla; el Gate 2 lo trata como Mayor.
-- **D4 · `mock-solo-en-bordes` con `no-restricted-syntax`.** Selector sobre `CallExpression[callee.object.name='vi'][callee.property.name='mock']`
+- **D4 · `mock-solo-en-bordes` con `no-restricted-syntax`.** **Corrección de diseño (aprobada por sprint-S3, 2026-10-24):** regla propia `oncolens/mock-solo-en-bordes`
+  (`scripts/quality/eslint-rules/mock-solo-en-bordes.mjs`) en lugar de `no-restricted-syntax`, que otros bloques ya usan y se
+  pisarían; mismo criterio y el mensaje nombra el módulo. Criterio original: selector sobre `CallExpression[callee.object.name='vi'][callee.property.name='mock']`
   cuyo primer argumento literal empieza por `./`, `../`, `@/`, `@oncolens/` o es `@prisma/client`. Si el código vigente lo
   viola en más de dos operaciones de corrección, excepción con caducidad y deuda, como D5 de `l1d-263`.
 - **D5 · Arnés de handlers desde los ejemplos.** `packages/test-support/msw/` (workspace npm, solo `devDependency`) exporta
@@ -42,10 +51,17 @@ PostgreSQL de test (US-038), migración masiva de tests existentes, reintentos d
   `apps/rag-orchestrator/tests/support/http.py` sobre `respx`. No se generan handlers del spec en este change: se construyen
   del ejemplo (fuente de los mocks según `CLAUDE.md`).
 - **D6 · Cobertura de líneas cambiadas.** `vitest --coverage` (`@vitest/coverage-v8`, LCOV) en `web` y `clinical-api`,
-  `pytest-cov` (Cobertura XML) en `rag-orchestrator`, y `diff-cover --compare-branch origin/main --json-report`; un
+  `pytest-cov` (Cobertura XML) en `rag-orchestrator`, y `diff-cover --compare-branch origin/main --json-report` **(corrección de diseño, aprobada por sprint-S3, 2026-10-24: las
+  líneas cambiadas se calculan en Node con `git diff -U0` y LCOV, sin `diff-cover` ni paquete pip nuevo, porque
+  `requirements-dev.txt` es de ai-services; `scripts/quality/cobertura.mjs`)**; un
   normalizador en `scripts/quality/` lo vuelca a `latest.json` (`tool: diff-cover`, `measured`, `threshold`). Clave nueva
   `coverage.changedLinesWarn` (propuesta 80) en `quality-thresholds.json`, validada por `umbrales.mjs`. Rutas de alerta como
   lista en la misma clave `coverage.alertPaths` (no literales en el script).
+  **Adición fuera de lo previsto (aprobada por sprint-S3, 2026-10-24):** `pytest-cov==7.1.0` (MIT, publicada el 2026-03-21;
+  `coverage` 7.17 Apache-2.0 como transitiva) en `apps/rag-orchestrator/requirements-dev.txt`, sin `diff-cover`. El Pytest completo
+  de `build-test` escribe `coverage/coverage.xml`, lo publica como artefacto y `quality` (ahora con `needs: build-test`) lo
+  descarga; `cobertura.mjs` lo lee como un informe más (`<source>` + `filename` relativo). `[tool.coverage.run] data_file` apunta a
+  `coverage/` (ignorado por git).
 - **D7 · Q-1: exención mínima, solo para la máscara sintética.** En `assertExamplesSynthetic.mjs`, `esMascaraDeNombre(key, value)`:
   solo la clave `fullNameMasked` y solo si el valor cumple `^P\. S\.( \d\.)?$`, es decir, la máscara que `enmascararNombre()`
   produce para «Prueba Sintética [n]» (`"P. S."`, `"P. S. 1."`) **(decidido, usuario, 2026-10-24, `[S3 resp. 16]`)**; cualquier
@@ -129,3 +145,27 @@ tipos se regeneran con `contracts:generate`; nunca a mano.
 
 - **P-1 · cerrada (usuario, 2026-10-24, `[S3 resp. 16]`):** añadir el `pattern` es *patch* (`info.version` `1.9.0` → `1.9.1`).
 - **P-2 (dueño: Ingeniería · afecta: AC-11):** `coverage.changedLinesWarn = 80` es propuesta a calibrar en la retro del S3.
+
+## Notas de la implementación y preguntas para el usuario (Gate 2, vuelta 1; sin cambiar comportamiento)
+
+- **D6 · antigüedad de dependencias:** `@vitest/coverage-v8` 5.0.5 va en *lockstep* con `vitest` 5.0.5; excepción de antigüedad
+  (publicada 2026-10-15, menos de dos semanas).
+- **Dependencias de producción por un peer opcional (privacy, Menor 3):** `@vitest/coverage-v8` trae `magicast`, y
+  `@babel/parser` y `@babel/types` quedan sin la marca `dev` en `package-lock.json` porque `c12` (de `prisma`, dependencia de
+  producción de `clinical-api`) los declara como peer opcional y npm los resuelve. `npm ls --omit=dev -w apps/clinical-api
+  magicast` lo muestra bajo `c12`. Se acepta: no se importan en tiempo de ejecución; revisar al actualizar `prisma`.
+- **Contrato · Zod generado sin la bandera `u`:** el `pattern` `^\S\.( \S\.)*$` de `fullNameMasked` se valida en Ajv2020 (con
+  `unicodeRegExp`) pero el Zod generado compila `new RegExp(pattern)` sin `u`: un carácter fuera del plano básico (par
+  sustituto) se evalúa como dos unidades en Zod y no cumpliría el `pattern`. Hoy `web` no valida esa respuesta con Zod; si lo
+  hiciera, habría que generar la bandera o limitar el `pattern`.
+- **Contrato · `enmascararNombre`:** conserva la inicial original si su mayúscula ocupa más de un carácter (`ß` → `SS`); con
+  nombre vacío devuelve `''` (latente: `exigirIdentidad` solo rechaza `undefined`). **Deuda para la historia de altas (S6):**
+  `minLength` y `pattern` de `fullName` en el contrato.
+- **Pregunta (usuario) · `handlerDesdeEjemplo`:** `sobrescribir` no valida el tipo ni el *enum* del valor (p. ej., acepta
+  `status: 42`) ni limita `status` a los valores del contrato. ¿Se valida contra el schema del ejemplo? No se implementa sin respuesta.
+- **Pregunta (usuario) · cobertura de `*.service.ts`:** hoy solo cuenta el unitario de `clinical-api` (la integración, que es el
+  nivel principal, está excluida del LCOV). ¿Se mide también la integración o se quita `*.service.ts` de `coverage.alertPaths`?
+- **Pregunta (usuario) · ruido de `check-ac-coverage`:** emite alertas de **todos** los changes activos (90 en el S3). ¿Se
+  filtra a los changes que toca el diff del PR?
+- **Pregunta (usuario) · plazo del job `quality`:** `timeout-minutes: 15` con `needs: build-test` y la cobertura añadida; ¿se
+  amplía o se separa la cobertura en otro job?

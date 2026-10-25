@@ -40,6 +40,20 @@ describe('listado de pacientes', () => {
     }
   });
 
+  it('devuelve fullNameMasked con las iniciales del pattern del spec en cada elemento [US-213 AC-12]', async () => {
+    const { app } = montarPacientes(escenario.mundo);
+
+    const respuesta = await clienteVerificado(app)
+      .get('/platform/patients?page=1')
+      .set('Cookie', escenario.cookieDoctor);
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body.items.length).toBeGreaterThan(0);
+    for (const elemento of respuesta.body.items) {
+      expect(elemento.fullNameMasked).toMatch(/^\S\.( \S\.)*$/u);
+    }
+  });
+
   it('filtra a vacío con dataOrigin=real_identificado y a cinco con status=activo [US-048 AC-4]', async () => {
     const { app } = montarPacientes(escenario.mundo, { pageSize: 10 });
 

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -17,9 +17,18 @@ const SECRETOS_PERMITIDOS = ['pg_test_admin_password', 'pg_rag_corpus_password',
 const DOCKER_FALSO = `#!/usr/bin/env bash
 echo "$*" >> "$STUB_LOG"
 echo "$COMPOSE_PROJECT_NAME" >> "$STUB_LOG.proyecto"
+# Un docker que no responde (un registro colgado): el plazo del test debe cortar la ejecución.
+[ "$STUB_MODO" = cuelga ] && exec /bin/sleep 3
 sub=""
-for a in "$@"; do case "$a" in config|up|ps|run|build|down) sub="$a"; break ;; esac; done
+for a in "$@"; do case "$a" in config|pull|up|ps|run|build|down) sub="$a"; break ;; esac; done
 case "$sub" in
+  pull)
+    # El 503 del registro de imágenes (PR #189, quay.io): una vez o siempre, solo para milvus-etcd.
+    if [[ "$*" == *milvus-etcd* ]]; then
+      [ "$STUB_MODO" = pull_503_siempre ] && { echo "503 Service Unavailable" >&2; exit 1; }
+      if [ "$STUB_MODO" = pull_503_una_vez ] && [ ! -e "$STUB_LOG.pull503" ]; then touch "$STUB_LOG.pull503"; echo "503 Service Unavailable" >&2; exit 1; fi
+    fi
+    exit 0 ;;
   config) echo '{"services":{"rag-pruebas":{"depends_on":{"milvus-standalone":{},"postgres":{}}}}}' ;;
   up) [ "$STUB_MODO" = milvus_no_sano ] && { echo "container milvus-standalone is unhealthy" >&2; exit 1; }; exit 0 ;;
   ps) if [ "$STUB_MODO" = milvus_no_sano ] && [[ "$*" == *milvus-standalone* ]]; then echo "milvus-standalone unhealthy running"; else echo "x healthy running"; fi ;;
@@ -47,6 +56,7 @@ esac
 `;
 
 let temporal;
+const enlaces = [];
 
 beforeAll(() => {
   temporal = mkdtempSync(path.join(os.tmpdir(), 'integracion-rag-test-'));
@@ -55,22 +65,36 @@ beforeAll(() => {
   // `mktemp` falso: con STUB_MKTEMP_VACIO termina bien pero sin crear nada (el script debe fallar, no seguir con una ruta vacía).
   writeFileSync(path.join(temporal, 'mktemp'), '#!/usr/bin/env bash\n[ -n "$STUB_MKTEMP_VACIO" ] && exit 0\nexec /usr/bin/mktemp "$@"\n');
   chmodSync(path.join(temporal, 'mktemp'), 0o755);
+  // `sleep` falso: registra la espera pedida en vez de dormir (la espera creciente de la descarga, AC-13).
+  writeFileSync(path.join(temporal, 'sleep'), '#!/usr/bin/env bash\necho "$1" >> "$STUB_LOG.sleep"\n');
+  chmodSync(path.join(temporal, 'sleep'), 0o755);
   // `npm` falso: el script de clinical-api termina con scripts/test-integration.sh, que correría la suite real.
   writeFileSync(path.join(temporal, 'npm'), '#!/usr/bin/env bash\nexit 0\n');
   chmodSync(path.join(temporal, 'npm'), 0o755);
 });
-afterAll(() => rmSync(temporal, { recursive: true, force: true }));
+// Los enlaces a node_modules se quitan ANTES (sin `recursive`, así rmSync borra el enlace y no su destino) del borrado recursivo.
+afterAll(() => {
+  for (const enlace of enlaces) rmSync(enlace, { force: true });
+  rmSync(temporal, { recursive: true, force: true });
+});
 
 const leerLineas = (archivo) => (existsSync(archivo) ? readFileSync(archivo, 'utf8').split('\n').filter(Boolean) : []);
 
-function correr(modo, entorno = {}, script = SCRIPT) {
+// Plazo por defecto de una ejecución del script con docker falso: `spawnSync` es síncrono y el timeout del describe no lo interrumpe.
+const PLAZO_DEL_SCRIPT_MS = 25_000;
+
+function correr(modo, entorno = {}, script = SCRIPT, { plazoMs = PLAZO_DEL_SCRIPT_MS } = {}) {
   const registro = path.join(temporal, `registro-${modo}-${Object.keys(entorno).join('')}.log`);
   rmSync(registro, { force: true });
   rmSync(`${registro}.proyecto`, { force: true });
   rmSync(`${registro}.copiado`, { force: true });
+  rmSync(`${registro}.pull503`, { force: true });
+  rmSync(`${registro}.sleep`, { force: true });
   const resultado = spawnSync('bash', [script], {
     cwd: RAIZ,
     encoding: 'utf8',
+    timeout: plazoMs,
+    killSignal: 'SIGKILL',
     env: {
       ...process.env,
       PATH: `${temporal}:${process.env.PATH}`,
@@ -79,11 +103,37 @@ function correr(modo, entorno = {}, script = SCRIPT) {
       ...entorno,
     },
   });
+  if (resultado.error?.code === 'ETIMEDOUT') throw new Error(`el script no terminó en ${plazoMs} ms (modo ${modo})`);
   const proyectos = leerLineas(`${registro}.proyecto`);
   const copiado = leerLineas(`${registro}.copiado`);
   const llamadas = existsSync(registro) ? readFileSync(registro, 'utf8').split('\n').filter(Boolean) : [];
-  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado };
+  const esperas = leerLineas(`${registro}.sleep`);
+  return { codigo: resultado.status, salida: `${resultado.stdout}${resultado.stderr}`, llamadas, proyectos, copiado, esperas };
 }
+/**
+ * Repositorio git temporal con una copia del script (`raiz` se calcula desde la ubicación del script), un archivo versionado
+ * y otro sin versionar en una de las rutas que leen los tests. `setup-secrets.sh` es un doble: no es lo que se prueba.
+ */
+function repositorioTemporalConArchivoSinVersionar(rutaSinVersionar) {
+  const repositorio = mkdtempSync(path.join(temporal, 'repositorio-'));
+  const escribir = (ruta, contenido) => {
+    mkdirSync(path.dirname(path.join(repositorio, ruta)), { recursive: true });
+    writeFileSync(path.join(repositorio, ruta), contenido);
+  };
+  escribir('scripts/ci/integracion-rag-orchestrator.sh', readFileSync(SCRIPT));
+  escribir('scripts/ci/verificar-acs-rag.mjs', readFileSync(path.join(RAIZ, 'scripts/ci/verificar-acs-rag.mjs')));
+  escribir('scripts/setup-secrets.sh', '#!/usr/bin/env bash\nexit 0\n');
+  chmodSync(path.join(repositorio, 'scripts/setup-secrets.sh'), 0o755);
+  escribir('apps/rag-orchestrator/tests/versionado.txt', 'dato versionado');
+  escribir(rutaSinVersionar, 'dato local no versionado');
+  symlinkSync(path.join(RAIZ, 'node_modules'), path.join(repositorio, 'node_modules'));
+  enlaces.push(path.join(repositorio, 'node_modules'));
+  const git = (...parametros) => spawnSync('git', ['-C', repositorio, ...parametros], { encoding: 'utf8', timeout: 30_000 });
+  git('init', '--quiet');
+  git('add', 'scripts', 'apps/rag-orchestrator/tests/versionado.txt');
+  return { script: path.join(repositorio, 'scripts/ci/integracion-rag-orchestrator.sh') };
+}
+
 const ejecutoPytest = (llamadas) => llamadas.some((llamada) => /\brun\b/.test(llamada) && !llamada.includes('--entrypoint'));
 
 describe('integracion-rag-orchestrator.sh', () => {
@@ -183,18 +233,16 @@ describe('integracion-rag-orchestrator.sh', () => {
   });
 
   it('no copia un archivo sin versionar de las rutas que leen los tests y lo nombra en el aviso [ARR-01 AC-2, RN-14]', () => {
+    // El archivo sin versionar vive en un repositorio git temporal con una copia del script, nunca en el árbol real: otros
+    // tests (evalRequired) copian ese árbol en paralelo y un archivo transitorio los rompía (L1D-285 4.3).
     const ruta = 'apps/rag-orchestrator/tests/zz_sin_versionar_prueba.txt';
-    const absoluta = path.join(RAIZ, ruta);
-    writeFileSync(absoluta, 'dato local no versionado');
-    try {
-      const { codigo, salida, copiado } = correr('ok', { STUB_RUTA: ruta });
+    const { script } = repositorioTemporalConArchivoSinVersionar(ruta);
 
-      expect(codigo).toBe(0);
-      expect(copiado).toEqual(['no']);
-      expect(salida).toContain(`NO se copian al contenedor: ${ruta}`);
-    } finally {
-      rmSync(absoluta, { force: true });
-    }
+    const { codigo, salida, copiado } = correr('ok', { STUB_RUTA: ruta }, script);
+
+    expect(codigo).toBe(0);
+    expect(copiado).toEqual(['no']);
+    expect(salida).toContain(`NO se copian al contenedor: ${ruta}`);
   });
 
   it('tolera .env.example en el árbol del contenedor [ARR-01 AC-2]', () => {
@@ -218,6 +266,68 @@ describe('integracion-rag-orchestrator.sh', () => {
   it('declara como permitidos exactamente los tres secretos del arnés de corpus [ARR-01 AC-2, RN-10]', () => {
     const [, lista] = readFileSync(SCRIPT, 'utf8').match(/SECRETOS_DEL_CONTENEDOR_DE_PRUEBAS=\(([^)]*)\)/);
     expect(lista.trim().split(/\s+/).sort()).toEqual([...SECRETOS_PERMITIDOS].sort());
+  });
+});
+
+// Cada caso lanza el script real (bash) con docker falso: tiempo máximo explícito, no el de Vitest por defecto.
+describe('descarga de imágenes de integracion-rag-orchestrator.sh [US-213 AC-13]', { timeout: 30_000 }, () => {
+  const pulls = (llamadas) => llamadas.filter((llamada) => /\bpull\b/.test(llamada));
+  const pytestsEjecutados = (llamadas) => llamadas.filter((llamada) => /\brun\b/.test(llamada) && !llamada.includes('--entrypoint'));
+
+  it('descarga milvus-etcd y milvus-minio antes de levantar los servicios, con --ignore-buildable [US-213 AC-13]', () => {
+    const { codigo, llamadas } = correr('ok');
+
+    expect(codigo).toBe(0);
+    const ultimoPull = llamadas.findLastIndex((llamada) => /\bpull\b/.test(llamada));
+    const primerUp = llamadas.findIndex((llamada) => /\bup\b/.test(llamada));
+    expect(ultimoPull).toBeGreaterThanOrEqual(0);
+    expect(primerUp).toBeGreaterThan(ultimoPull);
+    expect(pulls(llamadas).some((llamada) => llamada.includes('milvus-etcd'))).toBe(true);
+    expect(pulls(llamadas).some((llamada) => llamada.includes('milvus-minio'))).toBe(true);
+    expect(pulls(llamadas).every((llamada) => llamada.includes('--ignore-buildable'))).toBe(true);
+  });
+
+  it('recupera al segundo intento con la espera configurada cuando el registro responde 503 una vez [US-213 AC-13] [S3 resp. 14]', () => {
+    const { codigo, salida, llamadas, esperas } = correr('pull_503_una_vez', {
+      INTEGRACION_RAG_PULL_ESPERA_BASE_S: '7',
+    });
+
+    expect(codigo).toBe(0);
+    expect(salida).toContain('integracion-rag: OK');
+    expect(esperas).toEqual(['7']);
+    expect(pulls(llamadas).filter((llamada) => llamada.includes('milvus-etcd'))).toHaveLength(2);
+    expect(pytestsEjecutados(llamadas)).toHaveLength(1);
+  });
+
+  it('falla nombrando la imagen de milvus-etcd, sin hablar de salud ni ejecutar up, cuando el 503 persiste [US-213 AC-13] [S3 resp. 14]', () => {
+    const { codigo, salida, llamadas, esperas } = correr('pull_503_siempre', {
+      INTEGRACION_RAG_PULL_INTENTOS: '3',
+      INTEGRACION_RAG_PULL_ESPERA_BASE_S: '2',
+    });
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toContain('integracion-rag: no se pudo descargar la imagen de milvus-etcd');
+    expect(salida).not.toMatch(/no quedaron sanos/);
+    expect(llamadas.some((llamada) => /\bup\b/.test(llamada))).toBe(false);
+    expect(pulls(llamadas).filter((llamada) => llamada.includes('milvus-etcd'))).toHaveLength(3);
+    expect(esperas).toEqual(['2', '4']);
+    expect(ejecutoPytest(llamadas)).toBe(false);
+    expect(llamadas.at(-1)).toMatch(/\bdown -v\b/);
+  });
+
+  it('conserva el mensaje de salud y no reintenta el up cuando la descarga fue correcta y Milvus no queda sano [US-213 AC-13]', () => {
+    const { codigo, salida, llamadas } = correr('milvus_no_sano');
+
+    expect(codigo).not.toBe(0);
+    expect(salida).toMatch(/no quedaron sanos/);
+    expect(salida).not.toMatch(/no se pudo descargar/);
+    expect(llamadas.filter((llamada) => /\bup\b/.test(llamada))).toHaveLength(1);
+  });
+});
+
+describe('plazo de las ejecuciones del script', { timeout: 30_000 }, () => {
+  it('falla por plazo, y no se queda colgado, cuando docker no responde [US-213 AC-13]', () => {
+    expect(() => correr('cuelga', {}, SCRIPT, { plazoMs: 1_500 })).toThrowError(/el script no terminó en 1500 ms/);
   });
 });
 
