@@ -186,13 +186,11 @@ US-233 (S4) y la revisión humana de la muestra, tarea `[HUMANO]` `[S3 resp. 13]
     test. Alternativa: derivar un delimitador que no aparezca en el texto.
   - **M4 · Tipo de `metadatos` en el resolutor.** `MetadatosResueltos` conserva `Mapping[str, Any]` en `population_criteria`
     (el valor de `biomarcadores` es un objeto); no se tipa más hasta que `poblacion.json` fije la forma (tarea 1.13).
-  - **Límite conocido de la decisión 5 (extraído vs declarado).** La fila `extraido_verificado` no distingue lo extraído de lo
-    declarado por el manifiesto: `integrar_metadatos_verificados` rotula `extraido_verificado` aunque no se verifique nada y
-    `campos_conservados` devuelve también los escalares declarados, así que un documento sin ningún campo extraído entra en la
-    muestra si el manifiesto declaró alguno. M-08.4 saldría inflado. Fijado con tests de caracterización y documentado en
-    `PLANTILLA.md`. Corrección real (columna `extracted_fields` en `corpus_document` + migración): deuda en tasks.md,
-    «antes de la primera revisión humana de la muestra». **Pregunta para el usuario:** ¿la decisión 5 contemplaba este efecto
-    sobre M-08.4?
+  - **Extraído vs declarado (decisión 5, M-08.4).** **Decidido (usuario, 2026-10-24):** la muestra se construye solo
+    desde la release y solo con campos extraídos. `corpus_document.extracted_fields` (JSONB, migración `0004`, `[]` por
+    defecto) lista los campos que el LLM extrajo y el NLI verificó; `integrar_metadatos_verificados` ya los conoce
+    (`campos_verificados`) y `registro_embebido` los persiste. La muestra filtra `campos_conservados` por esa lista, así
+    que lo declarado por el manifiesto no entra ni infla M-08.4. Sustituye al antiguo «límite conocido».
   - **RN-12, piso cerrado aplicado a la CLI (ADR-41 D4).** La regla pura `variable_que_incumple_llm_local` (dominio) niega con
     `LLM_CLOUD_ENABLED`, `LLM_PROVIDER`, `LLM_BASE_URL` (`es_proveedor_local`, que `LLM_ALLOWED_HOSTS` no amplía) o `LLM_MODEL`
     (`es_modelo_de_nube`: `x:cloud` servido por un Ollama local se ejecuta en la nube). No es una política nueva: es el piso

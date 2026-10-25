@@ -7,8 +7,10 @@ propagan sin traducir: el cargador los trata como fallo del catálogo y aborta.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy import Engine
@@ -26,6 +28,11 @@ from app.infrastructure.catalog.tables import (
     corpus_release,
     corpus_release_document,
 )
+
+
+def _registro_de(fila: Mapping[str, Any]) -> RegistroDeDocumento:
+    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable."""
+    return RegistroDeDocumento(**{**fila, "extracted_fields": tuple(fila["extracted_fields"])})
 
 
 class CorpusDocumentRepository:
@@ -129,7 +136,7 @@ class CorpusDocumentRepository:
             .order_by(corpus_document.c.document_id)
         )
         with self._motor.connect() as conexion:
-            return [RegistroDeDocumento(**fila) for fila in conexion.execute(consulta).mappings()]
+            return [_registro_de(fila) for fila in conexion.execute(consulta).mappings()]
 
     @staticmethod
     def _guardar(conexion: sa.Connection, registro: RegistroDeDocumento) -> None:

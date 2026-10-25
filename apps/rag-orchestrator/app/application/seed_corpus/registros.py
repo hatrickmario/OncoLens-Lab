@@ -158,6 +158,7 @@ def _registro(
         sample_size=metadatos.sample_size,
         population_criteria=metadatos.population_criteria,
         metadata_source=metadatos.metadata_source,
+        extracted_fields=tuple(c.campo for c in metadatos.campos_verificados),
         guideline_version=documento.guideline_version,
         last_updated_at=documento.last_updated_at,
         original_format=documento.original_format,

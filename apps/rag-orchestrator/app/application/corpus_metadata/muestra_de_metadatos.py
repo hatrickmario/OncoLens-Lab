@@ -98,13 +98,19 @@ class GeneradorDeMuestraDeMetadatos:
 
 
 def _campos_de(registro: RegistroDeDocumento) -> tuple[CampoDeMetadato, ...]:
-    """Solo se revisa lo que la fila conserva: un documento ``extraido_verificado`` sin campos no tiene nada que revisar."""
-    return campos_conservados(
-        registro.study_design,
-        registro.trial_phase,
-        registro.sample_size,
-        registro.primary_endpoint,
-        registro.population_criteria,
+    """Solo se revisa lo que el LLM extrajo y el NLI verificó (``extracted_fields``), no lo que el manifiesto declaraba.
+    Decidido (usuario, 2026-10-24)."""
+    extraidos = set(registro.extracted_fields)
+    return tuple(
+        c
+        for c in campos_conservados(
+            registro.study_design,
+            registro.trial_phase,
+            registro.sample_size,
+            registro.primary_endpoint,
+            registro.population_criteria,
+        )
+        if c.campo in extraidos
     )
 
 

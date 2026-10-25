@@ -179,7 +179,7 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
     from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
     from app.application.seed_corpus.ports import RegistroDeRelease
     from app.application.seed_corpus.registros import registro_embebido
-    from app.domain.corpus_metadata.resultado import MetadatosResueltos
+    from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
     from app.domain.corpus_seed.admisibilidad import Admision
     from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
     from tests.support.almacenes_falsos import CatalogoEnMemoria
@@ -187,7 +187,13 @@ def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_l
     from tests.support.metadatos import lote_sintetico
 
     metadatos = MetadatosResueltos(
-        "otro", "II", None, None, resolver_criterios_poblacion(None), "extraido_verificado"
+        "otro",
+        "II",
+        None,
+        None,
+        resolver_criterios_poblacion(None),
+        "extraido_verificado",
+        (CampoDeMetadato("trial_phase", "II"),),
     )
     fila = registro_embebido(
         lote_sintetico(1)[0],

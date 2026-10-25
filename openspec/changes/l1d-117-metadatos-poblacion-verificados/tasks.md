@@ -67,7 +67,9 @@
 
 ### Deuda explícita (revisión de diseño y privacidad del seguimiento)
 
-- [ ] 5.1 Columna `extracted_fields` en `corpus_document` (+ migración 0004) para distinguir lo extraído de lo declarado por el manifiesto; la muestra y M-08.4 la usarán · TRASLADADA a «antes de la primera revisión humana de la muestra» (límite fijado por tests de caracterización)
+- [x] 5.1 **Decidido (usuario, 2026-10-24):** columna `extracted_fields` en `corpus_document` (+ migración 0004); la muestra se construye solo con campos extraídos, sin los declarados por el manifiesto · commits `test(L1D-117)` (rojo) y `feat(L1D-117)`; el test de caracterización del límite se sustituye (`Test-Removal`: el AC cambió por decisión del usuario); PLANTILLA.md y design.md actualizados
+- [ ] 5.6 TRASLADADA a US-143 (preflight/arranque real-data, gate G-Piloto): aplicar `variable_que_incumple_llm_local` también en el arranque de rag-orchestrator (rechazar `LLM_MODEL` tipo `x:cloud` con Ollama local, RN-12)
+- [ ] 5.7 TRASLADADA a US-034 (modo `LLM_PROVIDER=fake`, Compose/CI/E2E): caso de `ingest` con `LLM_PROVIDER=fake` en Compose/E2E
 - [ ] 5.2 `/rag/query` no rechaza un modelo `:cloud` (`es_modelo_de_nube` solo lo usa `app/evaluation/`) · deuda previa a este PR, pregunta al usuario en design.md
 - [ ] 5.3 (Menor #7) El filtro `extraido_verificado` está duplicado en el adapter SQL y en el fake de `CatalogoEnMemoria`
 - [ ] 5.4 (Menor #9) El método `documentos_extraidos_de_la_release` engorda `CorpusCatalog` (ISP): separar un puerto de lectura de la muestra
