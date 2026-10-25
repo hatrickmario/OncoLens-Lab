@@ -56,12 +56,16 @@ persiste, `id` (orden total, determinista). Alternativa descartada: `created_at`
 regla 4 del backlog).
 
 **D5. Coincidencia de destino** por `destination.entity` + `match` del catálogo: `Biomarker` por `name` canónico
-(y `Exam.exam_type` cuando el `match` lo declara, `[S3 resp. 5]` de US-001), excluyendo `mapping_status =
-no_mapeado` (RN-27, `excluirNoMapeados()`; **decisión: la exclusión aplica solo al `Biomarker`**, porque en
-`PriorTreatment`/`Diagnosis` el `mapping_status` habla de códigos ATC/CIE-10 y el registro sigue siendo un dato presente;
-un `PriorTreatment` `no_mapeado` SÍ cuenta); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por campo no nulo (y
-`staging_system`/`performance_scale` cuando el `match` lo declara); `PriorTreatment` sin filtro adicional.
-`minValues` por defecto `1` si el ítem no lo declara (lo fija el schema de US-001).
+(y `Exam.exam_type` cuando el `match` lo declara, `[S3 resp. 5]` de US-001); `ClinicalAttribute` por `attribute_key`;
+`Diagnosis` por campo no nulo (y `staging_system`/`performance_scale` cuando el `match` lo declara); `PriorTreatment`
+sin filtro adicional. **Decidido (usuario, 2026-10-24): un dato `no_mapeado` cuenta como cualquier dato vigente con ese
+`name`; su estado sale de `review_status`** (no hay regla por `mapping_status`: un `no_mapeado` en `requiere_revision`
+da `presente_sin_verificar`, y uno ya `verificado`/`corregido` da `presente_verificado`; US-131 lo mide). En un
+`no_mapeado`, `name` es el texto propuesto, sin validar contra el catálogo. Se empareja *solo* por
+`name` (el término canónico): nunca por `original_name` ni por similitud, porque sin mapeo no se inventa ningún
+concepto (RN-27). Un `no_mapeado` cuyo `name` no coincide con el catálogo sigue `faltante`. Esto sustituye a la
+exclusión por entidad de `excluirNoMapeados()` (eliminada). `minValues` por defecto `1` si el ítem no lo declara (lo
+fija el schema de US-001).
 
 **D6. Salida**: `{ catalogVersion, items: [{ key, status }] }`, con claves en orden fijo para que dos
 serializaciones sean iguales byte a byte (AC-5). US-003 la amplía con la procedencia.
@@ -113,7 +117,7 @@ catálogo (contrato de datos con `rag-orchestrator` vía versión) es de L1D-93.
 | `modules/completeness/completeness.repository.ts` | nuevo | `Consultador`, `sqlDatoVigente()` |
 | `modules/completeness/completeness.module.ts`, `src/composition.ts` | nuevo / modifica | cargador del catálogo de L1D-93 |
 
-Reglas extraídas a métodos con nombre: ver D2 (RN-07 en `registrosVigentes()`, RN-27 en el filtro de destino).
+Reglas extraídas a métodos con nombre: ver D2 (RN-07 en `registrosVigentes()`, RN-27: sin regla especial, ver D5).
 
 ## Evaluación
 

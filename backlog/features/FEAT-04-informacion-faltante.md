@@ -220,10 +220,12 @@ con la misma regla, para saber qué me falta sin revisar el caso a mano.
   cuando se calcula el checklist, entonces devuelve solo `psa_serie` y `ecog`, ambos en
   `presente_verificado`, y ninguna clave del catálogo de mama. `[FR-23]`
 - **AC-8 (borde · biomarcador `no_mapeado`)** · Dado F-M2 con un biomarcador
-  `original_name = "Ki67 índice"` en `no_mapeado`, cuando se calcula el checklist,
-  entonces `ki67` sigue en `faltante` (nunca se asigna un concepto a un término no
-  mapeado). `[RN-27]` `(asumido)`
-  > **Decidido (usuario, 2026-10-23, `[S3 resp. 5]`):** un `no_mapeado` crítico no se marca aparte; US-131 lo cuenta como falso positivo.
+  `original_name = "Ki67 índice"` en `no_mapeado` y `name = "Ki-67"`, cuando se calcula el
+  checklist, entonces `ki67` cuenta como cualquier dato vigente con ese `name` y su estado sale de
+  `review_status` (el escenario lo siembra en `requiere_revision`, así que da
+  `presente_sin_verificar`); con un `name` que no coincide con el catálogo (p. ej.
+  `"Ki67 índice"`), `ki67` sigue en `faltante`. `[RN-27]`
+  > **Decidido (usuario, 2026-10-24):** un dato `no_mapeado` cuenta como cualquier dato vigente con ese `name` (su estado sale de `review_status`: en `requiere_revision`, presente sin verificar); US-131 lo mide. Un `no_mapeado` cuyo `name` no coincide sigue en `faltante`. El emparejamiento es solo por `name` (término canónico): nunca por `original_name` ni por similitud, porque sin mapeo no se inventa ningún concepto. (Sustituye a la decisión del 2026-10-23, `[S3 resp. 5]`: «el ítem queda `faltante`».)
 
 ## Contexto técnico
 Módulo `apps/clinical-api/src/modules/completeness/` (`completeness.service.ts` y
@@ -324,6 +326,8 @@ debo cargar lo que falta.
 - **AC-7 (borde · lectura auditada)** · Dado el AC-1, cuando se completa la llamada,
   entonces existe una fila `completeness.read` en `audit_log` con el UUID del paciente y
   sin PHI. `[FR-18]` `(asumido: hallazgo M-18 del piloto)`
+
+> **Decidido (usuario, 2026-10-24):** el seed usa los códigos del catálogo (`RE`/`RP`/`BRCA`/`HRR`), sin alias en el catálogo ni mapeo en código; el arreglo del seed (hoy "Receptor de estrógeno"/"Receptor de progesterona") es una tarea de esta historia (L1D-95), pendiente de hacer.
 
 ## Contexto técnico
 `completeness.controller.ts` + `completeness.schema.ts` (Zod en el borde) en el módulo

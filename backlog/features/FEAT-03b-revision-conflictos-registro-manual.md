@@ -24,6 +24,8 @@
 
 `FEAT-03b` · Sprint 4 · Estimación **5** · HU-09 · FR-08 (dueña), RN-07, RN-08 · AC-03.4, AC-02.6, AC-T3.2 · ⛔ DEC-09 · escenario más probable (AC-4) · ↪ US-100, US-098 · 🔗 Regresión [RN-07] → US-065 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: FEAT-11a (marca de desactualizado al cambiar datos usados, S6 si hay capacidad)
 
+> **Decidido (usuario, 2026-10-24):** un dato `no_mapeado` debe poder quedar en un campo final de «información adicional» de la ficha, donde el oncólogo ingrese esos detalles o confirme los hallazgos `no_mapeado`. **No se implementa en el S3.** Restricciones al refinar la historia: (1) no inventa ni asigna ningún código (RN-27): el dato confirmado sigue `no_mapeado` y sin código; el mapeo a catálogo es de US-109; (2) la confirmación del oncólogo es una verificación humana (RN-07/RN-08): no reemplaza en silencio a un dato verificado y no es soporte NLI de afirmaciones sobre evidencia del corpus (un dato del paciente sí puede citarse por enlace o verbalización, ADR-34); (3) el texto libre de «información adicional» se desidentifica y enmascara antes de llegar a cualquier IA (RN-10/RN-11, también en eventos y análisis previos), entra al contexto clínico del análisis etiquetado como dato del oncólogo sin código, y no va a logs, auditoría ni histórico (RN-10); dónde se guarda lo decide el refinamiento (modelo de datos y contrato congelados, RN-29); (4) no debe bloquear (RN-26); (5) la fila estructurada no se mueve ni se convierte en texto libre; (6) sobre un paciente egresado el registro da `422` (RN-17). Re-estimar al refinar el S4.
+
 ## Story
 Como oncólogo, quiero verificar, corregir o rechazar cualquier dato que extrajo el
 sistema, y decidir yo qué diagnóstico es el vigente, para que el caso de mi paciente
@@ -116,6 +118,8 @@ Compose en perfil de test con FX-03a-a sembrado.
 > Linear: [L1D-89](https://linear.app/l1der-lab-mjbc/issue/L1D-89)
 
 `FEAT-03b` · Sprint si-hay-capacidad · Estimación **5** · HU-09, HU-17 · FR-08 (conflictos y `no_mapeado`), FR-22 (parte S3), RN-27 · AC-03.2 (resolución), AC-03.3 (revisión de mapeos) · ↪ US-107, US-099, US-098 · 🔗 Regresión [RN-27] → US-098 · 🔗 Consumida por: US-124 (el aviso `en_conflicto` desaparece al resolver), US-136 · **Recorrido principal:** no · **Workaround en el MVP:** el conflicto queda `requiere_revision` y visible (US-099) y el oncólogo rechaza uno de los valores en la revisión (US-107); los términos sin mapeo quedan `no_mapeado` (RN-27)
+
+> **Decidido (usuario, 2026-10-24), referencia:** el campo final de «información adicional» para los `no_mapeado` se refina en US-107 (sin implementar en el S3); el mapeo de esos términos a catálogo sigue siendo de esta historia (US-109), nunca del campo de texto libre.
 
 ## Story
 Como oncólogo, quiero elegir cuál de dos valores contradictorios es el correcto y
@@ -225,6 +229,8 @@ Supertest con F-M2 y FX-03b-a.
 > Linear: [L1D-91](https://linear.app/l1der-lab-mjbc/issue/L1D-91)
 
 `FEAT-03b` · Sprint 4 · Estimación **3** · HU-18 · FR-23 (UI de registro), NFR-12 · AC-04.1 · ↪ US-110, US-090 · 🔗 Consumida por: FEAT-04 US-004 · 🔗 Regresión [RN-23] → US-068
+
+> **Decidido (usuario, 2026-10-24), referencia:** el campo final de «información adicional» para los `no_mapeado` se refina en US-107 (sin implementar en el S3); los formularios de registro manual (US-110/US-111) no sustituyen a ese campo ni asignan códigos a un `no_mapeado`.
 
 ## Story
 Como oncólogo, quiero un formulario corto para registrar un biomarcador o completar el
