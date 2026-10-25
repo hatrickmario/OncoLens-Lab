@@ -40,9 +40,13 @@ orden de salida es el de entrada (paso 5).
 
 **D3. Condición evaluada sobre el registro que cuenta del ítem referenciado.** `condition.item` apunta a otra
 clave del catálogo; se toma su registro que cuenta (vigente, más reciente), sin importar su `review_status`. Si no
-hay registro vigente → `no_evaluable` → `whenConditionUnknown`. Operadores declarativos de US-001: igualdad,
-pertenencia (`valueIn`) y prefijo (`startsWith`); el motor rechaza un operador desconocido con error (el
-validador de L1D-93 ya debería impedirlo). Ejemplos: F-M2 HER2 "2+ (IHQ)" → `her2_ish` aplica; F-M3 sin TNM →
+hay registro vigente → `no_evaluable` → `whenConditionUnknown`. Operadores declarativos de US-001 (nombres del catálogo real):
+`igualdad` (el valor es exactamente `values[0]`), `pertenencia` (el valor es uno de `values`) y `prefijo`
+(`values.some(p => valor.startsWith(p))`); el motor rechaza un operador desconocido con `CatalogoInconsistenteError`
+(el validador de L1D-93 ya debería impedirlo). **`prefijo` es `startsWith` exacto, sensible a mayúsculas y a
+espacios, sin normalizar ni recortar:** `"2+ (IHQ)"` activa `"2+"` (her2_ish); `" 2+ (IHQ)"` y `"iv"` contra `"IV"`
+no. Si el dato condicionante no tiene valor (`null`, o su campo de destino no está declarado) la condición es
+`no_evaluable`. Ejemplos: F-M2 HER2 "2+ (IHQ)" → `her2_ish` aplica; F-M3 sin TNM →
 `tratamientos_previos` con `whenConditionUnknown = faltante`.
 
 **D4. Fecha del registro por entidad**: `Biomarker` → `Exam.performed_at`; `ClinicalAttribute` → `observed_at`;
@@ -53,7 +57,9 @@ regla 4 del backlog).
 
 **D5. Coincidencia de destino** por `destination.entity` + `match` del catálogo: `Biomarker` por `name` canónico
 (y `Exam.exam_type` cuando el `match` lo declara, `[S3 resp. 5]` de US-001), excluyendo `mapping_status =
-no_mapeado` (RN-27); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por campo no nulo (y
+no_mapeado` (RN-27, `excluirNoMapeados()`; **decisión: la exclusión aplica solo al `Biomarker`**, porque en
+`PriorTreatment`/`Diagnosis` el `mapping_status` habla de códigos ATC/CIE-10 y el registro sigue siendo un dato presente;
+un `PriorTreatment` `no_mapeado` SÍ cuenta); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por campo no nulo (y
 `staging_system`/`performance_scale` cuando el `match` lo declara); `PriorTreatment` sin filtro adicional.
 `minValues` por defecto `1` si el ítem no lo declara (lo fija el schema de US-001).
 
@@ -61,7 +67,23 @@ no_mapeado` (RN-27); `ClinicalAttribute` por `attribute_key`; `Diagnosis` por ca
 serializaciones sean iguales byte a byte (AC-5). US-003 la amplía con la procedencia.
 
 **D7. Lectura acotada**: el repositorio hace una consulta por entidad de destino presente en los ítems del tipo,
-filtrando por `patient_id` y con `sqlDatoVigente()`; nunca lee `ClinicalNote`, `identity` ni texto libre.
+filtrando por `patient_id`, y el SQL proyecta solo las columnas de la allowlist del modelo (`modelo.allowlist.json`, L1D-93 D3) con
+`jsonb_build_object` generado de ese JSON (`source_span`, `description`, `patient_id`, `reviewed_by`… no salen de la
+base); nunca lee `ClinicalNote`, `identity` ni texto libre. **Ajuste en la implementación:** el repositorio *no* filtra
+por estado de revisión (no usa `sqlDatoVigente()`): el filtro de RN-07 vive en un solo lugar,
+`registrosVigentes()`, para que haya una única guarda auditable. Del `Diagnosis` solo lee el activo (`is_active`).
+
+**D8. Sin diagnóstico activo vigente** (añadido en la implementación): el checklist es `{ catalogVersion, items: [] }`.
+Tampoco hay ítems si el tipo del diagnóstico no está en el catálogo. Es un vacío, no un "completo": US-003/US-004
+decidirán cómo se muestra. Un ítem cuya `condition` referencia una clave inexistente del tipo, o sin
+`whenConditionUnknown`, lanza `CatalogoInconsistenteError`.
+
+**D9. Fixtures FX-04-a propios** (añadido en la implementación): los `test-1.0.0`/`test-1.1.0` de
+`packages/clinical-catalogs/test/fixtures/` (L1D-93) tienen 7 ítems de mama y no la tabla de US-002 (12 ítems,
+condiciones sobre `tnm` "IV", próstata de dos ítems). Como este change no edita `packages/`, los catálogos de la tabla
+viven en `apps/clinical-api/tests/fixtures/completeness/catalogos/` y validan con `catalog:validate --dir`. Los
+nombres de biomarcador de la tabla ("Receptor de estrógeno", "HER2 ISH"…) son los del backlog; el catálogo real 1.1.0
+usa `RE`/`RP` (ver Riesgos).
 
 ## Privacidad y ownership
 
@@ -107,6 +129,10 @@ y M-04.2 se miden en US-131.
   sesión de oncólogos del S4 sin cambiar el esquema.
 - [Condición sobre un dato sin verificar] → aplica la condición igual (D3); el ítem dependiente sigue mostrando su
   propio estado, y el aviso "sin verificar" del referenciado ya lo da su propio ítem.
+
+- [El catálogo real 1.1.0 nombra los biomarcadores `RE`, `RP`, `BRCA`, `HRR` y el seed sintético usa "Receptor de
+  estrógeno"] → con el catálogo real el seed daría `re`/`rp` en `faltante`. Es de L1D-93 / seed (no se toca aquí);
+  se reporta para US-003/US-131.
 
 ## Open Questions
 

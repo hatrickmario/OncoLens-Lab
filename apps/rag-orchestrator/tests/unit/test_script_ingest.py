@@ -11,6 +11,7 @@ import pytest
 
 from app.scripts import ingest
 from tests.support.ingesta import MANIFIESTO_FX_06C_B, CodificadorSparseFalso
+from tests.support.metadatos import FakeMetadataLlm, nli_de_metadatos
 from tests.support.semilla import EmbedderFalso
 
 RAIZ_APP = Path(__file__).resolve().parents[2]
@@ -30,6 +31,7 @@ ENTORNO_VALIDO = {
     "MILVUS_DENSE_METRIC_TYPE": "COSINE",
     "CORPUS_DATABASE_URL": "postgresql+psycopg://rag_corpus@postgres.invalid:5432/oncolens?sslmode=require",
     "PG_RAG_CORPUS_PASSWORD_FILE": "/run/secrets/no-existe",
+    "NLI_ENTAILMENT_THRESHOLD": "0.8",
 }
 ARGUMENTOS = ["--manifest", str(MANIFIESTO_FX_06C_B)]
 
@@ -93,7 +95,13 @@ def test_un_manifiesto_inexistente_sale_con_1_sin_la_ruta_en_el_mensaje(
 def test_una_base_inalcanzable_sale_con_1_con_la_clase_del_error_y_sin_la_uri(
     entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    codigo = ingest.main(ARGUMENTOS, embedder=EmbedderFalso(), sparse=CodificadorSparseFalso())
+    codigo = ingest.main(
+        ARGUMENTOS,
+        embedder=EmbedderFalso(),
+        sparse=CodificadorSparseFalso(),
+        llm=FakeMetadataLlm(),
+        nli=nli_de_metadatos(),
+    )
 
     capturado = capsys.readouterr()
     assert codigo == 1 and capturado.err.startswith("ingest: falló (")
@@ -116,3 +124,88 @@ def test_el_proceso_real_sin_modelos_termina_con_codigo_1_dentro_del_plazo_y_sin
 
     assert proceso.returncode == 1
     assert "MODEL_PROVIDER" in proceso.stderr and proceso.stdout == ""
+
+
+def test_sin_umbral_del_nli_sale_con_1_nombrando_la_variable_y_sin_conectar(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    entorno.delenv("NLI_ENTAILMENT_THRESHOLD")
+
+    codigo = ingest.main(
+        ARGUMENTOS,
+        embedder=EmbedderFalso(),
+        sparse=CodificadorSparseFalso(),
+        llm=FakeMetadataLlm(),
+        nli=nli_de_metadatos(),
+    )
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "NLI_ENTAILMENT_THRESHOLD" in capturado.err and capturado.out == ""
+    assert "postgres.invalid" not in capturado.err
+
+
+def test_las_claves_de_la_muestra_tienen_valores_por_defecto_en_la_configuracion(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    from app.config.settings import CorpusIngestSettings
+
+    ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
+
+    assert ajustes.corpus_metadata_sample_pct == 10.0
+    assert ajustes.corpus_metadata_sample_seed
+    assert ajustes.corpus_metadata_sample_dir == Path("data/evaluation/corpus-metadatos")
+
+
+@pytest.mark.parametrize("pct", ["-1", "100.5"])
+def test_un_porcentaje_de_muestra_fuera_de_rango_sale_con_1_nombrando_la_clave(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], pct: str
+) -> None:
+    entorno.setenv("CORPUS_METADATA_SAMPLE_PCT", pct)
+
+    codigo = ingest.main(ARGUMENTOS, embedder=EmbedderFalso(), sparse=CodificadorSparseFalso())
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "CORPUS_METADATA_SAMPLE_PCT" in capturado.err
+
+
+class _EscritorQueFalla:
+    def escribir(self, release_id, contenido):  # type: ignore[no-untyped-def]
+        raise OSError("disco lleno: /ruta/secreta")
+
+
+def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_la_ingesta() -> None:
+    from app.application.corpus_ingestion.reporte import (
+        Estado,
+        ReporteDeIngesta,
+        ResultadoDeIngesta,
+    )
+    from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+    from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+    from tests.support.fakes import RelojFijo
+    from tests.support.metadatos import lote_sintetico
+
+    metadatos = MetadatosResueltos(
+        "otro", None, None, None, {}, "extraido_verificado", (CampoDeMetadato("trial_phase", "II"),)
+    )
+    reporte = ReporteDeIngesta(
+        (
+            ResultadoDeIngesta(
+                "lote-01", Estado.EMBEBIDO, metadatos=metadatos, document_id="lote-01@x"
+            ),
+        ),
+        "release-1",
+    )
+    generador = GeneradorDeMuestraDeMetadatos(
+        pct=100,
+        semilla="s",
+        escritor=_EscritorQueFalla(),
+        reloj=RelojFijo(),
+        prompt_version="p",
+        llm_model="l",
+        nli_model="n",
+    )
+
+    resumen = ingest.escribir_muestra(generador, reporte, lote_sintetico(1))
+
+    assert resumen == {"tamano": 0, "fallo": "OSError"}
+    assert "secreta" not in str(resumen)

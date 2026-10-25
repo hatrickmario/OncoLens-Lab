@@ -629,3 +629,26 @@ def test_un_fallo_al_encender_la_vigente_al_omitir_es_un_error_del_documento_sin
     v1 = montaje.catalogo.documentos[id_de(montaje, "t-ok-1")]
     assert reporte.resultado_de("t-ok-1").motivo == "milvus: ConnectionError"
     assert (v1.is_current, v1.status) == (True, "embebido")
+
+
+def _origen_cargado(montaje: Montaje, clave: str) -> str:
+    return next(
+        r.metadata_source
+        for i, r in montaje.catalogo.documentos.items()
+        if i.split("@")[0] == clave
+    )
+
+
+def test_la_semilla_no_rotula_fuente_estructurada_un_documento_sin_criterios_de_poblacion(
+    montaje: Montaje,
+) -> None:
+    """D4/RN-25: el cargador de la semilla no extrae nada; sin criterios publicados el origen es ``pendiente``."""
+    sin_criterios = documento_de_prueba(document_key="s-1", version_group_id="s-1")
+    con_criterios = documento_de_prueba(
+        document_key="s-2", version_group_id="s-2", population_criteria={"ecog": "0-1"}
+    )
+
+    montaje.cargador.cargar([sin_criterios, con_criterios])
+
+    assert _origen_cargado(montaje, "s-1") == "pendiente"
+    assert _origen_cargado(montaje, "s-2") == "fuente_estructurada"

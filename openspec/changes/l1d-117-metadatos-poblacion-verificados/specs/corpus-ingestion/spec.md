@@ -13,7 +13,7 @@ Cuando el manifiesto trae los metadatos de un documento desde una fuente estruct
 Sin metadatos estructurados de la fuente, la ingesta MUST pedir al LLM local un JSON por esquema y verificar cada valor, verbalizado de forma determinista, con el NLI contra los chunks del documento. Un valor SHALL conservarse solo con `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD` en algún chunk; si no, MUST quedar no disponible (`no_disponible` en `population_criteria`, `null` en los escalares) sin descartar los demás, con `metadata_source = extraido_verificado` (RN-25, ADR-34, RN-12).
 
 #### Scenario: Los metadatos de un ensayo descrito solo en texto se extraen y verifican [US-118 AC-2] [FR-19] [R-16]
-- **GIVEN** `i-lit-1` (mama, PMC OA, `cc_by`, ensayo fase III descrito solo en texto), el LLM de metadatos falso de FX-06c-b que devuelve `study_design = eca`, `trial_phase = III`, `sample_size = 500`, estadio "I–III", HER2 "positivo" y un `primary_endpoint` inventado, y el NLI falso en `entailment` para todos salvo el `primary_endpoint`
+- **GIVEN** `i-lit-1` (mama, PMC OA, `cc_by`, ensayo fase III descrito solo en texto, con `study_design: otro` en el manifiesto = la fuente no lo declara), el LLM de metadatos falso de FX-06c-b que devuelve `study_design = eca`, `trial_phase = III`, `sample_size = 500`, estadio "I–III", HER2 "positivo" y un `primary_endpoint` inventado, y el NLI falso en `entailment` para todos salvo el `primary_endpoint`
 - **WHEN** se ingiere `i-lit-1`
 - **THEN** `i-lit-1` tiene `study_design = eca`, `trial_phase = III`, `sample_size = 500`, `population_criteria.estadio = "I–III"` y HER2 "positivo" en `population_criteria.biomarcadores`
 - **AND** `metadata_source = extraido_verificado`

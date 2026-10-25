@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterator
+from pathlib import Path
 
 import pytest
 from sqlalchemy import text
@@ -21,6 +22,7 @@ from tests.support.ingesta import (
     MANIFIESTO_FX_06C_B_CON_FALLO,
     CodificadorSparseFalso,
 )
+from tests.support.metadatos import FakeMetadataLlm, nli_de_metadatos
 from tests.support.milvus import INDICE_DE_ADR39
 from tests.support.pg import BaseDeTest
 from tests.support.semilla import EmbedderFalso
@@ -31,6 +33,7 @@ pytestmark = pytest.mark.servicios_reales
 @pytest.fixture
 def entorno_del_script(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
     base_migrada: BaseDeTest,
     uri_de_milvus: str,
     nueva_coleccion: Callable[[], str],
@@ -60,6 +63,8 @@ def entorno_del_script(
         "SPARSE_VECTOR_SOURCE": "modelo_embeddings",
         "EMBEDDING_SPARSE_WEIGHTS_PATH": "/no-se-usa-con-fakes",
         "EMBEDDING_SPARSE_WEIGHTS_SHA256": "ab" * 32,
+        "NLI_ENTAILMENT_THRESHOLD": "0.8",
+        "CORPUS_METADATA_SAMPLE_DIR": str(tmp_path / "muestra"),
     }.items():
         monkeypatch.setenv(clave, valor)
     yield base_migrada
@@ -76,6 +81,8 @@ def _ingerir(manifiesto, embedder=None, sparse=None) -> int:
         embedder=embedder or EmbedderFalso(),
         sparse=sparse or CodificadorSparseFalso(),
         reloj=RelojFijo(),
+        llm=FakeMetadataLlm(),
+        nli=nli_de_metadatos(),
     )
 
 
@@ -126,3 +133,27 @@ def test_el_script_sale_con_1_si_un_documento_queda_en_error_pero_imprime_el_res
         "rechazado_licencia": 2,
         "error": 1,
     }
+
+
+def test_el_script_extrae_los_metadatos_de_i_lit_1_y_escribe_la_muestra_de_la_release(
+    entorno_del_script: BaseDeTest, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    codigo = _ingerir(MANIFIESTO_FX_06C_B)
+
+    resumen = json.loads(capsys.readouterr().out)
+    motor = crear_motor(entorno_del_script.url_runtime)
+    try:
+        with motor.connect() as conexion:
+            fila = conexion.execute(
+                text(
+                    "SELECT study_design, metadata_source, population_criteria->'biomarcadores' "
+                    "FROM corpus.corpus_document WHERE starts_with(document_id, 'i-lit-1@')"
+                )
+            ).one()
+    finally:
+        motor.dispose()
+    assert codigo == 0
+    assert tuple(fila) == ("eca", "extraido_verificado", {"her2": "positivo"})
+    assert resumen["metadatos_pendientes"]["cantidad"] == 0
+    assert resumen["muestra_de_metadatos"]["tamano"] == 1
+    assert (tmp_path / "muestra" / f"{resumen['release_id']}.yaml").is_file()

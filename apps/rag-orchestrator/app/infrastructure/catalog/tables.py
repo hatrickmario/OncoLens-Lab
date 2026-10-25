@@ -25,7 +25,7 @@ DOMINIOS_CERRADOS: Final[dict[str, tuple[str, ...]]] = {
     "population": ("adulto", "pediatrico", "ambos"),
     "study_design": ("guia", "eca", "observacional", "revision_sistematica", "otro"),
     "trial_phase": ("I", "II", "III", "IV"),
-    "metadata_source": ("fuente_estructurada", "extraido_verificado"),
+    "metadata_source": ("fuente_estructurada", "extraido_verificado", "pendiente"),
     "original_format": ("jats_xml", "xml", "pdf", "html"),
     "status": ("pendiente", "normalizado", "embebido", "error", "rechazado_licencia"),
 }

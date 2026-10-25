@@ -14,6 +14,7 @@ from app.application.seed_corpus.registros import (
     registro_rechazado,
 )
 from app.config.settings import CLASES_DE_LICENCIA
+from app.domain.corpus_metadata.origen import metadatos_de_la_fuente
 from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.versionado import (
     STATUS_A_MEDIAS,
@@ -42,7 +43,9 @@ def test_el_registro_embebido_es_vigente_con_los_metadatos_y_las_llaves_de_objet
         population_criteria={"estadio": "metastasico"},
     )
 
-    registro = registro_embebido(documento, ADMITIDO, CHECKSUM, AHORA)
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     assert (registro.status, registro.is_current, registro.open_access) == ("embebido", True, True)
     assert registro.document_id == f"d-1@{CHECKSUM[:12]}" and registro.checksum == CHECKSUM
@@ -62,7 +65,10 @@ def test_el_registro_embebido_es_vigente_con_los_metadatos_y_las_llaves_de_objet
 
 
 def test_la_etiqueta_de_version_por_defecto_es_la_fecha_de_publicacion() -> None:
-    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+    documento = documento_de_prueba()
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     assert registro.version_label == date(2025, 1, 15).isoformat()
 
@@ -96,8 +102,9 @@ def test_el_registro_con_error_usa_el_identificador_del_contenido_si_hay_checksu
 
 
 def test_cada_chunk_copia_los_metadatos_denormalizados_del_documento() -> None:
+    documento = documento_de_prueba(cancer_type_tags=("mama",), language="es")
     registro = registro_embebido(
-        documento_de_prueba(cancer_type_tags=("mama",), language="es"), ADMITIDO, CHECKSUM, AHORA
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
     )
 
     chunks = chunks_del_documento(registro, ["uno", "dos"], [[0.1] * 8, [0.2] * 8], AHORA)
@@ -122,7 +129,10 @@ def test_cada_chunk_copia_los_metadatos_denormalizados_del_documento() -> None:
 
 
 def test_los_vectores_se_asignan_a_los_fragmentos_en_orden() -> None:
-    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+    documento = documento_de_prueba()
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     chunks = chunks_del_documento(registro, ["uno", "dos"], [[1.0] * 8, [2.0] * 8], AHORA)
 
@@ -141,7 +151,9 @@ def test_el_registro_embebido_copia_la_url_original_del_documento_en_source_url(
         url_original="https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
     )
 
-    registro = registro_embebido(documento, ADMITIDO, CHECKSUM, AHORA)
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     assert registro.source_url == "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"
 
@@ -149,11 +161,14 @@ def test_el_registro_embebido_copia_la_url_original_del_documento_en_source_url(
 def test_el_registro_normalizado_es_el_checkpoint_no_vigente_con_el_identificador_del_contenido() -> (
     None
 ):
-    registro = registro_normalizado(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+    documento = documento_de_prueba()
+    registro = registro_normalizado(documento, ADMITIDO, CHECKSUM, AHORA)
 
     assert (
         registro.document_id
-        == registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA).document_id
+        == registro_embebido(
+            documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+        ).document_id
     )
     assert (registro.status, registro.is_current, registro.checksum) == (
         "normalizado",
@@ -163,7 +178,10 @@ def test_el_registro_normalizado_es_el_checkpoint_no_vigente_con_el_identificado
 
 
 def test_cada_chunk_lleva_el_vector_sparse_de_su_fragmento_cuando_se_entrega() -> None:
-    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+    documento = documento_de_prueba()
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     chunks = chunks_del_documento(
         registro, ["uno", "dos"], [[1.0] * 8, [2.0] * 8], AHORA, [{7: 0.5}, {9: 0.25}]
@@ -173,7 +191,10 @@ def test_cada_chunk_lleva_el_vector_sparse_de_su_fragmento_cuando_se_entrega() -
 
 
 def test_los_chunks_de_la_semilla_siguen_sin_vector_sparse() -> None:
-    registro = registro_embebido(documento_de_prueba(), ADMITIDO, CHECKSUM, AHORA)
+    documento = documento_de_prueba()
+    registro = registro_embebido(
+        documento, ADMITIDO, CHECKSUM, AHORA, metadatos_de_la_fuente(documento)
+    )
 
     chunks = chunks_del_documento(registro, ["uno"], [[1.0] * 8], AHORA)
 
