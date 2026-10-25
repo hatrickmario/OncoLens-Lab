@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMues
 from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
 from app.application.seed_corpus.registros import registro_embebido
 from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
+from app.domain.corpus_metadata.extraccion import campos_conservados
 from app.domain.corpus_metadata.resultado import MetadatosResueltos
 from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
@@ -128,8 +130,11 @@ def _documento(clave: str) -> DocumentoDeSemilla:
     )
 
 
-def _fila(clave: str, origen: str, **metadatos: Any) -> RegistroDeDocumento:
-    """Fila del catálogo como la deja la ingesta: ``trial_phase`` etc. son los valores conservados."""
+def _fila(
+    clave: str, origen: str, extraidos: tuple[str, ...] | None = None, **metadatos: Any
+) -> RegistroDeDocumento:
+    """Fila del catálogo como la deja la ingesta. ``extraidos``: los campos que el LLM extrajo y el NLI verificó; por
+    omisión, todos los que la fila conserva."""
     resueltos = MetadatosResueltos(
         study_design=metadatos.get("study_design", "otro"),
         trial_phase=metadatos.get("trial_phase"),
@@ -140,7 +145,19 @@ def _fila(clave: str, origen: str, **metadatos: Any) -> RegistroDeDocumento:
         ),
         metadata_source=origen,
     )
-    return registro_embebido(_documento(clave), ADMITIDO, "ab" * 32, AHORA, resueltos)
+    fila = registro_embebido(_documento(clave), ADMITIDO, "ab" * 32, AHORA, resueltos)
+    if extraidos is None:
+        extraidos = tuple(
+            c.campo
+            for c in campos_conservados(
+                fila.study_design,
+                fila.trial_phase,
+                fila.sample_size,
+                fila.primary_endpoint,
+                fila.population_criteria,
+            )
+        )
+    return replace(fila, extracted_fields=extraidos)
 
 
 def _catalogo(*filas: RegistroDeDocumento, release: str | None = "release-1") -> CatalogoEnMemoria:
@@ -255,3 +272,33 @@ def test_el_escritor_no_sigue_un_enlace_simbolico_existente_y_no_toca_su_destino
         EscritorDeMuestraYaml(destino).escribir("release-1", {"a": 1})
 
     assert ajeno.read_text(encoding="utf-8") == "intacto"
+
+
+def test_un_documento_cuyos_unicos_valores_vienen_del_manifiesto_no_entra_en_la_muestra() -> None:
+    """Decidido (usuario, 2026-10-24): M-08.4 mide solo lo extraído, no lo que el manifiesto ya declaraba."""
+    escritor = _EscritorEnMemoria()
+    catalogo = _catalogo(_fila("a", "extraido_verificado", extraidos=(), study_design="eca"))
+
+    muestra = _generador(escritor, catalogo).generar("release-1")
+
+    assert (muestra.tamano, escritor.escritos) == (0, [])
+
+
+def test_la_muestra_de_un_documento_con_un_campo_extraido_y_un_escalar_declarado_solo_lista_el_extraido() -> (
+    None
+):
+    escritor = _EscritorEnMemoria()
+    catalogo = _catalogo(
+        _fila(
+            "a",
+            "extraido_verificado",
+            extraidos=("trial_phase",),
+            study_design="eca",
+            trial_phase="II",
+        )
+    )
+
+    _generador(escritor, catalogo).generar("release-1")
+
+    campos = escritor.escritos[0][1]["documentos"][0]["campos"]
+    assert [c["campo"] for c in campos] == ["trial_phase"]

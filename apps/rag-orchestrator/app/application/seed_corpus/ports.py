@@ -97,6 +97,9 @@ class RegistroDeDocumento:
     status: str
     # URL pública del documento original (data-model §4.6); ausente = la UI muestra "No disponible" (RN-25).
     source_url: str | None = None
+    # Nombres de los campos de ``population_criteria``/escalares que el LLM extrajo y el NLI verificó (no los declarados por el
+    # manifiesto). Decidido (usuario, 2026-10-24): la muestra de M-08.4 se construye solo desde estos.
+    extracted_fields: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
