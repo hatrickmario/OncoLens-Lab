@@ -19,8 +19,8 @@ import {
   ordenar,
   sinAlertaDondeHayError,
 } from './normalizar.mjs';
-import { verificarCoberturaDeAc } from './check-ac-coverage.mjs';
-import { alertasDeCobertura, medirCoberturaDelPr } from './cobertura.mjs';
+import { changesTocados, verificarCoberturaDeAc } from './check-ac-coverage.mjs';
+import { alertasDeCobertura, archivosDelPr, medirCoberturaDelPr } from './cobertura.mjs';
 import { verificarHigieneDePytest } from './higiene-pytest.mjs';
 import { verificarEstiloDePytest } from './ruff-pt.mjs';
 import { estaSincronizado } from './sync-ruff-thresholds.mjs';
@@ -160,17 +160,17 @@ function ejecutarImportLinter() {
  * Lo que `quality` mide por sí mismo sobre `raiz` (sin herramientas externas): directivas que apagan reglas, higiene de los
  * tests de Python, AC sin test de aceptación y cobertura de líneas cambiadas. Exportada para probar el cableado con una raíz de fixture.
  */
-export function hallazgosPropios(raiz, umbrales, medidasDeLineas) {
+export function hallazgosPropios(raiz, umbrales, medidasDeLineas, { soloChanges = null } = {}) {
   return [
     ...ejecutarBusquedaDeDesactivaciones(raiz),
     ...verificarHigieneDePytest(raiz, `${RAG}/tests`),
     ...verificarEstiloDePytest(raiz, RAG, `${RAG}/pyproject.toml`),
-    ...verificarCoberturaDeAc(raiz),
+    ...verificarCoberturaDeAc(raiz, { soloChanges }),
     ...(medidasDeLineas ? alertasDeCobertura(medidasDeLineas, umbrales.coverage) : []),
   ];
 }
 
-async function medir(umbrales, medidasDeLineas) {
+async function medir(umbrales, medidasDeLineas, soloChanges) {
   const hallazgos = [
     ...(await ejecutarEslint()),
     ...(await ejecutarAlertaDeComponentes(umbrales)),
@@ -178,7 +178,7 @@ async function medir(umbrales, medidasDeLineas) {
     ...verificarUmbralesDeRuff(umbrales),
     ...ejecutarRuff(),
     ...ejecutarImportLinter(),
-    ...hallazgosPropios(RAIZ, umbrales, medidasDeLineas),
+    ...hallazgosPropios(RAIZ, umbrales, medidasDeLineas, { soloChanges }),
   ];
   return ordenar(sinAlertaDondeHayError(hallazgos));
 }
@@ -190,12 +190,22 @@ function commitActual() {
   return resultado.status === 0 ? resultado.stdout.trim() : null;
 }
 
+/**
+ * Changes cuyos AC se revisan: los que toca el diff del PR contra la base. `--todos` o `QUALITY_AC_TODOS=1` revisan todos los
+ * activos (barrido completo); sin `origin/main` en el clon también se revisan todos.
+ */
+function changesDelPr() {
+  if (process.argv.includes('--todos') || process.env.QUALITY_AC_TODOS === '1') return null;
+  const archivos = archivosDelPr(RAIZ);
+  return archivos === null ? null : changesTocados(archivos);
+}
+
 async function principal() {
   // Un reporte viejo no puede sobrevivir a una herramienta rota: se borra antes de medir.
   rmSync(RUTA_REPORTE, { force: true });
   const umbrales = leerUmbrales();
   const medidasDeLineas = medirCoberturaDelPr(RAIZ);
-  const medicion = await medir(umbrales, medidasDeLineas);
+  const medicion = await medir(umbrales, medidasDeLineas, changesDelPr());
   const reporte = armarReporte(umbrales, medicion, {
     ahora: new Date(),
     commit: commitActual(),
