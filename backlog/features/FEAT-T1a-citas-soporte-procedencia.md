@@ -189,6 +189,7 @@ simulado (AC-1 a AC-4) y Pytest del constructor de prompt (AC-5).
 ## US-127 — Los metadatos factuales de cada fuente se copian del catálogo del corpus y lo ausente se muestra "No disponible"
 
 > Linear: [L1D-182](https://linear.app/l1der-lab-mjbc/issue/L1D-182)
+> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** recibe la deuda del enum `guia` en la cita (L1D-287): el rótulo de fuente sale de los metadatos del catálogo, no del valor crudo del enum.
 
 `FEAT-T1a` · Sprint 3 · Estimación **3** · HU-22, HU-20 · RN-25 (dueña) · AC-T1.3 (metadatos), AC-08.9 (valor del estudio) · ↪ US-063, US-118, US-122 · 🔗 Consumida por: FEAT-07 (etiquetas factuales, S6 si hay capacidad), FEAT-09 (vigencia, S6 si hay capacidad) · 🔗 Medido en: US-132 (metadatos del corpus)
 

@@ -72,6 +72,7 @@ FEAT-04 US-001; esta historia solo registra la decisión.
 ## US-121 — Los criterios de aplicabilidad de mama y próstata viven en el catálogo con destino, excluyentes y regla de "Parcial"
 
 > Linear: [L1D-126](https://linear.app/l1der-lab-mjbc/issue/L1D-126)
+> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** `destination.match` del catálogo de datos críticos se amplía a arrays (compatible hacia atrás; deuda anotada en L1D-93 con destino esta historia). La allowlist de destinos de L1D-93 **excluye** `Biomarker.original_name`, `reference_range` y `Exam.source_lab` (privacidad); si un criterio los necesita, se reabre con el usuario.
 
 `FEAT-08b` · Sprint 3 · Estimación **3** · HU-22 · FR-25 (criterios en el catálogo), RN-29, RN-28 · AC-08.1 (criterios del catálogo), AC-04.5 (aplicabilidad) · ⛔ DEC-11 · escenario más probable · ↪ US-041, FEAT-04 US-001 (validador del catálogo; US-042 es `si-hay-capacidad`) · 🔗 Regresión [RN-29] → US-001 · 🔗 Regresión [NFR-14] → US-041
 
