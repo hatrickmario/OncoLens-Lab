@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -146,6 +146,123 @@ describe('catalog:version-guard · el archivo entero cuenta, no solo sus ítems 
       expect(resultado.codigo).toBe(1);
       expect(resultado.salida).toContain(
         'contenido_cambiado_sin_subir_version mama/datos-criticos',
+      );
+    },
+    PLAZO_PROCESO_MS,
+  );
+});
+
+describe('catalog:version-guard · tipos quitados, base ilegible, versión que no sube y alcance (Gate 2 m-1, m-2, m-3, P-1)', () => {
+  const escribirEnLaBase = (archivo, contenido) => (raiz) => {
+    const ruta = path.join(raiz, 'catalogo', archivo);
+    mkdirSync(path.dirname(ruta), { recursive: true });
+    writeFileSync(ruta, typeof contenido === 'string' ? contenido : JSON.stringify(contenido));
+  };
+
+  it(
+    'falla cuando se quita un tipo del manifiesto y su carpeta con la misma versión (m-1)',
+    () => {
+      const raiz = repoConCatalogo();
+      rmSync(path.join(raiz, 'catalogo/prostata'), { recursive: true });
+      modificar(raiz, 'manifest.json', (m) => (m.cancerTypes = ['mama']));
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain(
+        'contenido_cambiado_sin_subir_version prostata/datos-criticos',
+      );
+      expect(resultado.salida).toContain('contenido_cambiado_sin_subir_version manifest');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'falla cerrado en CI y nombra atributos cuando el archivo de la base no es JSON (m-2)',
+    () => {
+      const raiz = repoConCatalogo(escribirEnLaBase('atributos.json', '{no es json'));
+
+      const resultado = ejecutar(raiz, { ci: true });
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('base_ilegible atributos');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'avisa y pasa en local cuando el archivo de la base no es JSON (m-2)',
+    () => {
+      const raiz = repoConCatalogo(escribirEnLaBase('atributos.json', '{no es json'));
+
+      const resultado = ejecutar(raiz, { ci: false });
+
+      expect(resultado.codigo).toBe(0);
+      expect(resultado.salida).toContain('base_ilegible atributos');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'falla con version_no_sube cuando la versión baja y el contenido cambió (m-3)',
+    () => {
+      const raiz = repoConCatalogo((r) =>
+        escribirEnLaBase('manifest.json', {
+          version: 'test-apl-1.2.0',
+          cancerTypes: ['mama', 'prostata'],
+          standards: ['cie10', 'loinc', 'atc'],
+        })(r),
+      );
+      modificar(raiz, 'mama/aplicabilidad.json', agregarContenido);
+      modificar(raiz, 'manifest.json', (m) => (m.version = 'test-apl-1.1.0'));
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain('version_no_sube mama/aplicabilidad');
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it.each([
+    ['mama/sinonimos.json', { version: 'test-apl-1.0.0', items: [{ k: 1 }] }],
+    ['mama/codigos.json', { entradas: [{ codigo: 'C50.9' }] }],
+    ['mama/tendencias.json', { version: 'test-apl-1.0.0', estado: 'propuesta', items: [{ k: 1 }] }],
+    ['mama/plantillas.json', { version: 'test-apl-1.0.0', items: [{ k: 1 }] }],
+  ])(
+    'falla y nombra %s cuando un archivo versionado del catálogo cambia con la misma versión (P-1)',
+    (archivo, contenido) => {
+      const raiz = repoConCatalogo(escribirEnLaBase(archivo, contenido));
+      modificar(raiz, archivo, (c) => (c.items ?? c.entradas).push({ k: 2 }));
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain(
+        `contenido_cambiado_sin_subir_version ${archivo.replace('.json', '')}`,
+      );
+    },
+    PLAZO_PROCESO_MS,
+  );
+
+  it(
+    'falla cuando lenguaje/terminos-prohibidos cambia con su misma version propia (P-1)',
+    () => {
+      const raiz = repoConCatalogo(
+        escribirEnLaBase('lenguaje/terminos-prohibidos.json', {
+          version: '1.5.0',
+          nivelA: { terminos: [] },
+        }),
+      );
+      modificar(raiz, 'lenguaje/terminos-prohibidos.json', (c) =>
+        c.nivelA.terminos.push({ id: 'x' }),
+      );
+
+      const resultado = ejecutar(raiz);
+
+      expect(resultado.codigo).toBe(1);
+      expect(resultado.salida).toContain(
+        'contenido_cambiado_sin_subir_version lenguaje/terminos-prohibidos',
       );
     },
     PLAZO_PROCESO_MS,
