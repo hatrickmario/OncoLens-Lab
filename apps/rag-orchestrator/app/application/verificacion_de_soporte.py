@@ -23,6 +23,7 @@ from app.domain.support import (
     pares_a_verificar,
     planificar_soporte,
     retirar_texto_prohibido,
+    soporta,
     verificar_soporte,
 )
 
@@ -63,7 +64,7 @@ class VerificadorDeSoporte:
         )
         self._registrar_retiros(trace_id, plan.retiros)
         pares = pares_a_verificar(plan)
-        resultados = await self._clasificar(trace_id, pares)
+        resultados = await self.clasificar_pares(trace_id, pares)
         resultado = verificar_soporte(plan, resultados, self._umbral, idioma)
         logger.info(
             "event=rag_query_soporte traceId=%s afirmaciones=%d paresNli=%d opcionesDescartadas=%d "
@@ -91,8 +92,14 @@ class VerificadorDeSoporte:
             saneadas.append(OpcionDescartada(opcion, descartada.motivo))
         return tuple(saneadas)
 
-    async def _clasificar(self, trace_id: str, pares: list[ParNli]) -> list[ResultadoNli]:
-        """Un lote único por consulta. Cualquier fallo, o un resultado que no cumple el contrato, falla cerrado."""
+    async def pares_soportados(self, trace_id: str, pares: list[ParNli]) -> list[bool]:
+        """Un veredicto por par: ``entailment`` sobre el umbral (``soporta``). Mismo clasificador y misma falla cerrada que
+        el soporte de las opciones; lo usa la aplicabilidad textual (US-123) con un lote propio."""
+        resultados = await self.clasificar_pares(trace_id, pares)
+        return [soporta(r, self._umbral) for r in resultados]
+
+    async def clasificar_pares(self, trace_id: str, pares: list[ParNli]) -> list[ResultadoNli]:
+        """Un lote único por etapa. Cualquier fallo, o un resultado que no cumple el contrato, falla cerrado."""
         if not pares:
             return []
         try:

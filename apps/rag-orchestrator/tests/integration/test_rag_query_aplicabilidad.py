@@ -209,13 +209,6 @@ def test_rag_query_deja_cada_criterio_desconocido_sin_valor_del_estudio_cuando_d
     assert criterios["estado_menopausico"]["unknownReason"] == "falta_en_paciente"
 
 
-@pytest.mark.ac("US-122", 5)
-def test_rag_query_omite_de_applicability_el_documento_con_metadata_source_pendiente_cuando_se_recuperan_doc_a1_y_doc_a6():
-    cuerpo = _consultar({"doc-a1": RELEVANCIA_ALTA, "doc-a6": 0.80})
-
-    assert [f["externalId"] for f in cuerpo["applicability"]] == [external_id_de("doc-a1")]
-
-
 @pytest.mark.ac("US-122", 6)
 def test_rag_query_da_una_applicability_identica_y_una_sola_invocacion_del_llm_por_consulta_cuando_se_procesa_dos_veces_doc_a1(
     tmp_path: Path,

@@ -100,3 +100,9 @@ def test_los_campos_copiados_del_corpus_no_estan_entre_los_generados() -> None:
     )
 
     assert copiados.isdisjoint(CAMPOS_GENERADOS)
+
+
+def test_study_population_value_figura_como_campo_generado_en_el_json_y_en_python() -> None:
+    """US-123 [S3 resp. 16] (RN-23): el valor textual de la población lo redacta el LLM; en el JSON y en Python."""
+    assert "studyPopulationValue" in CAMPOS_GENERADOS
+    assert "studyPopulationValue" in _campos_generados_del_origen(ORIGEN_DE_CAMPOS)
