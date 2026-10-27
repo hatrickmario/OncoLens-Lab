@@ -14,7 +14,10 @@ from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
 from app.application.ports import ResultadoDeRecuperacion
 from app.domain.aplicabilidad_tipos import CriterioEvaluado, ResumenDeEstados
-from app.domain.applicability_aggregation import AplicabilidadDeOpcion
+from app.domain.applicability_aggregation import (
+    FuenteDeLaOpcion,
+    agregar_aplicabilidad_de_opcion,
+)
 from app.domain.citations import OpcionDescartada, construir_cita
 from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import top_relevance_score
@@ -124,9 +127,7 @@ def _opcion_con_evidencia(
 ) -> EvidenceOption:
     """``relevanceScore`` = el del chunk citado más relevante: metadato secundario, no mide la opción (RN-03)."""
     aceptada = validada.aceptada
-    aplicabilidad = validada.aplicabilidad or AplicabilidadDeOpcion(
-        ResumenDeEstados(0, 0, 0, 0), (), False, ()
-    )
+    aplicabilidad = validada.aplicabilidad or agregar_aplicabilidad_de_opcion([])
     citados = [citables[chunk_id] for chunk_id in aceptada.chunk_ids_validos]
     return EvidenceOption(
         option=aceptada.opcion.option,
@@ -134,17 +135,18 @@ def _opcion_con_evidencia(
         **({"details": list(aceptada.opcion.details)} if aceptada.opcion.details else {}),
         applicabilitySummary=_resumen_del_contrato(aplicabilidad.resumen),
         populationNotComparable=aplicabilidad.poblacion_no_comparable,
-        perSource=[
-            PerSourceItem(
-                externalId=f.external_id,
-                summary=_resumen_del_contrato(f.resumen),
-                populationNotComparable=f.poblacion_no_comparable,
-            )
-            for f in aplicabilidad.por_fuente
-        ],
+        perSource=[_aplicabilidad_de_fuente_citada(f) for f in aplicabilidad.por_fuente],
         relevanceScore=validada.relevance_score,
         warnings=[Warning(aviso) for aviso in aplicabilidad.avisos],
         citedSources=[_cita_de(c) for c in citados],
+    )
+
+
+def _aplicabilidad_de_fuente_citada(fuente: FuenteDeLaOpcion) -> PerSourceItem:
+    return PerSourceItem(
+        externalId=fuente.external_id,
+        summary=_resumen_del_contrato(fuente.resumen),
+        populationNotComparable=fuente.poblacion_no_comparable,
     )
 
 
