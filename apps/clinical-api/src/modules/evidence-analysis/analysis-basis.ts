@@ -5,16 +5,11 @@ import type {
   RagQueryInternalResponse,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { verbalizarDatoDelContexto, type DatoDelContexto } from './analysis-basis.verbalizacion.js';
-import type { AnalysisBasisBuilder, EtiquetaDeDatoCritico } from './ports.js';
-
-/**
- * Supuesto declarado mientras el inciso (b) no se calcule (US-128, S3/S4): sin él, `missingCriticalData = []` se
- * leería como "no falta nada". US-128 lo retira. Texto fijo del builder, no configurable (design 4).
- */
-const SUPUESTO_FALTANTES_NO_CALCULADOS: AnalysisBasis['assumptions'][number] = {
-  text: 'Los faltantes críticos aún no se calculan en esta versión',
-  origin: 'regla_catalogo',
-};
+import {
+  EtiquetaDeDatoCriticoNoDisponibleError,
+  type AnalysisBasisBuilder,
+  type EtiquetaDeDatoCritico,
+} from './ports.js';
 
 /** Limitación estructural fija de un `tipo_no_habilitado` (como `contracts/examples/tipo-no-habilitado.json`). */
 const LIMITACION_TIPO_NO_HABILITADO: AnalysisBasis['limitations'][number] = {
@@ -61,26 +56,50 @@ function datosDelPacienteUsados(contexto: ClinicalContext): AnalysisBasis['patie
   }));
 }
 
-/** Supuestos que verificó el LLM (la respuesta interna no trae su origen) tras el supuesto declarado del builder. */
+/** Supuestos que verificó el LLM; la respuesta interna no trae su origen. */
 function supuestosVerificados(respuesta: RagQueryInternalResponse): AnalysisBasis['assumptions'] {
   return respuesta.assumptions.map(({ text }) => ({ text, origin: 'llm_verificado' as const }));
+}
+
+/**
+ * Inciso (b) (FR-27, AC-T2.2): SOLO la lista que `clinical-api` calculó y envió en el request interno (l1d-98); nunca
+ * lo que la IA diga de faltantes. Es la misma lista que se persiste en `missing_critical_data`.
+ */
+function faltantesDeLaBase(request: RagQueryInternalRequest): string[] {
+  return [...request.clinicalContext.missingCriticalData];
+}
+
+/**
+ * Etiqueta `label.es` del catálogo de cada clave, en el mismo orden (D3). Una clave sin etiqueta falla cerrado: nunca se
+ * inventa una etiqueta ni se descarta la clave (RN-27).
+ */
+export function etiquetarFaltantes(
+  claves: readonly string[],
+  etiquetaDe: EtiquetaDeDatoCritico,
+): string[] {
+  return claves.map((clave) => {
+    const etiqueta = etiquetaDe(clave);
+    if (etiqueta === undefined) throw new EtiquetaDeDatoCriticoNoDisponibleError();
+    return etiqueta;
+  });
 }
 
 /**
  * Base del análisis del S2 (FR-27, US-066): determinista y sin E/S. Función pura de la petición interna, la respuesta
  * interna y `continueWithWarning`; la sustituye en la raíz de composición sin tocar el service.
  */
-export function crearBaseDelAnalisis(_dependencias: {
+export function crearBaseDelAnalisis(dependencias: {
   etiquetaDe: EtiquetaDeDatoCritico;
 }): AnalysisBasisBuilder {
   return {
     construir(request, respuesta, continueWithWarning) {
+      const faltantes = faltantesDeLaBase(request);
       return {
         patientDataUsed: datosDelPacienteUsados(request.clinicalContext),
-        missingCriticalData: [],
-        missingCriticalDataLabels: [],
+        missingCriticalData: faltantes,
+        missingCriticalDataLabels: etiquetarFaltantes(faltantes, dependencias.etiquetaDe),
         continuedWithWarning: continueWithWarning,
-        assumptions: [{ ...SUPUESTO_FALTANTES_NO_CALCULADOS }, ...supuestosVerificados(respuesta)],
+        assumptions: supuestosVerificados(respuesta),
         sourcesConsulted: {
           selected: fuentesSeleccionadas(request.sourcesSelected),
           filters: request.filtersApplied,

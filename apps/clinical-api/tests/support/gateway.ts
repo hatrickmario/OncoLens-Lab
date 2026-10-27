@@ -15,6 +15,7 @@ import {
   crearChecklistDeFaltantes,
 } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
+import { cargarEtiquetasDeDatosCriticos } from '../../src/modules/evidence-analysis/etiquetas-datos-criticos.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
@@ -287,7 +288,9 @@ export async function montarGateway(
     db: mundo.cliente,
     rag,
     catalogo: crearProveedorDeCatalogo(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
-    etiquetaDe: opciones.etiquetaDe ?? ((clave) => clave),
+    etiquetaDe:
+      opciones.etiquetaDe ??
+      cargarEtiquetasDeDatosCriticos(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
     checklist:
       opciones.checklist ??
       crearChecklistDeFaltantes(

@@ -20,7 +20,11 @@ import {
   PacienteNoEncontradoError,
   type EvidenceAnalysisService,
 } from './evidence-analysis.service.js';
-import { ChecklistNoDisponibleError, type TraceIdGenerator } from './ports.js';
+import {
+  ChecklistNoDisponibleError,
+  EtiquetaDeDatoCriticoNoDisponibleError,
+  type TraceIdGenerator,
+} from './ports.js';
 import { crearTraceIdMiddleware } from './trace-id.middleware.js';
 
 export interface DependenciasDelController {
@@ -79,6 +83,9 @@ function rechazoDe(error: unknown): Rechazo | undefined {
   if (error instanceof FalloDePersistenciaError) return ERROR_INTERNO;
   if (error instanceof ChecklistNoDisponibleError) {
     return { ...ERROR_INTERNO, resultado: 'checklist_no_disponible' };
+  }
+  if (error instanceof EtiquetaDeDatoCriticoNoDisponibleError) {
+    return { ...ERROR_INTERNO, resultado: 'etiqueta_de_dato_critico_no_disponible' };
   }
   if (error instanceof DesidentificacionNoDisponible) return DESIDENTIFICACION_NO_DISPONIBLE;
   if (error instanceof EntornoNoSintetico) {
