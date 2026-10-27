@@ -308,8 +308,8 @@ def _reindexar_sparse(
         return 1
     try:
         exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
-        codificador = sparse or _sparse_real(ajustes)
-        almacen = almacen or _almacen_de_milvus()
+        codificador = sparse if sparse is not None else _sparse_real(ajustes)
+        almacen = almacen if almacen is not None else _almacen_de_milvus()
         resumen = ReindexarSparse(
             almacen=almacen,
             codificador=codificador,

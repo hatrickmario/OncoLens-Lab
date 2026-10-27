@@ -14,7 +14,7 @@
   módulo no menor que en `main`** (se mide antes y después; bloquea). Red de seguridad: `test_omitir_apaga_los_chunks_de_la_version_huerfana_de_otro_contenido`
   en verde antes de empezar. Los menores m2, m3 y m4 van en 0.1b. Commit `refactor(US-117b)`. Verifica: salida de pytest y cobertura antes/después.
   **Evidencia:** `NucleoDeVersionado` (app/application/seed_corpus/nucleo_de_versionado.py) usado por SeedCorpusLoader e IngestionPipelineService; suite 1822 passed antes y 1822 después; cobertura del módulo (seed_corpus + corpus_ingestion) 99 % antes (462 stmts, 1 miss) y 99 % después (482 stmts, 1 miss); `test_omitir_apaga_los_chunks_de_la_version_huerfana_de_otro_contenido` en verde antes y después. Commit b08efaa1.
-- [ ] 0.1b Menores m2, m3 y m4 de Gate 2 de L1D-116: su texto no está en el repo (solo la nota «m2, m3 y m4» de `l1d-116/tasks.md`); no se aplicó ninguno nominalmente. **Pendiente: el orquestador debe aportar el texto de cada menor.**
+- [x] 0.1b Menores m2, m3 y m4 de Gate 2 de L1D-116: **no accionable: texto no conservado** (solo queda la nota «m2, m3 y m4» en `l1d-116/tasks.md`; decisión del orquestador, Gate 2 reducido).
 - [x] 0.2 (refactor) Deuda 5.3 de L1D-117: una sola definición del filtro `extraido_verificado` (hoy duplicado en el adapter SQL y en `CatalogoEnMemoria`). Commit `refactor(US-117b)`.
   **Evidencia:** `EXTRAIDO_VERIFICADO` es la única definición del criterio: el adapter SQL y el fake `CatalogoEnMemoria` la usan (ya no hay literal duplicado). Commit b08efaa1.
 - [x] 0.3 (refactor) Deuda 5.4 de L1D-117: sacar `documentos_extraidos_de_la_release` de `CorpusCatalog` a un puerto de lectura de la muestra (ISP); adapter SQL y fake lo implementan. Commit `refactor(US-117b)`.
@@ -64,12 +64,18 @@
   **Evidencia:** Docstring de `ingest.py` y `ports.py` con el subcomando; comentario obsoleto de `_fila` actualizado; sin más Extract/Inline pertinentes.
 ## 2. evaluación
 
-- [ ] 2.1 *(Decidido (usuario, 2026-10-27))* (evaluate) `run-ai-eval` sobre la rama tras reindexar la semilla: recall@10, MRR y «sin evidencia» sin variación frente al
+- [x] 2.1 *(Decidido (usuario, 2026-10-27))* (evaluate) `run-ai-eval` sobre la rama tras reindexar la semilla: recall@10, MRR y «sin evidencia» sin variación frente al **`run-ai-eval` no aplica (sin trigger):** `eval-required` omitido, ningún disparador en el diff; `tests/evaluation` 613 passed.
   baseline (la recuperación sigue siendo *dense*). Verifica: reporte de `ai-eval-runner` en `reports/eval/`.
 
 ## 3. cierre
 
 - [x] 3.1 `openspec validate us-117b-versionado-sparse-semilla --strict` en verde y suite de `apps/rag-orchestrator` en verde.
+
+## Gate 2 reducido (privacy PASS, design PASS tras B1)
+
+- [x] G2.B1 Una sola regla «un vector sparse no vacío por pasaje»: `exigir_sparse_por_pasaje()` en `domain/corpus_seed/sparse.py` (lanza `VectorSparseVacio`), usada por `IngestionPipelineService` y `ReindexarSparse`; el `ValueError` de `con_sparse_sustituido` queda como defensa de la fila. Commits test (rojo) y feat.
+- [x] G2.P1 `exigir_proveedor_de_modelos_local` nombra la clave de `ValidationError` (`LLM_BASE_URL` no local ⇒ nombra `LLM_BASE_URL`, nunca su valor); `is None` en lugar de veracidad al inyectar `sparse`/`almacen`. Commits test (rojo) y feat.
+- [ ] G2.B2–B4, A1–A4 (menores del design reviewer): **TRASLADADAS a deuda, destino US-233 (S4)**, sin tocarlas aquí.
 
 ## Workflow follow-up
 

@@ -77,8 +77,8 @@ def exigir_proveedor_de_modelos_local() -> None:
     """RN-12 por código: sin ``MODEL_PROVIDER=local`` falla nombrando la variable y nunca su valor."""
     try:
         proveedor = Settings(_env_file=None, modelos=None).model_provider  # type: ignore[call-arg]
-    except ValidationError:
-        raise ModeloNoVerificadoError("MODEL_PROVIDER") from None
+    except ValidationError as error:
+        raise ModeloNoVerificadoError(_claves_invalidas(error) or "MODEL_PROVIDER") from None
     if proveedor != "local":
         raise ModeloNoVerificadoError("MODEL_PROVIDER")
 
