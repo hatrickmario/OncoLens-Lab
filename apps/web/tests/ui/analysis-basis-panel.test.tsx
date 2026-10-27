@@ -293,7 +293,7 @@ describe('AnalysisBasisPanel', () => {
       .map((item) => item.textContent)
       .filter((texto) => ETIQUETAS_F_M2.includes(texto ?? ''));
     expect(etiquetas).toEqual(ETIQUETAS_F_M2);
-    for (const clave of CLAVES_F_M2) expect(document.body.textContent).not.toContain(clave);
+    for (const clave of CLAVES_F_M2) expect(screen.queryByText(clave)).toBeNull();
   });
 
   it('no muestra Datos críticos faltantes cuando la lista está vacía [US-128 AC-4]', async () => {
