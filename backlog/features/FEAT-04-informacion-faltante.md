@@ -329,6 +329,8 @@ debo cargar lo que falta.
 
 > **Decidido (usuario, 2026-10-24):** el seed usa los códigos del catálogo (`RE`/`RP`/`BRCA`/`HRR`), sin alias en el catálogo ni mapeo en código; el arreglo del seed (hoy "Receptor de estrógeno"/"Receptor de progesterona") es una tarea de esta historia (L1D-95), pendiente de hacer.
 
+> **Decidido (usuario, 2026-10-27):** la parte del seed se adelanta al S3 como change `l1d-95a-seed-codigos-catalogo`; en el S4 quedan el router `/completeness` y el cableado.
+
 ## Contexto técnico
 `completeness.controller.ts` + `completeness.schema.ts` (Zod en el borde) en el módulo
 `completeness`. `CaseTimelineService` (US-088) llama a `CompletenessService` para llenar
