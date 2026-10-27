@@ -6,6 +6,7 @@ from datetime import date, datetime
 from typing import Any, Literal, Protocol
 
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
+from app.domain.applicability_text import FuenteParaProponer, PropuestaDePoblacion
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
@@ -190,6 +191,18 @@ class EvidenceGenerator(Protocol):
     async def generar(
         self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
     ) -> EvidenciaGenerada: ...
+
+
+class ApplicabilityTextProposer(Protocol):
+    """Propone el valor de población que el texto de una fuente da a un criterio sin valor estructurado (US-123).
+
+    Una sola llamada por consulta con todas las fuentes (design D2). Solo propone: la cita, el lenguaje y el soporte NLI
+    los valida el servicio, y el estado lo asigna la regla del catálogo. Un fallo se propaga y la etapa lo traduce en
+    ``503 LOCAL_LLM_UNAVAILABLE``."""
+
+    async def proponer(
+        self, fuentes: Sequence[FuenteParaProponer]
+    ) -> tuple[PropuestaDePoblacion, ...]: ...
 
 
 class CatalogoClinico(Protocol):

@@ -43,6 +43,8 @@ class CriterioEvaluado:
     causa: CausaDeDesconocido | None
     es_excluyente: bool
     motivo_interno: MotivoInterno | None = None
+    chunk_citado_id: str | None = None
+    """El chunk que cita un valor textual aceptado (US-123); ``None`` = cita el mejor chunk de la fuente (L1D-127)."""
 
 
 @dataclass(frozen=True)

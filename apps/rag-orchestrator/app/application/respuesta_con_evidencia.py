@@ -50,7 +50,7 @@ def ensamblar_respuesta_con_evidencia(
     return RagQueryInternalResponse(
         status=RagQueryStatus.con_evidencia,
         synthesis=Synthesis(agreements=[], discrepancies=[]),
-        applicability=[_fuente_con_aplicabilidad(f) for f in aplicabilidad],
+        applicability=[_fuente_con_aplicabilidad(f, citables) for f in aplicabilidad],
         evidenceOptions=[_opcion_con_evidencia(o, citables) for o in opciones],
         discardedOptions=[
             *(_opcion_descartada(d) for d in descartadas),
@@ -69,12 +69,14 @@ def ensamblar_respuesta_con_evidencia(
     )
 
 
-def _fuente_con_aplicabilidad(fuente: AplicabilidadDeFuente) -> SourceApplicability:
+def _fuente_con_aplicabilidad(
+    fuente: AplicabilidadDeFuente, citables: Mapping[str, ChunkCitable]
+) -> SourceApplicability:
     """``SourceApplicability`` de un documento: los valores se copian tal cual, sin puntaje ni ponderación (RN-28)."""
     resumen = fuente.resumen
     return SourceApplicability(
         externalId=fuente.external_id,
-        criteria=[_criterio_aplicable(c, fuente.mejor_chunk) for c in fuente.criterios],
+        criteria=[_criterio_aplicable(c, fuente.mejor_chunk, citables) for c in fuente.criterios],
         summary=ApplicabilitySummary(
             coincide=resumen.coincide,
             parcial=resumen.parcial,
@@ -86,11 +88,13 @@ def _fuente_con_aplicabilidad(fuente: AplicabilidadDeFuente) -> SourceApplicabil
 
 
 def _criterio_aplicable(
-    criterio: CriterioEvaluado, mejor_chunk: ChunkCitable
+    criterio: CriterioEvaluado, mejor_chunk: ChunkCitable, citables: Mapping[str, ChunkCitable]
 ) -> ApplicabilityCriterion:
     """Todo criterio que muestra un valor del estudio cita la fuente, aunque sea ``desconocido`` (RN-25, design D6);
-    sin valor del estudio no hay nada que citar. ``patientDataWarning`` es de US-124."""
+    sin valor del estudio no hay nada que citar. Un valor textual aceptado cita el chunk que lo respaldó (US-123);
+    uno estructurado, el mejor chunk de la fuente. ``patientDataWarning`` es de US-124."""
     cita_la_fuente = criterio.valor_estudio is not None
+    citado = citables[criterio.chunk_citado_id] if criterio.chunk_citado_id else mejor_chunk
     return ApplicabilityCriterion(
         criterion=criterio.clave,
         patientValue=criterio.valor_paciente,
@@ -99,7 +103,7 @@ def _criterio_aplicable(
         unknownReason=UnknownReason(criterio.causa) if criterio.causa else None,
         isExclusionary=criterio.es_excluyente,
         patientDataWarning=None,
-        citedSources=[_cita_de(mejor_chunk)] if cita_la_fuente else [],
+        citedSources=[_cita_de(citado)] if cita_la_fuente else [],
     )
 
 
