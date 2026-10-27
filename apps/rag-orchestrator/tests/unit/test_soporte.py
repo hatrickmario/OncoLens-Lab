@@ -73,6 +73,7 @@ def test_los_campos_generados_son_los_de_la_decision_79() -> None:
         "unsupportedClaims",
         "limitations[].text",
         "synthesis",
+        "studyPopulationValue",  # US-123 [S3 resp. 16]: el valor textual de la población lo redacta el LLM (RN-23)
     )
 
 
