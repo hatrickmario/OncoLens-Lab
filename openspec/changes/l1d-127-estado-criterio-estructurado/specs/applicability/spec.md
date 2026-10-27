@@ -16,7 +16,7 @@ Con `status = con_evidencia`, `POST /rag/query` MUST devolver en `applicability`
 - **THEN** responde `200` con `status = con_evidencia` y `applicability` con un elemento de `externalId` igual al de `doc-a1`
 - **AND** su criterio `estado_her2` trae `patientValue = "3+ (IHQ)"`, `studyPopulationValue = "positivo"` (copiado literal), `status = coincide`, `isExclusionary = true` y `citedSources` con la fuente `doc-a1`
 - **AND** `ecog` trae `patientValue = "1"`, `studyPopulationValue = "0-1"` y `status = coincide`
-- **AND** `estadio`, rango sin escala ordenada en el catálogo, trae `patientValue = "IIA"`, `studyPopulationValue = "I–III"`, `status = desconocido` y `unknownReason = null` (alcance del S3 declarado)
+- **AND** `estadio`, rango sin escala ordenada en el catálogo, trae `patientValue = "IIA"`, `studyPopulationValue = "I–III"`, `status = desconocido`, `unknownReason = null` y `citedSources` con la fuente `doc-a1` (todo valor del estudio mostrado lleva cita, RN-25; alcance del S3 declarado)
 - **AND** `linea_tratamiento`, que `doc-a1` no reporta, trae `patientValue = "1"`, `status = desconocido`, `unknownReason = no_reportado_por_fuente` y `studyPopulationValue = null`
 - **AND** `estado_menopausico`, ausente en A-M1, trae `patientValue = null`, `status = desconocido` y `unknownReason = falta_en_paciente`
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor

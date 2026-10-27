@@ -147,9 +147,9 @@ def external_id_de(documento: str) -> str:
     return FICHAS_FX08BA[documento].external_id
 
 
-def puntajes_de(documentos: dict[str, float]) -> dict[str, dict[str, float]]:
+def relevancias_de(documentos: dict[str, float]) -> dict[str, dict[str, float]]:
     """Puntajes del reranker falso para ``Q_HER2``: solo los documentos dados superan el umbral de 0.30."""
-    return {Q_HER2: {_chunk_id(d): puntaje for d, puntaje in documentos.items()}}
+    return {Q_HER2: {_chunk_id(d): relevancia for d, relevancia in documentos.items()}}
 
 
 def catalogo_falso_fx08ba(**errores: Exception) -> CatalogoFalso:
@@ -229,7 +229,7 @@ def entorno_de_aplicabilidad(
     version = catalogo.name
     return crear_entorno(
         buscador=BuscadorFalso(chunks=CORPUS_FX08BA),
-        reranker=RerankerFalso(puntajes=puntajes_de(documentos)),
+        reranker=RerankerFalso(puntajes=relevancias_de(documentos)),
         catalogo=catalogo_falso or catalogo_falso_fx08ba(),
         catalogo_clinico=catalogo_clinico_falso(version),
         generador=generador or GeneradorDeAplicabilidad(),

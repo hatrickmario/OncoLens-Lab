@@ -131,9 +131,11 @@ estudio → `no_reportado_por_fuente`. Por eso US-122 AC-5 (`doc-a3`, sin poblac
 `estado_menopausico`, que falta en A-M1 y trae `falta_en_paciente` (US-124). `patientDataWarning` siempre
 `null` en este change. Descartado: que prevalezca `no_reportado_por_fuente` (contradecía l1d-129 D2).
 
-**D6 · `citedSources` del criterio.** Con valor estructurado del estudio (`coincide`, `parcial`,
-`no_coincide`), una `CitedSource` del documento construida con `construir_cita()` (RN-04) sobre su chunk sobre
-el umbral de mayor puntaje del *reranker*; `desconocido` por la fuente → `[]`. `contracts/examples/con-evidencia-s4.json`
+**D6 · `citedSources` del criterio.** Todo criterio con `studyPopulationValue` no nulo (`coincide`, `parcial`,
+`no_coincide` y también `desconocido` con el valor del estudio mostrado, p. ej. `estadio` sin escala o
+`falta_en_paciente`) lleva una `CitedSource` del documento construida con `construir_cita()` (RN-04) sobre su chunk
+sobre el umbral de mayor puntaje del *reranker* (RN-25: no se muestra un valor del estudio sin cita; corrección del
+Gate 2, decidida por el orquestador); con `studyPopulationValue = null` → `[]`. `contracts/examples/con-evidencia-s4.json`
 trae `[]` en criterios estructurados: es válido contra el schema y no se toca (ver Open Questions).
 
 **D7 · Orden de `applicability[]`.** Por documento, de mayor a menor puntaje del *reranker* de su mejor chunk y,

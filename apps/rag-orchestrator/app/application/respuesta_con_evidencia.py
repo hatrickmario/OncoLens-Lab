@@ -88,8 +88,9 @@ def _fuente_con_aplicabilidad(fuente: AplicabilidadDeFuente) -> SourceApplicabil
 def _criterio_aplicable(
     criterio: CriterioEvaluado, mejor_chunk: ChunkCitable
 ) -> ApplicabilityCriterion:
-    """Solo un criterio con valor estructurado del estudio cita la fuente (design D6); ``patientDataWarning`` es de US-124."""
-    cita_la_fuente = criterio.estado != "desconocido"
+    """Todo criterio que muestra un valor del estudio cita la fuente, aunque sea ``desconocido`` (RN-25, design D6);
+    sin valor del estudio no hay nada que citar. ``patientDataWarning`` es de US-124."""
+    cita_la_fuente = criterio.valor_estudio is not None
     return ApplicabilityCriterion(
         criterion=criterio.clave,
         patientValue=criterio.valor_paciente,

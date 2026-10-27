@@ -25,7 +25,7 @@ from tests.support.aplicabilidad import (
 from tests.support.catalogo_aplicabilidad import APL_1_0_0, APL_1_0_1
 from tests.support.recuperacion import CatalogoFalso
 
-PUNTAJE_ALTO = 0.90
+RELEVANCIA_ALTA = 0.90
 
 
 def _consultar(
@@ -52,7 +52,7 @@ def _criterios_de(cuerpo: dict[str, Any], documento: str) -> dict[str, dict[str,
 
 @pytest.mark.ac("US-122", 1)
 def test_rag_query_trae_estado_her2_coincide_con_valores_copiados_cuando_se_recupera_doc_a1():
-    cuerpo = _consultar({"doc-a1": PUNTAJE_ALTO})
+    cuerpo = _consultar({"doc-a1": RELEVANCIA_ALTA})
 
     assert cuerpo["status"] == "con_evidencia"
     assert [f["externalId"] for f in cuerpo["applicability"]] == [external_id_de("doc-a1")]
@@ -99,7 +99,7 @@ def test_rag_query_conserva_patient_value_del_contexto_cuando_el_llm_falso_atrib
     solicitud = solicitud_a_m1()
     generador = GeneradorDeAplicabilidad("APL-VALOR-PACIENTE")
 
-    cuerpo = _consultar({"doc-a1": PUNTAJE_ALTO}, solicitud=solicitud, generador=generador)
+    cuerpo = _consultar({"doc-a1": RELEVANCIA_ALTA}, solicitud=solicitud, generador=generador)
 
     assert generador.invocaciones == 1
     assert "2+" in cuerpo["evidenceOptions"][0]["rationale"]  # el LLM falso sí lo dijo
@@ -156,7 +156,7 @@ def test_rag_query_rotula_los_valores_de_la_lista_y_no_copia_ecog_con_otra_escal
 
     def evaluar(solicitud: dict[str, Any]) -> dict[str, dict[str, Any]]:
         cuerpo = _consultar(
-            {"doc-a1": PUNTAJE_ALTO},
+            {"doc-a1": RELEVANCIA_ALTA},
             solicitud=solicitud,
             catalogo=catalogo,
             catalogo_falso=falso,
@@ -180,7 +180,7 @@ def test_rag_query_rotula_los_valores_de_la_lista_y_no_copia_ecog_con_otra_escal
 
 @pytest.mark.ac("US-122", 3)
 def test_rag_query_deja_estado_her2_en_no_coincide_cuando_doc_a4_publica_her2_negativo():
-    cuerpo = _consultar({"doc-a4": PUNTAJE_ALTO})
+    cuerpo = _consultar({"doc-a4": RELEVANCIA_ALTA})
 
     her2 = _criterios_de(cuerpo, "doc-a4")["estado_her2"]
     assert her2["status"] == "no_coincide"
@@ -190,7 +190,7 @@ def test_rag_query_deja_estado_her2_en_no_coincide_cuando_doc_a4_publica_her2_ne
 
 @pytest.mark.ac("US-122", 4)
 def test_rag_query_deja_ecog_en_parcial_cuando_doc_a5_reporta_ecog_0_1_con_alcance_subgrupo():
-    cuerpo = _consultar({"doc-a5": PUNTAJE_ALTO})
+    cuerpo = _consultar({"doc-a5": RELEVANCIA_ALTA})
 
     ecog = _criterios_de(cuerpo, "doc-a5")["ecog"]
     assert ecog["status"] == "parcial"
@@ -199,7 +199,7 @@ def test_rag_query_deja_ecog_en_parcial_cuando_doc_a5_reporta_ecog_0_1_con_alcan
 
 @pytest.mark.ac("US-122", 5)
 def test_rag_query_deja_cada_criterio_desconocido_sin_valor_del_estudio_cuando_doc_a3_no_tiene_poblacion():
-    cuerpo = _consultar({"doc-a3": PUNTAJE_ALTO})
+    cuerpo = _consultar({"doc-a3": RELEVANCIA_ALTA})
 
     criterios = _criterios_de(cuerpo, "doc-a3")
     assert all(c["status"] == "desconocido" for c in criterios.values())
@@ -211,7 +211,7 @@ def test_rag_query_deja_cada_criterio_desconocido_sin_valor_del_estudio_cuando_d
 
 @pytest.mark.ac("US-122", 5)
 def test_rag_query_omite_de_applicability_el_documento_con_metadata_source_pendiente_cuando_se_recuperan_doc_a1_y_doc_a6():
-    cuerpo = _consultar({"doc-a1": PUNTAJE_ALTO, "doc-a6": 0.80})
+    cuerpo = _consultar({"doc-a1": RELEVANCIA_ALTA, "doc-a6": 0.80})
 
     assert [f["externalId"] for f in cuerpo["applicability"]] == [external_id_de("doc-a1")]
 
@@ -221,7 +221,7 @@ def test_rag_query_da_una_applicability_identica_y_una_sola_invocacion_del_llm_p
     tmp_path: Path,
 ):
     generador = GeneradorDeAplicabilidad()
-    entorno = entorno_de_aplicabilidad({"doc-a1": PUNTAJE_ALTO}, generador=generador)
+    entorno = entorno_de_aplicabilidad({"doc-a1": RELEVANCIA_ALTA}, generador=generador)
     primera = entorno.consultar(solicitud_a_m1()).json()
     invocaciones_tras_la_primera = generador.invocaciones
     segunda = entorno.consultar(solicitud_a_m1()).json()
@@ -233,7 +233,7 @@ def test_rag_query_da_una_applicability_identica_y_una_sola_invocacion_del_llm_p
     sin_criterios = catalogo_de_test_sin_criterios(tmp_path)
     generador_sin_criterios = GeneradorDeAplicabilidad()
     cuerpo = _consultar(
-        {"doc-a1": PUNTAJE_ALTO}, catalogo=sin_criterios, generador=generador_sin_criterios
+        {"doc-a1": RELEVANCIA_ALTA}, catalogo=sin_criterios, generador=generador_sin_criterios
     )
     assert cuerpo["applicability"] == []
     assert generador_sin_criterios.invocaciones == invocaciones_tras_la_primera
@@ -241,8 +241,8 @@ def test_rag_query_da_una_applicability_identica_y_una_sola_invocacion_del_llm_p
 
 @pytest.mark.ac("US-121", 5)
 def test_rag_query_cambia_ecog_de_coincide_a_no_coincide_sin_tocar_el_resto_cuando_cambia_el_catalogo_montado():
-    con_1_0_0 = _criterios_de(_consultar({"doc-a1": PUNTAJE_ALTO}, catalogo=APL_1_0_0), "doc-a1")
-    con_1_0_1 = _criterios_de(_consultar({"doc-a1": PUNTAJE_ALTO}, catalogo=APL_1_0_1), "doc-a1")
+    con_1_0_0 = _criterios_de(_consultar({"doc-a1": RELEVANCIA_ALTA}, catalogo=APL_1_0_0), "doc-a1")
+    con_1_0_1 = _criterios_de(_consultar({"doc-a1": RELEVANCIA_ALTA}, catalogo=APL_1_0_1), "doc-a1")
 
     assert con_1_0_0["ecog"]["status"] == "coincide"
     assert con_1_0_1["ecog"]["status"] == "no_coincide"
@@ -252,7 +252,7 @@ def test_rag_query_cambia_ecog_de_coincide_a_no_coincide_sin_tocar_el_resto_cuan
 
 @pytest.mark.ac("US-122", 1)
 def test_rag_query_cita_la_fuente_en_todo_criterio_con_valor_del_estudio_aunque_sea_desconocido_cuando_se_recupera_doc_a1():
-    cuerpo = _consultar({"doc-a1": PUNTAJE_ALTO})
+    cuerpo = _consultar({"doc-a1": RELEVANCIA_ALTA})
 
     criterios = _criterios_de(cuerpo, "doc-a1")
     citada = [external_id_de("doc-a1")]
