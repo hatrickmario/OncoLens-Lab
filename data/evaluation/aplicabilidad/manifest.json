@@ -1,0 +1,11 @@
+{
+  "clase": "sintetico",
+  "nombre": "aplicabilidad",
+  "version": "1",
+  "descripcion": "Pares paciente-fuente con el estado esperado por criterio (US-132, FX-08b-a). Solo datos sintéticos: títulos «(test)», pseudoPatientId de prueba, fechas relativas.",
+  "catalogVersion": "test-apl-1.0.0",
+  "catalogos": {
+    "mama": "packages/clinical-catalogs/test/fixtures/test-apl-1.0.0",
+    "prostata": "packages/clinical-catalogs"
+  }
+}

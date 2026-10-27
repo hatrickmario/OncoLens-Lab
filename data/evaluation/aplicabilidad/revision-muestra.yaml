@@ -1,0 +1,99 @@
+# Muestra revisada SINTÉTICA para medir M-08.4 en la CI: 2 documentos, 20 campos (19 correcto, 1 incorrecto). La revisión humana real vive en data/evaluation/corpus-metadatos/.
+release: release-sintetica-1
+prompt_version: metadatos_v1
+llm_model: fake-guion@1
+nli_model: fake-nli@1
+seed: semilla-sintetica
+pct: 10.0
+generated_at: '2026-10-16T00:00:00+00:00'
+documentos:
+- document_id: muestra-1
+  source_name: Fuente sintética (test)
+  external_id: MUESTRA-1
+  source_url: no_disponible
+  campos:
+  - campo: study_design
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: trial_phase
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: sample_size
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: primary_endpoint
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: estadio
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: ecog
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: linea
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: edad
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: subtipo
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: biomarcadores.her2
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+- document_id: muestra-2
+  source_name: Fuente sintética (test)
+  external_id: MUESTRA-2
+  source_url: no_disponible
+  campos:
+  - campo: study_design
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: trial_phase
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: sample_size
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: primary_endpoint
+    valor: valor-sintetico
+    revision: incorrecto
+    nota: ''
+  - campo: estadio
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: ecog
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: linea
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: edad
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: subtipo
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''
+  - campo: biomarcadores.her2
+    valor: valor-sintetico
+    revision: correcto
+    nota: ''

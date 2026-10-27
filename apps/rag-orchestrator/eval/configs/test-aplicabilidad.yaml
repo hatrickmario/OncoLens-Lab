@@ -1,0 +1,23 @@
+# Configuración de la familia `aplicabilidad` de `evaluate` con adapters falsos (US-132, L1D-244). Es la configuración de
+# la CI de esta familia: no carga modelos, no abre sockets y es reproducible (misma configuración, misma huella).
+# Es independiente de test-fake.yaml: `--suite all` no la usa y data/evaluation/baseline.json no depende de ella.
+nombre: test-aplicabilidad
+fixture: FX-08b-a
+dataset:
+  ruta: data/evaluation/aplicabilidad
+medicion:
+  reloj: simulado
+adaptadores:
+  proveedor: fake # fake | local (el catálogo SQL con rag_corpus se cablea con la medición real, US-233)
+umbrales:
+  nli_entailment_threshold: 0.7
+catalogo:
+  ruta_terminos: packages/clinical-catalogs # lista de términos prohibidos (RN-23) con la que el camino textual sanea
+corpus:
+  cutoff_date: '2026-10-16' # CORPUS_CUTOFF_DATE; `--corpus-cutoff-date` la sustituye (el runner no lee el entorno)
+  catalogo_en_memoria: data/evaluation/aplicabilidad/corpus-catalogo.yaml
+corpus_metadatos:
+  revision: data/evaluation/aplicabilidad/revision-muestra.yaml # la muestra real de US-118 vive en data/evaluation/corpus-metadatos/
+metas: # RN-22: metas iniciales propuestas (a recalibrar con DEC-07); M-08.2 y M-08.6 no son metas: son invariantes en 0
+  cobertura_poblacion: {minimo: 0.90}
+  exactitud_extraido_verificado: {minimo: 0.95}

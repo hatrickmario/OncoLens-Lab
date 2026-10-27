@@ -1,0 +1,24 @@
+{
+  "document_id": "doc-a1",
+  "external_id": "CDR-TEST-A1",
+  "title": "Estudio sintético doc-a1 (test)",
+  "tipo_de_cancer": "mama",
+  "metadata_source": "fuente_estructurada",
+  "population_criteria": {
+    "subtipo": "no_disponible",
+    "estadio": "I–III",
+    "linea": "no_disponible",
+    "biomarcadores": {
+      "her2": "positivo"
+    },
+    "edad": "no_disponible",
+    "ecog": "0-1"
+  },
+  "chunks": [
+    {
+      "chunk_id": "ch-a1-1",
+      "text": "Synthetic adjuvant study doc-a1 describing anti-HER2 therapy after surgery (test).",
+      "relevance_score": 0.9
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "pseudoPatientId": "psd_PA1synthetic01",
+  "population": "adulto",
+  "diagnosis": {
+    "dataRef": "r1",
+    "cancerType": "prostata",
+    "histology": "adenocarcinoma acinar",
+    "grade": "ISUP grupo 3",
+    "stagingSystem": "TNM_8",
+    "stageValue": "T3a",
+    "performanceScale": "ECOG",
+    "performanceValue": 1,
+    "monthsSinceDiagnosis": 1,
+    "provenance": {
+      "entryMethod": "seed",
+      "extractionConfidence": "n_a",
+      "reviewStatus": "verificado",
+      "conflict": false
+    }
+  },
+  "biomarkers": [
+    {
+      "dataRef": "r2",
+      "biomarkerName": "BRCA",
+      "value": "Mutación patogénica",
+      "resultType": "cualitativo",
+      "clinicalSignificance": "relevante",
+      "monthsAgo": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    }
+  ],
+  "clinicalNotes": [],
+  "currentLine": null,
+  "attributes": [],
+  "priorTreatments": [],
+  "events": [
+    {
+      "dataRef": "r4",
+      "eventType": "diagnostico",
+      "monthsAgo": 1,
+      "description": "Adenocarcinoma de próstata",
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
+    }
+  ],
+  "biomarkerTrends": [],
+  "missingCriticalData": [
+    "estado_castracion"
+  ],
+  "priorAnalyses": []
+}

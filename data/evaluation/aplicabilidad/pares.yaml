@@ -1,0 +1,103 @@
+# Verdad conocida de la familia `aplicabilidad` (US-132). Cada par es un paciente desidentificado (contextos/) contra una
+# fuente del corpus sintético (fuentes/) con el guion del LLM falso de aplicabilidad (guiones). El estado y la causa
+# esperados por criterio los fija un humano leyendo la regla del catálogo, no la salida del código (DEC-11).
+clase: sintetico
+version: '1'
+guiones:
+  # `propuestas`: lo único que el LLM de aplicabilidad puede devolver (criterio, valor, chunk); `nli`: veredicto del NLI falso.
+  APL-SILENCIO: {propuestas: [], nli: entailment}
+  APL-OK:
+    propuestas: [{criterio: estado_her2, valor: HER2 negativo, chunk: ch-a2-1}]
+    nli: entailment
+  APL-SIN-SOPORTE:
+    propuestas: [{criterio: estadio, valor: estadio I–III, chunk: ch-a2-1}]
+    nli: neutral
+  APL-CITA-AJENA:
+    propuestas: [{criterio: estado_her2, valor: HER2 negativo, chunk: ch-x-999}]
+    nli: entailment
+  APL-VALOR-PACIENTE:
+    propuestas: [{criterio: estado_her2, valor: '2+', chunk: ch-a2-1}]
+    nli: entailment
+pares:
+  - id: am1-a1
+    paciente: a-m1
+    fuente: doc-a1
+    guion: APL-SILENCIO
+    esperado:
+      estado_her2: {estado: coincide}
+      estadio: {estado: desconocido}
+      ecog: {estado: coincide}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a2-ok
+    paciente: a-m1
+    fuente: doc-a2
+    guion: APL-OK
+    esperado:
+      estado_her2: {estado: no_coincide}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: no_reportado_por_fuente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a2-sin-soporte
+    paciente: a-m1
+    fuente: doc-a2
+    guion: APL-SIN-SOPORTE
+    esperado:
+      estado_her2: {estado: desconocido, causa: no_reportado_por_fuente}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: no_reportado_por_fuente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a2-cita-ajena
+    paciente: a-m1
+    fuente: doc-a2
+    guion: APL-CITA-AJENA
+    esperado:
+      estado_her2: {estado: desconocido, causa: no_reportado_por_fuente}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: no_reportado_por_fuente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a2-valor-paciente
+    paciente: a-m1
+    fuente: doc-a2
+    guion: APL-VALOR-PACIENTE
+    esperado:
+      estado_her2: {estado: no_coincide}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: no_reportado_por_fuente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a4
+    paciente: a-m1
+    fuente: doc-a4
+    guion: APL-SILENCIO
+    esperado:
+      estado_her2: {estado: no_coincide}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: desconocido, causa: no_reportado_por_fuente}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  - id: am1-a5
+    paciente: a-m1
+    fuente: doc-a5
+    guion: APL-SILENCIO
+    esperado:
+      estado_her2: {estado: desconocido, causa: no_reportado_por_fuente}
+      estadio: {estado: desconocido, causa: no_reportado_por_fuente}
+      ecog: {estado: parcial}
+      estado_menopausico: {estado: desconocido, causa: falta_en_paciente}
+      linea_tratamiento: {estado: desconocido, causa: no_reportado_por_fuente}
+  # Próstata con el catálogo real: la ingesta no produce `grado` ni `estado_castracion` (L1D-117), así que salen desconocidos.
+  - id: pa1-p1
+    paciente: p-a1
+    fuente: doc-p1
+    guion: APL-SILENCIO
+    esperado:
+      estado_castracion: {estado: desconocido, causa: falta_en_paciente}
+      extension: {estado: desconocido, causa: no_reportado_por_fuente}
+      isup: {estado: desconocido, causa: no_reportado_por_fuente}
+      linea_tratamiento: {estado: desconocido, causa: falta_en_paciente}
+      ecog: {estado: coincide}
+      hrr_brca: {estado: desconocido, causa: no_reportado_por_fuente}
