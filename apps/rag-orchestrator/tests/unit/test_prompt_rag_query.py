@@ -10,10 +10,13 @@ from app.domain.alias_de_chunks import asignar_alias
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import (
+    ETIQUETA_EN_CONFLICTO,
+    ETIQUETA_SIN_VERIFICAR,
     PLANTILLA_RAG_QUERY,
     VERSION_DEL_PROMPT,
     bloque_de_datos_del_paciente,
     construir_prompt_rag_query,
+    datos_del_contexto,
     etiqueta_de_procedencia,
 )
 from app.schemas.generated.models import ClinicalContext, Provenance
@@ -192,6 +195,26 @@ def test_resumen_del_contexto_es_identico_cuando_el_ki67_esta_sin_verificar_y_cu
     assert resumen == resumen_del_contexto_clinico(verificado)
     assert "(sin verificar)" not in resumen
     assert "(en conflicto)" not in resumen
+
+
+def test_bloque_de_datos_sin_etiquetas_coincide_con_el_resumen_embebido_cuando_se_une_con_punto_y_coma():
+    contexto = _contexto_de_fx_t1a_a(ki67="requiere_revision", er_en_conflicto=True)
+
+    textos = [texto for texto, _ in datos_del_contexto(contexto)]
+
+    assert "; ".join(textos) == resumen_del_contexto_clinico(contexto)
+    lineas = bloque_de_datos_del_paciente(contexto).splitlines()
+    assert all(linea.startswith(f"- {texto}") for linea, texto in zip(lineas, textos, strict=True))
+
+
+def test_plantilla_explica_las_mismas_etiquetas_que_el_bloque_emite():
+    prompt = construir_prompt_rag_query("p", "- dato", [], "es")
+
+    encabezado = next(
+        linea for linea in prompt.splitlines() if linea.startswith("Datos del paciente")
+    )
+    assert ETIQUETA_SIN_VERIFICAR in encabezado
+    assert ETIQUETA_EN_CONFLICTO in encabezado
 
 
 @pytest.mark.ac("US-065", 5)

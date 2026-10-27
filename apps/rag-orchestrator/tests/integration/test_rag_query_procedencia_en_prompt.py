@@ -19,7 +19,10 @@ LINEA_RE = "- Receptor de estrógeno Positivo (80%)"
 def _consultar(*, conflicto: bool = False):
     solicitud = solicitud_de(Q_HER2)
     if conflicto:
-        solicitud["clinicalContext"]["biomarkers"][1]["provenance"]["conflict"] = True
+        estrogeno = next(
+            b for b in solicitud["clinicalContext"]["biomarkers"] if b["dataRef"] == "r3"
+        )
+        estrogeno["provenance"]["conflict"] = True
     llm = FakeLlmClient("LLM-OK")
     respuesta = entorno_con_alias(llm).consultar(solicitud)
     assert respuesta.status_code == 200

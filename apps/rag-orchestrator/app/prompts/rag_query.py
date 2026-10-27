@@ -46,7 +46,7 @@ Instrucciones:
 
 Pregunta: {pregunta}
 
-Datos del paciente (las etiquetas "(sin verificar)" y "(en conflicto)" indican el estado de revisión del dato; no forman parte del dato):
+Datos del paciente (las etiquetas "{etiqueta_sin_verificar}" y "{etiqueta_en_conflicto}" indican el estado de revisión del dato; no forman parte del dato):
 {contexto}
 
 Fragmentos:
@@ -64,13 +64,15 @@ INSTRUCCION_DE_DETALLE = (
 
 def construir_prompt_rag_query(
     pregunta: str,
-    contexto_clinico: str,
+    datos_del_paciente: str,
     fragmentos: Sequence[FragmentoConAlias],
     idioma: str,
     max_parrafos_detalle: int = 0,
 ) -> str:
-    """Rellena la plantilla con la pregunta enmascarada, el resumen clínico desidentificado y los chunks recuperados con su alias (RN-04)."""
+    """Rellena la plantilla con la pregunta enmascarada, el bloque de datos del paciente y los chunks recuperados con su alias (RN-04)."""
     return PLANTILLA_RAG_QUERY.format(
+        etiqueta_sin_verificar=ETIQUETA_SIN_VERIFICAR,
+        etiqueta_en_conflicto=ETIQUETA_EN_CONFLICTO,
         idioma=_NOMBRE_DEL_IDIOMA.get(idioma, idioma),
         instruccion_de_detalle=(
             INSTRUCCION_DE_DETALLE.format(maximo=max_parrafos_detalle)
@@ -78,24 +80,29 @@ def construir_prompt_rag_query(
             else ""
         ),
         pregunta=pregunta,
-        contexto=contexto_clinico or "No disponible",
+        contexto=datos_del_paciente or "No disponible",
         fragmentos="\n".join(_fragmento(f) for f in fragmentos),
     )
 
 
 def bloque_de_datos_del_paciente(contexto: ClinicalContext) -> str:
-    """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3)."""
-    lineas: list[str] = []
+    """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3).
+
+    Solo diagnóstico y biomarcadores: atributos, tratamientos previos y eventos quedan fuera (Non-Goal del S3).
+    """
+    return "\n".join(
+        _linea_etiquetada(texto, procedencia) for texto, procedencia in datos_del_contexto(contexto)
+    )
+
+
+def datos_del_contexto(contexto: ClinicalContext) -> list[tuple[str, Provenance]]:
+    """Texto y procedencia de cada dato clínico que el modelo y la recuperación reciben: única fuente de qué campos salen (RN-11)."""
+    datos: list[tuple[str, Provenance]] = []
     diagnostico = contexto.diagnosis
     if diagnostico is not None:
-        lineas.append(
-            _linea_etiquetada(_texto_del_diagnostico(diagnostico), diagnostico.provenance)
-        )
-    lineas += [
-        _linea_etiquetada(f"{b.biomarkerName.root} {b.value.root}", b.provenance)
-        for b in contexto.biomarkers
-    ]
-    return "\n".join(lineas)
+        datos.append((_texto_del_diagnostico(diagnostico), diagnostico.provenance))
+    datos += [(f"{b.biomarkerName.root} {b.value.root}", b.provenance) for b in contexto.biomarkers]
+    return datos
 
 
 def etiqueta_de_procedencia(procedencia: Provenance) -> str | None:
