@@ -26,6 +26,15 @@ _GUIONES: dict[str, tuple[PropuestaDePoblacion, ...]] = {
     ),
     "APL-CITA-AJENA": (_her2_negativo(CITA_AJENA),),
     "APL-SILENCIO": (),
+    # Valores descuidados de un LLM real (contrato común con el adapter, test_contrato_del_proponente.py).
+    "APL-CRUDO": (
+        PropuestaDePoblacion(
+            external_id_de("doc-a2"), "estado_her2", "  HER2 negativo \n", "ch-a2-1"
+        ),
+        PropuestaDePoblacion(external_id_de("doc-a2"), "estado_her2", "   ", "ch-a2-1"),
+        PropuestaDePoblacion(external_id_de("doc-a2"), "estado_her2", "HER2 negativo", ""),
+        PropuestaDePoblacion(external_id_de("doc-a2"), "estado_her2", "x" * 201, "ch-a2-1"),
+    ),
 }
 
 

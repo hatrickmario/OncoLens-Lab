@@ -55,6 +55,17 @@ class PropuestaDePoblacion:
     chunk_id: str
 
 
+LONGITUD_MAXIMA_DEL_VALOR = 200
+"""Un valor de población es una frase corta; una más larga no cabe como hipótesis del NLI ni como celda de la tabla."""
+
+
+def normalizar_propuesta(
+    external_id: str, criterio: str, valor: str, chunk_id: str
+) -> PropuestaDePoblacion | None:
+    """ESQUELETO del commit en rojo (Gate 2, LSP)."""
+    raise NotImplementedError("no implementado")
+
+
 # --- qué se le pide al LLM (D1) ------------------------------------------------------------------------------------
 
 
