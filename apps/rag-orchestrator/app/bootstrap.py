@@ -16,6 +16,7 @@ from app.api.errors import registrar_manejadores_de_error
 from app.api.health import crear_router_health
 from app.api.rag_query import crear_router_rag_query
 from app.api.trace import ContextoDeTraceId
+from app.application.aplicabilidad import ApplicabilityService
 from app.application.catalogo_exigido import ConsultaConCatalogoExigido
 from app.application.consulta_no_componible import ConsultaNoComponible
 from app.application.generation import LlmEvidenceGenerator
@@ -218,7 +219,7 @@ def crear_app(
     trace_ids = trace_ids or UuidTraceIdGenerator()
     clock = clock or RelojDelSistema()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    # Lo consume el motor de aplicabilidad (US-122); aquí solo se monta, una vez, desde el catálogo (L1D-126, D4).
+    # Los criterios se montan una vez desde el catálogo (L1D-126, D4) y los consume la aplicabilidad (US-122).
     app.state.criterios_de_aplicabilidad = (
         criterios_de_aplicabilidad
         if criterios_de_aplicabilidad is not None
@@ -239,6 +240,7 @@ def crear_app(
         clock=clock,
         generador=generador,
         catalogo_clinico=catalogo_clinico,
+        criterios_de_aplicabilidad=app.state.criterios_de_aplicabilidad,
     )
     app.include_router(
         crear_router_health(
@@ -348,6 +350,7 @@ def _registrar_consulta_de_evidencia(
     clock: Clock,
     generador: EvidenceGenerator | None,
     catalogo_clinico: CatalogoClinico,
+    criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
 ) -> None:
     if consulta is None and settings.llm_provider == "fake":
         consulta = ConsultaConCatalogoExigido(
@@ -358,7 +361,9 @@ def _registrar_consulta_de_evidencia(
         # (adapters de embeddings, reranker e idioma, US-231): sin ellos responde 503 fallando cerrado.
         _exigir_configuracion_de_recuperacion(settings)
         consulta = (
-            _crear_servicio_de_recuperacion(settings, recuperacion, clock, generador)
+            _crear_servicio_de_recuperacion(
+                settings, recuperacion, clock, generador, criterios_de_aplicabilidad
+            )
             if recuperacion is not None
             else ConsultaNoComponible()
         )
@@ -371,6 +376,7 @@ def _crear_servicio_de_recuperacion(
     puertos: PuertosDeRecuperacion,
     clock: Clock,
     generador: EvidenceGenerator | None,
+    criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
 ) -> RAGOrchestratorService:
     return RAGOrchestratorService(
         detector_idioma=puertos.detector_idioma,
@@ -380,6 +386,7 @@ def _crear_servicio_de_recuperacion(
         lector_release=puertos.lector_release,
         catalogo=puertos.catalogo,
         catalogo_clinico=puertos.catalogo_clinico,
+        aplicabilidad=ApplicabilityService(criterios_de_aplicabilidad),
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de

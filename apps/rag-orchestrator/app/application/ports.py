@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Literal, Protocol
 
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.relevance import ChunkPuntuado
@@ -208,6 +209,15 @@ class CorpusCatalogReader(Protocol):
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         """Solo devuelve los documentos que existen; un campo que el catálogo no registra es ``None``."""
+        ...
+
+    def poblacion_por_documento(
+        self, document_ids: Collection[str]
+    ) -> dict[str, PoblacionDelEstudio]:
+        """``population_criteria`` y ``metadata_source`` (incluido ``pendiente``) de los documentos que existen.
+
+        Solo lectura del schema ``corpus``; un documento inexistente no figura. Un fallo se propaga: el orquestador
+        lo traduce en ``503 RETRIEVAL_UNAVAILABLE`` (nunca una población vacía disfrazada de «no reportado»)."""
         ...
 
 
