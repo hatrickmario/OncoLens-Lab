@@ -32,11 +32,11 @@
 
 ## 4. frontend
 
-- [ ] 4.1 (test del AC primero) Test con Testing Library + MSW sobre `/api/*`: "muestra No disponible en Endpoint principal y Tamaño de muestra cuando la cita los trae en null [US-127 AC-3]" y "muestra fase, endpoint, tamaño y versión con el valor del ejemplo [US-127 AC-1]", incluyendo que los rótulos "No disponible" no llevan `data-origen`. Commit `test(L1D-182)` en rojo.
-- [ ] 4.2 (test del AC primero) Filas `trialPhase`, `primaryEndpoint`, `sampleSize`, `guidelineVersion` en `components/molecules/citation-details.tsx` tras "Diseño del estudio"; rótulos en `messages/es.json` (design, Componentes y patrones); `valorONoDisponible` para `number | null` sin tratar `0` como ausente (design D3). Verificación: 4.1 en verde y `tsc`/lint sin errores. Commit `feat(L1D-182)`.
-- [ ] 4.3 (test del AC primero) E2E Playwright en `apps/web/e2e/panel-analisis.spec.ts` contra Compose con seed sintético y `LLM_PROVIDER=fake`: "muestra No disponible en endpoint y tamaño de muestra de la cita de doc-a3 [US-127 AC-3]". Verificación: E2E en verde con *trace*.
-- [ ] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo.
-- [ ] 4.5 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-182)`.
+- [x] 4.1 (test del AC primero) Test con Testing Library + MSW sobre `/api/*`: "muestra No disponible en Endpoint principal y Tamaño de muestra cuando la cita los trae en null [US-127 AC-3]" y "muestra fase, endpoint, tamaño y versión con el valor del ejemplo [US-127 AC-1]", incluyendo que los rótulos "No disponible" no llevan `data-origen`. Commit `test(L1D-182)` en rojo. **Hecho** (1085ce2e): `apps/web/tests/ui/citation-details-metadatos.test.tsx`, rojo en las aserciones; AC-1 parte de `con-evidencia-s1.json` con los cuatro campos sustituidos por valores válidos del tipo generado (ningún ejemplo trae valores no nulos).
+- [x] 4.2 (test del AC primero) Filas `trialPhase`, `primaryEndpoint`, `sampleSize`, `guidelineVersion` en `components/molecules/citation-details.tsx` tras "Diseño del estudio"; rótulos en `messages/es.json` (design, Componentes y patrones); `valorONoDisponible` para `number | null` sin tratar `0` como ausente (design D3). Verificación: 4.1 en verde y `tsc`/lint sin errores. Commit `feat(L1D-182)`. **Hecho** (a3625567): `numeroONoDisponible` y `rotuloDeDiseno` en `lib/evidence/procedencia.ts`; rótulos de `studyDesign` en `messages/es.json` (deuda «Enum guia», sin cambio de contrato); 328 tests de web en verde, tsc y eslint sin errores.
+- [x] 4.3 (test del AC primero) E2E Playwright en `apps/web/e2e/panel-analisis.spec.ts` contra Compose con seed sintético y `LLM_PROVIDER=fake`: "muestra No disponible en endpoint y tamaño de muestra de la cita de doc-a3 [US-127 AC-3]". Verificación: E2E en verde con *trace*. **Hecho** (a1ecc98c): `scripts/e2e/ejecutar.sh -- --grep US-127`, 1 passed; verde al primer intento porque la UI ya existía (regresión).
+- [x] 4.4 Loop visual (visual-check): estados, consola sin errores ni violaciones de CSP, red solo /api/* sin PII en URLs, accesibilidad y teclado, rendimiento y capturas a 375 y 1280 px; cada fallo se convierte primero en un test en rojo. **Hecho:** PASS, sin fallos (consola 0, red solo /api/*).
+- [x] 4.5 **Refactor: sin cambios** (citation-details.tsx 75 líneas, un solo concepto). Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-182)`.
 
 ## 5. evaluación
 
@@ -45,7 +45,7 @@
 ## 6. Verificación
 
 - [x] 6.1 `openspec validate l1d-182-metadatos-fuente-catalogo --strict` en verde.
-- [ ] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3.
+- [ ] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3. **web y E2E verificados** (328 Vitest, E2E US-127); pendiente clinical-api (sección 3).
 - [ ] 6.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec del proveedor en la integración (sin cambio de schema: `contracts:verify-provider` y `contracts:breaking` sin diferencias). **ai-services verificado** (rag-orchestrator: `verify-provider` 218 respuestas, `breaking` y `generate:check` sin diferencias); pendiente lo de `clinical-api` y `web`.
 
 ## Workflow follow-up
