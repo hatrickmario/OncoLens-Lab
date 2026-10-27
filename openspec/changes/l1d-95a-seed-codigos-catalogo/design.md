@@ -30,9 +30,13 @@ presente; y un paciente de test (F-M2 con nombres del catálogo, sembrado con `s
 JSON del catálogo por el propio test, incluido `BRCA`) deja `re`, `rp` y `brca_germinal` presentes. BRCA y HRR no
 existen en el seed (OL-01) y no se añaden: se cubren con la fila sintética del test. 
 
-**D3b · `her2_ihq` (PENDIENTE de decisión del usuario).** El catálogo exige `exam.exam_type = "IHQ"` y el seed siembra
-`inmunohistoquimica`. Opciones: (a) alinear el seed a `IHQ` en este change (recomendado: es seed); (b) dejarlo en
-L1D-95/S4. No se aplica hasta que el usuario decida; este change y su test no afirman `her2_ihq`.
+**D3b · `exam_type` del seed alineado al catálogo.** Decidido (usuario, 2026-10-27): el catálogo exige
+`exam.exam_type = "IHQ"` para `her2_ihq` y el seed sembraba `inmunohistoquimica`; el seed pasa a `IHQ` en este change
+(`tipo: 'IHQ'` en `pacientes/{a,c,e}.ts`). Se actualizan los fixtures que lo referencian
+(`tests/support/filas-sinteticas.ts` y el valor por defecto de `tests/support/completitud.ts`, solo si ningún catálogo
+de test discrimina por tipo de examen) y las aserciones de los tests del seed/ficha que lean `exam_type`. El test de D3
+afirma también `her2_ihq` presente con el catálogo real 1.1.0 en (a) y (e), que tienen `HER2`; (c) no tiene `HER2` en
+OL-01 (solo `RP`) y no se le añade, así que en (c) `her2_ihq` queda `faltante`.
 
 **D4 · Compatibilidad.** Un cambio de `nombre` en una fila sembrada no requiere migración (las `clave:` del seed no
 cambian). Los entornos locales/CI se re-siembran; el piloto no usa el seed (guardas existentes).
@@ -41,7 +45,7 @@ cambian). Los entornos locales/CI se re-siembran; el piloto no usa el seed (guar
 
 Solo `clinical-api` y PostgreSQL de test. No se añade ningún campo a la frontera con `rag-orchestrator`; solo cambia el
 nombre canónico del biomarcador (`RE`/`RP`), que no es un identificador y viaja en `clinicalContext.biomarkers[].biomarkerName`
-y en el texto embebido del paciente. Avisar a `ai-eval-runner`: cambia el texto embebido del paciente semilla. Seed y
+y en el texto embebido del paciente. Hay que avisar a `ai-eval-runner` (lo hace el orquestador `sprint-S3`): cambia el texto embebido del paciente semilla (nombres `RE`/`RP` y tipo de examen `IHQ`). Seed y
 fixtures son sintéticos (RN-13/RN-14); sin identidad ni secretos. RN-27: sin entrada en el catálogo → código nulo y `no_mapeado`, nunca
 inventado.
 

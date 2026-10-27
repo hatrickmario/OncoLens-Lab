@@ -15,6 +15,7 @@ El seed de `clinical-api` SHALL sembrar los biomarcadores de receptores hormonal
 - **GIVEN** el catálogo real `packages/clinical-catalogs` `1.1.0` montado y pacientes sintéticos sembrados con los nombres del catálogo (semilla (a) con `RE`, semilla (c) con `RP` y un paciente de test con `RE`, `RP` y `BRCA`)
 - **WHEN** se calcula el checklist de cada uno con `CompletenessService`
 - **THEN** `re` está presente en (a), `rp` está presente en (c) y `re`, `rp` y `brca_germinal` están presentes en el paciente de test
+- **AND** `her2_ihq` está presente en (a) y (e) porque el seed siembra el examen con `exam_type = "IHQ"` del catálogo
 - **AND** `catalogVersion = "1.1.0"`
 
 #### Scenario: Un biomarcador con el nombre antiguo no cuenta como el dato crítico [US-003 AC-1] [RN-27]
