@@ -15,6 +15,7 @@ import {
 } from './evidence-analysis.service.js';
 import {
   ChecklistNoDisponibleError,
+  type EtiquetaDeDatoCritico,
   type CatalogVersionProvider,
   type ChecklistDeFaltantes,
   type ContextDeidentifier,
@@ -45,6 +46,8 @@ export interface DependenciasDelGateway {
   registrar: Registrar;
   /** Obligatorio y explícito: la raíz de composición decide el desidentificador (`crearContextDeidentifier`, L1D-203). */
   desidentificador: ContextDeidentifier;
+  /** `label.es` del catálogo montado para el inciso (b) de la Base (US-128). */
+  etiquetaDe: EtiquetaDeDatoCritico;
 }
 
 /** Claves del catálogo en estado `faltante`, en el orden del catálogo (US-002). */
@@ -77,7 +80,7 @@ export function componerGatewayDeAnalisis(dependencias: DependenciasDelGateway):
     rag: dependencias.rag,
     cierre: crearAnalysisCompletion({
       analisis: repositorio,
-      base: crearBaseDelAnalisis(),
+      base: crearBaseDelAnalisis({ etiquetaDe: dependencias.etiquetaDe }),
       reloj: dependencias.reloj,
       idsDeAnalisis: dependencias.idsDeAnalisis,
       disclaimer: dependencias.config.aiDisclaimerText,
