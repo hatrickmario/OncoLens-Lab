@@ -91,6 +91,9 @@ class PropuestaPlanificada:
 
     propuesta: PropuestaDePoblacion
     premisa: str
+    hipotesis: str
+    """``{etiqueta del criterio}: {valor}``: el valor suelto («negativo») lo implicaría un chunk que lo diga de otro
+    biomarcador («ER-negative, HER2-positive»); con el criterio nombrado la afirmación es sobre el criterio pedido."""
 
 
 @dataclass(frozen=True)
@@ -128,7 +131,11 @@ def planificar_propuestas(
         if motivo is not None:
             rechazadas.append((propuesta, motivo))
         else:
-            por_validar.append(PropuestaPlanificada(propuesta, _texto_del_chunk(origen, propuesta)))
+            por_validar.append(
+                PropuestaPlanificada(
+                    propuesta, _texto_del_chunk(origen, propuesta), _hipotesis_de(origen, propuesta)
+                )
+            )
     return PlanDePropuestas(tuple(por_validar), tuple(rechazadas))
 
 
@@ -149,13 +156,18 @@ def _motivo_de_rechazo(
     return None
 
 
+def _hipotesis_de(fuente: FuenteParaProponer, propuesta: PropuestaDePoblacion) -> str:
+    etiqueta = next(c.etiqueta_es for c in fuente.criterios if c.clave == propuesta.criterio)
+    return f"{etiqueta}: {propuesta.valor}"
+
+
 def _texto_del_chunk(fuente: FuenteParaProponer, propuesta: PropuestaDePoblacion) -> str:
     return next(c.texto for c in fuente.chunks if c.chunk_id == propuesta.chunk_id)
 
 
 def pares_para_el_nli(plan: PlanDePropuestas) -> list[ParNli]:
-    """Premisa = texto del chunk citado; hipótesis = el valor propuesto, en el orden de ``plan.por_validar``."""
-    return [ParNli(p.premisa, p.propuesta.valor) for p in plan.por_validar]
+    """Premisa = texto del chunk citado; hipótesis = el criterio y su valor, en el orden de ``plan.por_validar``."""
+    return [ParNli(p.premisa, p.hipotesis) for p in plan.por_validar]
 
 
 def aceptar_propuestas(plan: PlanDePropuestas, soportadas: Sequence[bool]) -> ResultadoDePropuestas:

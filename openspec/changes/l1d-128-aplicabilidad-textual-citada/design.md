@@ -56,7 +56,7 @@ ignoran (ADR-34). Descartada: una llamada por criterio (latencia lineal).
    si no → rechazo sin NLI (AC-3).
 3. Filtro RN-23 sobre el valor propuesto como campo generado `studyPopulationValue`
    (`coincidencias_en_campo_generado()`, D7); coincidencia → rechazo sin NLI.
-4. NLI: premisa = `chunkTextSnapshot` del chunk citado, hipótesis = `studyPopulationValue`; soporte
+4. NLI: premisa = `chunkTextSnapshot` del chunk citado, hipótesis = `{etiqueta del criterio}: {studyPopulationValue}` (Gate 2: el valor suelto lo implicaría un chunk de varios biomarcadores); soporte
    solo con `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD` (`soporta()` de US-064). Los pares de todas las
    propuestas van en **un único lote de la etapa de aplicabilidad** (`VerificadorDeSoporte.pares_soportados`, mismo
    clasificador y misma falla cerrada). *Desviación* de la versión anterior de D3 («junto con los de las opciones»):

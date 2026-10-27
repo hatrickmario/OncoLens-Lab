@@ -26,7 +26,7 @@ Para un criterio sin valor estructurado en `population_criteria`, el valor del e
 - **GIVEN** el paciente A-M1, el catálogo `test-apl-1.0.0`, la fuente `doc-a2` (guía con `metadata_source = pendiente`, sin población extraída, con el chunk `ch-a2-1`: "This guidance applies to patients with HER2-negative disease") recuperada sobre el umbral, el LLM falso `APL-OK` (afirma "HER2 negativo" citando `ch-a2-1`) y el NLI falso en `entailment` para "HER2 negativo" contra `ch-a2-1` (FX-08b-a)
 - **WHEN** `POST /rag/query` evalúa la aplicabilidad de `doc-a2`
 - **THEN** el criterio `estado_her2` de `applicability[doc-a2]` trae `studyPopulationValue = "HER2 negativo"`, `citedSources` con `ch-a2-1` y `status = no_coincide`
-- **AND** el adapter NLI se invocó con el texto de `ch-a2-1` como premisa y "HER2 negativo" como hipótesis
+- **AND** el adapter NLI se invocó con el texto de `ch-a2-1` como premisa y "Estado de HER2: HER2 negativo" (etiqueta del criterio y valor) como hipótesis
 - **AND** `patientValue` de `estado_her2` es "3+ (IHQ)", copiado del `clinicalContext`
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
 
