@@ -200,10 +200,58 @@ export function crearEvidenceAnalysisService(
     });
   }
 
+  /**
+   * Tipo habilitado: los faltantes críticos se calculan en el servidor antes de armar el contexto (si fallan, el
+   * análisis falla cerrado sin llamar a Backend 2), luego se desidentifica, se consulta con plazo y se cierra (RN-06).
+   */
+  async function analizarConIA(
+    { traceId, userId, peticion }: SolicitudDeAnalisis,
+    caso: CasoClinico,
+    ahora: Date,
+  ): Promise<ResultadoDelAnalisis> {
+    const faltantes = await checklist.faltantes(peticion.patientId);
+    const { contexto, dataRefs } = construirContextoPermitido(caso, ahora, faltantes);
+    const { clinicalContext, query } = await desidentificador.desidentificar({
+      traceId,
+      patientId: peticion.patientId,
+      contexto,
+      query: peticion.query,
+      dataOrigin: caso.paciente.dataOrigin,
+    });
+    const request = armarRagQueryRequest({
+      traceId,
+      query,
+      sourcesSelected: peticion.sourcesSelected,
+      dataClassification: caso.paciente.dataOrigin,
+      catalogVersion: catalogo.version(),
+      maxOptions: config.analysisMaxOptions,
+      filtros: peticion.filtersApplied,
+      clinicalContext,
+      anioActual: ahora.getUTCFullYear(),
+      aniosPorDefecto: config.evidenceDefaultYears,
+    });
+    const respuesta = await consultarConPlazo(
+      rag,
+      request,
+      calcularDeadline(ahora, config.ragTimeoutMs),
+      config.ragTimeoutMs,
+    );
+    return cierre.completar({
+      traceId,
+      patientId: peticion.patientId,
+      episodeId: caso.episodioId,
+      userId,
+      questionTemplateId: peticion.questionTemplateId ?? null,
+      continueWithWarning: peticion.continueWithWarning,
+      request,
+      dataRefs,
+      respuesta,
+    });
+  }
+
   return {
     async solicitar(solicitud) {
-      const { traceId, userId, peticion } = solicitud;
-      const caso = await casos.leerCaso(peticion.patientId);
+      const caso = await casos.leerCaso(solicitud.peticion.patientId);
       if (caso === null) throw new PacienteNoEncontradoError();
       exigirTipoCancer(caso);
 
@@ -211,44 +259,7 @@ export function crearEvidenceAnalysisService(
       if (alcanceDelTipo(caso, tiposHabilitados) === 'tipo_no_habilitado') {
         return cerrarTipoNoHabilitado(solicitud, caso, ahora);
       }
-      const faltantes = await checklist.faltantes(peticion.patientId);
-      const { contexto, dataRefs } = construirContextoPermitido(caso, ahora, faltantes);
-      const { clinicalContext, query } = await desidentificador.desidentificar({
-        traceId,
-        patientId: peticion.patientId,
-        contexto,
-        query: peticion.query,
-        dataOrigin: caso.paciente.dataOrigin,
-      });
-      const request = armarRagQueryRequest({
-        traceId,
-        query,
-        sourcesSelected: peticion.sourcesSelected,
-        dataClassification: caso.paciente.dataOrigin,
-        catalogVersion: catalogo.version(),
-        maxOptions: config.analysisMaxOptions,
-        filtros: peticion.filtersApplied,
-        clinicalContext,
-        anioActual: ahora.getUTCFullYear(),
-        aniosPorDefecto: config.evidenceDefaultYears,
-      });
-      const respuesta = await consultarConPlazo(
-        rag,
-        request,
-        calcularDeadline(ahora, config.ragTimeoutMs),
-        config.ragTimeoutMs,
-      );
-      return cierre.completar({
-        traceId,
-        patientId: peticion.patientId,
-        episodeId: caso.episodioId,
-        userId,
-        questionTemplateId: peticion.questionTemplateId ?? null,
-        continueWithWarning: peticion.continueWithWarning,
-        request,
-        dataRefs,
-        respuesta,
-      });
+      return analizarConIA(solicitud, caso, ahora);
     },
   };
 }
