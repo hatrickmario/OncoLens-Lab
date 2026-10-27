@@ -9,7 +9,8 @@ dependen las claves de `population_criteria` del dataset `[S3 resp. 16]`). Sin c
 
 - [ ] 1.1 (test después) Dataset `data/evaluation/aplicabilidad/` (D2): `manifest.json` con `clase: sintetico` y
       `catalogVersion: test-apl-1.0.0`, contextos A-M1 y P-A1, fuentes `doc-a1`…`doc-a5` de FX-08b-a más una de
-      próstata (claves de `population_criteria` según el `studyKey` de `test-apl-1.0.0`, `[S3 resp. 16]`),
+      próstata evaluada con el catálogo real (`test-apl-1.0.0` no tiene criterios de próstata; claves de `population_criteria`
+      según el `studyKey` del catálogo, `[S3 resp. 16]`),
       `pares.yaml` con el estado y la causa esperados por criterio y los guiones `APL-OK`,
       `APL-SIN-SOPORTE`, `APL-VALOR-PACIENTE`, `APL-CITA-AJENA`. Verificación: test de humo de carga con
       `guardas.py` en verde.
@@ -44,8 +45,8 @@ dependen las claves de `population_criteria` del dataset `[S3 resp. 16]`). Sin c
 - [ ] 1.9 (TDD estricto) Familia `aplicabilidad` en `config_suite.py`, `composicion_suite.py`, `evaluate.py` (código
       3), `armado_reporte.py` y `esquema_suite.py`; puerto `LectorDeCoberturaDePoblacion` con adapter SQL
       (`rag_corpus`) y en memoria; `revision_muestra.py`; metas `cobertura_poblacion` y
-      `exactitud_extraido_verificado` en `metas-iniciales.yaml` sin tocar las existentes; sección `corpus_metadatos`
-      en `test-fake.yaml`. Verificación: 1.3–1.7 en verde. Commit `feat(L1D-244)`.
+      `exactitud_extraido_verificado` en `metas-iniciales.yaml` sin tocar las existentes; configuración propia
+      `test-aplicabilidad.yaml` (no se toca `test-fake.yaml` ni `baseline.json`) y selección de config en el envoltorio. Verificación: 1.3–1.7 en verde. Commit `feat(L1D-244)`.
 - [ ] 1.10 (test después) No-fuga: el reporte y la salida de la familia no contienen `patientValue`, valores de
       metadatos, notas de revisión ni textos de chunks. Verificación: test con captura de salidas en verde.
 - [ ] 1.11 (test después) Regresión: suites existentes de `app/evaluation` (familias `retrieval`, `generation`,
