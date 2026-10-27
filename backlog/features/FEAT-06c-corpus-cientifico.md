@@ -216,6 +216,7 @@ texto. Validación de licencia y fuentes excluidas con las listas en configuraci
 `FEAT-06c` · Sprint 3 · Estimación **3** · — (técnica, PRD §17; OL-02) · FR-19 (ingesta como entregable), RN-05 · AC-06.1 (corpus abierto) · ⛔ ADR-39 (modelo *sparse*) · ↪ US-117a · 🔗 Regresión [RN-05] → US-059 · 🔗 Consumida por: US-112 (*sparse* poblado)
 
 > **Decidido (usuario, 2026-10-23, `[S3 resp. 2]`):** segunda mitad de la partición de US-117 (versionado sin borrado y *sparse* de la semilla), 3 pts, en el S3. Se crea en Linear cuando el workspace tenga cupo.
+> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** recibe como **tarea 0** el refactor del núcleo común de ingesta (`SeedCorpusLoader` e `IngestionPipelineService`, deuda de L1D-116), antes de tocar el *sparse*. Es un refactor: la cobertura del módulo no baja respecto de `main`. Absorbe también la tarea 1.10 de L1D-116 (smoke con pesos reales de BGE-M3, vía `EMBEDDING_SPARSE_WEIGHTS_*`).
 
 ## Story
 Como responsable del corpus, quiero que una versión nueva de un documento reemplace a la

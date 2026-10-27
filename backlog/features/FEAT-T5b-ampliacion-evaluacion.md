@@ -219,8 +219,11 @@ en la lista de lo que le falta.
   el reporte. `[AC-T5.4]`
 - **AC-4 (borde · falsos faltantes conocidos)** · Dado un paciente del dataset con un
   biomarcador `no_mapeado` que corresponde a un ítem crítico, cuando se evalúa, entonces
-  el reporte lo cuenta como falso positivo y lo lista por clave (sin datos del paciente).
+  el reporte lo trata según su `name`: si coincide con el catálogo, cuenta como presente
+  (no es falso faltante); si NO coincide, es un falso faltante conocido y lo lista por
+  clave (sin datos del paciente).
   `[M-04.2]` (asumido: hace visible el efecto de la nota pendiente de FEAT-04 US-002)
+  > **Decidido (usuario, 2026-10-24):** un `no_mapeado` con `name` coincidente cuenta como presente (no es falso faltante); un `no_mapeado` cuyo `name` NO coincide con el catálogo es un falso faltante conocido, listado por clave. Sustituye a «lo cuenta como falso positivo» (`[S3 resp. 5]`).
 
 ## Contexto técnico
 Comando de `clinical-api` (`npm run eval:completeness`) que ejecuta `CompletenessService`

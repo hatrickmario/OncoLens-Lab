@@ -494,6 +494,7 @@ erDiagram
         int sample_size "nullable"
         jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
         string metadata_source "fuente_estructurada|extraido_verificado|pendiente"
+        jsonb extracted_fields "campos extraídos y verificados; [] por defecto (L1D-117)"
         string guideline_version "nullable"
         string source_url "nullable; URL https del documento original (ARR-07)"
         date last_updated_at "nullable"
@@ -1101,6 +1102,7 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `sample_size` | integer |  | nullable |
 | `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible |
 | `metadata_source` | text |  | fuente_estructurada\|extraido_verificado\|pendiente; `pendiente` = la extracción no corrió (LLM o NLI caídos, o salida inválida): nunca `fuente_estructurada`, la fuente no publicó nada (RN-25) |
+| `extracted_fields` | jsonb |  | L1D-117: campos de `population_criteria` que la extracción verificó (`[]` por defecto). La muestra de M-08.4 solo toma estos, no los que declara el manifiesto |
 | `guideline_version` | text |  | nullable |
 | `source_url` | text |  | nullable; URL pública (https) del documento original de donde se extrajo el texto; la UI la enlaza en «Fragmento citado» (ARR-07) |
 | `last_updated_at` | date |  | nullable |
@@ -1234,6 +1236,7 @@ CREATE UNIQUE INDEX diagnosis_grading_reference_uq ON clinical.diagnosis_grading
 - **Procedencia y estado de revisión propios:** cada gradación tiene su `entry_method`, su confianza de extracción y **un único** `review_status`; no existe un segundo estado de revisión (el contrato lo expone como `provenance.reviewStatus`).
 - **Gradación de referencia** (`is_reference`, una por diagnóstico) para `Diagnosis.grade` y para el checklist: en próstata, la de prostatectomía con alcance `global`; si no existe, la `peor` de la biopsia. En mama, la más reciente verificada (**asumido**; lo confirma US-110).
 - **Formato canónico de `Diagnosis.grade`:** próstata `"Gleason 4+3=7 · ISUP 3"`; mama `"Nottingham grado 2"`. El seed (US-039) y la extracción (FEAT-01b) escriben con este mismo formato.
+- **Claves de `poblacion.json` (L1D-117, S3):** `grado` vive en `Diagnosis.grade`, no en `ClinicalAttribute`; `estado_menopausico` y `estado_castracion` son `attribute_key`. En el S3 la ingesta del corpus no las extrae: quedan «Desconocido» explícito hasta que haya dataset de evaluación (decisión del usuario, 2026-10-24).
 - **Validación clínica:** validada por el Oncólogo asesor A (`[S1 resp. 1]`, 2026-10-13); el destino y el formato no cambian (`docs/decisions/DEC-05-tnm-isup.md`). Si en adelante se rechazaran, se escala a Ingeniería.
 
 ## 7. Preguntas de seguimiento: `clinical.analysis_follow_up`

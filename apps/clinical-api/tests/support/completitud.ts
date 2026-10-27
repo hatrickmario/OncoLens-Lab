@@ -58,7 +58,26 @@ export async function prepararSiembra(
   return { cliente, ids, userId: base.userId };
 }
 
-async function nuevoPaciente(contexto: ContextoDeSiembra): Promise<PacienteSembrado> {
+/**
+ * Ki-67 `no_mapeado` en `requiere_revision` (AC-8): `name` es el texto propuesto por el extractor y `originalName` el del
+ * documento; el emparejamiento solo mira `name`.
+ */
+export async function sembrarKi67NoMapeado(
+  p: PacienteSembrado,
+  name: string,
+  originalName = 'Ki67 índice',
+): Promise<void> {
+  await sembrarBiomarcador(p, {
+    name,
+    originalName,
+    value: '30%',
+    reviewStatus: 'requiere_revision',
+    mappingStatus: 'no_mapeado',
+    entryMethod: 'ocr',
+  });
+}
+
+export async function nuevoPaciente(contexto: ContextoDeSiembra): Promise<PacienteSembrado> {
   const { cliente, ids, userId } = contexto;
   const paciente = await insertar(cliente, 'clinical.patient', filaDePaciente(ids));
   const patientId = paciente['id'] as string;
@@ -227,7 +246,7 @@ export async function sembrarFM1(contexto: ContextoDeSiembra): Promise<PacienteS
   return p;
 }
 
-/** F-M2 (mama, mixto): RE sin verificar, RP rechazado, HER2 corregido, Ki-67 `no_mapeado`, un tratamiento previo. */
+/** F-M2 (mama, mixto): RE sin verificar, RP rechazado, HER2 corregido, un tratamiento previo y sin Ki-67 (el AC-8 añade uno `no_mapeado` con `sembrarKi67NoMapeado`). */
 export async function sembrarFM2(contexto: ContextoDeSiembra): Promise<PacienteSembrado> {
   const p = await nuevoPaciente(contexto);
   await sembrarDiagnostico(p, {
@@ -255,15 +274,6 @@ export async function sembrarFM2(contexto: ContextoDeSiembra): Promise<PacienteS
     value: '2+ (IHQ)',
     reviewStatus: 'corregido',
     entryMethod: 'manual_correction',
-  });
-  // El nombre canónico coincide con el del catálogo a propósito: solo `mapping_status` lo deja fuera (RN-27, AC-8).
-  await sembrarBiomarcador(p, {
-    name: 'Ki-67',
-    originalName: 'Ki67 índice',
-    value: '30%',
-    reviewStatus: 'requiere_revision',
-    mappingStatus: 'no_mapeado',
-    entryMethod: 'ocr',
   });
   await sembrarTratamientoPrevio(p, { regimen: 'letrozol', reviewStatus: 'verificado' });
   const pii = piiSinteticaDeFM2();

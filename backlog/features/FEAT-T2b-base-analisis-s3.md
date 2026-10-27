@@ -24,6 +24,7 @@
 `FEAT-T2b` · Sprint 3 *(adelantada del S4, `[S3 resp. 18]`)* · Estimación **3** · HU-20 · FR-27 (b, dueña) · AC-T2.1 (inciso b), AC-T2.2 (b), AC-T2.4, AC-04.3 (Base) · ↪ FEAT-04 US-006, US-066, US-067 · 🔗 Regresión [RN-02] → US-055
 
 > **Decidido (usuario, 2026-10-24, `[S3 resp. 18]`, Gate 1 del S3):** se adelanta al S3 porque l1d-98 (US-006) ya calcula y persiste los faltantes con el análisis; sin US-128 la Base diría "Los faltantes críticos aún no se calculan", que sería falso. S3 +3 pts, S4 −3.
+> **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** recibe la deuda de UX de la Base: mostrar la etiqueta legible del dato faltante declarado en vez de la clave cruda (p. ej. `estado_menopausico`).
 
 ## Story
 Como oncólogo, quiero que cada análisis diga qué datos críticos de mi paciente faltaban

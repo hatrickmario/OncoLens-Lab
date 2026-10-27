@@ -13,7 +13,10 @@ from app.config.logging import configurar_logging_json
 from app.infrastructure.corpus.composicion import puertos_del_corpus_segun_proveedores
 
 configurar_logging_json(trace_id_actual)
-_settings, _catalogo = cargar_configuracion_o_salir()
+_settings, _montado = cargar_configuracion_o_salir()
 app = crear_app(
-    _settings, corpus=puertos_del_corpus_segun_proveedores(_settings), catalogo_clinico=_catalogo
+    _settings,
+    corpus=puertos_del_corpus_segun_proveedores(_settings),
+    catalogo_clinico=_montado.catalogo,
+    criterios_de_aplicabilidad=_montado.criterios,
 )

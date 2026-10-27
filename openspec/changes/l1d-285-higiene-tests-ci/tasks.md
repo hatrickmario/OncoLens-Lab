@@ -54,7 +54,7 @@
   `pull` correcto conserva el mensaje de salud; Pytest se invoca una vez `[US-213 AC-13]` [S3 resp. 14]. Tiempo máximo explícito.
   Luego `descargar_imagenes()` en `scripts/ci/integracion-rag-orchestrator.sh` con `INTEGRACION_RAG_PULL_INTENTOS` (3) y
   `INTEGRACION_RAG_PULL_ESPERA_BASE_S`, documentadas en la cabecera de variables del script (D8). Verifica: test hermético en verde.
-- [ ] 2.7 **[HECHA en código; falta el job real `integration-rag` del PR en verde — no verificable sin PR]** (test después) **Verificación previa (`[S3 resp. 16]`):** confirmar que `gcr.io/etcd-development/etcd:v3.5.34` incluye
+- [x] 2.7 **(job real `integration-rag` del PR #199 en verde: pass 18/18, run de ea6a3138)** (test después) **Verificación previa (`[S3 resp. 16]`):** confirmar que `gcr.io/etcd-development/etcd:v3.5.34` incluye
   `etcdctl` (p. ej., `docker run --rm --entrypoint etcdctl gcr.io/etcd-development/etcd:v3.5.34 version`), porque el
   *healthcheck* lo usa; si no lo trae, parar y reportar. Luego `milvus-etcd` → `gcr.io/etcd-development/etcd:v3.5.34` en `infra/docker/docker-compose.yml` y caso que
   comprueba con `compose config` que ninguna imagen viene de `quay.io` y que el *healthcheck* se conserva `[US-213 AC-13]`.
@@ -81,7 +81,7 @@
 
 ## 4. cierre
 
-- [ ] 4.1 (parte ai-services verificada: pytest de rag-orchestrator 2134 passed, `npm run quality` 0 errores, `test:quality` 145 passed, `contracts:verify-provider` 193 respuestas, `openspec validate --strict` válido; faltan suites de `clinical-api`/`web` y `run-cases.sh`, que en este entorno falla 5 casos por falta de `gitleaks`) `openspec validate l1d-285-higiene-tests-ci --strict` en verde; `npm run quality`, `ci/tests/run-cases.sh`, suites de
+- [x] 4.1 **(CI del PR #199 en ea6a3138: `build-test` pass con el Pytest completo de rag-orchestrator; `quality`, `integration-rag`, `contracts`, `e2e` en verde)** (parte ai-services verificada: pytest de rag-orchestrator 2134 passed, `npm run quality` 0 errores, `test:quality` 145 passed, `contracts:verify-provider` 193 respuestas, `openspec validate --strict` válido; faltan suites de `clinical-api`/`web` y `run-cases.sh`, que en este entorno falla 5 casos por falta de `gitleaks`) `openspec validate l1d-285-higiene-tests-ci --strict` en verde; `npm run quality`, `ci/tests/run-cases.sh`, suites de
   `clinical-api`, `web` y `rag-orchestrator` en verde; `contracts:verify-provider` en verde (hubo cambio de contrato). Sin
   `run-ai-eval` (no toca modelo, prompt, umbral de IA, catálogo ni corpus).
 - [ ] 4.2 `.env.example`: sin variables nuevas de aplicación (las de `integracion-rag` viven en el script y en `ci.yml`); si
@@ -110,6 +110,8 @@ Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloqu
     en un mismo archivo.
   - #17 diferencias entre `handlerDesdeEjemplo` (TS) y `handler_desde_ejemplo` (Python): `sobrescribir` vacío, patrones
     `:id` en la URL y validación del cuerpo contra el esquema; alinear ambos o documentar la diferencia.
+  - **Decidido (usuario, 2026-10-24)** deuda a **US-232**: «medir la cobertura de la integración de clinical-api» (el LCOV del
+    unitario no la mide; por eso `*.service.ts` salió de `coverage.alertPaths`).
   - #18 hecho: `rmSync(enlace, { force: true })` en `integracionRag.test.mjs` (commit `d385f571`).
   - #19 `docs/process/ci.md`, fila del job `quality` (ver 5.2).
   - #20 unos 16 archivos de handlers MSW manuales (`web`, `clinical-api`) y unos 10 de `respx` sin migrar al arnés
@@ -131,3 +133,10 @@ Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloqu
 - [ ] 5.2 (deuda) `docs/process/ci.md`, fila del job `quality` (cobertura, higiene y AC): fuera de los paths de este
   implementador; la actualiza quien tenga `docs/process/`.
 - [ ] 5.3 (deuda, historia de altas del S6) `minLength` y `pattern` de `fullName` en el contrato de altas de pacientes.
+
+## 6. decisiones del usuario (2026-10-24)
+
+- [x] 6.1 **Decidido (usuario, 2026-10-24):** `*.service.ts` fuera de `coverage.alertPaths`; deuda a US-232 (5.1).
+- [x] 6.2 **Decidido (usuario, 2026-10-24):** `check-ac-coverage` filtra a los changes que toca el diff (`--todos` o
+  `QUALITY_AC_TODOS=1` para el barrido completo) `[US-213 AC-9]`.
+- [x] 6.3 **Decidido (usuario, 2026-10-24):** `timeout-minutes` del job `quality` se mantiene en 15: medición 4 min 48 s (<12 min).

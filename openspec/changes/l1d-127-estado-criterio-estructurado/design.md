@@ -13,8 +13,9 @@ Ver proposal.md (Why). Estado actual en `apps/rag-orchestrator`:
   (`jsonb`, data-model §4.6; `app/domain/corpus_seed/poblacion.py` normaliza la semilla a seis claves o
   `no_disponible`).
 - `CatalogoClinico` (`infrastructure/catalogo_clinico/manifiesto.py`) solo expone `version()` y
-  `tipos_de_cancer()`. `packages/clinical-catalogs/<tipo>/aplicabilidad.json` hoy es `{"version","items":[]}` y su
-  esquema no fija la forma del ítem: ambas cosas son de US-121 (L1D-126).
+  `tipos_de_cancer()`. Los criterios los entrega el puerto `CriteriosDeAplicabilidad` de US-121 (L1D-126,
+  `app/domain/criterios_aplicabilidad.py`, con su adapter sobre `<tipo>/aplicabilidad.json`, ya con contenido y con
+  esquema estricto del ítem); este change lo inyecta, no lo define.
 - El contrato ya trae `SourceApplicability`, `ApplicabilityCriterion` y `ApplicabilitySummary`
   (`contracts/schemas/evidence.yaml`, congelados en US-033); `clinicalContext` trae `biomarkers`, `diagnosis`
   (`stageValue`, `performanceValue`), `attributes`, `currentLine`, `priorTreatments` y `missingCriticalData`.
@@ -141,12 +142,11 @@ US-121.
 | Módulo | Acción | Depende de |
 |---|---|---|
 | `app/domain/applicability_rules.py` | nuevo: `evaluar_criterio()`, reglas por tipo, `valor_del_paciente()`, `contar_estados()`, `poblacion_no_comparable()` | solo tipos de dominio (puro, sin E/S) |
-| `app/domain/` (tipos) | nuevos `CriterioDeAplicabilidad`, `PoblacionDelEstudio`, `CriterioEvaluado` | — |
-| `app/application/aplicabilidad.py` | nuevo `ApplicabilityService.evaluar(documentos, contexto, tipo)` | puertos `CatalogoClinico` (criterios) y `CorpusCatalogReader` (población); **sin** LLM |
-| `app/application/ports.py` | `CatalogoClinico.criterios_de_aplicabilidad(tipo)`; `CorpusCatalogReader.poblacion_por_documento(ids)` | — |
+| `app/domain/` (tipos) | nuevos `PoblacionDelEstudio`, `CriterioEvaluado`; **reutiliza** `CriterioDeAplicabilidad` de L1D-126 (su campo `estado_de_revision` = propuesta/pendiente/revisado es distinto del estado calculado Coincide/Parcial/No coincide/Desconocido de este change) | — |
+| `app/application/aplicabilidad.py` | nuevo `ApplicabilityService.evaluar(documentos, contexto, tipo)` | puerto `CriteriosDeAplicabilidad` (L1D-126, inyectado) y `CorpusCatalogReader` (población); **sin** LLM |
+| `app/application/ports.py` | `CorpusCatalogReader.poblacion_por_documento(ids)` | — |
 | `app/application/rag_orchestrator_service.py` | nueva etapa `_evaluar_aplicabilidad()` en la rama `con_evidencia` | `ApplicabilityService` |
 | `app/application/respuesta_con_evidencia.py` | recibe la aplicabilidad y la mapea a `SourceApplicability` | modelos generados |
-| `infrastructure/catalogo_clinico/` | carga `aplicabilidad.json` del tipo (forma de US-121) | archivo montado |
 | `infrastructure/catalog/catalogo_reader.py` | lectura de `population_criteria` y `metadata_source` | schema `corpus`, rol `rag_corpus` |
 | `app/bootstrap.py` | cablea el servicio | — |
 
