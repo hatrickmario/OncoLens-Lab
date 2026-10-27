@@ -60,9 +60,9 @@ Gate 2. AC-5 sí es rojo genuino (hoy no hay etiqueta).
 
 **D5 — AC-3 y AC-4 sobre el payload y el registro, aseverados por identidad del dato, no por nombre.** El test
 captura el request hacia `rag-orchestrator` (MSW desde `contracts/examples/`) y lee `clinical_context_snapshot` de
-PostgreSQL real. Identifica los datos por su `dataRef`/id (los ids que `insertarFxT1aA` devuelve) y comprueba la
+PostgreSQL real. Identifica los datos por los ids que `insertarFxT1aA` devuelve. El cruce `dataRef` → id se hace con `patient_data_links` del `AIAnalysisRecord` persistido (`entityId` de cada enlace): el test comprueba que ningún enlace apunta a los dos ids `rechazado`/`reemplazado`. El UUID de la entidad nunca va en el `clinicalContext` (RN-10). Además comprueba la
 condición «ningún `reviewStatus` `rechazado`/`reemplazado` en el payload ni en el snapshot». No usa el nombre
-«Receptor de …»: el seed pasa a `RE`/`RP` en el change de seed de la O3 y el test no debe depender del rótulo.
+«Receptor de …»: el seed pasa a `RE`/`RP` en `l1d-95a-seed-codigos-catalogo` y el test no debe depender del rótulo.
 
 **D6 — Un solo origen de los estados descartados.** `sqlDatoVigente()` (SQL) y `registrosVigentes()` (completitud)
 derivan de la misma constante `ESTADOS_DESCARTADOS` de `modules/patients/estados-de-revision.ts`. Un unitario

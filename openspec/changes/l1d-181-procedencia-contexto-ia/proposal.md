@@ -4,7 +4,7 @@
 
 L1D-181 · US-065 · FEAT-T1a (L1D-34) · Sprint 3 · Estimación **3** · HU-03 · RN-07 (dueña: etiquetas en el
 contexto y exclusión de rechazados) · AC-02.6 (contexto), AC-T1.1 (contexto) · readme §4.1 `Provenance`,
-§4.2 `clinicalContext` · US-065 AC-1…AC-5 · ↪ US-052 (constructor de contexto, archivado en
+§4.2 `clinicalContext` · US-065 AC-1…AC-5 · ↪ `l1d-95a-seed-codigos-catalogo` (renombra el seed a `RE`/`RP`) · ↪ US-052 (constructor de contexto, archivado en
 `2026-10-18-l1d-103-gateway-contexto-clinico`) · 🔗 Consumida por: US-066 (inciso a de la Base del análisis),
 US-124 (`l1d-129-aplicabilidad-causas-avisos`, aviso `en_conflicto`/`sin_verificar`) · `[S3 resp. 8]` (AC-4 sobre
 conflicto sembrado).
