@@ -248,3 +248,17 @@ def test_rag_query_cambia_ecog_de_coincide_a_no_coincide_sin_tocar_el_resto_cuan
     assert con_1_0_1["ecog"]["status"] == "no_coincide"
     sin_ecog = [c for c in con_1_0_0 if c != "ecog"]
     assert {c: con_1_0_0[c] for c in sin_ecog} == {c: con_1_0_1[c] for c in sin_ecog}
+
+
+@pytest.mark.ac("US-122", 1)
+def test_rag_query_cita_la_fuente_en_todo_criterio_con_valor_del_estudio_aunque_sea_desconocido_cuando_se_recupera_doc_a1():
+    cuerpo = _consultar({"doc-a1": PUNTAJE_ALTO})
+
+    criterios = _criterios_de(cuerpo, "doc-a1")
+    citada = [external_id_de("doc-a1")]
+    for clave in ("estado_her2", "ecog", "estadio"):  # estadio: desconocido con valor del estudio
+        assert criterios[clave]["studyPopulationValue"] is not None
+        assert [c["externalId"] for c in criterios[clave]["citedSources"]] == citada
+    for clave in ("linea_tratamiento", "estado_menopausico"):  # sin valor del estudio: sin cita
+        assert criterios[clave]["studyPopulationValue"] is None
+        assert criterios[clave]["citedSources"] == []
