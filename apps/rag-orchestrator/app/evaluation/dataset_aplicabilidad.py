@@ -17,6 +17,7 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
+from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.evaluation.config_suite import ConfigInvalida, _ruta_del_repo
 from app.evaluation.dataset_loader import CLASE_SINTETICA, DatasetInvalido
@@ -26,7 +27,6 @@ from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_d
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from app.schemas.generated.models import ClinicalContext
 
-NO_DISPONIBLE = "no_disponible"
 ETIQUETAS_NLI = ("entailment", "neutral")
 
 

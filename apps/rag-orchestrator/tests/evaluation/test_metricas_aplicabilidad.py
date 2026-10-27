@@ -150,6 +150,11 @@ class TestCoberturaDePoblacion:
     def test_cuenta_el_valor_con_alcance_como_una_hoja(self) -> None:
         assert tiene_criterios_de_poblacion({"ecog": {"valor": "0-1", "alcance": "subgrupo"}})
 
+    def test_no_cuenta_el_documento_que_produce_la_ingesta_cuando_no_declara_nada(self) -> None:
+        from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
+
+        assert not tiene_criterios_de_poblacion(resolver_criterios_poblacion({}))
+
     def test_devuelve_nulo_cuando_no_hay_documentos_vigentes(self) -> None:
         assert proporcion_con_criterios(0, 0) is None
 

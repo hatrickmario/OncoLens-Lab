@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-NO_DISPONIBLE = "no_disponible"
+from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 
 
 def tiene_criterios_de_poblacion(population_criteria: Mapping[str, object]) -> bool:
