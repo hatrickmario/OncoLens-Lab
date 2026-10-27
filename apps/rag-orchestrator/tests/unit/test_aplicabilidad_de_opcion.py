@@ -61,3 +61,18 @@ def test_agregar_elige_la_fuente_de_mayor_relevancia_cuando_dos_fuentes_empatan_
 
     assert agregada.por_fuente[0].external_id == "CDR-TEST-A6"
     assert {f.external_id for f in agregada.por_fuente} == {"CDR-TEST-A1", "CDR-TEST-A6"}
+
+
+def test_agregar_devuelve_resumen_en_cero_y_no_marca_no_comparable_cuando_la_opcion_no_tiene_fuentes_evaluadas():
+    agregada = agregar_aplicabilidad_de_opcion([])
+
+    assert agregada.resumen == ResumenDeEstados(0, 0, 0, 0)
+    assert agregada.por_fuente == ()
+    assert agregada.poblacion_no_comparable is False
+    assert agregada.avisos == ()
+
+
+def test_agregar_desempata_por_external_id_ascendente_cuando_las_fuentes_empatan_en_todo():
+    agregada = agregar_aplicabilidad_de_opcion([_fuente("CDR-TEST-B"), _fuente("CDR-TEST-A")])
+
+    assert [f.external_id for f in agregada.por_fuente] == ["CDR-TEST-A", "CDR-TEST-B"]
