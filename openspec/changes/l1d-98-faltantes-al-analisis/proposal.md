@@ -75,11 +75,11 @@ no cambia aquí.
   `test-1.0.0` y `test-1.1.0` en `apps/clinical-api/tests/fixtures/completeness/catalogos/`) y FX-04-b (pacientes
   F-M1, F-M2, F-M3, F-P1). El adaptador del puerto `ChecklistDeFaltantes` es la única pieza del gateway que
   conoce esa interfaz. L1D-94 (1.12b) **trasladó a L1D-95 el cableado** de `componerCompletitud` en
-  `composition.ts`/`server.ts` y el change de seed de la O3 no lo hace: aún no existe, la tarea 1.6b lo hace aquí.
-- ↪ **Change de seed de la O3 (renombra a `RE`/`RP` los biomarcadores «Receptor de …»)**: el catálogo real declara
+  `composition.ts`/`server.ts` y el `l1d-95a-seed-codigos-catalogo` no lo hace: aún no existe, la tarea 1.6b lo hace aquí.
+- ↪ **`l1d-95a-seed-codigos-catalogo` (renombra a `RE`/`RP` los biomarcadores «Receptor de …»)**: el catálogo real declara
   las claves `re` y `rp`; mientras el seed no mergee, el checklist con el **catálogo real** da `re`/`rp` como
   faltantes falsos. Por eso L1D-98 va **después** del change de seed (los tests con `test-1.0.0` no se ven
-  afectados).
+  afectados). Riesgo conocido adicional: `her2_ihq` saldría faltante falso con el catálogo real (`exam_type = 'IHQ'` vs `'inmunohistoquimica'` sembrado); no afirmarlo en demo/AC. Decisión pendiente del usuario: alinear `exam_type` en `l1d-95a-seed-codigos-catalogo` (recomendado) o en L1D-95/S4.
 - ↪ **US-052 / US-053** (archivados, S1): gateway, persistencia antes de responder, deadline y mapeo de fallos.
 - ↪ **US-066** (archivado, S2): `AnalysisBasisBuilder`, que ya recibe el request interno con la lista.
 - 🔗 Produce para **L1D-188 (US-128)**, adelantada al S3 (`[S3 resp. 18]`): ↪ L1D-98; declara los faltantes en la

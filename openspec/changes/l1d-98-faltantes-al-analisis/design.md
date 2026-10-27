@@ -68,7 +68,7 @@ declarado. `[S3 resp. 5]`.
 comparten fuente en el mismo proceso (AC-6 de US-002 lo cubre al cambiar `CLINICAL_CATALOG_PATH`).
 
 `componerCompletitud` (`completeness.module.ts`) existe pero nadie lo cablea: L1D-94 (1.12b) trasladó el cableado a
-L1D-95 y el change de seed de la O3 no lo hace. Este change lo **cablea en `composition.ts`/`server.ts`** con
+L1D-95 y el `l1d-95a-seed-codigos-catalogo` no lo hace. Este change lo **cablea en `composition.ts`/`server.ts`** con
 `db: pool` y la misma `rutaDelCatalogo` (`CLINICAL_CATALOG_PATH`) y `leerArchivo` que `startup.ts` entrega a
 `crearProveedorDeCatalogo`, de modo que `CatalogVersionProvider` y el checklist leen **el mismo catálogo**. El
 servicio compuesto se inyecta (vía el adaptador del puerto) en `componerGatewayDeAnalisis`; si US-003 (L1D-95)
@@ -119,8 +119,9 @@ Regla con nombre propio: ninguna nueva en dominio (la regla del checklist es de 
   versión" sigue hasta que entre US-128 (L1D-188), adelantada al S3 (`[S3 resp. 18]`). Mitigación: **L1D-98 y
   L1D-188 deben mergear seguidos** (entre ambos merges la Base es incoherente con el registro); L1D-188 va en la
   oleada inmediata posterior y no se despliega una build intermedia.
-- **[Faltantes falsos `re`/`rp` con el catálogo real]** → hasta que el change de seed de la O3 (renombra a `RE`/`RP`)
+- **[Faltantes falsos `re`/`rp` con el catálogo real]** → hasta que el `l1d-95a-seed-codigos-catalogo` (renombra a `RE`/`RP`)
   mergee, el seed no satisface esas claves. Mitigación: L1D-98 va **después** del seed.
+- **[Riesgo CONOCIDO: `her2_ihq` faltante falso con el catálogo real]** → el catálogo real exige `exam.exam_type = 'IHQ'` y el seed siembra `'inmunohistoquimica'`, así que `her2_ihq` saldría `faltante` para los pacientes (a), (c) y (e). No se afirma en demo ni en AC con el catálogo real (los AC usan `test-1.0.0`).
 - **[`[]` no es «completo»]** → la lista vacía solo significa «ningún faltante» con diagnóstico y tipo habilitado;
   sin ellos el análisis se corta antes de calcular (D2) y `tipo_no_habilitado` persiste `[]` sin evaluar.
 - **[Latencia]** → una lectura más por análisis; el p95 del análisis (15 s) lo domina Backend 2.
@@ -128,6 +129,7 @@ Regla con nombre propio: ninguna nueva en dominio (la regla del checklist es de 
 
 ## Open Questions
 
+- **Q4 · PENDIENTE de decisión del usuario (afecta: demo con catálogo real):** dónde se alinea `exam_type` (`'IHQ'` del catálogo vs `'inmunohistoquimica'` del seed): en `l1d-95a-seed-codigos-catalogo` (recomendado) o en L1D-95/S4.
 - **Q1 · cerrada (usuario, 2026-10-24, `[S3 resp. 18]`):** US-128 (L1D-188) se adelanta al S3 y es quien
   declara los faltantes en la Base (inciso (b) y retiro del supuesto "Los faltantes críticos aún no se calculan
   en esta versión"). Este change **no** toca el texto de la Base; L1D-188 depende de él (↪ L1D-98).

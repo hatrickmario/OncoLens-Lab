@@ -1,7 +1,7 @@
 # Tasks — l1d-98-faltantes-al-analisis
 
 > ↪ Depende de **L1D-94 (US-002)** (mergeado): `CompletenessService.calcular(patientId)`, FX-04-a (`test-1.0.0`) y
-> FX-04-b (F-M2). Va **después del change de seed de la O3** (renombra a `RE`/`RP`; con el catálogo real `re`/`rp`
+> FX-04-b (F-M2). Va **después del `l1d-95a-seed-codigos-catalogo`** (renombra a `RE`/`RP`; con el catálogo real `re`/`rp`
 > saldrían faltantes falsos). L1D-188 debe mergear inmediatamente después de este change.
 >
 > Matriz TDD (CLAUDE.md): endpoint y service con lógica → **TDD estricto, doble bucle** (commit `test(L1D-98)`
