@@ -236,14 +236,14 @@ modifican.
 
 ## Open Questions
 
-- **PENDIENTE de decisión (usuario) · Documentos `pendiente` omitidos.** No tienen `SourceApplicability`, así que
-  `l1d-128` (US-123, camino textual) debe reconciliarse con esa omisión: ¿quién los re-incorpora (el camino
-  textual, con extracción + cita + NLI, o ninguno)? No se decide aquí.
-- **PENDIENTE de decisión (usuario) · Casos límite de `igualdad` en HER2** (semántica sin cambiar; unitario que los
+- **Decidido (usuario, 2026-10-27) · Documentos `pendiente` omitidos.** No tienen `SourceApplicability`.
+  `l1d-128` (US-123, camino textual) los re-incorpora en su Gate 1 del S4 y debe reconciliarse con esa omisión;
+  `l1d-127` no cambia (los omite).
+- **Decidido (usuario, 2026-10-27) · Casos límite de `igualdad` en HER2** (se mantienen, con unitario que los
   fija): paciente "negativo" vs estudio "positivo" → `desconocido`; paciente "2+ (IHQ)" vs estudio "negativo" →
   `no_coincide`; `igualdad` con `partial.when = solo_subgrupo` no produce `parcial` (solo `rango` y `pertenencia`).
-  Recomendación: mantener `desconocido` hasta que un catálogo ≥ 1.2.0 añada `negativo` a `rule.equivalences`.
-- **Nota para US-126 (UI):** si una opción tiene como única fuente un documento `pendiente` (sin
+  Se mantienen hasta que un catálogo ≥ 1.2.0 añada `negativo` a `rule.equivalences`.
+- **Nota para US-126 (UI)** (`Decidido (usuario, 2026-10-27)`): si una opción tiene como única fuente un documento `pendiente` (sin
   `SourceApplicability`), mostrar «Sin datos de aplicabilidad de esta fuente: metadatos del estudio no disponibles».
 
 Pendientes de definir (los verá el humano en `/sprint-start`):
