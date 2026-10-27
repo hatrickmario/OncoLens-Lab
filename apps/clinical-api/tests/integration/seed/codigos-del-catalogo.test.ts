@@ -107,7 +107,7 @@ describe('Códigos del seed solo desde el catálogo versionado', () => {
 
   it('un biomarcador sin entrada en el catálogo queda con código nulo y no_mapeado, sin descartarse [US-039 AC-4]', async () => {
     const { rows } = await cliente.query<{ loinc_code: string | null; mapping_status: string }>(
-      `SELECT loinc_code, mapping_status FROM clinical.biomarker WHERE name = 'Receptor de progesterona'`,
+      `SELECT loinc_code, mapping_status FROM clinical.biomarker WHERE name = 'RP'`,
     );
 
     expect(rows).toEqual([{ loinc_code: null, mapping_status: 'no_mapeado' }]);

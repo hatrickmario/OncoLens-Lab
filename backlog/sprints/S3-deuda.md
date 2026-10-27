@@ -19,3 +19,7 @@
 ## Decisiones del usuario (2026-10-24)
 
 1. L1D-94 tarea 1.12b → trasladada a L1D-95 (US-003). 2. RN-27: `Biomarker` `no_mapeado` cuenta como presente sin verificar. 3. RE/RP: el seed adopta los códigos del catálogo (US-003). 4. L1D-117: `grado`, `estado_menopausico` y `estado_castracion` quedan «Desconocido» explícito en el S3. 5. Muestra de metadatos desde la release/catálogo. 6. El CLI de ingesta se niega con nube o proveedor no local y tiene temperatura de extracción propia (0). 7. `poblacion.json` asimétrico hasta US-122. 8. Control de CI por hash contra cambios de aplicabilidad sin subir versión. 9. Arranque estricto con `aplicabilidad.json` inválido. 10-12. L1D-285: sin `*.service.ts` en `alertPaths`, alertas de `check-ac-coverage` filtradas al diff, `quality` con timeout según la duración real. 13. AC-7 de L1D-287 aceptado con la evidencia sintética (`reports/eval/l1d-287-ac7-temperaturas.md`); la prueba con el chunk real pasa a la Demo 3. 14. `.gitleaks.toml`: allowlist acotada para `generic-api-key` en el catálogo de aplicabilidad.
+
+## Decisión del usuario (2026-10-27)
+
+- Decisión 3 (seed RE/RP/BRCA/HRR con los códigos del catálogo): la parte del **seed** se adelanta a la O3 como change `l1d-95a-seed-codigos-catalogo` (2 pts de L1D-95/US-003 adelantados); el router `/completeness` y el cableado siguen en L1D-95 (S4). **L1D-98 espera a este change** (emparejará por `dataRef`/`id`; también L1D-181).
