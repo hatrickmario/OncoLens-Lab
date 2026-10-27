@@ -86,7 +86,8 @@ class AplicabilidadTextual:
         plan = planificar_propuestas(propuestas, a_proponer, self._terminos.reglas_coincidentes)
         soportadas = await self._soporte.pares_soportados(trace_id, pares_para_el_nli(plan))
         resultado = aceptar_propuestas(plan, soportadas)
-        self._registrar(trace_id, a_proponer, propuestas, plan, resultado.aceptadas, inicio)
+        recuentos = recuentos_de_propuestas(a_proponer, propuestas, plan, resultado.aceptadas)
+        self._registrar(trace_id, recuentos, inicio)
         return AplicabilidadCompleta(
             _con_valores_aceptados(fuentes, criterios, resultado.aceptadas),
             resultado.omitidas,
@@ -115,28 +116,37 @@ class AplicabilidadTextual:
     def _registrar(
         self,
         trace_id: str,
-        fuentes: Sequence[FuenteParaProponer],
-        propuestas: Sequence[PropuestaDePoblacion],
-        plan: PlanDePropuestas,
-        aceptadas: Sequence[PropuestaDePoblacion],
+        recuentos: Mapping[str, int],
         inicio: datetime,
     ) -> None:
-        por_motivo = [m for _, m in plan.rechazadas]
+        detalle = " ".join(f"{k}={v}" for k, v in recuentos.items())
         logger.info(
-            "event=rag_query_poblacion_textual traceId=%s fuentes=%d propuestas=%d aceptadas=%d "
-            "rechazadasPorCita=%d rechazadasPorLenguaje=%d rechazadasPorNli=%d latenciaMs=%d nliModel=%s "
+            "event=rag_query_poblacion_textual traceId=%s %s latenciaMs=%d nliModel=%s "
             "applicabilityPromptVersion=%s",
             trace_id,
-            len(fuentes),
-            len(propuestas),
-            len(aceptadas),
-            por_motivo.count(MotivoDeRechazo.cita_fuera_de_la_fuente),
-            por_motivo.count(MotivoDeRechazo.lenguaje_no_permitido),
-            len(plan.por_validar) - len(aceptadas),
+            detalle,
             int((self._reloj.ahora() - inicio).total_seconds() * 1000),
             self._soporte.nli_model,
             VERSION_DEL_PROMPT_APLICABILIDAD,
         )
+
+
+def recuentos_de_propuestas(
+    fuentes: Sequence[FuenteParaProponer],
+    propuestas: Sequence[PropuestaDePoblacion],
+    plan: PlanDePropuestas,
+    aceptadas: Sequence[PropuestaDePoblacion],
+) -> dict[str, int]:
+    """Solo recuentos para el log: nunca un valor propuesto, un ``chunkId`` ni texto de un chunk (RN-10, RN-25)."""
+    motivos = [motivo for _, motivo in plan.rechazadas]
+    return {
+        "fuentes": len(fuentes),
+        "propuestas": len(propuestas),
+        "aceptadas": len(aceptadas),
+        "rechazadasPorCita": motivos.count(MotivoDeRechazo.cita_fuera_de_la_fuente),
+        "rechazadasPorLenguaje": motivos.count(MotivoDeRechazo.lenguaje_no_permitido),
+        "rechazadasPorNli": len(plan.por_validar) - len(aceptadas),
+    }
 
 
 def _fuentes_para_proponer(
