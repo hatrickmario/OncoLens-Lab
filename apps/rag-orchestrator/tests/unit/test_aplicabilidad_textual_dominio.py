@@ -105,7 +105,7 @@ def test_planificar_manda_al_nli_la_propuesta_con_cita_de_su_fuente_y_su_texto_c
     plan = planificar_propuestas([propuesta()], [fuente()], sin_terminos)
 
     assert [p.propuesta for p in plan.por_validar] == [propuesta()]
-    assert pares_para_el_nli(plan) == [ParNli(TEXTO_A2, "HER2 negativo")]
+    assert pares_para_el_nli(plan) == [ParNli(TEXTO_A2, "Estado de HER2: HER2 negativo")]
     assert plan.rechazadas == ()
 
 
@@ -260,3 +260,31 @@ def test_con_valor_textual_conserva_falta_en_paciente_cuando_el_paciente_no_tien
 
     assert (resultado.estado, resultado.causa) == ("desconocido", "falta_en_paciente")
     assert resultado.valor_estudio == "posmenopáusicas"
+
+
+# --- la hipótesis del NLI nombra el criterio (RN-01, hallazgo del Gate 2) ------------------------------------------------
+
+
+def test_la_hipotesis_del_nli_lleva_la_etiqueta_del_criterio_para_que_un_chunk_de_varios_biomarcadores_no_la_implique_por_otro():
+    multiple = FuenteParaProponer(
+        "CDR-A2",
+        fuente().criterios,
+        (ChunkDeFuente("ch-a2-1", "ER-negative, HER2-positive disease."),),
+    )
+
+    plan = planificar_propuestas([propuesta(valor="negativo")], [multiple], sin_terminos)
+
+    assert pares_para_el_nli(plan) == [
+        ParNli("ER-negative, HER2-positive disease.", "Estado de HER2: negativo")
+    ]
+
+
+@pytest.mark.parametrize("valor", ["HER2 no positivo", "no amplificado", "HER2 not positive"])
+def test_con_valor_textual_no_da_coincide_con_una_negacion_suelta_cuando_el_paciente_es_her2_positivo(
+    valor: str,
+):
+    resultado = con_valor_textual(
+        CRITERIOS["estado_her2"], evaluado("estado_her2"), propuesta(valor=valor)
+    )
+
+    assert resultado.estado != "coincide"

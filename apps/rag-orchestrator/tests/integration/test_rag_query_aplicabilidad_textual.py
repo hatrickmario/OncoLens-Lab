@@ -80,13 +80,13 @@ def test_rag_query_acepta_her2_negativo_citando_ch_a2_1_y_queda_no_coincide_cuan
     assert (
         her2["citedSources"][0]["chunkTextSnapshot"] == TEXTO_DE_CH_A2_1
     )  # copiado del corpus (RN-04)
-    assert ParNli(TEXTO_DE_CH_A2_1, "HER2 negativo") in nli.pares_recibidos
+    assert ParNli(TEXTO_DE_CH_A2_1, "Estado de HER2: HER2 negativo") in nli.pares_recibidos
 
 
 @pytest.mark.ac("US-123", 2)
 def test_rag_query_deja_estadio_desconocido_sin_el_texto_y_suma_un_omitido_cuando_apl_sin_soporte_y_nli_neutral():
     sin_propuesta = _consultar(ProponenteFalso("APL-SILENCIO"), NliFalso(por_defecto=IMPLICA))
-    nli = NliFalso(resultados={"estadio I–III": NEUTRAL}, por_defecto=IMPLICA)
+    nli = NliFalso(resultados={"Estadio: estadio I–III": NEUTRAL}, por_defecto=IMPLICA)
 
     cuerpo = _consultar(ProponenteFalso("APL-SIN-SOPORTE"), nli)
 
@@ -97,7 +97,7 @@ def test_rag_query_deja_estadio_desconocido_sin_el_texto_y_suma_un_omitido_cuand
     )
     assert estadio["studyPopulationValue"] is None
     assert estadio["citedSources"] == []
-    assert ParNli(TEXTO_DE_CH_A2_1, "estadio I–III") in nli.pares_recibidos
+    assert ParNli(TEXTO_DE_CH_A2_1, "Estadio: estadio I–III") in nli.pares_recibidos
     for texto in _texto_completo(cuerpo):
         assert "estadio I–III" not in texto and "estadio I\\u2013III" not in texto
     assert cuerpo["omittedClaims"] == sin_propuesta["omittedClaims"] + 1
@@ -166,7 +166,7 @@ def test_rag_query_responde_503_nli_unavailable_sin_aplicabilidad_cuando_el_nli_
     assert not {"applicability", "evidenceOptions"} & set(cuerpo)
     assert "HER2 negativo" not in respuesta.text
     assert (
-        ParNli(TEXTO_DE_CH_A2_1, "HER2 negativo") in nli.pares_recibidos
+        ParNli(TEXTO_DE_CH_A2_1, "Estado de HER2: HER2 negativo") in nli.pares_recibidos
     )  # falló al validar la propuesta
 
 
