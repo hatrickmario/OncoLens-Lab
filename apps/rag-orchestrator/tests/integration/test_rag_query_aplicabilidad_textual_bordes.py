@@ -2,6 +2,7 @@
 
 import logging
 
+from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from tests.support.aplicabilidad import TEXTO_DE_CH_A2_1, entorno_de_aplicabilidad, solicitud_a_m1
 from tests.support.nli_falso import IMPLICA, NliFalso
 from tests.support.proponente_falso import ProponenteFalso
@@ -73,3 +74,39 @@ def test_rag_query_solo_registra_conteos_cuando_acepta_una_propuesta(caplog):
     for mensaje in mensajes:
         for prohibido in ("HER2 negativo", TEXTO_DE_CH_A2_1, "ch-a2-1", pseudonimo):
             assert prohibido not in mensaje
+
+
+class _LlmGuionado:
+    def __init__(self, respuesta: str) -> None:
+        self._respuesta = respuesta
+        self.prompts: list[str] = []
+
+    async def completar_json(self, prompt, esquema):
+        self.prompts.append(prompt)
+        return self._respuesta
+
+
+def test_rag_query_acepta_la_propuesta_del_adapter_real_y_su_prompt_no_lleva_datos_del_paciente():
+    llm = _LlmGuionado(
+        '{"proposals": [{"source": "S1", "criterion": "estado_her2", "value": "HER2 negativo",'
+        ' "chunkId": "ch-a2-1", "patientValue": "2+", "status": "coincide"}]}'
+    )
+    solicitud = solicitud_a_m1()
+    entorno = _entorno(
+        LlmApplicabilityTextProposer(llm), NliFalso(por_defecto=IMPLICA), SOLO_DOC_A2
+    )
+
+    respuesta = entorno.consultar(solicitud)
+
+    assert respuesta.status_code == 200
+    (fuente,) = respuesta.json()["applicability"]
+    her2 = next(c for c in fuente["criteria"] if c["criterion"] == "estado_her2")
+    assert (her2["patientValue"], her2["studyPopulationValue"], her2["status"]) == (
+        "3+ (IHQ)",
+        "HER2 negativo",
+        "no_coincide",
+    )
+    (prompt,) = llm.prompts
+    assert TEXTO_DE_CH_A2_1 in prompt
+    assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt
+    assert "3+ (IHQ)" not in prompt

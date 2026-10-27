@@ -63,13 +63,13 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
 )
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
-from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
     cargar_verificador_de_terminos,
 )
 from app.infrastructure.llm.openai_compatible import OpenAICompatibleLlmClient
+from app.infrastructure.llm.proponente_de_aplicabilidad import LlmApplicabilityTextProposer
 from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmHealth
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
@@ -388,7 +388,8 @@ def _crear_servicio_de_recuperacion(
         catalogo=puertos.catalogo,
         catalogo_clinico=puertos.catalogo_clinico,
         aplicabilidad=ApplicabilityService(criterios_de_aplicabilidad),
-        proponente=ProponenteSilencioso(),  # TEMPORAL del commit en rojo: 2.11 lo cambia por el adapter local
+        # Producción: el mismo LLM local (RN-12); la validación de cita, lenguaje y NLI es del servicio, no del adapter.
+        proponente=crear_proponente_local(settings),
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
@@ -399,18 +400,29 @@ def _crear_servicio_de_recuperacion(
     )
 
 
+def _cliente_llm_local(settings: Settings) -> OpenAICompatibleLlmClient:
+    return OpenAICompatibleLlmClient(
+        settings.llm_base_url,
+        settings.llm_model,
+        settings.llm_request_timeout_ms,
+        settings.llm_max_output_tokens,
+        settings.llm_temperature,
+    )
+
+
 def crear_generador_local(settings: Settings) -> LlmEvidenceGenerator:
     """Generación con el LLM nativo local (``LLM_BASE_URL``); sin adapter de nube ni *fallback* (RN-12)."""
     return LlmEvidenceGenerator(
-        OpenAICompatibleLlmClient(
-            settings.llm_base_url,
-            settings.llm_model,
-            settings.llm_request_timeout_ms,
-            settings.llm_max_output_tokens,
-            settings.llm_temperature,
-        ),
+        _cliente_llm_local(settings),
         settings.details_max_paragraphs,
         settings.llm_fragments_max_chars,
+    )
+
+
+def crear_proponente_local(settings: Settings) -> LlmApplicabilityTextProposer:
+    """Población textual de las fuentes (US-123) con el mismo LLM local y el mismo presupuesto de fragmentos."""
+    return LlmApplicabilityTextProposer(
+        _cliente_llm_local(settings), settings.llm_fragments_max_chars
     )
 
 
