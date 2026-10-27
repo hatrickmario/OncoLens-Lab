@@ -143,7 +143,7 @@ export async function sembrarBiomarcador(
     patient_id: p.patientId,
     episode_id: p.episodeId,
     source_document_id: null,
-    exam_type: b.examType ?? 'inmunohistoquimica',
+    exam_type: b.examType ?? 'IHQ',
     source_lab: null,
     entry_method: b.entryMethod ?? 'seed',
     performed_at: b.performedAt ?? FECHA_FIJA,

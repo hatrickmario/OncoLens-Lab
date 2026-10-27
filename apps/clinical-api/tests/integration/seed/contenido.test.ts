@@ -136,7 +136,7 @@ describe('Contenido del seed sintético', () => {
     );
     expect(biomarcadores).toEqual([
       { name: 'HER2', value: '3+ (IHQ)' },
-      { name: 'Receptor de estrógeno', value: 'Positivo (80%)' },
+      { name: 'RE', value: 'Positivo (80%)' },
     ]);
     const atributos = await filas<{ attribute_key: string }>(
       'SELECT attribute_key FROM clinical.clinical_attribute WHERE patient_id = $1',
