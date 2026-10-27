@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -70,6 +71,12 @@ class Observador(Protocol):
 
     def textos_de_chunks(self, claves: tuple[str, ...]) -> set[str]: ...
 
+    def chunks_vigentes_por_clave(self) -> dict[str, int]: ...
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        """``superseded_at`` de cada fila del catálogo cuyo ``document_id`` empieza por ``<clave>@``."""
+        ...
+
 
 class ObservadorEnMemoria:
     def __init__(self, catalogo: CatalogoEnMemoria, almacen: AlmacenDeChunksEnMemoria) -> None:
@@ -98,6 +105,21 @@ class ObservadorEnMemoria:
             for c in self._almacen.chunks.values()
             if c.document_id.split("@")[0] in claves
         }
+
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        cuenta: dict[str, int] = {}
+        for chunk in self._almacen.chunks.values():
+            if chunk.is_current:
+                clave = chunk.document_id.split("@")[0]
+                cuenta[clave] = cuenta.get(clave, 0) + 1
+        return cuenta
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        return [
+            r.superseded_at
+            for i, r in self._catalogo.documentos.items()
+            if i.split("@")[0] == clave
+        ]
 
 
 class ObservadorReal:
@@ -142,6 +164,21 @@ class ObservadorReal:
             if f["document_id"].split("@")[0] in claves
         }
 
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        cuenta: dict[str, int] = {}
+        for fila in self._chunks(["document_id", "is_current"]):
+            if fila["is_current"]:
+                clave = fila["document_id"].split("@")[0]
+                cuenta[clave] = cuenta.get(clave, 0) + 1
+        return cuenta
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        consulta = text(
+            "SELECT superseded_at FROM corpus.corpus_document WHERE starts_with(document_id, :p)"
+        )
+        with self._motor.connect() as conexion:
+            return [f[0] for f in conexion.execute(consulta, {"p": f"{clave}@"})]
+
 
 @dataclass
 class Montaje:
@@ -173,6 +210,12 @@ class Montaje:
 
     def textos_de_chunks(self, *claves: str) -> set[str]:
         return self.observador.textos_de_chunks(claves)
+
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        return self.observador.chunks_vigentes_por_clave()
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        return self.observador.superseded_at_de(clave)
 
 
 def _servicio(

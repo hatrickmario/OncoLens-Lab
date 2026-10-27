@@ -1,0 +1,16 @@
+# FX-06c-b · i-gl-1-v2 (US-117b AC-1): mismo document_key (= version_group_id) y distinto contenido que i-gl-1. TEXTO SINTÉTICO.
+documentos:
+  - document_key: i-gl-1
+    source_type: guideline
+    source_name: NCI
+    external_id: sintetico-nci-mama-1
+    title: Guía sintética de mama
+    language: es
+    cancer_type_tags: [mama]
+    license: Texto de NCI libre de copyright
+    license_url: https://www.cancer.gov/policies/copyright-reuse
+    published_at: 2025-01-15
+    study_design: guia
+    population: adulto
+    original_format: html
+    text_path: ingest-textos/i-gl-1-v2.txt
