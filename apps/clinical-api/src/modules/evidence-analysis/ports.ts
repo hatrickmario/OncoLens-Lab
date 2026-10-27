@@ -35,6 +35,19 @@ export interface TiposDeCancerHabilitados {
   estaHabilitado(tipo: string): boolean;
 }
 
+/** El checklist de datos críticos (US-002) no pudo calcularse: el análisis falla cerrado (US-006 AC-8). */
+export class ChecklistNoDisponibleError extends Error {
+  constructor() {
+    super('Checklist de datos críticos no disponible');
+    this.name = 'ChecklistNoDisponibleError';
+  }
+}
+
+/** Claves del catálogo en estado `faltante`, en el orden del catálogo (US-002). Lanza ChecklistNoDisponibleError. */
+export interface ChecklistDeFaltantes {
+  faltantes(patientId: string): Promise<readonly string[]>;
+}
+
 export type OrigenDeDatos = DataClassification;
 
 /** Contexto que arma `construirContextoPermitido()`: todo el `ClinicalContext` salvo el seudónimo. */
