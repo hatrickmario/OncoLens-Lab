@@ -15,7 +15,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TypeVar
 
+from app.application.aplicabilidad import (
+    AplicabilidadDeFuente,
+    ApplicabilityService,
+    mejor_chunk_por_documento,
+    recuentos_para_el_log,
+)
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
+from app.application.chunk_citable import ChunkCitable
+from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
@@ -36,10 +44,7 @@ from app.application.ports import (
     Reranker,
     ResultadoDeRecuperacion,
 )
-from app.application.respuesta_con_evidencia import (
-    ChunkCitable,
-    ensamblar_respuesta_con_evidencia,
-)
+from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.citations import OpcionAceptada, validar_citas
@@ -111,6 +116,7 @@ class RAGOrchestratorService:
         lector_release: CorpusReleaseReader,
         catalogo: CorpusCatalogReader,
         catalogo_clinico: CatalogoClinico,
+        aplicabilidad: ApplicabilityService,
         generador: EvidenceGenerator,
         clasificador_nli: NliClassifier,
         verificador_terminos: ProhibitedTermsChecker,
@@ -124,6 +130,7 @@ class RAGOrchestratorService:
         self._lector_release = lector_release
         self._catalogo = catalogo
         self._catalogo_clinico = catalogo_clinico
+        self._aplicabilidad = aplicabilidad
         self._generador: EvidenceGenerator = GeneradorFallandoCerrado(generador)
         self._reloj = reloj
         self._parametros = parametros
@@ -179,6 +186,7 @@ class RAGOrchestratorService:
         trace_id = solicitud.traceId.root
         idioma = recuperacion.meta.responseLanguage.value
         citables = await self._chunks_citables(trace_id, recuperacion)
+        aplicabilidad = await self._evaluar_aplicabilidad(solicitud, citables)
         resultado = validar_citas(evidencia.opciones, citables.keys())
         logger.info(
             "event=rag_query_citas traceId=%s opcionesAceptadas=%d opcionesDescartadas=%d",
@@ -199,6 +207,45 @@ class RAGOrchestratorService:
             soporte.omitidas,
             citables,
             recuperacion,
+            aplicabilidad,
+        )
+
+    async def _evaluar_aplicabilidad(
+        self, solicitud: RagQueryInternalRequest, citables: Mapping[str, ChunkCitable]
+    ) -> tuple[AplicabilidadDeFuente, ...]:
+        """FR-25: criterio a criterio por fuente recuperada, sin LLM y sin puntaje (RN-28, ADR-34 b).
+
+        Solo corre en la rama con evidencia (RN-02) y no depende de las opciones generadas. Sin criterios en el
+        catálogo para el tipo no hay nada que leer del corpus. Solo se registran recuentos, nunca valores.
+        """
+        trace_id = solicitud.traceId.root
+        diagnostico = solicitud.clinicalContext.diagnosis
+        if diagnostico is None:
+            return ()
+        tipo = diagnostico.cancerType.root
+        if not self._aplicabilidad.criterios_del(tipo):
+            return ()
+        inicio = self._reloj.ahora()
+        mejores = mejor_chunk_por_documento(citables)
+        poblaciones = await self._invocar_borde_fallando_cerrado(
+            trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
+        )
+        fuentes = self._aplicabilidad.evaluar(
+            tipo, contexto_del_paciente(solicitud.clinicalContext), mejores, poblaciones
+        )
+        self._registrar_aplicabilidad(trace_id, fuentes, inicio)
+        return fuentes
+
+    def _registrar_aplicabilidad(
+        self, trace_id: str, fuentes: Sequence[AplicabilidadDeFuente], inicio: datetime
+    ) -> None:
+        recuentos = " ".join(f"{k}={v}" for k, v in recuentos_para_el_log(fuentes).items())
+        latencia_ms = int((self._reloj.ahora() - inicio).total_seconds() * 1000)
+        logger.info(
+            "event=rag_query_aplicabilidad traceId=%s %s latenciaMs=%d",
+            trace_id,
+            recuentos,
+            latencia_ms,
         )
 
     @staticmethod
