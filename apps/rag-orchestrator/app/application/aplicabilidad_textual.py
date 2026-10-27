@@ -13,11 +13,11 @@ la versión del prompt y ``traceId``; jamás el valor propuesto, el texto de un 
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.application.aplicabilidad import AplicabilidadDeFuente, ApplicabilityService
+from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
 from app.application.errores import ErrorDeAplicacion, LlmLocalNoDisponibleError
 from app.application.ports import ApplicabilityTextProposer, Clock, ProhibitedTermsChecker
@@ -58,13 +58,13 @@ class AplicabilidadTextual:
         proponente: ApplicabilityTextProposer,
         soporte: VerificadorDeSoporte,
         terminos: ProhibitedTermsChecker,
-        estructurada: ApplicabilityService,
+        criterios_del: Callable[[str], Sequence[CriterioDeAplicabilidad]],
         reloj: Clock,
     ) -> None:
         self._proponente = proponente
         self._soporte = soporte
         self._terminos = terminos
-        self._estructurada = estructurada
+        self._criterios_del = criterios_del
         self._reloj = reloj
 
     async def completar(
@@ -75,7 +75,7 @@ class AplicabilidadTextual:
         citables: Mapping[str, ChunkCitable],
     ) -> AplicabilidadCompleta:
         """Propone → valida cita y lenguaje → NLI → aplica la regla del catálogo a lo aceptado."""
-        criterios = self._estructurada.criterios_del(tipo_de_cancer)
+        criterios = self._criterios_del(tipo_de_cancer)
         a_proponer = _fuentes_para_proponer(fuentes, criterios, citables)
         if not a_proponer:
             return AplicabilidadCompleta(

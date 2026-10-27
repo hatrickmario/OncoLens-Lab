@@ -148,7 +148,7 @@ class RAGOrchestratorService:
             proponente=proponente,
             soporte=self._soporte,
             terminos=verificador_terminos,
-            estructurada=aplicabilidad,
+            criterios_del=aplicabilidad.criterios_del,
             reloj=reloj,
         )
 
