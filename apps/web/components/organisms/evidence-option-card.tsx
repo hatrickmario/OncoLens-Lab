@@ -5,14 +5,12 @@ import type {
   CitedSource,
   EvidenceOption,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { tieneAplicabilidadCalculada } from '../../lib/evidence/aplicabilidad-calculada';
 import { elegirBaseDeRelevancia } from '../../lib/evidence/criterio-de-orden';
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
-import { ApplicabilityCounts } from '../molecules/applicability-counts';
 import { CitationChip } from '../molecules/citation-chip';
 import { CitationDetails } from '../molecules/citation-details';
-import { NonBlockingNotice } from '../molecules/non-blocking-notice';
+import { OptionApplicability } from '../molecules/option-applicability';
 import { RelevanceMeta } from '../molecules/relevance-meta';
 
 export interface EvidenceOptionCardProps {
@@ -29,16 +27,7 @@ export function EvidenceOptionCard({ opcion, indice, onVerFragmento }: EvidenceO
     <article className={estilos.tarjeta}>
       <h3>{opcion.option}</h3>
       <p>{opcion.rationale}</p>
-      {tieneAplicabilidadCalculada(opcion) ? (
-        <ApplicabilityCounts resumen={opcion.applicabilitySummary} />
-      ) : (
-        <p>{mensajes().evidence.aplicabilidad.noEvaluada}</p>
-      )}
-      {opcion.populationNotComparable && (
-        <NonBlockingNotice>
-          <p>{mensajes().evidence.aplicabilidad.poblacionNoComparable}</p>
-        </NonBlockingNotice>
-      )}
+      <OptionApplicability opcion={opcion} />
       {opcion.details && opcion.details.length > 0 && (
         <details className={estilos.masDetalle}>
           <summary>{mensajes().evidence.detalle.resumen}</summary>
