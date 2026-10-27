@@ -24,6 +24,7 @@ from app.application.ports import (
     Reranker,
     ResultadoDeRecuperacion,
 )
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
 from app.domain.nli import ParNli, ResultadoNli
 from app.evaluation.cronometro import Cronometro
@@ -66,6 +67,13 @@ class CatalogoMedido:
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         return self._cronometro.medir("catalogo", self._interno.fichas_por_documento, document_ids)
+
+    def poblacion_por_documento(
+        self, document_ids: Collection[str]
+    ) -> dict[str, PoblacionDelEstudio]:
+        return self._cronometro.medir(
+            "catalogo", self._interno.poblacion_por_documento, document_ids
+        )
 
 
 class EmbedderMedido:

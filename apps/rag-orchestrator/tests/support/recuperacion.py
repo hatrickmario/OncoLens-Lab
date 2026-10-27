@@ -33,13 +33,17 @@ from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
     RAGOrchestratorService,
 )
+from app.application.aplicabilidad import ApplicabilityService
 from app.bootstrap import PuertosDeRecuperacion, crear_app
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
+from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
 from app.domain.retrieval_filter import (
     coincide_etiqueta,
     exigir_filtro_vigente,
     expresion_solo_vigente,
 )
+from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
@@ -314,16 +318,29 @@ class CatalogoFalso:
         self,
         fichas: dict[str, FichaDeFuente] | None = None,
         error: Exception | None = None,
+        poblaciones: dict[str, PoblacionDelEstudio] | None = None,
+        error_de_poblacion: Exception | None = None,
     ) -> None:
         self._fichas = FICHAS_FX06A if fichas is None else fichas
+        self._poblaciones = {} if poblaciones is None else poblaciones
         self.error = error
+        self.error_de_poblacion = error_de_poblacion
         self.consultas: list[frozenset[str]] = []
+        self.consultas_de_poblacion: list[frozenset[str]] = []
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         self.consultas.append(frozenset(document_ids))
         if self.error is not None:
             raise self.error
         return {d: self._fichas[d] for d in document_ids if d in self._fichas}
+
+    def poblacion_por_documento(
+        self, document_ids: Collection[str]
+    ) -> dict[str, PoblacionDelEstudio]:
+        self.consultas_de_poblacion.append(frozenset(document_ids))
+        if self.error_de_poblacion is not None:
+            raise self.error_de_poblacion
+        return {d: self._poblaciones[d] for d in document_ids if d in self._poblaciones}
 
 
 class CatalogoClinicoFalso:
@@ -442,6 +459,7 @@ def crear_entorno(
     generador: EvidenceGenerator | None = None,
     clasificador_nli: NliClassifier | None = None,
     verificador_terminos: ProhibitedTermsChecker | None = None,
+    criterios: CriteriosDeAplicabilidad | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -466,6 +484,7 @@ def crear_entorno(
         lector_release=lector_release,
         catalogo=catalogo,
         catalogo_clinico=catalogo_clinico,
+        aplicabilidad=ApplicabilityService(criterios or CriteriosDelCatalogo({})),
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,

@@ -8,14 +8,19 @@ por citas y por soporte, las limitaciones verificadas y ``omittedClaims``.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 
+from app.application.aplicabilidad import AplicabilidadDeFuente
+from app.application.chunk_citable import ChunkCitable
 from app.application.ports import ResultadoDeRecuperacion
-from app.domain.citations import FichaDeFuente, OpcionDescartada, construir_cita
+from app.domain.aplicabilidad_tipos import CriterioEvaluado
+from app.domain.citations import OpcionDescartada, construir_cita
 from app.domain.option_selection import OpcionConRelevancia
-from app.domain.relevance import ChunkPuntuado, top_relevance_score
+from app.domain.relevance import top_relevance_score
 from app.domain.support import OpcionSinSoporte
 from app.schemas.generated.models import (
+    ApplicabilityCriterion,
+    ApplicabilityStatus,
     ApplicabilitySummary,
     CitedSource,
     DiscardedOption,
@@ -26,16 +31,10 @@ from app.schemas.generated.models import (
     RagQueryInternalResponse,
     RagQueryStatus,
     RetrievalStats,
+    SourceApplicability,
     Synthesis,
+    UnknownReason,
 )
-
-
-@dataclass(frozen=True)
-class ChunkCitable:
-    """Un chunk recuperado en esta consulta con la ficha de su documento: lo único que puede citarse."""
-
-    chunk: ChunkPuntuado
-    ficha: FichaDeFuente
 
 
 def ensamblar_respuesta_con_evidencia(
@@ -46,11 +45,12 @@ def ensamblar_respuesta_con_evidencia(
     omitidas: int,
     citables: Mapping[str, ChunkCitable],
     recuperacion: ResultadoDeRecuperacion,
+    aplicabilidad: Sequence[AplicabilidadDeFuente],
 ) -> RagQueryInternalResponse:
     return RagQueryInternalResponse(
         status=RagQueryStatus.con_evidencia,
         synthesis=Synthesis(agreements=[], discrepancies=[]),
-        applicability=[],
+        applicability=[_fuente_con_aplicabilidad(f) for f in aplicabilidad],
         evidenceOptions=[_opcion_con_evidencia(o, citables) for o in opciones],
         discardedOptions=[
             *(_opcion_descartada(d) for d in descartadas),
@@ -67,6 +67,44 @@ def ensamblar_respuesta_con_evidencia(
         topRelevanceScore=top_relevance_score(recuperacion.chunks_sobre_umbral),
         meta=recuperacion.meta,
     )
+
+
+def _fuente_con_aplicabilidad(fuente: AplicabilidadDeFuente) -> SourceApplicability:
+    """``SourceApplicability`` de un documento: los valores se copian tal cual, sin puntaje ni ponderación (RN-28)."""
+    resumen = fuente.resumen
+    return SourceApplicability(
+        externalId=fuente.external_id,
+        criteria=[_criterio_aplicable(c, fuente.mejor_chunk) for c in fuente.criterios],
+        summary=ApplicabilitySummary(
+            coincide=resumen.coincide,
+            parcial=resumen.parcial,
+            noCoincide=resumen.no_coincide,
+            desconocido=resumen.desconocido,
+        ),
+        populationNotComparable=fuente.poblacion_no_comparable,
+    )
+
+
+def _criterio_aplicable(
+    criterio: CriterioEvaluado, mejor_chunk: ChunkCitable
+) -> ApplicabilityCriterion:
+    """Todo criterio que muestra un valor del estudio cita la fuente, aunque sea ``desconocido`` (RN-25, design D6);
+    sin valor del estudio no hay nada que citar. ``patientDataWarning`` es de US-124."""
+    cita_la_fuente = criterio.valor_estudio is not None
+    return ApplicabilityCriterion(
+        criterion=criterio.clave,
+        patientValue=criterio.valor_paciente,
+        studyPopulationValue=criterio.valor_estudio,
+        status=ApplicabilityStatus(criterio.estado),
+        unknownReason=UnknownReason(criterio.causa) if criterio.causa else None,
+        isExclusionary=criterio.es_excluyente,
+        patientDataWarning=None,
+        citedSources=[_cita_de(mejor_chunk)] if cita_la_fuente else [],
+    )
+
+
+def _cita_de(citable: ChunkCitable) -> CitedSource:
+    return CitedSource.model_validate(asdict(construir_cita(citable.chunk, citable.ficha)))
 
 
 def _opcion_con_evidencia(
@@ -86,9 +124,7 @@ def _opcion_con_evidencia(
         perSource=[],
         relevanceScore=validada.relevance_score,
         warnings=[],
-        citedSources=[
-            CitedSource.model_validate(asdict(construir_cita(c.chunk, c.ficha))) for c in citados
-        ],
+        citedSources=[_cita_de(c) for c in citados],
     )
 
 
