@@ -20,7 +20,7 @@ Regresión [RN-11] activa desde S1 con el change de L1D-203 (US-049): seudónimo
 En todo análisis de un tipo habilitado, `clinical-api` MUST calcular el checklist (US-002) en el servidor, en el mismo `POST` y antes de llamar a `rag-orchestrator`, y SHALL enviar en `clinicalContext.missingCriticalData` las claves `faltante` en el orden del catálogo, con o sin `continueWithWarning` (FR-09, FR-23, RN-26). Cada elemento MUST ser una clave del catálogo, nunca texto del paciente (RN-11).
 
 #### Scenario: Continuar con aviso envía los seis faltantes de F-M2 en el orden del catálogo [US-006 AC-1] [AC-04.3] [ADR-38]
-- **GIVEN** `doc1@test.local` con sesión válida, el catálogo `test-1.0.0` (FX-04-a) en `CLINICAL_CATALOG_PATH`, el paciente F-M2 (FX-04-b) y `rag-orchestrator` simulado con MSW que captura el request
+- **GIVEN** `doc1@test.local` con sesión válida, el catálogo `test-1.0.0` (FX-04-a, `apps/clinical-api/tests/fixtures/completeness/catalogos/test-1.0.0`, 12 ítems) en `CLINICAL_CATALOG_PATH`, el paciente F-M2 (FX-04-b; sus seis faltantes se derivan de FX-04-a) y `rag-orchestrator` simulado con MSW que captura el request
 - **WHEN** envía `POST /platform/evidence-analyses` con una pregunta válida y `continueWithWarning = true`
 - **THEN** el request capturado lleva `clinicalContext.missingCriticalData = ["grado", "rp", "her2_ish", "ki67", "estado_menopausico", "brca_germinal"]` y `catalogVersion = "test-1.0.0"`
 - **AND** el request valida contra `RagQueryInternalRequest`

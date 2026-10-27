@@ -13,11 +13,12 @@ import type {
   ClinicalContext,
   RagQueryInternalRequest,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
-import type {
-  EntradaDeCierre,
-  EntradaDeCierreSinIA,
-  EntradaDeDesidentificacion,
-  OpcionesDeConsultaRag,
+import {
+  ChecklistNoDisponibleError,
+  type EntradaDeCierre,
+  type EntradaDeCierreSinIA,
+  type EntradaDeDesidentificacion,
+  type OpcionesDeConsultaRag,
 } from '../../../src/modules/evidence-analysis/ports.js';
 import { AHORA_DE_EJEMPLO, casoDeEjemplo } from './casos.js';
 
@@ -117,6 +118,7 @@ function crearFakes(
   opciones: {
     caso?: ReturnType<typeof casoDeEjemplo> | null;
     tiposHabilitados?: readonly string[];
+    faltantes?: readonly string[];
   } = {},
 ) {
   const llamadas: string[] = [];
@@ -125,6 +127,7 @@ function crearFakes(
     request?: RagQueryInternalRequest;
     cierre?: EntradaDeCierre;
     cierreSinIA?: EntradaDeCierreSinIA;
+    faltantesDe?: string;
   } = {};
   const caso = opciones.caso === undefined ? casoDeEjemplo() : opciones.caso;
   const dependencias: DependenciasDelService = {
@@ -165,6 +168,13 @@ function crearFakes(
       'prostata',
     ]),
     catalogo: { version: () => '1.0.0' },
+    checklist: {
+      faltantes: async (patientId) => {
+        llamadas.push('checklist');
+        recibido.faltantesDe = patientId;
+        return opciones.faltantes ?? [];
+      },
+    },
     reloj: { now: () => AHORA_DE_EJEMPLO },
     config: { analysisMaxOptions: 1, evidenceDefaultYears: 10, ragTimeoutMs: 30_000 },
   };
@@ -215,7 +225,31 @@ describe('crearEvidenceAnalysisService', () => {
     await expect(
       crearEvidenceAnalysisService(dependencias).solicitar(solicitud),
     ).rejects.toBeInstanceOf(EntornoNoSintetico);
-    expect(llamadas).toEqual(['leerCaso', 'desidentificar']);
+    expect(llamadas).toEqual(['leerCaso', 'checklist', 'desidentificar']);
+  });
+
+  it('calcula los faltantes del paciente y los entrega al desidentificador cuando el tipo está habilitado', async () => {
+    const { dependencias, recibido } = crearFakes({ faltantes: ['grado', 'rp'] });
+
+    await crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
+
+    expect(recibido.faltantesDe).toBe('paciente-sintetico');
+    expect(recibido.desidentificacion?.contexto.missingCriticalData).toEqual(['grado', 'rp']);
+  });
+
+  it('no desidentifica ni llama a la IA ni cierra cuando el checklist no está disponible', async () => {
+    const { dependencias, llamadas } = crearFakes();
+    dependencias.checklist = {
+      faltantes: async () => {
+        llamadas.push('checklist');
+        throw new ChecklistNoDisponibleError();
+      },
+    };
+
+    await expect(
+      crearEvidenceAnalysisService(dependencias).solicitar(solicitud),
+    ).rejects.toBeInstanceOf(ChecklistNoDisponibleError);
+    expect(llamadas).toEqual(['leerCaso', 'checklist']);
   });
 
   it('desidentifica, consulta a la IA con el request armado y cierra el análisis, en ese orden', async () => {
@@ -223,7 +257,7 @@ describe('crearEvidenceAnalysisService', () => {
 
     const resultado = await crearEvidenceAnalysisService(dependencias).solicitar(solicitud);
 
-    expect(llamadas).toEqual(['leerCaso', 'desidentificar', 'consultar', 'completar']);
+    expect(llamadas).toEqual(['leerCaso', 'checklist', 'desidentificar', 'consultar', 'completar']);
     expect(recibido.desidentificacion).toMatchObject({
       query: 'pregunta sintética',
       dataOrigin: 'sintetico',
