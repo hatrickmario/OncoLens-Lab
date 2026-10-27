@@ -373,17 +373,24 @@ def evaluar_criterio_de_fuente(
     """Lee el valor del paciente por ``destination`` y el del estudio por ``studyKey``, evalúa el criterio y le añade el
     aviso del dato del paciente (US-124)."""
     try:
-        dato = dato_del_paciente(contexto, criterio.destino)
+        dato = _dato_comparable(contexto, criterio)
     except DestinoNoResoluble:
         return _desconocido(criterio, None, None, motivo="destino_no_resoluble")
-    if criterio.clave in contexto.datos_criticos_faltantes:
-        dato = None  # el checklist declara que falta: no se compara un valor que el propio contexto desmiente
     evaluado = evaluar_criterio(
         criterio,
         None if dato is None else dato.valor,
         valor_del_estudio(poblacion, criterio.clave_de_estudio),
     )
     return replace(evaluado, aviso=aviso_dato_paciente(() if dato is None else dato.procedencias))
+
+
+def _dato_comparable(
+    contexto: ContextoDelPaciente, criterio: CriterioDeAplicabilidad
+) -> DatoDelPaciente | None:
+    """El dato del paciente que se compara; ``None`` si no existe o si el checklist declara que falta (D2): no se
+    compara un valor que el propio contexto desmiente."""
+    dato = dato_del_paciente(contexto, criterio.destino)
+    return None if criterio.clave in contexto.datos_criticos_faltantes else dato
 
 
 # --- conteos y población no comparable (RN-28) ---------------------------------------------------------------------
