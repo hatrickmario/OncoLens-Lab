@@ -44,7 +44,7 @@ lo reconcilia (`es_reanudacion`: mismo `chunk_id` determinista, repite apagar y 
 son recuperables hasta ese reintento es la contrapartida aceptada de no apagar antes de tener la nueva escrita (apagar primero
 dejaría el grupo sin ninguna vigente si el `upsert` fallara). *Descartada:* apagar antes del `upsert`.
 
-*(Decidido (usuario, 2026-10-27))* **D2 — Reindexación por relectura y `upsert` del registro completo.** Se leen los vigentes paginados por `chunk_id`
+*(Decidido (usuario, 2026-10-27))* **D2 — Reindexación por relectura y `upsert` del registro completo.** *Paginación:* Milvus no garantiza el orden por PK en `query` con `limit`, así que se usa `query_iterator` (o el orden soportado por el cliente si el iterador no aplica); se verifica la versión del servidor y de pymilvus (3.0.2) y se cubre con un test de integración sobre Milvus real con más de 2 páginas que comprueba que el 100 % de los vigentes quedó reindexado. Se leen los vigentes paginados por `chunk_id`
 (`is_current == true and chunk_id > <último>`, `consistency_level="Strong"`, `output_fields=["*"]`), se calcula el *sparse*
 por lote con `SparsePassageEncoder.codificar(textos)` y se hace `upsert` de la fila leída con solo `sparse_vector` sustituido.
 Así `dense_vector` y el resto viajan byte a byte desde Milvus. *Descartada:* `upsert(partial_update=True)` — depende de la
@@ -55,7 +55,7 @@ versión del servidor y del cliente; queda como optimización si se verifica en 
 no cambia. El resumen reporta recuentos (leídos, reindexados) y nunca texto de chunks.
 
 *(Decidido (usuario, 2026-10-27))* **D4 — Tamaño de lote en configuración** (`CORPUS_SPARSE_REINDEX_BATCH_SIZE`, RN-22). El tope `LIMITE_DE_CONSULTA` es de infraestructura: `settings.py` no lo
-importa; `MilvusRepository.listar_vigentes_paginado()` valida `0 < lote < LIMITE_DE_CONSULTA` (estricto: `_exigir_completo` falla con `len >= límite`) y rechaza el resto; unitario del borde (`lote == LIMITE_DE_CONSULTA` y `lote == 0` rechazados, `LIMITE_DE_CONSULTA - 1` aceptado).
+importa; `MilvusRepository.listar_vigentes_paginado()` valida `0 < lote < LIMITE_DE_CONSULTA` (estricto: `_exigir_completo` falla con `len >= límite`) y rechaza el resto (`0` no pagina nada y `>= LIMITE_DE_CONSULTA` hace que `_exigir_completo` falle, así que el lote tiene que quedar estrictamente por debajo); unitario del borde (`lote == LIMITE_DE_CONSULTA` y `lote == 0` rechazados, `LIMITE_DE_CONSULTA - 1` aceptado).
 
 **D5 — `reindex-sparse` es un subcomando aparte, con guarda de embeddings locales (Decidido (usuario, 2026-10-27), pregunta 6, opción A).**
 El CLI de ingesta separa sus modos: `ingest` conserva `--manifest` obligatorio y su guarda de LLM; `ingest reindex-sparse` no usa
@@ -67,13 +67,16 @@ termina en cerrado (código ≠ 0) **nombrando la variable, nunca su valor**. Un
 `--manifest` es obligatorio, validado a mano con salida ≠ 0 si falta; `reindex-sparse` **no acepta** `--manifest`. La invocación
 existente `python -m app.scripts.ingest --manifest X` queda idéntica.
 *Guarda (menor 3):* no se escribe una guarda nueva. `reindex-sparse` reutiliza el cargador de `main`
-(`ajustes_de_modelos_del_entorno` + `cargar_embeddings_y_sparse_de_pasajes` / `fabricar_codificadores_reales(ajustes)`) y corre
+(`ajustes_de_modelos_del_entorno()` + `cargar_embeddings_y_sparse_de_pasajes` directamente; **no** `fabricar_codificadores_reales`, que construye el *tokenizer* de chunks) y corre
 **antes de abrir Milvus**.
 *Errores (menor 6):* la salida nombra la etapa como constante (`leer_vigentes` | `codificar` | `reescribir`) más
 `type(error).__name__`, nunca `str(error)`; el test de subproceso comprueba que stderr no trae la URI de Milvus ni `chunk_text`.
-*Configuración (P1, asumido, pendiente de confirmación del usuario):* `reindex-sparse` tiene un *settings* propio
-(`sparse_vector_source`, pesos `EMBEDDING_SPARSE_WEIGHTS_*`, `CORPUS_SPARSE_REINDEX_BATCH_SIZE`) y **no** exige licencias, fecha de
-corte ni parámetros de *chunking* de `CorpusIngestSettings`.
+*Configuración (Decidido (usuario, 2026-10-27)):* `reindex-sparse` tiene un *settings* propio (`CORPUS_SPARSE_REINDEX_BATCH_SIZE` más la base
+`AjustesSparse`) y **no** exige licencias, fecha de corte ni parámetros de *chunking* de `CorpusIngestSettings`.
+*Base `AjustesSparse`:* `cargar_embeddings_y_sparse_de_pasajes` y `fabricar_codificadores_reales` están hoy tipadas con `CorpusIngestSettings`
+(licencias, corte y *chunking* obligatorios). Se extrae una base `AjustesSparse` (`sparse_vector_source`, `embedding_sparse_weights_path`
+y `embedding_sparse_weights_sha256`) de la que hereda `CorpusIngestSettings`; `cargar_embeddings_y_sparse_de_pasajes` acepta esa base. El
+cambio de firma es un ensanchamiento del tipo: no altera la invocación de `ingest`.
 *Descartadas:* (a) flag `--reindex-sparse` con la guarda movida; (b) flag con la guarda de LLM siempre activa (exigiría un LLM
 que no usa); (c) escape `--sin-guarda-llm` (un interruptor que apaga RN-12); (d) script de módulo separado (duplica el arranque y
 la configuración del CLI).
@@ -89,7 +92,7 @@ semilla; (3) la búsqueda híbrida vivirá dentro de `RAGOrchestratorService`, n
 - *(Decidido (usuario, 2026-10-27))* Nuevo caso de uso `ReindexarSparse` en `app/application/` que recibe por parámetro el puerto de chunks
   (`listar_vigentes_paginado`, `reescribir_sparse`) y `SparsePassageEncoder` (`codificar(textos)`).
 - `MilvusRepository` (`app/infrastructure/milvus/`): `listar_vigentes_paginado()` y `reescribir_sparse()`; `_fila()` **sin cambios**: ya respeta el *sparse* del chunk
-  (`repository.py:208-213`).
+  (`repository.py:208-214`).
 - Regla extraída *(Decidido (usuario, 2026-10-27))*: `con_sparse_sustituido(fila, sparse)` (garantía de AC-2). El versionado reutiliza `decidir_version`.
 
 ## Privacidad y ownership

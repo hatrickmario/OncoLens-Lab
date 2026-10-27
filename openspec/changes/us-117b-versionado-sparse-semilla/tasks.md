@@ -19,8 +19,11 @@
 
 ## 1. ai-services
 
-- [ ] 1.1 *(Decidido (usuario, 2026-10-27))* (test después, RN-22) Clave `CORPUS_SPARSE_REINDEX_BATCH_SIZE` en `app/config/settings.py` (settings propio de `reindex-sparse`, sin exigir licencias, fecha de corte ni *chunking* de `CorpusIngestSettings`: *asumido, pendiente de confirmación del usuario*; positiva; el tope `LIMITE_DE_CONSULTA` lo valida `MilvusRepository.listar_vigentes_paginado()`, sin importar infraestructura desde `settings`),
+- [ ] 1.1 *(Decidido (usuario, 2026-10-27))* (test después, RN-22) Clave `CORPUS_SPARSE_REINDEX_BATCH_SIZE` en `app/config/settings.py` (settings propio de `reindex-sparse` sobre la base `AjustesSparse`, sin exigir licencias, fecha de corte ni *chunking* de `CorpusIngestSettings` (*Decidido (usuario, 2026-10-27)*); positiva; el tope `LIMITE_DE_CONSULTA` lo valida `MilvusRepository.listar_vigentes_paginado()`, sin importar infraestructura desde `settings`),
   con su test de configuración; `.env.example` lo aplica el humano (el agente reporta la clave). Verifica: test de settings en verde.
+- [ ] 1.1b *(Decidido (usuario, 2026-10-27), D5)* (refactor de tipos, tests en verde antes y después) Extraer la base `AjustesSparse` (`sparse_vector_source`,
+  `embedding_sparse_weights_path`, `embedding_sparse_weights_sha256`) de `CorpusIngestSettings`, que hereda de ella; `cargar_embeddings_y_sparse_de_pasajes`
+  acepta `AjustesSparse`. La invocación de `ingest` no cambia (test de `ingest --manifest X` existente en verde). Commit `refactor(US-117b)`.
 - [ ] 1.2 (caracterización; patrón de `l1d-181` D4) Test de aceptación, ejecutado primero. Si pasa a la primera queda como regresión (`test(US-117b)`) con su salida; si falla en la aserción, va en rojo antes del `feat`: «i-gl-1-v2 queda vigente, i-gl-1 queda no vigente con superseded_at y el
   total de filas crece en 1 sin borrar chunks cuando se ingiere la versión nueva [US-117b AC-1]» · integración (`IngestionPipelineService`
   de L1D-116, FX-06c-b, PostgreSQL `corpus` real, Milvus de test) con `@pytest.mark.ac("US-117b", 1)`, más «la búsqueda dense
@@ -36,12 +39,12 @@
 - [ ] 1.5 *(Decidido (usuario, 2026-10-27))* (TDD estricto) Verde de 1.4: `ReindexarSparse` en `app/application/`, `MilvusRepository.listar_vigentes_paginado()` y
   `reescribir_sparse()` (D2; valida el lote contra `LIMITE_DE_CONSULTA`), regla `con_sparse_sustituido()` (`_fila()` ya respeta el *sparse*: sin cambios), y subcomando `reindex-sparse`
   en `app/scripts/ingest.py` con resumen de recuentos; unitarios uno a la vez (borde del lote `0 < lote < LIMITE_DE_CONSULTA`; lote vacío; paginación por `chunk_id`; solo cambia
-  `sparse_vector`). Commit `feat(US-117b)`.
+  `sparse_vector`); **integración con Milvus real y > 2 páginas**: el 100 % de los vigentes queda reindexado (paginación con `query_iterator` o el orden soportado; se anota la versión de Milvus y de pymilvus usadas). Docstrings de `ports.py` e `ingest.py` actualizados con el subcomando. Commit `feat(US-117b)`.
 - [ ] 1.5b *(Decidido (usuario, 2026-10-27), D5)* (TDD estricto) Un test por modo de la CLI: `ingest` conserva `--manifest` obligatorio y su guarda de LLM;
   `reindex-sparse` falla cerrado (código ≠ 0, nombra la variable, nunca su valor) con `MODEL_PROVIDER` no local, pesos o *tokenizer* sin
-  SHA-256 verificado o `EMBEDDING_SPARSE_WEIGHTS_*` sin verificar, y no exige LLM; la guarda es la de `main` (D5) y corre antes de abrir Milvus. Además: sin modo, `--manifest` sigue obligatorio (salida ≠ 0 si falta), `reindex-sparse --manifest X` se rechaza y `python -m app.scripts.ingest --manifest X` se comporta como antes. En los fallos de Milvus/modelo, stderr trae la etapa (`leer_vigentes|codificar|reescribir`) y `type(error).__name__`, nunca la URI de Milvus ni `chunk_text`. Subproceso con tiempo máximo explícito. Commit `test(US-117b)` en rojo y `feat(US-117b)`.
+  SHA-256 verificado o `EMBEDDING_SPARSE_WEIGHTS_*` sin verificar, y no exige LLM; la guarda es la de `main` (D5) y corre antes de abrir Milvus. Además: sin modo, `--manifest` sigue obligatorio (salida ≠ 0 si falta), `reindex-sparse --manifest X` y `ingest --manifest X reindex-sparse` se rechazan con salida ≠ 0 y `python -m app.scripts.ingest --manifest X` se comporta como antes. En los fallos de Milvus/modelo, stderr trae la etapa (`leer_vigentes|codificar|reescribir`) y `type(error).__name__`, nunca la URI de Milvus ni `chunk_text`. Subproceso con tiempo máximo explícito. Commit `test(US-117b)` en rojo y `feat(US-117b)`.
 - [ ] 1.6 (test después) No regresión: tests de L1D-114, L1D-115 y L1D-116 y de *permission denied* de `rag_corpus` en verde.
-- [ ] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
+- [ ] 1.7 Refactor: actualizar el comentario obsoleto de `repository.py:208-214` sobre el *sparse* vacío y los docstrings de `ports.py` e `ingest.py`; Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(US-117b)`.
 
 ## 2. evaluación
