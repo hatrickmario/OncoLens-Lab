@@ -117,7 +117,8 @@
       "auditoria": "Registro solo para auditoría: no es contenido clínico utilizable.",
       "numero": "N.º {n}",
       "analisis": "Análisis",
-      "sinSoporte": "Sin soporte"
+      "sinSoporte": "Sin soporte",
+      "motivos": "Motivos:"
     },
     "discardReason": {
       "cita_invalida": "La cita no corresponde a un fragmento recuperado",
