@@ -2,7 +2,14 @@
 
 import logging
 
-from tests.support.generador_falso import TITULO_INVENTADO, FakeEvidenceGenerator
+import pytest
+
+from tests.support.generador_falso import (
+    OPCION_ANTI_HER2,
+    TITULO_INVENTADO,
+    FakeEvidenceGenerator,
+)
+from tests.support.logs import exigir_sin_valores_prohibidos, parsear_lineas_json
 from tests.support.recuperacion import (
     CORPUS_FX06A,
     FICHAS_FX06A,
@@ -68,3 +75,46 @@ def test_rag_query_solo_registra_conteos_de_citas_cuando_valida_citas_en_los_log
     for mensaje in mensajes:
         for prohibido in prohibidos:
             assert prohibido not in mensaje
+
+
+def _registro_de_citas(salida: str) -> dict:
+    registros = [r for r in parsear_lineas_json(salida) if "event=rag_query_citas" in r["message"]]
+    assert len(registros) == 1
+    return registros[0]
+
+
+@pytest.mark.ac("US-237", 5)
+def test_rag_query_citas_registra_recuento_por_motivo_sin_contenido(logs_json):
+    solicitud = solicitud_de(Q_HER2)
+    entorno = crear_entorno(generador=FakeEvidenceGenerator("LLM-SIN-CITAS-Y-CITA-AJENA"))
+
+    respuesta = entorno.consultar(solicitud)
+
+    assert respuesta.status_code == 200
+    salida = logs_json()
+    registro = _registro_de_citas(salida)
+    assert registro["message"].endswith(
+        "opcionesAceptadas=0 opcionesDescartadas=2 sinCitas=1 citaInvalida=1"
+    )
+    assert registro["traceId"] == solicitud["traceId"]
+    exigir_sin_valores_prohibidos(
+        salida,
+        [
+            "ch-x-999",
+            "ch-m1-1",
+            OPCION_ANTI_HER2,
+            solicitud["query"],
+            solicitud["clinicalContext"]["pseudoPatientId"],
+        ],
+    )
+
+
+def test_rag_query_citas_registra_ceros_por_motivo_cuando_no_hay_descartadas(logs_json):
+    entorno = crear_entorno(generador=FakeEvidenceGenerator("LLM-OK"))
+
+    entorno.consultar(solicitud_de(Q_HER2))
+
+    registro = _registro_de_citas(logs_json())
+    assert registro["message"].endswith(
+        "opcionesAceptadas=1 opcionesDescartadas=0 sinCitas=0 citaInvalida=0"
+    )

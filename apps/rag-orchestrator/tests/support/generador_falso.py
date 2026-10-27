@@ -41,6 +41,7 @@ ESCENARIOS: dict[str, list[dict[str, Any]]] = {
         _opcion([{"chunkId": "ch-m1-1", "title": TITULO_INVENTADO, "sourceName": "NCCN"}])
     ],
     "LLM-SIN-CITAS": [_opcion([])],
+    "LLM-SIN-CITAS-Y-CITA-AJENA": [_opcion([]), _opcion([{"chunkId": "ch-x-999"}])],
     "LLM-CITA-MIXTA": [_opcion([{"chunkId": "ch-m1-1"}, {"chunkId": "ch-x-999"}])],
     "LLM-SIN-SOPORTE": [_opcion_con(RAZON_SIN_SOPORTE, [{"chunkId": "ch-m1-1"}])],
     "LLM-PRESCRIPTIVO": [_opcion_con(RAZON_PRESCRIPTIVA, [{"chunkId": "ch-m1-1"}])],
