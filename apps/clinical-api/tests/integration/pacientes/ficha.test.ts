@@ -58,7 +58,7 @@ describe('ficha del paciente: doctor', () => {
     });
     const biomarcadores: BiomarcadorDeLaFicha[] = respuesta.body.recentBiomarkers;
     const her2 = biomarcadores.find((b) => b.name === 'HER2');
-    const estrogeno = biomarcadores.find((b) => b.name === 'Receptor de estrógeno');
+    const estrogeno = biomarcadores.find((b) => b.name === 'RE');
     expect(her2).toMatchObject({ value: '3+ (IHQ)', clinicalSignificance: 'relevante' });
     expect(estrogeno?.value).toContain('Positivo');
     for (const b of [her2, estrogeno]) {

@@ -59,7 +59,7 @@ describe('Base del análisis con FX-T1a-a', () => {
       conflict: false,
     });
     expect(base.patientDataUsed).toContainEqual({
-      label: 'Receptor de estrógeno 90 %',
+      label: 'RE 90 %',
       reviewStatus: 'requiere_revision',
       conflict: true,
     });
@@ -107,7 +107,7 @@ describe('Base del análisis con FX-T1a-a', () => {
       conflict: false,
     });
     expect(usados).toContainEqual({
-      label: 'Receptor de estrógeno 90 %',
+      label: 'RE 90 %',
       reviewStatus: 'requiere_revision',
       conflict: true,
     });

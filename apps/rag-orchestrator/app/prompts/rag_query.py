@@ -1,4 +1,4 @@
-"""Prompt `rag-query@0.3.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
+"""Prompt `rag-query@0.4.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
 
 Las instrucciones están redactadas en positivo (describir lo que reporta la evidencia citada) y sin términos de
 RN-23; un test las verifica con ``check_prohibited_terms``. El prompt solo recibe campos clínicos ya enmascarados,
@@ -11,8 +11,13 @@ import re
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
+from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
-VERSION_DEL_PROMPT = "rag-query@0.3.0"
+VERSION_DEL_PROMPT = "rag-query@0.4.0"
+
+# Etiquetas de procedencia del bloque de datos del paciente (RN-07): texto del prompt, versionado con él (no RN-22).
+ETIQUETA_SIN_VERIFICAR = "(sin verificar)"
+ETIQUETA_EN_CONFLICTO = "(en conflicto)"
 
 # Fórmula de atribución «La fuente [cita] describe que…» (ARR-03 AC-3), en español y en inglés; la cita es opcional.
 # El prompt vigente NO la impone (ver reports/eval/L1D-279-ol06-rn23.md): la suite `evaluate` mide si el generador la usa.
@@ -41,7 +46,8 @@ Instrucciones:
 
 Pregunta: {pregunta}
 
-Contexto clínico: {contexto}
+Datos del paciente (las etiquetas "{etiqueta_sin_verificar}" y "{etiqueta_en_conflicto}" indican el estado de revisión del dato; no forman parte del dato):
+{contexto}
 
 Fragmentos:
 {fragmentos}
@@ -58,13 +64,15 @@ INSTRUCCION_DE_DETALLE = (
 
 def construir_prompt_rag_query(
     pregunta: str,
-    contexto_clinico: str,
+    datos_del_paciente: str,
     fragmentos: Sequence[FragmentoConAlias],
     idioma: str,
     max_parrafos_detalle: int = 0,
 ) -> str:
-    """Rellena la plantilla con la pregunta enmascarada, el resumen clínico desidentificado y los chunks recuperados con su alias (RN-04)."""
+    """Rellena la plantilla con la pregunta enmascarada, el bloque de datos del paciente y los chunks recuperados con su alias (RN-04)."""
     return PLANTILLA_RAG_QUERY.format(
+        etiqueta_sin_verificar=ETIQUETA_SIN_VERIFICAR,
+        etiqueta_en_conflicto=ETIQUETA_EN_CONFLICTO,
         idioma=_NOMBRE_DEL_IDIOMA.get(idioma, idioma),
         instruccion_de_detalle=(
             INSTRUCCION_DE_DETALLE.format(maximo=max_parrafos_detalle)
@@ -72,9 +80,53 @@ def construir_prompt_rag_query(
             else ""
         ),
         pregunta=pregunta,
-        contexto=contexto_clinico or "No disponible",
+        contexto=datos_del_paciente or "No disponible",
         fragmentos="\n".join(_fragmento(f) for f in fragmentos),
     )
+
+
+def bloque_de_datos_del_paciente(contexto: ClinicalContext) -> str:
+    """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3).
+
+    Solo diagnóstico y biomarcadores: atributos, tratamientos previos y eventos quedan fuera (Non-Goal del S3).
+    """
+    return "\n".join(
+        _linea_etiquetada(texto, procedencia) for texto, procedencia in datos_del_contexto(contexto)
+    )
+
+
+def datos_del_contexto(contexto: ClinicalContext) -> list[tuple[str, Provenance]]:
+    """Texto y procedencia de cada dato clínico que el modelo y la recuperación reciben: única fuente de qué campos salen (RN-11)."""
+    datos: list[tuple[str, Provenance]] = []
+    diagnostico = contexto.diagnosis
+    if diagnostico is not None:
+        datos.append((_texto_del_diagnostico(diagnostico), diagnostico.provenance))
+    datos += [(f"{b.biomarkerName.root} {b.value.root}", b.provenance) for b in contexto.biomarkers]
+    return datos
+
+
+def etiqueta_de_procedencia(procedencia: Provenance) -> str | None:
+    """Etiqueta legible de un dato según su estado de revisión (RN-07); el conflicto precede al «sin verificar»."""
+    if procedencia.conflict:
+        return ETIQUETA_EN_CONFLICTO
+    if procedencia.reviewStatus == ReviewStatus.requiere_revision:
+        return ETIQUETA_SIN_VERIFICAR
+    return None
+
+
+def _texto_del_diagnostico(diagnostico: Diagnosis) -> str:
+    partes = [
+        diagnostico.cancerType.root,
+        diagnostico.histology.root if diagnostico.histology else "",
+        diagnostico.grade.root if diagnostico.grade else "",
+        f"{diagnostico.stagingSystem.root} {diagnostico.stageValue.root}",
+    ]
+    return "; ".join(parte.strip() for parte in partes if parte.strip())
+
+
+def _linea_etiquetada(texto: str, procedencia: Provenance) -> str:
+    etiqueta = etiqueta_de_procedencia(procedencia)
+    return f"- {texto} {etiqueta}" if etiqueta else f"- {texto}"
 
 
 def _fragmento(fragmento: FragmentoConAlias) -> str:
