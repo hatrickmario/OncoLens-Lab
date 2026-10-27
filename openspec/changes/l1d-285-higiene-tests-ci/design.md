@@ -169,3 +169,16 @@ tipos se regeneran con `contracts:generate`; nunca a mano.
   filtra a los changes que toca el diff del PR?
 - **Pregunta (usuario) · plazo del job `quality`:** `timeout-minutes: 15` con `needs: build-test` y la cobertura añadida; ¿se
   amplía o se separa la cobertura en otro job?
+
+## Decisiones del usuario (2026-10-24) sobre las preguntas anteriores
+
+- **Decidido (usuario, 2026-10-24) · cobertura de `*.service.ts`:** se quita `apps/clinical-api/src/**/*.service.ts` de
+  `coverage.alertPaths` (`quality-thresholds.json`): el LCOV del unitario no mide la integración, que es el nivel principal.
+  Deuda a US-232: «medir la cobertura de la integración de clinical-api» (tasks.md 5.1).
+- **Decidido (usuario, 2026-10-24) · ruido de `check-ac-coverage`:** las alertas se filtran a los changes que toca el diff del PR
+  contra la base (`openspec/changes/<change>/…`). `npm run quality -- --todos` o `QUALITY_AC_TODOS=1` hacen el barrido completo
+  (76 alertas hoy); sin `origin/main` en el clon también se revisan todos. Un diff que toca el change X solo reporta los AC de X.
+- **Decidido (usuario, 2026-10-24) · plazo del job `quality`:** medición del último run completo de CI antes del cambio
+  (run 40142529647, commit 49df7262): el job `quality` duró **4 min 48 s** (23:34:32 → 23:39:20), tras `build-test` (11 min 9 s),
+  del que depende (`needs: build-test`, sin cambios). Menos de 12 min: `timeout-minutes: 15` se mantiene.
+- **Sigue abierta (usuario):** `sobrescribir` de `handlerDesdeEjemplo` no valida tipo ni *enum* del valor.

@@ -80,6 +80,20 @@ class CatalogoEnMemoria:
         self._puede("publicar_release")
         self.releases.append(release)
 
+    def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]:
+        self._puede("documentos_extraidos_de_la_release")
+        ids = next(
+            (set(r.document_ids) for r in self.releases if r.release_id == release_id), set()
+        )
+        return sorted(
+            (
+                r
+                for i, r in self.documentos.items()
+                if i in ids and r.metadata_source == "extraido_verificado"
+            ),
+            key=lambda r: r.document_id,
+        )
+
 
 class AlmacenDeChunksEnMemoria:
     def __init__(self, dimension: int = DIMENSION_DE_TEST) -> None:

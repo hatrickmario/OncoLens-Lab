@@ -4,9 +4,10 @@
     {
       "key": "estado_menopausico",
       "cancerType": "mama",
+      "studyKey": "estado_menopausico",
       "label": {
-        "es": "estado_menopausico",
-        "en": "estado_menopausico"
+        "es": "Estado menopausico",
+        "en": "Menopausal status"
       },
       "destination": {
         "entity": "ClinicalAttribute",
@@ -14,7 +15,15 @@
         "match": {
           "attribute_key": "estado_menopausico"
         }
-      }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
     }
   ]
 }

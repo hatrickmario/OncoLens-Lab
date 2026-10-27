@@ -471,6 +471,8 @@ class CorpusIngestSettings(AjustesDeCorpus):
     corpus_metadata_sample_pct: float = Field(default=10.0, ge=0.0, le=100.0)
     corpus_metadata_sample_seed: str = Field(default="oncolens-metadatos", min_length=1)
     corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
+    # Temperatura del LLM en la extracción de metadatos (RN-22): propia, no la de la generación de /rag/query.
+    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
 
     @field_validator("sparse_vector_source")
     @classmethod

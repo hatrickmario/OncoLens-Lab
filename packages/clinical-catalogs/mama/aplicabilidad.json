@@ -1,4 +1,161 @@
 {
   "version": "1.1.0",
-  "items": []
+  "validation": {
+    "scope": [
+      "aplicabilidad"
+    ],
+    "status": "propuesta_revisada",
+    "reviewerRole": "oncologo_asesor",
+    "date": "2026-10-24",
+    "catalogHash": "c89a3335f17f3141dcecbed4d8fd5875614736f27e2e8f66bc8a9621db0498b4"
+  },
+  "items": [
+    {
+      "key": "estado_her2",
+      "cancerType": "mama",
+      "studyKey": "biomarcadores.her2",
+      "label": {
+        "es": "Estado de HER2",
+        "en": "HER2 status"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": "HER2"
+        }
+      },
+      "isExclusionary": true,
+      "rule": {
+        "operator": "igualdad",
+        "equivalences": {
+          "positivo": [
+            "3+",
+            "2+ con ISH positivo"
+          ]
+        },
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "receptores_hormonales",
+      "cancerType": "mama",
+      "studyKey": "biomarcadores.receptores_hormonales",
+      "label": {
+        "es": "Receptores hormonales (RE/RP)",
+        "en": "Hormone receptors (ER/PR)"
+      },
+      "destination": {
+        "entity": "Biomarker",
+        "field": "value",
+        "match": {
+          "name": [
+            "RE",
+            "RP"
+          ]
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "estadio",
+      "cancerType": "mama",
+      "studyKey": "estadio",
+      "label": {
+        "es": "Estadio",
+        "en": "Stage"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "stage_value"
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "rango",
+        "partial": {
+          "when": "rango_solapado"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "linea_tratamiento",
+      "cancerType": "mama",
+      "studyKey": "linea",
+      "label": {
+        "es": "Línea de tratamiento",
+        "en": "Treatment line"
+      },
+      "destination": {
+        "entity": "PriorTreatment",
+        "field": "line_number"
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "estado_menopausico",
+      "cancerType": "mama",
+      "studyKey": "estado_menopausico",
+      "label": {
+        "es": "Estado menopáusico",
+        "en": "Menopausal status"
+      },
+      "destination": {
+        "entity": "ClinicalAttribute",
+        "field": "value",
+        "match": {
+          "attribute_key": "estado_menopausico"
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "pertenencia",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    },
+    {
+      "key": "ecog",
+      "cancerType": "mama",
+      "studyKey": "ecog",
+      "label": {
+        "es": "Estado funcional (ECOG)",
+        "en": "Performance status (ECOG)"
+      },
+      "destination": {
+        "entity": "Diagnosis",
+        "field": "performance_value",
+        "match": {
+          "performance_scale": "ECOG"
+        }
+      },
+      "isExclusionary": false,
+      "rule": {
+        "operator": "rango",
+        "partial": {
+          "when": "solo_subgrupo"
+        }
+      },
+      "estado": "propuesta"
+    }
+  ]
 }

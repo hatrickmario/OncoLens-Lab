@@ -6,13 +6,10 @@
         "created_at",
         "extraction_confidence",
         "extraction_score",
-        "id",
         "loinc_code",
         "mapping_status",
         "name",
         "normalized_unit",
-        "original_name",
-        "reference_range",
         "result_type",
         "review_status",
         "reviewed_at",
@@ -31,7 +28,6 @@
         "date_precision",
         "entry_method",
         "extraction_confidence",
-        "id",
         "observed_at",
         "review_status",
         "value"
@@ -48,7 +44,6 @@
         "event_type",
         "extraction_confidence",
         "icd10_code",
-        "id",
         "mapping_status",
         "review_status",
         "toxicity_grade"
@@ -69,7 +64,6 @@
         "histology",
         "histology_code",
         "icd10_code",
-        "id",
         "is_active",
         "mapping_status",
         "performance_scale",
@@ -86,9 +80,7 @@
         "created_at",
         "entry_method",
         "exam_type",
-        "id",
-        "performed_at",
-        "source_lab"
+        "performed_at"
       ],
       "relaciones": {
         "biomarkers": "Biomarker"
@@ -104,7 +96,6 @@
         "ended_at",
         "entry_method",
         "extraction_confidence",
-        "id",
         "line_number",
         "mapping_status",
         "ongoing",

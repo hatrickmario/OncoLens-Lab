@@ -7,16 +7,16 @@ Al publicar una ``CorpusRelease`` se eligen, de forma determinista, ``ceil(N * p
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from app.application.corpus_ingestion.reporte import ReporteDeIngesta, ResultadoDeIngesta
 from app.application.ports import Clock
+from app.application.seed_corpus.ports import RegistroDeDocumento
 from app.domain.corpus_metadata.muestra import seleccionar_muestra
-from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
-from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_metadata.extraccion import campos_conservados
+from app.domain.corpus_metadata.resultado import CampoDeMetadato
 from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 
 REVISION_PENDIENTE = "pendiente"
@@ -36,13 +36,23 @@ class ResultadoDeMuestra:
     archivo: Path | None
 
 
+class LectorDeDocumentosExtraidos(Protocol):
+    """Lo único que la muestra pide al catálogo (``CorpusCatalog`` lo cumple)."""
+
+    def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]: ...
+
+
 class GeneradorDeMuestraDeMetadatos:
+    """La fuente de la muestra es la RELEASE publicada (catálogo), no los resultados de la corrida: los documentos omitidos
+    de corridas previas también se pueden muestrear. Decidido (usuario, 2026-10-24)."""
+
     def __init__(
         self,
         *,
         pct: float,
         semilla: str,
         escritor: EscritorDeMuestra,
+        catalogo: LectorDeDocumentosExtraidos,
         reloj: Clock,
         prompt_version: str,
         llm_model: str,
@@ -51,27 +61,27 @@ class GeneradorDeMuestraDeMetadatos:
         self._pct = pct
         self._semilla = semilla
         self._escritor = escritor
+        self._catalogo = catalogo
         self._reloj = reloj
         self._prompt_version = prompt_version
         self._llm_model = llm_model
         self._nli_model = nli_model
 
-    def generar(
-        self, reporte: ReporteDeIngesta, documentos: Sequence[DocumentoDeSemilla]
-    ) -> ResultadoDeMuestra:
-        elegibles = [r for r in reporte.resultados if _es_extraido_con_campos(r)]
-        if reporte.release_id is None or not elegibles:
+    def generar(self, release_id: str | None) -> ResultadoDeMuestra:
+        """``release_id``: la release que publicó la ingesta (``None`` si no publicó ninguna: no hay muestra)."""
+        if release_id is None:
             return ResultadoDeMuestra(0, None)
-        elegidos = seleccionar_muestra(
-            [r.document_id for r in elegibles if r.document_id], self._pct, self._semilla
-        )
+        elegibles = {
+            r.document_id: (r, campos)
+            for r in self._catalogo.documentos_extraidos_de_la_release(release_id)
+            if (campos := _campos_de(r))
+        }
+        elegidos = seleccionar_muestra(list(elegibles), self._pct, self._semilla)
         if not elegidos:
             return ResultadoDeMuestra(0, None)
-        por_id = {r.document_id: r for r in elegibles}
-        fuentes = {d.document_key: d for d in documentos}
-        entradas = [_entrada(por_id[i], fuentes[por_id[i].document_key]) for i in elegidos]
+        entradas = [_entrada(*elegibles[i]) for i in elegidos]
         archivo = self._escritor.escribir(
-            reporte.release_id, {**self._cabecera(reporte.release_id), "documentos": entradas}
+            release_id, {**self._cabecera(release_id), "documentos": entradas}
         )
         return ResultadoDeMuestra(len(entradas), archivo)
 
@@ -87,24 +97,30 @@ class GeneradorDeMuestraDeMetadatos:
         }
 
 
-def _es_extraido_con_campos(resultado: ResultadoDeIngesta) -> bool:
-    """Solo se revisa lo que la extracción conservó: un documento ``extraido_verificado`` sin campos no tiene nada que revisar."""
-    metadatos = resultado.metadatos
-    return bool(
-        metadatos
-        and metadatos.metadata_source == EXTRAIDO_VERIFICADO
-        and metadatos.campos_verificados
+def _campos_de(registro: RegistroDeDocumento) -> tuple[CampoDeMetadato, ...]:
+    """Solo se revisa lo que el LLM extrajo y el NLI verificó (``extracted_fields``), no lo que el manifiesto declaraba.
+    Decidido (usuario, 2026-10-24)."""
+    extraidos = set(registro.extracted_fields)
+    return tuple(
+        c
+        for c in campos_conservados(
+            registro.study_design,
+            registro.trial_phase,
+            registro.sample_size,
+            registro.primary_endpoint,
+            registro.population_criteria,
+        )
+        if c.campo in extraidos
     )
 
 
-def _entrada(resultado: ResultadoDeIngesta, documento: DocumentoDeSemilla) -> dict[str, Any]:
-    """Datos de la fuente copiados del manifiesto (RN-04, RN-25); la URL ausente se informa como "No disponible"."""
-    campos = resultado.metadatos.campos_verificados if resultado.metadatos else ()
+def _entrada(registro: RegistroDeDocumento, campos: tuple[CampoDeMetadato, ...]) -> dict[str, Any]:
+    """Datos de la fuente copiados del catálogo (RN-04, RN-25); la URL ausente se informa como "No disponible"."""
     return {
-        "document_id": resultado.document_id,
-        "source_name": documento.source_name,
-        "external_id": documento.external_id,
-        "source_url": documento.url_original or NO_DISPONIBLE,
+        "document_id": registro.document_id,
+        "source_name": registro.source_name,
+        "external_id": registro.external_id,
+        "source_url": registro.source_url or NO_DISPONIBLE,
         "campos": [
             {"campo": c.campo, "valor": str(c.valor), "revision": REVISION_PENDIENTE, "nota": ""}
             for c in campos
