@@ -37,7 +37,11 @@ from app.application.corpus_ingestion.ports import (
     AlmacenDeReindexacionSparse,
     SparsePassageEncoder,
 )
-from app.application.corpus_ingestion.reindexar_sparse import ReindexarSparse
+from app.application.corpus_ingestion.reindexar_sparse import (
+    ETAPA_LEER,
+    FalloDeReindexacion,
+    ReindexarSparse,
+)
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
@@ -45,6 +49,8 @@ from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMues
 from app.application.ports import Clock, LlmClient, NliClassifier
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import (
+    AjustesDeReindexacionSparse,
+    AjustesSparse,
     CorpusDatabaseSettings,
     CorpusIngestSettings,
     MilvusSettings,
@@ -264,13 +270,63 @@ def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
     return argumentos
 
 
+def _sparse_real(ajustes: AjustesSparse) -> SparsePassageEncoder:
+    """El codificador *sparse* REAL con pesos y *tokenizer* verificados (el ``onnxruntime`` se difiere hasta aquí). No construye
+    el *tokenizer* de chunks ni el LLM: la reindexación no trocea ni genera."""
+    from app.infrastructure.models.local import cargar_embeddings_y_sparse_de_pasajes
+
+    return cargar_embeddings_y_sparse_de_pasajes(ajustes_de_modelos_del_entorno(), ajustes)[1]
+
+
+def _almacen_de_milvus(milvus: MilvusSettings) -> AlmacenDeReindexacionSparse:
+    try:
+        almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
+        almacen.ensure_collection()
+    except Exception as error:  # noqa: BLE001 - el mensaje de pymilvus puede traer la URI: solo etapa y clase
+        raise FalloDeReindexacion(ETAPA_LEER, error) from None
+    return almacen
+
+
 def _reindexar_sparse(
     sparse: SparsePassageEncoder | None, almacen: AlmacenDeReindexacionSparse | None
 ) -> int:
-    assert (
-        sparse is not None and almacen is not None
-    )  # esqueleto (US-117b): la composición real llega con el feat
-    ReindexarSparse(almacen=almacen, codificador=sparse, lote=1).ejecutar()
+    """``ingest reindex-sparse`` (US-117b D5): sin LLM, sin catálogo y sin PostgreSQL; solo Milvus. ``sparse`` y ``almacen``
+    se inyectan solo en los tests."""
+    try:
+        ajustes = AjustesDeReindexacionSparse(_env_file=None)  # type: ignore[call-arg]
+        milvus = None if almacen else MilvusSettings(_env_file=None)  # type: ignore[call-arg]
+    except ValidationError as error:
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    try:
+        codificador = sparse or _sparse_real(ajustes)
+        almacen = almacen or _almacen_de_milvus(milvus)  # type: ignore[arg-type]
+        resumen = ReindexarSparse(
+            almacen=almacen,
+            codificador=codificador,
+            lote=ajustes.corpus_sparse_reindex_batch_size,
+        ).ejecutar()
+    except FalloDeReindexacion as fallo:
+        print(
+            f"{NOMBRE} {MODO_REINDEX_SPARSE}: falló en {fallo.etapa} ({fallo.clase})",
+            file=sys.stderr,
+        )
+        return 1
+    except ModeloNoVerificadoError as error:
+        print(f"{NOMBRE}: {error}", file=sys.stderr)
+        return 1
+    except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje puede traer una URI
+        print(f"{NOMBRE} {MODO_REINDEX_SPARSE}: falló ({type(error).__name__})", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "modo": MODO_REINDEX_SPARSE,
+                "leidos": resumen.leidos,
+                "reindexados": resumen.reindexados,
+            }
+        )
+    )
     return 0
 
 
@@ -288,11 +344,7 @@ def main(
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     if argumentos.modo == MODO_REINDEX_SPARSE:
-        try:
-            return _reindexar_sparse(sparse, almacen_sparse)
-        except Exception as error:  # noqa: BLE001 - esqueleto
-            print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
-            return 1
+        return _reindexar_sparse(sparse, almacen_sparse)
     try:
         ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
         milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
