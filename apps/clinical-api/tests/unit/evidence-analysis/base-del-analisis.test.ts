@@ -11,13 +11,9 @@ import type { RagQueryInternalRequest } from '../../../../../packages/api-contra
 
 const request = peticion as RagQueryInternalRequest;
 const respuestaConEvidencia = () => validarRespuestaInterna(conEvidencia);
-const SUPUESTO_DECLARADO = {
-  text: 'Los faltantes críticos aún no se calculan en esta versión',
-  origin: 'regla_catalogo',
-};
 
 describe('BaseDelAnalisis', () => {
-  const base = crearBaseDelAnalisis();
+  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave });
 
   it('produce la misma Base byte a byte cuando se ejecuta dos veces con las mismas entradas [US-066 AC-4]', () => {
     const primera = base.construir(request, respuestaConEvidencia(), false);
@@ -50,10 +46,9 @@ describe('BaseDelAnalisis', () => {
     });
   });
 
-  it('deja vacíos missingCriticalData y priorAnalysesUsed', () => {
+  it('deja vacío priorAnalysesUsed', () => {
     const resultado = base.construir(request, respuestaConEvidencia(), false);
 
-    expect(resultado.missingCriticalData).toEqual([]);
     expect(resultado.priorAnalysesUsed).toEqual([]);
   });
 
@@ -64,13 +59,13 @@ describe('BaseDelAnalisis', () => {
     expect(base.construir(request, respuesta, false).continuedWithWarning).toBe(false);
   });
 
-  it('declara como único supuesto el de faltantes no calculados cuando la respuesta no trae supuestos', () => {
+  it('no declara supuestos cuando la respuesta no trae supuestos', () => {
     const resultado = base.construir(request, validarRespuestaInterna(sinEvidencia), false);
 
-    expect(resultado.assumptions).toEqual([SUPUESTO_DECLARADO]);
+    expect(resultado.assumptions).toEqual([]);
   });
 
-  it('pone el supuesto declarado antes de los supuestos verificados de la respuesta', () => {
+  it('declara solo los supuestos verificados de la respuesta', () => {
     const respuesta = validarRespuestaInterna({
       ...structuredClone(conEvidencia),
       assumptions: [{ text: 'Supuesto sintético del modelo.' }],
@@ -79,7 +74,6 @@ describe('BaseDelAnalisis', () => {
     const resultado = base.construir(request, respuesta, false);
 
     expect(resultado.assumptions).toEqual([
-      SUPUESTO_DECLARADO,
       { text: 'Supuesto sintético del modelo.', origin: 'llm_verificado' },
     ]);
   });

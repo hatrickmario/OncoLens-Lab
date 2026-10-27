@@ -19,10 +19,7 @@ import { clienteVerificado } from '../../support/verificarProveedor.js';
 
 const ESPACIO_DE_IDS = 662;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-base-analisis-0001';
-const SUPUESTO_FALTANTES = {
-  text: 'Los faltantes críticos aún no se calculan en esta versión',
-  origin: 'regla_catalogo',
-};
+const SUPUESTO_RETIRADO = 'Los faltantes críticos aún no se calculan en esta versión';
 
 const rag = ragSimulado();
 let mundo: MundoDeGateway;
@@ -68,7 +65,7 @@ const dataRefsEnviados = (): string[] => {
 };
 
 describe('Base del análisis (FR-27)', () => {
-  it('devuelve la Base con datos usados, fuentes consultadas, fuentes no incluidas, fecha de corte y el supuesto declarado de faltantes no calculados cuando Q-HER2 tiene evidencia [US-066 AC-1]', async () => {
+  it('devuelve la Base con datos usados, fuentes consultadas, fuentes no incluidas, fecha de corte y sin supuestos cuando Q-HER2 tiene evidencia [US-066 AC-1]', async () => {
     rag.responder(LLM_OK);
 
     const { analysisBasis: base } = await analizar('req_Base0001', PREGUNTA_Q_HER2);
@@ -94,11 +91,16 @@ describe('Base del análisis (FR-27)', () => {
     });
     expect(base.sourcesNotIncluded).toEqual(['NCCN', 'ESMO']);
     expect(base.corpusCutoffDate).toBe('2026-09-30');
-    expect(base.missingCriticalData).toEqual([]);
+    expect(base.missingCriticalData).toEqual(
+      (rag.capturadas[0]!.cuerpo['clinicalContext'] as Record<string, unknown>)[
+        'missingCriticalData'
+      ],
+    );
     expect(base.limitations).toEqual([]);
     expect(base.agentSteps).toEqual([]);
     expect(base.priorAnalysesUsed).toEqual([]);
-    expect(base.assumptions).toEqual([SUPUESTO_FALTANTES]);
+    expect(base.assumptions).toEqual([]);
+    expect(JSON.stringify(base)).not.toContain(SUPUESTO_RETIRADO);
   });
 
   it('devuelve la Base con aboveThreshold 0 y los datos usados cuando no hay evidencia [US-066 AC-2]', async () => {
@@ -116,7 +118,7 @@ describe('Base del análisis (FR-27)', () => {
     expect(base.sourcesNotIncluded).toEqual(['NCCN', 'ESMO']);
     expect(base.corpusCutoffDate).toBe('2026-09-30');
     expect(base.patientDataUsed.length).toBeGreaterThan(0);
-    expect(base.assumptions).toContainEqual(SUPUESTO_FALTANTES);
+    expect(base.assumptions).toEqual([]);
   });
 
   it('cuenta una afirmación omitida sin su texto cuando rag-orchestrator devuelve omittedClaims 1 [US-066 AC-3]', async () => {

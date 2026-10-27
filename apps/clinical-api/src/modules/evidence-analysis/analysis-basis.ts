@@ -5,7 +5,7 @@ import type {
   RagQueryInternalResponse,
 } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 import { verbalizarDatoDelContexto, type DatoDelContexto } from './analysis-basis.verbalizacion.js';
-import type { AnalysisBasisBuilder } from './ports.js';
+import type { AnalysisBasisBuilder, EtiquetaDeDatoCritico } from './ports.js';
 
 /**
  * Supuesto declarado mientras el inciso (b) no se calcule (US-128, S3/S4): sin él, `missingCriticalData = []` se
@@ -70,12 +70,15 @@ function supuestosVerificados(respuesta: RagQueryInternalResponse): AnalysisBasi
  * Base del análisis del S2 (FR-27, US-066): determinista y sin E/S. Función pura de la petición interna, la respuesta
  * interna y `continueWithWarning`; la sustituye en la raíz de composición sin tocar el service.
  */
-export function crearBaseDelAnalisis(): AnalysisBasisBuilder {
+export function crearBaseDelAnalisis(_dependencias: {
+  etiquetaDe: EtiquetaDeDatoCritico;
+}): AnalysisBasisBuilder {
   return {
     construir(request, respuesta, continueWithWarning) {
       return {
         patientDataUsed: datosDelPacienteUsados(request.clinicalContext),
         missingCriticalData: [],
+        missingCriticalDataLabels: [],
         continuedWithWarning: continueWithWarning,
         assumptions: [{ ...SUPUESTO_FALTANTES_NO_CALCULADOS }, ...supuestosVerificados(respuesta)],
         sourcesConsulted: {
@@ -111,6 +114,7 @@ export function construirBaseTipoNoHabilitado(entrada: EntradaDeLaBaseSinIA): An
   return {
     patientDataUsed: [],
     missingCriticalData: [],
+    missingCriticalDataLabels: [],
     continuedWithWarning: entrada.continuedWithWarning,
     assumptions: [],
     sourcesConsulted: {

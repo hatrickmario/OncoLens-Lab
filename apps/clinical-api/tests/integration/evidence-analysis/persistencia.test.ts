@@ -151,7 +151,7 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
     ['con evidencia', PREGUNTA_Q_HER2, undefined],
     ['sin evidencia', PREGUNTA_Q_SIN, SIN_EVIDENCIA],
   ])(
-    'incluye en analysisBasis.assumptions el supuesto declarado de faltantes no calculados con missingCriticalData vacío cuando el análisis es %s [US-053 AC-1]',
+    'persiste la Base sin supuesto declarado y con missingCriticalData igual a lo enviado cuando el análisis es %s [US-053 AC-1]',
     async (_caso, pregunta, escenario) => {
       if (escenario !== undefined) rag.responder(escenario);
       const { app } = await gateway(`req_Supuesto${escenario === undefined ? 'A' : 'B'}01`);
@@ -160,11 +160,12 @@ describe('persistencia del análisis antes de responder (RN-06)', () => {
 
       expect(respuesta.status).toBe(200);
       const base = respuesta.body.analysisBasis;
-      expect(base.missingCriticalData).toEqual([]);
-      expect(base.assumptions).toContainEqual({
-        text: 'Los faltantes críticos aún no se calculan en esta versión',
-        origin: 'regla_catalogo',
-      });
+      expect(base.missingCriticalData).toEqual(
+        (rag.capturadas[0]!.cuerpo['clinicalContext'] as Record<string, unknown>)[
+          'missingCriticalData'
+        ],
+      );
+      expect(base.assumptions).toEqual([]);
       const fila = await leerRegistroPorTrace(
         mundo.cliente,
         `req_Supuesto${escenario === undefined ? 'A' : 'B'}01`,
