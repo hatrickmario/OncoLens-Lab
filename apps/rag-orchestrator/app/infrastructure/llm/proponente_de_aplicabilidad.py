@@ -16,13 +16,16 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.application.errores import LlmLocalNoDisponibleError
 from app.application.ports import FalloDelLlm, LlmClient
-from app.domain.applicability_text import ChunkDeFuente, FuenteParaProponer, PropuestaDePoblacion
+from app.domain.applicability_text import (
+    LONGITUD_MAXIMA_DEL_VALOR,
+    ChunkDeFuente,
+    FuenteParaProponer,
+    PropuestaDePoblacion,
+    normalizar_propuesta,
+)
 from app.prompts.aplicabilidad_texto import construir_prompt_aplicabilidad_texto, rotulo_de_fuente
 
 logger = logging.getLogger(__name__)
-
-LONGITUD_MAXIMA_DEL_VALOR = 200
-"""Un valor de población es una frase corta; una más larga no cabe como hipótesis del NLI ni como celda de la tabla."""
 
 
 class _PropuestaCruda(BaseModel):
@@ -30,8 +33,8 @@ class _PropuestaCruda(BaseModel):
 
     fuente: str = Field(alias="source")
     criterio: str = Field(alias="criterion")
-    valor: str = Field(alias="value", min_length=1, max_length=LONGITUD_MAXIMA_DEL_VALOR)
-    chunk_id: str = Field(alias="chunkId", min_length=1)
+    valor: str = Field(alias="value")
+    chunk_id: str = Field(alias="chunkId")
 
 
 class SalidaDeAplicabilidad(BaseModel):
@@ -42,7 +45,18 @@ class SalidaDeAplicabilidad(BaseModel):
     proposals: list[_PropuestaCruda]
 
 
-ESQUEMA_DE_APLICABILIDAD: dict[str, Any] = SalidaDeAplicabilidad.model_json_schema()
+def _esquema_para_el_runtime() -> dict[str, Any]:
+    """El tope de longitud va en el esquema que ve el LLM (gramática); el parseo es indulgente y ``normalizar_propuesta``
+    descarta lo que no cabe, igual que con el fake (LSP)."""
+    esquema = SalidaDeAplicabilidad.model_json_schema()
+    propiedades = esquema["$defs"]["_PropuestaCruda"]["properties"]
+    propiedades["value"]["maxLength"] = LONGITUD_MAXIMA_DEL_VALOR
+    propiedades["value"]["minLength"] = 1
+    propiedades["chunkId"]["minLength"] = 1
+    return esquema
+
+
+ESQUEMA_DE_APLICABILIDAD: dict[str, Any] = _esquema_para_el_runtime()
 
 
 class LlmApplicabilityTextProposer:
@@ -63,11 +77,12 @@ class LlmApplicabilityTextProposer:
             raise LlmLocalNoDisponibleError() from None
         salida = self._parsear(crudo)
         por_rotulo = {rotulo_de_fuente(i): f.external_id for i, f in enumerate(fuentes, start=1)}
-        return tuple(
-            PropuestaDePoblacion(por_rotulo[p.fuente], p.criterio, p.valor.strip(), p.chunk_id)
+        normalizadas = (
+            normalizar_propuesta(por_rotulo[p.fuente], p.criterio, p.valor, p.chunk_id)
             for p in salida.proposals
-            if p.fuente in por_rotulo and p.valor.strip()
+            if p.fuente in por_rotulo
         )
+        return tuple(p for p in normalizadas if p is not None)
 
     def _dentro_del_presupuesto(
         self, fuentes: Sequence[FuenteParaProponer]

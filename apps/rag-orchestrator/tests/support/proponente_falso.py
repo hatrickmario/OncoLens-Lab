@@ -9,7 +9,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from app.domain.applicability_text import FuenteParaProponer, PropuestaDePoblacion
+from app.domain.applicability_text import (
+    FuenteParaProponer,
+    PropuestaDePoblacion,
+    normalizar_propuesta,
+)
 from tests.support.aplicabilidad import external_id_de
 
 CITA_AJENA = "ch-x-999"  # no es un chunk recuperado en ninguna consulta de los tests
@@ -55,4 +59,10 @@ class ProponenteFalso:
         if self.error is not None:
             raise self.error
         recibidas = {f.external_id for f in fuentes}
-        return tuple(p for p in self._guion if p.external_id in recibidas)
+        # Como el adapter real: la misma normalizacion del dominio (LSP).
+        normalizadas = (
+            normalizar_propuesta(p.external_id, p.criterio, p.valor, p.chunk_id)
+            for p in self._guion
+            if p.external_id in recibidas
+        )
+        return tuple(p for p in normalizadas if p is not None)

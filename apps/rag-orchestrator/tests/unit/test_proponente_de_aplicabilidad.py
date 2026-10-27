@@ -97,8 +97,8 @@ def test_proponer_ignora_la_propuesta_de_una_fuente_con_rotulo_inexistente_o_val
 
 @pytest.mark.parametrize(
     "respuesta",
-    ["no es json", json.dumps({"otra": []}), salida(propuesta_cruda(value="x" * 201))],
-    ids=["no_json", "fuera_de_esquema", "valor_demasiado_largo"],
+    ["no es json", json.dumps({"otra": []})],
+    ids=["no_json", "fuera_de_esquema"],
 )
 def test_proponer_falla_cerrado_cuando_la_salida_no_valida_contra_el_esquema(respuesta: str):
     with pytest.raises(LlmLocalNoDisponibleError):

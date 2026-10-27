@@ -62,8 +62,14 @@ LONGITUD_MAXIMA_DEL_VALOR = 200
 def normalizar_propuesta(
     external_id: str, criterio: str, valor: str, chunk_id: str
 ) -> PropuestaDePoblacion | None:
-    """ESQUELETO del commit en rojo (Gate 2, LSP)."""
-    raise NotImplementedError("no implementado")
+    """La propuesta con el valor sin espacios sobrantes, o ``None`` si no es utilizable.
+
+    No es utilizable: valor vacío, valor de más de ``LONGITUD_MAXIMA_DEL_VALOR`` caracteres o ``chunkId`` vacío. Una sola
+    regla para el adapter real y los falsos (LSP): el LLM descuidado y el guion de un test se tratan igual."""
+    limpio = valor.strip()
+    if not limpio or len(limpio) > LONGITUD_MAXIMA_DEL_VALOR or not chunk_id.strip():
+        return None
+    return PropuestaDePoblacion(external_id, criterio, limpio, chunk_id)
 
 
 # --- qué se le pide al LLM (D1) ------------------------------------------------------------------------------------
