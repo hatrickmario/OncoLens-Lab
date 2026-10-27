@@ -50,7 +50,12 @@ from app.application.ports import (
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
-from app.domain.citations import OpcionAceptada, validar_citas
+from app.domain.citations import (
+    MotivoDeDescarte,
+    OpcionAceptada,
+    contar_por_motivo,
+    validar_citas,
+)
 from app.domain.normalizacion_puntaje import validar_puntaje_normalizado
 from app.domain.option_selection import OpcionConRelevancia, recortar_a_max_opciones
 from app.domain.pares_del_reranker import recortar_a_pares_del_reranker
@@ -202,11 +207,15 @@ class RAGOrchestratorService:
         if aplicabilidad.invoco_al_llm:
             recuperacion = self._con_version_de_aplicabilidad(recuperacion)
         resultado = validar_citas(evidencia.opciones, citables.keys())
+        por_motivo = contar_por_motivo(resultado.descartadas)
         logger.info(
-            "event=rag_query_citas traceId=%s opcionesAceptadas=%d opcionesDescartadas=%d",
+            "event=rag_query_citas traceId=%s opcionesAceptadas=%d opcionesDescartadas=%d"
+            " sinCitas=%d citaInvalida=%d",
             trace_id,
             len(resultado.aceptadas),
             len(resultado.descartadas),
+            por_motivo[MotivoDeDescarte.sin_citas],
+            por_motivo[MotivoDeDescarte.cita_invalida],
         )
         textos = {chunk_id: c.chunk.chunk_text for chunk_id, c in citables.items()}
         soporte = await self._soporte.verificar(

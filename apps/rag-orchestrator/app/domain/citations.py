@@ -120,6 +120,13 @@ def validar_citas(
     return ResultadoCitas(tuple(aceptadas), tuple(descartadas))
 
 
+def contar_por_motivo(
+    descartadas: Sequence[OpcionDescartada],
+) -> dict[MotivoDeDescarte, int]:
+    """Recuento de descartadas por motivo, con cero para el que no aparece (RN-01); solo enteros, sin contenido."""
+    return {motivo: sum(d.motivo is motivo for d in descartadas) for motivo in MotivoDeDescarte}
+
+
 def construir_cita(chunk: ChunkPuntuado, ficha: FichaDeFuente) -> CitaDelCorpus:
     """Cita copiada del catálogo y del chunk recuperado; nada viene del texto generado (RN-04, RN-25)."""
     return CitaDelCorpus(
