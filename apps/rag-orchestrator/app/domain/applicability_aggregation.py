@@ -30,6 +30,11 @@ class AplicabilidadDeOpcion:
     poblacion_no_comparable: bool
     avisos: tuple[str, ...]
 
+    @property
+    def fuente_mas_aplicable(self) -> FuenteDeLaOpcion | None:
+        """La de menor clave del comparador, sin depender del orden de ``por_fuente``."""
+        return min(self.por_fuente, key=_clave_de, default=None)
+
 
 def agregar_aplicabilidad_de_opcion(fuentes: Sequence[FuenteDeLaOpcion]) -> AplicabilidadDeOpcion:
     """La opción hereda el resumen de su fuente más aplicable y es no comparable solo si todas sus fuentes lo son.

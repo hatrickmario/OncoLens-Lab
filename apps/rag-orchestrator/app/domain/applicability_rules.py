@@ -25,6 +25,7 @@ from app.domain.aplicabilidad_tipos import (
     TratamientoPrevioDelPaciente,
     ValorDelEstudio,
 )
+from app.domain.applicability_order import contar_excluyentes_no_coincide
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, DestinoDelCriterio
 
 VALOR_NO_DISPONIBLE = "no_disponible"
@@ -409,4 +410,4 @@ def contar_estados(criterios: Sequence[CriterioEvaluado]) -> ResumenDeEstados:
 
 def poblacion_no_comparable(criterios: Sequence[CriterioEvaluado]) -> bool:
     """Un criterio excluyente en ``no_coincide`` hace la población no comparable (base de RN-28)."""
-    return any(c.es_excluyente and c.estado == "no_coincide" for c in criterios)
+    return contar_excluyentes_no_coincide(criterios) > 0

@@ -286,7 +286,7 @@ class RAGOrchestratorService:
         """FR-09, RN-28: agrega la aplicabilidad de cada opción ya soportada y conserva las ``maxOptions`` más aplicables.
 
         El orden va después del soporte y antes del recorte: una descartada nunca ocupa posición. El excedente se omite
-        (no es una opción descartada) y solo se cuenta, igual que las opciones de población no comparable.
+        (no es una opción descartada) y solo se cuenta; las de población no comparable se conservan con su aviso y se cuentan en el log.
         """
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
         soportadas = con_aplicabilidad_de_cada_opcion(
