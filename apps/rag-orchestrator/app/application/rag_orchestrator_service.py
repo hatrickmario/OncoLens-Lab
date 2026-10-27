@@ -19,6 +19,7 @@ from app.application.aplicabilidad import (
     AplicabilidadDeFuente,
     ApplicabilityService,
     mejor_chunk_por_documento,
+    recuentos_para_el_log,
 )
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
@@ -224,12 +225,27 @@ class RAGOrchestratorService:
         tipo = diagnostico.cancerType.root
         if not self._aplicabilidad.criterios_del(tipo):
             return ()
+        inicio = self._reloj.ahora()
         mejores = mejor_chunk_por_documento(citables)
         poblaciones = await self._invocar_borde_fallando_cerrado(
             trace_id, "poblacion", self._catalogo.poblacion_por_documento, set(mejores)
         )
-        return self._aplicabilidad.evaluar(
+        fuentes = self._aplicabilidad.evaluar(
             tipo, contexto_del_paciente(solicitud.clinicalContext), mejores, poblaciones
+        )
+        self._registrar_aplicabilidad(trace_id, fuentes, inicio)
+        return fuentes
+
+    def _registrar_aplicabilidad(
+        self, trace_id: str, fuentes: Sequence[AplicabilidadDeFuente], inicio: datetime
+    ) -> None:
+        recuentos = " ".join(f"{k}={v}" for k, v in recuentos_para_el_log(fuentes).items())
+        latencia_ms = int((self._reloj.ahora() - inicio).total_seconds() * 1000)
+        logger.info(
+            "event=rag_query_aplicabilidad traceId=%s %s latenciaMs=%d",
+            trace_id,
+            recuentos,
+            latencia_ms,
         )
 
     @staticmethod

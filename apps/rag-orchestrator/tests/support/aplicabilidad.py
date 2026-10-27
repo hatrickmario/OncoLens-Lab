@@ -10,6 +10,7 @@ ni ``estado_castracion`` como si la ingesta los produjera.
 from __future__ import annotations
 
 import copy
+import json
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,22 @@ TIPOS_DE_TEST = ("mama", "prostata")
 def criterios_de(catalogo: Path) -> CriteriosDeAplicabilidad:
     """Los criterios como los monta el arranque desde un directorio de catálogo (misma función de L1D-126)."""
     return cargar_criterios_de_aplicabilidad(catalogo, TIPOS_DE_TEST)
+
+
+def escribir_aplicabilidad(catalogo: Path, tipo: str, items: list[dict[str, Any]]) -> None:
+    """Escribe ``<catalogo>/<tipo>/aplicabilidad.json`` de un catálogo de test propio (versión ``test-apl-1.0.0``)."""
+    carpeta = catalogo / tipo
+    carpeta.mkdir(parents=True, exist_ok=True)
+    contenido = {"version": "test-apl-1.0.0", "items": items}
+    (carpeta / "aplicabilidad.json").write_text(json.dumps(contenido), encoding="utf-8")
+
+
+def catalogo_de_test_sin_criterios(raiz: Path) -> Path:
+    """Catálogo de test (``test-apl-1.0.0``) cuyos tipos declaran ``items: []``: ni un criterio de aplicabilidad."""
+    catalogo = raiz / "test-apl-1.0.0"
+    for tipo in TIPOS_DE_TEST:
+        escribir_aplicabilidad(catalogo, tipo, [])
+    return catalogo
 
 
 def criterios_de_test_apl_1_0_0() -> CriteriosDeAplicabilidad:

@@ -5,14 +5,16 @@ Un criterio evaluado nunca lleva puntaje ni ponderación (RN-28): solo su estado
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, get_args
 
 EstadoDeCriterio = Literal["coincide", "parcial", "no_coincide", "desconocido"]
+ESTADOS: tuple[EstadoDeCriterio, ...] = get_args(EstadoDeCriterio)
 CausaDeDesconocido = Literal["falta_en_paciente", "no_reportado_por_fuente"]
 MotivoInterno = Literal[
     "valor_fuera_de_tabla", "sin_escala", "forma_no_comparable", "destino_no_resoluble"
 ]
 """Por qué un ``desconocido`` no lleva causa en el contrato: solo se cuenta en el log, nunca se envía (design D2b)."""
+MOTIVOS_INTERNOS: tuple[MotivoInterno, ...] = get_args(MotivoInterno)
 OrigenDeMetadatos = Literal["fuente_estructurada", "extraido_verificado", "pendiente"]
 
 

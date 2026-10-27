@@ -16,7 +16,9 @@ from tests.support.aplicabilidad import (
     FICHAS_FX08BA,
     POBLACIONES_FX08BA,
     GeneradorDeAplicabilidad,
+    catalogo_de_test_sin_criterios,
     entorno_de_aplicabilidad,
+    escribir_aplicabilidad,
     external_id_de,
     solicitud_a_m1,
 )
@@ -120,16 +122,9 @@ def _catalogo_con_criterios_de_prueba(raiz: Path) -> Path:
         "rule": {"operator": "pertenencia", "partial": {"when": "solo_subgrupo"}},
         "estado": "propuesta",
     }
-    _escribir_aplicabilidad(catalogo, "mama", [receptores, por_clave["ecog"]])
-    _escribir_aplicabilidad(catalogo, "prostata", [])
+    escribir_aplicabilidad(catalogo, "mama", [receptores, por_clave["ecog"]])
+    escribir_aplicabilidad(catalogo, "prostata", [])
     return catalogo
-
-
-def _escribir_aplicabilidad(catalogo: Path, tipo: str, items: list[dict[str, Any]]) -> None:
-    carpeta = catalogo / tipo
-    carpeta.mkdir(parents=True, exist_ok=True)
-    contenido = {"version": APL_1_0_0.name, "items": items}
-    (carpeta / "aplicabilidad.json").write_text(json.dumps(contenido), encoding="utf-8")
 
 
 def _paciente_con(
@@ -235,9 +230,7 @@ def test_rag_query_da_una_applicability_identica_y_una_sola_invocacion_del_llm_p
     assert invocaciones_tras_la_primera == 1
     assert generador.invocaciones == 2
 
-    sin_criterios = tmp_path / APL_1_0_0.name
-    _escribir_aplicabilidad(sin_criterios, "mama", [])
-    _escribir_aplicabilidad(sin_criterios, "prostata", [])
+    sin_criterios = catalogo_de_test_sin_criterios(tmp_path)
     generador_sin_criterios = GeneradorDeAplicabilidad()
     cuerpo = _consultar(
         {"doc-a1": PUNTAJE_ALTO}, catalogo=sin_criterios, generador=generador_sin_criterios
