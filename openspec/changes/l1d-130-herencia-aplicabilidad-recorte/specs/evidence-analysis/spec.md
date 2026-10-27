@@ -13,7 +13,7 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-01, 
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 #### Scenario: A igual relevanceScore el desempate es el chunkId de la cita principal [FR-09] [RN-28]
-- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1`, `applicability = []` y dos opciones validadas con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
+- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1` y dos opciones validadas sin aplicabilidad (`aplicabilidad = None`) con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
 - **WHEN** se aplica el recorte
 - **THEN** se conserva la opción cuya cita principal es `ch-a`, cualquiera que sea el orden de aparición
 
