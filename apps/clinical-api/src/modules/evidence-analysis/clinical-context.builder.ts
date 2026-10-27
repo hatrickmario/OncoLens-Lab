@@ -182,11 +182,12 @@ export function construirContextoSinDatosClinicos(
 
 /**
  * Allowlist del contexto clínico (RN-10): arma cada objeto campo a campo desde las filas leídas, nunca copiando
- * entidades completas. Devuelve además qué dato respalda cada `dataRef`.
+ * entidades completas. `faltantes` son claves del catálogo (US-006), nunca texto del paciente. Devuelve además qué dato respalda cada `dataRef`.
  */
 export function construirContextoPermitido(
   caso: CasoClinico,
   ahora: Date,
+  faltantes: readonly string[],
 ): { contexto: ContextoPermitido; dataRefs: MapaDeDataRefs } {
   const asignador = asignarDataRefs();
   const contexto: ContextoPermitido = {
@@ -203,7 +204,7 @@ export function construirContextoPermitido(
     ),
     events: caso.eventos.map((fila) => eventoPermitido(fila, ahora, asignador)),
     biomarkerTrends: [],
-    missingCriticalData: [],
+    missingCriticalData: [...faltantes],
     priorAnalyses: [],
   };
   return { contexto, dataRefs: asignador.mapa };

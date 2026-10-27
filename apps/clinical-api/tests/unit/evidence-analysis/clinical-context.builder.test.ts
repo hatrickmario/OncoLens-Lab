@@ -86,8 +86,17 @@ describe('asignarDataRefs', () => {
 });
 
 describe('construirContextoPermitido', () => {
+  it('copia los faltantes en orden como missingCriticalData cuando llegan claves del catálogo', () => {
+    const faltantes = ['grado', 'rp', 'brca_germinal'];
+
+    const { contexto } = construirContextoPermitido(casoDeEjemplo(), AHORA_DE_EJEMPLO, faltantes);
+
+    expect(contexto.missingCriticalData).toEqual(['grado', 'rp', 'brca_germinal']);
+    expect(contexto.missingCriticalData).not.toBe(faltantes);
+  });
+
   it('arma el diagnóstico activo con el grupo ISUP en grade, fechas relativas y procedencia', () => {
-    const { contexto } = construirContextoPermitido(casoDeEjemplo(), AHORA_DE_EJEMPLO);
+    const { contexto } = construirContextoPermitido(casoDeEjemplo(), AHORA_DE_EJEMPLO, []);
 
     expect(contexto.diagnosis).toEqual({
       dataRef: 'r1',
@@ -113,6 +122,7 @@ describe('construirContextoPermitido', () => {
     const { contexto } = construirContextoPermitido(
       casoDeEjemplo({ diagnosticoActivo: null }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.diagnosis).toBeNull();
@@ -124,6 +134,7 @@ describe('construirContextoPermitido', () => {
         diagnosticoActivo: diagnosticoDeEjemplo({ stagingSystem: null, stageValue: null }),
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.diagnosis).toMatchObject({
@@ -141,6 +152,7 @@ describe('construirContextoPermitido', () => {
         }),
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.diagnosis?.provenance).toMatchObject({
@@ -165,6 +177,7 @@ describe('construirContextoPermitido', () => {
         ],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.biomarkers.map((b) => [b.biomarkerName, b.value])).toEqual([
@@ -187,6 +200,7 @@ describe('construirContextoPermitido', () => {
         ],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.biomarkers.map((b) => b.value)).toEqual(['2']);
@@ -204,6 +218,7 @@ describe('construirContextoPermitido', () => {
         ],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.priorTreatments).toEqual([
@@ -231,12 +246,14 @@ describe('construirContextoPermitido', () => {
         ],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
     const terminados = construirContextoPermitido(
       casoDeEjemplo({
         tratamientosPrevios: [tratamientoPrevioDeEjemplo({ ongoing: false })],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(enCurso.contexto.currentLine).toBe(2);
@@ -250,6 +267,7 @@ describe('construirContextoPermitido', () => {
         atributos: [atributoDeEjemplo({ observedAt: null })],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.events[0]?.monthsAgo).toBeNull();
@@ -265,6 +283,7 @@ describe('construirContextoPermitido', () => {
         eventos: [eventoDeEjemplo()],
       }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     expect(contexto.diagnosis?.dataRef).toBe('r1');
@@ -282,7 +301,7 @@ describe('construirContextoPermitido', () => {
   });
 
   it('envía vacías las listas que el S1 no puebla: notas, tendencias, faltantes y análisis previos', () => {
-    const { contexto } = construirContextoPermitido(casoDeEjemplo(), AHORA_DE_EJEMPLO);
+    const { contexto } = construirContextoPermitido(casoDeEjemplo(), AHORA_DE_EJEMPLO, []);
 
     expect(contexto.clinicalNotes).toEqual([]);
     expect(contexto.biomarkerTrends).toEqual([]);
@@ -303,6 +322,7 @@ describe('construirContextoPermitido', () => {
     const { contexto } = construirContextoPermitido(
       casoDeEjemplo({ diagnosticoActivo: conCampoAjeno }),
       AHORA_DE_EJEMPLO,
+      [],
     );
 
     const texto = JSON.stringify(contexto);
