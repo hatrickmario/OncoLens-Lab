@@ -67,8 +67,8 @@ Ninguna.
 
 ## Impact
 
-- `apps/rag-orchestrator/app/application/` (núcleo común de ingesta, test de caracterización de la versión nueva y, pendiente de decisión, el caso de uso de
+- `apps/rag-orchestrator/app/application/` (núcleo común de ingesta, test de caracterización de la versión nueva y el caso de uso de
   reindexación *sparse*), `app/scripts/ingest.py` (subcomando `reindex-sparse`), `app/infrastructure/milvus/repository.py`
   (lectura paginada de vigentes y reescritura del *sparse* por `chunk_id`).
 - Corpus: la semilla pasa a tener *sparse* poblado → la suite `evaluate` se ejecuta para confirmar que el *dense* no cambia.
-- Rol `rag_corpus` y schema `corpus` exclusivamente (SEG-06); ningún dato clínico.
+- Rol `rag_corpus` y schema `corpus` exclusivamente (SEG-06); ningún dato clínico. `reindex-sparse` **no abre conexión a PostgreSQL**: solo Milvus.
