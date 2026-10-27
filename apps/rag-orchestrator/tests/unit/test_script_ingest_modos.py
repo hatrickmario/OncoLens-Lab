@@ -165,6 +165,18 @@ def test_una_variable_de_pesos_sparse_ausente_detiene_la_reindexacion_nombrandol
     assert codigo == 1 and salida == "" and clave in error and almacen.llamadas == 0
 
 
+def test_sin_la_configuracion_de_milvus_sale_con_1_nombrando_las_claves_despues_de_la_guarda(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for clave in ("MILVUS_URI", "EMBEDDING_DIM", "VECTOR_INDEX_TYPE", "VECTOR_INDEX_PARAMS"):
+        entorno.delenv(clave, raising=False)
+
+    codigo = ingest.main(["reindex-sparse"], sparse=CodificadorSparseFalso())
+
+    error = capsys.readouterr().err
+    assert codigo == 1 and "configuración inválida" in error and "EMBEDDING_DIM" in error
+
+
 # --- los archivos de modelos se verifican por SHA-256 (proceso real, plazo explícito) ----------------------------
 
 

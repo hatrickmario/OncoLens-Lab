@@ -1,6 +1,7 @@
 """Ingesta en lote reanudable del corpus (US-117a, L1D-116): raíz de composición del ``IngestionPipelineService``.
 
     python -m app.scripts.ingest --manifest <ruta>
+    python -m app.scripts.ingest reindex-sparse
 
 Lee el manifiesto indicado, rechaza lo que no tiene licencia aceptada o viene de una fuente excluida (RN-21), normaliza,
 trocea, embebe *dense* y *sparse*, inserta en ``corpus.corpus_document`` (rol ``rag_corpus``) y en ``corpus_chunks``
@@ -14,6 +15,12 @@ verifica con el NLI (``NLI_ENTAILMENT_THRESHOLD``); si cualquiera cae, el docume
 
 Imprime un resumen JSON en la salida estándar: solo identificadores, estados, motivos (etapa y clase) y contadores;
 nunca contenido, URLs, credenciales ni mensajes de excepción.
+
+``reindex-sparse`` (US-117b) puebla el ``sparse_vector`` de los chunks VIGENTES de la semilla (``chunk_id``, ``dense_vector`` y los
+demás campos no cambian; los no vigentes no se tocan). No usa LLM ni el catálogo (solo Milvus), así que no lleva la guarda de LLM
+de ``ingest``, pero exige por código embeddings locales verificados por SHA-256 (``MODEL_PROVIDER=local``, ``EMBEDDING_*``,
+``EMBEDDING_SPARSE_WEIGHTS_*``, RN-12) y falla cerrado nombrando solo la variable. El lote es ``CORPUS_SPARSE_REINDEX_BATCH_SIZE``.
+Es idempotente y no se ejecuta a la vez que una ingesta. Falla con la etapa (``leer_vigentes|codificar|reescribir``) y la clase del error.
 
 Código de salida: 0 si ningún documento quedó en ``error``; 1 si hubo uno, la configuración es inválida o una
 dependencia obligatoria falló. Como ``load_seed_corpus``: sin ``MODEL_PROVIDER=local`` no hay embedder, y nunca se usa
@@ -280,8 +287,8 @@ def _sparse_real(ajustes: AjustesSparse) -> SparsePassageEncoder:
 
 
 def _almacen_de_milvus() -> AlmacenDeReindexacionSparse:
+    milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
     try:
-        milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
         almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
         almacen.ensure_collection()
     except Exception as error:  # noqa: BLE001 - el mensaje de pymilvus puede traer la URI: solo etapa y clase
@@ -308,6 +315,11 @@ def _reindexar_sparse(
             codificador=codificador,
             lote=ajustes.corpus_sparse_reindex_batch_size,
         ).ejecutar()
+    except (
+        ValidationError
+    ) as error:  # la configuración de Milvus, que se valida después de la guarda
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
     except FalloDeReindexacion as fallo:
         print(
             f"{NOMBRE} {MODO_REINDEX_SPARSE}: falló en {fallo.etapa} ({fallo.clase})",
