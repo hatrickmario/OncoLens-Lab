@@ -11,7 +11,7 @@ import re
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
-from app.schemas.generated.models import ClinicalContext, Provenance, ReviewStatus
+from app.schemas.generated.models import ClinicalContext, Diagnosis, Provenance, ReviewStatus
 
 VERSION_DEL_PROMPT = "rag-query@0.4.0"
 
@@ -88,16 +88,8 @@ def bloque_de_datos_del_paciente(contexto: ClinicalContext) -> str:
     lineas: list[str] = []
     diagnostico = contexto.diagnosis
     if diagnostico is not None:
-        partes = [
-            diagnostico.cancerType.root,
-            diagnostico.histology.root if diagnostico.histology else "",
-            diagnostico.grade.root if diagnostico.grade else "",
-            f"{diagnostico.stagingSystem.root} {diagnostico.stageValue.root}",
-        ]
         lineas.append(
-            _linea_etiquetada(
-                "; ".join(p.strip() for p in partes if p.strip()), diagnostico.provenance
-            )
+            _linea_etiquetada(_texto_del_diagnostico(diagnostico), diagnostico.provenance)
         )
     lineas += [
         _linea_etiquetada(f"{b.biomarkerName.root} {b.value.root}", b.provenance)
@@ -113,6 +105,16 @@ def etiqueta_de_procedencia(procedencia: Provenance) -> str | None:
     if procedencia.reviewStatus == ReviewStatus.requiere_revision:
         return ETIQUETA_SIN_VERIFICAR
     return None
+
+
+def _texto_del_diagnostico(diagnostico: Diagnosis) -> str:
+    partes = [
+        diagnostico.cancerType.root,
+        diagnostico.histology.root if diagnostico.histology else "",
+        diagnostico.grade.root if diagnostico.grade else "",
+        f"{diagnostico.stagingSystem.root} {diagnostico.stageValue.root}",
+    ]
+    return "; ".join(parte.strip() for parte in partes if parte.strip())
 
 
 def _linea_etiquetada(texto: str, procedencia: Provenance) -> str:
