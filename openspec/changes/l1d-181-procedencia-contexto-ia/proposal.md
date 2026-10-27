@@ -14,6 +14,10 @@ conflicto sembrado).
 > insertado por el test, sin detección automática), porque la detección real (US-099) pasó al S5. El AC original,
 > con el conflicto detectado por la reconciliación al persistir una extracción, vive en US-099 AC-8 (FEAT-03a, S5).
 >
+> **Decidido (usuario, 2026-10-27):** es **Non-Goal explícito** que el prompt etiquete la procedencia solo del
+> diagnóstico y los biomarcadores en el S3; atributos, tratamientos previos y eventos viajan con `provenance` en el
+> payload (B1) pero siguen fuera del bloque del prompt, como hoy.
+>
 > **Decidido (usuario, 2026-10-24, `[S3 resp. 15]`):** `l1d-287-alias-chunks-cita` va **primero** y sube el prompt
 > a `rag-query@0.3.0` (alias de chunks); este change va **después**, hace *rebase* sobre él y sube a
 > `rag-query@0.4.0`. Su medición `evaluate` corre sobre el prompt con alias **y** etiquetas.
@@ -36,7 +40,7 @@ uno verificado.
   persistido. La lógica ya existe desde el S1 (`provenanceDe()`, filtro `SIN_RECHAZADOS`); se nombra como la
   regla única de RN-07 y el filtro pasa a usar `sqlDatoVigente()` (fuente única del predicado).
 - **rag-orchestrator:** el prompt `rag-query` recibe un bloque de datos del paciente que acompaña cada dato
-  `requiere_revision` con la etiqueta "(sin verificar)" y cada dato en conflicto con "(en conflicto)" (asumido,
+  `requiere_revision` **del diagnóstico y de los biomarcadores** con la etiqueta "(sin verificar)" y cada dato en conflicto con "(en conflicto)" (asumido,
   ver design D3). Sobre el prompt con alias de `l1d-287` (`rag-query@0.3.0`), sube la versión a
   `rag-query@0.4.0` (`[S3 resp. 15]`). El texto que se embebe para la recuperación
   (`resumen_del_contexto_clinico`) **no** cambia.
@@ -65,8 +69,8 @@ uno verificado.
   `2026-10-18-l1d-203-desidentificacion-contexto-ia` (US-049, desidentificación del contexto),
   `2026-10-18-l1d-104-persistencia-analisis-fallos` (registro con `clinical_context_snapshot`).
 - ↪ **l1d-287-alias-chunks-cita** (US-236) `[S3 resp. 15]`: mergea primero (`rag-query@0.3.0`, alias `C1…Cn` en
-  `construir_prompt_rag_query()` y `generation.py`); este change hace *rebase* sobre él, añade el bloque de datos
-  del paciente al mismo prompt y sube a `rag-query@0.4.0`.
+  `construir_prompt_rag_query()`, que recibe `fragmentos: Sequence[FragmentoConAlias]`, y `generation.py`); este change hace *rebase* sobre él, añade el bloque de datos
+  del paciente al mismo prompt (como el argumento `contexto_clinico: str` existente) y sube a `rag-query@0.4.0`.
 - 🔗 Coordina con **l1d-129-aplicabilidad-causas-avisos** (US-124): ese change consume
   `provenance.conflict`/`reviewStatus` para `patientDataWarning`; la mitad B1 de su AC-3 (conflicto sembrado →
   `conflict = true`) la verifica este change (US-065 AC-4). Ninguno bloquea al otro: l1d-129 construye el
@@ -84,6 +88,8 @@ uno verificado.
 - Flujo de revisión humana (verificar, corregir, rechazar) y su UI (FEAT-03b, S4).
 - Marcar como `conflict = true` el **otro** extremo del conflicto (el dato del seed sin `conflicts_with_id`) o
   enviar ambos valores en conflicto: no lo pide ningún AC (ver Pendientes en design.md).
+- Etiquetar en el prompt la procedencia de atributos, tratamientos previos y eventos (Non-Goal explícito del S3,
+  decidido 2026-10-27): solo diagnóstico y biomarcadores.
 - Sembrar el conflicto en el paciente (a) de la demo: rompería el AC-1 (`conflict = false` en el seed).
 - Base del análisis (US-066, ya archivada en el S2) y textos de UI.
 

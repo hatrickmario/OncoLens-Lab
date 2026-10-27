@@ -15,8 +15,8 @@ Ver proposal.md (Why). Estado de partida en `main`:
 - `rag-orchestrator`: `generation.py` arma el prompt `rag-query@0.2.0` con `resumen_del_contexto_clinico()`, el
   mismo texto que se embebe para la recuperación (`rag_orchestrator_service.py`); la procedencia se pierde.
   Base efectiva tras el *rebase* `[S3 resp. 15]`: `l1d-287-alias-chunks-cita` mergea antes y deja el prompt en
-  `rag-query@0.3.0` con fragmentos `[fragmento C<n>]` y `construir_prompt_rag_query()` recibiendo pares
-  `(alias, chunk)`; este change parte de ese estado.
+  `rag-query@0.3.0` con fragmentos `[fragmento C<n>]` y `construir_prompt_rag_query(pregunta, contexto_clinico: str,
+  fragmentos: Sequence[FragmentoConAlias], idioma, max_parrafos_detalle)`; este change parte de ese estado.
 
 ## Goals / Non-Goals
 
@@ -24,8 +24,9 @@ Ver proposal.md (Why). Estado de partida en `main`:
 procedencia al prompt como etiquetas legibles (AC-5).
 
 **Non-Goals:** detección de conflictos (US-099, S5); flujo de revisión (FEAT-03b, S4); aplicabilidad
-(`l1d-129`); ampliar los campos del contexto que entran al prompt (atributos, tratamientos, eventos siguen fuera,
-como hoy).
+(`l1d-129`); ampliar los campos del contexto que entran al prompt. **Non-Goal explícito (usuario, 2026-10-27):** en
+el S3 el prompt etiqueta la procedencia **solo del diagnóstico y los biomarcadores**; atributos, tratamientos
+previos y eventos siguen fuera del bloque (como hoy) aunque su `provenance` viaje en el payload.
 
 ## Decisions
 
@@ -44,8 +45,9 @@ plantilla): lista el diagnóstico y los biomarcadores (los mismos campos que hoy
 la etiqueta derivada de su `provenance` por `etiqueta_de_procedencia(provenance) -> str | None` (RN-07):
 `conflict = true` → "(en conflicto)"; si no, `reviewStatus = requiere_revision` → "(sin verificar)"; si no,
 ninguna. La precedencia del conflicto coincide con `patientDataWarning` de `l1d-129` (requisito "Aviso del dato del paciente según su procedencia"). La plantilla
-renombra "Contexto clínico" a "Datos del paciente" e incluye una línea fija que explica las etiquetas (redactada
-sin términos de RN-23). `resumen_del_contexto_clinico()` no cambia: etiquetar el texto embebido alteraría la
+renombra "Contexto clínico" a "Datos del paciente" e incluye una línea fija que explica las etiquetas. Literal propuesto (sin términos de RN-23; no se reproduce en la spec):
+«Las etiquetas "(sin verificar)" y "(en conflicto)" indican el estado de revisión del dato; no forman parte del
+dato.» El bloque pasa como el argumento `contexto_clinico: str` ya existente de `construir_prompt_rag_query()`. `resumen_del_contexto_clinico()` no cambia: etiquetar el texto embebido alteraría la
 recuperación y obligaría a recalibrar. Versión del prompt `rag-query@0.3.0` (alias, `l1d-287`) →
 `rag-query@0.4.0` `[S3 resp. 15]`; los fragmentos y la instrucción de citar por alias no cambian. Las etiquetas son texto del prompt
 (versionado con él), no valores calibrables: no van a configuración (RN-22 no aplica).
@@ -56,9 +58,17 @@ Descartada: etiquetar dentro de `resumen_del_contexto_clinico()` (mezcla recuper
 antes del `feat`; si pasa, se registra como test de regresión (test después) con su salida en el reporte del
 Gate 2. AC-5 sí es rojo genuino (hoy no hay etiqueta).
 
-**D5 — AC-3 sobre el payload y el registro.** El test captura el request hacia `rag-orchestrator` (MSW desde
-`contracts/examples/`) y lee `clinical_context_snapshot` de PostgreSQL real; ambos sin receptores de
-progesterona.
+**D5 — AC-3 y AC-4 sobre el payload y el registro, aseverados por identidad del dato, no por nombre.** El test
+captura el request hacia `rag-orchestrator` (MSW desde `contracts/examples/`) y lee `clinical_context_snapshot` de
+PostgreSQL real. Identifica los datos por su `dataRef`/id (los ids que `insertarFxT1aA` devuelve) y comprueba la
+condición «ningún `reviewStatus` `rechazado`/`reemplazado` en el payload ni en el snapshot». No usa el nombre
+«Receptor de …»: el seed pasa a `RE`/`RP` en el change de seed de la O3 y el test no debe depender del rótulo.
+
+**D6 — Un solo origen de los estados descartados.** `sqlDatoVigente()` (SQL) y `registrosVigentes()` (completitud)
+derivan de la misma constante `ESTADOS_DESCARTADOS` de `modules/patients/estados-de-revision.ts`. Un unitario
+lo fija: cada estado de `ESTADOS_DESCARTADOS` aparece en la cadena de `sqlDatoVigente()` y `registrosVigentes()`
+descarta exactamente esos estados; si se añadiera un estado a la constante, ambos cambian a la vez. El
+repositorio del análisis deja de tener su literal `SIN_RECHAZADOS`.
 
 ## Pendientes de definir
 
