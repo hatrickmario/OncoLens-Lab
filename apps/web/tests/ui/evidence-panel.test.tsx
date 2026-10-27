@@ -163,7 +163,9 @@ describe('EvidencePanel', () => {
     }
     expect(screen.getByText(opcion.rationale).closest('[data-origen]')).toBeNull();
     expect(screen.getByText(opcion.option).closest('[data-origen]')).toBeNull();
-    expect(screen.getByText(evidence.cita.noDisponible).closest('[data-origen]')).toBeNull();
+    const ausentes = screen.getAllByText(evidence.cita.noDisponible);
+    expect(ausentes.length).toBeGreaterThan(0);
+    for (const ausente of ausentes) expect(ausente.closest('[data-origen]')).toBeNull();
   });
 
   it('muestra el rótulo exacto Relevancia de recuperación de evidencia con 0,87 después de las citas, con la presentación del orden por la cita más relevante, la nota y la ayuda negadas, en estilo secundario [US-061 AC-2]', async () => {
