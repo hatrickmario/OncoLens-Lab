@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -10,16 +11,21 @@ from typing import Any
 import pytest
 import yaml
 
-from app.application.corpus_ingestion.reporte import Estado, ReporteDeIngesta, ResultadoDeIngesta
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+from app.application.seed_corpus.ports import RegistroDeDocumento, RegistroDeRelease
+from app.application.seed_corpus.registros import registro_embebido
 from app.domain.corpus_metadata.muestra import PorcentajeDeMuestraInvalido, seleccionar_muestra
-from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+from app.domain.corpus_metadata.extraccion import campos_conservados
+from app.domain.corpus_metadata.resultado import MetadatosResueltos
+from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
+from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 from app.infrastructure.corpus_metadata.escritor_muestra import (
     ArchivoDeMuestraEsUnEnlace,
     EscritorDeMuestraYaml,
     ReleaseNoSeguraComoNombreDeArchivo,
 )
+from tests.support.almacenes_falsos import CatalogoEnMemoria
 from tests.support.fakes import RelojFijo
 
 IDS = tuple(f"doc-{i:02d}@abc" for i in range(1, 21))
@@ -103,14 +109,8 @@ class _EscritorEnMemoria:
         return Path(f"{release_id}.yaml")
 
 
-def _metadatos(origen: str, *campos: CampoDeMetadato) -> MetadatosResueltos:
-    return MetadatosResueltos("otro", None, None, None, {}, origen, campos)
-
-
-def _resultado(clave: str, origen: str, *campos: CampoDeMetadato) -> ResultadoDeIngesta:
-    return ResultadoDeIngesta(
-        clave, Estado.EMBEBIDO, metadatos=_metadatos(origen, *campos), document_id=f"{clave}@x"
-    )
+AHORA = RelojFijo().ahora()
+ADMITIDO = Admision(None, "dominio_publico")
 
 
 def _documento(clave: str) -> DocumentoDeSemilla:
@@ -130,11 +130,57 @@ def _documento(clave: str) -> DocumentoDeSemilla:
     )
 
 
-def _generador(escritor: _EscritorEnMemoria, pct: float = 100) -> GeneradorDeMuestraDeMetadatos:
+def _fila(
+    clave: str, origen: str, extraidos: tuple[str, ...] | None = None, **metadatos: Any
+) -> RegistroDeDocumento:
+    """Fila del catálogo como la deja la ingesta. ``extraidos``: los campos que el LLM extrajo y el NLI verificó; por
+    omisión, todos los que la fila conserva."""
+    resueltos = MetadatosResueltos(
+        study_design=metadatos.get("study_design", "otro"),
+        trial_phase=metadatos.get("trial_phase"),
+        sample_size=metadatos.get("sample_size"),
+        primary_endpoint=metadatos.get("primary_endpoint"),
+        population_criteria=metadatos.get(
+            "population_criteria", resolver_criterios_poblacion(None)
+        ),
+        metadata_source=origen,
+    )
+    fila = registro_embebido(_documento(clave), ADMITIDO, "ab" * 32, AHORA, resueltos)
+    if extraidos is None:
+        extraidos = tuple(
+            c.campo
+            for c in campos_conservados(
+                fila.study_design,
+                fila.trial_phase,
+                fila.sample_size,
+                fila.primary_endpoint,
+                fila.population_criteria,
+            )
+        )
+    return replace(fila, extracted_fields=extraidos)
+
+
+def _catalogo(*filas: RegistroDeDocumento, release: str | None = "release-1") -> CatalogoEnMemoria:
+    catalogo = CatalogoEnMemoria()
+    for fila in filas:
+        catalogo.guardar_documento(fila)
+    if release:
+        catalogo.publicar_release(
+            RegistroDeRelease(
+                release, date(2026, 10, 16), (), AHORA, tuple(f.document_id for f in filas)
+            )
+        )
+    return catalogo
+
+
+def _generador(
+    escritor: _EscritorEnMemoria, catalogo: CatalogoEnMemoria, pct: float = 100
+) -> GeneradorDeMuestraDeMetadatos:
     return GeneradorDeMuestraDeMetadatos(
         pct=pct,
         semilla="s",
         escritor=escritor,
+        catalogo=catalogo,
         reloj=RelojFijo(),
         prompt_version="metadatos_v1",
         llm_model="llm",
@@ -142,55 +188,72 @@ def _generador(escritor: _EscritorEnMemoria, pct: float = 100) -> GeneradorDeMue
     )
 
 
-FASE = CampoDeMetadato("trial_phase", "II")
-
-
 def test_la_muestra_solo_incluye_documentos_extraidos_con_al_menos_un_campo_conservado() -> None:
     escritor = _EscritorEnMemoria()
-    reporte = ReporteDeIngesta(
-        (
-            _resultado("a", "extraido_verificado", FASE),
-            _resultado("b", "extraido_verificado"),
-            _resultado("c", "fuente_estructurada", FASE),
-            _resultado("d", "pendiente"),
-        ),
-        "release-1",
+    catalogo = _catalogo(
+        _fila("a", "extraido_verificado", trial_phase="II"),
+        _fila("b", "extraido_verificado"),
+        _fila("c", "fuente_estructurada", trial_phase="II"),
+        _fila("d", "pendiente"),
     )
 
-    muestra = _generador(escritor).generar(reporte, [_documento(c) for c in "abcd"])
+    muestra = _generador(escritor, catalogo).generar("release-1")
 
     assert muestra.tamano == 1
-    assert [d["document_id"] for d in escritor.escritos[0][1]["documentos"]] == ["a@x"]
+    assert [d["document_id"] for d in escritor.escritos[0][1]["documentos"]] == ["a@" + "ab" * 6]
 
 
 def test_la_muestra_no_se_escribe_cuando_la_ingesta_no_publico_release() -> None:
     escritor = _EscritorEnMemoria()
-    reporte = ReporteDeIngesta((_resultado("a", "extraido_verificado", FASE),), None)
+    catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"), release=None)
 
-    muestra = _generador(escritor).generar(reporte, [_documento("a")])
+    muestra = _generador(escritor, catalogo).generar(None)
 
     assert (muestra.tamano, muestra.archivo, escritor.escritos) == (0, None, [])
 
 
 def test_la_muestra_al_0_por_ciento_no_escribe_archivo() -> None:
     escritor = _EscritorEnMemoria()
-    reporte = ReporteDeIngesta((_resultado("a", "extraido_verificado", FASE),), "release-1")
+    catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"))
 
-    muestra = _generador(escritor, pct=0).generar(reporte, [_documento("a")])
+    muestra = _generador(escritor, catalogo, pct=0).generar("release-1")
 
     assert (muestra.tamano, escritor.escritos) == (0, [])
 
 
+def test_la_muestra_solo_considera_los_documentos_de_la_release_publicada() -> None:
+    escritor = _EscritorEnMemoria()
+    catalogo = _catalogo(_fila("a", "extraido_verificado", trial_phase="II"))
+    catalogo.guardar_documento(_fila("fuera", "extraido_verificado", trial_phase="III"))
+
+    muestra = _generador(escritor, catalogo).generar("release-1")
+
+    assert muestra.tamano == 1
+
+
 def test_cada_campo_de_la_muestra_nace_pendiente_de_revision_y_sin_nota() -> None:
     escritor = _EscritorEnMemoria()
-    reporte = ReporteDeIngesta((_resultado("a", "extraido_verificado", FASE),), "release-1")
+    catalogo = _catalogo(
+        _fila(
+            "a",
+            "extraido_verificado",
+            trial_phase="II",
+            population_criteria={
+                **resolver_criterios_poblacion(None),
+                "estadio": "I–III",
+                "biomarcadores": {"her2": "positivo"},
+            },
+        )
+    )
 
-    _generador(escritor).generar(reporte, [_documento("a")])
+    _generador(escritor, catalogo).generar("release-1")
 
-    (cabecera,) = [escritor.escritos[0][1]]
+    cabecera = escritor.escritos[0][1]
     entrada = cabecera["documentos"][0]
     assert entrada["campos"] == [
-        {"campo": "trial_phase", "valor": "II", "revision": "pendiente", "nota": ""}
+        {"campo": "trial_phase", "valor": "II", "revision": "pendiente", "nota": ""},
+        {"campo": "biomarcadores.her2", "valor": "positivo", "revision": "pendiente", "nota": ""},
+        {"campo": "estadio", "valor": "I–III", "revision": "pendiente", "nota": ""},
     ]
     assert entrada["source_url"] == "no_disponible"
     assert cabecera["generated_at"] == RelojFijo().ahora().isoformat()
@@ -209,3 +272,33 @@ def test_el_escritor_no_sigue_un_enlace_simbolico_existente_y_no_toca_su_destino
         EscritorDeMuestraYaml(destino).escribir("release-1", {"a": 1})
 
     assert ajeno.read_text(encoding="utf-8") == "intacto"
+
+
+def test_un_documento_cuyos_unicos_valores_vienen_del_manifiesto_no_entra_en_la_muestra() -> None:
+    """Decidido (usuario, 2026-10-24): M-08.4 mide solo lo extraído, no lo que el manifiesto ya declaraba."""
+    escritor = _EscritorEnMemoria()
+    catalogo = _catalogo(_fila("a", "extraido_verificado", extraidos=(), study_design="eca"))
+
+    muestra = _generador(escritor, catalogo).generar("release-1")
+
+    assert (muestra.tamano, escritor.escritos) == (0, [])
+
+
+def test_la_muestra_de_un_documento_con_un_campo_extraido_y_un_escalar_declarado_solo_lista_el_extraido() -> (
+    None
+):
+    escritor = _EscritorEnMemoria()
+    catalogo = _catalogo(
+        _fila(
+            "a",
+            "extraido_verificado",
+            extraidos=("trial_phase",),
+            study_design="eca",
+            trial_phase="II",
+        )
+    )
+
+    _generador(escritor, catalogo).generar("release-1")
+
+    campos = escritor.escritos[0][1]["documentos"][0]["campos"]
+    assert [c["campo"] for c in campos] == ["trial_phase"]
