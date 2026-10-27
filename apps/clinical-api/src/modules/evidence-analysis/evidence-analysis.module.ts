@@ -14,6 +14,7 @@ import {
 } from './evidence-analysis.service.js';
 import type {
   CatalogVersionProvider,
+  ChecklistDeFaltantes,
   ContextDeidentifier,
   TraceIdGenerator,
   RagQueryClient,
@@ -29,6 +30,8 @@ export interface DependenciasDelGateway {
   db: Consultador;
   rag: RagQueryClient;
   catalogo: CatalogVersionProvider;
+  /** Faltantes críticos del caso (US-006); el esqueleto aún no lo usa. */
+  checklist?: ChecklistDeFaltantes;
   config: ConfiguracionDelGateway;
   /** `ENABLED_CANCER_TYPES` ya validada contra el manifiesto (RN-20). */
   tiposHabilitados: TiposDeCancerHabilitados;

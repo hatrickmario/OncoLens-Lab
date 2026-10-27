@@ -14,6 +14,7 @@ import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
 import type {
+  ChecklistDeFaltantes,
   PatientIdentityReader,
   PiiDetectorFactory,
   TraceIdGenerator,
@@ -242,6 +243,8 @@ export interface OpcionesDeGateway {
   corpusCutoffDate?: string;
   /** Directorio del catálogo montado (`CLINICAL_CATALOG_PATH`; por defecto, el del monorepo). */
   rutaDelCatalogo?: string;
+  /** Checklist de faltantes a inyectar (por defecto, el real sobre `CompletenessService` del catálogo montado). */
+  checklist?: ChecklistDeFaltantes;
   /** Logger a usar (por defecto, en memoria con las líneas crudas; `loggerJsonEnMemoria` pasa por la redacción real). */
   logger?: LoggerEnMemoria;
 }
@@ -278,6 +281,7 @@ export async function montarGateway(
     catalogo: crearProveedorDeCatalogo(opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO, (archivo) =>
       readFileSync(archivo, 'utf8'),
     ),
+    ...(opciones.checklist !== undefined && { checklist: opciones.checklist }),
     config: {
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,
