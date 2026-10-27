@@ -58,7 +58,7 @@ def test_la_busqueda_dense_no_devuelve_chunks_de_i_gl_1_tras_ingerir_su_version_
     montaje = montaje_en_ambos
     montaje.ingerir()
     texto_de_v1 = fragmentos_esperados_fx_06c_b(CLAVE)[CLAVE][0]
-    vector = EmbedderFalso(montaje.almacen.dimension).embeber([texto_de_v1])[0]
+    vector = EmbedderFalso().embeber([texto_de_v1])[0]
     antes = montaje.almacen.search_dense(vector, 50)
     assert any(r.document_id.startswith(f"{CLAVE}@") for r in antes)
     ids_de_v1 = {r.document_id for r in antes if r.document_id.startswith(f"{CLAVE}@")}

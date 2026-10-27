@@ -40,7 +40,7 @@ def entorno_de_reindexacion(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CORPUS_SPARSE_REINDEX_BATCH_SIZE", str(LOTE))
 
 
-def _cargar_semilla(montaje: Montaje, *claves: str) -> None:
+def _cargar_semilla(montaje: Montaje, *claves: str, ids: GeneradorDeIdsFijo | None = None) -> None:
     """La semilla del S1 con el cargador de L1D-115: chunks vigentes SIN *sparse*."""
     SeedCorpusLoader(
         catalogo=montaje.catalogo,
@@ -48,7 +48,7 @@ def _cargar_semilla(montaje: Montaje, *claves: str) -> None:
         embedder=EmbedderFalso(),
         fuente=FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None),
         reloj=RelojFijo(),
-        ids=GeneradorDeIdsFijo(),
+        ids=ids or GeneradorDeIdsFijo(),
         politica=politica_de_test(),
         tokenizador=TokenizadorPorPalabras(),
         tamano_de_chunk=TAMANO_DE_CHUNK_DE_TEST,
@@ -100,8 +100,9 @@ def test_reindex_sparse_no_toca_los_chunks_no_vigentes(
     fabrica_de_montaje: Callable[[Path], Montaje],
 ) -> None:
     montaje = fabrica_de_montaje(DIRECTORIO_DE_FIXTURES)
-    _cargar_semilla(montaje, "t-ok-1")
-    _cargar_semilla(montaje, "t-ok-1-v2")
+    ids = GeneradorDeIdsFijo()  # una release por carga: ids distintos
+    _cargar_semilla(montaje, "t-ok-1", ids=ids)
+    _cargar_semilla(montaje, "t-ok-1-v2", ids=ids)
     antes = montaje.registros_de_chunks()
     no_vigentes = {i for i, r in antes.items() if not r.is_current}
     assert no_vigentes
