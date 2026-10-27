@@ -303,6 +303,10 @@
       "estado_menopausico",
       "ki67"
     ],
+    "missingCriticalDataLabels": [
+      "Estado menopáusico",
+      "Ki-67"
+    ],
     "continuedWithWarning": true,
     "assumptions": [
       {

@@ -408,6 +408,11 @@
       "file": "con-evidencia-s3-aplicabilidad.json",
       "spec": "clinical-api",
       "target": "#/components/schemas/EvidenceAnalysis"
+    },
+    {
+      "file": "con-evidencia-s3-poblacion-no-comparable.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
     }
   ],
   "pendingExamples": [
