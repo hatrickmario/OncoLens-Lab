@@ -7,6 +7,31 @@ const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').que
 test.describe('Base del análisis (L1D-187)', () => {
   test.setTimeout(60_000);
 
+  // Desviación: Compose monta el catálogo real y el seed no incluye F-M2 (seis faltantes de test-1.0.0); el recorrido
+  // comprueba que el contador del resumen coincide con las etiquetas del detalle del paciente semilla (a).
+  test('dice N datos críticos faltantes sin continuó con aviso y lista N etiquetas cuando la UI analiza el paciente semilla [US-128 AC-4]', async ({
+    page,
+  }) => {
+    await analizar(page, preguntaHer2);
+    await esperarResultado(page);
+
+    const resumen = page.getByText(
+      /^(\d+) datos críticos faltantes · Supuestos: \d+ · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0$/,
+    );
+    await expect(resumen).toBeVisible();
+    const cuenta = Number((await resumen.innerText()).match(/^(\d+) /)?.[1]);
+    expect(cuenta).toBeGreaterThan(0);
+    await expect(page.getByText(/continuó con aviso/)).toHaveCount(0);
+    await expect(page.getByText(/aún no se calculan/)).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Ver detalle de la Base' }).click();
+    const bloque = page
+      .getByRole('heading', { level: 4, name: 'Datos críticos faltantes' })
+      .locator('..');
+    await expect(bloque.getByText('Solo informa; no bloquea el análisis')).toBeVisible();
+    await expect(bloque.getByRole('listitem')).toHaveCount(cuenta);
+  });
+
   test('muestra el resumen de la Base sin expandir con la fecha de corte y las fuentes no incluidas [US-067 AC-1]', async ({
     page,
   }) => {
@@ -15,12 +40,7 @@ test.describe('Base del análisis (L1D-187)', () => {
 
     await expect(page.getByRole('heading', { level: 3, name: 'Base del análisis' })).toBeVisible();
     await expect(
-      page.getByText(
-        'Faltantes: 0 · Supuestos: 1 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
-      ),
-    ).toBeVisible();
-    await expect(
-      page.getByText('Los faltantes críticos aún no se calculan en esta versión'),
+      page.getByText(/Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0$/),
     ).toBeVisible();
     await expect(page.getByText(/^Evidencia del corpus al \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ver detalle de la Base' })).toHaveAttribute(

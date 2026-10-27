@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Platform API (Backend 1 / clinical-api)
-  version: 1.9.1
+  version: 1.10.0
   description: >-
     API pública, accesible solo a través de los Route Handlers de web (clinical-api no
     publica puerto al host). Autenticación por cookie de sesión HttpOnly + Secure +
@@ -1545,6 +1545,7 @@ components:
       required:
         - patientDataUsed
         - missingCriticalData
+        - missingCriticalDataLabels
         - continuedWithWarning
         - assumptions
         - sourcesConsulted
@@ -1574,6 +1575,17 @@ components:
           type: array
           items:
             type: string
+        missingCriticalDataLabels:
+          type: array
+          description: >-
+            Etiqueta en español del catálogo (label.es) de cada clave de missingCriticalData, mismo orden y
+            longitud, resuelta con la catalog_version del análisis (FR-27 b). Texto de catálogo, nunca valores
+            ni datos del paciente.
+          items:
+            type: string
+            minLength: 1
+          examples:
+            - [Estado menopáusico, Ki-67]
         continuedWithWarning:
           type: boolean
         assumptions:
