@@ -22,7 +22,7 @@ DETALLE_DOS = "La fuente reporta el beneficio en la supervivencia libre de enfer
 DETALLE_TRES = "Un tercer párrafo que excede el máximo configurado."
 
 
-def _opcion(opcion: str, razon: str, *chunk_ids: str, **extra: str) -> dict[str, Any]:
+def _opcion(opcion: str, razon: str, *chunk_ids: str, **extra: Any) -> dict[str, Any]:
     return {"option": opcion, "rationale": razon, "citedFragments": list(chunk_ids), **extra}
 
 
@@ -61,6 +61,10 @@ ESCENARIOS_LLM: dict[str, str] = {
             title=TITULO_INVENTADO,
             sourceName="NCCN",
         )
+    ),
+    # US-127 AC-2: el LLM añade a la opción un tamaño de muestra y una fase que no son los del catálogo (RN-25, RN-04).
+    "LLM-METADATOS-FALSOS": _salida(
+        _opcion(OPCION_ANTI_HER2, RAZON_ANTI_HER2, "C1", sampleSize=9999, trialPhase="IV")
     ),
     "LLM-FUERA-DE-ESQUEMA": json.dumps({"synthesis": {"agreements": [], "discrepancies": []}}),
     "LLM-JSON-ROTO": '{"options": [',

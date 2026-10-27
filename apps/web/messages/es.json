@@ -62,6 +62,17 @@
       "lista": "Citas",
       "autores": "Autores",
       "diseno": "Diseño del estudio",
+      "disenos": {
+        "guia": "Guía clínica",
+        "eca": "Ensayo clínico aleatorizado",
+        "observacional": "Estudio observacional",
+        "revision_sistematica": "Revisión sistemática",
+        "otro": "Otro diseño"
+      },
+      "fase": "Fase del ensayo",
+      "endpoint": "Endpoint principal",
+      "tamanoMuestra": "Tamaño de muestra",
+      "versionGuia": "Versión de la guía",
       "publicado": "Publicado",
       "actualizado": "Actualizado",
       "idioma": "Idioma",
