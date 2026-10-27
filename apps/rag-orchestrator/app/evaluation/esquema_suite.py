@@ -157,3 +157,74 @@ ESQUEMA_SUITE = Objeto(
     },
     opcionales=frozenset({"privacidad"}),
 )
+
+
+# --- Familia `aplicabilidad` (US-132): reporte propio, solo agregados e identificadores -------------------------------
+
+_ESTADOS_DEL_PAR = {
+    estado: Numero() for estado in ("coincide", "parcial", "no_coincide", "desconocido")
+}
+_MARCAS = frozenset({"en_meta", "fuera_de_meta", "no_medida"})
+_CAUSAS_SIN_EXACTITUD = frozenset({"sin_archivo", "sin_campos", "todo_pendiente"})
+
+ESQUEMA_APLICABILIDAD = Objeto(
+    {
+        "esquema": Enumerado(frozenset({VERSION_ESQUEMA})),
+        "suite": Enumerado(frozenset({"aplicabilidad"})),
+        "configuracion": Objeto(
+            {
+                "nombre": Identificador(),
+                "hashConfig": Huella(),
+                "fixture": Identificador(),
+                "claseDataset": Enumerado(frozenset(CLASES_ADMITIDAS)),
+                "dataset": Objeto({"nombre": Identificador(), "version": Identificador()}),
+                "proveedor": Enumerado(frozenset(PROVEEDORES)),
+                "reloj": Enumerado(frozenset(RELOJES)),
+                "catalogVersion": Identificador(),
+                "umbrales": Objeto({"nliEntailmentThreshold": Numero()}),
+            }
+        ),
+        "metricas": Objeto(
+            {
+                "aplicabilidad": Objeto(
+                    {
+                        "pares": Lista(
+                            Objeto(
+                                {"id": Identificador(), **_ESTADOS_DEL_PAR, "acierto": Booleano()}
+                            )
+                        ),
+                        "concordancia_de_estados": Objeto(
+                            {"aciertos": Numero(), "total": Numero(), "valor": Numero()}
+                        ),
+                        "criterios_coincide_sin_cita": Numero(),
+                        "valores_paciente_no_copiados": Numero(),
+                        "omitidas": Numero(),
+                    }
+                ),
+                "cobertura_poblacion": Objeto(
+                    {
+                        "version": Identificador(),
+                        "vigentes": Numero(),
+                        "con_criterios": Numero(),
+                        "valor": Numero(),
+                        "meta": Numero(),
+                        "marca": Enumerado(_MARCAS),
+                    }
+                ),
+                "exactitud_extraido_verificado": Objeto(
+                    {
+                        "documentos": Numero(),
+                        "revisados": Numero(),
+                        "correctos": Numero(),
+                        "pendientes": Numero(),
+                        "valor": Numero(),
+                        "meta": Numero(),
+                        "marca": Enumerado(_MARCAS),
+                        "causa": Enumerado(_CAUSAS_SIN_EXACTITUD),
+                    },
+                    opcionales=frozenset({"causa"}),
+                ),
+            }
+        ),
+    }
+)

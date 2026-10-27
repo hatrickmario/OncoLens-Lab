@@ -32,6 +32,20 @@
         "reviewStatus": "verificado",
         "conflict": false
       }
+    },
+    {
+      "dataRef": "r3",
+      "biomarkerName": "HRR",
+      "value": "Alteración detectada",
+      "resultType": "cualitativo",
+      "clinicalSignificance": "relevante",
+      "monthsAgo": 1,
+      "provenance": {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": false
+      }
     }
   ],
   "clinicalNotes": [],

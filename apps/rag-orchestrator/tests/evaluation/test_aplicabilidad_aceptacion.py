@@ -7,6 +7,9 @@ módulos propios). Cada invariante tiene una variante que falla, para que la med
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import shutil
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -67,7 +70,9 @@ def configuracion_variante(
     return ruta, dataset
 
 
-def par_construido(criterio: CriterioEvaluado, *, chunks: Sequence[str] = ("ch-a1-1",)) -> ParEvaluado:
+def par_construido(
+    criterio: CriterioEvaluado, *, chunks: Sequence[str] = ("ch-a1-1",)
+) -> ParEvaluado:
     contexto = ContextoDelPaciente(biomarcadores=(BiomarcadorDelPaciente("HER2", "3+ (IHQ)", 1),))
     catalogo = {c.clave: c for c in criterios_de_test_apl_1_0_0().criterios("mama")}
     return ParEvaluado(
@@ -112,7 +117,13 @@ def test_aplicabilidad_reporta_concordancia_cero_coincidencias_sin_cita_y_cero_v
     assert medidas["valores_paciente_no_copiados"] == 0
     assert reporte["configuracion"]["catalogVersion"] == "test-apl-1.0.0"
     par = {p["id"]: p for p in medidas["pares"]}["am1-a1"]
-    assert (par["coincide"], par["parcial"], par["no_coincide"], par["desconocido"], par["acierto"]) == (
+    assert (
+        par["coincide"],
+        par["parcial"],
+        par["no_coincide"],
+        par["desconocido"],
+        par["acierto"],
+    ) == (
         2,
         0,
         0,
@@ -379,3 +390,55 @@ def test_aplicabilidad_da_reportes_identicos_cuando_se_ejecuta_dos_veces_con_la_
     segundo = next((tmp_path / "dos").glob("*.json"))
     assert primero.name == segundo.name
     assert primero.read_bytes() == segundo.read_bytes()
+
+
+def test_el_envoltorio_usa_la_configuracion_de_aplicabilidad_y_la_fecha_del_entorno_cuando_no_se_pasa_config(
+    tmp_path: Path,
+) -> None:
+    proceso = subprocess.run(
+        [
+            "node",
+            str(RAIZ_REPO / "scripts" / "eval" / "evaluate.mjs"),
+            "--suite",
+            "aplicabilidad",
+            "--salida",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        env={
+            "PATH": os.environ["PATH"],
+            "EVAL_PYTHON": sys.executable,
+            "CORPUS_CUTOFF_DATE": "2026-12-01",
+        },
+        check=False,
+    )
+
+    assert proceso.returncode == 0, proceso.stderr
+    reporte = json.loads(next(tmp_path.glob("*-aplicabilidad.json")).read_text(encoding="utf-8"))
+    assert reporte["configuracion"]["nombre"] == "test-aplicabilidad"
+    assert reporte["metricas"]["cobertura_poblacion"]["version"] == "2026-12-01"
+
+
+# --- no-fuga (RN-14, RN-25) ----------------------------------------------------------------------------------------
+
+
+def test_aplicabilidad_no_copia_valores_del_paciente_ni_textos_de_fuentes_al_reporte_ni_a_la_consola(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    violada = con_evaluador(par_construido(her2_evaluado(valor_paciente="2+")))
+    _, reporte = correr(tmp_path / "violada", puertos=violada)
+    _, completo = correr(tmp_path / "completo")
+
+    consola = capsys.readouterr()
+    todo = json.dumps(reporte) + json.dumps(completo) + consola.out + consola.err
+    secretos = (
+        "3+ (IHQ)",
+        "HER2 negativo",
+        "This guidance",
+        "Mutación patogénica",
+        "ISUP grupo 3",
+        "valor-sintetico",
+    )
+    assert [s for s in secretos if s in todo] == []
