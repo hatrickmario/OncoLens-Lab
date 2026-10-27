@@ -24,6 +24,10 @@ export function resumirBase(base: AnalysisBasis): ResumenDeBase {
   };
 }
 
+export function textoDeFaltantes(_resumen: ResumenDeBase): string {
+  throw new Error('no implementado');
+}
+
 /** `AAAA-MM-DD` → `dd/mm/aaaa` partiendo la cadena: `new Date()` desplazaría un día según la zona horaria. */
 export function formatearFechaDeCorte(fechaIso: string): string {
   const [anio, mes, dia] = fechaIso.slice(0, 10).split('-');
