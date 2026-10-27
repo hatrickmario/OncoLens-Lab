@@ -113,7 +113,7 @@ def cargar_dataset_aplicabilidad(directorio: Path) -> DatasetAplicabilidad:
             guiones={nombre: _guion(g) for nombre, g in pares["guiones"].items()},
             pares=tuple(_par(p) for p in pares["pares"]),
         )
-    except (KeyError, TypeError, AttributeError, ValidationError):
+    except (KeyError, TypeError, AttributeError, ValueError, ValidationError):
         raise DatasetInvalido("el dataset de aplicabilidad no tiene la forma esperada") from None
 
 

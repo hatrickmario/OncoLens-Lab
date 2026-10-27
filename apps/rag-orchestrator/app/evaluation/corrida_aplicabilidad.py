@@ -34,6 +34,7 @@ from app.evaluation.dataset_aplicabilidad import (
     CriteriosPorTipo,
     DatasetAplicabilidad,
     FuenteDelDataset,
+    Guion,
     ParDelDataset,
     cargar_criterios,
     cargar_dataset_aplicabilidad,
@@ -152,17 +153,7 @@ async def _evaluar_par(
             )
         },  # type: ignore[arg-type]
     )
-    textual = AplicabilidadTextual(
-        proponente=ProponenteGuionado(
-            fuente.external_id, [(p.criterio, p.valor, p.chunk_id) for p in guion.propuestas]
-        ),
-        soporte=VerificadorDeSoporte(
-            clasificador=NliGuionado(guion.nli), terminos=terminos, umbral=umbral_nli, reloj=reloj
-        ),
-        terminos=terminos,
-        criterios_del=servicio.criterios_del,
-        reloj=reloj,
-    )
+    textual = _servicio_textual(fuente, guion, servicio, terminos, umbral_nli, reloj)
     completa = await textual.completar(
         TRAZA_DE_LA_SUITE, fuente.tipo_de_cancer, estructurada, citables
     )
@@ -177,6 +168,28 @@ async def _evaluar_par(
         chunk_ids_de_la_fuente=frozenset(c.chunk_id for c in fuente.chunks),
         catalogo={c.clave: c for c in criterios.criterios(fuente.tipo_de_cancer)},
         omitidas=completa.omitidas,
+    )
+
+
+def _servicio_textual(
+    fuente: FuenteDelDataset,
+    guion: Guion,
+    servicio: ApplicabilityService,
+    terminos: VerificadorDeTerminosProhibidos,
+    umbral_nli: float,
+    reloj: Clock,
+) -> AplicabilidadTextual:
+    """El camino textual real con el LLM y el NLI falsos que dicta el guion del par."""
+    return AplicabilidadTextual(
+        proponente=ProponenteGuionado(
+            fuente.external_id, [(p.criterio, p.valor, p.chunk_id) for p in guion.propuestas]
+        ),
+        soporte=VerificadorDeSoporte(
+            clasificador=NliGuionado(guion.nli), terminos=terminos, umbral=umbral_nli, reloj=reloj
+        ),
+        terminos=terminos,
+        criterios_del=servicio.criterios_del,
+        reloj=reloj,
     )
 
 

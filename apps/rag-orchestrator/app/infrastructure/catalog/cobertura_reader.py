@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.application.errores import RecuperacionNoDisponibleError
 from app.application.ports import CoberturaDePoblacion
-from app.domain.cobertura_poblacion import tiene_criterios_de_poblacion
+from app.domain.cobertura_poblacion import contar_cobertura
 from app.infrastructure.catalog.tables import corpus_document
 
 
@@ -29,9 +29,5 @@ class LectorDeCoberturaPostgres:
             raise RecuperacionNoDisponibleError(
                 "cobertura"
             ) from None  # sin cadena de conexión ni detalle del motor
-        return CoberturaDePoblacion(
-            vigentes=len(criterios),
-            con_criterios=sum(
-                1 for c in criterios if isinstance(c, dict) and tiene_criterios_de_poblacion(c)
-            ),
-        )
+        conteo = contar_cobertura(criterios)
+        return CoberturaDePoblacion(conteo.vigentes, conteo.con_criterios)

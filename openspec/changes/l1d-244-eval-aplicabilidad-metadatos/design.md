@@ -65,6 +65,13 @@ cita» del PRD §18; clave del reporte `criterios_coincide_sin_cita`) (un criter
 `valores_no_copiados(criterios, contexto)` (compara `patientValue` con el valor que el resolvedor de destino lee del
 contexto **enviado**; `null` en ambos = copiado). Las métricas nulas se reportan `null`, nunca `0.0`.
 
+Definición de M-08.2 (Gate 2): un criterio en `coincide` cuenta si su cita no es un chunk de la fuente en esta consulta
+(`ch-x-999` dentro de un `coincide` también cuenta), si la fuente no tiene chunks o si no trae valor del estudio; el enlace a
+un dato del paciente no sustituye la cita del estudio. Limitación de M-08.6: el oráculo es la regla pura
+`valor_del_paciente()` de `domain/`, no el servicio; la variante que falla se prueba con un resultado construido. En
+`pares.yaml` la ausencia de `causa` significa «ninguna» (el `desconocido` interno, p. ej. `sin_escala`, no lleva causa en el contrato);
+la precedencia de causas la fija `l1d-129`. `APL-VALOR-PACIENTE` propone «2+» como valor del estudio.
+
 **D4 · Bloqueo con código propio.** `veredicto_de_invariantes(metricas) -> list[str]` devuelve las métricas violadas;
 el runner escribe el reporte y sale con **código 3** ("invariante violada"), distinto de 1 y 2, para que la CI
 distinga una violación de un dataset mal formado. Los ceros son invariantes del PRD: no van a `regression.yaml` ni a

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 
 NO_DISPONIBLE = "no_disponible"
 
@@ -12,6 +13,22 @@ def tiene_criterios_de_poblacion(population_criteria: Mapping[str, object]) -> b
 
     Un objeto anidado (``biomarcadores``) cuenta si alguna de sus claves lo cumple; ``{}`` no cuenta (decidido, S3 resp. 16)."""
     return any(_declara_valor(valor) for valor in population_criteria.values())
+
+
+@dataclass(frozen=True)
+class ConteoDeCobertura:
+    vigentes: int
+    con_criterios: int
+
+
+def contar_cobertura(criterios_de_vigentes: Iterable[object]) -> ConteoDeCobertura:
+    """Cuenta los documentos vigentes y los que traen criterios; una fila que no es un objeto JSON no cuenta como
+    «con metadatos». Única agregación, la usan el adapter SQL y el catálogo en memoria."""
+    filas = list(criterios_de_vigentes)
+    return ConteoDeCobertura(
+        len(filas),
+        sum(1 for c in filas if isinstance(c, dict) and tiene_criterios_de_poblacion(c)),
+    )
 
 
 def proporcion_con_criterios(vigentes: int, con_criterios: int) -> float | None:

@@ -28,11 +28,12 @@ from app.domain.applicability_text import (
     PropuestaDePoblacion,
     normalizar_propuesta,
 )
-from app.domain.cobertura_poblacion import tiene_criterios_de_poblacion
+from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
+from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -246,15 +247,14 @@ class CoberturaEnMemoria:
     """``LectorDeCoberturaDePoblacion`` sobre un catálogo sintético en YAML (``documentos[].{is_current, population_criteria}``)."""
 
     def __init__(self, ruta: Path) -> None:
-        crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
-        self._documentos = [d for d in crudo["documentos"] if d["is_current"]]
+        try:
+            crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+            self._documentos = [d for d in crudo["documentos"] if d["is_current"]]
+        except (OSError, yaml.YAMLError, KeyError, TypeError):
+            raise ConfigInvalida(
+                "el catálogo del corpus en memoria no tiene la forma esperada"
+            ) from None
 
     def cobertura(self) -> CoberturaDePoblacion:
-        return CoberturaDePoblacion(
-            vigentes=len(self._documentos),
-            con_criterios=sum(
-                1
-                for d in self._documentos
-                if tiene_criterios_de_poblacion(d["population_criteria"])
-            ),
-        )
+        conteo = contar_cobertura(d["population_criteria"] for d in self._documentos)
+        return CoberturaDePoblacion(conteo.vigentes, conteo.con_criterios)

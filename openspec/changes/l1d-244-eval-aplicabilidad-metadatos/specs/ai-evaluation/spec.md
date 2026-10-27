@@ -12,17 +12,17 @@
 #### Scenario: Un guion del LLM que propone otro valor del paciente no altera M-08.6 [US-132 AC-1] [M-08.6] [ADR-34]
 - **GIVEN** el par A-M1 × `doc-a2` con el guion `APL-VALOR-PACIENTE`, cuyo LLM falso propone para `estado_her2` el valor «2+» como si fuera el del paciente
 - **WHEN** se ejecuta `evaluate --suite aplicabilidad`
-- **THEN** el valor del paciente reportado para `estado_her2` es el del contexto enviado (`3+ (IHQ)`), no el propuesto, y M-08.6 vale 0
+- **THEN** el `patientValue` evaluado de `estado_her2` es el literal del contexto enviado, no el propuesto, y M-08.6 vale 0 (el reporte solo lleva el conteo, nunca el valor)
 
 #### Scenario: Una afirmación textual sin soporte o con cita ajena no cuenta como Coincide [US-132 AC-1] [M-08.2] [RN-01]
 - **GIVEN** los pares con los guiones `APL-SIN-SOPORTE` (NLI `neutral`) y `APL-CITA-AJENA` (cita `ch-x-999`)
 - **WHEN** se ejecuta `evaluate --suite aplicabilidad`
 - **THEN** esos criterios no aparecen en `coincide`, coinciden con su estado esperado `desconocido` y M-08.2 vale 0
 
-#### Scenario: Un paciente de próstata con el catálogo real mide `grado`, `estado_castracion` y `estadio` como desconocidos [US-132 AC-1] [M-08.2] [RN-27]
-- **GIVEN** el par P-A1 × una fuente de próstata que declara solo `biomarcadores.hrr_brca` y el catálogo de `packages/clinical-catalogs` (el catálogo `test-apl-1.0.0` no declara criterios de próstata)
+#### Scenario: Un paciente de próstata con el catálogo real mide `isup` (grado), `estado_castracion` y `extension` como desconocidos [US-132 AC-1] [M-08.2] [RN-27]
+- **GIVEN** el par P-A1 × una fuente de próstata que declara solo `ecog` y el catálogo de `packages/clinical-catalogs` (el catálogo `test-apl-1.0.0` no declara criterios de próstata)
 - **WHEN** se ejecuta `evaluate --suite aplicabilidad`
-- **THEN** `isup`, `estado_castracion` y `extension` quedan `desconocido` con su causa esperada, nunca inventados, y el par cuenta como acierto
+- **THEN** `ecog` queda `coincide`; `isup`, `estado_castracion`, `extension` y `hrr_brca` quedan `desconocido` con su causa esperada, nunca inventados, y el par cuenta como acierto
 
 #### Scenario: La familia se niega a correr con un dataset no sintético [US-132 AC-1] [RN-14]
 - **GIVEN** un dataset de aplicabilidad cuyo manifiesto no declara `clase: sintetico`
@@ -35,7 +35,7 @@
 - **THEN** cada `studyKey` del catálogo resuelve en las claves de `population_criteria` de las fuentes que declaran criterios
 - **AND** con un `studyKey` que no resuelve la suite termina con código 2 y el mensaje nombra el criterio, sin valores de metadatos
 
-### Requirement: Bloqueo por coincidencias sin cita o valores del paciente no copiados
+### Requirement: Invariantes de la evaluación: coincidencias sin cita o valores del paciente no copiados (afecta solo a la CI)
 Al terminar la familia `aplicabilidad`, si M-08.2 > 0 o M-08.6 > 0 la suite MUST terminar con un código de salida distinto de 0 propio de la violación de invariante, nombrando cada métrica violada; el reporte SHALL escribirse igualmente. Estos dos ceros son invariantes del PRD (§18), no metas calibrables.
 
 #### Scenario: M-08.2 mayor que cero rompe la suite [US-132 AC-2] [M-08.2]
