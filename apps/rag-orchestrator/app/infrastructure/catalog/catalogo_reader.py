@@ -46,12 +46,16 @@ class LectorCatalogoPostgres:
         ).where(corpus_document.c.document_id.in_(sorted(document_ids)))
         with self._motor.connect() as conexion:
             filas = conexion.execute(consulta).mappings().all()
-        return {
-            fila["document_id"]: PoblacionDelEstudio(
-                fila["metadata_source"], fila["population_criteria"]
-            )
-            for fila in filas
-        }
+        return {fila["document_id"]: _poblacion_de_fila(fila) for fila in filas}
+
+
+def _poblacion_de_fila(fila: Mapping[str, Any]) -> PoblacionDelEstudio:
+    """``population_criteria`` debe ser un objeto JSON; otra forma es un catálogo corrupto y se rechaza (el
+    orquestador lo traduce en 503) en vez de leerse como «sin población». El mensaje no lleva el contenido."""
+    criterios = fila["population_criteria"]
+    if not isinstance(criterios, dict):
+        raise ValueError("population_criteria no es un objeto JSON")
+    return PoblacionDelEstudio(fila["metadata_source"], criterios)
 
 
 def ficha_de_fila(fila: Mapping[str, Any]) -> FichaDeFuente:

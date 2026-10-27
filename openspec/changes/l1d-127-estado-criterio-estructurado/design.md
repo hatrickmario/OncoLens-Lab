@@ -161,6 +161,8 @@ para A-M1 pasa de `coincide` a `no_coincide` y el resto no cambia. Verifica el e
 **D10 · Orden de archivo de `applicability`** (`[S3 resp. 16]`): 127 → 128 → 129 → 130 → 182. Este change
 crea la capacidad y se archiva el primero.
 
+**Deuda (Gate 2) · OCP del estadio.** Sin escala ordenada en el catálogo 1.1.0, el estadio se resuelve por `destination.campo == stage_value` en código. Destino: US-125 (orden RN-28) / catálogo >= 1.2.0.
+
 ## Privacidad y ownership
 
 - Cruza la frontera `clinical-api → rag-orchestrator` solo lo que ya cruza: el `clinicalContext` desidentificado

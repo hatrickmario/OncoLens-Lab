@@ -17,12 +17,15 @@ from app.domain.aplicabilidad_tipos import (
 from app.domain.applicability_rules import (
     DestinoNoResoluble,
     contar_estados,
+    es_criterio_compuesto,
     evaluar_criterio,
     evaluar_criterio_de_fuente,
     poblacion_no_comparable,
     valor_del_estudio,
     valor_del_paciente,
 )
+from tests.support.aplicabilidad import criterios_de
+from tests.support.contract import CATALOGOS
 from app.domain.criterios_aplicabilidad import (
     CondicionDeParcial,
     CriterioDeAplicabilidad,
@@ -560,3 +563,25 @@ def test_poblacion_no_comparable_es_falsa_cuando_el_no_coincide_no_es_excluyente
     assert poblacion_no_comparable([evaluado("desconocido", excluyente=True)]) is False
     assert poblacion_no_comparable([evaluado("parcial", excluyente=True)]) is False
     assert poblacion_no_comparable([]) is False
+
+
+# --- destino compuesto y paridad con el catálogo montado ------------------------------------------------------------
+
+
+def test_es_criterio_compuesto_es_verdadero_solo_cuando_match_name_reune_varios_biomarcadores():
+    assert es_criterio_compuesto(destino("Biomarker", "value", name=("RE", "RP"))) is True
+    assert es_criterio_compuesto(destino("Biomarker", "value", name=("HER2",))) is False
+    assert es_criterio_compuesto(destino("Diagnosis", "stage_value")) is False
+
+
+@pytest.mark.parametrize("tipo", ["mama", "prostata"])
+def test_valor_del_paciente_resuelve_todos_los_destinos_del_catalogo_montado_cuando_se_leen_sus_criterios(
+    tipo: str,
+):
+    criterios = criterios_de(CATALOGOS).criterios(tipo)
+
+    assert criterios, "el catálogo montado debe declarar criterios"
+    for criterio in criterios:
+        valor_del_paciente(
+            A_M1, criterio.destino
+        )  # DestinoNoResoluble = destino fuera del resolvedor

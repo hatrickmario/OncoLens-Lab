@@ -10,6 +10,7 @@ from app.application.aplicabilidad import (
 )
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.relevance import ChunkPuntuado
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
@@ -140,3 +141,16 @@ def test_contexto_del_paciente_deja_vacios_los_campos_del_diagnostico_cuando_no_
     assert contexto.valor_de_estadio is None
     assert contexto.valor_de_desempeno is None
     assert contexto.biomarcadores == A_M1.biomarcadores
+
+
+def test_evaluar_omite_el_documento_cuando_su_metadata_source_no_es_un_origen_estructurado_conocido():
+    mejores = {
+        "doc-a1": citable("ch-a1-1", "doc-a1", 0.90),
+        "doc-a4": citable("ch-a4-1", "doc-a4", 0.80),
+    }
+    desconocido = PoblacionDelEstudio("origen_nuevo", POBLACIONES_FX08BA["doc-a4"].criterios)  # type: ignore[arg-type]
+    poblaciones = {"doc-a1": POBLACIONES_FX08BA["doc-a1"], "doc-a4": desconocido}
+
+    fuentes = servicio().evaluar("mama", A_M1, mejores, poblaciones)
+
+    assert [f.external_id for f in fuentes] == ["CDR-TEST-A1"]

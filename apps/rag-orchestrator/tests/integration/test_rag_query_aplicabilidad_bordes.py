@@ -21,9 +21,13 @@ RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
 SENTINELA_PACIENTE = "SENTINELA-PACIENTE-4K"
 SENTINELA_ESTUDIO = "SENTINELA-ESTUDIO-8Z"
 SENTINELA_FALLO = "SENTINELA-HOST-INTERNO-pg.test:5432"
+SENTINELA_ESTADIO = "SENTINELA-ESTADIO-2M"
+SENTINELA_ATRIBUTO = "SENTINELA-ATRIBUTO-6P"
 
 
-def test_rag_query_responde_503_retrieval_unavailable_sin_applicability_ni_eco_cuando_falla_el_lector_de_poblacion():
+def test_rag_query_responde_503_retrieval_unavailable_sin_applicability_ni_eco_cuando_falla_el_lector_de_poblacion(
+    caplog,
+):
     solicitud = solicitud_a_m1()
     falso = CatalogoFalso(
         fichas=FICHAS_FX08BA,
@@ -31,6 +35,7 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_applicability_ni_eco_c
         error_de_poblacion=RuntimeError(f"{SENTINELA_FALLO} {solicitud['query']}"),
     )
     entorno = entorno_de_aplicabilidad({"doc-a1": 0.90}, catalogo_falso=falso)
+    caplog.set_level(logging.DEBUG)
 
     respuesta = entorno.consultar(solicitud)
 
@@ -40,6 +45,9 @@ def test_rag_query_responde_503_retrieval_unavailable_sin_applicability_ni_eco_c
     assert "applicability" not in cuerpo
     assert SENTINELA_FALLO not in respuesta.text
     assert solicitud["query"] not in respuesta.text
+    exigir_sin_valores_prohibidos(
+        "\n".join(r.getMessage() for r in caplog.records), [SENTINELA_FALLO, solicitud["query"]]
+    )
 
 
 def test_rag_query_no_lee_la_poblacion_cuando_el_catalogo_no_declara_criterios(tmp_path):
@@ -59,6 +67,16 @@ def _solicitud_con_centinelas() -> dict:
     solicitud = solicitud_a_m1()
     contexto = solicitud["clinicalContext"]
     contexto["biomarkers"][0]["value"] = f"3+ ({SENTINELA_PACIENTE})"
+    contexto["diagnosis"]["stageValue"] = f"IIA {SENTINELA_ESTADIO}"
+    contexto["attributes"] = [
+        {
+            "dataRef": "r20",
+            "key": "estado_menopausico",
+            "value": SENTINELA_ATRIBUTO,
+            "monthsAgo": 1,
+            "provenance": contexto["biomarkers"][0]["provenance"],
+        }
+    ]
     return solicitud
 
 
@@ -73,6 +91,8 @@ def _prohibidos(solicitud: dict) -> list[str]:
     return [
         SENTINELA_PACIENTE,
         SENTINELA_ESTUDIO,
+        SENTINELA_ESTADIO,
+        SENTINELA_ATRIBUTO,
         solicitud["clinicalContext"]["pseudoPatientId"],
         solicitud["query"],
         "Synthetic adjuvant study",  # texto de los chunks
