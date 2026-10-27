@@ -1,8 +1,11 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import conEvidencia from '../../../../../contracts/examples/con-evidencia-s1.json';
+import conEvidenciaAplicabilidad from '../../../../../contracts/examples/con-evidencia-s3-aplicabilidad.json';
+import conEvidenciaPoblacionNoComparable from '../../../../../contracts/examples/con-evidencia-s3-poblacion-no-comparable.json';
 import conEvidenciaSinOpciones from '../../../../../contracts/examples/con-evidencia-sin-opciones.json';
 import conEvidenciaSoloDescartadas from '../../../../../contracts/examples/con-evidencia-solo-descartadas.json';
+import errorColaLlena from '../../../../../contracts/examples/error-cola-inferencia-llena.json';
 import errorDeadline from '../../../../../contracts/examples/error-deadline-vencido.json';
 import errorLlmNoDisponible from '../../../../../contracts/examples/error-llm-local-no-disponible.json';
 import errorServicioIa from '../../../../../contracts/examples/error-servicio-ia.json';
@@ -13,8 +16,11 @@ import tipoNoHabilitado from '../../../../../contracts/examples/tipo-no-habilita
 
 export {
   conEvidencia,
+  conEvidenciaAplicabilidad,
+  conEvidenciaPoblacionNoComparable,
   conEvidenciaSinOpciones,
   conEvidenciaSoloDescartadas,
+  errorColaLlena,
   errorDeadline,
   errorLlmNoDisponible,
   errorServicioIa,
@@ -27,6 +33,12 @@ export {
 export interface Respuesta {
   status: number;
   cuerpo: object;
+  /** Cabeceras de la respuesta (p. ej. `Retry-After` del `429`, RN-30). */
+  cabeceras?: Record<string, string>;
+  /** La respuesta espera a esta promesa: así un test fija "petición en curso" sin temporizadores. */
+  compuerta?: Promise<void>;
+  /** Fallo de red: no hay respuesta HTTP. */
+  red?: true;
 }
 
 /**
@@ -50,8 +62,11 @@ export function crearBffAnalisisSimulado() {
       servidor.use(
         http.post('*/api/evidence-analyses', async ({ request }) => {
           cuerpos.push(await request.json());
-          const { status, cuerpo } = respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
-          return HttpResponse.json(cuerpo, { status });
+          const { status, cuerpo, cabeceras, compuerta, red } =
+            respuestas[Math.min(siguiente++, respuestas.length - 1)]!;
+          await compuerta;
+          if (red) return HttpResponse.error();
+          return HttpResponse.json(cuerpo, { status, headers: cabeceras });
         }),
       );
     },

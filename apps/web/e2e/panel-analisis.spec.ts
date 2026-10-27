@@ -1,9 +1,18 @@
 import { expect, test } from '@playwright/test';
-import { analizar, ejemplo, esperarResultado, iniciarSesion, SIN_BASE, textos } from './soporte';
+import {
+  analizar,
+  ejemplo,
+  esperarResultado,
+  ID_SEMILLA_A,
+  iniciarSesion,
+  SIN_BASE,
+  textos,
+} from './soporte';
 
 const respuestaConEvidencia = ejemplo('rag-query-con-evidencia.json');
 const cita = respuestaConEvidencia.evidenceOptions[0].citedSources[0];
 const preguntaHer2 = ejemplo('rag-query-request.json').query as string;
+const preguntaSinEvidencia = ejemplo('rag-query-request-sin-evidencia.json').query as string;
 const preguntaSoloDescartadas = ejemplo('rag-query-request-solo-descartadas.json').query as string;
 const preguntaSinOpciones = ejemplo('rag-query-request-sin-opciones.json').query as string;
 const descartada = ejemplo('rag-query-solo-descartadas.json').discardedOptions[0];
@@ -144,5 +153,67 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(page.getByRole('status')).toHaveText(textos.estado.listoUna);
     await expect(page.getByRole('status')).toHaveAttribute('aria-live', 'polite');
     await expect(boton).toBeFocused();
+  });
+});
+
+test.describe('Estados del panel (L1D-141)', () => {
+  test('llega un solo POST y un solo AIAnalysisRecord cuando el doctor hace doble clic en Analizar evidencia [US-062 AC-1]', async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const respuestas: string[] = [];
+    const peticiones: string[] = [];
+    page.on('request', (r) => {
+      if (r.method() === 'POST' && r.url().endsWith('/api/evidence-analyses'))
+        peticiones.push(r.url());
+    });
+    page.on('response', async (r) => {
+      if (r.request().method() === 'POST' && r.url().endsWith('/api/evidence-analyses'))
+        respuestas.push(((await r.json()) as { id: string }).id);
+    });
+    await iniciarSesion(page);
+    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
+
+    await page.getByRole('button', { name: 'Analizar evidencia' }).dblclick();
+
+    await esperarResultado(page);
+    expect(peticiones).toHaveLength(1);
+    expect(new Set(respuestas).size).toBe(1);
+    await expect(page.getByRole('button', { name: 'Analizar evidencia' })).toBeEnabled();
+  });
+
+  test('muestra el estado sin evidencia con su alcance y Relevancia máxima: no aplica para Q-SIN [US-062 AC-2]', async ({
+    page,
+  }) => {
+    await analizar(page, preguntaSinEvidencia);
+    await esperarResultado(page);
+
+    await expect(page.getByText(textos.resultado.sinEvidencia)).toBeVisible();
+    await expect(page.getByText(textos.resultado.sinEvidenciaAlcance)).toBeVisible();
+    await expect(page.getByText('Relevancia máxima: no aplica')).toBeVisible();
+    const busqueda = page.getByRole('region', { name: textos.resultado.queSeBusco });
+    await expect(busqueda).toContainText(preguntaSinEvidencia);
+    await expect(page.getByRole('heading', { level: 3, name: 'Base del análisis' })).toBeVisible();
+    await expect(page.getByRole('article')).toHaveCount(0);
+  });
+
+  test('redirige a /login?motivo=expirada sin datos del paciente cuando la sesión expiró [US-062 AC-3]', async ({
+    page,
+    context,
+  }) => {
+    await iniciarSesion(page);
+    const cookies = await context.cookies();
+    const origen = new URL(page.url()).origin;
+    await page.request.post('/api/auth/logout', { headers: { Origin: origen } });
+    await context.clearCookies();
+    await context.addCookies(cookies);
+
+    await page.getByLabel('Pregunta clínica').fill(preguntaHer2);
+    await page.getByRole('button', { name: 'Analizar evidencia' }).click();
+
+    await expect(page).toHaveURL(/\/login\?motivo=expirada$/);
+    await expect(page.getByRole('status')).toHaveText('Tu sesión expiró. Vuelve a iniciar sesión.');
+    await expect(page.getByText(/Paciente · ID/)).toHaveCount(0);
+    await expect(page.getByText(ID_SEMILLA_A)).toHaveCount(0);
   });
 });
