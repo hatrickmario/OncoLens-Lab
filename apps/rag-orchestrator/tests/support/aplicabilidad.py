@@ -297,10 +297,14 @@ POBLACIONES_FX08BB: dict[str, PoblacionDelEstudio] = {
 }
 RELEVANCIAS_FX08BB = {"doc-a4": 0.92, "doc-a1": 0.70, "doc-a6": 0.60}
 """Puntajes del reranker falso de FX-08b-b: ``ch-a4-1`` 0,92 · ``ch-a1-1`` 0,70 · ``ch-a6-1`` 0,60."""
-RAZON_B_SIN_SOPORTE = "La fuente más parecida al paciente afirma una reducción de la mortalidad a la mitad."
+RAZON_B_SIN_SOPORTE = (
+    "La fuente más parecida al paciente afirma una reducción de la mortalidad a la mitad."
+)
 OPCION_O_A = "Quimioterapia adyuvante sin terapia dirigida"
 OPCION_O_B = "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
-OPCION_O_B_SIN_SOPORTE = "Quimioterapia adyuvante con terapia dirigida anti-HER2 y reducción de dosis"
+OPCION_O_B_SIN_SOPORTE = (
+    "Quimioterapia adyuvante con terapia dirigida anti-HER2 y reducción de dosis"
+)
 OPCION_O_D = "Terapia dirigida anti-HER2 posterior a la cirugía"
 RAZON_FX08BB = "La evidencia recuperada describe el esquema adyuvante en la población estudiada."
 

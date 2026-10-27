@@ -10,6 +10,11 @@ from typing import Any
 import pytest
 
 from tests.support.aplicabilidad import (
+    FICHAS_FX08BA,
+    POBLACIONES_FX08BB,
+    RELEVANCIAS_FX08BB,
+    GeneradorDeDosOpciones,
+    entorno_de_aplicabilidad,
     OPCION_O_A,
     OPCION_O_B,
     OPCION_O_B_SIN_SOPORTE,
@@ -20,12 +25,15 @@ from tests.support.aplicabilidad import (
     solicitud_a_m1_con_max_opciones,
 )
 from tests.support.nli_falso import IMPLICA, NEUTRAL, NliFalso
+from tests.support.recuperacion import CatalogoFalso
 
 RESUMEN_DE_DOC_A1 = {"coincide": 2, "parcial": 0, "noCoincide": 0, "desconocido": 3}
 RESUMEN_DE_DOC_A4 = {"coincide": 0, "parcial": 0, "noCoincide": 1, "desconocido": 4}
 
 
-def _consultar(escenario: str, *, nli: NliFalso | None = None, max_options: int = 1) -> dict[str, Any]:
+def _consultar(
+    escenario: str, *, nli: NliFalso | None = None, max_options: int = 1
+) -> dict[str, Any]:
     entorno = entorno_de_dos_opciones(escenario, clasificador_nli=nli)
     respuesta = entorno.consultar(solicitud_a_m1_con_max_opciones(max_options))
     assert respuesta.status_code == 200
@@ -80,3 +88,28 @@ def test_rag_query_devuelve_o_a_y_descarta_o_b_prima_por_soporte_cuando_la_mas_a
     assert opcion["populationNotComparable"] is True
     assert opcion["warnings"] == ["poblacion_no_comparable"]
 
+
+def test_rag_query_agrega_en_cero_y_no_falla_cuando_la_fuente_citada_no_tiene_entrada_en_applicability():
+    sin_doc_a1 = {k: v for k, v in POBLACIONES_FX08BB.items() if k != "doc-a1"}
+    entorno = entorno_de_aplicabilidad(
+        RELEVANCIAS_FX08BB,
+        generador=GeneradorDeDosOpciones("LLM-DOS-APL"),
+        catalogo_falso=CatalogoFalso(fichas=FICHAS_FX08BA, poblaciones=sin_doc_a1),
+    )
+
+    respuesta = entorno.consultar(solicitud_a_m1_con_max_opciones(2))
+
+    assert respuesta.status_code == 200
+    por_nombre = {o["option"]: o for o in respuesta.json()["evidenceOptions"]}
+    sin_entrada = por_nombre[OPCION_O_B]
+    assert sin_entrada["applicabilitySummary"] == {
+        "coincide": 0,
+        "parcial": 0,
+        "noCoincide": 0,
+        "desconocido": 0,
+    }
+    assert (
+        sin_entrada["perSource"],
+        sin_entrada["populationNotComparable"],
+        sin_entrada["warnings"],
+    ) == ([], False, [])

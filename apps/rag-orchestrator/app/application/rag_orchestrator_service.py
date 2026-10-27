@@ -22,6 +22,7 @@ from app.application.aplicabilidad import (
     recuentos_para_el_log,
 )
 from app.application.aplicabilidad_textual import AplicabilidadCompleta, AplicabilidadTextual
+from app.application.aplicabilidad_de_opciones import con_aplicabilidad_de_cada_opcion
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
@@ -211,7 +212,9 @@ class RAGOrchestratorService:
         soporte = await self._soporte.verificar(
             trace_id, idioma, resultado.aceptadas, evidencia.limitaciones_propuestas, textos
         )
-        recortadas = self._recortar_soportadas(trace_id, soporte.soportadas, citables, solicitud)
+        recortadas = self._recortar_soportadas(
+            trace_id, soporte.soportadas, citables, solicitud, aplicabilidad.fuentes
+        )
         return ensamblar_respuesta_con_evidencia(
             recortadas,
             self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
@@ -278,15 +281,28 @@ class RAGOrchestratorService:
         aceptadas: Sequence[OpcionAceptada],
         citables: dict[str, ChunkCitable],
         solicitud: RagQueryInternalRequest,
+        fuentes: Sequence[AplicabilidadDeFuente],
     ) -> tuple[OpcionConRelevancia, ...]:
-        """FR-09: conserva ``maxOptions``; el excedente se omite (no es una opción descartada) y solo se cuenta."""
+        """FR-09, RN-28: agrega la aplicabilidad de cada opción ya soportada y conserva las ``maxOptions`` más aplicables.
+
+        El orden va después del soporte y antes del recorte: una descartada nunca ocupa posición. El excedente se omite
+        (no es una opción descartada) y solo se cuenta, igual que las opciones de población no comparable.
+        """
         puntajes = {chunk_id: c.chunk.relevance_score for chunk_id, c in citables.items()}
-        soportadas = [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas]
-        recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions, [])
+        soportadas = con_aplicabilidad_de_cada_opcion(
+            [_con_relevancia(aceptada, puntajes) for aceptada in aceptadas],
+            fuentes,
+            citables,
+            puntajes,
+        )
+        recortadas = recortar_a_max_opciones(soportadas, solicitud.maxOptions)
         logger.info(
-            "event=rag_query_recorte traceId=%s opcionesRecortadas=%d",
+            "event=rag_query_recorte traceId=%s opcionesRecortadas=%d opcionesNoComparables=%d",
             trace_id,
             len(soportadas) - len(recortadas),
+            sum(
+                1 for o in recortadas if o.aplicabilidad and o.aplicabilidad.poblacion_no_comparable
+            ),
         )
         return recortadas
 
