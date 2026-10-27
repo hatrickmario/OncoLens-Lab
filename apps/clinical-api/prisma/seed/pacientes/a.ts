@@ -1,6 +1,6 @@
 import type { PacienteSemilla } from './tipos.js';
 
-/** (a) Mama HER2+ completa: TNM_8 IIA, ECOG 1, HER2 3+, receptor de estrógeno positivo, menopausia, histología y grado. */
+/** (a) Mama HER2+ completa: TNM_8 IIA, ECOG 1, HER2 3+, RE positivo, menopausia, histología y grado. */
 export const pacienteA: PacienteSemilla = {
   clave: 'paciente-a',
   anioDeNacimiento: 1968,
@@ -22,7 +22,7 @@ export const pacienteA: PacienteSemilla = {
   examenes: [
     {
       clave: 'examen-ihq',
-      tipo: 'inmunohistoquimica',
+      tipo: 'IHQ',
       diasAntes: 41,
       biomarcadores: [
         {
@@ -35,7 +35,7 @@ export const pacienteA: PacienteSemilla = {
         },
         {
           clave: 'receptor-estrogeno',
-          nombre: 'Receptor de estrógeno',
+          nombre: 'RE',
           valor: 'Positivo (80%)',
           unidad: null,
           tipoResultado: 'cualitativo',
