@@ -21,6 +21,7 @@ from app.domain.applicability_rules import (
     evaluar_criterio_de_fuente,
     poblacion_no_comparable,
 )
+from app.domain.relevance import ordenar_por_relevancia
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad, CriteriosDeAplicabilidad
 
 
@@ -35,14 +36,17 @@ class AplicabilidadDeFuente:
     poblacion_no_comparable: bool
 
 
+ORIGENES_ESTRUCTURADOS = frozenset({"fuente_estructurada", "extraido_verificado"})
+"""Solo estos orígenes cuentan como población estructurada; ``pendiente`` y cualquier otro valor se omiten (RN-25)."""
+
+
 def mejor_chunk_por_documento(citables: Mapping[str, ChunkCitable]) -> dict[str, ChunkCitable]:
-    """El chunk de mayor ``relevance_score`` de cada documento (``chunk_id`` ascendente ante un empate), en ese orden."""
-    por_relevancia = sorted(
-        citables.values(), key=lambda c: (-c.chunk.relevance_score, c.chunk.chunk_id)
-    )
+    """El chunk de mayor ``relevance_score`` de cada documento (desempate de ``ordenar_por_relevancia``). El orden de
+    los documentos del resultado no es parte del contrato: lo fija ``ApplicabilityService.evaluar``."""
+    por_chunk = {c.chunk.chunk_id: c for c in citables.values()}
     mejores: dict[str, ChunkCitable] = {}
-    for citable in por_relevancia:
-        mejores.setdefault(citable.chunk.document_id, citable)
+    for chunk in ordenar_por_relevancia([c.chunk for c in citables.values()]):
+        mejores.setdefault(chunk.document_id, por_chunk[chunk.chunk_id])
     return mejores
 
 
@@ -71,7 +75,8 @@ class ApplicabilityService:
         fuentes = [
             _aplicabilidad_de(mejor, criterios, contexto, poblaciones[documento])
             for documento, mejor in mejores_chunks.items()
-            if documento in poblaciones and poblaciones[documento].metadata_source != "pendiente"
+            if documento in poblaciones
+            and poblaciones[documento].metadata_source in ORIGENES_ESTRUCTURADOS
         ]
         return tuple(sorted(fuentes, key=_orden_por_relevancia))
 

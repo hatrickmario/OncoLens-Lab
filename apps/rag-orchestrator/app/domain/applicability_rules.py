@@ -79,7 +79,13 @@ def valor_del_paciente(contexto: ContextoDelPaciente, destino: DestinoDelCriteri
     lector = _LECTORES_DE_DESTINO.get((destino.entidad, destino.campo))
     if lector is None:
         raise DestinoNoResoluble(f"{destino.entidad}.{destino.campo}")
-    return lector(contexto, destino.coincidencia)
+    return lector(contexto, destino)
+
+
+def es_criterio_compuesto(destino: DestinoDelCriterio) -> bool:
+    """RE/RP, HRR/BRCA: el destino reúne varios biomarcadores (``match.name`` con lista). El paciente se rotula por
+    componente y el estudio guarda una sola cadena, así que no hay componente contra componente que comparar."""
+    return len(destino.coincidencia.get("name", ())) > 1
 
 
 def _nombres_exigidos(coincidencia: Mapping[str, tuple[str, ...]]) -> tuple[str, ...]:
@@ -94,21 +100,19 @@ def _valor_de_biomarcador(contexto: ContextoDelPaciente, nombre: str) -> str | N
     return _el_mas_reciente(biomarcadores, lambda b: b.meses_atras, lambda b: b.valor)
 
 
-def _leer_biomarcador(
-    contexto: ContextoDelPaciente, coincidencia: Mapping[str, tuple[str, ...]]
-) -> str | None:
+def _leer_biomarcador(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
+    coincidencia = destino.coincidencia
     nombres = _nombres_exigidos(coincidencia)
     valores = [_valor_de_biomarcador(contexto, nombre) for nombre in nombres]
-    if len(nombres) == 1:
+    if not es_criterio_compuesto(destino):
         return valores[0]
     if any(valor is None for valor in valores):
         return None
     return "; ".join(f"{nombre}: {valor}" for nombre, valor in zip(nombres, valores))
 
 
-def _leer_ecog(
-    contexto: ContextoDelPaciente, coincidencia: Mapping[str, tuple[str, ...]]
-) -> str | None:
+def _leer_desempeno(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
+    coincidencia = destino.coincidencia
     escala = coincidencia.get("performance_scale")
     if not escala:
         raise DestinoNoResoluble("performance_value sin match.performance_scale")
@@ -117,9 +121,8 @@ def _leer_ecog(
     return str(contexto.valor_de_desempeno)
 
 
-def _leer_atributo(
-    contexto: ContextoDelPaciente, coincidencia: Mapping[str, tuple[str, ...]]
-) -> str | None:
+def _leer_atributo(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
+    coincidencia = destino.coincidencia
     claves = coincidencia.get("attribute_key")
     if not claves:
         raise DestinoNoResoluble("ClinicalAttribute sin match.attribute_key")
@@ -127,9 +130,7 @@ def _leer_atributo(
     return _el_mas_reciente(atributos, _meses_de_atributo, lambda a: a.valor)
 
 
-def _leer_linea(
-    contexto: ContextoDelPaciente, coincidencia: Mapping[str, tuple[str, ...]]
-) -> str | None:
+def _leer_linea(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
     con_numero = (t for t in contexto.tratamientos_previos if t.numero_de_linea is not None)
     return _el_mas_reciente(con_numero, _meses_de_tratamiento, lambda t: str(t.numero_de_linea))
 
@@ -146,13 +147,13 @@ def _meses_de_tratamiento(tratamiento: TratamientoPrevioDelPaciente) -> int:
 _SIN_FECHA = 10**9
 """Un valor sin fecha pierde frente a cualquiera con fecha; entre iguales gana el primero de la petición."""
 
-type _Lector = Callable[[ContextoDelPaciente, Mapping[str, tuple[str, ...]]], str | None]
+type _Lector = Callable[[ContextoDelPaciente, DestinoDelCriterio], str | None]
 
 _LECTORES_DE_DESTINO: Mapping[tuple[str, str | None], _Lector] = {
     ("Biomarker", "value"): _leer_biomarcador,
     ("Diagnosis", "stage_value"): lambda contexto, _: contexto.valor_de_estadio,
     ("Diagnosis", "grade"): lambda contexto, _: contexto.grado,
-    ("Diagnosis", "performance_value"): _leer_ecog,
+    ("Diagnosis", "performance_value"): _leer_desempeno,
     ("ClinicalAttribute", "value"): _leer_atributo,
     ("PriorTreatment", "line_number"): _leer_linea,
 }
@@ -212,8 +213,7 @@ def _desconocido(
 def _veredicto(
     criterio: CriterioDeAplicabilidad, valor_paciente: str, valor_estudio: ValorDelEstudio
 ) -> _Veredicto:
-    if len(criterio.destino.coincidencia.get("name", ())) > 1:
-        # RE/RP, HRR/BRCA: el estudio guarda una sola cadena y no hay componente contra componente que comparar.
+    if es_criterio_compuesto(criterio.destino):
         return "desconocido", "forma_no_comparable"
     regla = criterio.regla
     if regla.operador == "igualdad":
