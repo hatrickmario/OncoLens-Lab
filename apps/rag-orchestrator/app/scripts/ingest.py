@@ -1,6 +1,7 @@
 """Ingesta en lote reanudable del corpus (US-117a, L1D-116): raíz de composición del ``IngestionPipelineService``.
 
     python -m app.scripts.ingest --manifest <ruta>
+    python -m app.scripts.ingest reindex-sparse
 
 Lee el manifiesto indicado, rechaza lo que no tiene licencia aceptada o viene de una fuente excluida (RN-21), normaliza,
 trocea, embebe *dense* y *sparse*, inserta en ``corpus.corpus_document`` (rol ``rag_corpus``) y en ``corpus_chunks``
@@ -14,6 +15,12 @@ verifica con el NLI (``NLI_ENTAILMENT_THRESHOLD``); si cualquiera cae, el docume
 
 Imprime un resumen JSON en la salida estándar: solo identificadores, estados, motivos (etapa y clase) y contadores;
 nunca contenido, URLs, credenciales ni mensajes de excepción.
+
+``reindex-sparse`` (US-117b) puebla el ``sparse_vector`` de los chunks VIGENTES de la semilla (``chunk_id``, ``dense_vector`` y los
+demás campos no cambian; los no vigentes no se tocan). No usa LLM ni el catálogo (solo Milvus), así que no lleva la guarda de LLM
+de ``ingest``, pero exige por código embeddings locales verificados por SHA-256 (``MODEL_PROVIDER=local``, ``EMBEDDING_*``,
+``EMBEDDING_SPARSE_WEIGHTS_*``, RN-12) y falla cerrado nombrando solo la variable. El lote es ``CORPUS_SPARSE_REINDEX_BATCH_SIZE``.
+Es idempotente y no se ejecuta a la vez que una ingesta. Falla con la etapa (``leer_vigentes|codificar|reescribir``) y la clase del error.
 
 Código de salida: 0 si ningún documento quedó en ``error``; 1 si hubo uno, la configuración es inválida o una
 dependencia obligatoria falló. Como ``load_seed_corpus``: sin ``MODEL_PROVIDER=local`` no hay embedder, y nunca se usa
@@ -33,7 +40,15 @@ from pydantic import ValidationError
 from pymilvus import MilvusClient
 
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
-from app.application.corpus_ingestion.ports import SparsePassageEncoder
+from app.application.corpus_ingestion.ports import (
+    AlmacenDeReindexacionSparse,
+    SparsePassageEncoder,
+)
+from app.application.corpus_ingestion.reindexar_sparse import (
+    ETAPA_LEER,
+    FalloDeReindexacion,
+    ReindexarSparse,
+)
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
@@ -41,6 +56,8 @@ from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMues
 from app.application.ports import Clock, LlmClient, NliClassifier
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import (
+    AjustesDeReindexacionSparse,
+    AjustesSparse,
     CorpusDatabaseSettings,
     CorpusIngestSettings,
     MilvusSettings,
@@ -62,6 +79,7 @@ from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from app.scripts.load_seed_corpus import (
     ajustes_de_modelos_del_entorno,
     allow_cc_by_nc_del_entorno,
+    exigir_proveedor_de_modelos_local,
     fabricar_tokenizador_de_chunks,
     fuente_de_texto,
     politica_de_licencias,
@@ -243,10 +261,87 @@ def _modelos_de_la_ingesta(
     return fabricar_codificadores_reales(ajustes)
 
 
+MODO_REINDEX_SPARSE = "reindex-sparse"
+
+
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
+    """Sin modo rige ``ingest``: ``--manifest`` obligatorio (validado a mano). ``reindex-sparse`` no acepta ``--manifest``."""
     analizador = argparse.ArgumentParser(prog="python -m app.scripts.ingest", description=__doc__)
-    analizador.add_argument("--manifest", type=Path, required=True, help="manifiesto de ingesta")
-    return analizador.parse_args(argv)
+    analizador.add_argument("--manifest", type=Path, help="manifiesto de ingesta")
+    modos = analizador.add_subparsers(dest="modo", required=False)
+    modos.add_parser(MODO_REINDEX_SPARSE, help="puebla el sparse de los chunks vigentes")
+    argumentos = analizador.parse_args(argv)
+    if argumentos.modo is None and argumentos.manifest is None:
+        analizador.error("--manifest es obligatorio")
+    if argumentos.modo == MODO_REINDEX_SPARSE and argumentos.manifest is not None:
+        analizador.error("reindex-sparse no acepta --manifest")
+    return argumentos
+
+
+def _sparse_real(ajustes: AjustesSparse) -> SparsePassageEncoder:
+    """El codificador *sparse* REAL con pesos y *tokenizer* verificados (el ``onnxruntime`` se difiere hasta aquí). No construye
+    el *tokenizer* de chunks ni el LLM: la reindexación no trocea ni genera."""
+    from app.infrastructure.models.local import cargar_embeddings_y_sparse_de_pasajes
+
+    return cargar_embeddings_y_sparse_de_pasajes(ajustes_de_modelos_del_entorno(), ajustes)[1]
+
+
+def _almacen_de_milvus() -> AlmacenDeReindexacionSparse:
+    milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
+    try:
+        almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
+        almacen.ensure_collection()
+    except Exception as error:  # noqa: BLE001 - el mensaje de pymilvus puede traer la URI: solo etapa y clase
+        raise FalloDeReindexacion(ETAPA_LEER, error) from None
+    return almacen
+
+
+def _reindexar_sparse(
+    sparse: SparsePassageEncoder | None, almacen: AlmacenDeReindexacionSparse | None
+) -> int:
+    """``ingest reindex-sparse`` (US-117b D5): sin LLM, sin catálogo y sin PostgreSQL; solo Milvus. ``sparse`` y ``almacen``
+    se inyectan solo en los tests."""
+    try:
+        ajustes = AjustesDeReindexacionSparse(_env_file=None)  # type: ignore[call-arg]
+    except ValidationError as error:
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    try:
+        exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
+        codificador = sparse if sparse is not None else _sparse_real(ajustes)
+        almacen = almacen if almacen is not None else _almacen_de_milvus()
+        resumen = ReindexarSparse(
+            almacen=almacen,
+            codificador=codificador,
+            lote=ajustes.corpus_sparse_reindex_batch_size,
+        ).ejecutar()
+    except (
+        ValidationError
+    ) as error:  # la configuración de Milvus, que se valida después de la guarda
+        print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
+        return 1
+    except FalloDeReindexacion as fallo:
+        print(
+            f"{NOMBRE} {MODO_REINDEX_SPARSE}: falló en {fallo.etapa} ({fallo.clase})",
+            file=sys.stderr,
+        )
+        return 1
+    except ModeloNoVerificadoError as error:
+        print(f"{NOMBRE}: {error}", file=sys.stderr)
+        return 1
+    except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje puede traer una URI
+        print(f"{NOMBRE} {MODO_REINDEX_SPARSE}: falló ({type(error).__name__})", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "modo": MODO_REINDEX_SPARSE,
+                "leidos": resumen.leidos,
+                "reindexados": resumen.reindexados,
+            }
+        )
+    )
+    return 0
 
 
 def main(
@@ -257,10 +352,13 @@ def main(
     tokenizador: Tokenizador | None = None,
     llm: LlmClient | None = None,
     nli: NliClassifier | None = None,
+    almacen_sparse: AlmacenDeReindexacionSparse | None = None,
 ) -> int:
     """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm`` y ``nli`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
+    if argumentos.modo == MODO_REINDEX_SPARSE:
+        return _reindexar_sparse(sparse, almacen_sparse)
     try:
         ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
         milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]

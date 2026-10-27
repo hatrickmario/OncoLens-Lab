@@ -505,6 +505,10 @@ export type AnalysisBasis = {
         conflict: boolean;
     }>;
     missingCriticalData: Array<string>;
+    /**
+     * Etiqueta en español del catálogo (label.es) de cada clave de missingCriticalData, mismo orden y longitud, resuelta con la catalog_version del análisis (FR-27 b). Texto de catálogo, nunca valores ni datos del paciente.
+     */
+    missingCriticalDataLabels: Array<string>;
     continuedWithWarning: boolean;
     assumptions: Array<{
         text: string;
