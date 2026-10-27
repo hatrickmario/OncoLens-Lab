@@ -169,7 +169,8 @@ describe('EvidencePanel · estados del S3', () => {
       expect(visible).not.toMatch(
         /rag-orchestrator|clinical-api|Ollama|http:\/\/|Error:|\bat \S+\(/,
       );
-      expect(visible).not.toContain(cuerpo.message);
+      expect(visible).not.toContain(cuerpo.error);
+      expect(screen.queryByText(cuerpo.message)).toBeNull();
     },
   );
 

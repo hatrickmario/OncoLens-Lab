@@ -7,8 +7,10 @@ import type {
   EvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/types/clinical-api';
 import { anunciarEstado } from '../../lib/evidence/anuncio-de-estado';
-import { faseTrasSolicitud, type FaseDelPanel } from '../../lib/evidence/fase-del-panel';
+import { esFallo, faseTrasSolicitud, type FaseDelPanel } from '../../lib/evidence/fase-del-panel';
+import { puedeEnviar, validarPregunta } from '../../lib/evidence/reglas-del-formulario';
 import { armarSolicitud, solicitarAnalisis } from '../../lib/evidence/solicitar-analisis';
+import { EvidenceOptionSkeleton } from '../atoms/evidence-option-skeleton';
 import estilos from '../evidence.module.css';
 import { AnalysisFailure } from '../molecules/analysis-failure';
 import { CitedFragment } from '../molecules/cited-fragment';
@@ -31,16 +33,21 @@ interface FragmentoAbierto {
 export function EvidencePanel({ patientId }: EvidencePanelProps) {
   const router = useRouter();
   const botonRef = useRef<HTMLButtonElement>(null);
+  // Guarda síncrona: el estado de React no basta ante un doble clic antes del re-render (D1).
+  const enCurso = useRef(false);
   const [pregunta, setPregunta] = useState('');
   const [fase, setFase] = useState<FaseDelPanel>({ tipo: 'inactivo' });
   const [ultima, setUltima] = useState<EvidenceAnalysisRequest | null>(null);
   const [fragmento, setFragmento] = useState<FragmentoAbierto | null>(null);
 
   async function enviar(solicitud: EvidenceAnalysisRequest) {
+    if (!puedeEnviar(enCurso.current, solicitud.query)) return;
+    enCurso.current = true;
     setUltima(solicitud);
     setFragmento(null);
     setFase({ tipo: 'enviando' });
     const resultado = await solicitarAnalisis(solicitud);
+    enCurso.current = false;
     if (resultado.tipo === 'sin_sesion') return router.replace(RUTA_LOGIN_EXPIRADA);
     setFase(faseTrasSolicitud(resultado));
   }
@@ -56,6 +63,7 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
     if (idChip) document.getElementById(idChip)?.focus();
   }
 
+  const validacion = validarPregunta(pregunta);
   const { fragmento: textos } = mensajes().evidence;
   return (
     <div className={estilos.columnas}>
@@ -63,20 +71,20 @@ export function EvidencePanel({ patientId }: EvidencePanelProps) {
         <EvidenceQueryForm
           pregunta={pregunta}
           enviando={fase.tipo === 'enviando'}
+          errorMaximo={validacion.ok ? null : validacion.max}
           anuncio={anunciarEstado(fase)}
           botonRef={botonRef}
           onCambiar={setPregunta}
-          onEnviar={() => pregunta.trim() && void enviar(armarSolicitud(patientId, pregunta))}
+          onEnviar={() => validacion.ok && void enviar(armarSolicitud(patientId, pregunta))}
         />
+        {fase.tipo === 'enviando' && <EvidenceOptionSkeleton />}
         {fase.tipo === 'ok' && (
           <AnalysisResult
             analisis={fase.analisis}
             onVerFragmento={(cita, idChip) => setFragmento({ cita, idChip })}
           />
         )}
-        {(fase.tipo === 'error' || fase.tipo === 'no_realizado') && (
-          <AnalysisFailure fallo={fase} onReintentar={reintentar} />
-        )}
+        {esFallo(fase) && <AnalysisFailure fallo={fase} onReintentar={reintentar} />}
       </div>
       <aside className={estilos.panelLateral} aria-label={textos.titulo}>
         {fragmento ? (
