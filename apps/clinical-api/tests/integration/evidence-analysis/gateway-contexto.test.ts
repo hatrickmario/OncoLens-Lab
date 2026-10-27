@@ -138,7 +138,9 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
       expect(contexto[lista], lista).toEqual([]);
     }
     const clavesDelCatalogo = clavesDeDatosCriticos('prostata');
-    for (const clave of contexto['missingCriticalData'] as string[]) {
+    const faltantes = contexto['missingCriticalData'] as string[];
+    expect(faltantes.length).toBeGreaterThan(0);
+    for (const clave of faltantes) {
       expect(clavesDelCatalogo, clave).toContain(clave);
     }
   });

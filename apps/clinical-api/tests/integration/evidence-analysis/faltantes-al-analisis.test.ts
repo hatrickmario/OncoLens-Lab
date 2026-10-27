@@ -236,3 +236,30 @@ describe('faltantes críticos del análisis: privacidad y fallos', () => {
     expect(logger.texto()).toContain('checklist_no_disponible');
   });
 });
+
+describe('faltantes críticos: regresiones de alcance y de logs', () => {
+  it('no registra ninguna clave de la lista de faltantes en el log cuando el análisis se completa', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    const { app, logger } = await montar('req_Faltantes0009');
+
+    const respuesta = await solicitar(app, fm2, { continueWithWarning: true });
+
+    expect(respuesta.status).toBe(200);
+    for (const clave of FALTANTES_DE_FM2) expect(logger.texto(), clave).not.toContain(clave);
+  });
+
+  it('cierra sin IA con missing_critical_data vacío y sin calcular el checklist cuando el tipo no está habilitado', async () => {
+    const fm2 = await sembrarFM2(siembra);
+    const { app } = await montar('req_Faltantes0010', {
+      tiposHabilitados: ['prostata'],
+      checklist: { faltantes: () => Promise.reject(new ChecklistNoDisponibleError()) },
+    });
+
+    const respuesta = await solicitar(app, fm2, { continueWithWarning: true });
+
+    expect(respuesta.status).toBe(200);
+    expect(rag.llamadas()).toBe(0);
+    const registro = await leerRegistroPorTrace(mundo.cliente, 'req_Faltantes0010');
+    expect(registro?.missing_critical_data).toEqual([]);
+  });
+});
