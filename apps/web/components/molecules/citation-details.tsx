@@ -1,5 +1,10 @@
 import type { CitedSource } from '../../../../packages/api-contracts/src/types/clinical-api';
-import { esUrlHttpSegura, valorONoDisponible } from '../../lib/evidence/procedencia';
+import {
+  esUrlHttpSegura,
+  numeroONoDisponible,
+  rotuloDeDiseno,
+  valorONoDisponible,
+} from '../../lib/evidence/procedencia';
 import { mensajes } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 
@@ -47,7 +52,15 @@ export function CitationDetails({ cita, id, onVerFragmento }: CitationDetailsPro
           <AutoresDeLaCita autores={cita.authors} />
         </dd>
         <dt>{textos.diseno}</dt>
-        <dd>{valorONoDisponible(cita.studyDesign)}</dd>
+        <dd>{rotuloDeDiseno(cita.studyDesign)}</dd>
+        <dt>{textos.fase}</dt>
+        <dd>{valorONoDisponible(cita.trialPhase)}</dd>
+        <dt>{textos.endpoint}</dt>
+        <dd>{valorONoDisponible(cita.primaryEndpoint)}</dd>
+        <dt>{textos.tamanoMuestra}</dt>
+        <dd>{numeroONoDisponible(cita.sampleSize)}</dd>
+        <dt>{textos.versionGuia}</dt>
+        <dd>{valorONoDisponible(cita.guidelineVersion)}</dd>
         <dt>{textos.publicado}</dt>
         <dd>{valorONoDisponible(cita.publishedAt)}</dd>
         <dt>{textos.actualizado}</dt>

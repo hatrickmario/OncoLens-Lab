@@ -8,16 +8,20 @@ las mismas reglas que los adapters reales (LSP): ``guardar_documento`` es un *up
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
 
+from app.application.corpus_ingestion.ports import ChunkParaReindexar
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     RegistroDeRelease,
     VersionInexistente,
 )
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
+from app.infrastructure.milvus.repository import LIMITE_DE_CONSULTA
 from tests.support.milvus import DIMENSION_DE_TEST
 
 
@@ -89,7 +93,7 @@ class CatalogoEnMemoria:
             (
                 r
                 for i, r in self.documentos.items()
-                if i in ids and r.metadata_source == "extraido_verificado"
+                if i in ids and r.metadata_source == EXTRAIDO_VERIFICADO
             ),
             key=lambda r: r.document_id,
         )
@@ -146,6 +150,29 @@ class AlmacenDeChunksEnMemoria:
         for identificador in cambiados:
             self.chunks[identificador] = replace(self.chunks[identificador], is_current=True)
         return len(cambiados)
+
+    def listar_vigentes_paginado(self, lote: int) -> Iterator[list[ChunkParaReindexar]]:
+        """Mismo contrato que ``MilvusRepository`` (LSP): lote estrictamente entre 0 y ``LIMITE_DE_CONSULTA``."""
+        if not 0 < lote < LIMITE_DE_CONSULTA:
+            raise ValueError("el lote debe ser positivo y menor que el tope de consulta")
+        vigentes = sorted(
+            (c for c in self.chunks.values() if c.is_current), key=lambda c: c.chunk_id
+        )
+        for inicio in range(0, len(vigentes), lote):
+            self._puede("listar_vigentes_paginado")
+            yield [
+                ChunkParaReindexar(c.chunk_id, c.chunk_text, {"chunk": c})
+                for c in vigentes[inicio : inicio + lote]
+            ]
+
+    def reescribir_sparse(
+        self, chunks: Sequence[ChunkParaReindexar], vectores_sparse: Sequence[Mapping[int, float]]
+    ) -> int:
+        self._puede("reescribir_sparse")
+        for chunk, sparse in zip(chunks, vectores_sparse, strict=True):
+            original = chunk.registro["chunk"]
+            self.chunks[original.chunk_id] = replace(original, sparse_vector=dict(sparse))
+        return len(chunks)
 
 
 class AlmacenConFallosInyectables:
