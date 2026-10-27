@@ -110,8 +110,8 @@ transformarla; si pasa en verde a la primera, se documenta como test de regresi�
   construye desde él. Regla de `l1d-188` (`[S3 resp. 18]`): todo ejemplo con `analysisBasis` lleva
   `missingCriticalDataLabels`; si `l1d-188` ya está en `main`, este change lo incluye en el público; si llega
   después, lo añade `l1d-188` (tarea 1.1 condicional en ambos sentidos). `l1d-127` no publica ejemplo; `l1d-130` y `l1d-141` reutilizan este par (`l1d-141` solo
-  añade la variante `poblacion-no-comparable`). `l1d-188` (#216) aún no está en `main`: se omite
-  `missingCriticalDataLabels` y lo añade `l1d-188` al rebasar.
+  añade la variante `poblacion-no-comparable`). `l1d-188` (#216) ya está en `main`: se incluye
+  `missingCriticalDataLabels` en el público.
 
 ## Dependencias y colaboradores
 
