@@ -120,6 +120,11 @@ CORPUS_FX08BA: tuple[ChunkFx, ...] = tuple(
 )
 
 
+# Metadatos factuales completos solo en ``doc-a1`` (US-127 AC-1/AC-2); el resto no registra fase, endpoint ni tamaño (AC-3).
+_ENDPOINT_DOC_A1 = "Supervivencia libre de enfermedad invasiva"
+_MUESTRA_DOC_A1 = 4800
+
+
 def _ficha(documento: str) -> FichaDeFuente:
     return FichaDeFuente(
         title=f"Estudio sintético {documento} (test)",
@@ -128,10 +133,10 @@ def _ficha(documento: str) -> FichaDeFuente:
         language="en",
         source_type="guideline",
         license_class="dominio_publico",
-        study_design="guia",
-        trial_phase=None,
-        primary_endpoint=None,
-        sample_size=None,
+        study_design="eca" if documento == "doc-a1" else "guia",
+        trial_phase="III" if documento == "doc-a1" else None,
+        primary_endpoint=_ENDPOINT_DOC_A1 if documento == "doc-a1" else None,
+        sample_size=_MUESTRA_DOC_A1 if documento == "doc-a1" else None,
         published_at=date(2025, 3, 1),
         last_updated_at=date(2026, 5, 1),
         guideline_version="2026-05",
