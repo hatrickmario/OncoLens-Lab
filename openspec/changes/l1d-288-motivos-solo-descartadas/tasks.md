@@ -11,7 +11,7 @@
 
 ## 1. contratos
 
-- [ ] 1.1 (test después: ejemplos, sin cambio de `openapi.yaml`) Con la skill `sync-contracts`: crear en `contracts/examples/` `con-evidencia-solo-descartadas-cita-invalida.json`, `con-evidencia-solo-descartadas-motivos-mixtos.json` (orden de llegada `sin_citas`, `cita_invalida`, `cita_invalida`) y `con-evidencia-solo-descartadas-otros-motivos.json` (`afirmacion_sin_soporte`, `solo_soportada_por_analisis_previo`), derivados de `con-evidencia-solo-descartadas.json` (mismo `disclaimer` literal, `evidenceOptions = []`, sintéticos, NCCN/ESMO solo en `sourcesNotIncluded`), y registrarlos en `index.json` (target `#/components/schemas/EvidenceAnalysis`). Verificación: `contracts:check` en verde y `contracts:breaking` vacío [US-237 AC-6]. Commit `contract(L1D-288)`.
+- [x] 1.1 (test después: ejemplos, sin cambio de `openapi.yaml`) Con la skill `sync-contracts`: crear en `contracts/examples/` `con-evidencia-solo-descartadas-cita-invalida.json`, `con-evidencia-solo-descartadas-motivos-mixtos.json` (orden de llegada `sin_citas`, `cita_invalida`, `cita_invalida`) y `con-evidencia-solo-descartadas-otros-motivos.json` (`afirmacion_sin_soporte`, `solo_soportada_por_analisis_previo`), derivados de `con-evidencia-solo-descartadas.json` (mismo `disclaimer` literal, `evidenceOptions = []`, sintéticos, NCCN/ESMO solo en `sourcesNotIncluded`), y registrarlos en `index.json` (target `#/components/schemas/EvidenceAnalysis`). Verificación: `contracts:check` en verde y `contracts:breaking` vacío [US-237 AC-6]. Commit `contract(L1D-288)`.
 
 ## 2. ai-services
 
