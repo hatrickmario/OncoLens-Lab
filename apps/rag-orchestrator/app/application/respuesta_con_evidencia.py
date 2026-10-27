@@ -28,6 +28,7 @@ from app.schemas.generated.models import (
     EvidenceOption,
     Limitation,
     Origin,
+    PatientDataWarning,
     RagQueryInternalResponse,
     RagQueryStatus,
     RetrievalStats,
@@ -92,7 +93,7 @@ def _criterio_aplicable(
 ) -> ApplicabilityCriterion:
     """Todo criterio que muestra un valor del estudio cita la fuente, aunque sea ``desconocido`` (RN-25, design D6);
     sin valor del estudio no hay nada que citar. Un valor textual aceptado cita el chunk que lo respaldó (US-123);
-    uno estructurado, el mejor chunk de la fuente. ``patientDataWarning`` es de US-124."""
+    uno estructurado, el mejor chunk de la fuente. ``patientDataWarning`` es el aviso del dato del paciente (US-124)."""
     cita_la_fuente = criterio.valor_estudio is not None
     citado = citables[criterio.chunk_citado_id] if criterio.chunk_citado_id else mejor_chunk
     return ApplicabilityCriterion(
@@ -102,7 +103,7 @@ def _criterio_aplicable(
         status=ApplicabilityStatus(criterio.estado),
         unknownReason=UnknownReason(criterio.causa) if criterio.causa else None,
         isExclusionary=criterio.es_excluyente,
-        patientDataWarning=None,
+        patientDataWarning=PatientDataWarning(criterio.aviso) if criterio.aviso else None,
         citedSources=[_cita_de(citado)] if cita_la_fuente else [],
     )
 

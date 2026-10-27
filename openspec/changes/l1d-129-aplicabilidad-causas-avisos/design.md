@@ -2,13 +2,17 @@
 
 ## Context
 
-Ver proposal.md (Why). Estado de partida en `main`: el contrato final ya declara
+Ver proposal.md (Why). Estado de partida (reconciliado el 2026-10-27, sobre `l1d-128`): el contrato final ya declara
 `ApplicabilityCriterion.unknownReason` (`falta_en_paciente | no_reportado_por_fuente | null`),
 `patientDataWarning` (`sin_verificar | en_conflicto | faltante | null`), `SourceApplicability.summary` y
-`populationNotComparable` (`contracts/schemas/evidence.yaml`, Pre-S1, ADR-26). `rag-orchestrator` devuelve hoy
-`applicability = []` (`app/application/rag_orchestrator_service.py`, `respuesta_con_evidencia.py`); el cálculo
-por criterio llega con el change de L1D-127 (US-122: `ApplicabilityService` en `application/`, regla pura en
-`domain/applicability_rules.py`) y el valor textual citado con `l1d-128-aplicabilidad-textual-citada` (US-123).
+`populationNotComparable` (`contracts/schemas/evidence.yaml`, Pre-S1, ADR-26). `rag-orchestrator` ya calcula la
+aplicabilidad por criterio (L1D-127: `ApplicabilityService` en `application/aplicabilidad.py`, reglas puras en
+`domain/applicability_rules.py`, incluidas `evaluar_criterio` con la causa, `contar_estados` y
+`poblacion_no_comparable`) y el valor textual citado (L1D-128), pero `respuesta_con_evidencia._criterio_aplicable`
+fija `patientDataWarning = None` y `contexto_del_paciente` descarta la `provenance` y `missingCriticalData`. El
+catálogo real (`packages/clinical-catalogs/mama/aplicabilidad.json`) trae 6 criterios (`estado_her2`,
+`receptores_hormonales` con `match.name = [RE, RP]`, `estadio`, `linea_tratamiento`, `estado_menopausico`, `ecog`);
+el de test `test-apl-1.0.0`, 5.
 Cada dato del `clinicalContext` trae `provenance { entryMethod, extractionConfidence, reviewStatus, conflict }`
 (`apps/rag-orchestrator/openapi.yaml`, `Provenance`); `clinical-api` pone `conflict = conflictsWithId !== null`
 (`clinical-context.builder.ts`). `missingCriticalData` es una lista de claves de catálogo (`^[a-z0-9_]+$`,
@@ -27,11 +31,13 @@ por opción (US-125); textos de UI (US-126, US-062 AC-7); detección real de con
 ## Decisions
 
 **D1 — Reglas como funciones puras con nombre propio en `domain/applicability_rules.py`.** Este change añade
-solo `causa_de_desconocido(criterio, contexto) -> UnknownReason | None` y `aviso_dato_paciente(datos_comparados)
--> PatientDataWarning | None`, con sus unitarios. `poblacion_no_comparable(criterios) -> bool` y
+solo `causa_de_desconocido(valor_paciente, valor_estudio) -> CausaDeDesconocido | None` (Extract Method del cuerpo de
+`evaluar_criterio`) y `aviso_dato_paciente(procedencias) -> AvisoDelDato | None`, con sus unitarios. El tipo de dominio
+`ProcedenciaDelDato(revision_pendiente, en_conflicto)` lo construye `application/contexto_del_paciente.py` desde
+`Provenance` (el dominio no importa el esquema generado). `poblacion_no_comparable(criterios) -> bool` y
 `contar_estados(criterios) -> ApplicabilitySummary` **son de `l1d-127`** (decisión del usuario, 2026-10-24,
 `[S3 resp. 16]`): aquí no se reimplementan ni se duplican sus unitarios; solo se escriben contra ellas los AC de
-US-124 (AC-4, AC-5). `ApplicabilityService` (US-122) compone las cuatro al cerrar cada `SourceApplicability`.
+US-124 (AC-4, AC-5). `evaluar_criterio_de_fuente` compone causa y aviso por criterio y `ApplicabilityService` el conteo y la no comparabilidad al cerrar cada `SourceApplicability`.
 Así cada invariante que un guardián verifica (RN-28, RN-26) vive y se prueba en un solo lugar. Descartada:
 calcularlas en el ensamblado de la respuesta (mezcla presentación y dominio).
 
@@ -40,12 +46,18 @@ calcularlas en el ensamblado de la respuesta (mezcla presentación y dominio).
 es `desconocido` con `falta_en_paciente`, `patientValue = null` y `patientDataWarning = faltante`, aunque la
 fuente tampoco lo reporte: la causa accionable para el oncólogo es completar su paciente. Un dato es "faltante"
 si la clave del criterio está en `missingCriticalData` **o** el destino del criterio no tiene ningún dato en el
-contexto (asumido; cubre criterios que no son dato crítico del checklist). La correspondencia clave del criterio
-↔ clave del checklist es por igualdad de clave (`estado_menopausico`); ver Dudas.
+contexto (cubre criterios que no son dato crítico del checklist, p. ej. RE/RP). La correspondencia clave del criterio
+↔ clave del checklist es por igualdad de clave (`estado_menopausico`, `ecog`); los demás (`tnm`, `re`, `her2_ihq` del
+checklist frente a `estadio`, `receptores_hormonales`, `estado_her2`) los cubre la ausencia del dato. Ver Q2.
 
 **D3 — Precedencia de avisos `en_conflicto` > `sin_verificar` > `null`.** Un dato en conflicto también está en
-`requiere_revision`; el conflicto es la información más fuerte. Si varios datos alimentan el criterio (los dos
-HER2 sembrados del AC-3), basta uno con `conflict = true` para `en_conflicto`. `verificado`, `corregido` y
+`requiere_revision`; el conflicto es la información más fuerte. **El aviso sale del mismo dato que se copia
+en `patientValue`** (el de menor `monthsAgo`, L1D-127 D3), no de los demás candidatos: un valor antiguo sin verificar no
+ensucia a uno reciente verificado. En un destino compuesto (RE/RP) se reúnen las procedencias de sus componentes y rige
+la misma precedencia. En el conflicto sembrado del AC-3 ambos HER2 llevan `conflict = true`, así que el elegido avisa.
+Los datos del `Diagnosis` (estadio, grado, ECOG) comparten la `provenance` del diagnóstico. **Paridad:** la regla
+reproduce `rag_query.etiqueta_de_procedencia` (L1D-181); un test de tabla `reviewStatus × conflict` en cada lado
+(`aviso_dato_paciente` y `etiqueta_de_procedencia`) impide que diverjan. `verificado`, `corregido` y
 `auto_aceptado` no generan aviso. El aviso **no** cambia `status` ni produce error (RN-26): el estado lo sigue
 calculando la regla de US-122 sobre el valor que esa historia elige.
 
@@ -60,7 +72,7 @@ criterios del catálogo. Sin pesos ni porcentajes: el validador del catálogo ya
 **D6 — Conflicto del AC-3 en un fixture de test, no en el seed de demo.** Variante `A-M1-CONFLICTO` de FX-08b-a:
 dos HER2 (`3+ (IHQ)` y `2+`), ambos `requiere_revision` con `conflicts_with_id` cruzados, que llegan a B2 con
 `provenance.conflict = true`. En `rag-orchestrator` se construye directamente como `clinicalContext` (la mitad
-B1, conflicto sembrado → `conflict = true`, la verifica US-065 AC-4). Sembrarlo en el paciente (a) de la demo
+B1, conflicto sembrado → `conflict = true`, ya la verifica L1D-181). El seed #212 de la demo no lo contiene. Sembrarlo en el paciente (a) de la demo
 rompería US-065 AC-1 (`conflict = false`).
 
 **D7 — AC-7 sin código nuevo en B1.** El test Supertest fija que la persistencia copia `applicability` sin
@@ -84,23 +96,32 @@ transformarla; si pasa en verde a la primera, se documenta como test de regresi�
   `contracts/schemas/evidence.yaml`: los campos y enums existen desde el Pre-S1. Proveedor: `rag-orchestrator`
   (`/rag/query`); consumidor: `clinical-api` vía cliente generado. Compatible con ADR-26; `contracts:breaking`
   sin cambios.
-- **Ejemplos: este change es dueño del par** (decisión del usuario, 2026-10-24, `[S3 resp. 16]`):
+- **Ejemplos:** (1) los 6 ejemplos de petición con «Receptor de estrógeno» pasan a `RE`
+  (nombre del seed de L1D-95a y `match.name` del catálogo real); los tests de prompt que fijan la línea se
+  actualizan en el mismo commit `contract`. (2) **Este change es dueño del par** (decisión del usuario, 2026-10-24, `[S3 resp. 16]`):
   `contracts/examples/rag-query-aplicabilidad-a-m1.json` (interno, `RagQueryInternalResponse` de
   `rag-orchestrator`, con `request` a su petición) y su público `con-evidencia-s3-aplicabilidad.json`
   (`EvidenceAnalysis` de `clinical-api`), ambos registrados en `contracts/examples/index.json` y validados con
-  `contracts:check`. Contenido: `applicability` de `doc-a1` con `estado_menopausico`
-  `falta_en_paciente`/`faltante`, `ecog` `sin_verificar` y el `summary` del AC-5. El handler MSW del AC-7 se
+  `contracts:check`. Contenido: `applicability` de `doc-a1` con los **6 criterios del catálogo real** para A-M1
+  (petición dedicada `rag-query-request-aplicabilidad-a-m1.json`: HER2 `3+ (IHQ)`, sin RE/RP, diagnóstico en
+  `requiere_revision`, `missingCriticalData` con `estado_menopausico`): `estado_menopausico` y `receptores_hormonales`
+  `falta_en_paciente`/`faltante`, `ecog` `coincide` con `sin_verificar`, `estadio` `desconocido` sin causa, y su
+  `summary`. Todo criterio con valor del estudio lleva su cita. El handler MSW del AC-7 se
   construye desde él. Regla de `l1d-188` (`[S3 resp. 18]`): todo ejemplo con `analysisBasis` lleva
   `missingCriticalDataLabels`; si `l1d-188` ya está en `main`, este change lo incluye en el público; si llega
   después, lo añade `l1d-188` (tarea 1.1 condicional en ambos sentidos). `l1d-127` no publica ejemplo; `l1d-130` y `l1d-141` reutilizan este par (`l1d-141` solo
-  añade la variante `poblacion-no-comparable`).
+  añade la variante `poblacion-no-comparable`). `l1d-188` (#216) ya está en `main`: se incluye
+  `missingCriticalDataLabels` en el público.
 
 ## Dependencias y colaboradores
 
 - Modifica `app/domain/applicability_rules.py` (US-122) con las dos funciones nuevas de D1; sin dependencias de
   infraestructura.
-- Modifica `app/application/aplicabilidad.py` (`ApplicabilityService`, US-122): compone D1 por fuente; depende solo de puertos
-  (`CorpusCatalogReader`, `LlmClient`, `NliClassifier` de US-122/123), nunca de clientes concretos.
+- Modifica `app/domain/aplicabilidad_tipos.py` (`ProcedenciaDelDato`, `AvisoDelDato`, campo `aviso` de
+  `CriterioEvaluado`, `datos_criticos_faltantes` del contexto), `app/application/contexto_del_paciente.py` (traduce
+  `Provenance` y `missingCriticalData`) y `app/application/respuesta_con_evidencia.py` (copia el aviso al contrato).
+  `ApplicabilityService` no cambia: el aviso lo fija `evaluar_criterio_de_fuente`, que ya compone la fuente; el camino
+  textual (`con_valor_textual`) conserva el aviso del criterio que reemplaza.
 - `clinical-api`: sin módulos nuevos; test en `apps/clinical-api/test/` del módulo `evidence-analysis`.
 - Reglas extraídas: `causa_de_desconocido()` (FR-25), `aviso_dato_paciente()` (RN-26, RN-07). Reutilizadas de
   `l1d-127`: `poblacion_no_comparable()` (AC-08.6), `contar_estados()` (RN-28).

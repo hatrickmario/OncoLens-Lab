@@ -8,15 +8,19 @@ prefijo o elemento exacto, sensible a mayúsculas y espacios (design D2b). Lo qu
 
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import replace
 
 from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
+    AvisoDelDato,
     CausaDeDesconocido,
     ContextoDelPaciente,
     CriterioEvaluado,
+    DatoDelPaciente,
     EstadoDeCriterio,
     MotivoInterno,
     PoblacionDelEstudio,
+    ProcedenciaDelDato,
     ResumenDeEstados,
     TratamientoPrevioDelPaciente,
     ValorDelEstudio,
@@ -76,6 +80,14 @@ def valor_del_paciente(contexto: ContextoDelPaciente, destino: DestinoDelCriteri
 
     Con varios valores del mismo destino gana el de menor ``monthsAgo`` y, a igualdad, el primero de la petición.
     ``DestinoNoResoluble`` si el destino no es uno de los conocidos: ``None`` no puede significar dos cosas."""
+    dato = dato_del_paciente(contexto, destino)
+    return None if dato is None else dato.valor
+
+
+def dato_del_paciente(
+    contexto: ContextoDelPaciente, destino: DestinoDelCriterio
+) -> DatoDelPaciente | None:
+    """El valor de ``valor_del_paciente`` con la procedencia del dato del que se copió (RN-07, US-124)."""
     lector = _LECTORES_DE_DESTINO.get((destino.entidad, destino.campo))
     if lector is None:
         raise DestinoNoResoluble(f"{destino.entidad}.{destino.campo}")
@@ -95,44 +107,68 @@ def _nombres_exigidos(coincidencia: Mapping[str, tuple[str, ...]]) -> tuple[str,
     return nombres
 
 
-def _valor_de_biomarcador(contexto: ContextoDelPaciente, nombre: str) -> str | None:
+def _dato_de_biomarcador(contexto: ContextoDelPaciente, nombre: str) -> DatoDelPaciente | None:
     biomarcadores = (b for b in contexto.biomarcadores if b.nombre == nombre)
-    return _el_mas_reciente(biomarcadores, lambda b: b.meses_atras, lambda b: b.valor)
+    return _el_mas_reciente(
+        biomarcadores, lambda b: b.meses_atras, lambda b: DatoDelPaciente(b.valor, (b.procedencia,))
+    )
 
 
-def _leer_biomarcador(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
-    coincidencia = destino.coincidencia
-    nombres = _nombres_exigidos(coincidencia)
-    valores = [_valor_de_biomarcador(contexto, nombre) for nombre in nombres]
+def _leer_biomarcador(
+    contexto: ContextoDelPaciente, destino: DestinoDelCriterio
+) -> DatoDelPaciente | None:
+    nombres = _nombres_exigidos(destino.coincidencia)
+    datos = [_dato_de_biomarcador(contexto, nombre) for nombre in nombres]
     if not es_criterio_compuesto(destino):
-        return valores[0]
-    if any(valor is None for valor in valores):
+        return datos[0]
+    componentes = [(nombre, dato) for nombre, dato in zip(nombres, datos) if dato is not None]
+    if len(componentes) < len(nombres):
         return None
-    return "; ".join(f"{nombre}: {valor}" for nombre, valor in zip(nombres, valores))
+    return DatoDelPaciente(
+        "; ".join(f"{nombre}: {dato.valor}" for nombre, dato in componentes),
+        tuple(p for _, dato in componentes for p in dato.procedencias),
+    )
 
 
-def _leer_desempeno(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
-    coincidencia = destino.coincidencia
-    escala = coincidencia.get("performance_scale")
+def _del_diagnostico(contexto: ContextoDelPaciente, valor: str | None) -> DatoDelPaciente | None:
+    """Estadio, grado y desempeño se copian del diagnóstico y comparten su procedencia."""
+    if valor is None:
+        return None
+    return DatoDelPaciente(valor, (contexto.procedencia_del_diagnostico,))
+
+
+def _leer_desempeno(
+    contexto: ContextoDelPaciente, destino: DestinoDelCriterio
+) -> DatoDelPaciente | None:
+    escala = destino.coincidencia.get("performance_scale")
     if not escala:
         raise DestinoNoResoluble("performance_value sin match.performance_scale")
     if contexto.escala_de_desempeno not in escala or contexto.valor_de_desempeno is None:
         return None
-    return str(contexto.valor_de_desempeno)
+    return _del_diagnostico(contexto, str(contexto.valor_de_desempeno))
 
 
-def _leer_atributo(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
-    coincidencia = destino.coincidencia
-    claves = coincidencia.get("attribute_key")
+def _leer_atributo(
+    contexto: ContextoDelPaciente, destino: DestinoDelCriterio
+) -> DatoDelPaciente | None:
+    claves = destino.coincidencia.get("attribute_key")
     if not claves:
         raise DestinoNoResoluble("ClinicalAttribute sin match.attribute_key")
     atributos = (a for a in contexto.atributos if a.clave in claves)
-    return _el_mas_reciente(atributos, _meses_de_atributo, lambda a: a.valor)
+    return _el_mas_reciente(
+        atributos, _meses_de_atributo, lambda a: DatoDelPaciente(a.valor, (a.procedencia,))
+    )
 
 
-def _leer_linea(contexto: ContextoDelPaciente, destino: DestinoDelCriterio) -> str | None:
+def _leer_linea(
+    contexto: ContextoDelPaciente, destino: DestinoDelCriterio
+) -> DatoDelPaciente | None:
     con_numero = (t for t in contexto.tratamientos_previos if t.numero_de_linea is not None)
-    return _el_mas_reciente(con_numero, _meses_de_tratamiento, lambda t: str(t.numero_de_linea))
+    return _el_mas_reciente(
+        con_numero,
+        _meses_de_tratamiento,
+        lambda t: DatoDelPaciente(str(t.numero_de_linea), (t.procedencia,)),
+    )
 
 
 def _meses_de_atributo(atributo: AtributoDelPaciente) -> int:
@@ -147,12 +183,14 @@ def _meses_de_tratamiento(tratamiento: TratamientoPrevioDelPaciente) -> int:
 _SIN_FECHA = 10**9
 """Un valor sin fecha pierde frente a cualquiera con fecha; entre iguales gana el primero de la petición."""
 
-type _Lector = Callable[[ContextoDelPaciente, DestinoDelCriterio], str | None]
+type _Lector = Callable[[ContextoDelPaciente, DestinoDelCriterio], DatoDelPaciente | None]
 
 _LECTORES_DE_DESTINO: Mapping[tuple[str, str | None], _Lector] = {
     ("Biomarker", "value"): _leer_biomarcador,
-    ("Diagnosis", "stage_value"): lambda contexto, _: contexto.valor_de_estadio,
-    ("Diagnosis", "grade"): lambda contexto, _: contexto.grado,
+    ("Diagnosis", "stage_value"): lambda contexto, _: _del_diagnostico(
+        contexto, contexto.valor_de_estadio
+    ),
+    ("Diagnosis", "grade"): lambda contexto, _: _del_diagnostico(contexto, contexto.grado),
     ("Diagnosis", "performance_value"): _leer_desempeno,
     ("ClinicalAttribute", "value"): _leer_atributo,
     ("PriorTreatment", "line_number"): _leer_linea,
@@ -160,11 +198,13 @@ _LECTORES_DE_DESTINO: Mapping[tuple[str, str | None], _Lector] = {
 
 
 def _el_mas_reciente[T](
-    candidatos: Iterable[T], meses_atras: Callable[[T], int], valor: Callable[[T], str]
-) -> str | None:
-    """El valor del candidato con menos meses de antigüedad; ``min`` conserva el primero ante un empate."""
+    candidatos: Iterable[T],
+    meses_atras: Callable[[T], int],
+    dato: Callable[[T], DatoDelPaciente],
+) -> DatoDelPaciente | None:
+    """El dato del candidato con menos meses de antigüedad; ``min`` conserva el primero ante un empate."""
     elegido = min(candidatos, key=meses_atras, default=None)
-    return None if elegido is None else valor(elegido)
+    return None if elegido is None else dato(elegido)
 
 
 # --- evaluación de un criterio (FR-25, design D2 y D2b) ------------------------------------------------------------
@@ -181,14 +221,37 @@ def evaluar_criterio(
     """Estado del criterio con la ``rule`` del catálogo. Precedencia de la causa: ``falta_en_paciente`` gana a
     ``no_reportado_por_fuente`` (D5); un valor presente pero no comparable es ``desconocido`` sin causa."""
     copiado = valor_estudio.valor if valor_estudio else None
-    if valor_paciente is None:
-        return _desconocido(criterio, valor_paciente, copiado, causa="falta_en_paciente")
-    if valor_estudio is None:
-        return _desconocido(criterio, valor_paciente, copiado, causa="no_reportado_por_fuente")
+    causa = causa_de_desconocido(valor_paciente, valor_estudio)
+    if causa is not None:
+        return _desconocido(criterio, valor_paciente, copiado, causa=causa)
     estado, motivo = _veredicto(criterio, valor_paciente, valor_estudio)
     return CriterioEvaluado(
         criterio.clave, valor_paciente, copiado, estado, None, criterio.es_excluyente, motivo
     )
+
+
+def causa_de_desconocido(
+    valor_paciente: str | None, valor_estudio: ValorDelEstudio | None
+) -> CausaDeDesconocido | None:
+    """Por qué falta uno de los dos valores (FR-25): ``falta_en_paciente`` gana a ``no_reportado_por_fuente`` si faltan
+    ambos (D2, ``[S3 resp. 16]``); con ambos presentes no hay causa, aunque el criterio acabe ``desconocido``."""
+    if valor_paciente is None:
+        return "falta_en_paciente"
+    if valor_estudio is None:
+        return "no_reportado_por_fuente"
+    return None
+
+
+def aviso_dato_paciente(procedencias: Sequence[ProcedenciaDelDato]) -> AvisoDelDato | None:
+    """Aviso del dato del paciente que se comparó (RN-26, RN-07): sin datos es ``faltante``; con datos, el conflicto
+    precede al «sin verificar» (D3), como ``etiqueta_de_procedencia`` del prompt. Nunca altera el estado ni bloquea."""
+    if not procedencias:
+        return "faltante"
+    if any(p.en_conflicto for p in procedencias):
+        return "en_conflicto"
+    if any(p.requiere_revision for p in procedencias):
+        return "sin_verificar"
+    return None
 
 
 def _desconocido(
@@ -307,14 +370,27 @@ def evaluar_criterio_de_fuente(
     contexto: ContextoDelPaciente,
     poblacion: PoblacionDelEstudio,
 ) -> CriterioEvaluado:
-    """Lee el valor del paciente por ``destination`` y el del estudio por ``studyKey`` y evalúa el criterio."""
+    """Lee el valor del paciente por ``destination`` y el del estudio por ``studyKey``, evalúa el criterio y le añade el
+    aviso del dato del paciente (US-124)."""
     try:
-        valor_paciente = valor_del_paciente(contexto, criterio.destino)
+        dato = _dato_comparable(contexto, criterio)
     except DestinoNoResoluble:
         return _desconocido(criterio, None, None, motivo="destino_no_resoluble")
-    return evaluar_criterio(
-        criterio, valor_paciente, valor_del_estudio(poblacion, criterio.clave_de_estudio)
+    evaluado = evaluar_criterio(
+        criterio,
+        None if dato is None else dato.valor,
+        valor_del_estudio(poblacion, criterio.clave_de_estudio),
     )
+    return replace(evaluado, aviso=aviso_dato_paciente(() if dato is None else dato.procedencias))
+
+
+def _dato_comparable(
+    contexto: ContextoDelPaciente, criterio: CriterioDeAplicabilidad
+) -> DatoDelPaciente | None:
+    """El dato del paciente que se compara; ``None`` si no existe o si el checklist declara que falta (D2): no se
+    compara un valor que el propio contexto desmiente."""
+    dato = dato_del_paciente(contexto, criterio.destino)
+    return None if criterio.clave in contexto.datos_criticos_faltantes else dato
 
 
 # --- conteos y población no comparable (RN-28) ---------------------------------------------------------------------

@@ -204,6 +204,40 @@ def solicitud_a_m1(version_del_catalogo: str = "test-apl-1.0.0") -> dict[str, An
     return solicitud
 
 
+def _procedencia(revision: str, *, conflicto: bool = False) -> dict[str, Any]:
+    return {
+        "entryMethod": "ocr",
+        "extractionConfidence": "media",
+        "reviewStatus": revision,
+        "conflict": conflicto,
+    }
+
+
+def a_m1_con_diagnostico_sin_verificar() -> dict[str, Any]:
+    """A-M1 con su diagnóstico (estadio y ECOG) en ``requiere_revision``, como declara FX-08b-a para el ECOG."""
+    solicitud = solicitud_a_m1()
+    solicitud["clinicalContext"]["diagnosis"]["provenance"] = _procedencia("requiere_revision")
+    return solicitud
+
+
+def a_m1_conflicto() -> dict[str, Any]:
+    """``A-M1-CONFLICTO`` (design D6): dos HER2, ``3+ (IHQ)`` y ``2+``, ambos ``requiere_revision`` con
+    ``conflict = true`` (el seed los cruza por ``conflicts_with_id``; en la frontera solo viaja el booleano)."""
+    solicitud = solicitud_a_m1()
+    plantilla = solicitud["clinicalContext"]["biomarkers"][0]
+    solicitud["clinicalContext"]["biomarkers"] = [
+        {
+            **plantilla,
+            "dataRef": referencia,
+            "value": valor,
+            "monthsAgo": meses,
+            "provenance": _procedencia("requiere_revision", conflicto=True),
+        }
+        for referencia, valor, meses in (("r2", "3+ (IHQ)", 1), ("r8", "2+", 2))
+    ]
+    return solicitud
+
+
 class GeneradorDeAplicabilidad:
     """``EvidenceGenerator`` falso de FX-08b-a: una opción válida que cita el chunk de ``doc-a1`` y cuenta invocaciones.
 
