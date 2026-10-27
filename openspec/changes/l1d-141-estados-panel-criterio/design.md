@@ -59,13 +59,14 @@ Handler en el servidor con el mismo schema.
 ### D3 · Fallos tipados: límite, red y servicio (AC-5)
 
 `ResultadoDeSolicitud` gana dos variantes en lugar de sobrecargar `httpStatus`:
-`{ tipo: 'limite', reintentarEnSegundos: number | null, traceId }` (de `429`; `leerRetryAfter(headers)`
+`{ tipo: 'limite', reintentarEnSegundos: number }` (de `429`; `leerRetryAfter(headers)`
 acepta solo enteros ≥ 0, cualquier otra cosa → `null`) y `{ tipo: 'red' }` (excepción de `fetch`). La fase
 del panel refleja ambas. `mensajeDeError()` sigue mapeando `502/503/504`. Con `limite`:
 `AnalysisFailure` muestra `evidence.error.limite` con `{s}` en `role="status"` y deshabilita "Reintentar"
 hasta que vence el plazo, medido con el reloj inyectado (`setTimeout` controlado con `vi.useFakeTimers` en
-los tests); con `reintentarEnSegundos = null` cae en `evidence.error.generico` con "Reintentar" activo
-(asumido: el contrato declara `Retry-After` en el `429`, así que solo cubre una respuesta mal formada). Con `red`: `evidence.error.red` sin línea de código de traza (no hay `traceId` que mostrar; nunca
+los tests); un `429` sin `Retry-After` válido no produce la fase `limite`: cae en `error` (`evidence.error.generico`) con "Reintentar" activo
+(implementado así; el contrato declara `Retry-After` en el `429`, así que solo cubre una respuesta mal formada). La espera es un único
+`setTimeout` en la molécula `RateLimitNotice` (sin cuenta regresiva visible). Con `red`: `evidence.error.red` sin línea de código de traza (no hay `traceId` que mostrar; nunca
 se inventa). El foco va a "Reintentar" tras cualquier error (ya lo hace el S1 al reintentar; se extiende a la
 aparición del error).
 
@@ -138,6 +139,8 @@ contiene el aviso de IA (llega en `disclaimer`).
 | `ApplicabilityCounts` | molécula **nueva** | D5 | hereda |
 | `NonBlockingNotice` | molécula **nueva** | D5 (2 consumidores) | hereda |
 | `EvidenceOptionSkeleton` | átomo **nuevo** | D1 | hereda |
+| `RateLimitNotice` | molécula **nueva** | D3 (espera del `429` con un `setTimeout`; separada de `AnalysisFailure`: un concepto por componente) | sí |
+| `QueSeBusco` | molécula **nueva** | D7 (pregunta, idioma y fuentes de `sin_evidencia`) | hereda |
 
 Ningún componente supera 100 líneas (`EvidencePanel` está en 90: si D1 + D3 lo acercan al límite, no se crea
 un hook; se extrae la función pura `puedeEnviar` y el manejo de fases ya vive en `faseTrasSolicitud`). Sin hooks, *providers*, *compound components* ni *render props*: ningún concepto tiene

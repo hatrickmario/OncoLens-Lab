@@ -98,13 +98,23 @@ test.describe('Panel de análisis (L1D-140)', () => {
     expect(relevancia!.y).toBeGreaterThan(citas!.y);
   });
 
-  test('muestra el criterio por relevancia de recuperación y no el de aplicabilidad [US-061 AC-3]', async ({
+  test('muestra el criterio por aplicabilidad, la línea de conteos y la relevancia que solo desempata cuando la opción trae aplicabilidad calculada [US-062 AC-7]', async ({
     page,
   }) => {
     await analizar(page, preguntaHer2);
     await esperarResultado(page);
 
-    await expect(page.getByText(textos.orderCriterion.relevance, { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(textos.orderCriterion.applicability, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(textos.orderCriterion.relevance, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(textos.aplicabilidad.prefijo)).toBeVisible();
+    await expect(
+      page.getByRole('group', {
+        name: /^Coincide \d+, Parcial \d+, No coincide \d+, Desconocido \d+$/,
+      }),
+    ).toBeVisible();
+    await expect(page.getByTestId('relevance-basis')).toHaveText(textos.relevance.basis);
     await expect(page.getByText(/Ordenadas por coincidencia con la población/)).toHaveCount(0);
   });
 
