@@ -40,3 +40,9 @@
 - [x] 4.1 `openspec validate l1d-129-aplicabilidad-causas-avisos --strict` en verde. **Evidencia:** Hecho: `openspec validate l1d-129-aplicabilidad-causas-avisos --strict` es válido.
 - [x] 4.2 Suites de `apps/rag-orchestrator` (Pytest) y `apps/clinical-api` (Vitest) en verde. **Evidencia:** Hecho: Pytest de rag-orchestrator 2663 pasan; Vitest de clinical-api (unit + integración) en verde.
 - [x] 4.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec de cada proveedor (`contracts:verify-provider`, US-214). Sin `run-ai-eval`: no cambia modelo, prompt, umbral, catálogo ni corpus. **Evidencia:** Hecho: `contracts:check`, `contracts:generate:check`, `contracts:breaking` y `contracts:verify-provider` de ambos backends (rag-orchestrator 237 respuestas, clinical-api 310) en verde; `npm run quality` 0 errores; `integration-rag` local OK (Pytest `servicios_reales` y AC requeridos en verde); `eval-required` sin regresión (no cambia modelo, prompt, umbral, catálogo ni corpus).
+
+## 5. Deuda (Gate 2 reducido, menores)
+
+- TRASLADADA a US-233 (design A2): quitar el default `ProcedenciaDelDato()` de los campos `procedencia` de `aplicabilidad_tipos.py`; lo usan decenas de builders de test de varios archivos (más de una operación).
+- TRASLADADA a US-233 (design A1): que `etiqueta_de_procedencia` (prompts) reutilice `aviso_dato_paciente` (domain); exige mover la traducción `Provenance` -> `ProcedenciaDelDato` fuera de `application/`, hoy cubierto por el test de paridad.
+- Nota: el texto de US-124 AC-5 en `backlog/features/` dice {3,0,0,2}; el conteo real con `test-apl-1.0.0` es {2,0,0,3}. La alineación del Markdown la hace el orquestador.

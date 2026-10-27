@@ -133,11 +133,13 @@ def test_planificar_rechaza_sin_nli_el_valor_con_lenguaje_prohibido_y_lo_revisa_
         revisados.append((texto, campo))
         return ("N-001",)
 
-    plan = planificar_propuestas([propuesta(valor="recomendado")], [fuente()], buscar)
+    plan = planificar_propuestas(
+        [propuesta(valor="valor-no-presente-en-el-chunk")], [fuente()], buscar
+    )
 
     assert plan.por_validar == ()
     assert plan.rechazadas[0][1] is MotivoDeRechazo.lenguaje_no_permitido
-    assert revisados == [("recomendado", "studyPopulationValue")]
+    assert revisados == [("valor-no-presente-en-el-chunk", "studyPopulationValue")]
 
 
 def test_planificar_ignora_la_propuesta_de_una_fuente_o_un_criterio_que_no_se_pidio():
