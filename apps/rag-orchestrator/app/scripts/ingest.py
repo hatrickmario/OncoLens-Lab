@@ -72,6 +72,7 @@ from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
 from app.scripts.load_seed_corpus import (
     ajustes_de_modelos_del_entorno,
     allow_cc_by_nc_del_entorno,
+    exigir_proveedor_de_modelos_local,
     fabricar_tokenizador_de_chunks,
     fuente_de_texto,
     politica_de_licencias,
@@ -278,8 +279,9 @@ def _sparse_real(ajustes: AjustesSparse) -> SparsePassageEncoder:
     return cargar_embeddings_y_sparse_de_pasajes(ajustes_de_modelos_del_entorno(), ajustes)[1]
 
 
-def _almacen_de_milvus(milvus: MilvusSettings) -> AlmacenDeReindexacionSparse:
+def _almacen_de_milvus() -> AlmacenDeReindexacionSparse:
     try:
+        milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]
         almacen = MilvusRepository(MilvusClient(uri=milvus.milvus_uri), milvus)
         almacen.ensure_collection()
     except Exception as error:  # noqa: BLE001 - el mensaje de pymilvus puede traer la URI: solo etapa y clase
@@ -294,13 +296,13 @@ def _reindexar_sparse(
     se inyectan solo en los tests."""
     try:
         ajustes = AjustesDeReindexacionSparse(_env_file=None)  # type: ignore[call-arg]
-        milvus = None if almacen else MilvusSettings(_env_file=None)  # type: ignore[call-arg]
     except ValidationError as error:
         print(f"{NOMBRE}: configuración inválida en: {_claves_invalidas(error)}", file=sys.stderr)
         return 1
     try:
+        exigir_proveedor_de_modelos_local()  # RN-12: antes de cargar modelos o abrir Milvus
         codificador = sparse or _sparse_real(ajustes)
-        almacen = almacen or _almacen_de_milvus(milvus)  # type: ignore[arg-type]
+        almacen = almacen or _almacen_de_milvus()
         resumen = ReindexarSparse(
             almacen=almacen,
             codificador=codificador,

@@ -73,13 +73,21 @@ def fabricar_tokenizador_de_chunks(ajustes: Settings) -> TokenizadorDePiezas:
         raise ModeloNoVerificadoError("EMBEDDING_TOKENIZER_PATH") from None
 
 
+def exigir_proveedor_de_modelos_local() -> None:
+    """RN-12 por código: sin ``MODEL_PROVIDER=local`` falla nombrando la variable y nunca su valor."""
+    try:
+        proveedor = Settings(_env_file=None, modelos=None).model_provider  # type: ignore[call-arg]
+    except ValidationError:
+        raise ModeloNoVerificadoError("MODEL_PROVIDER") from None
+    if proveedor != "local":
+        raise ModeloNoVerificadoError("MODEL_PROVIDER")
+
+
 def ajustes_de_modelos_del_entorno() -> Settings:
     """``Settings`` completos con ``MODEL_PROVIDER=local``. El proveedor se mira ANTES de exigir el bloque de ADR-39,
     para que un entorno sin modelos locales nombre ``MODEL_PROVIDER`` y no una clave de modelo."""
+    exigir_proveedor_de_modelos_local()
     try:
-        proveedor = Settings(_env_file=None, modelos=None).model_provider  # type: ignore[call-arg]
-        if proveedor != "local":
-            raise ModeloNoVerificadoError("MODEL_PROVIDER")
         return Settings(_env_file=None)  # type: ignore[call-arg]
     except ValidationError as error:
         raise ModeloNoVerificadoError(_claves_invalidas(error) or "EMBEDDING_MODEL") from None
