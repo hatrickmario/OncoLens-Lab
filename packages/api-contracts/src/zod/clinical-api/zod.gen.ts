@@ -405,6 +405,7 @@ export const zAnalysisBasis = z.strictObject({
         conflict: z.boolean()
     })),
     missingCriticalData: z.array(z.string()),
+    missingCriticalDataLabels: z.array(z.string().min(1)),
     continuedWithWarning: z.boolean(),
     assumptions: z.array(z.strictObject({
         text: z.string(),

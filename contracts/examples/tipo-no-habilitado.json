@@ -15,6 +15,7 @@
   "analysisBasis": {
     "patientDataUsed": [],
     "missingCriticalData": [],
+    "missingCriticalDataLabels": [],
     "continuedWithWarning": false,
     "assumptions": [],
     "sourcesConsulted": {

@@ -22,6 +22,7 @@ import {
   componerGatewayDeAnalisis,
   crearChecklistDeFaltantes,
 } from './modules/evidence-analysis/evidence-analysis.module.js';
+import { cargarEtiquetasDeDatosCriticos } from './modules/evidence-analysis/etiquetas-datos-criticos.js';
 import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
 import { arrancar, cargarEtapaDeServicios, registrarEventoDeArranque } from './startup.js';
 
@@ -83,6 +84,10 @@ arrancar({
             ragTimeoutMs: configuracion.analisis.ragTimeoutMs,
             aiDisclaimerText: configuracion.analisis.aiDisclaimerText,
           },
+          etiquetaDe: cargarEtiquetasDeDatosCriticos(
+            configuracion.analisis.catalogPath,
+            leerArchivo,
+          ),
           tiposHabilitados,
           alcanceDelCorpus: configuracion.alcance,
           reloj,
