@@ -18,7 +18,7 @@ from app.application.corpus_ingestion.ports import SparsePassageEncoder
 from app.application.ports import LanguageDetector, NliClassifier, QueryEmbedder, Reranker
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.modelos import ConfigModelos
-from app.config.settings import CorpusIngestSettings, Settings
+from app.config.settings import AjustesSparse, Settings
 from app.domain.modelos import describir_modelo
 from app.domain.nli import (
     ETIQUETAS_NLI,
@@ -123,14 +123,14 @@ def cargar_embedder_de_pasajes(
 
 def cargar_embeddings_y_sparse_de_pasajes(
     settings: Settings,
-    ajustes_sparse: CorpusIngestSettings,
+    ajustes_sparse: AjustesSparse,
     *,
     fabricar_sesion: Callable[..., SesionDeInferencia] = SesionOnnx.desde_bytes,
     fabricar_tokenizador: Callable[[Path], Tokenizador] = TokenizadorDeArchivo,
 ) -> tuple[PassageEmbedder, SparsePassageEncoder]:
     """El ``PassageEmbedder`` y el ``SparsePassageEncoder`` reales de la ingesta (US-117a D3) sobre UNA sola sesión.
 
-    Verifica los archivos de embeddings y los pesos de ``sparse_linear`` (ruta y SHA-256 de ``CorpusIngestSettings``,
+    Verifica los archivos de embeddings y los pesos de ``sparse_linear`` (ruta y SHA-256 de ``AjustesSparse``,
     RN-22) antes de construir nada. Un fallo nombra solo la variable.
     """
     pesos, sesgo = _pesos_sparse_verificados(ajustes_sparse)
@@ -186,7 +186,7 @@ def _nucleo_de_pasajes(
     return _nucleo_de_embeddings(settings, config, sesion, tokenizador), sesion, tokenizador
 
 
-def _pesos_sparse_verificados(ajustes: CorpusIngestSettings) -> tuple[np.ndarray, float]:
+def _pesos_sparse_verificados(ajustes: AjustesSparse) -> tuple[np.ndarray, float]:
     """Pesos y sesgo de la cabeza lineal del *sparse*, leídos una vez y con el SHA-256 de esos mismos bytes."""
     variable_ruta, variable_sha = "EMBEDDING_SPARSE_WEIGHTS_PATH", "EMBEDDING_SPARSE_WEIGHTS_SHA256"
     contenido = leer_modelo_verificado(
