@@ -48,4 +48,4 @@ def test_rag_query_no_envia_al_llm_el_seudonimo_ni_los_data_ref_cuando_etiqueta_
 
     prompt = "\n".join(lineas)
     assert solicitud["clinicalContext"]["pseudoPatientId"] not in prompt
-    assert re.search(r"\br[1-9]\b", prompt) is None
+    assert re.search(r"\br\d+\b", prompt) is None
