@@ -391,7 +391,7 @@ export async function insertarFxT1aA(
   );
   const { rows: seed } = await cliente.query<{ id: string }>(
     `SELECT b.id FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-      WHERE e.patient_id = $1 AND b.name = 'Receptor de estrógeno'`,
+      WHERE e.patient_id = $1 AND b.name = 'RE'`,
     [patientId],
   );
   const receptorEstrogenoDelSeedId = seed[0]?.id ?? '';
@@ -400,7 +400,7 @@ export async function insertarFxT1aA(
     patient_id: patientId,
     episode_id: episodios[0]?.id ?? '',
     source_document_id: null,
-    exam_type: 'inmunohistoquimica',
+    exam_type: 'IHQ',
     source_lab: null,
     entry_method: 'ocr',
     performed_at: FECHA_FIJA, // el más reciente del paciente (los del seed son de hace semanas)
@@ -421,16 +421,16 @@ export async function insertarFxT1aA(
     result_type: 'cuantitativo',
     review_status: 'requiere_revision',
   });
-  const estrogeno = await biomarcador('Receptor de estrógeno', {
+  const estrogeno = await biomarcador('RE', {
     value: '90 %',
     review_status: 'requiere_revision',
     conflicts_with_id: receptorEstrogenoDelSeedId,
   });
-  const rechazada = await biomarcador('Receptor de progesterona', {
+  const rechazada = await biomarcador('RP', {
     value: 'Negativo',
     review_status: 'rechazado',
   });
-  const reemplazada = await biomarcador('Receptor de progesterona', {
+  const reemplazada = await biomarcador('RP', {
     value: 'Positivo',
     review_status: 'reemplazado',
   });

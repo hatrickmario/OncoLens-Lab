@@ -1,5 +1,6 @@
 import type { Consultador } from '../auth/auth.repository.js';
 import type { RegistroDeAnalisis } from './analysis-record.js';
+import { sqlDatoVigente } from '../patients/estados-de-revision.js';
 import type { OrigenDeDatos } from './ports.js';
 
 export type EstadoDeRevisionMostrable =
@@ -96,9 +97,6 @@ export interface AnalisisRepository {
 
 type Fila = Record<string, unknown>;
 
-/** Los datos rechazados o reemplazados no entran al RAG (RN-07); el contrato de procedencia ni siquiera los admite. */
-const SIN_RECHAZADOS = `review_status NOT IN ('rechazado', 'reemplazado')`;
-
 function procedenciaDe(fila: Fila): ProcedenciaDeFila {
   return {
     entryMethod: fila['entry_method'] as MetodoDeIngreso,
@@ -182,7 +180,7 @@ async function leerDiagnosticoActivo(leer: Leer): Promise<FilaDeDiagnostico | nu
             performance_value, diagnosed_at::text AS diagnosed_at, entry_method,
             extraction_confidence, review_status, conflicts_with_id
        FROM clinical.diagnosis
-      WHERE patient_id = $1 AND is_active AND ${SIN_RECHAZADOS}
+      WHERE patient_id = $1 AND is_active AND ${sqlDatoVigente('review_status')}
       ORDER BY diagnosed_at DESC, created_at DESC
       LIMIT 1`,
   );
@@ -195,7 +193,7 @@ async function leerBiomarcadores(leer: Leer): Promise<FilaDeBiomarcador[]> {
             e.performed_at::text AS performed_at, e.entry_method, b.extraction_confidence,
             b.review_status, b.conflicts_with_id
        FROM clinical.biomarker b JOIN clinical.exam e ON e.id = b.exam_id
-      WHERE e.patient_id = $1 AND b.${SIN_RECHAZADOS}
+      WHERE e.patient_id = $1 AND ${sqlDatoVigente('b.review_status')}
       ORDER BY e.performed_at DESC, b.created_at DESC`,
   );
   return filas.map(biomarcadorDe);
@@ -206,7 +204,7 @@ async function leerAtributos(leer: Leer): Promise<FilaDeAtributo[]> {
     `SELECT id, attribute_key, value, observed_at::text AS observed_at, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_attribute
-      WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+      WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}
       ORDER BY attribute_key, observed_at DESC NULLS LAST`,
   );
   return filas.map(atributoDe);
@@ -218,7 +216,7 @@ async function leerTratamientosPrevios(leer: Leer): Promise<FilaDeTratamientoPre
             ended_at::text AS ended_at, ongoing, end_reason, entry_method,
             extraction_confidence, review_status
        FROM clinical.prior_treatment
-      WHERE patient_id = $1 AND ${SIN_RECHAZADOS}
+      WHERE patient_id = $1 AND ${sqlDatoVigente('review_status')}
       ORDER BY line_number NULLS LAST, started_at NULLS LAST`,
   );
   return filas.map(tratamientoPrevioDe);
@@ -230,7 +228,7 @@ async function leerEventos(leer: Leer): Promise<FilaDeEvento[]> {
     `SELECT id, event_type, event_date::text AS event_date, description, entry_method,
             extraction_confidence, review_status
        FROM clinical.clinical_event
-      WHERE patient_id = $1 AND analysis_id IS NULL AND ${SIN_RECHAZADOS}
+      WHERE patient_id = $1 AND analysis_id IS NULL AND ${sqlDatoVigente('review_status')}
       ORDER BY event_date NULLS LAST, created_at`,
   );
   return filas.map(eventoDe);

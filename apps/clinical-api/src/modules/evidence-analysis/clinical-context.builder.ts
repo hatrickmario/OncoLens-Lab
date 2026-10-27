@@ -22,7 +22,11 @@ export function mesesTranscurridos(fecha: string | null, ahora: Date): number | 
   return Math.max(0, mesCompleto);
 }
 
-/** Procedencia mínima del S1 (design 4): copia los ejes de la fila; el etiquetado completo es de RN-07 (US-065, S3). */
+/**
+ * Regla única de procedencia de RN-07 (US-065): copia los dos ejes de la fila (`extractionConfidence`, `reviewStatus`)
+ * y marca `conflict` solo cuando la fila tiene `conflicts_with_id`. Los `rechazado`/`reemplazado` no llegan aquí: el
+ * repositorio los excluye con `sqlDatoVigente()` y `Provenance.reviewStatus` no los admite.
+ */
 export function provenanceDe(fila: ProcedenciaDeFila): Provenance {
   return {
     entryMethod: fila.entryMethod,

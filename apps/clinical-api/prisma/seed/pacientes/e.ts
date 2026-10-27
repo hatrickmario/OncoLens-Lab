@@ -22,7 +22,7 @@ export const pacienteE: PacienteSemilla = {
   examenes: [
     {
       clave: 'examen-ihq',
-      tipo: 'inmunohistoquimica',
+      tipo: 'IHQ',
       diasAntes: 18,
       biomarcadores: [
         {
@@ -35,7 +35,7 @@ export const pacienteE: PacienteSemilla = {
         },
         {
           clave: 'receptor-estrogeno',
-          nombre: 'Receptor de estrógeno',
+          nombre: 'RE',
           valor: 'Positivo (90%)',
           unidad: null,
           tipoResultado: 'cualitativo',
