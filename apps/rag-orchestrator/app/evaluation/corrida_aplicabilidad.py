@@ -21,7 +21,7 @@ from app.application.aplicabilidad import ApplicabilityService, mejor_chunk_por_
 from app.application.aplicabilidad_textual import AplicabilidadTextual
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
-from app.application.ports import Clock, LectorDeCoberturaDePoblacion
+from app.application.ports import Clock, CoberturaDePoblacion, LectorDeCoberturaDePoblacion
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
 from app.domain.aplicabilidad_tipos import CriterioEvaluado, PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
@@ -218,7 +218,7 @@ def _reporte(
     config: ConfigAplicabilidad,
     dataset: DatasetAplicabilidad,
     pares: Sequence[ParEvaluado],
-    cobertura: Any,
+    cobertura: CoberturaDePoblacion,
     revision: ResultadoDeRevision,
 ) -> dict[str, Any]:
     return {
@@ -279,7 +279,9 @@ def _detalle_del_par(par: ParEvaluado, concordancia: Concordancia) -> dict[str, 
     return {"id": par.id, **cuentas, "acierto": concordancia.aciertos == concordancia.total}
 
 
-def _metricas_de_cobertura(config: ConfigAplicabilidad, cobertura: Any) -> dict[str, Any]:
+def _metricas_de_cobertura(
+    config: ConfigAplicabilidad, cobertura: CoberturaDePoblacion
+) -> dict[str, Any]:
     valor = proporcion_con_criterios(cobertura.vigentes, cobertura.con_criterios)
     return {
         "version": config.fecha_de_corte.isoformat(),
