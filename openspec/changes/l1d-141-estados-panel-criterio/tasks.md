@@ -24,9 +24,9 @@
 
 ## 3. cierre
 
-- [ ] 3.1 `openspec validate l1d-141-estados-panel-criterio --strict` en verde.
-- [ ] 3.2 Suite Vitest de `web` y E2E de Playwright en verde; `contracts:check` en verde. `contracts:verify-provider` no aplica (sin cambio de API). `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral, catálogo ni corpus).
-- [ ] 3.3 Aviso al orquestador en el PR: coordinación de archivos con US-237 (L1D-288). (Q1 y Q2 cerradas el 2026-10-24: aviso de IA visible en `tipo_no_habilitado`, `[S3 resp. 17]`; dos claves de `relevance.basis`.)
+- [x] 3.1 `openspec validate l1d-141-estados-panel-criterio --strict` en verde. **Evidencia:** "is valid".
+- [x] 3.2 (Vitest web 366/366, tsc, eslint, lint:lenguaje 0, contracts:check verde, Playwright 21/21) Suite Vitest de `web` y E2E de Playwright en verde; `contracts:check` en verde. `contracts:verify-provider` no aplica (sin cambio de API). `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral, catálogo ni corpus).
+- TRASLADADA al orquestador (cuerpo del PR) 3.3 Aviso al orquestador en el PR: coordinación de archivos con US-237 (L1D-288). (Q1 y Q2 cerradas el 2026-10-24: aviso de IA visible en `tipo_no_habilitado`, `[S3 resp. 17]`; dos claves de `relevance.basis`.)
 
 ## Workflow follow-up
 
