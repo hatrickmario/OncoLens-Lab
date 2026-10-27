@@ -149,6 +149,7 @@ class RAGOrchestratorService:
             soporte=self._soporte,
             terminos=verificador_terminos,
             estructurada=aplicabilidad,
+            reloj=reloj,
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
