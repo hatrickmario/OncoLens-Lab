@@ -149,6 +149,18 @@ def test_un_proveedor_de_modelos_no_local_detiene_la_reindexacion_nombrando_la_v
     assert "MODEL_PROVIDER" in error and (valor is None or valor not in error)
 
 
+def test_una_url_de_llm_no_local_nombra_llm_base_url_y_no_su_valor_en_la_reindexacion(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    entorno.setenv("LLM_BASE_URL", "https://api.nube-secreta.example.com/v1")
+    almacen = AlmacenEspia()
+
+    codigo, salida, error = _reindexar(capsys, almacen)
+
+    assert codigo == 1 and salida == "" and almacen.llamadas == 0
+    assert "LLM_BASE_URL" in error and "nube-secreta" not in error
+
+
 @pytest.mark.parametrize(
     "clave",
     ["SPARSE_VECTOR_SOURCE", "EMBEDDING_SPARSE_WEIGHTS_PATH", "EMBEDDING_SPARSE_WEIGHTS_SHA256"],
