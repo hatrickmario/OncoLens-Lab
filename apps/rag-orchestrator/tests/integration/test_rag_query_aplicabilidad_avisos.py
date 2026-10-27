@@ -4,6 +4,7 @@ FR-25, RN-26, RN-28, RN-02. Corpus FX-08b-a, paciente A-M1 y catálogo ``test-ap
 falsos. Cada respuesta la valida contra el spec del proveedor el hook de ``verificacion_proveedor.py`` (US-214).
 """
 
+import logging
 from typing import Any
 
 import pytest
@@ -122,3 +123,36 @@ def test_rag_query_devuelve_applicability_vacio_y_cero_invocaciones_del_llm_cuan
     assert cuerpo["applicability"] == []
     assert cuerpo["topRelevanceScore"] is None
     assert generador.invocaciones == 0
+
+
+def test_rag_query_no_registra_valores_del_paciente_ni_del_estudio_ni_faltantes_en_los_logs_cuando_calcula_los_avisos(
+    caplog,
+):
+    caplog.set_level(logging.DEBUG)
+    solicitud = a_m1_conflicto()
+    solicitud["clinicalContext"]["biomarkers"][0]["value"] = "SENTINELA-PACIENTE-7Q"
+
+    _consultar({"doc-a1": RELEVANCIA_ALTA}, solicitud)
+
+    assert caplog.records
+    texto = "\n".join(registro.getMessage() for registro in caplog.records)
+    for prohibido in (
+        "SENTINELA-PACIENTE-7Q",
+        "3+ (IHQ)",
+        "positivo",
+        "estado_menopausico",
+        "ki67",
+    ):
+        assert prohibido not in texto
+
+
+def test_rag_query_conserva_el_aviso_en_conflicto_cuando_el_valor_textual_de_doc_a2_reemplaza_al_criterio():
+    cuerpo = _consultar(
+        {"doc-a2": RELEVANCIA_ALTA},
+        a_m1_conflicto(),
+        proponente=ProponenteFalso("APL-OK"),
+        clasificador_nli=NliFalso(por_defecto=IMPLICA),
+    )
+
+    her2 = _criterios_de(cuerpo, "doc-a2")["estado_her2"]
+    assert (her2["status"], her2["patientDataWarning"]) == ("no_coincide", "en_conflicto")
