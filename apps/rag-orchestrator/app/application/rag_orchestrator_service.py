@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import TypeVar
 
@@ -21,12 +21,14 @@ from app.application.aplicabilidad import (
     mejor_chunk_por_documento,
     recuentos_para_el_log,
 )
+from app.application.aplicabilidad_textual import AplicabilidadCompleta, AplicabilidadTextual
 from app.application.catalogo_exigido import exigir_catalogo_de_la_solicitud
 from app.application.chunk_citable import ChunkCitable
 from app.application.contexto_del_paciente import contexto_del_paciente
 from app.application.errores import RecuperacionNoDisponibleError, TipoCancerNoRegistradoError
 from app.application.generador_fallando_cerrado import GeneradorFallandoCerrado
 from app.application.ports import (
+    ApplicabilityTextProposer,
     CatalogoClinico,
     ChunkEncontrado,
     ChunkSearch,
@@ -60,6 +62,7 @@ from app.domain.relevance import (
 )
 from app.domain.retrieval_filter import expresion_vigente_del_tipo
 from app.domain.tipos_habilitados import exigir_tipo_habilitado
+from app.prompts.aplicabilidad_texto import VERSION_DEL_PROMPT_APLICABILIDAD
 from app.prompts.rag_query import VERSION_DEL_PROMPT
 from app.schemas.generated.models import (
     Limitation,
@@ -117,6 +120,7 @@ class RAGOrchestratorService:
         catalogo: CorpusCatalogReader,
         catalogo_clinico: CatalogoClinico,
         aplicabilidad: ApplicabilityService,
+        proponente: ApplicabilityTextProposer,
         generador: EvidenceGenerator,
         clasificador_nli: NliClassifier,
         verificador_terminos: ProhibitedTermsChecker,
@@ -139,6 +143,12 @@ class RAGOrchestratorService:
             terminos=verificador_terminos,
             umbral=parametros.nli_entailment_threshold,
             reloj=reloj,
+        )
+        self._textual = AplicabilidadTextual(
+            proponente=proponente,
+            soporte=self._soporte,
+            terminos=verificador_terminos,
+            estructurada=aplicabilidad,
         )
 
     async def consultar(self, solicitud: RagQueryInternalRequest) -> RagQueryInternalResponse:
@@ -187,6 +197,8 @@ class RAGOrchestratorService:
         idioma = recuperacion.meta.responseLanguage.value
         citables = await self._chunks_citables(trace_id, recuperacion)
         aplicabilidad = await self._evaluar_aplicabilidad(solicitud, citables)
+        if aplicabilidad.invoco_al_llm:
+            recuperacion = self._con_version_de_aplicabilidad(recuperacion)
         resultado = validar_citas(evidencia.opciones, citables.keys())
         logger.info(
             "event=rag_query_citas traceId=%s opcionesAceptadas=%d opcionesDescartadas=%d",
@@ -204,27 +216,28 @@ class RAGOrchestratorService:
             self._soporte.sanear_descartadas(trace_id, idioma, resultado.descartadas),
             soporte.descartadas,
             soporte.limitaciones,
-            soporte.omitidas,
+            soporte.omitidas + aplicabilidad.omitidas,
             citables,
             recuperacion,
-            aplicabilidad,
+            aplicabilidad.fuentes,
         )
 
     async def _evaluar_aplicabilidad(
         self, solicitud: RagQueryInternalRequest, citables: Mapping[str, ChunkCitable]
-    ) -> tuple[AplicabilidadDeFuente, ...]:
-        """FR-25: criterio a criterio por fuente recuperada, sin LLM y sin puntaje (RN-28, ADR-34 b).
+    ) -> AplicabilidadCompleta:
+        """FR-25: criterio a criterio por fuente recuperada, sin puntaje (RN-28, ADR-34 b).
 
-        Solo corre en la rama con evidencia (RN-02) y no depende de las opciones generadas. Sin criterios en el
-        catálogo para el tipo no hay nada que leer del corpus. Solo se registran recuentos, nunca valores.
+        Primero el cálculo estructurado, determinista y sin LLM; después el camino textual para lo que la fuente no trae
+        estructurado (US-123). Solo corre en la rama con evidencia (RN-02) y no depende de las opciones generadas. Sin
+        criterios en el catálogo para el tipo no hay nada que leer del corpus. Solo se registran recuentos, nunca valores.
         """
         trace_id = solicitud.traceId.root
         diagnostico = solicitud.clinicalContext.diagnosis
         if diagnostico is None:
-            return ()
+            return AplicabilidadCompleta(())
         tipo = diagnostico.cancerType.root
         if not self._aplicabilidad.criterios_del(tipo):
-            return ()
+            return AplicabilidadCompleta(())
         inicio = self._reloj.ahora()
         mejores = mejor_chunk_por_documento(citables)
         poblaciones = await self._invocar_borde_fallando_cerrado(
@@ -234,7 +247,17 @@ class RAGOrchestratorService:
             tipo, contexto_del_paciente(solicitud.clinicalContext), mejores, poblaciones
         )
         self._registrar_aplicabilidad(trace_id, fuentes, inicio)
-        return fuentes
+        return await self._textual.completar(trace_id, tipo, fuentes, citables)
+
+    @staticmethod
+    def _con_version_de_aplicabilidad(
+        recuperacion: ResultadoDeRecuperacion,
+    ) -> ResultadoDeRecuperacion:
+        """``meta.promptVersion`` lleva también la del prompt de aplicabilidad cuando se invocó al LLM (design D6)."""
+        version = f"{recuperacion.meta.promptVersion}+{VERSION_DEL_PROMPT_APLICABILIDAD}"
+        return replace(
+            recuperacion, meta=recuperacion.meta.model_copy(update={"promptVersion": version})
+        )
 
     def _registrar_aplicabilidad(
         self, trace_id: str, fuentes: Sequence[AplicabilidadDeFuente], inicio: datetime

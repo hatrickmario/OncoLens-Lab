@@ -18,6 +18,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.application.ports import (
+    ApplicabilityTextProposer,
     ChunkDelCorpus,
     ChunkEncontrado,
     ChunkSearch,
@@ -44,6 +45,7 @@ from app.domain.retrieval_filter import (
     expresion_solo_vigente,
 )
 from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
+from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
 from app.schemas.generated.models import (
     LlmProvider,
@@ -460,6 +462,7 @@ def crear_entorno(
     clasificador_nli: NliClassifier | None = None,
     verificador_terminos: ProhibitedTermsChecker | None = None,
     criterios: CriteriosDeAplicabilidad | None = None,
+    proponente: ApplicabilityTextProposer | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -485,6 +488,7 @@ def crear_entorno(
         catalogo=catalogo,
         catalogo_clinico=catalogo_clinico,
         aplicabilidad=ApplicabilityService(criterios or CriteriosDelCatalogo({})),
+        proponente=proponente or ProponenteSilencioso(),
         generador=generador,
         clasificador_nli=clasificador_nli,
         verificador_terminos=verificador_terminos,

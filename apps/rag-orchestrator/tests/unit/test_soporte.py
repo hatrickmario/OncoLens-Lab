@@ -66,14 +66,17 @@ def test_los_literales_de_retiro_no_tienen_coincidencias_con_la_lista_de_termino
 
 
 def test_los_campos_generados_son_los_de_la_decision_79() -> None:
-    assert CAMPOS_GENERADOS == (
-        "option",
-        "rationale",
-        "details",
-        "unsupportedClaims",
-        "limitations[].text",
-        "synthesis",
-        "studyPopulationValue",  # US-123 [S3 resp. 16]: el valor textual de la población lo redacta el LLM (RN-23)
+    assert (
+        CAMPOS_GENERADOS
+        == (
+            "option",
+            "rationale",
+            "details",
+            "unsupportedClaims",
+            "limitations[].text",
+            "synthesis",
+            "studyPopulationValue",  # US-123 [S3 resp. 16]: el valor textual de la población lo redacta el LLM (RN-23)
+        )
     )
 
 

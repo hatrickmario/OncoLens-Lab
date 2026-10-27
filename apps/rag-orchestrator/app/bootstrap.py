@@ -63,6 +63,7 @@ from app.infrastructure.catalogo_clinico.manifiesto import (
 )
 from app.infrastructure.clock.system_clock import RelojDelSistema
 from app.infrastructure.fake.fake_evidence_query import FakeEvidenceQuery
+from app.infrastructure.fake.fake_applicability_text_proposer import ProponenteSilencioso
 from app.infrastructure.fake.fake_llm_health import FakeLlmHealth
 from app.infrastructure.lenguaje.terminos_prohibidos import (
     ListaDeTerminosNoDisponible,
@@ -387,6 +388,7 @@ def _crear_servicio_de_recuperacion(
         catalogo=puertos.catalogo,
         catalogo_clinico=puertos.catalogo_clinico,
         aplicabilidad=ApplicabilityService(criterios_de_aplicabilidad),
+        proponente=ProponenteSilencioso(),  # TEMPORAL del commit en rojo: 2.11 lo cambia por el adapter local
         clasificador_nli=puertos.clasificador_nli,
         verificador_terminos=puertos.verificador_terminos,
         # Producción: el LLM local (RN-12). La rama con evidencia ya verifica el soporte NLI y el lenguaje antes de
