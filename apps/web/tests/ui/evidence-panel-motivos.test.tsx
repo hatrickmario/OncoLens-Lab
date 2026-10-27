@@ -62,7 +62,8 @@ describe('EvidencePanel · motivos del estado solo descartadas', () => {
     expect(screen.getByTestId('analysis-result').textContent).not.toMatch(PROHIBIDOS);
     const avisos = screen.getAllByRole('note');
     expect(avisos.length).toBeGreaterThan(0);
-    for (const aviso of avisos) expect(aviso.textContent).toBe(soloDescartadasMotivosMixtos.disclaimer);
+    for (const aviso of avisos)
+      expect(aviso.textContent).toBe(soloDescartadasMotivosMixtos.disclaimer);
   });
 
   it('no muestra Motivos cuando hay una opción aceptada', async () => {
