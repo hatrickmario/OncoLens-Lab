@@ -20,10 +20,14 @@ híbrida (US-112) no cubriría la semilla.
 ## What Changes
 
 - La ingesta de US-117a detecta la versión nueva de un documento (mismo `version_group_id` que una vigente y `checksum`
-  distinto), la inserta como fila nueva vigente y, en la misma operación, marca la anterior `is_current = false` con
-  `superseded_at` (reloj inyectado) y apaga sus chunks en Milvus, **sin borrar filas ni chunks** (RN-05, ADR-5). Reutiliza
-  la regla ya vigente del cargador de la semilla (L1D-115), no la duplica.
-- Nueva opción `ingest --reindex-sparse`: recorre los chunks **vigentes** de `corpus_chunks`, calcula su vector *sparse*
+  distinto), la inserta como fila nueva vigente y marca la anterior `is_current = false` con `superseded_at` (reloj inyectado) en una
+  transacción del catálogo, y apaga sus chunks en Milvus, **sin borrar filas ni chunks** (RN-05, ADR-5). Esa regla **ya
+  existe en `main`** (`decidir_version`, `decidir_retiro`, `reemplazar_version` en el catálogo y `IngestionPipelineService`):
+  este change la **caracteriza con un test de aceptación** (AC-1) y fija el orden y el fallo; no crea una regla nueva.
+- **Tarea 0, refactor previo (decisión del usuario 2026-10-24 y 2026-10-27):** núcleo común de `SeedCorpusLoader` e
+  `IngestionPipelineService` con la cobertura del módulo no menor que en `main`, las deudas 5.3 y 5.4 de L1D-117 y el *smoke*
+  de `CodificadorSparseBgeM3` con pesos reales (ex 1.10 de L1D-116).
+- *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* Nueva opción `ingest --reindex-sparse`: recorre los chunks **vigentes** de `corpus_chunks`, calcula su vector *sparse*
   con el adapter de *embeddings* (BGE-M3, ADR-39) y reescribe solo `sparse_vector`; `chunk_id`, `dense_vector` y los demás
   campos no cambian. Idempotente y con salida distinta de 0 si Milvus o el modelo fallan.
 - Sin cambios de esquema (ni Alembic ni colección), sin cambios de API ni de `openapi.yaml`.
@@ -45,8 +49,8 @@ Ninguna.
 
 ## Dependencias
 
-- ↪ **L1D-116 (US-117a)** — change en preparación en paralelo: `IngestionPipelineService`, el script
-  `python -m app.scripts.ingest`, el *checkpoint* por documento, el puerto/adapter *sparse* de BGE-M3 y FX-06c-b
+- ↪ **L1D-116 (US-117a)** — ya en `main`: `IngestionPipelineService`, el script
+  `python -m app.scripts.ingest`, el *checkpoint* por documento, el puerto `SparsePassageEncoder` y su adapter `CodificadorSparseBgeM3` y FX-06c-b
   (`i-gl-1`, `i-gl-1-v2`). Este change no cubre sus AC (reanudación, licencias, fallo aislado, AC-1 del *happy path*).
 - ↪ `l1d-114` / `l1d-115` (archivados): esquema con `sparse_vector`, `marcar_no_vigentes` y la regla de versionado de la semilla.
 - ⛔ ADR-39 (modelo *sparse*): **resuelto** en la fase A (`SPARSE_VECTOR_SOURCE=modelo_embeddings`); los tests usan un
@@ -63,7 +67,7 @@ Ninguna.
 
 ## Impact
 
-- `apps/rag-orchestrator/app/application/` (servicio de ingesta de US-117a: rama de versión nueva y caso de uso de
+- `apps/rag-orchestrator/app/application/` (núcleo común de ingesta, test de caracterización de la versión nueva y, pendiente de decisión, el caso de uso de
   reindexación *sparse*), `app/scripts/ingest.py` (flag `--reindex-sparse`), `app/infrastructure/milvus/repository.py`
   (lectura paginada de vigentes y reescritura del *sparse* por `chunk_id`).
 - Corpus: la semilla pasa a tener *sparse* poblado → la suite `evaluate` se ejecuta para confirmar que el *dense* no cambia.

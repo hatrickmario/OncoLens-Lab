@@ -24,14 +24,17 @@ Cuando llega un documento con el mismo `version_group_id` que uno vigente y dist
 - **WHEN** se busca por *dense* con el vector de un chunk de `i-gl-1`
 - **THEN** ningún resultado pertenece a `i-gl-1` y los de su grupo pertenecen a `i-gl-1-v2`
 
-#### Scenario: Si apagar los chunks de la versión anterior falla la versión nueva no queda vigente [US-117b AC-1] [RN-05] (asumido)
+#### Scenario: Si apagar los chunks de la versión anterior falla la versión nueva no se confirma y un reintento la reconcilia [US-117b AC-1] [RN-05] (asumido)
 - **GIVEN** `i-gl-1` vigente y Milvus que falla al marcar sus chunks no vigentes
 - **WHEN** se ingiere `i-gl-1-v2`
-- **THEN** `i-gl-1-v2` queda `error` en el resumen de la ingesta, `i-gl-1` sigue `is_current = true` con `superseded_at` nulo y el grupo tiene una sola versión vigente
+- **THEN** `i-gl-1-v2` queda `error` en el resumen de la ingesta y `i-gl-1` sigue `is_current = true` con `superseded_at` nulo en el catálogo
+- **AND** no se borra ninguna fila ni ningún chunk, y los chunks de `i-gl-1` y de `i-gl-1-v2` quedan vigentes en Milvus hasta el reintento
 - **AND** la ingesta continúa con el resto del manifiesto
+- **AND** al ingerir de nuevo `i-gl-1-v2` con Milvus disponible, `i-gl-1-v2` queda vigente, `i-gl-1` y sus chunks no vigentes y el grupo tiene una sola versión vigente
 
 ## ADDED Requirements
 
+<!-- PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI) -->
 ### Requirement: La reindexación sparse puebla los chunks vigentes sin cambiar su dense
 `ingest --reindex-sparse` MUST escribir un `sparse_vector` no vacío, calculado con el adapter de *embeddings* que fija `SPARSE_VECTOR_SOURCE`, en cada chunk vigente de `corpus_chunks`, y SHALL NOT cambiar su `chunk_id`, `dense_vector`, `is_current` ni ningún otro campo (OL-02, FR-19). Corre con el rol `rag_corpus` y solo sobre el schema `corpus` y Milvus (SEG-06).
 
@@ -47,6 +50,7 @@ Cuando llega un documento con el mismo `version_group_id` que uno vigente y dist
 - **WHEN** se ejecuta `ingest --reindex-sparse`
 - **THEN** los chunks de `t-ok-1` siguen con `is_current = false` y `sparse_vector` vacío, y siguen existiendo
 
+<!-- PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI) -->
 ### Requirement: La reindexación sparse es idempotente y falla sin dejar datos a medias
 Volver a ejecutar `ingest --reindex-sparse` MUST dejar los mismos `sparse_vector`. Si Milvus o el adapter de *embeddings* fallan, el proceso MUST terminar con código distinto de 0, nombrando la etapa y sin texto de chunks, URI ni credenciales en su salida, y los chunks ya reescritos SHALL conservar intactos su `dense_vector` y su `is_current` (asumido).
 
