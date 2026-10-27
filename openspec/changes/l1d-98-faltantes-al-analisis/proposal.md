@@ -79,22 +79,7 @@ no cambia aquí.
 - ↪ **`l1d-95a-seed-codigos-catalogo` (renombra a `RE`/`RP` los biomarcadores «Receptor de …»)**: el catálogo real declara
   las claves `re` y `rp`; mientras el seed no mergee, el checklist con el **catálogo real** da `re`/`rp` como
   faltantes falsos. Por eso L1D-98 va **después** del change de seed (los tests con `test-1.0.0` no se ven
-  afectados). Riesgo conocido adicional: `her2_ihq` saldría faltante falso con el catálogo real (`exam_type = 'IHQ'` vs `'inmunohistoquimica'` sembrado); no afirmarlo en demo/AC. Decisión pendiente del usuario: alinear `exam_type` en `l1d-95a-seed-codigos-catalogo` (recomendado) o en L1D-95/S4.
-- ↪ **US-052 / US-053** (archivados, S1): gateway, persistencia antes de responder, deadline y mapeo de fallos.
-- ↪ **US-066** (archivado, S2): `AnalysisBasisBuilder`, que ya recibe el request interno con la lista.
-- 🔗 Produce para **L1D-188 (US-128)**, adelantada al S3 (`[S3 resp. 18]`): ↪ L1D-98; declara los faltantes en la
-  Base (inciso b) a partir de `missing_critical_data`.
-- 🔗 Produce para **L1D-129 (US-124)**, change `l1d-129-aplicabilidad-causas-avisos`: la causa
-  `falta_en_paciente` desde `missingCriticalData`.
-
-## Fuera de alcance
-
-- Uso de los faltantes en el prompt y en la recuperación de Backend 2 → US-116 (S5).
-- "Desconocido: falta en el paciente" en la aplicabilidad → US-124 (L1D-129).
-- Inciso (b) de `analysisBasis` (`missingCriticalData`, `continuedWithWarning` de la Base) y retiro del supuesto
-  declarado "Los faltantes críticos aún no se calculan en esta versión" → US-128 (L1D-188, adelantada al S3, `[S3 resp. 18]`), que depende de este change.
-- Supuestos anclados a faltantes, inciso (c) → US-129. Aviso `datos_faltantes` en las tarjetas → US-136.
-- `GET /platform/patients/{id}/completeness` y el aviso del panel antes de analizar → US-003, US-005 (S4).
+  afectados). **Decidido (usuario, 2026-10-27):** el seed se alinea a `exam_type = 'IHQ'` en `l1d-95a-seed-codigos-catalogo`, así que el faltante falso de `her2_ihq` desaparece al mergear esa historia (L1D-98 va después); los AC se mantienen con `test-1.0.0`.
 - Re-ejecución que recalcula los faltantes → US-177. Marca "catálogo más reciente" → FR-12 (FEAT-11a).
 - `tipo_no_habilitado` (US-043): no calcula el checklist ni llama a Backend 2; sigue persistiendo
   `missing_critical_data = []` (significa «no se evaluó»).
