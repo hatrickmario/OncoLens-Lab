@@ -39,3 +39,11 @@
 - [x] 4.1 `openspec validate l1d-128-aplicabilidad-textual-citada --strict` en verde. _Evidencia:_ `openspec validate l1d-128-aplicabilidad-textual-citada --strict` válido.
 - [x] 4.2 Suite de `apps/rag-orchestrator` en verde (unitarios e integración). _Evidencia:_ pytest unit+integration en verde; `verify-provider` 226 respuestas verificadas.
 - [x] 4.3 `contracts:check` y `contracts:breaking` sin cambios (tarea 1.1); `contracts:verify-provider` no aplica (sin cambio de API). _Evidencia:_ ver 1.1; además `contracts:verify-provider -- --proveedor rag-orchestrator` en verde.
+
+## 5. Gate 2 (vuelta única)
+
+- [x] 5.1 Mayor RN-01: la hipótesis del NLI es `{etiqueta del criterio}: {valor}` (rojo `test(L1D-128)` → feat «hipotesis del NLI con la etiqueta del criterio»); tests con chunk de varios biomarcadores y negaciones sueltas («HER2 no positivo», «no amplificado», «HER2 not positive»: ninguna da `coincide`).
+- [x] 5.2 Mayor DIP/ISP: `AplicabilidadTextual` recibe `criterios_del` (callable) en vez del `ApplicabilityService` (commit `refactor(L1D-128)`, sin cambio de comportamiento).
+- [x] 5.3 Mayor LSP: `normalizar_propuesta` en el dominio, usada por el adapter real y por `ProponenteFalso`; `test_contrato_del_proponente.py` parametrizado real/falso (valor con espacios, vacío, > 200 caracteres, `chunkId` vacío). Cambio de comportamiento declarado: un valor largo ya no es 503, se descarta (`Test-Removal:` en el commit).
+- Menores a deuda: (a) hipótesis/subcadena literal del valor frente al texto del chunk (RN-25): TRASLADADA a US-233 (medición con el LLM real); (b) degradar a `desconocido` en lugar de `503` cuando falla el LLM de aplicabilidad: **Pregunta abierta OQ-3 para el usuario** (hoy falla cerrada, igual que la generación); (c) `traceId` en el log de fallo del adapter (`aplicabilidad_llm_fallo`/`aplicabilidad_salida_invalida`): TRASLADADA a US-233; (d) constante con nombre para el motivo interno `destino_no_resoluble`: TRASLADADA a US-130; (e) `rechazadasPorNli` se deriva de `por_validar - aceptadas` y duplica el cálculo de `aceptar_propuestas`: TRASLADADA a US-130.
+

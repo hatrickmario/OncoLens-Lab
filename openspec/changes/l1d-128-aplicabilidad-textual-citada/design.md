@@ -183,6 +183,7 @@ Sin migración: no hay esquema ni contrato nuevos (`promptVersion` cambia de val
   (`no_reportado_por_fuente`); el LLM no asigna estado (D4).
 - **OQ-2 (asumido, afecta AC-3):** una propuesta con cita ajena suma 1 a `omittedClaims` (es una
   afirmación generada omitida, RN-01). Confirmar.
+- **OQ-4 (pregunta al usuario, Gate 2):** ¿degradar a `desconocido` cuando falla el LLM de aplicabilidad, en lugar de `503 LOCAL_LLM_UNAVAILABLE`? Hoy falla cerrada.
 - ~~OQ-3~~ **Decidida** `[S3 resp. 16]`: `studyPopulationValue` entra en `camposGenerados` y en `CampoGenerado`, con
   el test de coherencia de L1D-180 (D7).
 
