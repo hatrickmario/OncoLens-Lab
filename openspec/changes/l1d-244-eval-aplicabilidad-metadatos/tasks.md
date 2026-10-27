@@ -48,7 +48,7 @@ dependen las claves de `population_criteria` del dataset `[S3 resp. 16]`). Sin c
       informe del baseline y otros consumidores). Familia `aplicabilidad` en `config_suite.py`, `evaluate.py` (código
       3) y `esquema_suite.py`; puerto `LectorDeCoberturaDePoblacion` con adapter SQL
       (`rag_corpus`) y en memoria; `revision_muestra.py`; metas `cobertura_poblacion` y
-      `exactitud_extraido_verificado` en `metas-iniciales.yaml` sin tocar las existentes (ver desviación); configuración propia
+      `exactitud_extraido_verificado` en el bloque `metas:` (ver desviación); configuración propia
       `test-aplicabilidad.yaml` (no se toca `test-fake.yaml` ni `baseline.json`) y selección de config en el envoltorio. Verificación: 1.3–1.7 en verde. Commit `feat(L1D-244)`.
 - [x] 1.10 (test después) No-fuga: el reporte y la salida de la familia no contienen `patientValue`, valores de
       metadatos, notas de revisión ni textos de chunks. Verificación: test con captura de salidas en verde.
@@ -71,3 +71,13 @@ dependen las claves de `population_criteria` del dataset `[S3 resp. 16]`). Sin c
 - [x] 3.1 `openspec validate l1d-244-eval-aplicabilidad-metadatos --strict` en verde.
 - [x] 3.2 Suite de `apps/rag-orchestrator` en verde (Pytest unitarios, evaluación e integración); sin cambios de API,
       no aplican `contracts:verify-provider` ni `contracts:breaking`.
+
+## 4. Deuda (Gate 2 reducido, destino US-233)
+
+- [ ] 4.1 TRASLADADA a US-233: `eval-required` solo corre `--suite all`, así que el código de salida 3 de la familia
+      `aplicabilidad` no corre en esa CI; hoy la barrera es el Pytest de `build-test` (`test_aplicabilidad_aceptacion.py`).
+      Decisión registrada en `design.md` (D4): no se cambia `scripts/ci/eval-required.mjs` en este change.
+- [ ] 4.2 TRASLADADA a US-233: Menores del Gate 2 — nombres privados importados de `config_suite` (hacerlos públicos),
+      `_ficha_de` duplicada con `adaptadores_falsos._ficha`, `corrida_aplicabilidad.py` largo (mover el armado del
+      reporte), `CoberturaEnMemoria` sin guarda `clase: sintetico`, causa `escala_no_comparable` para el `desconocido`
+      interno, par con `priorAnalyses` (RN-24) y par con datos `requiere_revision` (RN-26).

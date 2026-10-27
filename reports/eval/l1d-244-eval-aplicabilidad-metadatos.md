@@ -20,12 +20,12 @@ Config `test-aplicabilidad` (hash `3c940c21…2331542fa`), dataset `aplicabilida
 
 | Métrica | Baseline | Rama | Meta | Δ | Estado |
 |---|---|---|---|---|---|
-| Concordancia de estados (M-08.2) | n/a (familia nueva) | 41/41 = 1,00 | 41/41 esperado | n/a | OK |
-| criterios_coincide_sin_cita (M-08.3) | n/a | 0 | 0 | n/a | OK |
-| valores_paciente_no_copiados (M-08.4) | n/a | 0 | 0 | n/a | OK |
+| Concordancia de estados (AC-T5.1, sin ID M-08.x) | n/a (familia nueva) | 41/41 = 1,00 | 41/41 esperado | n/a | OK |
+| criterios_coincide_sin_cita (M-08.2) | n/a | 0 | 0 | n/a | OK |
+| valores_paciente_no_copiados (M-08.6) | n/a | 0 | 0 | n/a | OK |
 | omitidas | n/a | 2 | informativa | n/a | OK (pares am1-a2-sin-soporte y am1-a2-cita-ajena, NLI neutral/cita ajena, quedan Desconocido) |
-| Cobertura de población (M-08.6, versión 2026-10-16) | n/a | 0,70 (7 de 10 vigentes) | 0,90 | n/a | FUERA DE META (informativa, código 0) |
-| Exactitud extraído vs verificado | n/a | 0,95 (19/20 campos, 2 documentos, 0 pendientes) | 0,95 | n/a | EN META (muestra sintética) |
+| Cobertura de población (M-08.3, versión 2026-10-16) | n/a | 0,70 (7 de 10 vigentes) | 0,90 | n/a | FUERA DE META (informativa, código 0) |
+| Exactitud extraído vs verificado (M-08.4) | n/a | 0,95 (19/20 campos, 2 documentos, 0 pendientes) | 0,95 | n/a | EN META (muestra sintética) |
 
 Salidas prescriptivas: 0 (no aplican a esta familia; `all` sin cambio).
 

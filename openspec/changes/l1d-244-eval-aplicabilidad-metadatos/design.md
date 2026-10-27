@@ -72,7 +72,7 @@ un dato del paciente no sustituye la cita del estudio. Limitación de M-08.6: el
 `pares.yaml` la ausencia de `causa` significa «ninguna» (el `desconocido` interno, p. ej. `sin_escala`, no lleva causa en el contrato);
 la precedencia de causas la fija `l1d-129`. `APL-VALOR-PACIENTE` propone «2+» como valor del estudio.
 
-**D4 · Bloqueo con código propio.** `veredicto_de_invariantes(metricas) -> list[str]` devuelve las métricas violadas;
+**D4 · Bloqueo con código propio.** (Decisión Gate 2: el job `eval-required` solo corre `--suite all`; el código 3 de esta familia no corre en esa CI y la barrera es el Pytest de `build-test`. Cablearla en `eval-required` es deuda con destino US-233.) `veredicto_de_invariantes(metricas) -> list[str]` devuelve las métricas violadas;
 el runner escribe el reporte y sale con **código 3** ("invariante violada"), distinto de 1 y 2, para que la CI
 distinga una violación de un dataset mal formado. Los ceros son invariantes del PRD: no van a `regression.yaml` ni a
 las metas.
