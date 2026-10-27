@@ -15,6 +15,7 @@ import type { PeticionDeAnalisis } from './evidence-analysis.schema.js';
 import type {
   AnalysisCompletion,
   CatalogVersionProvider,
+  ChecklistDeFaltantes,
   Clock,
   ContextDeidentifier,
   RagQueryClient,
@@ -46,6 +47,8 @@ export interface DependenciasDelService {
   rag: RagQueryClient;
   cierre: AnalysisCompletion;
   catalogo: CatalogVersionProvider;
+  /** Faltantes críticos calculados en el servidor en cada análisis (US-006). */
+  checklist: ChecklistDeFaltantes;
   /** `ENABLED_CANCER_TYPES` validada contra el manifiesto (RN-20). */
   tiposHabilitados: TiposDeCancerHabilitados;
   reloj: Clock;
@@ -142,14 +145,23 @@ async function consultarConPlazo(
 
 /**
  * Gateway de `POST /platform/evidence-analyses`: leer el caso → cortar si no hay tipo de cáncer → cerrar sin IA si el
- * tipo no está habilitado → contexto por allowlist → desidentificar → consultar a rag-orchestrator → cerrar el
+ * tipo no está habilitado → faltantes críticos (fallo cerrado si no se calculan) → contexto por allowlist → desidentificar → consultar a rag-orchestrator → cerrar el
  * análisis. Los puertos llegan por la factory.
  */
 export function crearEvidenceAnalysisService(
   dependencias: DependenciasDelService,
 ): EvidenceAnalysisService {
-  const { casos, desidentificador, rag, cierre, catalogo, tiposHabilitados, reloj, config } =
-    dependencias;
+  const {
+    casos,
+    desidentificador,
+    rag,
+    cierre,
+    catalogo,
+    checklist,
+    tiposHabilitados,
+    reloj,
+    config,
+  } = dependencias;
 
   /**
    * RN-20: un tipo no habilitado no se analiza. Nada del caso viaja a Backend 2; solo la pregunta se desidentifica,
@@ -199,7 +211,8 @@ export function crearEvidenceAnalysisService(
       if (alcanceDelTipo(caso, tiposHabilitados) === 'tipo_no_habilitado') {
         return cerrarTipoNoHabilitado(solicitud, caso, ahora);
       }
-      const { contexto, dataRefs } = construirContextoPermitido(caso, ahora);
+      const faltantes = await checklist.faltantes(peticion.patientId);
+      const { contexto, dataRefs } = construirContextoPermitido(caso, ahora, faltantes);
       const { clinicalContext, query } = await desidentificador.desidentificar({
         traceId,
         patientId: peticion.patientId,

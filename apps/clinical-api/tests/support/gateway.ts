@@ -9,7 +9,11 @@ import { idSembrado } from '../../prisma/seed/determinismo.js';
 import { createRagOrchestratorClient } from '../../src/infrastructure/rag-orchestrator.client.js';
 import { createServiceTokenSigner } from '../../src/infrastructure/service-jwt.js';
 import { crearProveedorDeCatalogo } from '../../src/modules/evidence-analysis/catalog-version.provider.js';
-import { componerGatewayDeAnalisis } from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
+import { componerCompletitud } from '../../src/modules/completeness/completeness.module.js';
+import {
+  componerGatewayDeAnalisis,
+  crearChecklistDeFaltantes,
+} from '../../src/modules/evidence-analysis/evidence-analysis.module.js';
 import { crearTiposHabilitados } from '../../src/modules/evidence-analysis/tipos-habilitados.js';
 import { crearRagQueryClient } from '../../src/modules/evidence-analysis/rag-query.adapter.js';
 import { crearContextDeidentifier } from '../../src/modules/evidence-analysis/deidentification/context-deidentifier.js';
@@ -275,13 +279,20 @@ export async function montarGateway(
   const rag = crearRagQueryClient(createRagOrchestratorClient({ baseUrl: RAG_BASE_URL, signer }));
   const appEnv = Object.hasOwn(opciones, 'appEnv') ? opciones.appEnv : 'test';
   const pseudonimos = opciones.pseudonimos ?? pseudonimosFijos();
+  const rutaDelCatalogo = opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO;
   const ruta = componerGatewayDeAnalisis({
     db: mundo.cliente,
     rag,
-    catalogo: crearProveedorDeCatalogo(opciones.rutaDelCatalogo ?? RUTA_DEL_CATALOGO, (archivo) =>
-      readFileSync(archivo, 'utf8'),
-    ),
-    ...(opciones.checklist !== undefined && { checklist: opciones.checklist }),
+    catalogo: crearProveedorDeCatalogo(rutaDelCatalogo, (archivo) => readFileSync(archivo, 'utf8')),
+    checklist:
+      opciones.checklist ??
+      crearChecklistDeFaltantes(
+        componerCompletitud({
+          db: mundo.cliente,
+          rutaDelCatalogo,
+          leerArchivo: (archivo) => readFileSync(archivo, 'utf8'),
+        }),
+      ),
     config: {
       analysisMaxOptions: opciones.analysisMaxOptions ?? 1,
       evidenceDefaultYears: opciones.evidenceDefaultYears ?? 10,

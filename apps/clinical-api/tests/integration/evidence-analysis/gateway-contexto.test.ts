@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { jwtVerify } from 'jose';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -17,11 +18,18 @@ import {
   type MundoDeGateway,
 } from '../../support/gateway.js';
 import { FX_T4A_A } from '../../support/identidad.js';
+import { RUTA_DEL_CATALOGO } from '../../support/seed.js';
 
 const ESPACIO_DE_IDS = 201;
 const TOKEN_DE_SESION = 'SINT-cookie-sesion-contexto-0001';
 const PUNTERO_REQUEST_INTERNO = '#/components/schemas/RagQueryInternalRequest';
 const PUNTERO_CONTEXTO = '#/components/schemas/ClinicalContext';
+
+/** Claves de `datos-criticos.json` del tipo, del catálogo montado (el mismo que carga el checklist). */
+function clavesDeDatosCriticos(tipo: string): string[] {
+  const archivo = readFileSync(`${RUTA_DEL_CATALOGO}/${tipo}/datos-criticos.json`, 'utf8');
+  return (JSON.parse(archivo) as { items: { key: string }[] }).items.map((item) => item.key);
+}
 
 const rag = ragSimulado();
 let mundo: MundoDeGateway;
@@ -126,13 +134,12 @@ describe('gateway de análisis: request interno hacia rag-orchestrator', () => {
     ]) {
       expect(texto, prohibido).not.toContain(prohibido);
     }
-    for (const lista of [
-      'clinicalNotes',
-      'biomarkerTrends',
-      'missingCriticalData',
-      'priorAnalyses',
-    ]) {
+    for (const lista of ['clinicalNotes', 'biomarkerTrends', 'priorAnalyses']) {
       expect(contexto[lista], lista).toEqual([]);
+    }
+    const clavesDelCatalogo = clavesDeDatosCriticos('prostata');
+    for (const clave of contexto['missingCriticalData'] as string[]) {
+      expect(clavesDelCatalogo, clave).toContain(clave);
     }
   });
 

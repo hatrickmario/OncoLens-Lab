@@ -11,13 +11,17 @@ import { createServiceTokenSigner, loadServicePrivateKey } from './infrastructur
 import { componerInformacionDeSalud } from './routes/health.js';
 import { crearGeneradorDeToken } from './infrastructure/token.js';
 import { versionDelServicio } from './infrastructure/version-servicio.js';
+import { componerCompletitud } from './modules/completeness/completeness.module.js';
 import { componerModuloDeDocumentos } from './modules/documents/documents.module.js';
 import { componerModuloDePacientes } from './modules/patients/patients.module.js';
 import { crearServicioDeIdentidad } from './modules/patients/identity.module.js';
 import { crearContextDeidentifier } from './modules/evidence-analysis/deidentification/context-deidentifier.js';
 import { crearLectorDeIdentidad } from './modules/evidence-analysis/deidentification/patient-identity.reader.js';
 import { crearDetectorOpcionA } from './modules/evidence-analysis/deidentification/pii-detector.opcion-a.js';
-import { componerGatewayDeAnalisis } from './modules/evidence-analysis/evidence-analysis.module.js';
+import {
+  componerGatewayDeAnalisis,
+  crearChecklistDeFaltantes,
+} from './modules/evidence-analysis/evidence-analysis.module.js';
 import { crearRagQueryClient } from './modules/evidence-analysis/rag-query.adapter.js';
 import { arrancar, cargarEtapaDeServicios, registrarEventoDeArranque } from './startup.js';
 
@@ -65,6 +69,14 @@ arrancar({
             }),
           ),
           catalogo,
+          // El checklist lee el MISMO catálogo montado que `catalogo` (`CLINICAL_CATALOG_PATH`, design D5).
+          checklist: crearChecklistDeFaltantes(
+            componerCompletitud({
+              db: pool,
+              rutaDelCatalogo: configuracion.analisis.catalogPath,
+              leerArchivo,
+            }),
+          ),
           config: {
             analysisMaxOptions: configuracion.analisis.analysisMaxOptions,
             evidenceDefaultYears: configuracion.analisis.evidenceDefaultYears,

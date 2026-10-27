@@ -180,6 +180,7 @@ export function armarRegistro(entrada: EntradaDelRegistro): RegistroDeAnalisis {
   const { meta } = respuesta;
   return {
     ...registroBase(entrada),
+    missingCriticalData: [...request.clinicalContext.missingCriticalData],
     queryText: request.query,
     queryLanguage: meta.queryLanguage,
     responseLanguage: meta.responseLanguage,

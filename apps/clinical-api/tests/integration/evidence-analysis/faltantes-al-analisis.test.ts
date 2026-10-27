@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import respuestaConEvidencia from '../../../../../contracts/examples/rag-query-con-evidencia.json' with { type: 'json' };
 import { assertMatchesSpec } from '../../../../../scripts/contracts/lib/responseValidator.mjs';
 import { componerCompletitud } from '../../../src/modules/completeness/completeness.module.js';
 import { ChecklistNoDisponibleError } from '../../../src/modules/evidence-analysis/ports.js';
@@ -22,6 +23,7 @@ import {
   montarGateway,
   prepararMundoConSeed,
   ragSimulado,
+  type EscenarioDeRag,
   type MundoDeGateway,
 } from '../../support/gateway.js';
 import { clienteVerificado } from '../../support/verificarProveedor.js';
@@ -32,6 +34,16 @@ const PUNTERO_REQUEST_INTERNO = '#/components/schemas/RagQueryInternalRequest';
 
 /** Los seis faltantes de F-M2 en el orden de `datos-criticos.json` de FX-04-a (`test-1.0.0`). */
 const FALTANTES_DE_FM2 = ['grado', 'rp', 'her2_ish', 'ki67', 'estado_menopausico', 'brca_germinal'];
+
+/** rag-orchestrator devuelve en `meta.catalogVersion` la versión del request (si difiere responde 409): el simulado la repite. */
+const RESPUESTA_CON_CATALOGO_DE_TEST: EscenarioDeRag = {
+  tipo: 'json',
+  status: 200,
+  cuerpo: {
+    ...respuestaConEvidencia,
+    meta: { ...respuestaConEvidencia.meta, catalogVersion: 'test-1.0.0' },
+  },
+};
 
 const rag = ragSimulado();
 let mundo: MundoDeGateway;
@@ -108,6 +120,7 @@ describe('faltantes críticos del análisis: envío y persistencia', () => {
 
   it('persiste los seis faltantes, continued_with_warning true y catalog_version test-1.0.0 cuando se completa el análisis [US-006 AC-2]', async () => {
     const fm2 = await sembrarFM2(siembra);
+    rag.responder(RESPUESTA_CON_CATALOGO_DE_TEST);
     const { app } = await montar('req_Faltantes0002');
 
     const respuesta = await solicitar(app, fm2, { continueWithWarning: true });
