@@ -44,28 +44,42 @@ lo reconcilia (`es_reanudacion`: mismo `chunk_id` determinista, repite apagar y 
 son recuperables hasta ese reintento es la contrapartida aceptada de no apagar antes de tener la nueva escrita (apagar primero
 dejaría el grupo sin ninguna vigente si el `upsert` fallara). *Descartada:* apagar antes del `upsert`.
 
-*(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* **D2 — Reindexación por relectura y `upsert` del registro completo.** Se leen los vigentes paginados por `chunk_id`
+*(Decidido (usuario, 2026-10-27))* **D2 — Reindexación por relectura y `upsert` del registro completo.** Se leen los vigentes paginados por `chunk_id`
 (`is_current == true and chunk_id > <último>`, `consistency_level="Strong"`, `output_fields=["*"]`), se calcula el *sparse*
 por lote con `vectorizar_pasajes_sparse(chunk_text)` y se hace `upsert` de la fila leída con solo `sparse_vector` sustituido.
 Así `dense_vector` y el resto viajan byte a byte desde Milvus. *Descartada:* `upsert(partial_update=True)` — depende de la
 versión del servidor y del cliente; queda como optimización si se verifica en la CI. *Descartada:* recrear la colección
 (rompe AC-2: cambia nada que no sea *sparse*, y viola la inicialización idempotente de US-058 AC-5).
 
-*(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* **D3 — Sin escritura en el catálogo durante `--reindex-sparse`.** El catálogo no guarda el *sparse*; el estado `embebido`
+*(Decidido (usuario, 2026-10-27))* **D3 — Sin escritura en el catálogo durante `reindex-sparse`.** El catálogo no guarda el *sparse*; el estado `embebido`
 no cambia. El resumen reporta recuentos (leídos, reindexados) y nunca texto de chunks.
 
-*(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* **D4 — Tamaño de lote en configuración** (`CORPUS_SPARSE_REINDEX_BATCH_SIZE`, RN-22). El tope `LIMITE_DE_CONSULTA` es de infraestructura: `settings.py` no lo
+*(Decidido (usuario, 2026-10-27))* **D4 — Tamaño de lote en configuración** (`CORPUS_SPARSE_REINDEX_BATCH_SIZE`, RN-22). El tope `LIMITE_DE_CONSULTA` es de infraestructura: `settings.py` no lo
 importa; `MilvusRepository.listar_vigentes_paginado()` valida el lote y rechaza uno mayor.
+
+**D5 — `reindex-sparse` es un subcomando aparte, con guarda de embeddings locales (Decidido (usuario, 2026-10-27), pregunta 6, opción A).**
+El CLI de ingesta separa sus modos: `ingest` conserva `--manifest` obligatorio y su guarda de LLM; `ingest reindex-sparse` no usa
+LLM ni escribe en el catálogo (D3), así que no lleva la guarda de LLM, pero **exige por código embeddings locales (RN-12)**:
+`MODEL_PROVIDER=local`, pesos y *tokenizer* verificados por SHA-256 y `EMBEDDING_SPARSE_WEIGHTS_*` verificados. Si algo falla,
+termina en cerrado (código ≠ 0) **nombrando la variable, nunca su valor**. Un test por modo (la guarda de `ingest` no cambia; la de
+`reindex-sparse` falla cerrado con cada requisito ausente).
+*Descartadas:* (a) flag `--reindex-sparse` con la guarda movida; (b) flag con la guarda de LLM siempre activa (exigiría un LLM
+que no usa); (c) escape `--sin-guarda-llm` (un interruptor que apaga RN-12); (d) script de módulo separado (duplica el arranque y
+la configuración del CLI).
+*Condiciones a vigilar:* (1) el *sparse* de la consulta (US-112) saldrá del mismo BGE-M3, los mismos pesos y el mismo
+`SPARSE_VECTOR_SOURCE` que el del corpus; se deja nota en US-112 y, si cabe, un test de consistencia índice/consulta con la misma
+configuración; (2) la ingesta de documentos nuevos sigue escribiendo *dense* y *sparse*: `reindex-sparse` es solo el relleno de la
+semilla; (3) la búsqueda híbrida vivirá dentro de `RAGOrchestratorService`, no en el CLI ni en el agente.
 
 ## Dependencias y colaboradores
 
 - `IngestionPipelineService` y `SeedCorpusLoader` dependen de los puertos existentes (`CorpusCatalog`, almacén de chunks),
   nunca de `MilvusClient` ni de SQLAlchemy concretos; tras la tarea 0 comparten el núcleo común.
-- *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* Nuevo caso de uso `ReindexarSparse` en `app/application/` que recibe por parámetro el puerto de chunks
+- *(Decidido (usuario, 2026-10-27))* Nuevo caso de uso `ReindexarSparse` en `app/application/` que recibe por parámetro el puerto de chunks
   (`listar_vigentes_paginado`, `reescribir_sparse`) y `SparsePassageEncoder` (`codificar(textos)`).
 - `MilvusRepository` (`app/infrastructure/milvus/`): `listar_vigentes_paginado()` y `reescribir_sparse()`; `_fila()` deja de
   forzar el vacío cuando el chunk trae *sparse*.
-- Regla extraída *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))*: `con_sparse_sustituido(fila, sparse)` (garantía de AC-2). El versionado reutiliza `decidir_version`.
+- Regla extraída *(Decidido (usuario, 2026-10-27))*: `con_sparse_sustituido(fila, sparse)` (garantía de AC-2). El versionado reutiliza `decidir_version`.
 
 ## Privacidad y ownership
 
@@ -76,7 +90,7 @@ desidentificar (RN-11 no aplica). Los *logs* y el resumen solo llevan recuentos 
 ## Contratos
 
 Sin cambios en `apps/rag-orchestrator/openapi.yaml` ni en `apps/clinical-api/openapi.yaml`; sin ejemplos nuevos en
-`contracts/examples/`. La superficie es un CLI interno (`ingest --reindex-sparse`). Compatible con ADR-26.
+`contracts/examples/`. La superficie es un CLI interno (`ingest reindex-sparse`). Compatible con ADR-26.
 
 ## Evaluación
 
@@ -92,5 +106,5 @@ la mide US-112.
 
 ## Migration Plan
 
-Tras mergear: `python -m app.scripts.ingest --reindex-sparse` una vez sobre la semilla en el Compose local. Reversible: el
+Tras mergear: `python -m app.scripts.ingest reindex-sparse` una vez sobre la semilla en el Compose local. Reversible: el
 *sparse* no se usa en la recuperación hasta US-112.

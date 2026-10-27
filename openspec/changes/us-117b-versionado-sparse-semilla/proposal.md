@@ -27,7 +27,7 @@ híbrida (US-112) no cubriría la semilla.
 - **Tarea 0, refactor previo (decisión del usuario 2026-10-24 y 2026-10-27):** núcleo común de `SeedCorpusLoader` e
   `IngestionPipelineService` con la cobertura del módulo no menor que en `main`, las deudas 5.3 y 5.4 de L1D-117 y el *smoke*
   de `CodificadorSparseBgeM3` con pesos reales (ex 1.10 de L1D-116).
-- *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* Nueva opción `ingest --reindex-sparse`: recorre los chunks **vigentes** de `corpus_chunks`, calcula su vector *sparse*
+- *(Decidido (usuario, 2026-10-27))* Nueva subcomando `ingest reindex-sparse`: recorre los chunks **vigentes** de `corpus_chunks`, calcula su vector *sparse*
   con el adapter de *embeddings* (BGE-M3, ADR-39) y reescribe solo `sparse_vector`; `chunk_id`, `dense_vector` y los demás
   campos no cambian. Idempotente y con salida distinta de 0 si Milvus o el modelo fallan.
 - Sin cambios de esquema (ni Alembic ni colección), sin cambios de API ni de `openapi.yaml`.
@@ -68,7 +68,7 @@ Ninguna.
 ## Impact
 
 - `apps/rag-orchestrator/app/application/` (núcleo común de ingesta, test de caracterización de la versión nueva y, pendiente de decisión, el caso de uso de
-  reindexación *sparse*), `app/scripts/ingest.py` (flag `--reindex-sparse`), `app/infrastructure/milvus/repository.py`
+  reindexación *sparse*), `app/scripts/ingest.py` (subcomando `reindex-sparse`), `app/infrastructure/milvus/repository.py`
   (lectura paginada de vigentes y reescritura del *sparse* por `chunk_id`).
 - Corpus: la semilla pasa a tener *sparse* poblado → la suite `evaluate` se ejecuta para confirmar que el *dense* no cambia.
 - Rol `rag_corpus` y schema `corpus` exclusivamente (SEG-06); ningún dato clínico.

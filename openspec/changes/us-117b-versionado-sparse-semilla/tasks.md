@@ -19,7 +19,7 @@
 
 ## 1. ai-services
 
-- [ ] 1.1 *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* (test después, RN-22) Clave `CORPUS_SPARSE_REINDEX_BATCH_SIZE` en `app/config/settings.py` (positiva; el tope `LIMITE_DE_CONSULTA` lo valida `MilvusRepository.listar_vigentes_paginado()`, sin importar infraestructura desde `settings`),
+- [ ] 1.1 *(Decidido (usuario, 2026-10-27))* (test después, RN-22) Clave `CORPUS_SPARSE_REINDEX_BATCH_SIZE` en `app/config/settings.py` (positiva; el tope `LIMITE_DE_CONSULTA` lo valida `MilvusRepository.listar_vigentes_paginado()`, sin importar infraestructura desde `settings`),
   con su test de configuración; `.env.example` lo aplica el humano (el agente reporta la clave). Verifica: test de settings en verde.
 - [ ] 1.2 (caracterización; patrón de `l1d-181` D4) Test de aceptación, ejecutado primero. Si pasa a la primera queda como regresión (`test(US-117b)`) con su salida; si falla en la aserción, va en rojo antes del `feat`: «i-gl-1-v2 queda vigente, i-gl-1 queda no vigente con superseded_at y el
   total de filas crece en 1 sin borrar chunks cuando se ingiere la versión nueva [US-117b AC-1]» · integración (`IngestionPipelineService`
@@ -28,22 +28,25 @@
 - [ ] 1.3 (solo si 1.2 salió en rojo) Verde de 1.2 con el mínimo cambio sobre `decidir_version` / `reemplazar_version` y el orden
   `upsert → apagar → reemplazar_version` (D1); unitarios uno a la vez. No crear `es_version_nueva` ni `reemplazar_version_vigente`.
   La regresión de US-059 AC-6 y de «Un rechazo retira la versión vigente del grupo» sigue en verde. Commit `feat(US-117b)`. Si 1.2 pasó, se marca con «sin cambios: la regla ya existe».
-- [ ] 1.4 *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* (TDD estricto) Test de aceptación en rojo: «todos los chunks vigentes de la semilla tienen sparse_vector y sus chunk_id
-  y dense_vector no cambian cuando se ejecuta ingest --reindex-sparse [US-117b AC-2]» · integración (semilla FX-06c-a cargada con el
+- [ ] 1.4 *(Decidido (usuario, 2026-10-27))* (TDD estricto) Test de aceptación en rojo: «todos los chunks vigentes de la semilla tienen sparse_vector y sus chunk_id
+  y dense_vector no cambian cuando se ejecuta ingest reindex-sparse [US-117b AC-2]» · integración (semilla FX-06c-a cargada con el
   cargador del S1, adapter *sparse* falso, Milvus de test) con `@pytest.mark.ac("US-117b", 2)`, más «no vigentes intactos»,
   «segunda ejecución idéntica» y, en **subproceso** con tiempo máximo explícito (60 s), «Milvus que falla en el segundo lote →
   código ≠ 0, nombra la etapa, sin URI ni texto, dense intacto». Esqueleto de `ReindexarSparse` (`NotImplementedError`). Commit `test(US-117b)`.
-- [ ] 1.5 *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* (TDD estricto) Verde de 1.4: `ReindexarSparse` en `app/application/`, `MilvusRepository.listar_vigentes_paginado()` y
-  `reescribir_sparse()` (D2; valida el lote contra `LIMITE_DE_CONSULTA`), regla `con_sparse_sustituido()`, `_fila()` que respeta el *sparse* del chunk, y flag `--reindex-sparse`
+- [ ] 1.5 *(Decidido (usuario, 2026-10-27))* (TDD estricto) Verde de 1.4: `ReindexarSparse` en `app/application/`, `MilvusRepository.listar_vigentes_paginado()` y
+  `reescribir_sparse()` (D2; valida el lote contra `LIMITE_DE_CONSULTA`), regla `con_sparse_sustituido()`, `_fila()` que respeta el *sparse* del chunk, y subcomando `reindex-sparse`
   en `app/scripts/ingest.py` con resumen de recuentos; unitarios uno a la vez (lote vacío; paginación por `chunk_id`; solo cambia
   `sparse_vector`). Commit `feat(US-117b)`.
+- [ ] 1.5b *(Decidido (usuario, 2026-10-27), D5)* (TDD estricto) Un test por modo de la CLI: `ingest` conserva `--manifest` obligatorio y su guarda de LLM;
+  `reindex-sparse` falla cerrado (código ≠ 0, nombra la variable, nunca su valor) con `MODEL_PROVIDER` no local, pesos o *tokenizer* sin
+  SHA-256 verificado o `EMBEDDING_SPARSE_WEIGHTS_*` sin verificar, y no exige LLM. Subproceso con tiempo máximo explícito. Commit `test(US-117b)` en rojo y `feat(US-117b)`.
 - [ ] 1.6 (test después) No regresión: tests de L1D-114, L1D-115 y L1D-116 y de *permission denied* de `rag_corpus` en verde.
 - [ ] 1.7 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(US-117b)`.
 
 ## 2. evaluación
 
-- [ ] 2.1 *(PENDIENTE de decisión del usuario (guarda RN-12 y separación de modos de la CLI))* (evaluate) `run-ai-eval` sobre la rama tras reindexar la semilla: recall@10, MRR y «sin evidencia» sin variación frente al
+- [ ] 2.1 *(Decidido (usuario, 2026-10-27))* (evaluate) `run-ai-eval` sobre la rama tras reindexar la semilla: recall@10, MRR y «sin evidencia» sin variación frente al
   baseline (la recuperación sigue siendo *dense*). Verifica: reporte de `ai-eval-runner` en `reports/eval/`.
 
 ## 3. cierre
