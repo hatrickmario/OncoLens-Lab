@@ -30,6 +30,11 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
+from app.evaluation.corrida_aplicabilidad import (
+    SUITE_APLICABILIDAD,
+    PuertosDeAplicabilidad,
+    ejecutar_aplicabilidad,
+)
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -83,6 +88,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
     parser.add_argument("--fijar", action="store_true")
     parser.add_argument("--p95-e2e-s", type=float, default=None)
+    parser.add_argument("--corpus-cutoff-date", default=None)
     return parser
 
 
@@ -97,11 +103,16 @@ def main(
     raiz: Path | None = None,
     entorno: Mapping[str, str] | None = None,
     directorio_de_configs: Path | None = None,
+    puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
 ) -> int:
     try:
         args = _parser().parse_args(list(argv))
         if args.suite not in SUITES:
             raise ConfigInvalida(f"familia no disponible: {args.suite}")
+        if args.suite == SUITE_APLICABILIDAD:  # configuración, dataset y reporte propios (US-132)
+            return ejecutar_aplicabilidad(
+                args, reloj or RelojDelSistema(), puertos_aplicabilidad or PuertosDeAplicabilidad()
+            )
         config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
         return _ejecutar(config, args, reloj or RelojDelSistema(), raiz, directorio_de_configs)
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
