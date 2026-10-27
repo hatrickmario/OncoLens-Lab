@@ -56,7 +56,8 @@
   `reindex-sparse` falla cerrado (código ≠ 0, nombra la variable, nunca su valor) con `MODEL_PROVIDER` no local, pesos o *tokenizer* sin
   SHA-256 verificado o `EMBEDDING_SPARSE_WEIGHTS_*` sin verificar, y no exige LLM; la guarda es la de `main` (D5) y corre antes de abrir Milvus. Además: sin modo, `--manifest` sigue obligatorio (salida ≠ 0 si falta), `reindex-sparse --manifest X` y `ingest --manifest X reindex-sparse` se rechazan con salida ≠ 0 y `python -m app.scripts.ingest --manifest X` se comporta como antes. En los fallos de Milvus/modelo, stderr trae la etapa (`leer_vigentes|codificar|reescribir`) y `type(error).__name__`, nunca la URI de Milvus ni `chunk_text`. Subproceso con tiempo máximo explícito. Commit `test(US-117b)` en rojo y `feat(US-117b)`.
   **Evidencia:** 15 tests en `tests/unit/test_script_ingest_modos.py` (incluye el proceso real con plazo de 60 s); 2 en rojo antes de la guarda, verde con d4f8d6b0.
-- [ ] 1.6 (test después) No regresión: tests de L1D-114, L1D-115 y L1D-116 y de *permission denied* de `rag_corpus` en verde.
+- [x] 1.6 (test después) No regresión: tests de L1D-114, L1D-115 y L1D-116 y de *permission denied* de `rag_corpus` en verde.
+  **Evidencia:** `integration-rag` local (scripts/ci/integracion-rag-orchestrator.sh, subredes propias): 119 passed y 1 failed (corregido: la búsqueda dense del escenario «solo chunks de i-gl-1-v2» pasó a memoria); permission denied de `rag_corpus` US-040 AC-1/2/3 y US-058/059/117a en verde. Suite local unit+integration: 1874 passed.
 - [x] 1.7 Refactor: actualizar el comentario obsoleto de `repository.py:208-214` sobre el *sparse* vacío y los docstrings de `ports.py` e `ingest.py`; Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y
   después, commit `refactor(US-117b)`.
 
@@ -68,7 +69,7 @@
 
 ## 3. cierre
 
-- [ ] 3.1 `openspec validate us-117b-versionado-sparse-semilla --strict` en verde y suite de `apps/rag-orchestrator` en verde.
+- [x] 3.1 `openspec validate us-117b-versionado-sparse-semilla --strict` en verde y suite de `apps/rag-orchestrator` en verde.
 
 ## Workflow follow-up
 

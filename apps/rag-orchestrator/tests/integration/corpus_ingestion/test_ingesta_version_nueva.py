@@ -52,10 +52,11 @@ def test_ingesta_de_i_gl_1_v2_la_deja_vigente_y_a_i_gl_1_no_vigente_con_supersed
     assert montaje.chunks_vigentes_por_clave()[CLAVE] == chunks_v2
 
 
+# Solo en memoria: la búsqueda de Milvus no es de consistencia fuerte y leería datos recién escritos a medias; la vigencia en Milvus real
+# la prueban la consulta Strong de AC-1 y US-055 AC-3.
 def test_la_busqueda_dense_no_devuelve_chunks_de_i_gl_1_tras_ingerir_su_version_nueva(
-    montaje_en_ambos: Montaje,
+    montaje: Montaje,
 ) -> None:
-    montaje = montaje_en_ambos
     montaje.ingerir()
     texto_de_v1 = fragmentos_esperados_fx_06c_b(CLAVE)[CLAVE][0]
     vector = EmbedderFalso().embeber([texto_de_v1])[0]
