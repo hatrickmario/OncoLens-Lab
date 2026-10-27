@@ -1,5 +1,7 @@
 """Traduce el ``clinicalContext`` (ya desidentificado) a lo que lee la aplicabilidad: copias literales (ADR-34 b)."""
 
+from dataclasses import replace
+
 from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
     BiomarcadorDelPaciente,
@@ -10,27 +12,22 @@ from app.schemas.generated.models import ClinicalContext
 
 
 def contexto_del_paciente(contexto: ClinicalContext) -> ContextoDelPaciente:
+    del_paciente = ContextoDelPaciente(
+        biomarcadores=_biomarcadores(contexto),
+        atributos=_atributos(contexto),
+        tratamientos_previos=_tratamientos_previos(contexto),
+    )
     diagnostico = contexto.diagnosis
     if diagnostico is None:
-        return _sin_diagnostico(contexto)
-    return ContextoDelPaciente(
-        biomarcadores=_biomarcadores(contexto),
+        return del_paciente
+    return replace(
+        del_paciente,
         valor_de_estadio=diagnostico.stageValue.root,
         grado=diagnostico.grade.root if diagnostico.grade else None,
         escala_de_desempeno=(
             diagnostico.performanceScale.root if diagnostico.performanceScale else None
         ),
         valor_de_desempeno=diagnostico.performanceValue,
-        atributos=_atributos(contexto),
-        tratamientos_previos=_tratamientos_previos(contexto),
-    )
-
-
-def _sin_diagnostico(contexto: ClinicalContext) -> ContextoDelPaciente:
-    return ContextoDelPaciente(
-        biomarcadores=_biomarcadores(contexto),
-        atributos=_atributos(contexto),
-        tratamientos_previos=_tratamientos_previos(contexto),
     )
 
 
