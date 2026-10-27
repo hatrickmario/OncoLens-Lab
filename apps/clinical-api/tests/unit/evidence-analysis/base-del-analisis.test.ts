@@ -91,7 +91,7 @@ describe('BaseDelAnalisis', () => {
       { label: 'mama · TNM_8 IIA', reviewStatus: 'verificado', conflict: false },
       { label: 'HER2 3+ (IHQ)', reviewStatus: 'auto_aceptado', conflict: false },
       {
-        label: 'Receptor de estrógeno Positivo (80%)',
+        label: 'RE Positivo (80%)',
         reviewStatus: 'requiere_revision',
         conflict: false,
       },
