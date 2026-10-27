@@ -8,12 +8,14 @@ por citas y por soporte, las limitaciones verificadas y ``omittedClaims``.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 
+from app.application.aplicabilidad import AplicabilidadDeFuente
+from app.application.chunk_citable import ChunkCitable
 from app.application.ports import ResultadoDeRecuperacion
-from app.domain.citations import FichaDeFuente, OpcionDescartada, construir_cita
+from app.domain.citations import OpcionDescartada, construir_cita
 from app.domain.option_selection import OpcionConRelevancia
-from app.domain.relevance import ChunkPuntuado, top_relevance_score
+from app.domain.relevance import top_relevance_score
 from app.domain.support import OpcionSinSoporte
 from app.schemas.generated.models import (
     ApplicabilitySummary,
@@ -30,14 +32,6 @@ from app.schemas.generated.models import (
 )
 
 
-@dataclass(frozen=True)
-class ChunkCitable:
-    """Un chunk recuperado en esta consulta con la ficha de su documento: lo único que puede citarse."""
-
-    chunk: ChunkPuntuado
-    ficha: FichaDeFuente
-
-
 def ensamblar_respuesta_con_evidencia(
     opciones: Sequence[OpcionConRelevancia],
     descartadas: Sequence[OpcionDescartada],
@@ -46,6 +40,7 @@ def ensamblar_respuesta_con_evidencia(
     omitidas: int,
     citables: Mapping[str, ChunkCitable],
     recuperacion: ResultadoDeRecuperacion,
+    aplicabilidad: Sequence[AplicabilidadDeFuente] = (),
 ) -> RagQueryInternalResponse:
     return RagQueryInternalResponse(
         status=RagQueryStatus.con_evidencia,

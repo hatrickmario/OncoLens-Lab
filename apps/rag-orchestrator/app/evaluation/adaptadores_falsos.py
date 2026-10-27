@@ -18,6 +18,7 @@ from app.application.ports import (
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
 )
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
@@ -143,6 +144,12 @@ class CatalogoEnMemoria:
 
     def fichas_por_documento(self, document_ids: Collection[str]) -> dict[str, FichaDeFuente]:
         return {d: self._fichas[d] for d in document_ids if d in self._fichas}
+
+    def poblacion_por_documento(
+        self, document_ids: Collection[str]
+    ) -> dict[str, PoblacionDelEstudio]:
+        """El corpus sintético no trae población: sus metadatos están ``pendiente`` (no se atribuye nada a la fuente)."""
+        return {d: PoblacionDelEstudio("pendiente", {}) for d in document_ids if d in self._fichas}
 
 
 def _ficha(documento: str, titulo: str, corte: date) -> FichaDeFuente:

@@ -8,6 +8,7 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy import Engine
 
+from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente
 from app.infrastructure.catalog.tables import corpus_document
 
@@ -28,6 +29,29 @@ class LectorCatalogoPostgres:
         with self._motor.connect() as conexion:
             filas = conexion.execute(consulta).mappings().all()
         return {fila["document_id"]: ficha_de_fila(fila) for fila in filas}
+
+    def poblacion_por_documento(
+        self, document_ids: Collection[str]
+    ) -> dict[str, PoblacionDelEstudio]:
+        """``population_criteria`` y ``metadata_source`` tal como están guardados (``pendiente`` incluido).
+
+        Solo las dos columnas de población: la ficha completa no hace falta para evaluar criterios. Un documento
+        inexistente no figura en el resultado."""
+        if not document_ids:
+            return {}
+        consulta = sa.select(
+            corpus_document.c.document_id,
+            corpus_document.c.population_criteria,
+            corpus_document.c.metadata_source,
+        ).where(corpus_document.c.document_id.in_(sorted(document_ids)))
+        with self._motor.connect() as conexion:
+            filas = conexion.execute(consulta).mappings().all()
+        return {
+            fila["document_id"]: PoblacionDelEstudio(
+                fila["metadata_source"], fila["population_criteria"]
+            )
+            for fila in filas
+        }
 
 
 def ficha_de_fila(fila: Mapping[str, Any]) -> FichaDeFuente:
