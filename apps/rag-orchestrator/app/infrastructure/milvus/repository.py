@@ -8,14 +8,16 @@ El cliente ``pymilvus`` se inyecta (real en integración y E2E).
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
 
 from pymilvus import MilvusClient
 from pymilvus.exceptions import MilvusException
 
+from app.application.corpus_ingestion.ports import ChunkParaReindexar
 from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
 from app.config.settings import MilvusSettings
+from app.domain.corpus_seed.reindexacion import con_sparse_sustituido
 from app.domain.retrieval_filter import exigir_filtro_vigente, expresion_solo_vigente
 from app.infrastructure.milvus.schema import (
     CAMPO_DENSE,
@@ -204,9 +206,44 @@ class MilvusRepository:
         self._cliente.upsert(self._coleccion, [{**fila, "is_current": not desde} for fila in filas])
         return len(filas)
 
+    def listar_vigentes_paginado(self, lote: int) -> Iterator[list[ChunkParaReindexar]]:
+        """Todos los chunks ``is_current`` en páginas de ``lote`` (US-117b D2): ``query_iterator`` pagina por PK, porque
+        ``query`` con ``limit`` no garantiza el orden. ``lote`` debe quedar estrictamente entre 0 y ``LIMITE_DE_CONSULTA``
+        (``ValueError`` antes de leer nada). Cada chunk lleva su registro completo para reescribirlo sin perder campos."""
+        if not 0 < lote < LIMITE_DE_CONSULTA:
+            raise ValueError(f"el lote debe cumplir 0 < lote < {LIMITE_DE_CONSULTA}")
+        return self._paginas_de_vigentes(lote)
+
+    def _paginas_de_vigentes(self, lote: int) -> Iterator[list[ChunkParaReindexar]]:
+        iterador = self._cliente.query_iterator(
+            self._coleccion,
+            batch_size=lote,
+            filter=expresion_solo_vigente(),
+            output_fields=["*"],
+            consistency_level="Strong",
+        )
+        try:
+            while pagina := iterador.next():
+                yield [ChunkParaReindexar(f["chunk_id"], f["chunk_text"], f) for f in pagina]
+        finally:
+            iterador.close()
+
+    def reescribir_sparse(
+        self, chunks: Sequence[ChunkParaReindexar], vectores_sparse: Sequence[Mapping[int, float]]
+    ) -> int:
+        """``upsert`` por ``chunk_id`` de la fila leída con solo ``sparse_vector`` sustituido (``dense_vector`` viaja tal cual)."""
+        if not chunks:
+            return 0
+        filas = [
+            con_sparse_sustituido(chunk.registro, sparse)
+            for chunk, sparse in zip(chunks, vectores_sparse, strict=True)
+        ]
+        self._cliente.upsert(self._coleccion, filas)
+        return len(filas)
+
     @staticmethod
     def _fila(chunk: ChunkDelCorpus) -> dict[str, Any]:
-        # Sin sparse (S1, D4) se inserta el vector sparse vacío: Milvus lo acepta sin cambiar el esquema.
+        # Sin sparse (semilla del S1) se inserta el vector vacío; ``ingest reindex-sparse`` (US-117b) lo puebla después.
         return {
             "chunk_id": chunk.chunk_id,
             "document_id": chunk.document_id,

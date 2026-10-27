@@ -24,6 +24,7 @@ from tests.support.semilla import (
 )
 
 MANIFIESTO_FX_06C_B = DIRECTORIO_DE_FIXTURES / "ingest-manifest.yaml"
+MANIFIESTO_FX_06C_B_V2 = DIRECTORIO_DE_FIXTURES / "ingest-manifest-v2.yaml"
 MANIFIESTO_FX_06C_B_CON_FALLO = DIRECTORIO_DE_FIXTURES / "ingest-manifest-falla.yaml"
 DOCUMENTOS_ADMISIBLES_FX_06C_B = ("i-ct-1", "i-lit-1", "i-lit-2", "i-gl-1")
 VOCABULARIO_SPARSE_DE_TEST = 1000
@@ -53,6 +54,19 @@ def fragmentos_esperados_fx_06c_b(*claves: str) -> dict[str, list[str]]:
         )
         for d in documentos_fx_06c_b(*pedidas)
     }
+
+
+def fragmentos_de_i_gl_1_v2() -> list[str]:
+    """Los fragmentos de ``i-gl-1-v2`` (FX-06c-b) con las reglas puras de chunking."""
+    (documento,) = leer_manifiesto(MANIFIESTO_FX_06C_B_V2)
+    return fragmentar(
+        normalizar_texto(
+            FuenteDeTextoDelManifiesto(DIRECTORIO_DE_FIXTURES, None).obtener_texto(documento)
+        ),
+        TokenizadorPorPalabras(),
+        tamano=TAMANO_DE_CHUNK_DE_TEST,
+        solape=SOLAPE_DE_CHUNK_DE_TEST,
+    )
 
 
 def chunks_esperados_fx_06c_b() -> dict[str, int]:

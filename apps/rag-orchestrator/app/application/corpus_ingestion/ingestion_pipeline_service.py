@@ -29,12 +29,12 @@ from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     SourceFetcher,
 )
+from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
     registro_con_error,
     registro_embebido,
     registro_normalizado,
-    registro_rechazado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
 from app.domain.corpus_metadata.resultado import MetadatosResueltos
@@ -45,19 +45,18 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
+from app.domain.corpus_seed.errores import (
+    ChecksumDelManifiestoNoCoincide,
+    TextoVacio,
+)
+from app.domain.corpus_seed.sparse import exigir_sparse_por_pasaje
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeVersion,
     calcular_checksum,
-    decidir_retiro,
     decidir_version,
     es_reanudacion,
 )
-
-
-class VectorSparseVacio(Exception):
-    """El codificador *sparse* no devolvió un término para algún pasaje: Milvus lo rechazaría (US-117a, riesgos)."""
 
 
 class FalloDeEtapa(Exception):
@@ -110,6 +109,9 @@ class IngestionPipelineService:
         self._tamano_de_chunk = tamano_de_chunk
         self._solape_de_chunk = solape_de_chunk
         self._fecha_de_corte = fecha_de_corte
+        self._nucleo = NucleoDeVersionado(
+            catalogo=catalogo, almacen_de_chunks=almacen_de_chunks, reloj=reloj
+        )
 
     def ingerir(self, documentos: Sequence[DocumentoDeSemilla]) -> ReporteDeIngesta:
         resultados = tuple(self._procesar(documento) for documento in documentos)
@@ -126,22 +128,20 @@ class IngestionPipelineService:
 
     def _rechazar(self, documento: DocumentoDeSemilla, admision: Admision) -> ResultadoDeIngesta:
         """Rechazo por licencia o fuente (RN-21): retira la vigente del grupo sin borrar nada (RN-05) y registra el rechazo."""
-        retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
+        retiro = self._nucleo.planificar_retiro(documento)
         try:
             with _etapa("retiro"):
-                self._apagar(retiro.a_apagar)
+                self._nucleo.apagar_chunks(retiro.a_apagar)
         except FalloDeEtapa as fallo:
             # Error y sin fila de rechazo: la siguiente ingesta repite el retiro desde cero.
             return _resultado_de_error(documento, fallo)
-        if retiro.vigente_id is not None:
-            self._catalogo.retirar_version(retiro.vigente_id, self._reloj.ahora())
-        self._catalogo.guardar_documento(registro_rechazado(documento, self._reloj.ahora()))
-        motivo = admision.motivo.value if admision.motivo else None
+        retirada = self._nucleo.retirar_vigente_del_catalogo(retiro)
+        motivo = self._nucleo.registrar_rechazo(documento, admision)
         return ResultadoDeIngesta(
             documento.document_key,
             Estado.RECHAZADO_LICENCIA,
             motivo,
-            retirada_de_vigente=retiro.vigente_id is not None,
+            retirada_de_vigente=retirada,
         )
 
     def _ingerir_documento(
@@ -227,9 +227,7 @@ class IngestionPipelineService:
         """Un vector *sparse* no vacío por fragmento: sin él el documento queda en error, nunca se inserta sin *sparse*."""
         with _etapa("sparse"):
             vectores = self._codificador_sparse.codificar(fragmentos)
-            if len(vectores) != len(fragmentos) or not all(vectores):
-                raise VectorSparseVacio()
-        return vectores
+            return list(exigir_sparse_por_pasaje(vectores, len(fragmentos)))
 
     def _omitir(
         self, documento: DocumentoDeSemilla, decision: DecisionDeVersion
@@ -237,9 +235,7 @@ class IngestionPipelineService:
         """Ya embebido con ese contenido: no se re-embebe, pero se reconcilia Milvus con el catálogo (RN-05)."""
         try:
             with _etapa("milvus"):
-                self._apagar(decision.a_apagar)
-                if decision.a_encender is not None:
-                    self._almacen_de_chunks.marcar_vigentes(decision.a_encender)
+                self._nucleo.reconciliar_omitido(decision)
         except FalloDeEtapa as fallo:
             # Sin fila de error: el documento embebido y vigente sigue siendo la verdad del catálogo.
             return _resultado_de_error(documento, fallo)
@@ -257,19 +253,11 @@ class IngestionPipelineService:
         chunks = chunks_del_documento(
             registro, fragmentos, vectores, self._reloj.ahora(), vectores_sparse
         )
-        self._almacen_de_chunks.upsert_chunks(chunks)
-        self._apagar(decision.a_apagar)
-
-    def _apagar(self, document_ids: Sequence[str]) -> None:
-        for document_id in document_ids:
-            self._almacen_de_chunks.marcar_no_vigentes(document_id)
+        self._nucleo.escribir_y_apagar(chunks, decision)
 
     def _confirmar(self, registro: RegistroDeDocumento, decision: DecisionDeVersion) -> None:
         """Último paso: el catálogo es la verdad (``embebido`` + ``is_current``). Un reemplazo marca la anterior no vigente."""
-        if decision.anterior_id is None:
-            self._catalogo.guardar_documento(registro)
-        else:
-            self._catalogo.reemplazar_version(registro, decision.anterior_id, self._reloj.ahora())
+        self._nucleo.confirmar_version(registro, decision)
 
     def _registrar_error(
         self,

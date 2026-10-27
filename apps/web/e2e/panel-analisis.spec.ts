@@ -164,6 +164,26 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await expect(page.getByRole('status')).toHaveAttribute('aria-live', 'polite');
     await expect(boton).toBeFocused();
   });
+
+  test('muestra No disponible en endpoint y tamaño de muestra de la cita cuando el catálogo no los registra [US-127 AC-3]', async ({
+    page,
+  }) => {
+    expect(cita.primaryEndpoint).toBeNull();
+    expect(cita.sampleSize).toBeNull();
+    await analizar(page, preguntaHer2);
+    await esperarResultado(page);
+    await page
+      .getByRole('button', { name: new RegExp(`${cita.sourceName}.*${cita.externalId}`) })
+      .click();
+
+    for (const rotulo of [textos.cita.endpoint, textos.cita.tamanoMuestra]) {
+      const valor = page
+        .locator('dt', { hasText: rotulo })
+        .locator('xpath=following-sibling::dd[1]');
+      await expect(valor).toHaveText(textos.cita.noDisponible);
+      await expect(valor.locator('[data-origen]')).toHaveCount(0);
+    }
+  });
 });
 
 test.describe('Estados del panel (L1D-141)', () => {

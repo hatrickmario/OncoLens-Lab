@@ -217,6 +217,7 @@ texto. Validación de licencia y fuentes excluidas con las listas en configuraci
 
 > **Decidido (usuario, 2026-10-23, `[S3 resp. 2]`):** segunda mitad de la partición de US-117 (versionado sin borrado y *sparse* de la semilla), 3 pts, en el S3. Se crea en Linear cuando el workspace tenga cupo.
 > **Decidido (usuario, 2026-10-24, cierre de la O1 del S3):** recibe como **tarea 0** el refactor del núcleo común de ingesta (`SeedCorpusLoader` e `IngestionPipelineService`, deuda de L1D-116), antes de tocar el *sparse*. Es un refactor: la cobertura del módulo no baja respecto de `main`. Absorbe también la tarea 1.10 de L1D-116 (smoke con pesos reales de BGE-M3, vía `EMBEDDING_SPARSE_WEIGHTS_*`).
+> **Decidido (usuario, 2026-10-27):** `reindex-sparse` es un **subcomando** del CLI de ingesta (no un flag `--reindex-sparse`): sin guarda de LLM (no usa LLM ni escribe en el catálogo) pero con embeddings locales exigidos por código (`MODEL_PROVIDER=local`, pesos y *tokenizer* con SHA-256, `EMBEDDING_SPARSE_WEIGHTS_*`), falla en cerrado nombrando la variable. `ingest` conserva `--manifest` y su guarda. Absorbe además las deudas 5.3 y 5.4 de L1D-117 en la tarea 0. Ver `openspec/changes/us-117b-versionado-sparse-semilla/design.md` D5. El AC-2 se lee con `ingest reindex-sparse`.
 
 ## Story
 Como responsable del corpus, quiero que una versión nueva de un documento reemplace a la

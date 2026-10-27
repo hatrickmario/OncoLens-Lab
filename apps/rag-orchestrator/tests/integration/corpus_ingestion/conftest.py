@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -57,6 +58,14 @@ from tests.support.semilla import (
 )
 
 
+@dataclass(frozen=True)
+class RegistroObservado:
+    chunk_text: str
+    is_current: bool
+    dense: tuple[float, ...]
+    sparse: dict[int, float]
+
+
 class Observador(Protocol):
     """Lo que un test puede preguntar al catálogo y al almacén, sea cual sea su implementación."""
 
@@ -69,6 +78,16 @@ class Observador(Protocol):
     def chunks_por_clave(self) -> dict[str, int]: ...
 
     def textos_de_chunks(self, claves: tuple[str, ...]) -> set[str]: ...
+
+    def chunks_vigentes_por_clave(self) -> dict[str, int]: ...
+
+    def registros_de_chunks(self) -> dict[str, RegistroObservado]:
+        """Todos los chunks (vigentes o no) por ``chunk_id``, con lo que el *sparse* no debe alterar."""
+        ...
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        """``superseded_at`` de cada fila del catálogo cuyo ``document_id`` empieza por ``<clave>@``."""
+        ...
 
 
 class ObservadorEnMemoria:
@@ -98,6 +117,29 @@ class ObservadorEnMemoria:
             for c in self._almacen.chunks.values()
             if c.document_id.split("@")[0] in claves
         }
+
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        cuenta: dict[str, int] = {}
+        for chunk in self._almacen.chunks.values():
+            if chunk.is_current:
+                clave = chunk.document_id.split("@")[0]
+                cuenta[clave] = cuenta.get(clave, 0) + 1
+        return cuenta
+
+    def registros_de_chunks(self) -> dict[str, RegistroObservado]:
+        return {
+            c.chunk_id: RegistroObservado(
+                c.chunk_text, c.is_current, tuple(c.dense_vector), dict(c.sparse_vector or {})
+            )
+            for c in self._almacen.chunks.values()
+        }
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        return [
+            r.superseded_at
+            for i, r in self._catalogo.documentos.items()
+            if i.split("@")[0] == clave
+        ]
 
 
 class ObservadorReal:
@@ -142,6 +184,33 @@ class ObservadorReal:
             if f["document_id"].split("@")[0] in claves
         }
 
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        cuenta: dict[str, int] = {}
+        for fila in self._chunks(["document_id", "is_current"]):
+            if fila["is_current"]:
+                clave = fila["document_id"].split("@")[0]
+                cuenta[clave] = cuenta.get(clave, 0) + 1
+        return cuenta
+
+    def registros_de_chunks(self) -> dict[str, RegistroObservado]:
+        campos = ["chunk_id", "chunk_text", "is_current", "dense_vector", "sparse_vector"]
+        return {
+            f["chunk_id"]: RegistroObservado(
+                f["chunk_text"],
+                bool(f["is_current"]),
+                tuple(f["dense_vector"]),
+                {int(k): float(v) for k, v in (f["sparse_vector"] or {}).items()},
+            )
+            for f in self._chunks(campos)
+        }
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        consulta = text(
+            "SELECT superseded_at FROM corpus.corpus_document WHERE starts_with(document_id, :p)"
+        )
+        with self._motor.connect() as conexion:
+            return [f[0] for f in conexion.execute(consulta, {"p": f"{clave}@"})]
+
 
 @dataclass
 class Montaje:
@@ -173,6 +242,15 @@ class Montaje:
 
     def textos_de_chunks(self, *claves: str) -> set[str]:
         return self.observador.textos_de_chunks(claves)
+
+    def chunks_vigentes_por_clave(self) -> dict[str, int]:
+        return self.observador.chunks_vigentes_por_clave()
+
+    def superseded_at_de(self, clave: str) -> list[datetime | None]:
+        return self.observador.superseded_at_de(clave)
+
+    def registros_de_chunks(self) -> dict[str, RegistroObservado]:
+        return self.observador.registros_de_chunks()
 
 
 def _servicio(
