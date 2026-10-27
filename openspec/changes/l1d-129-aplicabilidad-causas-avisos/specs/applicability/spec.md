@@ -8,20 +8,33 @@ para que el oncólogo vea qué coincide, qué no, qué se desconoce y por qué (
 ## ADDED Requirements
 
 ### Requirement: Criterio desconocido por dato ausente en el paciente
-Cuando el dato de destino de un criterio figura en `clinicalContext.missingCriticalData` o no está en el contexto, `rag-orchestrator` MUST devolver el criterio con `status = desconocido`, `unknownReason = falta_en_paciente`, `patientValue = null` y `patientDataWarning = faltante`, sin inferir ni generar el valor (FR-25, ADR-34). `falta_en_paciente` SHALL prevalecer sobre `no_reportado_por_fuente` cuando la fuente tampoco reporta el dato (`[S3 resp. 16]`).
+Cuando la clave de un criterio figura en `clinicalContext.missingCriticalData` o su dato de destino no está en el contexto, `rag-orchestrator` MUST devolver el criterio con `status = desconocido`, `unknownReason = falta_en_paciente`, `patientValue = null` y `patientDataWarning = faltante`, sin inferir ni generar el valor (FR-25, ADR-34). `falta_en_paciente` SHALL prevalecer sobre `no_reportado_por_fuente` cuando la fuente tampoco reporta el dato (`[S3 resp. 16]`).
 
 #### Scenario: Estado menopáusico ausente en A-M1 [US-124 AC-1]
 - **GIVEN** el paciente A-M1 de FX-08b-a, sin estado menopáusico (llega en `missingCriticalData`), el catálogo `test-apl-1.0.0` y `doc-a1` recuperado
 - **WHEN** se evalúa la aplicabilidad de `doc-a1`
 - **THEN** `estado_menopausico` trae `status = desconocido`, `unknownReason = falta_en_paciente`, `patientValue = null` y `patientDataWarning = faltante` [AC-08.2] [AC-04.3]
 
+### Requirement: Desconocido sin causa cuando el dato no falta
+Un criterio `desconocido` cuyo motivo no es la ausencia del dato en el paciente ni en la fuente (valor no comparable, estadio sin escala ordenada) MUST llevar `unknownReason = null`: la causa solo toma los dos valores del contrato.
+
+#### Scenario: Estadio de A-M1 sin escala ordenada
+- **GIVEN** A-M1 con estadio «IIA» y `doc-a1` con estadio «I–III»
+- **WHEN** se evalúa la aplicabilidad de `doc-a1`
+- **THEN** `estadio` trae `status = desconocido` y `unknownReason = null`
+
 ### Requirement: Aviso del dato del paciente según su procedencia
-Para cada criterio comparado con un dato del paciente, `patientDataWarning` MUST derivarse de la `provenance` de ese dato: `en_conflicto` si `conflict = true` (con precedencia sobre `sin_verificar`), `sin_verificar` si `reviewStatus = requiere_revision`, y `null` en otro caso. El aviso MUST NOT cambiar el `status` calculado ni bloquear el análisis (RN-26, RN-07).
+Para cada criterio comparado con un dato del paciente, `patientDataWarning` MUST derivarse de la `provenance` del dato cuyo valor se copia en `patientValue`: `en_conflicto` si `conflict = true` (con precedencia sobre `sin_verificar`), `sin_verificar` si `reviewStatus = requiere_revision`, y `null` en otro caso; en un destino compuesto (RE/RP) rige la misma precedencia sobre sus componentes. El aviso MUST NOT cambiar el `status` calculado ni bloquear el análisis (RN-26, RN-07).
 
 #### Scenario: ECOG sin verificar conserva su estado calculado [US-124 AC-2]
 - **GIVEN** A-M1 con ECOG 1 en `requiere_revision` y `doc-a1` (ECOG 0–1)
 - **WHEN** se evalúa la aplicabilidad de `doc-a1`
 - **THEN** `ecog` trae `status = coincide` y `patientDataWarning = sin_verificar` [AC-08.4]
+
+#### Scenario: Paridad con la etiqueta de procedencia del prompt [RN-07]
+- **GIVEN** cada combinación de `reviewStatus` y `conflict` de una `provenance`
+- **WHEN** se calcula `patientDataWarning` y, del lado del prompt, `etiqueta_de_procedencia`
+- **THEN** `en_conflicto` corresponde a «(en conflicto)», `sin_verificar` a «(sin verificar)» y `null` a ninguna etiqueta, en las mismas combinaciones
 
 #### Scenario: HER2 en conflicto sembrado [US-124 AC-3]
 - **GIVEN** una variante de A-M1 cuyo seed sintético siembra dos HER2 en conflicto (`requiere_revision`, `conflicts_with_id` cruzados), de modo que ambos llegan al contexto con `provenance.conflict = true`
@@ -44,7 +57,8 @@ Para cada criterio comparado con un dato del paciente, `patientDataWarning` MUST
 #### Scenario: Conteo de A-M1 con doc-a1 [US-124 AC-5]
 - **GIVEN** A-M1, `doc-a1` y `test-apl-1.0.0`
 - **WHEN** se evalúa la aplicabilidad
-- **THEN** `summary = { coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }` y `populationNotComparable = false` [AC-08.5]
+- **THEN** `summary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` y `populationNotComparable = false` [AC-08.5]
+- **AND** la suma del `summary` es 5, el número de criterios de `test-apl-1.0.0`
 - **AND** la respuesta valida contra `RagQueryInternalResponse` sin ningún campo numérico de puntaje o porcentaje de aplicabilidad [RN-28]
 
 ### Requirement: Sin evidencia no hay aplicabilidad
