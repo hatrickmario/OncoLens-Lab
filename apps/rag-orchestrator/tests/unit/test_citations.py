@@ -4,6 +4,7 @@ from app.domain.citations import (
     MotivoDeDescarte,
     OpcionGenerada,
     construir_cita,
+    contar_por_motivo,
     validar_citas,
 )
 from app.domain.relevance import ChunkPuntuado
@@ -89,3 +90,19 @@ def test_construir_cita_marca_false_vigencia_y_version_posterior_en_el_s1():
 
     assert cita.possiblyOutdated is False
     assert cita.newerVersionAvailable is False
+
+
+def test_contar_por_motivo_devuelve_ceros_cuando_no_hay_descartadas():
+    assert contar_por_motivo(()) == {
+        MotivoDeDescarte.sin_citas: 0,
+        MotivoDeDescarte.cita_invalida: 0,
+    }
+
+
+def test_contar_por_motivo_cuenta_cada_motivo_cuando_hay_descartadas_de_ambos():
+    resultado = validar_citas([_opcion(), _opcion("ch-x"), _opcion("ch-y")], CITABLES)
+
+    assert contar_por_motivo(resultado.descartadas) == {
+        MotivoDeDescarte.sin_citas: 1,
+        MotivoDeDescarte.cita_invalida: 2,
+    }
