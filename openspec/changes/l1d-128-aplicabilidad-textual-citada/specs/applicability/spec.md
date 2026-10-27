@@ -5,13 +5,25 @@
 Compara al paciente con la población de cada fuente recuperada, criterio a criterio del catálogo
 versionado, sin puntaje clínico, y solo con valores del estudio copiados o verificados contra el texto.
 
+## MODIFIED Requirements
+
+### Requirement: Aplicabilidad por fuente recuperada con los criterios del catálogo
+Con `status = con_evidencia`, `POST /rag/query` MUST devolver en `applicability` un `SourceApplicability` por cada documento con chunks sobre el umbral en esa consulta, con un `ApplicabilityCriterion` por cada criterio de aplicabilidad del catálogo clínico del tipo de cáncer, en el orden del catálogo. Un documento con `metadata_source = pendiente` SHALL incluirse con todos sus criterios pendientes del camino textual (decidido, usuario, 2026-10-27: antes se omitía). Si el catálogo no declara criterios para el tipo, `applicability` SHALL ser `[]`.
+
+#### Scenario: Un documento con metadata_source pendiente entra por el camino textual y calla desconocido [US-123 AC-4] [US-122 AC-5] [RN-25] (decidido, usuario, 2026-10-27)
+- **GIVEN** FX-08b-a, A-M1, `doc-a1` estructurado y `doc-a6` con `metadata_source = pendiente` (todos sus criterios de población `no_disponible`), ambos con chunks sobre el umbral, y un LLM falso de aplicabilidad que no propone nada
+- **WHEN** se procesa la consulta
+- **THEN** `applicability` trae un elemento por cada uno, el de `doc-a6` con todos sus criterios `desconocido` y `studyPopulationValue = null`
+- **AND** cada criterio de `doc-a6` con dato en el paciente trae `unknownReason = no_reportado_por_fuente` y `estado_menopausico` trae `falta_en_paciente`
+- **AND** `omittedClaims` no cambia (el LLM no afirmó nada) y la respuesta valida contra `RagQueryInternalResponse`
+
 ## ADDED Requirements
 
 ### Requirement: Valor textual de la población aceptado solo con cita y soporte NLI
 Para un criterio sin valor estructurado en `population_criteria`, el valor del estudio propuesto por el LLM MUST aceptarse solo si cita un chunk recuperado de esa fuente en esta consulta y el NLI da `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD` con ese chunk como premisa (RN-01, ADR-34). El estado SHALL asignarlo la regla del catálogo sobre el valor aceptado; la cita MUST copiarse del corpus (RN-04).
 
 #### Scenario: Un valor textual citado y soportado se acepta y la regla del catálogo da no_coincide [US-123 AC-1] [AC-08.3] [FR-25] [ADR-34]
-- **GIVEN** el paciente A-M1, el catálogo `test-apl-1.0.0`, la fuente `doc-a2` sin `population_criteria` y recuperada sobre el umbral, el LLM falso `APL-OK` (afirma "HER2 negativo" citando `ch-a2-1`) y el NLI falso en `entailment` para "HER2 negativo" contra `ch-a2-1` (FX-08b-a)
+- **GIVEN** el paciente A-M1, el catálogo `test-apl-1.0.0`, la fuente `doc-a2` (guía con `metadata_source = pendiente`, sin población extraída, con el chunk `ch-a2-1`: "This guidance applies to patients with HER2-negative disease") recuperada sobre el umbral, el LLM falso `APL-OK` (afirma "HER2 negativo" citando `ch-a2-1`) y el NLI falso en `entailment` para "HER2 negativo" contra `ch-a2-1` (FX-08b-a)
 - **WHEN** `POST /rag/query` evalúa la aplicabilidad de `doc-a2`
 - **THEN** el criterio `estado_her2` de `applicability[doc-a2]` trae `studyPopulationValue = "HER2 negativo"`, `citedSources` con `ch-a2-1` y `status = no_coincide`
 - **AND** el adapter NLI se invocó con el texto de `ch-a2-1` como premisa y "HER2 negativo" como hipótesis
@@ -67,7 +79,7 @@ Cuando el camino textual invoca al LLM de aplicabilidad, `meta.promptVersion` MU
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
 
 #### Scenario: Sin camino textual la versión es solo la del generador [S3 resp. 16]
-- **GIVEN** A-M1, `test-apl-1.0.0` y solo `doc-a1`, con todos sus criterios estructurados
+- **GIVEN** A-M1, `test-apl-1.0.0` y una única fuente recuperada con los cinco criterios de población estructurados (fixture propia; `doc-a1` no reporta `linea` y la llamaría)
 - **WHEN** `POST /rag/query` procesa el análisis
 - **THEN** `meta.promptVersion` es la del generador, sin sufijo de aplicabilidad
 

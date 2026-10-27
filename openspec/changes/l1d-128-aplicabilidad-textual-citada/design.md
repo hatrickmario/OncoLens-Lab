@@ -33,7 +33,12 @@ de `l1d-287` quedan como seguimiento (Risks).
 ## Decisions
 
 **D1 — Cuándo se usa el camino textual.** Por fuente recuperada sobre el umbral y por criterio del
-catálogo del tipo de cáncer: solo si `population_criteria` no trae ese criterio. Un criterio
+catálogo del tipo de cáncer: solo si `population_criteria` no trae ese criterio (`valor_del_estudio()` de L1D-127 da
+`None`: clave ausente, `no_disponible` o forma no leíble) y el destino del criterio es resoluble. Un documento
+`metadata_source = pendiente` **entra** (decidido, usuario, 2026-10-27): L1D-127 lo omitía para no atribuirle un «no
+reportado» que nadie verificó; aquí el LLM sí revisa el texto recuperado, así que sus criterios son todos pendientes y el
+que no se acepta queda `desconocido` / `no_reportado_por_fuente` (AC-4). El criterio con `falta_en_paciente` también
+se propone: la causa del `desconocido` no cambia (L1D-127 D5) pero el oncólogo ve qué población exige la fuente. Un criterio
 estructurado nunca va al LLM (US-122 AC-6). Con `sin_evidencia` no hay aplicabilidad ni llamada al LLM
 (RN-02). Descartada: pedir al LLM todos los criterios y preferir el estructurado (gasta latencia y abre
 la puerta a mezclar valores).
@@ -53,7 +58,10 @@ ignoran (ADR-34). Descartada: una llamada por criterio (latencia lineal).
    (`coincidencias_en_campo_generado()`, D7); coincidencia → rechazo sin NLI.
 4. NLI: premisa = `chunkTextSnapshot` del chunk citado, hipótesis = `studyPopulationValue`; soporte
    solo con `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD` (`soporta()` de US-064). Los pares de todas las
-   propuestas van en un único lote junto con los de las opciones.
+   propuestas van en **un único lote de la etapa de aplicabilidad** (`VerificadorDeSoporte.clasificar_pares`, mismo
+   clasificador y misma falla cerrada). *Desviación* de la versión anterior de D3 («junto con los de las opciones»):
+   la aplicabilidad se calcula antes de generar las citas de las opciones y no depende de ellas (L1D-127 D1); unirlos
+   obligaría a atar ambas etapas. Coste: dos lotes NLI por consulta en lugar de uno.
 5. Aceptado → `studyPopulationValue` = valor propuesto, `citedSources` = `construir_cita()` (copiado del
    corpus, RN-04), `status` = regla del catálogo de US-122 sobre el valor (D4).
 6. Rechazado (2, 3 o 4) → `desconocido`, `no_reportado_por_fuente`, `studyPopulationValue = null`,
@@ -61,8 +69,12 @@ ignoran (ADR-34). Descartada: una llamada por criterio (latencia lineal).
 Sin propuesta para un criterio pendiente → `desconocido` sin sumar a `omittedClaims` (AC-4).
 
 **D4 — El estado lo pone la regla del catálogo.** La regla de US-122 (igualdad, pertenencia, rango)
-se aplica sobre el valor aceptado tras normalizarlo al vocabulario de valores del criterio en el
-catálogo (p. ej., "HER2 negativo" → `negativo`), con sinónimos del catálogo y sin LLM. Si el valor
+se aplica sobre el valor aceptado tras normalizarlo: `normalizar_valor_al_catalogo()` quita del texto, sin LLM, los
+rótulos del propio criterio que el catálogo ya declara (sus etiquetas `es`/`en`, su `studyKey`, su clave y los nombres
+de `destination.match`: «HER2 negativo» → `negativo`, «ECOG 0-1» → `0-1`, «estadio I–III» → `I–III`) y, en `igualdad`,
+lleva a la clave de `equivalences` el texto que la nombra sin distinguir mayúsculas. `sinonimos.json` del catálogo 1.1.0
+está vacío, así que no hay sinónimos que aplicar todavía (cuando los traiga, se leerán del catálogo, no del código).
+El **texto mostrado** (`studyPopulationValue`) es el propuesto y verificado, no el normalizado. Si el valor
 aceptado no encaja en ningún valor de la regla, el criterio queda `desconocido`
 (`no_reportado_por_fuente`) y el LLM **no** asigna estado (OQ-1 decidida `[S3 resp. 16]`). Descartada: que el LLM
 asigne el estado y lo valide el NLI (lo permitía la historia; ninguna AC lo cubre y abriría un estado no determinista).
@@ -121,6 +133,14 @@ con soporte), precisión de citas, salidas prescriptivas = 0, y las de aplicabil
 correcto) que mide US-132. En el S3 el PR corre `run-ai-eval` con `LLM_PROVIDER=fake` para verificar
 que no hay regresión en las métricas existentes; la medición del prompt con el LLM real es de US-233 (S4).
 
+**D8 — La etapa textual compone el servicio estructurado, no lo modifica.** Clase `AplicabilidadTextual`
+(`application/aplicabilidad_textual.py`) que recibe el puerto `ApplicabilityTextProposer` y `VerificadorDeSoporte`, toma la
+salida de `ApplicabilityService.evaluar()` y devuelve las mismas `AplicabilidadDeFuente` con los criterios aceptados
+(estado, valor y chunk citado), el recuento de afirmaciones omitidas y si se invocó al LLM. `ApplicabilityService`
+sigue sin puerto de LLM (garantía estructural de ADR-34 b, L1D-127 AC-2/AC-6); su único cambio es dejar de omitir los
+documentos `pendiente`. Descartada: inyectar el puerto en `ApplicabilityService` (como decía la versión anterior de esta
+sección): mezclaba el cálculo determinista con la propuesta de un modelo en la misma clase.
+
 ## Dependencias y colaboradores
 
 - **Nuevo puerto** `ApplicabilityTextProposer` en `application/ports.py` (`proponer(fuentes) ->
@@ -130,9 +150,12 @@ que no hay regresión en las métricas existentes; la medición del prompt con e
   `validar_propuesta_de_poblacion()` (RN-01, D3), `criterios_pendientes_de_texto()` (D1) y
   `normalizar_valor_al_catalogo()` (D4). Usa `validar_citas()`, `construir_cita()`, `soporta()` y
   `check_prohibited_terms()` existentes.
-- **Modificado** `ApplicabilityService` (L1D-127): recibe el puerto por constructor y añade la rama
-  textual tras el camino estructurado; el lote NLI pasa por `VerificadorDeSoporte` (sin cliente concreto).
-- **Modificado** `app/bootstrap.py`: enlace del adapter real o falso según `LLM_PROVIDER`.
+- **Nuevo** `AplicabilidadTextual` (`application/aplicabilidad_textual.py`, D8): rama textual tras el camino
+  estructurado; el lote NLI pasa por `VerificadorDeSoporte` (sin cliente concreto).
+- **Modificado** `ApplicabilityService` (L1D-127): deja de omitir `pendiente` (D1); `CriterioEvaluado` gana
+  `chunk_citado_id` (la cita del valor textual aceptado).
+- **Modificado** `app/bootstrap.py` y `app/evaluation/composicion_suite.py`: enlace del adapter real (`local`) o del
+  falso (suite `evaluate`, `LLM_PROVIDER=fake`).
 - **Modificado** `RAGOrchestratorService` (armado de `meta.promptVersion` y log, D6) y `app/domain/support.py` +
   `packages/clinical-language/origen-de-campos.json` (D7).
 
