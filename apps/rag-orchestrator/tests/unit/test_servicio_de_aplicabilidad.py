@@ -69,7 +69,7 @@ def test_evaluar_ordena_por_relevancia_del_mejor_chunk_y_desempata_por_external_
     assert [f.external_id for f in fuentes] == ["CDR-TEST-A3", "CDR-TEST-A1", "CDR-TEST-A4"]
 
 
-def test_evaluar_omite_el_documento_pendiente_y_el_que_no_tiene_fila_de_poblacion():
+def test_evaluar_incluye_el_documento_pendiente_y_omite_el_que_no_tiene_fila_de_poblacion():
     mejores = {
         "doc-a1": citable("ch-a1-1", "doc-a1", 0.90),
         "doc-a6": citable("ch-a6-1", "doc-a6", 0.80),
@@ -79,7 +79,9 @@ def test_evaluar_omite_el_documento_pendiente_y_el_que_no_tiene_fila_de_poblacio
 
     fuentes = servicio().evaluar("mama", A_M1, mejores, poblaciones)
 
-    assert [f.external_id for f in fuentes] == ["CDR-TEST-A1"]
+    assert [f.external_id for f in fuentes] == ["CDR-TEST-A1", "CDR-TEST-A6"]
+    pendiente = fuentes[1]
+    assert all(c.estado == "desconocido" and c.valor_estudio is None for c in pendiente.criterios)
 
 
 def test_evaluar_devuelve_los_criterios_en_el_orden_del_catalogo_con_resumen_y_poblacion_no_comparable():

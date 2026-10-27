@@ -5,19 +5,17 @@ import peticion from '../../../../../contracts/examples/rag-query-request.json' 
 import {
   construirBaseTipoNoHabilitado,
   crearBaseDelAnalisis,
+  etiquetarFaltantes,
 } from '../../../src/modules/evidence-analysis/analysis-basis.js';
 import { validarRespuestaInterna } from '../../../src/modules/evidence-analysis/analysis-completion.js';
+import { EtiquetaDeDatoCriticoNoDisponibleError } from '../../../src/modules/evidence-analysis/ports.js';
 import type { RagQueryInternalRequest } from '../../../../../packages/api-contracts/src/client/rag-orchestrator/index.js';
 
 const request = peticion as RagQueryInternalRequest;
 const respuestaConEvidencia = () => validarRespuestaInterna(conEvidencia);
-const SUPUESTO_DECLARADO = {
-  text: 'Los faltantes críticos aún no se calculan en esta versión',
-  origin: 'regla_catalogo',
-};
 
 describe('BaseDelAnalisis', () => {
-  const base = crearBaseDelAnalisis();
+  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave });
 
   it('produce la misma Base byte a byte cuando se ejecuta dos veces con las mismas entradas [US-066 AC-4]', () => {
     const primera = base.construir(request, respuestaConEvidencia(), false);
@@ -50,10 +48,9 @@ describe('BaseDelAnalisis', () => {
     });
   });
 
-  it('deja vacíos missingCriticalData y priorAnalysesUsed', () => {
+  it('deja vacío priorAnalysesUsed', () => {
     const resultado = base.construir(request, respuestaConEvidencia(), false);
 
-    expect(resultado.missingCriticalData).toEqual([]);
     expect(resultado.priorAnalysesUsed).toEqual([]);
   });
 
@@ -64,13 +61,13 @@ describe('BaseDelAnalisis', () => {
     expect(base.construir(request, respuesta, false).continuedWithWarning).toBe(false);
   });
 
-  it('declara como único supuesto el de faltantes no calculados cuando la respuesta no trae supuestos', () => {
+  it('no declara supuestos cuando la respuesta no trae supuestos', () => {
     const resultado = base.construir(request, validarRespuestaInterna(sinEvidencia), false);
 
-    expect(resultado.assumptions).toEqual([SUPUESTO_DECLARADO]);
+    expect(resultado.assumptions).toEqual([]);
   });
 
-  it('pone el supuesto declarado antes de los supuestos verificados de la respuesta', () => {
+  it('declara solo los supuestos verificados de la respuesta', () => {
     const respuesta = validarRespuestaInterna({
       ...structuredClone(conEvidencia),
       assumptions: [{ text: 'Supuesto sintético del modelo.' }],
@@ -79,7 +76,6 @@ describe('BaseDelAnalisis', () => {
     const resultado = base.construir(request, respuesta, false);
 
     expect(resultado.assumptions).toEqual([
-      SUPUESTO_DECLARADO,
       { text: 'Supuesto sintético del modelo.', origin: 'llm_verificado' },
     ]);
   });
@@ -149,6 +145,7 @@ describe('construirBaseTipoNoHabilitado', () => {
     expect(construirBaseTipoNoHabilitado(entrada)).toMatchObject({
       patientDataUsed: [],
       missingCriticalData: [],
+      missingCriticalDataLabels: [],
       continuedWithWarning: false,
       assumptions: [],
       sourcesNotIncluded: ['NCCN', 'ESMO'],
@@ -176,5 +173,69 @@ describe('construirBaseTipoNoHabilitado', () => {
       construirBaseTipoNoHabilitado({ ...entrada, continuedWithWarning: true })
         .continuedWithWarning,
     ).toBe(true);
+  });
+});
+
+describe('inciso (b) de la Base', () => {
+  const etiquetas: Record<string, string> = {
+    ki67: 'Ki-67',
+    grado: 'Grado histológico',
+    rp: 'Receptor de progesterona',
+  };
+  const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => etiquetas[clave] });
+  const conFaltantes = (faltantes: string[]): RagQueryInternalRequest => ({
+    ...request,
+    clinicalContext: { ...request.clinicalContext, missingCriticalData: faltantes },
+  });
+
+  it('declara listas vacías cuando el request no trae faltantes', () => {
+    const resultado = base.construir(conFaltantes([]), respuestaConEvidencia(), false);
+
+    expect(resultado.missingCriticalData).toEqual([]);
+    expect(resultado.missingCriticalDataLabels).toEqual([]);
+  });
+
+  it('conserva el orden de las claves y pone cada etiqueta en la misma posición cuando hay varios faltantes', () => {
+    const resultado = base.construir(
+      conFaltantes(['rp', 'ki67', 'grado']),
+      respuestaConEvidencia(),
+      true,
+    );
+
+    expect(resultado.missingCriticalData).toEqual(['rp', 'ki67', 'grado']);
+    expect(resultado.missingCriticalDataLabels).toEqual([
+      'Receptor de progesterona',
+      'Ki-67',
+      'Grado histológico',
+    ]);
+  });
+
+  it('copia la lista sin compartir el arreglo del request', () => {
+    const entrada = conFaltantes(['ki67']);
+
+    const resultado = base.construir(entrada, respuestaConEvidencia(), false);
+
+    expect(resultado.missingCriticalData).not.toBe(entrada.clinicalContext.missingCriticalData);
+  });
+
+  it('lanza EtiquetaDeDatoCriticoNoDisponibleError sin nombrar la clave cuando el catálogo no la conoce', () => {
+    const construir = () =>
+      base.construir(conFaltantes(['ki67', 'clave_desconocida']), respuestaConEvidencia(), false);
+
+    expect(construir).toThrow(EtiquetaDeDatoCriticoNoDisponibleError);
+    expect(construir).not.toThrow(/clave_desconocida/);
+  });
+
+  it('produce la misma Base byte a byte cuando se repite con los mismos faltantes [US-066 AC-4]', () => {
+    const primera = base.construir(conFaltantes(['rp', 'ki67']), respuestaConEvidencia(), true);
+    const segunda = base.construir(conFaltantes(['rp', 'ki67']), respuestaConEvidencia(), true);
+
+    expect(JSON.stringify(segunda)).toBe(JSON.stringify(primera));
+  });
+});
+
+describe('etiquetarFaltantes', () => {
+  it('devuelve un arreglo vacío cuando no hay claves', () => {
+    expect(etiquetarFaltantes([], () => undefined)).toEqual([]);
   });
 });

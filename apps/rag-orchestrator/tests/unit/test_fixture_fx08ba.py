@@ -1,15 +1,21 @@
 """Humo de FX-08b-a (L1D-127, tarea 1.1): los documentos, el paciente A-M1 y el catálogo de test se corresponden."""
 
+import asyncio
+
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
+from app.domain.applicability_text import FuenteParaProponer
 from app.schemas.generated.models import RagQueryInternalRequest
 from tests.support.aplicabilidad import (
     CORPUS_FX08BA,
     DOCUMENTOS_FX08BA,
     FICHAS_FX08BA,
     POBLACIONES_FX08BA,
+    TEXTO_DE_CH_A2_1,
     criterios_de_test_apl_1_0_0,
+    external_id_de,
     solicitud_a_m1,
 )
+from tests.support.proponente_falso import ProponenteFalso
 
 CLAVES_DEL_CATALOGO_DE_TEST = {
     "estado_her2": "biomarcadores.her2",
@@ -62,3 +68,26 @@ def test_fixture_fx08ba_arma_a_m1_valido_contra_el_contrato_cuando_se_construye_
     assert (contexto.diagnosis.stageValue.root, contexto.diagnosis.performanceValue) == ("IIA", 1)
     assert [t.lineNumber for t in contexto.priorTreatments] == [1]
     assert contexto.attributes == []
+
+
+def test_fixture_fx08ba_trae_doc_a2_pendiente_con_ch_a2_1_cuando_se_carga_la_guia_sin_poblacion():
+    chunk = next(c for c in CORPUS_FX08BA if c.chunk_id == "ch-a2-1")
+
+    assert (chunk.document_id, chunk.texto) == ("doc-a2", TEXTO_DE_CH_A2_1)
+    assert POBLACIONES_FX08BA["doc-a2"].metadata_source == "pendiente"
+
+
+def test_proponente_falso_solo_habla_de_las_fuentes_que_recibio_y_registra_la_llamada():
+    proponente = ProponenteFalso("APL-OK")
+    otra = FuenteParaProponer(external_id_de("doc-a1"), (), ())
+    a2 = FuenteParaProponer(external_id_de("doc-a2"), (), ())
+
+    assert asyncio.run(proponente.proponer([otra])) == ()
+    (propuesta,) = asyncio.run(proponente.proponer([otra, a2]))
+
+    assert (propuesta.criterio, propuesta.valor, propuesta.chunk_id) == (
+        "estado_her2",
+        "HER2 negativo",
+        "ch-a2-1",
+    )
+    assert proponente.invocaciones == 2

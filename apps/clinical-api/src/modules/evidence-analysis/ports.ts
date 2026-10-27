@@ -43,6 +43,17 @@ export class ChecklistNoDisponibleError extends Error {
   }
 }
 
+/** Etiqueta en español (`label.es`) de una clave del catálogo de datos críticos; `undefined` si el catálogo no la conoce. */
+export type EtiquetaDeDatoCritico = (clave: string) => string | undefined;
+
+/** Una clave de `missingCriticalData` no tiene etiqueta en el catálogo cargado: el análisis falla cerrado (US-128). */
+export class EtiquetaDeDatoCriticoNoDisponibleError extends Error {
+  constructor() {
+    super('Etiqueta de dato crítico no disponible en el catálogo');
+    this.name = 'EtiquetaDeDatoCriticoNoDisponibleError';
+  }
+}
+
 /** Claves del catálogo en estado `faltante`, en el orden del catálogo (US-002). Lanza ChecklistNoDisponibleError. */
 export interface ChecklistDeFaltantes {
   faltantes(patientId: string): Promise<readonly string[]>;

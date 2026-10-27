@@ -38,7 +38,11 @@ describe('EvidencePanel · aviso de alcance (tipo_no_habilitado)', () => {
 
     await screen.findByText(AVISO);
     expect(screen.getByRole('heading', { level: 3, name: 'Base del análisis' })).toBeTruthy();
-    expect(screen.getByText('No se consultó el corpus: tipo fuera de alcance')).toBeTruthy();
+    expect(
+      screen.getByText(
+        'No se consultó el corpus: tipo fuera de alcance · Datos críticos faltantes: no evaluados en este estado',
+      ),
+    ).toBeTruthy();
   });
 
   it('no muestra opciones, puntaje ni anuncio de análisis listo ante tipo_no_habilitado [US-043 AC-2]', async () => {

@@ -29,6 +29,8 @@
 
 > **Enmienda decidida (usuario, 2026-10-20, ADR-45):** la expansión bilingüe **no invoca al LLM local** (RN-02 se mantiene). Se resuelve con sinónimos del catálogo y/o un modelo de traducción dedicado, según el resultado de los brazos A3 y A4 de ADR-45. Los AC se ajustan en el refinamiento de la historia; el ID no cambia. **Linear: pendiente de sincronizar.**
 
+> **Decidido (usuario, 2026-10-27, desde US-117b):** el *sparse* de la consulta sale del **mismo BGE-M3, los mismos pesos y el mismo `SPARSE_VECTOR_SOURCE`** que el del corpus (`reindex-sparse` y la ingesta lo escriben con esa configuración); si cabe, test de consistencia índice/consulta con la misma configuración. La búsqueda híbrida vive dentro de `RAGOrchestratorService`, no en el CLI ni en el agente.
+
 ## Story
 Como oncólogo, quiero que la búsqueda encuentre también la evidencia que menciona
 literalmente el fármaco o el gen que pregunto, para no perder un estudio relevante

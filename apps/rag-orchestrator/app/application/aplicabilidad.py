@@ -5,7 +5,8 @@ orquestador con su borde fallando cerrado; este servicio solo compone las reglas
 """
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from typing import get_args
 
 from app.application.chunk_citable import ChunkCitable
 from app.domain.aplicabilidad_tipos import (
@@ -14,6 +15,7 @@ from app.domain.aplicabilidad_tipos import (
     ContextoDelPaciente,
     CriterioEvaluado,
     PoblacionDelEstudio,
+    OrigenDeMetadatos,
     ResumenDeEstados,
 )
 from app.domain.applicability_rules import (
@@ -35,9 +37,19 @@ class AplicabilidadDeFuente:
     resumen: ResumenDeEstados
     poblacion_no_comparable: bool
 
+    def con_criterios(self, criterios: tuple[CriterioEvaluado, ...]) -> "AplicabilidadDeFuente":
+        """La misma fuente con otros criterios evaluados: el resumen y la no comparabilidad se recalculan (RN-28)."""
+        return replace(
+            self,
+            criterios=criterios,
+            resumen=contar_estados(criterios),
+            poblacion_no_comparable=poblacion_no_comparable(criterios),
+        )
 
-ORIGENES_ESTRUCTURADOS = frozenset({"fuente_estructurada", "extraido_verificado"})
-"""Solo estos orígenes cuentan como población estructurada; ``pendiente`` y cualquier otro valor se omiten (RN-25)."""
+
+ORIGENES_CONOCIDOS = frozenset(get_args(OrigenDeMetadatos))
+"""Los orígenes que declara el catálogo (``pendiente`` incluido, US-123); cualquier otro valor se omite: no se puede
+saber qué garantiza (RN-25)."""
 
 
 def mejor_chunk_por_documento(citables: Mapping[str, ChunkCitable]) -> dict[str, ChunkCitable]:
@@ -64,11 +76,12 @@ class ApplicabilityService:
         mejores_chunks: Mapping[str, ChunkCitable],
         poblaciones: Mapping[str, PoblacionDelEstudio],
     ) -> tuple[AplicabilidadDeFuente, ...]:
-        """Una ``AplicabilidadDeFuente`` por documento con población estructurada, criterios en el orden del catálogo.
+        """Una ``AplicabilidadDeFuente`` por documento con fila de población, criterios en el orden del catálogo.
 
-        Un documento ``pendiente`` (o sin fila de población) se omite: decir «no reportado» atribuiría a la fuente algo
-        que nadie verificó (RN-25). El orden entre documentos es por relevancia de su mejor chunk y, a igualdad,
-        ``externalId``: determinista y sin significado clínico (RN-03)."""
+        Un documento ``pendiente`` entra con todos sus criterios sin valor estructurado: el camino textual (US-123) decide
+        qué se acepta, y lo que no queda ``desconocido`` (decidido, usuario, 2026-10-27). Un documento sin fila de
+        población, o con un origen que el catálogo no declara, se omite. El orden entre documentos es por relevancia de su mejor chunk y, a igualdad, ``externalId``:
+        determinista y sin significado clínico (RN-03)."""
         criterios = self.criterios_del(tipo_de_cancer)
         if not criterios:
             return ()  # sin criterios en el catálogo no hay nada que comparar: applicability = []
@@ -76,7 +89,7 @@ class ApplicabilityService:
             _aplicabilidad_de(mejor, criterios, contexto, poblaciones[documento])
             for documento, mejor in mejores_chunks.items()
             if documento in poblaciones
-            and poblaciones[documento].metadata_source in ORIGENES_ESTRUCTURADOS
+            and poblaciones[documento].metadata_source in ORIGENES_CONOCIDOS
         ]
         return tuple(sorted(fuentes, key=_orden_por_relevancia))
 

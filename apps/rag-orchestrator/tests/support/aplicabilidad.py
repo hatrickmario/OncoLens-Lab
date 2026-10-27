@@ -15,7 +15,13 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from app.application.ports import EvidenceGenerator, EvidenciaGenerada, ResultadoDeRecuperacion
+from app.application.ports import (
+    ApplicabilityTextProposer,
+    EvidenceGenerator,
+    EvidenciaGenerada,
+    NliClassifier,
+    ResultadoDeRecuperacion,
+)
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
@@ -73,6 +79,8 @@ def _poblacion_de_la_semilla() -> dict[str, object]:
 
 
 POBLACIONES_FX08BA: dict[str, PoblacionDelEstudio] = {
+    # doc-a2: guía sin población extraída (US-123): la ingesta no pudo estructurarla y la deja ``pendiente``.
+    "doc-a2": PoblacionDelEstudio("pendiente", _poblacion_de_la_semilla()),
     "doc-a1": PoblacionDelEstudio(
         "fuente_estructurada",
         {
@@ -94,14 +102,19 @@ POBLACIONES_FX08BA: dict[str, PoblacionDelEstudio] = {
     "doc-a6": PoblacionDelEstudio("pendiente", _poblacion_de_la_semilla()),
 }
 
-DOCUMENTOS_FX08BA = ("doc-a1", "doc-a3", "doc-a4", "doc-a5", "doc-a6")
+DOCUMENTOS_FX08BA = ("doc-a1", "doc-a2", "doc-a3", "doc-a4", "doc-a5", "doc-a6")
 
 
 def _chunk_id(documento: str) -> str:
     return f"ch-{documento.removeprefix('doc-')}-1"
 
 
+TEXTO_DE_CH_A2_1 = "This guidance applies to patients with HER2-negative disease."
+
+
 def _texto_del_chunk(documento: str) -> str:
+    if documento == "doc-a2":
+        return TEXTO_DE_CH_A2_1
     return (
         f"Synthetic adjuvant study {documento} describing anti-HER2 therapy after surgery (test)."
     )
@@ -227,6 +240,8 @@ def entorno_de_aplicabilidad(
     catalogo: Path = APL_1_0_0,
     generador: EvidenceGenerator | None = None,
     catalogo_falso: CatalogoFalso | None = None,
+    proponente: ApplicabilityTextProposer | None = None,
+    clasificador_nli: NliClassifier | None = None,
 ) -> EntornoDeRecuperacion:
     """El servicio real con los bordes falsos de FX-08b-a: solo los ``documentos`` dados superan el umbral.
 
@@ -239,4 +254,6 @@ def entorno_de_aplicabilidad(
         catalogo_clinico=catalogo_clinico_falso(version),
         generador=generador or GeneradorDeAplicabilidad(),
         criterios=criterios_de(catalogo),
+        proponente=proponente,
+        clasificador_nli=clasificador_nli,
     )

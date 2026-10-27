@@ -12,7 +12,13 @@ from app.domain.lenguaje import Coincidencia, ListaTerminos, Nivel, check_prohib
 from app.domain.nli import ParNli, ResultadoNli
 
 CampoGenerado = Literal[
-    "option", "rationale", "details", "unsupportedClaims", "limitations[].text", "synthesis"
+    "option",
+    "rationale",
+    "details",
+    "unsupportedClaims",
+    "limitations[].text",
+    "synthesis",
+    "studyPopulationValue",
 ]
 CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
 

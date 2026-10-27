@@ -111,8 +111,8 @@
       {
         "destino": "clinical-api",
         "operaciones": [
-          { "op": "test", "path": "/components/schemas/AnalysisBasis/required/9", "value": "agentSteps" },
-          { "op": "remove", "path": "/components/schemas/AnalysisBasis/required/9" }
+          { "op": "test", "path": "/components/schemas/AnalysisBasis/required/10", "value": "agentSteps" },
+          { "op": "remove", "path": "/components/schemas/AnalysisBasis/required/10" }
         ]
       }
     ],
