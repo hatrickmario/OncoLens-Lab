@@ -19,6 +19,17 @@ prompt de aplicabilidad registrada, OQ-1 decidida) · 🔗 Regresión [RN-01] �
 > no encaja en la regla del catálogo queda `desconocido` y el LLM **no** asigna estado; (4) la llamada de aplicabilidad
 > devuelve `chunkId` reales: los alias como en `l1d-287-alias-chunks-cita` quedan como seguimiento, fuera de este change.
 
+> **Conciliación con lo mergeado y decidido (usuario, 2026-10-27, Gate 1 reducido):** (1) `l1d-127` **omite** de
+> `applicability[]` los documentos `metadata_source = pendiente`; este change los **re-incorpora** por el camino textual
+> (US-123): un documento `pendiente` entra con todos sus criterios pendientes de texto, y el que el LLM calle queda
+> `desconocido` / `no_reportado_por_fuente`; (2) el catálogo real 1.1.0 ya trae 6 criterios por tipo (L1D-126) y
+> `population_criteria` real tiene la forma de L1D-117 (`biomarcadores` objeto, valor `positivo`): el criterio es
+> «sin valor estructurado» cuando `valor_del_estudio()` de L1D-127 devuelve `None`; (3) L1D-127 expone `applicability[]`
+> con la regla de cita «todo valor del estudio no nulo cita un chunk»: el valor textual aceptado cita **el chunk
+> propuesto y validado**, no el mejor chunk; (4) sin puntaje (RN-28), metadatos copiados literalmente (RN-25).
+> Efecto en el diseño: la etapa textual es una clase propia de `application/` que **compone** `ApplicabilityService`
+> (que sigue sin puerto de LLM: garantía estructural de ADR-34 b y de US-122 AC-6) en vez de modificarlo (design D8).
+
 > **Supuesto "(asumido)" del AC-5:** falla cerrada si el NLI no está disponible durante la
 > aplicabilidad, igual que US-064 AC-6 (aceptado en el S1, `[S1 resp. 3]`): `503 NLI_UNAVAILABLE`
 > y ninguna aplicabilidad sin validar.
@@ -36,17 +47,21 @@ criterio queda `desconocido` con `no_reportado_por_fuente` y la afirmación se o
 
 ## What Changes
 
-- **Camino textual de la aplicabilidad** en `rag-orchestrator`: para cada fuente recuperada y cada
+- **Camino textual de la aplicabilidad** en `rag-orchestrator` (clase `AplicabilidadTextual`, que compone el resultado
+  estructurado de L1D-127): para cada fuente recuperada y cada
   criterio del catálogo sin valor estructurado en `population_criteria`, se pide al LLM una propuesta
   `(criterio, valor del estudio, chunkId)`. Nunca para criterios con valor estructurado (US-122 AC-6)
   ni con `sin_evidencia` (RN-02).
+- **Documentos `pendiente` re-incorporados**: `ApplicabilityService` ya no los omite (cambia el requisito de
+  `l1d-127`, ver «Modified Capabilities»); todos sus criterios son pendientes de texto.
 - **Validación de la propuesta** reutilizando lo existente: la cita pasa `validar_citas()` (US-063,
   solo chunks recuperados en esta consulta y de esa fuente; campos copiados del corpus, RN-04) y la
   afirmación pasa el NLI estricto (`SupportChecker` / `VerificadorDeSoporte` de US-064, umbral
   `NLI_ENTAILMENT_THRESHOLD`) con el texto del chunk citado como premisa, y el filtro de términos
   prohibidos (RN-23) antes del NLI.
-- **Valor aceptado** → `studyPopulationValue` = valor propuesto, `citedSources` con el chunk copiado del
-  corpus, y el **estado lo asigna la regla del catálogo** (la de US-122) sobre ese valor; el
+- **Valor aceptado** → `studyPopulationValue` = valor propuesto (verificado), `citedSources` con **el chunk citado**
+  copiado del corpus, y el **estado lo asigna la regla del catálogo** (la de US-122) sobre ese valor normalizado a su
+  vocabulario (quitando el rótulo del criterio: «HER2 negativo» → `negativo`); el
   `patientValue` sigue copiado del `clinicalContext` (ADR-34).
 - **Valor no aceptado** (sin soporte, cita ajena o término prohibido) → criterio `desconocido`,
   `unknownReason = no_reportado_por_fuente`, `studyPopulationValue = null`, `citedSources = []`; la
@@ -78,7 +93,10 @@ criterio queda `desconocido` con `no_reportado_por_fuente` y la afirmación se o
 
 ### Modified Capabilities
 
-- Ninguna. `evidence-analysis` no cambia: los requisitos de soporte NLI, umbral y `503 NLI_UNAVAILABLE`
+- `applicability` (requisito «Aplicabilidad por fuente recuperada con los criterios del catálogo», de `l1d-127`): el
+  documento con `metadata_source = pendiente` deja de omitirse y entra por el camino textual (MODIFIED en este delta;
+  vale al archivar tras L1D-127).
+- `evidence-analysis` no cambia: los requisitos de soporte NLI, umbral y `503 NLI_UNAVAILABLE`
   (L1D-180) se reutilizan sin modificarse; `omittedClaims` ya cuenta "toda afirmación generada omitida".
 
 ## Bounded contexts

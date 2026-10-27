@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CAMPOS_COPIADOS_DEL_CORPUS, CAMPOS_GENERADOS } from '../src/index.js';
 
 describe('origen de los campos del contrato', () => {
-  it('lista exactamente los cinco campos copiados del corpus y los seis generados [US-068 AC-3, ARR-08]', () => {
+  it('lista exactamente los cinco campos copiados del corpus y los siete generados [US-068 AC-3, ARR-08, US-123]', () => {
     expect([...CAMPOS_COPIADOS_DEL_CORPUS]).toEqual([
       'chunkTextSnapshot',
       'title',
@@ -17,6 +17,7 @@ describe('origen de los campos del contrato', () => {
       'unsupportedClaims',
       'limitations[].text',
       'synthesis',
+      'studyPopulationValue',
     ]);
   });
 

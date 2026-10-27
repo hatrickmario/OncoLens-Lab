@@ -25,7 +25,11 @@ function registroDe(cuerpo: unknown, topRelevanceScore: number | null) {
     request,
     dataRefs: new Map([['r1', { tabla: 'diagnosis', id: 'dx-1' }]]),
     respuesta,
-    base: crearBaseDelAnalisis().construir(request, respuesta, false),
+    base: crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
+      request,
+      respuesta,
+      false,
+    ),
     topRelevanceScore,
   });
 }

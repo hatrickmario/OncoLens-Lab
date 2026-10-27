@@ -18,7 +18,11 @@ import {
 const AHORA = new Date('2026-10-16T12:00:00.000Z');
 const request = peticion as RagQueryInternalRequest;
 const respuesta = validarRespuestaInterna(conEvidencia);
-const base = crearBaseDelAnalisis().construir(request, respuesta, true);
+const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
+  request,
+  respuesta,
+  true,
+);
 
 function entrada(resto: Partial<EntradaDelRegistro> = {}): EntradaDelRegistro {
   return {
@@ -44,6 +48,17 @@ function entrada(resto: Partial<EntradaDelRegistro> = {}): EntradaDelRegistro {
 }
 
 describe('armarRegistro', () => {
+  it('persiste como missingCriticalData exactamente la lista enviada en el contexto del request', () => {
+    const conFaltantes: RagQueryInternalRequest = {
+      ...request,
+      clinicalContext: { ...request.clinicalContext, missingCriticalData: ['grado', 'rp'] },
+    };
+
+    const registro = armarRegistro(entrada({ request: conFaltantes }));
+
+    expect(registro.missingCriticalData).toEqual(['grado', 'rp']);
+  });
+
   it('copia identificadores, trazabilidad y tiempo: el id y la hora vienen inyectados y el traceId es el generado', () => {
     const registro = armarRegistro(entrada());
 
@@ -95,7 +110,7 @@ describe('armarRegistro', () => {
       analysisBasis: base,
       agentSteps: [],
       omittedClaims: 0,
-      missingCriticalData: [],
+      missingCriticalData: ['estado_menopausico', 'ki67'],
       priorAnalysesUsed: [],
     });
   });
@@ -163,6 +178,12 @@ describe('huellaDelContexto', () => {
 });
 
 describe('armarRegistroTipoNoHabilitado', () => {
+  it('deja missingCriticalData vacío en el tipo no habilitado porque no calcula el checklist', () => {
+    const registro = armarRegistroTipoNoHabilitado(entradaSinIA());
+
+    expect(registro.missingCriticalData).toEqual([]);
+  });
+
   const baseSinIA = construirBaseTipoNoHabilitado({
     sourcesSelected: request.sourcesSelected,
     filters: request.filtersApplied,

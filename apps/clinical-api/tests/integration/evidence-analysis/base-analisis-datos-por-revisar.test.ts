@@ -41,13 +41,13 @@ afterAll(async () => {
 describe('Base del análisis con FX-T1a-a', () => {
   it('lista el Ki-67 por revisar y el receptor de estrógeno en conflicto y omite los rechazados cuando el contexto viene de FX-T1a-a [US-066 AC-6]', async () => {
     const caso = await createEvidenceAnalysisRepository(mundo.cliente).leerCaso(idDePaciente('a'));
-    const { contexto } = construirContextoPermitido(caso!, new Date(AHORA));
+    const { contexto } = construirContextoPermitido(caso!, new Date(AHORA), []);
     const solicitud: RagQueryInternalRequest = {
       ...(peticion as RagQueryInternalRequest),
       clinicalContext: { pseudoPatientId: 'psd_TestPseudonimo0001', ...contexto },
     };
 
-    const base = crearBaseDelAnalisis().construir(
+    const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
       solicitud,
       validarRespuestaInterna(conEvidencia),
       false,
@@ -67,13 +67,13 @@ describe('Base del análisis con FX-T1a-a', () => {
   });
   it('lista el diagnóstico primero y el atributo al final, en el orden de asignación de los dataRef, cuando el contexto viene de construirContextoPermitido() [US-066 AC-1]', async () => {
     const caso = await createEvidenceAnalysisRepository(mundo.cliente).leerCaso(idDePaciente('a'));
-    const { contexto } = construirContextoPermitido(caso!, new Date(AHORA));
+    const { contexto } = construirContextoPermitido(caso!, new Date(AHORA), []);
     const solicitud: RagQueryInternalRequest = {
       ...(peticion as RagQueryInternalRequest),
       clinicalContext: { pseudoPatientId: 'psd_TestPseudonimo0001', ...contexto },
     };
 
-    const base = crearBaseDelAnalisis().construir(
+    const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
       solicitud,
       validarRespuestaInterna(conEvidencia),
       false,

@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 
 const bff = crearBffAnalisisSimulado();
 
-const SUPUESTO = 'Los faltantes críticos aún no se calculan en esta versión';
+const SUPUESTO_DE_CATALOGO = 'Supuesto de prueba de la regla del catálogo';
 const VER_DETALLE = 'Ver detalle de la Base';
 
 /** Respuesta de [US-066 AC-1] derivada de `con-evidencia-s1.json` (el ejemplo no se edita). */
@@ -25,7 +25,32 @@ const conBaseDeUs066 = {
   analysisBasis: {
     ...conEvidencia.analysisBasis,
     missingCriticalData: [],
-    assumptions: [{ text: SUPUESTO, origin: 'regla_catalogo' }],
+    missingCriticalDataLabels: [],
+    continuedWithWarning: false,
+    assumptions: [],
+    omittedClaims: 0,
+  },
+};
+
+const ETIQUETAS_F_M2 = [
+  'Grado histológico',
+  'Receptor de progesterona',
+  'HER2 por ISH',
+  'Ki-67',
+  'Estado menopáusico',
+  'BRCA germinal',
+];
+const CLAVES_F_M2 = ['grado', 'rp', 'her2_ish', 'ki67', 'estado_menopausico', 'brca_germinal'];
+
+/** Respuesta de [US-128 AC-1] (F-M2) derivada de `con-evidencia-s1.json`: seis faltantes y continuó con aviso. */
+const conSeisFaltantes = {
+  ...conEvidencia,
+  analysisBasis: {
+    ...conEvidencia.analysisBasis,
+    missingCriticalData: CLAVES_F_M2,
+    missingCriticalDataLabels: ETIQUETAS_F_M2,
+    continuedWithWarning: true,
+    assumptions: [],
     omittedClaims: 0,
   },
 };
@@ -43,7 +68,7 @@ describe('AnalysisBasisPanel', () => {
     replace.mockReset();
   });
 
-  it('muestra el resumen con faltantes, supuestos con el texto del supuesto declarado, fuentes no incluidas, omitidas y la fecha 30/09/2026 sin expandir [US-067 AC-1]', async () => {
+  it('muestra el resumen con cero datos críticos faltantes, supuestos, fuentes no incluidas, omitidas y la fecha 30/09/2026 sin el supuesto declarado sin expandir [US-067 AC-1]', async () => {
     bff.responder({ status: 200, cuerpo: conBaseDeUs066 });
     await analizar();
 
@@ -52,10 +77,10 @@ describe('AnalysisBasisPanel', () => {
     ).toBeTruthy();
     expect(
       screen.getByText(
-        'Faltantes: 0 · Supuestos: 1 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
+        '0 datos críticos faltantes · Supuestos: 0 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
       ),
     ).toBeTruthy();
-    expect(screen.getByText(`Supuesto (regla del catálogo): ${SUPUESTO}`)).toBeTruthy();
+    expect(document.body.textContent).not.toContain('aún no se calculan');
     expect(screen.getByText('Evidencia del corpus al 30/09/2026')).toBeTruthy();
     expect(screen.getByRole('button', { name: VER_DETALLE })).toBeTruthy();
   });
@@ -98,14 +123,17 @@ describe('AnalysisBasisPanel', () => {
   });
 
   it('rotula Limitación estructural la limitación de origin estructural [US-067 AC-2]', async () => {
-    bff.responder({ status: 200, cuerpo: conBaseDeUs066 });
+    bff.responder({
+      status: 200,
+      cuerpo: conBase({ assumptions: [{ text: SUPUESTO_DE_CATALOGO, origin: 'regla_catalogo' }] }),
+    });
     const usuario = await analizar();
     await usuario.click(await screen.findByRole('button', { name: VER_DETALLE }));
 
     expect(
       screen.getByText('Limitación estructural: Síntesis basada en una sola fuente.'),
     ).toBeTruthy();
-    expect(screen.getByText(`Regla del catálogo: ${SUPUESTO}`)).toBeTruthy();
+    expect(screen.getByText(`Regla del catálogo: ${SUPUESTO_DE_CATALOGO}`)).toBeTruthy();
   });
 
   it('dice qué fuentes y filtros se buscaron y 0 fragmentos sobre el umbral sin expandir cuando no hay evidencia [US-067 AC-3]', async () => {
@@ -155,7 +183,12 @@ describe('AnalysisBasisPanel', () => {
   it('dice No se consultó el corpus: tipo fuera de alcance ante tipo_no_habilitado [US-067 AC-3]', () => {
     render(<AnalysisResult analisis={tipoNoHabilitado as never} onVerFragmento={() => {}} />);
 
-    expect(screen.getByText('No se consultó el corpus: tipo fuera de alcance')).toBeTruthy();
+    expect(
+      screen.getByText(
+        'No se consultó el corpus: tipo fuera de alcance · Datos críticos faltantes: no evaluados en este estado',
+      ),
+    ).toBeTruthy();
+    expect(document.body.textContent).not.toContain('0 datos críticos faltantes');
     expect(screen.queryByText(/Qué se buscó/)).toBeNull();
   });
 
@@ -217,5 +250,67 @@ describe('AnalysisBasisPanel', () => {
 
     expect(new Set(ids).size).toBe(2);
     for (const id of ids) expect(document.querySelectorAll(`[id="${id}"]`)).toHaveLength(1);
+  });
+
+  it('dice 6 datos críticos faltantes · continuó con aviso sin expandir cuando continuedWithWarning es true [US-128 AC-4]', async () => {
+    bff.responder({ status: 200, cuerpo: conSeisFaltantes });
+    await analizar();
+
+    expect(
+      await screen.findByText(
+        '6 datos críticos faltantes · continuó con aviso · Supuestos: 0 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('dice 1 dato crítico faltante y no continuó con aviso cuando falta uno y continuedWithWarning es false [US-128 AC-4]', async () => {
+    bff.responder({
+      status: 200,
+      cuerpo: conBase({
+        missingCriticalData: ['ki67'],
+        missingCriticalDataLabels: ['Ki-67'],
+        continuedWithWarning: false,
+      }),
+    });
+    await analizar();
+
+    const resumen = await screen.findByText(/^1 dato crítico faltante · Supuestos: 0/);
+    expect(resumen.textContent).not.toContain('continuó con aviso');
+    expect(document.body.textContent).not.toContain('1 datos críticos');
+  });
+
+  it('lista las seis etiquetas del catálogo con la nota Solo informa; no bloquea el análisis y ninguna clave al expandir [US-128 AC-4]', async () => {
+    bff.responder({ status: 200, cuerpo: conSeisFaltantes });
+    const usuario = await analizar();
+    await usuario.click(await screen.findByRole('button', { name: VER_DETALLE }));
+
+    expect(
+      screen.getByRole('heading', { level: 4, name: 'Datos críticos faltantes' }),
+    ).toBeTruthy();
+    expect(screen.getByText('Solo informa; no bloquea el análisis')).toBeTruthy();
+    const etiquetas = screen
+      .getAllByRole('listitem')
+      .map((item) => item.textContent)
+      .filter((texto) => ETIQUETAS_F_M2.includes(texto ?? ''));
+    expect(etiquetas).toEqual(ETIQUETAS_F_M2);
+    for (const clave of CLAVES_F_M2) expect(screen.queryByText(clave)).toBeNull();
+  });
+
+  it('no muestra Datos críticos faltantes cuando la lista está vacía [US-128 AC-4]', async () => {
+    bff.responder({ status: 200, cuerpo: conBaseDeUs066 });
+    const usuario = await analizar();
+    await usuario.click(await screen.findByRole('button', { name: VER_DETALLE }));
+
+    expect(screen.queryByRole('heading', { name: 'Datos críticos faltantes' })).toBeNull();
+    expect(screen.queryByText('Solo informa; no bloquea el análisis')).toBeNull();
+  });
+
+  it('dice Datos críticos faltantes: no evaluados en este estado y no 0 datos críticos faltantes cuando el tipo no está habilitado [US-128 AC-4]', () => {
+    render(<AnalysisResult analisis={tipoNoHabilitado as never} onVerFragmento={() => {}} />);
+
+    expect(document.body.textContent).toContain(
+      'Datos críticos faltantes: no evaluados en este estado',
+    );
+    expect(document.body.textContent).not.toContain('0 datos críticos faltantes');
   });
 });
