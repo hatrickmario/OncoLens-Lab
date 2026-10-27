@@ -21,7 +21,9 @@ from tests.support.inferencia_falsa import PASAJES_FX06AC
 pytestmark = pytest.mark.models
 
 
-def test_el_sparse_real_devuelve_al_menos_un_termino_con_peso_por_pasaje_y_es_determinista() -> None:
+def test_el_sparse_real_devuelve_al_menos_un_termino_con_peso_por_pasaje_y_es_determinista() -> (
+    None
+):
     _, sparse = cargar_embeddings_y_sparse_de_pasajes(
         ajustes_de_modelos_del_entorno(),
         AjustesSparse(_env_file=None),  # type: ignore[call-arg]
