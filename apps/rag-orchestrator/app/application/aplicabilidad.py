@@ -66,6 +66,8 @@ class ApplicabilityService:
         que nadie verificó (RN-25). El orden entre documentos es por relevancia de su mejor chunk y, a igualdad,
         ``externalId``: determinista y sin significado clínico (RN-03)."""
         criterios = self.criterios_del(tipo_de_cancer)
+        if not criterios:
+            return ()  # sin criterios en el catálogo no hay nada que comparar: applicability = []
         fuentes = [
             _aplicabilidad_de(mejor, criterios, contexto, poblaciones[documento])
             for documento, mejor in mejores_chunks.items()
