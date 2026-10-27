@@ -1,9 +1,11 @@
 """Plantilla del prompt `rag-query@0.1.0` (L1D-275, tarea 2.8): RN-23, `[S1 resp. 15]`, `[S1 resp. 34]`."""
 
+import re
 from pathlib import Path
 
 import pytest
 
+from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.alias_de_chunks import asignar_alias
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.relevance import ChunkPuntuado
@@ -12,8 +14,9 @@ from app.prompts.rag_query import (
     VERSION_DEL_PROMPT,
     bloque_de_datos_del_paciente,
     construir_prompt_rag_query,
+    etiqueta_de_procedencia,
 )
-from app.schemas.generated.models import ClinicalContext
+from app.schemas.generated.models import ClinicalContext, Provenance
 from tests.support.recuperacion import solicitud_de
 
 RAIZ = Path(__file__).resolve().parents[4]
@@ -40,8 +43,8 @@ def test_plantilla_contiene_la_instruccion_de_poblacion_y_escenario_atribuida_a_
     assert "no lo dirijas al paciente" in texto
 
 
-def test_version_del_prompt_es_rag_query_0_3_0_porque_pide_citar_por_alias():
-    assert VERSION_DEL_PROMPT == "rag-query@0.3.0"
+def test_version_del_prompt_es_rag_query_0_4_0_porque_etiqueta_la_procedencia_de_los_datos():
+    assert VERSION_DEL_PROMPT == "rag-query@0.4.0"
 
 
 def test_prompt_incluye_pregunta_contexto_y_alias_de_cada_fragmento():
@@ -127,3 +130,89 @@ def test_bloque_de_datos_acompana_el_ki67_con_sin_verificar_cuando_requiere_revi
     assert len(etiquetadas) == 1
     assert "Ki-67 20 %" in etiquetadas[0]
     assert "(sin verificar)" in etiquetadas[0]
+
+
+@pytest.mark.ac("US-065", 5)
+def test_bloque_de_datos_etiqueta_en_conflicto_y_no_sin_verificar_cuando_conflict_es_true():
+    contexto = _contexto_de_fx_t1a_a(ki67="verificado", er_en_conflicto=True)
+
+    lineas = bloque_de_datos_del_paciente(contexto).splitlines()
+
+    etiquetadas = [linea for linea in lineas if "Receptor de estrógeno 90 %" in linea]
+    assert etiquetadas == ["- Receptor de estrógeno 90 % (en conflicto)"]
+    assert not any("(sin verificar)" in linea for linea in lineas)
+
+
+def test_bloque_de_datos_no_etiqueta_ningun_dato_cuando_todos_estan_verificados():
+    contexto = _contexto_de_fx_t1a_a(ki67="verificado")
+
+    bloque = bloque_de_datos_del_paciente(contexto)
+
+    assert "(sin verificar)" not in bloque
+    assert "(en conflicto)" not in bloque
+    assert "- Ki-67 20 %" in bloque.splitlines()
+
+
+def test_etiqueta_de_procedencia_es_none_cuando_el_dato_es_auto_aceptado():
+    procedencia = Provenance.model_validate(_procedencia(reviewStatus="auto_aceptado"))
+
+    assert etiqueta_de_procedencia(procedencia) is None
+
+
+@pytest.mark.ac("US-065", 5)
+def test_bloque_de_datos_omite_atributos_y_eventos_aunque_esten_sin_verificar():
+    datos = _contexto_de_fx_t1a_a(ki67="verificado").model_dump(mode="json")
+    sin_verificar = _procedencia(reviewStatus="requiere_revision")
+    datos["attributes"] = [
+        {
+            "dataRef": "r7",
+            "key": "ATRIBUTO-X",
+            "value": "valor-a",
+            "monthsAgo": 1,
+            "provenance": sin_verificar,
+        }
+    ]
+    datos["events"][0]["description"] = "EVENTO-X"
+    datos["events"][0]["provenance"] = sin_verificar
+
+    bloque = bloque_de_datos_del_paciente(ClinicalContext.model_validate(datos))
+
+    assert "ATRIBUTO-X" not in bloque
+    assert "EVENTO-X" not in bloque
+    assert "(sin verificar)" not in bloque
+
+
+@pytest.mark.ac("US-065", 5)
+def test_resumen_del_contexto_es_identico_cuando_el_ki67_esta_sin_verificar_y_cuando_esta_verificado():
+    sin_verificar = _contexto_de_fx_t1a_a(ki67="requiere_revision", er_en_conflicto=True)
+    verificado = _contexto_de_fx_t1a_a(ki67="verificado", er_en_conflicto=True)
+
+    resumen = resumen_del_contexto_clinico(sin_verificar)
+
+    assert resumen == resumen_del_contexto_clinico(verificado)
+    assert "(sin verificar)" not in resumen
+    assert "(en conflicto)" not in resumen
+
+
+@pytest.mark.ac("US-065", 5)
+def test_prompt_con_datos_etiquetados_no_contiene_terminos_prohibidos_ni_identificadores():
+    contexto = _contexto_de_fx_t1a_a(ki67="requiere_revision", er_en_conflicto=True)
+    fragmentos = asignar_alias(
+        [ChunkPuntuado("ch-1", "doc-1", "texto del fragmento", 0.9)]
+    ).fragmentos
+
+    prompt = construir_prompt_rag_query(
+        "¿Qué opciones describe la evidencia?",
+        bloque_de_datos_del_paciente(contexto),
+        fragmentos,
+        "es",
+    )
+
+    assert "(sin verificar)" in prompt
+    assert "(en conflicto)" in prompt
+    assert check_prohibited_terms(prompt, _lista(), niveles=("A", "B")) == []
+    assert contexto.pseudoPatientId not in prompt
+    assert contexto.diagnosis is not None
+    referencias = [contexto.diagnosis.dataRef.root, *(b.dataRef.root for b in contexto.biomarkers)]
+    for referencia in referencias:
+        assert re.search(rf"\b{re.escape(referencia)}\b", prompt) is None

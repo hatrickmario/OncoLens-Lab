@@ -21,7 +21,6 @@ from app.application.ports import (
     LlmClient,
     ResultadoDeRecuperacion,
 )
-from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.domain.alias_de_chunks import (
     CITA_NO_TRADUCIBLE,
     PATRON_DE_ALIAS,
@@ -32,7 +31,7 @@ from app.domain.alias_de_chunks import (
 from app.domain.calidad_de_texto import tiene_artefactos
 from app.domain.citations import OpcionGenerada
 from app.domain.relevance import ChunkPuntuado
-from app.prompts.rag_query import construir_prompt_rag_query
+from app.prompts.rag_query import bloque_de_datos_del_paciente, construir_prompt_rag_query
 from app.schemas.generated.models import RagQueryInternalRequest
 
 logger = logging.getLogger(__name__)
@@ -98,7 +97,7 @@ class LlmEvidenceGenerator:
         )
         prompt = construir_prompt_rag_query(
             solicitud.query,
-            resumen_del_contexto_clinico(solicitud.clinicalContext),
+            bloque_de_datos_del_paciente(solicitud.clinicalContext),
             tabla.fragmentos,
             recuperacion.meta.responseLanguage,
             self._max_parrafos_detalle,

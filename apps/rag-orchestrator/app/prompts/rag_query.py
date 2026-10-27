@@ -1,4 +1,4 @@
-"""Prompt `rag-query@0.3.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
+"""Prompt `rag-query@0.4.0` de la rama con evidencia de `/rag/query` (US-225): función pura, sin E/S.
 
 Las instrucciones están redactadas en positivo (describir lo que reporta la evidencia citada) y sin términos de
 RN-23; un test las verifica con ``check_prohibited_terms``. El prompt solo recibe campos clínicos ya enmascarados,
@@ -11,9 +11,13 @@ import re
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
-from app.schemas.generated.models import ClinicalContext
+from app.schemas.generated.models import ClinicalContext, Provenance, ReviewStatus
 
-VERSION_DEL_PROMPT = "rag-query@0.3.0"
+VERSION_DEL_PROMPT = "rag-query@0.4.0"
+
+# Etiquetas de procedencia del bloque de datos del paciente (RN-07): texto del prompt, versionado con él (no RN-22).
+ETIQUETA_SIN_VERIFICAR = "(sin verificar)"
+ETIQUETA_EN_CONFLICTO = "(en conflicto)"
 
 # Fórmula de atribución «La fuente [cita] describe que…» (ARR-03 AC-3), en español y en inglés; la cita es opcional.
 # El prompt vigente NO la impone (ver reports/eval/L1D-279-ol06-rn23.md): la suite `evaluate` mide si el generador la usa.
@@ -42,7 +46,8 @@ Instrucciones:
 
 Pregunta: {pregunta}
 
-Contexto clínico: {contexto}
+Datos del paciente (las etiquetas "(sin verificar)" y "(en conflicto)" indican el estado de revisión del dato; no forman parte del dato):
+{contexto}
 
 Fragmentos:
 {fragmentos}
@@ -80,7 +85,39 @@ def construir_prompt_rag_query(
 
 def bloque_de_datos_del_paciente(contexto: ClinicalContext) -> str:
     """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3)."""
-    raise NotImplementedError("no implementado")
+    lineas: list[str] = []
+    diagnostico = contexto.diagnosis
+    if diagnostico is not None:
+        partes = [
+            diagnostico.cancerType.root,
+            diagnostico.histology.root if diagnostico.histology else "",
+            diagnostico.grade.root if diagnostico.grade else "",
+            f"{diagnostico.stagingSystem.root} {diagnostico.stageValue.root}",
+        ]
+        lineas.append(
+            _linea_etiquetada(
+                "; ".join(p.strip() for p in partes if p.strip()), diagnostico.provenance
+            )
+        )
+    lineas += [
+        _linea_etiquetada(f"{b.biomarkerName.root} {b.value.root}", b.provenance)
+        for b in contexto.biomarkers
+    ]
+    return "\n".join(lineas)
+
+
+def etiqueta_de_procedencia(procedencia: Provenance) -> str | None:
+    """Etiqueta legible de un dato según su estado de revisión (RN-07); el conflicto precede al «sin verificar»."""
+    if procedencia.conflict:
+        return ETIQUETA_EN_CONFLICTO
+    if procedencia.reviewStatus == ReviewStatus.requiere_revision:
+        return ETIQUETA_SIN_VERIFICAR
+    return None
+
+
+def _linea_etiquetada(texto: str, procedencia: Provenance) -> str:
+    etiqueta = etiqueta_de_procedencia(procedencia)
+    return f"- {texto} {etiqueta}" if etiqueta else f"- {texto}"
 
 
 def _fragmento(fragmento: FragmentoConAlias) -> str:
