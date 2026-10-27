@@ -14,6 +14,14 @@ escenario `propuesta_revisada` aceptado para el S3, cierre en la sesión de onc�
 > castración en próstata como excluyentes; "Parcial" según los ejemplos de FR-25), publicadas en el catálogo
 > versionado por US-121. Un cambio que salga de la sesión del S4 solo toca el catálogo JSON, no este código.
 
+> **Decidido (usuario, 2026-10-27, Gate 1 revalidado):** (1) `metadata_source = pendiente` NO es estructurado: el
+> documento se omite de `applicability[]` (no se reporta como `no_reportado_por_fuente`). (2) HER2 se compara por
+> prefijo exacto sobre `rule.equivalences` (como L1D-94); el estadio no tiene escala en el catálogo 1.1.0 y queda
+> `desconocido` en el S3. (3) Criterios con lista (RE/RP, HRR/BRCA): valor rotulado `RE: …; RP: …` copiado sin
+> componer, `desconocido` si falta un componente. (4) `poblacion.json` sigue sin leerse en `rag-orchestrator`
+> hasta US-122/US-118 (asimetría aceptada). (5) El catálogo real ya trae 6 criterios por tipo: activación
+> inmediata y *rollback* por revert del PR.
+
 ## Why
 
 `POST /rag/query` devuelve hoy `applicability = []` (S1–S2) y el oncólogo no ve si la población de cada estudio
@@ -27,12 +35,18 @@ contexto clínico, sin que el modelo interprete nada: es reproducible, auditable
 - **Cálculo determinista del estado por criterio** en `rag-orchestrator`: por cada documento con chunks sobre
   el umbral en la consulta, y por cada criterio de aplicabilidad del catálogo del tipo de cáncer, se obtiene el
   valor del paciente del `clinicalContext` (por el `destination` del criterio), el valor del estudio de
-  `population_criteria` del documento (cuando `metadata_source` lo da como estructurado) y se aplica la regla
-  declarativa del criterio (igualdad, pertenencia a lista, rango, con su regla de "Parcial") para obtener
-  `coincide | parcial | no_coincide | desconocido`.
+  `population_criteria` del documento (cuando `metadata_source` lo da como estructurado: `fuente_estructurada` o
+  `extraido_verificado`) y se aplica la regla declarativa del criterio (igualdad con `rule.equivalences`,
+  pertenencia a lista, rango, con su regla de "Parcial") para obtener `coincide | parcial | no_coincide |
+  desconocido`. Un documento con `metadata_source = pendiente` (la ingesta no pudo extraer sus metadatos, L1D-117)
+  **no es estructurado**: se omite de `applicability[]`, no se reporta como `no_reportado_por_fuente`.
+- **Alcance del S3 declarado:** HER2 por prefijo exacto sobre `rule.equivalences`; ECOG numérico con `rule.limits`;
+  `estadio` (rango sin escala en el catálogo 1.1.0) queda `desconocido` (`unknownReason = null`); criterios con
+  lista (RE/RP, HRR/BRCA) muestran `patientValue` rotulado y quedan `desconocido`; `parcial` por subgrupo solo con
+  fixtures (la ingesta de L1D-117 no extrae subgrupos hasta US-118).
 - **`patientValue` copiado literal** del `clinicalContext` enviado (ADR-34 b); ninguna salida del LLM lo alimenta.
 - **`studyPopulationValue` copiado** carácter a carácter de `population_criteria`, por la clave `studyKey` del
-  criterio (RN-25); ausente o `no_disponible` → `null` y `desconocido` con `unknownReason =
+  criterio (RN-25); ausente, `no_disponible` o con forma no resoluble → `null` y `desconocido` con `unknownReason =
   no_reportado_por_fuente` (salvo que el dato también falte en el paciente: `falta_en_paciente`), sin inferir
   nada. Este change es dueño del único requisito de este valor; US-127 (`l1d-182`) solo le añade su escenario.
 - **`isExclusionary` y `citedSources`** del criterio: la marca viene del catálogo; la cita es la del documento
@@ -71,29 +85,46 @@ contexto clínico, sin que el modelo interprete nada: es reproducible, auditable
   código porque las reglas viven en el catálogo.
 - ↪ **US-121 (L1D-126)**, change `l1d-126-criterios-aplicabilidad-catalogo`: forma y contenido de
   `packages/clinical-catalogs/<tipo>/aplicabilidad.json` (`destination`, `isExclusionary`, `rule`) y su
-  validador. Este change lo consume; los tests reutilizan sus fixtures `test-apl-1.0.0` y `test-apl-1.0.1`
-  (FX-08b-a) y su `poblacion.json` (claves válidas de `studyKey`). **Recibe por escrito el test de aceptación
+  validador; **el catálogo real 1.1.0 ya trae 6 criterios por tipo**. Este change lo consume; los tests reutilizan
+  sus fixtures `packages/clinical-catalogs/test/fixtures/test-apl-1.0.0` y `test-apl-1.0.1` (copias con sha256 en
+  `apps/rag-orchestrator/tests/fixtures/catalogo/`; no se modifican) como FX-08b-a. **Recibe por escrito el test de aceptación
   de US-121 AC-5** (la regla se lee del catálogo montado: `ecog.rule.limits.max = 0` en `test-apl-1.0.1` pasa
   `ecog` de `coincide` a `no_coincide` sin desplegar código), diferido desde `l1d-126` (`[S3 resp. 16]`;
   tarea 1.7b).
-- ↪ **US-118 (L1D-117)**, change del S3 de L1D-117 (aún sin crear): `population_criteria` y `metadata_source`
-  poblados por la ingesta. Los tests siembran `population_criteria` en el catálogo del corpus de test.
+- ↪ **US-118 (L1D-117)**, change `l1d-117-metadatos-poblacion-verificados` (ya en `main`): `population_criteria`
+  (`biomarcadores` como objeto `{"her2": "positivo", …}`; subclaves `her2`, `receptores_hormonales`, `hrr_brca`) y
+  `metadata_source` (`fuente_estructurada | extraido_verificado | pendiente`) poblados por la ingesta. `grado`,
+  `estado_menopausico` y `estado_castracion` son «Desconocido explícito» (decisión 4 de L1D-117, no se extraen),
+  no «supuestas». Los tests siembran `population_criteria` en el catálogo del corpus de test con la forma real y
+  **no** siembran esas tres claves como si la ingesta las produjera.
 - ↪ **US-055 / US-225** (archivados: `l1d-106-retrieval-threshold-sin-evidencia`,
   `l1d-275-generacion-opcion-max-options`), **US-063 / US-064** (archivados: `l1d-179-citas-chunk-recuperado`,
   `l1d-180-soporte-nli-descartadas`): pipeline `con_evidencia` sobre el que se inserta la etapa.
-- 🔗 Produce para: **US-123 (L1D-128, `l1d-128-aplicabilidad-textual-citada`)** (camino textual con cita y NLI), **US-124 (L1D-129, `l1d-129-aplicabilidad-causas-avisos`)** (causa
+- 🔗 Produce para: **US-123 (L1D-128, `l1d-128-aplicabilidad-textual-citada`)** (camino textual con cita y NLI; los documentos `pendiente` omitidos aquí no tienen `SourceApplicability` y L1D-128 debe reconciliarse: **Decidido (usuario, 2026-10-27)**: L1D-128 los re-incorpora en su Gate 1 del S4; L1D-127 no cambia), **US-124 (L1D-129, `l1d-129-aplicabilidad-causas-avisos`)** (causa
   `falta_en_paciente` desde `missingCriticalData`, `patientDataWarning`, AC de conteo y no comparable),
   **US-125 (L1D-130, `l1d-130-herencia-aplicabilidad-recorte`)** (agregación por opción y selección por aplicabilidad).
 - ↪ **`studyKey`** (`[S3 resp. 16]`): cada criterio de `aplicabilidad.json` declara en `studyKey` la clave (o
   subclave) de `population_criteria` que lee; lo añade `l1d-126-criterios-aplicabilidad-catalogo`, con las
-  claves válidas en `packages/clinical-catalogs/poblacion.json` (incluidas las supuestas `estado_menopausico`,
-  `estado_castracion` y `grado`), y este change lo usa para resolver `studyPopulationValue` sin inventar claves.
+  claves válidas en `packages/clinical-catalogs/poblacion.json` (incluidas `estado_menopausico`,
+  `estado_castracion` y `grado`, «Desconocido explícito» en el S3), y este change lo usa para resolver `studyPopulationValue` sin inventar claves.
 - 📦 **Orden de archivo de `applicability`** (`[S3 resp. 16]`): **127** → 128 → 129 → 130 → 182. Este change
   crea la capacidad y debe archivarse primero.
+
+## Efecto de la asimetría con `poblacion.json`
+
+**Decidido (usuario, 2026-10-27):** `rag-orchestrator` no lee `poblacion.json` (la lista de claves válidas la
+valida el catálogo en `clinical-catalogs`) hasta US-122/US-118. Efecto declarado en el S3: como la ingesta no
+extrae `estado_castracion` ni `grado`, en próstata `estado_castracion` e `isup` salen **siempre** `desconocido` y
+`populationNotComparable` **nunca** sale `true` por ese excluyente (el único excluyente de próstata es
+`estado_castracion`); en mama sí puede salir por `estado_her2`. `applicability[]` se ordena por relevancia del
+mejor chunk, sin significado clínico: US-126 debe rotularlo así en la UI.
 
 ## Fuera de alcance
 
 - Valor del estudio extraído del texto con LLM + cita + NLI → US-123.
+- Escala ordenada del estadio y equivalencias de `negativo`/`2+` en el catálogo, comparación componente a
+  componente de RE/RP y HRR/BRCA: cambian contenido del catálogo (exigen `manifest.version` ≥ 1.2.0, *version-guard*
+  D8 de L1D-126) y no son de este change.
 - `patientDataWarning` (`sin_verificar`, `en_conflicto`, `faltante`) y la conciliación de
   `unknownReason = falta_en_paciente` con `missingCriticalData` → US-124. Aquí `patientDataWarning` siempre es
   `null` y, si el destino del criterio no tiene valor en el `clinicalContext`, el criterio queda `desconocido`
@@ -116,4 +147,9 @@ contexto clínico, sin que el modelo interprete nada: es reproducible, auditable
   `app/application/respuesta_con_evidencia.py` (deja de fijar `applicability = []`), adapters de
   `infrastructure/catalogo_clinico/` e `infrastructure/catalog/`, fixtures FX-08b-a en `tests/`.
 - API: sin cambio de forma; `applicability` deja de ir vacío en `con_evidencia`. `clinical-api` no cambia.
+- Catálogo: este change **no** cambia contenido del catálogo, así que no sube `manifest.version`; si una tarea lo
+  cambiara, debe subirla a ≥ 1.2.0 (D8 de L1D-126). El valor `pendiente` de `metadata_source` debe admitirlo el
+  tipo del lector de población (Pydantic / `Literal`).
+- Spec: el escenario US-225 AC-1 (`applicability == []`) pasa a un catálogo de test sin criterios (cambio de spec
+  declarado, no relajación de test).
 - Evaluación: no cambia modelo, prompt, umbral ni corpus; M-08.2 y M-08.6 se miden en US-132.

@@ -8,6 +8,7 @@ se valida contra el spec con el hook de `verificacion_proveedor.py` (US-214).
 import pytest
 
 from app.application.generation import LlmEvidenceGenerator
+from tests.support.aplicabilidad import catalogo_de_test_sin_criterios, criterios_de
 from tests.support.generador_falso import OPCION_ANTI_HER2, TITULO_INVENTADO
 from tests.support.llm_falso import OPCION_SOLA, FakeLlmClient
 from tests.support.recuperacion import Q_HER2, Q_TOX, crear_entorno, solicitud_de
@@ -16,16 +17,21 @@ RESPUESTA = "#/components/schemas/RagQueryInternalResponse"
 RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
 
 
-def _consultar(escenario: str, pregunta: str = Q_HER2, *, max_options: int = 1):
+def _consultar(escenario: str, pregunta: str = Q_HER2, *, max_options: int = 1, criterios=None):
     llm = FakeLlmClient(escenario)
-    entorno = crear_entorno(generador=LlmEvidenceGenerator(llm))
+    entorno = crear_entorno(generador=LlmEvidenceGenerator(llm), criterios=criterios)
     respuesta = entorno.consultar(solicitud_de(pregunta, max_options=max_options))
     return respuesta, llm
 
 
 @pytest.mark.ac("US-225", 1)
-def test_rag_query_devuelve_con_evidencia_con_una_opcion_que_cita_ch_m1_1_cuando_q_her2_tiene_evidencia_sobre_el_umbral():
-    respuesta, _ = _consultar("LLM-OK")
+def test_rag_query_devuelve_con_evidencia_con_una_opcion_que_cita_ch_m1_1_cuando_q_her2_tiene_evidencia_sobre_el_umbral(
+    tmp_path,
+):
+    # L1D-127: el catálogo real ya trae criterios de aplicabilidad; este AC es del contrato S1 y se verifica con un
+    # catálogo de test sin criterios (``items: []``). La aplicabilidad poblada la cubre test_rag_query_aplicabilidad.py.
+    sin_criterios = criterios_de(catalogo_de_test_sin_criterios(tmp_path))
+    respuesta, _ = _consultar("LLM-OK", criterios=sin_criterios)
 
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()

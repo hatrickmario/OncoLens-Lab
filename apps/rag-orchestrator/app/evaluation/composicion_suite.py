@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.application.aplicabilidad import ApplicabilityService
 from app.application.ports import Clock, ProhibitedTermsChecker
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
@@ -35,6 +36,7 @@ from app.evaluation.medidores import (
     Observaciones,
     RerankerObservado,
 )
+from app.infrastructure.catalogo_clinico.aplicabilidad import CriteriosDelCatalogo
 from app.infrastructure.catalogo_clinico.manifiesto import cargar_catalogo_del_manifiesto
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.lenguaje.terminos_prohibidos import (
@@ -98,6 +100,8 @@ def componer_servicio(
         lector_release=LectorReleaseMedido(LectorReleaseFijo(dataset), cronometro),
         catalogo=CatalogoMedido(CatalogoEnMemoria(dataset), cronometro),
         catalogo_clinico=CatalogoClinicoDeConfig(config.catalogo_version, tipos_habilitados),
+        # Sin criterios: la suite mide la recuperación y la generación; la aplicabilidad se mide en US-132 (M-08.2).
+        aplicabilidad=ApplicabilityService(CriteriosDelCatalogo({})),
         generador=GeneradorObservado(GeneradorGuionado(dataset), cronometro, observaciones),
         clasificador_nli=NliMedido(nli, cronometro),
         verificador_terminos=terminos,
