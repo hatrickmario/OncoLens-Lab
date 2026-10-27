@@ -33,7 +33,11 @@ from pydantic import ValidationError
 from pymilvus import MilvusClient
 
 from app.application.corpus_ingestion.ingestion_pipeline_service import IngestionPipelineService
-from app.application.corpus_ingestion.ports import SparsePassageEncoder
+from app.application.corpus_ingestion.ports import (
+    AlmacenDeReindexacionSparse,
+    SparsePassageEncoder,
+)
+from app.application.corpus_ingestion.reindexar_sparse import ReindexarSparse
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
@@ -243,10 +247,31 @@ def _modelos_de_la_ingesta(
     return fabricar_codificadores_reales(ajustes)
 
 
+MODO_REINDEX_SPARSE = "reindex-sparse"
+
+
 def _argumentos(argv: Sequence[str] | None) -> argparse.Namespace:
+    """Sin modo rige ``ingest``: ``--manifest`` obligatorio (validado a mano). ``reindex-sparse`` no acepta ``--manifest``."""
     analizador = argparse.ArgumentParser(prog="python -m app.scripts.ingest", description=__doc__)
-    analizador.add_argument("--manifest", type=Path, required=True, help="manifiesto de ingesta")
-    return analizador.parse_args(argv)
+    analizador.add_argument("--manifest", type=Path, help="manifiesto de ingesta")
+    modos = analizador.add_subparsers(dest="modo", required=False)
+    modos.add_parser(MODO_REINDEX_SPARSE, help="puebla el sparse de los chunks vigentes")
+    argumentos = analizador.parse_args(argv)
+    if argumentos.modo is None and argumentos.manifest is None:
+        analizador.error("--manifest es obligatorio")
+    if argumentos.modo == MODO_REINDEX_SPARSE and argumentos.manifest is not None:
+        analizador.error("reindex-sparse no acepta --manifest")
+    return argumentos
+
+
+def _reindexar_sparse(
+    sparse: SparsePassageEncoder | None, almacen: AlmacenDeReindexacionSparse | None
+) -> int:
+    assert (
+        sparse is not None and almacen is not None
+    )  # esqueleto (US-117b): la composición real llega con el feat
+    ReindexarSparse(almacen=almacen, codificador=sparse, lote=1).ejecutar()
+    return 0
 
 
 def main(
@@ -257,10 +282,17 @@ def main(
     tokenizador: Tokenizador | None = None,
     llm: LlmClient | None = None,
     nli: NliClassifier | None = None,
+    almacen_sparse: AlmacenDeReindexacionSparse | None = None,
 ) -> int:
     """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm`` y ``nli`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
+    if argumentos.modo == MODO_REINDEX_SPARSE:
+        try:
+            return _reindexar_sparse(sparse, almacen_sparse)
+        except Exception as error:  # noqa: BLE001 - esqueleto
+            print(f"{NOMBRE}: falló ({type(error).__name__})", file=sys.stderr)
+            return 1
     try:
         ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
         milvus = MilvusSettings(_env_file=None)  # type: ignore[call-arg]

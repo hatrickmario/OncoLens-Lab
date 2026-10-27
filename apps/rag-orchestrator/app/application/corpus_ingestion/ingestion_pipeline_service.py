@@ -45,7 +45,11 @@ from app.domain.corpus_seed.admisibilidad import (
 )
 from app.domain.corpus_seed.chunking import Tokenizador, fragmentar, normalizar_texto
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
+from app.domain.corpus_seed.errores import (
+    ChecksumDelManifiestoNoCoincide,
+    TextoVacio,
+    VectorSparseVacio,
+)
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeVersion,
@@ -53,10 +57,6 @@ from app.domain.corpus_seed.versionado import (
     decidir_version,
     es_reanudacion,
 )
-
-
-class VectorSparseVacio(Exception):
-    """El codificador *sparse* no devolvió un término para algún pasaje: Milvus lo rechazaría (US-117a, riesgos)."""
 
 
 class FalloDeEtapa(Exception):
