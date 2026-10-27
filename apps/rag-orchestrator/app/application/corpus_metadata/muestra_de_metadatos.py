@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from app.application.ports import Clock
-from app.application.seed_corpus.ports import RegistroDeDocumento
+from app.application.seed_corpus.ports import LectorDeDocumentosExtraidos, RegistroDeDocumento
 from app.domain.corpus_metadata.muestra import seleccionar_muestra
 from app.domain.corpus_metadata.extraccion import campos_conservados
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
@@ -34,12 +34,6 @@ class ResultadoDeMuestra:
 
     tamano: int
     archivo: Path | None
-
-
-class LectorDeDocumentosExtraidos(Protocol):
-    """Lo único que la muestra pide al catálogo (``CorpusCatalog`` lo cumple)."""
-
-    def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]: ...
 
 
 class GeneradorDeMuestraDeMetadatos:

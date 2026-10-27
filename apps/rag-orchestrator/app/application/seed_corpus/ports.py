@@ -144,6 +144,13 @@ class CorpusCatalog(Protocol):
 
     def publicar_release(self, release: RegistroDeRelease) -> None: ...
 
+
+class LectorDeDocumentosExtraidos(Protocol):
+    """Lectura de la muestra de metadatos (US-118 AC-5), aparte de ``CorpusCatalog`` (ISP, deuda 5.4 de L1D-117).
+
+    El catálogo SQL y el fake en memoria lo cumplen además de ``CorpusCatalog``; la muestra solo depende de este puerto.
+    """
+
     def documentos_extraidos_de_la_release(self, release_id: str) -> list[RegistroDeDocumento]:
         """Filas de los documentos de la release con ``metadata_source = extraido_verificado`` (fuente de la muestra humana,
         US-118 AC-5), ordenadas por ``document_id``. Release inexistente: lista vacía."""

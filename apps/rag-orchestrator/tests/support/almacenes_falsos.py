@@ -17,6 +17,7 @@ from app.application.seed_corpus.ports import (
     RegistroDeRelease,
     VersionInexistente,
 )
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO
 from app.domain.corpus_seed.versionado import STATUS_EMBEBIDO, VersionExistente
 from tests.support.milvus import DIMENSION_DE_TEST
 
@@ -89,7 +90,7 @@ class CatalogoEnMemoria:
             (
                 r
                 for i, r in self.documentos.items()
-                if i in ids and r.metadata_source == "extraido_verificado"
+                if i in ids and r.metadata_source == EXTRAIDO_VERIFICADO
             ),
             key=lambda r: r.document_id,
         )
