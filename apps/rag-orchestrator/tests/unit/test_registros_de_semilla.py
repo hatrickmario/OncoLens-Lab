@@ -6,7 +6,6 @@ from datetime import date
 
 from app.application.seed_corpus.registros import (
     CLASE_DE_LICENCIA_DE_RECHAZADOS,
-    ORIGEN_DE_LA_SEMILLA,
     chunks_del_documento,
     registro_con_error,
     registro_embebido,
@@ -15,6 +14,7 @@ from app.application.seed_corpus.registros import (
 )
 from app.config.settings import CLASES_DE_LICENCIA
 from app.domain.corpus_metadata.origen import metadatos_de_la_fuente
+from app.domain.corpus_metadata.resultado import EXTRAIDO_VERIFICADO, FUENTE_ESTRUCTURADA, PENDIENTE
 from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.versionado import (
     STATUS_A_MEDIAS,
@@ -33,7 +33,9 @@ def test_los_valores_fijos_de_las_filas_pertenecen_a_los_dominios_cerrados_del_c
     """Si el catálogo cambia un dominio, la semilla falla aquí y no en el ``CHECK`` de PostgreSQL en plena carga."""
     assert STATUS_A_MEDIAS | {STATUS_EMBEBIDO, STATUS_RECHAZADO} == set(DOMINIOS_CERRADOS["status"])
     assert CLASE_DE_LICENCIA_DE_RECHAZADOS in DOMINIOS_CERRADOS["license_class"]
-    assert ORIGEN_DE_LA_SEMILLA in DOMINIOS_CERRADOS["metadata_source"]
+    assert {FUENTE_ESTRUCTURADA, EXTRAIDO_VERIFICADO, PENDIENTE} == set(
+        DOMINIOS_CERRADOS["metadata_source"]
+    )
     assert set(CLASES_DE_LICENCIA) == set(DOMINIOS_CERRADOS["license_class"])
 
 

@@ -13,7 +13,8 @@ cierre en la sesión de oncólogos del S4 `[S3 resp. 1]` · 🔗 Medido en: US-1
 >   aplica lo que declara el catálogo: el AC-4 sobre `test-1.0.0` no cambia.
 > - Cuenta el registro **más reciente** aunque no esté verificado (regla 4, conservador): un verificado antiguo
 >   con uno más reciente sin verificar da `presente_sin_verificar`.
-> - Un `no_mapeado` crítico no se marca aparte: el ítem queda `faltante` y US-131 lo cuenta como falso positivo.
+> - Un `no_mapeado` crítico no se marca aparte; US-131 lo mide. **Decidido (usuario, 2026-10-24):** cuenta como
+>   presente sin verificar si su `name` coincide con el catálogo (sustituye a «el ítem queda `faltante`»).
 > - Sin cambio de esquema en el S3 para la "ausencia confirmada" (DEC-01 Q8): un paciente sin `PriorTreatment`
 >   con la condición cumplida queda en `faltante`. La pregunta va a la sesión de oncólogos del S4.
 
@@ -35,7 +36,8 @@ el mismo para los mismos datos y la misma versión del catálogo, sin IA y cambi
 - **`CompletenessService` + repositorio de lectura** en `apps/clinical-api/src/modules/completeness/`: lee los
   registros de los campos de destino del paciente y devuelve el resultado con su `catalogVersion`. Sin LLM, sin
   llamadas a `rag-orchestrator`, sin aleatoriedad.
-- **Biomarcadores `no_mapeado`** nunca satisfacen un ítem (RN-27).
+- **Biomarcadores `no_mapeado`** cuentan como presente sin verificar solo si su `name` coincide con el catálogo; nunca se
+  emparejan por `original_name` ni similitud (RN-27, decisión del usuario 2026-10-24).
 - **Fixtures FX-04-a** (catálogos `test-1.0.0` y `test-1.1.0`) y **FX-04-b** (pacientes F-M1, F-M2, F-M3,
   F-P1), compartidos por US-002…US-006 y US-131.
 - Sin endpoint nuevo, sin cambio de `openapi.yaml` ni de `contracts/examples/`, sin cambio de esquema Prisma.

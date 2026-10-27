@@ -494,6 +494,7 @@ erDiagram
         int sample_size "nullable"
         jsonb population_criteria "v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible"
         string metadata_source "fuente_estructurada|extraido_verificado|pendiente"
+        jsonb extracted_fields "campos extraídos y verificados; [] por defecto (L1D-117)"
         string guideline_version "nullable"
         string source_url "nullable; URL https del documento original (ARR-07)"
         date last_updated_at "nullable"
@@ -1101,6 +1102,7 @@ Las columnas de metadatos del modelo se anulan según el estado o el tipo del an
 | `sample_size` | integer |  | nullable |
 | `population_criteria` | jsonb |  | v1.1: subtipo, estadio, línea, biomarcadores, edad, ECOG — o no_disponible |
 | `metadata_source` | text |  | fuente_estructurada\|extraido_verificado\|pendiente; `pendiente` = la extracción no corrió (LLM o NLI caídos, o salida inválida): nunca `fuente_estructurada`, la fuente no publicó nada (RN-25) |
+| `extracted_fields` | jsonb |  | L1D-117: campos de `population_criteria` que la extracción verificó (`[]` por defecto). La muestra de M-08.4 solo toma estos, no los que declara el manifiesto |
 | `guideline_version` | text |  | nullable |
 | `source_url` | text |  | nullable; URL pública (https) del documento original de donde se extrajo el texto; la UI la enlaza en «Fragmento citado» (ARR-07) |
 | `last_updated_at` | date |  | nullable |

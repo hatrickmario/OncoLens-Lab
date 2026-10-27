@@ -28,6 +28,25 @@ def es_proveedor_local(url: str) -> bool:
         return False
 
 
+def variable_que_incumple_llm_local(
+    *, llm_cloud_enabled: bool, llm_provider: str, llm_base_url: str, llm_model: str
+) -> str | None:
+    """RN-12: nombre de la variable de configuración que impide usar solo el LLM local, o ``None`` si cumple.
+
+    Aplica el piso cerrado en código de RN-12 (ADR-41 D4): el host debe estar en ``HOSTS_LOCALES`` (``LLM_ALLOWED_HOSTS`` no
+    lo amplía) y un modelo ``x:cloud`` servido por un runtime local también se ejecuta en la nube. Nunca devuelve el valor.
+    """
+    if llm_cloud_enabled:
+        return "LLM_CLOUD_ENABLED"
+    if llm_provider != "local":
+        return "LLM_PROVIDER"
+    if not es_proveedor_local(llm_base_url):
+        return "LLM_BASE_URL"
+    if es_modelo_de_nube(llm_model):
+        return "LLM_MODEL"
+    return None
+
+
 def _banderas_de_datos_reales_activas(
     real_anonymized_enabled: bool, real_identified_enabled: bool
 ) -> list[str]:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from app.domain.corpus_metadata.campos import CAMPOS_ESCALARES, DISENO_NO_DECLARADO
@@ -14,7 +14,7 @@ from app.domain.corpus_metadata.resultado import (
     MetadatosResueltos,
 )
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
-from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
+from app.domain.corpus_seed.poblacion import NO_DISPONIBLE, resolver_criterios_poblacion
 
 _PREFIJO_DE_BIOMARCADOR = "biomarcadores."
 
@@ -94,3 +94,29 @@ def _a_texto_o_nulo(valor: object) -> str | None:
 
 def _entero_o_nulo(valor: object) -> int | None:
     return None if valor is None else int(str(valor))
+
+
+def campos_conservados(
+    study_design: str,
+    trial_phase: str | None,
+    sample_size: int | None,
+    primary_endpoint: str | None,
+    population_criteria: Mapping[str, Any],
+) -> tuple[CampoDeMetadato, ...]:
+    """Los metadatos que una fila del catálogo conserva (lo contrario de ``integrar_metadatos_verificados``): escalares no
+    nulos (``study_design = otro`` es «no declarado») y criterios de población distintos de ``no_disponible``."""
+    escalares = (
+        ("study_design", None if study_design == DISENO_NO_DECLARADO else study_design),
+        ("trial_phase", trial_phase),
+        ("sample_size", sample_size),
+        ("primary_endpoint", primary_endpoint),
+    )
+    campos = [CampoDeMetadato(n, v) for n, v in escalares if v is not None]
+    for nombre, valor in sorted(population_criteria.items()):
+        if nombre == "biomarcadores" and isinstance(valor, Mapping):
+            campos += [
+                CampoDeMetadato(f"{_PREFIJO_DE_BIOMARCADOR}{k}", str(v)) for k, v in valor.items()
+            ]
+        elif valor != NO_DISPONIBLE and not isinstance(valor, Mapping):
+            campos.append(CampoDeMetadato(nombre, str(valor)))
+    return tuple(campos)

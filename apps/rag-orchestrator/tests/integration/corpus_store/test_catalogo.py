@@ -55,6 +55,7 @@ COLUMNAS_ESPERADAS: dict[str, dict[str, tuple[str, bool]]] = {
         "sample_size": (ENTERO, True),
         "population_criteria": (JSONB, False),
         "metadata_source": (TEXTO, False),
+        "extracted_fields": (JSONB, False),
         "guideline_version": (TEXTO, True),
         "source_url": (TEXTO, True),
         "last_updated_at": (FECHA, True),
@@ -129,7 +130,8 @@ def fila_sintetica(**cambios: Any) -> dict[str, Any]:
 def insertar_documento(conexion: Connection, fila: dict[str, Any]) -> None:
     columnas = ", ".join(fila)
     marcadores = ", ".join(
-        f"CAST(:{c} AS jsonb)" if c == "population_criteria" else f":{c}" for c in fila
+        f"CAST(:{c} AS jsonb)" if c in ("population_criteria", "extracted_fields") else f":{c}"
+        for c in fila
     )
     conexion.execute(
         text(f"INSERT INTO corpus.corpus_document ({columnas}) VALUES ({marcadores})"), fila

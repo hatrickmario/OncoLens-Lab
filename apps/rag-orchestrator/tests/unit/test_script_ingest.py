@@ -174,38 +174,184 @@ class _EscritorQueFalla:
 
 
 def test_un_error_al_escribir_la_muestra_va_al_resumen_con_su_clase_y_no_tumba_la_ingesta() -> None:
-    from app.application.corpus_ingestion.reporte import (
-        Estado,
-        ReporteDeIngesta,
-        ResultadoDeIngesta,
-    )
+    from datetime import date
+
     from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+    from app.application.seed_corpus.ports import RegistroDeRelease
+    from app.application.seed_corpus.registros import registro_embebido
     from app.domain.corpus_metadata.resultado import CampoDeMetadato, MetadatosResueltos
+    from app.domain.corpus_seed.admisibilidad import Admision
+    from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
+    from tests.support.almacenes_falsos import CatalogoEnMemoria
     from tests.support.fakes import RelojFijo
     from tests.support.metadatos import lote_sintetico
 
     metadatos = MetadatosResueltos(
-        "otro", None, None, None, {}, "extraido_verificado", (CampoDeMetadato("trial_phase", "II"),)
+        "otro",
+        "II",
+        None,
+        None,
+        resolver_criterios_poblacion(None),
+        "extraido_verificado",
+        (CampoDeMetadato("trial_phase", "II"),),
     )
-    reporte = ReporteDeIngesta(
-        (
-            ResultadoDeIngesta(
-                "lote-01", Estado.EMBEBIDO, metadatos=metadatos, document_id="lote-01@x"
-            ),
-        ),
-        "release-1",
+    fila = registro_embebido(
+        lote_sintetico(1)[0],
+        Admision(None, "dominio_publico"),
+        "ab" * 32,
+        RelojFijo().ahora(),
+        metadatos,
+    )
+    catalogo = CatalogoEnMemoria()
+    catalogo.guardar_documento(fila)
+    catalogo.publicar_release(
+        RegistroDeRelease(
+            "release-1", date(2026, 10, 16), (), RelojFijo().ahora(), (fila.document_id,)
+        )
     )
     generador = GeneradorDeMuestraDeMetadatos(
         pct=100,
         semilla="s",
         escritor=_EscritorQueFalla(),
+        catalogo=catalogo,
         reloj=RelojFijo(),
         prompt_version="p",
         llm_model="l",
         nli_model="n",
     )
 
-    resumen = ingest.escribir_muestra(generador, reporte, lote_sintetico(1))
+    resumen = ingest.escribir_muestra(generador, "release-1")
 
     assert resumen == {"tamano": 0, "fallo": "OSError"}
     assert "secreta" not in str(resumen)
+
+
+NO_LOCAL = [
+    ("LLM_CLOUD_ENABLED", {"LLM_CLOUD_ENABLED": "true"}, "true"),
+    ("LLM_PROVIDER", {"LLM_PROVIDER": "fake"}, "fake"),
+    (
+        "LLM_BASE_URL",
+        {"LLM_ALLOWED_HOSTS": "api.example.com", "LLM_BASE_URL": "https://api.example.com/v1"},
+        "api.example.com",
+    ),
+    ("LLM_MODEL", {"LLM_MODEL": "gpt-oss:120b-cloud"}, "gpt-oss"),
+]
+
+
+@pytest.mark.parametrize(("variable", "ajustes", "valor"), NO_LOCAL)
+def test_la_cli_se_niega_sin_llm_local_nombrando_solo_la_variable_y_sin_conectar(
+    entorno: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    variable: str,
+    ajustes: dict[str, str],
+    valor: str,
+) -> None:
+    """Decidido (usuario, 2026-10-24), RN-12 (piso cerrado, ADR-41 D4): la extracción de metadatos solo usa el LLM local."""
+    for clave, v in ajustes.items():
+        entorno.setenv(clave, v)
+
+    codigo = ingest.main(
+        ARGUMENTOS,
+        embedder=EmbedderFalso(),
+        sparse=CodificadorSparseFalso(),
+        llm=FakeMetadataLlm(),
+        nli=nli_de_metadatos(),
+    )
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and variable in capturado.err and capturado.out == ""
+    assert valor not in capturado.err and "postgres.invalid" not in capturado.err
+
+
+def _temperatura_enviada_al_llm(entorno: pytest.MonkeyPatch, **variables: str) -> float:
+    """Temperatura del request HTTP real (borde fingido con respx) del cliente que compone la CLI."""
+    import asyncio
+    import json
+
+    import httpx
+    import respx
+
+    from app.config.settings import CorpusIngestSettings
+
+    for clave, valor in variables.items():
+        entorno.setenv(clave, valor)
+    ajustes = CorpusIngestSettings(_env_file=None)  # type: ignore[call-arg]
+    modelos = ingest._modelos_de_metadatos(
+        None, nli_de_metadatos(), ajustes.corpus_metadata_llm_temperature
+    )
+    url = "http://host.docker.internal:11434/v1/chat/completions"
+    with respx.mock() as llm:
+        ruta = llm.post(url).mock(
+            return_value=httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+        )
+        asyncio.run(modelos.llm.completar_json("p", {}))
+    return json.loads(ruta.calls[0].request.content)["temperature"]
+
+
+def test_la_extraccion_de_metadatos_usa_su_propia_temperatura_y_no_la_de_generacion(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    assert _temperatura_enviada_al_llm(entorno, LLM_TEMPERATURE="0.7") == 0.0
+
+
+def test_la_temperatura_de_extraccion_se_configura_con_corpus_metadata_llm_temperature(
+    entorno: pytest.MonkeyPatch,
+) -> None:
+    temperatura = _temperatura_enviada_al_llm(
+        entorno, LLM_TEMPERATURE="0.7", CORPUS_METADATA_LLM_TEMPERATURE="0.3"
+    )
+
+    assert temperatura == 0.3
+
+
+@pytest.mark.parametrize("valor", ["-0.1", "2.5"])
+def test_una_temperatura_de_extraccion_fuera_de_rango_se_rechaza_en_la_configuracion(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], valor: str
+) -> None:
+    entorno.setenv("CORPUS_METADATA_LLM_TEMPERATURE", valor)
+
+    codigo = ingest.main(ARGUMENTOS, embedder=EmbedderFalso(), sparse=CodificadorSparseFalso())
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "CORPUS_METADATA_LLM_TEMPERATURE" in capturado.err
+
+
+def test_la_cli_se_niega_sin_llm_local_antes_de_cargar_los_modelos_de_embeddings(
+    entorno: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Sin ``MODEL_PROVIDER=local`` la carga de embeddings fallaría nombrando ``MODEL_PROVIDER``: la negativa va PRIMERO."""
+    entorno.setenv("LLM_CLOUD_ENABLED", "true")
+
+    codigo = ingest.main(ARGUMENTOS)
+
+    capturado = capsys.readouterr()
+    assert codigo == 1 and "LLM_CLOUD_ENABLED" in capturado.err
+    assert "MODEL_PROVIDER" not in capturado.err
+
+
+@pytest.mark.parametrize(("variable", "ajustes", "valor"), NO_LOCAL)
+def test_al_negarse_la_cli_no_carga_modelos_ni_abre_conexiones_ni_lee_el_manifiesto(
+    entorno: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    variable: str,
+    ajustes: dict[str, str],
+    valor: str,
+) -> None:
+    llamadas: list[str] = []
+
+    def espia(nombre: str):  # type: ignore[no-untyped-def]
+        def _(*args, **kwargs):  # type: ignore[no-untyped-def]
+            llamadas.append(nombre)
+            raise AssertionError(nombre)
+
+        return _
+
+    for nombre in ("fabricar_codificadores_reales", "crear_motor", "leer_manifiesto"):
+        entorno.setattr(ingest, nombre, espia(nombre))
+    for clave, v in ajustes.items():
+        entorno.setenv(clave, v)
+
+    codigo = ingest.main(ARGUMENTOS)
+
+    assert codigo == 1 and variable in capsys.readouterr().err
+    assert llamadas == []

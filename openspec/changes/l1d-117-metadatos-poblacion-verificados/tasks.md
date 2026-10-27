@@ -55,9 +55,25 @@
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde
       antes y después, commit `refactor(L1D-117)`
 
-- [ ] 1.13 Reconciliar las claves de `population_criteria` con `packages/clinical-catalogs/poblacion.json` (11 claves; faltan `grado`, `estado_menopausico`, `estado_castracion`) · TRASLADADA a `L1D-117 tras merge de L1D-126` (y de #197); pregunta al usuario en `design.md`, Pendientes
+- [x] 1.13 Reconciliar `packages/clinical-catalogs/poblacion.json` MENOS `grado`, `estado_menopausico` y `estado_castracion` (quedan «Desconocido» explícito en el S3, **Decidido (usuario, 2026-10-24)**, `CLAVES_NO_EXTRAIDAS_EN_EL_S3`) contra `campos.py`: las claves restantes deben coincidir exactamente · test `test_las_claves_de_poblacion_del_catalogo_son_las_admitidas_mas_las_no_extraidas_en_el_s3` (poblacion.json v1.1.0 de main; 1452 unitarios en verde)
 
 > Notas para el cuerpo del PR (Gate 2, M1 y M2): en `c85845bc` se eliminó el test «umbral ignorado» sin `Test-Removal:` (lo sustituyen tests que sí miden el umbral con p entre umbrales); el commit `3ba468eb` se llama refactor pero añade comportamiento nuevo (tope `maxLength` de 200). No se reescriben.
+
+## decisiones del usuario (2026-10-24, PR `feat/l1d-117-decisiones-usuario`)
+
+- [x] 4.1 **Decidido (usuario, 2026-10-24):** `grado`, `estado_menopausico` y `estado_castracion` no se extraen en el S3 (`CLAVES_NO_EXTRAIDAS_EN_EL_S3` con motivo y su test); `ORIGEN_DE_LA_SEMILLA` eliminado (ya no era veraz) · commit `feat(L1D-117)`
+- [x] 4.2 **Decidido (usuario, 2026-10-24):** la muestra se construye desde la release/catálogo (`CorpusCatalog.documentos_extraidos_de_la_release`) · test: omitidos de corridas previas entran, reproducible, sin extraídos no se escribe
+- [x] 4.3 **Decidido (usuario, 2026-10-24):** la CLI `ingest` se niega con `LLM_CLOUD_ENABLED=true` o `LLM_PROVIDER != local`; `CORPUS_METADATA_LLM_TEMPERATURE` (default 0) · variables nuevas para `.env.example` (sesión principal): `CORPUS_METADATA_LLM_TEMPERATURE=0`
+
+### Deuda explícita (revisión de diseño y privacidad del seguimiento)
+
+- [x] 5.1 **Decidido (usuario, 2026-10-24):** columna `extracted_fields` en `corpus_document` (+ migración 0004); la muestra se construye solo con campos extraídos, sin los declarados por el manifiesto · commits `test(L1D-117)` (rojo) y `feat(L1D-117)`; el test de caracterización del límite se sustituye (`Test-Removal`: el AC cambió por decisión del usuario); PLANTILLA.md y design.md actualizados
+- [ ] 5.6 TRASLADADA a US-143 (preflight/arranque real-data, gate G-Piloto): aplicar `variable_que_incumple_llm_local` también en el arranque de rag-orchestrator (rechazar `LLM_MODEL` tipo `x:cloud` con Ollama local, RN-12)
+- [ ] 5.7 TRASLADADA a US-034 (modo `LLM_PROVIDER=fake`, Compose/CI/E2E): caso de `ingest` con `LLM_PROVIDER=fake` en Compose/E2E
+- [ ] 5.2 `/rag/query` no rechaza un modelo `:cloud` (`es_modelo_de_nube` solo lo usa `app/evaluation/`) · deuda previa a este PR, pregunta al usuario en design.md
+- [ ] 5.3 (Menor #7) El filtro `extraido_verificado` está duplicado en el adapter SQL y en el fake de `CatalogoEnMemoria`
+- [ ] 5.4 (Menor #9) El método `documentos_extraidos_de_la_release` engorda `CorpusCatalog` (ISP): separar un puerto de lectura de la muestra
+- [ ] 5.5 (Menor #13) Orden TDD: algunos commits del seguimiento llevan el test y el código juntos o el rojo por excepción en vez de aserción
 
 ## evaluación
 

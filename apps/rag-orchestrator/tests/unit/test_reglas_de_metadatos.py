@@ -10,15 +10,19 @@ from datetime import date
 
 import pytest
 
+from app.application.seed_corpus.registros import registro_embebido
 from app.domain.corpus_metadata.extraccion import (
+    campos_conservados,
     escalares_a_extraer,
     integrar_metadatos_verificados,
 )
 from app.domain.corpus_metadata.resultado import CampoDeMetadato
 from app.domain.corpus_metadata.verificacion import metadato_verificado
+from app.domain.corpus_seed.admisibilidad import Admision
 from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.poblacion import NO_DISPONIBLE
 from app.domain.nli import ResultadoNli
+from tests.support.fakes import RelojFijo
 
 UMBRAL = 0.8
 DOCUMENTO = DocumentoDeSemilla(
@@ -112,3 +116,78 @@ def test_cada_criterio_plano_verificado_se_guarda_bajo_su_clave(campo: str) -> N
     metadatos = integrar_metadatos_verificados(DOCUMENTO, (CampoDeMetadato(campo, "valor"),))
 
     assert metadatos.population_criteria[campo] == "valor"
+
+
+def test_los_campos_conservados_de_una_fila_son_los_escalares_y_criterios_no_vacios() -> None:
+    campos = campos_conservados(
+        "eca",
+        "III",
+        500,
+        None,
+        {
+            "subtipo": NO_DISPONIBLE,
+            "estadio": "I–III",
+            "biomarcadores": {"her2": "positivo"},
+            "ecog": NO_DISPONIBLE,
+        },
+    )
+
+    assert [(c.campo, c.valor) for c in campos] == [
+        ("study_design", "eca"),
+        ("trial_phase", "III"),
+        ("sample_size", 500),
+        ("biomarcadores.her2", "positivo"),
+        ("estadio", "I–III"),
+    ]
+
+
+def test_una_fila_sin_nada_conservado_no_tiene_campos_y_otro_es_no_declarado() -> None:
+    assert campos_conservados("otro", None, None, None, {"biomarcadores": NO_DISPONIBLE}) == ()
+
+
+AHORA = RelojFijo().ahora()
+ADMITIDO = Admision(None, "dominio_publico")
+
+
+def test_una_fila_extraido_verificado_sin_ningun_campo_verificado_no_registra_campos_extraidos_aunque_el_manifiesto_declare_uno() -> (
+    None
+):
+    """Decidido (usuario, 2026-10-24): ``extracted_fields`` distingue lo extraído de lo declarado por el manifiesto."""
+    declarado = replace(DOCUMENTO, study_design="eca")
+
+    fila = integrar_metadatos_verificados(declarado, ())
+    registro = registro_embebido(declarado, ADMITIDO, "ab" * 32, AHORA, fila)
+
+    assert fila.study_design == "eca" and registro.extracted_fields == ()
+
+
+def test_los_campos_verificados_quedan_como_campos_extraidos_de_la_fila() -> None:
+    fila = integrar_metadatos_verificados(
+        DOCUMENTO,
+        (CampoDeMetadato("trial_phase", "III"), CampoDeMetadato("biomarcadores.her2", "positivo")),
+    )
+
+    registro = registro_embebido(DOCUMENTO, ADMITIDO, "ab" * 32, AHORA, fila)
+
+    assert registro.extracted_fields == ("trial_phase", "biomarcadores.her2")
+
+
+def test_ida_y_vuelta_de_los_campos_verificados_por_integrar_y_campos_conservados() -> None:
+    verificados = (
+        CampoDeMetadato("study_design", "eca"),
+        CampoDeMetadato("trial_phase", "III"),
+        CampoDeMetadato("sample_size", 500),
+        CampoDeMetadato("biomarcadores.her2", "positivo"),
+        CampoDeMetadato("estadio", "I–III"),
+    )
+
+    fila = integrar_metadatos_verificados(DOCUMENTO, verificados)
+    de_vuelta = campos_conservados(
+        fila.study_design,
+        fila.trial_phase,
+        fila.sample_size,
+        fila.primary_endpoint,
+        fila.population_criteria,
+    )
+
+    assert set(de_vuelta) == set(verificados)

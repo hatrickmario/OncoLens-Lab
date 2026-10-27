@@ -34,6 +34,12 @@ marca un campo como correcto o incorrecto. La lee US-132 (AC-4) para calcular la
 Regla general: se revisa **lo que el documento declara**, no si el dato es clínicamente deseable. Un valor correcto pero
 de un subgrupo (no de toda la población) es `incorrecto`: la representación de subgrupos queda fuera del S3.
 
+## Qué campos aparecen
+
+**Decidido (usuario, 2026-10-24):** la muestra se construye solo desde la release y solo con los campos que el LLM extrajo y
+el NLI verificó (`corpus_document.extracted_fields`). Un valor que el manifiesto ya declaraba (p. ej. un `study_design`
+publicado por la fuente) no aparece en la muestra ni cuenta en M-08.4; un documento sin ningún campo extraído no se muestrea.
+
 ## Formato del archivo
 
 ```yaml

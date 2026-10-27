@@ -89,10 +89,30 @@ Los ítems, sus destinos, condiciones, `minValues` y `verifiedReviewStatuses` MU
 - **AND** hay 5 ítems en `faltante`
 - **AND** `catalogVersion = "test-1.1.0"`
 
-### Requirement: Un biomarcador no mapeado nunca satisface un dato crítico
-Un registro con `mapping_status = no_mapeado` MUST quedar fuera del cálculo: nunca SHALL asignarse a un concepto del catálogo por su `original_name` ni por similitud (RN-27). El checklist no marca aparte un `no_mapeado` crítico; su conteo es de la medición del checklist `[S3 resp. 5]`.
+### Requirement: Un dato no mapeado cuenta como cualquier dato vigente con su mismo nombre
+Decidido (usuario, 2026-10-24): un registro `no_mapeado` MUST contarse como cualquier dato vigente cuyo `name` coincida con el del destino; su estado sale de `review_status`, no de `mapping_status`. El emparejamiento SHALL ser solo por `name`, nunca por `original_name` ni por similitud (RN-27); sin coincidencia, el ítem sigue `faltante`.
 
-#### Scenario: Un Ki-67 no mapeado deja ki67 en faltante [US-002 AC-8] [RN-27] (asumido)
-- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `original_name = "Ki67 índice"` en `no_mapeado`
+#### Scenario: Un Ki-67 no mapeado en requiere_revision con name del catálogo deja ki67 en presente sin verificar [US-002 AC-8] [RN-27]
+- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `name = "Ki-67"`, `original_name = "Ki67 índice"`, `no_mapeado` y `requiere_revision`
 - **WHEN** se calcula el checklist de F-M2
-- **THEN** `ki67` está en `faltante`
+- **THEN** `ki67` está en `presente_sin_verificar`
+
+#### Scenario: Un no mapeado ya verificado con name del catálogo da presente verificado [US-002 AC-8] [RN-27]
+- **GIVEN** un `Biomarker` `no_mapeado` con `name` del catálogo y `review_status = verificado`
+- **WHEN** se calcula el checklist
+- **THEN** el ítem está en `presente_verificado`: el estado sale de `review_status`
+
+#### Scenario: Un Ki-67 no mapeado cuyo name no coincide deja ki67 en faltante [US-002 AC-8] [RN-27]
+- **GIVEN** `test-1.0.0` y F-M2 con un biomarcador `name = "Ki67 índice"` en `no_mapeado`
+- **WHEN** se calcula el checklist de F-M2
+- **THEN** `ki67` está en `faltante`, aunque su `original_name` sea `"Ki-67"`
+
+#### Scenario: Un PriorTreatment no mapeado cuenta como dato presente [US-002 AC-2] [RN-27]
+- **GIVEN** `test-1.0.0` y F-M2, cuyo tratamiento previo (`letrozol`) está `no_mapeado` y `verificado`
+- **WHEN** se calcula el checklist de F-M2
+- **THEN** `tratamientos_previos` está en `presente_verificado`
+
+#### Scenario: Un HER2 por IHQ no mapeado con "2+" activa her2_ish [US-002 AC-4] [RN-27]
+- **GIVEN** un `Biomarker` `her2_ihq` `no_mapeado` con `name` del catálogo y valor `"2+ (IHQ)"`
+- **WHEN** se calcula el checklist
+- **THEN** la condición de `her2_ish` se cumple (el registro que cuenta es el `no_mapeado`)
