@@ -6,7 +6,7 @@ El gateway (`crearEvidenceAnalysisService`, S1) lee el caso, corta si no hay tip
 está habilitado, construye el contexto por allowlist (`construirContextoPermitido`), lo desidentifica, consulta a
 `rag-orchestrator` con plazo y cierra el análisis (`AnalysisCompletion`), que persiste el `AIAnalysisRecord`
 antes de responder (RN-06). Hoy `construirContextoPermitido` fija `missingCriticalData: []` y `armarRegistro`
-fija `missingCriticalData: []`. US-002 (L1D-94, change `l1d-94-checklist-determinista`) entrega en el S3 el
+hereda `missingCriticalData: []` de `registroBase`. US-002 (L1D-94, change `l1d-94-checklist-determinista`) entrega en el S3 el
 `CompletenessService` determinista del módulo `completeness`. Decisión de partida: `[S3 resp. 5]` (AC-8: si el
 checklist falla, error).
 
@@ -30,8 +30,8 @@ export interface ChecklistDeFaltantes {
 }
 ```
 
-Un adaptador en `evidence-analysis.module.ts` lo implementa sobre el `CompletenessService` de L1D-94 (filtra
-`status === 'faltante'` y toma la clave `item`, sin reordenar). El service no conoce `CompletenessService` ni su
+Un adaptador en `evidence-analysis.module.ts` lo implementa sobre `CompletenessService.calcular(patientId)` de L1D-94
+(filtra `status === 'faltante'` y toma el campo `key` de cada ítem, sin reordenar). El service no conoce `CompletenessService` ni su
 forma de ítem: si L1D-94 cambia su interfaz, solo cambia el adaptador. Cualquier excepción del adaptador se
 envuelve en `ChecklistNoDisponibleError`. Descartadas: llamar al `CompletenessService` directo desde el service
 (acopla dos módulos por su forma interna) y calcular los faltantes en `CasoRepository` (duplica la regla de
@@ -48,8 +48,9 @@ desidentificar y de llamar a Backend 2: si falla (AC-8) no hay llamada saliente 
 ### D3. Una sola fuente de la lista: el request interno
 
 `construirContextoPermitido` recibe `faltantes` como tercer parámetro y lo copia en `missingCriticalData` (copia
-del arreglo, sin transformar). `armarRegistro` toma `missingCriticalData` de
-`request.clinicalContext.missingCriticalData` en lugar del literal `[]`: lo persistido es exactamente lo enviado
+del arreglo, sin transformar). `armarRegistro` **sobrescribe** `missingCriticalData` con
+`request.clinicalContext.missingCriticalData` después de `...registroBase(entrada)` (que lo deja en `[]`;
+`armarRegistroTipoNoHabilitado` no lo sobrescribe y queda `[]`): lo persistido es exactamente lo enviado
 (AC-1 = AC-2) sin un segundo campo en `EntradaDeCierre`. `continued_with_warning` ya viene de
 `entrada.continueWithWarning` y `catalog_version` del `meta`/request (sin cambio). `AnalysisBasisBuilder` ya
 recibe el request, así que US-128 leerá la lista de ahí sin cambiar la firma del puerto.
@@ -60,11 +61,18 @@ recibe el request, así que US-128 leerá la lista de ahí sin cambiar la firma 
 el log (sin mensaje del error original). Cuerpo `{ error, message, traceId }` del schema `ErrorInterno` ya
 declarado. `[S3 resp. 5]`.
 
-### D5. Versión de catálogo
+### D5. Versión de catálogo y cableado de `componerCompletitud`
 
 `catalogVersion` del request sigue saliendo de `CatalogVersionProvider` (`manifest.json` de
 `CLINICAL_CATALOG_PATH`), el mismo catálogo que carga `CompletenessService`. No se añade comparación entre ambas:
 comparten fuente en el mismo proceso (AC-6 de US-002 lo cubre al cambiar `CLINICAL_CATALOG_PATH`).
+
+`componerCompletitud` (`completeness.module.ts`) existe pero nadie lo cablea: L1D-94 (1.12b) trasladó el cableado a
+L1D-95 y el change de seed de la O3 no lo hace. Este change lo **cablea en `composition.ts`/`server.ts`** con
+`db: pool` y la misma `rutaDelCatalogo` (`CLINICAL_CATALOG_PATH`) y `leerArchivo` que `startup.ts` entrega a
+`crearProveedorDeCatalogo`, de modo que `CatalogVersionProvider` y el checklist leen **el mismo catálogo**. El
+servicio compuesto se inyecta (vía el adaptador del puerto) en `componerGatewayDeAnalisis`; si US-003 (L1D-95)
+cablea después `/completeness`, reutiliza esa instancia.
 
 ## Privacidad y ownership
 
@@ -108,10 +116,15 @@ Regla con nombre propio: ninguna nueva en dominio (la regla del checklist es de 
 
 - **[Desfase con la Base dentro del S3]** → `missing_critical_data` lleva las claves mientras
   `analysisBasis.missingCriticalData = []` y el supuesto "Los faltantes críticos aún no se calculan en esta
-  versión" sigue hasta que entre US-128 (L1D-188), adelantada al S3 (`[S3 resp. 18]`). Mitigación: L1D-188 va
-  en una oleada posterior a este change dentro del mismo sprint.
+  versión" sigue hasta que entre US-128 (L1D-188), adelantada al S3 (`[S3 resp. 18]`). Mitigación: **L1D-98 y
+  L1D-188 deben mergear seguidos** (entre ambos merges la Base es incoherente con el registro); L1D-188 va en la
+  oleada inmediata posterior y no se despliega una build intermedia.
+- **[Faltantes falsos `re`/`rp` con el catálogo real]** → hasta que el change de seed de la O3 (renombra a `RE`/`RP`)
+  mergee, el seed no satisface esas claves. Mitigación: L1D-98 va **después** del seed.
+- **[`[]` no es «completo»]** → la lista vacía solo significa «ningún faltante» con diagnóstico y tipo habilitado;
+  sin ellos el análisis se corta antes de calcular (D2) y `tipo_no_habilitado` persiste `[]` sin evaluar.
 - **[Latencia]** → una lectura más por análisis; el p95 del análisis (15 s) lo domina Backend 2.
-- **[Interfaz de L1D-94 aún no publicada]** → aislada en el adaptador (D1).
+- **[Cambio futuro en la interfaz de L1D-94]** → aislado en el adaptador (D1).
 
 ## Open Questions
 
