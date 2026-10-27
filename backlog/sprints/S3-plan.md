@@ -17,6 +17,7 @@
 | L1D-117 | US-118 | `l1d-117-metadatos-poblacion-verificados` | ai-services | O2 | 116 · `studyKey` de 126 (el fixture se alinea al rebasar) | R5 | 5 |
 | L1D-285 | US-213b | `l1d-285-higiene-tests-ci` (patch 1.9.1) | clinical-platform · ai-services · CI | O2 | — (tarea 1.1 en la **sesión principal**: regla AC-17) | — | 3 |
 | L1D-127 | US-122 | `l1d-127-estado-criterio-estructurado` | ai-services | O3 | 126, 117 | R2 | 5 |
+| L1D-95 (parte del seed) | US-003 | `l1d-95a-seed-codigos-catalogo` | clinical-platform | O3 | 93, 94 (va **antes** de L1D-98 y L1D-181; ai-services no interviene) | R6 | 2 (estimado; puntos de L1D-95 adelantados) |
 | L1D-98 | US-006 | `l1d-98-faltantes-al-analisis` | clinical-platform | O3 | 94 | R6 | 3 |
 | — | US-117b | `us-117b-versionado-sparse-semilla` | ai-services | O3 | 116 | R5 | 3 |
 | L1D-181 | US-065 | `l1d-181-procedencia-contexto-ia` (prompt `rag-query@0.4.0`) | clinical-platform · ai-services | O3 | 287 | R4 | 3 |
@@ -30,7 +31,7 @@
 | L1D-288 | US-237 | `l1d-288-motivos-solo-descartadas` | frontend · ai-services | O8 | 287, 141 | R4 | 2 |
 | L1D-125 · L1D-92 | US-021 · DEC-11 · DEC-01 | sin change: `propuesta_revisada` en el catálogo (126, 93); cierre con los oncólogos en el S4 | — | cierre | 126, 93 | — | 2 |
 
-**Total: 85 pts** (77 de historias + 8 de ARR-09). DEC-03 da 80–90.
+**Total: 85 pts** (77 de historias + 8 de ARR-09). DEC-03 da 80–90. **Adelanto del 2026-10-27:** `l1d-95a-seed-codigos-catalogo` suma 2 pts de L1D-95 (US-003; el reparto de sus 3 pts entre S3 y S4 se ajusta en el S4); el total pasa a 87 (dentro de 80–90).
 
 **Changes activos que no se tocan en el S3:**
 - `l1d-205-adr40-deteccion-pii`: la medición de ADR-40 pasa al S5 como prerrequisito de US-083 (`[S3 resp. 7]`). Sigue activo con destino escrito.
