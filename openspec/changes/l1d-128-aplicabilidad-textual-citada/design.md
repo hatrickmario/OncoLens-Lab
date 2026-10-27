@@ -58,7 +58,7 @@ ignoran (ADR-34). Descartada: una llamada por criterio (latencia lineal).
    (`coincidencias_en_campo_generado()`, D7); coincidencia → rechazo sin NLI.
 4. NLI: premisa = `chunkTextSnapshot` del chunk citado, hipótesis = `studyPopulationValue`; soporte
    solo con `entailment` ≥ `NLI_ENTAILMENT_THRESHOLD` (`soporta()` de US-064). Los pares de todas las
-   propuestas van en **un único lote de la etapa de aplicabilidad** (`VerificadorDeSoporte.clasificar_pares`, mismo
+   propuestas van en **un único lote de la etapa de aplicabilidad** (`VerificadorDeSoporte.pares_soportados`, mismo
    clasificador y misma falla cerrada). *Desviación* de la versión anterior de D3 («junto con los de las opciones»):
    la aplicabilidad se calcula antes de generar las citas de las opciones y no depende de ellas (L1D-127 D1); unirlos
    obligaría a atar ambas etapas. Coste: dos lotes NLI por consulta en lugar de uno.
