@@ -459,20 +459,17 @@ class CorpusSeedSettings(AjustesDeCorpus):
     corpus_seed_manifest_path: Path
 
 
-class CorpusIngestSettings(AjustesDeCorpus):
-    """Configuración de ``python -m app.scripts.ingest`` (US-117a, RN-22): las claves de la semilla sin el manifiesto
-    (llega por ``--manifest``) más el origen del *sparse* y los pesos de su cabeza lineal, verificados por SHA-256."""
+class AjustesSparse(BaseSettings):
+    """Origen del *sparse* y pesos de su cabeza lineal (ADR-39, RN-22), verificados por SHA-256.
+
+    Base común de ``ingest`` y de ``ingest reindex-sparse`` (US-117b D5): este último no exige licencias, corte ni *chunking*."""
+
+    model_config = SettingsConfigDict(extra="ignore", hide_input_in_errors=True)
 
     sparse_vector_source: str
     # Pesos de ``sparse_linear`` de BGE-M3 (ADR-39): no se versionan en el repo; solo la ruta y el SHA-256 (US-117a, 1.10).
     embedding_sparse_weights_path: Path
     embedding_sparse_weights_sha256: str
-    # Muestra de metadatos extraídos para revisión humana (US-118, TBD-20, RN-22): porcentaje, semilla y directorio.
-    corpus_metadata_sample_pct: float = Field(default=10.0, ge=0.0, le=100.0)
-    corpus_metadata_sample_seed: str = Field(default="oncolens-metadatos", min_length=1)
-    corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
-    # Temperatura del LLM en la extracción de metadatos (RN-22): propia, no la de la generación de /rag/query.
-    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
 
     @field_validator("sparse_vector_source")
     @classmethod
@@ -485,3 +482,23 @@ class CorpusIngestSettings(AjustesDeCorpus):
         if not re.fullmatch(r"[0-9a-f]{64}", valor):
             raise ValueError("debe ser un SHA-256 hexadecimal en minúsculas")
         return valor
+
+
+class AjustesDeReindexacionSparse(AjustesSparse):
+    """Configuración de ``python -m app.scripts.ingest reindex-sparse`` (US-117b D4/D5, RN-22).
+
+    El tope superior del lote (``LIMITE_DE_CONSULTA``) es de infraestructura y lo valida el repositorio de Milvus."""
+
+    corpus_sparse_reindex_batch_size: int = Field(default=64, gt=0)
+
+
+class CorpusIngestSettings(AjustesDeCorpus, AjustesSparse):
+    """Configuración de ``python -m app.scripts.ingest`` (US-117a, RN-22): las claves de la semilla sin el manifiesto
+    (llega por ``--manifest``) más el origen del *sparse* y los pesos de su cabeza lineal (``AjustesSparse``)."""
+
+    # Muestra de metadatos extraídos para revisión humana (US-118, TBD-20, RN-22): porcentaje, semilla y directorio.
+    corpus_metadata_sample_pct: float = Field(default=10.0, ge=0.0, le=100.0)
+    corpus_metadata_sample_seed: str = Field(default="oncolens-metadatos", min_length=1)
+    corpus_metadata_sample_dir: Path = Path("data/evaluation/corpus-metadatos")
+    # Temperatura del LLM en la extracción de metadatos (RN-22): propia, no la de la generación de /rag/query.
+    corpus_metadata_llm_temperature: float = Field(default=0.0, ge=0.0, le=2.0)

@@ -12,3 +12,7 @@ class ChecksumDelManifiestoNoCoincide(Exception):
 
 class TextoVacio(Exception):
     """El documento no tiene texto que indexar tras normalizarlo."""
+
+
+class VectorSparseVacio(Exception):
+    """El codificador *sparse* no devolvió un término para algún pasaje: Milvus lo rechazaría (US-117a, riesgos)."""

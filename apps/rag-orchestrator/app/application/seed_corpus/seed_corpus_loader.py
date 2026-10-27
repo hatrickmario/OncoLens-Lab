@@ -19,11 +19,11 @@ from app.application.seed_corpus.ports import (
     RegistroDeDocumento,
     SourceFetcher,
 )
+from app.application.seed_corpus.nucleo_de_versionado import NucleoDeVersionado
 from app.application.seed_corpus.registros import (
     chunks_del_documento,
     registro_con_error,
     registro_embebido,
-    registro_rechazado,
 )
 from app.application.seed_corpus.release import publicar_release_si_cambio_el_conjunto_vigente
 from app.application.seed_corpus.reporte import ReporteDeCarga, Resultado, ResultadoDeDocumento
@@ -38,10 +38,8 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.errores import ChecksumDelManifiestoNoCoincide, TextoVacio
 from app.domain.corpus_seed.versionado import (
     Accion,
-    DecisionDeRetiro,
     DecisionDeVersion,
     calcular_checksum,
-    decidir_retiro,
     decidir_version,
 )
 
@@ -82,6 +80,9 @@ class SeedCorpusLoader:
         self._tamano_de_chunk = tamano_de_chunk
         self._solape_de_chunk = solape_de_chunk
         self._fecha_de_corte = fecha_de_corte
+        self._nucleo = NucleoDeVersionado(
+            catalogo=catalogo, almacen_de_chunks=almacen_de_chunks, reloj=reloj
+        )
 
     def cargar(self, documentos: Sequence[DocumentoDeSemilla]) -> ReporteDeCarga:
         resultados = tuple(self._procesar(documento) for documento in documentos)
@@ -98,27 +99,19 @@ class SeedCorpusLoader:
 
         Solo el apagado de chunks (Milvus) se vuelve un resultado ``error``; un fallo del catálogo se propaga y aborta.
         """
-        retiro = decidir_retiro(self._catalogo.versiones_del_grupo(documento.version_group_id))
+        retiro = self._nucleo.planificar_retiro(documento)
         try:
-            self._apagar(retiro.a_apagar)
+            self._nucleo.apagar_chunks(retiro.a_apagar)
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             # Error, no rechazado, y sin fila de rechazo: la siguiente carga repite el retiro desde cero.
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"retiro: {type(error).__name__}"
             )
-        retirada = self._retirar_en_el_catalogo(retiro)
-        self._catalogo.guardar_documento(registro_rechazado(documento, self._reloj.ahora()))
-        motivo = admision.motivo.value if admision.motivo else None
+        retirada = self._nucleo.retirar_vigente_del_catalogo(retiro)
+        motivo = self._nucleo.registrar_rechazo(documento, admision)
         return ResultadoDeDocumento(
             documento.document_key, Resultado.RECHAZADO, motivo, retirada_de_vigente=retirada
         )
-
-    def _retirar_en_el_catalogo(self, retiro: DecisionDeRetiro) -> bool:
-        """Marca no vigente la versión del grupo (después de apagar sus chunks, D5); ``True`` si había una."""
-        if retiro.vigente_id is None:
-            return False
-        self._catalogo.retirar_version(retiro.vigente_id, self._reloj.ahora())
-        return True
 
     def _cargar_documento(
         self, documento: DocumentoDeSemilla, admision: Admision
@@ -187,9 +180,7 @@ class SeedCorpusLoader:
         pudo dejar apagados. Si falla NO se escribe una fila ``error``: el documento embebido y vigente sigue siendo la verdad.
         """
         try:
-            self._apagar(decision.a_apagar)
-            if decision.a_encender is not None:
-                self._almacen_de_chunks.marcar_vigentes(decision.a_encender)
+            self._nucleo.reconciliar_omitido(decision)
         except Exception as error:  # noqa: BLE001 - borde del puerto ChunkStoreDeIngesta (Milvus)
             return ResultadoDeDocumento(
                 documento.document_key, Resultado.ERROR, f"milvus: {type(error).__name__}"
@@ -212,12 +203,7 @@ class SeedCorpusLoader:
         siguiente (deuda: insertar con ``is_current = false`` y encender tras confirmar).
         """
         chunks = chunks_del_documento(registro, fragmentos, vectores, self._reloj.ahora())
-        self._almacen_de_chunks.upsert_chunks(chunks)
-        self._apagar(decision.a_apagar)
-
-    def _apagar(self, document_ids: Sequence[str]) -> None:
-        for document_id in document_ids:
-            self._almacen_de_chunks.marcar_no_vigentes(document_id)
+        self._nucleo.escribir_y_apagar(chunks, decision)
 
     def _confirmar(
         self,
@@ -227,13 +213,9 @@ class SeedCorpusLoader:
         n_chunks: int,
     ) -> ResultadoDeDocumento:
         """Último paso: el catálogo es la verdad (``is_current``); un fallo aquí aborta la carga."""
-        if decision.anterior_id is None:
-            self._catalogo.guardar_documento(registro)
-            return ResultadoDeDocumento(documento.document_key, Resultado.CARGADO, chunks=n_chunks)
-        self._catalogo.reemplazar_version(registro, decision.anterior_id, self._reloj.ahora())
-        return ResultadoDeDocumento(
-            documento.document_key, Resultado.NUEVA_VERSION, chunks=n_chunks
-        )
+        reemplazo = self._nucleo.confirmar_version(registro, decision)
+        resultado = Resultado.NUEVA_VERSION if reemplazo else Resultado.CARGADO
+        return ResultadoDeDocumento(documento.document_key, resultado, chunks=n_chunks)
 
     def _registrar_error(
         self,
