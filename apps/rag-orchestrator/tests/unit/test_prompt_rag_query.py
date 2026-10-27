@@ -2,14 +2,19 @@
 
 from pathlib import Path
 
+import pytest
+
 from app.domain.alias_de_chunks import asignar_alias
 from app.domain.lenguaje import ListaTerminos, check_prohibited_terms
 from app.domain.relevance import ChunkPuntuado
 from app.prompts.rag_query import (
     PLANTILLA_RAG_QUERY,
     VERSION_DEL_PROMPT,
+    bloque_de_datos_del_paciente,
     construir_prompt_rag_query,
 )
+from app.schemas.generated.models import ClinicalContext
+from tests.support.recuperacion import solicitud_de
 
 RAIZ = Path(__file__).resolve().parents[4]
 LISTA = RAIZ / "packages" / "clinical-catalogs" / "lenguaje" / "terminos-prohibidos.json"
@@ -63,3 +68,62 @@ def test_prompt_conserva_las_llaves_del_texto_de_un_fragmento_sin_interpretarlas
 
     assert "valor {idioma} y {0}" in prompt
     assert "inglés" in prompt
+
+
+def _procedencia(**cambios) -> dict:
+    return {
+        "entryMethod": "seed",
+        "extractionConfidence": "n_a",
+        "reviewStatus": "verificado",
+        "conflict": False,
+        **cambios,
+    }
+
+
+def _contexto_de_fx_t1a_a(*, ki67: str, er_en_conflicto: bool = False) -> ClinicalContext:
+    """Contexto sintético: todo `verificado` salvo el Ki-67 `20 %` (estado dado) y, si se pide, el receptor de estrógeno `90 %`."""
+    datos = solicitud_de()["clinicalContext"]
+    datos["diagnosis"]["provenance"] = _procedencia()
+    datos["biomarkers"] = [
+        {**b, "provenance": _procedencia()} for b in datos["biomarkers"] if b["dataRef"] != "r3"
+    ]
+    datos["biomarkers"].append(
+        {
+            "dataRef": "r5",
+            "biomarkerName": "Ki-67",
+            "value": "20 %",
+            "resultType": "cuantitativo",
+            "clinicalSignificance": "relevante",
+            "monthsAgo": 1,
+            "provenance": _procedencia(entryMethod="ocr", reviewStatus=ki67),
+        }
+    )
+    datos["biomarkers"].append(
+        {
+            "dataRef": "r6",
+            "biomarkerName": "Receptor de estrógeno",
+            "value": "90 %",
+            "resultType": "cuantitativo",
+            "clinicalSignificance": "relevante",
+            "monthsAgo": 1,
+            "provenance": _procedencia(
+                reviewStatus="requiere_revision" if er_en_conflicto else "verificado",
+                conflict=er_en_conflicto,
+            ),
+        }
+    )
+    return ClinicalContext.model_validate(datos)
+
+
+@pytest.mark.ac("US-065", 5)
+def test_bloque_de_datos_acompana_el_ki67_con_sin_verificar_cuando_requiere_revision():
+    contexto = _contexto_de_fx_t1a_a(ki67="requiere_revision")
+
+    lineas = bloque_de_datos_del_paciente(contexto).splitlines()
+
+    etiquetadas = [
+        linea for linea in lineas if "(sin verificar)" in linea or "(en conflicto)" in linea
+    ]
+    assert len(etiquetadas) == 1
+    assert "Ki-67 20 %" in etiquetadas[0]
+    assert "(sin verificar)" in etiquetadas[0]

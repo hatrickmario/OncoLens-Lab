@@ -11,6 +11,7 @@ import re
 from collections.abc import Sequence
 
 from app.domain.alias_de_chunks import FragmentoConAlias
+from app.schemas.generated.models import ClinicalContext
 
 VERSION_DEL_PROMPT = "rag-query@0.3.0"
 
@@ -75,6 +76,11 @@ def construir_prompt_rag_query(
         contexto=contexto_clinico or "No disponible",
         fragmentos="\n".join(_fragmento(f) for f in fragmentos),
     )
+
+
+def bloque_de_datos_del_paciente(contexto: ClinicalContext) -> str:
+    """Datos del paciente del prompt, con la etiqueta de procedencia de cada dato (RN-07, L1D-181 D3)."""
+    raise NotImplementedError("no implementado")
 
 
 def _fragmento(fragmento: FragmentoConAlias) -> str:
