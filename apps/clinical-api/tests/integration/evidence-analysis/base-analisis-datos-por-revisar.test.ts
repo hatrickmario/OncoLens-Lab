@@ -47,7 +47,7 @@ describe('Base del análisis con FX-T1a-a', () => {
       clinicalContext: { pseudoPatientId: 'psd_TestPseudonimo0001', ...contexto },
     };
 
-    const base = crearBaseDelAnalisis().construir(
+    const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
       solicitud,
       validarRespuestaInterna(conEvidencia),
       false,
@@ -73,7 +73,7 @@ describe('Base del análisis con FX-T1a-a', () => {
       clinicalContext: { pseudoPatientId: 'psd_TestPseudonimo0001', ...contexto },
     };
 
-    const base = crearBaseDelAnalisis().construir(
+    const base = crearBaseDelAnalisis({ etiquetaDe: (clave) => clave }).construir(
       solicitud,
       validarRespuestaInterna(conEvidencia),
       false,

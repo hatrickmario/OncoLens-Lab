@@ -10,13 +10,16 @@ export interface BasisDetailProps {
 interface ListaProps {
   titulo: string;
   items: string[];
+  /** Aclaración visible bajo el título (RN-26: el aviso informa y no bloquea). */
+  nota?: string;
 }
 
-function Lista({ titulo, items }: ListaProps) {
+function Lista({ titulo, items, nota }: ListaProps) {
   if (items.length === 0) return null;
   return (
     <section>
       <h4>{titulo}</h4>
+      {nota && <p>{nota}</p>}
       <ul>
         {items.map((item, indice) => (
           <li key={`${indice}-${item}`}>{item}</li>
@@ -38,6 +41,11 @@ export function BasisDetail({ base }: BasisDetailProps) {
         items={base.patientDataUsed.map((dato) =>
           rellenar(textos.etiquetaDato, { etiqueta: dato.label, revision: textoDeRevision(dato) }),
         )}
+      />
+      <Lista
+        titulo={textos.datosCriticosFaltantes}
+        nota={textos.notaFaltantes}
+        items={base.missingCriticalDataLabels}
       />
       <Lista
         titulo={textos.fuentesConsultadas}
