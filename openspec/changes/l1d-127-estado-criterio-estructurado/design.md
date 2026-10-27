@@ -76,7 +76,7 @@ asumido). Comparación por **prefijo exacto** (`startsWith`, sensible a mayúscu
   componente exige otra forma del estudio (hoy una sola cadena por subclave) → `desconocido` sin causa cuando
   hay valor del paciente y del estudio; queda fuera del alcance del S3.
 - Cada `desconocido` sin `unknownReason` lleva un motivo interno (`valor_fuera_de_tabla`, `sin_escala`,
-  `forma_no_comparable`, `destino_no_resoluble`) que solo se cuenta en el log, nunca se envía.
+  `forma_no_comparable`, `destino_no_resoluble`) que solo se cuenta en el log (campo permitido: **conteo por motivo interno**, sin valores del paciente ni del estudio), nunca se envía.
 
 **D3 · `patientValue` por `destination`, copia literal.** Un resolvedor puro
 `valor_del_paciente(contexto, destino) -> str | None` traduce cada destino del catálogo a su campo del
@@ -85,7 +85,7 @@ asumido). Comparación por **prefijo exacto** (`startsWith`, sensible a mayúscu
 `Biomarker.value` con lista (`RE`/`RP`, `HRR`/`BRCA`) → un valor **rotulado** `RE: <valor>; RP: <valor>` en el
 orden de `match.name`, cada `<valor>` copiado literal y el rótulo tomado del catálogo (nunca compuesto por el
 modelo), y `desconocido` + `falta_en_paciente` si **falta cualquier** componente (el seed usa «Receptor de
-estrógeno/progesterona» hasta el change de seed de la O3: los tests de RE/RP usan fixtures propios con los códigos
+estrógeno/progesterona» hasta `l1d-95a-seed-codigos-catalogo`: los tests de RE/RP usan fixtures propios con los códigos
 `RE`/`RP`); `Diagnosis.stage_value` → `diagnosis.stageValue`; `Diagnosis.grade` (isup) → `diagnosis.grade`;
 `Diagnosis.performance_value` con `match.performance_scale = ECOG` → `diagnosis.performanceValue` (entero → su
 representación decimal) **solo si** `diagnosis.performanceScale` es `ECOG`: con otra escala no se copia y el
@@ -167,7 +167,7 @@ crea la capacidad y se archiva el primero.
   el catálogo clínico de solo lectura (`CLINICAL_CATALOG_PATH`); no toca datos clínicos ni `clinical-minio`.
   `AC-T4.4` / `SEG-06`: el servicio trabaja solo con el contexto desidentificado.
 - `patientValue` viaja de vuelta a `clinical-api` en la respuesta; es el mismo valor enmascarado que llegó. Los
-  logs de la etapa solo registran `traceId`, número de documentos y de criterios por estado y latencia; nunca
+  logs de la etapa solo registran `traceId`, número de documentos, de criterios por estado, de `desconocido` por motivo interno y latencia; nunca
   `patientValue`, `studyPopulationValue`, texto de chunks ni `pseudoPatientId`.
 - Datos: solo sintéticos (FX-08b-a). Sin modelos en la nube (RN-12): la etapa no usa ningún modelo.
 
@@ -235,6 +235,16 @@ relajación de test. Las copias de fixtures con sha256 en `apps/rag-orchestrator
 modifican.
 
 ## Open Questions
+
+- **PENDIENTE de decisión (usuario) · Documentos `pendiente` omitidos.** No tienen `SourceApplicability`, así que
+  `l1d-128` (US-123, camino textual) debe reconciliarse con esa omisión: ¿quién los re-incorpora (el camino
+  textual, con extracción + cita + NLI, o ninguno)? No se decide aquí.
+- **PENDIENTE de decisión (usuario) · Casos límite de `igualdad` en HER2** (semántica sin cambiar; unitario que los
+  fija): paciente "negativo" vs estudio "positivo" → `desconocido`; paciente "2+ (IHQ)" vs estudio "negativo" →
+  `no_coincide`; `igualdad` con `partial.when = solo_subgrupo` no produce `parcial` (solo `rango` y `pertenencia`).
+  Recomendación: mantener `desconocido` hasta que un catálogo ≥ 1.2.0 añada `negativo` a `rule.equivalences`.
+- **Nota para US-126 (UI):** si una opción tiene como única fuente un documento `pendiente` (sin
+  `SourceApplicability`), mostrar «Sin datos de aplicabilidad de esta fuente: metadatos del estudio no disponibles».
 
 Pendientes de definir (los verá el humano en `/sprint-start`):
 

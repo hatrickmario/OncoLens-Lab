@@ -100,7 +100,7 @@ contexto clínico, sin que el modelo interprete nada: es reproducible, auditable
 - ↪ **US-055 / US-225** (archivados: `l1d-106-retrieval-threshold-sin-evidencia`,
   `l1d-275-generacion-opcion-max-options`), **US-063 / US-064** (archivados: `l1d-179-citas-chunk-recuperado`,
   `l1d-180-soporte-nli-descartadas`): pipeline `con_evidencia` sobre el que se inserta la etapa.
-- 🔗 Produce para: **US-123 (L1D-128, `l1d-128-aplicabilidad-textual-citada`)** (camino textual con cita y NLI), **US-124 (L1D-129, `l1d-129-aplicabilidad-causas-avisos`)** (causa
+- 🔗 Produce para: **US-123 (L1D-128, `l1d-128-aplicabilidad-textual-citada`)** (camino textual con cita y NLI; los documentos `pendiente` omitidos aquí no tienen `SourceApplicability` y L1D-128 debe reconciliarse: **PENDIENTE de decisión del usuario** sobre quién los re-incorpora), **US-124 (L1D-129, `l1d-129-aplicabilidad-causas-avisos`)** (causa
   `falta_en_paciente` desde `missingCriticalData`, `patientDataWarning`, AC de conteo y no comparable),
   **US-125 (L1D-130, `l1d-130-herencia-aplicabilidad-recorte`)** (agregación por opción y selección por aplicabilidad).
 - ↪ **`studyKey`** (`[S3 resp. 16]`): cada criterio de `aplicabilidad.json` declara en `studyKey` la clave (o
