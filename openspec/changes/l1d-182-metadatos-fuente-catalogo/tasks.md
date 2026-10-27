@@ -27,8 +27,8 @@
 
 ## 3. clinical-platform
 
-- [ ] 3.1 (TDD estricto) Test de aceptación: "persiste y devuelve primaryEndpoint y sampleSize en null cuando rag-orchestrator los devuelve null [US-127 AC-3]" · integración (Supertest + PostgreSQL real de test + MSW desde el ejemplo de 1.1), con la respuesta validada contra `apps/clinical-api/openapi.yaml`. Commit `test(L1D-182)` (regresión si pasa en verde, design D1).
-- [ ] 3.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-182)` (o "sin cambios" en el PR si solo hubo test).
+- [x] 3.1 (TDD estricto) Test de aceptación: "persiste y devuelve primaryEndpoint y sampleSize en null cuando rag-orchestrator los devuelve null [US-127 AC-3]" · integración (Supertest + PostgreSQL real de test + MSW desde el ejemplo de 1.1), con la respuesta validada contra `apps/clinical-api/openapi.yaml`. Commit `test(L1D-182)` (regresión si pasa en verde, design D1). **Hecho**: `apps/clinical-api/tests/integration/evidence-analysis/metadatos-fuente-nulos.test.ts` pasó a la primera (regresión, D1/D4); una mutación (`sampleSize` null→0 al persistir en `analysis-record.ts`) lo hizo fallar con `expected +0 to be null`; sin código de producción tocado.
+- [x] 3.2 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en verde antes y después, commit `refactor(L1D-182)` (o "sin cambios" en el PR si solo hubo test). **Refactor: sin cambios** (solo hubo test).
 
 ## 4. frontend
 
@@ -40,13 +40,13 @@
 
 ## 5. evaluación
 
-- [ ] 5.1 (exento) Sin cambio de modelo, prompt, umbral, catálogo real ni corpus: `run-ai-eval` no aplica; la calidad de los metadatos del corpus se mide en US-132 (L1D-244). Verificación: nota en el PR.
+- [x] 5.1 (exento) Sin cambio de modelo, prompt, umbral, catálogo real ni corpus: `run-ai-eval` no aplica; la calidad de los metadatos del corpus se mide en US-132 (L1D-244). Verificación: nota en el PR.
 
 ## 6. Verificación
 
 - [x] 6.1 `openspec validate l1d-182-metadatos-fuente-catalogo --strict` en verde.
-- [ ] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3. **web y E2E verificados** (328 Vitest, E2E US-127); pendiente clinical-api (sección 3).
-- [ ] 6.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec del proveedor en la integración (sin cambio de schema: `contracts:verify-provider` y `contracts:breaking` sin diferencias). **ai-services verificado** (rag-orchestrator: `verify-provider` 218 respuestas, `breaking` y `generate:check` sin diferencias); pendiente lo de `clinical-api` y `web`.
+- [ ] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3. **web y E2E verificados** (328 Vitest, E2E US-127); clinical-api verificado: `npm test -w apps/clinical-api` 919 en verde e integración de `evidence-analysis` 102 en verde; falta el Pytest de rag-orchestrator (ai-services).
+- [ ] 6.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec del proveedor en la integración (sin cambio de schema: `contracts:verify-provider` y `contracts:breaking` sin diferencias). **ai-services verificado** (rag-orchestrator: `verify-provider` 218 respuestas, `breaking` y `generate:check` sin diferencias); clinical-api: `verify-provider` 320 respuestas, `contracts:check` y `contracts-breaking` sin hallazgos; pendiente `web`.
 
 ## Workflow follow-up
 
