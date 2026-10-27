@@ -14,7 +14,7 @@ propio `summary` y `populationNotComparable` (ADR-31). La relevancia de una fuen
 `relevanceScore` de sus chunks citados por la opción (asumido). Ningún campo es un puntaje (RN-28).
 
 #### Scenario: La opción con una fuente comparable y otra no comparable toma el resumen de la comparable [US-125 AC-1] [AC-08.8]
-- **GIVEN** A-M1, el catálogo `test-apl-1.0.0` y una opción validada que cita `doc-a1` (0 excluyentes en No coincide, `{ coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }`) y `doc-a2` (1 excluyente en No coincide)
+- **GIVEN** A-M1, el catálogo `test-apl-1.0.0` y una opción validada que cita `doc-a1` (0 excluyentes en No coincide, `{ coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }`) y `doc-a2` (1 excluyente en No coincide)
 - **WHEN** se agrega la aplicabilidad de la opción
 - **THEN** `applicabilitySummary` es igual al `summary` de `doc-a1`
 - **AND** `perSource` trae exactamente `doc-a1` y `doc-a2`, cada una con su propio `summary` y su `populationNotComparable` (`false` y `true`)
@@ -56,3 +56,9 @@ independiente del orden de entrada y nunca un puntaje combinado; `parcial` y `de
 - **WHEN** se evalúa la función pura
 - **THEN** gana la de 0 excluyentes
 - **AND** la clave de orden expuesta por el comparador es una tupla de los conteos y la relevancia, sin ningún valor derivado de combinarlos
+
+#### Scenario: Una opción sin ninguna fuente evaluada se agrega en cero y no falla [RN-28] [RN-26]
+- **GIVEN** una opción validada cuyas fuentes citadas no tienen entrada en `applicability` (documento sin población o con origen no declarado)
+- **WHEN** se agrega la aplicabilidad de la opción
+- **THEN** `applicabilitySummary` es `{ coincide: 0, parcial: 0, noCoincide: 0, desconocido: 0 }`, `perSource` es `[]` y `populationNotComparable` es `false`
+- **AND** `warnings` no incluye `poblacion_no_comparable`

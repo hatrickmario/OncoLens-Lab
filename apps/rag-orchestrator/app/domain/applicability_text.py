@@ -245,4 +245,9 @@ def con_valor_textual(
     el valor del paciente no se toca (ADR-34). Si el valor no encaja en la regla queda ``desconocido`` (OQ-1)."""
     normalizado = normalizar_valor_al_catalogo(criterio, propuesta.valor)
     veredicto = evaluar_criterio(criterio, evaluado.valor_paciente, ValorDelEstudio(normalizado))
-    return replace(veredicto, valor_estudio=propuesta.valor, chunk_citado_id=propuesta.chunk_id)
+    return replace(
+        veredicto,
+        valor_estudio=propuesta.valor,
+        chunk_citado_id=propuesta.chunk_id,
+        aviso=evaluado.aviso,
+    )

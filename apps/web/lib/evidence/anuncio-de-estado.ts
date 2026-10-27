@@ -30,6 +30,10 @@ export function anunciarEstado(fase: FaseDelPanel): string {
       return estado.analizando;
     case 'no_realizado':
       return estado.noRealizado;
+    case 'limite':
+    case 'red':
+      // el propio aviso (`role="status"` del límite, `role="alert"` de la red) es la región que se anuncia
+      return '';
     case 'error':
       return rellenar(estado.error, { traceId: fase.traceId ?? '' }).trim();
     case 'ok':

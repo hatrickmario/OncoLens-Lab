@@ -28,25 +28,38 @@ por fuente que US-125 agrega y que la UI de US-126 (S4) muestra.
 
 ## What Changes
 
-- `rag-orchestrator` marca cada criterio `desconocido` con su causa: `falta_en_paciente` cuando el dato está
-  en `clinicalContext.missingCriticalData` o ausente del contexto (con `patientValue = null` y
-  `patientDataWarning = faltante`), y `no_reportado_por_fuente` cuando la fuente no lo reporta (US-122/123).
-- `patientDataWarning` por criterio desde la `provenance` del dato comparado: `en_conflicto` si
-  `conflict = true`, `sin_verificar` si `reviewStatus = requiere_revision`, `null` si está verificado,
-  corregido o auto-aceptado. El aviso no altera el estado calculado ni bloquea (RN-26).
-- `SourceApplicability.populationNotComparable = true` cuando algún criterio con `isExclusionary = true`
-  queda en `no_coincide`.
-- `SourceApplicability.summary` = conteo por estado (`coincide`, `parcial`, `noCoincide`, `desconocido`),
-  sin ningún puntaje ni porcentaje (RN-28).
+Reconciliado el 2026-10-27 con lo mergeado (L1D-127, L1D-181, seed #212, catálogo real de 6 criterios, `missingCriticalData`
+de L1D-98) y con L1D-128:
+
+- **Ya hecho por L1D-127/128 (no se rehace):** `unknownReason` solo `falta_en_paciente | no_reportado_por_fuente`; un
+  `desconocido` cuyo motivo no es ninguno de los dos (estadio sin escala ordenada, forma no comparable, destino no
+  resoluble) lleva `unknownReason = null` (decidido, usuario, 2026-10-27); el valor del estudio siempre lleva cita
+  (RN-25); el documento `pendiente` lo re-incorpora L1D-128 con todos sus criterios `desconocido`;
+  `contar_estados()` y `poblacion_no_comparable()` (RN-28, AC-08.6).
+- **Nuevo en este change:** `patientDataWarning` por criterio, hoy siempre `null` en `respuesta_con_evidencia.py`.
+  Se deriva de la `provenance` **del dato del paciente que se copia** (`patientValue`): `en_conflicto` si
+  `conflict = true`, `sin_verificar` si `reviewStatus = requiere_revision` (precedencia `en_conflicto` > `sin_verificar` >
+  `null`), y `faltante` si el dato no existe. Espejo de `rag_query.etiqueta_de_procedencia` (L1D-181), con un test de
+  paridad por tabla `reviewStatus × conflict` en cada lado. El aviso no altera el estado ni bloquea (RN-26).
+- **Faltante:** un criterio es `falta_en_paciente` si no hay dato en el contexto **o** su clave figura en
+  `clinicalContext.missingCriticalData` (igualdad de clave); en ambos casos `patientValue = null` y
+  `patientDataWarning = faltante`. La regla `causa_de_desconocido()` se extrae de `evaluar_criterio` a una función con
+  nombre propio.
 - Regresiones verificadas: sin evidencia → `applicability = []` y cero invocaciones del LLM (RN-02);
   `clinical-api` persiste en el `AIAnalysisRecord` la misma `applicability` que responde (RN-06).
-- Sin cambio de contrato: `ApplicabilityCriterion` y `SourceApplicability` ya declaran estos campos y
-  enums desde el Pre-S1 (`contracts/schemas/evidence.yaml`, ADR-26).
-- **Dueño del par de ejemplos con aplicabilidad** (`[S3 resp. 16]`): `contracts/examples/rag-query-aplicabilidad-a-m1.json`
-  (interno, `RagQueryInternalResponse`) y su público `con-evidencia-s3-aplicabilidad.json` (`EvidenceAnalysis`),
-  registrados en `contracts/examples/index.json`; `l1d-130` y `l1d-141` los reutilizan.
-- Reglas nuevas solo `causa_de_desconocido()` y `aviso_dato_paciente()`; `contar_estados()` y
-  `poblacion_no_comparable()` son de `l1d-127` y aquí solo se verifican sus AC (US-124 AC-4, AC-5).
+- **Contrato (solo ejemplos, `contract(L1D-129)`):** sin cambio de `openapi.yaml` ni de `contracts/schemas/`
+  (`ApplicabilityCriterion` y `SourceApplicability` ya declaran los campos). Se corrigen los **6 ejemplos** que
+  nombran el biomarcador «Receptor de estrógeno» (el catálogo real de aplicabilidad lo lee por `match.name = RE|RP`,
+  alineado con el seed de L1D-95a) y este change es **dueño del par con aplicabilidad** (`[S3 resp. 16]`):
+  `contracts/examples/rag-query-aplicabilidad-a-m1.json` (interno, con su petición
+  `rag-query-request-aplicabilidad-a-m1.json`) y su público `con-evidencia-s3-aplicabilidad.json`
+  (`EvidenceAnalysis`), registrados en `contracts/examples/index.json`; `l1d-130` y `l1d-141` los reutilizan.
+- Reglas nuevas solo `causa_de_desconocido()` y `aviso_dato_paciente()`; los AC-4 y AC-5 de US-124 se verifican
+  contra `poblacion_no_comparable()` y `contar_estados()` de L1D-127.
+- **Desviación del backlog:** con el catálogo de test de 5 criterios, A-M1 + `doc-a1` da `{ coincide: 2, parcial: 0,
+  noCoincide: 0, desconocido: 3 }` y no `{3,0,0,2}`: el `estadio` queda `desconocido` sin causa porque «IIA» no tiene
+  escala ordenada en el catálogo (L1D-127 D2b). El AC-5 se escribe con el conteo real; el texto de la historia en
+  `backlog/features/` queda por alinear (no es de este implementador).
 
 ## Capabilities
 
@@ -72,10 +85,10 @@ por fuente que US-125 agrega y que la UI de US-126 (S4) muestra.
   (`[S3 resp. 16]`).
 - ↪ **l1d-128-aplicabilidad-textual-citada (US-123)** — valor textual citado y validado con NLI; el AC-4
   (`doc-a2` + `APL-OK` → HER2 `no_coincide`) lo necesita.
-- ↪ change de **L1D-98 (US-006)** — `missingCriticalData` poblado en el contexto (en los tests de B2 basta
-  el contexto de FX-08b-a; la integración de punta a punta depende de US-006).
-- ↪ change de **L1D-181 (US-065)** — `provenance.conflict = true` en el contexto a partir de un conflicto
-  sembrado (la mitad B1 del AC-3).
+- ↪ change de **L1D-98 (US-006)** — `missingCriticalData` ya viaja en el contexto (PR #215; en los tests de B2 basta
+  el contexto de FX-08b-a).
+- ↪ change de **L1D-181 (US-065)** — ya en `main`: `provenance.conflict = true` y `etiqueta_de_procedencia` (el aviso
+  es su espejo).
 - ↪ archivados: `l1d-275-generacion-opcion-max-options`, `l1d-106-retrieval-threshold-sin-evidencia`,
   `l1d-104-persistencia-analisis-fallos`.
 - 🔗 US-099 (S5): detección real del conflicto (US-099 AC-7). 🔗 US-125: consume `summary` y
@@ -99,4 +112,4 @@ por fuente que US-125 agrega y que la UI de US-126 (S4) muestra.
   `index.json`.
 - Tests Pytest con FX-08b-a (+ variante con HER2 en conflicto) y Supertest de persistencia en `clinical-api`.
 - Sin cambios en `openapi.yaml`, `contracts/schemas/` ni en lo generado (solo ejemplos). Sin cambio de modelo, prompt, umbral,
-  catálogo ni corpus (no exige `evaluate`).
+  catálogo ni corpus: no exige `evaluate`. Los ejemplos de petición se leen en tests del prompt, no cambian la plantilla.

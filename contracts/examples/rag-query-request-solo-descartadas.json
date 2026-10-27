@@ -53,7 +53,7 @@
       },
       {
         "dataRef": "r3",
-        "biomarkerName": "Receptor de estrógeno",
+        "biomarkerName": "RE",
         "value": "Positivo (80%)",
         "resultType": "cualitativo",
         "clinicalSignificance": "relevante",
