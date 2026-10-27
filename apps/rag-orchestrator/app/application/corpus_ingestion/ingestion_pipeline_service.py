@@ -48,8 +48,8 @@ from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.corpus_seed.errores import (
     ChecksumDelManifiestoNoCoincide,
     TextoVacio,
-    VectorSparseVacio,
 )
+from app.domain.corpus_seed.sparse import exigir_sparse_por_pasaje
 from app.domain.corpus_seed.versionado import (
     Accion,
     DecisionDeVersion,
@@ -227,9 +227,7 @@ class IngestionPipelineService:
         """Un vector *sparse* no vacío por fragmento: sin él el documento queda en error, nunca se inserta sin *sparse*."""
         with _etapa("sparse"):
             vectores = self._codificador_sparse.codificar(fragmentos)
-            if len(vectores) != len(fragmentos) or not all(vectores):
-                raise VectorSparseVacio()
-        return vectores
+            return list(exigir_sparse_por_pasaje(vectores, len(fragmentos)))
 
     def _omitir(
         self, documento: DocumentoDeSemilla, decision: DecisionDeVersion

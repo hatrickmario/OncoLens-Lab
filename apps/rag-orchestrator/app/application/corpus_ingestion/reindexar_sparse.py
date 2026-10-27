@@ -17,7 +17,7 @@ from app.application.corpus_ingestion.ports import (
     ChunkParaReindexar,
     SparsePassageEncoder,
 )
-from app.domain.corpus_seed.errores import VectorSparseVacio
+from app.domain.corpus_seed.sparse import exigir_sparse_por_pasaje
 
 ETAPA_LEER: Final = "leer_vigentes"
 ETAPA_CODIFICAR: Final = "codificar"
@@ -83,6 +83,4 @@ class ReindexarSparse:
         """Un vector no vacío por chunk: si el adapter rompe ese contrato no se escribe nada (Milvus lo rechazaría)."""
         with _etapa(ETAPA_CODIFICAR):
             vectores = self._codificador.codificar([chunk.chunk_text for chunk in pagina])
-            if len(vectores) != len(pagina) or not all(vectores):
-                raise VectorSparseVacio()
-        return vectores
+            return list(exigir_sparse_por_pasaje(vectores, len(pagina)))
