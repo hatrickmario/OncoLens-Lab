@@ -1,4 +1,4 @@
-ruff==0.17.1
+ruff==0.17.2
 # Contratos de capas (.importlinter, L1D-263 US-213 AC-3). BSD-2-Clause; 2.15 publicada el 2026-09-04.
 import-linter==2.15
 # Cobertura XML de Pytest para la cobertura de lineas cambiadas (L1D-285 US-213 AC-11, design D6). MIT; 7.1.0 publicada el 2026-03-21.
