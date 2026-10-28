@@ -21,6 +21,8 @@ del checklist (l1d-94) y su persistencia (l1d-98).
 
 ## Decisions
 
+- Fusión aprobada (usuario, 2026-10-28) en el cierre del S3: el MODIFIED de «Resumen de la Base visible sin expandir» reemplaza el escenario de l1d-187 «Resumen de la Base del análisis con evidencia [US-067 AC-1]» por el de 188 (texto ampliado con fecha de corte y faltantes), conservando el título de main para que el archive lo acepte.
+
 ### D1. Una sola fuente del inciso (b): el request interno
 
 `construir(request, respuesta, continueWithWarning)` copia `request.clinicalContext.missingCriticalData` (copia del

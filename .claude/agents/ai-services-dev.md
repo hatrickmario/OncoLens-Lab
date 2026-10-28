@@ -72,6 +72,10 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
    spec, tests por AC con la **salida en rojo y en verde**, refactors, comandos y resultado,
    desviaciones del design.md.
 
+## Integración antes del PR
+
+Los fallos que solo aparecían en la CI costaron vueltas en el S3. Antes de abrir el PR corre los tests de integración de `apps/rag-orchestrator` con el PostgreSQL `corpus` de test (Compose de test; ver `docs/process/ci.md`) y el job `integration-rag` en lo que sea posible sin pesos reales. Nunca `npm ci`/`pip install` en un worktree que comparta `node_modules` o entorno por symlink.
+
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 
 Después de que los tests de los AC estén en verde y **antes** de la verificación final, revisa
