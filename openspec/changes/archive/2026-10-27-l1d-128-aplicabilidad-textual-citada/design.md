@@ -32,6 +32,8 @@ de `l1d-287` quedan como seguimiento (Risks).
 
 ## Decisions
 
+- Fusión aprobada (usuario, 2026-10-28) en el cierre del S3: el MODIFIED de «Aplicabilidad por fuente recuperada con los criterios del catálogo» incorpora el escenario «fuente estructurada compatible… [US-122 AC-1]» de l1d-127 y el escenario propio de 128 («entra por el camino textual y calla desconocido [US-123 AC-4]») reemplaza al de 127 «pendiente se omite de applicability» (mismo US-122 AC-5); en la spec archivada se renombró a su título descriptivo.
+
 **D1 — Cuándo se usa el camino textual.** Por fuente recuperada sobre el umbral y por criterio del
 catálogo del tipo de cáncer: solo si `population_criteria` no trae ese criterio (`valor_del_estudio()` de L1D-127 da
 `None`: clave ausente, `no_disponible` o forma no leíble) y el destino del criterio es resoluble. Un documento
