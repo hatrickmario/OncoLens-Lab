@@ -7,7 +7,9 @@ import type {
 import { clasificarResultado } from '../../lib/evidence/clasificar-resultado';
 import { formatearRelevancia } from '../../lib/evidence/formatear-relevancia';
 import { mensajes } from '../../lib/mensajes';
+import { resumirMotivos } from '../../lib/evidence/resumir-motivos';
 import { AiDisclaimer } from '../molecules/ai-disclaimer';
+import { DiscardReasonsSummary } from '../molecules/discard-reasons-summary';
 import { QueSeBusco } from '../molecules/que-se-busco';
 import { ScopeNotice } from '../molecules/scope-notice';
 import { AnalysisBasisPanel } from './analysis-basis-panel';
@@ -46,7 +48,12 @@ export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps
           ))}
         </>
       )}
-      {clase === 'solo_descartadas' && <p>{resultado.soloDescartadas}</p>}
+      {clase === 'solo_descartadas' && (
+        <>
+          <p>{resultado.soloDescartadas}</p>
+          <DiscardReasonsSummary motivos={resumirMotivos(descartadas)} />
+        </>
+      )}
       {clase === 'sin_opciones' && <p>{resultado.sinOpciones}</p>}
       {clase === 'sin_evidencia' && (
         <>

@@ -5,6 +5,9 @@ import conEvidenciaAplicabilidad from '../../../../../contracts/examples/con-evi
 import conEvidenciaPoblacionNoComparable from '../../../../../contracts/examples/con-evidencia-s3-poblacion-no-comparable.json';
 import conEvidenciaSinOpciones from '../../../../../contracts/examples/con-evidencia-sin-opciones.json';
 import conEvidenciaSoloDescartadas from '../../../../../contracts/examples/con-evidencia-solo-descartadas.json';
+import soloDescartadasCitaInvalida from '../../../../../contracts/examples/con-evidencia-solo-descartadas-cita-invalida.json';
+import soloDescartadasMotivosMixtos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-motivos-mixtos.json';
+import soloDescartadasOtrosMotivos from '../../../../../contracts/examples/con-evidencia-solo-descartadas-otros-motivos.json';
 import errorColaLlena from '../../../../../contracts/examples/error-cola-inferencia-llena.json';
 import errorDeadline from '../../../../../contracts/examples/error-deadline-vencido.json';
 import errorLlmNoDisponible from '../../../../../contracts/examples/error-llm-local-no-disponible.json';
@@ -27,6 +30,9 @@ export {
   errorTipoCancer,
   peticion,
   sinEvidencia,
+  soloDescartadasCitaInvalida,
+  soloDescartadasMotivosMixtos,
+  soloDescartadasOtrosMotivos,
   tipoNoHabilitado,
 };
 

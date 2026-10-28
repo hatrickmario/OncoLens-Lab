@@ -125,11 +125,17 @@ test.describe('Panel de análisis (L1D-140)', () => {
     await esperarResultado(page);
 
     await expect(page.getByRole('heading', { level: 3, name: SIN_BASE })).toHaveCount(0);
+    // US-237: el resumen por motivo vive bajo el titular, fuera de la sección plegada.
+    await expect(page.getByText(textos.discarded.motivos)).toBeVisible();
+    await expect(
+      page.getByRole('listitem').filter({ hasText: textos.discardReason.afirmacion_sin_soporte }),
+    ).toHaveCount(1);
     const titulo = page.getByRole('button', { name: textos.discarded.titulo });
     await expect(titulo).toHaveAttribute('aria-expanded', 'false');
     await titulo.click();
     await expect(page.getByText(descartada.option)).toBeVisible();
-    await expect(page.getByText(textos.discardReason.afirmacion_sin_soporte)).toBeVisible();
+    const seccion = page.locator('#descartadas');
+    await expect(seccion.getByText(textos.discardReason.afirmacion_sin_soporte)).toBeVisible();
     await expect(page.getByText(descartada.unsupportedClaims[0])).toBeVisible();
     await expect(page.getByText(textos.discarded.auditoria)).toBeVisible();
     const meta = page.getByTestId('discarded-audit-meta');
