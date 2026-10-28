@@ -40,7 +40,9 @@
       cálculo de `app/evaluation/envoltorios.py` sin duplicarlo; smoke con los modelos verificados de ADR-39 en el
       mismo job que el smoke de US-231b (`integration-rag`), que comprueba ≥ 1 término por pasaje · test después ·
       commit `feat(L1D-116)` · **adapter y unitarios hechos; smoke con pesos reales TRASLADADA a L1D-117 AC-5 / US-117b**
-      (ahí se reindexa con pesos reales); por eso sigue `[ ]`
+      (ahí se reindexa con pesos reales); por eso sigue `[ ]` · **Conciliación S3 (2026-10-28):** el smoke con pesos
+      reales se ejecutó en local en US-117b 0.4 (`test_smoke_sparse_con_pesos_reales.py`, `1 passed`); su ejecución en
+      el job `integration-rag` (la CI no tiene pesos, RN-14): TRASLADADA a US-233
 - [x] 1.11 Regresión: suite de la semilla (US-059, `load_seed_corpus`) y de ADR-39 (`app/evaluation`) en verde sin
       cambios en sus tests · verificación: Pytest de `tests/integration` y `tests/evaluation`
 - [x] 1.12 Refactor: Extract Method / Inline Method en los archivos tocados, sin cambio de comportamiento, tests en
@@ -48,19 +50,20 @@
 
 ## evaluación
 
-- [ ] 2.1 Confirmar en el PR que `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral ni corpus versionado;
+- [x] 2.1 Confirmar en el PR que `run-ai-eval` no aplica (sin cambio de modelo, prompt, umbral ni corpus versionado;
       ver `design.md`, Evaluación) · **corregida:** `eval-required` SÍ se dispara (`SPARSE_VECTOR_SOURCE` en
       `app/config/**`); resultado neutro verificado por `ai-eval-runner` en el Gate 2 (`eval-required` exit 0, 26 métricas
-      iguales al baseline); el job `eval-required` de la CI del PR lo confirma: `[ ]` hasta verlo verde. Sin medición con
-      modelos reales hasta US-112 / US-120.
+      iguales al baseline); el job `eval-required` de la CI del PR lo confirma. Sin medición con
+      modelos reales hasta US-112 / US-120. _Evidencia (PR #194, CI 0 fallos):_ job `eval-required` pass
+      (run 40126068321).
 
 ## cierre
 
 - [x] 3.1 `openspec validate l1d-116-ingesta-reanudable-licencia --strict`
-- [ ] 3.2 Suite Pytest de `rag-orchestrator` en verde (unit, integration con PostgreSQL y Milvus de test) · local:
+- [x] 3.2 Suite Pytest de `rag-orchestrator` en verde (unit, integration con PostgreSQL y Milvus de test) · local:
       suite completa sin `servicios_reales` en verde; los `servicios_reales` (`tests/integration/corpus_store/test_script_ingest.py`
-      y las variantes `[real]` de AC-2 y AC-4) NO se pudieron ejecutar localmente (sin Compose de test): `[ ]` hasta ver
-      el job `integration-rag`.
+      y las variantes `[real]` de AC-2 y AC-4) NO se pudieron ejecutar localmente (sin Compose de test). _Evidencia
+      (PR #194, CI 0 fallos):_ `build-test` pass (Pytest completo) e `integration-rag` pass (run 40126068321).
 
 ## Estado y desviaciones de la implementación
 
@@ -71,7 +74,8 @@
   US-117b añada versionado (la historia la crea el orquestador). Aquí solo se movieron los errores compartidos a
   `domain/corpus_seed/errores.py`. **Su primera tarea es el test `test_omitir_apaga_los_chunks_de_la_version_huerfana_de_otro_contenido`
   (ya añadido en 9ee3e1f5) como red de seguridad del núcleo;** el ID de la historia lo asigna el orquestador. Menores
-  de Gate 2 diferidos a esa deuda ("deuda núcleo común de ingesta"): m2, m3 y m4.
+  de Gate 2 diferidos a esa deuda ("deuda núcleo común de ingesta"): m2, m3 y m4 (conciliación S3, 2026-10-28: el texto de
+  m2–m4 no se conservó; se cierran como no accionables).
 - **Cambio de comportamiento (4aaf8709):** `ConfigModelos` endurece `SPARSE_VECTOR_SOURCE`: antes aceptaba cualquier
   texto no vacío (con `strip()`), ahora solo `modelo_embeddings` y ya no hace `strip()` del valor.
 - **Gate 2, vuelta 1:** `decidir_reanudacion` pasó a `es_reanudacion` (bool); los `STATUS_*` viven en

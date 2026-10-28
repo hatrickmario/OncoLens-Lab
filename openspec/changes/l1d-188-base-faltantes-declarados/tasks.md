@@ -38,7 +38,7 @@
 
 ## 4. evaluación
 
-- [ ] 4.1 (exento) Sin cambio de modelo, prompt, umbral, catálogo real ni corpus: `run-ai-eval` no aplica. Texto visible nuevo → `clinical-language-auditor` en el Gate 2 (RN-19, RN-23, RN-26). Verificación: nota en el PR.
+- [x] 4.1 (exento) Sin cambio de modelo, prompt, umbral, catálogo real ni corpus: `run-ai-eval` no aplica. Texto visible nuevo → `clinical-language-auditor` en el Gate 2 (RN-19, RN-23, RN-26). Verificación: nota en el PR. _Evidencia:_ PR #216 (tabla del Gate 2: `ai-eval-runner` «no aplica», `clinical-language-auditor` PASS).
 
 ## 5. Verificación
 

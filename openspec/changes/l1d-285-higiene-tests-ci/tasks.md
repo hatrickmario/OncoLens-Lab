@@ -84,8 +84,9 @@
 - [x] 4.1 **(CI del PR #199 en ea6a3138: `build-test` pass con el Pytest completo de rag-orchestrator; `quality`, `integration-rag`, `contracts`, `e2e` en verde)** (parte ai-services verificada: pytest de rag-orchestrator 2134 passed, `npm run quality` 0 errores, `test:quality` 145 passed, `contracts:verify-provider` 193 respuestas, `openspec validate --strict` válido; faltan suites de `clinical-api`/`web` y `run-cases.sh`, que en este entorno falla 5 casos por falta de `gitleaks`) `openspec validate l1d-285-higiene-tests-ci --strict` en verde; `npm run quality`, `ci/tests/run-cases.sh`, suites de
   `clinical-api`, `web` y `rag-orchestrator` en verde; `contracts:verify-provider` en verde (hubo cambio de contrato). Sin
   `run-ai-eval` (no toca modelo, prompt, umbral de IA, catálogo ni corpus).
-- [ ] 4.2 `.env.example`: sin variables nuevas de aplicación (las de `integracion-rag` viven en el script y en `ci.yml`); si
-  aparece alguna, el agente la reporta y la aplica el humano.
+- [x] 4.2 `.env.example`: sin variables nuevas de aplicación (las de `integracion-rag` viven en el script y en `ci.yml`); si
+  aparece alguna, el agente la reporta y la aplica el humano. _Evidencia (conciliación S3):_ ni #199 ni #204 tocan ningún
+  `.env.example` (lista de archivos de ambos PR); los cambios posteriores del archivo son de L1D-117/US-117b (#210, #222).
 - [x] 4.3 (test después; decisión del usuario, 2026-10-24, carrera de CI detectada en el PR #195) **Carrera de tests en
   `scripts/ci/__tests__`:** `integracionRag.test.mjs` escribe `zz_sin_versionar_prueba.txt` en el árbol real mientras
   `evalRequired.test.mjs` copia el árbol (ENOENT, *flaky*). Corregir sin `.skip` ni reintentos silenciosos: el test de
@@ -98,7 +99,7 @@
 Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloquean el PR y se tratan después del S3:
 
 - [ ] 5.1 (deuda: higiene de tests, post-S3) Menores del design-principles-reviewer (Gate 2, vuelta 1 y re-gate), uno por línea,
-  con ubicación y refactor mínimo; se asignan a la historia de deuda del S4 y no cambian comportamiento en este change:
+  con ubicación y refactor mínimo; se asignan a la historia de deuda del S4 (**TRASLADADA a US-233**, salvo lo que lleva US-232 abajo) y no cambian comportamiento en este change:
   - #13 `scripts/quality/cobertura.mjs:89-93`, `medirLineasCambiadas` con dos formatos (LCOV y Cobertura XML) detrás de un `if`:
     recibir mapas ya parseados (`archivo → línea → veces`) y que cada formato se parsee en su propio módulo.
   - #14 `eslint.config.js` (comentario de `bloqueMockSoloEnBordes`): dice que admite excepciones con caducidad, pero
@@ -127,12 +128,12 @@ Menores del Gate 2 (vuelta 1, design-principles-reviewer #13–#20) que no bloqu
   - m-9 evidencia del rojo del commit de `enmascararNombre` (`ß`, `f1ea5c8a` antes del último rebase): en el cuerpo del PR, revirtiendo
     `inicialEnMayuscula` y mostrando `Received "SS. G."`.
   - **Deuda de estilo de Pytest (Ruff `PT`): 298 hallazgos** (PT018 268, PT011 22, PT001 5, PT006 3) ignorados solo en
-    `tests/**` por `per-file-ignores`; destino: `backlog/sprints/S3-deuda.md`, fila «estilo pytest PT» (la añade la sesión
-    principal; el ID lo asigna al crear el issue). No se amplía el `per-file-ignores`. El comentario equivalente en
+    `tests/**` por `per-file-ignores`; destino: US-233 (S4), fila «estilo pytest PT» de `backlog/sprints/S3-deuda.md`. No se amplía el `per-file-ignores`. El comentario equivalente en
     `apps/rag-orchestrator/pyproject.toml` es de ai-services.
-- [ ] 5.2 (deuda) `docs/process/ci.md`, fila del job `quality` (cobertura, higiene y AC): fuera de los paths de este
-  implementador; la actualiza quien tenga `docs/process/`.
-- [ ] 5.3 (deuda, historia de altas del S6) `minLength` y `pattern` de `fullName` en el contrato de altas de pacientes.
+- [x] 5.2 (deuda) `docs/process/ci.md`, fila del job `quality` (cobertura, higiene y AC): fuera de los paths de este
+  implementador; la actualiza quien tenga `docs/process/`. _Evidencia:_ commit b71756c6 (`docs/process/ci.md`, fila
+  `quality` con higiene de tests, cobertura de líneas cambiadas y `check-ac-coverage`), ancestro de `main`.
+- [ ] 5.3 (deuda, historia de altas del S6; TRASLADADA a US-222) `minLength` y `pattern` de `fullName` en el contrato de altas de pacientes.
 
 ## 6. decisiones del usuario (2026-10-24)
 

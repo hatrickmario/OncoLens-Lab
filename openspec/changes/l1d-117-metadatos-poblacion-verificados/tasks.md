@@ -44,7 +44,7 @@
 - [x] 1.8 Test de aceptación en rojo: `test_muestra_lote_20_al_10_por_ciento_elige_2_reproducibles`
       (`ac("US-118", 5)`, salida en `tmp_path`) y el caso sin documentos extraídos · integración · TDD estricto · commit
       `test(L1D-117)`
-- [ ] 1.9 PARCIAL: pendiente: persona con permiso (sesión principal) para `apps/rag-orchestrator/.env.example`: `CORPUS_METADATA_SAMPLE_PCT=10`, `CORPUS_METADATA_SAMPLE_SEED=oncolens-metadatos`, `CORPUS_METADATA_SAMPLE_DIR=data/evaluation/corpus-metadatos` (el resto de 1.9 está hecho). Extraer `seleccionar_muestra()` (TBD-20) en `app/domain/corpus_metadata/muestra.py` con unitarios (N = 0,
+- [x] 1.9 _Evidencia (conciliación S3, 2026-10-28):_ las claves `CORPUS_METADATA_SAMPLE_PCT`, `_SEED` y `_DIR` ya están en `apps/rag-orchestrator/.env.example` (commit b8bfc670, PR #210, ancestro de `main`); el resto de 1.9 se hizo en PR #198 (CI verde). Extraer `seleccionar_muestra()` (TBD-20) en `app/domain/corpus_metadata/muestra.py` con unitarios (N = 0,
       redondeo hacia arriba, independiente del orden de entrada); escritor YAML en `infrastructure/`; claves
       `CORPUS_METADATA_SAMPLE_PCT`, `CORPUS_METADATA_SAMPLE_SEED` y `CORPUS_METADATA_SAMPLE_DIR` en
       `CorpusIngestSettings` y `.env.example`; AC-5 en verde · TDD estricto · commit `feat(L1D-117)`
@@ -70,10 +70,10 @@
 - [x] 5.1 **Decidido (usuario, 2026-10-24):** columna `extracted_fields` en `corpus_document` (+ migración 0004); la muestra se construye solo con campos extraídos, sin los declarados por el manifiesto · commits `test(L1D-117)` (rojo) y `feat(L1D-117)`; el test de caracterización del límite se sustituye (`Test-Removal`: el AC cambió por decisión del usuario); PLANTILLA.md y design.md actualizados
 - [ ] 5.6 TRASLADADA a US-143 (preflight/arranque real-data, gate G-Piloto): aplicar `variable_que_incumple_llm_local` también en el arranque de rag-orchestrator (rechazar `LLM_MODEL` tipo `x:cloud` con Ollama local, RN-12)
 - [ ] 5.7 TRASLADADA a US-034 (modo `LLM_PROVIDER=fake`, Compose/CI/E2E): caso de `ingest` con `LLM_PROVIDER=fake` en Compose/E2E
-- [ ] 5.2 `/rag/query` no rechaza un modelo `:cloud` (`es_modelo_de_nube` solo lo usa `app/evaluation/`) · deuda previa a este PR, pregunta al usuario en design.md
-- [ ] 5.3 (Menor #7) El filtro `extraido_verificado` está duplicado en el adapter SQL y en el fake de `CatalogoEnMemoria`
-- [ ] 5.4 (Menor #9) El método `documentos_extraidos_de_la_release` engorda `CorpusCatalog` (ISP): separar un puerto de lectura de la muestra
-- [ ] 5.5 (Menor #13) Orden TDD: algunos commits del seguimiento llevan el test y el código juntos o el rojo por excepción en vez de aserción
+- [ ] 5.2 TRASLADADA a US-143 (mismo gate RN-12 que 5.6): `/rag/query` no rechaza un modelo `:cloud` (`es_modelo_de_nube` solo lo usa `app/evaluation/`) · deuda previa a este PR, pregunta al usuario en design.md
+- [ ] 5.3 TRASLADADA a US-233 (Menor #7) El filtro `extraido_verificado` está duplicado en el adapter SQL y en el fake de `CatalogoEnMemoria`
+- [x] 5.4 (Menor #9) El método `documentos_extraidos_de_la_release` engorda `CorpusCatalog` (ISP): separar un puerto de lectura de la muestra · _Evidencia:_ hecho en US-117b 0.3 (`LectorDeDocumentosExtraidos` en `seed_corpus/ports.py`, commit b08efaa1, PR #218)
+- [ ] 5.5 TRASLADADA a US-233 (Menor #13) Orden TDD: algunos commits del seguimiento llevan el test y el código juntos o el rojo por excepción en vez de aserción
 
 ## evaluación
 
@@ -82,7 +82,7 @@
 - [ ] 2.2 TRASLADADA a US-233 (P1: sin pesos reales de BGE-M3/mDeBERTa ni corpus de literatura en el S3, no hay documentos `extraido_verificado` reales; la CLI ya escribe el archivo al ingerir con `MODEL_PROVIDER=local`). Generar la muestra para el revisor según P1: ingesta con `MODEL_PROVIDER=local` (ADR-39) y archivo
       `data/evaluation/corpus-metadatos/<release>.yaml`; si no hay documentos `extraido_verificado`, diferir a US-233 ·
       evaluate
-- [ ] 2.3 `[HUMANO]` (pendiente del usuario; no la ejecuta ai-services, depende de 2.2) El usuario revisa la muestra con `PLANTILLA.md` (unos 20 min) y marca cada campo
+- [ ] 2.3 TRASLADADA a US-233 (S4) `[HUMANO]` (pendiente del usuario; no la ejecuta ai-services, depende de 2.2) El usuario revisa la muestra con `PLANTILLA.md` (unos 20 min) y marca cada campo
       `correcto | incorrecto`; el agente versiona el archivo revisado para US-132 AC-4 `[S3 resp. 13]` · exento
 
 ## cierre

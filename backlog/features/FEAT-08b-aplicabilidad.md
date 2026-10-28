@@ -20,10 +20,11 @@
   - LLM falso de aplicabilidad: `APL-OK` (para `doc-a2` afirma "HER2 negativo" citando `ch-a2-1`); `APL-SIN-SOPORTE` (para `doc-a2` afirma "estadio I–III" sin respaldo en `ch-a2-1`); `APL-VALOR-PACIENTE` (devuelve `patientValue = "2+"` para `estado_her2`); `APL-CITA-AJENA` (cita `ch-x-999`). NLI falso: `entailment` para "HER2 negativo" contra `ch-a2-1`; `neutral` para "estadio I–III".
 - **FX-08b-b · Dos opciones válidas para el recorte a una** (extiende FX-08b-a; perfil de test `RAG_ADAPTERS=fake`, mismo catálogo `test-apl-1.0.0` en ambos backends):
   - Chunks de test (`is_current = true`, mama): `ch-a4-1` (`doc-a4`), `ch-a1-1` (`doc-a1`), `ch-a6-1` (`doc-a6`, ECA estructurado con la misma población que `doc-a1`). Puntajes del *reranker* falso: `ch-a4-1` 0,92 · `ch-a1-1` 0,70 · `ch-a6-1` 0,60.
-  - Resúmenes de aplicabilidad con A-M1: `doc-a4` → 1 excluyente (`estado_her2`) en No coincide, `{ coincide: 2, parcial: 0, noCoincide: 1, desconocido: 2 }`; `doc-a1` y `doc-a6` → 0 excluyentes, `{ 3, 0, 0, 2 }`.
+  - Resúmenes de aplicabilidad con A-M1: `doc-a4` → 1 excluyente (`estado_her2`) en No coincide, `{ coincide: 0, parcial: 0, noCoincide: 1, desconocido: 4 }`; `doc-a1` y `doc-a6` → 0 excluyentes, `{ 2, 0, 0, 3 }`.
+  - > **Decidido (usuario, 2026-10-28):** con el catálogo 1.1.0 el `estadio` queda `desconocido` por falta de escala comparable en el catálogo, y el catálogo de test tiene 5 criterios; por eso A-M1 × `doc-a1` es `{ 2, 0, 0, 3 }` (antes `{ 3, 0, 0, 2 }`) y A-M1 × `doc-a4` es `{ 0, 0, 1, 4 }` (antes `{ 2, 0, 1, 2 }`). Alinea FX-08b-a, FX-08b-b, US-124 AC-5, US-125 AC-1 (el AC no nombra `doc-a4`; solo cambia `doc-a1`) y US-126 AC-1 con los conteos reales. FX-10c-a (`APL-FIJA`) es un adaptador falso de resúmenes fijos y no se toca.
   - LLM falso `LLM-DOS-APL` (en este orden de salida): **O-A** cita `ch-a4-1` · **O-B** cita `ch-a1-1`. `LLM-EMPATE-APL`: **O-B** cita `ch-a1-1` · **O-D** cita `ch-a6-1`. `LLM-SIN-SOPORTE-APL`: **O-B'** cita `ch-a1-1` con una afirmación que el NLI falso marca `neutral` · **O-A** cita `ch-a4-1` (`entailment`).
   - Configuración: `ANALYSIS_MAX_OPTIONS = 1`, `RELEVANCE_THRESHOLD = 0.30`.
-- **Resultado esperado de A-M1 con `doc-a1`:** `estado_her2` coincide · `estadio` coincide · `ecog` coincide con aviso `sin_verificar` · `estado_menopausico` desconocido (`falta_en_paciente`) · `linea_tratamiento` desconocido (`no_reportado_por_fuente`) → resumen `{ coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }`, `populationNotComparable = false`.
+- **Resultado esperado de A-M1 con `doc-a1`:** `estado_her2` coincide · `estadio` desconocido (sin escala comparable en el catálogo 1.1.0) · `ecog` coincide con aviso `sin_verificar` · `estado_menopausico` desconocido (`falta_en_paciente`) · `linea_tratamiento` desconocido (`no_reportado_por_fuente`) → resumen `{ coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }`, `populationNotComparable = false`.
 
 ---
 
@@ -238,7 +239,7 @@ por un criterio excluyente, para pesar cada fuente con esa información a la vis
 - **AC-4 (borde · población no comparable)** · Dados A-M1, `doc-a2` y `APL-OK`, cuando se
   evalúa, entonces `applicability[doc-a2].populationNotComparable = true`. `[AC-08.6]` `[HU-22]`
 - **AC-5 (invariante · conteo, nunca puntaje)** · Dados A-M1 y `doc-a1`, cuando se
-  evalúa, entonces `summary = { coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }`
+  evalúa, entonces `summary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }`
   y la respuesta valida contra el esquema sin ningún campo numérico de puntaje o
   porcentaje de aplicabilidad. `[AC-08.5]` `[RN-28]`
 - **AC-6 (invariante · sin evidencia)** · Dado `Q-SIN`, cuando se procesa, entonces
@@ -276,7 +277,7 @@ relevancia de la búsqueda.
 
 ## AC (Given/When/Then)
 - **AC-1 (happy path)** · Dada una opción que cita `doc-a1` (0 excluyentes en No
-  coincide, 3 coincide) y `doc-a2` (1 excluyente en No coincide), cuando se agrega,
+  coincide, 2 coincide) y `doc-a2` (1 excluyente en No coincide), cuando se agrega,
   entonces `applicabilitySummary` es el de `doc-a1`, `perSource` trae ambas fuentes con
   su propio resumen y `populationNotComparable = false`. `[AC-08.8]` `[HU-22]` `[ADR-31]`
 - **AC-2 (borde · todas no comparables)** · Dada una opción cuyas dos fuentes tienen un
@@ -342,7 +343,7 @@ aplica antes de considerarla.
 - **AC-1 (happy path)** · Dado el análisis de A-M1 con `doc-a1`, cuando el oncólogo abre
   el detalle de la fuente, entonces ve una tabla con criterio, valor del paciente, valor
   del estudio y estado en texto ("Coincide", "Parcial", "No coincide", "Desconocido"), y
-  el resumen "3 coinciden · 2 desconocidos". `[AC-08.1]` `[AC-08.5]` `[NFR-12]`
+  el resumen "2 coinciden · 3 desconocidos". `[AC-08.1]` `[AC-08.5]` `[NFR-12]`
 - **AC-2 (borde · desconocido con causa)** · Dado `estado_menopausico`, cuando se
   muestra, entonces se lee "Desconocido: falta en el paciente" con un enlace a la sección
   "Datos críticos" de la vista de caso; y `linea_tratamiento` muestra "Desconocido: no

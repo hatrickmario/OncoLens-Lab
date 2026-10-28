@@ -45,8 +45,8 @@
 ## 6. Verificación
 
 - [x] 6.1 `openspec validate l1d-182-metadatos-fuente-catalogo --strict` en verde.
-- [ ] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3. **web y E2E verificados** (328 Vitest, E2E US-127); clinical-api verificado: `npm test -w apps/clinical-api` 919 en verde e integración de `evidence-analysis` 102 en verde; falta el Pytest de rag-orchestrator (ai-services).
-- [ ] 6.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec del proveedor en la integración (sin cambio de schema: `contracts:verify-provider` y `contracts:breaking` sin diferencias). **ai-services verificado** (rag-orchestrator: `verify-provider` 218 respuestas, `breaking` y `generate:check` sin diferencias); clinical-api: `verify-provider` 320 respuestas, `contracts:check` y `contracts-breaking` sin hallazgos; pendiente `web`.
+- [x] 6.2 Suites en verde: Pytest de `apps/rag-orchestrator`, Vitest de `apps/clinical-api` y `apps/web`, E2E de 4.3. **web y E2E verificados** (328 Vitest, E2E US-127); clinical-api verificado: `npm test -w apps/clinical-api` 919 en verde e integración de `evidence-analysis` 102 en verde; _Evidencia (PR #219):_ rag-orchestrator pytest 2562 en verde; CI del PR 0 fallos, 0 pendientes, 0 alertas.
+- [x] 6.3 `contracts:check` en verde y respuestas de `/rag/query` y `/platform/evidence-analyses` validadas contra el spec del proveedor en la integración (sin cambio de schema: `contracts:verify-provider` y `contracts:breaking` sin diferencias). **ai-services verificado** (rag-orchestrator: `verify-provider` 218 respuestas, `breaking` y `generate:check` sin diferencias); clinical-api: `verify-provider` 320 respuestas, `contracts:check` y `contracts-breaking` sin hallazgos; `web` sin cambio de contrato (`contracts:breaking` sin diferencias). _Evidencia (PR #219):_ job `contracts` en pass, CI 0 fallos.
 
 ## Workflow follow-up
 
