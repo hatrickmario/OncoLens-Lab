@@ -83,10 +83,9 @@ updates:
     ignore:
       - dependency-name: "postgres"
         update-types: ["version-update:semver-major"]
+      # etcd va fijado por el test de infra (v3.5.34): se ignora toda actualización, incluidos los patch (PR #229).
       - dependency-name: "gcr.io/etcd-development/etcd"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       # Dependabot nombra la imagen sin el registro (PR #206): sin esta entrada el ignore anterior no casa.
       - dependency-name: "etcd-development/etcd"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "milvusdb/milvus"
         update-types: ["version-update:semver-major"]
