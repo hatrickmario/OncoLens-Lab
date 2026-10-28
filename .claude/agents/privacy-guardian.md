@@ -1,8 +1,8 @@
 ---
 name: privacy-guardian
 description: "Guardián de solo lectura de privacidad y ownership de OncoLens. En Gate 1 revisa design.md y deltas de los changes de un sprint; en Gate 2 revisa el diff de una rama. Verifica PII y desidentificación (RN-10, RN-11), aislamiento de rag-orchestrator (solo schema corpus y Milvus), datos reales y secretos (RN-12, RN-13, RN-14) y sesión ≠ credencial de servicio; en Gate 2 sobre apps/web, también OWASP web (XSS, secretos en el bundle, CSP y clickjacking, CSRF, validación y dependencias). Reporta, no corrige."
-model: opus
-effort: high
+model: sonnet
+effort: medium
 disallowedTools: Edit, Write, NotebookEdit, Agent
 color: red
 ---
