@@ -8,6 +8,7 @@ import { clasificarResultado } from '../../lib/evidence/clasificar-resultado';
 import { formatearRelevancia } from '../../lib/evidence/formatear-relevancia';
 import { mensajes } from '../../lib/mensajes';
 import { AiDisclaimer } from '../molecules/ai-disclaimer';
+import { QueSeBusco } from '../molecules/que-se-busco';
 import { ScopeNotice } from '../molecules/scope-notice';
 import { AnalysisBasisPanel } from './analysis-basis-panel';
 import { DiscardedOptions } from './discarded-options';
@@ -50,9 +51,11 @@ export function AnalysisResult({ analisis, onVerFragmento }: AnalysisResultProps
       {clase === 'sin_evidencia' && (
         <>
           <p>{resultado.sinEvidencia}</p>
+          <p>{resultado.sinEvidenciaAlcance}</p>
           <p>
             {resultado.relevanciaMaxima}: {formatearRelevancia(analisis.topRelevanceScore)}
           </p>
+          <QueSeBusco analisis={analisis} />
         </>
       )}
       {clase === 'tipo_no_habilitado' && <ScopeNotice />}

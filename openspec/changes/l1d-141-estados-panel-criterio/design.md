@@ -59,13 +59,14 @@ Handler en el servidor con el mismo schema.
 ### D3 · Fallos tipados: límite, red y servicio (AC-5)
 
 `ResultadoDeSolicitud` gana dos variantes en lugar de sobrecargar `httpStatus`:
-`{ tipo: 'limite', reintentarEnSegundos: number | null, traceId }` (de `429`; `leerRetryAfter(headers)`
+`{ tipo: 'limite', reintentarEnSegundos: number }` (de `429`; `leerRetryAfter(headers)`
 acepta solo enteros ≥ 0, cualquier otra cosa → `null`) y `{ tipo: 'red' }` (excepción de `fetch`). La fase
 del panel refleja ambas. `mensajeDeError()` sigue mapeando `502/503/504`. Con `limite`:
 `AnalysisFailure` muestra `evidence.error.limite` con `{s}` en `role="status"` y deshabilita "Reintentar"
 hasta que vence el plazo, medido con el reloj inyectado (`setTimeout` controlado con `vi.useFakeTimers` en
-los tests); con `reintentarEnSegundos = null` cae en `evidence.error.generico` con "Reintentar" activo
-(asumido: el contrato declara `Retry-After` en el `429`, así que solo cubre una respuesta mal formada). Con `red`: `evidence.error.red` sin línea de código de traza (no hay `traceId` que mostrar; nunca
+los tests); un `429` sin `Retry-After` válido no produce la fase `limite`: cae en `error` (`evidence.error.generico`) con "Reintentar" activo
+(implementado así; el contrato declara `Retry-After` en el `429`, así que solo cubre una respuesta mal formada). La espera es un único
+`setTimeout` en la molécula `RateLimitNotice` (sin cuenta regresiva visible). Con `red`: `evidence.error.red` sin línea de código de traza (no hay `traceId` que mostrar; nunca
 se inventa). El foco va a "Reintentar" tras cualquier error (ya lo hace el S1 al reintentar; se extiende a la
 aparición del error).
 
@@ -83,8 +84,7 @@ congelado, ADR-26; lo reserva US-126 AC-7 si hiciera falta en el S4).
 
 - `ApplicabilityCounts` (molécula): prefijo `evidence.aplicabilidad.prefijo` y cuatro `StatusChip` en texto
   (símbolo `aria-hidden` + palabra + número), separados por " · "; nombre accesible "Coincide 3, Parcial 1,
-  No coincide 0, Desconocido 2". «Desconocido» enlaza al detalle de la Base del análisis (`#base-detalle`,
-  `pantallas-s3.md`). Solo se monta si la opción tiene aplicabilidad calculada (D4).
+  No coincide 0, Desconocido 2". Sin enlace del «Desconocido» a la Base (D9). Solo se monta si la opción tiene aplicabilidad calculada (D4).
 - `NonBlockingNotice` (molécula genérica, `role="status"`): la usan el aviso de población y el `429`
   (dos consumidores, por eso es componente propio y no texto inline).
 - `EvidenceOptionCard` compone ambas entre la justificación y las citas, en el orden de S3-02.
@@ -105,6 +105,17 @@ el criterio neutro. **Desviación menor del diseño** (una clave más), justific
 `evidence.resultado.idioma` (sin regla nueva). La Base ya se monta para todo estado. No se añade ningún texto
 con forma de opción.
 
+### D9 · Aplicabilidad no evaluada no se dibuja como ceros (AC-7, reconciliación con L1D-129/130)
+
+Una opción con `perSource = []` trae `applicabilitySummary` en ceros porque **no se calculó**, no porque haya 0
+criterios desconocidos. `ApplicabilityCounts` solo se monta con `tieneAplicabilidadCalculada()` (D4); si no, la
+tarjeta muestra una línea de texto `evidence.aplicabilidad.noEvaluada` = "Aplicabilidad no evaluada: sin datos de
+población en las fuentes citadas" (sin conteos, sin puntaje). El orden por aplicabilidad (RN-28) no usa puntaje
+clínico y la relevancia es solo metadato secundario (desempata); el panel muestra el criterio de orden. El panel
+**no** muestra `unknownReason` ni `patientDataWarning` (null en un desconocido sin causa; en_conflicto >
+sin_verificar > null, faltante): son del detalle por criterio de US-126 (S4). «Desconocido» no enlaza a la Base del
+análisis (su detalle está plegado y sin ancla estable): **desviación menor de S3-02**, la Base va justo debajo.
+
 ### D8 · Textos
 
 Claves nuevas, literales de `pantallas-s3.md`: `evidence.resultado.sinEvidenciaAlcance`,
@@ -112,7 +123,7 @@ Claves nuevas, literales de `pantallas-s3.md`: `evidence.resultado.sinEvidenciaA
 caracteres."), `evidence.error.limite` ("Se alcanzó el límite de análisis. Puedes reintentar en {s}
 segundos."), `evidence.error.red`, `evidence.orderCriterion.applicability`, `evidence.aplicabilidad.prefijo`
 ("Criterios del estudio frente a datos registrados:"), `evidence.aplicabilidad.{coincide,parcial,noCoincide,desconocido}`,
-`evidence.aplicabilidad.poblacionNoComparable`, y la de D6. Modificada: `evidence.relevance.basis`. Ninguna
+`evidence.aplicabilidad.poblacionNoComparable`, `evidence.aplicabilidad.noEvaluada` (D9) y la de D6. Modificada: `evidence.relevance.basis`. Ninguna
 contiene el aviso de IA (llega en `disclaimer`).
 
 ## Componentes y patrones
@@ -128,6 +139,8 @@ contiene el aviso de IA (llega en `disclaimer`).
 | `ApplicabilityCounts` | molécula **nueva** | D5 | hereda |
 | `NonBlockingNotice` | molécula **nueva** | D5 (2 consumidores) | hereda |
 | `EvidenceOptionSkeleton` | átomo **nuevo** | D1 | hereda |
+| `RateLimitNotice` | molécula **nueva** | D3 (espera del `429` con un `setTimeout`; separada de `AnalysisFailure`: un concepto por componente) | sí |
+| `QueSeBusco` | molécula **nueva** | D7 (pregunta, idioma y fuentes de `sin_evidencia`) | hereda |
 
 Ningún componente supera 100 líneas (`EvidencePanel` está en 90: si D1 + D3 lo acercan al límite, no se crea
 un hook; se extrae la función pura `puedeEnviar` y el manejo de fases ya vive en `faseTrasSolicitud`). Sin hooks, *providers*, *compound components* ni *render props*: ningún concepto tiene
@@ -167,12 +180,16 @@ un hook; se extrae la función pura `puedeEnviar` y el manejo de fases ya vive e
   `con-evidencia-solo-descartadas.json`, `error-cola-inferencia-llena.json` (`429`, con `Retry-After: 30` en el
   handler), `error-servicio-ia.json` (`502`), `error-llm-local-no-disponible.json` (`503`),
   `error-deadline-vencido.json` (`504`), `error-no-autenticado.json` (`401`).
-- Ejemplo con aplicabilidad (AC-7): el que crea `l1d-130-herencia-aplicabilidad-recorte` (tarea 1.1:
-  `con-evidencia-s3-aplicabilidad.json` o la ampliación de `rag-query-aplicabilidad-a-m1.json`). Si al empezar
-  no está en `main`, este change no lo crea: AC-7 espera a L1D-130 en la oleada; si hace falta un ejemplo de
-  `EvidenceAnalysis` (no de `rag/query`) con `populationNotComparable = true`, se añade aquí como
-  `con-evidencia-s3-poblacion-no-comparable.json`, validado por `contracts:check` y registrado en `index.json`
-  (commit `contract(L1D-141)`), coordinado con L1D-130 para no duplicar nombres.
+- Ejemplos de aplicabilidad (AC-7), ya en `main` por `l1d-130-herencia-aplicabilidad-recorte`:
+  `con-evidencia-s3-aplicabilidad.json` (catálogo real de 6 criterios; opción con `applicabilitySummary`
+  `{coincide: 2, parcial: 0, noCoincide: 0, desconocido: 4}`, `populationNotComparable = false`, `perSource` de una
+  fuente; el estadio es `desconocido` con `patientDataWarning = sin_verificar`) y
+  `con-evidencia-s1.json` (opción con `perSource = []` y resumen en ceros: **aplicabilidad no calculada**).
+  Este change añade, con el commit `contract(L1D-141)`, `con-evidencia-s3-poblacion-no-comparable.json` (derivado
+  del anterior: `estado_her2` excluyente en `no_coincide`, resumen `{1,0,1,4}`, `populationNotComparable = true`,
+  `warnings` con `poblacion_no_comparable`), registrado en `index.json`, y corrige el primero, que tras integrar
+  L1D-188 no cumplía `EvidenceAnalysis` (faltaba `analysisBasis.missingCriticalDataLabels`). `contracts:check`
+  y `contracts:breaking` en verde; sin diff de `openapi.yaml`.
 
 ## Risks / Trade-offs
 

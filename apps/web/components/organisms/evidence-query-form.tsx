@@ -1,17 +1,15 @@
 'use client';
 
-import type { FormEvent, RefObject } from 'react';
+import { useEffect, useRef, type FormEvent, type RefObject } from 'react';
+import { MAXIMO_PREGUNTA } from '../../lib/evidence/reglas-del-formulario';
 import { mensajes, rellenar } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
-
-/** Máximo de `EvidenceAnalysisRequest.query` en el contrato. */
-const MAXIMO_PREGUNTA = 2000;
-/** El contador se anuncia a lectores de pantalla solo cerca del límite. */
-const UMBRAL_ANUNCIO = 1900;
 
 export interface EvidenceQueryFormProps {
   pregunta: string;
   enviando: boolean;
+  /** Máximo de la pregunta cuando se lo excede; `null` si el largo es válido (AC-4). */
+  errorMaximo: number | null;
   /** Texto breve del estado, anunciado en una región `role="status"` fuera del resultado. */
   anuncio: string;
   botonRef: RefObject<HTMLButtonElement | null>;
@@ -20,12 +18,23 @@ export interface EvidenceQueryFormProps {
 }
 
 export function EvidenceQueryForm(props: EvidenceQueryFormProps) {
-  const { pregunta, enviando, anuncio, botonRef, onCambiar, onEnviar } = props;
+  const { pregunta, enviando, errorMaximo, anuncio, botonRef, onCambiar, onEnviar } = props;
   const { formulario } = mensajes().evidence;
+  // Un botón deshabilitado pierde el foco: se lo devuelve al terminar la petición (sin mover el foco, US-061 AC-6).
+  const teniaFoco = useRef(false);
+  useEffect(() => {
+    if (enviando || !teniaFoco.current) return;
+    teniaFoco.current = false;
+    botonRef.current?.focus();
+  }, [enviando, botonRef]);
   function alEnviar(evento: FormEvent) {
     evento.preventDefault();
-    if (!enviando) onEnviar();
+    teniaFoco.current = document.activeElement === botonRef.current;
+    onEnviar();
   }
+  const describe = ['pregunta-ayuda', errorMaximo !== null && 'pregunta-error', 'pregunta-contador']
+    .filter(Boolean)
+    .join(' ');
   return (
     <form className={estilos.formulario} onSubmit={alEnviar} noValidate>
       <label htmlFor="pregunta-clinica">{formulario.pregunta}</label>
@@ -33,21 +42,26 @@ export function EvidenceQueryForm(props: EvidenceQueryFormProps) {
         id="pregunta-clinica"
         className={estilos.campo}
         value={pregunta}
-        maxLength={MAXIMO_PREGUNTA}
-        aria-describedby="pregunta-ayuda pregunta-contador"
+        aria-describedby={describe}
+        aria-invalid={errorMaximo !== null}
         onChange={(evento) => onCambiar(evento.target.value)}
       />
       <p id="pregunta-ayuda" className={estilos.ayuda}>
         {formulario.ayuda}
       </p>
+      {errorMaximo !== null && (
+        <p id="pregunta-error" className={estilos.errorCampo}>
+          {rellenar(formulario.maximo, { max: errorMaximo })}
+        </p>
+      )}
       <p
         id="pregunta-contador"
         className={estilos.contador}
-        aria-live={pregunta.length >= UMBRAL_ANUNCIO ? 'polite' : 'off'}
+        aria-live={errorMaximo !== null ? 'polite' : 'off'}
       >
         {rellenar(formulario.contador, { n: pregunta.length, max: MAXIMO_PREGUNTA })}
       </p>
-      <button ref={botonRef} type="submit" className={estilos.boton} aria-disabled={enviando}>
+      <button ref={botonRef} type="submit" className={estilos.boton} disabled={enviando}>
         {enviando ? formulario.analizando : formulario.analizar}
       </button>
       {enviando && <p className={estilos.espera}>{formulario.espera}</p>}
