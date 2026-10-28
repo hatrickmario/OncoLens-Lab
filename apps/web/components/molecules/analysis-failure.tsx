@@ -2,18 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { mensajeDeError } from '../../lib/evidence/clasificar-fallo';
+import type { FaseDeFallo } from '../../lib/evidence/fase-del-panel';
 import { mensajes, rellenar, textoDe } from '../../lib/mensajes';
 import estilos from '../evidence.module.css';
 import { RateLimitNotice } from './rate-limit-notice';
 
-export type FalloDelAnalisis =
-  | { tipo: 'error'; httpStatus: number; traceId: string | null }
-  | { tipo: 'limite'; reintentarEnSegundos: number }
-  | { tipo: 'red' }
-  | { tipo: 'no_realizado' };
-
 export interface AnalysisFailureProps {
-  fallo: FalloDelAnalisis;
+  fallo: FaseDeFallo;
   onReintentar: () => void;
 }
 

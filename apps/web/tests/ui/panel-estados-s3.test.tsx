@@ -170,7 +170,8 @@ describe('EvidencePanel · estados del S3', () => {
         /rag-orchestrator|clinical-api|Ollama|http:\/\/|Error:|\bat \S+\(/,
       );
       expect(visible).not.toContain(cuerpo.error);
-      expect(screen.queryByText(cuerpo.message)).toBeNull();
+      // El mensaje del S1 puede coincidir con el `message` (503); se quita solo ese fragmento legítimo.
+      expect(visible.replace(mensaje, '')).not.toContain(cuerpo.message);
     },
   );
 

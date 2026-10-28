@@ -186,6 +186,11 @@ describe('leerRetryAfter', () => {
     expect(leerRetryAfter(con('0'))).toBe(0);
   });
 
+  it('devuelve null cuando el plazo supera una hora', () => {
+    expect(leerRetryAfter(con('3601'))).toBeNull();
+    expect(leerRetryAfter(con('3600'))).toBe(3600);
+  });
+
   it.each([null, 'pronto', '-5', '1.5', 'Wed, 21 Oct 2026 07:28:00 GMT', ''])(
     'devuelve null cuando la cabecera es %j',
     (valor) => {

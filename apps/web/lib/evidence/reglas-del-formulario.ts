@@ -19,8 +19,13 @@ export function puedeEnviar(enCurso: boolean, pregunta: string): boolean {
   return !enCurso && pregunta.trim().length > 0;
 }
 
-/** `Retry-After` en segundos enteros ≥ 0; ausente o con otra forma (fecha HTTP, texto) → `null` (RN-30). */
+/** Tope de cordura del plazo de reintento: más de una hora no es un límite de generación sino una respuesta mal formada. */
+export const MAXIMO_REINTENTO_SEGUNDOS = 3600;
+
+/** `Retry-After` en segundos enteros de 0 a una hora; ausente, con otra forma (fecha HTTP, texto) o absurdo → `null` (RN-30). */
 export function leerRetryAfter(cabeceras: Pick<Headers, 'get'>): number | null {
   const valor = cabeceras.get('Retry-After')?.trim();
-  return valor !== undefined && /^\d+$/.test(valor) ? Number(valor) : null;
+  if (valor === undefined || !/^\d+$/.test(valor)) return null;
+  const segundos = Number(valor);
+  return segundos <= MAXIMO_REINTENTO_SEGUNDOS ? segundos : null;
 }
