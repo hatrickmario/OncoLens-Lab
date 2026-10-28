@@ -100,10 +100,11 @@
 - [ ] G1.6 **Deuda: registro de archivos de raíz del catálogo (lado API).** El mapa `ESQUEMAS` de
       `apps/clinical-api/src/infrastructure/catalogo/validar-catalogo.ts` sigue listando a mano `atributos` y
       `poblacion`; debe derivar de `ARCHIVOS_DE_RAIZ` (imports JSON estáticos en TS). Destino: deuda: registro de
-      archivos de raíz del catálogo.
-- [ ] G1.7 **Pendiente de modelo:** las claves `grado`, `estado_menopausico` y `estado_castracion` de `poblacion.json`
+      archivos de raíz del catálogo. **TRASLADADA a US-232** (decisión del usuario, 2026-10-27).
+- [x] G1.7 **Pendiente de modelo:** las claves `grado`, `estado_menopausico` y `estado_castracion` de `poblacion.json`
       están fuera del modelo v1.1; anotarlo en `docs/architecture/data-model.md` (fuera de mis paths). Destino:
-      orquestador / L1D-117.
+      orquestador / L1D-117. _Evidencia:_ anotado en `docs/architecture/data-model.md` («Claves de `poblacion.json`
+      (L1D-117, S3)», PR #210).
 
 ## Decisiones del usuario (2026-10-24) tras el Gate 2
 
@@ -120,12 +121,11 @@
       unión de tipos y `manifest`, `base_ilegible`, `version_no_sube`, registro explícito ampliado (design D8). La
       rama `git ls-tree`/`maxBuffer` del error de git no tiene test propio (solo el JSON ilegible).
 - [ ] G2.3 **Deuda (m-4): base desfasada de `pull_request.base.sha`.** Usar el primer padre del merge (`HEAD^1`, con
-      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: deuda: base del guardián de versión.
+      `fetch-depth: 2`) o exigir rama al día en la protección de `main`. Destino: US-232 (decisión del usuario, 2026-10-27).
 - [x] G2.5 Menor 1 (base vacía solo cubre listas) y Menor 3 (`violacionesDeVersion` devuelve `base_ilegible`): tests en
       rojo y verde; el Lint (`no-unused-vars` de la desestructuración) se resuelve con `sinClaves`.
 - [ ] G2.4 **Deuda (Menor 2):** evasión en dos pasos (vaciar y rellenar una lista publicada). Riesgo aceptado: vaciar
-      una lista publicada exige revisión humana explícita. Destino: deuda: guardián de versión, evasión en dos pasos.
+      una lista publicada exige revisión humana explícita. Destino: US-232 (decisión del usuario, 2026-10-27).
 - [ ] G2.6 **Deuda (Menor 4):** la `version` propia de cada archivo por tipo queda fuera de la huella y
-      `catalog:validate` no exige que coincida con `manifest.version`. Destino: deuda: guardián de versión, versión por
-      archivo.
+      `catalog:validate` no exige que coincida con `manifest.version`. Destino: US-232 (decisión del usuario, 2026-10-27).
 

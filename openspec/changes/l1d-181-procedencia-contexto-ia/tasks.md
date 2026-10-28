@@ -32,4 +32,4 @@
 
 ## cierre
 
-- [ ] 4.1 `openspec validate l1d-181-procedencia-contexto-ia --strict`, suites de `clinical-api` y `rag-orchestrator` en verde; sin `contracts:verify-provider` adicional (sin cambios de API). (rag-orchestrator: validate --strict y pytest unit+integration en verde, 1820 passed; la suite de clinical-api queda a la CI del PR: sin node_modules en este worktree.)
+- [x] 4.1 `openspec validate l1d-181-procedencia-contexto-ia --strict`, suites de `clinical-api` y `rag-orchestrator` en verde; sin `contracts:verify-provider` adicional (sin cambios de API). (rag-orchestrator: validate --strict y pytest unit+integration en verde, 1820 passed; la suite de clinical-api queda a la CI del PR: sin node_modules en este worktree.) _Evidencia (conciliación S3):_ PR #213 con CI 0 fallos: `build-test`, `integration` y `contracts` en pass.

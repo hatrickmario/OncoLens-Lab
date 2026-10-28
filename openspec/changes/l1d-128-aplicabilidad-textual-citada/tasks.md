@@ -32,7 +32,7 @@
 
 ## 3. evaluación
 
-- [ ] 3.1 (evaluate) `run-ai-eval` sobre la rama con `LLM_PROVIDER=fake`: sin regresión en fidelidad, precisión de citas y salidas prescriptivas = 0 respecto del baseline; la medición del prompt de aplicabilidad con el LLM real queda en US-233 (S4). Reporte de `ai-eval-runner` en `reports/eval/`. _Evidencia:_ `eval-required` «sin regresión» y `npm run evaluate -- --suite all` idéntico byte a byte a `data/evaluation/baseline.json` (la suite `fake` no usa criterios ni proponente; no hay regeneración del baseline). El reporte de `ai-eval-runner` en `reports/eval/`: TRASLADADA al Gate 2 del orquestador.
+- [x] 3.1 (evaluate) `run-ai-eval` sobre la rama con `LLM_PROVIDER=fake`: sin regresión en fidelidad, precisión de citas y salidas prescriptivas = 0 respecto del baseline; la medición del prompt de aplicabilidad con el LLM real queda en US-233 (S4). Reporte de `ai-eval-runner` en `reports/eval/`. _Evidencia:_ `eval-required` «sin regresión» y `npm run evaluate -- --suite all` idéntico byte a byte a `data/evaluation/baseline.json` (la suite `fake` no usa criterios ni proponente; no hay regeneración del baseline). Reporte de `ai-eval-runner` versionado en `reports/eval/l1d-128-aplicabilidad-textual-citada.md` (+ `.json`); PR #217 con CI 0 fallos (`eval-required` pass, run 40588722301).
 
 ## 4. Verificación
 
