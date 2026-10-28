@@ -14,7 +14,7 @@ import yaml
 from app.evaluation.reporte import es_identificador
 from app.evaluation.rutas import raiz_repo
 
-SUITES = ("retrieval", "generation", "pii", "all")
+SUITES = ("retrieval", "generation", "pii", "aplicabilidad", "all")
 SUITE_COMPLETA = "all"
 PROVEEDORES = ("fake", "local")
 RELOJES = ("simulado", "real")

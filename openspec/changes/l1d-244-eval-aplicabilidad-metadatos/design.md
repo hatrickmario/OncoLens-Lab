@@ -11,8 +11,9 @@
   pura en `app/domain/applicability_rules.py`, `CriterioEvaluado`, `patientValue` copiado por `destination`, D6 sobre
   `citedSources`), la rama textual con LLM y NLI con `l1d-128-aplicabilidad-textual-citada` y las causas y avisos con
   `l1d-129-aplicabilidad-causas-avisos`.
-- La muestra humana `data/evaluation/corpus-metadatos/<release>.yaml` (cabecera + `campos: [{campo, valor, revision,
-  nota}]`) la escribe `l1d-117-metadatos-poblacion-verificados` (D5); su revisión es tarea `[HUMANO]` del usuario
+- La muestra humana `data/evaluation/corpus-metadatos/<release>.yaml` (cabecera `release`… + `documentos: [{document_id,
+  source_name, external_id, source_url, campos: [{campo, valor, revision, nota}]}]`, solo campos de `extracted_fields`)
+  la escribe `l1d-117-metadatos-poblacion-verificados` (D5); su revisión es tarea `[HUMANO]` del usuario
   `[S3 resp. 13]`.
 - `CORPUS_CUTOFF_DATE` existe en la configuración del orquestador (`.env.example`) y el cargador publica con ella la
   `CorpusRelease` (`corpus-ingestion`). US-119 sigue `si-hay-capacidad`, de ahí la versión por configuración
@@ -33,8 +34,11 @@ US-142), concordancia del oncólogo (M-08.1), usar la `CorpusRelease` como versi
 
 ## Decisions
 
-**D1 · Familia nueva en el runner existente.** `SUITES` gana `aplicabilidad` (y `all` la incluye). La composición
-(`composicion_suite.py`) arma `ApplicabilityService` con los mismos puertos que producción: `CatalogoClinico` desde el
+**D1 · Familia nueva en el runner existente.** `SUITES` gana `aplicabilidad`; `all` **no** la incluye (reconciliado
+2026-10-27: incluirla cambiaría la huella de `test-fake.yaml` y obligaría a regenerar `baseline.json`). La familia tiene
+su configuración propia `eval/configs/test-aplicabilidad.yaml` (carga en `config_aplicabilidad.py`, huella propia con el mismo
+`huella_de_config`) y el envoltorio `scripts/eval/evaluate.mjs` la elige cuando `--suite aplicabilidad` no trae `--config`. La composición
+(`composicion_aplicabilidad.py`) arma `ApplicabilityService` y `AplicabilidadTextual` con los mismos puertos que producción: `CatalogoClinico` desde el
 catálogo de test, `CorpusCatalogReader` (en memoria a partir del dataset en la configuración falsa; adapter real del
 schema `corpus` en integración) y el LLM y el NLI de aplicabilidad falsos de FX-08b-a (bordes). No se instancia
 `RAGOrchestratorService`: la aplicabilidad se evalúa por par paciente-fuente sin recuperación, que ya mide la familia
@@ -49,7 +53,9 @@ paciente de próstata P-A1), `fuentes/*.json` (documento, `population_criteria`,
 (`l1d-126`; p. ej. `biomarcadores.her2`), las mismas que escribe la ingesta de `l1d-117` (D7) `[S3 resp. 16]`; la
 carga del dataset falla con código 2 si un `studyKey` del catálogo no resuelve en ninguna fuente que declare
 criterios. Verdad conocida = el
-resultado esperado de FX-08b-a más los criterios de próstata del catálogo de test de `l1d-126`. DEC-11 en
+resultado esperado de FX-08b-a (A-M1 con `test-apl-1.0.0`). **Reconciliado:** `test-apl-1.0.0` declara `items: []` para
+próstata, así que el paciente P-A1 se evalúa con el catálogo real de `packages/clinical-catalogs` (grupo `catalogos` del
+manifiesto del dataset: tipo de cáncer → directorio); el reporte lista las versiones de catálogo evaluadas. DEC-11 en
 `propuesta_revisada`: si la sesión del S4 cambia el catálogo, solo se regeneran los esperados.
 
 **D3 · Métricas puras con nombre propio** en `app/evaluation/metricas/aplicabilidad.py`:
@@ -59,7 +65,14 @@ cita» del PRD §18; clave del reporte `criterios_coincide_sin_cita`) (un criter
 `valores_no_copiados(criterios, contexto)` (compara `patientValue` con el valor que el resolvedor de destino lee del
 contexto **enviado**; `null` en ambos = copiado). Las métricas nulas se reportan `null`, nunca `0.0`.
 
-**D4 · Bloqueo con código propio.** `veredicto_de_invariantes(metricas) -> list[str]` devuelve las métricas violadas;
+Definición de M-08.2 (Gate 2): un criterio en `coincide` cuenta si su cita no es un chunk de la fuente en esta consulta
+(`ch-x-999` dentro de un `coincide` también cuenta), si la fuente no tiene chunks o si no trae valor del estudio; el enlace a
+un dato del paciente no sustituye la cita del estudio. Limitación de M-08.6: el oráculo es la regla pura
+`valor_del_paciente()` de `domain/`, no el servicio; la variante que falla se prueba con un resultado construido. En
+`pares.yaml` la ausencia de `causa` significa «ninguna» (el `desconocido` interno, p. ej. `sin_escala`, no lleva causa en el contrato);
+la precedencia de causas la fija `l1d-129`. `APL-VALOR-PACIENTE` propone «2+» como valor del estudio.
+
+**D4 · Bloqueo con código propio.** (Decisión Gate 2: el job `eval-required` solo corre `--suite all`; el código 3 de esta familia no corre en esa CI y la barrera es el Pytest de `build-test`. Cablearla en `eval-required` es deuda con destino US-233.) `veredicto_de_invariantes(metricas) -> list[str]` devuelve las métricas violadas;
 el runner escribe el reporte y sale con **código 3** ("invariante violada"), distinto de 1 y 2, para que la CI
 distinga una violación de un dataset mal formado. Los ceros son invariantes del PRD: no van a `regression.yaml` ni a
 las metas.
@@ -69,12 +82,14 @@ las metas.
 `rag_corpus` (`SELECT count(*) … FROM corpus.corpus_document WHERE is_current`, con criterios = al menos una clave de
 `population_criteria` distinta de `no_disponible`, P1 aceptado `[S3 resp. 16]`; un documento `metadata_source =
 pendiente` de `l1d-117` tiene todo `no_disponible` y cuenta en el denominador, no en el numerador); adapter en memoria para la configuración falsa. La versión se lee
-de `CORPUS_CUTOFF_DATE` (ajustes del orquestador) y se reporta como `corpusVersion`. Meta en
+de `CORPUS_CUTOFF_DATE` (el runner no lee el entorno, US-037 AC-1: llega en `corpus.cutoff_date` del YAML y el envoltorio
+la sustituye con `--corpus-cutoff-date` desde la variable, como `EVAL_JUDGE_*`) y se reporta como `corpusVersion`. Meta en
 `eval/configs/metas-iniciales.yaml` (`cobertura_poblacion: {minimo: 0.90}`) y la de exactitud
 (`exactitud_extraido_verificado: {minimo: 0.95}`); son metas nuevas, no se modifica ninguna existente.
 
 **D6 · Exactitud M-08.4 desde la muestra.** Lector en `app/evaluation/revision_muestra.py` con ruta en la
 configuración de la suite (`corpus_metadatos.revision`); en test apunta a una muestra sintética de `tests/fixtures/`.
+El formato es el que escribe `l1d-117` (`documentos[].campos[]`).
 Exactitud = `correcto / (correcto + incorrecto)`; `pendiente` se cuenta aparte; archivo ausente o todo pendiente →
 `null` + causa, sin fallar (la revisión puede no estar hecha en el S3 o no haber documentos `extraido_verificado`,
 P1 de `l1d-117`). Valor desconocido de `revision` → código 2. El reporte nunca copia `valor` ni `nota`.
@@ -114,7 +129,11 @@ Reglas con nombre propio: `coincide_sin_cita()` (RN-01, M-08.2), `valores_no_cop
 
 Añade una familia y dos metas nuevas; no cambia modelo, prompt, umbral, catálogo real ni corpus. Métricas OL-06
 afectadas: M-08.2, M-08.3, M-08.4, M-08.6 (nuevas) y concordancia de estados (AC-T5.1). `run-ai-eval` se ejecuta en el
-PR para confirmar que las familias existentes dan las mismas métricas (huella de configuración aparte). La medición
+PR para confirmar que las familias existentes dan las mismas métricas (`baseline.json` y la huella de `test-fake.yaml`
+no cambian). Con adapters falsos la suite `all` reporta citas 0,80 (meta 0,90) y fidelidad 0,75 (meta 0,90) bajo meta,
+rotuladas `no_validada`: es el baseline, no una regresión de este change. Para que la medición no sea decorativa
+(lección del S3) cada invariante tiene una variante que falla: un resultado construido con una coincidencia sin cita o un
+valor distinto da código 3, y un esperado alterado en el dataset baja la concordancia. La medición
 con modelos reales es de US-233 (S4).
 
 ## Risks / Trade-offs
@@ -133,8 +152,8 @@ con modelos reales es de US-233 (S4).
 
 - ~~P1 · Definición de documento "con metadatos de población" en M-08.3~~ → **aceptado** `[S3 resp. 16]`: al menos
   una clave de `population_criteria` distinta de `no_disponible` (D5).
-- **P2 · Cita de un criterio estructurado en `coincide`** (dueño: `l1d-127` Q4; afecta: AC-1/AC-2). M-08.2 asume que
-  todo `coincide` estructurado trae la `CitedSource` del documento (D6 de `l1d-127`); si Q4 se resuelve con `[]`,
-  M-08.2 tendría que contar el enlace al dato estructurado como cita.
+- ~~P2 · Cita de un criterio estructurado en `coincide`~~ → **resuelto por lo mergeado en `l1d-127`**: un criterio
+  estructurado cita el mejor chunk de la fuente (`chunk_citado_id = None` = mejor chunk); M-08.2 cuenta `coincide` sin
+  esa cita ni una de chunk propio.
 - ~~P3 · Grafía de M-08.2~~ → **decidido** `[S3 resp. 16]`: «Criterios en "Coincide" sin cita» (PRD §18) en todo
   este change; la "concordancia de estados" es la métrica de AC-T5.1, sin ID M-08.x.

@@ -1,0 +1,111 @@
+# Catálogo del corpus sintético de la familia `aplicabilidad` (M-08.3): 10 documentos vigentes, 7 con criterios de población; 2 no vigentes.
+clase: sintetico
+documentos:
+- document_id: cat-01
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-02
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-03
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-04
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-05
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-06
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-07
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: 0-1
+- document_id: cat-08
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: no_disponible
+- document_id: cat-09
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: no_disponible
+- document_id: cat-10
+  is_current: true
+  population_criteria:
+    subtipo: no_disponible
+    estadio: no_disponible
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: no_disponible
+- document_id: cat-11
+  is_current: false
+  population_criteria:
+    subtipo: no_disponible
+    estadio: I–III
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: no_disponible
+- document_id: cat-12
+  is_current: false
+  population_criteria:
+    subtipo: no_disponible
+    estadio: I–III
+    linea: no_disponible
+    biomarcadores: no_disponible
+    edad: no_disponible
+    ecog: no_disponible

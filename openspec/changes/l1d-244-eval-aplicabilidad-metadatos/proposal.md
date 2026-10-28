@@ -39,6 +39,9 @@ de aplicabilidad o corpus podría introducir coincidencias sin soporte sin que l
   produce US-118 (`data/evaluation/corpus-metadatos/<release>.yaml`) y reporta exactitud y tamaño de la muestra frente a
   una meta en configuración (0,95, propuesta).
 - **Reproducibilidad**: con la configuración falsa, dos corridas dan métricas deterministas idénticas.
+- **Configuración propia** `eval/configs/test-aplicabilidad.yaml` (dataset, catálogos, metas y fecha de corte): la huella de
+  `test-fake.yaml` y `data/evaluation/baseline.json` no cambian y `--suite all` no incluye la familia nueva (no se regenera
+  el baseline; la familia no entra en la comparación de `eval-required`, cuyo cableado a la CI es de `scripts/ci`).
 - Sin cambio de contrato HTTP, de esquema del catálogo del corpus ni de Milvus.
 
 ## Capacidades
@@ -64,18 +67,22 @@ Ninguna.
 
 ## Dependencias
 
-- ↪ `l1d-127-estado-criterio-estructurado` (US-122): `ApplicabilityService`, `CriterioEvaluado`, `patientValue`
+- ↪ `l1d-127-estado-criterio-estructurado` (US-122, mergeado en #214): `ApplicabilityService`, `CriterioEvaluado`, `patientValue`
   copiado, lectura de `population_criteria`. La familia lo invoca; va **después**.
-- ↪ `l1d-128-aplicabilidad-textual-citada` (US-123): rama textual con cita y NLI, puerto del LLM de aplicabilidad y los
+- ↪ `l1d-128-aplicabilidad-textual-citada` (US-123, en la pila bajo L1D-130; PR #217/#220): rama textual con cita y NLI, puerto del LLM de aplicabilidad y los
   guiones del LLM falso de FX-08b-a.
 - ↪ `l1d-129-aplicabilidad-causas-avisos` (US-124): causas del desconocido y avisos por criterio que el dataset espera.
 - ↪ `l1d-126-criterios-aplicabilidad-catalogo` (US-121): catálogo `test-apl-1.0.0`, su validación y el `studyKey` de
   cada criterio; las claves de `population_criteria` de `fuentes/*.json` del dataset son las que nombra `studyKey`
   `[S3 resp. 16]`.
-- ↪ `l1d-117-metadatos-poblacion-verificados` (US-118): archivo de la muestra con `revision: correcto|incorrecto`,
+- ↪ `l1d-117-metadatos-poblacion-verificados` (US-118, mergeado en #209): archivo de la muestra con `revision: correcto|incorrecto`,
   plantilla y tarea `[HUMANO]` del usuario `[S3 resp. 13]`; `metadata_source = extraido_verificado`; claves de
   `population_criteria` por `studyKey` y valor `metadata_source = pendiente` (todo `no_disponible`, no cuenta en
-  M-08.3) `[S3 resp. 16]`.
+  M-08.3) `[S3 resp. 16]`. **Reconciliado con lo mergeado (2026-10-27):** la muestra se construye solo desde la release y solo
+  con campos de `corpus_document.extracted_fields` (decisión del usuario 2026-10-24); el archivo es
+  `release` + `documentos[].{document_id, campos[].{campo, valor, revision, nota}}`; la ingesta no produce `grado`,
+  `estado_menopausico` ni `estado_castracion`, así que sobre el corpus real esos criterios salen `Desconocido` y el
+  dataset no los siembra como si la ingesta los produjera.
 - ↪ `l1d-116-ingesta-reanudable-licencia`: publicación del corpus con `CORPUS_CUTOFF_DATE` (la misma versión que reporta
   `meta.corpusRelease`).
 - 🔗 `l1d-130-herencia-aplicabilidad-recorte` (US-125): sin solape; esta suite mide por criterio y fuente, no la
