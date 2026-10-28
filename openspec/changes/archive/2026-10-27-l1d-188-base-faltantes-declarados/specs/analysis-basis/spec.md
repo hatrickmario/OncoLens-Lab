@@ -42,7 +42,7 @@ El panel del análisis MUST mostrar, sin ninguna interacción y en toda respuest
 - **AND** no se lee "continuó con aviso"
 - **AND** el análisis no se bloqueó por los faltantes
 
-#### Scenario: Resumen de la Base del análisis con evidencia y fecha de corte [US-067 AC-1] [AC-T2.1] [FR-27]
+#### Scenario: Resumen de la Base del análisis con evidencia [US-067 AC-1] [AC-T2.1] [FR-27]
 - **GIVEN** la respuesta de [US-066 AC-1] con `missingCriticalData = []`, `assumptions = []`, `sourcesNotIncluded = ["NCCN","ESMO"]`, `omittedClaims = 0` y `corpusCutoffDate = 2026-09-30`
 - **WHEN** se renderiza el panel
 - **THEN** sin expandir se lee "0 datos críticos faltantes · Supuestos: 0 · Fuentes no incluidas: NCCN, ESMO · Afirmaciones omitidas: 0"

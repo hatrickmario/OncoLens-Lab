@@ -10,7 +10,18 @@ versionado, sin puntaje clínico, y solo con valores del estudio copiados o veri
 ### Requirement: Aplicabilidad por fuente recuperada con los criterios del catálogo
 Con `status = con_evidencia`, `POST /rag/query` MUST devolver en `applicability` un `SourceApplicability` por cada documento con chunks sobre el umbral en esa consulta, con un `ApplicabilityCriterion` por cada criterio de aplicabilidad del catálogo clínico del tipo de cáncer, en el orden del catálogo. Un documento con `metadata_source = pendiente` SHALL incluirse con todos sus criterios pendientes del camino textual (decidido, usuario, 2026-10-27: antes se omitía). Si el catálogo no declara criterios para el tipo, `applicability` SHALL ser `[]`.
 
-#### Scenario: Un documento con metadata_source pendiente entra por el camino textual y calla desconocido [US-123 AC-4] [US-122 AC-5] [RN-25] (decidido, usuario, 2026-10-27)
+#### Scenario: Una fuente estructurada compatible trae sus criterios en coincide con los valores copiados [US-122 AC-1] [AC-08.1] [AC-08.9] [HU-22]
+- **GIVEN** el catálogo de test `test-apl-1.0.0` (mama) montado, el paciente sintético A-M1 (HER2 "3+ (IHQ)" `verificado`, `TNM_8` "IIA" `verificado`, ECOG 1 con `performanceScale = ECOG`, un tratamiento previo con `lineNumber = 1`, sin `estado_menopausico`) y `doc-a1` con `metadata_source = fuente_estructurada` y `population_criteria` en la forma real de L1D-117: `biomarcadores = {"her2": "positivo"}`, `estadio = "I–III"`, `ecog = "0-1"` y `linea = "no_disponible"` (FX-08b-a), con adapters falsos
+- **WHEN** `clinical-api` envía a `POST /rag/query` una consulta cuyo único documento sobre el umbral es `doc-a1`
+- **THEN** responde `200` con `status = con_evidencia` y `applicability` con un elemento de `externalId` igual al de `doc-a1`
+- **AND** su criterio `estado_her2` trae `patientValue = "3+ (IHQ)"`, `studyPopulationValue = "positivo"` (copiado literal), `status = coincide`, `isExclusionary = true` y `citedSources` con la fuente `doc-a1`
+- **AND** `ecog` trae `patientValue = "1"`, `studyPopulationValue = "0-1"` y `status = coincide`
+- **AND** `estadio`, rango sin escala ordenada en el catálogo, trae `patientValue = "IIA"`, `studyPopulationValue = "I–III"`, `status = desconocido`, `unknownReason = null` y `citedSources` con la fuente `doc-a1` (todo valor del estudio mostrado lleva cita, RN-25; alcance del S3 declarado)
+- **AND** `linea_tratamiento`, que `doc-a1` no reporta, trae `patientValue = "1"`, `status = desconocido`, `unknownReason = no_reportado_por_fuente` y `studyPopulationValue = null`
+- **AND** `estado_menopausico`, ausente en A-M1, trae `patientValue = null`, `status = desconocido` y `unknownReason = falta_en_paciente`
+- **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
+
+#### Scenario: Un documento con metadata_source pendiente se omite de applicability [US-122 AC-5] [RN-25] (decidido, usuario, 2026-10-27)
 - **GIVEN** FX-08b-a, A-M1, `doc-a1` estructurado y `doc-a6` con `metadata_source = pendiente` (todos sus criterios de población `no_disponible`), ambos con chunks sobre el umbral, y un LLM falso de aplicabilidad que no propone nada
 - **WHEN** se procesa la consulta
 - **THEN** `applicability` trae un elemento por cada uno, el de `doc-a6` con todos sus criterios `desconocido` y `studyPopulationValue = null`
