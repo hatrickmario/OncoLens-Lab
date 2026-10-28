@@ -109,6 +109,8 @@ rules:
     - "Un borde cuyo control llega en un sprint posterior no se escribe como escenario: se anota como 'Regresión [RN-xx] activa desde S<n>'."
     - "Todo número calibrable (umbral, TTL, límite, plazo) se especifica como clave de configuración, no como literal."
     - "Usa MODIFIED (no ADDED) cuando el requisito ya existe en openspec/specs; nunca dupliques requisitos entre capacidades."
+    - "El párrafo normativo de cada requisito mide como máximo 500 caracteres; ejemplos, listas y bordes van en escenarios (`openspec validate --specs --strict` falla con el aviso de requisito largo)."
+    - "En un MODIFIED copia el requisito completo con TODOS los escenarios vigentes de main y sus títulos exactos; `openspec archive` compara por título y rechaza el delta que omita uno. Para reemplazar un escenario conserva su título (S3, l1d-128 y l1d-188)."
   design:
     - "Un centinela de texto (por ejemplo 'No disponible') no sustituye a null en un campo del dominio; una función no comprueba dos veces el mismo permiso; cada concepto del dominio usa una sola grafía y un identificador un solo significado (lección del S1: hallazgos Mayores de L1D-103)."
     - "Si el change toca apps/web o los Route Handlers, la sección '## Privacidad y ownership' incluye 'Seguridad web': validación con el schema Zod compartido en cliente y servidor, variables NEXT_PUBLIC_ nuevas (deben estar en la lista permitida), módulos server-only, cómo se renderiza el texto del LLM o del corpus (sin HTML crudo), impacto en la CSP y las cabeceras, y dependencias nuevas con su resultado de auditoría."

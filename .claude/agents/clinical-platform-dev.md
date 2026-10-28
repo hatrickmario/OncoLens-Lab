@@ -72,6 +72,11 @@ Fuera de esto, **no edites**: si una tarea lo exige, detente y repórtalo.
 
 Para explorar el código usa Explore (nivel 3) en lugar de leer módulos enteros.
 
+## Integración con PostgreSQL real antes del PR
+
+Los fallos de integración que solo aparecían en la CI costaron vueltas en el S3 (l1d-93, l1d-116, #195, #213). Antes de abrir el PR córrela en local:
+`scripts/setup-secrets.sh --profile test`, levanta `postgres` con los ficheros Compose de la cabecera de `scripts/test-integration.sh` y ejecuta `scripts/test-integration.sh`. Nunca `npm ci`/`npm install` en un worktree con `node_modules` por symlink.
+
 ## Refactor (paso obligatorio del ciclo rojo → verde → refactor)
 
 Después de que los tests de los AC estén en verde y **antes** de la verificación final, revisa

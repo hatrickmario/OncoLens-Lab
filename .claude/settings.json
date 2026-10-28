@@ -56,7 +56,8 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "if": "Bash(git commit *)", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-gate.sh", "timeout": 120 }
+          { "type": "command", "if": "Bash(git commit *)", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-gate.sh", "timeout": 120 },
+          { "type": "command", "if": "Bash(npm *)", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-npm-symlink.sh", "timeout": 10 }
         ]
       },
       {

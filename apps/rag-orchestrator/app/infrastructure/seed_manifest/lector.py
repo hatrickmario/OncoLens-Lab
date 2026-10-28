@@ -63,7 +63,8 @@ CLAVES_OPCIONALES = frozenset(
     }
 )
 CLAVES_DE_TEXTO = ("text", "text_path", "source_url")
-PATRON_DE_CLAVE = re.compile(r"[A-Za-z0-9._-]{1,80}")
+# Sin «.» ni «..»: la clave no debe poder leerse como segmento de ruta si un uso futuro la convierte en nombre de archivo.
+PATRON_DE_CLAVE = re.compile(r"(?!\.{1,2}$)[A-Za-z0-9._-]{1,80}")
 
 
 class ManifiestoInvalido(ValueError):

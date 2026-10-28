@@ -157,6 +157,10 @@ tu pregunta va en el mensaje final.
 ## Reglas duras
 
 - Superpowers en uso selectivo (`CLAUDE.md`, `[S3 resp. 4]`): en el prompt de cada implementador, recuerda `verification-before-completion` antes del PR y `systematic-debugging` ante CI roja. Registra por historia las vueltas de gate y las reanudaciones (métrica del S3).
+- **Informes verificables (retro S3):** antes de informar un estado de PR, contrástalo con `gh pr view`/`gh pr checks` y con `git fetch origin`; un informe tuyo desactualizado cuesta más que uno tardío. Escribe `S<n>-status.md` tras **cada** paso (un corte por límite de uso no debe perder estado).
+- **Métricas por historia, no solo de la O1:** rellena la tabla «Métricas» del status para **toda** historia al cerrarla: vueltas de Gate 2 por guardián, reanudaciones, hallazgos de `design-principles-reviewer` por principio (P1/P2/P3) y las skills de Superpowers que se invocaron (si ninguna, dilo).
+- **Gate 2 reducido por defecto (decisión del usuario, 2026-10-28):** un pase, una vuelta, Menores a deuda con ID destino. Doble vuelta solo en historias de seguridad, privacidad o contrato.
+- **Linear tras cada merge:** la automatización GitHub–Linear pasa a Done al mergear sin mirar las tareas abiertas. Al recibir «mergeado …» revisa cada historia: con tareas abiertas en `tasks.md` de `main` sin ID destino, devuélvela a In Review con un comentario.
 - Ninguna edición fuera de `backlog/sprints/S<n>-status.md`. El código lo escriben los implementadores.
 - Ningún dato real, secreto ni identificador de paciente en PRs, ramas, comentarios ni en Linear (RN-14).
 - No reordenes el plan ni metas historias nuevas; si el plan no se puede cumplir, devuelve el control.

@@ -23,3 +23,14 @@
 ## Decisión del usuario (2026-10-27)
 
 - Decisión 3 (seed RE/RP/BRCA/HRR con los códigos del catálogo): la parte del **seed** se adelanta a la O3 como change `l1d-95a-seed-codigos-catalogo` (2 pts de L1D-95/US-003 adelantados); el router `/completeness` y el cableado siguen en L1D-95 (S4). **L1D-98 espera a este change** (emparejará por `dataRef`/`id`; también L1D-181).
+
+## Mejoras de la retro del S3 (usuario, 2026-10-28)
+
+Aprobadas en el cierre del S3 (`S3-cierre.md` §7). Aplicadas antes del `/sprint-refine` del S4: reglas del orquestador (informes verificables, métricas por historia, Gate 2 reducido por defecto, Linear tras cada merge), DoD (`tasks.md` conciliado), reglas de `openspec/config.yaml` (requisito ≤ 500 caracteres; MODIFIED con escenarios exactos), recetas de integración en los implementadores, hook `guard-npm-symlink.sh`, `.gitignore` de la muestra de metadatos, `PATRON_DE_CLAVE` sin `.`/`..` y `fast-uri` 3.1.9 en el lockfile.
+
+| Pendiente | Destino | Nota |
+|---|---|---|
+| `scripts/demo/levantar.sh` no carga metadatos de población ni pesos sparse: sin ellos la aplicabilidad sale «no evaluada» en vivo | **US-233** (S4) | Tarea nueva en el refinamiento; hasta entonces ensayar según `docs/demo/guia-demo-S3.md` §0 |
+| Descargador HTTPS sin validar la IP resuelta (riesgo teórico: lista de hosts fija, sin redirecciones) | **US-233** (S4) | Opcional; rechazar IP privadas/loopback |
+| Exposición de iniciales y 2 últimos caracteres del documento en el listado (RN-10) | Decisión del usuario antes del piloto | L1D-202 D2 / L1D-285 D7 |
+
