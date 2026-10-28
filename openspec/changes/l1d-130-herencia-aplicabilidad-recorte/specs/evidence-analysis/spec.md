@@ -13,7 +13,7 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-01, 
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 #### Scenario: A igual relevanceScore el desempate es el chunkId de la cita principal [FR-09] [RN-28]
-- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1`, `applicability = []` y dos opciones validadas con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
+- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1` y dos opciones validadas sin aplicabilidad (`aplicabilidad = None`) con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
 - **WHEN** se aplica el recorte
 - **THEN** se conserva la opción cuya cita principal es `ch-a`, cualquiera que sea el orden de aparición
 
@@ -22,11 +22,11 @@ Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-01, 
 - **WHEN** `clinical-api` envía la consulta a `POST /rag/query` con un JWT de servicio válido
 - **THEN** responde `200` con `evidenceOptions` de 1 elemento: O-B
 - **AND** O-A no aparece en `evidenceOptions` ni en `discardedOptions`
-- **AND** O-B trae `applicabilitySummary = { coincide: 3, parcial: 0, noCoincide: 0, desconocido: 2 }` y `perSource` con `doc-a1`
+- **AND** O-B trae `applicabilitySummary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` (`estadio` queda `desconocido` sin causa: el catálogo de test no declara escala para el estadio) y `perSource` con `doc-a1`
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 #### Scenario: A igualdad de conteos la relevancia desempata la opción única [US-125 AC-6] [AC-10.1] [RN-28] [RN-03]
-- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-EMPATE-APL` (O-B cita `ch-a1-1` y O-D cita `ch-a6-1`, ambas con 0 excluyentes en No coincide y 3 en Coincide; relevancia 0,70 y 0,60)
+- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-EMPATE-APL` (O-B cita `ch-a1-1` y O-D cita `ch-a6-1`, ambas con 0 excluyentes en No coincide y 2 en Coincide, `doc-a6` estructurado con la población de `doc-a1`; relevancia 0,70 y 0,60)
 - **WHEN** se procesa la consulta en `POST /rag/query`
 - **THEN** `evidenceOptions` tiene 1 elemento: O-B
 

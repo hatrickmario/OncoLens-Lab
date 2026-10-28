@@ -13,8 +13,18 @@ Ver `proposal.md` (Why). Estado observado en `apps/rag-orchestrator`:
   `populationNotComparable = False`, `perSource = []` y `warnings = []`.
 - El contrato (`contracts/schemas/evidence.yaml`) ya define `SourceApplicability`, `ApplicabilitySummary`,
   `EvidenceOption.perSource`, `warnings[poblacion_no_comparable]` y `DiscardedOption.discardReason`.
-- La `applicability: SourceApplicability[]` por fuente la producen `l1d-127`, `l1d-128` y `l1d-129`
-  (el `ApplicabilityService`, sin implementar aún). Este change consume su salida, no la calcula.
+- La aplicabilidad por fuente (`AplicabilidadDeFuente`: criterios evaluados, `resumen`, `poblacion_no_comparable`)
+  la producen `l1d-127` (`ApplicabilityService`), `l1d-128` (camino textual, que **re-incorpora** los documentos
+  `pendiente`: entran con todo `desconocido` y el texto aceptado puede cambiar sus criterios) y `l1d-129`
+  (causas y avisos; un `desconocido` sin causa lleva `unknownReason = null`). Ya está en el service
+  (`_evaluar_aplicabilidad`) y en `applicability[]` de la respuesta. Este change consume su salida, no la calcula.
+- Un documento sin fila de población, o con un `metadata_source` que el catálogo no declara, **no tiene** entrada
+  en `applicability` (`ApplicabilityService.evaluar` lo omite).
+- **Conteos reales de A-M1** (catálogo `test-apl-1.0.0`, sin escala para el estadio, de modo que `estadio` queda
+  `desconocido` con `unknownReason = null`): `doc-a1` y un `doc-a6` estructurado como `doc-a1` →
+  `{ coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }`; `doc-a4` → 1 excluyente en No coincide
+  (`estado_her2`) y `{ 0, 0, 1, 4 }`. Los `{3, 0, 0, 2}` de FX-08b-b (backlog) son anteriores; el comparador no
+  depende de ellos (gana el de 0 excluyentes) y los tests de este change fijan los reales.
 - `maxOptions` llega en `RagQueryInternalRequest`; en `clinical-api` sale de `ANALYSIS_MAX_OPTIONS`
   (`src/config/secciones.ts`, 1 por defecto). Es el nombre vigente (decisión del usuario, 2026-10-24,
   `[S3 resp. 16]`).
@@ -43,29 +53,37 @@ Ver `proposal.md` (Why). Estado observado en `apps/rag-orchestrator`:
 2. **Excluyentes en No coincide se cuentan desde los criterios**, no desde `summary.noCoincide` (que incluye
    criterios no excluyentes): `sum(c.isExclusionary and c.status == no_coincide)`. Se extrae
    `contar_excluyentes_no_coincide()` (RN-28) para que viva en un solo lugar.
-3. **Relevancia de una fuente dentro de la opción** = máximo `relevanceScore` de los chunks de esa fuente que
-   la opción cita (mismo criterio que `relevancia_de_opcion()` de L1D-275, RN-03). Asumido: el AC-3 dice
-   "mayor `relevanceScore`" sin definir el de una fuente. Desempate final por `externalId` ascendente.
-4. **Agregación en `app/domain/applicability_aggregation.py`**: `agregar_aplicabilidad_de_opcion(fuentes) ->
-   AplicabilidadDeOpcion(resumen, por_fuente, no_comparable, avisos)` con la fuente más aplicable vía el
-   comparador; `no_comparable = all(f.populationNotComparable)`; `avisos = (poblacion_no_comparable,)` si
-   `no_comparable`. `por_fuente` en el orden del comparador (asumido: el AC-1 no fija el orden; así la primera
-   entrada coincide con `applicabilitySummary`).
-5. **Recorte**: `recortar_a_max_opciones()` deja de lanzar con aplicabilidad no vacía; recibe opciones ya
-   agregadas (`OpcionConRelevancia` + `AplicabilidadDeOpcion | None`). Con aplicabilidad → clave del comparador
-   sobre la fuente más aplicable con `chunk_principal_id` como desempate; sin ella → regla del S1 sin cambios
-   (el escenario de US-225 AC-3 sigue en verde). El service no reimplementa el orden.
+3. **Relevancia de una fuente dentro de la opción** = la de su chunk citado más relevante, con la función de
+   dominio que ya existe, `relevancia_de_opcion()` (RN-03), aplicada a los chunks de esa fuente que la opción
+   cita (la misma regla que da la relevancia de la opción; no se reescribe). Asumido: el AC-3 dice "mayor
+   `relevanceScore`" sin definir el de una fuente. Desempate final por `externalId` ascendente.
+4. **Agregación en `app/domain/applicability_aggregation.py`**: entrada pura `FuenteDeLaOpcion(external_id,
+   resumen, excluyentes_no_coincide, poblacion_no_comparable, relevance_score)` (el dominio no importa
+   `application/`); `agregar_aplicabilidad_de_opcion(fuentes) -> AplicabilidadDeOpcion(resumen, por_fuente,
+   poblacion_no_comparable, avisos)` con la fuente más aplicable vía el comparador;
+   `poblacion_no_comparable = all(...)` (con al menos una fuente); `avisos = ("poblacion_no_comparable",)` si
+   aplica. `por_fuente` en el orden del comparador (asumido: el AC-1 no fija el orden; así la primera entrada
+   coincide con `applicabilitySummary`).
+5. **Recorte**: `recortar_a_max_opciones(opciones, max_options)` pierde el parámetro `applicability` y deja de
+   lanzar; `OpcionConRelevancia` gana `aplicabilidad: AplicabilidadDeOpcion | None`. Con aplicabilidad (la
+   consulta calculó `applicability` no vacía) → clave del comparador sobre la fuente más aplicable, con la
+   relevancia de la opción (RN-03) y `chunk_principal_id` como desempate; sin ella (`None`: catálogo sin
+   criterios o ninguna fuente evaluable) → regla del S1 sin cambios (el escenario de US-225 AC-3 sigue en
+   verde). El service no reimplementa el orden. Ninguna clave es un puntaje combinado: es una tupla (RN-28).
 6. **Orden en el service**: citas → soporte → `agregar_aplicabilidad_de_opcion()` por soportada → recorte →
    ensamblado. `_opcion_con_evidencia()` copia resumen, `perSource`, `populationNotComparable` y `warnings` de
    la agregación. La agregación no se aplica a `discardedOptions` (el contrato no la incluye).
-7. **Fuente citada sin `SourceApplicability`** con `applicability` no vacía: no debería ocurrir (US-122 AC-5
-   produce entrada con todo `desconocido` para cada fuente recuperada); se trata como invariante rota → error
-   interno `500 ErrorInterno` sin respuesta parcial (falla cerrada). Si US-124 decide otra cosa, solo cambia
-   esta rama.
+7. **Fuente citada sin entrada en `applicability`** (documento sin fila de población o con origen no declarado,
+   que `ApplicabilityService.evaluar` omite a propósito): **no es un error**. Se ignora en `perSource`; si
+   ninguna fuente citada por la opción tiene entrada, la opción se agrega con resumen en cero, `perSource = []`
+   y `populationNotComparable = false`, y ordena con la clave `(0, 0, relevancia, id)` (`desconocido` y la
+   ausencia no ordenan, RN-28). *Corrección* de la versión previa de este design (que lanzaba `500`): el
+   orquestador ya omite esos documentos, así que fallar cerrado rechazaría respuestas legítimas.
 8. **Decisiones del usuario del 2026-10-24 (`[S3 resp. 16]`)**: (a) ejemplos — este change **no crea
    ejemplo propio**; reutiliza el par de `l1d-129` y, si hace falta, actualiza en él los campos de la opción;
    (b) `warnings` de datos del paciente fuera de alcance → US-126 (S4); (c) la variable es
-   `ANALYSIS_MAX_OPTIONS`; (d) orden de archivo de `applicability`: 127 → 128 → 129 → **130** → 182.
+   `ANALYSIS_MAX_OPTIONS` (1 por defecto; es la que existe en `clinical-api/src/config/secciones.ts`, no hay
+   `EVIDENCE_MAX_OPTIONS`); (d) orden de archivo de `applicability`: 127 → 128 → 129 → **130** → 182.
 
 ## Privacidad y ownership
 
@@ -102,8 +120,10 @@ Ver `proposal.md` (Why). Estado observado en `apps/rag-orchestrator`:
 - Nuevos (dominio puro, sin E/S): `app/domain/applicability_order.py` (`clave_de_aplicabilidad`,
   `contar_excluyentes_no_coincide`), `app/domain/applicability_aggregation.py`
   (`agregar_aplicabilidad_de_opcion`).
-- Modificados: `app/domain/option_selection.py` (`recortar_a_max_opciones` acepta aplicabilidad),
-  `app/application/rag_orchestrator_service.py` (paso de agregación antes del recorte),
+- Nuevo en `application/`: `app/application/aplicabilidad_de_opciones.py` (traduce `AplicabilidadDeFuente` +
+  chunks citados a `FuenteDeLaOpcion` y agrega por opción; sin reglas propias).
+- Modificados: `app/domain/option_selection.py` (`recortar_a_max_opciones` ordena por aplicabilidad si la
+  opción la trae), `app/application/rag_orchestrator_service.py` (paso de agregación antes del recorte),
   `app/application/respuesta_con_evidencia.py` (copia la agregación).
 - Dependen solo de tipos del dominio y de los modelos generados; ningún cliente concreto ni puerto nuevo.
 - Reglas extraídas con nombre propio: `clave_de_aplicabilidad()` (RN-28), `contar_excluyentes_no_coincide()`
@@ -111,8 +131,9 @@ Ver `proposal.md` (Why). Estado observado en `apps/rag-orchestrator`:
 
 ## Risks / Trade-offs
 
-- [Los changes de US-122…US-124 aún no existen y pueden fijar otra forma interna de la aplicabilidad] → el
-  dominio de este change consume `SourceApplicability` del contrato generado, no un tipo interno suyo.
+- [La forma interna de la aplicabilidad la fijan US-122…US-124] → el dominio de este change define su propia
+  entrada mínima (`FuenteDeLaOpcion`) y solo `application/aplicabilidad_de_opciones.py` conoce
+  `AplicabilidadDeFuente`.
 - [Conflicto al archivar: varios changes del S3 crean `openspec/specs/applicability/`] → requisitos con
   nombres distintos; `bulk-archive` los fusiona.
 - [La relevancia por fuente (decisión 3) es un supuesto] → aislada en un método; cambiarla no toca el

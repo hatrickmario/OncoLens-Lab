@@ -13,7 +13,7 @@ from tests.support.recuperacion_alias import entorno_con_alias
 
 VERSION_DEL_PROMPT = re.compile(r"^rag-query@0\.4\.0(\+aplicabilidad-texto@0\.1\.0)?$")
 LINEA_HER2 = "- HER2 3+ (IHQ)"
-LINEA_RE = "- Receptor de estrógeno Positivo (80%)"
+LINEA_RE = "- RE Positivo (80%)"
 
 
 def _consultar(*, conflicto: bool = False):

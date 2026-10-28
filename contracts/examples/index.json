@@ -392,6 +392,22 @@
       "file": "error-almacen-no-disponible.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1documents/post/responses/503"
+    },
+    {
+      "file": "rag-query-request-aplicabilidad-a-m1.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-aplicabilidad-a-m1.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-aplicabilidad-a-m1.json"
+    },
+    {
+      "file": "con-evidencia-s3-aplicabilidad.json",
+      "spec": "clinical-api",
+      "target": "#/components/schemas/EvidenceAnalysis"
     }
   ],
   "pendingExamples": [

@@ -1,3 +1,4 @@
 - [Trampas del entorno de worktree](feedback_entorno_worktree.md) — Bash rechaza "eval" en rutas, heredocs y variables; venv en /tmp
 - [Integration-rag en local](integracion_rag_local.md) — subredes libres, node_modules symlink y venv compartido para reproducir el job de la CI
+- [Verificaciones locales de la CI](verificaciones_locales_ci.md) — env vars para generate:check, eval-required, quality; cambiar ejemplos rompe clinical-api
 - [ONNX desde bytes y entorno de trabajo](onnx_bytes_y_entorno_de_trabajo.md) — trampas de ORT con datos externos y cómo correr pytest/vitest/ruff en el worktree

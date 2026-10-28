@@ -46,6 +46,33 @@ def test_ficha_de_fila_devuelve_none_y_no_cadena_vacia_cuando_el_catalogo_no_reg
     assert ficha.source_url is None
 
 
+def test_ficha_de_fila_conserva_el_cero_y_no_lo_trata_como_ausente_cuando_sample_size_es_0():
+    ficha = ficha_de_fila({**FILA, "sample_size": 0})
+
+    assert ficha.sample_size == 0
+    assert ficha.sample_size is not None
+
+
+def test_ficha_de_fila_copia_los_metadatos_factuales_cuando_el_catalogo_los_registra():
+    ficha = ficha_de_fila(
+        {
+            **FILA,
+            "trial_phase": "III",
+            "primary_endpoint": "Supervivencia libre de enfermedad",
+            "sample_size": 4800,
+            "last_updated_at": date(2026, 5, 1),
+            "guideline_version": "2026-05",
+        }
+    )
+
+    assert (ficha.trial_phase, ficha.primary_endpoint, ficha.sample_size) == (
+        "III",
+        "Supervivencia libre de enfermedad",
+        4800,
+    )
+    assert (ficha.last_updated_at, ficha.guideline_version) == (date(2026, 5, 1), "2026-05")
+
+
 def test_ficha_de_fila_copia_la_url_de_la_fuente_cuando_el_catalogo_la_registra():
     ficha = ficha_de_fila(
         {**FILA, "source_url": "https://www.cancer.gov/types/breast/hp/breast-treatment-pdq"}
