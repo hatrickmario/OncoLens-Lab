@@ -112,6 +112,8 @@ def test_un_documento_sin_licencia_es_valido_porque_el_dominio_lo_rechaza_con_su
         ("published_at: 2024-01-02", "published_at: ayer", "published_at no es una fecha"),
         ("license: CC BY 4.0", "licence: CC BY 4.0", "claves desconocidas licence"),
         ("cancer_type_tags: [mama]", "cancer_type_tags: []", "cancer_type_tags"),
+        ("document_key: d-1", "document_key: ..", "document_key debe cumplir"),
+        ("document_key: d-1", "document_key: '.'", "document_key debe cumplir"),
     ],
 )
 def test_rechaza_valores_fuera_del_catalogo_claves_desconocidas_y_claves_mal_formadas(

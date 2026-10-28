@@ -9,6 +9,7 @@
 - [ ] Título `[L1D-nn] <título>` y la historia en el Markdown de `backlog/features/` (el Markdown es la fuente; Linear, el espejo).
 - [ ] Gate 2 en verde con los guardianes que tocan según los paths del diff. Los Menores van en el cuerpo del PR.
 - [ ] `openspec validate <change> --strict` y `/opsx:verify` en verde.
+- [ ] `tasks.md` conciliado antes de pedir el merge: cada tarea cumplida en `[x]` con su evidencia (test o CI) y cada diferida con su **ID destino** escrito en la línea (lección del S1 y del S3). Nada `[x]` sin evidencia ejecutada.
 - [ ] Ningún dato real, secreto ni identificador de paciente (RN-13, RN-14). Ejemplos y fixtures solo sintéticos (`SINT-`).
 - [ ] Suite `evaluate` con su reporte adjunto si el PR toca modelo, prompt, umbral, catálogo o corpus (OL-06). Comando: `npm run evaluate -- --suite <familia> --report json` (sin `--config` usa la de la CI, adapters falsos).
 - [ ] `visual-check` en PASS si el PR toca la UI de `apps/web`.
