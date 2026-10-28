@@ -291,3 +291,74 @@ def entorno_de_aplicabilidad(
         proponente=proponente,
         clasificador_nli=clasificador_nli,
     )
+
+
+# --- FX-08b-b: dos opciones válidas para el recorte a una (L1D-130) ----------------------------------------------
+
+POBLACIONES_FX08BB: dict[str, PoblacionDelEstudio] = {
+    **POBLACIONES_FX08BA,
+    # doc-a6: «ECA estructurado con la misma población que doc-a1»; en FX-08b-a sigue ``pendiente`` y no se toca.
+    "doc-a6": PoblacionDelEstudio("fuente_estructurada", POBLACIONES_FX08BA["doc-a1"].criterios),
+}
+RELEVANCIAS_FX08BB = {"doc-a4": 0.92, "doc-a1": 0.70, "doc-a6": 0.60}
+"""Puntajes del reranker falso de FX-08b-b: ``ch-a4-1`` 0,92 · ``ch-a1-1`` 0,70 · ``ch-a6-1`` 0,60."""
+RAZON_B_SIN_SOPORTE = (
+    "La fuente más parecida al paciente afirma una reducción de la mortalidad a la mitad."
+)
+OPCION_O_A = "Quimioterapia adyuvante sin terapia dirigida"
+OPCION_O_B = "Quimioterapia adyuvante combinada con terapia dirigida anti-HER2"
+OPCION_O_B_SIN_SOPORTE = (
+    "Quimioterapia adyuvante con terapia dirigida anti-HER2 y reducción de dosis"
+)
+OPCION_O_D = "Terapia dirigida anti-HER2 posterior a la cirugía"
+RAZON_FX08BB = "La evidencia recuperada describe el esquema adyuvante en la población estudiada."
+
+ESCENARIOS_FX08BB: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "LLM-DOS-APL": (
+        (OPCION_O_A, RAZON_FX08BB, "doc-a4"),
+        (OPCION_O_B, RAZON_FX08BB, "doc-a1"),
+    ),
+    "LLM-EMPATE-APL": (
+        (OPCION_O_B, RAZON_FX08BB, "doc-a1"),
+        (OPCION_O_D, RAZON_FX08BB, "doc-a6"),
+    ),
+    "LLM-SIN-SOPORTE-APL": (
+        (OPCION_O_B_SIN_SOPORTE, RAZON_B_SIN_SOPORTE, "doc-a1"),
+        (OPCION_O_A, RAZON_FX08BB, "doc-a4"),
+    ),
+}
+
+
+class GeneradorDeDosOpciones:
+    """``EvidenceGenerator`` falso de FX-08b-b: dos opciones válidas, en el orden de salida del escenario."""
+
+    def __init__(self, escenario: str) -> None:
+        self._opciones = tuple(
+            OpcionGenerada(option=opcion, rationale=razon, chunk_ids_citados=(_chunk_id(doc),))
+            for opcion, razon, doc in ESCENARIOS_FX08BB[escenario]
+        )
+        self.recuperaciones: list[ResultadoDeRecuperacion] = []
+
+    async def generar(
+        self, solicitud: RagQueryInternalRequest, recuperacion: ResultadoDeRecuperacion
+    ) -> EvidenciaGenerada:
+        self.recuperaciones.append(recuperacion)
+        return EvidenciaGenerada(opciones=self._opciones)
+
+
+def solicitud_a_m1_con_max_opciones(max_options: int) -> dict[str, Any]:
+    solicitud = solicitud_a_m1()
+    solicitud["maxOptions"] = max_options
+    return solicitud
+
+
+def entorno_de_dos_opciones(
+    escenario: str, *, clasificador_nli: NliClassifier | None = None
+) -> EntornoDeRecuperacion:
+    """El servicio real con los bordes falsos de FX-08b-b (umbral 0,30; los tres documentos superan el umbral)."""
+    return entorno_de_aplicabilidad(
+        RELEVANCIAS_FX08BB,
+        generador=GeneradorDeDosOpciones(escenario),
+        catalogo_falso=CatalogoFalso(fichas=FICHAS_FX08BA, poblaciones=POBLACIONES_FX08BB),
+        clasificador_nli=clasificador_nli,
+    )

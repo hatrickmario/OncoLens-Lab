@@ -13,7 +13,11 @@ from dataclasses import asdict
 from app.application.aplicabilidad import AplicabilidadDeFuente
 from app.application.chunk_citable import ChunkCitable
 from app.application.ports import ResultadoDeRecuperacion
-from app.domain.aplicabilidad_tipos import CriterioEvaluado
+from app.domain.aplicabilidad_tipos import CriterioEvaluado, ResumenDeEstados
+from app.domain.applicability_aggregation import (
+    FuenteDeLaOpcion,
+    agregar_aplicabilidad_de_opcion,
+)
 from app.domain.citations import OpcionDescartada, construir_cita
 from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import top_relevance_score
@@ -29,12 +33,14 @@ from app.schemas.generated.models import (
     Limitation,
     Origin,
     PatientDataWarning,
+    PerSourceItem,
     RagQueryInternalResponse,
     RagQueryStatus,
     RetrievalStats,
     SourceApplicability,
     Synthesis,
     UnknownReason,
+    Warning,
 )
 
 
@@ -78,13 +84,17 @@ def _fuente_con_aplicabilidad(
     return SourceApplicability(
         externalId=fuente.external_id,
         criteria=[_criterio_aplicable(c, fuente.mejor_chunk, citables) for c in fuente.criterios],
-        summary=ApplicabilitySummary(
-            coincide=resumen.coincide,
-            parcial=resumen.parcial,
-            noCoincide=resumen.no_coincide,
-            desconocido=resumen.desconocido,
-        ),
+        summary=_resumen_del_contrato(resumen),
         populationNotComparable=fuente.poblacion_no_comparable,
+    )
+
+
+def _resumen_del_contrato(resumen: ResumenDeEstados) -> ApplicabilitySummary:
+    return ApplicabilitySummary(
+        coincide=resumen.coincide,
+        parcial=resumen.parcial,
+        noCoincide=resumen.no_coincide,
+        desconocido=resumen.desconocido,
     )
 
 
@@ -117,19 +127,26 @@ def _opcion_con_evidencia(
 ) -> EvidenceOption:
     """``relevanceScore`` = el del chunk citado más relevante: metadato secundario, no mide la opción (RN-03)."""
     aceptada = validada.aceptada
+    aplicabilidad = validada.aplicabilidad or agregar_aplicabilidad_de_opcion([])
     citados = [citables[chunk_id] for chunk_id in aceptada.chunk_ids_validos]
     return EvidenceOption(
         option=aceptada.opcion.option,
         rationale=aceptada.opcion.rationale,
         **({"details": list(aceptada.opcion.details)} if aceptada.opcion.details else {}),
-        applicabilitySummary=ApplicabilitySummary(
-            coincide=0, parcial=0, noCoincide=0, desconocido=0
-        ),
-        populationNotComparable=False,
-        perSource=[],
+        applicabilitySummary=_resumen_del_contrato(aplicabilidad.resumen),
+        populationNotComparable=aplicabilidad.poblacion_no_comparable,
+        perSource=[_aplicabilidad_de_fuente_citada(f) for f in aplicabilidad.por_fuente],
         relevanceScore=validada.relevance_score,
-        warnings=[],
+        warnings=[Warning(aviso) for aviso in aplicabilidad.avisos],
         citedSources=[_cita_de(c) for c in citados],
+    )
+
+
+def _aplicabilidad_de_fuente_citada(fuente: FuenteDeLaOpcion) -> PerSourceItem:
+    return PerSourceItem(
+        externalId=fuente.external_id,
+        summary=_resumen_del_contrato(fuente.resumen),
+        populationNotComparable=fuente.poblacion_no_comparable,
     )
 
 
