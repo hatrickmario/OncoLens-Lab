@@ -85,5 +85,8 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "gcr.io/etcd-development/etcd"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Dependabot nombra la imagen sin el registro (PR #206): sin esta entrada el ignore anterior no casa.
+      - dependency-name: "etcd-development/etcd"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "milvusdb/milvus"
         update-types: ["version-update:semver-major"]
