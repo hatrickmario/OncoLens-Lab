@@ -15,6 +15,12 @@ Cada `CitedSource` de una opción MUST construirse desde el catálogo del corpus
 - **AND** `chunkTextSnapshot` es igual al texto de `ch-m1-1` en el corpus
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor (helper de validación de L1D-164)
 
+#### Scenario: Los metadatos factuales de la cita son las columnas del catálogo [US-127 AC-1] [AC-T1.3] [RN-25]
+- **GIVEN** el schema `corpus` de test con `doc-a1` de FX-08b-a (ECA fase III, `metadata_source = fuente_estructurada`) con `study_design`, `trial_phase`, `primary_endpoint`, `sample_size`, `published_at`, `last_updated_at` y `guideline_version` sembrados con valores no nulos, y un generador falso cuya opción cita un chunk de `doc-a1`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** el `CitedSource` de esa opción trae `studyDesign`, `trialPhase`, `primaryEndpoint`, `sampleSize`, `publishedAt`, `lastUpdatedAt` y `guidelineVersion` iguales, campo a campo, a las columnas de `corpus_document` de `doc-a1`
+- **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
+
 ### Requirement: Metadatos de fuente inventados por el LLM se ignoran
 Cualquier metadato de fuente incluido por el LLM en una cita MUST descartarse y SHALL NOT aparecer en ningún campo de la respuesta, incluidas `discardedOptions` (RN-04).
 
@@ -23,6 +29,12 @@ Cualquier metadato de fuente incluido por el LLM en una cita MUST descartarse y 
 - **WHEN** `POST /rag/query` valida la respuesta
 - **THEN** la cita conserva `title = "Breast Cancer Treatment (test)"` y `sourceName = "NCI PDQ"` del corpus
 - **AND** la cadena "Guía NCCN 2026" no aparece en ninguna parte de la respuesta serializada
+
+#### Scenario: Un tamaño de muestra y una fase inventados se reemplazan por los del catálogo [US-127 AC-2] [RN-25] [RN-04]
+- **GIVEN** `doc-a1` de FX-08b-a en el schema `corpus` de test y un generador falso que cita un chunk de `doc-a1` e incluye en la cita `sampleSize = 9999` y `trialPhase = "IV"`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** la cita conserva `sampleSize` y `trialPhase` de las columnas `sample_size` y `trial_phase` de `doc-a1`
+- **AND** ni `9999` ni `"IV"` aparecen en ningún campo de la cita, de `evidenceOptions` ni de `discardedOptions`
 
 ### Requirement: Texto de la cita en su idioma original
 `chunkTextSnapshot` y `language` MUST conservar el texto y el idioma del corpus, sin traducción, cualquiera que sea el idioma de la pregunta (RN-04; traducción fuera del MVP, `[S1 resp. 8]`).
@@ -207,16 +219,23 @@ Por cada fragmento retirado por términos prohibidos, `rag-orchestrator` MUST re
 - **AND** ningún registro de log contiene "recomendado para este paciente", el texto de la justificación, de la opción ni de la pregunta
 
 ### Requirement: Con evidencia sobre el umbral, respuesta con_evidencia en el contrato final
-Cuando al menos un chunk supere `RELEVANCE_THRESHOLD`, `POST /rag/query` MUST invocar al LLM local vía `EvidenceGenerator`, validar las opciones antes de devolverlas (RN-01) y responder `200` con `status = con_evidencia` en la forma final de `RagQueryInternalResponse` (FR-25, ADR-26). En el S1, síntesis, `applicability` y `agentSteps` SHALL ir vacíos; `limitations` solo trae limitaciones de regla o verificadas: el LLM no las genera en el S1 (`[S1 resp. 11]`). Sin *fallback* a la nube (RN-12).
+Cuando al menos un chunk supere `RELEVANCE_THRESHOLD`, `POST /rag/query` MUST invocar al LLM local vía `EvidenceGenerator`, validar las opciones antes de devolverlas (RN-01) y responder `200` con `status = con_evidencia` en la forma final de `RagQueryInternalResponse` (FR-25, ADR-26). Sin *fallback* a la nube (RN-12). Síntesis, `agentSteps`, `applicability` y `limitations` SHALL poblarse según el escenario de alcance.
 
 #### Scenario: Una pregunta con evidencia devuelve una opción citada en el contrato final [US-225 AC-1] [AC-10.1] [OL-02] [FR-25] [ADR-26]
-- **GIVEN** el corpus de prueba FX-06a-a con `RELEVANCE_THRESHOLD = 0.30`, `CorpusRelease rel-test-1` con `cutoff_date = 2026-09-30`, el LLM falso `LLM-OK` y el NLI falso en `entailment` (FX-06a-b), y un `clinicalContext` sintético de mama
+- **GIVEN** el corpus de prueba FX-06a-a con `RELEVANCE_THRESHOLD = 0.30`, `CorpusRelease rel-test-1` con `cutoff_date = 2026-09-30`, el LLM falso `LLM-OK` y el NLI falso en `entailment` (FX-06a-b), un `clinicalContext` sintético de mama y un catálogo clínico de test sin criterios de aplicabilidad (`items: []` en `aplicabilidad.json` de mama; cambio de spec declarado de L1D-127, no una relajación del test)
 - **WHEN** `clinical-api` envía `Q-HER2` a `POST /rag/query` con un JWT de servicio válido y `maxOptions = 1`
 - **THEN** responde `200` con `status = con_evidencia` y exactamente 1 elemento en `evidenceOptions`, con `citedSources[0].chunkId = "ch-m1-1"` y `relevanceScore = 0.87`
 - **AND** `topRelevanceScore = 0.87` (máximo de los chunks sobre el umbral)
 - **AND** `synthesis.agreements = []`, `synthesis.discrepancies = []`, `applicability = []`, `agentSteps = []` y `meta.corpusCutoffDate = 2026-09-30`
 - **AND** con la salida del *fixture* `LLM-OK`, `limitations = []` y `omittedClaims = 0`
 - **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor (helper de validación de L1D-164)
+
+#### Scenario: Alcance de los campos de la respuesta con evidencia [FR-25] [S1 resp. 11] [RN-12]
+- **GIVEN** una respuesta `con_evidencia`
+- **WHEN** se arma la respuesta final
+- **THEN** en el S1 la síntesis y `agentSteps` van vacíos
+- **AND** `applicability` va vacío solo si el catálogo clínico del tipo de cáncer no declara criterios de aplicabilidad; con el catálogo real (6 criterios por tipo desde L1D-126) trae la aplicabilidad por fuente de la capacidad `applicability` (L1D-127)
+- **AND** `limitations` solo trae limitaciones de regla o verificadas: el LLM no las genera en el S1
 
 ### Requirement: relevanceScore de opción y topRelevanceScore con evidencia
 `topRelevanceScore` MUST ser el máximo de los chunks sobre el umbral, calculado por `top_relevance_score()` (`[S1 resp. 18]`). El `relevanceScore` de cada opción SHALL ser el del *reranker* para su cita válida más relevante (la cita principal): un metadato de esa cita, no una medida de la opción ni de su solidez clínica (RN-03).
@@ -238,7 +257,7 @@ Cuando hay chunks sobre el umbral pero el LLM no propone ninguna opción, `POST 
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 ### Requirement: Recorte de opciones validadas a maxOptions
-Tras la validación, el pipeline MUST conservar como máximo `maxOptions` opciones (FR-09). Sin aplicabilidad calculada (S1–S2) SHALL conservar las de mayor `relevanceScore` (desempate de RN-28), a igualdad la de menor `chunkId` de su cita principal, y omitir el excedente sin listarlo en `discardedOptions` (asumido, aceptado `[S1 resp. 3]`). Regresión [RN-28] selección por aplicabilidad activa desde S5 (US-125 AC-5).
+Tras la validación de citas (RN-01, RN-04) y de soporte NLI y lenguaje (RN-23), el pipeline MUST conservar como máximo `maxOptions` opciones (FR-09), valor que `clinical-api` envía desde su configuración (RN-22). El orden SHALL aplicarse después de la validación y antes del recorte: una opción descartada (`discardedOptions`) nunca ocupa una posición. El excedente se omite sin listarlo en `discardedOptions` (asumido, aceptado `[S1 resp. 3]`).
 
 #### Scenario: Con maxOptions 1 y dos opciones válidas queda la más relevante y la otra no es descartada [US-225 AC-3] [FR-09] [RN-28]
 - **GIVEN** FX-06a-a, `maxOptions = 1`, el LLM falso `LLM-DOS` (opción que cita `ch-m1-1`, 0,87, y opción "Terapia anti-HER2 sola" que cita `ch-inj-1`, 0,40), el NLI falso en `entailment` y un pipeline sin aplicabilidad calculada (`applicability = []`)
@@ -248,9 +267,36 @@ Tras la validación, el pipeline MUST conservar como máximo `maxOptions` opcion
 - **AND** la respuesta valida contra `RagQueryInternalResponse`
 
 #### Scenario: A igual relevanceScore el desempate es el chunkId de la cita principal [FR-09] [RN-28]
-- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1`, `applicability = []` y dos opciones validadas con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
+- **GIVEN** `recortar_a_max_opciones()` con `max_options = 1` y dos opciones validadas sin aplicabilidad (`aplicabilidad = None`) con `relevanceScore = 0.60`, cuyas citas principales son `ch-b` y `ch-a`, en ese orden de aparición
 - **WHEN** se aplica el recorte
 - **THEN** se conserva la opción cuya cita principal es `ch-a`, cualquiera que sea el orden de aparición
+
+#### Scenario: Con maxOptions 1 la opción conservada es la más aplicable y no la más relevante [US-125 AC-5] [AC-10.1] [FR-09] [RN-28] [RN-22]
+- **GIVEN** FX-08b-b con A-M1, `maxOptions = 1`, `RELEVANCE_THRESHOLD = 0.30`, el LLM falso `LLM-DOS-APL` (O-A cita `ch-a4-1`, 1 excluyente en No coincide, relevancia 0,92; O-B cita `ch-a1-1`, 0 excluyentes, relevancia 0,70) y el NLI falso en `entailment`
+- **WHEN** `clinical-api` envía la consulta a `POST /rag/query` con un JWT de servicio válido
+- **THEN** responde `200` con `evidenceOptions` de 1 elemento: O-B
+- **AND** O-A no aparece en `evidenceOptions` ni en `discardedOptions`
+- **AND** O-B trae `applicabilitySummary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 3 }` (`estadio` queda `desconocido` sin causa: el catálogo de test no declara escala para el estadio) y `perSource` con `doc-a1`
+- **AND** la respuesta valida contra `RagQueryInternalResponse`
+
+#### Scenario: A igualdad de conteos la relevancia desempata la opción única [US-125 AC-6] [AC-10.1] [RN-28] [RN-03]
+- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-EMPATE-APL` (O-B cita `ch-a1-1` y O-D cita `ch-a6-1`, ambas con 0 excluyentes en No coincide y 2 en Coincide, `doc-a6` estructurado con la población de `doc-a1`; relevancia 0,70 y 0,60)
+- **WHEN** se procesa la consulta en `POST /rag/query`
+- **THEN** `evidenceOptions` tiene 1 elemento: O-B
+
+#### Scenario: Una opción descartada por soporte nunca ocupa la posición aunque sea la más aplicable [US-125 AC-7] [RN-01] [FR-10] [RN-28]
+- **GIVEN** FX-08b-b, `maxOptions = 1` y el LLM falso `LLM-SIN-SOPORTE-APL` (O-B' cita `ch-a1-1`, más aplicable, con una afirmación que el NLI falso marca `neutral`; O-A cita `ch-a4-1` con `entailment`)
+- **WHEN** se procesa la consulta en `POST /rag/query`
+- **THEN** `evidenceOptions` = [O-A]
+- **AND** O-B' aparece en `discardedOptions` con `discardReason = afirmacion_sin_soporte`
+- **AND** O-A conserva `populationNotComparable = true` y `warnings` con `poblacion_no_comparable` (el aviso no bloquea, RN-26)
+
+#### Scenario: Criterio de orden previo al recorte, con y sin aplicabilidad [FR-09] [RN-28] [RN-03] [S1 resp. 3]
+- **GIVEN** opciones validadas, con y sin aplicabilidad calculada (`applicability` no vacía, desde el S3)
+- **WHEN** se aplica el recorte a `maxOptions`
+- **THEN** con aplicabilidad se ordenan con el comparador de aplicabilidad de RN-28 sobre la fuente más aplicable de cada una (menos excluyentes en No coincide → más Coincide → mayor `relevanceScore` → menor `chunkId` de su cita principal) y se conservan las primeras
+- **AND** la relevancia solo desempata a igualdad de conteos (RN-03)
+- **AND** sin aplicabilidad se conservan las de mayor `relevanceScore`, a igualdad la de menor `chunkId` de su cita principal
 
 ### Requirement: Salida del LLM inválida responde 503 LOCAL_LLM_UNAVAILABLE
 Si el LLM no responde o devuelve un JSON no parseable o que no valida contra el esquema interno de generación, `POST /rag/query` MUST responder `503` con `error = "LOCAL_LLM_UNAVAILABLE"` (alternativa `ErrorLlmLocalNoDisponible` del `oneOf` del `503`), sin reintento silencioso, sin respuesta parcial y sin eco del texto generado (`[S1 resp. 12]`, RN-12).
@@ -418,3 +464,135 @@ La latencia de los *embeddings* y del *reranker* con modelos reales MUST medirse
 - **WHEN** se mide cada etapa en 3 corridas y se toma la mediana
 - **THEN** los *embeddings* quedan en ≤ 500 ms y el *reranker* (12 pares) en ≤ 4500 ms
 - **AND** un valor fuera de presupuesto queda en el reporte de la medición para el refinamiento
+
+### Requirement: El prompt etiqueta los datos del paciente sin verificar o en conflicto
+El bloque de datos del paciente del prompt `rag-query@0.4.0` (`[S3 resp. 15]`) MUST etiquetar con "(sin verificar)" el dato `requiere_revision` y con "(en conflicto)", con precedencia (asumido), el dato con `provenance.conflict = true`; un dato verificado SHALL NOT llevar etiqueta y el texto embebido para la recuperación MUST NOT cambiar (RN-07).
+
+#### Scenario: El Ki-67 sin verificar aparece etiquetado en el bloque de datos del paciente [US-065 AC-5] [RN-07] (asumido: texto de la etiqueta)
+- **GIVEN** un `clinicalContext` con el Ki-67 `20 %` en `provenance.reviewStatus = requiere_revision` y el resto de los datos `verificado`
+- **WHEN** `rag-orchestrator` arma el prompt de `/rag/query`
+- **THEN** dentro del bloque de datos del paciente el Ki-67 `20 %` aparece acompañado de "(sin verificar)"
+- **AND** ningún dato `verificado` del bloque lleva "(sin verificar)" ni "(en conflicto)"
+
+#### Scenario: El dato en conflicto aparece etiquetado como en conflicto [US-065 AC-5] [RN-07] (asumido: etiqueta de conflicto y precedencia)
+- **GIVEN** un `clinicalContext` con el receptor de estrógeno `90 %` en `requiere_revision` y `provenance.conflict = true`
+- **WHEN** `rag-orchestrator` arma el prompt de `/rag/query`
+- **THEN** el receptor de estrógeno `90 %` aparece acompañado de "(en conflicto)" y no de "(sin verificar)"
+
+#### Scenario: El texto embebido para la recuperación no lleva etiquetas [US-065 AC-5] [RN-07]
+- **GIVEN** el mismo `clinicalContext` con el Ki-67 en `requiere_revision`
+- **WHEN** se calcula el resumen del contexto clínico que se embebe junto con la pregunta
+- **THEN** el resumen es idéntico al de un contexto con el Ki-67 `verificado` y no contiene "(sin verificar)" ni "(en conflicto)"
+
+### Requirement: En el S3 solo el diagnóstico y los biomarcadores se etiquetan en el prompt
+Atributos, tratamientos previos y eventos MUST NOT etiquetarse en el bloque de datos del paciente del prompt en el S3 (Non-Goal explícito, decidido 2026-10-27); su `provenance` viaja en el payload.
+
+#### Scenario: Los atributos, tratamientos y eventos no entran al bloque etiquetado [US-065 AC-5] [RN-07] (asumido: Non-Goal del S3)
+- **GIVEN** un `clinicalContext` con un atributo, un tratamiento previo y un evento en `requiere_revision`
+- **WHEN** `rag-orchestrator` arma el bloque de datos del paciente del prompt
+- **THEN** el bloque no contiene ni el atributo, ni el tratamiento, ni el evento, ni la etiqueta "(sin verificar)" por ellos
+
+### Requirement: Las etiquetas de procedencia del prompt no introducen lenguaje prescriptivo
+El bloque de datos del paciente y sus etiquetas MUST NOT contener ningún `terminos` del nivel A ni `prefijos` del nivel B de `terminos-prohibidos.json` (RN-23), ni el `pseudoPatientId` ni identificadores de dato (`dataRef`) (RN-11).
+
+#### Scenario: El prompt con datos etiquetados no contiene términos prohibidos ni identificadores [US-065 AC-5] [RN-23] [RN-11]
+- **GIVEN** el prompt armado con el `clinicalContext` de FX-T1a-a (Ki-67 sin verificar y receptor de estrógeno en conflicto)
+- **WHEN** se aplica `check_prohibited_terms()` con los niveles A (`terminos`) y B (`prefijos`) y se busca el `pseudoPatientId` y cada `dataRef` del contexto
+- **THEN** devuelve cero coincidencias y no aparece ningún `pseudoPatientId` ni `dataRef`
+
+### Requirement: La versión del prompt de generación queda registrada en meta
+`meta.promptVersion` MUST comenzar por `rag-query@0.4.0`; cuando el camino textual de aplicabilidad de `l1d-128` invoca al LLM, MAY continuar con el sufijo `+aplicabilidad-texto@0.1.0` sin espacios. Las comprobaciones SHALL usar un prefijo tolerante a ese sufijo, para no acoplar este change al de aplicabilidad.
+
+#### Scenario: La versión del prompt empieza por rag-query@0.4.0 con o sin sufijo de aplicabilidad [US-065 AC-5] [RN-07] (asumido: sufijo de l1d-128)
+- **GIVEN** una consulta a `/rag/query` con el contexto de FX-T1a-a y el LLM falso
+- **WHEN** se lee `meta.promptVersion` de la respuesta
+- **THEN** el valor coincide con `^rag-query@0\.4\.0(\+aplicabilidad-texto@0\.1\.0)?$`
+
+### Requirement: Metadato factual ausente del catálogo viaja como null
+Si el catálogo no registra un metadato factual de la fuente (columna nula o texto vacío), el campo correspondiente de `CitedSource` MUST viajar `null`; SHALL NOT rellenarse con `""`, `0`, un valor por defecto, un centinela de texto ("No disponible" es solo texto de la UI) ni un valor de otra fuente o del texto generado (RN-25).
+
+#### Scenario: Un documento sin endpoint ni tamaño de muestra devuelve esos campos en null [US-127 AC-3] [RN-25]
+- **GIVEN** `doc-a3` de FX-08b-a en el schema `corpus` de test con `primary_endpoint` y `sample_size` nulos, y un generador falso cuya opción cita un chunk de `doc-a3`
+- **WHEN** `POST /rag/query` responde
+- **THEN** el `CitedSource` de esa opción trae `primaryEndpoint = null` y `sampleSize = null`
+- **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
+
+#### Scenario: El gateway persiste y devuelve los metadatos nulos sin alterarlos [US-127 AC-3] [RN-25] [RN-06]
+- **GIVEN** `rag-orchestrator` simulado (MSW, respuesta construida desde `contracts/examples/`) con una cita de `primaryEndpoint = null` y `sampleSize = null`
+- **WHEN** `POST /platform/evidence-analyses` completa el análisis
+- **THEN** la respuesta de `clinical-api` y el `AIAnalysisRecord` persistido traen `primaryEndpoint = null` y `sampleSize = null` en esa cita
+- **AND** la respuesta valida contra el `openapi.yaml` de `clinical-api`
+
+### Requirement: El log de citas cuenta las descartadas por motivo sin contenido
+Tras validar las citas, `rag-orchestrator` MUST registrar en el evento `event=rag_query_citas`, además de
+`traceId`, `opcionesAceptadas` y `opcionesDescartadas`, los campos `sinCitas=<n>` y `citaInvalida=<n>` (cero
+cuando no hay descartadas por ese motivo). El evento MUST NOT registrar ningún `chunkId`, texto de opción, de
+cita ni de la pregunta (RN-14). El contrato de `/rag/query` y de `/platform/evidence-analyses` MUST NOT
+cambiar: el motivo ya viaja en `discardedOptions[].discardReason`.
+
+#### Scenario: Recuento por motivo en el log de citas [US-237 AC-5] [RN-14]
+- **GIVEN** una consulta con chunks sobre el umbral y un LLM fingido que genera una opción que cita un `chunkId` no recuperado y otra sin citas
+- **WHEN** `rag-orchestrator` valida las citas
+- **THEN** el log `event=rag_query_citas` registra `opcionesAceptadas=0 opcionesDescartadas=2 sinCitas=1 citaInvalida=1`
+- **AND** el registro es una línea JSON válida del formateador de logs del servicio que contiene el `traceId` de la consulta
+- **AND** ese registro no contiene ningún `chunkId` (recuperado ni inventado), ni el texto de las opciones, ni el de la pregunta
+
+#### Scenario: Sin descartadas los recuentos por motivo son cero (asumido)
+- **GIVEN** una consulta cuya única opción generada cita un chunk recuperado
+- **WHEN** `rag-orchestrator` valida las citas
+- **THEN** el log `event=rag_query_citas` registra `sinCitas=0 citaInvalida=0`
+
+#### Scenario: Los openapi.yaml no cambian [US-237 AC-6] [ADR-26]
+- **GIVEN** `apps/clinical-api/openapi.yaml` y `apps/rag-orchestrator/openapi.yaml` de la rama del change
+- **WHEN** se ejecutan `contracts:check` y `contracts:breaking` contra `main`
+- **THEN** ambos están en verde, ninguno de los dos `openapi.yaml` tiene diff y `discardedOptions[].discardReason` conserva su enum
+
+### Requirement: Los fragmentos se entregan al LLM con un alias corto y sin su chunkId real
+El prompt de generación de `POST /rag/query` MUST presentar cada chunk entregado a la generación con un alias `C1…Cn` asignado por orden de `relevanceScore` descendente, con desempate por `chunkId` ascendente, y SHALL NOT contener ningún `chunkId` real. La instrucción de citar MUST pedir el alias del fragmento (RN-04). Solo reciben alias los chunks sobre el umbral que caben en el presupuesto de fragmentos configurado (`LLM_FRAGMENTS_MAX_CHARS`, RN-22).
+
+#### Scenario: Cuatro chunks sobre el umbral reciben C1…C4 por relevancia y el prompt no lleva ids reales [US-236 AC-1] [RN-04]
+- **GIVEN** una recuperación con cuatro chunks sobre el umbral (FX-06a-a) y el LLM falso `LLM-OK` a nivel de cliente (FX-06a-b)
+- **WHEN** se arma el prompt de generación
+- **THEN** el chunk de mayor `relevanceScore` lleva `C1` y los siguientes `C2`, `C3`, `C4` en orden descendente, y dos chunks con el mismo puntaje se ordenan por `chunkId` ascendente
+- **AND** el texto del prompt no contiene ninguno de los cuatro `chunkId` reales
+
+#### Scenario: La misma entrada produce los mismos alias [US-236 AC-5] [RN-06]
+- **GIVEN** los mismos chunks en el mismo orden
+- **WHEN** se arma el prompt dos veces
+- **THEN** los dos prompts asignan alias idénticos a cada chunk
+
+### Requirement: El alias citado se traduce al chunkId real antes de validar la cita
+Cada alias citado MUST traducirse al `chunkId` real de su chunk antes de validar la cita, que sigue comparando `chunkId` reales (RN-01, RN-04). El alias es el único formato aceptado: cualquier otro texto, incluido un `chunkId` real, SHALL ser cita inválida, sin reparación; una opción sin cita traducible MUST ir a `discardedOptions` con `discardReason = cita_invalida`.
+
+#### Scenario: Una cita a C2 apunta al chunk real con su texto del corpus [US-236 AC-2] [RN-04] [AC-T1.3]
+- **GIVEN** FX-06a-a con cuatro chunks sobre el umbral y un LLM falso cuya opción cita `C2`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** la opción queda en `evidenceOptions` y su cita tiene el `chunkId` real del chunk al que se asignó `C2`
+- **AND** `chunkTextSnapshot` es igual al texto de ese chunk en el corpus
+- **AND** la respuesta valida contra `RagQueryInternalResponse` del `openapi.yaml` del proveedor
+
+#### Scenario: Un alias inexistente descarta la opción por cita inválida [US-236 AC-3] [RN-01] [AC-T1.2]
+- **GIVEN** FX-06a-a con cuatro chunks entregados a la generación y un LLM falso cuya opción cita solo `C9`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** la opción no está en `evidenceOptions` y aparece en `discardedOptions` con `discardReason = cita_invalida`
+
+#### Scenario: El chunkId real copiado por el LLM no se acepta [US-236 AC-4] [RN-04] (asumido)
+- **GIVEN** FX-06a-a y un LLM falso cuya opción cita el `chunkId` real `ch-m1-1` en lugar de su alias
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** la opción va a `discardedOptions` con `discardReason = cita_invalida`
+- **AND** ningún id "parecido" a un `chunkId` real se repara ni se acepta
+
+#### Scenario: Un alias de un chunk que no superó el umbral no existe [US-236 AC-6] [RN-01] [RN-24]
+- **GIVEN** una recuperación donde tres chunks superan el umbral y un cuarto queda por debajo, y un LLM falso cuya opción cita `C4`
+- **WHEN** `POST /rag/query` valida la respuesta
+- **THEN** `C4` no corresponde a ningún chunk (solo existen `C1…C3`) y la opción va a `discardedOptions` con `discardReason = cita_invalida`
+- **AND** el chunk bajo el umbral no aparece en ningún `citedSources` de la respuesta
+
+### Requirement: Los alias nunca salen de la generación
+Los alias MUST vivir solo dentro de una consulta de generación: la respuesta de `POST /rag/query`, el `AIAnalysisRecord` persistido por `clinical-api` y los logs de ambos servicios SHALL identificar los chunks solo por su `chunkId` real y SHALL NOT contener un alias como identificador (RN-06).
+
+#### Scenario: Ni la respuesta, ni la persistencia, ni los logs llevan alias [US-236 AC-5] [RN-06]
+- **GIVEN** FX-06a-a y un LLM falso cuya opción cita `C1` y `C2`
+- **WHEN** se completa el análisis de punta a punta y se inspeccionan la respuesta serializada, el `AIAnalysisRecord` persistido y los logs capturados
+- **THEN** cada `citedSources[].chunkId` es un `chunkId` real del corpus
+- **AND** ninguna de las tres salidas contiene `C1` ni `C2` como identificador de chunk

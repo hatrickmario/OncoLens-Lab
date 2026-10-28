@@ -25,17 +25,23 @@ El cliente generado hacia `rag-orchestrator` MUST instanciarse sobre el transpor
 - **AND** no lleva cabecera `Cookie` ni ninguna cabecera copiada del request entrante
 
 ### Requirement: Contexto clínico por allowlist explícita
-`ClinicalContextBuilder` MUST construir el `clinicalContext` campo a campo desde una allowlist explícita (diagnóstico activo, último valor por biomarcador, tratamientos previos, eventos, atributos y `currentLine`), nunca copiando entidades completas; el resultado SHALL validar contra `ClinicalContext` con `additionalProperties: false` (RN-10). En el S1 `clinicalNotes`, `biomarkerTrends`, `missingCriticalData` y `priorAnalyses` MUST viajar vacíos.
+`ClinicalContextBuilder` MUST construir el `clinicalContext` campo a campo desde una allowlist explícita, nunca copiando entidades completas; el resultado SHALL validar contra `ClinicalContext` con `additionalProperties: false` (RN-10). `clinicalNotes`, `biomarkerTrends` y `priorAnalyses` MUST viajar vacíos; `missingCriticalData` SHALL contener solo claves del catálogo clínico cargado.
 
 #### Scenario: El contexto enviado valida contra el esquema cerrado y no lleva identificadores [US-052 AC-4] [RN-10] [OL-03]
 - **GIVEN** el request capturado del caso del AC-1 sobre el paciente semilla (b)
 - **WHEN** se validan las claves de `clinicalContext` contra el esquema `ClinicalContext` de `apps/rag-orchestrator/openapi.yaml` con `additionalProperties: false`
 - **THEN** la validación pasa
 - **AND** ninguna clave ni valor del payload contiene `patientId`, `identification`, `birthYear`, `agreementReference` ni `sourceDataset`, ni el UUID interno del paciente
-- **AND** `clinicalNotes`, `biomarkerTrends`, `missingCriticalData` y `priorAnalyses` son listas vacías
+- **AND** `clinicalNotes`, `biomarkerTrends` y `priorAnalyses` son listas vacías
+- **AND** cada elemento de `missingCriticalData` es una clave del catálogo cargado
 
 Regresión [RN-07] activa desde S3 (US-065): exclusión de datos `rechazado`/`reemplazado` y etiquetado completo de procedencia.
 Regresión [RN-11] activa desde S1 con el change de L1D-203 (US-049): seudónimo criptográfico, enmascaramiento de la pregunta y del texto libre.
+
+#### Scenario: Campos de la allowlist del contexto clínico [RN-10] [US-052]
+- **GIVEN** el `clinicalContext` construido por `ClinicalContextBuilder`
+- **WHEN** se inspecciona su allowlist
+- **THEN** contiene solo diagnóstico activo, último valor por biomarcador, tratamientos previos, eventos, atributos, `currentLine` y, desde el S3, `missingCriticalData` con las claves del checklist
 
 ### Requirement: Validación de la petición en el borde sin invocar a la IA
 `clinical-api` MUST validar el cuerpo de `POST /platform/evidence-analyses` con el schema Zod generado de `EvidenceAnalysisRequest` antes de cualquier lectura o llamada saliente; un cuerpo inválido (`query` vacía o de más de 2000 caracteres, o `sourcesSelected` sin ninguna fuente en `true`) SHALL responder `422` con `{ error, message, traceId }` (`error = CUERPO_INVALIDO`) y cero llamadas a `rag-orchestrator` (AC-05.1).
@@ -293,3 +299,108 @@ Regresión [AC-11.4 timeline con el evento derivado] activa desde S3 (US-088).
 - **WHEN** se envía `Q-HER2`
 - **THEN** la respuesta es `422` con `error = TIPO_CANCER_NO_REGISTRADO`, el `message` fijo de `error-tipo-cancer-no-registrado.json` y el `traceId` generado, válida contra el spec de `clinical-api` (*helper* de L1D-164), sin el texto interno de rag
 - **AND** no se persiste ningún registro
+
+### Requirement: Aplicabilidad persistida igual a la respondida
+`clinical-api` MUST persistir en `clinical.ai_analysis_record.applicability` la `applicability` recibida de `rag-orchestrator` sin transformarla, con sus causas, avisos, conteos y `populationNotComparable`, y la respuesta `200` SHALL construirse desde ese valor persistido (RN-06, AC-T1.4).
+
+#### Scenario: La aplicabilidad de A-M1 con doc-a1 se lee igual del registro [US-124 AC-7]
+- **GIVEN** `doc1@test.local` con sesión válida, A-M1 sembrado por el test y `rag-orchestrator` simulado con MSW respondiendo una `applicability` de `doc-a1` con `estado_menopausico` en `desconocido` (`falta_en_paciente`, `patientDataWarning = faltante`), `ecog` con `patientDataWarning = sin_verificar` y el `summary` del ejemplo, construida desde `contracts/examples/con-evidencia-s3-aplicabilidad.json` y `rag-query-aplicabilidad-a-m1.json`
+- **WHEN** envía `POST /platform/evidence-analyses` y después se lee el `AIAnalysisRecord` del `id` respondido
+- **THEN** `applicability` del registro es igual, campo a campo, a la `applicability` de la respuesta [RN-06] [AC-T1.4]
+- **AND** la respuesta valida contra el spec de `clinical-api`
+
+### Requirement: Cada dato del contexto clínico lleva su procedencia
+Cada dato del `clinicalContext` que `clinical-api` envía a `rag-orchestrator` (diagnóstico, biomarcadores, atributos, tratamientos previos y eventos) MUST llevar `provenance` con `entryMethod`, `extractionConfidence` y `reviewStatus` copiados del dato, y `conflict = true` si y solo si el dato tiene `conflicts_with_id` (RN-07). Un dato sin verificar SHALL viajar etiquetado, nunca omitido.
+
+#### Scenario: El paciente semilla viaja con procedencia seed verificada y sin conflicto [US-065 AC-1] [RN-07]
+- **GIVEN** el paciente semilla (a) sin datos añadidos y `rag-orchestrator` simulado que captura el request
+- **WHEN** un doctor solicita un análisis de evidencia sobre ese paciente
+- **THEN** el diagnóstico y cada biomarcador del `clinicalContext` capturado llevan `provenance` con `entryMethod = seed`, `reviewStatus = verificado` y `conflict = false`
+
+#### Scenario: El dato extraído sin verificar viaja con su procedencia [US-065 AC-2] [RN-07]
+- **GIVEN** FX-T1a-a sobre el paciente semilla (a)
+- **WHEN** un doctor solicita un análisis de evidencia y se captura el `clinicalContext`
+- **THEN** el Ki-67 `20 %` está incluido con `provenance.entryMethod = ocr`, `provenance.extractionConfidence = media` y `provenance.reviewStatus = requiere_revision`
+
+#### Scenario: El dato sembrado en conflicto viaja con conflict true [US-065 AC-4] [readme §4.1] [RN-07] [S3 resp. 8]
+- **GIVEN** FX-T1a-a, cuyo receptor de estrógeno `90 %` se inserta ya con `review_status = requiere_revision` y `conflicts_with_id` hacia el receptor de estrógeno del seed, sin detección automática
+- **WHEN** un doctor solicita un análisis de evidencia y se captura el `clinicalContext`
+- **THEN** el biomarcador `90 %` identificado por su `dataRef` (no por su nombre) lleva `provenance.conflict = true` y `provenance.reviewStatus = requiere_revision`
+
+Regresión [RN-07] activa desde S5 (US-099 AC-8): conflicto detectado por la reconciliación al persistir una extracción, en lugar de sembrado.
+
+### Requirement: Los datos rechazados o reemplazados nunca entran al contexto ni al registro
+Un dato con `review_status` `rechazado` o `reemplazado` MUST NOT aparecer en el `clinicalContext` enviado a `rag-orchestrator` ni en el `clinical_context_snapshot` del `AIAnalysisRecord` persistido (RN-07, AC-02.6). La exclusión SHALL aplicarse con un único predicado de RN-07 compartido con la ficha del paciente y con el checklist, derivado de una sola constante de estados descartados.
+
+#### Scenario: Los datos de progesterona rechazado y reemplazado no viajan ni se persisten [US-065 AC-3] [AC-02.6] [RN-07]
+- **GIVEN** FX-T1a-a, con un receptor de progesterona `negativo` `rechazado` y otro `positivo` `reemplazado`
+- **WHEN** un doctor solicita un análisis de evidencia, se captura el `clinicalContext` y se lee el `AIAnalysisRecord` persistido
+- **THEN** ningún biomarcador identificado por el `dataRef` de los dos registros de progesterona (`rechazado` y `reemplazado`) aparece en el `clinicalContext` capturado
+- **AND** ninguno de esos dos registros aparece en `clinical_context_snapshot`
+- **AND** ningún valor `rechazado` ni `reemplazado` aparece en ninguna `provenance.reviewStatus` del payload ni del snapshot
+
+#### Scenario: El predicado SQL y el filtro de completitud derivan de la misma constante de estados descartados [RN-07] (unitario)
+- **GIVEN** la constante `ESTADOS_DESCARTADOS` de `modules/patients/estados-de-revision.ts`
+- **WHEN** se construye `sqlDatoVigente('review_status')` y se aplica `registrosVigentes()` a un registro por estado de revisión
+- **THEN** la cadena SQL excluye exactamente los estados de `ESTADOS_DESCARTADOS`
+- **AND** `registrosVigentes()` descarta exactamente esos mismos estados
+
+### Requirement: Los faltantes críticos viajan en todo análisis como claves del catálogo
+En todo análisis de un tipo habilitado, `clinical-api` MUST calcular el checklist (US-002) en el servidor, en el mismo `POST` y antes de llamar a `rag-orchestrator`, y SHALL enviar en `clinicalContext.missingCriticalData` las claves `faltante` en el orden del catálogo, con o sin `continueWithWarning` (FR-09, FR-23, RN-26). Cada elemento MUST ser una clave del catálogo, nunca texto del paciente (RN-11).
+
+#### Scenario: Continuar con aviso envía los seis faltantes de F-M2 en el orden del catálogo [US-006 AC-1] [AC-04.3] [ADR-38]
+- **GIVEN** `doc1@test.local` con sesión válida, el catálogo `test-1.0.0` (FX-04-a, `apps/clinical-api/tests/fixtures/completeness/catalogos/test-1.0.0`, 12 ítems) en `CLINICAL_CATALOG_PATH`, el paciente F-M2 (FX-04-b; sus seis faltantes se derivan de FX-04-a) y `rag-orchestrator` simulado con MSW que captura el request
+- **WHEN** envía `POST /platform/evidence-analyses` con una pregunta válida y `continueWithWarning = true`
+- **THEN** el request capturado lleva `clinicalContext.missingCriticalData = ["grado", "rp", "her2_ish", "ki67", "estado_menopausico", "brca_germinal"]` y `catalogVersion = "test-1.0.0"`
+- **AND** el request valida contra `RagQueryInternalRequest`
+
+#### Scenario: Sin continueWithWarning el análisis no se bloquea y lleva los mismos faltantes [US-006 AC-3] [RN-26] [AC-04.2] [FR-09]
+- **GIVEN** el mismo contexto del escenario anterior
+- **WHEN** envía el análisis sin el campo `continueWithWarning`
+- **THEN** la respuesta es `200`, válida contra el spec de `clinical-api`
+- **AND** el request capturado lleva la misma `missingCriticalData` de seis claves
+
+#### Scenario: Un dato registrado justo antes del POST ya no figura como faltante [US-006 AC-4] [AC-04.4] [readme §2.1] (asumido: sin `GET …/completeness` hasta US-003, S4; el checklist previo se calcula con `CompletenessService`)
+- **GIVEN** F-M2 con su checklist calculado con seis faltantes y, después, un `ClinicalAttribute` `estado_menopausico` `verificado` registrado en la base de test
+- **WHEN** se procesa el `POST /platform/evidence-analyses`
+- **THEN** el request capturado lleva `missingCriticalData` con cinco claves y sin `estado_menopausico`
+
+#### Scenario: Los faltantes son claves del catálogo y el payload no lleva la PII sembrada [US-006 AC-6] [RN-11] [AC-T4.3]
+- **GIVEN** F-M2 con una `ClinicalNote` que contiene un nombre y un número de documento sintéticos generados en tiempo de test
+- **WHEN** se captura el request interno del análisis
+- **THEN** cada elemento de `missingCriticalData` es una clave del catálogo `test-1.0.0` y cumple `^[a-z0-9_]+$`
+- **AND** ni el nombre ni el número de documento sembrados aparecen en `missingCriticalData` ni en ningún otro campo del payload
+
+### Requirement: Faltantes y continuación con aviso persistidos con el análisis
+El `AIAnalysisRecord` MUST persistir en `missing_critical_data` exactamente la lista enviada en `clinicalContext.missingCriticalData`, en `continued_with_warning` el valor de `continueWithWarning` de la petición (`false` si se omite) y en `catalog_version` la versión enviada, en la misma transacción que el resto del registro y antes de responder (RN-06, AC-T1.4), también cuando la respuesta es `sin_evidencia` (FR-27, RN-02).
+
+#### Scenario: El registro guarda los seis faltantes, la continuación con aviso y la versión del catálogo [US-006 AC-2] [AC-T1.4] [FR-27] [readme §3.1]
+- **GIVEN** el análisis de [US-006 AC-1] completado con `rag-orchestrator` simulado respondiendo con evidencia
+- **WHEN** se lee el `AIAnalysisRecord` del `id` respondido
+- **THEN** `missing_critical_data` tiene las mismas seis claves en el mismo orden, `continued_with_warning = true` y `catalog_version = "test-1.0.0"`
+
+#### Scenario: Sin continueWithWarning el registro guarda false y los mismos faltantes [US-006 AC-3] [RN-26] [readme §4.1]
+- **GIVEN** el análisis de F-M2 enviado sin `continueWithWarning`
+- **WHEN** se lee su `AIAnalysisRecord`
+- **THEN** `continued_with_warning = false` y `missing_critical_data` tiene las mismas seis claves
+
+#### Scenario: Un análisis sin evidencia también persiste los faltantes [US-006 AC-5] [FR-27] [RN-02]
+- **GIVEN** F-M2 y `rag-orchestrator` simulado respondiendo `status = "sin_evidencia"` desde `contracts/examples/rag-query-sin-evidencia.json`
+- **WHEN** se completa el análisis
+- **THEN** la respuesta es `200` con `status = sin_evidencia` y el `AIAnalysisRecord` persiste las seis claves en `missing_critical_data`
+
+#### Scenario: Si rag-orchestrator no responde a tiempo no queda ningún registro con faltantes [US-006 AC-7] [OL-03] [RN-06]
+- **GIVEN** F-M2, `RAG_TIMEOUT_MS` de test, el reloj congelado y `rag-orchestrator` simulado que no responde dentro del plazo
+- **WHEN** se envía el análisis y el temporizador supera `RAG_TIMEOUT_MS`
+- **THEN** la respuesta es `504` con `error = DEADLINE_VENCIDO`, válida contra el spec de `clinical-api`
+- **AND** no existe ningún `AIAnalysisRecord` nuevo para ese paciente
+
+### Requirement: Checklist no disponible en el servidor falla cerrado
+Si el cálculo del checklist falla durante el análisis, `clinical-api` MUST responder `500` con `ErrorInterno` (`{ error = ERROR_INTERNO, message, traceId }`), SHALL NOT invocar a `rag-orchestrator` ni persistir ningún `AIAnalysisRecord`, y MUST registrar en el log solo el `traceId`, el UUID del paciente y `resultado = checklist_no_disponible`, sin el mensaje del error original (`[S3 resp. 5]`: no se analiza sin faltantes, para que el análisis sea reproducible, AC-T1.4).
+
+#### Scenario: Con el checklist lanzando un error la respuesta es 500 sin llamar a la IA ni persistir [US-006 AC-8] [AC-T1.4] (asumido: hallazgo M-08 del piloto; decidido en [S3 resp. 5])
+- **GIVEN** F-M2, un `ChecklistDeFaltantes` inyectado por la factory que lanza un error y `rag-orchestrator` simulado que cuenta llamadas
+- **WHEN** `doc1@test.local` envía `POST /platform/evidence-analyses`
+- **THEN** la respuesta es `500` con `error = ERROR_INTERNO`, `message` y `traceId`, válida contra el spec de `clinical-api`
+- **AND** el cliente de `rag-orchestrator` registra cero llamadas
+- **AND** no existe ningún `AIAnalysisRecord` nuevo para ese paciente
