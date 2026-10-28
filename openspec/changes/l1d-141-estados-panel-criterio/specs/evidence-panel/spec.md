@@ -138,22 +138,31 @@ Con `status = tipo_no_habilitado`, el panel MUST mostrar el aviso de alcance "Ti
 Cuando la opción trae aplicabilidad calculada, la tarjeta MUST mostrar bajo la justificación, en texto, "Criterios del estudio frente a datos registrados:" y los cuatro conteos de `applicabilitySummary` (Coincide, Parcial, No coincide, Desconocido), cada uno con símbolo y palabra, nunca solo color, y MUST NOT mostrar puntaje, porcentaje ni barra (RN-28). La tabla por criterio es de US-126 (S4).
 
 #### Scenario: La opción muestra la línea de conteos con prefijo, sin puntaje ni porcentaje [US-062 AC-7] [RN-28] [RN-03] [AC-08.8] [S3 resp. 9]
-- **GIVEN** una respuesta `con_evidencia` cuya opción trae `applicabilitySummary = { coincide: 3, parcial: 1, noCoincide: 0, desconocido: 2 }` y aplicabilidad calculada
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-s3-aplicabilidad.json` (6 criterios del catálogo; `applicabilitySummary = { coincide: 2, parcial: 0, noCoincide: 0, desconocido: 4 }`, `perSource` no vacío)
 - **WHEN** se renderiza la tarjeta
-- **THEN** bajo la justificación se lee "Criterios del estudio frente a datos registrados:" seguido de "Coincide 3 · Parcial 1 · No coincide 0 · Desconocido 2"
-- **AND** el nombre accesible de la línea es "Coincide 3, Parcial 1, No coincide 0, Desconocido 2" y los símbolos llevan `aria-hidden`
+- **THEN** bajo la justificación se lee "Criterios del estudio frente a datos registrados:" seguido de "Coincide 2 · Parcial 0 · No coincide 0 · Desconocido 4"
+- **AND** el nombre accesible de la línea es "Coincide 2, Parcial 0, No coincide 0, Desconocido 4" y los símbolos llevan `aria-hidden`
 - **AND** la tarjeta no contiene "%", ni un puntaje combinado, ni una barra de progreso de aplicabilidad
 
 ### Requirement: Aviso no bloqueante de población no comparable
 Si la opción trae `populationNotComparable = true`, la tarjeta MUST mostrar en una región `role="status"` "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.", y MUST NOT ocultar la opción ni deshabilitar ningún control (RN-26). Con `populationNotComparable = false` el aviso MUST NOT aparecer.
 
 #### Scenario: Una opción de población no comparable lleva el aviso y sigue visible y operable [US-062 AC-7] [RN-26] [RN-28] [AC-08.8] [S3 resp. 9]
-- **GIVEN** una respuesta `con_evidencia` cuya opción trae `populationNotComparable = true` y `warnings` con `poblacion_no_comparable`
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-s3-poblacion-no-comparable.json` (`populationNotComparable = true`, `warnings` con `poblacion_no_comparable`)
 - **WHEN** se renderiza la tarjeta
 - **THEN** se lee "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente." en una región `role="status"`
 - **AND** la opción, sus citas, su línea de conteos y su relevancia siguen visibles, y el formulario y "Ver fragmento" siguen habilitados
 
 #### Scenario: Sin población no comparable no aparece el aviso [US-062 AC-7] [RN-26]
-- **GIVEN** una respuesta `con_evidencia` cuya opción trae `populationNotComparable = false`
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-s3-aplicabilidad.json` (`populationNotComparable = false`)
 - **WHEN** se renderiza la tarjeta
 - **THEN** no aparece "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente."
+
+### Requirement: Aplicabilidad no calculada se muestra como no evaluada, no como ceros
+Cuando la opción no trae aplicabilidad calculada (`perSource = []`, resumen en ceros), la tarjeta MUST mostrar en texto "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas" y MUST NOT mostrar los cuatro conteos ni "Desconocido 0" (cero es un valor distinto de no evaluado). El panel MUST NOT mostrar puntaje de aplicabilidad (RN-28).
+
+#### Scenario: Una opción con perSource vacío dice que la aplicabilidad no se evaluó [US-062 AC-7] [RN-28] [RN-03]
+- **GIVEN** la respuesta de `contracts/examples/con-evidencia-s1.json` (opción con `perSource = []` y `applicabilitySummary` en ceros)
+- **WHEN** se renderiza la tarjeta
+- **THEN** se lee "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas"
+- **AND** no aparece "Criterios del estudio frente a datos registrados:" ni "Desconocido 0"

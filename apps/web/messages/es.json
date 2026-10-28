@@ -29,7 +29,8 @@
       "contador": "{n} / {max}",
       "analizar": "Analizar evidencia",
       "analizando": "Analizando…",
-      "espera": "El contenido aparece completo cuando está validado."
+      "espera": "El contenido aparece completo cuando está validado.",
+      "maximo": "La pregunta admite como máximo {max} caracteres."
     },
     "estado": {
       "analizando": "Analizando…",
@@ -46,15 +47,29 @@
       "soloDescartadas": "No hay opciones descritas con soporte verificable en la evidencia recuperada.",
       "sinOpciones": "La evidencia recuperada no describe opciones para esta pregunta.",
       "sinEvidencia": "Ningún fragmento del corpus superó el umbral de relevancia. No se generaron opciones.",
+      "sinEvidenciaAlcance": "La búsqueda se limita a las fuentes consultadas; no implica que no exista evidencia.",
+      "queSeBusco": "Qué se buscó",
+      "fuentes": "Fuentes",
       "relevanciaMaxima": "Relevancia máxima",
       "noAplica": "no aplica"
     },
     "orderCriterion": {
-      "relevance": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica."
+      "relevance": "Ordenado por relevancia de recuperación de la búsqueda; no representa prioridad ni aplicabilidad clínica.",
+      "applicability": "Orden por aplicabilidad: primero la opción con menos criterios excluyentes en No coincide; luego, la que coincide en más criterios con los datos registrados; la relevancia de recuperación solo desempata. Es un criterio de orden, no una valoración clínica."
+    },
+    "aplicabilidad": {
+      "prefijo": "Criterios del estudio frente a datos registrados:",
+      "coincide": "Coincide",
+      "parcial": "Parcial",
+      "noCoincide": "No coincide",
+      "desconocido": "Desconocido",
+      "poblacionNoComparable": "Según los datos registrados, al menos un criterio excluyente del estudio no coincide con este paciente. La opción se muestra igualmente.",
+      "noEvaluada": "Aplicabilidad no evaluada: sin datos de población en las fuentes citadas"
     },
     "relevance": {
       "label": "Relevancia de recuperación de evidencia",
-      "basis": "Orden basado en la cita recuperada más relevante asociada a cada opción",
+      "basis": "Metadato de recuperación; solo desempata el orden por aplicabilidad.",
+      "basisRelevancia": "Orden basado en la cita recuperada más relevante asociada a cada opción",
       "note": "Metadato secundario: no mide eficacia ni solidez clínica",
       "help": "No resume la aplicabilidad, la eficacia ni la calidad global de la opción."
     },
@@ -114,6 +129,8 @@
       "modeloNoDisponible": "El modelo local no está disponible. No se muestra ningún resultado parcial.",
       "tiempoAgotado": "El análisis superó el tiempo máximo de espera. No se muestra ningún resultado parcial.",
       "generico": "No se pudo completar el análisis. No se muestra ningún resultado parcial.",
+      "limite": "Se alcanzó el límite de análisis. Puedes reintentar en {s} segundos.",
+      "red": "No hay conexión con el servidor. No se muestra ningún resultado parcial.",
       "codigoTraza": "Código de traza: {traceId}",
       "reintentar": "Reintentar"
     },

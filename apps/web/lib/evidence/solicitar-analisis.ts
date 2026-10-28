@@ -7,10 +7,13 @@ import {
   zEvidenceAnalysisRequest,
 } from '../../../../packages/api-contracts/src/zod/clinical-api/zod.gen';
 import { esCodigoConEstadoPropio, type CodigoConEstadoPropio } from './clasificar-fallo';
+import { leerRetryAfter } from './reglas-del-formulario';
 
 export type ResultadoDeSolicitud =
   | { tipo: 'ok'; analisis: EvidenceAnalysis }
   | { tipo: 'sin_sesion' }
+  | { tipo: 'red' }
+  | { tipo: 'limite'; reintentarEnSegundos: number }
   | {
       tipo: 'error';
       httpStatus: number;
@@ -35,6 +38,9 @@ const FALLO_DE_TRANSPORTE: ResultadoDeSolicitud = {
 async function leerError(respuesta: Response): Promise<ResultadoDeSolicitud> {
   const cuerpo: unknown = await respuesta.json().catch(() => null);
   const { error, traceId } = (cuerpo ?? {}) as { error?: unknown; traceId?: unknown };
+  const reintentarEnSegundos = respuesta.status === 429 ? leerRetryAfter(respuesta.headers) : null;
+  // Un 429 sin `Retry-After` válido cae en el error genérico: el plazo viene de la respuesta, nunca del código (RN-30).
+  if (reintentarEnSegundos !== null) return { tipo: 'limite', reintentarEnSegundos };
   return {
     tipo: 'error',
     httpStatus: respuesta.status,
@@ -62,9 +68,9 @@ export async function solicitarAnalisis(
     });
     if (respuesta.status === 401) return { tipo: 'sin_sesion' };
     if (!respuesta.ok) return await leerError(respuesta);
-    const analisis = zEvidenceAnalysis.safeParse(await respuesta.json());
+    const analisis = zEvidenceAnalysis.safeParse(await respuesta.json().catch(() => null));
     return analisis.success ? { tipo: 'ok', analisis: analisis.data } : FALLO_DE_TRANSPORTE;
   } catch {
-    return FALLO_DE_TRANSPORTE;
+    return { tipo: 'red' };
   }
 }

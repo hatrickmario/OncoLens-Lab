@@ -59,9 +59,21 @@
   cursor: pointer;
 }
 
-.boton[aria-disabled='true'] {
+.boton[aria-disabled='true'],
+.boton:disabled {
   cursor: progress;
   opacity: 0.75;
+}
+
+.campo[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.errorCampo {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .boton:focus-visible,
@@ -210,4 +222,80 @@
 
 .resumenBase p {
   margin: 0;
+}
+
+.aviso {
+  padding: 0.75rem;
+  border: 1px solid var(--color-warn-border);
+  border-radius: 0.375rem;
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+
+.aviso p {
+  margin: 0;
+}
+
+.conteos {
+  margin: 0 0 0.5rem;
+}
+
+.conteos p {
+  margin: 0;
+}
+
+.conteosEstados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  font-weight: 600;
+}
+
+.coincide {
+  color: var(--color-status-coincide);
+}
+
+.parcial {
+  color: var(--color-status-parcial);
+}
+
+.noCoincide {
+  color: var(--color-status-nocoincide);
+}
+
+.desconocido {
+  color: var(--color-status-desconocido);
+}
+
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+
+.esqueletoLinea {
+  height: 1rem;
+  border-radius: 0.25rem;
+  background: var(--color-surface-alt);
+}
+
+.esqueletoLinea:first-child {
+  width: 60%;
+  height: 1.25rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .esqueletoLinea {
+    animation: pulso 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes pulso {
+  50% {
+    opacity: 0.5;
+  }
 }
