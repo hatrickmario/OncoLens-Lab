@@ -296,3 +296,22 @@ class ProhibitedTermsChecker(Protocol):
         Un campo que no es generado (copiado del corpus) nunca coincide. Nunca devuelve el término ni el texto.
         """
         ...
+
+
+# --- Cobertura de metadatos de población del catálogo del corpus (US-132, M-08.3) --------------------------
+
+
+@dataclass(frozen=True)
+class CoberturaDePoblacion:
+    """Documentos vigentes del catálogo y cuántos traen al menos un criterio de población (``is_current = true``)."""
+
+    vigentes: int
+    con_criterios: int
+
+
+class LectorDeCoberturaDePoblacion(Protocol):
+    """Lee del schema ``corpus`` (rol ``rag_corpus``) la cobertura de ``population_criteria`` de los documentos vigentes.
+
+    Un fallo del catálogo lanza ``RecuperacionNoDisponibleError``: nunca una cobertura vacía disfrazada de «sin documentos»."""
+
+    def cobertura(self) -> CoberturaDePoblacion: ...

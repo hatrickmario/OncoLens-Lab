@@ -11,18 +11,29 @@ import zlib
 from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date
+from pathlib import Path
+
+import yaml
 
 from app.application.ports import (
     ChunkEncontrado,
+    CoberturaDePoblacion,
     EvidenciaGenerada,
     ReleaseDelCorpus,
     ResultadoDeRecuperacion,
 )
 from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
+from app.domain.applicability_text import (
+    FuenteParaProponer,
+    PropuestaDePoblacion,
+    normalizar_propuesta,
+)
+from app.domain.cobertura_poblacion import contar_cobertura
 from app.domain.citations import FichaDeFuente, OpcionGenerada
 from app.domain.corpus_seed.admisibilidad import PISO_DE_FUENTES_EXCLUIDAS
 from app.domain.nli import ParNli, ResultadoNli
 from app.domain.retrieval_filter import coincide_etiqueta, exigir_filtro_vigente
+from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.fuente_dataset import DatasetSuite
 from app.schemas.generated.models import RagQueryInternalRequest
 
@@ -192,3 +203,58 @@ class LectorReleaseFijo:
 
     def release_vigente(self) -> ReleaseDelCorpus:
         return self._release
+
+
+class ProponenteGuionado:
+    """``ApplicabilityTextProposer`` con el guion de un par: propone lo escrito, solo de las fuentes recibidas.
+
+    Como el adapter real (LSP) devuelve solo propuestas ``(fuente, criterio, valor, chunkId)`` ya normalizadas, nunca
+    un estado ni un valor del paciente."""
+
+    def __init__(self, external_id: str, propuestas: Sequence[tuple[str, str, str]]) -> None:
+        self._external_id = external_id
+        self._propuestas = tuple(propuestas)
+
+    async def proponer(
+        self, fuentes: Sequence[FuenteParaProponer]
+    ) -> tuple[PropuestaDePoblacion, ...]:
+        if self._external_id not in {f.external_id for f in fuentes}:
+            return ()
+        normalizadas = (
+            normalizar_propuesta(self._external_id, criterio, valor, chunk_id)
+            for criterio, valor, chunk_id in self._propuestas
+        )
+        return tuple(p for p in normalizadas if p is not None)
+
+
+class NliGuionado:
+    """``NliClassifier`` que responde lo que dice el guion del par (``entailment`` o ``neutral``) a todo par."""
+
+    version = "fake-nli-guionado@1"
+
+    def __init__(self, etiqueta: str) -> None:
+        self._resultado = (
+            ResultadoNli(label="entailment", p_entailment=0.97)
+            if etiqueta == "entailment"
+            else ResultadoNli(label="neutral", p_entailment=0.02)
+        )
+
+    def clasificar(self, pares: list[ParNli]) -> list[ResultadoNli]:
+        return [self._resultado for _ in pares]
+
+
+class CoberturaEnMemoria:
+    """``LectorDeCoberturaDePoblacion`` sobre un catálogo sintético en YAML (``documentos[].{is_current, population_criteria}``)."""
+
+    def __init__(self, ruta: Path) -> None:
+        try:
+            crudo = yaml.safe_load(ruta.read_text(encoding="utf-8"))
+            self._documentos = [d for d in crudo["documentos"] if d["is_current"]]
+        except (OSError, yaml.YAMLError, KeyError, TypeError):
+            raise ConfigInvalida(
+                "el catálogo del corpus en memoria no tiene la forma esperada"
+            ) from None
+
+    def cobertura(self) -> CoberturaDePoblacion:
+        conteo = contar_cobertura(d["population_criteria"] for d in self._documentos)
+        return CoberturaDePoblacion(conteo.vigentes, conteo.con_criterios)

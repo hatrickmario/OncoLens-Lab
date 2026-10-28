@@ -2,7 +2,8 @@
 /**
  * Envoltorio de `npm run evaluate -- --suite <familia> --report json` (US-072, contrato de la skill run-ai-eval):
  * llama a `python -m app.evaluation.evaluate` dentro de apps/rag-orchestrator y devuelve su código de salida.
- * Sin `--config` usa la configuración de la CI (adapters falsos, FX-T5a-a). Las demás opciones pasan tal cual.
+ * Sin `--config` usa la configuración de la CI (adapters falsos, FX-T5a-a), o la de la familia `aplicabilidad`
+ * (US-132) cuando `--suite aplicabilidad`. Las demás opciones pasan tal cual.
  * Variables (RN-22): EVAL_PYTHON (intérprete, por defecto python3) y EVAL_TIMEOUT_S (tope del proceso, por defecto 600).
  */
 import path from 'node:path';
@@ -12,6 +13,7 @@ import { spawnPython } from './python.mjs';
 const RAIZ = path.resolve(import.meta.dirname, '../..');
 const DIRECTORIO = path.join(RAIZ, 'apps', 'rag-orchestrator');
 const CONFIG_DE_LA_CI = path.join('eval', 'configs', 'test-fake.yaml');
+const CONFIG_DE_APLICABILIDAD = path.join('eval', 'configs', 'test-aplicabilidad.yaml');
 
 const OPCIONES_CON_RUTA = ['--config', '--salida'];
 
@@ -39,14 +41,26 @@ export function flagsDelJuezDesdeEntorno(entorno) {
   );
 }
 
+/** La configuración de la CI de la familia pedida (`aplicabilidad` tiene la suya; las demás comparten test-fake.yaml). */
+function configPorDefecto(argumentos) {
+  const posicion = argumentos.indexOf('--suite');
+  return posicion >= 0 && argumentos[posicion + 1] === 'aplicabilidad' ? CONFIG_DE_APLICABILIDAD : CONFIG_DE_LA_CI;
+}
+
+/** CORPUS_CUTOFF_DATE del entorno llega como `--corpus-cutoff-date` (el runner no lee el entorno, US-037 AC-1). */
+export function flagDeLaFechaDeCorteDesdeEntorno(entorno) {
+  return entorno.CORPUS_CUTOFF_DATE ? ['--corpus-cutoff-date', entorno.CORPUS_CUTOFF_DATE] : [];
+}
+
 /** Argumentos para el módulo Python: añade la configuración de la CI si no se pasó `--config`. */
 export function argumentosDePython(argumentos, cwd = process.cwd(), entorno = {}) {
   const conConfig = argumentos.includes('--config');
   return [
     '-m',
     'app.evaluation.evaluate',
-    ...(conConfig ? [] : ['--config', CONFIG_DE_LA_CI]),
+    ...(conConfig ? [] : ['--config', configPorDefecto(argumentos)]),
     ...flagsDelJuezDesdeEntorno(entorno),
+    ...(argumentos.includes('--corpus-cutoff-date') ? [] : flagDeLaFechaDeCorteDesdeEntorno(entorno)),
     ...conRutasAbsolutas(argumentos, cwd),
   ];
 }

@@ -1,0 +1,22 @@
+{
+  "document_id": "doc-a2",
+  "external_id": "CDR-TEST-A2",
+  "title": "Estudio sintético doc-a2 (test)",
+  "tipo_de_cancer": "mama",
+  "metadata_source": "pendiente",
+  "population_criteria": {
+    "subtipo": "no_disponible",
+    "estadio": "no_disponible",
+    "linea": "no_disponible",
+    "biomarcadores": "no_disponible",
+    "edad": "no_disponible",
+    "ecog": "no_disponible"
+  },
+  "chunks": [
+    {
+      "chunk_id": "ch-a2-1",
+      "text": "This guidance applies to patients with HER2-negative disease.",
+      "relevance_score": 0.9
+    }
+  ]
+}

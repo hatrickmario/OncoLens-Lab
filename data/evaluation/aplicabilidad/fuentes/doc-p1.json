@@ -1,0 +1,22 @@
+{
+  "document_id": "doc-p1",
+  "external_id": "CDR-TEST-P1",
+  "title": "Estudio sintético doc-p1 (test)",
+  "tipo_de_cancer": "prostata",
+  "metadata_source": "fuente_estructurada",
+  "population_criteria": {
+    "subtipo": "no_disponible",
+    "estadio": "no_disponible",
+    "linea": "no_disponible",
+    "biomarcadores": "no_disponible",
+    "edad": "no_disponible",
+    "ecog": "0-1"
+  },
+  "chunks": [
+    {
+      "chunk_id": "ch-p1-1",
+      "text": "Synthetic androgen deprivation study doc-p1 in prostate adenocarcinoma (test).",
+      "relevance_score": 0.9
+    }
+  ]
+}

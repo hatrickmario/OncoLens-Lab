@@ -30,6 +30,11 @@ from app.evaluation.config_suite import (
     cargar_config_suite,
 )
 from app.evaluation.corrida import evaluar_dataset
+from app.evaluation.corrida_aplicabilidad import (
+    SUITE_APLICABILIDAD,
+    PuertosDeAplicabilidad,
+    ejecutar_aplicabilidad,
+)
 from app.evaluation.corrida_barrido import ejecutar_barrido, exigir_dataset_sintetico
 from app.evaluation.cronometro import Cronometro, RelojSimulado
 from app.evaluation.dataset_loader import DatasetInvalido
@@ -83,6 +88,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--sweep", choices=("relevance_threshold",), default=None)
     parser.add_argument("--fijar", action="store_true")
     parser.add_argument("--p95-e2e-s", type=float, default=None)
+    parser.add_argument("--corpus-cutoff-date", default=None)
     return parser
 
 
@@ -97,13 +103,17 @@ def main(
     raiz: Path | None = None,
     entorno: Mapping[str, str] | None = None,
     directorio_de_configs: Path | None = None,
+    puertos_aplicabilidad: PuertosDeAplicabilidad | None = None,
 ) -> int:
     try:
-        args = _parser().parse_args(list(argv))
-        if args.suite not in SUITES:
-            raise ConfigInvalida(f"familia no disponible: {args.suite}")
-        config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
-        return _ejecutar(config, args, reloj or RelojDelSistema(), raiz, directorio_de_configs)
+        return _despachar_familia(
+            _parser().parse_args(list(argv)),
+            reloj or RelojDelSistema(),
+            raiz,
+            entorno,
+            directorio_de_configs,
+            puertos_aplicabilidad or PuertosDeAplicabilidad(),
+        )
     except (argparse.ArgumentError, SystemExit, ConfigInvalida) as error:
         print(f"evaluate: uso o configuración inválidos ({type(error).__name__})", file=sys.stderr)
         return 2
@@ -129,6 +139,23 @@ def main(
     except (DatasetInvalido, SuiteAbortada) as error:
         print(f"evaluate: la suite no corre: {error}", file=sys.stderr)
         return 1
+
+
+def _despachar_familia(
+    args: argparse.Namespace,
+    reloj: Clock,
+    raiz: Path | None,
+    entorno: Mapping[str, str] | None,
+    directorio_de_configs: Path | None,
+    puertos_aplicabilidad: PuertosDeAplicabilidad,
+) -> int:
+    """La familia `aplicabilidad` tiene configuración, dataset y reporte propios (US-132); el resto, la configuración común."""
+    if args.suite not in SUITES:
+        raise ConfigInvalida(f"familia no disponible: {args.suite}")
+    if args.suite == SUITE_APLICABILIDAD:
+        return ejecutar_aplicabilidad(args, reloj, puertos_aplicabilidad)
+    config = cargar_config_suite(args.config, _ajustes_del_juez(args, entorno))
+    return _ejecutar(config, args, reloj, raiz, directorio_de_configs)
 
 
 def _ajustes_del_juez(

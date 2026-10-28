@@ -77,8 +77,12 @@ def test_arranque_con_tokenizer_del_nli_alterado_termina_nombrando_nli_tokenizer
 @pytest.mark.parametrize(
     ("cambios", "variable", "valor_secreto"),
     [
-        ({"NLI_LABEL_INDEX_ENTAILMENT": "4711"}, "NLI_LABEL_INDEX_ENTAILMENT", "4711"),
-        ({"NLI_LABEL_INDEX_CONTRADICTION": "-4711"}, "NLI_LABEL_INDEX_CONTRADICTION", "4711"),
+        ({"NLI_LABEL_INDEX_ENTAILMENT": "738291046"}, "NLI_LABEL_INDEX_ENTAILMENT", "738291046"),
+        (
+            {"NLI_LABEL_INDEX_CONTRADICTION": "-738291046"},
+            "NLI_LABEL_INDEX_CONTRADICTION",
+            "738291046",
+        ),
         ({"NLI_LABEL_INDEX_NEUTRAL": "0"}, "NLI_LABEL_INDEX_NEUTRAL", None),
         ({"NLI_LABEL_INDEX_NEUTRAL": None}, "NLI_LABEL_INDEX_NEUTRAL", None),
     ],
