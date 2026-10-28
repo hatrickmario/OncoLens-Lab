@@ -59,7 +59,11 @@ de L1D-98) y con L1D-128:
 - **Desviación del backlog:** con el catálogo de test de 5 criterios, A-M1 + `doc-a1` da `{ coincide: 2, parcial: 0,
   noCoincide: 0, desconocido: 3 }` y no `{3,0,0,2}`: el `estadio` queda `desconocido` sin causa porque «IIA» no tiene
   escala ordenada en el catálogo (L1D-127 D2b). El AC-5 se escribe con el conteo real; el texto de la historia en
-  `backlog/features/` queda por alinear (no es de este implementador).
+  `backlog/features/` queda por alinear (lo hace el orquestador, no este change).
+- **Dos conteos, dos catálogos:** el par de ejemplos (`rag-query-aplicabilidad-a-m1.json`,
+  `con-evidencia-s3-aplicabilidad.json`) usa el catálogo **real** de 6 criterios, con `summary = { coincide: 2,
+  parcial: 0, noCoincide: 0, desconocido: 4 }` (suma 6); el `{2,0,0,3}` del test (suma 5) corresponde al catálogo de
+  test `test-apl-1.0.0`. Ambos son ilustrativos: el conteo describe una fuente y nunca ordena fuentes ni opciones (RN-28).
 
 ## Capabilities
 
