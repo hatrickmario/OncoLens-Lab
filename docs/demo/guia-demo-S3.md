@@ -107,3 +107,72 @@ Para la sesión con oncólogos y equipo técnico. Todo con **datos sintéticos**
 ## 7. Si algo falla
 
 Ver `docs/demo/runbook-demo-S1.md` §5 (login 500, `DEADLINE_VENCIDO`, Ollama, memoria). Apagar y limpiar al terminar: `scripts/demo/apagar.sh` (y borrar contenedores, redes y volúmenes del proyecto de la demo).
+
+## 8. Preguntas de feedback para cerrar los outcomes abiertos
+
+Lista de verificación para la sesión de la Demo 3 y su repaso posterior. Cada fila tiene un **criterio de cierre** («Se espera») y lo **observado el 2026-10-28/29** en la instalación desde cero (`Demo3/OncoLens-Lab`), para no repetir lo ya medido. En **Resultado** se marca una opción tras comprobarlo:
+
+- **Verdadero:** se cumple lo que se espera (el outcome puede cerrarse).
+- **Falso:** no se cumple (el outcome sigue abierto; anotar qué se vio).
+- **Otro feedback:** hay un matiz, una opinión clínica o un hallazgo nuevo (anotarlo en la columna «Notas»).
+
+Los outcomes están en [`backlog/sprints/S3-demo-outcomes.md`](../../backlog/sprints/S3-demo-outcomes.md); el análisis de la extracción de población, en [`backlog/sprints/S4-insumo-extraccion-poblacion.md`](../../backlog/sprints/S4-insumo-extraccion-poblacion.md). Usuarios: médico `doc1@test.local` y administrador `admin@test.local` (contraseñas en `infra/docker/secrets/`).
+
+### 8.1 Acceso y rol del administrador (OUT-01)
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-01 | Iniciar sesión con `admin@test.local`: ¿a qué pantalla llega? | Una pantalla propia del administrador o «sin acceso»; **no** el panel de análisis de un paciente | Llega a `/pacientes/0fd028e2-…/analisis` (la ruta de inicio es única para todos los roles) | X Verdadero ☐ Falso ☐ Otro | Una vez logueado llega a http://127.0.0.1:3000/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis |
+| F-02 | Como administrador, en `/pacientes/<id>/analisis`, lanzar una pregunta | `403` con aviso claro de falta de permiso; sin datos clínicos | `POST /api/evidence-analyses` responde `403 PERMISO_DENEGADO` | X Verdadero ☐ Falso ☐ Otro | Da como resultado No se pudo completar el análisis. No se muestra ningún resultado parcial. Código de traza: req_09415dba |
+| F-03 | Como administrador, abrir `/pacientes` y una ficha | Solo documento enmascarado, estado y fecha de alta; sin nombre ni datos clínicos (PRD v1.4 §11) | La API devuelve la vista `admin` con esos tres campos; **la pantalla no se ha mirado** | X Verdadero ☐ Falso ☐ Otro | |
+
+### 8.2 Listado y búsqueda de pacientes (OUT-02)
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-04 | Como médico, abrir `/pacientes` justo después de `levantar.sh` | Lista de 5 pacientes, nombre y documento enmascarados, columnas «Faltantes críticos» y «Por revisar» | Tras reconstruir la imagen del seed: `200` con 5 pacientes. Con la imagen antigua: `500 IDENTITY_INTEGRITY_ERROR` | X Verdadero ☐ Falso ☐ Otro | |
+| F-05 | Buscar por documento: tipo **Sintético** + `SINT-0000001` … `SINT-0000005` | Devuelve el paciente de la tabla (1 = mama HER2+ completa, 2 = próstata, 3 = mama con dos diagnósticos, 4 = mama IIIA, 5 = mama IB) | Verificado por API con los 5 | X Verdadero ☐ Falso ☐ Otro | |
+| F-06 | Buscar con tipo «Cédula de ciudadanía» y un número de prueba | Mensaje claro; idealmente una pista de que los datos de prueba usan «Sintético» | Responde «No hay pacientes con ese documento», sin pista | X Verdadero ☐ Falso ☐ Otro | |
+
+### 8.3 Instalación y limpieza (OUT-03, OUT-04, OUT-05)
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-07 | Con volúmenes `oncolens_*` de una instalación anterior, ejecutar `scripts/demo/levantar.sh` | Detecta el estado previo, avisa y propone `apagar.sh --borrar-datos` antes de seguir | Falla en `corpus-migrate`: `password authentication failed for user "rag_corpus_migrator"` | ☐ Verdadero ☐ Falso X Otro | Ya se agrego feedback de la salida, se debe avisar y borrar. realizar limpueza |
+| F-08 | Terminar `levantar.sh`: ¿verifica el seed? | Un paso final comprueba conteos (5 pacientes, 5 identidades, 2 usuarios, 10 documentos, chunks en Milvus) y falla si no cuadran | No verifica: terminó en «Listo» con 5 pacientes y **0** identidades | X Verdadero ☐ Falso ☐ Otro | |
+| F-09 | `docker images` tras reinstalar: ¿`oncolens-clinical-seed` es de hoy? | La imagen del seed se reconstruye en cada instalación | Era de hace 8 días (`up --build` no reconstruye los servicios del perfil `seed`) | X Verdadero ☐ Falso ☐ Otro | |
+| F-10 | Al terminar la demo: `docker ps` | Un solo puerto publicado (`127.0.0.1:3000`); sin Attu ni proxies | Attu (`8000`) quedó abierto durante la sesión; hay que cerrarlo con `docker rm -f attu` | X Verdadero ☐ Falso ☐ Otro | |
+
+### 8.4 Análisis de evidencia y «modelo local no disponible» (OUT-06)
+
+Paciente (a) mama HER2+: `/pacientes/0fd028e2-f8b0-56c7-a748-2a4e473d879d/analisis`. Esperar entre consulta y consulta (una a la vez): el LLM local solo atiende bien una petición.
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-11 | Pregunta: *«¿Qué dice la evidencia sobre tamoxifeno adyuvante en cáncer de mama con receptores hormonales positivos?»* | Un análisis con opciones citadas; si un paso interno falla, aviso y aplicabilidad en Desconocido, **sin** perder el análisis ni decir «modelo local no disponible» | `503 LOCAL_LLM_UNAVAILABLE` en 6 de 6 intentos con la misma huella (el modelo entra en bucle: 25 propuestas, una ×21) | X Verdadero ☐ Falso ☐ Otro | El mensaje mostrado es : El modelo local no está disponible. No se muestra ningún resultado parcial. Código de traza: req_c3af47a6 |
+| F-12 | Repetir F-11 una segunda vez | Mismo resultado (la falla es determinista, no intermitente) | Idéntico: `caracteres=4852` en todas las ejecuciones | X Verdadero ☐ Falso ☐ Otro | |
+| F-13 | Preguntas de la guía §2.1 (HER2 estadio IIA) y de antraciclinas | Responden con opciones (o «sin opciones con soporte») y muestran la aplicabilidad con su motivo | HER2 IIA: 0 opciones, 2 descartadas (32 s). Antraciclinas: 1 opción, `0·0·0·6` (62 s) | ☐ Verdadero ☐ Falso X Otro | Responde: No hay opciones descritas con soporte verificable en la evidencia recuperada. Motivos: Una afirmación no tiene soporte en la fuente o contenía lenguaje no permitido|
+| F-14 | Anotar **cualquier otra pregunta** que dé «El modelo local no está disponible» (guardar el `traceId`) | Ninguna otra; si aparece, registrarla con su `traceId` | En 13 consultas de esta instalación solo hay una huella de fallo | X Verdadero ☐ Falso ☐ Otro | |
+| F-15 | Tiempo de respuesta con evidencia | ≤ 15 s p95 (NFR; se recalibra en el S5) | 32 a 70 s en estas pruebas; la primera consulta es más lenta | X Verdadero ☐ Falso ☐ Otro | |
+| F-16 | Repetir el análisis del bucle con ≥ 20 preguntas distintas | 0 salidas cortadas por longitud (`finish_reason=length`) | Investigado solo con la pregunta del tamoxifeno (R17) | X Verdadero ☐ Falso ☐ Otro | |
+
+### 8.5 Estados de aplicabilidad (OUT-07)
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-17 | Con cualquier pregunta con evidencia: línea «Criterios del estudio frente a datos registrados» | Al menos una opción con **Coincide > 0** y otra con **Parcial > 0** en pares paciente + pregunta documentados | Siempre `0 · 0 · 0 · N` (Desconocido): los 10 documentos tienen `population_criteria` en `no_disponible` | X Verdadero ☐ Falso ☐ Otro | |
+| F-18 | Un caso con un criterio excluyente en **No coincide** | Aviso «al menos un criterio excluyente del estudio no coincide…» y la opción se muestra igual | No reproducible en el sistema real (solo en `contracts/examples/`) | X Verdadero ☐ Falso ☐ Otro | |
+| F-19 | Leer el motivo de cada «Desconocido» | Se distingue «el estudio no lo reporta» de «falta en el paciente» y se entiende sin ayuda | La API da `no_reportado_por_fuente` y `falta_en_paciente`; **la redacción en pantalla no se ha validado con oncólogos** | X Verdadero ☐ Falso ☐ Otro | |
+
+### 8.6 Preguntas clínicas para los oncólogos (decisiones del S4)
+
+| # | Qué verificar | Se espera | Observado (29-oct) | Resultado | Notas |
+|---|---|---|---|---|---|
+| F-20 | Si el estudio incluyó premenopáusicas **y** posmenopáusicas, ¿una paciente posmenopáusica «coincide»? | Sí: cumple alguno de los grupos que el estudio incluyó | Hoy solo se conserva un valor por fuente y criterio («gana el primero»), lo que puede dar un estado falso | ☐ Verdadero ☐ Falso X Otro | Sí: una paciente posmenopáusica coincide con un estudio que incluyó premenopáusicas y posmenopáusicas. En RAG debe clasificarse como: - poblacion_match: parcial/inclusiva - No como coincidencia exacta exclusiva de posmenopáusicas. |
+| F-21 | Si el paciente no está en la lista de valores del estudio, ¿es «No coincide»? | No, salvo que el estudio declare una restricción explícita («solo posmenopáusicas»); si no, Desconocido | Sin regla implementada | X Verdadero ☐ Falso ☐ Otro | |
+| F-22 | Un resumen o guía agrupa varios estudios: ¿la población debe medirse sobre los fragmentos que cita la opción y no sobre todo el documento? | Sí: la aplicabilidad de una opción refleja la población de *su* recomendación | Hoy se evalúa por documento (R18) | X Verdadero ☐ Falso ☐ Otro | Sí. La población debe evaluarse sobre los fragmentos citados que sustentan la opción, no sobre el conjunto del documento. Un resumen puede abarcar poblaciones heterogéneas; lo relevante es si la afirmación recuperada se apoya en estudios o análisis que incluyen a la paciente. Si el fragmento mezcla poblaciones sin desagregarlas, clasifíquelo como match parcial/incierto, no como coincidencia exacta.|
+| F-23 | Dos valores de HER2 en conflicto en la misma fuente | Se fuerza «Desconocido» con motivo (A-2, US-124) | Pendiente de validación clínica | X Verdadero ☐ Falso ☐ Otro | Muéstrelos ambos, sin resolver el conflicto automáticamente: HER2: información discordante en la fuente   - Resultado 1: IHQ 3+ — [fecha/muestra si consta] - Resultado 2: IHQ 2+ / ISH no amplificado — [fecha/muestra si consta]   Estado para análisis: indeterminado; requiere validación clínica/patológica. |
+| F-24 | ¿Basta con mostrar hasta 3 valores del estudio por criterio, cada uno con su cita? | Sí; más de 3 se resumen con «ver más» | No implementado | X Verdadero ☐ Falso ☐ Otro | |
+
+**Cierre:** un outcome se cierra cuando todas sus filas están en **Verdadero**. Cualquier **Falso** o **Otro feedback** se registra en `S3-demo-outcomes.md` (o en un outcome nuevo) antes del refinamiento del S4, donde se crean las tareas en Linear con la aprobación del usuario (`S4-insumo-extraccion-poblacion.md` §10).
+
