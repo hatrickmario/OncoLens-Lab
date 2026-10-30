@@ -35,6 +35,8 @@ from app.application.ports import FalloDeInferencia, FalloDelLlm, NliClassifier
 from app.domain.corpus_metadata.poblacion_abanico import (
     Depurado,
     ValorPropuesto,
+    descartar_por_longitud,
+    omitir_lenguaje_prescriptivo,
     pares_de_verificacion,
     rechazar_relleno,
     validar_chunk,
@@ -248,11 +250,15 @@ class PopulationFanoutExtractor:
         criterio: CriterioDeAplicabilidad,
         salida: _SalidaDelLlm,
     ) -> _ResultadoDeCriterio:
-        """Relleno → fragmento → NLI → duplicados → tope. Lo que sobrevive se guarda con su fragmento y su etiqueta NLI."""
+        """Relleno → fragmento → longitud → lenguaje → NLI → duplicados → tope. Lo que sobrevive se guarda con su fragmento y su etiqueta NLI."""
         texto_del_fragmento = {f.chunk_id: f.texto for f in self._recuperador.todos(documento)}
         sin_relleno = rechazar_relleno(salida.valores or ())
         en_el_documento = validar_chunk(sin_relleno.conservados, texto_del_fragmento.keys())
-        con_soporte = self._verificar(en_el_documento.conservados, texto_del_fragmento, criterio)
+        acotados_en_longitud = descartar_por_longitud(en_el_documento.conservados)
+        sin_lenguaje = omitir_lenguaje_prescriptivo(
+            acotados_en_longitud.conservados, self._buscar_terminos_prohibidos
+        )
+        con_soporte = self._verificar(sin_lenguaje.conservados, texto_del_fragmento, criterio)
         con_tope = aplicar_tope(
             deduplicar(con_soporte.conservados, self._sinonimos),
             self._configuracion.max_valores_por_criterio,
@@ -260,6 +266,8 @@ class PopulationFanoutExtractor:
         contadores = salida.contadores + ContadoresDePoblacion(
             valores_rechazados_por_relleno=sin_relleno.descartados,
             valores_rechazados_por_chunk_ajeno=en_el_documento.descartados,
+            valores_descartados_por_longitud=acotados_en_longitud.descartados,
+            valores_con_lenguaje_prescriptivo=sin_lenguaje.descartados,
             valores_sin_soporte=con_soporte.descartados,
             valores_fuera_del_tope=con_tope.fuera_del_tope,
         )
