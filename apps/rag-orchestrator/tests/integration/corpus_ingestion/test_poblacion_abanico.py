@@ -73,3 +73,45 @@ def test_ingesta_doce_e1_seis_llamadas_valores_con_fragmento(
         }
         for valor in ("premenopausal women", "postmenopausal women")
     ]
+
+
+@pytest.mark.ac("US-242", 2)
+def test_ingesta_relleno_y_fragmento_ajeno_dejan_lista_vacia_y_se_cuentan(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-2] El relleno y el fragmento ajeno dejan el criterio vacío y suman a ``valoresRechazados`` por motivo."""
+    montaje = montar(FakePopulationLlm(("EXT-OK", "EXT-RELLENO", "EXT-AJENO")))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert criterios["ecog"] == []
+    assert criterios["estadio"] == []
+    assert criterios["biomarcadores.her2"] == []
+    assert len(criterios["estado_menopausico"]) == 2
+    contadores = reporte.contadores_de_poblacion
+    assert contadores.valores_rechazados == 3
+    assert (
+        contadores.valores_rechazados_por_relleno,
+        contadores.valores_rechazados_por_chunk_ajeno,
+    ) == (2, 1)
+    resumen = reporte.como_diccionario()["poblacion"]
+    assert resumen["valoresRechazados"] == 3
+    assert resumen["valoresRechazadosPorMotivo"] == {"relleno": 2, "chunk_ajeno": 1}
+
+
+@pytest.mark.ac("US-242", 3)
+def test_ingesta_valor_sin_soporte_nli_no_se_guarda_y_se_cuenta(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-3] Un valor que el NLI no confirma contra su fragmento no se guarda y suma a ``valoresSinSoporte``."""
+    montaje = montar(FakePopulationLlm(("EXT-OK", "EXT-NLI")))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert criterios["estadio"] == []
+    assert len(criterios["estado_menopausico"]) == 2
+    assert reporte.contadores_de_poblacion.valores_sin_soporte == 1
+    assert reporte.como_diccionario()["poblacion"]["valoresSinSoporte"] == 1
