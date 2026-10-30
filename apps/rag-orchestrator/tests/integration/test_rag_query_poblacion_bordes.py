@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from app.application.respuesta_con_evidencia import _poblacion_en_lista
+from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDePoblacion
 from app.infrastructure.catalogo_clinico.aplicabilidad import cargar_criterios_de_aplicabilidad
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
 from tests.support.catalogo_aplicabilidad import APL_1_0_0, APL_1_2_0
@@ -114,3 +116,41 @@ def test_el_catalogo_no_esta_disponible_cuando_poblacion_reglas_no_cumple_su_for
 
     assert str(tmp_path) not in str(error.value)
     assert "peso" not in str(error.value)
+
+
+def test_rag_query_no_fabrica_conflicto_en_la_fuente_cuando_dos_opciones_citan_fragmentos_distintos_del_mismo_documento(
+    caplog,
+):
+    entorno = entorno_fx08bc("O-P7", "O-P8")
+    caplog.set_level(logging.DEBUG)
+
+    respuesta = entorno.consultar(solicitud_a_m2())
+
+    assert respuesta.status_code == 200
+    externo = FICHAS_FX08BC["doc-b7"].external_id
+    fuente = next(f for f in respuesta.json()["applicability"] if f["externalId"] == externo)
+    menopausia = next(c for c in fuente["criteria"] if c["criterion"] == "estado_menopausico")
+    # La fuente muestra los criterios de la opción más aplicable que la cita (O-P7, coincide), nunca la unión.
+    assert menopausia["status"] == "coincide"
+    assert menopausia["unknownReason"] is None
+    assert {v["chunkId"] for v in menopausia["studyPopulationValues"]} == {"ch-b7-1"}
+    assert not [r for r in caplog.records if "poblacion_conflicto" in r.getMessage()]
+
+
+def test_criterio_aplicable_no_emite_el_valor_de_la_forma_antigua_sin_fragmento_cuando_se_mezcla_con_la_lista():
+    criterio = CriterioEvaluado(
+        "estado_menopausico",
+        "posmenopáusica",
+        "postmenopausal women",
+        "desconocido",
+        "no_reportado_por_fuente",
+        False,
+        valores_del_estudio=(
+            ValorDePoblacion("postmenopausal women", "elegibilidad", None),
+            ValorDePoblacion("premenopausal women", "elegibilidad", "ch-1"),
+        ),
+    )
+
+    campos = _poblacion_en_lista(criterio)
+
+    assert [v.chunkId for v in campos["studyPopulationValues"]] == ["ch-1"]
