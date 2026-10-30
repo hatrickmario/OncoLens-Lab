@@ -7,7 +7,7 @@
 **Evidencia:** [→ PRD §5 FR-04], [→ PRD §17 FR-04 → HU-02, HU-05], [→ PRD §18.3.2 AC-02.4], [→ PRD §18.4 AC-T1.1], [→ readme §5 HU-02], [→ readme §4.1 `PatientSummary`, `GET /platform/patients/{patientId}`], [→ readme §6 OL-01 (pacientes semilla)], [→ readme §3.3 #12], [→ PRD §16 TBD-06], [→ backlog/01-requisitos.md §14 Q-06 (b); §15 P-02], [→ docs/AS-IS.md P1]
 **Dependencias:** ↪ US-039 (seed), US-044 (sesión), US-046 (identidad), US-041 (códigos CIE-10) · 🔗 Regresión [AC-T1.5/FR-18, auditoría de lectura de la ficha] → US-102 (activa desde S6) · 🔗 Produce para: US-091 (tendencia en la ficha, `si-hay-capacidad`) · 🔗 Regresión [FR-15] → US-204 (Post-MVP)
 **Valor:** antes de preguntarle nada a la IA, el oncólogo necesita ver en una pantalla el diagnóstico vigente y los biomarcadores recientes de su paciente, sin abrir documentos sueltos (P1: el dolor "document-centric vs patient-centric"). Es la puerta de entrada del walking skeleton hacia el análisis.
-**Stories:** US-051, US-019 · DEC-09 (6 puntos, S2)
+**Stories:** US-051 (5 puntos, S2) · US-019 · DEC-09 (1 punto, S5; S2 → S4 → S5, `[S4 resp. 1]`)
 
 ---
 
@@ -80,7 +80,9 @@ Acceso a la vista de caso (S2, US-090).
 
 > Linear: [L1D-73](https://linear.app/l1der-lab-mjbc/issue/L1D-73)
 
-`FEAT-02a` · Sprint 4 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`)* · Estimación **1** · — (decisión) · RN-08 · TBD-06 (reglas clínicas), ADR-12 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-01b (regla de diagnóstico extraído vs. vigente y origen del semáforo, S2), FEAT-03a (S2), FEAT-03b (conflictos, S3)
+`FEAT-02a` · Sprint 5 *(desde S2, sesión con oncólogos junto a ARR-05, `[S2 resp. 1]`; S4 → S5, `[S4 resp. 1]`)* · Estimación **1** · — (decisión) · RN-08 · TBD-06 (reglas clínicas), ADR-12 · Dueño: oncólogo asesor · 🔗 Bloquea: FEAT-01b (regla de diagnóstico extraído vs. vigente y origen del semáforo, S2), FEAT-03a (S2), FEAT-03b (conflictos, S3)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo asesor, quiero validar la regla de vigencia de diagnósticos y las reglas
@@ -123,3 +125,4 @@ aplicación a datos extraídos es del S2 (FEAT-01b, FEAT-03a).
 | — | backlog/02-adrs.md: DEC-09 en la Feature FEAT-01b | Mapa de lotes de F3: DEC-09 en el S1 | Se ubica en FEAT-02a (S1) para que la historia quede en el milestone de su sprint; la bloqueada sigue siendo FEAT-01b |
 | Slicing v2 | readme §5.0 S1 (HU-02) y PRD §14 S1: ficha mínima en el S1 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): ficha en el S2 | El walking skeleton del S1 abre el panel del paciente semilla por ruta directa; la ficha llega en el S2 |
 | Ajuste del S2 | Slicing v2: US-019 · DEC-09 en el S2 | Refinamiento del S2 (usuario, 2026-10-21, `[S2 resp. 1]`): al S4, sesión con oncólogos | Se siguió el ajuste del S2 |
+| S4-2026-10-29 | Refinamiento del S2: US-019 · DEC-09 en el S4, sesión con oncólogos | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

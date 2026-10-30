@@ -1,1 +1,2 @@
 - [Lecciones Pre-S1](project_pre_s1_learnings.md) — TDD Guard retirado, WIP en wip/l1d-nn, Linear por integración, fallos recurrentes del Gate 2, tiempos y cortes por límite de uso
+- [S3 oleada 1](project_s3_o1_learnings.md) — tope de 8 subagentes, rojos de CI no vistos, patrones de Mayores, evals con variante que falle en main

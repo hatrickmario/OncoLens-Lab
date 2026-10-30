@@ -2,12 +2,12 @@
 
 > Linear: [L1D-39](https://linear.app/l1der-lab-mjbc/issue/L1D-39)
 
-**Talla:** L · **Sprint:** 1 (US-068, US-069) · 4 (US-070) · 5 (US-071, cuando existen todos los avisos clínicos; verificación completa en G-Piloto, S6) · **Capacidad:** T-3 (AC-T3.1, AC-T3.2, AC-T3.3, AC-T3.4) · CAP-10 (AC-10.3) · **Recorrido principal:** sí
+**Talla:** L · **Sprint:** 1 (US-068, US-069) · 5 (US-070; S4 → S5, `[S4 resp. 1]`) · 5 (US-071, cuando existen todos los avisos clínicos; verificación completa en G-Piloto, S6) · **Capacidad:** T-3 (AC-T3.1, AC-T3.2, AC-T3.3, AC-T3.4) · CAP-10 (AC-10.3) · **Recorrido principal:** sí
 **Requisitos:** RN-23 (dueña) · RN-19 (dueña) · RN-26 (dueña) · AC-T3.2 (dueña; regresión en FEAT-01c, FEAT-03a/b) · M-10.2 (medido en T-5)
 **Evidencia:** [→ PRD §6 RN-19, RN-23, RN-26], [→ PRD §18.4 T-3, AC-T3.1–AC-T3.4], [→ PRD §18.3.10 AC-10.3, M-10.2], [→ PRD §2.1 G-14], [→ PRD §13 Lenguaje], [→ PRD §1.3 PP-1, PP-6], [→ readme §5 HU-03 escenarios 1 y 4], [→ readme §6 OL-04 (aviso fijo, etiqueta permanente)], [→ readme §2.6 Lenguaje], [→ readme §6.0 DoD], [→ docs/AS-IS.md P12]
 **Dependencias:** ↪ US-061, US-062 (textos del panel), US-053 (campo `disclaimer`) · US-071: ↪ US-101 (avisos de no verificados, S4), FEAT-04 US-005 (aviso previo de faltantes, S4), US-124 (población no comparable y avisos por criterio, S5), US-136 (avisos de conflicto y faltantes en la tarjeta, S5) · 🔗 Medido en: US-072 (M-10.2 y G-14 sobre las salidas del set de evaluación) · 🔗 Regresión [RN-15] → US-148 (activa desde S6)
 **Valor:** el oncólogo pidió explícitamente que la herramienta no le diga qué hacer (PP-1, "no me digas qué hacer"; P12: control humano). Esta Feature garantiza que ninguna pantalla ni salida use lenguaje prescriptivo, que toda salida generada se identifique como IA que requiere validación, que el sistema nunca ejecute una acción clínica por su cuenta y que ningún aviso clínico le impida continuar.
-**Stories:** US-068, US-069 (5 puntos, S1) · US-070 (2 puntos, S4) · US-071 (3 puntos, S5) — total 10 puntos
+**Stories:** US-068, US-069 (5 puntos, S1) · US-070 (2 puntos, S5, `[S4 resp. 1]`) · US-071 (3 puntos, S5) — total 10 puntos
 
 ---
 
@@ -119,7 +119,9 @@ configuración (AC-2).
 
 > Linear: [L1D-195](https://linear.app/l1der-lab-mjbc/issue/L1D-195)
 
-`FEAT-T3` · Sprint 4 · Estimación **2** · HU-03 · AC-T3.2 (dueña), RN-06 · ↪ US-053, US-061 · 🔗 Relacionada: RN-08 (FEAT-03a, S2), RN-09 (FEAT-01c), que llevan `🔗 Regresión [AC-T3.2] → US-070`
+`FEAT-T3` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **2** · HU-03 · AC-T3.2 (dueña), RN-06 · ↪ US-053, US-061 · 🔗 Relacionada: RN-08 (FEAT-03a, S2), RN-09 (FEAT-01c), que llevan `🔗 Regresión [AC-T3.2] → US-070`
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero tener la certeza de que pedir un análisis nunca cambia los datos
@@ -212,3 +214,4 @@ perfil de test (AC-2, AC-3, AC-5).
 | — | PRD AC-T3.3: se verifica en G-Piloto (S5) junto con los bloqueos | Mapa de lotes: FEAT-T3 en el S1 | La parte de avisos (US-071) va al S4, cuando existen todos los avisos; la de bloqueos, al S5 con US-148 |
 | P-02 | PRD RN-26 y AC-T3.3: bloquean opt-out, egreso y equipo tratante | P-02 (equipo tratante fuera del MVP) y slicing adoptado (egreso Post-MVP) | En el MVP solo bloquea el opt-out de `analisis_ia` (S5); los otros dos llegan con FEAT-T4b y FEAT-T4e (Post-MVP) |
 | Slicing v2 | PRD §14 y lote 1: US-070 en el S1 y US-071 en el S4 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): US-070 en el S4 y US-071 en el S5 | Se siguió el slicing v2; el panel no ofrece acciones clínicas en ningún sprint |
+| S4-2026-10-29 | Slicing v2: US-070 en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasa al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |

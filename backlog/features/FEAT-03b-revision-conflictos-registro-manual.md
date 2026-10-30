@@ -2,13 +2,13 @@
 
 > Linear: [L1D-13](https://linear.app/l1der-lab-mjbc/issue/L1D-13)
 
-**Talla:** L · **Sprint:** 4 (US-107, US-108, US-110, US-111) · `si-hay-capacidad` (US-109) · **Capacidad:** CAP-03 (AC-03.2 resolución, AC-03.3 revisión de mapeos, AC-03.4) · CAP-04 (AC-04.1: "registrarlo a mano") · T-3 (AC-T3.2) · **Recorrido principal:** sí (el registro manual completa los faltantes de la hipótesis 2; los conflictos son el 2.º punto de recorte del PRD) · no (US-109)
+**Talla:** L · **Sprint:** 5 (US-107, US-108, US-110, US-111; S4 → S5, `[S4 resp. 1]`) · `si-hay-capacidad` (US-109) · **Capacidad:** CAP-03 (AC-03.2 resolución, AC-03.3 revisión de mapeos, AC-03.4) · CAP-04 (AC-04.1: "registrarlo a mano") · T-3 (AC-T3.2) · **Recorrido principal:** sí (el registro manual completa los faltantes de la hipótesis 2; los conflictos son el 2.º punto de recorte del PRD) · no (US-109)
 **Requisitos:** FR-08 (dueña, vía HU-09) · FR-22 (parte S3: conflictos y términos `no_mapeado`, vía HU-17) · registro manual de biomarcadores y campos de `Diagnosis` (Q-03, V-01: contrato a incorporar en readme §4.1) · ADR-33 (normalización final en Backend 1) · RN-07, RN-08, RN-27 (regresiones)
 **Evidencia:** [→ PRD §5 FR-08, FR-22, FR-23], [→ PRD §6 RN-07, RN-08, RN-27], [→ PRD §10 (`PATCH …/clinical-data/{type}/{itemId}/review`)], [→ PRD §14 (orden de recorte)], [→ PRD §18.3.3 AC-03.2–AC-03.4], [→ PRD §18.3.4 AC-04.1], [→ PRD §18.4 AC-T3.2], [→ readme §5.6 HU-09, HU-17], [→ readme §3.3 #12, #25, #33], [→ backlog/01-requisitos.md §10 V-01, §14 Q-03, Q-04], [→ backlog/02-adrs.md DEC-05, DEC-09], [→ docs/AS-IS.md P3, P4]
 **Dependencias:** ↪ US-099 (conflictos detectados), US-100 (diagnósticos en revisión), US-098 (normalización final), US-090 (vista de caso) · ⛔ DEC-09 · escenario más probable (US-107 AC-4) · ⛔ DEC-05 · escenario más probable (US-110 AC-3) · 🔗 Consumida por: FEAT-04 US-004 ("Registrar a mano"), US-124 (avisos por criterio) · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Regresión [RN-17] → US-198 (Post-MVP)
 **Valor:** el oncólogo es quien decide qué dato vale (PP-6): con esta Feature confirma, corrige o rechaza lo que extrajo la IA, resuelve los valores que se contradicen y, desde un dato faltante, lo registra a mano sin esperar un documento (P3, P4).
 **Workaround en el MVP (US-109):** el conflicto queda `requiere_revision` y visible, y el oncólogo rechaza uno de los valores en la revisión (US-107).
-**Stories:** US-107, US-108, US-110, US-111 (16 puntos, S4) · US-109 (5 puntos, `si-hay-capacidad`)
+**Stories:** US-107, US-108, US-110, US-111 (16 puntos, S5, `[S4 resp. 1]`) · US-109 (5 puntos, `si-hay-capacidad`)
 
 ## Fixtures
 
@@ -22,7 +22,9 @@
 
 > Linear: [L1D-87](https://linear.app/l1der-lab-mjbc/issue/L1D-87)
 
-`FEAT-03b` · Sprint 4 · Estimación **5** · HU-09 · FR-08 (dueña), RN-07, RN-08 · AC-03.4, AC-02.6, AC-T3.2 · ⛔ DEC-09 · escenario más probable (AC-4) · ↪ US-100, US-098 · 🔗 Regresión [RN-07] → US-065 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: FEAT-11a (marca de desactualizado al cambiar datos usados, S6 si hay capacidad)
+`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-09 · FR-08 (dueña), RN-07, RN-08 · AC-03.4, AC-02.6, AC-T3.2 · ⛔ DEC-09 · escenario más probable (AC-4) · ↪ US-100, US-098 · 🔗 Regresión [RN-07] → US-065 · 🔗 Regresión [AC-T3.2] → US-070 · 🔗 Produce para: FEAT-11a (marca de desactualizado al cambiar datos usados, S6 si hay capacidad)
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Decidido (usuario, 2026-10-24):** un dato `no_mapeado` debe poder quedar en un campo final de «información adicional» de la ficha, donde el oncólogo ingrese esos detalles o confirme los hallazgos `no_mapeado`. **No se implementa en el S3.** Restricciones al refinar la historia: (1) no inventa ni asigna ningún código (RN-27): el dato confirmado sigue `no_mapeado` y sin código; el mapeo a catálogo es de US-109; (2) la confirmación del oncólogo es una verificación humana (RN-07/RN-08): no reemplaza en silencio a un dato verificado y no es soporte NLI de afirmaciones sobre evidencia del corpus (un dato del paciente sí puede citarse por enlace o verbalización, ADR-34); (3) el texto libre de «información adicional» se desidentifica y enmascara antes de llegar a cualquier IA (RN-10/RN-11, también en eventos y análisis previos), entra al contexto clínico del análisis etiquetado como dato del oncólogo sin código, y no va a logs, auditoría ni histórico (RN-10); dónde se guarda lo decide el refinamiento (modelo de datos y contrato congelados, RN-29); (4) no debe bloquear (RN-26); (5) la fila estructurada no se mueve ni se convierte en texto libre; (6) sobre un paciente egresado el registro da `422` (RN-17). Re-estimar al refinar el S4.
 
@@ -78,7 +80,9 @@ Tests: Vitest + Supertest con FX-03a-a y FX-03b-a.
 
 > Linear: [L1D-88](https://linear.app/l1der-lab-mjbc/issue/L1D-88)
 
-`FEAT-03b` · Sprint 4 · Estimación **3** · HU-09 · FR-08 (UI), NFR-12 · AC-T1.1 · ↪ US-107, US-090 · 🔗 Regresión [RN-23] → US-068
+`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-09 · FR-08 (UI), NFR-12 · AC-T1.1 · ↪ US-107, US-090 · 🔗 Regresión [RN-23] → US-068
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero ver juntos los datos que esperan mi revisión, con su valor, su
@@ -165,7 +169,9 @@ Playwright (AC-5).
 
 > Linear: [L1D-90](https://linear.app/l1der-lab-mjbc/issue/L1D-90)
 
-`FEAT-03b` · Sprint 4 · Estimación **5** · HU-18 (acceso desde el checklist), HU-09 · FR-23 (registrar a mano), FR-22 (datos manuales), RN-08 · AC-04.1, AC-03.3 (manuales) · ⛔ DEC-05 · escenario más probable (AC-3) · ↪ US-033 (contrato congelado, AC-10), US-098, US-107 · 🔗 Regresión [RN-27] → US-098 · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Consumida por: FEAT-04 US-004
+`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **5** · HU-18 (acceso desde el checklist), HU-09 · FR-23 (registrar a mano), FR-22 (datos manuales), RN-08 · AC-04.1, AC-03.3 (manuales) · ⛔ DEC-05 · escenario más probable (AC-3) · ↪ US-033 (contrato congelado, AC-10), US-098, US-107 · 🔗 Regresión [RN-27] → US-098 · 🔗 Regresión [RN-17] → US-198 (Post-MVP) · 🔗 Consumida por: FEAT-04 US-004
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 ## Story
 Como oncólogo, quiero registrar a mano un biomarcador (p. ej., Ki-67) o completar la
@@ -228,7 +234,9 @@ Supertest con F-M2 y FX-03b-a.
 
 > Linear: [L1D-91](https://linear.app/l1der-lab-mjbc/issue/L1D-91)
 
-`FEAT-03b` · Sprint 4 · Estimación **3** · HU-18 · FR-23 (UI de registro), NFR-12 · AC-04.1 · ↪ US-110, US-090 · 🔗 Consumida por: FEAT-04 US-004 · 🔗 Regresión [RN-23] → US-068
+`FEAT-03b` · Sprint 5 *(S4 → S5, `[S4 resp. 1]`)* · Estimación **3** · HU-18 · FR-23 (UI de registro), NFR-12 · AC-04.1 · ↪ US-110, US-090 · 🔗 Consumida por: FEAT-04 US-004 · 🔗 Regresión [RN-23] → US-068
+
+> **Decidido (usuario, 2026-10-29):** pasa del S4 al **S5**. El S4 se compromete con ≈ 57 pts (núcleo del RAG de conocimiento, faltantes y etapa 2 de la población, ADR-47) y lo que no cabe se recorta de menor a mayor prioridad: gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca. El S5 queda sobrecargado y se recorta en su refinamiento `[S4 resp. 1]`.
 
 > **Decidido (usuario, 2026-10-24), referencia:** el campo final de «información adicional» para los `no_mapeado` se refina en US-107 (sin implementar en el S3); los formularios de registro manual (US-110/US-111) no sustituyen a ese campo ni asignan códigos a un `no_mapeado`.
 
@@ -276,3 +284,4 @@ términos del catálogo a través de un endpoint de lectura del catálogo en `cl
 | C-11 / Q-04 | readme §3.2 y CLAUDE.md: `stage_value` cubre el grupo ISUP en próstata | PRD FR-23: TNM **y** Gleason/ISUP en próstata | DEC-05 (escenario): TNM en `staging_system`/`stage_value`, ISUP en `Diagnosis.grade` (US-110 AC-3) |
 | — | PRD §14: orden de recorte, 2.º punto = conflictos de CAP-03 | — | US-109 es la historia recortable; la detección (US-099) no se recorta |
 | Slicing v2 | PRD §14 S3 y FR-08/FR-22: revisión y resolución de conflictos en el S3 | Slicing v2 aprobado por el usuario (`01-requisitos.md` §15, 2026-10-07): revisión y registro manual en el S4; resolución de conflictos `si-hay-capacidad` (2.º punto de recorte del PRD) | Se siguió el slicing v2; AC-03.2 (resolución) queda en US-109 `si-hay-capacidad` |
+| S4-2026-10-29 | Slicing v2 y reordenamiento del 2026-10-23: revisión y registro manual (US-107, US-108, US-110, US-111) en el S4 | Refinamiento del S4 (usuario, 2026-10-29): pasan al S5; el S4 se compromete con ≈ 57 pts y se recorta de menor a mayor prioridad (gestión de usuarios → OCR → búsqueda por datos del paciente; el RAG de conocimiento nunca) `[S4 resp. 1]` | Decisión del usuario |
