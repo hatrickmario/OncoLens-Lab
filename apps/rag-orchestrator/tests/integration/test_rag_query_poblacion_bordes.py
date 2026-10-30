@@ -4,6 +4,7 @@ Test después (tareas 3.2 y del lector del catálogo). Cada respuesta la valida 
 ``verificacion_proveedor.py`` (US-214).
 """
 
+import json
 import logging
 import shutil
 from pathlib import Path
@@ -180,3 +181,19 @@ def test_rag_query_cita_los_dos_fragmentos_del_conflicto_cuando_estado_her2_trae
     fuente = next(f for f in cuerpo["applicability"] if f["externalId"] == externo)
     her2 = next(c for c in fuente["criteria"] if c["criterion"] == "estado_her2")
     assert [c["chunkId"] for c in her2["citedSources"]] == ["ch-b4-1", "ch-b4-2"]
+
+
+def test_el_catalogo_no_declara_disenos_que_mezclan_cuando_poblacion_reglas_no_trae_la_clave(
+    tmp_path: Path,
+):
+    catalogo = tmp_path / "test-apl-1.2.0"
+    shutil.copytree(APL_1_2_0, catalogo)
+    reglas = catalogo / "mama" / "poblacion-reglas.json"
+    datos = json.loads(reglas.read_text(encoding="utf-8"))
+    del datos["disenosQueMezclan"]
+    reglas.write_text(json.dumps(datos), encoding="utf-8")
+
+    mama = cargar_criterios_de_aplicabilidad(catalogo, TIPOS).criterios("mama")
+
+    assert all(c.poblacion.disenos_que_mezclan == () for c in mama)
+    assert all(c.poblacion.marcadores_de_restriccion for c in mama)

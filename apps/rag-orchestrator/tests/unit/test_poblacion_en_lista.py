@@ -388,3 +388,10 @@ def test_clasifica_restringido_cuando_solo_uno_de_varios_valores_elegibles_lleva
     valores = [_v("postmenopausal women only"), _v("perimenopausal women")]
 
     assert clasificar_poblacion(valores, "premenopáusica", MENOPAUSIA_CON_PERI)[0] == "restringido"
+
+
+def test_clasifica_exacto_cuando_el_valor_del_paciente_difiere_del_sinonimo_solo_en_mayusculas():
+    assert clasificar_poblacion([_v("postmenopausal women")], "Posmenopáusica", MENOPAUSIA) == (
+        "exacto",
+        None,
+    )

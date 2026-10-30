@@ -74,7 +74,7 @@ CASOS = {
         None,
         _desconocido("valores_en_conflicto"),
     ),
-    "ausente": (MENOPAUSIA, [], "posmenopáusica", False, _desconocido("no_reportado_por_fuente")),
+    "ausente": (MENOPAUSIA, [], "posmenopáusica", None, _desconocido("no_reportado_por_fuente")),
     "solo_subgrupo_forma_nueva": (
         RECEPTORES,
         [ValorDePoblacion("triple-negative (TNBC)", "subgrupo", "ch-1")],

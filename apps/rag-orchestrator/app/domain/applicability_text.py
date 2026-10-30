@@ -12,7 +12,11 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from app.domain.aplicabilidad_tipos import CriterioEvaluado, ValorDelEstudio, ValorDePoblacion
-from app.domain.applicability_rules import estado_de_poblacion, evaluar_criterio
+from app.domain.applicability_rules import (
+    criterio_evaluado,
+    estado_de_poblacion,
+    evaluar_criterio,
+)
 from app.domain.citations import OpcionGenerada, validar_citas
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.domain.nli import ParNli
@@ -212,16 +216,7 @@ def _veredicto_del_texto(
     if criterio.poblacion.sinonimos or criterio.poblacion.escala:
         valor = ValorDePoblacion(propuesta.valor, "elegibilidad", propuesta.chunk_id)
         proyeccion = estado_de_poblacion([valor], valor_paciente, criterio)
-        return CriterioEvaluado(
-            criterio.clave,
-            valor_paciente,
-            propuesta.valor,
-            proyeccion.estado,
-            proyeccion.causa,
-            criterio.es_excluyente,
-            proyeccion.motivo_interno,
-            motivo_parcial=proyeccion.motivo_parcial,
-        )
+        return criterio_evaluado(criterio, valor_paciente, propuesta.valor, proyeccion)
     normalizado = normalizar_valor_al_catalogo(criterio, propuesta.valor)
     return evaluar_criterio(criterio, valor_paciente, ValorDelEstudio(normalizado))
 

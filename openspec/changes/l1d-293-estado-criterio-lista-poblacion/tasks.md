@@ -49,6 +49,8 @@
   (`infrastructure/catalogo_clinico/poblacion_reglas.py`): marcadores es/en, `disenosQueMezclan` y, por criterio, `synonyms`, `scale`, `groups`; ausente = sin
   reglas, inválido = `CatalogoNoDisponible`. La fixture `test-apl-1.2.0` vive solo en el rag-orchestrator. **Falta** (clinical-platform / contratos):
   esquema y validador de `poblacion-reglas.json`, la versión `1.2.0` real en ambos backends y su copia exacta (`test_fixtures_de_aplicabilidad`).
+  Sin `poblacion-reglas.json`, `mezclada` no aparece en producción (antes salía de una constante guía/revisión sistemática; el catálogo
+  real aún no trae el archivo).
 - **D-2 · Unidad de la `applicability` de la fuente.** El contrato solo trae criterios por fuente, no por opción: `applicability[]` se calcula con
   los fragmentos que cita la opción más aplicable que cita esa fuente (sin cita, el mejor chunk), nunca con la unión entre opciones; el resumen
   **por opción** (`perSource`, `applicabilitySummary`) con los de cada opción. El conflicto solo se detecta entre fragmentos de una misma opción
@@ -57,3 +59,9 @@
   en lugar de tumbar el análisis; el estado sí los usa.
 - **D-4 · `data/evaluation/aplicabilidad/pares.yaml`:** el estadio de A-M1 × doc-a1 pasa a esperar `sin_regla_de_comparacion` (MODIFIED de la spec).
 - **D-5 · El camino textual (US-123)** ya no pregunta al LLM por un criterio cuya lista trae solo subgrupo o mención.
+- **D-6 · El camino textual cambia de semántica según el catálogo.** Con sinónimos o escala en `poblacion-reglas.json`, `con_valor_textual` evalúa el
+  texto con `estado_de_poblacion`; sin ellos, con la regla de US-123 (sin cambios). Unificar al terminar la lectura doble (US-241 D6).
+- **D-7 · AC-8 por HTTP.** La aserción «cero invocaciones del LLM» queda acotada a que el LLM textual no recibe `estado_menopausico`: los demás criterios sin
+  valor sí van al texto (US-123); la regla «cero llamadas» se prueba en la tabla pura.
+- **D-8 · Rangos acotados.** Un rango acotado declarado por el estudio que no incluye el valor del paciente da No coincide: comportamiento del S3, no escrito en
+  DEC-11; a confirmar por el oncólogo.

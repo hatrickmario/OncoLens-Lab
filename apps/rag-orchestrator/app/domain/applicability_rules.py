@@ -235,10 +235,10 @@ def evaluar_criterio(
     ``sin_regla_de_comparacion`` (US-243)."""
     proyeccion = _proyeccion_de_forma_antigua(criterio, valor_paciente, valor_estudio)
     copiado = valor_estudio.valor if valor_estudio else None
-    return _criterio_evaluado(criterio, valor_paciente, copiado, proyeccion)
+    return criterio_evaluado(criterio, valor_paciente, copiado, proyeccion)
 
 
-def _criterio_evaluado(
+def criterio_evaluado(
     criterio: CriterioDeAplicabilidad,
     valor_paciente: str | None,
     valor_estudio: str | None,
@@ -429,7 +429,7 @@ def _evaluar_con_lista(
         valores, valor_paciente, criterio, diseno_de_la_fuente=diseno_de_la_fuente
     )
     primero = next((v.valor for v in valores if v.alcance == "elegibilidad"), None)
-    return _criterio_evaluado(criterio, valor_paciente, primero, proyeccion, valores)
+    return criterio_evaluado(criterio, valor_paciente, primero, proyeccion, valores)
 
 
 def _dato_comparable(

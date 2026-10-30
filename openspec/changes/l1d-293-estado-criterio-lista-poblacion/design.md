@@ -118,6 +118,12 @@ no se reescriben (RN-06): la UI los muestra con «? Desconocido · causa no regi
 Toca la semántica del catálogo de aplicabilidad (no prompts ni modelos): el PR corre `run-ai-eval` si cambia el catálogo.
 La concordancia de estados la mide US-233b. Sin impacto directo en recall/MRR/fidelidad.
 
+## Decisiones de implementación (gate 2)
+
+- **Camino textual (D-6).** Con sinónimos o escala en el catálogo, `con_valor_textual` usa `estado_de_poblacion`; sin ellos, la regla de US-123.
+- **Rangos acotados (D-8).** Un rango declarado por el estudio que no incluye el valor del paciente da No coincide (S3); DEC-11 no lo escribe: a confirmar por el oncólogo.
+- **`mezclada`.** Sale de `disenosQueMezclan` en `poblacion-reglas.json`; sin el archivo no aparece en producción.
+
 ## Risks / Trade-offs
 
 - [La sesión de oncólogos cambia la semántica] → el ajuste va al catálogo; solo se re-estima si cambia la proyección.

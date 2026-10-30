@@ -46,3 +46,18 @@ def test_con_valor_textual_coincide_con_el_camino_de_lista_cuando_el_valor_es_el
     assert resultado.estado == estado
     assert resultado.valor_estudio == valor
     assert resultado.chunk_citado_id == "ch-1"
+
+
+def test_con_valor_textual_usa_la_escala_del_catalogo_cuando_el_criterio_no_tiene_sinonimos():
+    from tests.support.criterios_poblacion import ESTADIO_CON_ESCALA
+
+    pendiente = CriterioEvaluado(
+        "estadio", "IIA", None, "desconocido", "no_reportado_por_fuente", False
+    )
+
+    resultado = con_valor_textual(
+        ESTADIO_CON_ESCALA, pendiente, PropuestaDePoblacion("CDR", "estadio", "IA–IIB", "ch-1")
+    )
+
+    assert (resultado.estado, resultado.causa) == ("coincide", None)
+    assert resultado.valor_estudio == "IA–IIB"
