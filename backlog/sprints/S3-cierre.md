@@ -98,3 +98,40 @@ Guion, pasos y preguntas para oncólogos y equipo técnico: [`docs/demo/guia-dem
 - Pregunta de privacidad: exposición de iniciales y 2 últimos caracteres del documento en el listado (RN-10).
 - Milestone de Linear del Sprint 3: lo cierra el humano tras mergear el PR de cierre.
 - FEAT-10c (FX-10c-a): conteos sin alinear con FEAT-08b (revisar en el S4).
+
+## 9. Retrospectiva: decisiones del usuario tras la Demo 3 (2026-10-29)
+
+> Añadido después del cierre del S3, con los resultados de la Demo 3 ([`S3-demo-cierre.md`](S3-demo-cierre.md)). **9.1 a 9.3 son decisiones del usuario**, tal como las dio; **9.4 son consecuencias y propuestas mías, sin aprobar**. Nada de esto se ha aplicado al backlog, al PRD ni a Linear: el slicing solo cambia con aprobación en `/sprint-refine` (Markdown primero, Linear después).
+
+### 9.1 Compromiso: cerrar al menos el 80 % de lo comprometido
+
+- **Decisión:** en cada sprint hay que **cerrar los issues comprometidos, o al menos más del 80 %**. En el S3 se cerró **alrededor del 53 %** (cifra del usuario).
+- **Contraste con los datos (Linear, 2026-10-29):** de las 20 filas del plan del S3 (`S3-status.md`), 13 historias están en Done (65 %); por puntos, 51 de 87 (59 %), o 59 de 87 (68 %) si se cuenta ARR-09, que no tiene issue. Las otras 5 (L1D-116, 117, 126, 244 y 285) siguen en In Review, con tareas abiertas que pasaron al S4, y US-117b no se empezó. Mi reconstrucción **no reproduce el 53 %**; la diferencia depende de qué se cuente (tareas abiertas, ARR-09, las 2 arrastradas del S2 cerradas en este cierre). **Se toma la cifra más severa del usuario como línea base** y conviene fijar la definición de «cerrado» en el próximo refinamiento.
+- **Medida de éxito desde el S4:** historias comprometidas en Done (con `tasks.md` conciliado y change archivado) ÷ historias comprometidas ≥ 0,80 al cierre de cada sprint.
+
+### 9.2 Orden de prioridad para el S4, S5 y S6
+
+Orden en que se completa el trabajo, de mayor a menor prioridad:
+
+1. **Knowledge RAG** (el RAG de conocimiento).
+2. **Búsqueda basada en la información médica del paciente.**
+3. **OCR.**
+4. **Gestión de usuarios.**
+
+- **Si no alcanza el tiempo y no hay pacientes reales o anonimizados:** las demos se hacen **solo con pacientes sintéticos**.
+- *Interpretación a confirmar en `/sprint-refine`:* por «búsqueda basada en la información médica del paciente» entiendo la recuperación de evidencia dirigida por los datos clínicos del caso (aplicabilidad, faltantes y preguntas ancladas al paciente), no la búsqueda de pacientes por documento o nombre (US-048, ya en Done).
+
+### 9.3 Ritmo y presupuesto
+
+- **Meta:** S4 en 1 a 2 días, S5 en 1 a 2 días y S6 en 1 a 2 días.
+- **Presupuesto:** se completan con la **suscripción Max de 100 USD dedicada a este fin**, ya activa.
+
+### 9.4 Consecuencias y propuestas (SIN aprobar)
+
+1. **El orden choca con el slicing vigente.** CLAUDE.md y PRD §14 fijan S4 = orden y tabla de aplicabilidad, hasta 3 opciones, preguntas de seguimiento y vista de caso; S5 = OCR, gate de PII, normalización y filtro de antigüedad (→ G-Demo); S6 = opt-out por CLI, auditoría, proveedores locales, `preflight` y, con baja prioridad, consola del administrador (→ G-Piloto). Con el orden nuevo habría que recolocar **OCR (hoy S5)** y **gestión de usuarios (hoy S6, baja prioridad)** como los últimos recortables, y llevar al S4 lo que sostiene el RAG de conocimiento: arreglo de OUT-06 y OUT-08, extracción de población en la ingesta con lista acotada (`S4-insumo-extraccion-poblacion.md`) y datos de demo con Coincide/Parcial (OUT-07). Hay que actualizar PRD §14 y el README de `backlog/features/` con aprobación.
+2. **Recorte por orden de prioridad.** Si el sprint no alcanza, se recorta de abajo hacia arriba (gestión de usuarios, luego OCR, luego búsqueda por datos del paciente) y nunca el RAG de conocimiento. Cada recorte pasa a `V2-Post-MVP.md` o al sprint siguiente por escrito.
+3. **Compromiso por capacidad real.** En el S3 se comprometieron 87 puntos y se cerraron menos; con sprints de 1 a 2 días, comprometer menos historias y de menor talla, y no abrir historias nuevas a mitad de sprint (las deudas y los outcomes de la demo entran en el siguiente refinamiento).
+4. **El presupuesto es un recurso de planificación, no solo de ejecución.** El S3 sufrió dos cortes por límite de uso (429) y el orquestador ya tiene un checkpoint al pasar el 80 % del límite (PR #234). Con una suscripción de 100 USD para tres sprints: un solo orquestador a la vez, Gate 2 reducido por defecto (mejora §7.8), sin re-ejecutar gates completos para Menores, y guardar el estado tras cada paso para reanudar sin repetir trabajo. Medir y anotar el consumo por sprint para calibrar el siguiente.
+5. **Definición de «cerrado» (Done).** Para llegar al 80 % sin sorpresas: Done = AC verificados, CI en verde, `tasks.md` conciliado (todo `[x]` con evidencia o con ID destino), change archivado y Linear en Done. Esto absorbe las mejoras §7.2 y §7.6.
+6. **Demos sintéticas.** Es consistente con RN-13/RN-14 y con el gate G-Piloto: ningún dato real entra antes del S6; aun así, la demo debe cubrir el caso completo con el seed y no depender de datos reales.
+
