@@ -3,9 +3,9 @@
 > `/sprint-refine S4`, sesión principal, 2026-10-29.
 > Entradas:
 > - [`S3-cierre.md`](S3-cierre.md) §9: decisiones del usuario tras la Demo 3.
-> - [`S3-demo-outcomes.md`](S3-demo-outcomes.md): OUT-01 a OUT-09.
-> - [`S3-demo-cierre.md`](S3-demo-cierre.md) §4: respuestas clínicas F-20 a F-24.
-> - [`S4-insumo-extraccion-poblacion.md`](S4-insumo-extraccion-poblacion.md).
+> - [`S3-demo-outcomes.md`](../../docs/evidence/S3-demo3/S3-demo-outcomes.md): OUT-01 a OUT-09.
+> - [`S3-demo-cierre.md`](../../docs/evidence/S3-demo3/S3-demo-cierre.md) §4: respuestas clínicas F-20 a F-24.
+> - [`S4-insumo-extraccion-poblacion.md`](../../docs/evidence/S3-demo3/S4-insumo-extraccion-poblacion.md).
 > - [`S3-deuda.md`](S3-deuda.md).
 >
 > **Markdown = fuente.** Linear se actualiza después, con confirmación (§7). Las respuestas se citan en las historias como `[S4 resp. n]`.
@@ -92,6 +92,7 @@ Según el orden de prioridad del usuario (RAG de conocimiento → búsqueda por 
 13. **US-126** se queda en 5 pts y 10 AC como excepción justificada. «Ver más» revela el resto de valores sin pedir nada nuevo al backend.
 14. **El enlace del faltante** va a la sección ya existente de la ficha (`#diagnostico` o `#biomarcadores`, con foco). Si el dato no tiene sección, va al encabezado principal.
 15. **Diseño S4-01:** variante A, tarjetas apiladas (§6).
+16. **Cobertura de la Demo 3:** los huecos que encontró la auditoría se cierran en documentos formales (§9). Los tres documentos temporales se conservan como evidencia en `docs/evidence/S3-demo3/`. En las historias se cita como `[S4 resp. 15]`.
 
 ## 5. Cambios de slicing aprobados
 
@@ -123,6 +124,8 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
 - cómo se reconoce una «restricción explícita»;
 - «conflicto en la misma cohorte» frente a «cohortes distintas»;
 - `solo_subgrupo`, que choca con US-122 AC-4 y se mantiene en la forma antigua hasta el S5.
+- F-19: validar la redacción de los textos de «Desconocido».
+- F-23: si consta en el fragmento, mostrar con los valores en conflicto la fecha y el tamaño de muestra (`(asumido)` en US-126 AC-9).
 
 ## 6. UI/UX (fase 3)
 
@@ -163,4 +166,26 @@ Aplicados en `backlog/features/` (cada Feature con su fila en `## Conflictos de 
 ## 8. Cambios aplicados en este PR (aprobados)
 
 - **`CLAUDE.md`:** el texto de RN-02 recoge el segundo loop (E-14) y el párrafo del Roadmap refleja el refinamiento del S4 (E-15). Como los subagentes leen `CLAUDE.md` del disco, `/sprint-start S4` debe correr en una **sesión nueva** tras el merge.
-- **Cierre de la Demo 3:** la rama temporal `docs/s3-demo3-cierre` no lleva PR propio. Su contenido queda traducido en ADR-47, DEC-11, las historias US-240…US-247 y sus issues de Linear, y E-15 del PRD. Este PR incluye sus dos commits porque los documentos de evidencia que citan el ADR, la DEC y las historias viven ahí: `S3-demo-outcomes.md`, `S3-demo-cierre.md`, `S4-insumo-extraccion-poblacion.md` y `S3-cierre.md` §9.
+- **Cierre de la Demo 3:** la rama temporal `docs/s3-demo3-cierre` no lleva PR propio. Sus dos commits van en este PR. Los tres documentos temporales se movieron a [`docs/evidence/S3-demo3/`](../../docs/evidence/S3-demo3/), donde se conservan como **evidencia** de solo lectura: las mediciones, los datos brutos de OUT-01…OUT-09 y las respuestas F-01…F-24. Lo accionable de esos documentos tiene ya destino formal (§9).
+- **`CLAUDE.md` y `docs/process/definition-of-done.md`:** recogen el ritmo y el presupuesto de S4–S6 y la definición de «cerrado» para la meta ≥ 80 % (S3-cierre §9.1 y §9.3).
+
+## 9. Cobertura de los documentos de la Demo 3 (auditoría, 2026-10-29) `[S4 resp. 15]`
+
+Se auditó todo lo accionable de `S3-demo-outcomes.md`, `S3-demo-cierre.md`, `S4-insumo-extraccion-poblacion.md`, `S3-cierre.md` §9 y `guia-demo-S3.md` §8. Este es su destino formal:
+
+| Origen | Destino formal |
+|---|---|
+| OUT-02, OUT-03, OUT-04, OUT-05 (incluidos Attu y las notas del runbook), OUT-07 | US-247 (L1D-297) |
+| OUT-06 | US-244 (L1D-294), US-242 (L1D-292), ADR-47 (decisión, riesgos y evidencia), US-240 (L1D-290) y US-233a (L1D-298) para la memoria. Nota sobre el tope por llamada del agente en FEAT-08c (Post-MVP) |
+| OUT-08 | US-245 (L1D-295) y US-246 (L1D-296). Las soluciones 3 y 4 (contexto del fragmento para el NLI, NLI más fuerte) quedan como nota en US-120 (L1D-119, S5) |
+| OUT-01 y OUT-09 (admin y aviso de `403`) | AC nuevos en US-222 (L1D-272, S6), que además cierra la deuda `WEB_HOME_PATH` de US-211 |
+| F-20…F-24 | DEC-11, US-243 (L1D-293) y US-126 (L1D-131). F-19 y F-23 (fecha y muestra) van a la sesión de oncólogos (§5) |
+| F-06 | Descartado por el usuario (sin outcome) |
+| F-15 (p95) | US-141 (si hay capacidad) y la recalibración del NFR en el S5 |
+| Insumo: §2–§8, §10 y R1…R18 | ADR-47 (riesgos ADR47-R1…R18 copiados) y US-240…US-244 y US-233b. La etapa 1 «puente» y el contrato con versión mayor quedan descartados (resp. 3 y 5) |
+| Insumo: candidatas del S5 y S6 | US-126 (varios valores en la UI), US-242 AC-7 (reindexación por versión), US-247 (`levantar.sh`). En `V2-Post-MVP.md`: herramienta de revisión humana a escala, métricas de deriva y runbook de reindexación, extracción doble |
+| S3-cierre §9.1 (≥ 80 %, definición de «cerrado») | PRD E-15, `CLAUDE.md` (Dinámica por sprint) y `docs/process/definition-of-done.md` |
+| S3-cierre §9.2 (prioridad, demos sintéticas) | PRD E-15, `CLAUDE.md` (Roadmap), `backlog/features/README.md` |
+| S3-cierre §9.3 (1–2 días por sprint, Max 100 USD) | `CLAUDE.md` (Dinámica por sprint) |
+| S3-cierre §9.4.3 y §9.4.4 (no abrir historias a mitad de sprint, un solo orquestador a la vez, medir el consumo por sprint) | **Propuestas sin aprobar**: siguen en `S3-cierre.md` §9.4 hasta que el usuario las apruebe |
+| Pregunta de privacidad (iniciales y 2 dígitos del documento en el listado) | `S3-deuda.md`: decisión del usuario antes del piloto (G-Piloto, S6) |
