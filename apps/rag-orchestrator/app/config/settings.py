@@ -27,6 +27,9 @@ from app.domain.reglas_proveedor import (
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
 POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL = 3
+# Recuperación híbrida (US-112): valores iniciales de la fuente (ADR-45 P1), únicos para Settings y ParametrosDeRecuperacion.
+RRF_K_INICIAL = 60
+HYBRID_SPARSE_WEIGHT_INICIAL = 0.3
 """Valor inicial de ``POPULATION_MAX_VALUES_PER_CRITERION`` (ADR-47): el único lugar donde aparece el literal."""
 HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
 
@@ -76,8 +79,8 @@ class Settings(BaseSettings):
     # Recuperación híbrida (US-112, RN-22): `dense` por defecto (sin la rama sparse); un valor inválido falla al arrancar.
     retrieval_mode: Literal["dense", "hibrida"] = "dense"
     retrieval_fusion: Literal["rrf", "ponderada"] = "rrf"
-    rrf_k: int = Field(default=60, ge=1)
-    hybrid_sparse_weight: float = Field(default=0.3, gt=0.0, lt=1.0)
+    rrf_k: int = Field(default=RRF_K_INICIAL, ge=1)
+    hybrid_sparse_weight: float = Field(default=HYBRID_SPARSE_WEIGHT_INICIAL, gt=0.0, lt=1.0)
     rerank_top_n: int | None = Field(default=None, gt=0)
     # Longitud máxima del código de tipo de cáncer que entra al filtro de Milvus (RN-22).
     retrieval_cancer_type_max_length: int = Field(default=64, gt=0)

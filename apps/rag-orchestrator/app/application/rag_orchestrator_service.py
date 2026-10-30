@@ -56,6 +56,7 @@ from app.application.ports import (
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
+from app.config.settings import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.citations import (
     MotivoDeDescarte,
     OpcionAceptada,
@@ -122,9 +123,9 @@ class ParametrosDeRecuperacion:
     """``RETRIEVAL_MODE`` (US-112, RN-22): ``dense`` por defecto; ``hibrida`` suma la rama *sparse* antes del reranker."""
     retrieval_fusion: EstrategiaDeFusion = EstrategiaDeFusion.rrf
     """``RETRIEVAL_FUSION``: regla que fusiona las dos ramas; solo se usa con ``retrieval_mode = hibrida``."""
-    rrf_k: int = 60
+    rrf_k: int = RRF_K_INICIAL
     """``RRF_K``: constante de ``Σ 1/(k+rank)``; solo con ``retrieval_fusion = rrf``."""
-    peso_sparse: float = 0.3
+    peso_sparse: float = HYBRID_SPARSE_WEIGHT_INICIAL
     """``HYBRID_SPARSE_WEIGHT``: peso de la rama *sparse* (0 < w < 1); solo con ``retrieval_fusion = ponderada``."""
 
 

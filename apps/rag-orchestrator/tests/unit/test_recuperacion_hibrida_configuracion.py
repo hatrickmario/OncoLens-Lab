@@ -11,6 +11,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.application.rag_orchestrator_service import ParametrosDeRecuperacion
+from app.schemas.generated.models import LlmProvider
 from app.bootstrap import ConfiguracionDeRecuperacionIncompleta, crear_app
 from app.config.settings import AjustesSparse, Settings
 from app.infrastructure.models.local import (
@@ -53,6 +55,23 @@ def test_settings_recupera_en_dense_con_rrf_k_60_y_peso_0_3_cuando_no_se_define_
     assert ajustes.retrieval_fusion == "rrf"
     assert ajustes.rrf_k == 60
     assert ajustes.hybrid_sparse_weight == 0.3
+
+
+def test_los_valores_iniciales_de_la_fusion_son_los_mismos_en_settings_y_en_los_parametros_del_servicio():
+    ajustes = _settings()
+    parametros = ParametrosDeRecuperacion(
+        relevance_threshold=0.3,
+        retrieval_top_k=1,
+        rerank_top_n=1,
+        longitud_maxima_codigo_tipo=64,
+        llm_provider=LlmProvider.local,
+        llm_model="m",
+        nli_entailment_threshold=0.7,
+        tipos_habilitados=(),
+    )
+
+    assert parametros.rrf_k == ajustes.rrf_k
+    assert parametros.peso_sparse == ajustes.hybrid_sparse_weight
 
 
 @pytest.mark.parametrize(
