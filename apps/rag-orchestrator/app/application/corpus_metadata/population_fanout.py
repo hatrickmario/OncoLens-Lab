@@ -42,6 +42,7 @@ from app.domain.corpus_metadata.poblacion_abanico import (
     validar_chunk,
     verificar_nli,
 )
+from app.domain.corpus_metadata.poblacion_seleccion import aplicar_tope, deduplicar
 from app.domain.corpus_metadata.poblacion_contadores import ContadoresDePoblacion
 from app.domain.corpus_metadata.poblacion_escritura import (
     FORMA_LISTA,
@@ -218,17 +219,22 @@ class PopulationFanoutExtractor:
         criterio: CriterioDeAplicabilidad,
         salida: _SalidaDelLlm,
     ) -> _ResultadoDeCriterio:
-        """Relleno → fragmento → NLI. Lo que sobrevive se guarda con su fragmento y la etiqueta del NLI."""
+        """Relleno → fragmento → NLI → duplicados → tope. Lo que sobrevive se guarda con su fragmento y su etiqueta NLI."""
         texto_del_fragmento = {f.chunk_id: f.texto for f in self._recuperador.todos(documento)}
         sin_relleno = rechazar_relleno(salida.valores or ())
         en_el_documento = validar_chunk(sin_relleno.conservados, texto_del_fragmento.keys())
         con_soporte = self._verificar(en_el_documento.conservados, texto_del_fragmento, criterio)
+        con_tope = aplicar_tope(
+            deduplicar(con_soporte.conservados, self._sinonimos),
+            self._configuracion.max_valores_por_criterio,
+        )
         contadores = salida.contadores + ContadoresDePoblacion(
             valores_rechazados_por_relleno=sin_relleno.descartados,
             valores_rechazados_por_chunk_ajeno=en_el_documento.descartados,
             valores_sin_soporte=con_soporte.descartados,
+            valores_fuera_del_tope=con_tope.fuera_del_tope,
         )
-        lista = lista_de_criterio(con_soporte.conservados, self._configuracion.versiones)
+        lista = lista_de_criterio(con_tope.conservados, self._configuracion.versiones)
         return _ResultadoDeCriterio(criterio.clave_de_estudio, lista, contadores)
 
     def _verificar(
