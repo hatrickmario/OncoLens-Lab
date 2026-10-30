@@ -9,7 +9,7 @@ from __future__ import annotations
 import copy
 import json
 import re
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -20,7 +20,9 @@ from fastapi.testclient import TestClient
 from app.application.ports import (
     ApplicabilityTextProposer,
     ChunkDelCorpus,
+    CandidatoParaReranker,
     ChunkEncontrado,
+    ChunkEncontradoSparse,
     ChunkSearch,
     CorpusChunkStore,
     EvidenceGenerator,
@@ -28,7 +30,9 @@ from app.application.ports import (
     Idioma,
     NliClassifier,
     ProhibitedTermsChecker,
+    QuerySparseEncoder,
     ReleaseDelCorpus,
+    SparseChunkSearch,
 )
 from app.application.rag_orchestrator_service import (
     ParametrosDeRecuperacion,
@@ -94,6 +98,8 @@ class ChunkFx:
     vector: list[float]
     es_vigente: bool
     cancer_type_tags: str
+    terminos_sparse: Mapping[int, float] | None = None
+    """Vector *sparse* del chunk (``{id_de_token: peso}``); ``None`` = sin poblar (corpus del S1)."""
 
 
 # Cada vector queda más cerca de la consulta de Q-HER2 (e0) cuanto más alta es su similitud: ch-m1v0-1 es el más
@@ -165,6 +171,7 @@ def chunk_del_corpus(chunk: ChunkFx) -> ChunkDelCorpus:
         published_year=2025,
         is_current=chunk.es_vigente,
         created_at_ms=EPOCA_FIJA_MS,
+        sparse_vector=chunk.terminos_sparse,
     )
 
 
@@ -204,11 +211,17 @@ class BuscadorFalso:
     """
 
     def __init__(
-        self, chunks: Sequence[ChunkFx] = CORPUS_FX06A, error: Exception | None = None
+        self,
+        chunks: Sequence[ChunkFx] = CORPUS_FX06A,
+        error: Exception | None = None,
+        error_sparse: Exception | None = None,
     ) -> None:
         self._chunks = list(chunks)
         self.error = error
+        self.error_sparse = error_sparse
+        self.limites_sparse: list[int] = []
         self.expresiones: list[str] = []
+        self.expresiones_sparse: list[str] = []
 
     @property
     def invocaciones(self) -> int:
@@ -233,6 +246,33 @@ class BuscadorFalso:
             for c in candidatos[:limit]
         ]
 
+    @property
+    def invocaciones_sparse(self) -> int:
+        return len(self.expresiones_sparse)
+
+    def search_sparse(
+        self, vector: Mapping[int, float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontradoSparse]:
+        """Como Milvus con ``IP``: producto interno sobre los términos en común; sin términos en común, no hay acierto."""
+        if not vector:
+            raise ValueError("el vector sparse de la consulta no puede estar vacío")
+        filtro = expresion_solo_vigente() if filtro is None else filtro
+        self.expresiones_sparse.append(filtro)
+        self.limites_sparse.append(limit)
+        if self.error_sparse is not None:
+            raise self.error_sparse
+        aciertos = [
+            (c, _producto_sparse(vector, c.terminos_sparse or {}))
+            for c in self._chunks
+            if self._cumple(c, filtro)
+        ]
+        aciertos = [(c, puntaje) for c, puntaje in aciertos if puntaje > 0.0]
+        aciertos.sort(key=lambda par: (-par[1], par[0].chunk_id))
+        return [
+            ChunkEncontradoSparse(c.chunk_id, c.document_id, c.texto, puntaje)
+            for c, puntaje in aciertos[:limit]
+        ]
+
     @staticmethod
     def _cumple(chunk: ChunkFx, filtro: str) -> bool:
         # Las mismas reglas del dominio que usa el repositorio real: sin is_current obligatorio, ValueError.
@@ -245,6 +285,33 @@ class BuscadorFalso:
 
 def _producto(a: Sequence[float], b: Sequence[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
+
+
+def _producto_sparse(a: Mapping[int, float], b: Mapping[int, float]) -> float:
+    return sum(peso * b[termino] for termino, peso in a.items() if termino in b)
+
+
+class EmbedderSparseFalso:
+    """``QuerySparseEncoder``: el mismo contrato que el real: un texto sin términos conocidos es un fallo, no un vector vacío."""
+
+    def __init__(
+        self, vectores: Mapping[str, Mapping[int, float]], error: Exception | None = None
+    ) -> None:
+        self._vectores = dict(vectores)
+        self.error = error
+        self.textos: list[str] = []
+
+    @property
+    def invocaciones(self) -> int:
+        return len(self.textos)
+
+    def embeber_sparse(self, texto: str) -> Mapping[int, float]:
+        self.textos.append(texto)
+        if self.error is not None:
+            raise self.error
+        if texto not in self._vectores:
+            raise FalloDeInferencia("sparse falso: la consulta no tiene ningún término con peso")
+        return dict(self._vectores[texto])
 
 
 class RerankerFalso:
@@ -267,7 +334,7 @@ class RerankerFalso:
     def invocaciones(self) -> int:
         return len(self.candidatos_recibidos)
 
-    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
+    def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         self.candidatos_recibidos.append([c.chunk_id for c in candidatos])
         if self.max_pairs is not None and len(candidatos) > self.max_pairs:
             raise FalloDeInferencia("reranker falso: más pares que el máximo")
@@ -463,6 +530,8 @@ def crear_entorno(
     verificador_terminos: ProhibitedTermsChecker | None = None,
     criterios: CriteriosDeAplicabilidad | None = None,
     proponente: ApplicabilityTextProposer | None = None,
+    buscador_sparse: SparseChunkSearch | None = None,
+    embedder_sparse: QuerySparseEncoder | None = None,
 ) -> EntornoDeRecuperacion:
     embedder = embedder or EmbedderFalso()
     buscador = buscador or BuscadorFalso()
@@ -494,6 +563,8 @@ def crear_entorno(
         verificador_terminos=verificador_terminos,
         reloj=RelojFijo(),
         parametros=parametros,
+        buscador_sparse=buscador_sparse,
+        embedder_sparse=embedder_sparse,
     )
     app = crear_app(
         settings_de_prueba(), trace_ids=GeneradorTraceFijo(), clock=RelojFijo(), consulta=servicio

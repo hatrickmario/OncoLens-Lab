@@ -15,7 +15,12 @@ from pymilvus import MilvusClient
 from pymilvus.exceptions import MilvusException
 
 from app.application.corpus_ingestion.ports import ChunkParaReindexar
-from app.application.ports import ChunkDelCorpus, ChunkEncontrado, DimensionDeVectorInvalida
+from app.application.ports import (
+    ChunkDelCorpus,
+    ChunkEncontrado,
+    ChunkEncontradoSparse,
+    DimensionDeVectorInvalida,
+)
 from app.config.settings import MilvusSettings
 from app.domain.corpus_seed.reindexacion import con_sparse_sustituido
 from app.domain.retrieval_filter import exigir_filtro_vigente, expresion_solo_vigente
@@ -26,6 +31,7 @@ from app.infrastructure.milvus.schema import (
     build_corpus_chunks_schema,
     campos_esperados,
     search_params,
+    search_params_sparse,
 )
 
 CODIGO_PARAMETRO_INVALIDO = (
@@ -173,6 +179,36 @@ class MilvusRepository:
                 document_id=hit["entity"]["document_id"],
                 chunk_text=hit["entity"]["chunk_text"],
                 similitud_dense=float(hit["distance"]),
+            )
+            for hit in resultados[0]
+        ]
+
+    def search_sparse(
+        self, vector: Mapping[int, float], limit: int, filtro: str | None = None
+    ) -> list[ChunkEncontradoSparse]:
+        """Rama *sparse* de la recuperación híbrida (US-112): mismo filtro y mismo ``is_current`` obligatorio que ``search_dense`` (RN-05).
+
+        ``similitud_sparse`` es el producto interno de Milvus (``MILVUS_SPARSE_METRIC_TYPE``): no es ``relevance_score`` (RN-03).
+        Un vector vacío se rechaza con ``ValueError`` antes de llegar a Milvus.
+        """
+        if not vector:
+            raise ValueError("el vector sparse de la consulta no puede estar vacío")
+        filtro = expresion_solo_vigente() if filtro is None else exigir_filtro_vigente(filtro)
+        resultados = self._cliente.search(
+            self._coleccion,
+            data=[dict(vector)],
+            anns_field=CAMPO_SPARSE,
+            limit=limit,
+            filter=filtro,
+            search_params=search_params_sparse(self._ajustes),
+            output_fields=["chunk_id", "document_id", "chunk_text"],
+        )
+        return [
+            ChunkEncontradoSparse(
+                chunk_id=hit["entity"]["chunk_id"],
+                document_id=hit["entity"]["document_id"],
+                chunk_text=hit["entity"]["chunk_text"],
+                similitud_sparse=float(hit["distance"]),
             )
             for hit in resultados[0]
         ]

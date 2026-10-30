@@ -430,6 +430,17 @@
       "target": "#/components/schemas/EvidenceAnalysis"
     },
     {
+      "file": "rag-query-request-hibrida.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalRequest"
+    },
+    {
+      "file": "rag-query-hibrida.json",
+      "spec": "rag-orchestrator",
+      "target": "#/components/schemas/RagQueryInternalResponse",
+      "request": "rag-query-request-hibrida.json"
+    },
+    {
       "file": "completeness-f-m2.json",
       "spec": "clinical-api",
       "target": "#/paths/~1platform~1patients~1{patientId}~1completeness/get/responses/200"

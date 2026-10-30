@@ -98,6 +98,11 @@ def search_params(ajustes: MilvusSettings) -> dict[str, Any]:
     }
 
 
+def search_params_sparse(ajustes: MilvusSettings) -> dict[str, Any]:
+    """Búsqueda *sparse*: la métrica del índice declarado en ``build_corpus_chunks_indexes`` (RN-22)."""
+    return {"metric_type": ajustes.milvus_sparse_metric_type, "params": {}}
+
+
 def build_corpus_chunks_indexes(cliente: MilvusClient, ajustes: MilvusSettings) -> Any:
     """Índices dense, sparse y escalares. Milvus exige índice en cada vector para cargar la colección."""
     indices = cliente.prepare_index_params()

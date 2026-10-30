@@ -36,6 +36,7 @@ def _opcion_con(razon: str, citas: list[dict[str, Any]]) -> dict[str, Any]:
 
 ESCENARIOS: dict[str, list[dict[str, Any]]] = {
     "LLM-OK": [_opcion([{"chunkId": "ch-m1-1"}])],
+    "LLM-OK-M2": [_opcion([{"chunkId": "ch-m2-1"}])],
     "LLM-CITA-AJENA": [_opcion([{"chunkId": "ch-x-999"}])],
     "LLM-TITULO-FALSO": [
         _opcion([{"chunkId": "ch-m1-1", "title": TITULO_INVENTADO, "sourceName": "NCCN"}])

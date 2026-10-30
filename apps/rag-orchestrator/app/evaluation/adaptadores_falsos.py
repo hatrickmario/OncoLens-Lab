@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from app.application.ports import (
+    CandidatoParaReranker,
     ChunkEncontrado,
     CoberturaDePoblacion,
     EvidenciaGenerada,
@@ -88,7 +89,7 @@ class BuscadorEnMemoria:
 class RerankerLexico:
     version = "fake-lexical@1"
 
-    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
+    def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         palabras = tokens(pregunta)
         return [
             min(

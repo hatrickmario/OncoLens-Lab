@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from app.application.ports import ChunkEncontrado, FalloDeInferencia
+from app.application.ports import CandidatoParaReranker, FalloDeInferencia
 from app.domain.normalizacion_puntaje import normalizar_a_unidad
 from app.infrastructure.models.fallos import fallos_de_inferencia_como_error_del_puerto
 from app.infrastructure.models.lotes import (
@@ -43,7 +43,7 @@ class BgeReranker:
     def version(self) -> str:
         return self._version
 
-    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
+    def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         if len(candidatos) > self._max_pairs:
             raise FalloDeInferencia(_EXCESO_DE_PARES)
         if not candidatos:

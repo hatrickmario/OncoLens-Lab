@@ -34,7 +34,9 @@ from app.application.ports import (
     ProhibitedTermsChecker,
     PuertosDelCorpus,
     QueryEmbedder,
+    QuerySparseEncoder,
     Reranker,
+    SparseChunkSearch,
     TraceIdGenerator,
 )
 from app.application.rag_orchestrator_service import (
@@ -51,6 +53,7 @@ from app.config.logging import registrar_evento, silenciar_urls_de_httpx_en_logs
 from app.config.settings import Settings, claves_de_recuperacion_ausentes, nombres_de_claves
 from app.config.version import VERSION_DEL_SERVICIO
 from app.domain.criterios_aplicabilidad import CriteriosDeAplicabilidad
+from app.domain.fusion_de_candidatos import EstrategiaDeFusion
 from app.domain.tipos_habilitados import tipos_ausentes_del_catalogo
 from app.infrastructure.catalogo_clinico.aplicabilidad import (
     CriteriosDelCatalogo,
@@ -74,7 +77,7 @@ from app.infrastructure.llm.openai_compatible_health import OpenAICompatibleLlmH
 from app.infrastructure.security.clave_publica import cargar_clave_publica_es256
 from app.infrastructure.security.service_jwt_verifier import ServiceJwtVerifier
 from app.infrastructure.trace.uuid_trace_id import UuidTraceIdGenerator
-from app.schemas.generated.models import LlmProvider
+from app.schemas.generated.models import LlmProvider, RetrievalMode
 
 if (
     TYPE_CHECKING
@@ -102,6 +105,9 @@ class PuertosDeRecuperacion:
     catalogo_clinico: CatalogoClinico
     clasificador_nli: NliClassifier
     verificador_terminos: ProhibitedTermsChecker
+    buscador_sparse: SparseChunkSearch | None = None
+    """Rama *sparse* del corpus (US-112); solo se exige con ``RETRIEVAL_MODE=hibrida``."""
+    embedder_sparse: QuerySparseEncoder | None = None
 
 
 CargadorDeModelos = Callable[[Settings], "ModelosDeRecuperacion"]
@@ -290,6 +296,8 @@ def _componer_recuperacion(
         catalogo_clinico=catalogo_clinico,
         clasificador_nli=modelos.clasificador_nli,
         verificador_terminos=_cargar_lista_de_terminos(settings),
+        buscador_sparse=corpus.buscador_sparse,
+        embedder_sparse=modelos.embedder_sparse_consulta,
     )
 
 
@@ -379,6 +387,7 @@ def _crear_servicio_de_recuperacion(
     generador: EvidenceGenerator | None,
     criterios_de_aplicabilidad: CriteriosDeAplicabilidad,
 ) -> RAGOrchestratorService:
+    _exigir_ramas_de_la_recuperacion_hibrida(settings, puertos)
     return RAGOrchestratorService(
         detector_idioma=puertos.detector_idioma,
         embedder=puertos.embedder,
@@ -397,6 +406,8 @@ def _crear_servicio_de_recuperacion(
         generador=generador or crear_generador_local(settings),
         reloj=clock,
         parametros=_parametros_de_recuperacion(settings),
+        buscador_sparse=puertos.buscador_sparse,
+        embedder_sparse=puertos.embedder_sparse,
     )
 
 
@@ -435,6 +446,26 @@ def _exigir_configuracion_de_recuperacion(settings: Settings) -> None:
         )
 
 
+def _exigir_ramas_de_la_recuperacion_hibrida(
+    settings: Settings, puertos: PuertosDeRecuperacion
+) -> None:
+    """``RETRIEVAL_MODE=hibrida`` sin la rama sparse (búsqueda o codificador) no arranca: nunca degrada a dense en silencio."""
+    if settings.retrieval_mode != "hibrida":
+        return
+    faltan = [
+        nombre
+        for nombre, puerto in (
+            ("la búsqueda sparse del corpus", puertos.buscador_sparse),
+            ("el codificador sparse de la consulta", puertos.embedder_sparse),
+        )
+        if puerto is None
+    ]
+    if faltan:
+        raise ConfiguracionDeRecuperacionIncompleta(
+            f"RETRIEVAL_MODE=hibrida exige {' y '.join(faltan)}"
+        )
+
+
 def _exigir_claves(valores: dict[str, object]) -> None:
     ausentes = [clave for clave, valor in valores.items() if valor is None]
     if ausentes:
@@ -469,6 +500,10 @@ def _parametros_de_recuperacion(settings: Settings) -> ParametrosDeRecuperacion:
         llm_model=settings.llm_model,
         nli_entailment_threshold=settings.nli_entailment_threshold,  # type: ignore[arg-type]
         tipos_habilitados=settings.enabled_cancer_types,
+        retrieval_mode=RetrievalMode(settings.retrieval_mode),
+        retrieval_fusion=EstrategiaDeFusion(settings.retrieval_fusion),
+        rrf_k=settings.rrf_k,
+        peso_sparse=settings.hybrid_sparse_weight,
         # Con modelos locales el tope sale de ADR-39 (RERANKER_MAX_PAIRS); sin él, el reranker no limita y no se recorta.
         reranker_max_pairs=settings.modelos.reranker_max_pairs if settings.modelos else None,
     )

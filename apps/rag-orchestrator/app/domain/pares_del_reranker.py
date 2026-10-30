@@ -11,7 +11,7 @@ class CandidatoRecuperado(Protocol):
     def chunk_id(self) -> str: ...
 
     @property
-    def similitud_dense(self) -> float: ...
+    def puntaje_de_recuperacion(self) -> float: ...
 
 
 def recortar_a_pares_del_reranker[T: CandidatoRecuperado](
@@ -24,5 +24,5 @@ def recortar_a_pares_del_reranker[T: CandidatoRecuperado](
     """
     if max_pares <= 0:
         raise ValueError("max_pares debe ser positivo")
-    ordenados = sorted(candidatos, key=lambda c: (-c.similitud_dense, c.chunk_id))
+    ordenados = sorted(candidatos, key=lambda c: (-c.puntaje_de_recuperacion, c.chunk_id))
     return ordenados[:max_pares]

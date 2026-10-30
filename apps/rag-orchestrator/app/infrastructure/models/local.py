@@ -13,9 +13,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from pydantic import ValidationError
 
 from app.application.corpus_ingestion.ports import SparsePassageEncoder
-from app.application.ports import LanguageDetector, NliClassifier, QueryEmbedder, Reranker
+from app.application.ports import (
+    LanguageDetector,
+    NliClassifier,
+    QueryEmbedder,
+    QuerySparseEncoder,
+    Reranker,
+)
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.modelos import ConfigModelos
 from app.config.settings import AjustesSparse, Settings
@@ -31,7 +38,10 @@ from app.infrastructure.embeddings.bge_m3 import (
     EmbedderDePasajesBgeM3,
     NucleoBgeM3,
 )
-from app.infrastructure.embeddings.bge_m3_sparse import CodificadorSparseBgeM3
+from app.infrastructure.embeddings.bge_m3_sparse import (
+    CodificadorSparseBgeM3,
+    CodificadorSparseDeConsultaBgeM3,
+)
 from app.infrastructure.language.detector_local import DetectorDeIdiomaLocal
 from app.infrastructure.models.onnx import (
     DatosExternosNoResueltos,
@@ -71,6 +81,8 @@ class ModelosDeRecuperacion:
     embedder_pasajes: PassageEmbedder
     reranker: Reranker
     clasificador_nli: NliClassifier
+    embedder_sparse_consulta: QuerySparseEncoder | None = None
+    """Solo con ``RETRIEVAL_MODE=hibrida`` (US-112): el mismo codificador *sparse* de la ingesta, aplicado a la consulta."""
 
 
 def cargar_modelos_locales(
@@ -99,12 +111,64 @@ def cargar_modelos_locales(
     nucleo = _nucleo_de_embeddings(settings, config, sesion_embeddings, tokenizador_embeddings)
     clasificador_nli = _clasificador_nli(settings, config, indices_nli, sesion_nli, tokenizador_nli)
     _comprobar_las_tres_clases_del_nli(clasificador_nli)
+    sparse_de_consulta = _sparse_de_consulta_si_es_hibrida(
+        settings, sesion_embeddings, tokenizador_embeddings
+    )
     return ModelosDeRecuperacion(
         detector_idioma=DetectorDeIdiomaLocal(settings.default_query_language),
         embedder_consulta=EmbedderDeConsultaBgeM3(nucleo),
         embedder_pasajes=EmbedderDePasajesBgeM3(nucleo),
         reranker=_reranker(settings, config, sesion_reranker, tokenizador_reranker),
         clasificador_nli=clasificador_nli,
+        embedder_sparse_consulta=sparse_de_consulta,
+    )
+
+
+def _sparse_de_consulta_si_es_hibrida(
+    settings: Settings, sesion: SesionDeInferencia, tokenizador: Tokenizador
+) -> QuerySparseEncoder | None:
+    """El codificador *sparse* de la consulta, solo en modo híbrido; sus pesos se verifican con SHA-256 (RN-22).
+
+    Una clave de ``AjustesSparse`` ausente o inválida falla al arrancar nombrando la variable, nunca su valor.
+    """
+    if settings.retrieval_mode != "hibrida":
+        return None
+    try:
+        ajustes = AjustesSparse(_env_file=None)  # type: ignore[call-arg]
+    except ValidationError as error:
+        variable = str(error.errors()[0]["loc"][0]).upper()
+        raise ModeloNoVerificadoError(variable) from None
+    pesos, sesgo = _pesos_del_sparse_del_modelo(settings, ajustes)
+    return CodificadorSparseDeConsultaBgeM3(
+        _codificador_sparse(settings, pesos, sesgo, sesion, tokenizador)
+    )
+
+
+def _pesos_del_sparse_del_modelo(
+    settings: Settings, ajustes_sparse: AjustesSparse
+) -> tuple[np.ndarray, float]:
+    pesos, sesgo = _pesos_sparse_verificados(ajustes_sparse)
+    if pesos.size != _exigir_configuracion_de_modelos(settings).embedding_dim:
+        # Falla al cargar, no por documento: los pesos no son los de la cabeza del modelo configurado.
+        raise ModeloNoVerificadoError("EMBEDDING_SPARSE_WEIGHTS_PATH")
+    return pesos, sesgo
+
+
+def _codificador_sparse(
+    settings: Settings,
+    pesos: np.ndarray,
+    sesgo: float,
+    sesion: SesionDeInferencia,
+    tokenizador: Tokenizador,
+) -> CodificadorSparseBgeM3:
+    """Una sola construcción para la ingesta y la consulta: misma sesión, pesos, ``max_length`` y lotes (US-112 D6)."""
+    return CodificadorSparseBgeM3(
+        sesion,
+        tokenizador,
+        pesos=pesos,
+        sesgo=sesgo,
+        max_length=settings.embedding_max_length,
+        max_tokens_por_lote=settings.model_batch_max_tokens,
     )
 
 
@@ -133,21 +197,11 @@ def cargar_embeddings_y_sparse_de_pasajes(
     Verifica los archivos de embeddings y los pesos de ``sparse_linear`` (ruta y SHA-256 de ``AjustesSparse``,
     RN-22) antes de construir nada. Un fallo nombra solo la variable.
     """
-    pesos, sesgo = _pesos_sparse_verificados(ajustes_sparse)
-    if pesos.size != _exigir_configuracion_de_modelos(settings).embedding_dim:
-        # Falla al cargar, no por documento: los pesos no son los de la cabeza del modelo configurado.
-        raise ModeloNoVerificadoError("EMBEDDING_SPARSE_WEIGHTS_PATH")
+    pesos, sesgo = _pesos_del_sparse_del_modelo(settings, ajustes_sparse)
     nucleo, sesion, tokenizador = _nucleo_de_pasajes(
         settings, fabricar_sesion, fabricar_tokenizador
     )
-    codificador = CodificadorSparseBgeM3(
-        sesion,
-        tokenizador,
-        pesos=pesos,
-        sesgo=sesgo,
-        max_length=settings.embedding_max_length,
-        max_tokens_por_lote=settings.model_batch_max_tokens,
-    )
+    codificador = _codificador_sparse(settings, pesos, sesgo, sesion, tokenizador)
     return EmbedderDePasajesBgeM3(nucleo), codificador
 
 

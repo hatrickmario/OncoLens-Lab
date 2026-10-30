@@ -82,6 +82,8 @@ def test_rag_query_completa_meta_con_la_release_del_corpus_y_la_configuracion_cu
             "rerankTopN": 10,
             "relevanceThreshold": 0.3,
             "retrievalMode": "dense",
+            "fusion": "ninguna",
+            "fusionParam": 0,
         },
         "latencyMs": 0,
     }
