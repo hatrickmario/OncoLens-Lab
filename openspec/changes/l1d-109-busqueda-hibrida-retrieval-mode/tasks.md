@@ -18,7 +18,7 @@
 
 ## clinical-platform
 
-- [ ] 3.1 (pendiente: la hace `clinical-platform-dev` en esta rama tras mi contrato 1.7.0) Verificar (sin cambio de código esperado) que `retrieval_params` del `AIAnalysisRecord` persiste el bloque `retrievalParams` completo con `fusion` y `fusionParam` (`rag-query-hibrida.json` → `rrf`/60; `rag-query-con-evidencia.json` → `ninguna`/0); si el cliente/Zod generado de `clinical-api` es cerrado, regenerarlo desde el contrato 1.7.0 · integración (Supertest + MSW desde `contracts/examples/`) · test después · commit `test(L1D-109)`
+- [x] 3.1 Verificar (sin cambio de código esperado) que `retrieval_params` del `AIAnalysisRecord` persiste el bloque `retrievalParams` completo con `fusion` y `fusionParam` (`rag-query-hibrida.json` → `rrf`/60; `rag-query-con-evidencia.json` → `ninguna`/0); si el cliente/Zod generado de `clinical-api` es cerrado, regenerarlo desde el contrato 1.7.0 · integración (Supertest + MSW desde `contracts/examples/`) · test después · commit `test(L1D-109)` · evidencia: `persistencia-busqueda-hibrida.test.ts` (2 tests en verde; en rojo al quitar `fusion`/`fusionParam` del Zod generado de rag-orchestrator, revertido); el Zod `strictObject` ya acepta 1.7.0, sin regenerar y sin cambio de código
 
 ## evaluación
 
