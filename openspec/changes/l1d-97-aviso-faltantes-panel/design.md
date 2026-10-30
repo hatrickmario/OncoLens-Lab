@@ -26,6 +26,10 @@ No hay PII nueva: solo etiquetas del catálogo. El navegador habla solo con `web
 
 Las etiquetas y textos del aviso se pintan solo como texto de React (sin `dangerouslySetInnerHTML` ni HTML del servidor). El Route Handler se apoya en `apps/web/lib/server/proxy-json.ts` (módulo `server-only`): la URL de `clinical-api` y el reenvío de la cookie de sesión nunca llegan al bundle del cliente. No se añaden variables `NEXT_PUBLIC_`, ni cambios de CSP, de cabeceras de seguridad ni de `next.config`. El foco por ancla usa la lista permitida de D4.
 
+## Ampliación de alcance (Decidido (usuario, 2026-10-30))
+
+Las cuatro deudas de l1d-95 2.15 (ciclos de módulo, `errorClase` del log, regla única del diagnóstico vigente, `PacienteNoEncontrado` duplicado) pasan a este change como tareas 1.4…1.7 de `## clinical-platform`. **Ensancha el alcance**: l1d-97 deja de tocar solo `apps/web` y toca también `apps/clinical-api` (refactors sin cambio de comportamiento ni de contrato, más un campo de log). Disciplina: TDD estricto en (b); refactor con tests en verde antes y después en (a), (c) y (d). La estimación (3) queda a decisión del orquestador.
+
 ## Contratos
 
 Sin cambios en ningún `openapi.yaml`. Consume `GET /platform/patients/{id}/completeness` de US-003 con cliente/Zod generados en `packages/api-contracts` (no editar a mano) y `EvidenceAnalysisRequest.continueWithWarning` ya existente. Los handlers MSW se construyen desde los ejemplos que publica l1d-95 en `contracts/examples/`: `completeness-f-m2.json` (6 faltantes), `completeness-f-m1.json` (0), `completeness-tipo-no-habilitado.json` y `error-interno.json` (`500`); para la ficha (Q2), el ejemplo de `PatientSummary` con `completenessAvailable = false` que publica l1d-95.
