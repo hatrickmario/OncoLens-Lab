@@ -32,6 +32,7 @@ from app.prompts.rag_query import (
 )
 from app.schemas.generated.models import Provenance, RagQueryInternalRequest
 from tests.support.aplicabilidad import a_m1_conflicto, solicitud_a_m1
+from tests.support.poblacion_lista import poblacion_guardada
 
 VERIFICADO = ProcedenciaDelDato()
 SIN_VERIFICAR = ProcedenciaDelDato(requiere_revision=True)
@@ -160,7 +161,7 @@ def _criterio(
 
 
 def _poblacion(**criterios: object) -> PoblacionDelEstudio:
-    return PoblacionDelEstudio("fuente_estructurada", criterios)
+    return poblacion_guardada("fuente_estructurada", criterios)
 
 
 def test_evaluar_criterio_de_fuente_copia_el_aviso_del_dato_que_se_compara_cuando_el_dato_esta_sin_verificar():

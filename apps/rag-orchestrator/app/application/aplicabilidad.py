@@ -114,6 +114,20 @@ def _orden_por_relevancia(fuente: AplicabilidadDeFuente) -> tuple[float, str]:
     return -fuente.mejor_chunk.chunk.relevance_score, fuente.external_id
 
 
+def formas_invalidas_para_el_log(
+    poblaciones: Mapping[str, PoblacionDelEstudio],
+) -> list[tuple[str, str | None]]:
+    """``(criterio, chunkId)`` de cada criterio cuya lista se descartó por forma inválida (US-241 D6), en el orden de
+    documento y criterio. Solo la clave del criterio y el ID del fragmento del corpus público: nunca el valor (RN-14).
+    La marca ``pendiente`` es una forma válida y no figura."""
+    return [
+        (clave, criterio.invalidez.chunk_id)
+        for documento in sorted(poblaciones)
+        for clave, criterio in poblaciones[documento].criterios.items()
+        if criterio.invalidez is not None
+    ]
+
+
 def recuentos_para_el_log(fuentes: Sequence[AplicabilidadDeFuente]) -> dict[str, int]:
     """Solo recuentos: documentos, criterios por estado y ``desconocido`` por motivo interno (design D2b).
 

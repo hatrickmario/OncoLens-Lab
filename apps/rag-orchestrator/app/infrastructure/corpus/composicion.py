@@ -34,7 +34,11 @@ def puertos_del_corpus_segun_proveedores(settings: Settings) -> PuertosDelCorpus
     if settings.model_provider != "local" or settings.llm_provider != "local":
         return None
     milvus, base = _leer_configuracion_del_corpus()
-    return crear_puertos_del_corpus(milvus, base)
+    return crear_puertos_del_corpus(
+        milvus,
+        base,
+        max_valores_de_poblacion=settings.population_max_values_per_criterion,
+    )
 
 
 def crear_puertos_del_corpus(
@@ -43,6 +47,7 @@ def crear_puertos_del_corpus(
     *,
     fabricar_cliente: Callable[..., Any] | None = None,
     fabricar_motor: Callable[..., Any] | None = None,
+    max_valores_de_poblacion: int,
 ) -> PuertosDelCorpus:
     """Construye Milvus y los lectores del catálogo y los sonda. Las fábricas se inyectan en los tests."""
     from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres
@@ -58,7 +63,7 @@ def crear_puertos_del_corpus(
     return PuertosDelCorpus(
         buscador=MilvusRepository(cliente, milvus),
         lector_release=LectorReleasePostgres(motor),
-        catalogo=LectorCatalogoPostgres(motor),
+        catalogo=LectorCatalogoPostgres(motor, max_valores_de_poblacion),
     )
 
 

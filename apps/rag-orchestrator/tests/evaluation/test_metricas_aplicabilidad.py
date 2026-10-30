@@ -12,6 +12,7 @@ from app.domain.aplicabilidad_tipos import (
     ContextoDelPaciente,
     CriterioEvaluado,
 )
+from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.domain.cobertura_poblacion import proporcion_con_criterios, tiene_criterios_de_poblacion
 from app.evaluation.config_suite import ConfigInvalida
 from app.evaluation.metricas.aplicabilidad import (
@@ -140,20 +141,40 @@ class TestMarcaFrenteAMeta:
 
 class TestCoberturaDePoblacion:
     def test_no_cuenta_el_documento_cuando_todo_es_no_disponible(self) -> None:
-        assert not tiene_criterios_de_poblacion({"ecog": "no_disponible", "biomarcadores": {}})
+        assert not tiene_criterios_de_poblacion(
+            {"ecog": "no_disponible", "biomarcadores": {}}, MAX_VALORES
+        )
 
     def test_cuenta_el_documento_cuando_un_biomarcador_anidado_trae_valor(self) -> None:
         assert tiene_criterios_de_poblacion(
-            {"ecog": "no_disponible", "biomarcadores": {"her2": "positivo"}}
+            {"ecog": "no_disponible", "biomarcadores": {"her2": "positivo"}}, MAX_VALORES
         )
 
     def test_cuenta_el_valor_con_alcance_como_una_hoja(self) -> None:
-        assert tiene_criterios_de_poblacion({"ecog": {"valor": "0-1", "alcance": "subgrupo"}})
+        assert tiene_criterios_de_poblacion(
+            {"ecog": {"valor": "0-1", "alcance": "subgrupo"}}, MAX_VALORES
+        )
 
     def test_no_cuenta_el_documento_que_produce_la_ingesta_cuando_no_declara_nada(self) -> None:
         from app.domain.corpus_seed.poblacion import resolver_criterios_poblacion
 
-        assert not tiene_criterios_de_poblacion(resolver_criterios_poblacion({}))
+        assert not tiene_criterios_de_poblacion(resolver_criterios_poblacion({}), MAX_VALORES)
+
+    def test_no_cuenta_la_marca_pendiente_la_lista_vacia_ni_la_lista_de_forma_invalida(
+        self,
+    ) -> None:
+        invalida = [{"value": "x", "chunkId": "ch-1", "scope": "global"}]
+        for criterios in (
+            {"linea": {"status": "pendiente", "values": []}},
+            {"linea": []},
+            {"linea": invalida},
+        ):
+            assert not tiene_criterios_de_poblacion(criterios, MAX_VALORES)
+
+    def test_cuenta_el_documento_cuando_un_criterio_trae_una_lista_valida(self) -> None:
+        valida = [{"value": "x", "chunkId": "ch-1", "scope": "elegibilidad"}]
+
+        assert tiene_criterios_de_poblacion({"linea": valida}, MAX_VALORES)
 
     def test_devuelve_nulo_cuando_no_hay_documentos_vigentes(self) -> None:
         assert proporcion_con_criterios(0, 0) is None

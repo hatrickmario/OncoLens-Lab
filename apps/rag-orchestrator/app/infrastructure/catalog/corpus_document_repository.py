@@ -31,8 +31,10 @@ from app.infrastructure.catalog.tables import (
 
 
 def _registro_de(fila: Mapping[str, Any]) -> RegistroDeDocumento:
-    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable."""
-    return RegistroDeDocumento(**{**fila, "extracted_fields": tuple(fila["extracted_fields"])})
+    """JSONB devuelve ``extracted_fields`` como lista: el registro lo expone como tupla inmutable. ``population_form``
+    (migración 0005) es del catálogo, no del registro: lo escribe la ingesta de población (US-242)."""
+    campos = {k: v for k, v in fila.items() if k != "population_form"}
+    return RegistroDeDocumento(**{**campos, "extracted_fields": tuple(fila["extracted_fields"])})
 
 
 class CorpusDocumentRepository:

@@ -724,19 +724,68 @@ export const zSynthesis = z.strictObject({
 });
 
 /**
+ * Cita de un turno de seguimiento, con la marca de fuente nueva que calcula clinical-api.
+ */
+export const zFollowUpCitedSource = zCitedSourceFields.and(z.object({
+    isNewSource: z.boolean()
+}));
+
+export const zFollowUpTurn = z.strictObject({
+    id: z.uuid(),
+    analysisId: z.uuid(),
+    turnNumber: z.int().gte(1),
+    question: z.string(),
+    status: z.enum([
+        'con_evidencia',
+        'sin_evidencia',
+        'fuera_de_contexto'
+    ]),
+    answer: z.array(zSupportedClaim),
+    citedSources: z.array(zFollowUpCitedSource),
+    omittedClaims: z.int().gte(0),
+    patientDataLinks: z.array(zPatientDataLink),
+    disclaimer: z.string().min(1),
+    createdAt: z.iso.datetime()
+});
+
+export const zStudyPopulationValue = z.strictObject({
+    value: z.string().max(200),
+    chunkId: z.string(),
+    scope: z.enum([
+        'elegibilidad',
+        'subgrupo',
+        'mencion'
+    ])
+});
+
+/**
  * Un criterio del catálogo del tipo de cáncer y su estado frente al paciente (RN-28).
  */
 export const zApplicabilityCriterion = z.strictObject({
     criterion: z.string(),
     patientValue: z.string().nullable(),
     studyPopulationValue: z.string().nullable(),
+    studyPopulationValues: z.array(zStudyPopulationValue).optional(),
+    partialReason: z.enum([
+        'inclusiva',
+        'mezclada',
+        'rango_solapado',
+        'solo_subgrupo'
+    ]).nullish(),
     status: z.enum([
         'coincide',
         'parcial',
         'no_coincide',
         'desconocido'
     ]),
-    unknownReason: z.enum(['falta_en_paciente', 'no_reportado_por_fuente']).nullable(),
+    unknownReason: z.enum([
+        'falta_en_paciente',
+        'no_reportado_por_fuente',
+        'varios_valores_en_la_fuente',
+        'valores_en_conflicto',
+        'respaldo_fallido',
+        'sin_regla_de_comparacion'
+    ]).nullable(),
     isExclusionary: z.boolean(),
     patientDataWarning: z.enum([
         'sin_verificar',
@@ -778,31 +827,6 @@ export const zEvidenceAnalysis = z.strictObject({
     topRelevanceScore: z.number().gte(0).lte(1).nullable(),
     staleness: zStaleness,
     rerunOfAnalysisId: z.uuid().nullable(),
-    patientDataLinks: z.array(zPatientDataLink),
-    disclaimer: z.string().min(1),
-    createdAt: z.iso.datetime()
-});
-
-/**
- * Cita de un turno de seguimiento, con la marca de fuente nueva que calcula clinical-api.
- */
-export const zFollowUpCitedSource = zCitedSourceFields.and(z.object({
-    isNewSource: z.boolean()
-}));
-
-export const zFollowUpTurn = z.strictObject({
-    id: z.uuid(),
-    analysisId: z.uuid(),
-    turnNumber: z.int().gte(1),
-    question: z.string(),
-    status: z.enum([
-        'con_evidencia',
-        'sin_evidencia',
-        'fuera_de_contexto'
-    ]),
-    answer: z.array(zSupportedClaim),
-    citedSources: z.array(zFollowUpCitedSource),
-    omittedClaims: z.int().gte(0),
     patientDataLinks: z.array(zPatientDataLink),
     disclaimer: z.string().min(1),
     createdAt: z.iso.datetime()

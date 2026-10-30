@@ -26,6 +26,7 @@ DOMINIOS_CERRADOS: Final[dict[str, tuple[str, ...]]] = {
     "study_design": ("guia", "eca", "observacional", "revision_sistematica", "otro"),
     "trial_phase": ("I", "II", "III", "IV"),
     "metadata_source": ("fuente_estructurada", "extraido_verificado", "pendiente"),
+    "population_form": ("antigua", "lista"),
     "original_format": ("jats_xml", "xml", "pdf", "html"),
     "status": ("pendiente", "normalizado", "embebido", "error", "rechazado_licencia"),
 }
@@ -62,6 +63,7 @@ corpus_document = sa.Table(
     _texto("primary_endpoint", nullable=True),
     sa.Column("sample_size", sa.Integer, nullable=True),
     sa.Column("population_criteria", postgresql.JSONB, nullable=False),
+    sa.Column("population_form", sa.Text, nullable=False, server_default="antigua"),
     _texto("metadata_source"),
     sa.Column("extracted_fields", postgresql.JSONB, nullable=False, server_default="[]"),
     _texto("guideline_version", nullable=True),

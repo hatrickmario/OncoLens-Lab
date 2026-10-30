@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OncoLens — Schemas compartidos del análisis de evidencia
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     Origen único de los ocho schemas que comparten clinical-api (contrato público) y
     rag-orchestrator (contrato interno): EvidenceOption, DiscardedOption, Synthesis,
@@ -223,13 +223,38 @@ components:
           description: Valor copiado del contexto del paciente; nunca generado (ADR-34).
         studyPopulationValue:
           type: [string, "null"]
+          deprecated: true
+          description: >-
+            Deprecado; se retira en el S5 (ADR-26). Con lista, el primer valor con scope elegibilidad de los
+            fragmentos citados por la opción; si no hay ninguno, null. Con la forma antigua, su texto.
+        studyPopulationValues:
+          type: array
+          description: >-
+            Valores de población de los fragmentos que cita la opción (ADR-47). El tope
+            POPULATION_MAX_VALUES_PER_CRITERION rige por fragmento y criterio al extraer; aquí no hay maxItems.
+            Opcional: las respuestas con la forma antigua no lo llevan.
+          items:
+            $ref: '#/components/schemas/StudyPopulationValue'
+        partialReason:
+          type: [string, "null"]
+          enum: [inclusiva, mezclada, rango_solapado, solo_subgrupo, null]
+          description: Motivo del estado parcial. Opcional.
         status:
           title: ApplicabilityStatus
           type: string
           enum: [coincide, parcial, no_coincide, desconocido]
         unknownReason:
           type: [string, "null"]
-          enum: [falta_en_paciente, no_reportado_por_fuente, null]
+          enum:
+            - falta_en_paciente
+            - no_reportado_por_fuente
+            - varios_valores_en_la_fuente
+            - valores_en_conflicto
+            - respaldo_fallido
+            - sin_regla_de_comparacion
+            - null
+          description: >-
+            varios_valores_en_la_fuente está reservado (ADR-47): ningún change del S4 lo produce.
         isExclusionary:
           type: boolean
         patientDataWarning:
@@ -239,6 +264,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CitedSource'
+    StudyPopulationValue:
+      type: object
+      additionalProperties: false
+      required: [value, chunkId, scope]
+      properties:
+        value:
+          type: string
+          maxLength: 200
+          description: >-
+            Extraído por IA de un fragmento citado y verificado con NLI contra él (ADR-47); no es texto
+            copiado del corpus; recorrido por el filtro RN-23.
+        chunkId:
+          type: string
+        scope:
+          type: string
+          enum: [elegibilidad, subgrupo, mencion]
     SourceApplicability:
       type: object
       description: Aplicabilidad de una fuente al paciente, criterio a criterio.

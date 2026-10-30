@@ -19,6 +19,7 @@ CampoGenerado = Literal[
     "limitations[].text",
     "synthesis",
     "studyPopulationValue",
+    "studyPopulationValues[].value",
 ]
 CAMPOS_GENERADOS: tuple[CampoGenerado, ...] = get_args(CampoGenerado)
 

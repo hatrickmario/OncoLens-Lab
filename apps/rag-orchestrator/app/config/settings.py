@@ -26,6 +26,8 @@ from app.domain.reglas_proveedor import (
 )
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
+POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL = 3
+"""Valor inicial de ``POPULATION_MAX_VALUES_PER_CRITERION`` (ADR-47): el único lugar donde aparece el literal."""
 HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
 
 
@@ -83,6 +85,10 @@ class Settings(BaseSettings):
     model_provider: Literal["fake", "local"] = "fake"
     # Idioma que se asume cuando el detector no puede decidir (RN-22).
     default_query_language: Literal["es", "en"] = "es"
+    # Tope de valores de población por fragmento y criterio al extraer, persistir y leer (ADR-47, RN-22).
+    population_max_values_per_criterion: int = Field(
+        default=POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL, gt=0
+    )
     # Un archivo cargado = una ruta y un SHA-256 (RN-22); se verifican al arrancar con MODEL_PROVIDER=local.
     embedding_model_path: Path | None = None
     embedding_model_sha256: str | None = None

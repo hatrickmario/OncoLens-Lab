@@ -25,6 +25,7 @@ from app.domain.applicability_rules import (
     valor_del_paciente,
 )
 from tests.support.aplicabilidad import criterios_de
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.contract import CATALOGOS
 from app.domain.criterios_aplicabilidad import (
     CondicionDeParcial,
@@ -88,7 +89,7 @@ def estado_y_causa(evaluado: CriterioEvaluado) -> tuple[str, str | None]:
 
 
 def poblacion(**criterios: object) -> PoblacionDelEstudio:
-    return PoblacionDelEstudio("fuente_estructurada", criterios)
+    return poblacion_guardada("fuente_estructurada", criterios)
 
 
 def test_valor_del_estudio_copia_el_texto_cuando_la_clave_es_una_cadena():
