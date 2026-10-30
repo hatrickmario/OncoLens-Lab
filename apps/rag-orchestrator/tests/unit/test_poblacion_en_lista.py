@@ -10,14 +10,17 @@ from app.domain.aplicabilidad_tipos import (
     AtributoDelPaciente,
     ContextoDelPaciente,
     CriterioDePoblacion,
+    CriterioEvaluado,
     PoblacionDelEstudio,
     ProyeccionDeEstado,
     ValorDePoblacion,
 )
+from app.domain.applicability_text import criterios_pendientes_de_texto
 from app.domain.criterios_aplicabilidad import DestinoDelCriterio
 from app.domain.applicability_rules import (
     clasificar_poblacion,
     detectar_conflicto,
+    estado_de_poblacion,
     evaluar_criterio_de_fuente,
     fuente_mezcla_poblaciones,
     proyectar_estado,
@@ -308,3 +311,49 @@ def test_evaluar_criterio_de_fuente_lee_todos_los_valores_cuando_no_se_indican_f
     evaluado = evaluar_criterio_de_fuente(MENOPAUSIA_LEIDA, A_M2, _poblacion_de_menopausia())
 
     assert [v.chunk_id for v in evaluado.valores_del_estudio] == ["ch-1", "ch-2"]
+
+
+def test_criterios_pendientes_de_texto_no_pide_al_llm_el_criterio_cuando_la_lista_solo_trae_subgrupo():
+    solo_subgrupo = CriterioEvaluado(
+        "receptores_hormonales",
+        "RE: Positivo",
+        None,
+        "desconocido",
+        "no_reportado_por_fuente",
+        False,
+        valores_del_estudio=(_v("triple-negative (TNBC)", alcance="subgrupo"),),
+    )
+    sin_lista = dataclasses.replace(
+        solo_subgrupo, clave="estado_menopausico", valores_del_estudio=()
+    )
+
+    pendientes = criterios_pendientes_de_texto(
+        [solo_subgrupo, sin_lista], [RECEPTORES, MENOPAUSIA_LEIDA]
+    )
+
+    assert [p.clave for p in pendientes] == ["estado_menopausico"]
+
+
+def test_evaluar_criterio_de_fuente_copia_el_primer_valor_de_elegibilidad_cuando_el_subgrupo_va_primero():
+    poblacion = PoblacionDelEstudio(
+        "extraido_verificado",
+        {
+            "estado_menopausico": CriterioDePoblacion(
+                (_v("premenopausal women", "ch-1", "subgrupo"), _v("postmenopausal women", "ch-1"))
+            )
+        },
+    )
+
+    evaluado = evaluar_criterio_de_fuente(MENOPAUSIA_LEIDA, A_M2, poblacion, {"ch-1"})
+
+    assert evaluado.valor_estudio == "postmenopausal women"
+    assert [v.alcance for v in evaluado.valores_del_estudio] == ["subgrupo", "elegibilidad"]
+
+
+def test_estado_de_poblacion_lee_la_forma_antigua_cuando_algun_valor_no_trae_fragmento():
+    mezcla = [_v("postmenopausal women", None), _v("premenopausal women", "ch-1")]
+
+    proyeccion = estado_de_poblacion(mezcla, "posmenopáusica", MENOPAUSIA)
+
+    # Con la lectura de lista sería ``parcial``/``inclusiva``; la forma antigua compara el primer valor por pertenencia.
+    assert proyeccion == ProyeccionDeEstado("no_coincide")

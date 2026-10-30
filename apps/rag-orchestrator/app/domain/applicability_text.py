@@ -80,13 +80,16 @@ def criterios_pendientes_de_texto(
 ) -> tuple[CriterioPendiente, ...]:
     """Los criterios sin valor estructurado de una fuente, en el orden del catálogo (design D1).
 
-    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6); tampoco el que
-    tiene un destino que el resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
+    Un criterio con valor del estudio ya leído de ``population_criteria`` nunca va al LLM (US-122 AC-6), ni uno cuya lista
+    solo trae valores de subgrupo o mención (US-243: ya se leyó y no cuenta); tampoco el que tiene un destino que el
+    resolvedor no sabe leer, que es un error del catálogo y no una pregunta al texto."""
     catalogo = {c.clave: c for c in criterios}
     return tuple(
         CriterioPendiente(e.clave, catalogo[e.clave].etiqueta_es, catalogo[e.clave].etiqueta_en)
         for e in evaluados
-        if e.valor_estudio is None and e.motivo_interno != "destino_no_resoluble"
+        if e.valor_estudio is None
+        and not e.valores_del_estudio
+        and e.motivo_interno != "destino_no_resoluble"
     )
 
 

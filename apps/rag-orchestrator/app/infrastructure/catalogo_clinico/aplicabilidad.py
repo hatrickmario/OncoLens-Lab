@@ -25,6 +25,11 @@ from app.domain.criterios_aplicabilidad import (
     ReglaDeAplicabilidad,
 )
 from app.infrastructure.catalogo_clinico.manifiesto import CatalogoNoDisponible
+from app.infrastructure.catalogo_clinico.poblacion_reglas import (
+    NOMBRE_DEL_ARCHIVO_DE_REGLAS,
+    ReglasDePoblacionDelTipo,
+    leer_reglas_de_poblacion,
+)
 
 NOMBRE_DEL_ARCHIVO = "aplicabilidad.json"
 
@@ -151,7 +156,10 @@ def cargar_criterios_de_aplicabilidad(
         raise CatalogoNoDisponible("el manifiesto declara un tipo de cáncer inválido")
     return CriteriosDelCatalogo(
         {
-            tipo: _leer_criterios_del_tipo(catalogos / tipo / NOMBRE_DEL_ARCHIVO)
+            tipo: _leer_criterios_del_tipo(
+                catalogos / tipo / NOMBRE_DEL_ARCHIVO,
+                leer_reglas_de_poblacion(catalogos / tipo / NOMBRE_DEL_ARCHIVO_DE_REGLAS),
+            )
             for tipo in tipos_de_cancer
         }
     )
@@ -177,7 +185,9 @@ def _leer_json_estricto(texto: str) -> object:
     )
 
 
-def _leer_criterios_del_tipo(archivo: Path) -> tuple[CriterioDeAplicabilidad, ...]:
+def _leer_criterios_del_tipo(
+    archivo: Path, reglas_de_poblacion: ReglasDePoblacionDelTipo
+) -> tuple[CriterioDeAplicabilidad, ...]:
     try:
         contenido = _Archivo.model_validate(
             _leer_json_estricto(archivo.read_text(encoding="utf-8"))
@@ -189,10 +199,12 @@ def _leer_criterios_del_tipo(archivo: Path) -> tuple[CriterioDeAplicabilidad, ..
         raise CatalogoNoDisponible(
             "aplicabilidad.json no está disponible o no cumple su esquema"
         ) from None
-    return tuple(_a_criterio_del_dominio(item) for item in contenido.items)
+    return tuple(_a_criterio_del_dominio(item, reglas_de_poblacion) for item in contenido.items)
 
 
-def _a_criterio_del_dominio(item: _Criterio) -> CriterioDeAplicabilidad:
+def _a_criterio_del_dominio(
+    item: _Criterio, reglas_de_poblacion: ReglasDePoblacionDelTipo
+) -> CriterioDeAplicabilidad:
     destino = item.destination
     regla = item.rule
     return CriterioDeAplicabilidad(
@@ -221,6 +233,7 @@ def _a_criterio_del_dominio(item: _Criterio) -> CriterioDeAplicabilidad:
             limites=LimitesDeRegla(regla.limits.min, regla.limits.max) if regla.limits else None,
         ),
         estado_de_revision=item.estado,
+        poblacion=reglas_de_poblacion.de(item.key),
     )
 
 
