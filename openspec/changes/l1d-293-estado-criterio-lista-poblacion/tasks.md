@@ -49,9 +49,10 @@
   (`infrastructure/catalogo_clinico/poblacion_reglas.py`): marcadores es/en, y por criterio `synonyms`, `scale`, `groups`; ausente = sin
   reglas, inválido = `CatalogoNoDisponible`. La fixture `test-apl-1.2.0` vive solo en el rag-orchestrator. **Falta** (clinical-platform / contratos):
   esquema y validador de `poblacion-reglas.json`, la versión `1.2.0` real en ambos backends y su copia exacta (`test_fixtures_de_aplicabilidad`).
-- **D-2 · Unidad de la `applicability` de la fuente.** El contrato solo trae criterios por fuente, no por opción: `applicability[]` se calcula con la unión de
-  los fragmentos que citan las opciones mostradas (sin cita, el mejor chunk) y el resumen **por opción** (`perSource`, `applicabilitySummary`) con los
-  de esa opción. Dos opciones del mismo documento (AC-7) se distinguen en el resumen de cada opción, no en `criteria`.
+- **D-2 · Unidad de la `applicability` de la fuente.** El contrato solo trae criterios por fuente, no por opción: `applicability[]` se calcula con
+  los fragmentos que cita la opción más aplicable que cita esa fuente (sin cita, el mejor chunk), nunca con la unión entre opciones; el resumen
+  **por opción** (`perSource`, `applicabilitySummary`) con los de cada opción. El conflicto solo se detecta entre fragmentos de una misma opción
+  (corregido en la vuelta 2 del Gate 2; ver `design.md`, Contratos).
 - **D-3 · P6 (`value` > 200 caracteres)** sigue abierta (US-241): la respuesta no emite `studyPopulationValues` con valores más largos que el contrato
   en lugar de tumbar el análisis; el estado sí los usa.
 - **D-4 · `data/evaluation/aplicabilidad/pares.yaml`:** el estadio de A-M1 × doc-a1 pasa a esperar `sin_regla_de_comparacion` (MODIFIED de la spec).

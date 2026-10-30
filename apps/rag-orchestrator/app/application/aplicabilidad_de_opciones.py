@@ -52,9 +52,13 @@ def fuentes_con_los_fragmentos_citados(
     citables: Mapping[str, ChunkCitable],
     reevaluar: Reevaluar,
 ) -> tuple[AplicabilidadDeFuente, ...]:
-    """La ``applicability`` de la respuesta: cada fuente recalculada con la unión de los fragmentos que citan las opciones
-    mostradas; la que ninguna cita conserva su cálculo con el mejor chunk."""
-    citados = _fragmentos_citados_por_fuente(opciones, citables)
+    """La ``applicability`` de la respuesta: cada fuente con los criterios de la opción más aplicable que la cita (las
+    ``opciones`` llegan en el orden de RN-28, ADR-31), nunca la unión entre opciones: un conflicto solo existe entre
+    fragmentos que cita una misma opción. La fuente que ninguna cita conserva su cálculo con el mejor chunk."""
+    citados: dict[str, list[str]] = {}
+    for opcion in opciones:
+        for externo, chunk_ids in _fragmentos_citados_por_fuente([opcion], citables).items():
+            citados.setdefault(externo, chunk_ids)
     return tuple(
         reevaluar(fuente, citados[fuente.external_id]) if fuente.external_id in citados else fuente
         for fuente in fuentes

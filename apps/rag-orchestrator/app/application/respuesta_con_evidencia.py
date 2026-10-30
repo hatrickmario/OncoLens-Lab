@@ -134,7 +134,7 @@ def _poblacion_en_lista(criterio: CriterioEvaluado) -> dict[str, object]:
     valores = [
         v
         for v in criterio.valores_del_estudio
-        if len(v.valor) <= LONGITUD_MAXIMA_DEL_VALOR_DE_POBLACION
+        if v.chunk_id is not None and len(v.valor) <= LONGITUD_MAXIMA_DEL_VALOR_DE_POBLACION
     ]
     if valores:
         campos["studyPopulationValues"] = [_valor_del_contrato(v) for v in valores]

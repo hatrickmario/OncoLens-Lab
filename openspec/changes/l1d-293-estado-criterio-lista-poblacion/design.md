@@ -102,6 +102,12 @@ ellos no divergen de lo que produce el proveedor. El requisito de la spec princi
 falta» (`applicability`) se modifica en este change; el escenario de US-125 AC-5 (`evidence-analysis`) lo modifica
 `l1d-144` (dueño de ese requisito en el S4), que depende de este change para él.
 
+**Unidad real de `applicability[]` (D-2, gate 2 vuelta 2).** El contrato trae criterios por fuente, no por opción. Cada fuente
+de `applicability[]` lleva los criterios de **la opción más aplicable que la cita** (orden de RN-28, ADR-31), calculados con
+los fragmentos que cita esa opción; si ninguna opción la cita, con el mejor chunk. Nunca la unión entre opciones: un
+`valores_en_conflicto` y el log `poblacion_conflicto` solo nacen entre fragmentos citados por una misma opción. El resumen por
+opción (`perSource`, `applicabilitySummary`) usa los fragmentos de cada opción y no cambia. Sin cambio de contrato.
+
 **Tests que fijan la causa antigua.** `test_rag_query_aplicabilidad.py:74` (`[US-122 AC-1]`) asierta `unknownReason = None`
 para el estadio: cambia la aserción con el *trailer* `Test-Removal:` (el AC cambió en la spec de este change). El test de
 US-125 AC-5 no fija `unknownReason`; gana la aserción nueva sin *trailer*. Los análisis históricos persistidos con `null`
