@@ -4,10 +4,11 @@ import { crearProveedorDeCatalogo } from '../evidence-analysis/catalog-version.p
 import type { TiposDeCancerHabilitados } from '../evidence-analysis/ports.js';
 import { createCompletenessRepository } from './completeness.repository.js';
 import { createCompletenessService } from './completeness.service.js';
-import type {
-  CatalogoDeDatosCriticos,
-  CompletenessService,
-  DatosCriticosDeUnTipo,
+import {
+  OPERADORES_DE_CONDICION,
+  type CatalogoDeDatosCriticos,
+  type CompletenessService,
+  type DatosCriticosDeUnTipo,
 } from './ports.js';
 
 export interface DependenciasDelModulo {
@@ -35,7 +36,7 @@ const esquemaDeDatosCriticos = z.object({
       condition: z
         .object({
           item: z.string(),
-          operator: z.enum(['igualdad', 'pertenencia', 'prefijo']),
+          operator: z.enum(OPERADORES_DE_CONDICION),
           values: z.array(z.string()),
         })
         .optional(),

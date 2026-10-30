@@ -2,7 +2,10 @@
 export type EstadoDelChecklist =
   'presente_verificado' | 'presente_sin_verificar' | 'faltante' | 'no_aplica';
 
-export type OperadorDeCondicion = 'igualdad' | 'pertenencia' | 'prefijo';
+/** Vocabulario de operadores de condición del catálogo (L1D-93): ÚNICO sitio; el esquema Zod y el tipo salen de aquí. */
+export const OPERADORES_DE_CONDICION = ['igualdad', 'pertenencia', 'prefijo'] as const;
+
+export type OperadorDeCondicion = (typeof OPERADORES_DE_CONDICION)[number];
 
 export interface CondicionDeItem {
   readonly item: string;
