@@ -54,9 +54,10 @@
 - [ ] 1.8 `run-ai-eval`: sin cambio de métricas (solo forma y lector)
       > TRASLADADA a Gate 2 (`ai-eval-runner`): `tests/evaluation` y `verify-provider` (2840 tests) en verde; A-M1 × `doc-a1` = `{2,0,0,3}`.
 
-- [x] 1.9 `POPULATION_MAX_VALUES_PER_CRITERION=3` en `apps/rag-orchestrator/.env.example` y en el servicio `rag-orchestrator` de
-      `infra/docker/docker-compose.yml` (Compose lista las variables una a una, con el mismo patrón `${VAR:-default}` que
-      `RELEVANCE_THRESHOLD`) · test después: `vitest run infra/docker` 99 passed
+- [x] 1.9 `POPULATION_MAX_VALUES_PER_CRITERION=3` en el servicio `rag-orchestrator` de `infra/docker/docker-compose.yml`
+      (Compose lista las variables una a una, con el mismo patrón `${VAR:-default}` que `RELEVANCE_THRESHOLD`) · test después:
+      `vitest run infra/docker` en verde. La entrada de `apps/rag-orchestrator/.env.example` va en el PR #246
+      (`chore/env-retrieval-poblacion`, contra `main`): este change depende de su merge para esa línea.
 
 ## clinical-platform
 
