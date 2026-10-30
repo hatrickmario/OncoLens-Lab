@@ -32,6 +32,7 @@ Sin TDD de contenido (prompts, modelos, corpus: suite `evaluate`); TDD estricto 
 - [ ] 1.9 (TDD estricto) Test de aceptación: "contiene solo corpus público con licencia y agregados, y el escaneo de PII
       no encuentra nada [US-233b AC-8]" · integración con el escáner de la CI y código 1 con manifiesto sin licencia.
       Commit `test(L1D-299)`.
+- [ ] 1.9b (TDD estricto; Decidido (usuario, 2026-10-30), Mayor de `clinical-language-auditor` en el Gate 2 de L1D-291) El recolector de textos generados de la suite `evaluate` (`apps/rag-orchestrator/app/evaluation/salida_generada.py`, `textos_de_respuesta`) recorre `applicability[].criteria[]` incluyendo `studyPopulationValue` y `studyPopulationValues[].value`, para que la métrica «salidas prescriptivas = 0» cubra los valores de población (RN-23). Test de aceptación en rojo: «marca salida prescriptiva cuando un studyPopulationValues[].value o un studyPopulationValue contiene un término prohibido sembrado [US-233b AC-9]» (con variante limpia que no marca). Commits `test(L1D-299)` y `feat(L1D-299)`.
 - [ ] 1.10 (TDD estricto) Implementar `metricas/poblacion.py` (`precision_por_criterio`, `cobertura_por_criterio`,
       `tasa_duplicados`, `cortes_por_longitud`, `concordancia_de_estados`, `sin_evidencia_vs_baseline`,
       `tasa_cortes_del_bucle`, `veredicto`) con unitarios uno a la vez, del caso más simple al siguiente. Reloj y

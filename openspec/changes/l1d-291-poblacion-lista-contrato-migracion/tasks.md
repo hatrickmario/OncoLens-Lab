@@ -51,7 +51,7 @@
 - [x] 1.6 Degradación de forma inválida en el lector y el log; AC-5 en verde · TDD estricto · commit `feat(L1D-291)`
 - [x] 1.7 Verificación de frontera: tests de *permission denied* de `rag_corpus` en verde tras `0005` (AC-6) · test
       después (integración)
-- [ ] 1.8 `run-ai-eval`: sin cambio de métricas (solo forma y lector)
+- [x] 1.8 `run-ai-eval`: sin cambio de métricas (solo forma y lector). Evidencia (Gate 2, ai-eval-runner, 2026-10-30): suites test-fake y aplicabilidad idénticas a main y al baseline (Δ = 0) sobre fb49214f; el camino de la forma lista no pasa por evaluate (fixture doc-l1 propuesto para L1D-293 y L1D-299); cobertura_poblacion 0,70 preexistente; PR #245.
       > TRASLADADA a Gate 2 (`ai-eval-runner`): `tests/evaluation` y `verify-provider` (2840 tests) en verde; A-M1 × `doc-a1` = `{2,0,0,3}`.
 
 - [x] 1.9 `POPULATION_MAX_VALUES_PER_CRITERION=3` en el servicio `rag-orchestrator` de `infra/docker/docker-compose.yml`

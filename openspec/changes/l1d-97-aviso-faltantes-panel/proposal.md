@@ -22,6 +22,7 @@ Hoy el panel envía el análisis sin decir qué datos críticos faltan ni dar fo
 - **frontend (ficha)**: los encabezados existentes de diagnóstico y biomarcadores pasan a `id="diagnostico"` / `id="biomarcadores"` con `tabindex="-1"` y reciben el foco al llegar por ancla; un destino sin sección propia enlaza al encabezado principal.
 - **frontend (ficha, decisión Q2 del usuario, 2026-10-30)**: si `PatientSummary.completenessAvailable = false` (l1d-95), la ficha muestra el aviso no bloqueante «No se pudieron verificar los datos críticos» (`role="status"`) en lugar de un contador `0` o «sin faltantes»; no bloquea nada (RN-26). El listado y la búsqueda no cambian en el S4.
 - **clinical-platform**: este change **crea** el Route Handler BFF `GET /api/patients/[id]/completeness` (l1d-95 no lo crea) sobre `lib/server/proxy-json.ts`; reenvía la sesión a US-003, retransmite `200`/`4xx` del contrato y convierte un `5xx` en `{ error, message }` saneado, sin detalles internos ni la URL de `clinical-api`; el POST de análisis ya reenvía el cuerpo tal cual, solo se verifica que `continueWithWarning` pasa.
+- **clinical-platform (deudas heredadas de l1d-95 2.15, ensanchan el alcance; Decidido (usuario, 2026-10-30))**: (a) cerrar los ciclos de módulo moviendo `estados-de-revision` y `patients.errores` fuera de `patients/`; (b) añadir `errorClase` (`error.name`) al log `checklist_no_disponible`, sin ensanchar `PatientSummary`; (c) unificar en JS la regla del «diagnóstico vigente» (`seleccionarDiagnosticoVigente`, `diagnosticoVigente` y la función local de `ficha.service.ts`); (d) eliminar el `PacienteNoEncontrado` duplicado y preexistente de `documents.errores.ts`. Son refactors en `apps/clinical-api` sin cambio de comportamiento ni de contrato, más un campo de log.
 - Sin cambios de contrato, de catálogo, de prompt ni de modelo (`run-ai-eval` no aplica).
 
 ## Capabilities
@@ -33,7 +34,7 @@ Hoy el panel envía el análisis sin decir qué datos críticos faltan ni dar fo
 
 ## Impact
 
-`apps/web/components/organisms/evidence-panel.tsx`, `apps/web/components/organisms/active-diagnosis-table.tsx`, `recent-biomarkers-table.tsx`, `components/molecules/fila-de-ficha.tsx`, `ficha-del-doctor.tsx`/`patient-summary-card.tsx` (aviso Q2), `lib/evidence/solicitar-analisis.ts`, nuevos `lib/evidence/*faltantes*`, `app/api/patients/[id]/completeness/route.ts`, `lib/server/*`, mensajes i18n; tests Vitest/MSW y Playwright.
+`apps/web/components/organisms/evidence-panel.tsx`, `apps/web/components/organisms/active-diagnosis-table.tsx`, `recent-biomarkers-table.tsx`, `components/molecules/fila-de-ficha.tsx`, `ficha-del-doctor.tsx`/`patient-summary-card.tsx` (aviso Q2), `lib/evidence/solicitar-analisis.ts`, nuevos `lib/evidence/*faltantes*`, `app/api/patients/[id]/completeness/route.ts`, `lib/server/*`, y por las deudas de l1d-95: `apps/clinical-api/src/modules/patients/*` (estados-de-revision, patients.errores, ficha.service.ts), `apps/clinical-api/src/modules/documents/documents.errores.ts` y el módulo que aloja `diagnosticoVigente`, mensajes i18n; tests Vitest/MSW y Playwright.
 
 ## Non-goals
 

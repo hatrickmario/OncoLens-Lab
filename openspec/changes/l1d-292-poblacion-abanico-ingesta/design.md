@@ -58,6 +58,15 @@ PR de migración 0005; no se define aquí un esquema paralelo.
 orquestador; `MetadataExtractionService` conserva los escalares. Los tests de `l1d-117` cambian solo si su AC cambió
 (con `Test-Removal:`).
 
+## Decisiones añadidas el 2026-10-30
+
+**Decidido (usuario, 2026-10-30)**; ensanchan el alcance de este change (tareas 1.12b y 1.12c):
+
+- **D9 · Filtro RN-23 sobre los valores:** pasa a este change. La ingesta recorre cada `studyPopulationValues[].value` con el filtro de lenguaje prescriptivo; un valor con término prohibido se omite y se cuenta, nunca se sustituye. Test con un valor prohibido sembrado en un fragmento citado.
+- **D10 · P4 (`population_form`):** la escribe este change y se valida frente a la estructura al escribir; es informativa, la ingesta la escribe coherente con la forma real y el lector sigue decidiendo por la forma del JSON.
+- **D11 · P5:** el escritor emite solo la lista o `{"status":"pendiente","values":[]}`, nunca `{"values":[…]}` sin `status`; el lector lo tolera, el escritor no lo produce.
+- **D12 · P6:** el escritor recorta o descarta un `value` de más de 200 caracteres (`maxLength` del contrato) para que nunca tumbe el análisis.
+
 ## Dependencias y colaboradores
 
 - Crea: `application/corpus_metadata/population_fanout.py`, `prompts/poblacion_v1.txt`, `domain/corpus_metadata/poblacion_abanico.py`,
