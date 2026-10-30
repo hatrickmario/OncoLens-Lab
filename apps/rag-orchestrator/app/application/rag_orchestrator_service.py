@@ -56,7 +56,6 @@ from app.application.ports import (
 from app.application.respuesta_con_evidencia import ensamblar_respuesta_con_evidencia
 from app.application.resumen_contexto import resumen_del_contexto_clinico
 from app.application.verificacion_de_soporte import VerificadorDeSoporte
-from app.config.settings import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.citations import (
     MotivoDeDescarte,
     OpcionAceptada,
@@ -64,6 +63,8 @@ from app.domain.citations import (
     validar_citas,
 )
 from app.domain.fusion_de_candidatos import (
+    HYBRID_SPARSE_WEIGHT_INICIAL,
+    RRF_K_INICIAL,
     CandidatoDeRama,
     EstrategiaDeFusion,
     fusionar_candidatos,

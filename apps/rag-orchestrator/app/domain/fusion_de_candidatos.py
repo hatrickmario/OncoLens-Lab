@@ -9,6 +9,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 
+RRF_K_INICIAL = 60
+"""Valor inicial de ``RRF_K`` (ADR-45 P1): el único lugar donde aparece el literal."""
+HYBRID_SPARSE_WEIGHT_INICIAL = 0.3
+"""Valor inicial de ``HYBRID_SPARSE_WEIGHT`` (ADR-45 P1): el único lugar donde aparece el literal."""
+
+
 class EstrategiaDeFusion(StrEnum):
     rrf = "rrf"
     ponderada = "ponderada"

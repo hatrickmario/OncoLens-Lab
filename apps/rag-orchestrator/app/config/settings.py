@@ -19,6 +19,7 @@ from app.domain.corpus_seed.admisibilidad import (
     clase_contradice_el_texto,
 )
 from app.domain.corpus_seed.chunking import validar_ventana
+from app.domain.fusion_de_candidatos import HYBRID_SPARSE_WEIGHT_INICIAL, RRF_K_INICIAL
 from app.domain.reglas_proveedor import (
     HOSTS_LOCALES,
     reject_fake_model_provider_with_real_data,
@@ -27,9 +28,6 @@ from app.domain.reglas_proveedor import (
 
 _SHA256 = re.compile(r"[0-9a-fA-F]{64}")
 POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL = 3
-# Recuperación híbrida (US-112): valores iniciales de la fuente (ADR-45 P1), únicos para Settings y ParametrosDeRecuperacion.
-RRF_K_INICIAL = 60
-HYBRID_SPARSE_WEIGHT_INICIAL = 0.3
 """Valor inicial de ``POPULATION_MAX_VALUES_PER_CRITERION`` (ADR-47): el único lugar donde aparece el literal."""
 HOSTS_LOCALES_DEL_LLM = tuple(sorted(HOSTS_LOCALES))
 

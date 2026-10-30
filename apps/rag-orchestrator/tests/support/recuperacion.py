@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 from app.application.ports import (
     ApplicabilityTextProposer,
     ChunkDelCorpus,
+    CandidatoParaReranker,
     ChunkEncontrado,
     ChunkEncontradoSparse,
     ChunkSearch,
@@ -333,7 +334,7 @@ class RerankerFalso:
     def invocaciones(self) -> int:
         return len(self.candidatos_recibidos)
 
-    def puntuar(self, pregunta: str, candidatos: Sequence[ChunkEncontrado]) -> list[float]:
+    def puntuar(self, pregunta: str, candidatos: Sequence[CandidatoParaReranker]) -> list[float]:
         self.candidatos_recibidos.append([c.chunk_id for c in candidatos])
         if self.max_pairs is not None and len(candidatos) > self.max_pairs:
             raise FalloDeInferencia("reranker falso: más pares que el máximo")
