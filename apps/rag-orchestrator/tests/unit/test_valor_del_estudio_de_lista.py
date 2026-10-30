@@ -2,7 +2,7 @@
 
 from app.application.aplicabilidad import formas_invalidas_para_el_log
 from app.domain.aplicabilidad_tipos import ValorDelEstudio
-from app.domain.applicability_rules import valor_del_estudio
+from tests.support.poblacion_lista import valor_del_estudio
 from tests.support.poblacion_lista import MARCA_PENDIENTE, poblacion_guardada, valor_nuevo
 
 

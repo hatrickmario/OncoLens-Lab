@@ -4,7 +4,7 @@ Sin puerto de LLM: es la garantía estructural de ADR-34 (b). La lectura de ``po
 orquestador con su borde fallando cerrado; este servicio solo compone las reglas puras de ``domain/``.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import get_args
 
@@ -36,6 +36,9 @@ class AplicabilidadDeFuente:
     criterios: tuple[CriterioEvaluado, ...]
     resumen: ResumenDeEstados
     poblacion_no_comparable: bool
+    poblacion: PoblacionDelEstudio | None = None
+    """La población leída del catálogo del corpus: con ella se recalculan los criterios con los fragmentos que cita cada
+    opción (US-243, ADR-47)."""
 
     def con_criterios(self, criterios: tuple[CriterioEvaluado, ...]) -> "AplicabilidadDeFuente":
         """La misma fuente con otros criterios evaluados: el resumen y la no comparabilidad se recalculan (RN-28)."""
@@ -93,6 +96,47 @@ class ApplicabilityService:
         ]
         return tuple(sorted(fuentes, key=_orden_por_relevancia))
 
+    def con_chunks_citados(
+        self,
+        tipo_de_cancer: str,
+        contexto: ContextoDelPaciente,
+        fuente: AplicabilidadDeFuente,
+        chunk_ids: Collection[str],
+    ) -> AplicabilidadDeFuente:
+        """La fuente con los criterios de población en lista recalculados con los valores de ``chunk_ids`` (los fragmentos
+        que cita la opción, ADR-47): ningún otro fragmento del documento entra. Un criterio sin valores en la lista (p. ej.
+        el aceptado por el camino textual) conserva su evaluación."""
+        if fuente.poblacion is None:
+            return fuente
+        catalogo = {c.clave: c for c in self.criterios_del(tipo_de_cancer)}
+        diseno = fuente.mejor_chunk.ficha.study_design
+        return fuente.con_criterios(
+            tuple(
+                _recalculado(evaluado, catalogo, contexto, fuente.poblacion, chunk_ids, diseno)
+                for evaluado in fuente.criterios
+            )
+        )
+
+
+def _recalculado(
+    evaluado: CriterioEvaluado,
+    catalogo: Mapping[str, CriterioDeAplicabilidad],
+    contexto: ContextoDelPaciente,
+    poblacion: PoblacionDelEstudio,
+    chunk_ids: Collection[str],
+    diseno_de_la_fuente: str | None,
+) -> CriterioEvaluado:
+    criterio = catalogo.get(evaluado.clave)
+    en_lista = None if criterio is None else poblacion.criterios.get(criterio.clave_de_estudio)
+    if criterio is None or en_lista is None or not en_lista.valores:
+        return evaluado
+    recalculado = evaluar_criterio_de_fuente(
+        criterio, contexto, poblacion, chunk_ids, diseno_de_la_fuente=diseno_de_la_fuente
+    )
+    if evaluado.chunk_citado_id is not None and not recalculado.valores_del_estudio:
+        return evaluado  # el valor aceptado por texto (US-123) no se pisa si la lista no dice nada en estos fragmentos
+    return recalculado
+
 
 def _aplicabilidad_de(
     mejor: ChunkCitable,
@@ -100,13 +144,24 @@ def _aplicabilidad_de(
     contexto: ContextoDelPaciente,
     poblacion: PoblacionDelEstudio,
 ) -> AplicabilidadDeFuente:
-    evaluados = tuple(evaluar_criterio_de_fuente(c, contexto, poblacion) for c in criterios)
+    """Sin opción que cite fragmentos, la unidad es el mejor chunk del documento (el mismo que cita la fuente)."""
+    evaluados = tuple(
+        evaluar_criterio_de_fuente(
+            c,
+            contexto,
+            poblacion,
+            (mejor.chunk.chunk_id,),
+            diseno_de_la_fuente=mejor.ficha.study_design,
+        )
+        for c in criterios
+    )
     return AplicabilidadDeFuente(
         external_id=mejor.ficha.external_id,
         mejor_chunk=mejor,
         criterios=evaluados,
         resumen=contar_estados(evaluados),
         poblacion_no_comparable=poblacion_no_comparable(evaluados),
+        poblacion=poblacion,
     )
 
 
@@ -125,6 +180,19 @@ def formas_invalidas_para_el_log(
         for documento in sorted(poblaciones)
         for clave, criterio in poblaciones[documento].criterios.items()
         if criterio.invalidez is not None
+    ]
+
+
+def conflictos_para_el_log(fuentes: Sequence[AplicabilidadDeFuente]) -> list[tuple[str, str]]:
+    """``(criterio, chunkId)`` de cada fragmento que participa en un conflicto de valores (US-243), por fuente y criterio.
+    Solo la clave del criterio y el ID del fragmento del corpus público: nunca el valor ni el texto (RN-14)."""
+    return [
+        (criterio.clave, chunk_id)
+        for fuente in fuentes
+        for criterio in fuente.criterios
+        if criterio.causa == "valores_en_conflicto"
+        for chunk_id in dict.fromkeys(v.chunk_id for v in criterio.valores_del_estudio)
+        if chunk_id is not None
     ]
 
 

@@ -63,6 +63,9 @@ def test_rag_query_devuelve_o_b_y_no_o_a_cuando_max_options_es_1_y_la_mas_releva
     assert opcion["populationNotComparable"] is False
     assert opcion["warnings"] == []
     assert opcion["relevanceScore"] == 0.70
+    fuente = next(f for f in cuerpo["applicability"] if f["externalId"] == external_id_de("doc-a1"))
+    estadio = next(c for c in fuente["criteria"] if c["criterion"] == "estadio")
+    assert estadio["unknownReason"] == "sin_regla_de_comparacion"
 
 
 @pytest.mark.ac("US-125", 6)

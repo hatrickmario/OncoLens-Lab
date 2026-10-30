@@ -9,12 +9,34 @@ from typing import Literal, get_args
 
 EstadoDeCriterio = Literal["coincide", "parcial", "no_coincide", "desconocido"]
 ESTADOS: tuple[EstadoDeCriterio, ...] = get_args(EstadoDeCriterio)
-CausaDeDesconocido = Literal["falta_en_paciente", "no_reportado_por_fuente"]
+CausaDeDesconocido = Literal[
+    "falta_en_paciente",
+    "no_reportado_por_fuente",
+    "valores_en_conflicto",
+    "sin_regla_de_comparacion",
+]
 MotivoInterno = Literal[
     "valor_fuera_de_tabla", "sin_escala", "forma_no_comparable", "destino_no_resoluble"
 ]
-"""Por qué un ``desconocido`` no lleva causa en el contrato: solo se cuenta en el log, nunca se envía (design D2b)."""
+"""Por qué un ``desconocido`` no tiene regla de comparación o no se pudo leer. Los tres primeros salen al contrato como
+``sin_regla_de_comparacion`` (US-243); ``destino_no_resoluble`` solo se cuenta en el log (design D2b)."""
 MOTIVOS_INTERNOS: tuple[MotivoInterno, ...] = get_args(MotivoInterno)
+MOTIVOS_SIN_REGLA_DE_COMPARACION: frozenset[MotivoInterno] = frozenset(
+    {"valor_fuera_de_tabla", "sin_escala", "forma_no_comparable"}
+)
+MotivoParcial = Literal["inclusiva", "mezclada", "rango_solapado", "solo_subgrupo"]
+EstadoInterno = Literal[
+    "exacto",
+    "inclusivo",
+    "mezclado",
+    "rango_solapado",
+    "solo_subgrupo",
+    "restringido",
+    "en_conflicto",
+    "ausente",
+    "sin_regla",
+]
+"""Estados internos de la población del estudio (US-243, design D2): nunca salen en la API, solo los cuatro de RN-28."""
 AvisoDelDato = Literal["sin_verificar", "en_conflicto", "faltante"]
 OrigenDeMetadatos = Literal["fuente_estructurada", "extraido_verificado", "pendiente"]
 
@@ -70,6 +92,17 @@ class ValorDelEstudio:
 
 
 @dataclass(frozen=True)
+class ProyeccionDeEstado:
+    """Estado visible de un criterio con sus motivos (RN-28): ``motivo_parcial`` solo con ``parcial``; ``causa`` solo con
+    ``desconocido``. Nunca un puntaje ni un porcentaje."""
+
+    estado: EstadoDeCriterio
+    motivo_parcial: MotivoParcial | None = None
+    causa: CausaDeDesconocido | None = None
+    motivo_interno: MotivoInterno | None = None
+
+
+@dataclass(frozen=True)
 class CriterioEvaluado:
     clave: str
     valor_paciente: str | None
@@ -82,6 +115,11 @@ class CriterioEvaluado:
     """El chunk que cita un valor textual aceptado (US-123); ``None`` = cita el mejor chunk de la fuente (L1D-127)."""
     aviso: AvisoDelDato | None = None
     """Estado del dato del paciente que se comparó (US-124, RN-26): nunca altera ``estado``."""
+    motivo_parcial: MotivoParcial | None = None
+    """Por qué el criterio es ``parcial`` (US-243); ``None`` con cualquier otro estado."""
+    valores_del_estudio: tuple[ValorDePoblacion, ...] = ()
+    """Los valores de la lista de los fragmentos que cita la opción, de cualquier alcance (contexto, ADR-47); vacío con la
+    forma antigua."""
 
 
 @dataclass(frozen=True)

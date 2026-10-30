@@ -44,3 +44,11 @@ def poblacion_guardada(
 ) -> PoblacionDelEstudio:
     """La población que el lector entrega al dominio para un ``population_criteria`` guardado (cualquiera de las dos formas)."""
     return poblacion_desde_lo_guardado(origen, guardado, POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL)
+
+
+def valor_del_estudio(poblacion: PoblacionDelEstudio, clave_de_estudio: str):
+    """La lectura de la forma antigua de un criterio de la población (``valor_de_forma_antigua``) por su clave de estudio."""
+    from app.domain.applicability_rules import valor_de_forma_antigua
+
+    criterio = poblacion.criterios.get(clave_de_estudio)
+    return None if criterio is None else valor_de_forma_antigua(criterio.valores)

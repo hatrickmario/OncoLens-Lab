@@ -117,7 +117,7 @@
           "patientValue": "IIA",
           "studyPopulationValue": "I–III",
           "status": "desconocido",
-          "unknownReason": null,
+          "unknownReason": "sin_regla_de_comparacion",
           "isExclusionary": false,
           "patientDataWarning": "sin_verificar",
           "citedSources": [

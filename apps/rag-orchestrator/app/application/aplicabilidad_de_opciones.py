@@ -6,7 +6,7 @@ Sin reglas propias: la agregación y el comparador de RN-28 viven en ``domain/``
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 
 from app.application.aplicabilidad import AplicabilidadDeFuente
@@ -21,20 +21,60 @@ from app.domain.option_selection import OpcionConRelevancia
 from app.domain.relevance import relevancia_de_opcion
 
 
+type Reevaluar = Callable[[AplicabilidadDeFuente, Sequence[str]], AplicabilidadDeFuente]
+"""Recalcula una fuente con los fragmentos que cita una opción (ADR-47): la unidad de cálculo es el fragmento citado."""
+
+
 def con_aplicabilidad_de_cada_opcion(
     opciones: Sequence[OpcionConRelevancia],
     fuentes: Sequence[AplicabilidadDeFuente],
     citables: Mapping[str, ChunkCitable],
     puntajes: Mapping[str, float],
+    reevaluar: Reevaluar,
 ) -> tuple[OpcionConRelevancia, ...]:
-    """Cada opción con la aplicabilidad de las fuentes que cita; sin ``applicability`` calculada no se agrega nada."""
+    """Cada opción con la aplicabilidad de las fuentes que cita, calculada con los fragmentos que cita **esa** opción;
+    sin ``applicability`` calculada no se agrega nada."""
     if not fuentes:
         return tuple(opciones)
     por_externo = {f.external_id: f for f in fuentes}
     return tuple(
-        replace(opcion, aplicabilidad=_aplicabilidad_de(opcion, por_externo, citables, puntajes))
+        replace(
+            opcion,
+            aplicabilidad=_aplicabilidad_de(opcion, por_externo, citables, puntajes, reevaluar),
+        )
         for opcion in opciones
     )
+
+
+def fuentes_con_los_fragmentos_citados(
+    fuentes: Sequence[AplicabilidadDeFuente],
+    opciones: Sequence[OpcionConRelevancia],
+    citables: Mapping[str, ChunkCitable],
+    reevaluar: Reevaluar,
+) -> tuple[AplicabilidadDeFuente, ...]:
+    """La ``applicability`` de la respuesta: cada fuente con los criterios de la opción más aplicable que la cita (las
+    ``opciones`` llegan en el orden de RN-28, ADR-31), nunca la unión entre opciones: un conflicto solo existe entre
+    fragmentos que cita una misma opción. La fuente que ninguna cita conserva su cálculo con el mejor chunk."""
+    citados: dict[str, list[str]] = {}
+    for opcion in opciones:
+        for externo, chunk_ids in _fragmentos_citados_por_fuente([opcion], citables).items():
+            citados.setdefault(externo, chunk_ids)
+    return tuple(
+        reevaluar(fuente, citados[fuente.external_id]) if fuente.external_id in citados else fuente
+        for fuente in fuentes
+    )
+
+
+def _fragmentos_citados_por_fuente(
+    opciones: Sequence[OpcionConRelevancia], citables: Mapping[str, ChunkCitable]
+) -> dict[str, list[str]]:
+    citados: dict[str, list[str]] = {}
+    for opcion in opciones:
+        for chunk_id in opcion.aceptada.chunk_ids_validos:
+            lista = citados.setdefault(citables[chunk_id].ficha.external_id, [])
+            if chunk_id not in lista:
+                lista.append(chunk_id)
+    return citados
 
 
 def _aplicabilidad_de(
@@ -42,23 +82,25 @@ def _aplicabilidad_de(
     por_externo: Mapping[str, AplicabilidadDeFuente],
     citables: Mapping[str, ChunkCitable],
     puntajes: Mapping[str, float],
+    reevaluar: Reevaluar,
 ) -> AplicabilidadDeOpcion:
-    citados_por_fuente: dict[str, list[str]] = {}
-    for chunk_id in opcion.aceptada.chunk_ids_validos:
-        externo = citables[chunk_id].ficha.external_id
-        if externo in por_externo:
-            citados_por_fuente.setdefault(externo, []).append(chunk_id)
+    citados_por_fuente = _fragmentos_citados_por_fuente([opcion], citables)
     return agregar_aplicabilidad_de_opcion(
         [
-            FuenteDeLaOpcion(
-                external_id=externo,
-                resumen=por_externo[externo].resumen,
-                excluyentes_no_coincide=contar_excluyentes_no_coincide(
-                    por_externo[externo].criterios
-                ),
-                poblacion_no_comparable=por_externo[externo].poblacion_no_comparable,
-                relevance_score=relevancia_de_opcion(chunk_ids, puntajes).relevance_score,
-            )
+            _fuente_de_la_opcion(reevaluar(por_externo[externo], chunk_ids), chunk_ids, puntajes)
             for externo, chunk_ids in citados_por_fuente.items()
+            if externo in por_externo
         ]
+    )
+
+
+def _fuente_de_la_opcion(
+    fuente: AplicabilidadDeFuente, chunk_ids: Sequence[str], puntajes: Mapping[str, float]
+) -> FuenteDeLaOpcion:
+    return FuenteDeLaOpcion(
+        external_id=fuente.external_id,
+        resumen=fuente.resumen,
+        excluyentes_no_coincide=contar_excluyentes_no_coincide(fuente.criterios),
+        poblacion_no_comparable=fuente.poblacion_no_comparable,
+        relevance_score=relevancia_de_opcion(chunk_ids, puntajes).relevance_score,
     )
