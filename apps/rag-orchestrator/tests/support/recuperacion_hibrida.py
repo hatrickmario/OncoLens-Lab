@@ -110,11 +110,14 @@ def crear_entorno_hibrido(
     *,
     parametros: ParametrosDeRecuperacion | None = None,
     chunks: Sequence[ChunkFx] = CORPUS_HIBRIDO,
+    buscador: Any = None,
     escenario_llm: str = "LLM-OK-M2",
     **bordes: Any,
-) -> tuple[EntornoDeRecuperacion, BuscadorFalso, EmbedderSparseFalso]:
-    """El servicio real con las dos ramas falsas; devuelve además el buscador y el codificador *sparse* para contar llamadas."""
-    buscador = BuscadorFalso(chunks)
+) -> tuple[EntornoDeRecuperacion, Any, EmbedderSparseFalso]:
+    """El servicio real con las dos ramas; devuelve además el buscador y el codificador *sparse* para contar llamadas.
+
+    ``buscador`` permite sustituir el falso por el repositorio de Milvus real (una sola instancia sirve a las dos ramas)."""
+    buscador = BuscadorFalso(chunks) if buscador is None else buscador
     codificador = EmbedderSparseFalso(_SPARSE_DE_LA_PREGUNTA)
     entorno = crear_entorno(
         parametros=parametros or parametros_hibridos(),

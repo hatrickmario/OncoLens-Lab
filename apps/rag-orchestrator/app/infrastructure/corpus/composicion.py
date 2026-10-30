@@ -55,8 +55,10 @@ def crear_puertos_del_corpus(
     except BaseException:
         motor.dispose()
         raise
+    repositorio = MilvusRepository(cliente, milvus)
     return PuertosDelCorpus(
-        buscador=MilvusRepository(cliente, milvus),
+        buscador=repositorio,
+        buscador_sparse=repositorio,
         lector_release=LectorReleasePostgres(motor),
         catalogo=LectorCatalogoPostgres(motor),
     )

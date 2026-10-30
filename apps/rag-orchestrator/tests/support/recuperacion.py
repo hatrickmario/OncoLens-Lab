@@ -170,6 +170,7 @@ def chunk_del_corpus(chunk: ChunkFx) -> ChunkDelCorpus:
         published_year=2025,
         is_current=chunk.es_vigente,
         created_at_ms=EPOCA_FIJA_MS,
+        sparse_vector=chunk.terminos_sparse,
     )
 
 
