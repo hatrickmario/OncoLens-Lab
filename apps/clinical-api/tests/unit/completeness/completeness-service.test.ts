@@ -39,9 +39,22 @@ const diagnostico = (tipo: string): RegistroDeDato => ({
   columnas: { cancer_type: tipo, histology: 'x' },
 });
 
-const registrosCon = (diagnosticos: RegistroDeDato[], existe = true): RegistrosDeCompletitud => ({
+/** Cumple el contrato del puerto: una clave por cada entidad pedida (`[]` si no hay filas), nada más. */
+const registrosCon = (
+  diagnosticos: RegistroDeDato[],
+  existe = true,
+  pedidos: (readonly string[])[] = [],
+): RegistrosDeCompletitud => ({
   existePaciente: async () => existe,
-  registrosSinFiltrarPorRevision: async () => ({ Diagnosis: diagnosticos }),
+  registrosSinFiltrarPorRevision: async (_patientId, entidades) => {
+    pedidos.push(entidades);
+    return Object.fromEntries(
+      [...new Set(entidades)].map((entidad) => [
+        entidad,
+        entidad === 'Diagnosis' ? diagnosticos : [],
+      ]),
+    );
+  },
 });
 
 const servicioCon = (

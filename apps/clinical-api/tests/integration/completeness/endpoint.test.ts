@@ -224,6 +224,46 @@ describe('origen y procedencia de cada ítem', () => {
   });
 });
 
+describe('cabeceras y fallo cerrado', () => {
+  it('marca la respuesta con Cache-Control no-store cuando el checklist es del doctor', async () => {
+    const fm1 = await sembrarFM1(siembra);
+
+    const { respuesta } = pedir(fm1.patientId);
+    const resultado = await respuesta;
+
+    expect(resultado.status).toBe(200);
+    expect(resultado.headers['cache-control']).toBe('no-store');
+  });
+
+  it('responde 500 ERROR_INTERNO sin eco del detalle cuando el servicio devuelve un destino fuera del contrato', async () => {
+    const fm1 = await sembrarFM1(siembra);
+    const fueraDeContrato = {
+      catalogVersion: 'test-1.0.0',
+      cancerTypeEnabled: true,
+      items: [
+        {
+          key: 'x',
+          label: 'SINT-etiqueta-fuera-de-contrato',
+          status: 'faltante' as const,
+          origin: 'regla' as const,
+          provenance: null,
+          destination: { entity: 'EntidadInexistente', field: null },
+          condition: null,
+        },
+      ],
+    };
+
+    const { respuesta } = pedir(fm1.patientId, cookieDoctor, {
+      envolver: () => ({ calcular: () => Promise.resolve(fueraDeContrato) }),
+    });
+    const resultado = await respuesta;
+
+    expect(resultado.status).toBe(500);
+    expect(resultado.body.error).toBe('ERROR_INTERNO');
+    expect(JSON.stringify(resultado.body)).not.toContain('EntidadInexistente');
+  });
+});
+
 describe('sesión y permiso', () => {
   it('responde 401 sin invocar al servicio cuando no hay cookie de sesión [US-003 AC-4]', async () => {
     const invocaciones: string[] = [];

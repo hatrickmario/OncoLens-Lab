@@ -1,10 +1,12 @@
 import { ESTADOS_DESCARTADOS } from '../patients/estados-de-revision.js';
 import type {
   CondicionDeItem,
+  ChecklistDelPaciente,
   DestinoDeItem,
   EstadoDelChecklist,
-  ItemDeDatoCritico,
   EstadoDeItem,
+  ItemDeDatoCritico,
+  ItemDelChecklist,
   RegistroDeDato,
   RegistrosPorEntidad,
 } from './ports.js';
@@ -194,4 +196,16 @@ export function calcularChecklist(entrada: EntradaDelChecklist): EstadoDeItem[] 
     key: item.key,
     status: estadoDelItem(item, delTipo, entrada.verifiedReviewStatuses, entrada.registros),
   }));
+}
+
+/** Esqueleto (L1D-95): se implementa en el commit refactor. */
+export function faltantesDe(_checklist: ChecklistDelPaciente): ItemDelChecklist[] {
+  throw new Error('no implementado');
+}
+
+/** Esqueleto (L1D-95): se implementa en el commit refactor. */
+export function diagnosticoVigente(
+  _diagnosticos: readonly RegistroDeDato[],
+): RegistroDeDato | undefined {
+  throw new Error('no implementado');
 }

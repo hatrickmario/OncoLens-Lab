@@ -142,6 +142,25 @@ describe('procedenciaDeItem', () => {
     );
   });
 
+  it('omite page cuando el registro manual trae página pero no documento de origen', () => {
+    const resultado = procedenciaDeItem(
+      item(),
+      'presente_verificado',
+      registro('manual', { sourceDocumentId: null, page: 3 }),
+    );
+
+    expect(resultado.provenance).not.toHaveProperty('page');
+  });
+
+  it.each(['constructor', 'toString', '__proto__'])(
+    'falla cerrado cuando el entryMethod es la propiedad heredada %s',
+    (heredada) => {
+      expect(() => procedenciaDeItem(item(), 'presente_verificado', registro(heredada))).toThrow(
+        'entry_method_desconocido',
+      );
+    },
+  );
+
   it('falla cerrado cuando el registro trae un entryMethod que el contrato no declara', () => {
     expect(() => procedenciaDeItem(item(), 'presente_verificado', registro('importado'))).toThrow(
       'entry_method_desconocido',
