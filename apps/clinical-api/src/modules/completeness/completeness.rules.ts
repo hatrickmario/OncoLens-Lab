@@ -77,12 +77,12 @@ export function itemsDelTipoActivo(
 }
 
 /**
- * Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor. El
+ * Coincidencia de destino (design D5): columnas de `match` iguales y, si el destino declara campo, con valor.
  * En un `no_mapeado`, `name` es el texto propuesto, sin validar contra el catálogo: coincide si es igual al del
  * destino. Nunca se empareja por `original_name` ni por similitud (RN-27: sería asignar un concepto sin mapeo). El
  * estado del dato sale de `review_status`, no de `mapping_status`.
  */
-export function registrosDelDestino(
+function registrosDelDestino(
   destino: DestinoDeItem,
   registros: readonly RegistroDeDato[],
 ): RegistroDeDato[] {

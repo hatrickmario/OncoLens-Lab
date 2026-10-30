@@ -72,12 +72,8 @@ const CONSULTAS: Readonly<Record<string, ConsultaDeEntidad>> = {
     origen: 't',
     aliasDelFragmento: 't',
   },
-  Exam: {
-    desde: 'clinical.exam t',
-    filtro: 't.patient_id = $1',
-    fecha: FECHA('t.performed_at'),
-    origen: 't',
-  },
+  // `Exam` no es destino de ningún dato crítico: `clinical.exam` no tiene `review_status` y solo se lee como relación de
+  // `Biomarker`. Pedirlo falla cerrado con `entidad_de_destino_no_soportada`.
 };
 
 type Allowlist = Readonly<Record<string, { readonly campos: readonly string[] }>>;
