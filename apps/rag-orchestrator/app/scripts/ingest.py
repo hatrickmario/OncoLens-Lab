@@ -51,8 +51,11 @@ from app.application.corpus_ingestion.reindexar_sparse import (
 )
 from app.application.corpus_ingestion.reporte import ReporteDeIngesta
 from app.application.corpus_metadata.esquema import PROMPT_VERSION
+from app.application.corpus_metadata.esquema_poblacion import PlantillaDePoblacionNoDisponible
 from app.application.corpus_metadata.metadata_extraction_service import MetadataExtractionService
 from app.application.corpus_metadata.muestra_de_metadatos import GeneradorDeMuestraDeMetadatos
+from app.application.corpus_metadata.poblacion_puertos import LlmDePoblacion
+from app.application.corpus_metadata.population_fanout import PopulationFanoutExtractor
 from app.application.ports import Clock, LlmClient, NliClassifier
 from app.application.seed_corpus.ports import PassageEmbedder
 from app.config.settings import (
@@ -76,6 +79,7 @@ from app.infrastructure.milvus.repository import MilvusRepository
 from app.infrastructure.models.verificacion import ModeloNoVerificadoError
 from app.infrastructure.seed_manifest.lector import ManifiestoInvalido, leer_manifiesto
 from app.infrastructure.tokenizer.por_palabras import TokenizadorPorPalabras
+from app.scripts.ingest_poblacion import CatalogoDePoblacionNoConfigurado, extractor_de_poblacion
 from app.scripts.load_seed_corpus import (
     ajustes_de_modelos_del_entorno,
     allow_cc_by_nc_del_entorno,
@@ -115,23 +119,32 @@ class ModelosDeMetadatos:
     nli: NliClassifier
     umbral_nli: float
     nombre_del_llm: str
+    # LLM de la extracción de población en abanico (US-242). ``None`` = sin abanico: la población sigue por el camino de
+    # US-118 (solo los tests que inyectan un ``llm`` de metadatos sin tarea corta).
+    llm_poblacion: LlmDePoblacion | None = None
 
 
 def _modelos_de_metadatos(
-    llm: LlmClient | None, nli: NliClassifier | None, temperatura: float
+    llm: LlmClient | None,
+    nli: NliClassifier | None,
+    temperatura: float,
+    llm_poblacion: LlmDePoblacion | None = None,
 ) -> ModelosDeMetadatos:
-    """Inyectados (solo en los tests) o, en producción, el LLM local (RN-12) y el NLI real verificado.
+    """Inyectados (solo en los tests) o, en producción, el LLM local (RN-12) y el NLI real verificado. En producción el
+    mismo cliente local atiende los metadatos escalares y la tarea corta de población.
 
     Sin ``NLI_ENTAILMENT_THRESHOLD`` no hay umbral que aplicar: falla nombrando la variable (RN-22).
     """
     ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
     if ambiente.nli_entailment_threshold is None:
         raise ModeloNoVerificadoError("NLI_ENTAILMENT_THRESHOLD")
+    cliente_local = _llm_local(ambiente, temperatura) if llm is None else None
     return ModelosDeMetadatos(
-        llm=llm or _llm_local(ambiente, temperatura),
+        llm=llm or cliente_local,  # type: ignore[arg-type]
         nli=nli or _nli_real(),
         umbral_nli=ambiente.nli_entailment_threshold,
         nombre_del_llm=ambiente.llm_model or "no_declarado",
+        llm_poblacion=llm_poblacion or cliente_local,
     )
 
 
@@ -157,14 +170,38 @@ def _exigir_llm_local() -> None:
         raise ConfiguracionDeLlmNoLocalError(incumplida)
 
 
-def servicio_de_metadatos(modelos: ModelosDeMetadatos) -> MetadataExtractionService:
-    """Fábrica de producción del paso de metadatos: la usan la CLI y la evaluación (adapters falsos en la CI)."""
+def servicio_de_metadatos(
+    modelos: ModelosDeMetadatos, incluir_poblacion: bool = True
+) -> MetadataExtractionService:
+    """Fábrica de producción del paso de metadatos: la usan la CLI y la evaluación (adapters falsos en la CI).
+
+    ``incluir_poblacion = False`` cuando la población la extrae el abanico (US-242 D8)."""
     return MetadataExtractionService(
-        llm=modelos.llm, nli=modelos.nli, umbral_nli=modelos.umbral_nli
+        llm=modelos.llm,
+        nli=modelos.nli,
+        umbral_nli=modelos.umbral_nli,
+        incluir_poblacion=incluir_poblacion,
     )
 
 
-def _llm_local(ambiente: Settings, temperatura: float) -> LlmClient:
+def _extractor_de_poblacion(
+    modelos: ModelosDeMetadatos, ajustes: CorpusIngestSettings
+) -> PopulationFanoutExtractor | None:
+    """El abanico solo corre si hay LLM de población (producción o inyectado); sin él, el camino de US-118."""
+    if modelos.llm_poblacion is None:
+        return None
+    ambiente = Settings(_env_file=None, modelos=None)  # type: ignore[call-arg]
+    return extractor_de_poblacion(
+        modelos.llm_poblacion,
+        modelos.nli,
+        modelos.umbral_nli,
+        modelos.nombre_del_llm,
+        ajustes,
+        ambiente,
+    )
+
+
+def _llm_local(ambiente: Settings, temperatura: float) -> OpenAICompatibleLlmClient:
     return OpenAICompatibleLlmClient(
         ambiente.llm_base_url,
         ambiente.llm_model,
@@ -207,6 +244,9 @@ def _ejecutar_ingesta(
 ) -> tuple[ReporteDeIngesta, dict[str, object]]:
     """Raíz de composición: adapters reales -> ``IngestionPipelineService``. Cierra las conexiones a PostgreSQL al terminar."""
     documentos = leer_manifiesto(manifiesto)
+    extractor = _extractor_de_poblacion(
+        metadatos, ajustes
+    )  # antes de abrir conexiones: falla cerrado por configuración
     motor = crear_motor(
         componer_url(
             base.corpus_database_url,
@@ -223,7 +263,9 @@ def _ejecutar_ingesta(
             almacen_de_chunks=almacen,
             embedder=embedder,
             codificador_sparse=sparse,
-            resolutor_de_metadatos=servicio_de_metadatos(metadatos),
+            resolutor_de_metadatos=servicio_de_metadatos(
+                metadatos, incluir_poblacion=extractor is None
+            ),
             fuente=fuente_de_texto(ajustes, manifiesto.resolve().parent),
             reloj=reloj,
             ids=UuidIdGenerator("release"),
@@ -232,6 +274,8 @@ def _ejecutar_ingesta(
             tamano_de_chunk=ajustes.corpus_chunk_size,
             solape_de_chunk=ajustes.corpus_chunk_overlap,
             fecha_de_corte=ajustes.corpus_cutoff_date,
+            extractor_de_poblacion=extractor,
+            almacen_de_poblacion=catalogo,
         )
         reporte = servicio.ingerir(documentos)
         generador = GeneradorDeMuestraDeMetadatos(
@@ -353,8 +397,9 @@ def main(
     llm: LlmClient | None = None,
     nli: NliClassifier | None = None,
     almacen_sparse: AlmacenDeReindexacionSparse | None = None,
+    llm_poblacion: LlmDePoblacion | None = None,
 ) -> int:
-    """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm`` y ``nli`` se inyectan solo en los tests; en
+    """``embedder``, ``sparse``, ``reloj``, ``tokenizador``, ``llm``, ``nli`` y ``llm_poblacion`` se inyectan solo en los tests; en
     producción salen de los adapters reales (``MODEL_PROVIDER=local``, LLM local)."""
     argumentos = _argumentos(argv)
     if argumentos.modo == MODO_REINDEX_SPARSE:
@@ -377,10 +422,16 @@ def main(
             base,
             politica,
             *modelos,
-            _modelos_de_metadatos(llm, nli, ajustes.corpus_metadata_llm_temperature),
+            _modelos_de_metadatos(llm, nli, ajustes.corpus_metadata_llm_temperature, llm_poblacion),
             reloj or RelojDelSistema(),
         )
-    except (ModeloNoVerificadoError, ManifiestoInvalido, ConfiguracionDeLlmNoLocalError) as error:
+    except (
+        ModeloNoVerificadoError,
+        ManifiestoInvalido,
+        ConfiguracionDeLlmNoLocalError,
+        CatalogoDePoblacionNoConfigurado,
+        PlantillaDePoblacionNoDisponible,
+    ) as error:
         print(f"{NOMBRE}: {error}", file=sys.stderr)
         return 1
     except Exception as error:  # noqa: BLE001 - se informa la clase; el mensaje de la base o de pymilvus puede traer una URI
