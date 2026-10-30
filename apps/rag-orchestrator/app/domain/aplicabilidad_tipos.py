@@ -54,10 +54,11 @@ class CriterioDePoblacion:
 
 @dataclass(frozen=True)
 class PoblacionDelEstudio:
-    """``population_criteria`` y ``metadata_source`` de un documento del catálogo, tal como están guardados."""
+    """``population_criteria`` y ``metadata_source`` de un documento del catálogo, ya leídos de cualquiera de las dos formas
+    guardadas (US-241). ``criterios`` va por clave de estudio (``a`` o ``a.b``); una clave ausente es «sin valor»."""
 
     metadata_source: OrigenDeMetadatos
-    criterios: Mapping[str, object]
+    criterios: Mapping[str, CriterioDePoblacion]
 
 
 @dataclass(frozen=True)

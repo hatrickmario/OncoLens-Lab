@@ -12,12 +12,12 @@ from collections.abc import Iterator
 import pytest
 from sqlalchemy import Engine, text
 
-from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from app.config.settings import POBLACION_MAX_VALORES_POR_CRITERIO_INICIAL as MAX_VALORES
 from app.infrastructure.catalog.catalogo_reader import LectorCatalogoPostgres
 from app.infrastructure.catalog.conexion import crear_motor
 from app.infrastructure.catalog.corpus_document_repository import CorpusDocumentRepository
 from tests.support.pg import BaseDeTest
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.registros import registro_de_prueba
 
 pytestmark = pytest.mark.servicios_reales
@@ -46,7 +46,10 @@ def test_poblacion_por_documento_devuelve_el_objeto_biomarcadores_y_el_origen_cu
         {"doc-a1@abcdef"}
     )
 
-    assert poblaciones == {"doc-a1@abcdef": PoblacionDelEstudio("extraido_verificado", criterios)}
+    assert poblaciones == {"doc-a1@abcdef": poblacion_guardada("extraido_verificado", criterios)}
+    assert (
+        poblaciones["doc-a1@abcdef"].criterios["biomarcadores.her2"].valores[0].valor == "positivo"
+    )
 
 
 def test_poblacion_por_documento_admite_pendiente_y_omite_los_documentos_inexistentes(

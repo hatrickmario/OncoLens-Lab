@@ -6,8 +6,8 @@ Test después (tareas 1.11 y 1.13). Cada respuesta la valida contra el spec del 
 
 import logging
 
-from app.domain.aplicabilidad_tipos import PoblacionDelEstudio
 from tests.support.aplicabilidad import (
+    CRITERIOS_DE_DOC_A1,
     FICHAS_FX08BA,
     POBLACIONES_FX08BA,
     catalogo_de_test_sin_criterios,
@@ -15,6 +15,7 @@ from tests.support.aplicabilidad import (
     solicitud_a_m1,
 )
 from tests.support.logs import exigir_sin_valores_prohibidos
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.recuperacion import CatalogoFalso
 
 RESPUESTA_503 = "#/paths/~1rag~1query/post/responses/503"
@@ -81,9 +82,8 @@ def _solicitud_con_centinelas() -> dict:
 
 
 def _catalogo_con_centinela_del_estudio() -> CatalogoFalso:
-    base = POBLACIONES_FX08BA["doc-a1"]
-    criterios = {**base.criterios, "estadio": f"I–III {SENTINELA_ESTUDIO}"}
-    poblaciones = {"doc-a1": PoblacionDelEstudio(base.metadata_source, criterios)}
+    criterios = {**CRITERIOS_DE_DOC_A1, "estadio": f"I–III {SENTINELA_ESTUDIO}"}
+    poblaciones = {"doc-a1": poblacion_guardada("fuente_estructurada", criterios)}
     return CatalogoFalso(fichas=FICHAS_FX08BA, poblaciones=poblaciones)
 
 
