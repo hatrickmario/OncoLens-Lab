@@ -6,11 +6,14 @@ el Compose de test, PostgreSQL ``corpus`` y Milvus reales. Se fingen solo los bo
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
+
+from app.domain.corpus_metadata.campos import LONGITUD_MAXIMA_DE_VALOR
 
 from tests.integration.corpus_ingestion.conftest import Montaje
 from tests.integration.corpus_ingestion.montaje_poblacion import (
@@ -26,8 +29,11 @@ from tests.support.poblacion_abanico import (
     VERSION_DE_CATALOGO_DE_TEST,
     VERSION_DEL_MODELO_DE_TEST,
     VERSION_DEL_PROMPT_DE_TEST,
+    VALOR_PROHIBIDO,
     FakePopulationLlm,
+    documentos_e,
 )
+from tests.support.poblacion_lista import poblacion_guardada
 from tests.support.semilla import DIRECTORIO_DE_FIXTURES
 
 
@@ -229,3 +235,123 @@ def test_ingesta_valor_sin_soporte_nli_no_se_guarda_y_se_cuenta(
     assert len(criterios["estado_menopausico"]) == 2
     assert reporte.contadores_de_poblacion.valores_sin_soporte == 1
     assert reporte.como_diccionario()["poblacion"]["valoresSinSoporte"] == 1
+
+
+@pytest.mark.ac("US-242", 9)
+def test_ingesta_omite_y_cuenta_el_valor_con_termino_prohibido_y_conserva_los_demas(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 AC-9] Un valor con término prohibido (RN-23) en un fragmento citado se omite y se cuenta; nunca se sustituye."""
+    montaje = montar(FakePopulationLlm(("EXT-OK", "EXT-PROHIBIDO")))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert criterios["ecog"] == []
+    assert len(criterios["estado_menopausico"]) == 2
+    assert len(criterios["biomarcadores.her2"]) == 1
+    assert reporte.contadores_de_poblacion.valores_con_lenguaje_prescriptivo == 1
+    assert reporte.como_diccionario()["poblacion"]["valoresConLenguajePrescriptivo"] == 1
+    assert VALOR_PROHIBIDO not in str(criterios)
+    assert VALOR_PROHIBIDO not in "".join(p.hipotesis for p in montaje.nli.pares)
+
+
+def test_ingesta_recorta_o_descarta_un_valor_de_201_caracteres_y_cuenta_el_descarte(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D12] Un ``value`` de más de 200 caracteres nunca se guarda (``maxLength`` del contrato) y suma al descarte."""
+    montaje = montar(FakePopulationLlm(("EXT-OK", "EXT-LARGO")))
+
+    reporte = montaje.ingerir("doc-e1")
+
+    assert reporte.resultado_de("doc-e1").estado.value == "embebido"
+    criterios = montaje.poblacion_de("doc-e1").population_criteria
+    assert criterios["ecog"] == []
+    assert reporte.contadores_de_poblacion.valores_descartados_por_longitud == 1
+    assert all(
+        len(v["value"]) <= LONGITUD_MAXIMA_DE_VALOR
+        for lista in criterios.values()
+        if isinstance(lista, list)
+        for v in lista
+    )
+
+
+def test_ingesta_escribe_population_form_coherente_con_la_forma_de_cada_fila(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D10] ``population_form`` es ``lista`` y el lector de US-241 lee todos los criterios sin forma inválida."""
+    montaje = montar(FakePopulationLlm(("EXT-OK",), cortes={CRITERIO_QUE_SE_CORTA: 2}))
+
+    montaje.ingerir("doc-e1")
+
+    poblacion = montaje.poblacion_de("doc-e1")
+    assert poblacion.population_form == "lista"
+    leida = poblacion_guardada("extraido_verificado", poblacion.population_criteria)
+    assert all(c.invalidez is None for c in leida.criterios.values())
+    assert leida.criterios["estado_menopausico"].pendiente is True
+    assert len(leida.criterios["estado_menopausico"].valores) == 0
+    assert len(leida.criterios["biomarcadores.her2"].valores) == 1
+
+
+def test_ingesta_nunca_emite_values_sin_status_ni_cadenas_de_la_forma_antigua(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[US-242 D11] Cada criterio guardado es una lista o exactamente la marca ``pendiente``; nunca ``{values}`` sin ``status``."""
+    montaje = montar(FakePopulationLlm(("EXT-OK",), cortes={CRITERIO_QUE_SE_CORTA: 2}))
+
+    montaje.ingerir("doc-e1")
+
+    for clave, contenido in montaje.poblacion_de("doc-e1").population_criteria.items():
+        if isinstance(contenido, dict):
+            assert contenido == {"status": "pendiente", "values": []}, clave
+        else:
+            assert isinstance(contenido, list), clave
+
+
+def test_ingesta_rechazada_por_licencia_no_invoca_al_extractor(
+    montar: Callable[..., MontajeDePoblacion],
+) -> None:
+    """[RN-21] Una fuente con licencia que no se acepta se rechaza antes de extraer: 0 llamadas."""
+    montaje = montar()
+    sin_derivadas = replace(
+        documentos_e()["doc-e1"],
+        document_key="doc-nd",
+        version_group_id="doc-nd",
+        license="CC BY-ND 4.0",
+        license_url="https://creativecommons.org/licenses/by-nd/4.0/",
+    )
+
+    reporte = montaje.ingerir_documentos(sin_derivadas)
+
+    assert reporte.resultado_de("doc-nd").estado.value == "rechazado_licencia"
+    assert montaje.llm.invocaciones == 0
+
+
+def test_ingesta_no_registra_en_los_logs_prompt_salida_fragmentos_ni_valores(
+    montar: Callable[..., MontajeDePoblacion], caplog: pytest.LogCaptureFixture
+) -> None:
+    """[RN-14] Los logs llevan criterio, ``chunkId``, ``finish_reason`` y longitudes; nunca el prompt, la salida del LLM, el
+    texto de los fragmentos ni los valores."""
+    montaje = montar(
+        FakePopulationLlm(("EXT-OK", "EXT-PROHIBIDO"), cortes={CRITERIO_QUE_SE_CORTA: 2})
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        montaje.ingerir("doc-e1")
+
+    registro = "\n".join(r.getMessage() for r in caplog.records)
+    assert "finish_reason=length" in registro and "estado_menopausico" in registro
+    assert "ch-e1-1" in registro
+    secretos = [
+        *montaje.llm.prompts,
+        *montaje.llm.salidas,
+        *(f.texto for f in FRAGMENTOS_POR_DOCUMENTO["doc-e1"]),
+        "premenopausal women",
+        "postmenopausal women",
+        "HER2-positive",
+        "triple-negative",
+        VALOR_PROHIBIDO,
+        "Eres un extractor",
+    ]
+    assert not [s for s in secretos if s in registro]

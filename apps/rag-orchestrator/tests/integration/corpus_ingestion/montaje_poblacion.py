@@ -16,6 +16,7 @@ from app.application.corpus_metadata.population_fanout import (
     ConfiguracionDePoblacion,
     PopulationFanoutExtractor,
 )
+from app.domain.corpus_seed.documento import DocumentoDeSemilla
 from app.domain.criterios_aplicabilidad import CriterioDeAplicabilidad
 from app.infrastructure.fetch.fuente_de_texto import FuenteDeTextoDelManifiesto
 from app.infrastructure.lenguaje.terminos_prohibidos import cargar_verificador_de_terminos
@@ -73,6 +74,9 @@ class MontajeDePoblacion:
     def ingerir(self, *claves: str) -> ReporteDeIngesta:
         documentos = documentos_e()
         return self.servicio.ingerir(tuple(documentos[c] for c in (claves or tuple(documentos))))
+
+    def ingerir_documentos(self, *documentos: DocumentoDeSemilla) -> ReporteDeIngesta:
+        return self.servicio.ingerir(documentos)
 
     def poblacion_de(self, clave: str) -> PoblacionObservada:
         return self.base.observador.poblacion_de(clave)
